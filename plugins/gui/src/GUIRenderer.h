@@ -50,15 +50,16 @@
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/Vector4fParam.h"
 #include "mmcore/utility/ResourceWrapper.h"
-#include "mmcore/view/CallGUIRenderer.h"
+//#include "mmcore/view/CallGUIRenderer.h"
 #include "mmcore/view/Input.h"
 #include "mmcore/view/Renderer2DModule.h"
 #include "mmcore/view/Renderer3DModule.h"
 
 #include "vislib/UTF8Encoder.h"
 
-#include <iomanip> // setprecision
-#include <sstream> // stringstream
+#include <algorithm> // sort
+#include <iomanip>   // setprecision
+#include <sstream>   // stringstream
 
 #ifdef _WIN32
 #    include <filesystem> // directory_iterator
@@ -131,17 +132,17 @@ protected:
 
     // Callbacks for CallGUIRenderer ------------------------------------------
 
-    bool OnGUIRenderCallback(core::Call& call);
+    // bool OnGUIRenderCallback(core::Call& call);
 
-    bool OnGUIKeyCallback(core::Call& call);
+    // bool OnGUIKeyCallback(core::Call& call);
 
-    bool OnGUICharCallback(core::Call& call);
+    // bool OnGUICharCallback(core::Call& call);
 
-    bool OnGUIMouseButtonCallback(core::Call& call);
+    // bool OnGUIMouseButtonCallback(core::Call& call);
 
-    bool OnGUIMouseMoveCallback(core::Call& call);
+    // bool OnGUIMouseMoveCallback(core::Call& call);
 
-    bool OnGUIMouseScrollCallback(core::Call& call);
+    // bool OnGUIMouseScrollCallback(core::Call& call);
 
 private:
     // TYPES, ENUMS -----------------------------------------------------------
@@ -151,14 +152,14 @@ private:
 
     /** Type for holding a window configuration. */
     typedef struct _gui_window {
-        std::string label;                 // window label
-        bool show;                         // open/close window
-        core::view::KeyCode hotkey;        // hotkey for opening/closing window
-        ImGuiWindowFlags flags;            // imgui window flags
-        GuiFunc func;                      // pointer to function drawing window content
-        bool param_hotkeys_show;           // flag to toggle parameter hotkeys
-        bool param_main;                   // flag indicating main parameter window
-        std::list<std::string> param_mods; // modules to show the parameters of
+        std::string label;                   // window label
+        bool show;                           // open/close window
+        core::view::KeyCode hotkey;          // hotkey for opening/closing window
+        ImGuiWindowFlags flags;              // imgui window flags
+        GuiFunc func;                        // pointer to function drawing window content
+        bool param_hotkeys_show;             // flag to toggle parameter hotkeys
+        bool param_main;                     // flag indicating main parameter window
+        std::vector<std::string> param_mods; // modules to show the parameters of
     } GUIWindow;
 
     // ImGui key map assignment for text manipulation hotkeys (using last unused indices < 512)
@@ -173,7 +174,7 @@ private:
     core::CallerSlot decorated_renderer_slot;
 
     /** The split view callee slot */
-    core::CalleeSlot splitview_slot;
+    // core::CalleeSlot splitview_slot;
 
     /** Float precision for parameter format. */
     int float_print_prec;
@@ -185,7 +186,7 @@ private:
     ImGuiID tooltip_id;
 
     /** Array holding the window states. */
-    std::list<GUIWindow> windows;
+    std::vector<GUIWindow> windows;
 
     /** Last instance time.  */
     double lastInstTime;
@@ -230,6 +231,9 @@ private:
 
     /** Font size of font to load. */
     float font_new_size;
+
+    /** The name of the view instance this renderer belongs to. */
+    std::string inst_name;
 
     // FUNCTIONS --------------------------------------------------------------
 
@@ -346,6 +350,22 @@ private:
      */
     void shutdown(void);
 
+    /**
+     * Draw a transfer function widget.
+     */
+    bool TransFuncWidget(void);
+
+    std::vector<std::array<float, 5>> tf_cols;
+    size_t tf_interpol = 0;
+    int tf_modstate = 0;
+    size_t tf_tex_size = 128;
+    bool tf_chan_red = false;
+    bool tf_chan_green = false;
+    bool tf_chan_blue = false;
+    bool tf_chan_alpha = true;
+    int p_selected_node = 0;
+    int p_selected_chan = 0;
+
     // ------------------------------------------------------------------------
 };
 
@@ -361,7 +381,7 @@ template <>
 inline GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIRenderer()
     : imgui_context(nullptr)
     , decorated_renderer_slot("decoratedRenderer", "Connects to another 2D Renderer being decorated")
-    , splitview_slot("splitViewRender", "Connected by SplitView")
+    //, splitview_slot("splitViewRender", "Connected by SplitView")
     , float_print_prec(3) // INIT: Float string format precision
     , tooltip_time(0.0f)
     , tooltip_id(0)
@@ -379,29 +399,30 @@ inline GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIR
     , max_value_count(50) // INIT: Max count of stored fps/ms values
     , font_new_load(false)
     , font_new_filename()
-    , font_new_size(13.0f) {
+    , font_new_size(13.0f)
+    , inst_name() {
 
     // InputCall
-    this->splitview_slot.SetCallback(core::view::CallGUIRenderer::ClassName(),
-        core::view::InputCall::FunctionName(core::view::InputCall::FnOnKey),
-        &GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::OnGUIKeyCallback);
-    this->splitview_slot.SetCallback(core::view::CallGUIRenderer::ClassName(),
-        core::view::InputCall::FunctionName(core::view::InputCall::FnOnChar),
-        &GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::OnGUICharCallback);
-    this->splitview_slot.SetCallback(core::view::CallGUIRenderer::ClassName(),
-        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseButton),
-        &GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::OnGUIMouseButtonCallback);
-    this->splitview_slot.SetCallback(core::view::CallGUIRenderer::ClassName(),
-        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseMove),
-        &GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::OnGUIMouseMoveCallback);
-    this->splitview_slot.SetCallback(core::view::CallGUIRenderer::ClassName(),
-        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseScroll),
-        &GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::OnGUIMouseScrollCallback);
-    // CallGUIRenderer
-    this->splitview_slot.SetCallback(core::view::CallGUIRenderer::ClassName(),
-        core::view::CallGUIRenderer::FunctionName(core::view::CallGUIRenderer::FnRender),
-        &GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::OnGUIRenderCallback);
-    this->MakeSlotAvailable(&this->splitview_slot);
+    // this->splitview_slot.SetCallback(core::view::CallGUIRenderer::ClassName(),
+    //    core::view::InputCall::FunctionName(core::view::InputCall::FnOnKey),
+    //    &GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::OnGUIKeyCallback);
+    // this->splitview_slot.SetCallback(core::view::CallGUIRenderer::ClassName(),
+    //    core::view::InputCall::FunctionName(core::view::InputCall::FnOnChar),
+    //    &GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::OnGUICharCallback);
+    // this->splitview_slot.SetCallback(core::view::CallGUIRenderer::ClassName(),
+    //    core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseButton),
+    //    &GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::OnGUIMouseButtonCallback);
+    // this->splitview_slot.SetCallback(core::view::CallGUIRenderer::ClassName(),
+    //    core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseMove),
+    //    &GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::OnGUIMouseMoveCallback);
+    // this->splitview_slot.SetCallback(core::view::CallGUIRenderer::ClassName(),
+    //    core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseScroll),
+    //    &GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::OnGUIMouseScrollCallback);
+    //// CallGUIRenderer
+    // this->splitview_slot.SetCallback(core::view::CallGUIRenderer::ClassName(),
+    //    core::view::CallGUIRenderer::FunctionName(core::view::CallGUIRenderer::FnRender),
+    //    &GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::OnGUIRenderCallback);
+    // this->MakeSlotAvailable(&this->splitview_slot);
 
     this->decorated_renderer_slot.SetCompatibleCall<core::view::CallRender2DDescription>();
     this->MakeSlotAvailable(&this->decorated_renderer_slot);
@@ -415,7 +436,7 @@ template <>
 inline GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GUIRenderer()
     : imgui_context(nullptr)
     , decorated_renderer_slot("decoratedRenderer", "Connects to another 2D Renderer being decorated")
-    , splitview_slot("splitViewRender", "Connected by SplitView")
+    //, splitview_slot("splitViewRender", "Connected by SplitView")
     , float_print_prec(3) // INIT: Float string format precision
     , tooltip_time(0.0f)
     , tooltip_id(0)
@@ -433,29 +454,30 @@ inline GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GUIR
     , max_value_count(50) // INIT: Max count of stored fps/ms values
     , font_new_load(false)
     , font_new_filename()
-    , font_new_size(13.0f) {
+    , font_new_size(13.0f)
+    , inst_name() {
 
     // InputCall
-    this->splitview_slot.SetCallback(core::view::CallGUIRenderer::ClassName(),
-        core::view::InputCall::FunctionName(core::view::InputCall::FnOnKey),
-        &GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::OnGUIKeyCallback);
-    this->splitview_slot.SetCallback(core::view::CallGUIRenderer::ClassName(),
-        core::view::InputCall::FunctionName(core::view::InputCall::FnOnChar),
-        &GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::OnGUICharCallback);
-    this->splitview_slot.SetCallback(core::view::CallGUIRenderer::ClassName(),
-        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseButton),
-        &GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::OnGUIMouseButtonCallback);
-    this->splitview_slot.SetCallback(core::view::CallGUIRenderer::ClassName(),
-        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseMove),
-        &GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::OnGUIMouseMoveCallback);
-    this->splitview_slot.SetCallback(core::view::CallGUIRenderer::ClassName(),
-        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseScroll),
-        &GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::OnGUIMouseScrollCallback);
-    // CallGUIRenderer
-    this->splitview_slot.SetCallback(core::view::CallGUIRenderer::ClassName(),
-        core::view::CallGUIRenderer::FunctionName(core::view::CallGUIRenderer::FnRender),
-        &GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::OnGUIRenderCallback);
-    this->MakeSlotAvailable(&this->splitview_slot);
+    // this->splitview_slot.SetCallback(core::view::CallGUIRenderer::ClassName(),
+    //    core::view::InputCall::FunctionName(core::view::InputCall::FnOnKey),
+    //    &GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::OnGUIKeyCallback);
+    // this->splitview_slot.SetCallback(core::view::CallGUIRenderer::ClassName(),
+    //    core::view::InputCall::FunctionName(core::view::InputCall::FnOnChar),
+    //    &GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::OnGUICharCallback);
+    // this->splitview_slot.SetCallback(core::view::CallGUIRenderer::ClassName(),
+    //    core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseButton),
+    //    &GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::OnGUIMouseButtonCallback);
+    // this->splitview_slot.SetCallback(core::view::CallGUIRenderer::ClassName(),
+    //    core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseMove),
+    //    &GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::OnGUIMouseMoveCallback);
+    // this->splitview_slot.SetCallback(core::view::CallGUIRenderer::ClassName(),
+    //    core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseScroll),
+    //    &GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::OnGUIMouseScrollCallback);
+    //// CallGUIRenderer
+    // this->splitview_slot.SetCallback(core::view::CallGUIRenderer::ClassName(),
+    //    core::view::CallGUIRenderer::FunctionName(core::view::CallGUIRenderer::FnRender),
+    //    &GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::OnGUIRenderCallback);
+    // this->MakeSlotAvailable(&this->splitview_slot);
 
     this->decorated_renderer_slot.SetCompatibleCall<core::view::CallRender3DDescription>();
     this->MakeSlotAvailable(&this->decorated_renderer_slot);
@@ -658,6 +680,10 @@ bool GUIRenderer<M, C>::OnKey(core::view::Key key, core::view::KeyAction action,
     ImGui::SetCurrentContext(this->imgui_context);
 
     ImGuiIO& io = ImGui::GetIO();
+
+    bool last_return_key = io.KeysDown[static_cast<size_t>(core::view::Key::KEY_ENTER)];
+    bool last_num_enter_key = io.KeysDown[static_cast<size_t>(core::view::Key::KEY_KP_ENTER)];
+
     auto keyIndex = static_cast<size_t>(key);
     switch (action) {
     case core::view::KeyAction::PRESS:
@@ -672,6 +698,14 @@ bool GUIRenderer<M, C>::OnKey(core::view::Key key, core::view::KeyAction action,
     io.KeyCtrl = mods.test(core::view::Modifier::CTRL);
     io.KeyShift = mods.test(core::view::Modifier::SHIFT);
     io.KeyAlt = mods.test(core::view::Modifier::ALT);
+
+
+    // Pass NUM 'Enter' as alternative for 'Return' to ImGui
+    bool cur_return_key = ImGui::IsKeyDown(static_cast<int>(core::view::Key::KEY_ENTER));
+    bool cur_num_enter_key = ImGui::IsKeyDown(static_cast<int>(core::view::Key::KEY_KP_ENTER));
+    bool return_pressed = (!last_return_key && cur_return_key);
+    bool enter_pressed = (!last_num_enter_key && cur_num_enter_key);
+    io.KeysDown[static_cast<size_t>(core::view::Key::KEY_ENTER)] = (return_pressed || enter_pressed);
 
     // Check for additional text modification hotkeys
     if (action == core::view::KeyAction::RELEASE) {
@@ -740,20 +774,35 @@ bool GUIRenderer<M, C>::OnKey(core::view::Key key, core::view::KeyAction action,
 
     // Check for pressed parameter hotkeys
     hotkeyPressed = false;
+    const core::Module* current_mod = nullptr;
+    bool current_mod_consider = false;
     this->GetCoreInstance()->EnumParameters([&, this](const auto& mod, auto& slot) {
-        auto param = slot.Parameter();
-        if (!param.IsNull()) {
-            if (auto* p = slot.template Param<core::param::ButtonParam>()) {
-                auto keyCode = p->GetKeyCode();
+        if (current_mod != &mod) {
+            current_mod = &mod;
+            std::string label = mod.FullName().PeekBuffer();
 
-                if (hotkeyPressed) return;
+            // Consider only modules belonging to same instance as gui renderer.
+            current_mod_consider = true;
+            if (label.find(this->inst_name) == std::string::npos) {
+                current_mod_consider = false;
+            }
+        }
 
-                hotkeyPressed = (ImGui::IsKeyDown(static_cast<int>(keyCode.key))) &&
-                                (keyCode.mods.test(core::view::Modifier::ALT) == io.KeyAlt) &&
-                                (keyCode.mods.test(core::view::Modifier::CTRL) == io.KeyCtrl) &&
-                                (keyCode.mods.test(core::view::Modifier::SHIFT) == io.KeyShift);
-                if (hotkeyPressed) {
-                    p->setDirty();
+        if (current_mod_consider) {
+            auto param = slot.Parameter();
+            if (!param.IsNull()) {
+                if (auto* p = slot.template Param<core::param::ButtonParam>()) {
+                    auto keyCode = p->GetKeyCode();
+
+                    if (hotkeyPressed) return;
+
+                    hotkeyPressed = (ImGui::IsKeyDown(static_cast<int>(keyCode.key))) &&
+                                    (keyCode.mods.test(core::view::Modifier::ALT) == io.KeyAlt) &&
+                                    (keyCode.mods.test(core::view::Modifier::CTRL) == io.KeyCtrl) &&
+                                    (keyCode.mods.test(core::view::Modifier::SHIFT) == io.KeyShift);
+                    if (hotkeyPressed) {
+                        p->setDirty();
+                    }
                 }
             }
         }
@@ -940,10 +989,10 @@ inline bool GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>:
  */
 template <class M, class C> bool GUIRenderer<M, C>::Render(C& call) {
 
-    if (this->splitview_slot.GetStatus() == core::AbstractSlot::SlotStatus::STATUS_CONNECTED) {
-        vislib::sys::Log::DefaultLog.WriteError("[GUIRenderer] Only one connected callee slot is allowed!");
-        return false;
-    }
+    // if (this->splitview_slot.GetStatus() == core::AbstractSlot::SlotStatus::STATUS_CONNECTED) {
+    //    vislib::sys::Log::DefaultLog.WriteError("[GUIRenderer] Only one connected callee slot is allowed!");
+    //    return false;
+    //}
 
     auto* cr = this->decorated_renderer_slot.template CallAs<C>();
     if (cr != nullptr) {
@@ -956,29 +1005,29 @@ template <class M, class C> bool GUIRenderer<M, C>::Render(C& call) {
 }
 
 
-/**
- * GUIRenderer<M, C>::OnGUIRenderCallback
- */
-template <class M, class C> bool GUIRenderer<M, C>::OnGUIRenderCallback(core::Call& call) {
-
-    if (this->renderSlot.GetStatus() == core::AbstractSlot::SlotStatus::STATUS_CONNECTED) {
-        vislib::sys::Log::DefaultLog.WriteError("[GUIRenderer] Only one connected callee slot is allowed!");
-        return false;
-    }
-
-    auto* cr = this->decorated_renderer_slot.template CallAs<C>();
-    if (cr != nullptr) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[GUIRenderer] Render callback of connected Renderer is not called!");
-    }
-
-    try {
-        core::view::CallGUIRenderer& cgr = dynamic_cast<core::view::CallGUIRenderer&>(call);
-        return this->renderGUI(cgr.GetViewport(), cgr.InstanceTime());
-    } catch (...) {
-        ASSERT("OnGUIRenderCallback call cast failed\n");
-    }
-    return false;
-}
+///**
+// * GUIRenderer<M, C>::OnGUIRenderCallback
+// */
+// template <class M, class C> bool GUIRenderer<M, C>::OnGUIRenderCallback(core::Call& call) {
+//
+//    if (this->renderSlot.GetStatus() == core::AbstractSlot::SlotStatus::STATUS_CONNECTED) {
+//        vislib::sys::Log::DefaultLog.WriteError("[GUIRenderer] Only one connected callee slot is allowed!");
+//        return false;
+//    }
+//
+//    auto* cr = this->decorated_renderer_slot.template CallAs<C>();
+//    if (cr != nullptr) {
+//        vislib::sys::Log::DefaultLog.WriteWarn("[GUIRenderer] Render callback of connected Renderer is not called!");
+//    }
+//
+//    try {
+//        core::view::CallGUIRenderer& cgr = dynamic_cast<core::view::CallGUIRenderer&>(call);
+//        return this->renderGUI(cgr.GetViewport(), cgr.InstanceTime());
+//    } catch (...) {
+//        ASSERT("OnGUIRenderCallback call cast failed\n");
+//    }
+//    return false;
+//}
 
 
 /**
@@ -986,6 +1035,13 @@ template <class M, class C> bool GUIRenderer<M, C>::OnGUIRenderCallback(core::Ca
  */
 template <class M, class C>
 bool GUIRenderer<M, C>::renderGUI(vislib::math::Rectangle<int> viewport, double instanceTime) {
+
+    // Get instance name the gui renderer belongs to (not available in create() yet)
+    if (this->inst_name.empty()) {
+        /// Parent's name of a module is the name of the instance a module is part of.
+        this->inst_name = this->Parent()->FullName().PeekBuffer();
+        this->inst_name.append("::"); // Required string search format to prevent ambiguity: "::<INSTANCE_NAME>::"
+    }
 
     ImGui::SetCurrentContext(this->imgui_context);
 
@@ -1056,6 +1112,13 @@ template <class M, class C> void GUIRenderer<M, C>::drawMainWindowCallback(std::
     std::string color_param_help = "[Hover] Parameter for Description Tooltip\n[Right-Click] for Context Menu\n[Drag & "
                                    "Drop] Module's Parameters to other Parameter Window";
     this->helpMarkerToolTip(color_param_help);
+
+    std::vector<float> tf_tex_data;
+    std::vector<ImVec4> tf_cols;
+
+    // if (this->TransFuncWidget()) {
+    //}
+
     this->drawParametersCallback(win_label);
 }
 
@@ -1098,10 +1161,6 @@ template <class M, class C> void GUIRenderer<M, C>::drawParametersCallback(std::
     bool current_mod_open = false;
     size_t dnd_size = 2048; // Set same max size of all module labels for drag and drop.
 
-    // Get instance name the gui renderer belongs to.
-    /// Parent's name of a module is the name of the instance a module is part of.
-    std::string inst = this->Parent()->FullName().PeekBuffer();
-    inst.append("::"); // Required string search format to prevent ambiguity: "::<INSTANCE_NAME>::"
 
     this->GetCoreInstance()->EnumParameters([&, this](const auto& mod, auto& slot) {
         if (current_mod != &mod) {
@@ -1109,14 +1168,14 @@ template <class M, class C> void GUIRenderer<M, C>::drawParametersCallback(std::
             std::string label = mod.FullName().PeekBuffer();
 
             // Consider only modules belonging to same instance as gui renderer.
-            if (label.find(inst) == std::string::npos) {
+            if (label.find(this->inst_name) == std::string::npos) {
                 current_mod_open = false;
                 return;
             }
 
             // Main parameter window always draws all module's parameters
             if (!win->param_main) {
-                std::list<std::string>::iterator find_iter =
+                std::vector<std::string>::iterator find_iter =
                     std::find(win->param_mods.begin(), win->param_mods.end(), label);
                 // Consider only modules contained in list
                 if (find_iter == win->param_mods.end()) {
@@ -1153,7 +1212,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawParametersCallback(std::
                 // Deleting module's parameters is not available in main parameter window.
                 if (!win->param_main) { // && (win->param_mods.size() > 1)) {
                     if (ImGui::MenuItem("Delete from List")) {
-                        std::list<std::string>::iterator find_iter =
+                        std::vector<std::string>::iterator find_iter =
                             std::find(win->param_mods.begin(), win->param_mods.end(), label);
                         // Break if module name is not contained in list
                         if (find_iter != win->param_mods.end()) {
@@ -1192,7 +1251,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawParametersCallback(std::
 
             // Nothing to add to main parameter window (draws always all module's parameters)
             if (!win->param_main) {
-                std::list<std::string>::iterator find_iter =
+                std::vector<std::string>::iterator find_iter =
                     std::find(win->param_mods.begin(), win->param_mods.end(), payload_id);
                 // Insert dragged module name only if not contained in list
                 if (find_iter == win->param_mods.end()) {
@@ -1242,7 +1301,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawFpsWindowCallback(std::s
         val = stream.str();
     }
     ImGui::PlotHistogram(
-        "###fpsmsplot", data, count, 0, val.c_str(), 0.0f, val_scale, ImVec2(0, 50)); /// use hidden label
+        "###fpsmsplot", data, count, 0, val.c_str(), 0.0f, val_scale, ImVec2(0.0f, 50.0f)); /// use hidden label
 
     if (this->show_fps_ms_options) {
 
@@ -1256,20 +1315,14 @@ template <class M, class C> void GUIRenderer<M, C>::drawFpsWindowCallback(std::s
             this->ms_values.clear();
         }
         // Validate refresh rate
-        if (this->max_delay < 0.0f) {
-            this->max_delay = 0.0f;
-        }
+        this->max_delay = std::max(0.0f, this->max_delay);
         std::string help = "Changes clear all values";
         this->helpMarkerToolTip(help);
 
         int mvc = (int)this->max_value_count;
-        if (ImGui::InputInt("Stored Values Count", &mvc, 0, 0, ImGuiInputTextFlags_EnterReturnsTrue)) {
-            this->max_value_count = (size_t)mvc;
-        }
+        ImGui::InputInt("Stored Values Count", &mvc, 0, 0, ImGuiInputTextFlags_EnterReturnsTrue);
         // Validate refresh rate
-        if (this->max_value_count < 0) {
-            this->max_value_count = 0;
-        }
+        this->max_value_count = (size_t)(std::max(0, mvc));
         if (ImGui::Button("Current Value")) {
             ImGui::SetClipboardText(val.c_str());
         }
@@ -1376,8 +1429,8 @@ template <class M, class C> void GUIRenderer<M, C>::drawWindow(GUIWindow& win) {
  */
 template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
 
-    // File
-    if (ImGui::BeginMenu("File")) {
+    // App
+    if (ImGui::BeginMenu("App")) {
         if (ImGui::MenuItem("Exit", "'Esc', ALT + 'F4'")) {
             this->shutdown();
         }
@@ -1386,11 +1439,11 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
 
     // Windows
     bool reset_win_size = false;
-    if (ImGui::BeginMenu("Windows")) {
+    if (ImGui::BeginMenu("View")) {
         if (ImGui::MenuItem("Reset Window", "SHIFT + 'F12'")) {
             this->reset_main_window = true;
         }
-        this->hoverToolTip("Reset size and position of main window");
+        this->hoverToolTip("Reset Size and Position of this Window");
         ImGui::Separator();
 
         for (auto& win : this->windows) {
@@ -1767,83 +1820,359 @@ template <class M, class C> void GUIRenderer<M, C>::shutdown(void) {
 
 
 /**
- * GUIRenderer<M, C>::OnGUIKeyCallback
+ * GUIRenderer<M, C>::drawTransFuncWidget
  */
-template <class M, class C> bool GUIRenderer<M, C>::OnGUIKeyCallback(core::Call& call) {
-    try {
-        core::view::CallGUIRenderer& cr = dynamic_cast<core::view::CallGUIRenderer&>(call);
-        auto& evt = cr.GetInputEvent();
-        ASSERT(evt.tag == core::view::InputEvent::Tag::Key && "Callback invocation mismatched input event");
-        return this->OnKey(evt.keyData.key, evt.keyData.action, evt.keyData.mods);
-    } catch (...) {
-        ASSERT("OnGUIKeyCallback call cast failed\n");
+template <class M, class C> bool GUIRenderer<M, C>::TransFuncWidget(void) {
+
+    ASSERT(ImGui::GetCurrentContext() != nullptr);
+    ImGuiIO& io = ImGui::GetIO();
+    ImGuiStyle& style = ImGui::GetStyle();
+    bool retval = false;
+
+    float tfw_height = 30.0f;
+    ImGui::BeginChild("fransfer_function_widget", ImVec2(0.0, ImGui::GetFontSize() * tfw_height), true);
+    float tfw_item_width = ImGui::GetContentRegionAvailWidth() * 0.75f;
+    ImGui::PushItemWidth(tfw_item_width); // set general proportional item width
+
+    // Title
+    ImGui::Text("1D Transfer Function");
+
+    // Init colors
+    if (this->tf_cols.size() < 3) {
+        this->tf_cols.clear();
+        std::array<float, 5> zero = {1.0f, 0.0f, 0.0f, 1.0f, 0.0f};
+        std::array<float, 5> half = {0.5f, 0.9f, 0.5f, 0.5f, 0.5f};
+        std::array<float, 5> one = {0.0f, 1.0f, 1.0f, 1.0f, 1.0f};
+        this->tf_cols.push_back(zero);
+        this->tf_cols.push_back(half);
+        this->tf_cols.push_back(one);
     }
-    return false;
+
+    // Select color channels
+    ImGui::Checkbox("Red", &this->tf_chan_red);
+    ImGui::SameLine();
+    ImGui::Checkbox("Green", &this->tf_chan_green);
+    ImGui::SameLine();
+    ImGui::Checkbox("Blue", &this->tf_chan_blue);
+    ImGui::SameLine();
+    ImGui::Checkbox("Alpha", &this->tf_chan_alpha);
+    ImGui::SameLine(tfw_item_width + style.ItemSpacing.x + style.ItemInnerSpacing.x);
+    ImGui::Text("Color Channels");
+
+    // Plot
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    ImVec2 canvas_pos = ImGui::GetCursorScreenPos(); // ImDrawList API uses screen coordinates!
+    ImVec2 canvas_size = ImVec2(tfw_item_width, 150.0f);
+    if (canvas_size.x < 50.0f) canvas_size.x = 50.0f;
+    if (canvas_size.y < 50.0f) canvas_size.y = 50.0f;
+    ImVec2 cmp = io.MousePos;   // current mouse position
+    ImVec2 cmd = io.MouseDelta; // current mouse delta
+
+    ImU32 frmBkgdCol = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_FrameBg]);
+    ImU32 frmBrdrCol = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Border]);
+
+    draw_list->AddRectFilledMultiColor(canvas_pos, ImVec2(canvas_pos.x + canvas_size.x, canvas_pos.y + canvas_size.y),
+        frmBkgdCol, frmBkgdCol, frmBkgdCol, frmBkgdCol);
+    draw_list->AddRect(canvas_pos, ImVec2(canvas_pos.x + canvas_size.x, canvas_pos.y + canvas_size.y), frmBrdrCol);
+
+    draw_list->PushClipRect(canvas_pos, ImVec2(canvas_pos.x + canvas_size.x, canvas_pos.y + canvas_size.y),
+        true); // clip lines within the canvas (if we resize it, etc.)
+
+    const float p_radius = 9.0f;
+    const float p_border = 3.0f;
+    int selected_node = -1;
+    int selected_chan = -1;
+    for (int i = 0; i < this->tf_cols.size(); ++i) {
+        ImU32 d_color = ImGui::ColorConvertFloat4ToU32(
+            ImVec4(this->tf_cols[i][0], this->tf_cols[i][1], this->tf_cols[i][2], this->tf_cols[i][3]));
+
+        // For each color channel
+        for (int c = 0; c < 4; ++c) {
+            switch (c) {
+            case (0):
+                if (!this->tf_chan_red) {
+                    continue;
+                }
+                break;
+            case (1):
+                if (!this->tf_chan_green) {
+                    continue;
+                }
+                break;
+            case (2):
+                if (!this->tf_chan_blue) {
+                    continue;
+                }
+                break;
+            case (3):
+                if (!this->tf_chan_alpha) {
+                    continue;
+                }
+                break;
+            }
+
+            ImVec2 p_cur_pos = ImVec2(canvas_pos.x + this->tf_cols[i][4] * canvas_size.x,
+                canvas_pos.y + (1.0f - this->tf_cols[i][c]) * canvas_size.y);
+
+            if (i < (this->tf_cols.size() - 1)) {
+                ImVec2 p_nxt_pos = ImVec2(canvas_pos.x + this->tf_cols[i + 1][4] * canvas_size.x,
+                    canvas_pos.y + (1.0f - this->tf_cols[i + 1][c]) * canvas_size.y);
+
+                draw_list->AddLine(p_cur_pos, p_nxt_pos, d_color, 5.0f);
+            }
+
+            ImU32 p_border_col = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Border]);
+            if (i == this->p_selected_node) {
+                p_border_col = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ButtonActive]);
+            }
+
+            draw_list->AddCircle(p_cur_pos, (p_radius + p_border - 1.0f), p_border_col, 12, p_border);
+            draw_list->AddCircleFilled(p_cur_pos, p_radius, d_color, 12);
+
+            ImVec2 deltav = ImVec2(p_cur_pos.x - cmp.x, p_cur_pos.y - cmp.y);
+            if (std::sqrtf((deltav.x * deltav.x) + (deltav.y * deltav.y)) <= p_radius) {
+                selected_node = i;
+                selected_chan = c;
+            }
+        }
+    }
+    draw_list->PopClipRect();
+
+    ImGui::InvisibleButton("plot", canvas_size);
+    bool sort_required = false;
+    ImVec2 ds = style.ItemSpacing; // delta space around canvas
+    if ((cmp.x > (canvas_pos.x - ds.x)) && (cmp.y > (canvas_pos.y - ds.y)) &&
+        (cmp.x < (canvas_pos.x + canvas_size.x + ds.x)) && (cmp.y < (canvas_pos.y + canvas_size.y + ds.y))) {
+
+        if (io.MouseDown[0]) { // Left Move -> Move selecteed node
+            if (selected_node >= 0) {
+                this->p_selected_node = selected_node;
+                this->p_selected_chan = selected_chan;
+            }
+
+            float tmp_pos_x = (cmp.x - canvas_pos.x) / canvas_size.x;
+            tmp_pos_x = std::max(0.0f, std::min(tmp_pos_x, 1.0f));
+            if (this->p_selected_node == 0) {
+                tmp_pos_x = 0.0f;
+            } else if (this->p_selected_node == (this->tf_cols.size() - 1)) {
+                tmp_pos_x = 1.0f;
+            }
+            this->tf_cols[this->p_selected_node][4] = tmp_pos_x;
+
+            float tmp_pos_y = 1.0f - ((cmp.y - canvas_pos.y) / canvas_size.y);
+            tmp_pos_y = std::max(0.0f, std::min(tmp_pos_y, 1.0f));
+
+            if (this->tf_chan_red && (this->p_selected_chan == 0)) {
+                this->tf_cols[this->p_selected_node][0] = tmp_pos_y;
+            }
+            if (this->tf_chan_green && (this->p_selected_chan == 1)) {
+                this->tf_cols[this->p_selected_node][1] = tmp_pos_y;
+            }
+            if (this->tf_chan_blue && (this->p_selected_chan == 2)) {
+                this->tf_cols[this->p_selected_node][2] = tmp_pos_y;
+            }
+            if (this->tf_chan_alpha && (this->p_selected_chan == 3)) {
+                this->tf_cols[this->p_selected_node][3] = tmp_pos_y;
+            }
+            sort_required = true;
+
+        } else if (io.MouseClicked[1]) { // Right Click -> Add/delete Node
+
+            if (selected_node < 0) { // Add new at current position
+                float tmp_pos_x = (cmp.x - canvas_pos.x) / canvas_size.x;
+                tmp_pos_x = std::max(0.0f, std::min(tmp_pos_x, 1.0f));
+
+                float tmp_pos_y = 1.0f - ((cmp.y - canvas_pos.y) / canvas_size.y);
+                tmp_pos_y = std::max(0.0f, std::min(tmp_pos_y, 1.0f));
+
+                std::array<float, 5> col = {1.0f, 0.0f, 1.0f, tmp_pos_y, tmp_pos_x}; // TODO: Interpolate Color
+                for (auto it = this->tf_cols.begin(); it != this->tf_cols.end(); ++it) {
+                    if (tmp_pos_x < (*it)[4]) {
+                        this->tf_cols.insert(it, col);
+                        break;
+                    }
+                }
+            } else { // Delete currently hovered
+                if ((selected_node > 0) && (selected_node < (this->tf_cols.size() - 1))) {
+                    this->tf_cols.erase(this->tf_cols.begin() + selected_node);
+                    this->p_selected_node = std::max(0, this->p_selected_node - 1);
+                }
+            }
+            sort_required = true;
+        }
+    }
+    if (sort_required) {
+        std::sort(this->tf_cols.begin(), this->tf_cols.end(),
+            [](const std::array<float, 5>& lhs, const std::array<float, 5>& rhs) { return (lhs[4] < rhs[4]); });
+    }
+    ImGui::SameLine(0.0f, style.ItemInnerSpacing.x);
+    ImGui::Text("Plot");
+    this->helpMarkerToolTip("[Left-Click] Select Node\n[Left-Drag] Mode Node\n[Right-Click] Add/Delete Node");
+
+    // Edit Color of selected node
+    float col[4] = {this->tf_cols[this->p_selected_node][0], this->tf_cols[this->p_selected_node][1],
+        this->tf_cols[this->p_selected_node][2], this->tf_cols[this->p_selected_node][3]};
+    if (ImGui::ColorEdit4("Selected Color", col)) {
+        this->tf_cols[this->p_selected_node][0] = col[0];
+        this->tf_cols[this->p_selected_node][1] = col[1];
+        this->tf_cols[this->p_selected_node][2] = col[2];
+        this->tf_cols[this->p_selected_node][3] = col[3];
+    }
+
+    // Select interpolation mode (Linear, Gauss, ...)
+    std::array<std::string, 2> interpol_opts;
+    interpol_opts[0] = "Linear";
+    interpol_opts[1] = "Gauss";
+    if (ImGui::BeginCombo("Interpolation", interpol_opts[this->tf_interpol].c_str())) {
+        for (size_t i = 0; i < interpol_opts.size(); ++i) {
+            if (ImGui::Selectable(interpol_opts[i].c_str(), (this->tf_interpol == i))) {
+                this->tf_interpol = i;
+            }
+        }
+        ImGui::EndCombo();
+    }
+
+    // Create current texture data
+    std::vector<ImVec4> tex_cols;
+    tex_cols.resize(this->tf_tex_size);
+    std::array<float, 5> cx1 = this->tf_cols[0];
+    std::array<float, 5> cx2 = this->tf_cols[0];
+    int p1 = 0;
+    int p2 = 0;
+    size_t col_cnt = this->tf_cols.size();
+    float r, g, b, a;
+    // CHOOSE LINEAR INTERPOLATION
+    if (this->tf_interpol == 0) {
+        for (size_t i = 0; i < col_cnt; ++i) {
+            cx1 = cx2;
+            p1 = p2;
+            cx2 = this->tf_cols[i];
+            ASSERT(cx2[4] <= 1.0f + 1e-5f);
+            p2 = static_cast<int>(cx2[4] * static_cast<float>(this->tf_tex_size - 1));
+            ASSERT(p2 < static_cast<int>(this->tf_tex_size));
+            ASSERT(p2 >= p1);
+
+            for (int p = p1; p <= p2; p++) {
+                float al = static_cast<float>(p - p1) / static_cast<float>(p2 - p1);
+                float be = 1.0f - al;
+
+                r = cx1[0] * be + cx2[0] * al;
+                g = cx1[1] * be + cx2[1] * al;
+                b = cx1[2] * be + cx2[2] * al;
+                a = cx1[3] * be + cx2[3] * al;
+                tex_cols[p] = ImVec4(r, g, b, a);
+            }
+        }
+    }
+    // Draw current transfer function texture
+    const float texture_height = 30.0f;
+    ImVec2 texture_pos = ImGui::GetCursorScreenPos();
+    ImVec2 rect_size = ImVec2(tfw_item_width / (float)this->tf_tex_size, texture_height);
+    ImGui::InvisibleButton("texture", ImVec2(tfw_item_width, rect_size.y));
+    for (int i = 0; i < this->tf_tex_size; ++i) {
+
+        ImU32 rect_col = ImGui::ColorConvertFloat4ToU32(tex_cols[i]);
+
+        ImVec2 rect_pos_a = ImVec2(texture_pos.x + (float)i * rect_size.x, texture_pos.y);
+        ImVec2 rect_pos_b = ImVec2(rect_pos_a.x + rect_size.x, rect_pos_a.y + rect_size.y);
+        draw_list->AddRectFilled(rect_pos_a, rect_pos_b, rect_col, 0.0f, 10);
+    }
+
+    // Get texture size
+    int tfw_texsize = (int)this->tf_tex_size;
+    if (ImGui::InputInt("Texture Size", &tfw_texsize, 1, 10, ImGuiInputTextFlags_EnterReturnsTrue)) {
+        this->tf_tex_size = std::max(1, tfw_texsize);
+    }
+
+    // Apply current changes
+    if (ImGui::Button("Apply Transfer Function")) {
+    }
+
+    ImGui::EndChild();
+
+    return true; // retval;
 }
 
 
-/**
- * GUIRenderer<M, C>::OnGUICharCallback
- */
-template <class M, class C> bool GUIRenderer<M, C>::OnGUICharCallback(core::Call& call) {
-    try {
-        core::view::CallGUIRenderer& cr = dynamic_cast<core::view::CallGUIRenderer&>(call);
-        auto& evt = cr.GetInputEvent();
-        ASSERT(evt.tag == core::view::InputEvent::Tag::Char && "Callback invocation mismatched input event");
-        return this->OnChar(evt.charData.codePoint);
-    } catch (...) {
-        ASSERT("OnGUICharCallback call cast failed\n");
-    }
-    return false;
-}
-
-
-/**
- * GUIRenderer<M, C>::OnGUIMouseButtonCallback
- */
-template <class M, class C> bool GUIRenderer<M, C>::OnGUIMouseButtonCallback(core::Call& call) {
-    try {
-        core::view::CallGUIRenderer& cr = dynamic_cast<core::view::CallGUIRenderer&>(call);
-        auto& evt = cr.GetInputEvent();
-        ASSERT(evt.tag == core::view::InputEvent::Tag::MouseButton && "Callback invocation mismatched input event");
-        return this->OnMouseButton(evt.mouseButtonData.button, evt.mouseButtonData.action, evt.mouseButtonData.mods);
-    } catch (...) {
-        ASSERT("OnGUIMouseButtonCallback call cast failed\n");
-    }
-    return false;
-}
-
-
-/**
- * GUIRenderer<M, C>::OnGUIMouseMoveCallback
- */
-template <class M, class C> bool GUIRenderer<M, C>::OnGUIMouseMoveCallback(core::Call& call) {
-    try {
-        core::view::CallGUIRenderer& cr = dynamic_cast<core::view::CallGUIRenderer&>(call);
-        auto& evt = cr.GetInputEvent();
-        ASSERT(evt.tag == core::view::InputEvent::Tag::MouseMove && "Callback invocation mismatched input event");
-        return this->OnMouseMove(evt.mouseMoveData.x, evt.mouseMoveData.y);
-    } catch (...) {
-        ASSERT("OnGUIMouseMoveCallback call cast failed\n");
-    }
-    return false;
-}
-
-
-/**
- * GUIRenderer<M, C>::OnGUIMouseScrollCallback
- */
-template <class M, class C> bool GUIRenderer<M, C>::OnGUIMouseScrollCallback(core::Call& call) {
-    try {
-        core::view::CallGUIRenderer& cr = dynamic_cast<core::view::CallGUIRenderer&>(call);
-        auto& evt = cr.GetInputEvent();
-        ASSERT(evt.tag == core::view::InputEvent::Tag::MouseScroll && "Callback invocation mismatched input event");
-        return this->OnMouseScroll(evt.mouseScrollData.dx, evt.mouseScrollData.dy);
-    } catch (...) {
-        ASSERT("OnGUIMouseScrollCallback call cast failed\n");
-    }
-    return false;
-}
+///**
+// * GUIRenderer<M, C>::OnGUIKeyCallback
+// */
+// template <class M, class C> bool GUIRenderer<M, C>::OnGUIKeyCallback(core::Call& call) {
+//    try {
+//        core::view::CallGUIRenderer& cr = dynamic_cast<core::view::CallGUIRenderer&>(call);
+//        auto& evt = cr.GetInputEvent();
+//        ASSERT(evt.tag == core::view::InputEvent::Tag::Key && "Callback invocation mismatched input event");
+//        return this->OnKey(evt.keyData.key, evt.keyData.action, evt.keyData.mods);
+//    } catch (...) {
+//        ASSERT("OnGUIKeyCallback call cast failed\n");
+//    }
+//    return false;
+//}
+//
+//
+///**
+// * GUIRenderer<M, C>::OnGUICharCallback
+// */
+// template <class M, class C> bool GUIRenderer<M, C>::OnGUICharCallback(core::Call& call) {
+//    try {
+//        core::view::CallGUIRenderer& cr = dynamic_cast<core::view::CallGUIRenderer&>(call);
+//        auto& evt = cr.GetInputEvent();
+//        ASSERT(evt.tag == core::view::InputEvent::Tag::Char && "Callback invocation mismatched input event");
+//        return this->OnChar(evt.charData.codePoint);
+//    } catch (...) {
+//        ASSERT("OnGUICharCallback call cast failed\n");
+//    }
+//    return false;
+//}
+//
+//
+///**
+// * GUIRenderer<M, C>::OnGUIMouseButtonCallback
+// */
+// template <class M, class C> bool GUIRenderer<M, C>::OnGUIMouseButtonCallback(core::Call& call) {
+//    try {
+//        core::view::CallGUIRenderer& cr = dynamic_cast<core::view::CallGUIRenderer&>(call);
+//        auto& evt = cr.GetInputEvent();
+//        ASSERT(evt.tag == core::view::InputEvent::Tag::MouseButton && "Callback invocation mismatched input
+//        event"); return this->OnMouseButton(evt.mouseButtonData.button, evt.mouseButtonData.action,
+//        evt.mouseButtonData.mods);
+//    } catch (...) {
+//        ASSERT("OnGUIMouseButtonCallback call cast failed\n");
+//    }
+//    return false;
+//}
+//
+//
+///**
+// * GUIRenderer<M, C>::OnGUIMouseMoveCallback
+// */
+// template <class M, class C> bool GUIRenderer<M, C>::OnGUIMouseMoveCallback(core::Call& call) {
+//    try {
+//        core::view::CallGUIRenderer& cr = dynamic_cast<core::view::CallGUIRenderer&>(call);
+//        auto& evt = cr.GetInputEvent();
+//        ASSERT(evt.tag == core::view::InputEvent::Tag::MouseMove && "Callback invocation mismatched input event");
+//        return this->OnMouseMove(evt.mouseMoveData.x, evt.mouseMoveData.y);
+//    } catch (...) {
+//        ASSERT("OnGUIMouseMoveCallback call cast failed\n");
+//    }
+//    return false;
+//}
+//
+//
+///**
+// * GUIRenderer<M, C>::OnGUIMouseScrollCallback
+// */
+// template <class M, class C> bool GUIRenderer<M, C>::OnGUIMouseScrollCallback(core::Call& call) {
+//    try {
+//        core::view::CallGUIRenderer& cr = dynamic_cast<core::view::CallGUIRenderer&>(call);
+//        auto& evt = cr.GetInputEvent();
+//        ASSERT(evt.tag == core::view::InputEvent::Tag::MouseScroll && "Callback invocation mismatched input
+//        event"); return this->OnMouseScroll(evt.mouseScrollData.dx, evt.mouseScrollData.dy);
+//    } catch (...) {
+//        ASSERT("OnGUIMouseScrollCallback call cast failed\n");
+//    }
+//    return false;
+//}
 
 
 } // namespace gui
