@@ -8,13 +8,15 @@
 #include "stdafx.h"
 #include "mmcore/param/ButtonParam.h"
 
+using namespace megamol;
 using namespace megamol::core::param;
 
 
 /*
  * ButtonParam::ButtonParam
  */
-ButtonParam::ButtonParam(WORD key) : AbstractParam(), key(key) {
+ButtonParam::ButtonParam(void) : AbstractParam(), keycode() {
+
     // intentionally empty
 }
 
@@ -22,9 +24,39 @@ ButtonParam::ButtonParam(WORD key) : AbstractParam(), key(key) {
 /*
  * ButtonParam::ButtonParam
  */
-ButtonParam::ButtonParam(const vislib::sys::KeyCode &key) : AbstractParam(),
-        key(key) {
+ButtonParam::ButtonParam(const core::view::KeyCode &keycode) : AbstractParam(),
+    keycode(keycode) {
+
     // intentionally empty
+}
+
+
+/*
+ * ButtonParam::ButtonParam
+ */
+ButtonParam::ButtonParam(const core::view::Key &key, const core::view::Modifiers &mods) : AbstractParam(), 
+    keycode(key, mods) {
+
+    // intentionally empty
+}
+
+
+/*
+ * ButtonParam::ButtonParam
+ */
+ButtonParam::ButtonParam(const core::view::Key &key, const core::view::Modifier &mod) : AbstractParam(),
+keycode(key, core::view::Modifiers(mod)) {
+
+    // intentionally empty
+}
+
+
+/*
+ * ButtonParam::ButtonParam
+ */
+ButtonParam::ButtonParam(const core::view::Key &key) : AbstractParam(), keycode() {
+
+    this->keycode.key = key;
 }
 
 
@@ -32,6 +64,7 @@ ButtonParam::ButtonParam(const vislib::sys::KeyCode &key) : AbstractParam(),
  * ButtonParam::~ButtonParam
  */
 ButtonParam::~ButtonParam(void) {
+
     // intentionally empty
 }
 
@@ -40,9 +73,12 @@ ButtonParam::~ButtonParam(void) {
  * ButtonParam::Definition
  */
 void ButtonParam::Definition(vislib::RawStorage& outDef) const {
-    outDef.AssertSize(8);
+
+    outDef.AssertSize(6 + (2 * sizeof(WORD)));
     memcpy(outDef.AsAt<char>(0), "MMBUTN", 6);
-    *outDef.AsAt<WORD>(6) = (WORD)this->key;
+    *outDef.AsAt<WORD>(6) = (WORD)this->keycode.key;
+    core::view::Modifiers mods = this->keycode.mods;
+    *outDef.AsAt<WORD>(6 + sizeof(WORD)) = (WORD)mods.toInt();
 }
 
 
@@ -50,6 +86,7 @@ void ButtonParam::Definition(vislib::RawStorage& outDef) const {
  * ButtonParam::ParseValue
  */
 bool ButtonParam::ParseValue(const vislib::TString& v) {
+
     this->setDirty();
     return true;
 }
@@ -59,6 +96,7 @@ bool ButtonParam::ParseValue(const vislib::TString& v) {
  * ButtonParam::ValueString
  */
 vislib::TString ButtonParam::ValueString(void) const {
+
     // intentionally empty
     return _T("");
 }

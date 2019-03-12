@@ -484,6 +484,7 @@ int runNormal(megamol::console::utility::CmdLineParser *& parser) {
         if ((instsCnt == 0) && (parser->LoadAll())) {
             ::mmcRequestAllInstances(hCore);
         }
+        processPendingActions();
     }
 
     processPendingActions(); // <-- GLFW and OpenGL context/window start life here!
@@ -514,8 +515,6 @@ int runNormal(megamol::console::utility::CmdLineParser *& parser) {
     // main loop
     bool winsAlive, jobsAlive;
     do {
-        processPendingActions();
-
         winsAlive = megamol::console::WindowManager::Instance().IsAlive();
         jobsAlive = megamol::console::JobManager::Instance().IsAlive();
 
@@ -531,7 +530,7 @@ int runNormal(megamol::console::utility::CmdLineParser *& parser) {
             }
             megamol::console::WindowManager::Instance().Update();
         }
-
+        processPendingActions();
     } while (winsAlive || jobsAlive);
 
 #if 0

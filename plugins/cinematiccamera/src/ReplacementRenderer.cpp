@@ -139,19 +139,19 @@ bool ReplacementRenderer::Render(megamol::core::view::CallRender3D& call) {
         this->replacementKeyParam.ResetDirty();
 
         keyAssignment newKey = static_cast<keyAssignment>(this->replacementKeyParam.Param<param::EnumParam>()->Value());
-        WORD newKeyWord = 0;
+        core::view::Key key = core::view::Key::KEY_UNKNOWN;
         switch (newKey) {
-            case(keyAssignment::KEY_ASSIGN_O): newKeyWord = 'o'; break;
-            case(keyAssignment::KEY_ASSIGN_I): newKeyWord = 'i'; break;
-            case(keyAssignment::KEY_ASSIGN_J): newKeyWord = 'j'; break;
-            case(keyAssignment::KEY_ASSIGN_K): newKeyWord = 'k'; break;
-            case(keyAssignment::KEY_ASSIGN_X): newKeyWord = 'x'; break;
-            case(keyAssignment::KEY_ASSIGN_Y): newKeyWord = 'y'; break;
+        case(keyAssignment::KEY_ASSIGN_O): key = core::view::Key::KEY_O; break;
+            case(keyAssignment::KEY_ASSIGN_I): key = core::view::Key::KEY_I; break;
+            case(keyAssignment::KEY_ASSIGN_J): key = core::view::Key::KEY_J; break;
+            case(keyAssignment::KEY_ASSIGN_K): key = core::view::Key::KEY_K; break;
+            case(keyAssignment::KEY_ASSIGN_X): key = core::view::Key::KEY_X; break;
+            case(keyAssignment::KEY_ASSIGN_Y): key = core::view::Key::KEY_Y; break;
             default: break;
         }
 
         // Make button param available ... 
-        this->toggleReplacementRenderingParam.SetParameter(new param::ButtonParam(newKeyWord));
+        this->toggleReplacementRenderingParam.SetParameter(new param::ButtonParam(key));
         this->MakeSlotAvailable(&this->toggleReplacementRenderingParam);
         // ... and set enum param unavailable.
         this->SetSlotUnavailable(static_cast<AbstractSlot*>(&this->replacementKeyParam));

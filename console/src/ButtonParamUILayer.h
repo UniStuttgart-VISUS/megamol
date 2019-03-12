@@ -10,7 +10,7 @@
 #include <chrono>
 #include <map>
 #include "vislib/String.h"
-#include "vislib/sys/KeyCode.h"
+#include "mmcore/view/Input.h"
 
 namespace megamol {
 namespace console {
@@ -36,7 +36,7 @@ namespace console {
         void *hView; // handle memory is owned by Window
 
         std::chrono::system_clock::time_point last_update;
-        std::map<vislib::sys::KeyCode, vislib::TString> hotkeys;
+        std::map<std::string, vislib::TString> hotkeys;
         AbstractUILayer *maskingLayer;
     };
 

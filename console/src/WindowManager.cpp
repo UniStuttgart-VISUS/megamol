@@ -22,10 +22,11 @@
 #include "ButtonParamUILayer.h"
 #include "ViewUILayer.h"
 #include "gl/WindowEscapeHotKeysUILayer.h"
-#ifdef HAS_ANTTWEAKBAR
-#include "gl/ATBToggleHotKeyUILayer.h"
-#include "gl/ATBUILayer.h"
-#endif /* HAS_ANTTWEAKBAR */
+
+ #ifdef HAS_ANTTWEAKBAR
+ #include "gl/ATBUILayer.h"
+ #include "gl/ATBToggleHotKeyUILayer.h"
+ #endif /* HAS_ANTTWEAKBAR */
 
 const char* const megamol::console::WindowManager::TitlePrefix = "MegaMol - ";
 const int megamol::console::WindowManager::TitlePrefixLength = 10;
@@ -250,15 +251,15 @@ bool megamol::console::WindowManager::InstantiatePendingView(void *hCore) {
     w->AddUILayer(std::make_shared<ViewUILayer>(w->Handle()));
     std::shared_ptr<ButtonParamUILayer> btnLayer = std::make_shared<ButtonParamUILayer>(hCore, w->Handle());
     w->AddUILayer(btnLayer);
+
 #ifdef HAS_ANTTWEAKBAR
-    btnLayer->SetMaskingLayer(atbLayer.get()); // TODO: DOES NOTHING
-#endif /* HAS_ANTTWEAKBAR */
-    w->AddUILayer(std::make_shared<gl::WindowEscapeHotKeysUILayer>(
-        *w.get())); // add as last. This allows MegaMol module buttons to use 'q' (and 'ESC') as hotkeys, overriding
-                    // this hotkey
-    if (utility::HotFixes::Instance().IsHotFixed("EnableFileNameFix")) {
-        w->AddUILayer(std::make_shared<utility::HotFixFileName>(hCore));
+    // Mask ButtonParamUILayer only if AntTweakBar is enabled
+    if (atbLayer->Enabled()) {
+        btnLayer->SetMaskingLayer(atbLayer.get());
     }
+#endif /* HAS_ANTTWEAKBAR */
+
+    w->AddUILayer(std::make_shared<gl::WindowEscapeHotKeysUILayer>(*w.get())); // add as last. This allows MegaMol module buttons to use 'q' (and 'ESC') as hotkeys, overriding this hotkey
 
     w->ForceIssueResizeEvent();
     windows.push_back(w);

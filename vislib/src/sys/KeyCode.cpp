@@ -55,6 +55,7 @@ vislib::StringA vislib::sys::KeyCode::ToStringA(void) const {
             case vislib::sys::KeyCode::KEY_ESC: msg += "ESC"; break;
             case vislib::sys::KeyCode::KEY_TAB: msg += "Tab"; break;
             case vislib::sys::KeyCode::KEY_LEFT: msg += "Left"; break;
+            case vislib::sys::KeyCode::KEY_RIGHT: msg += "Right"; break;
             case vislib::sys::KeyCode::KEY_UP: msg += "Up"; break;
             case vislib::sys::KeyCode::KEY_DOWN: msg += "Down"; break;
             case vislib::sys::KeyCode::KEY_PAGE_UP: msg += "Page Up"; break;

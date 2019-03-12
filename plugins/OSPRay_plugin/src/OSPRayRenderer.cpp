@@ -17,6 +17,7 @@
 #include "mmcore/CoreInstance.h"
 
 #include <functional>
+#include <chrono>
 
 #include "ospray/ospray.h"
 #include "ospcommon/vec.h"
@@ -206,7 +207,8 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
 
     // new framebuffer at resize action
     //bool triggered = false;
-    if (imgSize.x != cr->GetCameraParameters()->TileRect().Width() || imgSize.y != cr->GetCameraParameters()->TileRect().Height() || extraSamles.IsDirty()) {
+    if (imgSize.x != cr->GetCameraParameters()->TileRect().Width() ||
+        imgSize.y != cr->GetCameraParameters()->TileRect().Height() || accumulateSlot.IsDirty()) {
         //triggered = true;
         // Breakpoint for Screenshooter debugging
         if (framebuffer != NULL) ospFreeFrameBuffer(framebuffer);
@@ -246,21 +248,28 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
         light_has_changed ||
         cam_has_changed ||
         renderer_has_changed ||
-        !(this->extraSamles.Param<core::param::BoolParam>()->Value()) ||
-        time != cr->Time() ||
+        !(this->accumulateSlot.Param<core::param::BoolParam>()->Value()) ||
+        frameID != static_cast<size_t>(cr->Time()) ||
         this->InterfaceIsDirty()) {
 
-        if (data_has_changed ||
-            time != cr->Time() ||
-            this->InterfaceIsDirty()) {
+        if (data_has_changed || frameID != static_cast<size_t>(cr->Time()) || renderer_has_changed) {
+			// || this->InterfaceIsDirty()) {
             if (!this->fillWorld()) return false;
+
+            // Commiting world and measuring time
+            auto t1 = std::chrono::high_resolution_clock::now();
             ospCommit(world);
-        }
+            auto t2 = std::chrono::high_resolution_clock::now();
+            const auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
+            vislib::sys::Log::DefaultLog.WriteInfo("OSPRayRenderer: Commiting World took: %d microseconds", duration);
+
+            }
         if (material_has_changed && !data_has_changed) {
             this->changeMaterial();
         }
         this->InterfaceResetDirty();
         time = cr->Time();
+        frameID = static_cast<size_t>(cr->Time());
         renderer_has_changed = false;
 
         /*

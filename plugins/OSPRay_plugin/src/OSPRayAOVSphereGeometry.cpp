@@ -249,11 +249,13 @@ bool OSPRayAOVSphereGeometry::getDataCallback(megamol::core::Call& call) {
                 }
             }
 
-            float fixedSpacing[3];
+            /*float fixedSpacing[3];
             for (auto x = 0; x < 3; ++x) {
-                fixedSpacing[x] = this->gridorigin.at(x) / (this->dimensions.at(x) - 1) + this->gridorigin.at(x);
+                fixedSpacing[x] = this->gridspacing.at(x) / (this->dimensions.at(x) - 1) + this->gridspacing.at(x);
             }
-            float maxGridSpacing = std::max(fixedSpacing[0], std::max(fixedSpacing[1], fixedSpacing[2]));
+            float maxGridSpacing = std::max(fixedSpacing[0], std::max(fixedSpacing[1], fixedSpacing[2]));*/
+            float maxGridSpacing =
+                std::max(this->gridspacing.at(0), std::max(this->gridspacing.at(1), this->gridspacing.at(2)));
             // aovol
             // auto const aovol = ospNewVolume("block_bricked_volume");
             if (aovol == NULL) {
@@ -265,7 +267,7 @@ bool OSPRayAOVSphereGeometry::getDataCallback(megamol::core::Call& call) {
                 ospSetString(aovol, "voxelType", voxelDataTypeS[static_cast<uint8_t>(voxelDataType::FLOAT)].c_str());
                 ospSet3fv(aovol, "gridOrigin", this->gridorigin.data());
 
-                ospSet3fv(aovol, "gridSpacing", fixedSpacing);
+                ospSet3fv(aovol, "gridSpacing", this->gridspacing.data());
 
                 OSPTransferFunction tf = ospNewTransferFunction("piecewise_linear");
 
@@ -368,15 +370,20 @@ bool OSPRayAOVSphereGeometry::getExtendsCallback(megamol::core::Call& call) {
     cd->SetFrameID(os->FrameID());
     (*cd)(1);
     os->SetExtent(cd->FrameCount(), cd->AccessBoundingBoxes());
-
+    
     return true;
 }
 
 bool megamol::ospray::OSPRayAOVSphereGeometry::getDirtyCallback(core::Call& call) {
     auto os = dynamic_cast<CallOSPRayAPIObject*>(&call);
+    auto cd = this->getDataSlot.CallAs<megamol::core::moldyn::MultiParticleDataCall>();
 
+    if (cd == nullptr) return false;
     if (this->InterfaceIsDirtyNoReset()) {
         os->setDirty();
+    }
+    if (this->datahash != cd->DataHash()) {
+        os->SetDataHash(cd->DataHash());
     }
     return true;
 }
