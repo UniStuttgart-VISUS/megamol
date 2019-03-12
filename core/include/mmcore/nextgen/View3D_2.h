@@ -158,7 +158,7 @@ public:
 protected:
     /**
      * This method determines the file path the camera file should have
-     * 
+     *
      * @return The file path of the camera file as string
      */
     std::string determineCameraFilePath(void) const;
@@ -272,18 +272,6 @@ protected:
     /** Slot to call the renderer to render */
     CallerSlot rendererSlot;
 
-#ifdef _WIN32
-#    pragma warning(disable : 4251)
-#endif /* _WIN32 */
-    /** The light direction vector (NOT LIGHT POSITION) */
-    vislib::graphics::SceneSpaceVector3D lightDir;
-#ifdef _WIN32
-#    pragma warning(default : 4251)
-#endif /* _WIN32 */
-
-    /** flag whether or not the light is a camera relative light */
-    bool isCamLight;
-
     /** Flag showing the look at point */
     param::ParamSlot showLookAt;
 
@@ -311,32 +299,11 @@ protected:
      */
     bool firstImg;
 
-    /**
-     * Flag whether the light is relative to the camera or to the world
-     * coordinate system
-     */
-    param::ParamSlot isCamLightSlot;
-
-    /** Direction vector of the light */
-    param::ParamSlot lightDirSlot;
-
-    /** Diffuse light colour */
-    param::ParamSlot lightColDifSlot;
-
-    /** Ambient light colour */
-    param::ParamSlot lightColAmbSlot;
-
     /** focus distance for stereo projection */
     param::ParamSlot stereoFocusDistSlot;
 
     /** eye distance for stereo projection */
     param::ParamSlot stereoEyeDistSlot;
-
-    /** The diffuse light colour */
-    float lightColDif[4];
-
-    /** The ambient light colour */
-    float lightColAmb[4];
 
     /** The incoming call */
     view::AbstractCallRender* overrideCall;
