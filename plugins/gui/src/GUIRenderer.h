@@ -10,7 +10,7 @@
  *
  * - Fix drawing order/depth handling of bbox (currently front of bbox is drawn on top of everything)
  * - Fix x and y transformation by View2D class (will be fixed when new CallRender is available)
- *
+ * - Fix lost keyboard/mouse input for low frame rates
  *
  * USED HOKEYS:
  *
@@ -59,7 +59,8 @@
 
 #include <algorithm> // sort
 #include <iomanip>   // setprecision
-#include <sstream>   // stringstream
+#include <map>
+#include <sstream> // stringstream
 
 #ifdef _WIN32
 #    include <filesystem> // directory_iterator
@@ -350,21 +351,31 @@ private:
      */
     void shutdown(void);
 
+    // DEMO -------------------------------------------------------------------
+
+    /**
+     * Callback for drawing the demo window.
+     *
+     * @param win_label  The label of the calling window.
+     *
+     */
+    void drawDemoWindowCallback(std::string win_label);
+
     /**
      * Draw a transfer function widget.
      */
     bool TransFuncWidget(void);
 
     std::vector<std::array<float, 5>> tf_cols;
-    size_t tf_interpol = 0;
-    int tf_modstate = 0;
-    size_t tf_tex_size = 128;
-    bool tf_chan_red = false;
-    bool tf_chan_green = false;
-    bool tf_chan_blue = false;
-    bool tf_chan_alpha = true;
-    int p_selected_node = 0;
-    int p_selected_chan = 0;
+    enum InterpolOpts { LINEAR = 0, GAUSS = 1 };
+    InterpolOpts tf_interpol;
+    size_t tf_tex_size;
+    bool tf_chan_red;
+    bool tf_chan_green;
+    bool tf_chan_blue;
+    bool tf_chan_alpha;
+    unsigned int tf_point_select_node;
+    unsigned int tf_point_select_chan;
 
     // ------------------------------------------------------------------------
 };
@@ -400,7 +411,18 @@ inline GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIR
     , font_new_load(false)
     , font_new_filename()
     , font_new_size(13.0f)
-    , inst_name() {
+    , inst_name()
+    , tf_cols()
+    , tf_interpol(InterpolOpts::LINEAR)
+    , tf_tex_size(128)
+    , tf_chan_red(false)
+    , tf_chan_green(false)
+    , tf_chan_blue(false)
+    , tf_chan_alpha(true)
+    , tf_point_select_node(0)
+    , tf_point_select_chan(0)
+
+{
 
     // InputCall
     // this->splitview_slot.SetCallback(core::view::CallGUIRenderer::ClassName(),
@@ -455,7 +477,16 @@ inline GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GUIR
     , font_new_load(false)
     , font_new_filename()
     , font_new_size(13.0f)
-    , inst_name() {
+    , inst_name()
+    , tf_cols()
+    , tf_interpol(InterpolOpts::LINEAR)
+    , tf_tex_size(128)
+    , tf_chan_red(false)
+    , tf_chan_green(false)
+    , tf_chan_blue(false)
+    , tf_chan_alpha(true)
+    , tf_point_select_node(0)
+    , tf_point_select_chan(0) {
 
     // InputCall
     // this->splitview_slot.SetCallback(core::view::CallGUIRenderer::ClassName(),
@@ -562,6 +593,15 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
     tmp_win.hotkey = core::view::KeyCode(core::view::Key::KEY_F10);
     tmp_win.flags = ImGuiWindowFlags_AlwaysAutoResize;
     tmp_win.func = &GUIRenderer<M, C>::drawFontSelectionWindowCallback;
+    tmp_win.param_main = false;
+    this->windows.push_back(tmp_win);
+
+    // Demo Window --------------------------------------------------
+    tmp_win.label = "Demo";
+    tmp_win.show = false;
+    tmp_win.hotkey = core::view::KeyCode(core::view::Key::KEY_F9);
+    tmp_win.flags = ImGuiWindowFlags_HorizontalScrollbar;
+    tmp_win.func = &GUIRenderer<M, C>::drawDemoWindowCallback;
     tmp_win.param_main = false;
     this->windows.push_back(tmp_win);
 
@@ -1112,12 +1152,6 @@ template <class M, class C> void GUIRenderer<M, C>::drawMainWindowCallback(std::
     std::string color_param_help = "[Hover] Parameter for Description Tooltip\n[Right-Click] for Context Menu\n[Drag & "
                                    "Drop] Module's Parameters to other Parameter Window";
     this->helpMarkerToolTip(color_param_help);
-
-    std::vector<float> tf_tex_data;
-    std::vector<ImVec4> tf_cols;
-
-    // if (this->TransFuncWidget()) {
-    //}
 
     this->drawParametersCallback(win_label);
 }
@@ -1820,6 +1854,15 @@ template <class M, class C> void GUIRenderer<M, C>::shutdown(void) {
 
 
 /**
+ * GUIRenderer<M, C>::drawDemoWindowCallback
+ */
+template <class M, class C> void GUIRenderer<M, C>::drawDemoWindowCallback(std::string win_label) {
+
+    if (this->TransFuncWidget()) {
+    }
+}
+
+/**
  * GUIRenderer<M, C>::drawTransFuncWidget
  */
 template <class M, class C> bool GUIRenderer<M, C>::TransFuncWidget(void) {
@@ -1829,7 +1872,7 @@ template <class M, class C> bool GUIRenderer<M, C>::TransFuncWidget(void) {
     ImGuiStyle& style = ImGui::GetStyle();
     bool retval = false;
 
-    float tfw_height = 30.0f;
+    float tfw_height = 27.0f;
     ImGui::BeginChild("fransfer_function_widget", ImVec2(0.0, ImGui::GetFontSize() * tfw_height), true);
     float tfw_item_width = ImGui::GetContentRegionAvailWidth() * 0.75f;
     ImGui::PushItemWidth(tfw_item_width); // set general proportional item width
@@ -1840,9 +1883,9 @@ template <class M, class C> bool GUIRenderer<M, C>::TransFuncWidget(void) {
     // Init colors
     if (this->tf_cols.size() < 3) {
         this->tf_cols.clear();
-        std::array<float, 5> zero = {1.0f, 0.0f, 0.0f, 1.0f, 0.0f};
-        std::array<float, 5> half = {0.5f, 0.9f, 0.5f, 0.5f, 0.5f};
-        std::array<float, 5> one = {0.0f, 1.0f, 1.0f, 1.0f, 1.0f};
+        std::array<float, 5> zero = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+        std::array<float, 5> half = {0.5f, 0.5f, 0.5f, 0.5f, 0.5f};
+        std::array<float, 5> one = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
         this->tf_cols.push_back(zero);
         this->tf_cols.push_back(half);
         this->tf_cols.push_back(one);
@@ -1865,74 +1908,92 @@ template <class M, class C> bool GUIRenderer<M, C>::TransFuncWidget(void) {
     ImVec2 canvas_size = ImVec2(tfw_item_width, 150.0f);
     if (canvas_size.x < 50.0f) canvas_size.x = 50.0f;
     if (canvas_size.y < 50.0f) canvas_size.y = 50.0f;
-    ImVec2 cmp = io.MousePos;   // current mouse position
-    ImVec2 cmd = io.MouseDelta; // current mouse delta
+    ImVec2 mouse_cur_pos = io.MousePos; // current mouse position
+    ImVec2 cmd = io.MouseDelta;         // current mouse delta
 
-    ImU32 frmBkgdCol = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_FrameBg]);
-    ImU32 frmBrdrCol = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Border]);
+    ImVec4 tmp_frame_back_col = style.Colors[ImGuiCol_FrameBg];
+    tmp_frame_back_col.w = 1.0f;
+    ImU32 frame_back_col = ImGui::ColorConvertFloat4ToU32(tmp_frame_back_col);
+    ImU32 frame_border_col = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Border]);
 
     draw_list->AddRectFilledMultiColor(canvas_pos, ImVec2(canvas_pos.x + canvas_size.x, canvas_pos.y + canvas_size.y),
-        frmBkgdCol, frmBkgdCol, frmBkgdCol, frmBkgdCol);
-    draw_list->AddRect(canvas_pos, ImVec2(canvas_pos.x + canvas_size.x, canvas_pos.y + canvas_size.y), frmBrdrCol);
+        frame_back_col, frame_back_col, frame_back_col, frame_back_col);
+    draw_list->AddRect(
+        canvas_pos, ImVec2(canvas_pos.x + canvas_size.x, canvas_pos.y + canvas_size.y), frame_border_col);
 
     draw_list->PushClipRect(canvas_pos, ImVec2(canvas_pos.x + canvas_size.x, canvas_pos.y + canvas_size.y),
         true); // clip lines within the canvas (if we resize it, etc.)
 
-    const float p_radius = 9.0f;
-    const float p_border = 3.0f;
+
+    const float point_radius = 10.0f;
+    const float point_border = 4.0f;
+    const int circle_subdiv = 12;
     int selected_node = -1;
     int selected_chan = -1;
     for (int i = 0; i < this->tf_cols.size(); ++i) {
-        ImU32 d_color = ImGui::ColorConvertFloat4ToU32(
+        ImU32 point_col = ImGui::ColorConvertFloat4ToU32(
             ImVec4(this->tf_cols[i][0], this->tf_cols[i][1], this->tf_cols[i][2], this->tf_cols[i][3]));
 
         // For each color channel
+        ImU32 line_col = IM_COL32(255, 255, 255, 255);
         for (int c = 0; c < 4; ++c) {
             switch (c) {
             case (0):
                 if (!this->tf_chan_red) {
                     continue;
                 }
+                line_col = IM_COL32(255, 0, 0, 255);
                 break;
             case (1):
                 if (!this->tf_chan_green) {
                     continue;
                 }
+                line_col = IM_COL32(0, 255, 0, 255);
                 break;
             case (2):
                 if (!this->tf_chan_blue) {
                     continue;
                 }
+                line_col = IM_COL32(0, 0, 255, 255);
                 break;
             case (3):
                 if (!this->tf_chan_alpha) {
                     continue;
                 }
+                line_col = IM_COL32(255, 255, 255, 255);
                 break;
             }
 
-            ImVec2 p_cur_pos = ImVec2(canvas_pos.x + this->tf_cols[i][4] * canvas_size.x,
+            ImVec2 point_cur_pos = ImVec2(canvas_pos.x + this->tf_cols[i][4] * canvas_size.x,
                 canvas_pos.y + (1.0f - this->tf_cols[i][c]) * canvas_size.y);
 
             if (i < (this->tf_cols.size() - 1)) {
-                ImVec2 p_nxt_pos = ImVec2(canvas_pos.x + this->tf_cols[i + 1][4] * canvas_size.x,
+                ImVec2 point_next_pos = ImVec2(canvas_pos.x + this->tf_cols[i + 1][4] * canvas_size.x,
                     canvas_pos.y + (1.0f - this->tf_cols[i + 1][c]) * canvas_size.y);
 
-                draw_list->AddLine(p_cur_pos, p_nxt_pos, d_color, 5.0f);
+                if (this->tf_interpol == InterpolOpts::LINEAR) {
+                    draw_list->AddLine(point_cur_pos, point_next_pos, line_col, 4.0f);
+                } else if (this->tf_interpol == InterpolOpts::GAUSS) {
+                    // TODO: Implement ...
+                }
             }
 
-            ImU32 p_border_col = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Border]);
-            if (i == this->p_selected_node) {
-                p_border_col = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ButtonActive]);
+            ImU32 point_border_col = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_TextDisabled]);
+            if (i == this->tf_point_select_node) {
+                point_border_col = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ButtonActive]);
             }
 
-            draw_list->AddCircle(p_cur_pos, (p_radius + p_border - 1.0f), p_border_col, 12, p_border);
-            draw_list->AddCircleFilled(p_cur_pos, p_radius, d_color, 12);
+            draw_list->AddCircleFilled(point_cur_pos, point_radius, frame_back_col, circle_subdiv);
+            draw_list->AddCircle(
+                point_cur_pos, (point_radius + point_border - 2.0f), point_border_col, circle_subdiv, point_border);
+            draw_list->AddCircleFilled(point_cur_pos, point_radius, point_col, 12);
 
-            ImVec2 deltav = ImVec2(p_cur_pos.x - cmp.x, p_cur_pos.y - cmp.y);
-            if (std::sqrtf((deltav.x * deltav.x) + (deltav.y * deltav.y)) <= p_radius) {
+            ImVec2 delta_vec = ImVec2(point_cur_pos.x - mouse_cur_pos.x, point_cur_pos.y - mouse_cur_pos.y);
+            if (std::sqrtf((delta_vec.x * delta_vec.x) + (delta_vec.y * delta_vec.y)) <= point_radius) {
+                // if ((selected_node != this->tf_point_select_node) && (selected_chan != this->tf_point_select_chan)) {
                 selected_node = i;
                 selected_chan = c;
+                //}
             }
         }
     }
@@ -1940,62 +2001,80 @@ template <class M, class C> bool GUIRenderer<M, C>::TransFuncWidget(void) {
 
     ImGui::InvisibleButton("plot", canvas_size);
     bool sort_required = false;
-    ImVec2 ds = style.ItemSpacing; // delta space around canvas
-    if ((cmp.x > (canvas_pos.x - ds.x)) && (cmp.y > (canvas_pos.y - ds.y)) &&
-        (cmp.x < (canvas_pos.x + canvas_size.x + ds.x)) && (cmp.y < (canvas_pos.y + canvas_size.y + ds.y))) {
+    ImVec2 delta_border = style.ItemInnerSpacing;
+    if ((mouse_cur_pos.x > (canvas_pos.x - delta_border.x)) && (mouse_cur_pos.y > (canvas_pos.y - delta_border.y)) &&
+        (mouse_cur_pos.x < (canvas_pos.x + canvas_size.x + delta_border.x)) &&
+        (mouse_cur_pos.y < (canvas_pos.y + canvas_size.y + delta_border.y))) {
 
-        if (io.MouseDown[0]) { // Left Move -> Move selecteed node
+        if (io.MouseClicked[0]) { // Left Click -> Change selected node selecteed node
             if (selected_node >= 0) {
-                this->p_selected_node = selected_node;
-                this->p_selected_chan = selected_chan;
+                this->tf_point_select_node = selected_node;
+                this->tf_point_select_chan = selected_chan;
+            }
+        } else if (io.MouseDown[0]) { // Left Move -> Move selecteed node
+
+            float new_x = (mouse_cur_pos.x - canvas_pos.x) / canvas_size.x;
+            new_x = std::max(0.0f, std::min(new_x, 1.0f));
+            if (this->tf_point_select_node == 0) {
+                new_x = 0.0f;
+            } else if (this->tf_point_select_node == (this->tf_cols.size() - 1)) {
+                new_x = 1.0f;
+            } else if ((new_x <= this->tf_cols[this->tf_point_select_node - 1][4]) ||
+                       (new_x >= this->tf_cols[this->tf_point_select_node + 1][4])) {
+                new_x = this->tf_cols[this->tf_point_select_node][4];
+            }
+            this->tf_cols[this->tf_point_select_node][4] = new_x;
+
+            float new_y = 1.0f - ((mouse_cur_pos.y - canvas_pos.y) / canvas_size.y);
+            new_y = std::max(0.0f, std::min(new_y, 1.0f));
+
+            if (this->tf_chan_red && (this->tf_point_select_chan == 0)) {
+                this->tf_cols[this->tf_point_select_node][0] = new_y;
+            }
+            if (this->tf_chan_green && (this->tf_point_select_chan == 1)) {
+                this->tf_cols[this->tf_point_select_node][1] = new_y;
+            }
+            if (this->tf_chan_blue && (this->tf_point_select_chan == 2)) {
+                this->tf_cols[this->tf_point_select_node][2] = new_y;
+            }
+            if (this->tf_chan_alpha && (this->tf_point_select_chan == 3)) {
+                this->tf_cols[this->tf_point_select_node][3] = new_y;
             }
 
-            float tmp_pos_x = (cmp.x - canvas_pos.x) / canvas_size.x;
-            tmp_pos_x = std::max(0.0f, std::min(tmp_pos_x, 1.0f));
-            if (this->p_selected_node == 0) {
-                tmp_pos_x = 0.0f;
-            } else if (this->p_selected_node == (this->tf_cols.size() - 1)) {
-                tmp_pos_x = 1.0f;
-            }
-            this->tf_cols[this->p_selected_node][4] = tmp_pos_x;
+            // std::stringstream value_stream;
+            // value_stream << std::setprecision(3); //<< std::setw(7)
+            // value_stream << this->tf_cols[this->tf_point_select_node][4];
+            // std::string value = value_stream.str();
+            // this->hoverToolTip(value);
 
-            float tmp_pos_y = 1.0f - ((cmp.y - canvas_pos.y) / canvas_size.y);
-            tmp_pos_y = std::max(0.0f, std::min(tmp_pos_y, 1.0f));
-
-            if (this->tf_chan_red && (this->p_selected_chan == 0)) {
-                this->tf_cols[this->p_selected_node][0] = tmp_pos_y;
-            }
-            if (this->tf_chan_green && (this->p_selected_chan == 1)) {
-                this->tf_cols[this->p_selected_node][1] = tmp_pos_y;
-            }
-            if (this->tf_chan_blue && (this->p_selected_chan == 2)) {
-                this->tf_cols[this->p_selected_node][2] = tmp_pos_y;
-            }
-            if (this->tf_chan_alpha && (this->p_selected_chan == 3)) {
-                this->tf_cols[this->p_selected_node][3] = tmp_pos_y;
-            }
             sort_required = true;
 
         } else if (io.MouseClicked[1]) { // Right Click -> Add/delete Node
 
             if (selected_node < 0) { // Add new at current position
-                float tmp_pos_x = (cmp.x - canvas_pos.x) / canvas_size.x;
-                tmp_pos_x = std::max(0.0f, std::min(tmp_pos_x, 1.0f));
+                float new_x = (mouse_cur_pos.x - canvas_pos.x) / canvas_size.x;
+                new_x = std::max(0.0f, std::min(new_x, 1.0f));
 
-                float tmp_pos_y = 1.0f - ((cmp.y - canvas_pos.y) / canvas_size.y);
-                tmp_pos_y = std::max(0.0f, std::min(tmp_pos_y, 1.0f));
+                float new_y = 1.0f - ((mouse_cur_pos.y - canvas_pos.y) / canvas_size.y);
+                new_y = std::max(0.0f, std::min(new_y, 1.0f));
 
-                std::array<float, 5> col = {1.0f, 0.0f, 1.0f, tmp_pos_y, tmp_pos_x}; // TODO: Interpolate Color
                 for (auto it = this->tf_cols.begin(); it != this->tf_cols.end(); ++it) {
-                    if (tmp_pos_x < (*it)[4]) {
-                        this->tf_cols.insert(it, col);
+                    if (new_x < (*it)[4]) {
+                        // New nodes can only be inserted between two exisintng ones,
+                        // so there is always a node before and after
+                        std::array<float, 5> prev_col = (*(it - 1));
+                        std::array<float, 5> fol_col = (*it);
+                        // Linear interpolation for new color in between
+                        std::array<float, 5> new_col = {(prev_col[0] + fol_col[0]) / 2.0f,
+                            (prev_col[1] + fol_col[1]) / 2.0f, (prev_col[2] + fol_col[2]) / 2.0f, new_y, new_x};
+                        this->tf_cols.insert(it, new_col);
                         break;
                     }
                 }
             } else { // Delete currently hovered
                 if ((selected_node > 0) && (selected_node < (this->tf_cols.size() - 1))) {
                     this->tf_cols.erase(this->tf_cols.begin() + selected_node);
-                    this->p_selected_node = std::max(0, this->p_selected_node - 1);
+                    this->tf_point_select_node = (unsigned int)std::max(0, (int)this->tf_point_select_node - 1);
                 }
             }
             sort_required = true;
@@ -2009,24 +2088,46 @@ template <class M, class C> bool GUIRenderer<M, C>::TransFuncWidget(void) {
     ImGui::Text("Plot");
     this->helpMarkerToolTip("[Left-Click] Select Node\n[Left-Drag] Mode Node\n[Right-Click] Add/Delete Node");
 
-    // Edit Color of selected node
-    float col[4] = {this->tf_cols[this->p_selected_node][0], this->tf_cols[this->p_selected_node][1],
-        this->tf_cols[this->p_selected_node][2], this->tf_cols[this->p_selected_node][3]};
-    if (ImGui::ColorEdit4("Selected Color", col)) {
-        this->tf_cols[this->p_selected_node][0] = col[0];
-        this->tf_cols[this->p_selected_node][1] = col[1];
-        this->tf_cols[this->p_selected_node][2] = col[2];
-        this->tf_cols[this->p_selected_node][3] = col[3];
+    // Value slider
+    float value = this->tf_cols[this->tf_point_select_node][4];
+    if (ImGui::SliderFloat("Selected Value", &value, 0.0f, 1.0f)) {
+        float new_x = value;
+        new_x = std::max(0.0f, std::min(new_x, 1.0f));
+        if (this->tf_point_select_node == 0) {
+            new_x = 0.0f;
+        } else if (this->tf_point_select_node == (this->tf_cols.size() - 1)) {
+            new_x = 1.0f;
+        } else if ((new_x <= this->tf_cols[this->tf_point_select_node - 1][4]) ||
+                   (new_x >= this->tf_cols[this->tf_point_select_node + 1][4])) {
+            new_x = this->tf_cols[this->tf_point_select_node][4];
+        }
+        this->tf_cols[this->tf_point_select_node][4] = new_x;
     }
+    std::string help = "[Ctrl-Click] for keyboard input";
+    this->helpMarkerToolTip(help);
+
+    // Edit Color of selected node
+    float edit_col[4] = {this->tf_cols[this->tf_point_select_node][0], this->tf_cols[this->tf_point_select_node][1],
+        this->tf_cols[this->tf_point_select_node][2], this->tf_cols[this->tf_point_select_node][3]};
+    if (ImGui::ColorEdit4("Selected Color", edit_col)) {
+        this->tf_cols[this->tf_point_select_node][0] = edit_col[0];
+        this->tf_cols[this->tf_point_select_node][1] = edit_col[1];
+        this->tf_cols[this->tf_point_select_node][2] = edit_col[2];
+        this->tf_cols[this->tf_point_select_node][3] = edit_col[3];
+    }
+    help = "[Click] on the colored square to open a color picker.\n"
+           "[CTRL+Click] on individual component to input value.\n"
+           "[Right-Click] on the individual color widget to show options.";
+    this->helpMarkerToolTip(help);
 
     // Select interpolation mode (Linear, Gauss, ...)
-    std::array<std::string, 2> interpol_opts;
-    interpol_opts[0] = "Linear";
-    interpol_opts[1] = "Gauss";
-    if (ImGui::BeginCombo("Interpolation", interpol_opts[this->tf_interpol].c_str())) {
-        for (size_t i = 0; i < interpol_opts.size(); ++i) {
-            if (ImGui::Selectable(interpol_opts[i].c_str(), (this->tf_interpol == i))) {
-                this->tf_interpol = i;
+    std::map<InterpolOpts, std::string> opts;
+    opts[InterpolOpts::LINEAR] = "Linear";
+    opts[InterpolOpts::GAUSS] = "Gauss";
+    if (ImGui::BeginCombo("Interpolation", opts[this->tf_interpol].c_str())) {
+        for (int i = 0; i < opts.size(); ++i) {
+            if (ImGui::Selectable(opts[(InterpolOpts)i].c_str(), (this->tf_interpol == (InterpolOpts)i))) {
+                this->tf_interpol = (InterpolOpts)i;
             }
         }
         ImGui::EndCombo();
@@ -2042,7 +2143,7 @@ template <class M, class C> bool GUIRenderer<M, C>::TransFuncWidget(void) {
     size_t col_cnt = this->tf_cols.size();
     float r, g, b, a;
     // CHOOSE LINEAR INTERPOLATION
-    if (this->tf_interpol == 0) {
+    if (this->tf_interpol == InterpolOpts::LINEAR) {
         for (size_t i = 0; i < col_cnt; ++i) {
             cx1 = cx2;
             p1 = p2;
@@ -2063,6 +2164,8 @@ template <class M, class C> bool GUIRenderer<M, C>::TransFuncWidget(void) {
                 tex_cols[p] = ImVec4(r, g, b, a);
             }
         }
+    } else if (this->tf_interpol == InterpolOpts::GAUSS) {
+        // TODO: Implement ....
     }
     // Draw current transfer function texture
     const float texture_height = 30.0f;
@@ -2070,9 +2173,7 @@ template <class M, class C> bool GUIRenderer<M, C>::TransFuncWidget(void) {
     ImVec2 rect_size = ImVec2(tfw_item_width / (float)this->tf_tex_size, texture_height);
     ImGui::InvisibleButton("texture", ImVec2(tfw_item_width, rect_size.y));
     for (int i = 0; i < this->tf_tex_size; ++i) {
-
         ImU32 rect_col = ImGui::ColorConvertFloat4ToU32(tex_cols[i]);
-
         ImVec2 rect_pos_a = ImVec2(texture_pos.x + (float)i * rect_size.x, texture_pos.y);
         ImVec2 rect_pos_b = ImVec2(rect_pos_a.x + rect_size.x, rect_pos_a.y + rect_size.y);
         draw_list->AddRectFilled(rect_pos_a, rect_pos_b, rect_col, 0.0f, 10);
@@ -2081,7 +2182,7 @@ template <class M, class C> bool GUIRenderer<M, C>::TransFuncWidget(void) {
     // Get texture size
     int tfw_texsize = (int)this->tf_tex_size;
     if (ImGui::InputInt("Texture Size", &tfw_texsize, 1, 10, ImGuiInputTextFlags_EnterReturnsTrue)) {
-        this->tf_tex_size = std::max(1, tfw_texsize);
+        this->tf_tex_size = (size_t)std::max(1, tfw_texsize);
     }
 
     // Apply current changes
