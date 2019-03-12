@@ -1,24 +1,27 @@
 /*
-* OSPRayQuadLight.cpp
-* Copyright (C) 2009-2017 by MegaMol Team
-* Alle Rechte vorbehalten.
-*/
+ * QuadLight.cpp
+ * Copyright (C) 2009-2017 by MegaMol Team
+ * Alle Rechte vorbehalten.
+ */
 
 #include "stdafx.h"
-#include "OSPRayQuadLight.h"
-#include "mmcore/param/FloatParam.h"
+#include "mmcore/view/light/QuadLight.h"
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/param/FloatParam.h"
 #include "mmcore/param/Vector3fParam.h"
 
-using namespace megamol::ospray;
+using namespace megamol::core::view::light;
 
-
-OSPRayQuadLight::OSPRayQuadLight(void) :
-    AbstractOSPRayLight(),
+/*
+ * megamol::core::view::light::QuadLight::QuadLight
+ */
+QuadLight::QuadLight(void)
+    : AbstractLight()
+    ,
     // quad light parameters
-    ql_position("Position", ""),
-    ql_edgeOne("Edge1", ""),
-    ql_edgeTwo("Edge2", "") {
+    ql_position("Position", "")
+    , ql_edgeOne("Edge1", "")
+    , ql_edgeTwo("Edge2", "") {
 
     // quad light
     this->ql_position << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(1.0f, 0.0f, 0.0f));
@@ -27,15 +30,17 @@ OSPRayQuadLight::OSPRayQuadLight(void) :
     this->MakeSlotAvailable(&this->ql_position);
     this->MakeSlotAvailable(&this->ql_edgeOne);
     this->MakeSlotAvailable(&this->ql_edgeTwo);
-
 }
 
-OSPRayQuadLight::~OSPRayQuadLight(void) {
-    this->Release();
-}
+/*
+ * megamol::core::view::light::QuadLight::~QuadLight
+ */
+QuadLight::~QuadLight(void) { this->Release(); }
 
-
-void OSPRayQuadLight::readParams() {
+/*
+ * megamol::core::view::light::QuadLight::readParams
+ */
+void QuadLight::readParams() {
     lightContainer.lightType = lightenum::QUADLIGHT;
     auto lcolor = this->lightColor.Param<core::param::Vector3fParam>()->Value().PeekComponents();
     lightContainer.lightColor.assign(lcolor, lcolor + 3);
@@ -49,12 +54,12 @@ void OSPRayQuadLight::readParams() {
     lightContainer.ql_edgeTwo.assign(ql_e2, ql_e2 + 3);
 }
 
-bool OSPRayQuadLight::InterfaceIsDirty() {
-    if (this->AbstractIsDirty() ||
-        this->ql_position.IsDirty() ||
-        this->ql_edgeOne.IsDirty() ||
-        this->ql_edgeTwo.IsDirty() 
-        ) {
+/*
+ * megamol::core::view::light::QuadLight::InterfaceIsDirty
+ */
+bool QuadLight::InterfaceIsDirty() {
+    if (this->AbstractIsDirty() || this->ql_position.IsDirty() || this->ql_edgeOne.IsDirty() ||
+        this->ql_edgeTwo.IsDirty()) {
         this->ql_position.ResetDirty();
         this->ql_edgeOne.ResetDirty();
         this->ql_edgeTwo.ResetDirty();

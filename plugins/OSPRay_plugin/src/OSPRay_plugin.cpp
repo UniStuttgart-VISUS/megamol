@@ -23,14 +23,6 @@
 #include "OSPRay_plugin/CallOSPRayStructure.h"
 #include "OSPRay_plugin/CallOSPRayAPIObject.h"
 
-#include "OSPRayDistantLight.h"
-#include "OSPRayAmbientLight.h"
-#include "OSPRayPointLight.h"
-#include "OSPRaySpotLight.h"
-#include "OSPRayQuadLight.h"
-#include "OSPRayHDRILight.h"
-#include "CallOSPRayLight.h"
-
 #include "OSPRayOBJMaterial.h"
 #include "OSPRayLuminousMaterial.h"
 #include "OSPRayVelvetMaterial.h"
@@ -81,13 +73,6 @@ namespace {
                this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayAPIStructure>();
                this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayLineGeometry>();
 
-               this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayDistantLight>();
-               this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayAmbientLight>();
-               this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayPointLight>();
-               this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRaySpotLight>();
-               this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayQuadLight>();
-               this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayHDRILight>();
-
                this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayOBJMaterial>();
                this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayLuminousMaterial>();
                this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayVelvetMaterial>();
@@ -105,7 +90,6 @@ namespace {
 
             // register calls here:
 
-               this->call_descriptions.RegisterAutoDescription<megamol::ospray::CallOSPRayLight>();
                this->call_descriptions.RegisterAutoDescription<megamol::ospray::CallOSPRayStructure>();
                this->call_descriptions.RegisterAutoDescription<megamol::ospray::CallOSPRayAPIObject>();
                this->call_descriptions.RegisterAutoDescription<megamol::ospray::CallOSPRayMaterial>();

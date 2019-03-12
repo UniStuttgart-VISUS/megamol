@@ -1,24 +1,27 @@
 /*
-* OSPRayHDRILight.cpp
-* Copyright (C) 2009-2017 by MegaMol Team
-* Alle Rechte vorbehalten.
-*/
+ * HDRILight.cpp
+ * Copyright (C) 2009-2017 by MegaMol Team
+ * Alle Rechte vorbehalten.
+ */
 
 #include "stdafx.h"
-#include "OSPRayHDRILight.h"
-#include "mmcore/param/FloatParam.h"
+#include "mmcore/view/light/HDRILight.h"
 #include "mmcore/param/FilePathParam.h"
+#include "mmcore/param/FloatParam.h"
 #include "mmcore/param/Vector3fParam.h"
 
-using namespace megamol::ospray;
+using namespace megamol::core::view::light;
 
-
-OSPRayHDRILight::OSPRayHDRILight(void) :
-    AbstractOSPRayLight(),
+/*
+ * megamol::core::view::light::HDRILight::HDRILight
+ */
+HDRILight::HDRILight(void)
+    : AbstractLight()
+    ,
     // hdri light parameteres
-    hdri_up("up", ""),
-    hdri_direction("Direction", ""),
-    hdri_evnfile("EvironmentFile", "") {
+    hdri_up("up", "")
+    , hdri_direction("Direction", "")
+    , hdri_evnfile("EvironmentFile", "") {
 
     // HDRI light
     this->hdri_up << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(0.0f, 1.0f, 0.0f));
@@ -27,15 +30,17 @@ OSPRayHDRILight::OSPRayHDRILight(void) :
     this->MakeSlotAvailable(&this->hdri_up);
     this->MakeSlotAvailable(&this->hdri_direction);
     this->MakeSlotAvailable(&this->hdri_evnfile);
-
 }
 
-OSPRayHDRILight::~OSPRayHDRILight(void) {
-    this->Release();
-}
+/*
+ * megamol::core::view::light::HDRILight::~HDRILight
+ */
+HDRILight::~HDRILight(void) { this->Release(); }
 
-
-void OSPRayHDRILight::readParams() {
+/*
+ * megamol::core::view::light::HDRILight::readParams
+ */
+void HDRILight::readParams() {
     lightContainer.lightType = lightenum::HDRILIGHT;
     auto lcolor = this->lightColor.Param<core::param::Vector3fParam>()->Value().PeekComponents();
     lightContainer.lightColor.assign(lcolor, lcolor + 3);
@@ -48,12 +53,12 @@ void OSPRayHDRILight::readParams() {
     lightContainer.hdri_evnfile = this->hdri_evnfile.Param<core::param::FilePathParam>()->Value();
 }
 
-bool OSPRayHDRILight::InterfaceIsDirty() {
-    if (this->AbstractIsDirty() ||
-        this->hdri_up.IsDirty() ||
-        this->hdri_direction.IsDirty() ||
-        this->hdri_evnfile.IsDirty()
-        ) {
+/*
+ * megamol::core::view::light::HDRILight::InterfaceIsDirty
+ */
+bool HDRILight::InterfaceIsDirty() {
+    if (this->AbstractIsDirty() || this->hdri_up.IsDirty() || this->hdri_direction.IsDirty() ||
+        this->hdri_evnfile.IsDirty()) {
         this->hdri_up.ResetDirty();
         this->hdri_direction.ResetDirty();
         this->hdri_evnfile.ResetDirty();

@@ -62,7 +62,7 @@ AbstractOSPRayRenderer::AbstractOSPRayRenderer(void)
 
     // ospray lights
     lightsToRender = NULL;
-    this->getLightSlot.SetCompatibleCall<ospray::CallOSPRayLightDescription>();
+    this->getLightSlot.SetCompatibleCall<core::view::light::CallLightDescription>();
     this->MakeSlotAvailable(&this->getLightSlot);
     // ospray device and framebuffer
     device = NULL;
@@ -468,10 +468,10 @@ void AbstractOSPRayRenderer::fillLightArray(float* eyeDir) {
         auto const& lc = entry.second;
 
         switch (lc.lightType) {
-        case ospray::lightenum::NONE:
+        case core::view::light::lightenum::NONE:
             light = NULL;
             break;
-        case ospray::lightenum::DISTANTLIGHT:
+        case core::view::light::lightenum::DISTANTLIGHT:
             light = ospNewLight(this->renderer, "distant");
             if (lc.dl_eye_direction == true) {
                 ospSet3fv(light, "direction", eyeDir);
@@ -480,12 +480,12 @@ void AbstractOSPRayRenderer::fillLightArray(float* eyeDir) {
             }
             ospSet1f(light, "angularDiameter", lc.dl_angularDiameter);
             break;
-        case ospray::lightenum::POINTLIGHT:
+        case core::view::light::lightenum::POINTLIGHT:
             light = ospNewLight(this->renderer, "point");
             ospSet3fv(light, "position", lc.pl_position.data());
             ospSet1f(light, "radius", lc.pl_radius);
             break;
-        case ospray::lightenum::SPOTLIGHT:
+        case core::view::light::lightenum::SPOTLIGHT:
             light = ospNewLight(this->renderer, "spot");
             ospSet3fv(light, "position", lc.sl_position.data());
             ospSet3fv(light, "direction", lc.sl_direction.data());
@@ -493,13 +493,13 @@ void AbstractOSPRayRenderer::fillLightArray(float* eyeDir) {
             ospSet1f(light, "penumbraAngle", lc.sl_penumbraAngle);
             ospSet1f(light, "radius", lc.sl_radius);
             break;
-        case ospray::lightenum::QUADLIGHT:
+        case core::view::light::lightenum::QUADLIGHT:
             light = ospNewLight(this->renderer, "quad");
             ospSet3fv(light, "position", lc.ql_position.data());
             ospSet3fv(light, "edge1", lc.ql_edgeOne.data());
             ospSet3fv(light, "edge2", lc.ql_edgeTwo.data());
             break;
-        case ospray::lightenum::HDRILIGHT:
+        case core::view::light::lightenum::HDRILIGHT:
             light = ospNewLight(this->renderer, "hdri");
             ospSet3fv(light, "up", lc.hdri_up.data());
             ospSet3fv(light, "dir", lc.hdri_direction.data());
@@ -508,7 +508,7 @@ void AbstractOSPRayRenderer::fillLightArray(float* eyeDir) {
                 ospSetObject(this->renderer, "backplate", hdri_tex);
             }
             break;
-        case ospray::lightenum::AMBIENTLIGHT:
+        case core::view::light::lightenum::AMBIENTLIGHT:
             light = ospNewLight(this->renderer, "ambient");
             break;
         }

@@ -74,6 +74,12 @@
 #include "mmcore/moldyn/DynDensityGradientEstimator.h"
 #include "job/PluginsStateFileGeneratorJob.h"
 #include "mmcore/utility/LuaHostSettingsModule.h"
+#include "mmcore/view/light/AmbientLight.h"
+#include "mmcore/view/light/DistantLight.h"
+#include "mmcore/view/light/HDRILight.h"
+#include "mmcore/view/light/PointLight.h"
+#include "mmcore/view/light/QuadLight.h"
+#include "mmcore/view/light/SpotLight.h"
 
 using namespace megamol::core;
 
@@ -152,4 +158,10 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
 #endif /* MEGAMOLCORE_WITH_DIRECT3D11 */
     instance.RegisterAutoDescription<job::PluginsStateFileGeneratorJob>();
     instance.RegisterAutoDescription<core::utility::LuaHostSettingsModule>();
+    instance.RegisterAutoDescription<view::light::AmbientLight>();
+    instance.RegisterAutoDescription<view::light::DistantLight>();
+    instance.RegisterAutoDescription<view::light::HDRILight>();
+    instance.RegisterAutoDescription<view::light::PointLight>();
+    instance.RegisterAutoDescription<view::light::QuadLight>();
+    instance.RegisterAutoDescription<view::light::SpotLight>();
 }

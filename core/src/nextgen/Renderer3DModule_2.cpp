@@ -8,8 +8,8 @@
 #include "stdafx.h"
 #include "mmcore/nextgen/Renderer3DModule_2.h"
 #include "mmcore/nextgen/CallRender3D_2.h"
-#include "mmcore/view/InputCall.h"
 #include "mmcore/view/AbstractView.h"
+#include "mmcore/view/InputCall.h"
 
 using namespace megamol::core;
 using namespace megamol::core::nextgen;
@@ -18,10 +18,18 @@ using namespace megamol::core::view;
 /*
  * Renderer3DModule_2::Renderer3DModule_2
  */
-Renderer3DModule_2::Renderer3DModule_2(void) : RendererModule<CallRender3D_2>() {
+Renderer3DModule_2::Renderer3DModule_2(void)
+    : RendererModule<CallRender3D_2>()
+    , lightSlot(
+          "lights", "Lights are retrieved over this slot. If no light is connected, a default camera light is used") {
 
-    // Callbacks should already be set by RendererModule
+    // Callback should already be set by RendererModule
     this->MakeSlotAvailable(&this->chainRenderSlot);
+
+    this->lightSlot.SetCompatibleCall<light::CallLightDescription>();
+    this->MakeSlotAvailable(&this->lightSlot);
+
+    // Callback should already be set by RendererModule
     this->MakeSlotAvailable(&this->renderSlot);
 }
 
@@ -71,7 +79,8 @@ bool Renderer3DModule_2::GetExtentsChain(CallRender3D_2& call) {
  */
 bool Renderer3DModule_2::RenderChain(CallRender3D_2& call) {
     auto leftSlotParent = call.PeekCallerSlot()->Parent();
-    std::shared_ptr<const view::AbstractView> viewptr = std::dynamic_pointer_cast<const view::AbstractView>(leftSlotParent);
+    std::shared_ptr<const view::AbstractView> viewptr =
+        std::dynamic_pointer_cast<const view::AbstractView>(leftSlotParent);
 
     if (viewptr != nullptr) {
         // TODO move this behind the fbo magic?

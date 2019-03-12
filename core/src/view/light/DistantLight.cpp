@@ -1,24 +1,27 @@
 /*
-* OSPRayDistantLight.cpp
-* Copyright (C) 2009-2017 by MegaMol Team
-* Alle Rechte vorbehalten.
-*/
+ * DistantLight.cpp
+ * Copyright (C) 2009-2017 by MegaMol Team
+ * Alle Rechte vorbehalten.
+ */
 
 #include "stdafx.h"
-#include "OSPRayDistantLight.h"
-#include "mmcore/param/FloatParam.h"
+#include "mmcore/view/light/DistantLight.h"
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/param/FloatParam.h"
 #include "mmcore/param/Vector3fParam.h"
 
-using namespace megamol::ospray;
+using namespace megamol::core::view::light;
 
-
-OSPRayDistantLight::OSPRayDistantLight(void) :
-    AbstractOSPRayLight(),
+/*
+ * megamol::core::view::light::DistantLight::DistantLight
+ */
+DistantLight::DistantLight(void)
+    : AbstractLight()
+    ,
     // Distant light parameters
-    dl_direction("Direction", "Direction of the Light"),
-    dl_angularDiameter("AngularDiameter", "If greater than zero results in soft shadows"),
-    dl_eye_direction("EyeDirection", "Sets the light direction as view direction") {
+    dl_direction("Direction", "Direction of the Light")
+    , dl_angularDiameter("AngularDiameter", "If greater than zero results in soft shadows")
+    , dl_eye_direction("EyeDirection", "Sets the light direction as view direction") {
 
     // distant light
     this->dl_angularDiameter << new core::param::FloatParam(0.0f);
@@ -27,15 +30,17 @@ OSPRayDistantLight::OSPRayDistantLight(void) :
     this->MakeSlotAvailable(&this->dl_direction);
     this->MakeSlotAvailable(&this->dl_angularDiameter);
     this->MakeSlotAvailable(&this->dl_eye_direction);
-
 }
 
-OSPRayDistantLight::~OSPRayDistantLight(void) {
-    this->Release();
-}
+/*
+ * megamol::core::view::light::DistantLight::~DistantLight
+ */
+DistantLight::~DistantLight(void) { this->Release(); }
 
-
-void OSPRayDistantLight::readParams() {
+/*
+ * megamol::core::view::light::DistantLight::readParams
+ */
+void DistantLight::readParams() {
     lightContainer.lightType = lightenum::DISTANTLIGHT;
     auto lcolor = this->lightColor.Param<core::param::Vector3fParam>()->Value().PeekComponents();
     lightContainer.lightColor.assign(lcolor, lcolor + 3);
@@ -46,12 +51,12 @@ void OSPRayDistantLight::readParams() {
     lightContainer.dl_angularDiameter = this->dl_angularDiameter.Param<core::param::FloatParam>()->Value();
 }
 
-bool OSPRayDistantLight::InterfaceIsDirty() {
-    if (this->AbstractIsDirty() ||
-        this->dl_angularDiameter.IsDirty() ||
-        this->dl_direction.IsDirty() ||
-        this->dl_eye_direction.IsDirty()
-        ) {
+/*
+ * megamol::core::view::light::DistantLight::InterfaceIsDirty
+ */
+bool DistantLight::InterfaceIsDirty() {
+    if (this->AbstractIsDirty() || this->dl_angularDiameter.IsDirty() || this->dl_direction.IsDirty() ||
+        this->dl_eye_direction.IsDirty()) {
         this->dl_angularDiameter.ResetDirty();
         this->dl_direction.ResetDirty();
         this->dl_eye_direction.ResetDirty();

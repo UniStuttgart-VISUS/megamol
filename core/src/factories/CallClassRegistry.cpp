@@ -40,6 +40,7 @@
 #include "mmcore/cluster/mpi/MpiCall.h"
 #include "mmcore/moldyn/EllipsoidalDataCall.h"
 #include "mmcore/moldyn/ParticleRelistCall.h"
+#include "mmcore/view/light/CallLight.h"
 
 using namespace megamol::core;
 
@@ -80,4 +81,5 @@ void factories::register_call_classes(factories::CallDescriptionManager& instanc
     instance.RegisterAutoDescription<cluster::mpi::MpiCall>();
     instance.RegisterAutoDescription<moldyn::EllipsoidalParticleDataCall>();
     instance.RegisterAutoDescription<moldyn::ParticleRelistCall>();
+    instance.RegisterAutoDescription<view::light::CallLight>();
 }

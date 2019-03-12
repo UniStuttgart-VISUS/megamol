@@ -13,11 +13,12 @@
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/view/RendererModule.h"
 #include "mmcore/api/MegaMolCore.std.h"
-#include "mmcore/view/MouseFlags.h"
-#include "vislib/graphics/graphicstypes.h"
 #include "mmcore/nextgen/CallRender3D_2.h"
+#include "mmcore/view/MouseFlags.h"
+#include "mmcore/view/RendererModule.h"
+#include "mmcore/view/light/CallLight.h"
+#include "vislib/graphics/graphicstypes.h"
 
 namespace megamol {
 namespace core {
@@ -78,6 +79,9 @@ private:
     virtual bool RenderChain(CallRender3D_2& call) override final;
 
     // TODO events
+
+    /** Slot to retrieve the light information */
+    CallerSlot lightSlot;
 };
 
 } // namespace nextgen

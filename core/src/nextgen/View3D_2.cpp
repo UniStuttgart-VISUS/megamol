@@ -53,8 +53,6 @@ View3D_2::View3D_2(void)
     /*, view::AbstractCamParamSync()*/
     , cursor2d()
     , rendererSlot("rendering", "Connects the view to a Renderer")
-    , lightDir(0.5f, -1.0f, -1.0f)
-    , isCamLight(true)
     , bboxs()
     , showLookAt("showLookAt", "Flag showing the look at point")
     , storeCameraSettingsSlot("camstore::storecam",
@@ -72,11 +70,6 @@ View3D_2::View3D_2(void)
           "This only works if you use .lua project files")
     , resetViewSlot("resetView", "Triggers the reset of the view")
     , firstImg(false)
-    , isCamLightSlot(
-          "light::isCamLight", "Flag whether the light is relative to the camera or to the world coordinate system")
-    , lightDirSlot("light::direction", "Direction vector of the light")
-    , lightColDifSlot("light::diffuseCol", "Diffuse light colour")
-    , lightColAmbSlot("light::ambientCol", "Ambient light colour")
     , stereoFocusDistSlot("stereo::focusDist", "focus distance for stereo projection")
     , stereoEyeDistSlot("stereo::eyeDist", "eye distance for stereo projection")
     , overrideCall(NULL)
@@ -138,27 +131,6 @@ View3D_2::View3D_2(void)
     this->resetViewSlot.SetParameter(new param::ButtonParam(view::Key::KEY_HOME));
     this->resetViewSlot.SetUpdateCallback(&View3D_2::onResetView);
     this->MakeSlotAvailable(&this->resetViewSlot);
-
-    /*this->isCamLightSlot << new param::BoolParam(this->isCamLight);
-    this->MakeSlotAvailable(&this->isCamLightSlot);
-
-    this->lightDirSlot << new param::Vector3fParam(this->lightDir);
-    this->MakeSlotAvailable(&this->lightDirSlot);
-
-    this->lightColDif[0] = this->lightColDif[1] = this->lightColDif[2] = 1.0f;
-    this->lightColDif[3] = 1.0f;
-
-    this->lightColAmb[0] = this->lightColAmb[1] = this->lightColAmb[2] = 0.2f;
-    this->lightColAmb[3] = 1.0f;
-
-    this->lightColDifSlot << new param::StringParam(
-        utility::ColourParser::ToString(this->lightColDif[0], this->lightColDif[1], this->lightColDif[2]));
-    this->MakeSlotAvailable(&this->lightColDifSlot);
-
-    this->lightColAmbSlot << new param::StringParam(
-        utility::ColourParser::ToString(this->lightColAmb[0], this->lightColAmb[1], this->lightColAmb[2]));
-    this->MakeSlotAvailable(&this->lightColAmbSlot);
-    */
 
     this->ResetView();
 

@@ -1,27 +1,30 @@
 /*
-* OSPRaySpotLight.cpp
-* Copyright (C) 2009-2017 by MegaMol Team
-* Alle Rechte vorbehalten.
-*/
+ * SpotLight.cpp
+ * Copyright (C) 2009-2017 by MegaMol Team
+ * Alle Rechte vorbehalten.
+ */
 
 #include "stdafx.h"
-#include "OSPRaySpotLight.h"
-#include "mmcore/param/FloatParam.h"
+#include "mmcore/view/light/SpotLight.h"
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/param/FloatParam.h"
 #include "mmcore/param/Vector3fParam.h"
 
-using namespace megamol::ospray;
+using namespace megamol::core::view::light;
 
-
-OSPRaySpotLight::OSPRaySpotLight(void) :
-    AbstractOSPRayLight(),
+/*
+ * megamol::core::view::light::SpotLight::SpotLight
+ */
+SpotLight::SpotLight(void)
+    : AbstractLight()
+    ,
     // Distant light parameters
     // spot light parameters
-    sl_position("Position", ""),
-    sl_direction("Direction", ""),
-    sl_openingAngle("openingAngle", ""),
-    sl_penumbraAngle("penumbraAngle", ""),
-    sl_radius("Radius", "") {
+    sl_position("Position", "")
+    , sl_direction("Direction", "")
+    , sl_openingAngle("openingAngle", "")
+    , sl_penumbraAngle("penumbraAngle", "")
+    , sl_radius("Radius", "") {
 
     // spot light
     this->sl_position << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(0.0f, 0.0f, 0.0f));
@@ -34,15 +37,17 @@ OSPRaySpotLight::OSPRaySpotLight(void) :
     this->MakeSlotAvailable(&this->sl_openingAngle);
     this->MakeSlotAvailable(&this->sl_penumbraAngle);
     this->MakeSlotAvailable(&this->sl_radius);
-
 }
 
-OSPRaySpotLight::~OSPRaySpotLight(void) {
-    this->Release();
-}
+/*
+ * megamol::core::view::light::SpotLight::~SpotLight
+ */
+SpotLight::~SpotLight(void) { this->Release(); }
 
-
-void OSPRaySpotLight::readParams() {
+/*
+ * megamol::core::view::light::SpotLight::readParams
+ */
+void SpotLight::readParams() {
     lightContainer.lightType = lightenum::SPOTLIGHT;
     auto lcolor = this->lightColor.Param<core::param::Vector3fParam>()->Value().PeekComponents();
     lightContainer.lightColor.assign(lcolor, lcolor + 3);
@@ -57,14 +62,12 @@ void OSPRaySpotLight::readParams() {
     lightContainer.sl_radius = this->sl_radius.Param<core::param::FloatParam>()->Value();
 }
 
-bool OSPRaySpotLight::InterfaceIsDirty() {
-    if (this->AbstractIsDirty() ||
-        this->sl_position.IsDirty() ||
-        this->sl_direction.IsDirty() ||
-        this->sl_openingAngle.IsDirty() ||
-        this->sl_penumbraAngle.IsDirty() ||
-        this->sl_radius.IsDirty() 
-        ) {
+/*
+ * megamol::core::view::light::SpotLight::InterfaceIsDirty
+ */
+bool SpotLight::InterfaceIsDirty() {
+    if (this->AbstractIsDirty() || this->sl_position.IsDirty() || this->sl_direction.IsDirty() ||
+        this->sl_openingAngle.IsDirty() || this->sl_penumbraAngle.IsDirty() || this->sl_radius.IsDirty()) {
         this->sl_position.ResetDirty();
         this->sl_direction.ResetDirty();
         this->sl_openingAngle.ResetDirty();
