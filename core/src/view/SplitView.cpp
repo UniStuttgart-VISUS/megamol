@@ -11,7 +11,7 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/StringParam.h"
-#include "mmcore/view/CallGUIRenderer.h"
+#include "mmcore/view/CallSplitViewOverlay.h"
 #include "vislib/sys/Log.h"
 #include "vislib/Trace.h"
 
@@ -25,9 +25,9 @@ using vislib::sys::Log;
  * view::SplitView::SplitView
  */
 view::SplitView::SplitView(void) : AbstractView(),
-guiSlot("rendergui", "Connects to a GUIRenderer"),
 render1Slot("render1", "Connects to the view 1 (left or top)"),
 render2Slot("render2", "Connects to the view 2 (right or bottom)"),
+overlaySlot("rendergui", "Connects to a special overlay renderer (e.g. gui::GUIRenderer)"),
 splitOriSlot("split.orientation", "The split orientation"),
 splitSlot("split.pos", "The split position"),
 splitWidthSlot("split.width", "The split border width"),
@@ -36,8 +36,8 @@ overrideCall(NULL),
 clientArea(), client1Area(), client2Area(), fbo1(), fbo2(),
 focus(0), mouseX(0.0f), mouseY(0.0f) {
 
-    this->guiSlot.SetCompatibleCall<view::CallGUIRendererDescription>();
-    this->MakeSlotAvailable(&this->guiSlot);
+    this->overlaySlot.SetCompatibleCall<view::CallSplitViewOverlayDescription>();
+    this->MakeSlotAvailable(&this->overlaySlot);
 
     this->render1Slot.SetCompatibleCall<CallRenderViewDescription>();
     this->MakeSlotAvailable(&this->render1Slot);
@@ -304,12 +304,12 @@ void view::SplitView::Render(const mmcRenderViewContext& context) {
         fbo = &this->fbo2;
     }
 
-    // Render GUI as overlay at last.
-    auto* cgr = this->guiSlot.CallAs<view::CallGUIRenderer>();
+    // Render overlay renderer as overlay at last.
+    auto* cgr = this->overlaySlot.CallAs<view::CallSplitViewOverlay>();
     if (cgr != nullptr) {
         cgr->SetInstanceTime(instTime);
         cgr->Resize(this->clientArea.Width(), this->clientArea.Height());
-        (*cgr)(view::CallGUIRenderer::FnRender);
+        (*cgr)(view::CallSplitViewOverlay::FnRender);
     }
 
     ::glMatrixMode(GL_PROJECTION);
@@ -382,7 +382,7 @@ void view::SplitView::Resize(unsigned int width, unsigned int height) {
             }
         }
 
-        auto* cgr = this->guiSlot.CallAs<view::CallGUIRenderer>();
+        auto* cgr = this->overlaySlot.CallAs<view::CallSplitViewOverlay>();
         if (cgr != nullptr) {
             cgr->Resize(this->clientArea.Width(), this->clientArea.Height());
         }
@@ -427,8 +427,8 @@ bool view::SplitView::OnKey(Key key, KeyAction action, Modifiers mods) {
 
     bool consumed = false;
 
-    // Prioritize GUI
-    auto* cgr = this->guiSlot.CallAs<view::CallGUIRenderer>();
+    // Prioritize overlay renderer
+    auto* cgr = this->overlaySlot.CallAs<view::CallSplitViewOverlay>();
     if (cgr != nullptr) {
         InputEvent evt;
         evt.tag = InputEvent::Tag::Key;
@@ -436,7 +436,7 @@ bool view::SplitView::OnKey(Key key, KeyAction action, Modifiers mods) {
         evt.keyData.action = action;
         evt.keyData.mods = mods;
         cgr->SetInputEvent(evt);
-        if ((*cgr)(view::CallGUIRenderer::FnOnKey)) return true;
+        if ((*cgr)(view::CallSplitViewOverlay::FnOnKey)) return true;
     }
 
     auto* crv = this->render1();
@@ -470,14 +470,14 @@ bool view::SplitView::OnChar(unsigned int codePoint) {
 
     bool consumed = false;
 
-    // Prioritize GUI
-    auto* cgr = this->guiSlot.CallAs<view::CallGUIRenderer>();
+    // Prioritize overlay renderer
+    auto* cgr = this->overlaySlot.CallAs<view::CallSplitViewOverlay>();
     if (cgr != nullptr) {
         InputEvent evt;
         evt.tag = InputEvent::Tag::Char;
         evt.charData.codePoint = codePoint;
         cgr->SetInputEvent(evt);
-        if ((*cgr)(view::CallGUIRenderer::FnOnChar)) return true;
+        if ((*cgr)(view::CallSplitViewOverlay::FnOnChar)) return true;
     }
 
     auto* crv = this->render1();
@@ -504,8 +504,8 @@ bool view::SplitView::OnChar(unsigned int codePoint) {
 
 bool view::SplitView::OnMouseButton(MouseButton button, MouseButtonAction action, Modifiers mods) {
 
-    // Prioritize GUI
-    auto* cgr = this->guiSlot.CallAs<view::CallGUIRenderer>();
+    // Prioritize overlay renderer
+    auto* cgr = this->overlaySlot.CallAs<view::CallSplitViewOverlay>();
     if (cgr != nullptr) {
         InputEvent evt;
         evt.tag = InputEvent::Tag::MouseButton;
@@ -513,7 +513,7 @@ bool view::SplitView::OnMouseButton(MouseButton button, MouseButtonAction action
         evt.mouseButtonData.action = action;
         evt.mouseButtonData.mods = mods;
         cgr->SetInputEvent(evt);
-        if ((*cgr)(view::CallGUIRenderer::FnOnMouseButton)) return true;
+        if ((*cgr)(view::CallSplitViewOverlay::FnOnMouseButton)) return true;
     }
 
     auto* crv = this->renderHovered();
@@ -552,15 +552,15 @@ bool view::SplitView::OnMouseMove(double x, double y) {
     this->mouseX = x;
     this->mouseY = y;
 
-    // Prioritize GUI
-    auto* cgr = this->guiSlot.CallAs<view::CallGUIRenderer>();
+    // Prioritize overlay renderer
+    auto* cgr = this->overlaySlot.CallAs<view::CallSplitViewOverlay>();
     if (cgr != nullptr) {
         InputEvent evt;
         evt.tag = InputEvent::Tag::MouseMove;
         evt.mouseMoveData.x = x;
         evt.mouseMoveData.y = y;
         cgr->SetInputEvent(evt);
-        if ((*cgr)(view::CallGUIRenderer::FnOnMouseMove)) return true;
+        if ((*cgr)(view::CallSplitViewOverlay::FnOnMouseMove)) return true;
     }
 
     auto* crv = this->renderHovered();
@@ -597,15 +597,15 @@ bool view::SplitView::OnMouseMove(double x, double y) {
 
 bool view::SplitView::OnMouseScroll(double dx, double dy) {
 
-    // Prioritize GUI
-    auto* cgr = this->guiSlot.CallAs<view::CallGUIRenderer>();
+    // Prioritize overlay renderer
+    auto* cgr = this->overlaySlot.CallAs<view::CallSplitViewOverlay>();
     if (cgr != nullptr) {
         InputEvent evt;
         evt.tag = InputEvent::Tag::MouseScroll;
         evt.mouseScrollData.dx = dx;
         evt.mouseScrollData.dy = dy;
         cgr->SetInputEvent(evt);
-        if ((*cgr)(view::CallGUIRenderer::FnOnMouseScroll)) return true;
+        if ((*cgr)(view::CallSplitViewOverlay::FnOnMouseScroll)) return true;
     }
 
     auto* crv = this->renderHovered();

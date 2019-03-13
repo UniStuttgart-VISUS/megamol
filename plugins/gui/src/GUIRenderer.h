@@ -1,7 +1,7 @@
 /*
  * GUIRenderer.h
  *
- * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS).
+ * Copyright (C) 2018 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
@@ -11,6 +11,7 @@
  * - Fix drawing order/depth handling of bbox (currently front of bbox is drawn on top of everything)
  * - Fix x and y transformation by View2D class (will be fixed when new CallRender is available)
  * - Fix lost keyboard/mouse input for low frame rates
+ *
  *
  * USED HOKEYS:
  *
@@ -30,8 +31,6 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "mmcore/Call.h"
-#include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/Module.h"
@@ -50,17 +49,20 @@
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/Vector4fParam.h"
 #include "mmcore/utility/ResourceWrapper.h"
-//#include "mmcore/view/CallGUIRenderer.h"
-#include "mmcore/view/Input.h"
 #include "mmcore/view/Renderer2DModule.h"
 #include "mmcore/view/Renderer3DModule.h"
 
 #include "vislib/UTF8Encoder.h"
 
-#include <algorithm> // sort
-#include <iomanip>   // setprecision
-#include <map>
+#include <iomanip> // setprecision
 #include <sstream> // stringstream
+
+#include <imgui.h>
+#include "imgui_impl_opengl3.h"
+
+#include "OverlayInterfaceLayer.h"
+#include "TransferFunctionEditor.h"
+
 
 #ifdef _WIN32
 #    include <filesystem> // directory_iterator
@@ -71,14 +73,11 @@ namespace ns_fs = std::experimental::filesystem;
 #    endif
 #endif
 
-#include <imgui.h>
-#include "imgui_impl_opengl3.h"
-
-
 namespace megamol {
 namespace gui {
 
-template <class M, class C> class GUIRenderer : public M {
+
+template <class M, class C> class GUIRenderer : public OverlayInterfaceLayer<M> {
 public:
     /**
      * Answer the name of this module.
@@ -131,19 +130,7 @@ protected:
 
     virtual bool Render(C& call) override;
 
-    // Callbacks for CallGUIRenderer ------------------------------------------
-
-    // bool OnGUIRenderCallback(core::Call& call);
-
-    // bool OnGUIKeyCallback(core::Call& call);
-
-    // bool OnGUICharCallback(core::Call& call);
-
-    // bool OnGUIMouseButtonCallback(core::Call& call);
-
-    // bool OnGUIMouseMoveCallback(core::Call& call);
-
-    // bool OnGUIMouseScrollCallback(core::Call& call);
+    virtual bool OnGUIRenderCallback(megamol::core::Call& call) override;
 
 private:
     // TYPES, ENUMS -----------------------------------------------------------
@@ -163,7 +150,7 @@ private:
         std::vector<std::string> param_mods; // modules to show the parameters of
     } GUIWindow;
 
-    // ImGui key map assignment for text manipulation hotkeys (using last unused indices < 512)
+    /** ImGui key map assignment for text manipulation hotkeys (using last unused indices < 512) */
     enum TextModHotkeys { CTRL_A = 506, CTRL_C = 507, CTRL_V = 508, CTRL_X = 509, CTRL_Y = 510, CTRL_Z = 511 };
 
     // VARIABLES --------------------------------------------------------------
@@ -171,11 +158,11 @@ private:
     /** The ImGui context created and used by this GUIRenderer */
     ImGuiContext* imgui_context;
 
+    /** The transfer function editor. */
+    TransferFunctionEditor tf_editor;
+
     /** The decorated renderer caller slot */
     core::CallerSlot decorated_renderer_slot;
-
-    /** The split view callee slot */
-    // core::CalleeSlot splitview_slot;
 
     /** Float precision for parameter format. */
     int float_print_prec;
@@ -187,15 +174,18 @@ private:
     ImGuiID tooltip_id;
 
     /** Array holding the window states. */
-    std::vector<GUIWindow> windows;
+    std::list<GUIWindow> windows;
 
     /** Last instance time.  */
     double lastInstTime;
 
+    /** The name of the view instance this renderer belongs to. */
+    std::string inst_name;
+
     // ---------- Main Parameter Window ----------
 
     /** Reset main parameter window. */
-    bool reset_main_window;
+    bool main_reset_window;
 
     // ---------- FPS window ----------
 
@@ -232,9 +222,6 @@ private:
 
     /** Font size of font to load. */
     float font_new_size;
-
-    /** The name of the view instance this renderer belongs to. */
-    std::string inst_name;
 
     // FUNCTIONS --------------------------------------------------------------
 
@@ -278,6 +265,14 @@ private:
      *
      */
     void drawFontSelectionWindowCallback(std::string win_label);
+
+    /**
+     * Callback for drawing the demo window.
+     *
+     * @param win_label  The label of the calling window.
+     *
+     */
+    void drawTFWindowCallback(std::string win_label);
 
     // ---------------------------------
 
@@ -351,32 +346,6 @@ private:
      */
     void shutdown(void);
 
-    // DEMO -------------------------------------------------------------------
-
-    /**
-     * Callback for drawing the demo window.
-     *
-     * @param win_label  The label of the calling window.
-     *
-     */
-    void drawDemoWindowCallback(std::string win_label);
-
-    /**
-     * Draw a transfer function widget.
-     */
-    bool TransFuncWidget(void);
-
-    std::vector<std::array<float, 5>> tf_cols;
-    enum InterpolOpts { LINEAR = 0, GAUSS = 1 };
-    InterpolOpts tf_interpol;
-    size_t tf_tex_size;
-    bool tf_chan_red;
-    bool tf_chan_green;
-    bool tf_chan_blue;
-    bool tf_chan_alpha;
-    unsigned int tf_point_select_node;
-    unsigned int tf_point_select_chan;
-
     // ------------------------------------------------------------------------
 };
 
@@ -390,61 +359,29 @@ typedef GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D> GUIR
  */
 template <>
 inline GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIRenderer()
-    : imgui_context(nullptr)
+    : OverlayInterfaceLayer<core::view::Renderer2DModule>()
+    , imgui_context(nullptr)
+    , tf_editor()
     , decorated_renderer_slot("decoratedRenderer", "Connects to another 2D Renderer being decorated")
-    //, splitview_slot("splitViewRender", "Connected by SplitView")
     , float_print_prec(3) // INIT: Float string format precision
     , tooltip_time(0.0f)
     , tooltip_id(0)
     , windows()
     , lastInstTime(0.0)
-    , reset_main_window(false)
+    , main_reset_window(false)
     , show_fps_ms_options(false)
     , current_delay(0.0f)
-    , max_delay(2.0f) // INIT: Update fps/ms every X second(s)
+    , max_delay(2.0f)
     , fps_values()
     , ms_values()
     , fps_value_scale(0.0f)
     , ms_value_scale(0.0f)
     , fps_ms_mode(0)
-    , max_value_count(50) // INIT: Max count of stored fps/ms values
+    , max_value_count(50)
     , font_new_load(false)
     , font_new_filename()
     , font_new_size(13.0f)
-    , inst_name()
-    , tf_cols()
-    , tf_interpol(InterpolOpts::LINEAR)
-    , tf_tex_size(128)
-    , tf_chan_red(false)
-    , tf_chan_green(false)
-    , tf_chan_blue(false)
-    , tf_chan_alpha(true)
-    , tf_point_select_node(0)
-    , tf_point_select_chan(0)
-
-{
-
-    // InputCall
-    // this->splitview_slot.SetCallback(core::view::CallGUIRenderer::ClassName(),
-    //    core::view::InputCall::FunctionName(core::view::InputCall::FnOnKey),
-    //    &GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::OnGUIKeyCallback);
-    // this->splitview_slot.SetCallback(core::view::CallGUIRenderer::ClassName(),
-    //    core::view::InputCall::FunctionName(core::view::InputCall::FnOnChar),
-    //    &GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::OnGUICharCallback);
-    // this->splitview_slot.SetCallback(core::view::CallGUIRenderer::ClassName(),
-    //    core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseButton),
-    //    &GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::OnGUIMouseButtonCallback);
-    // this->splitview_slot.SetCallback(core::view::CallGUIRenderer::ClassName(),
-    //    core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseMove),
-    //    &GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::OnGUIMouseMoveCallback);
-    // this->splitview_slot.SetCallback(core::view::CallGUIRenderer::ClassName(),
-    //    core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseScroll),
-    //    &GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::OnGUIMouseScrollCallback);
-    //// CallGUIRenderer
-    // this->splitview_slot.SetCallback(core::view::CallGUIRenderer::ClassName(),
-    //    core::view::CallGUIRenderer::FunctionName(core::view::CallGUIRenderer::FnRender),
-    //    &GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::OnGUIRenderCallback);
-    // this->MakeSlotAvailable(&this->splitview_slot);
+    , inst_name() {
 
     this->decorated_renderer_slot.SetCompatibleCall<core::view::CallRender2DDescription>();
     this->MakeSlotAvailable(&this->decorated_renderer_slot);
@@ -456,59 +393,29 @@ inline GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIR
  */
 template <>
 inline GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GUIRenderer()
-    : imgui_context(nullptr)
+    : OverlayInterfaceLayer<core::view::Renderer3DModule>()
+    , imgui_context(nullptr)
+    , tf_editor()
     , decorated_renderer_slot("decoratedRenderer", "Connects to another 2D Renderer being decorated")
-    //, splitview_slot("splitViewRender", "Connected by SplitView")
     , float_print_prec(3) // INIT: Float string format precision
     , tooltip_time(0.0f)
     , tooltip_id(0)
     , windows()
     , lastInstTime(0.0)
-    , reset_main_window(false)
+    , main_reset_window(false)
     , show_fps_ms_options(false)
     , current_delay(0.0f)
-    , max_delay(2.0f) // INIT: Update fps/ms every X second(s)
+    , max_delay(2.0f)
     , fps_values()
     , ms_values()
     , fps_value_scale(0.0f)
     , ms_value_scale(0.0f)
     , fps_ms_mode(0)
-    , max_value_count(50) // INIT: Max count of stored fps/ms values
+    , max_value_count(50)
     , font_new_load(false)
     , font_new_filename()
     , font_new_size(13.0f)
-    , inst_name()
-    , tf_cols()
-    , tf_interpol(InterpolOpts::LINEAR)
-    , tf_tex_size(128)
-    , tf_chan_red(false)
-    , tf_chan_green(false)
-    , tf_chan_blue(false)
-    , tf_chan_alpha(true)
-    , tf_point_select_node(0)
-    , tf_point_select_chan(0) {
-
-    // InputCall
-    // this->splitview_slot.SetCallback(core::view::CallGUIRenderer::ClassName(),
-    //    core::view::InputCall::FunctionName(core::view::InputCall::FnOnKey),
-    //    &GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::OnGUIKeyCallback);
-    // this->splitview_slot.SetCallback(core::view::CallGUIRenderer::ClassName(),
-    //    core::view::InputCall::FunctionName(core::view::InputCall::FnOnChar),
-    //    &GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::OnGUICharCallback);
-    // this->splitview_slot.SetCallback(core::view::CallGUIRenderer::ClassName(),
-    //    core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseButton),
-    //    &GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::OnGUIMouseButtonCallback);
-    // this->splitview_slot.SetCallback(core::view::CallGUIRenderer::ClassName(),
-    //    core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseMove),
-    //    &GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::OnGUIMouseMoveCallback);
-    // this->splitview_slot.SetCallback(core::view::CallGUIRenderer::ClassName(),
-    //    core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseScroll),
-    //    &GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::OnGUIMouseScrollCallback);
-    //// CallGUIRenderer
-    // this->splitview_slot.SetCallback(core::view::CallGUIRenderer::ClassName(),
-    //    core::view::CallGUIRenderer::FunctionName(core::view::CallGUIRenderer::FnRender),
-    //    &GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::OnGUIRenderCallback);
-    // this->MakeSlotAvailable(&this->splitview_slot);
+    , inst_name() {
 
     this->decorated_renderer_slot.SetCompatibleCall<core::view::CallRender3DDescription>();
     this->MakeSlotAvailable(&this->decorated_renderer_slot);
@@ -576,7 +483,7 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
     tmp_win.flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_HorizontalScrollbar;
     tmp_win.func = &GUIRenderer<M, C>::drawMainWindowCallback;
     tmp_win.param_main = true;
-    this->windows.push_back(tmp_win);
+    this->windows.emplace_back(tmp_win);
 
     // FPS overlay Window -----------------------------------------------------
     tmp_win.label = "FPS";
@@ -585,7 +492,7 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
     tmp_win.flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar;
     tmp_win.func = &GUIRenderer<M, C>::drawFpsWindowCallback;
     tmp_win.param_main = false;
-    this->windows.push_back(tmp_win);
+    this->windows.emplace_back(tmp_win);
 
     // Font Selection Window --------------------------------------------------
     tmp_win.label = "Fonts";
@@ -594,17 +501,16 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
     tmp_win.flags = ImGuiWindowFlags_AlwaysAutoResize;
     tmp_win.func = &GUIRenderer<M, C>::drawFontSelectionWindowCallback;
     tmp_win.param_main = false;
-    this->windows.push_back(tmp_win);
+    this->windows.emplace_back(tmp_win);
 
     // Demo Window --------------------------------------------------
-    tmp_win.label = "Demo";
+    tmp_win.label = "1D Transfer Function Editor";
     tmp_win.show = false;
     tmp_win.hotkey = core::view::KeyCode(core::view::Key::KEY_F9);
     tmp_win.flags = ImGuiWindowFlags_HorizontalScrollbar;
-    tmp_win.func = &GUIRenderer<M, C>::drawDemoWindowCallback;
+    tmp_win.func = &GUIRenderer<M, C>::drawTFWindowCallback;
     tmp_win.param_main = false;
-    this->windows.push_back(tmp_win);
-
+    this->windows.emplace_back(tmp_win);
 
     // Style settings ---------------------------------------------------------
     ImGui::StyleColorsDark();
@@ -791,7 +697,7 @@ bool GUIRenderer<M, C>::OnKey(core::view::Key key, core::view::KeyAction action,
     // Reset main window
     hotkeyPressed = ((io.KeyShift) && (ImGui::IsKeyDown(static_cast<int>(core::view::Key::KEY_F12))));
     if (hotkeyPressed) {
-        this->reset_main_window = true;
+        this->main_reset_window = true;
     }
 
     // Hotkeys of window(s)
@@ -947,7 +853,7 @@ bool GUIRenderer<M, C>::OnMouseButton(
         if (!(*cr)(core::view::InputCall::FnOnMouseButton)) return false;
     }
 
-    return true;
+    return (down); // Don't consume 'release' events.
 }
 
 
@@ -1029,10 +935,10 @@ inline bool GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>:
  */
 template <class M, class C> bool GUIRenderer<M, C>::Render(C& call) {
 
-    // if (this->splitview_slot.GetStatus() == core::AbstractSlot::SlotStatus::STATUS_CONNECTED) {
-    //    vislib::sys::Log::DefaultLog.WriteError("[GUIRenderer] Only one connected callee slot is allowed!");
-    //    return false;
-    //}
+    if (this->overlay_slot.GetStatus() == core::AbstractSlot::SlotStatus::STATUS_CONNECTED) {
+        vislib::sys::Log::DefaultLog.WriteError("[GUIRenderer] Only one connected callee slot is allowed!");
+        return false;
+    }
 
     auto* cr = this->decorated_renderer_slot.template CallAs<C>();
     if (cr != nullptr) {
@@ -1045,29 +951,29 @@ template <class M, class C> bool GUIRenderer<M, C>::Render(C& call) {
 }
 
 
-///**
-// * GUIRenderer<M, C>::OnGUIRenderCallback
-// */
-// template <class M, class C> bool GUIRenderer<M, C>::OnGUIRenderCallback(core::Call& call) {
-//
-//    if (this->renderSlot.GetStatus() == core::AbstractSlot::SlotStatus::STATUS_CONNECTED) {
-//        vislib::sys::Log::DefaultLog.WriteError("[GUIRenderer] Only one connected callee slot is allowed!");
-//        return false;
-//    }
-//
-//    auto* cr = this->decorated_renderer_slot.template CallAs<C>();
-//    if (cr != nullptr) {
-//        vislib::sys::Log::DefaultLog.WriteWarn("[GUIRenderer] Render callback of connected Renderer is not called!");
-//    }
-//
-//    try {
-//        core::view::CallGUIRenderer& cgr = dynamic_cast<core::view::CallGUIRenderer&>(call);
-//        return this->renderGUI(cgr.GetViewport(), cgr.InstanceTime());
-//    } catch (...) {
-//        ASSERT("OnGUIRenderCallback call cast failed\n");
-//    }
-//    return false;
-//}
+/**
+ * GUIRenderer<M, C>::OnGUIRenderCallback
+ */
+template <class M, class C> bool GUIRenderer<M, C>::OnGUIRenderCallback(core::Call& call) {
+
+    if (this->renderSlot.GetStatus() == core::AbstractSlot::SlotStatus::STATUS_CONNECTED) {
+        vislib::sys::Log::DefaultLog.WriteError("[GUIRenderer] Only one connected callee slot is allowed!");
+        return false;
+    }
+
+    auto* cr = this->decorated_renderer_slot.template CallAs<C>();
+    if (cr != nullptr) {
+        vislib::sys::Log::DefaultLog.WriteWarn("[GUIRenderer] Render callback of connected Renderer is not called!");
+    }
+
+    try {
+        core::view::CallSplitViewOverlay& cgr = dynamic_cast<core::view::CallSplitViewOverlay&>(call);
+        return this->renderGUI(cgr.GetViewport(), cgr.InstanceTime());
+    } catch (...) {
+        ASSERT("OnGUIRenderCallback call cast failed\n");
+    }
+    return false;
+}
 
 
 /**
@@ -1135,9 +1041,9 @@ bool GUIRenderer<M, C>::renderGUI(vislib::math::Rectangle<int> viewport, double 
 template <class M, class C> void GUIRenderer<M, C>::drawMainWindowCallback(std::string win_label) {
 
     // Trigger window size reset outside of menu window to get right position
-    if (this->reset_main_window) {
+    if (this->main_reset_window) {
         this->resetWindowSizePos(win_label, 100.0f);
-        this->reset_main_window = false;
+        this->main_reset_window = false;
     }
 
     // Menu -------------------------------------------------------------------
@@ -1151,8 +1057,8 @@ template <class M, class C> void GUIRenderer<M, C>::drawMainWindowCallback(std::
     ImGui::Text("PARAMETERS");
     std::string color_param_help = "[Hover] Parameter for Description Tooltip\n[Right-Click] for Context Menu\n[Drag & "
                                    "Drop] Module's Parameters to other Parameter Window";
-    this->helpMarkerToolTip(color_param_help);
 
+    this->helpMarkerToolTip(color_param_help);
     this->drawParametersCallback(win_label);
 }
 
@@ -1195,7 +1101,6 @@ template <class M, class C> void GUIRenderer<M, C>::drawParametersCallback(std::
     bool current_mod_open = false;
     size_t dnd_size = 2048; // Set same max size of all module labels for drag and drop.
 
-
     this->GetCoreInstance()->EnumParameters([&, this](const auto& mod, auto& slot) {
         if (current_mod != &mod) {
             current_mod = &mod;
@@ -1209,10 +1114,8 @@ template <class M, class C> void GUIRenderer<M, C>::drawParametersCallback(std::
 
             // Main parameter window always draws all module's parameters
             if (!win->param_main) {
-                std::vector<std::string>::iterator find_iter =
-                    std::find(win->param_mods.begin(), win->param_mods.end(), label);
                 // Consider only modules contained in list
-                if (find_iter == win->param_mods.end()) {
+                if (std::find(win->param_mods.begin(), win->param_mods.end(), label) == win->param_mods.end()) {
                     current_mod_open = false;
                     return;
                 }
@@ -1233,15 +1136,16 @@ template <class M, class C> void GUIRenderer<M, C>::drawParametersCallback(std::
                     GUIWindow tmp_win;
                     std::stringstream stream;
                     stream << std::fixed << std::setprecision(8) << this->lastInstTime;
-                    tmp_win.label = "Parameters##parameters" + stream.str(); /// using instance time as hidden unique id
+                    tmp_win.label =
+                        "Parameters###parameters" + stream.str(); /// using instance time as hidden unique id
                     tmp_win.show = true;
                     // tmp_win.hotkey = core::view::KeyCode();
                     tmp_win.flags = ImGuiWindowFlags_HorizontalScrollbar;
                     tmp_win.func = &GUIRenderer<M, C>::drawParametersCallback;
                     tmp_win.param_hotkeys_show = false;
-                    tmp_win.param_mods.push_back(label);
+                    tmp_win.param_mods.emplace_back(label);
                     tmp_win.param_main = false;
-                    this->windows.push_back(tmp_win);
+                    this->windows.emplace_back(tmp_win);
                 }
                 // Deleting module's parameters is not available in main parameter window.
                 if (!win->param_main) { // && (win->param_mods.size() > 1)) {
@@ -1285,11 +1189,9 @@ template <class M, class C> void GUIRenderer<M, C>::drawParametersCallback(std::
 
             // Nothing to add to main parameter window (draws always all module's parameters)
             if (!win->param_main) {
-                std::vector<std::string>::iterator find_iter =
-                    std::find(win->param_mods.begin(), win->param_mods.end(), payload_id);
                 // Insert dragged module name only if not contained in list
-                if (find_iter == win->param_mods.end()) {
-                    win->param_mods.push_back(payload_id);
+                if (std::find(win->param_mods.begin(), win->param_mods.end(), payload_id) == win->param_mods.end()) {
+                    win->param_mods.emplace_back(payload_id);
                 }
             }
         }
@@ -1357,6 +1259,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawFpsWindowCallback(std::s
         ImGui::InputInt("Stored Values Count", &mvc, 0, 0, ImGuiInputTextFlags_EnterReturnsTrue);
         // Validate refresh rate
         this->max_value_count = (size_t)(std::max(0, mvc));
+
         if (ImGui::Button("Current Value")) {
             ImGui::SetClipboardText(val.c_str());
         }
@@ -1434,6 +1337,15 @@ template <class M, class C> void GUIRenderer<M, C>::drawFontSelectionWindowCallb
 
 
 /**
+ * GUIRenderer<M, C>::drawTFWindowCallback
+ */
+template <class M, class C> void GUIRenderer<M, C>::drawTFWindowCallback(std::string win_label) {
+
+    this->tf_editor.DrawEditor();
+}
+
+
+/**
  * GUIRenderer<M, C>::drawWindow
  */
 template <class M, class C> void GUIRenderer<M, C>::drawWindow(GUIWindow& win) {
@@ -1475,7 +1387,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
     bool reset_win_size = false;
     if (ImGui::BeginMenu("View")) {
         if (ImGui::MenuItem("Reset Window", "SHIFT + 'F12'")) {
-            this->reset_main_window = true;
+            this->main_reset_window = true;
         }
         this->hoverToolTip("Reset Size and Position of this Window");
         ImGui::Separator();
@@ -1615,12 +1527,12 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
             auto value = p->Value();
             if (ImGui::InputFloat(
                     label.c_str(), &value, 0.0f, 0.0f, float_format.c_str(), ImGuiInputTextFlags_EnterReturnsTrue)) {
-                p->SetValue(value);
+                p->SetValue(std::max(p->MinValue(), std::min(value, p->MaxValue())));
             }
         } else if (auto* p = slot.template Param<core::param::IntParam>()) {
             auto value = p->Value();
             if (ImGui::InputInt(label.c_str(), &value, 0, 0, ImGuiInputTextFlags_EnterReturnsTrue)) {
-                p->SetValue(value);
+                p->SetValue(std::max(p->MinValue(), std::min(value, p->MaxValue())));
             }
         } else if (auto* p = slot.template Param<core::param::Vector2fParam>()) {
             auto value = p->Value();
@@ -1641,7 +1553,8 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
                 p->SetValue(value);
             }
         } else { // if (auto* p = slot.Param<core::param::StringParam>()) {
-                 // XXX: UTF8 conversion and allocation every frame is horrific inefficient.
+
+            // XXX: UTF8 conversion and allocation every frame is horrific inefficient.
             vislib::StringA valueString;
             vislib::UTF8Encoder::Encode(valueString, param->ValueString());
 
@@ -1770,8 +1683,8 @@ template <class M, class C> void GUIRenderer<M, C>::updateFps(void) {
             this->fps_values.erase(this->fps_values.begin());
             this->ms_values.erase(this->ms_values.begin());
 
-            this->fps_values.push_back(io.Framerate);
-            this->ms_values.push_back(io.DeltaTime * 1000.0f); // scale to milliseconds
+            this->fps_values.emplace_back(io.Framerate);
+            this->ms_values.emplace_back(io.DeltaTime * 1000.0f); // scale to milliseconds
 
             float value_max = 0.0f;
             for (auto& v : this->fps_values) {
@@ -1851,429 +1764,6 @@ template <class M, class C> void GUIRenderer<M, C>::shutdown(void) {
     vislib::sys::Log::DefaultLog.WriteInfo("[GUIRenderer] Initialising megamol core instance shutdown ...");
     this->GetCoreInstance()->Shutdown();
 }
-
-
-/**
- * GUIRenderer<M, C>::drawDemoWindowCallback
- */
-template <class M, class C> void GUIRenderer<M, C>::drawDemoWindowCallback(std::string win_label) {
-
-    if (this->TransFuncWidget()) {
-    }
-}
-
-/**
- * GUIRenderer<M, C>::drawTransFuncWidget
- */
-template <class M, class C> bool GUIRenderer<M, C>::TransFuncWidget(void) {
-
-    ASSERT(ImGui::GetCurrentContext() != nullptr);
-    ImGuiIO& io = ImGui::GetIO();
-    ImGuiStyle& style = ImGui::GetStyle();
-    bool retval = false;
-
-    float tfw_height = 27.0f;
-    ImGui::BeginChild("fransfer_function_widget", ImVec2(0.0, ImGui::GetFontSize() * tfw_height), true);
-    float tfw_item_width = ImGui::GetContentRegionAvailWidth() * 0.75f;
-    ImGui::PushItemWidth(tfw_item_width); // set general proportional item width
-
-    // Title
-    ImGui::Text("1D Transfer Function");
-
-    // Init colors
-    if (this->tf_cols.size() < 3) {
-        this->tf_cols.clear();
-        std::array<float, 5> zero = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
-        std::array<float, 5> half = {0.5f, 0.5f, 0.5f, 0.5f, 0.5f};
-        std::array<float, 5> one = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
-        this->tf_cols.push_back(zero);
-        this->tf_cols.push_back(half);
-        this->tf_cols.push_back(one);
-    }
-
-    // Select color channels
-    ImGui::Checkbox("Red", &this->tf_chan_red);
-    ImGui::SameLine();
-    ImGui::Checkbox("Green", &this->tf_chan_green);
-    ImGui::SameLine();
-    ImGui::Checkbox("Blue", &this->tf_chan_blue);
-    ImGui::SameLine();
-    ImGui::Checkbox("Alpha", &this->tf_chan_alpha);
-    ImGui::SameLine(tfw_item_width + style.ItemSpacing.x + style.ItemInnerSpacing.x);
-    ImGui::Text("Color Channels");
-
-    // Plot
-    ImDrawList* draw_list = ImGui::GetWindowDrawList();
-    ImVec2 canvas_pos = ImGui::GetCursorScreenPos(); // ImDrawList API uses screen coordinates!
-    ImVec2 canvas_size = ImVec2(tfw_item_width, 150.0f);
-    if (canvas_size.x < 50.0f) canvas_size.x = 50.0f;
-    if (canvas_size.y < 50.0f) canvas_size.y = 50.0f;
-    ImVec2 mouse_cur_pos = io.MousePos; // current mouse position
-    ImVec2 cmd = io.MouseDelta;         // current mouse delta
-
-    ImVec4 tmp_frame_back_col = style.Colors[ImGuiCol_FrameBg];
-    tmp_frame_back_col.w = 1.0f;
-    ImU32 frame_back_col = ImGui::ColorConvertFloat4ToU32(tmp_frame_back_col);
-    ImU32 frame_border_col = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Border]);
-
-    draw_list->AddRectFilledMultiColor(canvas_pos, ImVec2(canvas_pos.x + canvas_size.x, canvas_pos.y + canvas_size.y),
-        frame_back_col, frame_back_col, frame_back_col, frame_back_col);
-    draw_list->AddRect(
-        canvas_pos, ImVec2(canvas_pos.x + canvas_size.x, canvas_pos.y + canvas_size.y), frame_border_col);
-
-    draw_list->PushClipRect(canvas_pos, ImVec2(canvas_pos.x + canvas_size.x, canvas_pos.y + canvas_size.y),
-        true); // clip lines within the canvas (if we resize it, etc.)
-
-
-    const float point_radius = 10.0f;
-    const float point_border = 4.0f;
-    const int circle_subdiv = 12;
-    int selected_node = -1;
-    int selected_chan = -1;
-    for (int i = 0; i < this->tf_cols.size(); ++i) {
-        ImU32 point_col = ImGui::ColorConvertFloat4ToU32(
-            ImVec4(this->tf_cols[i][0], this->tf_cols[i][1], this->tf_cols[i][2], this->tf_cols[i][3]));
-
-        // For each color channel
-        ImU32 line_col = IM_COL32(255, 255, 255, 255);
-        for (int c = 0; c < 4; ++c) {
-            switch (c) {
-            case (0):
-                if (!this->tf_chan_red) {
-                    continue;
-                }
-                line_col = IM_COL32(255, 0, 0, 255);
-                break;
-            case (1):
-                if (!this->tf_chan_green) {
-                    continue;
-                }
-                line_col = IM_COL32(0, 255, 0, 255);
-                break;
-            case (2):
-                if (!this->tf_chan_blue) {
-                    continue;
-                }
-                line_col = IM_COL32(0, 0, 255, 255);
-                break;
-            case (3):
-                if (!this->tf_chan_alpha) {
-                    continue;
-                }
-                line_col = IM_COL32(255, 255, 255, 255);
-                break;
-            }
-
-            ImVec2 point_cur_pos = ImVec2(canvas_pos.x + this->tf_cols[i][4] * canvas_size.x,
-                canvas_pos.y + (1.0f - this->tf_cols[i][c]) * canvas_size.y);
-
-            if (i < (this->tf_cols.size() - 1)) {
-                ImVec2 point_next_pos = ImVec2(canvas_pos.x + this->tf_cols[i + 1][4] * canvas_size.x,
-                    canvas_pos.y + (1.0f - this->tf_cols[i + 1][c]) * canvas_size.y);
-
-                if (this->tf_interpol == InterpolOpts::LINEAR) {
-                    draw_list->AddLine(point_cur_pos, point_next_pos, line_col, 4.0f);
-                } else if (this->tf_interpol == InterpolOpts::GAUSS) {
-                    // TODO: Implement ...
-                }
-            }
-
-            ImU32 point_border_col = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_TextDisabled]);
-            if (i == this->tf_point_select_node) {
-                point_border_col = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ButtonActive]);
-            }
-
-            draw_list->AddCircleFilled(point_cur_pos, point_radius, frame_back_col, circle_subdiv);
-            draw_list->AddCircle(
-                point_cur_pos, (point_radius + point_border - 2.0f), point_border_col, circle_subdiv, point_border);
-            draw_list->AddCircleFilled(point_cur_pos, point_radius, point_col, 12);
-
-            ImVec2 delta_vec = ImVec2(point_cur_pos.x - mouse_cur_pos.x, point_cur_pos.y - mouse_cur_pos.y);
-            if (std::sqrtf((delta_vec.x * delta_vec.x) + (delta_vec.y * delta_vec.y)) <= point_radius) {
-                // if ((selected_node != this->tf_point_select_node) && (selected_chan != this->tf_point_select_chan)) {
-                selected_node = i;
-                selected_chan = c;
-                //}
-            }
-        }
-    }
-    draw_list->PopClipRect();
-
-    ImGui::InvisibleButton("plot", canvas_size);
-    bool sort_required = false;
-    ImVec2 delta_border = style.ItemInnerSpacing;
-    if ((mouse_cur_pos.x > (canvas_pos.x - delta_border.x)) && (mouse_cur_pos.y > (canvas_pos.y - delta_border.y)) &&
-        (mouse_cur_pos.x < (canvas_pos.x + canvas_size.x + delta_border.x)) &&
-        (mouse_cur_pos.y < (canvas_pos.y + canvas_size.y + delta_border.y))) {
-
-        if (io.MouseClicked[0]) { // Left Click -> Change selected node selecteed node
-            if (selected_node >= 0) {
-                this->tf_point_select_node = selected_node;
-                this->tf_point_select_chan = selected_chan;
-            }
-        } else if (io.MouseDown[0]) { // Left Move -> Move selecteed node
-
-            float new_x = (mouse_cur_pos.x - canvas_pos.x) / canvas_size.x;
-            new_x = std::max(0.0f, std::min(new_x, 1.0f));
-            if (this->tf_point_select_node == 0) {
-                new_x = 0.0f;
-            } else if (this->tf_point_select_node == (this->tf_cols.size() - 1)) {
-                new_x = 1.0f;
-            } else if ((new_x <= this->tf_cols[this->tf_point_select_node - 1][4]) ||
-                       (new_x >= this->tf_cols[this->tf_point_select_node + 1][4])) {
-                new_x = this->tf_cols[this->tf_point_select_node][4];
-            }
-            this->tf_cols[this->tf_point_select_node][4] = new_x;
-
-            float new_y = 1.0f - ((mouse_cur_pos.y - canvas_pos.y) / canvas_size.y);
-            new_y = std::max(0.0f, std::min(new_y, 1.0f));
-
-            if (this->tf_chan_red && (this->tf_point_select_chan == 0)) {
-                this->tf_cols[this->tf_point_select_node][0] = new_y;
-            }
-            if (this->tf_chan_green && (this->tf_point_select_chan == 1)) {
-                this->tf_cols[this->tf_point_select_node][1] = new_y;
-            }
-            if (this->tf_chan_blue && (this->tf_point_select_chan == 2)) {
-                this->tf_cols[this->tf_point_select_node][2] = new_y;
-            }
-            if (this->tf_chan_alpha && (this->tf_point_select_chan == 3)) {
-                this->tf_cols[this->tf_point_select_node][3] = new_y;
-            }
-
-            // std::stringstream value_stream;
-            // value_stream << std::setprecision(3); //<< std::setw(7)
-            // value_stream << this->tf_cols[this->tf_point_select_node][4];
-            // std::string value = value_stream.str();
-            // this->hoverToolTip(value);
-
-            sort_required = true;
-
-        } else if (io.MouseClicked[1]) { // Right Click -> Add/delete Node
-
-            if (selected_node < 0) { // Add new at current position
-                float new_x = (mouse_cur_pos.x - canvas_pos.x) / canvas_size.x;
-                new_x = std::max(0.0f, std::min(new_x, 1.0f));
-
-                float new_y = 1.0f - ((mouse_cur_pos.y - canvas_pos.y) / canvas_size.y);
-                new_y = std::max(0.0f, std::min(new_y, 1.0f));
-
-                for (auto it = this->tf_cols.begin(); it != this->tf_cols.end(); ++it) {
-                    if (new_x < (*it)[4]) {
-                        // New nodes can only be inserted between two exisintng ones,
-                        // so there is always a node before and after
-                        std::array<float, 5> prev_col = (*(it - 1));
-                        std::array<float, 5> fol_col = (*it);
-                        // Linear interpolation for new color in between
-                        std::array<float, 5> new_col = {(prev_col[0] + fol_col[0]) / 2.0f,
-                            (prev_col[1] + fol_col[1]) / 2.0f, (prev_col[2] + fol_col[2]) / 2.0f, new_y, new_x};
-                        this->tf_cols.insert(it, new_col);
-                        break;
-                    }
-                }
-            } else { // Delete currently hovered
-                if ((selected_node > 0) && (selected_node < (this->tf_cols.size() - 1))) {
-                    this->tf_cols.erase(this->tf_cols.begin() + selected_node);
-                    this->tf_point_select_node = (unsigned int)std::max(0, (int)this->tf_point_select_node - 1);
-                }
-            }
-            sort_required = true;
-        }
-    }
-    if (sort_required) {
-        std::sort(this->tf_cols.begin(), this->tf_cols.end(),
-            [](const std::array<float, 5>& lhs, const std::array<float, 5>& rhs) { return (lhs[4] < rhs[4]); });
-    }
-    ImGui::SameLine(0.0f, style.ItemInnerSpacing.x);
-    ImGui::Text("Plot");
-    this->helpMarkerToolTip("[Left-Click] Select Node\n[Left-Drag] Mode Node\n[Right-Click] Add/Delete Node");
-
-    // Value slider
-    float value = this->tf_cols[this->tf_point_select_node][4];
-    if (ImGui::SliderFloat("Selected Value", &value, 0.0f, 1.0f)) {
-        float new_x = value;
-        new_x = std::max(0.0f, std::min(new_x, 1.0f));
-        if (this->tf_point_select_node == 0) {
-            new_x = 0.0f;
-        } else if (this->tf_point_select_node == (this->tf_cols.size() - 1)) {
-            new_x = 1.0f;
-        } else if ((new_x <= this->tf_cols[this->tf_point_select_node - 1][4]) ||
-                   (new_x >= this->tf_cols[this->tf_point_select_node + 1][4])) {
-            new_x = this->tf_cols[this->tf_point_select_node][4];
-        }
-        this->tf_cols[this->tf_point_select_node][4] = new_x;
-    }
-    std::string help = "[Ctrl-Click] for keyboard input";
-    this->helpMarkerToolTip(help);
-
-    // Edit Color of selected node
-    float edit_col[4] = {this->tf_cols[this->tf_point_select_node][0], this->tf_cols[this->tf_point_select_node][1],
-        this->tf_cols[this->tf_point_select_node][2], this->tf_cols[this->tf_point_select_node][3]};
-    if (ImGui::ColorEdit4("Selected Color", edit_col)) {
-        this->tf_cols[this->tf_point_select_node][0] = edit_col[0];
-        this->tf_cols[this->tf_point_select_node][1] = edit_col[1];
-        this->tf_cols[this->tf_point_select_node][2] = edit_col[2];
-        this->tf_cols[this->tf_point_select_node][3] = edit_col[3];
-    }
-    help = "[Click] on the colored square to open a color picker.\n"
-           "[CTRL+Click] on individual component to input value.\n"
-           "[Right-Click] on the individual color widget to show options.";
-    this->helpMarkerToolTip(help);
-
-    // Select interpolation mode (Linear, Gauss, ...)
-    std::map<InterpolOpts, std::string> opts;
-    opts[InterpolOpts::LINEAR] = "Linear";
-    opts[InterpolOpts::GAUSS] = "Gauss";
-    if (ImGui::BeginCombo("Interpolation", opts[this->tf_interpol].c_str())) {
-        for (int i = 0; i < opts.size(); ++i) {
-            if (ImGui::Selectable(opts[(InterpolOpts)i].c_str(), (this->tf_interpol == (InterpolOpts)i))) {
-                this->tf_interpol = (InterpolOpts)i;
-            }
-        }
-        ImGui::EndCombo();
-    }
-
-    // Create current texture data
-    std::vector<ImVec4> tex_cols;
-    tex_cols.resize(this->tf_tex_size);
-    std::array<float, 5> cx1 = this->tf_cols[0];
-    std::array<float, 5> cx2 = this->tf_cols[0];
-    int p1 = 0;
-    int p2 = 0;
-    size_t col_cnt = this->tf_cols.size();
-    float r, g, b, a;
-    // CHOOSE LINEAR INTERPOLATION
-    if (this->tf_interpol == InterpolOpts::LINEAR) {
-        for (size_t i = 0; i < col_cnt; ++i) {
-            cx1 = cx2;
-            p1 = p2;
-            cx2 = this->tf_cols[i];
-            ASSERT(cx2[4] <= 1.0f + 1e-5f);
-            p2 = static_cast<int>(cx2[4] * static_cast<float>(this->tf_tex_size - 1));
-            ASSERT(p2 < static_cast<int>(this->tf_tex_size));
-            ASSERT(p2 >= p1);
-
-            for (int p = p1; p <= p2; p++) {
-                float al = static_cast<float>(p - p1) / static_cast<float>(p2 - p1);
-                float be = 1.0f - al;
-
-                r = cx1[0] * be + cx2[0] * al;
-                g = cx1[1] * be + cx2[1] * al;
-                b = cx1[2] * be + cx2[2] * al;
-                a = cx1[3] * be + cx2[3] * al;
-                tex_cols[p] = ImVec4(r, g, b, a);
-            }
-        }
-    } else if (this->tf_interpol == InterpolOpts::GAUSS) {
-        // TODO: Implement ....
-    }
-    // Draw current transfer function texture
-    const float texture_height = 30.0f;
-    ImVec2 texture_pos = ImGui::GetCursorScreenPos();
-    ImVec2 rect_size = ImVec2(tfw_item_width / (float)this->tf_tex_size, texture_height);
-    ImGui::InvisibleButton("texture", ImVec2(tfw_item_width, rect_size.y));
-    for (int i = 0; i < this->tf_tex_size; ++i) {
-        ImU32 rect_col = ImGui::ColorConvertFloat4ToU32(tex_cols[i]);
-        ImVec2 rect_pos_a = ImVec2(texture_pos.x + (float)i * rect_size.x, texture_pos.y);
-        ImVec2 rect_pos_b = ImVec2(rect_pos_a.x + rect_size.x, rect_pos_a.y + rect_size.y);
-        draw_list->AddRectFilled(rect_pos_a, rect_pos_b, rect_col, 0.0f, 10);
-    }
-
-    // Get texture size
-    int tfw_texsize = (int)this->tf_tex_size;
-    if (ImGui::InputInt("Texture Size", &tfw_texsize, 1, 10, ImGuiInputTextFlags_EnterReturnsTrue)) {
-        this->tf_tex_size = (size_t)std::max(1, tfw_texsize);
-    }
-
-    // Apply current changes
-    if (ImGui::Button("Apply Transfer Function")) {
-    }
-
-    ImGui::EndChild();
-
-    return true; // retval;
-}
-
-
-///**
-// * GUIRenderer<M, C>::OnGUIKeyCallback
-// */
-// template <class M, class C> bool GUIRenderer<M, C>::OnGUIKeyCallback(core::Call& call) {
-//    try {
-//        core::view::CallGUIRenderer& cr = dynamic_cast<core::view::CallGUIRenderer&>(call);
-//        auto& evt = cr.GetInputEvent();
-//        ASSERT(evt.tag == core::view::InputEvent::Tag::Key && "Callback invocation mismatched input event");
-//        return this->OnKey(evt.keyData.key, evt.keyData.action, evt.keyData.mods);
-//    } catch (...) {
-//        ASSERT("OnGUIKeyCallback call cast failed\n");
-//    }
-//    return false;
-//}
-//
-//
-///**
-// * GUIRenderer<M, C>::OnGUICharCallback
-// */
-// template <class M, class C> bool GUIRenderer<M, C>::OnGUICharCallback(core::Call& call) {
-//    try {
-//        core::view::CallGUIRenderer& cr = dynamic_cast<core::view::CallGUIRenderer&>(call);
-//        auto& evt = cr.GetInputEvent();
-//        ASSERT(evt.tag == core::view::InputEvent::Tag::Char && "Callback invocation mismatched input event");
-//        return this->OnChar(evt.charData.codePoint);
-//    } catch (...) {
-//        ASSERT("OnGUICharCallback call cast failed\n");
-//    }
-//    return false;
-//}
-//
-//
-///**
-// * GUIRenderer<M, C>::OnGUIMouseButtonCallback
-// */
-// template <class M, class C> bool GUIRenderer<M, C>::OnGUIMouseButtonCallback(core::Call& call) {
-//    try {
-//        core::view::CallGUIRenderer& cr = dynamic_cast<core::view::CallGUIRenderer&>(call);
-//        auto& evt = cr.GetInputEvent();
-//        ASSERT(evt.tag == core::view::InputEvent::Tag::MouseButton && "Callback invocation mismatched input
-//        event"); return this->OnMouseButton(evt.mouseButtonData.button, evt.mouseButtonData.action,
-//        evt.mouseButtonData.mods);
-//    } catch (...) {
-//        ASSERT("OnGUIMouseButtonCallback call cast failed\n");
-//    }
-//    return false;
-//}
-//
-//
-///**
-// * GUIRenderer<M, C>::OnGUIMouseMoveCallback
-// */
-// template <class M, class C> bool GUIRenderer<M, C>::OnGUIMouseMoveCallback(core::Call& call) {
-//    try {
-//        core::view::CallGUIRenderer& cr = dynamic_cast<core::view::CallGUIRenderer&>(call);
-//        auto& evt = cr.GetInputEvent();
-//        ASSERT(evt.tag == core::view::InputEvent::Tag::MouseMove && "Callback invocation mismatched input event");
-//        return this->OnMouseMove(evt.mouseMoveData.x, evt.mouseMoveData.y);
-//    } catch (...) {
-//        ASSERT("OnGUIMouseMoveCallback call cast failed\n");
-//    }
-//    return false;
-//}
-//
-//
-///**
-// * GUIRenderer<M, C>::OnGUIMouseScrollCallback
-// */
-// template <class M, class C> bool GUIRenderer<M, C>::OnGUIMouseScrollCallback(core::Call& call) {
-//    try {
-//        core::view::CallGUIRenderer& cr = dynamic_cast<core::view::CallGUIRenderer&>(call);
-//        auto& evt = cr.GetInputEvent();
-//        ASSERT(evt.tag == core::view::InputEvent::Tag::MouseScroll && "Callback invocation mismatched input
-//        event"); return this->OnMouseScroll(evt.mouseScrollData.dx, evt.mouseScrollData.dy);
-//    } catch (...) {
-//        ASSERT("OnGUIMouseScrollCallback call cast failed\n");
-//    }
-//    return false;
-//}
 
 
 } // namespace gui

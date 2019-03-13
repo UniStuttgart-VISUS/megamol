@@ -1,12 +1,12 @@
 /*
- * CallGUIRenderer.h
+ * CallSplitViewOverlay.h
  *
  * Copyright (C) 2019 by VISUS (Universitaet Stuttgart).
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_CALLGUIRENDERER_H_INCLUDED
-#define MEGAMOLCORE_CALLGUIRENDERER_H_INCLUDED
+#ifndef MEGAMOLCORE_CALLSPLITVIEWOVERLAY_H_INCLUDED
+#define MEGAMOLCORE_CALLSPLITVIEWOVERLAY_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -24,9 +24,12 @@ namespace core {
 namespace view {
 
     /**
-     * ...
+     * Call connecting SplitView with special overlay renderer (e.g. gui::GUIRenderer)
+     * 
+     * (Provides only currently available viewport and instance time.)
+     *
      */
-    class MEGAMOLCORE_API CallGUIRenderer : public InputCall {
+    class MEGAMOLCORE_API CallSplitViewOverlay : public InputCall {
     public:
 
         /**
@@ -35,7 +38,7 @@ namespace view {
          * @return The name of the objects of this description.
          */
         static const char *ClassName(void) {
-            return "CallGUIRenderer";
+            return "CallSplitViewOverlay";
         }
 
         /**
@@ -44,7 +47,7 @@ namespace view {
          * @return A human readable description of the module.
          */
         static const char *Description(void) {
-            return "Call the GUIRenderer";
+            return "Call the Overlay Renderer";
         }
 
 		/** Function index of 'render' */
@@ -79,12 +82,12 @@ namespace view {
         /**
          * Ctor.
          */
-        CallGUIRenderer(void);
+        CallSplitViewOverlay(void);
 
         /**
          * ~Dtor.
          */
-        virtual ~CallGUIRenderer(void);
+        virtual ~CallSplitViewOverlay(void);
 
 
         /**
@@ -135,11 +138,11 @@ namespace view {
     };
 
     /** Description class typedef */
-    typedef megamol::core::factories::CallAutoDescription<CallGUIRenderer>
-        CallGUIRendererDescription;
+    typedef megamol::core::factories::CallAutoDescription<CallSplitViewOverlay>
+        CallSplitViewOverlayDescription;
 
 } /* end namespace view */
 } /* end namespace core */
 } /* end namespace megamol */
 
-#endif /* MEGAMOLCORE_CALLGUIRENDERER_H_INCLUDED */
+#endif /* MEGAMOLCORE_CALLSPLITVIEWOVERLAY_H_INCLUDED */
