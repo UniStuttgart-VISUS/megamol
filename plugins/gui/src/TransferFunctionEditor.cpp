@@ -15,16 +15,15 @@ using namespace megamol::gui;
 /**
  * Ctor
  */
-megamol::gui::TransferFunctionEditor::TransferFunctionEditor(void) :
-    data()
+megamol::gui::TransferFunctionEditor::TransferFunctionEditor(void)
+    : data()
     , interpol_mode(InterpolMode::LINEAR)
     , tex_size(128)
     , tex_data()
     , tex_recalc(false)
-    , plot_channels{ false, false, false, true }
+    , plot_channels{false, false, false, true}
     , point_select_node(0)
-    , point_select_chan(0)
-{
+    , point_select_chan(0) {
 
     // nothing to do here ...
 }
@@ -42,7 +41,8 @@ megamol::gui::TransferFunctionEditor::~TransferFunctionEditor(void) {
 /**
  * TransferFunctionEditor::SetTransferFunction
  */
-void megamol::gui::TransferFunctionEditor::SetTransferFunction(std::vector<std::array<float, 5>>& data, InterpolMode imod) {
+void megamol::gui::TransferFunctionEditor::SetTransferFunction(
+    std::vector<std::array<float, 5>>& data, InterpolMode imod) {
 
     this->interpol_mode = imod;
     this->data = data;
@@ -52,11 +52,7 @@ void megamol::gui::TransferFunctionEditor::SetTransferFunction(std::vector<std::
 /**
  * TransferFunctionEditor::GetTransferFunction
  */
-std::vector<std::array<float, 5>> megamol::gui::TransferFunctionEditor::GetTransferFunction(void) {
-
-    return this->data;
-}
-
+std::vector<std::array<float, 5>> megamol::gui::TransferFunctionEditor::GetTransferFunction(void) { return this->data; }
 
 
 /**
@@ -77,8 +73,8 @@ bool megamol::gui::TransferFunctionEditor::DrawTransferFunctionEditor(void) {
     // Init transfer function colors
     if (this->data.size() < 2) {
         this->data.clear();
-        std::array<float, 5> zero = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
-        std::array<float, 5> one = { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f };
+        std::array<float, 5> zero = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+        std::array<float, 5> one = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
         this->data.emplace_back(zero);
         this->data.emplace_back(one);
         this->tex_recalc = true;
@@ -166,8 +162,7 @@ bool megamol::gui::TransferFunctionEditor::DrawTransferFunctionEditor(void) {
 
                 if (this->interpol_mode == InterpolMode::LINEAR) {
                     draw_list->AddLine(point_cur_pos, point_next_pos, line_col, 4.0f);
-                }
-                else if (this->interpol_mode == InterpolMode::GAUSS) {
+                } else if (this->interpol_mode == InterpolMode::GAUSS) {
 
 
                     // TODO: Implement ...
@@ -181,8 +176,7 @@ bool megamol::gui::TransferFunctionEditor::DrawTransferFunctionEditor(void) {
 
             draw_list->AddCircleFilled(point_cur_pos, point_radius, frame_back_col, circle_subdiv);
             float point_radius_full = point_radius + point_border - 2.0f;
-            draw_list->AddCircle(
-                point_cur_pos, point_radius_full, point_border_col, circle_subdiv, point_border);
+            draw_list->AddCircle(point_cur_pos, point_radius_full, point_border_col, circle_subdiv, point_border);
             draw_list->AddCircleFilled(point_cur_pos, point_radius, point_col, 12);
 
             ImVec2 delta_vec = ImVec2(point_cur_pos.x - mouse_cur_pos.x, point_cur_pos.y - mouse_cur_pos.y);
@@ -205,19 +199,16 @@ bool megamol::gui::TransferFunctionEditor::DrawTransferFunctionEditor(void) {
                 this->point_select_node = selected_node;
                 this->point_select_chan = selected_chan;
             }
-        }
-        else if (io.MouseDown[0]) { // Left Move -> Move selecteed node
+        } else if (io.MouseDown[0]) { // Left Move -> Move selecteed node
 
             float new_x = (mouse_cur_pos.x - canvas_pos.x) / canvas_size.x;
             new_x = std::max(0.0f, std::min(new_x, 1.0f));
             if (this->point_select_node == 0) {
                 new_x = 0.0f;
-            }
-            else if (this->point_select_node == (this->data.size() - 1)) {
+            } else if (this->point_select_node == (this->data.size() - 1)) {
                 new_x = 1.0f;
-            }
-            else if ((new_x <= this->data[this->point_select_node - 1][4]) ||
-                (new_x >= this->data[this->point_select_node + 1][4])) {
+            } else if ((new_x <= this->data[this->point_select_node - 1][4]) ||
+                       (new_x >= this->data[this->point_select_node + 1][4])) {
                 new_x = this->data[this->point_select_node][4];
             }
             this->data[this->point_select_node][4] = new_x;
@@ -239,8 +230,7 @@ bool megamol::gui::TransferFunctionEditor::DrawTransferFunctionEditor(void) {
             }
             this->tex_recalc = true;
 
-        }
-        else if (io.MouseClicked[1]) { // Right Click -> Add/delete Node
+        } else if (io.MouseClicked[1]) { // Right Click -> Add/delete Node
 
             if (selected_node < 0) { // Add new at current position
                 float new_x = (mouse_cur_pos.x - canvas_pos.x) / canvas_size.x;
@@ -255,9 +245,9 @@ bool megamol::gui::TransferFunctionEditor::DrawTransferFunctionEditor(void) {
                         // so there is always a node before and after
                         std::array<float, 5> prev_col = (*(it - 1));
                         std::array<float, 5> fol_col = (*it);
-                        std::array<float, 5> new_col = { (prev_col[0] + fol_col[0]) / 2.0f,
+                        std::array<float, 5> new_col = {(prev_col[0] + fol_col[0]) / 2.0f,
                             (prev_col[1] + fol_col[1]) / 2.0f, (prev_col[2] + fol_col[2]) / 2.0f,
-                            (prev_col[3] + fol_col[3]) / 2.0f, new_x };
+                            (prev_col[3] + fol_col[3]) / 2.0f, new_x};
 
                         if (this->plot_channels[0]) {
                             new_col[0] = new_y;
@@ -276,8 +266,7 @@ bool megamol::gui::TransferFunctionEditor::DrawTransferFunctionEditor(void) {
                         break;
                     }
                 }
-            }
-            else { // Delete currently hovered
+            } else { // Delete currently hovered
                 if ((selected_node > 0) && (selected_node < (this->data.size() - 1))) {
                     this->data.erase(this->data.begin() + selected_node);
                     this->point_select_node = (unsigned int)std::max(0, (int)this->point_select_node - 1);
@@ -301,12 +290,10 @@ bool megamol::gui::TransferFunctionEditor::DrawTransferFunctionEditor(void) {
         new_x = std::max(0.0f, std::min(new_x, 1.0f));
         if (this->point_select_node == 0) {
             new_x = 0.0f;
-        }
-        else if (this->point_select_node == (this->data.size() - 1)) {
+        } else if (this->point_select_node == (this->data.size() - 1)) {
             new_x = 1.0f;
-        }
-        else if ((new_x <= this->data[this->point_select_node - 1][4]) ||
-            (new_x >= this->data[this->point_select_node + 1][4])) {
+        } else if ((new_x <= this->data[this->point_select_node - 1][4]) ||
+                   (new_x >= this->data[this->point_select_node + 1][4])) {
             new_x = this->data[this->point_select_node][4];
         }
         this->data[this->point_select_node][4] = new_x;
@@ -316,8 +303,8 @@ bool megamol::gui::TransferFunctionEditor::DrawTransferFunctionEditor(void) {
     this->HelpMarkerToolTip(help);
 
     // Edit Color of selected node
-    float edit_col[4] = { this->data[this->point_select_node][0], this->data[this->point_select_node][1],
-        this->data[this->point_select_node][2], this->data[this->point_select_node][3] };
+    float edit_col[4] = {this->data[this->point_select_node][0], this->data[this->point_select_node][1],
+        this->data[this->point_select_node][2], this->data[this->point_select_node][3]};
     if (ImGui::ColorEdit4("Selected Color", edit_col)) {
         this->data[this->point_select_node][0] = edit_col[0];
         this->data[this->point_select_node][1] = edit_col[1];
@@ -326,8 +313,8 @@ bool megamol::gui::TransferFunctionEditor::DrawTransferFunctionEditor(void) {
         this->tex_recalc = true;
     }
     help = "[Click] on the colored square to open a color picker.\n"
-        "[CTRL+Click] on individual component to input value.\n"
-        "[Right-Click] on the individual color widget to show options.";
+           "[CTRL+Click] on individual component to input value.\n"
+           "[Right-Click] on the individual color widget to show options.";
     this->HelpMarkerToolTip(help);
 
     // Create current texture data
@@ -361,8 +348,7 @@ bool megamol::gui::TransferFunctionEditor::DrawTransferFunctionEditor(void) {
                     this->tex_data[p] = ImVec4(r, g, b, a);
                 }
             }
-        }
-        else if (this->interpol_mode == InterpolMode::GAUSS) {
+        } else if (this->interpol_mode == InterpolMode::GAUSS) {
             // TODO: Implement ....
         }
     }
@@ -390,7 +376,7 @@ bool megamol::gui::TransferFunctionEditor::DrawTransferFunctionEditor(void) {
     // Select interpolation mode (Linear, Gauss, ...)
     std::map<InterpolMode, std::string> opts;
     opts[InterpolMode::LINEAR] = "Linear";
-    //opts[InterpolMode::GAUSS] = "Gauss";
+    // opts[InterpolMode::GAUSS] = "Gauss";
     if (ImGui::BeginCombo("Interpolation", opts[this->interpol_mode].c_str())) {
         for (int i = 0; i < opts.size(); ++i) {
             if (ImGui::Selectable(opts[(InterpolMode)i].c_str(), (this->interpol_mode == (InterpolMode)i))) {

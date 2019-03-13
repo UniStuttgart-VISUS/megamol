@@ -30,7 +30,6 @@ megamol::gui::GUIUtility::~GUIUtility(void) {
 }
 
 
-
 /**
  * GUIUtility::ResetWindowSizePos
  */
@@ -60,7 +59,6 @@ void megamol::gui::GUIUtility::ResetWindowSizePos(std::string win_label, float m
 }
 
 
-
 /**
  * GUIUtility::HoverToolTip
  */
@@ -74,15 +72,13 @@ void megamol::gui::GUIUtility::HoverToolTip(std::string text, ImGuiID id, float 
             if (this->tooltip_id != id) {
                 this->tooltip_time = 0.0f;
                 this->tooltip_id = id;
-            }
-            else {
+            } else {
                 if ((this->tooltip_time > time_start) && (this->tooltip_time < (time_start + time_end))) {
                     show_tooltip = true;
                 }
                 this->tooltip_time += io.DeltaTime;
             }
-        }
-        else {
+        } else {
             show_tooltip = true;
         }
 
@@ -93,8 +89,7 @@ void megamol::gui::GUIUtility::HoverToolTip(std::string text, ImGuiID id, float 
             ImGui::PopTextWrapPos();
             ImGui::EndTooltip();
         }
-    }
-    else {
+    } else {
         if ((time_start > 0.0f) && (this->tooltip_id == id)) {
             this->tooltip_time = 0.0f;
         }

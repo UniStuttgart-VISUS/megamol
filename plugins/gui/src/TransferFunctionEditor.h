@@ -16,13 +16,13 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include <string>
-#include <array>
-#include <vector>
-#include <map>
 #include <algorithm> // sort
+#include <array>
 #include <cassert>
 #include <imgui.h>
+#include <map>
+#include <string>
+#include <vector>
 
 #include "GUIUtility.h"
 
@@ -36,7 +36,6 @@ namespace gui {
  */
 class TransferFunctionEditor : public GUIUtility {
 public:
-
     /** Interpolstion modes. */
     enum InterpolMode { LINEAR = 0, GAUSS = 1 };
 
@@ -57,7 +56,6 @@ public:
     std::vector<std::array<float, 5>> GetTransferFunction(void);
 
 protected:
-
     /**
      * Ctor
      */
@@ -69,7 +67,6 @@ protected:
     ~TransferFunctionEditor(void);
 
 private:
-
     // VARIABLES -----------------------------------------------------------
 
     /** Array holding current colors and function values. */

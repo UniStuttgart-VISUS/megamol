@@ -16,9 +16,9 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include <string>
 #include <cassert>
 #include <imgui.h>
+#include <string>
 
 
 namespace megamol {
@@ -61,7 +61,6 @@ public:
     void HelpMarkerToolTip(std::string text, std::string label = "(?)");
 
 protected:
-
     /**
      * Ctor
      */
@@ -73,13 +72,11 @@ protected:
     ~GUIUtility(void);
 
 private:
-
     /** Current tooltip hover time. */
     float tooltip_time;
 
     /** Current hovered tooltip item. */
     ImGuiID tooltip_id;
-
 };
 
 } // namespace gui
