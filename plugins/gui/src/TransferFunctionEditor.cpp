@@ -167,6 +167,8 @@ bool megamol::gui::TransferFunctionEditor::DrawTransferFunctionEditor(void) {
                     draw_list->AddLine(point_cur_pos, point_next_pos, line_col, 4.0f);
                 }
                 else if (this->interpol_mode == InterpolMode::GAUSS) {
+
+
                     // TODO: Implement ...
                 }
             }
@@ -289,7 +291,7 @@ bool megamol::gui::TransferFunctionEditor::DrawTransferFunctionEditor(void) {
     }
     ImGui::SameLine(0.0f, style.ItemInnerSpacing.x);
     ImGui::Text("Plot");
-    // FIX: this->helpMarkerToolTip("[Left-Click] Select Node\n[Left-Drag] Move Node\n[Right-Click] Add/Delete Node");
+    this->HelpMarkerToolTip("[Left-Click] Select Node\n[Left-Drag] Move Node\n[Right-Click] Add/Delete Node");
 
     // Value slider
     float value = this->data[this->point_select_node][4];
@@ -310,7 +312,7 @@ bool megamol::gui::TransferFunctionEditor::DrawTransferFunctionEditor(void) {
         this->tex_recalc = true;
     }
     std::string help = "[Ctrl-Click] for keyboard input";
-    // FIX: this->helpMarkerToolTip(help);
+    this->HelpMarkerToolTip(help);
 
     // Edit Color of selected node
     float edit_col[4] = { this->data[this->point_select_node][0], this->data[this->point_select_node][1],
@@ -325,7 +327,7 @@ bool megamol::gui::TransferFunctionEditor::DrawTransferFunctionEditor(void) {
     help = "[Click] on the colored square to open a color picker.\n"
         "[CTRL+Click] on individual component to input value.\n"
         "[Right-Click] on the individual color widget to show options.";
-    // FIX: this->helpMarkerToolTip(help);
+    this->HelpMarkerToolTip(help);
 
     // Create current texture data
     if (this->tex_recalc) {
@@ -387,7 +389,7 @@ bool megamol::gui::TransferFunctionEditor::DrawTransferFunctionEditor(void) {
     // Select interpolation mode (Linear, Gauss, ...)
     std::map<InterpolMode, std::string> opts;
     opts[InterpolMode::LINEAR] = "Linear";
-    opts[InterpolMode::GAUSS] = "Gauss";
+    //opts[InterpolMode::GAUSS] = "Gauss";
     if (ImGui::BeginCombo("Interpolation", opts[this->interpol_mode].c_str())) {
         for (int i = 0; i < opts.size(); ++i) {
             if (ImGui::Selectable(opts[(InterpolMode)i].c_str(), (this->interpol_mode == (InterpolMode)i))) {
@@ -401,7 +403,7 @@ bool megamol::gui::TransferFunctionEditor::DrawTransferFunctionEditor(void) {
     // Apply current changes
     if (ImGui::Button("Apply Transfer Function")) {
     }
-    // FIX: this->hoverToolTip("So far nothing happens ...");
+    this->HoverToolTip("So far nothing happens ...");
 
     return true;
 }

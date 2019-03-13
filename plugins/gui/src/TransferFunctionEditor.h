@@ -26,6 +26,8 @@
 
 #include "vislib/assert.h"
 
+#include "GUIUtility.h"
+
 
 namespace megamol {
 namespace gui {
@@ -34,21 +36,11 @@ namespace gui {
 /**
  * 1D Transfer Function Editor using ImGui.
  */
-class TransferFunctionEditor {
+class TransferFunctionEditor : public GUIUtility {
 public:
 
     /** Interpolstion modes. */
     enum InterpolMode { LINEAR = 0, GAUSS = 1 };
-
-    /**
-     * Ctor
-     */
-    TransferFunctionEditor(void);
-
-    /**
-     * Dtor
-     */
-    ~TransferFunctionEditor(void);
 
     /**
      * Draws the transfer function editor.
@@ -67,6 +59,16 @@ public:
     std::vector<std::array<float, 5>> GetTransferFunction(void);
 
 protected:
+
+    /**
+     * Ctor
+     */
+    TransferFunctionEditor(void);
+
+    /**
+     * Dtor
+     */
+    ~TransferFunctionEditor(void);
 
 private:
 

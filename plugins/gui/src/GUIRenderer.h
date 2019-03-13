@@ -195,12 +195,6 @@ private:
     /** Float precision for parameter format. */
     int float_print_prec;
 
-    /** Current tooltip hover time. */
-    float tooltip_time;
-
-    /** Current hovered tooltip item. */
-    ImGuiID tooltip_id;
-
     /** Array holding the window states. */
     std::list<GUIWindow> windows;
 
@@ -336,35 +330,6 @@ private:
     void drawHotkeyParameter(const core::Module& mod, core::param::ParamSlot& slot);
 
     /**
-     * Reset size and position of main window.
-     *
-     * @param win_label   The label of the current window.
-     * @param min_height  The minimum height the window should at least be reset.
-     *
-     */
-    void resetWindowSizePos(std::string win_label, float min_height);
-
-    /**
-     * Show tooltip on hover.
-     *
-     * @param text        The tooltip text.
-     * @param id          The id of the imgui item the tooltip belongs (only needed for delayed appearance of tooltip).
-     * @param time_start  The time delay to wait until the tooltip is shown for a hovered imgui item.
-     * @param time_end    The time delay to wait until the tooltip is hidden for a hovered imgui item.
-     *
-     */
-    void hoverToolTip(std::string text, ImGuiID id = 0, float time_start = 0.0f, float time_end = 4.0f);
-
-    /**
-     * Show help marker.
-     *
-     * @param text   The help tooltip text.
-     * @param label  The visible text for which the tooltip is enabled.
-     *
-     */
-    void helpMarkerToolTip(std::string text, std::string label = "(?)");
-
-    /**
      * Update stored fps and ms values.
      */
     void updateFps(void);
@@ -391,8 +356,6 @@ inline GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIR
     , decorated_renderer_slot("decoratedRenderer", "Connects to another 2D Renderer being decorated")
     , overlay_slot("overlayRender", "Connected with SplitView for special overlay rendering")
     , float_print_prec(3) // INIT: Float string format precision
-    , tooltip_time(0.0f)
-    , tooltip_id(0)
     , windows()
     , lastInstTime(0.0)
     , main_reset_window(false)
@@ -445,8 +408,6 @@ inline GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GUIR
     , decorated_renderer_slot("decoratedRenderer", "Connects to another 2D Renderer being decorated")
     , overlay_slot("overlayRender", "Connected with SplitView for special overlay rendering")
     , float_print_prec(3) // INIT: Float string format precision
-    , tooltip_time(0.0f)
-    , tooltip_id(0)
     , windows()
     , lastInstTime(0.0)
     , main_reset_window(false)
@@ -1190,7 +1151,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawMainWindowCallback(std::
 
     // Trigger window size reset outside of menu window to get right position
     if (this->main_reset_window) {
-        this->resetWindowSizePos(win_label, 100.0f);
+        this->ResetWindowSizePos(win_label, 100.0f);
         this->main_reset_window = false;
     }
 
@@ -1206,7 +1167,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawMainWindowCallback(std::
     std::string color_param_help = "[Hover] Parameter for Description Tooltip\n[Right-Click] for Context Menu\n[Drag & "
                                    "Drop] Module's Parameters to other Parameter Window";
 
-    this->helpMarkerToolTip(color_param_help);
+    this->HelpMarkerToolTip(color_param_help);
     this->drawParametersCallback(win_label);
 }
 
@@ -1410,7 +1371,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawFpsWindowCallback(std::s
         // Validate refresh rate
         this->max_delay = std::max(0.0f, this->max_delay);
         std::string help = "Changes clear all values";
-        this->helpMarkerToolTip(help);
+        this->HelpMarkerToolTip(help);
 
         int mvc = (int)this->max_value_count;
         ImGui::InputInt("Stored Values Count", &mvc, 0, 0, ImGuiInputTextFlags_EnterReturnsTrue);
@@ -1435,7 +1396,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawFpsWindowCallback(std::s
 
         ImGui::Text("Copy to Clipborad");
         help = "Values are copied in chronological order (newest first)";
-        this->helpMarkerToolTip(help);
+        this->HelpMarkerToolTip(help);
     }
 }
 
@@ -1488,7 +1449,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawFontSelectionWindowCallb
         ImGui::TextColored(ImVec4(0.24f, 0.52f, 0.88f, 1.0f), "Please enter valid font file name");
     }
     std::string help = "Same font can be loaded multiple times using different font size";
-    this->helpMarkerToolTip(help);
+    this->HelpMarkerToolTip(help);
 #endif
 }
 
@@ -1537,7 +1498,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
         if (ImGui::MenuItem("Reset Window", "SHIFT + 'F12'")) {
             this->main_reset_window = true;
         }
-        this->hoverToolTip("Reset Size and Position of this Window");
+        this->HoverToolTip("Reset Size and Position of this Window");
         ImGui::Separator();
 
         for (auto& win : this->windows) {
@@ -1559,15 +1520,15 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
         if (ImGui::MenuItem("GitHub")) {
             ImGui::SetClipboardText(gitLink.c_str());
         }
-        this->hoverToolTip(hint);
+        this->HoverToolTip(hint);
         if (ImGui::MenuItem("Readme")) {
             ImGui::SetClipboardText(helpLink.c_str());
         }
-        this->hoverToolTip(hint);
+        this->HoverToolTip(hint);
         if (ImGui::MenuItem("Web Page")) {
             ImGui::SetClipboardText(mmLink.c_str());
         }
-        this->hoverToolTip(hint);
+        this->HoverToolTip(hint);
         ImGui::Separator();
         if (ImGui::MenuItem("About...")) {
             open_popup = true;
@@ -1719,9 +1680,9 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
             help = "Press [Return] to confirm changes.";
         }
 
-        this->hoverToolTip(desc, ImGui::GetID(label.c_str()), 1.0f);
+        this->HoverToolTip(desc, ImGui::GetID(label.c_str()), 1.0f);
 
-        this->helpMarkerToolTip(help);
+        this->HelpMarkerToolTip(help);
     }
 }
 
@@ -1742,12 +1703,12 @@ void GUIRenderer<M, C>::drawHotkeyParameter(const core::Module& mod, core::param
             ImGui::Columns(2, "hotkey_columns", false);
 
             ImGui::Text(label.c_str());
-            this->hoverToolTip(desc); //, ImGui::GetID(keycode.c_str()), 0.5f);
+            this->HoverToolTip(desc); //, ImGui::GetID(keycode.c_str()), 0.5f);
 
             ImGui::NextColumn();
 
             ImGui::Text(keycode.c_str());
-            this->hoverToolTip(desc); //, ImGui::GetID(keycode.c_str()), 0.5f);
+            this->HoverToolTip(desc); //, ImGui::GetID(keycode.c_str()), 0.5f);
 
             // Reset colums
             ImGui::Columns(1);
@@ -1755,35 +1716,6 @@ void GUIRenderer<M, C>::drawHotkeyParameter(const core::Module& mod, core::param
             ImGui::Separator();
         }
     }
-}
-
-
-/**
- * GUIRenderer<M, C>::resetCurrentWindow
- */
-template <class M, class C> void GUIRenderer<M, C>::resetWindowSizePos(std::string win_label, float min_height) {
-
-    ImGuiIO& io = ImGui::GetIO();
-    ImGuiStyle& style = ImGui::GetStyle();
-
-    auto win_pos = ImGui::GetWindowPos();
-    if (win_pos.x < 0) {
-        win_pos.x = style.DisplayWindowPadding.x;
-    }
-    if (win_pos.y < 0) {
-        win_pos.y = style.DisplayWindowPadding.y;
-    }
-
-    auto win_width = 0.0f; // width = 0 means auto resize
-    auto win_height = io.DisplaySize.y - (win_pos.y + style.DisplayWindowPadding.y);
-    if (win_height < min_height) {
-        win_height = min_height;
-        win_pos.y = io.DisplaySize.y - (min_height + style.DisplayWindowPadding.y);
-    }
-
-    ImGui::SetWindowSize(win_label.c_str(), ImVec2(win_width, win_height), ImGuiCond_Always);
-
-    ImGui::SetWindowPos(win_label.c_str(), win_pos, ImGuiCond_Always);
 }
 
 
@@ -1848,58 +1780,6 @@ template <class M, class C> void GUIRenderer<M, C>::updateFps(void) {
         }
 
         this->current_delay = 0.0f;
-    }
-}
-
-
-/**
- * GUIRenderer<M, C>::hoverToolTip
- */
-template <class M, class C>
-void GUIRenderer<M, C>::hoverToolTip(std::string text, ImGuiID id, float time_start, float time_end) {
-
-    ImGuiIO& io = ImGui::GetIO();
-
-    if (ImGui::IsItemHovered()) {
-        bool show_tooltip = false;
-        if (time_start > 0.0f) {
-            if (this->tooltip_id != id) {
-                this->tooltip_time = 0.0f;
-                this->tooltip_id = id;
-            } else {
-                if ((this->tooltip_time > time_start) && (this->tooltip_time < (time_start + time_end))) {
-                    show_tooltip = true;
-                }
-                this->tooltip_time += io.DeltaTime;
-            }
-        } else {
-            show_tooltip = true;
-        }
-
-        if (show_tooltip) {
-            ImGui::BeginTooltip();
-            ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
-            ImGui::TextUnformatted(text.c_str());
-            ImGui::PopTextWrapPos();
-            ImGui::EndTooltip();
-        }
-    } else {
-        if ((time_start > 0.0f) && (this->tooltip_id == id)) {
-            this->tooltip_time = 0.0f;
-        }
-    }
-}
-
-
-/**
- * GUIRenderer<M, C>::helpMarkerToolTip
- */
-template <class M, class C> void GUIRenderer<M, C>::helpMarkerToolTip(std::string text, std::string label) {
-
-    if (!text.empty()) {
-        ImGui::SameLine();
-        ImGui::TextDisabled(label.c_str());
-        this->hoverToolTip(text);
     }
 }
 
