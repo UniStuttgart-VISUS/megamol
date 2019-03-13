@@ -1,6 +1,6 @@
 #include "stdafx.h"
 
-#include "VolumeGenerator.h"
+#include "mmcore/moldyn/MDAO2VolumeGenerator.h"
 
 #include <iostream>
 #include <vector>
@@ -13,20 +13,19 @@
 #include "vislib/graphics/gl/ShaderSource.h"
 #include <GL/glu.h>
 
-#include "ShaderUtilities.h"
+#include "mmcore/moldyn/MDAO2ShaderUtilities.h"
 
-using namespace megamol;
+using namespace megamol::core::moldyn;
 
 #define checkGLError { GLenum errCode = glGetError(); if (errCode != GL_NO_ERROR) std::cout<<"Error in line "<<__LINE__<<": "<<gluErrorString(errCode)<<std::endl;}
 
-mdao::VolumeGenerator::VolumeGenerator(): fboHandle(0), volumeHandle(0), factory(nullptr), dataVersion(0)
+MDAO2VolumeGenerator::MDAO2VolumeGenerator(): fboHandle(0), volumeHandle(0), factory(nullptr), dataVersion(0)
 {
 	clearBuffer = nullptr;
 }
 
 
-
-mdao::VolumeGenerator::~VolumeGenerator()
+MDAO2VolumeGenerator::~MDAO2VolumeGenerator()
 {
 	glDeleteTextures(1, &volumeHandle);
 	volumeShader.Release();
@@ -37,13 +36,13 @@ mdao::VolumeGenerator::~VolumeGenerator()
 }
 
 
-void mdao::VolumeGenerator::SetShaderSourceFactory(megamol::core::utility::ShaderSourceFactory* factory)
+void MDAO2VolumeGenerator::SetShaderSourceFactory(megamol::core::utility::ShaderSourceFactory* factory)
 {
 	this->factory = factory;
 }
 
 
-GLuint mdao::VolumeGenerator::GetVolumeTextureHandle()
+GLuint MDAO2VolumeGenerator::GetVolumeTextureHandle()
 {
 	return volumeHandle;
 }
@@ -51,7 +50,7 @@ GLuint mdao::VolumeGenerator::GetVolumeTextureHandle()
 
 
 
-bool mdao::VolumeGenerator::Init()
+bool MDAO2VolumeGenerator::Init()
 {
 	// Generate and initialize the volume texture
 	glGenTextures(1, &this->volumeHandle);
@@ -104,7 +103,7 @@ bool mdao::VolumeGenerator::Init()
 
 
 
-void mdao::VolumeGenerator::SetResolution(float resX, float resY, float resZ)
+void MDAO2VolumeGenerator::SetResolution(float resX, float resY, float resZ)
 {
 	if (volumeRes.Width() == resX && volumeRes.Height() == resY && volumeRes.Depth() == resZ)
 		return;
@@ -123,7 +122,7 @@ void mdao::VolumeGenerator::SetResolution(float resX, float resY, float resZ)
 }
 
 
-void mdao::VolumeGenerator::StartInsertion(const vislib::math::Cuboid< float >& obb, const vislib::math::Vector<float, 4> &clipDat)
+void MDAO2VolumeGenerator::StartInsertion(const vislib::math::Cuboid< float >& obb, const vislib::math::Vector<float, 4> &clipDat)
 {
 	this->clipDat = clipDat;
 	
@@ -156,7 +155,7 @@ void mdao::VolumeGenerator::StartInsertion(const vislib::math::Cuboid< float >& 
 
 
 
-void mdao::VolumeGenerator::ClearVolume()
+void MDAO2VolumeGenerator::ClearVolume()
 {
 	if (clearAvailable) {
 		unsigned char clearData = 0;
@@ -175,7 +174,7 @@ void mdao::VolumeGenerator::ClearVolume()
 
 
 
-void mdao::VolumeGenerator::EndInsertion()
+void MDAO2VolumeGenerator::EndInsertion()
 {
 	volumeShader.Disable(); checkGLError;
 
@@ -203,7 +202,7 @@ void mdao::VolumeGenerator::EndInsertion()
 
 
 
-void mdao::VolumeGenerator::InsertParticles(unsigned int count, float globalRadius, GLuint vertexArray)
+void MDAO2VolumeGenerator::InsertParticles(unsigned int count, float globalRadius, GLuint vertexArray)
 {
 	volumeShader.SetParameter("inGlobalRadius", globalRadius);checkGLError;
 
@@ -212,7 +211,7 @@ void mdao::VolumeGenerator::InsertParticles(unsigned int count, float globalRadi
 }
 
 
-void mdao::VolumeGenerator::RecreateMipmap() {
+void MDAO2VolumeGenerator::RecreateMipmap() {
 	
 	if (!computeAvailable) {
 		glBindTexture(GL_TEXTURE_3D, this->volumeHandle);
@@ -246,14 +245,14 @@ void mdao::VolumeGenerator::RecreateMipmap() {
 
 
 
-const vislib::math::Dimension< float, 3 >& mdao::VolumeGenerator::GetExtents()
+const vislib::math::Dimension< float, 3 >& MDAO2VolumeGenerator::GetExtents()
 {
 	return volumeRes;
 }
 
 
 
-unsigned int mdao::VolumeGenerator::GetDataVersion()
+unsigned int MDAO2VolumeGenerator::GetDataVersion()
 {
 	return dataVersion;
 }

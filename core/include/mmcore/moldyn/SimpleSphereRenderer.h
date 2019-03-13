@@ -14,23 +14,34 @@
 
 #include "mmcore/moldyn/AbstractSimpleSphereRenderer.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "mmcore/moldyn/MDAO2ShaderUtilities.h"
+#include "mmcore/moldyn/MDAO2VolumeGenerator.h"
+
 #include "mmcore/CoreInstance.h"
 #include "mmcore/view/CallClipPlane.h"
 #include "mmcore/view/CallGetTransferFunction.h"
 #include "mmcore/view/CallRender3D.h"
-#include "mmcore/param/FloatParam.h"
 #include "mmcore/param/EnumParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/param/StringParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/utility/SSBOStreamer.h"
 
+#include "vislib/types.h"
 #include "vislib/assert.h"
 #include "vislib/graphics/gl/ShaderSource.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/GLSLGeometryShader.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib/graphics/gl/CameraOpenGL.h"
+#include "vislib/graphics/CameraParameters.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib/math/ShallowMatrix.h"
+#include "vislib/math/Vector.h"
 #include "vislib/math/Matrix.h"
+#include "vislib/math/Cuboid.h"
 #include "vislib/Map.h"
 
 #include <map>
@@ -41,6 +52,15 @@
 #include <chrono>
 #include <sstream>
 #include <iterator>
+
+#include <GL/glu.h>
+#include <algorithm>
+#include <vector>
+#include <string>
+#include <sstream>
+#include <deque>
+#include <fstream>
+#include <signal.h>
 
 //#include "TimeMeasure.h"
 
@@ -95,6 +115,7 @@ namespace moldyn {
                 && vislib::graphics::gl::GLSLGeometryShader::AreExtensionsAvailable()   // SimpleGeo
                 && ogl_IsVersionGEQ(4, 4)                                               // NGSphere, NGBufferArray, NGSplat
                 //&& ogl_IsVersionGEQ(2, 2)                                             // SimpleGeo
+                //&& ogl_IsVersionGEQ(3, 3)                                             // AmbientOcclusion
                 && isExtAvailable("GL_ARB_buffer_storage")                              // NGSphere, NGBufferArray, NGSplat
                 && isExtAvailable("GL_EXT_geometry_shader4")                            // SimpleGeo
                 && isExtAvailable("GL_EXT_gpu_shader4")                                 // SimpleGeo
@@ -138,19 +159,34 @@ namespace moldyn {
         /*********************************************************************/
 
         enum RenderMode {
-            SIMPLE           = 0,     /// Simple sphere rendering.
-            SIMPLE_CLUSTERED = 1,     /// Same as "Simple" - Clustered rendering is not yet implemented in SimpleSphericalParticles.
-            SIMPLE_GEO       = 2,     /// Simple sphere rendering using geometry shader.
-            NG               = 3,     /// Next generation (NG) sphere rendering using shader storage buffer object.
-            NG_SPLAT         = 4,     /// NG sphere rendering using splats.
-            NG_BUFFER_ARRAY  = 5,     /// NG sphere rendering using array buffers.
-            __MODE_COUNT__   = 6
+            SIMPLE            = 0,     /// Simple sphere rendering.
+            SIMPLE_CLUSTERED  = 1,     /// Same as "Simple" - Clustered rendering is not yet implemented in SimpleSphericalParticles?
+            SIMPLE_GEO        = 2,     /// Simple sphere rendering using geometry shader.
+            NG                = 3,     /// Next generation (NG) sphere rendering using shader storage buffer object.
+            NG_SPLAT          = 4,     /// NG sphere rendering using splats.
+            NG_BUFFER_ARRAY   = 5,     /// NG sphere rendering using array buffers.
+            AMBIENT_OCCLUSION = 6,     /// Sphere rendering with ambient occlusion
+            __MODE_COUNT__    = 7
         };
 
         typedef std::map <std::tuple<int, int, bool>, std::shared_ptr<GLSLShader> > shaderMap;
         typedef std::map <std::pair<int, int>, std::shared_ptr<GLSLShader> >        shaderMap_splat;
 
+        // Current Render State -----------------------------------------------
+
+        float curVp[4];
+        float curClipDat[4];
+        float curClipCol[4];
+        float curLightPos[4];
+        vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> curMVinv;
+        vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> curMVP;
+        vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> curMVPinv;
+        vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> curMVPtransp;
+
+        // --------------------------------------------------------------------
+
         RenderMode                               renderMode;
+
         vislib::graphics::gl::GLSLShader         sphereShader;
         vislib::graphics::gl::GLSLGeometryShader sphereGeometryShader;
         vislib::SmartPtr<ShaderSource>           vertShader;
@@ -178,6 +214,33 @@ namespace moldyn {
 
         //TimeMeasure                            timer;
 
+        // Ambient Occlusion --------------------------------------------------
+
+        struct gpuParticleDataType {
+            GLuint vertexVBO, colorVBO, vertexArray;
+        };
+
+        struct gBufferDataType {
+            GLuint color, depth, normals;
+            GLuint fbo;
+        };
+
+        // The sphere shader
+        vislib::graphics::gl::GLSLShader         lightingShader;
+        // GPU buffers for particle lists
+        std::vector<gpuParticleDataType>         gpuData;
+        // G-Buffer handles for deferred shading
+        gBufferDataType                          gBuffer;
+        SIZE_T                                   oldHash;
+        unsigned int                             oldFrameID;
+        int                                      vpWidth;
+        int                                      vpHeight;
+        float                                    oldClipDat[4];
+        vislib::math::Vector<float, 2>           ambConeConstants;
+        // Fallback handle if no transfer function is specified
+        GLuint                                   tfFallbackHandle;
+        MDAO2VolumeGenerator                    *volGen;
+
         /*********************************************************************/
         /* PARAMETERS                                                        */
         /*********************************************************************/
@@ -187,9 +250,32 @@ namespace moldyn {
 
         core::param::ParamSlot radiusScalingParam;
 
-        // NGSplat ////////////////////////////////////////////////////////////
+        // NGSplat ------------------------------------------------------------
+
         core::param::ParamSlot alphaScalingParam;
         core::param::ParamSlot attenuateSubpixelParam;
+
+        // Ambient Occlusion --------------------------------------------------
+
+        // Enable or disable lighting
+        megamol::core::param::ParamSlot enableLightingSlot;
+        // Enable Ambient Occlusion
+        megamol::core::param::ParamSlot enableAOSlot;
+        megamol::core::param::ParamSlot enableGeometryShader;
+        // AO texture size 
+        megamol::core::param::ParamSlot aoVolSizeSlot;
+        // Cone Apex Angle 
+        megamol::core::param::ParamSlot aoConeApexSlot;
+        // AO offset from surface
+        megamol::core::param::ParamSlot aoOffsetSlot;
+        // AO strength
+        megamol::core::param::ParamSlot aoStrengthSlot;
+        // AO cone length
+        megamol::core::param::ParamSlot aoConeLengthSlot;
+        // High precision textures slot
+        megamol::core::param::ParamSlot useHPTexturesSlot;
+        // bool parameter to force the time from the data set
+        megamol::core::param::ParamSlot forceTimeSlot;
 
         /*********************************************************************/
         /* FUNCTIONS                                                         */
@@ -209,10 +295,10 @@ namespace moldyn {
          * 
          * @return True if success, false otherwise.
          */
-        bool createShaders(void);
+        bool createResources(void);
 
         /**
-         * Release all OpenGL resources.
+         * Reset all OpenGL resources.
          *
          * @return True if success, false otherwise.
          */
@@ -221,55 +307,17 @@ namespace moldyn {
         /**
          * Render spheres in different render modes.
          *
-         * @param cr3d       Pointer to the calling render call.
-         * @param mpdc       Pointer to the multi particle data call.
-         * @param vp         The current viewport.
-         * @param clipDat    The current clip data.
-         * @param clipCol    The current clip data.
-         * @param scaling    The current scaling factor.
-         * @param lp         The current light position.
-         * @param MVinv      The inverse model view matrix.
-         * @param MVP        The model view projection matrix.
-         * @param MVPinv     The inverse model view projection matrix.
-         * @param MVPtransp  The tranpose model view projection matrix.
+         * @param cr3d       Pointer to the current calling render call.
+         * @param mpdc       Pointer to the current multi particle data call.
          *
-         * @return         True if success, false otherwise.
+         * @return           True if success, false otherwise.
          */
-        // SIMPLE
-        bool renderSimple(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc, 
-            float vp[4], float clipDat[4], float clipCol[4], float scaling, float lp[4],
-            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> &MVinv,
-            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> &MVP,
-            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> &MVPinv,
-            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> &MVPtransp);
-        // NG
-        bool renderNG(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc, 
-            float vp[4], float clipDat[4], float clipCol[4], float scaling, float lp[4],
-            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> &MVinv,
-            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> &MVP,
-            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> &MVPinv,
-            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> &MVPtransp);
-        // NGSPLAT
-        bool renderNGSplat(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc,
-            float vp[4], float clipDat[4], float clipCol[4], float scaling, float lp[4],
-            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> &MVinv,
-            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> &MVP,
-            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> &MVPinv,
-            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> &MVPtransp);
-        // NGBUFFERARRAY
-        bool renderNGBufferArray(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc,
-            float vp[4], float clipDat[4], float clipCol[4], float scaling, float lp[4],
-            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> &MVinv,
-            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> &MVP,
-            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> &MVPinv,
-            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> &MVPtransp);
-        // GEO
-        bool renderGeo(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc, 
-            float vp[4], float clipDat[4], float clipCol[4], float scaling, float lp[4],
-            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> &MVinv,
-            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> &MVP,
-            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> &MVPinv,
-            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> &MVPtransp);
+        bool renderSimple(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc);
+        bool renderNG(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc);
+        bool renderNGSplat(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc);
+        bool renderNGBufferArray(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc);
+        bool renderGeo(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc);
+        bool renderAmbientOcclusion(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc);
 
         /**
          * Set pointers to vertex and color buffers and corresponding shader variables.
@@ -352,6 +400,82 @@ namespace moldyn {
          * @param syncObj  ...
          */
         void waitSingle(GLsync& syncObj);
+
+        // Ambient Occlusion --------------------------------------------------
+
+        /**
+         * ...
+         *
+         * @param ...  ...
+         */
+        void uploadDataToGPU(const gpuParticleDataType &gpuData, megamol::core::moldyn::MultiParticleDataCall::Particles& particles);
+
+        /**
+         * ...
+         *
+         * @param ...  ...
+         */
+        void renderParticlesGeometry(megamol::core::view::AbstractCallRender3D* renderCall, megamol::core::moldyn::MultiParticleDataCall* dataCall);
+
+        /**
+         * ...
+         *
+         * @return ...  ...
+         */
+        bool rebuildShader(void);
+
+        /**
+         * ...
+         * 
+         * @return ...  ...
+         */
+        bool rebuildGBuffer(void);
+
+        /**
+         * ...
+         *
+         * @param ...  ...
+         */
+        void rebuildWorkingData(megamol::core::view::AbstractCallRender3D* renderCall, megamol::core::moldyn::MultiParticleDataCall* dataCall);
+
+        /**
+         * ...
+         *
+         * @param ...  ...
+         *
+         * @return ...  ...
+         */
+        std::string generateDirectionShaderArrayString(const std::vector< vislib::math::Vector< float, int(4) > >& directions, const std::string& directionsName);
+
+        /**
+         * ...
+         *
+         * @param ...  ...
+         */
+        void generate3ConeDirections(std::vector< vislib::math::Vector< float, int(4) > >& directions, float apex);
+
+        /**
+         * ...
+         *
+         * @param ...  ...
+         */
+        void renderDeferredPass(megamol::core::view::AbstractCallRender3D* renderCall);
+
+        /**
+         * ...
+         *
+         * @return ...  ...
+         */
+        GLuint getTransferFunctionHandle(void);
+
+        /**
+         * Simple access to the value of forceTimeSlot.
+         *
+         * @return ...  ...
+         */
+        // 
+        bool isTimeForced(void) const;
+
     };
 
 } /* end namespace moldyn */
