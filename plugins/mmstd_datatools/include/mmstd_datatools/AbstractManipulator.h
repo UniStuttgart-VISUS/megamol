@@ -101,7 +101,7 @@ AbstractManipulator<C>::AbstractManipulator(const char* outSlotName, const char*
     this->outDataSlot.SetCallback(C::ClassName(), "GetExtent", &AbstractManipulator::getExtentCallback);
     this->MakeSlotAvailable(&this->outDataSlot);
 
-    this->inDataSlot.SetCompatibleCall<core::factories::CallAutoDescription<C> >();
+    this->inDataSlot.template SetCompatibleCall<core::factories::CallAutoDescription<C>>();
     this->MakeSlotAvailable(&this->inDataSlot);
 }
 
