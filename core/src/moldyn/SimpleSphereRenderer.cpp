@@ -516,7 +516,7 @@ bool moldyn::SimpleSphereRenderer::createResources() {
                 bool enableAO = this->enableAOSlot.Param<megamol::core::param::BoolParam>()->Value();
 
                 if (enableAO) {
-                    this->volGen = new MDAO2VolumeGenerator();
+                    this->volGen = new megamol::core::utility::MDAO2VolumeGenerator();
                     this->volGen->SetShaderSourceFactory(&this->GetCoreInstance()->ShaderSourceFactory());
                     if (!this->volGen->Init()) {
                         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
@@ -1777,11 +1777,11 @@ bool moldyn::SimpleSphereRenderer::rebuildShader()
 
     // Create the sphere shader if neccessary
     if (!vislib::graphics::gl::GLSLShader::IsValidHandle(this->sphereShader) &&
-        !megamol::core::moldyn::InitializeShader(&factory, this->sphereShader, "mdao2::vertex", "mdao2::fragment"))
+        !megamol::core::utility::InitializeShader(&factory, this->sphereShader, "mdao2::vertex", "mdao2::fragment"))
         return false;
 
     if (!vislib::graphics::gl::GLSLGeometryShader::IsValidHandle(sphereGeometryShader) &&
-        !megamol::core::moldyn::InitializeShader(&factory, this->sphereGeometryShader, "mdao2::geovert", "mdao2::fragment", "mdao2::geogeo"))
+        !megamol::core::utility::InitializeShader(&factory, this->sphereGeometryShader, "mdao2::geovert", "mdao2::fragment", "mdao2::geogeo"))
         return false;
 
 
@@ -2079,7 +2079,7 @@ void moldyn::SimpleSphereRenderer::rebuildWorkingData(megamol::core::view::CallR
             this->volGen = nullptr;
         }
         if (enableAO && this->volGen == nullptr) {
-            this->volGen = new MDAO2VolumeGenerator();
+            this->volGen = new megamol::core::utility::MDAO2VolumeGenerator();
             this->volGen->SetShaderSourceFactory(&instance()->ShaderSourceFactory());
             this->volGen->Init();
         }

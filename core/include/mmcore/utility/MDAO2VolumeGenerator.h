@@ -8,7 +8,7 @@
 
 namespace megamol {
     namespace core {
-        namespace moldyn {
+        namespace utility {
 
             class MDAO2VolumeGenerator {
             public:

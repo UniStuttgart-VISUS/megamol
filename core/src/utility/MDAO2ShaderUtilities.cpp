@@ -1,14 +1,14 @@
 #include "stdafx.h"
-#include "mmcore/moldyn/MDAO2ShaderUtilities.h"
+#include "mmcore/utility/MDAO2ShaderUtilities.h"
 
 #include <iostream>
 #include <string>
 
 
-using namespace megamol::core::moldyn;
+using namespace megamol::core::utility;
 
 
-bool megamol::core::moldyn::InitializeShader(megamol::core::utility::ShaderSourceFactory* factory, vislib::graphics::gl::GLSLShader& shader, const std::string& vertexName, const std::string& fragmentName)
+bool megamol::core::utility::InitializeShader(megamol::core::utility::ShaderSourceFactory* factory, vislib::graphics::gl::GLSLShader& shader, const std::string& vertexName, const std::string& fragmentName)
 {
 	vislib::graphics::gl::ShaderSource vert, frag;
 
@@ -56,7 +56,7 @@ bool megamol::core::moldyn::InitializeShader(megamol::core::utility::ShaderSourc
 }
 
 
-bool megamol::core::moldyn::InitializeShader(megamol::core::utility::ShaderSourceFactory* factory, vislib::graphics::gl::GLSLGeometryShader& shader, const std::string& vertexName, const std::string& fragmentName, const std::string& geometryName)
+bool megamol::core::utility::InitializeShader(megamol::core::utility::ShaderSourceFactory* factory, vislib::graphics::gl::GLSLGeometryShader& shader, const std::string& vertexName, const std::string& fragmentName, const std::string& geometryName)
 {
 	vislib::graphics::gl::ShaderSource vert, frag, geom;
 
@@ -110,7 +110,7 @@ bool megamol::core::moldyn::InitializeShader(megamol::core::utility::ShaderSourc
 }
 
 
-void megamol::core::moldyn::AddShaderSnippet(megamol::core::utility::ShaderSourceFactory* factory, vislib::graphics::gl::ShaderSource& source, const std::string& snippetName, bool containsCode)
+void megamol::core::utility::AddShaderSnippet(megamol::core::utility::ShaderSourceFactory* factory, vislib::graphics::gl::ShaderSource& source, const std::string& snippetName, bool containsCode)
 {
 	if (!containsCode) {
 		source.Append(factory->MakeShaderSnippet(snippetName.c_str()));	

@@ -14,8 +14,8 @@
 
 #include "mmcore/moldyn/AbstractSimpleSphereRenderer.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
-#include "mmcore/moldyn/MDAO2ShaderUtilities.h"
-#include "mmcore/moldyn/MDAO2VolumeGenerator.h"
+#include "mmcore/utility/MDAO2ShaderUtilities.h"
+#include "mmcore/utility/MDAO2VolumeGenerator.h"
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/view/CallClipPlane.h"
@@ -239,7 +239,7 @@ namespace moldyn {
         vislib::math::Vector<float, 2>           ambConeConstants;
         // Fallback handle if no transfer function is specified
         GLuint                                   tfFallbackHandle;
-        MDAO2VolumeGenerator                    *volGen;
+        megamol::core::utility::MDAO2VolumeGenerator *volGen;
 
         /*********************************************************************/
         /* PARAMETERS                                                        */
@@ -338,7 +338,7 @@ namespace moldyn {
             GLuint colBuf,  const void *colPtr,  GLuint colAttribLoc, GLuint colIdxAttribLoc);
 
         /**
-         * Get bytes and stride ...
+         * Get bytes and stride.
          *
          * @param parts        ...
          * @param colBytes     ...
@@ -351,7 +351,7 @@ namespace moldyn {
             unsigned int &colStride, unsigned int &vertStride, bool &interleaved);
 
         /**
-         * Make NG vertex shader color string ...
+         * Make NG vertex shader color string.
          *
          * @param parts        ...
          * @param code         ...
@@ -362,7 +362,7 @@ namespace moldyn {
         bool makeColorString(MultiParticleDataCall::Particles &parts, std::string &code, std::string &declaration, bool interleaved);
 
         /**
-         * Make NG vertex shader position string ...
+         * Make NG vertex shader position string.
          *
          * @param parts        ...
          * @param code         ...
@@ -372,7 +372,7 @@ namespace moldyn {
         bool makeVertexString(MultiParticleDataCall::Particles &parts, std::string &code, std::string &declaration, bool interleaved);
 
         /**
-         * Make NG shaders ...
+         * Make NG shaders.
          *
          * @param vert  ...
          * @param frag  ...
@@ -380,7 +380,7 @@ namespace moldyn {
         std::shared_ptr<GLSLShader> makeShader(vislib::SmartPtr<ShaderSource> vert, vislib::SmartPtr<ShaderSource> frag);
 
         /**
-         * Generate NG shaders ...
+         * Generate NG shaders.
          *
          * @param parts  ...
          *
@@ -388,14 +388,14 @@ namespace moldyn {
         std::shared_ptr<GLSLShader> generateShader(MultiParticleDataCall::Particles &parts);
 
         /**
-         * Lock single ...
+         * Lock single.
          *
          * @param syncObj  ...
          */
         void lockSingle(GLsync& syncObj);
 
         /**
-         * Wait single ...
+         * Wait single.
          *
          * @param syncObj  ...
          */
@@ -404,7 +404,7 @@ namespace moldyn {
         // Ambient Occlusion --------------------------------------------------
 
         /**
-         * Upload data to GPU ...
+         * Upload data to GPU.
          *
          * @param gpuData    ...
          * @param particles  ...
@@ -412,7 +412,7 @@ namespace moldyn {
         void uploadDataToGPU(const gpuParticleDataType &gpuData, megamol::core::moldyn::MultiParticleDataCall::Particles& particles);
 
         /**
-         * Render particles geometry ...
+         * Render particles geometry.
          *
          * @param renderCall  ...
          * @param dataCall    ...
@@ -420,21 +420,21 @@ namespace moldyn {
         void renderParticlesGeometry(megamol::core::view::CallRender3D* renderCall, megamol::core::moldyn::MultiParticleDataCall* dataCall);
 
         /**
-         * Rebuild the ambient occlusion shaders ...
+         * Rebuild the ambient occlusion shaders.
          *
          * @return ...  
          */
         bool rebuildShader(void);
 
         /**
-         * Rebuild the ambient occlusion gBuffer ...
+         * Rebuild the ambient occlusion gBuffer.
          * 
          * @return ...  
          */
         bool rebuildGBuffer(void);
 
         /**
-         * Rebuild working data ...
+         * Rebuild working data.
          *
          * @param renderCall  ...
          * @param dataCall    ...
@@ -442,7 +442,7 @@ namespace moldyn {
         void rebuildWorkingData(megamol::core::view::CallRender3D* renderCall, megamol::core::moldyn::MultiParticleDataCall* dataCall);
 
         /**
-         * Generate direction shader array string ...
+         * Generate direction shader array string.
          *
          * @param directions      ...
          * @param directionsName  ...
@@ -452,7 +452,7 @@ namespace moldyn {
         std::string generateDirectionShaderArrayString(const std::vector< vislib::math::Vector< float, int(4) > >& directions, const std::string& directionsName);
 
         /**
-         * Generate 3 cone directions ...
+         * Generate 3 cone directions.
          *
          * @param directions  ...
          * @param apex        ...
@@ -460,14 +460,14 @@ namespace moldyn {
         void generate3ConeDirections(std::vector< vislib::math::Vector< float, int(4) > >& directions, float apex);
 
         /**
-         * Render deferred pass ...
+         * Render deferred pass.
          *
          * @param renderCall  ...
          */
         void renderDeferredPass(megamol::core::view::CallRender3D* renderCall);
 
         /**
-         * Get transfer function handle ...
+         * Get transfer function handle.
          *
          * @return ...  ...
          */

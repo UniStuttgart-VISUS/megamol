@@ -1,6 +1,6 @@
 #include "stdafx.h"
 
-#include "mmcore/moldyn/MDAO2VolumeGenerator.h"
+#include "mmcore/utility/MDAO2VolumeGenerator.h"
 
 #include <iostream>
 #include <vector>
@@ -13,9 +13,9 @@
 #include "vislib/graphics/gl/ShaderSource.h"
 #include <GL/glu.h>
 
-#include "mmcore/moldyn/MDAO2ShaderUtilities.h"
+#include "mmcore/utility/MDAO2ShaderUtilities.h"
 
-using namespace megamol::core::moldyn;
+using namespace megamol::core::utility;
 
 #define checkGLError { GLenum errCode = glGetError(); if (errCode != GL_NO_ERROR) std::cout<<"Error in line "<<__LINE__<<": "<<gluErrorString(errCode)<<std::endl;}
 
