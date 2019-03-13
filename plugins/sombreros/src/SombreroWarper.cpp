@@ -28,7 +28,7 @@ using namespace megamol::geocalls;
 using namespace megamol::sombreros;
 using namespace megamol::protein_calls;
 
-#define NO_DEFORMATION
+//#define NO_DEFORMATION
 //#define SWEAT
 
 /*

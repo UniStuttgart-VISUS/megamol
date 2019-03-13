@@ -304,7 +304,7 @@ bool io::PlyWriter::run(void) {
             ASSERT_WRITEOUT(text.c_str(), text.size());
         }
 
-        indexOffset += static_cast<unsigned int>(vertices[objID].size());
+        indexOffset += static_cast<unsigned int>(vertices[objID].size() / 3);
     }
     file.Close();
 
