@@ -8,6 +8,8 @@
 #include "UILayersCollection.hpp"
 #include "vislib/sys/Log.h"
 
+#include <algorithm>
+
 #define init bool ret = false; m_lastCapture = nullptr;
 #define abort {m_lastCapture = uil; break;}
 
