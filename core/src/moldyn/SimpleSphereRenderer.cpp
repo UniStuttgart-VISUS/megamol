@@ -174,10 +174,10 @@ moldyn::SimpleSphereRenderer::SimpleSphereRenderer(void) : AbstractSimpleSphereR
     aoOffsetSlot(          "ao::offset",                 "AO Offset from Surface"),
     aoStrengthSlot(        "ao::strength",               "AO Strength"),
     aoConeLengthSlot(      "ao::conelen",                "AO Cone length"),
-    useHPTexturesSlot(     "ao::high_prec_tex",          "Use high precision textures"),
-    forceTimeSlot(         "ao::forceTime",              "Flag to force the time code to the specified value. Set to true when rendering a video.")
-
+    useHPTexturesSlot(     "ao::high_prec_tex",          "Use high precision textures")
+    //forceTimeSlot(         "ao::forceTime",              "Flag to force the time code to the specified value. Set to true when rendering a video.")
 {
+
     param::EnumParam* rmp = new param::EnumParam(this->renderMode);
     rmp->SetTypePair(RenderMode::SIMPLE,            "Simple");
     rmp->SetTypePair(RenderMode::SIMPLE_CLUSTERED,  "Simple_Clustered");
@@ -230,8 +230,8 @@ moldyn::SimpleSphereRenderer::SimpleSphereRenderer(void) : AbstractSimpleSphereR
     this->useHPTexturesSlot << (new core::param::BoolParam(false));
     this->MakeSlotAvailable(&this->useHPTexturesSlot);
 
-    this->forceTimeSlot.SetParameter(new core::param::BoolParam(false));
-    this->MakeSlotAvailable(&this->forceTimeSlot);
+    //this->forceTimeSlot.SetParameter(new core::param::BoolParam(false));
+    //this->MakeSlotAvailable(&this->forceTimeSlot);
 
     //this->resetResources();
 
@@ -1184,9 +1184,6 @@ bool moldyn::SimpleSphereRenderer::renderGeo(view::CallRender3D* cr3d, MultiPart
  */
 bool moldyn::SimpleSphereRenderer::renderAmbientOcclusion(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc) {
 
-    megamol::core::view::AbstractCallRender3D *renderCall = dynamic_cast<megamol::core::view::AbstractCallRender3D*>(cr3d);
-    if (renderCall == NULL) return false;
-
     // We need to regenerate the shader if certain settings are changed
     if (this->enableAOSlot.IsDirty() ||
         this->enableLightingSlot.IsDirty() ||
@@ -1194,14 +1191,15 @@ bool moldyn::SimpleSphereRenderer::renderAmbientOcclusion(view::CallRender3D* cr
     {
         this->aoConeApexSlot.ResetDirty();
         this->enableLightingSlot.ResetDirty();
-        rebuildShader();
+
+        this->rebuildShader();
     }
 
     // Rebuild the GBuffer if neccessary
     this->rebuildGBuffer();
 
     // Rebuild and reupload working data if neccessary
-    this->rebuildWorkingData(renderCall, mpdc);
+    this->rebuildWorkingData(cr3d, mpdc);
 
     GLint prevFBO;
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prevFBO);
@@ -1213,13 +1211,12 @@ bool moldyn::SimpleSphereRenderer::renderAmbientOcclusion(view::CallRender3D* cr
     glBindFragDataLocation(sphereShader.ProgramHandle(), 0, "outColor"); checkGLError;
     glBindFragDataLocation(sphereShader.ProgramHandle(), 1, "outNormal"); checkGLError;
 
-
     // Render the particles' geometry
-    this->renderParticlesGeometry(renderCall, mpdc);
+    this->renderParticlesGeometry(cr3d, mpdc);
 
     glBindFramebuffer(GL_FRAMEBUFFER, prevFBO);
 
-    renderDeferredPass(renderCall);
+    renderDeferredPass(cr3d);
 
     return true;
 }
@@ -1722,11 +1719,11 @@ bool moldyn::SimpleSphereRenderer::rebuildGBuffer()
     int width = static_cast<int>(viewport[2]);
     int height = static_cast<int>(viewport[3]);
 
-    if (vpWidth == width && vpHeight == height && !this->useHPTexturesSlot.IsDirty())
+    if (this->vpWidth == width && this->vpHeight == height && !this->useHPTexturesSlot.IsDirty())
         return true;
 
-    vpWidth = width;
-    vpHeight = height;
+    this->vpWidth = width;
+    this->vpHeight = height;
     this->useHPTexturesSlot.ResetDirty();
 
     bool highPrecision = this->useHPTexturesSlot.Param<megamol::core::param::BoolParam>()->Value();
@@ -1779,12 +1776,12 @@ bool moldyn::SimpleSphereRenderer::rebuildShader()
     core::utility::ShaderSourceFactory &factory = instance()->ShaderSourceFactory();
 
     // Create the sphere shader if neccessary
-    if (!vislib::graphics::gl::GLSLShader::IsValidHandle(sphereShader) &&
-        !megamol::core::moldyn::InitializeShader(&factory, sphereShader, "mdao2::vertex", "mdao2::fragment"))
+    if (!vislib::graphics::gl::GLSLShader::IsValidHandle(this->sphereShader) &&
+        !megamol::core::moldyn::InitializeShader(&factory, this->sphereShader, "mdao2::vertex", "mdao2::fragment"))
         return false;
 
     if (!vislib::graphics::gl::GLSLGeometryShader::IsValidHandle(sphereGeometryShader) &&
-        !megamol::core::moldyn::InitializeShader(&factory, sphereGeometryShader, "mdao2::geovert", "mdao2::fragment", "mdao2::geogeo"))
+        !megamol::core::moldyn::InitializeShader(&factory, this->sphereGeometryShader, "mdao2::geovert", "mdao2::fragment", "mdao2::geogeo"))
         return false;
 
 
@@ -1818,7 +1815,7 @@ bool moldyn::SimpleSphereRenderer::rebuildShader()
     }
 
     try {
-        lightingShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count());
+        this->lightingShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count());
     }
     catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
@@ -1833,7 +1830,7 @@ bool moldyn::SimpleSphereRenderer::rebuildShader()
 /*
  * moldyn::SimpleSphereRenderer::renderDeferredPass
  */
-void moldyn::SimpleSphereRenderer::renderDeferredPass(megamol::core::view::AbstractCallRender3D* renderCall)
+void moldyn::SimpleSphereRenderer::renderDeferredPass(megamol::core::view::CallRender3D* renderCall)
 {
     vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> mv, mvInverse, mvp, mvpInverse, proj, mvpTrans;
     vislib::graphics::gl::CameraOpenGL cam(renderCall->GetCameraParameters());
@@ -1860,15 +1857,15 @@ void moldyn::SimpleSphereRenderer::renderDeferredPass(megamol::core::view::Abstr
 
     glPointSize(static_cast<GLfloat>((std::max)(vpWidth, vpHeight)));
 
-    lightingShader.Enable();
-    lightingShader.SetParameter("inWidth", static_cast<float>(vpWidth));
-    lightingShader.SetParameter("inHeight", static_cast<float>(vpHeight));
-    glUniformMatrix4fv(lightingShader.ParameterLocation("inMvpInverse"), 1, GL_FALSE, mvpInverse.PeekComponents());
-    lightingShader.SetParameter("inColorTex", static_cast<int>(0));
-    lightingShader.SetParameter("inNormalsTex", static_cast<int>(1));
-    lightingShader.SetParameter("inDepthTex", static_cast<int>(2));
+    this->lightingShader.Enable();
+    this->lightingShader.SetParameter("inWidth", static_cast<float>(vpWidth));
+    this->lightingShader.SetParameter("inHeight", static_cast<float>(vpHeight));
+    glUniformMatrix4fv(this->lightingShader.ParameterLocation("inMvpInverse"), 1, GL_FALSE, mvpInverse.PeekComponents());
+    this->lightingShader.SetParameter("inColorTex", static_cast<int>(0));
+    this->lightingShader.SetParameter("inNormalsTex", static_cast<int>(1));
+    this->lightingShader.SetParameter("inDepthTex", static_cast<int>(2));
 
-    lightingShader.SetParameter("inUseHighPrecision", highPrecision);
+    this->lightingShader.SetParameter("inUseHighPrecision", highPrecision);
 
     if (enableLighting) {
         vislib::math::Vector<float, 4> lightDir;
@@ -1877,8 +1874,8 @@ void moldyn::SimpleSphereRenderer::renderDeferredPass(megamol::core::view::Abstr
         glDisable(GL_LIGHTING);
         lightDir = mvInverse * lightDir;
         lightDir.Normalise();
-        lightingShader.SetParameterArray3("inObjLightDir", 1, lightDir.PeekComponents());
-        lightingShader.SetParameterArray3("inObjCamPos", 1, mvInverse.GetColumn(3).PeekComponents());
+        this->lightingShader.SetParameterArray3("inObjLightDir", 1, lightDir.PeekComponents());
+        this->lightingShader.SetParameterArray3("inObjCamPos", 1, mvInverse.GetColumn(3).PeekComponents());
     }
 
     if (enableAO) {
@@ -1890,26 +1887,26 @@ void moldyn::SimpleSphereRenderer::renderDeferredPass(megamol::core::view::Abstr
             glBindTexture(GL_TEXTURE_3D, this->volGen->GetVolumeTextureHandle());
             glActiveTexture(GL_TEXTURE0);
         }
-        lightingShader.SetParameter("inAOOffset", aoOffset);
-        lightingShader.SetParameter("inDensityTex", static_cast<int>(3));
-        lightingShader.SetParameter("inAOStrength", aoStrength);
-        lightingShader.SetParameter("inAOConeLength", aoConeLength);
-        lightingShader.SetParameter("inAmbVolShortestEdge", ambConeConstants[0]);
-        lightingShader.SetParameter("inAmbVolMaxLod", ambConeConstants[1]);
-        lightingShader.SetParameterArray3("inBoundsMin", 1, renderCall->AccessBoundingBoxes().ObjectSpaceClipBox().GetLeftBottomBack().PeekCoordinates());
-        lightingShader.SetParameterArray3("inBoundsSize", 1, renderCall->AccessBoundingBoxes().ObjectSpaceClipBox().GetSize().PeekDimension());
+        this->lightingShader.SetParameter("inAOOffset", aoOffset);
+        this->lightingShader.SetParameter("inDensityTex", static_cast<int>(3));
+        this->lightingShader.SetParameter("inAOStrength", aoStrength);
+        this->lightingShader.SetParameter("inAOConeLength", aoConeLength);
+        this->lightingShader.SetParameter("inAmbVolShortestEdge", ambConeConstants[0]);
+        this->lightingShader.SetParameter("inAmbVolMaxLod", ambConeConstants[1]);
+        this->lightingShader.SetParameterArray3("inBoundsMin", 1, renderCall->AccessBoundingBoxes().ObjectSpaceClipBox().GetLeftBottomBack().PeekCoordinates());
+        this->lightingShader.SetParameterArray3("inBoundsSize", 1, renderCall->AccessBoundingBoxes().ObjectSpaceClipBox().GetSize().PeekDimension());
     }
     glBegin(GL_POINTS);
     glVertex2f(0.0f, 0.0f);
     glEnd();
-    lightingShader.Disable();
+    this->lightingShader.Disable();
 }
 
 
 /*
  * moldyn::SimpleSphereRenderer::renderParticlesGeometry
  */
-void moldyn::SimpleSphereRenderer::renderParticlesGeometry(megamol::core::view::AbstractCallRender3D* renderCall, megamol::core::moldyn::MultiParticleDataCall* dataCall)
+void moldyn::SimpleSphereRenderer::renderParticlesGeometry(megamol::core::view::CallRender3D* renderCall, megamol::core::moldyn::MultiParticleDataCall* dataCall)
 {
     glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
@@ -2030,7 +2027,7 @@ GLuint moldyn::SimpleSphereRenderer::getTransferFunctionHandle()
 /*
  * moldyn::SimpleSphereRenderer::rebuildWorkingData
  */
-void moldyn::SimpleSphereRenderer::rebuildWorkingData(megamol::core::view::AbstractCallRender3D* renderCall, megamol::core::moldyn::MultiParticleDataCall* dataCall)
+void moldyn::SimpleSphereRenderer::rebuildWorkingData(megamol::core::view::CallRender3D* renderCall, megamol::core::moldyn::MultiParticleDataCall* dataCall)
 {
     SIZE_T hash = dataCall->DataHash();
     unsigned int frameID = dataCall->FrameID();
@@ -2237,7 +2234,6 @@ void moldyn::SimpleSphereRenderer::generate3ConeDirections(std::vector< vislib::
         center.Normalise();
         directions.push_back(vislib::math::Vector<float, 4>(center.X(), center.Y(), center.Z(), edge_length));
     }
-
 }
 
 
@@ -2269,6 +2265,7 @@ std::string moldyn::SimpleSphereRenderer::generateDirectionShaderArrayString(con
 /*
  * moldyn::SimpleSphereRenderer::isTimeForced
  */
-bool moldyn::SimpleSphereRenderer::isTimeForced() const {
-    return this->forceTimeSlot.Param<core::param::BoolParam>()->Value();
-}
+//bool moldyn::SimpleSphereRenderer::isTimeForced() const {
+//
+//    return this->forceTimeSlot.Param<core::param::BoolParam>()->Value();
+//}
