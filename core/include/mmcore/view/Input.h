@@ -284,24 +284,15 @@ public:
     }
 
     /** Ctor. */
-    KeyCode(Key key, Modifiers mods) {
-        this->mods = mods;
-        this->key = key;
-    }
     KeyCode(Key key) {
         this->key = key;
         this->mods = core::view::Modifiers(core::view::Modifier::NONE);
     }
 
-    /// ONLY for map in ButtonParamUILayer ....
-    inline KeyCode& operator=(const KeyCode& rhs) {
-        this->key = rhs.key;
-        this->mods = rhs.mods;
-        return *this;
-    }
-    /// ONLY for map in ButtonParamUILayer ....
-    inline bool operator==(const KeyCode& rhs) const {
-        return ((this->key == rhs.key) && (this->mods.test(rhs.mods)));
+    /** Ctor. */
+    KeyCode(Key key, Modifiers mods) {
+        this->mods = mods;
+        this->key = key;
     }
 
     /**
@@ -312,12 +303,13 @@ public:
     std::string ToString(void) const {
 
         std::string msg;
+
         if (this->mods.test(core::view::Modifier::SHIFT)) msg += "SHIFT + ";
         if (this->mods.test(core::view::Modifier::CTRL)) msg += "CTRL + ";
         if (this->mods.test(core::view::Modifier::ALT)) msg += "ALT + ";
 
         switch (this->key) {
-            case (core::view::Key::KEY_UNKNOWN) : msg += "'Unknown Key'"; break;
+            case (core::view::Key::KEY_UNKNOWN): msg += ""; break; // 'Unknown Key'
             case (core::view::Key::KEY_SPACE) : msg += "'Space'"; break;
             case (core::view::Key::KEY_APOSTROPHE) : msg += "'''"; break;
             case (core::view::Key::KEY_COMMA) : msg += "','"; break;    
@@ -448,17 +440,6 @@ public:
         return msg;
     }
 };
-
-
-/// ONLY for map in ButtonParamUILayer ....
-inline bool operator<(KeyCode lhs, KeyCode rhs) {
-    return (((int)lhs.key < (int)rhs.key) && (lhs.mods.toInt() < rhs.mods.toInt()));
-}
-/// ONLY for map in ButtonParamUILayer ....
-inline bool operator>(KeyCode lhs, KeyCode rhs) {
-    return (((int)lhs.key > (int)rhs.key) && (lhs.mods.toInt() > rhs.mods.toInt()));
-}
-
 
 } /* end namespace view */
 } /* end namespace core */
