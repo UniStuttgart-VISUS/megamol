@@ -59,9 +59,9 @@ std::vector<std::array<float, 5>> megamol::gui::TransferFunctionEditor::GetTrans
 
 
 /**
- * TransferFunctionEditor::DrawEditor
+ * TransferFunctionEditor::DrawTransferFunctionEditor
  */
-bool megamol::gui::TransferFunctionEditor::DrawEditor(void) {
+bool megamol::gui::TransferFunctionEditor::DrawTransferFunctionEditor(void) {
 
     ASSERT(ImGui::GetCurrentContext() != nullptr);
     ImGuiIO& io = ImGui::GetIO();
@@ -177,12 +177,13 @@ bool megamol::gui::TransferFunctionEditor::DrawEditor(void) {
             }
 
             draw_list->AddCircleFilled(point_cur_pos, point_radius, frame_back_col, circle_subdiv);
+            float point_radius_full = point_radius + point_border - 2.0f;
             draw_list->AddCircle(
-                point_cur_pos, (point_radius + point_border - 2.0f), point_border_col, circle_subdiv, point_border);
+                point_cur_pos, point_radius_full, point_border_col, circle_subdiv, point_border);
             draw_list->AddCircleFilled(point_cur_pos, point_radius, point_col, 12);
 
             ImVec2 delta_vec = ImVec2(point_cur_pos.x - mouse_cur_pos.x, point_cur_pos.y - mouse_cur_pos.y);
-            if (std::sqrtf((delta_vec.x * delta_vec.x) + (delta_vec.y * delta_vec.y)) <= point_radius) {
+            if (std::sqrtf((delta_vec.x * delta_vec.x) + (delta_vec.y * delta_vec.y)) <= point_radius_full) {
                 selected_node = i;
                 selected_chan = c;
             }

@@ -27,7 +27,7 @@ using vislib::sys::Log;
 view::SplitView::SplitView(void) : AbstractView(),
 render1Slot("render1", "Connects to the view 1 (left or top)"),
 render2Slot("render2", "Connects to the view 2 (right or bottom)"),
-overlaySlot("rendergui", "Connects to a special overlay renderer (e.g. gui::GUIRenderer)"),
+overlaySlot("overlay", "Connects to a special overlay renderer (e.g. gui::GUIRenderer)"),
 splitOriSlot("split.orientation", "The split orientation"),
 splitSlot("split.pos", "The split position"),
 splitWidthSlot("split.width", "The split border width"),
@@ -309,7 +309,7 @@ void view::SplitView::Render(const mmcRenderViewContext& context) {
     if (cgr != nullptr) {
         cgr->SetInstanceTime(instTime);
         cgr->Resize(this->clientArea.Width(), this->clientArea.Height());
-        (*cgr)(view::CallSplitViewOverlay::FnRender);
+        (*cgr)(view::CallSplitViewOverlay::FnOverlay);
     }
 
     ::glMatrixMode(GL_PROJECTION);

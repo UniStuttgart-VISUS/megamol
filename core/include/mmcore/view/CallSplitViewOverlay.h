@@ -47,11 +47,11 @@ namespace view {
          * @return A human readable description of the module.
          */
         static const char *Description(void) {
-            return "Call the Overlay Renderer";
+            return "Call the special overlay renderer";
         }
 
 		/** Function index of 'render' */
-        static const unsigned int FnRender = 5;
+        static const unsigned int FnOverlay = 5;
 
         /**
          * Answer the number of functions used for this call.
@@ -59,7 +59,7 @@ namespace view {
          * @return The number of functions used for this call.
          */
         static unsigned int FunctionCount(void) {
-            ASSERT(FnRender == InputCall::FunctionCount() && "Enum has bad magic number");
+            ASSERT(FnOverlay == InputCall::FunctionCount() && "Enum has bad magic number");
             return InputCall::FunctionCount() + 1;
         }
 
@@ -73,7 +73,7 @@ namespace view {
 		static const char* FunctionName(unsigned int idx) {
             #define CaseFunction(id) case Fn##id: return #id
             switch (idx) {
-                CaseFunction(Render);
+                CaseFunction(Overlay);
             default: return InputCall::FunctionName(idx);
             }
             #undef CaseFunction
@@ -109,7 +109,7 @@ namespace view {
         }
 
         /**
-         * Resize the viewport.
+         * Resize the viewport (meaning equals SetViewport)
          *
          * @param width  The width of the viewport to set
          * @param height The height of the viewport to set

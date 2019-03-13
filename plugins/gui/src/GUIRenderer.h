@@ -49,6 +49,7 @@
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/Vector4fParam.h"
 #include "mmcore/utility/ResourceWrapper.h"
+#include "mmcore/view/CallSplitViewOverlay.h"
 #include "mmcore/view/Renderer2DModule.h"
 #include "mmcore/view/Renderer3DModule.h"
 
@@ -60,7 +61,6 @@
 #include <imgui.h>
 #include "imgui_impl_opengl3.h"
 
-#include "OverlayInterfaceLayer.h"
 #include "TransferFunctionEditor.h"
 
 
@@ -77,7 +77,7 @@ namespace megamol {
 namespace gui {
 
 
-template <class M, class C> class GUIRenderer : public OverlayInterfaceLayer<M> {
+template <class M, class C> class GUIRenderer : public M, TransferFunctionEditor {
 public:
     /**
      * Answer the name of this module.
@@ -115,6 +115,10 @@ protected:
 
     virtual void release() override;
 
+    virtual bool GetExtents(C& call) override;
+
+    virtual bool Render(C& call) override;
+
     virtual bool OnKey(core::view::Key key, core::view::KeyAction action, core::view::Modifiers mods) override;
 
     virtual bool OnChar(unsigned int codePoint) override;
@@ -126,11 +130,35 @@ protected:
 
     virtual bool OnMouseScroll(double dx, double dy) override;
 
-    virtual bool GetExtents(C& call) override;
+    /**
+     * Callback forwarding OnRender request.
+     */
+    bool OnOverlayCallback(megamol::core::Call& call);
 
-    virtual bool Render(C& call) override;
+    /**
+     * Callback forwarding OnKey request.
+     */
+    bool OnKeyCallback(megamol::core::Call& call);
 
-    virtual bool OnGUIRenderCallback(megamol::core::Call& call) override;
+    /**
+     * Callback forwarding OnChar request.
+     */
+    bool OnCharCallback(megamol::core::Call& call);
+
+    /**
+     * Callback forwarding OnMouse request.
+     */
+    bool OnMouseButtonCallback(megamol::core::Call& call);
+
+    /**
+     * Callback forwarding OnMouseMove request.
+     */
+    bool OnMouseMoveCallback(megamol::core::Call& call);
+
+    /**
+     * Callback forwarding OnMouseScroll request.
+     */
+    bool OnMouseScrollCallback(megamol::core::Call& call);
 
 private:
     // TYPES, ENUMS -----------------------------------------------------------
@@ -155,11 +183,11 @@ private:
 
     // VARIABLES --------------------------------------------------------------
 
+    /** The overlay callee slot */
+    megamol::core::CalleeSlot overlay_slot;
+
     /** The ImGui context created and used by this GUIRenderer */
     ImGuiContext* imgui_context;
-
-    /** The transfer function editor. */
-    TransferFunctionEditor tf_editor;
 
     /** The decorated renderer caller slot */
     core::CallerSlot decorated_renderer_slot;
@@ -359,10 +387,9 @@ typedef GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D> GUIR
  */
 template <>
 inline GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIRenderer()
-    : OverlayInterfaceLayer<core::view::Renderer2DModule>()
-    , imgui_context(nullptr)
-    , tf_editor()
+    : imgui_context(nullptr)
     , decorated_renderer_slot("decoratedRenderer", "Connects to another 2D Renderer being decorated")
+    , overlay_slot("overlayRender", "Connected with SplitView for special overlay rendering")
     , float_print_prec(3) // INIT: Float string format precision
     , tooltip_time(0.0f)
     , tooltip_id(0)
@@ -385,6 +412,27 @@ inline GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIR
 
     this->decorated_renderer_slot.SetCompatibleCall<core::view::CallRender2DDescription>();
     this->MakeSlotAvailable(&this->decorated_renderer_slot);
+
+    // InputCall
+    this->overlay_slot.SetCallback(core::view::CallSplitViewOverlay::ClassName(),
+        core::view::CallSplitViewOverlay::FunctionName(core::view::CallSplitViewOverlay::FnOverlay),
+        &GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::OnOverlayCallback);
+    this->overlay_slot.SetCallback(core::view::CallSplitViewOverlay::ClassName(),
+        core::view::InputCall::FunctionName(core::view::InputCall::FnOnKey),
+        &GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::OnKeyCallback);
+    this->overlay_slot.SetCallback(core::view::CallSplitViewOverlay::ClassName(),
+        core::view::InputCall::FunctionName(core::view::InputCall::FnOnChar),
+        &GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::OnCharCallback);
+    this->overlay_slot.SetCallback(core::view::CallSplitViewOverlay::ClassName(),
+        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseButton),
+        &GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::OnMouseButtonCallback);
+    this->overlay_slot.SetCallback(core::view::CallSplitViewOverlay::ClassName(),
+        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseMove),
+        &GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::OnMouseMoveCallback);
+    this->overlay_slot.SetCallback(core::view::CallSplitViewOverlay::ClassName(),
+        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseScroll),
+        &GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::OnMouseScrollCallback);
+    this->MakeSlotAvailable(&this->overlay_slot);
 }
 
 
@@ -393,10 +441,9 @@ inline GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIR
  */
 template <>
 inline GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GUIRenderer()
-    : OverlayInterfaceLayer<core::view::Renderer3DModule>()
-    , imgui_context(nullptr)
-    , tf_editor()
+    : imgui_context(nullptr)
     , decorated_renderer_slot("decoratedRenderer", "Connects to another 2D Renderer being decorated")
+    , overlay_slot("overlayRender", "Connected with SplitView for special overlay rendering")
     , float_print_prec(3) // INIT: Float string format precision
     , tooltip_time(0.0f)
     , tooltip_id(0)
@@ -419,6 +466,27 @@ inline GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GUIR
 
     this->decorated_renderer_slot.SetCompatibleCall<core::view::CallRender3DDescription>();
     this->MakeSlotAvailable(&this->decorated_renderer_slot);
+
+    // Overlay Call
+    this->overlay_slot.SetCallback(core::view::CallSplitViewOverlay::ClassName(),
+        core::view::CallSplitViewOverlay::FunctionName(core::view::CallSplitViewOverlay::FnOverlay),
+        &GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::OnOverlayCallback);
+    this->overlay_slot.SetCallback(core::view::CallSplitViewOverlay::ClassName(),
+        core::view::InputCall::FunctionName(core::view::InputCall::FnOnKey),
+        &GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::OnKeyCallback);
+    this->overlay_slot.SetCallback(core::view::CallSplitViewOverlay::ClassName(),
+        core::view::InputCall::FunctionName(core::view::InputCall::FnOnChar),
+        &GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::OnCharCallback);
+    this->overlay_slot.SetCallback(core::view::CallSplitViewOverlay::ClassName(),
+        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseButton),
+        &GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::OnMouseButtonCallback);
+    this->overlay_slot.SetCallback(core::view::CallSplitViewOverlay::ClassName(),
+        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseMove),
+        &GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::OnMouseMoveCallback);
+    this->overlay_slot.SetCallback(core::view::CallSplitViewOverlay::ClassName(),
+        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseScroll),
+        &GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::OnMouseScrollCallback);
+    this->MakeSlotAvailable(&this->overlay_slot);
 }
 
 
@@ -952,9 +1020,9 @@ template <class M, class C> bool GUIRenderer<M, C>::Render(C& call) {
 
 
 /**
- * GUIRenderer<M, C>::OnGUIRenderCallback
+ * GUIRenderer<M, C>::OnRenderCallback
  */
-template <class M, class C> bool GUIRenderer<M, C>::OnGUIRenderCallback(core::Call& call) {
+template <class M, class C> bool GUIRenderer<M, C>::OnOverlayCallback(core::Call& call) {
 
     if (this->renderSlot.GetStatus() == core::AbstractSlot::SlotStatus::STATUS_CONNECTED) {
         vislib::sys::Log::DefaultLog.WriteError("[GUIRenderer] Only one connected callee slot is allowed!");
@@ -970,7 +1038,87 @@ template <class M, class C> bool GUIRenderer<M, C>::OnGUIRenderCallback(core::Ca
         core::view::CallSplitViewOverlay& cgr = dynamic_cast<core::view::CallSplitViewOverlay&>(call);
         return this->renderGUI(cgr.GetViewport(), cgr.InstanceTime());
     } catch (...) {
-        ASSERT("OnGUIRenderCallback call cast failed\n");
+        ASSERT("OnRenderCallback call cast failed\n");
+    }
+    return false;
+}
+
+
+/**
+ * GUIRenderer<M, C>::OnKeyCallback
+ */
+template <class M, class C> bool GUIRenderer<M, C>::OnKeyCallback(core::Call& call) {
+    try {
+        core::view::CallSplitViewOverlay& cr = dynamic_cast<core::view::CallSplitViewOverlay&>(call);
+        auto& evt = cr.GetInputEvent();
+        ASSERT(evt.tag == core::view::InputEvent::Tag::Key && "Callback invocation mismatched input event");
+        return this->OnKey(evt.keyData.key, evt.keyData.action, evt.keyData.mods);
+    } catch (...) {
+        ASSERT("OnKeyCallback call cast failed\n");
+    }
+    return false;
+}
+
+
+/**
+ * GUIRenderer<M, C>::OnCharCallback
+ */
+template <class M, class C> bool GUIRenderer<M, C>::OnCharCallback(core::Call& call) {
+    try {
+        core::view::CallSplitViewOverlay& cr = dynamic_cast<core::view::CallSplitViewOverlay&>(call);
+        auto& evt = cr.GetInputEvent();
+        ASSERT(evt.tag == core::view::InputEvent::Tag::Char && "Callback invocation mismatched input event");
+        return this->OnChar(evt.charData.codePoint);
+    } catch (...) {
+        ASSERT("OnCharCallback call cast failed\n");
+    }
+    return false;
+}
+
+
+/**
+ * GUIRenderer<M, C>::OnMouseButtonCallback
+ */
+template <class M, class C> bool GUIRenderer<M, C>::OnMouseButtonCallback(core::Call& call) {
+    try {
+        core::view::CallSplitViewOverlay& cr = dynamic_cast<core::view::CallSplitViewOverlay&>(call);
+        auto& evt = cr.GetInputEvent();
+        ASSERT(evt.tag == core::view::InputEvent::Tag::MouseButton && "Callback invocation mismatched input event");
+        return this->OnMouseButton(evt.mouseButtonData.button, evt.mouseButtonData.action, evt.mouseButtonData.mods);
+    } catch (...) {
+        ASSERT("OnMouseButtonCallback call cast failed\n");
+    }
+    return false;
+}
+
+
+/**
+ * GUIRenderer<M, C>::OnMouseMoveCallback
+ */
+template <class M, class C> bool GUIRenderer<M, C>::OnMouseMoveCallback(core::Call& call) {
+    try {
+        core::view::CallSplitViewOverlay& cr = dynamic_cast<core::view::CallSplitViewOverlay&>(call);
+        auto& evt = cr.GetInputEvent();
+        ASSERT(evt.tag == core::view::InputEvent::Tag::MouseMove && "Callback invocation mismatched input event");
+        return this->OnMouseMove(evt.mouseMoveData.x, evt.mouseMoveData.y);
+    } catch (...) {
+        ASSERT("OnMouseMoveCallback call cast failed\n");
+    }
+    return false;
+}
+
+
+/**
+ * GUIRenderer<M, C>::OnMouseScrollCallback
+ */
+template <class M, class C> bool GUIRenderer<M, C>::OnMouseScrollCallback(core::Call& call) {
+    try {
+        core::view::CallSplitViewOverlay& cr = dynamic_cast<core::view::CallSplitViewOverlay&>(call);
+        auto& evt = cr.GetInputEvent();
+        ASSERT(evt.tag == core::view::InputEvent::Tag::MouseScroll && "Callback invocation mismatched input event");
+        return this->OnMouseScroll(evt.mouseScrollData.dx, evt.mouseScrollData.dy);
+    } catch (...) {
+        ASSERT("OnMouseScrollCallback call cast failed\n");
     }
     return false;
 }
@@ -1060,6 +1208,15 @@ template <class M, class C> void GUIRenderer<M, C>::drawMainWindowCallback(std::
 
     this->helpMarkerToolTip(color_param_help);
     this->drawParametersCallback(win_label);
+}
+
+
+/**
+ * GUIRenderer<M, C>::drawTFWindowCallback
+ */
+template <class M, class C> void GUIRenderer<M, C>::drawTFWindowCallback(std::string win_label) {
+
+    this->DrawTransferFunctionEditor();
 }
 
 
@@ -1333,15 +1490,6 @@ template <class M, class C> void GUIRenderer<M, C>::drawFontSelectionWindowCallb
     std::string help = "Same font can be loaded multiple times using different font size";
     this->helpMarkerToolTip(help);
 #endif
-}
-
-
-/**
- * GUIRenderer<M, C>::drawTFWindowCallback
- */
-template <class M, class C> void GUIRenderer<M, C>::drawTFWindowCallback(std::string win_label) {
-
-    this->tf_editor.DrawEditor();
 }
 
 

@@ -53,7 +53,7 @@ public:
     /**
      * Draws the transfer function editor.
      */
-    bool DrawEditor(void);
+    bool DrawTransferFunctionEditor(void);
 
     /**
      * Set transfer function data to use in editor.
