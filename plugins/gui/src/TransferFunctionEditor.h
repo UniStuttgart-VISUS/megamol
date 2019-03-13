@@ -16,15 +16,13 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
+#include <string>
 #include <array>
 #include <vector>
-#include <string>
-#include <algorithm> // sort
 #include <map>
-
+#include <algorithm> // sort
+#include <cassert>
 #include <imgui.h>
-
-#include "vislib/assert.h"
 
 #include "GUIUtility.h"
 

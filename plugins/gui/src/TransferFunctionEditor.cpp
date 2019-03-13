@@ -11,6 +11,7 @@
 
 using namespace megamol::gui;
 
+
 /**
  * Ctor
  */
@@ -63,7 +64,7 @@ std::vector<std::array<float, 5>> megamol::gui::TransferFunctionEditor::GetTrans
  */
 bool megamol::gui::TransferFunctionEditor::DrawTransferFunctionEditor(void) {
 
-    ASSERT(ImGui::GetCurrentContext() != nullptr);
+    assert(ImGui::GetCurrentContext() != nullptr);
     ImGuiIO& io = ImGui::GetIO();
     ImGuiStyle& style = ImGui::GetStyle();
 
@@ -344,10 +345,10 @@ bool megamol::gui::TransferFunctionEditor::DrawTransferFunctionEditor(void) {
                 cx1 = cx2;
                 p1 = p2;
                 cx2 = this->data[i];
-                ASSERT(cx2[4] <= 1.0f + 1e-5f);
+                assert(cx2[4] <= 1.0f + 1e-5f);
                 p2 = static_cast<int>(cx2[4] * static_cast<float>(this->tex_size - 1));
-                ASSERT(p2 < static_cast<int>(this->tex_size));
-                ASSERT(p2 >= p1);
+                assert(p2 < static_cast<int>(this->tex_size));
+                assert(p2 >= p1);
 
                 for (int p = p1; p <= p2; p++) {
                     float al = static_cast<float>(p - p1) / static_cast<float>(p2 - p1);

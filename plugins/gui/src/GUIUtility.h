@@ -17,13 +17,13 @@
 
 
 #include <string>
+#include <cassert>
 #include <imgui.h>
-
-#include "vislib/assert.h"
 
 
 namespace megamol {
 namespace gui {
+
 
 /**
  * Utility functions for the GUI

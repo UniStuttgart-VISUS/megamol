@@ -15,7 +15,7 @@
  *
  * USED HOKEYS:
  *
- * - Show/hide Windows: F12 - F10
+ * - Show/hide Windows: F12 - F9
  * - Reset window size: Shift+F12
  * - Quit program:      Esc, Alt+F4
  *
@@ -55,13 +55,12 @@
 
 #include "vislib/UTF8Encoder.h"
 
+#include <imgui.h>
 #include <iomanip> // setprecision
 #include <sstream> // stringstream
 
-#include <imgui.h>
-#include "imgui_impl_opengl3.h"
-
 #include "TransferFunctionEditor.h"
+#include "imgui_impl_opengl3.h"
 
 
 #ifdef _WIN32
