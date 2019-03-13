@@ -101,7 +101,7 @@ AbstractManipulator<C>::AbstractManipulator(const char* outSlotName, const char*
     this->outDataSlot.SetCallback(C::ClassName(), "GetExtent", &AbstractManipulator::getExtentCallback);
     this->MakeSlotAvailable(&this->outDataSlot);
 
-    this->inDataSlot.SetCompatibleCall<core::factories::CallAutoDescription<C>>();
+    this->inDataSlot.SetCompatibleCall<typename core::factories::CallAutoDescription<C>>();
     this->MakeSlotAvailable(&this->inDataSlot);
 }
 
@@ -133,7 +133,7 @@ template <class C> bool AbstractManipulator<C>::getDataCallback(megamol::core::C
     auto outMpdc = dynamic_cast<C*>(&c);
     if (outMpdc == NULL) return false;
 
-    auto inMpdc = this->inDataSlot.CallAs<C>();
+    auto inMpdc = this->inDataSlot.template CallAs<C>();
     if (inMpdc == NULL) return false;
 
     *inMpdc = *outMpdc; // to get the correct request time
@@ -154,7 +154,7 @@ template <class C> bool AbstractManipulator<C>::getExtentCallback(megamol::core:
     auto outMpdc = dynamic_cast<C*>(&c);
     if (outMpdc == NULL) return false;
 
-    auto inMpdc = this->inDataSlot.CallAs<C>();
+    auto inMpdc = this->inDataSlot.template CallAs<C>();
     if (inMpdc == NULL) return false;
 
     *inMpdc = *outMpdc; // to get the correct request time
