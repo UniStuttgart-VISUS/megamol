@@ -326,9 +326,12 @@ bool moldyn::SimpleSphereRenderer::resetResources(void) {
     this->theShaders.clear();
     this->theShaders_splat.clear();
 
-    if (this->volGen != nullptr) {
-        delete this->volGen;
+    if (volGen != nullptr) {
+        delete volGen;
+        volGen = nullptr;
     }
+    glDeleteTextures(3, reinterpret_cast<GLuint*>(&this->gBuffer));
+    glDeleteFramebuffers(1, &(this->gBuffer.fbo));
 
     glUnmapNamedBufferEXT(this->theSingleBuffer);
     for (auto &x : fences) {
@@ -1181,20 +1184,42 @@ bool moldyn::SimpleSphereRenderer::renderGeo(view::CallRender3D* cr3d, MultiPart
  */
 bool moldyn::SimpleSphereRenderer::renderAmbientOcclusion(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc) {
 
+    megamol::core::view::AbstractCallRender3D *renderCall = dynamic_cast<megamol::core::view::AbstractCallRender3D*>(cr3d);
+    if (renderCall == NULL) return false;
+
+    // We need to regenerate the shader if certain settings are changed
+    if (this->enableAOSlot.IsDirty() ||
+        this->enableLightingSlot.IsDirty() ||
+        this->aoConeApexSlot.IsDirty())
+    {
+        this->aoConeApexSlot.ResetDirty();
+        this->enableLightingSlot.ResetDirty();
+        rebuildShader();
+    }
+
+    // Rebuild the GBuffer if neccessary
+    this->rebuildGBuffer();
+
+    // Rebuild and reupload working data if neccessary
+    this->rebuildWorkingData(renderCall, mpdc);
+
+    GLint prevFBO;
+    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prevFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, gBuffer.fbo); checkGLError;
+    GLenum bufs[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
+    glDrawBuffers(2, bufs);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); checkGLError;
+
+    glBindFragDataLocation(sphereShader.ProgramHandle(), 0, "outColor"); checkGLError;
+    glBindFragDataLocation(sphereShader.ProgramHandle(), 1, "outNormal"); checkGLError;
 
 
+    // Render the particles' geometry
+    this->renderParticlesGeometry(renderCall, mpdc);
 
+    glBindFramebuffer(GL_FRAMEBUFFER, prevFBO);
 
-
-
-
-
-
-
-
-
-
-
+    renderDeferredPass(renderCall);
 
     return true;
 }
