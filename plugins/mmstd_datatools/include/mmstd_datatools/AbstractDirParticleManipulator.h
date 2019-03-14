@@ -1,20 +1,19 @@
 /*
- * AbstractMeshManipulator.h
+ * AbstractDirParticleManipulator.h
  *
  * Copyright (C) 2019 MegaMol Dev Team
  * Alle Rechte vorbehalten.
  */
-
 #pragma once
 
-#include "geometry_calls/CallTriMeshData.h"
-#include "AbstractManipulator.h"
+#include "mmcore/moldyn/DirectionalParticleDataCall.h"
+#include "mmstd_datatools/AbstractManipulator.h"
 
 namespace megamol {
 namespace stdplugin {
 namespace datatools {
 
-using AbstractMeshManipulator = AbstractManipulator<geocalls::CallTriMeshData>;
+using AbstractDirParticleManipulator = AbstractManipulator<core::moldyn::DirectionalParticleDataCall>;
 
 } /* end namespace datatools */
 } /* end namespace stdplugin */
