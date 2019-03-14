@@ -39,7 +39,7 @@ view::SwitchRenderer3D::SwitchRenderer3D(void) : view::Renderer3DModule(),
     this->MakeSlotAvailable(&this->selectedRendererSlot);
     this->selectedRendererSlot.ForceSetDirty();
 
-    this->switchRendererBtnSlot << new param::ButtonParam(vislib::sys::KeyCode::KEY_MOD_ALT + 's');
+    this->switchRendererBtnSlot << new param::ButtonParam(core::view::Key::KEY_S, core::view::Modifier::ALT);
     this->switchRendererBtnSlot.SetUpdateCallback(&SwitchRenderer3D::onSwitchRenderer);
     this->MakeSlotAvailable(&this->switchRendererBtnSlot);
 

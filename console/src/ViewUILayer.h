@@ -1,5 +1,5 @@
 /*
- * ViewMouseUILayer.h
+ * ViewUILayer.h
  *
  * Copyright (C) 2016 MegaMol Team
  * Alle Rechte vorbehalten. All rights reserved.

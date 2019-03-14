@@ -38,10 +38,6 @@
 
 #ifdef _WIN32
 #include "TrackingUtilizer.h"
-#define USE_TRACKING 1
-#endif
-
-#ifdef USE_TRACKING
 using namespace tracking;
 #endif
 
@@ -518,9 +514,6 @@ namespace view {
         /** Parameter slot for the bounding box colour */
         param::ParamSlot bboxColSlot;
 
-        /** Enable selecting mode of mouse (disables camera movement) */
-        param::ParamSlot enableMouseSelectionSlot;
-
         /** Shows the view cube helper */
         param::ParamSlot showViewCubeSlot;
 
@@ -534,11 +527,7 @@ namespace view {
         float mouseY;
 
         /** The time control */
-        TimeControl timeCtrl;
-
-        /** Flag whether mouse control is to be handed over to the renderer */
-        bool toggleMouseSelection;
-        
+        TimeControl timeCtrl;        
     };
 
 

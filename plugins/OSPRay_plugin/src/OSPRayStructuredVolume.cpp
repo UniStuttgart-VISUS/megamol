@@ -103,6 +103,11 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
         vislib::sys::Log::DefaultLog.WriteError("OSPRayStructuredVolume: no transferfunction connected.");
         return false;
     }
+
+    if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS)) return false;
+    if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_METADATA)) return false;
+    if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_DATA)) return false;
+
     if (os->getTime() >= cd->FrameCount()) {
         cd->SetFrameID(cd->FrameCount() - 1, true); // isTimeForced flag set to true
     } else {
@@ -115,11 +120,6 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
     } else {
         return true;
     }
-
-
-    if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS)) return false;
-    if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_METADATA)) return false;
-    if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_DATA)) return false;
 
     auto const metadata = cd->GetMetadata();
 

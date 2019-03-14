@@ -117,16 +117,16 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
 
 
     // init parameters
-    this->applyKeyframeParam.SetParameter(new param::ButtonParam('a'));
+    this->applyKeyframeParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_A));
     this->MakeSlotAvailable(&this->applyKeyframeParam);
 
-    this->undoChangesParam.SetParameter(new param::ButtonParam(vislib::sys::KeyCode::KEY_MOD_CTRL + 'y')); // = z in german keyboard layout
+    this->undoChangesParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_Y, core::view::Modifier::CTRL)); // = z in german keyboard layout
     this->MakeSlotAvailable(&this->undoChangesParam);
 
-    this->redoChangesParam.SetParameter(new param::ButtonParam(vislib::sys::KeyCode::KEY_MOD_CTRL + 'z')); // = y in german keyboard layout
+    this->redoChangesParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_Z, core::view::Modifier::CTRL)); // = y in german keyboard layout
     this->MakeSlotAvailable(&this->redoChangesParam);
 
-    this->deleteSelectedKeyframeParam.SetParameter(new param::ButtonParam('d'));
+    this->deleteSelectedKeyframeParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_D));
     this->MakeSlotAvailable(&this->deleteSelectedKeyframeParam);
 
     this->editCurrentAnimTimeParam.SetParameter(new param::FloatParam(this->selectedKeyframe.GetAnimTime(), 0.0f));
@@ -141,7 +141,7 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
     this->editCurrentLookAtParam.SetParameter(new param::Vector3fParam(this->selectedKeyframe.GetCamLookAt()));
     this->MakeSlotAvailable(&this->editCurrentLookAtParam);
 
-    this->resetLookAtParam.SetParameter(new param::ButtonParam('l'));
+    this->resetLookAtParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_L));
     this->MakeSlotAvailable(&this->resetLookAtParam);
     
     this->editCurrentUpParam.SetParameter(new param::Vector3fParam(this->selectedKeyframe.GetCamUp()));
@@ -156,26 +156,26 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
     this->fileNameParam.SetParameter(new param::FilePathParam(this->filename));
     this->MakeSlotAvailable(&this->fileNameParam);
 
-    this->saveKeyframesParam.SetParameter(new param::ButtonParam(vislib::sys::KeyCode::KEY_MOD_CTRL + 's'));
+    this->saveKeyframesParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_S, core::view::Modifier::CTRL));
     this->MakeSlotAvailable(&this->saveKeyframesParam);
 
-    this->loadKeyframesParam.SetParameter(new param::ButtonParam(vislib::sys::KeyCode::KEY_MOD_CTRL + 'l'));
+    this->loadKeyframesParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_L, core::view::Modifier::CTRL));
     this->MakeSlotAvailable(&this->loadKeyframesParam);
     this->loadKeyframesParam.ForceSetDirty(); // Try to load keyframe file at program start
 
-    this->snapAnimFramesParam.SetParameter(new param::ButtonParam('f'));
+    this->snapAnimFramesParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_F));
     this->MakeSlotAvailable(&this->snapAnimFramesParam);
 
-    this->snapSimFramesParam.SetParameter(new param::ButtonParam('g'));
+    this->snapSimFramesParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_G));
     this->MakeSlotAvailable(&this->snapSimFramesParam);
 
-    this->simTangentParam.SetParameter(new param::ButtonParam('t'));
+    this->simTangentParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_T));
     this->MakeSlotAvailable(&this->simTangentParam);
 
     this->interpolTangentParam.SetParameter(new param::FloatParam(this->tl)); // , -10.0f, 10.0f));
     this->MakeSlotAvailable(&this->interpolTangentParam);
 
-    this->setKeyframesToSameSpeed.SetParameter(new param::ButtonParam('v'));
+    this->setKeyframesToSameSpeed.SetParameter(new param::ButtonParam(core::view::Key::KEY_V));
     this->MakeSlotAvailable(&this->setKeyframesToSameSpeed);
 }
 

@@ -84,23 +84,7 @@ namespace view {
             this->camParams = camParams;
         }
 
-        /**
-         * Gets the number of milliseconds required to render the last frame.
-         *
-         * @return The time required to render the last frame
-         */
-        inline double LastFrameTime(void) const {
-            return this->lastFrameTime;
-        }
 
-        /**
-         * Sets the number of milliseconds required to render the last frame.
-         *
-         * @param time The time required to render the last frame
-         */
-        inline void SetLastFrameTime(double time) {
-            this->lastFrameTime = time;
-        }
 
         /**
          * Assignment operator
@@ -129,9 +113,6 @@ namespace view {
 
         /** The bounding boxes */
         BoundingBoxes bboxs;
-
-        /** The number of milliseconds required to render the last frame */
-        double lastFrameTime;
 
     };
 #ifdef _WIN32

@@ -150,7 +150,7 @@ CartoonTessellationRenderer::CartoonTessellationRenderer(void) : Renderer3DModul
 	this->lineDebugParam << new core::param::BoolParam(false);
 	this->MakeSlotAvailable(&this->lineDebugParam);
 
-	this->buttonParam << new core::param::ButtonParam(vislib::sys::KeyCode::KEY_F5);
+	this->buttonParam << new core::param::ButtonParam(core::view::Key::KEY_F5);
 	this->MakeSlotAvailable(&this->buttonParam);
 
 	this->colorInterpolationParam << new core::param::BoolParam(false);
