@@ -202,7 +202,7 @@ if(BUILD_CORE)
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "src" "include"
     PUBLIC ${EXPAT_INCLUDE_DIRS})
   target_link_libraries(${PROJECT_NAME} 
-    PUBLIC vislib glad glm zlib libpng ${EXPAT_LIBRARIES}
+    PUBLIC vislib glad glm zlib libpng json ${EXPAT_LIBRARIES}
     PRIVATE lua libzmq libcppzmq ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT})
   if(WIN32)
     set_target_properties(${PROJECT_NAME} PROPERTIES

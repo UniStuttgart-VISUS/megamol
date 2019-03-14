@@ -41,18 +41,13 @@ megamol::gui::TransferFunctionEditor::~TransferFunctionEditor(void) {
 /**
  * TransferFunctionEditor::SetTransferFunction
  */
-void megamol::gui::TransferFunctionEditor::SetTransferFunction(
-    std::vector<std::array<float, 5>>& data, InterpolMode imod) {
-
-    this->interpol_mode = imod;
-    this->data = data;
-}
+void megamol::gui::TransferFunctionEditor::SetTransferFunction(std::string tfs) {}
 
 
 /**
  * TransferFunctionEditor::GetTransferFunction
  */
-std::vector<std::array<float, 5>> megamol::gui::TransferFunctionEditor::GetTransferFunction(void) { return this->data; }
+std::string megamol::gui::TransferFunctionEditor::GetTransferFunction(void) { return std::string(""); }
 
 
 /**
@@ -180,7 +175,7 @@ bool megamol::gui::TransferFunctionEditor::DrawTransferFunctionEditor(void) {
             draw_list->AddCircleFilled(point_cur_pos, point_radius, point_col, 12);
 
             ImVec2 delta_vec = ImVec2(point_cur_pos.x - mouse_cur_pos.x, point_cur_pos.y - mouse_cur_pos.y);
-            if (std::sqrtf((delta_vec.x * delta_vec.x) + (delta_vec.y * delta_vec.y)) <= point_radius_full) {
+            if (sqrtf((delta_vec.x * delta_vec.x) + (delta_vec.y * delta_vec.y)) <= point_radius_full) {
                 selected_node = i;
                 selected_chan = c;
             }

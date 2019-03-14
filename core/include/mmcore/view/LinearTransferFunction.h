@@ -19,7 +19,6 @@
 #include "vislib/sys/BufferedFile.h"
 
 
-
 namespace megamol {
 namespace core {
 namespace view {

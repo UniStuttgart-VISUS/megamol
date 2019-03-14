@@ -19,12 +19,14 @@
 #include <algorithm> // sort
 #include <array>
 #include <cassert>
+#include <cmath> // sqrtf
 #include <imgui.h>
 #include <map>
 #include <string>
 #include <vector>
 
 #include "GUIUtility.h"
+#include "json.hpp"
 
 
 namespace megamol {
@@ -46,14 +48,18 @@ public:
 
     /**
      * Set transfer function data to use in editor.
+     *
+     * @param tfs The transfer function encoded as string in JSON format.
      */
-    void SetTransferFunction(std::vector<std::array<float, 5>>& data, InterpolMode imod);
+    void SetTransferFunction(std::string tfs);
 
 
     /**
      * Get current transfer function data.
+     *
+     * @return The transfer function encoded as string in JSON format
      */
-    std::vector<std::array<float, 5>> GetTransferFunction(void);
+    std::string GetTransferFunction(void);
 
 protected:
     /**

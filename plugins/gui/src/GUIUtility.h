@@ -32,7 +32,7 @@ class GUIUtility {
 
 public:
     /**
-     * Reset size and position of main window.
+     * Reset size and position of window.
      *
      * @param win_label   The label of the current window.
      * @param min_height  The minimum height the window should at least be reset.
@@ -52,7 +52,7 @@ public:
     void HoverToolTip(std::string text, ImGuiID id = 0, float time_start = 0.0f, float time_end = 4.0f);
 
     /**
-     * Show help marker.
+     * Show help marker text with tooltip on hover.
      *
      * @param text   The help tooltip text.
      * @param label  The visible text for which the tooltip is enabled.
