@@ -103,7 +103,7 @@ bool megamol::console::WindowManager::InstantiatePendingView(void *hCore) {
     const void* wpData = nullptr;
     ::mmcValueType wpDataType = MMC_TYPE_VOIDP;
 
-	const auto getWindowPlacementFromCore = [&](auto& queryString) {
+	const auto getWindowPlacementFromCore = [&](auto const& queryString) {
         wpDataType = MMC_TYPE_VOIDP;
         wpData = ::mmcGetConfigurationValue(hCore, MMC_CFGID_VARIABLE, queryString, &wpDataType);
         if (wpData != nullptr) {
