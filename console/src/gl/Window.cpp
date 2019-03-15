@@ -145,6 +145,10 @@ gl::Window::Window(const char* title, const utility::WindowPlacement & placement
             ::glfwSetScrollCallback(hWnd, &Window::glfw_onMouseWheel_func);
             ::glfwSetCharCallback(hWnd, &Window::glfw_onChar_func);
         }
+
+        glGenQueries(1, &fragmentQuery);
+        glGenQueries(1, &primsQuery);
+        fpsSyncTime = std::chrono::system_clock::now();
     }
 #else
     // TODO initialize EGL display, context etc.
@@ -211,10 +215,11 @@ gl::Window::Window(const char* title, const utility::WindowPlacement & placement
     
     vislib::graphics::gl::LoadAllGL();
     vislib::sys::Log::DefaultLog.WriteInfo("Successfully created EGL context.");
-#endif
+
     glGenQueries(1, &fragmentQuery);
     glGenQueries(1, &primsQuery);
     fpsSyncTime = std::chrono::system_clock::now();
+#endif
 }
 
 gl::Window::~Window() {
@@ -236,18 +241,11 @@ void gl::Window::EnableVSync() {
 }
 
 void gl::Window::AddUILayer(std::shared_ptr<AbstractUILayer> uiLayer) {
-    auto it = std::find(uiLayers.begin(), uiLayers.end(), uiLayer);
-    if (it != uiLayers.end()) {
-        vislib::sys::Log::DefaultLog.WriteWarn("uiLayer already part of the window");
-        return;
-    }
-    uiLayers.push_back(uiLayer);
+    uiLayers.AddUILayer(uiLayer);
 }
 
 void gl::Window::RemoveUILayer(std::shared_ptr<AbstractUILayer> uiLayer) {
-    auto it = std::find(uiLayers.begin(), uiLayers.end(), uiLayer);
-    if (it == uiLayers.end()) return;
-    uiLayers.erase(it);
+    uiLayers.RemoveUILayer(uiLayer);
 }
 
 void gl::Window::SetShowFPSinTitle(bool show) {
@@ -296,7 +294,7 @@ void gl::Window::Update() {
 
     if (hWnd == nullptr) return;
     if (::glfwWindowShouldClose(hWnd)) {
-        uiLayers.clear();
+        uiLayers.ClearUILayers();
 
         hView.DestroyHandle();
 
@@ -334,10 +332,7 @@ void gl::Window::Update() {
         if (showPrimsInTitle) glEndQuery(GL_PRIMITIVES_GENERATED);
     }
 
-    for (std::shared_ptr<AbstractUILayer> uil : this->uiLayers) {
-        if (!uil->Enabled()) continue;
-        uil->OnDraw();
-    }
+	this->uiLayers.OnDraw();
 
     // done rendering. swap and next turn
 #ifndef USE_EGL
@@ -384,19 +379,13 @@ void gl::Window::glfw_onKey_func(GLFWwindow* wnd, int k, int s, int a, int m) {
     if ((m & GLFW_MOD_CONTROL) == GLFW_MOD_CONTROL) mods |= core::view::Modifier::CTRL;
     if ((m & GLFW_MOD_ALT) == GLFW_MOD_ALT) mods |= core::view::Modifier::ALT;
 
-    for (std::shared_ptr<AbstractUILayer> uil : that->uiLayers) {
-        if (!uil->Enabled()) continue;
-        if (uil->OnKey(key, action, mods)) break;
-    }
+	that->uiLayers.OnKey(key, action, mods);
 }
 
 void gl::Window::glfw_onChar_func(GLFWwindow* wnd, unsigned int charcode) {
     ::glfwMakeContextCurrent(wnd);
     Window* that = static_cast<Window*>(::glfwGetWindowUserPointer(wnd));
-    for (std::shared_ptr<AbstractUILayer> uil : that->uiLayers) {
-        if (!uil->Enabled()) continue;
-        if (uil->OnChar(charcode)) break;
-    }
+    that->uiLayers.OnChar(charcode);
 }
 
 void gl::Window::glfw_onMouseMove_func(GLFWwindow* wnd, double x, double y) {
@@ -405,10 +394,7 @@ void gl::Window::glfw_onMouseMove_func(GLFWwindow* wnd, double x, double y) {
     if (that->mouseCapture) {
         that->mouseCapture->OnMouseMove(x, y);
     } else {
-        for (std::shared_ptr<AbstractUILayer> uil : that->uiLayers) {
-            if (!uil->Enabled()) continue;
-            if (uil->OnMouseMove(x, y)) break;
-        }
+        that->uiLayers.OnMouseMove(x, y);
     }
 }
 
@@ -430,15 +416,9 @@ void gl::Window::glfw_onMouseButton_func(GLFWwindow* wnd, int b, int a, int m) {
     if (that->mouseCapture) {
         that->mouseCapture->OnMouseButton(btn, action, mods);
     } else {
-        for (std::shared_ptr<AbstractUILayer> uil : that->uiLayers) {
-            if (!uil->Enabled()) continue;
-            if (uil->OnMouseButton(btn, action, mods)) {
-                if (action == core::view::MouseButtonAction::PRESS) {
-                    that->mouseCapture = uil;
-                }
-                break;
-            }
-        }
+		if(that->uiLayers.OnMouseButton(btn, action, mods))
+			if (action == core::view::MouseButtonAction::PRESS)
+				that->mouseCapture = that->uiLayers.lastEventCaptureUILayer();
     }
 
     if (that->mouseCapture) {
@@ -464,10 +444,7 @@ void gl::Window::glfw_onMouseWheel_func(GLFWwindow* wnd, double x, double y) {
     if (that->mouseCapture) {
         that->mouseCapture->OnMouseScroll(x, y);
     } else {
-        for (std::shared_ptr<AbstractUILayer> uil : that->uiLayers) {
-            if (!uil->Enabled()) continue;
-            if (uil->OnMouseScroll(x, y)) break;
-        }
+        that->uiLayers.OnMouseScroll(x, y);
     }
 }
 #endif // USE_EGL
@@ -479,20 +456,14 @@ void gl::Window::on_resize(int w, int h) {
         ::glViewport(0, 0, w, h);
         ::mmcResizeView(hView, w, h);
         vislib::sys::Log::DefaultLog.WriteInfo("Console::Window: Resize window (w: %d, h: %d)\n", w, h);
-        for (std::shared_ptr<AbstractUILayer> uil : uiLayers) {
-            // we inform even disabled layers, since we would need to know and update as soon as they get enabled.
-            uil->OnResize(w, h);
-        }
+		uiLayers.OnResize(w, h);
     }
 #else
     eglMakeCurrent( eglDisplay, eglSurface, eglSurface, *hWnd);
     if ((w > 0) && (h > 0)) {
         ::glViewport(0, 0, w, h);
         ::mmcResizeView(hView, w, h);
-        for (std::shared_ptr<AbstractUILayer> uil : uiLayers) {
-            // we inform even disabled layers, since we would need to know and update as soon as they get enabled.
-            uil->onResize(w, h);
-        }
+		uiLayers.OnResize(w, h);
     }
 #endif
 }

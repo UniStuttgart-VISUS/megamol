@@ -18,12 +18,12 @@ namespace utility {
 
     /** Configuration for window placement */
     struct WindowPlacement {
-        int x, y, w, h, mon;
-        bool pos;
-        bool size;
-        bool noDec;
-        bool fullScreen;
-        bool topMost;
+        int x = 100, y = 100, w = 800, h = 600, mon = 0;
+        bool pos = false;
+        bool size = false;
+        bool noDec = false;
+        bool fullScreen = false;
+        bool topMost = false;
 
         bool Parse(const vislib::TString& str);
         vislib::TString ToString() const;
