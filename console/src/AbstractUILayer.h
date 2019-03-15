@@ -23,10 +23,8 @@ public:
     virtual void OnDraw() {}
 
 protected:
-    AbstractUILayer(gl::Window& wnd) : wnd(wnd){};
+    AbstractUILayer() {}
     virtual ~AbstractUILayer() = default;
-
-    gl::Window& wnd;
 };
 
 } /* end namespace console */
