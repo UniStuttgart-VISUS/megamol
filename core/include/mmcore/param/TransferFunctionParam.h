@@ -32,7 +32,15 @@ class MEGAMOLCORE_API TransferFunctionParam : public AbstractParam {
 public:
 
     /** Interpolstion modes. */
-    enum InterpolationMode { LINEAR = 0, GAUSS = 1 };
+    enum InterpolationMode { 
+        LINEAR = 0, 
+        GAUSS = 1 
+    };
+
+    /** Data type for transfer function data. */
+    typedef std::vector<std::array<float, 5>> TFType;
+
+    // ------------------------------------------------------------------------
 
     // Example JSON output format (minimal version):
     //{
@@ -66,7 +74,7 @@ public:
     *
     * @return True if JSON string was successfully converted into transfer function data, false otherwise.
     */
-    static bool ParseTransferFunction(const std::string &in_tfs, std::vector<std::array<float, 5>> &out_data, InterpolationMode &out_interpolmode, size_t &out_texsize);
+    static bool ParseTransferFunction(const std::string &in_tfs, TFType &out_data, InterpolationMode &out_interpolmode, UINT &out_texsize);
 
     /**
      * Get transfer function JSON string from data.
@@ -78,7 +86,7 @@ public:
      *
      * @return True if transfer function data was successfully converted into JSON string, false otherwise.
      */
-    static bool DumpTransferFunction(std::string &out_tfs, const std::vector<std::array<float, 5>> &in_data, const InterpolationMode in_interpolmode, const size_t in_texsize);
+    static bool DumpTransferFunction(std::string &out_tfs, const TFType &in_data, const InterpolationMode in_interpolmode, const UINT in_texsize);
 
     /**
      * Check given transfer function data.
@@ -89,7 +97,7 @@ public:
      *
      * @return True if given data is valid, false otherwise.
      */
-    static bool CheckTransferFunctionData(const std::vector<std::array<float, 5>> &data, const InterpolationMode interpolmode, const size_t texsize);
+    static bool CheckTransferFunctionData(const TFType &data, const InterpolationMode interpolmode, const UINT texsize);
 
     /**
      * Check given transfer function JSON string.
@@ -107,7 +115,7 @@ public:
      *
      * @param initVal The initial value
      */
-    TransferFunctionParam(const std::string& initVal);
+    TransferFunctionParam(const std::string& initVal = "");
 
     /**
      * Ctor.
@@ -184,7 +192,6 @@ public:
     }
 
 private:
-
 
     /** The value of the parameter */
     std::string val;

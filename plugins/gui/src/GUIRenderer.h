@@ -360,7 +360,9 @@ typedef GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D> GUIR
  */
 template <>
 inline GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIRenderer()
-    : imgui_context(nullptr)
+    : core::view::Renderer2DModule()
+    , TransferFunctionEditor()
+    , imgui_context(nullptr)
     , decorated_renderer_slot("decoratedRenderer", "Connects to another 2D Renderer being decorated")
     , overlay_slot("overlayRender", "Connected with SplitView for special overlay rendering")
     , float_print_prec(3) // INIT: Float string format precision
@@ -414,7 +416,9 @@ inline GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIR
  */
 template <>
 inline GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GUIRenderer()
-    : imgui_context(nullptr)
+    : core::view::Renderer3DModule()
+    , TransferFunctionEditor()
+    , imgui_context(nullptr)
     , decorated_renderer_slot("decoratedRenderer", "Connects to another 2D Renderer being decorated")
     , overlay_slot("overlayRender", "Connected with SplitView for special overlay rendering")
     , float_print_prec(3) // INIT: Float string format precision
@@ -1663,8 +1667,6 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
                    "[Right-Click] on the individual color widget to show options.";
         } else if (auto* p = slot.template Param<core::param::TransferFunctionParam>()) {
             auto value = p->Value();
-            ImGui::Text(value.c_str());
-            ImGui::SameLine();
             if (ImGui::Button("Load TF into Editor")) {
                 this->active_tf_param = p;
                 // Load transfer function string
@@ -1680,7 +1682,9 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
                 }
             }
             ImGui::SameLine();
-            ImGui::Text(label.c_str());
+            if (ImGui::Button("DEBUG: Print TF String to Console")) {
+                vislib::sys::Log::DefaultLog.WriteInfo("Transfer Function: \n%s\n", value.c_str());
+            }
 
         } else if (auto* p = slot.template Param<core::param::EnumParam>()) {
             // XXX: no UTF8 fanciness required here?

@@ -17,7 +17,8 @@ using namespace megamol::core;
  * Ctor
  */
 megamol::gui::TransferFunctionEditor::TransferFunctionEditor(void)
-    : data()
+    : GUIUtility()
+    , data()
     , interpol_mode(param::TransferFunctionParam::InterpolationMode::LINEAR)
     , tex_size(128)
     , tex_data()
@@ -281,10 +282,6 @@ bool megamol::gui::TransferFunctionEditor::DrawTransferFunctionEditor(void) {
             }
         }
     }
-    if (this->tex_modified) {
-        std::sort(this->data.begin(), this->data.end(),
-            [](const std::array<float, 5>& lhs, const std::array<float, 5>& rhs) { return (lhs[4] < rhs[4]); });
-    }
     ImGui::SameLine(0.0f, style.ItemInnerSpacing.x);
     ImGui::Text("Transfer Function");
     this->HelpMarkerToolTip("[Left-Click] Select Node\n[Left-Drag] Move Node\n[Right-Click] Add/Delete Node");
@@ -380,7 +377,7 @@ bool megamol::gui::TransferFunctionEditor::DrawTransferFunctionEditor(void) {
     // Get texture size
     int tfw_texsize = (int)this->tex_size;
     if (ImGui::InputInt("Texture Size", &tfw_texsize, 1, 10, ImGuiInputTextFlags_EnterReturnsTrue)) {
-        this->tex_size = (size_t)std::max(1, tfw_texsize);
+        this->tex_size = (UINT)std::max(1, tfw_texsize);
         this->tex_modified = true; /// Changes are applied in next frame
     }
 
@@ -406,7 +403,7 @@ bool megamol::gui::TransferFunctionEditor::DrawTransferFunctionEditor(void) {
     }
     ImGui::SameLine();
     // Auto apply changes
-    ImGui::Checkbox("Immediately Apply all Changes", &this->imm_apply);
+    ImGui::Checkbox("Apply Changes Immediately", &this->imm_apply);
     if (this->imm_apply && imm_apply_tex_changed) {
         ret_val = true;
     }

@@ -80,13 +80,13 @@ private:
     // VARIABLES -----------------------------------------------------------
 
     /** Array holding current colors and function values. */
-    std::vector<std::array<float, 5>> data;
+    megamol::core::param::TransferFunctionParam::TFType data;
 
     /** Current interpolation option. */
     megamol::core::param::TransferFunctionParam::InterpolationMode interpol_mode;
 
     /** Current texture size. */
-    size_t tex_size;
+    UINT tex_size;
 
     /** Indicating modified transfer function. Recalculate texture data. */
     bool tex_modified;

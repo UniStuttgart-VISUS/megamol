@@ -11,12 +11,18 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
-#include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/CallGetTransferFunction.h"
-#include "vislib/sys/BufferedFile.h"
+#include "mmcore/param/ParamSlot.h"
+#include "mmcore/param/FilePathParam.h"
+#include "mmcore/param/ButtonParam.h"
+#include "mmcore/param/TransferFunctionParam.h"
+
+#include "vislib/sys/sysfunctions.h"
+#include "vislib/sys/Log.h"
 
 
 namespace megamol {
@@ -25,8 +31,7 @@ namespace view {
 
 
     /**
-     * Module defining a piecewise linear transfer function based on the
-     * interval [0..1]
+     * Module defining a piecewise linear transfer function based on the interval [0..1]
      */
     class LinearTransferFunction : public Module {
     public:
@@ -66,27 +71,7 @@ namespace view {
 
     private:
 
-        /**
-         * Maximum number of intermediate colour definitions
-         */
-        static const SIZE_T INTER_COLOUR_COUNT = 11;
-
-        /**
-         * struct holding all members required for intermediate colour definition
-         */
-        typedef struct interColour_t {
-
-            /** The enable flag slot */
-            param::ParamSlot *enableSlot;
-
-            /** The colour slot */
-            param::ParamSlot *colSlot;
-
-            /** The value slot */
-            param::ParamSlot *valSlot;
-
-           
-        } InterColour;
+        // FUNCTIONS ----------------------------------------------------------
 
         /**
          * Implementation of 'Create'.
@@ -105,54 +90,29 @@ namespace view {
          *
          * @param call The calling call
          *
-         * @return 'true' on success
+         * @return 'true' on success, 'false' otherwise.
          */
         bool requestTF(Call& call);
 
         /**
-         * Callback called when the TFload button is pressed.
+         * Callback checks if any parameter is dirty.
          *
-         * @param slot The slot causing it
+         * @param call The calling call
          *
-         * @return 'true' on success
+         * @return 'true' on success, 'false' otherwise.
          */
-        bool loadTFPressed(param::ParamSlot& slot);
+        bool interfaceIsDirty(Call& call);
 
         /**
-         * Callback called when the TFstore button is pressed.
+         * Callback resets all dirty parameters.
          *
-         * @param slot The slot causing it
+         * @param call The calling call
          *
-         * @return 'true' on success
+         * @return 'true' on success, 'false' otherwise.
          */
-        bool storeTFPressed(param::ParamSlot& slot);
+        bool interfaceResetDirty(Call& call);
 
-        /** convenience for serializing a ParamSlot */
-        void writeParameterFileParameter(param::ParamSlot& param,
-            vislib::sys::BufferedFile &outFile);
-        bool InterfaceIsDirty(Call& call);
-        bool InterfaceResetDirty(Call& call);
-
-        /** The callee slot called on request of a transfer function */
-        CalleeSlot getTFSlot;
-
-        /** The slot defining the colour for the minimum value */
-        param::ParamSlot minColSlot;
-
-        /** The slot defining the colour for the maximum value */
-        param::ParamSlot maxColSlot;
-
-        /** The slot defining the texture size to generate */
-        param::ParamSlot texSizeSlot;
-
-        /** The slot containing a path for (de)serializing the current TF */
-        param::ParamSlot pathSlot;
-
-        /** Button for loading the TF from the pathSlot file */
-        param::ParamSlot loadTFSlot;
-
-        /** Button for storing the TF in the pathSlot file */
-        param::ParamSlot storeTFSlot;
+        // VARIABLES ----------------------------------------------------------
 
         /** The OpenGL texture object id */
         unsigned int texID;
@@ -161,16 +121,19 @@ namespace view {
         unsigned int texSize;
 
         /** The texture data */
-        float* tex;
+        std::vector<float> tex;
 
         /** The texture format */
         CallGetTransferFunction::TextureFormat texFormat;
 
-        /** The array of intermediate colour definitions */
-        InterColour interCols[INTER_COLOUR_COUNT];
+        /** The interpolation mode */
+        param::TransferFunctionParam::InterpolationMode interpolMode;
 
-        bool firstRequest;
+        /** The callee slot called on request of a transfer function */
+        CalleeSlot getTFSlot;
 
+        /** Parameter continaing the transfer function data serialized into JSON string */
+        param::ParamSlot tfSlot;
     };
 
 
