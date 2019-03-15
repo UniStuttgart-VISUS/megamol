@@ -47,7 +47,7 @@ namespace console {
          * @return 'true' if the handle is valid, 'false' otherwise.
          */
         inline bool IsValid(void) const {
-            return ((this->hndl != NULL) && (this->hndl[0] != 0));
+            return ((this->hndl != nullptr) && (this->hndl[0] != 0));
         }
 
         /**

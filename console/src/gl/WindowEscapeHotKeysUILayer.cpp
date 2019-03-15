@@ -11,7 +11,9 @@
 using namespace megamol;
 using namespace megamol::console;
 
-gl::WindowEscapeHotKeysUILayer::WindowEscapeHotKeysUILayer(gl::Window& wnd) : AbstractUILayer(wnd) {}
+gl::WindowEscapeHotKeysUILayer::WindowEscapeHotKeysUILayer(gl::Window& _wnd) : wndPtr(&_wnd) {}
+
+gl::WindowEscapeHotKeysUILayer::WindowEscapeHotKeysUILayer(std::function<void()> func) : actionFunc{func} {}
 
 gl::WindowEscapeHotKeysUILayer::~WindowEscapeHotKeysUILayer() {}
 
@@ -23,9 +25,13 @@ bool gl::WindowEscapeHotKeysUILayer::OnKey(
 
     if (isQuit && isPressed && isNotShift) {
         if (mods.test(core::view::Modifier::CTRL)) {
-            wnd.RequestClose();
+            if (wndPtr) {
+                wndPtr->RequestClose(); // TODO: better solution?
+            } else {
+                actionFunc();
+            }
         } else {
-            WindowManager::Instance().Shutdown();
+            WindowManager::Instance().Shutdown(); // TODO: WHY?!
         }
         return true;
     }

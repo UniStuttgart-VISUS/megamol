@@ -62,6 +62,12 @@ int runNormal(megamol::console::utility::CmdLineParser *& parser);
 void signalCtrlC(int);
 void MEGAMOLCORE_CALLBACK writeLogEchoToConsole(unsigned int level, const char* message);
 
+void initTraceAndLog();
+void echoCmdLine(vislib::sys::TCmdLineProvider& cmdline);
+void printErrorsAndWarnings(megamol::console::utility::CmdLineParser* parser);
+void loadCmdFromFile(megamol::console::utility::CmdLineParser* parser, vislib::sys::TCmdLineProvider& cmdline, char** argv, int& retVal);
+void countProjects(vislib::SingleLinkedList<vislib::TString>& projects, int& loadedProjects, int& loadedLuaProjects);
+
 }
 
 
@@ -93,19 +99,7 @@ int main(int argc, char* argv[]) {
     ::terminationRequest = false;
     ::echoedImportant = false;
     ::applicationExecutablePath = argv[0];
-
-    // VISlib TRACE
-    vislib::Trace::GetInstance().SetLevel(vislib::Trace::LEVEL_VL);
-
-    // VISlib Log
-    vislib::sys::Log::DefaultLog.SetLogFileName(static_cast<const char*>(NULL), false);
-    vislib::sys::Log::DefaultLog.SetLevel(vislib::sys::Log::LEVEL_ALL);
-    vislib::sys::Log::DefaultLog.SetEchoLevel(vislib::sys::Log::LEVEL_ALL);
-    vislib::sys::Log::DefaultLog.SetEchoTarget(new vislib::sys::Log::StreamTarget(stdout, vislib::sys::Log::LEVEL_ALL));
-
-    megamol::console::utility::AboutInfo::LogGreeting();
-    megamol::console::utility::AboutInfo::LogVersionInfo();
-    megamol::console::utility::AboutInfo::LogStartTime();
+    ::initTraceAndLog();
 
     try {
         vislib::sys::TCmdLineProvider cmdline(argc, argv);
@@ -120,46 +114,13 @@ int main(int argc, char* argv[]) {
 
         if (retVal < 0) {
             // errors are present!
-            megamol::console::utility::AboutInfo::PrintGreeting();
-            parser->PrintErrorsAndWarnings(stderr);
-            std::cerr << std::endl << "Use \"--help\" for usage information" << std::endl << std::endl;
+            ::printErrorsAndWarnings(parser);
 
         } else {
             // ok or warnings!
 
             if (parser->UseCmdLineFile()) {
-                const TCHAR *cmdlinefile = parser->CmdLineFile();
-                if (cmdlinefile == NULL) {
-                    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Unable to retreive command line file name.\n");
-
-                } else {
-                    vislib::TString cmdlinefilename(cmdlinefile);
-                    vislib::sys::BufferedFile file;
-                    if (file.Open(cmdlinefilename, vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
-                        vislib::StringA newCmdLine = vislib::sys::ReadLineFromFileA(file, 100000);
-                        file.Close();
-
-                        cmdline.CreateCmdLine(argv[0], A2T(newCmdLine));
-                        retVal = parser->Parse(cmdline.ArgC(), cmdline.ArgV());
-
-                        if (retVal < 0) {
-                            megamol::console::utility::AboutInfo::PrintGreeting();
-                            parser->PrintErrorsAndWarnings(stderr);
-                            std::cerr << std::endl << "Use \"--help\" for usage information" << std::endl << std::endl;
-
-                        } else {
-                            vislib::sys::Log::DefaultLog.WriteInfo(
-                                "Read command line from \"%s\"\n", vislib::StringA(cmdlinefilename).PeekBuffer());
-
-                        }
-
-                    } else {
-                        vislib::sys::Log::DefaultLog.WriteError(
-                            "Unable to open file \"%s\"\n", vislib::StringA(cmdlinefilename).PeekBuffer());
-
-                    }
-                }
-
+                ::loadCmdFromFile(parser, cmdline, argv, retVal);
             }
 
             if (!parser->HideLogo() || parser->ShowVersionInfo()) {
@@ -167,17 +128,7 @@ int main(int argc, char* argv[]) {
             }
 
             if (parser->EchoCmdLine()) {
-                // echo the command line
-                vislib::StringA cmdlineecho("Called:");
-                for (int i = 0; i < cmdline.ArgC(); i++) {
-                    cmdlineecho.Append(" ");
-                    cmdlineecho.Append(vislib::StringA(cmdline.ArgV()[i]));
-                }
-                
-                vislib::sys::Log::DefaultLog.WriteInfo("%s\n", cmdlineecho.PeekBuffer());
-                if (vislib::sys::Log::DefaultLog.GetEchoLevel() < vislib::sys::Log::LEVEL_INFO) {
-                    std::cout << cmdlineecho << std::endl;
-                }
+                ::echoCmdLine(cmdline);
             }
 
             if (parser->ShowVersionInfo()) {
@@ -185,6 +136,7 @@ int main(int argc, char* argv[]) {
             }
 
             if (retVal > 0) {
+                // warnings are present
                 parser->PrintErrorsAndWarnings(stderr);
             }
 
@@ -214,6 +166,7 @@ int main(int argc, char* argv[]) {
 
     if (parser != NULL) {
         delete parser;
+        parser = NULL;
     }
 
     ::hCore.DestroyHandle();
@@ -229,7 +182,74 @@ int main(int argc, char* argv[]) {
     return retVal;
 }
 
+
 namespace {
+
+void initTraceAndLog() {
+    // VISlib TRACE
+    vislib::Trace::GetInstance().SetLevel(vislib::Trace::LEVEL_VL);
+
+    // VISlib Log
+    vislib::sys::Log::DefaultLog.SetLogFileName(static_cast<const char*>(NULL), false);
+    vislib::sys::Log::DefaultLog.SetLevel(vislib::sys::Log::LEVEL_ALL);
+    vislib::sys::Log::DefaultLog.SetEchoLevel(vislib::sys::Log::LEVEL_ALL);
+    vislib::sys::Log::DefaultLog.SetEchoTarget(new vislib::sys::Log::StreamTarget(stdout, vislib::sys::Log::LEVEL_ALL));
+    megamol::console::utility::AboutInfo::LogGreeting();
+    megamol::console::utility::AboutInfo::LogVersionInfo();
+    megamol::console::utility::AboutInfo::LogStartTime();
+}
+
+void printErrorsAndWarnings(megamol::console::utility::CmdLineParser* parser) {
+    megamol::console::utility::AboutInfo::PrintGreeting();
+    parser->PrintErrorsAndWarnings(stderr);
+    std::cerr << std::endl << "Use \"--help\" for usage information" << std::endl << std::endl;
+}
+
+void loadCmdFromFile(megamol::console::utility::CmdLineParser* parser, vislib::sys::TCmdLineProvider& cmdline, char** argv, int& retVal) {
+    const TCHAR* cmdlinefile = parser->CmdLineFile();
+    if (cmdlinefile == NULL) {
+        vislib::sys::Log::DefaultLog.WriteMsg(
+            vislib::sys::Log::LEVEL_ERROR, "Unable to retreive command line file name.\n");
+
+    } else {
+        vislib::TString cmdlinefilename(cmdlinefile);
+        vislib::sys::BufferedFile file;
+        if (file.Open(cmdlinefilename, vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ,
+                vislib::sys::File::OPEN_ONLY)) {
+            vislib::StringA newCmdLine = vislib::sys::ReadLineFromFileA(file, 100000);
+            file.Close();
+
+            cmdline.CreateCmdLine(argv[0], A2T(newCmdLine));
+            retVal = parser->Parse(cmdline.ArgC(), cmdline.ArgV());
+
+            if (retVal < 0) {
+                ::printErrorsAndWarnings(parser);
+
+            } else {
+                vislib::sys::Log::DefaultLog.WriteInfo(
+                    "Read command line from \"%s\"\n", vislib::StringA(cmdlinefilename).PeekBuffer());
+            }
+
+        } else {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "Unable to open file \"%s\"\n", vislib::StringA(cmdlinefilename).PeekBuffer());
+        }
+    }
+}
+
+void echoCmdLine(vislib::sys::TCmdLineProvider& cmdline) {
+    // echo the command line
+    vislib::StringA cmdlineecho("Called:");
+    for (int i = 0; i < cmdline.ArgC(); i++) {
+        cmdlineecho.Append(" ");
+        cmdlineecho.Append(vislib::StringA(cmdline.ArgV()[i]));
+    }
+
+    vislib::sys::Log::DefaultLog.WriteInfo("%s\n", cmdlineecho.PeekBuffer());
+    if (vislib::sys::Log::DefaultLog.GetEchoLevel() < vislib::sys::Log::LEVEL_INFO) {
+        std::cout << cmdlineecho << std::endl;
+    }
+}
 
 /**
  * Creates the core instance object.
@@ -399,7 +419,7 @@ void processPendingActions(void) {
         }
     }
     while (::mmcHasPendingViewInstantiationRequests(hCore)) {
-        if (!megamol::console::WindowManager::Instance().InstantiatePendingView(hCore)) {
+        if (!megamol::console::WindowManager::Instance().InstantiatePendingView(hCore)) { // <-- GLFW and OpenGL context/window start life when instantiating the first view
             vislib::sys::Log::DefaultLog.WriteError("Unable to instantiate the requested view.");
             vislib::sys::Log::DefaultLog.WriteError("Skipping remaining instantiation requests");
             break;
@@ -437,19 +457,9 @@ int runNormal(megamol::console::utility::CmdLineParser *& parser) {
     // prepare project files and instantiations
     vislib::SingleLinkedList<vislib::TString> projects;
     parser->GetProjectFiles(projects);
-    vislib::SingleLinkedList<vislib::TString>::Iterator projectIter = projects.GetIterator();
     int loadedProjects = 0;
     int loadedLuaProjects = 0;
-    while (projectIter.HasNext()) {
-        const vislib::TString& project = projectIter.Next();
-        // HAZARD: Legacy Projects vs. new Projects
-        ::mmcLoadProject(hCore, project);
-        loadedProjects++;
-        if (project.EndsWith(".lua")) {
-            loadedLuaProjects++;
-            processPendingActions();
-        }
-    }
+    countProjects(projects, loadedProjects, loadedLuaProjects);
     if (loadedLuaProjects > 0 && loadedLuaProjects != loadedProjects) {
         vislib::sys::Log::DefaultLog.WriteError("You cannot mix loading legacy projects and lua projects!");
         return -66;
@@ -476,6 +486,8 @@ int runNormal(megamol::console::utility::CmdLineParser *& parser) {
         }
         processPendingActions();
     }
+
+    processPendingActions(); // <-- GLFW and OpenGL context/window start life here!
 
     // parameter value options
     std::map<vislib::TString, vislib::TString> paramValues;
@@ -520,8 +532,6 @@ int runNormal(megamol::console::utility::CmdLineParser *& parser) {
         }
         processPendingActions();
     } while (winsAlive || jobsAlive);
-
-    SAFE_DELETE(parser);
 
 #if 0
 
@@ -577,6 +587,21 @@ int runNormal(megamol::console::utility::CmdLineParser *& parser) {
 #endif
 
     return 0;
+}
+
+void countProjects(vislib::SingleLinkedList<vislib::TString> &projects, int &loadedProjects, int &loadedLuaProjects)
+{
+    vislib::SingleLinkedList<vislib::TString>::Iterator projectIter = projects.GetIterator();
+    while (projectIter.HasNext()) {
+        const vislib::TString& project = projectIter.Next();
+        // HAZARD: Legacy Projects vs. new Projects
+        ::mmcLoadProject(hCore, project);
+        loadedProjects++;
+        if (project.EndsWith(".lua")) {
+            loadedLuaProjects++;
+            processPendingActions();
+        }
+    }
 }
 
 /**

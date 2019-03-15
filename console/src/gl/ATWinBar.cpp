@@ -16,7 +16,7 @@
 using namespace megamol;
 using namespace megamol::console;
 
-gl::ATWinBar::ATWinBar(Window& wnd, ATBUILayer& layer, const char* wndName) : ATBar("winBar"), wnd(wnd), layer(layer),
+gl::ATWinBar::ATWinBar(ATBUILayer& layer, const char* wndName) : ATBar("winBar"), layer(layer),
         winX(0), winY(0), winW(0), winH(0), winSizePresets() {
 
     winSizePresets[0] = std::tuple<ATWinBar*, unsigned int, unsigned int>(this, 256, 256);
@@ -35,21 +35,21 @@ gl::ATWinBar::ATWinBar(Window& wnd, ATBUILayer& layer, const char* wndName) : AT
     ::TwDefine(def.str().c_str());
 
     // FPS
-    ::TwAddVarRO(Handle(), "fps", TW_TYPE_FLOAT, &wnd.FPS(), "label='FPS' help='Rendering performance in frames per second, measured by the time between OpenGL buffer swaps. This value is the mean over several rendering calls or over the rendering calls within some time'");
+    ::TwAddVarRO(Handle(), "fps", TW_TYPE_FLOAT, &this->fps, "label='FPS' help='Rendering performance in frames per second, measured by the time between OpenGL buffer swaps. This value is the mean over several rendering calls or over the rendering calls within some time'");
     ::TwAddVarCB(Handle(), "fpsTitle", TW_TYPE_BOOLCPP, 
         reinterpret_cast<TwSetVarCallback>(&ATWinBar::setShowFPSinWindowTitle),
         reinterpret_cast<TwGetVarCallback>(&ATWinBar::getShowFPSinWindowTitle),
-        &wnd, "label='Show FPS in Window Caption'");
+        nullptr, "label='Show FPS in Window Caption'");
     ::TwAddVarCB(Handle(), "sampTitle", TW_TYPE_BOOLCPP,
         reinterpret_cast<TwSetVarCallback>(&ATWinBar::setShowSamplesinWindowTitle),
         reinterpret_cast<TwGetVarCallback>(&ATWinBar::getShowSamplesinWindowTitle),
-        &wnd, "label='Show Samples passed in Window Caption'");
+        nullptr, "label='Show Samples passed in Window Caption'");
     ::TwAddVarCB(Handle(), "primsTitle", TW_TYPE_BOOLCPP,
         reinterpret_cast<TwSetVarCallback>(&ATWinBar::setShowPrimsinWindowTitle),
         reinterpret_cast<TwGetVarCallback>(&ATWinBar::getShowPrimsinWindowTitle),
-        &wnd, "label='Show Primitives generated in Window Caption'");
-    ::TwAddButton(Handle(), "fpsCopy", reinterpret_cast<TwButtonCallback>(&ATWinBar::copyFPS), &wnd, "label='Copy to Clipboard'");
-    ::TwAddButton(Handle(), "fpsCopyList", reinterpret_cast<TwButtonCallback>(&ATWinBar::copyFPSList), &wnd, "label='Copy FPS List to Clipboard'");
+        nullptr, "label='Show Primitives generated in Window Caption'");
+    ::TwAddButton(Handle(), "fpsCopy", reinterpret_cast<TwButtonCallback>(&ATWinBar::copyFPS), nullptr, "label='Copy to Clipboard'");
+    ::TwAddButton(Handle(), "fpsCopyList", reinterpret_cast<TwButtonCallback>(&ATWinBar::copyFPSList), nullptr, "label='Copy FPS List to Clipboard'");
 
     // Window placement, size, decorations, etc.
     //  Note: switching to/from fullscreen mode is no longer supported, as GLFW cannot remove/add window decorations after window was created.
@@ -113,33 +113,33 @@ gl::ATWinBar::~ATWinBar() {
 }
 
 void gl::ATWinBar::getWndValues(ATWinBar *inst) {
-    ::glfwGetWindowPos(inst->wnd.WindowHandle(), &inst->winX, &inst->winY);
-    int w, h;
-    ::glfwGetFramebufferSize(inst->wnd.WindowHandle(), &w, &h);
-    if (w < 0) w = 0;
-    if (h < 0) h = 0;
-    inst->winW = static_cast<unsigned int>(w);
-    inst->winH = static_cast<unsigned int>(h);
+//    ::glfwGetWindowPos(inst->wnd.WindowHandle(), &inst->winX, &inst->winY);
+//    int w, h;
+//    ::glfwGetFramebufferSize(inst->wnd.WindowHandle(), &w, &h);
+//    if (w < 0) w = 0;
+//    if (h < 0) h = 0;
+//    inst->winW = static_cast<unsigned int>(w);
+//    inst->winH = static_cast<unsigned int>(h);
 }
 
 void gl::ATWinBar::setWndValues(ATWinBar *inst) {
-    int x, y;
-    ::glfwGetFramebufferSize(inst->wnd.WindowHandle(), &x, &y);
-    if (x < 0) x = 0;
-    if (y < 0) y = 0;
-    if ((static_cast<unsigned int>(x) != inst->winW) || (static_cast<unsigned int>(y) != inst->winH)) {
-        ::glfwSetWindowSize(inst->wnd.WindowHandle(), inst->winW, inst->winH);
-    }
-    ::glfwGetWindowPos(inst->wnd.WindowHandle(), &x, &y);
-    if ((x != inst->winX) || (y != inst->winY)) {
-        ::glfwSetWindowPos(inst->wnd.WindowHandle(), inst->winX, inst->winY);
-    }
-    getWndValues(inst);
+//    int x, y;
+//    ::glfwGetFramebufferSize(inst->wnd.WindowHandle(), &x, &y);
+//    if (x < 0) x = 0;
+//    if (y < 0) y = 0;
+//    if ((static_cast<unsigned int>(x) != inst->winW) || (static_cast<unsigned int>(y) != inst->winH)) {
+//        ::glfwSetWindowSize(inst->wnd.WindowHandle(), inst->winW, inst->winH);
+//    }
+//    ::glfwGetWindowPos(inst->wnd.WindowHandle(), &x, &y);
+//    if ((x != inst->winX) || (y != inst->winY)) {
+//        ::glfwSetWindowPos(inst->wnd.WindowHandle(), inst->winX, inst->winY);
+//    }
+//    getWndValues(inst);
 }
 
 void gl::ATWinBar::setWinSizePreset(std::tuple<ATWinBar*, unsigned int, unsigned int> *preset) {
-    ::glfwSetWindowSize(std::get<0>(*preset)->wnd.WindowHandle(), std::get<1>(*preset), std::get<2>(*preset));
-    getWndValues(std::get<0>(*preset));
+//    ::glfwSetWindowSize(std::get<0>(*preset)->wnd.WindowHandle(), std::get<1>(*preset), std::get<2>(*preset));
+//    getWndValues(std::get<0>(*preset));
 }
 
 void gl::ATWinBar::toggleGUI(ATWinBar *inst) {
@@ -147,41 +147,41 @@ void gl::ATWinBar::toggleGUI(ATWinBar *inst) {
 }
 
 void gl::ATWinBar::setShowFPSinWindowTitle(const void *value, Window *wnd) {
-    wnd->SetShowFPSinTitle(*(const bool*)value);
+    //wnd->SetShowFPSinTitle(*(const bool*)value);
 }
 
 void gl::ATWinBar::getShowFPSinWindowTitle(void *value, Window *wnd) {
-    *(bool*)value = wnd->ShowFPSinTitle();
+    //*(bool*)value = wnd->ShowFPSinTitle();
 }
 
 void gl::ATWinBar::setShowSamplesinWindowTitle(const void *value, Window *wnd) {
-    wnd->SetShowSamplesinTitle(*(const bool*)value);
+    //wnd->SetShowSamplesinTitle(*(const bool*)value);
 }
 
 void gl::ATWinBar::getShowSamplesinWindowTitle(void *value, Window *wnd) {
-    *(bool*)value = wnd->ShowSamplesinTitle();
+    //*(bool*)value = wnd->ShowSamplesinTitle();
 }
 
 void gl::ATWinBar::setShowPrimsinWindowTitle(const void *value, Window *wnd) {
-    wnd->SetShowPrimsinTitle(*(const bool*)value);
+    //wnd->SetShowPrimsinTitle(*(const bool*)value);
 }
 
 void gl::ATWinBar::getShowPrimsinWindowTitle(void *value, Window *wnd) {
-    *(bool*)value = wnd->ShowPrimsinTitle();
+    //*(bool*)value = wnd->ShowPrimsinTitle();
 }
 
 void gl::ATWinBar::copyFPS(Window *wnd) {
     std::stringstream str;
-    str << wnd->LiveFPS();
-    ::glfwSetClipboardString(wnd->WindowHandle(), str.str().c_str());
+    //str << wnd->LiveFPS();
+    //::glfwSetClipboardString(wnd->WindowHandle(), str.str().c_str());
 }
 
 void gl::ATWinBar::copyFPSList(Window *wnd) {
     std::stringstream str;
-    for (float v : wnd->LiveFPSList()) {
-        str << v << std::endl;
-    }
-    ::glfwSetClipboardString(wnd->WindowHandle(), str.str().c_str());
+    //for (float v : wnd->LiveFPSList()) {
+        //str << v << std::endl;
+    //}
+    //::glfwSetClipboardString(wnd->WindowHandle(), str.str().c_str());
 }
 
 void gl::ATWinBar::setParamFilePath(const void *value, void *ctxt) {

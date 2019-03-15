@@ -477,6 +477,7 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::DirectionalParticleD
                 pl.GetVertexDataType(), pl.GetVertexData(), pl.GetVertexDataStride());
             outMPDC->AccessParticles(i).SetColourData(core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I,
                 this->newColors.data() + allpartcnt, 0);
+            outMPDC->AccessParticles(i).SetIDData(pl.GetIDDataType(), pl.GetIDData(), pl.GetIDDataStride());
             outMPDC->AccessParticles(i).SetColourMapIndexValues(
                 this->minMetricSlot.Param<core::param::FloatParam>()->Value(),
                 this->maxMetricSlot.Param<core::param::FloatParam>()->Value());
@@ -498,6 +499,7 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::DirectionalParticleD
                 core::moldyn::DirectionalParticleDataCall::Particles::COLDATA_FLOAT_I,
                 this->newColors.data() + allpartcnt, 0);
             outDPDC->AccessParticles(i).SetDirData(pl.GetDirDataType(), pl.GetDirData(), pl.GetDirDataStride());
+            outDPDC->AccessParticles(i).SetIDData(pl.GetIDDataType(), pl.GetIDData(), pl.GetIDDataStride());
             outDPDC->AccessParticles(i).SetColourMapIndexValues(
                 this->minMetricSlot.Param<core::param::FloatParam>()->Value(),
                 this->maxMetricSlot.Param<core::param::FloatParam>()->Value());
