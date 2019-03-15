@@ -127,7 +127,7 @@ bool LinearTransferFunction::requestTF(Call& call) {
 
         bool t1de = (glIsEnabled(GL_TEXTURE_1D) == GL_TRUE);
         if (!t1de) glEnable(GL_TEXTURE_1D);
-        if (this->texID == 0) glGenTextures(1, &(GLuint)this->texID);
+        if (this->texID == 0) glGenTextures(1, &this->texID);
 
         GLint otid = 0;
         glGetIntegerv(GL_TEXTURE_BINDING_1D, &otid);

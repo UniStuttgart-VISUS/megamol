@@ -140,7 +140,7 @@ bool LinearTransferFunctionParam::ParseTransferFunction(const std::string &in_tf
         }
 
         // Get nodes data
-        UINT tf_size = json.at("Nodes").size();
+        UINT tf_size = (UINT)json.at("Nodes").size();
         tmp_data.resize(tf_size);
         for (UINT i = 0; i < tf_size; ++i) {
             json.at("Nodes")[i].get_to(tmp_data[i]);
@@ -281,7 +281,7 @@ bool LinearTransferFunctionParam::CheckTransferFunctionString(const std::string 
             std::string tmp_str;
             json.at("Interpolation").get_to(tmp_str);
             if ((tmp_str != "LINEAR") && (tmp_str != "GAUSS")) {
-                vislib::sys::Log::DefaultLog.WriteError(
+                vislib::sys::Log::DefaultLog.WriteError( 
                     "[CheckTransferFunctionString] Couldn't find 'Interpolation' mode.");
                 check = false;
             }
@@ -294,7 +294,7 @@ bool LinearTransferFunctionParam::CheckTransferFunctionString(const std::string 
 
         // Check transfer function node data
         if (json.at("Nodes").is_array()) {
-            UINT tmp_size = json.at("Nodes").size();
+            UINT tmp_size = (UINT)json.at("Nodes").size();
             if (tmp_size < 2) {
                 vislib::sys::Log::DefaultLog.WriteError(
                     "[CheckTransferFunctionString] There should be at least two entries in 'Nodes' array.");

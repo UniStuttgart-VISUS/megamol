@@ -130,11 +130,19 @@ namespace view {
 
     private:
 
+#ifdef _WIN32
+#pragma warning (disable: 4251)
+#endif /* _WIN32 */
+
         /** The instance time code */
         double instTime;
       
         /** The viewport on the buffer */
         vislib::math::Rectangle<int> viewport;
+
+#ifdef _WIN32
+#pragma warning (default: 4251)
+#endif /* _WIN32 */
     };
 
     /** Description class typedef */

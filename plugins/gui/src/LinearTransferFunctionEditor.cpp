@@ -336,7 +336,7 @@ bool megamol::gui::LinearTransferFunctionEditor::DrawTransferFunctionEditor(void
     ImVec2 texture_pos = ImGui::GetCursorScreenPos();
     ImVec2 rect_size = ImVec2(tfw_item_width / (float)this->tex_size, texture_height);
     ImGui::InvisibleButton("texture", ImVec2(tfw_item_width, rect_size.y));
-    for (int i = 0; i < this->tex_size; ++i) {
+    for (unsigned int i = 0; i < this->tex_size; ++i) {
         ImU32 rect_col = ImGui::ColorConvertFloat4ToU32(ImVec4(
             this->tex_data[4 * i], this->tex_data[4 * i + 1], this->tex_data[4 * i + 2], this->tex_data[4 * i + 3]));
         ImVec2 rect_pos_a = ImVec2(texture_pos.x + (float)i * rect_size.x, texture_pos.y);

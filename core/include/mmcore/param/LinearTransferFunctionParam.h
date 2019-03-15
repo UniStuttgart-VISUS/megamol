@@ -193,8 +193,16 @@ public:
 
 private:
 
+#ifdef _WIN32
+#pragma warning (disable: 4251)
+#endif /* _WIN32 */
+
     /** The value of the parameter */
     std::string val;
+
+#ifdef _WIN32
+#pragma warning (disable: 4251)
+#endif /* _WIN32 */
 
 }; /* end class LinearTransferFunctionParam */
 

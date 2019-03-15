@@ -122,6 +122,10 @@ namespace view {
 
         // VARIABLES ----------------------------------------------------------
 
+#ifdef _WIN32
+#pragma warning (disable: 4251)
+#endif /* _WIN32 */
+
         /** The OpenGL texture object id */
         unsigned int texID;
 
@@ -142,6 +146,10 @@ namespace view {
 
         /** Parameter continaing the transfer function data serialized into JSON string */
         param::ParamSlot tfParam;
+
+#ifdef _WIN32
+#pragma warning (default: 4251)
+#endif /* _WIN32 */
     };
 
 
