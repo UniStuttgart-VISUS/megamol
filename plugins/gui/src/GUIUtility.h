@@ -17,8 +17,9 @@
 
 
 #include <cassert>
-#include <imgui.h>
 #include <string>
+
+#include <imgui.h>
 
 
 namespace megamol {

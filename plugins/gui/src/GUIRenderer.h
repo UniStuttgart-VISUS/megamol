@@ -45,6 +45,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/TernaryParam.h"
+#include "mmcore/param/TransferFunctionParam.h"
 #include "mmcore/param/Vector2fParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/Vector4fParam.h"
@@ -71,6 +72,8 @@ namespace ns_fs = std::filesystem;
 namespace ns_fs = std::experimental::filesystem;
 #    endif
 #endif
+
+#define GUI_MAX_BUFFER_LEN (2048)
 
 namespace megamol {
 namespace gui {
@@ -207,6 +210,12 @@ private:
 
     /** Reset main parameter window. */
     bool main_reset_window;
+
+    /** File name to load/save parmeter values to. */
+    std::string param_file;
+
+    /** The currently active parameter whose transfer function is loaded into the editor. */
+    core::param::TransferFunctionParam* active_tf_param;
 
     // ---------- FPS window ----------
 
@@ -358,6 +367,8 @@ inline GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIR
     , windows()
     , lastInstTime(0.0)
     , main_reset_window(false)
+    , param_file()
+    , active_tf_param(nullptr)
     , show_fps_ms_options(false)
     , current_delay(0.0f)
     , max_delay(2.0f)
@@ -410,6 +421,8 @@ inline GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GUIR
     , windows()
     , lastInstTime(0.0)
     , main_reset_window(false)
+    , param_file()
+    , active_tf_param(nullptr)
     , show_fps_ms_options(false)
     , current_delay(0.0f)
     , max_delay(2.0f)
@@ -490,7 +503,7 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
     IMGUI_CHECKVERSION();
     this->imgui_context = ImGui::CreateContext(current_fonts);
     if (this->imgui_context == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError("[GUIRenderer] Couldn't create ImGui context");
+        vislib::sys::Log::DefaultLog.WriteError("[GUIRenderer][create] Couldn't create ImGui context");
         return false;
     }
     ImGui::SetCurrentContext(this->imgui_context);
@@ -535,7 +548,7 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
     tmp_win.label = "1D Transfer Function Editor";
     tmp_win.show = false;
     tmp_win.hotkey = core::view::KeyCode(core::view::Key::KEY_F9);
-    tmp_win.flags = ImGuiWindowFlags_HorizontalScrollbar;
+    tmp_win.flags = ImGuiWindowFlags_AlwaysAutoResize;
     tmp_win.func = &GUIRenderer<M, C>::drawTFWindowCallback;
     tmp_win.param_main = false;
     this->windows.emplace_back(tmp_win);
@@ -551,7 +564,9 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
     style.AntiAliasedFill = true;
     style.DisplayWindowPadding = ImVec2(5.0f, 5.0f);
     style.DisplaySafeAreaPadding = ImVec2(5.0f, 5.0f);
+    // Custom style color
     style.Colors[ImGuiCol_PlotHistogram] = ImVec4(0.24f, 0.52f, 0.88f, 1.0f);
+    style.Colors[ImGuiCol_Header] = ImVec4(0.26f, 0.59f, 0.98f, 0.60f);
 
     ImGui::SetColorEditOptions(ImGuiColorEditFlags_Uint8 | ImGuiColorEditFlags_RGB |
                                ImGuiColorEditFlags_PickerHueWheel | ImGuiColorEditFlags_AlphaBar);
@@ -964,7 +979,7 @@ inline bool GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>:
 template <class M, class C> bool GUIRenderer<M, C>::Render(C& call) {
 
     if (this->overlay_slot.GetStatus() == core::AbstractSlot::SlotStatus::STATUS_CONNECTED) {
-        vislib::sys::Log::DefaultLog.WriteError("[GUIRenderer] Only one connected callee slot is allowed!");
+        vislib::sys::Log::DefaultLog.WriteError("[GUIRenderer][Render] Only one connected callee slot is allowed!");
         return false;
     }
 
@@ -985,13 +1000,15 @@ template <class M, class C> bool GUIRenderer<M, C>::Render(C& call) {
 template <class M, class C> bool GUIRenderer<M, C>::OnOverlayCallback(core::Call& call) {
 
     if (this->renderSlot.GetStatus() == core::AbstractSlot::SlotStatus::STATUS_CONNECTED) {
-        vislib::sys::Log::DefaultLog.WriteError("[GUIRenderer] Only one connected callee slot is allowed!");
+        vislib::sys::Log::DefaultLog.WriteError(
+            "[GUIRenderer][OnOverlayCallback] Only one connected callee slot is allowed!");
         return false;
     }
 
     auto* cr = this->decorated_renderer_slot.template CallAs<C>();
     if (cr != nullptr) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[GUIRenderer] Render callback of connected Renderer is not called!");
+        vislib::sys::Log::DefaultLog.WriteWarn(
+            "[GUIRenderer][OnOverlayCallback] Render callback of connected Renderer is not called!");
     }
 
     try {
@@ -1176,7 +1193,25 @@ template <class M, class C> void GUIRenderer<M, C>::drawMainWindowCallback(std::
  */
 template <class M, class C> void GUIRenderer<M, C>::drawTFWindowCallback(std::string win_label) {
 
-    this->DrawTransferFunctionEditor();
+    ImGuiStyle& style = ImGui::GetStyle();
+
+    if (this->active_tf_param == nullptr) {
+        ImGui::TextColored(style.Colors[ImGuiCol_ButtonHovered],
+            "Please open the '%s' via the loading button of an appropriate parameter.", win_label.c_str());
+    } else {
+        if (this->DrawTransferFunctionEditor()) {
+
+            if (this->active_tf_param != nullptr) {
+                std::string tf;
+                if (this->GetTransferFunction(tf)) {
+                    this->active_tf_param->SetValue(tf);
+                }
+            } else {
+                vislib::sys::Log::DefaultLog.WriteWarn(
+                    "[GUIRenderer][drawTFWindowCallback] No active transfer function parameter present.");
+            }
+        }
+    }
 }
 
 
@@ -1185,17 +1220,44 @@ template <class M, class C> void GUIRenderer<M, C>::drawTFWindowCallback(std::st
  */
 template <class M, class C> void GUIRenderer<M, C>::drawParametersCallback(std::string win_label) {
 
+    ImGuiStyle& style = ImGui::GetStyle();
+
     // Get current window configuration
     GUIWindow* win = nullptr;
     for (auto& w : this->windows) {
         if (win_label == w.label) win = &w;
     }
     if (win == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError("[GUIRenderer] Window label not found.");
+        vislib::sys::Log::DefaultLog.WriteError("[GUIRenderer][drawParametersCallback] Window label not found.");
         return;
     }
 
     ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() * 0.5f); // set general proportional item width
+
+    //    // Load/save parameter values to LUA file
+    //    if (ImGui::Button("Save Parameters to File")) {
+    //
+    //        // Save parameter file
+    //    }
+    //    ImGui::SameLine();
+    //    if (ImGui::Button("Load Parameters from File")) {
+    //#ifdef _WIN32
+    //        if (!ns_fs::exists(this->param_file.c_str())) {
+    //            ImGui::TextColored(style.Colors[ImGuiCol_ButtonHovered], "Please enter valid Paramter File Name");
+    //        } else
+    //#endif
+    //        {
+    //            // Load parameter file
+    //        }
+    //    }
+    //    size_t bufferLength = GUI_MAX_BUFFER_LEN;
+    //    char* buffer = new char[bufferLength];
+    //    memcpy(buffer, this->param_file.c_str(), this->param_file.size() + 1);
+    //    if (ImGui::InputText("Parameter File Name", buffer, bufferLength, ImGuiInputTextFlags_EnterReturnsTrue)) {
+    //        this->param_file = std::string(buffer);
+    //    }
+    //    delete[] buffer;
+    //    ImGui::Separator();
 
     // Options
     int overrideState = -1;
@@ -1216,7 +1278,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawParametersCallback(std::
     // Listing parameters
     const core::Module* current_mod = nullptr;
     bool current_mod_open = false;
-    size_t dnd_size = 2048; // Set same max size of all module labels for drag and drop.
+    size_t dnd_size = GUI_MAX_BUFFER_LEN; // Set same max size of all module labels for drag and drop.
 
     this->GetCoreInstance()->EnumParameters([&, this](const auto& mod, auto& slot) {
         if (current_mod != &mod) {
@@ -1406,6 +1468,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawFpsWindowCallback(std::s
 template <class M, class C> void GUIRenderer<M, C>::drawFontSelectionWindowCallback(std::string win_label) {
 
     ImGuiIO& io = ImGui::GetIO();
+    ImGuiStyle& style = ImGui::GetStyle();
 
     ImFont* font_current = ImGui::GetFont();
 
@@ -1422,7 +1485,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawFontSelectionWindowCallb
     ImGui::Text("Load new Font from File");
 
     std::string label = "Font Filename (.ttf)";
-    size_t bufferLength = 2048;
+    size_t bufferLength = GUI_MAX_BUFFER_LEN;
     char* buffer = new char[bufferLength];
     memcpy(buffer, this->font_new_filename.c_str(), this->font_new_filename.size() + 1);
     ImGui::InputText(label.c_str(), buffer, bufferLength);
@@ -1445,7 +1508,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawFontSelectionWindowCallb
             this->font_new_load = true;
         }
     } else {
-        ImGui::TextColored(ImVec4(0.24f, 0.52f, 0.88f, 1.0f), "Please enter valid font file name");
+        ImGui::TextColored(style.Colors[ImGuiCol_ButtonHovered], "Please enter valid font file name");
     }
     std::string help = "Same font can be loaded multiple times using different font size";
     this->HelpMarkerToolTip(help);
@@ -1598,6 +1661,27 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
             help = "[Click] on the colored square to open a color picker.\n"
                    "[CTRL+Click] on individual component to input value.\n"
                    "[Right-Click] on the individual color widget to show options.";
+        } else if (auto* p = slot.template Param<core::param::TransferFunctionParam>()) {
+            auto value = p->Value();
+            ImGui::Text(value.c_str());
+            ImGui::SameLine();
+            if (ImGui::Button("Load TF into Editor")) {
+                this->active_tf_param = p;
+                // Load transfer function string
+                if (!this->SetTransferFunction(value)) {
+                    vislib::sys::Log::DefaultLog.WriteWarn(
+                        "[GUIRenderer] Couldn't load transfer function of parameter: %s.", label.c_str());
+                }
+                // Open Transfer Function Editor window
+                for (auto& win : this->windows) {
+                    if (win.func == &GUIRenderer<M, C>::drawTFWindowCallback) {
+                        win.show = true;
+                    }
+                }
+            }
+            ImGui::SameLine();
+            ImGui::Text(label.c_str());
+
         } else if (auto* p = slot.template Param<core::param::EnumParam>()) {
             // XXX: no UTF8 fanciness required here?
             auto map = p->getMap();
@@ -1666,7 +1750,7 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
             vislib::StringA valueString;
             vislib::UTF8Encoder::Encode(valueString, param->ValueString());
 
-            size_t bufferLength = 2048; /// std::min(4096, (valueString.Length() + 1) * 2);
+            size_t bufferLength = GUI_MAX_BUFFER_LEN; /// std::min(4096, (valueString.Length() + 1) * 2);
             char* buffer = new char[bufferLength];
             memcpy(buffer, valueString.PeekBuffer(), valueString.Length() + 1);
 
@@ -1741,7 +1825,8 @@ template <class M, class C> void GUIRenderer<M, C>::updateFps(void) {
         const float scale_fac = 1.5f;
 
         if (this->fps_values.size() != this->ms_values.size()) {
-            vislib::sys::Log::DefaultLog.WriteError("[GUIRenderer] Fps and ms value arrays don't have same size.");
+            vislib::sys::Log::DefaultLog.WriteError(
+                "[GUIRenderer][updateFps] Fps and ms value arrays don't have same size.");
             return;
         }
 
@@ -1788,7 +1873,7 @@ template <class M, class C> void GUIRenderer<M, C>::updateFps(void) {
  */
 template <class M, class C> void GUIRenderer<M, C>::shutdown(void) {
 
-    vislib::sys::Log::DefaultLog.WriteInfo("[GUIRenderer] Initialising megamol core instance shutdown ...");
+    vislib::sys::Log::DefaultLog.WriteInfo("[GUIRenderer][shutdown] Initialising megamol core instance shutdown ...");
     this->GetCoreInstance()->Shutdown();
 }
 

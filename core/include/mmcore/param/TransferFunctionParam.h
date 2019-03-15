@@ -15,7 +15,10 @@
 #include "AbstractParam.h"
 
 #include "vislib/String.h"
-		
+#include "vislib/sys/Log.h"
+
+#include "json.hpp"
+
 
 namespace megamol {
 namespace core {
@@ -27,6 +30,77 @@ namespace param {
  */
 class MEGAMOLCORE_API TransferFunctionParam : public AbstractParam {
 public:
+
+    /** Interpolstion modes. */
+    enum InterpolationMode { LINEAR = 0, GAUSS = 1 };
+
+    // Example JSON output format (minimal version):
+    //{
+    //    "Interpolation": "LINEAR",
+    //    "Nodes" : [
+    //        [
+    //            0.0, // = Red
+    //            0.0, // = Green
+    //            0.0, // = Blue
+    //            0.0, // = Alpha
+    //            0.0  // = Value
+    //        ],
+    //        [
+    //            1.0, // = Red
+    //            1.0, // = Green
+    //            1.0, // = Blue
+    //            1.0, // = Alpha
+    //            1.0  // = Value
+    //        ]
+    //    ],
+    //    "TextureSize": 128
+    //}
+
+    /**
+    * Set transfer function data from JSON string.
+    *
+    * @param in_tfs            The transfer function input encoded as string in JSON format.
+    * @param out_data          The transfer function data output.
+    * @param out_interpolmode  The transfer function interpolation mode output.
+    * @param out_texsize       The transfer function texture size output.
+    *
+    * @return True if JSON string was successfully converted into transfer function data, false otherwise.
+    */
+    static bool ParseTransferFunction(const std::string &in_tfs, std::vector<std::array<float, 5>> &out_data, InterpolationMode &out_interpolmode, size_t &out_texsize);
+
+    /**
+     * Get transfer function JSON string from data.
+     *
+     * @param out_tfs          The transfer function output encoded as string in JSON format.
+     * @param in_data          The transfer function data input.
+     * @param in_interpolmode  The transfer function interpolation mode input.
+     * @param in_texsize       The transfer function texture size input.
+     *
+     * @return True if transfer function data was successfully converted into JSON string, false otherwise.
+     */
+    static bool DumpTransferFunction(std::string &out_tfs, const std::vector<std::array<float, 5>> &in_data, const InterpolationMode in_interpolmode, const size_t in_texsize);
+
+    /**
+     * Check given transfer function data.
+     *
+     * @param data          The transfer function data input.
+     * @param interpolmode  The transfer function interpolation mode input.
+     * @param texsize       The transfer function texture size input.
+     *
+     * @return True if given data is valid, false otherwise.
+     */
+    static bool CheckTransferFunctionData(const std::vector<std::array<float, 5>> &data, const InterpolationMode interpolmode, const size_t texsize);
+
+    /**
+     * Check given transfer function JSON string.
+     *
+     * @param tfs  The transfer function JSON string.
+     *
+     * @return True if given data is valid, false otherwise.
+     */
+    static bool CheckTransferFunctionString(const std::string &tfs);
+
+    // ------------------------------------------------------------------------
 
     /**
      * Ctor.
@@ -110,6 +184,7 @@ public:
     }
 
 private:
+
 
     /** The value of the parameter */
     std::string val;

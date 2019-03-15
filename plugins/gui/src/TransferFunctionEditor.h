@@ -16,17 +16,23 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
+#include "mmcore/param/TransferFunctionParam.h"
+#include "mmcore/view/LinearTransferFunction.h"
+
+#include "vislib/sys/Log.h"
+
 #include <algorithm> // sort
 #include <array>
 #include <cassert>
 #include <cmath> // sqrtf
 #include <imgui.h>
 #include <map>
+#include <sstream> // stringstream
 #include <string>
 #include <vector>
 
+#include <imgui.h>
 #include "GUIUtility.h"
-#include "json.hpp"
 
 
 namespace megamol {
@@ -38,9 +44,6 @@ namespace gui {
  */
 class TransferFunctionEditor : public GUIUtility {
 public:
-    /** Interpolstion modes. */
-    enum InterpolMode { LINEAR = 0, GAUSS = 1 };
-
     /**
      * Draws the transfer function editor.
      */
@@ -50,16 +53,17 @@ public:
      * Set transfer function data to use in editor.
      *
      * @param tfs The transfer function encoded as string in JSON format.
+     *
+     * @return True if string was successfully converted into transfer function data, false otherwise.
      */
-    void SetTransferFunction(std::string tfs);
-
+    bool SetTransferFunction(const std::string& in_tfs);
 
     /**
      * Get current transfer function data.
      *
      * @return The transfer function encoded as string in JSON format
      */
-    std::string GetTransferFunction(void);
+    bool GetTransferFunction(std::string& out_tfs);
 
 protected:
     /**
@@ -79,13 +83,13 @@ private:
     std::vector<std::array<float, 5>> data;
 
     /** Current interpolation option. */
-    InterpolMode interpol_mode;
+    megamol::core::param::TransferFunctionParam::InterpolationMode interpol_mode;
 
     /** Current texture size. */
     size_t tex_size;
 
-    /** Recalculate texture data. */
-    bool tex_recalc;
+    /** Indicating modified transfer function. Recalculate texture data. */
+    bool tex_modified;
 
     /** Current texture data. */
     std::vector<ImVec4> tex_data;
@@ -98,6 +102,9 @@ private:
 
     /** Currently selected color channel of selected node. */
     unsigned int point_select_chan;
+
+    /** Flag for applying all changes immediately. */
+    bool imm_apply;
 };
 
 } // namespace gui
