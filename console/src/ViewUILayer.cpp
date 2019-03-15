@@ -11,7 +11,7 @@
 using namespace megamol;
 using namespace megamol::console;
 
-ViewUILayer::ViewUILayer(gl::Window& wnd, void* viewHandle) : AbstractUILayer(wnd), hView(viewHandle) {}
+ViewUILayer::ViewUILayer(void* viewHandle) : hView(viewHandle) {}
 
 ViewUILayer::~ViewUILayer() {
     hView = nullptr; // handle memory is owned by Window and will be deleted there
