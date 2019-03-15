@@ -19,7 +19,7 @@ using namespace megamol::core::view;
 LinearTransferFunction::LinearTransferFunction(void)
     : Module()
     , getTFSlot("gettransferfunction", "Provides the transfer function")
-    , tfSlot("TransferFunction", "The transfer function serialized into JSON string.")
+    , tfParam("TransferFunction", "The transfer function serialized into JSON string.")
     , texID(0)
     , texSize(1)
     , tex()
@@ -33,8 +33,8 @@ LinearTransferFunction::LinearTransferFunction(void)
     this->getTFSlot.SetCallback(cgtfd.ClassName(), cgtfd.FunctionName(2), &LinearTransferFunction::interfaceResetDirty);
     this->MakeSlotAvailable(&this->getTFSlot);
 
-    this->tfSlot << new param::LinearTransferFunctionParam("");
-    this->MakeSlotAvailable(&this->tfSlot);
+    this->tfParam << new param::LinearTransferFunctionParam("");
+    this->MakeSlotAvailable(&this->tfParam);
 }
 
 
@@ -64,6 +64,39 @@ void LinearTransferFunction::release(void) {
 
 
 /*
+ * LinearTransferFunction::LinearInterpolation
+ */
+void LinearTransferFunction::LinearInterpolation(std::vector<float> &out_texdata, unsigned int in_texsize, const param::LinearTransferFunctionParam::TFType &in_tfdata) {
+
+    out_texdata.resize(4 * in_texsize);
+    std::array<float, 5> cx1 = in_tfdata[0];
+    std::array<float, 5> cx2 = in_tfdata[0];
+    int p1 = 0;
+    int p2 = 0;
+    size_t data_cnt = in_tfdata.size();
+    for (size_t i = 1; i < data_cnt; i++) {
+        cx1 = cx2;
+        p1 = p2;
+        cx2 = in_tfdata[i];
+        assert(cx2[4] <= 1.0f + 1e-5f); // 1e-5f = vislib::math::FLOAT_EPSILON
+        p2 = static_cast<int>(cx2[4] * static_cast<float>(in_texsize - 1));
+        assert(p2 < static_cast<int>(in_texsize));
+        assert(p2 >= p1);
+
+        for (int p = p1; p <= p2; p++) {
+            float al = static_cast<float>(p - p1) / static_cast<float>(p2 - p1);
+            float be = 1.0f - al;
+
+            out_texdata[p * 4] = cx1[0] * be + cx2[0] * al;
+            out_texdata[p * 4 + 1] = cx1[1] * be + cx2[1] * al;
+            out_texdata[p * 4 + 2] = cx1[2] * be + cx2[2] * al;
+            out_texdata[p * 4 + 3] = cx1[3] * be + cx2[3] * al;
+        }
+    }
+}
+
+
+/*
  * LinearTransferFunction::requestTF
  */
 bool LinearTransferFunction::requestTF(Call& call) {
@@ -71,50 +104,24 @@ bool LinearTransferFunction::requestTF(Call& call) {
     CallGetTransferFunction* cgtf = dynamic_cast<CallGetTransferFunction*>(&call);
     if (cgtf == nullptr) return false;
 
-    bool dirty = this->tfSlot.IsDirty();
+    bool dirty = this->tfParam.IsDirty();
     if ((this->texID == 0) || dirty) {
-        this->tfSlot.ResetDirty();
+        this->tfParam.ResetDirty();
 
         param::LinearTransferFunctionParam::TFType tfdata;
 
-        // Get current values from parameter string. 
-        // Values are also checked.
+        // Get current values from parameter string. Values are checked, too.
         if (!megamol::core::param::LinearTransferFunctionParam::ParseTransferFunction(
-            this->tfSlot.Param<param::LinearTransferFunctionParam>()->Value(), tfdata, this->interpolMode, this->texSize)) {
+            this->tfParam.Param<param::LinearTransferFunctionParam>()->Value(), tfdata, this->interpolMode, this->texSize)) {
             return false;
         }
 
+        // Apply interpolation and generate texture data.
         if (this->interpolMode == param::LinearTransferFunctionParam::InterpolationMode::LINEAR) {
-            this->tex.resize(4 * this->texSize);
-            std::array<float, 5> cx1 = tfdata[0];
-            std::array<float, 5> cx2 = tfdata[0];
-            int p1 = 0;
-            int p2 = 0;
-            size_t color_cnt = tfdata.size();
-            for (size_t i = 1; i < color_cnt; i++) {
-                cx1 = cx2;
-                p1 = p2;
-                cx2 = tfdata[i];
-                assert(cx2[4] <= 1.0f + 1e-5f); // 1e-5f = vislib::math::FLOAT_EPSILON
-                p2 = static_cast<int>(cx2[4] * static_cast<float>(this->texSize - 1));
-                assert(p2 < static_cast<int>(this->texSize));
-                assert(p2 >= p1);
-
-                for (int p = p1; p <= p2; p++) {
-                    float al = static_cast<float>(p - p1) / static_cast<float>(p2 - p1);
-                    float be = 1.0f - al;
-
-                    this->tex[p * 4]     = cx1[0] * be + cx2[0] * al;
-                    this->tex[p * 4 + 1] = cx1[1] * be + cx2[1] * al;
-                    this->tex[p * 4 + 2] = cx1[2] * be + cx2[2] * al;
-                    this->tex[p * 4 + 3] = cx1[3] * be + cx2[3] * al;
-                }
-            }
+            this->LinearInterpolation(this->tex, this->texSize, tfdata);
         }
         else if (this->interpolMode == param::LinearTransferFunctionParam::InterpolationMode::GAUSS) {
-
             // TODO: Implement ...
-
             return false;
         }
 
@@ -151,7 +158,7 @@ bool LinearTransferFunction::interfaceIsDirty(Call& call) {
     CallGetTransferFunction* cgtf = dynamic_cast<CallGetTransferFunction*>(&call);
     if (cgtf == nullptr) return false;
 
-    bool retval = tfSlot.IsDirty();
+    bool retval = tfParam.IsDirty();
 
     cgtf->setDirty(retval);
     return true;
@@ -166,6 +173,6 @@ bool LinearTransferFunction::interfaceResetDirty(Call& call) {
     CallGetTransferFunction* cgtf = dynamic_cast<CallGetTransferFunction*>(&call);
     if (cgtf == nullptr) return false;
 
-    tfSlot.ResetDirty();
+    tfParam.ResetDirty();
     return true;
 }

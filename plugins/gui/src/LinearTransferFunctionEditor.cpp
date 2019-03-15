@@ -323,50 +323,22 @@ bool megamol::gui::LinearTransferFunctionEditor::DrawTransferFunctionEditor(void
     // Create current texture data
     bool imm_apply_tex_changed = this->tex_modified;
     if (this->tex_modified) {
-        this->tex_data.resize(this->tex_size);
-        std::array<float, 5> cx1 = this->data[0];
-        std::array<float, 5> cx2 = this->data[0];
-        int p1 = 0;
-        int p2 = 0;
-        size_t col_cnt = this->data.size();
-        float r, g, b, a;
-        // CHOOSE LINEAR INTERPOLATION
         if (this->interpol_mode == param::LinearTransferFunctionParam::InterpolationMode::LINEAR) {
-            for (size_t i = 0; i < col_cnt; ++i) {
-                cx1 = cx2;
-                p1 = p2;
-                cx2 = this->data[i];
-                assert(cx2[4] <= 1.0f + 1e-5f);
-                p2 = static_cast<int>(cx2[4] * static_cast<float>(this->tex_size - 1));
-                assert(p2 < static_cast<int>(this->tex_size));
-                assert(p2 >= p1);
-
-                for (int p = p1; p <= p2; p++) {
-                    float al = static_cast<float>(p - p1) / static_cast<float>(p2 - p1);
-                    float be = 1.0f - al;
-
-                    r = cx1[0] * be + cx2[0] * al;
-                    g = cx1[1] * be + cx2[1] * al;
-                    b = cx1[2] * be + cx2[2] * al;
-                    a = cx1[3] * be + cx2[3] * al;
-                    this->tex_data[p] = ImVec4(r, g, b, a);
-                }
-            }
+            core::view::LinearTransferFunction::LinearInterpolation(this->tex_data, this->tex_size, this->data);
         } else if (this->interpol_mode == param::LinearTransferFunctionParam::InterpolationMode::GAUSS) {
-            // TODO: Implement ....
+            // Needs implementation in LinearTransferFunction ...
         }
-
         this->tex_modified = false;
     }
 
     // Draw current transfer function texture
     const float texture_height = 30.0f;
-    size_t tex_cnt = this->tex_data.size();
     ImVec2 texture_pos = ImGui::GetCursorScreenPos();
-    ImVec2 rect_size = ImVec2(tfw_item_width / (float)tex_cnt, texture_height);
+    ImVec2 rect_size = ImVec2(tfw_item_width / (float)this->tex_size, texture_height);
     ImGui::InvisibleButton("texture", ImVec2(tfw_item_width, rect_size.y));
-    for (int i = 0; i < tex_cnt; ++i) {
-        ImU32 rect_col = ImGui::ColorConvertFloat4ToU32(this->tex_data[i]);
+    for (int i = 0; i < this->tex_size; ++i) {
+        ImU32 rect_col = ImGui::ColorConvertFloat4ToU32(ImVec4(
+            this->tex_data[4 * i], this->tex_data[4 * i + 1], this->tex_data[4 * i + 2], this->tex_data[4 * i + 3]));
         ImVec2 rect_pos_a = ImVec2(texture_pos.x + (float)i * rect_size.x, texture_pos.y);
         ImVec2 rect_pos_b = ImVec2(rect_pos_a.x + rect_size.x, rect_pos_a.y + rect_size.y);
         draw_list->AddRectFilled(rect_pos_a, rect_pos_b, rect_col, 0.0f, 10);

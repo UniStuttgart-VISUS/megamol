@@ -92,7 +92,7 @@ private:
     bool tex_modified;
 
     /** Current texture data. */
-    std::vector<ImVec4> tex_data;
+    std::vector<float> tex_data;
 
     /** Currently active color channels in plot. */
     std::array<bool, 4> plot_channels;

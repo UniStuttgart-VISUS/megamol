@@ -33,8 +33,15 @@ namespace view {
     /**
      * Module defining a piecewise linear transfer function based on the interval [0..1]
      */
-    class LinearTransferFunction : public Module {
+    class MEGAMOLCORE_API LinearTransferFunction : public Module {
     public:
+
+        /**
+        * Linear interpolation of transfer function data in range [0..texsize]
+        */
+        static void LinearInterpolation(std::vector<float> &out_texdata, unsigned int in_texsize, const megamol::core::param::LinearTransferFunctionParam::TFType &in_tfdata);
+
+        // --------------------------------------------------------------------
 
         /**
          * Answer the name of this module.
@@ -68,6 +75,7 @@ namespace view {
 
         /** Dtor. */
         virtual ~LinearTransferFunction(void);
+
 
     private:
 
@@ -133,7 +141,7 @@ namespace view {
         CalleeSlot getTFSlot;
 
         /** Parameter continaing the transfer function data serialized into JSON string */
-        param::ParamSlot tfSlot;
+        param::ParamSlot tfParam;
     };
 
 
