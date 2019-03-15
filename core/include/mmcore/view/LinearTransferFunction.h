@@ -19,7 +19,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/ButtonParam.h"
-#include "mmcore/param/TransferFunctionParam.h"
+#include "mmcore/param/LinearTransferFunctionParam.h"
 
 #include "vislib/sys/sysfunctions.h"
 #include "vislib/sys/Log.h"
@@ -127,7 +127,7 @@ namespace view {
         CallGetTransferFunction::TextureFormat texFormat;
 
         /** The interpolation mode */
-        param::TransferFunctionParam::InterpolationMode interpolMode;
+        param::LinearTransferFunctionParam::InterpolationMode interpolMode;
 
         /** The callee slot called on request of a transfer function */
         CalleeSlot getTFSlot;

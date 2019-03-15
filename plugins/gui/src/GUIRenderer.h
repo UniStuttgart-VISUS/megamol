@@ -42,10 +42,10 @@
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
+#include "mmcore/param/LinearTransferFunctionParam.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/TernaryParam.h"
-#include "mmcore/param/TransferFunctionParam.h"
 #include "mmcore/param/Vector2fParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/Vector4fParam.h"
@@ -60,7 +60,7 @@
 #include <iomanip> // setprecision
 #include <sstream> // stringstream
 
-#include "TransferFunctionEditor.h"
+#include "LinearTransferFunctionEditor.h"
 #include "imgui_impl_opengl3.h"
 
 
@@ -79,7 +79,7 @@ namespace megamol {
 namespace gui {
 
 
-template <class M, class C> class GUIRenderer : public M, TransferFunctionEditor {
+template <class M, class C> class GUIRenderer : public M, LinearTransferFunctionEditor {
 public:
     /**
      * Answer the name of this module.
@@ -215,7 +215,7 @@ private:
     std::string param_file;
 
     /** The currently active parameter whose transfer function is loaded into the editor. */
-    core::param::TransferFunctionParam* active_tf_param;
+    core::param::LinearTransferFunctionParam* active_tf_param;
 
     // ---------- FPS window ----------
 
@@ -361,7 +361,7 @@ typedef GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D> GUIR
 template <>
 inline GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIRenderer()
     : core::view::Renderer2DModule()
-    , TransferFunctionEditor()
+    , LinearTransferFunctionEditor()
     , imgui_context(nullptr)
     , decorated_renderer_slot("decoratedRenderer", "Connects to another 2D Renderer being decorated")
     , overlay_slot("overlayRender", "Connected with SplitView for special overlay rendering")
@@ -417,7 +417,7 @@ inline GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIR
 template <>
 inline GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GUIRenderer()
     : core::view::Renderer3DModule()
-    , TransferFunctionEditor()
+    , LinearTransferFunctionEditor()
     , imgui_context(nullptr)
     , decorated_renderer_slot("decoratedRenderer", "Connects to another 2D Renderer being decorated")
     , overlay_slot("overlayRender", "Connected with SplitView for special overlay rendering")
@@ -549,7 +549,7 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
     this->windows.emplace_back(tmp_win);
 
     // Demo Window --------------------------------------------------
-    tmp_win.label = "1D Transfer Function Editor";
+    tmp_win.label = "Linear Transfer Function Editor";
     tmp_win.show = false;
     tmp_win.hotkey = core::view::KeyCode(core::view::Key::KEY_F9);
     tmp_win.flags = ImGuiWindowFlags_AlwaysAutoResize;
@@ -1665,9 +1665,9 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
             help = "[Click] on the colored square to open a color picker.\n"
                    "[CTRL+Click] on individual component to input value.\n"
                    "[Right-Click] on the individual color widget to show options.";
-        } else if (auto* p = slot.template Param<core::param::TransferFunctionParam>()) {
+        } else if (auto* p = slot.template Param<core::param::LinearTransferFunctionParam>()) {
             auto value = p->Value();
-            if (ImGui::Button("Load TF into Editor")) {
+            if (ImGui::Button("Load LTF into Editor")) {
                 this->active_tf_param = p;
                 // Load transfer function string
                 if (!this->SetTransferFunction(value)) {
@@ -1682,7 +1682,7 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
                 }
             }
             ImGui::SameLine();
-            if (ImGui::Button("DEBUG: Print TF String to Console")) {
+            if (ImGui::Button("DEBUG: Print LTF String to Console")) {
                 vislib::sys::Log::DefaultLog.WriteInfo("Transfer Function: \n%s\n", value.c_str());
             }
 

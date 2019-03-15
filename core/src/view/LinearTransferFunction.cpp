@@ -24,7 +24,7 @@ LinearTransferFunction::LinearTransferFunction(void)
     , texSize(1)
     , tex()
     , texFormat(CallGetTransferFunction::TEXTURE_FORMAT_RGB)
-    , interpolMode(param::TransferFunctionParam::InterpolationMode::LINEAR)
+    , interpolMode(param::LinearTransferFunctionParam::InterpolationMode::LINEAR)
 {
 
     CallGetTransferFunctionDescription cgtfd;
@@ -33,7 +33,7 @@ LinearTransferFunction::LinearTransferFunction(void)
     this->getTFSlot.SetCallback(cgtfd.ClassName(), cgtfd.FunctionName(2), &LinearTransferFunction::interfaceResetDirty);
     this->MakeSlotAvailable(&this->getTFSlot);
 
-    this->tfSlot << new param::TransferFunctionParam("");
+    this->tfSlot << new param::LinearTransferFunctionParam("");
     this->MakeSlotAvailable(&this->tfSlot);
 }
 
@@ -75,16 +75,16 @@ bool LinearTransferFunction::requestTF(Call& call) {
     if ((this->texID == 0) || dirty) {
         this->tfSlot.ResetDirty();
 
-        param::TransferFunctionParam::TFType tfdata;
+        param::LinearTransferFunctionParam::TFType tfdata;
 
         // Get current values from parameter string. 
         // Values are also checked.
-        if (!megamol::core::param::TransferFunctionParam::ParseTransferFunction(
-            this->tfSlot.Param<param::TransferFunctionParam>()->Value(), tfdata, this->interpolMode, this->texSize)) {
+        if (!megamol::core::param::LinearTransferFunctionParam::ParseTransferFunction(
+            this->tfSlot.Param<param::LinearTransferFunctionParam>()->Value(), tfdata, this->interpolMode, this->texSize)) {
             return false;
         }
 
-        if (this->interpolMode == param::TransferFunctionParam::InterpolationMode::LINEAR) {
+        if (this->interpolMode == param::LinearTransferFunctionParam::InterpolationMode::LINEAR) {
             this->tex.resize(4 * this->texSize);
             std::array<float, 5> cx1 = tfdata[0];
             std::array<float, 5> cx2 = tfdata[0];
@@ -111,7 +111,7 @@ bool LinearTransferFunction::requestTF(Call& call) {
                 }
             }
         }
-        else if (this->interpolMode == param::TransferFunctionParam::InterpolationMode::GAUSS) {
+        else if (this->interpolMode == param::LinearTransferFunctionParam::InterpolationMode::GAUSS) {
 
             // TODO: Implement ...
 

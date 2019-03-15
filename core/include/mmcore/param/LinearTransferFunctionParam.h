@@ -1,12 +1,12 @@
 /*
- * TransferFunctionParam.h
+ * LinearTransferFunctionParam.h
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_TRANSFERFUNCTIONPARAM_H_INCLUDED
-#define MEGAMOLCORE_TRANSFERFUNCTIONPARAM_H_INCLUDED
+#ifndef MEGAMOLCORE_LINEARTRANSFERFUNCTIONPARAM_H_INCLUDED
+#define MEGAMOLCORE_LINEARTRANSFERFUNCTIONPARAM_H_INCLUDED
 
 
 #include <string>
@@ -28,7 +28,7 @@ namespace param {
 /**
  * Class for parameter holding transfer function as JSON string.
  */
-class MEGAMOLCORE_API TransferFunctionParam : public AbstractParam {
+class MEGAMOLCORE_API LinearTransferFunctionParam : public AbstractParam {
 public:
 
     /** Interpolstion modes. */
@@ -115,14 +115,14 @@ public:
      *
      * @param initVal The initial value
      */
-    TransferFunctionParam(const std::string& initVal = "");
+    LinearTransferFunctionParam(const std::string& initVal = "");
 
     /**
      * Ctor.
      *
      * @param initVal The initial value
      */
-    TransferFunctionParam(const char *initVal);
+    LinearTransferFunctionParam(const char *initVal);
 
     /**
      * Ctor.
@@ -130,12 +130,12 @@ public:
      * @param initVal The initial value
      * @param visible If 'true' the parameter is visible in the gui.
      */
-    TransferFunctionParam(const vislib::StringA& initVal);
+    LinearTransferFunctionParam(const vislib::StringA& initVal);
 
     /**
      * Dtor.
      */
-    virtual ~TransferFunctionParam(void);
+    virtual ~LinearTransferFunctionParam(void);
 
     /**
      * Returns a machine-readable definition of the parameter.
@@ -196,10 +196,10 @@ private:
     /** The value of the parameter */
     std::string val;
 
-}; /* end class TransferFunctionParam */
+}; /* end class LinearTransferFunctionParam */
 
 } /* end namespace param */
 } /* end namespace core */
 } /* end namespace megamol */
 
-#endif /* end ifndef MEGAMOLCORE_TRANSFERFUNCTIONPARAM_H_INCLUDED */
+#endif /* end ifndef MEGAMOLCORE_LINEARTRANSFERFUNCTIONPARAM_H_INCLUDED */
