@@ -110,3 +110,24 @@ bool Renderer3DModule_2::RenderChain(CallRender3D_2& call) {
 
     return true;
 }
+
+/*
+ * Renderer3DModule_2::GetLights
+ */
+bool Renderer3DModule_2::GetLights(void) {
+    core::view::light::CallLight * cl = this->lightSlot.CallAs<core::view::light::CallLight>();
+    if (cl == nullptr) {
+        // TODO add local light
+        return false;
+    }
+    cl->setLightMap(&this->lightMap);
+    cl->fillLightMap();
+    bool lightDirty = false;
+    for (const auto element : this->lightMap) {
+        auto light = element.second;
+        if (light.dataChanged) {
+            lightDirty = true;
+        }
+    }
+    return lightDirty;
+}

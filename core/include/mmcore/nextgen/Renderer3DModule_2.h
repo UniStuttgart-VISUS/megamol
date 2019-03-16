@@ -56,6 +56,16 @@ protected:
      */
     virtual bool Render(CallRender3D_2& call) = 0;
 
+    /**
+     * Receives the current lights from the light call and writes them to the lightMap
+     *
+     * @return True if any light has changed, false otherwise.
+     */
+    virtual bool GetLights(void);
+
+    /** map to store the called lights */
+    core::view::light::LightMap lightMap;
+
 private:
     /**
      * The chained get extents callback. The module should set the members of

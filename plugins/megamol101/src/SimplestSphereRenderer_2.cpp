@@ -221,6 +221,8 @@ bool SimplestSphereRenderer_2::Render(core::nextgen::CallRender3D_2& call) {
     glm::mat4 proj = projCam;
     glm::mat4 mvp = projCam * viewCam;
 
+    this->GetLights();
+
     // start the rendering
 
     // Scale the point size with the parameter
@@ -251,6 +253,11 @@ bool SimplestSphereRenderer_2::Render(core::nextgen::CallRender3D_2& call) {
         glUniform3f(this->sphereShader.ParameterLocation("camDir"), camsnap.view_vector.x(), camsnap.view_vector.y(), camsnap.view_vector.z());
         glUniform1f(this->sphereShader.ParameterLocation("scalingFactor"),
             this->sizeScalingSlot.Param<core::param::FloatParam>()->Value());
+
+        if (this->lightMap.size() >= 1 && this->lightMap.begin()->second.lightType == core::view::light::POINTLIGHT) {
+            auto lightPos = this->lightMap.begin()->second.pl_position;
+            glUniform3f(this->sphereShader.ParameterLocation("lightPos"), lightPos[0], lightPos[1], lightPos[2]);
+        }
     } else {
         glUniformMatrix4fv(this->simpleShader.ParameterLocation("mvp"), 1, GL_FALSE, glm::value_ptr(mvp));
     }

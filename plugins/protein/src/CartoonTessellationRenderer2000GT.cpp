@@ -464,22 +464,6 @@ bool CartoonTessellationRenderer2000GT::Render(nextgen::CallRender3D_2& call) {
     auto mvpInvTrans = glm::transpose(mvpInv);
     auto projInv = glm::transpose(proj);
 
-    GLfloat lightPos[4];
-    glGetLightfv(GL_LIGHT0, GL_POSITION, lightPos);
-    GLfloat lightAmbient[4];
-    glGetLightfv(GL_LIGHT0, GL_AMBIENT, lightAmbient);
-    GLfloat lightDiffuse[4];
-    glGetLightfv(GL_LIGHT0, GL_DIFFUSE, lightDiffuse);
-    GLfloat lightSpecular[4];
-    glGetLightfv(GL_LIGHT0, GL_SPECULAR, lightSpecular);
-
-
-    /*std::cout << lightAmbient[0] << " " << lightAmbient[1] << " " << lightAmbient[2] << " " << lightAmbient[3] <<
-    std::endl; std::cout << lightDiffuse[0] << " " << lightDiffuse[1] << " " << lightDiffuse[2] << " " <<
-    lightDiffuse[3] << std::endl;
-    std::cout << lightSpecular[0] << " " << lightSpecular[1] << " " << lightSpecular[2] << " " << lightSpecular[3] <<
-    std::endl;*/
-
     // copy data
     if (this->positionsCa.Count() != mol->MoleculeCount()) {
         this->positionsCa.SetCount(mol->MoleculeCount());
@@ -664,7 +648,6 @@ bool CartoonTessellationRenderer2000GT::Render(nextgen::CallRender3D_2& call) {
 
             this->splineShader.Enable();
             glColor4f(1.0f / this->positionsCa.Count() * (i + 1), 0.75f, 0.25f, 1.0f);
-            colIdxAttribLoc = glGetAttribLocationARB(this->splineShader, "colIdx");
             glUniform4fv(this->splineShader.ParameterLocation("viewAttr"), 1, viewportStuff);
             // TODO
             // glUniform3fv(this->splineShader.ParameterLocation("camIn"), 1,
@@ -714,8 +697,6 @@ bool CartoonTessellationRenderer2000GT::Render(nextgen::CallRender3D_2& call) {
             }
 
             glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-            glDisableClientState(GL_COLOR_ARRAY);
-            glDisableClientState(GL_VERTEX_ARRAY);
             glDisable(GL_TEXTURE_1D);
             this->splineShader.Disable();
         }
@@ -733,17 +714,23 @@ bool CartoonTessellationRenderer2000GT::Render(nextgen::CallRender3D_2& call) {
         unsigned int colBytes, vertBytes, colStride, vertStride;
         this->getBytesAndStride(*mol, colBytes, vertBytes, colStride, vertStride);
 
+        this->GetLights();
+        auto ls = this->lightMap.size();
+        std::vector<float> lightPos = {0.0f, 0.0f, 0.0f};
+        auto bla = this->lightMap.begin()->second;
+        if (this->lightMap.size() != 1) {
+            vislib::sys::Log::DefaultLog.WriteWarn("Only single point light sources are supported by this renderer");
+        } else if (this->lightMap.begin()->second.lightType != core::view::light::POINTLIGHT) {
+            vislib::sys::Log::DefaultLog.WriteWarn("Only single point light sources are supported by this renderer");
+        } else {
+            lightPos = this->lightMap.begin()->second.pl_position;
+            std::cout << lightPos[0] << " " << lightPos[1] << " " << lightPos[2] << std::endl;
+        }
+
+
         this->tubeShader.Enable();
         glColor4f(1.0f / mainchain.size(), 0.75f, 0.25f, 1.0f);
-        colIdxAttribLoc = glGetAttribLocationARB(this->splineShader, "colIdx");
         glUniform4fv(this->tubeShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-        // TODO
-        // glUniform3fv(this->tubeShader.ParameterLocation("camIn"), 1,
-        // cr->GetCameraParameters()->Front().PeekComponents());
-        // glUniform3fv(this->tubeShader.ParameterLocation("camRight"), 1,
-        // cr->GetCameraParameters()->Right().PeekComponents());
-        // glUniform3fv(this->tubeShader.ParameterLocation("camUp"), 1,
-        // cr->GetCameraParameters()->Up().PeekComponents());
         glUniform4fv(this->tubeShader.ParameterLocation("clipDat"), 1, clipDat);
         glUniform4fv(this->tubeShader.ParameterLocation("clipCol"), 1, clipCol);
         glUniformMatrix4fv(this->tubeShader.ParameterLocation("MV"), 1, GL_FALSE, glm::value_ptr(view));
@@ -762,12 +749,7 @@ bool CartoonTessellationRenderer2000GT::Render(nextgen::CallRender3D_2& call) {
         float minC = 0.0f, maxC = 0.0f;
         unsigned int colTabSize = 0;
         glUniform4f(this->tubeShader.ParameterLocation("inConsts1"), -1.0f, minC, maxC, float(colTabSize));
-        // auto v = this->materialParam.Param<param::Vector4fParam>()->Value();
-        glUniform4f(this->tubeShader.ParameterLocation("ambientColor"), lightAmbient[0], lightAmbient[1],
-            lightAmbient[2], lightAmbient[3]);
-        glUniform4f(this->tubeShader.ParameterLocation("diffuseColor"), lightDiffuse[0], lightDiffuse[1],
-            lightDiffuse[2], lightDiffuse[3]);
-        glUniform4f(this->tubeShader.ParameterLocation("lightPos"), lightPos[0], lightPos[1], lightPos[2], lightPos[3]);
+        glUniform4f(this->tubeShader.ParameterLocation("lightPos"), lightPos[0], lightPos[1], lightPos[2], 1.0f);
 
         UINT64 numVerts;
         numVerts = this->bufSize / vertStride;
@@ -800,8 +782,6 @@ bool CartoonTessellationRenderer2000GT::Render(nextgen::CallRender3D_2& call) {
         }
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-        glDisableClientState(GL_COLOR_ARRAY);
-        glDisableClientState(GL_VERTEX_ARRAY);
         glDisable(GL_TEXTURE_1D);
         this->tubeShader.Disable();
     }
