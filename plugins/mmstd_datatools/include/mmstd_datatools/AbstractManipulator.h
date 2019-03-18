@@ -20,7 +20,7 @@ namespace datatools {
 /**
  * Abstract class data manipulators for calls with getData/getExtent interface
  */
-template <class C> class MMSTD_DATATOOLS_API AbstractManipulator : public megamol::core::Module {
+template <class C> class AbstractManipulator : public megamol::core::Module {
 public:
     /**
      * Ctor
