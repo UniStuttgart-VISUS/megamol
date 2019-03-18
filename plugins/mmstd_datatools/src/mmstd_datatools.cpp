@@ -79,6 +79,12 @@
 #include "ParticleVisibilityFromVolume.h"
 #include "IColToIdentity.h"
 #include "ParticleIdentitySort.h"
+#include "DirParticleListSelector.h"
+#include "DumpIColTrend.h"
+#include "ParticleBoxFilter.h"
+#include "DirParticleBoxFilter.h"
+#include "MPDCInterleaver.h"
+#include "DPDCInterleaver.h"
 
 /*
  * mmplgPluginAPIVersion
@@ -220,6 +226,12 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleVisibilityFromVolume>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::IColToIdentity>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleIdentitySort>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::DirParticleListSelector>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::DumpIColTrend>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleBoxFilter>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::DirParticleBoxFilter>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::MPDCInterleaver>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::DPDCInterleaver>();
 
             // register calls here:
             this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::CallFloatTableData>();
