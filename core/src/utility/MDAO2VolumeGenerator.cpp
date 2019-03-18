@@ -83,7 +83,7 @@ bool MDAO2VolumeGenerator::Init()
 	if (computeAvailable) {
 		// Try to initialize the compute shader
 		vislib::SmartPtr<vislib::graphics::gl::ShaderSource::Snippet> mipmapSrc;
-		mipmapSrc = factory->MakeShaderSnippet("mdao2_mipmap::generate");
+		mipmapSrc = factory->MakeShaderSnippet("mdao2mipmap::compute");
 		try {
 			mipmapShader.Compile(mipmapSrc->PeekCode());
 			mipmapShader.Link();
@@ -98,7 +98,7 @@ bool MDAO2VolumeGenerator::Init()
 		}	
 	}
 	
-	return InitializeShader(this->factory, this->volumeShader, "mdao2_volumegen::vertex", "mdao2_volumegen::fragment", "mdao2_volumegen::geometry");
+	return InitializeShader(this->factory, this->volumeShader, "mdao2volume::vertex", "mdao2volume::fragment", "mdao2volume::geometry");
 }
 
 

@@ -1,9 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
-<btf type="MegaMolGLSLShader" version="1.0" namespace="mdao2_mipmap">
-	<snippet name="generate" type="string">
-	<![CDATA[
-#version 430
-
 layout (local_size_x = 64, local_size_y=1, local_size_z=1) in;
 
 uniform readonly layout(binding=0, R8) image3D inputImage;
@@ -29,7 +23,3 @@ void main()
 	
 	imageStore(outputImage, gid, result);
 }
-]]>
-	</snippet>
-
-</btf>
