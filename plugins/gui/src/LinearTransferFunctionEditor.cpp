@@ -26,17 +26,16 @@ megamol::gui::LinearTransferFunctionEditor::LinearTransferFunctionEditor(void)
     , plot_channels{false, false, false, true}
     , point_select_node(0)
     , point_select_chan(0)
+    , point_select_delta()
     , imm_apply(false) {
 
     // Init transfer function colors
-    if (this->data.size() < 2) {
-        this->data.clear();
-        std::array<float, 5> zero = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
-        std::array<float, 5> one = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
-        this->data.emplace_back(zero);
-        this->data.emplace_back(one);
-        this->tex_modified = true;
-    }
+    this->data.clear();
+    std::array<float, 5> zero = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+    std::array<float, 5> one = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
+    this->data.emplace_back(zero);
+    this->data.emplace_back(one);
+    this->tex_modified = true;
 }
 
 
@@ -54,8 +53,14 @@ megamol::gui::LinearTransferFunctionEditor::~LinearTransferFunctionEditor(void) 
  */
 bool megamol::gui::LinearTransferFunctionEditor::SetTransferFunction(const std::string& in_tfs) {
 
-    return megamol::core::param::LinearTransferFunctionParam::ParseTransferFunction(
+    bool retval = megamol::core::param::LinearTransferFunctionParam::ParseTransferFunction(
         in_tfs, this->data, this->interpol_mode, this->tex_size);
+
+    if (retval) {
+        this->tex_modified = true;
+    }
+
+    return retval;
 }
 
 
@@ -126,6 +131,7 @@ bool megamol::gui::LinearTransferFunctionEditor::DrawTransferFunctionEditor(void
 
     int selected_node = -1;
     int selected_chan = -1;
+    ImVec2 selected_delta = ImVec2(0.0f, 0.0f);
     for (int i = 0; i < this->data.size(); ++i) {
         ImU32 point_col = ImGui::ColorConvertFloat4ToU32(
             ImVec4(this->data[i][0], this->data[i][1], this->data[i][2], this->data[i][3]));
@@ -186,10 +192,11 @@ bool megamol::gui::LinearTransferFunctionEditor::DrawTransferFunctionEditor(void
             draw_list->AddCircle(point_cur_pos, point_radius_full, point_border_col, circle_subdiv, point_border);
             draw_list->AddCircleFilled(point_cur_pos, point_radius, point_col, 12);
 
-            ImVec2 delta_vec = ImVec2(point_cur_pos.x - mouse_cur_pos.x, point_cur_pos.y - mouse_cur_pos.y);
-            if (sqrtf((delta_vec.x * delta_vec.x) + (delta_vec.y * delta_vec.y)) <= point_radius_full) {
+            ImVec2 d = ImVec2(point_cur_pos.x - mouse_cur_pos.x, point_cur_pos.y - mouse_cur_pos.y);
+            if (sqrtf((d.x * d.x) + (d.y * d.y)) <= point_radius_full) {
                 selected_node = i;
                 selected_chan = c;
+                selected_delta = d;
             }
         }
     }
@@ -205,10 +212,11 @@ bool megamol::gui::LinearTransferFunctionEditor::DrawTransferFunctionEditor(void
             if (selected_node >= 0) {
                 this->point_select_node = selected_node;
                 this->point_select_chan = selected_chan;
+                this->point_select_delta = selected_delta;
             }
         } else if (io.MouseDown[0]) { // Left Move -> Move selecteed node
 
-            float new_x = (mouse_cur_pos.x - canvas_pos.x) / canvas_size.x;
+            float new_x = (mouse_cur_pos.x - canvas_pos.x + this->point_select_delta.x) / canvas_size.x;
             new_x = std::max(0.0f, std::min(new_x, 1.0f));
             if (this->point_select_node == 0) {
                 new_x = 0.0f;
@@ -220,7 +228,7 @@ bool megamol::gui::LinearTransferFunctionEditor::DrawTransferFunctionEditor(void
             }
             this->data[this->point_select_node][4] = new_x;
 
-            float new_y = 1.0f - ((mouse_cur_pos.y - canvas_pos.y) / canvas_size.y);
+            float new_y = 1.0f - ((mouse_cur_pos.y - canvas_pos.y + this->point_select_delta.y) / canvas_size.y);
             new_y = std::max(0.0f, std::min(new_y, 1.0f));
 
             if (this->plot_channels[0] && (this->point_select_chan == 0)) {
@@ -378,6 +386,17 @@ bool megamol::gui::LinearTransferFunctionEditor::DrawTransferFunctionEditor(void
     ImGui::Checkbox("Apply Changes Immediately", &this->imm_apply);
     if (this->imm_apply && imm_apply_tex_changed) {
         ret_val = true;
+    }
+
+    // DEBUG
+    ImGui::Separator();
+    ImGui::Text("DEBUG: ");
+    ImGui::SameLine();
+    if (ImGui::Button("Print LTF String ")) {
+        std::string tf;
+        if (this->GetTransferFunction(tf)) {
+            vislib::sys::Log::DefaultLog.WriteInfo("Transfer Function: \n%s\n", tf.c_str());
+        }
     }
 
     return ret_val;

@@ -253,6 +253,9 @@ private:
     /** Font size of font to load. */
     float font_new_size;
 
+    /** Additional UTF-8 glyph ranges for ImGui fonts. */
+    std::vector<ImWchar> utf8_ranges;
+
     // FUNCTIONS --------------------------------------------------------------
 
     /**
@@ -383,7 +386,8 @@ inline GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIR
     , font_new_load(false)
     , font_new_filename()
     , font_new_size(13.0f)
-    , inst_name() {
+    , inst_name()
+    , utf8_ranges() {
 
     this->decorated_renderer_slot.SetCompatibleCall<core::view::CallRender2DDescription>();
     this->MakeSlotAvailable(&this->decorated_renderer_slot);
@@ -439,7 +443,8 @@ inline GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GUIR
     , font_new_load(false)
     , font_new_filename()
     , font_new_size(13.0f)
-    , inst_name() {
+    , inst_name()
+    , utf8_ranges() {
 
     this->decorated_renderer_slot.SetCompatibleCall<core::view::CallRender3DDescription>();
     this->MakeSlotAvailable(&this->decorated_renderer_slot);
@@ -582,16 +587,34 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
     io.LogFilename = "imgui_log.txt";
     io.FontAllowUserScaling = true;
 
+    // Adding additional utf-8 glyph ranges
+    /// (there is no error if glyph has no representation in font atlas)
+    this->utf8_ranges.emplace_back(0x0020);
+    this->utf8_ranges.emplace_back(0x00FF); // Basic Latin + Latin Supplement
+    this->utf8_ranges.emplace_back(0x20AC);
+    this->utf8_ranges.emplace_back(0x20AC); // €
+    this->utf8_ranges.emplace_back(0x2122);
+    this->utf8_ranges.emplace_back(0x2122); // ™
+    this->utf8_ranges.emplace_back(0x212B);
+    this->utf8_ranges.emplace_back(0x212B); // Å
+    this->utf8_ranges.emplace_back(0x0391);
+    this->utf8_ranges.emplace_back(0x03D6); // greek alphabet
+    this->utf8_ranges.emplace_back(0);
+
     // Load initial fonts only once for all imgui contexts
     if (!other_context) {
-        io.Fonts->AddFontDefault();
+
+        ImFontConfig config;
+        config.OversampleH = 4;
+        config.OversampleV = 1;
+        config.GlyphRanges = this->utf8_ranges.data();
+
+        io.Fonts->AddFontDefault(&config);
+
 #ifdef _WIN32
         // Loading additional known fonts
         float font_size = 15.0f;
         std::string ext = ".ttf";
-        ImFontConfig config;
-        config.OversampleH = 4;
-        config.OversampleV = 1;
         const vislib::Array<vislib::StringW>& searchPaths =
             this->GetCoreInstance()->Configuration().ResourceDirectories();
         for (int i = 0; i < searchPaths.Count(); ++i) {
@@ -1136,6 +1159,8 @@ bool GUIRenderer<M, C>::renderGUI(vislib::math::Rectangle<int> viewport, double 
         ImFontConfig config;
         config.OversampleH = 4;
         config.OversampleV = 1;
+        config.GlyphRanges = this->utf8_ranges.data();
+        ;
         io.Fonts->AddFontFromFileTTF(this->font_new_filename.c_str(), this->font_new_size, &config);
         ImGui_ImplOpenGL3_CreateFontsTexture();
         // Load last added font
@@ -1489,11 +1514,14 @@ template <class M, class C> void GUIRenderer<M, C>::drawFontSelectionWindowCallb
     ImGui::Text("Load new Font from File");
 
     std::string label = "Font Filename (.ttf)";
+    vislib::StringA valueString;
+    vislib::UTF8Encoder::Encode(valueString, vislib::StringA(this->font_new_filename.c_str()));
     size_t bufferLength = GUI_MAX_BUFFER_LEN;
     char* buffer = new char[bufferLength];
-    memcpy(buffer, this->font_new_filename.c_str(), this->font_new_filename.size() + 1);
+    memcpy(buffer, valueString.PeekBuffer(), valueString.Length() + 1);
     ImGui::InputText(label.c_str(), buffer, bufferLength);
-    this->font_new_filename = buffer;
+    vislib::UTF8Encoder::Decode(valueString, vislib::StringA(buffer));
+    this->font_new_filename = valueString.PeekBuffer();
     delete[] buffer;
 
     label = "Font Size";
@@ -1667,12 +1695,14 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
                    "[Right-Click] on the individual color widget to show options.";
         } else if (auto* p = slot.template Param<core::param::LinearTransferFunctionParam>()) {
             auto value = p->Value();
-            if (ImGui::Button("Load LTF into Editor")) {
+            label = "Load LTF into Editor###" + modname + "::" + pname;
+            if (ImGui::Button(label.c_str())) {
                 this->active_tf_param = p;
                 // Load transfer function string
                 if (!this->SetTransferFunction(value)) {
+                    std::string name = modname + "::" + pname;
                     vislib::sys::Log::DefaultLog.WriteWarn(
-                        "[GUIRenderer] Couldn't load transfer function of parameter: %s.", label.c_str());
+                        "[GUIRenderer] Couldn't load transfer function of parameter: %s.", name.c_str());
                 }
                 // Open Transfer Function Editor window
                 for (auto& win : this->windows) {
@@ -1680,10 +1710,6 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
                         win.show = true;
                     }
                 }
-            }
-            ImGui::SameLine();
-            if (ImGui::Button("DEBUG: Print LTF String to Console")) {
-                vislib::sys::Log::DefaultLog.WriteInfo("Transfer Function: \n%s\n", value.c_str());
             }
 
         } else if (auto* p = slot.template Param<core::param::EnumParam>()) {

@@ -103,6 +103,9 @@ private:
     /** Currently selected color channel of selected node. */
     unsigned int point_select_chan;
 
+    /** Offset from center of point to initial drag position. */
+    ImVec2 point_select_delta;
+
     /** Flag for applying all changes immediately. */
     bool imm_apply;
 };
