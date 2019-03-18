@@ -3,7 +3,7 @@
 
     <shader name="vertex">
         <snippet type="version">150</snippet>
-        <snippet name="MainStart"                 type="file">simplesphere/mdao2v_vert_mainstart.glsl</snippet>
+        <snippet name="MainStart"                 type="file">simplesphere/mdao2_vert_mainstart.glsl</snippet>
         <snippet name="Corners"                   type="file">simplesphere/mdao2_vert_corners.glsl</snippet>
         <snippet name="MainEnd"                   type="file">simplesphere/mdao2_vert_mainend.glsl</snippet>
     </shader>
@@ -15,16 +15,16 @@
 
 
   
-    <namespace name="goemetry">
+    <namespace name="geometry">
         
         <shader name="vertex">
             <snippet type="version">150</snippet>
-            <snippet name="Main"                  type="file">simplesphere/mdao2v_geometry_vert_main.glsl</snippet>
+            <snippet name="Main"                  type="file">simplesphere/mdao2_geometry_vert_main.glsl</snippet>
         </shader>
 
         <shader name="geometry">
             <snippet type="version">150</snippet>
-            <snippet name="MainStart"             type="file">simplesphere/mdao2_geometry_goe_mainstart.glsl</snippet>
+            <snippet name="MainStart"             type="file">simplesphere/mdao2_geometry_geo_mainstart.glsl</snippet>
             <snippet name="Corners"               type="file">simplesphere/mdao2_vert_corners.glsl</snippet>
             <snippet name="MainEnd"               type="file">simplesphere/mdao2_geometry_geo_mainend.glsl</snippet>
         </shader>
@@ -41,13 +41,12 @@
         </shader>
 
         <shader name="fragment">
-            <snippet type="version">150</snippet>
             <snippet name="Main"                  type="file">simplesphere/mdao2_deferred_frag_main.glsl</snippet>
             
             <snippet name="Lighting"              type="file">simplesphere/mdao2_deferred_frag_lighting.glsl</snippet>
-            <snippet name="Lighting_Stub"         type="file">simplesphere/mdao2_deferred_frag_lighting_stub.glsl</snippet>
+            <snippet name="LightingStub"          type="file">simplesphere/mdao2_deferred_frag_lighting_stub.glsl</snippet>
             <snippet name="AmbientOcclusion"      type="file">simplesphere/mdao2_deferred_frag_ambocc.glsl</snippet>
-            <snippet name="AmbientOcclusion_Stub" type="file">simplesphere/mdao2_deferred_frag_ambocc_stub.glsl</snippet>
+            <snippet name="AmbientOcclusionStub"  type="file">simplesphere/mdao2_deferred_frag_ambocc_stub.glsl</snippet>
         </shader>
 
     </namespace>

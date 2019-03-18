@@ -83,7 +83,7 @@ bool MDAO2VolumeGenerator::Init()
 	if (computeAvailable) {
 		// Try to initialize the compute shader
 		vislib::SmartPtr<vislib::graphics::gl::ShaderSource::Snippet> mipmapSrc;
-		mipmapSrc = factory->MakeShaderSnippet("mdao2mipmap::compute");
+		mipmapSrc = factory->MakeShaderSnippet("mdao2mipmap::Compute");
 		try {
 			mipmapShader.Compile(mipmapSrc->PeekCode());
 			mipmapShader.Link();

@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <btf type="MegaMolGLSLShader" version="1.0" namespace="ngsphere">
+    
     <include file="common"/>
 
     <shader name="vertex">
-        <snippet type="version">400</snippet>
+        <snippet type="version">150</snippet>
         <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>
         <snippet name="Attributes"       type="file">simplesphere/ngsphere_vert_attributes.glsl</snippet>
         <snippet name="MainParams"       type="file">simplesphere/ngsphere_vert_mainparams.glsl</snippet>

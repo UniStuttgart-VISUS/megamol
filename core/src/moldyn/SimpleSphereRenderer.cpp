@@ -128,7 +128,7 @@ moldyn::SimpleSphereRenderer::SimpleSphereRenderer(void) : AbstractSimpleSphereR
     curMVP(),
     curMVPinv(),
     curMVPtransp(),
-    renderMode(RenderMode::NG),
+    renderMode(RenderMode::AMBIENT_OCCLUSION),
     sphereShader(),
     sphereGeometryShader(),
     vertShader(nullptr),
@@ -1781,7 +1781,7 @@ bool moldyn::SimpleSphereRenderer::rebuildShader()
         return false;
 
     if (!vislib::graphics::gl::GLSLGeometryShader::IsValidHandle(sphereGeometryShader) &&
-        !megamol::core::utility::InitializeShader(&factory, this->sphereGeometryShader, "mdao2::geovert", "mdao2::fragment", "mdao2::geogeo"))
+        !megamol::core::utility::InitializeShader(&factory, this->sphereGeometryShader, "mdao2::geometry::vertex", "mdao2::fragment", "mdao2::geometry::geometry"))
         return false;
 
 
@@ -1792,11 +1792,11 @@ bool moldyn::SimpleSphereRenderer::rebuildShader()
     bool enableAO = this->enableAOSlot.Param<megamol::core::param::BoolParam>()->Value();
     bool enableLighting = this->enableLightingSlot.Param<megamol::core::param::BoolParam>()->Value();
 
-    frag.Append(factory.MakeShaderSnippet("mdao2::deferred::fragment::main"));
+    frag.Append(factory.MakeShaderSnippet("mdao2::deferred::fragment::Main"));
     if (enableLighting)
-        frag.Append(factory.MakeShaderSnippet("mdao2::deferred::fragment::lighting"));
+        frag.Append(factory.MakeShaderSnippet("mdao2::deferred::fragment::Lighting"));
     else
-        frag.Append(factory.MakeShaderSnippet("mdao2::deferred::fragment::lighting_stub"));
+        frag.Append(factory.MakeShaderSnippet("mdao2::deferred::fragment::LightingStub"));
 
     if (enableAO) {
         float apex = this->aoConeApexSlot.Param<megamol::core::param::FloatParam>()->Value();
@@ -1808,10 +1808,10 @@ bool moldyn::SimpleSphereRenderer::rebuildShader()
         vislib::graphics::gl::ShaderSource::StringSnippet* dirSnippet = new vislib::graphics::gl::ShaderSource::StringSnippet(directionsCode.c_str());
         frag.Append(dirSnippet);
 
-        frag.Append(factory.MakeShaderSnippet("mdao2::deferred::fragment::ambocc"));
+        frag.Append(factory.MakeShaderSnippet("mdao2::deferred::fragment::AmbientOcclusion"));
     }
     else {
-        frag.Append(factory.MakeShaderSnippet("mdao2::deferred::fragment::ambocc_stub"));
+        frag.Append(factory.MakeShaderSnippet("mdao2::deferred::fragment::AmbientOcclusionStub"));
     }
 
     try {

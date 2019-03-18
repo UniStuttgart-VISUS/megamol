@@ -1,3 +1,5 @@
+#version 150
+
 uniform float inWidth;
 uniform float inHeight;
 
