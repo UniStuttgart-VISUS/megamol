@@ -28,6 +28,8 @@ view::AbstractCallRender& view::AbstractCallRender::operator=(
     this->time = rhs.time;
     this->instTime = rhs.instTime;
     this->isInSituTime = rhs.isInSituTime;
+    this->lastFrameTime = rhs.lastFrameTime;
+
     return *this;
 }
 
@@ -36,6 +38,6 @@ view::AbstractCallRender& view::AbstractCallRender::operator=(
  * view::AbstractCallRender::AbstractCallRender
  */
 view::AbstractCallRender::AbstractCallRender(void) : InputCall(), cntTimeFrames(1),
-        gpuAffinity(NO_GPU_AFFINITY), time(0.0f), instTime(0.0f), isInSituTime(false) {
+        gpuAffinity(NO_GPU_AFFINITY), time(0.0f), instTime(0.0f), isInSituTime(false), lastFrameTime(0.0) {
     // intentionally empty
 }

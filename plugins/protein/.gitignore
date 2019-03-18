@@ -1,0 +1,2 @@
+# specifically unignore the exe for msmsm
+!msms/msms.exe

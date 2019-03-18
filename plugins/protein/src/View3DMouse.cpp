@@ -27,7 +27,7 @@ protein::View3DMouse::View3DMouse(void) : core::view::View3D(),
     this->MakeSlotAvailable(&this->mouseSlot);
 
     // Slot for key modifier
-    this->enableSelectingSlot << new core::param::ButtonParam(vislib::sys::KeyCode::KEY_TAB);
+    this->enableSelectingSlot << new core::param::ButtonParam(core::view::Key::KEY_TAB);
     this->enableSelectingSlot.SetUpdateCallback(&View3DMouse::OnButtonEvent);
     this->MakeSlotAvailable(&this->enableSelectingSlot);
 }

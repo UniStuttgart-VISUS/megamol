@@ -100,11 +100,11 @@ ProteinExploder::ProteinExploder(void) :
     this->playParam.SetParameter(new param::BoolParam(false));
     this->MakeSlotAvailable(&this->playParam);
 
-    this->togglePlayParam << new param::ButtonParam('p');
+    this->togglePlayParam << new param::ButtonParam(core::view::Key::KEY_P);
     this->togglePlayParam.SetUpdateCallback(this, &ProteinExploder::onPlayToggleButton);
     this->MakeSlotAvailable(&this->togglePlayParam);
 
-    this->resetButtonParam << new param::ButtonParam('o');
+    this->resetButtonParam << new param::ButtonParam(core::view::Key::KEY_O);
     this->resetButtonParam.SetUpdateCallback(this, &ProteinExploder::onResetAnimationButton);
     this->MakeSlotAvailable(&this->resetButtonParam);
 

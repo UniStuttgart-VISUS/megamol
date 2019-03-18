@@ -307,6 +307,7 @@ namespace protein {
         megamol::core::param::ParamSlot colorTableFileParam;
         /** Parameter to toggle offscreen rendering */
         megamol::core::param::ParamSlot offscreenRenderingParam;
+		megamol::core::param::ParamSlot probeRadiusSlot;
 
         bool usePuxels;
         bool allowPuxels;

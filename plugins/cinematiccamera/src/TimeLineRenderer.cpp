@@ -22,7 +22,6 @@
 #include "vislib/sys/Log.h"
 #include "vislib/graphics/gl/SimpleFont.h"
 #include "vislib/graphics/BitmapImage.h"
-#include "vislib/sys/KeyCode.h"
 #include "vislib/math/ShallowMatrix.h"
 #include "vislib/math/Matrix.h"
 
@@ -99,13 +98,13 @@ TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule(),
     this->rulerFontParam.SetParameter(new param::FloatParam(this->fontSize, 0.000001f));
     this->MakeSlotAvailable(&this->rulerFontParam);
 
-    this->moveRightFrameParam.SetParameter(new param::ButtonParam(vislib::sys::KeyCode::KEY_RIGHT));
+    this->moveRightFrameParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_RIGHT));
     this->MakeSlotAvailable(&this->moveRightFrameParam);
 
-    this->moveLeftFrameParam.SetParameter(new param::ButtonParam(vislib::sys::KeyCode::KEY_LEFT));
+    this->moveLeftFrameParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_LEFT));
     this->MakeSlotAvailable(&this->moveLeftFrameParam);
 
-    this->resetPanScaleParam.SetParameter(new param::ButtonParam('p'));
+    this->resetPanScaleParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_P));
     this->MakeSlotAvailable(&this->resetPanScaleParam);
 }
 

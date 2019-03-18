@@ -52,8 +52,8 @@ void MEGAMOLCORE_CALLBACK fixFileNameEnum(const char *str, void *hCore) {
 
 }
 
-utility::HotFixFileName::HotFixFileName(gl::Window &wnd, void* hCore)
-        : AbstractUILayer(wnd), hCore(hCore) {
+utility::HotFixFileName::HotFixFileName(void* hCore)
+        : hCore(hCore) {
     // intentionally empty
 }
 

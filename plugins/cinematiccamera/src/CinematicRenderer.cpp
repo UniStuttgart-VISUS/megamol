@@ -35,7 +35,6 @@ CinematicRenderer::CinematicRenderer(void) : Renderer3DModule(),
     showHelpText(false),
     manipulator(), 
     manipulatorGrabbed(false),
-    showMode(false),
     textureShader(),
     fbo(),
     mouseX(0.0f),
@@ -52,13 +51,13 @@ CinematicRenderer::CinematicRenderer(void) : Renderer3DModule(),
     this->stepsParam.SetParameter(new param::IntParam((int)this->interpolSteps, 1));
     this->MakeSlotAvailable(&this->stepsParam);
 
-    this->toggleManipulateParam.SetParameter(new param::ButtonParam('m'));
+    this->toggleManipulateParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_M));
     this->MakeSlotAvailable(&this->toggleManipulateParam);
 
-    this->toggleHelpTextParam.SetParameter(new param::ButtonParam('h'));
+    this->toggleHelpTextParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_H));
     this->MakeSlotAvailable(&this->toggleHelpTextParam);
 
-    this->toggleManipOusideBboxParam.SetParameter(new param::ButtonParam('w'));
+    this->toggleManipOusideBboxParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_W));
     this->MakeSlotAvailable(&this->toggleManipOusideBboxParam);
 
     // Load spline interpolation keyframes at startup
@@ -442,19 +441,7 @@ bool CinematicRenderer::Render(megamol::core::view::CallRender3D& call) {
     float vpW = (float)(vpWidth);
 
     vislib::StringA leftLabel  = " TRACKING SHOT VIEW ";
-
-    vislib::StringA midLabel = "";
-///TODO:  Detect whether mouse interaction is consumed by view or not.
-    if (this->showMode) {
-        if (this->toggleManipulator == 0) { 
-            midLabel = "KEYFRAME manipulation (position along x,y,z | start/end control point)";
-        } else {// if (this->toggleManipulator == 1) { 
-            midLabel = "KEYFRAME manipulation (lookat | up | position along lookat)";
-        }
-    } 
-    //else {
-    //    midLabel = "SCENE manipulation";
-    //}
+    vislib::StringA midLabel   = "";
     vislib::StringA rightLabel = " [h] show help text ";
     if (this->showHelpText) {
         rightLabel = " [h] hide help text ";
@@ -500,7 +487,6 @@ bool CinematicRenderer::Render(megamol::core::view::CallRender3D& call) {
         helpText += "[ctrl+z] Undo keyframe changes. \n";
         helpText += "[ctrl+y] Redo keyframe changes. \n";
         helpText += "-----[ TRACKING SHOT VIEW ]----- \n";
-        helpText += "[tab] Toggle keyframe/scene manipulation mode. \n";
         helpText += "[m] Toggle different manipulators for the selected keyframe. \n";
         helpText += "[w] Show manipulators inside/outside of model bounding box. \n";
         helpText += "[l] Reset Look-At of selected keyframe. \n";
@@ -565,12 +551,18 @@ bool CinematicRenderer::Render(megamol::core::view::CallRender3D& call) {
 /*
 * CinematicRenderer::OnMouseButton
 */
-// !!!ONLY triggered when "TAB" is pressed => parameter 'enableMouseSelection' in View3D
 bool CinematicRenderer::OnMouseButton(megamol::core::view::MouseButton button, megamol::core::view::MouseButtonAction action, megamol::core::view::Modifiers mods) {
 
-    auto down = (action == MouseButtonAction::PRESS);
-
-    bool consumed = false;
+    auto* cr = this->rendererCallerSlot.CallAs<view::CallRender3D>();
+    if (cr) {
+        InputEvent evt;
+        evt.tag = InputEvent::Tag::MouseButton;
+        evt.mouseButtonData.button = button;
+        evt.mouseButtonData.action = action;
+        evt.mouseButtonData.mods = mods;
+        cr->SetInputEvent(evt);
+        if ((*cr)(view::CallRender3D::FnOnMouseButton)) return true;
+    }
 
     CallCinematicCamera *ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
     if (ccc == nullptr) return false;
@@ -580,10 +572,11 @@ bool CinematicRenderer::OnMouseButton(megamol::core::view::MouseButton button, m
         return false;
     }
 
+    bool consumed = false;
+
+    bool down = (action == core::view::MouseButtonAction::PRESS);
     if (button == MouseButton::BUTTON_LEFT) {
         if (down) {
-            this->showMode = true;
-
             // Check if manipulator is selected
             if (this->manipulator.CheckManipulatorHit(this->mouseX, this->mouseY)) {
                 this->manipulatorGrabbed = true;
@@ -602,8 +595,6 @@ bool CinematicRenderer::OnMouseButton(megamol::core::view::MouseButton button, m
             }
         }
         else {
-            this->showMode = false;
-
             // Apply changes of selected manipulator and control points
             if (this->manipulator.ProcessManipulatorHit(this->mouseX, this->mouseY)) {
 
@@ -620,114 +611,33 @@ bool CinematicRenderer::OnMouseButton(megamol::core::view::MouseButton button, m
         }
     }
 
-    if (!consumed) {
-        // Propagate only if event is not consumed 
-        auto* cr = this->rendererCallerSlot.CallAs<view::CallRender3D>();
-        if (cr == NULL) return false;
-        InputEvent evt;
-        evt.tag = InputEvent::Tag::MouseButton;
-        evt.mouseButtonData.button = button;
-        evt.mouseButtonData.action = action;
-        evt.mouseButtonData.mods = mods;
-        cr->SetInputEvent(evt);
-        if (!(*cr)(view::CallRender3D::FnOnMouseButton)) return false;
-    }
-
-    return true;
+    return consumed;
 }
 
 
 /*
 * CinematicRenderer::OnMouseMove
 */
-// !!!ONLY triggered when "TAB" is pressed => parameter 'enableMouseSelection' in View3D
 bool CinematicRenderer::OnMouseMove(double x, double y) {
 
-    bool consumed = false;
+    auto* cr = this->rendererCallerSlot.CallAs<view::CallRender3D>();
+    if (cr) {
+        InputEvent evt;
+        evt.tag = InputEvent::Tag::MouseMove;
+        evt.mouseMoveData.x = x;
+        evt.mouseMoveData.y = y;
+        cr->SetInputEvent(evt);
+        if ((*cr)(view::CallRender3D::FnOnMouseMove))  return true;
+    }
 
     // Just store current mouse position
     this->mouseX = (float)static_cast<int>(x);
     this->mouseY = (float)static_cast<int>(y);
 
     // Update position of grabbed manipulator
-    if (this->manipulatorGrabbed && this->manipulator.ProcessManipulatorHit(this->mouseX, this->mouseY)) {
-        consumed = true;
-    }
-
-    if (!consumed) {
-        auto* cr = this->rendererCallerSlot.CallAs<view::CallRender3D>();
-        if (cr) {
-            InputEvent evt;
-                evt.tag = InputEvent::Tag::MouseMove;
-                evt.mouseMoveData.x = x;
-                evt.mouseMoveData.y = y;
-                cr->SetInputEvent(evt);
-            if (!(*cr)(view::CallRender3D::FnOnMouseMove)) {
-                return false;
-            }
-        }
+    if (!(this->manipulatorGrabbed && this->manipulator.ProcessManipulatorHit(this->mouseX, this->mouseY))) {
+        return false;
     }
 
     return true;
 }
-
-
-/*
-* CinematicRenderer::OnKey
-*//*
-bool CinematicRenderer::OnKey(megamol::core::view::Key key, megamol::core::view::KeyAction action, megamol::core::view::Modifiers mods) {
-
-    // Unused
-
-    auto* cr = this->rendererCallerSlot.CallAs<view::CallRender3D>();
-    if (cr == NULL) return false;
-    InputEvent evt;
-    evt.tag = InputEvent::Tag::Key;
-    evt.keyData.key = key;
-    evt.keyData.action = action;
-    evt.keyData.mods = mods;
-    cr->SetInputEvent(evt);
-    if (!(*cr)(view::CallRender3D::FnOnKey)) return false;
-
-    return true;
-}
-*/
-
-/*
-* CinematicRenderer::OnChar
-*//*
-bool CinematicRenderer::OnChar(unsigned int codePoint) {
-
-    // Unused
-
-    auto* cr = this->rendererCallerSlot.CallAs<view::CallRender3D>();
-    if (cr == NULL) return false;
-    InputEvent evt;
-    evt.tag = InputEvent::Tag::Char;
-    evt.charData.codePoint = codePoint;
-    cr->SetInputEvent(evt);
-    if (!(*cr)(view::CallRender3D::FnOnChar)) return false;
-
-    return true;
-}
-*/
-
-/*
-* CinematicRenderer::OnMouseScroll
-*//*
-bool CinematicRenderer::OnMouseScroll(double dx, double dy) {
-
-    // Unused
-
-    auto* cr = this->rendererCallerSlot.CallAs<view::CallRender3D>();
-    if (cr == NULL) return false;
-    InputEvent evt;
-    evt.tag = InputEvent::Tag::MouseScroll;
-    evt.mouseScrollData.dx = dx;
-    evt.mouseScrollData.dy = dy;
-    cr->SetInputEvent(evt);
-    if (!(*cr)(view::CallRender3D::FnOnMouseScroll)) return false;
-
-    return true;
-}
-*/
