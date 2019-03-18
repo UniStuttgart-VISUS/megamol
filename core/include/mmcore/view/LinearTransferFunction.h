@@ -126,6 +126,12 @@ namespace view {
 #pragma warning (disable: 4251)
 #endif /* _WIN32 */
 
+        /** The callee slot called on request of a transfer function */
+        CalleeSlot getTFSlot;
+
+        /** Parameter continaing the transfer function data serialized into JSON string */
+        param::ParamSlot tfParam;
+
         /** The OpenGL texture object id */
         unsigned int texID;
 
@@ -140,12 +146,6 @@ namespace view {
 
         /** The interpolation mode */
         param::LinearTransferFunctionParam::InterpolationMode interpolMode;
-
-        /** The callee slot called on request of a transfer function */
-        CalleeSlot getTFSlot;
-
-        /** Parameter continaing the transfer function data serialized into JSON string */
-        param::ParamSlot tfParam;
 
 #ifdef _WIN32
 #pragma warning (default: 4251)

@@ -1655,6 +1655,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
 template <class M, class C>
 void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::ParamSlot& slot) {
 
+    ImGuiStyle& style = ImGui::GetStyle();
     std::string help;
 
     auto param = slot.Parameter();
@@ -1695,22 +1696,36 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
                    "[Right-Click] on the individual color widget to show options.";
         } else if (auto* p = slot.template Param<core::param::LinearTransferFunctionParam>()) {
             auto value = p->Value();
-            label = "Load LTF into Editor###" + modname + "::" + pname;
-            if (ImGui::Button(label.c_str())) {
-                this->active_tf_param = p;
-                // Load transfer function string
-                if (!this->SetTransferFunction(value)) {
-                    std::string name = modname + "::" + pname;
-                    vislib::sys::Log::DefaultLog.WriteWarn(
-                        "[GUIRenderer] Couldn't load transfer function of parameter: %s.", name.c_str());
-                }
-                // Open Transfer Function Editor window
-                for (auto& win : this->windows) {
-                    if (win.func == &GUIRenderer<M, C>::drawTFWindowCallback) {
-                        win.show = true;
+
+            label = "Load into Editor###editor" + modname + "::" + pname;
+            if (p != this->active_tf_param) {
+                if (ImGui::Button(label.c_str())) {
+                    this->active_tf_param = p;
+                    // Load transfer function string
+                    if (!this->SetTransferFunction(value)) {
+                        std::string name = modname + "::" + pname;
+                        vislib::sys::Log::DefaultLog.WriteWarn(
+                            "[GUIRenderer] Couldn't load transfer function of parameter: %s.", name.c_str());
+                    }
+                    // Open Transfer Function Editor window
+                    for (auto& win : this->windows) {
+                        if (win.func == &GUIRenderer<M, C>::drawTFWindowCallback) {
+                            win.show = true;
+                        }
                     }
                 }
+            } else {
+                ImGui::TextColored(style.Colors[ImGuiCol_ButtonHovered], "Currently loaded into Editor.");
             }
+            ImGui::SameLine();
+            label = "Copy to Clipboard###clipboard" + modname + "::" + pname;
+            if (ImGui::Button(label.c_str())) {
+                ImGui::SetClipboardText(value.c_str());
+            }
+            ImGui::Text("JSON String:");
+            ImGui::PushTextWrapPos(ImGui::GetContentRegionAvailWidth());
+            ImGui::TextDisabled(value.c_str());
+            ImGui::PopTextWrapPos();
 
         } else if (auto* p = slot.template Param<core::param::EnumParam>()) {
             // XXX: no UTF8 fanciness required here?

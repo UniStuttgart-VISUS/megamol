@@ -19,7 +19,7 @@ using namespace megamol::core::view;
 LinearTransferFunction::LinearTransferFunction(void)
     : Module()
     , getTFSlot("gettransferfunction", "Provides the transfer function")
-    , tfParam("TransferFunction", "The transfer function serialized into JSON string.")
+    , tfParam("TransferFunction", "The transfer function serialized as JSON string.")
     , texID(0)
     , texSize(1)
     , tex()

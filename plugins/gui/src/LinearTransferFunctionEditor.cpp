@@ -388,16 +388,5 @@ bool megamol::gui::LinearTransferFunctionEditor::DrawTransferFunctionEditor(void
         ret_val = true;
     }
 
-    // DEBUG
-    ImGui::Separator();
-    ImGui::Text("DEBUG: ");
-    ImGui::SameLine();
-    if (ImGui::Button("Print LTF String ")) {
-        std::string tf;
-        if (this->GetTransferFunction(tf)) {
-            vislib::sys::Log::DefaultLog.WriteInfo("Transfer Function: \n%s\n", tf.c_str());
-        }
-    }
-
     return ret_val;
 }
