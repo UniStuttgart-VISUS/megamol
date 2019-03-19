@@ -224,6 +224,9 @@ private:
      */
     void calcClientAreas(void);
 
+    /** Connection to a overlay renderer (e.g. GUIRenderer) */
+    mutable CallerSlot overlaySlot;
+
     /** Connection to the renderer 1 (left, top) */
     mutable CallerSlot render1Slot;
 

@@ -29,6 +29,7 @@
 #endif /* MEGAMOLCORE_WITH_DIRECT3D11 */
 #include "mmcore/view/CallCamParams.h"
 #include "mmcore/view/CallCamParamSync.h"
+#include "mmcore/view/CallSplitViewOverlay.h"
 #include "mmcore/CallVolumeData.h"
 #include "mmcore/moldyn/VolumeDataCall.h"
 #include "mmcore/misc/BezierCurvesListDataCall.h"
@@ -62,6 +63,7 @@ void factories::register_call_classes(factories::CallDescriptionManager& instanc
     instance.RegisterAutoDescription<view::CallRenderDeferred3D>();
     instance.RegisterAutoDescription<view::CallRenderView>();
     instance.RegisterAutoDescription<view::CallTimeControl>();
+    instance.RegisterAutoDescription<view::CallSplitViewOverlay>();
     instance.RegisterAutoDescription<DataWriterCtrlCall>();
     instance.RegisterAutoDescription<CallVolumeData>();
     instance.RegisterAutoDescription<moldyn::VolumeDataCall>();

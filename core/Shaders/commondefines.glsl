@@ -9,8 +9,6 @@
 #define AXISHINTS
 #endif // DEBUG
 
-//#define BULLSHIT
-
 #ifndef FLACH
 #define FLACH
-#endif
+#endif // FLACH

@@ -34,6 +34,11 @@ void ColorParam::Definition(vislib::RawStorage& outDef) const {
 }
 
 bool ColorParam::ParseValue(vislib::TString const& v) {
+
+    // Checked color syntax:
+    // 1] #123 #1234 #123456 #12345678
+    // 2] Colour(1.0;0.5;1.0;1.0) Colour(1.0;0.5;1.0)
+    // 3] 'Named Colour', e.g. Red
     try {
         float vParsed[4];
         if (core::utility::ColourParser::FromString(v, 4, vParsed)) {
@@ -43,6 +48,7 @@ bool ColorParam::ParseValue(vislib::TString const& v) {
         }
     } catch (...) {
     }
+
     return false;
 }
 
