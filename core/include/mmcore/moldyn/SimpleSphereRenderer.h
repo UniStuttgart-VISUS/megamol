@@ -172,6 +172,15 @@ namespace moldyn {
         typedef std::map <std::tuple<int, int, bool>, std::shared_ptr<GLSLShader> > shaderMap;
         typedef std::map <std::pair<int, int>, std::shared_ptr<GLSLShader> >        shaderMap_splat;
 
+        struct gpuParticleDataType {
+            GLuint vertexVBO, colorVBO, vertexArray;
+        };
+
+        struct gBufferDataType {
+            GLuint color, depth, normals;
+            GLuint fbo;
+        };
+
         // Current Render State -----------------------------------------------
 
         float curViewAttrib[4];
@@ -194,6 +203,8 @@ namespace moldyn {
 
         vislib::graphics::gl::GLSLShader         sphereShader;
         vislib::graphics::gl::GLSLGeometryShader sphereGeometryShader;
+        vislib::graphics::gl::GLSLShader         lightingShader;
+
         vislib::SmartPtr<ShaderSource>           vertShader;
         vislib::SmartPtr<ShaderSource>           fragShader;
         vislib::SmartPtr<ShaderSource>           geoShader;
@@ -217,20 +228,6 @@ namespace moldyn {
         GLuint                                   singleBufferCreationBits;
         GLuint                                   singleBufferMappingBits;
 
-        //TimeMeasure                            timer;
-
-        // Ambient Occlusion --------------------------------------------------
-
-        struct gpuParticleDataType {
-            GLuint vertexVBO, colorVBO, vertexArray;
-        };
-
-        struct gBufferDataType {
-            GLuint color, depth, normals;
-            GLuint fbo;
-        };
-
-        vislib::graphics::gl::GLSLShader         lightingShader;
         std::vector<gpuParticleDataType>         gpuData;
         gBufferDataType                          gBuffer;
         SIZE_T                                   oldHash;
@@ -238,6 +235,8 @@ namespace moldyn {
         vislib::math::Vector<float, 2>           ambConeConstants;
         GLuint                                   tfFallbackHandle;
         core::utility::MDAO2VolumeGenerator     *volGen;
+
+        //TimeMeasure                            timer;
 
         /*********************************************************************/
         /* PARAMETERS                                                        */

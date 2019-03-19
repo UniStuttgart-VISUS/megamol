@@ -136,6 +136,7 @@ moldyn::SimpleSphereRenderer::SimpleSphereRenderer(void) : AbstractSimpleSphereR
     renderMode(RenderMode::AMBIENT_OCCLUSION),
     sphereShader(),
     sphereGeometryShader(),
+    lightingShader(),
     vertShader(nullptr),
     fragShader(nullptr),
     geoShader(nullptr),
@@ -155,29 +156,28 @@ moldyn::SimpleSphereRenderer::SimpleSphereRenderer(void) : AbstractSimpleSphereR
     theSingleMappedMem(nullptr),
     singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT), 
     singleBufferMappingBits( GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT),
-    //timer(),
-    lightingShader(),
     gpuData(),
     gBuffer(),
-    oldHash(),
+    oldHash(0),
     oldFrameID(0),
     ambConeConstants(),
     tfFallbackHandle(0),
     volGen(nullptr),
+    //timer(),
     renderModeParam(       "renderMode",                 "The sphere render mode."),
     toggleModeParam(       "renderModeButton",           "Toggle sphere render modes."),
     radiusScalingParam(    "scaling",                    "Scaling factor for particle radii."),
-    alphaScalingParam(     "ngsplat::alphaScaling",      "NGSplat: Scaling factor for particle alpha."), 
-    attenuateSubpixelParam("ngsplat::attenuateSubpixel", "NGSplat: Attenuate alpha of points that should have subpixel size."),
-    enableLightingSlot(    "ao::enable_lighting",        "Lighting"),
-    enableAOSlot(          "ao::enable_ao",              "Enable Ambient Occlusion"),
-    enableGeometryShader(  "ao::use_gs_proxies",         "Enables rendering using triangle strips from the geometry shader"),
-    aoVolSizeSlot(         "ao::volsize",                "Longest volume edge"),
-    aoConeApexSlot(        "ao::apex",                   "Cone Apex Angle"),
-    aoOffsetSlot(          "ao::offset",                 "AO Offset from Surface"),
-    aoStrengthSlot(        "ao::strength",               "AO Strength"),
-    aoConeLengthSlot(      "ao::conelen",                "AO Cone length"),
-    useHPTexturesSlot(     "ao::high_prec_tex",          "Use high precision textures")
+    alphaScalingParam(     "splat::alphaScaling",        "NG Splat: Scaling factor for particle alpha."), 
+    attenuateSubpixelParam("splat::attenuateSubpixel",   "NG Splat: Attenuate alpha of points that should have subpixel size."),
+    enableLightingSlot(    "ao::enable_lighting",        "Ambient Occlusion: Enable Lighting"),
+    enableAOSlot(          "ao::enable_ao",              "Ambient Occlusion: Enable Ambient Occlusion"),
+    enableGeometryShader(  "ao::use_gs_proxies",         "Ambient Occlusion: Enables rendering using triangle strips from the geometry shader"),
+    aoVolSizeSlot(         "ao::volsize",                "Ambient Occlusion: Longest volume edge"),
+    aoConeApexSlot(        "ao::apex",                   "Ambient Occlusion: Cone Apex Angle"),
+    aoOffsetSlot(          "ao::offset",                 "Ambient Occlusion: Offset from Surface"),
+    aoStrengthSlot(        "ao::strength",               "Ambient Occlusion: Strength"),
+    aoConeLengthSlot(      "ao::conelen",                "Ambient Occlusion: Cone length"),
+    useHPTexturesSlot(     "ao::high_prec_tex",          "Ambient Occlusion: Use high precision textures")
     //forceTimeSlot(         "ao::forceTime",              "Flag to force the time code to the specified value. Set to true when rendering a video.")
 {
 
@@ -333,19 +333,27 @@ bool moldyn::SimpleSphereRenderer::resetResources(void) {
         delete this->volGen;
         this->volGen = nullptr;
     }
+
     glDeleteTextures(3, reinterpret_cast<GLuint*>(&this->gBuffer));
     glDeleteFramebuffers(1, &(this->gBuffer.fbo));
+
+    glDeleteTextures(1, &(this->tfFallbackHandle));
+
+    for (int i = 0; i < this->gpuData.size(); ++i) {
+        glDeleteVertexArrays(3, reinterpret_cast<GLuint*>(&(this->gpuData[i])));
+    }
     this->gpuData.clear();
 
     glUnmapNamedBufferEXT(this->theSingleBuffer);
+
     for (auto &x : fences) {
         if (x) {
             glDeleteSync(x);
         }
     }
 
-    glDeleteBuffers(1, &this->theSingleBuffer);
-    glDeleteVertexArrays(1, &this->vertArray);
+    glDeleteBuffers(1, &(this->theSingleBuffer));
+    glDeleteVertexArrays(1, &(this->vertArray));
 
     this->currBuf = 0;
     this->bufSize = (32 * 1024 * 1024);
@@ -353,10 +361,13 @@ bool moldyn::SimpleSphereRenderer::resetResources(void) {
     this->fences.clear();
     this->fences.resize(numBuffers);
 
+    this->oldHash = 0;
+    this->oldFrameID = 0;
+
     this->colType = SimpleSphericalParticles::ColourDataType::COLDATA_NONE;
     this->vertType = SimpleSphericalParticles::VertexDataType::VERTDATA_NONE;
 
-    // this variant should not need the fence
+    /// This variant should not need the fence (?)
     //singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_COHERENT_BIT);
     //singleBufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_COHERENT_BIT); 
     this->singleBufferCreationBits = (GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT);
@@ -510,7 +521,13 @@ bool moldyn::SimpleSphereRenderer::createResources() {
                 // Generate texture and frame buffer handles
                 glGenTextures(3, reinterpret_cast<GLuint*>(&this->gBuffer));
                 glGenFramebuffers(1, &(this->gBuffer.fbo));
-                ///this->rebuildGBuffer();
+
+                //glGetFloatv(GL_VIEWPORT, this->curViewAttrib);
+                //this->curVpWidth = static_cast<int>(this->curViewAttrib[2]);
+                //this->curVpHeight = static_cast<int>(this->curViewAttrib[3]);
+                //this->lastVpHeight = 0;
+                //this->lastVpWidth = 0;
+                //this->rebuildGBuffer();
 
                 // Build the sphere shader	
                 this->rebuildShader();
@@ -594,13 +611,14 @@ bool moldyn::SimpleSphereRenderer::Render(view::CallRender3D& call) {
 
     // Update current state variables -----------------------------------------
     glGetFloatv(GL_VIEWPORT, this->curViewAttrib);
-    glPointSize(vislib::math::Max(this->curViewAttrib[2], this->curViewAttrib[3]));
     this->curVpWidth = static_cast<int>(this->curViewAttrib[2]);
     this->curVpHeight = static_cast<int>(this->curViewAttrib[3]);
     if (this->curViewAttrib[2] < 1.0f) this->curViewAttrib[2] = 1.0f;
     if (this->curViewAttrib[3] < 1.0f) this->curViewAttrib[3] = 1.0f;
     this->curViewAttrib[2] = 2.0f / this->curViewAttrib[2];
     this->curViewAttrib[3] = 2.0f / this->curViewAttrib[3];
+
+    glPointSize(static_cast<GLfloat>(std::max(this->curVpWidth, this->curVpHeight)));
 
     this->getClipData(this->curClipDat, this->curClipCol);
 
@@ -650,13 +668,14 @@ bool moldyn::SimpleSphereRenderer::Render(view::CallRender3D& call) {
 
     glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
-    // timer.EndFrame();
-
+    // Save some current data
     this->lastVpHeight = this->curVpHeight;
     this->lastVpWidth = this->curVpWidth;
     for (size_t i = 0; i < 4; ++i) {
         this->oldClipDat[i] = this->curClipDat[i];
     }
+
+    // timer.EndFrame();
 
 #ifdef DEBUG_GL_CALLBACK
     glDisable(GL_DEBUG_OUTPUT);
@@ -1203,6 +1222,7 @@ bool moldyn::SimpleSphereRenderer::renderAmbientOcclusion(view::CallRender3D* cr
     {
         this->aoConeApexSlot.ResetDirty();
         this->enableLightingSlot.ResetDirty();
+        this->enableAOSlot.ResetDirty();
 
         this->rebuildShader();
     }
@@ -1727,8 +1747,9 @@ void moldyn::SimpleSphereRenderer::waitSingle(GLsync& syncObj) {
  */
 bool moldyn::SimpleSphereRenderer::rebuildGBuffer()
 {
-    if (this->curVpWidth == this->lastVpWidth && this->curVpHeight == this->lastVpHeight && !this->useHPTexturesSlot.IsDirty())
+    if ((this->curVpWidth == this->lastVpWidth) && (this->curVpHeight == this->lastVpHeight) && !this->useHPTexturesSlot.IsDirty()) {
         return true;
+    }
 
     this->useHPTexturesSlot.ResetDirty();
 
@@ -1755,11 +1776,11 @@ bool moldyn::SimpleSphereRenderer::rebuildGBuffer()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, this->curVpWidth, this->curVpHeight, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, nullptr);
 
+    glBindTexture(GL_TEXTURE_2D, 0);
+
      // Configure the framebuffer object
     GLint prevFBO;
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prevFBO);
-
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     glBindFramebuffer(GL_FRAMEBUFFER, this->gBuffer.fbo);                                                     checkGLError;
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this->gBuffer.color, 0);      checkGLError;
@@ -1786,12 +1807,14 @@ bool moldyn::SimpleSphereRenderer::rebuildShader()
 
     // Create the sphere shader if neccessary
     if (!vislib::graphics::gl::GLSLShader::IsValidHandle(this->sphereShader) &&
-        !megamol::core::utility::InitializeShader(&factory, this->sphereShader, "mdao2::vertex", "mdao2::fragment"))
+        !megamol::core::utility::InitializeShader(&factory, this->sphereShader, "mdao2::vertex", "mdao2::fragment")) {
         return false;
+    }
 
-    if (!vislib::graphics::gl::GLSLGeometryShader::IsValidHandle(sphereGeometryShader) &&
-        !megamol::core::utility::InitializeShader(&factory, this->sphereGeometryShader, "mdao2::geometry::vertex", "mdao2::fragment", "mdao2::geometry::geometry"))
+    if (!vislib::graphics::gl::GLSLGeometryShader::IsValidHandle(this->sphereGeometryShader) &&
+        !megamol::core::utility::InitializeShader(&factory, this->sphereGeometryShader, "mdao2::geometry::vertex", "mdao2::fragment", "mdao2::geometry::geometry")) {
         return false;
+    }
 
 
     // Load the vertex shader
@@ -1802,17 +1825,20 @@ bool moldyn::SimpleSphereRenderer::rebuildShader()
     bool enableLighting = this->enableLightingSlot.Param<megamol::core::param::BoolParam>()->Value();
 
     frag.Append(factory.MakeShaderSnippet("mdao2::deferred::fragment::Main"));
-    if (enableLighting)
+
+    if (enableLighting) {
         frag.Append(factory.MakeShaderSnippet("mdao2::deferred::fragment::Lighting"));
-    else
+    }
+    else {
         frag.Append(factory.MakeShaderSnippet("mdao2::deferred::fragment::LightingStub"));
+    }
 
     if (enableAO) {
         float apex = this->aoConeApexSlot.Param<megamol::core::param::FloatParam>()->Value();
 
         std::vector<vislib::math::Vector<float, 4> > directions;
-        generate3ConeDirections(directions, apex *static_cast<float>(M_PI) / 180.0f);
-        std::string directionsCode = generateDirectionShaderArrayString(directions, "coneDirs");
+        this->generate3ConeDirections(directions, apex *static_cast<float>(M_PI) / 180.0f);
+        std::string directionsCode = this->generateDirectionShaderArrayString(directions, "coneDirs");
 
         vislib::graphics::gl::ShaderSource::StringSnippet* dirSnippet = new vislib::graphics::gl::ShaderSource::StringSnippet(directionsCode.c_str());
         frag.Append(dirSnippet);
@@ -1991,38 +2017,38 @@ void moldyn::SimpleSphereRenderer::rebuildWorkingData(megamol::core::view::CallR
     unsigned int frameID = dataCall->FrameID();
 
     // Check if we got a new data set
-    bool stateInvalid = (hash != oldHash || frameID != oldFrameID);
+    bool stateInvalid = (hash != this->oldHash || frameID != this->oldFrameID);
 
-    oldHash = hash;
-    oldFrameID = frameID;
+    this->oldHash = hash;
+    this->oldFrameID = frameID;
 
     // Upload new data if neccessary
     if (stateInvalid) {
         unsigned int partsCount = dataCall->GetParticleListCount();
 
         // Add buffers if neccessary
-        for (unsigned int i = static_cast<unsigned int>(gpuData.size()); i < partsCount; ++i) {
+        for (unsigned int i = static_cast<unsigned int>(this->gpuData.size()); i < partsCount; ++i) {
             gpuParticleDataType data;
 
             glGenVertexArrays(1, &(data.vertexArray));
             glGenBuffers(1, &(data.vertexVBO));
             glGenBuffers(1, &(data.colorVBO));
 
-            gpuData.push_back(data);
+            this->gpuData.push_back(data);
         }
 
         // Remove buffers if neccessary
-        while (gpuData.size() > partsCount) {
-            gpuParticleDataType &data = gpuData.back();
+        while (this->gpuData.size() > partsCount) {
+            gpuParticleDataType &data = this->gpuData.back();
             glDeleteVertexArrays(1, &(data.vertexArray));
             glDeleteBuffers(1, &(data.vertexVBO));
             glDeleteBuffers(1, &(data.colorVBO));
-            gpuData.pop_back();
+            this->gpuData.pop_back();
         }
 
         // Reupload buffers
         for (unsigned int i = 0; i < partsCount; ++i) {
-            uploadDataToGPU(gpuData[i], dataCall->AccessParticles(i));
+            uploadDataToGPU(this->gpuData[i], dataCall->AccessParticles(i));
         }
     }
 
@@ -2075,11 +2101,11 @@ void moldyn::SimpleSphereRenderer::rebuildWorkingData(megamol::core::view::CallR
         this->volGen->ClearVolume();
 
         this->volGen->StartInsertion(cube, vislib::math::Vector<float, 4>(this->curClipDat[0], this->curClipDat[1], this->curClipDat[2], this->curClipDat[3]));
-        for (unsigned int i = 0; i < gpuData.size(); ++i) {
+        for (unsigned int i = 0; i < this->gpuData.size(); ++i) {
             float globalRadius = 0.0f;
             if (dataCall->AccessParticles(i).GetVertexDataType() != megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR)
                 globalRadius = dataCall->AccessParticles(i).GetGlobalRadius();
-            this->volGen->InsertParticles(static_cast<unsigned int>(dataCall->AccessParticles(i).GetCount()), globalRadius, gpuData[i].vertexArray);
+            this->volGen->InsertParticles(static_cast<unsigned int>(dataCall->AccessParticles(i).GetCount()), globalRadius, this->gpuData[i].vertexArray);
         }
         this->volGen->EndInsertion();
 
