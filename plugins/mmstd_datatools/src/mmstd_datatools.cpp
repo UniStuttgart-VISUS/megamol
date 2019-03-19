@@ -77,6 +77,8 @@
 #include "ParticleTranslateRotateScale.h"
 #include "MeshTranslateRotateScale.h"
 #include "ParticleVisibilityFromVolume.h"
+#include "IColToIdentity.h"
+#include "ParticleIdentitySort.h"
 
 /*
  * mmplgPluginAPIVersion
@@ -216,6 +218,8 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::io::PLYDataSource>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::MeshTranslateRotateScale>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleVisibilityFromVolume>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::IColToIdentity>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleIdentitySort>();
 
             // register calls here:
             this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::CallFloatTableData>();

@@ -1,5 +1,5 @@
 /*
- * ViewMouseUILayer.h
+ * ViewUILayer.h
  *
  * Copyright (C) 2016 MegaMol Team
  * Alle Rechte vorbehalten. All rights reserved.
@@ -16,7 +16,7 @@ namespace console {
      */
     class ViewUILayer : public AbstractUILayer {
     public:
-        ViewUILayer(gl::Window& wnd, void * viewHandle);
+        ViewUILayer(void * viewHandle);
         virtual ~ViewUILayer();
 
         virtual void OnResize(int w, int h);

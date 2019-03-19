@@ -12,11 +12,20 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+
+#include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/view/Renderer3DModule.h"
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "MultiParticleDataCall.h"
+#include "mmcore/CoreInstance.h"
+#include "mmcore/view/CallClipPlane.h"
+#include "mmcore/view/CallGetTransferFunction.h"
+#include "mmcore/view/CallRender3D.h"
+#include "mmcore/param/BoolParam.h"
+
+#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib/assert.h"
 
 
 namespace megamol {
@@ -24,7 +33,7 @@ namespace core {
 namespace moldyn {
 
     /**
-     * Renderer for simple sphere glyphs
+     * Abstract renderer for simple sphere glyphs.
      */
     class MEGAMOLCORE_API AbstractSimpleSphereRenderer : public view::Renderer3DModule {
     public:
@@ -38,13 +47,6 @@ namespace moldyn {
         virtual ~AbstractSimpleSphereRenderer(void);
 
         /**
-         * Implementation of 'Create'.
-         *
-         * @return 'true' on success, 'false' otherwise.
-         */
-        virtual bool create(void);
-
-        /**
          * The get extents callback. The module should set the members of
          * 'call' to tell the caller the extents of its data (bounding boxes
          * and times).
@@ -53,12 +55,7 @@ namespace moldyn {
          *
          * @return The return value of the function.
          */
-        virtual bool GetExtents(Call& call);
-
-        /**
-         * Implementation of 'Release'.
-         */
-        virtual void release(void);
+        virtual bool GetExtents(megamol::core::view::CallRender3D& call);
 
         ///**
         // * The render callback.
@@ -67,33 +64,40 @@ namespace moldyn {
         // *
         // * @return The return value of the function.
         // */
-        //virtual bool Render(Call& call);
+        //virtual bool Render(megamol::core::view::CallRender3D& call);
 
-        ///** The sphere shader */
-        //vislib::graphics::gl::GLSLShader sphereShader;
+    protected:
+
+        /**
+         * Implementation of 'Create'.
+         *
+         * @return 'true' on success, 'false' otherwise.
+         */
+        virtual bool create(void);
+
+        /**
+         * Implementation of 'Release'.
+         */
+        virtual void release(void);
 
         /**
          * TODO: Document
+         *
+         * @param t           ...
+         * @param outScaling  ...
+         *
+         * @return Pointer to MultiParticleDataCall ...
          */
         MultiParticleDataCall *getData(unsigned int t, float& outScaling);
 
         /**
          * TODO: Document
          *
-         * @param clipDat points to four floats
-         * @param clipCol points to four floats
+         * @param clipDat  Points to four floats ...
+         * @param clipCol  Points to four floats ....
          */
         void getClipData(float *clipDat, float *clipCol);
 
-    private:
-
-        /** The call for data */
-        CallerSlot getDataSlot;
-
-        /** The call for clipping plane */
-        CallerSlot getClipPlaneSlot;
-
-    protected:
 
         /**
          * Answer the value of the forceTimeSlot parameter
@@ -113,6 +117,17 @@ namespace moldyn {
 
         /** Determine whether global or local bbox should be used */
         param::ParamSlot useLocalBBoxParam;
+
+    private:
+
+        /** The call for data */
+        CallerSlot getDataSlot;
+
+        /** The call for clipping plane */
+        CallerSlot getClipPlaneSlot;
+
+        ///** The sphere shader */
+        //vislib::graphics::gl::GLSLShader sphereShader;
 
     };
 

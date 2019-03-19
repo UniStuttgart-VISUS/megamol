@@ -39,7 +39,8 @@ namespace datatools {
             FRACTIONAL_ANISOTROPY,
             DENSITY,
             PRESSURE,
-            NEIGHBORS
+            NEIGHBORS,
+            NEAREST_DISTANCE
         };
 
         /** Return module class name */
@@ -96,6 +97,7 @@ namespace datatools {
 
         float computeTemperature(std::vector<std::pair<size_t, float> > &matches, size_t num_matches, float mass, float freedom);
         float computeFractionalAnisotropy(std::vector<std::pair<size_t, float> > &matches, size_t num_matches);
+        float computeDensity(std::vector<std::pair<size_t, float> > &matches, size_t num_matches, float const curPoint[3], float radius, vislib::math::Cuboid<float> const& bbox);
 
         core::param::ParamSlot cyclXSlot;
         core::param::ParamSlot cyclYSlot;
@@ -113,6 +115,7 @@ namespace datatools {
         core::param::ParamSlot extremeValueSlot;
         
         size_t datahash;
+        size_t myHash = 0;
         int lastTime;
         std::vector<float> newColors;
         std::vector<size_t> allParts;

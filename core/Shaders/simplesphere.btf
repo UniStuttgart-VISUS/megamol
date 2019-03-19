@@ -3,25 +3,25 @@
     <include file="common"/>
 
     <shader name="vertex">
-        <snippet type="version">110</snippet>
-        <snippet name="common::defines"/>
-        <snippet name="attributes" type="file">simplesphere/attributes.glsl</snippet>
-        <snippet name="MainParams" type="file">simplesphere/vert_mainparams.glsl</snippet>
-        <snippet name="posTrans" type="file">simplesphere/vert_postrans.glsl</snippet>
-        <snippet name="clippingPlane" type="file">simplesphere/vert_clipping.glsl</snippet>
-        <snippet name="SphereTouchPlane" type="file">simplesphere/vert_spheretouchplane.glsl</snippet>
-        <snippet name="Output" type="file">simplesphere/vert_output.glsl</snippet>
-        <snippet name="MainEnd" type="file">simplesphere/vert_mainend.glsl</snippet>
+        <snippet type="version">150</snippet>
+        <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>
+        <snippet name="Attributes"       type="file">simplesphere/simple_vert_attributes.glsl</snippet>
+        <snippet name="MainStart"        type="file">simplesphere/simple_vert_mainstart.glsl</snippet>
+        <snippet name="PosTrans"         type="file">simplesphere/simple_vert_postrans.glsl</snippet>
+        <snippet name="ClippingPlane"    type="file">simplesphere/simple_vert_clipping.glsl</snippet>
+        <snippet name="SphereTouchPlane" type="file">simplesphere/simple_vert_spheretouchplane.glsl</snippet>
+        <snippet name="PosOutput"        type="file">simplesphere/simple_vert_posout.glsl</snippet>
+        <snippet name="MainEnd"          type="file">simplesphere/simple_vert_mainend.glsl</snippet>
     </shader>
 
     <shader name="fragment">
-        <snippet type="version">110</snippet>
-        <snippet name="common::defines"/>
-        <snippet name="common::lighting::simple"/>
-        <snippet name="body1" type="file">simplesphere/frag_body1.glsl</snippet>
-        <snippet name="out-lighting" type="file">simplesphere/frag_out-lighting.glsl</snippet>
-        <snippet name="out-depth" type="file">simplesphere/frag_out-depth.glsl</snippet>
-        <snippet name="footer" type="file">simplesphere/frag_footer.glsl</snippet>
+        <snippet type="version">150</snippet>
+        <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>
+        <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
+        <snippet name="MainStart"        type="file">simplesphere/simple_frag_mainstart.glsl</snippet>
+        <snippet name="OutLighting"      type="file">simplesphere/simple_frag_out-lighting.glsl</snippet>
+        <snippet name="OutDepth"         type="file">simplesphere/simple_frag_out-depth.glsl</snippet>
+        <snippet name="MainEnd"          type="file">simplesphere/simple_frag_mainend.glsl</snippet>
     </shader>
 
 </btf>

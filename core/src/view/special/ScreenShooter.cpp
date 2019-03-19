@@ -238,7 +238,7 @@ view::special::ScreenShooter::ScreenShooter() : job::AbstractJob(), Module(),
     this->backgroundSlot << bkgnd;
     this->MakeSlotAvailable(&this->backgroundSlot);
 
-    this->triggerButtonSlot << new param::ButtonParam(vislib::sys::KeyCode::KEY_MOD_ALT | 's');
+    this->triggerButtonSlot << new param::ButtonParam(core::view::Key::KEY_S, core::view::Modifier::ALT);
     this->triggerButtonSlot.SetUpdateCallback(&ScreenShooter::triggerButtonClicked);
     this->MakeSlotAvailable(&this->triggerButtonSlot);
 
@@ -438,6 +438,11 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView *view) {
         png_set_IHDR(data.pngPtr, data.pngInfoPtr, data.imgWidth, data.imgHeight, 8,
             (bkgndMode == 1) ? PNG_COLOR_TYPE_RGB_ALPHA : PNG_COLOR_TYPE_RGB, 
             PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
+
+        // todo: just put the whole project file into one string, even better would ofc be
+        // to have a legal exif structure (lol)
+        //png_byte info[] = "heinzor:blah";
+        //png_set_eXIf_1(data.pngPtr, data.pngInfoPtr, sizeof(info), info);
 
         // check how complex the upcoming action is
         if ((data.imgWidth <= data.tileWidth) && (data.imgHeight <= data.tileHeight)) {

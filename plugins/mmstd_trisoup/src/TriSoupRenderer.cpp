@@ -21,7 +21,6 @@
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/FilePathParam.h"
-#include "vislib/sys/KeyCode.h"
 #include "vislib/sys/Log.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib/sys/MemmappedFile.h"

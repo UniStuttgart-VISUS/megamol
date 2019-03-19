@@ -83,7 +83,7 @@ QuickSurfRaycaster::QuickSurfRaycaster(void) : Renderer3DModule(),
 	this->convertedIsoValueParam.SetParameter(new param::FloatParam(0.1f, 0.0f, 1.0f));
 	this->MakeSlotAvailable(&this->convertedIsoValueParam);
 
-	this->triggerConvertButtonParam.SetParameter(new param::ButtonParam('I'));
+	this->triggerConvertButtonParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_I));
 	this->MakeSlotAvailable(&this->triggerConvertButtonParam);
 
 	this->scalingFactor.SetParameter(new param::FloatParam(1.0f, 0.0f));
