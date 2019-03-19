@@ -522,13 +522,6 @@ bool moldyn::SimpleSphereRenderer::createResources() {
                 glGenTextures(3, reinterpret_cast<GLuint*>(&this->gBuffer));
                 glGenFramebuffers(1, &(this->gBuffer.fbo));
 
-                //glGetFloatv(GL_VIEWPORT, this->curViewAttrib);
-                //this->curVpWidth = static_cast<int>(this->curViewAttrib[2]);
-                //this->curVpHeight = static_cast<int>(this->curViewAttrib[3]);
-                //this->lastVpHeight = 0;
-                //this->lastVpWidth = 0;
-                //this->rebuildGBuffer();
-
                 // Build the sphere shader	
                 this->rebuildShader();
 
@@ -1249,7 +1242,7 @@ bool moldyn::SimpleSphereRenderer::renderAmbientOcclusion(view::CallRender3D* cr
 
     glBindFramebuffer(GL_FRAMEBUFFER, prevFBO);
 
-    renderDeferredPass(cr3d);
+    this->renderDeferredPass(cr3d);
 
     return true;
 }
@@ -1742,60 +1735,6 @@ void moldyn::SimpleSphereRenderer::waitSingle(GLsync& syncObj) {
 
 // Ambient Occlusion ----------------------------------------------------------
 
-/*
- * moldyn::SimpleSphereRenderer::rebuildGBuffer
- */
-bool moldyn::SimpleSphereRenderer::rebuildGBuffer()
-{
-    if ((this->curVpWidth == this->lastVpWidth) && (this->curVpHeight == this->lastVpHeight) && !this->useHPTexturesSlot.IsDirty()) {
-        return true;
-    }
-
-    this->useHPTexturesSlot.ResetDirty();
-
-    bool highPrecision = this->useHPTexturesSlot.Param<megamol::core::param::BoolParam>()->Value();
-
-    glBindTexture(GL_TEXTURE_2D, this->gBuffer.color);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, this->curVpWidth, this->curVpHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
-
-    glBindTexture(GL_TEXTURE_2D, this->gBuffer.normals);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexImage2D(GL_TEXTURE_2D, 0, highPrecision ? GL_RGBA32F : GL_RGBA, this->curVpWidth, this->curVpHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
-
-    glBindTexture(GL_TEXTURE_2D, this->gBuffer.depth);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, this->curVpWidth, this->curVpHeight, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, nullptr);
-
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-     // Configure the framebuffer object
-    GLint prevFBO;
-    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prevFBO);
-
-    glBindFramebuffer(GL_FRAMEBUFFER, this->gBuffer.fbo);                                                     checkGLError;
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this->gBuffer.color, 0);      checkGLError;
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, this->gBuffer.normals, 0);    checkGLError;
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, this->gBuffer.depth, 0);       checkGLError;
-
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-        std::cout << "Framebuffer NOT complete!" << std::endl;
-    }
-
-    glBindFramebuffer(GL_FRAMEBUFFER, prevFBO);
-
-    return true;
-}
-
 
 /*
  * moldyn::SimpleSphereRenderer::rebuildShader
@@ -1863,148 +1802,57 @@ bool moldyn::SimpleSphereRenderer::rebuildShader()
 
 
 /*
- * moldyn::SimpleSphereRenderer::renderDeferredPass
+ * moldyn::SimpleSphereRenderer::rebuildGBuffer
  */
-void moldyn::SimpleSphereRenderer::renderDeferredPass(megamol::core::view::CallRender3D* cr3d)
+bool moldyn::SimpleSphereRenderer::rebuildGBuffer()
 {
-    bool enableAO = this->enableAOSlot.Param<megamol::core::param::BoolParam>()->Value();
-    bool enableLighting = this->enableLightingSlot.Param<megamol::core::param::BoolParam>()->Value();
+    if ((this->curVpWidth == this->lastVpWidth) && (this->curVpHeight == this->lastVpHeight) && !this->useHPTexturesSlot.IsDirty()) {
+        return true;
+    }
+
+    this->useHPTexturesSlot.ResetDirty();
+
     bool highPrecision = this->useHPTexturesSlot.Param<megamol::core::param::BoolParam>()->Value();
 
-    glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, this->gBuffer.depth);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, this->gBuffer.normals);
-    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, this->gBuffer.color);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, this->curVpWidth, this->curVpHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
 
-    this->lightingShader.Enable();
+    glBindTexture(GL_TEXTURE_2D, this->gBuffer.normals);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexImage2D(GL_TEXTURE_2D, 0, highPrecision ? GL_RGBA32F : GL_RGBA, this->curVpWidth, this->curVpHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
 
-    this->lightingShader.SetParameter("inWidth", static_cast<float>(this->curVpWidth));
-    this->lightingShader.SetParameter("inHeight", static_cast<float>(this->curVpHeight));
-    glUniformMatrix4fv(this->lightingShader.ParameterLocation("inMvpInverse"), 1, GL_FALSE, this->curMVPinv.PeekComponents());
-    this->lightingShader.SetParameter("inColorTex", static_cast<int>(0));
-    this->lightingShader.SetParameter("inNormalsTex", static_cast<int>(1));
-    this->lightingShader.SetParameter("inDepthTex", static_cast<int>(2));
+    glBindTexture(GL_TEXTURE_2D, this->gBuffer.depth);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, this->curVpWidth, this->curVpHeight, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, nullptr);
 
-    this->lightingShader.SetParameter("inUseHighPrecision", highPrecision);
+    glBindTexture(GL_TEXTURE_2D, 0);
 
-    if (enableLighting) {
-        vislib::math::Vector<float, 4> lightDir = this->curMVinv * vislib::math::Vector<float, 4>(this->curLightPos);
-        lightDir.Normalise();
-        this->lightingShader.SetParameterArray3("inObjLightDir", 1, lightDir.PeekComponents());
-        this->lightingShader.SetParameterArray3("inObjCamPos", 1, this->curMVinv.GetColumn(3).PeekComponents());
+     // Configure the framebuffer object
+    GLint prevFBO;
+    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prevFBO);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, this->gBuffer.fbo);                                                     checkGLError;
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this->gBuffer.color, 0);      checkGLError;
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, this->gBuffer.normals, 0);    checkGLError;
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, this->gBuffer.depth, 0);       checkGLError;
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        std::cout << "Framebuffer NOT complete!" << std::endl;
     }
 
-    if (enableAO) {
-        float aoOffset = this->aoOffsetSlot.Param<megamol::core::param::FloatParam>()->Value();
-        float aoStrength = this->aoStrengthSlot.Param<megamol::core::param::FloatParam>()->Value();
-        float aoConeLength = this->aoConeLengthSlot.Param<megamol::core::param::FloatParam>()->Value();
-        if (volGen != nullptr) {
-            glActiveTexture(GL_TEXTURE3);
-            glBindTexture(GL_TEXTURE_3D, this->volGen->GetVolumeTextureHandle());
-            glActiveTexture(GL_TEXTURE0);
-        }
-        this->lightingShader.SetParameter("inAOOffset", aoOffset);
-        this->lightingShader.SetParameter("inDensityTex", static_cast<int>(3));
-        this->lightingShader.SetParameter("inAOStrength", aoStrength);
-        this->lightingShader.SetParameter("inAOConeLength", aoConeLength);
-        this->lightingShader.SetParameter("inAmbVolShortestEdge", ambConeConstants[0]);
-        this->lightingShader.SetParameter("inAmbVolMaxLod", ambConeConstants[1]);
-        this->lightingShader.SetParameterArray3("inBoundsMin", 1, cr3d->AccessBoundingBoxes().ObjectSpaceClipBox().GetLeftBottomBack().PeekCoordinates());
-        this->lightingShader.SetParameterArray3("inBoundsSize", 1, cr3d->AccessBoundingBoxes().ObjectSpaceClipBox().GetSize().PeekDimension());
-    }
+    glBindFramebuffer(GL_FRAMEBUFFER, prevFBO);
 
-    glBegin(GL_POINTS);
-    glVertex2f(0.0f, 0.0f);
-    glEnd();
-
-    this->lightingShader.Disable();
-}
-
-
-/*
- * moldyn::SimpleSphereRenderer::renderParticlesGeometry
- */
-void moldyn::SimpleSphereRenderer::renderParticlesGeometry(megamol::core::view::CallRender3D* cr3d, megamol::core::moldyn::MultiParticleDataCall* dataCall)
-{
-    bool highPrecision = this->useHPTexturesSlot.Param<megamol::core::param::BoolParam>()->Value();
-
-    bool useGeo = this->enableGeometryShader.Param<core::param::BoolParam>()->Value();
-    vislib::graphics::gl::GLSLShader& theShader = useGeo ? this->sphereGeometryShader : this->sphereShader;
-
-    theShader.Enable();
-
-    glUniformMatrix4fv(theShader.ParameterLocation("inMvp"), 1, GL_FALSE, this->curMVP.PeekComponents());
-    glUniformMatrix4fv(theShader.ParameterLocation("inMvpInverse"), 1, GL_FALSE, this->curMVPinv.PeekComponents());
-    glUniformMatrix4fv(theShader.ParameterLocation("inMvpTrans"), 1, GL_FALSE, this->curMVPtransp.PeekComponents()); 
-
-    theShader.SetParameterArray4("inViewAttr", 1, this->curViewAttrib);
-    theShader.SetParameterArray3("inCamFront", 1, cr3d->GetCameraParameters()->Front().PeekComponents());
-    theShader.SetParameterArray3("inCamRight", 1, cr3d->GetCameraParameters()->Right().PeekComponents());
-    theShader.SetParameterArray3("inCamUp", 1, cr3d->GetCameraParameters()->Up().PeekComponents());
-    theShader.SetParameterArray4("inCamPos", 1, this->curMVinv.GetColumn(3).PeekComponents());
-
-    theShader.SetParameterArray4("inClipDat", 1, this->curClipDat);
-    theShader.SetParameterArray4("inClipCol", 1, this->curClipCol);
-
-    theShader.SetParameter("inUseHighPrecision", highPrecision);
-
-    for (unsigned int i = 0; i < gpuData.size(); ++i) {
-        glBindVertexArray(gpuData[i].vertexArray);
-
-        core::moldyn::SimpleSphericalParticles &parts = dataCall->AccessParticles(i);
-
-        float globalRadius = 0.0f;
-        if (parts.GetVertexDataType() != megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR)
-            globalRadius = parts.GetGlobalRadius();
-
-        theShader.SetParameter("inGlobalRadius", globalRadius);
-
-        bool useGlobalColor = false;
-        if (parts.GetColourDataType() == megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE) {
-            useGlobalColor = true;
-            const unsigned char *globalColor = parts.GetGlobalColour();
-            float globalColorFlt[4] = {
-                static_cast<float>(globalColor[0]) / 255.0f,
-                static_cast<float>(globalColor[1]) / 255.0f,
-                static_cast<float>(globalColor[2]) / 255.0f,
-                1.0f
-            };
-            theShader.SetParameterArray4("inGlobalColor", 1, globalColorFlt);
-        }
-        theShader.SetParameter("inUseGlobalColor", useGlobalColor);
-
-        bool useTransferFunction = false;
-        if (parts.GetColourDataType() == megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I) {
-            useTransferFunction = true;
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_1D, getTransferFunctionHandle());
-            theShader.SetParameter("inTransferFunction", static_cast<int>(0));
-            float tfRange[2] = { parts.GetMinColourIndexValue(), parts.GetMaxColourIndexValue() };
-            theShader.SetParameterArray2("inIndexRange", 1, tfRange);
-        }
-        theShader.SetParameter("inUseTransferFunction", useTransferFunction);
-
-        glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(dataCall->AccessParticles(i).GetCount()));
-    }
-
-    glBindVertexArray(0);
-
-    theShader.Disable();
-}
-
-
-/*
- * moldyn::SimpleSphereRenderer::getTransferFunctionHandle
- */
-GLuint moldyn::SimpleSphereRenderer::getTransferFunctionHandle()
-{
-    core::view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<core::view::CallGetTransferFunction>();
-    if ((cgtf != nullptr) && (*cgtf)())
-        return cgtf->OpenGLTexture();
-
-    return tfFallbackHandle;
+    return true;
 }
 
 
@@ -2122,6 +1970,152 @@ void moldyn::SimpleSphereRenderer::rebuildWorkingData(megamol::core::view::CallR
     this->enableAOSlot.ResetDirty();
     this->aoVolSizeSlot.ResetDirty();
 
+}
+
+
+/*
+ * moldyn::SimpleSphereRenderer::renderParticlesGeometry
+ */
+void moldyn::SimpleSphereRenderer::renderParticlesGeometry(megamol::core::view::CallRender3D* cr3d, megamol::core::moldyn::MultiParticleDataCall* dataCall)
+{
+    bool highPrecision = this->useHPTexturesSlot.Param<megamol::core::param::BoolParam>()->Value();
+
+    bool useGeo = this->enableGeometryShader.Param<core::param::BoolParam>()->Value();
+    vislib::graphics::gl::GLSLShader& theShader = useGeo ? this->sphereGeometryShader : this->sphereShader;
+
+    theShader.Enable();
+
+    glUniformMatrix4fv(theShader.ParameterLocation("inMvp"), 1, GL_FALSE, this->curMVP.PeekComponents());
+    glUniformMatrix4fv(theShader.ParameterLocation("inMvpInverse"), 1, GL_FALSE, this->curMVPinv.PeekComponents());
+    glUniformMatrix4fv(theShader.ParameterLocation("inMvpTrans"), 1, GL_FALSE, this->curMVPtransp.PeekComponents());
+
+    theShader.SetParameterArray4("inViewAttr", 1, this->curViewAttrib);
+    theShader.SetParameterArray3("inCamFront", 1, cr3d->GetCameraParameters()->Front().PeekComponents());
+    theShader.SetParameterArray3("inCamRight", 1, cr3d->GetCameraParameters()->Right().PeekComponents());
+    theShader.SetParameterArray3("inCamUp", 1, cr3d->GetCameraParameters()->Up().PeekComponents());
+    theShader.SetParameterArray4("inCamPos", 1, this->curMVinv.GetColumn(3).PeekComponents());
+
+    theShader.SetParameterArray4("inClipDat", 1, this->curClipDat);
+    theShader.SetParameterArray4("inClipCol", 1, this->curClipCol);
+
+    theShader.SetParameter("inUseHighPrecision", highPrecision);
+
+    for (unsigned int i = 0; i < gpuData.size(); ++i) {
+        glBindVertexArray(gpuData[i].vertexArray);
+
+        core::moldyn::SimpleSphericalParticles &parts = dataCall->AccessParticles(i);
+
+        float globalRadius = 0.0f;
+        if (parts.GetVertexDataType() != megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR)
+            globalRadius = parts.GetGlobalRadius();
+
+        theShader.SetParameter("inGlobalRadius", globalRadius);
+
+        bool useGlobalColor = false;
+        if (parts.GetColourDataType() == megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE) {
+            useGlobalColor = true;
+            const unsigned char *globalColor = parts.GetGlobalColour();
+            float globalColorFlt[4] = {
+                static_cast<float>(globalColor[0]) / 255.0f,
+                static_cast<float>(globalColor[1]) / 255.0f,
+                static_cast<float>(globalColor[2]) / 255.0f,
+                1.0f
+            };
+            theShader.SetParameterArray4("inGlobalColor", 1, globalColorFlt);
+        }
+        theShader.SetParameter("inUseGlobalColor", useGlobalColor);
+
+        bool useTransferFunction = false;
+        if (parts.GetColourDataType() == megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I) {
+            useTransferFunction = true;
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_1D, getTransferFunctionHandle());
+            theShader.SetParameter("inTransferFunction", static_cast<int>(0));
+            float tfRange[2] = { parts.GetMinColourIndexValue(), parts.GetMaxColourIndexValue() };
+            theShader.SetParameterArray2("inIndexRange", 1, tfRange);
+        }
+        theShader.SetParameter("inUseTransferFunction", useTransferFunction);
+
+        glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(dataCall->AccessParticles(i).GetCount()));
+    }
+
+    glBindVertexArray(0);
+
+    theShader.Disable();
+}
+
+
+/*
+ * moldyn::SimpleSphereRenderer::renderDeferredPass
+ */
+void moldyn::SimpleSphereRenderer::renderDeferredPass(megamol::core::view::CallRender3D* cr3d)
+{
+    bool enableAO = this->enableAOSlot.Param<megamol::core::param::BoolParam>()->Value();
+    bool enableLighting = this->enableLightingSlot.Param<megamol::core::param::BoolParam>()->Value();
+    bool highPrecision = this->useHPTexturesSlot.Param<megamol::core::param::BoolParam>()->Value();
+
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, this->gBuffer.depth);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, this->gBuffer.normals);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, this->gBuffer.color);
+
+    this->lightingShader.Enable();
+
+    this->lightingShader.SetParameter("inWidth", static_cast<float>(this->curVpWidth));
+    this->lightingShader.SetParameter("inHeight", static_cast<float>(this->curVpHeight));
+    glUniformMatrix4fv(this->lightingShader.ParameterLocation("inMvpInverse"), 1, GL_FALSE, this->curMVPinv.PeekComponents());
+    this->lightingShader.SetParameter("inColorTex", static_cast<int>(0));
+    this->lightingShader.SetParameter("inNormalsTex", static_cast<int>(1));
+    this->lightingShader.SetParameter("inDepthTex", static_cast<int>(2));
+
+    this->lightingShader.SetParameter("inUseHighPrecision", highPrecision);
+
+    if (enableLighting) {
+        vislib::math::Vector<float, 4> lightDir = this->curMVinv * vislib::math::Vector<float, 4>(this->curLightPos);
+        lightDir.Normalise();
+        this->lightingShader.SetParameterArray3("inObjLightDir", 1, lightDir.PeekComponents());
+        this->lightingShader.SetParameterArray3("inObjCamPos", 1, this->curMVinv.GetColumn(3).PeekComponents());
+    }
+
+    if (enableAO) {
+        float aoOffset = this->aoOffsetSlot.Param<megamol::core::param::FloatParam>()->Value();
+        float aoStrength = this->aoStrengthSlot.Param<megamol::core::param::FloatParam>()->Value();
+        float aoConeLength = this->aoConeLengthSlot.Param<megamol::core::param::FloatParam>()->Value();
+        if (volGen != nullptr) {
+            glActiveTexture(GL_TEXTURE3);
+            glBindTexture(GL_TEXTURE_3D, this->volGen->GetVolumeTextureHandle());
+            glActiveTexture(GL_TEXTURE0);
+        }
+        this->lightingShader.SetParameter("inAOOffset", aoOffset);
+        this->lightingShader.SetParameter("inDensityTex", static_cast<int>(3));
+        this->lightingShader.SetParameter("inAOStrength", aoStrength);
+        this->lightingShader.SetParameter("inAOConeLength", aoConeLength);
+        this->lightingShader.SetParameter("inAmbVolShortestEdge", ambConeConstants[0]);
+        this->lightingShader.SetParameter("inAmbVolMaxLod", ambConeConstants[1]);
+        this->lightingShader.SetParameterArray3("inBoundsMin", 1, cr3d->AccessBoundingBoxes().ObjectSpaceClipBox().GetLeftBottomBack().PeekCoordinates());
+        this->lightingShader.SetParameterArray3("inBoundsSize", 1, cr3d->AccessBoundingBoxes().ObjectSpaceClipBox().GetSize().PeekDimension());
+    }
+
+    glBegin(GL_POINTS);
+    glVertex2f(0.0f, 0.0f);
+    glEnd();
+
+    this->lightingShader.Disable();
+}
+
+
+/*
+ * moldyn::SimpleSphereRenderer::getTransferFunctionHandle
+ */
+GLuint moldyn::SimpleSphereRenderer::getTransferFunctionHandle()
+{
+    core::view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<core::view::CallGetTransferFunction>();
+    if ((cgtf != nullptr) && (*cgtf)())
+        return cgtf->OpenGLTexture();
+
+    return tfFallbackHandle;
 }
 
 
