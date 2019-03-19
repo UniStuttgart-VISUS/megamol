@@ -7,279 +7,133 @@
 
 #include "stdafx.h"
 #include "mmcore/view/LinearTransferFunction.h"
-#include "mmcore/param/BoolParam.h"
-#include "mmcore/param/ButtonParam.h"
-#include "mmcore/param/FilePathParam.h"
-#include "mmcore/param/FloatParam.h"
-#include "mmcore/param/IntParam.h"
-#include "mmcore/param/StringParam.h"
-#include "mmcore/utility/ColourParser.h"
-#include "vislib/Array.h"
-#include "vislib/assert.h"
-#include "vislib/math/Vector.h"
-#include "vislib/sys/Log.h"
-#include "vislib/sys/sysfunctions.h"
-
-
-namespace megamol {
-namespace core {
-namespace view {
-
-static int InterColourComparer(const vislib::math::Vector<float, 5>& lhs, const vislib::math::Vector<float, 5>& rhs) {
-    if (lhs[4] >= rhs[4]) {
-        if (rhs[4] + vislib::math::FLOAT_EPSILON >= lhs[4]) {
-            return 0;
-        } else {
-            return 1;
-        }
-    } else {
-        if (lhs[4] + vislib::math::FLOAT_EPSILON >= rhs[4]) {
-            return 0;
-        } else {
-            return -1;
-        }
-    }
-}
-
-} /* end namespace view */
-} /* end namespace core */
-} /* end namespace megamol */
 
 
 using namespace megamol::core;
+using namespace megamol::core::view;
 
 
 /*
- * view::LinearTransferFunction::LinearTransferFunction
+ * LinearTransferFunction::LinearTransferFunction
  */
-view::LinearTransferFunction::LinearTransferFunction(void)
+LinearTransferFunction::LinearTransferFunction(void)
     : Module()
     , getTFSlot("gettransferfunction", "Provides the transfer function")
-    , minColSlot("mincolour", "The colour for the minimum value")
-    , maxColSlot("maxcolour", "The colour for the maximum value")
-    , texSizeSlot("texsize", "The size of the texture to generate")
-    , pathSlot("filepath", "path for serializing the TF")
-    , loadTFSlot("loadTF", "trigger loading from file")
-    , storeTFSlot("storeTF", "trigger saving to file")
+    , tfParam("TransferFunction", "The transfer function serialized as JSON string.")
     , texID(0)
     , texSize(1)
-    , tex(NULL)
+    , tex()
     , texFormat(CallGetTransferFunction::TEXTURE_FORMAT_RGB)
-    , firstRequest(true) {
+    , interpolMode(param::LinearTransferFunctionParam::InterpolationMode::LINEAR)
+{
 
-    view::CallGetTransferFunctionDescription cgtfd;
+    CallGetTransferFunctionDescription cgtfd;
     this->getTFSlot.SetCallback(cgtfd.ClassName(), cgtfd.FunctionName(0), &LinearTransferFunction::requestTF);
-    this->getTFSlot.SetCallback(cgtfd.ClassName(), cgtfd.FunctionName(1), &LinearTransferFunction::InterfaceIsDirty);
-    this->getTFSlot.SetCallback(cgtfd.ClassName(), cgtfd.FunctionName(2), &LinearTransferFunction::InterfaceResetDirty);
+    this->getTFSlot.SetCallback(cgtfd.ClassName(), cgtfd.FunctionName(1), &LinearTransferFunction::interfaceIsDirty);
+    this->getTFSlot.SetCallback(cgtfd.ClassName(), cgtfd.FunctionName(2), &LinearTransferFunction::interfaceResetDirty);
     this->MakeSlotAvailable(&this->getTFSlot);
 
-    this->minColSlot << new param::StringParam("blue");
-    this->MakeSlotAvailable(&this->minColSlot);
-
-    vislib::StringA t1, t2;
-    for (SIZE_T i = 0; i < INTER_COLOUR_COUNT; i++) {
-        t1.Format("enable%.2d", i + 1);
-        t2.Format("Enables the intermediate colour %d", i + 1);
-        this->interCols[i].enableSlot = new param::ParamSlot(t1, t2);
-        this->interCols[i].enableSlot->SetParameter(new param::BoolParam(false));
-        this->MakeSlotAvailable(this->interCols[i].enableSlot);
-
-        t1.Format("colour%.2d", i + 1);
-        t2.Format("The colour for the intermediate value no. %d", i + 1);
-        this->interCols[i].colSlot = new param::ParamSlot(t1, t2);
-        this->interCols[i].colSlot->SetParameter(new param::StringParam("Gray"));
-        this->MakeSlotAvailable(this->interCols[i].colSlot);
-
-        t1.Format("value%.2d", i + 1);
-        t2.Format("The intermediate value no. %d", i + 1);
-        this->interCols[i].valSlot = new param::ParamSlot(t1, t2);
-        this->interCols[i].valSlot->SetParameter(
-            new param::FloatParam(static_cast<float>(i + 1) / static_cast<float>(INTER_COLOUR_COUNT + 1), 0.0f, 1.0f));
-        this->MakeSlotAvailable(this->interCols[i].valSlot);
-    }
-
-    this->maxColSlot << new param::StringParam("red");
-    this->MakeSlotAvailable(&this->maxColSlot);
-    this->maxColSlot.ForceSetDirty();
-
-    this->texSizeSlot << new param::IntParam(128, 2, 1024);
-    this->MakeSlotAvailable(&this->texSizeSlot);
-
-    this->pathSlot << new param::FilePathParam("");
-    this->MakeSlotAvailable(&this->pathSlot);
-
-    this->loadTFSlot << new param::ButtonParam();
-    this->loadTFSlot.SetUpdateCallback(&LinearTransferFunction::loadTFPressed);
-    this->MakeSlotAvailable(&this->loadTFSlot);
-
-    this->storeTFSlot << new param::ButtonParam();
-    this->storeTFSlot.SetUpdateCallback(&LinearTransferFunction::storeTFPressed);
-    this->MakeSlotAvailable(&this->storeTFSlot);
+    this->tfParam << new param::LinearTransferFunctionParam("");
+    this->MakeSlotAvailable(&this->tfParam);
 }
 
 
 /*
- * view::LinearTransferFunction::~LinearTransferFunction
+ * LinearTransferFunction::~LinearTransferFunction
  */
-view::LinearTransferFunction::~LinearTransferFunction(void) { this->Release(); }
+LinearTransferFunction::~LinearTransferFunction(void) { this->Release(); }
 
 
 /*
- * view::LinearTransferFunction::create
+ * LinearTransferFunction::create
  */
-bool view::LinearTransferFunction::create(void) {
-    firstRequest = true;
-    return true;
-}
-
-
-/*
- * view::LinearTransferFunction::release
- */
-void view::LinearTransferFunction::release(void) {
-    ::glDeleteTextures(1, &this->texID);
-    this->texID = 0;
-    this->tex = NULL;
-}
-
-
-/*
- * view::LinearTransferFunction::loadTFPressed
- */
-bool view::LinearTransferFunction::loadTFPressed(param::ParamSlot& param) {
-    try {
-        vislib::sys::BufferedFile inFile;
-        if (!inFile.Open(pathSlot.Param<param::FilePathParam>()->Value(), vislib::sys::File::AccessMode::READ_ONLY,
-                vislib::sys::File::ShareMode::SHARE_READ, vislib::sys::File::CreationMode::OPEN_ONLY)) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, "Unable to open TF file.");
-            // failed, but does not matter here
-            return true;
-        }
-
-        while (!inFile.IsEOF()) {
-            vislib::StringA line = vislib::sys::ReadLineFromFileA(inFile);
-            line.TrimSpaces();
-            if (line.IsEmpty()) continue;
-            if (line[0] == '#') continue;
-            vislib::StringA::Size pos = line.Find('=');
-            vislib::StringA name = line.Substring(0, pos);
-            vislib::StringA value = line.Substring(pos + 1);
-            Module::child_list_type::iterator ano_end = this->ChildList_End();
-            for (Module::child_list_type::iterator ano_i = this->ChildList_Begin(); ano_i != ano_end; ++ano_i) {
-                std::shared_ptr<param::ParamSlot> p = std::dynamic_pointer_cast<param::ParamSlot>(*ano_i);
-                if (p && p->Name().Equals(name)) {
-                    p->Parameter()->ParseValue(value);
-                }
-            }
-        }
-        inFile.Close();
-    } catch (...) {
-    }
+bool LinearTransferFunction::create(void) {
 
     return true;
 }
 
 
 /*
- * view::LinearTransferFunction::requestTF
+ * LinearTransferFunction::release
  */
-bool view::LinearTransferFunction::requestTF(Call& call) {
-    view::CallGetTransferFunction* cgtf = dynamic_cast<view::CallGetTransferFunction*>(&call);
-    if (cgtf == NULL) return false;
+void LinearTransferFunction::release(void) {
 
-    if (firstRequest) {
-        loadTFPressed(loadTFSlot);
-        firstRequest = false;
-    }
+    glDeleteTextures(1, &this->texID);
+    this->texID = 0;    
+}
 
-    bool dirty = this->minColSlot.IsDirty() || this->maxColSlot.IsDirty() || this->texSizeSlot.IsDirty();
-    for (SIZE_T i = 0; !dirty && (i < INTER_COLOUR_COUNT); i++) {
-        dirty = this->interCols[i].enableSlot->IsDirty() || this->interCols[i].colSlot->IsDirty() ||
-                this->interCols[i].valSlot->IsDirty();
+
+/*
+ * LinearTransferFunction::LinearInterpolation
+ */
+void LinearTransferFunction::LinearInterpolation(std::vector<float> &out_texdata, unsigned int in_texsize, const param::LinearTransferFunctionParam::TFType &in_tfdata) {
+
+    out_texdata.resize(4 * in_texsize);
+    std::array<float, 5> cx1 = in_tfdata[0];
+    std::array<float, 5> cx2 = in_tfdata[0];
+    int p1 = 0;
+    int p2 = 0;
+    size_t data_cnt = in_tfdata.size();
+    for (size_t i = 1; i < data_cnt; i++) {
+        cx1 = cx2;
+        p1 = p2;
+        cx2 = in_tfdata[i];
+        assert(cx2[4] <= 1.0f + 1e-5f); // 1e-5f = vislib::math::FLOAT_EPSILON
+        p2 = static_cast<int>(cx2[4] * static_cast<float>(in_texsize - 1));
+        assert(p2 < static_cast<int>(in_texsize));
+        assert(p2 >= p1);
+
+        for (int p = p1; p <= p2; p++) {
+            float al = static_cast<float>(p - p1) / static_cast<float>(p2 - p1);
+            float be = 1.0f - al;
+
+            out_texdata[p * 4] = cx1[0] * be + cx2[0] * al;
+            out_texdata[p * 4 + 1] = cx1[1] * be + cx2[1] * al;
+            out_texdata[p * 4 + 2] = cx1[2] * be + cx2[2] * al;
+            out_texdata[p * 4 + 3] = cx1[3] * be + cx2[3] * al;
+        }
     }
+}
+
+
+/*
+ * LinearTransferFunction::requestTF
+ */
+bool LinearTransferFunction::requestTF(Call& call) {
+
+    CallGetTransferFunction* cgtf = dynamic_cast<CallGetTransferFunction*>(&call);
+    if (cgtf == nullptr) return false;
+
+    bool dirty = this->tfParam.IsDirty();
     if ((this->texID == 0) || dirty) {
-        this->minColSlot.ResetDirty();
-        this->maxColSlot.ResetDirty();
-        this->texSizeSlot.ResetDirty();
-        for (SIZE_T i = 0; i < INTER_COLOUR_COUNT; i++) {
-            this->interCols[i].enableSlot->ResetDirty();
-            this->interCols[i].colSlot->ResetDirty();
-            this->interCols[i].valSlot->ResetDirty();
+        this->tfParam.ResetDirty();
+
+        param::LinearTransferFunctionParam::TFType tfdata;
+
+        // Get current values from parameter string. Values are checked, too.
+        if (!megamol::core::param::LinearTransferFunctionParam::ParseTransferFunction(
+            this->tfParam.Param<param::LinearTransferFunctionParam>()->Value(), tfdata, this->interpolMode, this->texSize)) {
+            return false;
+        }
+
+        // Apply interpolation and generate texture data.
+        if (this->interpolMode == param::LinearTransferFunctionParam::InterpolationMode::LINEAR) {
+            this->LinearInterpolation(this->tex, this->texSize, tfdata);
+        }
+        else if (this->interpolMode == param::LinearTransferFunctionParam::InterpolationMode::GAUSS) {
+            // TODO: Implement ...
+            return false;
         }
 
         bool t1de = (glIsEnabled(GL_TEXTURE_1D) == GL_TRUE);
         if (!t1de) glEnable(GL_TEXTURE_1D);
         if (this->texID == 0) glGenTextures(1, &this->texID);
 
-        vislib::Array<vislib::math::Vector<float, 5>> cols;
-        vislib::math::Vector<float, 5> cx1, cx2;
-        bool validAlpha = false;
-        if (utility::ColourParser::FromString(
-                this->minColSlot.Param<param::StringParam>()->Value(), cx1[0], cx1[1], cx1[2], cx1[3])) {
-            cx1[4] = 0.0f;
-        } else {
-            cx1[0] = cx1[1] = cx1[2] = cx1[3] = 0.0f;
-            cx1[4] = 0.0f;
-        }
-        if (cx1[3] < 0.99f) validAlpha = true;
-        cols.Add(cx1);
-        if (utility::ColourParser::FromString(
-                this->maxColSlot.Param<param::StringParam>()->Value(), cx1[0], cx1[1], cx1[2], cx1[3])) {
-            cx1[4] = 1.0f;
-        } else {
-            cx1[0] = cx1[1] = cx1[2] = cx1[3] = 0.0f;
-            cx1[4] = 1.0f;
-        }
-        if (cx1[3] < 0.99f) validAlpha = true;
-        cols.Add(cx1);
-        for (SIZE_T i = 0; i < INTER_COLOUR_COUNT; i++) {
-            if (this->interCols[i].enableSlot->Param<param::BoolParam>()->Value()) {
-                float val = this->interCols[i].valSlot->Param<param::FloatParam>()->Value();
-                if (utility::ColourParser::FromString(this->interCols[i].colSlot->Param<param::StringParam>()->Value(),
-                        cx1[0], cx1[1], cx1[2], cx1[3])) {
-                    cx1[4] = val;
-                } else {
-                    cx1[0] = cx1[1] = cx1[2] = cx1[3] = 0.0f;
-                    cx1[4] = val;
-                }
-                if (cx1[3] < 0.99f) validAlpha = true;
-                cols.Add(cx1);
-            }
-        }
-
-        cols.Sort(&InterColourComparer);
-
-        this->texSize = this->texSizeSlot.Param<param::IntParam>()->Value();
-        this->tex = new float[4 * this->texSize];
-        int p1, p2;
-
-        cx2 = cols[0];
-        p2 = 0;
-        for (SIZE_T i = 1; i < cols.Count(); i++) {
-            cx1 = cx2;
-            p1 = p2;
-            cx2 = cols[i];
-            ASSERT(cx2[4] <= 1.0f + vislib::math::FLOAT_EPSILON);
-            p2 = static_cast<int>(cx2[4] * static_cast<float>(this->texSize - 1));
-            ASSERT(p2 < static_cast<int>(this->texSize));
-            ASSERT(p2 >= p1);
-
-            for (int p = p1; p <= p2; p++) {
-                float al = static_cast<float>(p - p1) / static_cast<float>(p2 - p1);
-                float be = 1.0f - al;
-
-                this->tex[p * 4] = cx1[0] * be + cx2[0] * al;
-                this->tex[p * 4 + 1] = cx1[1] * be + cx2[1] * al;
-                this->tex[p * 4 + 2] = cx1[2] * be + cx2[2] * al;
-                this->tex[p * 4 + 3] = cx1[3] * be + cx2[3] * al;
-            }
-        }
-
         GLint otid = 0;
         glGetIntegerv(GL_TEXTURE_BINDING_1D, &otid);
-        glBindTexture(GL_TEXTURE_1D, this->texID);
+        glBindTexture(GL_TEXTURE_1D, (GLuint)this->texID);
 
-        glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, this->texSize, 0, GL_RGBA, GL_FLOAT, tex);
+        glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, this->texSize, 0, GL_RGBA, GL_FLOAT, this->tex.data());
 
         glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -288,94 +142,37 @@ bool view::LinearTransferFunction::requestTF(Call& call) {
         glBindTexture(GL_TEXTURE_1D, otid);
 
         if (!t1de) glDisable(GL_TEXTURE_1D);
-
-        this->texFormat =
-            validAlpha ? CallGetTransferFunction::TEXTURE_FORMAT_RGBA : CallGetTransferFunction::TEXTURE_FORMAT_RGB;
     }
 
-    cgtf->SetTexture(this->texID, this->texSize, this->tex, this->texFormat);
+    cgtf->SetTexture(this->texID, this->texSize, this->tex.data(), CallGetTransferFunction::TEXTURE_FORMAT_RGBA);
 
     return true;
 }
 
 
 /*
- * view::LinearTransferFunction::storeTFPressed
+ * LinearTransferFunction::InterfaceIsDirty
  */
-bool view::LinearTransferFunction::storeTFPressed(param::ParamSlot& param) {
+bool LinearTransferFunction::interfaceIsDirty(Call& call) {
 
-    try {
-        vislib::sys::BufferedFile outFile;
-        if (!outFile.Open(pathSlot.Param<param::FilePathParam>()->Value(), vislib::sys::File::AccessMode::WRITE_ONLY,
-                vislib::sys::File::ShareMode::SHARE_EXCLUSIVE, vislib::sys::File::CreationMode::CREATE_OVERWRITE)) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, "Unable to create TF file.");
-        }
+    CallGetTransferFunction* cgtf = dynamic_cast<CallGetTransferFunction*>(&call);
+    if (cgtf == nullptr) return false;
 
-        Module::child_list_type::iterator ano_end = this->ChildList_End();
-        for (Module::child_list_type::iterator ano_i = this->ChildList_Begin(); ano_i != ano_end; ++ano_i) {
-            std::shared_ptr<param::ParamSlot> p = std::dynamic_pointer_cast<param::ParamSlot>(*ano_i);
-            if (p && !p->Name().Equals("filepath")) {
-                writeParameterFileParameter(*p, outFile);
-            }
-        }
-        outFile.Close();
-    } catch (...) {
-    }
+    bool retval = tfParam.IsDirty();
 
-    return true;
-}
-
-
-/*
- * view::LinearTransferFunction::writeParameterFileParameter
- */
-void view::LinearTransferFunction::writeParameterFileParameter(
-    param::ParamSlot& param, vislib::sys::BufferedFile& outFile) {
-
-    unsigned int len = 0;
-    vislib::RawStorage store;
-    param.Parameter()->Definition(store);
-
-    if (::memcmp(store, "MMBUTN", 6) == 0) {
-        outFile.Write("# ", 2);
-    }
-
-    vislib::sys::WriteFormattedLineToFile(
-        outFile, "%s=%s\n", param.Name().PeekBuffer(), vislib::StringA(param.Parameter()->ValueString()).PeekBuffer());
-}
-
-/*
- * view::LinearTransferFunction::InterfaceIsDirty
- */
-bool view::LinearTransferFunction::InterfaceIsDirty(Call& call) {
-    view::CallGetTransferFunction* cgtf = dynamic_cast<view::CallGetTransferFunction*>(&call);
-
-    bool retval = minColSlot.IsDirty() || maxColSlot.IsDirty() || storeTFSlot.IsDirty() || loadTFSlot.IsDirty() ||
-                  texSizeSlot.IsDirty() || pathSlot.IsDirty();
-    for (SIZE_T i = 0; i < INTER_COLOUR_COUNT; i++) {
-        retval = retval || interCols[i].colSlot->IsDirty();
-        retval = retval || interCols[i].valSlot->IsDirty();
-        retval = retval || interCols[i].enableSlot->IsDirty();
-    }
     cgtf->setDirty(retval);
     return true;
 }
 
 
 /*
- * view::LinearTransferFunction::InterfaceResetDirty
+ * LinearTransferFunction::interfaceResetDirty
  */
-bool view::LinearTransferFunction::InterfaceResetDirty(Call& call) {
-    minColSlot.ResetDirty();
-    maxColSlot.ResetDirty();
-    storeTFSlot.ResetDirty();
-    loadTFSlot.ResetDirty();
-    texSizeSlot.ResetDirty();
-    pathSlot.ResetDirty();
-    for (SIZE_T i = 0; i < INTER_COLOUR_COUNT; i++) {
-        interCols[i].colSlot->ResetDirty();
-        interCols[i].valSlot->ResetDirty();
-        interCols[i].enableSlot->ResetDirty();
-    }
+bool LinearTransferFunction::interfaceResetDirty(Call& call) {
+
+    CallGetTransferFunction* cgtf = dynamic_cast<CallGetTransferFunction*>(&call);
+    if (cgtf == nullptr) return false;
+
+    tfParam.ResetDirty();
     return true;
 }
