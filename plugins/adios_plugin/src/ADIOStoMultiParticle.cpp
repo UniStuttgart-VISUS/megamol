@@ -223,7 +223,8 @@ bool ADIOStoMultiParticle::getDataCallback(core::Call& call) {
 
             // Fill mmpld byte array
             mix[k].clear();
-            for (size_t i = 0; i < particleCount; i++) {
+            size_t start = k == 0 ? 0 : plist_offset[k-1];
+            for (size_t i = start; i < (start+particleCount); i++) {
 
                 if (cad->isInVars("xyz")) {
                     std::vector<char> tmp_xyz = reinterpret_cast<std::vector<char>&>(X);
