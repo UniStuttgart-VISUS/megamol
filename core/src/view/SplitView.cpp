@@ -11,7 +11,7 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/StringParam.h"
-#include "vislib/graphics/ColourParser.h"
+#include "mmcore/view/CallSplitViewOverlay.h"
 #include "vislib/sys/Log.h"
 #include "vislib/Trace.h"
 
@@ -25,15 +25,19 @@ using vislib::sys::Log;
  * view::SplitView::SplitView
  */
 view::SplitView::SplitView(void) : AbstractView(),
-        render1Slot("render1", "Connects to the view 1 (left or top)"),
-        render2Slot("render2", "Connects to the view 2 (right or bottom)"),
-        splitOriSlot("split.orientation", "The split orientation"),
-        splitSlot("split.pos", "The split position"),
-        splitWidthSlot("split.width", "The split border width"),
-        splitColourSlot("split.colour", "The split border colour"),
-        splitColour(192, 192, 192, 255), overrideCall(NULL),
-        clientArea(), client1Area(), client2Area(), fbo1(), fbo2(),
-        focus(0), mouseX(0.0f), mouseY(0.0f) {
+render1Slot("render1", "Connects to the view 1 (left or top)"),
+render2Slot("render2", "Connects to the view 2 (right or bottom)"),
+overlaySlot("overlay", "Connects to a special overlay renderer (e.g. gui::GUIRenderer)"),
+splitOriSlot("split.orientation", "The split orientation"),
+splitSlot("split.pos", "The split position"),
+splitWidthSlot("split.width", "The split border width"),
+splitColourSlot("split.colour", "The split border colour"),
+overrideCall(NULL),
+clientArea(), client1Area(), client2Area(), fbo1(), fbo2(),
+focus(0), mouseX(0.0f), mouseY(0.0f) {
+
+    this->overlaySlot.SetCompatibleCall<view::CallSplitViewOverlayDescription>();
+    this->MakeSlotAvailable(&this->overlaySlot);
 
     this->render1Slot.SetCompatibleCall<CallRenderViewDescription>();
     this->MakeSlotAvailable(&this->render1Slot);
@@ -53,8 +57,8 @@ view::SplitView::SplitView(void) : AbstractView(),
     this->splitWidthSlot << new param::FloatParam(4.0f, 0.0f, 100.0f);
     this->MakeSlotAvailable(&this->splitWidthSlot);
 
-    vislib::StringA s;
-    this->splitColourSlot << new param::StringParam(vislib::graphics::ColourParser::ToString(s, this->splitColour));
+    this->splitColour = { 0.75f, 0.75f, 0.75f, 1.0f };
+    this->splitColourSlot << new param::ColorParam(this->splitColour);
     this->splitColourSlot.SetUpdateCallback(&SplitView::splitColourUpdated);
     this->MakeSlotAvailable(&this->splitColourSlot);
 
@@ -123,18 +127,19 @@ void view::SplitView::Render(const mmcRenderViewContext& context) {
         ::glGetIntegerv(GL_VIEWPORT, vp);
         vpw = vp[2];
         vph = vp[3];
-    } else {
+    }
+    else {
         vpw = this->overrideCall->ViewportWidth();
         vph = this->overrideCall->ViewportHeight();
     }
 
     if (this->splitSlot.IsDirty()
-            || this->splitOriSlot.IsDirty()
-            || this->splitWidthSlot.IsDirty()
-            || !this->fbo1.IsValid()
-            || !this->fbo2.IsValid()
-            || !vislib::math::IsEqual(this->clientArea.Width(), static_cast<float>(vpw))
-            || !vislib::math::IsEqual(this->clientArea.Height(), static_cast<float>(vph)) ) {
+        || this->splitOriSlot.IsDirty()
+        || this->splitWidthSlot.IsDirty()
+        || !this->fbo1.IsValid()
+        || !this->fbo2.IsValid()
+        || !vislib::math::IsEqual(this->clientArea.Width(), static_cast<float>(vpw))
+        || !vislib::math::IsEqual(this->clientArea.Height(), static_cast<float>(vph))) {
 
         this->clientArea.SetWidth(static_cast<float>(vpw));
         this->clientArea.SetHeight(static_cast<float>(vph));
@@ -195,9 +200,9 @@ void view::SplitView::Render(const mmcRenderViewContext& context) {
     ::glPushMatrix();
 
     ::glViewport(
-        static_cast<int>(this->clientArea.Left()), 
-        static_cast<int>(this->clientArea.Bottom()), 
-        static_cast<int>(this->clientArea.Width()), 
+        static_cast<int>(this->clientArea.Left()),
+        static_cast<int>(this->clientArea.Bottom()),
+        static_cast<int>(this->clientArea.Width()),
         static_cast<int>(this->clientArea.Height()));
 
     ::glClearColor(0.0f, 0.0f, 0.0, 1.0f);
@@ -210,7 +215,7 @@ void view::SplitView::Render(const mmcRenderViewContext& context) {
     ::glDisable(GL_DEPTH_TEST);
     ::glDisable(GL_TEXTURE_2D);
     ::glBegin(GL_QUADS);
-    ::glColor4ubv(this->splitColour.PeekComponents());
+    ::glColor4fv(this->splitColour.data());
     float sx1, sx2, sy1, sy2;
     float sp = this->splitSlot.Param<param::FloatParam>()->Value();
     float shw = this->splitWidthSlot.Param<param::FloatParam>()->Value() * 0.5f;
@@ -220,7 +225,8 @@ void view::SplitView::Render(const mmcRenderViewContext& context) {
         sx1 = this->clientArea.Width() * sp;
         sx2 = sx1 + shw;
         sx1 -= shw;
-    } else { // vertical
+    }
+    else { // vertical
         sx1 = 0.0f;
         sx2 = this->clientArea.Width();
         sy1 = this->clientArea.Height() * sp;
@@ -297,7 +303,15 @@ void view::SplitView::Render(const mmcRenderViewContext& context) {
         car = &this->client2Area;
         fbo = &this->fbo2;
     }
-    
+
+    // Render overlay renderer as overlay at last.
+    auto* cgr = this->overlaySlot.CallAs<view::CallSplitViewOverlay>();
+    if (cgr != nullptr) {
+        cgr->SetInstanceTime(instTime);
+        cgr->Resize(this->clientArea.Width(), this->clientArea.Height());
+        (*cgr)(view::CallSplitViewOverlay::FnOverlay);
+    }
+
     ::glMatrixMode(GL_PROJECTION);
     ::glPopMatrix();
     ::glMatrixMode(GL_MODELVIEW);
@@ -322,7 +336,7 @@ void view::SplitView::ResetView(void) {
  */
 void view::SplitView::Resize(unsigned int width, unsigned int height) {
     if (!vislib::math::IsEqual(this->clientArea.Width(), static_cast<float>(width))
-            || !vislib::math::IsEqual(this->clientArea.Height(), static_cast<float>(height))) {
+        || !vislib::math::IsEqual(this->clientArea.Height(), static_cast<float>(height))) {
         this->clientArea.SetWidth(static_cast<float>(width));
         this->clientArea.SetHeight(static_cast<float>(height));
 
@@ -346,9 +360,9 @@ void view::SplitView::Resize(unsigned int width, unsigned int height) {
         CallRenderView *crv = this->render1();
         if (crv != NULL) {
             // der ganz ganz dicke "because-i-know"-Knüppel
-            AbstractView *crvView = 
+            AbstractView *crvView =
                 const_cast<AbstractView*>(dynamic_cast<const AbstractView *>(
-                static_cast<const Module*>(crv->PeekCalleeSlot()->Owner())));
+                    static_cast<const Module*>(crv->PeekCalleeSlot()->Owner())));
             if (crvView != NULL) {
                 crvView->Resize(
                     static_cast<unsigned int>(this->client1Area.Width()),
@@ -358,14 +372,19 @@ void view::SplitView::Resize(unsigned int width, unsigned int height) {
         crv = this->render2();
         if (crv != NULL) {
             // der ganz ganz dicke "because-i-know"-Knüppel
-            AbstractView *crvView = 
+            AbstractView *crvView =
                 const_cast<AbstractView*>(dynamic_cast<const AbstractView *>(
-                static_cast<const Module*>(crv->PeekCalleeSlot()->Owner())));
+                    static_cast<const Module*>(crv->PeekCalleeSlot()->Owner())));
             if (crvView != NULL) {
                 crvView->Resize(
                     static_cast<unsigned int>(this->client2Area.Width()),
                     static_cast<unsigned int>(this->client2Area.Height()));
             }
+        }
+
+        auto* cgr = this->overlaySlot.CallAs<view::CallSplitViewOverlay>();
+        if (cgr != nullptr) {
+            cgr->Resize(this->clientArea.Width(), this->clientArea.Height());
         }
     }
 }
@@ -377,7 +396,7 @@ void view::SplitView::Resize(unsigned int width, unsigned int height) {
 bool view::SplitView::OnRenderView(Call& call) {
     view::CallRenderView *crv = dynamic_cast<view::CallRenderView *>(&call);
     if (crv == NULL) return false;
-    
+
     this->overrideCall = crv;
 
     mmcRenderViewContext context;
@@ -405,50 +424,116 @@ void view::SplitView::UpdateFreeze(bool freeze) {
 
 
 bool view::SplitView::OnKey(Key key, KeyAction action, Modifiers mods) {
-    auto* crv = this->renderFocused();
-    if (crv == NULL) return false;
 
-    InputEvent evt;
-    evt.tag = InputEvent::Tag::Key;
-    evt.keyData.key = key;
-    evt.keyData.action = action;
-    evt.keyData.mods = mods;
-    crv->SetInputEvent(evt);
-    if (!(*crv)(view::CallRenderView::FnOnKey)) return false;
+    bool consumed = false;
 
-    return true;
+    // Prioritize overlay renderer
+    auto* cgr = this->overlaySlot.CallAs<view::CallSplitViewOverlay>();
+    if (cgr != nullptr) {
+        InputEvent evt;
+        evt.tag = InputEvent::Tag::Key;
+        evt.keyData.key = key;
+        evt.keyData.action = action;
+        evt.keyData.mods = mods;
+        cgr->SetInputEvent(evt);
+        if ((*cgr)(view::CallSplitViewOverlay::FnOnKey)) return true;
+    }
+
+    auto* crv = this->render1();
+    if (crv != nullptr) {
+        InputEvent evt;
+        evt.tag = InputEvent::Tag::Key;
+        evt.keyData.key = key;
+        evt.keyData.action = action;
+        evt.keyData.mods = mods;
+        crv->SetInputEvent(evt);
+        if ((*crv)(view::CallRenderView::FnOnKey)) consumed = true;
+    }
+
+    crv = this->render2();
+    if (crv != nullptr) {
+
+        InputEvent evt;
+        evt.tag = InputEvent::Tag::Key;
+        evt.keyData.key = key;
+        evt.keyData.action = action;
+        evt.keyData.mods = mods;
+        crv->SetInputEvent(evt);
+        if ((*crv)(view::CallRenderView::FnOnKey)) consumed = true;
+    }
+
+    return consumed;
 }
 
 
 bool view::SplitView::OnChar(unsigned int codePoint) {
-    auto* crv = this->renderFocused();
-    if (crv == NULL) return false;
 
-    InputEvent evt;
-    evt.tag = InputEvent::Tag::Char;
-    evt.charData.codePoint = codePoint;
-    crv->SetInputEvent(evt);
-    if (!(*crv)(view::CallRenderView::FnOnChar)) return false;
+    bool consumed = false;
 
-    return true;
+    // Prioritize overlay renderer
+    auto* cgr = this->overlaySlot.CallAs<view::CallSplitViewOverlay>();
+    if (cgr != nullptr) {
+        InputEvent evt;
+        evt.tag = InputEvent::Tag::Char;
+        evt.charData.codePoint = codePoint;
+        cgr->SetInputEvent(evt);
+        if ((*cgr)(view::CallSplitViewOverlay::FnOnChar)) return true;
+    }
+
+    auto* crv = this->render1();
+    if (crv != nullptr) {
+        InputEvent evt;
+        evt.tag = InputEvent::Tag::Char;
+        evt.charData.codePoint = codePoint;
+        crv->SetInputEvent(evt);
+        if ((*crv)(view::CallRenderView::FnOnChar)) consumed = true;
+    }
+
+    crv = this->render2();
+    if (crv != nullptr) {
+        InputEvent evt;
+        evt.tag = InputEvent::Tag::Char;
+        evt.charData.codePoint = codePoint;
+        crv->SetInputEvent(evt);
+        if ((*crv)(view::CallRenderView::FnOnChar)) consumed = true;
+    }
+
+    return consumed;
 }
 
 
 bool view::SplitView::OnMouseButton(MouseButton button, MouseButtonAction action, Modifiers mods) {
+
+    // Prioritize overlay renderer
+    auto* cgr = this->overlaySlot.CallAs<view::CallSplitViewOverlay>();
+    if (cgr != nullptr) {
+        InputEvent evt;
+        evt.tag = InputEvent::Tag::MouseButton;
+        evt.mouseButtonData.button = button;
+        evt.mouseButtonData.action = action;
+        evt.mouseButtonData.mods = mods;
+        cgr->SetInputEvent(evt);
+        if ((*cgr)(view::CallSplitViewOverlay::FnOnMouseButton)) return true;
+    }
+
     auto* crv = this->renderHovered();
     auto* crv1 = this->render1();
     auto* crv2 = this->render2();
 
-    auto down = action == MouseButtonAction::PRESS;
-    if (crv == crv1 && this->focus == 0 && down) {
-        this->focus = 1;
-    } else if (crv == crv2 && this->focus == 0 && down) {
-        this->focus = 2;
-    } else {
-        this->focus = 0;
+    auto down = (action == MouseButtonAction::PRESS);
+    if (down) {
+        if (crv == crv1) {
+            this->focus = 1;
+        }
+        else if (crv == crv2) {
+            this->focus = 2;
+        }
+        else {
+            this->focus = 0;
+        }
     }
 
-	if (crv) {
+    if (crv) {
         InputEvent evt;
         evt.tag = InputEvent::Tag::MouseButton;
         evt.mouseButtonData.button = button;
@@ -467,27 +552,41 @@ bool view::SplitView::OnMouseMove(double x, double y) {
     this->mouseX = x;
     this->mouseY = y;
 
+    // Prioritize overlay renderer
+    auto* cgr = this->overlaySlot.CallAs<view::CallSplitViewOverlay>();
+    if (cgr != nullptr) {
+        InputEvent evt;
+        evt.tag = InputEvent::Tag::MouseMove;
+        evt.mouseMoveData.x = x;
+        evt.mouseMoveData.y = y;
+        cgr->SetInputEvent(evt);
+        if ((*cgr)(view::CallSplitViewOverlay::FnOnMouseMove)) return true;
+    }
+
     auto* crv = this->renderHovered();
     auto* crv1 = this->render1();
     auto* crv2 = this->render2();
 
     float mx;
     float my;
+
     if (crv == crv1) {
         mx = x - this->client1Area.Left();
         my = y - this->client1Area.Bottom();
-    } else if (crv == crv2) {
+    }
+    else if (crv == crv2) {
         mx = x - this->client2Area.Left();
         my = y - this->client2Area.Bottom();
-    } else {
+    }
+    else {
         return false;
     }
 
-    InputEvent evt;
-    evt.tag = InputEvent::Tag::MouseMove;
-    evt.mouseMoveData.x = mx;
-    evt.mouseMoveData.y = my;
     if (crv != nullptr) {
+        InputEvent evt;
+        evt.tag = InputEvent::Tag::MouseMove;
+        evt.mouseMoveData.x = mx;
+        evt.mouseMoveData.y = my;
         crv->SetInputEvent(evt);
         if (!(*crv)(view::CallRenderView::FnOnMouseMove)) return false;
     }
@@ -497,6 +596,18 @@ bool view::SplitView::OnMouseMove(double x, double y) {
 
 
 bool view::SplitView::OnMouseScroll(double dx, double dy) {
+
+    // Prioritize overlay renderer
+    auto* cgr = this->overlaySlot.CallAs<view::CallSplitViewOverlay>();
+    if (cgr != nullptr) {
+        InputEvent evt;
+        evt.tag = InputEvent::Tag::MouseScroll;
+        evt.mouseScrollData.dx = dx;
+        evt.mouseScrollData.dy = dy;
+        cgr->SetInputEvent(evt);
+        if ((*cgr)(view::CallSplitViewOverlay::FnOnMouseScroll)) return true;
+    }
+
     auto* crv = this->renderHovered();
     if (crv == NULL) return false;
 
@@ -544,10 +655,9 @@ void view::SplitView::unpackMouseCoordinates(float &x, float &y) {
  */
 bool view::SplitView::splitColourUpdated(param::ParamSlot& sender) {
     try {
-        vislib::graphics::ColourParser::FromString(
-            this->splitColourSlot.Param<param::StringParam>()->Value(),
-            this->splitColour);
-    } catch(...) {
+        this->splitColour = this->splitColourSlot.Param<param::ColorParam>()->Value();
+    }
+    catch (...) {
         Log::DefaultLog.WriteError("Unable to parse splitter colour");
     }
     return true;
@@ -576,7 +686,8 @@ void view::SplitView::calcClientAreas(void) {
             this->clientArea.Bottom(),
             this->clientArea.Right(),
             this->clientArea.Top());
-    } else { // vertical
+    }
+    else { // vertical
         this->client1Area.Set(
             this->clientArea.Left(),
             this->clientArea.Bottom(),

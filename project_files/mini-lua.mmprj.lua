@@ -12,6 +12,7 @@ else
     mmCreateModule("View3D", "::mini-lua::v")
 end
 mmCreateModule("SimpleSphereRenderer", "::mini-lua::ssr")
+mmSetParamValue("::mini-lua::ssr::renderMode", "Simple")
 mmCreateModule("MMPLDDataSource", "::mini-lua::ds")
 mmCreateModule("LinearTransferFunction", "::mini-lua::ltf")
 mmCreateCall("CallRender3D", "::mini-lua::v::rendering", "::mini-lua::ssr::rendering")

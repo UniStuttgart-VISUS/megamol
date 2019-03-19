@@ -10,7 +10,7 @@
 #include <chrono>
 #include <map>
 #include "vislib/String.h"
-#include "vislib/sys/KeyCode.h"
+#include "mmcore/view/Input.h"
 
 namespace megamol {
 namespace console {
@@ -20,7 +20,7 @@ namespace console {
      */
     class ButtonParamUILayer : public AbstractUILayer {
     public:
-        ButtonParamUILayer(gl::Window& wnd, void * coreHandle, void * viewHandle);
+        ButtonParamUILayer(void * coreHandle, void * viewHandle);
         virtual ~ButtonParamUILayer();
 
         inline void SetMaskingLayer(AbstractUILayer *layer) {
@@ -36,7 +36,7 @@ namespace console {
         void *hView; // handle memory is owned by Window
 
         std::chrono::system_clock::time_point last_update;
-        std::map<vislib::sys::KeyCode, vislib::TString> hotkeys;
+        std::map<std::string, vislib::TString> hotkeys;
         AbstractUILayer *maskingLayer;
     };
 

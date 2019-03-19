@@ -72,8 +72,11 @@ if(BUILD_CORE)
     set(ZLIB_RELEASE "lib/zlibstatic${CMAKE_STATIC_LIBRARY_SUFFIX}")
   else()
     include(GNUInstallDirs)
-    set(ZLIB_DEBUG "${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}z${CMAKE_STATIC_LIBRARY_SUFFIX}")
-    set(ZLIB_RELEASE "${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}z${CMAKE_STATIC_LIBRARY_SUFFIX}")
+    #set(ZLIB_DEBUG "${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}z${CMAKE_STATIC_LIBRARY_SUFFIX}")
+    #set(ZLIB_RELEASE "${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}z${CMAKE_STATIC_LIBRARY_SUFFIX}")
+    set(ZLIB_DEBUG "lib/${CMAKE_STATIC_LIBRARY_PREFIX}z${CMAKE_STATIC_LIBRARY_SUFFIX}")
+    set(ZLIB_RELEASE "lib/${CMAKE_STATIC_LIBRARY_PREFIX}z${CMAKE_STATIC_LIBRARY_SUFFIX}")
+
   endif()
   add_external_project(zlib_ext
     GIT_REPOSITORY https://github.com/madler/zlib.git
@@ -92,7 +95,7 @@ if(BUILD_CORE)
     set(LIBPNG_RELEASE "lib/libpng16_static${CMAKE_STATIC_LIBRARY_SUFFIX}")
   else()
     include(GNUInstallDirs)
-    set(LIBPNG_DEBUG "${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}png16d${CMAKE_STATIC_LIBRARY_SUFFIX}")
+    set(LIBPNG_DEBUG "${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}png16${CMAKE_STATIC_LIBRARY_SUFFIX}")
     set(LIBPNG_RELEASE "${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}png16${CMAKE_STATIC_LIBRARY_SUFFIX}")
   endif()
   ExternalProject_Get_Property(zlib_ext INSTALL_DIR)
@@ -158,7 +161,20 @@ if(BUILD_CORE)
     DEPENDS glm_ext
     INCLUDE_DIR "src/glm_ext/")
 
-  file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
+  #include nlohmann/json
+  add_external_project(json_ext
+      GIT_REPOSITORY https://github.com/azadkuh/nlohmann_json_release.git
+      GIT_TAG "v3.5.0"
+      CONFIGURE_COMMAND ""
+      BUILD_COMMAND ""
+      INSTALL_COMMAND ""
+      TEST_COMMAND ""
+      CMAKE_ARGS -DBUILD_TESTING=OFF)
+  add_external_library(json INTERFACE
+    DEPENDS json_ext
+    INCLUDE_DIR "src/json_ext/")
+
+  file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h" "include/*.inl")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
   file(GLOB_RECURSE shader_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Shaders/*")
@@ -186,7 +202,7 @@ if(BUILD_CORE)
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "src" "include"
     PUBLIC ${EXPAT_INCLUDE_DIRS})
   target_link_libraries(${PROJECT_NAME} 
-    PUBLIC vislib glad zlib libpng ${EXPAT_LIBRARIES}
+    PUBLIC vislib glad glm zlib libpng json ${EXPAT_LIBRARIES}
     PRIVATE lua libzmq libcppzmq ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT})
   if(WIN32)
     set_target_properties(${PROJECT_NAME} PROPERTIES

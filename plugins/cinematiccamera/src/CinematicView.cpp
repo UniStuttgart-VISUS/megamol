@@ -24,22 +24,24 @@ using namespace vislib;
 CinematicView::CinematicView(void)
     : View3D()
     , keyframeKeeperSlot("keyframeKeeper", "Connects to the Keyframe Keeper.")
-    , renderParam("01_renderAnim", "Toggle rendering of complete animation to PNG files.")
-    , toggleAnimPlayParam("02_playPreview", "Toggle playing animation as preview")
-    , selectedSkyboxSideParam("03_skyboxSide", "Select the skybox side.")
-    , cubeModeRenderParam("04_cubeMode", "Render cube around dataset with skyboxSide as side selector.")
-    , resWidthParam("05_cinematicWidth", "The width resolution of the cineamtic view to render.")
-    , resHeightParam("06_cinematicHeight", "The height resolution of the cineamtic view to render.")
-    , fpsParam("07_fps", "Frames per second the animation should be rendered.")
-    , startRenderFrameParam("08_firstRenderFrame", "Set first frame number to start rendering with (allows continuing "
-                                                   "aborted rendering without starting from the beginning).")
-    , delayFirstRenderFrameParam("09_delayFirstRenderFrame",
-          "Delay (in seconds) to wait until first frame for rendering is written (needed to get right first frame "
-          "especially for high resolutions and for distributed rendering).")
-    , frameFolderParam("10_frameFolder", "Specify folder where the frame files should be stored.")
-    , addSBSideToNameParam("11_addSBSideToName", "Toggle whether skybox side should be added to output filename")
-    , eyeParam("stereo::eye", "Select eye position (for stereo view).")
-    , projectionParam("stereo::projection", "Select camera projection.")
+    , renderParam(               "01_renderAnim", "Toggle rendering of complete animation to PNG files.")
+    , toggleAnimPlayParam(       "02_playPreview", "Toggle playing animation as preview")
+    , selectedSkyboxSideParam(   "03_skyboxSide", "Select the skybox side.")
+    , cubeModeRenderParam(       "04_cubeMode", "Render cube around dataset with skyboxSide as side selector.")
+    , resWidthParam(             "05_cinematicWidth", "The width resolution of the cineamtic view to render.")
+    , resHeightParam(            "06_cinematicHeight", "The height resolution of the cineamtic view to render.")
+    , fpsParam(                  "07_fps", "Frames per second the animation should be rendered.")
+    , startRenderFrameParam(     "08_firstRenderFrame", "Set first frame number to start rendering with " 
+                                                        "(allows continuing aborted rendering without starting "
+                                                        "from the beginning).")
+    , delayFirstRenderFrameParam("09_delayFirstRenderFrame", "Delay (in seconds) to wait until first frame "
+                                                             "for rendering is written (needed to get right "
+                                                             "first frame especially for high resolutions and "
+                                                             "for distributed rendering).")
+    , frameFolderParam(          "10_frameFolder", "Specify folder where the frame files should be stored.")
+    , addSBSideToNameParam(      "11_addSBSideToName", "Toggle whether skybox side should be added to output filename")
+    , eyeParam(                  "stereo::eye", "Select eye position (for stereo view).")
+    , projectionParam(           "stereo::projection", "Select camera projection.")
     , theFont(megamol::core::utility::SDFFont::FontName::ROBOTO_SANS)
     , deltaAnimTime(clock())
     , shownKeyframe()
@@ -53,6 +55,7 @@ CinematicView::CinematicView(void)
     , rendering(false)
     , fps(24)
     , pngdata() {
+
     // init callback
     this->keyframeKeeperSlot.SetCompatibleCall<CallCinematicCameraDescription>();
     this->MakeSlotAvailable(&this->keyframeKeeperSlot);
@@ -81,10 +84,10 @@ CinematicView::CinematicView(void)
     this->fpsParam.SetParameter(new param::IntParam(static_cast<int>(this->fps), 1));
     this->MakeSlotAvailable(&this->fpsParam);
 
-    this->renderParam.SetParameter(new param::ButtonParam('r'));
+    this->renderParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_R));
     this->MakeSlotAvailable(&this->renderParam);
 
-    this->toggleAnimPlayParam.SetParameter(new param::ButtonParam(' '));
+    this->toggleAnimPlayParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_SPACE));
     this->MakeSlotAvailable(&this->toggleAnimPlayParam);
 
     param::EnumParam* enp = new param::EnumParam(vislib::graphics::CameraParameters::StereoEye::LEFT_EYE);
@@ -178,10 +181,6 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
 
     bool loadNewCamParams = false;
 
-    // Disabling enableMouseSelectionSlot for this view
-    // -> 'TAB'-key is needed to be active in the View3D connected to CinematicRenderer for mouse selection of
-    // manipulators
-    this->SetSlotUnavailable(static_cast<AbstractSlot*>(&this->enableMouseSelectionSlot));
     // Disabling toggleAnimPlaySlot in the parent view3d
     // -> 'SPACE'-key is needed to be available here for own control of animation time
     this->SetSlotUnavailable(static_cast<AbstractSlot*>(this->timeCtrl.GetSlot(3)));
@@ -503,9 +502,9 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     const float* bgColor = Base::BkgndColour();
     // COLORS
     float lbColor[4] = {1.0f, 1.0f, 1.0f, 1.0f};
-    float white[4] = {1.0f, 1.0f, 1.0f, 1.0f};
-    float yellow[4] = {1.0f, 1.0f, 0.0f, 1.0f};
-    float menu[4] = {0.0f, 0.0f, 0.3f, 1.0f};
+    float white[4]   = {1.0f, 1.0f, 1.0f, 1.0f};
+    float yellow[4]  = {1.0f, 1.0f, 0.0f, 1.0f};
+    float menu[4]    = {0.0f, 0.0f, 0.3f, 1.0f};
     // Adapt colors depending on lightness
     float L = (vislib::math::Max(bgColor[0], vislib::math::Max(bgColor[1], bgColor[2])) +
                   vislib::math::Min(bgColor[0], vislib::math::Min(bgColor[1], bgColor[2]))) /
@@ -546,14 +545,14 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glBegin(GL_QUADS);
-    glTexCoord2f(0.0f, 0.0f);
-    glVertex3f(left, bottom, 0.0f);
-    glTexCoord2f(1.0f, 0.0f);
-    glVertex3f(right, bottom, 0.0f);
-    glTexCoord2f(1.0f, 1.0f);
-    glVertex3f(right, up, 0.0f);
-    glTexCoord2f(0.0f, 1.0f);
-    glVertex3f(left, up, 0.0f);
+        glTexCoord2f(0.0f, 0.0f);
+        glVertex3f(left, bottom, 0.0f);
+        glTexCoord2f(1.0f, 0.0f);
+        glVertex3f(right, bottom, 0.0f);
+        glTexCoord2f(1.0f, 1.0f);
+        glVertex3f(right, up, 0.0f);
+        glTexCoord2f(0.0f, 1.0f);
+        glVertex3f(left, up, 0.0f);
     glEnd();
     glBindTexture(GL_TEXTURE_2D, 0);
     glDisable(GL_TEXTURE_2D);
@@ -574,14 +573,14 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     // Draw letter box quads in letter box Color
     glColor4fv(lbColor);
     glBegin(GL_QUADS);
-    glVertex2i(0, 0);
-    glVertex2i(x, 0);
-    glVertex2i(x, y);
-    glVertex2i(0, y);
-    glVertex2i(vpW_int, vpH_int);
-    glVertex2i(vpW_int - x, vpH_int);
-    glVertex2i(vpW_int - x, vpH_int - y);
-    glVertex2i(vpW_int, vpH_int - y);
+        glVertex2i(0, 0);
+        glVertex2i(x, 0);
+        glVertex2i(x, y);
+        glVertex2i(0, y);
+        glVertex2i(vpW_int, vpH_int);
+        glVertex2i(vpW_int - x, vpH_int);
+        glVertex2i(vpW_int - x, vpH_int - y);
+        glVertex2i(vpW_int, vpH_int - y);
     glEnd();
 
     // DRAW MENU --------------------------------------------------------------

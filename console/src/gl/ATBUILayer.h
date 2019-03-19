@@ -14,6 +14,7 @@
 #include "gl/ATBar.h"
 #include "AntTweakBar.h"
 #include <chrono>
+#include <string>
 
 namespace megamol {
 namespace console {
@@ -26,7 +27,7 @@ namespace gl {
     class ATBUILayer : public AbstractUILayer {
     public:
 
-        ATBUILayer(Window& wnd, const char* wndName, void* hView, void *hCore);
+        ATBUILayer(const char* wndName, void* hView, void *hCore);
         virtual ~ATBUILayer();
 
         virtual bool Enabled();
@@ -51,6 +52,7 @@ namespace gl {
         bool enabled;
         bool isCoreHotFixed;
         std::chrono::system_clock::time_point lastParamUpdateTime;
+        std::string wndName;
 
         bool fwd = false, back = false, left = false, right = false;
         bool wasdHotfixed = false;

@@ -118,7 +118,7 @@ protected:
     core::param::ParamSlot AOtransparencyEnabled;
     core::param::ParamSlot AOsamples;
     core::param::ParamSlot AOdistance;
-    core::param::ParamSlot extraSamles;
+    core::param::ParamSlot accumulateSlot;
 
     core::param::ParamSlot rd_epsilon;
     core::param::ParamSlot rd_spp;
@@ -128,6 +128,9 @@ protected:
     core::param::ParamSlot shadows;
     core::param::ParamSlot useDB;
     core::param::ParamSlot numThreads;
+
+    // Fix for deprecated material (ospNewMaterial2 now)
+    std::string rd_type_string;
     
 
     megamol::core::param::ParamSlot deviceTypeSlot;

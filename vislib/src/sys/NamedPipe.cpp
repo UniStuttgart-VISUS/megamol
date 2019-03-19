@@ -20,7 +20,7 @@
 #ifndef _WIN32
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <linux/stat.h>
+//#include <linux/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <signal.h>

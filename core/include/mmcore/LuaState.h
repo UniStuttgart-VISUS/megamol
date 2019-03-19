@@ -76,7 +76,7 @@ namespace utility {
         /**
          * Run a script string, sandboxed in the environment provided.
          */
-        bool RunString(const std::string& envName, const std::string& script, std::string& result);
+        bool RunString(const std::string& envName, const std::string& script, std::string& result, std::string scriptPath = "");
         
         /**
          * Run a script file, sandboxed in the standard megamol_env.
@@ -89,7 +89,7 @@ namespace utility {
         /**
          * Run a script string, sandboxed in the standard megamol_env.
          */
-        bool RunString(const std::string& script, std::string& result);
+        bool RunString(const std::string& script, std::string& result, std::string scriptPath = "");
 
         /**
          * Answer whether the wrapped lua state is valid
@@ -232,6 +232,9 @@ namespace utility {
 
         int ReadTextFile(lua_State* L);
 
+        int Flush(lua_State* L);
+        int CurrentScriptPath(lua_State* L);
+
     private:
 
         /** error handler */
@@ -284,6 +287,8 @@ namespace utility {
 
         /** no two threads must interfere with the reentrant L */
         std::mutex stateLock;
+
+        std::string currentScriptPath = "";
     };
 
 } /* namespace core */
