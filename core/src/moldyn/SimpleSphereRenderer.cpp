@@ -120,10 +120,15 @@ void APIENTRY DebugGLCallback(GLenum source, GLenum type, GLuint id, GLenum seve
  * moldyn::SimpleSphereRenderer::SimpleSphereRenderer
  */
 moldyn::SimpleSphereRenderer::SimpleSphereRenderer(void) : AbstractSimpleSphereRenderer(),
-    curVp(),
+    curViewAttrib(),
     curClipDat(),
+    oldClipDat(),
     curClipCol(),
     curLightPos(),
+    curVpWidth(0),
+    curVpHeight(0),
+    lastVpWidth(0),
+    lastVpHeight(0),
     curMVinv(),
     curMVP(),
     curMVPinv(),
@@ -156,8 +161,6 @@ moldyn::SimpleSphereRenderer::SimpleSphereRenderer(void) : AbstractSimpleSphereR
     gBuffer(),
     oldHash(),
     oldFrameID(0),
-    vpWidth(0),
-    vpHeight(0),
     ambConeConstants(),
     tfFallbackHandle(0),
     volGen(nullptr),
@@ -237,8 +240,8 @@ moldyn::SimpleSphereRenderer::SimpleSphereRenderer(void) : AbstractSimpleSphereR
 
     // Ambient Occlusion ------------------------------------------------------
     oldHash = -1;
-    vpWidth = -1;
-    vpHeight = -1;
+    curVpWidth = -1;
+    curVpHeight = -1;
     this->volGen = nullptr;
 }
 
@@ -326,12 +329,13 @@ bool moldyn::SimpleSphereRenderer::resetResources(void) {
     this->theShaders.clear();
     this->theShaders_splat.clear();
 
-    if (volGen != nullptr) {
-        delete volGen;
-        volGen = nullptr;
+    if (this->volGen != nullptr) {
+        delete this->volGen;
+        this->volGen = nullptr;
     }
     glDeleteTextures(3, reinterpret_cast<GLuint*>(&this->gBuffer));
     glDeleteFramebuffers(1, &(this->gBuffer.fbo));
+    this->gpuData.clear();
 
     glUnmapNamedBufferEXT(this->theSingleBuffer);
     for (auto &x : fences) {
@@ -505,10 +509,8 @@ bool moldyn::SimpleSphereRenderer::createResources() {
 
                 // Generate texture and frame buffer handles
                 glGenTextures(3, reinterpret_cast<GLuint*>(&this->gBuffer));
-
                 glGenFramebuffers(1, &(this->gBuffer.fbo));
-
-                this->rebuildGBuffer();
+                ///this->rebuildGBuffer();
 
                 // Build the sphere shader	
                 this->rebuildShader();
@@ -591,16 +593,20 @@ bool moldyn::SimpleSphereRenderer::Render(view::CallRender3D& call) {
     if (mpdc == nullptr) return false;
 
     // Update current state variables -----------------------------------------
-    glGetFloatv(GL_VIEWPORT, this->curVp);
-    glPointSize(vislib::math::Max(this->curVp[2], this->curVp[3]));
-    if (this->curVp[2] < 1.0f) this->curVp[2] = 1.0f;
-    if (this->curVp[3] < 1.0f) this->curVp[3] = 1.0f;
-    this->curVp[2] = 2.0f / this->curVp[2];
-    this->curVp[3] = 2.0f / this->curVp[3];
+    glGetFloatv(GL_VIEWPORT, this->curViewAttrib);
+    glPointSize(vislib::math::Max(this->curViewAttrib[2], this->curViewAttrib[3]));
+    this->curVpWidth = static_cast<int>(this->curViewAttrib[2]);
+    this->curVpHeight = static_cast<int>(this->curViewAttrib[3]);
+    if (this->curViewAttrib[2] < 1.0f) this->curViewAttrib[2] = 1.0f;
+    if (this->curViewAttrib[3] < 1.0f) this->curViewAttrib[3] = 1.0f;
+    this->curViewAttrib[2] = 2.0f / this->curViewAttrib[2];
+    this->curViewAttrib[3] = 2.0f / this->curViewAttrib[3];
 
     this->getClipData(this->curClipDat, this->curClipCol);
 
+    glEnable(GL_LIGHTING);
     glGetLightfv(GL_LIGHT0, GL_POSITION, this->curLightPos);
+    glDisable(GL_LIGHTING);
 
     GLfloat modelViewMatrix_column[16];
     glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
@@ -646,6 +652,12 @@ bool moldyn::SimpleSphereRenderer::Render(view::CallRender3D& call) {
 
     // timer.EndFrame();
 
+    this->lastVpHeight = this->curVpHeight;
+    this->lastVpWidth = this->curVpWidth;
+    for (size_t i = 0; i < 4; ++i) {
+        this->oldClipDat[i] = this->curClipDat[i];
+    }
+
 #ifdef DEBUG_GL_CALLBACK
     glDisable(GL_DEBUG_OUTPUT);
     glDisable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
@@ -666,7 +678,7 @@ bool moldyn::SimpleSphereRenderer::renderSimple(view::CallRender3D* cr3d, MultiP
     GLuint colAttribLoc = glGetAttribLocationARB(this->sphereShader, "inColor");
     GLuint colIdxAttribLoc = glGetAttribLocationARB(this->sphereShader, "colIdx");
 
-    glUniform4fv(this->sphereShader.ParameterLocation("viewAttr"), 1, this->curVp);
+    glUniform4fv(this->sphereShader.ParameterLocation("viewAttr"), 1, this->curViewAttrib);
     glUniform3fv(this->sphereShader.ParameterLocation("camIn"), 1, cr3d->GetCameraParameters()->Front().PeekComponents());
     glUniform3fv(this->sphereShader.ParameterLocation("camRight"), 1, cr3d->GetCameraParameters()->Right().PeekComponents());
     glUniform3fv(this->sphereShader.ParameterLocation("camUp"), 1, cr3d->GetCameraParameters()->Up().PeekComponents());
@@ -740,7 +752,7 @@ bool moldyn::SimpleSphereRenderer::renderNG(view::CallRender3D* cr3d, MultiParti
 
         this->newShader->Enable();
 
-        glUniform4fv(this->newShader->ParameterLocation("viewAttr"), 1, this->curVp);
+        glUniform4fv(this->newShader->ParameterLocation("viewAttr"), 1, this->curViewAttrib);
         glUniform3fv(this->newShader->ParameterLocation("camIn"), 1, cr3d->GetCameraParameters()->Front().PeekComponents());
         glUniform3fv(this->newShader->ParameterLocation("camRight"), 1, cr3d->GetCameraParameters()->Right().PeekComponents());
         glUniform3fv(this->newShader->ParameterLocation("camUp"), 1, cr3d->GetCameraParameters()->Up().PeekComponents());
@@ -912,7 +924,7 @@ bool moldyn::SimpleSphereRenderer::renderNGSplat(view::CallRender3D* cr3d, Multi
 
         this->newShader->Enable();
 
-        glUniform4fv(this->newShader->ParameterLocation("viewAttr"), 1, this->curVp);
+        glUniform4fv(this->newShader->ParameterLocation("viewAttr"), 1, this->curViewAttrib);
         glUniform3fv(this->newShader->ParameterLocation("camIn"), 1, cr3d->GetCameraParameters()->Front().PeekComponents());
         glUniform3fv(this->newShader->ParameterLocation("camRight"), 1, cr3d->GetCameraParameters()->Right().PeekComponents());
         glUniform3fv(this->newShader->ParameterLocation("camUp"), 1, cr3d->GetCameraParameters()->Up().PeekComponents());
@@ -1049,7 +1061,7 @@ bool moldyn::SimpleSphereRenderer::renderNGBufferArray(view::CallRender3D* cr3d,
     GLuint colAttribLoc    = glGetAttribLocationARB(this->sphereShader, "inColor");
     GLuint colIdxAttribLoc = glGetAttribLocationARB(this->sphereShader, "colIdx");
 
-    glUniform4fv(this->sphereShader.ParameterLocation("viewAttr"), 1, this->curVp);
+    glUniform4fv(this->sphereShader.ParameterLocation("viewAttr"), 1, this->curViewAttrib);
     glUniform3fv(this->sphereShader.ParameterLocation("camIn"), 1, cr3d->GetCameraParameters()->Front().PeekComponents());
     glUniform3fv(this->sphereShader.ParameterLocation("camRight"), 1, cr3d->GetCameraParameters()->Right().PeekComponents());
     glUniform3fv(this->sphereShader.ParameterLocation("camUp"), 1, cr3d->GetCameraParameters()->Up().PeekComponents());
@@ -1141,7 +1153,7 @@ bool moldyn::SimpleSphereRenderer::renderGeo(view::CallRender3D* cr3d, MultiPart
     GLuint colIdxAttribLoc = glGetAttribLocationARB(this->sphereGeometryShader, "colIdx");
 
     // Set shader variables
-    glUniform4fv(this->sphereGeometryShader.ParameterLocation("viewAttr"), 1, this->curVp);
+    glUniform4fv(this->sphereGeometryShader.ParameterLocation("viewAttr"), 1, this->curViewAttrib);
     glUniform3fv(this->sphereGeometryShader.ParameterLocation("camIn"), 1, cr3d->GetCameraParameters()->Front().PeekComponents());
     glUniform3fv(this->sphereGeometryShader.ParameterLocation("camRight"), 1, cr3d->GetCameraParameters()->Right().PeekComponents());
     glUniform3fv(this->sphereGeometryShader.ParameterLocation("camUp"), 1, cr3d->GetCameraParameters()->Up().PeekComponents());
@@ -1203,13 +1215,14 @@ bool moldyn::SimpleSphereRenderer::renderAmbientOcclusion(view::CallRender3D* cr
 
     GLint prevFBO;
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prevFBO);
-    glBindFramebuffer(GL_FRAMEBUFFER, gBuffer.fbo); checkGLError;
+
+    glBindFramebuffer(GL_FRAMEBUFFER, this->gBuffer.fbo);                   checkGLError;
     GLenum bufs[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
     glDrawBuffers(2, bufs);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); checkGLError;
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);                     checkGLError;
 
-    glBindFragDataLocation(sphereShader.ProgramHandle(), 0, "outColor"); checkGLError;
-    glBindFragDataLocation(sphereShader.ProgramHandle(), 1, "outNormal"); checkGLError;
+    glBindFragDataLocation(sphereShader.ProgramHandle(), 0, "outColor");    checkGLError;
+    glBindFragDataLocation(sphereShader.ProgramHandle(), 1, "outNormal");   checkGLError;
 
     // Render the particles' geometry
     this->renderParticlesGeometry(cr3d, mpdc);
@@ -1714,52 +1727,48 @@ void moldyn::SimpleSphereRenderer::waitSingle(GLsync& syncObj) {
  */
 bool moldyn::SimpleSphereRenderer::rebuildGBuffer()
 {
-    float viewport[4];
-    glGetFloatv(GL_VIEWPORT, viewport);
-    int width = static_cast<int>(viewport[2]);
-    int height = static_cast<int>(viewport[3]);
-
-    if (this->vpWidth == width && this->vpHeight == height && !this->useHPTexturesSlot.IsDirty())
+    if (this->curVpWidth == this->lastVpWidth && this->curVpHeight == this->lastVpHeight && !this->useHPTexturesSlot.IsDirty())
         return true;
 
-    this->vpWidth = width;
-    this->vpHeight = height;
     this->useHPTexturesSlot.ResetDirty();
 
     bool highPrecision = this->useHPTexturesSlot.Param<megamol::core::param::BoolParam>()->Value();
 
-    glBindTexture(GL_TEXTURE_2D, gBuffer.color);
+    glBindTexture(GL_TEXTURE_2D, this->gBuffer.color);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, this->curVpWidth, this->curVpHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
 
-    glBindTexture(GL_TEXTURE_2D, gBuffer.normals);
+    glBindTexture(GL_TEXTURE_2D, this->gBuffer.normals);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexImage2D(GL_TEXTURE_2D, 0, highPrecision ? GL_RGBA32F : GL_RGBA, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, highPrecision ? GL_RGBA32F : GL_RGBA, this->curVpWidth, this->curVpHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
 
-    glBindTexture(GL_TEXTURE_2D, gBuffer.depth);
+    glBindTexture(GL_TEXTURE_2D, this->gBuffer.depth);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, width, height, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, this->curVpWidth, this->curVpHeight, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, nullptr);
 
-    // Configure the framebuffer object
+     // Configure the framebuffer object
     GLint prevFBO;
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prevFBO);
 
-    glBindFramebuffer(GL_FRAMEBUFFER, gBuffer.fbo); checkGLError;
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gBuffer.color, 0); checkGLError;
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, gBuffer.normals, 0); checkGLError;
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, gBuffer.depth, 0); checkGLError;
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+    glBindFramebuffer(GL_FRAMEBUFFER, this->gBuffer.fbo);                                                     checkGLError;
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this->gBuffer.color, 0);      checkGLError;
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, this->gBuffer.normals, 0);    checkGLError;
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, this->gBuffer.depth, 0);       checkGLError;
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
         std::cout << "Framebuffer NOT complete!" << std::endl;
+    }
 
     glBindFramebuffer(GL_FRAMEBUFFER, prevFBO);
 
@@ -1830,37 +1839,24 @@ bool moldyn::SimpleSphereRenderer::rebuildShader()
 /*
  * moldyn::SimpleSphereRenderer::renderDeferredPass
  */
-void moldyn::SimpleSphereRenderer::renderDeferredPass(megamol::core::view::CallRender3D* renderCall)
+void moldyn::SimpleSphereRenderer::renderDeferredPass(megamol::core::view::CallRender3D* cr3d)
 {
-    vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> mv, mvInverse, mvp, mvpInverse, proj, mvpTrans;
-    vislib::graphics::gl::CameraOpenGL cam(renderCall->GetCameraParameters());
-    glGetFloatv(GL_MODELVIEW_MATRIX, mv.PeekComponents());
-    glGetFloatv(GL_PROJECTION_MATRIX, proj.PeekComponents());
-
     bool enableAO = this->enableAOSlot.Param<megamol::core::param::BoolParam>()->Value();
     bool enableLighting = this->enableLightingSlot.Param<megamol::core::param::BoolParam>()->Value();
     bool highPrecision = this->useHPTexturesSlot.Param<megamol::core::param::BoolParam>()->Value();
 
-
-    mvp = proj * mv;
-    mvInverse = mv;
-    mvInverse.Invert();
-    mvpInverse = mvp;
-    mvpInverse.Invert();
-
     glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, gBuffer.depth);
+    glBindTexture(GL_TEXTURE_2D, this->gBuffer.depth);
     glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, gBuffer.normals);
+    glBindTexture(GL_TEXTURE_2D, this->gBuffer.normals);
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, gBuffer.color);
-
-    glPointSize(static_cast<GLfloat>((std::max)(vpWidth, vpHeight)));
+    glBindTexture(GL_TEXTURE_2D, this->gBuffer.color);
 
     this->lightingShader.Enable();
-    this->lightingShader.SetParameter("inWidth", static_cast<float>(vpWidth));
-    this->lightingShader.SetParameter("inHeight", static_cast<float>(vpHeight));
-    glUniformMatrix4fv(this->lightingShader.ParameterLocation("inMvpInverse"), 1, GL_FALSE, mvpInverse.PeekComponents());
+
+    this->lightingShader.SetParameter("inWidth", static_cast<float>(this->curVpWidth));
+    this->lightingShader.SetParameter("inHeight", static_cast<float>(this->curVpHeight));
+    glUniformMatrix4fv(this->lightingShader.ParameterLocation("inMvpInverse"), 1, GL_FALSE, this->curMVPinv.PeekComponents());
     this->lightingShader.SetParameter("inColorTex", static_cast<int>(0));
     this->lightingShader.SetParameter("inNormalsTex", static_cast<int>(1));
     this->lightingShader.SetParameter("inDepthTex", static_cast<int>(2));
@@ -1868,14 +1864,10 @@ void moldyn::SimpleSphereRenderer::renderDeferredPass(megamol::core::view::CallR
     this->lightingShader.SetParameter("inUseHighPrecision", highPrecision);
 
     if (enableLighting) {
-        vislib::math::Vector<float, 4> lightDir;
-        glEnable(GL_LIGHTING);
-        glGetLightfv(GL_LIGHT0, GL_POSITION, lightDir.PeekComponents());
-        glDisable(GL_LIGHTING);
-        lightDir = mvInverse * lightDir;
+        vislib::math::Vector<float, 4> lightDir = this->curMVinv * vislib::math::Vector<float, 4>(this->curLightPos);
         lightDir.Normalise();
         this->lightingShader.SetParameterArray3("inObjLightDir", 1, lightDir.PeekComponents());
-        this->lightingShader.SetParameterArray3("inObjCamPos", 1, mvInverse.GetColumn(3).PeekComponents());
+        this->lightingShader.SetParameterArray3("inObjCamPos", 1, this->curMVinv.GetColumn(3).PeekComponents());
     }
 
     if (enableAO) {
@@ -1893,12 +1885,14 @@ void moldyn::SimpleSphereRenderer::renderDeferredPass(megamol::core::view::CallR
         this->lightingShader.SetParameter("inAOConeLength", aoConeLength);
         this->lightingShader.SetParameter("inAmbVolShortestEdge", ambConeConstants[0]);
         this->lightingShader.SetParameter("inAmbVolMaxLod", ambConeConstants[1]);
-        this->lightingShader.SetParameterArray3("inBoundsMin", 1, renderCall->AccessBoundingBoxes().ObjectSpaceClipBox().GetLeftBottomBack().PeekCoordinates());
-        this->lightingShader.SetParameterArray3("inBoundsSize", 1, renderCall->AccessBoundingBoxes().ObjectSpaceClipBox().GetSize().PeekDimension());
+        this->lightingShader.SetParameterArray3("inBoundsMin", 1, cr3d->AccessBoundingBoxes().ObjectSpaceClipBox().GetLeftBottomBack().PeekCoordinates());
+        this->lightingShader.SetParameterArray3("inBoundsSize", 1, cr3d->AccessBoundingBoxes().ObjectSpaceClipBox().GetSize().PeekDimension());
     }
+
     glBegin(GL_POINTS);
     glVertex2f(0.0f, 0.0f);
     glEnd();
+
     this->lightingShader.Disable();
 }
 
@@ -1906,66 +1900,29 @@ void moldyn::SimpleSphereRenderer::renderDeferredPass(megamol::core::view::CallR
 /*
  * moldyn::SimpleSphereRenderer::renderParticlesGeometry
  */
-void moldyn::SimpleSphereRenderer::renderParticlesGeometry(megamol::core::view::CallRender3D* renderCall, megamol::core::moldyn::MultiParticleDataCall* dataCall)
+void moldyn::SimpleSphereRenderer::renderParticlesGeometry(megamol::core::view::CallRender3D* cr3d, megamol::core::moldyn::MultiParticleDataCall* dataCall)
 {
-    glDisable(GL_BLEND);
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
-
-    float scaling = 10.0f / renderCall->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
     bool highPrecision = this->useHPTexturesSlot.Param<megamol::core::param::BoolParam>()->Value();
 
-    glScalef(scaling, scaling, scaling);
-
-    float viewportStuff[4];
-    ::glGetFloatv(GL_VIEWPORT, viewportStuff);
-    glPointSize(vislib::math::Max(viewportStuff[2], viewportStuff[3]));
-    glPointSize(64);
-    if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
-    if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
-    viewportStuff[2] = 2.0f / viewportStuff[2];
-    viewportStuff[3] = 2.0f / viewportStuff[3];
-
-    vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> mv, mvInverse, mvp, mvpInverse, proj, mvpTrans;
-    vislib::graphics::gl::CameraOpenGL cam(renderCall->GetCameraParameters());
-    glGetFloatv(GL_MODELVIEW_MATRIX, mv.PeekComponents());
-    glGetFloatv(GL_PROJECTION_MATRIX, proj.PeekComponents());
-
-    mvp = proj * mv;
-    mvInverse = mv;
-    mvInverse.Invert();
-    mvpInverse = mvp;
-    mvpInverse.Invert();
-
-    vislib::math::Vector<float, 3> mvFront = -mvInverse.GetColumn(2);
-    vislib::math::Vector<float, 3> mvRight = mvInverse.GetColumn(0);
-    vislib::math::Vector<float, 3> mvUp = mvInverse.GetColumn(1);
-    mvFront.Normalise();
-    mvRight.Normalise();
-    mvUp.Normalise();
-
     bool useGeo = this->enableGeometryShader.Param<core::param::BoolParam>()->Value();
-
     vislib::graphics::gl::GLSLShader& theShader = useGeo ? this->sphereGeometryShader : this->sphereShader;
 
     theShader.Enable();
-    glUniformMatrix4fv(theShader.ParameterLocation("inMvp"), 1, GL_FALSE, mvp.PeekComponents());
-    glUniformMatrix4fv(theShader.ParameterLocation("inMvpInverse"), 1, GL_FALSE, mvpInverse.PeekComponents());
-    glUniformMatrix4fv(theShader.ParameterLocation("inMvpTrans"), 1, GL_TRUE, mvp.PeekComponents());
-    glUniformMatrix4fv(theShader.ParameterLocation("inMv"), 1, GL_FALSE, mv.PeekComponents());
 
+    glUniformMatrix4fv(theShader.ParameterLocation("inMvp"), 1, GL_FALSE, this->curMVP.PeekComponents());
+    glUniformMatrix4fv(theShader.ParameterLocation("inMvpInverse"), 1, GL_FALSE, this->curMVPinv.PeekComponents());
+    glUniformMatrix4fv(theShader.ParameterLocation("inMvpTrans"), 1, GL_FALSE, this->curMVPtransp.PeekComponents()); 
 
-    theShader.SetParameterArray4("inViewAttr", 1, viewportStuff);
-    theShader.SetParameterArray3("inCamFront", 1, mvFront.PeekComponents());
-    theShader.SetParameterArray3("inCamRight", 1, mvRight.PeekComponents());
-    theShader.SetParameterArray3("inCamUp", 1, mvUp.PeekComponents());
-    theShader.SetParameterArray4("inCamPos", 1, mvInverse.GetColumn(3).PeekComponents());
+    theShader.SetParameterArray4("inViewAttr", 1, this->curViewAttrib);
+    theShader.SetParameterArray3("inCamFront", 1, cr3d->GetCameraParameters()->Front().PeekComponents());
+    theShader.SetParameterArray3("inCamRight", 1, cr3d->GetCameraParameters()->Right().PeekComponents());
+    theShader.SetParameterArray3("inCamUp", 1, cr3d->GetCameraParameters()->Up().PeekComponents());
+    theShader.SetParameterArray4("inCamPos", 1, this->curMVinv.GetColumn(3).PeekComponents());
 
     theShader.SetParameterArray4("inClipDat", 1, this->curClipDat);
     theShader.SetParameterArray4("inClipCol", 1, this->curClipCol);
 
     theShader.SetParameter("inUseHighPrecision", highPrecision);
-
 
     for (unsigned int i = 0; i < gpuData.size(); ++i) {
         glBindVertexArray(gpuData[i].vertexArray);
@@ -2007,6 +1964,7 @@ void moldyn::SimpleSphereRenderer::renderParticlesGeometry(megamol::core::view::
     }
 
     glBindVertexArray(0);
+
     theShader.Disable();
 }
 
@@ -2027,12 +1985,10 @@ GLuint moldyn::SimpleSphereRenderer::getTransferFunctionHandle()
 /*
  * moldyn::SimpleSphereRenderer::rebuildWorkingData
  */
-void moldyn::SimpleSphereRenderer::rebuildWorkingData(megamol::core::view::CallRender3D* renderCall, megamol::core::moldyn::MultiParticleDataCall* dataCall)
+void moldyn::SimpleSphereRenderer::rebuildWorkingData(megamol::core::view::CallRender3D* cr3d, megamol::core::moldyn::MultiParticleDataCall* dataCall)
 {
     SIZE_T hash = dataCall->DataHash();
     unsigned int frameID = dataCall->FrameID();
-
-    this->getClipData(this->curClipDat, this->curClipCol);
 
     // Check if we got a new data set
     bool stateInvalid = (hash != oldHash || frameID != oldFrameID);
@@ -2097,7 +2053,7 @@ void moldyn::SimpleSphereRenderer::rebuildWorkingData(megamol::core::view::CallR
     if (volGen != nullptr && (stateInvalid || this->enableAOSlot.IsDirty() || this->aoVolSizeSlot.IsDirty() || !equalClipData)) {
         int volSize = this->aoVolSizeSlot.Param<megamol::core::param::IntParam>()->Value();
 
-        const vislib::math::Cuboid<float> &cube = renderCall->AccessBoundingBoxes().ObjectSpaceClipBox();
+        const vislib::math::Cuboid<float> &cube = cr3d->AccessBoundingBoxes().ObjectSpaceClipBox();
         vislib::math::Dimension<float, 3> dims = cube.GetSize();
 
         // Calculate the extensions of the volume by using the specified number of voxels for the longest edge
@@ -2139,9 +2095,7 @@ void moldyn::SimpleSphereRenderer::rebuildWorkingData(megamol::core::view::CallR
 
     this->enableAOSlot.ResetDirty();
     this->aoVolSizeSlot.ResetDirty();
-    for (size_t i = 0; i < 4; ++i) {
-        this->oldClipDat[i] = this->curClipDat[i];
-    }
+
 }
 
 

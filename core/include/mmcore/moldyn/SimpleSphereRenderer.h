@@ -174,10 +174,15 @@ namespace moldyn {
 
         // Current Render State -----------------------------------------------
 
-        float curVp[4];
+        float curViewAttrib[4];
         float curClipDat[4];
+        float oldClipDat[4];
         float curClipCol[4];
         float curLightPos[4];
+        int   curVpWidth;
+        int   curVpHeight;
+        int   lastVpWidth;
+        int   lastVpHeight;
         vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> curMVinv;
         vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> curMVP;
         vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> curMVPinv;
@@ -225,21 +230,14 @@ namespace moldyn {
             GLuint fbo;
         };
 
-        // The sphere shader
         vislib::graphics::gl::GLSLShader         lightingShader;
-        // GPU buffers for particle lists
         std::vector<gpuParticleDataType>         gpuData;
-        // G-Buffer handles for deferred shading
         gBufferDataType                          gBuffer;
         SIZE_T                                   oldHash;
         unsigned int                             oldFrameID;
-        int                                      vpWidth;
-        int                                      vpHeight;
-        float                                    oldClipDat[4];
         vislib::math::Vector<float, 2>           ambConeConstants;
-        // Fallback handle if no transfer function is specified
         GLuint                                   tfFallbackHandle;
-        megamol::core::utility::MDAO2VolumeGenerator *volGen;
+        core::utility::MDAO2VolumeGenerator     *volGen;
 
         /*********************************************************************/
         /* PARAMETERS                                                        */
@@ -414,10 +412,10 @@ namespace moldyn {
         /**
          * Render particles geometry.
          *
-         * @param renderCall  ...
+         * @param cr3d  ...
          * @param dataCall    ...
          */
-        void renderParticlesGeometry(megamol::core::view::CallRender3D* renderCall, megamol::core::moldyn::MultiParticleDataCall* dataCall);
+        void renderParticlesGeometry(megamol::core::view::CallRender3D* cr3d, megamol::core::moldyn::MultiParticleDataCall* dataCall);
 
         /**
          * Rebuild the ambient occlusion shaders.
@@ -436,10 +434,10 @@ namespace moldyn {
         /**
          * Rebuild working data.
          *
-         * @param renderCall  ...
+         * @param cr3d  ...
          * @param dataCall    ...
          */
-        void rebuildWorkingData(megamol::core::view::CallRender3D* renderCall, megamol::core::moldyn::MultiParticleDataCall* dataCall);
+        void rebuildWorkingData(megamol::core::view::CallRender3D* cr3d, megamol::core::moldyn::MultiParticleDataCall* dataCall);
 
         /**
          * Generate direction shader array string.
@@ -462,9 +460,9 @@ namespace moldyn {
         /**
          * Render deferred pass.
          *
-         * @param renderCall  ...
+         * @param cr3d  ...
          */
-        void renderDeferredPass(megamol::core::view::CallRender3D* renderCall);
+        void renderDeferredPass(megamol::core::view::CallRender3D* cr3d);
 
         /**
          * Get transfer function handle.
