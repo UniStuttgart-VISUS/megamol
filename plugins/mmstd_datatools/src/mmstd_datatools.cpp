@@ -77,6 +77,7 @@
 #include "ParticleTranslateRotateScale.h"
 #include "MeshTranslateRotateScale.h"
 #include "ParticleVisibilityFromVolume.h"
+#include "CSVFileSequence.h"
 #include "IColToIdentity.h"
 #include "ParticleIdentitySort.h"
 
@@ -218,6 +219,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::io::PLYDataSource>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::MeshTranslateRotateScale>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleVisibilityFromVolume>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::CSVFileSequence>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::IColToIdentity>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleIdentitySort>();
 
