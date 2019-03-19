@@ -18,7 +18,6 @@ namespace megamol {
 namespace adios {
 
 
-
 class abstractContainer {
 public:
     virtual ~abstractContainer() = default;
@@ -32,6 +31,7 @@ public:
 
 
     virtual const std::string getType() = 0;
+    virtual const size_t getTypeSize() = 0;
     virtual size_t size() = 0;
 };
 
@@ -48,6 +48,7 @@ public:
     std::vector<double>& getVec() { return dataVec; }
     size_t size() override { return dataVec.size(); }
     const std::string getType() override { return "double"; }
+    const size_t getTypeSize() override { return sizeof(double); }
 
 private:
     // TODO: maybe better in abstract container - no copy paste
@@ -73,6 +74,7 @@ public:
     std::vector<float>& getVec() { return dataVec; }
     size_t size() override { return dataVec.size(); }
     const std::string getType() override { return "float"; }
+    const size_t getTypeSize() override { return sizeof(float); }
 
 private:
     // TODO: maybe better in abstract container - no copy paste
@@ -84,6 +86,7 @@ private:
 
 public:
     ~FloatContainer() override = default;
+
 private:
     std::vector<float> dataVec;
 };
@@ -101,6 +104,7 @@ public:
     std::vector<int>& getVec() { return dataVec; }
     size_t size() override { return dataVec.size(); }
     const std::string getType() override { return "int"; }
+    const size_t getTypeSize() override { return sizeof(int); }
 
 private:
     // TODO: maybe better in abstract container - no copy paste
@@ -119,13 +123,14 @@ public:
     std::vector<unsigned long long int> GetAsUInt64() override { return this->getAs<unsigned long long int>(); }
     std::vector<unsigned int> GetAsUInt32() override { return this->getAs<unsigned int>(); }
     std::vector<char> GetAsChar() override { return this->getAs<char>(); }
-    std::vector<int> GetAsInt() override { return this->getAs<int>(); } 
+    std::vector<int> GetAsInt() override { return this->getAs<int>(); }
     std::vector<float> GetAsFloat() override { return this->getAs<float>(); }
     std::vector<unsigned char> GetAsUChar() override { return this->getAs<unsigned char>(); }
 
     std::vector<unsigned long long int>& getVec() { return dataVec; }
     size_t size() override { return dataVec.size(); }
     const std::string getType() override { return "unsigned long long int"; }
+    const size_t getTypeSize() override { return sizeof(unsigned long long int); }
 
 private:
     // TODO: maybe better in abstract container - no copy paste
@@ -153,6 +158,7 @@ public:
     std::vector<unsigned int>& getVec() { return dataVec; }
     size_t size() override { return dataVec.size(); }
     const std::string getType() override { return "unsigned int"; }
+    const size_t getTypeSize() override { return sizeof(unsigned int); }
 
 private:
     // TODO: maybe better in abstract container - no copy paste
@@ -180,6 +186,7 @@ public:
     std::vector<unsigned char>& getVec() { return dataVec; }
     size_t size() override { return dataVec.size(); }
     const std::string getType() override { return "unsigned char"; }
+    const size_t getTypeSize() override { return sizeof(unsigned char); }
 
 private:
     // TODO: maybe better in abstract container - no copy paste
@@ -257,12 +264,12 @@ public:
     void setTime(float time);
     float getTime() const;
 
-    void inquire(const std::string &varname);
+    void inquire(const std::string& varname);
 
     std::vector<std::string> getVarsToInquire() const;
 
     std::vector<std::string> getAvailableVars() const;
-    void setAvailableVars(const std::vector<std::string> &avars);
+    void setAvailableVars(const std::vector<std::string>& avars);
 
     void setDataHash(size_t datah) { this->dataHash = datah; }
     size_t getDataHash() const { return this->dataHash; }

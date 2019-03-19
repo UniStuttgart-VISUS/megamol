@@ -72,9 +72,9 @@ private:
     core::CalleeSlot mpSlot;
     core::CallerSlot adiosSlot;
 
-    std::vector<char> mix;
+    std::vector<std::vector<char>> mix;
 
-    int currentFrame = -1;
+    size_t currentFrame = -1;
 
 
 };

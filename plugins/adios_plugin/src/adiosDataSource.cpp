@@ -113,20 +113,21 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
 						size_t num = 1;
 						bool singleValue = true;
 						if (var.second["SingleValue"] != std::string("true")) {
-							num = std::stoi(var.second["Shape"]);
+							//num = std::stoi(var.second["Shape"]);
 							singleValue = false;
 						}
 						if (var.second["Type"] == "float") {
 
                             auto fc = std::make_shared<FloatContainer>(FloatContainer());
                             std::vector<float>& tmp_vec = fc->getVec();
-                            tmp_vec.resize(num);
-
                             adios2::Variable<float> advar = io->InquireVariable<float>(var.first);
-                            if (this->MpiInitialized && !singleValue) {
+                            auto info = reader.BlocksInfo(advar, cad->getFrameIDtoLoad());
+                            num = info[0].Count[0];
+                            tmp_vec.resize(num);
+						    if (this->MpiInitialized && !singleValue) {
                                 advar.SetSelection({{num * this->mpiRank}, {num}});
                             }
-
+                            
                             reader.Get<float>(advar, tmp_vec);
                             dataMap[var.first] = std::move(fc);
 
@@ -134,9 +135,11 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
 
                             auto fc = std::make_shared<DoubleContainer>(DoubleContainer());
                             std::vector<double>& tmp_vec = fc->getVec();
-                            tmp_vec.resize(num);
 
                             adios2::Variable<double> advar = io->InquireVariable<double>(var.first);
+                            auto info = reader.BlocksInfo(advar, cad->getFrameIDtoLoad());
+                            num = info[0].Count[0];
+                            tmp_vec.resize(num);
                             if (this->MpiInitialized && !singleValue) {
                                 advar.SetSelection({{num * this->mpiRank}, {num}});
                             }
@@ -148,9 +151,11 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
 
                             auto fc = std::make_shared<IntContainer>(IntContainer());
                             std::vector<int>& tmp_vec = fc->getVec();
-                            tmp_vec.resize(num);
 
                             adios2::Variable<int> advar = io->InquireVariable<int>(var.first);
+                            auto info = reader.BlocksInfo(advar, cad->getFrameIDtoLoad());
+                            num = info[0].Count[0];
+                            tmp_vec.resize(num);
                             if (this->MpiInitialized && !singleValue) {
                                 advar.SetSelection({{num * this->mpiRank}, {num}});
                             }
@@ -160,10 +165,12 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
                         } else if (var.second["Type"] == "unsigned long long int") {
                             auto fc = std::make_shared<UInt64Container>(UInt64Container());
                             std::vector<unsigned long long int>& tmp_vec = fc->getVec();
-                            tmp_vec.resize(num);
 
                             adios2::Variable<unsigned long long int> advar =
                                 io->InquireVariable<unsigned long long int>(var.first);
+                            auto info = reader.BlocksInfo(advar, cad->getFrameIDtoLoad());
+                            num = info[0].Count[0];
+                            tmp_vec.resize(num);
                             if (this->MpiInitialized && !singleValue) {
                                 advar.SetSelection({{num * this->mpiRank}, {num}});
                             }
@@ -173,9 +180,11 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
                         } else if (var.second["Type"] == "unsigned char") {
                             auto fc = std::make_shared<UCharContainer>(UCharContainer());
                             std::vector<unsigned char>& tmp_vec = fc->getVec();
-                            tmp_vec.resize(num);
 
                             adios2::Variable<unsigned char> advar = io->InquireVariable<unsigned char>(var.first);
+                            auto info = reader.BlocksInfo(advar, cad->getFrameIDtoLoad());
+                            num = info[0].Count[0];
+                            tmp_vec.resize(num);
                             if (this->MpiInitialized && !singleValue) {
                                 advar.SetSelection({{num * this->mpiRank}, {num}});
                             }
@@ -185,9 +194,11 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
                         } else if (var.second["Type"] == "unsigned int") {
                             auto fc = std::make_shared<UInt32Container>(UInt32Container());
                             std::vector<unsigned int>& tmp_vec = fc->getVec();
-                            tmp_vec.resize(num);
 
                             adios2::Variable<unsigned int> advar = io->InquireVariable<unsigned int>(var.first);
+                            auto info = reader.BlocksInfo(advar, cad->getFrameIDtoLoad());
+                            num = info[0].Count[0];
+                            tmp_vec.resize(num);
                             if (this->MpiInitialized && !singleValue) {
                                 advar.SetSelection({{num * this->mpiRank}, {num}});
                             }

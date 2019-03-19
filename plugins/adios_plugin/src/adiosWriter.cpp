@@ -178,7 +178,8 @@ bool adiosWriter::run() {
                 vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Defining Variables");
                 adios2::Variable<float> adiosVar =
                     io->DefineVariable<float>(var, {static_cast<size_t>(this->mpiSize * num)},
-                        {static_cast<size_t>(this->mpiRank * num)}, {static_cast<size_t>(num)});
+                        {static_cast<size_t>(this->mpiRank * num)}, {static_cast<size_t>(num)}, false);
+                adiosVar.SetShape({this->mpiSize * num});
 
                 vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Putting Variables");
                 if (adiosVar) writer.Put<float>(adiosVar, values.data());
@@ -190,6 +191,7 @@ bool adiosWriter::run() {
                 adios2::Variable<double> adiosVar =
                     io->DefineVariable<double>(var, {static_cast<size_t>(this->mpiSize * num)},
                         {static_cast<size_t>(this->mpiRank * num)}, {static_cast<size_t>(num)});
+                adiosVar.SetShape({this->mpiSize * num});
 
                 vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Putting Variables");
                 if (adiosVar) writer.Put<double>(adiosVar, values.data());
@@ -201,6 +203,7 @@ bool adiosWriter::run() {
                 adios2::Variable<int> adiosVar =
                     io->DefineVariable<int>(var, {static_cast<size_t>(this->mpiSize * num)},
                         {static_cast<size_t>(this->mpiRank * num)}, {static_cast<size_t>(num)});
+                adiosVar.SetShape({this->mpiSize * num});
 
                 vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Putting Variables");
                 if (adiosVar) writer.Put<int>(adiosVar, values.data());
@@ -213,6 +216,7 @@ bool adiosWriter::run() {
                 adios2::Variable<unsigned long long int> adiosVar =
                     io->DefineVariable<unsigned long long int>(var, {static_cast<size_t>(this->mpiSize * num)},
                         {static_cast<size_t>(this->mpiRank * num)}, {static_cast<size_t>(num)});
+                adiosVar.SetShape({this->mpiSize * num});
 
                 vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Putting Variables");
                 if (adiosVar) writer.Put<unsigned long long int>(adiosVar, values.data());
@@ -225,6 +229,7 @@ bool adiosWriter::run() {
                 adios2::Variable<unsigned char> adiosVar =
                     io->DefineVariable<unsigned char>(var, {static_cast<size_t>(this->mpiSize * num)},
                         {static_cast<size_t>(this->mpiRank * num)}, {static_cast<size_t>(num)});
+                adiosVar.SetShape({this->mpiSize * num});
 
                 vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Putting Variables");
                 if (adiosVar) writer.Put<unsigned char>(adiosVar, values.data());
@@ -236,6 +241,7 @@ bool adiosWriter::run() {
                 adios2::Variable<unsigned int> adiosVar =
                     io->DefineVariable<unsigned int>(var, {static_cast<size_t>(this->mpiSize * num)},
                         {static_cast<size_t>(this->mpiRank * num)}, {static_cast<size_t>(num)});
+                adiosVar.SetShape({this->mpiSize * num});
 
                 vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Putting Variables");
                 if (adiosVar) writer.Put<unsigned int>(adiosVar, values.data());

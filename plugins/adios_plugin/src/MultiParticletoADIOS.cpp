@@ -7,6 +7,7 @@
 
 #include "stdafx.h"
 #include "MultiParticletoADIOS.h"
+#include <algorithm>
 #include "CallADIOSData.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/param/EnumParam.h"
@@ -310,6 +311,33 @@ bool MultiParticletoADIOS::getDataCallback(core::Call& call) {
         dataMap["global_g"] = std::move(gCont);
         dataMap["global_b"] = std::move(bCont);
         dataMap["global_a"] = std::move(aCont);
+    } else if (cad->isInVars("list_r")) { 
+        auto rCont = std::make_shared<FloatContainer>(FloatContainer());
+        auto gCont = std::make_shared<FloatContainer>(FloatContainer());
+        auto bCont = std::make_shared<FloatContainer>(FloatContainer());
+        auto aCont = std::make_shared<FloatContainer>(FloatContainer());
+        std::vector<float>& tmp_r = rCont->getVec();
+        std::vector<float>& tmp_g = gCont->getVec();
+        std::vector<float>& tmp_b = bCont->getVec();
+        std::vector<float>& tmp_a = aCont->getVec();
+        tmp_r.reserve(mpdc->GetParticleListCount());
+        tmp_g.reserve(mpdc->GetParticleListCount());
+        tmp_b.reserve(mpdc->GetParticleListCount());
+        tmp_a.reserve(mpdc->GetParticleListCount());
+
+        for (auto i = 0; i < mpdc->GetParticleListCount(); i++) {
+            core::moldyn::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
+
+            const unsigned char* rgba = parts.GetGlobalColour();
+            tmp_r.push_back(static_cast<float>(rgba[0])/255.0f);
+            tmp_g.push_back(static_cast<float>(rgba[1])/255.0f);
+            tmp_b.push_back(static_cast<float>(rgba[2])/255.0f);
+            tmp_a.push_back(static_cast<float>(rgba[3])/255.0f);
+        }
+        dataMap["list_r"] = std::move(rCont);
+        dataMap["list_g"] = std::move(gCont);
+        dataMap["list_b"] = std::move(bCont);
+        dataMap["list_a"] = std::move(aCont);
     } else if (cad->isInVars("i")) {
         if (list0.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I) {
 
@@ -325,8 +353,8 @@ bool MultiParticletoADIOS::getDataCallback(core::Call& call) {
                 for (auto j = 0; j < num; j++) {
                     tmp_i.push_back(parts.GetParticleStore().GetCRAcc()->Get_f(j));
                 }
-                dataMap["i"] = std::move(iCont);
             }
+            dataMap["i"] = std::move(iCont);
         } else if (list0.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_DOUBLE_I) {
 
             auto iCont = std::make_shared<DoubleContainer>(DoubleContainer());
@@ -340,8 +368,8 @@ bool MultiParticletoADIOS::getDataCallback(core::Call& call) {
                 for (auto j = 0; j < num; j++) {
                     tmp_i.push_back(parts.GetParticleStore().GetCRAcc()->Get_d(j));
                 }
-                dataMap["i"] = std::move(iCont);
             }
+            dataMap["i"] = std::move(iCont);
         }
     }
 
@@ -374,7 +402,18 @@ bool MultiParticletoADIOS::getDataCallback(core::Call& call) {
             dataMap["id"] = std::move(idCont);
         }
     }
+    if (cad->isInVars("plist_offset")) {
+        auto listCont = std::make_shared<UInt64Container>(UInt64Container());
+        std::vector<unsigned long long int>& tmp_list = listCont->getVec();
+        tmp_list.reserve(mpdc->GetParticleListCount());
+        for (unsigned long long int i = 0; i < mpdc->GetParticleListCount(); i++) {
+            core::moldyn::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
+            const size_t num = parts.GetCount();
 
+            tmp_list.push_back(num);
+        }
+        dataMap["plist_offset"] = std::move(listCont);
+    }
 
     // Particle Count
     auto ic_pcount = std::make_shared<UInt64Container>(UInt64Container());
@@ -392,19 +431,44 @@ bool MultiParticletoADIOS::getDataCallback(core::Call& call) {
     dataMap["box"] = std::move(fc_box);
 
     // global radius
-    auto fc_radius = std::make_shared<FloatContainer>(FloatContainer());
-    std::vector<float>& tmp_radius = fc_radius->getVec();
     if (cad->isInVars("global_radius")) {
+        auto fc_radius = std::make_shared<FloatContainer>(FloatContainer());
+        std::vector<float>& tmp_radius = fc_radius->getVec();
         tmp_radius.push_back(list0.GetParticleStore().GetRAcc()->Get_f(0));
         dataMap["global_radius"] = std::move(fc_radius);
+    } else if (cad->isInVars("list_radius")) {
+        auto radiusCont = std::make_shared<FloatContainer>(FloatContainer());
+        std::vector<float>& tmp_radius = radiusCont->getVec();
+        tmp_radius.resize(mpdc->GetParticleListCount());
+        for (auto i = 0; i < mpdc->GetParticleListCount(); i++) {
+            core::moldyn::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
+
+            tmp_radius[i] = parts.GetGlobalRadius();
+        }
+        dataMap["list_radius"] = std::move(radiusCont);
+    } else if (cad->isInVars("radius")) {
+        auto radiusCont = std::make_shared<FloatContainer>(FloatContainer());
+        std::vector<float>& tmp_radius = radiusCont->getVec();
+
+        for (auto i = 0; i < mpdc->GetParticleListCount(); i++) {
+            core::moldyn::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
+            const size_t num = parts.GetCount();
+
+            tmp_radius.reserve(tmp_radius.size() + num);
+            for (auto j = 0; j < num; j++) {
+                tmp_radius.push_back(parts.GetGlobalRadius());
+            }
+        }
+        dataMap["radius"] = std::move(radiusCont);
     }
+
 
     // set stuff in call
     cad->setData(std::make_shared<adiosDataMap>(dataMap));
     cad->setDataHash(mpdc->DataHash());
 
     return true;
-} 
+}
 
 bool MultiParticletoADIOS::getHeaderCallback(core::Call& call) {
 
@@ -437,10 +501,10 @@ bool MultiParticletoADIOS::getHeaderCallback(core::Call& call) {
 
     if (parts.GetColourDataType() == core::moldyn::SimpleSphericalParticles::COLDATA_NONE) {
         if (mpdc->GetParticleListCount() > 1) {
-            availVars.push_back("r");
-            availVars.push_back("g");
-            availVars.push_back("b");
-            availVars.push_back("a");
+            availVars.push_back("list_r");
+            availVars.push_back("list_g");
+            availVars.push_back("list_b");
+            availVars.push_back("list_a");
         } else {
             availVars.push_back("global_r");
             availVars.push_back("global_g");
@@ -461,11 +525,22 @@ bool MultiParticletoADIOS::getHeaderCallback(core::Call& call) {
         availVars.push_back("radius");
     } else {
         if (mpdc->GetParticleListCount() > 1) {
-            availVars.push_back("radius");
+            std::vector<float> list_radius(mpdc->GetParticleListCount());
+            for (auto i = 0; i < mpdc->GetParticleListCount(); i++) {
+                core::moldyn::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
+                list_radius[i] = parts.GetGlobalRadius();
+            }
+            if (std::equal(list_radius.begin() + 1, list_radius.end(), list_radius.begin())) {
+                availVars.push_back("global_radius");
+            } else {
+                availVars.push_back("list_radius");
+            }
         } else {
             availVars.push_back("global_radius");
         }
     }
+
+    availVars.push_back("plist_offset");
 
     if (parts.HasID()) {
         availVars.push_back("id");
