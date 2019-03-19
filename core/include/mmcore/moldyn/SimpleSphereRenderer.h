@@ -401,22 +401,6 @@ namespace moldyn {
         // Ambient Occlusion --------------------------------------------------
 
         /**
-         * Upload data to GPU.
-         *
-         * @param gpuData    ...
-         * @param particles  ...
-         */
-        void uploadDataToGPU(const gpuParticleDataType &gpuData, megamol::core::moldyn::MultiParticleDataCall::Particles& particles);
-
-        /**
-         * Render particles geometry.
-         *
-         * @param cr3d  ...
-         * @param dataCall    ...
-         */
-        void renderParticlesGeometry(megamol::core::view::CallRender3D* cr3d, megamol::core::moldyn::MultiParticleDataCall* dataCall);
-
-        /**
          * Rebuild the ambient occlusion shaders.
          *
          * @return ...  
@@ -439,6 +423,29 @@ namespace moldyn {
         void rebuildWorkingData(megamol::core::view::CallRender3D* cr3d, megamol::core::moldyn::MultiParticleDataCall* dataCall);
 
         /**
+         * Render particles geometry.
+         *
+         * @param cr3d  ...
+         * @param dataCall    ...
+         */
+        void renderParticlesGeometry(megamol::core::view::CallRender3D* cr3d, megamol::core::moldyn::MultiParticleDataCall* dataCall);
+
+        /**
+         * Render deferred pass.
+         *
+         * @param cr3d  ...
+         */
+        void renderDeferredPass(megamol::core::view::CallRender3D* cr3d);
+
+        /**
+         * Upload data to GPU.
+         *
+         * @param gpuData    ...
+         * @param particles  ...
+         */
+        void uploadDataToGPU(const gpuParticleDataType &gpuData, megamol::core::moldyn::MultiParticleDataCall::Particles& particles);
+
+        /**
          * Generate direction shader array string.
          *
          * @param directions      ...
@@ -455,13 +462,6 @@ namespace moldyn {
          * @param apex        ...
          */
         void generate3ConeDirections(std::vector< vislib::math::Vector< float, int(4) > >& directions, float apex);
-
-        /**
-         * Render deferred pass.
-         *
-         * @param cr3d  ...
-         */
-        void renderDeferredPass(megamol::core::view::CallRender3D* cr3d);
 
         /**
          * Get transfer function handle.

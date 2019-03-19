@@ -2092,8 +2092,8 @@ void moldyn::SimpleSphereRenderer::renderDeferredPass(megamol::core::view::CallR
         this->lightingShader.SetParameter("inDensityTex", static_cast<int>(3));
         this->lightingShader.SetParameter("inAOStrength", aoStrength);
         this->lightingShader.SetParameter("inAOConeLength", aoConeLength);
-        this->lightingShader.SetParameter("inAmbVolShortestEdge", ambConeConstants[0]);
-        this->lightingShader.SetParameter("inAmbVolMaxLod", ambConeConstants[1]);
+        this->lightingShader.SetParameter("inAmbVolShortestEdge", this->ambConeConstants[0]);
+        this->lightingShader.SetParameter("inAmbVolMaxLod", this->ambConeConstants[1]);
         this->lightingShader.SetParameterArray3("inBoundsMin", 1, cr3d->AccessBoundingBoxes().ObjectSpaceClipBox().GetLeftBottomBack().PeekCoordinates());
         this->lightingShader.SetParameterArray3("inBoundsSize", 1, cr3d->AccessBoundingBoxes().ObjectSpaceClipBox().GetSize().PeekDimension());
     }
