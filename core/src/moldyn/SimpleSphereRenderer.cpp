@@ -133,7 +133,7 @@ moldyn::SimpleSphereRenderer::SimpleSphereRenderer(void) : AbstractSimpleSphereR
     curMVP(),
     curMVPinv(),
     curMVPtransp(),
-    renderMode(RenderMode::AMBIENT_OCCLUSION),
+    renderMode(RenderMode::NG),
     sphereShader(),
     sphereGeometryShader(),
     lightingShader(),
