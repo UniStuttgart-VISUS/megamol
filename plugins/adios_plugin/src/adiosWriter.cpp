@@ -41,17 +41,33 @@ adiosWriter::~adiosWriter(void) {
  */
 bool adiosWriter::create(void) {
     MpiInitialized = this->initMPI();
-    vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Initializing");
-    if (MpiInitialized) {
-        adiosInst = adios2::ADIOS(this->mpi_comm_, adios2::DebugON);
-    } else {
-        adiosInst = adios2::ADIOS(adios2::DebugON);
-    }
+    try {
+        vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Initializing");
+        if (MpiInitialized) {
+            adiosInst = adios2::ADIOS(this->mpi_comm_, adios2::DebugON);
+        } else {
+            adiosInst = adios2::ADIOS(adios2::DebugON);
+        }
 
-    vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Declaring IO");
-    io = std::make_shared<adios2::IO>(adiosInst.DeclareIO("Output"));
-    vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Setting Engine");
-    io->SetEngine("BPFile");
+        vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Declaring IO");
+        io = std::make_shared<adios2::IO>(adiosInst.DeclareIO("Output"));
+        vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Setting Engine");
+
+
+        io->SetEngine("BPFile");
+
+    } catch (std::invalid_argument& e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Invalid argument exception, STOPPING PROGRAM from rank %d", this->mpiRank);
+        vislib::sys::Log::DefaultLog.WriteError(e.what());
+    } catch (std::ios_base::failure& e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "IO System base failure exception, STOPPING PROGRAM from rank %d", this->mpiRank);
+        vislib::sys::Log::DefaultLog.WriteError(e.what());
+    } catch (std::exception& e) {
+        vislib::sys::Log::DefaultLog.WriteError("Exception, STOPPING PROGRAM from rank %d", this->mpiRank);
+        vislib::sys::Log::DefaultLog.WriteError(e.what());
+    }
 
     return true;
 }
