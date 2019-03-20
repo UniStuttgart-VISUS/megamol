@@ -28,6 +28,7 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/utility/SSBOStreamer.h"
+#include "mmcore/utility/SSBOBufferArray.h"
 
 #include "vislib/types.h"
 #include "vislib/assert.h"
@@ -218,6 +219,10 @@ namespace moldyn {
 
         megamol::core::utility::SSBOStreamer     streamer;
         megamol::core::utility::SSBOStreamer     colStreamer;
+        megamol::core::utility::SSBOBufferArray  bufArray;
+        megamol::core::utility::SSBOBufferArray  colBufArray;
+
+
 
         std::vector<GLsync>                      fences;
         GLuint                                   theSingleBuffer;
@@ -232,6 +237,7 @@ namespace moldyn {
         gBufferDataType                          gBuffer;
         SIZE_T                                   oldHash;
         unsigned int                             oldFrameID;
+        bool                                     stateInvalid;
         vislib::math::Vector<float, 2>           ambConeConstants;
         GLuint                                   tfFallbackHandle;
         core::utility::MDAO2VolumeGenerator     *volGen;
@@ -251,6 +257,7 @@ namespace moldyn {
 
         core::param::ParamSlot alphaScalingParam;
         core::param::ParamSlot attenuateSubpixelParam;
+        core::param::ParamSlot useStaticDataParam;
 
         // Ambient Occlusion --------------------------------------------------
 
@@ -271,8 +278,7 @@ namespace moldyn {
         megamol::core::param::ParamSlot aoConeLengthSlot;
         // High precision textures slot
         megamol::core::param::ParamSlot useHPTexturesSlot;
-        // bool parameter to force the time from the data set - UNUSED
-        //megamol::core::param::ParamSlot forceTimeSlot;
+
 
         /*********************************************************************/
         /* FUNCTIONS                                                         */
@@ -469,14 +475,6 @@ namespace moldyn {
          * @return ...  ...
          */
         GLuint getTransferFunctionHandle(void);
-
-        /**
-         * Simple access to the value of forceTimeSlot - UNUSED
-         *
-         * @return ...  ...
-         */
-        // 
-        //bool isTimeForced(void) const;
 
     };
 
