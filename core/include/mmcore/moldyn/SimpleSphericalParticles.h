@@ -64,6 +64,8 @@ public:
 
         ParticleStore& operator=(ParticleStore&& rhs) = delete;*/
 
+        virtual ~ParticleStore() = default;
+
         void SetVertexData(SimpleSphericalParticles::VertexDataType const t, char const* p, unsigned int const s = 0,
             float const globRad = 0.5f) {
             switch (t) {
@@ -189,15 +191,15 @@ public:
         std::shared_ptr<Accessor> const& GetIDAcc() const { return this->id_acc_; }
 
     private:
-        std::shared_ptr<Accessor> x_acc_;
-        std::shared_ptr<Accessor> y_acc_;
-        std::shared_ptr<Accessor> z_acc_;
-        std::shared_ptr<Accessor> r_acc_;
-        std::shared_ptr<Accessor> cr_acc_;
-        std::shared_ptr<Accessor> cg_acc_;
-        std::shared_ptr<Accessor> cb_acc_;
-        std::shared_ptr<Accessor> ca_acc_;
-        std::shared_ptr<Accessor> id_acc_;
+        std::shared_ptr<Accessor> x_acc_  = std::make_shared<Accessor_0>();
+        std::shared_ptr<Accessor> y_acc_  = std::make_shared<Accessor_0>();
+        std::shared_ptr<Accessor> z_acc_  = std::make_shared<Accessor_0>();
+        std::shared_ptr<Accessor> r_acc_  = std::make_shared<Accessor_0>();
+        std::shared_ptr<Accessor> cr_acc_ = std::make_shared<Accessor_0>();
+        std::shared_ptr<Accessor> cg_acc_ = std::make_shared<Accessor_0>();
+        std::shared_ptr<Accessor> cb_acc_ = std::make_shared<Accessor_0>();
+        std::shared_ptr<Accessor> ca_acc_ = std::make_shared<Accessor_0>();
+        std::shared_ptr<Accessor> id_acc_ = std::make_shared<Accessor_0>();
     };
 
     /** possible values of accumulated data sizes over all vertex coordinates */
@@ -624,7 +626,7 @@ private:
     unsigned int idStride;
 
     /** Instance of the particle store */
-    ParticleStore par_store_;
+    std::shared_ptr<ParticleStore> par_store_ = std::make_shared<ParticleStore>();
 };
 
 } // namespace moldyn
