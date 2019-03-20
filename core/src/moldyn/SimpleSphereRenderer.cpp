@@ -1295,6 +1295,8 @@ bool moldyn::SimpleSphereRenderer::renderGeo(view::CallRender3D* cr3d, MultiPart
         cr3d->GetCameraParameters()->Right().PeekComponents());
     glUniform3fv(
         this->sphereGeometryShader.ParameterLocation("camUp"), 1, cr3d->GetCameraParameters()->Up().PeekComponents());
+    glUniform1f(
+        this->sphereGeometryShader.ParameterLocation("scaling"), this->radiusScalingParam.Param<param::FloatParam>()->Value());
     glUniform4fv(this->sphereGeometryShader.ParameterLocation("clipDat"), 1, this->curClipDat);
     glUniform4fv(this->sphereGeometryShader.ParameterLocation("clipCol"), 1, this->curClipCol);
     glUniform4fv(this->sphereGeometryShader.ParameterLocation("lpos"), 1, this->curLightPos);
@@ -1703,7 +1705,7 @@ std::shared_ptr<vislib::graphics::gl::GLSLShader> moldyn::SimpleSphereRenderer::
 
             decl = "\nstruct SphereParams {\n";
 
-            // if (vertStride > vertBytes) {
+            // if (vertStride > (vertBytes + colBytes)) {
             //    unsigned int rest = (vertStride - vertBytes);
             //    if (rest % 4 == 0) {
             //        char heinz[128];
