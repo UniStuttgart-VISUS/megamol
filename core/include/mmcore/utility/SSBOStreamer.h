@@ -28,6 +28,8 @@ namespace utility {
     /// like items/chunk and the sync objects. You can align multiple streamers
     /// by giving the first a desired buffer size and make all others follow
     /// the resulting GetMaxNumItemsPerChunk to set their buffer sizes automatically.
+    /// Note that the user must SignalCompletion after the rendering command if
+    /// the buffer can be freed afterwards (or re-upload of data will be performed)
     /// See NGSphereRenderer for a usage example.
     class MEGAMOLCORE_API SSBOStreamer {
     public:
@@ -35,6 +37,8 @@ namespace utility {
          SSBOStreamer(const std::string& debugLabel = std::string());
         ~SSBOStreamer();
 
+        /// this is for defining the max number of items that fit in a desired buffer size,
+        /// i.e. for the largest data stream, the 'master'
         /// @param data the pointer to the original data
         /// @param srcStride the size of a single data item in the original data
         /// @param dstStride the size of a single data item that will be uploaded
@@ -46,16 +50,18 @@ namespace utility {
         GLuint SetDataWithSize(const void *data, GLuint srcStride, GLuint dstStride, size_t numItems,
             GLuint numBuffers, GLuint bufferSize);
 
+        /// this is for the smaller data streams that need be aligned with numChunks of the
+        /// 'master' stream.
         /// @param data the pointer to the original data
         /// @param srcStride the size of a single data item in the original data
         /// @param dstStride the size of a single data item that will be uploaded
         ///                   and must not be split across buffers
         /// @param numItems the length of the original data in multiples of stride
         /// @param numBuffers how long the ring buffer should be
-        /// @param numChunks how many chunks you want to upload
+        /// @param numItemsPerChunk number of items per chunk in the master buffer
         /// @returns the size of a ring buffer in bytes
         GLuint SetDataWithItems(const void *data, GLuint srcStride, GLuint dstStride, size_t numItems,
-            GLuint numBuffers, GLuint numChunks);
+            GLuint numBuffers, GLuint numItemsPerChunk);
 
         /// @param idx the chunk to upload [0..SetData()-1]
         /// @param numItems returns the number of items in this chunk
