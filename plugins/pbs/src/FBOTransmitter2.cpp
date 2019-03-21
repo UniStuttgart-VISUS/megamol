@@ -545,7 +545,7 @@ bool megamol::pbs::FBOTransmitter2::initMPI() {
                                                    _T("retrieving communicator properties ..."));
             ::MPI_Comm_rank(this->mpi_comm_, &this->mpiRank);
             ::MPI_Comm_size(this->mpi_comm_, &this->mpiSize);
-            vislib::sys::Log::DefaultLog.WriteInfo(_T("This view on %hs is %d ")
+            vislib::sys::Log::DefaultLog.WriteInfo(_T("This transmitter on %hs is %d ")
                                                    _T("of %d."),
                 vislib::sys::SystemInformation::ComputerNameA().PeekBuffer(), this->mpiRank, this->mpiSize);
         } /* end if (this->comm != MPI_COMM_NULL) */
