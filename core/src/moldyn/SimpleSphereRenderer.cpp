@@ -20,7 +20,7 @@ using namespace vislib::graphics::gl;
 //#define CHRONOTIMING
 
 #define NGS_THE_INSTANCE "gl_VertexID" // "gl_InstanceID"
-#define NGS_THE_ALIGNMENT "packed"
+#define NGS_THE_ALIGNMENT "std430"
 
 const GLuint SSBObindingPoint = 2;
 const GLuint SSBOcolorBindingPoint = 3;
@@ -884,6 +884,8 @@ bool moldyn::SimpleSphereRenderer::renderNG(view::CallRender3D* cr3d, MultiParti
         bool interleaved;
         const bool staticData = this->useStaticDataParam.Param<param::BoolParam>()->Value();
         this->getBytesAndStride(parts, colBytes, vertBytes, colStride, vertStride, interleaved);
+        const bool colBeforePos = parts.GetColourDataType() != SimpleSphericalParticles::COLDATA_NONE &&
+                                  parts.GetColourData() < parts.GetVertexData();
 
         // does all data reside interleaved in the same memory?
         if (interleaved) {
@@ -1671,36 +1673,81 @@ std::shared_ptr<vislib::graphics::gl::GLSLShader> moldyn::SimpleSphereRenderer::
 
         vislib::SmartPtr<ShaderSource> v2 = new ShaderSource(*this->vertShader);
         vislib::SmartPtr<ShaderSource::Snippet> codeSnip, declarationSnip;
-        std::string vertCode, colCode, vertDecl, colDecl, decl;
+        std::string vertCode, colCode, vertDecl, colDecl;
+        std::stringstream decl;
         makeVertexString(parts, vertCode, vertDecl, interleaved);
         makeColorString(parts, colCode, colDecl, interleaved);
 
         if (interleaved) {
 
-            decl = "\nstruct SphereParams {\n";
+            decl << "\nstruct SphereParams {\n";
 
-            // if (vertStride > vertBytes) {
-            //    unsigned int rest = (vertStride - vertBytes);
-            //    if (rest % 4 == 0) {
-            //        char heinz[128];
-            //        while (rest > 0) {
-            //            sprintf(heinz, "    float padding%u;\n", rest);
-            //            decl += heinz;
-            //            rest -= 4;
-            //        }
-            //    }
-            //}
-
-            if (parts.GetColourData() < parts.GetVertexData()) {
-                decl += colDecl;
-                decl += vertDecl;
+            std::stringstream padding;
+            int paddingCounter = 0;
+            if (parts.GetColourDataType() != SimpleSphericalParticles::COLDATA_NONE && parts.GetColourData() < parts.GetVertexData()) {
+                decl << colDecl;
+                auto vertColDist = parts.GetColourDataType() != SimpleSphericalParticles::COLDATA_NONE
+                                       ? reinterpret_cast<const char*>(parts.GetVertexData()) -
+                                             reinterpret_cast<const char*>(parts.GetColourData())
+                                       : colBytes;
+                vertColDist -= colBytes;
+                auto vcd = vertColDist;
+                if (vertColDist % 4 != 0) {
+                    vislib::sys::Log::DefaultLog.WriteError(
+                        "SimpleSphereRenderer: padding between color and vertex data must be divisible by 4!");
+                } else {
+                    while (vertColDist > 0) {
+                        decl << "float padding" << std::to_string(paddingCounter) << ";\n";
+                        vertColDist -= 4;
+                        paddingCounter++;
+                    }
+                }
+                decl << vertDecl;
+                auto rest = vertStride - vertBytes - vcd - colBytes;
+                if (rest % 4 != 0) {
+                    vislib::sys::Log::DefaultLog.WriteError(
+                        "SimpleSphereRenderer: padding after vertex data must be divisible by 4!");
+                } else {
+                    while (rest > 0) {
+                        decl << "float padding" << std::to_string(paddingCounter) << ";\n";
+                        rest -= 4;
+                        paddingCounter++;
+                    }
+                }
             } else {
-                decl += vertDecl;
-                decl += colDecl;
+                decl << vertDecl;
+                auto vertColDist =
+                    parts.GetColourDataType() !=
+                    SimpleSphericalParticles::COLDATA_NONE ? reinterpret_cast<const char*>(parts.GetColourData()) -
+                                   reinterpret_cast<const char*>(parts.GetVertexData()) : vertBytes;
+                vertColDist -= vertBytes;
+                auto vcd = vertColDist;
+                if (vertColDist % 4 != 0) {
+                    vislib::sys::Log::DefaultLog.WriteError(
+                        "SimpleSphereRenderer: padding between vertex and color data must be divisible by 4!");
+                } else {
+                    while (vertColDist > 0) {
+                        decl << "float padding" << std::to_string(paddingCounter) << ";\n";
+                        vertColDist -= 4;
+                        paddingCounter++;
+                    }
+                }
+                decl << colDecl;
+                auto rest = vertStride - vertBytes - vcd - colBytes;
+                if (rest % 4 != 0) {
+                    vislib::sys::Log::DefaultLog.WriteError(
+                        "SimpleSphereRenderer: padding after color data must be divisible by 4!");
+                } else {
+                    while (rest > 0) {
+                        decl << "float padding" << std::to_string(paddingCounter) << ";\n";
+                        rest -= 4;
+                        paddingCounter++;
+                    }
+                }
             }
-            decl += "};\n";
+            decl << "};\n";
 
-            decl += "layout(" NGS_THE_ALIGNMENT ", binding = " + std::to_string(SSBObindingPoint) +
+            decl << "layout(" NGS_THE_ALIGNMENT ", binding = " + std::to_string(SSBObindingPoint) +
                     ") buffer shader_data {\n"
                     "    SphereParams theBuffer[];\n"
                     // flat float version
@@ -1710,14 +1757,14 @@ std::shared_ptr<vislib::graphics::gl::GLSLShader> moldyn::SimpleSphereRenderer::
         } else {
             // we seem to have separate buffers for vertex and color data
 
-            decl = "\nstruct SpherePosParams {\n" + vertDecl + "};\n";
-            decl += "\nstruct SphereColParams {\n" + colDecl + "};\n";
+            decl << "\nstruct SpherePosParams {\n" + vertDecl + "};\n";
+            decl << "\nstruct SphereColParams {\n" + colDecl + "};\n";
 
-            decl += "layout(" NGS_THE_ALIGNMENT ", binding = " + std::to_string(SSBObindingPoint) +
+            decl << "layout(" NGS_THE_ALIGNMENT ", binding = " + std::to_string(SSBObindingPoint) +
                     ") buffer shader_data {\n"
                     "    SpherePosParams thePosBuffer[];\n"
                     "};\n";
-            decl += "layout(" NGS_THE_ALIGNMENT ", binding = " + std::to_string(SSBOcolorBindingPoint) +
+            decl << "layout(" NGS_THE_ALIGNMENT ", binding = " + std::to_string(SSBOcolorBindingPoint) +
                     ") buffer shader_data2 {\n"
                     "    SphereColParams theColBuffer[];\n"
                     "};\n";
@@ -1725,7 +1772,7 @@ std::shared_ptr<vislib::graphics::gl::GLSLShader> moldyn::SimpleSphereRenderer::
         std::string code = "\n";
         code += colCode;
         code += vertCode;
-        declarationSnip = new ShaderSource::StringSnippet(decl.c_str());
+        declarationSnip = new ShaderSource::StringSnippet(decl.str().c_str());
         codeSnip = new ShaderSource::StringSnippet(code.c_str());
 
         /// Generated shader declaration snippet is inserted between 2nd and 3rd snippet (after
