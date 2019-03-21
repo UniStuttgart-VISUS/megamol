@@ -1342,10 +1342,8 @@ template <class M, class C> void GUIRenderer<M, C>::drawParametersCallback(std::
             if (ImGui::BeginPopupContextItem()) {
                 if (ImGui::MenuItem("Copy to new Window")) {
                     GUIWindow tmp_win;
-                    std::stringstream stream;
-                    stream << std::fixed << std::setprecision(8) << this->lastInstTime;
-                    tmp_win.label =
-                        "Parameters###parameters" + stream.str(); /// using instance time as hidden unique id
+                    tmp_win.label = "Parameters###parameters" +
+                                    std::to_string(this->lastInstTime); /// using instance time as hidden unique id
                     tmp_win.show = true;
                     // tmp_win.hotkey = core::view::KeyCode();
                     tmp_win.flags = ImGuiWindowFlags_HorizontalScrollbar;
@@ -1440,8 +1438,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawFpsWindowCallback(std::s
     std::string val;
     if (!arr->empty()) {
         std::stringstream stream;
-        stream << std::fixed << std::setprecision(this->float_print_prec); //<< std::setw(7)
-        stream << arr->back();
+        stream << std::fixed << std::setprecision(this->float_print_prec) << arr->back();
         val = stream.str();
     }
     ImGui::PlotHistogram(
@@ -1475,7 +1472,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawFpsWindowCallback(std::s
 
         if (ImGui::Button("All Values")) {
             std::stringstream stream;
-            stream << std::fixed << std::setprecision(this->float_print_prec); //<< std::setw(7)
+            stream << std::fixed << std::setprecision(this->float_print_prec);
             auto end = (*arr).rend();
             for (std::vector<float>::reverse_iterator i = (*arr).rbegin(); i != end; ++i) {
                 stream << (*i) << "\n";
@@ -1524,10 +1521,11 @@ template <class M, class C> void GUIRenderer<M, C>::drawFontSelectionWindowCallb
     this->font_new_filename = valueString.PeekBuffer();
     delete[] buffer;
 
-    label = "Font Size";
     std::stringstream float_stream;
     float_stream << "%." << this->float_print_prec << "f";
     std::string float_format = float_stream.str();
+
+    label = "Font Size";
     ImGui::InputFloat(label.c_str(), &this->font_new_size, 0.0f, 0.0f, float_format.c_str(), ImGuiInputTextFlags_None);
     // Validate font size
     if (this->font_new_size <= 0.0f) {
@@ -1631,9 +1629,8 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
     }
 
     // PopUp
-    std::stringstream about_stream;
-    about_stream << "MegaMol is GREAT!" << std::endl << "Using Dear ImGui " << IMGUI_VERSION << std::endl;
-    std::string about = about_stream.str();
+    std::string about =
+        std::string("MegaMol is GREAT!\nUsing Dear ImGui ") + std::string(IMGUI_VERSION) + std::string("\n");
     if (open_popup) {
         ImGui::OpenPopup("About");
     }
@@ -1698,29 +1695,31 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
             auto value = p->Value();
 
             label = "Load into Editor###editor" + modname + "::" + pname;
-            if (p != this->active_tf_param) {
-                if (ImGui::Button(label.c_str())) {
-                    this->active_tf_param = p;
-                    // Load transfer function string
-                    if (!this->SetTransferFunction(value)) {
-                        std::string name = modname + "::" + pname;
-                        vislib::sys::Log::DefaultLog.WriteWarn(
-                            "[GUIRenderer] Couldn't load transfer function of parameter: %s.", name.c_str());
-                    }
-                    // Open Transfer Function Editor window
-                    for (auto& win : this->windows) {
-                        if (win.func == &GUIRenderer<M, C>::drawTFWindowCallback) {
-                            win.show = true;
-                        }
+            if (p == this->active_tf_param) {
+                label = "Open Editor###editor" + modname + "::" + pname;
+            }
+            if (ImGui::Button(label.c_str())) {
+                this->active_tf_param = p;
+                // Load transfer function string
+                if (!this->SetTransferFunction(value)) {
+                    std::string name = modname + "::" + pname;
+                    vislib::sys::Log::DefaultLog.WriteWarn(
+                        "[GUIRenderer] Couldn't load transfer function of parameter: %s.", name.c_str());
+                }
+                // Open Transfer Function Editor window
+                for (auto& win : this->windows) {
+                    if (win.func == &GUIRenderer<M, C>::drawTFWindowCallback) {
+                        win.show = true;
                     }
                 }
-            } else {
-                ImGui::TextColored(style.Colors[ImGuiCol_ButtonHovered], "Currently loaded into Editor.");
+            }
+            ImGui::SameLine();
+            if (p == this->active_tf_param) {
+                ImGui::TextColored(
+                    style.Colors[ImGuiCol_ButtonHovered], "Transfer Function is already loaded into Editor");
             }
 
-            ImGui::Text("JSON String:");
-            ImGui::SameLine();
-            label = "Copy to Clipboard###clipboard" + modname + "::" + pname;
+            label = "Copy JSON String###clipboard" + modname + "::" + pname;
             if (ImGui::Button(label.c_str())) {
                 ImGui::SetClipboardText(value.c_str());
             }
