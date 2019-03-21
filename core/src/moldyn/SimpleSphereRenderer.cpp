@@ -1750,58 +1750,8 @@ std::shared_ptr<vislib::graphics::gl::GLSLShader> moldyn::SimpleSphereRenderer::
 void moldyn::SimpleSphereRenderer::getBytesAndStride(MultiParticleDataCall::Particles& parts, unsigned int& colBytes,
     unsigned int& vertBytes, unsigned int& colStride, unsigned int& vertStride, bool& interleaved) {
 
-    vertBytes = 0;
-    colBytes = 0;
-
-    // color
-    switch (parts.GetColourDataType()) {
-    case MultiParticleDataCall::Particles::COLDATA_NONE:
-        // nothing
-        break;
-    case MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
-        colBytes = vislib::math::Max(colBytes, 3U);
-        break;
-    case MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
-        colBytes = vislib::math::Max(colBytes, 4U);
-        break;
-    case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
-        colBytes = vislib::math::Max(colBytes, 3 * 4U);
-        break;
-    case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
-        colBytes = vislib::math::Max(colBytes, 4 * 4U);
-        break;
-    case MultiParticleDataCall::Particles::COLDATA_FLOAT_I: {
-        colBytes = vislib::math::Max(colBytes, 1 * 4U);
-    } break;
-    case MultiParticleDataCall::Particles::COLDATA_DOUBLE_I: {
-        colBytes = vislib::math::Max(colBytes, 1 * 8U);
-    } break;
-    case MultiParticleDataCall::Particles::COLDATA_USHORT_RGBA: {
-        colBytes = vislib::math::Max(colBytes, 4 * 2U);
-    } break;
-    default:
-        // nothing
-        break;
-    }
-
-    // radius and position
-    switch (parts.GetVertexDataType()) {
-    case MultiParticleDataCall::Particles::VERTDATA_NONE:
-        // continue;
-        break;
-    case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
-        vertBytes = vislib::math::Max(vertBytes, 3 * 4U);
-        break;
-    case MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ:
-        vertBytes = vislib::math::Max(vertBytes, 3 * 8U);
-        break;
-    case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
-        vertBytes = vislib::math::Max(vertBytes, 4 * 4U);
-        break;
-    default:
-        // continue;
-        break;
-    }
+    vertBytes = MultiParticleDataCall::Particles::VertexDataSize[parts.GetVertexDataType()];
+    colBytes = MultiParticleDataCall::Particles::ColorDataSize[parts.GetColourDataType()];
 
     colStride = parts.GetColourDataStride();
     colStride = colStride < colBytes ? colBytes : colStride;
