@@ -1,7 +1,7 @@
 /*
 * SSBOBufferArray.h
 *
-* Copyright (C) 2018 by VISUS (Universitaet Stuttgart)
+* Copyright (C) 2019 by VISUS (Universitaet Stuttgart)
 * Alle Rechte vorbehalten.
 */
 
@@ -11,13 +11,19 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+
+#include "mmcore/api/MegaMolCore.std.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/graphics/gl/GLSLShader.h"
+
 #include <vector>
 #include <algorithm>
 #include <cinttypes>
-#include "mmcore/api/MegaMolCore.std.h"
-#include <omp.h>
+#include <algorithm>
+#include "vislib/assert.h"
+#include <iostream>
+#include <sstream>
+
 
 namespace megamol {
 namespace core {
@@ -29,7 +35,7 @@ namespace utility {
     /// the resulting GetMaxNumItemsPerChunk to set their buffer sizes automatically.
     /// Note that the user must SignalCompletion after the rendering command if
     /// the buffer can be freed afterwards (or re-upload of data will be performed)
-    /// See NGSphereRenderer for a usage example.
+    /// See NG render mode of SimpleSphereRenderer for a usage example.
 class MEGAMOLCORE_API SSBOBufferArray {
     public:
 
@@ -71,16 +77,16 @@ class MEGAMOLCORE_API SSBOBufferArray {
 
         /// returns the GL object of the SSBO corresponding to chunk idx
         GLuint GetHandle(unsigned int idx) const {
-            if (idx >= 0 && idx < theSSBOs.size()) {
-                return theSSBOs[idx];
+            if (idx >= 0 && idx < this->theSSBOs.size()) {
+                return this->theSSBOs[idx];
             } else {
                 return 0;
             }
         }
 
         GLuint GetNumItems(unsigned int idx) const {
-            if (idx >= 0 && idx < theSSBOs.size()) {
-                return actualItemsPerChunk[idx];
+            if (idx >= 0 && idx < this->actualItemsPerChunk.size()) {
+                return this->actualItemsPerChunk[idx];
             } else {
                 return 0;
             }
@@ -95,7 +101,10 @@ class MEGAMOLCORE_API SSBOBufferArray {
         }
 
     private:
+        /** */
         static void queueSignal(GLsync &syncObj);
+
+        /** */
         static void waitSignal(GLsync &syncObj);
 
         std::vector<GLuint> theSSBOs;
@@ -110,7 +119,6 @@ class MEGAMOLCORE_API SSBOBufferArray {
         GLuint numChunks;
         GLuint numItemsPerChunk;
         GLsync fence;
-        int numThr;
         std::string debugLabel;
         int offsetAlignment = 0;
     };

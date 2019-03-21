@@ -3,6 +3,7 @@
 
     <shader name="vertex">
         <snippet type="version">150</snippet>
+        <snippet name="CommonDefines"             type="file">commondefines.glsl</snippet>        
         <snippet name="MainStart"                 type="file">simplesphere/mdao2_vert_mainstart.glsl</snippet>
         <snippet name="Corners"                   type="file">simplesphere/mdao2_vert_corners.glsl</snippet> <!-- see simple_vert_spheretouchplane.glsl -->
         <snippet name="MainEnd"                   type="file">simplesphere/mdao2_vert_mainend.glsl</snippet>
@@ -24,6 +25,7 @@
 
         <shader name="geometry">
             <snippet type="version">150</snippet>
+            <snippet name="CommonDefines"         type="file">commondefines.glsl</snippet>            
             <snippet name="MainStart"             type="file">simplesphere/mdao2_geometry_geo_mainstart.glsl</snippet>
             <snippet name="Corners"               type="file">simplesphere/mdao2_vert_corners.glsl</snippet>  <!-- see simple_vert_spheretouchplane.glsl -->
             <snippet name="MainEnd"               type="file">simplesphere/mdao2_geometry_geo_mainend.glsl</snippet>

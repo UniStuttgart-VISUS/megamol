@@ -143,7 +143,7 @@ moldyn::SimpleSphereRenderer::SimpleSphereRenderer(void)
     , curMVP()
     , curMVPinv()
     , curMVPtransp()
-    , renderMode(RenderMode::AMBIENT_OCCLUSION)
+    , renderMode(RenderMode::NG)
     , sphereShader()
     , sphereGeometryShader()
     , lightingShader()
@@ -647,7 +647,7 @@ bool moldyn::SimpleSphereRenderer::Render(view::CallRender3D& call) {
     const unsigned int frameID = mpdc->FrameID();
 
     // Check if we got a new data set
-    this->stateInvalid = (hash != this->oldHash || frameID != this->oldFrameID);
+    this->stateInvalid = ((hash != this->oldHash) || (frameID != this->oldFrameID));
 
     this->oldHash = hash;
     this->oldFrameID = frameID;
@@ -893,34 +893,32 @@ bool moldyn::SimpleSphereRenderer::renderNG(view::CallRender3D* cr3d, MultiParti
         if (interleaved) {
             if (staticData) {
                 if (this->stateInvalid) {
-                    bufArray.SetDataWithSize(
+                    this->bufArray.SetDataWithSize(
                         parts.GetVertexData(), vertStride, vertStride, parts.GetCount(), 2 * 1024 * 1024 * 1024);
                 }
-                const GLuint numChunks = bufArray.GetNumChunks();
+                const GLuint numChunks = this->bufArray.GetNumChunks();
 
                 for (GLuint x = 0; x < numChunks; ++x) {
-                    GLuint numItems;
-                    GLsizeiptr dstOff, dstLen;
                     glUniform1i(this->newShader->ParameterLocation("instanceOffset"), 0);
-                    auto actualItems = bufArray.GetNumItems(x);
-                    glBindBuffer(GL_SHADER_STORAGE_BUFFER, bufArray.GetHandle(x));
-                    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, bufArray.GetHandle(x));
-                    glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, bufArray.GetHandle(x), 0,
-                        bufArray.GetMaxNumItemsPerChunk() * vertStride);
+                    auto actualItems = this->bufArray.GetNumItems(x);
+                    glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->bufArray.GetHandle(x));
+                    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->bufArray.GetHandle(x));
+                    glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->bufArray.GetHandle(x), 0,
+                        this->bufArray.GetMaxNumItemsPerChunk() * vertStride);
                     glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(actualItems));
-                    bufArray.SignalCompletion();
+                    this->bufArray.SignalCompletion();
                 }
             }
             else {
-                const GLuint numChunks = streamer.SetDataWithSize(
+                const GLuint numChunks = this->streamer.SetDataWithSize(
                     parts.GetVertexData(), vertStride, vertStride, parts.GetCount(), 3, 32 * 1024 * 1024);
-                glBindBuffer(GL_SHADER_STORAGE_BUFFER, streamer.GetHandle());
-                glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, streamer.GetHandle());
+                glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->streamer.GetHandle());
+                glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->streamer.GetHandle());
 
                 for (GLuint x = 0; x < numChunks; ++x) {
                     GLuint numItems, sync;
                     GLsizeiptr dstOff, dstLen;
-                    streamer.UploadChunk(x, numItems, sync, dstOff, dstLen);
+                    this->streamer.UploadChunk(x, numItems, sync, dstOff, dstLen);
                     // streamer.UploadChunk<float, float>(x, [](float f) -> float { return f + 100.0; },
                     //    numItems, sync, dstOff, dstLen);
                     // vislib::sys::Log::DefaultLog.WriteInfo("uploading chunk %u at %lu len %lu", x, dstOff, dstLen);
@@ -929,53 +927,51 @@ bool moldyn::SimpleSphereRenderer::renderNG(view::CallRender3D* cr3d, MultiParti
                     glBindBufferRange(
                         GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->streamer.GetHandle(), dstOff, dstLen);
                     glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(numItems));
-                    streamer.SignalCompletion(sync);
+                    this->streamer.SignalCompletion(sync);
                 }
             }
         }
         else {
             if (staticData) {
                 if (this->stateInvalid) {
-                    bufArray.SetDataWithSize(
+                    this->bufArray.SetDataWithSize(
                         parts.GetVertexData(), vertStride, vertStride, parts.GetCount(), 2 * 1024 * 1024 * 1024);
-                    colBufArray.SetDataWithItems(parts.GetColourData(), colStride, colStride, parts.GetCount(),
-                        bufArray.GetMaxNumItemsPerChunk());
+                    this->colBufArray.SetDataWithItems(parts.GetColourData(), colStride, colStride, parts.GetCount(),
+                        this->bufArray.GetMaxNumItemsPerChunk());
                 }
-                const GLuint numChunks = bufArray.GetNumChunks();
+                const GLuint numChunks = this->bufArray.GetNumChunks();
 
                 for (GLuint x = 0; x < numChunks; ++x) {
-                    GLuint numItems;
-                    GLsizeiptr dstOff, dstLen;
                     glUniform1i(this->newShader->ParameterLocation("instanceOffset"), 0);
-                    auto actualItems = bufArray.GetNumItems(x);
-                    glBindBuffer(GL_SHADER_STORAGE_BUFFER, bufArray.GetHandle(x));
-                    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, bufArray.GetHandle(x));
-                    glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, bufArray.GetHandle(x), 0,
-                        bufArray.GetMaxNumItemsPerChunk() * vertStride);
-                    glBindBuffer(GL_SHADER_STORAGE_BUFFER, colBufArray.GetHandle(x));
-                    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBOcolorBindingPoint, colBufArray.GetHandle(x));
-                    glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBOcolorBindingPoint, colBufArray.GetHandle(x), 0,
-                        colBufArray.GetMaxNumItemsPerChunk() * colStride);
+                    auto actualItems = this->bufArray.GetNumItems(x);
+                    glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->bufArray.GetHandle(x));
+                    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->bufArray.GetHandle(x));
+                    glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->bufArray.GetHandle(x), 0,
+                        this->bufArray.GetMaxNumItemsPerChunk() * vertStride);
+                    glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->colBufArray.GetHandle(x));
+                    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBOcolorBindingPoint, this->colBufArray.GetHandle(x));
+                    glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBOcolorBindingPoint, this->colBufArray.GetHandle(x), 0,
+                        this->colBufArray.GetMaxNumItemsPerChunk() * colStride);
                     glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(actualItems));
-                    bufArray.SignalCompletion();
-                    colBufArray.SignalCompletion();
+                    this->bufArray.SignalCompletion();
+                    this->colBufArray.SignalCompletion();
                 }
             }
             else {
-                const GLuint numChunks = streamer.SetDataWithSize(
+                const GLuint numChunks = this->streamer.SetDataWithSize(
                     parts.GetVertexData(), vertStride, vertStride, parts.GetCount(), 3, 32 * 1024 * 1024);
-                const GLuint colSize = colStreamer.SetDataWithItems(parts.GetColourData(), colStride, colStride,
-                    parts.GetCount(), 3, streamer.GetMaxNumItemsPerChunk());
-                glBindBuffer(GL_SHADER_STORAGE_BUFFER, streamer.GetHandle());
-                glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, streamer.GetHandle());
-                glBindBuffer(GL_SHADER_STORAGE_BUFFER, colStreamer.GetHandle());
-                glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBOcolorBindingPoint, colStreamer.GetHandle());
+                const GLuint colSize = this->colStreamer.SetDataWithItems(parts.GetColourData(), colStride, colStride,
+                    parts.GetCount(), 3, this->streamer.GetMaxNumItemsPerChunk());
+                glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->streamer.GetHandle());
+                glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->streamer.GetHandle());
+                glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->colStreamer.GetHandle());
+                glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBOcolorBindingPoint, this->colStreamer.GetHandle());
 
                 for (GLuint x = 0; x < numChunks; ++x) {
                     GLuint numItems, numItems2, sync, sync2;
                     GLsizeiptr dstOff, dstLen, dstOff2, dstLen2;
-                    streamer.UploadChunk(x, numItems, sync, dstOff, dstLen);
-                    colStreamer.UploadChunk(x, numItems2, sync2, dstOff2, dstLen2);
+                    this->streamer.UploadChunk(x, numItems, sync, dstOff, dstLen);
+                    this->colStreamer.UploadChunk(x, numItems2, sync2, dstOff2, dstLen2);
                     ASSERT(numItems == numItems2);
                     glUniform1i(this->newShader->ParameterLocation("instanceOffset"), 0);
                     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
@@ -984,8 +980,8 @@ bool moldyn::SimpleSphereRenderer::renderNG(view::CallRender3D* cr3d, MultiParti
                     glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBOcolorBindingPoint, this->colStreamer.GetHandle(),
                         dstOff2, dstLen2);
                     glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(numItems));
-                    streamer.SignalCompletion(sync);
-                    colStreamer.SignalCompletion(sync2);
+                    this->streamer.SignalCompletion(sync);
+                    this->colStreamer.SignalCompletion(sync2);
                 }
             }
         }
@@ -1159,7 +1155,8 @@ bool moldyn::SimpleSphereRenderer::renderNGSplat(view::CallRender3D* cr3d, Multi
             }
         }
         else {
-            // nothing
+            vislib::sys::Log::DefaultLog.WriteMsg(
+                vislib::sys::Log::LEVEL_ERROR, "NGSplat mode does not support not interleaved data so far ...");
         }
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
@@ -1249,7 +1246,8 @@ bool moldyn::SimpleSphereRenderer::renderNGBufferArray(view::CallRender3D* cr3d,
             }
         }
         else {
-            // nothing
+            vislib::sys::Log::DefaultLog.WriteMsg(
+                vislib::sys::Log::LEVEL_ERROR, "NGBufferArray mode does not support not interleaved data so far ...");
         }
 
         glBindBuffer(GL_ARRAY_BUFFER, 0); // enabled in setPointers()
@@ -1705,8 +1703,16 @@ std::shared_ptr<vislib::graphics::gl::GLSLShader> moldyn::SimpleSphereRenderer::
 
             decl = "\nstruct SphereParams {\n";
 
-            // if (vertStride > (vertBytes + colBytes)) {
-            //    unsigned int rest = (vertStride - vertBytes);
+            if (parts.GetColourData() < parts.GetVertexData()) {
+                decl += colDecl;
+                decl += vertDecl;
+            }
+            else {
+                decl += vertDecl;
+                decl += colDecl;
+            }
+            //if (vertStride > (vertBytes + colBytes)) {
+            //    unsigned int rest = (vertStride - (vertBytes + colBytes));
             //    if (rest % 4 == 0) {
             //        char heinz[128];
             //        while (rest > 0) {
@@ -1716,15 +1722,6 @@ std::shared_ptr<vislib::graphics::gl::GLSLShader> moldyn::SimpleSphereRenderer::
             //        }
             //    }
             //}
-
-            if (parts.GetColourData() < parts.GetVertexData()) {
-                decl += colDecl;
-                decl += vertDecl;
-            }
-            else {
-                decl += vertDecl;
-                decl += colDecl;
-            }
             decl += "};\n";
 
             decl += "layout(" NGS_THE_ALIGNMENT ", binding = " + std::to_string(SSBObindingPoint) +
@@ -1738,8 +1735,33 @@ std::shared_ptr<vislib::graphics::gl::GLSLShader> moldyn::SimpleSphereRenderer::
         else {
             // we seem to have separate buffers for vertex and color data
 
-            decl = "\nstruct SpherePosParams {\n" + vertDecl + "};\n";
-            decl += "\nstruct SphereColParams {\n" + colDecl + "};\n";
+            decl = "\nstruct SpherePosParams {\n" + vertDecl;
+            //if (vertStride > (vertBytes)) {
+            //    unsigned int rest = (vertStride - vertBytes);
+            //    if (rest % 4 == 0) {
+            //        char heinz[128];
+            //        while (rest > 0) {
+            //            sprintf(heinz, "    float padding%u;\n", rest);
+            //            decl += heinz;
+            //            rest -= 4;
+            //        }
+            //    }
+            //}
+            decl +="};\n";
+
+            decl += "\nstruct SphereColParams {\n" + colDecl;
+            //if (colStride > colBytes) {
+            //    unsigned int rest = (colStride - colBytes);
+            //    if (rest % 4 == 0) {
+            //        char heinz[128];
+            //        while (rest > 0) {
+            //            sprintf(heinz, "    float padding%u;\n", rest);
+            //            decl += heinz;
+            //            rest -= 4;
+            //        }
+            //    }
+            //}
+            decl += "};\n";
 
             decl += "layout(" NGS_THE_ALIGNMENT ", binding = " + std::to_string(SSBObindingPoint) +
                 ") buffer shader_data {\n"
@@ -2123,6 +2145,8 @@ void moldyn::SimpleSphereRenderer::renderParticlesGeometry(
     glUniformMatrix4fv(theShader.ParameterLocation("inMvp"), 1, GL_FALSE, this->curMVP.PeekComponents());
     glUniformMatrix4fv(theShader.ParameterLocation("inMvpInverse"), 1, GL_FALSE, this->curMVPinv.PeekComponents());
     glUniformMatrix4fv(theShader.ParameterLocation("inMvpTrans"), 1, GL_FALSE, this->curMVPtransp.PeekComponents());
+
+    glUniform1f(theShader.ParameterLocation("scaling"), this->radiusScalingParam.Param<param::FloatParam>()->Value());
 
     theShader.SetParameterArray4("inViewAttr", 1, this->curViewAttrib);
     theShader.SetParameterArray3("inCamFront", 1, cr3d->GetCameraParameters()->Front().PeekComponents());
