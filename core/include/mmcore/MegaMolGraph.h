@@ -27,6 +27,7 @@ public:
     // todo: constructor(s)? see serialization
 
     // todo: the lock!
+    // todo: probably get rid of RootModuleNamespace altogether
 
     bool QueueModuleDeletion(const std::string id);
     bool QueueCallDeletion(const std::string from, const std::string to);
@@ -63,7 +64,7 @@ public:
     typename std::enable_if<std::is_convertible<A*, Module*>::value, bool>::type FindModule(
         std::string module_name, std::function<void(A&)> cb) const;
 
-    // WHY??? this is just EnumerateParamters(FindModule()...) GET RID OF IT!
+    // WHY??? this is just EnumerateParameters(FindModule()...) GET RID OF IT!
     template <class A>
     typename std::enable_if<std::is_convertible<A*, Module*>::value, bool>::type EnumerateParameterSlots(
         std::string module_name, std::function<void(param::ParamSlot&)> cb) const;
