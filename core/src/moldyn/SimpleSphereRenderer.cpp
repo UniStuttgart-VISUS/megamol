@@ -183,7 +183,7 @@ moldyn::SimpleSphereRenderer::SimpleSphereRenderer(void)
     , alphaScalingParam("splat::alphaScaling", "NG Splat: Scaling factor for particle alpha.")
     , attenuateSubpixelParam(
         "splat::attenuateSubpixel", "NG Splat: Attenuate alpha of points that should have subpixel size.")
-    , useStaticDataParam("NG::staticData", "NG: upload data only once per hash change and keep data static on GPU")
+    , useStaticDataParam("ng::staticData", "NG: Upload data only once per hash change and keep data static on GPU")
     , enableLightingSlot("ao::enable_lighting", "Ambient Occlusion: Enable Lighting")
     , enableAOSlot("ao::enable_ao", "Ambient Occlusion: Enable Ambient Occlusion")
     , enableGeometryShader(
@@ -892,9 +892,9 @@ bool moldyn::SimpleSphereRenderer::renderNG(view::CallRender3D* cr3d, MultiParti
         // does all data reside interleaved in the same memory?
         if (interleaved) {
             if (staticData) {
-                if (this->stateInvalid) {
+                if (this->stateInvalid || (this->bufArray.GetNumChunks() == 0)) {
                     this->bufArray.SetDataWithSize(
-                        parts.GetVertexData(), vertStride, vertStride, parts.GetCount(), 2 * 1024 * 1024 * 1024);
+                        parts.GetVertexData(), vertStride, vertStride, parts.GetCount(), (2 * 1024 * 1024 * 1024)); // 2 GB - khronos: Most implementations will let you allocate a size up to the limit of GPU memory.
                 }
                 const GLuint numChunks = this->bufArray.GetNumChunks();
 
@@ -911,7 +911,7 @@ bool moldyn::SimpleSphereRenderer::renderNG(view::CallRender3D* cr3d, MultiParti
             }
             else {
                 const GLuint numChunks = this->streamer.SetDataWithSize(
-                    parts.GetVertexData(), vertStride, vertStride, parts.GetCount(), 3, 32 * 1024 * 1024);
+                    parts.GetVertexData(), vertStride, vertStride, parts.GetCount(), 3, (32 * 1024 * 1024)); // 32 MB
                 glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->streamer.GetHandle());
                 glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->streamer.GetHandle());
 
@@ -933,9 +933,9 @@ bool moldyn::SimpleSphereRenderer::renderNG(view::CallRender3D* cr3d, MultiParti
         }
         else {
             if (staticData) {
-                if (this->stateInvalid) {
+                if (this->stateInvalid || (this->bufArray.GetNumChunks() == 0)) {
                     this->bufArray.SetDataWithSize(
-                        parts.GetVertexData(), vertStride, vertStride, parts.GetCount(), 2 * 1024 * 1024 * 1024);
+                        parts.GetVertexData(), vertStride, vertStride, parts.GetCount(), (2 * 1024 * 1024 * 1024)); // 2 GB - khronos: Most implementations will let you allocate a size up to the limit of GPU memory.
                     this->colBufArray.SetDataWithItems(parts.GetColourData(), colStride, colStride, parts.GetCount(),
                         this->bufArray.GetMaxNumItemsPerChunk());
                 }
@@ -959,7 +959,7 @@ bool moldyn::SimpleSphereRenderer::renderNG(view::CallRender3D* cr3d, MultiParti
             }
             else {
                 const GLuint numChunks = this->streamer.SetDataWithSize(
-                    parts.GetVertexData(), vertStride, vertStride, parts.GetCount(), 3, 32 * 1024 * 1024);
+                    parts.GetVertexData(), vertStride, vertStride, parts.GetCount(), 3, (32 * 1024 * 1024)); // 32 MB
                 const GLuint colSize = this->colStreamer.SetDataWithItems(parts.GetColourData(), colStride, colStride,
                     parts.GetCount(), 3, this->streamer.GetMaxNumItemsPerChunk());
                 glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->streamer.GetHandle());
@@ -1711,17 +1711,6 @@ std::shared_ptr<vislib::graphics::gl::GLSLShader> moldyn::SimpleSphereRenderer::
                 decl += vertDecl;
                 decl += colDecl;
             }
-            //if (vertStride > (vertBytes + colBytes)) {
-            //    unsigned int rest = (vertStride - (vertBytes + colBytes));
-            //    if (rest % 4 == 0) {
-            //        char heinz[128];
-            //        while (rest > 0) {
-            //            sprintf(heinz, "    float padding%u;\n", rest);
-            //            decl += heinz;
-            //            rest -= 4;
-            //        }
-            //    }
-            //}
             decl += "};\n";
 
             decl += "layout(" NGS_THE_ALIGNMENT ", binding = " + std::to_string(SSBObindingPoint) +
@@ -1736,31 +1725,9 @@ std::shared_ptr<vislib::graphics::gl::GLSLShader> moldyn::SimpleSphereRenderer::
             // we seem to have separate buffers for vertex and color data
 
             decl = "\nstruct SpherePosParams {\n" + vertDecl;
-            //if (vertStride > (vertBytes)) {
-            //    unsigned int rest = (vertStride - vertBytes);
-            //    if (rest % 4 == 0) {
-            //        char heinz[128];
-            //        while (rest > 0) {
-            //            sprintf(heinz, "    float padding%u;\n", rest);
-            //            decl += heinz;
-            //            rest -= 4;
-            //        }
-            //    }
-            //}
             decl +="};\n";
 
             decl += "\nstruct SphereColParams {\n" + colDecl;
-            //if (colStride > colBytes) {
-            //    unsigned int rest = (colStride - colBytes);
-            //    if (rest % 4 == 0) {
-            //        char heinz[128];
-            //        while (rest > 0) {
-            //            sprintf(heinz, "    float padding%u;\n", rest);
-            //            decl += heinz;
-            //            rest -= 4;
-            //        }
-            //    }
-            //}
             decl += "};\n";
 
             decl += "layout(" NGS_THE_ALIGNMENT ", binding = " + std::to_string(SSBObindingPoint) +
