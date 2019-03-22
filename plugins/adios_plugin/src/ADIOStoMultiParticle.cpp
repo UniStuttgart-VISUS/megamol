@@ -269,8 +269,12 @@ bool ADIOStoMultiParticle::getDataCallback(core::Call& call) {
             mpdc->AccessParticles(k).SetCount(particleCount);
 
             mpdc->AccessParticles(k).SetVertexData(vertType, mix[k].data(), stride);
-            mpdc->AccessParticles(k).SetColourData(colType, mix[k].data(), stride);
-            mpdc->AccessParticles(k).SetIDData(idType, mix[k].data(), stride);
+            mpdc->AccessParticles(k).SetColourData(
+                colType, mix[k].data() + core::moldyn::SimpleSphericalParticles::VertexDataSize[vertType], stride);
+            mpdc->AccessParticles(k).SetIDData(idType,
+                mix[k].data() + core::moldyn::SimpleSphericalParticles::VertexDataSize[vertType] +
+                    core::moldyn::SimpleSphericalParticles::ColorDataSize[colType],
+                stride);
         }
         mpdc->SetFrameCount(cad->getFrameCount());
         mpdc->SetDataHash(cad->getDataHash());
