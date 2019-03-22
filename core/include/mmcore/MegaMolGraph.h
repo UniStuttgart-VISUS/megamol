@@ -35,6 +35,8 @@ public:
     bool QueueCallInstantiation(const std::string className, const std::string from, const std::string to);
     bool QueueChainCallInstantiation(const std::string className, const std::string chainStart, const std::string to);
     bool QueueParamValueChange(const std::string id, const std::string value);
+    // a JSON serialization of all the requests as above (see updateListener)
+    bool QueueGraphChange(const std::string changes);
     /// @return group id 0 is invalid and means failure
     uint32_t CreateParamGroup(const std::string name, int size);
     bool QueueParamGroupValue(const std::string groupName, const std::string id, const std::string value);
@@ -86,10 +88,16 @@ public:
     // construct from serialization
     MegaMolGraph(std::string othergraph);
 
-    void NotifyParameterValueChange(param::ParamSlot& slot) const;
+    // nope, see below!
+    // void NotifyParameterValueChange(param::ParamSlot& slot) const;
+    // void RegisterParamUpdateListener(param::ParamUpdateListener* pul);
+    // void UnregisterParamUpdateListener(param::ParamUpdateListener* pul);
 
-    void RegisterParamUpdateListener(param::ParamUpdateListener* pul);
-    void UnregisterParamUpdateListener(param::ParamUpdateListener* pul);
+    // accumulate the stuff the queues ask from the graph and give out a JSON diff right afterwards
+    // bitfield says what (params, modules, whatnot) - and also reports whether something did not happen
+    /// @return some ID to allow for removal of the listener later
+    uint32_t RegisterGraphUpdateListener(std::function<void(std::string, uint32_t field)> func, int32_t serviceBitfield);
+    void UnregisterGraphUpdateListener(uint32_t id);
 
 private:
     // todo: signature is weird, data structure might be as well
