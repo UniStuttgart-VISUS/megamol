@@ -76,7 +76,7 @@ public:
     // probably just throws everything away?
     void Cleanup(void);
 
-    // serialize into... JSON?
+    // serialize into... JSON? WHY THE FUCK IS THIS IN THE ROOTMODULENAMESPACE!
     std::string SerializeGraph(void) const;
 
     // replace the whole graph with whatever is in serialization
