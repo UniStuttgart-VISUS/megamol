@@ -4,7 +4,7 @@
 # Alle Rechte vorbehalten. All rights reserved.
 #
 string(TOUPPER adios_plugin EXPORT_NAME)
-option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build adios_plugin" ON)
+option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build adios_plugin" OFF)
 
 if(BUILD_${EXPORT_NAME}_PLUGIN)
   project(adios_plugin)
@@ -13,13 +13,13 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   # afterwards list the dependencies.
   set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE BUILD_MMSTD_DATATOOLS_PLUGIN" CACHE INTERNAL "")
 
-  option(USE_EXTERNAL_ADIOS "Option to externally include ADIOS2" ON)
+  option(USE_EXTERNAL_ADIOS "Option to externally include ADIOS2" OFF)
   if (USE_EXTERNAL_ADIOS)
     find_package(ADIOS2 REQUIRED)
   else()
     add_external_project(adios2_ext
     GIT_REPOSITORY https://github.com/ornladios/ADIOS2.git
-    GIT_TAG "v2.3.0"
+    GIT_TAG "v2.3.1"
     CMAKE_ARGS -DBUILD_TESTING=OFF -DADIOS2_USE_BZip2=OFF 
     -DADIOS2_USE_Fortran=OFF -DADIOS2_USE_HDF5=OFF 
     -DADIOS2_USE_Python=OFF -DADIOS2_USE_SST=OFF 
