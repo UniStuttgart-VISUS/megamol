@@ -566,7 +566,8 @@ bool nextgen::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButto
                     glm::vec3 rotCenter = static_cast<glm::vec4>(this->arcballManipulator.rotation_centre());
                     glm::vec3 curPos = static_cast<glm::vec4>(this->cam.eye_position());
                     this->arcballManipulator.set_radius(glm::distance(rotCenter, curPos));
-                    this->arcballManipulator.on_drag_start(this->cursor2d.X(), this->cursor2d.Y());
+                    auto wndSize = this->cam.resolution_gate();
+                    this->arcballManipulator.on_drag_start(static_cast<int>(this->mouseX), wndSize.height() - static_cast<int>(this->mouseY));
                 }
             } else if (action == view::MouseButtonAction::RELEASE && (altPressed ^ this->arcballDefault)) {
                 this->arcballManipulator.on_drag_stop();
@@ -607,7 +608,8 @@ bool nextgen::View3D_2::OnMouseMove(double x, double y) {
     if (!this->toggleMouseSelection) {
         this->cursor2d.SetPosition(x, y, true);
         if (this->arcballManipulator.manipulating()) {
-            this->arcballManipulator.on_drag(this->cursor2d.X(), this->cursor2d.Y());
+            auto wndSize = this->cam.resolution_gate();
+            this->arcballManipulator.on_drag(static_cast<int>(this->mouseX), wndSize.height() - static_cast<int>(this->mouseY));
         }
     } else {
         auto* cr = this->rendererSlot.CallAs<nextgen::CallRender3D_2>();
