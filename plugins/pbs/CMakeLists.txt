@@ -77,7 +77,6 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
 
   # Target definition
   add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${source_files})
-  set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 17)
   
   # Set target naming conventions for different build types
   set_target_properties(${PROJECT_NAME} PROPERTIES
