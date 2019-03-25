@@ -45,7 +45,7 @@ public:
 	 *
 	 * @return Returns true if the event was accepted (stopping propagation), otherwise false.
 	 */
-    virtual bool OnMouseMove(double x, double y) { return false; }
+    virtual bool OnMouseMove(double x, double y, double world_x, double world_y) { return false; }
 
 	/**
 	 * This event handler can be reimplemented to receive mouse scroll events.

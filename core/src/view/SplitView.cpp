@@ -547,7 +547,7 @@ bool view::SplitView::OnMouseButton(MouseButton button, MouseButtonAction action
 }
 
 
-bool view::SplitView::OnMouseMove(double x, double y) {
+bool view::SplitView::OnMouseMove(double x, double y, double world_x, double world_y) {
     // x, y are coordinates in pixel
     this->mouseX = x;
     this->mouseY = y;
@@ -559,6 +559,8 @@ bool view::SplitView::OnMouseMove(double x, double y) {
         evt.tag = InputEvent::Tag::MouseMove;
         evt.mouseMoveData.x = x;
         evt.mouseMoveData.y = y;
+        evt.mouseMoveData.world_x = world_x;
+        evt.mouseMoveData.world_y = world_y;
         cgr->SetInputEvent(evt);
         if ((*cgr)(view::CallSplitViewOverlay::FnOnMouseMove)) return true;
     }
@@ -587,6 +589,7 @@ bool view::SplitView::OnMouseMove(double x, double y) {
         evt.tag = InputEvent::Tag::MouseMove;
         evt.mouseMoveData.x = mx;
         evt.mouseMoveData.y = my;
+        // TODO: world space coordinates?
         crv->SetInputEvent(evt);
         if (!(*crv)(view::CallRenderView::FnOnMouseMove)) return false;
     }

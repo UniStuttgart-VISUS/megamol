@@ -40,7 +40,7 @@ bool ViewUILayer::OnMouseButton(
         static_cast<mmcInputModifiers>(mods.toInt()));
 }
 
-bool ViewUILayer::OnMouseMove(double x, double y) {
+bool ViewUILayer::OnMouseMove(double x, double y, double, double) {
     return ::mmcSendMouseMoveEvent(hView, static_cast<float>(x), static_cast<float>(y));
 }
 

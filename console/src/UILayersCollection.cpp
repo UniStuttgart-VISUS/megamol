@@ -66,11 +66,11 @@ bool UILayersCollection::OnMouseButton(MouseButton button, MouseButtonAction act
 	return ret;
 }
 
-bool UILayersCollection::OnMouseMove(double x, double y) {
+bool UILayersCollection::OnMouseMove(double x, double y, double world_x, double world_y) {
 	init;
     for (auto& uil : m_uiLayers) {
         if (!uil->Enabled()) continue;
-        if (ret = uil->OnMouseMove(x, y)) abort;
+        if (ret = uil->OnMouseMove(x, y, world_x, world_y)) abort;
     }
 	return ret;
 }

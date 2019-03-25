@@ -426,7 +426,7 @@ bool view::View2D::OnMouseButton(MouseButton button, MouseButtonAction action, M
 }
 
 
-bool view::View2D::OnMouseMove(double x, double y) {
+bool view::View2D::OnMouseMove(double x, double y, double, double) {
     if (this->mouseMode == MouseMode::Propagate) {
         float mx, my;
         mx = ((x * 2.0f / this->width) - 1.0f) * this->width / this->height;
@@ -440,8 +440,10 @@ bool view::View2D::OnMouseMove(double x, double y) {
         if (cr) {
             InputEvent evt;
             evt.tag = InputEvent::Tag::MouseMove;
-            evt.mouseMoveData.x = mx;
-            evt.mouseMoveData.y = my;
+            evt.mouseMoveData.world_x = mx;
+            evt.mouseMoveData.world_y = my;
+            evt.mouseMoveData.x = x;
+            evt.mouseMoveData.y = y;
             cr->SetInputEvent(evt);
             if ((*cr)(view::CallRender2D::FnOnMouseMove)) return true;
         }
