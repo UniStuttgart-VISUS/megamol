@@ -30,7 +30,7 @@ namespace utility {
     /// the resulting GetMaxNumItemsPerChunk to set their buffer sizes automatically.
     /// Note that the user must SignalCompletion after the rendering command if
     /// the buffer can be freed afterwards (or re-upload of data will be performed)
-    /// See NGSphereRenderer for a usage example.
+    /// See NG render mode of SimpleSphereRenderer for a usage example.
     class MEGAMOLCORE_API SSBOStreamer {
     public:
 
