@@ -10,6 +10,7 @@
 #include "mmcore/Module.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
+#include "mmcore/moldyn/SimpleSphericalParticles.h"
 
 namespace megamol {
 namespace adios {
@@ -76,6 +77,13 @@ private:
 
     size_t currentFrame = -1;
 
+    core::moldyn::SimpleSphericalParticles::ColourDataType colType = core::moldyn::SimpleSphericalParticles::COLDATA_NONE;
+    core::moldyn::SimpleSphericalParticles::VertexDataType vertType = core::moldyn::SimpleSphericalParticles::VERTDATA_NONE;
+    core::moldyn::SimpleSphericalParticles::IDDataType idType = core::moldyn::SimpleSphericalParticles::IDDATA_NONE;
+
+    size_t stride = 0;
+
+    std::vector<unsigned long long int> plist_offset;
 
 };
 

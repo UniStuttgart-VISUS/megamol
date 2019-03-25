@@ -110,7 +110,7 @@ bool ADIOStoMultiParticle::getDataCallback(core::Call& call) {
         std::vector<float> Y;
         std::vector<float> Z;
 
-        size_t stride = 0;
+        stride = 0;
         if (cad->isInVars("xyz")) {
             X = cad->getData("xyz")->GetAsFloat();
             stride += 3 * cad->getData("xyz")->getTypeSize();
@@ -178,7 +178,7 @@ bool ADIOStoMultiParticle::getDataCallback(core::Call& call) {
 
 
         // ParticeList offset
-        std::vector<unsigned long long int> plist_offset = cad->getData("plist_offset")->GetAsUInt64();
+        plist_offset = cad->getData("plist_offset")->GetAsUInt64();
 
         // Set particle list count
         mpdc->SetParticleListCount(plist_offset.size());
@@ -189,9 +189,9 @@ bool ADIOStoMultiParticle::getDataCallback(core::Call& call) {
             const size_t particleCount = plist_offset[k];
 
             // Set types
-            auto colType = core::moldyn::SimpleSphericalParticles::COLDATA_NONE;
-            auto vertType = core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ;
-            auto idType = core::moldyn::SimpleSphericalParticles::IDDATA_NONE;
+            colType = core::moldyn::SimpleSphericalParticles::COLDATA_NONE;
+            vertType = core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ;
+            idType = core::moldyn::SimpleSphericalParticles::IDDATA_NONE;
 
             if (cad->isInVars("global_radius")) {
                 mpdc->AccessParticles(k).SetGlobalRadius(radius[0]);
@@ -265,21 +265,28 @@ bool ADIOStoMultiParticle::getDataCallback(core::Call& call) {
                 }
             }
 
-
-            mpdc->AccessParticles(k).SetCount(particleCount);
-
-            mpdc->AccessParticles(k).SetVertexData(vertType, mix[k].data(), stride);
-            mpdc->AccessParticles(k).SetColourData(
-                colType, mix[k].data() + core::moldyn::SimpleSphericalParticles::VertexDataSize[vertType], stride);
-            mpdc->AccessParticles(k).SetIDData(idType,
-                mix[k].data() + core::moldyn::SimpleSphericalParticles::VertexDataSize[vertType] +
-                    core::moldyn::SimpleSphericalParticles::ColorDataSize[colType],
-                stride);
         }
-        mpdc->SetFrameCount(cad->getFrameCount());
-        mpdc->SetDataHash(cad->getDataHash());
-        currentFrame = mpdc->FrameID();
+
     }
+
+    for (auto k = 0; k < plist_offset.size(); k++) {
+        // Set particles
+        const size_t particleCount = plist_offset[k];
+        mpdc->AccessParticles(k).SetCount(particleCount);
+
+        mpdc->AccessParticles(k).SetVertexData(vertType, mix[k].data(), stride);
+        mpdc->AccessParticles(k).SetColourData(
+            colType, mix[k].data() + core::moldyn::SimpleSphericalParticles::VertexDataSize[vertType], stride);
+        mpdc->AccessParticles(k).SetIDData(idType,
+            mix[k].data() + core::moldyn::SimpleSphericalParticles::VertexDataSize[vertType] +
+                core::moldyn::SimpleSphericalParticles::ColorDataSize[colType],
+            stride);
+    }
+
+    mpdc->SetFrameCount(cad->getFrameCount());
+    mpdc->SetDataHash(cad->getDataHash());
+    currentFrame = mpdc->FrameID();
+    
     return true;
 }
 
