@@ -6,30 +6,32 @@
  */
 
 #include "stdafx.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
 #include "mmcore/view/special/ScreenShooter.h"
+#include <climits>
+#include <map>
+#include <sstream>
 #include "mmcore/AbstractNamedObject.h"
 #include "mmcore/AbstractNamedObjectContainer.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
+#include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
-#include "mmcore/param/FilePathParam.h"
-#include "png.h"
 #include "mmcore/view/CallRenderView.h"
-#include "vislib/assert.h"
-#include "vislib/sys/CriticalSection.h"
-#include "vislib/sys/File.h"
-#include "vislib/graphics/gl/FramebufferObject.h"
-#include "vislib/sys/Log.h"
-#include "vislib/math/mathfunctions.h"
-#include "vislib/sys/FastFile.h"
-#include "vislib/sys/Thread.h"
+#include "png.h"
 #include "vislib/Trace.h"
-#include <climits>
+#include "vislib/assert.h"
+#include "vislib/graphics/gl/FramebufferObject.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib/math/mathfunctions.h"
+#include "vislib/sys/CriticalSection.h"
+#include "vislib/sys/FastFile.h"
+#include "vislib/sys/File.h"
+#include "vislib/sys/Log.h"
+#include "vislib/sys/Thread.h"
 
 
 namespace megamol {
@@ -37,141 +39,141 @@ namespace core {
 namespace view {
 namespace special {
 
-    /**
-     * My error handling function for png export
-     *
-     * @param pngPtr The png structure pointer
-     * @param msg The error message
-     */
-    static void PNGAPI myPngError(png_structp pngPtr, png_const_charp msg) {
-        throw vislib::Exception(msg, __FILE__, __LINE__);
+/**
+ * My error handling function for png export
+ *
+ * @param pngPtr The png structure pointer
+ * @param msg The error message
+ */
+static void PNGAPI myPngError(png_structp pngPtr, png_const_charp msg) {
+    throw vislib::Exception(msg, __FILE__, __LINE__);
+}
+
+/**
+ * My error handling function for png export
+ *
+ * @param pngPtr The png structure pointer
+ * @param msg The error message
+ */
+static void PNGAPI myPngWarn(png_structp pngPtr, png_const_charp msg) {
+    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, "Png-Warning: %s\n", msg);
+}
+
+/**
+ * My write function for png export
+ *
+ * @param pngPtr The png structure pointer
+ * @param buf The pointer to the buffer to be written
+ * @param size The number of bytes to be written
+ */
+static void PNGAPI myPngWrite(png_structp pngPtr, png_bytep buf, png_size_t size) {
+    vislib::sys::File* f = static_cast<vislib::sys::File*>(png_get_io_ptr(pngPtr));
+    f->Write(buf, size);
+}
+
+/**
+ * My flush function for png export
+ *
+ * @param pngPtr The png structure pointer
+ */
+static void PNGAPI myPngFlush(png_structp pngPtr) {
+    vislib::sys::File* f = static_cast<vislib::sys::File*>(png_get_io_ptr(pngPtr));
+    f->Flush();
+}
+
+/**
+ * Data used by the multithreaded shooter code
+ */
+typedef struct _shooterdata_t {
+
+    /** The two temporary files */
+    vislib::sys::File* tmpFiles[2];
+
+    /** The locks for the usage of the temporary files */
+    vislib::sys::CriticalSection tmpFileLocks[2];
+
+    /** lock to syncronize the switch of temporary files */
+    vislib::sys::CriticalSection switchLock;
+
+    /** The width of the full image */
+    unsigned int imgWidth;
+
+    /** The height of the full image */
+    unsigned int imgHeight;
+
+    /** The general tile width */
+    unsigned int tileWidth;
+
+    /** The general tile height */
+    unsigned int tileHeight;
+
+    /** The png export structure */
+    png_structp pngPtr;
+
+    /** The png export info */
+    png_infop pngInfoPtr;
+
+    /** Bytes per pixel */
+    unsigned int bpp;
+
+} ShooterData;
+
+/**
+ * The second thread to load the tile data from the temporary files and
+ * create the final output
+ *
+ * @param d Pointer to the common ShooterData structure
+ *
+ * @return 0
+ */
+static DWORD myPngStoreData(void* d) {
+    ShooterData* data = static_cast<ShooterData*>(d);
+    int xSteps = (data->imgWidth / data->tileWidth) + (((data->imgWidth % data->tileWidth) != 0) ? 1 : 0);
+    int ySteps = (data->imgHeight / data->tileHeight) + (((data->imgHeight % data->tileHeight) != 0) ? 1 : 0);
+    int tmpid = ySteps % 2;
+    BYTE* buffer = new BYTE[data->imgWidth * data->bpp]; // 1 scanline at a time
+
+    if (buffer == NULL) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Unable to allocate scanline buffer");
+        return -1;
     }
 
-    /**
-     * My error handling function for png export
-     *
-     * @param pngPtr The png structure pointer
-     * @param msg The error message
-     */
-    static void PNGAPI myPngWarn(png_structp pngPtr, png_const_charp msg) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
-            "Png-Warning: %s\n", msg);
-    }
+    data->tmpFileLocks[tmpid].Lock();
+    VLTRACE(VISLIB_TRCELVL_INFO, "Writer locked tmp[%d]\n", tmpid);
 
-    /**
-     * My write function for png export
-     *
-     * @param pngPtr The png structure pointer
-     * @param buf The pointer to the buffer to be written
-     * @param size The number of bytes to be written
-     */
-    static void PNGAPI myPngWrite(png_structp pngPtr, png_bytep buf, png_size_t size) {
-        vislib::sys::File *f = static_cast<vislib::sys::File*>(png_get_io_ptr(pngPtr));
-        f->Write(buf, size);
-    }
-
-    /**
-     * My flush function for png export
-     *
-     * @param pngPtr The png structure pointer
-     */
-    static void PNGAPI myPngFlush(png_structp pngPtr) {
-        vislib::sys::File *f = static_cast<vislib::sys::File*>(png_get_io_ptr(pngPtr));
-        f->Flush();
-    }
-
-    /**
-     * Data used by the multithreaded shooter code
-     */
-    typedef struct _shooterdata_t {
-
-        /** The two temporary files */
-        vislib::sys::File *tmpFiles[2];
-
-        /** The locks for the usage of the temporary files */
-        vislib::sys::CriticalSection tmpFileLocks[2];
-
-        /** lock to syncronize the switch of temporary files */
-        vislib::sys::CriticalSection switchLock;
-
-        /** The width of the full image */
-        unsigned int imgWidth;
-
-        /** The height of the full image */
-        unsigned int imgHeight;
-
-        /** The general tile width */
-        unsigned int tileWidth;
-
-        /** The general tile height */
-        unsigned int tileHeight;
-
-        /** The png export structure */
-        png_structp pngPtr;
-
-        /** The png export info */
-        png_infop pngInfoPtr;
-
-        /** Bytes per pixel */
-        unsigned int bpp;
-
-    } ShooterData;
-
-    /**
-     * The second thread to load the tile data from the temporary files and
-     * create the final output
-     *
-     * @param d Pointer to the common ShooterData structure
-     *
-     * @return 0
-     */
-    static DWORD myPngStoreData(void *d) {
-        ShooterData *data = static_cast<ShooterData*>(d);
-        int xSteps = (data->imgWidth / data->tileWidth) + (((data->imgWidth % data->tileWidth) != 0) ? 1 : 0);
-        int ySteps = (data->imgHeight / data->tileHeight) + (((data->imgHeight % data->tileHeight) != 0) ? 1 : 0);
-        int tmpid = ySteps % 2;
-        BYTE *buffer = new BYTE[data->imgWidth * data->bpp]; // 1 scanline at a time
-
-        if (buffer == NULL) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-                "Unable to allocate scanline buffer");
+    for (int yi = ySteps - 1; yi >= 0; yi--) {
+        tmpid = yi % 2;
+        int tileY = yi * data->tileHeight;
+        int tileH = vislib::math::Min(data->tileHeight, data->imgHeight - tileY);
+        if (tileH <= 0) {
             return -1;
         }
 
         data->tmpFileLocks[tmpid].Lock();
         VLTRACE(VISLIB_TRCELVL_INFO, "Writer locked tmp[%d]\n", tmpid);
+        VLTRACE(VISLIB_TRCELVL_INFO, "Writer unlocks tmp[%d]\n", (1 - tmpid));
+        data->tmpFileLocks[1 - tmpid].Unlock();
+        data->switchLock.Lock();
+        data->switchLock.Unlock();
 
-        for (int yi = ySteps - 1; yi >= 0; yi--) {
-            tmpid = yi % 2;
-            int tileY = yi * data->tileHeight;
-            int tileH = vislib::math::Min(data->tileHeight, data->imgHeight - tileY);
-            if (tileH <= 0) { return -1; }
-
-            data->tmpFileLocks[tmpid].Lock();
-            VLTRACE(VISLIB_TRCELVL_INFO, "Writer locked tmp[%d]\n", tmpid);
-            VLTRACE(VISLIB_TRCELVL_INFO, "Writer unlocks tmp[%d]\n", (1 - tmpid));
-            data->tmpFileLocks[1 - tmpid].Unlock();
-            data->switchLock.Lock();
-            data->switchLock.Unlock();
-
-            for (int yo = tileH - 1; yo >= 0; yo--) {
-                for (int xi = 0; xi < xSteps; xi++) {
-                    data->tmpFiles[tmpid]->Seek(xi * data->tileWidth * data->tileHeight * data->bpp
-                        + yo * data->tileWidth * data->bpp);
-                    data->tmpFiles[tmpid]->Read(buffer + (xi * data->tileWidth * data->bpp),
-                        vislib::math::Min(data->tileWidth, data->imgWidth - xi * data->tileWidth) * data->bpp);
-                }
-                png_write_row(data->pngPtr, buffer);
+        for (int yo = tileH - 1; yo >= 0; yo--) {
+            for (int xi = 0; xi < xSteps; xi++) {
+                data->tmpFiles[tmpid]->Seek(
+                    xi * data->tileWidth * data->tileHeight * data->bpp + yo * data->tileWidth * data->bpp);
+                data->tmpFiles[tmpid]->Read(buffer + (xi * data->tileWidth * data->bpp),
+                    vislib::math::Min(data->tileWidth, data->imgWidth - xi * data->tileWidth) * data->bpp);
             }
+            png_write_row(data->pngPtr, buffer);
         }
-
-        VLTRACE(VISLIB_TRCELVL_INFO, "Writer unlocks tmp[%d]\n", tmpid);
-        data->tmpFileLocks[tmpid].Unlock();
-
-        delete[] buffer;
-
-        return 0;
     }
+
+    VLTRACE(VISLIB_TRCELVL_INFO, "Writer unlocks tmp[%d]\n", tmpid);
+    data->tmpFileLocks[tmpid].Unlock();
+
+    delete[] buffer;
+
+    return 0;
+}
 
 } /* end namespace special */
 } /* end namespace view */
@@ -194,23 +196,27 @@ bool view::special::ScreenShooter::IsAvailable(void) {
 /*
  * view::special::ScreenShooter::release
  */
-view::special::ScreenShooter::ScreenShooter() : job::AbstractJob(), Module(),
-        viewNameSlot("view", "The name of the view instance to be used"),
-        imgWidthSlot("imgWidth", "The width in pixel of the resulting image"),
-        imgHeightSlot("imgHeight", "The height in pixel of the resulting image"),
-        tileWidthSlot("tileWidth", "The width of a rendering tile in pixel"),
-        tileHeightSlot("tileHeight", "The height of a rendering tile in pixel"),
-        imageFilenameSlot("filename", "The file name to store the resulting image under"),
-        backgroundSlot("background", "The background to be used"),
-        triggerButtonSlot("trigger", "The trigger button"),
-        closeAfterShotSlot("closeAfter", "If set the application will close after an image had been created"),
-        animFromSlot("anim::from", "The first time"),
-        animToSlot("anim::to", "The last time"),
-        animStepSlot("anim::step", "The time step"),
-        animAddTime2FrameSlot("anim::addTime2Fname", "Add animation time to the output filenames"),
-        makeAnimSlot("anim::makeAnim", "Flag whether or not to make an animation of screen shots"),
-        animTimeParamNameSlot("anim::paramname", "Name of the time parameter"),
-        running(false), animLastFrameTime(0), outputCounter(0) {
+view::special::ScreenShooter::ScreenShooter()
+    : job::AbstractJob()
+    , Module()
+    , viewNameSlot("view", "The name of the view instance to be used")
+    , imgWidthSlot("imgWidth", "The width in pixel of the resulting image")
+    , imgHeightSlot("imgHeight", "The height in pixel of the resulting image")
+    , tileWidthSlot("tileWidth", "The width of a rendering tile in pixel")
+    , tileHeightSlot("tileHeight", "The height of a rendering tile in pixel")
+    , imageFilenameSlot("filename", "The file name to store the resulting image under")
+    , backgroundSlot("background", "The background to be used")
+    , triggerButtonSlot("trigger", "The trigger button")
+    , closeAfterShotSlot("closeAfter", "If set the application will close after an image had been created")
+    , animFromSlot("anim::from", "The first time")
+    , animToSlot("anim::to", "The last time")
+    , animStepSlot("anim::step", "The time step")
+    , animAddTime2FrameSlot("anim::addTime2Fname", "Add animation time to the output filenames")
+    , makeAnimSlot("anim::makeAnim", "Flag whether or not to make an animation of screen shots")
+    , animTimeParamNameSlot("anim::paramname", "Name of the time parameter")
+    , running(false)
+    , animLastFrameTime(0)
+    , outputCounter(0) {
 
     this->viewNameSlot << new param::StringParam("");
     this->MakeSlotAvailable(&this->viewNameSlot);
@@ -225,11 +231,10 @@ view::special::ScreenShooter::ScreenShooter() : job::AbstractJob(), Module(),
     this->tileHeightSlot << new param::IntParam(1024, 1);
     this->MakeSlotAvailable(&this->tileHeightSlot);
 
-    this->imageFilenameSlot << new param::FilePathParam("Unnamed.png",
-        param::FilePathParam::FLAG_TOBECREATED);
+    this->imageFilenameSlot << new param::FilePathParam("Unnamed.png", param::FilePathParam::FLAG_TOBECREATED);
     this->MakeSlotAvailable(&this->imageFilenameSlot);
 
-    param::EnumParam *bkgnd = new param::EnumParam(0);
+    param::EnumParam* bkgnd = new param::EnumParam(0);
     bkgnd->SetTypePair(0, "Scene Background");
     bkgnd->SetTypePair(1, "Transparent");
     bkgnd->SetTypePair(2, "White");
@@ -252,7 +257,7 @@ view::special::ScreenShooter::ScreenShooter() : job::AbstractJob(), Module(),
     this->MakeSlotAvailable(&this->animToSlot);
 
     this->animStepSlot << new param::FloatParam(1.0f, 0.01f);
-    //this->animStepSlot << new param::IntParam(1, 1);
+    // this->animStepSlot << new param::IntParam(1, 1);
     this->MakeSlotAvailable(&this->animStepSlot);
 
     this->animAddTime2FrameSlot << new param::BoolParam(false);
@@ -263,24 +268,19 @@ view::special::ScreenShooter::ScreenShooter() : job::AbstractJob(), Module(),
 
     this->animTimeParamNameSlot << new param::StringParam("");
     this->MakeSlotAvailable(&this->animTimeParamNameSlot);
-
 }
 
 
 /*
  * view::special::ScreenShooter::release
  */
-view::special::ScreenShooter::~ScreenShooter() {
-    this->Release();
-}
+view::special::ScreenShooter::~ScreenShooter() { this->Release(); }
 
 
 /*
  * view::special::ScreenShooter::release
  */
-bool view::special::ScreenShooter::IsRunning(void) const {
-    return this->running;
-}
+bool view::special::ScreenShooter::IsRunning(void) const { return this->running; }
 
 
 /*
@@ -321,7 +321,7 @@ void view::special::ScreenShooter::release(void) {
 /*
  * view::special::ScreenShooter::BeforeRender
  */
-void view::special::ScreenShooter::BeforeRender(view::AbstractView *view) {
+void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
     using vislib::sys::Log;
     vislib::graphics::gl::FramebufferObject fbo;
     ShooterData data;
@@ -353,8 +353,8 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView *view) {
 
                 if (this->animAddTime2FrameSlot.Param<param::BoolParam>()->Value()) {
                     int intPart = static_cast<int>(floor(this->animLastFrameTime));
-                    float fractPart = this->animLastFrameTime-(float)intPart;
-                    ext.Format(_T(".%.5d.%03d.png"), intPart, (int)(fractPart*1000.0f));
+                    float fractPart = this->animLastFrameTime - (float)intPart;
+                    ext.Format(_T(".%.5d.%03d.png"), intPart, (int)(fractPart * 1000.0f));
                 } else {
                     ext.Format(_T(".%.5u.png"), this->outputCounter);
                 }
@@ -375,58 +375,57 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView *view) {
     data.pngPtr = NULL;
 
     if ((data.tileWidth == 0) || (data.tileHeight == 0)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "Failed to create Screenshot: Illegal tile size %u x %u", data.tileWidth, data.tileHeight);
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Failed to create Screenshot: Illegal tile size %u x %u",
+            data.tileWidth, data.tileHeight);
         return;
     }
     if ((data.imgWidth == 0) || (data.imgHeight == 0)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "Failed to create Screenshot: Illegal image size %u x %u", data.imgWidth, data.imgHeight);
+        Log::DefaultLog.WriteMsg(
+            Log::LEVEL_ERROR, "Failed to create Screenshot: Illegal image size %u x %u", data.imgWidth, data.imgHeight);
         return;
     }
     if (filename.IsEmpty()) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "Failed to create Screenshot: You must specify a file name to save the image");
+        Log::DefaultLog.WriteMsg(
+            Log::LEVEL_ERROR, "Failed to create Screenshot: You must specify a file name to save the image");
         return;
     }
 
     if (!vislib::graphics::gl::FramebufferObject::InitialiseExtensions()) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "Failed to create Screenshot: Unable to initialize framebuffer extensions.");
+        Log::DefaultLog.WriteMsg(
+            Log::LEVEL_ERROR, "Failed to create Screenshot: Unable to initialize framebuffer extensions.");
         return;
     }
 
     data.tmpFiles[0] = vislib::sys::File::CreateTempFile();
     if (data.tmpFiles[0] == NULL) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "Failed to create Screenshot: Unable to create first temporary file.");
+        Log::DefaultLog.WriteMsg(
+            Log::LEVEL_ERROR, "Failed to create Screenshot: Unable to create first temporary file.");
         return;
     }
     data.tmpFiles[1] = vislib::sys::File::CreateTempFile();
     if (data.tmpFiles[1] == NULL) {
         delete data.tmpFiles[0];
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "Failed to create Screenshot: Unable to create second temporary file.");
+        Log::DefaultLog.WriteMsg(
+            Log::LEVEL_ERROR, "Failed to create Screenshot: Unable to create second temporary file.");
         return;
     }
 
     view::CallRenderView crv;
-    BYTE *buffer = NULL;
+    BYTE* buffer = NULL;
     vislib::sys::FastFile file;
     bool rollback = false;
-    vislib::graphics::gl::FramebufferObject *overlayfbo = NULL;
+    vislib::graphics::gl::FramebufferObject* overlayfbo = NULL;
 
     try {
 
         // open final image file
-        if (!file.Open(filename, vislib::sys::File::WRITE_ONLY,
-                vislib::sys::File::SHARE_EXCLUSIVE, vislib::sys::File::CREATE_OVERWRITE)) {
+        if (!file.Open(filename, vislib::sys::File::WRITE_ONLY, vislib::sys::File::SHARE_EXCLUSIVE,
+                vislib::sys::File::CREATE_OVERWRITE)) {
             throw vislib::Exception("Cannot open output file", __FILE__, __LINE__);
         }
 
         // init png lib
-        data.pngPtr = png_create_write_struct(
-            PNG_LIBPNG_VER_STRING, NULL, &myPngError, &myPngWarn);
+        data.pngPtr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, &myPngError, &myPngWarn);
         if (data.pngPtr == NULL) {
             throw vislib::Exception("Cannot create png structure", __FILE__, __LINE__);
         }
@@ -436,13 +435,81 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView *view) {
         }
         png_set_write_fn(data.pngPtr, static_cast<void*>(&file), &myPngWrite, &myPngFlush);
         png_set_IHDR(data.pngPtr, data.pngInfoPtr, data.imgWidth, data.imgHeight, 8,
-            (bkgndMode == 1) ? PNG_COLOR_TYPE_RGB_ALPHA : PNG_COLOR_TYPE_RGB, 
-            PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
+            (bkgndMode == 1) ? PNG_COLOR_TYPE_RGB_ALPHA : PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE,
+            PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
 
         // todo: just put the whole project file into one string, even better would ofc be
         // to have a legal exif structure (lol)
-        //png_byte info[] = "heinzor:blah";
-        //png_set_eXIf_1(data.pngPtr, data.pngInfoPtr, sizeof(info), info);
+
+        // todo: camera settings are not stored without magic knowledge about the view
+
+        std::stringstream confInstances, confModules, confCalls, confParams;
+
+        std::map<std::string, std::string> view_instances;
+        std::map<std::string, std::string> job_instances;
+        this->ModuleGraphLock().LockExclusive();
+        AbstractNamedObjectContainer::ptr_type anoc =
+            AbstractNamedObjectContainer::dynamic_pointer_cast(this->RootModule());
+        int job_counter = 0;
+        for (auto ano = anoc->ChildList_Begin(); ano != anoc->ChildList_End(); ++ano) {
+            auto vi = dynamic_cast<ViewInstance*>(ano->get());
+            auto ji = dynamic_cast<JobInstance*>(ano->get());
+            if (vi && vi->View()) {
+                std::string vin = vi->Name().PeekBuffer();
+                view_instances[vi->View()->FullName().PeekBuffer()] = vin;
+                vislib::sys::Log::DefaultLog.WriteInfo("ScreenShooter: found view instance \"%s\" with view \"%s\".",
+                    view_instances[vi->View()->FullName().PeekBuffer()].c_str(), vi->View()->FullName().PeekBuffer());
+            }
+            if (ji && ji->Job()) {
+                std::string jin = ji->Name().PeekBuffer();
+                // todo: find job module! WTF!
+                job_instances[jin] = std::string("job") + std::to_string(job_counter);
+                vislib::sys::Log::DefaultLog.WriteInfo("ScreenShooter: found job instance \"%s\" with job \"%s\".",
+                    jin.c_str(), job_instances[jin].c_str());
+                ++job_counter;
+            }
+        }
+
+        const auto fun = [&confInstances, &confModules, &confCalls, &confParams, &view_instances](Module* mod) {
+            if (view_instances.find(mod->FullName().PeekBuffer()) != view_instances.end()) {
+                confInstances << "mmCreateView(\"" << view_instances[mod->FullName().PeekBuffer()] << "\",\"" << mod->ClassName()
+                     << "\",\"" << mod->FullName().PeekBuffer() << "\")\n";
+            } else {
+                // todo: jobs??
+                confModules << "mmCreateModule(\"" << mod->ClassName() << "\",\"" << mod->FullName().PeekBuffer() << "\")\n";
+            }
+            AbstractNamedObjectContainer::child_list_type::const_iterator se = mod->ChildList_End();
+            for (AbstractNamedObjectContainer::child_list_type::const_iterator si = mod->ChildList_Begin(); si != se;
+                 ++si) {
+                const auto slot = dynamic_cast<param::ParamSlot*>((*si).get());
+                if (slot) {
+                    const auto bp = slot->Param<param::ButtonParam>();
+                    if (!bp) {
+                        confParams << "mmSetParamValue(\"" << slot->FullName() << "\",\""
+                                   << slot->Parameter()->ValueString().PeekBuffer() << "\")\n";
+                    }
+                }
+                const auto cslot = dynamic_cast<CallerSlot*>((*si).get());
+                if (cslot) {
+                    const Call* c = const_cast<CallerSlot*>(cslot)->CallAs<Call>();
+                    if (c != nullptr) {
+                        confCalls << "mmCreateCall(\"" << c->ClassName() << "\",\""
+                             << c->PeekCallerSlot()->Parent()->FullName().PeekBuffer()
+                             << "::" << c->PeekCallerSlot()->Name().PeekBuffer() << "\",\""
+                             << c->PeekCalleeSlot()->Parent()->FullName().PeekBuffer()
+                             << "::" << c->PeekCalleeSlot()->Name().PeekBuffer() << "\")\n";
+                    }
+                }
+            }
+        };
+        this->GetCoreInstance()->EnumModulesNoLock(nullptr, fun);
+
+        auto confstr = confInstances.str() + "\n" + confModules.str() + "\n" + confCalls.str() + "\n" + confParams.str();
+        std::vector<png_byte> tempvec(confstr.begin(), confstr.end());
+        // auto info = new png_byte[confstr.size()];
+        // memcpy(info, confstr.c_str(), confstr.size());
+        // png_set_eXIf_1(data.pngPtr, data.pngInfoPtr, sizeof(info), info);
+        png_set_eXIf_1(data.pngPtr, data.pngInfoPtr, confstr.size(), tempvec.data());
 
         // check how complex the upcoming action is
         if ((data.imgWidth <= data.tileWidth) && (data.imgHeight <= data.tileHeight)) {
@@ -459,36 +526,45 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView *view) {
             }
             crv.ResetAll();
             switch (bkgndMode) {
-                case 0: /* don't set bkgnd */ break;
-                case 1: crv.SetBackground(0, 0, 0); break;
-                case 2: crv.SetBackground(255, 255, 255); break;
-                case 3: crv.SetBackground(0, 0, 0); break;
-                case 4: crv.SetBackground(192, 192, 192); break;
-                default: /* don't set bkgnd */ break;
+            case 0: /* don't set bkgnd */
+                break;
+            case 1:
+                crv.SetBackground(0, 0, 0);
+                break;
+            case 2:
+                crv.SetBackground(255, 255, 255);
+                break;
+            case 3:
+                crv.SetBackground(0, 0, 0);
+                break;
+            case 4:
+                crv.SetBackground(192, 192, 192);
+                break;
+            default: /* don't set bkgnd */
+                break;
             }
             // don't set projection
             if (fbo.Enable() != GL_NO_ERROR) {
-                throw vislib::Exception("Failed to create Screenshot: Cannot enable Framebuffer object", __FILE__, __LINE__);
+                throw vislib::Exception(
+                    "Failed to create Screenshot: Cannot enable Framebuffer object", __FILE__, __LINE__);
             }
             glViewport(0, 0, data.imgWidth, data.imgHeight);
             crv.SetOutputBuffer(&fbo, vislib::math::Rectangle<int>(0, 0, data.imgWidth, data.imgHeight));
-            crv.SetTile(static_cast<float>(data.imgWidth), static_cast<float>(data.imgHeight),
-                0.0f, 0.0f, static_cast<float>(data.imgWidth), static_cast<float>(data.imgHeight));
+            crv.SetTile(static_cast<float>(data.imgWidth), static_cast<float>(data.imgHeight), 0.0f, 0.0f,
+                static_cast<float>(data.imgWidth), static_cast<float>(data.imgHeight));
             crv.SetTime(frameTime);
             view->OnRenderView(crv); // glClear by SFX
             glFlush();
             fbo.Disable();
 
-            if (fbo.GetColourTexture(buffer, 0,
-                    (bkgndMode == 1) ? GL_RGBA : GL_RGB,
-                    GL_UNSIGNED_BYTE) != GL_NO_ERROR) {
+            if (fbo.GetColourTexture(buffer, 0, (bkgndMode == 1) ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE) != GL_NO_ERROR) {
                 throw vislib::Exception("Failed to create Screenshot: Cannot read image data", __FILE__, __LINE__);
             }
             if (bkgndMode == 1) {
                 // fixing alpha from premultiplied to postmultiplied
                 for (UINT x = 0; x < data.imgWidth; x++) {
                     for (UINT y = 0; y < data.imgHeight; y++) {
-                        BYTE *cptr = buffer + 4 * (x + y * data.imgWidth);
+                        BYTE* cptr = buffer + 4 * (x + y * data.imgWidth);
                         if (cptr[3] == 0) continue;
                         float r = static_cast<float>(cptr[0]) / 255.0f;
                         float g = static_cast<float>(cptr[1]) / 255.0f;
@@ -517,7 +593,7 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView *view) {
 
                 ARY_SAFE_DELETE(rows);
 
-            } catch(...) {
+            } catch (...) {
                 if (rows != NULL) {
                     ARY_SAFE_DELETE(rows);
                 }
@@ -592,17 +668,22 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView *view) {
                 int tileY = yi * data.tileHeight;
                 int tileH = vislib::math::Min(data.tileHeight, data.imgHeight - tileY);
                 int xid = (yi % 2) * 2 - 1; // for the coolness!
-                for (int xi = (xid > 0) ? 0 : (xSteps - 1); ((xid > 0) && (xi < xSteps)) || ((xid < 0) && (xi >= 0)); xi += xid) {
+                for (int xi = (xid > 0) ? 0 : (xSteps - 1); ((xid > 0) && (xi < xSteps)) || ((xid < 0) && (xi >= 0));
+                     xi += xid) {
                     int tileX = xi * data.tileWidth;
                     int tileW = vislib::math::Min(data.tileWidth, data.imgWidth - tileX);
 
                     if (overlayfbo != NULL) {
                         float tx, ty, tw, th;
 
-                        tx = static_cast<float>(tileX) * static_cast<float>(overlayfbo->GetWidth()) / static_cast<float>(data.imgWidth);
-                        ty = static_cast<float>(tileY) * static_cast<float>(overlayfbo->GetHeight()) / static_cast<float>(data.imgHeight);
-                        tw = static_cast<float>(tileW) * static_cast<float>(overlayfbo->GetWidth()) / static_cast<float>(data.imgWidth);
-                        th = static_cast<float>(tileH) * static_cast<float>(overlayfbo->GetHeight()) / static_cast<float>(data.imgHeight);
+                        tx = static_cast<float>(tileX) * static_cast<float>(overlayfbo->GetWidth()) /
+                             static_cast<float>(data.imgWidth);
+                        ty = static_cast<float>(tileY) * static_cast<float>(overlayfbo->GetHeight()) /
+                             static_cast<float>(data.imgHeight);
+                        tw = static_cast<float>(tileW) * static_cast<float>(overlayfbo->GetWidth()) /
+                             static_cast<float>(data.imgWidth);
+                        th = static_cast<float>(tileH) * static_cast<float>(overlayfbo->GetHeight()) /
+                             static_cast<float>(data.imgHeight);
 
                         glDrawBuffer(GL_FRONT);
                         glMatrixMode(GL_PROJECTION);
@@ -653,45 +734,52 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView *view) {
                     // render a tile
                     crv.ResetAll();
                     switch (bkgndMode) {
-                        case 0: /* don't set bkgnd */ break;
-                        case 1: crv.SetBackground(0, 0, 0); break;
-                        case 2: crv.SetBackground(255, 255, 255); break;
-                        case 3: crv.SetBackground(0, 0, 0); break;
-                        case 4:
-                            if ((xi + yi) % 2) {
-                                crv.SetBackground(192, 192, 192);
-                            } else {
-                                crv.SetBackground(128, 128, 128);
-                            }
-                            break;
-                        default: /* don't set bkgnd */ break;
+                    case 0: /* don't set bkgnd */
+                        break;
+                    case 1:
+                        crv.SetBackground(0, 0, 0);
+                        break;
+                    case 2:
+                        crv.SetBackground(255, 255, 255);
+                        break;
+                    case 3:
+                        crv.SetBackground(0, 0, 0);
+                        break;
+                    case 4:
+                        if ((xi + yi) % 2) {
+                            crv.SetBackground(192, 192, 192);
+                        } else {
+                            crv.SetBackground(128, 128, 128);
+                        }
+                        break;
+                    default: /* don't set bkgnd */
+                        break;
                     }
                     // don't set projection
                     if (fbo.Enable() != GL_NO_ERROR) {
                         throw vislib::Exception(
-                            "Failed to create Screenshot: Cannot enable Framebuffer object",
-                            __FILE__, __LINE__);
+                            "Failed to create Screenshot: Cannot enable Framebuffer object", __FILE__, __LINE__);
                     }
                     glViewport(0, 0, tileW, tileH);
                     crv.SetOutputBuffer(&fbo, vislib::math::Rectangle<int>(0, 0, tileW, tileH));
                     crv.SetTile(static_cast<float>(data.imgWidth), static_cast<float>(data.imgHeight),
-                        static_cast<float>(tileX), static_cast<float>(tileY),
-                        static_cast<float>(tileW), static_cast<float>(tileH));
+                        static_cast<float>(tileX), static_cast<float>(tileY), static_cast<float>(tileW),
+                        static_cast<float>(tileH));
                     crv.SetTime(frameTime);
                     view->OnRenderView(crv); // glClear by SFX
                     glFlush();
                     fbo.Disable();
 
-                    if (fbo.GetColourTexture(buffer, 0,
-                            (bkgndMode == 1) ? GL_RGBA : GL_RGB,
-                            GL_UNSIGNED_BYTE) != GL_NO_ERROR) {
-                        throw vislib::Exception("Failed to create Screenshot: Cannot read image data", __FILE__, __LINE__);
+                    if (fbo.GetColourTexture(buffer, 0, (bkgndMode == 1) ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE) !=
+                        GL_NO_ERROR) {
+                        throw vislib::Exception(
+                            "Failed to create Screenshot: Cannot read image data", __FILE__, __LINE__);
                     }
                     if (bkgndMode == 1) {
                         // fixing alpha from premultiplied to postmultiplied
                         for (UINT x = 0; x < data.tileWidth; x++) {
                             for (UINT y = 0; y < data.tileHeight; y++) {
-                                BYTE *cptr = buffer + 4 * (x + y * data.tileWidth);
+                                BYTE* cptr = buffer + 4 * (x + y * data.tileWidth);
                                 if (cptr[3] == 0) continue;
                                 float r = static_cast<float>(cptr[0]) / 255.0f;
                                 float g = static_cast<float>(cptr[1]) / 255.0f;
@@ -713,10 +801,14 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView *view) {
                     if (overlayfbo != NULL) {
                         float tx, ty, tw, th;
 
-                        tx = static_cast<float>(tileX) * static_cast<float>(overlayfbo->GetWidth()) / static_cast<float>(data.imgWidth);
-                        ty = static_cast<float>(tileY) * static_cast<float>(overlayfbo->GetHeight()) / static_cast<float>(data.imgHeight);
-                        tw = static_cast<float>(tileW) * static_cast<float>(overlayfbo->GetWidth()) / static_cast<float>(data.imgWidth);
-                        th = static_cast<float>(tileH) * static_cast<float>(overlayfbo->GetHeight()) / static_cast<float>(data.imgHeight);
+                        tx = static_cast<float>(tileX) * static_cast<float>(overlayfbo->GetWidth()) /
+                             static_cast<float>(data.imgWidth);
+                        ty = static_cast<float>(tileY) * static_cast<float>(overlayfbo->GetHeight()) /
+                             static_cast<float>(data.imgHeight);
+                        tw = static_cast<float>(tileW) * static_cast<float>(overlayfbo->GetWidth()) /
+                             static_cast<float>(data.imgWidth);
+                        th = static_cast<float>(tileH) * static_cast<float>(overlayfbo->GetHeight()) /
+                             static_cast<float>(data.imgHeight);
                         tx -= 1.0f;
                         ty -= 1.0f;
                         tw += 2.0f;
@@ -768,14 +860,12 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView *view) {
 
         } /* end if */
 
-    } catch(vislib::Exception ex) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "Failed to create screenshot image: %s (%s, %d)",
-            ex.GetMsgA(), ex.GetFile(), ex.GetLine());
+    } catch (vislib::Exception ex) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Failed to create screenshot image: %s (%s, %d)", ex.GetMsgA(),
+            ex.GetFile(), ex.GetLine());
         rollback = true;
-    } catch(...) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "Failed to create screenshot image: Unexpected exception");
+    } catch (...) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Failed to create screenshot image: Unexpected exception");
         rollback = true;
     }
 
@@ -786,7 +876,7 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView *view) {
     if (overlayfbo != NULL) {
         try {
             overlayfbo->Release();
-        } catch(...) {
+        } catch (...) {
         }
         delete overlayfbo;
     }
@@ -797,22 +887,34 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView *view) {
             png_destroy_write_struct(&data.pngPtr, (png_infopp)NULL);
         }
     }
-    try { file.Flush(); } catch(...) { }
-    try { file.Close(); } catch(...) { }
+    try {
+        file.Flush();
+    } catch (...) {
+    }
+    try {
+        file.Close();
+    } catch (...) {
+    }
     if (rollback) {
         try {
             if (vislib::sys::File::Exists(filename)) {
                 vislib::sys::File::Delete(filename);
             }
-        } catch(...) {
+        } catch (...) {
         }
     }
     if (data.tmpFiles[0] != NULL) {
-        try { data.tmpFiles[0]->Close(); } catch(...) { }
+        try {
+            data.tmpFiles[0]->Close();
+        } catch (...) {
+        }
         delete data.tmpFiles[0];
     }
     if (data.tmpFiles[1] != NULL) {
-        try { data.tmpFiles[1]->Close(); } catch(...) { }
+        try {
+            data.tmpFiles[1]->Close();
+        } catch (...) {
+        }
         delete data.tmpFiles[1];
     }
     delete[] buffer;
@@ -825,15 +927,14 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView *view) {
             Log::DefaultLog.WriteInfo("Animation screen shots complete");
 
             // stop animation
-            //param::ParamSlot *playSlot = dynamic_cast<param::ParamSlot*>(view->FindNamedObject("anim::play"));
-            //if (playSlot != NULL)
+            // param::ParamSlot *playSlot = dynamic_cast<param::ParamSlot*>(view->FindNamedObject("anim::play"));
+            // if (playSlot != NULL)
             //    playSlot->Param<param::BoolParam>()->SetValue(false);
             this->outputCounter = 0;
         } else {
             param::ParamSlot* time = this->findTimeParam(view);
             if (time != NULL) {
-                float nextTime = this->animLastFrameTime
-                    + this->animStepSlot.Param<param::FloatParam>()->Value();
+                float nextTime = this->animLastFrameTime + this->animStepSlot.Param<param::FloatParam>()->Value();
                 time->Param<param::FloatParam>()->SetValue(static_cast<float>(nextTime));
                 closeAfter = false;
 
@@ -850,7 +951,6 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView *view) {
         this->running = false;
         this->GetCoreInstance()->Shutdown();
     }
-
 }
 
 
@@ -863,39 +963,47 @@ bool view::special::ScreenShooter::triggerButtonClicked(param::ParamSlot& slot) 
     ASSERT(&slot == &this->triggerButtonSlot);
 
     vislib::StringA mvn(this->viewNameSlot.Param<param::StringParam>()->Value());
-    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 100,
-        "ScreenShot of \"%s\" requested", mvn.PeekBuffer());
+    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 100, "ScreenShot of \"%s\" requested", mvn.PeekBuffer());
 
     this->ModuleGraphLock().LockExclusive();
-    AbstractNamedObjectContainer::ptr_type anoc = AbstractNamedObjectContainer::dynamic_pointer_cast(this->RootModule());
+    AbstractNamedObjectContainer::ptr_type anoc =
+        AbstractNamedObjectContainer::dynamic_pointer_cast(this->RootModule());
     AbstractNamedObject::ptr_type ano = anoc->FindChild(mvn);
-    ViewInstance *vi = dynamic_cast<ViewInstance *>(ano.get());
+    ViewInstance* vi = dynamic_cast<ViewInstance*>(ano.get());
+    auto av = dynamic_cast<AbstractView*>(ano.get());
     if (vi != NULL) {
         if (vi->View() != NULL) {
-            if (this->makeAnimSlot.Param<param::BoolParam>()->Value()) {
-                param::ParamSlot *timeSlot = this->findTimeParam(vi->View());
-                if (timeSlot != NULL) {
-                    timeSlot->Param<param::FloatParam>()->SetValue(static_cast<float>(this->animFromSlot.Param<param::IntParam>()->Value()));
-                    this->animLastFrameTime = (float)UINT_MAX;
-                } else {
-                    Log::DefaultLog.WriteError("Unable to make animation screen shots");
-                    this->makeAnimSlot.Param<param::BoolParam>()->SetValue(false);
-                }
-                // this is not a good idea because the animation module interferes with the "anim::time" parameter in "play" mode ...
-                //param::ParamSlot *playSlot = dynamic_cast<param::ParamSlot*>(vi->View()->FindNamedObject("anim::play"));
-                //if (playSlot != NULL)
-                //    playSlot->Param<param::BoolParam>()->SetValue(true);
+            av = vi->View();
+        }
+    }
+    if (av != NULL) {
+        if (this->makeAnimSlot.Param<param::BoolParam>()->Value()) {
+            param::ParamSlot* timeSlot = this->findTimeParam(vi->View());
+            if (timeSlot != NULL) {
+                timeSlot->Param<param::FloatParam>()->SetValue(
+                    static_cast<float>(this->animFromSlot.Param<param::IntParam>()->Value()));
+                this->animLastFrameTime = (float)UINT_MAX;
+            } else {
+                Log::DefaultLog.WriteError("Unable to make animation screen shots");
+                this->makeAnimSlot.Param<param::BoolParam>()->SetValue(false);
             }
-            vi->View()->RegisterHook(this);
-        } else {
+            // this is not a good idea because the animation module interferes with the "anim::time" parameter in
+            // "play" mode ...
+            // param::ParamSlot *playSlot =
+            // dynamic_cast<param::ParamSlot*>(vi->View()->FindNamedObject("anim::play")); if (playSlot != NULL)
+            //    playSlot->Param<param::BoolParam>()->SetValue(true);
+        }
+        av->RegisterHook(this);
+    } else {
+        if (vi == NULL) {
+            Log::DefaultLog.WriteMsg(
+                Log::LEVEL_ERROR, "Unable to find viewInstance \"%s\" for ScreenShot", mvn.PeekBuffer());
+        } else if (av == NULL) {
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                "View \"%s\" is not usable for ScreenShot (Not initialized)",
+                "ViewInstance \"%s\" is not usable for ScreenShot (Not initialized) and AbstractView \"%s\" does not "
+                "exist either",
                 mvn.PeekBuffer());
         }
-    } else {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "Unable to find view \"%s\" for ScreenShot",
-            mvn.PeekBuffer());
     }
     this->ModuleGraphLock().UnlockExclusive();
 
@@ -908,12 +1016,12 @@ bool view::special::ScreenShooter::triggerButtonClicked(param::ParamSlot& slot) 
  */
 param::ParamSlot* view::special::ScreenShooter::findTimeParam(view::AbstractView* view) {
     vislib::TString name(this->animTimeParamNameSlot.Param<param::StringParam>()->Value());
-    param::ParamSlot *timeSlot = nullptr;
+    param::ParamSlot* timeSlot = nullptr;
 
     if (name.IsEmpty()) {
         timeSlot = dynamic_cast<param::ParamSlot*>(view->FindNamedObject("anim::time").get());
     } else {
-        AbstractNamedObjectContainer * anoc = dynamic_cast<AbstractNamedObjectContainer*>(view->RootModule().get());
+        AbstractNamedObjectContainer* anoc = dynamic_cast<AbstractNamedObjectContainer*>(view->RootModule().get());
         timeSlot = dynamic_cast<param::ParamSlot*>(anoc->FindNamedObject(vislib::StringA(name)).get());
     }
 
