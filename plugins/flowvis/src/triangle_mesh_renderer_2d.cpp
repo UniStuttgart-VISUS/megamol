@@ -27,7 +27,8 @@ namespace megamol
             triangle_mesh_slot("get_triangle_mesh", "Triangle mesh input"), triangle_mesh_hash(0),
             mesh_data_slot("get_mesh_data", "Mesh data input"), mesh_data_hash(0),
             data_set("data_set", "Data set used for coloring the triangles"),
-            wireframe("wireframe", "Render as wireframe instead of filling the triangles")
+            wireframe("wireframe", "Render as wireframe instead of filling the triangles"),
+            mouse_state({ false, false, -1.0, -1.0 })
         {
             // Connect input slots
             this->triangle_mesh_slot.SetCompatibleCall<triangle_mesh_call::triangle_mesh_description>();
@@ -139,23 +140,6 @@ namespace megamol
                 this->render_data.vertices = get_triangles->get_vertices();
                 this->render_data.indices = get_triangles->get_indices();
 
-                // Update data (connection optional)
-                auto get_data = this->mesh_data_slot.CallAs<mesh_data_call>();
-
-                if (get_data != nullptr && (*get_data)(0) && (get_data->DataHash() != this->mesh_data_hash || this->data_set.IsDirty()))
-                {
-                    // Set hash and reset parameter
-                    this->mesh_data_hash = get_data->DataHash();
-                    this->data_set.ResetDirty();
-
-                    this->render_data.colors = get_data->get_data(this->data_set.Param<core::param::FlexEnumParam>()->Value());
-                }
-
-                if (this->render_data.colors == nullptr)
-                {
-                    this->render_data.colors = std::make_shared<std::vector<GLfloat>>(this->render_data.vertices->size() * 2, 1.0f);
-                }
-
                 // Prepare OpenGL buffers
                 glBindVertexArray(this->render_data.vao);
 
@@ -165,16 +149,49 @@ namespace megamol
                 glEnableVertexAttribArray(0);
                 glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
 
-                glBindBuffer(GL_ARRAY_BUFFER, this->render_data.cbo);
-                glBufferData(GL_ARRAY_BUFFER, this->render_data.colors->size() * sizeof(GLfloat), this->render_data.colors->data(), GL_STATIC_DRAW);
-
-                glEnableVertexAttribArray(1);
-                glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
-
                 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->render_data.ibo);
                 glBufferData(GL_ELEMENT_ARRAY_BUFFER, this->render_data.indices->size() * sizeof(GLuint), this->render_data.indices->data(), GL_STATIC_DRAW);
 
                 glBindVertexArray(0);
+            }
+
+            // Update data (connection optional)
+            {
+                auto get_data = this->mesh_data_slot.CallAs<mesh_data_call>();
+
+                bool new_data = false;
+
+                if (get_data != nullptr && (*get_data)(0) && (get_data->DataHash() != this->mesh_data_hash || this->data_set.IsDirty()))
+                {
+                    // Set hash and reset parameter
+                    this->mesh_data_hash = get_data->DataHash();
+                    this->data_set.ResetDirty();
+
+                    this->render_data.colors = get_data->get_data(this->data_set.Param<core::param::FlexEnumParam>()->Value());
+
+                    new_data = true;
+                }
+
+                if (this->render_data.colors == nullptr)
+                {
+                    this->render_data.colors = std::make_shared<std::vector<GLfloat>>(this->render_data.vertices->size() * 2, 1.0f);
+
+                    new_data = true;
+                }
+
+                // Prepare OpenGL buffers
+                if (new_data)
+                {
+                    glBindVertexArray(this->render_data.vao);
+
+                    glBindBuffer(GL_ARRAY_BUFFER, this->render_data.cbo);
+                    glBufferData(GL_ARRAY_BUFFER, this->render_data.colors->size() * sizeof(GLfloat), this->render_data.colors->data(), GL_STATIC_DRAW);
+
+                    glEnableVertexAttribArray(1);
+                    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+                    glBindVertexArray(0);
+                }
             }
 
             // Render triangle mesh
@@ -230,6 +247,8 @@ namespace megamol
                 const auto previous_value = this->data_set.Param<core::param::FlexEnumParam>()->Value();
 
                 this->data_set.Param<core::param::FlexEnumParam>()->ClearValues();
+
+                this->data_set.Param<core::param::FlexEnumParam>()->AddValue("");
                 this->data_set.Param<core::param::FlexEnumParam>()->SetValue("");
 
                 for (const auto& data_set : get_data->get_data_sets())
@@ -246,18 +265,34 @@ namespace megamol
             return true;
         }
 
-        bool triangle_mesh_renderer_2d::MouseEvent(float x, float y, core::view::MouseFlags flags)
+        bool triangle_mesh_renderer_2d::OnMouseButton(core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods)
         {
-            if (flags & core::view::MOUSEFLAG_MODKEY_CTRL_DOWN && flags & core::view::MOUSEFLAG_BUTTON_LEFT_DOWN &&
-                x >= this->bounds.Left() && x <= this->bounds.Right() && y >= this->bounds.Bottom() && y <= this->bounds.Top())
+            // Save mouse state
+            this->mouse_state.left_pressed = button == core::view::MouseButton::BUTTON_LEFT && action == core::view::MouseButtonAction::PRESS;
+            this->mouse_state.control_pressed = mods.test(core::view::Modifier::CTRL);
+
+            // If control is pressed, left mouse button is released and it is inside the data's extent, consume the event
+            if (!this->mouse_state.left_pressed && this->mouse_state.control_pressed &&
+                this->mouse_state.x >= this->bounds.Left() && this->mouse_state.x <= this->bounds.Right() &&
+                this->mouse_state.y >= this->bounds.Bottom() && this->mouse_state.y <= this->bounds.Top())
             {
-                vislib::sys::Log::DefaultLog.WriteInfo("Event at %.2f x %.2f!", x, y);
+                vislib::sys::Log::DefaultLog.WriteInfo("Event at %.2f x %.2f!", this->mouse_state.x, this->mouse_state.y);
                 // TODO
 
                 return true;
             }
 
             return false;
+        }
+
+        bool triangle_mesh_renderer_2d::OnMouseMove(double, double, double world_x, double world_y)
+        {
+            // Track mouse position
+            this->mouse_state.x = world_x;
+            this->mouse_state.y = world_y;
+
+            // Claim mouse event if control key is pressed
+            return this->mouse_state.control_pressed;
         }
 
         GLuint triangle_mesh_renderer_2d::make_shader(const std::string& shader, GLenum type) const

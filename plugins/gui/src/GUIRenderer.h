@@ -128,7 +128,7 @@ protected:
     virtual bool OnMouseButton(
         core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) override;
 
-    virtual bool OnMouseMove(double x, double y) override;
+    virtual bool OnMouseMove(double x, double y, double world_x, double world_y) override;
 
     virtual bool OnMouseScroll(double dx, double dy) override;
 
@@ -869,7 +869,7 @@ template <class M, class C> bool GUIRenderer<M, C>::OnChar(unsigned int codePoin
 /**
  * GUIRenderer<M, C>::OnMouseMove
  */
-template <class M, class C> bool GUIRenderer<M, C>::OnMouseMove(double x, double y) {
+template <class M, class C> bool GUIRenderer<M, C>::OnMouseMove(double x, double y, double world_x, double world_y) {
 
     ImGui::SetCurrentContext(this->imgui_context);
 
@@ -886,6 +886,8 @@ template <class M, class C> bool GUIRenderer<M, C>::OnMouseMove(double x, double
         evt.tag = core::view::InputEvent::Tag::MouseMove;
         evt.mouseMoveData.x = x;
         evt.mouseMoveData.y = y;
+        evt.mouseMoveData.world_x = world_x;
+        evt.mouseMoveData.world_y = world_y;
         cr->SetInputEvent(evt);
         if (!(*cr)(core::view::InputCall::FnOnMouseMove)) return false;
     }
@@ -1104,7 +1106,7 @@ template <class M, class C> bool GUIRenderer<M, C>::OnMouseMoveCallback(core::Ca
         core::view::CallSplitViewOverlay& cr = dynamic_cast<core::view::CallSplitViewOverlay&>(call);
         auto& evt = cr.GetInputEvent();
         ASSERT(evt.tag == core::view::InputEvent::Tag::MouseMove && "Callback invocation mismatched input event");
-        return this->OnMouseMove(evt.mouseMoveData.x, evt.mouseMoveData.y);
+        return this->OnMouseMove(evt.mouseMoveData.x, evt.mouseMoveData.y, evt.mouseMoveData.world_x, evt.mouseMoveData.world_y);
     } catch (...) {
         ASSERT("OnMouseMoveCallback call cast failed\n");
     }

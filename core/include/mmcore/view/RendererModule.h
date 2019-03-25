@@ -100,16 +100,16 @@ protected:
 		//TODO: Verify semantics of (X,Y) coordinates...
 		// - Could be "world space" (see View2D/View3D) instead of window space!
 		// - If so, then provide a freaking method in the Call to the the transformation instead of passing around black magic!
-        this->MouseEvent(lastX, lastY, mouseFlags);
+        this->MouseEvent(this->lastX, this->lastY, mouseFlags);
 		// Ignore deprecated "event was processed" flag because too many renderers fail to use it properly
         return false;
     }
 
-    virtual bool OnMouseMove(double x, double y) {
+    virtual bool OnMouseMove(double, double, double world_x, double world_y) {
         // Ugly mapping to deprecated functions (can be removed some day).
-        this->lastX = x;
-        this->lastY = y;
-        this->MouseEvent(x, y, 0);
+        this->lastX = world_x;
+        this->lastY = world_y;
+        this->MouseEvent(world_x, world_y, 0);
 		// Ignore deprecated "event was processed" flag because too many renderers fail to use it properly
         return false;
     }
@@ -176,7 +176,7 @@ protected:
             C& cr = dynamic_cast<C&>(call);
             auto& evt = cr.GetInputEvent();
             ASSERT(evt.tag == InputEvent::Tag::MouseMove && "Callback invocation mismatched input event");
-            return this->OnMouseMove(evt.mouseMoveData.x, evt.mouseMoveData.y);
+            return this->OnMouseMove(evt.mouseMoveData.x, evt.mouseMoveData.y, evt.mouseMoveData.world_x, evt.mouseMoveData.world_y);
         } catch (...) {
             ASSERT("onRenderCallback call cast failed\n");
         }

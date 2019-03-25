@@ -24,7 +24,7 @@ namespace console {
 		virtual bool OnKey(core::view::Key key, core::view::KeyAction action, core::view::Modifiers mods);
         virtual bool OnChar(unsigned int codePoint);
         virtual bool OnMouseButton(core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods);
-        virtual bool OnMouseMove(double x, double y);
+        virtual bool OnMouseMove(double x, double y, double world_x, double world_y);
         virtual bool OnMouseScroll(double x, double y);
 
     private:

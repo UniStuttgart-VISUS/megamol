@@ -618,7 +618,7 @@ bool CinematicRenderer::OnMouseButton(megamol::core::view::MouseButton button, m
 /*
 * CinematicRenderer::OnMouseMove
 */
-bool CinematicRenderer::OnMouseMove(double x, double y) {
+bool CinematicRenderer::OnMouseMove(double x, double y, double world_x, double world_y) {
 
     auto* cr = this->rendererCallerSlot.CallAs<view::CallRender3D>();
     if (cr) {
@@ -626,6 +626,8 @@ bool CinematicRenderer::OnMouseMove(double x, double y) {
         evt.tag = InputEvent::Tag::MouseMove;
         evt.mouseMoveData.x = x;
         evt.mouseMoveData.y = y;
+        evt.mouseMoveData.world_x = world_x;
+        evt.mouseMoveData.world_y = world_y;
         cr->SetInputEvent(evt);
         if ((*cr)(view::CallRender3D::FnOnMouseMove))  return true;
     }

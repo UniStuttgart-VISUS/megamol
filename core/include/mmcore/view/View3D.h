@@ -160,7 +160,7 @@ namespace view {
 
         virtual bool OnMouseButton(MouseButton button, MouseButtonAction action, Modifiers mods) override;
 
-        virtual bool OnMouseMove(double x, double y) override;
+        virtual bool OnMouseMove(double x, double y, double = 0.0, double = 0.0) override;
 
         virtual bool OnMouseScroll(double dx, double dy) override;
 

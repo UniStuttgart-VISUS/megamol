@@ -142,7 +142,7 @@ public:
 
     virtual bool OnMouseButton(MouseButton button, MouseButtonAction action, Modifiers mods) override;
 
-    virtual bool OnMouseMove(double x, double y) override;
+    virtual bool OnMouseMove(double x, double y, double world_x, double world_y) override;
 
     virtual bool OnMouseScroll(double dx, double dy) override;
 

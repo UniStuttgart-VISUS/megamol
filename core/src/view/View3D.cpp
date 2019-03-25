@@ -756,13 +756,15 @@ bool view::View3D::OnMouseButton(MouseButton button, MouseButtonAction action, M
 }
 
 
-bool view::View3D::OnMouseMove(double x, double y) {
+bool view::View3D::OnMouseMove(double x, double y, double, double) {
     auto* cr = this->rendererSlot.CallAs<view::CallRender3D>();
     if (cr) {
         InputEvent evt;
         evt.tag = InputEvent::Tag::MouseMove;
         evt.mouseMoveData.x = x;
         evt.mouseMoveData.y = y;
+        evt.mouseMoveData.world_x = x;
+        evt.mouseMoveData.world_y = y;
         cr->SetInputEvent(evt);
         if ((*cr)(view::CallRender3D::FnOnMouseMove))  return true;
     }
