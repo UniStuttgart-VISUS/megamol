@@ -320,7 +320,7 @@ $m->Close();
 
 open my $batch, ">", "SphereTest.bat" or die "cannot open batch file";
 
-my @renderers = ("SimpleSphereRenderer", "SimpleGeoSphereRenderer", "NGSphereRenderer", "OSPRaySphereGeometry", "OSPRayNHSphereGeometry");
+my @renderers = ("SimpleSphereRenderer", "SimpleGeoSphereRenderer", "NGSphereRenderer", "NGSphereBufferArray", "OSPRaySphereGeometry", "OSPRayNHSphereGeometry");
 foreach my $r (@renderers) {
     foreach my $f (@outfiles) {
         my $proj = "$f-$r.lua";
@@ -328,9 +328,14 @@ foreach my $r (@renderers) {
         print $fh qq{mmCreateView("test", "View3D", "::v")\n};
         print $fh qq{mmCreateJob("imagemaker", "ScreenShooter", "::imgmaker")\n};
         print $fh qq{mmCreateModule("MMPLDDataSource", "::dat")\n};
-        print $fh qq{mmCreateModule("$r", "::rnd")\n};
         if ($r =~ /^OSPRay/) {
             print $fh qq{mmCreateModule("OSPRayRenderer", "::osp")\n};
+            if ($r =~ /^OSPRaySphereGeometry/) {
+                print $fh qq{mmCreateModule("OSPRaySphereGeometry", "::rnd")\n};
+            }
+            elsif ($r =~ /^OSPRayNHSphereGeometry/) {
+                print $fh qq{mmCreateModule("OSPRayNHSphereGeometry", "::rnd")\n};
+            }
             print $fh qq{mmCreateModule("OSPRayAmbientLight", "::amb")\n};
             print $fh qq{mmCreateModule("OSPRayOBJMaterial", "::mat")\n};
             print $fh qq{mmCreateCall("CallRender3D", "::v::rendering", "::osp::rendering")\n};
@@ -339,7 +344,20 @@ foreach my $r (@renderers) {
             print $fh qq{mmCreateCall("CallOSPRayMaterial", "::rnd::getMaterialSlot", "::mat::deployMaterialSlot")\n};
             print $fh qq{mmSetParamValue("::osp::useDBcomponent", "false")\n};
         } else {
+            print $fh qq{mmCreateModule("SimpleSphereRenderer", "::rnd")\n};
             print $fh qq{mmCreateCall("CallRender3D", "::v::rendering", "::rnd::rendering")\n};
+            if ($r =~ /^SimpleSphereRenderer/) {
+                print $fh qq{mmSetParamValue("::rnd::renderMode", "Simple")\n};
+            }
+            elsif ($r =~ /^SimpleGeoSphereRenderer/) {
+                print $fh qq{mmSetParamValue("::rnd::renderMode", "Simple_Geometry_Shader")\n};
+            }
+            elsif ($r =~ /^NGSphereRenderer/) {
+                print $fh qq{mmSetParamValue("::rnd::renderMode", "NG")\n};
+            }
+            elsif ($r =~ /^NGSphereBufferArray/) {
+                print $fh qq{mmSetParamValue("::rnd::renderMode", "NG_Buffer_Array")\n};
+            }
         }
         print $fh qq{mmCreateCall("MultiParticleDataCall", "::rnd::getdata", "::dat::getData")\n};
         print $fh qq{mmSetParamValue("::dat::filename", "}.getcwd().qq{/$f")\n};

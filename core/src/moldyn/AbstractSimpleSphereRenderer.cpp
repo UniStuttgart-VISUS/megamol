@@ -5,15 +5,10 @@
  * Alle Rechte vorbehalten.
  */
 
+
 #include "stdafx.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
 #include "mmcore/moldyn/AbstractSimpleSphereRenderer.h"
-#include "mmcore/CoreInstance.h"
-#include "mmcore/view/CallClipPlane.h"
-#include "mmcore/view/CallGetTransferFunction.h"
-#include "mmcore/view/CallRender3D.h"
-#include "mmcore/param/BoolParam.h"
-#include "vislib/assert.h"
+
 
 using namespace megamol::core;
 
@@ -119,7 +114,7 @@ bool moldyn::AbstractSimpleSphereRenderer::create(void) {
 /*
  * moldyn::AbstractSimpleSphereRenderer::GetExtents
  */
-bool moldyn::AbstractSimpleSphereRenderer::GetExtents(Call& call) {
+bool moldyn::AbstractSimpleSphereRenderer::GetExtents(view::CallRender3D& call) {
     view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
     if (cr == NULL) return false;
 
@@ -237,7 +232,7 @@ void moldyn::AbstractSimpleSphereRenderer::getClipData(float *clipDat, float *cl
 ///*
 // * moldyn::AbstractSimpleSphereRenderer::Render
 // */
-//bool moldyn::AbstractSimpleSphereRenderer::Render(Call& call) {
+//bool moldyn::AbstractSimpleSphereRenderer::Render(view::CallRender3D& call) {
 //    view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
 //    if (cr == NULL) return false;
 //
