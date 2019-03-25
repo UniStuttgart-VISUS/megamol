@@ -12,6 +12,13 @@
 #include "mmcore/versioninfo.h"
 #include "vislib/vislibversion.h"
 
+#include "implicit_topology.h"
+
+#include "triangle_mesh_renderer_2d.h"
+
+#include "mesh_data_call.h"
+#include "triangle_mesh_call.h"
+
 /* anonymous namespace hides this type from any other object files */
 namespace {
     /** Implementing the instance class of this plugin */
@@ -37,10 +44,14 @@ namespace {
         virtual void registerClasses(void) {
 
             // register modules here:
-            
+            this->module_descriptions.RegisterAutoDescription<megamol::flowvis::implicit_topology>();
+
+            // register renderer here:
+            this->module_descriptions.RegisterAutoDescription<megamol::flowvis::triangle_mesh_renderer_2d>();
 
             // register calls here:
-
+            this->call_descriptions.RegisterAutoDescription<megamol::flowvis::mesh_data_call>();
+            this->call_descriptions.RegisterAutoDescription<megamol::flowvis::triangle_mesh_call>();
         }
         MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics
     };
