@@ -14,7 +14,10 @@ namespace megamol
     {
         void mesh_data_call::set_data(const std::string& name, std::shared_ptr<std::vector<GLfloat>> data)
         {
-            this->data_sets[name] = data;
+            if (this->data_sets.find(name) == this->data_sets.end() || data != nullptr)
+            {
+                this->data_sets[name] = data;
+            }
         }
 
         std::shared_ptr<std::vector<GLfloat>> mesh_data_call::get_data(const std::string& name) const

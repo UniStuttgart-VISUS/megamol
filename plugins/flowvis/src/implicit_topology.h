@@ -1,9 +1,16 @@
 #pragma once
 
+#include "triangulation.h"
+
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
+#include "mmcore/param/ParamSlot.h"
+
+#include "glad/glad.h"
+
+#include <memory>
 
 namespace megamol
 {
@@ -70,6 +77,27 @@ namespace megamol
 
             /** Output slot for data attached to the triangles or their nodes */
             core::CalleeSlot mesh_data_slot;
+
+            /** Path to input vector field */
+            core::param::ParamSlot vector_field_path;
+
+            /** Path to input convergence structures */
+            core::param::ParamSlot convergence_structures_path;
+            
+            /** Transfer function for labels */
+            core::param::ParamSlot label_transfer_function;
+            
+            /** Transfer function for distances */
+            core::param::ParamSlot distance_transfer_function;
+
+            /** Indicator for changed output */
+            bool output_changed;
+
+            /** Output labels */
+            std::shared_ptr<std::vector<GLint>> labels;
+
+            /** Output distances */
+            std::shared_ptr<std::vector<GLfloat>> distances;
         };
     }
 }

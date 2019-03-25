@@ -24,8 +24,8 @@ namespace megamol
     namespace flowvis
     {
         triangle_mesh_renderer_2d::triangle_mesh_renderer_2d() :
-            triangle_mesh_slot("get_triangle_mesh", "Triangle mesh input"), triangle_mesh_hash(0),
-            mesh_data_slot("get_mesh_data", "Mesh data input"), mesh_data_hash(0),
+            triangle_mesh_slot("get_triangle_mesh", "Triangle mesh input"), triangle_mesh_hash(-1),
+            mesh_data_slot("get_mesh_data", "Mesh data input"), mesh_data_hash(-1),
             data_set("data_set", "Data set used for coloring the triangles"),
             wireframe("wireframe", "Render as wireframe instead of filling the triangles"),
             mouse_state({ false, false, -1.0, -1.0 })
@@ -141,21 +141,25 @@ namespace megamol
                 this->render_data.indices = get_triangles->get_indices();
 
                 // Prepare OpenGL buffers
-                glBindVertexArray(this->render_data.vao);
+                if (this->render_data.vertices != nullptr && this->render_data.indices != nullptr)
+                {
+                    glBindVertexArray(this->render_data.vao);
 
-                glBindBuffer(GL_ARRAY_BUFFER, this->render_data.vbo);
-                glBufferData(GL_ARRAY_BUFFER, this->render_data.vertices->size() * sizeof(GLfloat), this->render_data.vertices->data(), GL_STATIC_DRAW);
+                    glBindBuffer(GL_ARRAY_BUFFER, this->render_data.vbo);
+                    glBufferData(GL_ARRAY_BUFFER, this->render_data.vertices->size() * sizeof(GLfloat), this->render_data.vertices->data(), GL_STATIC_DRAW);
 
-                glEnableVertexAttribArray(0);
-                glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+                    glEnableVertexAttribArray(0);
+                    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
 
-                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->render_data.ibo);
-                glBufferData(GL_ELEMENT_ARRAY_BUFFER, this->render_data.indices->size() * sizeof(GLuint), this->render_data.indices->data(), GL_STATIC_DRAW);
+                    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->render_data.ibo);
+                    glBufferData(GL_ELEMENT_ARRAY_BUFFER, this->render_data.indices->size() * sizeof(GLuint), this->render_data.indices->data(), GL_STATIC_DRAW);
 
-                glBindVertexArray(0);
+                    glBindVertexArray(0);
+                }
             }
 
             // Update data (connection optional)
+            if (this->render_data.vertices != nullptr && this->render_data.indices != nullptr)
             {
                 auto get_data = this->mesh_data_slot.CallAs<mesh_data_call>();
 
@@ -195,6 +199,7 @@ namespace megamol
             }
 
             // Render triangle mesh
+            if (this->render_data.vertices != nullptr && this->render_data.indices != nullptr)
             {
                 // Set wireframe or filled rendering
                 if (this->wireframe.Param<core::param::BoolParam>()->Value())
