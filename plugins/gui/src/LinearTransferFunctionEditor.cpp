@@ -332,7 +332,7 @@ bool megamol::gui::LinearTransferFunctionEditor::DrawTransferFunctionEditor(void
     bool imm_apply_tex_changed = this->tex_modified;
     if (this->tex_modified) {
         if (this->interpol_mode == param::LinearTransferFunctionParam::InterpolationMode::LINEAR) {
-            core::view::LinearTransferFunction::LinearInterpolation(this->tex_data, this->tex_size, this->data);
+            param::LinearTransferFunctionParam::LinearInterpolation(this->tex_data, this->tex_size, this->data);
         } else if (this->interpol_mode == param::LinearTransferFunctionParam::InterpolationMode::GAUSS) {
             // Needs implementation in LinearTransferFunction ...
         }
