@@ -485,8 +485,17 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
                 if (slot) {
                     const auto bp = slot->Param<param::ButtonParam>();
                     if (!bp) {
+                        // caution: value strings could contain unescaped quotes, so fix that:
+                        std::string from = "\"";
+                        std::string to = "\\\"";
+                        std::string val = slot->Parameter()->ValueString().PeekBuffer();
+                        size_t start_pos = 0;
+                        while ((start_pos = val.find(from, start_pos)) != std::string::npos) {
+                            val.replace(start_pos, from.length(), to);
+                            start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
+                        }
                         confParams << "mmSetParamValue(\"" << slot->FullName() << "\",\""
-                                   << slot->Parameter()->ValueString().PeekBuffer() << "\")\n";
+                                   << val << "\")\n";
                     }
                 }
                 const auto cslot = dynamic_cast<CallerSlot*>((*si).get());
