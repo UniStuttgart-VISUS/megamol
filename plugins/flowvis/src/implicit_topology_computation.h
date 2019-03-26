@@ -77,15 +77,15 @@ namespace megamol
 
         private:
             /** Input seed positions and respective vectors */
-            std::vector<float> positions;
-            std::vector<float> vectors;
+            const std::vector<float> positions;
+            const std::vector<float> vectors;
 
             /** Input convergence structures with ids (labels) */
-            std::vector<float> points;
-            std::vector<float> lines;
+            const std::vector<float> points;
+            const std::vector<float> lines;
 
-            std::vector<int> point_ids;
-            std::vector<int> line_ids;
+            const std::vector<int> point_ids;
+            const std::vector<int> line_ids;
 
             /** Output labels and distances */
             std::vector<float> labels;

@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "implicit_topology_computation.h"
 
+#include "../cuda/streamlines.h"
+
 #include <chrono>
 #include <future>
 #include <thread>
@@ -11,18 +13,9 @@ namespace megamol
     namespace flowvis
     {
         implicit_topology_computation::implicit_topology_computation(std::vector<float> positions, std::vector<float> vectors, std::vector<float> points,
-            std::vector<int> point_ids, std::vector<float> lines, std::vector<int> line_ids) : delaunay(positions)
+            std::vector<int> point_ids, std::vector<float> lines, std::vector<int> line_ids) : positions(std::move(positions)), vectors(std::move(vectors)),
+            points(std::move(points)), point_ids(std::move(point_ids)), lines(std::move(lines)), line_ids(std::move(line_ids)), delaunay(positions)
         {
-            // Set input
-            std::swap(this->positions, positions);
-            std::swap(this->vectors, vectors);
-
-            std::swap(this->points, points);
-            std::swap(this->point_ids, point_ids);
-
-            std::swap(this->lines, lines);
-            std::swap(this->line_ids, line_ids);
-
             // Set state
             this->terminate_computation = false;
 
@@ -118,11 +111,21 @@ namespace megamol
                 {
                     bool finished = false;
 
+                    streamlines_cuda streamlines(this->positions, this->vectors, this->points, this->point_ids, this->lines, this->line_ids, 0.0f, 0.0f); // TODO
+
                     while (!this->terminate_computation && !finished)
                     {
                         // Produce results...
 
                         // TODO
+
+                        // Integrate stream lines
+                        //  -> small number of integration steps each loop
+                        // streamlines.update_labels(source, this->labels, this->distances, this->end_positions, num_steps, sign);
+
+                        // Refine grid
+                        //  -> refine only after all integration steps were performed (or other approach)
+
 
                         finished = true;
 
