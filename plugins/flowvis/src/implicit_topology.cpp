@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "implicit_topology.h"
 
+#include "implicit_topology_computation.h"
 #include "mesh_data_call.h"
 #include "triangle_mesh_call.h"
 #include "triangulation.h"
@@ -15,9 +16,10 @@
 #include "glad/glad.h"
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <fstream>
-#include <initializer_list>
+#include <future>
 #include <iostream>
 #include <limits>
 #include <memory>
@@ -34,7 +36,7 @@ namespace megamol
             convergence_structures_path("convergence_structures_path", "Path to the input convergence structures"),
             label_transfer_function("label_transfer_function", "Transfer function for labels"),
             distance_transfer_function("distance_transfer_function", "Transfer function for distances"),
-            output_changed(false)
+            output_changed(false), computation(nullptr)
         {
             // Connect output
             this->triangle_mesh_slot.SetCallback(triangle_mesh_call::ClassName(), triangle_mesh_call::FunctionName(0), &implicit_topology::get_triangle_data_callback);
@@ -88,7 +90,10 @@ namespace megamol
                 triangle_call->SetDataHash(0);
 
                 // Terminate earlier computation
-                // TODO
+                if (this->computation != nullptr)
+                {
+                    this->computation->terminate();
+                }
 
                 // Try to load input vector field
                 std::ifstream vectors_ifs(this->vector_field_path.Param<core::param::FilePathParam>()->Value(), std::ios_base::in | std::ios_base::binary);
@@ -134,8 +139,6 @@ namespace megamol
                     // Read file content
                     const float x_step = (x_max - x_min) / (x_num - 1);
                     const float y_step = (y_max - y_min) / (y_num - 1);
-
-                    static_assert(std::is_same<float, GLfloat>::value, "GLfloat and float are not the same, argh!");
 
                     std::vector<GLfloat> positions(num * 2);
                     std::vector<GLfloat> vectors(num * 3);
@@ -216,93 +219,13 @@ namespace megamol
                         }
                     }
 
-                    // Compute initial fields
-                    this->labels = std::make_shared<std::vector<GLfloat>>(num);
-                    this->distances = std::make_shared<std::vector<GLfloat>>(num);
-
-                    auto calc_dot = [](const float x_1, const float y_1, const float x_2, const float y_2) { return x_1 * x_2 + y_1 * y_2; };
-                    auto calc_norm = [calc_dot](const float x, const float y) { return calc_dot(x, y, x, y); };
-                    auto calc_length = [calc_norm](const float x_1, const float y_1, const float x_2, const float y_2) { return std::sqrt(calc_norm(x_1 - x_2, y_1 - y_2)); };
-
-                    for (unsigned int n = 0; n < num; ++n)
-                    {
-                        const float x_pos = positions[n * 2 + 0];
-                        const float y_pos = positions[n * 2 + 1];
-
-                        (*this->distances)[n] = std::numeric_limits<float>::max();
-
-                        for (unsigned int i = 0; i < point_ids.size(); ++i)
-                        {
-                            const float point_x_pos = points[i * 2 + 0];
-                            const float point_y_pos = points[i * 2 + 1];
-
-                            const float distance = calc_length(x_pos, y_pos, point_x_pos, point_y_pos);
-
-                            if ((*this->distances)[n] > distance)
-                            {
-                                (*this->labels)[n] = static_cast<GLfloat>(point_ids[i]);
-                                (*this->distances)[n] = distance;
-                            }
-                        }
-
-                        for (unsigned int i = 0; i < line_ids.size(); ++i)
-                        {
-                            float distance = 0.0f;
-
-                            const float line_1_x_pos = lines[i * 4 + 0];
-                            const float line_1_y_pos = lines[i * 4 + 1];
-                            const float line_2_x_pos = lines[i * 4 + 2];
-                            const float line_2_y_pos = lines[i * 4 + 3];
-
-                            const float length = calc_length(line_1_x_pos, line_1_y_pos, line_2_x_pos, line_2_y_pos);
-                            
-                            const float line_vector_x = length == 0.0f ? 0.0f : (line_2_x_pos - line_1_x_pos) / length;
-                            const float line_vector_y = length == 0.0f ? 0.0f : (line_2_y_pos - line_1_y_pos) / length;
-
-                            if (line_vector_x == 0.0f && line_vector_y == 0.0f)
-                            {
-                                distance = calc_length(x_pos, y_pos, line_1_x_pos, line_1_y_pos);
-                            }
-                            else
-                            {
-                                const float point_distance = calc_dot(line_vector_x, line_vector_y, x_pos - line_1_x_pos, y_pos - line_1_y_pos);
-
-                                if (point_distance < 0.0f)
-                                {
-                                    distance = calc_length(x_pos, y_pos, line_1_x_pos, line_1_y_pos);
-                                }
-                                else if (point_distance > length)
-                                {
-                                    distance = calc_length(x_pos, y_pos, line_2_x_pos, line_2_y_pos);
-                                }
-                                else
-                                {
-                                    const float projection_x_pos = line_1_x_pos + line_vector_x * point_distance;
-                                    const float projection_y_pos = line_1_y_pos + line_vector_y * point_distance;
-
-                                    distance = calc_length(x_pos, y_pos, projection_x_pos, projection_y_pos);
-                                }
-                            }
-
-                            if ((*this->distances)[n] > distance)
-                            {
-                                (*this->labels)[n] = static_cast<GLfloat>(line_ids[i]);
-                                (*this->distances)[n] = distance;
-                            }
-                        }
-                    }
-
-                    // Store initial triangles
-                    auto delaunay = std::make_shared<triangulation>(positions);
-
-                    const auto grid = delaunay->export_grid();
-
-                    triangle_call->set_vertices(grid.first);
-                    triangle_call->set_indices(grid.second);
-
                     // Start asynchronous computation
-                    // TODO
-                    // note: hand over triangulation
+                    this->computation = std::make_unique<implicit_topology_computation>(std::move(positions), std::move(vectors),
+                        std::move(points), std::move(point_ids), std::move(lines), std::move(line_ids));
+
+                    this->computation->start();
+
+                    this->last_result = this->computation->get_results();
 
                     triangle_call->SetDataHash(1);
                     this->output_changed = true;
@@ -324,16 +247,25 @@ namespace megamol
             }
 
             // Update render output while computation is still running
-            if (triangle_call->DataHash() != 0)
+            if (triangle_call->DataHash() != 0 && this->computation != nullptr)
             {
-                // Get last results
-
+                // Get new results
+                if (this->last_result.wait_for(std::chrono::milliseconds(1)) != std::future_status::ready)
+                {
+                    return true;
+                }
 
                 // Store triangles
+                auto result = this->last_result.get();
 
+                triangle_call->set_vertices(result.vertices);
+                triangle_call->set_indices(result.indices);
+
+                this->labels = result.labels;
+                this->distances = result.distances;
 
                 // Check state of computation
-                if (true)
+                if (result.finished)
                 {
                     triangle_call->SetDataHash(0);
                 }
@@ -341,6 +273,9 @@ namespace megamol
                 {
                     triangle_call->SetDataHash(triangle_call->DataHash() + 1);
                 }
+
+                // Save new last result
+                this->last_result = this->computation->get_results();
 
                 this->output_changed = true;
             }

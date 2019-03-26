@@ -1,6 +1,9 @@
 #include "stdafx.h"
 #include "triangle_mesh_renderer_2d.h"
 
+#include "mesh_data_call.h"
+#include "triangle_mesh_call.h"
+
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/LinearTransferFunctionParam.h"
@@ -11,11 +14,8 @@
 
 #include "glad/glad.h"
 
-#include "mesh_data_call.h"
-#include "triangle_mesh_call.h"
-
-#include <algorithm>
 #include <exception>
+#include <memory>
 #include <stdexcept>
 #include <string>
 #include <vector>

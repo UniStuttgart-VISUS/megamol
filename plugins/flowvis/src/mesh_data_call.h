@@ -1,9 +1,13 @@
+/*
+ * mesh_data_call.h
+ *
+ * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
+ * Alle Rechte vorbehalten.
+ */
 #pragma once
 
 #include "mmcore/AbstractGetDataCall.h"
 #include "mmcore/factories/CallAutoDescription.h"
-
-#include "glad/glad.h"
 
 #include <map>
 #include <memory>
@@ -14,6 +18,11 @@ namespace megamol
 {
     namespace flowvis
     {
+        /**
+        * Call for transporting scalar data, attached with a transfer function, in an ready-to-use fashion (for OpenGL).
+        *
+        * @author Alexander Straub
+        */
         class mesh_data_call : public core::AbstractGetDataCall
         {
         public:
@@ -25,9 +34,9 @@ namespace megamol
                 std::string transfer_function;
                 bool transfer_function_dirty;
 
-                GLfloat min_value, max_value;
+                float min_value, max_value;
 
-                std::shared_ptr<std::vector<GLfloat>> data;
+                std::shared_ptr<std::vector<float>> data;
             };
 
             /**

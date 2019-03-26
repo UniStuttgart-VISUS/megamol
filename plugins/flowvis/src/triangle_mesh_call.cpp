@@ -3,8 +3,6 @@
 
 #include "vislib/math/Rectangle.h"
 
-#include "glad/glad.h"
-
 #include <memory>
 #include <vector>
 
@@ -22,22 +20,22 @@ namespace megamol
             this->bounding_rectangle = bounding_rectangle;
         }
 
-        std::shared_ptr<std::vector<GLfloat>> triangle_mesh_call::get_vertices() const
+        std::shared_ptr<std::vector<float>> triangle_mesh_call::get_vertices() const
         {
             return this->vertices;
         }
 
-        void triangle_mesh_call::set_vertices(std::shared_ptr<std::vector<GLfloat>> vertices)
+        void triangle_mesh_call::set_vertices(std::shared_ptr<std::vector<float>> vertices)
         {
             this->vertices = vertices;
         }
 
-        std::shared_ptr<std::vector<GLuint>> triangle_mesh_call::get_indices() const
+        std::shared_ptr<std::vector<unsigned int>> triangle_mesh_call::get_indices() const
         {
             return this->indices;
         }
 
-        void triangle_mesh_call::set_indices(std::shared_ptr<std::vector<GLuint>> indices)
+        void triangle_mesh_call::set_indices(std::shared_ptr<std::vector<unsigned int>> indices)
         {
             this->indices = indices;
         }

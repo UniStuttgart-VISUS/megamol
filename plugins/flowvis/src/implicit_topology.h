@@ -1,5 +1,12 @@
+/*
+ * implicit_topology.h
+ *
+ * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
+ * Alle Rechte vorbehalten.
+ */
 #pragma once
 
+#include "implicit_topology_computation.h"
 #include "triangulation.h"
 
 #include "mmcore/Call.h"
@@ -11,13 +18,24 @@
 #include "glad/glad.h"
 
 #include <memory>
+#include <type_traits>
+#include <vector>
 
 namespace megamol
 {
     namespace flowvis
     {
+        /**
+        * Module for computing and visualizing the implicit topology of a vector field.
+        *
+        * @author Alexander Straub
+        * @author Grzegorz K. Karch
+        */
         class implicit_topology : public core::Module
         {
+            static_assert(std::is_same<GLfloat, float>::value, "'GLfloat' and 'float' must be the same type!");
+            static_assert(std::is_same<GLuint, unsigned int>::value, "'GLuint' and 'unsigned int' must be the same type!");
+
         public:
             /**
              * Answer the name of this module.
@@ -98,6 +116,12 @@ namespace megamol
 
             /** Output distances */
             std::shared_ptr<std::vector<GLfloat>> distances;
+
+            /** Computation class */
+            std::unique_ptr<implicit_topology_computation> computation;
+
+            /** Store last promised result */
+            std::shared_future<implicit_topology_computation::result> last_result;
         };
     }
 }

@@ -34,62 +34,71 @@ namespace megamol
             typedef delaunay_t::Vertex_handle vertex_t;
 
         public:
-            /// <summary>
-            /// Constructor
-            /// </summary>
-            /// <param name="initial_points">Initial points to add to the triangulation</param>
+            /**
+            * Constructor
+            *
+            * @param initial_points Initial points to add to the triangulation
+            */
             triangulation(const std::vector<GLfloat>& initial_points);
 
-            /// <summary>
-            /// Iteratively insert points for triangulation
-            /// </summary>
-            /// <param name="new_points">New points to add to the triangulation</param>
+            /**
+            * Iteratively insert points for triangulation
+            *
+            * @param new_points New points to add to the triangulation
+            */
             void insert_points(const std::vector<GLfloat>& new_points);
 
-            /// <summary>
-            /// Export triangulation as grid
-            /// </summary>
-            /// <param name="grid">Grid storing the triangulation</param>
+            /**
+            * Export triangulation as grid
+            *
+            * @param grid Grid storing the triangulation
+            */
             std::pair<std::shared_ptr<std::vector<GLfloat>>, std::shared_ptr<std::vector<GLuint>>> export_grid() const;
 
-            /// <summary>
-            /// Get neighbor vertices
-            /// </summary>
-            /// <param name="vertex">Input vertex</param>
-            /// <returns>Neighbors of the input vertex</returns>
+            /**
+            * Get neighbor vertices
+            *
+            * @param vertex Input vertex
+            *
+            * @return Neighbors of the input vertex
+            */
             std::vector<vertex_t> get_neighbors(const vertex_t& vertex) const;
 
-            /// <summary>
-            /// Get number of cells in triangulation
-            /// </summary>
-            /// <returns>Number of cells</returns>
+            /**
+            * Get number of cells in triangulation
+            *
+            * @return Number of cells
+            */
             std::size_t get_number_of_cells() const;
 
-            /// <summary>
-            /// Get cell iterator of triangulation
-            /// </summary>
-            /// <returns>Cell iterator</returns>
+            /**
+            * Get cell iterator of triangulation
+            *
+            * @return Cell iterator
+            */
             cell_it_t get_finite_cells_begin() const;
 
-            /// <summary>
-            /// Get past-the-end cell iterator of triangulation
-            /// </summary>
-            /// <returns>Cell iterator</returns>
+            /**
+            * Get past-the-end cell iterator of triangulation
+            *
+            * @return Cell iterator
+            */
             cell_it_t get_finite_cells_end() const;
 
-            /// <summary>
-            /// Convert CGAL point to c-style array
-            /// </summary>
-            /// <param name="point">CGAL point</param>
-            /// <param name="c_point">C-style array</param>
+            /**
+            * Convert CGAL point to c-style array
+            *
+            * @param point CGAL point
+            * @param c_point C-style array
+            */
             void to_c_point(const point_t& point, float* c_point) const;
 
         private:
-            /// point_t counter for mapping triangulated points to original input
+            // Counter for mapping triangulated points to original input
             std::size_t point_index;
 
         public:
-            /// Access to delaunay triangulation
+            // Access to delaunay triangulation
             delaunay_t delaunay;
         };
     }

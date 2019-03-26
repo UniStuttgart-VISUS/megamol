@@ -1,9 +1,6 @@
 #include "stdafx.h"
 #include "mesh_data_call.h"
 
-#include "glad/glad.h"
-
-#include <map>
 #include <memory>
 #include <string>
 #include <vector>

@@ -1,3 +1,9 @@
+/*
+ * implicit_topology.h
+ *
+ * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
+ * Alle Rechte vorbehalten.
+ */
 #pragma once
 
 #include "mesh_data_call.h"
@@ -14,14 +20,24 @@
 
 #include <array>
 #include <memory>
+#include <string>
+#include <type_traits>
 #include <vector>
 
 namespace megamol
 {
     namespace flowvis
     {
+        /**
+        * Module for rendering a 2D triangle mesh, allowing interaction.
+        *
+        * @author Alexander Straub
+        */
         class triangle_mesh_renderer_2d : public core::view::Renderer2DModule
         {
+            static_assert(std::is_same<GLfloat, float>::value, "'GLfloat' and 'float' must be the same type!");
+            static_assert(std::is_same<GLuint, unsigned int>::value, "'GLuint' and 'unsigned int' must be the same type!");
+
         public:
             /**
              * Answer the name of this module.

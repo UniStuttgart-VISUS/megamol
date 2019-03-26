@@ -1,11 +1,15 @@
+/*
+ * triangle_mesh_call.h
+ *
+ * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
+ * Alle Rechte vorbehalten.
+ */
 #pragma once
 
 #include "mmcore/AbstractGetDataCall.h"
 #include "mmcore/factories/CallAutoDescription.h"
 
 #include "vislib/math/Rectangle.h"
-
-#include "glad/glad.h"
 
 #include <memory>
 #include <vector>
@@ -14,6 +18,11 @@ namespace megamol
 {
     namespace flowvis
     {
+        /**
+        * Call for transporting a triangle mesh in an ready-to-use fashion (for OpenGL).
+        *
+        * @author Alexander Straub
+        */
         class triangle_mesh_call : public core::AbstractGetDataCall
         {
         public:
@@ -61,30 +70,30 @@ namespace megamol
             /**
             * Getter for the vertices defining the triangle mesh
             */
-            std::shared_ptr<std::vector<GLfloat>> get_vertices() const;
+            std::shared_ptr<std::vector<float>> get_vertices() const;
 
             /**
             * Setter for the vertices defining the triangle mesh
             */
-            void set_vertices(std::shared_ptr<std::vector<GLfloat>> vertices);
+            void set_vertices(std::shared_ptr<std::vector<float>> vertices);
 
             /**
             * Getter for the indices defining the triangle mesh
             */
-            std::shared_ptr<std::vector<GLuint>> get_indices() const;
+            std::shared_ptr<std::vector<unsigned int>> get_indices() const;
 
             /**
             * Setter for the indices defining the triangle mesh
             */
-            void set_indices(std::shared_ptr<std::vector<GLuint>> indices);
+            void set_indices(std::shared_ptr<std::vector<unsigned int>> indices);
 
         protected:
             /** Bounding rectangle */
             vislib::math::Rectangle<float> bounding_rectangle;
 
             /** Vertices and indices defining the triangle mesh */
-            std::shared_ptr<std::vector<GLfloat>> vertices;
-            std::shared_ptr<std::vector<GLuint>> indices;
+            std::shared_ptr<std::vector<float>> vertices;
+            std::shared_ptr<std::vector<unsigned int>> indices;
         };
     }
 }
