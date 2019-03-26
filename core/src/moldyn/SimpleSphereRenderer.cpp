@@ -125,9 +125,9 @@ void APIENTRY DebugGLCallback(GLenum source, GLenum type, GLuint id, GLenum seve
  ******************************************************************************/
 
 
-/*
- * moldyn::SimpleSphereRenderer::SimpleSphereRenderer
- */
+ /*
+  * moldyn::SimpleSphereRenderer::SimpleSphereRenderer
+  */
 moldyn::SimpleSphereRenderer::SimpleSphereRenderer(void)
     : AbstractSimpleSphereRenderer()
     , curViewAttrib()
@@ -143,7 +143,7 @@ moldyn::SimpleSphereRenderer::SimpleSphereRenderer(void)
     , curMVP()
     , curMVPinv()
     , curMVPtransp()
-    , renderMode(RenderMode::AMBIENT_OCCLUSION)
+    , renderMode(RenderMode::NG)
     , sphereShader()
     , sphereGeometryShader()
     , lightingShader()
@@ -182,12 +182,12 @@ moldyn::SimpleSphereRenderer::SimpleSphereRenderer(void)
     , radiusScalingParam("scaling", "Scaling factor for particle radii.")
     , alphaScalingParam("splat::alphaScaling", "NG Splat: Scaling factor for particle alpha.")
     , attenuateSubpixelParam(
-          "splat::attenuateSubpixel", "NG Splat: Attenuate alpha of points that should have subpixel size.")
-    , useStaticDataParam("NG::staticData", "NG: upload data only once per hash change and keep data static on GPU")
+        "splat::attenuateSubpixel", "NG Splat: Attenuate alpha of points that should have subpixel size.")
+    , useStaticDataParam("ng::staticData", "NG: Upload data only once per hash change and keep data static on GPU")
     , enableLightingSlot("ao::enable_lighting", "Ambient Occlusion: Enable Lighting")
     , enableAOSlot("ao::enable_ao", "Ambient Occlusion: Enable Ambient Occlusion")
     , enableGeometryShader(
-          "ao::use_gs_proxies", "Ambient Occlusion: Enables rendering using triangle strips from the geometry shader")
+        "ao::use_gs_proxies", "Ambient Occlusion: Enables rendering using triangle strips from the geometry shader")
     , aoVolSizeSlot("ao::volsize", "Ambient Occlusion: Longest volume edge")
     , aoConeApexSlot("ao::apex", "Ambient Occlusion: Cone Apex Angle")
     , aoOffsetSlot("ao::offset", "Ambient Occlusion: Offset from Surface")
@@ -449,7 +449,7 @@ bool moldyn::SimpleSphereRenderer::createResources() {
                 return false;
             }
             if (!this->sphereShader.Create(this->vertShader->Code(), this->vertShader->Count(),
-                    this->fragShader->Code(), this->fragShader->Count())) {
+                this->fragShader->Code(), this->fragShader->Count())) {
                 vislib::sys::Log::DefaultLog.WriteMsg(
                     vislib::sys::Log::LEVEL_ERROR, "Unable to compile sphere shader: Unknown error\n");
                 return false;
@@ -471,8 +471,8 @@ bool moldyn::SimpleSphereRenderer::createResources() {
                 return false;
             }
             if (!this->sphereGeometryShader.Compile(this->vertShader->Code(), this->vertShader->Count(),
-                    this->geoShader->Code(), this->geoShader->Count(), this->fragShader->Code(),
-                    this->fragShader->Count())) {
+                this->geoShader->Code(), this->geoShader->Count(), this->fragShader->Code(),
+                this->fragShader->Count())) {
                 vislib::sys::Log::DefaultLog.WriteMsg(
                     vislib::sys::Log::LEVEL_ERROR, "Unable to compile sphere geometry shader: Unknown error\n");
                 return false;
@@ -529,7 +529,7 @@ bool moldyn::SimpleSphereRenderer::createResources() {
                 return false;
             }
             if (!this->sphereShader.Create(this->vertShader->Code(), this->vertShader->Count(),
-                    this->fragShader->Code(), this->fragShader->Count())) {
+                this->fragShader->Code(), this->fragShader->Count())) {
                 vislib::sys::Log::DefaultLog.WriteMsg(
                     vislib::sys::Log::LEVEL_ERROR, "Unable to compile sphere shader: Unknown error\n");
                 return false;
@@ -571,7 +571,7 @@ bool moldyn::SimpleSphereRenderer::createResources() {
             }
 
             glGenTextures(1, &this->tfFallbackHandle);
-            unsigned char tex[6] = {0, 0, 0, 255, 255, 255};
+            unsigned char tex[6] = { 0, 0, 0, 255, 255, 255 };
             glBindTexture(GL_TEXTURE_1D, this->tfFallbackHandle);
             glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, 2, 0, GL_RGB, GL_UNSIGNED_BYTE, tex);
             glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -583,17 +583,20 @@ bool moldyn::SimpleSphereRenderer::createResources() {
         default:
             return false;
         }
-    } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+    }
+    catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
             "Unable to compile sphere shader (@%s): %s\n",
             vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         return false;
-    } catch (vislib::Exception e) {
+    }
+    catch (vislib::Exception e) {
         vislib::sys::Log::DefaultLog.WriteMsg(
             vislib::sys::Log::LEVEL_ERROR, "Unable to compile sphere shader: %s\n", e.GetMsgA());
         return false;
-    } catch (...) {
+    }
+    catch (...) {
         vislib::sys::Log::DefaultLog.WriteMsg(
             vislib::sys::Log::LEVEL_ERROR, "Unable to compile sphere shader: Unknown exception\n");
         return false;
@@ -644,7 +647,7 @@ bool moldyn::SimpleSphereRenderer::Render(view::CallRender3D& call) {
     const unsigned int frameID = mpdc->FrameID();
 
     // Check if we got a new data set
-    this->stateInvalid = (hash != this->oldHash || frameID != this->oldFrameID);
+    this->stateInvalid = ((hash != this->oldHash) || (frameID != this->oldFrameID));
 
     this->oldHash = hash;
     this->oldFrameID = frameID;
@@ -848,7 +851,8 @@ bool moldyn::SimpleSphereRenderer::renderNG(view::CallRender3D* cr3d, MultiParti
             if ((cgtf != nullptr) && ((*cgtf)())) {
                 glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
                 colTabSize = cgtf->TextureSize();
-            } else {
+            }
+            else {
                 glBindTexture(GL_TEXTURE_1D, this->greyTF);
                 colTabSize = 2;
             }
@@ -888,34 +892,33 @@ bool moldyn::SimpleSphereRenderer::renderNG(view::CallRender3D* cr3d, MultiParti
         // does all data reside interleaved in the same memory?
         if (interleaved) {
             if (staticData) {
-                if (this->stateInvalid) {
-                    bufArray.SetDataWithSize(
-                        parts.GetVertexData(), vertStride, vertStride, parts.GetCount(), 2 * 1024 * 1024 * 1024);
+                if (this->stateInvalid || (this->bufArray.GetNumChunks() == 0)) {
+                    this->bufArray.SetDataWithSize(
+                        parts.GetVertexData(), vertStride, vertStride, parts.GetCount(), (2 * 1024 * 1024 * 1024)); // 2 GB - khronos: Most implementations will let you allocate a size up to the limit of GPU memory.
                 }
-                const GLuint numChunks = bufArray.GetNumChunks();
+                const GLuint numChunks = this->bufArray.GetNumChunks();
 
                 for (GLuint x = 0; x < numChunks; ++x) {
-                    GLuint numItems;
-                    GLsizeiptr dstOff, dstLen;
                     glUniform1i(this->newShader->ParameterLocation("instanceOffset"), 0);
-                    auto actualItems = bufArray.GetNumItems(x);
-                    glBindBuffer(GL_SHADER_STORAGE_BUFFER, bufArray.GetHandle(x));
-                    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, bufArray.GetHandle(x));
-                    glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, bufArray.GetHandle(x), 0,
-                        bufArray.GetMaxNumItemsPerChunk() * vertStride);
+                    auto actualItems = this->bufArray.GetNumItems(x);
+                    glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->bufArray.GetHandle(x));
+                    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->bufArray.GetHandle(x));
+                    glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->bufArray.GetHandle(x), 0,
+                        this->bufArray.GetMaxNumItemsPerChunk() * vertStride);
                     glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(actualItems));
-                    bufArray.SignalCompletion();
+                    this->bufArray.SignalCompletion();
                 }
-            } else {
-                const GLuint numChunks = streamer.SetDataWithSize(
-                    parts.GetVertexData(), vertStride, vertStride, parts.GetCount(), 3, 32 * 1024 * 1024);
-                glBindBuffer(GL_SHADER_STORAGE_BUFFER, streamer.GetHandle());
-                glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, streamer.GetHandle());
+            }
+            else {
+                const GLuint numChunks = this->streamer.SetDataWithSize(
+                    parts.GetVertexData(), vertStride, vertStride, parts.GetCount(), 3, (32 * 1024 * 1024)); // 32 MB
+                glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->streamer.GetHandle());
+                glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->streamer.GetHandle());
 
                 for (GLuint x = 0; x < numChunks; ++x) {
                     GLuint numItems, sync;
                     GLsizeiptr dstOff, dstLen;
-                    streamer.UploadChunk(x, numItems, sync, dstOff, dstLen);
+                    this->streamer.UploadChunk(x, numItems, sync, dstOff, dstLen);
                     // streamer.UploadChunk<float, float>(x, [](float f) -> float { return f + 100.0; },
                     //    numItems, sync, dstOff, dstLen);
                     // vislib::sys::Log::DefaultLog.WriteInfo("uploading chunk %u at %lu len %lu", x, dstOff, dstLen);
@@ -924,51 +927,51 @@ bool moldyn::SimpleSphereRenderer::renderNG(view::CallRender3D* cr3d, MultiParti
                     glBindBufferRange(
                         GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->streamer.GetHandle(), dstOff, dstLen);
                     glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(numItems));
-                    streamer.SignalCompletion(sync);
+                    this->streamer.SignalCompletion(sync);
                 }
             }
-        } else {
+        }
+        else {
             if (staticData) {
-                if (this->stateInvalid) {
-                    bufArray.SetDataWithSize(
-                        parts.GetVertexData(), vertStride, vertStride, parts.GetCount(), 2 * 1024 * 1024 * 1024);
-                    colBufArray.SetDataWithItems(parts.GetColourData(), colStride, colStride, parts.GetCount(),
-                        bufArray.GetMaxNumItemsPerChunk());
+                if (this->stateInvalid || (this->bufArray.GetNumChunks() == 0)) {
+                    this->bufArray.SetDataWithSize(
+                        parts.GetVertexData(), vertStride, vertStride, parts.GetCount(), (2 * 1024 * 1024 * 1024)); // 2 GB - khronos: Most implementations will let you allocate a size up to the limit of GPU memory.
+                    this->colBufArray.SetDataWithItems(parts.GetColourData(), colStride, colStride, parts.GetCount(),
+                        this->bufArray.GetMaxNumItemsPerChunk());
                 }
-                const GLuint numChunks = bufArray.GetNumChunks();
+                const GLuint numChunks = this->bufArray.GetNumChunks();
 
                 for (GLuint x = 0; x < numChunks; ++x) {
-                    GLuint numItems;
-                    GLsizeiptr dstOff, dstLen;
                     glUniform1i(this->newShader->ParameterLocation("instanceOffset"), 0);
-                    auto actualItems = bufArray.GetNumItems(x);
-                    glBindBuffer(GL_SHADER_STORAGE_BUFFER, bufArray.GetHandle(x));
-                    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, bufArray.GetHandle(x));
-                    glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, bufArray.GetHandle(x), 0,
-                        bufArray.GetMaxNumItemsPerChunk() * vertStride);
-                    glBindBuffer(GL_SHADER_STORAGE_BUFFER, colBufArray.GetHandle(x));
-                    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBOcolorBindingPoint, colBufArray.GetHandle(x));
-                    glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBOcolorBindingPoint, colBufArray.GetHandle(x), 0,
-                        colBufArray.GetMaxNumItemsPerChunk() * colStride);
+                    auto actualItems = this->bufArray.GetNumItems(x);
+                    glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->bufArray.GetHandle(x));
+                    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->bufArray.GetHandle(x));
+                    glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->bufArray.GetHandle(x), 0,
+                        this->bufArray.GetMaxNumItemsPerChunk() * vertStride);
+                    glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->colBufArray.GetHandle(x));
+                    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBOcolorBindingPoint, this->colBufArray.GetHandle(x));
+                    glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBOcolorBindingPoint, this->colBufArray.GetHandle(x), 0,
+                        this->colBufArray.GetMaxNumItemsPerChunk() * colStride);
                     glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(actualItems));
-                    bufArray.SignalCompletion();
-                    colBufArray.SignalCompletion();
+                    this->bufArray.SignalCompletion();
+                    this->colBufArray.SignalCompletion();
                 }
-            } else {
-                const GLuint numChunks = streamer.SetDataWithSize(
-                    parts.GetVertexData(), vertStride, vertStride, parts.GetCount(), 3, 32 * 1024 * 1024);
-                const GLuint colSize = colStreamer.SetDataWithItems(parts.GetColourData(), colStride, colStride,
-                    parts.GetCount(), 3, streamer.GetMaxNumItemsPerChunk());
-                glBindBuffer(GL_SHADER_STORAGE_BUFFER, streamer.GetHandle());
-                glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, streamer.GetHandle());
-                glBindBuffer(GL_SHADER_STORAGE_BUFFER, colStreamer.GetHandle());
-                glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBOcolorBindingPoint, colStreamer.GetHandle());
+            }
+            else {
+                const GLuint numChunks = this->streamer.SetDataWithSize(
+                    parts.GetVertexData(), vertStride, vertStride, parts.GetCount(), 3, (32 * 1024 * 1024)); // 32 MB
+                const GLuint colSize = this->colStreamer.SetDataWithItems(parts.GetColourData(), colStride, colStride,
+                    parts.GetCount(), 3, this->streamer.GetMaxNumItemsPerChunk());
+                glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->streamer.GetHandle());
+                glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->streamer.GetHandle());
+                glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->colStreamer.GetHandle());
+                glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBOcolorBindingPoint, this->colStreamer.GetHandle());
 
                 for (GLuint x = 0; x < numChunks; ++x) {
                     GLuint numItems, numItems2, sync, sync2;
                     GLsizeiptr dstOff, dstLen, dstOff2, dstLen2;
-                    streamer.UploadChunk(x, numItems, sync, dstOff, dstLen);
-                    colStreamer.UploadChunk(x, numItems2, sync2, dstOff2, dstLen2);
+                    this->streamer.UploadChunk(x, numItems, sync, dstOff, dstLen);
+                    this->colStreamer.UploadChunk(x, numItems2, sync2, dstOff2, dstLen2);
                     ASSERT(numItems == numItems2);
                     glUniform1i(this->newShader->ParameterLocation("instanceOffset"), 0);
                     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
@@ -977,8 +980,8 @@ bool moldyn::SimpleSphereRenderer::renderNG(view::CallRender3D* cr3d, MultiParti
                     glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBOcolorBindingPoint, this->colStreamer.GetHandle(),
                         dstOff2, dstLen2);
                     glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(numItems));
-                    streamer.SignalCompletion(sync);
-                    colStreamer.SignalCompletion(sync2);
+                    this->streamer.SignalCompletion(sync);
+                    this->colStreamer.SignalCompletion(sync2);
                 }
             }
         }
@@ -1076,7 +1079,8 @@ bool moldyn::SimpleSphereRenderer::renderNGSplat(view::CallRender3D* cr3d, Multi
             if ((cgtf != nullptr) && ((*cgtf)())) {
                 glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
                 colTabSize = cgtf->TextureSize();
-            } else {
+            }
+            else {
                 glBindTexture(GL_TEXTURE_1D, this->greyTF);
                 colTabSize = 2;
             }
@@ -1149,8 +1153,10 @@ bool moldyn::SimpleSphereRenderer::renderNGSplat(view::CallRender3D* cr3d, Multi
                 currCol += vertsThisTime * colStride;
                 // break;
             }
-        } else {
-            // nothing
+        }
+        else {
+            vislib::sys::Log::DefaultLog.WriteMsg(
+                vislib::sys::Log::LEVEL_ERROR, "NGSplat mode does not support not interleaved data so far ...");
         }
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
@@ -1238,8 +1244,10 @@ bool moldyn::SimpleSphereRenderer::renderNGBufferArray(view::CallRender3D* cr3d,
                 currVert += vertsThisTime * vertStride;
                 currCol += vertsThisTime * colStride;
             }
-        } else {
-            // nothing
+        }
+        else {
+            vislib::sys::Log::DefaultLog.WriteMsg(
+                vislib::sys::Log::LEVEL_ERROR, "NGBufferArray mode does not support not interleaved data so far ...");
         }
 
         glBindBuffer(GL_ARRAY_BUFFER, 0); // enabled in setPointers()
@@ -1285,6 +1293,8 @@ bool moldyn::SimpleSphereRenderer::renderGeo(view::CallRender3D* cr3d, MultiPart
         cr3d->GetCameraParameters()->Right().PeekComponents());
     glUniform3fv(
         this->sphereGeometryShader.ParameterLocation("camUp"), 1, cr3d->GetCameraParameters()->Up().PeekComponents());
+    glUniform1f(
+        this->sphereGeometryShader.ParameterLocation("scaling"), this->radiusScalingParam.Param<param::FloatParam>()->Value());
     glUniform4fv(this->sphereGeometryShader.ParameterLocation("clipDat"), 1, this->curClipDat);
     glUniform4fv(this->sphereGeometryShader.ParameterLocation("clipCol"), 1, this->curClipCol);
     glUniform4fv(this->sphereGeometryShader.ParameterLocation("lpos"), 1, this->curLightPos);
@@ -1346,7 +1356,7 @@ bool moldyn::SimpleSphereRenderer::renderAmbientOcclusion(view::CallRender3D* cr
 
     glBindFramebuffer(GL_FRAMEBUFFER, this->gBuffer.fbo);
     checkGLError;
-    GLenum bufs[2] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
+    GLenum bufs[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
     glDrawBuffers(2, bufs);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     checkGLError;
@@ -1407,7 +1417,8 @@ void moldyn::SimpleSphereRenderer::setPointers(MultiParticleDataCall::Particles&
         glEnableVertexAttribArray(colIdxAttribLoc);
         if (parts.GetColourDataType() == MultiParticleDataCall::Particles::COLDATA_FLOAT_I) {
             glVertexAttribPointer(colIdxAttribLoc, 1, GL_FLOAT, GL_FALSE, parts.GetColourDataStride(), colPtr);
-        } else {
+        }
+        else {
             glVertexAttribPointer(colIdxAttribLoc, 1, GL_DOUBLE, GL_FALSE, parts.GetColourDataStride(), colPtr);
         }
 
@@ -1417,7 +1428,8 @@ void moldyn::SimpleSphereRenderer::setPointers(MultiParticleDataCall::Particles&
         if ((cgtf != nullptr) && ((*cgtf)())) {
             glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
             colTabSize = cgtf->TextureSize();
-        } else {
+        }
+        else {
             glBindTexture(GL_TEXTURE_1D, this->greyTF);
             colTabSize = 2;
         }
@@ -1487,7 +1499,8 @@ bool moldyn::SimpleSphereRenderer::makeColorString(
         declaration = "    uint color;\n";
         if (interleaved) {
             code = "    theColor = unpackUnorm4x8(theBuffer[" NGS_THE_INSTANCE "+ instanceOffset].color);\n";
-        } else {
+        }
+        else {
             code = "    theColor = unpackUnorm4x8(theColBuffer[" NGS_THE_INSTANCE "+ instanceOffset].color);\n";
         }
         break;
@@ -1495,33 +1508,36 @@ bool moldyn::SimpleSphereRenderer::makeColorString(
         declaration = "    float r; float g; float b;\n";
         if (interleaved) {
             code = "    theColor = vec4(theBuffer[" NGS_THE_INSTANCE " + instanceOffset].r,\n"
-                   "                       theBuffer[" NGS_THE_INSTANCE " + instanceOffset].g,\n"
-                   "                       theBuffer[" NGS_THE_INSTANCE " + instanceOffset].b, 1.0); \n";
-        } else {
+                "                       theBuffer[" NGS_THE_INSTANCE " + instanceOffset].g,\n"
+                "                       theBuffer[" NGS_THE_INSTANCE " + instanceOffset].b, 1.0); \n";
+        }
+        else {
             code = "    theColor = vec4(theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].r,\n"
-                   "                       theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].g,\n"
-                   "                       theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].b, 1.0); \n";
+                "                       theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].g,\n"
+                "                       theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].b, 1.0); \n";
         }
         break;
     case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
         declaration = "    float r; float g; float b; float a;\n";
         if (interleaved) {
             code = "    theColor = vec4(theBuffer[" NGS_THE_INSTANCE " + instanceOffset].r,\n"
-                   "                       theBuffer[" NGS_THE_INSTANCE " + instanceOffset].g,\n"
-                   "                       theBuffer[" NGS_THE_INSTANCE " + instanceOffset].b,\n"
-                   "                       theBuffer[" NGS_THE_INSTANCE " + instanceOffset].a); \n";
-        } else {
+                "                       theBuffer[" NGS_THE_INSTANCE " + instanceOffset].g,\n"
+                "                       theBuffer[" NGS_THE_INSTANCE " + instanceOffset].b,\n"
+                "                       theBuffer[" NGS_THE_INSTANCE " + instanceOffset].a); \n";
+        }
+        else {
             code = "    theColor = vec4(theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].r,\n"
-                   "                       theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].g,\n"
-                   "                       theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].b,\n"
-                   "                       theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].a); \n";
+                "                       theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].g,\n"
+                "                       theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].b,\n"
+                "                       theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].a); \n";
         }
         break;
     case MultiParticleDataCall::Particles::COLDATA_FLOAT_I: {
         declaration = "    float colorIndex;\n";
         if (interleaved) {
             code = "    theColIdx = theBuffer[" NGS_THE_INSTANCE " + instanceOffset].colorIndex; \n";
-        } else {
+        }
+        else {
             code = "    theColIdx = theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].colorIndex; \n";
         }
     } break;
@@ -1529,7 +1545,8 @@ bool moldyn::SimpleSphereRenderer::makeColorString(
         declaration = "    double colorIndex;\n";
         if (interleaved) {
             code = "    theColIdx = float(theBuffer[" NGS_THE_INSTANCE " + instanceOffset].colorIndex); \n";
-        } else {
+        }
+        else {
             code = "    theColIdx = float(theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].colorIndex); \n";
         }
     } break;
@@ -1537,10 +1554,11 @@ bool moldyn::SimpleSphereRenderer::makeColorString(
         declaration = "    uint col1; uint col2;\n";
         if (interleaved) {
             code = "    theColor.xy = unpackUnorm2x16(theBuffer[" NGS_THE_INSTANCE "+ instanceOffset].col1);\n"
-                   "    theColor.zw = unpackUnorm2x16(theBuffer[" NGS_THE_INSTANCE "+ instanceOffset].col2);\n";
-        } else {
+                "    theColor.zw = unpackUnorm2x16(theBuffer[" NGS_THE_INSTANCE "+ instanceOffset].col2);\n";
+        }
+        else {
             code = "    theColor.xy = unpackUnorm2x16(theColBuffer[" NGS_THE_INSTANCE "+ instanceOffset].col1);\n"
-                   "    theColor.zw = unpackUnorm2x16(theColBuffer[" NGS_THE_INSTANCE "+ instanceOffset].col2);\n";
+                "    theColor.zw = unpackUnorm2x16(theColBuffer[" NGS_THE_INSTANCE "+ instanceOffset].col2);\n";
         }
     } break;
     default:
@@ -1571,42 +1589,45 @@ bool moldyn::SimpleSphereRenderer::makeVertexString(
         declaration = "    float posX; float posY; float posZ;\n";
         if (interleaved) {
             code = "    inPos = vec4(theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posX,\n"
-                   "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posY,\n"
-                   "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posZ, 1.0); \n"
-                   "    rad = CONSTRAD;";
-        } else {
+                "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posY,\n"
+                "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posZ, 1.0); \n"
+                "    rad = CONSTRAD;";
+        }
+        else {
             code = "    inPos = vec4(thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posX,\n"
-                   "                 thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posY,\n"
-                   "                 thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posZ, 1.0); \n"
-                   "    rad = CONSTRAD;";
+                "                 thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posY,\n"
+                "                 thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posZ, 1.0); \n"
+                "    rad = CONSTRAD;";
         }
         break;
     case MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ:
         declaration = "    double posX; double posY; double posZ;\n";
         if (interleaved) {
             code = "    inPos = vec4(float(theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posX),\n"
-                   "                 float(theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posY),\n"
-                   "                 float(theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posZ), 1.0); \n"
-                   "    rad = CONSTRAD;";
-        } else {
+                "                 float(theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posY),\n"
+                "                 float(theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posZ), 1.0); \n"
+                "    rad = CONSTRAD;";
+        }
+        else {
             code = "    inPos = vec4(float(thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posX),\n"
-                   "                 float(thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posY),\n"
-                   "                 float(thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posZ), 1.0); \n"
-                   "    rad = CONSTRAD;";
+                "                 float(thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posY),\n"
+                "                 float(thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posZ), 1.0); \n"
+                "    rad = CONSTRAD;";
         }
         break;
     case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
         declaration = "    float posX; float posY; float posZ; float posR;\n";
         if (interleaved) {
             code = "    inPos = vec4(theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posX,\n"
-                   "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posY,\n"
-                   "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posZ, 1.0); \n"
-                   "    rad = theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posR;";
-        } else {
+                "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posY,\n"
+                "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posZ, 1.0); \n"
+                "    rad = theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posR;";
+        }
+        else {
             code = "    inPos = vec4(thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posX,\n"
-                   "                 thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posY,\n"
-                   "                 thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posZ, 1.0); \n"
-                   "    rad = thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posR;";
+                "                 thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posY,\n"
+                "                 thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posZ, 1.0); \n"
+                "    rad = thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posR;";
         }
         break;
     default:
@@ -1633,17 +1654,20 @@ std::shared_ptr<GLSLShader> moldyn::SimpleSphereRenderer::makeShader(
             return nullptr;
         }
 
-    } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+    }
+    catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
             "Unable to compile sphere shader (@%s): %s\n",
             vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         return nullptr;
-    } catch (vislib::Exception e) {
+    }
+    catch (vislib::Exception e) {
         vislib::sys::Log::DefaultLog.WriteMsg(
             vislib::sys::Log::LEVEL_ERROR, "Unable to compile sphere shader: %s\n", e.GetMsgA());
         return nullptr;
-    } catch (...) {
+    }
+    catch (...) {
         vislib::sys::Log::DefaultLog.WriteMsg(
             vislib::sys::Log::LEVEL_ERROR, "Unable to compile sphere shader: Unknown exception\n");
         return nullptr;
@@ -1679,48 +1703,41 @@ std::shared_ptr<vislib::graphics::gl::GLSLShader> moldyn::SimpleSphereRenderer::
 
             decl = "\nstruct SphereParams {\n";
 
-            // if (vertStride > vertBytes) {
-            //    unsigned int rest = (vertStride - vertBytes);
-            //    if (rest % 4 == 0) {
-            //        char heinz[128];
-            //        while (rest > 0) {
-            //            sprintf(heinz, "    float padding%u;\n", rest);
-            //            decl += heinz;
-            //            rest -= 4;
-            //        }
-            //    }
-            //}
-
             if (parts.GetColourData() < parts.GetVertexData()) {
                 decl += colDecl;
                 decl += vertDecl;
-            } else {
+            }
+            else {
                 decl += vertDecl;
                 decl += colDecl;
             }
             decl += "};\n";
 
             decl += "layout(" NGS_THE_ALIGNMENT ", binding = " + std::to_string(SSBObindingPoint) +
-                    ") buffer shader_data {\n"
-                    "    SphereParams theBuffer[];\n"
-                    // flat float version
-                    //"    float theBuffer[];\n"
-                    "};\n";
+                ") buffer shader_data {\n"
+                "    SphereParams theBuffer[];\n"
+                // flat float version
+                //"    float theBuffer[];\n"
+                "};\n";
 
-        } else {
+        }
+        else {
             // we seem to have separate buffers for vertex and color data
 
-            decl = "\nstruct SpherePosParams {\n" + vertDecl + "};\n";
-            decl += "\nstruct SphereColParams {\n" + colDecl + "};\n";
+            decl = "\nstruct SpherePosParams {\n" + vertDecl;
+            decl +="};\n";
+
+            decl += "\nstruct SphereColParams {\n" + colDecl;
+            decl += "};\n";
 
             decl += "layout(" NGS_THE_ALIGNMENT ", binding = " + std::to_string(SSBObindingPoint) +
-                    ") buffer shader_data {\n"
-                    "    SpherePosParams thePosBuffer[];\n"
-                    "};\n";
+                ") buffer shader_data {\n"
+                "    SpherePosParams thePosBuffer[];\n"
+                "};\n";
             decl += "layout(" NGS_THE_ALIGNMENT ", binding = " + std::to_string(SSBOcolorBindingPoint) +
-                    ") buffer shader_data2 {\n"
-                    "    SphereColParams theColBuffer[];\n"
-                    "};\n";
+                ") buffer shader_data2 {\n"
+                "    SphereColParams theColBuffer[];\n"
+                "};\n";
         }
         std::string code = "\n";
         code += colCode;
@@ -1759,9 +1776,9 @@ void moldyn::SimpleSphereRenderer::getBytesAndStride(MultiParticleDataCall::Part
     vertStride = vertStride < vertBytes ? vertBytes : vertStride;
 
     interleaved = (std::abs(reinterpret_cast<const ptrdiff_t>(parts.GetColourData()) -
-                            reinterpret_cast<const ptrdiff_t>(parts.GetVertexData())) <= vertStride &&
-                      vertStride == colStride) ||
-                  colStride == 0;
+        reinterpret_cast<const ptrdiff_t>(parts.GetVertexData())) <= vertStride &&
+        vertStride == colStride) ||
+        colStride == 0;
 }
 
 
@@ -1824,7 +1841,8 @@ bool moldyn::SimpleSphereRenderer::rebuildShader() {
 
     if (enableLighting) {
         frag.Append(factory.MakeShaderSnippet("mdao2::deferred::fragment::Lighting"));
-    } else {
+    }
+    else {
         frag.Append(factory.MakeShaderSnippet("mdao2::deferred::fragment::LightingStub"));
     }
 
@@ -1840,13 +1858,15 @@ bool moldyn::SimpleSphereRenderer::rebuildShader() {
         frag.Append(dirSnippet);
 
         frag.Append(factory.MakeShaderSnippet("mdao2::deferred::fragment::AmbientOcclusion"));
-    } else {
+    }
+    else {
         frag.Append(factory.MakeShaderSnippet("mdao2::deferred::fragment::AmbientOcclusionStub"));
     }
 
     try {
         this->lightingShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count());
-    } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+    }
+    catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
         vislib::sys::Log::DefaultLog.WriteMsg(
             vislib::sys::Log::LEVEL_ERROR, "Unable to compile mdao shader: %s", ce.GetMsg());
         return false;
@@ -2002,7 +2022,7 @@ void moldyn::SimpleSphereRenderer::rebuildWorkingData(
         this->volGen->ClearVolume();
 
         this->volGen->StartInsertion(cube, vislib::math::Vector<float, 4>(this->curClipDat[0], this->curClipDat[1],
-                                               this->curClipDat[2], this->curClipDat[3]));
+            this->curClipDat[2], this->curClipDat[3]));
         for (unsigned int i = 0; i < this->gpuData.size(); ++i) {
             float globalRadius = 0.0f;
             if (dataCall->AccessParticles(i).GetVertexDataType() !=
@@ -2043,6 +2063,8 @@ void moldyn::SimpleSphereRenderer::renderParticlesGeometry(
     glUniformMatrix4fv(theShader.ParameterLocation("inMvpInverse"), 1, GL_FALSE, this->curMVPinv.PeekComponents());
     glUniformMatrix4fv(theShader.ParameterLocation("inMvpTrans"), 1, GL_FALSE, this->curMVPtransp.PeekComponents());
 
+    glUniform1f(theShader.ParameterLocation("scaling"), this->radiusScalingParam.Param<param::FloatParam>()->Value());
+
     theShader.SetParameterArray4("inViewAttr", 1, this->curViewAttrib);
     theShader.SetParameterArray3("inCamFront", 1, cr3d->GetCameraParameters()->Front().PeekComponents());
     theShader.SetParameterArray3("inCamRight", 1, cr3d->GetCameraParameters()->Right().PeekComponents());
@@ -2069,8 +2091,8 @@ void moldyn::SimpleSphereRenderer::renderParticlesGeometry(
         if (parts.GetColourDataType() == megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE) {
             useGlobalColor = true;
             const unsigned char* globalColor = parts.GetGlobalColour();
-            float globalColorFlt[4] = {static_cast<float>(globalColor[0]) / 255.0f,
-                static_cast<float>(globalColor[1]) / 255.0f, static_cast<float>(globalColor[2]) / 255.0f, 1.0f};
+            float globalColorFlt[4] = { static_cast<float>(globalColor[0]) / 255.0f,
+                static_cast<float>(globalColor[1]) / 255.0f, static_cast<float>(globalColor[2]) / 255.0f, 1.0f };
             theShader.SetParameterArray4("inGlobalColor", 1, globalColorFlt);
         }
         theShader.SetParameter("inUseGlobalColor", useGlobalColor);
@@ -2081,7 +2103,7 @@ void moldyn::SimpleSphereRenderer::renderParticlesGeometry(
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_1D, getTransferFunctionHandle());
             theShader.SetParameter("inTransferFunction", static_cast<int>(0));
-            float tfRange[2] = {parts.GetMinColourIndexValue(), parts.GetMaxColourIndexValue()};
+            float tfRange[2] = { parts.GetMinColourIndexValue(), parts.GetMaxColourIndexValue() };
             theShader.SetParameterArray2("inIndexRange", 1, tfRange);
         }
         theShader.SetParameter("inUseTransferFunction", useTransferFunction);
@@ -2284,7 +2306,7 @@ std::string moldyn::SimpleSphereRenderer::generateDirectionShaderArrayString(
 
     result << "#define NUM_" << upperDirName << " " << directions.size() << std::endl;
     result << "const vec4 " << directionsName << "[NUM_" << upperDirName << "] = vec4[NUM_" << upperDirName << "]("
-           << std::endl;
+        << std::endl;
 
     for (auto iter = directions.begin(); iter != directions.end(); ++iter) {
         result << "\tvec4(" << (*iter)[0] << ", " << (*iter)[1] << ", " << (*iter)[2] << ", " << (*iter)[3] << ")";

@@ -4,13 +4,14 @@
 
     <shader name="vertex">
         <snippet type="version">150</snippet>
-        <snippet name="CommonDefines"   type="file">commondefines.glsl</snippet>
-        <snippet name="Attributes"      type="file">simplesphere/geosphere_vert_attributes.glsl</snippet>
-        <snippet name="Main"            type="file">simplesphere/geosphere_vert_main.glsl</snippet>
+        <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>
+        <snippet name="Attributes"       type="file">simplesphere/geosphere_vert_attributes.glsl</snippet>
+        <snippet name="Main"             type="file">simplesphere/geosphere_vert_main.glsl</snippet>
     </shader>
 
     <shader name="geometry">
         <snippet type="version">150</snippet>
+        <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>        
         <snippet name="MainStart"        type="file">simplesphere/geosphere_geo_mainstart.glsl</snippet>
         <snippet name="SphereTouchPlane" type="file">simplesphere/simple_vert_spheretouchplane.glsl</snippet>
         <snippet name="MainEnd"          type="file">simplesphere/geosphere_geo_mainend.glsl</snippet>
