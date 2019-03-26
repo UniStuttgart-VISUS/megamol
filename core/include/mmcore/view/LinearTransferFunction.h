@@ -35,14 +35,7 @@ namespace view {
      */
     class MEGAMOLCORE_API LinearTransferFunction : public Module {
     public:
-
-        /**
-        * Linear interpolation of transfer function data in range [0..texsize]
-        */
-        static void LinearInterpolation(std::vector<float> &out_texdata, unsigned int in_texsize, const megamol::core::param::LinearTransferFunctionParam::TFType &in_tfdata);
-
-        // --------------------------------------------------------------------
-
+        
         /**
          * Answer the name of this module.
          *

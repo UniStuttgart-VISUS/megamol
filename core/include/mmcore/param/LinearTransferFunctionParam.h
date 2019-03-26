@@ -65,6 +65,17 @@ public:
     //}
 
     /**
+    * Create transfer function texture from JSON string.
+    *
+    * @param in_tfs            The transfer function input encoded as string in JSON format.
+    * @param out_data          The transfer function texture data output.
+    * @param out_texsize       The transfer function texture size output.
+    *
+    * @return True if JSON string was successfully converted into transfer function data, false otherwise.
+    */
+    static bool TransferFunctionTexture(const std::string &in_tfs, std::vector<float> &out_data, UINT &out_texsize);
+
+    /**
     * Set transfer function data from JSON string.
     *
     * @param in_tfs            The transfer function input encoded as string in JSON format.
@@ -107,6 +118,15 @@ public:
      * @return True if given data is valid, false otherwise.
      */
     static bool CheckTransferFunctionString(const std::string &tfs);
+
+    /**
+    * Linear interpolation of transfer function data in range [0..texsize]
+    *
+    * @param out_texdata  The generated texture from the input transfer function.
+    * @param in_texsize   The transfer function texture size input.
+    * @param in_tfdata    The transfer function data input.
+    */
+    static void LinearInterpolation(std::vector<float> &out_texdata, unsigned int in_texsize, const TFType &in_tfdata);
 
     // ------------------------------------------------------------------------
 
