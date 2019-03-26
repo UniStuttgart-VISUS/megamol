@@ -5,6 +5,10 @@ in vec4 colorgs[1];
 
 out vec4 vsColor;
 
+#ifdef WITH_SCALING
+uniform float scaling;
+#endif // WITH_SCALING
+
 uniform vec4 inViewAttr;
 uniform vec3 inCamFront;
 uniform vec3 inCamUp;
@@ -46,6 +50,10 @@ void main(void) {
 		float normPos = (colorgs[0].r - inIndexRange.x)/(inIndexRange.y - inIndexRange.x);
 		vsColor = texture(inTransferFunction, normPos * (1.0 - 2.0*texOffset) + texOffset);
 	}
+
+#ifdef WITH_SCALING
+    vsRad *= scaling;
+#endif // WITH_SCALING
 
     vsSquaredRad = vsRad * vsRad;
 
