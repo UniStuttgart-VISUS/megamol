@@ -14,6 +14,7 @@
 
 #include "glad/glad.h"
 
+#include <algorithm>
 #include <cmath>
 #include <fstream>
 #include <initializer_list>
@@ -216,7 +217,7 @@ namespace megamol
                     }
 
                     // Compute initial fields
-                    this->labels = std::make_shared<std::vector<GLint>>(num);
+                    this->labels = std::make_shared<std::vector<GLfloat>>(num);
                     this->distances = std::make_shared<std::vector<GLfloat>>(num);
 
                     auto calc_dot = [](const float x_1, const float y_1, const float x_2, const float y_2) { return x_1 * x_2 + y_1 * y_2; };
@@ -228,7 +229,7 @@ namespace megamol
                         const float x_pos = positions[n * 2 + 0];
                         const float y_pos = positions[n * 2 + 1];
 
-                        (*this->distances)[0] = std::numeric_limits<float>::max();
+                        (*this->distances)[n] = std::numeric_limits<float>::max();
 
                         for (unsigned int i = 0; i < point_ids.size(); ++i)
                         {
@@ -237,10 +238,10 @@ namespace megamol
 
                             const float distance = calc_length(x_pos, y_pos, point_x_pos, point_y_pos);
 
-                            if ((*this->distances)[0] > distance)
+                            if ((*this->distances)[n] > distance)
                             {
-                                (*this->labels)[0] = point_ids[i];
-                                (*this->distances)[0] = distance;
+                                (*this->labels)[n] = static_cast<GLfloat>(point_ids[i]);
+                                (*this->distances)[n] = distance;
                             }
                         }
 
@@ -283,10 +284,10 @@ namespace megamol
                                 }
                             }
 
-                            if ((*this->distances)[0] > distance)
+                            if ((*this->distances)[n] > distance)
                             {
-                                (*this->labels)[0] = line_ids[i];
-                                (*this->distances)[0] = distance;
+                                (*this->labels)[n] = static_cast<GLfloat>(line_ids[i]);
+                                (*this->distances)[n] = distance;
                             }
                         }
                     }
@@ -414,16 +415,62 @@ namespace megamol
             if (this->output_changed)
             {
                 // Prepare labels
-                auto label_colors = std::make_shared<std::vector<GLfloat>>(4 * this->labels->size());
+                {
+                    auto label_data = std::make_shared<mesh_data_call::data_set>();
+                    label_data->transfer_function = this->label_transfer_function.Param<core::param::LinearTransferFunctionParam>()->Value();
 
+                    const auto min_max_value = std::minmax_element(this->labels->begin(), this->labels->end());
+                    label_data->min_value = *min_max_value.first;
+                    label_data->max_value = *min_max_value.second;
 
+                    label_data->data = this->labels;
+
+                    data_call->set_data("labels", label_data);
+                }
                 
                 // Prepare distances
-                auto distance_colors = std::make_shared<std::vector<GLfloat>>(4 * this->distances->size());
+                {
+                    auto distance_data = std::make_shared<mesh_data_call::data_set>();
+                    distance_data->transfer_function = this->distance_transfer_function.Param<core::param::LinearTransferFunctionParam>()->Value();
+                    
+                    const auto min_max_value = std::minmax_element(this->distances->begin(), this->distances->end());
+                    distance_data->min_value = *min_max_value.first;
+                    distance_data->max_value = *min_max_value.second;
 
-                
+                    distance_data->data = this->distances;
+
+                    data_call->set_data("distances", distance_data);
+                }
+
+                // Set new data hash
+                data_call->SetDataHash(data_call->DataHash() + 1);
 
                 this->output_changed = false;
+            }
+
+            if (this->label_transfer_function.IsDirty())
+            {
+                auto label_data = data_call->get_data("labels");
+                
+                if (label_data != nullptr)
+                {
+                    label_data->transfer_function = this->label_transfer_function.Param<core::param::LinearTransferFunctionParam>()->Value();
+                    label_data->transfer_function_dirty = true;
+                }
+
+                this->label_transfer_function.ResetDirty();
+            }
+            if (this->distance_transfer_function.IsDirty())
+            {
+                auto distance_data = data_call->get_data("distances");
+
+                if (distance_data != nullptr)
+                {
+                    distance_data->transfer_function = this->distance_transfer_function.Param<core::param::LinearTransferFunctionParam>()->Value();
+                    distance_data->transfer_function_dirty = true;
+                }
+
+                this->distance_transfer_function.ResetDirty();
             }
 
             return true;

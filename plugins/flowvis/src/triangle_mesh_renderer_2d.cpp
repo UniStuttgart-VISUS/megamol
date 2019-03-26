@@ -3,6 +3,7 @@
 
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FlexEnumParam.h"
+#include "mmcore/param/LinearTransferFunctionParam.h"
 #include "mmcore/view/CallRender2D.h"
 #include "mmcore/view/MouseFlags.h"
 
@@ -68,6 +69,8 @@ namespace megamol
                 glDeleteBuffers(1, &this->render_data.vbo);
                 glDeleteBuffers(1, &this->render_data.ibo);
                 glDeleteBuffers(1, &this->render_data.cbo);
+
+                glDeleteTextures(1, &this->render_data.tf);
             }
 
             return;
@@ -82,13 +85,17 @@ namespace megamol
                 const std::string vertex_shader =
                     "#version 330 \n" \
                     "layout(location = 0) in vec2 in_position; \n" \
-                    "layout(location = 1) in vec4 in_value; \n" \
+                    "layout(location = 1) in float in_value; \n" \
                     "uniform mat4 model_view_matrix; \n" \
                     "uniform mat4 projection_matrix; \n" \
+                    "uniform float min_value; \n" \
+                    "uniform float max_value; \n" \
+                    "uniform float num_tex_values; \n" \
+                    "uniform sampler1D transfer_function; \n" \
                     "out vec4 vertex_color; \n" \
                     "void main() { \n" \
                     "    gl_Position = projection_matrix * model_view_matrix * vec4(in_position, 0.0f, 1.0f); \n" \
-                    "    vertex_color = in_value; \n" \
+                    "    vertex_color = texture(transfer_function, (min_value == max_value) ? 0.5f : ((in_value - min_value) / (max_value - min_value))); \n" \
                     "}";
 
                 const std::string fragment_shader =
@@ -118,6 +125,9 @@ namespace megamol
                 glGenBuffers(1, &this->render_data.vbo);
                 glGenBuffers(1, &this->render_data.ibo);
                 glGenBuffers(1, &this->render_data.cbo);
+
+                // Create transfer function texture
+                glGenTextures(1, &this->render_data.tf);
 
                 this->render_data.initialized = true;
             }
@@ -171,14 +181,18 @@ namespace megamol
                     this->mesh_data_hash = get_data->DataHash();
                     this->data_set.ResetDirty();
 
-                    this->render_data.colors = get_data->get_data(this->data_set.Param<core::param::FlexEnumParam>()->Value());
+                    this->render_data.values = get_data->get_data(this->data_set.Param<core::param::FlexEnumParam>()->Value());
 
                     new_data = true;
                 }
 
-                if (this->render_data.colors == nullptr)
+                if (this->render_data.values == nullptr)
                 {
-                    this->render_data.colors = std::make_shared<std::vector<GLfloat>>(this->render_data.vertices->size() * 2, 1.0f);
+                    this->render_data.values = std::make_shared<mesh_data_call::data_set>();
+                    this->render_data.values->transfer_function = "{\"Interpolation\":\"LINEAR\",\"Nodes\":[[0.0,0.0,0.0,0.0,0.0],[1.0,1.0,1.0,1.0,1.0]],\"TextureSize\":2}";
+                    this->render_data.values->min_value = 0.0f;
+                    this->render_data.values->max_value = 1.0f;
+                    this->render_data.values->data = std::make_shared<std::vector<GLfloat>>(this->render_data.vertices->size() / 2, 1.0f);
 
                     new_data = true;
                 }
@@ -189,12 +203,35 @@ namespace megamol
                     glBindVertexArray(this->render_data.vao);
 
                     glBindBuffer(GL_ARRAY_BUFFER, this->render_data.cbo);
-                    glBufferData(GL_ARRAY_BUFFER, this->render_data.colors->size() * sizeof(GLfloat), this->render_data.colors->data(), GL_STATIC_DRAW);
+                    glBufferData(GL_ARRAY_BUFFER, this->render_data.values->data->size() * sizeof(GLfloat), this->render_data.values->data->data(), GL_STATIC_DRAW);
 
                     glEnableVertexAttribArray(1);
-                    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
+                    glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, 0, nullptr);
 
                     glBindVertexArray(0);
+                }
+
+                if (new_data || this->render_data.values->transfer_function_dirty)
+                {
+                    // Get transfer function texture data
+                    std::vector<GLfloat> texture_data;
+
+                    core::param::LinearTransferFunctionParam::TransferFunctionTexture(this->render_data.values->transfer_function,
+                        texture_data, this->render_data.tf_size);
+
+                    // Create transfer funtion texture
+                    glActiveTexture(GL_TEXTURE0);
+                    glBindTexture(GL_TEXTURE_1D, this->render_data.tf);
+
+                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+                    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+                    glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, static_cast<GLsizei>(this->render_data.tf_size), 0, GL_RGBA, GL_FLOAT, static_cast<GLvoid*>(texture_data.data()));
+
+                    glBindTexture(GL_TEXTURE_1D, 0);
+
+                    this->render_data.values->transfer_function_dirty = false;
                 }
             }
 
@@ -218,9 +255,16 @@ namespace megamol
 
                 glUniformMatrix4fv(glGetUniformLocation(this->render_data.prog, "model_view_matrix"), 1, GL_FALSE, this->camera.model_view.data());
                 glUniformMatrix4fv(glGetUniformLocation(this->render_data.prog, "projection_matrix"), 1, GL_FALSE, this->camera.projection.data());
+                
+                glUniform1f(glGetUniformLocation(this->render_data.prog, "min_value"), this->render_data.values->min_value);
+                glUniform1f(glGetUniformLocation(this->render_data.prog, "max_value"), this->render_data.values->max_value);
+                glUniform1f(glGetUniformLocation(this->render_data.prog, "num_tex_values"), this->render_data.tf_size);
 
                 glBindVertexArray(this->render_data.vao);
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_1D, this->render_data.tf);
                 glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(this->render_data.indices->size()), GL_UNSIGNED_INT, nullptr);
+                glBindTexture(GL_TEXTURE_1D, 0);
                 glBindVertexArray(0);
 
                 glDepthMask(GL_TRUE);
@@ -281,7 +325,7 @@ namespace megamol
                 this->mouse_state.x >= this->bounds.Left() && this->mouse_state.x <= this->bounds.Right() &&
                 this->mouse_state.y >= this->bounds.Bottom() && this->mouse_state.y <= this->bounds.Top())
             {
-                vislib::sys::Log::DefaultLog.WriteInfo("Event at %.2f x %.2f!", this->mouse_state.x, this->mouse_state.y);
+                vislib::sys::Log::DefaultLog.WriteInfo("Event at %.5f x %.5f!", this->mouse_state.x, this->mouse_state.y);
                 // TODO
 
                 return true;

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "mesh_data_call.h"
+
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/CallRender2D.h"
@@ -161,12 +163,14 @@ namespace megamol
             {
                 bool initialized = false;
 
-                GLuint vao, vbo, ibo, cbo;
                 GLuint vs, fs, prog;
+                GLuint vao, vbo, ibo, cbo;
+                GLuint tf, tf_size;
 
                 std::shared_ptr<std::vector<GLfloat>> vertices;
                 std::shared_ptr<std::vector<GLuint>> indices;
-                std::shared_ptr<std::vector<GLfloat>> colors;
+
+                std::shared_ptr<mesh_data_call::data_set> values;
 
             } render_data;
 

@@ -12,7 +12,7 @@ namespace megamol
 {
     namespace flowvis
     {
-        void mesh_data_call::set_data(const std::string& name, std::shared_ptr<std::vector<GLfloat>> data)
+        void mesh_data_call::set_data(const std::string& name, std::shared_ptr<data_set> data)
         {
             if (this->data_sets.find(name) == this->data_sets.end() || data != nullptr)
             {
@@ -20,7 +20,7 @@ namespace megamol
             }
         }
 
-        std::shared_ptr<std::vector<GLfloat>> mesh_data_call::get_data(const std::string& name) const
+        std::shared_ptr<mesh_data_call::data_set> mesh_data_call::get_data(const std::string& name) const
         {
             if (this->data_sets.find(name) != this->data_sets.end())
             {

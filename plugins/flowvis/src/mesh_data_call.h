@@ -19,6 +19,17 @@ namespace megamol
         public:
             typedef core::factories::CallAutoDescription<mesh_data_call> mesh_data_description;
 
+            /** Struct to store data and relevant information for visualization */
+            struct data_set
+            {
+                std::string transfer_function;
+                bool transfer_function_dirty;
+
+                GLfloat min_value, max_value;
+
+                std::shared_ptr<std::vector<GLfloat>> data;
+            };
+
             /**
             * Human-readable class name
             */
@@ -54,7 +65,7 @@ namespace megamol
             * @param name Name of the data set
             * @param data Data set
             */
-            void set_data(const std::string& name, std::shared_ptr<std::vector<GLfloat>> data = nullptr);
+            void set_data(const std::string& name, std::shared_ptr<data_set> data = nullptr);
 
             /**
             * Get the data, as indicated by the name
@@ -63,7 +74,7 @@ namespace megamol
             *
             * @return Data set, or nullptr if it does not exist
             */
-            std::shared_ptr<std::vector<GLfloat>> get_data(const std::string& name) const;
+            std::shared_ptr<data_set> get_data(const std::string& name) const;
 
             /**
             * Get data set names
@@ -74,7 +85,7 @@ namespace megamol
 
         protected:
             /** Store data sets with their name */
-            std::map<std::string, std::shared_ptr<std::vector<GLfloat>>> data_sets;
+            std::map<std::string, std::shared_ptr<data_set>> data_sets;
         };
     }
 }

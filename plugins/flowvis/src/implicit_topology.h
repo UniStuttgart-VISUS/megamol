@@ -94,7 +94,7 @@ namespace megamol
             bool output_changed;
 
             /** Output labels */
-            std::shared_ptr<std::vector<GLint>> labels;
+            std::shared_ptr<std::vector<GLfloat>> labels;
 
             /** Output distances */
             std::shared_ptr<std::vector<GLfloat>> distances;

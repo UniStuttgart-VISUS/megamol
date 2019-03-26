@@ -24,13 +24,26 @@ if(BUILD_FLOWVIS_PLUGIN)
       "src/dllmain.cpp")
   endif()
 
+  # Find CGAL
+  find_package(CGAL REQUIRED)
+
+  get_target_property(CGAL_minsizerel CGAL::CGAL IMPORTED_LOCATION_MINSIZEREL)
+  get_target_property(CGAL_relwithdebinfo CGAL::CGAL IMPORTED_LOCATION_RELWITHDEBINFO)
+
+  if(NOT CGAL_minsizerel)
+    set_target_properties(CGAL::CGAL PROPERTIES MAP_IMPORTED_CONFIG_MINSIZEREL Release)
+  endif()
+  if(NOT CGAL_relwithdebinfo)
+    set_target_properties(CGAL::CGAL PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO Release)
+  endif()
+
   # Target definition
   add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files})
   # Set target naming conventions for different build types
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
-  target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src")
-  target_link_libraries(${PROJECT_NAME} PRIVATE core)
+  target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src" PRIVATE ${CGAL_INCLUDE_DIRS} ${CGAL_3RD_PARTY_INCLUDE_DIRS})
+  target_link_libraries(${PROJECT_NAME} PRIVATE core CGAL::CGAL)
 
   # Installation rules for generated files
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
