@@ -14,7 +14,7 @@
 #include "mmcore/api/MegaMolCore.std.h"
 #include "AbstractParam.h"
 //#include "vislib/Map.h"
-#include <unordered_set>
+#include <set>
 #include "vislib/String.h"
 #include "vislib/tchar.h"
 
@@ -34,7 +34,7 @@ namespace param {
     class MEGAMOLCORE_API FlexEnumParam : public AbstractParam {
     public:
 
-        typedef std::unordered_set<std::string> Storage_t;
+        typedef std::set<std::string> Storage_t;
 
         /**
          * Ctor.
