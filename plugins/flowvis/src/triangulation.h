@@ -39,7 +39,7 @@ namespace megamol
             *
             * @param initial_points Initial points to add to the triangulation
             */
-            triangulation(const std::vector<GLfloat>& initial_points);
+            explicit triangulation(const std::vector<GLfloat>& initial_points = std::vector<GLfloat>());
 
             /**
             * Iteratively insert points for triangulation

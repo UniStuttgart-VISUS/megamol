@@ -90,32 +90,67 @@ namespace megamol
             bool get_data_data_callback(core::Call& call);
             bool get_data_extent_callback(core::Call& call);
 
+            /** Callbacks for starting/resetting the computation */
+            bool start_computation_callback(core::param::ParamSlot& parameter);
+            bool reset_computation_callback(core::param::ParamSlot& parameter);
+
+            /**
+            * Update results obtained from computation
+            */
+            void update_results();
+
             /** Output slot for the triangle mesh */
             core::CalleeSlot triangle_mesh_slot;
 
             /** Output slot for data attached to the triangles or their nodes */
             core::CalleeSlot mesh_data_slot;
 
-            /** Path to input vector field */
-            core::param::ParamSlot vector_field_path;
+            /** Start or reset the computation */
+            core::param::ParamSlot start_computation;
+            core::param::ParamSlot reset_computation;
 
-            /** Path to input convergence structures */
+            /** Path to input vector field, and input convergence structures */
+            core::param::ParamSlot vector_field_path;
             core::param::ParamSlot convergence_structures_path;
             
-            /** Transfer function for labels */
+            /** Transfer function for labels, distances and reasons of termination */
             core::param::ParamSlot label_transfer_function;
-            
-            /** Transfer function for distances */
             core::param::ParamSlot distance_transfer_function;
+            core::param::ParamSlot termination_transfer_function;
+
+            /** Parameters for stream line computation */
+            core::param::ParamSlot num_integration_steps;
+            core::param::ParamSlot integration_timestep;
+            core::param::ParamSlot max_integration_error;
+            core::param::ParamSlot num_particles_per_batch;
+            core::param::ParamSlot num_integration_steps_per_batch;
+
+            /** Parameters for grid refinement */
+            core::param::ParamSlot refinement_threshold;
+            core::param::ParamSlot refine_at_labels;
+            core::param::ParamSlot distance_difference_threshold;
 
             /** Indicator for changed output */
-            bool output_changed;
+            bool computation_running;
+
+            bool mesh_output_changed;
+            bool data_output_changed;
+
+            /** Output vertices and indices of the triangle mesh */
+            std::shared_ptr<std::vector<GLfloat>> vertices;
+            std::shared_ptr<std::vector<GLuint>> indices;
 
             /** Output labels */
-            std::shared_ptr<std::vector<GLfloat>> labels;
+            std::shared_ptr<std::vector<GLfloat>> labels_forward;
+            std::shared_ptr<std::vector<GLfloat>> labels_backward;
 
             /** Output distances */
-            std::shared_ptr<std::vector<GLfloat>> distances;
+            std::shared_ptr<std::vector<GLfloat>> distances_forward;
+            std::shared_ptr<std::vector<GLfloat>> distances_backward;
+
+            /** Output reasons for termination */
+            std::shared_ptr<std::vector<GLfloat>> terminations_forward;
+            std::shared_ptr<std::vector<GLfloat>> terminations_backward;
 
             /** Computation class */
             std::unique_ptr<implicit_topology_computation> computation;

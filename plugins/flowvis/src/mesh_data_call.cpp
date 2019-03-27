@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "mesh_data_call.h"
 
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <vector>
@@ -35,6 +36,8 @@ namespace megamol
             {
                 data_sets.push_back(entry.first);
             }
+
+            std::sort(data_sets.begin(), data_sets.end());
 
             return data_sets;
         }
