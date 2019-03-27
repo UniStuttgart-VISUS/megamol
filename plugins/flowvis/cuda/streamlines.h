@@ -22,6 +22,7 @@
 #define __streamlines_cuda_integration_error_min 0      // True: output integration error field with minimum values
 #define __streamlines_cuda_integration_error_avg 0      // True: output integration error field with average values
 
+#include <array>
 #include <memory>
 #include <vector>
 
@@ -29,9 +30,6 @@ namespace megamol
 {
     namespace flowvis
     {
-        /** Forward definition for the actual implementation */
-        class streamlines_cuda_impl;
-
         /**
         * Class for computation of stream lines, corresponding labels and distances on the GPU
         */
@@ -41,44 +39,39 @@ namespace megamol
             /**
             * Initialize constants and textures
             *
-            * @param positions              Positions of the vectors
-            * @param vectors                Vectors defining the vector field to analyze
-            * @param points                 Convergence structures defined as points
-            * @param point_ids              IDs (or labels) of the point convergence structures
-            * @param lines                  Convergence structures defined as lines
-            * @param line_ids               IDs (or labels) of the line convergence structures
-            * @param integration_timestep   Time step factor for advection
-            * @param max_integration_error  Maximum error for Runge-Kutta 4-5, above which the time step size has to be adapted
+            * @param resolution                 Domain resolution (number of vectors per direction)
+            * @param domain                     Domain size (minimum and maximum coordinates)
+            * @param vectors                    Vectors defining the vector field to analyze
+            * @param points                     Convergence structures defined as points
+            * @param point_ids                  IDs (or labels) of the point convergence structures
+            * @param lines                      Convergence structures defined as lines
+            * @param line_ids                   IDs (or labels) of the line convergence structures
+            * @param integration_timestep       Time step factor for advection
+            * @param max_integration_error      Maximum error for Runge-Kutta 4-5, above which the time step size has to be adapted
             */
-            streamlines_cuda(const std::vector<float>& positions, const std::vector<float>& vectors, const std::vector<float>& points,
-                const std::vector<int>& point_ids, const std::vector<float>& lines, const std::vector<int>& line_ids,
-                float integration_timestep, float max_integration_error);
-
-            /**
-            * Destructor
-            */
-            ~streamlines_cuda();
+            streamlines_cuda(const std::array<int, 2>& resolution, const std::array<float, 4>& domain,
+                const std::vector<float>& vectors, const std::vector<float>& points, const std::vector<int>& point_ids,
+                const std::vector<float>& lines, const std::vector<int>& line_ids, float integration_timestep,
+                float max_integration_error);
 
             /**
             * Update labels for the given seed
             *
-            * @param source                 Seed for advecting stream lines
-            * @param labels                 In/output labels
-            * @param distances              In/output distances
-            * @param end_positions          In/output end positions of stream lines
-            * @param num_integration_steps  Number of integration steps
-            * @param sign                   Sign indicating forward (1) or backward (-1) integration
-            * @param integration_steps      Output integration steps as a field
+            * @param source                     In/output seed for advecting stream lines
+            * @param labels                     In/output labels
+            * @param distances                  In/output distances
+            * @param terminations               In/output termination reasons
+            * @param num_integration_steps      Number of integration steps
+            * @param sign                       Sign indicating forward (1) or backward (-1) integration
+            * @param integration_steps          Output integration steps as a field
+            * @param num_particles_per_batch    Number of particles processed and uploaded to the GPU per batch
             */
-            void update_labels(const std::vector<float>& source, std::vector<float>& labels, std::vector<float>& distances,
-                std::vector<float>& end_positions, int num_integration_steps, float sign
+            void update_labels(std::vector<float>& source, std::vector<float>& labels, std::vector<float>& distances,
+                std::vector<float>& terminations, int num_integration_steps, float sign, unsigned int num_particles_per_batch
 #if __streamlines_cuda_detailed_output
                 , std::vector<float>& integration_steps
 #endif
             );
-
-        private:
-            std::unique_ptr<streamlines_cuda_impl> impl;
         };
     }
 }

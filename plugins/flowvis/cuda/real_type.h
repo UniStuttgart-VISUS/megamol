@@ -374,3 +374,14 @@ inline __host__ __device__ Real3 normalizeSafe(Real3 v)
 
     return make_real<Real, 3>(0.0);
 }
+inline __host__ __device__ Real2 normalizeSafe(Real2 v)
+{
+    Real len = length(v);
+
+    if (len > 0)
+    {
+        return v / len;
+    }
+
+    return make_real<Real, 2>(0.0);
+}
