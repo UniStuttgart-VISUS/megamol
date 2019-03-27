@@ -1699,6 +1699,11 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
         } else if (auto* p = slot.template Param<core::param::LinearTransferFunctionParam>()) {
             auto value = p->Value();
 
+            ImGui::Separator();
+
+            ImGui::Text(pname.c_str());
+            ImGui::SameLine();
+
             label = "Load into Editor###editor" + modname + "::" + pname;
             if (p != this->active_tf_param) {
                 if (ImGui::Button(label.c_str())) {
@@ -1729,6 +1734,8 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
             ImGui::PushTextWrapPos(ImGui::GetContentRegionAvailWidth());
             ImGui::TextDisabled(value.c_str());
             ImGui::PopTextWrapPos();
+
+            ImGui::Separator();
 
         } else if (auto* p = slot.template Param<core::param::EnumParam>()) {
             // XXX: no UTF8 fanciness required here?
