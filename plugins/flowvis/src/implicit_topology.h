@@ -90,14 +90,36 @@ namespace megamol
             bool get_data_data_callback(core::Call& call);
             bool get_data_extent_callback(core::Call& call);
 
-            /** Callbacks for starting/resetting the computation */
-            bool start_computation_callback(core::param::ParamSlot& parameter);
-            bool reset_computation_callback(core::param::ParamSlot& parameter);
+            /** Callbacks for starting/stopping/resetting the computation */
+            bool start_computation_callback(core::param::ParamSlot& parameter = core::param::ParamSlot("", ""));
+            bool stop_computation_callback(core::param::ParamSlot& parameter = core::param::ParamSlot("", ""));
+            bool reset_computation_callback(core::param::ParamSlot& parameter = core::param::ParamSlot("", ""));
 
             /**
-            * Update results obtained from computation
+            * Initialize computation.
+            *
+            * @return Success
+            */
+            bool initialize_computation();
+
+            /**
+            * Update results obtained from computation.
             */
             void update_results();
+
+            /**
+            * Manipulate accessibility of fixed parameters
+            *
+            * @param read_only True: read-only, false: writable
+            */
+            void set_readonly_fixed_parameters(bool read_only);
+
+            /**
+            * Manipulate accessibility of variable parameters
+            *
+            * @param read_only True: read-only, false: writable
+            */
+            void set_readonly_variable_parameters(bool read_only);
 
             /** Output slot for the triangle mesh */
             core::CalleeSlot triangle_mesh_slot;
@@ -107,6 +129,7 @@ namespace megamol
 
             /** Start or reset the computation */
             core::param::ParamSlot start_computation;
+            core::param::ParamSlot stop_computation;
             core::param::ParamSlot reset_computation;
 
             /** Path to input vector field, and input convergence structures */

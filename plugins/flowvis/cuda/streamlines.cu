@@ -273,7 +273,7 @@ void update_label_and_dist(const int num_convergence_points, const int num_conve
 */
 __global__
 void compute_streamlines_kernel(const int num_convergence_points, const int num_convergence_lines, const float sign,
-    float2* particles, const int num_particles, const int num_steps, short* labels, float* distances, short* terminations
+    float2* particles, const int num_particles, const int num_steps, float* labels, float* distances, float* terminations
 #if __streamlines_cuda_detailed_output
     , cudaSurfaceObject_t integration_steps
 #endif
@@ -286,9 +286,9 @@ void compute_streamlines_kernel(const int num_convergence_points, const int num_
     if (gid < num_particles && terminations[gid] == 0)
     {
         // Get initial values for labels, distances and positions
-        short label = labels[gid];
+        short label = (short)labels[gid];
         float dist = distances[gid];
-        short termination = terminations[gid];
+        short termination = (short)terminations[gid];
         float2 pos = particles[gid];
 
 #if !(__streamlines_cuda_shi_et_al)
@@ -479,7 +479,7 @@ namespace megamol
                 }
 
                 initialize_texture((void*)h_convergence_points.data(), this->num_convergence_points,
-                    sizeof(float), sizeof(float), sizeof(float), sizeof(float), &this->convergence_points_texture, (void**)&this->d_convergence_points);
+                    sizeof(float), sizeof(float), 0, 0, &this->convergence_points_texture, (void**)&this->d_convergence_points);
 
                 initialize_texture((void*)h_ids.data(), this->num_convergence_points,
                     sizeof(float), 0, 0, 0, &this->convergence_point_ids_texture, (void**)&this->d_convergence_point_ids);
@@ -504,7 +504,7 @@ namespace megamol
                 }
 
                 initialize_texture((void*)h_convergence_lines.data(), this->num_convergence_lines * 2,
-                    sizeof(float), sizeof(float), sizeof(float), sizeof(float), &this->convergence_lines_texture, (void**)&this->d_convergence_lines);
+                    sizeof(float), sizeof(float), 0, 0, &this->convergence_lines_texture, (void**)&this->d_convergence_lines);
 
                 initialize_texture((void*)h_ids.data(), this->num_convergence_lines,
                     sizeof(float), 0, 0, 0, &this->convergence_line_ids_texture, (void**)&this->d_convergence_line_ids);
@@ -570,8 +570,8 @@ namespace megamol
 #endif
 
             // Allocate memory
-            short *d_labels;
-            err = cudaMalloc((void**)&d_labels, max_num_particles_per_batch * sizeof(short));
+            float *d_labels;
+            err = cudaMalloc((void**)&d_labels, max_num_particles_per_batch * sizeof(float));
             if (err)
             {
                 ss << "Error allocating memory using cudaMalloc for labels." << " (" << cudaGetErrorName(err) << ": " << cudaGetErrorString(err) << ")";
@@ -586,8 +586,8 @@ namespace megamol
                 throw std::runtime_error(ss.str());
             }
 
-            short *d_terminations;
-            err = cudaMalloc((void**)&d_terminations, max_num_particles_per_batch * sizeof(short));
+            float *d_terminations;
+            err = cudaMalloc((void**)&d_terminations, max_num_particles_per_batch * sizeof(float));
             if (err)
             {
                 ss << "Error allocating memory using cudaMalloc for termination reasons." << " (" << cudaGetErrorName(err) << ": " << cudaGetErrorString(err) << ")";
@@ -658,7 +658,7 @@ namespace megamol
 #endif
 #endif
 
-                err = cudaMemcpy(d_labels, &labels[offset], num_particles_this_batch * sizeof(short), cudaMemcpyHostToDevice);
+                err = cudaMemcpy(d_labels, &labels[offset], num_particles_this_batch * sizeof(float), cudaMemcpyHostToDevice);
                 if (err)
                 {
                     ss << "Error copying to GPU memory using cudaMemcpy for labels." << " (" << cudaGetErrorName(err) << ": " << cudaGetErrorString(err) << ")";
@@ -672,7 +672,7 @@ namespace megamol
                     throw std::runtime_error(ss.str());
                 }
 
-                err = cudaMemcpy(d_terminations, &terminations[offset], num_particles_this_batch * sizeof(short), cudaMemcpyHostToDevice);
+                err = cudaMemcpy(d_terminations, &terminations[offset], num_particles_this_batch * sizeof(float), cudaMemcpyHostToDevice);
                 if (err)
                 {
                     ss << "Error copying to GPU memory using cudaMemcpy for termination reasons." << " (" << cudaGetErrorName(err) << ": " << cudaGetErrorString(err) << ")";
@@ -707,7 +707,7 @@ namespace megamol
                 //--------------------------------------------------------------------------
 
                 // Copy data from GPU memory
-                err = cudaMemcpy(&labels[offset], d_labels, num_particles_this_batch * sizeof(short), cudaMemcpyDeviceToHost);
+                err = cudaMemcpy(&labels[offset], d_labels, num_particles_this_batch * sizeof(float), cudaMemcpyDeviceToHost);
                 if (err)
                 {
                     ss << "Error copying from GPU memory using cudaMemcpy for labels." << " (" << cudaGetErrorName(err) << ": " << cudaGetErrorString(err) << ")";
@@ -721,7 +721,7 @@ namespace megamol
                     throw std::runtime_error(ss.str());
                 }
 
-                err = cudaMemcpy(&terminations[offset], d_terminations, num_particles_this_batch * sizeof(short), cudaMemcpyDeviceToHost);
+                err = cudaMemcpy(&terminations[offset], d_terminations, num_particles_this_batch * sizeof(float), cudaMemcpyDeviceToHost);
                 if (err)
                 {
                     ss << "Error copying from GPU memory using cudaMemcpy for termination reasons." << " (" << cudaGetErrorName(err) << ": " << cudaGetErrorString(err) << ")";
@@ -796,7 +796,7 @@ namespace megamol
         }
 
         void streamlines_cuda_impl::compute_streamlines(float2* d_particles, const int num_particles, const int num_convergence_points, const int num_convergence_lines,
-            const int num_steps, const float sign, short* d_labels, float* d_dists, short* d_terminations
+            const int num_steps, const float sign, float* d_labels, float* d_dists, float* d_terminations
 #if __streamlines_cuda_detailed_output
             , cudaSurfaceObject_t integration_steps
 #endif

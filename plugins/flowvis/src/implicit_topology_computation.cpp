@@ -14,13 +14,11 @@ namespace megamol
     {
         implicit_topology_computation::implicit_topology_computation(std::array<int, 2> resolution, std::array<float, 4> domain,
             std::vector<float> positions, std::vector<float> vectors, std::vector<float> points, std::vector<int> point_ids,
-            std::vector<float> lines, std::vector<int> line_ids, const float integration_timestep, const float max_integration_error,
-            const unsigned int num_particles_per_batch, const unsigned int num_integration_steps_per_batch)
+            std::vector<float> lines, std::vector<int> line_ids, const float integration_timestep, const float max_integration_error)
             : resolution(std::move(resolution)), domain(std::move(domain)), positions(std::move(positions)),
             vectors(std::move(vectors)), points(std::move(points)), point_ids(std::move(point_ids)), lines(std::move(lines)),
             line_ids(std::move(line_ids)), integration_timestep(integration_timestep), max_integration_error(max_integration_error),
-            num_particles_per_batch(num_particles_per_batch), num_integration_steps_per_batch(num_integration_steps_per_batch),
-            num_integration_steps_performed(0)
+            num_integration_steps_performed(0), terminate_computation(false)
         {
             // Store positions
             this->positions_forward = this->positions;
@@ -47,7 +45,7 @@ namespace megamol
                 const float y_pos = this->positions[n * 2 + 1];
 
                 this->distances_forward[n] = this->distances_backward[n] = std::numeric_limits<float>::max();
-                this->terminations_forward[n] = this->terminations_backward[n] = -1.0f;
+                this->terminations_forward[n] = this->terminations_backward[n] = 0.0f;
 
                 // Compute minimum distance to convergence structures represented by points
                 for (unsigned int i = 0; i < this->point_ids.size(); ++i)
@@ -116,13 +114,30 @@ namespace megamol
             this->delaunay.insert_points(this->positions);
         }
 
+        implicit_topology_computation::implicit_topology_computation(std::array<int, 2> resolution, std::array<float, 4> domain,
+            std::vector<float> positions, std::vector<float> vectors, std::vector<float> points, std::vector<int> point_ids,
+            std::vector<float> lines, std::vector<int> line_ids, result previous_result)
+            : resolution(std::move(resolution)), domain(std::move(domain)), positions(std::move(positions)),
+            vectors(std::move(vectors)), points(std::move(points)), point_ids(std::move(point_ids)), lines(std::move(lines)),
+            line_ids(std::move(line_ids)), integration_timestep(previous_result.computation_state.integration_timestep),
+            max_integration_error(previous_result.computation_state.max_integration_error),
+            num_integration_steps_performed(previous_result.computation_state.num_integration_steps), terminate_computation(false),
+            positions_forward(*previous_result.positions_forward), positions_backward(*previous_result.positions_backward),
+            labels_forward(*previous_result.labels_forward), distances_forward(*previous_result.distances_forward),
+            terminations_forward(*previous_result.terminations_forward), labels_backward(*previous_result.labels_backward),
+            distances_backward(*previous_result.distances_backward), terminations_backward(*previous_result.terminations_backward),
+            delaunay(*previous_result.vertices)
+        {
+        }
+
         implicit_topology_computation::~implicit_topology_computation()
         {
             terminate();
         }
 
         void implicit_topology_computation::start(const unsigned int num_integration_steps,
-            const float refinement_threshold, const bool refine_at_labels, const float distance_difference_threshold)
+            const float refinement_threshold, const bool refine_at_labels, const float distance_difference_threshold,
+            const unsigned int num_particles_per_batch, const unsigned int num_integration_steps_per_batch)
         {
             // Prepare results
             {
@@ -130,28 +145,10 @@ namespace megamol
                 this->current_result = promise.get_future().share();
 
                 // Set initial result
-                result current_result;
-
-                auto mesh = this->delaunay.export_grid();
-                current_result.vertices = mesh.first;
-                current_result.indices = mesh.second;
-
-                current_result.positions_forward = std::make_shared<std::vector<float>>(this->positions_forward);
-                current_result.labels_forward = std::make_shared<std::vector<float>>(this->labels_forward);
-                current_result.distances_forward = std::make_shared<std::vector<float>>(this->distances_forward);
-                current_result.terminations_forward = std::make_shared<std::vector<float>>(this->terminations_forward);
-
-                current_result.positions_backward = std::make_shared<std::vector<float>>(this->positions_backward);
-                current_result.labels_backward = std::make_shared<std::vector<float>>(this->labels_backward);
-                current_result.distances_backward = std::make_shared<std::vector<float>>(this->distances_backward);
-                current_result.terminations_backward = std::make_shared<std::vector<float>>(this->terminations_backward);
-
-                current_result.finished = num_integration_steps <= this->num_integration_steps_performed;
-
-                promise.set_value(std::move(current_result));
+                set_result(promise, num_integration_steps <= this->num_integration_steps_performed);
 
                 // Check if there is actually something to do
-                if (current_result.finished)
+                if (num_integration_steps <= this->num_integration_steps_performed)
                 {
                     return;
                 }
@@ -167,15 +164,20 @@ namespace megamol
             }
 
             this->computation = std::thread(&implicit_topology_computation::run, this, std::move(promise),
-                num_integration_steps, refinement_threshold, refine_at_labels, distance_difference_threshold);
+                num_integration_steps, refinement_threshold, refine_at_labels, distance_difference_threshold,
+                num_particles_per_batch, num_integration_steps_per_batch);
         }
 
         void implicit_topology_computation::terminate()
         {
+            this->terminate_computation = true;
+
             if (this->computation.joinable())
             {
                 this->computation.join();
             }
+
+            this->terminate_computation = false;
         }
 
         std::shared_future<implicit_topology_computation::result> implicit_topology_computation::get_results()
@@ -184,7 +186,8 @@ namespace megamol
         }
 
         void implicit_topology_computation::run(std::promise<result>&& promise, const unsigned int num_integration_steps,
-            const float refinement_threshold, const bool refine_at_labels, const float distance_difference_threshold)
+            const float refinement_threshold, const bool refine_at_labels, const float distance_difference_threshold,
+            const unsigned int num_particles_per_batch, const unsigned int num_integration_steps_per_batch)
         {
             streamlines_cuda streamlines(this->resolution, this->domain, this->vectors, this->points, this->point_ids,
                 this->lines, this->line_ids, this->integration_timestep, this->max_integration_error);
@@ -195,17 +198,17 @@ namespace megamol
             auto positions_forward = this->positions_forward;
             auto positions_backward = this->positions_backward;
 
-            while (!finished)
+            while (!finished && !this->terminate_computation)
             {
                 // Integrate stream lines
                 {
-                    const unsigned int num_steps = std::min(num_integration_steps - this->num_integration_steps_performed, this->num_integration_steps_per_batch);
+                    const unsigned int num_steps = std::min(num_integration_steps - this->num_integration_steps_performed, num_integration_steps_per_batch);
 
                     streamlines.update_labels(positions_forward, this->labels_forward, this->distances_forward, this->terminations_forward,
-                        num_steps, 1.0f, this->num_particles_per_batch);
+                        num_steps, 1.0f, num_particles_per_batch);
 
                     streamlines.update_labels(positions_backward, this->labels_backward, this->distances_backward, this->terminations_backward,
-                        num_steps, -1.0f, this->num_particles_per_batch);
+                        num_steps, -1.0f, num_particles_per_batch);
 
                     this->num_integration_steps_performed += num_steps;
 
@@ -231,25 +234,7 @@ namespace megamol
                 }
 
                 // Set (intermediate) results
-                result current_result;
-
-                auto mesh = this->delaunay.export_grid();
-                current_result.vertices = mesh.first;
-                current_result.indices = mesh.second;
-
-                current_result.positions_forward = std::make_shared<std::vector<float>>(this->positions_forward);
-                current_result.labels_forward = std::make_shared<std::vector<float>>(this->labels_forward);
-                current_result.distances_forward = std::make_shared<std::vector<float>>(this->distances_forward);
-                current_result.terminations_forward = std::make_shared<std::vector<float>>(this->terminations_forward);
-
-                current_result.positions_backward = std::make_shared<std::vector<float>>(this->positions_backward);
-                current_result.labels_backward = std::make_shared<std::vector<float>>(this->labels_backward);
-                current_result.distances_backward = std::make_shared<std::vector<float>>(this->distances_backward);
-                current_result.terminations_backward = std::make_shared<std::vector<float>>(this->terminations_backward);
-
-                current_result.finished = finished;
-
-                promise.set_value(std::move(current_result));
+                set_result(promise, finished || this->terminate_computation);
 
                 // Prepare new results
                 if (!finished)
@@ -262,6 +247,33 @@ namespace megamol
                 // Prevent blocking of CPU
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
             }
+        }
+
+        void implicit_topology_computation::set_result(std::promise<result>& promise, const bool finished)
+        {
+            result current_result;
+
+            auto mesh = this->delaunay.export_grid();
+            current_result.vertices = mesh.first;
+            current_result.indices = mesh.second;
+
+            current_result.positions_forward = std::make_shared<std::vector<float>>(this->positions_forward);
+            current_result.labels_forward = std::make_shared<std::vector<float>>(this->labels_forward);
+            current_result.distances_forward = std::make_shared<std::vector<float>>(this->distances_forward);
+            current_result.terminations_forward = std::make_shared<std::vector<float>>(this->terminations_forward);
+
+            current_result.positions_backward = std::make_shared<std::vector<float>>(this->positions_backward);
+            current_result.labels_backward = std::make_shared<std::vector<float>>(this->labels_backward);
+            current_result.distances_backward = std::make_shared<std::vector<float>>(this->distances_backward);
+            current_result.terminations_backward = std::make_shared<std::vector<float>>(this->terminations_backward);
+
+            current_result.finished = finished;
+
+            current_result.computation_state.integration_timestep = this->integration_timestep;
+            current_result.computation_state.max_integration_error = this->max_integration_error;
+            current_result.computation_state.num_integration_steps = this->num_integration_steps_performed;
+
+            promise.set_value(std::move(current_result));
         }
     }
 }

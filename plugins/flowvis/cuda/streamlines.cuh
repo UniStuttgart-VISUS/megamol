@@ -83,7 +83,7 @@ namespace megamol
             * @param integration_steps      Output integration steps as a field
             */
             void compute_streamlines(float2* d_particles, int num_particles, int num_convergence_points, int num_convergence_lines,
-                int num_steps, float sign, short* d_labels, float* d_dists, short* d_terminations
+                int num_steps, float sign, float* d_labels, float* d_dists, float* d_terminations
 #if __streamlines_cuda_detailed_output
                 , cudaSurfaceObject_t integration_steps
 #endif
