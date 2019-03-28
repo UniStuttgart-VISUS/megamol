@@ -369,7 +369,7 @@ inline GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIR
     , imgui_context(nullptr)
     , decorated_renderer_slot("decoratedRenderer", "Connects to another 2D Renderer being decorated")
     , overlay_slot("overlayRender", "Connected with SplitView for special overlay rendering")
-    , float_print_prec(3) // INIT: Float string format precision
+    , float_print_prec(7) // INIT: Float string format precision
     , windows()
     , lastInstTime(0.0)
     , main_reset_window(false)
@@ -426,7 +426,7 @@ inline GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GUIR
     , imgui_context(nullptr)
     , decorated_renderer_slot("decoratedRenderer", "Connects to another 2D Renderer being decorated")
     , overlay_slot("overlayRender", "Connected with SplitView for special overlay rendering")
-    , float_print_prec(3) // INIT: Float string format precision
+    , float_print_prec(7) // INIT: Float string format precision
     , windows()
     , lastInstTime(0.0)
     , main_reset_window(false)
@@ -1728,12 +1728,22 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
             } else {
                 ImGui::TextColored(style.Colors[ImGuiCol_ButtonHovered], "Currently loaded into Editor.");
             }
-
+            
             ImGui::Text("JSON String:");
             ImGui::SameLine();
             label = "Copy to Clipboard###clipboard" + modname + "::" + pname;
             if (ImGui::Button(label.c_str())) {
                 ImGui::SetClipboardText(value.c_str());
+            }
+            ImGui::SameLine();
+            label = "Copy from Clipboard###fclipboard" + modname + "::" + pname;
+            if (ImGui::Button(label.c_str())) {
+                p->SetValue(ImGui::GetClipboardText());
+            }
+            ImGui::SameLine();
+            label = "Reset###reset" + modname + "::" + pname;
+            if (ImGui::Button(label.c_str())) {
+                p->SetValue("");
             }
             ImGui::PushTextWrapPos(ImGui::GetContentRegionAvailWidth());
             ImGui::TextDisabled(value.c_str());
