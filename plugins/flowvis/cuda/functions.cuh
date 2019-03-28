@@ -4,10 +4,6 @@
 
 #include "real_type.h"
 
-#if (false) // Used to disable errors in IDE. Turn off when compiling!
-template <typename t> t tex2D(cudaTextureObject_t, float, float);
-#endif
-
 /**
 * Manual bilinear interpolation of values or vectors within a voxel
 *

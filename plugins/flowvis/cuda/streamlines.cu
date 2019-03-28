@@ -369,7 +369,6 @@ void compute_streamlines_kernel(const int num_convergence_points, const int num_
                 break;
             }
         }
-
 #if __streamlines_cuda_shi_et_al
         // Update values by evaluating the distance to convergence structures at the final position
         update_label_and_dist(num_convergence_points, num_convergence_lines, num_triangles, pos, label, dist);
@@ -816,33 +815,21 @@ namespace megamol
 
         void streamlines_cuda_impl::initialize_texture(const void* h_data, const int num_components, cudaTextureObject_t* texture, cudaArray** d_data)
         {
-            const cudaExtent extent = { static_cast<std::size_t>(this->resolution[0]), static_cast<std::size_t>(this->resolution[1]), 0 };
             cudaChannelFormatDesc desc = cudaCreateChannelDesc(sizeof(float) * 8, num_components > 1 ? sizeof(float) * 8 : 0,
                 num_components > 2 ? sizeof(float) * 8 : 0, num_components > 3 ? sizeof(float) * 8 : 0, cudaChannelFormatKindFloat);
 
             cudaError_t err;
             std::stringstream ss;
 
-            err = cudaMalloc3DArray(d_data, &desc, extent);
+            err = cudaMallocArray(d_data, &desc, static_cast<std::size_t>(this->resolution[0]), static_cast<std::size_t>(this->resolution[1]));
             if (err)
             {
                 ss << "Error allocating memory using cudaMalloc3DArray for velocity or RK4 step size." << " (" << cudaGetErrorName(err) << ": " << cudaGetErrorString(err) << ")";
                 throw std::runtime_error(ss.str());
             }
 
-            cudaPitchedPtr srcPtr;
-            srcPtr.ptr = const_cast<void*>(h_data);
-            srcPtr.pitch = static_cast<std::size_t>(this->resolution[0] * sizeof(float) * num_components);
-            srcPtr.xsize = static_cast<std::size_t>(this->resolution[0]);
-            srcPtr.ysize = static_cast<std::size_t>(this->resolution[1]);
-
-            cudaMemcpy3DParms params = { 0 };
-            params.srcPtr = srcPtr;
-            params.dstArray = *d_data;
-            params.extent = extent;
-            params.kind = cudaMemcpyHostToDevice;
-
-            err = cudaMemcpy3D(&params);
+            err = cudaMemcpyToArray(*d_data, 0, 0, h_data, static_cast<std::size_t>(this->resolution[0]) *
+                static_cast<std::size_t>(this->resolution[1]) * sizeof(float) * num_components, cudaMemcpyHostToDevice);
             if (err)
             {
                 ss << "Error copying memory using cudaMemcpy3D for velocity or RK4 step size." << " (" << cudaGetErrorName(err) << ": " << cudaGetErrorString(err) << ")";
@@ -858,7 +845,6 @@ namespace megamol
             memset(&texDesc, 0, sizeof(texDesc));
             texDesc.addressMode[0] = cudaAddressModeBorder;
             texDesc.addressMode[1] = cudaAddressModeBorder;
-            texDesc.addressMode[2] = cudaAddressModeBorder;
             texDesc.readMode = cudaReadModeElementType;
             texDesc.filterMode = cudaFilterModePoint;
             texDesc.normalizedCoords = 0;

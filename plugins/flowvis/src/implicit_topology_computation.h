@@ -11,6 +11,7 @@
 #include <array>
 #include <future>
 #include <memory>
+#include <sstream>
 #include <thread>
 #include <vector>
 
@@ -75,6 +76,8 @@ namespace megamol
             * Initialize computation by providing seed positions and corresponding vectors, convergence structures,
             * and the initial delaunay triangulation of the domain.
             *
+            * @param log_stream                         Stream in which to write output
+            * @param performance_stream                 Stream in which to write the performance in CSV format
             * @param resolution                         Domain resolution (number of vectors per direction)
             * @param domain                             Domain size (minimum and maximum coordinates)
             * @param positions                          Positions of the vectors, also used as initial seed
@@ -86,7 +89,8 @@ namespace megamol
             * @param integration_timestep               (Initial) integration time step
             * @param max_integration_error              Maximum integration error
             */
-            implicit_topology_computation(std::array<int, 2> resolution, std::array<float, 4> domain,
+            implicit_topology_computation(std::ostream& log_stream, std::ostream& performance_stream,
+                std::array<int, 2> resolution, std::array<float, 4> domain,
                 std::vector<float> positions, std::vector<float> vectors, std::vector<float> points,
                 std::vector<int> point_ids, std::vector<float> lines, std::vector<int> line_ids,
                 float integration_timestep, float max_integration_error);
@@ -96,6 +100,8 @@ namespace megamol
             * and the initial delaunay triangulation of the domain. Additionally provide the previous results in order
             * to restart the computation from a different state.
             *
+            * @param log_stream                         Stream in which to write output
+            * @param performance_stream                 Stream in which to write the performance in CSV format
             * @param resolution                         Domain resolution (number of vectors per direction)
             * @param domain                             Domain size (minimum and maximum coordinates)
             * @param positions                          Positions of the vectors, also used as initial seed
@@ -106,7 +112,8 @@ namespace megamol
             * @param line_ids                           (Unique) IDs (or labels) of the given lines
             * @param previous_result                    Previous results, used as initialization for restarting
             */
-            implicit_topology_computation(std::array<int, 2> resolution, std::array<float, 4> domain,
+            implicit_topology_computation(std::ostream& log_stream, std::ostream& performance_stream,
+                std::array<int, 2> resolution, std::array<float, 4> domain,
                 std::vector<float> positions, std::vector<float> vectors, std::vector<float> points,
                 std::vector<int> point_ids, std::vector<float> lines, std::vector<int> line_ids,
                 result previous_result);
@@ -139,8 +146,8 @@ namespace megamol
             *
             * @return Future object on (intermediate) results
             */
-            std::shared_future<result> get_results();
-
+            std::shared_future<result> get_results() const;
+            
         private:
             /**
             * Main algorithm.
@@ -149,7 +156,7 @@ namespace megamol
             * @param num_integration_steps              Number of total integration steps to perform
             * @param refinement_threshold               Threshold for refinement to prevent from refining infinitly
             * @param refine_at_labels                   Refine where different labels meet?
-            * @param distance_difference_threshold      Refine when distance difference between neighboring nodes exceed the threshold 
+            * @param distance_difference_threshold      Refine when distance difference between neighboring nodes exceed the threshold
             * @param num_particles_per_batch            Number of particles processed and uploaded to the GPU per batch
             * @param num_integration_steps_per_batch    Number of integration steps per batch, after which a new (intermediate) result can be extracted
             */
@@ -164,6 +171,17 @@ namespace megamol
             * @param finished   Set finished flag of the results accordingly
             */
             void set_result(std::promise<result>& promise, bool finished);
+
+            /**
+            * Refine the grid around nodes and edges which satisfy the refinement criteria defined by the parameters.
+            *
+            * @param refinement_threshold               Threshold for refinement to prevent from refining infinitly
+            * @param refine_at_labels                   Refine where different labels meet?
+            * @param distance_difference_threshold      Refine when distance difference between neighboring nodes exceed the threshold
+            *
+            * @return Newly created seed points
+            */
+            std::vector<float> refine_grid(float refinement_threshold, bool refine_at_labels, float distance_difference_threshold);
 
             /** Input domain information */
             const std::array<int, 2> resolution;
@@ -209,6 +227,10 @@ namespace megamol
 
             /** Current results */
             std::shared_future<result> current_result;
+
+            /** Performance output */
+            std::ostream& log_output;
+            std::ostream& performance_output;
         };
     }
 }

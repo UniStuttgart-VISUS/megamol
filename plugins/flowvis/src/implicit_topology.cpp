@@ -52,6 +52,8 @@ namespace megamol
             refinement_threshold("refinement_threshold", "Threshold for grid refinement, defined as minimum edge length"),
             refine_at_labels("refine_at_labels", "Should the grid be refined in regions of different labels?"),
             distance_difference_threshold("distance_difference_threshold", "Threshold for refining the grid when neighboring nodes exceed a distance difference"),
+            log_file_path("log_file_path", "File in which to write information from the computation"),
+            performance_file_path("performance_file_path", "File in which to write performance measurements from the computation"),
             computation_running(false), mesh_output_changed(false), data_output_changed(false), computation(nullptr)
         {
             // Connect output
@@ -74,25 +76,25 @@ namespace megamol
             this->num_integration_steps << new core::param::IntParam(0);
             this->MakeSlotAvailable(&this->num_integration_steps);
 
-            this->integration_timestep << new core::param::FloatParam(0.1f);
+            this->integration_timestep << new core::param::FloatParam(0.01f);
             this->MakeSlotAvailable(&this->integration_timestep);
 
-            this->max_integration_error << new core::param::FloatParam(1.0f);
+            this->max_integration_error << new core::param::FloatParam(0.000001f);
             this->MakeSlotAvailable(&this->max_integration_error);
 
             this->num_particles_per_batch << new core::param::IntParam(10000);
             this->MakeSlotAvailable(&this->num_particles_per_batch);
 
-            this->num_integration_steps_per_batch << new core::param::IntParam(1000);
+            this->num_integration_steps_per_batch << new core::param::IntParam(10000);
             this->MakeSlotAvailable(&this->num_integration_steps_per_batch);
 
-            this->refinement_threshold << new core::param::FloatParam(1.0f);
+            this->refinement_threshold << new core::param::FloatParam(0.00024f);
             this->MakeSlotAvailable(&this->refinement_threshold);
 
-            this->refine_at_labels << new core::param::BoolParam(false);
+            this->refine_at_labels << new core::param::BoolParam(true);
             this->MakeSlotAvailable(&this->refine_at_labels);
 
-            this->distance_difference_threshold << new core::param::FloatParam(0.0f);
+            this->distance_difference_threshold << new core::param::FloatParam(0.00025f);
             this->MakeSlotAvailable(&this->distance_difference_threshold);
 
             // Create computation buttons
@@ -109,19 +111,42 @@ namespace megamol
             this->MakeSlotAvailable(&this->reset_computation);
 
             // Create transfer function parameters
-            this->label_transfer_function << new core::param::LinearTransferFunctionParam();
+            this->label_transfer_function << new core::param::LinearTransferFunctionParam(
+                "{\"Interpolation\":\"LINEAR\",\"Nodes\":[[0.0,0.0,0.423499,1.0,0.0],[0.0,0.119346,0.529237,1.0,0.125]," \
+                "[0.0,0.238691,0.634976,1.0,0.1875],[0.0,0.346852,0.68788,1.0,0.25],[0.0,0.45022,0.718141,1.0,0.3125]," \
+                "[0.0,0.553554,0.664839,1.0,0.375],[0.0,0.651082,0.519303,1.0,0.4375],[0.115841,0.72479,0.352857,1.0,0.5]," \
+                "[0.326771,0.781195,0.140187,1.0,0.5625],[0.522765,0.798524,0.0284624,1.0,0.625],[0.703162,0.788685,0.00885756,1.0,0.6875]," \
+                "[0.845118,0.751133,0.0,1.0,0.75],[0.955734,0.690825,0.0,1.0,0.8125],[0.995402,0.567916,0.0618524,1.0,0.875]," \
+                "[0.987712,0.403398,0.164851,1.0,0.9375],[0.980407,0.247105,0.262699,1.0,1.0]],\"TextureSize\":128}");
             this->MakeSlotAvailable(&this->label_transfer_function);
 
-            this->distance_transfer_function << new core::param::LinearTransferFunctionParam();
+            this->distance_transfer_function << new core::param::LinearTransferFunctionParam(
+                "{\"Interpolation\":\"LINEAR\",\"Nodes\":[[0.0,0.0,0.0,1.0,0.0],[0.9019607901573181,0.0,0.0,1.0,0.39500004053115845]," \
+                "[0.9019607901573181,0.9019607901573181,0.0,1.0,0.7990000247955322],[1.0,1.0,1.0,1.0,1.0]],\"TextureSize\":128}");
             this->MakeSlotAvailable(&this->distance_transfer_function);
 
-            this->termination_transfer_function << new core::param::LinearTransferFunctionParam();
+            this->termination_transfer_function << new core::param::LinearTransferFunctionParam(
+                "{\"Interpolation\":\"LINEAR\",\"Nodes\":[[0.23137255012989044,0.2980392277240753,0.7529411911964417,1.0,0.0]," \
+                "[0.8627451062202454,0.8627451062202454,0.8627451062202454,1.0,0.4989999830722809]," \
+                "[0.7058823704719543,0.01568627543747425,0.14901961386203766,1.0,1.0]],\"TextureSize\":4}");
             this->MakeSlotAvailable(&this->termination_transfer_function);
+
+            // Create log path parameters
+            this->log_file_path << new core::param::FilePathParam("");
+            this->MakeSlotAvailable(&this->log_file_path);
+            
+            this->performance_file_path << new core::param::FilePathParam("");
+            this->MakeSlotAvailable(&this->performance_file_path);
         }
 
         implicit_topology::~implicit_topology()
         {
             this->Release();
+
+            if (this->computation != nullptr)
+            {
+                this->computation->terminate();
+            }
         }
 
         bool implicit_topology::create()
@@ -135,6 +160,43 @@ namespace megamol
 
         bool implicit_topology::initialize_computation()
         {
+            // Open log files for writing
+            if (this->log_file_path.IsDirty())
+            {
+                if (this->log_file.is_open())
+                {
+                    this->log_file.close();
+                }
+
+                this->log_file.open(this->log_file_path.Param<core::param::FilePathParam>()->Value(), std::ios_base::out);
+
+                if (!this->log_file.good())
+                {
+                    vislib::sys::Log::DefaultLog.WriteError("Unable to open/create log file: '%s'",
+                        this->log_file_path.Param<core::param::FilePathParam>()->Value());
+
+                    return false;
+                }
+            }
+
+            if (this->performance_file_path.IsDirty())
+            {
+                if (this->performance_file.is_open())
+                {
+                    this->performance_file.close();
+                }
+
+                this->performance_file.open(this->performance_file_path.Param<core::param::FilePathParam>()->Value(), std::ios_base::out);
+
+                if (!this->performance_file.good())
+                {
+                    vislib::sys::Log::DefaultLog.WriteError("Unable to open/create log file: '%s'",
+                        this->performance_file_path.Param<core::param::FilePathParam>()->Value());
+
+                    return false;
+                }
+            }
+
             // Try to load input vector field
             if (this->computation == nullptr)
             {
@@ -261,8 +323,8 @@ namespace megamol
                     }
 
                     // Create new computation object
-                    this->computation = std::make_unique<implicit_topology_computation>(std::array<int, 2>{ static_cast<int>(x_num), static_cast<int>(y_num) },
-                        std::array<float, 4>{ x_min, x_max, y_min, y_max },
+                    this->computation = std::make_unique<implicit_topology_computation>(this->log_file, this->performance_file,
+                        std::array<int, 2>{ static_cast<int>(x_num), static_cast<int>(y_num) }, std::array<float, 4>{ x_min, x_max, y_min, y_max },
                         std::move(positions), std::move(vectors), std::move(points), std::move(point_ids), std::move(lines), std::move(line_ids),
                         this->integration_timestep.Param<core::param::FloatParam>()->Value(),
                         this->max_integration_error.Param<core::param::FloatParam>()->Value());

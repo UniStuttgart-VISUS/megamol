@@ -18,6 +18,7 @@
 #include "glad/glad.h"
 
 #include <memory>
+#include <fstream>
 #include <type_traits>
 #include <vector>
 
@@ -153,6 +154,10 @@ namespace megamol
             core::param::ParamSlot refine_at_labels;
             core::param::ParamSlot distance_difference_threshold;
 
+            /** Path to output log files */
+            core::param::ParamSlot log_file_path;
+            core::param::ParamSlot performance_file_path;
+
             /** Indicator for changed output */
             bool computation_running;
 
@@ -180,6 +185,10 @@ namespace megamol
 
             /** Store last promised result */
             std::shared_future<implicit_topology_computation::result> last_result;
+
+            /** File handles for writing output */
+            std::ofstream log_file;
+            std::ofstream performance_file;
         };
     }
 }
