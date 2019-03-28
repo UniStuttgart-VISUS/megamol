@@ -7,6 +7,10 @@ uniform mat4 MVP;
 uniform vec4 viewAttr; // TODO: check fragment position if viewport starts not in (0, 0)
 uniform vec4 lpos;
 
+#ifdef WITH_SCALING
+uniform float scaling;
+#endif // WITH_SCALING
+
 #ifndef CALC_CAM_SYS
 uniform vec3 camIn;
 uniform vec3 camUp;
@@ -27,6 +31,11 @@ void main(void) {
     // remove the sphere radius from the w coordinates to the rad varyings
     vec4 inPos = gl_in[0].gl_Position;
     rad = inPos.w;
+
+#ifdef WITH_SCALING
+    rad *= scaling;
+#endif // WITH_SCALING
+
     squarRad = rad*rad;
     inPos.w = 1.0;
 

@@ -80,6 +80,8 @@
 #include "CSVFileSequence.h"
 #include "IColToIdentity.h"
 #include "ParticleIdentitySort.h"
+#include "ParticleBoxFilter.h"
+#include "DirParticleBoxFilter.h"
 
 /*
  * mmplgPluginAPIVersion
@@ -222,6 +224,8 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::CSVFileSequence>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::IColToIdentity>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleIdentitySort>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleBoxFilter>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::DirParticleBoxFilter>();
 
             // register calls here:
             this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::CallFloatTableData>();
