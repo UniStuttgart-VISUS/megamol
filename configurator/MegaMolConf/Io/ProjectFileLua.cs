@@ -18,7 +18,7 @@ namespace MegaMolConf.Io {
         /// Escapes paths for Lua
         /// </summary>
         private string safeString(string p) {
-            return p.Replace(@"\", @"\\"); //.Replace("\"", "&quot;");
+            return p.Replace(@"\", @"\\").Replace("\"", "\\\"");
         }
 
         public override void Save(string filename) {
