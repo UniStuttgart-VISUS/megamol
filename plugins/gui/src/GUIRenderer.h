@@ -57,6 +57,7 @@
 #include "vislib/UTF8Encoder.h"
 
 #include <imgui.h>
+#include <imgui_internal.h>
 #include <iomanip> // setprecision
 #include <sstream> // stringstream
 
@@ -1659,7 +1660,14 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
     std::string help;
 
     auto param = slot.Parameter();
-    if (!param.IsNull()) {
+    if (!param.IsNull() && param->IsGUIVisible()) {
+        // Set different style if parameter is read-only
+        if (param->IsGUIReadOnly())
+        {
+            ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.25f);
+        }
+
         std::string modname = mod.FullName().PeekBuffer();
         std::string pname = slot.Name().PeekBuffer();
         std::string label = pname + "###" + modname + "::" + pname;
@@ -1668,7 +1676,7 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
         std::stringstream float_stream;
         float_stream << "%." << this->float_print_prec << "f";
         std::string float_format = float_stream.str();
-
+        
         if (auto* p = slot.template Param<core::param::BoolParam>()) {
             auto value = p->Value();
             if (ImGui::Checkbox(label.c_str(), &value)) {
@@ -1696,8 +1704,6 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
                    "[Right-Click] on the individual color widget to show options.";
         } else if (auto* p = slot.template Param<core::param::LinearTransferFunctionParam>()) {
             auto value = p->Value();
-
-            ImGui::Separator();
 
             ImGui::Text(pname.c_str());
             ImGui::SameLine();
@@ -1819,6 +1825,13 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
         this->HoverToolTip(desc, ImGui::GetID(label.c_str()), 1.0f);
 
         this->HelpMarkerToolTip(help);
+
+        // Reset to default style
+        if (param->IsGUIReadOnly())
+        {
+            ImGui::PopItemFlag();
+            ImGui::PopStyleVar();
+        }
     }
 }
 
