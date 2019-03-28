@@ -285,7 +285,15 @@ bool LinearTransferFunctionParam::CheckTransferFunctionString(const std::string 
     bool check = true;
     if (!tfs.empty()) {
 
-        nlohmann::json json = nlohmann::json::parse(tfs);
+        nlohmann::json json;
+
+        try
+        {
+            json = nlohmann::json::parse(tfs);
+        }
+        catch (...) {
+            return false;
+        }
 
         // Check for valid JSON object
         if (!json.is_object()) {
