@@ -1,13 +1,13 @@
 #include "stdafx.h"
 #include "implicit_topology.h"
 
-#include "direct_data_writer_call.h"
 #include "implicit_topology_computation.h"
 #include "mesh_data_call.h"
 #include "triangle_mesh_call.h"
 #include "triangulation.h"
 
 #include "mmcore/Call.h"
+#include "mmcore/DirectDataWriterCall.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/FloatParam.h"
@@ -71,11 +71,11 @@ namespace megamol
             //this->MakeSlotAvailable(&this->results_slot);
             // TODO
 
-            this->log_slot.SetCallback(direct_data_writer_call::ClassName(), direct_data_writer_call::FunctionName(0), &implicit_topology::get_log_cb_callback);
+            this->log_slot.SetCallback(core::DirectDataWriterCall::ClassName(), core::DirectDataWriterCall::FunctionName(0), &implicit_topology::get_log_cb_callback);
             this->MakeSlotAvailable(&this->log_slot);
             this->get_log_callback = []() -> std::ostream& { static std::ostream dummy(nullptr); return dummy; };
 
-            this->performance_slot.SetCallback(direct_data_writer_call::ClassName(), direct_data_writer_call::FunctionName(0), &implicit_topology::get_performance_cb_callback);
+            this->performance_slot.SetCallback(core::DirectDataWriterCall::ClassName(), core::DirectDataWriterCall::FunctionName(0), &implicit_topology::get_performance_cb_callback);
             this->MakeSlotAvailable(&this->performance_slot);
             this->get_performance_callback = []() -> std::ostream& { static std::ostream dummy(nullptr); return dummy; };
 
@@ -661,14 +661,14 @@ namespace megamol
 
         bool implicit_topology::get_log_cb_callback(core::Call& call)
         {
-            this->get_log_callback = dynamic_cast<direct_data_writer_call*>(&call)->get_callback();
+            this->get_log_callback = dynamic_cast<core::DirectDataWriterCall*>(&call)->GetCallback();
 
             return true;
         }
 
         bool implicit_topology::get_performance_cb_callback(core::Call& call)
         {
-            this->get_performance_callback = dynamic_cast<direct_data_writer_call*>(&call)->get_callback();
+            this->get_performance_callback = dynamic_cast<core::DirectDataWriterCall*>(&call)->GetCallback();
 
             return true;
         }

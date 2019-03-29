@@ -12,12 +12,10 @@
 #include "mmcore/versioninfo.h"
 #include "vislib/vislibversion.h"
 
-#include "file_stream_provider.h"
 #include "implicit_topology.h"
 
 #include "triangle_mesh_renderer_2d.h"
 
-#include "direct_data_writer_call.h"
 #include "mesh_data_call.h"
 #include "triangle_mesh_call.h"
 
@@ -46,14 +44,12 @@ namespace {
         virtual void registerClasses(void) {
 
             // register modules here:
-            this->module_descriptions.RegisterAutoDescription<megamol::flowvis::file_stream_provider>();
             this->module_descriptions.RegisterAutoDescription<megamol::flowvis::implicit_topology>();
 
             // register renderer here:
             this->module_descriptions.RegisterAutoDescription<megamol::flowvis::triangle_mesh_renderer_2d>();
 
             // register calls here:
-            this->call_descriptions.RegisterAutoDescription<megamol::flowvis::direct_data_writer_call>();
             this->call_descriptions.RegisterAutoDescription<megamol::flowvis::mesh_data_call>();
             this->call_descriptions.RegisterAutoDescription<megamol::flowvis::triangle_mesh_call>();
         }
