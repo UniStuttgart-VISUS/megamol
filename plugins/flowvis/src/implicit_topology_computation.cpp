@@ -1,5 +1,7 @@
 #include "stdafx.h"
+
 #include "implicit_topology_computation.h"
+#include "implicit_topology_results.h"
 
 #include "../cuda/streamlines.h"
 
@@ -146,7 +148,7 @@ namespace megamol
 
         implicit_topology_computation::implicit_topology_computation(std::ostream& log_stream, std::ostream& performance_stream,
             std::array<int, 2> resolution, std::array<float, 4> domain, std::vector<float> positions, std::vector<float> vectors,
-            std::vector<float> points, std::vector<int> point_ids, std::vector<float> lines, std::vector<int> line_ids, result previous_result)
+            std::vector<float> points, std::vector<int> point_ids, std::vector<float> lines, std::vector<int> line_ids, implicit_topology_results previous_result)
             : log_output(log_stream), performance_output(performance_stream), resolution(std::move(resolution)), domain(std::move(domain)),
             positions(std::move(positions)), vectors(std::move(vectors)), points(std::move(points)), point_ids(std::move(point_ids)),
             lines(std::move(lines)), line_ids(std::move(line_ids)), integration_timestep(previous_result.computation_state.integration_timestep),
@@ -180,7 +182,7 @@ namespace megamol
         {
             // Prepare results
             {
-                std::promise<result> promise;
+                std::promise<implicit_topology_results> promise;
                 this->current_result = promise.get_future().share();
 
                 // Set initial result
@@ -194,7 +196,7 @@ namespace megamol
             }
 
             // Start computation
-            std::promise<result> promise;
+            std::promise<implicit_topology_results> promise;
             this->current_result = promise.get_future().share();
 
             if (this->computation.joinable())
@@ -219,12 +221,12 @@ namespace megamol
             this->terminate_computation = false;
         }
 
-        std::shared_future<implicit_topology_computation::result> implicit_topology_computation::get_results() const
+        std::shared_future<implicit_topology_results> implicit_topology_computation::get_results() const
         {
             return this->current_result;
         }
 
-        void implicit_topology_computation::run(std::promise<result>&& promise, const unsigned int num_integration_steps,
+        void implicit_topology_computation::run(std::promise<implicit_topology_results>&& promise, const unsigned int num_integration_steps,
             const float refinement_threshold, const bool refine_at_labels, const float distance_difference_threshold,
             const unsigned int num_particles_per_batch, const unsigned int num_integration_steps_per_batch)
         {
@@ -289,7 +291,7 @@ namespace megamol
 
                     if (!this->terminate_computation)
                     {
-                        std::swap(promise, std::promise<result>());
+                        std::swap(promise, std::promise<implicit_topology_results>());
 
                         this->current_result = promise.get_future().share();
                     }
@@ -445,7 +447,7 @@ namespace megamol
                 // Prepare new results
                 if (!finished && finished_refined_integration && !this->terminate_computation)
                 {
-                    std::swap(promise, std::promise<result>());
+                    std::swap(promise, std::promise<implicit_topology_results>());
 
                     this->current_result = promise.get_future().share();
                 }
@@ -459,9 +461,9 @@ namespace megamol
             print_performance(num_integration_steps);
         }
 
-        void implicit_topology_computation::set_result(std::promise<result>& promise, const bool finished)
+        void implicit_topology_computation::set_result(std::promise<implicit_topology_results>& promise, const bool finished)
         {
-            result current_result;
+            implicit_topology_results current_result;
 
             auto mesh = this->delaunay.export_grid();
             current_result.vertices = mesh.first;
@@ -477,7 +479,7 @@ namespace megamol
             current_result.distances_backward = std::make_shared<std::vector<float>>(this->distances_backward);
             current_result.terminations_backward = std::make_shared<std::vector<float>>(this->terminations_backward);
 
-            current_result.finished = finished;
+            current_result.computation_state.finished = finished;
 
             current_result.computation_state.integration_timestep = this->integration_timestep;
             current_result.computation_state.max_integration_error = this->max_integration_error;

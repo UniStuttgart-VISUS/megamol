@@ -7,6 +7,7 @@
 #pragma once
 
 #include "implicit_topology_computation.h"
+#include "implicit_topology_results.h"
 #include "triangulation.h"
 
 #include "mmcore/Call.h"
@@ -199,7 +200,7 @@ namespace megamol
             std::unique_ptr<implicit_topology_computation> computation;
 
             /** Store last promised result */
-            std::shared_future<implicit_topology_computation::result> last_result;
+            std::shared_future<implicit_topology_results> last_result;
         };
     }
 }

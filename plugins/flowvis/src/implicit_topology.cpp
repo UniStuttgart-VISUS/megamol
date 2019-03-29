@@ -347,9 +347,9 @@ namespace megamol
                 this->distances_backward = result.distances_backward;
                 this->terminations_backward = result.terminations_backward;
 
-                this->computation_running = !result.finished;
+                this->computation_running = !result.computation_state.finished;
 
-                if (result.finished)
+                if (result.computation_state.finished)
                 {
                     vislib::sys::Log::DefaultLog.WriteInfo("Computation of stream lines ended.");
 

@@ -6,6 +6,7 @@
  */
 #pragma once
 
+#include "implicit_topology_results.h"
 #include "triangulation.h"
 
 #include <array>
@@ -31,48 +32,6 @@ namespace megamol
         class implicit_topology_computation
         {
         public:
-            /**
-            * Struct storing the state of the computation.
-            */
-            struct state
-            {
-                /** Time step information */
-                float integration_timestep;
-                float max_integration_error;
-
-                /** Number of time steps computed */
-                unsigned int num_integration_steps;
-            };
-
-            /**
-            * Struct storing the (intermediate) results of the computation.
-            */
-            struct result
-            {
-                /** End positions of stream lines */
-                std::shared_ptr<std::vector<float>> positions_forward;
-                std::shared_ptr<std::vector<float>> positions_backward;
-
-                /** Label and distance fields, and reasons for termination */
-                std::shared_ptr<std::vector<float>> labels_forward;
-                std::shared_ptr<std::vector<float>> distances_forward;
-                std::shared_ptr<std::vector<float>> terminations_forward;
-
-                std::shared_ptr<std::vector<float>> labels_backward;
-                std::shared_ptr<std::vector<float>> distances_backward;
-                std::shared_ptr<std::vector<float>> terminations_backward;
-
-                /** Triangle mesh */
-                std::shared_ptr<std::vector<float>> vertices;
-                std::shared_ptr<std::vector<unsigned int>> indices;
-
-                /** Was this the final result? */
-                bool finished;
-
-                /** Computation state */
-                state computation_state;
-            };
-
             /**
             * Initialize computation by providing seed positions and corresponding vectors, convergence structures,
             * and the initial delaunay triangulation of the domain.
@@ -117,7 +76,7 @@ namespace megamol
                 std::array<int, 2> resolution, std::array<float, 4> domain,
                 std::vector<float> positions, std::vector<float> vectors, std::vector<float> points,
                 std::vector<int> point_ids, std::vector<float> lines, std::vector<int> line_ids,
-                result previous_result);
+                implicit_topology_results previous_result);
 
             /**
             * Destructor
@@ -130,7 +89,7 @@ namespace megamol
             * @param num_integration_steps              Number of total integration steps to perform
             * @param refinement_threshold               Threshold for refinement to prevent from refining infinitly
             * @param refine_at_labels                   Refine where different labels meet?
-            * @param distance_difference_threshold      Refine when distance difference between neighboring nodes exceed the threshold 
+            * @param distance_difference_threshold      Refine when distance difference between neighboring nodes exceed the threshold
             * @param num_particles_per_batch            Number of particles processed and uploaded to the GPU per batch
             * @param num_integration_steps_per_batch    Number of integration steps per batch, after which a new (intermediate) result can be extracted
             */
@@ -147,8 +106,8 @@ namespace megamol
             *
             * @return Future object on (intermediate) results
             */
-            std::shared_future<result> get_results() const;
-            
+            std::shared_future<implicit_topology_results> get_results() const;
+
         private:
             /**
             * Main algorithm.
@@ -161,7 +120,7 @@ namespace megamol
             * @param num_particles_per_batch            Number of particles processed and uploaded to the GPU per batch
             * @param num_integration_steps_per_batch    Number of integration steps per batch, after which a new (intermediate) result can be extracted
             */
-            void run(std::promise<result>&& promise, unsigned int num_integration_steps, float refinement_threshold,
+            void run(std::promise<implicit_topology_results>&& promise, unsigned int num_integration_steps, float refinement_threshold,
                 bool refine_at_labels, float distance_difference_threshold, unsigned int num_particles_per_batch,
                 unsigned int num_integration_steps_per_batch);
 
@@ -171,7 +130,7 @@ namespace megamol
             * @param promise    Promise containing future results
             * @param finished   Set finished flag of the results accordingly
             */
-            void set_result(std::promise<result>& promise, bool finished);
+            void set_result(std::promise<implicit_topology_results>& promise, bool finished);
 
             /**
             * Refine the grid around nodes and edges which satisfy the refinement criteria defined by the parameters.
@@ -234,7 +193,7 @@ namespace megamol
             bool terminate_computation;
 
             /** Current results */
-            std::shared_future<result> current_result;
+            std::shared_future<implicit_topology_results> current_result;
 
             /** Performance */
             std::size_t performance_num_particles_added;
