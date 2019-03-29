@@ -295,9 +295,6 @@ namespace megamol
                     }
                 }
 
-                this->log_output << "Number of integration steps:           " << "-" << "   "
-                    << num_integration_steps << " / " << num_integration_steps << std::endl;
-
                 this->log_output << "Finished integration!" << std::endl << std::endl;
 
                 // Performance output

@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "implicit_topology.h"
 
+#include "direct_data_writer_call.h"
 #include "implicit_topology_computation.h"
 #include "mesh_data_call.h"
 #include "triangle_mesh_call.h"
@@ -36,6 +37,9 @@ namespace megamol
         implicit_topology::implicit_topology() :
             triangle_mesh_slot("set_triangle_mesh", "Triangle mesh output"),
             mesh_data_slot("set_mesh_data", "Mesh data output"),
+            results_slot("results_slot", "Results output slot"),
+            log_slot("log_slot", "Log output slot"),
+            performance_slot("performance_slot", "Performance log output slot"),
             start_computation("start_computation", "Start the computation"),
             stop_computation("stop_computation", "Stop the computation"),
             reset_computation("reset_computation", "Reset the computation"),
@@ -52,8 +56,6 @@ namespace megamol
             refinement_threshold("refinement_threshold", "Threshold for grid refinement, defined as minimum edge length"),
             refine_at_labels("refine_at_labels", "Should the grid be refined in regions of different labels?"),
             distance_difference_threshold("distance_difference_threshold", "Threshold for refining the grid when neighboring nodes exceed a distance difference"),
-            log_file_path("log_file_path", "File in which to write information from the computation"),
-            performance_file_path("performance_file_path", "File in which to write performance measurements from the computation"),
             computation_running(false), mesh_output_changed(false), data_output_changed(false), computation(nullptr)
         {
             // Connect output
@@ -64,6 +66,18 @@ namespace megamol
             this->mesh_data_slot.SetCallback(mesh_data_call::ClassName(), mesh_data_call::FunctionName(0), &implicit_topology::get_data_data_callback);
             this->mesh_data_slot.SetCallback(mesh_data_call::ClassName(), mesh_data_call::FunctionName(1), &implicit_topology::get_data_extent_callback);
             this->MakeSlotAvailable(&this->mesh_data_slot);
+
+            this->results_slot.SetCallback(triangle_mesh_call::ClassName(), triangle_mesh_call::FunctionName(0), &implicit_topology::get_results_cb_callback);
+            //this->MakeSlotAvailable(&this->results_slot);
+            // TODO
+
+            this->log_slot.SetCallback(direct_data_writer_call::ClassName(), direct_data_writer_call::FunctionName(0), &implicit_topology::get_log_cb_callback);
+            this->MakeSlotAvailable(&this->log_slot);
+            this->get_log_callback = []() -> std::ostream& { static std::ostream dummy(nullptr); return dummy; };
+
+            this->performance_slot.SetCallback(direct_data_writer_call::ClassName(), direct_data_writer_call::FunctionName(0), &implicit_topology::get_performance_cb_callback);
+            this->MakeSlotAvailable(&this->performance_slot);
+            this->get_performance_callback = []() -> std::ostream& { static std::ostream dummy(nullptr); return dummy; };
 
             // Create path parameters
             this->vector_field_path << new core::param::FilePathParam("");
@@ -130,13 +144,6 @@ namespace megamol
                 "[0.8627451062202454,0.8627451062202454,0.8627451062202454,1.0,0.4989999830722809]," \
                 "[0.7058823704719543,0.01568627543747425,0.14901961386203766,1.0,1.0]],\"TextureSize\":4}");
             this->MakeSlotAvailable(&this->termination_transfer_function);
-
-            // Create log path parameters
-            this->log_file_path << new core::param::FilePathParam("");
-            this->MakeSlotAvailable(&this->log_file_path);
-            
-            this->performance_file_path << new core::param::FilePathParam("");
-            this->MakeSlotAvailable(&this->performance_file_path);
         }
 
         implicit_topology::~implicit_topology()
@@ -160,43 +167,6 @@ namespace megamol
 
         bool implicit_topology::initialize_computation()
         {
-            // Open log files for writing
-            if (this->log_file_path.IsDirty())
-            {
-                if (this->log_file.is_open())
-                {
-                    this->log_file.close();
-                }
-
-                this->log_file.open(this->log_file_path.Param<core::param::FilePathParam>()->Value(), std::ios_base::out);
-
-                if (!this->log_file.good())
-                {
-                    vislib::sys::Log::DefaultLog.WriteError("Unable to open/create log file: '%s'",
-                        this->log_file_path.Param<core::param::FilePathParam>()->Value());
-
-                    return false;
-                }
-            }
-
-            if (this->performance_file_path.IsDirty())
-            {
-                if (this->performance_file.is_open())
-                {
-                    this->performance_file.close();
-                }
-
-                this->performance_file.open(this->performance_file_path.Param<core::param::FilePathParam>()->Value(), std::ios_base::out);
-
-                if (!this->performance_file.good())
-                {
-                    vislib::sys::Log::DefaultLog.WriteError("Unable to open/create log file: '%s'",
-                        this->performance_file_path.Param<core::param::FilePathParam>()->Value());
-
-                    return false;
-                }
-            }
-
             // Try to load input vector field
             if (this->computation == nullptr)
             {
@@ -323,7 +293,7 @@ namespace megamol
                     }
 
                     // Create new computation object
-                    this->computation = std::make_unique<implicit_topology_computation>(this->log_file, this->performance_file,
+                    this->computation = std::make_unique<implicit_topology_computation>(this->get_log_callback(), this->get_performance_callback(),
                         std::array<int, 2>{ static_cast<int>(x_num), static_cast<int>(y_num) }, std::array<float, 4>{ x_min, x_max, y_min, y_max },
                         std::move(positions), std::move(vectors), std::move(points), std::move(point_ids), std::move(lines), std::move(line_ids),
                         this->integration_timestep.Param<core::param::FloatParam>()->Value(),
@@ -678,6 +648,27 @@ namespace megamol
 
             data_call->set_data("reasons for termination (forward)");
             data_call->set_data("reasons for termination (backward)");
+
+            return true;
+        }
+
+        bool implicit_topology::get_results_cb_callback(core::Call& call)
+        {
+            // TODO
+
+            return true;
+        }
+
+        bool implicit_topology::get_log_cb_callback(core::Call& call)
+        {
+            this->get_log_callback = dynamic_cast<direct_data_writer_call*>(&call)->get_callback();
+
+            return true;
+        }
+
+        bool implicit_topology::get_performance_cb_callback(core::Call& call)
+        {
+            this->get_performance_callback = dynamic_cast<direct_data_writer_call*>(&call)->get_callback();
 
             return true;
         }

@@ -17,8 +17,8 @@
 
 #include "glad/glad.h"
 
+#include <iostream>
 #include <memory>
-#include <fstream>
 #include <type_traits>
 #include <vector>
 
@@ -91,6 +91,18 @@ namespace megamol
             bool get_data_data_callback(core::Call& call);
             bool get_data_extent_callback(core::Call& call);
 
+            /** Callback for the result writer */
+            bool get_results_cb_callback(core::Call& call);
+            // TODO
+
+            /** Callbacks for the log stream */
+            bool get_log_cb_callback(core::Call& call);
+            std::function<std::ostream&()> get_log_callback;
+
+            /** Callbacks for the performance log stream */
+            bool get_performance_cb_callback(core::Call& call);
+            std::function<std::ostream&()> get_performance_callback;
+
             /** Callbacks for starting/stopping/resetting the computation */
             bool start_computation_callback(core::param::ParamSlot& parameter = core::param::ParamSlot("", ""));
             bool stop_computation_callback(core::param::ParamSlot& parameter = core::param::ParamSlot("", ""));
@@ -128,6 +140,13 @@ namespace megamol
             /** Output slot for data attached to the triangles or their nodes */
             core::CalleeSlot mesh_data_slot;
 
+            /** Output slot for writing results to file */
+            core::CalleeSlot results_slot;
+
+            /** Output slots for logging */
+            core::CalleeSlot log_slot;
+            core::CalleeSlot performance_slot;
+
             /** Start or reset the computation */
             core::param::ParamSlot start_computation;
             core::param::ParamSlot stop_computation;
@@ -153,10 +172,6 @@ namespace megamol
             core::param::ParamSlot refinement_threshold;
             core::param::ParamSlot refine_at_labels;
             core::param::ParamSlot distance_difference_threshold;
-
-            /** Path to output log files */
-            core::param::ParamSlot log_file_path;
-            core::param::ParamSlot performance_file_path;
 
             /** Indicator for changed output */
             bool computation_running;
@@ -185,10 +200,6 @@ namespace megamol
 
             /** Store last promised result */
             std::shared_future<implicit_topology_computation::result> last_result;
-
-            /** File handles for writing output */
-            std::ofstream log_file;
-            std::ofstream performance_file;
         };
     }
 }
