@@ -9,9 +9,10 @@
 #include "triangulation.h"
 
 #include <array>
+#include <chrono>
 #include <future>
+#include <iostream>
 #include <memory>
-#include <sstream>
 #include <thread>
 #include <vector>
 
@@ -183,6 +184,13 @@ namespace megamol
             */
             std::vector<float> refine_grid(float refinement_threshold, bool refine_at_labels, float distance_difference_threshold);
 
+            /**
+            * Output the performance measured
+            *
+            * @param num_integration_steps              Number of integration steps performed
+            */
+            void print_performance(unsigned int num_integration_steps) const;
+
             /** Input domain information */
             const std::array<int, 2> resolution;
             const std::array<float, 4> domain;
@@ -227,6 +235,18 @@ namespace megamol
 
             /** Current results */
             std::shared_future<result> current_result;
+
+            /** Performance */
+            std::size_t performance_num_particles_added;
+
+            using clock_t = std::chrono::high_resolution_clock;
+            using duration_t = std::chrono::milliseconds;
+            static const char* duration_str;
+
+            duration_t total_runtime;
+            duration_t total_time;
+            duration_t total_time_integration;
+            duration_t total_time_refinement;
 
             /** Performance output */
             std::ostream& log_output;

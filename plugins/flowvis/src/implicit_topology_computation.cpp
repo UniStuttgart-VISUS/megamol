@@ -3,12 +3,19 @@
 
 #include "../cuda/streamlines.h"
 
+#include <algorithm>
+#include <array>
 #include <chrono>
+#include <cmath>
+#include <deque>
 #include <future>
 #include <iostream>
+#include <limits>
+#include <memory>
 #include <thread>
 #include <unordered_set>
 #include <utility>
+#include <vector>
 
 namespace megamol
 {
@@ -26,12 +33,12 @@ namespace megamol
         {
             this->log_output << "Initializing computation..." << std::endl;
             this->log_output << "Resolution:                            " << this->resolution[0] << " x " << this->resolution[1] << std::endl;
-            this->log_output << "Domain:                                " << "[" << this->domain[0] << ", " << this->domain[1] << "] x [" << this->domain[2] << ", " << this->domain[3] << "]" << std::endl;
+            this->log_output << "Domain:                                " << "[" << this->domain[0] << ", " << this->domain[1] << "] x "
+                                                                          << "[" << this->domain[2] << ", " << this->domain[3] << "]" << std::endl;
             this->log_output << "Number of convergence points:          " << this->point_ids.size() << std::endl;
             this->log_output << "Number of convergence lines:           " << this->line_ids.size() << std::endl;
             this->log_output << "Integration time step:                 " << this->integration_timestep << std::endl;
             this->log_output << "Maximum integration error:             " << this->max_integration_error << std::endl;
-            this->log_output << std::endl;
 
             // Store positions
             this->positions_forward = this->positions;
@@ -153,13 +160,13 @@ namespace megamol
         {
             this->log_output << "Initializing computation from previous results..." << std::endl;
             this->log_output << "Resolution:                            " << this->resolution[0] << " x " << this->resolution[1] << std::endl;
-            this->log_output << "Domain:                                " << "[" << this->domain[0] << ", " << this->domain[1] << "] x [" << this->domain[2] << ", " << this->domain[3] << "]" << std::endl;
+            this->log_output << "Domain:                                " << "[" << this->domain[0] << ", " << this->domain[1] << "] x " <<
+                                                                             "[" << this->domain[2] << ", " << this->domain[3] << "]" << std::endl;
             this->log_output << "Number of convergence points:          " << this->point_ids.size() << std::endl;
             this->log_output << "Number of convergence lines:           " << this->line_ids.size() << std::endl;
             this->log_output << "Integration time step:                 " << this->integration_timestep << std::endl;
             this->log_output << "Maximum integration error:             " << this->max_integration_error << std::endl;
             this->log_output << "Previously performed steps:            " << this->num_integration_steps_performed << std::endl;
-            this->log_output << std::endl;
         }
 
         implicit_topology_computation::~implicit_topology_computation()
@@ -221,6 +228,12 @@ namespace megamol
             const float refinement_threshold, const bool refine_at_labels, const float distance_difference_threshold,
             const unsigned int num_particles_per_batch, const unsigned int num_integration_steps_per_batch)
         {
+            // Write output
+            this->log_output << "Refinement threshold:                  " << refinement_threshold << std::endl;
+            this->log_output << "Refinement at labels:                  " << (refine_at_labels ? "yes" : "no") << std::endl;
+            this->log_output << "Distance difference threshold:         " << distance_difference_threshold << std::endl;
+            this->log_output << std::endl;
+
             this->log_output << "Starting computation..." << std::endl;
             this->log_output << "Target number of integration steps:    " << num_integration_steps << std::endl;
             this->log_output << "Already performed integration steps:   " << this->num_integration_steps_performed << std::endl;
@@ -228,13 +241,77 @@ namespace megamol
             this->log_output << "Number of particles per batch:         " << num_particles_per_batch << std::endl;
             this->log_output << "Number of integration steps per batch: " << num_integration_steps_per_batch << std::endl;
             this->log_output << std::endl;
-            this->log_output << "Integrating stream lines..." << std::endl;
+
+            // Start computation initialization
+            const std::chrono::time_point<clock_t> time_start_total = clock_t::now();
+            const std::chrono::time_point<clock_t> time_start_initialization = clock_t::now();
 
             streamlines_cuda streamlines(this->resolution, this->domain, this->vectors, this->points, this->point_ids,
                 this->lines, this->line_ids, this->integration_timestep, this->max_integration_error);
 
+            this->performance_output << "Initialization:;" << std::chrono::duration_cast<duration_t>(clock_t::now() - time_start_initialization).count() << std::endl << std::endl;
+
+            // Initialize performance measure and output
+            this->total_time = this->total_time_integration = this->total_time_refinement = duration_t::zero();
+            this->performance_num_particles_added = 0;
+
+            this->performance_output << "Grid refinement " << duration_str << ";";
+            this->performance_output << "Number of points;";
+            this->performance_output << "Number of integration steps;";
+            this->performance_output << "Stream line integration " << duration_str << ";";
+            this->performance_output << "Total " << duration_str << std::endl;
+
+            const auto time_start_integration = clock_t::now();
+            const std::size_t performance_num_integration_steps = num_integration_steps - this->num_integration_steps_performed;
+
+            // Integrate stream lines
+            if (this->num_integration_steps_performed < num_integration_steps)
+            {
+                this->log_output << "Integrating stream lines..." << std::endl;
+
+                while (this->num_integration_steps_performed < num_integration_steps && !this->terminate_computation)
+                {
+                    const unsigned int num_steps = std::min(num_integration_steps - this->num_integration_steps_performed, num_integration_steps_per_batch);
+
+                    this->log_output << "Number of integration steps:           " << num_steps << "   "
+                        << this->num_integration_steps_performed << " / " << num_integration_steps << std::endl;
+
+                    streamlines.update_labels(this->positions_forward, this->labels_forward, this->distances_forward, this->terminations_forward,
+                        num_steps, 1.0f, num_particles_per_batch);
+
+                    streamlines.update_labels(this->positions_backward, this->labels_backward, this->distances_backward, this->terminations_backward,
+                        num_steps, -1.0f, num_particles_per_batch);
+
+                    this->num_integration_steps_performed += num_steps;
+
+                    // Set (intermediate) result, and prepare new one
+                    set_result(promise, this->terminate_computation);
+
+                    if (!this->terminate_computation)
+                    {
+                        std::swap(promise, std::promise<result>());
+
+                        this->current_result = promise.get_future().share();
+                    }
+                }
+
+                this->log_output << "Number of integration steps:           " << "-" << "   "
+                    << num_integration_steps << " / " << num_integration_steps << std::endl;
+
+                this->log_output << "Finished integration!" << std::endl << std::endl;
+
+                // Performance output
+                this->total_time = this->total_time_integration = std::chrono::duration_cast<duration_t>(clock_t::now() - time_start_integration);
+
+                this->performance_output << "-;";
+                this->performance_output << this->labels_forward.size() << ";";
+                this->performance_output << performance_num_integration_steps << ";";
+                this->performance_output << this->total_time_integration.count() << ";";
+                this->performance_output << this->total_time.count() << std::endl;
+            }
+
+            // Alternatingly perform grid refinement and stream line integration
             bool finished = false;
-            bool finished_integration = false;
             bool finished_refined_integration = true;
 
             std::vector<float> new_positions_forward;
@@ -251,131 +328,138 @@ namespace megamol
 
             unsigned int num_refined_integration_steps;
 
+            duration_t time_refinement;
+            std::chrono::time_point<clock_t> time_start_refined_integration;
+
             while (!finished && !this->terminate_computation)
             {
-                // Integrate stream lines
-                if (!finished_integration)
-                {
-                    const unsigned int num_steps = std::min(num_integration_steps - this->num_integration_steps_performed, num_integration_steps_per_batch);
-
-                    this->log_output << "Number of integration steps:           " << num_steps << "   " << this->num_integration_steps_performed << " / " << num_integration_steps << std::endl;
-
-                    streamlines.update_labels(this->positions_forward, this->labels_forward, this->distances_forward, this->terminations_forward,
-                        num_steps, 1.0f, num_particles_per_batch);
-
-                    streamlines.update_labels(this->positions_backward, this->labels_backward, this->distances_backward, this->terminations_backward,
-                        num_steps, -1.0f, num_particles_per_batch);
-
-                    this->num_integration_steps_performed += num_steps;
-
-                    // Check if all integration steps have been performed
-                    if (this->num_integration_steps_performed >= num_integration_steps)
-                    {
-                        this->log_output << "Finished integration!" << std::endl << std::endl;
-
-                        finished_integration = true;
-                    }
-                }
-
                 // Refine grid
-                if (finished_integration)
+                if (finished_refined_integration)
                 {
-                    if (finished_refined_integration)
+                    const auto time_start_refinement = clock_t::now();
+
+                    // Refine grid and get new seed points
+                    new_positions_forward = new_positions_backward = refine_grid(refinement_threshold, refine_at_labels, distance_difference_threshold);
+
+                    // Performance output
+                    time_refinement = std::chrono::duration_cast<duration_t>(clock_t::now() - time_start_refinement);
+
+                    this->total_time += time_refinement;
+                    this->total_time_refinement += time_refinement;
+
+                    this->performance_output << time_refinement.count() << ";";
+                    this->performance_output << (new_positions_forward.size() / 2) << ";" << std::flush;
+
+                    this->performance_num_particles_added += new_positions_forward.size() / 2;
+
+                    // Check if new points have been added; if not, the computation is finished
+                    if (new_positions_forward.empty())
                     {
-                        // Refine grid and get new seed points
-                        new_positions_forward = new_positions_backward = refine_grid(refinement_threshold, refine_at_labels, distance_difference_threshold);
+                        this->performance_output << "-;-;" << time_refinement.count() << std::endl;
 
-                        // Check if new points have been added; if not, the computation is finished
-                        if (new_positions_forward.empty())
-                        {
-                            finished = true;
-                        }
-                        else
-                        {
-                            // Create output fields
-                            new_labels_forward.resize(new_positions_forward.size() / 2);
-                            new_labels_backward.resize(new_positions_backward.size() / 2);
-
-                            new_distances_forward.resize(new_positions_forward.size() / 2);
-                            new_distances_backward.resize(new_positions_backward.size() / 2);
-
-                            new_terminations_forward.resize(new_positions_forward.size() / 2);
-                            new_terminations_backward.resize(new_positions_backward.size() / 2);
-
-                            // Initialize output fields
-                            std::fill(new_labels_forward.begin(), new_labels_forward.end(), -1.0f);
-                            std::fill(new_labels_backward.begin(), new_labels_backward.end(), -1.0f);
-
-                            std::fill(new_distances_forward.begin(), new_distances_forward.end(), std::numeric_limits<float>::max());
-                            std::fill(new_distances_backward.begin(), new_distances_backward.end(), std::numeric_limits<float>::max());
-
-                            std::fill(new_terminations_forward.begin(), new_terminations_forward.end(), 0.0f);
-                            std::fill(new_terminations_backward.begin(), new_terminations_backward.end(), 0.0f);
-
-                            finished_refined_integration = false;
-
-                            num_refined_integration_steps = 0;
-
-                            this->log_output << "Integrating stream lines for new particles..." << std::endl;
-                        }
+                        finished = true;
                     }
                     else
                     {
-                        // Integrate stream lines for newly added seed
-                        const unsigned int num_steps = std::min(num_integration_steps - num_refined_integration_steps, num_integration_steps_per_batch);
+                        // Create output fields
+                        new_labels_forward.resize(new_positions_forward.size() / 2);
+                        new_labels_backward.resize(new_positions_backward.size() / 2);
 
-                        this->log_output << "Number of integration steps:           " << num_steps << "   " << num_refined_integration_steps << " / " << num_integration_steps << std::endl;
+                        new_distances_forward.resize(new_positions_forward.size() / 2);
+                        new_distances_backward.resize(new_positions_backward.size() / 2);
 
-                        streamlines.update_labels(new_positions_forward, new_labels_forward, new_distances_forward, new_terminations_forward,
-                            num_steps, 1.0f, num_particles_per_batch);
+                        new_terminations_forward.resize(new_positions_forward.size() / 2);
+                        new_terminations_backward.resize(new_positions_backward.size() / 2);
 
-                        streamlines.update_labels(new_positions_backward, new_labels_backward, new_distances_backward, new_terminations_backward,
-                            num_steps, -1.0f, num_particles_per_batch);
+                        // Initialize output fields
+                        std::fill(new_labels_forward.begin(), new_labels_forward.end(), -1.0f);
+                        std::fill(new_labels_backward.begin(), new_labels_backward.end(), -1.0f);
 
-                        num_refined_integration_steps += num_steps;
+                        std::fill(new_distances_forward.begin(), new_distances_forward.end(), std::numeric_limits<float>::max());
+                        std::fill(new_distances_backward.begin(), new_distances_backward.end(), std::numeric_limits<float>::max());
 
-                        // Check if all integration steps have been performed
-                        if (num_refined_integration_steps >= num_integration_steps)
-                        {
-                            this->log_output << "Finished integration for new particles!" << std::endl << std::endl;
+                        std::fill(new_terminations_forward.begin(), new_terminations_forward.end(), 0.0f);
+                        std::fill(new_terminations_backward.begin(), new_terminations_backward.end(), 0.0f);
 
-                            // Merge positions and output arrays
-                            this->positions_forward.insert(this->positions_forward.end(), new_positions_forward.begin(), new_positions_forward.end());
-                            this->positions_backward.insert(this->positions_backward.end(), new_positions_backward.begin(), new_positions_backward.end());
+                        finished_refined_integration = false;
 
-                            this->labels_forward.insert(this->labels_forward.end(), new_labels_forward.begin(), new_labels_forward.end());
-                            this->labels_backward.insert(this->labels_backward.end(), new_labels_backward.begin(), new_labels_backward.end());
+                        num_refined_integration_steps = 0;
 
-                            this->distances_forward.insert(this->distances_forward.end(), new_distances_forward.begin(), new_distances_forward.end());
-                            this->distances_backward.insert(this->distances_backward.end(), new_distances_backward.begin(), new_distances_backward.end());
+                        // Performance output and measure initialization
+                        this->log_output << "Integrating stream lines for new particles..." << std::endl;
 
-                            this->terminations_forward.insert(this->terminations_forward.end(), new_terminations_forward.begin(), new_terminations_forward.end());
-                            this->terminations_backward.insert(this->terminations_backward.end(), new_terminations_backward.begin(), new_terminations_backward.end());
+                        time_start_refined_integration = clock_t::now();
+                    }
+                }
+                else
+                {
+                    // Integrate stream lines for newly added seed
+                    const unsigned int num_steps = std::min(num_integration_steps - num_refined_integration_steps, num_integration_steps_per_batch);
 
-                            finished_refined_integration = true;
-                        }
+                    this->log_output << "Number of integration steps:           " << num_steps << "   "
+                                     << num_refined_integration_steps << " / " << num_integration_steps << std::endl;
+
+                    streamlines.update_labels(new_positions_forward, new_labels_forward, new_distances_forward, new_terminations_forward,
+                        num_steps, 1.0f, num_particles_per_batch);
+
+                    streamlines.update_labels(new_positions_backward, new_labels_backward, new_distances_backward, new_terminations_backward,
+                        num_steps, -1.0f, num_particles_per_batch);
+
+                    num_refined_integration_steps += num_steps;
+
+                    // Check if all integration steps have been performed
+                    if (num_refined_integration_steps >= num_integration_steps)
+                    {
+                        this->log_output << "Finished integration for new particles!" << std::endl << std::endl;
+
+                        // Performance output
+                        const auto time_integration = std::chrono::duration_cast<duration_t>(clock_t::now() - time_start_refined_integration);
+
+                        this->total_time += time_integration;
+                        this->total_time_integration += time_integration;
+
+                        this->performance_output << num_integration_steps << ";";
+                        this->performance_output << time_integration.count() << ";";
+                        this->performance_output << (time_refinement + time_integration).count() << std::endl;
+
+                        // Merge positions and output arrays
+                        this->positions_forward.insert(this->positions_forward.end(), new_positions_forward.begin(), new_positions_forward.end());
+                        this->positions_backward.insert(this->positions_backward.end(), new_positions_backward.begin(), new_positions_backward.end());
+
+                        this->labels_forward.insert(this->labels_forward.end(), new_labels_forward.begin(), new_labels_forward.end());
+                        this->labels_backward.insert(this->labels_backward.end(), new_labels_backward.begin(), new_labels_backward.end());
+
+                        this->distances_forward.insert(this->distances_forward.end(), new_distances_forward.begin(), new_distances_forward.end());
+                        this->distances_backward.insert(this->distances_backward.end(), new_distances_backward.begin(), new_distances_backward.end());
+
+                        this->terminations_forward.insert(this->terminations_forward.end(), new_terminations_forward.begin(), new_terminations_forward.end());
+                        this->terminations_backward.insert(this->terminations_backward.end(), new_terminations_backward.begin(), new_terminations_backward.end());
+
+                        finished_refined_integration = true;
                     }
                 }
 
                 // Set (intermediate) results
-                if (finished_refined_integration)
+                if (finished_refined_integration || finished || this->terminate_computation)
                 {
                     set_result(promise, finished || this->terminate_computation);
                 }
 
                 // Prepare new results
-                if (!finished && finished_refined_integration)
+                if (!finished && finished_refined_integration && !this->terminate_computation)
                 {
                     std::swap(promise, std::promise<result>());
 
                     this->current_result = promise.get_future().share();
                 }
-
-                // Prevent blocking of CPU
-                std::this_thread::sleep_for(std::chrono::milliseconds(10));
             }
 
             this->log_output << "Finished computation!" << (this->terminate_computation ? " (terminated)" : "") << std::endl << std::endl;
+
+            // Performance output
+            this->total_runtime = std::chrono::duration_cast<duration_t>(clock_t::now() - time_start_total);
+
+            print_performance(num_integration_steps);
         }
 
         void implicit_topology_computation::set_result(std::promise<result>& promise, const bool finished)
@@ -409,9 +493,6 @@ namespace megamol
             const bool refine_at_labels, const float distance_difference_threshold)
         {
             this->log_output << "Refining grid..." << std::endl;
-            this->log_output << "Refinement threshold:                  " << refinement_threshold << std::endl;
-            this->log_output << "Refinement at labels:                  " << (refine_at_labels ? "yes" : "no") << std::endl;
-            this->log_output << "Distance difference threshold:         " << distance_difference_threshold << std::endl;
 
             // Find and mark points where the edges should be refined
             std::unordered_set<std::size_t> marked_points;
@@ -551,5 +632,25 @@ namespace megamol
 
             return new_points_gl;
         }
+
+        void implicit_topology_computation::print_performance(const unsigned int num_integration_steps) const
+        {
+            this->performance_output << std::endl;
+
+            this->performance_output << "Total number of points;";
+            this->performance_output << "Number of integration steps;";
+            this->performance_output << "Stream line integrations " << duration_str << ";";
+            this->performance_output << "Grid refinements " << duration_str << ";";
+            this->performance_output << "Total " << duration_str << std::endl;
+
+            this->performance_output << this->performance_num_particles_added << ";";
+            this->performance_output << num_integration_steps << ";";
+            this->performance_output << this->total_time_integration.count() << ";";
+            this->performance_output << this->total_time_refinement.count() << ";";
+            this->performance_output << this->total_time.count() << std::endl;
+            this->performance_output << "-;-;-;-;" << this->total_runtime.count() << std::endl;
+        }
+
+        const char* implicit_topology_computation::duration_str = "[ms]";
     }
 }
