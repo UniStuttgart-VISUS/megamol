@@ -1707,6 +1707,8 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
         } else if (auto* p = slot.template Param<core::param::LinearTransferFunctionParam>()) {
             auto value = p->Value();
 
+            ImGui::Separator();
+
             ImGui::Text(pname.c_str());
             ImGui::SameLine();
 
