@@ -11,6 +11,7 @@
 #include "vislib/StringConverter.h"
 #include "vislib/UTF8Encoder.h"
 #include <set>
+#include <string>
 
 using namespace megamol::core::param;
 

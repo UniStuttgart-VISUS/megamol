@@ -15,6 +15,7 @@
 #include "AbstractParam.h"
 //#include "vislib/Map.h"
 #include <set>
+#include <string>
 #include "vislib/String.h"
 #include "vislib/tchar.h"
 
