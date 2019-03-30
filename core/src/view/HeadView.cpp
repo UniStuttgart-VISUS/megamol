@@ -217,7 +217,7 @@ bool view::HeadView::OnMouseButton(MouseButton button, MouseButtonAction action,
 }
 
 
-bool view::HeadView::OnMouseMove(double x, double y, double world_x, double world_y) {
+bool view::HeadView::OnMouseMove(double x, double y) {
 
     CallRenderView *view = this->viewSlot.CallAs<CallRenderView>();
 
@@ -226,8 +226,6 @@ bool view::HeadView::OnMouseMove(double x, double y, double world_x, double worl
         evt.tag = InputEvent::Tag::MouseMove;
         evt.mouseMoveData.x = x;
         evt.mouseMoveData.y = y;
-        evt.mouseMoveData.world_x = world_x;
-        evt.mouseMoveData.world_y = world_y;
 
         view->SetInputEvent(evt);
 
