@@ -1,5 +1,5 @@
 /*
- * AbstractCallbackWriter.h
+ * AbstractCallbackReader.h
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
@@ -7,8 +7,8 @@
 #pragma once
 
 #include "mmcore/AbstractCallbackCall.h"
-#include "mmcore/CallerSlot.h"
-#include "mmcore/job/AbstractTickJob.h"
+#include "mmcore/CalleeSlot.h"
+#include "mmcore/Module.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/ParamSlot.h"
 
@@ -48,28 +48,28 @@ namespace megamol {
 namespace core {
 
     /**
-    * Abstract class for implementing a writer based on a callback.
+    * Abstract class for implementing a reader based on a callback.
     *
     * @author Alexander Straub
     */
-    template <typename CallDescT, typename... ContentT>
-    class AbstractCallbackWriter : public job::AbstractTickJob {
+    template <typename CallT, typename... ContentT>
+    class AbstractCallbackReader : public core::Module {
 
     public:
         using FunctionT = std::function<bool(ContentT...)>;
 
-        static_assert(std::is_base_of<AbstractCallbackCall<FunctionT>, typename CallDescT::CallT>::value,
+        static_assert(std::is_base_of<AbstractCallbackCall<FunctionT>, CallT>::value,
             "Call not derived from AbstractCallbackCall, or using wrong template parameter.");
 
         /**
         * Constructor
         */
-        AbstractCallbackWriter() :
-            inputSlot("input", "Slot for providing a callback"),
+        AbstractCallbackReader() :
+            outputSlot("output", "Slot for providing a callback"),
             filePathSlot("outputFile", "Path to file which should be written into") {
             
-            this->inputSlot.SetCompatibleCall<CallDescT>();
-            this->MakeSlotAvailable(&this->inputSlot);
+            this->outputSlot.SetCallback(CallT::ClassName(), CallT::FunctionName(0), &AbstractCallbackReader::SetCallback);
+            this->MakeSlotAvailable(&this->outputSlot);
 
             this->filePathSlot << new param::FilePathParam("");
             this->MakeSlotAvailable(&this->filePathSlot);
@@ -78,7 +78,7 @@ namespace core {
         /**
         * Destructor
         */
-        virtual ~AbstractCallbackWriter() {
+        virtual ~AbstractCallbackReader() {
             this->Release();
         }
 
@@ -103,21 +103,19 @@ namespace core {
         *
         * @return 'true' on success, 'false' otherwise.
         */
-        virtual bool write(const std::string& path, ContentT... content) = 0;
+        virtual bool read(const std::string& path, ContentT... content) = 0;
 
         /**
-         * Starts the job.
+         * Callback for handling the callback request.
          *
-         * @return true if the job has been successfully started.
+         * @return 'true' on success, 'false' otherwise.
          */
-        virtual bool run() final {
-            auto* call = this->inputSlot.CallAs<AbstractCallbackCall<FunctionT>>();
+        bool SetCallback(Call& call) {
+            auto* callbackCall = dynamic_cast<AbstractCallbackCall<FunctionT>*>(&call);
 
-            if (call != nullptr)
+            if (callbackCall != nullptr)
             {
-                call->SetCallback(bind(&AbstractCallbackWriter::Write, this));
-
-                return (*call)(0);
+                callbackCall->SetCallback(bind(&AbstractCallbackReader::Read, this));
             }
 
             return true;
@@ -125,18 +123,18 @@ namespace core {
 
     private:
         /**
-        * Callback function for writing data to file.
+        * Callback function for reading data from file.
         *
-        * @param content Content to write
+        * @param content Content to fill
         *
         * @return 'true' on success, 'false' otherwise.
         */
-        bool Write(ContentT... content) {
-            return write(static_cast<std::string>(this->filePathSlot.template Param<param::FilePathParam>()->Value()), content...);
+        bool Read(ContentT... content) {
+            return read(static_cast<std::string>(this->filePathSlot.template Param<param::FilePathParam>()->Value()), content...);
         }
 
-        /** Input slot */
-        CallerSlot inputSlot;
+        /** Output slot */
+        CalleeSlot outputSlot;
 
         /** File path parameter */
         param::ParamSlot filePathSlot;

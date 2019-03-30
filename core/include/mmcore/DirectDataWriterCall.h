@@ -6,7 +6,7 @@
  */
 #pragma once
 
-#include "mmcore/AbstractDataWriterCall.h"
+#include "mmcore/AbstractCallbackCall.h"
 #include "mmcore/factories/CallAutoDescription.h"
 
 #include <functional>
@@ -20,7 +20,7 @@ namespace core {
     *
     * @author Alexander Straub
     */
-    class MEGAMOLCORE_API DirectDataWriterCall : public AbstractDataWriterCall<std::function<std::ostream&()>> {
+    class MEGAMOLCORE_API DirectDataWriterCall : public AbstractCallbackCall<std::function<std::ostream&()>> {
 
     public:
         typedef factories::CallAutoDescription<DirectDataWriterCall> DirectDataWriterDescription;
