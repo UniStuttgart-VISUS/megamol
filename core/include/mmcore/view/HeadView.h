@@ -167,6 +167,9 @@ private:
 
     /** Connection to a module in desperate need for an invocation */
     CallerSlot tickSlot;
+
+    /** Window width and height */
+    unsigned int width, height;
 };
 
 } /* end namespace view */

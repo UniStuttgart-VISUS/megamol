@@ -78,14 +78,13 @@ void view::HeadView::DeserialiseCamera(vislib::Serialiser& serialiser) {
  * view::HeadView::Render
  */
 void view::HeadView::Render(const mmcRenderViewContext& context) {
-    float time = static_cast<float>(context.Time);
-    double instTime = context.InstanceTime;
-
     CallRenderView *view = this->viewSlot.CallAs<CallRenderView>();
 
     if (view != nullptr) {
-        view->SetInstanceTime(instTime);
-        view->SetTime(-1.0f);
+        view->SetInstanceTime(context.InstanceTime);
+        view->SetTime(static_cast<float>(context.Time));
+
+        const_cast<vislib::math::Rectangle<int>&>(view->GetViewport()).Set(0, 0, this->width, this->height);
 
         (*view)(CallRenderView::CALL_RENDER);
     }
@@ -114,6 +113,9 @@ void view::HeadView::ResetView(void) {
  */
 void view::HeadView::Resize(unsigned int width, unsigned int height) {
     CallRenderView *view = this->viewSlot.CallAs<CallRenderView>();
+
+    this->width = width;
+    this->height = height;
 
     if (view != nullptr) {
         AbstractView *abstract_view = const_cast<AbstractView*>(dynamic_cast<const AbstractView *>(static_cast<const Module*>(view->PeekCalleeSlot()->Owner())));
