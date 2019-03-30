@@ -6,10 +6,10 @@
  */
 #pragma once
 
+#include "implicit_topology_call.h"
 #include "implicit_topology_results.h"
 
 #include "mmcore/AbstractCallbackWriter.h"
-#include "mmcore/CallerSlot.h"
 
 namespace megamol
 {
@@ -20,7 +20,8 @@ namespace megamol
         *
         * @author Alexander Straub
         */
-        class implicit_topology_writer : public core::AbstractCallbackWriter<const implicit_topology_results&>
+        class implicit_topology_writer : public core::AbstractCallbackWriter<
+            implicit_topology_writer_call::implicit_topology_writer_description, const implicit_topology_results&>
         {
         public:
             /**
@@ -72,7 +73,7 @@ namespace megamol
             *
             * @return true if the job has been successfully started.
             */
-            virtual void write(const std::string& filename, const implicit_topology_results& content) override;
+            virtual bool write(const std::string& filename, const implicit_topology_results& content) override;
         };
     }
 }

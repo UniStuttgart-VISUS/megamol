@@ -93,8 +93,8 @@ namespace megamol
             bool get_data_extent_callback(core::Call& call);
 
             /** Callback for the result writer */
-            bool get_results_cb_callback(core::Call& call);
-            // TODO
+            bool get_result_writer_cb_callback(core::Call& call);
+            std::function<bool(const implicit_topology_results&)> get_result_writer_callback;
 
             /** Callbacks for the log stream */
             bool get_log_cb_callback(core::Call& call);
@@ -108,6 +108,8 @@ namespace megamol
             bool start_computation_callback(core::param::ParamSlot& parameter = core::param::ParamSlot("", ""));
             bool stop_computation_callback(core::param::ParamSlot& parameter = core::param::ParamSlot("", ""));
             bool reset_computation_callback(core::param::ParamSlot& parameter = core::param::ParamSlot("", ""));
+            bool load_computation_callback(core::param::ParamSlot& parameter = core::param::ParamSlot("", ""));
+            bool save_computation_callback(core::param::ParamSlot& parameter = core::param::ParamSlot("", ""));
 
             /**
             * Initialize computation.
@@ -115,6 +117,23 @@ namespace megamol
             * @return Success
             */
             bool initialize_computation();
+
+            /**
+            * Load input from file.
+            *
+            * @param resolution   Domain resolution (number of vectors per direction)
+            * @param domain       Domain size (minimum and maximum coordinates)
+            * @param positions    Positions of the vectors, also used as initial seed
+            * @param vectors      Vectors of the vector field
+            * @param points       Convergence structure points (e.g., critical points, periodic orbits, ...)
+            * @param point_ids    Unique IDs (or labels) of the given points
+            * @param lines        Convergence structure lines (e.g., domain boundaries, obstacles, ...)
+            * @param line_ids     (Unique) IDs (or labels) of the given lines
+            *
+            * @return Success
+            */
+            bool load_input(std::array<int, 2>& resolution, std::array<float, 4>& domain, std::vector<float>& positions, std::vector<float>& vectors,
+                std::vector<float>& points, std::vector<int>& point_ids, std::vector<float>& lines, std::vector<int>& line_ids);
 
             /**
             * Update results obtained from computation.
@@ -142,16 +161,21 @@ namespace megamol
             core::CalleeSlot mesh_data_slot;
 
             /** Output slot for writing results to file */
-            core::CalleeSlot results_slot;
+            core::CalleeSlot result_writer_slot;
 
             /** Output slots for logging */
             core::CalleeSlot log_slot;
             core::CalleeSlot performance_slot;
 
+            /** Output slot for reading results from file */
+            core::CallerSlot result_reader_slot;
+
             /** Start or reset the computation */
             core::param::ParamSlot start_computation;
             core::param::ParamSlot stop_computation;
             core::param::ParamSlot reset_computation;
+            core::param::ParamSlot load_computation;
+            core::param::ParamSlot save_computation;
 
             /** Path to input vector field, and input convergence structures */
             core::param::ParamSlot vector_field_path;

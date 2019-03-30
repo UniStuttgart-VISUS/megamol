@@ -1,7 +1,9 @@
 #include "stdafx.h"
 #include "implicit_topology.h"
 
+#include "implicit_topology_call.h"
 #include "implicit_topology_computation.h"
+#include "implicit_topology_results.h"
 #include "mesh_data_call.h"
 #include "triangle_mesh_call.h"
 #include "triangulation.h"
@@ -17,8 +19,6 @@
 
 #include "vislib/math/Rectangle.h"
 #include "vislib/sys/Log.h"
-
-#include "glad/glad.h"
 
 #include <algorithm>
 #include <chrono>
@@ -37,12 +37,15 @@ namespace megamol
         implicit_topology::implicit_topology() :
             triangle_mesh_slot("set_triangle_mesh", "Triangle mesh output"),
             mesh_data_slot("set_mesh_data", "Mesh data output"),
-            results_slot("results_slot", "Results output slot"),
+            result_writer_slot("result_writer_slot", "Results output slot"),
             log_slot("log_slot", "Log output slot"),
             performance_slot("performance_slot", "Performance log output slot"),
+            result_reader_slot("result_reader_slot", "Results input slot"),
             start_computation("start_computation", "Start the computation"),
             stop_computation("stop_computation", "Stop the computation"),
             reset_computation("reset_computation", "Reset the computation"),
+            load_computation("load_computation", "Load computation from file"),
+            save_computation("save_computation", "Save computation to file"),
             vector_field_path("vector_field_path", "Path to the input vector field"),
             convergence_structures_path("convergence_structures_path", "Path to the input convergence structures"),
             label_transfer_function("label_transfer_function", "Transfer function for labels"),
@@ -67,10 +70,11 @@ namespace megamol
             this->mesh_data_slot.SetCallback(mesh_data_call::ClassName(), mesh_data_call::FunctionName(1), &implicit_topology::get_data_extent_callback);
             this->MakeSlotAvailable(&this->mesh_data_slot);
 
-            this->results_slot.SetCallback(triangle_mesh_call::ClassName(), triangle_mesh_call::FunctionName(0), &implicit_topology::get_results_cb_callback);
-            //this->MakeSlotAvailable(&this->results_slot);
-            // TODO
-
+            this->result_writer_slot.SetCallback(implicit_topology_writer_call::ClassName(), implicit_topology_writer_call::FunctionName(0), &implicit_topology::get_result_writer_cb_callback);
+            this->MakeSlotAvailable(&this->result_writer_slot);
+            this->get_result_writer_callback = [](const implicit_topology_results&) -> bool
+                { vislib::sys::Log::DefaultLog.WriteWarn("Cannot write results. Writer module not connected!"); return true; };
+            
             this->log_slot.SetCallback(core::DirectDataWriterCall::ClassName(), core::DirectDataWriterCall::FunctionName(0), &implicit_topology::get_log_cb_callback);
             this->MakeSlotAvailable(&this->log_slot);
             this->get_log_callback = []() -> std::ostream& { static std::ostream dummy(nullptr); return dummy; };
@@ -78,6 +82,10 @@ namespace megamol
             this->performance_slot.SetCallback(core::DirectDataWriterCall::ClassName(), core::DirectDataWriterCall::FunctionName(0), &implicit_topology::get_performance_cb_callback);
             this->MakeSlotAvailable(&this->performance_slot);
             this->get_performance_callback = []() -> std::ostream& { static std::ostream dummy(nullptr); return dummy; };
+
+            // Connect input
+            this->result_reader_slot.SetCompatibleCall<implicit_topology_reader_call::implicit_topology_reader_description>();
+            this->MakeSlotAvailable(&this->result_reader_slot);
 
             // Create path parameters
             this->vector_field_path << new core::param::FilePathParam("");
@@ -123,6 +131,14 @@ namespace megamol
             this->reset_computation << new core::param::ButtonParam();
             this->reset_computation.SetUpdateCallback(&implicit_topology::reset_computation_callback);
             this->MakeSlotAvailable(&this->reset_computation);
+
+            this->load_computation << new core::param::ButtonParam();
+            this->load_computation.SetUpdateCallback(&implicit_topology::load_computation_callback);
+            this->MakeSlotAvailable(&this->load_computation);
+
+            this->save_computation << new core::param::ButtonParam();
+            this->save_computation.SetUpdateCallback(&implicit_topology::save_computation_callback);
+            this->MakeSlotAvailable(&this->save_computation);
 
             // Create transfer function parameters
             this->label_transfer_function << new core::param::LinearTransferFunctionParam(
@@ -170,151 +186,173 @@ namespace megamol
             // Try to load input vector field
             if (this->computation == nullptr)
             {
-                std::ifstream vectors_ifs(this->vector_field_path.Param<core::param::FilePathParam>()->Value(), std::ios_base::in | std::ios_base::binary);
-                std::ifstream structures_ifs(this->convergence_structures_path.Param<core::param::FilePathParam>()->Value(), std::ios_base::in | std::ios_base::binary);
+                std::array<int, 2> resolution;
+                std::array<float, 4> domain;
+                
+                std::vector<float> positions;
+                std::vector<float> vectors;
+                std::vector<float> points;
+                std::vector<int> point_ids;
+                std::vector<float> lines;
+                std::vector<int> line_ids;
 
-                if (vectors_ifs.good() && structures_ifs.good())
+                if (load_input(resolution, domain, positions, vectors, points, point_ids, lines, line_ids))
                 {
-                    // Get dimension from file
-                    unsigned int dimension, components;
-
-                    vectors_ifs.read(reinterpret_cast<char*>(&dimension), sizeof(unsigned int));
-                    vectors_ifs.read(reinterpret_cast<char*>(&components), sizeof(unsigned int));
-
-                    if (dimension != 2)
-                    {
-                        vislib::sys::Log::DefaultLog.WriteError("Vector field file must have exactly two dimensions '%s'",
-                            this->vector_field_path.Param<core::param::FilePathParam>()->Value());
-
-                        return false;
-                    }
-
-                    if (components != 2)
-                    {
-                        vislib::sys::Log::DefaultLog.WriteError("Vectors must have exactly two components '%s'",
-                            this->vector_field_path.Param<core::param::FilePathParam>()->Value());
-
-                        return false;
-                    }
-
-                    // Read extents from file
-                    float x_min, x_max, y_min, y_max;
-                    unsigned int x_num, y_num, num;
-
-                    vectors_ifs.read(reinterpret_cast<char*>(&x_num), sizeof(unsigned int));
-                    vectors_ifs.read(reinterpret_cast<char*>(&x_min), sizeof(float));
-                    vectors_ifs.read(reinterpret_cast<char*>(&x_max), sizeof(float));
-                    vectors_ifs.read(reinterpret_cast<char*>(&y_num), sizeof(unsigned int));
-                    vectors_ifs.read(reinterpret_cast<char*>(&y_min), sizeof(float));
-                    vectors_ifs.read(reinterpret_cast<char*>(&y_max), sizeof(float));
-
-                    num = x_num * y_num;
-
-                    // Read file content
-                    const float x_step = (x_max - x_min) / (x_num - 1);
-                    const float y_step = (y_max - y_min) / (y_num - 1);
-
-                    std::vector<GLfloat> positions(num * 2);
-                    std::vector<GLfloat> vectors(num * 2);
-
-                    for (unsigned int y = 0; y < y_num; ++y)
-                    {
-                        for (unsigned int x = 0; x < x_num; ++x)
-                        {
-                            const unsigned int xy = y * x_num + x;
-
-                            // Calculate positions
-                            const float x_pos = x_min + x * x_step;
-                            const float y_pos = y_min + y * y_step;
-
-                            positions[xy * 2 + 0] = x_pos;
-                            positions[xy * 2 + 1] = y_pos;
-
-                            // Read vectors
-                            vectors_ifs.read(reinterpret_cast<char*>(&vectors[xy * 2 + 0]), sizeof(float));
-                            vectors_ifs.read(reinterpret_cast<char*>(&vectors[xy * 2 + 1]), sizeof(float));
-                        }
-                    }
-
-                    vectors_ifs.close();
-
-                    // Load convergence structures
-                    unsigned int num_convergence_structures;
-
-                    structures_ifs.read(reinterpret_cast<char*>(&num_convergence_structures), sizeof(unsigned int));
-
-                    std::vector<GLfloat> points, lines;
-                    std::vector<int> point_ids, line_ids;
-
-                    points.reserve(2 * num_convergence_structures);
-                    lines.reserve(4 * num_convergence_structures);
-
-                    point_ids.reserve(num_convergence_structures);
-                    line_ids.reserve(num_convergence_structures);
-
-                    for (unsigned int i = 0; i < num_convergence_structures; ++i)
-                    {
-                        unsigned int type;
-                        structures_ifs.read(reinterpret_cast<char*>(&type), sizeof(unsigned int));
-
-                        float value;
-
-                        switch (type)
-                        {
-                        case 0: // Point
-                            structures_ifs.read(reinterpret_cast<char*>(&value), sizeof(float));
-                            points.push_back(value);
-                            structures_ifs.read(reinterpret_cast<char*>(&value), sizeof(float));
-                            points.push_back(value);
-
-                            point_ids.push_back(i);
-
-                            break;
-                        case 1: // Line
-                            structures_ifs.read(reinterpret_cast<char*>(&value), sizeof(float));
-                            lines.push_back(value);
-                            structures_ifs.read(reinterpret_cast<char*>(&value), sizeof(float));
-                            lines.push_back(value);
-
-                            structures_ifs.read(reinterpret_cast<char*>(&value), sizeof(float));
-                            lines.push_back(value);
-                            structures_ifs.read(reinterpret_cast<char*>(&value), sizeof(float));
-                            lines.push_back(value);
-
-                            line_ids.push_back(i);
-
-                            break;
-                        default:
-                            vislib::sys::Log::DefaultLog.WriteError("Unknown convergence structure type in file '%s'!",
-                                this->convergence_structures_path.Param<core::param::FilePathParam>()->Value());
-
-                            return false;
-                        }
-                    }
-
                     // Create new computation object
                     this->computation = std::make_unique<implicit_topology_computation>(this->get_log_callback(), this->get_performance_callback(),
-                        std::array<int, 2>{ static_cast<int>(x_num), static_cast<int>(y_num) }, std::array<float, 4>{ x_min, x_max, y_min, y_max },
-                        std::move(positions), std::move(vectors), std::move(points), std::move(point_ids), std::move(lines), std::move(line_ids),
-                        this->integration_timestep.Param<core::param::FloatParam>()->Value(),
+                        std::move(resolution), std::move(domain), std::move(positions), std::move(vectors), std::move(points), std::move(point_ids),
+                        std::move(lines), std::move(line_ids), this->integration_timestep.Param<core::param::FloatParam>()->Value(),
                         this->max_integration_error.Param<core::param::FloatParam>()->Value());
 
                     set_readonly_fixed_parameters(true);
+
+                    return true;
                 }
-                else if (!vectors_ifs.good())
+
+                return false;
+            }
+
+            return true;
+        }
+
+        bool implicit_topology::load_input(std::array<int, 2>& resolution, std::array<float, 4>& domain, std::vector<float>& positions,
+            std::vector<float>& vectors, std::vector<float>& points, std::vector<int>& point_ids, std::vector<float>& lines, std::vector<int>& line_ids)
+        {
+            std::ifstream vectors_ifs(this->vector_field_path.Param<core::param::FilePathParam>()->Value(), std::ios_base::in | std::ios_base::binary);
+            std::ifstream structures_ifs(this->convergence_structures_path.Param<core::param::FilePathParam>()->Value(), std::ios_base::in | std::ios_base::binary);
+
+            if (vectors_ifs.good() && structures_ifs.good())
+            {
+                // Get dimension from file
+                unsigned int dimension, components;
+
+                vectors_ifs.read(reinterpret_cast<char*>(&dimension), sizeof(unsigned int));
+                vectors_ifs.read(reinterpret_cast<char*>(&components), sizeof(unsigned int));
+
+                if (dimension != 2)
                 {
-                    vislib::sys::Log::DefaultLog.WriteWarn("Unable to open input vector field file '%s'!",
+                    vislib::sys::Log::DefaultLog.WriteError("Vector field file must have exactly two dimensions '%s'",
                         this->vector_field_path.Param<core::param::FilePathParam>()->Value());
 
                     return false;
                 }
-                else if (!structures_ifs.good())
+
+                if (components != 2)
                 {
-                    vislib::sys::Log::DefaultLog.WriteWarn("Unable to open input convergence structures file '%s'!",
-                        this->convergence_structures_path.Param<core::param::FilePathParam>()->Value());
+                    vislib::sys::Log::DefaultLog.WriteError("Vectors must have exactly two components '%s'",
+                        this->vector_field_path.Param<core::param::FilePathParam>()->Value());
 
                     return false;
                 }
+
+                // Read extents from file
+                float x_min, x_max, y_min, y_max;
+                unsigned int x_num, y_num, num;
+
+                vectors_ifs.read(reinterpret_cast<char*>(&x_num), sizeof(unsigned int));
+                vectors_ifs.read(reinterpret_cast<char*>(&x_min), sizeof(float));
+                vectors_ifs.read(reinterpret_cast<char*>(&x_max), sizeof(float));
+                vectors_ifs.read(reinterpret_cast<char*>(&y_num), sizeof(unsigned int));
+                vectors_ifs.read(reinterpret_cast<char*>(&y_min), sizeof(float));
+                vectors_ifs.read(reinterpret_cast<char*>(&y_max), sizeof(float));
+
+                num = x_num * y_num;
+
+                resolution = { static_cast<int>(x_num), static_cast<int>(y_num) };
+                domain = { x_min, x_max, y_min, y_max };
+
+                // Read file content
+                const float x_step = (x_max - x_min) / (x_num - 1);
+                const float y_step = (y_max - y_min) / (y_num - 1);
+
+                positions.resize(num * 2);
+                vectors.resize(num * 2);
+
+                for (unsigned int y = 0; y < y_num; ++y)
+                {
+                    for (unsigned int x = 0; x < x_num; ++x)
+                    {
+                        const unsigned int xy = y * x_num + x;
+
+                        // Calculate positions
+                        const float x_pos = x_min + x * x_step;
+                        const float y_pos = y_min + y * y_step;
+
+                        positions[xy * 2 + 0] = x_pos;
+                        positions[xy * 2 + 1] = y_pos;
+
+                        // Read vectors
+                        vectors_ifs.read(reinterpret_cast<char*>(&vectors[xy * 2 + 0]), sizeof(float));
+                        vectors_ifs.read(reinterpret_cast<char*>(&vectors[xy * 2 + 1]), sizeof(float));
+                    }
+                }
+
+                vectors_ifs.close();
+
+                // Load convergence structures
+                unsigned int num_convergence_structures;
+
+                structures_ifs.read(reinterpret_cast<char*>(&num_convergence_structures), sizeof(unsigned int));
+
+                points.reserve(2 * num_convergence_structures);
+                lines.reserve(4 * num_convergence_structures);
+
+                point_ids.reserve(num_convergence_structures);
+                line_ids.reserve(num_convergence_structures);
+
+                for (unsigned int i = 0; i < num_convergence_structures; ++i)
+                {
+                    unsigned int type;
+                    structures_ifs.read(reinterpret_cast<char*>(&type), sizeof(unsigned int));
+
+                    float value;
+
+                    switch (type)
+                    {
+                    case 0: // Point
+                        structures_ifs.read(reinterpret_cast<char*>(&value), sizeof(float));
+                        points.push_back(value);
+                        structures_ifs.read(reinterpret_cast<char*>(&value), sizeof(float));
+                        points.push_back(value);
+
+                        point_ids.push_back(i);
+
+                        break;
+                    case 1: // Line
+                        structures_ifs.read(reinterpret_cast<char*>(&value), sizeof(float));
+                        lines.push_back(value);
+                        structures_ifs.read(reinterpret_cast<char*>(&value), sizeof(float));
+                        lines.push_back(value);
+
+                        structures_ifs.read(reinterpret_cast<char*>(&value), sizeof(float));
+                        lines.push_back(value);
+                        structures_ifs.read(reinterpret_cast<char*>(&value), sizeof(float));
+                        lines.push_back(value);
+
+                        line_ids.push_back(i);
+
+                        break;
+                    default:
+                        vislib::sys::Log::DefaultLog.WriteError("Unknown convergence structure type in file '%s'!",
+                            this->convergence_structures_path.Param<core::param::FilePathParam>()->Value());
+
+                        return false;
+                    }
+                }
+            }
+            else if (!vectors_ifs.good())
+            {
+                vislib::sys::Log::DefaultLog.WriteWarn("Unable to open input vector field file '%s'!",
+                    this->vector_field_path.Param<core::param::FilePathParam>()->Value());
+
+                return false;
+            }
+            else if (!structures_ifs.good())
+            {
+                vislib::sys::Log::DefaultLog.WriteWarn("Unable to open input convergence structures file '%s'!",
+                    this->convergence_structures_path.Param<core::param::FilePathParam>()->Value());
+
+                return false;
             }
 
             return true;
@@ -331,7 +369,7 @@ namespace megamol
                     return;
                 }
 
-                vislib::sys::Log::DefaultLog.WriteInfo("Computation of stream lines yielded new results.");
+                vislib::sys::Log::DefaultLog.WriteInfo("Computation of topology yielded new results.");
 
                 // Store triangles
                 auto result = this->last_result.get();
@@ -351,7 +389,7 @@ namespace megamol
 
                 if (result.computation_state.finished)
                 {
-                    vislib::sys::Log::DefaultLog.WriteInfo("Computation of stream lines ended.");
+                    vislib::sys::Log::DefaultLog.WriteInfo("Computation of topology ended.");
 
                     // Reset parameters to read-write
                     set_readonly_variable_parameters(false);
@@ -652,9 +690,9 @@ namespace megamol
             return true;
         }
 
-        bool implicit_topology::get_results_cb_callback(core::Call& call)
+        bool implicit_topology::get_result_writer_cb_callback(core::Call& call)
         {
-            // TODO
+            this->get_result_writer_callback = dynamic_cast<implicit_topology_writer_call*>(&call)->GetCallback();
 
             return true;
         }
@@ -693,7 +731,7 @@ namespace megamol
 
             this->computation_running = true;
 
-            vislib::sys::Log::DefaultLog.WriteInfo("Computation of stream lines started...");
+            vislib::sys::Log::DefaultLog.WriteInfo("Computation of topology started...");
 
             // Set parameters to read-only
             set_readonly_variable_parameters(true);
@@ -708,7 +746,7 @@ namespace megamol
             {
                 this->computation->terminate();
 
-                vislib::sys::Log::DefaultLog.WriteInfo("Computation of stream lines terminated!");
+                vislib::sys::Log::DefaultLog.WriteInfo("Computation of topology terminated!");
             }
 
             this->computation_running = false;
@@ -728,6 +766,76 @@ namespace megamol
             // Reset parameters to read-write
             set_readonly_fixed_parameters(false);
             set_readonly_variable_parameters(false);
+
+            return true;
+        }
+
+        bool implicit_topology::load_computation_callback(core::param::ParamSlot&)
+        {
+            // Get load callback
+            auto* call = this->result_reader_slot.CallAs<implicit_topology_reader_call>();
+
+            if (call != nullptr && (*call)(0))
+            {
+                // Reset computation
+                reset_computation_callback();
+
+                // Load previous results
+                implicit_topology_results previous_results;
+
+                if (!call->GetCallback()(previous_results))
+                {
+                    return false;
+                }
+
+                // Load input from file
+                std::array<int, 2> resolution;
+                std::array<float, 4> domain;
+
+                std::vector<float> positions;
+                std::vector<float> vectors;
+                std::vector<float> points;
+                std::vector<int> point_ids;
+                std::vector<float> lines;
+                std::vector<int> line_ids;
+
+                if (!load_input(resolution, domain, positions, vectors, points, point_ids, lines, line_ids))
+                {
+                    return false;
+                }
+                    
+                // Create new computation object
+                this->computation = std::make_unique<implicit_topology_computation>(this->get_log_callback(), this->get_performance_callback(),
+                    std::move(resolution), std::move(domain), std::move(positions), std::move(vectors), std::move(points), std::move(point_ids),
+                    std::move(lines), std::move(line_ids), previous_results);
+
+                set_readonly_fixed_parameters(true);
+
+                vislib::sys::Log::DefaultLog.WriteInfo("Previous computation of topology loaded from file.");
+            }
+            else
+            {
+                vislib::sys::Log::DefaultLog.WriteWarn("Cannot load previous results. Loader module not connected!");
+            }
+
+            return true;
+        }
+
+        bool implicit_topology::save_computation_callback(core::param::ParamSlot&)
+        {
+            if (this->computation_running)
+            {
+                vislib::sys::Log::DefaultLog.WriteWarn("Results can only be saved after the computation has finished.");
+
+                return false;
+            }
+
+            if (!this->get_result_writer_callback(this->last_result.get()))
+            {
+                return false;
+            }
+
+            vislib::sys::Log::DefaultLog.WriteInfo("Previous computation of topology saved to file.");
 
             return true;
         }
