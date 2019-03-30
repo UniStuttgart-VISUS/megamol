@@ -20,10 +20,10 @@ namespace core {
     *
     * @author Alexander Straub
     */
-    class DirectDataWriterCall : public AbstractDataWriterCall<std::function<std::ostream&()>>
-    {
+    class MEGAMOLCORE_API DirectDataWriterCall : public AbstractDataWriterCall<std::function<std::ostream&()>> {
+
     public:
-        typedef factories::CallAutoDescription<DirectDataWriterCall> direct_data_writer_description;
+        typedef factories::CallAutoDescription<DirectDataWriterCall> DirectDataWriterDescription;
 
         /**
         * Human-readable class name

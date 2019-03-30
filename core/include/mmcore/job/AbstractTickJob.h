@@ -1,68 +1,69 @@
 /*
- * AbstractStreamProvider.h
+ * AbstractTickJob.h
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 #pragma once
 
-#include "mmcore/CallerSlot.h"
-#include "mmcore/job/AbstractTickJob.h"
-
-#include <iostream>
+#include "mmcore/Module.h"
+#include "mmcore/Call.h"
+#include "mmcore/CalleeSlot.h"
 
 namespace megamol {
 namespace core {
+namespace job {
 
     /**
-    * Provides a stream.
+    * Call for propagating a tick.
     *
     * @author Alexander Straub
     */
-    class MEGAMOLCORE_API AbstractStreamProvider : public job::AbstractTickJob {
+    class MEGAMOLCORE_API AbstractTickJob : public core::Module {
 
     public:
         /**
         * Constructor
         */
-        AbstractStreamProvider();
+        AbstractTickJob();
 
         /**
         * Destructor
         */
-        ~AbstractStreamProvider();
+        virtual ~AbstractTickJob();
 
     protected:
-        /**
-        * Callback function providing the stream.
-        *
-        * @return Stream
-        */
-        virtual std::iostream& GetStream() = 0;
-
         /**
          * Implementation of 'Create'.
          *
          * @return 'true' on success, 'false' otherwise.
          */
-        virtual bool create() override;
+        virtual bool create() = 0;
 
         /**
          * Implementation of 'Release'.
          */
-        virtual void release() override;
+        virtual void release() = 0;
 
+        /**
+        * Run this job.
+        *
+        * @return true if the job has been successfully started.
+        */
+        virtual bool run() = 0;
+
+    private:
         /**
          * Starts the job.
          *
          * @return true if the job has been successfully started.
          */
-        virtual bool run() override;
+        bool Run(Call&);
 
-    private:
-        /** Input slot  */
-        CallerSlot inputSlot;
+        /** Tick slot */
+        CalleeSlot tickSlot;
     };
 
+}
 }
 }

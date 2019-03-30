@@ -7,6 +7,7 @@
 #pragma once
 
 #include "mmcore/Call.h"
+#include "mmcore/factories/CallAutoDescription.h"
 
 namespace megamol {
 namespace core {
@@ -20,6 +21,41 @@ namespace core {
     class AbstractDataWriterCall : public Call {
 
     public:
+        using AbstractDataWriterDescription = factories::CallAutoDescription<AbstractDataWriterCall<FunctionT>>;
+
+        /**
+        * Human-readable class name
+        */
+        static const char* ClassName() { return "AbstractDataWriterDescription"; }
+
+        /**
+        * Human-readable class description
+        */
+        static const char *Description() { return "Call transporting a callback for writing data"; }
+
+        /**
+        * Number of available functions
+        */
+        static unsigned int FunctionCount() { return 1; }
+
+        /**
+        * Names of available functions
+        */
+        static const char * FunctionName(unsigned int idx) {
+
+            switch (idx)
+            {
+            case 0: return "SetCallback";
+            }
+
+            return nullptr;
+        }
+
+        /**
+        * Constructor
+        */
+        AbstractDataWriterCall() {}
+
         /**
         * Set the callback
         *
@@ -39,12 +75,6 @@ namespace core {
         {
             return this->callback;
         }
-
-    protected:
-        /**
-        * Constructor
-        */
-        AbstractDataWriterCall() {}
 
     private:
         /** Store callback */

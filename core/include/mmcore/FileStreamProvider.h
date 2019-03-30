@@ -20,7 +20,7 @@ namespace core {
     *
     * @author Alexander Straub
     */
-    class FileStreamProvider : public AbstractStreamProvider
+    class MEGAMOLCORE_API FileStreamProvider : public AbstractStreamProvider
     {
     public:
         /**
@@ -62,7 +62,7 @@ namespace core {
         *
         * @return Stream
         */
-        virtual std::ostream& GetStream() override;
+        virtual std::iostream& GetStream() override;
 
     private:
         /** File path parameter */

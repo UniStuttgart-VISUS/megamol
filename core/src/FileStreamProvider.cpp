@@ -23,7 +23,7 @@ namespace core {
         this->MakeSlotAvailable(&this->filePath);
     }
 
-    std::ostream& FileStreamProvider::GetStream()
+    std::iostream& FileStreamProvider::GetStream()
     {
         if (!this->stream.is_open())
         {
