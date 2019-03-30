@@ -13,6 +13,7 @@
 #include "vislib/vislibversion.h"
 
 #include "implicit_topology.h"
+#include "implicit_topology_writer.h"
 
 #include "triangle_mesh_renderer_2d.h"
 
@@ -45,6 +46,7 @@ namespace {
 
             // register modules here:
             this->module_descriptions.RegisterAutoDescription<megamol::flowvis::implicit_topology>();
+            this->module_descriptions.RegisterAutoDescription<megamol::flowvis::implicit_topology_writer>();
 
             // register renderer here:
             this->module_descriptions.RegisterAutoDescription<megamol::flowvis::triangle_mesh_renderer_2d>();
