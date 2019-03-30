@@ -186,6 +186,16 @@ namespace megamol
             core::param::ParamSlot distance_transfer_function;
             core::param::ParamSlot termination_transfer_function;
 
+            /** Checkboxes for fixing the data range */
+            core::param::ParamSlot label_fixed_range;
+            core::param::ParamSlot distance_fixed_range;
+            core::param::ParamSlot termination_fixed_range;
+
+            /** Values of the fixed range */
+            core::param::ParamSlot label_range_min, label_range_max;
+            core::param::ParamSlot distance_range_min, distance_range_max;
+            core::param::ParamSlot termination_range_min, termination_range_max;
+
             /** Parameters for stream line computation */
             core::param::ParamSlot num_integration_steps;
             core::param::ParamSlot integration_timestep;

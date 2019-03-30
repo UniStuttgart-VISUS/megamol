@@ -49,8 +49,17 @@ namespace megamol
             vector_field_path("vector_field_path", "Path to the input vector field"),
             convergence_structures_path("convergence_structures_path", "Path to the input convergence structures"),
             label_transfer_function("label_transfer_function", "Transfer function for labels"),
+            label_fixed_range("label_fixed_range", "Fixed or dynamic value range for labels"),
+            label_range_min("label_range_min", "Minimum value for labels in the transfer function"),
+            label_range_max("label_range_max", "Maximum value for labels in the transfer function"),
             distance_transfer_function("distance_transfer_function", "Transfer function for distances"),
+            distance_fixed_range("distance_fixed_range", "Fixed or dynamic value range for labels"),
+            distance_range_min("distance_range_min", "Minimum value for distances in the transfer function"),
+            distance_range_max("distance_range_max", "Maximum value for distances in the transfer function"),
             termination_transfer_function("termination_transfer_function", "Transfer function for reasons of termination"),
+            termination_fixed_range("termination_fixed_range", "Fixed or dynamic value range for reasons of termination"),
+            termination_range_min("termination_range_min", "Minimum value for reasons of termination in the transfer function"),
+            termination_range_max("termination_range_max", "Maximum value for reasons of termination in the transfer function"),
             num_integration_steps("num_integration_steps", "Number of stream line integration steps"),
             integration_timestep("integration_timestep", "Initial time step for stream line integration"),
             max_integration_error("max_integration_error", "Maximum integration error for Runge-Kutta 4-5"),
@@ -150,16 +159,43 @@ namespace megamol
                 "[0.987712,0.403398,0.164851,1.0,0.9375],[0.980407,0.247105,0.262699,1.0,1.0]],\"TextureSize\":128}");
             this->MakeSlotAvailable(&this->label_transfer_function);
 
+            this->label_fixed_range << new core::param::BoolParam(false);
+            this->MakeSlotAvailable(&this->label_fixed_range);
+
+            this->label_range_min << new core::param::FloatParam(0.0f);
+            this->MakeSlotAvailable(&this->label_range_min);
+
+            this->label_range_max << new core::param::FloatParam(1.0f);
+            this->MakeSlotAvailable(&this->label_range_max);
+
             this->distance_transfer_function << new core::param::LinearTransferFunctionParam(
                 "{\"Interpolation\":\"LINEAR\",\"Nodes\":[[0.0,0.0,0.0,1.0,0.0],[0.9019607901573181,0.0,0.0,1.0,0.39500004053115845]," \
                 "[0.9019607901573181,0.9019607901573181,0.0,1.0,0.7990000247955322],[1.0,1.0,1.0,1.0,1.0]],\"TextureSize\":128}");
             this->MakeSlotAvailable(&this->distance_transfer_function);
+
+            this->distance_fixed_range << new core::param::BoolParam(false);
+            this->MakeSlotAvailable(&this->distance_fixed_range);
+
+            this->distance_range_min << new core::param::FloatParam(0.0f);
+            this->MakeSlotAvailable(&this->distance_range_min);
+
+            this->distance_range_max << new core::param::FloatParam(1.0f);
+            this->MakeSlotAvailable(&this->distance_range_max);
 
             this->termination_transfer_function << new core::param::LinearTransferFunctionParam(
                 "{\"Interpolation\":\"LINEAR\",\"Nodes\":[[0.23137255012989044,0.2980392277240753,0.7529411911964417,1.0,0.0]," \
                 "[0.8627451062202454,0.8627451062202454,0.8627451062202454,1.0,0.4989999830722809]," \
                 "[0.7058823704719543,0.01568627543747425,0.14901961386203766,1.0,1.0]],\"TextureSize\":4}");
             this->MakeSlotAvailable(&this->termination_transfer_function);
+
+            this->termination_fixed_range << new core::param::BoolParam(true);
+            this->MakeSlotAvailable(&this->termination_fixed_range);
+
+            this->termination_range_min << new core::param::FloatParam(-1.0f);
+            this->MakeSlotAvailable(&this->termination_range_min);
+
+            this->termination_range_max << new core::param::FloatParam(2.0f);
+            this->MakeSlotAvailable(&this->termination_range_max);
         }
 
         implicit_topology::~implicit_topology()
@@ -511,16 +547,44 @@ namespace megamol
             // Update render output if there are new results
             update_results();
 
-            if (this->data_output_changed)
+            if (this->data_output_changed
+                || this->label_fixed_range.IsDirty() || this->label_range_min.IsDirty() || this->label_range_max.IsDirty()
+                || this->distance_fixed_range.IsDirty() || this->distance_range_min.IsDirty() || this->distance_range_max.IsDirty()
+                || this->termination_fixed_range.IsDirty() || this->termination_range_min.IsDirty() || this->termination_range_max.IsDirty())
             {
+                this->label_fixed_range.ResetDirty();
+                this->label_range_min.ResetDirty();
+                this->label_range_max.ResetDirty();
+
+                this->distance_fixed_range.ResetDirty();
+                this->distance_range_min.ResetDirty();
+                this->distance_range_max.ResetDirty();
+
+                this->termination_fixed_range.ResetDirty();
+                this->termination_range_min.ResetDirty();
+                this->termination_range_max.ResetDirty();
+
                 // Prepare labels
+                float label_min, label_max;
+
                 {
                     auto label_data = std::make_shared<mesh_data_call::data_set>();
                     label_data->transfer_function = this->label_transfer_function.Param<core::param::LinearTransferFunctionParam>()->Value();
 
-                    const auto min_max_value = std::minmax_element(this->labels_forward->begin(), this->labels_forward->end());
-                    label_data->min_value = *min_max_value.first;
-                    label_data->max_value = *min_max_value.second;
+                    if (this->label_fixed_range.Param<core::param::BoolParam>()->Value())
+                    {
+                        label_data->min_value = this->label_range_min.Param<core::param::FloatParam>()->Value();
+                        label_data->max_value = this->label_range_max.Param<core::param::FloatParam>()->Value();
+                    }
+                    else
+                    {
+                        const auto min_max_value = std::minmax_element(this->labels_forward->begin(), this->labels_forward->end());
+                        label_data->min_value = *min_max_value.first;
+                        label_data->max_value = *min_max_value.second;
+                    }
+
+                    label_min = label_data->min_value;
+                    label_max = label_data->max_value;
 
                     label_data->data = this->labels_forward;
 
@@ -530,9 +594,20 @@ namespace megamol
                     auto label_data = std::make_shared<mesh_data_call::data_set>();
                     label_data->transfer_function = this->label_transfer_function.Param<core::param::LinearTransferFunctionParam>()->Value();
 
-                    const auto min_max_value = std::minmax_element(this->labels_backward->begin(), this->labels_backward->end());
-                    label_data->min_value = *min_max_value.first;
-                    label_data->max_value = *min_max_value.second;
+                    if (this->label_fixed_range.Param<core::param::BoolParam>()->Value())
+                    {
+                        label_data->min_value = this->label_range_min.Param<core::param::FloatParam>()->Value();
+                        label_data->max_value = this->label_range_max.Param<core::param::FloatParam>()->Value();
+                    }
+                    else
+                    {
+                        const auto min_max_value = std::minmax_element(this->labels_backward->begin(), this->labels_backward->end());
+                        label_data->min_value = *min_max_value.first;
+                        label_data->max_value = *min_max_value.second;
+                    }
+
+                    label_min = std::min(label_min, label_data->min_value);
+                    label_max = std::max(label_max, label_data->max_value);
 
                     label_data->data = this->labels_backward;
 
@@ -540,13 +615,26 @@ namespace megamol
                 }
                 
                 // Prepare distances
+                float distance_min, distance_max;
+
                 {
                     auto distance_data = std::make_shared<mesh_data_call::data_set>();
                     distance_data->transfer_function = this->distance_transfer_function.Param<core::param::LinearTransferFunctionParam>()->Value();
 
-                    const auto min_max_value = std::minmax_element(this->distances_forward->begin(), this->distances_forward->end());
-                    distance_data->min_value = *min_max_value.first;
-                    distance_data->max_value = *min_max_value.second;
+                    if (this->distance_fixed_range.Param<core::param::BoolParam>()->Value())
+                    {
+                        distance_data->min_value = this->distance_range_min.Param<core::param::FloatParam>()->Value();
+                        distance_data->max_value = this->distance_range_max.Param<core::param::FloatParam>()->Value();
+                    }
+                    else
+                    {
+                        const auto min_max_value = std::minmax_element(this->distances_forward->begin(), this->distances_forward->end());
+                        distance_data->min_value = *min_max_value.first;
+                        distance_data->max_value = *min_max_value.second;
+                    }
+
+                    distance_min = distance_data->min_value;
+                    distance_max = distance_data->max_value;
 
                     distance_data->data = this->distances_forward;
 
@@ -556,9 +644,20 @@ namespace megamol
                     auto distance_data = std::make_shared<mesh_data_call::data_set>();
                     distance_data->transfer_function = this->distance_transfer_function.Param<core::param::LinearTransferFunctionParam>()->Value();
 
-                    const auto min_max_value = std::minmax_element(this->distances_backward->begin(), this->distances_backward->end());
-                    distance_data->min_value = *min_max_value.first;
-                    distance_data->max_value = *min_max_value.second;
+                    if (this->distance_fixed_range.Param<core::param::BoolParam>()->Value())
+                    {
+                        distance_data->min_value = this->distance_range_min.Param<core::param::FloatParam>()->Value();
+                        distance_data->max_value = this->distance_range_max.Param<core::param::FloatParam>()->Value();
+                    }
+                    else
+                    {
+                        const auto min_max_value = std::minmax_element(this->distances_backward->begin(), this->distances_backward->end());
+                        distance_data->min_value = *min_max_value.first;
+                        distance_data->max_value = *min_max_value.second;
+                    }
+
+                    distance_min = std::min(distance_min, distance_data->min_value);
+                    distance_max = std::max(distance_max, distance_data->max_value);
 
                     distance_data->data = this->distances_backward;
 
@@ -566,13 +665,26 @@ namespace megamol
                 }
 
                 // Prepare reasons for termination
+                float termination_min, termination_max;
+
                 {
                     auto termination_data = std::make_shared<mesh_data_call::data_set>();
                     termination_data->transfer_function = this->termination_transfer_function.Param<core::param::LinearTransferFunctionParam>()->Value();
 
-                    const auto min_max_value = std::minmax_element(this->terminations_forward->begin(), this->terminations_forward->end());
-                    termination_data->min_value = *min_max_value.first;
-                    termination_data->max_value = *min_max_value.second;
+                    if (this->termination_fixed_range.Param<core::param::BoolParam>()->Value())
+                    {
+                        termination_data->min_value = this->termination_range_min.Param<core::param::FloatParam>()->Value();
+                        termination_data->max_value = this->termination_range_max.Param<core::param::FloatParam>()->Value();
+                    }
+                    else
+                    {
+                        const auto min_max_value = std::minmax_element(this->terminations_forward->begin(), this->terminations_forward->end());
+                        termination_data->min_value = *min_max_value.first;
+                        termination_data->max_value = *min_max_value.second;
+                    }
+
+                    termination_min = termination_data->min_value;
+                    termination_max = termination_data->max_value;
 
                     termination_data->data = this->terminations_forward;
 
@@ -582,20 +694,51 @@ namespace megamol
                     auto termination_data = std::make_shared<mesh_data_call::data_set>();
                     termination_data->transfer_function = this->termination_transfer_function.Param<core::param::LinearTransferFunctionParam>()->Value();
 
-                    const auto min_max_value = std::minmax_element(this->terminations_forward->begin(), this->terminations_forward->end());
-                    termination_data->min_value = *min_max_value.first;
-                    termination_data->max_value = *min_max_value.second;
+                    if (this->termination_fixed_range.Param<core::param::BoolParam>()->Value())
+                    {
+                        termination_data->min_value = this->termination_range_min.Param<core::param::FloatParam>()->Value();
+                        termination_data->max_value = this->termination_range_max.Param<core::param::FloatParam>()->Value();
+                    }
+                    else
+                    {
+                        const auto min_max_value = std::minmax_element(this->terminations_forward->begin(), this->terminations_forward->end());
+                        termination_data->min_value = *min_max_value.first;
+                        termination_data->max_value = *min_max_value.second;
+                    }
+
+                    termination_min = std::min(termination_min, termination_data->min_value);
+                    termination_max = std::max(termination_max, termination_data->max_value);
 
                     termination_data->data = this->terminations_forward;
 
                     data_call->set_data("reasons for termination (backward)", termination_data);
                 }
 
+                // Set fixed range values
+                this->label_range_min.Param<core::param::FloatParam>()->SetValue(label_min, false);
+                this->label_range_max.Param<core::param::FloatParam>()->SetValue(label_max, false);
+
+                this->distance_range_min.Param<core::param::FloatParam>()->SetValue(distance_min, false);
+                this->distance_range_max.Param<core::param::FloatParam>()->SetValue(distance_max, false);
+
+                this->termination_range_min.Param<core::param::FloatParam>()->SetValue(termination_min, false);
+                this->termination_range_max.Param<core::param::FloatParam>()->SetValue(termination_max, false);
+
                 // Set new data hash
                 data_call->SetDataHash(data_call->DataHash() + 1);
 
                 this->data_output_changed = false;
             }
+
+            // Set accessibility
+            this->label_range_min.Parameter()->SetGUIReadOnly(!this->label_fixed_range.Param<core::param::BoolParam>()->Value());
+            this->label_range_max.Parameter()->SetGUIReadOnly(!this->label_fixed_range.Param<core::param::BoolParam>()->Value());
+
+            this->distance_range_min.Parameter()->SetGUIReadOnly(!this->distance_fixed_range.Param<core::param::BoolParam>()->Value());
+            this->distance_range_max.Parameter()->SetGUIReadOnly(!this->distance_fixed_range.Param<core::param::BoolParam>()->Value());
+
+            this->termination_range_min.Parameter()->SetGUIReadOnly(!this->termination_fixed_range.Param<core::param::BoolParam>()->Value());
+            this->termination_range_max.Parameter()->SetGUIReadOnly(!this->termination_fixed_range.Param<core::param::BoolParam>()->Value());
 
             // Update transfer functions
             if (this->label_transfer_function.IsDirty())
