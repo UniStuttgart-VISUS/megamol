@@ -16,15 +16,10 @@
 namespace megamol {
 namespace core {
 
-    AbstractStreamProvider::AbstractStreamProvider() :
-        inputSlot("inputSlot", "Slot for providing a callback"),
-        tickSlot("tickSlot", "Slot for receiving a tick") {
+    AbstractStreamProvider::AbstractStreamProvider() : inputSlot("inputSlot", "Slot for providing a callback") {
 
-        this->inputSlot.SetCompatibleCall<DirectDataWriterCall::direct_data_writer_description>();
+        this->inputSlot.SetCompatibleCall<DirectDataWriterCall::DirectDataWriterDescription>();
         this->MakeSlotAvailable(&this->inputSlot);
-
-        this->tickSlot.SetCallback(job::TickCall::ClassName(), job::TickCall::FunctionName(0), &AbstractStreamProvider::Run);
-        this->MakeSlotAvailable(&this->tickSlot);
     }
 
     AbstractStreamProvider::~AbstractStreamProvider() {
@@ -38,7 +33,7 @@ namespace core {
     void AbstractStreamProvider::release() {
     }
 
-    bool AbstractStreamProvider::Run(Call&) {
+    bool AbstractStreamProvider::run() {
         auto* call = this->inputSlot.CallAs<DirectDataWriterCall>();
 
         if (call != nullptr)
