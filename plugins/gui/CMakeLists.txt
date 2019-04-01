@@ -44,7 +44,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     "include" "src"
     "${SOURCE_DIR}/examples/")
-  target_link_libraries(${PROJECT_NAME} PRIVATE vislib core glad ImGui)
+  target_link_libraries(${PROJECT_NAME} PRIVATE vislib core glad PUBLIC ImGui)
 
   # Installation rules for generated files
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
