@@ -11,6 +11,7 @@
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/AbstractView.h"
+#include "mmcore/view/CallRenderView.h"
 
 #include "vislib/Serialiser.h"
 
@@ -170,6 +171,9 @@ private:
 
     /** Window width and height */
     unsigned int width, height;
+
+    /** Incoming call */
+    view::CallRenderView* override_view_call;
 };
 
 } /* end namespace view */
