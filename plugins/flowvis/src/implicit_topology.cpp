@@ -973,9 +973,9 @@ namespace megamol
                 return false;
             }
 
-            if (!this->get_result_writer_callback(this->last_result.get()))
+            if (!this->last_result.valid() || !this->get_result_writer_callback(this->last_result.get()))
             {
-                return false;
+                return true;
             }
 
             vislib::sys::Log::DefaultLog.WriteInfo("Previous computation of topology saved to file.");
