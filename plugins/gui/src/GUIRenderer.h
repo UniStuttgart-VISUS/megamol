@@ -207,6 +207,12 @@ private:
     /** The name of the view instance this renderer belongs to. */
     std::string inst_name;
 
+    /** Default visibility of the GUI */
+    core::param::ParamSlot default_visible;
+
+    /** Initialization on first execution */
+    bool initialized;
+
     // ---------- Main Parameter Window ----------
 
     /** Reset main parameter window. */
@@ -372,6 +378,8 @@ inline GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIR
     , float_print_prec(7) // INIT: Float string format precision
     , windows()
     , lastInstTime(0.0)
+    , default_visible("defaultVisible", "Set the visibility of the GUI at startup")
+    , initialized(false)
     , main_reset_window(false)
     , param_file()
     , active_tf_param(nullptr)
@@ -413,6 +421,11 @@ inline GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIR
         core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseScroll),
         &GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::OnMouseScrollCallback);
     this->MakeSlotAvailable(&this->overlay_slot);
+
+    // Parameter
+    this->default_visible << new core::param::BoolParam(true);
+    this->default_visible.Parameter()->SetGUIReadOnly(true);
+    this->MakeSlotAvailable(&this->default_visible);
 }
 
 
@@ -429,6 +442,8 @@ inline GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GUIR
     , float_print_prec(7) // INIT: Float string format precision
     , windows()
     , lastInstTime(0.0)
+    , default_visible("defaultVisible", "Set the visibility of the GUI at startup")
+    , initialized(false)
     , main_reset_window(false)
     , param_file()
     , active_tf_param(nullptr)
@@ -470,6 +485,11 @@ inline GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GUIR
         core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseScroll),
         &GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::OnMouseScrollCallback);
     this->MakeSlotAvailable(&this->overlay_slot);
+
+    // Parameter
+    this->default_visible << new core::param::BoolParam(true);
+    this->default_visible.Parameter()->SetGUIReadOnly(true);
+    this->MakeSlotAvailable(&this->default_visible);
 }
 
 
@@ -1134,6 +1154,16 @@ template <class M, class C> bool GUIRenderer<M, C>::OnMouseScrollCallback(core::
  */
 template <class M, class C>
 bool GUIRenderer<M, C>::renderGUI(vislib::math::Rectangle<int> viewport, double instanceTime) {
+
+    if (!this->initialized) {
+        for (auto& window : this->windows) {
+            if (window.label == "MegaMol") {
+                window.show = this->default_visible.Param<core::param::BoolParam>()->Value();
+            }
+        }
+
+        this->initialized = true;
+    }
 
     // Get instance name the gui renderer belongs to (not available in create() yet)
     if (this->inst_name.empty()) {
