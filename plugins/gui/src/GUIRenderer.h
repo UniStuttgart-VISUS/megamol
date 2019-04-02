@@ -59,6 +59,7 @@
 #include "vislib/UTF8Encoder.h"
 
 #include <imgui.h>
+#include <imgui_internal.h>
 #include <iomanip> // setprecision
 #include <sstream> // stringstream
 
@@ -492,11 +493,11 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
     this->utf8_ranges.emplace_back(0x0020);
     this->utf8_ranges.emplace_back(0x00FF); // Basic Latin + Latin Supplement
     this->utf8_ranges.emplace_back(0x20AC);
-    this->utf8_ranges.emplace_back(0x20AC); // €
+    this->utf8_ranges.emplace_back(0x20AC); // ï¿½
     this->utf8_ranges.emplace_back(0x2122);
-    this->utf8_ranges.emplace_back(0x2122); // ™
+    this->utf8_ranges.emplace_back(0x2122); // ï¿½
     this->utf8_ranges.emplace_back(0x212B);
-    this->utf8_ranges.emplace_back(0x212B); // Å
+    this->utf8_ranges.emplace_back(0x212B); // ï¿½
     this->utf8_ranges.emplace_back(0x0391);
     this->utf8_ranges.emplace_back(0x03D6); // greek alphabet
     this->utf8_ranges.emplace_back(0);
@@ -1515,7 +1516,14 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
     std::string help;
 
     auto param = slot.Parameter();
-    if (!param.IsNull()) {
+    if (!param.IsNull() && param->IsGUIVisible()) {
+        // Set different style if parameter is read-only
+        if (param->IsGUIReadOnly())
+        {
+            ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.25f);
+        }
+
         std::string modname = mod.FullName().PeekBuffer();
         std::string pname = slot.Name().PeekBuffer();
         std::string label = pname + "###" + modname + "::" + pname;
@@ -1524,7 +1532,7 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
         std::stringstream float_stream;
         float_stream << "%." << this->float_print_prec << "f";
         std::string float_format = float_stream.str();
-
+        
         if (auto* p = slot.template Param<core::param::BoolParam>()) {
             auto value = p->Value();
             if (ImGui::Checkbox(label.c_str(), &value)) {
@@ -1553,6 +1561,11 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
         } else if (auto* p = slot.template Param<core::param::LinearTransferFunctionParam>()) {
             auto value = p->Value();
 
+            ImGui::Separator();
+
+            ImGui::Text(pname.c_str());
+            ImGui::SameLine();
+
             label = "Load into Editor###editor" + modname + "::" + pname;
             if (p != this->active_tf_param) {
                 if (ImGui::Button(label.c_str())) {
@@ -1573,16 +1586,28 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
             } else {
                 ImGui::TextColored(style.Colors[ImGuiCol_ButtonHovered], "Currently loaded into Editor.");
             }
-
+            
             ImGui::Text("JSON String:");
             ImGui::SameLine();
             label = "Copy to Clipboard###clipboard" + modname + "::" + pname;
             if (ImGui::Button(label.c_str())) {
                 ImGui::SetClipboardText(value.c_str());
             }
+            ImGui::SameLine();
+            label = "Copy from Clipboard###fclipboard" + modname + "::" + pname;
+            if (ImGui::Button(label.c_str())) {
+                p->SetValue(ImGui::GetClipboardText());
+            }
+            ImGui::SameLine();
+            label = "Reset###reset" + modname + "::" + pname;
+            if (ImGui::Button(label.c_str())) {
+                p->SetValue("");
+            }
             ImGui::PushTextWrapPos(ImGui::GetContentRegionAvailWidth());
             ImGui::TextDisabled(value.c_str());
             ImGui::PopTextWrapPos();
+
+            ImGui::Separator();
 
         } else if (auto* p = slot.template Param<core::param::EnumParam>()) {
             // XXX: no UTF8 fanciness required here?
@@ -1668,6 +1693,13 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
         this->HoverToolTip(desc, ImGui::GetID(label.c_str()), 1.0f);
 
         this->HelpMarkerToolTip(help);
+
+        // Reset to default style
+        if (param->IsGUIReadOnly())
+        {
+            ImGui::PopItemFlag();
+            ImGui::PopStyleVar();
+        }
     }
 }
 

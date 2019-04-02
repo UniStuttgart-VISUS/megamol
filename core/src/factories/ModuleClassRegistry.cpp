@@ -63,6 +63,7 @@
 #endif /* MEGAMOLCORE_WITH_DIRECT3D11 */
 #include "mmcore/view/BlinnPhongRendererDeferred.h"
 #include "mmcore/view/SplitView.h"
+#include "mmcore/view/HeadView.h"
 #include "mmcore/view/SharedCameraParameters.h"
 #include "mmcore/view/LinkedView3D.h"
 #include "mmcore/job/DataWriterJob.h"
@@ -78,6 +79,8 @@
 #include "mmcore/view/light/PointLight.h"
 #include "mmcore/view/light/QuadLight.h"
 #include "mmcore/view/light/SpotLight.h"
+#include "../job/TickSwitch.h"
+#include "mmcore/FileStreamProvider.h"
 
 using namespace megamol::core;
 
@@ -141,6 +144,7 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<nextgen::BoundingBoxRenderer>();
     instance.RegisterAutoDescription<view::BlinnPhongRendererDeferred>();
     instance.RegisterAutoDescription<view::SplitView>();
+    instance.RegisterAutoDescription<view::HeadView>();
     instance.RegisterAutoDescription<view::SharedCameraParameters>();
     instance.RegisterAutoDescription<view::LinkedView3D>();
     instance.RegisterAutoDescription<view::RendererRegistration>();
@@ -154,6 +158,8 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
 #endif /* MEGAMOLCORE_WITH_DIRECT3D11 */
     instance.RegisterAutoDescription<job::PluginsStateFileGeneratorJob>();
     instance.RegisterAutoDescription<core::utility::LuaHostSettingsModule>();
+    instance.RegisterAutoDescription<core::job::TickSwitch>();
+    instance.RegisterAutoDescription<core::FileStreamProvider>();
     instance.RegisterAutoDescription<view::light::AmbientLight>();
     instance.RegisterAutoDescription<view::light::DistantLight>();
     instance.RegisterAutoDescription<view::light::HDRILight>();
