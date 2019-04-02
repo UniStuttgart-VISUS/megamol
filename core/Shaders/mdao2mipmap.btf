@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<btf type="MegaMolGLSLShader" version="1.0" namespace="mdao2mipmap">
+
+    <snippet name="Compute" type="file">simplesphere/mdao2mipmap_comp_main.glsl</snippet>
+
+</btf>

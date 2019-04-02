@@ -24,7 +24,76 @@ const GLuint SSBObindingPoint = 2;
 
 //typedef void (APIENTRY *GLDEBUGPROC)(GLenum source,GLenum type,GLuint id,GLenum severity,GLsizei length,const GLchar *message,const void *userParam);
 extern void APIENTRY MyFunkyDebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length,
-    const GLchar* message, const GLvoid* userParam);
+    const GLchar* message, const GLvoid* userParam) {
+    const char *sourceText, *typeText, *severityText;
+    switch (source) {
+    case GL_DEBUG_SOURCE_API:
+        sourceText = "API";
+        break;
+    case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
+        sourceText = "Window System";
+        break;
+    case GL_DEBUG_SOURCE_SHADER_COMPILER:
+        sourceText = "Shader Compiler";
+        break;
+    case GL_DEBUG_SOURCE_THIRD_PARTY:
+        sourceText = "Third Party";
+        break;
+    case GL_DEBUG_SOURCE_APPLICATION:
+        sourceText = "Application";
+        break;
+    case GL_DEBUG_SOURCE_OTHER:
+        sourceText = "Other";
+        break;
+    default:
+        sourceText = "Unknown";
+        break;
+    }
+    switch (type) {
+    case GL_DEBUG_TYPE_ERROR:
+        typeText = "Error";
+        break;
+    case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
+        typeText = "Deprecated Behavior";
+        break;
+    case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
+        typeText = "Undefined Behavior";
+        break;
+    case GL_DEBUG_TYPE_PORTABILITY:
+        typeText = "Portability";
+        break;
+    case GL_DEBUG_TYPE_PERFORMANCE:
+        typeText = "Performance";
+        break;
+    case GL_DEBUG_TYPE_OTHER:
+        typeText = "Other";
+        break;
+    case GL_DEBUG_TYPE_MARKER:
+        typeText = "Marker";
+        break;
+    default:
+        typeText = "Unknown";
+        break;
+    }
+    switch (severity) {
+    case GL_DEBUG_SEVERITY_HIGH:
+        severityText = "High";
+        break;
+    case GL_DEBUG_SEVERITY_MEDIUM:
+        severityText = "Medium";
+        break;
+    case GL_DEBUG_SEVERITY_LOW:
+        severityText = "Low";
+        break;
+    case GL_DEBUG_SEVERITY_NOTIFICATION:
+        severityText = "Notification";
+        break;
+    default:
+        severityText = "Unknown";
+        break;
+    }
+    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "[%s %s] (%s %u) %s\n", sourceText, severityText, typeText, id, message);
+}
 
 
 /*
