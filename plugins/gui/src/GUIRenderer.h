@@ -1518,8 +1518,7 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
     auto param = slot.Parameter();
     if (!param.IsNull() && param->IsGUIVisible()) {
         // Set different style if parameter is read-only
-        if (param->IsGUIReadOnly())
-        {
+        if (param->IsGUIReadOnly()) {
             ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
             ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.25f);
         }
@@ -1532,7 +1531,7 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
         std::stringstream float_stream;
         float_stream << "%." << this->float_print_prec << "f";
         std::string float_format = float_stream.str();
-        
+
         if (auto* p = slot.template Param<core::param::BoolParam>()) {
             auto value = p->Value();
             if (ImGui::Checkbox(label.c_str(), &value)) {
@@ -1586,7 +1585,7 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
             } else {
                 ImGui::TextColored(style.Colors[ImGuiCol_ButtonHovered], "Currently loaded into Editor.");
             }
-            
+
             ImGui::Text("JSON String:");
             ImGui::SameLine();
             label = "Copy to Clipboard###clipboard" + modname + "::" + pname;
@@ -1695,8 +1694,7 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
         this->HelpMarkerToolTip(help);
 
         // Reset to default style
-        if (param->IsGUIReadOnly())
-        {
+        if (param->IsGUIReadOnly()) {
             ImGui::PopItemFlag();
             ImGui::PopStyleVar();
         }
