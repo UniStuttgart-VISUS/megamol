@@ -4,22 +4,25 @@
 #    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include <string>
 #include <functional>
+#include <string>
 #include <vector>
+#include "mmcore/Call.h"
+#include "mmcore/Module.h"
+#include "mmcore/ModuleNamespace.h"
+#include "mmcore/api/MegaMolCore.h"
 #include "mmcore/param/AbstractParam.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/param/ParamUpdateListener.h"
-#include "mmcore/ModuleNamespace.h"
-#include "mmcore/Module.h"
-#include "mmcore/Call.h"
-#include "mmcore/api/MegaMolCore.h"
 #include "vislib/SmartPtr.h"
+
+#include "mmcore/serializable.h"
+#include "mmcore/deferrable_construction.h"
 
 namespace megamol {
 namespace core {
 
-class MegaMolGraph {
+class MegaMolGraph : public serializable, public deferrable_construction {
 
     // todo: where do the descriptionmanagers go?
     // todo: what about the view / job descriptions?
@@ -45,11 +48,12 @@ public:
     void PerformGraphUpdates();
     bool AnythingQueued();
 
-    // todo: for everything below, RO version AND RW version? or would we just omit the const and imply the user needs to lock?
+    // todo: for everything below, RO version AND RW version? or would we just omit the const and imply the user needs
+    // to lock?
     ////////////////////////////
 
     vislib::SmartPtr<param::AbstractParam> FindParameter(const std::string name, bool quiet = false) const;
-    
+
     // todo: optionally ask for the parameters of a specific module (name OR module pointer?)
     inline void EnumerateParameters(std::function<void(const Module&, param::ParamSlot&)> cb) const;
 
@@ -96,7 +100,8 @@ public:
     // accumulate the stuff the queues ask from the graph and give out a JSON diff right afterwards
     // bitfield says what (params, modules, whatnot) - and also reports whether something did not happen
     /// @return some ID to allow for removal of the listener later
-    uint32_t RegisterGraphUpdateListener(std::function<void(std::string, uint32_t field)> func, int32_t serviceBitfield);
+    uint32_t RegisterGraphUpdateListener(
+        std::function<void(std::string, uint32_t field)> func, int32_t serviceBitfield);
     void UnregisterGraphUpdateListener(uint32_t id);
 
 private:
@@ -107,8 +112,6 @@ private:
     void updateFlushIdxList(size_t const processedCount, std::vector<size_t>& list);
     bool checkForFlushEvent(size_t const eventIdx, std::vector<size_t>& list) const;
     void shortenFlushIdxList(size_t const eventCount, std::vector<size_t>& list);
-
-
 };
 
 } /* namespace core */
