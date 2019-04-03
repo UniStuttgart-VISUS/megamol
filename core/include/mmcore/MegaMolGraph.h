@@ -18,11 +18,12 @@
 
 #include "mmcore/serializable.h"
 #include "mmcore/deferrable_construction.h"
+#include "mmcore/lockable.h"
 
 namespace megamol {
 namespace core {
 
-class MegaMolGraph : public serializable, public deferrable_construction {
+class MegaMolGraph : public serializable, public deferrable_construction, public lockable {
 
     // todo: where do the descriptionmanagers go?
     // todo: what about the view / job descriptions?
@@ -32,6 +33,58 @@ public:
     // todo: the lock!
     // todo: probably get rid of RootModuleNamespace altogether
 
+    //////////////////////////// ctor / dtor ///////////////////////////////
+
+    /**
+     * Bare construction as stub for deserialization
+     */
+    MegaMolGraph();
+
+    /**
+     * No copy-construction. This can only be a legal operation, if we allow deep-copy of Modules in graph.
+     */
+    MegaMolGraph(MegaMolGraph const& rhs) = delete;
+
+    /**
+     * Same argument as for copy-construction.
+     */
+    MegaMolGraph& operator=(MegaMolGraph const& rhs) = delete;
+
+    /**
+     * A move of the graph should be OK, even without changing state of Modules in graph.
+     */
+    MegaMolGraph(MegaMolGraph&& rhs) noexcept;
+
+    /**
+     * Same is true for move-assignment.
+     */
+    MegaMolGraph& operator=(MegaMolGraph&& rhs) noexcept;
+
+    /**
+     * Construction fr0m serialized string.
+     */
+    MegaMolGraph(std::string const& descr);
+
+    /** dtor */
+    virtual ~MegaMolGraph();
+
+    //////////////////////////// END ctor / dtor ///////////////////////////////
+
+    //////////////////////////// serialization ////////////////////////////////
+
+    /*
+     * Each module should be serializable, i.e. the modules capture their entire state.
+     * As a result, an entire MegaMolGraph can basically be copied by reinitializing the serialized descriptor.
+     * Therefore the MegaMolGraph creates its descriptor by iterating through all modules and calls in the graph.
+     * 
+     * Maybe the ModuleGraph should even allow external objects to iterate through a linearized array of containing modules and calls.
+     */
+
+    //////////////////////////// END serialization ////////////////////////////////
+
+
+    ////////////////////////// old interface stuff //////////////////////////////////////////////
+public:
     bool QueueModuleDeletion(const std::string id);
     bool QueueCallDeletion(const std::string from, const std::string to);
     bool QueueModuleInstantiation(const std::string className, const std::string id);
