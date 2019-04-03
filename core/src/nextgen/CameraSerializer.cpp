@@ -116,86 +116,92 @@ void CameraSerializer::addCamToJsonObject(nlohmann::json& outObj, const Camera_2
  */
 bool CameraSerializer::getCamFromJsonObject(
     Camera_2::minimal_state_type& cam, const nlohmann::json::value_type& val) const {
-    // If we would be sure that the read file is valid we could omit the sanity checks.
-    // In fact, one sanity check is missing but very time consuming. We should check each array element for the correct
-    // data type.
-    if (!val.is_object()) return false;
-    if (val.at("centre_offset").is_array() && val.at("centre_offset").size() == cam.centre_offset.size()) {
-        val.at("centre_offset").get_to(cam.centre_offset);
-    } else {
-        return false;
-    }
-    if (val.at("convergence_plane").is_number_float()) {
-        val.at("convergence_plane").get_to(cam.convergence_plane);
-    } else {
-        return false;
-    }
-    if (val.at("eye").is_number_integer()) {
-        val.at("eye").get_to(cam.eye);
-    } else {
-        return false;
-    }
-    if (val.at("far_clipping_plane").is_number_float()) {
-        val.at("far_clipping_plane").get_to(cam.far_clipping_plane);
-    } else {
-        return false;
-    }
-    if (val.at("film_gate").is_array() && val.at("film_gate").size() == cam.film_gate.size()) {
-        val.at("film_gate").get_to(cam.film_gate);
-    } else {
-        return false;
-    }
-    if (val.at("gate_scaling").is_number_integer()) {
-        val.at("gate_scaling").get_to(cam.gate_scaling);
-    } else {
-        return false;
-    }
-    if (val.at("half_aperture_angle").is_number_float()) {
-        val.at("half_aperture_angle").get_to(cam.half_aperture_angle_radians);
-    } else {
-        return false;
-    }
-    if (val.at("half_disparity").is_number_float()) {
-        val.at("half_disparity").get_to(cam.half_disparity);
-    } else {
-        return false;
-    }
-    if (val.at("image_tile").is_array() && val.at("image_tile").size() == cam.image_tile.size()) {
-        val.at("image_tile").get_to(cam.image_tile);
-    } else {
-        return false;
-    }
-    if (val.at("near_clipping_plane").is_number_float()) {
-        val.at("near_clipping_plane").get_to(cam.near_clipping_plane);
-    } else {
-        return false;
-    }
-    if (val.at("orientation").is_array() && val.at("orientation").size() == cam.orientation.size()) {
-        val.at("orientation").get_to(cam.orientation);
-    } else {
-        return false;
-    }
-    if (val.at("position").is_array() && val.at("position").size() == cam.position.size()) {
-        val.at("position").get_to(cam.position);
-    } else {
-        return false;
-    }
-    if (val.at("projection_type").is_number_integer()) {
-        val.at("projection_type").get_to(cam.projection_type);
-    } else {
-        return false;
-    }
-    if (val.at("resolution_gate").is_array() && val.at("resolution_gate").size() == cam.resolution_gate.size()) {
-        val.at("resolution_gate").get_to(cam.resolution_gate);
-    } else {
-        return false;
-    }
 
-    // try to read the additional "valid" value
-    if (val.at("valid").is_boolean()) {
-        bool valid;
-        val.at("valid").get_to(valid);
-        return valid;
+    try {
+        // If we would be sure that the read file is valid we could omit the sanity checks.
+        // In fact, one sanity check is missing but very time consuming. We should check each array element for the
+        // correct data type.
+        if (!val.is_object()) return false;
+        if (val.at("centre_offset").is_array() && val.at("centre_offset").size() == cam.centre_offset.size()) {
+            val.at("centre_offset").get_to(cam.centre_offset);
+        } else {
+            return false;
+        }
+        if (val.at("convergence_plane").is_number_float()) {
+            val.at("convergence_plane").get_to(cam.convergence_plane);
+        } else {
+            return false;
+        }
+        if (val.at("eye").is_number_integer()) {
+            val.at("eye").get_to(cam.eye);
+        } else {
+            return false;
+        }
+        if (val.at("far_clipping_plane").is_number_float()) {
+            val.at("far_clipping_plane").get_to(cam.far_clipping_plane);
+        } else {
+            return false;
+        }
+        if (val.at("film_gate").is_array() && val.at("film_gate").size() == cam.film_gate.size()) {
+            val.at("film_gate").get_to(cam.film_gate);
+        } else {
+            return false;
+        }
+        if (val.at("gate_scaling").is_number_integer()) {
+            val.at("gate_scaling").get_to(cam.gate_scaling);
+        } else {
+            return false;
+        }
+        if (val.at("half_aperture_angle").is_number_float()) {
+            val.at("half_aperture_angle").get_to(cam.half_aperture_angle_radians);
+        } else {
+            return false;
+        }
+        if (val.at("half_disparity").is_number_float()) {
+            val.at("half_disparity").get_to(cam.half_disparity);
+        } else {
+            return false;
+        }
+        if (val.at("image_tile").is_array() && val.at("image_tile").size() == cam.image_tile.size()) {
+            val.at("image_tile").get_to(cam.image_tile);
+        } else {
+            return false;
+        }
+        if (val.at("near_clipping_plane").is_number_float()) {
+            val.at("near_clipping_plane").get_to(cam.near_clipping_plane);
+        } else {
+            return false;
+        }
+        if (val.at("orientation").is_array() && val.at("orientation").size() == cam.orientation.size()) {
+            val.at("orientation").get_to(cam.orientation);
+        } else {
+            return false;
+        }
+        if (val.at("position").is_array() && val.at("position").size() == cam.position.size()) {
+            val.at("position").get_to(cam.position);
+        } else {
+            return false;
+        }
+        if (val.at("projection_type").is_number_integer()) {
+            val.at("projection_type").get_to(cam.projection_type);
+        } else {
+            return false;
+        }
+        if (val.at("resolution_gate").is_array() && val.at("resolution_gate").size() == cam.resolution_gate.size()) {
+            val.at("resolution_gate").get_to(cam.resolution_gate);
+        } else {
+            return false;
+        }
+        // try to read the additional "valid" value
+        if (val.find("valid") != val.end()) {
+            if (val.at("valid").is_boolean()) {
+                bool valid;
+                val.at("valid").get_to(valid);
+                return valid;
+            }
+        }
+    } catch (...) {
+        return false;
     }
 
     return true;
