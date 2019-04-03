@@ -215,7 +215,6 @@ protected:
      * Stores the current camera settings
      *
      * @param p Must be storeCameraSettingsSlot
-     *
      * @return true
      */
     bool onStoreCamera(param::ParamSlot& p);
@@ -274,6 +273,9 @@ protected:
 
     /** Flag showing the look at point */
     param::ParamSlot showLookAt;
+
+    /** Slot containing the settings of the currently stored camera */
+    param::ParamSlot cameraSettingsSlot;
 
     /** Triggers the storage of the camera settings */
     param::ParamSlot storeCameraSettingsSlot;

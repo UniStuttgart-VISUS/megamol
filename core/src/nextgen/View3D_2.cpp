@@ -55,10 +55,11 @@ View3D_2::View3D_2(void)
     , rendererSlot("rendering", "Connects the view to a Renderer")
     , bboxs()
     , showLookAt("showLookAt", "Flag showing the look at point")
-    , storeCameraSettingsSlot("camstore::storecam",
-          "Triggers the storage of the camera settings. This only works if you use .lua project files")
-    , restoreCameraSettingsSlot("camstore::restorecam",
-          "Triggers the restore of the camera settings. This only works if you use .lua project files")
+    , cameraSettingsSlot("camstore::settings", "Holds the camera settings of the currently stored camera.")
+    , storeCameraSettingsSlot("camstore::storecam", "Triggers the storage of the camera settings. This only works for "
+                                                    "multiple cameras if you use .lua project files")
+    , restoreCameraSettingsSlot("camstore::restorecam", "Triggers the restore of the camera settings. This only works "
+                                                        "for multiple cameras if you use .lua project files")
     , overrideCamSettingsSlot("camstore::overrideSettings",
           "When activated, existing camera settings files will be overwritten by this "
           "module. This only works if you use .lua project files")
@@ -109,6 +110,9 @@ View3D_2::View3D_2(void)
 
     this->showLookAt.SetParameter(new param::BoolParam(false));
     this->MakeSlotAvailable(&this->showLookAt);
+
+    this->cameraSettingsSlot.SetParameter(new param::StringParam(""));
+    this->MakeSlotAvailable(&this->cameraSettingsSlot);
 
     this->storeCameraSettingsSlot.SetParameter(
         new param::ButtonParam(view::Key::KEY_C, (view::Modifier::SHIFT | view::Modifier::ALT)));
@@ -709,6 +713,15 @@ bool View3D_2::mouseSensitivityChanged(param::ParamSlot& p) { return true; }
  * View3D_2::onStoreCamera
  */
 bool View3D_2::onStoreCamera(param::ParamSlot& p) {
+    // save the current camera, too
+    Camera_2::minimal_state_type minstate;
+    this->cam.get_minimal_state(minstate);
+    this->savedCameras[10].first = minstate;
+    this->savedCameras[10].second = true;
+    this->serializer.setPrettyMode(false);
+    std::string camstring = this->serializer.serialize(this->savedCameras[10].first);
+    this->cameraSettingsSlot.Param<param::StringParam>()->SetValue(camstring.c_str());
+
     auto path = this->determineCameraFilePath();
     if (path.empty()) {
         vislib::sys::Log::DefaultLog.WriteWarn(
@@ -730,11 +743,7 @@ bool View3D_2::onStoreCamera(param::ParamSlot& p) {
         }
     }
 
-    // save the current camera, too
-    Camera_2::minimal_state_type minstate;
-    this->cam.get_minimal_state(minstate);
-    this->savedCameras[10].first = minstate;
-    this->savedCameras[10].second = true;
+
     this->serializer.setPrettyMode();
     auto outString = this->serializer.serialize(this->savedCameras);
 
@@ -756,6 +765,18 @@ bool View3D_2::onStoreCamera(param::ParamSlot& p) {
  * View3D_2::onRestoreCamera
  */
 bool View3D_2::onRestoreCamera(param::ParamSlot& p) {
+    if (!this->cameraSettingsSlot.Param<param::StringParam>()->Value().IsEmpty()) {
+        std::string camstring = T2A(this->cameraSettingsSlot.Param<param::StringParam>()->Value());
+        cam_type::minimal_state_type minstate;
+        if (!this->serializer.deserialize(minstate, camstring)) {
+            vislib::sys::Log::DefaultLog.WriteWarn(
+                "The entered camera string was not valid. No change of the camera has been performed");
+        } else {
+            this->cam = minstate;
+            return true;
+        }
+    }
+
     auto path = this->determineCameraFilePath();
     if (path.empty()) {
         vislib::sys::Log::DefaultLog.WriteWarn(
