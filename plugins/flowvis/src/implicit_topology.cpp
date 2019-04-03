@@ -60,6 +60,10 @@ namespace megamol
             termination_fixed_range("termination_fixed_range", "Fixed or dynamic value range for reasons of termination"),
             termination_range_min("termination_range_min", "Minimum value for reasons of termination in the transfer function"),
             termination_range_max("termination_range_max", "Maximum value for reasons of termination in the transfer function"),
+            gradient_transfer_function("gradient_transfer_function", "Transfer function for gradients"),
+            gradient_fixed_range("gradient_fixed_range", "Fixed or dynamic value range for gradients"),
+            gradient_range_min("gradient_range_min", "Minimum value for gradients in the transfer function"),
+            gradient_range_max("gradient_range_max", "Maximum value for gradients in the transfer function"),
             num_integration_steps("num_integration_steps", "Number of stream line integration steps"),
             integration_timestep("integration_timestep", "Initial time step for stream line integration"),
             max_integration_error("max_integration_error", "Maximum integration error for Runge-Kutta 4-5"),
@@ -68,7 +72,7 @@ namespace megamol
             refinement_threshold("refinement_threshold", "Threshold for grid refinement, defined as minimum edge length"),
             refine_at_labels("refine_at_labels", "Should the grid be refined in regions of different labels?"),
             distance_difference_threshold("distance_difference_threshold", "Threshold for refining the grid when neighboring nodes exceed a distance difference"),
-            computation_running(false), mesh_output_changed(false), data_output_changed(false), computation(nullptr)
+            computation_running(false), mesh_output_changed(false), data_output_changed(false), computation(nullptr), previous_result(nullptr)
         {
             // Connect output
             this->triangle_mesh_slot.SetCallback(triangle_mesh_call::ClassName(), triangle_mesh_call::FunctionName(0), &implicit_topology::get_triangle_data_callback);
@@ -196,6 +200,19 @@ namespace megamol
 
             this->termination_range_max << new core::param::FloatParam(2.0f);
             this->MakeSlotAvailable(&this->termination_range_max);
+
+            this->gradient_transfer_function << new core::param::LinearTransferFunctionParam(
+                "{\"Interpolation\":\"LINEAR\",\"Nodes\":[[1.0,1.0,1.0,1.0,0.0],[0.0,0.0,0.0,1.0,1.0]],\"TextureSize\":128}");
+            this->MakeSlotAvailable(&this->gradient_transfer_function);
+
+            this->gradient_fixed_range << new core::param::BoolParam(false);
+            this->MakeSlotAvailable(&this->gradient_fixed_range);
+
+            this->gradient_range_min << new core::param::FloatParam(0.0f);
+            this->MakeSlotAvailable(&this->gradient_range_min);
+
+            this->gradient_range_max << new core::param::FloatParam(1.0f);
+            this->MakeSlotAvailable(&this->gradient_range_max);
         }
 
         implicit_topology::~implicit_topology()
@@ -294,7 +311,7 @@ namespace megamol
 
                 num = x_num * y_num;
 
-                resolution = { static_cast<int>(x_num), static_cast<int>(y_num) };
+                this->resolution = resolution = { static_cast<int>(x_num), static_cast<int>(y_num) };
                 domain = { x_min, x_max, y_min, y_max };
 
                 // Read file content
@@ -433,6 +450,7 @@ namespace megamol
 
                 // Save new last result
                 this->last_result = this->computation->get_results();
+                this->previous_result = std::make_unique<implicit_topology_results>(result);
 
                 this->mesh_output_changed = true;
                 this->data_output_changed = true;
@@ -544,13 +562,21 @@ namespace megamol
             auto* data_call = dynamic_cast<mesh_data_call*>(&call);
             if (data_call == nullptr) return false;
 
+            // Only update if there is actual data
+            if (this->labels_forward == nullptr || this->labels_backward == nullptr || this->distances_forward == nullptr ||
+                this->distances_backward == nullptr || this->terminations_forward == nullptr || this->terminations_backward == nullptr)
+            {
+                return true;
+            }
+
             // Update render output if there are new results
             update_results();
 
             if (this->data_output_changed
                 || this->label_fixed_range.IsDirty() || this->label_range_min.IsDirty() || this->label_range_max.IsDirty()
                 || this->distance_fixed_range.IsDirty() || this->distance_range_min.IsDirty() || this->distance_range_max.IsDirty()
-                || this->termination_fixed_range.IsDirty() || this->termination_range_min.IsDirty() || this->termination_range_max.IsDirty())
+                || this->termination_fixed_range.IsDirty() || this->termination_range_min.IsDirty() || this->termination_range_max.IsDirty()
+                || this->gradient_fixed_range.IsDirty() || this->gradient_range_min.IsDirty() || this->gradient_range_max.IsDirty())
             {
                 this->label_fixed_range.ResetDirty();
                 this->label_range_min.ResetDirty();
@@ -564,165 +590,165 @@ namespace megamol
                 this->termination_range_min.ResetDirty();
                 this->termination_range_max.ResetDirty();
 
-                // Prepare labels
-                float label_min, label_max;
+                this->gradient_fixed_range.ResetDirty();
+                this->gradient_range_min.ResetDirty();
+                this->gradient_range_max.ResetDirty();
 
+                // Set data function
+                auto set_data = [](mesh_data_call* call, std::shared_ptr<std::vector<float>> data, const std::string& name,
+                    const bool fixed_range, const float range_min, const float range_max) -> std::pair<float, float>
                 {
-                    auto label_data = std::make_shared<mesh_data_call::data_set>();
-                    label_data->transfer_function = this->label_transfer_function.Param<core::param::LinearTransferFunctionParam>()->Value();
+                    auto data_set = std::make_shared<mesh_data_call::data_set>();
 
-                    if (this->label_fixed_range.Param<core::param::BoolParam>()->Value())
+                    if (fixed_range)
                     {
-                        label_data->min_value = this->label_range_min.Param<core::param::FloatParam>()->Value();
-                        label_data->max_value = this->label_range_max.Param<core::param::FloatParam>()->Value();
+                        data_set->min_value = range_min;
+                        data_set->max_value = range_max;
                     }
                     else
                     {
-                        const auto min_max_value = std::minmax_element(this->labels_forward->begin(), this->labels_forward->end());
-                        label_data->min_value = *min_max_value.first;
-                        label_data->max_value = *min_max_value.second;
+                        const auto min_max_value = std::minmax_element(data->begin(), data->end());
+                        data_set->min_value = *min_max_value.first;
+                        data_set->max_value = *min_max_value.second;
                     }
 
-                    label_min = label_data->min_value;
-                    label_max = label_data->max_value;
+                    data_set->data = data;
 
-                    label_data->data = this->labels_forward;
+                    call->set_data(name, data_set);
 
-                    data_call->set_data("labels (forward)", label_data);
-                }
-                {
-                    auto label_data = std::make_shared<mesh_data_call::data_set>();
-                    label_data->transfer_function = this->label_transfer_function.Param<core::param::LinearTransferFunctionParam>()->Value();
+                    return { data_set->min_value, data_set->max_value };
+                };
 
-                    if (this->label_fixed_range.Param<core::param::BoolParam>()->Value())
-                    {
-                        label_data->min_value = this->label_range_min.Param<core::param::FloatParam>()->Value();
-                        label_data->max_value = this->label_range_max.Param<core::param::FloatParam>()->Value();
-                    }
-                    else
-                    {
-                        const auto min_max_value = std::minmax_element(this->labels_backward->begin(), this->labels_backward->end());
-                        label_data->min_value = *min_max_value.first;
-                        label_data->max_value = *min_max_value.second;
-                    }
+                // Set labels
+                auto label_forward_min_max = set_data(data_call, this->labels_forward, "labels (forward)",
+                    this->label_fixed_range.Param<core::param::BoolParam>()->Value(),
+                    this->label_range_min.Param<core::param::FloatParam>()->Value(),
+                    this->label_range_max.Param<core::param::FloatParam>()->Value());
 
-                    label_min = std::min(label_min, label_data->min_value);
-                    label_max = std::max(label_max, label_data->max_value);
+                auto label_backward_min_max = set_data(data_call, this->labels_backward, "labels (backward)",
+                    this->label_fixed_range.Param<core::param::BoolParam>()->Value(),
+                    this->label_range_min.Param<core::param::FloatParam>()->Value(),
+                    this->label_range_max.Param<core::param::FloatParam>()->Value());
 
-                    label_data->data = this->labels_backward;
+                const float label_min = std::min(label_forward_min_max.first, label_backward_min_max.first);
+                const float label_max = std::max(label_forward_min_max.second, label_backward_min_max.second);
 
-                    data_call->set_data("labels (backward)", label_data);
-                }
-                
-                // Prepare distances
-                float distance_min, distance_max;
-
-                {
-                    auto distance_data = std::make_shared<mesh_data_call::data_set>();
-                    distance_data->transfer_function = this->distance_transfer_function.Param<core::param::LinearTransferFunctionParam>()->Value();
-
-                    if (this->distance_fixed_range.Param<core::param::BoolParam>()->Value())
-                    {
-                        distance_data->min_value = this->distance_range_min.Param<core::param::FloatParam>()->Value();
-                        distance_data->max_value = this->distance_range_max.Param<core::param::FloatParam>()->Value();
-                    }
-                    else
-                    {
-                        const auto min_max_value = std::minmax_element(this->distances_forward->begin(), this->distances_forward->end());
-                        distance_data->min_value = *min_max_value.first;
-                        distance_data->max_value = *min_max_value.second;
-                    }
-
-                    distance_min = distance_data->min_value;
-                    distance_max = distance_data->max_value;
-
-                    distance_data->data = this->distances_forward;
-
-                    data_call->set_data("distances (forward)", distance_data);
-                }
-                {
-                    auto distance_data = std::make_shared<mesh_data_call::data_set>();
-                    distance_data->transfer_function = this->distance_transfer_function.Param<core::param::LinearTransferFunctionParam>()->Value();
-
-                    if (this->distance_fixed_range.Param<core::param::BoolParam>()->Value())
-                    {
-                        distance_data->min_value = this->distance_range_min.Param<core::param::FloatParam>()->Value();
-                        distance_data->max_value = this->distance_range_max.Param<core::param::FloatParam>()->Value();
-                    }
-                    else
-                    {
-                        const auto min_max_value = std::minmax_element(this->distances_backward->begin(), this->distances_backward->end());
-                        distance_data->min_value = *min_max_value.first;
-                        distance_data->max_value = *min_max_value.second;
-                    }
-
-                    distance_min = std::min(distance_min, distance_data->min_value);
-                    distance_max = std::max(distance_max, distance_data->max_value);
-
-                    distance_data->data = this->distances_backward;
-
-                    data_call->set_data("distances (backward)", distance_data);
-                }
-
-                // Prepare reasons for termination
-                float termination_min, termination_max;
-
-                {
-                    auto termination_data = std::make_shared<mesh_data_call::data_set>();
-                    termination_data->transfer_function = this->termination_transfer_function.Param<core::param::LinearTransferFunctionParam>()->Value();
-
-                    if (this->termination_fixed_range.Param<core::param::BoolParam>()->Value())
-                    {
-                        termination_data->min_value = this->termination_range_min.Param<core::param::FloatParam>()->Value();
-                        termination_data->max_value = this->termination_range_max.Param<core::param::FloatParam>()->Value();
-                    }
-                    else
-                    {
-                        const auto min_max_value = std::minmax_element(this->terminations_forward->begin(), this->terminations_forward->end());
-                        termination_data->min_value = *min_max_value.first;
-                        termination_data->max_value = *min_max_value.second;
-                    }
-
-                    termination_min = termination_data->min_value;
-                    termination_max = termination_data->max_value;
-
-                    termination_data->data = this->terminations_forward;
-
-                    data_call->set_data("reasons for termination (forward)", termination_data);
-                }
-                {
-                    auto termination_data = std::make_shared<mesh_data_call::data_set>();
-                    termination_data->transfer_function = this->termination_transfer_function.Param<core::param::LinearTransferFunctionParam>()->Value();
-
-                    if (this->termination_fixed_range.Param<core::param::BoolParam>()->Value())
-                    {
-                        termination_data->min_value = this->termination_range_min.Param<core::param::FloatParam>()->Value();
-                        termination_data->max_value = this->termination_range_max.Param<core::param::FloatParam>()->Value();
-                    }
-                    else
-                    {
-                        const auto min_max_value = std::minmax_element(this->terminations_forward->begin(), this->terminations_forward->end());
-                        termination_data->min_value = *min_max_value.first;
-                        termination_data->max_value = *min_max_value.second;
-                    }
-
-                    termination_min = std::min(termination_min, termination_data->min_value);
-                    termination_max = std::max(termination_max, termination_data->max_value);
-
-                    termination_data->data = this->terminations_forward;
-
-                    data_call->set_data("reasons for termination (backward)", termination_data);
-                }
-
-                // Set fixed range values
                 this->label_range_min.Param<core::param::FloatParam>()->SetValue(label_min, false);
                 this->label_range_max.Param<core::param::FloatParam>()->SetValue(label_max, false);
+
+                this->label_transfer_function.ForceSetDirty();
+                
+                // Set distances
+                auto distance_forward_min_max = set_data(data_call, this->distances_forward, "distances (forward)",
+                    this->distance_fixed_range.Param<core::param::BoolParam>()->Value(),
+                    this->distance_range_min.Param<core::param::FloatParam>()->Value(),
+                    this->distance_range_max.Param<core::param::FloatParam>()->Value());
+
+                auto distance_backward_min_max = set_data(data_call, this->distances_backward, "distances (backward)",
+                    this->distance_fixed_range.Param<core::param::BoolParam>()->Value(),
+                    this->distance_range_min.Param<core::param::FloatParam>()->Value(),
+                    this->distance_range_max.Param<core::param::FloatParam>()->Value());
+
+                const float distance_min = std::min(distance_forward_min_max.first, distance_backward_min_max.first);
+                const float distance_max = std::max(distance_forward_min_max.second, distance_backward_min_max.second);
 
                 this->distance_range_min.Param<core::param::FloatParam>()->SetValue(distance_min, false);
                 this->distance_range_max.Param<core::param::FloatParam>()->SetValue(distance_max, false);
 
+                this->distance_transfer_function.ForceSetDirty();
+
+                // Set reasons for termination
+                auto termination_forward_min_max = set_data(data_call, this->terminations_forward, "terminations (forward)",
+                    this->termination_fixed_range.Param<core::param::BoolParam>()->Value(),
+                    this->termination_range_min.Param<core::param::FloatParam>()->Value(),
+                    this->termination_range_max.Param<core::param::FloatParam>()->Value());
+
+                auto termination_backward_min_max = set_data(data_call, this->terminations_backward, "terminations (backward)",
+                    this->termination_fixed_range.Param<core::param::BoolParam>()->Value(),
+                    this->termination_range_min.Param<core::param::FloatParam>()->Value(),
+                    this->termination_range_max.Param<core::param::FloatParam>()->Value());
+
+                const float termination_min = std::min(termination_forward_min_max.first, termination_backward_min_max.first);
+                const float termination_max = std::max(termination_forward_min_max.second, termination_backward_min_max.second);
+
                 this->termination_range_min.Param<core::param::FloatParam>()->SetValue(termination_min, false);
                 this->termination_range_max.Param<core::param::FloatParam>()->SetValue(termination_max, false);
+
+                this->termination_transfer_function.ForceSetDirty();
+
+                // Compute and set gradient magnitudes
+                if (this->data_output_changed)
+                {
+                    this->gradients_forward = std::make_shared<std::vector<float>>(this->distances_forward->size());
+                    this->gradients_backward = std::make_shared<std::vector<float>>(this->distances_backward->size());
+
+                    const std::vector<float>& distances_forward = *this->distances_forward;
+                    const std::vector<float>& distances_backward = *this->distances_backward;
+
+                    for (int x = 0; x < this->resolution[0]; ++x)
+                    {
+                        for (int y = 0; y < this->resolution[1]; ++y)
+                        {
+                            const int index = x + y * resolution[0];
+
+                            float magnitude_forward = 0.0f;
+                            float magnitude_backward = 0.0f;
+
+                            if (x == 0)
+                            {
+                                magnitude_forward += std::pow(distances_forward[index + 1] - distances_forward[index], 2.0f);
+                                magnitude_backward += std::pow(distances_backward[index + 1] - distances_backward[index], 2.0f);
+                            }
+                            else if (x == this->resolution[0] - 1)
+                            {
+                                magnitude_forward += std::pow(distances_forward[index] - distances_forward[index - 1], 2.0f);
+                                magnitude_backward += std::pow(distances_backward[index] - distances_backward[index - 1], 2.0f);
+                            }
+                            else
+                            {
+                                magnitude_forward += std::pow((distances_forward[index + 1] - distances_forward[index - 1]) / 2.0f, 2.0f);
+                                magnitude_backward += std::pow((distances_backward[index + 1] - distances_backward[index - 1]) / 2.0f, 2.0f);
+                            }
+
+                            if (y == 0)
+                            {
+                                magnitude_forward += std::pow(distances_forward[index + this->resolution[0]] - distances_forward[index], 2.0f);
+                                magnitude_backward += std::pow(distances_backward[index + this->resolution[0]] - distances_backward[index], 2.0f);
+                            }
+                            else if (y == this->resolution[1] - 1)
+                            {
+                                magnitude_forward += std::pow(distances_forward[index] - distances_forward[index - this->resolution[0]], 2.0f);
+                                magnitude_backward += std::pow(distances_backward[index] - distances_backward[index - this->resolution[0]], 2.0f);
+                            }
+                            else
+                            {
+                                magnitude_forward += std::pow((distances_forward[index + this->resolution[0]] - distances_forward[index - this->resolution[0]]) / 2.0f, 2.0f);
+                                magnitude_backward += std::pow((distances_backward[index + this->resolution[0]] - distances_backward[index - this->resolution[0]]) / 2.0f, 2.0f);
+                            }
+
+                            (*this->gradients_forward)[index] = std::sqrt(magnitude_forward);
+                            (*this->gradients_backward)[index] = std::sqrt(magnitude_backward);
+                        }
+                    }
+                }
+
+                auto gradient_forward_min_max = set_data(data_call, this->gradients_forward, "gradients (forward)",
+                    this->gradient_fixed_range.Param<core::param::BoolParam>()->Value(),
+                    this->gradient_range_min.Param<core::param::FloatParam>()->Value(),
+                    this->gradient_range_max.Param<core::param::FloatParam>()->Value());
+
+                auto gradient_backward_min_max = set_data(data_call, this->gradients_backward, "gradients (backward)",
+                    this->gradient_fixed_range.Param<core::param::BoolParam>()->Value(),
+                    this->gradient_range_min.Param<core::param::FloatParam>()->Value(),
+                    this->gradient_range_max.Param<core::param::FloatParam>()->Value());
+
+                const float gradient_min = std::min(gradient_forward_min_max.first, gradient_backward_min_max.first);
+                const float gradient_max = std::max(gradient_forward_min_max.second, gradient_backward_min_max.second);
+
+                this->gradient_range_min.Param<core::param::FloatParam>()->SetValue(gradient_min, false);
+                this->gradient_range_max.Param<core::param::FloatParam>()->SetValue(gradient_max, false);
+
+                this->gradient_transfer_function.ForceSetDirty();
 
                 // Set new data hash
                 data_call->SetDataHash(data_call->DataHash() + 1);
@@ -740,77 +766,50 @@ namespace megamol
             this->termination_range_min.Parameter()->SetGUIReadOnly(!this->termination_fixed_range.Param<core::param::BoolParam>()->Value());
             this->termination_range_max.Parameter()->SetGUIReadOnly(!this->termination_fixed_range.Param<core::param::BoolParam>()->Value());
 
+            this->gradient_range_min.Parameter()->SetGUIReadOnly(!this->gradient_fixed_range.Param<core::param::BoolParam>()->Value());
+            this->gradient_range_max.Parameter()->SetGUIReadOnly(!this->gradient_fixed_range.Param<core::param::BoolParam>()->Value());
+
             // Update transfer functions
+            auto set_transfer_function = [](std::shared_ptr<mesh_data_call::data_set> data_set, std::string transfer_function)
+            {
+                if (data_set != nullptr)
+                {
+                    std::swap(data_set->transfer_function, transfer_function);
+
+                    data_set->transfer_function_dirty = true;
+                }
+            };
+
             if (this->label_transfer_function.IsDirty())
             {
-                {
-                    auto label_data = data_call->get_data("labels (forward)");
-
-                    if (label_data != nullptr)
-                    {
-                        label_data->transfer_function = this->label_transfer_function.Param<core::param::LinearTransferFunctionParam>()->Value();
-                        label_data->transfer_function_dirty = true;
-                    }
-                }
-                {
-                    auto label_data = data_call->get_data("labels (backward)");
-
-                    if (label_data != nullptr)
-                    {
-                        label_data->transfer_function = this->label_transfer_function.Param<core::param::LinearTransferFunctionParam>()->Value();
-                        label_data->transfer_function_dirty = true;
-                    }
-                }
+                set_transfer_function(data_call->get_data("labels (forward)"), this->label_transfer_function.Param<core::param::LinearTransferFunctionParam>()->Value());
+                set_transfer_function(data_call->get_data("labels (backward)"), this->label_transfer_function.Param<core::param::LinearTransferFunctionParam>()->Value());
 
                 this->label_transfer_function.ResetDirty();
             }
 
             if (this->distance_transfer_function.IsDirty())
             {
-                {
-                    auto distance_data = data_call->get_data("distances (forward)");
-
-                    if (distance_data != nullptr)
-                    {
-                        distance_data->transfer_function = this->distance_transfer_function.Param<core::param::LinearTransferFunctionParam>()->Value();
-                        distance_data->transfer_function_dirty = true;
-                    }
-                }
-                {
-                    auto distance_data = data_call->get_data("distances (backward)");
-
-                    if (distance_data != nullptr)
-                    {
-                        distance_data->transfer_function = this->distance_transfer_function.Param<core::param::LinearTransferFunctionParam>()->Value();
-                        distance_data->transfer_function_dirty = true;
-                    }
-                }
+                set_transfer_function(data_call->get_data("distances (forward)"), this->distance_transfer_function.Param<core::param::LinearTransferFunctionParam>()->Value());
+                set_transfer_function(data_call->get_data("distances (backward)"), this->distance_transfer_function.Param<core::param::LinearTransferFunctionParam>()->Value());
 
                 this->distance_transfer_function.ResetDirty();
             }
 
             if (this->termination_transfer_function.IsDirty())
             {
-                {
-                    auto termination_data = data_call->get_data("reasons for termination (forward)");
-
-                    if (termination_data != nullptr)
-                    {
-                        termination_data->transfer_function = this->termination_transfer_function.Param<core::param::LinearTransferFunctionParam>()->Value();
-                        termination_data->transfer_function_dirty = true;
-                    }
-                }
-                {
-                    auto termination_data = data_call->get_data("reasons for termination (backward)");
-
-                    if (termination_data != nullptr)
-                    {
-                        termination_data->transfer_function = this->termination_transfer_function.Param<core::param::LinearTransferFunctionParam>()->Value();
-                        termination_data->transfer_function_dirty = true;
-                    }
-                }
+                set_transfer_function(data_call->get_data("terminations (forward)"), this->termination_transfer_function.Param<core::param::LinearTransferFunctionParam>()->Value());
+                set_transfer_function(data_call->get_data("terminations (backward)"), this->termination_transfer_function.Param<core::param::LinearTransferFunctionParam>()->Value());
 
                 this->termination_transfer_function.ResetDirty();
+            }
+
+            if (this->gradient_transfer_function.IsDirty())
+            {
+                set_transfer_function(data_call->get_data("gradients (forward)"), this->gradient_transfer_function.Param<core::param::LinearTransferFunctionParam>()->Value());
+                set_transfer_function(data_call->get_data("gradients (backward)"), this->gradient_transfer_function.Param<core::param::LinearTransferFunctionParam>()->Value());
+
+                this->gradient_transfer_function.ResetDirty();
             }
 
             return true;
@@ -829,6 +828,9 @@ namespace megamol
 
             data_call->set_data("reasons for termination (forward)");
             data_call->set_data("reasons for termination (backward)");
+
+            data_call->set_data("gradients (forward)");
+            data_call->set_data("gradients (backward)");
 
             return true;
         }
@@ -854,11 +856,12 @@ namespace megamol
             return true;
         }
 
-        bool implicit_topology::start_computation_callback(core::param::ParamSlot&)
+        bool implicit_topology::start_computation_callback(core::param::ParamSlot& slot)
         {
             // Initialize computation object
             if (!initialize_computation())
             {
+                slot.ResetDirty();
                 return false;
             }
 
@@ -904,7 +907,9 @@ namespace megamol
         {
             // Terminate earlier computation
             stop_computation_callback();
+
             this->computation = nullptr;
+            this->previous_result = nullptr;
 
             // Reset parameters to read-write
             set_readonly_fixed_parameters(false);
@@ -913,7 +918,7 @@ namespace megamol
             return true;
         }
 
-        bool implicit_topology::load_computation_callback(core::param::ParamSlot&)
+        bool implicit_topology::load_computation_callback(core::param::ParamSlot& slot)
         {
             // Get load callback
             auto* call = this->result_reader_slot.CallAs<implicit_topology_reader_call>();
@@ -928,6 +933,7 @@ namespace megamol
 
                 if (!call->GetCallback()(previous_results))
                 {
+                    slot.ResetDirty();
                     return false;
                 }
 
@@ -944,6 +950,7 @@ namespace megamol
 
                 if (!load_input(resolution, domain, positions, vectors, points, point_ids, lines, line_ids))
                 {
+                    slot.ResetDirty();
                     return false;
                 }
                     
@@ -964,18 +971,28 @@ namespace megamol
             return true;
         }
 
-        bool implicit_topology::save_computation_callback(core::param::ParamSlot&)
+        bool implicit_topology::save_computation_callback(core::param::ParamSlot& slot)
         {
             if (this->computation_running)
             {
                 vislib::sys::Log::DefaultLog.WriteWarn("Results can only be saved after the computation has finished.");
 
+                slot.ResetDirty();
                 return false;
             }
 
-            if (!this->last_result.valid() || !this->get_result_writer_callback(this->last_result.get()))
+            if (this->previous_result == nullptr)
             {
-                return true;
+                vislib::sys::Log::DefaultLog.WriteWarn("There is no result to write to file.");
+
+                slot.ResetDirty();
+                return false;
+            }
+
+            if (!this->get_result_writer_callback(*this->previous_result))
+            {
+                slot.ResetDirty();
+                return false;
             }
 
             vislib::sys::Log::DefaultLog.WriteInfo("Previous computation of topology saved to file.");

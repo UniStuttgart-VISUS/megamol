@@ -18,6 +18,7 @@
 
 #include "glad/glad.h"
 
+#include <array>
 #include <iostream>
 #include <memory>
 #include <type_traits>
@@ -181,20 +182,23 @@ namespace megamol
             core::param::ParamSlot vector_field_path;
             core::param::ParamSlot convergence_structures_path;
             
-            /** Transfer function for labels, distances and reasons of termination */
+            /** Transfer function for labels, distances, reasons of termination, and gradients */
             core::param::ParamSlot label_transfer_function;
             core::param::ParamSlot distance_transfer_function;
             core::param::ParamSlot termination_transfer_function;
+            core::param::ParamSlot gradient_transfer_function;
 
             /** Checkboxes for fixing the data range */
             core::param::ParamSlot label_fixed_range;
             core::param::ParamSlot distance_fixed_range;
             core::param::ParamSlot termination_fixed_range;
+            core::param::ParamSlot gradient_fixed_range;
 
             /** Values of the fixed range */
             core::param::ParamSlot label_range_min, label_range_max;
             core::param::ParamSlot distance_range_min, distance_range_max;
             core::param::ParamSlot termination_range_min, termination_range_max;
+            core::param::ParamSlot gradient_range_min, gradient_range_max;
 
             /** Parameters for stream line computation */
             core::param::ParamSlot num_integration_steps;
@@ -207,6 +211,9 @@ namespace megamol
             core::param::ParamSlot refinement_threshold;
             core::param::ParamSlot refine_at_labels;
             core::param::ParamSlot distance_difference_threshold;
+
+            /** Input information */
+            std::array<int, 2> resolution;
 
             /** Indicator for changed output */
             bool computation_running;
@@ -230,11 +237,18 @@ namespace megamol
             std::shared_ptr<std::vector<GLfloat>> terminations_forward;
             std::shared_ptr<std::vector<GLfloat>> terminations_backward;
 
+            /** Output gradients */
+            std::shared_ptr<std::vector<GLfloat>> gradients_forward;
+            std::shared_ptr<std::vector<GLfloat>> gradients_backward;
+
             /** Computation class */
             std::unique_ptr<implicit_topology_computation> computation;
 
             /** Store last promised result */
             std::shared_future<implicit_topology_results> last_result;
+
+            /** Store previous result */
+            std::unique_ptr<implicit_topology_results> previous_result;
         };
     }
 }
