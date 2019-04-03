@@ -71,7 +71,7 @@ void main(void) {
     vec4 d, p, q, h, dd;
 
     // get camera orthonormal coordinate system
-//    vec4 tmp;
+    // vec4 tmp;
 
     vec4 mins, maxs;
 
@@ -262,7 +262,9 @@ void main(void) {
     camPos.xyz -= objPos.xyz; // cam pos to glyph space
 ]]>
             </snippet>
-            <snippet name="simplesphere::vertex::SphereTouchPlane" />
+
+            <snippet  type="file">mipdepth_spheretouchplane.glsl</snippet>
+            
             <snippet name="Output" type="string">
                 <![CDATA[
     vec4 depthPos; // ass of sphere in object space
