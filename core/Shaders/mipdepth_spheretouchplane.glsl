@@ -6,7 +6,6 @@
 
     // get camera orthonormal coordinate system
     vec4 tmp;
-
 #ifdef CALC_CAM_SYS
     // camera coordinate system in object space
     tmp = gl_ModelViewMatrixInverse[3] + gl_ModelViewMatrixInverse[2];
@@ -23,18 +22,14 @@
 
     // projected camera vector
     vec3 c2 = vec3(dot(camPos.xyz, camRight), dot(camPos.xyz, camUp), dot(camPos.xyz, camIn));
-
     vec3 cpj1 = camIn * c2.z + camRight * c2.x;
     vec3 cpm1 = camIn * c2.x - camRight * c2.z;
-
     vec3 cpj2 = camIn * c2.z + camUp * c2.y;
     vec3 cpm2 = camIn * c2.y - camUp * c2.z;
     
     d.x = length(cpj1);
     d.y = length(cpj2);
-
     dd = vec2(1.0) / d;
-
     p = squarRad * dd;
     q = d - p;
     h = sqrt(p * q);
