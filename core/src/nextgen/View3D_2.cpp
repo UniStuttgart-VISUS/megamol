@@ -426,10 +426,7 @@ void View3D_2::ResetView(void) {
 
     auto bbcglm = glm::vec4(bbc.GetX(), bbc.GetY(), bbc.GetZ(), 1.0f);
 
-    // this->cam.look_at(bbcglm + glm::vec4(0.0f, 0.0f, dist, 0.0f), bbcglm);
     this->cam.position(bbcglm + glm::vec4(0.0f, 0.0f, dist, 0.0f));
-    // TODO set up vector correctly
-    // via cam.orientation quaternion
     this->cam.orientation(cam_type::quaternion_type::create_identity());
 
     glm::mat4 vm = this->cam.view_matrix();
@@ -466,6 +463,17 @@ void View3D_2::UpdateFreeze(bool freeze) {
  * View3D_2::OnKey
  */
 bool nextgen::View3D_2::OnKey(view::Key key, view::KeyAction action, view::Modifiers mods) {
+    auto* cr = this->rendererSlot.CallAs<CallRender3D_2>();
+    if (cr != nullptr) {
+        view::InputEvent evt;
+        evt.tag = view::InputEvent::Tag::Key;
+        evt.keyData.key = key;
+        evt.keyData.action = action;
+        evt.keyData.mods = mods;
+        cr->SetInputEvent(evt);
+        if ((*cr)(CallRender3D_2::FnOnKey)) return true;
+    }
+
     if (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT) {
         this->pressedKeyMap[key] = true;
     } else if (action == view::KeyAction::RELEASE) {
@@ -513,17 +521,6 @@ bool nextgen::View3D_2::OnKey(view::Key key, view::KeyAction action, view::Modif
         }
     }
 
-    auto* cr = this->rendererSlot.CallAs<nextgen::CallRender3D_2>();
-    if (cr == NULL) return false;
-
-    view::InputEvent evt;
-    evt.tag = view::InputEvent::Tag::Key;
-    evt.keyData.key = key;
-    evt.keyData.action = action;
-    evt.keyData.mods = mods;
-    cr->SetInputEvent(evt);
-    if (!(*cr)(nextgen::CallRender3D_2::FnOnKey)) return false;
-
     return true;
 }
 
@@ -547,6 +544,17 @@ bool nextgen::View3D_2::OnChar(unsigned int codePoint) {
  * View3D_2::OnMouseButton
  */
 bool nextgen::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButtonAction action, view::Modifiers mods) {
+    auto* cr = this->rendererSlot.CallAs<CallRender3D_2>();
+    if (cr != nullptr) {
+        view::InputEvent evt;
+        evt.tag = view::InputEvent::Tag::MouseButton;
+        evt.mouseButtonData.button = button;
+        evt.mouseButtonData.action = action;
+        evt.mouseButtonData.mods = mods;
+        cr->SetInputEvent(evt);
+        if ((*cr)(CallRender3D_2::FnOnMouseButton)) return true;
+    }
+
     if (action == view::MouseButtonAction::PRESS) {
         this->pressedMouseMap[button] = true;
     } else if (action == view::MouseButtonAction::RELEASE) {
@@ -567,7 +575,8 @@ bool nextgen::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButto
                     glm::vec3 curPos = static_cast<glm::vec4>(this->cam.eye_position());
                     this->arcballManipulator.set_radius(glm::distance(rotCenter, curPos));
                     auto wndSize = this->cam.resolution_gate();
-                    this->arcballManipulator.on_drag_start(static_cast<int>(this->mouseX), wndSize.height() - static_cast<int>(this->mouseY));
+                    this->arcballManipulator.on_drag_start(
+                        static_cast<int>(this->mouseX), wndSize.height() - static_cast<int>(this->mouseY));
                 }
             } else if (action == view::MouseButtonAction::RELEASE && (altPressed ^ this->arcballDefault)) {
                 this->arcballManipulator.on_drag_stop();
@@ -582,17 +591,6 @@ bool nextgen::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButto
         default:
             break;
         }
-    } else {
-        auto* cr = this->rendererSlot.CallAs<nextgen::CallRender3D_2>();
-        if (cr == NULL) return false;
-
-        view::InputEvent evt;
-        evt.tag = view::InputEvent::Tag::MouseButton;
-        evt.mouseButtonData.button = button;
-        evt.mouseButtonData.action = action;
-        evt.mouseButtonData.mods = mods;
-        cr->SetInputEvent(evt);
-        if (!(*cr)(nextgen::CallRender3D_2::FnOnMouseButton)) return false;
     }
     return true;
 }
@@ -604,24 +602,23 @@ bool nextgen::View3D_2::OnMouseMove(double x, double y) {
     this->mouseX = (float)static_cast<int>(x);
     this->mouseY = (float)static_cast<int>(y);
 
+    auto* cr = this->rendererSlot.CallAs<CallRender3D_2>();
+    if (cr != nullptr) {
+        view::InputEvent evt;
+        evt.tag = view::InputEvent::Tag::MouseMove;
+        evt.mouseMoveData.x = x;
+        evt.mouseMoveData.y = y;
+        cr->SetInputEvent(evt);
+        if ((*cr)(CallRender3D_2::FnOnMouseMove)) return true;
+    }
+
     // This mouse handling/mapping is so utterly weird and should die!
     if (!this->toggleMouseSelection) {
         this->cursor2d.SetPosition(x, y, true);
         if (this->arcballManipulator.manipulating()) {
             auto wndSize = this->cam.resolution_gate();
-            this->arcballManipulator.on_drag(static_cast<int>(this->mouseX), wndSize.height() - static_cast<int>(this->mouseY));
-        }
-    } else {
-        auto* cr = this->rendererSlot.CallAs<nextgen::CallRender3D_2>();
-        if (cr) {
-            view::InputEvent evt;
-            evt.tag = view::InputEvent::Tag::MouseMove;
-            evt.mouseMoveData.x = x;
-            evt.mouseMoveData.y = y;
-            cr->SetInputEvent(evt);
-            if (!(*cr)(nextgen::CallRender3D_2::FnOnMouseMove)) {
-                return false;
-            }
+            this->arcballManipulator.on_drag(
+                static_cast<int>(this->mouseX), wndSize.height() - static_cast<int>(this->mouseY));
         }
     }
 
