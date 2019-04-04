@@ -15,6 +15,7 @@
 #include "vislib/UTF8Encoder.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
+#include "mmcore/param/GroupParam.h"
 #include <set>
 #include <cassert>
 
@@ -249,16 +250,20 @@ void job::PluginsStateFileGeneratorJob::WriteModuleInfo(std::ofstream& file,
         if (paramSlots.size() > 0) {
             file << "          <ParamSlots>" << std::endl;
             for (std::shared_ptr<param::ParamSlot> p : paramSlots) {
-                file << "            <ParamSlot>" << std::endl;
+                if (p->Param<param::GroupParam>() == nullptr &&
+                    p->Param<param::GroupEndParam>() == nullptr)
+                {
+                    file << "            <ParamSlot>" << std::endl;
 
-                WriteEntityName(file, "              ", m, p);
-                vislib::StringA str = p->Description();
-                str.TrimSpaces();
-                WriteSimpleTag(file, "              ", "Description", str);
+                    WriteEntityName(file, "              ", m, p);
+                    vislib::StringA str = p->Description();
+                    str.TrimSpaces();
+                    WriteSimpleTag(file, "              ", "Description", str);
 
-                WriteParamInfo(file, p->Parameter().operator->());
+                    WriteParamInfo(file, p->Parameter().operator->());
 
-                file << "            </ParamSlot>" << std::endl;
+                    file << "            </ParamSlot>" << std::endl;
+                }
             }
             file << "          </ParamSlots>" << std::endl;
         } else {

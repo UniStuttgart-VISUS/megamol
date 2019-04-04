@@ -41,6 +41,7 @@
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/FloatParam.h"
+#include "mmcore/param/GroupParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/LinearTransferFunctionParam.h"
 #include "mmcore/param/ParamSlot.h"
@@ -1340,6 +1341,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawParametersCallback(std::
     // Listing parameters
     const core::Module* current_mod = nullptr;
     bool current_mod_open = false;
+    bool current_group_open = true;
     size_t dnd_size = GUI_MAX_BUFFER_LEN; // Set same max size of all module labels for drag and drop.
 
     this->GetCoreInstance()->EnumParameters([&, this](const auto& mod, auto& slot) {
@@ -1412,9 +1414,24 @@ template <class M, class C> void GUIRenderer<M, C>::drawParametersCallback(std::
             }
         }
         if (current_mod_open) {
-            if (win->param_hotkeys_show) {
+            if (auto* group = slot.template Param<core::param::GroupParam>()) {
+                ImGui::Indent(20.0f);
+
+                const std::string label = group->Value();
+
+                auto headerId = ImGui::GetID(label.c_str());
+                auto headerState = overrideState;
+                if (headerState == -1) {
+                    headerState = ImGui::GetStateStorage()->GetInt(headerId, 0); // 0=close 1=open
+                }
+
+                ImGui::GetStateStorage()->SetInt(headerId, headerState);
+                current_group_open = ImGui::CollapsingHeader(label.c_str(), nullptr);
+            } else if (slot.template Param<core::param::GroupEndParam>() != nullptr) {
+                ImGui::Unindent(20.0f);
+            } else if (current_group_open && win->param_hotkeys_show) {
                 this->drawHotkeyParameter(mod, slot);
-            } else {
+            } else if (current_group_open) {
                 this->drawParameter(mod, slot);
             }
         }
