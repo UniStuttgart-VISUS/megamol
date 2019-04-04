@@ -54,7 +54,11 @@ namespace special {
     }
 
     void CallbackScreenShooter::CreateScreenshot() {
-        ScreenShooter::createScreenshot(AbstractWriterParams::getNextFilename());
+        const auto filename = AbstractWriterParams::getNextFilename();
+
+        if (filename.first) {
+            ScreenShooter::createScreenshot(filename.second);
+        }
     }
 
 }

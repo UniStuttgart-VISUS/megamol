@@ -11,6 +11,7 @@
 
 #include <functional>
 #include <string>
+#include <utility>
 
 namespace megamol {
 namespace core {
@@ -34,9 +35,9 @@ namespace core {
         /**
         * Get the next filename, based on the set parameters.
         *
-        * @return The generated filename
+        * @return The generated filename and the success in setting it
         */
-        std::string getNextFilename();
+        std::pair<bool, std::string> getNextFilename();
 
     private:
         /**
