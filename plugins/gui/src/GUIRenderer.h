@@ -57,6 +57,7 @@
 #include "vislib/UTF8Encoder.h"
 
 #include <imgui.h>
+#include <imgui_internal.h>
 #include <iomanip> // setprecision
 #include <sstream> // stringstream
 
@@ -368,7 +369,7 @@ inline GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIR
     , imgui_context(nullptr)
     , decorated_renderer_slot("decoratedRenderer", "Connects to another 2D Renderer being decorated")
     , overlay_slot("overlayRender", "Connected with SplitView for special overlay rendering")
-    , float_print_prec(3) // INIT: Float string format precision
+    , float_print_prec(7) // INIT: Float string format precision
     , windows()
     , lastInstTime(0.0)
     , main_reset_window(false)
@@ -425,7 +426,7 @@ inline GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GUIR
     , imgui_context(nullptr)
     , decorated_renderer_slot("decoratedRenderer", "Connects to another 2D Renderer being decorated")
     , overlay_slot("overlayRender", "Connected with SplitView for special overlay rendering")
-    , float_print_prec(3) // INIT: Float string format precision
+    , float_print_prec(7) // INIT: Float string format precision
     , windows()
     , lastInstTime(0.0)
     , main_reset_window(false)
@@ -1659,7 +1660,14 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
     std::string help;
 
     auto param = slot.Parameter();
-    if (!param.IsNull()) {
+    if (!param.IsNull() && param->IsGUIVisible()) {
+        // Set different style if parameter is read-only
+        if (param->IsGUIReadOnly())
+        {
+            ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.25f);
+        }
+
         std::string modname = mod.FullName().PeekBuffer();
         std::string pname = slot.Name().PeekBuffer();
         std::string label = pname + "###" + modname + "::" + pname;
@@ -1668,7 +1676,7 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
         std::stringstream float_stream;
         float_stream << "%." << this->float_print_prec << "f";
         std::string float_format = float_stream.str();
-
+        
         if (auto* p = slot.template Param<core::param::BoolParam>()) {
             auto value = p->Value();
             if (ImGui::Checkbox(label.c_str(), &value)) {
@@ -1697,6 +1705,11 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
         } else if (auto* p = slot.template Param<core::param::LinearTransferFunctionParam>()) {
             auto value = p->Value();
 
+            ImGui::Separator();
+
+            ImGui::Text(pname.c_str());
+            ImGui::SameLine();
+
             label = "Load into Editor###editor" + modname + "::" + pname;
             if (p != this->active_tf_param) {
                 if (ImGui::Button(label.c_str())) {
@@ -1717,16 +1730,28 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
             } else {
                 ImGui::TextColored(style.Colors[ImGuiCol_ButtonHovered], "Currently loaded into Editor.");
             }
-
+            
             ImGui::Text("JSON String:");
             ImGui::SameLine();
             label = "Copy to Clipboard###clipboard" + modname + "::" + pname;
             if (ImGui::Button(label.c_str())) {
                 ImGui::SetClipboardText(value.c_str());
             }
+            ImGui::SameLine();
+            label = "Copy from Clipboard###fclipboard" + modname + "::" + pname;
+            if (ImGui::Button(label.c_str())) {
+                p->SetValue(ImGui::GetClipboardText());
+            }
+            ImGui::SameLine();
+            label = "Reset###reset" + modname + "::" + pname;
+            if (ImGui::Button(label.c_str())) {
+                p->SetValue("");
+            }
             ImGui::PushTextWrapPos(ImGui::GetContentRegionAvailWidth());
             ImGui::TextDisabled(value.c_str());
             ImGui::PopTextWrapPos();
+
+            ImGui::Separator();
 
         } else if (auto* p = slot.template Param<core::param::EnumParam>()) {
             // XXX: no UTF8 fanciness required here?
@@ -1812,6 +1837,13 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
         this->HoverToolTip(desc, ImGui::GetID(label.c_str()), 1.0f);
 
         this->HelpMarkerToolTip(help);
+
+        // Reset to default style
+        if (param->IsGUIReadOnly())
+        {
+            ImGui::PopItemFlag();
+            ImGui::PopStyleVar();
+        }
     }
 }
 
