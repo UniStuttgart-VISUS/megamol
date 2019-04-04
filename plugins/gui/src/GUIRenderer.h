@@ -57,6 +57,7 @@
 #include "vislib/UTF8Encoder.h"
 
 #include <imgui.h>
+#include <imgui_internal.h>
 #include <iomanip> // setprecision
 #include <sstream> // stringstream
 
@@ -128,7 +129,7 @@ protected:
     virtual bool OnMouseButton(
         core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) override;
 
-    virtual bool OnMouseMove(double x, double y) override;
+    virtual bool OnMouseMove(double x, double y, double world_x, double world_y) override;
 
     virtual bool OnMouseScroll(double dx, double dy) override;
 
@@ -205,6 +206,12 @@ private:
 
     /** The name of the view instance this renderer belongs to. */
     std::string inst_name;
+
+    /** Default visibility of the GUI */
+    core::param::ParamSlot default_visible;
+
+    /** Initialization on first execution */
+    bool initialized;
 
     // ---------- Main Parameter Window ----------
 
@@ -368,9 +375,11 @@ inline GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIR
     , imgui_context(nullptr)
     , decorated_renderer_slot("decoratedRenderer", "Connects to another 2D Renderer being decorated")
     , overlay_slot("overlayRender", "Connected with SplitView for special overlay rendering")
-    , float_print_prec(3) // INIT: Float string format precision
+    , float_print_prec(7) // INIT: Float string format precision
     , windows()
     , lastInstTime(0.0)
+    , default_visible("defaultVisible", "Set the visibility of the GUI at startup")
+    , initialized(false)
     , main_reset_window(false)
     , param_file()
     , active_tf_param(nullptr)
@@ -412,6 +421,11 @@ inline GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIR
         core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseScroll),
         &GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::OnMouseScrollCallback);
     this->MakeSlotAvailable(&this->overlay_slot);
+
+    // Parameter
+    this->default_visible << new core::param::BoolParam(true);
+    this->default_visible.Parameter()->SetGUIReadOnly(true);
+    this->MakeSlotAvailable(&this->default_visible);
 }
 
 
@@ -425,9 +439,11 @@ inline GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GUIR
     , imgui_context(nullptr)
     , decorated_renderer_slot("decoratedRenderer", "Connects to another 2D Renderer being decorated")
     , overlay_slot("overlayRender", "Connected with SplitView for special overlay rendering")
-    , float_print_prec(3) // INIT: Float string format precision
+    , float_print_prec(7) // INIT: Float string format precision
     , windows()
     , lastInstTime(0.0)
+    , default_visible("defaultVisible", "Set the visibility of the GUI at startup")
+    , initialized(false)
     , main_reset_window(false)
     , param_file()
     , active_tf_param(nullptr)
@@ -469,6 +485,11 @@ inline GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GUIR
         core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseScroll),
         &GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::OnMouseScrollCallback);
     this->MakeSlotAvailable(&this->overlay_slot);
+
+    // Parameter
+    this->default_visible << new core::param::BoolParam(true);
+    this->default_visible.Parameter()->SetGUIReadOnly(true);
+    this->MakeSlotAvailable(&this->default_visible);
 }
 
 
@@ -869,7 +890,7 @@ template <class M, class C> bool GUIRenderer<M, C>::OnChar(unsigned int codePoin
 /**
  * GUIRenderer<M, C>::OnMouseMove
  */
-template <class M, class C> bool GUIRenderer<M, C>::OnMouseMove(double x, double y) {
+template <class M, class C> bool GUIRenderer<M, C>::OnMouseMove(double x, double y, double world_x, double world_y) {
 
     ImGui::SetCurrentContext(this->imgui_context);
 
@@ -886,6 +907,8 @@ template <class M, class C> bool GUIRenderer<M, C>::OnMouseMove(double x, double
         evt.tag = core::view::InputEvent::Tag::MouseMove;
         evt.mouseMoveData.x = x;
         evt.mouseMoveData.y = y;
+        evt.mouseMoveData.world_x = world_x;
+        evt.mouseMoveData.world_y = world_y;
         cr->SetInputEvent(evt);
         if (!(*cr)(core::view::InputCall::FnOnMouseMove)) return false;
     }
@@ -1104,7 +1127,7 @@ template <class M, class C> bool GUIRenderer<M, C>::OnMouseMoveCallback(core::Ca
         core::view::CallSplitViewOverlay& cr = dynamic_cast<core::view::CallSplitViewOverlay&>(call);
         auto& evt = cr.GetInputEvent();
         ASSERT(evt.tag == core::view::InputEvent::Tag::MouseMove && "Callback invocation mismatched input event");
-        return this->OnMouseMove(evt.mouseMoveData.x, evt.mouseMoveData.y);
+        return this->OnMouseMove(evt.mouseMoveData.x, evt.mouseMoveData.y, evt.mouseMoveData.world_x, evt.mouseMoveData.world_y);
     } catch (...) {
         ASSERT("OnMouseMoveCallback call cast failed\n");
     }
@@ -1134,6 +1157,16 @@ template <class M, class C> bool GUIRenderer<M, C>::OnMouseScrollCallback(core::
 template <class M, class C>
 bool GUIRenderer<M, C>::renderGUI(vislib::math::Rectangle<int> viewport, double instanceTime) {
 
+    if (!this->initialized) {
+        for (auto& window : this->windows) {
+            if (window.label == "MegaMol") {
+                window.show = this->default_visible.template Param<core::param::BoolParam>()->Value();
+            }
+        }
+
+        this->initialized = true;
+    }
+
     // Get instance name the gui renderer belongs to (not available in create() yet)
     if (this->inst_name.empty()) {
         /// Parent's name of a module is the name of the instance a module is part of.
@@ -1151,8 +1184,8 @@ bool GUIRenderer<M, C>::renderGUI(vislib::math::Rectangle<int> viewport, double 
     io.DisplaySize = ImVec2((float)viewportWidth, (float)viewportHeight);
     io.DisplayFramebufferScale = ImVec2(1.0, 1.0);
 
-    io.DeltaTime = static_cast<float>(instanceTime - this->lastInstTime);
-    this->lastInstTime = instanceTime;
+    io.DeltaTime = (instanceTime - this->lastInstTime) > 0.0 ? static_cast<float>(instanceTime - this->lastInstTime) : io.DeltaTime;
+    this->lastInstTime = (instanceTime - this->lastInstTime) > 0.0 ? instanceTime : this->lastInstTime + io.DeltaTime;
 
     // Loading new font (before NewFrame!)
     if (this->font_new_load) {
@@ -1659,7 +1692,14 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
     std::string help;
 
     auto param = slot.Parameter();
-    if (!param.IsNull()) {
+    if (!param.IsNull() && param->IsGUIVisible()) {
+        // Set different style if parameter is read-only
+        if (param->IsGUIReadOnly())
+        {
+            ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+        }
+
         std::string modname = mod.FullName().PeekBuffer();
         std::string pname = slot.Name().PeekBuffer();
         std::string label = pname + "###" + modname + "::" + pname;
@@ -1668,7 +1708,7 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
         std::stringstream float_stream;
         float_stream << "%." << this->float_print_prec << "f";
         std::string float_format = float_stream.str();
-
+        
         if (auto* p = slot.template Param<core::param::BoolParam>()) {
             auto value = p->Value();
             if (ImGui::Checkbox(label.c_str(), &value)) {
@@ -1697,6 +1737,11 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
         } else if (auto* p = slot.template Param<core::param::LinearTransferFunctionParam>()) {
             auto value = p->Value();
 
+            ImGui::Separator();
+
+            ImGui::Text(pname.c_str());
+            ImGui::SameLine();
+
             label = "Load into Editor###editor" + modname + "::" + pname;
             if (p != this->active_tf_param) {
                 if (ImGui::Button(label.c_str())) {
@@ -1717,16 +1762,28 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
             } else {
                 ImGui::TextColored(style.Colors[ImGuiCol_ButtonHovered], "Currently loaded into Editor.");
             }
-
+            
             ImGui::Text("JSON String:");
             ImGui::SameLine();
             label = "Copy to Clipboard###clipboard" + modname + "::" + pname;
             if (ImGui::Button(label.c_str())) {
                 ImGui::SetClipboardText(value.c_str());
             }
+            ImGui::SameLine();
+            label = "Copy from Clipboard###fclipboard" + modname + "::" + pname;
+            if (ImGui::Button(label.c_str())) {
+                p->SetValue(ImGui::GetClipboardText());
+            }
+            ImGui::SameLine();
+            label = "Reset###reset" + modname + "::" + pname;
+            if (ImGui::Button(label.c_str())) {
+                p->SetValue("");
+            }
             ImGui::PushTextWrapPos(ImGui::GetContentRegionAvailWidth());
             ImGui::TextDisabled(value.c_str());
             ImGui::PopTextWrapPos();
+
+            ImGui::Separator();
 
         } else if (auto* p = slot.template Param<core::param::EnumParam>()) {
             // XXX: no UTF8 fanciness required here?
@@ -1812,6 +1869,13 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
         this->HoverToolTip(desc, ImGui::GetID(label.c_str()), 1.0f);
 
         this->HelpMarkerToolTip(help);
+
+        // Reset to default style
+        if (param->IsGUIReadOnly())
+        {
+            ImGui::PopItemFlag();
+            ImGui::PopStyleVar();
+        }
     }
 }
 
