@@ -613,11 +613,11 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
     this->utf8_ranges.emplace_back(0x0020);
     this->utf8_ranges.emplace_back(0x00FF); // Basic Latin + Latin Supplement
     this->utf8_ranges.emplace_back(0x20AC);
-    this->utf8_ranges.emplace_back(0x20AC); // €
+    this->utf8_ranges.emplace_back(0x20AC); // Â€
     this->utf8_ranges.emplace_back(0x2122);
-    this->utf8_ranges.emplace_back(0x2122); // ™
+    this->utf8_ranges.emplace_back(0x2122); // Â™
     this->utf8_ranges.emplace_back(0x212B);
-    this->utf8_ranges.emplace_back(0x212B); // Å
+    this->utf8_ranges.emplace_back(0x212B); // Ã…
     this->utf8_ranges.emplace_back(0x0391);
     this->utf8_ranges.emplace_back(0x03D6); // greek alphabet
     this->utf8_ranges.emplace_back(0);

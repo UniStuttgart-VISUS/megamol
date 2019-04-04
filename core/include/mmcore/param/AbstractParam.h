@@ -89,6 +89,42 @@ namespace param {
             this->hash = hash;
         }
 
+        /**
+        * Answer visibility in GUI.
+        *
+        * @return GUI visibility
+        */
+        inline bool IsGUIVisible() const {
+            return this->gui_visible;
+        }
+
+        /**
+        * Set visibility in GUI.
+        *
+        * @param visible True: visible in GUI, false: invisible
+        */
+        inline void SetGUIVisible(const bool visible) {
+            this->gui_visible = visible;
+        }
+
+        /**
+        * Answer accessibility in GUI.
+        *
+        * @return GUI accessibility
+        */
+        inline bool IsGUIReadOnly() const {
+            return this->gui_read_only;
+        }
+
+        /**
+        * Set accessibility in GUI.
+        *
+        * @param read_only True: read-only in GUI, false: writable
+        */
+        inline void SetGUIReadOnly(const bool read_only) {
+            this->gui_read_only = read_only;
+        }
+
     protected:
 
         /**
@@ -114,6 +150,16 @@ namespace param {
          * (i.e. requires rebuilding the UI).
          */
         size_t hash;
+
+        /**
+        * Show or hide the parameter in the GUI.
+        */
+        bool gui_visible;
+
+        /**
+        * Make parameter read-only in the GUI.
+        */
+        bool gui_read_only;
 
     };
 
