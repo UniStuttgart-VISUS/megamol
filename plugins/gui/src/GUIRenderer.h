@@ -1158,7 +1158,7 @@ bool GUIRenderer<M, C>::renderGUI(vislib::math::Rectangle<int> viewport, double 
     if (!this->initialized) {
         for (auto& window : this->windows) {
             if (window.label == "MegaMol") {
-                window.show = this->default_visible.Param<core::param::BoolParam>()->Value();
+                window.show = this->default_visible.template Param<core::param::BoolParam>()->Value();
             }
         }
 
