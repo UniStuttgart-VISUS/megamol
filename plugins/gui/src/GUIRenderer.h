@@ -1160,7 +1160,7 @@ bool GUIRenderer<M, C>::renderGUI(vislib::math::Rectangle<int> viewport, double 
     if (!this->initialized) {
         for (auto& window : this->windows) {
             if (window.label == "MegaMol") {
-                window.show = this->default_visible.Param<core::param::BoolParam>()->Value();
+                window.show = this->default_visible.template Param<core::param::BoolParam>()->Value();
             }
         }
 
@@ -1184,8 +1184,8 @@ bool GUIRenderer<M, C>::renderGUI(vislib::math::Rectangle<int> viewport, double 
     io.DisplaySize = ImVec2((float)viewportWidth, (float)viewportHeight);
     io.DisplayFramebufferScale = ImVec2(1.0, 1.0);
 
-    io.DeltaTime = static_cast<float>(instanceTime - this->lastInstTime);
-    this->lastInstTime = instanceTime;
+    io.DeltaTime = (instanceTime - this->lastInstTime) > 0.0 ? static_cast<float>(instanceTime - this->lastInstTime) : io.DeltaTime;
+    this->lastInstTime = (instanceTime - this->lastInstTime) > 0.0 ? instanceTime : this->lastInstTime + io.DeltaTime;
 
     // Loading new font (before NewFrame!)
     if (this->font_new_load) {
@@ -1697,7 +1697,7 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
         if (param->IsGUIReadOnly())
         {
             ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.25f);
+            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
         }
 
         std::string modname = mod.FullName().PeekBuffer();
