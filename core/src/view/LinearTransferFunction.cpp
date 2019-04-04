@@ -8,6 +8,8 @@
 #include "stdafx.h"
 #include "mmcore/view/LinearTransferFunction.h"
 
+#include "mmcore/param/LinearTransferFunctionParam.h"
+
 
 using namespace megamol::core;
 using namespace megamol::core::view;
@@ -64,39 +66,6 @@ void LinearTransferFunction::release(void) {
 
 
 /*
- * LinearTransferFunction::LinearInterpolation
- */
-void LinearTransferFunction::LinearInterpolation(std::vector<float> &out_texdata, unsigned int in_texsize, const param::LinearTransferFunctionParam::TFType &in_tfdata) {
-
-    out_texdata.resize(4 * in_texsize);
-    std::array<float, 5> cx1 = in_tfdata[0];
-    std::array<float, 5> cx2 = in_tfdata[0];
-    int p1 = 0;
-    int p2 = 0;
-    size_t data_cnt = in_tfdata.size();
-    for (size_t i = 1; i < data_cnt; i++) {
-        cx1 = cx2;
-        p1 = p2;
-        cx2 = in_tfdata[i];
-        assert(cx2[4] <= 1.0f + 1e-5f); // 1e-5f = vislib::math::FLOAT_EPSILON
-        p2 = static_cast<int>(cx2[4] * static_cast<float>(in_texsize - 1));
-        assert(p2 < static_cast<int>(in_texsize));
-        assert(p2 >= p1);
-
-        for (int p = p1; p <= p2; p++) {
-            float al = static_cast<float>(p - p1) / static_cast<float>(p2 - p1);
-            float be = 1.0f - al;
-
-            out_texdata[p * 4] = cx1[0] * be + cx2[0] * al;
-            out_texdata[p * 4 + 1] = cx1[1] * be + cx2[1] * al;
-            out_texdata[p * 4 + 2] = cx1[2] * be + cx2[2] * al;
-            out_texdata[p * 4 + 3] = cx1[3] * be + cx2[3] * al;
-        }
-    }
-}
-
-
-/*
  * LinearTransferFunction::requestTF
  */
 bool LinearTransferFunction::requestTF(Call& call) {
@@ -118,7 +87,7 @@ bool LinearTransferFunction::requestTF(Call& call) {
 
         // Apply interpolation and generate texture data.
         if (this->interpolMode == param::LinearTransferFunctionParam::InterpolationMode::LINEAR) {
-            this->LinearInterpolation(this->tex, this->texSize, tfdata);
+            param::LinearTransferFunctionParam::LinearInterpolation(this->tex, this->texSize, tfdata);
         }
         else if (this->interpolMode == param::LinearTransferFunctionParam::InterpolationMode::GAUSS) {
             // TODO: Implement ...
