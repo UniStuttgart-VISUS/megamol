@@ -73,6 +73,7 @@
 #include "mmcore/utility/LuaHostSettingsModule.h"
 #include "../job/TickSwitch.h"
 #include "mmcore/FileStreamProvider.h"
+#include "mmcore/view/special/CallbackScreenShooter.h"
 
 using namespace megamol::core;
 
@@ -150,4 +151,5 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<core::utility::LuaHostSettingsModule>();
     instance.RegisterAutoDescription<core::job::TickSwitch>();
     instance.RegisterAutoDescription<core::FileStreamProvider>();
+    instance.RegisterAutoDescription<view::special::CallbackScreenShooter>();
 }

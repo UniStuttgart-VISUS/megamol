@@ -194,7 +194,7 @@ bool view::special::ScreenShooter::IsAvailable(void) {
 /*
  * view::special::ScreenShooter::release
  */
-view::special::ScreenShooter::ScreenShooter() : job::AbstractJob(), Module(),
+view::special::ScreenShooter::ScreenShooter(const bool reducedParameters) : job::AbstractJob(), Module(),
         viewNameSlot("view", "The name of the view instance to be used"),
         imgWidthSlot("imgWidth", "The width in pixel of the resulting image"),
         imgHeightSlot("imgHeight", "The height in pixel of the resulting image"),
@@ -227,7 +227,7 @@ view::special::ScreenShooter::ScreenShooter() : job::AbstractJob(), Module(),
 
     this->imageFilenameSlot << new param::FilePathParam("Unnamed.png",
         param::FilePathParam::FLAG_TOBECREATED);
-    this->MakeSlotAvailable(&this->imageFilenameSlot);
+    if (!reducedParameters) this->MakeSlotAvailable(&this->imageFilenameSlot);
 
     param::EnumParam *bkgnd = new param::EnumParam(0);
     bkgnd->SetTypePair(0, "Scene Background");
@@ -240,29 +240,29 @@ view::special::ScreenShooter::ScreenShooter() : job::AbstractJob(), Module(),
 
     this->triggerButtonSlot << new param::ButtonParam(core::view::Key::KEY_S, core::view::Modifier::ALT);
     this->triggerButtonSlot.SetUpdateCallback(&ScreenShooter::triggerButtonClicked);
-    this->MakeSlotAvailable(&this->triggerButtonSlot);
+    if (!reducedParameters) this->MakeSlotAvailable(&this->triggerButtonSlot);
 
     this->closeAfterShotSlot << new param::BoolParam(false);
-    this->MakeSlotAvailable(&this->closeAfterShotSlot);
+    if (!reducedParameters) this->MakeSlotAvailable(&this->closeAfterShotSlot);
 
     this->animFromSlot << new param::IntParam(0, 0);
-    this->MakeSlotAvailable(&this->animFromSlot);
+    if (!reducedParameters) this->MakeSlotAvailable(&this->animFromSlot);
 
     this->animToSlot << new param::IntParam(0, 0);
-    this->MakeSlotAvailable(&this->animToSlot);
+    if (!reducedParameters) this->MakeSlotAvailable(&this->animToSlot);
 
     this->animStepSlot << new param::FloatParam(1.0f, 0.01f);
     //this->animStepSlot << new param::IntParam(1, 1);
-    this->MakeSlotAvailable(&this->animStepSlot);
+    if (!reducedParameters) this->MakeSlotAvailable(&this->animStepSlot);
 
     this->animAddTime2FrameSlot << new param::BoolParam(false);
-    this->MakeSlotAvailable(&this->animAddTime2FrameSlot);
+    if (!reducedParameters) this->MakeSlotAvailable(&this->animAddTime2FrameSlot);
 
     this->makeAnimSlot << new param::BoolParam(false);
-    this->MakeSlotAvailable(&this->makeAnimSlot);
+    if (!reducedParameters) this->MakeSlotAvailable(&this->makeAnimSlot);
 
     this->animTimeParamNameSlot << new param::StringParam("");
-    this->MakeSlotAvailable(&this->animTimeParamNameSlot);
+    if (!reducedParameters) this->MakeSlotAvailable(&this->animTimeParamNameSlot);
 
 }
 
@@ -851,6 +851,16 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView *view) {
         this->GetCoreInstance()->Shutdown();
     }
 
+}
+
+
+/*
+ * view::special::ScreenShooter::createScreenshot
+ */
+void view::special::ScreenShooter::createScreenshot(const std::string& filename) {
+    this->imageFilenameSlot.Param<param::FilePathParam>()->SetValue(filename.c_str());
+
+    triggerButtonClicked(this->triggerButtonSlot);
 }
 
 
