@@ -97,6 +97,10 @@ namespace megamol
             bool get_result_writer_cb_callback(core::Call& call);
             std::function<bool(const implicit_topology_results&)> get_result_writer_callback;
 
+            /** Callback for the screen shooter */
+            bool get_screenshot_cb_callback(core::Call& call);
+            std::function<void()> get_screenshot_callback;
+
             /** Callbacks for the log stream */
             bool get_log_cb_callback(core::Call& call);
             std::function<std::ostream&()> get_log_callback;
@@ -164,6 +168,9 @@ namespace megamol
             /** Output slot for writing results to file */
             core::CalleeSlot result_writer_slot;
 
+            /** Output slot for taking screenshots */
+            core::CalleeSlot screenshot_slot;
+
             /** Output slots for logging */
             core::CalleeSlot log_slot;
             core::CalleeSlot performance_slot;
@@ -194,6 +201,9 @@ namespace megamol
             core::param::ParamSlot termination_fixed_range;
             core::param::ParamSlot gradient_fixed_range;
 
+            /** Field for showing the number of labels combined */
+            core::param::ParamSlot num_labels_combined;
+
             /** Values of the fixed range */
             core::param::ParamSlot label_range_min, label_range_max;
             core::param::ParamSlot distance_range_min, distance_range_max;
@@ -212,6 +222,10 @@ namespace megamol
             core::param::ParamSlot refine_at_labels;
             core::param::ParamSlot distance_difference_threshold;
 
+            /** Parameters for automatical saving of results and screenshots */
+            core::param::ParamSlot auto_save_results;
+            core::param::ParamSlot auto_save_screenshots;
+
             /** Input information */
             std::array<int, 2> resolution;
 
@@ -226,10 +240,12 @@ namespace megamol
             std::shared_ptr<std::vector<GLuint>> indices;
 
             /** Output labels */
+            std::shared_ptr<std::vector<GLfloat>> labels;
             std::shared_ptr<std::vector<GLfloat>> labels_forward;
             std::shared_ptr<std::vector<GLfloat>> labels_backward;
 
             /** Output distances */
+            std::shared_ptr<std::vector<GLfloat>> distances;
             std::shared_ptr<std::vector<GLfloat>> distances_forward;
             std::shared_ptr<std::vector<GLfloat>> distances_backward;
 
@@ -238,6 +254,7 @@ namespace megamol
             std::shared_ptr<std::vector<GLfloat>> terminations_backward;
 
             /** Output gradients */
+            std::shared_ptr<std::vector<GLfloat>> gradients;
             std::shared_ptr<std::vector<GLfloat>> gradients_forward;
             std::shared_ptr<std::vector<GLfloat>> gradients_backward;
 

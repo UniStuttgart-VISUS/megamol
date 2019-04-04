@@ -140,6 +140,10 @@ namespace megamol
                     this->distances_forward[n] = this->distances_backward[n] = 0.0f;
                     this->terminations_forward[n] = this->terminations_backward[n] = -1.0f;
                 }
+                else
+                {
+                    this->terminations_forward[n] = this->terminations_backward[n] = 0.0f;
+                }
             }
 
             // Initialize triangulation

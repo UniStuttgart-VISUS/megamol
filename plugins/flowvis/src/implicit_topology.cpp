@@ -16,6 +16,7 @@
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/LinearTransferFunctionParam.h"
+#include "mmcore/view/special/CallbackScreenShooter.h"
 
 #include "vislib/math/Rectangle.h"
 #include "vislib/sys/Log.h"
@@ -27,7 +28,9 @@
 #include <future>
 #include <iostream>
 #include <limits>
+#include <map>
 #include <memory>
+#include <utility>
 #include <vector>
 
 namespace megamol
@@ -38,6 +41,7 @@ namespace megamol
             triangle_mesh_slot("set_triangle_mesh", "Triangle mesh output"),
             mesh_data_slot("set_mesh_data", "Mesh data output"),
             result_writer_slot("result_writer_slot", "Results output slot"),
+            screenshot_slot("screenshot_slot", "Screenshot output slot"),
             log_slot("log_slot", "Log output slot"),
             performance_slot("performance_slot", "Performance log output slot"),
             result_reader_slot("result_reader_slot", "Results input slot"),
@@ -52,6 +56,7 @@ namespace megamol
             label_fixed_range("label_fixed_range", "Fixed or dynamic value range for labels"),
             label_range_min("label_range_min", "Minimum value for labels in the transfer function"),
             label_range_max("label_range_max", "Maximum value for labels in the transfer function"),
+            num_labels_combined("num_labels_combined", "Number of labels in the combined label field"),
             distance_transfer_function("distance_transfer_function", "Transfer function for distances"),
             distance_fixed_range("distance_fixed_range", "Fixed or dynamic value range for labels"),
             distance_range_min("distance_range_min", "Minimum value for distances in the transfer function"),
@@ -72,6 +77,8 @@ namespace megamol
             refinement_threshold("refinement_threshold", "Threshold for grid refinement, defined as minimum edge length"),
             refine_at_labels("refine_at_labels", "Should the grid be refined in regions of different labels?"),
             distance_difference_threshold("distance_difference_threshold", "Threshold for refining the grid when neighboring nodes exceed a distance difference"),
+            auto_save_results("auto_save_results", "Automatically save results when new ones are available"),
+            auto_save_screenshots("auto_save_screenshots", "Automatically take screenshot when new results are available"),
             computation_running(false), mesh_output_changed(false), data_output_changed(false), computation(nullptr), previous_result(nullptr)
         {
             // Connect output
@@ -85,8 +92,13 @@ namespace megamol
 
             this->result_writer_slot.SetCallback(implicit_topology_writer_call::ClassName(), implicit_topology_writer_call::FunctionName(0), &implicit_topology::get_result_writer_cb_callback);
             this->MakeSlotAvailable(&this->result_writer_slot);
-            this->get_result_writer_callback = [](const implicit_topology_results&) -> bool
-                { vislib::sys::Log::DefaultLog.WriteWarn("Cannot write results. Writer module not connected!"); return true; };
+            this->get_result_writer_callback = [](const implicit_topology_results&) -> bool {
+                vislib::sys::Log::DefaultLog.WriteWarn("Cannot write results. Writer module not connected!"); return true; };
+
+            this->screenshot_slot.SetCallback(core::view::special::CallbackScreenShooterCall::ClassName(),
+                core::view::special::CallbackScreenShooterCall::FunctionName(0), &implicit_topology::get_screenshot_cb_callback);
+            this->MakeSlotAvailable(&this->screenshot_slot);
+            this->get_screenshot_callback = []() -> void { vislib::sys::Log::DefaultLog.WriteWarn("Cannot take screenshot. Screen shooter module not connected!"); };
             
             this->log_slot.SetCallback(core::DirectDataWriterCall::ClassName(), core::DirectDataWriterCall::FunctionName(0), &implicit_topology::get_log_cb_callback);
             this->MakeSlotAvailable(&this->log_slot);
@@ -153,6 +165,13 @@ namespace megamol
             this->save_computation.SetUpdateCallback(&implicit_topology::save_computation_callback);
             this->MakeSlotAvailable(&this->save_computation);
 
+            // Create auto-save and auto-screenshot checkboxes
+            this->auto_save_results << new core::param::BoolParam(false);
+            this->MakeSlotAvailable(&this->auto_save_results);
+
+            this->auto_save_screenshots << new core::param::BoolParam(false);
+            this->MakeSlotAvailable(&this->auto_save_screenshots);
+
             // Create transfer function parameters
             this->label_transfer_function << new core::param::LinearTransferFunctionParam(
                 "{\"Interpolation\":\"LINEAR\",\"Nodes\":[[0.0,0.0,0.423499,1.0,0.0],[0.0,0.119346,0.529237,1.0,0.125]," \
@@ -166,10 +185,16 @@ namespace megamol
             this->label_fixed_range << new core::param::BoolParam(false);
             this->MakeSlotAvailable(&this->label_fixed_range);
 
+            this->num_labels_combined << new core::param::IntParam(0);
+            this->num_labels_combined.Parameter()->SetGUIReadOnly(true);
+            this->MakeSlotAvailable(&this->num_labels_combined);
+
             this->label_range_min << new core::param::FloatParam(0.0f);
+            this->label_range_min.Parameter()->SetGUIReadOnly(true);
             this->MakeSlotAvailable(&this->label_range_min);
 
             this->label_range_max << new core::param::FloatParam(1.0f);
+            this->label_range_max.Parameter()->SetGUIReadOnly(true);
             this->MakeSlotAvailable(&this->label_range_max);
 
             this->distance_transfer_function << new core::param::LinearTransferFunctionParam(
@@ -181,9 +206,11 @@ namespace megamol
             this->MakeSlotAvailable(&this->distance_fixed_range);
 
             this->distance_range_min << new core::param::FloatParam(0.0f);
+            this->distance_range_min.Parameter()->SetGUIReadOnly(true);
             this->MakeSlotAvailable(&this->distance_range_min);
 
             this->distance_range_max << new core::param::FloatParam(1.0f);
+            this->distance_range_max.Parameter()->SetGUIReadOnly(true);
             this->MakeSlotAvailable(&this->distance_range_max);
 
             this->termination_transfer_function << new core::param::LinearTransferFunctionParam(
@@ -209,9 +236,11 @@ namespace megamol
             this->MakeSlotAvailable(&this->gradient_fixed_range);
 
             this->gradient_range_min << new core::param::FloatParam(0.0f);
+            this->gradient_range_min.Parameter()->SetGUIReadOnly(true);
             this->MakeSlotAvailable(&this->gradient_range_min);
 
             this->gradient_range_max << new core::param::FloatParam(1.0f);
+            this->gradient_range_max.Parameter()->SetGUIReadOnly(true);
             this->MakeSlotAvailable(&this->gradient_range_max);
         }
 
@@ -452,6 +481,17 @@ namespace megamol
                 this->last_result = this->computation->get_results();
                 this->previous_result = std::make_unique<implicit_topology_results>(result);
 
+                // Save result to file, and take screenshot
+                if (this->auto_save_results.Param<core::param::BoolParam>()->Value())
+                {
+                    this->get_result_writer_callback(result);
+                }
+
+                if (this->auto_save_screenshots.Param<core::param::BoolParam>()->Value())
+                {
+                    this->get_screenshot_callback();
+                }
+
                 this->mesh_output_changed = true;
                 this->data_output_changed = true;
             }
@@ -562,6 +602,19 @@ namespace megamol
             auto* data_call = dynamic_cast<mesh_data_call*>(&call);
             if (data_call == nullptr) return false;
 
+            // Set accessibility
+            this->label_range_min.Parameter()->SetGUIReadOnly(!this->label_fixed_range.Param<core::param::BoolParam>()->Value());
+            this->label_range_max.Parameter()->SetGUIReadOnly(!this->label_fixed_range.Param<core::param::BoolParam>()->Value());
+
+            this->distance_range_min.Parameter()->SetGUIReadOnly(!this->distance_fixed_range.Param<core::param::BoolParam>()->Value());
+            this->distance_range_max.Parameter()->SetGUIReadOnly(!this->distance_fixed_range.Param<core::param::BoolParam>()->Value());
+
+            this->termination_range_min.Parameter()->SetGUIReadOnly(!this->termination_fixed_range.Param<core::param::BoolParam>()->Value());
+            this->termination_range_max.Parameter()->SetGUIReadOnly(!this->termination_fixed_range.Param<core::param::BoolParam>()->Value());
+
+            this->gradient_range_min.Parameter()->SetGUIReadOnly(!this->gradient_fixed_range.Param<core::param::BoolParam>()->Value());
+            this->gradient_range_max.Parameter()->SetGUIReadOnly(!this->gradient_fixed_range.Param<core::param::BoolParam>()->Value());
+
             // Only update if there is actual data
             if (this->labels_forward == nullptr || this->labels_backward == nullptr || this->distances_forward == nullptr ||
                 this->distances_backward == nullptr || this->terminations_forward == nullptr || this->terminations_backward == nullptr)
@@ -620,6 +673,36 @@ namespace megamol
                 };
 
                 // Set labels
+                if (this->data_output_changed)
+                {
+                    // Generate unique labels from combinations
+                    this->labels = std::make_shared<std::vector<float>>(this->labels_forward->size());
+
+                    auto less = [](const std::pair<float, float>& lhs, const std::pair<float, float>& rhs) -> std::size_t
+                    { return lhs.first < rhs.first || (lhs.first == rhs.first && lhs.second < rhs.second); };
+
+                    std::map<std::pair<float, float>, float, decltype(less)> label_combinations(less);
+
+                    int counter = 0;
+
+                    for (int i = 0; i < this->labels->size(); ++i)
+                    {
+                        const auto min_max = std::minmax((*this->labels_forward)[i], (*this->labels_backward)[i]);
+
+                        if (label_combinations.find(min_max) == label_combinations.end())
+                        {
+                            label_combinations[min_max] = static_cast<float>(counter++);
+                        }
+
+                        (*this->labels)[i] = label_combinations.at(min_max);
+                    }
+                }
+
+                auto label_min_max = set_data(data_call, this->labels, "labels",
+                    this->label_fixed_range.Param<core::param::BoolParam>()->Value(),
+                    this->label_range_min.Param<core::param::FloatParam>()->Value(),
+                    this->label_range_max.Param<core::param::FloatParam>()->Value());
+
                 auto label_forward_min_max = set_data(data_call, this->labels_forward, "labels (forward)",
                     this->label_fixed_range.Param<core::param::BoolParam>()->Value(),
                     this->label_range_min.Param<core::param::FloatParam>()->Value(),
@@ -636,9 +719,28 @@ namespace megamol
                 this->label_range_min.Param<core::param::FloatParam>()->SetValue(label_min, false);
                 this->label_range_max.Param<core::param::FloatParam>()->SetValue(label_max, false);
 
+                this->num_labels_combined.Param<core::param::IntParam>()->SetValue(label_min_max.second - label_min_max.first + 1, false);
+
                 this->label_transfer_function.ForceSetDirty();
                 
                 // Set distances
+                if (this->data_output_changed)
+                {
+                    // Generate combination of distances
+                    this->distances = std::make_shared<std::vector<float>>(this->distances_forward->size());
+
+                    for (int i = 0; i < this->distances->size(); ++i)
+                    {
+                        (*this->distances)[i] = std::sqrt((*this->distances_forward)[i] * (*this->distances_forward)[i]
+                            + (*this->distances_backward)[i] * (*this->distances_backward)[i]);
+                    }
+                }
+
+                set_data(data_call, this->distances, "distances",
+                    this->distance_fixed_range.Param<core::param::BoolParam>()->Value(),
+                    this->distance_range_min.Param<core::param::FloatParam>()->Value(),
+                    this->distance_range_max.Param<core::param::FloatParam>()->Value());
+
                 auto distance_forward_min_max = set_data(data_call, this->distances_forward, "distances (forward)",
                     this->distance_fixed_range.Param<core::param::BoolParam>()->Value(),
                     this->distance_range_min.Param<core::param::FloatParam>()->Value(),
@@ -658,12 +760,12 @@ namespace megamol
                 this->distance_transfer_function.ForceSetDirty();
 
                 // Set reasons for termination
-                auto termination_forward_min_max = set_data(data_call, this->terminations_forward, "terminations (forward)",
+                auto termination_forward_min_max = set_data(data_call, this->terminations_forward, "reasons for termination (forward)",
                     this->termination_fixed_range.Param<core::param::BoolParam>()->Value(),
                     this->termination_range_min.Param<core::param::FloatParam>()->Value(),
                     this->termination_range_max.Param<core::param::FloatParam>()->Value());
 
-                auto termination_backward_min_max = set_data(data_call, this->terminations_backward, "terminations (backward)",
+                auto termination_backward_min_max = set_data(data_call, this->terminations_backward, "reasons for termination (backward)",
                     this->termination_fixed_range.Param<core::param::BoolParam>()->Value(),
                     this->termination_range_min.Param<core::param::FloatParam>()->Value(),
                     this->termination_range_max.Param<core::param::FloatParam>()->Value());
@@ -730,7 +832,21 @@ namespace megamol
                             (*this->gradients_backward)[index] = std::sqrt(magnitude_backward);
                         }
                     }
+
+                    // Generate combination of distances
+                    this->gradients = std::make_shared<std::vector<float>>(this->gradients_forward->size());
+
+                    for (int i = 0; i < this->gradients->size(); ++i)
+                    {
+                        (*this->gradients)[i] = std::sqrt((*this->gradients_forward)[i] * (*this->gradients_forward)[i]
+                            + (*this->gradients_backward)[i] * (*this->gradients_backward)[i]);
+                    }
                 }
+
+                set_data(data_call, this->gradients, "gradients",
+                    this->gradient_fixed_range.Param<core::param::BoolParam>()->Value(),
+                    this->gradient_range_min.Param<core::param::FloatParam>()->Value(),
+                    this->gradient_range_max.Param<core::param::FloatParam>()->Value());
 
                 auto gradient_forward_min_max = set_data(data_call, this->gradients_forward, "gradients (forward)",
                     this->gradient_fixed_range.Param<core::param::BoolParam>()->Value(),
@@ -756,19 +872,6 @@ namespace megamol
                 this->data_output_changed = false;
             }
 
-            // Set accessibility
-            this->label_range_min.Parameter()->SetGUIReadOnly(!this->label_fixed_range.Param<core::param::BoolParam>()->Value());
-            this->label_range_max.Parameter()->SetGUIReadOnly(!this->label_fixed_range.Param<core::param::BoolParam>()->Value());
-
-            this->distance_range_min.Parameter()->SetGUIReadOnly(!this->distance_fixed_range.Param<core::param::BoolParam>()->Value());
-            this->distance_range_max.Parameter()->SetGUIReadOnly(!this->distance_fixed_range.Param<core::param::BoolParam>()->Value());
-
-            this->termination_range_min.Parameter()->SetGUIReadOnly(!this->termination_fixed_range.Param<core::param::BoolParam>()->Value());
-            this->termination_range_max.Parameter()->SetGUIReadOnly(!this->termination_fixed_range.Param<core::param::BoolParam>()->Value());
-
-            this->gradient_range_min.Parameter()->SetGUIReadOnly(!this->gradient_fixed_range.Param<core::param::BoolParam>()->Value());
-            this->gradient_range_max.Parameter()->SetGUIReadOnly(!this->gradient_fixed_range.Param<core::param::BoolParam>()->Value());
-
             // Update transfer functions
             auto set_transfer_function = [](std::shared_ptr<mesh_data_call::data_set> data_set, std::string transfer_function)
             {
@@ -782,6 +885,7 @@ namespace megamol
 
             if (this->label_transfer_function.IsDirty())
             {
+                set_transfer_function(data_call->get_data("labels"), this->label_transfer_function.Param<core::param::LinearTransferFunctionParam>()->Value());
                 set_transfer_function(data_call->get_data("labels (forward)"), this->label_transfer_function.Param<core::param::LinearTransferFunctionParam>()->Value());
                 set_transfer_function(data_call->get_data("labels (backward)"), this->label_transfer_function.Param<core::param::LinearTransferFunctionParam>()->Value());
 
@@ -790,6 +894,7 @@ namespace megamol
 
             if (this->distance_transfer_function.IsDirty())
             {
+                set_transfer_function(data_call->get_data("distances"), this->distance_transfer_function.Param<core::param::LinearTransferFunctionParam>()->Value());
                 set_transfer_function(data_call->get_data("distances (forward)"), this->distance_transfer_function.Param<core::param::LinearTransferFunctionParam>()->Value());
                 set_transfer_function(data_call->get_data("distances (backward)"), this->distance_transfer_function.Param<core::param::LinearTransferFunctionParam>()->Value());
 
@@ -798,14 +903,15 @@ namespace megamol
 
             if (this->termination_transfer_function.IsDirty())
             {
-                set_transfer_function(data_call->get_data("terminations (forward)"), this->termination_transfer_function.Param<core::param::LinearTransferFunctionParam>()->Value());
-                set_transfer_function(data_call->get_data("terminations (backward)"), this->termination_transfer_function.Param<core::param::LinearTransferFunctionParam>()->Value());
+                set_transfer_function(data_call->get_data("reasons for termination (forward)"), this->termination_transfer_function.Param<core::param::LinearTransferFunctionParam>()->Value());
+                set_transfer_function(data_call->get_data("reasons for termination (backward)"), this->termination_transfer_function.Param<core::param::LinearTransferFunctionParam>()->Value());
 
                 this->termination_transfer_function.ResetDirty();
             }
 
             if (this->gradient_transfer_function.IsDirty())
             {
+                set_transfer_function(data_call->get_data("gradients"), this->gradient_transfer_function.Param<core::param::LinearTransferFunctionParam>()->Value());
                 set_transfer_function(data_call->get_data("gradients (forward)"), this->gradient_transfer_function.Param<core::param::LinearTransferFunctionParam>()->Value());
                 set_transfer_function(data_call->get_data("gradients (backward)"), this->gradient_transfer_function.Param<core::param::LinearTransferFunctionParam>()->Value());
 
@@ -820,15 +926,18 @@ namespace megamol
             auto* data_call = dynamic_cast<mesh_data_call*>(&call);
             if (data_call == nullptr) return false;
 
+            data_call->set_data("labels");
             data_call->set_data("labels (forward)");
             data_call->set_data("labels (backward)");
 
+            data_call->set_data("distances");
             data_call->set_data("distances (forward)");
             data_call->set_data("distances (backward)");
 
             data_call->set_data("reasons for termination (forward)");
             data_call->set_data("reasons for termination (backward)");
 
+            data_call->set_data("gradients");
             data_call->set_data("gradients (forward)");
             data_call->set_data("gradients (backward)");
 
@@ -838,6 +947,13 @@ namespace megamol
         bool implicit_topology::get_result_writer_cb_callback(core::Call& call)
         {
             this->get_result_writer_callback = dynamic_cast<implicit_topology_writer_call*>(&call)->GetCallback();
+
+            return true;
+        }
+
+        bool implicit_topology::get_screenshot_cb_callback(core::Call& call)
+        {
+            this->get_screenshot_callback = dynamic_cast<core::view::special::CallbackScreenShooterCall*>(&call)->GetCallback();
 
             return true;
         }
