@@ -20,6 +20,7 @@
 #include <iomanip>
 #include <sstream>
 #include <string>
+#include <utility>
 
 namespace megamol {
 namespace core {
@@ -51,8 +52,8 @@ namespace core {
         modeChanged(this->writeMode);
     }
 
-    std::string AbstractWriterParams::getNextFilename() {
-        const std::string filepath_param = this->filePathSlot.template Param<param::FilePathParam>()->Value();
+    std::pair<bool, std::string> AbstractWriterParams::getNextFilename() {
+        const std::string filepath_param = this->filePathSlot.template Param<param::FilePathParam>()->Value().PeekBuffer();
 
         const std::string filepath = filepath_param.find_last_of("/\\") != std::string::npos ? filepath_param.substr(0, filepath_param.find_last_of("/\\") + 1) : "";
         const std::string filename = filepath_param.find_last_of("/\\") != std::string::npos ? filepath_param.substr(filepath_param.find_last_of("/\\") + 1) : filepath_param;
@@ -65,7 +66,7 @@ namespace core {
             // Do not overwrite file
             vislib::sys::Log::DefaultLog.WriteWarn("Did not write file '%s'. File already exists.", filepath_param.c_str());
 
-            return false;
+            return std::make_pair(false, std::string(""));
         }
         else if (this->writeMode.Param<param::EnumParam>()->Value() == 2) {
             // Set counter postfix
@@ -103,7 +104,7 @@ namespace core {
             postfix = "_" + ss.str() + "_" + id;
         }
 
-        return filepath + filename_we + postfix + file_ext;
+        return std::make_pair(true, filepath + filename_we + postfix + file_ext);
     }
 
     bool AbstractWriterParams::modeChanged(param::ParamSlot&) {

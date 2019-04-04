@@ -129,7 +129,13 @@ namespace core {
         * @return 'true' on success, 'false' otherwise.
         */
         bool Write(ContentT... content) {
-            return write(AbstractWriterParams::getNextFilename(), content...);
+            const auto filename = AbstractWriterParams::getNextFilename();
+
+            if (filename.first) {
+                return write(filename.second, content...);
+            }
+
+            return false;
         }
 
         /** Input slot */
