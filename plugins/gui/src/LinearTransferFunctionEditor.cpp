@@ -295,6 +295,10 @@ bool megamol::gui::LinearTransferFunctionEditor::DrawTransferFunctionEditor(void
     this->HelpMarkerToolTip("[Left-Click] Select Node\n[Left-Drag] Move Node\n[Right-Click] Add/Delete Node");
 
     // Value slider
+    if (this->data.size() <= this->point_select_node) {
+        this->point_select_node = 0;
+    }
+
     float value = this->data[this->point_select_node][4];
     if (ImGui::SliderFloat("Selected Value", &value, 0.0f, 1.0f)) {
         float new_x = value;
@@ -332,7 +336,7 @@ bool megamol::gui::LinearTransferFunctionEditor::DrawTransferFunctionEditor(void
     bool imm_apply_tex_changed = this->tex_modified;
     if (this->tex_modified) {
         if (this->interpol_mode == param::LinearTransferFunctionParam::InterpolationMode::LINEAR) {
-            core::view::LinearTransferFunction::LinearInterpolation(this->tex_data, this->tex_size, this->data);
+            param::LinearTransferFunctionParam::LinearInterpolation(this->tex_data, this->tex_size, this->data);
         } else if (this->interpol_mode == param::LinearTransferFunctionParam::InterpolationMode::GAUSS) {
             // Needs implementation in LinearTransferFunction ...
         }
