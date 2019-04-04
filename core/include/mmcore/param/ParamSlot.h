@@ -195,13 +195,22 @@ namespace param {
              *         the dirty flag should remain set.
              */
             virtual bool Update(Module *owner, ParamSlot& slot) {
-                ASSERT((this->obj != NULL) || (dynamic_cast<C*>(owner) != NULL));
+                return update(owner, slot);
+            }
+
+        private:
+            template <typename ModuleT = Module>
+            bool update(typename std::enable_if<std::is_base_of<ModuleT, C>::value, Module>::type* owner, ParamSlot& slot) {
                 return ((this->obj == NULL)
                     ? ((dynamic_cast<C*>(owner)->*this->func)(slot))
                     : ((this->obj->*this->func)(slot)));
             }
 
-        private:
+            template <typename ModuleT = Module>
+            bool update(typename std::enable_if<!std::is_base_of<ModuleT, C>::value, Module>::type*, ParamSlot& slot) {
+                ASSERT(this->obj != NULL);
+                return (this->obj->*this->func)(slot);
+            }
 
             /** The callback object */
             C* obj;
