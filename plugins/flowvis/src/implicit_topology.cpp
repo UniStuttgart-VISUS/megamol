@@ -14,6 +14,7 @@
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/FilePathParam.h"
+#include "mmcore/param/GroupParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/LinearTransferFunctionParam.h"
 #include "mmcore/view/special/CallbackScreenShooter.h"
@@ -52,23 +53,31 @@ namespace megamol
             save_computation("save_computation", "Save computation to file"),
             vector_field_path("vector_field_path", "Path to the input vector field"),
             convergence_structures_path("convergence_structures_path", "Path to the input convergence structures"),
+            label_group("label_group", "Label group"),
             label_transfer_function("label_transfer_function", "Transfer function for labels"),
             label_fixed_range("label_fixed_range", "Fixed or dynamic value range for labels"),
             label_range_min("label_range_min", "Minimum value for labels in the transfer function"),
             label_range_max("label_range_max", "Maximum value for labels in the transfer function"),
             num_labels_combined("num_labels_combined", "Number of labels in the combined label field"),
+            label_end_group("label_end_group", "Label end group"),
+            distance_group("distance_group", "Distance group"),
             distance_transfer_function("distance_transfer_function", "Transfer function for distances"),
             distance_fixed_range("distance_fixed_range", "Fixed or dynamic value range for labels"),
             distance_range_min("distance_range_min", "Minimum value for distances in the transfer function"),
             distance_range_max("distance_range_max", "Maximum value for distances in the transfer function"),
+            distance_end_group("distance_end_group", "Distance end group"),
+            termination_group("termination_group", "Termination group"),
             termination_transfer_function("termination_transfer_function", "Transfer function for reasons of termination"),
             termination_fixed_range("termination_fixed_range", "Fixed or dynamic value range for reasons of termination"),
             termination_range_min("termination_range_min", "Minimum value for reasons of termination in the transfer function"),
             termination_range_max("termination_range_max", "Maximum value for reasons of termination in the transfer function"),
+            termination_end_group("termination_end_group", "Termination end group"),
+            gradient_group("gradient_group", "Gradient group"),
             gradient_transfer_function("gradient_transfer_function", "Transfer function for gradients"),
             gradient_fixed_range("gradient_fixed_range", "Fixed or dynamic value range for gradients"),
             gradient_range_min("gradient_range_min", "Minimum value for gradients in the transfer function"),
             gradient_range_max("gradient_range_max", "Maximum value for gradients in the transfer function"),
+            gradient_end_group("gradient_end_group", "Gradient end group"),
             num_integration_steps("num_integration_steps", "Number of stream line integration steps"),
             integration_timestep("integration_timestep", "Initial time step for stream line integration"),
             max_integration_error("max_integration_error", "Maximum integration error for Runge-Kutta 4-5"),
@@ -173,6 +182,9 @@ namespace megamol
             this->MakeSlotAvailable(&this->auto_save_screenshots);
 
             // Create transfer function parameters
+            this->label_group << new core::param::GroupParam("Label field");
+            this->MakeSlotAvailable(&this->label_group);
+
             this->label_transfer_function << new core::param::LinearTransferFunctionParam(
                 "{\"Interpolation\":\"LINEAR\",\"Nodes\":[[0.0,0.0,0.423499,1.0,0.0],[0.0,0.119346,0.529237,1.0,0.125]," \
                 "[0.0,0.238691,0.634976,1.0,0.1875],[0.0,0.346852,0.68788,1.0,0.25],[0.0,0.45022,0.718141,1.0,0.3125]," \
@@ -197,6 +209,12 @@ namespace megamol
             this->label_range_max.Parameter()->SetGUIReadOnly(true);
             this->MakeSlotAvailable(&this->label_range_max);
 
+            this->label_end_group << new core::param::GroupEndParam();
+            this->MakeSlotAvailable(&this->label_end_group);
+
+            this->distance_group << new core::param::GroupParam("Distance field");
+            this->MakeSlotAvailable(&this->distance_group);
+
             this->distance_transfer_function << new core::param::LinearTransferFunctionParam(
                 "{\"Interpolation\":\"LINEAR\",\"Nodes\":[[0.0,0.0,0.0,1.0,0.0],[0.9019607901573181,0.0,0.0,1.0,0.39500004053115845]," \
                 "[0.9019607901573181,0.9019607901573181,0.0,1.0,0.7990000247955322],[1.0,1.0,1.0,1.0,1.0]],\"TextureSize\":128}");
@@ -213,6 +231,12 @@ namespace megamol
             this->distance_range_max.Parameter()->SetGUIReadOnly(true);
             this->MakeSlotAvailable(&this->distance_range_max);
 
+            this->distance_end_group << new core::param::GroupEndParam();
+            this->MakeSlotAvailable(&this->distance_end_group);
+
+            this->termination_group << new core::param::GroupParam("Termination field");
+            this->MakeSlotAvailable(&this->termination_group);
+
             this->termination_transfer_function << new core::param::LinearTransferFunctionParam(
                 "{\"Interpolation\":\"LINEAR\",\"Nodes\":[[0.23137255012989044,0.2980392277240753,0.7529411911964417,1.0,0.0]," \
                 "[0.8627451062202454,0.8627451062202454,0.8627451062202454,1.0,0.4989999830722809]," \
@@ -228,6 +252,12 @@ namespace megamol
             this->termination_range_max << new core::param::FloatParam(2.0f);
             this->MakeSlotAvailable(&this->termination_range_max);
 
+            this->termination_end_group << new core::param::GroupEndParam();
+            this->MakeSlotAvailable(&this->termination_end_group);
+
+            this->gradient_group << new core::param::GroupParam("Gradient field");
+            this->MakeSlotAvailable(&this->gradient_group);
+
             this->gradient_transfer_function << new core::param::LinearTransferFunctionParam(
                 "{\"Interpolation\":\"LINEAR\",\"Nodes\":[[1.0,1.0,1.0,1.0,0.0],[0.0,0.0,0.0,1.0,1.0]],\"TextureSize\":128}");
             this->MakeSlotAvailable(&this->gradient_transfer_function);
@@ -242,6 +272,9 @@ namespace megamol
             this->gradient_range_max << new core::param::FloatParam(1.0f);
             this->gradient_range_max.Parameter()->SetGUIReadOnly(true);
             this->MakeSlotAvailable(&this->gradient_range_max);
+
+            this->gradient_end_group << new core::param::GroupEndParam();
+            this->MakeSlotAvailable(&this->gradient_end_group);
         }
 
         implicit_topology::~implicit_topology()
@@ -732,7 +765,7 @@ namespace megamol
                     for (int i = 0; i < this->distances->size(); ++i)
                     {
                         (*this->distances)[i] = std::sqrt((*this->distances_forward)[i] * (*this->distances_forward)[i]
-                            + (*this->distances_backward)[i] * (*this->distances_backward)[i]);
+                            + (*this->distances_backward)[i] * (*this->distances_backward)[i]) / std::sqrt(2.0f);
                     }
                 }
 
@@ -839,7 +872,7 @@ namespace megamol
                     for (int i = 0; i < this->gradients->size(); ++i)
                     {
                         (*this->gradients)[i] = std::sqrt((*this->gradients_forward)[i] * (*this->gradients_forward)[i]
-                            + (*this->gradients_backward)[i] * (*this->gradients_backward)[i]);
+                            + (*this->gradients_backward)[i] * (*this->gradients_backward)[i]) / std::sqrt(2.0f);
                     }
                 }
 

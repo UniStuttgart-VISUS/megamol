@@ -175,7 +175,7 @@ namespace megamol
             core::CalleeSlot log_slot;
             core::CalleeSlot performance_slot;
 
-            /** Output slot for reading results from file */
+            /** Input slot for reading results from file */
             core::CallerSlot result_reader_slot;
 
             /** Start or reset the computation */
@@ -225,6 +225,12 @@ namespace megamol
             /** Parameters for automatical saving of results and screenshots */
             core::param::ParamSlot auto_save_results;
             core::param::ParamSlot auto_save_screenshots;
+
+            /** Groups */
+            core::param::ParamSlot label_group, label_end_group;
+            core::param::ParamSlot distance_group, distance_end_group;
+            core::param::ParamSlot termination_group, termination_end_group;
+            core::param::ParamSlot gradient_group, gradient_end_group;
 
             /** Input information */
             std::array<int, 2> resolution;
