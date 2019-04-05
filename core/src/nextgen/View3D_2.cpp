@@ -196,6 +196,7 @@ View3D_2::View3D_2(void)
     this->arcballManipulator.set_target(this->cam);
     this->arcballManipulator.set_radius(1.0f);
     this->arcballManipulator.enable();
+    this->arcballCenterDistance = 0.0f;
 
     // none of the saved camera states are valid right now
     for (auto& e : this->savedCameras) {
@@ -432,6 +433,7 @@ void View3D_2::ResetView(void) {
 
     this->cam.position(bbcglm + glm::vec4(0.0f, 0.0f, dist, 0.0f));
     this->cam.orientation(cam_type::quaternion_type::create_identity());
+    this->arcballCenterDistance = dist;
 
     glm::mat4 vm = this->cam.view_matrix();
     glm::mat4 pm = this->cam.projection_matrix();
@@ -575,9 +577,13 @@ bool nextgen::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButto
             this->cursor2d.SetButtonState(0, down);
             if (action == view::MouseButtonAction::PRESS && (altPressed ^ this->arcballDefault)) {
                 if (!this->arcballManipulator.manipulating()) {
-                    glm::vec3 rotCenter = static_cast<glm::vec4>(this->arcballManipulator.rotation_centre());
                     glm::vec3 curPos = static_cast<glm::vec4>(this->cam.eye_position());
-                    this->arcballManipulator.set_radius(glm::distance(rotCenter, curPos));
+                    glm::vec3 camDir = static_cast<glm::vec4>(this->cam.view_vector());
+                    glm::vec3 rotCenter = curPos + this->arcballCenterDistance * glm::normalize(camDir);
+                    //glm::vec3 rotCenter = static_cast<glm::vec4>(this->arcballManipulator.rotation_centre());
+                    this->arcballManipulator.set_rotation_centre(glm::vec4(rotCenter, 1.0f));
+                    //this->arcballManipulator.set_radius(glm::distance(rotCenter, curPos));
+                    this->arcballManipulator.set_radius(1.0f);
                     auto wndSize = this->cam.resolution_gate();
                     this->arcballManipulator.on_drag_start(
                         static_cast<int>(this->mouseX), wndSize.height() - static_cast<int>(this->mouseY));
