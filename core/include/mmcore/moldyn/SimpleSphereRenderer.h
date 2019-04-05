@@ -103,25 +103,7 @@ namespace moldyn {
          */
         static bool IsAvailable(void) {
 
-#ifdef _WIN32
-#if defined(DEBUG) || defined(_DEBUG)
-            HDC dc = ::wglGetCurrentDC();
-            HGLRC rc = ::wglGetCurrentContext();
-            ASSERT(dc != NULL);
-            ASSERT(rc != NULL);
-#endif // DEBUG || _DEBUG
-#endif // _WIN32
-                                                                                        /// Necessary for:
-            return vislib::graphics::gl::GLSLShader::AreExtensionsAvailable()           // SimpleSphere, Clustered, NGSphere, NGBufferArray, NGSplat, SimpleGeo
-                && vislib::graphics::gl::GLSLGeometryShader::AreExtensionsAvailable()   // SimpleGeo
-                && ogl_IsVersionGEQ(4, 4)                                               // NGSphere, NGBufferArray, NGSplat
-                //&& ogl_IsVersionGEQ(2, 2)                                             // SimpleGeo
-                //&& ogl_IsVersionGEQ(3, 3)                                             // AmbientOcclusion
-                && isExtAvailable("GL_ARB_buffer_storage")                              // NGSphere, NGBufferArray, NGSplat
-                && isExtAvailable("GL_EXT_geometry_shader4")                            // SimpleGeo
-                && isExtAvailable("GL_EXT_gpu_shader4")                                 // SimpleGeo
-                && isExtAvailable("GL_EXT_bindable_uniform")                            // SimpleGeo
-                && isExtAvailable("GL_ARB_shader_objects");                             // SimpleGeo
+            return SimpleSphereRenderer::isRenderModeAvailable();
         }
 
         /** Ctor. */
@@ -167,7 +149,7 @@ namespace moldyn {
             NG_SPLAT          = 4,     /// NG sphere rendering using splats.
             NG_BUFFER_ARRAY   = 5,     /// NG sphere rendering using array buffers.
             AMBIENT_OCCLUSION = 6,     /// Sphere rendering with ambient occlusion
-            __MODE_COUNT__    = 7
+            __COUNT__    = 7
         };
 
         typedef std::map <std::tuple<int, int, bool>, std::shared_ptr<GLSLShader> > shaderMap;
@@ -283,6 +265,11 @@ namespace moldyn {
         /*********************************************************************/
         /* FUNCTIONS                                                         */
         /*********************************************************************/
+
+        /**
+         * Check if specified render mode or all render mode are available.
+         */
+        static bool isRenderModeAvailable(RenderMode rm = RenderMode::__COUNT__);
 
         /**
          * Toggle render mode on button press.
