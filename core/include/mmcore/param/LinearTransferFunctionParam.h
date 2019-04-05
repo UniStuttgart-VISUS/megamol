@@ -10,6 +10,7 @@
 
 
 #include <string>
+#include <cmath>
 
 #include "mmcore/api/MegaMolCore.std.h"
 #include "AbstractParam.h"
@@ -38,11 +39,11 @@ public:
     };
 
     /** Data type for transfer function data. */
-    typedef std::vector<std::array<float, 5>> TFType;
+    typedef std::vector<std::array<float, 5>> TFDataType;
 
     // ------------------------------------------------------------------------
 
-    // Example JSON output format (minimal version):
+    // Example JSON output format (empty string is also excepted for initialisation):
     //{
     //    "Interpolation": "LINEAR",
     //    "Nodes" : [
@@ -71,7 +72,7 @@ public:
     * @param out_data          The transfer function texture data output.
     * @param out_texsize       The transfer function texture size output.
     *
-    * @return True if JSON string was successfully converted into transfer function data, false otherwise.
+    * @return True if JSON string was successfully converted into transfer function texture, false otherwise.
     */
     static bool TransferFunctionTexture(const std::string &in_tfs, std::vector<float> &out_data, UINT &out_texsize);
 
@@ -85,7 +86,7 @@ public:
     *
     * @return True if JSON string was successfully converted into transfer function data, false otherwise.
     */
-    static bool ParseTransferFunction(const std::string &in_tfs, TFType &out_data, InterpolationMode &out_interpolmode, UINT &out_texsize);
+    static bool ParseTransferFunction(const std::string &in_tfs, TFDataType &out_data, InterpolationMode &out_interpolmode, UINT &out_texsize);
 
     /**
      * Get transfer function JSON string from data.
@@ -97,7 +98,7 @@ public:
      *
      * @return True if transfer function data was successfully converted into JSON string, false otherwise.
      */
-    static bool DumpTransferFunction(std::string &out_tfs, const TFType &in_data, const InterpolationMode in_interpolmode, const UINT in_texsize);
+    static bool DumpTransferFunction(std::string &out_tfs, const TFDataType &in_data, const InterpolationMode in_interpolmode, const UINT in_texsize);
 
     /**
      * Check given transfer function data.
@@ -108,7 +109,7 @@ public:
      *
      * @return True if given data is valid, false otherwise.
      */
-    static bool CheckTransferFunctionData(const TFType &data, const InterpolationMode interpolmode, const UINT texsize);
+    static bool CheckTransferFunctionData(const TFDataType &data, const InterpolationMode interpolmode, const UINT texsize);
 
     /**
      * Check given transfer function JSON string.
@@ -126,7 +127,22 @@ public:
     * @param in_texsize   The transfer function texture size input.
     * @param in_tfdata    The transfer function data input.
     */
-    static void LinearInterpolation(std::vector<float> &out_texdata, unsigned int in_texsize, const TFType &in_tfdata);
+    static void LinearInterpolation(std::vector<float> &out_texdata, unsigned int in_texsize, const TFDataType &in_tfdata);
+
+    /**
+    * Gauss interpolation of transfer function data in range [0..texsize]
+    *
+    * @param out_texdata  The generated texture from the input transfer function.
+    * @param in_texsize   The transfer function texture size input.
+    * @param in_tfdata    The transfer function data input.
+    */
+    static void GaussInterpolation(std::vector<float> &out_texdata, unsigned int in_texsize, const TFDataType &in_tfdata);
+
+    /** Calculates gauss function for given parameters. */
+    static float gauss(float x, float a, float b, float c) {
+        //return ((1.0 / (s * sqrt(2.0*3.14159265358979323846))) * exp(-0.5 * ((x - u) / s) * ((x - u) / s)));
+        return (a * expf(-1.0f * (x - b) * (x - b) / (2.0 * c * c)));
+    }
 
     // ------------------------------------------------------------------------
 

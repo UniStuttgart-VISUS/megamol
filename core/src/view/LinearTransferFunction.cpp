@@ -77,7 +77,7 @@ bool LinearTransferFunction::requestTF(Call& call) {
     if ((this->texID == 0) || dirty) {
         this->tfParam.ResetDirty();
 
-        param::LinearTransferFunctionParam::TFType tfdata;
+        param::LinearTransferFunctionParam::TFDataType tfdata;
 
         // Get current values from parameter string. Values are checked, too.
         if (!megamol::core::param::LinearTransferFunctionParam::ParseTransferFunction(

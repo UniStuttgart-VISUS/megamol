@@ -80,7 +80,7 @@ private:
     // VARIABLES -----------------------------------------------------------
 
     /** Array holding current colors and function values. */
-    megamol::core::param::LinearTransferFunctionParam::TFType data;
+    megamol::core::param::LinearTransferFunctionParam::TFDataType data;
 
     /** Current interpolation option. */
     megamol::core::param::LinearTransferFunctionParam::InterpolationMode interpol_mode;
@@ -108,6 +108,9 @@ private:
 
     /** Flag for applying all changes immediately. */
     bool imm_apply;
+
+    /** TEMP */
+    float sigma;
 };
 
 } // namespace gui
