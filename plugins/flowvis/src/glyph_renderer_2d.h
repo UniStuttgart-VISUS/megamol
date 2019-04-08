@@ -1,0 +1,171 @@
+/*
+ * glyph_renderer_2d.h
+ *
+ * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
+ * Alle Rechte vorbehalten.
+ */
+#pragma once
+
+#include "glyph_data_call.h"
+
+#include "mmcore/CallerSlot.h"
+#include "mmcore/param/ParamSlot.h"
+#include "mmcore/view/CallRender2D.h"
+#include "mmcore/view/MouseFlags.h"
+#include "mmcore/view/Renderer2DModule.h"
+
+#include "vislib/math/Rectangle.h"
+
+#include "glad/glad.h"
+
+#include <memory>
+#include <type_traits>
+#include <vector>
+
+namespace megamol
+{
+    namespace flowvis
+    {
+        /**
+        * Module for rendering 2D glyphs.
+        *
+        * @author Alexander Straub
+        */
+        class glyph_renderer_2d : public core::view::Renderer2DModule
+        {
+            static_assert(std::is_same<GLfloat, float>::value, "'GLfloat' and 'float' must be the same type!");
+            static_assert(std::is_same<GLuint, unsigned int>::value, "'GLuint' and 'unsigned int' must be the same type!");
+
+        public:
+            /**
+             * Answer the name of this module.
+             *
+             * @return The name of this module.
+             */
+            static inline const char* ClassName() { return "glyph_renderer_2d"; }
+
+            /**
+             * Answer a human readable description of this module.
+             *
+             * @return A human readable description of this module.
+             */
+            static inline const char* Description() { return "2D glyph renderer"; }
+
+            /**
+             * Answers whether this module is available on the current system.
+             *
+             * @return 'true' if the module is available, 'false' otherwise.
+             */
+            static inline bool IsAvailable() { return true; }
+
+            /**
+             * Initialises a new instance.
+             */
+            glyph_renderer_2d();
+
+            /**
+             * Finalises an instance.
+             */
+            virtual ~glyph_renderer_2d();
+
+        protected:
+            /**
+             * Implementation of 'Create'.
+             *
+             * @return 'true' on success, 'false' otherwise.
+             */
+            virtual bool create() override;
+
+            /**
+             * Implementation of 'Release'.
+             */
+            virtual void release() override;
+
+            /**
+             * The render callback.
+             *
+             * @param call The calling call.
+             *
+             * @return 'true' on success, 'false' otherwise.
+             */
+            virtual bool Render(core::view::CallRender2D& call) override;
+
+            /**
+             * The extent callback.
+             *
+             * @param call The calling call.
+             *
+             * @return 'true' on success, 'false' otherwise.
+             */
+            virtual bool GetExtents(core::view::CallRender2D& call) override;
+
+            /**
+            * Forwards key events.
+            */
+            virtual bool OnKey(core::view::Key key, core::view::KeyAction action, core::view::Modifiers mods) override;
+
+            /**
+            * Forwards character events.
+            */
+            virtual bool OnChar(unsigned int codePoint) override;
+
+            /**
+             * Forwards click events.
+             */
+            virtual bool OnMouseButton(core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) override;
+
+            /**
+             * Forwards move events.
+             */
+            virtual bool OnMouseMove(double x, double y, double world_x, double world_y) override;
+
+            /**
+            * Forwards scroll events.
+            */
+            virtual bool OnMouseScroll(double dx, double dy) override;
+
+        private:
+            /** Input render call */
+            core::CallerSlot render_input_slot;
+
+            /** Input slot for the glyphs */
+            core::CallerSlot glyph_slot;
+            SIZE_T glyph_hash;
+
+            /** Parameter slots for defining the size (strongness) of the glyphs */
+            core::param::ParamSlot point_size;
+            core::param::ParamSlot line_width;
+
+            /** Parameter slot for the transfer function */
+            core::param::ParamSlot transfer_function;
+
+            /** Bounding rectangle */
+            vislib::math::Rectangle<float> bounds;
+
+            /** Struct for storing data needed for rendering */
+            struct render_data_t
+            {
+                bool initialized = false;
+
+                GLuint vs, fs, prog;
+                struct glyph_data_t { GLuint vao, vbo, ibo, cbo; } point, line;
+                GLuint tf, tf_size;
+
+                std::shared_ptr<std::vector<GLfloat>> point_vertices, line_vertices;
+                std::shared_ptr<std::vector<GLuint>> point_indices, line_indices;
+
+                std::shared_ptr<std::vector<GLfloat>> point_values, line_values;
+
+                float min_value, max_value;
+
+            } render_data;
+
+            /** Struct for storing data needed for creating transformation matrices */
+            struct camera_t
+            {
+                std::array<GLfloat, 16> model_view, projection;
+
+            } camera;
+        };
+    }
+}
