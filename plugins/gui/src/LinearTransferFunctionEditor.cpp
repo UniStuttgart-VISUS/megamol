@@ -1,4 +1,4 @@
-/*
+﻿/*
  * LinearTransferFunctionEditor.cpp
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
@@ -27,13 +27,12 @@ megamol::gui::LinearTransferFunctionEditor::LinearTransferFunctionEditor(void)
     , point_select_node(0)
     , point_select_chan(0)
     , point_select_delta()
-    , imm_apply(false)
-    , sigma(0.05f) {
+    , imm_apply(false) {
 
     // Init transfer function colors
     this->data.clear();
-    std::array<float, 5> zero = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
-    std::array<float, 5> one = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
+    std::array<float, TFP_VAL_CNT> zero = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.05f};
+    std::array<float, TFP_VAL_CNT> one = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.05f};
     this->data.emplace_back(zero);
     this->data.emplace_back(one);
     this->tex_modified = true;
@@ -153,6 +152,7 @@ bool megamol::gui::LinearTransferFunctionEditor::DrawTransferFunctionEditor(void
             // Draw lines/curves ...
             ImVec2 point_cur_pos = ImVec2(canvas_pos.x + this->data[i][4] * canvas_size.x,
                 canvas_pos.y + (1.0f - this->data[i][c]) * canvas_size.y);
+
             if (this->interpol_mode == param::LinearTransferFunctionParam::InterpolationMode::LINEAR) {
                 if (i < (this->data.size() - 1)) {
                     ImVec2 point_next_pos = ImVec2(canvas_pos.x + this->data[i + 1][4] * canvas_size.x,
@@ -161,32 +161,36 @@ bool megamol::gui::LinearTransferFunctionEditor::DrawTransferFunctionEditor(void
                     draw_list->AddLine(point_cur_pos, point_next_pos, line_col, 4.0f);
                 }
             } else if (this->interpol_mode == param::LinearTransferFunctionParam::InterpolationMode::GAUSS) {
-                float ga = this->data[i][c];
-                float gb = this->data[i][4];
-                float gc = this->sigma;
-
+                const float ga = this->data[i][c];
+                const float gb = this->data[i][4];
+                const float gc = this->data[i][5];
                 const int d = 3; // step width in x direction
+                float x0, x1;
+                float g0, g1;
                 float last_g1 = 0.0f;
-                for (int p = 0; p < (int)canvas_size.x; p += d) {
-                    float x0 = (float)p / canvas_size.x;
-                    float x1 = (float)(p + d) / canvas_size.x;
 
-                    float g0 = last_g1;
+                for (int p = 0; p < (int)canvas_size.x; p += d) {
+                    x0 = (float)p / canvas_size.x;
+                    x1 = (float)(p + d) / canvas_size.x;
+
+                    g0 = last_g1;
                     if (p == 0) {
+                        x0 = (float)(-d) / canvas_size.x;
                         g0 = param::LinearTransferFunctionParam::gauss(x0, ga, gb, gc);
                     }
                     ImVec2 pos0 = ImVec2(
                         canvas_pos.x + (x0 * canvas_size.x), canvas_pos.y + canvas_size.y - (g0 * canvas_size.y));
 
-                    float g1 = param::LinearTransferFunctionParam::gauss(x1, ga, gb, gc);
+                    if (p == ((int)canvas_size.x - 1)) {
+                        x1 = (float)(canvas_size.x + d) / canvas_size.x;
+                    }
+                    g1 = param::LinearTransferFunctionParam::gauss(x1, ga, gb, gc);
                     ImVec2 pos1 = ImVec2(
                         canvas_pos.x + (x1 * canvas_size.x), canvas_pos.y + canvas_size.y - (g1 * canvas_size.y));
                     last_g1 = g1;
 
                     draw_list->AddLine(pos0, pos1, line_col, 4.0f);
                 }
-
-                // TODO: Implement ...
             }
 
             // Draw node point
@@ -225,7 +229,7 @@ bool megamol::gui::LinearTransferFunctionEditor::DrawTransferFunctionEditor(void
                 this->point_select_delta = selected_delta;
             }
         }
-        // Left Move -> Move selecteed node
+        // Left Move -> Move selected node
         else if (io.MouseDown[0]) {
 
             float new_x = (mouse_cur_pos.x - canvas_pos.x + this->point_select_delta.x) / canvas_size.x;
@@ -273,11 +277,11 @@ bool megamol::gui::LinearTransferFunctionEditor::DrawTransferFunctionEditor(void
                     if (new_x < (*it)[4]) {
                         // New nodes can only be inserted between two exisintng ones,
                         // so there is always a node before and after
-                        std::array<float, 5> prev_col = (*(it - 1));
-                        std::array<float, 5> fol_col = (*it);
-                        std::array<float, 5> new_col = {(prev_col[0] + fol_col[0]) / 2.0f,
+                        std::array<float, TFP_VAL_CNT> prev_col = (*(it - 1));
+                        std::array<float, TFP_VAL_CNT> fol_col = (*it);
+                        std::array<float, TFP_VAL_CNT> new_col = {(prev_col[0] + fol_col[0]) / 2.0f,
                             (prev_col[1] + fol_col[1]) / 2.0f, (prev_col[2] + fol_col[2]) / 2.0f,
-                            (prev_col[3] + fol_col[3]) / 2.0f, new_x};
+                            (prev_col[3] + fol_col[3]) / 2.0f, new_x, 0.05f};
 
                         if (this->plot_channels[0]) {
                             new_col[0] = new_y;
@@ -317,7 +321,6 @@ bool megamol::gui::LinearTransferFunctionEditor::DrawTransferFunctionEditor(void
     float value = this->data[this->point_select_node][4];
     if (ImGui::SliderFloat("Selected Value", &value, 0.0f, 1.0f)) {
         float new_x = value;
-        new_x = std::max(0.0f, std::min(new_x, 1.0f));
         if (this->point_select_node == 0) {
             new_x = 0.0f;
         } else if (this->point_select_node == (this->data.size() - 1)) {
@@ -334,8 +337,10 @@ bool megamol::gui::LinearTransferFunctionEditor::DrawTransferFunctionEditor(void
 
     // Sigma slider
     if (this->interpol_mode == param::LinearTransferFunctionParam::InterpolationMode::GAUSS) {
-        // float sigma = 1.0f; // this->data[this->point_select_node][5];
-        if (ImGui::SliderFloat("Selected Sigma (dummy)", &this->sigma, 0.0f, 1.0f)) {
+        float sigma = this->data[this->point_select_node][5];
+        if (ImGui::SliderFloat("Selected Sigma", &sigma, 0.0f, 1.0f)) {
+            this->data[this->point_select_node][5] = sigma;
+            this->tex_modified = true;
         }
         std::string help = "[Ctrl-Click] for keyboard input";
         this->HelpMarkerToolTip(help);
@@ -362,7 +367,7 @@ bool megamol::gui::LinearTransferFunctionEditor::DrawTransferFunctionEditor(void
         if (this->interpol_mode == param::LinearTransferFunctionParam::InterpolationMode::LINEAR) {
             param::LinearTransferFunctionParam::LinearInterpolation(this->tex_data, this->tex_size, this->data);
         } else if (this->interpol_mode == param::LinearTransferFunctionParam::InterpolationMode::GAUSS) {
-            // Needs implementation in LinearTransferFunctionParam ...
+            param::LinearTransferFunctionParam::GaussInterpolation(this->tex_data, this->tex_size, this->data);
         }
         this->tex_modified = false;
     }

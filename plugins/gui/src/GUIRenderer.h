@@ -584,7 +584,8 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
     style.Colors[ImGuiCol_Header] = ImVec4(0.26f, 0.59f, 0.98f, 0.60f);
 
     ImGui::SetColorEditOptions(ImGuiColorEditFlags_Uint8 | ImGuiColorEditFlags_RGB |
-                               ImGuiColorEditFlags_PickerHueWheel | ImGuiColorEditFlags_AlphaBar);
+                               ImGuiColorEditFlags_PickerHueWheel | ImGuiColorEditFlags_AlphaBar |
+                               ImGuiColorEditFlags_AlphaPreview);
 
     // IO settings ------------------------------------------------------------
     ImGuiIO& io = ImGui::GetIO();
@@ -1704,10 +1705,8 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
             auto value = p->Value();
 
             ImGui::Separator();
-
             ImGui::Text(pname.c_str());
             ImGui::SameLine();
-
             label = "Load into Editor###editor" + modname + "::" + pname;
             if (p == this->active_tf_param) {
                 label = "Open Editor###editor" + modname + "::" + pname;
@@ -1722,14 +1721,13 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
                     }
                 }
             }
-
-            ImGui::SameLine();
             if (p == this->active_tf_param) {
+                ImGui::SameLine();
                 ImGui::TextColored(
                     style.Colors[ImGuiCol_ButtonHovered], "(Transfer Function is already loaded into Editor)");
             }
 
-            ImGui::Text("JSON String:");
+            ImGui::Text("JSON");
             ImGui::SameLine();
             label = "Copy to Clipboard###clipboard" + modname + "::" + pname;
             if (ImGui::Button(label.c_str())) {

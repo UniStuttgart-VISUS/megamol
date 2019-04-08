@@ -21,6 +21,8 @@
 #include "json.hpp"
 
 
+#define TFP_VAL_CNT (6)
+
 namespace megamol {
 namespace core {
 namespace param {
@@ -39,7 +41,7 @@ public:
     };
 
     /** Data type for transfer function data. */
-    typedef std::vector<std::array<float, 5>> TFDataType;
+    typedef std::vector<std::array<float, TFP_VAL_CNT>> TFDataType;
 
     // ------------------------------------------------------------------------
 
@@ -48,18 +50,20 @@ public:
     //    "Interpolation": "LINEAR",
     //    "Nodes" : [
     //        [
-    //            0.0, // = Red
-    //            0.0, // = Green
-    //            0.0, // = Blue
-    //            0.0, // = Alpha
-    //            0.0  // = Value
+    //            0.0,  // = Red
+    //            0.0,  // = Green
+    //            0.0,  // = Blue
+    //            0.0,  // = Alpha
+    //            0.0,  // = Value
+    //            0.05  // = Sigma (only used for gauss interpolation)
     //        ],
     //        [
-    //            1.0, // = Red
-    //            1.0, // = Green
-    //            1.0, // = Blue
-    //            1.0, // = Alpha
-    //            1.0  // = Value
+    //            1.0,  // = Red
+    //            1.0,  // = Green
+    //            1.0,  // = Blue
+    //            1.0,  // = Alpha
+    //            1.0,  // = Value
+    //            0.05  // = Sigma (only used for gauss interpolation)
     //        ]
     //    ],
     //    "TextureSize": 128
@@ -139,9 +143,8 @@ public:
     static void GaussInterpolation(std::vector<float> &out_texdata, unsigned int in_texsize, const TFDataType &in_tfdata);
 
     /** Calculates gauss function for given parameters. */
-    static float gauss(float x, float a, float b, float c) {
-        //return ((1.0 / (s * sqrt(2.0*3.14159265358979323846))) * exp(-0.5 * ((x - u) / s) * ((x - u) / s)));
-        return (a * expf(-1.0f * (x - b) * (x - b) / (2.0 * c * c)));
+    static inline float gauss(float x, float a, float b, float c) {
+        return (a * expf(-1.0f * (x - b) * (x - b) / (2.0f * c * c)));
     }
 
     // ------------------------------------------------------------------------

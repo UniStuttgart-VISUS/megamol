@@ -108,9 +108,6 @@ private:
 
     /** Flag for applying all changes immediately. */
     bool imm_apply;
-
-    /** TEMP */
-    float sigma;
 };
 
 } // namespace gui
