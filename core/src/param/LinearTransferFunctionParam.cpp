@@ -431,10 +431,11 @@ void LinearTransferFunctionParam::GaussInterpolation(std::vector<float> &out_tex
             b = param::LinearTransferFunctionParam::gauss(x, in_tfdata[i][2], gb, gc);
             a = param::LinearTransferFunctionParam::gauss(x, in_tfdata[i][3], gb, gc);
 
-            out_texdata[t * 4] += r;
-            out_texdata[t * 4 + 1] += g;
-            out_texdata[t * 4 + 2] += b;
-            out_texdata[t * 4 + 3] += a;
+            // Max
+            out_texdata[t * 4]     = std::max(r, out_texdata[t * 4]);
+            out_texdata[t * 4 + 1] = std::max(g, out_texdata[t * 4 + 1]);
+            out_texdata[t * 4 + 2] = std::max(b, out_texdata[t * 4 + 2]);
+            out_texdata[t * 4 + 3] = std::max(a, out_texdata[t * 4 + 3]);
         }
     }
 }
