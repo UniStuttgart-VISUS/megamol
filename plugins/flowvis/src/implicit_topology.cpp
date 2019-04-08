@@ -7,6 +7,7 @@
 #include "mesh_data_call.h"
 #include "triangle_mesh_call.h"
 #include "triangulation.h"
+#include "vector_field_call.h"
 
 #include "mmcore/Call.h"
 #include "mmcore/DirectDataWriterCall.h"
@@ -45,13 +46,13 @@ namespace megamol
             screenshot_slot("screenshot_slot", "Screenshot output slot"),
             log_slot("log_slot", "Log output slot"),
             performance_slot("performance_slot", "Performance log output slot"),
+            vector_field_slot("vector_field_slot", "Vector field input slot"),
             result_reader_slot("result_reader_slot", "Results input slot"),
             start_computation("start_computation", "Start the computation"),
             stop_computation("stop_computation", "Stop the computation"),
             reset_computation("reset_computation", "Reset the computation"),
             load_computation("load_computation", "Load computation from file"),
             save_computation("save_computation", "Save computation to file"),
-            vector_field_path("vector_field_path", "Path to the input vector field"),
             convergence_structures_path("convergence_structures_path", "Path to the input convergence structures"),
             label_group("label_group", "Label group"),
             label_transfer_function("label_transfer_function", "Transfer function for labels"),
@@ -118,13 +119,13 @@ namespace megamol
             this->get_performance_callback = []() -> std::ostream& { static std::ostream dummy(nullptr); return dummy; };
 
             // Connect input
+            this->vector_field_slot.SetCompatibleCall<vector_field_call::vector_field_description>();
+            this->MakeSlotAvailable(&this->vector_field_slot);
+
             this->result_reader_slot.SetCompatibleCall<implicit_topology_reader_call::implicit_topology_reader_description>();
             this->MakeSlotAvailable(&this->result_reader_slot);
 
             // Create path parameters
-            this->vector_field_path << new core::param::FilePathParam("");
-            this->MakeSlotAvailable(&this->vector_field_path);
-
             this->convergence_structures_path << new core::param::FilePathParam("");
             this->MakeSlotAvailable(&this->convergence_structures_path);
 
@@ -301,7 +302,7 @@ namespace megamol
             // Try to load input vector field
             if (this->computation == nullptr)
             {
-                std::array<int, 2> resolution;
+                std::array<unsigned int, 2> resolution;
                 std::array<float, 4> domain;
                 
                 std::vector<float> positions;
@@ -330,81 +331,31 @@ namespace megamol
             return true;
         }
 
-        bool implicit_topology::load_input(std::array<int, 2>& resolution, std::array<float, 4>& domain, std::vector<float>& positions,
+        bool implicit_topology::load_input(std::array<unsigned int, 2>& resolution, std::array<float, 4>& domain, std::vector<float>& positions,
             std::vector<float>& vectors, std::vector<float>& points, std::vector<int>& point_ids, std::vector<float>& lines, std::vector<int>& line_ids)
         {
-            std::ifstream vectors_ifs(this->vector_field_path.Param<core::param::FilePathParam>()->Value(), std::ios_base::in | std::ios_base::binary);
+            // Get vector field
+            auto* vf_call = this->vector_field_slot.CallAs<vector_field_call>();
+
+            if (vf_call != nullptr && (*vf_call)(0))
+            {
+                resolution = this->resolution = vf_call->get_resolution();
+                domain = { vf_call->get_bounding_rectangle().Left(), vf_call->get_bounding_rectangle().Bottom(),
+                    vf_call->get_bounding_rectangle().Right(), vf_call->get_bounding_rectangle().Top() };
+
+                positions = *vf_call->get_positions();
+                vectors = *vf_call->get_vectors();
+            }
+            else
+            {
+                return false;
+            }
+
+            // Load convergence structures
             std::ifstream structures_ifs(this->convergence_structures_path.Param<core::param::FilePathParam>()->Value(), std::ios_base::in | std::ios_base::binary);
 
-            if (vectors_ifs.good() && structures_ifs.good())
-            {
-                // Get dimension from file
-                unsigned int dimension, components;
-
-                vectors_ifs.read(reinterpret_cast<char*>(&dimension), sizeof(unsigned int));
-                vectors_ifs.read(reinterpret_cast<char*>(&components), sizeof(unsigned int));
-
-                if (dimension != 2)
-                {
-                    vislib::sys::Log::DefaultLog.WriteError("Vector field file must have exactly two dimensions '%s'",
-                        this->vector_field_path.Param<core::param::FilePathParam>()->Value());
-
-                    return false;
-                }
-
-                if (components != 2)
-                {
-                    vislib::sys::Log::DefaultLog.WriteError("Vectors must have exactly two components '%s'",
-                        this->vector_field_path.Param<core::param::FilePathParam>()->Value());
-
-                    return false;
-                }
-
-                // Read extents from file
-                float x_min, x_max, y_min, y_max;
-                unsigned int x_num, y_num, num;
-
-                vectors_ifs.read(reinterpret_cast<char*>(&x_num), sizeof(unsigned int));
-                vectors_ifs.read(reinterpret_cast<char*>(&x_min), sizeof(float));
-                vectors_ifs.read(reinterpret_cast<char*>(&x_max), sizeof(float));
-                vectors_ifs.read(reinterpret_cast<char*>(&y_num), sizeof(unsigned int));
-                vectors_ifs.read(reinterpret_cast<char*>(&y_min), sizeof(float));
-                vectors_ifs.read(reinterpret_cast<char*>(&y_max), sizeof(float));
-
-                num = x_num * y_num;
-
-                this->resolution = resolution = { static_cast<int>(x_num), static_cast<int>(y_num) };
-                domain = { x_min, x_max, y_min, y_max };
-
-                // Read file content
-                const float x_step = (x_max - x_min) / (x_num - 1);
-                const float y_step = (y_max - y_min) / (y_num - 1);
-
-                positions.resize(num * 2);
-                vectors.resize(num * 2);
-
-                for (unsigned int y = 0; y < y_num; ++y)
-                {
-                    for (unsigned int x = 0; x < x_num; ++x)
-                    {
-                        const unsigned int xy = y * x_num + x;
-
-                        // Calculate positions
-                        const float x_pos = x_min + x * x_step;
-                        const float y_pos = y_min + y * y_step;
-
-                        positions[xy * 2 + 0] = x_pos;
-                        positions[xy * 2 + 1] = y_pos;
-
-                        // Read vectors
-                        vectors_ifs.read(reinterpret_cast<char*>(&vectors[xy * 2 + 0]), sizeof(float));
-                        vectors_ifs.read(reinterpret_cast<char*>(&vectors[xy * 2 + 1]), sizeof(float));
-                    }
-                }
-
-                vectors_ifs.close();
-
-                // Load convergence structures
+            if (structures_ifs.good())
+            {   
                 unsigned int num_convergence_structures;
 
                 structures_ifs.read(reinterpret_cast<char*>(&num_convergence_structures), sizeof(unsigned int));
@@ -455,14 +406,7 @@ namespace megamol
                     }
                 }
             }
-            else if (!vectors_ifs.good())
-            {
-                vislib::sys::Log::DefaultLog.WriteWarn("Unable to open input vector field file '%s'!",
-                    this->vector_field_path.Param<core::param::FilePathParam>()->Value());
-
-                return false;
-            }
-            else if (!structures_ifs.good())
+            else
             {
                 vislib::sys::Log::DefaultLog.WriteWarn("Unable to open input convergence structures file '%s'!",
                     this->convergence_structures_path.Param<core::param::FilePathParam>()->Value());
@@ -532,7 +476,6 @@ namespace megamol
 
         void implicit_topology::set_readonly_fixed_parameters(const bool read_only)
         {
-            this->vector_field_path.Parameter()->SetGUIReadOnly(read_only);
             this->convergence_structures_path.Parameter()->SetGUIReadOnly(read_only);
 
             this->integration_timestep.Parameter()->SetGUIReadOnly(read_only);
@@ -576,55 +519,18 @@ namespace megamol
             auto* triangle_call = dynamic_cast<triangle_mesh_call*>(&call);
             if (triangle_call == nullptr) return false;
 
-            if (this->vector_field_path.IsDirty())
+            // Get input vector field extents
+            auto* vf_call = this->vector_field_slot.CallAs<vector_field_call>();
+
+            if (vf_call != nullptr && (*vf_call)(1))
             {
-                // Try to load input vector field
-                std::ifstream vectors_ifs(this->vector_field_path.Param<core::param::FilePathParam>()->Value(), std::ios_base::in | std::ios_base::binary);
+                this->resolution = vf_call->get_resolution();
 
-                if (vectors_ifs.good())
-                {
-                    // Read dimension from file
-                    unsigned int dimension, components;
-
-                    vectors_ifs.read(reinterpret_cast<char*>(&dimension), sizeof(unsigned int));
-                    vectors_ifs.read(reinterpret_cast<char*>(&components), sizeof(unsigned int));
-
-                    if (dimension != 2)
-                    {
-                        vislib::sys::Log::DefaultLog.WriteError("Vector field file must have exactly two dimensions '%s'",
-                            this->vector_field_path.Param<core::param::FilePathParam>()->Value());
-
-                        return false;
-                    }
-
-                    if (components != 2)
-                    {
-                        vislib::sys::Log::DefaultLog.WriteError("Vectors must have exactly two components '%s'",
-                            this->vector_field_path.Param<core::param::FilePathParam>()->Value());
-
-                        return false;
-                    }
-
-                    // Read extents from file
-                    float x_min, x_max, y_min, y_max;
-
-                    vectors_ifs.ignore(sizeof(unsigned int));
-                    vectors_ifs.read(reinterpret_cast<char*>(&x_min), sizeof(float));
-                    vectors_ifs.read(reinterpret_cast<char*>(&x_max), sizeof(float));
-                    vectors_ifs.ignore(sizeof(unsigned int));
-                    vectors_ifs.read(reinterpret_cast<char*>(&y_min), sizeof(float));
-                    vectors_ifs.read(reinterpret_cast<char*>(&y_max), sizeof(float));
-
-                    triangle_call->set_bounding_rectangle(vislib::math::Rectangle<float>(x_min, y_min, x_max, y_max));
-                }
-                else
-                {
-                    triangle_call->SetDataHash(0);
-
-                    this->vector_field_path.ResetDirty();
-
-                    return false;
-                }
+                triangle_call->set_bounding_rectangle(vf_call->get_bounding_rectangle());
+            }
+            else
+            {
+                return false;
             }
 
             return true;
@@ -752,7 +658,7 @@ namespace megamol
                 this->label_range_min.Param<core::param::FloatParam>()->SetValue(label_min, false);
                 this->label_range_max.Param<core::param::FloatParam>()->SetValue(label_max, false);
 
-                this->num_labels_combined.Param<core::param::IntParam>()->SetValue(label_min_max.second - label_min_max.first + 1, false);
+                this->num_labels_combined.Param<core::param::IntParam>()->SetValue(static_cast<int>(label_min_max.second - label_min_max.first) + 1, false);
 
                 this->label_transfer_function.ForceSetDirty();
                 
@@ -820,11 +726,11 @@ namespace megamol
                     const std::vector<float>& distances_forward = *this->distances_forward;
                     const std::vector<float>& distances_backward = *this->distances_backward;
 
-                    for (int x = 0; x < this->resolution[0]; ++x)
+                    for (unsigned int x = 0; x < this->resolution[0]; ++x)
                     {
-                        for (int y = 0; y < this->resolution[1]; ++y)
+                        for (unsigned int y = 0; y < this->resolution[1]; ++y)
                         {
-                            const int index = x + y * resolution[0];
+                            const unsigned int index = x + y * resolution[0];
 
                             float magnitude_forward = 0.0f;
                             float magnitude_backward = 0.0f;
@@ -1087,7 +993,7 @@ namespace megamol
                 }
 
                 // Load input from file
-                std::array<int, 2> resolution;
+                std::array<unsigned int, 2> resolution;
                 std::array<float, 4> domain;
 
                 std::vector<float> positions;

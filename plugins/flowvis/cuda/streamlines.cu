@@ -390,7 +390,7 @@ namespace megamol
     {
         static std::unique_ptr<streamlines_cuda_impl> impl = nullptr;
 
-        streamlines_cuda::streamlines_cuda(const std::array<int, 2>& resolution, const std::array<float, 4>& domain,
+        streamlines_cuda::streamlines_cuda(const std::array<unsigned int, 2>& resolution, const std::array<float, 4>& domain,
             const std::vector<float>& vectors, const std::vector<float>& points, const std::vector<int>& point_ids,
             const std::vector<float>& lines, const std::vector<int>& line_ids, const float integration_timestep,
             const float max_integration_error)
@@ -421,7 +421,7 @@ namespace megamol
 {
     namespace flowvis
     {
-        streamlines_cuda_impl::streamlines_cuda_impl(const std::array<int, 2>& resolution, const std::array<float, 4>& domain,
+        streamlines_cuda_impl::streamlines_cuda_impl(const std::array<unsigned int, 2>& resolution, const std::array<float, 4>& domain,
             const std::vector<float>& vectors, const std::vector<float>& points, const std::vector<int>& point_ids,
             const std::vector<float>& lines, const std::vector<int>& line_ids, const float integration_timestep,
             const float max_integration_error)

@@ -137,7 +137,7 @@ namespace megamol
             *
             * @return Success
             */
-            bool load_input(std::array<int, 2>& resolution, std::array<float, 4>& domain, std::vector<float>& positions, std::vector<float>& vectors,
+            bool load_input(std::array<unsigned int, 2>& resolution, std::array<float, 4>& domain, std::vector<float>& positions, std::vector<float>& vectors,
                 std::vector<float>& points, std::vector<int>& point_ids, std::vector<float>& lines, std::vector<int>& line_ids);
 
             /**
@@ -175,6 +175,9 @@ namespace megamol
             core::CalleeSlot log_slot;
             core::CalleeSlot performance_slot;
 
+            /** Input slot for getting the vector field */
+            core::CallerSlot vector_field_slot;
+
             /** Input slot for reading results from file */
             core::CallerSlot result_reader_slot;
 
@@ -185,8 +188,7 @@ namespace megamol
             core::param::ParamSlot load_computation;
             core::param::ParamSlot save_computation;
 
-            /** Path to input vector field, and input convergence structures */
-            core::param::ParamSlot vector_field_path;
+            /** Path to input convergence structures */
             core::param::ParamSlot convergence_structures_path;
             
             /** Transfer function for labels, distances, reasons of termination, and gradients */
@@ -233,7 +235,7 @@ namespace megamol
             core::param::ParamSlot gradient_group, gradient_end_group;
 
             /** Input information */
-            std::array<int, 2> resolution;
+            std::array<unsigned int, 2> resolution;
 
             /** Indicator for changed output */
             bool computation_running;

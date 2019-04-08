@@ -50,7 +50,7 @@ namespace megamol
             * @param max_integration_error              Maximum integration error
             */
             implicit_topology_computation(std::ostream& log_stream, std::ostream& performance_stream,
-                std::array<int, 2> resolution, std::array<float, 4> domain,
+                std::array<unsigned int, 2> resolution, std::array<float, 4> domain,
                 std::vector<float> positions, std::vector<float> vectors, std::vector<float> points,
                 std::vector<int> point_ids, std::vector<float> lines, std::vector<int> line_ids,
                 float integration_timestep, float max_integration_error);
@@ -73,7 +73,7 @@ namespace megamol
             * @param previous_result                    Previous results, used as initialization for restarting
             */
             implicit_topology_computation(std::ostream& log_stream, std::ostream& performance_stream,
-                std::array<int, 2> resolution, std::array<float, 4> domain,
+                std::array<unsigned int, 2> resolution, std::array<float, 4> domain,
                 std::vector<float> positions, std::vector<float> vectors, std::vector<float> points,
                 std::vector<int> point_ids, std::vector<float> lines, std::vector<int> line_ids,
                 implicit_topology_results previous_result);
@@ -151,7 +151,7 @@ namespace megamol
             void print_performance(unsigned int num_integration_steps) const;
 
             /** Input domain information */
-            const std::array<int, 2> resolution;
+            const std::array<unsigned int, 2> resolution;
             const std::array<float, 4> domain;
 
             /** Input seed positions and respective vectors */

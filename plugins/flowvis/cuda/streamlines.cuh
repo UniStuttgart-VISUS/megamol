@@ -38,7 +38,7 @@ namespace megamol
             * @param integration_timestep       Time step factor for advection
             * @param max_integration_error      Maximum error for Runge-Kutta 4-5, above which the time step size has to be adapted
             */
-            streamlines_cuda_impl(const std::array<int, 2>& resolution, const std::array<float, 4>& domain,
+            streamlines_cuda_impl(const std::array<unsigned int, 2>& resolution, const std::array<float, 4>& domain,
                 const std::vector<float>& vectors, const std::vector<float>& points, const std::vector<int>& point_ids,
                 const std::vector<float>& lines, const std::vector<int>& line_ids, float integration_timestep,
                 float max_integration_error);
@@ -114,7 +114,7 @@ namespace megamol
             void initialize_texture(const void* h_data, int num_elements, int c0, int c1, int c2, int c3, cudaTextureObject_t* texture, void** d_data);
 
             // Vector field resolution
-            std::array<int, 2> resolution;
+            std::array<unsigned int, 2> resolution;
 
             // Number of convergence structures
             int num_convergence_points;

@@ -24,7 +24,7 @@ namespace megamol
     namespace flowvis
     {
         implicit_topology_computation::implicit_topology_computation(std::ostream& log_stream, std::ostream& performance_stream, 
-            std::array<int, 2> resolution, std::array<float, 4> domain, std::vector<float> positions, std::vector<float> vectors,
+            std::array<unsigned int, 2> resolution, std::array<float, 4> domain, std::vector<float> positions, std::vector<float> vectors,
             std::vector<float> points, std::vector<int> point_ids, std::vector<float> lines, std::vector<int> line_ids,
             const float integration_timestep, const float max_integration_error)
             : log_output(log_stream), performance_output(performance_stream), resolution(std::move(resolution)),
@@ -151,7 +151,7 @@ namespace megamol
         }
 
         implicit_topology_computation::implicit_topology_computation(std::ostream& log_stream, std::ostream& performance_stream,
-            std::array<int, 2> resolution, std::array<float, 4> domain, std::vector<float> positions, std::vector<float> vectors,
+            std::array<unsigned int, 2> resolution, std::array<float, 4> domain, std::vector<float> positions, std::vector<float> vectors,
             std::vector<float> points, std::vector<int> point_ids, std::vector<float> lines, std::vector<int> line_ids, implicit_topology_results previous_result)
             : log_output(log_stream), performance_output(performance_stream), resolution(std::move(resolution)), domain(std::move(domain)),
             positions(std::move(positions)), vectors(std::move(vectors)), points(std::move(points)), point_ids(std::move(point_ids)),
