@@ -4,6 +4,8 @@
 #include "mesh_data_call.h"
 #include "triangle_mesh_call.h"
 
+#include "flowvis/shader.h"
+
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/LinearTransferFunctionParam.h"
@@ -25,6 +27,7 @@ namespace megamol
     namespace flowvis
     {
         triangle_mesh_renderer_2d::triangle_mesh_renderer_2d() :
+            render_input_slot("render_input_slot", "Render input slot"),
             triangle_mesh_slot("get_triangle_mesh", "Triangle mesh input"), triangle_mesh_hash(-1),
             mesh_data_slot("get_mesh_data", "Mesh data input"), mesh_data_hash(-1),
             data_set("data_set", "Data set used for coloring the triangles"),
@@ -32,6 +35,9 @@ namespace megamol
             mouse_state({ false, false, -1.0, -1.0 })
         {
             // Connect input slots
+            this->render_input_slot.SetCompatibleCall<core::view::CallRender2DDescription>();
+            this->MakeSlotAvailable(&this->render_input_slot);
+
             this->triangle_mesh_slot.SetCompatibleCall<triangle_mesh_call::triangle_mesh_description>();
             this->MakeSlotAvailable(&this->triangle_mesh_slot);
 
@@ -78,6 +84,14 @@ namespace megamol
 
         bool triangle_mesh_renderer_2d::Render(core::view::CallRender2D& call)
         {
+            // Call input renderer, if connected
+            auto* input_renderer = this->render_input_slot.CallAs<core::view::CallRender2D>();
+
+            if (input_renderer != nullptr && (*input_renderer)(core::view::AbstractCallRender::FnRender))
+            {
+                (*input_renderer) = call;
+            }
+
             // Initialize renderer by creating shaders and buffers
             if (!this->render_data.initialized)
             {
@@ -108,10 +122,10 @@ namespace megamol
 
                 try
                 {
-                    this->render_data.vs = make_shader(vertex_shader, GL_VERTEX_SHADER);
-                    this->render_data.fs = make_shader(fragment_shader, GL_FRAGMENT_SHADER);
+                    this->render_data.vs = utility::make_shader(vertex_shader, GL_VERTEX_SHADER);
+                    this->render_data.fs = utility::make_shader(fragment_shader, GL_FRAGMENT_SHADER);
 
-                    this->render_data.prog = make_program({ this->render_data.vs, this->render_data.fs });
+                    this->render_data.prog = utility::make_program({ this->render_data.vs, this->render_data.fs });
                 }
                 catch (const std::exception& e)
                 {
@@ -286,6 +300,18 @@ namespace megamol
             if (get_triangles == nullptr || !(*get_triangles)(1)) return false;
 
             this->bounds = get_triangles->get_bounding_rectangle();
+
+            // Get bounding rectangle of input renderer, if available
+            auto* input_renderer = this->render_input_slot.CallAs<core::view::CallRender2D>();
+
+            if (input_renderer != nullptr && (*input_renderer)(core::view::AbstractCallRender::FnGetExtents))
+            {
+                this->bounds.SetLeft(std::min(this->bounds.Left(), input_renderer->GetBoundingBox().Left()));
+                this->bounds.SetRight(std::max(this->bounds.Right(), input_renderer->GetBoundingBox().Right()));
+                this->bounds.SetBottom(std::min(this->bounds.Bottom(), input_renderer->GetBoundingBox().Bottom()));
+                this->bounds.SetTop(std::max(this->bounds.Top(), input_renderer->GetBoundingBox().Top()));
+            }
+
             call.SetBoundingBox(this->bounds);
 
             // Get available data sets (connection optional)
@@ -314,6 +340,34 @@ namespace megamol
             return true;
         }
 
+        bool triangle_mesh_renderer_2d::OnKey(core::view::Key key, core::view::KeyAction action, core::view::Modifiers mods)
+        {
+            auto* input_renderer = this->render_input_slot.template CallAs<core::view::CallRender2D>();
+            if (input_renderer == nullptr) return false;
+
+            core::view::InputEvent evt;
+            evt.tag = core::view::InputEvent::Tag::Key;
+            evt.keyData.key = key;
+            evt.keyData.action = action;
+            evt.keyData.mods = mods;
+
+            input_renderer->SetInputEvent(evt);
+            return (*input_renderer)(core::view::InputCall::FnOnKey);
+        }
+
+        bool triangle_mesh_renderer_2d::OnChar(unsigned int codePoint)
+        {
+            auto* input_renderer = this->render_input_slot.template CallAs<core::view::CallRender2D>();
+            if (input_renderer == nullptr) return false;
+
+            core::view::InputEvent evt;
+            evt.tag = core::view::InputEvent::Tag::Char;
+            evt.charData.codePoint = codePoint;
+
+            input_renderer->SetInputEvent(evt);
+            return (*input_renderer)(core::view::InputCall::FnOnChar);
+        }
+
         bool triangle_mesh_renderer_2d::OnMouseButton(core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods)
         {
             // Save mouse state
@@ -331,92 +385,59 @@ namespace megamol
                 return true;
             }
 
-            return false;
+            // Forward event
+            auto* input_renderer = this->render_input_slot.template CallAs<core::view::CallRender2D>();
+            if (input_renderer == nullptr) return false;
+
+            core::view::InputEvent evt;
+            evt.tag = core::view::InputEvent::Tag::MouseButton;
+            evt.mouseButtonData.button = button;
+            evt.mouseButtonData.action = action;
+            evt.mouseButtonData.mods = mods;
+
+            input_renderer->SetInputEvent(evt);
+            return (*input_renderer)(core::view::InputCall::FnOnMouseButton);
         }
 
-        bool triangle_mesh_renderer_2d::OnMouseMove(double, double, double world_x, double world_y)
+        bool triangle_mesh_renderer_2d::OnMouseMove(double x, double y, double world_x, double world_y)
         {
             // Track mouse position
             this->mouse_state.x = world_x;
             this->mouse_state.y = world_y;
 
             // Claim mouse event if control key is pressed
-            return this->mouse_state.control_pressed;
+            if (this->mouse_state.control_pressed)
+            {
+                return true;
+            }
+
+            // Forward event
+            auto* input_renderer = this->render_input_slot.template CallAs<core::view::CallRender2D>();
+            if (input_renderer == nullptr) return false;
+
+            core::view::InputEvent evt;
+            evt.tag = core::view::InputEvent::Tag::MouseMove;
+            evt.mouseMoveData.x = x;
+            evt.mouseMoveData.y = y;
+            evt.mouseMoveData.world_x = world_x;
+            evt.mouseMoveData.world_y = world_y;
+
+            input_renderer->SetInputEvent(evt);
+            return (*input_renderer)(core::view::InputCall::FnOnMouseMove);
         }
 
-        GLuint triangle_mesh_renderer_2d::make_shader(const std::string& shader, GLenum type) const
+        bool triangle_mesh_renderer_2d::OnMouseScroll(double dx, double dy)
         {
-            const GLchar* vertex_shader_ptr = shader.c_str();
-            const GLint vertex_shader_length = static_cast<GLint>(shader.length());
+            auto* input_renderer = this->render_input_slot.template CallAs<core::view::CallRender2D>();
+            if (input_renderer == nullptr) return false;
 
-            GLuint shader_handle = glCreateShader(type);
-            glShaderSource(shader_handle, 1, &vertex_shader_ptr, &vertex_shader_length);
-            glCompileShader(shader_handle);
+            core::view::InputEvent evt;
+            evt.tag = core::view::InputEvent::Tag::MouseScroll;
+            evt.mouseScrollData.dx = dx;
+            evt.mouseScrollData.dy = dy;
 
-            // Check compile status
-            GLint compile_status;
-            glGetShaderiv(shader_handle, GL_COMPILE_STATUS, &compile_status);
-
-            if (compile_status == GL_FALSE)
-            {
-                int info_log_length = 0;
-                glGetShaderiv(shader_handle, GL_INFO_LOG_LENGTH, &info_log_length);
-
-                if (info_log_length > 1)
-                {
-                    int chars_written = 0;
-                    std::vector<GLchar> info_log(info_log_length);
-
-                    glGetShaderInfoLog(shader_handle, info_log_length, &chars_written, info_log.data());
-
-                    throw std::runtime_error(info_log.data());
-                }
-                else
-                {
-                    throw std::runtime_error("Unknown shader compile error");
-                }
-            }
-
-            return shader_handle;
-        }
-
-        GLuint triangle_mesh_renderer_2d::make_program(const std::vector<GLuint>& shader_handles) const
-        {
-            GLuint program_handle = glCreateProgram();
-
-            for (const auto shader_handle : shader_handles)
-            {
-                glAttachShader(program_handle, shader_handle);
-            }
-            
-            glLinkProgram(program_handle);
-            glUseProgram(0);
-
-            // Check link status
-            GLint link_status;
-            glGetShaderiv(program_handle, GL_LINK_STATUS, &link_status);
-
-            if (link_status == GL_FALSE)
-            {
-                int info_log_length = 0;
-                glGetShaderiv(program_handle, GL_INFO_LOG_LENGTH, &info_log_length);
-
-                if (info_log_length > 1)
-                {
-                    int chars_written = 0;
-                    std::vector<GLchar> info_log(info_log_length);
-
-                    glGetShaderInfoLog(program_handle, info_log_length, &chars_written, info_log.data());
-
-                    throw std::runtime_error(info_log.data());
-                }
-                else
-                {
-                    throw std::runtime_error("Unknown shader compile error");
-                }
-            }
-
-            return program_handle;
+            input_renderer->SetInputEvent(evt);
+            return (*input_renderer)(core::view::InputCall::FnOnMouseScroll);
         }
     }
 }

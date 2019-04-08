@@ -1,5 +1,5 @@
 /*
- * implicit_topology.h
+ * triangle_mesh_renderer_2d.h
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
@@ -102,6 +102,16 @@ namespace megamol
             virtual bool GetExtents(core::view::CallRender2D& call) override;
 
             /**
+            * Forwards key events.
+            */
+            virtual bool OnKey(core::view::Key key, core::view::KeyAction action, core::view::Modifiers mods) override;
+
+            /**
+            * Forwards character events.
+            */
+            virtual bool OnChar(unsigned int codePoint) override;
+
+            /**
              * The mouse button callback.
              *
              * @param button Mouse button that caused the event
@@ -124,28 +134,14 @@ namespace megamol
              */
             virtual bool OnMouseMove(double x, double y, double world_x, double world_y) override;
 
-        private:
             /**
-            * Create shader, additionally performing checks.
-            * Throws an exception if it fails to compile the shader.
-            *
-            * @param shader Shader text
-            * @param type Shader type
-            *
-            * @return Shader handle
+            * Forwards scroll events.
             */
-            GLuint make_shader(const std::string& shader, GLenum type) const;
+            virtual bool OnMouseScroll(double dx, double dy) override;
 
-            /**
-            * Create program, additionally performing checks.
-            * Throws an exception if it fails to link the shaders.
-            *
-            * @param shader Shader text
-            * @param type Shader type
-            *
-            * @return Shader handle
-            */
-            GLuint make_program(const std::vector<GLuint>& shader_handles) const;
+        private:
+            /** Input render call */
+            core::CallerSlot render_input_slot;
 
             /** Input slot for the triangle mesh */
             core::CallerSlot triangle_mesh_slot;
