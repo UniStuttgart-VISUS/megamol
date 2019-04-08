@@ -262,13 +262,13 @@ moldyn::SimpleSphereRenderer::~SimpleSphereRenderer(void) { this->Release(); }
  */
 bool moldyn::SimpleSphereRenderer::create(void) {
 
+    ASSERT(IsAvailable());
+
 #ifdef DEBUG_GL_CALLBACK
     glDebugMessageCallback(DebugGLCallback, nullptr);
 #endif
-
-    // Add available render modes to enum parameter (at least the simple mode should be available)
-    ASSERT(IsAvailable());
-
+    
+    // Add only available render modes to enum parameter (at least the simple mode should be available)
     param::EnumParam* rmp = new param::EnumParam(this->renderMode);
     if (this->isRenderModeAvailable(RenderMode::SIMPLE)) {
         rmp->SetTypePair(RenderMode::SIMPLE, "Simple");
@@ -327,10 +327,15 @@ void moldyn::SimpleSphereRenderer::release(void) {
 bool moldyn::SimpleSphereRenderer::toggleRenderMode(param::ParamSlot& slot) {
 
     ASSERT((&slot == &this->toggleModeParam));
+    // At least one render mode must be available
+    ASSERT(this->isRenderModeAvailable(RenderMode::SIMPLE));
 
     // Only changing value of parameter.
     auto currentRenderMode = this->renderModeParam.Param<param::EnumParam>()->Value();
-    currentRenderMode = (currentRenderMode + 1) % (static_cast<int>(RenderMode::__COUNT__));
+    do {
+        currentRenderMode = (currentRenderMode + 1) % (static_cast<int>(RenderMode::__COUNT__));
+    } while (!this->isRenderModeAvailable((RenderMode)currentRenderMode));
+
     this->renderModeParam.Param<param::EnumParam>()->SetValue(currentRenderMode);
 
     return true;
@@ -369,12 +374,14 @@ bool moldyn::SimpleSphereRenderer::resetResources(void) {
 
     glDeleteTextures(1, &(this->tfFallbackHandle));
 
-    for (int i = 0; i < this->gpuData.size(); ++i) {
+    for (unsigned int i = 0; i < this->gpuData.size(); ++i) {
         glDeleteVertexArrays(3, reinterpret_cast<GLuint*>(&(this->gpuData[i])));
     }
     this->gpuData.clear();
 
-    glUnmapNamedBufferEXT(this->theSingleBuffer);
+    if (this->isRenderModeAvailable(RenderMode::NG)) { 
+        glUnmapNamedBuffer(this->theSingleBuffer); // requires OGL >= 4.5
+    }
 
     for (auto& x : fences) {
         if (x) {
@@ -528,7 +535,7 @@ bool moldyn::SimpleSphereRenderer::createResources() {
             glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->theSingleBuffer);
             glBufferStorage(
                 GL_SHADER_STORAGE_BUFFER, this->bufSize * this->numBuffers, nullptr, singleBufferCreationBits);
-            this->theSingleMappedMem = glMapNamedBufferRangeEXT(
+            this->theSingleMappedMem = glMapNamedBufferRange(
                 this->theSingleBuffer, 0, this->bufSize * this->numBuffers, singleBufferMappingBits);
             glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
             glBindVertexArray(0);
@@ -554,7 +561,7 @@ bool moldyn::SimpleSphereRenderer::createResources() {
             glGenBuffers(1, &this->theSingleBuffer);
             glBindBuffer(GL_ARRAY_BUFFER, this->theSingleBuffer);
             glBufferStorage(GL_ARRAY_BUFFER, this->bufSize * this->numBuffers, nullptr, singleBufferCreationBits);
-            this->theSingleMappedMem = glMapNamedBufferRangeEXT(
+            this->theSingleMappedMem = glMapNamedBufferRange(
                 this->theSingleBuffer, 0, this->bufSize * this->numBuffers, singleBufferMappingBits);
             glBindBuffer(GL_ARRAY_BUFFER, 0);
             glBindVertexArray(0);
@@ -909,7 +916,7 @@ bool moldyn::SimpleSphereRenderer::renderNG(view::CallRender3D* cr3d, MultiParti
             if (staticData) {
                 if (this->stateInvalid || (this->bufArray.GetNumChunks() == 0)) {
                     this->bufArray.SetDataWithSize(
-                        parts.GetVertexData(), vertStride, vertStride, parts.GetCount(), (2 * 1024 * 1024 * 1024)); // 2 GB - khronos: Most implementations will let you allocate a size up to the limit of GPU memory.
+                        parts.GetVertexData(), vertStride, vertStride, parts.GetCount(), (unsigned int)((2 * 1024 * 1024 * 1024) - 1)); // 2 GB - khronos: Most implementations will let you allocate a size up to the limit of GPU memory.
                 }
                 const GLuint numChunks = this->bufArray.GetNumChunks();
 
@@ -950,7 +957,7 @@ bool moldyn::SimpleSphereRenderer::renderNG(view::CallRender3D* cr3d, MultiParti
             if (staticData) {
                 if (this->stateInvalid || (this->bufArray.GetNumChunks() == 0)) {
                     this->bufArray.SetDataWithSize(
-                        parts.GetVertexData(), vertStride, vertStride, parts.GetCount(), (2 * 1024 * 1024 * 1024)); // 2 GB - khronos: Most implementations will let you allocate a size up to the limit of GPU memory.
+                        parts.GetVertexData(), vertStride, vertStride, parts.GetCount(), (unsigned int)((2 * 1024 * 1024 * 1024) - 1)); // 2 GB - khronos: Most implementations will let you allocate a size up to the limit of GPU memory.
                     this->colBufArray.SetDataWithItems(parts.GetColourData(), colStride, colStride, parts.GetCount(),
                         this->bufArray.GetMaxNumItemsPerChunk());
                 }
@@ -1148,7 +1155,7 @@ bool moldyn::SimpleSphereRenderer::renderNGSplat(view::CallRender3D* cr3d, Multi
                 // vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "memcopying %u bytes from %016"
                 // PRIxPTR " to %016" PRIxPTR "\n", vertsThisTime * vertStride, whence, mem);
                 memcpy(mem, whence, vertsThisTime * vertStride);
-                glFlushMappedNamedBufferRangeEXT(theSingleBuffer, bufSize * currBuf, vertsThisTime * vertStride);
+                glFlushMappedNamedBufferRange(theSingleBuffer, bufSize * currBuf, vertsThisTime * vertStride);
                 // glMemoryBarrier(GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT);
                 // glUniform1i(this->newShader->ParameterLocation("instanceOffset"), numVerts * currBuf);
                 glUniform1i(this->newShader->ParameterLocation("instanceOffset"), 0);
@@ -1244,7 +1251,7 @@ bool moldyn::SimpleSphereRenderer::renderNGBufferArray(view::CallRender3D* cr3d,
                 // vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "memcopying %u bytes from %016"
                 // PRIxPTR " to %016" PRIxPTR "\n", vertsThisTime * vertStride, whence, mem);
                 memcpy(mem, whence, vertsThisTime * vertStride);
-                glFlushMappedNamedBufferRangeEXT(
+                glFlushMappedNamedBufferRange(
                     this->theSingleBuffer, numVerts * this->currBuf, vertsThisTime * vertStride);
                 // glMemoryBarrier(GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT);
                 this->setPointers<GLSLShader>(parts, this->sphereShader, this->theSingleBuffer,
@@ -2340,47 +2347,9 @@ std::string moldyn::SimpleSphereRenderer::generateDirectionShaderArrayString(
  */
 bool moldyn::SimpleSphereRenderer::isRenderModeAvailable(RenderMode rm) {
 
-#ifdef _WIN32
-#if defined(DEBUG) || defined(_DEBUG)
-    HDC dc = ::wglGetCurrentDC();
-    HGLRC rc = ::wglGetCurrentContext();
-    if (dc == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, 
-            "[SimpleSphereRenderer] No OpenGL rendering context available ...");
-    }
-    if (rc == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, 
-            "[SimpleSphereRenderer] No current OpenGL rendering context from the calling thread available ... ");
-    }
-    ASSERT(dc != nullptr);
-    ASSERT(rc != nullptr);
-#endif // DEBUG || _DEBUG
-#endif // _WIN32
-
     bool retval = true;
 
-    // Check all render modes
-    if (rm == RenderMode::__COUNT__) {
-        // Return true if at lest one render mode is available
-        for (int i = 0; i < (int)RenderMode::__COUNT__; ++i) {
-            retval = retval || SimpleSphereRenderer::isRenderModeAvailable((RenderMode)i);
-        }
-        return retval;
-    }
-
-    // Minimum requirements for all render modes
-    if (!vislib::graphics::gl::GLSLShader::AreExtensionsAvailable()) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, 
-            "[SimpleSphereRenderer] No render mode is available, because there are no shader extensions available.");
-        retval = false;
-    }
-    if (!ogl_IsVersionGEQ(3, 2)) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, 
-            "[SimpleSphereRenderer] No render mode is available, because available OpenGL version is not greater or equal to 3.2.");
-        retval = false;
-    }
-
-    // Check additonal requirements of each render mode separatly
+    // Check additonal requirements for each render mode separatly
     switch (rm) {
     case(RenderMode::SIMPLE):
         break;
@@ -2389,73 +2358,82 @@ bool moldyn::SimpleSphereRenderer::isRenderModeAvailable(RenderMode rm) {
     case(RenderMode::SIMPLE_GEO):
         if (!vislib::graphics::gl::GLSLGeometryShader::AreExtensionsAvailable()) {
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, 
-                "[SimpleSphereRenderer] Render Mode 'SIMPLE_GEO' is not available, because there are no geometry shader extensions available.");
+                "[SimpleSphereRenderer] Render Mode 'SIMPLE_GEO' is not available. Geometry shader extensions are not available.");
             retval = false;
         }
         if (!isExtAvailable("GL_EXT_geometry_shader4")) {
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, 
-                "[SimpleSphereRenderer] Render Mode 'SIMPLE_GEO' is not available, because extension GL_EXT_geometry_shader4 is not available.");
+                "[SimpleSphereRenderer] Render Mode 'SIMPLE_GEO' is not available. Extension GL_EXT_geometry_shader4 is not available.");
             retval = false;
         }
         if (!isExtAvailable("GL_EXT_gpu_shader4")) {
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, 
-                "[SimpleSphereRenderer] Render Mode 'SIMPLE_GEO' is not available, because extension GL_EXT_gpu_shader4 is not available.");
+                "[SimpleSphereRenderer] Render Mode 'SIMPLE_GEO' is not available. Extension GL_EXT_gpu_shader4 is not available.");
             retval = false;
         }
         if (!isExtAvailable("GL_EXT_bindable_uniform")) {
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, 
-                "[SimpleSphereRenderer] Render Mode 'SIMPLE_GEO' is not available, because extension GL_EXT_bindable_uniform is not available.");
+                "[SimpleSphereRenderer] Render Mode 'SIMPLE_GEO' is not available. Extension GL_EXT_bindable_uniform is not available.");
             retval = false;
         }
         if (!isExtAvailable("GL_ARB_shader_objects")) {
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, 
-                "[SimpleSphereRenderer] Render Mode 'SIMPLE_GEO' is not available, because extension GL_ARB_shader_objects is not available.");
+                "[SimpleSphereRenderer] Render Mode 'SIMPLE_GEO' is not available. Extension GL_ARB_shader_objects is not available.");
             retval = false;
         }
         break;
     case(RenderMode::NG):
-        if (!ogl_IsVersionGEQ(4, 4)) {
+        if (!ogl_IsVersionGEQ(4, 5)) {
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, 
-                "[SimpleSphereRenderer] Render Mode 'NG' is not available, because available OpenGL version is not greater or equal to 4.4");
+                "[SimpleSphereRenderer] Render Mode 'NG' is not available. Minimum OpenGL version is 4.5");
             retval = false;
         }
         if (!isExtAvailable("GL_ARB_buffer_storage")) {
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, 
-                "[SimpleSphereRenderer] Render Mode 'NG' is not available, because extension GL_ARB_buffer_storage is not available.");
+                "[SimpleSphereRenderer] Render Mode 'NG' is not available. Extension GL_ARB_buffer_storage is not available.");
             retval = false;
         }
         break;
     case(RenderMode::NG_SPLAT):
-        if (!ogl_IsVersionGEQ(4, 4)) {
+        if (!ogl_IsVersionGEQ(4, 5)) {
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, 
-                "[SimpleSphereRenderer] Render Mode 'NG_SPLAT' is not available, because available OpenGL version is not greater or equal to 4.4");
+                "[SimpleSphereRenderer] Render Mode 'NG_SPLAT' is not available. Minimum OpenGL version is 4.5");
             retval = false;
         }
         if (!isExtAvailable("GL_ARB_buffer_storage")) {
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, 
-                "[SimpleSphereRenderer] Render Mode 'NG_SPLAT' is not available, because extension GL_ARB_buffer_storage is not available.");
+                "[SimpleSphereRenderer] Render Mode 'NG_SPLAT' is not available. Extension GL_ARB_buffer_storage is not available.");
             retval = false;
         }
         break;
     case(RenderMode::NG_BUFFER_ARRAY):
-        if (!ogl_IsVersionGEQ(4, 4)) {
+        if (!ogl_IsVersionGEQ(4, 5)) {
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, 
-                "[SimpleSphereRenderer] Render Mode 'NG_BUFFER_ARRAY' is not available, because available OpenGL version is not greater or equal to 4.4");
+                "[SimpleSphereRenderer] Render Mode 'NG_BUFFER_ARRAY' is not available. Minimum OpenGL version is 4.5");
             retval = false;
         }
         if (!isExtAvailable("GL_ARB_buffer_storage")) {
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, 
-                "[SimpleSphereRenderer] Render Mode 'NG_BUFFER_ARRAY' is not available, because extension GL_ARB_buffer_storage is not available.");
+                "[SimpleSphereRenderer] Render Mode 'NG_BUFFER_ARRAY' is not available. Extension GL_ARB_buffer_storage is not available.");
             retval = false;
         }
         break;
     case(RenderMode::AMBIENT_OCCLUSION):
-        /// OpenGL version 3.2 is sufficient?
-        //if (!ogl_IsVersionGEQ(3, 3)) {
-        //    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, 
-        //        "[SimpleSphereRenderer] Render Mode 'AMBIENT_OCCLUSION' is not available, because available OpenGL version is not greater or equal to 3.3");
-        //    retval = false;
-        //}
+        if (!vislib::graphics::gl::GLSLGeometryShader::AreExtensionsAvailable()) {
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, 
+                "[SimpleSphereRenderer] Render Mode 'AMBIENT_OCCLUSION' is not available. Geometry shader extensions are not available.");
+            retval = false;
+        }    
+        if (!isExtAvailable("GL_ARB_gpu_shader_fp64")) {
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
+                "[SimpleSphereRenderer] Render Mode 'AMBIENT_OCCLUSION' is not available. Extension GL_ARB_gpu_shader_fp64 is not available.");
+            retval = false;
+        }
+        break;
+    default: 
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, 
+                "[SimpleSphereRenderer] BUG: Unknown render mode ...");
+        retval = false; 
         break;
     }
 

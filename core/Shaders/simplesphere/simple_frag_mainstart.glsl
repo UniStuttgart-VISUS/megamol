@@ -1,5 +1,5 @@
-#extension GL_ARB_explicit_attrib_location : enable
-#extension GL_ARB_conservative_depth       : require
+#extension GL_ARB_explicit_attrib_location : enable    // glsl version 150
+#extension GL_ARB_conservative_depth       : require   // glsl version 130
 layout (depth_greater) out float gl_FragDepth; 
 
 #ifdef BACKSIDE_ENABLED
@@ -29,9 +29,15 @@ FLACH in vec4 vertColor;
 FLACH in vec2 centerFragment;
 #endif // RETICLE
 
-out layout(location = 0) vec4 outColor;
+layout(location = 0) out vec4 outColor;
+
+
+// Forward declaration of lighting function.
+vec3 LocalLighting(const in vec3 ray, const in vec3 normal, const in vec3 lightPos, const in vec3 color);
+
 
 void main(void) {
+
     vec4 coord;
     vec3 ray;
     float lambda;

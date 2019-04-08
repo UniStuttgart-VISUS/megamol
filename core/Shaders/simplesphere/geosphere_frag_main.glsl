@@ -1,4 +1,4 @@
-#extension GL_ARB_explicit_attrib_location : enable
+#extension GL_ARB_explicit_attrib_location : enable   // glsl version 150
 
 uniform vec4 viewAttr; // TODO: check fragment position if viewport starts not in (0, 0)
 
@@ -22,9 +22,15 @@ uniform vec3 camUp;
 uniform vec3 camRight;
 #endif // CALC_CAM_SYS
 
-out layout(location = 0) vec4 outColor;
+layout(location = 0) out vec4 outColor;
+
+
+// Forward declaration of lighting function.
+vec3 LocalLighting(const in vec3 ray, const in vec3 normal, const in vec3 lightPos, const in vec3 color);
+
 
 void main(void) {
+    
     vec4 coord;
     vec3 ray;
     float lambda;
