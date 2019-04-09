@@ -64,6 +64,8 @@ public:
 
         ParticleStore& operator=(ParticleStore&& rhs) = delete;*/
 
+        virtual ~ParticleStore() = default;
+
         void SetVertexData(SimpleSphericalParticles::VertexDataType const t, char const* p, unsigned int const s = 0,
             float const globRad = 0.5f) {
             switch (t) {
@@ -189,15 +191,15 @@ public:
         std::shared_ptr<Accessor> const& GetIDAcc() const { return this->id_acc_; }
 
     private:
-        std::shared_ptr<Accessor> x_acc_;
-        std::shared_ptr<Accessor> y_acc_;
-        std::shared_ptr<Accessor> z_acc_;
-        std::shared_ptr<Accessor> r_acc_;
-        std::shared_ptr<Accessor> cr_acc_;
-        std::shared_ptr<Accessor> cg_acc_;
-        std::shared_ptr<Accessor> cb_acc_;
-        std::shared_ptr<Accessor> ca_acc_;
-        std::shared_ptr<Accessor> id_acc_;
+        std::shared_ptr<Accessor> x_acc_  = std::make_shared<Accessor_0>();
+        std::shared_ptr<Accessor> y_acc_  = std::make_shared<Accessor_0>();
+        std::shared_ptr<Accessor> z_acc_  = std::make_shared<Accessor_0>();
+        std::shared_ptr<Accessor> r_acc_  = std::make_shared<Accessor_0>();
+        std::shared_ptr<Accessor> cr_acc_ = std::make_shared<Accessor_0>();
+        std::shared_ptr<Accessor> cg_acc_ = std::make_shared<Accessor_0>();
+        std::shared_ptr<Accessor> cb_acc_ = std::make_shared<Accessor_0>();
+        std::shared_ptr<Accessor> ca_acc_ = std::make_shared<Accessor_0>();
+        std::shared_ptr<Accessor> id_acc_ = std::make_shared<Accessor_0>();
     };
 
     /** possible values of accumulated data sizes over all vertex coordinates */
@@ -355,7 +357,7 @@ public:
         this->colPtr = p;
         this->colStride = s == 0 ? ColorDataSize[t] : s;
 
-        this->par_store_.SetColorData(t, reinterpret_cast<char const*>(p), this->colStride, this->col[0], this->col[1],
+        this->par_store_->SetColorData(t, reinterpret_cast<char const*>(p), this->colStride, this->col[0], this->col[1],
             this->col[2], this->col[3]);
     }
 
@@ -383,9 +385,9 @@ public:
         this->idDataType = IDDATA_NONE;
         this->idPtr = nullptr; // DO NOT DELETE
 
-        this->par_store_.SetVertexData(VERTDATA_NONE, nullptr);
-        this->par_store_.SetColorData(COLDATA_NONE, nullptr);
-        this->par_store_.SetIDData(IDDATA_NONE, nullptr);
+        this->par_store_->SetVertexData(VERTDATA_NONE, nullptr);
+        this->par_store_->SetColorData(COLDATA_NONE, nullptr);
+        this->par_store_->SetIDData(IDDATA_NONE, nullptr);
 
         this->count = cnt;
     }
@@ -404,7 +406,7 @@ public:
         this->col[2] = b;
         this->col[3] = a;
 
-        this->par_store_.SetColorData(this->colDataType, reinterpret_cast<char const*>(this->colPtr), this->colStride,
+        this->par_store_->SetColorData(this->colDataType, reinterpret_cast<char const*>(this->colPtr), this->colStride,
             this->col[0], this->col[1], this->col[2], this->col[3]);
     }
 
@@ -415,7 +417,7 @@ public:
      */
     void SetGlobalRadius(float r) {
         this->radius = r;
-        this->par_store_.SetVertexData(
+        this->par_store_->SetVertexData(
             this->vertDataType, reinterpret_cast<char const*>(this->vertPtr), this->vertStride, this->radius);
     }
 
@@ -440,7 +442,7 @@ public:
         this->vertPtr = p;
         this->vertStride = s == 0 ? VertexDataSize[t] : s;
 
-        this->par_store_.SetVertexData(t, reinterpret_cast<char const*>(p), this->vertStride, this->radius);
+        this->par_store_->SetVertexData(t, reinterpret_cast<char const*>(p), this->vertStride, this->radius);
     }
 
     /**
@@ -457,7 +459,7 @@ public:
         this->idPtr = p;
         this->idStride = s == 0 ? IDDataSize[t] : s;
 
-        this->par_store_.SetIDData(t, reinterpret_cast<char const*>(p), this->idStride);
+        this->par_store_->SetIDData(t, reinterpret_cast<char const*>(p), this->idStride);
     }
 
     /**
@@ -490,7 +492,7 @@ public:
      *
      * @return Instance of particle store.
      */
-    ParticleStore const& GetParticleStore() const { return this->par_store_; }
+    ParticleStore const& GetParticleStore() const { return *this->par_store_; }
 
     /**
      * Disable NULL-checks in case we have an OpenGL-VAO
@@ -623,8 +625,9 @@ private:
     /** The particle ID stride */
     unsigned int idStride;
 
+protected:
     /** Instance of the particle store */
-    ParticleStore par_store_;
+    std::shared_ptr<ParticleStore> par_store_ = std::make_shared<ParticleStore>();
 };
 
 } // namespace moldyn

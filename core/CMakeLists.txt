@@ -76,7 +76,6 @@ if(BUILD_CORE)
     #set(ZLIB_RELEASE "${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}z${CMAKE_STATIC_LIBRARY_SUFFIX}")
     set(ZLIB_DEBUG "lib/${CMAKE_STATIC_LIBRARY_PREFIX}z${CMAKE_STATIC_LIBRARY_SUFFIX}")
     set(ZLIB_RELEASE "lib/${CMAKE_STATIC_LIBRARY_PREFIX}z${CMAKE_STATIC_LIBRARY_SUFFIX}")
-
   endif()
   add_external_project(zlib_ext
     GIT_REPOSITORY https://github.com/madler/zlib.git
@@ -272,6 +271,8 @@ if(BUILD_CORE)
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders/ DESTINATION "share/shaders")
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Resources/ DESTINATION "share/resources")
   install_external(TARGETS libzmq)
+  get_target_property(zmqcpp_include libcppzmq INTERFACE_INCLUDE_DIRECTORIES)
+  install(DIRECTORY ${zmqcpp_include} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/libzmq FILES_MATCHING PATTERN "*.hpp")
   if(WIN32)
     install_external(TARGETS tracking natnet)
     install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
