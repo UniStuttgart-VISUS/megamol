@@ -1,18 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <btf type="MegaMolGLSLShader" version="1.0" namespace="mipdepth6">
-  <include file="common" />
-  <include file="simplesphere" />
 
-  <shader name="spherevertex">
-    <snippet type="version">110</snippet>
-    <snippet name="common::defines"/>
-    <snippet type="string">
-      <![CDATA[
+    <shader name="spherevertex">
+        <snippet type="version">110</snippet>
+        <snippet name="common::defines"/>
+        <snippet type="string">
+<![CDATA[
 #define DEFERRED_SHADING
 ]]>
-    </snippet>
+        </snippet>
 
-    <snippet name="attributes" type="string">
+        <snippet name="attributes" type="string">
 <![CDATA[
 uniform vec4 viewAttr;
 #ifdef WITH_SCALING
@@ -45,9 +43,9 @@ varying vec2 centerFragment;
 #define MAX_COLV inConsts1.z
 #define COLTAB_SIZE inConsts1.w
 ]]>
-    </snippet>
+        </snippet>
 
-    <snippet name="MainParams" type="string">
+        <snippet name="MainParams" type="string">
 <![CDATA[
 void main(void) {
     // remove the sphere radius from the w coordinates to the rad varyings
@@ -72,9 +70,9 @@ void main(void) {
     
     squarRad = rad * rad;
 ]]>
-    </snippet>
+        </snippet>
 
-    <snippet name="posTrans" type="string">
+        <snippet name="posTrans" type="string">
 <![CDATA[
     // object pivot point in object space    
     objPos = inPos; // no w-div needed, because w is 1.0 (Because I know)
@@ -84,9 +82,9 @@ void main(void) {
     // calculate light position in glyph space
     lightPos = gl_ModelViewMatrixInverse * gl_LightSource[0].position;
 ]]>
-    </snippet>
+        </snippet>
 
-    <snippet name="clippingPlane" type="string">
+        <snippet name="clippingPlane" type="string">
 <![CDATA[
     // clipping
     float od = clipDat.w - 1.0;
@@ -94,12 +92,12 @@ void main(void) {
         od = dot(objPos.xyz, clipDat.xyz) - rad;
     }
 ]]>
-    </snippet>
+        </snippet>
 
-    <snippet name="SphereTouchPlane" type="file">mipdepth_spheretouchplane.glsl</snippet>
+        <snippet name="SphereTouchPlane" type="file">mipdepth_spheretouchplane.glsl</snippet>
 
-    <snippet name="Output" type="string">
- <![CDATA[
+        <snippet name="Output" type="string">
+<![CDATA[
     gl_Position = vec4((mins + maxs) * 0.5, 0.0, (od > clipDat.w) ? 0.0 : 1.0);
     maxs = (maxs - mins) * 0.5 * winHalf;
     gl_PointSize = max(maxs.x, maxs.y) + 0.5;
@@ -107,26 +105,29 @@ void main(void) {
     pointSize = gl_PointSize;
 #endif
 ]]>
-    </snippet>
-    
-    <snippet type="string">
-      <![CDATA[
-}]]>
-    </snippet>
-  </shader>
+        </snippet>
+
+        <snippet type="string">
+<![CDATA[
+}
+]]>
+        </snippet>
+    </shader>
 
 
-  <shader name="theOtherSphereVertex">
-    <snippet type="version">120</snippet>
-    <snippet type="string">
-      <![CDATA[
+    <shader name="theOtherSphereVertex">
+        <snippet type="version">120</snippet>
+        <snippet type="string">
+<![CDATA[
 #extension GL_EXT_gpu_shader4 : enable
 #define DEFERRED_SHADING
 ]]>
-    </snippet>
-    <snippet name="common::defines"/>
-    <snippet name="attributes" type="string">
-      <![CDATA[
+        </snippet>
+
+        <snippet name="common::defines"/>
+
+        <snippet name="attributes" type="string">
+<![CDATA[
 uniform vec4 viewAttr;
 
 #ifdef WITH_SCALING
@@ -172,9 +173,10 @@ varying float pointSize;
 #define MAX_COLV inConsts1.z
 #define COLTAB_SIZE inConsts1.w
 ]]>
-    </snippet>
-    <snippet name="MainParams" type="string">
-      <![CDATA[
+        </snippet>
+
+        <snippet name="MainParams" type="string">
+<![CDATA[
 void main(void) {
 
     // remove the sphere radius from the w coordinates to the rad varyings
@@ -200,10 +202,10 @@ void main(void) {
 
     squarRad = rad * rad;
 ]]>
-    </snippet>
+        </snippet>
 
-    <snippet name="posTrans" type="string">
- <![CDATA[
+        <snippet name="posTrans" type="string">
+<![CDATA[
 
     // object pivot point in object space    
     objPos = inPos; // no w-div needed, because w is 1.0 (Because I know)
@@ -215,10 +217,10 @@ void main(void) {
     // calculate light position in glyph space
     lightPos = gl_ModelViewMatrixInverse * gl_LightSource[0].position;
 ]]>
-    </snippet>
+        </snippet>
 
-    <snippet name="clippingPlane" type="string">
- <![CDATA[
+        <snippet name="clippingPlane" type="string">
+<![CDATA[
 
     // clipping
     float od = clipDat.w - 1.0;
@@ -227,11 +229,11 @@ void main(void) {
     }
 
 ]]>
-    </snippet>
+        </snippet>
 
-    <snippet name="SphereTouchPlane" type="file">mipdepth_spheretouchplane.glsl</snippet>
+        <snippet name="SphereTouchPlane" type="file">mipdepth_spheretouchplane.glsl</snippet>
 
-    <snippet name="Output" type="string">
+        <snippet name="Output" type="string">
 <![CDATA[
     gl_Position = vec4((mins + maxs) * 0.5, 0.0, (od > clipDat.w) ? 0.0 : 1.0);
     maxs = (maxs - mins) * 0.5 * winHalf;
@@ -240,9 +242,9 @@ void main(void) {
     pointSize = gl_PointSize;
 #endif
 ]]>
-    </snippet>
-    <snippet name="culling" type="string">
-      <![CDATA[
+        </snippet>
+        <snippet name="culling" type="string">
+<![CDATA[
 #ifdef SMALL_SPRITE_LIGHTING
     // for normal crowbaring on very small sprites
     lightPos.w = (clamp(gl_PointSize, 1.0, 5.0) - 1.0) / 4.0;
@@ -309,42 +311,44 @@ void main(void) {
 //    gl_Position.w = 0.0;
 }
 ]]>
-    </snippet>
-  </shader>
+        </snippet>
+    </shader>
 
-  <shader name="otherSphereVertex">
-    <snippet type="version">120</snippet>
-    <snippet type="string">
-      <![CDATA[
+    <shader name="otherSphereVertex">
+        <snippet type="version">120</snippet>
+        <snippet type="string">
+<![CDATA[
 #extension GL_EXT_gpu_shader4 : enable
 #define DEFERRED_SHADING
 ]]>
-    </snippet>
-    <snippet name="common::defines"/>
-    <snippet name="theOtherSphereVertex::attributes" />
-    <snippet name="theOtherSphereVertex::MainParams" />
-    <snippet name="theOtherSphereVertex::posTrans" />
-    <snippet name="theOtherSphereVertex::clippingPlane" />
-    <snippet name="theOtherSphereVertex::SphereTouchPlane" />
-    <snippet name="theOtherSphereVertex::Output" />
-    <snippet name="theOtherSphereVertex::culling" />
-  </shader>
+        </snippet>
+        <snippet name="common::defines"/>
+        <snippet name="theOtherSphereVertex::attributes" />
+        <snippet name="theOtherSphereVertex::MainParams" />
+        <snippet name="theOtherSphereVertex::posTrans" />
+        <snippet name="theOtherSphereVertex::clippingPlane" />
+        <snippet name="theOtherSphereVertex::SphereTouchPlane" />
+        <snippet name="theOtherSphereVertex::Output" />
+        <snippet name="theOtherSphereVertex::culling" />
+    </shader>
 
-  <shader name="spherefragment">
-    <snippet type="version">120</snippet>
-    <snippet type="string">
-      <![CDATA[
+    <shader name="spherefragment">
+        <snippet type="version">120</snippet>
+        <snippet type="string">
+<![CDATA[
 #extension GL_EXT_gpu_shader4 : enable
 ]]>
-    </snippet>
-    <snippet name="common::defines" />
-    <snippet type="string">
-      <![CDATA[
+        </snippet>
+
+        <snippet name="common::defines" />
+
+        <snippet type="string">
+<![CDATA[
 varying float pointSize;
 ]]>
-    </snippet>
+        </snippet>
 
-    <snippet name="body1" type="string">
+        <snippet name="body1" type="string">
 <![CDATA[
 #ifdef BACKSIDE_ENABLED
 uniform float hitsideFlag;
@@ -439,10 +443,10 @@ void main(void) {
     if (normal.z < -0.99)     { color = vec3(0.5); }
 #endif // AXISHINTS
 ]]>
-  </snippet>
+        </snippet>
 
-  <snippet name="out-depth" type="string">
-    <![CDATA[
+        <snippet name="out-depth" type="string">
+<![CDATA[
     // calculate depth
 #ifdef DEPTH
     vec4 Ding = vec4(sphereintersection + objPos.xyz, 1.0);
@@ -461,22 +465,22 @@ void main(void) {
 #endif // DISCARD_COLOR_MARKER
 #endif // DEPTH
 ]]>
-    </snippet>
+        </snippet>
 
-    <snippet type="string">
-      <![CDATA[
+        <snippet type="string">
+<![CDATA[
   gl_FragData[0] = vec4(color.rgb, 1.0);
   //normal = normalize((gl_ModelViewMatrixInverseTranspose * vec4(normal, 1.0)).xyz);
   gl_FragData[1] = vec4(normal.xyz, clamp((pointSize - 4.0) * 0.25, 0.0, 1.0));
   gl_FragData[2] = vec4(sphereintersection.xyz + objPos.xyz, 1.0);
 }
 ]]>
-    </snippet>
-  </shader>
+        </snippet>
+    </shader>
 
-  <shader name="pointvertex">
-    <snippet type="string">
-      <![CDATA[
+    <shader name="pointvertex">
+        <snippet type="string">
+<![CDATA[
 uniform vec4 inConsts1;
 attribute float colIdx;
 uniform sampler1D colTab;
@@ -507,13 +511,13 @@ void main(void) {
 
 }
 ]]>
-    </snippet>
-  </shader>
+        </snippet>
+    </shader>
 
-  <shader name="pointfragment">
-    <snippet type="version">120</snippet>
-    <snippet type="string">
-      <![CDATA[
+    <shader name="pointfragment">
+        <snippet type="version">120</snippet>
+        <snippet type="string">
+<![CDATA[
 #extension GL_EXT_gpu_shader4 : enable
 
 varying vec3 opos;
@@ -524,14 +528,14 @@ void main(void) {
   gl_FragData[2] = vec4(opos, 1.0);
 }
 ]]>
-    </snippet>
-  </shader>
+        </snippet>
+    </shader>
 
-  <namespace name="deferredShader">
-    <shader name="vert">
-      <snippet type="version">120</snippet>
-      <snippet type="string">
-      <![CDATA[
+    <namespace name="deferredShader">
+        <shader name="vert">
+            <snippet type="version">120</snippet>
+            <snippet type="string">
+<![CDATA[
 
 varying vec3 interpolRay;
 
@@ -540,12 +544,13 @@ void main(void) {
   interpolRay = gl_Normal.xyz;
 }
 ]]>
-      </snippet>
-    </shader>
-    <shader name="frag">
-      <snippet type="version">120</snippet>
-      <snippet type="string">
-      <![CDATA[
+            </snippet>
+        </shader>
+
+        <shader name="frag">
+            <snippet type="version">120</snippet>
+            <snippet type="string">
+<![CDATA[
 #extension GL_EXT_gpu_shader4 : enable
 
 uniform sampler2D colour;
@@ -558,10 +563,12 @@ uniform vec3 lightPos;
 varying vec3 interpolRay;
 
 ]]>
-      </snippet>
-      <snippet name="::common::lighting::simple" />
-      <snippet type="string">
-        <![CDATA[
+            </snippet>
+
+            <snippet name="common::lighting::simple" />
+
+            <snippet type="string">
+ <![CDATA[
 
 void main(void) {
   ivec2 fc = ivec2(gl_FragCoord.xy);
@@ -654,8 +661,8 @@ void main(void) {
   }
 }
 ]]>
-      </snippet>
-    </shader>
-  </namespace>
-  
+            </snippet>
+        </shader>
+    </namespace>
+
 </btf>
