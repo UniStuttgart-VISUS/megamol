@@ -207,6 +207,9 @@ private:
     /** The name of the view instance this renderer belongs to. */
     std::string inst_name;
 
+    /** Flag indicating if instance name should be retrieved. */
+    bool get_inst_name;
+
     // ---------- Main Parameter Window ----------
 
     /** Reset main parameter window. */
@@ -393,6 +396,7 @@ inline GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIR
     , font_new_filename()
     , font_new_size(13.0f)
     , inst_name()
+    , get_inst_name(true)
     , utf8_ranges() {
 
     this->decorated_renderer_slot.SetCompatibleCall<core::view::CallRender2DDescription>();
@@ -450,6 +454,7 @@ inline GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GUIR
     , font_new_filename()
     , font_new_size(13.0f)
     , inst_name()
+    , get_inst_name(true)
     , utf8_ranges() {
 
     this->decorated_renderer_slot.SetCompatibleCall<core::view::CallRender3DDescription>();
@@ -1137,11 +1142,12 @@ template <class M, class C>
 bool GUIRenderer<M, C>::renderGUI(vislib::math::Rectangle<int> viewport, double instanceTime) {
 
     // Get instance name the gui renderer belongs to (not available in create() yet)
-    if (this->inst_name.empty()) {
-        /// Parent's name of a module is the name of the instance a module is part of (always RIGHT?)
+    if (this->get_inst_name) {
+        // Parent's name of a module is the name of the instance the module belongs to.
         this->inst_name = this->Parent()->FullName().PeekBuffer();
-        this->inst_name.append("::"); // Required string search format to prevent ambiguity: "::<INSTANCE_NAME>::"
-        printf(">>>>>>>>>>>>>>>>>> INSTANCE NAME: %s  \n", this->inst_name.c_str());
+        this->inst_name.append("::"); /// Required string search format to prevent ambiguity: "::<INSTANCE_NAME>::"
+        printf("[DEBUG] >>>>>>>>>>>>>>>>>> INSTANCE NAME: %s  \n", this->inst_name.c_str());
+        this->get_inst_name = false;
     }
 
     ImGui::SetCurrentContext(this->imgui_context);
@@ -1588,7 +1594,6 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
     }
 
     // Windows
-    bool reset_win_size = false;
     if (ImGui::BeginMenu("View")) {
         if (ImGui::MenuItem("Reset Window", "SHIFT + 'F12'")) {
             this->main_reset_window = true;
@@ -1723,8 +1728,7 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
             }
             if (p == this->active_tf_param) {
                 ImGui::SameLine();
-                ImGui::TextColored(
-                    style.Colors[ImGuiCol_ButtonHovered], "(Transfer Function is already loaded into Editor)");
+                ImGui::TextColored(style.Colors[ImGuiCol_ButtonHovered], "Currently loaded into Editor");
             }
 
             ImGui::Text("JSON");
@@ -1958,7 +1962,15 @@ template <class M, class C> void GUIRenderer<M, C>::updateFps(void) {
  */
 template <class M, class C> bool GUIRenderer<M, C>::considerModule(std::string modname) {
 
-    return (modname.find(this->inst_name) != std::string::npos);
+    if (this->inst_name.empty()) {
+        return true;
+    }
+
+    bool foundInstanceName = (modname.find(this->inst_name) != std::string::npos);
+    // If no second '::' is found, the module is not assigned to any instance
+    bool noInstanceNamePresent = (modname.find("::", 2) == std::string::npos);
+
+    return (foundInstanceName || noInstanceNamePresent);
 }
 
 
