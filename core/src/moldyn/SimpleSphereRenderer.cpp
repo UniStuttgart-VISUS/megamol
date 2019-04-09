@@ -916,7 +916,7 @@ bool moldyn::SimpleSphereRenderer::renderNG(view::CallRender3D* cr3d, MultiParti
             if (staticData) {
                 if (this->stateInvalid || (this->bufArray.GetNumChunks() == 0)) {
                     this->bufArray.SetDataWithSize(
-                        parts.GetVertexData(), vertStride, vertStride, parts.GetCount(), (unsigned int)((2 * 1024 * 1024 * 1024) - 1)); // 2 GB - khronos: Most implementations will let you allocate a size up to the limit of GPU memory.
+                        parts.GetVertexData(), vertStride, vertStride, parts.GetCount(), (GLuint)(2 * 1024 * 1024 * 1024)); // 2 GB - khronos: Most implementations will let you allocate a size up to the limit of GPU memory.
                 }
                 const GLuint numChunks = this->bufArray.GetNumChunks();
 
@@ -933,7 +933,7 @@ bool moldyn::SimpleSphereRenderer::renderNG(view::CallRender3D* cr3d, MultiParti
             }
             else {
                 const GLuint numChunks = this->streamer.SetDataWithSize(
-                    parts.GetVertexData(), vertStride, vertStride, parts.GetCount(), 3, (32 * 1024 * 1024)); // 32 MB
+                    parts.GetVertexData(), vertStride, vertStride, parts.GetCount(), 3, (GLuint)(32 * 1024 * 1024)); // 32 MB
                 glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->streamer.GetHandle());
                 glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->streamer.GetHandle());
 
@@ -957,7 +957,7 @@ bool moldyn::SimpleSphereRenderer::renderNG(view::CallRender3D* cr3d, MultiParti
             if (staticData) {
                 if (this->stateInvalid || (this->bufArray.GetNumChunks() == 0)) {
                     this->bufArray.SetDataWithSize(
-                        parts.GetVertexData(), vertStride, vertStride, parts.GetCount(), (unsigned int)((2 * 1024 * 1024 * 1024) - 1)); // 2 GB - khronos: Most implementations will let you allocate a size up to the limit of GPU memory.
+                        parts.GetVertexData(), vertStride, vertStride, parts.GetCount(), (GLuint)(2 * 1024 * 1024 * 1024)); // 2 GB - khronos: Most implementations will let you allocate a size up to the limit of GPU memory.
                     this->colBufArray.SetDataWithItems(parts.GetColourData(), colStride, colStride, parts.GetCount(),
                         this->bufArray.GetMaxNumItemsPerChunk());
                 }
@@ -981,7 +981,7 @@ bool moldyn::SimpleSphereRenderer::renderNG(view::CallRender3D* cr3d, MultiParti
             }
             else {
                 const GLuint numChunks = this->streamer.SetDataWithSize(
-                    parts.GetVertexData(), vertStride, vertStride, parts.GetCount(), 3, (32 * 1024 * 1024)); // 32 MB
+                    parts.GetVertexData(), vertStride, vertStride, parts.GetCount(), 3, (GLuint)(32 * 1024 * 1024)); // 32 MB
                 const GLuint colSize = this->colStreamer.SetDataWithItems(parts.GetColourData(), colStride, colStride,
                     parts.GetCount(), 3, this->streamer.GetMaxNumItemsPerChunk());
                 glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->streamer.GetHandle());
