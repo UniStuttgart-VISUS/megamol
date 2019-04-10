@@ -281,14 +281,11 @@ namespace megamol
                         // Backward integration from possible exits
                         bool has_exit = false;
 
-                        for (auto possible_exit : possible_exits)
+                        for (auto possible_exit_it = possible_exits.cbegin(); possible_exit_it != possible_exits.cend() && !has_exit; ++possible_exit_it)
                         {
+                            Eigen::Vector2f possible_exit = *possible_exit_it;
+
                             has_exit = validate_turn(grid, possible_exit, delta, -sign, max_error, max_delta, *visited_cells, false);
-                            
-                            if (has_exit)
-                            {
-                                break;
-                            }
                         }
 
                         // Use Poincaré map for finding the closed stream line
@@ -416,7 +413,6 @@ namespace megamol
                 if (position == old_position)
                 {
                     // Advection had no result; stream line stopped
-                    vislib::sys::Log::DefaultLog.WriteError("%d", __LINE__);
                     return tpf::utility::nullopt;
                 }
 
@@ -427,7 +423,6 @@ namespace megamol
                 if (!new_cell)
                 {
                     // Advection went out-of-bounds
-                    vislib::sys::Log::DefaultLog.WriteError("%d", __LINE__);
                     return tpf::utility::nullopt;
                 }
 
@@ -487,7 +482,6 @@ namespace megamol
                         // Return, if stuck in a loop with a critical point
                         if (num_critical_point_visits == 1000)
                         {
-                            vislib::sys::Log::DefaultLog.WriteError("%d", __LINE__);
                             return tpf::utility::nullopt;
                         }
                     }
@@ -535,7 +529,6 @@ namespace megamol
                 if (position == old_position)
                 {
                     // Advection had no result; stream line stopped
-                    vislib::sys::Log::DefaultLog.WriteError("%d", __LINE__);
                     return false;
                 }
 
@@ -546,7 +539,6 @@ namespace megamol
                 if (!new_cell)
                 {
                     // Advection went out-of-bounds
-                    vislib::sys::Log::DefaultLog.WriteError("%d", __LINE__);
                     return false;
                 }
 
