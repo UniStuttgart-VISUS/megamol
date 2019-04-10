@@ -1160,8 +1160,9 @@ bool GUIRenderer<M, C>::renderGUI(vislib::math::Rectangle<int> viewport, double 
     io.DisplaySize = ImVec2((float)viewportWidth, (float)viewportHeight);
     io.DisplayFramebufferScale = ImVec2(1.0, 1.0);
 
-    io.DeltaTime = static_cast<float>(instanceTime - this->last_inst_time);
-    this->last_inst_time = instanceTime;
+    io.DeltaTime = (instanceTime - this->lastInstTime) > 0.0 ? static_cast<float>(instanceTime - this->lastInstTime)
+                                                             : io.DeltaTime;
+    this->lastInstTime = (instanceTime - this->lastInstTime) > 0.0 ? instanceTime : this->lastInstTime + io.DeltaTime;
 
     // Loading new font (before NewFrame!)
     if (this->font_new_load) {
@@ -1169,7 +1170,6 @@ bool GUIRenderer<M, C>::renderGUI(vislib::math::Rectangle<int> viewport, double 
         config.OversampleH = 4;
         config.OversampleV = 1;
         config.GlyphRanges = this->utf8_ranges.data();
-        ;
         io.Fonts->AddFontFromFileTTF(this->font_new_filename.c_str(), this->font_new_size, &config);
         ImGui_ImplOpenGL3_CreateFontsTexture();
         // Load last added font
