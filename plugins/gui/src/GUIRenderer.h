@@ -1160,9 +1160,10 @@ bool GUIRenderer<M, C>::renderGUI(vislib::math::Rectangle<int> viewport, double 
     io.DisplaySize = ImVec2((float)viewportWidth, (float)viewportHeight);
     io.DisplayFramebufferScale = ImVec2(1.0, 1.0);
 
-    io.DeltaTime = (instanceTime - this->lastInstTime) > 0.0 ? static_cast<float>(instanceTime - this->lastInstTime)
-                                                             : io.DeltaTime;
-    this->lastInstTime = (instanceTime - this->lastInstTime) > 0.0 ? instanceTime : this->lastInstTime + io.DeltaTime;
+    io.DeltaTime = (instanceTime - this->last_inst_time) > 0.0 ? static_cast<float>(instanceTime - this->last_inst_time)
+                                                               : io.DeltaTime;
+    this->last_inst_time =
+        (instanceTime - this->last_inst_time) > 0.0 ? instanceTime : this->last_inst_time + io.DeltaTime;
 
     // Loading new font (before NewFrame!)
     if (this->font_new_load) {
