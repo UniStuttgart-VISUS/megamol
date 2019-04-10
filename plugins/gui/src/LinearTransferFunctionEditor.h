@@ -45,6 +45,16 @@ namespace gui {
 class LinearTransferFunctionEditor : public GUIUtility {
 public:
     /**
+     * Ctor
+     */
+    LinearTransferFunctionEditor(void);
+
+    /**
+     * Dtor
+     */
+    ~LinearTransferFunctionEditor(void);
+
+    /**
      * Draws the transfer function editor.
      */
     bool DrawTransferFunctionEditor(void);
@@ -64,17 +74,6 @@ public:
      * @return The transfer function encoded as string in JSON format
      */
     bool GetTransferFunction(std::string& out_tfs);
-
-protected:
-    /**
-     * Ctor
-     */
-    LinearTransferFunctionEditor(void);
-
-    /**
-     * Dtor
-     */
-    ~LinearTransferFunctionEditor(void);
 
 private:
     // VARIABLES -----------------------------------------------------------

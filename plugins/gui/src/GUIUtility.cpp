@@ -31,35 +31,6 @@ megamol::gui::GUIUtility::~GUIUtility(void) {
 
 
 /**
- * GUIUtility::ResetWindowSizePos
- */
-void megamol::gui::GUIUtility::ResetWindowSizePos(std::string win_label, float min_height) {
-
-    ImGuiIO& io = ImGui::GetIO();
-    ImGuiStyle& style = ImGui::GetStyle();
-
-    auto win_pos = ImGui::GetWindowPos();
-    if (win_pos.x < 0) {
-        win_pos.x = style.DisplayWindowPadding.x;
-    }
-    if (win_pos.y < 0) {
-        win_pos.y = style.DisplayWindowPadding.y;
-    }
-
-    auto win_width = 0.0f; // width = 0 means auto resize
-    auto win_height = io.DisplaySize.y - (win_pos.y + style.DisplayWindowPadding.y);
-    if (win_height < min_height) {
-        win_height = min_height;
-        win_pos.y = io.DisplaySize.y - (min_height + style.DisplayWindowPadding.y);
-    }
-
-    ImGui::SetWindowSize(win_label.c_str(), ImVec2(win_width, win_height), ImGuiCond_Always);
-
-    ImGui::SetWindowPos(win_label.c_str(), win_pos, ImGuiCond_Always);
-}
-
-
-/**
  * GUIUtility::HoverToolTip
  */
 void megamol::gui::GUIUtility::HoverToolTip(std::string text, ImGuiID id, float time_start, float time_end) {

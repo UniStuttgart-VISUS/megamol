@@ -415,7 +415,10 @@ bool megamol::gui::LinearTransferFunctionEditor::DrawTransferFunctionEditor(void
         ret_val = true;
     }
     ImGui::SameLine();
-    ImGui::Checkbox("Apply Changes Immediately", &this->imm_apply);
+    if (ImGui::Checkbox("Apply Changes Immediately", &this->imm_apply)) {
+        ret_val = this->imm_apply;
+    }
+
     if (this->imm_apply && imm_apply_tex_modified) {
         ret_val = true;
     }

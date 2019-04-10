@@ -33,22 +33,12 @@ class GUIUtility {
 
 public:
     /**
-     * Reset size and position of window.
-     *
-     * @param win_label   The label of the current window.
-     * @param min_height  The minimum height the window should at least be reset.
-     *
-     */
-    void ResetWindowSizePos(std::string win_label, float min_height);
-
-    /**
      * Show tooltip on hover.
      *
      * @param text        The tooltip text.
      * @param id          The id of the imgui item the tooltip belongs (only needed for delayed appearance of tooltip).
      * @param time_start  The time delay to wait until the tooltip is shown for a hovered imgui item.
      * @param time_end    The time delay to wait until the tooltip is hidden for a hovered imgui item.
-     *
      */
     void HoverToolTip(std::string text, ImGuiID id = 0, float time_start = 0.0f, float time_end = 4.0f);
 
@@ -57,7 +47,6 @@ public:
      *
      * @param text   The help tooltip text.
      * @param label  The visible text for which the tooltip is enabled.
-     *
      */
     void HelpMarkerToolTip(std::string text, std::string label = "(?)");
 
