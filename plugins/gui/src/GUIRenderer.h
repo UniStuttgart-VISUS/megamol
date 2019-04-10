@@ -212,7 +212,7 @@ private:
     /** Flag indicating if instance name should be retrieved. */
     bool get_inst_name;
 
-    /** The linear transfer function editor. */
+    /** The transfer function editor. */
     GUITransferFunctionEditor tf_editor;
 
     /** The currently active parameter whose transfer function is loaded into the editor. */
@@ -537,6 +537,7 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
     // Window configurations
     this->windows.clear();
     GUIWindow tmp_win;
+    /// default for all
     tmp_win.reset = true;
     tmp_win.param_hotkeys_show = false;
     tmp_win.param_mods.clear();
@@ -568,7 +569,7 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
     this->windows.emplace_back(tmp_win);
 
     // Demo Window --------------------------------------------------
-    tmp_win.label = "Linear Transfer Function Editor";
+    tmp_win.label = "Transfer Function Editor";
     tmp_win.show = false;
     tmp_win.hotkey = core::view::KeyCode(core::view::Key::KEY_F9);
     tmp_win.flags = ImGuiWindowFlags_AlwaysAutoResize;
