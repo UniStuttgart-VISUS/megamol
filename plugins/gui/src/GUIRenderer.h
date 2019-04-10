@@ -42,10 +42,10 @@
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
-#include "mmcore/param/LinearTransferFunctionParam.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/TernaryParam.h"
+#include "mmcore/param/TransferFunctionParam.h"
 #include "mmcore/param/Vector2fParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/Vector4fParam.h"
@@ -61,8 +61,8 @@
 #include <iomanip> // setprecision
 #include <sstream> // stringstream
 
+#include "GUITransferFunctionEditor.h"
 #include "GUIUtility.h"
-#include "LinearTransferFunctionEditor.h"
 #include "imgui_impl_opengl3.h"
 
 
@@ -213,10 +213,10 @@ private:
     bool get_inst_name;
 
     /** The linear transfer function editor. */
-    LinearTransferFunctionEditor tf_editor;
+    GUITransferFunctionEditor tf_editor;
 
     /** The currently active parameter whose transfer function is loaded into the editor. */
-    core::param::LinearTransferFunctionParam* tf_active_param;
+    core::param::TransferFunctionParam* tf_active_param;
 
     // ---------- Main Parameter Window ----------
 
@@ -311,6 +311,7 @@ private:
 
     /**
      * Reset size and position of window.
+     * Should be called after ImGui::Begin().
      *
      * @param win_label    The name of the window to reset.
      * @param width        The width the window should be reset. Ignored if auto_resize is true.
@@ -1738,7 +1739,7 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
             help = "[Click] on the colored square to open a color picker.\n"
                    "[CTRL+Click] on individual component to input value.\n"
                    "[Right-Click] on the individual color widget to show options.";
-        } else if (auto* p = slot.template Param<core::param::LinearTransferFunctionParam>()) {
+        } else if (auto* p = slot.template Param<core::param::TransferFunctionParam>()) {
             bool load_tf = false;
             auto value = p->Value();
 

@@ -1,78 +1,78 @@
 /*
- * LinearTransferFunctionParam.cpp
+ * TransferFunctionParam.cpp
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
-#include "mmcore/param/LinearTransferFunctionParam.h"
+#include "mmcore/param/TransferFunctionParam.h"
 
 
 using namespace megamol::core::param;
 
 
 /**
- * LinearTransferFunctionParam::LinearTransferFunctionParam
+ * TransferFunctionParam::TransferFunctionParam
  */
-LinearTransferFunctionParam::LinearTransferFunctionParam(const std::string& initVal) : AbstractParam()
+TransferFunctionParam::TransferFunctionParam(const std::string& initVal) : AbstractParam()
 {
     if (this->CheckTransferFunctionString(initVal)) {
         this->val = initVal;
     }
     else {
-        vislib::sys::Log::DefaultLog.WriteError("[LinearTransferFunctionParam] No valid parameter value for constructor given.");
+        vislib::sys::Log::DefaultLog.WriteError("[TransferFunctionParam] No valid parameter value for constructor given.");
     }
 }
 
 
 /**
- * LinearTransferFunctionParam::LinearTransferFunctionParam
+ * TransferFunctionParam::TransferFunctionParam
  */
-LinearTransferFunctionParam::LinearTransferFunctionParam(const char *initVal) : AbstractParam()
+TransferFunctionParam::TransferFunctionParam(const char *initVal) : AbstractParam()
 {
     if (this->CheckTransferFunctionString(std::string(initVal))) {
         this->val = std::string(initVal);
     }
     else {
-        vislib::sys::Log::DefaultLog.WriteError("[LinearTransferFunctionParam] No valid parameter value for constructor given.");
+        vislib::sys::Log::DefaultLog.WriteError("[TransferFunctionParam] No valid parameter value for constructor given.");
     }
 }
 
 
 /**
- * LinearTransferFunctionParam::LinearTransferFunctionParam
+ * TransferFunctionParam::TransferFunctionParam
  */
-LinearTransferFunctionParam::LinearTransferFunctionParam(const vislib::StringA& initVal) : AbstractParam()
+TransferFunctionParam::TransferFunctionParam(const vislib::StringA& initVal) : AbstractParam()
 {
     if (this->CheckTransferFunctionString(std::string(initVal.PeekBuffer()))) {
         this->val = std::string(initVal.PeekBuffer());
     }
     else {
-        vislib::sys::Log::DefaultLog.WriteError("[LinearTransferFunctionParam] No valid parameter value for constructor given.");
+        vislib::sys::Log::DefaultLog.WriteError("[TransferFunctionParam] No valid parameter value for constructor given.");
     }
 }
 
 
 /**
- * LinearTransferFunctionParam::~LinearTransferFunctionParam
+ * TransferFunctionParam::~TransferFunctionParam
  */
-LinearTransferFunctionParam::~LinearTransferFunctionParam(void) {}
+TransferFunctionParam::~TransferFunctionParam(void) {}
 
 
 /**
- * LinearTransferFunctionParam::Definition
+ * TransferFunctionParam::Definition
  */
-void LinearTransferFunctionParam::Definition(vislib::RawStorage& outDef) const {
+void TransferFunctionParam::Definition(vislib::RawStorage& outDef) const {
     outDef.AssertSize(6);
     memcpy(outDef.AsAt<char>(0), "MMTFFNC", 6);
 }
 
 
 /**
- * LinearTransferFunctionParam::ParseValue
+ * TransferFunctionParam::ParseValue
  */
-bool LinearTransferFunctionParam::ParseValue(vislib::TString const& v) {
+bool TransferFunctionParam::ParseValue(vislib::TString const& v) {
 
     try {
         if (this->CheckTransferFunctionString(std::string(v.PeekBuffer()))) {
@@ -87,9 +87,9 @@ bool LinearTransferFunctionParam::ParseValue(vislib::TString const& v) {
 
 
 /**
- * LinearTransferFunctionParam::SetValue
+ * TransferFunctionParam::SetValue
  */
-void LinearTransferFunctionParam::SetValue(const std::string& v, bool setDirty) {
+void TransferFunctionParam::SetValue(const std::string& v, bool setDirty) {
 
     if (v != this->val) {
         if (this->CheckTransferFunctionString(v)) {
@@ -101,17 +101,17 @@ void LinearTransferFunctionParam::SetValue(const std::string& v, bool setDirty) 
 
 
 /**
- * LinearTransferFunctionParam::ValueString
+ * TransferFunctionParam::ValueString
  */
-vislib::TString LinearTransferFunctionParam::ValueString(void) const {
+vislib::TString TransferFunctionParam::ValueString(void) const {
     return vislib::TString(this->val.c_str());
 }
 
 
 /**
- * LinearTransferFunctionParam::TransferFunctionTexture
+ * TransferFunctionParam::TransferFunctionTexture
  */
-bool LinearTransferFunctionParam::TransferFunctionTexture(const std::string &in_tfs, std::vector<float> &out_data, UINT &out_texsize) {
+bool TransferFunctionParam::TransferFunctionTexture(const std::string &in_tfs, std::vector<float> &out_data, UINT &out_texsize) {
 
     TFDataType temp;
     InterpolationMode mode;
@@ -136,9 +136,9 @@ bool LinearTransferFunctionParam::TransferFunctionTexture(const std::string &in_
 
 
 /**
- * LinearTransferFunctionParam::ParseTransferFunction
+ * TransferFunctionParam::ParseTransferFunction
  */
-bool LinearTransferFunctionParam::ParseTransferFunction(const std::string &in_tfs, TFDataType &out_data, InterpolationMode &out_interpolmode, UINT &out_texsize) {
+bool TransferFunctionParam::ParseTransferFunction(const std::string &in_tfs, TFDataType &out_data, InterpolationMode &out_interpolmode, UINT &out_texsize) {
 
     TFDataType tmp_data;
     std::string tmp_interpolmode_str;
@@ -148,7 +148,7 @@ bool LinearTransferFunctionParam::ParseTransferFunction(const std::string &in_tf
     if (!in_tfs.empty()) {
 
         // Check for valid JSON string
-        if (!LinearTransferFunctionParam::CheckTransferFunctionString(in_tfs)) {
+        if (!TransferFunctionParam::CheckTransferFunctionString(in_tfs)) {
             return false;
         }
 
@@ -183,7 +183,7 @@ bool LinearTransferFunctionParam::ParseTransferFunction(const std::string &in_tf
         tmp_texsize = 128;
     }
 
-    if (!LinearTransferFunctionParam::CheckTransferFunctionData(tmp_data, tmp_interpolmode, tmp_texsize)) {
+    if (!TransferFunctionParam::CheckTransferFunctionData(tmp_data, tmp_interpolmode, tmp_texsize)) {
         return false;
     }
     out_data = tmp_data;
@@ -195,13 +195,13 @@ bool LinearTransferFunctionParam::ParseTransferFunction(const std::string &in_tf
 
 
 /**
- * LinearTransferFunctionParam::DumpTransferFunction
+ * TransferFunctionParam::DumpTransferFunction
  */
-bool LinearTransferFunctionParam::DumpTransferFunction(std::string &out_tfs, const TFDataType &in_data, const InterpolationMode in_interpolmode, const UINT in_texsize) {
+bool TransferFunctionParam::DumpTransferFunction(std::string &out_tfs, const TFDataType &in_data, const InterpolationMode in_interpolmode, const UINT in_texsize) {
 
     nlohmann::json json;
 
-    if (!LinearTransferFunctionParam::CheckTransferFunctionData(in_data, in_interpolmode, in_texsize)) {
+    if (!TransferFunctionParam::CheckTransferFunctionData(in_data, in_interpolmode, in_texsize)) {
         return false;
     }
 
@@ -226,9 +226,9 @@ bool LinearTransferFunctionParam::DumpTransferFunction(std::string &out_tfs, con
 
 
 /**
- * LinearTransferFunctionParam::CheckTransferFunctionData
+ * TransferFunctionParam::CheckTransferFunctionData
  */
-bool LinearTransferFunctionParam::CheckTransferFunctionData(const TFDataType &data, const InterpolationMode interpolmode, const UINT texsize) {
+bool TransferFunctionParam::CheckTransferFunctionData(const TFDataType &data, const InterpolationMode interpolmode, const UINT texsize) {
 
     bool check = true;
     if (texsize < 1) {
@@ -257,7 +257,7 @@ bool LinearTransferFunctionParam::CheckTransferFunctionData(const TFDataType &da
         }
         if (last_value >= a[4]) {
             vislib::sys::Log::DefaultLog.WriteError(
-                "[LinearTransferFunction] 'Values' should be sorted from 0 to 1 and all 'Values' must be distinct.");
+                "[TransferFunction] 'Values' should be sorted from 0 to 1 and all 'Values' must be distinct.");
             return false;
         }
         else {
@@ -285,9 +285,9 @@ bool LinearTransferFunctionParam::CheckTransferFunctionData(const TFDataType &da
 
 
 /**
- * LinearTransferFunctionParam::CheckTransferFunctionData
+ * TransferFunctionParam::CheckTransferFunctionData
  */
-bool LinearTransferFunctionParam::CheckTransferFunctionString(const std::string &tfs) {
+bool TransferFunctionParam::CheckTransferFunctionString(const std::string &tfs) {
 
     bool check = true;
     if (!tfs.empty()) {
@@ -377,9 +377,9 @@ bool LinearTransferFunctionParam::CheckTransferFunctionString(const std::string 
 
 
 /*
- * LinearTransferFunctionParam::LinearInterpolation
+ * TransferFunctionParam::LinearInterpolation
  */
-void LinearTransferFunctionParam::LinearInterpolation(std::vector<float> &out_texdata, unsigned int in_texsize, const TFDataType &in_tfdata) {
+void TransferFunctionParam::LinearInterpolation(std::vector<float> &out_texdata, unsigned int in_texsize, const TFDataType &in_tfdata) {
 
     out_texdata.resize(4 * in_texsize);
     std::array<float, TFP_VAL_CNT> cx1 = in_tfdata[0];
@@ -410,9 +410,9 @@ void LinearTransferFunctionParam::LinearInterpolation(std::vector<float> &out_te
 
 
 /*
- * LinearTransferFunctionParam::GaussInterpolation
+ * TransferFunctionParam::GaussInterpolation
  */
-void LinearTransferFunctionParam::GaussInterpolation(std::vector<float> &out_texdata, unsigned int in_texsize, const TFDataType &in_tfdata) {
+void TransferFunctionParam::GaussInterpolation(std::vector<float> &out_texdata, unsigned int in_texsize, const TFDataType &in_tfdata) {
 
     out_texdata.resize(4 * in_texsize);
     out_texdata.assign(out_texdata.size(), 0.0f);
@@ -426,10 +426,10 @@ void LinearTransferFunctionParam::GaussInterpolation(std::vector<float> &out_tex
         gc = in_tfdata[i][5];
         for (unsigned int t = 0; t < in_texsize; ++t) {
             x = (float)t / (float)in_texsize;
-            r = param::LinearTransferFunctionParam::gauss(x, in_tfdata[i][0], gb, gc);
-            g = param::LinearTransferFunctionParam::gauss(x, in_tfdata[i][1], gb, gc);
-            b = param::LinearTransferFunctionParam::gauss(x, in_tfdata[i][2], gb, gc);
-            a = param::LinearTransferFunctionParam::gauss(x, in_tfdata[i][3], gb, gc);
+            r = param::TransferFunctionParam::gauss(x, in_tfdata[i][0], gb, gc);
+            g = param::TransferFunctionParam::gauss(x, in_tfdata[i][1], gb, gc);
+            b = param::TransferFunctionParam::gauss(x, in_tfdata[i][2], gb, gc);
+            a = param::TransferFunctionParam::gauss(x, in_tfdata[i][3], gb, gc);
 
             // Max
             out_texdata[t * 4]     = std::max(r, out_texdata[t * 4]);

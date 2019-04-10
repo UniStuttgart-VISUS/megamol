@@ -1,14 +1,14 @@
 /*
- * LinearTransferFunction.cpp
+ * TransferFunction.cpp
  *
  * Copyright (C) 2008 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
-#include "mmcore/view/LinearTransferFunction.h"
+#include "mmcore/view/TransferFunction.h"
 
-#include "mmcore/param/LinearTransferFunctionParam.h"
+#include "mmcore/param/TransferFunctionParam.h"
 
 
 using namespace megamol::core;
@@ -16,9 +16,9 @@ using namespace megamol::core::view;
 
 
 /*
- * LinearTransferFunction::LinearTransferFunction
+ * TransferFunction::TransferFunction
  */
-LinearTransferFunction::LinearTransferFunction(void)
+TransferFunction::TransferFunction(void)
     : Module()
     , getTFSlot("gettransferfunction", "Provides the transfer function")
     , tfParam("TransferFunction", "The transfer function serialized as JSON string.")
@@ -26,39 +26,39 @@ LinearTransferFunction::LinearTransferFunction(void)
     , texSize(1)
     , tex()
     , texFormat(CallGetTransferFunction::TEXTURE_FORMAT_RGB)
-    , interpolMode(param::LinearTransferFunctionParam::InterpolationMode::LINEAR)
+    , interpolMode(param::TransferFunctionParam::InterpolationMode::LINEAR)
 {
 
     CallGetTransferFunctionDescription cgtfd;
-    this->getTFSlot.SetCallback(cgtfd.ClassName(), cgtfd.FunctionName(0), &LinearTransferFunction::requestTF);
-    this->getTFSlot.SetCallback(cgtfd.ClassName(), cgtfd.FunctionName(1), &LinearTransferFunction::interfaceIsDirty);
-    this->getTFSlot.SetCallback(cgtfd.ClassName(), cgtfd.FunctionName(2), &LinearTransferFunction::interfaceResetDirty);
+    this->getTFSlot.SetCallback(cgtfd.ClassName(), cgtfd.FunctionName(0), &TransferFunction::requestTF);
+    this->getTFSlot.SetCallback(cgtfd.ClassName(), cgtfd.FunctionName(1), &TransferFunction::interfaceIsDirty);
+    this->getTFSlot.SetCallback(cgtfd.ClassName(), cgtfd.FunctionName(2), &TransferFunction::interfaceResetDirty);
     this->MakeSlotAvailable(&this->getTFSlot);
 
-    this->tfParam << new param::LinearTransferFunctionParam("");
+    this->tfParam << new param::TransferFunctionParam("");
     this->MakeSlotAvailable(&this->tfParam);
 }
 
 
 /*
- * LinearTransferFunction::~LinearTransferFunction
+ * TransferFunction::~TransferFunction
  */
-LinearTransferFunction::~LinearTransferFunction(void) { this->Release(); }
+TransferFunction::~TransferFunction(void) { this->Release(); }
 
 
 /*
- * LinearTransferFunction::create
+ * TransferFunction::create
  */
-bool LinearTransferFunction::create(void) {
+bool TransferFunction::create(void) {
 
     return true;
 }
 
 
 /*
- * LinearTransferFunction::release
+ * TransferFunction::release
  */
-void LinearTransferFunction::release(void) {
+void TransferFunction::release(void) {
 
     glDeleteTextures(1, &this->texID);
     this->texID = 0;    
@@ -66,9 +66,9 @@ void LinearTransferFunction::release(void) {
 
 
 /*
- * LinearTransferFunction::requestTF
+ * TransferFunction::requestTF
  */
-bool LinearTransferFunction::requestTF(Call& call) {
+bool TransferFunction::requestTF(Call& call) {
 
     CallGetTransferFunction* cgtf = dynamic_cast<CallGetTransferFunction*>(&call);
     if (cgtf == nullptr) return false;
@@ -76,20 +76,20 @@ bool LinearTransferFunction::requestTF(Call& call) {
     if ((this->texID == 0) || this->tfParam.IsDirty()) {
         this->tfParam.ResetDirty();
 
-        param::LinearTransferFunctionParam::TFDataType tfdata;
+        param::TransferFunctionParam::TFDataType tfdata;
 
         // Get current values from parameter string. Values are checked, too.
-        if (!megamol::core::param::LinearTransferFunctionParam::ParseTransferFunction(
-            this->tfParam.Param<param::LinearTransferFunctionParam>()->Value(), tfdata, this->interpolMode, this->texSize)) {
+        if (!megamol::core::param::TransferFunctionParam::ParseTransferFunction(
+            this->tfParam.Param<param::TransferFunctionParam>()->Value(), tfdata, this->interpolMode, this->texSize)) {
             return false;
         }
 
         // Apply interpolation and generate texture data.
-        if (this->interpolMode == param::LinearTransferFunctionParam::InterpolationMode::LINEAR) {
-            param::LinearTransferFunctionParam::LinearInterpolation(this->tex, this->texSize, tfdata);
+        if (this->interpolMode == param::TransferFunctionParam::InterpolationMode::LINEAR) {
+            param::TransferFunctionParam::LinearInterpolation(this->tex, this->texSize, tfdata);
         }
-        else if (this->interpolMode == param::LinearTransferFunctionParam::InterpolationMode::GAUSS) {
-            param::LinearTransferFunctionParam::GaussInterpolation(this->tex, this->texSize, tfdata);
+        else if (this->interpolMode == param::TransferFunctionParam::InterpolationMode::GAUSS) {
+            param::TransferFunctionParam::GaussInterpolation(this->tex, this->texSize, tfdata);
         }
 
         bool t1de = (glIsEnabled(GL_TEXTURE_1D) == GL_TRUE);
@@ -118,9 +118,9 @@ bool LinearTransferFunction::requestTF(Call& call) {
 
 
 /*
- * LinearTransferFunction::InterfaceIsDirty
+ * TransferFunction::InterfaceIsDirty
  */
-bool LinearTransferFunction::interfaceIsDirty(Call& call) {
+bool TransferFunction::interfaceIsDirty(Call& call) {
 
     CallGetTransferFunction* cgtf = dynamic_cast<CallGetTransferFunction*>(&call);
     if (cgtf == nullptr) return false;
@@ -133,9 +133,9 @@ bool LinearTransferFunction::interfaceIsDirty(Call& call) {
 
 
 /*
- * LinearTransferFunction::interfaceResetDirty
+ * TransferFunction::interfaceResetDirty
  */
-bool LinearTransferFunction::interfaceResetDirty(Call& call) {
+bool TransferFunction::interfaceResetDirty(Call& call) {
 
     CallGetTransferFunction* cgtf = dynamic_cast<CallGetTransferFunction*>(&call);
     if (cgtf == nullptr) return false;

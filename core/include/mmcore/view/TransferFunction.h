@@ -1,5 +1,5 @@
 /*
- * LinearTransferFunction.h
+ * TransferFunction.h
  *
  * Copyright (C) 2008 by Universitaet Stuttgart (VIS). 
  * Alle Rechte vorbehalten.
@@ -19,7 +19,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/ButtonParam.h"
-#include "mmcore/param/LinearTransferFunctionParam.h"
+#include "mmcore/param/TransferFunctionParam.h"
 
 #include "vislib/sys/sysfunctions.h"
 #include "vislib/sys/Log.h"
@@ -33,7 +33,7 @@ namespace view {
     /**
      * Module defining a piecewise linear transfer function based on the interval [0..1]
      */
-    class MEGAMOLCORE_API LinearTransferFunction : public Module {
+    class MEGAMOLCORE_API TransferFunction : public Module {
     public:
         
         /**
@@ -42,7 +42,7 @@ namespace view {
          * @return The name of this module.
          */
         static const char *ClassName(void) {
-            return "LinearTransferFunction";
+            return "TransferFunction";
         }
 
         /**
@@ -64,10 +64,10 @@ namespace view {
         }
 
         /** Ctor. */
-        LinearTransferFunction(void);
+        TransferFunction(void);
 
         /** Dtor. */
-        virtual ~LinearTransferFunction(void);
+        virtual ~TransferFunction(void);
 
 
     private:
@@ -138,7 +138,7 @@ namespace view {
         CallGetTransferFunction::TextureFormat texFormat;
 
         /** The interpolation mode */
-        param::LinearTransferFunctionParam::InterpolationMode interpolMode;
+        param::TransferFunctionParam::InterpolationMode interpolMode;
 
 #ifdef _WIN32
 #pragma warning (default: 4251)
