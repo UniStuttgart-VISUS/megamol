@@ -45,8 +45,8 @@ namespace megamol
                 }
 
                 // Gather information for the file header and write it
-                const unsigned int num_particles = content.vertices->size() / 2;
-                const unsigned int num_indices = content.indices->size();
+                const unsigned int num_particles = static_cast<unsigned int>(content.vertices->size() / 2);
+                const unsigned int num_indices = static_cast<unsigned int>(content.indices->size());
 
                 ofs.write(reinterpret_cast<const char*>(&num_particles), sizeof(unsigned int));
                 ofs.write(reinterpret_cast<const char*>(&num_indices), sizeof(unsigned int));

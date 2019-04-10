@@ -22,8 +22,6 @@ namespace megamol
 
             this->point_values = std::make_shared<std::vector<float>>();
             this->line_values = std::make_shared<std::vector<float>>();
-
-            SetDataHash(0);
         }
 
         const vislib::math::Rectangle<float>& glyph_data_call::get_bounding_rectangle() const
@@ -73,7 +71,7 @@ namespace megamol
 
         void glyph_data_call::add_point(const Eigen::Vector2f& point, float value)
         {
-            this->point_indices->push_back(this->point_vertices->size() / 2);
+            this->point_indices->push_back(static_cast<unsigned int>(this->point_vertices->size() / 2));
 
             this->point_vertices->push_back(point[0]);
             this->point_vertices->push_back(point[1]);
@@ -99,8 +97,6 @@ namespace megamol
             }
 
             this->bounding_rectangle_valid = true;
-
-            SetDataHash(DataHash() + 1);
         }
 
         void glyph_data_call::add_line(const std::vector<Eigen::Vector2f>& points, float value)
@@ -154,8 +150,6 @@ namespace megamol
             }
 
             this->bounding_rectangle_valid = true;
-
-            SetDataHash(DataHash() + 1);
         }
 
         void glyph_data_call::clear()
@@ -170,8 +164,6 @@ namespace megamol
             this->line_values->clear();
 
             this->bounding_rectangle_valid = false;
-
-            SetDataHash(DataHash() + 1);
         }
     }
 }

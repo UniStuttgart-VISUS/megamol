@@ -5,6 +5,7 @@
 #include "vector_field_call.h"
 
 #include "mmcore/Call.h"
+#include "mmcore/utility/DataHash.h"
 #include "mmcore/param/IntParam.h"
 
 #include "vislib/math/Rectangle.h"
@@ -20,6 +21,7 @@ namespace megamol
     {
         critical_points::critical_points() :
             glyph_slot("set_glyphs", "Glyph output"),
+            glyph_hash(-1),
             vector_field_slot("get_vector_field", "Vector field input"),
             vector_field_hash(-1),
             boundary("boundary", "Number of boundary cells")
@@ -68,11 +70,12 @@ namespace megamol
                     const auto& positions = *get_vector_field->get_positions();
                     const auto& vectors = *get_vector_field->get_vectors();
 
-                    glyph_call->clear();
+                    // Reset output
+                    this->glyph_output.clear();
+                    this->glyph_hash = -1;
 
                     // Extract critical points
                     bool has_unhandled_case = false;
-                    unsigned int id = 0;
 
                     const unsigned int boundary_layer = static_cast<unsigned int>(this->boundary.Param<core::param::IntParam>()->Value());
 
@@ -98,7 +101,9 @@ namespace megamol
 
                             if (critical_point.first == POINT)
                             {
-                                glyph_call->add_point(critical_point.second, static_cast<float>(id++));
+                                this->glyph_output.push_back(critical_point.second);
+
+                                this->glyph_hash = static_cast<SIZE_T>(core::utility::DataHash(this->glyph_hash, critical_point.second[0], critical_point.second[1]));
                             }
                             else if (critical_point.first == UNHANDLED)
                             {
@@ -111,6 +116,19 @@ namespace megamol
                     {
                         vislib::sys::Log::DefaultLog.WriteWarn("Unhandled case while extracting critical points");
                     }
+                }
+
+                // Fill glyph call
+                if (glyph_call->DataHash() != this->glyph_hash)
+                {
+                    glyph_call->clear();
+
+                    for (std::size_t i = 0; i < this->glyph_output.size(); ++i)
+                    {
+                        glyph_call->add_point(this->glyph_output[i], static_cast<float>(i));
+                    }
+
+                    glyph_call->SetDataHash(this->glyph_hash);
                 }
             }
 
@@ -264,7 +282,7 @@ namespace megamol
             const auto width = right - left;
 
             const auto left_part = (position - left) / width;
-            const auto right_part = 1.0 - left_part;
+            const auto right_part = 1.0f - left_part;
 
             return right_part * value_left + left_part * value_right;
         }

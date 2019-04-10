@@ -2,6 +2,7 @@
 #include "glyph_renderer_2d.h"
 
 #include "glyph_data_call.h"
+#include "mouse_click_call.h"
 
 #include "flowvis/shader.h"
 
@@ -23,9 +24,11 @@ namespace megamol
         glyph_renderer_2d::glyph_renderer_2d() :
             render_input_slot("render_input_slot", "Render input slot"),
             glyph_slot("get_glyphs", "Glyph input"), glyph_hash(-1),
+            mouse_slot("mouse_slot", "Mouse events"),
             point_size("point_size", "Point size"),
             line_width("line_width", "Line width"),
-            transfer_function("transfer_function", "Transfer function")
+            transfer_function("transfer_function", "Transfer function"),
+            mouse_state({ false, false, -1.0, -1.0 })
         {
             // Connect input slots
             this->render_input_slot.SetCompatibleCall<core::view::CallRender2DDescription>();
@@ -33,6 +36,9 @@ namespace megamol
 
             this->glyph_slot.SetCompatibleCall<glyph_data_call::glyph_data_description>();
             this->MakeSlotAvailable(&this->glyph_slot);
+
+            this->mouse_slot.SetCompatibleCall<mouse_click_call::mouse_click_description>();
+            this->MakeSlotAvailable(&this->mouse_slot);
 
             // Connect parameter slots
             this->point_size << new core::param::IntParam(1);
@@ -104,7 +110,6 @@ namespace megamol
                     "uniform mat4 projection_matrix; \n" \
                     "uniform float min_value; \n" \
                     "uniform float max_value; \n" \
-                    "uniform float num_tex_values; \n" \
                     "uniform sampler1D transfer_function; \n" \
                     "out vec4 vertex_color; \n" \
                     "void main() { \n" \
@@ -159,7 +164,7 @@ namespace megamol
 
             if (get_glyphs == nullptr || !(*get_glyphs)(0)) return false;
 
-            if (get_glyphs->DataHash() != this->glyph_hash)
+            if (get_glyphs->DataHash() != this->glyph_hash || this->render_data.point_vertices == nullptr)
             {
                 // Set hash
                 this->glyph_hash = get_glyphs->DataHash();
@@ -272,7 +277,6 @@ namespace megamol
 
             glUniform1f(glGetUniformLocation(this->render_data.prog, "min_value"), this->render_data.min_value);
             glUniform1f(glGetUniformLocation(this->render_data.prog, "max_value"), this->render_data.max_value);
-            glUniform1f(glGetUniformLocation(this->render_data.prog, "num_tex_values"), this->render_data.tf_size);
 
             if (!this->render_data.point_indices->empty())
             {
@@ -370,6 +374,26 @@ namespace megamol
 
         bool glyph_renderer_2d::OnMouseButton(core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods)
         {
+            // Save mouse state
+            this->mouse_state.left_pressed = button == core::view::MouseButton::BUTTON_LEFT && action == core::view::MouseButtonAction::PRESS;
+            this->mouse_state.control_pressed = mods.test(core::view::Modifier::CTRL);
+
+            // If control is pressed, left mouse button is released and it is inside the data's extent, consume the event
+            if (!this->mouse_state.left_pressed && this->mouse_state.control_pressed &&
+                this->mouse_state.x >= this->bounds.Left() && this->mouse_state.x <= this->bounds.Right() &&
+                this->mouse_state.y >= this->bounds.Bottom() && this->mouse_state.y <= this->bounds.Top())
+            {
+                auto* mouse_call = this->mouse_slot.CallAs<mouse_click_call>();
+
+                if (mouse_call != nullptr)
+                {
+                    mouse_call->set_coordinates(std::make_pair(static_cast<float>(this->mouse_state.x), static_cast<float>(this->mouse_state.y)));
+                    
+                    (*mouse_call)(0);
+                }
+            }
+
+            // Forward event
             auto* input_renderer = this->render_input_slot.template CallAs<core::view::CallRender2D>();
             if (input_renderer == nullptr) return false;
 
@@ -385,6 +409,11 @@ namespace megamol
 
         bool glyph_renderer_2d::OnMouseMove(double x, double y, double world_x, double world_y)
         {
+            // Track mouse position
+            this->mouse_state.x = world_x;
+            this->mouse_state.y = world_y;
+
+            // Forward event
             auto* input_renderer = this->render_input_slot.template CallAs<core::view::CallRender2D>();
             if (input_renderer == nullptr) return false;
 

@@ -31,8 +31,7 @@ namespace megamol
             triangle_mesh_slot("get_triangle_mesh", "Triangle mesh input"), triangle_mesh_hash(-1),
             mesh_data_slot("get_mesh_data", "Mesh data input"), mesh_data_hash(-1),
             data_set("data_set", "Data set used for coloring the triangles"),
-            wireframe("wireframe", "Render as wireframe instead of filling the triangles"),
-            mouse_state({ false, false, -1.0, -1.0 })
+            wireframe("wireframe", "Render as wireframe instead of filling the triangles")
         {
             // Connect input slots
             this->render_input_slot.SetCompatibleCall<core::view::CallRender2DDescription>();
@@ -104,7 +103,6 @@ namespace megamol
                     "uniform mat4 projection_matrix; \n" \
                     "uniform float min_value; \n" \
                     "uniform float max_value; \n" \
-                    "uniform float num_tex_values; \n" \
                     "uniform sampler1D transfer_function; \n" \
                     "out vec4 vertex_color; \n" \
                     "void main() { \n" \
@@ -272,7 +270,6 @@ namespace megamol
                 
                 glUniform1f(glGetUniformLocation(this->render_data.prog, "min_value"), this->render_data.values->min_value);
                 glUniform1f(glGetUniformLocation(this->render_data.prog, "max_value"), this->render_data.values->max_value);
-                glUniform1f(glGetUniformLocation(this->render_data.prog, "num_tex_values"), this->render_data.tf_size);
 
                 glBindVertexArray(this->render_data.vao);
                 glActiveTexture(GL_TEXTURE0);
@@ -370,22 +367,6 @@ namespace megamol
 
         bool triangle_mesh_renderer_2d::OnMouseButton(core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods)
         {
-            // Save mouse state
-            this->mouse_state.left_pressed = button == core::view::MouseButton::BUTTON_LEFT && action == core::view::MouseButtonAction::PRESS;
-            this->mouse_state.control_pressed = mods.test(core::view::Modifier::CTRL);
-
-            // If control is pressed, left mouse button is released and it is inside the data's extent, consume the event
-            if (!this->mouse_state.left_pressed && this->mouse_state.control_pressed &&
-                this->mouse_state.x >= this->bounds.Left() && this->mouse_state.x <= this->bounds.Right() &&
-                this->mouse_state.y >= this->bounds.Bottom() && this->mouse_state.y <= this->bounds.Top())
-            {
-                vislib::sys::Log::DefaultLog.WriteInfo("Event at %.5f x %.5f!", this->mouse_state.x, this->mouse_state.y);
-                // TODO
-
-                return true;
-            }
-
-            // Forward event
             auto* input_renderer = this->render_input_slot.template CallAs<core::view::CallRender2D>();
             if (input_renderer == nullptr) return false;
 
@@ -401,17 +382,6 @@ namespace megamol
 
         bool triangle_mesh_renderer_2d::OnMouseMove(double x, double y, double world_x, double world_y)
         {
-            // Track mouse position
-            this->mouse_state.x = world_x;
-            this->mouse_state.y = world_y;
-
-            // Claim mouse event if control key is pressed
-            if (this->mouse_state.control_pressed)
-            {
-                return true;
-            }
-
-            // Forward event
             auto* input_renderer = this->render_input_slot.template CallAs<core::view::CallRender2D>();
             if (input_renderer == nullptr) return false;
 

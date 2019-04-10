@@ -126,6 +126,8 @@ namespace megamol
 
             /** Output slot for the glyphs */
             core::CalleeSlot glyph_slot;
+            SIZE_T glyph_hash;
+            std::vector<Eigen::Vector2f> glyph_output;
 
             /** Input slot for getting an input vector field */
             core::CallerSlot vector_field_slot;

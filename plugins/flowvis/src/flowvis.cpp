@@ -25,6 +25,7 @@
 #include "glyph_data_call.h"
 #include "implicit_topology_call.h"
 #include "mesh_data_call.h"
+#include "mouse_click_call.h"
 #include "triangle_mesh_call.h"
 #include "vector_field_call.h"
 
@@ -69,6 +70,7 @@ namespace {
             this->call_descriptions.RegisterAutoDescription<megamol::flowvis::implicit_topology_reader_call>();
             this->call_descriptions.RegisterAutoDescription<megamol::flowvis::implicit_topology_writer_call>();
             this->call_descriptions.RegisterAutoDescription<megamol::flowvis::mesh_data_call>();
+            this->call_descriptions.RegisterAutoDescription<megamol::flowvis::mouse_click_call>();
             this->call_descriptions.RegisterAutoDescription<megamol::flowvis::triangle_mesh_call>();
             this->call_descriptions.RegisterAutoDescription<megamol::flowvis::vector_field_call>();
         }

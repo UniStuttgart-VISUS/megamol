@@ -29,7 +29,7 @@ namespace megamol
     namespace flowvis
     {
         /**
-        * Module for rendering a 2D triangle mesh, allowing interaction.
+        * Module for rendering a 2D triangle mesh.
         *
         * @author Alexander Straub
         */
@@ -112,26 +112,13 @@ namespace megamol
             virtual bool OnChar(unsigned int codePoint) override;
 
             /**
-             * The mouse button callback.
-             *
-             * @param button Mouse button that caused the event
-             * @param action Type of interaction with the mouse button
-             * @param mods Modifiers, such as control or shift keys on the keyboard
-             *
-             * @return 'true' if mouse event was handled, 'false' otherwise.
-             */
+            * Forwards character events.
+            */
             virtual bool OnMouseButton(core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) override;
 
             /**
-             * The mouse move callback.
-             *
-             * @param x Current x-coordinate of the mouse in screen space
-             * @param y Current y-coordinate of the mouse in screen space
-             * @param world_x Current x-coordinate of the mouse in world space
-             * @param world_y Current y-coordinate of the mouse in world space
-             *
-             * @return 'true' if mouse event was handled, 'false' otherwise.
-             */
+            * Forwards character events.
+            */
             virtual bool OnMouseMove(double x, double y, double world_x, double world_y) override;
 
             /**
@@ -159,16 +146,6 @@ namespace megamol
 
             /** Bounding rectangle */
             vislib::math::Rectangle<float> bounds;
-
-            /** Mouse interaction */
-            struct mouse_state_t
-            {
-                bool left_pressed;
-                bool control_pressed;
-
-                double x, y;
-
-            } mouse_state;
 
             /** Struct for storing data needed for rendering */
             struct render_data_t
