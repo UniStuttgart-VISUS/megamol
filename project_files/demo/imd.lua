@@ -38,6 +38,7 @@ function doRendering(grim, cfile)
   else
 
     mmCreateModule("SimpleSphereRenderer", "::imd_demo::spheres")
+    mmSetParamValue("::imd_demo::spheres::renderMode", "Simple") 
     mmCreateModule("AddParticleColours", "::imd_demo::colourizer")
     mmCreateModule("ClipPlane", "::imd_demo::clip")
     mmCreateCall("CallRender3D", "::imd_demo::v::rendering", "::imd_demo::spheres::rendering")

@@ -2009,6 +2009,66 @@ void megamol::core::CoreInstance::LoadProject(const vislib::StringW& filename) {
 }
 
 
+void megamol::core::CoreInstance::EnumModulesNoLock(
+    core::AbstractNamedObject* entry_point, std::function<void(Module*)> cb) {
+    
+    AbstractNamedObject *ano = entry_point;
+    bool fromModule = true;
+    if (!entry_point) {
+        ano = this->namespaceRoot.get();
+        fromModule = false;
+    }
+
+    auto anoc = dynamic_cast<AbstractNamedObjectContainer*>(ano);
+    auto mod = dynamic_cast<Module *>(ano);
+    std::vector<AbstractNamedObject*> anoStack;
+    if (!fromModule || mod == nullptr) {
+        // we start from the root or a namespace
+        const auto it_end = anoc->ChildList_End();
+        for (auto it = anoc->ChildList_Begin(); it != it_end; ++it) {
+            if (dynamic_cast<AbstractNamedObjectContainer*>((*it).get())) {
+                anoStack.push_back((*it).get());
+            }
+        }
+        // if it was a namespace, we do not want to dig into calls!
+        fromModule = false;
+    } else {
+        anoStack.push_back(anoc);
+    }
+
+    while (!anoStack.empty()) {
+        ano = anoStack.back();
+        anoStack.pop_back();
+
+        anoc = dynamic_cast<AbstractNamedObjectContainer*>(ano);
+        mod = dynamic_cast<Module *>(ano);
+
+        if (mod) {
+            cb(mod);
+            if (fromModule) {
+                const auto it_end = mod->ChildList_End();
+                for (auto it = mod->ChildList_Begin(); it != it_end; ++it) {
+                    auto cs = dynamic_cast<CallerSlot*>((*it).get());
+                    if (cs) {
+                        const Call* c = cs->CallAs<Call>();
+                        if (c) {
+                            this->FindModuleNoLock<core::Module>(
+                                c->PeekCalleeSlot()->Parent()->FullName().PeekBuffer(),
+                                [&anoStack](core::Module* mod) { anoStack.push_back(mod); });
+                        }
+                    }
+                }
+            }
+        } else if (anoc) {
+            const auto it_end2 = anoc->ChildList_End();
+            for (auto it = anoc->ChildList_Begin(); it != it_end2; ++it) {
+                anoStack.push_back((*it).get());
+            }
+        }
+    }
+}
+
+
 /*
  * megamol::core::CoreInstance::GetGlobalParameterHash
  */
@@ -3088,6 +3148,8 @@ void megamol::core::CoreInstance::enumParameters(
 
     AbstractNamedObject::GraphLocker locker(this->namespaceRoot, false);
     vislib::sys::AutoLock lock(locker);
+
+    // TODO use EnumModulesNoLock?!
 
     AbstractNamedObjectContainer::child_list_type::const_iterator i, e;
     e = path->ChildList_End();
