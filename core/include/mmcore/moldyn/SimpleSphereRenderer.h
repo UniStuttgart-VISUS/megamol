@@ -224,6 +224,7 @@ namespace moldyn {
         // --------------------------------------------------------------------
 
         RenderMode                               renderMode;
+        bool                                     triggerRebuildGBuffer;
 
         vislib::graphics::gl::GLSLShader         sphereShader;
         vislib::graphics::gl::GLSLGeometryShader sphereGeometryShader;

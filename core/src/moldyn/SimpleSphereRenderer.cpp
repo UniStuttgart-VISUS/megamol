@@ -16,7 +16,7 @@ using namespace vislib::graphics::gl;
 
 
 #define MAP_BUFFER_LOCALLY
-//#define DEBUG_GL_CALLBACK
+#define DEBUG_GL_CALLBACK
 //#define CHRONOTIMING
 
 #define NGS_THE_INSTANCE "gl_VertexID" // "gl_InstanceID"
@@ -175,9 +175,9 @@ moldyn::SimpleSphereRenderer::SimpleSphereRenderer(void)
     , ambConeConstants()
     , tfFallbackHandle(0)
     , volGen(nullptr)
-    ,
-    // timer(),
-    renderModeParam("renderMode", "The sphere render mode.")
+    , triggerRebuildGBuffer(false)
+    // , timer()
+    , renderModeParam("renderMode", "The sphere render mode.")
     , toggleModeParam("renderModeButton", "Toggle sphere render modes.")
     , radiusScalingParam("scaling", "Scaling factor for particle radii.")
     , alphaScalingParam("splat::alphaScaling", "NG Splat: Scaling factor for particle alpha.")
@@ -586,11 +586,6 @@ bool moldyn::SimpleSphereRenderer::createResources() {
             break;
 
         case (RenderMode::AMBIENT_OCCLUSION): {
-            // Try to initialize OPENGL extensions
-            if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) {
-                return false;
-            }
-
             // Generate texture and frame buffer handles
             glGenTextures(3, reinterpret_cast<GLuint*>(&this->gBuffer));
             glGenFramebuffers(1, &(this->gBuffer.fbo));
@@ -618,6 +613,8 @@ bool moldyn::SimpleSphereRenderer::createResources() {
             glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP);
             glBindTexture(GL_TEXTURE_1D, 0);
+
+            this->triggerRebuildGBuffer = true;
         } break;
 
         default:
@@ -730,21 +727,23 @@ bool moldyn::SimpleSphereRenderer::Render(view::CallRender3D& call) {
 
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
+    bool retval = false;
     switch (currentRenderMode) {
     case (RenderMode::SIMPLE):
-        return this->renderSimple(cr3d, mpdc);
+        retval = this->renderSimple(cr3d, mpdc); break;
     case (RenderMode::SIMPLE_CLUSTERED):
-        return this->renderSimple(cr3d, mpdc);
+        retval = this->renderSimple(cr3d, mpdc); break;
     case (RenderMode::SIMPLE_GEO):
-        return this->renderGeo(cr3d, mpdc);
+        retval = this->renderGeo(cr3d, mpdc); break;
     case (RenderMode::NG):
-        return this->renderNG(cr3d, mpdc);
+        retval = this->renderNG(cr3d, mpdc); break;
     case (RenderMode::NG_SPLAT):
-        return this->renderNGSplat(cr3d, mpdc);
+        retval = this->renderNGSplat(cr3d, mpdc); break;
     case (RenderMode::NG_BUFFER_ARRAY):
-        return this->renderNGBufferArray(cr3d, mpdc);
+        retval = this->renderNGBufferArray(cr3d, mpdc); break;
     case (RenderMode::AMBIENT_OCCLUSION):
-        return this->renderAmbientOcclusion(cr3d, mpdc);
+        retval = this->renderAmbientOcclusion(cr3d, mpdc); 
+        break;
     default:
         break;
     }
@@ -765,7 +764,7 @@ bool moldyn::SimpleSphereRenderer::Render(view::CallRender3D& call) {
     glDisable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 #endif
 
-    return false;
+    return retval;
 }
 
 
@@ -1929,7 +1928,8 @@ bool moldyn::SimpleSphereRenderer::rebuildShader() {
  * moldyn::SimpleSphereRenderer::rebuildGBuffer
  */
 bool moldyn::SimpleSphereRenderer::rebuildGBuffer() {
-    if ((this->curVpWidth == this->lastVpWidth) && (this->curVpHeight == this->lastVpHeight) &&
+
+    if (!this->triggerRebuildGBuffer && (this->curVpWidth == this->lastVpWidth) && (this->curVpHeight == this->lastVpHeight) &&
         !this->useHPTexturesSlot.IsDirty()) {
         return true;
     }
@@ -1961,8 +1961,6 @@ bool moldyn::SimpleSphereRenderer::rebuildGBuffer() {
     glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, this->curVpWidth, this->curVpHeight, 0, GL_DEPTH_COMPONENT,
         GL_UNSIGNED_BYTE, nullptr);
 
-    glBindTexture(GL_TEXTURE_2D, 0);
-
     // Configure the framebuffer object
     GLint prevFBO;
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prevFBO);
@@ -1983,7 +1981,12 @@ bool moldyn::SimpleSphereRenderer::rebuildGBuffer() {
         std::cout << "Framebuffer NOT complete!" << std::endl;
     }
 
+    glBindTexture(GL_TEXTURE_2D, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, prevFBO);
+
+    if (this->triggerRebuildGBuffer) {
+        this->triggerRebuildGBuffer = false;
+    }
 
     return true;
 }
@@ -2104,6 +2107,7 @@ void moldyn::SimpleSphereRenderer::rebuildWorkingData(
  */
 void moldyn::SimpleSphereRenderer::renderParticlesGeometry(
     megamol::core::view::CallRender3D* cr3d, megamol::core::moldyn::MultiParticleDataCall* dataCall) {
+
     bool highPrecision = this->useHPTexturesSlot.Param<megamol::core::param::BoolParam>()->Value();
 
     bool useGeo = this->enableGeometryShader.Param<core::param::BoolParam>()->Value();
