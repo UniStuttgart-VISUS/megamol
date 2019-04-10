@@ -155,6 +155,11 @@ namespace megamol
             /** Parameter slot for the transfer function */
             core::param::ParamSlot transfer_function;
 
+            /** Parameter slots for fixed value range */
+            core::param::ParamSlot range_fixed;
+            core::param::ParamSlot range_min;
+            core::param::ParamSlot range_max;
+
             /** Bounding rectangle */
             vislib::math::Rectangle<float> bounds;
 

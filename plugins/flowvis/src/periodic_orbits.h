@@ -6,6 +6,8 @@
  */
 #pragma once
 
+#include "critical_points.h"
+
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
@@ -19,6 +21,7 @@
 
 #include "Eigen/Dense"
 
+#include <list>
 #include <utility>
 #include <vector>
 
@@ -93,7 +96,7 @@ namespace megamol
             * @return Periodic orbit, represented as line
             */
             std::vector<Eigen::Vector2f> extract_periodic_orbit(const tpf::data::grid<float, float, 2, 2>& grid,
-                const std::vector<Eigen::Vector2f>& critical_points, Eigen::Vector2f seed, float sign) const;
+                const std::vector<std::pair<critical_points::type, Eigen::Vector2f>>& critical_points, Eigen::Vector2f seed, float sign) const;
 
             /**
             * Advect using Runge-Kutta with dynamic step size
@@ -124,13 +127,13 @@ namespace megamol
             * @return List of coordinates, defining a turn
             */
             tpf::utility::optional<std::list<coords_t>> find_turn(const tpf::data::grid<float, float, 2, 2>& grid,
-                const std::vector<Eigen::Vector2f>& critical_points, Eigen::Vector2f& position, float& delta, float sign, float max_error, float max_delta) const;
+                const std::vector<std::pair<critical_points::type, Eigen::Vector2f>>& critical_points, Eigen::Vector2f& position,
+                float& delta, float sign, float max_error, float max_delta) const;
 
             /**
             * Validate a previous turn
             *
             * @param grid Vector field
-            * @param critical_points Critical points
             * @param position Original/Output position
             * @param delta Previous/Adjusted step size
             * @param sign Direction of integration
@@ -141,8 +144,8 @@ namespace megamol
             *
             * @return True: valid, false otherwise
             */
-            bool validate_turn(const tpf::data::grid<float, float, 2, 2>& grid, const std::vector<Eigen::Vector2f>& critical_points,
-                Eigen::Vector2f& position, float& delta, float sign, float max_error, float max_delta, const std::list<coords_t>& comparison, bool strict) const;
+            bool validate_turn(const tpf::data::grid<float, float, 2, 2>& grid, Eigen::Vector2f& position,
+                float& delta, float sign, float max_error, float max_delta, std::list<coords_t> comparison, bool strict) const;
 
             /**
             * Get intermediate cells
@@ -158,6 +161,21 @@ namespace megamol
             std::vector<coords_t> get_cells(const tpf::data::grid<float, float, 2, 2>& grid, coords_t source, const coords_t& target,
                 const Eigen::Vector2f& source_position, const Eigen::Vector2f& target_position) const;
 
+            /**
+            * Use Poincaré map for generating the orbit
+            *
+            * @param grid Vector field
+            * @param position Original position
+            * @param delta Previous/Adjusted step size
+            * @param sign Direction of integration
+            * @param max_error Maximum error for step size computation
+            * @param max_delta Maximum step size
+            *
+            * @return Line, defined as set of points, representing the orbit
+            */
+            std::vector<Eigen::Vector2f> integrate_orbit(const tpf::data::grid<float, float, 2, 2>& grid, Eigen::Vector2f position,
+                float delta, float sign, float max_error, float max_delta) const;
+
             /** Callbacks for the triangle mesh */
             bool get_glyph_data_callback(core::Call& call);
             bool get_glyph_extent_callback(core::Call& call);
@@ -168,7 +186,7 @@ namespace megamol
             /** Output slot for the glyphs */
             core::CalleeSlot glyph_slot;
             SIZE_T glyph_hash;
-            std::vector<std::vector<Eigen::Vector2f>> glyph_output;
+            std::vector<std::pair<float, std::vector<Eigen::Vector2f>>> glyph_output;
 
             /** Output slot for receiving mouse clicks */
             core::CalleeSlot mouse_slot;
@@ -193,7 +211,7 @@ namespace megamol
             tpf::data::grid<float, float, 2, 2> grid;
 
             /** Stored critical points */
-            std::vector<Eigen::Vector2f> critical_points;
+            std::vector<std::pair<critical_points::type, Eigen::Vector2f>> critical_points;
         };
     }
 }

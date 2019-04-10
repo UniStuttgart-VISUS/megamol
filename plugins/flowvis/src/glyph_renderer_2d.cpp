@@ -6,6 +6,8 @@
 
 #include "flowvis/shader.h"
 
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/LinearTransferFunctionParam.h"
 #include "mmcore/view/CallRender2D.h"
@@ -28,6 +30,9 @@ namespace megamol
             point_size("point_size", "Point size"),
             line_width("line_width", "Line width"),
             transfer_function("transfer_function", "Transfer function"),
+            range_fixed("range_fixed", "Fix value range for the transfer function"),
+            range_min("range_min", "Minimum value for the transfer function"),
+            range_max("range_max", "Maximum value for the transfer function"),
             mouse_state({ false, false, -1.0, -1.0 })
         {
             // Connect input slots
@@ -50,8 +55,18 @@ namespace megamol
             this->transfer_function << new core::param::LinearTransferFunctionParam("");
             this->MakeSlotAvailable(&this->transfer_function);
 
+            this->range_fixed << new core::param::BoolParam(false);
+            this->MakeSlotAvailable(&this->range_fixed);
+
+            this->range_min << new core::param::FloatParam(0.0f);
+            this->MakeSlotAvailable(&this->range_min);
+
+            this->range_max << new core::param::FloatParam(1.0f);
+            this->MakeSlotAvailable(&this->range_max);
+
             // Set initial transfer function
             this->transfer_function.ForceSetDirty();
+            this->range_fixed.ForceSetDirty();
         }
 
         glyph_renderer_2d::~glyph_renderer_2d()
@@ -166,9 +181,6 @@ namespace megamol
 
             if (get_glyphs->DataHash() != this->glyph_hash || this->render_data.point_vertices == nullptr)
             {
-                // Set hash
-                this->glyph_hash = get_glyphs->DataHash();
-
                 // Get vertices and indices
                 this->render_data.point_vertices = get_glyphs->get_point_vertices();
                 this->render_data.line_vertices = get_glyphs->get_line_vertices();
@@ -179,21 +191,6 @@ namespace megamol
                 // Get values
                 this->render_data.point_values = get_glyphs->get_point_values();
                 this->render_data.line_values = get_glyphs->get_line_values();
-
-                this->render_data.min_value = std::numeric_limits<float>::max();
-                this->render_data.max_value = std::numeric_limits<float>::min();
-
-                if (!this->render_data.point_values->empty())
-                {
-                    this->render_data.min_value = std::min(this->render_data.min_value, *std::min_element(this->render_data.point_values->begin(), this->render_data.point_values->end()));
-                    this->render_data.max_value = std::max(this->render_data.max_value, *std::max_element(this->render_data.point_values->begin(), this->render_data.point_values->end()));
-                }
-
-                if (!this->render_data.line_values->empty())
-                {
-                    this->render_data.min_value = std::min(this->render_data.min_value, *std::min_element(this->render_data.line_values->begin(), this->render_data.line_values->end()));
-                    this->render_data.max_value = std::max(this->render_data.max_value, *std::max_element(this->render_data.line_values->begin(), this->render_data.line_values->end()));
-                }
 
                 // Prepare OpenGL buffers for points
                 if (!this->render_data.point_indices->empty())
@@ -266,6 +263,47 @@ namespace megamol
 
                 this->transfer_function.ResetDirty();
             }
+
+            // Set value range
+            this->range_min.Parameter()->SetGUIReadOnly(!this->range_fixed.Param<core::param::BoolParam>()->Value());
+            this->range_max.Parameter()->SetGUIReadOnly(!this->range_fixed.Param<core::param::BoolParam>()->Value());
+
+            if (get_glyphs->DataHash() != this->glyph_hash || this->render_data.point_vertices == nullptr ||
+                this->range_fixed.IsDirty() || this->range_min.IsDirty() || this->range_max.IsDirty())
+            {
+                this->range_fixed.ResetDirty();
+                this->range_min.ResetDirty();
+                this->range_max.ResetDirty();
+
+                if (this->range_fixed.Param<core::param::BoolParam>()->Value())
+                {
+                    this->render_data.min_value = this->range_min.Param<core::param::FloatParam>()->Value();
+                    this->render_data.max_value = this->range_max.Param<core::param::FloatParam>()->Value();
+                }
+                else
+                {
+                    this->render_data.min_value = std::numeric_limits<float>::max();
+                    this->render_data.max_value = std::numeric_limits<float>::min();
+
+                    if (!this->render_data.point_values->empty())
+                    {
+                        this->render_data.min_value = std::min(this->render_data.min_value, *std::min_element(this->render_data.point_values->begin(), this->render_data.point_values->end()));
+                        this->render_data.max_value = std::max(this->render_data.max_value, *std::max_element(this->render_data.point_values->begin(), this->render_data.point_values->end()));
+                    }
+
+                    if (!this->render_data.line_values->empty())
+                    {
+                        this->render_data.min_value = std::min(this->render_data.min_value, *std::min_element(this->render_data.line_values->begin(), this->render_data.line_values->end()));
+                        this->render_data.max_value = std::max(this->render_data.max_value, *std::max_element(this->render_data.line_values->begin(), this->render_data.line_values->end()));
+                    }
+
+                    this->range_min.Param<core::param::FloatParam>()->SetValue(this->render_data.min_value, false);
+                    this->range_max.Param<core::param::FloatParam>()->SetValue(this->render_data.max_value, false);
+                }
+            }
+
+            // Set hash
+            this->glyph_hash = get_glyphs->DataHash();
 
             // Render
             glUseProgram(this->render_data.prog);

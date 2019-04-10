@@ -15,6 +15,7 @@
 #include "Eigen/Dense"
 
 #include <utility>
+#include <vector>
 
 namespace megamol
 {
@@ -28,6 +29,12 @@ namespace megamol
         class critical_points : public core::Module
         {
         public:
+            /** Types of critical points */
+            enum class type
+            {
+                NONE = -2, UNHANDLED, REPELLING_FOCUS, ATTRACTING_FOCUS, REPELLING_NODE, ATTRACTING_NODE, SADDLE, CENTER
+            };
+
             /**
              * Answer the name of this module.
              *
@@ -73,15 +80,11 @@ namespace megamol
             virtual void release() override;
 
         private:
-            /** Types of critical points */
-            enum type
-            {
-                NONE = -1, UNHANDLED, POINT
-            };
-
             /** Cell */
             struct cell_t
             {
+                typedef Eigen::Vector2f value_type;
+
                 Eigen::Vector2f bottom_left, bottom_right, top_left, top_right;
                 Eigen::Vector2f bottom_left_corner, top_right_corner;
             };
@@ -119,6 +122,46 @@ namespace megamol
             * @return Interpolated value
             */
             float linear_interpolate_value(float left, float right, float value_left, float value_right, float position) const;
+            Eigen::Vector2f linear_interpolate_value(float left, float right, const Eigen::Vector2f& value_left, const Eigen::Vector2f& value_right, float position) const;
+
+            /**
+            * Bilinear interpolate the value in a given cell
+            *
+            * @param cell Cell in which the point is located
+            * @param position Position at which the value should be interpolated
+            *
+            * @return Interpolated value
+            */
+            cell_t::value_type bilinear_interpolate_value(const cell_t& cell, const Eigen::Vector2f& position) const;
+
+            /**
+            * Calculate the gradient at the first vertices' position
+            *
+            * @param vertices All vertices
+            * @param values Values corresponding to the vertices
+            *
+            * @return Gradient
+            */
+            Eigen::Vector2f calculate_gradient(const std::vector<Eigen::Vector2f>& vertices, const std::vector<float>& values) const;
+
+            /**
+            * Calculate the Jacobian at the first vertices' position
+            *
+            * @param vertices All vertices
+            * @param values Values corresponding to the vertices
+            *
+            * @return Jacobian
+            */
+            Eigen::Matrix<float, 2, 2> calculate_jacobian(const std::vector<Eigen::Vector2f>& vertices, const std::vector<Eigen::Vector2f>& values) const;
+
+            /**
+            * Calculate the eigenvalues of a matrix
+            *
+            * @param matrix For which to calculate the eigenvalues
+            *
+            * @return Eigenvalues
+            */
+            Eigen::Vector2cf calculate_eigenvalues(const Eigen::Matrix<float, 2, 2>& matrix) const;
 
             /** Callbacks for the triangle mesh */
             bool get_glyph_data_callback(core::Call& call);
@@ -127,7 +170,7 @@ namespace megamol
             /** Output slot for the glyphs */
             core::CalleeSlot glyph_slot;
             SIZE_T glyph_hash;
-            std::vector<Eigen::Vector2f> glyph_output;
+            std::vector<std::pair<type, Eigen::Vector2f>> glyph_output;
 
             /** Input slot for getting an input vector field */
             core::CallerSlot vector_field_slot;

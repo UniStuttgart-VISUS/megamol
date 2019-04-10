@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "periodic_orbits.h"
 
+#include "critical_points.h"
 #include "glyph_data_call.h"
 #include "mouse_click_call.h"
 #include "vector_field_call.h"
@@ -116,6 +117,7 @@ namespace megamol
 
                     const auto& critical_points_vertices = *get_critical_points->get_point_vertices();
                     const auto& critical_points_indices = *get_critical_points->get_point_indices();
+                    const auto& critical_points_values = *get_critical_points->get_point_values();
 
                     // Create grid from input vector field
                     tpf::data::extent_t extent(2);
@@ -166,7 +168,8 @@ namespace megamol
 
                     for (auto index : critical_points_indices)
                     {
-                        this->critical_points.push_back(Eigen::Vector2f(critical_points_vertices[index * 2 + 0], critical_points_vertices[index * 2 + 1]));
+                        this->critical_points.push_back(std::make_pair(static_cast<flowvis::critical_points::type>(static_cast<int>(critical_points_values[index])),
+                            Eigen::Vector2f(critical_points_vertices[index * 2 + 0], critical_points_vertices[index * 2 + 1])));
                     }
                 }
 
@@ -177,7 +180,7 @@ namespace megamol
 
                     for (std::size_t i = 0; i < this->glyph_output.size(); ++i)
                     {
-                        glyph_call->add_line(this->glyph_output[i], static_cast<float>(i));
+                        glyph_call->add_line(this->glyph_output[i].second, this->glyph_output[i].first);
                     }
 
                     glyph_call->SetDataHash(this->glyph_hash);
@@ -206,13 +209,13 @@ namespace megamol
                 // Seed a stream lines
                 for (float sign = -1.0f; sign <= 1.0f; sign += 2.0f)
                 {
-                    vislib::sys::Log::DefaultLog.WriteInfo("Starting %s stream line at [%.5f, %.5f]", (sign < 0) ? "backward" : "forward", seed[0], seed[1]);
+                    vislib::sys::Log::DefaultLog.WriteInfo("Starting %s stream line at [%.5f, %.5f]", (sign < 0.0f) ? "backward" : "forward", seed[0], seed[1]);
 
                     auto periodic_orbit = extract_periodic_orbit(this->grid, this->critical_points, seed, sign);
 
                     if (!periodic_orbit.empty())
                     {
-                        this->glyph_output.push_back(periodic_orbit);
+                        this->glyph_output.push_back(std::make_pair(sign, periodic_orbit));
 
                         for (const auto& point : periodic_orbit)
                         {
@@ -232,7 +235,7 @@ namespace megamol
         }
 
         std::vector<Eigen::Vector2f> periodic_orbits::extract_periodic_orbit(const tpf::data::grid<float, float, 2, 2>& grid,
-            const std::vector<Eigen::Vector2f>& critical_points, Eigen::Vector2f position, const float sign) const
+            const std::vector<std::pair<flowvis::critical_points::type, Eigen::Vector2f>>& critical_points, Eigen::Vector2f position, const float sign) const
         {
             using coords_t = typename tpf::data::grid<float, float, 2, 2>::coords_t;
 
@@ -255,7 +258,7 @@ namespace megamol
                 if (!visited_cells->empty())
                 {
                     // Do a second turn and compare results
-                    const auto valid_second_turn = validate_turn(grid, critical_points, position, delta, sign, max_error, max_delta, *visited_cells, true);
+                    const auto valid_second_turn = validate_turn(grid, position, delta, sign, max_error, max_delta, *visited_cells, true);
 
                     if (valid_second_turn)
                     {
@@ -269,10 +272,10 @@ namespace megamol
 
                         for (const auto& cell : *visited_cells)
                         {
-                            possible_exits.insert(grid.get_node_coordinates(cell));
-                            possible_exits.insert(grid.get_node_coordinates(cell + coords_t(1, 0)));
-                            possible_exits.insert(grid.get_node_coordinates(cell + coords_t(0, 1)));
-                            possible_exits.insert(grid.get_node_coordinates(cell + coords_t(1, 1)));
+                            possible_exits.insert(grid.get_cell_coordinates(cell));
+                            possible_exits.insert(grid.get_cell_coordinates(cell + coords_t(1, 0)));
+                            possible_exits.insert(grid.get_cell_coordinates(cell + coords_t(0, 1)));
+                            possible_exits.insert(grid.get_cell_coordinates(cell + coords_t(1, 1)));
                         }
 
                         // Backward integration from possible exits
@@ -280,7 +283,7 @@ namespace megamol
 
                         for (auto possible_exit : possible_exits)
                         {
-                            has_exit = validate_turn(grid, critical_points, possible_exit, delta, -sign, max_error, max_delta, *visited_cells, false);
+                            has_exit = validate_turn(grid, possible_exit, delta, -sign, max_error, max_delta, *visited_cells, false);
                             
                             if (has_exit)
                             {
@@ -291,106 +294,7 @@ namespace megamol
                         // Use Poincaré map for finding the closed stream line
                         if (!has_exit)
                         {
-                            // Extract edge
-                            const auto first_cell = *grid.find_cell(position);
-                            auto second_cell = first_cell;
-
-                            Eigen::Vector2f last_position = position;
-
-                            while (first_cell == second_cell)
-                            {
-                                const auto advected = advect_RK45(grid, position, delta, sign, max_error, max_delta);
-
-                                last_position = position;
-
-                                position = advected.first;
-                                delta = advected.second;
-
-                                second_cell = *grid.find_cell(position);
-                            }
-
-                            const auto corner_bl = grid.get_node_coordinates(first_cell);
-                            const auto corner_br = grid.get_node_coordinates(first_cell + coords_t(1, 0));
-                            const auto corner_tl = grid.get_node_coordinates(first_cell + coords_t(0, 1));
-                            const auto corner_tr = grid.get_node_coordinates(first_cell + coords_t(1, 1));
-
-                            const kernel::Segment_2 edge_l(kernel::Point_2(corner_bl[0], corner_bl[1]), kernel::Point_2(corner_tl[0], corner_tl[1]));
-                            const kernel::Segment_2 edge_r(kernel::Point_2(corner_br[0], corner_br[1]), kernel::Point_2(corner_tr[0], corner_tr[1]));
-                            const kernel::Segment_2 edge_b(kernel::Point_2(corner_bl[0], corner_bl[1]), kernel::Point_2(corner_br[0], corner_br[1]));
-                            const kernel::Segment_2 edge_t(kernel::Point_2(corner_tl[0], corner_tl[1]), kernel::Point_2(corner_tr[0], corner_tr[1]));
-
-                            kernel::Segment_2 edge;
-                            CGAL::Orientation crossed_orientation;
-
-                            {
-                                const kernel::Segment_2 line(kernel::Point_2(last_position[0], last_position[1]), kernel::Point_2(position[0], position[1]));
-
-                                if (CGAL::do_intersect(line, edge_l))
-                                {
-                                    edge = edge_l;
-                                }
-                                else if (CGAL::do_intersect(line, edge_r))
-                                {
-                                    edge = edge_r;
-                                }
-                                else if (CGAL::do_intersect(line, edge_b))
-                                {
-                                    edge = edge_b;
-                                }
-                                else if (CGAL::do_intersect(line, edge_t))
-                                {
-                                    edge = edge_t;
-                                }
-
-                                crossed_orientation = CGAL::orientation(edge.source(), edge.target(), kernel::Point_2(position[0], position[1]));
-                            }
-
-                            // Start stream line at the edge
-                            std::vector<Eigen::Vector2f> periodic_orbit;
-                            const std::size_t num_iterations = static_cast<std::size_t>(this->poincare_iterations.Param<core::param::IntParam>()->Value());
-
-                            for (std::size_t i = 0; i < num_iterations; ++i)
-                            {
-                                const kernel::Point_2 start_point = edge.source() + 0.5 * (edge.target() - edge.source());
-                                position = Eigen::Vector2f(static_cast<float>(CGAL::to_double(start_point[0])), static_cast<float>(CGAL::to_double(start_point[1])));
-
-                                bool halfway = false;
-
-                                while (!(halfway && CGAL::orientation(edge.source(), edge.target(), kernel::Point_2(position[0], position[1])) == crossed_orientation))
-                                {
-                                    const auto advected = advect_RK45(grid, position, delta, sign, max_error, max_delta);
-
-                                    const Eigen::Vector2f old_position = position;
-
-                                    position = advected.first;
-                                    delta = advected.second;
-
-                                    if (!halfway && CGAL::orientation(edge.source(), edge.target(), kernel::Point_2(position[0], position[1])) != crossed_orientation)
-                                    {
-                                        halfway = true;
-                                    }
-
-                                    if (i == num_iterations - 1)
-                                    {
-                                        periodic_orbit.push_back(position);
-                                    }
-                                }
-
-                                const kernel::Point_2 end_point(position[0], position[1]);
-
-                                if ((edge.source() - end_point).squared_length() < (edge.target() - end_point).squared_length())
-                                {
-                                    edge = kernel::Segment_2(edge.source(), start_point);
-                                }
-                                else
-                                {
-                                    edge = kernel::Segment_2(start_point, edge.target());
-                                }
-                            }
-
-                            periodic_orbit.push_back(periodic_orbit.front());
-
-                            return periodic_orbit;
+                            return integrate_orbit(grid, position, delta, sign, max_error, max_delta);
                         }
                     }
                 }
@@ -466,13 +370,13 @@ namespace megamol
                 if (error > 1.0f)
                 {
                     // Error too large, reduce time step
-                    delta *= std::max(max_shrink, safety * powf(error, shrink_exponent));
+                    delta *= std::max(max_shrink, safety * std::pow(error, shrink_exponent));
                     decreased = true;
                 }
                 else
                 {
                     // Error (too) small, increase time step
-                    delta = std::min(max_delta, delta * std::min(max_growth, safety * powf(error, grow_exponent)));
+                    delta = std::min(max_delta, delta * std::min(max_growth, safety * std::pow(error, grow_exponent)));
                     decreased = false;
                 }
 
@@ -484,14 +388,15 @@ namespace megamol
         }
 
         tpf::utility::optional<std::list<typename tpf::data::grid<float, float, 2, 2>::coords_t>> periodic_orbits::find_turn(const tpf::data::grid<float, float, 2, 2>& grid,
-            const std::vector<Eigen::Vector2f>& critical_points, Eigen::Vector2f& position, float& delta, const float sign, const float max_error, const float max_delta) const
+            const std::vector<std::pair<flowvis::critical_points::type, Eigen::Vector2f>>& critical_points, Eigen::Vector2f& position,
+            float& delta, const float sign, const float max_error, const float max_delta) const
         {
             using coords_t = typename tpf::data::grid<float, float, 2, 2>::coords_t;
 
             // Initialize cell list
             std::list<coords_t> visited_cells;
 
-            visited_cells.push_back(*grid.find_cell(position));
+            visited_cells.push_back(*grid.find_staggered_cell(position));
 
             // Advect stream line until a closed turn is detected
             std::size_t num_critical_point_visits = 0;
@@ -511,16 +416,18 @@ namespace megamol
                 if (position == old_position)
                 {
                     // Advection had no result; stream line stopped
+                    vislib::sys::Log::DefaultLog.WriteError("%d", __LINE__);
                     return tpf::utility::nullopt;
                 }
 
                 // Check entry into new cell
-                const auto old_cell = *grid.find_cell(old_position);
-                const auto new_cell = grid.find_cell(position);
+                const auto old_cell = *grid.find_staggered_cell(old_position);
+                const auto new_cell = grid.find_staggered_cell(position);
 
                 if (!new_cell)
                 {
                     // Advection went out-of-bounds
+                    vislib::sys::Log::DefaultLog.WriteError("%d", __LINE__);
                     return tpf::utility::nullopt;
                 }
 
@@ -531,8 +438,10 @@ namespace megamol
 
                     current_cells.push_back(*new_cell);
 
-                    for (const auto& current_cell : current_cells)
+                    for (auto current_cell_it = current_cells.begin(); current_cell_it != current_cells.end() && !found_turn; ++current_cell_it)
                     {
+                        const auto& current_cell = *current_cell_it;
+
                         ++num_cells_visited;
 
                         // Check for existance of critical point within the new cell
@@ -540,7 +449,11 @@ namespace megamol
 
                         for (const auto& point : critical_points)
                         {
-                            if (*grid.find_cell(point) == current_cell)
+                            const bool attracting = true; // TODO: correct, but does not work if orbits are missed
+                                //(sign < 0.0f && (point.first == flowvis::critical_points::type::REPELLING_FOCUS || point.first == flowvis::critical_points::type::REPELLING_NODE)) ||
+                                //(sign > 0.0f && (point.first == flowvis::critical_points::type::ATTRACTING_FOCUS || point.first == flowvis::critical_points::type::ATTRACTING_NODE));
+
+                            if (attracting && *grid.find_staggered_cell(point.second) == current_cell)
                             {
                                 has_critical_point = true;
                             }
@@ -554,20 +467,13 @@ namespace megamol
                                 found_turn = true;
 
                                 // Remove all cells which do not belong to this turn
-                                for (auto cell_it = visited_cells.begin(); cell_it != visited_cells.end(); )
+                                for (auto cell_it = visited_cells.begin(); cell_it != visited_cells.end() && *cell_it != current_cell; )
                                 {
-                                    if (*cell_it == current_cell)
-                                    {
-                                        break;
-                                    }
-
                                     visited_cells.erase(cell_it++);
                                 }
                             }
                             else
                             {
-                                found_turn = false;
-
                                 visited_cells.push_back(current_cell);
                             }
                         }
@@ -581,6 +487,7 @@ namespace megamol
                         // Return, if stuck in a loop with a critical point
                         if (num_critical_point_visits == 1000)
                         {
+                            vislib::sys::Log::DefaultLog.WriteError("%d", __LINE__);
                             return tpf::utility::nullopt;
                         }
                     }
@@ -591,24 +498,32 @@ namespace megamol
             return visited_cells;
         }
 
-        bool periodic_orbits::validate_turn(const tpf::data::grid<float, float, 2, 2>& grid, const std::vector<Eigen::Vector2f>& critical_points, Eigen::Vector2f& position,
-            float& delta, const float sign, const float max_error, const float max_delta, const std::list<coords_t>& comparison, const bool strict) const
+        bool periodic_orbits::validate_turn(const tpf::data::grid<float, float, 2, 2>& grid, Eigen::Vector2f& position,
+            float& delta, const float sign, const float max_error, const float max_delta, std::list<coords_t> comparison, const bool strict) const
         {
             // Initialize comparison
-            auto compare_it = comparison.begin();
-
-            if (strict && *grid.find_cell(position) != *compare_it)
+            if (strict && *grid.find_staggered_cell(position) != comparison.front())
             {
                 return false;
             }
 
-            if (strict || std::find(comparison.begin(), comparison.end(), *grid.find_cell(position)) != comparison.end())
+            if (strict)
             {
-                ++compare_it;
+                comparison.pop_front();
+            }
+            else if (!strict && std::find(comparison.begin(), comparison.end(), *grid.find_staggered_cell(position)) == comparison.end())
+            {
+                // Advect one step, if the start is outside
+                const auto advected = advect_RK45(grid, position, delta, sign, max_error, max_delta);
+
+                const Eigen::Vector2f old_position = position;
+
+                position = advected.first;
+                delta = advected.second;
             }
 
             // Advect stream line while it corresponds to the input list of cells
-            while (compare_it != comparison.end())
+            while (!comparison.empty())
             {
                 const auto advected = advect_RK45(grid, position, delta, sign, max_error, max_delta);
 
@@ -620,16 +535,18 @@ namespace megamol
                 if (position == old_position)
                 {
                     // Advection had no result; stream line stopped
+                    vislib::sys::Log::DefaultLog.WriteError("%d", __LINE__);
                     return false;
                 }
 
                 // Check entry into new cell
-                const auto old_cell = *grid.find_cell(old_position);
-                const auto new_cell = grid.find_cell(position);
+                const auto old_cell = *grid.find_staggered_cell(old_position);
+                const auto new_cell = grid.find_staggered_cell(position);
 
                 if (!new_cell)
                 {
                     // Advection went out-of-bounds
+                    vislib::sys::Log::DefaultLog.WriteError("%d", __LINE__);
                     return false;
                 }
 
@@ -641,11 +558,11 @@ namespace megamol
                     current_cells.push_back(*new_cell);
 
                     // Check cells
-                    for (auto cell_it = current_cells.begin(); cell_it != current_cells.end() && compare_it != comparison.end(); ++cell_it)
+                    for (auto cell_it = current_cells.begin(); cell_it != current_cells.end() && !comparison.empty(); ++cell_it)
                     {
                         const auto& current_cell = *cell_it;
 
-                        if (strict && current_cell != *compare_it)
+                        if (strict && current_cell != comparison.front())
                         {
                             return false;
                         }
@@ -655,7 +572,7 @@ namespace megamol
                             return false;
                         }
 
-                        ++compare_it;
+                        comparison.remove(current_cell);
                     }
                 }
             }
@@ -673,10 +590,10 @@ namespace megamol
 
             while (direction[0] != 0 && direction[1] != 0)
             {
-                const auto corner_bl = grid.get_node_coordinates(source);
-                const auto corner_br = grid.get_node_coordinates(source + coords_t(1, 0));
-                const auto corner_tl = grid.get_node_coordinates(source + coords_t(0, 1));
-                const auto corner_tr = grid.get_node_coordinates(source + coords_t(1, 1));
+                const auto corner_bl = grid.get_cell_coordinates(source);
+                const auto corner_br = grid.get_cell_coordinates(source + coords_t(1, 0));
+                const auto corner_tl = grid.get_cell_coordinates(source + coords_t(0, 1));
+                const auto corner_tr = grid.get_cell_coordinates(source + coords_t(1, 1));
 
                 const kernel::Segment_2 edge_l(kernel::Point_2(corner_bl[0], corner_bl[1]), kernel::Point_2(corner_tl[0], corner_tl[1]));
                 const kernel::Segment_2 edge_r(kernel::Point_2(corner_br[0], corner_br[1]), kernel::Point_2(corner_tr[0], corner_tr[1]));
@@ -713,6 +630,111 @@ namespace megamol
             }
 
             return intermediate_cells;
+        }
+
+        std::vector<Eigen::Vector2f> periodic_orbits::integrate_orbit(const tpf::data::grid<float, float, 2, 2>& grid, Eigen::Vector2f position,
+            float delta, const float sign, const float max_error, const float max_delta) const
+        {
+            // Extract edge
+            const auto first_cell = *grid.find_staggered_cell(position);
+            auto second_cell = first_cell;
+
+            Eigen::Vector2f last_position = position;
+
+            while (first_cell == second_cell)
+            {
+                const auto advected = advect_RK45(grid, position, delta, sign, max_error, max_delta);
+
+                last_position = position;
+
+                position = advected.first;
+                delta = advected.second;
+
+                second_cell = *grid.find_staggered_cell(position);
+            }
+
+            const auto corner_bl = grid.get_cell_coordinates(first_cell);
+            const auto corner_br = grid.get_cell_coordinates(first_cell + coords_t(1, 0));
+            const auto corner_tl = grid.get_cell_coordinates(first_cell + coords_t(0, 1));
+            const auto corner_tr = grid.get_cell_coordinates(first_cell + coords_t(1, 1));
+
+            const kernel::Segment_2 edge_l(kernel::Point_2(corner_bl[0], corner_bl[1]), kernel::Point_2(corner_tl[0], corner_tl[1]));
+            const kernel::Segment_2 edge_r(kernel::Point_2(corner_br[0], corner_br[1]), kernel::Point_2(corner_tr[0], corner_tr[1]));
+            const kernel::Segment_2 edge_b(kernel::Point_2(corner_bl[0], corner_bl[1]), kernel::Point_2(corner_br[0], corner_br[1]));
+            const kernel::Segment_2 edge_t(kernel::Point_2(corner_tl[0], corner_tl[1]), kernel::Point_2(corner_tr[0], corner_tr[1]));
+
+            kernel::Segment_2 edge;
+            CGAL::Orientation crossed_orientation;
+
+            {
+                const kernel::Segment_2 line(kernel::Point_2(last_position[0], last_position[1]), kernel::Point_2(position[0], position[1]));
+
+                if (CGAL::do_intersect(line, edge_l))
+                {
+                    edge = edge_l;
+                }
+                else if (CGAL::do_intersect(line, edge_r))
+                {
+                    edge = edge_r;
+                }
+                else if (CGAL::do_intersect(line, edge_b))
+                {
+                    edge = edge_b;
+                }
+                else if (CGAL::do_intersect(line, edge_t))
+                {
+                    edge = edge_t;
+                }
+
+                crossed_orientation = CGAL::orientation(edge.source(), edge.target(), kernel::Point_2(position[0], position[1]));
+            }
+
+            // Start stream line at the edge
+            std::vector<Eigen::Vector2f> periodic_orbit;
+            const std::size_t num_iterations = static_cast<std::size_t>(this->poincare_iterations.Param<core::param::IntParam>()->Value());
+
+            for (std::size_t i = 0; i < num_iterations; ++i)
+            {
+                const kernel::Point_2 start_point = edge.source() + 0.5 * (edge.target() - edge.source());
+                position = Eigen::Vector2f(static_cast<float>(CGAL::to_double(start_point[0])), static_cast<float>(CGAL::to_double(start_point[1])));
+
+                bool halfway = false;
+
+                while (!(halfway && CGAL::orientation(edge.source(), edge.target(), kernel::Point_2(position[0], position[1])) == crossed_orientation))
+                {
+                    const auto advected = advect_RK45(grid, position, delta, sign, max_error, max_delta);
+
+                    const Eigen::Vector2f old_position = position;
+
+                    position = advected.first;
+                    delta = advected.second;
+
+                    if (!halfway && CGAL::orientation(edge.source(), edge.target(), kernel::Point_2(position[0], position[1])) != crossed_orientation)
+                    {
+                        halfway = true;
+                    }
+
+                    if (i == num_iterations - 1)
+                    {
+                        periodic_orbit.push_back(position);
+                    }
+                }
+
+                const kernel::Point_2 end_point(position[0], position[1]);
+
+                if ((edge.source() - end_point).squared_length() < (edge.target() - end_point).squared_length())
+                {
+                    edge = kernel::Segment_2(edge.source(), start_point);
+                }
+                else
+                {
+                    edge = kernel::Segment_2(start_point, edge.target());
+                }
+            }
+
+            periodic_orbit.push_back(periodic_orbit.front());
+
+            return periodic_orbit;
         }
     }
 }

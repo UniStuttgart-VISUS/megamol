@@ -99,13 +99,14 @@ namespace megamol
 
                             const auto critical_point = extract_critical_point(cell);
 
-                            if (critical_point.first == POINT)
+                            if (critical_point.first != type::NONE && critical_point.first != type::UNHANDLED)
                             {
-                                this->glyph_output.push_back(critical_point.second);
+                                this->glyph_output.push_back(critical_point);
 
-                                this->glyph_hash = static_cast<SIZE_T>(core::utility::DataHash(this->glyph_hash, critical_point.second[0], critical_point.second[1]));
+                                this->glyph_hash = static_cast<SIZE_T>(core::utility::DataHash(this->glyph_hash,
+                                    critical_point.first, critical_point.second[0], critical_point.second[1]));
                             }
-                            else if (critical_point.first == UNHANDLED)
+                            else if (critical_point.first == type::UNHANDLED)
                             {
                                 has_unhandled_case = true;
                             }
@@ -125,7 +126,7 @@ namespace megamol
 
                     for (std::size_t i = 0; i < this->glyph_output.size(); ++i)
                     {
-                        glyph_call->add_point(this->glyph_output[i], static_cast<float>(i));
+                        glyph_call->add_point(this->glyph_output[i].second, static_cast<float>(this->glyph_output[i].first));
                     }
 
                     glyph_call->SetDataHash(this->glyph_hash);
@@ -147,7 +148,7 @@ namespace megamol
             // Return the point directly, if it is a zero-vector itself
             if (cell.bottom_left.isZero())
             {
-                return std::make_pair(NONE, cell.bottom_left_corner);
+                return std::make_pair(type::NONE, cell.bottom_left_corner);
             }
 
             // Calculate cell size
@@ -167,7 +168,7 @@ namespace megamol
             // Find intersection
             if (marching_squares_index == 0)
             {
-                return std::make_pair(NONE, Eigen::Vector2f());
+                return std::make_pair(type::NONE, Eigen::Vector2f());
             }
 
             // Create helper functions
@@ -258,16 +259,80 @@ namespace megamol
             case 5:
             case 10:
             default:
-                return std::make_pair(UNHANDLED, Eigen::Vector2f());
+                return std::make_pair(type::UNHANDLED, Eigen::Vector2f());
             }
 
             // Interpolate linearly between line end points
             if (std::signbit(first_value) != std::signbit(second_value))
             {
-                return std::make_pair(POINT, linear_interpolate_position(first, second, first_value, second_value));
+                const Eigen::Vector2f critical_point = linear_interpolate_position(first, second, first_value, second_value);
+
+                // Classify critical point
+                std::vector<Eigen::Vector2f> points, vectors;
+
+                points.push_back(critical_point);
+                vectors.push_back(bilinear_interpolate_value(cell, critical_point));
+
+                points.push_back(cell.bottom_left_corner);
+                vectors.push_back(cell.bottom_left);
+
+                points.push_back(bottom_right_corner);
+                vectors.push_back(cell.bottom_right);
+
+                points.push_back(top_left_corner);
+                vectors.push_back(cell.top_left);
+
+                points.push_back(cell.top_right_corner);
+                vectors.push_back(cell.top_right);
+
+                const auto jacobian = calculate_jacobian(points, vectors);
+                const auto eigenvalues = calculate_eigenvalues(jacobian);
+
+                type point_type = type::NONE;
+
+                if (eigenvalues.imag().isZero())
+                {
+                    if (eigenvalues.real().isZero())
+                    {
+                        point_type = type::NONE;
+                    }
+                    if (std::signbit(eigenvalues[0].real()) != std::signbit(eigenvalues[1].real()))
+                    {
+                        point_type = type::SADDLE;
+                    }
+                    else if (eigenvalues[0].real() > 0.0 && eigenvalues[1].real() > 0.0)
+                    {
+                        point_type = type::REPELLING_NODE;
+                    }
+                    else if (eigenvalues[0].real() < 0.0 && eigenvalues[1].real() < 0.0)
+                    {
+                        point_type = type::ATTRACTING_NODE;
+                    }
+                }
+                else
+                {
+                    if (eigenvalues.real().isZero())
+                    {
+                        point_type = type::CENTER;
+                    }
+                    else if (std::signbit(eigenvalues[0].real()) != std::signbit(eigenvalues[1].real()))
+                    {
+                        point_type = type::NONE;
+                    }
+                    else if (eigenvalues[0].real() > 0.0 && eigenvalues[1].real() > 0.0)
+                    {
+                        point_type = type::REPELLING_FOCUS;
+                    }
+                    else if (eigenvalues[0].real() < 0.0 && eigenvalues[1].real() < 0.0)
+                    {
+                        point_type = type::ATTRACTING_FOCUS;
+                    }
+                }
+
+                return std::make_pair(point_type, critical_point);
             }
 
-            return std::make_pair(NONE, Eigen::Vector2f());
+            return std::make_pair(type::NONE, Eigen::Vector2f());
         }
 
         Eigen::Vector2f critical_points::linear_interpolate_position(const Eigen::Vector2f& left, const Eigen::Vector2f& right, const float value_left, const float value_right) const
@@ -285,6 +350,101 @@ namespace megamol
             const auto right_part = 1.0f - left_part;
 
             return right_part * value_left + left_part * value_right;
+        }
+
+        Eigen::Vector2f critical_points::linear_interpolate_value(float left, float right, const Eigen::Vector2f& value_left, const Eigen::Vector2f& value_right, float position) const
+        {
+            const auto width = right - left;
+
+            const auto left_part = (position - left) / width;
+            const auto right_part = 1.0f - left_part;
+
+            return right_part * value_left + left_part * value_right;
+        }
+
+        critical_points::cell_t::value_type critical_points::bilinear_interpolate_value(const cell_t& cell, const Eigen::Vector2f& position) const
+        {
+            const auto bottom = linear_interpolate_value(cell.bottom_left_corner[0], cell.top_right_corner[0], cell.bottom_left, cell.bottom_right, position[0]);
+            const auto top = linear_interpolate_value(cell.bottom_left_corner[0], cell.top_right_corner[0], cell.top_left, cell.top_right, position[0]);
+
+            return linear_interpolate_value(cell.bottom_left_corner[1], cell.top_right_corner[1], bottom, top, position[1]);
+        }
+
+        Eigen::Vector2f critical_points::calculate_gradient(const std::vector<Eigen::Vector2f>& vertices, const std::vector<float>& values) const
+        {
+            // Create matrix A, weight matrix W and right-hand side b
+            Eigen::Matrix<float, Eigen::Dynamic, 2> A;
+            A.resize(vertices.size() - 1, Eigen::NoChange);
+
+            Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic> W;
+            W.resize(vertices.size() - 1, vertices.size() - 1);
+            W.setZero();
+
+            Eigen::Matrix<float, Eigen::Dynamic, 1> b;
+            b.resize(vertices.size() - 1, Eigen::NoChange);
+
+            for (std::size_t j = 0; j < vertices.size() - 1; ++j)
+            {
+                for (std::size_t d = 0; d < 2; ++d)
+                {
+                    A(j, d) = vertices[j + 1][d] - vertices[0][d];
+                }
+
+                W(j, j) = 1.0f / (vertices[j + 1] - vertices[0]).squaredNorm();
+
+                b(j) = values[j + 1] - values[0];
+            }
+
+            // Calculate weighted matrix and vectors
+            Eigen::Matrix<float, Eigen::Dynamic, 2> X;
+            X.resize(vertices.size() - 1, Eigen::NoChange);
+
+            X = W * A;
+            b = W * b;
+
+            // Solve least squares for Ax = b
+            Eigen::JacobiSVD<Eigen::Matrix<float, Eigen::Dynamic, 2>> svd(X, Eigen::ComputeFullU | Eigen::ComputeFullV);
+
+            return svd.solve(b);
+        }
+
+        Eigen::Matrix<float, 2, 2> critical_points::calculate_jacobian(const std::vector<Eigen::Vector2f>& vertices, const std::vector<Eigen::Vector2f>& values) const
+        {
+            // Get values component-wise
+            auto x = std::vector<float>(values.size());
+            auto y = std::vector<float>(values.size());
+
+            for (std::size_t i = 0; i < values.size(); ++i)
+            {
+                x[i] = values[i][0];
+                y[i] = values[i][1];
+            }
+
+            // Solve least squares for Ax = b
+            Eigen::Vector2f result[2];
+
+            result[0] = calculate_gradient(vertices, x);
+            result[1] = calculate_gradient(vertices, y);
+
+            // Return jacobian
+            Eigen::Matrix<float, 2, 2> jacobian;
+
+            for (std::size_t i = 0; i < 2; i++)
+            {
+                for (std::size_t j = 0; j < 2; j++)
+                {
+                    jacobian(j, i) = result[j][i];
+                }
+            }
+
+            return jacobian;
+        }
+
+        Eigen::Vector2cf critical_points::calculate_eigenvalues(const Eigen::Matrix<float, 2, 2>& matrix) const
+        {
+            Eigen::EigenSolver<Eigen::Matrix<float, 2, 2>> eigensolver(matrix, true);
+
+            return eigensolver.eigenvalues();
         }
     }
 }
