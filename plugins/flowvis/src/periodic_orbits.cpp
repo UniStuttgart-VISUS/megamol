@@ -6,6 +6,8 @@
 #include "vector_field_call.h"
 
 #include "mmcore/Call.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/IntParam.h"
 #include "mmcore/utility/DataHash.h"
 
 #include "vislib/math/Rectangle.h"
@@ -14,6 +16,7 @@
 #include "tpf/data/tpf_grid.h"
 #include "tpf/math/tpf_vector.h"
 #include "tpf/stdext/tpf_hash.h"
+#include "tpf/utility/tpf_optional.h"
 
 #include <CGAL/Exact_predicates_exact_constructions_kernel.h>
 #include <CGAL/intersection_2.h>
@@ -39,7 +42,11 @@ namespace megamol
             vector_field_slot("get_vector_field", "Vector field input"),
             vector_field_hash(-1),
             critical_points_slot("get_critical_points", "Critical points input"),
-            critical_points_hash(-1)
+            critical_points_hash(-1),
+            initial_timestep("initial_timestep", "Initial time step for stream line integration"),
+            maximum_timestep("maximum_timestep", "Maximum time step for stream line integration"),
+            maximum_error("maximum_error", "Maximum error of the time step for stream line integration"),
+            poincare_iterations("poincare_iterations", "Number of iterations for the final periodic orbit")
         {
             // Connect output
             this->glyph_slot.SetCallback(glyph_data_call::ClassName(), glyph_data_call::FunctionName(0), &periodic_orbits::get_glyph_data_callback);
@@ -55,6 +62,19 @@ namespace megamol
 
             this->critical_points_slot.SetCompatibleCall<glyph_data_call::glyph_data_description>();
             this->MakeSlotAvailable(&this->critical_points_slot);
+
+            // Set parameters
+            this->initial_timestep << new core::param::FloatParam(0.01f);
+            this->MakeSlotAvailable(&this->initial_timestep);
+
+            this->maximum_timestep << new core::param::FloatParam(0.01f);
+            this->MakeSlotAvailable(&this->maximum_timestep);
+
+            this->maximum_error << new core::param::FloatParam(0.00001f);
+            this->MakeSlotAvailable(&this->maximum_error);
+
+            this->poincare_iterations << new core::param::IntParam(50);
+            this->MakeSlotAvailable(&this->poincare_iterations);
         }
 
         periodic_orbits::~periodic_orbits()
@@ -183,11 +203,11 @@ namespace megamol
             {
                 const Eigen::Vector2f seed(get_mouse_coordinates->get_coordinates().first, get_mouse_coordinates->get_coordinates().second);
 
-                vislib::sys::Log::DefaultLog.WriteInfo("Starting stream line at [%.5f, %.5f]", seed[0], seed[1]);
-
                 // Seed a stream lines
                 for (float sign = -1.0f; sign <= 1.0f; sign += 2.0f)
                 {
+                    vislib::sys::Log::DefaultLog.WriteInfo("Starting %s stream line at [%.5f, %.5f]", (sign < 0) ? "backward" : "forward", seed[0], seed[1]);
+
                     auto periodic_orbit = extract_periodic_orbit(this->grid, this->critical_points, seed, sign);
 
                     if (!periodic_orbit.empty())
@@ -198,6 +218,8 @@ namespace megamol
                         {
                             this->glyph_hash = static_cast<SIZE_T>(core::utility::DataHash(this->glyph_hash, point[0], point[1]));
                         }
+
+                        vislib::sys::Log::DefaultLog.WriteInfo("Periodic orbit found at [%.5f, %.5f]", periodic_orbit[0][0], periodic_orbit[0][1]);
                     }
                     else
                     {
@@ -214,238 +236,169 @@ namespace megamol
         {
             using coords_t = typename tpf::data::grid<float, float, 2, 2>::coords_t;
 
-            float delta = 0.01f; // TODO
-            const float max_error = 0.000001f; // TODO
+            float delta = this->initial_timestep.Param<core::param::FloatParam>()->Value();
+            const float max_delta = this->maximum_timestep.Param<core::param::FloatParam>()->Value();
+            const float max_error = this->maximum_error.Param<core::param::FloatParam>()->Value();
 
-            bool no_orbit = false;
-
-            while (!no_orbit)
+            while (true)
             {
                 // Find turn
-                const auto visited_cells = find_turn(grid, critical_points, position, delta, sign, max_error);
+                const auto visited_cells = find_turn(grid, critical_points, position, delta, sign, max_error, max_delta);
 
-                if (!visited_cells.empty())
+                if (!visited_cells)
+                {
+                    vislib::sys::Log::DefaultLog.WriteWarn("Turn stopped");
+
+                    return std::vector<Eigen::Vector2f>();
+                }
+
+                if (!visited_cells->empty())
                 {
                     // Do a second turn and compare results
-                    const auto visited_cells_second_turn = find_turn(grid, critical_points, position, delta, sign, max_error, visited_cells.size());
+                    const auto valid_second_turn = validate_turn(grid, critical_points, position, delta, sign, max_error, max_delta, *visited_cells, true);
 
-                    if (visited_cells.size() == visited_cells_second_turn.size())
+                    if (valid_second_turn)
                     {
-                        bool match = true;
-
-                        for (auto it_first = visited_cells.begin(), it_second = visited_cells_second_turn.begin(); it_first != visited_cells.end(); ++it_first, ++it_second)
+                        // Look for possible exits
+                        auto vector_hash = [](const Eigen::Vector2f& coords) -> std::size_t
                         {
-                            if (*it_first != *it_second)
+                            return core::utility::DataHash(coords[0], coords[1]);
+                        };
+
+                        std::unordered_set<Eigen::Vector2f, decltype(vector_hash)> possible_exits(23, vector_hash);
+
+                        for (const auto& cell : *visited_cells)
+                        {
+                            possible_exits.insert(grid.get_node_coordinates(cell));
+                            possible_exits.insert(grid.get_node_coordinates(cell + coords_t(1, 0)));
+                            possible_exits.insert(grid.get_node_coordinates(cell + coords_t(0, 1)));
+                            possible_exits.insert(grid.get_node_coordinates(cell + coords_t(1, 1)));
+                        }
+
+                        // Backward integration from possible exits
+                        bool has_exit = false;
+
+                        for (auto possible_exit : possible_exits)
+                        {
+                            has_exit = validate_turn(grid, critical_points, possible_exit, delta, -sign, max_error, max_delta, *visited_cells, false);
+                            
+                            if (has_exit)
                             {
-                                match = false;
                                 break;
                             }
                         }
 
-                        // Look for possible exits
-                        if (match)
+                        // Use Poincaré map for finding the closed stream line
+                        if (!has_exit)
                         {
-                            auto vector_hash = [](const Eigen::Vector2f& coords) -> std::size_t
+                            // Extract edge
+                            const auto first_cell = *grid.find_cell(position);
+                            auto second_cell = first_cell;
+
+                            Eigen::Vector2f last_position = position;
+
+                            while (first_cell == second_cell)
                             {
-                                return core::utility::DataHash(coords[0], coords[1]);
-                            };
+                                const auto advected = advect_RK45(grid, position, delta, sign, max_error, max_delta);
 
-                            std::unordered_set<Eigen::Vector2f, decltype(vector_hash)> possible_exits(23, vector_hash);
+                                last_position = position;
 
-                            for (const auto& cell : visited_cells)
-                            {
-                                const coords_t right(1, 0);
-                                const coords_t top(0, 1);
+                                position = advected.first;
+                                delta = advected.second;
 
-                                possible_exits.insert(grid.get_node_coordinates(cell));
-                                possible_exits.insert(grid.get_node_coordinates(cell + right));
-                                possible_exits.insert(grid.get_node_coordinates(cell + top));
-                                possible_exits.insert(grid.get_node_coordinates(cell + right + top));
+                                second_cell = *grid.find_cell(position);
                             }
 
-                            // Backward integration from possible exits
-                            bool has_exit = false;
+                            const auto corner_bl = grid.get_node_coordinates(first_cell);
+                            const auto corner_br = grid.get_node_coordinates(first_cell + coords_t(1, 0));
+                            const auto corner_tl = grid.get_node_coordinates(first_cell + coords_t(0, 1));
+                            const auto corner_tr = grid.get_node_coordinates(first_cell + coords_t(1, 1));
 
-                            for (auto possible_exit : possible_exits)
+                            const kernel::Segment_2 edge_l(kernel::Point_2(corner_bl[0], corner_bl[1]), kernel::Point_2(corner_tl[0], corner_tl[1]));
+                            const kernel::Segment_2 edge_r(kernel::Point_2(corner_br[0], corner_br[1]), kernel::Point_2(corner_tr[0], corner_tr[1]));
+                            const kernel::Segment_2 edge_b(kernel::Point_2(corner_bl[0], corner_bl[1]), kernel::Point_2(corner_br[0], corner_br[1]));
+                            const kernel::Segment_2 edge_t(kernel::Point_2(corner_tl[0], corner_tl[1]), kernel::Point_2(corner_tr[0], corner_tr[1]));
+
+                            kernel::Segment_2 edge;
+                            CGAL::Orientation crossed_orientation;
+
                             {
-                                auto visited_cells_backward = find_turn(grid, critical_points, possible_exit, delta, -sign, max_error, visited_cells.size() + 1);
+                                const kernel::Segment_2 line(kernel::Point_2(last_position[0], last_position[1]), kernel::Point_2(position[0], position[1]));
 
-                                if (visited_cells.size() == visited_cells_backward.size() - 1)
+                                if (CGAL::do_intersect(line, edge_l))
                                 {
-                                    visited_cells_backward.erase(visited_cells_backward.begin());
+                                    edge = edge_l;
+                                }
+                                else if (CGAL::do_intersect(line, edge_r))
+                                {
+                                    edge = edge_r;
+                                }
+                                else if (CGAL::do_intersect(line, edge_b))
+                                {
+                                    edge = edge_b;
+                                }
+                                else if (CGAL::do_intersect(line, edge_t))
+                                {
+                                    edge = edge_t;
                                 }
 
-                                if (visited_cells.size() == visited_cells_backward.size())
-                                {
-                                    bool is_exit = true;
-
-                                    for (const auto& cell_backward : visited_cells_backward)
-                                    {
-                                        if (std::find(visited_cells.begin(), visited_cells.end(), cell_backward) == visited_cells.end())
-                                        {
-                                            is_exit = false;
-                                            break;
-                                        }
-                                    }
-
-                                    has_exit = is_exit;
-                                }
+                                crossed_orientation = CGAL::orientation(edge.source(), edge.target(), kernel::Point_2(position[0], position[1]));
                             }
 
-                            // Use Poincaré map for finding the closed stream line
-                            if (!has_exit)
+                            // Start stream line at the edge
+                            std::vector<Eigen::Vector2f> periodic_orbit;
+                            const std::size_t num_iterations = static_cast<std::size_t>(this->poincare_iterations.Param<core::param::IntParam>()->Value());
+
+                            for (std::size_t i = 0; i < num_iterations; ++i)
                             {
-                                /*// Extract edge
-                                const auto first_cell = *grid.find_cell(position);
-                                auto second_cell = first_cell;
+                                const kernel::Point_2 start_point = edge.source() + 0.5 * (edge.target() - edge.source());
+                                position = Eigen::Vector2f(static_cast<float>(CGAL::to_double(start_point[0])), static_cast<float>(CGAL::to_double(start_point[1])));
 
-                                Eigen::Vector2f last_position = position;
+                                bool halfway = false;
 
-                                while (first_cell == second_cell)
+                                while (!(halfway && CGAL::orientation(edge.source(), edge.target(), kernel::Point_2(position[0], position[1])) == crossed_orientation))
                                 {
-                                    const auto advected = advect_RK45(grid, position, delta, sign, max_error);
-
-                                    last_position = position;
-
-                                    position = advected.first;
-                                    delta = advected.second;
-
-                                    second_cell = *grid.find_cell(position);
-                                }
-
-                                using kernel = CGAL::Exact_predicates_exact_constructions_kernel;
-
-                                const auto corner_bl = grid.get_node_coordinates(first_cell);
-                                const auto corner_br = grid.get_node_coordinates(first_cell + coords_t(1, 0));
-                                const auto corner_tl = grid.get_node_coordinates(first_cell + coords_t(0, 1));
-                                const auto corner_tr = grid.get_node_coordinates(first_cell + coords_t(1, 1));
-
-                                const kernel::Segment_2 edge_l(kernel::Point_2(corner_bl[0], corner_bl[1]), kernel::Point_2(corner_tl[0], corner_tl[1]));
-                                const kernel::Segment_2 edge_r(kernel::Point_2(corner_br[0], corner_br[1]), kernel::Point_2(corner_tr[0], corner_tr[1]));
-                                const kernel::Segment_2 edge_b(kernel::Point_2(corner_bl[0], corner_bl[1]), kernel::Point_2(corner_br[0], corner_br[1]));
-                                const kernel::Segment_2 edge_t(kernel::Point_2(corner_tl[0], corner_tl[1]), kernel::Point_2(corner_tr[0], corner_tr[1]));
-
-                                kernel::Segment_2 edge;
-
-                                {
-                                    const kernel::Point_2 start(last_position[0], last_position[1]);
-                                    const kernel::Point_2 end(position[0], position[1]);
-
-                                    const kernel::Segment_2 line(start, end);
-
-                                    if (CGAL::do_intersect(line, edge_l))
-                                    {
-                                        edge = edge_l;
-                                    }
-                                    else if (CGAL::do_intersect(line, edge_r))
-                                    {
-                                        edge = edge_r;
-                                    }
-                                    else if (CGAL::do_intersect(line, edge_b))
-                                    {
-                                        edge = edge_b;
-                                    }
-                                    else if (CGAL::do_intersect(line, edge_t))
-                                    {
-                                        edge = edge_t;
-                                    }
-                                    else
-                                    {
-                                        // Must not happen!
-                                        vislib::sys::Log::DefaultLog.WriteError("Argh!");
-
-                                        return std::vector<Eigen::Vector2f>();
-                                    }
-                                }
-
-                                // Start stream line at edge
-                                for (std::size_t i = 0; i < 10; ++i)
-                                {
-                                    const kernel::Point_2 start_point = edge.source() + 0.5 * (edge.target() - edge.source());
-                                    position = Eigen::Vector2f(static_cast<float>(CGAL::to_double(start_point[0])), static_cast<float>(CGAL::to_double(start_point[1])));
-
-                                    std::size_t cell_index = 0;
-
-                                    while (cell_index < visited_cells.size())
-                                    {
-                                        const auto advected = advect_RK45(grid, position, delta, sign, max_error);
-
-                                        const Eigen::Vector2f old_position = position;
-
-                                        position = advected.first;
-                                        delta = advected.second;
-
-                                        // Check entry into new cell
-                                        const auto old_cell = grid.find_cell(old_position);
-                                        const auto new_cell = grid.find_cell(position);
-
-                                        if (*old_cell != *new_cell)
-                                        {
-                                            ++cell_index;
-                                        }
-                                    }
-
-                                    const kernel::Point_2 end_point(position[0], position[1]);
-
-                                    if ((edge.source() - end_point).squared_length() < (edge.target() - end_point).squared_length())
-                                    {
-                                        edge = kernel::Segment_2(edge.source(), start_point);
-                                    }
-                                    else
-                                    {
-                                        edge = kernel::Segment_2(edge.target(), start_point);
-                                    }
-                                }*/
-
-                                // Start output stream line
-                                std::size_t cell_index = 0;
-
-                                std::vector<Eigen::Vector2f> periodic_orbit;
-                                periodic_orbit.push_back(position);
-
-                                while (cell_index < visited_cells.size())
-                                {
-                                    const auto advected = advect_RK45(grid, position, delta, sign, max_error);
+                                    const auto advected = advect_RK45(grid, position, delta, sign, max_error, max_delta);
 
                                     const Eigen::Vector2f old_position = position;
 
                                     position = advected.first;
                                     delta = advected.second;
 
-                                    // Check entry into new cell
-                                    const auto old_cell = grid.find_cell(old_position);
-                                    const auto new_cell = grid.find_cell(position);
-
-                                    if (*old_cell != *new_cell)
+                                    if (!halfway && CGAL::orientation(edge.source(), edge.target(), kernel::Point_2(position[0], position[1])) != crossed_orientation)
                                     {
-                                        ++cell_index;
+                                        halfway = true;
                                     }
 
-                                    periodic_orbit.push_back(position);
+                                    if (i == num_iterations - 1)
+                                    {
+                                        periodic_orbit.push_back(position);
+                                    }
                                 }
 
-                                return periodic_orbit;
+                                const kernel::Point_2 end_point(position[0], position[1]);
+
+                                if ((edge.source() - end_point).squared_length() < (edge.target() - end_point).squared_length())
+                                {
+                                    edge = kernel::Segment_2(edge.source(), start_point);
+                                }
+                                else
+                                {
+                                    edge = kernel::Segment_2(start_point, edge.target());
+                                }
                             }
+
+                            periodic_orbit.push_back(periodic_orbit.front());
+
+                            return periodic_orbit;
                         }
                     }
-                    else if (visited_cells_second_turn.empty())
-                    {
-                        vislib::sys::Log::DefaultLog.WriteInfo("Second turn stopped");
-                        no_orbit = true;
-                    }
-                }
-                else
-                {
-                    vislib::sys::Log::DefaultLog.WriteInfo("Turn stopped");
-                    no_orbit = true;
                 }
             }
-
-            return std::vector<Eigen::Vector2f>();
         }
 
         std::pair<Eigen::Vector2f, float> periodic_orbits::advect_RK45(const tpf::data::grid<float, float, 2, 2>& grid,
-            const Eigen::Vector2f& position, float delta, const float sign, const float max_error) const
+            const Eigen::Vector2f& position, float delta, const float sign, const float max_error, const float max_delta) const
         {
             // Cash-Karp parameters
             constexpr float b_21 = 0.2f;
@@ -519,7 +472,7 @@ namespace megamol
                 else
                 {
                     // Error (too) small, increase time step
-                    delta = std::min(0.01f, delta * std::min(max_growth, safety * powf(error, grow_exponent))); // TODO
+                    delta = std::min(max_delta, delta * std::min(max_growth, safety * powf(error, grow_exponent)));
                     decreased = false;
                 }
 
@@ -530,9 +483,8 @@ namespace megamol
             return std::make_pair(output_position, delta);
         }
 
-        std::list<typename tpf::data::grid<float, float, 2, 2>::coords_t> periodic_orbits::find_turn(const tpf::data::grid<float, float, 2, 2>& grid,
-            const std::vector<Eigen::Vector2f>& critical_points, Eigen::Vector2f& position, float& delta, const float sign, const float max_error,
-            const std::size_t max_new_cells) const
+        tpf::utility::optional<std::list<typename tpf::data::grid<float, float, 2, 2>::coords_t>> periodic_orbits::find_turn(const tpf::data::grid<float, float, 2, 2>& grid,
+            const std::vector<Eigen::Vector2f>& critical_points, Eigen::Vector2f& position, float& delta, const float sign, const float max_error, const float max_delta) const
         {
             using coords_t = typename tpf::data::grid<float, float, 2, 2>::coords_t;
 
@@ -547,9 +499,9 @@ namespace megamol
 
             bool found_turn = false;
 
-            while (!found_turn && num_cells_visited < max_new_cells)
+            while (!found_turn)
             {
-                const auto advected = advect_RK45(grid, position, delta, sign, max_error);
+                const auto advected = advect_RK45(grid, position, delta, sign, max_error, max_delta);
 
                 const Eigen::Vector2f old_position = position;
 
@@ -559,68 +511,23 @@ namespace megamol
                 if (position == old_position)
                 {
                     // Advection had no result; stream line stopped
-                    return std::list<coords_t>();
+                    return tpf::utility::nullopt;
                 }
 
                 // Check entry into new cell
-                auto old_cell = *grid.find_cell(old_position);
+                const auto old_cell = *grid.find_cell(old_position);
                 const auto new_cell = grid.find_cell(position);
 
                 if (!new_cell)
                 {
                     // Advection went out-of-bounds
-                    return std::list<coords_t>();
+                    return tpf::utility::nullopt;
                 }
 
                 if (old_cell != *new_cell)
                 {
-                    std::vector<coords_t> current_cells;
-                    
-                    // Add cell which was overstepped
-                    coords_t direction = *new_cell - old_cell;
-                    
-                    while (direction[0] != 0 && direction[1] != 0)
-                    {
-                        const auto corner_bl = grid.get_node_coordinates(old_cell);
-                        const auto corner_br = grid.get_node_coordinates(old_cell + coords_t(1, 0));
-                        const auto corner_tl = grid.get_node_coordinates(old_cell + coords_t(0, 1));
-                        const auto corner_tr = grid.get_node_coordinates(old_cell + coords_t(1, 1));
-
-                        using kernel = CGAL::Exact_predicates_exact_constructions_kernel;
-
-                        const kernel::Segment_2 edge_l(kernel::Point_2(corner_bl[0], corner_bl[1]), kernel::Point_2(corner_tl[0], corner_tl[1]));
-                        const kernel::Segment_2 edge_r(kernel::Point_2(corner_br[0], corner_br[1]), kernel::Point_2(corner_tr[0], corner_tr[1]));
-                        const kernel::Segment_2 edge_b(kernel::Point_2(corner_bl[0], corner_bl[1]), kernel::Point_2(corner_br[0], corner_br[1]));
-                        const kernel::Segment_2 edge_t(kernel::Point_2(corner_tl[0], corner_tl[1]), kernel::Point_2(corner_tr[0], corner_tr[1]));
-
-                        const kernel::Segment_2 displacement(kernel::Point_2(old_position[0], old_position[1]), kernel::Point_2(position[0], position[1]));
-
-                        const auto intersect_l = CGAL::do_intersect(displacement, edge_l);
-                        const auto intersect_r = CGAL::do_intersect(displacement, edge_r);
-                        const auto intersect_b = CGAL::do_intersect(displacement, edge_b);
-                        const auto intersect_t = CGAL::do_intersect(displacement, edge_t);
-
-                        if (intersect_l && old_position[0] > position[0])
-                        {
-                            current_cells.push_back(old_cell - coords_t(1, 0));
-                        }
-                        else if (intersect_r && old_position[0] < position[0])
-                        {
-                            current_cells.push_back(old_cell + coords_t(1, 0));
-                        }
-                        else if (intersect_b && old_position[1] > position[1])
-                        {
-                            current_cells.push_back(old_cell - coords_t(0, 1));
-                        }
-                        else if (intersect_t && old_position[1] < position[1])
-                        {
-                            current_cells.push_back(old_cell + coords_t(0, 1));
-                        }
-
-                        // Set new old cell
-                        old_cell = current_cells.back();
-                        direction = *new_cell - old_cell;
-                    }
+                    // Add cells that were overstepped
+                    auto current_cells = get_cells(grid, old_cell, *new_cell, old_position, position);
 
                     current_cells.push_back(*new_cell);
 
@@ -659,6 +566,8 @@ namespace megamol
                             }
                             else
                             {
+                                found_turn = false;
+
                                 visited_cells.push_back(current_cell);
                             }
                         }
@@ -672,13 +581,138 @@ namespace megamol
                         // Return, if stuck in a loop with a critical point
                         if (num_critical_point_visits == 1000)
                         {
-                            return std::list<coords_t>();
+                            return tpf::utility::nullopt;
                         }
                     }
                 }
             }
 
+            // Return results
             return visited_cells;
+        }
+
+        bool periodic_orbits::validate_turn(const tpf::data::grid<float, float, 2, 2>& grid, const std::vector<Eigen::Vector2f>& critical_points, Eigen::Vector2f& position,
+            float& delta, const float sign, const float max_error, const float max_delta, const std::list<coords_t>& comparison, const bool strict) const
+        {
+            // Initialize comparison
+            auto compare_it = comparison.begin();
+
+            if (strict && *grid.find_cell(position) != *compare_it)
+            {
+                return false;
+            }
+
+            if (strict || std::find(comparison.begin(), comparison.end(), *grid.find_cell(position)) != comparison.end())
+            {
+                ++compare_it;
+            }
+
+            // Advect stream line while it corresponds to the input list of cells
+            while (compare_it != comparison.end())
+            {
+                const auto advected = advect_RK45(grid, position, delta, sign, max_error, max_delta);
+
+                const Eigen::Vector2f old_position = position;
+
+                position = advected.first;
+                delta = advected.second;
+
+                if (position == old_position)
+                {
+                    // Advection had no result; stream line stopped
+                    return false;
+                }
+
+                // Check entry into new cell
+                const auto old_cell = *grid.find_cell(old_position);
+                const auto new_cell = grid.find_cell(position);
+
+                if (!new_cell)
+                {
+                    // Advection went out-of-bounds
+                    return false;
+                }
+
+                if (old_cell != *new_cell)
+                {
+                    // Add cells that were overstepped
+                    auto current_cells = get_cells(grid, old_cell, *new_cell, old_position, position);
+
+                    current_cells.push_back(*new_cell);
+
+                    // Check cells
+                    for (auto cell_it = current_cells.begin(); cell_it != current_cells.end() && compare_it != comparison.end(); ++cell_it)
+                    {
+                        const auto& current_cell = *cell_it;
+
+                        if (strict && current_cell != *compare_it)
+                        {
+                            return false;
+                        }
+
+                        if (!strict && std::find(comparison.begin(), comparison.end(), current_cell) == comparison.end())
+                        {
+                            return false;
+                        }
+
+                        ++compare_it;
+                    }
+                }
+            }
+
+            // Return results
+            return true;
+        }
+
+        std::vector<periodic_orbits::coords_t> periodic_orbits::get_cells(const tpf::data::grid<float, float, 2, 2>& grid, coords_t source,
+            const coords_t& target, const Eigen::Vector2f& source_position, const Eigen::Vector2f& target_position) const
+        {
+            std::vector<coords_t> intermediate_cells;
+
+            coords_t direction = target - source;
+
+            while (direction[0] != 0 && direction[1] != 0)
+            {
+                const auto corner_bl = grid.get_node_coordinates(source);
+                const auto corner_br = grid.get_node_coordinates(source + coords_t(1, 0));
+                const auto corner_tl = grid.get_node_coordinates(source + coords_t(0, 1));
+                const auto corner_tr = grid.get_node_coordinates(source + coords_t(1, 1));
+
+                const kernel::Segment_2 edge_l(kernel::Point_2(corner_bl[0], corner_bl[1]), kernel::Point_2(corner_tl[0], corner_tl[1]));
+                const kernel::Segment_2 edge_r(kernel::Point_2(corner_br[0], corner_br[1]), kernel::Point_2(corner_tr[0], corner_tr[1]));
+                const kernel::Segment_2 edge_b(kernel::Point_2(corner_bl[0], corner_bl[1]), kernel::Point_2(corner_br[0], corner_br[1]));
+                const kernel::Segment_2 edge_t(kernel::Point_2(corner_tl[0], corner_tl[1]), kernel::Point_2(corner_tr[0], corner_tr[1]));
+
+                const kernel::Segment_2 displacement(kernel::Point_2(source_position[0], source_position[1]), kernel::Point_2(target_position[0], target_position[1]));
+
+                const auto intersect_l = CGAL::do_intersect(displacement, edge_l);
+                const auto intersect_r = CGAL::do_intersect(displacement, edge_r);
+                const auto intersect_b = CGAL::do_intersect(displacement, edge_b);
+                const auto intersect_t = CGAL::do_intersect(displacement, edge_t);
+
+                if (intersect_l && source_position[0] > target_position[0])
+                {
+                    intermediate_cells.push_back(source - coords_t(1, 0));
+                }
+                else if (intersect_r && source_position[0] < target_position[0])
+                {
+                    intermediate_cells.push_back(source + coords_t(1, 0));
+                }
+                else if (intersect_b && source_position[1] > target_position[1])
+                {
+                    intermediate_cells.push_back(source - coords_t(0, 1));
+                }
+                else if (intersect_t && source_position[1] < target_position[1])
+                {
+                    intermediate_cells.push_back(source + coords_t(0, 1));
+                }
+
+                // Set new old cell
+                source = intermediate_cells.back();
+                direction = target - source;
+            }
+
+            return intermediate_cells;
         }
     }
 }
