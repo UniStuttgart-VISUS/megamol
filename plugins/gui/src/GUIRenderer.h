@@ -1145,8 +1145,12 @@ bool GUIRenderer<M, C>::renderGUI(vislib::math::Rectangle<int> viewport, double 
     if (this->get_inst_name) {
         // Parent's name of a module is the name of the instance the module belongs to.
         this->inst_name = this->Parent()->FullName().PeekBuffer();
-        this->inst_name.append("::"); /// Required string search format to prevent ambiguity: "::<INSTANCE_NAME>::"
-        printf("[DEBUG] >>>>>>>>>>>>>>>>>> INSTANCE NAME: %s  \n", this->inst_name.c_str());
+        if (this->inst_name == "::") {
+            this->inst_name.clear();
+        } else {
+            /// Required to prevent ambiguity: "::<INSTANCE_NAME>::"
+            this->inst_name.append("::");
+        }
         this->get_inst_name = false;
     }
 
