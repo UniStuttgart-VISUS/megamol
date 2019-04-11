@@ -1412,7 +1412,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawParametersCallback(std::
                     tmp_win.show = true;
                     // tmp_win.hotkey = core::view::KeyCode();
                     tmp_win.reset = false;
-                    tmp_win.flags = ImGuiWindowFlags_HorizontalScrollbar;
+                    tmp_win.flags = ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_AlwaysAutoResize;
                     tmp_win.func = &GUIRenderer<M, C>::drawParametersCallback;
                     tmp_win.param_hotkeys_show = false;
                     tmp_win.param_mods.emplace_back(label);
