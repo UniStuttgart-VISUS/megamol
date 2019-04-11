@@ -1292,6 +1292,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawParametersCallback(std::
     bool param_namespace_open = true;
 
     this->GetCoreInstance()->EnumParameters([&, this](const auto& mod, auto& slot) {
+        // Check for new module
         if (current_mod != &mod) {
             current_mod = &mod;
             std::string label = mod.FullName().PeekBuffer();
@@ -1368,7 +1369,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawParametersCallback(std::
         }
 
         if (current_mod_open) {
-
+            // Check for new parameter namespace
             std::string param_name = slot.Name().PeekBuffer();
             auto pos = param_name.find("::");
             std::string current_param_namespace = "";
@@ -1376,6 +1377,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawParametersCallback(std::
                 current_param_namespace = param_name.substr(0, pos);
             }
             if (current_param_namespace != param_namespace) {
+
                 param_namespace = current_param_namespace;
 
                 while (param_indent_stack > 0) {
@@ -1383,6 +1385,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawParametersCallback(std::
                     ImGui::Unindent();
                 }
 
+                ImGui::Separator();
                 if (!param_namespace.empty()) {
                     ImGui::Indent();
                     std::string label = param_namespace + "###" + param_namespace + "__" + param_name;
@@ -1393,6 +1396,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawParametersCallback(std::
                 }
             }
 
+            // Draw parameter
             if (param_namespace_open) {
                 if (win->param_hotkeys_show) {
                     this->drawParameterHotkey(mod, slot);
