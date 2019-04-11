@@ -36,6 +36,7 @@ bool megamol::ngmesh::GlTFFileLoader::getDataCallback(core::Call & caller)
 	if (cd == NULL)
 		return false;
 
+	cd->clearUpdateFlag();
 	m_update_flag = std::max(0, m_update_flag-1);
 
 	if (this->m_glTFFilename_slot.IsDirty())
