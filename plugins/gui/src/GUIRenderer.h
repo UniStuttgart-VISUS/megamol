@@ -1270,12 +1270,13 @@ template <class M, class C> void GUIRenderer<M, C>::drawParametersCallback(std::
     win->param_hotkeys_show = show_only_hotkeys;
 
     std::map<int, std::string> opts;
-    opts[0] = "All Modules.";
-    opts[1] = "Modules with same INSATNCE Name as current View and with no Instance Name.";
-    opts[2] = "Modules connected to superior VIEW Module of this GUI Module.";
+    opts[0] = "All";
+    opts[1] = "Instance";
+    opts[2] = "View";
     int opts_cnt = opts.size();
     if (ImGui::BeginCombo("Module Filter", opts[this->param_module_filter_mode].c_str())) {
         for (int i = 0; i < opts_cnt; ++i) {
+
             if (ImGui::Selectable(opts[i].c_str(), (this->param_module_filter_mode == i))) {
                 this->param_module_filter_mode = i;
                 this->param_considered_modules.clear();
@@ -1308,7 +1309,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawParametersCallback(std::
                     this->GetCoreInstance()->EnumModulesNoLock(nullptr, view_func);
 
                     if (!viewname.empty()) {
-                        if (this->param_module_filter_mode == 2) {
+                        if (this->param_module_filter_mode == 1) {
                             // Considering modules depending on the INSTANCE NAME of the first view this gui renderer is
                             // connected to.
                             std::string instname = "";
@@ -1327,7 +1328,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawParametersCallback(std::
                                 };
                                 this->GetCoreInstance()->EnumModulesNoLock(nullptr, func);
                             }
-                        } else {
+                        } else { // (this->param_module_filter_mode == 2)
                             // Considering modules depending on their connection to the first VIEW this gui renderer is
                             // connected to.
                             const auto add_func = [&, this](core::Module* mod) {
@@ -1342,11 +1343,18 @@ template <class M, class C> void GUIRenderer<M, C>::drawParametersCallback(std::
                     }
                 }
             }
+            std::string hover = "Show all Modules.";
+            if (i == 1) {
+                hover = "Show Modules with same Instance Name as current View and Modules with no Instance Name.";
+            } else if (i == 2) {
+                hover = "Show Modules connected to superior View Module this GUI Module is connected to.";
+            }
+            this->HoverToolTip(hover);
         }
         ImGui::EndCombo();
     }
-    this->HelpMarkerToolTip(
-        "Selected filter is not refreshed on graph changes.\nSelect filter again to trigger refresh.");
+    this->HelpMarkerToolTip("Filter applies globally to all parameter windows.\nSelected filter is not refreshed on "
+                            "graph changes.\nSelect filter again to trigger refresh.");
     ImGui::Separator();
 
     // Listing parameters
