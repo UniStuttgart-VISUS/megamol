@@ -72,7 +72,7 @@ imageviewer2::ImageViewer::ImageViewer(void)
     this->firstSlot << new param::ButtonParam();
     this->firstSlot.SetUpdateCallback(&ImageViewer::onFirstPressed);
     this->MakeSlotAvailable(&this->firstSlot);
-    this->previousSlot << new param::ButtonParam(264); // pageup
+    this->previousSlot << new param::ButtonParam(core::view::Key::KEY_PAGE_UP);
     this->previousSlot.SetUpdateCallback(&ImageViewer::onPreviousPressed);
     this->MakeSlotAvailable(&this->previousSlot);
 
@@ -80,7 +80,7 @@ imageviewer2::ImageViewer::ImageViewer(void)
     this->currentSlot.SetUpdateCallback(&ImageViewer::onCurrentSet);
     this->MakeSlotAvailable(&this->currentSlot);
 
-    this->nextSlot << new param::ButtonParam(265); // pagedown
+    this->nextSlot << new param::ButtonParam(core::view::Key::KEY_PAGE_DOWN);
     this->nextSlot.SetUpdateCallback(&ImageViewer::onNextPressed);
     this->MakeSlotAvailable(&this->nextSlot);
     this->lastSlot << new param::ButtonParam();

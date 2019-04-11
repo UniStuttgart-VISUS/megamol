@@ -27,11 +27,10 @@ enum geometryTypeEnum {
     STREAMLINES,
     CYLINDERS,
     PBS,
-    PKD,
-    AOVSPHERES
+    PKD
 };
 
-enum volumeTypeEnum { STRUCTUREDVOLUME, BLOCKBRICKEDVOLUME, GHOSTBLOCKBRICKEDVOLUME, OSPRAY_API_VOLUME };
+enum volumeTypeEnum { STRUCTUREDVOLUME, BLOCKBRICKEDVOLUME, GHOSTBLOCKBRICKEDVOLUME };
 
 enum volumeRepresentationType { VOLUMEREP, ISOSURFACE, SLICE };
 
@@ -84,7 +83,7 @@ public:
     std::shared_ptr<megamol::core::BoundingBoxes> boundingBox; //< TODO data duplicate to extent container ... however,
                                                                // this makes access more concise in the renderer
 
-    std::vector<std::pair<void*, structureTypeEnum>> ospStructures;
+    std::pair<std::vector<void*>,structureTypeEnum> ospStructures;
 
     unsigned int voxelCount;
     unsigned int maxDim;

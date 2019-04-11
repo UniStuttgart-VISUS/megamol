@@ -118,7 +118,7 @@ protected:
     core::param::ParamSlot AOtransparencyEnabled;
     core::param::ParamSlot AOsamples;
     core::param::ParamSlot AOdistance;
-    core::param::ParamSlot extraSamles;
+    core::param::ParamSlot accumulateSlot;
 
     core::param::ParamSlot rd_epsilon;
     core::param::ParamSlot rd_spp;

@@ -142,6 +142,7 @@ public:
         return indices.size();
     }
 
+    // TODO: this never seems to be used! why is that???
     // Returns the distance between the vector "p1[0:size-1]" and the data point with index "idx_p2" stored in the class:
     inline coord_t kdtree_distance(const coord_t *p1, const size_t idx_p2, size_t /*size*/) const {
         float const *p2 = get_position(idx_p2);
@@ -150,7 +151,7 @@ public:
         const coord_t d1 = p1[1] - p2[1];
         const coord_t d2 = p1[2] - p2[2];
 
-        return d0 * d0 + d1 * d1 + d2 * d2;
+        return sqrt(d0 * d0 + d1 * d1 + d2 * d2);
     }
 
     // Returns the dim'th component of the idx'th point in the class:

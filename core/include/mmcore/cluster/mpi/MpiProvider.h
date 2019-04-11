@@ -129,7 +129,7 @@ namespace mpi {
          *
          * @return true in case of success, false otherwise.
          */
-        static bool initialiseMpi(const int colour);
+        bool initialiseMpi(const int colour);
 
         /** Call for retrieving the communicator and other MPI-related data. */
         CalleeSlot callProvideMpi;
@@ -152,7 +152,7 @@ namespace mpi {
          * This atomic also serves as lock that prevents multiple
          * initialisations (enter of critical section).
          */
-        static std::atomic<int> activeNodeColour;
+        std::atomic<int> activeNodeColour;
 
 #ifdef WITH_MPI
         /**
@@ -160,7 +160,7 @@ namespace mpi {
          * is MPI_COMM_NULL, it indicates that node colouring has not yet been
          * performed.
          */
-        static std::atomic<MPI_Comm> comm;
+        std::atomic<MPI_Comm> comm;
 #endif /* WITH_MPI */
 
         /**
@@ -168,7 +168,7 @@ namespace mpi {
          * it will also finalise it if the last one was destroyed. Otherwise,
          * someone else is responsible for doing so.
          */
-        static bool isMpiOwner;
+        // static bool isMpiOwner;
     };
 
 } /* end namespace mpi */

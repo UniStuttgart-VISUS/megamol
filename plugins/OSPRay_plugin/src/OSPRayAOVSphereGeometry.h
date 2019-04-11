@@ -5,14 +5,15 @@
  */
 #pragma once
 
-#include "OSPRay_plugin/AbstractOSPRayStructure.h"
 #include "mmcore/CallerSlot.h"
+#include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
+#include "mmcore/Module.h"
 
 namespace megamol {
 namespace ospray {
 
-class OSPRayAOVSphereGeometry : public AbstractOSPRayStructure {
+class OSPRayAOVSphereGeometry : public core::Module {
 
 public:
     /**
@@ -58,11 +59,13 @@ protected:
     virtual bool create();
     virtual void release();
 
-    virtual bool readData(core::Call& call);
-    virtual bool getExtends(core::Call& call);
-
+    bool getDataCallback(core::Call& call);
+    bool getExtendsCallback(core::Call& call);
+    bool getDirtyCallback(core::Call& call);
 
     bool InterfaceIsDirty();
+
+    bool InterfaceIsDirtyNoReset() const;
 
     core::param::ParamSlot samplingRateSlot;
 
@@ -75,6 +78,8 @@ protected:
 
     core::CallerSlot getVolSlot;
 
+    core::CalleeSlot deployStructureSlot;
+
     size_t volDatahash;
 
     unsigned int volFrameID;
@@ -83,6 +88,10 @@ private:
     // color transfer data
     unsigned int tex_size;
 
+    size_t datahash;
+
+    size_t time;
+
     std::pair<float, float> valuerange;
 
     std::vector<float> gridorigin;
@@ -90,8 +99,6 @@ private:
     std::vector<float> gridspacing;
 
     std::vector<int> dimensions;
-
-    std::vector<std::pair<void*, structureTypeEnum>> ospStructures;
 
     long long int ispcLimit = 1ULL << 30;
 };

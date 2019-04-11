@@ -16,7 +16,7 @@ vec3 LocalLighting(const in vec3 ray, const in vec3 normal, const in vec3 lightP
     float nDOTl = dot(normal, lightDir);
 
     vec3 r = normalize(2.0 * vec3(nDOTl) * normal - lightDir);
-    return LIGHT_AMBIENT * color 
-        + LIGHT_DIFFUSE * color * max(nDOTl, 0.0) 
-        + LIGHT_SPECULAR * vec3(pow(max(dot(r, -ray), 0.0), LIGHT_EXPONENT));
+    return LIGHT_AMBIENT  * color 
+         + LIGHT_DIFFUSE  * color * max(nDOTl, 0.0) 
+         + LIGHT_SPECULAR * vec3(pow(max(dot(r, -ray), 0.0), LIGHT_EXPONENT));
 }

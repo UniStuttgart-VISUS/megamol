@@ -11,6 +11,9 @@
 #include "mmcore/api/MegaMolCore.std.h"
 #include "AbstractParam.h"
 
+#include <array>
+		
+
 namespace megamol {
 namespace core {
 namespace param {
@@ -21,15 +24,22 @@ namespace param {
  */
 class MEGAMOLCORE_API ColorParam : public AbstractParam {
 public:
-	//XXX: this sucks pretty hard, because coping array requires memcpy or loops. Replace with a class that has an assignment operator!
-    typedef float Type[4];
+
+    typedef std::array<float, 4> ColorType;
 
     /**
      * Ctor.
      *
      * @param initVal The initial value
      */
-    ColorParam(const Type& initVal);
+    ColorParam(const ColorType& initVal);
+
+    /**
+     * Ctor.
+     *
+     * @param initVal The initial value
+     */
+    ColorParam(const float& initR, const float& initG, const float& initB, const float& initA);
 
     /**
      * Ctor.
@@ -77,27 +87,51 @@ public:
     * @param setDirty If 'true' the dirty flag of the owning parameter
     *                 slot is set and the update callback might be called.
     */
-    void SetValue(const Type& v, bool setDirty = true);
+    void SetValue(const ColorType& v, bool setDirty = true);
 
     /**
     * Gets the value of the parameter
     *
     * @return The value of the parameter
     */
-    inline const Type& Value(void) const {
+    inline const ColorType& Value(void) const {
         return this->val;
+    }
+
+    /**
+    * Gets the value of the parameter
+    *
+    * @return The value of the parameter
+    */
+    inline const void Value(float& outR, float& outG, float& outB, float& outA) const {
+        outR = this->val[0];
+        outG = this->val[1];
+        outB = this->val[2];
+        outA = this->val[3];
+    }
+
+    /**
+    * Gets the value of the parameter
+    *
+    * @return The value of the parameter
+    */
+    inline const void Value(float& outR, float& outG, float& outB) const {
+        float a;
+        this->Value(outR, outG, outB, a);
     }
 
     /**
      * Returns a 32bit RGBA color.
      */
-    inline operator const float*(void) const { 
+    inline operator const ColorType(void) const { 
         return this->val;
     }
 
 private:
+
     /** The value of the parameter */
-    Type val;
+    ColorType val;
+
 }; /* end class ColorParam */
 
 } /* end namespace param */

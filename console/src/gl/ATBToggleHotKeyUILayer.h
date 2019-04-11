@@ -22,7 +22,7 @@ namespace gl {
     class ATBToggleHotKeyUILayer : public AbstractUILayer {
     public:
 
-        ATBToggleHotKeyUILayer(Window& wnd, ATBUILayer& atbLayer);
+        ATBToggleHotKeyUILayer(ATBUILayer& atbLayer);
         virtual ~ATBToggleHotKeyUILayer();
 
         virtual bool Enabled();

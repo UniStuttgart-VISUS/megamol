@@ -23,6 +23,7 @@
 #include "mmcore/api/MegaMolCore.h"
 #include "AbstractUILayer.h"
 #include "vislib/graphics/FpsCounter.h"
+#include "UILayersCollection.hpp"
 #include <chrono>
 #include <array>
 #include <cstring>
@@ -137,7 +138,7 @@ namespace gl {
 #endif
         int width, height;
         mmcRenderViewContext renderContext;
-        std::vector<std::shared_ptr<AbstractUILayer> > uiLayers;
+        UILayersCollection uiLayers;
         std::shared_ptr<AbstractUILayer> mouseCapture;
         std::string name;
         vislib::graphics::FpsCounter fpsCntr;
