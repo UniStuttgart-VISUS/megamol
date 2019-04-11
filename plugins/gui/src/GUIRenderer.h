@@ -137,32 +137,32 @@ protected:
     /**
      * Callback forwarding OnRender request.
      */
-    bool OnOverlayCallback(megamol::core::Call& call);
+    bool OnOverlayCallback(core::Call& call);
 
     /**
      * Callback forwarding OnKey request.
      */
-    bool OnKeyCallback(megamol::core::Call& call);
+    bool OnKeyCallback(core::Call& call);
 
     /**
      * Callback forwarding OnChar request.
      */
-    bool OnCharCallback(megamol::core::Call& call);
+    bool OnCharCallback(core::Call& call);
 
     /**
      * Callback forwarding OnMouse request.
      */
-    bool OnMouseButtonCallback(megamol::core::Call& call);
+    bool OnMouseButtonCallback(core::Call& call);
 
     /**
      * Callback forwarding OnMouseMove request.
      */
-    bool OnMouseMoveCallback(megamol::core::Call& call);
+    bool OnMouseMoveCallback(core::Call& call);
 
     /**
      * Callback forwarding OnMouseScroll request.
      */
-    bool OnMouseScrollCallback(megamol::core::Call& call);
+    bool OnMouseScrollCallback(core::Call& call);
 
 private:
     // TYPES, ENUMS -----------------------------------------------------------
@@ -189,25 +189,19 @@ private:
     // VARIABLES --------------------------------------------------------------
 
     /** The overlay callee slot */
-    megamol::core::CalleeSlot overlay_slot;
-
-    /** The ImGui context created and used by this GUIRenderer */
-    ImGuiContext* imgui_context;
+    core::CalleeSlot overlay_slot;
 
     /** The decorated renderer caller slot */
     core::CallerSlot decorated_renderer_slot;
+
+    /** The ImGui context created and used by this GUIRenderer */
+    ImGuiContext* imgui_context;
 
     /** Array holding the window states. */
     std::list<GUIWindow> windows;
 
     /** Last instance time.  */
-    double last_inst_time;
-
-    /** The name of the view instance this renderer belongs to. */
-    std::string inst_name;
-
-    /** Flag indicating if instance name should be retrieved. */
-    bool get_inst_name;
+    double inst_last_time;
 
     /** The transfer function editor. */
     GUITransferFunctionEditor tf_editor;
@@ -220,16 +214,22 @@ private:
     /** File name to load/save parmeter values to. */
     std::string param_file;
 
+    /** Filter mode for modules. */
+    std::vector<std::string> param_considered_modules;
+
+    /** Current module filter mode. */
+    unsigned int param_module_filter_mode;
+
     // ---------- FPS window ----------
 
     /** Show/hide fps/ms options. */
-    bool show_fps_ms_options;
+    bool fpsms_show_options;
 
     /** Current time delay since last time fps have been updated. */
-    float current_delay;
+    float fpsms_delay;
 
     /** Maximum delay when fps/ms value should be renewed. */
-    float max_delay;
+    float fpsms_max_delay;
 
     /** Array holding last fps values. */
     std::vector<float> fps_values;
@@ -240,10 +240,10 @@ private:
     float ms_value_scale;
 
     /** Toggle display fps or ms.  */
-    int fps_ms_mode;
+    int fpsms_mode;
 
     /** Maximum count of values in value array. */
-    size_t max_value_count;
+    size_t fpsms_value_max_count;
 
     // ---------- Font Selection Window ----------
 
@@ -257,7 +257,7 @@ private:
     float font_new_size;
 
     /** Additional UTF-8 glyph ranges for ImGui fonts. */
-    std::vector<ImWchar> utf8_ranges;
+    std::vector<ImWchar> font_utf8_ranges;
 
     // FUNCTIONS --------------------------------------------------------------
 
@@ -374,29 +374,29 @@ typedef GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D> GUIR
 template <>
 inline GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIRenderer()
     : core::view::Renderer2DModule()
-    , imgui_context(nullptr)
     , decorated_renderer_slot("decoratedRenderer", "Connects to another 2D Renderer being decorated")
     , overlay_slot("overlayRender", "Connected with SplitView for special overlay rendering")
+    , imgui_context(nullptr)
     , windows()
-    , last_inst_time(0.0)
-    , inst_name()
-    , get_inst_name(true)
+    , inst_last_time(0.0)
     , tf_editor()
     , tf_active_param(nullptr)
     , param_file()
-    , show_fps_ms_options(false)
-    , current_delay(0.0f)
-    , max_delay(2.0f)
+    , param_considered_modules()
+    , param_module_filter_mode(0)
+    , fpsms_show_options(false)
+    , fpsms_delay(0.0f)
+    , fpsms_max_delay(2.0f)
     , fps_values()
     , ms_values()
     , fps_value_scale(0.0f)
     , ms_value_scale(0.0f)
-    , fps_ms_mode(0)
-    , max_value_count(50)
+    , fpsms_mode(0)
+    , fpsms_value_max_count(50)
     , font_new_load(false)
     , font_new_filename()
     , font_new_size(13.0f)
-    , utf8_ranges() {
+    , font_utf8_ranges() {
 
     this->decorated_renderer_slot.SetCompatibleCall<core::view::CallRender2DDescription>();
     this->MakeSlotAvailable(&this->decorated_renderer_slot);
@@ -430,29 +430,29 @@ inline GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIR
 template <>
 inline GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GUIRenderer()
     : core::view::Renderer3DModule()
-    , imgui_context(nullptr)
     , decorated_renderer_slot("decoratedRenderer", "Connects to another 2D Renderer being decorated")
     , overlay_slot("overlayRender", "Connected with SplitView for special overlay rendering")
+    , imgui_context(nullptr)
     , windows()
-    , last_inst_time(0.0)
-    , inst_name()
-    , get_inst_name(true)
+    , inst_last_time(0.0)
     , tf_editor()
     , tf_active_param(nullptr)
     , param_file()
-    , show_fps_ms_options(false)
-    , current_delay(0.0f)
-    , max_delay(2.0f)
+    , param_considered_modules()
+    , param_module_filter_mode(0)
+    , fpsms_show_options(false)
+    , fpsms_delay(0.0f)
+    , fpsms_max_delay(2.0f)
     , fps_values()
     , ms_values()
     , fps_value_scale(0.0f)
     , ms_value_scale(0.0f)
-    , fps_ms_mode(0)
-    , max_value_count(50)
+    , fpsms_mode(0)
+    , fpsms_value_max_count(50)
     , font_new_load(false)
     , font_new_filename()
     , font_new_size(13.0f)
-    , utf8_ranges() {
+    , font_utf8_ranges() {
 
     this->decorated_renderer_slot.SetCompatibleCall<core::view::CallRender3DDescription>();
     this->MakeSlotAvailable(&this->decorated_renderer_slot);
@@ -600,17 +600,17 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
 
     // Adding additional utf-8 glyph ranges
     /// (there is no error if glyph has no representation in font atlas)
-    this->utf8_ranges.emplace_back(0x0020);
-    this->utf8_ranges.emplace_back(0x00FF); // Basic Latin + Latin Supplement
-    this->utf8_ranges.emplace_back(0x20AC);
-    this->utf8_ranges.emplace_back(0x20AC); // €
-    this->utf8_ranges.emplace_back(0x2122);
-    this->utf8_ranges.emplace_back(0x2122); // ™
-    this->utf8_ranges.emplace_back(0x212B);
-    this->utf8_ranges.emplace_back(0x212B); // Å
-    this->utf8_ranges.emplace_back(0x0391);
-    this->utf8_ranges.emplace_back(0x03D6); // greek alphabet
-    this->utf8_ranges.emplace_back(0);      // (range termination)
+    this->font_utf8_ranges.emplace_back(0x0020);
+    this->font_utf8_ranges.emplace_back(0x00FF); // Basic Latin + Latin Supplement
+    this->font_utf8_ranges.emplace_back(0x20AC);
+    this->font_utf8_ranges.emplace_back(0x20AC); // €
+    this->font_utf8_ranges.emplace_back(0x2122);
+    this->font_utf8_ranges.emplace_back(0x2122); // ™
+    this->font_utf8_ranges.emplace_back(0x212B);
+    this->font_utf8_ranges.emplace_back(0x212B); // Å
+    this->font_utf8_ranges.emplace_back(0x0391);
+    this->font_utf8_ranges.emplace_back(0x03D6); // greek alphabet
+    this->font_utf8_ranges.emplace_back(0);      // (range termination)
 
     // Load initial fonts only once for all imgui contexts
     if (!other_context) {
@@ -618,7 +618,7 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
         ImFontConfig config;
         config.OversampleH = 4;
         config.OversampleV = 1;
-        config.GlyphRanges = this->utf8_ranges.data();
+        config.GlyphRanges = this->font_utf8_ranges.data();
 
         io.Fonts->AddFontDefault(&config);
 
@@ -1016,6 +1016,7 @@ template <class M, class C> bool GUIRenderer<M, C>::Render(C& call) {
             call = (*cr);
         }
     }
+
     return this->renderGUI(call.GetViewport(), call.InstanceTime());
 }
 
@@ -1133,19 +1134,6 @@ template <class M, class C> bool GUIRenderer<M, C>::OnMouseScrollCallback(core::
 template <class M, class C>
 bool GUIRenderer<M, C>::renderGUI(vislib::math::Rectangle<int> viewport, double instanceTime) {
 
-    // Get instance name the gui renderer belongs to (not available in create() yet)
-    if (this->get_inst_name) {
-        // Parent's name of a module is the name of the instance the module belongs to.
-        this->inst_name = this->Parent()->FullName().PeekBuffer();
-        if (this->inst_name == "::") {
-            this->inst_name.clear();
-        } else {
-            /// Required to prevent ambiguity: "::<INSTANCE_NAME>::"
-            this->inst_name.append("::");
-        }
-        this->get_inst_name = false;
-    }
-
     ImGui::SetCurrentContext(this->imgui_context);
 
     auto viewportWidth = viewport.Width();
@@ -1156,21 +1144,21 @@ bool GUIRenderer<M, C>::renderGUI(vislib::math::Rectangle<int> viewport, double 
     io.DisplaySize = ImVec2((float)viewportWidth, (float)viewportHeight);
     io.DisplayFramebufferScale = ImVec2(1.0, 1.0);
 
-    if ((instanceTime - this->last_inst_time) < 0.0) {
+    if ((instanceTime - this->inst_last_time) < 0.0) {
         vislib::sys::Log::DefaultLog.WriteWarn("[GUIRenderer] Current instance time results in negative time delta.");
     }
-    io.DeltaTime = ((instanceTime - this->last_inst_time) > 0.0)
-                       ? (static_cast<float>(instanceTime - this->last_inst_time))
+    io.DeltaTime = ((instanceTime - this->inst_last_time) > 0.0)
+                       ? (static_cast<float>(instanceTime - this->inst_last_time))
                        : (io.DeltaTime);
-    this->last_inst_time =
-        ((instanceTime - this->last_inst_time) > 0.0) ? (instanceTime) : (this->last_inst_time + io.DeltaTime);
+    this->inst_last_time =
+        ((instanceTime - this->inst_last_time) > 0.0) ? (instanceTime) : (this->inst_last_time + io.DeltaTime);
 
     // Loading new font (before NewFrame!)
     if (this->font_new_load) {
         ImFontConfig config;
         config.OversampleH = 4;
         config.OversampleV = 1;
-        config.GlyphRanges = this->utf8_ranges.data();
+        config.GlyphRanges = this->font_utf8_ranges.data();
         io.Fonts->AddFontFromFileTTF(this->font_new_filename.c_str(), this->font_new_size, &config);
         ImGui_ImplOpenGL3_CreateFontsTexture();
         // Load last added font
@@ -1276,11 +1264,89 @@ template <class M, class C> void GUIRenderer<M, C>::drawParametersCallback(std::
     if (ImGui::Button("Collapse All")) {
         overrideState = 0; /// close
     }
-    ImGui::SameLine(0.0f, 50.0f);
 
     bool show_only_hotkeys = win->param_hotkeys_show;
     ImGui::Checkbox("Show Hotkeys", &show_only_hotkeys);
     win->param_hotkeys_show = show_only_hotkeys;
+
+    std::map<int, std::string> opts;
+    opts[0] = "All";
+    opts[1] = "Instance";
+    opts[2] = "View";
+    int opts_cnt = opts.size();
+    if (ImGui::BeginCombo("Module Filter", opts[this->param_module_filter_mode].c_str())) {
+        for (int i = 0; i < opts_cnt; ++i) {
+            if (ImGui::Selectable(opts[i].c_str(), (this->param_module_filter_mode == i))) {
+                this->param_module_filter_mode = i;
+                this->param_considered_modules.clear();
+                if ((this->param_module_filter_mode == 1) || (this->param_module_filter_mode == 2)) {
+
+                    // Goal is to find view module with shortest call connection path to this gui rendere module.
+                    // Since enumeration of modules goes bottom up, result for first abstract view is stored and
+                    // following hits are ignored.
+                    std::string viewname;
+                    std::string thisname = this->FullName().PeekBuffer();
+                    const auto view_func = [&, this](core::Module* viewmod) {
+                        auto v = dynamic_cast<core::view::AbstractView*>(viewmod);
+                        if (v != nullptr) {
+                            std::string vname = v->FullName().PeekBuffer();
+
+                            bool found = false;
+                            const auto find_func = [&, this](core::Module* guimod) {
+                                std::string modname = guimod->FullName().PeekBuffer();
+                                if (thisname == modname) {
+                                    found = true;
+                                }
+                            };
+                            this->GetCoreInstance()->EnumModulesNoLock(viewmod, find_func);
+
+                            if (found && viewname.empty()) {
+                                viewname = vname;
+                            }
+                        }
+                    };
+                    this->GetCoreInstance()->EnumModulesNoLock(nullptr, view_func);
+
+                    if (!viewname.empty()) {
+                        if (this->param_module_filter_mode == 2) {
+                            // Considering modules depending on the INSTANCE NAME of the first view this gui renderer is
+                            // connected to.
+                            std::string instname = "";
+                            if (viewname.find("::", 2) != std::string::npos) {
+                                instname = viewname.substr(0, viewname.find("::", 2));
+                            }
+                            if (!instname.empty()) { /// Consider all modules if view is not assigned to any instance
+
+                                const auto func = [&, this](core::Module* mod) {
+                                    std::string modname = mod->FullName().PeekBuffer();
+                                    bool foundInstanceName = (modname.find(instname) != std::string::npos);
+                                    // Modules with no namespace are always taken into account ...
+                                    bool noInstanceNamePresent = (modname.find("::", 2) == std::string::npos);
+                                    if (foundInstanceName || noInstanceNamePresent) {
+                                        this->param_considered_modules.emplace_back(modname);
+                                    }
+                                };
+                                this->GetCoreInstance()->EnumModulesNoLock(nullptr, func);
+                            }
+                        } else {
+                            // Considering modules depending on their connection to the first VIEW this gui renderer is
+                            // connected to.
+                            const auto add_func = [&, this](core::Module* mod) {
+                                std::string modname = mod->FullName().PeekBuffer();
+                                this->param_considered_modules.emplace_back(modname);
+                            };
+                            this->GetCoreInstance()->EnumModulesNoLock(viewname, add_func);
+                        }
+                    } else {
+                        vislib::sys::Log::DefaultLog.WriteError(
+                            "[GUIRenderer] Couldn't find abstract view module this gui renderer is connected to.");
+                    }
+                }
+            }
+        }
+        ImGui::EndCombo();
+    }
+    this->HelpMarkerToolTip("Only refreshed on selection change");
     ImGui::Separator();
 
     // Listing parameters
@@ -1334,7 +1400,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawParametersCallback(std::
                 if (ImGui::MenuItem("Copy to new Window")) {
                     GUIWindow tmp_win;
                     tmp_win.label = "Parameters###parameters" +
-                                    std::to_string(this->last_inst_time); /// using instance time as hidden unique id
+                                    std::to_string(this->inst_last_time); /// using instance time as hidden unique id
                     tmp_win.show = true;
                     // tmp_win.hotkey = core::view::KeyCode();
                     tmp_win.reset = false;
@@ -1440,22 +1506,22 @@ template <class M, class C> void GUIRenderer<M, C>::drawParametersCallback(std::
  */
 template <class M, class C> void GUIRenderer<M, C>::drawFpsWindowCallback(std::string win_label) {
 
-    if (ImGui::RadioButton("fps", (this->fps_ms_mode == 0))) {
-        this->fps_ms_mode = 0;
+    if (ImGui::RadioButton("fps", (this->fpsms_mode == 0))) {
+        this->fpsms_mode = 0;
     }
     ImGui::SameLine();
 
-    if (ImGui::RadioButton("ms", (this->fps_ms_mode == 1))) {
-        this->fps_ms_mode = 1;
+    if (ImGui::RadioButton("ms", (this->fpsms_mode == 1))) {
+        this->fpsms_mode = 1;
     }
     ImGui::SameLine(0.0f, 50.0f);
 
-    ImGui::Checkbox("Options", &this->show_fps_ms_options);
+    ImGui::Checkbox("Options", &this->fpsms_show_options);
 
-    // Default for this->fps_ms_mode == 0
+    // Default for this->fpsms_mode == 0
     std::vector<float>* arr = &this->fps_values;
     float val_scale = this->fps_value_scale;
-    if (this->fps_ms_mode == 1) {
+    if (this->fpsms_mode == 1) {
         arr = &this->ms_values;
         val_scale = this->ms_value_scale;
     }
@@ -1471,22 +1537,22 @@ template <class M, class C> void GUIRenderer<M, C>::drawFpsWindowCallback(std::s
     ImGui::PlotHistogram(
         "###fpsmsplot", data, count, 0, val.c_str(), 0.0f, val_scale, ImVec2(0.0f, 50.0f)); /// use hidden label
 
-    if (this->show_fps_ms_options) {
+    if (this->fpsms_show_options) {
 
         if (ImGui::InputFloat(
-                "Refresh Rate", &this->max_delay, 0.0f, 0.0f, "%.3f", ImGuiInputTextFlags_EnterReturnsTrue)) {
+                "Refresh Rate", &this->fpsms_max_delay, 0.0f, 0.0f, "%.3f", ImGuiInputTextFlags_EnterReturnsTrue)) {
             this->fps_values.clear();
             this->ms_values.clear();
         }
         // Validate refresh rate
-        this->max_delay = std::max(0.0f, this->max_delay);
+        this->fpsms_max_delay = std::max(0.0f, this->fpsms_max_delay);
         std::string help = "Changes clear all values";
         this->HelpMarkerToolTip(help);
 
-        int mvc = (int)this->max_value_count;
+        int mvc = (int)this->fpsms_value_max_count;
         ImGui::InputInt("Stored Values Count", &mvc, 0, 0, ImGuiInputTextFlags_EnterReturnsTrue);
         // Validate refresh rate
-        this->max_value_count = (size_t)(std::max(0, mvc));
+        this->fpsms_value_max_count = (size_t)(std::max(0, mvc));
 
         if (ImGui::Button("Current Value")) {
             ImGui::SetClipboardText(val.c_str());
@@ -1648,7 +1714,8 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
         //    if (ImGui::Button("Load Parameters from File")) {
         //#ifdef _WIN32
         //        if (!ns_fs::exists(this->param_file.c_str())) {
-        //            ImGui::TextColored(style.Colors[ImGuiCol_ButtonHovered], "Please enter valid Paramter File Name");
+        //            ImGui::TextColored(style.Colors[ImGuiCol_ButtonHovered], "Please enter valid Paramter File
+        //            Name");
         //        } else
         //#endif
         //        {
@@ -1658,7 +1725,8 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
         //    size_t bufferLength = GUI_MAX_BUFFER_LEN;
         //    char* buffer = new char[bufferLength];
         //    memcpy(buffer, this->param_file.c_str(), this->param_file.size() + 1);
-        //    if (ImGui::InputText("Parameter File Name", buffer, bufferLength, ImGuiInputTextFlags_EnterReturnsTrue)) {
+        //    if (ImGui::InputText("Parameter File Name", buffer, bufferLength,
+        //    ImGuiInputTextFlags_EnterReturnsTrue)) {
         //        this->param_file = std::string(buffer);
         //    }
         //    delete[] buffer;
@@ -1969,18 +2037,18 @@ void GUIRenderer<M, C>::drawParameterHotkey(const core::Module& mod, core::param
 template <class M, class C> void GUIRenderer<M, C>::updateFps(void) {
 
     ImGuiIO& io = ImGui::GetIO();
-    this->current_delay += io.DeltaTime;
+    this->fpsms_delay += io.DeltaTime;
 
-    if (this->max_delay <= 0.0f) {
+    if (this->fpsms_max_delay <= 0.0f) {
         return;
     }
-    if (this->max_value_count == 0) {
+    if (this->fpsms_value_max_count == 0) {
         this->fps_values.clear();
         this->ms_values.clear();
         return;
     }
 
-    if (this->current_delay > (1.0f / this->max_delay)) {
+    if (this->fpsms_delay > (1.0f / this->fpsms_max_delay)) {
 
         // Leave some space in histogram for text of current value
         const float scale_fac = 1.5f;
@@ -1992,16 +2060,16 @@ template <class M, class C> void GUIRenderer<M, C>::updateFps(void) {
         }
 
         size_t size = this->fps_values.size();
-        if (size != this->max_value_count) {
-            if (size > this->max_value_count) {
+        if (size != this->fpsms_value_max_count) {
+            if (size > this->fpsms_value_max_count) {
                 this->fps_values.erase(
-                    this->fps_values.begin(), this->fps_values.begin() + (size - this->max_value_count));
+                    this->fps_values.begin(), this->fps_values.begin() + (size - this->fpsms_value_max_count));
                 this->ms_values.erase(
-                    this->ms_values.begin(), this->ms_values.begin() + (size - this->max_value_count));
+                    this->ms_values.begin(), this->ms_values.begin() + (size - this->fpsms_value_max_count));
 
-            } else if (size < this->max_value_count) {
-                this->fps_values.insert(this->fps_values.begin(), (this->max_value_count - size), 0.0f);
-                this->ms_values.insert(this->ms_values.begin(), (this->max_value_count - size), 0.0f);
+            } else if (size < this->fpsms_value_max_count) {
+                this->fps_values.insert(this->fps_values.begin(), (this->fpsms_value_max_count - size), 0.0f);
+                this->ms_values.insert(this->ms_values.begin(), (this->fpsms_value_max_count - size), 0.0f);
             }
         }
         if (size > 0) {
@@ -2024,7 +2092,7 @@ template <class M, class C> void GUIRenderer<M, C>::updateFps(void) {
             this->ms_value_scale = value_max * scale_fac;
         }
 
-        this->current_delay = 0.0f;
+        this->fpsms_delay = 0.0f;
     }
 }
 
@@ -2034,21 +2102,17 @@ template <class M, class C> void GUIRenderer<M, C>::updateFps(void) {
  */
 template <class M, class C> bool GUIRenderer<M, C>::considerModule(std::string modname) {
 
-    // TODO: Recheck for changes only each ~5 seconds -> list of module names
-
-    // Consider modules depending on assigned view instance
-    if (this->inst_name.empty()) {
-        return true;
+    bool retval = false;
+    if (this->param_considered_modules.empty()) {
+        retval = true;
+    } else {
+        for (auto mod : this->param_considered_modules) {
+            if (modname == mod) {
+                retval = true;
+                break;
+            }
+        }
     }
-    bool foundInstanceName = (modname.find(this->inst_name) != std::string::npos);
-    bool noInstanceNamePresent =
-        (modname.find("::", 2) ==
-            std::string::npos); /// If no second '::' is found, the module is not assigned to any instance
-    bool retval = (foundInstanceName || noInstanceNamePresent);
-
-    // Consider modules depending on related view
-
-
     return retval;
 }
 

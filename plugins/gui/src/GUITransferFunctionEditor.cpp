@@ -398,8 +398,9 @@ bool megamol::gui::GUITransferFunctionEditor::DrawTransferFunctionEditor(void) {
     std::map<param::TransferFunctionParam::InterpolationMode, std::string> opts;
     opts[param::TransferFunctionParam::InterpolationMode::LINEAR] = "Linear";
     opts[param::TransferFunctionParam::InterpolationMode::GAUSS] = "Gauss";
+    int opts_cnt = opts.size();
     if (ImGui::BeginCombo("Interpolation", opts[this->interpol_mode].c_str())) {
-        for (int i = 0; i < opts.size(); ++i) {
+        for (int i = 0; i < opts_cnt; ++i) {
             if (ImGui::Selectable(opts[(param::TransferFunctionParam::InterpolationMode)i].c_str(),
                     (this->interpol_mode == (param::TransferFunctionParam::InterpolationMode)i))) {
                 this->interpol_mode = (param::TransferFunctionParam::InterpolationMode)i;
