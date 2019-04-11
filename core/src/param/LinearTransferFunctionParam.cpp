@@ -112,17 +112,19 @@ vislib::TString LinearTransferFunctionParam::ValueString(void) const {
  * LinearTransferFunctionParam::TransferFunctionTexture
  */
 bool LinearTransferFunctionParam::TransferFunctionTexture(const std::string &in_tfs, std::vector<float> &out_data, UINT &out_texsize) {
-    TFType temp;
+
+    TFDataType temp;
     InterpolationMode mode;
 
     if (ParseTransferFunction(in_tfs, temp, mode, out_texsize))
     {
-        if (mode == InterpolationMode::LINEAR)
-        {
+        if (mode == InterpolationMode::LINEAR) {
             LinearInterpolation(out_data, out_texsize, temp);
         }
-        else
-        {
+        else if (mode == InterpolationMode::GAUSS) {
+            GaussInterpolation(out_data, out_texsize, temp);
+        }
+        else {
             return false;
         }
 
@@ -136,9 +138,9 @@ bool LinearTransferFunctionParam::TransferFunctionTexture(const std::string &in_
 /**
  * LinearTransferFunctionParam::ParseTransferFunction
  */
-bool LinearTransferFunctionParam::ParseTransferFunction(const std::string &in_tfs, TFType &out_data, InterpolationMode &out_interpolmode, UINT &out_texsize) {
+bool LinearTransferFunctionParam::ParseTransferFunction(const std::string &in_tfs, TFDataType &out_data, InterpolationMode &out_interpolmode, UINT &out_texsize) {
 
-    TFType tmp_data;
+    TFDataType tmp_data;
     std::string tmp_interpolmode_str;
     InterpolationMode tmp_interpolmode;
     UINT tmp_texsize;
@@ -173,8 +175,8 @@ bool LinearTransferFunctionParam::ParseTransferFunction(const std::string &in_tf
     }
     else { // Loading default values for empty transfer function
         tmp_data.clear();
-        std::array<float, 5> zero = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
-        std::array<float, 5> one = { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f };
+        std::array<float, TFP_VAL_CNT> zero = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.05f };
+        std::array<float, TFP_VAL_CNT> one = { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.05f };
         tmp_data.emplace_back(zero);
         tmp_data.emplace_back(one);
         tmp_interpolmode = InterpolationMode::LINEAR;
@@ -195,7 +197,7 @@ bool LinearTransferFunctionParam::ParseTransferFunction(const std::string &in_tf
 /**
  * LinearTransferFunctionParam::DumpTransferFunction
  */
-bool LinearTransferFunctionParam::DumpTransferFunction(std::string &out_tfs, const TFType &in_data, const InterpolationMode in_interpolmode, const UINT in_texsize) {
+bool LinearTransferFunctionParam::DumpTransferFunction(std::string &out_tfs, const TFDataType &in_data, const InterpolationMode in_interpolmode, const UINT in_texsize) {
 
     nlohmann::json json;
 
@@ -226,7 +228,7 @@ bool LinearTransferFunctionParam::DumpTransferFunction(std::string &out_tfs, con
 /**
  * LinearTransferFunctionParam::CheckTransferFunctionData
  */
-bool LinearTransferFunctionParam::CheckTransferFunctionData(const TFType &data, const InterpolationMode interpolmode, const UINT texsize) {
+bool LinearTransferFunctionParam::CheckTransferFunctionData(const TFDataType &data, const InterpolationMode interpolmode, const UINT texsize) {
 
     bool check = true;
     if (texsize < 1) {
@@ -244,12 +246,12 @@ bool LinearTransferFunctionParam::CheckTransferFunctionData(const TFType &data, 
         for (int i = 0; i < 5; ++i) {
             if (a[i] < 0.0f) {
                 vislib::sys::Log::DefaultLog.WriteError(
-                    "[CheckTransferFunctionData] Color values must be greater than or equal to 0.");
+                    "[CheckTransferFunctionData] Values must be greater than or equal to 0.");
                 check = false;
             }
             else if (a[i] > 1.0f) {
                 vislib::sys::Log::DefaultLog.WriteError(
-                    "[CheckTransferFunctionData] Color values must be less than or equal to 1.");
+                    "[CheckTransferFunctionData] Values must be less than or equal to 1.");
                 check = false;
             }
         }
@@ -260,6 +262,11 @@ bool LinearTransferFunctionParam::CheckTransferFunctionData(const TFType &data, 
         }
         else {
             last_value = a[4];
+        }
+        if (a[5] <= 0.0f) {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "[CheckTransferFunctionData] Sigma value must be greater than 0.");
+            check = false;
         }
     }
     if (data.front()[4] != 0.0f) {
@@ -340,13 +347,13 @@ bool LinearTransferFunctionParam::CheckTransferFunctionString(const std::string 
                     check = false;
                 }
                 else {
-                    if (json.at("Nodes")[i].size() != 5) {
+                    if (json.at("Nodes")[i].size() != TFP_VAL_CNT) {
                         vislib::sys::Log::DefaultLog.WriteError(
-                            "[CheckTransferFunctionString] Entries of 'Nodes' should be arrays of size 5.");
+                            "[CheckTransferFunctionString] Entries of 'Nodes' should be arrays of size %d.", TFP_VAL_CNT);
                         check = false;
                     }
                     else {
-                        for (UINT k = 0; k < 5; ++k) {
+                        for (UINT k = 0; k < TFP_VAL_CNT; ++k) {
                             if (!json.at("Nodes")[i][k].is_number_float()) {
                                 vislib::sys::Log::DefaultLog.WriteError(
                                     "[CheckTransferFunctionString] Values in 'Nodes' arrays should be floating point numbers.");
@@ -368,14 +375,15 @@ bool LinearTransferFunctionParam::CheckTransferFunctionString(const std::string 
     return check;
 }
 
+
 /*
  * LinearTransferFunctionParam::LinearInterpolation
  */
-void LinearTransferFunctionParam::LinearInterpolation(std::vector<float> &out_texdata, unsigned int in_texsize, const TFType &in_tfdata) {
+void LinearTransferFunctionParam::LinearInterpolation(std::vector<float> &out_texdata, unsigned int in_texsize, const TFDataType &in_tfdata) {
 
     out_texdata.resize(4 * in_texsize);
-    std::array<float, 5> cx1 = in_tfdata[0];
-    std::array<float, 5> cx2 = in_tfdata[0];
+    std::array<float, TFP_VAL_CNT> cx1 = in_tfdata[0];
+    std::array<float, TFP_VAL_CNT> cx2 = in_tfdata[0];
     int p1 = 0;
     int p2 = 0;
     size_t data_cnt = in_tfdata.size();
@@ -396,6 +404,38 @@ void LinearTransferFunctionParam::LinearInterpolation(std::vector<float> &out_te
             out_texdata[p * 4 + 1] = cx1[1] * be + cx2[1] * al;
             out_texdata[p * 4 + 2] = cx1[2] * be + cx2[2] * al;
             out_texdata[p * 4 + 3] = cx1[3] * be + cx2[3] * al;
+        }
+    }
+}
+
+
+/*
+ * LinearTransferFunctionParam::GaussInterpolation
+ */
+void LinearTransferFunctionParam::GaussInterpolation(std::vector<float> &out_texdata, unsigned int in_texsize, const TFDataType &in_tfdata) {
+
+    out_texdata.resize(4 * in_texsize);
+    out_texdata.assign(out_texdata.size(), 0.0f);
+
+    float gb, gc;
+    float x;
+    float r, g, b, a;
+    size_t data_cnt = in_tfdata.size();
+    for (size_t i = 0; i < data_cnt; i++) {
+        gb = in_tfdata[i][4];
+        gc = in_tfdata[i][5];
+        for (unsigned int t = 0; t < in_texsize; ++t) {
+            x = (float)t / (float)in_texsize;
+            r = param::LinearTransferFunctionParam::gauss(x, in_tfdata[i][0], gb, gc);
+            g = param::LinearTransferFunctionParam::gauss(x, in_tfdata[i][1], gb, gc);
+            b = param::LinearTransferFunctionParam::gauss(x, in_tfdata[i][2], gb, gc);
+            a = param::LinearTransferFunctionParam::gauss(x, in_tfdata[i][3], gb, gc);
+
+            // Max
+            out_texdata[t * 4]     = std::max(r, out_texdata[t * 4]);
+            out_texdata[t * 4 + 1] = std::max(g, out_texdata[t * 4 + 1]);
+            out_texdata[t * 4 + 2] = std::max(b, out_texdata[t * 4 + 2]);
+            out_texdata[t * 4 + 3] = std::max(a, out_texdata[t * 4 + 3]);
         }
     }
 }
