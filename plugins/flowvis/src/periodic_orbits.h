@@ -139,12 +139,27 @@ namespace megamol
             * @param max_error Maximum error for step size computation
             * @param max_delta Maximum step size
             * @param comparison List of cells to compare with
-            * @param strict Strict comparison with the correct order
             *
             * @return True: valid, false otherwise
             */
-            std::pair<bool, std::vector<Eigen::Vector2f>> validate_turn(const tpf::data::grid<float, float, 2, 2>& grid, Eigen::Vector2f& position,
-                float& delta, float sign, float max_error, float max_delta, std::list<coords_t> comparison, bool strict) const;
+            std::pair<bool, std::vector<Eigen::Vector2f>> validate_turn_strict(const tpf::data::grid<float, float, 2, 2>& grid, Eigen::Vector2f& position,
+                float& delta, float sign, float max_error, float max_delta, std::list<coords_t> comparison) const;
+
+            /**
+            * Validate a previous turn
+            *
+            * @param grid Vector field
+            * @param position Original/Output position
+            * @param delta Previous/Adjusted step size
+            * @param sign Direction of integration
+            * @param max_error Maximum error for step size computation
+            * @param max_delta Maximum step size
+            * @param comparison List of cells to compare with
+            *
+            * @return True: valid, false otherwise
+            */
+            std::pair<bool, std::vector<Eigen::Vector2f>> validate_turn_relaxed(const tpf::data::grid<float, float, 2, 2>& grid, Eigen::Vector2f& position,
+                float& delta, float sign, float max_error, float max_delta, const std::list<coords_t>& comparison) const;
 
             /**
             * Get intermediate cells

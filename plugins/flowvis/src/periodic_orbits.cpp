@@ -253,9 +253,7 @@ namespace megamol
                     if (!visited_cells->empty())
                     {
                         // Do a second turn and compare results
-                        const auto valid_second_turn = validate_turn(grid, position, delta, sign, max_error, max_delta, *visited_cells, true);
-
-                        if (valid_second_turn.first)
+                        if (validate_turn_strict(grid, position, delta, sign, max_error, max_delta, *visited_cells).first)
                         {
                             // Look for possible exits
                             auto vector_hash = [](const Eigen::Vector2f& coords) -> std::size_t
@@ -280,7 +278,7 @@ namespace megamol
                             {
                                 Eigen::Vector2f possible_exit = *possible_exit_it;
 
-                                has_exit = validate_turn(grid, possible_exit, delta, -sign, max_error, max_delta, *visited_cells, false).first;
+                                has_exit = validate_turn_relaxed(grid, possible_exit, delta, -sign, max_error, max_delta, *visited_cells).first;
                             }
                         }
                     }
@@ -465,9 +463,9 @@ namespace megamol
 
                         for (const auto& point : critical_points)
                         {
-                            const bool attracting = true; // TODO: correct, but does not work if orbits are missed
-                                //(sign < 0.0f && (point.first == flowvis::critical_points::type::REPELLING_FOCUS || point.first == flowvis::critical_points::type::REPELLING_NODE)) ||
-                                //(sign > 0.0f && (point.first == flowvis::critical_points::type::ATTRACTING_FOCUS || point.first == flowvis::critical_points::type::ATTRACTING_NODE));
+                            const bool attracting =
+                                (sign < 0.0f && (point.first == flowvis::critical_points::type::REPELLING_FOCUS || point.first == flowvis::critical_points::type::REPELLING_NODE)) ||
+                                (sign > 0.0f && (point.first == flowvis::critical_points::type::ATTRACTING_FOCUS || point.first == flowvis::critical_points::type::ATTRACTING_NODE));
 
                             if (attracting && *grid.find_staggered_cell(point.second) == current_cell)
                             {
@@ -513,11 +511,11 @@ namespace megamol
             return visited_cells;
         }
 
-        std::pair<bool, std::vector<Eigen::Vector2f>> periodic_orbits::validate_turn(const tpf::data::grid<float, float, 2, 2>& grid, Eigen::Vector2f& position,
-            float& delta, const float sign, const float max_error, const float max_delta, std::list<coords_t> comparison, const bool strict) const
+        std::pair<bool, std::vector<Eigen::Vector2f>> periodic_orbits::validate_turn_strict(const tpf::data::grid<float, float, 2, 2>& grid, Eigen::Vector2f& position,
+            float& delta, const float sign, const float max_error, const float max_delta, std::list<coords_t> comparison) const
         {
             // Initialize comparison
-            if (strict && *grid.find_staggered_cell(position) != comparison.front())
+            if (*grid.find_staggered_cell(position) != comparison.front())
             {
                 return std::make_pair(false, std::vector<Eigen::Vector2f>());
             }
@@ -525,22 +523,7 @@ namespace megamol
             std::vector<Eigen::Vector2f> streamline;
             streamline.push_back(position);
 
-            if (strict)
-            {
-                comparison.pop_front();
-            }
-            else if (!strict && std::find(comparison.begin(), comparison.end(), *grid.find_staggered_cell(position)) == comparison.end())
-            {
-                // Advect one step, if the start is outside
-                const auto advected = advect_RK45(grid, position, delta, sign, max_error, max_delta);
-
-                const Eigen::Vector2f old_position = position;
-
-                position = advected.first;
-                delta = advected.second;
-
-                streamline.push_back(position);
-            }
+            comparison.pop_front();
 
             // Advect stream line while it corresponds to the input list of cells
             while (!comparison.empty())
@@ -582,12 +565,7 @@ namespace megamol
                     {
                         const auto& current_cell = *cell_it;
 
-                        if (strict && current_cell != comparison.front())
-                        {
-                            return std::make_pair(false, streamline);
-                        }
-
-                        if (!strict && std::find(comparison.begin(), comparison.end(), current_cell) == comparison.end())
+                        if (current_cell != comparison.front())
                         {
                             return std::make_pair(false, streamline);
                         }
@@ -599,6 +577,91 @@ namespace megamol
 
             // Return results
             return std::make_pair(true, streamline);
+        }
+
+        std::pair<bool, std::vector<Eigen::Vector2f>> periodic_orbits::validate_turn_relaxed(const tpf::data::grid<float, float, 2, 2>& grid, Eigen::Vector2f& position,
+            float& delta, const float sign, const float max_error, const float max_delta, const std::list<coords_t>& comparison) const
+        {
+            // Initialize comparison
+            std::vector<Eigen::Vector2f> streamline;
+            streamline.push_back(position);
+
+            std::unordered_set<coords_t, std::hash<coords_t>> visited_cells;
+
+            if (std::find(comparison.begin(), comparison.end(), *grid.find_staggered_cell(position)) == comparison.end())
+            {
+                // Advect one step, if the start is outside
+                const auto advected = advect_RK45(grid, position, delta, sign, max_error, max_delta);
+
+                position = advected.first;
+                delta = advected.second;
+
+                const auto current_cell = grid.find_staggered_cell(position);
+
+                if (!current_cell || std::find(comparison.begin(), comparison.end(), *current_cell) == comparison.end())
+                {
+                    return std::make_pair(false, std::vector<Eigen::Vector2f>());
+                }
+
+                visited_cells.insert(*current_cell);
+                streamline.push_back(position);
+            }
+
+            // Advect stream line while it corresponds to the input list of cells
+            while (true)
+            {
+                const auto advected = advect_RK45(grid, position, delta, sign, max_error, max_delta);
+
+                const Eigen::Vector2f old_position = position;
+
+                position = advected.first;
+                delta = advected.second;
+
+                if (position == old_position)
+                {
+                    // Advection had no result; stream line stopped
+                    return std::make_pair(false, streamline);
+                }
+
+                // Check entry into new cell
+                const auto old_cell = *grid.find_staggered_cell(old_position);
+                const auto new_cell = grid.find_staggered_cell(position);
+
+                if (!new_cell)
+                {
+                    // Advection went out-of-bounds
+                    return std::make_pair(false, streamline);
+                }
+
+                streamline.push_back(position);
+
+                if (old_cell != *new_cell)
+                {
+                    // Add cells that were overstepped
+                    auto current_cells = get_cells(grid, old_cell, *new_cell, old_position, position);
+
+                    current_cells.push_back(*new_cell);
+
+                    // Check cells
+                    for (auto cell_it = current_cells.begin(); cell_it != current_cells.end() && !comparison.empty(); ++cell_it)
+                    {
+                        const auto& current_cell = *cell_it;
+
+                        if (std::find(comparison.begin(), comparison.end(), current_cell) == comparison.end())
+                        {
+                            return std::make_pair(false, streamline);
+                        }
+
+                        if (visited_cells.find(current_cell) != visited_cells.end())
+                        {
+                            // Return results
+                            return std::make_pair(true, streamline);
+                        }
+
+                        visited_cells.insert(current_cell);
+                    }
+                }
+            }
         }
 
         std::vector<periodic_orbits::coords_t> periodic_orbits::get_cells(const tpf::data::grid<float, float, 2, 2>& grid, coords_t source,
@@ -752,6 +815,7 @@ namespace megamol
                 }
             }
 
+            // Add first position to close the orbit
             periodic_orbit.push_back(periodic_orbit.front());
 
             return periodic_orbit;
