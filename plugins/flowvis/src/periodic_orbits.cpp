@@ -28,7 +28,9 @@
 #include <array>
 #include <cmath>
 #include <list>
+#include <mutex>
 #include <unordered_set>
+#include <thread>
 #include <utility>
 #include <vector>
 
@@ -47,7 +49,8 @@ namespace megamol
             initial_timestep("initial_timestep", "Initial time step for stream line integration"),
             maximum_timestep("maximum_timestep", "Maximum time step for stream line integration"),
             maximum_error("maximum_error", "Maximum error of the time step for stream line integration"),
-            poincare_iterations("poincare_iterations", "Number of iterations for the final periodic orbit")
+            poincare_iterations("poincare_iterations", "Number of iterations for the final periodic orbit"),
+            num_threads(0)
         {
             // Connect output
             this->glyph_slot.SetCallback(glyph_data_call::ClassName(), glyph_data_call::FunctionName(0), &periodic_orbits::get_glyph_data_callback);
@@ -112,7 +115,6 @@ namespace megamol
                     this->vector_field_hash = get_vector_field->DataHash();
                     this->critical_points_hash = get_critical_points->DataHash();
 
-                    const auto& positions = *get_vector_field->get_positions();
                     const auto& vectors = *get_vector_field->get_vectors();
 
                     const auto& critical_points_vertices = *get_critical_points->get_point_vertices();
@@ -130,9 +132,9 @@ namespace megamol
                     cell_sizes[1].resize(get_vector_field->get_resolution()[1]);
 
                     std::fill(cell_sizes[0].begin(), cell_sizes[0].end(),
-                        (get_vector_field->get_bounding_rectangle().Right() - get_vector_field->get_bounding_rectangle().Left()) / get_vector_field->get_resolution()[0]);
+                        (get_vector_field->get_bounding_rectangle().Right() - get_vector_field->get_bounding_rectangle().Left()) / (get_vector_field->get_resolution()[0] - 1));
                     std::fill(cell_sizes[1].begin(), cell_sizes[1].end(),
-                        (get_vector_field->get_bounding_rectangle().Top() - get_vector_field->get_bounding_rectangle().Bottom()) / get_vector_field->get_resolution()[1]);
+                        (get_vector_field->get_bounding_rectangle().Top() - get_vector_field->get_bounding_rectangle().Bottom()) / (get_vector_field->get_resolution()[1] - 1));
 
                     tpf::data::grid_information<float>::array_type cell_coordinates(2);
                     tpf::data::grid_information<float>::array_type node_coordinates(2);
@@ -209,92 +211,111 @@ namespace megamol
                 // Seed a stream lines
                 for (float sign = -1.0f; sign <= 1.0f; sign += 2.0f)
                 {
-                    vislib::sys::Log::DefaultLog.WriteInfo("Starting %s stream line at [%.5f, %.5f]", (sign < 0.0f) ? "backward" : "forward", seed[0], seed[1]);
-
-                    auto periodic_orbit = extract_periodic_orbit(this->grid, this->critical_points, seed, sign);
-
-                    if (!periodic_orbit.empty())
-                    {
-                        this->glyph_output.push_back(std::make_pair(sign, periodic_orbit));
-
-                        for (const auto& point : periodic_orbit)
-                        {
-                            this->glyph_hash = static_cast<SIZE_T>(core::utility::DataHash(this->glyph_hash, point[0], point[1]));
-                        }
-
-                        vislib::sys::Log::DefaultLog.WriteInfo("Periodic orbit found at [%.5f, %.5f]", periodic_orbit[0][0], periodic_orbit[0][1]);
-                    }
-                    else
-                    {
-                        vislib::sys::Log::DefaultLog.WriteInfo("Could not find a periodic orbit");
-                    }
+                    std::thread(&periodic_orbits::extract_periodic_orbit, this, this->grid, this->critical_points, seed, sign).detach();
                 }
             }
 
             return true;
         }
 
-        std::vector<Eigen::Vector2f> periodic_orbits::extract_periodic_orbit(const tpf::data::grid<float, float, 2, 2>& grid,
-            const std::vector<std::pair<flowvis::critical_points::type, Eigen::Vector2f>>& critical_points, Eigen::Vector2f position, const float sign) const
+        void periodic_orbits::extract_periodic_orbit(const tpf::data::grid<float, float, 2, 2>& grid,
+            const std::vector<std::pair<flowvis::critical_points::type, Eigen::Vector2f>>& critical_points, const Eigen::Vector2f& seed, const float sign)
         {
-            using coords_t = typename tpf::data::grid<float, float, 2, 2>::coords_t;
+            // Get parameters for stream line integration
+            float delta;
+            float max_delta;
+            float max_error;
 
-            float delta = this->initial_timestep.Param<core::param::FloatParam>()->Value();
-            const float max_delta = this->maximum_timestep.Param<core::param::FloatParam>()->Value();
-            const float max_error = this->maximum_error.Param<core::param::FloatParam>()->Value();
+            {
+                std::lock_guard<std::mutex> locker(this->lock);
 
-            while (true)
+                vislib::sys::Log::DefaultLog.WriteInfo("Number of processes running: %d", ++this->num_threads);
+
+                vislib::sys::Log::DefaultLog.WriteInfo("Starting %s stream line at [%.5f, %.5f]", (sign < 0.0f) ? "backward" : "forward", seed[0], seed[1]);
+
+                delta = this->initial_timestep.Param<core::param::FloatParam>()->Value();
+                max_delta = this->maximum_timestep.Param<core::param::FloatParam>()->Value();
+                max_error = this->maximum_error.Param<core::param::FloatParam>()->Value();
+            }
+
+            // Start
+            Eigen::Vector2f position = seed;
+
+            bool has_exit = true;
+
+            while (has_exit)
             {
                 // Find turn
                 const auto visited_cells = find_turn(grid, critical_points, position, delta, sign, max_error, max_delta);
 
-                if (!visited_cells)
+                if (visited_cells)
                 {
-                    vislib::sys::Log::DefaultLog.WriteWarn("Turn stopped");
-
-                    return std::vector<Eigen::Vector2f>();
-                }
-
-                if (!visited_cells->empty())
-                {
-                    // Do a second turn and compare results
-                    const auto valid_second_turn = validate_turn(grid, position, delta, sign, max_error, max_delta, *visited_cells, true);
-
-                    if (valid_second_turn)
+                    if (!visited_cells->empty())
                     {
-                        // Look for possible exits
-                        auto vector_hash = [](const Eigen::Vector2f& coords) -> std::size_t
+                        // Do a second turn and compare results
+                        const auto valid_second_turn = validate_turn(grid, position, delta, sign, max_error, max_delta, *visited_cells, true);
+
+                        if (valid_second_turn.first)
                         {
-                            return core::utility::DataHash(coords[0], coords[1]);
-                        };
+                            // Look for possible exits
+                            auto vector_hash = [](const Eigen::Vector2f& coords) -> std::size_t
+                            {
+                                return core::utility::DataHash(coords[0], coords[1]);
+                            };
 
-                        std::unordered_set<Eigen::Vector2f, decltype(vector_hash)> possible_exits(23, vector_hash);
+                            std::unordered_set<Eigen::Vector2f, decltype(vector_hash)> possible_exits(23, vector_hash);
 
-                        for (const auto& cell : *visited_cells)
-                        {
-                            possible_exits.insert(grid.get_cell_coordinates(cell));
-                            possible_exits.insert(grid.get_cell_coordinates(cell + coords_t(1, 0)));
-                            possible_exits.insert(grid.get_cell_coordinates(cell + coords_t(0, 1)));
-                            possible_exits.insert(grid.get_cell_coordinates(cell + coords_t(1, 1)));
-                        }
+                            for (const auto& cell : *visited_cells)
+                            {
+                                possible_exits.insert(grid.get_cell_coordinates(cell));
+                                possible_exits.insert(grid.get_cell_coordinates(cell + coords_t(1, 0)));
+                                possible_exits.insert(grid.get_cell_coordinates(cell + coords_t(0, 1)));
+                                possible_exits.insert(grid.get_cell_coordinates(cell + coords_t(1, 1)));
+                            }
 
-                        // Backward integration from possible exits
-                        bool has_exit = false;
+                            // Backward integration from possible exits
+                            has_exit = false;
 
-                        for (auto possible_exit_it = possible_exits.cbegin(); possible_exit_it != possible_exits.cend() && !has_exit; ++possible_exit_it)
-                        {
-                            Eigen::Vector2f possible_exit = *possible_exit_it;
+                            for (auto possible_exit_it = possible_exits.cbegin(); possible_exit_it != possible_exits.cend() && !has_exit; ++possible_exit_it)
+                            {
+                                Eigen::Vector2f possible_exit = *possible_exit_it;
 
-                            has_exit = validate_turn(grid, possible_exit, delta, -sign, max_error, max_delta, *visited_cells, false);
-                        }
-
-                        // Use Poincaré map for finding the closed stream line
-                        if (!has_exit)
-                        {
-                            return integrate_orbit(grid, position, delta, sign, max_error, max_delta);
+                                has_exit = validate_turn(grid, possible_exit, delta, -sign, max_error, max_delta, *visited_cells, false).first;
+                            }
                         }
                     }
                 }
+                else
+                {
+                    std::lock_guard<std::mutex> locker(this->lock);
+
+                    vislib::sys::Log::DefaultLog.WriteWarn("Could not find a periodic orbit from %s stream line at [%.5f, %.5f]",
+                        (sign < 0.0f) ? "backward" : "forward", seed[0], seed[1]);
+
+                    vislib::sys::Log::DefaultLog.WriteInfo("Number of processes running: %d", --this->num_threads);
+
+                    return;
+                }
+            }
+
+            // Use Poincaré map for finding the closed stream line
+            const std::vector<Eigen::Vector2f> periodic_orbit = integrate_orbit(grid, position, delta, sign, max_error, max_delta);
+
+            // Output results
+            {
+                std::lock_guard<std::mutex> locker(this->lock);
+
+                this->glyph_output.push_back(std::make_pair(sign, periodic_orbit));
+
+                for (const auto& point : periodic_orbit)
+                {
+                    this->glyph_hash = static_cast<SIZE_T>(core::utility::DataHash(this->glyph_hash, point[0], point[1]));
+                }
+
+                vislib::sys::Log::DefaultLog.WriteInfo("Periodic orbit found at [%.5f, %.5f] from %s stream line at [%.5f, %.5f]",
+                    periodic_orbit[0][0], periodic_orbit[0][1], (sign < 0.0f) ? "backward" : "forward", seed[0], seed[1]);
+
+                vislib::sys::Log::DefaultLog.WriteInfo("Number of processes running: %d", --this->num_threads);
             }
         }
 
@@ -492,14 +513,17 @@ namespace megamol
             return visited_cells;
         }
 
-        bool periodic_orbits::validate_turn(const tpf::data::grid<float, float, 2, 2>& grid, Eigen::Vector2f& position,
+        std::pair<bool, std::vector<Eigen::Vector2f>> periodic_orbits::validate_turn(const tpf::data::grid<float, float, 2, 2>& grid, Eigen::Vector2f& position,
             float& delta, const float sign, const float max_error, const float max_delta, std::list<coords_t> comparison, const bool strict) const
         {
             // Initialize comparison
             if (strict && *grid.find_staggered_cell(position) != comparison.front())
             {
-                return false;
+                return std::make_pair(false, std::vector<Eigen::Vector2f>());
             }
+
+            std::vector<Eigen::Vector2f> streamline;
+            streamline.push_back(position);
 
             if (strict)
             {
@@ -514,6 +538,8 @@ namespace megamol
 
                 position = advected.first;
                 delta = advected.second;
+
+                streamline.push_back(position);
             }
 
             // Advect stream line while it corresponds to the input list of cells
@@ -529,7 +555,7 @@ namespace megamol
                 if (position == old_position)
                 {
                     // Advection had no result; stream line stopped
-                    return false;
+                    return std::make_pair(false, streamline);
                 }
 
                 // Check entry into new cell
@@ -539,8 +565,10 @@ namespace megamol
                 if (!new_cell)
                 {
                     // Advection went out-of-bounds
-                    return false;
+                    return std::make_pair(false, streamline);
                 }
+
+                streamline.push_back(position);
 
                 if (old_cell != *new_cell)
                 {
@@ -556,12 +584,12 @@ namespace megamol
 
                         if (strict && current_cell != comparison.front())
                         {
-                            return false;
+                            return std::make_pair(false, streamline);
                         }
 
                         if (!strict && std::find(comparison.begin(), comparison.end(), current_cell) == comparison.end())
                         {
-                            return false;
+                            return std::make_pair(false, streamline);
                         }
 
                         comparison.remove(current_cell);
@@ -570,7 +598,7 @@ namespace megamol
             }
 
             // Return results
-            return true;
+            return std::make_pair(true, streamline);
         }
 
         std::vector<periodic_orbits::coords_t> periodic_orbits::get_cells(const tpf::data::grid<float, float, 2, 2>& grid, coords_t source,

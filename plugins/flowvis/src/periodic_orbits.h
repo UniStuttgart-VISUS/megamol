@@ -22,6 +22,7 @@
 #include "Eigen/Dense"
 
 #include <list>
+#include <mutex>
 #include <utility>
 #include <vector>
 
@@ -92,11 +93,9 @@ namespace megamol
             * @param critical_points Critical points
             * @param seed Seed of the stream line used to find the periodic orbit
             * @param sign Direction of integration
-            *
-            * @return Periodic orbit, represented as line
             */
-            std::vector<Eigen::Vector2f> extract_periodic_orbit(const tpf::data::grid<float, float, 2, 2>& grid,
-                const std::vector<std::pair<critical_points::type, Eigen::Vector2f>>& critical_points, Eigen::Vector2f seed, float sign) const;
+            void extract_periodic_orbit(const tpf::data::grid<float, float, 2, 2>& grid,
+                const std::vector<std::pair<critical_points::type, Eigen::Vector2f>>& critical_points, const Eigen::Vector2f& seed, float sign);
 
             /**
             * Advect using Runge-Kutta with dynamic step size
@@ -144,7 +143,7 @@ namespace megamol
             *
             * @return True: valid, false otherwise
             */
-            bool validate_turn(const tpf::data::grid<float, float, 2, 2>& grid, Eigen::Vector2f& position,
+            std::pair<bool, std::vector<Eigen::Vector2f>> validate_turn(const tpf::data::grid<float, float, 2, 2>& grid, Eigen::Vector2f& position,
                 float& delta, float sign, float max_error, float max_delta, std::list<coords_t> comparison, bool strict) const;
 
             /**
@@ -212,6 +211,10 @@ namespace megamol
 
             /** Stored critical points */
             std::vector<std::pair<critical_points::type, Eigen::Vector2f>> critical_points;
+
+            /** Mutex for synchronization */
+            std::mutex lock;
+            std::size_t num_threads;
         };
     }
 }
