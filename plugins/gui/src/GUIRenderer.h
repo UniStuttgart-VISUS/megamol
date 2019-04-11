@@ -197,9 +197,6 @@ private:
     /** The decorated renderer caller slot */
     core::CallerSlot decorated_renderer_slot;
 
-    /** Float precision for parameter format. */
-    int float_print_prec;
-
     /** Array holding the window states. */
     std::list<GUIWindow> windows;
 
@@ -346,7 +343,7 @@ private:
      * @param mod   Module the paramter belongs to.
      * @param slot  The current parameter slot.
      */
-    void drawHotkeyParameter(const core::Module& mod, core::param::ParamSlot& slot);
+    void drawParameterHotkey(const core::Module& mod, core::param::ParamSlot& slot);
 
     /**
      * Update stored fps and ms values.
@@ -380,7 +377,6 @@ inline GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIR
     , imgui_context(nullptr)
     , decorated_renderer_slot("decoratedRenderer", "Connects to another 2D Renderer being decorated")
     , overlay_slot("overlayRender", "Connected with SplitView for special overlay rendering")
-    , float_print_prec(7) // INIT: Float string format precision
     , windows()
     , last_inst_time(0.0)
     , inst_name()
@@ -437,7 +433,6 @@ inline GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GUIR
     , imgui_context(nullptr)
     , decorated_renderer_slot("decoratedRenderer", "Connects to another 2D Renderer being decorated")
     , overlay_slot("overlayRender", "Connected with SplitView for special overlay rendering")
-    , float_print_prec(7) // INIT: Float string format precision
     , windows()
     , last_inst_time(0.0)
     , inst_name()
@@ -806,7 +801,6 @@ bool GUIRenderer<M, C>::OnKey(core::view::Key key, core::view::KeyAction action,
     this->GetCoreInstance()->EnumParameters([&, this](const auto& mod, auto& slot) {
         if (current_mod != &mod) {
             current_mod = &mod;
-            // Consider only modules belonging to same instance as gui renderer.
             consider_module = this->considerModule(mod.FullName().PeekBuffer());
         }
 
@@ -1005,7 +999,6 @@ inline bool GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>:
     return true;
 }
 
-
 /**
  * GUIRenderer<M, C>::Render
  */
@@ -1163,10 +1156,14 @@ bool GUIRenderer<M, C>::renderGUI(vislib::math::Rectangle<int> viewport, double 
     io.DisplaySize = ImVec2((float)viewportWidth, (float)viewportHeight);
     io.DisplayFramebufferScale = ImVec2(1.0, 1.0);
 
-    io.DeltaTime = (instanceTime - this->last_inst_time) > 0.0 ? static_cast<float>(instanceTime - this->last_inst_time)
-                                                               : io.DeltaTime;
+    if ((instanceTime - this->last_inst_time) < 0.0) {
+        vislib::sys::Log::DefaultLog.WriteWarn("[GUIRenderer] Current instance time results in negative time delta.");
+    }
+    io.DeltaTime = ((instanceTime - this->last_inst_time) > 0.0)
+                       ? (static_cast<float>(instanceTime - this->last_inst_time))
+                       : (io.DeltaTime);
     this->last_inst_time =
-        (instanceTime - this->last_inst_time) > 0.0 ? instanceTime : this->last_inst_time + io.DeltaTime;
+        ((instanceTime - this->last_inst_time) > 0.0) ? (instanceTime) : (this->last_inst_time + io.DeltaTime);
 
     // Loading new font (before NewFrame!)
     if (this->font_new_load) {
@@ -1215,11 +1212,11 @@ template <class M, class C> void GUIRenderer<M, C>::drawMainWindowCallback(std::
     }
 
     // Parameters -------------------------------------------------------------
-    ImGui::Text("PARAMETERS");
+    ImGui::Text("Parameters");
     std::string color_param_help = "[Hover] Parameter for Description Tooltip\n[Right-Click] for Context Menu\n[Drag & "
-                                   "Drop] Module's Parameters to other Parameter Window";
-
+                                   "Drop] Module Header to other Parameter Window";
     this->HelpMarkerToolTip(color_param_help);
+
     this->drawParametersCallback(win_label);
 }
 
@@ -1270,39 +1267,14 @@ template <class M, class C> void GUIRenderer<M, C>::drawParametersCallback(std::
 
     ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() * 0.5f); // set general proportional item width
 
-    //    // Load/save parameter values to LUA file
-    //    if (ImGui::Button("Save Parameters to File")) {
-    //
-    //        // Save parameter file
-    //    }
-    //    ImGui::SameLine();
-    //    if (ImGui::Button("Load Parameters from File")) {
-    //#ifdef _WIN32
-    //        if (!ns_fs::exists(this->param_file.c_str())) {
-    //            ImGui::TextColored(style.Colors[ImGuiCol_ButtonHovered], "Please enter valid Paramter File Name");
-    //        } else
-    //#endif
-    //        {
-    //            // Load parameter file
-    //        }
-    //    }
-    //    size_t bufferLength = GUI_MAX_BUFFER_LEN;
-    //    char* buffer = new char[bufferLength];
-    //    memcpy(buffer, this->param_file.c_str(), this->param_file.size() + 1);
-    //    if (ImGui::InputText("Parameter File Name", buffer, bufferLength, ImGuiInputTextFlags_EnterReturnsTrue)) {
-    //        this->param_file = std::string(buffer);
-    //    }
-    //    delete[] buffer;
-    //    ImGui::Separator();
-
     // Options
-    int overrideState = -1;
+    int overrideState = -1; /// invalid
     if (ImGui::Button("Expand All")) {
-        overrideState = 1;
+        overrideState = 1; /// open
     }
     ImGui::SameLine();
     if (ImGui::Button("Collapse All")) {
-        overrideState = 0;
+        overrideState = 0; /// close
     }
     ImGui::SameLine(0.0f, 50.0f);
 
@@ -1315,13 +1287,24 @@ template <class M, class C> void GUIRenderer<M, C>::drawParametersCallback(std::
     const core::Module* current_mod = nullptr;
     bool current_mod_open = false;
     size_t dnd_size = GUI_MAX_BUFFER_LEN; // Set same max size of all module labels for drag and drop.
+    std::string param_namespace = "";
+    unsigned int param_indent_stack = 0;
+    bool param_namespace_open = true;
 
     this->GetCoreInstance()->EnumParameters([&, this](const auto& mod, auto& slot) {
         if (current_mod != &mod) {
             current_mod = &mod;
             std::string label = mod.FullName().PeekBuffer();
 
-            // Consider only modules belonging to same instance as gui renderer.
+            // Reset parameter namespace stuff
+            param_namespace = "";
+            param_namespace_open = true;
+            while (param_indent_stack > 0) {
+                param_indent_stack--;
+                ImGui::Unindent();
+            }
+
+            // Check if module should be considered.
             if (!this->considerModule(label)) {
                 current_mod_open = false;
                 return;
@@ -1353,6 +1336,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawParametersCallback(std::
                                     std::to_string(this->last_inst_time); /// using instance time as hidden unique id
                     tmp_win.show = true;
                     // tmp_win.hotkey = core::view::KeyCode();
+                    tmp_win.reset = false;
                     tmp_win.flags = ImGuiWindowFlags_HorizontalScrollbar;
                     tmp_win.func = &GUIRenderer<M, C>::drawParametersCallback;
                     tmp_win.param_hotkeys_show = false;
@@ -1371,7 +1355,6 @@ template <class M, class C> void GUIRenderer<M, C>::drawParametersCallback(std::
                         }
                     }
                 }
-
                 ImGui::EndPopup();
             }
 
@@ -1383,14 +1366,47 @@ template <class M, class C> void GUIRenderer<M, C>::drawParametersCallback(std::
                 ImGui::EndDragDropSource();
             }
         }
+
         if (current_mod_open) {
-            if (win->param_hotkeys_show) {
-                this->drawHotkeyParameter(mod, slot);
-            } else {
-                this->drawParameter(mod, slot);
+
+            std::string param_name = slot.Name().PeekBuffer();
+            auto pos = param_name.find("::");
+            std::string current_param_namespace = "";
+            if (pos != std::string::npos) {
+                current_param_namespace = param_name.substr(0, pos);
+            }
+            if (current_param_namespace != param_namespace) {
+                param_namespace = current_param_namespace;
+
+                while (param_indent_stack > 0) {
+                    param_indent_stack--;
+                    ImGui::Unindent();
+                }
+
+                if (!param_namespace.empty()) {
+                    ImGui::Indent();
+                    std::string label = param_namespace + "###" + param_namespace + "__" + param_name;
+                    param_namespace_open = ImGui::CollapsingHeader(label.c_str(), ImGuiTreeNodeFlags_DefaultOpen);
+                    param_indent_stack++;
+                } else {
+                    param_namespace_open = true;
+                }
+            }
+
+            if (param_namespace_open) {
+                if (win->param_hotkeys_show) {
+                    this->drawParameterHotkey(mod, slot);
+                } else {
+                    this->drawParameter(mod, slot);
+                }
             }
         }
     });
+    // Reset parameter namespace stuff
+    while (param_indent_stack > 0) {
+        param_indent_stack--;
+        ImGui::Unindent();
+    }
 
     // Drop target
     ImGui::InvisibleButton("Drop Area", ImVec2(ImGui::GetContentRegionAvailWidth(), ImGui::GetFontSize()));
@@ -1445,7 +1461,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawFpsWindowCallback(std::s
     std::string val;
     if (!arr->empty()) {
         std::stringstream stream;
-        stream << std::fixed << std::setprecision(this->float_print_prec) << arr->back();
+        stream << std::fixed << std::setprecision(3) << arr->back();
         val = stream.str();
     }
     ImGui::PlotHistogram(
@@ -1453,12 +1469,8 @@ template <class M, class C> void GUIRenderer<M, C>::drawFpsWindowCallback(std::s
 
     if (this->show_fps_ms_options) {
 
-        std::stringstream float_stream;
-        float_stream << "%." << this->float_print_prec << "f";
-        std::string float_format = float_stream.str();
-
-        if (ImGui::InputFloat("Refresh Rate", &this->max_delay, 0.0f, 0.0f, float_format.c_str(),
-                ImGuiInputTextFlags_EnterReturnsTrue)) {
+        if (ImGui::InputFloat(
+                "Refresh Rate", &this->max_delay, 0.0f, 0.0f, "%.3f", ImGuiInputTextFlags_EnterReturnsTrue)) {
             this->fps_values.clear();
             this->ms_values.clear();
         }
@@ -1479,7 +1491,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawFpsWindowCallback(std::s
 
         if (ImGui::Button("All Values")) {
             std::stringstream stream;
-            stream << std::fixed << std::setprecision(this->float_print_prec);
+            stream << std::fixed << std::setprecision(3);
             auto end = (*arr).rend();
             for (std::vector<float>::reverse_iterator i = (*arr).rbegin(); i != end; ++i) {
                 stream << (*i) << "\n";
@@ -1528,12 +1540,8 @@ template <class M, class C> void GUIRenderer<M, C>::drawFontSelectionWindowCallb
     this->font_new_filename = valueString.PeekBuffer();
     delete[] buffer;
 
-    std::stringstream float_stream;
-    float_stream << "%." << this->float_print_prec << "f";
-    std::string float_format = float_stream.str();
-
     label = "Font Size";
-    ImGui::InputFloat(label.c_str(), &this->font_new_size, 0.0f, 0.0f, float_format.c_str(), ImGuiInputTextFlags_None);
+    ImGui::InputFloat(label.c_str(), &this->font_new_size, 0.0f, 0.0f, "%.2f", ImGuiInputTextFlags_None);
     // Validate font size
     if (this->font_new_size <= 0.0f) {
         this->font_new_size = 5.0f; /// min valid font size
@@ -1626,6 +1634,32 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
 
     // App
     if (ImGui::BeginMenu("App")) {
+
+        //    // Load/save parameter values to LUA file
+        //    if (ImGui::Button("Save Parameters to File")) {
+        //
+        //        // Save parameter file
+        //    }
+        //    ImGui::SameLine();
+        //    if (ImGui::Button("Load Parameters from File")) {
+        //#ifdef _WIN32
+        //        if (!ns_fs::exists(this->param_file.c_str())) {
+        //            ImGui::TextColored(style.Colors[ImGuiCol_ButtonHovered], "Please enter valid Paramter File Name");
+        //        } else
+        //#endif
+        //        {
+        //            // Load parameter file
+        //        }
+        //    }
+        //    size_t bufferLength = GUI_MAX_BUFFER_LEN;
+        //    char* buffer = new char[bufferLength];
+        //    memcpy(buffer, this->param_file.c_str(), this->param_file.size() + 1);
+        //    if (ImGui::InputText("Parameter File Name", buffer, bufferLength, ImGuiInputTextFlags_EnterReturnsTrue)) {
+        //        this->param_file = std::string(buffer);
+        //    }
+        //    delete[] buffer;
+        //    ImGui::Separator();
+
         if (ImGui::MenuItem("Exit", "'Esc', ALT + 'F4'")) {
             this->shutdown();
         }
@@ -1706,34 +1740,35 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
             ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.25f);
         }
 
-        std::string modname = mod.FullName().PeekBuffer();
-        std::string pname = slot.Name().PeekBuffer();
-        std::string label = pname + "###" + modname + "::" + pname;
-        std::string desc = slot.Description().PeekBuffer();
-
-        std::stringstream float_stream;
-        float_stream << "%." << this->float_print_prec << "f";
-        std::string float_format = float_stream.str();
+        std::string param_name = slot.Name().PeekBuffer();
+        std::string param_id = std::string(mod.FullName().PeekBuffer()) + "::" + param_name;
+        auto pos = param_name.find("::");
+        if (pos != std::string::npos) {
+            param_name = param_name.substr(pos + 2);
+        }
+        std::string param_label = param_name + "###" + param_id;
+        std::string param_desc = slot.Description().PeekBuffer();
+        std::string float_format = "%.7f";
 
         if (auto* p = slot.template Param<core::param::BoolParam>()) {
             auto value = p->Value();
-            if (ImGui::Checkbox(label.c_str(), &value)) {
+            if (ImGui::Checkbox(param_label.c_str(), &value)) {
                 p->SetValue(value);
             }
         } else if (auto* p = slot.template Param<core::param::ButtonParam>()) {
             std::string hotkey = " (";
             hotkey.append(p->GetKeyCode().ToString());
             hotkey.append(")");
-            auto insert_pos = label.find("###"); // no check if found -> should be present
-            label.insert(insert_pos, hotkey);
+            auto insert_pos = param_label.find("###"); // no check if found -> should be present
+            param_label.insert(insert_pos, hotkey);
 
-            if (ImGui::Button(label.c_str())) {
+            if (ImGui::Button(param_label.c_str())) {
                 p->setDirty();
             }
         } else if (auto* p = slot.template Param<core::param::ColorParam>()) {
             core::param::ColorParam::ColorType value = p->Value();
             auto color_flags = ImGuiColorEditFlags_AlphaPreview; // | ImGuiColorEditFlags_Float;
-            if (ImGui::ColorEdit4(label.c_str(), (float*)value.data(), color_flags)) {
+            if (ImGui::ColorEdit4(param_label.c_str(), (float*)value.data(), color_flags)) {
                 p->SetValue(value);
             }
 
@@ -1745,13 +1780,13 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
             auto value = p->Value();
 
             ImGui::Separator();
-            ImGui::Text(pname.c_str());
+            ImGui::Text(param_name.c_str());
             ImGui::SameLine();
-            label = "Load into Editor###editor" + modname + "::" + pname;
+            param_label = "Load into Editor###editor" + param_id;
             if (p == this->tf_active_param) {
-                label = "Open Editor###editor" + modname + "::" + pname;
+                param_label = "Open Editor###editor" + param_id;
             }
-            if (ImGui::Button(label.c_str())) {
+            if (ImGui::Button(param_label.c_str())) {
                 this->tf_active_param = p;
                 load_tf = true;
                 // Open Transfer Function Editor window
@@ -1768,19 +1803,19 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
 
             ImGui::Text("JSON");
             ImGui::SameLine();
-            label = "Copy to Clipboard###clipboard" + modname + "::" + pname;
-            if (ImGui::Button(label.c_str())) {
+            param_label = "Copy to Clipboard###clipboard" + param_id;
+            if (ImGui::Button(param_label.c_str())) {
                 ImGui::SetClipboardText(value.c_str());
             }
             ImGui::SameLine();
-            label = "Copy from Clipboard###fclipboard" + modname + "::" + pname;
-            if (ImGui::Button(label.c_str())) {
+            param_label = "Copy from Clipboard###fclipboard" + param_id;
+            if (ImGui::Button(param_label.c_str())) {
                 p->SetValue(ImGui::GetClipboardText());
                 load_tf = true;
             }
             ImGui::SameLine();
-            label = "Reset###reset" + modname + "::" + pname;
-            if (ImGui::Button(label.c_str())) {
+            param_label = "Reset###reset" + param_id;
+            if (ImGui::Button(param_label.c_str())) {
                 p->SetValue("");
                 load_tf = true;
             }
@@ -1792,19 +1827,17 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
             if (load_tf && (p == this->tf_active_param)) {
                 value = p->Value();
                 if (!this->tf_editor.SetTransferFunction(value)) {
-                    std::string name = modname + "::" + pname;
                     vislib::sys::Log::DefaultLog.WriteWarn(
-                        "[GUIRenderer] Couldn't load transfer function of parameter: %s.", name.c_str());
+                        "[GUIRenderer] Couldn't load transfer function of parameter: %s.", param_id.c_str());
                 }
             }
 
             ImGui::Separator();
-
         } else if (auto* p = slot.template Param<core::param::EnumParam>()) {
             // XXX: no UTF8 fanciness required here?
             auto map = p->getMap();
             auto key = p->Value();
-            if (ImGui::BeginCombo(label.c_str(), map[key].PeekBuffer())) {
+            if (ImGui::BeginCombo(param_label.c_str(), map[key].PeekBuffer())) {
                 auto iter = map.GetConstIterator();
                 while (iter.HasNext()) {
                     auto pair = iter.Next();
@@ -1821,7 +1854,7 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
         } else if (auto* p = slot.template Param<core::param::FlexEnumParam>()) {
             // XXX: no UTF8 fanciness required here?
             auto value = p->Value();
-            if (ImGui::BeginCombo(label.c_str(), value.c_str())) {
+            if (ImGui::BeginCombo(param_label.c_str(), value.c_str())) {
                 for (auto valueOption : p->getStorage()) {
                     bool isSelected = (valueOption == value);
                     if (ImGui::Selectable(valueOption.c_str(), isSelected)) {
@@ -1835,30 +1868,30 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
             }
         } else if (auto* p = slot.template Param<core::param::FloatParam>()) {
             auto value = p->Value();
-            if (ImGui::InputFloat(
-                    label.c_str(), &value, 0.0f, 0.0f, float_format.c_str(), ImGuiInputTextFlags_EnterReturnsTrue)) {
+            if (ImGui::InputFloat(param_label.c_str(), &value, 0.0f, 0.0f, float_format.c_str(),
+                    ImGuiInputTextFlags_EnterReturnsTrue)) {
                 p->SetValue(std::max(p->MinValue(), std::min(value, p->MaxValue())));
             }
         } else if (auto* p = slot.template Param<core::param::IntParam>()) {
             auto value = p->Value();
-            if (ImGui::InputInt(label.c_str(), &value, 0, 0, ImGuiInputTextFlags_EnterReturnsTrue)) {
+            if (ImGui::InputInt(param_label.c_str(), &value, 0, 0, ImGuiInputTextFlags_EnterReturnsTrue)) {
                 p->SetValue(std::max(p->MinValue(), std::min(value, p->MaxValue())));
             }
         } else if (auto* p = slot.template Param<core::param::Vector2fParam>()) {
             auto value = p->Value();
-            if (ImGui::InputFloat2(label.c_str(), value.PeekComponents(), float_format.c_str(),
+            if (ImGui::InputFloat2(param_label.c_str(), value.PeekComponents(), float_format.c_str(),
                     ImGuiInputTextFlags_EnterReturnsTrue)) {
                 p->SetValue(value);
             }
         } else if (auto* p = slot.template Param<core::param::Vector3fParam>()) {
             auto value = p->Value();
-            if (ImGui::InputFloat3(label.c_str(), value.PeekComponents(), float_format.c_str(),
+            if (ImGui::InputFloat3(param_label.c_str(), value.PeekComponents(), float_format.c_str(),
                     ImGuiInputTextFlags_EnterReturnsTrue)) {
                 p->SetValue(value);
             }
         } else if (auto* p = slot.template Param<core::param::Vector4fParam>()) {
             auto value = p->Value();
-            if (ImGui::InputFloat4(label.c_str(), value.PeekComponents(), float_format.c_str(),
+            if (ImGui::InputFloat4(param_label.c_str(), value.PeekComponents(), float_format.c_str(),
                     ImGuiInputTextFlags_EnterReturnsTrue)) {
                 p->SetValue(value);
             }
@@ -1872,7 +1905,7 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
             char* buffer = new char[bufferLength];
             memcpy(buffer, valueString.PeekBuffer(), valueString.Length() + 1);
 
-            if (ImGui::InputText(label.c_str(), buffer, bufferLength, ImGuiInputTextFlags_EnterReturnsTrue)) {
+            if (ImGui::InputText(param_label.c_str(), buffer, bufferLength, ImGuiInputTextFlags_EnterReturnsTrue)) {
                 vislib::UTF8Encoder::Decode(valueString, vislib::StringA(buffer));
                 param->ParseValue(valueString);
             }
@@ -1881,7 +1914,7 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
             help = "Press [Return] to confirm changes.";
         }
 
-        this->HoverToolTip(desc, ImGui::GetID(label.c_str()), 1.0f);
+        this->HoverToolTip(param_desc, ImGui::GetID(param_label.c_str()), 1.0f);
 
         this->HelpMarkerToolTip(help);
 
@@ -1895,10 +1928,10 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
 
 
 /**
- * GUIRenderer<M, C>::drawHotkeyParameter
+ * GUIRenderer<M, C>::drawParameterHotkey
  */
 template <class M, class C>
-void GUIRenderer<M, C>::drawHotkeyParameter(const core::Module& mod, core::param::ParamSlot& slot) {
+void GUIRenderer<M, C>::drawParameterHotkey(const core::Module& mod, core::param::ParamSlot& slot) {
 
     auto param = slot.Parameter();
     if (!param.IsNull()) {
@@ -1997,14 +2030,22 @@ template <class M, class C> void GUIRenderer<M, C>::updateFps(void) {
  */
 template <class M, class C> bool GUIRenderer<M, C>::considerModule(std::string modname) {
 
+    // TODO: Recheck for changes only each ~5 seconds -> list of module names
+
+    // Consider modules depending on assigned view instance
     if (this->inst_name.empty()) {
         return true;
     }
     bool foundInstanceName = (modname.find(this->inst_name) != std::string::npos);
-    // If no second '::' is found, the module is not assigned to any instance
-    bool noInstanceNamePresent = (modname.find("::", 2) == std::string::npos);
+    bool noInstanceNamePresent =
+        (modname.find("::", 2) ==
+            std::string::npos); /// If no second '::' is found, the module is not assigned to any instance
+    bool retval = (foundInstanceName || noInstanceNamePresent);
 
-    return (foundInstanceName || noInstanceNamePresent);
+    // Consider modules depending on related view
+
+
+    return retval;
 }
 
 
