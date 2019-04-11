@@ -1270,9 +1270,9 @@ template <class M, class C> void GUIRenderer<M, C>::drawParametersCallback(std::
     win->param_hotkeys_show = show_only_hotkeys;
 
     std::map<int, std::string> opts;
-    opts[0] = "All";
-    opts[1] = "Instance";
-    opts[2] = "View";
+    opts[0] = "All Modules.";
+    opts[1] = "Modules with same INSATNCE Name as current View and with no Instance Name.";
+    opts[2] = "Modules connected to superior VIEW Module of this GUI Module.";
     int opts_cnt = opts.size();
     if (ImGui::BeginCombo("Module Filter", opts[this->param_module_filter_mode].c_str())) {
         for (int i = 0; i < opts_cnt; ++i) {
@@ -1316,7 +1316,6 @@ template <class M, class C> void GUIRenderer<M, C>::drawParametersCallback(std::
                                 instname = viewname.substr(0, viewname.find("::", 2));
                             }
                             if (!instname.empty()) { /// Consider all modules if view is not assigned to any instance
-
                                 const auto func = [&, this](core::Module* mod) {
                                     std::string modname = mod->FullName().PeekBuffer();
                                     bool foundInstanceName = (modname.find(instname) != std::string::npos);
@@ -1346,7 +1345,8 @@ template <class M, class C> void GUIRenderer<M, C>::drawParametersCallback(std::
         }
         ImGui::EndCombo();
     }
-    this->HelpMarkerToolTip("Only refreshed on selection change");
+    this->HelpMarkerToolTip(
+        "Selected filter is not refreshed on graph changes.\nSelect filter again to trigger refresh.");
     ImGui::Separator();
 
     // Listing parameters
