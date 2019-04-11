@@ -190,6 +190,18 @@ namespace megamol
             std::vector<Eigen::Vector2f> integrate_orbit(const tpf::data::grid<float, float, 2, 2>& grid, Eigen::Vector2f position,
                 float delta, float sign, float max_error, float max_delta) const;
 
+            /**
+            * Linear interpolate position based on value
+            *
+            * @param left "Left" position
+            * @param right "Right" position
+            * @param value_left Value at "left" position
+            * @param value_right Value at "right" position
+            *
+            * @return Position at which the value is zero
+            */
+            Eigen::Vector2f linear_interpolate_position(const Eigen::Vector2f& left, const Eigen::Vector2f& right, float value_left, float value_right) const;
+
             /** Callbacks for the triangle mesh */
             bool get_glyph_data_callback(core::Call& call);
             bool get_glyph_extent_callback(core::Call& call);

@@ -265,10 +265,37 @@ namespace megamol
 
                             for (const auto& cell : *visited_cells)
                             {
-                                possible_exits.insert(grid.get_cell_coordinates(cell));
-                                possible_exits.insert(grid.get_cell_coordinates(cell + coords_t(1, 0)));
-                                possible_exits.insert(grid.get_cell_coordinates(cell + coords_t(0, 1)));
-                                possible_exits.insert(grid.get_cell_coordinates(cell + coords_t(1, 1)));
+                                const auto corner_bl = grid.get_cell_coordinates(cell);
+                                const auto corner_br = grid.get_cell_coordinates(cell + coords_t(1, 0));
+                                const auto corner_tl = grid.get_cell_coordinates(cell + coords_t(0, 1));
+                                const auto corner_tr = grid.get_cell_coordinates(cell + coords_t(1, 1));
+
+                                const auto value_bl = grid(cell);
+                                const auto value_br = grid(cell + coords_t(1, 0));
+                                const auto value_tl = grid(cell + coords_t(0, 1));
+                                const auto value_tr = grid(cell + coords_t(1, 1));
+
+                                if (std::signbit(value_bl[1]) != std::signbit(value_br[1]))
+                                {
+                                    possible_exits.insert(linear_interpolate_position(corner_bl, corner_br, value_bl[1], value_br[1]));
+                                }
+                                if (std::signbit(value_tl[1]) != std::signbit(value_tr[1]))
+                                {
+                                    possible_exits.insert(linear_interpolate_position(corner_tl, corner_tr, value_tl[1], value_tr[1]));
+                                }
+                                if (std::signbit(value_bl[0]) != std::signbit(value_tl[0]))
+                                {
+                                    possible_exits.insert(linear_interpolate_position(corner_bl, corner_tl, value_bl[0], value_tl[0]));
+                                }
+                                if (std::signbit(value_br[0]) != std::signbit(value_tr[0]))
+                                {
+                                    possible_exits.insert(linear_interpolate_position(corner_br, corner_tr, value_br[0], value_tr[0]));
+                                }
+
+                                possible_exits.insert(corner_bl);
+                                possible_exits.insert(corner_br);
+                                possible_exits.insert(corner_tl);
+                                possible_exits.insert(corner_tr);
                             }
 
                             // Backward integration from possible exits
@@ -588,25 +615,6 @@ namespace megamol
 
             std::unordered_set<coords_t, std::hash<coords_t>> visited_cells;
 
-            if (std::find(comparison.begin(), comparison.end(), *grid.find_staggered_cell(position)) == comparison.end())
-            {
-                // Advect one step, if the start is outside
-                const auto advected = advect_RK45(grid, position, delta, sign, max_error, max_delta);
-
-                position = advected.first;
-                delta = advected.second;
-
-                const auto current_cell = grid.find_staggered_cell(position);
-
-                if (!current_cell || std::find(comparison.begin(), comparison.end(), *current_cell) == comparison.end())
-                {
-                    return std::make_pair(false, std::vector<Eigen::Vector2f>());
-                }
-
-                visited_cells.insert(*current_cell);
-                streamline.push_back(position);
-            }
-
             // Advect stream line while it corresponds to the input list of cells
             while (true)
             {
@@ -649,6 +657,7 @@ namespace megamol
 
                         if (std::find(comparison.begin(), comparison.end(), current_cell) == comparison.end())
                         {
+                            // Terminate if position is outside of the reference cells
                             return std::make_pair(false, streamline);
                         }
 
@@ -819,6 +828,13 @@ namespace megamol
             periodic_orbit.push_back(periodic_orbit.front());
 
             return periodic_orbit;
+        }
+
+        Eigen::Vector2f periodic_orbits::linear_interpolate_position(const Eigen::Vector2f& left, const Eigen::Vector2f& right, const float value_left, const float value_right) const
+        {
+            const auto lambda = value_left / (value_left - value_right);
+
+            return left + lambda * (right - left);
         }
     }
 }
