@@ -141,6 +141,9 @@ namespace megamol
             /** Parameter slot for choosing data sets to visualize */
             core::param::ParamSlot data_set;
 
+            /** Parameter slot for choosing validity masks */
+            core::param::ParamSlot mask;
+
             /** Parameter slot for choosing between filled and wireframe mode */
             core::param::ParamSlot wireframe;
 
@@ -153,13 +156,15 @@ namespace megamol
                 bool initialized = false;
 
                 GLuint vs, fs, prog;
-                GLuint vao, vbo, ibo, cbo;
+                GLuint vao, vbo, ibo, cbo, mbo;
                 GLuint tf, tf_size;
 
                 std::shared_ptr<std::vector<GLfloat>> vertices;
                 std::shared_ptr<std::vector<GLuint>> indices;
 
                 std::shared_ptr<mesh_data_call::data_set> values;
+
+                std::shared_ptr<std::vector<GLfloat>> mask;
 
             } render_data;
 

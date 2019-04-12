@@ -92,9 +92,36 @@ namespace megamol
             */
             std::vector<std::string> get_data_sets() const;
 
+            /**
+            * Set the validity mask for a given name
+            *
+            * @param name Name of the mask
+            * @param data Validity mask
+            */
+            void set_mask(const std::string& name, std::shared_ptr<std::vector<float>> mask = nullptr);
+
+            /**
+            * Get the validity mask, as indicated by the name
+            *
+            * @param name Name of the validity mask
+            *
+            * @return Validity mask, or nullptr if it does not exist
+            */
+            std::shared_ptr<std::vector<float>> get_mask(const std::string& name) const;
+
+            /**
+            * Get validity mask names
+            *
+            * @return Names of all available validity masks
+            */
+            std::vector<std::string> get_masks() const;
+
         protected:
             /** Store data sets with their name */
             std::map<std::string, std::shared_ptr<data_set>> data_sets;
+
+            /** Store validity masks with their name */
+            std::map<std::string, std::shared_ptr<std::vector<float>>> masks;
         };
     }
 }

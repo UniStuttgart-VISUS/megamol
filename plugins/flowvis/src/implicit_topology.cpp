@@ -23,6 +23,8 @@
 #include "vislib/math/Rectangle.h"
 #include "vislib/sys/Log.h"
 
+#include "Eigen/Dense"
+
 #include <algorithm>
 #include <chrono>
 #include <cmath>
@@ -624,7 +626,7 @@ namespace megamol
 
                     int counter = 0;
 
-                    for (int i = 0; i < this->labels->size(); ++i)
+                    for (std::size_t i = 0; i < this->labels->size(); ++i)
                     {
                         const auto min_max = std::minmax((*this->labels_forward)[i], (*this->labels_backward)[i]);
 
@@ -668,7 +670,7 @@ namespace megamol
                     // Generate combination of distances
                     this->distances = std::make_shared<std::vector<float>>(this->distances_forward->size());
 
-                    for (int i = 0; i < this->distances->size(); ++i)
+                    for (std::size_t i = 0; i < this->distances->size(); ++i)
                     {
                         (*this->distances)[i] = std::sqrt((*this->distances_forward)[i] * (*this->distances_forward)[i]
                             + (*this->distances_backward)[i] * (*this->distances_backward)[i]) / std::sqrt(2.0f);
@@ -720,65 +722,43 @@ namespace megamol
                 // Compute and set gradient magnitudes
                 if (this->data_output_changed)
                 {
-                    this->gradients_forward = std::make_shared<std::vector<float>>(this->distances_forward->size());
-                    this->gradients_backward = std::make_shared<std::vector<float>>(this->distances_backward->size());
+                    auto& gradients = *(this->gradients = std::make_shared<std::vector<float>>(this->distances_forward->size()));
+                    auto& gradients_forward = *(this->gradients_forward = std::make_shared<std::vector<float>>(this->distances_forward->size(), 0.0f));
+                    auto& gradients_backward = *(this->gradients_backward = std::make_shared<std::vector<float>>(this->distances_backward->size(), 0.0f));
 
-                    const std::vector<float>& distances_forward = *this->distances_forward;
-                    const std::vector<float>& distances_backward = *this->distances_backward;
+                    const auto& vertices = *this->vertices;
+                    const auto& indices = *this->indices;
 
-                    for (unsigned int x = 0; x < this->resolution[0]; ++x)
+                    const auto& distances_forward = *this->distances_forward;
+                    const auto& distances_backward = *this->distances_backward;
+
+                    for (std::size_t i = 0; i < indices.size(); i += 3)
                     {
-                        for (unsigned int y = 0; y < this->resolution[1]; ++y)
-                        {
-                            const unsigned int index = x + y * resolution[0];
+                        const Eigen::Vector2f point_1(vertices[indices[i + 0] * 2 + 0], vertices[indices[i + 0] * 2 + 1]);
+                        const Eigen::Vector2f point_2(vertices[indices[i + 1] * 2 + 0], vertices[indices[i + 1] * 2 + 1]);
+                        const Eigen::Vector2f point_3(vertices[indices[i + 2] * 2 + 0], vertices[indices[i + 2] * 2 + 1]);
 
-                            float magnitude_forward = 0.0f;
-                            float magnitude_backward = 0.0f;
+                        const Eigen::Vector2f distance_1(distances_forward[indices[i + 0]], distances_backward[indices[i + 0]]);
+                        const Eigen::Vector2f distance_2(distances_forward[indices[i + 1]], distances_backward[indices[i + 1]]);
+                        const Eigen::Vector2f distance_3(distances_forward[indices[i + 2]], distances_backward[indices[i + 2]]);
 
-                            if (x == 0)
-                            {
-                                magnitude_forward += std::pow(distances_forward[index + 1] - distances_forward[index], 2.0f);
-                                magnitude_backward += std::pow(distances_backward[index + 1] - distances_backward[index], 2.0f);
-                            }
-                            else if (x == this->resolution[0] - 1)
-                            {
-                                magnitude_forward += std::pow(distances_forward[index] - distances_forward[index - 1], 2.0f);
-                                magnitude_backward += std::pow(distances_backward[index] - distances_backward[index - 1], 2.0f);
-                            }
-                            else
-                            {
-                                magnitude_forward += std::pow((distances_forward[index + 1] - distances_forward[index - 1]) / 2.0f, 2.0f);
-                                magnitude_backward += std::pow((distances_backward[index + 1] - distances_backward[index - 1]) / 2.0f, 2.0f);
-                            }
+                        gradients_forward[indices[i + 0]] = std::max(gradients_forward[indices[i + 0]], std::abs(distance_1[0] - distance_2[0]) / (point_1 - point_2).norm());
+                        gradients_forward[indices[i + 1]] = std::max(gradients_forward[indices[i + 1]], std::abs(distance_1[0] - distance_2[0]) / (point_1 - point_2).norm());
+                        gradients_forward[indices[i + 0]] = std::max(gradients_forward[indices[i + 0]], std::abs(distance_1[0] - distance_3[0]) / (point_1 - point_3).norm());
+                        gradients_forward[indices[i + 2]] = std::max(gradients_forward[indices[i + 2]], std::abs(distance_1[0] - distance_3[0]) / (point_1 - point_3).norm());
+                        gradients_forward[indices[i + 1]] = std::max(gradients_forward[indices[i + 1]], std::abs(distance_2[0] - distance_3[0]) / (point_2 - point_3).norm());
+                        gradients_forward[indices[i + 2]] = std::max(gradients_forward[indices[i + 2]], std::abs(distance_2[0] - distance_3[0]) / (point_2 - point_3).norm());
 
-                            if (y == 0)
-                            {
-                                magnitude_forward += std::pow(distances_forward[index + this->resolution[0]] - distances_forward[index], 2.0f);
-                                magnitude_backward += std::pow(distances_backward[index + this->resolution[0]] - distances_backward[index], 2.0f);
-                            }
-                            else if (y == this->resolution[1] - 1)
-                            {
-                                magnitude_forward += std::pow(distances_forward[index] - distances_forward[index - this->resolution[0]], 2.0f);
-                                magnitude_backward += std::pow(distances_backward[index] - distances_backward[index - this->resolution[0]], 2.0f);
-                            }
-                            else
-                            {
-                                magnitude_forward += std::pow((distances_forward[index + this->resolution[0]] - distances_forward[index - this->resolution[0]]) / 2.0f, 2.0f);
-                                magnitude_backward += std::pow((distances_backward[index + this->resolution[0]] - distances_backward[index - this->resolution[0]]) / 2.0f, 2.0f);
-                            }
+                        gradients_backward[indices[i + 0]] = std::max(gradients_backward[indices[i + 0]], std::abs(distance_1[1] - distance_2[1]) / (point_1 - point_2).norm());
+                        gradients_backward[indices[i + 1]] = std::max(gradients_backward[indices[i + 1]], std::abs(distance_1[1] - distance_2[1]) / (point_1 - point_2).norm());
+                        gradients_backward[indices[i + 0]] = std::max(gradients_backward[indices[i + 0]], std::abs(distance_1[1] - distance_3[1]) / (point_1 - point_3).norm());
+                        gradients_backward[indices[i + 2]] = std::max(gradients_backward[indices[i + 2]], std::abs(distance_1[1] - distance_3[1]) / (point_1 - point_3).norm());
+                        gradients_backward[indices[i + 1]] = std::max(gradients_backward[indices[i + 1]], std::abs(distance_2[1] - distance_3[1]) / (point_2 - point_3).norm());
+                        gradients_backward[indices[i + 2]] = std::max(gradients_backward[indices[i + 2]], std::abs(distance_2[1] - distance_3[1]) / (point_2 - point_3).norm());
 
-                            (*this->gradients_forward)[index] = std::sqrt(magnitude_forward);
-                            (*this->gradients_backward)[index] = std::sqrt(magnitude_backward);
-                        }
-                    }
-
-                    // Generate combination of distances
-                    this->gradients = std::make_shared<std::vector<float>>(this->gradients_forward->size());
-
-                    for (int i = 0; i < this->gradients->size(); ++i)
-                    {
-                        (*this->gradients)[i] = std::sqrt((*this->gradients_forward)[i] * (*this->gradients_forward)[i]
-                            + (*this->gradients_backward)[i] * (*this->gradients_backward)[i]) / std::sqrt(2.0f);
+                        gradients[indices[i + 0]] = std::max(gradients_forward[indices[i + 0]], gradients_backward[indices[i + 0]]);
+                        gradients[indices[i + 1]] = std::max(gradients_forward[indices[i + 1]], gradients_backward[indices[i + 1]]);
+                        gradients[indices[i + 2]] = std::max(gradients_forward[indices[i + 2]], gradients_backward[indices[i + 2]]);
                     }
                 }
 
@@ -804,6 +784,62 @@ namespace megamol
                 this->gradient_range_max.Param<core::param::FloatParam>()->SetValue(gradient_max, false);
 
                 this->gradient_transfer_function.ForceSetDirty();
+
+                // Compute and set validity mask
+                if (this->data_output_changed)
+                {
+                    auto& valid = *(this->valid = std::make_shared<std::vector<GLfloat>>(this->labels->size(), 1.0f));
+                    auto& valid_forward = *(this->valid_forward = std::make_shared<std::vector<GLfloat>>(this->labels->size(), 1.0f));
+                    auto& valid_backward = *(this->valid_backward = std::make_shared<std::vector<GLfloat>>(this->labels->size(), 1.0f));
+
+                    const auto& vertices = *this->vertices;
+                    const auto& indices = *this->indices;
+
+                    const auto& terminations_forward = *this->terminations_forward;
+                    const auto& terminations_backward = *this->terminations_backward;
+
+                    for (std::size_t i = 0; i < indices.size(); i += 3)
+                    {
+                        const Eigen::Vector2f termination_1(terminations_forward[indices[i + 0]], terminations_backward[indices[i + 0]]);
+                        const Eigen::Vector2f termination_2(terminations_forward[indices[i + 1]], terminations_backward[indices[i + 1]]);
+                        const Eigen::Vector2f termination_3(terminations_forward[indices[i + 2]], terminations_backward[indices[i + 2]]);
+
+                        // Set boundaries to invalid
+                        if (termination_1[0] == -1.0f || termination_1[0] == 1.0f || termination_1[0] == 2.0f)
+                        {
+                            valid_forward[indices[i + 0]] = 0.0f;
+                        }
+                        if (termination_1[1] == -1.0f || termination_1[1] == 1.0f || termination_1[1] == 2.0f)
+                        {
+                            valid_backward[indices[i + 0]] = 0.0f;
+                        }
+                        if (termination_2[0] == -1.0f || termination_2[0] == 1.0f || termination_2[0] == 2.0f)
+                        {
+                            valid_forward[indices[i + 1]] = 0.0f;
+                        }
+                        if (termination_2[1] == -1.0f || termination_2[1] == 1.0f || termination_2[1] == 2.0f)
+                        {
+                            valid_backward[indices[i + 1]] = 0.0f;
+                        }
+                        if (termination_3[0] == -1.0f || termination_3[0] == 1.0f || termination_3[0] == 2.0f)
+                        {
+                            valid_forward[indices[i + 2]] = 0.0f;
+                        }
+                        if (termination_3[1] == -1.0f || termination_3[1] == 1.0f || termination_3[1] == 2.0f)
+                        {
+                            valid_backward[indices[i + 2]] = 0.0f;
+                        }
+
+                        // Set combination
+                        valid[indices[i + 0]] = std::min(valid_forward[indices[i + 0]], valid_backward[indices[i + 0]]);
+                        valid[indices[i + 1]] = std::min(valid_forward[indices[i + 1]], valid_backward[indices[i + 1]]);
+                        valid[indices[i + 2]] = std::min(valid_forward[indices[i + 2]], valid_backward[indices[i + 2]]);
+                    }
+
+                    data_call->set_mask("valid", this->valid);
+                    data_call->set_mask("valid (forward)", this->valid_forward);
+                    data_call->set_mask("valid (backward)", this->valid_backward);
+                }
 
                 // Set new data hash
                 data_call->SetDataHash(data_call->DataHash() + 1);
@@ -879,6 +915,10 @@ namespace megamol
             data_call->set_data("gradients");
             data_call->set_data("gradients (forward)");
             data_call->set_data("gradients (backward)");
+
+            data_call->set_mask("valid");
+            data_call->set_mask("valid (forward)");
+            data_call->set_mask("valid (backward)");
 
             return true;
         }

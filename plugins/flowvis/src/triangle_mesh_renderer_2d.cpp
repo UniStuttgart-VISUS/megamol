@@ -31,6 +31,7 @@ namespace megamol
             triangle_mesh_slot("get_triangle_mesh", "Triangle mesh input"), triangle_mesh_hash(-1),
             mesh_data_slot("get_mesh_data", "Mesh data input"), mesh_data_hash(-1),
             data_set("data_set", "Data set used for coloring the triangles"),
+            mask("mask", "Validity mask to selectively hide unwanted vertices or triangles"),
             wireframe("wireframe", "Render as wireframe instead of filling the triangles")
         {
             // Connect input slots
@@ -46,6 +47,9 @@ namespace megamol
             // Connect parameter slots
             this->data_set << new core::param::FlexEnumParam("");
             this->MakeSlotAvailable(&this->data_set);
+
+            this->mask << new core::param::FlexEnumParam("");
+            this->MakeSlotAvailable(&this->mask);
 
             this->wireframe << new core::param::BoolParam(false);
             this->MakeSlotAvailable(&this->wireframe);
@@ -74,6 +78,7 @@ namespace megamol
                 glDeleteBuffers(1, &this->render_data.vbo);
                 glDeleteBuffers(1, &this->render_data.ibo);
                 glDeleteBuffers(1, &this->render_data.cbo);
+                glDeleteBuffers(1, &this->render_data.mbo);
 
                 glDeleteTextures(1, &this->render_data.tf);
             }
@@ -99,6 +104,7 @@ namespace megamol
                     "#version 330 \n" \
                     "layout(location = 0) in vec2 in_position; \n" \
                     "layout(location = 1) in float in_value; \n" \
+                    "layout(location = 2) in float in_mask; \n" \
                     "uniform mat4 model_view_matrix; \n" \
                     "uniform mat4 projection_matrix; \n" \
                     "uniform float min_value; \n" \
@@ -107,7 +113,7 @@ namespace megamol
                     "out vec4 vertex_color; \n" \
                     "void main() { \n" \
                     "    gl_Position = projection_matrix * model_view_matrix * vec4(in_position, 0.0f, 1.0f); \n" \
-                    "    vertex_color = texture(transfer_function, (min_value == max_value) ? 0.5f : ((in_value - min_value) / (max_value - min_value))); \n" \
+                    "    vertex_color = in_mask * texture(transfer_function, (min_value == max_value) ? 0.5f : ((in_value - min_value) / (max_value - min_value))); \n" \
                     "}";
 
                 const std::string fragment_shader =
@@ -137,6 +143,7 @@ namespace megamol
                 glGenBuffers(1, &this->render_data.vbo);
                 glGenBuffers(1, &this->render_data.ibo);
                 glGenBuffers(1, &this->render_data.cbo);
+                glGenBuffers(1, &this->render_data.mbo);
 
                 // Create transfer function texture
                 glGenTextures(1, &this->render_data.tf);
@@ -186,16 +193,31 @@ namespace megamol
                 auto get_data = this->mesh_data_slot.CallAs<mesh_data_call>();
 
                 bool new_data = false;
+                bool new_mask = false;
 
-                if (get_data != nullptr && (*get_data)(0) && (get_data->DataHash() != this->mesh_data_hash || this->data_set.IsDirty()))
+                if (get_data != nullptr && (*get_data)(0))
                 {
-                    // Set hash and reset parameter
+                    if (get_data->DataHash() != this->mesh_data_hash || this->data_set.IsDirty())
+                    {
+                        // Set hash and reset parameter
+                        this->data_set.ResetDirty();
+
+                        this->render_data.values = get_data->get_data(this->data_set.Param<core::param::FlexEnumParam>()->Value());
+
+                        new_data = true;
+                    }
+
+                    if (get_data->DataHash() != this->mesh_data_hash || this->mask.IsDirty())
+                    {
+                        // Set hash and reset parameter
+                        this->mask.ResetDirty();
+
+                        this->render_data.mask = get_data->get_mask(this->mask.Param<core::param::FlexEnumParam>()->Value());
+
+                        new_mask = true;
+                    }
+
                     this->mesh_data_hash = get_data->DataHash();
-                    this->data_set.ResetDirty();
-
-                    this->render_data.values = get_data->get_data(this->data_set.Param<core::param::FlexEnumParam>()->Value());
-
-                    new_data = true;
                 }
 
                 if (this->render_data.values == nullptr)
@@ -209,6 +231,13 @@ namespace megamol
                     new_data = true;
                 }
 
+                if (this->render_data.mask == nullptr)
+                {
+                    this->render_data.mask = std::make_shared<std::vector<GLfloat>>(this->render_data.vertices->size() / 2, 1.0f);
+
+                    new_mask = true;
+                }
+
                 // Prepare OpenGL buffers
                 if (new_data)
                 {
@@ -219,6 +248,19 @@ namespace megamol
 
                     glEnableVertexAttribArray(1);
                     glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+                    glBindVertexArray(0);
+                }
+
+                if (new_mask)
+                {
+                    glBindVertexArray(this->render_data.vao);
+
+                    glBindBuffer(GL_ARRAY_BUFFER, this->render_data.mbo);
+                    glBufferData(GL_ARRAY_BUFFER, this->render_data.mask->size() * sizeof(GLfloat), this->render_data.mask->data(), GL_STATIC_DRAW);
+
+                    glEnableVertexAttribArray(2);
+                    glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, 0, nullptr);
 
                     glBindVertexArray(0);
                 }
@@ -311,25 +353,48 @@ namespace megamol
 
             call.SetBoundingBox(this->bounds);
 
-            // Get available data sets (connection optional)
+            // Get data sets (connection optional)
             auto get_data = this->mesh_data_slot.CallAs<mesh_data_call>();
 
             if (get_data != nullptr && (*get_data)(1) && get_data->DataHash() != this->mesh_data_hash)
             {
-                const auto previous_value = this->data_set.Param<core::param::FlexEnumParam>()->Value();
-
-                this->data_set.Param<core::param::FlexEnumParam>()->ClearValues();
-
-                this->data_set.Param<core::param::FlexEnumParam>()->AddValue("");
-                this->data_set.Param<core::param::FlexEnumParam>()->SetValue("");
-
-                for (const auto& data_set : get_data->get_data_sets())
+                // Get available data sets
                 {
-                    this->data_set.Param<core::param::FlexEnumParam>()->AddValue(data_set);
+                    const auto previous_value = this->data_set.Param<core::param::FlexEnumParam>()->Value();
 
-                    if (data_set == previous_value)
+                    this->data_set.Param<core::param::FlexEnumParam>()->ClearValues();
+
+                    this->data_set.Param<core::param::FlexEnumParam>()->AddValue("");
+                    this->data_set.Param<core::param::FlexEnumParam>()->SetValue("");
+
+                    for (const auto& data_set : get_data->get_data_sets())
                     {
-                        this->data_set.Param<core::param::FlexEnumParam>()->SetValue(previous_value, false);
+                        this->data_set.Param<core::param::FlexEnumParam>()->AddValue(data_set);
+
+                        if (data_set == previous_value)
+                        {
+                            this->data_set.Param<core::param::FlexEnumParam>()->SetValue(previous_value, false);
+                        }
+                    }
+                }
+
+                // Get available masks
+                {
+                    const auto previous_value = this->mask.Param<core::param::FlexEnumParam>()->Value();
+
+                    this->mask.Param<core::param::FlexEnumParam>()->ClearValues();
+
+                    this->mask.Param<core::param::FlexEnumParam>()->AddValue("");
+                    this->mask.Param<core::param::FlexEnumParam>()->SetValue("");
+
+                    for (const auto& mask : get_data->get_masks())
+                    {
+                        this->mask.Param<core::param::FlexEnumParam>()->AddValue(mask);
+
+                        if (mask == previous_value)
+                        {
+                            this->mask.Param<core::param::FlexEnumParam>()->SetValue(previous_value, false);
+                        }
                     }
                 }
             }

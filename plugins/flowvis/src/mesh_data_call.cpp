@@ -41,5 +41,37 @@ namespace megamol
 
             return data_sets;
         }
+
+        void mesh_data_call::set_mask(const std::string& name, std::shared_ptr<std::vector<float>> data)
+        {
+            if (this->masks.find(name) == this->masks.end() || data != nullptr)
+            {
+                this->masks[name] = data;
+            }
+        }
+
+        std::shared_ptr<std::vector<float>> mesh_data_call::get_mask(const std::string& name) const
+        {
+            if (this->masks.find(name) != this->masks.end())
+            {
+                return this->masks.at(name);
+            }
+
+            return nullptr;
+        }
+
+        std::vector<std::string> mesh_data_call::get_masks() const
+        {
+            std::vector<std::string> masks;
+
+            for (const auto& entry : this->masks)
+            {
+                masks.push_back(entry.first);
+            }
+
+            std::sort(masks.begin(), masks.end());
+
+            return masks;
+        }
     }
 }
