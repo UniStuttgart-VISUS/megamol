@@ -606,33 +606,36 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
 
     // Load initial fonts only once for all imgui contexts
     if (!other_context) {
-
         ImFontConfig config;
         config.OversampleH = 4;
         config.OversampleV = 1;
         config.GlyphRanges = this->font_utf8_ranges.data();
-
+        // Add default font
         io.Fonts->AddFontDefault(&config);
-
-        // Loading additional known fonts
+        // Add other known fonts
+        std::string font_file, font_path;
         const vislib::Array<vislib::StringW>& searchPaths =
             this->GetCoreInstance()->Configuration().ResourceDirectories();
         for (int i = 0; i < searchPaths.Count(); ++i) {
-            std::string font_file = "Proggy_Tiny.ttf";
-            if (this->SearchFilePathRecursive(font_file, std::wstring(searchPaths[i].PeekBuffer()))) {
-                io.Fonts->AddFontFromFileTTF(font_file.c_str(), 10.0f, &config);
+            font_file = "Proggy_Tiny.ttf";
+            font_path = this->SearchFilePathRecursive(font_file, std::wstring(searchPaths[i].PeekBuffer()));
+            if (!font_path.empty()) {
+                io.Fonts->AddFontFromFileTTF(font_path.c_str(), 10.0f, &config);
             }
             font_file = "Roboto_Regular.ttf";
-            if (this->SearchFilePathRecursive(font_file, std::wstring(searchPaths[i].PeekBuffer()))) {
-                io.Fonts->AddFontFromFileTTF(font_file.c_str(), 18.0f, &config);
+            font_path = this->SearchFilePathRecursive(font_file, std::wstring(searchPaths[i].PeekBuffer()));
+            if (!font_path.empty()) {
+                io.Fonts->AddFontFromFileTTF(font_path.c_str(), 18.0f, &config);
             }
             font_file = "Ubuntu_Mono_Regular.ttf";
-            if (this->SearchFilePathRecursive(font_file, std::wstring(searchPaths[i].PeekBuffer()))) {
-                io.Fonts->AddFontFromFileTTF(font_file.c_str(), 15.0f, &config);
+            font_path = this->SearchFilePathRecursive(font_file, std::wstring(searchPaths[i].PeekBuffer()));
+            if (!font_path.empty()) {
+                io.Fonts->AddFontFromFileTTF(font_path.c_str(), 15.0f, &config);
             }
             font_file = "Evolventa-Regular.ttf";
-            if (this->SearchFilePathRecursive(font_file, std::wstring(searchPaths[i].PeekBuffer()))) {
-                io.Fonts->AddFontFromFileTTF(font_file.c_str(), 20.0f, &config);
+            font_path = this->SearchFilePathRecursive(font_file, std::wstring(searchPaths[i].PeekBuffer()));
+            if (!font_path.empty()) {
+                io.Fonts->AddFontFromFileTTF(font_path.c_str(), 20.0f, &config);
             }
         }
     }

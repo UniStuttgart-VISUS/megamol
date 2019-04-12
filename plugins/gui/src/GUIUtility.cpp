@@ -64,22 +64,25 @@ bool megamol::gui::GUIUtility::FileHasExtension(std::wstring path, std::string e
 /**
  * GUIUtility::SearchFilePathRecursive
  */
-bool megamol::gui::GUIUtility::SearchFilePathRecursive(std::string path, PathType search_path) {
+std::string megamol::gui::GUIUtility::SearchFilePathRecursive(std::string file, PathType search_path) {
+
+    std::string found_file_path;
 
     for (auto& entry : ns_fs::recursive_directory_iterator(search_path)) {
-        if (entry.path().generic_string() == path) {
-            return true;
+        if (entry.path().filename().generic_string() == file) {
+            found_file_path = entry.path().generic_string();
+            break;
         }
     }
-    return false;
+    return found_file_path;
 }
 
-bool megamol::gui::GUIUtility::SearchFilePathRecursive(std::string path, std::string search_path) {
-    return this->SearchFilePathRecursive(path, PathType(search_path));
+std::string megamol::gui::GUIUtility::SearchFilePathRecursive(std::string file, std::string search_path) {
+    return this->SearchFilePathRecursive(file, PathType(search_path));
 }
 
-bool megamol::gui::GUIUtility::SearchFilePathRecursive(std::string path, std::wstring search_path) {
-    return this->SearchFilePathRecursive(path, PathType(search_path));
+std::string megamol::gui::GUIUtility::SearchFilePathRecursive(std::string file, std::wstring search_path) {
+    return this->SearchFilePathRecursive(file, PathType(search_path));
 }
 
 

@@ -46,6 +46,9 @@ namespace gui {
 class GUIUtility {
 
 public:
+    // FILESYSTEM -------------------------------------------------------------
+
+    /** Type for filesystem paths. */
     typedef ns_fs::path PathType;
 
     /**
@@ -70,12 +73,16 @@ public:
     /**
      * Search recursively for file or path beginning at given directory.
      *
-     * @param path          The file or directory to search for.
+     * @param file          The file to search for.
      * @param search_path   The path of a directory as start for recursive search.
+     *
+     * @return              The complete path of the found file, empty string otherwise.
      */
-    bool SearchFilePathRecursive(std::string path, std::string search_path);
-    bool SearchFilePathRecursive(std::string path, std::wstring search_path);
-    bool SearchFilePathRecursive(std::string path, PathType search_path);
+    std::string SearchFilePathRecursive(std::string file, std::string search_path);
+    std::string SearchFilePathRecursive(std::string file, std::wstring search_path);
+    std::string SearchFilePathRecursive(std::string file, PathType search_path);
+
+    // TOOLTIP ----------------------------------------------------------------
 
     /**
      * Show tooltip on hover.
