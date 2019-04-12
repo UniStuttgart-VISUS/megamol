@@ -31,6 +31,59 @@ megamol::gui::GUIUtility::~GUIUtility(void) {
 
 
 /**
+ * GUIUtility::FilePathExists
+ */
+bool megamol::gui::GUIUtility::FilePathExists(PathType path) { return ns_fs::exists(path); }
+
+bool megamol::gui::GUIUtility::FilePathExists(std::string path) { return this->FilePathExists(PathType(path)); }
+
+bool megamol::gui::GUIUtility::FilePathExists(std::wstring path) { return this->FilePathExists(PathType(path)); }
+
+
+/**
+ * GUIUtility::FileHasExtension
+ */
+bool megamol::gui::GUIUtility::FileHasExtension(PathType path, std::string ext) {
+
+    if (!this->FilePathExists(path)) {
+        return false;
+    }
+
+    return (path.extension().generic_string() == ext);
+}
+
+bool megamol::gui::GUIUtility::FileHasExtension(std::string path, std::string ext) {
+    return this->FileHasExtension(PathType(path), ext);
+}
+
+bool megamol::gui::GUIUtility::FileHasExtension(std::wstring path, std::string ext) {
+    return this->FileHasExtension(PathType(path), ext);
+}
+
+
+/**
+ * GUIUtility::SearchFilePathRecursive
+ */
+bool megamol::gui::GUIUtility::SearchFilePathRecursive(std::string path, PathType search_path) {
+
+    for (auto& entry : ns_fs::recursive_directory_iterator(search_path)) {
+        if (entry.path().generic_string() == path) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool megamol::gui::GUIUtility::SearchFilePathRecursive(std::string path, std::string search_path) {
+    return this->SearchFilePathRecursive(path, PathType(search_path));
+}
+
+bool megamol::gui::GUIUtility::SearchFilePathRecursive(std::string path, std::wstring search_path) {
+    return this->SearchFilePathRecursive(path, PathType(search_path));
+}
+
+
+/**
  * GUIUtility::HoverToolTip
  */
 void megamol::gui::GUIUtility::HoverToolTip(std::string text, ImGuiID id, float time_start, float time_end) {

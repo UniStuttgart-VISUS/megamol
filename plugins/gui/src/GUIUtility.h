@@ -21,6 +21,20 @@
 
 #include <imgui.h>
 
+#if _HAS_CXX17
+#    include <filesystem> // directory_iterator
+namespace ns_fs = std::filesystem;
+#else
+// WINDOWS
+#    ifdef _WIN32
+#        include <filesystem>
+#    else
+// LINUX
+#        include <experimental/filesystem>
+#    endif
+namespace ns_fs = std::experimental::filesystem;
+#endif
+
 
 namespace megamol {
 namespace gui {
@@ -32,6 +46,37 @@ namespace gui {
 class GUIUtility {
 
 public:
+    typedef ns_fs::path PathType;
+
+    /**
+     * Check if given file or directory exists.
+     *
+     * @param path  The file or directory path.
+     */
+    bool FilePathExists(std::string path);
+    bool FilePathExists(std::wstring path);
+    bool FilePathExists(PathType path);
+
+    /**
+     * Check if filename exists and has specified file extension.
+     *
+     * @param path  The file or directory path.
+     * @param ext   The extension the given file should have.
+     */
+    bool FileHasExtension(std::string path, std::string ext);
+    bool FileHasExtension(std::wstring path, std::string ext);
+    bool FileHasExtension(PathType path, std::string ext);
+
+    /**
+     * Search recursively for file or path beginning at given directory.
+     *
+     * @param path          The file or directory to search for.
+     * @param search_path   The path of a directory as start for recursive search.
+     */
+    bool SearchFilePathRecursive(std::string path, std::string search_path);
+    bool SearchFilePathRecursive(std::string path, std::wstring search_path);
+    bool SearchFilePathRecursive(std::string path, PathType search_path);
+
     /**
      * Show tooltip on hover.
      *

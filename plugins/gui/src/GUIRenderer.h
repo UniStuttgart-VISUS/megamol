@@ -66,21 +66,6 @@
 #include "imgui_impl_opengl3.h"
 
 
-#if _HAS_CXX17
-#    include <filesystem> // directory_iterator
-namespace ns_fs = std::filesystem;
-#else
-// WINDOWS
-#    ifdef _WIN32
-#        include <filesystem>
-#    else
-// LINUX
-#        include <experimental/filesystem>
-#    endif
-namespace ns_fs = std::experimental::filesystem;
-#endif
-
-
 #define GUI_MAX_BUFFER_LEN (2048)
 
 
@@ -630,34 +615,24 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
         io.Fonts->AddFontDefault(&config);
 
         // Loading additional known fonts
-        float font_size = 15.0f;
-        std::string ext = ".ttf";
         const vislib::Array<vislib::StringW>& searchPaths =
             this->GetCoreInstance()->Configuration().ResourceDirectories();
         for (int i = 0; i < searchPaths.Count(); ++i) {
-            for (auto& entry : ns_fs::recursive_directory_iterator(ns_fs::path(searchPaths[i].PeekBuffer()))) {
-                // Finds all ttf files present in any resource directories
-                if (entry.path().extension().generic_string() == ext) {
-                    std::string file_path = entry.path().generic_string();
-                    std::string file_name = entry.path().filename().generic_string();
-                    bool found_known_font = false;
-                    if (file_name == "Proggy_Tiny.ttf") {
-                        font_size = 10.0f;
-                        found_known_font = true;
-                    } else if (file_name == "Roboto_Regular.ttf") {
-                        font_size = 18.0f;
-                        found_known_font = true;
-                    } else if (file_name == "Ubuntu_Mono_Regular.ttf") {
-                        font_size = 15.0f;
-                        found_known_font = true;
-                    } else if (file_name == "Evolventa-Regular.ttf") {
-                        font_size = 20.0f;
-                        found_known_font = true;
-                    }
-                    if (found_known_font) {
-                        io.Fonts->AddFontFromFileTTF(file_path.c_str(), font_size, &config);
-                    }
-                }
+            std::string font_file = "Proggy_Tiny.ttf";
+            if (this->SearchFilePathRecursive(font_file, std::wstring(searchPaths[i].PeekBuffer()))) {
+                io.Fonts->AddFontFromFileTTF(font_file.c_str(), 10.0f, &config);
+            }
+            font_file = "Roboto_Regular.ttf";
+            if (this->SearchFilePathRecursive(font_file, std::wstring(searchPaths[i].PeekBuffer()))) {
+                io.Fonts->AddFontFromFileTTF(font_file.c_str(), 18.0f, &config);
+            }
+            font_file = "Ubuntu_Mono_Regular.ttf";
+            if (this->SearchFilePathRecursive(font_file, std::wstring(searchPaths[i].PeekBuffer()))) {
+                io.Fonts->AddFontFromFileTTF(font_file.c_str(), 15.0f, &config);
+            }
+            font_file = "Evolventa-Regular.ttf";
+            if (this->SearchFilePathRecursive(font_file, std::wstring(searchPaths[i].PeekBuffer()))) {
+                io.Fonts->AddFontFromFileTTF(font_file.c_str(), 20.0f, &config);
             }
         }
     }
@@ -1630,7 +1605,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawFontSelectionWindowCallb
     }
 
     // Validate font file before offering load button
-    if (ns_fs::exists(this->font_new_filename.c_str()) && (this->font_new_filename.find(".ttf") < std::string::npos)) {
+    if (this->FileHasExtension(this->font_new_filename, std::string(".ttf"))) {
         if (ImGui::Button("Add Font")) {
             this->font_new_load = true;
         }
@@ -1723,7 +1698,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
         //    }
         //    ImGui::SameLine();
         //    if (ImGui::Button("Load Parameters from File")) {
-        //        if (!ns_fs::exists(this->param_file.c_str())) {
+        //        if (!this->FilePathExists(this->param_file)) {
         //            ImGui::TextColored(style.Colors[ImGuiCol_ButtonHovered], "Please enter valid Paramter File
         //            Name");
         //        } else
