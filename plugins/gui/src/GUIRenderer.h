@@ -61,8 +61,10 @@
 #include <iomanip> // setprecision
 #include <sstream> // stringstream
 
+#include "GUISettings.h"
 #include "GUITransferFunctionEditor.h"
 #include "GUIUtility.h"
+
 #include "imgui_impl_opengl3.h"
 
 
@@ -191,6 +193,9 @@ private:
 
     /** Array holding the window states. */
     std::list<GUIWindow> windows;
+
+    /** Settings manager. */
+    GUISettings settings;
 
     /** Last instance time.  */
     double inst_last_time;
@@ -370,6 +375,7 @@ inline GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIR
     , overlay_slot("overlayRender", "Connected with SplitView for special overlay rendering")
     , imgui_context(nullptr)
     , windows()
+    , settings()
     , inst_last_time(0.0)
     , tf_editor()
     , tf_active_param(nullptr)
@@ -426,6 +432,7 @@ inline GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GUIR
     , overlay_slot("overlayRender", "Connected with SplitView for special overlay rendering")
     , imgui_context(nullptr)
     , windows()
+    , settings()
     , inst_last_time(0.0)
     , tf_editor()
     , tf_active_param(nullptr)
@@ -1136,7 +1143,7 @@ bool GUIRenderer<M, C>::renderGUI(vislib::math::Rectangle<int> viewport, double 
     this->inst_last_time =
         ((instanceTime - this->inst_last_time) > 0.0) ? (instanceTime) : (this->inst_last_time + io.DeltaTime);
 
-    // Loading new font (before NewFrame!)
+    // Loading new font (before NewFrame)
     if (this->font_new_load) {
         ImFontConfig config;
         config.OversampleH = 4;
@@ -1149,11 +1156,11 @@ bool GUIRenderer<M, C>::renderGUI(vislib::math::Rectangle<int> viewport, double 
         this->font_new_load = false;
     }
 
-    // Start the frame
+    // Start new frame
     ImGui_ImplOpenGL3_NewFrame();
     ImGui::NewFrame();
 
-    // Construct frame
+    // Construct frame and draw windows
     for (auto& win : this->windows) {
         this->drawWindow(win);
     }
@@ -1719,6 +1726,19 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
         //    delete[] buffer;
         //    ImGui::Separator();
 
+        // GUI window Profile
+        if (ImGui::BeginMenu("Settings Profile")) {
+            if (ImGui::MenuItem("Load")) {
+            }
+            if (ImGui::MenuItem("Delete")) {
+            }
+            if (ImGui::MenuItem("Store")) {
+            }
+            ImGui::EndMenu();
+        }
+        ImGui::Separator();
+
+        // Exit program
         if (ImGui::MenuItem("Exit", "'Esc', ALT + 'F4'")) {
             this->shutdown();
         }
