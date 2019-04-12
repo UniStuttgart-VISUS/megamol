@@ -67,7 +67,7 @@
         /// <summary>
         /// TransferFunctionParam
         /// </summary>
-        MMTFFC = 93869144556749
+        MMTFFC = 84994521712195
     }
 
 }
