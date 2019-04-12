@@ -23,8 +23,8 @@ int2 threadIdx, blockIdx, blockDim;
 #define __cuda_kernel_start(a, b) <<< a, b >>>
 #endif
 
-// Transformations: domain offset, domain scale, texture offset, texture scale, time scale, max integration error}
-__constant__ float2 const_data[6];
+// Transformations: domain offset, domain scale, texture offset, texture scale, time scale, max integration error, cell size}
+__constant__ float2 const_data[7];
 
 // Textures: vector field, 4th-order runge-kutta step size, convergence points, point ids, convergence lines, line ids
 __constant__ cudaTextureObject_t textures[6];
@@ -348,7 +348,32 @@ void compute_streamlines_kernel(const int num_convergence_points, const int num_
             // If advection had no effect, abort the algorithm
             if (posPrev.x == pos.x && posPrev.y == pos.y)
             {
-                termination = 2;
+                float dist = FLT_MAX;
+
+                for (int k = 0; k < num_convergence_points; ++k)
+                {
+                    const float2 p = make_real<float, 2>(tex1Dfetch<float2>(textures[2], k));
+
+                    dist = fminf(dist, length(make_real<float, 2>(pos - p)));
+                }
+
+                for (int k = 0; k < num_convergence_lines; ++k)
+                {
+                    const float2 p0 = make_real<float, 2>(tex1Dfetch<float2>(textures[4], k * 2 + 0));
+                    const float2 p1 = make_real<float, 2>(tex1Dfetch<float2>(textures[4], k * 2 + 1));
+
+                    dist = fminf(dist, distance_point_line(make_real<float, 2>(pos), make_real<float, 2>(p0), make_real<float, 2>(p1)));
+                }
+
+                if (dist < 0.5f * fminf(const_data[6].x, const_data[6].y))
+                {
+                    termination = 3;
+                }
+                else
+                {
+                    termination = 2;
+                }
+
                 break;
             }
 
@@ -431,14 +456,19 @@ namespace megamol
             const std::size_t num_vectors = vectors.size() / 2;
 
             // Create constants and upload them to GPU
-            const float2 domain_offset = make_real<float, 2>(domain[0], domain[2]);
-            const float2 domain_scale = make_real<float, 2>(1.0f / (domain[1] - domain[0]), 1.0f / (domain[3] - domain[2]));
+            const float cellx = (domain[2] - domain[0]) / (this->resolution[0] - 1);
+            const float celly = (domain[3] - domain[1]) / (this->resolution[1] - 1);
+            const float cell_diag = std::sqrt(cellx * cellx + celly * celly);
+
+            const float2 domain_offset = make_real<float, 2>(domain[0], domain[1]);
+            const float2 domain_scale = make_real<float, 2>(1.0f / (domain[2] - domain[0]), 1.0f / (domain[3] - domain[1]));
             const float2 texture_offset = make_real<float, 2>(-0.5f, -0.5f);
             const float2 texture_scale = make_real<float, 2>(this->resolution[0] - 1, this->resolution[1] - 1);
             const float2 time_scale = make_real<float, 2>(integration_timestep);
             const float2 max_error = make_real<float, 2>(max_integration_error);
+            const float2 cell_size = make_real<float, 2>(cellx, celly);
 
-            const std::array<float2, 6> h_const_data = { domain_offset, domain_scale, texture_offset, texture_scale, time_scale, max_error };
+            const std::array<float2, 7> h_const_data = { domain_offset, domain_scale, texture_offset, texture_scale, time_scale, max_error, cell_size };
 
             cudaMemcpyToSymbol(const_data, h_const_data.data(), h_const_data.size() * sizeof(float2));
 
@@ -450,10 +480,6 @@ namespace megamol
 
             // Create texture for Runge-Kutta step size and upload to GPU
             std::vector<float> h_rk4step(num_vectors);
-
-            const float cellx = (domain[1] - domain[0]) / (this->resolution[0] - 1);
-            const float celly = (domain[3] - domain[2]) / (this->resolution[1] - 1);
-            const float cell_diag = std::sqrt(cellx * cellx + celly * celly);
 
             for (int i = 0; i < num_vectors; ++i)
             {
