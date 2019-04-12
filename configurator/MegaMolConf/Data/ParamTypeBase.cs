@@ -10,7 +10,8 @@ namespace MegaMolConf.Data {
     XmlInclude(typeof(ParamType.Int)),
     XmlInclude(typeof(ParamType.FilePath)),
     XmlInclude(typeof(ParamType.Color)),
-    XmlInclude(typeof(ParamType.String))]
+    XmlInclude(typeof(ParamType.String)),
+    XmlInclude(typeof(ParamType.TransferFunction))]
     public abstract class ParamTypeBase {
         public string TypeName { get; set; }
         abstract public bool ValuesEqual(string a, string b);

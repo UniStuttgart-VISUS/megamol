@@ -73,11 +73,10 @@ bool LinearTransferFunction::requestTF(Call& call) {
     CallGetTransferFunction* cgtf = dynamic_cast<CallGetTransferFunction*>(&call);
     if (cgtf == nullptr) return false;
 
-    bool dirty = this->tfParam.IsDirty();
-    if ((this->texID == 0) || dirty) {
+    if ((this->texID == 0) || this->tfParam.IsDirty()) {
         this->tfParam.ResetDirty();
 
-        param::LinearTransferFunctionParam::TFType tfdata;
+        param::LinearTransferFunctionParam::TFDataType tfdata;
 
         // Get current values from parameter string. Values are checked, too.
         if (!megamol::core::param::LinearTransferFunctionParam::ParseTransferFunction(
@@ -90,8 +89,7 @@ bool LinearTransferFunction::requestTF(Call& call) {
             param::LinearTransferFunctionParam::LinearInterpolation(this->tex, this->texSize, tfdata);
         }
         else if (this->interpolMode == param::LinearTransferFunctionParam::InterpolationMode::GAUSS) {
-            // TODO: Implement ...
-            return false;
+            param::LinearTransferFunctionParam::GaussInterpolation(this->tex, this->texSize, tfdata);
         }
 
         bool t1de = (glIsEnabled(GL_TEXTURE_1D) == GL_TRUE);

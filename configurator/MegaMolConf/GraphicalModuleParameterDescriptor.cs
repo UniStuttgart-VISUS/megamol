@@ -54,7 +54,8 @@ namespace MegaMolConf {
                 if (p.Type is Data.ParamType.Enum) return typeof(EnumParamEditor.Element); // TODO: Change!
                 if (p.Type is Data.ParamType.FlexEnum) return typeof(FlexEnumParamEditor.Element); // TODO: Change!
                 if (p.Type is Data.ParamType.FilePath) return typeof(string); // TODO: is this really the sensible solution?
-                return typeof(string); // all else is string (because buttons are handled by another class
+                if (p.Type is Data.ParamType.TransferFunction) return typeof(string); // TODO: is this really the sensible solution?
+                return typeof(string); // all else is string (because buttons are handled by another class)
             }
         }
 
