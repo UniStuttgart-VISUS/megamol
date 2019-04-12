@@ -66,16 +66,23 @@
 #include "imgui_impl_opengl3.h"
 
 
-#ifdef _WIN32
+#if _HAS_CXX17
 #    include <filesystem> // directory_iterator
-#    if _HAS_CXX17
 namespace ns_fs = std::filesystem;
+#else
+// WINDOWS
+#    ifdef _WIN32
+#        include <filesystem>
 #    else
-namespace ns_fs = std::experimental::filesystem;
+// LINUX
+#        include <experimental/filesystem>
 #    endif
+namespace ns_fs = std::experimental::filesystem;
 #endif
 
+
 #define GUI_MAX_BUFFER_LEN (2048)
+
 
 namespace megamol {
 namespace gui {
@@ -622,7 +629,6 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
 
         io.Fonts->AddFontDefault(&config);
 
-#ifdef _WIN32
         // Loading additional known fonts
         float font_size = 15.0f;
         std::string ext = ".ttf";
@@ -654,7 +660,6 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
                 }
             }
         }
-#endif
     }
 
     // ImGui Key Map
@@ -876,8 +881,8 @@ template <class M, class C> bool GUIRenderer<M, C>::OnMouseMove(double x, double
     ImGuiIO& io = ImGui::GetIO();
     io.MousePos = ImVec2((float)x, (float)y);
 
-    auto hoverFlags =
-        ImGuiHoveredFlags_AnyWindow | ImGuiHoveredFlags_AllowWhenDisabled | ImGuiHoveredFlags_AllowWhenBlockedByPopup;
+    auto hoverFlags = ImGuiHoveredFlags_AnyWindow | ImGuiHoveredFlags_AllowWhenDisabled |
+                      ImGuiHoveredFlags_AllowWhenBlockedByPopup | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem;
     if (!ImGui::IsWindowHovered(hoverFlags)) {
         auto* cr = this->decorated_renderer_slot.template CallAs<C>();
         if (cr == nullptr) return false;
@@ -908,8 +913,8 @@ bool GUIRenderer<M, C>::OnMouseButton(
     ImGuiIO& io = ImGui::GetIO();
     io.MouseDown[buttonIndex] = down;
 
-    auto hoverFlags =
-        ImGuiHoveredFlags_AnyWindow | ImGuiHoveredFlags_AllowWhenDisabled | ImGuiHoveredFlags_AllowWhenBlockedByPopup;
+    auto hoverFlags = ImGuiHoveredFlags_AnyWindow | ImGuiHoveredFlags_AllowWhenDisabled |
+                      ImGuiHoveredFlags_AllowWhenBlockedByPopup | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem;
     if (!ImGui::IsWindowHovered(hoverFlags)) {
         auto* cr = this->decorated_renderer_slot.template CallAs<C>();
         if (cr == nullptr) return false;
@@ -1411,8 +1416,8 @@ template <class M, class C> void GUIRenderer<M, C>::drawParametersCallback(std::
                                     std::to_string(this->inst_last_time); /// using instance time as hidden unique id
                     tmp_win.show = true;
                     // tmp_win.hotkey = core::view::KeyCode();
-                    tmp_win.reset = false;
-                    tmp_win.flags = ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_AlwaysAutoResize;
+                    tmp_win.reset = true;
+                    tmp_win.flags = ImGuiWindowFlags_HorizontalScrollbar; // | ImGuiWindowFlags_AlwaysAutoResize;
                     tmp_win.func = &GUIRenderer<M, C>::drawParametersCallback;
                     tmp_win.param_hotkeys_show = false;
                     tmp_win.param_mods.emplace_back(label);
@@ -1604,7 +1609,6 @@ template <class M, class C> void GUIRenderer<M, C>::drawFontSelectionWindowCallb
     }
     ImGui::Separator();
 
-#ifdef _WIN32
     ImGui::Text("Load new Font from File");
 
     std::string label = "Font Filename (.ttf)";
@@ -1635,7 +1639,6 @@ template <class M, class C> void GUIRenderer<M, C>::drawFontSelectionWindowCallb
     }
     std::string help = "Same font can be loaded multiple times using different font size";
     this->HelpMarkerToolTip(help);
-#endif
 }
 
 
@@ -1720,12 +1723,10 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
         //    }
         //    ImGui::SameLine();
         //    if (ImGui::Button("Load Parameters from File")) {
-        //#ifdef _WIN32
         //        if (!ns_fs::exists(this->param_file.c_str())) {
         //            ImGui::TextColored(style.Colors[ImGuiCol_ButtonHovered], "Please enter valid Paramter File
         //            Name");
         //        } else
-        //#endif
         //        {
         //            // Load parameter file
         //        }
