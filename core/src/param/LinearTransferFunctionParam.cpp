@@ -65,7 +65,7 @@ LinearTransferFunctionParam::~LinearTransferFunctionParam(void) {}
  */
 void LinearTransferFunctionParam::Definition(vislib::RawStorage& outDef) const {
     outDef.AssertSize(6);
-    memcpy(outDef.AsAt<char>(0), "MMTFFNC", 6);
+    memcpy(outDef.AsAt<char>(0), "MMTFFC", 6);
 }
 
 
