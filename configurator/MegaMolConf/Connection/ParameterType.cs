@@ -17,7 +17,8 @@
         Vector3fParam,
         Vector4fParam,
         FlexEnumParam,
-        ColorParam
+        ColorParam,
+        TransferFunctionParam
     }
 
 }
