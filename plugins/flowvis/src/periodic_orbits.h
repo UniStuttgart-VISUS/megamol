@@ -233,6 +233,9 @@ namespace megamol
             /** Parameter for accuracy of the Poincaré map */
             core::param::ParamSlot poincare_iterations;
 
+            /** Parameter for debug output */
+            core::param::ParamSlot output_exit_streamlines;
+
             /** Stored vector field */
             tpf::data::grid<float, float, 2, 2> grid;
 

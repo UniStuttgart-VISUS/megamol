@@ -7,6 +7,7 @@
 #include "vector_field_call.h"
 
 #include "mmcore/Call.h"
+#include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/DataHash.h"
@@ -29,8 +30,8 @@
 #include <cmath>
 #include <list>
 #include <mutex>
-#include <unordered_set>
 #include <thread>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -50,6 +51,7 @@ namespace megamol
             maximum_timestep("maximum_timestep", "Maximum time step for stream line integration"),
             maximum_error("maximum_error", "Maximum error of the time step for stream line integration"),
             poincare_iterations("poincare_iterations", "Number of iterations for the final periodic orbit"),
+            output_exit_streamlines("output_exit_streamlines", "Output stream lines from exit search"),
             num_threads(0)
         {
             // Connect output
@@ -79,6 +81,9 @@ namespace megamol
 
             this->poincare_iterations << new core::param::IntParam(50);
             this->MakeSlotAvailable(&this->poincare_iterations);
+
+            this->output_exit_streamlines << new core::param::BoolParam(false);
+            this->MakeSlotAvailable(&output_exit_streamlines);
         }
 
         periodic_orbits::~periodic_orbits()
@@ -226,6 +231,8 @@ namespace megamol
             float max_delta;
             float max_error;
 
+            bool output_exit_streamline;
+
             {
                 std::lock_guard<std::mutex> locker(this->lock);
 
@@ -236,6 +243,8 @@ namespace megamol
                 delta = this->initial_timestep.Param<core::param::FloatParam>()->Value();
                 max_delta = this->maximum_timestep.Param<core::param::FloatParam>()->Value();
                 max_error = this->maximum_error.Param<core::param::FloatParam>()->Value();
+
+                output_exit_streamline = this->output_exit_streamlines.Param<core::param::BoolParam>()->Value();
             }
 
             // Start
@@ -301,11 +310,43 @@ namespace megamol
                             // Backward integration from possible exits
                             has_exit = false;
 
+                            std::vector<std::vector<Eigen::Vector2f>> exit_tries;
+
                             for (auto possible_exit_it = possible_exits.cbegin(); possible_exit_it != possible_exits.cend() && !has_exit; ++possible_exit_it)
                             {
                                 Eigen::Vector2f possible_exit = *possible_exit_it;
 
-                                has_exit = validate_turn_relaxed(grid, possible_exit, delta, -sign, max_error, max_delta, *visited_cells).first;
+                                const auto exit = validate_turn_relaxed(grid, possible_exit, delta, -sign, max_error, max_delta, *visited_cells);
+                                has_exit = exit.first;
+
+                                if (output_exit_streamline)
+                                {
+                                    exit_tries.push_back(exit.second);
+                                }
+                            }
+
+                            if (output_exit_streamline && !has_exit)
+                            {
+                                std::lock_guard<std::mutex> locker(this->lock);
+
+                                for (const auto& exit_try : exit_tries)
+                                {
+                                    this->glyph_output.push_back(std::make_pair(0.5f * sign, exit_try));
+                                }
+
+                                for (const auto& cell : *visited_cells)
+                                {
+                                    const auto corner_bl = grid.get_cell_coordinates(cell);
+                                    const auto corner_br = grid.get_cell_coordinates(cell + coords_t(1, 0));
+                                    const auto corner_tl = grid.get_cell_coordinates(cell + coords_t(0, 1));
+                                    const auto corner_tr = grid.get_cell_coordinates(cell + coords_t(1, 1));
+
+                                    std::vector<Eigen::Vector2f> box { corner_bl, corner_br, corner_tr, corner_tl, corner_bl };
+
+                                    this->glyph_output.push_back(std::make_pair(0.0f, box));
+                                }
+
+                                ++this->glyph_hash;
                             }
                         }
                     }
@@ -615,6 +656,14 @@ namespace megamol
 
             std::unordered_set<coords_t, std::hash<coords_t>> visited_cells;
 
+            // Advect one step to ensure the start is not considered outside
+            const auto advected = advect_RK45(grid, position, delta, sign, max_error, max_delta);
+
+            position = advected.first;
+            delta = advected.second;
+
+            streamline.push_back(position);
+
             // Advect stream line while it corresponds to the input list of cells
             while (true)
             {
@@ -651,7 +700,7 @@ namespace megamol
                     current_cells.push_back(*new_cell);
 
                     // Check cells
-                    for (auto cell_it = current_cells.begin(); cell_it != current_cells.end() && !comparison.empty(); ++cell_it)
+                    for (auto cell_it = current_cells.begin(); cell_it != current_cells.end(); ++cell_it)
                     {
                         const auto& current_cell = *cell_it;
 
