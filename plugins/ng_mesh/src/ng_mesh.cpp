@@ -16,9 +16,6 @@
 #include "NGMeshRenderer.h"
 //#include "NGMeshDebugDataSource.h"
 
-#include "ng_mesh/BatchedMeshesDataCall.h"
-#include "ng_mesh/MaterialsDataCall.h"
-#include "ng_mesh/RenderTasksDataCall.h"
 #include "ng_mesh/GPUMeshDataCall.h"
 #include "ng_mesh/GPUMaterialDataCall.h"
 #include "ng_mesh/GPURenderTaskDataCall.h"
@@ -59,7 +56,6 @@ namespace {
 
             // register modules here:
 			this->module_descriptions.RegisterAutoDescription<megamol::ngmesh::NGMeshRenderer>();
-			//this->module_descriptions.RegisterAutoDescription<megamol::ngmesh::NGMeshDebugDataSource>();
 			this->module_descriptions.RegisterAutoDescription<megamol::ngmesh::DebugGPUMeshDataSource>();
 			this->module_descriptions.RegisterAutoDescription<megamol::ngmesh::DebugGPUMaterialDataSource>();
 			this->module_descriptions.RegisterAutoDescription<megamol::ngmesh::DebugGPURenderTaskDataSource>();
@@ -76,10 +72,6 @@ namespace {
             //
 
             // register calls here:
-			//this->call_descriptions.RegisterAutoDescription <megamol::ngmesh::CallNGMeshRenderBatches> ();
-			this->call_descriptions.RegisterAutoDescription<megamol::ngmesh::BatchedMeshesDataCall>();
-			this->call_descriptions.RegisterAutoDescription<megamol::ngmesh::MaterialsDataCall>();
-			this->call_descriptions.RegisterAutoDescription<megamol::ngmesh::RenderTasksDataCall>();
 			this->call_descriptions.RegisterAutoDescription<megamol::ngmesh::GPUMeshDataCall>();
 			this->call_descriptions.RegisterAutoDescription<megamol::ngmesh::GPUMaterialDataCall>();
 			this->call_descriptions.RegisterAutoDescription<megamol::ngmesh::GPURenderTaskDataCall>();

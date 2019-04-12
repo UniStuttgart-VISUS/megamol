@@ -18,11 +18,6 @@
 #include "mmcore/view/Renderer3DModule.h"
 #include "mmcore/view/CallRender3D.h"
 
-//#include "ng_mesh/CallNGMeshRenderBatches.h"
-#include "ng_mesh/BatchedMeshesDataCall.h"
-#include "ng_mesh/MaterialDataStorage.h"
-#include "ng_mesh/NGMeshStructs.h"
-#include "ng_mesh/RenderTaskDataStorage.h"
 #include "ng_mesh/GPUMaterialDataStorage.h"
 
 #include "glowl/BufferObject.h"
@@ -110,49 +105,6 @@ namespace ngmesh {
 		* @return The return value of the function.
 		*/
 		bool GetExtents(core::Call& call);
-
-		//	/**
-		//	 * Adds a new render batch by translating the given render batch data
-		//	 * into a GPU RenderBatch ready for rendering.
-		//	 *
-		//	 * @param shader_prgm_data The data for loading a shader program, i.e. the shader filename
-		//	 * @param mesh_data The data required for creating a mesh, i.e. vertex and index data, and vertex layout
-		//	 * @param draw_command_data The data that describes the draw calls executed by glMultiDrawElementsIndirect
-		//	 * @param obj_shader_params Additional data used by the shader during rendering that is specific to the rendered object
-		//	 * @param mtl_shader_params Additional used by the shader during rendering that is specific to the material in use, i.e. texture handles
-		//	 */
-		//	void addRenderBatch(
-		//		ShaderPrgmDataAccessor const&		shader_prgm_data,
-		//		MeshDataAccessor const&				mesh_data,
-		//		DrawCommandDataAccessor const&		draw_command_data,
-		//		ObjectShaderParamsDataAccessor const&	obj_shader_params,
-		//		MaterialShaderParamsDataAccessor const&	mtl_shader_params);
-		//	
-		//	/**
-		//	* Selectively updates an existing render batch with new data.
-		//	*
-		//	* @param idx The index of the render batch that is updated
-		//	* @param shader_prgm_data The data for loading a shader program, i.e. the shader filename
-		//	* @param mesh_data The data required for creating a mesh, i.e. vertex and index data, and vertex layout
-		//	* @param draw_command_data The data that describes the draw calls executed by glMultiDrawElementsIndirect
-		//	* @param obj_shader_params Additional data used by the shader during rendering that is specific to the rendered object
-		//	* @param mtl_shader_params Additional used by the shader during rendering that is specific to the material in use, i.e. texture handles
-		//	* @param update_flags The bit flags that signal which parts of the render batch data needs to be updated
-		//	*/
-		//	void updateRenderBatch(
-		//		size_t						idx,
-		//		ShaderPrgmDataAccessor const&		shader_prgm_data,
-		//		MeshDataAccessor const&				mesh_data,
-		//		DrawCommandDataAccessor const&		draw_command_data,
-		//		ObjectShaderParamsDataAccessor const&	obj_shader_params,
-		//		MaterialShaderParamsDataAccessor const&	mtl_shader_params,
-		//		uint32_t					update_flags);
-
-		void updateMeshes(BatchedMeshesDataAccessor const& meshes, uint32_t update_flags);
-
-		void updateMaterials(std::shared_ptr<MaterialsDataStorage> const& materials, uint32_t update_flags);
-
-		void updateRenderTasks(std::shared_ptr<RenderTaskDataStorage> const& render_tasks, uint32_t update_flags);
 	
 		/**
 		* The render callback.
@@ -167,15 +119,9 @@ namespace ngmesh {
 
 		std::unique_ptr<BufferObject> m_per_frame_data; //< GPU buffer object that stores per frame data, i.e. camera parameters
 
-		/** Render batches caller slot */
-		//megamol::core::CallerSlot m_renderBatches_callerSlot;
 
-		//megamol::core::CallerSlot m_mesh_callerSlot;
-		//megamol::core::CallerSlot m_material_callerSlot;
 		megamol::core::CallerSlot m_render_task_callerSlot;
 
-
-		std::shared_ptr<Mesh> createMesh(BatchedMeshesDataAccessor const & meshes, size_t mesh_idx);
 	};
 
 }

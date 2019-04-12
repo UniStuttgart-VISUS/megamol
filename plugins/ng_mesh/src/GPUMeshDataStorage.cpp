@@ -1,4 +1,4 @@
-#include "..\include\ng_mesh\GPUMeshDataStorage.h"
+#include "../include/ng_mesh/GPUMeshDataStorage.h"
 
 std::vector<megamol::ngmesh::GPUMeshDataStorage::BatchedMeshes> const & megamol::ngmesh::GPUMeshDataStorage::getMeshes()
 {
