@@ -15,14 +15,18 @@
 #include "mmcore/param/ParamSlot.h"
 
 #include "tpf/data/tpf_grid.h"
+#include "tpf/stdext/tpf_comparator.h"
 #include "tpf/utility/tpf_optional.h"
 
 #include <CGAL/Exact_predicates_exact_constructions_kernel.h>
 
 #include "Eigen/Dense"
 
+#include <functional>
 #include <list>
 #include <mutex>
+#include <ostream>
+#include <set>
 #include <utility>
 #include <vector>
 
@@ -209,6 +213,10 @@ namespace megamol
             /** Callback for the mouse event */
             bool get_mouse_coordinates_callback(core::Call& call);
 
+            /** Callback for setting the output callback */
+            bool get_output_callback(core::Call& call);
+            std::function<std::ostream&()> get_output;
+
             /** Callbacks for user input */
             bool stop_callback(core::param::ParamSlot&);
             bool reset_callback(core::param::ParamSlot&);
@@ -216,10 +224,15 @@ namespace megamol
             /** Output slot for the glyphs */
             core::CalleeSlot glyph_slot;
             SIZE_T glyph_hash;
+
             std::vector<std::pair<float, std::vector<Eigen::Vector2f>>> glyph_output;
+            std::vector<std::set<coords_t, std::less<coords_t>>> orbit_cells;
 
             /** Output slot for receiving mouse clicks */
             core::CalleeSlot mouse_slot;
+
+            /** Output slots for writing found periodic orbits to file */
+            core::CalleeSlot file_output_slot;
 
             /** Input slot for getting an input vector field */
             core::CallerSlot vector_field_slot;
@@ -236,7 +249,7 @@ namespace megamol
             core::param::ParamSlot maximum_error;
 
             /** Parameter for accuracy of the Poincaré map */
-            core::param::ParamSlot poincare_iterations;
+            core::param::ParamSlot poincare_error;
 
             /** Parameter for debug output */
             core::param::ParamSlot output_exit_streamlines;
