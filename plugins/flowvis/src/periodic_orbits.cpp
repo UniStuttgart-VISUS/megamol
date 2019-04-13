@@ -58,6 +58,8 @@ namespace megamol
             maximum_error("maximum_error", "Maximum error of the time step for stream line integration"),
             poincare_error("poincare_error", "Maximum error for representive position of periodic orbits"),
             output_exit_streamlines("output_exit_streamlines", "Output stream lines from exit search"),
+            output_critical_points("output_critical_points", "Also write input critical points to file?"),
+            output_critical_points_finished(false),
             stop("stop", "Stop the currently running integration processes"),
             reset("reset", "Reset and clear all previous results"),
             num_threads(0), terminate(false)
@@ -102,6 +104,9 @@ namespace megamol
 
             this->output_exit_streamlines << new core::param::BoolParam(false);
             this->MakeSlotAvailable(&output_exit_streamlines);
+
+            this->output_critical_points << new core::param::BoolParam(false);
+            this->MakeSlotAvailable(&output_critical_points);
 
             this->stop << new core::param::ButtonParam();
             this->stop.SetUpdateCallback(&periodic_orbits::stop_callback);
@@ -262,9 +267,23 @@ namespace megamol
         {
             auto* get_output_cb = dynamic_cast<core::DirectDataWriterCall*>(&call);
 
-            if (get_output_cb != nullptr && (*get_output_cb)(0))
+            if (get_output_cb != nullptr)
             {
                 this->get_output = get_output_cb->GetCallback();
+
+                if (!this->output_critical_points_finished && this->output_critical_points.Param<core::param::BoolParam>()->Value())
+                {
+                    this->get_output() << "# Critical points" << std::endl;
+
+                    for (const auto& critical_point : this->critical_points)
+                    {
+                        this->get_output() << critical_point.second[0] << "," << critical_point.second[1] << std::endl;
+                    }
+
+                    this->get_output() << "# Periodic orbits" << std::endl;
+
+                    this->output_critical_points_finished = true;
+                }
             }
 
             return true;
@@ -275,8 +294,6 @@ namespace megamol
             std::lock_guard<std::mutex> locker(this->lock);
 
             this->terminate = true;
-
-            this->get_output() << std::endl;
 
             return true;
         }
@@ -289,6 +306,8 @@ namespace megamol
             ++this->glyph_hash;
 
             this->orbit_cells.clear();
+
+            this->get_output() << "# Periodic orbits" << std::endl;
 
             return true;
         }

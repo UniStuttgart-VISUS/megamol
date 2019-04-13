@@ -254,6 +254,10 @@ namespace megamol
             /** Parameter for debug output */
             core::param::ParamSlot output_exit_streamlines;
 
+            /** Parameter to additionally writing input critical points to file */
+            core::param::ParamSlot output_critical_points;
+            bool output_critical_points_finished;
+
             /** Parameter for stopping and resetting the computation */
             core::param::ParamSlot stop;
             core::param::ParamSlot reset;
