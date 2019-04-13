@@ -8,6 +8,8 @@
 
 #include "mmcore/Call.h"
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/param/ButtonParam.h"
+#include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/DataHash.h"
@@ -47,12 +49,15 @@ namespace megamol
             vector_field_hash(-1),
             critical_points_slot("get_critical_points", "Critical points input"),
             critical_points_hash(-1),
+            integration_direction("integration_direction", "Direction of integration"),
             initial_timestep("initial_timestep", "Initial time step for stream line integration"),
             maximum_timestep("maximum_timestep", "Maximum time step for stream line integration"),
             maximum_error("maximum_error", "Maximum error of the time step for stream line integration"),
             poincare_iterations("poincare_iterations", "Number of iterations for the final periodic orbit"),
             output_exit_streamlines("output_exit_streamlines", "Output stream lines from exit search"),
-            num_threads(0)
+            stop("stop", "Stop the currently running integration processes"),
+            reset("reset", "Reset and clear all previous results"),
+            num_threads(0), terminate(false)
         {
             // Connect output
             this->glyph_slot.SetCallback(glyph_data_call::ClassName(), glyph_data_call::FunctionName(0), &periodic_orbits::get_glyph_data_callback);
@@ -70,6 +75,12 @@ namespace megamol
             this->MakeSlotAvailable(&this->critical_points_slot);
 
             // Set parameters
+            this->integration_direction << new core::param::EnumParam(0);
+            this->integration_direction.Param<core::param::EnumParam>()->SetTypePair(0, "Forward and backward");
+            this->integration_direction.Param<core::param::EnumParam>()->SetTypePair(1, "Forward");
+            this->integration_direction.Param<core::param::EnumParam>()->SetTypePair(2, "Backward");
+            this->MakeSlotAvailable(&this->integration_direction);
+
             this->initial_timestep << new core::param::FloatParam(0.01f);
             this->MakeSlotAvailable(&this->initial_timestep);
 
@@ -84,6 +95,14 @@ namespace megamol
 
             this->output_exit_streamlines << new core::param::BoolParam(false);
             this->MakeSlotAvailable(&output_exit_streamlines);
+
+            this->stop << new core::param::ButtonParam();
+            this->stop.SetUpdateCallback(&periodic_orbits::stop_callback);
+            this->MakeSlotAvailable(&this->stop);
+
+            this->reset << new core::param::ButtonParam();
+            this->reset.SetUpdateCallback(&periodic_orbits::reset_callback);
+            this->MakeSlotAvailable(&this->reset);
         }
 
         periodic_orbits::~periodic_orbits()
@@ -214,11 +233,37 @@ namespace megamol
                 const Eigen::Vector2f seed(get_mouse_coordinates->get_coordinates().first, get_mouse_coordinates->get_coordinates().second);
 
                 // Seed a stream lines
-                for (float sign = -1.0f; sign <= 1.0f; sign += 2.0f)
+                const auto direction = this->integration_direction.Param<core::param::EnumParam>()->Value();
+
+                if (direction == 0 || direction == 1)
                 {
-                    std::thread(&periodic_orbits::extract_periodic_orbit, this, this->grid, this->critical_points, seed, sign).detach();
+                    std::thread(&periodic_orbits::extract_periodic_orbit, this, this->grid, this->critical_points, seed, 1.0f).detach();
+                }
+
+                if (direction == 0 || direction == 2)
+                {
+                    std::thread(&periodic_orbits::extract_periodic_orbit, this, this->grid, this->critical_points, seed, -1.0f).detach();
                 }
             }
+
+            return true;
+        }
+
+        bool periodic_orbits::stop_callback(core::param::ParamSlot&)
+        {
+            std::lock_guard<std::mutex> locker(this->lock);
+
+            this->terminate = true;
+
+            return true;
+        }
+
+        bool periodic_orbits::reset_callback(core::param::ParamSlot&)
+        {
+            std::lock_guard<std::mutex> locker(this->lock);
+
+            this->glyph_output.clear();
+            ++this->glyph_hash;
 
             return true;
         }
@@ -236,6 +281,8 @@ namespace megamol
             {
                 std::lock_guard<std::mutex> locker(this->lock);
 
+                this->terminate = false;
+
                 vislib::sys::Log::DefaultLog.WriteInfo("Number of processes running: %d", ++this->num_threads);
 
                 vislib::sys::Log::DefaultLog.WriteInfo("Starting %s stream line at [%.5f, %.5f]", (sign < 0.0f) ? "backward" : "forward", seed[0], seed[1]);
@@ -252,7 +299,7 @@ namespace megamol
 
             bool has_exit = true;
 
-            while (has_exit)
+            while (has_exit && !this->terminate)
             {
                 // Find turn
                 const auto visited_cells = find_turn(grid, critical_points, position, delta, sign, max_error, max_delta);
@@ -364,11 +411,12 @@ namespace megamol
                 }
             }
 
-            // Use Poincaré map for finding the closed stream line
-            const std::vector<Eigen::Vector2f> periodic_orbit = integrate_orbit(grid, position, delta, sign, max_error, max_delta);
-
-            // Output results
+            if (!this->terminate)
             {
+                // Use Poincaré map for finding the closed stream line
+                const std::vector<Eigen::Vector2f> periodic_orbit = integrate_orbit(grid, position, delta, sign, max_error, max_delta);
+
+                // Output results
                 std::lock_guard<std::mutex> locker(this->lock);
 
                 this->glyph_output.push_back(std::make_pair(sign, periodic_orbit));
@@ -380,6 +428,15 @@ namespace megamol
 
                 vislib::sys::Log::DefaultLog.WriteInfo("Periodic orbit found at [%.5f, %.5f] from %s stream line at [%.5f, %.5f]",
                     periodic_orbit[0][0], periodic_orbit[0][1], (sign < 0.0f) ? "backward" : "forward", seed[0], seed[1]);
+
+                vislib::sys::Log::DefaultLog.WriteInfo("Number of processes running: %d", --this->num_threads);
+            }
+            else
+            {
+                std::lock_guard<std::mutex> locker(this->lock);
+
+                vislib::sys::Log::DefaultLog.WriteInfo("Search for periodic orbit from %s stream line at [%.5f, %.5f] terminated",
+                    (sign < 0.0f) ? "backward" : "forward", seed[0], seed[1]);
 
                 vislib::sys::Log::DefaultLog.WriteInfo("Number of processes running: %d", --this->num_threads);
             }

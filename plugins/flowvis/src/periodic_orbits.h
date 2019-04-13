@@ -209,6 +209,10 @@ namespace megamol
             /** Callback for the mouse event */
             bool get_mouse_coordinates_callback(core::Call& call);
 
+            /** Callbacks for user input */
+            bool stop_callback(core::param::ParamSlot&);
+            bool reset_callback(core::param::ParamSlot&);
+
             /** Output slot for the glyphs */
             core::CalleeSlot glyph_slot;
             SIZE_T glyph_hash;
@@ -226,6 +230,7 @@ namespace megamol
             SIZE_T critical_points_hash;
 
             /** Parameter for stream line integration */
+            core::param::ParamSlot integration_direction;
             core::param::ParamSlot initial_timestep;
             core::param::ParamSlot maximum_timestep;
             core::param::ParamSlot maximum_error;
@@ -236,6 +241,10 @@ namespace megamol
             /** Parameter for debug output */
             core::param::ParamSlot output_exit_streamlines;
 
+            /** Parameter for stopping and resetting the computation */
+            core::param::ParamSlot stop;
+            core::param::ParamSlot reset;
+
             /** Stored vector field */
             tpf::data::grid<float, float, 2, 2> grid;
 
@@ -245,6 +254,8 @@ namespace megamol
             /** Mutex for synchronization */
             std::mutex lock;
             std::size_t num_threads;
+
+            bool terminate;
         };
     }
 }
