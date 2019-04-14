@@ -178,6 +178,9 @@ namespace megamol
             /** Input slot for getting the vector field */
             core::CallerSlot vector_field_slot;
 
+            /** Input slot for getting convergence structures */
+            core::CallerSlot convergence_structures_slot;
+
             /** Input slot for reading results from file */
             core::CallerSlot result_reader_slot;
 
@@ -187,9 +190,6 @@ namespace megamol
             core::param::ParamSlot reset_computation;
             core::param::ParamSlot load_computation;
             core::param::ParamSlot save_computation;
-
-            /** Path to input convergence structures */
-            core::param::ParamSlot convergence_structures_path;
             
             /** Transfer function for labels, distances, reasons of termination, and gradients */
             core::param::ParamSlot label_transfer_function;

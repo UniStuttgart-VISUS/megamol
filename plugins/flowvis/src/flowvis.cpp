@@ -13,6 +13,7 @@
 #include "vislib/vislibversion.h"
 
 #include "critical_points.h"
+#include "glyph_data_reader.h"
 #include "implicit_topology.h"
 #include "implicit_topology_reader.h"
 #include "implicit_topology_writer.h"
@@ -55,6 +56,7 @@ namespace {
 
             // register modules here:
             this->module_descriptions.RegisterAutoDescription<megamol::flowvis::critical_points>();
+            this->module_descriptions.RegisterAutoDescription<megamol::flowvis::glyph_data_reader>();
             this->module_descriptions.RegisterAutoDescription<megamol::flowvis::implicit_topology>();
             this->module_descriptions.RegisterAutoDescription<megamol::flowvis::implicit_topology_reader>();
             this->module_descriptions.RegisterAutoDescription<megamol::flowvis::implicit_topology_writer>();

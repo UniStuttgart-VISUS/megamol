@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "implicit_topology.h"
 
+#include "glyph_data_call.h"
 #include "implicit_topology_call.h"
 #include "implicit_topology_computation.h"
 #include "implicit_topology_results.h"
@@ -49,13 +50,13 @@ namespace megamol
             log_slot("log_slot", "Log output slot"),
             performance_slot("performance_slot", "Performance log output slot"),
             vector_field_slot("vector_field_slot", "Vector field input slot"),
+            convergence_structures_slot("convergence_structures_slot", "Convergence structures input slot"),
             result_reader_slot("result_reader_slot", "Results input slot"),
             start_computation("start_computation", "Start the computation"),
             stop_computation("stop_computation", "Stop the computation"),
             reset_computation("reset_computation", "Reset the computation"),
             load_computation("load_computation", "Load computation from file"),
             save_computation("save_computation", "Save computation to file"),
-            convergence_structures_path("convergence_structures_path", "Path to the input convergence structures"),
             label_group("label_group", "Label group"),
             label_transfer_function("label_transfer_function", "Transfer function for labels"),
             label_fixed_range("label_fixed_range", "Fixed or dynamic value range for labels"),
@@ -124,12 +125,11 @@ namespace megamol
             this->vector_field_slot.SetCompatibleCall<vector_field_call::vector_field_description>();
             this->MakeSlotAvailable(&this->vector_field_slot);
 
+            this->convergence_structures_slot.SetCompatibleCall<glyph_data_call::glyph_data_description>();
+            this->MakeSlotAvailable(&this->convergence_structures_slot);
+
             this->result_reader_slot.SetCompatibleCall<implicit_topology_reader_call::implicit_topology_reader_description>();
             this->MakeSlotAvailable(&this->result_reader_slot);
-
-            // Create path parameters
-            this->convergence_structures_path << new core::param::FilePathParam("");
-            this->MakeSlotAvailable(&this->convergence_structures_path);
 
             // Create computation parameters
             this->num_integration_steps << new core::param::IntParam(0);
@@ -339,7 +339,7 @@ namespace megamol
             // Get vector field
             auto* vf_call = this->vector_field_slot.CallAs<vector_field_call>();
 
-            if (vf_call != nullptr && (*vf_call)(0))
+            if (vf_call != nullptr && (*vf_call)(1) && (*vf_call)(0))
             {
                 resolution = this->resolution = vf_call->get_resolution();
                 domain = { vf_call->get_bounding_rectangle().Left(), vf_call->get_bounding_rectangle().Bottom(),
@@ -354,65 +354,46 @@ namespace megamol
             }
 
             // Load convergence structures
-            std::ifstream structures_ifs(this->convergence_structures_path.Param<core::param::FilePathParam>()->Value(), std::ios_base::in | std::ios_base::binary);
+            auto* glyph_call = this->convergence_structures_slot.CallAs<glyph_data_call>();
 
-            if (structures_ifs.good())
-            {   
-                unsigned int num_convergence_structures;
+            if (glyph_call != nullptr && (*glyph_call)(1) && (*glyph_call)(0))
+            {
+                // Get points
+                const auto& point_vertices = *glyph_call->get_point_vertices();
+                const auto& point_indices = *glyph_call->get_point_indices();
+                const auto& point_values = *glyph_call->get_point_values();
 
-                structures_ifs.read(reinterpret_cast<char*>(&num_convergence_structures), sizeof(unsigned int));
+                points.reserve(2 * point_indices.size());
+                point_ids.reserve(point_indices.size());
 
-                points.reserve(2 * num_convergence_structures);
-                lines.reserve(4 * num_convergence_structures);
-
-                point_ids.reserve(num_convergence_structures);
-                line_ids.reserve(num_convergence_structures);
-
-                for (unsigned int i = 0; i < num_convergence_structures; ++i)
+                for (const auto index : point_indices)
                 {
-                    unsigned int type;
-                    structures_ifs.read(reinterpret_cast<char*>(&type), sizeof(unsigned int));
+                    points.push_back(point_vertices[index * 2 + 0]);
+                    points.push_back(point_vertices[index * 2 + 1]);
 
-                    float value;
+                    point_ids.push_back(static_cast<int>(point_values[index]));
+                }
 
-                    switch (type)
-                    {
-                    case 0: // Point
-                        structures_ifs.read(reinterpret_cast<char*>(&value), sizeof(float));
-                        points.push_back(value);
-                        structures_ifs.read(reinterpret_cast<char*>(&value), sizeof(float));
-                        points.push_back(value);
+                // Get lines
+                const auto& line_vertices = *glyph_call->get_line_vertices();
+                const auto& line_indices = *glyph_call->get_line_indices();
+                const auto& line_values = *glyph_call->get_line_values();
 
-                        point_ids.push_back(i);
+                lines.reserve(4 * line_indices.size());
+                line_ids.reserve(line_indices.size());
 
-                        break;
-                    case 1: // Line
-                        structures_ifs.read(reinterpret_cast<char*>(&value), sizeof(float));
-                        lines.push_back(value);
-                        structures_ifs.read(reinterpret_cast<char*>(&value), sizeof(float));
-                        lines.push_back(value);
+                for (const auto index : line_indices)
+                {
+                    lines.push_back(line_vertices[index * 4 + 0]);
+                    lines.push_back(line_vertices[index * 4 + 1]);
+                    lines.push_back(line_vertices[index * 4 + 2]);
+                    lines.push_back(line_vertices[index * 4 + 3]);
 
-                        structures_ifs.read(reinterpret_cast<char*>(&value), sizeof(float));
-                        lines.push_back(value);
-                        structures_ifs.read(reinterpret_cast<char*>(&value), sizeof(float));
-                        lines.push_back(value);
-
-                        line_ids.push_back(i);
-
-                        break;
-                    default:
-                        vislib::sys::Log::DefaultLog.WriteError("Unknown convergence structure type in file '%s'!",
-                            this->convergence_structures_path.Param<core::param::FilePathParam>()->Value());
-
-                        return false;
-                    }
+                    line_ids.push_back(static_cast<int>(line_values[index]));
                 }
             }
             else
             {
-                vislib::sys::Log::DefaultLog.WriteWarn("Unable to open input convergence structures file '%s'!",
-                    this->convergence_structures_path.Param<core::param::FilePathParam>()->Value());
-
                 return false;
             }
 
@@ -478,8 +459,6 @@ namespace megamol
 
         void implicit_topology::set_readonly_fixed_parameters(const bool read_only)
         {
-            this->convergence_structures_path.Parameter()->SetGUIReadOnly(read_only);
-
             this->integration_timestep.Parameter()->SetGUIReadOnly(read_only);
             this->max_integration_error.Parameter()->SetGUIReadOnly(read_only);
         }
