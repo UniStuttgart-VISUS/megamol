@@ -251,6 +251,9 @@ namespace megamol
             /** Parameter for accuracy of the Poincaré map */
             core::param::ParamSlot poincare_error;
 
+            /** Parameter for preventing double detection */
+            core::param::ParamSlot unique_detection;
+
             /** Parameter for debug output */
             core::param::ParamSlot output_exit_streamlines;
 

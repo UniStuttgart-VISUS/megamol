@@ -57,6 +57,7 @@ namespace megamol
             maximum_timestep("maximum_timestep", "Maximum time step for stream line integration"),
             maximum_error("maximum_error", "Maximum error of the time step for stream line integration"),
             poincare_error("poincare_error", "Maximum error for representive position of periodic orbits"),
+            unique_detection("unique_detection", "Ensure unique detection"),
             output_exit_streamlines("output_exit_streamlines", "Output stream lines from exit search"),
             output_critical_points("output_critical_points", "Also write input critical points to file?"),
             output_critical_points_finished(false),
@@ -101,6 +102,9 @@ namespace megamol
 
             this->poincare_error << new core::param::FloatParam(0.000001f);
             this->MakeSlotAvailable(&this->poincare_error);
+
+            this->unique_detection << new core::param::BoolParam(true);
+            this->MakeSlotAvailable(&unique_detection);
 
             this->output_exit_streamlines << new core::param::BoolParam(false);
             this->MakeSlotAvailable(&output_exit_streamlines);
@@ -357,7 +361,8 @@ namespace megamol
                         // Check if a periodic orbit with these cells was already extracted
                         const std::set<coords_t, std::less<coords_t>> sorted_visited_cells(visited_cells->cbegin(), visited_cells->cend());
 
-                        if (std::find(this->orbit_cells.begin(), this->orbit_cells.end(), sorted_visited_cells) == this->orbit_cells.end())
+                        if (!this->unique_detection.Param<core::param::BoolParam>()->Value() ||
+                            std::find(this->orbit_cells.begin(), this->orbit_cells.end(), sorted_visited_cells) == this->orbit_cells.end())
                         {
                             // Do a second turn and compare results
                             auto validation = validate_turn_strict(grid, position, delta, sign, max_error, max_delta, *visited_cells);
@@ -455,7 +460,7 @@ namespace megamol
                             }
 
                             // Add list of cells to already extracted periodic orbits
-                            if (!has_exit && !this->terminate)
+                            if (!has_exit && !this->terminate && this->unique_detection.Param<core::param::BoolParam>()->Value())
                             {
                                 this->orbit_cells.push_back(sorted_visited_cells);
                             }
@@ -804,9 +809,14 @@ namespace megamol
 
                 streamline.push_back(position);
 
-                const auto new_cell = grid.find_staggered_cell(position);
+                bool is_in_cell = false;
 
-                if (!new_cell || std::find(comparison.begin(), comparison.end(), *new_cell) == comparison.end())
+                std::for_each(comparison.begin(), comparison.end(), [&grid, &position, &is_in_cell](const coords_t& coords)
+                {
+                    is_in_cell |= grid.is_in_staggered_cell(coords, position);
+                });
+
+                if (!is_in_cell)
                 {
                     // Still outside
                     return std::make_pair(false, streamline);
