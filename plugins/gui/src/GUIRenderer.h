@@ -8,15 +8,13 @@
 /**
  * TODO
  *
- * - Fix drawing order/depth handling of bbox (currently front of bbox is drawn on top of everything)
- * - Fix x and y transformation by View2D class (will be fixed when new CallRender is available)
  * - Fix lost keyboard/mouse input for low frame rates
  *
  *
  * USED HOKEYS:
  *
  * - Show/hide Windows: F12 - F9
- * - Reset windows:     Shift + (Window show/hide hotkey)
+ * - Reset windows:     Shift + (Window show/hide hotkeys)
  * - Quit program:      Esc, Alt + F4
  *
  */
@@ -61,9 +59,10 @@
 #include <iomanip> // setprecision
 #include <sstream> // stringstream
 
-#include "GUISettings.h"
+
 #include "GUITransferFunctionEditor.h"
 #include "GUIUtility.h"
+#include "GUIWindowManager.h"
 
 #include "imgui_impl_opengl3.h"
 
@@ -109,6 +108,16 @@ public:
     virtual ~GUIRenderer();
 
 protected:
+    // TYPES ------------------------------------------------------------------
+
+    /** Type defining function pointer to window draw callbacks. */
+    typedef void (GUIRenderer<M, C>::*GUIWinCall)(const std::string&);
+
+    /** Type alias fpr window configuration (C++11 feature - alias template). */
+    template <typename F> using GUIWinConfig = typename megamol::gui::GUIWindowManager<F>::WindowConfiguration;
+
+    // FUNCTIONS --------------------------------------------------------------
+
     virtual bool create() override;
 
     virtual void release() override;
@@ -159,23 +168,7 @@ protected:
     bool OnMouseScrollCallback(core::Call& call);
 
 private:
-    // TYPES, ENUMS -----------------------------------------------------------
-
-    /** Type for window draw callback functions */
-    typedef void (GUIRenderer<M, C>::*GuiFunc)(std::string);
-
-    /** Type for holding a window configuration. */
-    typedef struct _gui_window {
-        std::string label;                   // window label
-        bool show;                           // open/close window
-        bool reset;                          // reset window position and size
-        core::view::KeyCode hotkey;          // hotkey for opening/closing window
-        ImGuiWindowFlags flags;              // imgui window flags
-        GuiFunc func;                        // pointer to function drawing window content
-        bool param_hotkeys_show;             // flag to toggle parameter hotkeys
-        bool param_main;                     // flag indicating main parameter window
-        std::vector<std::string> param_mods; // modules to show the parameters of
-    } GUIWindow;
+    // ENUMS ------------------------------------------------------------------
 
     /** ImGui key map assignment for text manipulation hotkeys (using last unused indices < 512) */
     enum TextModHotkeys { CTRL_A = 506, CTRL_C = 507, CTRL_V = 508, CTRL_X = 509, CTRL_Y = 510, CTRL_Z = 511 };
@@ -191,14 +184,11 @@ private:
     /** The ImGui context created and used by this GUIRenderer */
     ImGuiContext* imgui_context;
 
-    /** Array holding the window states. */
-    std::list<GUIWindow> windows;
-
-    /** Settings manager. */
-    GUISettings settings;
-
     /** Last instance time.  */
     double inst_last_time;
+
+    /** The window manager. */
+    GUIWindowManager<GUIWinCall> window_manager;
 
     /** The transfer function editor. */
     GUITransferFunctionEditor tf_editor;
@@ -271,55 +261,37 @@ private:
      *
      * @param win_label  The label of the calling window.
      */
-    void drawMainWindowCallback(std::string win_label);
+    void drawMainWindowCallback(const std::string& win_label);
 
     /**
      * Draws parameters and options.
      *
      * @param win_label  The label of the calling window.
      */
-    void drawParametersCallback(std::string win_label);
+    void drawParametersCallback(const std::string& win_label);
 
     /**
      * Draws fps overlay window.
      *
      * @param win_label  The label of the calling window.
      */
-    void drawFpsWindowCallback(std::string win_label);
+    void drawFpsWindowCallback(const std::string& win_label);
 
     /**
      * Callback for drawing font selection window.
      *
      * @param win_label  The label of the calling window.
      */
-    void drawFontSelectionWindowCallback(std::string win_label);
+    void drawFontSelectionWindowCallback(const std::string& win_label);
 
     /**
      * Callback for drawing the demo window.
      *
      * @param win_label  The label of the calling window.
      */
-    void drawTFWindowCallback(std::string win_label);
+    void drawTFWindowCallback(const std::string& win_label);
 
     // ---------------------------------
-
-    /**
-     * Reset size and position of window.
-     * Should be called after ImGui::Begin().
-     *
-     * @param win_label    The name of the window to reset.
-     * @param width        The width the window should be reset. Ignored if auto_resize is true.
-     * @param height       The height the window should be reset. Ignored if auto_resize is true.
-     * @param auto_resize  Flag indicating that given width and height should be ignored.
-     */
-    void resetWindowSizePos(std::string win_label, float width, float height, bool auto_resize);
-
-    /**
-     * Draws the menu bar.
-     *
-     * @param win  The window configuration to use.
-     */
-    void drawWindow(GUIWindow& win);
 
     /**
      * Draws the menu bar.
@@ -374,9 +346,8 @@ inline GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIR
     , decorated_renderer_slot("decoratedRenderer", "Connects to another 2D Renderer being decorated")
     , overlay_slot("overlayRender", "Connected with SplitView for special overlay rendering")
     , imgui_context(nullptr)
-    , windows()
-    , settings()
     , inst_last_time(0.0)
+    , window_manager()
     , tf_editor()
     , tf_active_param(nullptr)
     , param_file()
@@ -431,9 +402,8 @@ inline GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GUIR
     , decorated_renderer_slot("decoratedRenderer", "Connects to another 2D Renderer being decorated")
     , overlay_slot("overlayRender", "Connected with SplitView for special overlay rendering")
     , imgui_context(nullptr)
-    , windows()
-    , settings()
     , inst_last_time(0.0)
+    , window_manager()
     , tf_editor()
     , tf_active_param(nullptr)
     , param_file()
@@ -529,47 +499,44 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
     ImGui_ImplOpenGL3_Init(glsl_version);
 
     // Window configurations
-    this->windows.clear();
-    GUIWindow tmp_win;
+    // this->window_manager.clear();
+    GUIWinConfig<GUIWinCall> tmp_win;
     /// default for all
     tmp_win.reset = true;
     tmp_win.param_hotkeys_show = false;
     tmp_win.param_mods.clear();
+    tmp_win.dim = ImVec2(500.0f, 300.0f);
     // Main Window ------------------------------------------------------------
-    tmp_win.label = "MegaMol";
     tmp_win.show = true;
     tmp_win.hotkey = core::view::KeyCode(core::view::Key::KEY_F12);
     tmp_win.flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_HorizontalScrollbar;
     tmp_win.func = &GUIRenderer<M, C>::drawMainWindowCallback;
     tmp_win.param_main = true;
-    this->windows.emplace_back(tmp_win);
+    this->window_manager.AddWindowConfiguration("MegaMol", tmp_win);
 
     // FPS overlay Window -----------------------------------------------------
-    tmp_win.label = "FPS";
     tmp_win.show = false;
     tmp_win.hotkey = core::view::KeyCode(core::view::Key::KEY_F11);
     tmp_win.flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar;
     tmp_win.func = &GUIRenderer<M, C>::drawFpsWindowCallback;
     tmp_win.param_main = false;
-    this->windows.emplace_back(tmp_win);
+    this->window_manager.AddWindowConfiguration("FPS", tmp_win);
 
     // Font Selection Window --------------------------------------------------
-    tmp_win.label = "Fonts";
     tmp_win.show = false;
     tmp_win.hotkey = core::view::KeyCode(core::view::Key::KEY_F10);
     tmp_win.flags = ImGuiWindowFlags_AlwaysAutoResize;
     tmp_win.func = &GUIRenderer<M, C>::drawFontSelectionWindowCallback;
     tmp_win.param_main = false;
-    this->windows.emplace_back(tmp_win);
+    this->window_manager.AddWindowConfiguration("Fonts", tmp_win);
 
     // Demo Window --------------------------------------------------
-    tmp_win.label = "Transfer Function Editor";
     tmp_win.show = false;
     tmp_win.hotkey = core::view::KeyCode(core::view::Key::KEY_F9);
     tmp_win.flags = ImGuiWindowFlags_AlwaysAutoResize;
     tmp_win.func = &GUIRenderer<M, C>::drawTFWindowCallback;
     tmp_win.param_main = false;
-    this->windows.emplace_back(tmp_win);
+    this->window_manager.AddWindowConfiguration("Transfer Function Editor", tmp_win);
 
     // Style settings ---------------------------------------------------------
     ImGui::StyleColorsDark();
@@ -679,8 +646,6 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
  */
 template <class M, class C> void GUIRenderer<M, C>::release() {
 
-    this->windows.clear();
-
     if (this->imgui_context != nullptr) {
         ImGui_ImplOpenGL3_Shutdown();
         ImGui::DestroyContext(this->imgui_context);
@@ -766,17 +731,17 @@ bool GUIRenderer<M, C>::OnKey(core::view::Key key, core::view::KeyAction action,
     }
 
     // Hotkeys of window(s)
-    for (auto& win : this->windows) {
-        hotkeyPressed = (ImGui::IsKeyDown(static_cast<int>(win.hotkey.key))); // Ignoring additional modifiers
+    const auto func = [&, this](const std::string& wn, GUIWinConfig<GUIWinCall>& wc) {
+        hotkeyPressed = (ImGui::IsKeyDown(static_cast<int>(wc.hotkey.key))); // Ignoring additional modifiers
         if (hotkeyPressed) {
             if (io.KeyShift) {
-                win.reset = true;
+                wc.reset = true;
             } else {
-                win.show = !win.show;
+                wc.show = !wc.show;
             }
-            return true;
         }
-    }
+    };
+    this->window_manager.EnumWindows(func);
 
     // Always consume keyboard input if requested by any imgui widget (e.g. text input).
     // User expects hotkey priority of text input thus needs to be processed before parameter hotkeys.
@@ -1160,10 +1125,30 @@ bool GUIRenderer<M, C>::renderGUI(vislib::math::Rectangle<int> viewport, double 
     ImGui_ImplOpenGL3_NewFrame();
     ImGui::NewFrame();
 
-    // Construct frame and draw windows
-    for (auto& win : this->windows) {
-        this->drawWindow(win);
-    }
+    // Draw windows
+    const auto func = [&, this](const std::string& wn, GUIWinConfig<GUIWinCall>& wc) {
+        if (wc.show) {
+            ImGui::SetNextWindowBgAlpha(1.0f);
+
+            if (!ImGui::Begin(wn.c_str(), &wc.show, wc.flags)) {
+                ImGui::End(); // early ending
+                return;
+            }
+
+            // Reset window position and size
+            if (wc.reset) {
+                this->window_manager.ResetWindowSizePos(wn);
+                wc.reset = false;
+            }
+
+            if (wc.func != nullptr) {
+                (this->*wc.func)(wn);
+            }
+
+            ImGui::End();
+        }
+    };
+    this->window_manager.EnumWindows(func);
 
     // Render the frame
     glViewport(0, 0, viewportWidth, viewportHeight);
@@ -1174,13 +1159,13 @@ bool GUIRenderer<M, C>::renderGUI(vislib::math::Rectangle<int> viewport, double 
     this->updateFps();
 
     return true;
-}
+} // namespace gui
 
 
 /**
  * GUIRenderer<M, C>::drawMainWindowCallback
  */
-template <class M, class C> void GUIRenderer<M, C>::drawMainWindowCallback(std::string win_label) {
+template <class M, class C> void GUIRenderer<M, C>::drawMainWindowCallback(const std::string& win_label) {
 
     // Menu -------------------------------------------------------------------
     /// Requires window flag ImGuiWindowFlags_MenuBar
@@ -1202,7 +1187,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawMainWindowCallback(std::
 /**
  * GUIRenderer<M, C>::drawTFWindowCallback
  */
-template <class M, class C> void GUIRenderer<M, C>::drawTFWindowCallback(std::string win_label) {
+template <class M, class C> void GUIRenderer<M, C>::drawTFWindowCallback(const std::string& win_label) {
 
     ImGuiStyle& style = ImGui::GetStyle();
 
@@ -1229,17 +1214,15 @@ template <class M, class C> void GUIRenderer<M, C>::drawTFWindowCallback(std::st
 /**
  * GUIRenderer<M, C>::drawParametersCallback
  */
-template <class M, class C> void GUIRenderer<M, C>::drawParametersCallback(std::string win_label) {
+template <class M, class C> void GUIRenderer<M, C>::drawParametersCallback(const std::string& win_label) {
 
     ImGuiStyle& style = ImGui::GetStyle();
 
     // Get current window configuration
-    GUIWindow* win = nullptr;
-    for (auto& w : this->windows) {
-        if (win_label == w.label) win = &w;
-    }
+    auto win = this->window_manager.GetWindowConfiguration(win_label);
     if (win == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError("[GUIRenderer][drawParametersCallback] Window label not found.");
+        vislib::sys::Log::DefaultLog.WriteError(
+            "[GUIRenderer][drawParametersCallback] No window configuration found for '%s'.", win_label.c_str());
         return;
     }
 
@@ -1263,9 +1246,9 @@ template <class M, class C> void GUIRenderer<M, C>::drawParametersCallback(std::
     opts[0] = "All";
     opts[1] = "Instance";
     opts[2] = "View";
-    int opts_cnt = opts.size();
+    unsigned int opts_cnt = (unsigned int)opts.size();
     if (ImGui::BeginCombo("Module Filter", opts[this->param_module_filter_mode].c_str())) {
-        for (int i = 0; i < opts_cnt; ++i) {
+        for (unsigned int i = 0; i < opts_cnt; ++i) {
 
             if (ImGui::Selectable(opts[i].c_str(), (this->param_module_filter_mode == i))) {
                 this->param_module_filter_mode = i;
@@ -1396,18 +1379,20 @@ template <class M, class C> void GUIRenderer<M, C>::drawParametersCallback(std::
             // Context menu
             if (ImGui::BeginPopupContextItem()) {
                 if (ImGui::MenuItem("Copy to new Window")) {
-                    GUIWindow tmp_win;
-                    tmp_win.label = "Parameters###parameters" +
-                                    std::to_string(this->inst_last_time); /// using instance time as hidden unique id
+                    std::string win_label =
+                        "Parameters###parameters" +
+                        std::to_string(this->inst_last_time); /// using instance time as hidden unique id
+                    GUIWinConfig<GUIWinCall> tmp_win;
                     tmp_win.show = true;
-                    // tmp_win.hotkey = core::view::KeyCode();
+                    tmp_win.hotkey = core::view::KeyCode();
                     tmp_win.reset = true;
+                    tmp_win.dim = ImVec2(500.0f, 300.0f);
                     tmp_win.flags = ImGuiWindowFlags_HorizontalScrollbar; // | ImGuiWindowFlags_AlwaysAutoResize;
                     tmp_win.func = &GUIRenderer<M, C>::drawParametersCallback;
                     tmp_win.param_hotkeys_show = false;
                     tmp_win.param_mods.emplace_back(label);
                     tmp_win.param_main = false;
-                    this->windows.emplace_back(tmp_win);
+                    this->window_manager.AddWindowConfiguration(win_label, tmp_win);
                 }
                 // Deleting module's parameters is not available in main parameter window.
                 if (!win->param_main) { // && (win->param_mods.size() > 1)) {
@@ -1502,7 +1487,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawParametersCallback(std::
 /**
  * GUIRenderer<M, C>::drawFpsWindowCallback
  */
-template <class M, class C> void GUIRenderer<M, C>::drawFpsWindowCallback(std::string win_label) {
+template <class M, class C> void GUIRenderer<M, C>::drawFpsWindowCallback(const std::string& win_label) {
 
     if (ImGui::RadioButton("fps", (this->fpsms_mode == 0))) {
         this->fpsms_mode = 0;
@@ -1578,7 +1563,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawFpsWindowCallback(std::s
 /**
  * GUIRenderer<M, C>::drawFontSelectionWindowCallback
  */
-template <class M, class C> void GUIRenderer<M, C>::drawFontSelectionWindowCallback(std::string win_label) {
+template <class M, class C> void GUIRenderer<M, C>::drawFontSelectionWindowCallback(const std::string& win_label) {
 
     ImGuiIO& io = ImGui::GetIO();
     ImGuiStyle& style = ImGui::GetStyle();
@@ -1624,72 +1609,6 @@ template <class M, class C> void GUIRenderer<M, C>::drawFontSelectionWindowCallb
     }
     std::string help = "Same font can be loaded multiple times using different font size";
     this->HelpMarkerToolTip(help);
-}
-
-
-/**
- * GUIRenderer<M, C>::resetWindowSizePos
- */
-template <class M, class C>
-void GUIRenderer<M, C>::resetWindowSizePos(std::string win_label, float width, float height, bool auto_resize) {
-
-    ImGuiIO& io = ImGui::GetIO();
-    ImGuiStyle& style = ImGui::GetStyle();
-
-    auto win_pos = ImGui::GetWindowPos();
-    if (win_pos.x < 0) {
-        win_pos.x = style.DisplayWindowPadding.x;
-    }
-    if (win_pos.y < 0) {
-        win_pos.y = style.DisplayWindowPadding.y;
-    }
-
-    ImVec2 win_size;
-    if (auto_resize) {
-        win_size = ImGui::GetWindowSize();
-    } else {
-        win_size = ImVec2(width, height);
-    }
-    float win_width = io.DisplaySize.x - (win_pos.x + style.DisplayWindowPadding.x);
-    if (win_width < win_size.x) {
-        win_pos.x = io.DisplaySize.x - (win_size.x + style.DisplayWindowPadding.x);
-    }
-    float win_height = io.DisplaySize.y - (win_pos.y + style.DisplayWindowPadding.y);
-    if (win_height < win_size.y) {
-        win_pos.y = io.DisplaySize.y - (win_size.y + style.DisplayWindowPadding.y);
-    }
-
-    ImGui::SetWindowSize(win_label.c_str(), ImVec2(width, height), ImGuiCond_Always);
-    ImGui::SetWindowPos(win_label.c_str(), win_pos, ImGuiCond_Always);
-}
-
-
-/**
- * GUIRenderer<M, C>::drawWindow
- */
-template <class M, class C> void GUIRenderer<M, C>::drawWindow(GUIWindow& win) {
-
-    if (win.show) {
-
-        ImGui::SetNextWindowBgAlpha(1.0f);
-
-        if (!ImGui::Begin(win.label.c_str(), &win.show, win.flags)) {
-            ImGui::End(); // early ending
-            return;
-        }
-
-        // Reset window position and size
-        if (win.reset) {
-            this->resetWindowSizePos(win.label, 500.0f, 300.0f, (win.flags | ImGuiWindowFlags_AlwaysAutoResize));
-            win.reset = false;
-        }
-
-        if (win.func != nullptr) {
-            (this->*win.func)(win.label);
-        }
-
-        ImGui::End();
-    }
 }
 
 
@@ -1747,14 +1666,18 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
 
     // Windows
     if (ImGui::BeginMenu("View")) {
-        for (auto& win : this->windows) {
-            std::string hotkey_label = "(SHIFT +) " + win.hotkey.ToString();
-            bool win_open = win.show;
-            if (ImGui::MenuItem(win.label.c_str(), hotkey_label.c_str(), &win_open)) {
-                win.show = !win.show;
+        const auto func = [&, this](const std::string& wn, GUIWinConfig<GUIWinCall>& wc) {
+            bool win_open = wc.show;
+            std::string hotkey_label = wc.hotkey.ToString();
+            if (!hotkey_label.empty()) {
+                hotkey_label = "(SHIFT +) " + hotkey_label;
+            }
+            if (ImGui::MenuItem(wn.c_str(), hotkey_label.c_str(), &win_open)) {
+                wc.show = !wc.show;
             }
             this->HoverToolTip("[Shift] + ['Window Hotkey'] to Reset Size and Position of Window");
-        }
+        };
+        this->window_manager.EnumWindows(func);
         ImGui::EndMenu();
     }
 
@@ -1869,11 +1792,12 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
                 this->tf_active_param = p;
                 load_tf = true;
                 // Open Transfer Function Editor window
-                for (auto& win : this->windows) {
-                    if (win.func == &GUIRenderer<M, C>::drawTFWindowCallback) {
-                        win.show = true;
+                const auto func = [&, this](const std::string& wn, GUIWinConfig<GUIWinCall>& wc) {
+                    if (wc.func == &GUIRenderer<M, C>::drawTFWindowCallback) {
+                        wc.show = true;
                     }
-                }
+                };
+                this->window_manager.EnumWindows(func);
             }
             if (p == this->tf_active_param) {
                 ImGui::SameLine();
