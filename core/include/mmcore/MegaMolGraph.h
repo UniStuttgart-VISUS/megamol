@@ -16,14 +16,16 @@
 #include "mmcore/param/ParamUpdateListener.h"
 #include "vislib/SmartPtr.h"
 
-#include "mmcore/serializable.h"
 #include "mmcore/deferrable_construction.h"
 #include "mmcore/lockable.h"
+#include "mmcore/serializable.h"
+
+#include "AbstractUpdateQueue.h"
 
 namespace megamol {
 namespace core {
 
-class MegaMolGraph : public serializable, public deferrable_construction, public lockable {
+class MegaMolGraph : public serializable, public deferrable_construction {
 
     // todo: where do the descriptionmanagers go?
     // todo: what about the view / job descriptions?
@@ -32,6 +34,30 @@ public:
 
     // todo: the lock!
     // todo: probably get rid of RootModuleNamespace altogether
+
+    ///////////////////////////// types ////////////////////////////////////////
+    using ModuleDeletionRequest_t = std::string;
+
+    using ModuleDeletionQueue_t = AbstractUpdateQueue<ModuleDeletionRequest_t>;
+
+    struct ModuleInstantiationRequest {
+        std::string className;
+        std::string id;
+    };
+
+    using ModuleInstantiationRequest_t = ModuleInstantiationRequest;
+
+    using ModuleInstantiationQueue_t = AbstractUpdateQueue<ModuleInstantiationRequest_t>;
+
+    struct CallDeletionRequest {
+        std::string from;
+        std::string to;
+    };
+
+    using CallDeletionRequest_t = CallDeletionRequest;
+
+    using CallDeletionQueue_t = AbstractUpdateQueue<CallDeletionRequest_t>;
+
 
     //////////////////////////// ctor / dtor ///////////////////////////////
 
@@ -61,7 +87,7 @@ public:
     MegaMolGraph& operator=(MegaMolGraph&& rhs) noexcept;
 
     /**
-     * Construction fr0m serialized string.
+     * Construction from serialized string.
      */
     MegaMolGraph(std::string const& descr);
 
@@ -76,18 +102,42 @@ public:
      * Each module should be serializable, i.e. the modules capture their entire state.
      * As a result, an entire MegaMolGraph can basically be copied by reinitializing the serialized descriptor.
      * Therefore the MegaMolGraph creates its descriptor by iterating through all modules and calls in the graph.
-     * 
-     * Maybe the ModuleGraph should even allow external objects to iterate through a linearized array of containing modules and calls.
+     *
+     * Maybe the ModuleGraph should even allow external objects to iterate through a linearized array of containing
+     * modules and calls.
      */
 
     //////////////////////////// END serialization ////////////////////////////////
 
+    //////////////////////////// queue methods ////////////////////////////////////
+    bool QueueModuleDeletion(std::string const& id);
+
+    bool QueueModuleDeletion(std::string&& id);
+
+    bool QueueModuleInstantiation(std::string const& className, std::string const& id);
+
+    bool QueueModuleInstantiation(std::string&& className, std::string&& id);
+
+    bool QueueCallDeletion(std::string const& from, std::string const& to);
+
+    bool QueueCallDeletion(std::string&& from, std::string&& to);
+
+private:
+    /** The MegaMolGraph is the owner of the root module */
+    std::unique_ptr<Module> root_module_;
+
+    /** Queue for module deletions */
+    ModuleDeletionQueue_t module_deletion_queue_;
+
+    /** Queue for module instantiation */
+    ModuleInstantiationQueue_t module_instantiation_queue_;
+
+    /** Queue for call deletions */
+    CallDeletionQueue_t call_deletion_queue_;
+
 
     ////////////////////////// old interface stuff //////////////////////////////////////////////
 public:
-    bool QueueModuleDeletion(const std::string id);
-    bool QueueCallDeletion(const std::string from, const std::string to);
-    bool QueueModuleInstantiation(const std::string className, const std::string id);
     bool QueueCallInstantiation(const std::string className, const std::string from, const std::string to);
     bool QueueChainCallInstantiation(const std::string className, const std::string chainStart, const std::string to);
     bool QueueParamValueChange(const std::string id, const std::string value);
