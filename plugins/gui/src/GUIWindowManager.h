@@ -30,113 +30,140 @@
 
 
 namespace megamol {
-    namespace gui {
+namespace gui {
 
-        /**
-         * Managing window configurations for GUI
-         */
-        template <typename F> class GUIWindowManager : public GUIUtility {
+/**
+ * Managing window configurations for GUI
+ */
+template <typename F> class GUIWindowManager : public GUIUtility {
 
-        public:
+public:
 
-            /** Type for holding a window configuration. */
-            typedef struct _win_config {
-                bool show;                           // show/hide window
-                bool reset;                          // reset window position and size
-                megamol::core::view::KeyCode hotkey; // hotkey for opening/closing window
-                ImGuiWindowFlags flags;              // imgui window flags
-                F func;                              // pointer to function drawing window content
-                ImVec2 dim;                          // default width and height of window (ignored when auto resize flag is setS)
-                bool param_hotkeys_show;             // flag to toggle showing only parameter hotkeys
-                bool param_main;                     // flag indicating main parameter window
-                std::vector<std::string> param_mods; // modules to show in a parameter window
-            } WindowConfiguration;
+    /** Type for holding a window configuration. */
+    typedef struct _win_config {
+        bool                         show;                // show/hide window
+        bool                         reset;               // reset window position and size
+        megamol::core::view::KeyCode hotkey;              // hotkey for opening/closing window
+        ImGuiWindowFlags             flags;               // imgui window flags
+        F                            func;                // pointer to function drawing window content
+        ImVec2                       dim;                 // default width and height of window (ignored when auto resize flag is setS)
+        bool                         param_hotkeys_show;  // flag to toggle showing only parameter hotkeys
+        bool                         param_main;          // flag indicating main parameter window
+        std::vector<std::string>     param_mods;          // modules to show in a parameter window
+    } WindowConfiguration;
 
-            /**
-             * Ctor
-             */
-            GUIWindowManager();
+    /**
+     * Ctor
+     */
+    GUIWindowManager();
 
-            /**
-             * Dtor
-             */
-            ~GUIWindowManager(void);
+    /**
+     * Dtor
+     */
+    ~GUIWindowManager(void);
 
-            /**
-             * ...
-             */
-            bool AddWindowConfiguration(std::string name, WindowConfiguration& config) {
-                if (this->windowConfigurationExists(name)) {
-                    vislib::sys::Log::DefaultLog.WriteError(
-                        "[GUIWindowManager][AddWindowConfiguration] Found existing window configuration for '%s'. Window name should be unique.", name.c_str());
-                }
-                this->windows.emplace(name, config);
-                return true;
-            }
+    /**
+     * ...
+     */
+    bool AddWindowConfiguration(std::string window_name, WindowConfiguration& config);
 
-            /**
-             * ...
-             */
-            inline WindowConfiguration* GetWindowConfiguration(std::string name) {
-                if (!this->windowConfigurationExists(name)) {
-                    vislib::sys::Log::DefaultLog.WriteError(
-                        "[GUIWindowManager][AddWindowConfiguration] Didn't find existing window configuration for '%s'. Window name should exist.", name.c_str());
-                    return nullptr;
-                }
-                return &this->windows[name];
-            }
+    /**
+     * ...
+     */
+    bool DeleteWindowConfiguration(std::string window_name);
 
-            /**
-             * ...
-             */
-            void EnumWindows(std::function<void(const std::string&, WindowConfiguration&)> cb);
+    /**
+     * ...
+     */
+    WindowConfiguration* GetWindowConfiguration(std::string window_name) {
+        if (!this->windowConfigurationExists(window_name)) {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "[GUIWindowManager][GetWindowConfiguration] Didn't find existing window '%s'.", window_name.c_str());
+            return nullptr;
+        }
+        return &this->windows[window_name];
+    }
 
-            /**
-             * ...
-             *
-             * Should be called between ImGui::Begin() and ImGui::End()
-             */
-            void ResetWindowSizePos(std::string win_name);
+    /**
+     * ...
+      */
+    void EnumWindows(std::function<void(const std::string&, WindowConfiguration&)> cb);
 
-            /** 
-             * Set file name for writing the settings.
-             */
-            inline void SetIniFilename(std::string file) {
-                this->inifile = file;
-            }
+    /**
+     * ...
+     *
+     * Should be called between ImGui::Begin() and ImGui::End()
+     */
+    void ResetWindowSizePos(std::string window_name);
 
-        private:
+    // --------------------------------------------------------------------
 
-            // VARIABLES ------------------------------------------------------
+    /**
+     * ...
+     */
+    bool LoadWindowSettingsProfile(std::string profile_name);
 
-            /** The list of the window names and their configurations. */
-            std::map<std::string, WindowConfiguration> windows;
+    /**
+     * ...
+     */
+    bool DeleteWindowSettingsProfile(std::string profile_name);
 
-            /** The file the settings */
-            std::string inifile;
+    /**
+     * ...
+     */
+    bool SaveWindowSettingsProfie(std::string profile_name);
 
-            /** The settings in JSON format. */
-            nlohmann::json settings;
+    /**
+     * ...
+     */
+    bool SaveWindowSettingsFile(std::string file_name);
 
-            // FUNCTIONS ------------------------------------------------------
+    /**
+     * ...
+     */
+    bool LoadWindowSettingsFile(std::string file_name);
 
-            inline bool windowConfigurationExists(std::string& win_name) const {
-                return (this->windows.find(win_name) != this->windows.end());
-            }
+    /** 
+     * Set file name for writing the window settings.
+     */
+    inline void SetIniFilename(std::string file) {
+        this->inifile = file;
+    }
 
-        };
+    /**
+     * Get the current file name for the window settings.
+     */
+    inline std::string GetIniFilename(void) {
+        return this->inifilee;
+    }
+
+private:
+
+    // VARIABLES ------------------------------------------------------
+
+    /** The list of the window names and their configurations. */
+    std::map<std::string, WindowConfiguration> windows;
+
+    /** The file the settings */
+    std::string inifile;
+
+    /** The settings in JSON format. */
+    nlohmann::json settings;
+
+    // FUNCTIONS ------------------------------------------------------
+
+    inline bool windowConfigurationExists(std::string& name) const {
+        return (this->windows.find(name) != this->windows.end());
+    }
+
+};
  
-
-} // namespace gui
-} // namespace megamol
-
-#endif // MEGAMOL_GUI_GUISETTINGS_H_INCLUDED
 
 
 /**
  * GUIWindowManager<F>::Ctor
  */
-template <typename F> megamol::gui::GUIWindowManager<F>::GUIWindowManager(void) :
+template <typename F> GUIWindowManager<F>::GUIWindowManager(void) :
     windows()
     , inifile("mmgui.ini")
     , settings() {
@@ -148,16 +175,46 @@ template <typename F> megamol::gui::GUIWindowManager<F>::GUIWindowManager(void) 
 /**
  * GUIWindowManager<F>::Dtor
  */
-template <typename F> megamol::gui::GUIWindowManager<F>::~GUIWindowManager(void) {
+template <typename F> GUIWindowManager<F>::~GUIWindowManager(void) {
 
     this->windows.clear();
 }
 
 
 /**
+ * GUIWindowManager<F>::AddWindowConfiguration
+ */
+template <typename F> bool GUIWindowManager<F>::AddWindowConfiguration(std::string window_name, WindowConfiguration& config) {
+
+    if (this->windowConfigurationExists(window_name)) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "[GUIWindowManager][AddWindowConfiguration] Found already existing window '%s'. Window name must be unique.", window_name.c_str());
+        return false;
+    }
+    this->windows.emplace(window_name, config);
+    return true;
+}
+
+
+/**
+ * GUIWindowManager<F>::DeleteWindowConfiguration
+ */
+template <typename F> bool GUIWindowManager<F>::DeleteWindowConfiguration(std::string window_name) {
+
+    if (!this->windowConfigurationExists(window_name)) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "[GUIWindowManager][DeleteWindowConfiguration] Found no existing window '%s'.", window_name.c_str());
+        return false;
+    }
+    this->windows.erase(window_name);
+    return true;
+}
+
+
+/**
  * GUIWindowManager<F>::EnumWindows
  */
-template <typename F> void megamol::gui::GUIWindowManager<F>::EnumWindows(std::function<void(const std::string&, WindowConfiguration&)> cb) {
+template <typename F> void GUIWindowManager<F>::EnumWindows(std::function<void(const std::string&, GUIWindowManager<F>::WindowConfiguration&)> cb) {
 
     for (auto &wc : this->windows) {
         cb(wc.first, wc.second);
@@ -168,13 +225,13 @@ template <typename F> void megamol::gui::GUIWindowManager<F>::EnumWindows(std::f
 /**
  * GUIWindowManager<F>::ResetWindowSizePos
  */
-template <typename F> void megamol::gui::GUIWindowManager<F>::ResetWindowSizePos(std::string win_name) {
+template <typename F> void GUIWindowManager<F>::ResetWindowSizePos(std::string window_name) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
     ImGuiIO& io = ImGui::GetIO();
     ImGuiStyle& style = ImGui::GetStyle();
 
-    auto win = this->GetWindowConfiguration(win_name);
+    auto win = this->GetWindowConfiguration(window_name);
     float width = win->dim.x;
     float height = win->dim.y;
 
@@ -202,6 +259,71 @@ template <typename F> void megamol::gui::GUIWindowManager<F>::ResetWindowSizePos
         win_pos.y = io.DisplaySize.y - (win_size.y + style.DisplayWindowPadding.y);
     }
 
-    ImGui::SetWindowSize(win_name.c_str(), ImVec2(width, height), ImGuiCond_Always);
-    ImGui::SetWindowPos(win_name.c_str(), win_pos, ImGuiCond_Always);
+    ImGui::SetWindowSize(window_name.c_str(), ImVec2(width, height), ImGuiCond_Always);
+    ImGui::SetWindowPos(window_name.c_str(), win_pos, ImGuiCond_Always);
 }
+
+
+/**
+ * GUIWindowManager<F>::LoadWindowSettingsProfile
+ */
+template <typename F> bool GUIWindowManager<F>::LoadWindowSettingsProfile(std::string profile_name) {
+
+
+
+
+    return true;
+}
+
+/**
+ * GUIWindowManager<F>::DeleteWindowSettingsProfile
+ */
+template <typename F> bool GUIWindowManager<F>::DeleteWindowSettingsProfile(std::string profile_name) {
+
+
+
+
+    return true;
+}
+
+/**
+ * GUIWindowManager<F>::SaveWindowSettingsProfie
+ */
+template <typename F> bool GUIWindowManager<F>::SaveWindowSettingsProfie(std::string profile_name) {
+
+
+
+
+    return true;
+}
+
+/**
+ * GUIWindowManager<F>::SaveWindowSettingsFile
+ */
+template <typename F> bool GUIWindowManager<F>::SaveWindowSettingsFile(std::string file_name) {
+
+
+
+
+    return true;
+}
+
+
+/**
+ * GUIWindowManager<F>::LoadWindowSettingsFile
+ */
+template <typename F> bool GUIWindowManager<F>::LoadWindowSettingsFile(std::string file_name) {
+
+
+
+
+
+    return true;
+}
+
+
+
+} // namespace gui
+} // namespace megamol
+
+#endif // MEGAMOL_GUI_GUISETTINGS_H_INCLUDED
