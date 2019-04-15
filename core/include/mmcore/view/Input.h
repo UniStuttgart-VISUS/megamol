@@ -295,6 +295,16 @@ public:
         this->key = key;
     }
 
+    /** Return key. */
+    Key Key(void) {
+        return this->key;
+    }
+
+    /** Return modifiers. */
+    Modifiers Modifiers(void) {
+        return this->mods;
+    }
+
     /**
      * Generates a human-readable ASCII String representing the key code.
      *

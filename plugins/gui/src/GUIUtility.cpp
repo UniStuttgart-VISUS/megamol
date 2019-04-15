@@ -91,6 +91,7 @@ std::string megamol::gui::GUIUtility::SearchFilePathRecursive(std::string file, 
  */
 void megamol::gui::GUIUtility::HoverToolTip(std::string text, ImGuiID id, float time_start, float time_end) {
 
+    assert(ImGui::GetCurrentContext() != nullptr);
     ImGuiIO& io = ImGui::GetIO();
 
     if (ImGui::IsItemHovered()) {
@@ -129,9 +130,47 @@ void megamol::gui::GUIUtility::HoverToolTip(std::string text, ImGuiID id, float 
  */
 void megamol::gui::GUIUtility::HelpMarkerToolTip(std::string text, std::string label) {
 
+    assert(ImGui::GetCurrentContext() != nullptr);
+
     if (!text.empty()) {
         ImGui::SameLine();
         ImGui::TextDisabled(label.c_str());
         this->HoverToolTip(text);
     }
+}
+
+
+/**
+ * GUIUtility::InputDialogPopUp
+ */
+std::string megamol::gui::GUIUtility::InputDialogPopUp(std::string popup_name, std::string request, bool open) {
+
+    assert(ImGui::GetCurrentContext() != nullptr);
+
+    std::string outtext;
+
+    size_t bufferLength = GUI_MAX_BUFFER_LEN;
+    char* buffer = new char[bufferLength];
+    buffer[0] = '\0';
+
+    if (open) {
+        ImGui::OpenPopup(popup_name.c_str());
+    }
+    if (ImGui::BeginPopupModal(popup_name.c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+
+        ImGui::Text("Enter %s:", request.c_str());
+        this->HelpMarkerToolTip("Press [Return] to confirm input.");
+
+        ImGui::SetKeyboardFocusHere();
+        if (ImGui::InputText("", buffer, bufferLength, ImGuiInputTextFlags_EnterReturnsTrue)) {
+            outtext = buffer;
+            ImGui::CloseCurrentPopup();
+        }
+
+        ImGui::EndPopup();
+    }
+
+    delete[] buffer;
+
+    return outtext;
 }
