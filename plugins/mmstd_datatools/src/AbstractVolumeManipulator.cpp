@@ -5,8 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 #include "stdafx.h"
-#include "mmstd_datatools/AbstractParticleManipulator.h"
 #include "mmstd_datatools/AbstractVolumeManipulator.h"
+#include "mmstd_datatools/AbstractParticleManipulator.h"
 
 using namespace megamol;
 using namespace megamol::stdplugin;
@@ -15,10 +15,12 @@ using namespace megamol::stdplugin;
 /*
  * datatools::AbstractVolumeManipulator::AbstractVolumeManipulator
  */
-datatools::AbstractVolumeManipulator::AbstractVolumeManipulator(const char* outSlotName, const char* inSlotName)
+datatools::AbstractVolumeManipulator::AbstractVolumeManipulator(
+    const char* outSlotName, const char* inSlotName, std::function<bool(bool)>&& ballot_func)
     : megamol::core::Module()
     , outDataSlot(outSlotName, "providing access to the manipulated data")
-    , inDataSlot(inSlotName, "accessing the original data") {
+    , inDataSlot(inSlotName, "accessing the original data")
+    , ballot_func(std::move(ballot_func)) {
 
     this->outDataSlot.SetCallback(megamol::core::misc::VolumetricDataCall::ClassName(),
         core::misc::VolumetricDataCall::FunctionName(core::misc::VolumetricDataCall::IDX_GET_DATA),
@@ -109,7 +111,7 @@ bool datatools::AbstractVolumeManipulator::getDataCallback(megamol::core::Call& 
     if (inVdc == nullptr) return false;
 
     *inVdc = *outVdc; // to get the correct request time
-    if (!(*inVdc)(VolumetricDataCall::IDX_GET_DATA)) return false;
+    if (!ballot_func((*inVdc)(VolumetricDataCall::IDX_GET_DATA))) return false;
 
     if (!this->manipulateData(*outVdc, *inVdc)) {
         inVdc->Unlock();
@@ -135,7 +137,7 @@ bool datatools::AbstractVolumeManipulator::getExtentCallback(megamol::core::Call
     if (inVdc == nullptr) return false;
 
     *inVdc = *outVdc; // to get the correct request time
-    if (!(*inVdc)(VolumetricDataCall::IDX_GET_EXTENTS)) return false;
+    if (!ballot_func((*inVdc)(VolumetricDataCall::IDX_GET_EXTENTS))) return false;
 
     if (!this->manipulateExtent(*outVdc, *inVdc)) {
         inVdc->Unlock();
@@ -147,6 +149,7 @@ bool datatools::AbstractVolumeManipulator::getExtentCallback(megamol::core::Call
     return true;
 }
 
+
 bool datatools::AbstractVolumeManipulator::getMetaDataCallback(megamol::core::Call& c) {
     using megamol::core::misc::VolumetricDataCall;
 
@@ -157,7 +160,7 @@ bool datatools::AbstractVolumeManipulator::getMetaDataCallback(megamol::core::Ca
     if (inVdc == nullptr) return false;
 
     *inVdc = *outVdc; // to get the correct request time
-    if (!(*inVdc)(VolumetricDataCall::IDX_GET_METADATA)) return false;
+    if (!ballot_func((*inVdc)(VolumetricDataCall::IDX_GET_METADATA))) return false;
 
     if (!this->manipulateMetaData(*outVdc, *inVdc)) {
         inVdc->Unlock();
@@ -169,6 +172,7 @@ bool datatools::AbstractVolumeManipulator::getMetaDataCallback(megamol::core::Ca
     return true;
 }
 
+
 bool datatools::AbstractVolumeManipulator::startAsyncCallback(megamol::core::Call& c) {
     using megamol::core::misc::VolumetricDataCall;
 
@@ -179,12 +183,13 @@ bool datatools::AbstractVolumeManipulator::startAsyncCallback(megamol::core::Cal
     if (inVdc == nullptr) return false;
 
     *inVdc = *outVdc; // to get the correct request time
-    if (!(*inVdc)(VolumetricDataCall::IDX_START_ASYNC)) return false;
+    if (!ballot_func((*inVdc)(VolumetricDataCall::IDX_START_ASYNC))) return false;
 
     inVdc->Unlock();
 
     return true;
 }
+
 
 bool datatools::AbstractVolumeManipulator::stopAsyncCallback(megamol::core::Call& c) {
     using megamol::core::misc::VolumetricDataCall;
@@ -196,12 +201,13 @@ bool datatools::AbstractVolumeManipulator::stopAsyncCallback(megamol::core::Call
     if (inVdc == nullptr) return false;
 
     *inVdc = *outVdc; // to get the correct request time
-    if (!(*inVdc)(VolumetricDataCall::IDX_STOP_ASYNC)) return false;
+    if (!ballot_func((*inVdc)(VolumetricDataCall::IDX_STOP_ASYNC))) return false;
 
     inVdc->Unlock();
 
     return true;
 }
+
 
 bool datatools::AbstractVolumeManipulator::tryGetDataCallback(megamol::core::Call& c) {
     using megamol::core::misc::VolumetricDataCall;
@@ -213,7 +219,7 @@ bool datatools::AbstractVolumeManipulator::tryGetDataCallback(megamol::core::Cal
     if (inVdc == nullptr) return false;
 
     *inVdc = *outVdc; // to get the correct request time
-    if (!(*inVdc)(VolumetricDataCall::IDX_TRY_GET_DATA)) return false;
+    if (!ballot_func((*inVdc)(VolumetricDataCall::IDX_TRY_GET_DATA))) return false;
 
     // TODO BUG HAZARD: if data, manipulate.
 

@@ -6,11 +6,11 @@
  */
 #include "stdafx.h"
 #include "MPIVolumeAggregator.h"
+#include <chrono>
 #include "mmcore/cluster/mpi/MpiCall.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/param/EnumParam.h"
 #include "vislib/sys/SystemInformation.h"
-#include <chrono>
 
 using namespace megamol;
 using namespace megamol::stdplugin;
@@ -20,7 +20,8 @@ using namespace megamol::stdplugin;
  * datatools::MPIVolumeAggregator::MPIVolumeAggregator
  */
 datatools::MPIVolumeAggregator::MPIVolumeAggregator(void)
-    : AbstractVolumeManipulator("outData", "indata")
+    : AbstractVolumeManipulator(
+          "outData", "indata", std::bind(&MPIVolumeAggregator::ballot_mpi, this, std::placeholders::_1))
     , callRequestMpi("requestMpi", "Requests initialisation of MPI and the communicator for the view.")
     , operatorSlot("operator", "the operator to apply to the volume when aggregating") {
 
@@ -72,8 +73,7 @@ bool datatools::MPIVolumeAggregator::manipulateData(
     const auto comp = metadata.Components;
 
     if (metadata.GridType != core::misc::CARTESIAN && metadata.GridType != core::misc::RECTILINEAR) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "MPIVolumeAggregator cannot work with grid type %d", metadata.GridType);
+        vislib::sys::Log::DefaultLog.WriteError("MPIVolumeAggregator cannot work with grid type %d", metadata.GridType);
         return false;
     }
     if (metadata.ScalarType != core::misc::FLOATING_POINT) {
