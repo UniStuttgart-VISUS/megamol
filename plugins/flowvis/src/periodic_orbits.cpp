@@ -12,6 +12,7 @@
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
+#include "mmcore/param/IntParam.h"
 #include "mmcore/utility/DataHash.h"
 
 #include "vislib/math/Rectangle.h"
@@ -35,6 +36,7 @@
 #include <mutex>
 #include <ostream>
 #include <thread>
+#include <tuple>
 #include <unordered_set>
 #include <utility>
 #include <vector>
@@ -52,7 +54,9 @@ namespace megamol
             vector_field_hash(-1),
             critical_points_slot("get_critical_points", "Critical points input"),
             critical_points_hash(-1),
+            integration_method("integration_method", "Method used for stream line integration"),
             integration_direction("integration_direction", "Direction of integration"),
+            min_steps_per_cell("min_steps_per_cell", "Minimum number of stream line integration steps per cell"),
             initial_timestep("initial_timestep", "Initial time step for stream line integration"),
             maximum_timestep("maximum_timestep", "Maximum time step for stream line integration"),
             maximum_error("maximum_error", "Maximum error of the time step for stream line integration"),
@@ -85,19 +89,30 @@ namespace megamol
             this->MakeSlotAvailable(&this->critical_points_slot);
 
             // Set parameters
+            this->integration_method << new core::param::EnumParam(0);
+            this->integration_method.Param<core::param::EnumParam>()->SetTypePair(static_cast<int>(integration_parameter_t::method_t::RUNGE_KUTTA_4), "Runge-Kutta 4 (fixed)");
+            this->integration_method.Param<core::param::EnumParam>()->SetTypePair(static_cast<int>(integration_parameter_t::method_t::RUNGE_KUTTA_45), "Runge-Kutta 4-5 (dynamic)");
+            this->MakeSlotAvailable(&this->integration_method);
+
             this->integration_direction << new core::param::EnumParam(0);
             this->integration_direction.Param<core::param::EnumParam>()->SetTypePair(0, "Forward and backward");
             this->integration_direction.Param<core::param::EnumParam>()->SetTypePair(1, "Forward");
             this->integration_direction.Param<core::param::EnumParam>()->SetTypePair(2, "Backward");
             this->MakeSlotAvailable(&this->integration_direction);
 
+            this->min_steps_per_cell << new core::param::IntParam(10);
+            this->MakeSlotAvailable(&this->min_steps_per_cell);
+
             this->initial_timestep << new core::param::FloatParam(0.01f);
+            this->initial_timestep.Parameter()->SetGUIVisible(false);
             this->MakeSlotAvailable(&this->initial_timestep);
 
             this->maximum_timestep << new core::param::FloatParam(0.01f);
+            this->maximum_timestep.Parameter()->SetGUIVisible(false);
             this->MakeSlotAvailable(&this->maximum_timestep);
 
             this->maximum_error << new core::param::FloatParam(0.000001f);
+            this->maximum_error.Parameter()->SetGUIVisible(false);
             this->MakeSlotAvailable(&this->maximum_error);
 
             this->poincare_error << new core::param::FloatParam(0.000001f);
@@ -141,6 +156,16 @@ namespace megamol
 
             if (glyph_call != nullptr)
             {
+                // Set visibility of the GUI elements
+                const bool rk4 = this->integration_method.Param<core::param::EnumParam>()->Value() == static_cast<int>(integration_parameter_t::method_t::RUNGE_KUTTA_4);
+                const bool rk45 = this->integration_method.Param<core::param::EnumParam>()->Value() == static_cast<int>(integration_parameter_t::method_t::RUNGE_KUTTA_45);
+
+                this->min_steps_per_cell.Parameter()->SetGUIVisible(rk4);
+
+                this->initial_timestep.Parameter()->SetGUIVisible(rk45);
+                this->maximum_timestep.Parameter()->SetGUIVisible(rk45);
+                this->maximum_error.Parameter()->SetGUIVisible(rk45);
+
                 // Get vector field and critical points
                 auto* get_vector_field = this->vector_field_slot.CallAs<vector_field_call>();
                 auto* get_critical_points = this->critical_points_slot.CallAs<glyph_data_call>();
@@ -155,7 +180,7 @@ namespace megamol
                     this->vector_field_hash = get_vector_field->DataHash();
                     this->critical_points_hash = get_critical_points->DataHash();
 
-                    const auto& vectors = *get_vector_field->get_vectors();
+                    std::vector<double> vectors(get_vector_field->get_vectors()->begin(), get_vector_field->get_vectors()->end());
 
                     const auto& critical_points_vertices = *get_critical_points->get_point_vertices();
                     const auto& critical_points_indices = *get_critical_points->get_point_indices();
@@ -167,7 +192,7 @@ namespace megamol
                     extent[0].second = get_vector_field->get_resolution()[0] - 1;
                     extent[1].second = get_vector_field->get_resolution()[1] - 1;
 
-                    tpf::data::grid_information<float>::array_type cell_sizes(2);
+                    tpf::data::grid_information<double>::array_type cell_sizes(2);
                     cell_sizes[0].resize(get_vector_field->get_resolution()[0]);
                     cell_sizes[1].resize(get_vector_field->get_resolution()[1]);
 
@@ -176,10 +201,10 @@ namespace megamol
                     std::fill(cell_sizes[1].begin(), cell_sizes[1].end(),
                         (get_vector_field->get_bounding_rectangle().Top() - get_vector_field->get_bounding_rectangle().Bottom()) / (get_vector_field->get_resolution()[1] - 1));
 
-                    tpf::data::grid_information<float>::array_type cell_coordinates(2);
-                    tpf::data::grid_information<float>::array_type node_coordinates(2);
+                    tpf::data::grid_information<double>::array_type cell_coordinates(2);
+                    tpf::data::grid_information<double>::array_type node_coordinates(2);
 
-                    const std::array<float, 2> offset{ get_vector_field->get_bounding_rectangle().Left(), get_vector_field->get_bounding_rectangle().Bottom() };
+                    const std::array<double, 2> offset{ get_vector_field->get_bounding_rectangle().Left(), get_vector_field->get_bounding_rectangle().Bottom() };
 
                     for (std::size_t d = 0; d < 2; ++d)
                     {
@@ -187,25 +212,26 @@ namespace megamol
                         node_coordinates[d].resize(cell_sizes[d].size() + 1);
 
                         cell_coordinates[d][0] = offset[d];
-                        node_coordinates[d][0] = offset[d] - 0.5f * cell_sizes[d][0];
+                        node_coordinates[d][0] = offset[d] - 0.5 * cell_sizes[d][0];
 
                         for (std::size_t i = 1; i < cell_sizes[d].size(); ++i)
                         {
-                            cell_coordinates[d][i] = cell_coordinates[d][i - 1] + 0.5f * (cell_sizes[d][i - 1] + cell_sizes[d][i]);
+                            cell_coordinates[d][i] = cell_coordinates[d][i - 1] + 0.5 * (cell_sizes[d][i - 1] + cell_sizes[d][i]);
                             node_coordinates[d][i] = node_coordinates[d][i - 1] + cell_sizes[d][i - 1];
                         }
 
                         node_coordinates[d][cell_sizes[d].size()] = node_coordinates[d][cell_sizes[d].size() - 1] + cell_sizes[d][cell_sizes[d].size() - 1];
                     }
 
-                    this->grid = tpf::data::grid<float, float, 2, 2>("vector_field", extent, vectors,
+                    this->grid = tpf::data::grid<double, double, 2, 2>("vector_field", extent, std::move(vectors),
                         std::move(cell_coordinates), std::move(node_coordinates), std::move(cell_sizes));
 
                     // Reset output
                     this->glyph_output.clear();
                     this->glyph_hash = -1;
 
-                    this->orbit_cells.clear();
+                    this->orbit_cells_forward.clear();
+                    this->orbit_cells_backward.clear();
 
                     // Store critical points
                     this->critical_points.reserve(critical_points_indices.size());
@@ -213,7 +239,7 @@ namespace megamol
                     for (auto index : critical_points_indices)
                     {
                         this->critical_points.push_back(std::make_pair(static_cast<flowvis::critical_points::type>(static_cast<int>(critical_points_values[index])),
-                            Eigen::Vector2f(critical_points_vertices[index * 2 + 0], critical_points_vertices[index * 2 + 1])));
+                            Eigen::Vector2d(critical_points_vertices[index * 2 + 0], critical_points_vertices[index * 2 + 1])));
                     }
                 }
 
@@ -229,6 +255,10 @@ namespace megamol
 
                     glyph_call->SetDataHash(this->glyph_hash);
                 }
+            }
+            else
+            {
+                return false;
             }
 
             return true;
@@ -248,7 +278,7 @@ namespace megamol
 
             if (get_mouse_coordinates != nullptr && this->grid.get_num_elements() > 0)
             {
-                const Eigen::Vector2f seed(get_mouse_coordinates->get_coordinates().first, get_mouse_coordinates->get_coordinates().second);
+                const Eigen::Vector2d seed(get_mouse_coordinates->get_coordinates().first, get_mouse_coordinates->get_coordinates().second);
 
                 // Seed a stream lines
                 const auto direction = this->integration_direction.Param<core::param::EnumParam>()->Value();
@@ -309,20 +339,31 @@ namespace megamol
             this->glyph_output.clear();
             ++this->glyph_hash;
 
-            this->orbit_cells.clear();
+            this->orbit_cells_forward.clear();
+            this->orbit_cells_backward.clear();
 
             this->get_output() << "# Periodic orbits" << std::endl;
 
             return true;
         }
 
-        void periodic_orbits::extract_periodic_orbit(const tpf::data::grid<float, float, 2, 2>& grid,
-            const std::vector<std::pair<flowvis::critical_points::type, Eigen::Vector2f>>& critical_points, const Eigen::Vector2f& seed, const float sign)
+        void periodic_orbits::extract_periodic_orbit(const tpf::data::grid<double, double, 2, 2>& grid,
+            const std::vector<std::pair<flowvis::critical_points::type, Eigen::Vector2d>>& critical_points, const Eigen::Vector2d& seed, const float sign)
         {
+            auto create_output = [](const std::vector<Eigen::Vector2d>& input) -> std::vector<Eigen::Vector2f>
+            {
+                std::vector<Eigen::Vector2f> output;
+                output.reserve(input.size());
+                std::transform(input.begin(), input.end(), std::back_inserter(output), [](const Eigen::Vector2d& value) { return value.cast<float>(); });
+                return output;
+            };
+
             // Get parameters for stream line integration
-            float delta;
-            float max_delta;
-            float max_error;
+            integration_parameter_t integration;
+            integration.method = static_cast<integration_parameter_t::method_t>(this->integration_method.Param<core::param::EnumParam>()->Value());
+            integration.sign = sign;
+
+            float max_poincare_error;
 
             bool output_exit_streamline;
 
@@ -335,159 +376,191 @@ namespace megamol
 
                 vislib::sys::Log::DefaultLog.WriteInfo("Starting %s stream line at [%.5f, %.5f]", (sign < 0.0f) ? "backward" : "forward", seed[0], seed[1]);
 
-                delta = this->initial_timestep.Param<core::param::FloatParam>()->Value();
-                max_delta = this->maximum_timestep.Param<core::param::FloatParam>()->Value();
-                max_error = this->maximum_error.Param<core::param::FloatParam>()->Value();
+                if (this->integration_method.Param<core::param::EnumParam>()->Value() == 0)
+                {
+                    integration.param.rk_4.min_steps_per_cell = this->min_steps_per_cell.Param<core::param::IntParam>()->Value();
+                }
+                else
+                {
+                    integration.param.rk_45.timestep = this->initial_timestep.Param<core::param::FloatParam>()->Value();
+                    integration.param.rk_45.maximum_timestep = this->maximum_timestep.Param<core::param::FloatParam>()->Value();
+                    integration.param.rk_45.maximum_error = this->maximum_error.Param<core::param::FloatParam>()->Value();
+                }
+
+                max_poincare_error = this->poincare_error.Param<core::param::FloatParam>()->Value();
 
                 output_exit_streamline = this->output_exit_streamlines.Param<core::param::BoolParam>()->Value();
             }
 
             // Start
-            std::vector<Eigen::Vector2f> periodic_orbit;
+            std::vector<Eigen::Vector2d> periodic_orbit;
 
-            Eigen::Vector2f position = seed;
+            auto position = seed;
 
             bool has_exit = true;
 
             while (has_exit && !this->terminate)
             {
                 // Find turn
-                const auto visited_cells = find_turn(grid, critical_points, position, delta, sign, max_error, max_delta);
+                const auto visited_cells = find_turn(grid, critical_points, position, integration);
 
-                if (visited_cells)
+                if (!this->terminate)
                 {
-                    if (!visited_cells->empty())
+                    if (visited_cells)
                     {
-                        // Check if a periodic orbit with these cells was already extracted
-                        const std::set<coords_t, std::less<coords_t>> sorted_visited_cells(visited_cells->cbegin(), visited_cells->cend());
-
-                        if (!this->unique_detection.Param<core::param::BoolParam>()->Value() ||
-                            std::find(this->orbit_cells.begin(), this->orbit_cells.end(), sorted_visited_cells) == this->orbit_cells.end())
+                        if (!visited_cells->first.empty())
                         {
-                            // Do a second turn and compare results
-                            auto validation = validate_turn_strict(grid, position, delta, sign, max_error, max_delta, *visited_cells);
+                            // Check if a periodic orbit with these cells was already extracted
+                            const std::set<coords_t, std::less<coords_t>> sorted_visited_cells(visited_cells->first.cbegin(), visited_cells->first.cend());
 
-                            std::swap(periodic_orbit, validation.second);
-
-                            if (validation.first)
+                            if (!this->unique_detection.Param<core::param::BoolParam>()->Value() ||
+                                (sign > 0.0f && std::find(this->orbit_cells_forward.begin(), this->orbit_cells_forward.end(), sorted_visited_cells) == this->orbit_cells_forward.end()) ||
+                                (sign < 0.0f && std::find(this->orbit_cells_backward.begin(), this->orbit_cells_backward.end(), sorted_visited_cells) == this->orbit_cells_backward.end()))
                             {
-                                // Look for possible exits
-                                auto vector_hash = [](const Eigen::Vector2f& coords) -> std::size_t
+                                // Do a second turn and compare results
+                                auto validation = validate_turn(grid, position, integration, visited_cells->first);
+
+                                std::swap(periodic_orbit, std::get<1>(validation));
+
+                                if (std::get<0>(validation))
                                 {
-                                    return core::utility::DataHash(coords[0], coords[1]);
-                                };
-
-                                std::unordered_set<Eigen::Vector2f, decltype(vector_hash)> possible_exits(23, vector_hash);
-
-                                for (const auto& cell : *visited_cells)
-                                {
-                                    const auto corner_bl = grid.get_cell_coordinates(cell);
-                                    const auto corner_br = grid.get_cell_coordinates(cell + coords_t(1, 0));
-                                    const auto corner_tl = grid.get_cell_coordinates(cell + coords_t(0, 1));
-                                    const auto corner_tr = grid.get_cell_coordinates(cell + coords_t(1, 1));
-
-                                    const auto value_bl = grid(cell);
-                                    const auto value_br = grid(cell + coords_t(1, 0));
-                                    const auto value_tl = grid(cell + coords_t(0, 1));
-                                    const auto value_tr = grid(cell + coords_t(1, 1));
-
-                                    const float displacement = poincare_error.Param<core::param::FloatParam>()->Value();
-
-                                    if (std::signbit(value_bl[1]) != std::signbit(value_br[1]))
+                                    // Look for possible exits
+                                    auto vector_hash = [](const Eigen::Vector2d& coords) -> std::size_t
                                     {
-                                        possible_exits.insert(linear_interpolate_position(corner_bl, corner_br, value_bl[1], value_br[1]));
-                                    }
-                                    if (std::signbit(value_tl[1]) != std::signbit(value_tr[1]))
+                                        return core::utility::DataHash(coords[0], coords[1]);
+                                    };
+
+                                    std::unordered_set<Eigen::Vector2d, decltype(vector_hash)> possible_exits(23, vector_hash);
+
+                                    auto add_if_correct_ = [this, &possible_exits](const Eigen::Vector2d& position,
+                                        const std::list<kernel::Point_2>& outer, const std::vector<kernel::Point_2>& inner) -> void
                                     {
-                                        possible_exits.insert(linear_interpolate_position(corner_tl, corner_tr, value_tl[1], value_tr[1]));
-                                    }
-                                    if (std::signbit(value_bl[0]) != std::signbit(value_tl[0]))
-                                    {
-                                        possible_exits.insert(linear_interpolate_position(corner_bl, corner_tl, value_bl[0], value_tl[0]));
-                                    }
-                                    if (std::signbit(value_br[0]) != std::signbit(value_tr[0]))
-                                    {
-                                        possible_exits.insert(linear_interpolate_position(corner_br, corner_tr, value_br[0], value_tr[0]));
-                                    }
+                                        if (correct_side(position, outer, inner))
+                                        {
+                                            possible_exits.insert(position);
+                                        }
+                                    };
 
-                                    possible_exits.insert(corner_bl);
-                                    possible_exits.insert(corner_br);
-                                    possible_exits.insert(corner_tl);
-                                    possible_exits.insert(corner_tr);
-                                }
+                                    auto add_if_correct = std::bind(add_if_correct_, std::placeholders::_1, visited_cells->second, std::get<2>(validation));
 
-                                // Backward integration from possible exits
-                                has_exit = false;
-
-                                std::vector<std::vector<Eigen::Vector2f>> exit_tries;
-
-                                for (auto possible_exit_it = possible_exits.cbegin(); possible_exit_it != possible_exits.cend() && !has_exit; ++possible_exit_it)
-                                {
-                                    Eigen::Vector2f possible_exit = *possible_exit_it;
-
-                                    const auto exit = validate_turn_relaxed(grid, possible_exit, delta, -sign, max_error, max_delta, *visited_cells);
-                                    has_exit = exit.first;
-
-                                    if (output_exit_streamline)
-                                    {
-                                        exit_tries.push_back(exit.second);
-                                    }
-                                }
-
-                                if (output_exit_streamline && !has_exit)
-                                {
-                                    std::lock_guard<std::mutex> locker(this->lock);
-
-                                    for (const auto& exit_try : exit_tries)
-                                    {
-                                        this->glyph_output.push_back(std::make_pair(0.5f * sign, exit_try));
-                                    }
-
-                                    for (const auto& cell : *visited_cells)
+                                    for (const auto& cell : visited_cells->first)
                                     {
                                         const auto corner_bl = grid.get_cell_coordinates(cell);
                                         const auto corner_br = grid.get_cell_coordinates(cell + coords_t(1, 0));
                                         const auto corner_tl = grid.get_cell_coordinates(cell + coords_t(0, 1));
                                         const auto corner_tr = grid.get_cell_coordinates(cell + coords_t(1, 1));
 
-                                        std::vector<Eigen::Vector2f> box{ corner_bl, corner_br, corner_tr, corner_tl, corner_bl };
+                                        const auto value_bl = grid(cell);
+                                        const auto value_br = grid(cell + coords_t(1, 0));
+                                        const auto value_tl = grid(cell + coords_t(0, 1));
+                                        const auto value_tr = grid(cell + coords_t(1, 1));
 
-                                        this->glyph_output.push_back(std::make_pair(0.0f, box));
+                                        if (std::signbit(value_bl[1]) != std::signbit(value_br[1]))
+                                        {
+                                            add_if_correct(linear_interpolate_position(corner_bl, corner_br, value_bl[1], value_br[1]));
+                                        }
+                                        if (std::signbit(value_tl[1]) != std::signbit(value_tr[1]))
+                                        {
+                                            add_if_correct(linear_interpolate_position(corner_tl, corner_tr, value_tl[1], value_tr[1]));
+                                        }
+                                        if (std::signbit(value_bl[0]) != std::signbit(value_tl[0]))
+                                        {
+                                            add_if_correct(linear_interpolate_position(corner_bl, corner_tl, value_bl[0], value_tl[0]));
+                                        }
+                                        if (std::signbit(value_br[0]) != std::signbit(value_tr[0]))
+                                        {
+                                            add_if_correct(linear_interpolate_position(corner_br, corner_tr, value_br[0], value_tr[0]));
+                                        }
+
+                                        add_if_correct(corner_bl);
+                                        add_if_correct(corner_br);
+                                        add_if_correct(corner_tl);
+                                        add_if_correct(corner_tr);
                                     }
 
-                                    ++this->glyph_hash;
+                                    // Backward integration from possible exits
+                                    has_exit = false;
+
+                                    std::vector<std::vector<Eigen::Vector2d>> exit_tries;
+
+                                    for (auto possible_exit_it = possible_exits.cbegin(); possible_exit_it != possible_exits.cend() && !has_exit; ++possible_exit_it)
+                                    {
+                                        Eigen::Vector2d possible_exit = *possible_exit_it;
+
+                                        integration.sign *= -1.0f;
+                                        const auto exit = find_exits(grid, possible_exit, integration, visited_cells->first);
+                                        integration.sign *= -1.0f;
+
+                                        has_exit = exit.first;
+
+                                        if (output_exit_streamline)
+                                        {
+                                            exit_tries.push_back(exit.second);
+                                        }
+                                    }
+
+                                    if (output_exit_streamline && !has_exit)
+                                    {
+                                        std::lock_guard<std::mutex> locker(this->lock);
+
+                                        for (const auto& exit_try : exit_tries)
+                                        {
+                                            this->glyph_output.push_back(std::make_pair(0.5f * sign, create_output(exit_try)));
+                                        }
+
+                                        for (const auto& cell : visited_cells->first)
+                                        {
+                                            const auto corner_bl = grid.get_cell_coordinates(cell);
+                                            const auto corner_br = grid.get_cell_coordinates(cell + coords_t(1, 0));
+                                            const auto corner_tl = grid.get_cell_coordinates(cell + coords_t(0, 1));
+                                            const auto corner_tr = grid.get_cell_coordinates(cell + coords_t(1, 1));
+
+                                            std::vector<Eigen::Vector2d> box{ corner_bl, corner_br, corner_tr, corner_tl, corner_bl };
+
+                                            this->glyph_output.push_back(std::make_pair(0.0f, create_output(box)));
+                                        }
+
+                                        ++this->glyph_hash;
+                                    }
+                                }
+
+                                // Add list of cells to already extracted periodic orbits
+                                if (!has_exit && !this->terminate && this->unique_detection.Param<core::param::BoolParam>()->Value())
+                                {
+                                    if (sign > 0.0f)
+                                    {
+                                        this->orbit_cells_forward.push_back(sorted_visited_cells);
+                                    }
+                                    else
+                                    {
+                                        this->orbit_cells_backward.push_back(sorted_visited_cells);
+                                    }
                                 }
                             }
-
-                            // Add list of cells to already extracted periodic orbits
-                            if (!has_exit && !this->terminate && this->unique_detection.Param<core::param::BoolParam>()->Value())
+                            else
                             {
-                                this->orbit_cells.push_back(sorted_visited_cells);
+                                std::lock_guard<std::mutex> locker(this->lock);
+
+                                vislib::sys::Log::DefaultLog.WriteWarn("Periodic orbit found from %s stream line at [%.5f, %.5f] was already extracted",
+                                    (sign < 0.0f) ? "backward" : "forward", seed[0], seed[1]);
+
+                                vislib::sys::Log::DefaultLog.WriteInfo("Number of processes running: %d", --this->num_threads);
+
+                                return;
                             }
                         }
-                        else
-                        {
-                            std::lock_guard<std::mutex> locker(this->lock);
-
-                            vislib::sys::Log::DefaultLog.WriteWarn("Periodic orbit found from %s stream line at [%.5f, %.5f] was already extracted",
-                                (sign < 0.0f) ? "backward" : "forward", seed[0], seed[1]);
-
-                            vislib::sys::Log::DefaultLog.WriteInfo("Number of processes running: %d", --this->num_threads);
-
-                            return;
-                        }
                     }
-                }
-                else
-                {
-                    std::lock_guard<std::mutex> locker(this->lock);
+                    else
+                    {
+                        std::lock_guard<std::mutex> locker(this->lock);
 
-                    vislib::sys::Log::DefaultLog.WriteWarn("Could not find a periodic orbit from %s stream line at [%.5f, %.5f]",
-                        (sign < 0.0f) ? "backward" : "forward", seed[0], seed[1]);
+                        vislib::sys::Log::DefaultLog.WriteWarn("Could not find a periodic orbit from %s stream line at [%.5f, %.5f]",
+                            (sign < 0.0f) ? "backward" : "forward", seed[0], seed[1]);
 
-                    vislib::sys::Log::DefaultLog.WriteInfo("Number of processes running: %d", --this->num_threads);
+                        vislib::sys::Log::DefaultLog.WriteInfo("Number of processes running: %d", --this->num_threads);
 
-                    return;
+                        return;
+                    }
                 }
             }
 
@@ -496,13 +569,13 @@ namespace megamol
                 // Use Poincaré map for finding the closed stream line
                 if (!output_exit_streamline)
                 {
-                    std::swap(periodic_orbit, integrate_orbit(grid, position, delta, sign, max_error, max_delta));
+                    std::swap(periodic_orbit, integrate_orbit(grid, position, integration, max_poincare_error));
                 }
 
                 // Output results
                 std::lock_guard<std::mutex> locker(this->lock);
 
-                this->glyph_output.push_back(std::make_pair(sign, periodic_orbit));
+                this->glyph_output.push_back(std::make_pair(sign, create_output(periodic_orbit)));
 
                 for (const auto& point : periodic_orbit)
                 {
@@ -529,82 +602,120 @@ namespace megamol
             }
         }
 
-        std::pair<Eigen::Vector2f, float> periodic_orbits::advect_RK45(const tpf::data::grid<float, float, 2, 2>& grid,
-            const Eigen::Vector2f& position, float delta, const float sign, const float max_error, const float max_delta) const
+        Eigen::Vector2d periodic_orbits::advect(const tpf::data::grid<double, double, 2, 2>& grid,
+            const Eigen::Vector2d& position, integration_parameter_t& integration_parameter) const
+        {
+            switch (integration_parameter.method)
+            {
+            case integration_parameter_t::method_t::RUNGE_KUTTA_4:
+                return advect_RK4(grid, position, integration_parameter);
+            case integration_parameter_t::method_t::RUNGE_KUTTA_45:
+                return advect_RK45(grid, position, integration_parameter);
+            default:
+                return position;
+            }
+        }
+
+        Eigen::Vector2d periodic_orbits::advect_RK4(const tpf::data::grid<double, double, 2, 2>& grid,
+            const Eigen::Vector2d& position, const integration_parameter_t& integration) const
+        {
+            const auto cell = *grid.find_staggered_cell(position);
+
+            const auto cell_size = (grid.get_cell_coordinates(cell + coords_t(1, 1)) - grid.get_cell_coordinates(cell));
+            const auto min_cell_size = std::min(cell_size[0], cell_size[1]);
+
+            const auto max_velocity = std::max(std::max(grid(cell).norm(), grid(cell + coords_t(1, 0)).norm()),
+                std::max(grid(cell + coords_t(0, 1)).norm(), grid(cell + coords_t(1, 1)).norm()));
+
+            const auto steps_per_cell = min_cell_size / max_velocity;
+
+            const auto delta = steps_per_cell / static_cast<double>(integration.param.rk_4.min_steps_per_cell);
+
+            const auto k1 = delta * integration.sign * grid.interpolate(position);
+            const auto k2 = delta * integration.sign * grid.interpolate(position + 0.5 * k1);
+            const auto k3 = delta * integration.sign * grid.interpolate(position + 0.5 * k2);
+            const auto k4 = delta * integration.sign * grid.interpolate(position + k3);
+
+            return position + (1.0 / 6.0) * (k1 + 2.0 * (k2 + k3) + k4);
+        }
+
+        Eigen::Vector2d periodic_orbits::advect_RK45(const tpf::data::grid<double, double, 2, 2>& grid,
+            const Eigen::Vector2d& position, integration_parameter_t& integration) const
         {
             // Cash-Karp parameters
-            constexpr float b_21 = 0.2f;
-            constexpr float b_31 = 0.075f;
-            constexpr float b_41 = 0.3f;
-            constexpr float b_51 = -11.0f / 54.0f;
-            constexpr float b_61 = 1631.0f / 55296.0f;
-            constexpr float b_32 = 0.225f;
-            constexpr float b_42 = -0.9f;
-            constexpr float b_52 = 2.5f;
-            constexpr float b_62 = 175.0f / 512.0f;
-            constexpr float b_43 = 1.2f;
-            constexpr float b_53 = -70.0f / 27.0f;
-            constexpr float b_63 = 575.0f / 13824.0f;
-            constexpr float b_54 = 35.0f / 27.0f;
-            constexpr float b_64 = 44275.0f / 110592.0f;
-            constexpr float b_65 = 253.0f / 4096.0f;
+            constexpr auto b_21 = 0.2;
+            constexpr auto b_31 = 0.075;
+            constexpr auto b_41 = 0.3;
+            constexpr auto b_51 = -11.0 / 54.0;
+            constexpr auto b_61 = 1631.0 / 55296.0;
+            constexpr auto b_32 = 0.225;
+            constexpr auto b_42 = -0.9;
+            constexpr auto b_52 = 2.5;
+            constexpr auto b_62 = 175.0 / 512.0;
+            constexpr auto b_43 = 1.2;
+            constexpr auto b_53 = -70.0 / 27.0;
+            constexpr auto b_63 = 575.0 / 13824.0;
+            constexpr auto b_54 = 35.0 / 27.0;
+            constexpr auto b_64 = 44275.0 / 110592.0;
+            constexpr auto b_65 = 253.0 / 4096.0;
 
-            constexpr float c_1 = 37.0f / 378.0f;
-            constexpr float c_2 = 0.0f;
-            constexpr float c_3 = 250.0f / 621.0f;
-            constexpr float c_4 = 125.0f / 594.0f;
-            constexpr float c_5 = 0.0f;
-            constexpr float c_6 = 512.0f / 1771.0f;
+            constexpr auto c_1 = 37.0 / 378.0;
+            constexpr auto c_2 = 0.0;
+            constexpr auto c_3 = 250.0 / 621.0;
+            constexpr auto c_4 = 125.0 / 594.0;
+            constexpr auto c_5 = 0.0;
+            constexpr auto c_6 = 512.0 / 1771.0;
 
-            constexpr float c_1s = 2825.0f / 27648.0f;
-            constexpr float c_2s = 0.0f;
-            constexpr float c_3s = 18575.0f / 48384.0f;
-            constexpr float c_4s = 13525.0f / 55296.0f;
-            constexpr float c_5s = 277.0f / 14336.0f;
-            constexpr float c_6s = 0.25f;
+            constexpr auto c_1s = 2825.0 / 27648.0;
+            constexpr auto c_2s = 0.0;
+            constexpr auto c_3s = 18575.0 / 48384.0;
+            constexpr auto c_4s = 13525.0 / 55296.0;
+            constexpr auto c_5s = 277.0 / 14336.0;
+            constexpr auto c_6s = 0.25;
 
             // Constants
-            constexpr float grow_exponent = -0.2f;
-            constexpr float shrink_exponent = -0.25f;
-            constexpr float max_growth = 5.0f;
-            constexpr float max_shrink = 0.1f;
-            constexpr float safety = 0.9f;
+            constexpr auto grow_exponent = -0.2;
+            constexpr auto shrink_exponent = -0.25;
+            constexpr auto max_growth = 5.0;
+            constexpr auto max_shrink = 0.1;
+            constexpr auto safety = 0.9;
 
             // Calculate Runge-Kutta coefficients
-            Eigen::Vector2f output_position;
+            Eigen::Vector2d output_position;
 
             bool decreased = false;
 
             do
             {
-                const Eigen::Vector2f k1 = delta * sign * grid.interpolate(position);
-                const Eigen::Vector2f k2 = delta * sign * grid.interpolate(position + b_21 * k1);
-                const Eigen::Vector2f k3 = delta * sign * grid.interpolate(position + b_31 * k1 + b_32 * k2);
-                const Eigen::Vector2f k4 = delta * sign * grid.interpolate(position + b_41 * k1 + b_42 * k2 + b_43 * k3);
-                const Eigen::Vector2f k5 = delta * sign * grid.interpolate(position + b_51 * k1 + b_52 * k2 + b_53 * k3 + b_54 * k4);
-                const Eigen::Vector2f k6 = delta * sign * grid.interpolate(position + b_61 * k1 + b_62 * k2 + b_63 * k3 + b_64 * k4 + b_65 * k5);
+                const auto k1 = integration.param.rk_45.timestep * integration.sign * grid.interpolate(position);
+                const auto k2 = integration.param.rk_45.timestep * integration.sign * grid.interpolate(position + b_21 * k1);
+                const auto k3 = integration.param.rk_45.timestep * integration.sign * grid.interpolate(position + b_31 * k1 + b_32 * k2);
+                const auto k4 = integration.param.rk_45.timestep * integration.sign * grid.interpolate(position + b_41 * k1 + b_42 * k2 + b_43 * k3);
+                const auto k5 = integration.param.rk_45.timestep * integration.sign * grid.interpolate(position + b_51 * k1 + b_52 * k2 + b_53 * k3 + b_54 * k4);
+                const auto k6 = integration.param.rk_45.timestep * integration.sign * grid.interpolate(position + b_61 * k1 + b_62 * k2 + b_63 * k3 + b_64 * k4 + b_65 * k5);
 
                 // Calculate error estimate
-                const Eigen::Vector2f fifth_order = position + c_1 * k1 + c_2 * k2 + c_3 * k3 + c_4 * k4 + c_5 * k5 + c_6 * k6;
-                const Eigen::Vector2f fourth_order = position + c_1s * k1 + c_2s * k2 + c_3s * k3 + c_4s * k4 + c_5s * k5 + c_6s * k6;
+                const auto fifth_order = position + c_1 * k1 + c_2 * k2 + c_3 * k3 + c_4 * k4 + c_5 * k5 + c_6 * k6;
+                const auto fourth_order = position + c_1s * k1 + c_2s * k2 + c_3s * k3 + c_4s * k4 + c_5s * k5 + c_6s * k6;
 
-                const Eigen::Vector2f difference = fifth_order - fourth_order;
+                const auto difference = fifth_order - fourth_order;
 
-                const Eigen::Vector2f scale = grid.interpolate(position);
+                const auto scale = grid.interpolate(position);
 
-                const float error = std::max(0.0f, std::max(std::abs(difference[0] / scale[0]), std::abs(difference[1] / scale[1]))) / max_error;
+                const auto error = std::max(0.0, std::max(std::abs(difference[0] / scale[0]), std::abs(difference[1] / scale[1]))) / integration.param.rk_45.maximum_error;
 
                 // Set new, adapted time step
-                if (error > 1.0f)
+                if (error > 1.0)
                 {
                     // Error too large, reduce time step
-                    delta *= std::max(max_shrink, safety * std::pow(error, shrink_exponent));
+                    integration.param.rk_45.timestep *= static_cast<float>(std::max(max_shrink, safety * std::pow(error, shrink_exponent)));
                     decreased = true;
                 }
                 else
                 {
                     // Error (too) small, increase time step
-                    delta = std::min(max_delta, delta * std::min(max_growth, safety * std::pow(error, grow_exponent)));
+                    integration.param.rk_45.timestep = std::min(integration.param.rk_45.maximum_timestep,
+                        static_cast<float>(integration.param.rk_45.timestep * std::min(max_growth, safety * std::pow(error, grow_exponent))));
                     decreased = false;
                 }
 
@@ -612,19 +723,17 @@ namespace megamol
                 output_position = fifth_order;
             } while (decreased);
 
-            return std::make_pair(output_position, delta);
+            return output_position;
         }
 
-        tpf::utility::optional<std::list<typename tpf::data::grid<float, float, 2, 2>::coords_t>> periodic_orbits::find_turn(const tpf::data::grid<float, float, 2, 2>& grid,
-            const std::vector<std::pair<flowvis::critical_points::type, Eigen::Vector2f>>& critical_points, Eigen::Vector2f& position,
-            float& delta, const float sign, const float max_error, const float max_delta) const
+        tpf::utility::optional<std::pair<std::list<periodic_orbits::coords_t>, std::list<periodic_orbits::kernel::Point_2>>>
+            periodic_orbits::find_turn(const tpf::data::grid<double, double, 2, 2>& grid,
+                const std::vector<std::pair<flowvis::critical_points::type, Eigen::Vector2d>>& critical_points,
+                Eigen::Vector2d& position, integration_parameter_t& integration_param) const
         {
-            using coords_t = typename tpf::data::grid<float, float, 2, 2>::coords_t;
-
             // Initialize cell list
             std::list<coords_t> visited_cells;
-
-            visited_cells.push_back(*grid.find_staggered_cell(position));
+            std::list<periodic_orbits::kernel::Point_2> crossed_edges;
 
             // Advect stream line until a closed turn is detected
             std::size_t num_critical_point_visits = 0;
@@ -632,14 +741,11 @@ namespace megamol
 
             bool found_turn = false;
 
-            while (!found_turn)
+            while (!found_turn && !this->terminate)
             {
-                const auto advected = advect_RK45(grid, position, delta, sign, max_error, max_delta);
+                const auto old_position = position;
 
-                const Eigen::Vector2f old_position = position;
-
-                position = advected.first;
-                delta = advected.second;
+                position = advect(grid, position, integration_param);
 
                 if (position == old_position)
                 {
@@ -661,8 +767,6 @@ namespace megamol
                 {
                     // Add cells that were overstepped
                     auto current_cells = get_cells(grid, old_cell, *new_cell, old_position, position);
-
-                    current_cells.push_back(*new_cell);
 
                     for (auto current_cell_it = current_cells.begin(); current_cell_it != current_cells.end() && !found_turn; ++current_cell_it)
                     {
@@ -676,10 +780,12 @@ namespace megamol
                         for (const auto& point : critical_points)
                         {
                             const bool attracting =
-                                (sign < 0.0f && (point.first == flowvis::critical_points::type::REPELLING_FOCUS || point.first == flowvis::critical_points::type::REPELLING_NODE)) ||
-                                (sign > 0.0f && (point.first == flowvis::critical_points::type::ATTRACTING_FOCUS || point.first == flowvis::critical_points::type::ATTRACTING_NODE));
+                                (integration_param.sign < 0.0f && (point.first == flowvis::critical_points::type::REPELLING_FOCUS
+                                    || point.first == flowvis::critical_points::type::REPELLING_NODE)) ||
+                                (integration_param.sign > 0.0f && (point.first == flowvis::critical_points::type::ATTRACTING_FOCUS
+                                    || point.first == flowvis::critical_points::type::ATTRACTING_NODE));
 
-                            if (attracting && *grid.find_staggered_cell(point.second) == current_cell)
+                            if (attracting && *grid.find_staggered_cell(point.second) == current_cell.first)
                             {
                                 has_critical_point = true;
                             }
@@ -688,19 +794,21 @@ namespace megamol
                         if (!has_critical_point)
                         {
                             // Cell has changed: check for prior visitation
-                            if (std::find(visited_cells.begin(), visited_cells.end(), current_cell) != visited_cells.end())
+                            if (std::find(visited_cells.begin(), visited_cells.end(), current_cell.first) != visited_cells.end())
                             {
                                 found_turn = true;
 
                                 // Remove all cells which do not belong to this turn
-                                for (auto cell_it = visited_cells.begin(); cell_it != visited_cells.end() && *cell_it != current_cell; )
+                                for (auto cell_it = visited_cells.begin(); cell_it != visited_cells.end() && *cell_it != current_cell.first; )
                                 {
                                     visited_cells.erase(cell_it++);
+                                    crossed_edges.pop_front();
                                 }
                             }
                             else
                             {
-                                visited_cells.push_back(current_cell);
+                                visited_cells.push_back(current_cell.first);
+                                crossed_edges.push_back(current_cell.second);
                             }
                         }
                         else
@@ -708,6 +816,7 @@ namespace megamol
                             ++num_critical_point_visits;
 
                             visited_cells.clear();
+                            crossed_edges.clear();
                         }
 
                         // Return, if stuck in a loop with a critical point
@@ -720,37 +829,38 @@ namespace megamol
             }
 
             // Return results
-            return visited_cells;
+            return std::make_pair(visited_cells, crossed_edges);
         }
 
-        std::pair<bool, std::vector<Eigen::Vector2f>> periodic_orbits::validate_turn_strict(const tpf::data::grid<float, float, 2, 2>& grid, Eigen::Vector2f& position,
-            float& delta, const float sign, const float max_error, const float max_delta, std::list<coords_t> comparison) const
+        std::tuple<bool, std::vector<Eigen::Vector2d>, std::vector<periodic_orbits::kernel::Point_2>> periodic_orbits::validate_turn(
+            const tpf::data::grid<double, double, 2, 2>& grid, Eigen::Vector2d& position,
+            integration_parameter_t& integration_param, std::list<coords_t> comparison) const
         {
             // Initialize comparison
             if (*grid.find_staggered_cell(position) != comparison.front())
             {
-                return std::make_pair(false, std::vector<Eigen::Vector2f>());
+                return std::make_tuple(false, std::vector<Eigen::Vector2d>(), std::vector<kernel::Point_2>());
             }
 
-            std::vector<Eigen::Vector2f> streamline;
+            std::vector<Eigen::Vector2d> streamline;
             streamline.push_back(position);
 
+            std::vector<kernel::Point_2> crossed_edges;
+
+            comparison.push_back(comparison.front());
             comparison.pop_front();
 
             // Advect stream line while it corresponds to the input list of cells
             while (!comparison.empty())
             {
-                const auto advected = advect_RK45(grid, position, delta, sign, max_error, max_delta);
+                const auto old_position = position;
 
-                const Eigen::Vector2f old_position = position;
-
-                position = advected.first;
-                delta = advected.second;
+                position = advect(grid, position, integration_param);
 
                 if (position == old_position)
                 {
                     // Advection had no result; stream line stopped
-                    return std::make_pair(false, streamline);
+                    return std::make_tuple(false, streamline, crossed_edges);
                 }
 
                 // Check entry into new cell
@@ -760,7 +870,7 @@ namespace megamol
                 if (!new_cell)
                 {
                     // Advection went out-of-bounds
-                    return std::make_pair(false, streamline);
+                    return std::make_tuple(false, streamline, crossed_edges);
                 }
 
                 streamline.push_back(position);
@@ -770,42 +880,39 @@ namespace megamol
                     // Add cells that were overstepped
                     auto current_cells = get_cells(grid, old_cell, *new_cell, old_position, position);
 
-                    current_cells.push_back(*new_cell);
-
                     // Check cells
                     for (auto cell_it = current_cells.begin(); cell_it != current_cells.end() && !comparison.empty(); ++cell_it)
                     {
                         const auto& current_cell = *cell_it;
 
-                        if (current_cell != comparison.front())
+                        if (current_cell.first != comparison.front())
                         {
-                            return std::make_pair(false, streamline);
+                            return std::make_tuple(false, streamline, crossed_edges);
                         }
 
-                        comparison.remove(current_cell);
+                        comparison.remove(current_cell.first);
+
+                        crossed_edges.push_back(current_cell.second);
                     }
                 }
             }
 
             // Return results
-            return std::make_pair(true, streamline);
+            return std::make_tuple(true, streamline, crossed_edges);
         }
 
-        std::pair<bool, std::vector<Eigen::Vector2f>> periodic_orbits::validate_turn_relaxed(const tpf::data::grid<float, float, 2, 2>& grid, Eigen::Vector2f& position,
-            float& delta, const float sign, const float max_error, const float max_delta, const std::list<coords_t>& comparison) const
+        std::pair<bool, std::vector<Eigen::Vector2d>> periodic_orbits::find_exits(const tpf::data::grid<double, double, 2, 2>& grid,
+            Eigen::Vector2d& position, integration_parameter_t& integration_param, const std::list<coords_t>& comparison) const
         {
             // Initialize comparison
-            std::vector<Eigen::Vector2f> streamline;
+            std::vector<Eigen::Vector2d> streamline;
             streamline.push_back(position);
 
             std::unordered_set<coords_t, std::hash<coords_t>> visited_cells;
 
             // Advect one step to ensure the start is not considered outside
             {
-                const auto advected = advect_RK45(grid, position, delta, sign, max_error, max_delta);
-
-                position = advected.first;
-                delta = advected.second;
+                position = advect(grid, position, integration_param);
 
                 streamline.push_back(position);
 
@@ -824,14 +931,11 @@ namespace megamol
             }
 
             // Advect stream line while it corresponds to the input list of cells
-            while (true)
+            while (!this->terminate)
             {
-                const auto advected = advect_RK45(grid, position, delta, sign, max_error, max_delta);
+                const auto old_position = position;
 
-                const Eigen::Vector2f old_position = position;
-
-                position = advected.first;
-                delta = advected.second;
+                position = advect(grid, position, integration_param);
 
                 if (position == old_position)
                 {
@@ -856,12 +960,10 @@ namespace megamol
                     // Add cells that were overstepped
                     auto current_cells = get_cells(grid, old_cell, *new_cell, old_position, position);
 
-                    current_cells.push_back(*new_cell);
-
                     // Check cells
                     for (auto cell_it = current_cells.begin(); cell_it != current_cells.end(); ++cell_it)
                     {
-                        const auto& current_cell = *cell_it;
+                        const auto& current_cell = cell_it->first;
 
                         if (std::find(comparison.begin(), comparison.end(), current_cell) == comparison.end())
                         {
@@ -879,16 +981,19 @@ namespace megamol
                     }
                 }
             }
+
+            // Terminated, anyway
+            return std::make_pair(false, streamline);
         }
 
-        std::vector<periodic_orbits::coords_t> periodic_orbits::get_cells(const tpf::data::grid<float, float, 2, 2>& grid, coords_t source,
-            const coords_t& target, const Eigen::Vector2f& source_position, const Eigen::Vector2f& target_position) const
+        std::vector<std::pair<periodic_orbits::coords_t, periodic_orbits::kernel::Point_2>> periodic_orbits::get_cells(const tpf::data::grid<double, double, 2, 2>& grid,
+            coords_t source, const coords_t& target, const Eigen::Vector2d& source_position, const Eigen::Vector2d& target_position) const
         {
-            std::vector<coords_t> intermediate_cells;
+            std::vector<std::pair<coords_t, kernel::Point_2>> cells;
 
             coords_t direction = target - source;
 
-            while (direction[0] != 0 && direction[1] != 0)
+            while (direction[0] != 0 || direction[1] != 0)
             {
                 const auto corner_bl = grid.get_cell_coordinates(source);
                 const auto corner_br = grid.get_cell_coordinates(source + coords_t(1, 0));
@@ -909,46 +1014,70 @@ namespace megamol
 
                 if (intersect_l && source_position[0] > target_position[0])
                 {
-                    intermediate_cells.push_back(source - coords_t(1, 0));
+                    cells.push_back(std::make_pair(static_cast<coords_t>(source - coords_t(1, 0)), boost::get<kernel::Point_2>(*CGAL::intersection(displacement, edge_l))));
                 }
                 else if (intersect_r && source_position[0] < target_position[0])
                 {
-                    intermediate_cells.push_back(source + coords_t(1, 0));
+                    cells.push_back(std::make_pair(static_cast<coords_t>(source + coords_t(1, 0)), boost::get<kernel::Point_2>(*CGAL::intersection(displacement, edge_r))));
                 }
                 else if (intersect_b && source_position[1] > target_position[1])
                 {
-                    intermediate_cells.push_back(source - coords_t(0, 1));
+                    cells.push_back(std::make_pair(static_cast<coords_t>(source - coords_t(0, 1)), boost::get<kernel::Point_2>(*CGAL::intersection(displacement, edge_b))));
                 }
                 else if (intersect_t && source_position[1] < target_position[1])
                 {
-                    intermediate_cells.push_back(source + coords_t(0, 1));
+                    cells.push_back(std::make_pair(static_cast<coords_t>(source + coords_t(0, 1)), boost::get<kernel::Point_2>(*CGAL::intersection(displacement, edge_t))));
                 }
 
                 // Set new old cell
-                source = intermediate_cells.back();
+                source = cells.back().first;
                 direction = target - source;
             }
 
-            return intermediate_cells;
+            return cells;
         }
 
-        std::vector<Eigen::Vector2f> periodic_orbits::integrate_orbit(const tpf::data::grid<float, float, 2, 2>& grid, Eigen::Vector2f position,
-            float delta, const float sign, const float max_error, const float max_delta) const
+        bool periodic_orbits::correct_side(const Eigen::Vector2d& position, const std::list<kernel::Point_2>& outer, const std::vector<kernel::Point_2>& inner) const
+        {
+            const kernel::Point_2 point(position[0], position[1]);
+
+            // Create lambda for distance calculation
+            auto calculate_distance = [&point](const auto& list)
+            {
+                auto distance = CGAL::squared_distance(kernel::Segment_2(list.back(), list.front()), point);
+
+                auto last = list.front();
+
+                for (auto it = ++list.begin(); it != list.end(); ++it)
+                {
+                    const auto current = *it;
+
+                    distance = CGAL::min(distance, CGAL::squared_distance(kernel::Segment_2(last, current), point));
+
+                    last = current;
+                }
+
+                return distance;
+            };
+
+            // Calculate and compare distances
+            return calculate_distance(inner) < calculate_distance(outer);
+        }
+
+        std::vector<Eigen::Vector2d> periodic_orbits::integrate_orbit(const tpf::data::grid<double, double, 2, 2>& grid, Eigen::Vector2d position,
+            integration_parameter_t integration_param, const float max_poincare_error) const
         {
             // Extract edge
             const auto first_cell = *grid.find_staggered_cell(position);
             auto second_cell = first_cell;
 
-            Eigen::Vector2f last_position = position;
+            auto last_position = position;
 
             while (first_cell == second_cell)
             {
-                const auto advected = advect_RK45(grid, position, delta, sign, max_error, max_delta);
-
                 last_position = position;
 
-                position = advected.first;
-                delta = advected.second;
+                position = advect(grid, position, integration_param);
 
                 second_cell = *grid.find_staggered_cell(position);
             }
@@ -990,10 +1119,9 @@ namespace megamol
             }
 
             // Compute actual periodic orbit, until the error is small enough
-            std::vector<Eigen::Vector2f> periodic_orbit;
-            const auto max_poincare_error = poincare_error.Param<core::param::FloatParam>()->Value();
+            std::vector<Eigen::Vector2d> periodic_orbit;
 
-            float error = std::numeric_limits<float>::max();
+            auto error = std::numeric_limits<double>::max();
 
             while (error > max_poincare_error)
             {
@@ -1001,19 +1129,16 @@ namespace megamol
 
                 // Calculate new start point
                 const kernel::Point_2 start_point = edge.source() + 0.5 * (edge.target() - edge.source());
-                position = Eigen::Vector2f(static_cast<float>(CGAL::to_double(start_point[0])), static_cast<float>(CGAL::to_double(start_point[1])));
+                position << CGAL::to_double(start_point[0]), CGAL::to_double(start_point[1]);
 
                 bool halfway = false;
 
                 // Integrate stream line until it crosses the edge again
                 while (!(halfway && CGAL::orientation(edge.source(), edge.target(), kernel::Point_2(position[0], position[1])) == crossed_orientation))
                 {
-                    const auto advected = advect_RK45(grid, position, delta, sign, max_error, max_delta);
-
                     last_position = position;
 
-                    position = advected.first;
-                    delta = advected.second;
+                    position = advect(grid, position, integration_param);
 
                     if (!halfway && CGAL::orientation(edge.source(), edge.target(), kernel::Point_2(position[0], position[1])) != crossed_orientation)
                     {
@@ -1038,10 +1163,12 @@ namespace megamol
                     {
                         edge = kernel::Segment_2(start_point, edge.target());
                     }
+
+                    error = std::sqrt(CGAL::to_double(edge.squared_length()));
                 }
                 else
                 {
-                    error = 0.0f;
+                    error = 0.0;
                 }
             }
 
@@ -1051,7 +1178,8 @@ namespace megamol
             return periodic_orbit;
         }
 
-        Eigen::Vector2f periodic_orbits::linear_interpolate_position(const Eigen::Vector2f& left, const Eigen::Vector2f& right, const float value_left, const float value_right) const
+        Eigen::Vector2d periodic_orbits::linear_interpolate_position(const Eigen::Vector2d& left,
+            const Eigen::Vector2d& right, const double value_left, const double value_right) const
         {
             const auto lambda = value_left / (value_left - value_right);
 

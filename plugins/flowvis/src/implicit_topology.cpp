@@ -767,7 +767,8 @@ namespace megamol
                 // Compute and set validity mask
                 if (this->data_output_changed)
                 {
-                    auto& valid = *(this->valid = std::make_shared<std::vector<GLfloat>>(this->labels->size(), 1.0f));
+                    auto& valid_all = *(this->valid_all = std::make_shared<std::vector<GLfloat>>(this->labels->size(), 1.0f));
+                    auto& valid_one = *(this->valid_one = std::make_shared<std::vector<GLfloat>>(this->labels->size(), 1.0f));
                     auto& valid_forward = *(this->valid_forward = std::make_shared<std::vector<GLfloat>>(this->labels->size(), 1.0f));
                     auto& valid_backward = *(this->valid_backward = std::make_shared<std::vector<GLfloat>>(this->labels->size(), 1.0f));
 
@@ -784,38 +785,43 @@ namespace megamol
                         const Eigen::Vector2f termination_3(terminations_forward[indices[i + 2]], terminations_backward[indices[i + 2]]);
 
                         // Set boundaries to invalid
-                        if (termination_1[0] != 0.0f)
+                        if (termination_1[0] == -1.0f || termination_1[0] == 1.0f || termination_1[0] == 2.0f)
                         {
                             valid_forward[indices[i + 0]] = 0.0f;
                         }
-                        if (termination_1[1] != 0.0f)
+                        if (termination_1[1] == -1.0f || termination_1[1] == 1.0f || termination_1[1] == 2.0f)
                         {
                             valid_backward[indices[i + 0]] = 0.0f;
                         }
-                        if (termination_2[0] != 0.0f)
+                        if (termination_2[0] == -1.0f || termination_2[0] == 1.0f || termination_2[0] == 2.0f)
                         {
                             valid_forward[indices[i + 1]] = 0.0f;
                         }
-                        if (termination_2[1] != 0.0f)
+                        if (termination_2[1] == -1.0f || termination_2[1] == 1.0f || termination_2[1] == 2.0f)
                         {
                             valid_backward[indices[i + 1]] = 0.0f;
                         }
-                        if (termination_3[0] != 0.0f)
+                        if (termination_3[0] == -1.0f || termination_3[0] == 1.0f || termination_3[0] == 2.0f)
                         {
                             valid_forward[indices[i + 2]] = 0.0f;
                         }
-                        if (termination_3[1] != 0.0f)
+                        if (termination_3[1] == -1.0f || termination_3[1] == 1.0f || termination_3[1] == 2.0f)
                         {
                             valid_backward[indices[i + 2]] = 0.0f;
                         }
 
                         // Set combination
-                        valid[indices[i + 0]] = std::max(valid_forward[indices[i + 0]], valid_backward[indices[i + 0]]);
-                        valid[indices[i + 1]] = std::max(valid_forward[indices[i + 1]], valid_backward[indices[i + 1]]);
-                        valid[indices[i + 2]] = std::max(valid_forward[indices[i + 2]], valid_backward[indices[i + 2]]);
+                        valid_all[indices[i + 0]] = std::min(valid_forward[indices[i + 0]], valid_backward[indices[i + 0]]);
+                        valid_all[indices[i + 1]] = std::min(valid_forward[indices[i + 1]], valid_backward[indices[i + 1]]);
+                        valid_all[indices[i + 2]] = std::min(valid_forward[indices[i + 2]], valid_backward[indices[i + 2]]);
+
+                        valid_one[indices[i + 0]] = std::max(valid_forward[indices[i + 0]], valid_backward[indices[i + 0]]);
+                        valid_one[indices[i + 1]] = std::max(valid_forward[indices[i + 1]], valid_backward[indices[i + 1]]);
+                        valid_one[indices[i + 2]] = std::max(valid_forward[indices[i + 2]], valid_backward[indices[i + 2]]);
                     }
 
-                    data_call->set_mask("valid", this->valid);
+                    data_call->set_mask("valid (all)", this->valid_all);
+                    data_call->set_mask("valid (one)", this->valid_one);
                     data_call->set_mask("valid (forward)", this->valid_forward);
                     data_call->set_mask("valid (backward)", this->valid_backward);
                 }
@@ -895,7 +901,8 @@ namespace megamol
             data_call->set_data("gradients (forward)");
             data_call->set_data("gradients (backward)");
 
-            data_call->set_mask("valid");
+            data_call->set_mask("valid (all)");
+            data_call->set_mask("valid (one)");
             data_call->set_mask("valid (forward)");
             data_call->set_mask("valid (backward)");
 

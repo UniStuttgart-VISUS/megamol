@@ -267,7 +267,8 @@ namespace megamol
             std::shared_ptr<std::vector<GLfloat>> gradients_backward;
 
             /** Output mask */
-            std::shared_ptr<std::vector<GLfloat>> valid;
+            std::shared_ptr<std::vector<GLfloat>> valid_all;
+            std::shared_ptr<std::vector<GLfloat>> valid_one;
             std::shared_ptr<std::vector<GLfloat>> valid_forward;
             std::shared_ptr<std::vector<GLfloat>> valid_backward;
 

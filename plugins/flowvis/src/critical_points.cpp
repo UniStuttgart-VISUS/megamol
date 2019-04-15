@@ -154,8 +154,8 @@ namespace megamol
             // Calculate cell size
             const auto size = cell.top_right_corner - cell.bottom_left_corner;
 
-            const Eigen::Vector2f top_left_corner = cell.bottom_left_corner + Eigen::Vector2f(0.0, size[1]);
-            const Eigen::Vector2f bottom_right_corner = cell.bottom_left_corner + Eigen::Vector2f(size[0], 0.0);
+            const Eigen::Vector2f top_left_corner = cell.bottom_left_corner + Eigen::Vector2f(0.0f, size[1]);
+            const Eigen::Vector2f bottom_right_corner = cell.bottom_left_corner + Eigen::Vector2f(size[0], 0.0f);
 
             // Calculate marching squares index
             int marching_squares_index = 0;
@@ -300,11 +300,11 @@ namespace megamol
                     {
                         point_type = type::SADDLE;
                     }
-                    else if (eigenvalues[0].real() > 0.0 && eigenvalues[1].real() > 0.0)
+                    else if (eigenvalues[0].real() > 0.0f && eigenvalues[1].real() > 0.0f)
                     {
                         point_type = type::REPELLING_NODE;
                     }
-                    else if (eigenvalues[0].real() < 0.0 && eigenvalues[1].real() < 0.0)
+                    else if (eigenvalues[0].real() < 0.0f && eigenvalues[1].real() < 0.0f)
                     {
                         point_type = type::ATTRACTING_NODE;
                     }
@@ -319,11 +319,11 @@ namespace megamol
                     {
                         point_type = type::NONE;
                     }
-                    else if (eigenvalues[0].real() > 0.0 && eigenvalues[1].real() > 0.0)
+                    else if (eigenvalues[0].real() > 0.0f && eigenvalues[1].real() > 0.0f)
                     {
                         point_type = type::REPELLING_FOCUS;
                     }
-                    else if (eigenvalues[0].real() < 0.0 && eigenvalues[1].real() < 0.0)
+                    else if (eigenvalues[0].real() < 0.0f && eigenvalues[1].real() < 0.0f)
                     {
                         point_type = type::ATTRACTING_FOCUS;
                     }

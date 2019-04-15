@@ -27,6 +27,7 @@
 #include <mutex>
 #include <ostream>
 #include <set>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -87,8 +88,35 @@ namespace megamol
             virtual void release() override;
 
         private:
-            using coords_t = typename tpf::data::grid<float, float, 2, 2>::coords_t;
+            using coords_t = typename tpf::data::grid<double, double, 2, 2>::coords_t;
             using kernel = CGAL::Exact_predicates_exact_constructions_kernel;
+
+            /** Struct transporting the parameter sets for integration */
+            struct integration_parameter_t
+            {
+                float sign;
+
+                enum class method_t
+                {
+                    RUNGE_KUTTA_4,
+                    RUNGE_KUTTA_45
+                } method;
+
+                union integration_t
+                {
+                    struct runge_kutta_4_t
+                    {
+                        unsigned int min_steps_per_cell;
+                    } rk_4;
+
+                    struct runge_kutta_45_t
+                    {
+                        float timestep;
+                        float maximum_timestep;
+                        float maximum_error;
+                    } rk_45;
+                } param;
+            };
 
             /**
             * Extract periodic orbits.
@@ -98,23 +126,44 @@ namespace megamol
             * @param seed Seed of the stream line used to find the periodic orbit
             * @param sign Direction of integration
             */
-            void extract_periodic_orbit(const tpf::data::grid<float, float, 2, 2>& grid,
-                const std::vector<std::pair<critical_points::type, Eigen::Vector2f>>& critical_points, const Eigen::Vector2f& seed, float sign);
+            void extract_periodic_orbit(const tpf::data::grid<double, double, 2, 2>& grid,
+                const std::vector<std::pair<critical_points::type, Eigen::Vector2d>>& critical_points, const Eigen::Vector2d& seed, float sign);
+
+            /**
+            * Advect using the predefined method
+            *
+            * @param grid Vector field
+            * @param position Original position
+            * @param integration_parameter Parameter for time step control
+            *
+            * @return The advected position
+            */
+            Eigen::Vector2d advect(const tpf::data::grid<double, double, 2, 2>& grid,
+                const Eigen::Vector2d& position, integration_parameter_t& integration_parameter) const;
+
+            /**
+            * Advect using Runge-Kutta with fixed step size
+            *
+            * @param grid Vector field
+            * @param position Original position
+            * @param integration_parameter Parameter for time step control
+            *
+            * @return The advected position
+            */
+            Eigen::Vector2d advect_RK4(const tpf::data::grid<double, double, 2, 2>& grid,
+                const Eigen::Vector2d& position, const integration_parameter_t& integration_parameter) const;
 
             /**
             * Advect using Runge-Kutta with dynamic step size
             *
             * @param grid Vector field
             * @param position Original position
-            * @param delta Previous step size
-            * @param sign Direction of integration
-            * @param max_error Maximum error for step size computation
-            * @param max_delta Maximum step size
+            * @param integration_parameter Parameter for time step control
             *
-            * @return The advected position and adjusted step size
+            * @return The advected position
             */
-            std::pair<Eigen::Vector2f, float> advect_RK45(const tpf::data::grid<float, float, 2, 2>& grid,
-                const Eigen::Vector2f& position, float delta, float sign, float max_error, float max_delta) const;
+            Eigen::Vector2d advect_RK45(const tpf::data::grid<double, double, 2, 2>& grid,
+                const Eigen::Vector2d& position, integration_parameter_t& integration_parameter) const;
 
             /**
             * Find a turn, i.e., return a closed sequence of cell coordinates
@@ -122,48 +171,39 @@ namespace megamol
             * @param grid Vector field
             * @param critical_points Critical points
             * @param position Original/Output position
-            * @param delta Previous/Adjusted step size
-            * @param sign Direction of integration
-            * @param max_error Maximum error for step size computation
-            * @param max_delta Maximum step size
+            * @param integration_parameter Parameter for time step control
             *
             * @return List of coordinates, defining a turn
             */
-            tpf::utility::optional<std::list<coords_t>> find_turn(const tpf::data::grid<float, float, 2, 2>& grid,
-                const std::vector<std::pair<critical_points::type, Eigen::Vector2f>>& critical_points, Eigen::Vector2f& position,
-                float& delta, float sign, float max_error, float max_delta) const;
+            tpf::utility::optional<std::pair<std::list<coords_t>, std::list<kernel::Point_2>>> find_turn(const tpf::data::grid<double, double, 2, 2>& grid,
+                const std::vector<std::pair<critical_points::type, Eigen::Vector2d>>& critical_points, Eigen::Vector2d& position,
+                integration_parameter_t& integration_parameter) const;
 
             /**
             * Validate a previous turn
             *
             * @param grid Vector field
             * @param position Original/Output position
-            * @param delta Previous/Adjusted step size
-            * @param sign Direction of integration
-            * @param max_error Maximum error for step size computation
-            * @param max_delta Maximum step size
+            * @param integration_parameter Parameter for time step control
             * @param comparison List of cells to compare with
             *
             * @return True: valid, false otherwise
             */
-            std::pair<bool, std::vector<Eigen::Vector2f>> validate_turn_strict(const tpf::data::grid<float, float, 2, 2>& grid, Eigen::Vector2f& position,
-                float& delta, float sign, float max_error, float max_delta, std::list<coords_t> comparison) const;
+            std::tuple<bool, std::vector<Eigen::Vector2d>, std::vector<kernel::Point_2>> validate_turn(const tpf::data::grid<double, double, 2, 2>& grid,
+                Eigen::Vector2d& position, integration_parameter_t& integration_parameter, std::list<coords_t> comparison) const;
 
             /**
-            * Validate a previous turn
+            * Look for exits
             *
             * @param grid Vector field
             * @param position Original/Output position
-            * @param delta Previous/Adjusted step size
-            * @param sign Direction of integration
-            * @param max_error Maximum error for step size computation
-            * @param max_delta Maximum step size
+            * @param integration_parameter Parameter for time step control
             * @param comparison List of cells to compare with
             *
             * @return True: valid, false otherwise
             */
-            std::pair<bool, std::vector<Eigen::Vector2f>> validate_turn_relaxed(const tpf::data::grid<float, float, 2, 2>& grid, Eigen::Vector2f& position,
-                float& delta, float sign, float max_error, float max_delta, const std::list<coords_t>& comparison) const;
+            std::pair<bool, std::vector<Eigen::Vector2d>> find_exits(const tpf::data::grid<double, double, 2, 2>& grid, Eigen::Vector2d& position,
+                integration_parameter_t& integration_parameter, const std::list<coords_t>& comparison) const;
 
             /**
             * Get intermediate cells
@@ -176,23 +216,32 @@ namespace megamol
             *
             * @return Intermediate cells
             */
-            std::vector<coords_t> get_cells(const tpf::data::grid<float, float, 2, 2>& grid, coords_t source, const coords_t& target,
-                const Eigen::Vector2f& source_position, const Eigen::Vector2f& target_position) const;
+            std::vector<std::pair<coords_t, kernel::Point_2>> get_cells(const tpf::data::grid<double, double, 2, 2>& grid, coords_t source, const coords_t& target,
+                const Eigen::Vector2d& source_position, const Eigen::Vector2d& target_position) const;
+
+            /**
+            * Check if the position is on the correct side of the stream line
+            *
+            * @param position Position to check
+            * @param outer Outer stream line
+            * @param inner Inner stream line
+            *
+            * @return True if inside, false otherwise
+            */
+            bool correct_side(const Eigen::Vector2d& position, const std::list<kernel::Point_2>& outer, const std::vector<kernel::Point_2>& inner) const;
 
             /**
             * Use Poincaré map for generating the orbit
             *
             * @param grid Vector field
             * @param position Original position
-            * @param delta Previous/Adjusted step size
-            * @param sign Direction of integration
-            * @param max_error Maximum error for step size computation
-            * @param max_delta Maximum step size
+            * @param integration_parameter Parameter for time step control
+            * @param max_poincare_error Maximum error while determining the representative orbital point
             *
             * @return Line, defined as set of points, representing the orbit
             */
-            std::vector<Eigen::Vector2f> integrate_orbit(const tpf::data::grid<float, float, 2, 2>& grid, Eigen::Vector2f position,
-                float delta, float sign, float max_error, float max_delta) const;
+            std::vector<Eigen::Vector2d> integrate_orbit(const tpf::data::grid<double, double, 2, 2>& grid, Eigen::Vector2d position,
+                integration_parameter_t integration_parameter, float max_poincare_error) const;
 
             /**
             * Linear interpolate position based on value
@@ -204,7 +253,7 @@ namespace megamol
             *
             * @return Position at which the value is zero
             */
-            Eigen::Vector2f linear_interpolate_position(const Eigen::Vector2f& left, const Eigen::Vector2f& right, float value_left, float value_right) const;
+            Eigen::Vector2d linear_interpolate_position(const Eigen::Vector2d& left, const Eigen::Vector2d& right, double value_left, double value_right) const;
 
             /** Callbacks for the triangle mesh */
             bool get_glyph_data_callback(core::Call& call);
@@ -226,7 +275,7 @@ namespace megamol
             SIZE_T glyph_hash;
 
             std::vector<std::pair<float, std::vector<Eigen::Vector2f>>> glyph_output;
-            std::vector<std::set<coords_t, std::less<coords_t>>> orbit_cells;
+            std::vector<std::set<coords_t, std::less<coords_t>>> orbit_cells_forward, orbit_cells_backward;
 
             /** Output slot for receiving mouse clicks */
             core::CalleeSlot mouse_slot;
@@ -243,7 +292,11 @@ namespace megamol
             SIZE_T critical_points_hash;
 
             /** Parameter for stream line integration */
+            core::param::ParamSlot integration_method;
             core::param::ParamSlot integration_direction;
+
+            /** Parameter for integration time step control */
+            core::param::ParamSlot min_steps_per_cell;
             core::param::ParamSlot initial_timestep;
             core::param::ParamSlot maximum_timestep;
             core::param::ParamSlot maximum_error;
@@ -266,10 +319,10 @@ namespace megamol
             core::param::ParamSlot reset;
 
             /** Stored vector field */
-            tpf::data::grid<float, float, 2, 2> grid;
+            tpf::data::grid<double, double, 2, 2> grid;
 
             /** Stored critical points */
-            std::vector<std::pair<critical_points::type, Eigen::Vector2f>> critical_points;
+            std::vector<std::pair<critical_points::type, Eigen::Vector2d>> critical_points;
 
             /** Mutex for synchronization */
             std::mutex lock;
