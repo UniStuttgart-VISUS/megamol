@@ -16,7 +16,8 @@ using namespace megamol::gui;
  * GUIWindowManager::Ctor
  */
 GUIWindowManager::GUIWindowManager(std::string filename) :
-    windows()
+    callbacks()
+    , windows()
     , filename(filename)
     , profiles() {
 
@@ -34,58 +35,16 @@ GUIWindowManager::~GUIWindowManager(void) {
 
 
 /**
- * GUIWindowManager::AddWindowConfiguration
- */
-bool GUIWindowManager::AddWindowConfiguration(std::string window_name, WindowConfiguration& config) {
-
-    if (this->windowConfigurationExists(window_name)) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "[GUIWindowManager] Found already existing window '%s'. Window name must be unique.", window_name.c_str());
-        return false;
-    }
-    this->windows.emplace(window_name, config);
-    return true;
-}
-
-
-/**
- * GUIWindowManager::DeleteWindowConfiguration
- */
-//bool GUIWindowManager::DeleteWindowConfiguration(std::string window_name) {
-//
-//    if (!this->windowConfigurationExists(window_name)) {
-//        vislib::sys::Log::DefaultLog.WriteError(
-//            "[GUIWindowManager] Found no existing window '%s'.", window_name.c_str());
-//        return false;
-//    }
-//    this->windows.erase(window_name);
-//    return true;
-//}
-
-
-/**
- * GUIWindowManager::EnumWindows
- */
-void GUIWindowManager::EnumWindows(std::function<void(const std::string&, GUIWindowManager::WindowConfiguration&)> cb) {
-
-    for (auto &wc : this->windows) {
-        cb(wc.first, wc.second);
-    }
-}
-
-
-/**
  * GUIWindowManager::SoftResetWindowSizePos
  */
-void GUIWindowManager::SoftResetWindowSizePos(std::string window_name) {
+void GUIWindowManager::SoftResetWindowSizePos(const std::string& window_name, WindowConfiguration& window_config) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
     ImGuiIO& io = ImGui::GetIO();
     ImGuiStyle& style = ImGui::GetStyle();
 
-    auto win = this->GetWindowConfiguration(window_name);
-    float width = win->soft_reset_size.x;
-    float height = win->soft_reset_size.y;
+    float width = window_config.reset_size.x;
+    float height = window_config.reset_size.y;
 
     auto win_pos = ImGui::GetWindowPos();
     if (win_pos.x < 0) {
@@ -96,7 +55,7 @@ void GUIWindowManager::SoftResetWindowSizePos(std::string window_name) {
     }
 
     ImVec2 win_size;
-    if (win->flags | ImGuiWindowFlags_AlwaysAutoResize) {
+    if (window_config.flags | ImGuiWindowFlags_AlwaysAutoResize) {
         win_size = ImGui::GetWindowSize();
     }
     else {
@@ -117,15 +76,14 @@ void GUIWindowManager::SoftResetWindowSizePos(std::string window_name) {
 
 
 /**
- * GUIWindowManager::ResetWindowSizePosOnProfileLoad
+ * GUIWindowManager::ResetWindowOnProfileLoad
  */
-void GUIWindowManager::ResetWindowSizePosOnProfileLoad(std::string window_name) {
+void GUIWindowManager::ResetWindowOnProfileLoad(const std::string& window_name, WindowConfiguration& window_config) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
 
-    WindowConfiguration* win_config = this->GetWindowConfiguration(window_name);
-    ImVec2 pos = win_config->profile_position;
-    ImVec2 size = win_config->profile_size;
+    ImVec2 pos = window_config.position;
+    ImVec2 size = window_config.size;
 
     ImGui::SetWindowSize(window_name.c_str(), size, ImGuiCond_Always);
     ImGui::SetWindowPos(window_name.c_str(), pos, ImGuiCond_Always);
@@ -133,9 +91,85 @@ void GUIWindowManager::ResetWindowSizePosOnProfileLoad(std::string window_name) 
 
 
 /**
+ * GUIWindowManager::RegisterDrawWindowCallback
+ */
+bool GUIWindowManager::RegisterDrawWindowCallback(WindowDrawCallback cbid, GuiCallbackFunc cb) {
+
+    this->callbacks[cbid] = cb;
+
+    return true;
+}
+
+
+/**
+ * GUIWindowManager::DrawWindowContent
+ */
+bool GUIWindowManager::DrawWindowContent(const std::string& window_name) {
+
+    if (!this->windowConfigurationExists(window_name)) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "[GUIWindowManager] Found no existing window '%s'.", window_name.c_str());
+        return false;
+    }
+
+    WindowDrawCallback cdid = this->windows[window_name].callback;
+    if (this->callbacks.find(cdid) == this->callbacks.end()) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "[GUIWindowManager] Found no registerd callback for WindowDrawCallback '%d'", (int)cdid);
+        return false;
+    }
+
+    this->callbacks[cdid](window_name, this->windows[window_name]);
+
+    return true;
+}
+
+
+/**
+ * GUIWindowManager::AddWindowConfiguration
+ */
+bool GUIWindowManager::AddWindowConfiguration(const std::string& window_name, WindowConfiguration& window_config) {
+
+    if (this->windowConfigurationExists(window_name)) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "[GUIWindowManager] Found already existing window '%s'. Window name must be unique.", window_name.c_str());
+        return false;
+    }
+    this->windows.emplace(window_name, window_config);
+    return true;
+}
+
+
+/**
+ * GUIWindowManager::EnumWindows
+ */
+void GUIWindowManager::EnumWindows(std::function<void(const std::string&, GUIWindowManager::WindowConfiguration&)> cb) {
+
+    for (auto &wc : this->windows) {
+        cb(wc.first, wc.second);
+    }
+}
+
+
+/**
+ * GUIWindowManager::DeleteWindowConfiguration
+ */
+//bool GUIWindowManager::DeleteWindowConfiguration(const std::string& window_name) {
+//
+//    if (!this->windowConfigurationExists(window_name)) {
+//        vislib::sys::Log::DefaultLog.WriteError(
+//            "[GUIWindowManager] Found no existing window '%s'.", window_name.c_str());
+//        return false;
+//    }
+//    this->windows.erase(window_name);
+//    return true;
+//}
+
+
+/**
  * GUIWindowManager::LoadWindowConfigurationProfile
  */
-bool GUIWindowManager::LoadWindowConfigurationProfile(std::string profile_name) {
+bool GUIWindowManager::LoadWindowConfigurationProfile(const std::string& profile_name) {
 
     bool check = true;
     std::map<std::string, WindowConfiguration> tmp_windows;
@@ -152,6 +186,7 @@ bool GUIWindowManager::LoadWindowConfigurationProfile(std::string profile_name) 
                 {
                     auto config_values = w.value();
 
+                    // WindowConfiguration ------------------------------------
                     // show
                     if (config_values.at("show").is_boolean()) {
                         config_values.at("show").get_to(tmp_config.show);
@@ -166,9 +201,9 @@ bool GUIWindowManager::LoadWindowConfigurationProfile(std::string profile_name) 
                     else {
                         check = false;
                     }
-                    // draw_func_id
-                    if (config_values.at("draw_func_id").is_number_integer()) {
-                        config_values.at("draw_func_id").get_to(tmp_config.draw_func_id);
+                    // callback
+                    if (config_values.at("callback").is_number_integer()) {
+                        tmp_config.callback = (WindowDrawCallback)config_values.at("callback").get<int>();
                     }
                     else {
                         check = false;
@@ -187,16 +222,16 @@ bool GUIWindowManager::LoadWindowConfigurationProfile(std::string profile_name) 
                     else {
                         check = false;
                     }
-                    // profile_position
-                    if (config_values.at("profile_position").is_array() && (config_values.at("profile_position").size() == 2)) {
-                        if (config_values.at("profile_position")[0].is_number_float()) {
-                            config_values.at("profile_position")[0].get_to(tmp_config.profile_position.x);
+                    // position
+                    if (config_values.at("position").is_array() && (config_values.at("position").size() == 2)) {
+                        if (config_values.at("position")[0].is_number_float()) {
+                            config_values.at("position")[0].get_to(tmp_config.position.x);
                         }
                         else {
                             check = false;
                         }
-                        if (config_values.at("profile_position")[1].is_number_float()) {
-                            config_values.at("profile_position")[1].get_to(tmp_config.profile_position.y);
+                        if (config_values.at("position")[1].is_number_float()) {
+                            config_values.at("position")[1].get_to(tmp_config.position.y);
                         }
                         else {
                             check = false;
@@ -205,16 +240,16 @@ bool GUIWindowManager::LoadWindowConfigurationProfile(std::string profile_name) 
                     else {
                         check = false;
                     }
-                    // profile_size
-                    if (config_values.at("profile_size").is_array() && (config_values.at("profile_size").size() == 2)) {
-                        if (config_values.at("profile_size")[0].is_number_float()) {
-                            config_values.at("profile_size")[0].get_to(tmp_config.profile_size.x);
+                    // size
+                    if (config_values.at("size").is_array() && (config_values.at("size").size() == 2)) {
+                        if (config_values.at("size")[0].is_number_float()) {
+                            config_values.at("size")[0].get_to(tmp_config.size.x);
                         }
                         else {
                             check = false;
                         }
-                        if (config_values.at("profile_size")[1].is_number_float()) {
-                            config_values.at("profile_size")[1].get_to(tmp_config.profile_size.y);
+                        if (config_values.at("size")[1].is_number_float()) {
+                            config_values.at("size")[1].get_to(tmp_config.size.y);
                         }
                         else {
                             check = false;
@@ -230,16 +265,16 @@ bool GUIWindowManager::LoadWindowConfigurationProfile(std::string profile_name) 
                     else {
                         check = false;
                     }
-                    // soft_reset_size
-                    if (config_values.at("soft_reset_size").is_array() && (config_values.at("soft_reset_size").size() == 2)) {
-                        if (config_values.at("soft_reset_size")[0].is_number_float()) {
-                            config_values.at("soft_reset_size")[0].get_to(tmp_config.soft_reset_size.x);
+                    // reset_size
+                    if (config_values.at("reset_size").is_array() && (config_values.at("reset_size").size() == 2)) {
+                        if (config_values.at("reset_size")[0].is_number_float()) {
+                            config_values.at("reset_size")[0].get_to(tmp_config.reset_size.x);
                         }
                         else {
                             check = false;
                         }
-                        if (config_values.at("soft_reset_size")[1].is_number_float()) {
-                            config_values.at("soft_reset_size")[1].get_to(tmp_config.soft_reset_size.y);
+                        if (config_values.at("reset_size")[1].is_number_float()) {
+                            config_values.at("reset_size")[1].get_to(tmp_config.reset_size.y);
                         }
                         else {
                             check = false;
@@ -248,25 +283,76 @@ bool GUIWindowManager::LoadWindowConfigurationProfile(std::string profile_name) 
                     else {
                         check = false;
                     }
+
+                    // ParamConfig --------------------------------------------
+                    auto param_config = config_values.at("param_config");
                     // show_hotkeys
-                    if (config_values.at("show_hotkeys").is_boolean()) {
-                        config_values.at("show_hotkeys").get_to(tmp_config.show_hotkeys);
+                    if (param_config.at("show_hotkeys").is_boolean()) {
+                        param_config.at("show_hotkeys").get_to(tmp_config.param_config.show_hotkeys);
                     }
                     else {
                         check = false;
                     }
                     // param_modules
-                    tmp_config.param_modules.clear();
-                    if (config_values.at("param_modules").is_array()) {
-                        size_t tmp_size = config_values.at("param_modules").size();
+                    tmp_config.param_config.modules_list.clear();
+                    if (param_config.at("modules_list").is_array()) {
+                        size_t tmp_size = param_config.at("modules_list").size();
                         for (size_t i = 0; i < tmp_size; ++i) {
-                            if (config_values.at("param_modules")[i].is_string()) {
-                                tmp_config.param_modules.emplace_back(config_values.at("param_modules")[i].get<std::string>());
+                            if (param_config.at("modules_list")[i].is_string()) {
+                                tmp_config.param_config.modules_list.emplace_back(param_config.at("modules_list")[i].get<std::string>());
                             }
                             else {
                                 check = false;
                             }
                         }
+                    }
+                    else {
+                        check = false;
+                    }
+                    // module_filter
+                    if (param_config.at("module_filter").is_number_integer()) {
+                        tmp_config.param_config.module_filter = (FilterMode)param_config.at("module_filter").get<int>();
+                    }
+                    else {
+                        check = false;
+                    }
+
+                    // FpsMsConfig --------------------------------------------
+                    auto fpsms_config = config_values.at("fpsms_config");
+                    // show_hotkeys
+                    if (fpsms_config.at("show_options").is_boolean()) {
+                        fpsms_config.at("show_options").get_to(tmp_config.fpsms_config.show_options);
+                    }
+                    else {
+                        check = false;
+                    }
+                    // max_value_count
+                    if (fpsms_config.at("max_value_count").is_number_integer()) {
+                        fpsms_config.at("max_value_count").get_to(tmp_config.fpsms_config.max_value_count);
+                    }
+                    else {
+                        check = false;
+                    }
+                    // max_delay
+                    if (fpsms_config.at("max_delay").is_number_float()) {
+                        fpsms_config.at("max_delay").get_to(tmp_config.fpsms_config.max_delay);
+                    }
+                    else {
+                        check = false;
+                    }
+                    // mode
+                    if (fpsms_config.at("mode").is_number_integer()) {
+                        tmp_config.fpsms_config.mode = (FpsMsMode)fpsms_config.at("mode").get<int>();
+                    }
+                    else {
+                        check = false;
+                    }
+
+                    // FontConfig ---------------------------------------------
+                    // font_name
+                    auto font_config = config_values.at("font_config");
+                    if (font_config.at("font_name").is_string()) {
+                        font_config.at("font_name").get_to(tmp_config.font_config.font_name);
                     }
                     else {
                         check = false;
@@ -277,7 +363,7 @@ bool GUIWindowManager::LoadWindowConfigurationProfile(std::string profile_name) 
                     return false;
                 }
                 // profile_reset
-                tmp_config.profile_reset = true;
+                tmp_config.reset = true;
 
                 tmp_windows.emplace(window_name, tmp_config);
             }
@@ -297,10 +383,10 @@ bool GUIWindowManager::LoadWindowConfigurationProfile(std::string profile_name) 
 /**
  * GUIWindowManager::DeleteWindowConfigurationProfile
  */
-bool GUIWindowManager::DeleteWindowConfigurationProfile(std::string profile_name) {
+bool GUIWindowManager::DeleteWindowConfigurationProfile(const std::string& profile_name) {
 
     if (this->profiles.erase(profile_name) > 0) {
-        // Saving changes immediately to ini file.
+        // Saving changes immediately to profile file.
         return this->saveWindowConfigurationFile(); 
     }
 
@@ -310,26 +396,36 @@ bool GUIWindowManager::DeleteWindowConfigurationProfile(std::string profile_name
 /**
  * GUIWindowManager::SaveWindowConfigurationProfile
  */
-bool GUIWindowManager::SaveWindowConfigurationProfile(std::string profile_name) {
+bool GUIWindowManager::SaveWindowConfigurationProfile(const std::string& profile_name) {
 
     /// Existing profile with same name will be overwritten ...
     for (auto& w : this->windows) {
         std::string window_name = w.first;
         WindowConfiguration window_config = w.second;
-        this->profiles[profile_name][window_name]["show"]             = window_config.show;
-        this->profiles[profile_name][window_name]["flags"]            = (int)(window_config.flags);
-        this->profiles[profile_name][window_name]["draw_func_id"]     = window_config.draw_func_id;
-        this->profiles[profile_name][window_name]["hotkey"]           = { (int)(window_config.hotkey.Key()), window_config.hotkey.Modifiers().toInt() };
-        ///this->profiles[profile_name][window_name]["profile_reset"]    = window_config.profile_reset; // Always true for a loaded profile
-        this->profiles[profile_name][window_name]["profile_position"] = { window_config.profile_position.x, window_config.profile_position.y };
-        this->profiles[profile_name][window_name]["profile_size"]     = { window_config.profile_size.x, window_config.profile_size.y };
-        this->profiles[profile_name][window_name]["soft_reset"]       = window_config.soft_reset;
-        this->profiles[profile_name][window_name]["soft_reset_size"]  = { window_config.soft_reset_size.x, window_config.soft_reset_size.y };
-        this->profiles[profile_name][window_name]["show_hotkeys"]     = window_config.show_hotkeys;
-        this->profiles[profile_name][window_name]["param_modules"]    = window_config.param_modules;
+        this->profiles[profile_name][window_name]["show"]                               = window_config.show;
+        this->profiles[profile_name][window_name]["flags"]                              = (int)(window_config.flags);
+        this->profiles[profile_name][window_name]["callback"]                           = window_config.callback;
+        this->profiles[profile_name][window_name]["hotkey"]                             = { (int)(window_config.hotkey.Key()), window_config.hotkey.Modifiers().toInt() };
+        this->profiles[profile_name][window_name]["position"]                           = { window_config.position.x, window_config.position.y };
+        this->profiles[profile_name][window_name]["size"]                               = { window_config.size.x, window_config.size.y };
+        this->profiles[profile_name][window_name]["soft_reset"]                         = window_config.soft_reset;
+        this->profiles[profile_name][window_name]["reset_size"]                         = { window_config.reset_size.x, window_config.reset_size.y };
+
+        this->profiles[profile_name][window_name]["param_config"]["show_hotkeys"]       = window_config.param_config.show_hotkeys;
+        this->profiles[profile_name][window_name]["param_config"]["modules_list"]       = window_config.param_config.modules_list;
+        this->profiles[profile_name][window_name]["param_config"]["module_filter"]      = window_config.param_config.module_filter;
+        
+        this->profiles[profile_name][window_name]["fpsms_config"]["show_options"]       = window_config.fpsms_config.show_options;
+        this->profiles[profile_name][window_name]["fpsms_config"]["max_value_count"]    = window_config.fpsms_config.max_value_count;
+        this->profiles[profile_name][window_name]["fpsms_config"]["max_delay"]          = window_config.fpsms_config.max_delay;
+        this->profiles[profile_name][window_name]["fpsms_config"]["mode"]               = (int)window_config.fpsms_config.mode;
+
+        this->profiles[profile_name][window_name]["font_config"]["font_name"]           = window_config.font_config.font_name;
+
+        ///this->profiles[profile_name][window_name]["profile_reset"] = window_config.profile_reset; // Always true for a loaded profile
     }
 
-    // Saving changes immediately to ini file.
+    // Saving changes immediately to profile file.
     return this->saveWindowConfigurationFile(); 
 }
 
@@ -354,18 +450,18 @@ std::list<std::string> GUIWindowManager::GetWindowConfigurationProfileList(void)
  */
 bool GUIWindowManager::saveWindowConfigurationFile(void) {
 
-    std::ofstream inifile;
-    inifile.open(this->filename);
+    std::ofstream profilefile;
+    profilefile.open(this->filename);
 
     /// Existing file with same name will be overwritten ...
-    if (inifile.is_open() && inifile.good()) {
-        inifile << this->profiles.dump(4);
-        inifile.close();
+    if (profilefile.is_open() && profilefile.good()) {
+        profilefile << this->profiles.dump(4);
+        profilefile.close();
         return true;
     }
 
     vislib::sys::Log::DefaultLog.WriteWarn(
-        "[GUIWindowManager] Couldn't write to ini file: '%s'", this->filename.c_str());
+        "[GUIWindowManager] Couldn't write to profile file: '%s'", this->filename.c_str());
     return false;
 }
 
@@ -375,18 +471,18 @@ bool GUIWindowManager::saveWindowConfigurationFile(void) {
  */
 bool GUIWindowManager::loadWindowConfigurationFile(void) {
 
-    std::ifstream inifile;
-    inifile.open(this->filename);
+    std::ifstream profilefile;
+    profilefile.open(this->filename);
 
     std::string line;
     std::stringstream stream;
 
-    if (inifile.is_open() && inifile.good()) {
-        while (std::getline(inifile, line))
+    if (profilefile.is_open() && profilefile.good()) {
+        while (std::getline(profilefile, line))
         {
             stream << line << std::endl;
         }
-        inifile.close();
+        profilefile.close();
 
         nlohmann::json parsed_json = nlohmann::json::parse(stream.str());
 
@@ -403,6 +499,6 @@ bool GUIWindowManager::loadWindowConfigurationFile(void) {
     }
 
     vislib::sys::Log::DefaultLog.WriteWarn(
-        "[GUIWindowManager] Couldn't read ini file: '%s'", this->filename.c_str());
+        "[GUIWindowManager] Couldn't read profile file: '%s'", this->filename.c_str());
     return false;
 }

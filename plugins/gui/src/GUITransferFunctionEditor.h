@@ -75,8 +75,21 @@ public:
      */
     bool GetTransferFunction(std::string& out_tfs);
 
+    /**
+     * Set the currently active parameter.
+     */
+    void SetActiveParameter(core::param::TransferFunctionParam* ap) { this->active_param = ap; }
+
+    /**
+     * Get the currently active parameter.
+     */
+    core::param::TransferFunctionParam* GetActiveParameter(void) { return this->active_param; }
+
 private:
     // VARIABLES -----------------------------------------------------------
+
+    /** The currently active parameter whose transfer function is currently loaded into this editor. */
+    core::param::TransferFunctionParam* active_param;
 
     /** Array holding current colors and function values. */
     megamol::core::param::TransferFunctionParam::TFDataType data;

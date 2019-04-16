@@ -18,6 +18,7 @@ using namespace megamol::core;
  */
 megamol::gui::GUITransferFunctionEditor::GUITransferFunctionEditor(void)
     : GUIUtility()
+    , active_param(nullptr)
     , data()
     , interpol_mode(param::TransferFunctionParam::InterpolationMode::LINEAR)
     , tex_size(128)
@@ -44,7 +45,8 @@ megamol::gui::GUITransferFunctionEditor::GUITransferFunctionEditor(void)
  */
 megamol::gui::GUITransferFunctionEditor::~GUITransferFunctionEditor(void) {
 
-    // nothing to do here ...
+    // Do not delete!
+    this->active_param = nullptr;
 }
 
 
@@ -52,6 +54,12 @@ megamol::gui::GUITransferFunctionEditor::~GUITransferFunctionEditor(void) {
  * GUITransferFunctionEditor::SetTransferFunction
  */
 bool megamol::gui::GUITransferFunctionEditor::SetTransferFunction(const std::string& in_tfs) {
+
+    if (active_param == nullptr) {
+        vislib::sys::Log::DefaultLog.WriteWarn(
+            "[GUITransferFunctionEditor] Set active parameter before loading transfer function");
+        return false;
+    }
 
     bool retval = megamol::core::param::TransferFunctionParam::ParseTransferFunction(
         in_tfs, this->data, this->interpol_mode, this->tex_size);
@@ -67,10 +75,10 @@ bool megamol::gui::GUITransferFunctionEditor::SetTransferFunction(const std::str
 /**
  * GUITransferFunctionEditor::GetTransferFunction
  */
-bool megamol::gui::GUITransferFunctionEditor::GetTransferFunction(std::string& in_tfs) {
+bool megamol::gui::GUITransferFunctionEditor::GetTransferFunction(std::string& out_tfs) {
 
     return megamol::core::param::TransferFunctionParam::DumpTransferFunction(
-        in_tfs, this->data, this->interpol_mode, this->tex_size);
+        out_tfs, this->data, this->interpol_mode, this->tex_size);
 }
 
 
@@ -82,6 +90,13 @@ bool megamol::gui::GUITransferFunctionEditor::DrawTransferFunctionEditor(void) {
     assert(ImGui::GetCurrentContext() != nullptr);
     ImGuiIO& io = ImGui::GetIO();
     ImGuiStyle& style = ImGui::GetStyle();
+
+    if (this->active_param == nullptr) {
+        ImGui::TextColored(style.Colors[ImGuiCol_ButtonHovered],
+            "No active parameter connected.\nChanges are ineffectual.\nLoad "
+            "transfer function via appropriate parameter.");
+        ImGui::Separator();
+    }
 
     const float tfw_height = 28.0f;
     const float tfw_item_width = ImGui::GetContentRegionAvailWidth() * 0.75f;
@@ -422,6 +437,15 @@ bool megamol::gui::GUITransferFunctionEditor::DrawTransferFunctionEditor(void) {
 
     if (this->imm_apply && imm_apply_tex_modified) {
         ret_val = true;
+    }
+
+    if (ret_val) {
+        if (this->active_param != nullptr) {
+            std::string tf;
+            if (this->GetTransferFunction(tf)) {
+                this->active_param->SetValue(tf);
+            }
+        }
     }
 
     return ret_val;
