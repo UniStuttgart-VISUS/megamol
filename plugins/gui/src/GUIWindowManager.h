@@ -6,8 +6,8 @@
  */
 
 
-#ifndef MEGAMOL_GUI_GUISETTINGS_H_INCLUDED
-#define MEGAMOL_GUI_GUISETTINGS_H_INCLUDED
+#ifndef MEGAMOL_GUI_WINDOWMANAGER_H_INCLUDED
+#define MEGAMOL_GUI_WINDOWMANAGER_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -43,42 +43,28 @@ public:
 
     /** Type for holding a window configuration. */
     typedef struct _win_config {
-        ImVec2                       position;            // 
-        ImVec2                       size;                // 
         bool                         show;                // show/hide window
-        bool                         reset;               // reset window position and size
-        ImVec2                       default_size;        // default width and height of window (ignored when auto resize flag is setS)
-        megamol::core::view::KeyCode hotkey;              // hotkey for opening/closing window
         ImGuiWindowFlags             flags;               // imgui window flags
         int                          draw_func_id;        // id of the function drawing the window content
-        bool                         param_hotkeys_show;  // flag to toggle showing only parameter hotkeys
-        bool                         param_main;          // flag indicating main parameter window
-        std::vector<std::string>     param_mods;          // modules to show in a parameter window
+        megamol::core::view::KeyCode hotkey;              // hotkey for opening/closing window
+        bool                         profile_reset;       // reset window position and size on profile loading
+        ImVec2                       profile_position;    // keeping last position for reset on profile loading
+        ImVec2                       profile_size;        // keeping last size for reset on profile loading
+        bool                         soft_reset;          // reset window position and size
+        ImVec2                       soft_reset_size;     // default width and height of window (ignored when auto resize flag is setS)
+        bool                         show_hotkeys;        // flag to toggle showing only parameter hotkeys
+        std::vector<std::string>     param_modules;       // modules to show in a parameter window
     } WindowConfiguration;
 
     /**
      * Ctor
      */
-    GUIWindowManager(std::string inifilename = "mmgui.ini");
+    GUIWindowManager(std::string filename = "mmgui.profile");
 
     /**
      * Dtor
      */
     ~GUIWindowManager(void);
-
-    /**
-     * Add new window.
-     *
-     * @param The window name.
-     */
-    bool AddWindowConfiguration(std::string window_name, WindowConfiguration& config);
-
-    /**
-     * Delete window.
-     *
-     * @param window_name  The window name.
-     */
-    bool DeleteWindowConfiguration(std::string window_name);
 
     /**
      * Get pointer to specific window configuration.
@@ -95,6 +81,20 @@ public:
     }
 
     /**
+     * Add new window.
+     *
+     * @param The window name.
+     */
+    bool AddWindowConfiguration(std::string window_name, WindowConfiguration& config);
+
+    /**
+     * Delete window.
+     *
+     * @param window_name  The window name.
+     */
+    //bool DeleteWindowConfiguration(std::string window_name);
+
+    /**
      * Enumerate windows and call given function.
      *
      * @param cb  The function to call for enumerated windows.
@@ -102,49 +102,54 @@ public:
     void EnumWindows(std::function<void(const std::string&, WindowConfiguration&)> cb);
 
     /**
-     * Reset position and size of currently active window.
+     * Reset position and size of currently active window to fit into current viewport.
      * (Should be called between ImGui::Begin() and ImGui::End())
      *
      * @param window_name  The window name.
      */
-    void ResetWindowSizePos(std::string window_name);
+    void SoftResetWindowSizePos(std::string window_name);
 
     // --------------------------------------------------------------------
 
+    /**
+     * Returns a list of the currently available window configuration profiles.
+     */
+    std::list<std::string> GetWindowConfigurationProfileList(void);
 
     /**
-     * ...
+     * Load a window configuration profile.
+     *
+     * @param profile_name  The profile name.
+     *
+     * @return True on success, false otherwise.
      */
-    std::list<std::string> GetWindowSettingsProfileList(void);
+    bool LoadWindowConfigurationProfile(std::string profile_name);
 
     /**
-     * ...
+     * Delete a window configuration profile.
+     *
+     * @param profile_name  The profile name.
+     *
+     * @return True on success, false otherwise.
      */
-    bool LoadWindowSettingsProfile(std::string profile_name);
+    bool DeleteWindowConfigurationProfile(std::string profile_name);
 
     /**
-     * ...
+     * Save the current window configurations to a new profile.
+     *
+     * @param profile_name  The profile name.
+     *
+     * @return True on success, false otherwise.
      */
-    bool DeleteWindowSettingsProfile(std::string profile_name);
+    bool SaveWindowConfigurationProfile(std::string profile_name);
 
     /**
-     * ...
+     * Reset position and size after new profile has been loaded.
+     * (Should be called between ImGui::Begin() and ImGui::End())
+     *
+     * @param window_name  The window name.
      */
-    bool SaveWindowSettingsProfie(std::string profile_name);
-
-    /** 
-     * Set file name for writing the window settings.
-     */
-    //inline void SetIniFilenamename(std::string file) {
-    //    this->inifilename = file;
-    //}
-
-    /**
-     * Get the current file name the window settings are written to.
-     */
-    //inline std::string GetIniFilenamename(void) {
-    //    return this->inifilename;
-    //}
+    void ResetWindowSizePosOnProfileLoad(std::string window_name);
 
 private:
 
@@ -153,26 +158,34 @@ private:
     /** The list of the window names and their configurations. */
     std::map<std::string, WindowConfiguration> windows;
 
-    /** The file the settings */
-    std::string inifilename;
+    /** The file the window configuration profiles are stored to. */
+    std::string filename;
 
-    /** The settings in JSON format. */
-    nlohmann::json settings_store;
+    /** The the current window configuration profiles as JSON. */
+    nlohmann::json profiles;
 
     // FUNCTIONS ------------------------------------------------------
 
     /**
-     * ...
+     * Saving current window configurations to file.
+     *
+     * @return True on success, false otherwise.
      */
-    bool saveWindowSettingsFile(void);
+    bool saveWindowConfigurationFile(void);
 
     /**
-     * ...
+     * Loading window configurations from file.
+     *
+     * @return True on success, false otherwise.
      */
-    bool loadWindowSettingsFile(void);
+    bool loadWindowConfigurationFile(void);
 
     /**
-     * ...
+     * Check if a window configuration for the given window name exists.
+     *
+     * @param name  The window name.
+     *
+     * @return True if there is a window configuration for the given name, false otherwise.
      */
     inline bool windowConfigurationExists(std::string& name) const {
         return (this->windows.find(name) != this->windows.end());
@@ -184,4 +197,4 @@ private:
 } // namespace gui
 } // namespace megamol
 
-#endif // MEGAMOL_GUI_GUISETTINGS_H_INCLUDED
+#endif // MEGAMOL_GUI_WINDOWMANAGER_H_INCLUDED

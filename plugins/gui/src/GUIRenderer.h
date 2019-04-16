@@ -193,6 +193,9 @@ private:
     /** The window manager. */
     GUIWindowManager window_manager;
 
+    /** Flag indicating that this window configuration profile should be applied. */
+    std::string profile_new;
+
     /** The transfer function editor. */
     GUITransferFunctionEditor tf_editor;
 
@@ -262,28 +265,7 @@ private:
     /**
      * ..
      */
-    bool drawCall(DrawCallbackID id, const std::string& window_label) {
-        switch (id) {
-        case (DrawCallbackID::DrawMainWindowCallback):
-            this->drawMainWindowCallback(window_label);
-            break;
-        case (DrawCallbackID::DrawParametersCallback):
-            this->drawParametersCallback(window_label);
-            break;
-        case (DrawCallbackID::DrawFpsWindowCallback):
-            this->drawFpsWindowCallback(window_label);
-            break;
-        case (DrawCallbackID::DrawFontSelectionWindowCallback):
-            this->drawFontSelectionWindowCallback(window_label);
-            break;
-        case (DrawCallbackID::DrawTFWindowCallback):
-            this->drawTFWindowCallback(window_label);
-            break;
-        default:
-            return false;
-        }
-        return true;
-    }
+    inline bool drawWindowContent(const std::string& window_label, DrawCallbackID id);
 
     /**
      * Callback for drawing the parameter window.
@@ -377,6 +359,7 @@ inline GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIR
     , imgui_context(nullptr)
     , inst_last_time(0.0)
     , window_manager()
+    , profile_new()
     , tf_editor()
     , tf_active_param(nullptr)
     , param_file()
@@ -433,6 +416,7 @@ inline GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GUIR
     , imgui_context(nullptr)
     , inst_last_time(0.0)
     , window_manager()
+    , profile_new()
     , tf_editor()
     , tf_active_param(nullptr)
     , param_file()
@@ -531,18 +515,18 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
     // this->window_manager.clear();
     GUIWinConfig tmp_win;
     /// default for all
-    tmp_win.reset = true;
-    tmp_win.param_hotkeys_show = false;
-    tmp_win.param_mods.clear();
-    tmp_win.position = ImVec2(0.0f, 0.0f);
-    tmp_win.size = ImVec2(0.0f, 0.0f);
-    tmp_win.default_size = ImVec2(500.0f, 300.0f);
+    tmp_win.profile_reset = false;
+    tmp_win.soft_reset = true;
+    tmp_win.show_hotkeys = false;
+    tmp_win.param_modules.clear();
+    tmp_win.profile_position = ImVec2(0.0f, 0.0f);
+    tmp_win.profile_size = ImVec2(0.0f, 0.0f);
+    tmp_win.soft_reset_size = ImVec2(500.0f, 300.0f);
     // Main Window ------------------------------------------------------------
     tmp_win.show = true;
     tmp_win.hotkey = core::view::KeyCode(core::view::Key::KEY_F12);
     tmp_win.flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_HorizontalScrollbar;
     tmp_win.draw_func_id = (int)DrawCallbackID::DrawMainWindowCallback;
-    tmp_win.param_main = true;
     this->window_manager.AddWindowConfiguration("MegaMol", tmp_win);
 
     // FPS overlay Window -----------------------------------------------------
@@ -550,7 +534,6 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
     tmp_win.hotkey = core::view::KeyCode(core::view::Key::KEY_F11);
     tmp_win.flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar;
     tmp_win.draw_func_id = (int)DrawCallbackID::DrawFpsWindowCallback;
-    tmp_win.param_main = false;
     this->window_manager.AddWindowConfiguration("FPS", tmp_win);
 
     // Font Selection Window --------------------------------------------------
@@ -558,7 +541,6 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
     tmp_win.hotkey = core::view::KeyCode(core::view::Key::KEY_F10);
     tmp_win.flags = ImGuiWindowFlags_AlwaysAutoResize;
     tmp_win.draw_func_id = (int)DrawCallbackID::DrawFontSelectionWindowCallback;
-    tmp_win.param_main = false;
     this->window_manager.AddWindowConfiguration("Fonts", tmp_win);
 
     // Demo Window --------------------------------------------------
@@ -566,7 +548,6 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
     tmp_win.hotkey = core::view::KeyCode(core::view::Key::KEY_F9);
     tmp_win.flags = ImGuiWindowFlags_AlwaysAutoResize;
     tmp_win.draw_func_id = (int)DrawCallbackID::DrawTFWindowCallback;
-    tmp_win.param_main = false;
     this->window_manager.AddWindowConfiguration("Transfer Function Editor", tmp_win);
 
     // Style settings ---------------------------------------------------------
@@ -766,7 +747,7 @@ bool GUIRenderer<M, C>::OnKey(core::view::Key key, core::view::KeyAction action,
         hotkeyPressed = (ImGui::IsKeyDown(static_cast<int>(wc.hotkey.key))); // Ignoring additional modifiers
         if (hotkeyPressed) {
             if (io.KeyShift) {
-                wc.reset = true;
+                wc.soft_reset = true;
             } else {
                 wc.show = !wc.show;
             }
@@ -1152,6 +1133,12 @@ bool GUIRenderer<M, C>::renderGUI(vislib::math::Rectangle<int> viewport, double 
         this->font_new_load = false;
     }
 
+    // Applying new window configuration profile only before(!) next ImGui::Begin() call.
+    if (!this->profile_new.empty()) {
+        this->window_manager.LoadWindowConfigurationProfile(this->profile_new);
+        this->profile_new.clear();
+    }
+
     // Start new frame
     ImGui_ImplOpenGL3_NewFrame();
     ImGui::NewFrame();
@@ -1166,16 +1153,20 @@ bool GUIRenderer<M, C>::renderGUI(vislib::math::Rectangle<int> viewport, double 
                 return;
             }
 
-            // Reset window position and size
-            if (wc.reset) {
-                this->window_manager.ResetWindowSizePos(wn);
-                wc.reset = false;
+            // Apply soft reset of window position and size
+            if (wc.soft_reset) {
+                this->window_manager.SoftResetWindowSizePos(wn);
+                wc.soft_reset = false;
+            }
+            if (wc.profile_reset) {
+                this->window_manager.ResetWindowSizePosOnProfileLoad(wn);
+                wc.profile_reset = false;
             }
 
-            this->drawCall((DrawCallbackID)(wc.draw_func_id), wn);
+            this->drawWindowContent(wn, (DrawCallbackID)(wc.draw_func_id));
 
-            wc.position = ImGui::GetWindowPos();
-            wc.size = ImGui::GetWindowSize();
+            wc.profile_position = ImGui::GetWindowPos();
+            wc.profile_size = ImGui::GetWindowSize();
 
             ImGui::End();
         }
@@ -1192,6 +1183,34 @@ bool GUIRenderer<M, C>::renderGUI(vislib::math::Rectangle<int> viewport, double 
 
     return true;
 } // namespace gui
+
+
+/**
+ * GUIRenderer<M, C>::drawWindowContent
+ */
+template <class M, class C>
+bool GUIRenderer<M, C>::drawWindowContent(const std::string& window_label, DrawCallbackID id) {
+    switch (id) {
+    case (DrawCallbackID::DrawMainWindowCallback):
+        this->drawMainWindowCallback(window_label);
+        break;
+    case (DrawCallbackID::DrawParametersCallback):
+        this->drawParametersCallback(window_label);
+        break;
+    case (DrawCallbackID::DrawFpsWindowCallback):
+        this->drawFpsWindowCallback(window_label);
+        break;
+    case (DrawCallbackID::DrawFontSelectionWindowCallback):
+        this->drawFontSelectionWindowCallback(window_label);
+        break;
+    case (DrawCallbackID::DrawTFWindowCallback):
+        this->drawTFWindowCallback(window_label);
+        break;
+    default:
+        return false;
+    }
+    return true;
+}
 
 
 /**
@@ -1270,9 +1289,9 @@ template <class M, class C> void GUIRenderer<M, C>::drawParametersCallback(const
         overrideState = 0; /// close
     }
 
-    bool show_only_hotkeys = win->param_hotkeys_show;
+    bool show_only_hotkeys = win->show_hotkeys;
     ImGui::Checkbox("Show Hotkeys", &show_only_hotkeys);
-    win->param_hotkeys_show = show_only_hotkeys;
+    win->show_hotkeys = show_only_hotkeys;
 
     std::map<int, std::string> opts;
     opts[0] = "All";
@@ -1391,9 +1410,10 @@ template <class M, class C> void GUIRenderer<M, C>::drawParametersCallback(const
             }
 
             // Main parameter window always draws all module's parameters
-            if (!win->param_main) {
+            if (win->draw_func_id != DrawCallbackID::DrawMainWindowCallback) {
                 // Consider only modules contained in list
-                if (std::find(win->param_mods.begin(), win->param_mods.end(), label) == win->param_mods.end()) {
+                if (std::find(win->param_modules.begin(), win->param_modules.end(), label) ==
+                    win->param_modules.end()) {
                     current_mod_open = false;
                     return;
                 }
@@ -1416,26 +1436,27 @@ template <class M, class C> void GUIRenderer<M, C>::drawParametersCallback(const
                         std::to_string(this->inst_last_time); /// using instance time as hidden unique id
                     GUIWinConfig tmp_win;
                     tmp_win.show = true;
-                    tmp_win.hotkey = core::view::KeyCode();
-                    tmp_win.reset = true;
-                    tmp_win.position = ImVec2(0.0f, 0.0f);
-                    tmp_win.size = ImVec2(0.0f, 0.0f);
-                    tmp_win.default_size = ImVec2(500.0f, 300.0f);
                     tmp_win.flags = ImGuiWindowFlags_HorizontalScrollbar; // | ImGuiWindowFlags_AlwaysAutoResize;
                     tmp_win.draw_func_id = (int)DrawCallbackID::DrawParametersCallback;
-                    tmp_win.param_hotkeys_show = false;
-                    tmp_win.param_mods.emplace_back(label);
-                    tmp_win.param_main = false;
+                    tmp_win.hotkey = core::view::KeyCode();
+                    tmp_win.profile_reset = false;
+                    tmp_win.profile_position = ImVec2(0.0f, 0.0f);
+                    tmp_win.profile_size = ImVec2(0.0f, 0.0f);
+                    tmp_win.soft_reset = true;
+                    tmp_win.soft_reset_size = ImVec2(500.0f, 300.0f);
+                    tmp_win.show_hotkeys = false;
+                    tmp_win.param_modules.emplace_back(label);
                     this->window_manager.AddWindowConfiguration(win_label, tmp_win);
                 }
                 // Deleting module's parameters is not available in main parameter window.
-                if (!win->param_main) { // && (win->param_mods.size() > 1)) {
+                if (win->draw_func_id !=
+                    DrawCallbackID::DrawMainWindowCallback) { // && (win->param_modules.size() > 1)) {
                     if (ImGui::MenuItem("Delete from List")) {
                         std::vector<std::string>::iterator find_iter =
-                            std::find(win->param_mods.begin(), win->param_mods.end(), label);
+                            std::find(win->param_modules.begin(), win->param_modules.end(), label);
                         // Break if module name is not contained in list
-                        if (find_iter != win->param_mods.end()) {
-                            win->param_mods.erase(find_iter);
+                        if (find_iter != win->param_modules.end()) {
+                            win->param_modules.erase(find_iter);
                         }
                     }
                 }
@@ -1481,7 +1502,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawParametersCallback(const
 
             // Draw parameter
             if (param_namespace_open) {
-                if (win->param_hotkeys_show) {
+                if (win->show_hotkeys) {
                     this->drawParameterHotkey(mod, slot);
                 } else {
                     this->drawParameter(mod, slot);
@@ -1504,10 +1525,11 @@ template <class M, class C> void GUIRenderer<M, C>::drawParametersCallback(const
             std::string payload_id = (const char*)payload->Data;
 
             // Nothing to add to main parameter window (draws always all module's parameters)
-            if (!win->param_main) {
+            if ((win->draw_func_id != DrawCallbackID::DrawMainWindowCallback)) {
                 // Insert dragged module name only if not contained in list
-                if (std::find(win->param_mods.begin(), win->param_mods.end(), payload_id) == win->param_mods.end()) {
-                    win->param_mods.emplace_back(payload_id);
+                if (std::find(win->param_modules.begin(), win->param_modules.end(), payload_id) ==
+                    win->param_modules.end()) {
+                    win->param_modules.emplace_back(payload_id);
                 }
             }
         }
@@ -1672,33 +1694,6 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
         //    }
         //    ... popup asking for file name ...
 
-        // GUI window Profile
-        if (ImGui::BeginMenu("Settings")) {
-            if (ImGui::BeginMenu("Load Profile")) {
-                std::list<std::string> profile_list = this->window_manager.GetWindowSettingsProfileList();
-                for (auto& p : profile_list) {
-                    if (ImGui::MenuItem(p.c_str())) {
-                        this->window_manager.LoadWindowSettingsProfile(p);
-                    }
-                }
-                ImGui::EndMenu();
-            }
-            if (ImGui::BeginMenu("Delete Profile")) {
-                std::list<std::string> profile_list = this->window_manager.GetWindowSettingsProfileList();
-                for (auto& p : profile_list) {
-                    if (ImGui::MenuItem(p.c_str())) {
-                        this->window_manager.DeleteWindowSettingsProfile(p);
-                    }
-                }
-                ImGui::EndMenu();
-            }
-            if (ImGui::MenuItem("Save Profile")) {
-                save_profile = true; /// Processed below because of popup ...
-            }
-            ImGui::EndMenu();
-        }
-        ImGui::Separator();
-
         // Exit program
         if (ImGui::MenuItem("Exit", "'Esc', ALT + 'F4'")) {
             this->shutdown();
@@ -1720,6 +1715,35 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
             this->HoverToolTip("[Shift] + ['Window Hotkey'] to Reset Size and Position of Window");
         };
         this->window_manager.EnumWindows(func);
+        ImGui::Separator();
+
+        // GUI window Profile
+        if (ImGui::BeginMenu("Window Configuration")) {
+            if (ImGui::BeginMenu("Load Profile")) {
+                std::list<std::string> profile_list = this->window_manager.GetWindowConfigurationProfileList();
+                for (auto& p : profile_list) {
+                    if (ImGui::MenuItem(p.c_str())) {
+                        // Remember profile name for delayed loading
+                        this->profile_new = p;
+                    }
+                }
+                ImGui::EndMenu();
+            }
+            if (ImGui::BeginMenu("Delete Profile")) {
+                std::list<std::string> profile_list = this->window_manager.GetWindowConfigurationProfileList();
+                for (auto& p : profile_list) {
+                    if (ImGui::MenuItem(p.c_str())) {
+                        this->window_manager.DeleteWindowConfigurationProfile(p);
+                    }
+                }
+                ImGui::EndMenu();
+            }
+            if (ImGui::MenuItem("Save Profile")) {
+                save_profile = true; /// Processed below because of popup ...
+            }
+            ImGui::EndMenu();
+        }
+
         ImGui::EndMenu();
     }
 
@@ -1766,9 +1790,10 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
     }
 
     // Process request for saving current window profile
-    std::string profile_name = this->InputDialogPopUp("Save Current Settings", "Profile Name", save_profile);
+    std::string profile_name =
+        this->InputDialogPopUp("Save Current Window Configuration", "Profile Name", save_profile);
     if (!profile_name.empty()) {
-        this->window_manager.SaveWindowSettingsProfie(profile_name);
+        this->window_manager.SaveWindowConfigurationProfile(profile_name);
     }
 }
 
