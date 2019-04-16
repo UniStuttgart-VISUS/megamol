@@ -17,11 +17,12 @@
     <shader name="fragment">
         <snippet type="version">150</snippet>
         <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>
-        <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
         <snippet name="MainStart"        type="file">simplesphere/simple_frag_mainstart.glsl</snippet>
         <snippet name="OutLighting"      type="file">simplesphere/simple_frag_out-lighting.glsl</snippet>
         <snippet name="OutDepth"         type="file">simplesphere/simple_frag_out-depth.glsl</snippet>
         <snippet name="MainEnd"          type="file">simplesphere/simple_frag_mainend.glsl</snippet>
+
+        <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>        
     </shader>
 
 </btf>

@@ -1,5 +1,5 @@
-#extension GL_ARB_shader_storage_buffer_object : require
-#extension GL_EXT_gpu_shader4 : require
+#extension GL_ARB_shader_storage_buffer_object : require   // glsl version 430
+#extension GL_EXT_gpu_shader4 : require                    // glsl version 130
 
 uniform vec4 viewAttr;
 uniform float scaling;

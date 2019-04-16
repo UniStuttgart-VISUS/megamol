@@ -133,7 +133,7 @@ bool moldyn::GrimRenderer::create(void) {
 
         shaderName = "sphereShader";
         if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::theOtherSphereVertex", vert)) { return false; }
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("simplesphere::fragment", frag)) { return false; }
+        if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::simplesphere::fragment", frag)) { return false; }
         //printf("\nVertex Shader:\n%s\n\nFragment Shader:\n%s\n",
         //    vert.WholeCode().PeekBuffer(),
         //    frag.WholeCode().PeekBuffer());
@@ -144,8 +144,8 @@ bool moldyn::GrimRenderer::create(void) {
         }
 
         shaderName = "vanillaSphereShader";
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("simplesphere::vertex", vert)) { return false; }
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("simplesphere::fragment", frag)) { return false; }
+        if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::simplesphere::vertex", vert)) { return false; }
+        if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::simplesphere::fragment", frag)) { return false; }
         if (!this->vanillaSphereShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
                 "Unable to compile %s: Unknown error\n", shaderName);

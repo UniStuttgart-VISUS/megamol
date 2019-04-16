@@ -1,6 +1,4 @@
-//#extension GL_ARB_gpu_shader_fp64 : enable
-#define CLIP
-#define DEPTH
+#extension GL_ARB_gpu_shader_fp64 : enable   // glsl version 150
 
 in vec4 position;
 in vec4 color;
