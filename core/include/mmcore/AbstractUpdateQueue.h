@@ -10,6 +10,10 @@ template <typename T> class AbstractUpdateQueue {
 public:
     std::unique_lock<std::mutex> AcquireLock() { return std::unique_lock<std::mutex>(update_lock_); }
 
+    std::unique_lock<std::mutex> AcquireDeferredLock() {
+        return std::unique_lock<std::mutex>(update_lock_, std::defer_lock);
+    }
+
     void Push(T&& el) { update_queue_.push(el); }
 
     void Push(T const& el) { update_queue_.push(el); }

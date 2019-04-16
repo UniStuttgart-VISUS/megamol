@@ -5,6 +5,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include <functional>
+#include <mutex>
 #include <string>
 #include <vector>
 #include "mmcore/Call.h"
@@ -57,6 +58,16 @@ public:
     using CallDeletionRequest_t = CallDeletionRequest;
 
     using CallDeletionQueue_t = AbstractUpdateQueue<CallDeletionRequest_t>;
+
+    struct CallInstantiationRequest {
+        std::string className;
+        std::string from;
+        std::string to;
+    };
+
+    using CallInstantiationRequest_t = CallInstantiationRequest;
+
+    using CallInstantiationQueue_t = AbstractUpdateQueue<CallInstantiationRequest_t>;
 
 
     //////////////////////////// ctor / dtor ///////////////////////////////
@@ -114,15 +125,54 @@ public:
 
     bool QueueModuleDeletion(std::string&& id);
 
+    bool QueueModuleDeletionNoLock(std::string const& id);
+
+    bool QueueModuleDeletionNoLock(std::string&& id);
+
     bool QueueModuleInstantiation(std::string const& className, std::string const& id);
 
     bool QueueModuleInstantiation(std::string&& className, std::string&& id);
+
+    bool QueueModuleInstantiationNoLock(std::string const& className, std::string const& id);
+
+    bool QueueModuleInstantiationNoLock(std::string&& className, std::string&& id);
 
     bool QueueCallDeletion(std::string const& from, std::string const& to);
 
     bool QueueCallDeletion(std::string&& from, std::string&& to);
 
+    bool QueueCallDeletionNoLock(std::string const& from, std::string const& to);
+
+    bool QueueCallDeletionNoLock(std::string&& from, std::string&& to);
+
+    bool QueueCallInstantiation(std::string const& className, std::string const& from, std::string const& to);
+
+    bool QueueCallInstantiation(std::string&& className, std::string&& from, std::string&& to);
+
+    bool QueueCallInstantiationNoLock(std::string const& className, std::string const& from, std::string const& to);
+
+    bool QueueCallInstantiationNoLock(std::string&& className, std::string&& from, std::string&& to);
+
+    //////////////////////////// locking //////////////////////////////////////////
+    decltype(auto) AcquireQueueLocks() {
+        auto lock1 = module_deletion_queue_.AcquireDeferredLock();
+        auto lock2 = module_instantiation_queue_.AcquireDeferredLock();
+        auto lock3 = call_deletion_queue_.AcquireDeferredLock();
+        auto lock4 = call_instantiation_queue_.AcquireDeferredLock();
+        return std::scoped_lock(lock1, lock2, lock3, lock4);
+    }
+
 private:
+    template <typename Q, typename Arg> bool push_queue_element(Q& q, Arg&& arg) {
+        q.Push(std::forward<Arg>(arg));
+        return true;
+    }
+
+    template <typename Q, typename... Args> bool emplace_queue_element(Q& q, Args&&... args) {
+        q.Emplace(std::forward<Args>(args)...);
+        return true;
+    }
+
     /** The MegaMolGraph is the owner of the root module */
     std::unique_ptr<Module> root_module_;
 
@@ -135,10 +185,12 @@ private:
     /** Queue for call deletions */
     CallDeletionQueue_t call_deletion_queue_;
 
+    /** Queue for call instantiations */
+    CallInstantiationQueue_t call_instantiation_queue_;
+
 
     ////////////////////////// old interface stuff //////////////////////////////////////////////
 public:
-    bool QueueCallInstantiation(const std::string className, const std::string from, const std::string to);
     bool QueueChainCallInstantiation(const std::string className, const std::string chainStart, const std::string to);
     bool QueueParamValueChange(const std::string id, const std::string value);
     // a JSON serialization of all the requests as above (see updateListener)
