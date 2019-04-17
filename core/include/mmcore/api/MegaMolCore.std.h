@@ -12,8 +12,6 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #include <stdlib.h>
 
-#include <basetsd.h>
-
 /**
  * Struct to be returned by a plugin api holding compatibility informations
  */
