@@ -108,6 +108,9 @@
     <Compile Include="${CONFIGURATOR_SOURCE}\Data\ParamType\Color.cs">
       <Link>Data\ParamType\Color.cs</Link>
     </Compile>
+    <Compile Include="${CONFIGURATOR_SOURCE}\Data\ParamType\TransferFunction.cs">
+      <Link>Data\ParamType\TransferFunction.cs</Link>
+    </Compile>
     <Compile Include="${CONFIGURATOR_SOURCE}\FlexEnumParamEditor.cs">
       <Link>FlexEnumParamEditor.cs</Link>
     </Compile>
