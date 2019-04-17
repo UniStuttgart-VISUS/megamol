@@ -7,16 +7,16 @@ Modules and classes are designed with the single responsibility principle in min
 Jump to [Modules](#modules).
 
 ## Build
-To build the plugin, switch it on the in cmake.
 
----
-Example call graph for loading and rendering gltf data with ngmesh.
-
-<img src="gltfExample.png">
+To build the plugin, switch it on in cmake.
 
 ---
 
 ## Modules
+
+Example call graph for loading and rendering gltf data with ngmesh.
+
+<img src="gltfExample.png">
 
 ### NGMeshRenderer
 
