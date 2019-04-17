@@ -42,9 +42,9 @@
             <snippet name="Main"                  type="file">simplesphere/mdao2_deferred_vert_main.glsl</snippet>
         </shader>
 
-        <shader name="fragment">
+        <shader name="fragment"> <!-- Snippets are merged depending on need. -->
             <snippet name="Main"                  type="file">simplesphere/mdao2_deferred_frag_main.glsl</snippet>
-            
+
             <snippet name="Lighting"              type="file">simplesphere/mdao2_deferred_frag_lighting.glsl</snippet>
             <snippet name="LightingStub"          type="file">simplesphere/mdao2_deferred_frag_lighting_stub.glsl</snippet>
             <snippet name="AmbientOcclusion"      type="file">simplesphere/mdao2_deferred_frag_ambocc.glsl</snippet>
