@@ -13,6 +13,7 @@ uniform bool inUseHighPrecision;
 
 out vec4 outColor;
 
+
 // Declaration for local lighting
 vec3 evaluateLocalLighting(const in vec3 objPos, const in vec3 objNormal, const in vec3 matColor);
 

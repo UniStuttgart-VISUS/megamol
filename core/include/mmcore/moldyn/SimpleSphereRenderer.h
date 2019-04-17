@@ -77,7 +77,7 @@ namespace moldyn {
      */
     class SimpleSphereRenderer : public AbstractSimpleSphereRenderer {
     public:
-
+       
         /**
          * Answer the name of this module.
          *
@@ -103,7 +103,48 @@ namespace moldyn {
          */
         static bool IsAvailable(void) {
 
-            return SimpleSphereRenderer::isRenderModeAvailable();
+#ifdef _WIN32
+#if defined(DEBUG) || defined(_DEBUG)
+            HDC dc = ::wglGetCurrentDC();
+            HGLRC rc = ::wglGetCurrentContext();
+            if (dc == nullptr) {
+                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, 
+                    "[SimpleSphereRenderer] There is no OpenGL rendering context available.");
+            }
+            if (rc == nullptr) {
+                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, 
+                    "[SimpleSphereRenderer] There is no current OpenGL rendering context available from the calling thread.");
+            }
+            ASSERT(dc != nullptr);
+            ASSERT(rc != nullptr);
+#endif // DEBUG || _DEBUG
+#endif // _WIN32
+
+            bool retval = true;
+
+            // Minimum requirements for all render modes
+            if (!vislib::graphics::gl::GLSLShader::AreExtensionsAvailable()) {
+                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, 
+                    "[SimpleSphereRenderer] No render mode is available. Shader extensions are not available.");
+                retval = false;
+            }
+            if (!ogl_IsVersionGEQ(3, 2)) {
+                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, 
+                    "[SimpleSphereRenderer] No render mode available. Minimum OpenGL version is 3.2");
+                retval = false;
+            }
+            if (!isExtAvailable("GL_ARB_explicit_attrib_location")) {
+                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
+                    "[SimpleSphereRenderer] No render mode is available. Extension GL_ARB_explicit_attrib_location is not available.");
+                retval = false;
+            }
+            if (!isExtAvailable("GL_ARB_conservative_depth")) {
+                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
+                    "[SimpleSphereRenderer] No render mode is available. Extension GL_ARB_conservative_depth is not available.");
+                retval = false;
+            }
+
+            return retval;
         }
 
         /** Ctor. */
@@ -149,7 +190,7 @@ namespace moldyn {
             NG_SPLAT          = 4,     /// NG sphere rendering using splats.
             NG_BUFFER_ARRAY   = 5,     /// NG sphere rendering using array buffers.
             AMBIENT_OCCLUSION = 6,     /// Sphere rendering with ambient occlusion
-            __COUNT__    = 7
+            __COUNT__         = 7
         };
 
         typedef std::map <std::tuple<int, int, bool>, std::shared_ptr<GLSLShader> > shaderMap;
@@ -183,6 +224,7 @@ namespace moldyn {
         // --------------------------------------------------------------------
 
         RenderMode                               renderMode;
+        bool                                     triggerRebuildGBuffer;
 
         vislib::graphics::gl::GLSLShader         sphereShader;
         vislib::graphics::gl::GLSLGeometryShader sphereGeometryShader;
@@ -203,8 +245,6 @@ namespace moldyn {
         megamol::core::utility::SSBOStreamer     colStreamer;
         megamol::core::utility::SSBOBufferArray  bufArray;
         megamol::core::utility::SSBOBufferArray  colBufArray;
-
-
 
         std::vector<GLsync>                      fences;
         GLuint                                   theSingleBuffer;
@@ -269,8 +309,8 @@ namespace moldyn {
         /**
          * Check if specified render mode or all render mode are available.
          */
-        static bool isRenderModeAvailable(RenderMode rm = RenderMode::__COUNT__);
-
+        static bool isRenderModeAvailable(RenderMode rm);
+        
         /**
          * Toggle render mode on button press.
          *
