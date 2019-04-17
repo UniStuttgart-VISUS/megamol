@@ -8,7 +8,6 @@
 #include "ng_mesh/GPURenderTaskDataCall.h"
 #include "ng_mesh/GPUMaterialDataCall.h"
 #include "ng_mesh/GPUMeshDataCall.h"
-#include "ng_mesh/RenderTasksDataCall.h"
 
 megamol::ngmesh::GlTFRenderTasksDataSource::GlTFRenderTasksDataSource()
 	: m_glTF_callerSlot("getGlTFFile", "Connects the data source with a loaded glTF file")
