@@ -23,7 +23,6 @@ GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIRenderer
     , overlay_slot("overlayRender", "Connected with SplitView for special overlay rendering")
     , float_print_prec(3) // INIT: Float string format precision
     , windows()
-    , lastInstTime(0.0)
     , main_reset_window(false)
     , param_file()
     , active_tf_param(nullptr)
@@ -80,7 +79,6 @@ GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GUIRenderer
     , overlay_slot("overlayRender", "Connected with SplitView for special overlay rendering")
     , float_print_prec(3) // INIT: Float string format precision
     , windows()
-    , lastInstTime(0.0)
     , main_reset_window(false)
     , param_file()
     , active_tf_param(nullptr)
@@ -137,7 +135,6 @@ GUIRenderer<core::view::RendererModule<core::nextgen::CallRender3D_2>, core::nex
     , overlay_slot("overlayRender", "Connected with SplitView for special overlay rendering")
     , float_print_prec(3) // INIT: Float string format precision
     , windows()
-    , lastInstTime(0.0)
     , main_reset_window(false)
     , param_file()
     , active_tf_param(nullptr)
