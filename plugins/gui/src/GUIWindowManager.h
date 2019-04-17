@@ -16,10 +16,10 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include <iostream>
 #include <fstream>
-#include <string>
+#include <iostream>
 #include <map>
+#include <string>
 
 #include <imgui.h>
 
@@ -40,7 +40,6 @@ namespace gui {
 class GUIWindowManager : public GUIUtility {
 
 public:
-
     /**
      * Ctor
      */
@@ -52,14 +51,7 @@ public:
     ~GUIWindowManager(void);
 
     /** Identifiers for the window draw callbacks. */
-    enum WindowDrawCallback {
-        NONE   = 0,
-        MAIN   = 1,
-        PARAM  = 2,
-        FPSMS  = 3,
-        FONT   = 4,
-        TF     = 5
-    };
+    enum WindowDrawCallback { NONE = 0, MAIN = 1, PARAM = 2, FPSMS = 3, FONT = 4, TF = 5 };
 
     /** Performance mode for fps/ms windows. */
     enum FpsMsMode { FPS = 0, MS = 1 };
@@ -67,101 +59,71 @@ public:
     /** Module filter mode for parameter windows. */
     enum FilterMode { ALL = 0, INSTANCE = 1, VIEW = 2 };
 
-    /** Additional configuration varaibles for parameter windows. */
-    struct ParamConfig {
-        bool                     show_hotkeys;  // flag to toggle showing only parameter hotkeys
-        std::vector<std::string> modules_list;  // modules to show in a parameter window (show all if empty)
-        FilterMode               module_filter; // module filter
-
-        // Ctor for default values
-        ParamConfig(void) : 
-            show_hotkeys(false)
-            , modules_list()
-            , module_filter(FilterMode::ALL) {
-        }
-    };
-
-    /** Additional configuration varaibles for fps/ms windows. */
-    struct FpsMsConfig {
-        bool                show_options;           // Show/hide fps/ms options. 
-        size_t              max_value_count;        // Maximum count of values in value array
-        float               max_delay;              // Maximum delay when fps/ms value should be renewed.
-        FpsMsMode           mode;                   // mode for displaying either FPS or MS
-
-        float               current_delay;          // current delay between frames (not saved in profile)
-        std::vector<float>  fps_values;             // current fps values (not saved in profile)
-        std::vector<float>  ms_values;              // current ms values (not saved in profile)
-
-        // Ctor for default values
-        FpsMsConfig(void) :
-            show_options(false)
-            , max_value_count(20)
-            , max_delay(2.0f)
-            , mode(FpsMsMode::FPS)
-            , current_delay(0.0f)
-            , fps_values()
-            , ms_values() {
-        }
-    };
-
-    /** Additional configuration varaibles for font selection windows. */
-    struct FontConfig {
-        std::string font_name;                  // the currently used font (only already loaded font names can be restored on profile change)
-
-        // Ctor for default values
-        FontConfig(void) :
-            font_name() {
-        }
-    };
-
-    /** Additional configuration varaibles for transfer function windows. */
-    struct TfConfig {
-        // Ctor for default values
-        TfConfig(void) {
-        }
-    };
-
     /** Struct holding a window configuration. */
     struct WindowConfiguration {
-        bool                show;               // show/hide window
-        ImGuiWindowFlags    flags;              // imgui window flags
-        WindowDrawCallback  callback;           // id of the callback drawing the window content
-        core::view::KeyCode hotkey;             // hotkey for opening/closing window
-        bool                reset;              // flag for reset window position and size on profile loading
-        ImVec2              position;           // position for reset on profile loading (current position)
-        ImVec2              size;               // size for reset on profile loading (current size)
-        bool                soft_reset;         // soft reset of window position and size
-        ImVec2              reset_size;         // minimum window size for soft reset
-        // ---------- Window specific condfigurations ----------
-        ParamConfig         param_config;
-        FpsMsConfig         fpsms_config;
-        FontConfig          font_config;
-        TfConfig            tf_config;
+        bool win_show;                   // show/hide window
+        ImGuiWindowFlags win_flags;      // imgui window flags
+        WindowDrawCallback win_callback; // id of the callback drawing the window content
+        core::view::KeyCode win_hotkey;  // hotkey for opening/closing window
+        bool win_reset;        // flag for reset window position and size on profile loading  (not saved in profile)
+        ImVec2 win_position;   // position for reset on profile loading (current position)
+        ImVec2 win_size;       // size for reset on profile loading (current size)
+        bool win_soft_reset;   // soft reset of window position and size
+        ImVec2 win_reset_size; // minimum window size for soft reset
+        // ---------- Parameter specific condfiguration ----------
+        bool param_show_hotkeys;                     // flag to toggle showing only parameter hotkeys
+        std::vector<std::string> param_modules_list; // modules to show in a parameter window (show all if empty)
+        FilterMode param_module_filter;              // module filter
+        // ---------- FPS/MS specific condfiguration ----------
+        bool fpsms_show_options;             // Show/hide fps/ms options.
+        int fpsms_max_value_count;           // Maximum count of values in value array
+        float fpsms_max_delay;               // Maximum delay when fps/ms value should be renewed.
+        FpsMsMode fpsms_mode;                // mode for displaying either FPS or MS
+        float fpsms_current_delay;           // current delay between frames (not saved in profile)
+        std::vector<float> fpsms_fps_values; // current fps values (not saved in profile)
+        std::vector<float> fpsms_ms_values;  // current ms values (not saved in profile)
+        float fpsms_fps_value_scale;         // current scaling factor for fps values (not saved in profile)
+        float fpsms_ms_value_scale;          // current scaling factor for ms values (not saved in profile)
+        // ---------- Font specific condfiguration ----------
+        bool font_reset;               // flag for reset font on profile loading  (not saved in profile)
+        std::string font_name;         // the currently used font (only already loaded font names will be restored)
+        std::string font_new_filename; // temporary storage of new filename (not saved in profile)
+        float font_new_size;           // temporary storage of new font size (not saved in profile)
 
         // Ctor for default values
-        WindowConfiguration(void) :
-            show(false)
-            , flags(0)
-            , callback(WindowDrawCallback::NONE)
-            , hotkey(megamol::core::view::KeyCode())
-            , reset(false)
-            , position(ImVec2(0.0f, 0.0f))
-            , size(ImVec2(0.0f, 0.0f))
-            , soft_reset(true)
-            , reset_size(ImVec2(500.0f, 300.0f))
-            // Window specific condfigurations
-            , param_config()
-            , fpsms_config()
-            , font_config()
-            , tf_config() {
-        }
-    } ;
+        WindowConfiguration(void)
+            : win_show(false)
+            , win_flags(0)
+            , win_callback(WindowDrawCallback::NONE)
+            , win_hotkey(megamol::core::view::KeyCode())
+            , win_reset(false)
+            , win_position(ImVec2(0.0f, 0.0f))
+            , win_size(ImVec2(0.0f, 0.0f))
+            , win_soft_reset(true)
+            , win_reset_size(ImVec2(500.0f, 300.0f))
+            // Window specific configurations
+            , param_show_hotkeys(false)
+            , param_modules_list()
+            , param_module_filter(FilterMode::ALL)
+            , fpsms_show_options(false)
+            , fpsms_max_value_count(20)
+            , fpsms_max_delay(2.0f)
+            , fpsms_mode(FpsMsMode::FPS)
+            , fpsms_current_delay(0.0f)
+            , fpsms_fps_values()
+            , fpsms_ms_values()
+            , fpsms_fps_value_scale(1.0f)
+            , fpsms_ms_value_scale(1.0f)
+            , font_name()
+            , font_new_filename()
+            , font_new_size(13.0f) {}
+    };
 
     /** Type for callback function. */
     typedef std::function<void(const std::string& window_name, WindowConfiguration& window_config)> GuiCallbackFunc;
 
     // --------------------------------------------------------------------
-    //WINDOWs
+    // WINDOWs
 
     /**
      * Register callback function for given callback id.
@@ -169,14 +131,21 @@ public:
      * @param cbid  The callback id.
      * @param id    The callback function that should be matched to callback id.
      */
-    bool RegisterDrawWindowCallback(WindowDrawCallback cbid, GuiCallbackFunc cb);
+    inline bool RegisterDrawWindowCallback(WindowDrawCallback cbid, GuiCallbackFunc cb) {
+        /// Overwrites existing entry with same WindowDrawCallback id.
+        this->callbacks[cbid] = cb;
+        return true;
+    }
 
     /**
      * Draw window content by calling registered callback function in window configuration.
      *
      * @param window_name  The name of the calling window.
      */
-    inline bool DrawWindowContent(const std::string& window_name);
+    inline GuiCallbackFunc WindowCallback(WindowDrawCallback cbid) {
+        // Creates new entry if no callback for cbid is registered (default ctory)
+        return this->callbacks[cbid];
+    }
 
     /**
      * Reset position and size of currently active window to fit into current viewport.
@@ -201,7 +170,7 @@ public:
     void ResetWindowOnProfileLoad(const std::string& window_name, WindowConfiguration& window_config);
 
     // --------------------------------------------------------------------
-    //CONFIGURATIONs
+    // CONFIGURATIONs
 
     /**
      * Add new window.
@@ -215,18 +184,22 @@ public:
      * Enumerate windows and call given function.
      *
      * @param cb  The function to call for enumerated windows.
-      */
-    void EnumWindows(std::function<void(const std::string&, WindowConfiguration&)> cb);
+     */
+    inline void EnumWindows(std::function<void(const std::string&, WindowConfiguration&)> cb) {
+        for (auto& wc : this->windows) {
+            cb(wc.first, wc.second);
+        }
+    }
 
     /**
      * Delete window.
      *
      * @param window_name  The window name.
      */
-     //bool DeleteWindowConfiguration(const std::string& window_name);
+    // bool DeleteWindowConfiguration(const std::string& window_name);
 
     // --------------------------------------------------------------------
-    //PROFILEs
+    // PROFILEs
 
     /**
      * Returns a list of the currently available window configuration profiles.
@@ -262,7 +235,6 @@ public:
     bool SaveWindowConfigurationProfile(const std::string& profile_name);
 
 private:
-
     /**
      * Saving current window configurations to file.
      *
@@ -301,9 +273,8 @@ private:
 
     /** The the current window configuration profiles as JSON. */
     nlohmann::json profiles;
-
 };
- 
+
 
 } // namespace gui
 } // namespace megamol
