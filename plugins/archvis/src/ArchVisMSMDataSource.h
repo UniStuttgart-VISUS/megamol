@@ -21,17 +21,15 @@
 
 #include "mmcore/param/ParamSlot.h"
 
-#include "ng_mesh/AbstractNGMeshDataSource.h"
 #include "ScaleModel.h"
 
 #include <chrono>
 
-using namespace megamol::ngmesh;
 
 namespace megamol {
 namespace archvis {
 
-	class ArchVisMSMDataSource : public AbstractNGMeshDataSource
+	class ArchVisMSMDataSource : public megamol::core::Module
 	{
 	public:
 		/**
@@ -65,8 +63,19 @@ namespace archvis {
 		~ArchVisMSMDataSource();
 
 	protected:
+		/**
+			* Implementation of 'Create'.
+			*
+			* @return 'true' on success, 'false' otherwise.
+			*/
+		bool create(void);
 
 		virtual bool getDataCallback(megamol::core::Call& caller);
+
+		/**
+			* Implementation of 'Release'.
+			*/
+		void release();
 
 	private:
 
@@ -162,16 +171,6 @@ namespace archvis {
 
 		void updateMSMTransform();
 
-		/**
-		* Loads the specified geometry and shader file
-		*
-		* @param shader_filename The shader file to load
-		* @param geometry_filename The geometry file to load
-		*/
-		void createRenderBatches(
-			std::string const& shader_btf_namespace,
-			std::string const& partsList_filename);
-
 		void spawnAndUpdateTextLabels();
 
 		/** Representation of the scale model */
@@ -181,10 +180,6 @@ namespace archvis {
 
 		std::chrono::steady_clock::time_point m_last_spawn_time;
 		std::chrono::steady_clock::time_point m_last_update_time;
-
-
-		/** The shader file name */
-		megamol::core::param::ParamSlot m_shaderFilename_slot;
 
 		/** The mesh list file name */
 		megamol::core::param::ParamSlot m_partsList_slot;

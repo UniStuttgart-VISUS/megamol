@@ -23,17 +23,13 @@
 #include "stdafx.h"
 #include "ArchVisMSMDataSource.h"
 
-#include "ng_mesh/NGMeshRenderBatchBakery.h"
-
 #define TINYGLTF_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION
 #include "tiny_gltf.h"
 
 using namespace megamol::archvis;
-using namespace megamol::ngmesh;
 
 ArchVisMSMDataSource::ArchVisMSMDataSource() :
-	m_shaderFilename_slot("Shader", "The name of to the shader file to load"),
 	m_partsList_slot("Parts list", "The path to the parts list file to load"),
 	m_nodes_slot("Node list","The filepath of the node list to load"),
 	m_elements_slot("Edge list", "The filepath of the element list to load"),
@@ -47,8 +43,6 @@ ArchVisMSMDataSource::ArchVisMSMDataSource() :
 	m_last_spawn_time(std::chrono::steady_clock::now()),
 	m_last_update_time(std::chrono::steady_clock::now())
 {
-	this->m_shaderFilename_slot << new core::param::FilePathParam("");
-	this->MakeSlotAvailable(&this->m_shaderFilename_slot);
 
 	this->m_partsList_slot << new core::param::FilePathParam("");
 	this->MakeSlotAvailable(&this->m_partsList_slot);
@@ -95,6 +89,11 @@ ArchVisMSMDataSource::~ArchVisMSMDataSource()
 	vislib::net::Socket::Cleanup();
 }
 
+bool megamol::archvis::ArchVisMSMDataSource::create(void)
+{
+	return false;
+}
+
 bool ArchVisMSMDataSource::getDataCallback(megamol::core::Call& caller)
 {
 	static bool fontInitialized = false;
@@ -105,31 +104,17 @@ bool ArchVisMSMDataSource::getDataCallback(megamol::core::Call& caller)
 		}
 		fontInitialized = true;
 	}
-	CallNGMeshRenderBatches* render_batches_call = dynamic_cast<CallNGMeshRenderBatches*>(&caller);
-	if (render_batches_call == NULL)
-		return false;
 
 	if (this->m_partsList_slot.IsDirty() ||
-		this->m_shaderFilename_slot.IsDirty() ||
 		this->m_nodeElement_table_slot.IsDirty() ||
 		this->m_nodes_slot.IsDirty() ||
 		this->m_elements_slot.IsDirty() )
 	{
 		// TODO handle different slots seperatly ?
-		this->m_shaderFilename_slot.ResetDirty();
 		this->m_partsList_slot.ResetDirty();
 		this->m_nodeElement_table_slot.ResetDirty();
 		this->m_nodes_slot.ResetDirty();
 		this->m_elements_slot.ResetDirty();
-
-		// Clear render batches TODO: add explicit clear function?
-		CallNGMeshRenderBatches::RenderBatchesData empty_render_batches;
-		m_render_batches = empty_render_batches;
-
-		m_bbox.Set(-10.0f, -10.0f, -10.0f, 10.0f, 10.0f, 10.0f); //?
-
-		auto vislib_shader_filename = m_shaderFilename_slot.Param<megamol::core::param::FilePathParam>()->Value();
-		std::string shdr_filename(vislib_shader_filename.PeekBuffer());
 
 		auto vislib_partsList_filename = m_partsList_slot.Param<megamol::core::param::FilePathParam>()->Value();
 		std::string partsList_filename(vislib_partsList_filename.PeekBuffer());
@@ -162,15 +147,6 @@ bool ArchVisMSMDataSource::getDataCallback(megamol::core::Call& caller)
 		tower_model_matrix.SetAt(2, 3, -0.13f);
 
 		m_scale_model.setModelTransform(tower_model_matrix);
-
-		//for (auto& element : input_elements)
-		//{
-		//	std::cout << (element) << std::endl;
-		//}
-
-		createRenderBatches(shdr_filename, partsList_filename);
-
-		//load(shdr_filename, partsList_filename, nodesElement_filename);
 	}
 
 	if (this->m_rcv_IPAddr_slot.IsDirty() || this->m_rcv_port_slot.IsDirty())
@@ -214,9 +190,6 @@ bool ArchVisMSMDataSource::getDataCallback(megamol::core::Call& caller)
 		}
 	}
 
-	render_batches_call->setRenderBatches(&m_render_batches);
-
-
 	DataPackage data(m_scale_model.getNodeCount(), m_scale_model.getInputElementCount());
 
 	size_t bytes_received = 0;
@@ -249,6 +222,10 @@ bool ArchVisMSMDataSource::getDataCallback(megamol::core::Call& caller)
 	}
 	
 	return true;
+}
+
+void megamol::archvis::ArchVisMSMDataSource::release()
+{
 }
 
 std::vector<std::string> ArchVisMSMDataSource::parsePartsList(std::string const& filename)
@@ -445,28 +422,6 @@ void ArchVisMSMDataSource::parseInputElementList(
 
 void ArchVisMSMDataSource::updateMSMTransform()
 {
-	ObjectShaderParamsDataAccessor mesh_shader_params;
-
-	mesh_shader_params.byte_size = sizeof(PerObjectShaderParams) * m_render_batches.getDrawCommandData(0).draw_cnt;
-	mesh_shader_params.raw_data = new uint8_t[mesh_shader_params.byte_size];
-
-	int element_cnt = m_scale_model.getElementCount();
-
-	PerObjectShaderParams per_obj_params;
-
-	for (int i = 0; i < element_cnt; ++i)
-	{
-		ScaleModel::ElementType type = m_scale_model.getElementType(i);
-		per_obj_params.transform = m_scale_model.getElementTransform(i);
-		per_obj_params.force = m_scale_model.getElementForce(i);
-
-		std::memcpy(mesh_shader_params.raw_data + i * sizeof(PerObjectShaderParams), &per_obj_params, sizeof(PerObjectShaderParams));
-	}
-
-	m_render_batches.updateObjectShaderParams(0, mesh_shader_params);
-
-	delete[] mesh_shader_params.raw_data;
-
 	for (auto& particle : m_text_particles)
 	{
 		std::string label = particle.text;
@@ -485,190 +440,6 @@ void ArchVisMSMDataSource::updateMSMTransform()
 		//font.SetBillboard(true);
 		font.DrawString(c, x, y, z, 0.03f, false, label.c_str(), core::utility::SDFFont::ALIGN_LEFT_MIDDLE);
 	}
-}
-
-void ArchVisMSMDataSource::createRenderBatches(std::string const& shader_btf_namespace,
-	std::string const& partsList_filename)
-{
-	vislib::sys::Log::DefaultLog.WriteInfo("ArchVisMSM loading data from files.\n");
-
-	ShaderPrgmDataAccessor				shader_prgm_data;
-	DrawCommandsDataAccessor				draw_command_data;
-	ObjectShaderParamsDataAccessor		mesh_shader_params;
-	MaterialShaderParamsDataAccessor	mtl_shader_params;
-
-	shader_prgm_data.char_cnt = shader_btf_namespace.length();
-	shader_prgm_data.raw_string = new char[shader_prgm_data.char_cnt];
-	std::strcpy(shader_prgm_data.raw_string, shader_btf_namespace.c_str());
-
-	// parse parts list
-	std::vector<std::string> parts_meshes_paths = parsePartsList(partsList_filename);
-
-	// Create vector of glTF models
-	std::vector<tinygltf::Model> models;
-	tinygltf::TinyGLTF loader;
-	std::string err;
-
-	for (auto path : parts_meshes_paths)
-	{
-		models.push_back(tinygltf::Model());
-
-		bool ret = loader.LoadASCIIFromFile(&models.back(), &err, path);
-		if (!err.empty()) {
-			vislib::sys::Log::DefaultLog.WriteError("Err: %s\n", err.c_str());
-		}
-
-		if (!ret) {
-			vislib::sys::Log::DefaultLog.WriteError("Failed to parse glTF\n");
-		}
-	}
-
-	// Create mesh data that holds all models
-	// For now, assume glTF will supply non-interleaved data (this seems to be mostly the case,..how do I even identify interleaved data?)
-	// Also assume that all glTF files contain a single mesh and all meshes use the same vertex format (i.e. go into a single render batch)
-
-	// Create std-container holding vertex attribute descriptions
-	std::vector<std::string> attribute_names;
-	std::vector<VertexLayout::Attribute> attribs;
-	for (auto& attribute : models.front().meshes.front().primitives.front().attributes)
-	{
-		attribute_names.push_back(attribute.first);
-			attribs.push_back(VertexLayout::Attribute(
-				models.front().accessors[attribute.second].type,
-				models.front().accessors[attribute.second].componentType,
-				models.front().accessors[attribute.second].normalized,
-				0)); // a seperated VBO is used per vertex attribute, therefore offset should always be zero...
-	}
-
-	// Create intermediate information storage for index data
-	size_t index_buffer_byteSize = 0;
-	std::vector<uint32_t> first_indices = { 0 }; // index of the first index of the different meshes stored in the buffer
-	std::vector<uint32_t> indices_cnt;
-	GLenum index_type = GL_UNSIGNED_INT;
-
-	// Create intermediate information storage for vertex data
-	std::vector<size_t> vertex_buffers_byteSize(attribs.size(),0);
-	std::vector<uint32_t> base_vertices = { 0 }; // base vertices of the different meshes stored in the buffer
-
-	// Scan all models to sum up required storage for index and vertex data
-	for (auto& model : models)
-	{
-		auto index_buffer_accessor = model.accessors[model.meshes.front().primitives.front().indices];
-		auto index_bufferView = model.bufferViews[index_buffer_accessor.bufferView];
-		index_type = index_buffer_accessor.componentType; // TODO: detect different index types and throw error?
-		index_buffer_byteSize += index_bufferView.byteLength;
-
-		int attrib_counter = 0;
-		for (auto& attrib : model.meshes.front().primitives.front().attributes)
-		{
-			auto& accessor = model.accessors[attrib.second];
-			auto& bufferView = model.bufferViews[accessor.bufferView];
-
-			vertex_buffers_byteSize[attrib_counter] += bufferView.byteLength;
-			++attrib_counter;
-		}
-
-		// log first index and base vertex for each model
-		uint32_t base_vertex = base_vertices.back() + model.accessors[model.meshes.front().primitives.front().attributes.at(attribute_names.front())].count;
-		base_vertices.push_back(base_vertex);
-
-		uint32_t first_index = first_indices.back() + index_buffer_accessor.count;
-		first_indices.push_back(first_index);
-
-		indices_cnt.push_back(index_buffer_accessor.count);
-	}
-
-	// Create intermediate data storage for index and vertex buffers (size are know after first scan of all models)
-	std::vector<uint8_t> index_data(index_buffer_byteSize); // index data storage, index data from all models is gathered here (yes, this requires some copying)
-	std::vector<std::vector<uint8_t>> vertex_buffers; // vertex data storage, vertex data from all models is gathered per attribute (yes, this requires some copying)
-	for (auto& size : vertex_buffers_byteSize)
-		vertex_buffers.push_back(std::vector<uint8_t>(size));
-
-	// Copy vertex data from gltf models to intermediate buffer
-	for (int i=0; i < vertex_buffers.size(); ++i)
-	{
-		uint32_t bytes_copied = 0;
-
-		for (auto& model : models)
-		{
-			auto& accessor = model.accessors[model.meshes.front().primitives.front().attributes.at(attribute_names[i])];
-			auto& bufferView = model.bufferViews[accessor.bufferView];
-
-			auto tgt = vertex_buffers[i].data() + bytes_copied;
-			auto src = model.buffers[bufferView.buffer].data.data() + accessor.byteOffset + bufferView.byteOffset;
-			auto size = bufferView.byteLength;
-
-			std::memcpy(tgt, src, size);
-
-			bytes_copied += size;
-		}
-	}
-
-	// Copy index data from gltf models to intermediate buffer
-	uint32_t bytes_copied = 0;
-	for (auto& model : models)
-	{
-		auto& accessor = model.accessors[model.meshes.front().primitives.front().indices];
-		auto& bufferView = model.bufferViews[accessor.bufferView];
-
-		auto tgt = index_data.data() + bytes_copied;
-		auto src = model.buffers[bufferView.buffer].data.data() + accessor.byteOffset + bufferView.byteOffset;
-		auto size = bufferView.byteLength;
-
-		std::memcpy(tgt, src, size);
-
-		bytes_copied += size;
-	}
-
-	//assert(bytes_copied == mesh_data.index_data.byte_size);
-
-	// Build vertex buffer accessor block for vertex buffers
-	auto vb_accs = buildVertexBufferAccessors(vertex_buffers);
-	// Build mesh accessor from available data + additional info on mesh
-	auto mesh_acc = buildMeshDataAccessor(
-		vb_accs,
-		attribs,
-		0,
-		index_data,
-		index_type,
-		GL_STATIC_DRAW,
-		GL_TRIANGLES);
-
-
-	int element_cnt = m_scale_model.getElementCount();
-	draw_command_data.draw_cnt = element_cnt;
-	draw_command_data.data = new DrawCommandsDataAccessor::DrawElementsCommand[draw_command_data.draw_cnt];
-
-	std::cout << "Per object params byte size: " << sizeof(PerObjectShaderParams) << std::endl;
-
-	mesh_shader_params.byte_size = sizeof(PerObjectShaderParams) * draw_command_data.draw_cnt;
-	mesh_shader_params.raw_data = new uint8_t[mesh_shader_params.byte_size];
-
-	PerObjectShaderParams per_obj_params;
-
-	for (int i = 0; i < element_cnt; ++i)
-	{
-		ScaleModel::ElementType type = m_scale_model.getElementType(i);
-		per_obj_params.transform = m_scale_model.getElementTransform(i);
-		per_obj_params.force = m_scale_model.getElementForce(i);
-
-		draw_command_data.data[i].cnt = indices_cnt[type];
-		draw_command_data.data[i].instance_cnt = 1;
-		draw_command_data.data[i].first_idx = first_indices[type];
-		draw_command_data.data[i].base_vertex = base_vertices[type];
-		draw_command_data.data[i].base_instance = 0;
-
-		std::memcpy(mesh_shader_params.raw_data + i * sizeof(PerObjectShaderParams), &per_obj_params, sizeof(PerObjectShaderParams));
-	}
-
-	mtl_shader_params.elements_cnt = 0;
-
-	m_render_batches.addBatch(
-		shader_prgm_data,
-		mesh_acc,
-		draw_command_data,
-		mesh_shader_params,
-		mtl_shader_params);
 }
 
 void ArchVisMSMDataSource::spawnAndUpdateTextLabels()
