@@ -275,7 +275,7 @@ namespace megamol
             SIZE_T glyph_hash;
 
             std::vector<std::pair<float, std::vector<Eigen::Vector2f>>> glyph_output;
-            std::vector<std::set<coords_t, std::less<coords_t>>> orbit_cells_forward, orbit_cells_backward;
+            std::vector<std::set<coords_t, std::less<coords_t>>> orbit_cells;
 
             /** Output slot for receiving mouse clicks */
             core::CalleeSlot mouse_slot;

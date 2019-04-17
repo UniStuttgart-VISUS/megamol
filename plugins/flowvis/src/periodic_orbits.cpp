@@ -230,8 +230,7 @@ namespace megamol
                     this->glyph_output.clear();
                     this->glyph_hash = -1;
 
-                    this->orbit_cells_forward.clear();
-                    this->orbit_cells_backward.clear();
+                    this->orbit_cells.clear();
 
                     // Store critical points
                     this->critical_points.reserve(critical_points_indices.size());
@@ -339,8 +338,7 @@ namespace megamol
             this->glyph_output.clear();
             ++this->glyph_hash;
 
-            this->orbit_cells_forward.clear();
-            this->orbit_cells_backward.clear();
+            this->orbit_cells.clear();
 
             this->get_output() << "# Periodic orbits" << std::endl;
 
@@ -414,8 +412,7 @@ namespace megamol
                             const std::set<coords_t, std::less<coords_t>> sorted_visited_cells(visited_cells->first.cbegin(), visited_cells->first.cend());
 
                             if (!this->unique_detection.Param<core::param::BoolParam>()->Value() ||
-                                (sign > 0.0f && std::find(this->orbit_cells_forward.begin(), this->orbit_cells_forward.end(), sorted_visited_cells) == this->orbit_cells_forward.end()) ||
-                                (sign < 0.0f && std::find(this->orbit_cells_backward.begin(), this->orbit_cells_backward.end(), sorted_visited_cells) == this->orbit_cells_backward.end()))
+                                std::find(this->orbit_cells.begin(), this->orbit_cells.end(), sorted_visited_cells) == this->orbit_cells.end())
                             {
                                 // Do a second turn and compare results
                                 auto validation = validate_turn(grid, position, integration, visited_cells->first);
@@ -527,14 +524,7 @@ namespace megamol
                                 // Add list of cells to already extracted periodic orbits
                                 if (!has_exit && !this->terminate && this->unique_detection.Param<core::param::BoolParam>()->Value())
                                 {
-                                    if (sign > 0.0f)
-                                    {
-                                        this->orbit_cells_forward.push_back(sorted_visited_cells);
-                                    }
-                                    else
-                                    {
-                                        this->orbit_cells_backward.push_back(sorted_visited_cells);
-                                    }
+                                    this->orbit_cells.push_back(sorted_visited_cells);
                                 }
                             }
                             else
