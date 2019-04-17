@@ -10,8 +10,9 @@ Jump to [Modules](#modules).
 To build the plugin, switch it on the in cmake.
 
 ---
+Example call graph for loading and rendering gltf data with ngmesh.
 
-<img src="gltfExample.png"  width="720">
+<img src="gltfExample.png">
 
 ---
 
@@ -45,7 +46,7 @@ Material data is stored using the `GPUMaterialDataStorage` class. A shared_ptr t
 The GPUMaterialDataSource module is connected to a GPURenderTaskDataSource via the `GPUMaterialDataCall`.
 In theory, this module could be simplified to handling only shader compiling and linking and GPU buffer upload, while the raw data is supplied via another call by a dedicated IO data loading module.
 
-The `DebugGPUMaterialDataSource` module serves as an examples for what a GPUMaterialDataSource could look like.
+The `DebugGPUMaterialDataSource` module serves as an example for what a GPUMaterialDataSource could look like.
 
 ### GPUMeshDataSource
 
@@ -55,7 +56,7 @@ Mesh data is stored using the `GPUMeshDataStorage` class. A shared_ptr to an ins
 The GPUMeshDataSource module is connected to a GPURenderTaskDataSource via the `GPUMeshDataCall`.
 It is recommended that this modules only takes care of processing and uploading the mesh data and to handle data IO or generation in a dedicated module that is connected via a call (see gltf example above).
 
-The `GltfGPUMeshesDataSource` module serves as an examples for what a GPUMeshDataSource could look like.
+The `DebugGPUMeshDataSource` and `GltfGPUMeshesDataSource` modules serve as examples for what a GPUMeshDataSource could look like.
 
 ### GltfFileLoader
 
