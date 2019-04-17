@@ -29,6 +29,7 @@
 #include "vislib/sys/Thread.h"
 #include "vislib/Trace.h"
 #include "vislib/UTF8Encoder.h"
+#include <memory>
 
 using namespace megamol::core;
 
@@ -37,6 +38,7 @@ using namespace megamol::core;
  * RootModuleNamespace::RootModuleNamespace
  */
 RootModuleNamespace::RootModuleNamespace(void) : ModuleNamespace(""), lock() {
+  vislib::sys::Log::DefaultLog.WriteInfo("RootModuleNamespace Lock address: %x\n", std::addressof(this->lock));
     // intentionally empty ATM
 }
 
