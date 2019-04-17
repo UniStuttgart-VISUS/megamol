@@ -296,12 +296,12 @@ public:
     }
 
     /** Return key. */
-    Key Key(void) {
+    core::view::Key GetKey(void) {
         return this->key;
     }
 
     /** Return modifiers. */
-    Modifiers Modifiers(void) {
+    core::view::Modifiers GetModifiers(void) {
         return this->mods;
     }
 

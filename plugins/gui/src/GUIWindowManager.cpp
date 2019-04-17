@@ -331,7 +331,7 @@ bool GUIWindowManager::SaveWindowConfigurationProfile(const std::string& profile
         this->profiles[profile_name][window_name]["win_flags"] = (int)(window_config.win_flags);
         this->profiles[profile_name][window_name]["win_callback"] = window_config.win_callback;
         this->profiles[profile_name][window_name]["win_hotkey"] = {
-            (int)(window_config.win_hotkey.Key()), window_config.win_hotkey.Modifiers().toInt()};
+            (int)(window_config.win_hotkey.GetKey()), window_config.win_hotkey.GetModifiers().toInt()};
         this->profiles[profile_name][window_name]["win_position"] = {
             window_config.win_position.x, window_config.win_position.y};
         this->profiles[profile_name][window_name]["win_size"] = {window_config.win_size.x, window_config.win_size.y};
