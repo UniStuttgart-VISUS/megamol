@@ -9,6 +9,7 @@
 #define TEXTURE2D_H_INCLUDED
 
 #include <algorithm>
+#include <cmath>
 
 #include "Texture.h"
 
