@@ -1232,7 +1232,7 @@ private:
      * are designed to be manipulated from the Lua interface which CAN be
      * invoked from another thread (the LuaRemoteHost, for example).
      */
-    vislib::sys::CriticalSection graphUpdateLock;
+    mutable vislib::sys::CriticalSection graphUpdateLock;
 
     /** The module namespace root */
     RootModuleNamespace::ptr_type namespaceRoot;

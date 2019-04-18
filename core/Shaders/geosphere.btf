@@ -20,8 +20,9 @@
     <shader name="fragment">
         <snippet type="version">150</snippet>
         <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>
-        <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
         <snippet name="Main"             type="file">simplesphere/geosphere_frag_main.glsl</snippet>
+
+        <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
     </shader>
         
 </btf>
