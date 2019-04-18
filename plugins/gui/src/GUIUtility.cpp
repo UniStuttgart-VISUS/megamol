@@ -159,11 +159,15 @@ std::string megamol::gui::GUIUtility::InputDialogPopUp(std::string popup_name, s
     if (ImGui::BeginPopupModal(popup_name.c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
 
         ImGui::Text("Enter %s:", request.c_str());
-        this->HelpMarkerToolTip("Press [Return] to confirm input.");
+        this->HelpMarkerToolTip("Press [Enter] to confirm input.");
 
-        ImGui::SetKeyboardFocusHere();
+        // ImGui::SetKeyboardFocusHere();
         if (ImGui::InputText("", buffer, bufferLength, ImGuiInputTextFlags_EnterReturnsTrue)) {
             outtext = buffer;
+            ImGui::CloseCurrentPopup();
+        }
+
+        if (ImGui::Button("Cancel")) {
             ImGui::CloseCurrentPopup();
         }
 

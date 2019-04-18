@@ -184,6 +184,14 @@ private:
     /** The transfer function editor. */
     GUITransferFunctionEditor tf_editor;
 
+    /** Last instance time.  */
+    double last_instance_time;
+
+    /** Additional UTF-8 glyph ranges for ImGui fonts. */
+    std::vector<ImWchar> font_utf8_ranges;
+
+    // Window state buffer variables: -----------------------------------------
+
     /** Flag indicating that this window configuration profile should be applied. */
     std::string load_new_profile;
 
@@ -196,11 +204,11 @@ private:
     /** Load font by index. */
     int load_new_font_index;
 
-    /** Last instance time.  */
-    double last_instance_time;
+    /** List of available profiles (should be only loaded once on menu open). */
+    std::list<std::string> loaded_profile_list;
 
-    /** Additional UTF-8 glyph ranges for ImGui fonts. */
-    std::vector<ImWchar> font_utf8_ranges;
+    /** Name of window to delete. */
+    std::string delete_window;
 
     // FUNCTIONS --------------------------------------------------------------
 
@@ -289,112 +297,6 @@ private:
 
 typedef GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D> GUIRenderer2D;
 typedef GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D> GUIRenderer3D;
-
-
-/**
- * GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIRenderer
- */
-template <>
-inline GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIRenderer()
-    : core::view::Renderer2DModule()
-    , decorated_renderer_slot("decoratedRenderer", "Connects to another 2D Renderer being decorated")
-    , overlay_slot("overlayRender", "Connected with SplitView for special overlay rendering")
-    , imgui_context(nullptr)
-    , window_manager()
-    , tf_editor()
-    , load_new_profile()
-    , load_new_font_filename()
-    , load_new_font_size(13.0f)
-    , load_new_font_index(-1)
-    , last_instance_time(0.0)
-    , font_utf8_ranges() {
-
-    this->decorated_renderer_slot.SetCompatibleCall<core::view::CallRender2DDescription>();
-    this->MakeSlotAvailable(&this->decorated_renderer_slot);
-
-    // InputCall
-    this->overlay_slot.SetCallback(core::view::CallSplitViewOverlay::ClassName(),
-        core::view::CallSplitViewOverlay::FunctionName(core::view::CallSplitViewOverlay::FnOverlay),
-        &GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::OnOverlayCallback);
-    this->overlay_slot.SetCallback(core::view::CallSplitViewOverlay::ClassName(),
-        core::view::InputCall::FunctionName(core::view::InputCall::FnOnKey),
-        &GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::OnKeyCallback);
-    this->overlay_slot.SetCallback(core::view::CallSplitViewOverlay::ClassName(),
-        core::view::InputCall::FunctionName(core::view::InputCall::FnOnChar),
-        &GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::OnCharCallback);
-    this->overlay_slot.SetCallback(core::view::CallSplitViewOverlay::ClassName(),
-        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseButton),
-        &GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::OnMouseButtonCallback);
-    this->overlay_slot.SetCallback(core::view::CallSplitViewOverlay::ClassName(),
-        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseMove),
-        &GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::OnMouseMoveCallback);
-    this->overlay_slot.SetCallback(core::view::CallSplitViewOverlay::ClassName(),
-        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseScroll),
-        &GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::OnMouseScrollCallback);
-    this->MakeSlotAvailable(&this->overlay_slot);
-}
-
-
-/**
- * GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GUIRenderer
- */
-template <>
-inline GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GUIRenderer()
-    : core::view::Renderer3DModule()
-    , decorated_renderer_slot("decoratedRenderer", "Connects to another 2D Renderer being decorated")
-    , overlay_slot("overlayRender", "Connected with SplitView for special overlay rendering")
-    , imgui_context(nullptr)
-    , window_manager()
-    , tf_editor()
-    , load_new_profile()
-    , load_new_font_filename()
-    , load_new_font_size(13.0f)
-    , load_new_font_index(-1)
-    , last_instance_time(0.0)
-    , font_utf8_ranges() {
-
-    this->decorated_renderer_slot.SetCompatibleCall<core::view::CallRender3DDescription>();
-    this->MakeSlotAvailable(&this->decorated_renderer_slot);
-
-    // Overlay Call
-    this->overlay_slot.SetCallback(core::view::CallSplitViewOverlay::ClassName(),
-        core::view::CallSplitViewOverlay::FunctionName(core::view::CallSplitViewOverlay::FnOverlay),
-        &GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::OnOverlayCallback);
-    this->overlay_slot.SetCallback(core::view::CallSplitViewOverlay::ClassName(),
-        core::view::InputCall::FunctionName(core::view::InputCall::FnOnKey),
-        &GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::OnKeyCallback);
-    this->overlay_slot.SetCallback(core::view::CallSplitViewOverlay::ClassName(),
-        core::view::InputCall::FunctionName(core::view::InputCall::FnOnChar),
-        &GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::OnCharCallback);
-    this->overlay_slot.SetCallback(core::view::CallSplitViewOverlay::ClassName(),
-        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseButton),
-        &GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::OnMouseButtonCallback);
-    this->overlay_slot.SetCallback(core::view::CallSplitViewOverlay::ClassName(),
-        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseMove),
-        &GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::OnMouseMoveCallback);
-    this->overlay_slot.SetCallback(core::view::CallSplitViewOverlay::ClassName(),
-        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseScroll),
-        &GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::OnMouseScrollCallback);
-    this->MakeSlotAvailable(&this->overlay_slot);
-}
-
-
-/**
- * GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::ClassName
- */
-template <> inline const char* GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::ClassName(void) {
-
-    return "GUIRenderer2D";
-}
-
-
-/**
- * GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::ClassName
- */
-template <> inline const char* GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::ClassName(void) {
-
-    return "GUIRenderer3D";
-}
 
 
 /**
@@ -782,6 +684,7 @@ template <class M, class C> bool GUIRenderer<M, C>::OnMouseMove(double x, double
 
     auto hoverFlags = ImGuiHoveredFlags_AnyWindow | ImGuiHoveredFlags_AllowWhenDisabled |
                       ImGuiHoveredFlags_AllowWhenBlockedByPopup | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem;
+
     if (!ImGui::IsWindowHovered(hoverFlags)) {
         auto* cr = this->decorated_renderer_slot.template CallAs<C>();
         if (cr == nullptr) return false;
@@ -814,6 +717,7 @@ bool GUIRenderer<M, C>::OnMouseButton(
 
     auto hoverFlags = ImGuiHoveredFlags_AnyWindow | ImGuiHoveredFlags_AllowWhenDisabled |
                       ImGuiHoveredFlags_AllowWhenBlockedByPopup | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem;
+
     if (!ImGui::IsWindowHovered(hoverFlags)) {
         auto* cr = this->decorated_renderer_slot.template CallAs<C>();
         if (cr == nullptr) return false;
@@ -827,7 +731,7 @@ bool GUIRenderer<M, C>::OnMouseButton(
         if (!(*cr)(core::view::InputCall::FnOnMouseButton)) return false;
     }
 
-    return (down); // Don't consume 'release' events.
+    return true;
 }
 
 
@@ -842,8 +746,9 @@ template <class M, class C> bool GUIRenderer<M, C>::OnMouseScroll(double dx, dou
     io.MouseWheelH += (float)dx;
     io.MouseWheel += (float)dy;
 
-    auto hoverFlags =
-        ImGuiHoveredFlags_AnyWindow | ImGuiHoveredFlags_AllowWhenDisabled | ImGuiHoveredFlags_AllowWhenBlockedByPopup;
+    auto hoverFlags = ImGuiHoveredFlags_AnyWindow | ImGuiHoveredFlags_AllowWhenDisabled |
+                      ImGuiHoveredFlags_AllowWhenBlockedByPopup | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem;
+
     if (!ImGui::IsWindowHovered(hoverFlags)) {
         auto* cr = this->decorated_renderer_slot.template CallAs<C>();
         if (cr == nullptr) return false;
@@ -859,49 +764,6 @@ template <class M, class C> bool GUIRenderer<M, C>::OnMouseScroll(double dx, dou
     return true;
 }
 
-
-/**
- * GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GetExtents
- */
-template <>
-inline bool GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GetExtents(
-    core::view::CallRender2D& call) {
-
-    auto* cr = this->decorated_renderer_slot.CallAs<core::view::CallRender2D>();
-    if (cr != nullptr) {
-        (*cr) = call;
-        if ((*cr)(core::view::AbstractCallRender::FnGetExtents)) {
-            call = (*cr);
-        }
-    } else {
-        call.SetBoundingBox(vislib::math::Rectangle<float>(0, 1, 1, 0));
-    }
-
-    return true;
-}
-
-
-/**
- * GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GetExtents
- */
-template <>
-inline bool GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GetExtents(
-    core::view::CallRender3D& call) {
-
-    auto* cr = this->decorated_renderer_slot.CallAs<core::view::CallRender3D>();
-    if (cr != nullptr) {
-        (*cr) = call;
-        if ((*cr)(core::view::AbstractCallRender::FnGetExtents)) {
-            call = (*cr);
-        }
-    } else {
-        call.AccessBoundingBoxes().Clear();
-        call.AccessBoundingBoxes().SetWorldSpaceBBox(
-            vislib::math::Cuboid<float>(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f));
-    }
-
-    return true;
-}
 
 /**
  * GUIRenderer<M, C>::Render
@@ -1056,7 +918,8 @@ template <class M, class C> bool GUIRenderer<M, C>::render(vislib::math::Rectang
     this->last_instance_time =
         ((instanceTime - this->last_instance_time) > 0.0) ? (instanceTime) : (this->last_instance_time + io.DeltaTime);
 
-    // Loading new font (before next ImGui::Begin!)
+    // Changes that need to be applied before next ImGui::Begin ---------------
+    // Loading new font from font window
     if (!this->load_new_font_filename.empty()) {
         ImFontConfig config;
         config.OversampleH = 4;
@@ -1064,45 +927,50 @@ template <class M, class C> bool GUIRenderer<M, C>::render(vislib::math::Rectang
         config.GlyphRanges = this->font_utf8_ranges.data();
         io.Fonts->AddFontFromFileTTF(this->load_new_font_filename.c_str(), this->load_new_font_size, &config);
         ImGui_ImplOpenGL3_CreateFontsTexture();
-        // Load last added font
+        /// Load last added font
         io.FontDefault = io.Fonts->Fonts[(io.Fonts->Fonts.Size - 1)];
         this->load_new_font_filename.clear();
     }
+    // Loading new font from profile
     if (this->load_new_font_index >= 0) {
         if (this->load_new_font_index < io.Fonts->Fonts.Size) {
             io.FontDefault = io.Fonts->Fonts[this->load_new_font_index];
         }
         this->load_new_font_index = -1;
     }
-
-    // Applying new window configuration profile (before next ImGui::Begin!)
+    // Applying new window configuration profile
     if (!this->load_new_profile.empty()) {
         this->window_manager.LoadWindowConfigurationProfile(this->load_new_profile);
         this->load_new_profile.clear();
     }
+    // Deleting window
+    if (!this->delete_window.empty()) {
+        this->window_manager.DeleteWindowConfiguration(this->delete_window);
+        this->delete_window.clear();
+    }
 
-    // Start new frame
+    // Start new frame --------------------------------------------------------
     ImGui_ImplOpenGL3_NewFrame();
     ImGui::NewFrame();
 
-    // Draw window content
     const auto func = [&, this](const std::string& wn, GUIWinConfig& wc) {
-        // Loading font from font window configuration independant of showing font window
+        // Loading font from font window configuration independant if font window is shown
         if (wc.font_reset) {
             if (!wc.font_name.empty()) {
+                this->load_new_font_index = -1;
                 for (int n = 0; n < io.Fonts->Fonts.Size; n++) {
                     if (std::string(io.Fonts->Fonts[n]->GetDebugName()) == wc.font_name) {
                         this->load_new_font_index = n;
                     }
                 }
                 if (this->load_new_font_index < 0) {
-                    vislib::sys::Log::DefaultLog.WriteError(
+                    vislib::sys::Log::DefaultLog.WriteWarn(
                         "[GUIRenderer] Couldn't find font '%s' for loaded profile.", wc.font_name.c_str());
                 }
             }
             wc.font_reset = false;
         }
-
+        // Draw window content
         if (wc.win_show) {
             ImGui::SetNextWindowBgAlpha(1.0f);
             if (!ImGui::Begin(wn.c_str(), &wc.win_show, wc.win_flags)) {
@@ -1138,7 +1006,7 @@ template <class M, class C> bool GUIRenderer<M, C>::render(vislib::math::Rectang
     };
     this->window_manager.EnumWindows(func);
 
-    // Render the frame
+    // Render the frame -------------------------------------------------------
     glViewport(0, 0, viewportWidth, viewportHeight);
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -1277,7 +1145,7 @@ void GUIRenderer<M, C>::drawParametersCallback(const std::string& window_name, G
                                 this->GetCoreInstance()->EnumModulesNoLock(viewname, add_func);
                             }
                         } else {
-                            vislib::sys::Log::DefaultLog.WriteError(
+                            vislib::sys::Log::DefaultLog.WriteWarn(
                                 "[GUIRenderer] Couldn't find abstract view module this gui renderer is connected to.");
                         }
                     }
@@ -1658,20 +1526,26 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
     if (ImGui::BeginMenu("App")) {
 
         // Window configuration profile
-        if (ImGui::BeginMenu("Configuration")) {
+        if (ImGui::BeginMenu("Window Settings")) {
+            // Loading available profiles (only once at menu opening)
+            if (this->loaded_profile_list.empty()) {
+                this->loaded_profile_list = this->window_manager.GetWindowConfigurationProfileList();
+                // Add empty profile to prevent consecutive loading when no profile is available.
+                if (this->loaded_profile_list.empty()) {
+                    this->loaded_profile_list.emplace_back("");
+                }
+            }
             if (ImGui::BeginMenu("Load Profile")) {
-                std::list<std::string> profile_list = this->window_manager.GetWindowConfigurationProfileList();
-                for (auto& p : profile_list) {
+                for (auto& p : this->loaded_profile_list) {
                     if (ImGui::MenuItem(p.c_str())) {
-                        // Remember profile name for delayed loading
+                        /// Remember profile name for delayed loading (before ImGui::Begin)
                         this->load_new_profile = p;
                     }
                 }
                 ImGui::EndMenu();
             }
             if (ImGui::BeginMenu("Delete Profile")) {
-                std::list<std::string> profile_list = this->window_manager.GetWindowConfigurationProfileList();
-                for (auto& p : profile_list) {
+                for (auto& p : this->loaded_profile_list) {
                     if (ImGui::MenuItem(p.c_str())) {
                         this->window_manager.DeleteWindowConfigurationProfile(p);
                     }
@@ -1679,9 +1553,12 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
                 ImGui::EndMenu();
             }
             if (ImGui::MenuItem("Save Profile")) {
-                save_profile = true; /// Processed below because of popup ...
+                /// Processed below because of popup ...
+                save_profile = true;
             }
             ImGui::EndMenu();
+        } else {
+            this->loaded_profile_list.clear();
         }
         ImGui::Separator();
 
@@ -1706,6 +1583,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
 
     // Windows
     if (ImGui::BeginMenu("Views")) {
+
         const auto func = [&, this](const std::string& wn, GUIWinConfig& wc) {
             bool win_open = wc.win_show;
             std::string hotkey_label = wc.win_hotkey.ToString();
@@ -1715,7 +1593,19 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
             if (ImGui::MenuItem(wn.c_str(), hotkey_label.c_str(), &win_open)) {
                 wc.win_show = !wc.win_show;
             }
-            this->HoverToolTip("[Shift] + ['Window Hotkey'] to Reset Size and Position of Window");
+            // Add conext menu for deleting windows without hotkey (= custom parameter windows).
+            if (wc.win_hotkey.GetKey() == core::view::Key::KEY_UNKNOWN) {
+                if (ImGui::BeginPopupContextItem()) {
+                    if (ImGui::MenuItem("Delete Window")) {
+                        this->delete_window = wn;
+                    }
+                    ImGui::EndPopup();
+                }
+                this->HoverToolTip("[Right-Click] to open Context Menu for Deleting Window Permanently.");
+            } else {
+                this->HoverToolTip("['Window Hotkey'] to Show/Hide Window.\n[Shift]+['Window Hotkey'] to Reset Size "
+                                   "and Position of Window.");
+            }
         };
         this->window_manager.EnumWindows(func);
 

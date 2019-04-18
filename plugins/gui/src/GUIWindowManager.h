@@ -37,6 +37,9 @@ namespace gui {
 
 /**
  * Managing window configurations for GUI
+ *
+ * Profile changes are read/written directly from/to the profile file.
+ *
  */
 class GUIWindowManager : public GUIUtility {
 
@@ -197,7 +200,7 @@ public:
      *
      * @param window_name  The window name.
      */
-    // bool DeleteWindowConfiguration(const std::string& window_name);
+    bool DeleteWindowConfiguration(const std::string& window_name);
 
     // --------------------------------------------------------------------
     // PROFILEs
@@ -241,14 +244,14 @@ private:
      *
      * @return True on success, false otherwise.
      */
-    bool saveWindowConfigurationFile(void);
+    bool saveWindowConfigurationFile(nlohmann::json& in_profiles);
 
     /**
      * Loading window configurations from file.
      *
      * @return True on success, false otherwise.
      */
-    bool loadWindowConfigurationFile(void);
+    bool loadWindowConfigurationFile(nlohmann::json& out_profiles);
 
     /**
      * Check if a window configuration for the given window name exists.
@@ -271,9 +274,6 @@ private:
 
     /** The file the window configuration profiles are stored to. */
     std::string filename;
-
-    /** The the current window configuration profiles as JSON. */
-    nlohmann::json profiles;
 };
 
 
