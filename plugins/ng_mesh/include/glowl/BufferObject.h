@@ -11,6 +11,7 @@
 #include <memory>
 
 #include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib/sys/Log.h"
 
 namespace megamol {
 	namespace ngmesh {
@@ -75,7 +76,7 @@ namespace megamol {
 				if ((byte_offset + byte_size) > m_byte_size)
 				{
 					// error message
-					//vislib::sys::Log::DefaultLog.WriteError("Invalid byte_offset or size for loadSubData");
+					vislib::sys::Log::DefaultLog.WriteError("Invalid byte_offset or size for loadSubData");
 					return;
 				}
 
