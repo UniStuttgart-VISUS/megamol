@@ -10,17 +10,7 @@
 #define __streamlines_cuda_shi_et_al 0                  // True: use method by Shi et al., else our method
 
 // Used integration method
-#define __streamlines_cuda_runge_kutta_45 1             // True: use Runge-Kutta 4,5 with adaptive step size; else: use Runge-Kutta 4 with fixed step size
-#define __streamlines_cuda_runge_kutta_45_fixed 0       // True: use Runge-Kutta 4,5 only for error estimation, but keep fixed step size
-
-// Options for detailed output (! performance hit !)
-#define __streamlines_cuda_detailed_output 0            // True: output integration step size as field and stream line end points
-#define __streamlines_cuda_integration_steps_max 1      // True: output integration step size field with maximum values
-#define __streamlines_cuda_integration_steps_min 0      // True: output integration step size field with minimum values
-#define __streamlines_cuda_integration_steps_avg 0      // True: output integration step size field with average values
-#define __streamlines_cuda_integration_error_max 1      // True: output integration error field with maximum values
-#define __streamlines_cuda_integration_error_min 0      // True: output integration error field with minimum values
-#define __streamlines_cuda_integration_error_avg 0      // True: output integration error field with average values
+#define __streamlines_cuda_runge_kutta_45 0             // True: use Runge-Kutta 4,5 with adaptive step size; else: use Runge-Kutta 4 with fixed step size
 
 #include <array>
 #include <memory>
@@ -63,15 +53,10 @@ namespace megamol
             * @param terminations               In/output termination reasons
             * @param num_integration_steps      Number of integration steps
             * @param sign                       Sign indicating forward (1) or backward (-1) integration
-            * @param integration_steps          Output integration steps as a field
             * @param num_particles_per_batch    Number of particles processed and uploaded to the GPU per batch
             */
             void update_labels(std::vector<float>& source, std::vector<float>& labels, std::vector<float>& distances,
-                std::vector<float>& terminations, int num_integration_steps, float sign, unsigned int num_particles_per_batch
-#if __streamlines_cuda_detailed_output
-                , std::vector<float>& integration_steps
-#endif
-            );
+                std::vector<float>& terminations, int num_integration_steps, float sign, unsigned int num_particles_per_batch);
         };
     }
 }

@@ -57,15 +57,10 @@ namespace megamol
             * @param terminations               In/output termination reasons
             * @param num_integration_steps      Number of integration steps
             * @param sign                       Sign indicating forward (1) or backward (-1) integration
-            * @param integration_steps          Output integration steps as a field
             * @param num_particles_per_batch    Number of particles processed and uploaded to the GPU per batch
             */
             void update_labels(std::vector<float>& source, std::vector<float>& labels, std::vector<float>& distances,
-                std::vector<float>& terminations, int num_integration_steps, float sign, unsigned int num_particles_per_batch
-#if __streamlines_cuda_detailed_output
-                , std::vector<float>& integration_steps
-#endif
-            );
+                std::vector<float>& terminations, int num_integration_steps, float sign, unsigned int num_particles_per_batch);
 
         private:
             /**
@@ -80,14 +75,9 @@ namespace megamol
             * @param d_labels               Output labels
             * @param d_dists                Output distances
             * @param d_terminations         Output reasons for stream line termination
-            * @param integration_steps      Output integration steps as a field
             */
             void compute_streamlines(float2* d_particles, int num_particles, int num_convergence_points, int num_convergence_lines,
-                int num_steps, float sign, float* d_labels, float* d_dists, float* d_terminations
-#if __streamlines_cuda_detailed_output
-                , cudaSurfaceObject_t integration_steps
-#endif
-            );
+                int num_steps, float sign, float* d_labels, float* d_dists, float* d_terminations);
 
             /**
             * Initialize a higher-dimensional texture

@@ -15,13 +15,7 @@
 #include <stdexcept>
 #include <vector>
 
-#if (false) // Used to disable errors in IDE. Turn off when compiling!
-template <typename t> t tex1Dfetch(cudaTextureObject_t, int);
-int2 threadIdx, blockIdx, blockDim;
-#define __cuda_kernel_start(a, b)
-#else
 #define __cuda_kernel_start(a, b) <<< a, b >>>
-#endif
 
 // Transformations: domain offset, domain scale, texture offset, texture scale, time scale, max integration error, cell size}
 __constant__ float2 const_data[7];
@@ -65,7 +59,6 @@ int2 pos_to_surfcoords(const float2 pos)
     return make_int2(floor(scaled_position.x * const_data[3].x), floor(scaled_position.y * const_data[3].y));
 }
 
-#if !(__streamlines_cuda_runge_kutta_45)
 /**
 * Advect position using 4th-order Runge-Kutta
 *
@@ -76,20 +69,22 @@ int2 pos_to_surfcoords(const float2 pos)
 __device__
 void advectRK4(float2& pos, const float delta, const float sign)
 {
+    // Calculate step size
+    const auto max_velocity = length(texture_interpolation<2>(textures[0], pos_to_texcoords(pos)));
+    const auto min_cellsize = fminf(const_data[6].x, const_data[6].y);
+
+    const auto steps_per_cell = max_velocity > 0.0f ? min_cellsize / max_velocity : 0.0f;
+
     // Calculate Runge-Kutta coefficients
-    float2 velocity, scaled_position;
-
-    const float step = texture_interpolation<1>(textures[1], pos_to_texcoords(pos));
-
-    const float2 k1 = step * delta * normalizeSafe(sign * texture_interpolation<2>(textures[0], pos_to_texcoords(pos)));
-    const float2 k2 = step * delta * normalizeSafe(sign * texture_interpolation<2>(textures[0], pos_to_texcoords(pos + 0.5f * k1)));
-    const float2 k3 = step * delta * normalizeSafe(sign * texture_interpolation<2>(textures[0], pos_to_texcoords(pos + 0.5f * k2)));
-    const float2 k4 = step * delta * normalizeSafe(sign * texture_interpolation<2>(textures[0], pos_to_texcoords(pos + k3)));
+    const float2 k1 = steps_per_cell * delta * sign * texture_interpolation<2>(textures[0], pos_to_texcoords(pos));
+    const float2 k2 = steps_per_cell * delta * sign * texture_interpolation<2>(textures[0], pos_to_texcoords(pos + 0.5f * k1));
+    const float2 k3 = steps_per_cell * delta * sign * texture_interpolation<2>(textures[0], pos_to_texcoords(pos + 0.5f * k2));
+    const float2 k4 = steps_per_cell * delta * sign * texture_interpolation<2>(textures[0], pos_to_texcoords(pos + k3));
 
     // Advect and store position
     pos += (1.0f / 6.0f) * (k1 + 2.0f * k2 + 2.0f * k3 + k4);
 }
-#else
+
 /**
 * Advect position using 4th-order Runge-Kutta with 5th-order error estimation for adaptive time steps
 * See http://www.aip.de/groups/soe/local/numres/bookcpdf/c16-2.pdf for details
@@ -171,7 +166,6 @@ float2 advectRK45(float2& pos, float& delta, const float sign, const float max_e
         used_delta_and_error.x = delta;
         used_delta_and_error.y = error;
 
-#if !(__streamlines_cuda_runge_kutta_45_fixed)
         if (error > 1.0f)
         {
             // Error too large, reduce time step
@@ -184,7 +178,6 @@ float2 advectRK45(float2& pos, float& delta, const float sign, const float max_e
             delta *= fminf(max_growth, safety * powf(error, grow_exponent));
             decreased = false;
         }
-#endif
 
         // Set output
         output_position = fifth_order;
@@ -196,7 +189,6 @@ float2 advectRK45(float2& pos, float& delta, const float sign, const float max_e
 
     return used_delta_and_error;
 }
-#endif
 
 /**
 * Update label and distance
@@ -269,15 +261,10 @@ void update_label_and_dist(const int num_convergence_points, const int num_conve
 * @param num_steps              Number of advection steps
 * @param labels                 Output labels
 * @param distances              Output distances
-* @param integration_steps      Output integration step field
 */
 __global__
 void compute_streamlines_kernel(const int num_convergence_points, const int num_convergence_lines, const float sign,
-    float2* particles, const int num_particles, const int num_steps, float* labels, float* distances, float* terminations
-#if __streamlines_cuda_detailed_output
-    , cudaSurfaceObject_t integration_steps
-#endif
-    )
+    float2* particles, const int num_particles, const int num_steps, float* labels, float* distances, float* terminations)
 {
     // Get kernel ID
     const int tid = threadIdx.x;
@@ -306,10 +293,7 @@ void compute_streamlines_kernel(const int num_convergence_points, const int num_
             // Advect using 4th-order Runge-Kutta
             const float2 posPrev = pos;
 #if __streamlines_cuda_runge_kutta_45
-#if __streamlines_cuda_detailed_output
-            const float2 step_taken_and_error =
-#endif
-                advectRK45(pos, step, sign, const_data[5].x);
+            advectRK45(pos, step, sign, const_data[5].x);
 #else
             advectRK4(pos, const_data[4].x, sign);
 #endif
@@ -317,32 +301,6 @@ void compute_streamlines_kernel(const int num_convergence_points, const int num_
 #if !(__streamlines_cuda_shi_et_al)
             // Update values by evaluating the distance to convergence structures
             update_label_and_dist(num_convergence_points, num_convergence_lines, pos, label, dist);
-#endif
-
-#if __streamlines_cuda_detailed_output && __streamlines_cuda_runge_kutta_45
-            // Update integration step size
-            const int2 texPos = pos_to_surfcoords(posPrev);
-
-            const float2 old_integration_step = surf3Dread<float2>(integration_steps, texPos.x * sizeof(float2), texPos.y, gid);
-            
-#if __streamlines_cuda_integration_steps_max
-            const float integration_step = fmaxf(static_cast<float>(old_integration_step.x), step_taken_and_error.x);
-#elif __streamlines_cuda_integration_steps_min
-            const float integration_step = fminf(static_cast<float>(old_integration_step.x), step_taken_and_error.x);
-#elif __streamlines_cuda_integration_steps_avg
-            const float integration_step = static_cast<float>(old_integration_step.x) + step_taken_and_error.x;
-#endif
-
-#if __streamlines_cuda_integration_error_max
-            const float integration_error = fmaxf(static_cast<float>(old_integration_step.y), step_taken_and_error.y);
-#elif __streamlines_cuda_integration_error_min
-            const float integration_error = fminf(static_cast<float>(old_integration_step.y), step_taken_and_error.y);
-#elif __streamlines_cuda_integration_error_avg
-            const float integration_error = static_cast<float>(old_integration_step.y) + step_taken_and_error.y;
-#endif
-
-            const float2 new_integration_step = make_real<float, 2>(integration_step, integration_error);
-            surf3Dwrite(new_integration_step, integration_steps, texPos.x * sizeof(float2), texPos.y, gid);
 #endif
 
             // If advection had no effect, abort the algorithm
@@ -425,17 +383,9 @@ namespace megamol
         }
 
         void streamlines_cuda::update_labels(std::vector<float>& source, std::vector<float>& labels, std::vector<float>& distances,
-            std::vector<float>& terminations, const int num_integration_steps, const float sign, const unsigned int num_particles_per_batch
-#if __streamlines_cuda_detailed_output
-            , std::vector<float>& integration_steps
-#endif
-        )
+            std::vector<float>& terminations, const int num_integration_steps, const float sign, const unsigned int num_particles_per_batch)
         {
-            impl->update_labels(source, labels, distances, terminations, num_integration_steps, sign, num_particles_per_batch
-#if __streamlines_cuda_detailed_output
-                , integration_steps
-#endif
-            );
+            impl->update_labels(source, labels, distances, terminations, num_integration_steps, sign, num_particles_per_batch);
         }
     }
 }
@@ -571,28 +521,15 @@ namespace megamol
         }
 
         void streamlines_cuda_impl::update_labels(std::vector<float>& source, std::vector<float>& labels, std::vector<float>& distances,
-            std::vector<float>& terminations, const int num_integration_steps, const float sign, unsigned int num_particles_per_batch
-#if __streamlines_cuda_detailed_output
-            , std::vector<float>& integration_steps
-#endif
-        )
+            std::vector<float>& terminations, const int num_integration_steps, const float sign, unsigned int num_particles_per_batch)
         {
             // Subdivide the input
             const unsigned int num_particles = static_cast<unsigned int>(source.size() / 2);
-
-#if __streamlines_cuda_detailed_output
-            num_particles_per_batch = std::min(2048, num_particles_per_batch);
-#endif
 
             cudaError_t err;
             std::stringstream ss;
 
             const std::size_t max_num_particles_per_batch = std::min(num_particles_per_batch, num_particles);
-
-            // Allocate memory on CPU
-#if __streamlines_cuda_detailed_output
-            std::vector<float2> h_integration_steps(this->resolution[0] * this->resolution[1] * max_num_particles_per_batch);
-#endif
 
             // Allocate memory
             float *d_labels;
@@ -627,62 +564,11 @@ namespace megamol
                 throw std::runtime_error(ss.str());
             }
 
-#if __streamlines_cuda_detailed_output
-            const cudaExtent extent = { static_cast<std::size_t>(this->resolution[0]), static_cast<std::size_t>(this->resolution[1]), max_num_particles_per_batch };
-            const cudaChannelFormatDesc desc = cudaCreateChannelDesc(sizeof(float) * 8, sizeof(float) * 8, 0, 0, cudaChannelFormatKindSigned);
-
-            cudaArray_t d_integration_steps;
-            err = cudaMalloc3DArray(&d_integration_steps, &desc, extent, cudaArraySurfaceLoadStore);
-            if (err)
-            {
-                ss << "Error allocating memory using cudaMalloc3DArray for integration steps fields." << " (" << cudaGetErrorName(err) << ": " << cudaGetErrorString(err) << ")";
-                throw std::runtime_error(ss.str());
-            }
-
-            // Create surface object
-            cudaResourceDesc resDesc;
-            memset(&resDesc, 0, sizeof(resDesc));
-            resDesc.resType = cudaResourceTypeArray;
-            resDesc.res.array.array = d_integration_steps;
-
-            cudaSurfaceObject_t integration_steps = 0;
-            cudaCreateSurfaceObject(&integration_steps, &resDesc);
-
-            // Create copy parameters
-            cudaPitchedPtr cpuPtr;
-            cpuPtr.ptr = h_integration_steps.data();
-            cpuPtr.pitch = this->resolution[0] * sizeof(float2);
-            cpuPtr.xsize = this->resolution[0];
-            cpuPtr.ysize = this->resolution[1];
-
-            cudaMemcpy3DParms toGPUParams = { 0 };
-            toGPUParams.srcPtr = cpuPtr;
-            toGPUParams.dstArray = d_integration_steps;
-            toGPUParams.extent = extent;
-            toGPUParams.kind = cudaMemcpyHostToDevice;
-
-            cudaMemcpy3DParms fromGPUParams = { 0 };
-            fromGPUParams.dstPtr = cpuPtr;
-            fromGPUParams.srcArray = d_integration_steps;
-            fromGPUParams.extent = extent;
-            fromGPUParams.kind = cudaMemcpyDeviceToHost;
-#endif
-
             for (unsigned int offset = 0; offset < num_particles; offset += num_particles_per_batch)
             {
                 const int num_particles_this_batch = std::min(num_particles_per_batch, num_particles - offset);
 
                 // Copy data to GPU memory
-#if __streamlines_cuda_detailed_output
-#if __streamlines_cuda_integration_steps_max
-                std::fill(h_integration_steps.begin(), h_integration_steps.end(), make_real<float, 2>(0.0));
-#elif __streamlines_cuda_integration_steps_min
-                std::fill(h_integration_steps.begin(), h_integration_steps.end(), make_real<float, 2>(std::numeric_limits<float>::max()));
-#elif __streamlines_cuda_integration_steps_avg
-                std::fill(h_integration_steps.begin(), h_integration_steps.end(), make_real<float, 2>(0.0));
-#endif
-#endif
-
                 err = cudaMemcpy(d_labels, &labels[offset], num_particles_this_batch * sizeof(float), cudaMemcpyHostToDevice);
                 if (err)
                 {
@@ -711,23 +597,10 @@ namespace megamol
                     throw std::runtime_error(ss.str());
                 }
 
-#if __streamlines_cuda_detailed_output
-                err = cudaMemcpy3D(&toGPUParams);
-                if (err)
-                {
-                    ss << "Error copyingto GPU memory using cudaMemcpy3D for integration steps fields." << " (" << cudaGetErrorName(err) << ": " << cudaGetErrorString(err) << ")";
-                    throw std::runtime_error(ss.str());
-                }
-#endif
-
                 //--------------------------------------------------------------------------
 
                 compute_streamlines(d_particles, num_particles_this_batch, this->num_convergence_points, this->num_convergence_lines,
-                    num_integration_steps, sign, d_labels, d_dists, d_terminations
-#if __streamlines_cuda_detailed_output    
-                    , integration_steps
-#endif
-                );
+                    num_integration_steps, sign, d_labels, d_dists, d_terminations);
                 
                 //--------------------------------------------------------------------------
 
@@ -759,84 +632,23 @@ namespace megamol
                     ss << "Error copying from GPU memory using cudaMemcpy for particles." << " (" << cudaGetErrorName(err) << ": " << cudaGetErrorString(err) << ")";
                     throw std::runtime_error(ss.str());
                 }
-
-#if __streamlines_cuda_detailed_output
-                err = cudaMemcpy3D(&fromGPUParams);
-                if (err)
-                {
-                    ss << "Error copying from GPU memory using cudaMemcpy3D for integration steps fields." << " (" << cudaGetErrorName(err) << ": " << cudaGetErrorString(err) << ")";
-                    throw std::runtime_error(ss.str());
-                }
-#endif
-
-#if __streamlines_cuda_detailed_output
-                // Store information in output variables
-                for (int i = 0; i < num_particles_this_batch; ++i)
-                {
-                    // Calculate aggregated integration steps field
-                    for (int y = 0; y < this->resolution[1]; ++y)
-                    {
-                        for (int x = 0; x < this->resolution[0]; ++x)
-                        {
-                            const std::size_t field_index = x + this->resolution[0] * (y + this->resolution[1] * i);
-                            const vtkIdType map_index = x + this->resolution[0] * y;
-
-#if __streamlines_cuda_integration_steps_max
-                            integration_steps_field->SetComponent(map_index, 0,
-                                std::max(integration_steps_field->GetComponent(map_index, 0), static_cast<double>(h_integration_steps[field_index].x)));
-#elif __streamlines_cuda_integration_steps_min
-                            integration_steps_field->SetComponent(map_index, 0,
-                                std::min(integration_steps_field->GetComponent(map_index, 0), static_cast<double>(h_integration_steps[field_index].x)));
-#elif __streamlines_cuda_integration_steps_avg
-                            integration_steps_field->SetComponent(map_index, 0,
-                                (integration_steps_field->GetComponent(map_index, 0) + static_cast<double>(h_integration_steps[field_index].x / num_steps)) / 2.0);
-#endif
-
-#if __streamlines_cuda_integration_error_max
-                            integration_steps_field->SetComponent(map_index, 1,
-                                std::max(integration_steps_field->GetComponent(map_index, 1), static_cast<double>(h_integration_steps[field_index].y)));
-#elif __streamlines_cuda_integration_error_min
-                            integration_steps_field->SetComponent(map_index, 1,
-                                std::min(integration_steps_field->GetComponent(map_index, 1), static_cast<double>(h_integration_steps[field_index].y)));
-#elif __streamlines_cuda_integration_error_avg
-                            integration_steps_field->SetComponent(map_index, 1,
-                                (integration_steps_field->GetComponent(map_index, 1) + static_cast<double>(h_integration_steps[field_index].y / num_steps)) / 2.0);
-#endif
-                        }
-                    }
-                }
-#endif
             }
 
             cudaFree(d_labels);
             cudaFree(d_dists);
             cudaFree(d_terminations);
             cudaFree(d_particles);
-
-#if __streamlines_cuda_detailed_output
-            cudaDestroySurfaceObject(integration_steps);
-
-            cudaFree(d_integration_steps);
-#endif
         }
 
         void streamlines_cuda_impl::compute_streamlines(float2* d_particles, const int num_particles, const int num_convergence_points, const int num_convergence_lines,
-            const int num_steps, const float sign, float* d_labels, float* d_dists, float* d_terminations
-#if __streamlines_cuda_detailed_output
-            , cudaSurfaceObject_t integration_steps
-#endif
-        )
+            const int num_steps, const float sign, float* d_labels, float* d_dists, float* d_terminations)
         {
             // Run CUDA kernel
             int num_threads = 64;
             int num_blocks = num_particles / num_threads + (num_particles % num_threads == 0 ? 0 : 1);
 
             compute_streamlines_kernel __cuda_kernel_start(num_blocks, num_threads) (num_convergence_points, num_convergence_lines, sign,
-                d_particles, num_particles, num_steps, d_labels, d_dists, d_terminations
-#if __streamlines_cuda_detailed_output
-                , integration_steps
-#endif
-                );
+                d_particles, num_particles, num_steps, d_labels, d_dists, d_terminations);
         }
 
         void streamlines_cuda_impl::initialize_texture(const void* h_data, const int num_components, cudaTextureObject_t* texture, cudaArray** d_data)
