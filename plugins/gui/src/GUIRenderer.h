@@ -196,9 +196,6 @@ private:
     /** The decorated renderer caller slot */
     core::CallerSlot decorated_renderer_slot;
 
-    /** Float precision for parameter format. */
-    int float_print_prec;
-
     /** Array holding the window states. */
     std::list<GUIWindow> windows;
 
@@ -210,6 +207,9 @@ private:
 
     /** Default visibility of the GUI */
     core::param::ParamSlot default_visible;
+
+    /** Floating point precision */
+    core::param::ParamSlot float_print_prec;
 
     /** Initialization on first execution */
     bool initialized;
@@ -376,7 +376,7 @@ inline GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIR
     , imgui_context(nullptr)
     , decorated_renderer_slot("decoratedRenderer", "Connects to another 2D Renderer being decorated")
     , overlay_slot("overlayRender", "Connected with SplitView for special overlay rendering")
-    , float_print_prec(7) // INIT: Float string format precision
+    , float_print_prec("floatPrecision", "Floating point precision") // INIT: Float string format precision
     , windows()
     , lastInstTime(0.0)
     , default_visible("defaultVisible", "Set the visibility of the GUI at startup")
@@ -427,6 +427,9 @@ inline GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIR
     this->default_visible << new core::param::BoolParam(true);
     this->default_visible.Parameter()->SetGUIReadOnly(true);
     this->MakeSlotAvailable(&this->default_visible);
+
+    this->float_print_prec << new core::param::IntParam(7);
+    this->MakeSlotAvailable(&this->float_print_prec);
 }
 
 
@@ -440,7 +443,7 @@ inline GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GUIR
     , imgui_context(nullptr)
     , decorated_renderer_slot("decoratedRenderer", "Connects to another 2D Renderer being decorated")
     , overlay_slot("overlayRender", "Connected with SplitView for special overlay rendering")
-    , float_print_prec(7) // INIT: Float string format precision
+    , float_print_prec("floatPrecision", "Floating point precision") // INIT: Float string format precision
     , windows()
     , lastInstTime(0.0)
     , default_visible("defaultVisible", "Set the visibility of the GUI at startup")
@@ -491,6 +494,9 @@ inline GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GUIR
     this->default_visible << new core::param::BoolParam(true);
     this->default_visible.Parameter()->SetGUIReadOnly(true);
     this->MakeSlotAvailable(&this->default_visible);
+
+    this->float_print_prec << new core::param::IntParam(7);
+    this->MakeSlotAvailable(&this->float_print_prec);
 }
 
 
@@ -1490,7 +1496,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawFpsWindowCallback(std::s
     std::string val;
     if (!arr->empty()) {
         std::stringstream stream;
-        stream << std::fixed << std::setprecision(this->float_print_prec); //<< std::setw(7)
+        stream << std::fixed << std::setprecision(this->float_print_prec.Param<core::param::IntParam>()->Value());
         stream << arr->back();
         val = stream.str();
     }
@@ -1500,7 +1506,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawFpsWindowCallback(std::s
     if (this->show_fps_ms_options) {
 
         std::stringstream float_stream;
-        float_stream << "%." << this->float_print_prec << "f";
+        float_stream << "%." << this->float_print_prec.Param<core::param::IntParam>()->Value() << "f";
         std::string float_format = float_stream.str();
 
         if (ImGui::InputFloat("Refresh Rate", &this->max_delay, 0.0f, 0.0f, float_format.c_str(),
@@ -1525,7 +1531,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawFpsWindowCallback(std::s
 
         if (ImGui::Button("All Values")) {
             std::stringstream stream;
-            stream << std::fixed << std::setprecision(this->float_print_prec); //<< std::setw(7)
+            stream << std::fixed << std::setprecision(this->float_print_prec.Param<core::param::IntParam>()->Value());
             auto end = (*arr).rend();
             for (std::vector<float>::reverse_iterator i = (*arr).rbegin(); i != end; ++i) {
                 stream << (*i) << "\n";
@@ -1576,7 +1582,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawFontSelectionWindowCallb
 
     label = "Font Size";
     std::stringstream float_stream;
-    float_stream << "%." << this->float_print_prec << "f";
+    float_stream << "%." << this->float_print_prec.Param<core::param::IntParam>()->Value() << "f";
     std::string float_format = float_stream.str();
     ImGui::InputFloat(label.c_str(), &this->font_new_size, 0.0f, 0.0f, float_format.c_str(), ImGuiInputTextFlags_None);
     // Validate font size
@@ -1723,7 +1729,7 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
         std::string desc = slot.Description().PeekBuffer();
 
         std::stringstream float_stream;
-        float_stream << "%." << this->float_print_prec << "f";
+        float_stream << "%." << this->float_print_prec.Param<core::param::IntParam>()->Value() << "f";
         std::string float_format = float_stream.str();
         
         if (auto* p = slot.template Param<core::param::BoolParam>()) {
