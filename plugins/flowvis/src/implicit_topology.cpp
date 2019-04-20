@@ -1040,6 +1040,9 @@ namespace megamol
                     std::move(resolution), std::move(domain), std::move(positions), std::move(vectors), std::move(points), std::move(point_ids),
                     std::move(lines), std::move(line_ids), previous_results);
 
+                this->integration_timestep.Param<core::param::FloatParam>()->SetValue(previous_results.computation_state.integration_timestep);
+                this->max_integration_error.Param<core::param::FloatParam>()->SetValue(previous_results.computation_state.max_integration_error);
+
                 set_readonly_fixed_parameters(true);
 
                 vislib::sys::Log::DefaultLog.WriteInfo("Previous computation of topology loaded from file.");

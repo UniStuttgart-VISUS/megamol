@@ -172,12 +172,13 @@ namespace megamol
             * @param critical_points Critical points
             * @param position Original/Output position
             * @param integration_parameter Parameter for time step control
+            * @param critical_point_detection Detect critical points
             *
             * @return List of coordinates, defining a turn
             */
             tpf::utility::optional<std::pair<std::list<coords_t>, std::list<kernel::Point_2>>> find_turn(const tpf::data::grid<double, double, 2, 2>& grid,
                 const std::vector<std::pair<critical_points::type, Eigen::Vector2d>>& critical_points, Eigen::Vector2d& position,
-                integration_parameter_t& integration_parameter) const;
+                integration_parameter_t& integration_parameter, bool critical_point_detection) const;
 
             /**
             * Validate a previous turn
@@ -269,12 +270,15 @@ namespace megamol
             /** Callbacks for user input */
             bool stop_callback(core::param::ParamSlot&);
             bool reset_callback(core::param::ParamSlot&);
+            bool output_callback(core::param::ParamSlot&);
 
             /** Output slot for the glyphs */
             core::CalleeSlot glyph_slot;
             SIZE_T glyph_hash;
 
-            std::vector<std::pair<float, std::vector<Eigen::Vector2f>>> glyph_output;
+            std::vector<std::pair<float, std::vector<Eigen::Vector2f>>> line_output;
+            std::vector<std::pair<float, Eigen::Vector2f>> point_output;
+
             std::vector<std::set<coords_t, std::less<coords_t>>> orbit_cells;
 
             /** Output slot for receiving mouse clicks */
@@ -304,10 +308,12 @@ namespace megamol
             /** Parameter for accuracy of the Poincaré map */
             core::param::ParamSlot poincare_error;
 
-            /** Parameter for preventing double detection */
+            /** Parameter for preventing double detection and detection near attracting critical points */
             core::param::ParamSlot unique_detection;
+            core::param::ParamSlot critical_point_detection;
 
-            /** Parameter for debug output */
+            /** Parameter for additional output */
+            core::param::ParamSlot output_representive;
             core::param::ParamSlot output_exit_streamlines;
 
             /** Parameter to additionally writing input critical points to file */
@@ -317,6 +323,7 @@ namespace megamol
             /** Parameter for stopping and resetting the computation */
             core::param::ParamSlot stop;
             core::param::ParamSlot reset;
+            core::param::ParamSlot output;
 
             /** Stored vector field */
             tpf::data::grid<double, double, 2, 2> grid;
@@ -329,6 +336,7 @@ namespace megamol
             std::size_t num_threads;
 
             bool terminate;
+            bool output_next;
         };
     }
 }
