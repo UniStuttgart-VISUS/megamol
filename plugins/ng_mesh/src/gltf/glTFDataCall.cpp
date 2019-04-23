@@ -1,6 +1,6 @@
 #include "stdafx.h"
 
-#include "..\include\ng_mesh\glTFDataCall.h"
+#include "ng_mesh/glTFDataCall.h"
 
 #ifndef TINYGLTF_IMPLEMENTATION
 #define TINYGLTF_IMPLEMENTATION
