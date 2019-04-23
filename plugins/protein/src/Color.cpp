@@ -955,8 +955,8 @@ void Color::MakeColorTable(const megamol::protein_calls::MolecularDataCall* mol,
             float alpha, upper_bound, lower_bound;
             for (cnt = 0; cnt < mol->AtomCount(); ++cnt) {
                 dist = sqrt(pow(centroid[0] - mol->AtomPositions()[3 * cnt + 0], 2.0f) +
-                    pow(centroid[1] - mol->AtomPositions()[3 * cnt + 1], 2.0f) +
-                    pow(centroid[2] - mol->AtomPositions()[3 * cnt + 2], 2.0f));
+                            pow(centroid[1] - mol->AtomPositions()[3 * cnt + 1], 2.0f) +
+                            pow(centroid[2] - mol->AtomPositions()[3 * cnt + 2], 2.0f));
                 if (currentColoringMode == HEIGHTMAP_COL) {
                     bin = static_cast<unsigned int>(std::truncf(dist / steps));
                     lower_bound = float(bin) * steps;
