@@ -151,6 +151,13 @@ namespace megamol
 
         periodic_orbits::~periodic_orbits()
         {
+            this->terminate = true;
+
+            while (this->num_threads != 0)
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            }
+
             this->Release();
         }
 
@@ -190,6 +197,13 @@ namespace megamol
 
                 if (has_vector_field && has_critical_points && has_different_input)
                 {
+                    std::lock_guard<std::mutex> locker(this->lock);
+
+                    if (this->num_threads != 0)
+                    {
+                        return true;
+                    }
+
                     this->vector_field_hash = get_vector_field->DataHash();
                     this->critical_points_hash = get_critical_points->DataHash();
 
@@ -257,6 +271,8 @@ namespace megamol
                 }
 
                 // Fill glyph call
+                std::lock_guard<std::mutex> locker(this->lock);
+
                 if (glyph_call->DataHash() != this->glyph_hash)
                 {
                     glyph_call->clear();
@@ -294,6 +310,8 @@ namespace megamol
         {
             auto* get_mouse_coordinates = dynamic_cast<mouse_click_call*>(&call);
 
+            std::lock_guard<std::mutex> locker(this->lock);
+
             if (get_mouse_coordinates != nullptr && this->grid.get_num_elements() > 0)
             {
                 const Eigen::Vector2d seed(get_mouse_coordinates->get_coordinates().first, get_mouse_coordinates->get_coordinates().second);
@@ -321,6 +339,8 @@ namespace megamol
 
             if (get_output_cb != nullptr)
             {
+                std::lock_guard<std::mutex> locker(this->lock);
+
                 this->get_output = get_output_cb->GetCallback();
 
                 if (!this->output_critical_points_finished && this->output_critical_points.Param<core::param::BoolParam>()->Value())
@@ -377,180 +397,113 @@ namespace megamol
         void periodic_orbits::extract_periodic_orbit(const tpf::data::grid<double, double, 2, 2>& grid,
             const std::vector<std::pair<flowvis::critical_points::type, Eigen::Vector2d>>& critical_points, const Eigen::Vector2d& seed, const float sign)
         {
-            auto create_output = [](const std::vector<Eigen::Vector2d>& input) -> std::vector<Eigen::Vector2f>
+            try
             {
-                std::vector<Eigen::Vector2f> output;
-                output.reserve(input.size());
-                std::transform(input.begin(), input.end(), std::back_inserter(output), [](const Eigen::Vector2d& value) { return value.cast<float>(); });
-                return output;
-            };
-
-            // Get parameters for stream line integration
-            integration_parameter_t integration;
-            integration.method = static_cast<integration_parameter_t::method_t>(this->integration_method.Param<core::param::EnumParam>()->Value());
-            integration.sign = sign;
-
-            float max_poincare_error;
-
-            bool unique_detection;
-            bool critical_point_detection;
-
-            bool output_representive;
-            bool output_exit_streamline;
-
-            {
-                std::lock_guard<std::mutex> locker(this->lock);
-
-                this->terminate = false;
-
-                vislib::sys::Log::DefaultLog.WriteInfo("Number of processes running: %d", ++this->num_threads);
-
-                vislib::sys::Log::DefaultLog.WriteInfo("Starting %s stream line at [%.5f, %.5f]", (sign < 0.0f) ? "backward" : "forward", seed[0], seed[1]);
-
-                if (this->integration_method.Param<core::param::EnumParam>()->Value() == 0)
+                auto create_output = [](const std::vector<Eigen::Vector2d>& input) -> std::vector<Eigen::Vector2f>
                 {
-                    integration.param.rk_4.min_steps_per_cell = this->min_steps_per_cell.Param<core::param::IntParam>()->Value();
-                }
-                else
+                    std::vector<Eigen::Vector2f> output;
+                    output.reserve(input.size());
+                    std::transform(input.begin(), input.end(), std::back_inserter(output), [](const Eigen::Vector2d& value) { return value.cast<float>(); });
+                    return output;
+                };
+
+                // Get parameters for stream line integration
+                integration_parameter_t integration;
+                integration.sign = sign;
+
+                float max_poincare_error;
+
+                bool unique_detection;
+                bool critical_point_detection;
+
+                bool output_representive;
+                bool output_exit_streamline;
+
                 {
-                    integration.param.rk_45.timestep = this->initial_timestep.Param<core::param::FloatParam>()->Value();
-                    integration.param.rk_45.maximum_timestep = this->maximum_timestep.Param<core::param::FloatParam>()->Value();
-                    integration.param.rk_45.maximum_error = this->maximum_error.Param<core::param::FloatParam>()->Value();
-                }
+                    std::lock_guard<std::mutex> locker(this->lock);
 
-                max_poincare_error = this->poincare_error.Param<core::param::FloatParam>()->Value();
+                    this->terminate = false;
 
-                unique_detection = this->unique_detection.Param<core::param::BoolParam>()->Value();
-                critical_point_detection = this->critical_point_detection.Param<core::param::BoolParam>()->Value();
+                    vislib::sys::Log::DefaultLog.WriteInfo("Number of processes running: %d", ++this->num_threads);
 
-                output_representive = this->output_representive.Param<core::param::BoolParam>()->Value();
-                output_exit_streamline = this->output_exit_streamlines.Param<core::param::BoolParam>()->Value();
-            }
+                    vislib::sys::Log::DefaultLog.WriteInfo("Starting %s stream line at [%.5f, %.5f]", (sign < 0.0f) ? "backward" : "forward", seed[0], seed[1]);
 
-            // Start
-            std::vector<Eigen::Vector2d> periodic_orbit;
+                    integration.method = static_cast<integration_parameter_t::method_t>(this->integration_method.Param<core::param::EnumParam>()->Value());
 
-            auto position = seed;
-            bool has_exit = true;
-            bool output_now = false;
-
-            while (has_exit && !this->terminate)
-            {
-                // Find turn
-                const auto visited_cells = find_turn(grid, critical_points, position, integration, critical_point_detection);
-
-                if (!this->terminate)
-                {
-                    if (visited_cells && !visited_cells->first.empty())
+                    if (integration.method == integration_parameter_t::method_t::RUNGE_KUTTA_4)
                     {
-                        // Check if a periodic orbit with these cells was already extracted
-                        const std::set<coords_t, std::less<coords_t>> sorted_visited_cells(visited_cells->first.cbegin(), visited_cells->first.cend());
+                        integration.param.rk_4.min_steps_per_cell = this->min_steps_per_cell.Param<core::param::IntParam>()->Value();
+                    }
+                    else
+                    {
+                        integration.param.rk_45.timestep = this->initial_timestep.Param<core::param::FloatParam>()->Value();
+                        integration.param.rk_45.maximum_timestep = this->maximum_timestep.Param<core::param::FloatParam>()->Value();
+                        integration.param.rk_45.maximum_error = this->maximum_error.Param<core::param::FloatParam>()->Value();
+                    }
 
-                        if (!unique_detection || std::find(this->orbit_cells.begin(), this->orbit_cells.end(), sorted_visited_cells) == this->orbit_cells.end())
+                    max_poincare_error = this->poincare_error.Param<core::param::FloatParam>()->Value();
+
+                    unique_detection = this->unique_detection.Param<core::param::BoolParam>()->Value();
+                    critical_point_detection = this->critical_point_detection.Param<core::param::BoolParam>()->Value();
+
+                    output_representive = this->output_representive.Param<core::param::BoolParam>()->Value();
+                    output_exit_streamline = this->output_exit_streamlines.Param<core::param::BoolParam>()->Value();
+                }
+
+                // Start
+                std::vector<Eigen::Vector2d> periodic_orbit;
+
+                auto position = seed;
+                bool has_exit = true;
+                bool output_now = false;
+
+                while (has_exit && !this->terminate)
+                {
+                    // Find turn
+                    const auto visited_cells = find_turn(grid, critical_points, position, integration, critical_point_detection);
+
+                    if (!this->terminate)
+                    {
+                        if (visited_cells && !visited_cells->first.empty())
                         {
-                            // Do a second turn and compare results
-                            auto validation = validate_turn(grid, position, integration, visited_cells->first);
+                            // Check if a periodic orbit with these cells was already extracted
+                            const std::set<coords_t, std::less<coords_t>> sorted_visited_cells(visited_cells->first.cbegin(), visited_cells->first.cend());
 
-                            std::swap(periodic_orbit, std::get<1>(validation));
+                            bool already_found = false;
 
-                            if (std::get<0>(validation))
                             {
-                                // Look for possible exits
-                                auto vector_hash = [](const Eigen::Vector2d& coords) -> std::size_t
+                                std::lock_guard<std::mutex> locker(this->lock);
+
+                                already_found = std::find(this->orbit_cells.begin(), this->orbit_cells.end(), sorted_visited_cells) != this->orbit_cells.end();
+                            }
+
+                            if (!unique_detection || !already_found)
+                            {
+                                // Do a second turn and compare results
+                                auto validation = validate_turn(grid, position, integration, visited_cells->first);
+
+                                std::swap(periodic_orbit, std::get<1>(validation));
+
+                                if (std::get<0>(validation))
                                 {
-                                    return core::utility::DataHash(coords[0], coords[1]);
-                                };
-
-                                std::unordered_set<Eigen::Vector2d, decltype(vector_hash)> possible_exits(23, vector_hash);
-
-                                auto add_if_correct_ = [this, &possible_exits](const Eigen::Vector2d& position,
-                                    const std::list<kernel::Point_2>& outer, const std::vector<kernel::Point_2>& inner) -> void
-                                {
-                                    if (correct_side(position, outer, inner))
+                                    // Look for possible exits
+                                    auto vector_hash = [](const Eigen::Vector2d& coords) -> std::size_t
                                     {
-                                        possible_exits.insert(position);
-                                    }
-                                };
+                                        return core::utility::DataHash(coords[0], coords[1]);
+                                    };
 
-                                auto add_if_correct = std::bind(add_if_correct_, std::placeholders::_1, visited_cells->second, std::get<2>(validation));
+                                    std::unordered_set<Eigen::Vector2d, decltype(vector_hash)> possible_exits(23, vector_hash);
 
-                                for (const auto& cell : visited_cells->first)
-                                {
-                                    const auto corner_bl = grid.get_cell_coordinates(cell);
-                                    const auto corner_br = grid.get_cell_coordinates(cell + coords_t(1, 0));
-                                    const auto corner_tl = grid.get_cell_coordinates(cell + coords_t(0, 1));
-                                    const auto corner_tr = grid.get_cell_coordinates(cell + coords_t(1, 1));
-
-                                    const auto value_bl = grid(cell);
-                                    const auto value_br = grid(cell + coords_t(1, 0));
-                                    const auto value_tl = grid(cell + coords_t(0, 1));
-                                    const auto value_tr = grid(cell + coords_t(1, 1));
-
-                                    if (std::signbit(value_bl[1]) != std::signbit(value_br[1]))
+                                    auto add_if_correct_ = [this, &possible_exits](const Eigen::Vector2d& position,
+                                        const std::list<kernel::Point_2>& outer, const std::vector<kernel::Point_2>& inner) -> void
                                     {
-                                        add_if_correct(linear_interpolate_position(corner_bl, corner_br, value_bl[1], value_br[1]));
-                                    }
-                                    if (std::signbit(value_tl[1]) != std::signbit(value_tr[1]))
-                                    {
-                                        add_if_correct(linear_interpolate_position(corner_tl, corner_tr, value_tl[1], value_tr[1]));
-                                    }
-                                    if (std::signbit(value_bl[0]) != std::signbit(value_tl[0]))
-                                    {
-                                        add_if_correct(linear_interpolate_position(corner_bl, corner_tl, value_bl[0], value_tl[0]));
-                                    }
-                                    if (std::signbit(value_br[0]) != std::signbit(value_tr[0]))
-                                    {
-                                        add_if_correct(linear_interpolate_position(corner_br, corner_tr, value_br[0], value_tr[0]));
-                                    }
+                                        if (correct_side(position, outer, inner))
+                                        {
+                                            possible_exits.insert(position);
+                                        }
+                                    };
 
-                                    add_if_correct(corner_bl);
-                                    add_if_correct(corner_br);
-                                    add_if_correct(corner_tl);
-                                    add_if_correct(corner_tr);
-                                }
-
-                                // Check for output command
-                                {
-                                    std::lock_guard<std::mutex> locker(this->lock);
-
-                                    output_now = this->output_next;
-                                    this->output_next = false;
-
-                                    if (output_now)
-                                    {
-                                        vislib::sys::Log::DefaultLog.WriteInfo("Requested output");
-                                    }
-                                }
-
-                                // Backward integration from possible exits
-                                has_exit = false;
-
-                                std::vector<std::vector<Eigen::Vector2d>> exit_tries;
-
-                                for (auto possible_exit_it = possible_exits.cbegin(); possible_exit_it != possible_exits.cend() && (!has_exit || output_now); ++possible_exit_it)
-                                {
-                                    Eigen::Vector2d possible_exit = *possible_exit_it;
-
-                                    integration.sign *= -1.0f;
-                                    const auto exit = find_exits(grid, possible_exit, integration, visited_cells->first);
-                                    integration.sign *= -1.0f;
-
-                                    has_exit = exit.first;
-
-                                    if (output_exit_streamline)
-                                    {
-                                        exit_tries.push_back(exit.second);
-                                    }
-                                }
-
-                                if (output_exit_streamline && (!has_exit || output_now))
-                                {
-                                    std::lock_guard<std::mutex> locker(this->lock);
-
-                                    for (const auto& exit_try : exit_tries)
-                                    {
-                                        this->line_output.push_back(std::make_pair(0.5f * sign, create_output(exit_try)));
-                                    }
+                                    auto add_if_correct = std::bind(add_if_correct_, std::placeholders::_1, visited_cells->second, std::get<2>(validation));
 
                                     for (const auto& cell : visited_cells->first)
                                     {
@@ -559,114 +512,210 @@ namespace megamol
                                         const auto corner_tl = grid.get_cell_coordinates(cell + coords_t(0, 1));
                                         const auto corner_tr = grid.get_cell_coordinates(cell + coords_t(1, 1));
 
-                                        std::vector<Eigen::Vector2d> box{ corner_bl, corner_br, corner_tr, corner_tl, corner_bl };
+                                        const auto value_bl = grid(cell);
+                                        const auto value_br = grid(cell + coords_t(1, 0));
+                                        const auto value_tl = grid(cell + coords_t(0, 1));
+                                        const auto value_tr = grid(cell + coords_t(1, 1));
 
-                                        this->line_output.push_back(std::make_pair(0.0f, create_output(box)));
+                                        if (std::signbit(value_bl[1]) != std::signbit(value_br[1]))
+                                        {
+                                            add_if_correct(linear_interpolate_position(corner_bl, corner_br, value_bl[1], value_br[1]));
+                                        }
+                                        if (std::signbit(value_tl[1]) != std::signbit(value_tr[1]))
+                                        {
+                                            add_if_correct(linear_interpolate_position(corner_tl, corner_tr, value_tl[1], value_tr[1]));
+                                        }
+                                        if (std::signbit(value_bl[0]) != std::signbit(value_tl[0]))
+                                        {
+                                            add_if_correct(linear_interpolate_position(corner_bl, corner_tl, value_bl[0], value_tl[0]));
+                                        }
+                                        if (std::signbit(value_br[0]) != std::signbit(value_tr[0]))
+                                        {
+                                            add_if_correct(linear_interpolate_position(corner_br, corner_tr, value_br[0], value_tr[0]));
+                                        }
+
+                                        add_if_correct(corner_bl);
+                                        add_if_correct(corner_br);
+                                        add_if_correct(corner_tl);
+                                        add_if_correct(corner_tr);
                                     }
 
-                                    ++this->glyph_hash;
+                                    // Check for output command
+                                    {
+                                        std::lock_guard<std::mutex> locker(this->lock);
+
+                                        output_now = this->output_next;
+                                        this->output_next = false;
+
+                                        if (output_now)
+                                        {
+                                            vislib::sys::Log::DefaultLog.WriteInfo("Requested output");
+                                        }
+                                    }
+
+                                    // Backward integration from possible exits
+                                    has_exit = false;
+
+                                    std::vector<std::vector<Eigen::Vector2d>> exit_tries;
+
+                                    for (auto possible_exit_it = possible_exits.cbegin(); possible_exit_it != possible_exits.cend() && (!has_exit || output_now); ++possible_exit_it)
+                                    {
+                                        Eigen::Vector2d possible_exit = *possible_exit_it;
+
+                                        integration.sign *= -1.0f;
+                                        const auto exit = find_exits(grid, possible_exit, integration, visited_cells->first);
+                                        integration.sign *= -1.0f;
+
+                                        has_exit = exit.first;
+
+                                        if (output_exit_streamline)
+                                        {
+                                            exit_tries.push_back(exit.second);
+                                        }
+                                    }
+
+                                    if (output_exit_streamline && (!has_exit || output_now))
+                                    {
+                                        std::lock_guard<std::mutex> locker(this->lock);
+
+                                        for (const auto& exit_try : exit_tries)
+                                        {
+                                            this->line_output.push_back(std::make_pair(0.5f * sign, create_output(exit_try)));
+                                        }
+
+                                        for (const auto& cell : visited_cells->first)
+                                        {
+                                            const auto corner_bl = grid.get_cell_coordinates(cell);
+                                            const auto corner_br = grid.get_cell_coordinates(cell + coords_t(1, 0));
+                                            const auto corner_tl = grid.get_cell_coordinates(cell + coords_t(0, 1));
+                                            const auto corner_tr = grid.get_cell_coordinates(cell + coords_t(1, 1));
+
+                                            std::vector<Eigen::Vector2d> box{ corner_bl, corner_br, corner_tr, corner_tl, corner_bl };
+
+                                            this->line_output.push_back(std::make_pair(0.0f, create_output(box)));
+                                        }
+
+                                        ++this->glyph_hash;
+                                    }
+
+                                    output_now = false;
                                 }
 
-                                output_now = false;
-                            }
+                                // Add list of cells to already extracted periodic orbits
+                                if (!has_exit && !this->terminate && unique_detection)
+                                {
+                                    std::lock_guard<std::mutex> locker(this->lock);
 
-                            // Add list of cells to already extracted periodic orbits
-                            if (!has_exit && !this->terminate && unique_detection)
+                                    this->orbit_cells.push_back(sorted_visited_cells);
+                                }
+                            }
+                            else
                             {
-                                this->orbit_cells.push_back(sorted_visited_cells);
+                                std::lock_guard<std::mutex> locker(this->lock);
+
+                                vislib::sys::Log::DefaultLog.WriteWarn("Periodic orbit found from %s stream line at [%.5f, %.5f] was already extracted",
+                                    (sign < 0.0f) ? "backward" : "forward", seed[0], seed[1]);
+
+                                vislib::sys::Log::DefaultLog.WriteInfo("Number of processes running: %d", --this->num_threads);
+
+                                return;
                             }
                         }
                         else
                         {
                             std::lock_guard<std::mutex> locker(this->lock);
 
-                            vislib::sys::Log::DefaultLog.WriteWarn("Periodic orbit found from %s stream line at [%.5f, %.5f] was already extracted",
-                                (sign < 0.0f) ? "backward" : "forward", seed[0], seed[1]);
+                            vislib::sys::Log::DefaultLog.WriteWarn("Could not find a periodic orbit from %s stream line at [%.5f, %.5f], which ended at [%.5f, %.5f]",
+                                (sign < 0.0f) ? "backward" : "forward", seed[0], seed[1], position[0], position[1]);
+
+                            if (output_representive)
+                            {
+                                this->point_output.push_back(std::make_pair(0.0f, Eigen::Vector2f(static_cast<float>(position[0]), static_cast<float>(position[1]))));
+                                ++this->glyph_hash;
+                            }
 
                             vislib::sys::Log::DefaultLog.WriteInfo("Number of processes running: %d", --this->num_threads);
 
                             return;
                         }
                     }
-                    else
+                }
+
+                if (!this->terminate)
+                {
+                    // Use Poincaré map for finding the closed stream line
+                    if (!output_exit_streamline)
                     {
-                        std::lock_guard<std::mutex> locker(this->lock);
-
-                        vislib::sys::Log::DefaultLog.WriteWarn("Could not find a periodic orbit from %s stream line at [%.5f, %.5f], which ended at [%.5f, %.5f]",
-                            (sign < 0.0f) ? "backward" : "forward", seed[0], seed[1], position[0], position[1]);
-
-                        if (output_representive)
-                        {
-                            this->point_output.push_back(std::make_pair(0.0f, Eigen::Vector2f(static_cast<float>(position[0]), static_cast<float>(position[1]))));
-                            ++this->glyph_hash;
-                        }
-
-                        vislib::sys::Log::DefaultLog.WriteInfo("Number of processes running: %d", --this->num_threads);
-
-                        return;
+                        std::swap(periodic_orbit, integrate_orbit(grid, position, integration, max_poincare_error));
                     }
+
+                    // Output results
+                    std::lock_guard<std::mutex> locker(this->lock);
+
+                    this->line_output.push_back(std::make_pair(sign, create_output(periodic_orbit)));
+
+                    if (output_representive)
+                    {
+                        this->point_output.push_back(std::make_pair(sign, Eigen::Vector2f(static_cast<float>(periodic_orbit[0][0]), static_cast<float>(periodic_orbit[0][1]))));
+                    }
+
+                    for (const auto& point : periodic_orbit)
+                    {
+                        this->glyph_hash = static_cast<SIZE_T>(core::utility::DataHash(this->glyph_hash, point[0], point[1]));
+                    }
+
+                    vislib::sys::Log::DefaultLog.WriteInfo("Periodic orbit found at [%.5f, %.5f] from %s stream line at [%.5f, %.5f]",
+                        periodic_orbit[0][0], periodic_orbit[0][1], (sign < 0.0f) ? "backward" : "forward", seed[0], seed[1]);
+
+                    vislib::sys::Log::DefaultLog.WriteInfo("Number of processes running: %d", --this->num_threads);
+
+                    // Output results to file
+                    this->get_output() << periodic_orbit[0][0] << "," << periodic_orbit[0][1] << std::endl;
+                }
+                else
+                {
+                    // Output that computation was terminated
+                    std::lock_guard<std::mutex> locker(this->lock);
+
+                    vislib::sys::Log::DefaultLog.WriteInfo("Search for periodic orbit from %s stream line at [%.5f, %.5f] terminated at [%.5f, %.5f]",
+                        (sign < 0.0f) ? "backward" : "forward", seed[0], seed[1], position[0], position[1]);
+
+                    if (output_representive)
+                    {
+                        this->point_output.push_back(std::make_pair(0.0f, Eigen::Vector2f(static_cast<float>(position[0]), static_cast<float>(position[1]))));
+                        ++this->glyph_hash;
+                    }
+
+                    vislib::sys::Log::DefaultLog.WriteInfo("Number of processes running: %d", --this->num_threads);
                 }
             }
-
-            if (!this->terminate)
+            catch (const std::exception& e)
             {
-                // Use Poincaré map for finding the closed stream line
-                if (!output_exit_streamline)
-                {
-                    std::swap(periodic_orbit, integrate_orbit(grid, position, integration, max_poincare_error));
-                }
-
-                // Output results
-                std::lock_guard<std::mutex> locker(this->lock);
-
-                this->line_output.push_back(std::make_pair(sign, create_output(periodic_orbit)));
-
-                if (output_representive)
-                {
-                    this->point_output.push_back(std::make_pair(sign, Eigen::Vector2f(static_cast<float>(periodic_orbit[0][0]), static_cast<float>(periodic_orbit[0][1]))));
-                }
-
-                for (const auto& point : periodic_orbit)
-                {
-                    this->glyph_hash = static_cast<SIZE_T>(core::utility::DataHash(this->glyph_hash, point[0], point[1]));
-                }
-
-                vislib::sys::Log::DefaultLog.WriteInfo("Periodic orbit found at [%.5f, %.5f] from %s stream line at [%.5f, %.5f]",
-                    periodic_orbit[0][0], periodic_orbit[0][1], (sign < 0.0f) ? "backward" : "forward", seed[0], seed[1]);
-
-                vislib::sys::Log::DefaultLog.WriteInfo("Number of processes running: %d", --this->num_threads);
-
-                // Output results to file
-                this->get_output() << periodic_orbit[0][0] << "," << periodic_orbit[0][1] << std::endl;
+                vislib::sys::Log::DefaultLog.WriteInfo("Error while extracting periodic orbits: %s", e.what());
             }
-            else
+            catch (...)
             {
-                // Output that computation was terminated
-                std::lock_guard<std::mutex> locker(this->lock);
-
-                vislib::sys::Log::DefaultLog.WriteInfo("Search for periodic orbit from %s stream line at [%.5f, %.5f] terminated at [%.5f, %.5f]",
-                    (sign < 0.0f) ? "backward" : "forward", seed[0], seed[1], position[0], position[1]);
-
-                if (output_representive)
-                {
-                    this->point_output.push_back(std::make_pair(0.0f, Eigen::Vector2f(static_cast<float>(position[0]), static_cast<float>(position[1]))));
-                    ++this->glyph_hash;
-                }
-
-                vislib::sys::Log::DefaultLog.WriteInfo("Number of processes running: %d", --this->num_threads);
+                vislib::sys::Log::DefaultLog.WriteInfo("Unknown error while extracting periodic orbits");
             }
         }
 
         Eigen::Vector2d periodic_orbits::advect(const tpf::data::grid<double, double, 2, 2>& grid,
             const Eigen::Vector2d& position, integration_parameter_t& integration_parameter) const
         {
-            switch (integration_parameter.method)
+            try
             {
-            case integration_parameter_t::method_t::RUNGE_KUTTA_4:
-                return advect_RK4(grid, position, integration_parameter);
-            case integration_parameter_t::method_t::RUNGE_KUTTA_45:
-                return advect_RK45(grid, position, integration_parameter);
-            default:
+                switch (integration_parameter.method)
+                {
+                case integration_parameter_t::method_t::RUNGE_KUTTA_4:
+                    return advect_RK4(grid, position, integration_parameter);
+                case integration_parameter_t::method_t::RUNGE_KUTTA_45:
+                    return advect_RK45(grid, position, integration_parameter);
+                default:
+                    return position;
+                }
+            }
+            catch (...)
+            {
                 return position;
             }
         }
