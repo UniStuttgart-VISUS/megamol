@@ -261,10 +261,12 @@ void update_label_and_dist(const int num_convergence_points, const int num_conve
 * @param num_steps              Number of advection steps
 * @param labels                 Output labels
 * @param distances              Output distances
+* @param terminations           Output terminations
+* @param method                 Integration method
 */
 __global__
 void compute_streamlines_kernel(const int num_convergence_points, const int num_convergence_lines, const float sign,
-    float2* particles, const int num_particles, const int num_steps, float* labels, float* distances, float* terminations)
+    float2* particles, const int num_particles, const int num_steps, float* labels, float* distances, float* terminations, const int method)
 {
     // Get kernel ID
     const int tid = threadIdx.x;
@@ -283,20 +285,22 @@ void compute_streamlines_kernel(const int num_convergence_points, const int num_
         update_label_and_dist(num_convergence_points, num_convergence_lines, pos, label, dist);
 #endif
 
-#if __streamlines_cuda_runge_kutta_45
         // Calculate initial time step
         float step = const_data[4].x * texture_interpolation<1>(textures[1], pos_to_texcoords(pos));
-#endif
 
         for (int j = 0; j < num_steps; ++j)
         {
             // Advect using 4th-order Runge-Kutta
             const float2 posPrev = pos;
-#if __streamlines_cuda_runge_kutta_45
-            advectRK45(pos, step, sign, const_data[5].x);
-#else
-            advectRK4(pos, const_data[4].x, sign);
-#endif
+
+            if (method == 0)
+            {
+                advectRK4(pos, const_data[4].x, sign);
+            }
+            else if (method == 1)
+            {
+                advectRK45(pos, step, sign, const_data[5].x);
+            }
 
 #if !(__streamlines_cuda_shi_et_al)
             // Update values by evaluating the distance to convergence structures
@@ -376,10 +380,10 @@ namespace megamol
         streamlines_cuda::streamlines_cuda(const std::array<unsigned int, 2>& resolution, const std::array<float, 4>& domain,
             const std::vector<float>& vectors, const std::vector<float>& points, const std::vector<int>& point_ids,
             const std::vector<float>& lines, const std::vector<int>& line_ids, const float integration_timestep,
-            const float max_integration_error)
+            const float max_integration_error, const integration_method method)
         {
             impl = std::make_unique<streamlines_cuda_impl>(resolution, domain, vectors,
-                points, point_ids, lines, line_ids, integration_timestep, max_integration_error);
+                points, point_ids, lines, line_ids, integration_timestep, max_integration_error, method);
         }
 
         void streamlines_cuda::update_labels(std::vector<float>& source, std::vector<float>& labels, std::vector<float>& distances,
@@ -399,8 +403,9 @@ namespace megamol
         streamlines_cuda_impl::streamlines_cuda_impl(const std::array<unsigned int, 2>& resolution, const std::array<float, 4>& domain,
             const std::vector<float>& vectors, const std::vector<float>& points, const std::vector<int>& point_ids,
             const std::vector<float>& lines, const std::vector<int>& line_ids, const float integration_timestep,
-            const float max_integration_error)
-            : resolution(resolution), d_velocity(nullptr), d_rk4_step(nullptr), d_convergence_points(nullptr), d_convergence_lines(nullptr), d_convergence_line_ids(nullptr)
+            const float max_integration_error, const streamlines_cuda::integration_method method)
+            : resolution(resolution), d_velocity(nullptr), d_rk4_step(nullptr), d_convergence_points(nullptr),
+            d_convergence_lines(nullptr), d_convergence_line_ids(nullptr), method(method)
         {
             // Get domain boundaries
             const std::size_t num_vectors = vectors.size() / 2;
@@ -600,7 +605,7 @@ namespace megamol
                 //--------------------------------------------------------------------------
 
                 compute_streamlines(d_particles, num_particles_this_batch, this->num_convergence_points, this->num_convergence_lines,
-                    num_integration_steps, sign, d_labels, d_dists, d_terminations);
+                    num_integration_steps, sign, d_labels, d_dists, d_terminations, this->method);
                 
                 //--------------------------------------------------------------------------
 
@@ -641,14 +646,14 @@ namespace megamol
         }
 
         void streamlines_cuda_impl::compute_streamlines(float2* d_particles, const int num_particles, const int num_convergence_points, const int num_convergence_lines,
-            const int num_steps, const float sign, float* d_labels, float* d_dists, float* d_terminations)
+            const int num_steps, const float sign, float* d_labels, float* d_dists, float* d_terminations, const streamlines_cuda::integration_method method)
         {
             // Run CUDA kernel
             int num_threads = 64;
             int num_blocks = num_particles / num_threads + (num_particles % num_threads == 0 ? 0 : 1);
 
             compute_streamlines_kernel __cuda_kernel_start(num_blocks, num_threads) (num_convergence_points, num_convergence_lines, sign,
-                d_particles, num_particles, num_steps, d_labels, d_dists, d_terminations);
+                d_particles, num_particles, num_steps, d_labels, d_dists, d_terminations, static_cast<int>(method));
         }
 
         void streamlines_cuda_impl::initialize_texture(const void* h_data, const int num_components, cudaTextureObject_t* texture, cudaArray** d_data)

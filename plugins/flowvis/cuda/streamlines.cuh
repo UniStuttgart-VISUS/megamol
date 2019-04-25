@@ -37,11 +37,12 @@ namespace megamol
             * @param line_ids                   IDs (or labels) of the line convergence structures
             * @param integration_timestep       Time step factor for advection
             * @param max_integration_error      Maximum error for Runge-Kutta 4-5, above which the time step size has to be adapted
+            * @param method                     Integration method
             */
             streamlines_cuda_impl(const std::array<unsigned int, 2>& resolution, const std::array<float, 4>& domain,
                 const std::vector<float>& vectors, const std::vector<float>& points, const std::vector<int>& point_ids,
                 const std::vector<float>& lines, const std::vector<int>& line_ids, float integration_timestep,
-                float max_integration_error);
+                float max_integration_error, streamlines_cuda::integration_method method);
 
             /**
             * Destructor
@@ -75,9 +76,10 @@ namespace megamol
             * @param d_labels               Output labels
             * @param d_dists                Output distances
             * @param d_terminations         Output reasons for stream line termination
+            * @param method                 Integration method
             */
             void compute_streamlines(float2* d_particles, int num_particles, int num_convergence_points, int num_convergence_lines,
-                int num_steps, float sign, float* d_labels, float* d_dists, float* d_terminations);
+                int num_steps, float sign, float* d_labels, float* d_dists, float* d_terminations, streamlines_cuda::integration_method method);
 
             /**
             * Initialize a higher-dimensional texture
@@ -126,6 +128,9 @@ namespace megamol
             float* d_convergence_line_ids;
             cudaTextureObject_t convergence_lines_texture;
             float2* d_convergence_lines;
+
+            // Integration method
+            streamlines_cuda::integration_method method;
         };
     }
 }
