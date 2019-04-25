@@ -7,6 +7,7 @@
 #include "flowvis/shader.h"
 
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/param/ColorParam.h"
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/LinearTransferFunctionParam.h"
 #include "mmcore/view/CallRender2D.h"
@@ -32,6 +33,7 @@ namespace megamol
             mesh_data_slot("get_mesh_data", "Mesh data input"), mesh_data_hash(-1),
             data_set("data_set", "Data set used for coloring the triangles"),
             mask("mask", "Validity mask to selectively hide unwanted vertices or triangles"),
+            mask_color("mask_color", "Color for invalid values"),
             wireframe("wireframe", "Render as wireframe instead of filling the triangles")
         {
             // Connect input slots
@@ -50,6 +52,9 @@ namespace megamol
 
             this->mask << new core::param::FlexEnumParam("");
             this->MakeSlotAvailable(&this->mask);
+
+            this->mask_color << new core::param::ColorParam(1.0f, 1.0f, 1.0f, 1.0f);
+            this->MakeSlotAvailable(&this->mask_color);
 
             this->wireframe << new core::param::BoolParam(false);
             this->MakeSlotAvailable(&this->wireframe);
@@ -109,11 +114,14 @@ namespace megamol
                     "uniform mat4 projection_matrix; \n" \
                     "uniform float min_value; \n" \
                     "uniform float max_value; \n" \
+                    "uniform vec4 mask_color; \n" \
                     "uniform sampler1D transfer_function; \n" \
                     "out vec4 vertex_color; \n" \
                     "void main() { \n" \
                     "    gl_Position = projection_matrix * model_view_matrix * vec4(in_position, 0.0f, 1.0f); \n" \
-                    "    vertex_color = in_mask * texture(transfer_function, (min_value == max_value) ? 0.5f : ((in_value - min_value) / (max_value - min_value))); \n" \
+                    "    vertex_color = in_mask == 1.0f ? " \
+                    "        texture(transfer_function, (min_value == max_value) ? 0.5f : ((in_value - min_value) / (max_value - min_value)))" \
+                    "        : mask_color; \n" \
                     "}";
 
                 const std::string fragment_shader =
@@ -312,6 +320,9 @@ namespace megamol
                 
                 glUniform1f(glGetUniformLocation(this->render_data.prog, "min_value"), this->render_data.values->min_value);
                 glUniform1f(glGetUniformLocation(this->render_data.prog, "max_value"), this->render_data.values->max_value);
+
+                const auto mask_color = this->mask_color.Param<core::param::ColorParam>()->Value();
+                glUniform4f(glGetUniformLocation(this->render_data.prog, "mask_color"), mask_color[0], mask_color[1], mask_color[2], mask_color[3]);
 
                 glBindVertexArray(this->render_data.vao);
                 glActiveTexture(GL_TEXTURE0);

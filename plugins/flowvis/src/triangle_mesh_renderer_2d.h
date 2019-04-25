@@ -143,6 +143,7 @@ namespace megamol
 
             /** Parameter slot for choosing validity masks */
             core::param::ParamSlot mask;
+            core::param::ParamSlot mask_color;
 
             /** Parameter slot for choosing between filled and wireframe mode */
             core::param::ParamSlot wireframe;
