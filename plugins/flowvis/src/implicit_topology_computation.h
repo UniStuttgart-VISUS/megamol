@@ -9,6 +9,8 @@
 #include "implicit_topology_results.h"
 #include "triangulation.h"
 
+#include "../cuda/streamlines.h"
+
 #include <array>
 #include <chrono>
 #include <future>
@@ -48,12 +50,13 @@ namespace megamol
             * @param line_ids                           (Unique) IDs (or labels) of the given lines
             * @param integration_timestep               (Initial) integration time step
             * @param max_integration_error              Maximum integration error
+            * @param method                             Integration method
             */
             implicit_topology_computation(std::ostream& log_stream, std::ostream& performance_stream,
                 std::array<unsigned int, 2> resolution, std::array<float, 4> domain,
                 std::vector<float> positions, std::vector<float> vectors, std::vector<float> points,
                 std::vector<int> point_ids, std::vector<float> lines, std::vector<int> line_ids,
-                float integration_timestep, float max_integration_error);
+                float integration_timestep, float max_integration_error, streamlines_cuda::integration_method method);
 
             /**
             * Initialize computation by providing seed positions and corresponding vectors, convergence structures,
@@ -168,6 +171,9 @@ namespace megamol
             /** Input timestep information */
             const float integration_timestep;
             const float max_integration_error;
+
+            /** Integration method */
+            streamlines_cuda::integration_method method;
 
             /** Output positions */
             std::vector<float> positions_forward;

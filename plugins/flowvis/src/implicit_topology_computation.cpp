@@ -26,12 +26,12 @@ namespace megamol
         implicit_topology_computation::implicit_topology_computation(std::ostream& log_stream, std::ostream& performance_stream, 
             std::array<unsigned int, 2> resolution, std::array<float, 4> domain, std::vector<float> positions, std::vector<float> vectors,
             std::vector<float> points, std::vector<int> point_ids, std::vector<float> lines, std::vector<int> line_ids,
-            const float integration_timestep, const float max_integration_error)
+            const float integration_timestep, const float max_integration_error, const streamlines_cuda::integration_method method)
             : log_output(log_stream), performance_output(performance_stream), resolution(std::move(resolution)),
             domain(std::move(domain)), positions(std::move(positions)), vectors(std::move(vectors)),
             points(std::move(points)), point_ids(std::move(point_ids)), lines(std::move(lines)),
             line_ids(std::move(line_ids)), integration_timestep(integration_timestep), max_integration_error(max_integration_error),
-            num_integration_steps_performed(0), terminate_computation(false)
+            num_integration_steps_performed(0), terminate_computation(false), method(method)
         {
             this->log_output << "Initializing computation..." << std::endl;
             this->log_output << "Resolution:                            " << this->resolution[0] << " x " << this->resolution[1] << std::endl;
@@ -162,7 +162,7 @@ namespace megamol
             labels_forward(*previous_result.labels_forward), distances_forward(*previous_result.distances_forward),
             terminations_forward(*previous_result.terminations_forward), labels_backward(*previous_result.labels_backward),
             distances_backward(*previous_result.distances_backward), terminations_backward(*previous_result.terminations_backward),
-            delaunay(*previous_result.vertices)
+            delaunay(*previous_result.vertices), method(previous_result.computation_state.method)
         {
             this->log_output << "Initializing computation from previous results..." << std::endl;
             this->log_output << "Resolution:                            " << this->resolution[0] << " x " << this->resolution[1] << std::endl;
@@ -253,7 +253,7 @@ namespace megamol
             const std::chrono::time_point<clock_t> time_start_initialization = clock_t::now();
 
             streamlines_cuda streamlines(this->resolution, this->domain, this->vectors, this->points, this->point_ids,
-                this->lines, this->line_ids, this->integration_timestep, this->max_integration_error);
+                this->lines, this->line_ids, this->integration_timestep, this->max_integration_error, this->method);
 
             this->performance_output << "Initialization:;" << std::chrono::duration_cast<duration_t>(clock_t::now() - time_start_initialization).count() << std::endl << std::endl;
 

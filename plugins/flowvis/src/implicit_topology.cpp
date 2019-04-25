@@ -14,6 +14,7 @@
 #include "mmcore/DirectDataWriterCall.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
+#include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/GroupParam.h"
@@ -82,6 +83,7 @@ namespace megamol
             gradient_range_min("gradient_range_min", "Minimum value for gradients in the transfer function"),
             gradient_range_max("gradient_range_max", "Maximum value for gradients in the transfer function"),
             gradient_end_group("gradient_end_group", "Gradient end group"),
+            integration_method("integration_method", "Method for stream line integration"),
             num_integration_steps("num_integration_steps", "Number of stream line integration steps"),
             integration_timestep("integration_timestep", "Initial time step for stream line integration"),
             max_integration_error("max_integration_error", "Maximum integration error for Runge-Kutta 4-5"),
@@ -132,6 +134,11 @@ namespace megamol
             this->MakeSlotAvailable(&this->result_reader_slot);
 
             // Create computation parameters
+            this->integration_method << new core::param::EnumParam(0);
+            this->integration_method.Param<core::param::EnumParam>()->SetTypePair(0, "Runge-Kutta 4 (fixed)");
+            this->integration_method.Param<core::param::EnumParam>()->SetTypePair(1, "Runge-Kutta 4-5 (dynamic)");
+            this->MakeSlotAvailable(&this->integration_method);
+
             this->num_integration_steps << new core::param::IntParam(0);
             this->MakeSlotAvailable(&this->num_integration_steps);
 
@@ -319,8 +326,10 @@ namespace megamol
                     // Create new computation object
                     this->computation = std::make_unique<implicit_topology_computation>(this->get_log_callback(), this->get_performance_callback(),
                         std::move(resolution), std::move(domain), std::move(positions), std::move(vectors), std::move(points), std::move(point_ids),
-                        std::move(lines), std::move(line_ids), this->integration_timestep.Param<core::param::FloatParam>()->Value(),
-                        this->max_integration_error.Param<core::param::FloatParam>()->Value());
+                        std::move(lines), std::move(line_ids),
+                        this->integration_timestep.Param<core::param::FloatParam>()->Value(),
+                        this->max_integration_error.Param<core::param::FloatParam>()->Value(),
+                        static_cast<streamlines_cuda::integration_method>(this->integration_method.Param<core::param::EnumParam>()->Value()));
 
                     set_readonly_fixed_parameters(true);
 
@@ -459,6 +468,7 @@ namespace megamol
 
         void implicit_topology::set_readonly_fixed_parameters(const bool read_only)
         {
+            this->integration_method.Parameter()->SetGUIReadOnly(read_only);
             this->integration_timestep.Parameter()->SetGUIReadOnly(read_only);
             this->max_integration_error.Parameter()->SetGUIReadOnly(read_only);
         }

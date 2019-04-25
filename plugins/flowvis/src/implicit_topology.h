@@ -213,6 +213,7 @@ namespace megamol
             core::param::ParamSlot gradient_range_min, gradient_range_max;
 
             /** Parameters for stream line computation */
+            core::param::ParamSlot integration_method;
             core::param::ParamSlot num_integration_steps;
             core::param::ParamSlot integration_timestep;
             core::param::ParamSlot max_integration_error;

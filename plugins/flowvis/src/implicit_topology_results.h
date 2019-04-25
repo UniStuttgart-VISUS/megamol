@@ -6,6 +6,8 @@
  */
 #pragma once
 
+#include "../cuda/streamlines.h"
+
 #include <memory>
 #include <vector>
 
@@ -41,6 +43,9 @@ namespace megamol
             /** Computation state */
             struct state
             {
+                /** Integration method */
+                streamlines_cuda::integration_method method;
+
                 /** Time step information */
                 float integration_timestep;
                 float max_integration_error;
