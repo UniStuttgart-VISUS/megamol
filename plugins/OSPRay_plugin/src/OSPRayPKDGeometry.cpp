@@ -15,13 +15,13 @@
 #include "vislib/forceinline.h"
 #include "vislib/sys/Log.h"
 
-#include "mmcore/view/CallClipPlane.h"
-#include "mmcore/view/CallGetTransferFunction.h"
 #include <ospray.h>
 #include "OSPRay_plugin/CallOSPRayAPIObject.h"
+#include "mmcore/view/CallClipPlane.h"
+#include "mmcore/view/CallGetTransferFunction.h"
 
 namespace megamol {
-namespace ospray { 
+namespace ospray {
 
 
 OSPRayPKDGeometry::OSPRayPKDGeometry(void)
@@ -42,9 +42,12 @@ OSPRayPKDGeometry::OSPRayPKDGeometry(void)
     this->colorTypeSlot << ep;
     this->MakeSlotAvailable(&this->colorTypeSlot);
 
-    this->deployStructureSlot.SetCallback(CallOSPRayAPIObject::ClassName(), CallOSPRayAPIObject::FunctionName(0), &OSPRayPKDGeometry::getDataCallback);
-    this->deployStructureSlot.SetCallback(CallOSPRayAPIObject::ClassName(), CallOSPRayAPIObject::FunctionName(1), &OSPRayPKDGeometry::getExtendsCallback);
-    this->deployStructureSlot.SetCallback(CallOSPRayAPIObject::ClassName(), CallOSPRayAPIObject::FunctionName(2), &OSPRayPKDGeometry::getDirtyCallback);
+    this->deployStructureSlot.SetCallback(
+        CallOSPRayAPIObject::ClassName(), CallOSPRayAPIObject::FunctionName(0), &OSPRayPKDGeometry::getDataCallback);
+    this->deployStructureSlot.SetCallback(
+        CallOSPRayAPIObject::ClassName(), CallOSPRayAPIObject::FunctionName(1), &OSPRayPKDGeometry::getExtendsCallback);
+    this->deployStructureSlot.SetCallback(
+        CallOSPRayAPIObject::ClassName(), CallOSPRayAPIObject::FunctionName(2), &OSPRayPKDGeometry::getDirtyCallback);
     this->MakeSlotAvailable(&this->deployStructureSlot);
 }
 
@@ -79,7 +82,6 @@ bool OSPRayPKDGeometry::getDataCallback(megamol::core::Call& call) {
         return true;
     }
 
-    if (!(*cd)(1)) return false;
     if (!(*cd)(0)) return false;
 
     size_t listCount = cd->GetParticleListCount();
@@ -88,32 +90,22 @@ bool OSPRayPKDGeometry::getDataCallback(megamol::core::Call& call) {
 
         core::moldyn::MultiParticleDataCall::Particles& parts = cd->AccessParticles(i);
 
-        auto partCount = parts.GetCount();
-        auto globalRadius = parts.GetGlobalRadius();
-        auto raw = parts.GetVertexData();
-        auto boundingBox = parts.GetBBox();
-
-        size_t vertexLength = 3;
-        size_t colorLength = 0;
-
         auto colorType = this->colorTypeSlot.Param<megamol::core::param::EnumParam>()->Value();
-        if (colorType != 0) {
-            colorLength = 1;
-        }
 
         geo.push_back(ospNewGeometry("pkd_geometry"));
 
-        auto vertexData = ospNewData(partCount, OSP_FLOAT4, raw, OSP_DATA_SHARED_BUFFER);
+        auto vertexData = ospNewData(parts.GetCount(), OSP_FLOAT4, parts.GetVertexData(), OSP_DATA_SHARED_BUFFER);
         ospCommit(vertexData);
 
         // set bbox
-        auto bboxData = ospNewData(6, OSP_FLOAT, boundingBox.PeekBounds(), OSP_DATA_SHARED_BUFFER);
+        auto bboxData = ospNewData(6, OSP_FLOAT, parts.GetBBox().PeekBounds(), OSP_DATA_SHARED_BUFFER);
         ospCommit(bboxData);
 
-        ospSet1f(geo.back(), "radius", globalRadius);
+        ospSet1f(geo.back(), "radius", parts.GetGlobalRadius());
         ospSet1i(geo.back(), "colorType", colorType);
         ospSetData(geo.back(), "position", vertexData);
-        ospSetData(geo.back(), "bbox", bboxData);
+        // ospSetData(geo.back(), "bbox", bboxData);
+        ospSetData(geo.back(), "bbox", nullptr);
         ospCommit(geo.back());
 
         // TODO: implement distributed stuff
@@ -170,7 +162,7 @@ bool OSPRayPKDGeometry::InterfaceIsDirty() {
 bool OSPRayPKDGeometry::InterfaceIsDirtyNoReset() const { return this->colorTypeSlot.IsDirty(); }
 
 
-bool OSPRayPKDGeometry::getExtendsCallback(core::Call &call) {
+bool OSPRayPKDGeometry::getExtendsCallback(core::Call& call) {
     auto os = dynamic_cast<CallOSPRayAPIObject*>(&call);
     core::moldyn::MultiParticleDataCall* cd = this->getDataSlot.CallAs<core::moldyn::MultiParticleDataCall>();
 
