@@ -607,7 +607,7 @@ bool megamol::pbs::FBOTransmitter2::initThreads() {
             if (!this->force_localhost_slot_.Param<megamol::core::param::BoolParam>()->Value()) {
                 hostname.clear();
 #if _WIN32
-                DWORD buf_size = 32767;
+                DWORD buf_size = MAX_COMPUTERNAME_LENGTH + 1;
                 hostname.resize(buf_size);
                 GetComputerNameA(hostname.data(), &buf_size);
 #else
