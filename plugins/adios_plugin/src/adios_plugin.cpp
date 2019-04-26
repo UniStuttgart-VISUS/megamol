@@ -18,6 +18,7 @@
 #include "MultiParticletoADIOS.h"
 #include "adiosWriter.h"
 #include "FloatTabletoADIOS.h"
+#include "StaticMMPLDProvider.h"
 
 /* anonymous namespace hides this type from any other object files */
 namespace {
@@ -50,6 +51,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::adios::adiosWriter>();
             this->module_descriptions.RegisterAutoDescription<megamol::adios::MultiParticletoADIOS>();
             this->module_descriptions.RegisterAutoDescription<megamol::adios::FloatTabletoADIOS>();
+            this->module_descriptions.RegisterAutoDescription<megamol::adios::StaticMMPLDProvider>();
 
             // register calls here:
 
