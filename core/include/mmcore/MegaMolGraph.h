@@ -16,12 +16,14 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/param/ParamUpdateListener.h"
 #include "vislib/SmartPtr.h"
+#include "vislib/sys/Log.h"
 
 #include "mmcore/deferrable_construction.h"
 #include "mmcore/lockable.h"
 #include "mmcore/serializable.h"
 
 #include "AbstractUpdateQueue.h"
+#include "RootModuleNamespace.h"
 
 namespace megamol {
 namespace core {
@@ -153,14 +155,25 @@ public:
 
     bool QueueCallInstantiationNoLock(std::string&& className, std::string&& from, std::string&& to);
 
+    bool HasPendingRequests() {
+        auto lock = AcquireQueueLocks();
+        return !module_deletion_queue_.Empty() || !module_instantiation_queue_.Empty() ||
+               !call_deletion_queue_.Empty() || !call_instantiation_queue_.Empty();
+    }
+
     //////////////////////////// locking //////////////////////////////////////////
-    decltype(auto) AcquireQueueLocks() {
+    std::scoped_lock<std::unique_lock<std::mutex>, std::unique_lock<std::mutex>, std::unique_lock<std::mutex>,
+        std::unique_lock<std::mutex>>
+    AcquireQueueLocks() {
         auto lock1 = module_deletion_queue_.AcquireDeferredLock();
         auto lock2 = module_instantiation_queue_.AcquireDeferredLock();
         auto lock3 = call_deletion_queue_.AcquireDeferredLock();
         auto lock4 = call_instantiation_queue_.AcquireDeferredLock();
         return std::scoped_lock(lock1, lock2, lock3, lock4);
     }
+
+    //////////////////////////// find methods ////////////////////////////////////
+    std::shared_ptr<param::AbstractParam> FindParameter(std::string const& name, bool quiet = false) const;
 
 private:
     template <typename Q, typename Arg> bool push_queue_element(Q& q, Arg&& arg) {
@@ -173,8 +186,8 @@ private:
         return true;
     }
 
-    /** The MegaMolGraph is the owner of the root module */
-    std::unique_ptr<Module> root_module_;
+    /** The MegaMolGraph is the owner of the root module namespace*/
+    std::unique_ptr<RootModuleNamespace> root_module_namespace_;
 
     /** Queue for module deletions */
     ModuleDeletionQueue_t module_deletion_queue_;
@@ -207,7 +220,7 @@ public:
     // to lock?
     ////////////////////////////
 
-    vislib::SmartPtr<param::AbstractParam> FindParameter(const std::string name, bool quiet = false) const;
+    //vislib::SmartPtr<param::AbstractParam> FindParameter(const std::string name, bool quiet = false) const;
 
     // todo: optionally ask for the parameters of a specific module (name OR module pointer?)
     inline void EnumerateParameters(std::function<void(const Module&, param::ParamSlot&)> cb) const;
