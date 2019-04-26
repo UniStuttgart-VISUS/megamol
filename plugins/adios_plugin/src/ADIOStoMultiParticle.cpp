@@ -64,8 +64,8 @@ bool ADIOStoMultiParticle::getDataCallback(core::Call& call) {
             return false;
         }
 
-        cad->inquire("box");
-        cad->inquire("p_count");
+        cad->inquire("global_box");
+        cad->inquire("count");
         // Radius
         if (cad->isInVars("radius")) {
             cad->inquire("radius");
@@ -123,8 +123,8 @@ bool ADIOStoMultiParticle::getDataCallback(core::Call& call) {
             vislib::sys::Log::DefaultLog.WriteError("ADIOStoMultiParticle: No particle positions found");
             return false;
         }
-        auto box = cad->getData("box")->GetAsFloat();
-        auto p_count = cad->getData("p_count")->GetAsInt();
+        auto box = cad->getData("global_box")->GetAsFloat();
+        auto p_count = cad->getData("count")->GetAsInt();
         std::vector<float> radius;
         std::vector<float> r;
         std::vector<float> g;
@@ -178,7 +178,7 @@ bool ADIOStoMultiParticle::getDataCallback(core::Call& call) {
 
 
         // ParticeList offset
-        plist_offset = cad->getData("plist_offset")->GetAsUInt64();
+        plist_offset = cad->getData("list_offset")->GetAsUInt64();
 
         // Set particle list count
         mpdc->SetParticleListCount(plist_offset.size());
