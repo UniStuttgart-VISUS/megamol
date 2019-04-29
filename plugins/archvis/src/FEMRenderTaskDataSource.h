@@ -17,7 +17,7 @@ namespace megamol
 {
 	namespace archvis
 	{
-		class FEMGPURenderTaskDataSource : public ngmesh::AbstractGPURenderTaskDataSource
+		class FEMRenderTaskDataSource : public ngmesh::AbstractGPURenderTaskDataSource
 		{
 		public:
 			/**
@@ -48,8 +48,8 @@ namespace megamol
 			}
 
 
-			FEMGPURenderTaskDataSource();
-			~FEMGPURenderTaskDataSource();
+			FEMRenderTaskDataSource();
+			~FEMRenderTaskDataSource();
 
 		protected:
 

@@ -20,7 +20,7 @@ namespace megamol
 {
 	namespace archvis
 	{
-		class FEMGPUMeshDataSource : public ngmesh::AbstractGPUMeshDataSource
+		class FEMMeshDataSource : public ngmesh::AbstractGPUMeshDataSource
 		{
 		public:
 			/**
@@ -51,8 +51,8 @@ namespace megamol
 			}
 
 
-			FEMGPUMeshDataSource();
-			~FEMGPUMeshDataSource();
+			FEMMeshDataSource();
+			~FEMMeshDataSource();
 
 		protected:
 			virtual bool create();

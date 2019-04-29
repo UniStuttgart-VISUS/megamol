@@ -55,8 +55,8 @@ namespace {
             //
 			this->module_descriptions.RegisterAutoDescription<megamol::archvis::ArchVisMSMDataSource>();
 
-			this->module_descriptions.RegisterAutoDescription<megamol::archvis::FEMGPUMeshDataSource>();
-			this->module_descriptions.RegisterAutoDescription<megamol::archvis::FEMGPURenderTaskDataSource>();
+			this->module_descriptions.RegisterAutoDescription<megamol::archvis::FEMMeshDataSource>();
+			this->module_descriptions.RegisterAutoDescription<megamol::archvis::FEMRenderTaskDataSource>();
 			this->module_descriptions.RegisterAutoDescription<megamol::archvis::FEMLoader>();
 
             // register calls here:
