@@ -47,7 +47,7 @@ namespace megamol
 			*/
 			virtual void release();
 
-			std::shared_ptr<GPUMaterialDataStorage> m_gpu_materials;
+			std::shared_ptr<GPUMaterialCollecton> m_gpu_materials;
 
 		private:
 

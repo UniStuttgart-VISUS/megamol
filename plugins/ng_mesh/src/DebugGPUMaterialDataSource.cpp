@@ -48,7 +48,6 @@ bool megamol::ngmesh::DebugGPUMaterialDataSource::load()
 	vislib::StringA shader_base_name("NGMeshDebug");
 	instance()->ShaderSourceFactory().MakeShaderSource(shader_base_name + "::vertex", vert_shader_src);
 	instance()->ShaderSourceFactory().MakeShaderSource(shader_base_name + "::fragment", frag_shader_src);
-
 	shader->Create(vert_shader_src.Code(), vert_shader_src.Count(), frag_shader_src.Code(), frag_shader_src.Count());
 
 	m_gpu_materials->addMaterial(shader);

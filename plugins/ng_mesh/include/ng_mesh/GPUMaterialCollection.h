@@ -20,7 +20,7 @@ namespace megamol {
 
 		typedef vislib::graphics::gl::GLSLShader GLSLShader;
 
-		class GPUMaterialDataStorage
+		class GPUMaterialCollecton
 		{
 		public:
 			struct Material
@@ -33,13 +33,15 @@ namespace megamol {
 
 			void addMaterial(std::shared_ptr<GLSLShader> const& shader);
 
+			void clearMaterials();
+
 			inline std::vector<Material> const& getMaterials();
 
 		private:
 			std::vector<Material> m_materials;
 		};
 
-		inline std::vector<megamol::ngmesh::GPUMaterialDataStorage::Material> const & megamol::ngmesh::GPUMaterialDataStorage::getMaterials()
+		inline std::vector<megamol::ngmesh::GPUMaterialCollecton::Material> const & megamol::ngmesh::GPUMaterialCollecton::getMaterials()
 		{
 			return m_materials;
 		}

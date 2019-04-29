@@ -11,6 +11,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include <array>
 #include <vector>
 #include <tuple>
 
@@ -53,12 +54,12 @@ namespace megamol {
 			template<typename N>
 			struct ElementModel : ElementConcept
 			{
-				ElementModel(ElementType type, N node_indices, F forces)
-					: m_type(type), m_node_indices(node_indices), m_forces(forces) {}
+				ElementModel(ElementType type, N node_indices)
+					: m_type(type), m_node_indices(node_indices) {}
 
 				ElementConcept* clone() const
 				{
-					return new ElementModel(m_type, m_node_indices, m_forces);
+					return new ElementModel(m_type, m_node_indices);
 				}
 
 				ElementType getType() const { return m_type; }
@@ -72,7 +73,7 @@ namespace megamol {
 			public:
 				template<typename N>
 				Element(ElementType type, N node_indices)
-					: m_element(new ElementModel<N, F>(type, node_indices)) {}
+					: m_element(new ElementModel<N>(type, node_indices)) {}
 
 				Element() : m_element(nullptr) {};
 
@@ -102,7 +103,9 @@ namespace megamol {
 					return *this;
 				}
 
-				Element& operator=(Element&& other) = delete;
+				Element& operator=(Element&& other) {
+					std::swap(m_element, other.m_element);
+				};
 
 				ElementType getType() { return m_element->getType(); }
 
@@ -134,9 +137,7 @@ namespace megamol {
 		{
 			for (size_t element_idx = 0; element_idx < elements.size(); ++element_idx)
 			{
-				m_elements[element_idx] = Element(
-						ElementType::CUBE,
-						elements[element_idx]);
+				m_elements[element_idx] = Element(ElementType::CUBE, elements[element_idx]);;
 			}
 		}
 

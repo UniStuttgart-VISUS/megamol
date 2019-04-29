@@ -11,7 +11,7 @@
 #include "mmcore/CoreInstance.h"
 #include "vislib/graphics/gl/ShaderSource.h"
 
-void megamol::ngmesh::GPUMaterialDataStorage::addMaterial(std::string shader_btf_name)
+void megamol::ngmesh::GPUMaterialCollecton::addMaterial(std::string shader_btf_name)
 {
 	std::shared_ptr<GLSLShader> shader = std::make_shared<GLSLShader>();
 
@@ -29,8 +29,13 @@ void megamol::ngmesh::GPUMaterialDataStorage::addMaterial(std::string shader_btf
 	//addMaterial(shader);
 }
 
-void megamol::ngmesh::GPUMaterialDataStorage::addMaterial(std::shared_ptr<GLSLShader> const& shader)
+void megamol::ngmesh::GPUMaterialCollecton::addMaterial(std::shared_ptr<GLSLShader> const& shader)
 {
 	m_materials.push_back(Material());
 	m_materials.back().shader_program = shader;
+}
+
+void megamol::ngmesh::GPUMaterialCollecton::clearMaterials()
+{
+	m_materials.clear();
 }
