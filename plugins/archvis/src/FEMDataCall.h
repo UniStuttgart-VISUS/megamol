@@ -81,7 +81,7 @@ namespace megamol {
 		};
 
 		/** Description class typedef */
-		typedef megamol::core::factories::CallAutoDescription<FEMDataCall> GlTFDataCallDescription;
+		typedef megamol::core::factories::CallAutoDescription<FEMDataCall> FEMDataCallDescription;
 	}
 }
 

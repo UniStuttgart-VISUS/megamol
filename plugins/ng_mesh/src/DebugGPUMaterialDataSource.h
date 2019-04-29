@@ -12,7 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "ng_mesh/AbstractGPUMaterialDataSource.h"
-#include "ng_mesh/GPUMaterialDataStorage.h"
+#include "ng_mesh/GPUMaterialCollection.h"
 
 namespace megamol
 {

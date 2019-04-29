@@ -13,7 +13,7 @@
 
 #include "mmcore/AbstractGetDataCall.h"
 #include "ng_mesh.h"
-#include "GPUMaterialDataStorage.h"
+#include "GPUMaterialCollection.h"
 
 namespace megamol
 {

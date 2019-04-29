@@ -9,6 +9,7 @@
 #define GPU_MATERIAL_DATA_STORAGE_H_INCLUDED
 
 #include "vislib/graphics/gl/GLSLShader.h"
+#include "mmcore/CoreInstance.h"
 
 #include <memory>
 #include <vector>
@@ -29,7 +30,7 @@ namespace megamol {
 				std::vector<std::shared_ptr<Texture2D>> textures;
 			};
 
-			void addMaterial(std::string shader_btf_name);
+			void addMaterial(megamol::core::CoreInstance* mm_core_inst, std::string shader_btf_name);
 
 			void addMaterial(std::shared_ptr<GLSLShader> const& shader);
 

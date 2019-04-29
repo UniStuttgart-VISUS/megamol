@@ -14,7 +14,7 @@
 #include "mmcore/param/ParamSlot.h"
 
 #include "ng_mesh/AbstractGPUMaterialDataSource.h"
-#include "ng_mesh/GPUMaterialDataStorage.h"
+#include "ng_mesh/GPUMaterialCollection.h"
 
 namespace megamol
 {

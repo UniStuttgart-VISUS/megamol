@@ -13,7 +13,7 @@
 
 #include "mmcore/CalleeSlot.h"
 #include "ng_mesh/ng_mesh.h"
-#include "GPUMaterialDataStorage.h"
+#include "GPUMaterialCollection.h"
 
 namespace megamol
 {

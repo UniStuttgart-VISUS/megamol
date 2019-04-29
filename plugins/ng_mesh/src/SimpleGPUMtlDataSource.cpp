@@ -37,7 +37,7 @@ bool megamol::ngmesh::SimpleGPUMtlDataSource::getDataCallback(core::Call & calle
 
 		m_gpu_materials->clearMaterials();
 
-		m_gpu_materials->addMaterial(filename);
+		m_gpu_materials->addMaterial(this->instance(),filename);
 	}
 
 	mtl_call->setMaterialStorage(m_gpu_materials);

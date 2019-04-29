@@ -13,6 +13,11 @@
 #include "vislib/vislibversion.h"
 
 #include "ArchVisMSMDataSource.h"
+#include "FEMDataCall.h"
+#include "FEMDataStorage.h"
+#include "FEMGPUMeshDataSource.h"
+#include "FEMGPURenderTaskDataSource.h"
+#include "FEMLoader.h"
 
 
 /* anonymous namespace hides this type from any other object files */
@@ -50,6 +55,10 @@ namespace {
             //
 			this->module_descriptions.RegisterAutoDescription<megamol::archvis::ArchVisMSMDataSource>();
 
+			this->module_descriptions.RegisterAutoDescription<megamol::archvis::FEMGPUMeshDataSource>();
+			this->module_descriptions.RegisterAutoDescription<megamol::archvis::FEMGPURenderTaskDataSource>();
+			this->module_descriptions.RegisterAutoDescription<megamol::archvis::FEMLoader>();
+
             // register calls here:
 
             //
@@ -59,6 +68,7 @@ namespace {
             //   this->call_descriptions.RegisterAutoDescription<megamol::archvis::MyCall2>();
             //   ...
             //
+			this->call_descriptions.RegisterAutoDescription<megamol::archvis::FEMDataCall>();
 
         }
         MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics

@@ -18,7 +18,7 @@
 #include "mmcore/view/Renderer3DModule.h"
 #include "mmcore/view/CallRender3D.h"
 
-#include "ng_mesh/GPUMaterialDataStorage.h"
+#include "ng_mesh/GPUMaterialCollection.h"
 
 #include "glowl/BufferObject.h"
 #include "glowl/Mesh.h"

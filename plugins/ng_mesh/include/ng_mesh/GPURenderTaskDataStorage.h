@@ -15,7 +15,7 @@
 #include "glowl/Mesh.h"
 #include "glowl/BufferObject.h"
 
-#include "GPUMaterialDataStorage.h"
+#include "GPUMaterialCollection.h"
 
 namespace megamol {
 	namespace ngmesh {
