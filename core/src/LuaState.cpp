@@ -1590,17 +1590,23 @@ int megamol::core::LuaState::ReadTextFile(lua_State* L) {
 
             lua_remove(L, 1); // get rid of the filename on the stack, leaving the function pointer
             lua_pushstring(L, buffer.str().c_str()); // put string parameter on top of stack
-            // call the function pointer
-            lua_pcall(L, 1, 1, 0);
-            n = lua_gettop(L);
-            if (n != 1) {
-                std::string err = MMC_LUA_MMREADTEXTFILE ": function did not return a string, this is bad.";
-                lua_pushstring(L, err.c_str());
-                lua_error(L);
-            } else {
-                const auto newString = luaL_checkstring(L, 1);
-                //vislib::sys::Log::DefaultLog.WriteInfo(MMC_LUA_MMREADTEXTFILE ": transformed into:\n%s\n", newString);
+            if (lua_type(L, 1) == LUA_TNIL) {
+                // no transformation function, just return the string
                 return 1;
+            } else {
+                // call the function pointer
+                lua_pcall(L, 1, 1, 0);
+                n = lua_gettop(L);
+                if (n != 1) {
+                    std::string err = MMC_LUA_MMREADTEXTFILE ": function did not return a string, this is bad.";
+                    lua_pushstring(L, err.c_str());
+                    lua_error(L);
+                } else {
+                    const auto newString = luaL_checkstring(L, 1);
+                    // vislib::sys::Log::DefaultLog.WriteInfo(MMC_LUA_MMREADTEXTFILE ": transformed into:\n%s\n",
+                    // newString);
+                    return 1;
+                }
             }
         } else {
             std::string err = MMC_LUA_MMREADTEXTFILE ": cannot open file '";
