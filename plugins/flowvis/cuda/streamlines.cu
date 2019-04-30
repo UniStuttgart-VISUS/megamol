@@ -223,7 +223,7 @@ void update_label_and_dist(const int num_convergence_points, const int num_conve
 {
 #if __streamlines_cuda_shi_et_al
     label = -1;
-    distance = 100000.0f;
+    distance = FLT_MAX;
 #endif
 
     // Calculate distance of the current position to critical points
@@ -358,7 +358,7 @@ void compute_streamlines_kernel(const int num_convergence_points, const int num_
         }
 #if __streamlines_cuda_shi_et_al
         // Update values by evaluating the distance to convergence structures at the final position
-        update_label_and_dist(num_convergence_points, num_convergence_lines, num_triangles, pos, label, dist);
+        update_label_and_dist(num_convergence_points, num_convergence_lines, pos, label, dist);
 #endif
 
         // Store and return calculated values
