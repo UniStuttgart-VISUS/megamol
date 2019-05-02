@@ -61,7 +61,7 @@ bool moldyn::MMPLDDataSource::Frame::LoadFrame(vislib::sys::File *file, unsigned
 /*
  * moldyn::MMPLDDataSource::Frame::SetData
  */
-void moldyn::MMPLDDataSource::Frame::SetData(MultiParticleDataCall& call) {
+void moldyn::MMPLDDataSource::Frame::SetData(MultiParticleDataCall& call, vislib::math::Cuboid<float> const& bbox, bool overrideBBox) {
     if (this->dat.IsEmpty()) {
         call.SetParticleListCount(0);
         return;
@@ -137,12 +137,14 @@ void moldyn::MMPLDDataSource::Frame::SetData(MultiParticleDataCall& call) {
 
         pts.SetCount(*this->dat.AsAt<UINT64>(p)); p += 8;
 
-        if (this->fileVersion == 103) {
+        if (this->fileVersion == 103 && !overrideBBox) {
             auto const box = this->dat.AsAt<float>(p);
             vislib::math::Cuboid<float> bbox;
             bbox.Set(box[0], box[1], box[2], box[3], box[4], box[5]);
             pts.SetBBox(bbox);
             p += 24;
+        } else {
+            pts.SetBBox(bbox);
         }
 
         pts.SetVertexData(vrtDatType, this->dat.At(p), stride);
@@ -173,6 +175,7 @@ moldyn::MMPLDDataSource::MMPLDDataSource(void) : view::AnimDataModule(),
         filename("filename", "The path to the MMPLD file to load."),
         limitMemorySlot("limitMemory", "Limits the memory cache size"),
         limitMemorySizeSlot("limitMemorySize", "Specifies the size limit (in MegaBytes) of the memory cache"),
+        overrideBBoxSlot("overrideLocalBBox", "Override local bbox"),
         getData("getdata", "Slot to request data from this data source."),
         file(NULL), frameIdx(NULL), bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f),
         clipbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f), data_hash(0) {
@@ -192,6 +195,9 @@ moldyn::MMPLDDataSource::MMPLDDataSource(void) : view::AnimDataModule(),
 
     this->limitMemorySizeSlot << new param::IntParam(2 * 1024, 1);
     this->MakeSlotAvailable(&this->limitMemorySizeSlot);
+
+    this->overrideBBoxSlot << new param::BoolParam(false);
+    this->MakeSlotAvailable(&this->overrideBBoxSlot);
 
     this->getData.SetCallback("MultiParticleDataCall", "GetData", &MMPLDDataSource::getDataCallback);
     this->getData.SetCallback("MultiParticleDataCall", "GetExtent", &MMPLDDataSource::getExtentCallback);
@@ -388,7 +394,8 @@ bool moldyn::MMPLDDataSource::getDataCallback(Call& caller) {
         c2->SetUnlocker(new Unlocker(*f));
         c2->SetFrameID(f->FrameNumber());
         c2->SetDataHash(this->data_hash);
-        f->SetData(*c2);
+        auto overrideBBox = this->overrideBBoxSlot.Param<param::BoolParam>()->Value();
+        f->SetData(*c2, this->bbox, overrideBBox);
     }
 
     return true;
