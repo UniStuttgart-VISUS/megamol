@@ -85,4 +85,5 @@ void factories::register_call_classes(factories::CallDescriptionManager& instanc
     instance.RegisterAutoDescription<cluster::mpi::MpiCall>();
     instance.RegisterAutoDescription<moldyn::EllipsoidalParticleDataCall>();
     instance.RegisterAutoDescription<moldyn::ParticleRelistCall>();
+    instance.RegisterAutoDescription<view::light::CallLight>();
 }

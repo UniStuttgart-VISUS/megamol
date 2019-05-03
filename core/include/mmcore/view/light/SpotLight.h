@@ -12,7 +12,7 @@ namespace core {
 namespace view {
 namespace light {
 
-class SpotLight : public AbstractLight {
+class MEGAMOLCORE_API SpotLight : public AbstractLight {
 public:
     /**
      * Answer the name of this module.
