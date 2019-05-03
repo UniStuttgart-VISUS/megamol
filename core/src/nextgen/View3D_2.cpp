@@ -527,7 +527,7 @@ bool nextgen::View3D_2::OnKey(view::Key key, view::KeyAction action, view::Modif
         }
     }
 
-    return true;
+    return false;
 }
 
 /*
