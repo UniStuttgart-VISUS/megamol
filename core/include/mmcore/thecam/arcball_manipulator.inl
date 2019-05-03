@@ -107,38 +107,38 @@ void Operator::on_mouse_up(const int button) throw() {
 /*
  * megamol::core::thecam::arcball_manipulator<T>::arcball_manipulator
  */
-template<class T>
-megamol::core::thecam::arcball_manipulator<T>::arcball_manipulator(
-    const point_type& rotCentre, const world_type radius)
-    : ballRadius(radius), rotCentre(rotCentre) { }
+template <class T>
+megamol::core::thecam::arcball_manipulator<T>::arcball_manipulator(const point_type& rotCentre, const world_type radius)
+    : ballRadius(radius), rotCentre(rotCentre) {}
 
 
 /*
  * megamol::core::thecam::arcball_manipulator<T>::~arcball_manipulator
  */
-template<class T>
-megamol::core::thecam::arcball_manipulator<T>::~arcball_manipulator(void) { }
+template <class T> megamol::core::thecam::arcball_manipulator<T>::~arcball_manipulator(void) {}
 
 
 /*
  * megamol::core::thecam::arcball_manipulator<T>::on_drag
  */
-template<class T>
-void megamol::core::thecam::arcball_manipulator<T>::on_drag(
-        const screen_type x, const screen_type y) {
+template <class T>
+void megamol::core::thecam::arcball_manipulator<T>::on_drag(const screen_type x, const screen_type y) {
     if (this->manipulating() && this->enabled()) {
         auto cam = this->camera();
         THE_ASSERT(cam != nullptr);
-        this->currentVector = this->mapToSphere(x, y);
 
-        // Compute axis of rotation.
-        auto axis = megamol::core::thecam::math::cross(this->startVector, this->currentVector);
+        if (this->lastSx != x || this->lastSy != y) {
+            this->currentVector = this->mapToSphere(x, y);
 
-        if (!axis.empty()) {
+            // Compute axis of rotation.
+            auto axis = megamol::core::thecam::math::cross(this->startVector, this->currentVector);
+
             // Compute angle and rotation quaternion.
             quaternion_type quat;
-            auto dp = thecam::math::dot(this->startVector, this->currentVector);
-            thecam::math::set_from_angle_axis(quat, dp, axis);
+            auto angle = thecam::math::dot(this->startVector, this->currentVector);
+
+
+            thecam::math::set_from_angle_axis(quat, angle, axis);
 
             // Apply the rotation.
             auto rot = quat * this->startRot;
@@ -150,6 +150,9 @@ void megamol::core::thecam::arcball_manipulator<T>::on_drag(
             pos = thecam::math::rotate(pos, rot);
             pos += this->rotCentre;
             cam->position(pos);
+
+            this->lastSx = x;
+            this->lastSy = y;
         }
     }
 }
@@ -158,14 +161,15 @@ void megamol::core::thecam::arcball_manipulator<T>::on_drag(
 /*
  * megamol::core::thecam::arcball_manipulator<T>::on_drag_start
  */
-template<class T>
-void megamol::core::thecam::arcball_manipulator<T>::on_drag_start(
-        const screen_type x, const screen_type y) {
+template <class T>
+void megamol::core::thecam::arcball_manipulator<T>::on_drag_start(const screen_type x, const screen_type y) {
     if (!this->manipulating() && this->enabled()) {
         this->begin_manipulation();
         this->startPos = this->camera()->position();
         this->startRot = math::invert(this->camera()->orientation());
         this->startVector = this->mapToSphere(x, y);
+        this->lastSx = x;
+        this->lastSy = y;
     }
 }
 
@@ -173,10 +177,9 @@ void megamol::core::thecam::arcball_manipulator<T>::on_drag_start(
 /*
  * megamol::core::thecam::arcball_manipulator<T>::mapToSphere
  */
-template<class T>
+template <class T>
 typename megamol::core::thecam::arcball_manipulator<T>::vector_type
-megamol::core::thecam::arcball_manipulator<T>::mapToSphere(
-        const screen_type sx, const screen_type sy) const {
+megamol::core::thecam::arcball_manipulator<T>::mapToSphere(const screen_type sx, const screen_type sy) const {
     THE_ASSERT(this->camera() != nullptr);
     auto wndSize = this->camera()->resolution_gate();
     auto halfHeight = wndSize.height() / static_cast<world_type>(2);

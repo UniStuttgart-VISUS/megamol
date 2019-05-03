@@ -176,6 +176,11 @@ namespace thecam {
         /** The point on the arcball when the drag interaction started. */
         vector_type startVector;
 
+        /** The x-coordinate of the last clicked screen position */
+        screen_type lastSx;
+
+        /** The y-coordinate of the last clicked screen position */
+        screen_type lastSy;
     };
 
 } /* end namespace thecam */
