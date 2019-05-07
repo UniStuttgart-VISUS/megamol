@@ -54,6 +54,8 @@ bool megamol::ngmesh::GlTFRenderTasksDataSource::getDataCallback(core::Call & ca
 
 	if (gltf_call->getUpdateFlag())
 	{
+		m_gpu_render_tasks->clear();
+
 		auto model = gltf_call->getGlTFModel();
 
 		for (size_t node_idx = 0; node_idx < model->nodes.size(); node_idx++)
@@ -89,15 +91,27 @@ bool megamol::ngmesh::GlTFRenderTasksDataSource::getDataCallback(core::Call & ca
 
 				//TODO bounding box ?
 
-				auto const& sub_mesh = gpu_mesh_storage->getSubMeshData()[model->nodes[node_idx].mesh];
-				auto const& gpu_batch_mesh = gpu_mesh_storage->getMeshes()[sub_mesh.batch_index].mesh;
-				auto const& shader = gpu_mtl_storage->getMaterials().front().shader_program;
+				// compute submesh offset by iterating over all meshes before the given mesh and summing up their primitive counts
+				size_t submesh_offset = 0;
+				for (int mesh_idx = 0; mesh_idx < model->nodes[node_idx].mesh; ++mesh_idx)
+				{
+					submesh_offset += model->meshes[mesh_idx].primitives.size();
+				}
 
-				m_gpu_render_tasks->addSingleRenderTask(
-					shader,
-					gpu_batch_mesh,
-					sub_mesh.sub_mesh_draw_command,
-					object_transform);
+				auto primitive_cnt = model->meshes[model->nodes[node_idx].mesh].primitives.size();
+				for (size_t primitive_idx = 0; primitive_idx < primitive_cnt; ++primitive_idx)
+				{
+					//auto const& sub_mesh = gpu_mesh_storage->getSubMeshData()[model->nodes[node_idx].mesh];
+					auto const& sub_mesh = gpu_mesh_storage->getSubMeshData()[submesh_offset + primitive_idx];
+					auto const& gpu_batch_mesh = gpu_mesh_storage->getMeshes()[sub_mesh.batch_index].mesh;
+					auto const& shader = gpu_mtl_storage->getMaterials().front().shader_program;
+
+					m_gpu_render_tasks->addSingleRenderTask(
+						shader,
+						gpu_batch_mesh,
+						sub_mesh.sub_mesh_draw_command,
+						object_transform);
+				}
 			}
 		}
 

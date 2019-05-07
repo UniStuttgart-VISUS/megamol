@@ -1,5 +1,5 @@
 /*
-* GPURenderTaskDataStorage.h
+* GPURenderTaskCollection.h
 *
 * Copyright (C) 2019 by Universitaet Stuttgart (VISUS).
 * All rights reserved.
@@ -20,7 +20,7 @@
 namespace megamol {
 	namespace ngmesh {
 
-		class GPURenderTaskDataStorage
+		class GPURenderTaskCollection
 		{
 		public:
 			//template<typename T>
@@ -68,6 +68,8 @@ namespace megamol {
 
 			//void updateGPUBuffers();
 
+			void clear() { m_render_tasks.clear(); }
+
 			size_t getTotalDrawCount() { size_t retval = 0; for (auto& rt : m_render_tasks) { retval += rt.draw_cnt; } return retval; };
 
 			std::vector<RenderTasks> const& getRenderTasks() { return m_render_tasks; }
@@ -80,7 +82,7 @@ namespace megamol {
 		};
 
 		template<typename PerDrawDataContainer>
-		inline void GPURenderTaskDataStorage::addSingleRenderTask(
+		inline void GPURenderTaskCollection::addSingleRenderTask(
 			std::shared_ptr<GLSLShader> const & shader_prgm,
 			std::shared_ptr<Mesh> const & mesh,
 			DrawElementsCommand const & draw_command,
@@ -136,7 +138,7 @@ namespace megamol {
 		}
 
 		template<typename DrawCommandContainer, typename PerDrawDataContainer>
-		inline void GPURenderTaskDataStorage::addRenderTasks(
+		inline void GPURenderTaskCollection::addRenderTasks(
 			std::shared_ptr<GLSLShader> const & shader_prgm,
 			std::shared_ptr<Mesh> const & mesh,
 			DrawCommandContainer const& draw_commands,

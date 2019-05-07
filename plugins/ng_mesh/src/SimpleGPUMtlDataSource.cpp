@@ -17,7 +17,7 @@ megamol::ngmesh::SimpleGPUMtlDataSource::~SimpleGPUMtlDataSource()
 
 bool megamol::ngmesh::SimpleGPUMtlDataSource::create()
 {
-	return false;
+	return true;
 }
 
 bool megamol::ngmesh::SimpleGPUMtlDataSource::getDataCallback(core::Call & caller)

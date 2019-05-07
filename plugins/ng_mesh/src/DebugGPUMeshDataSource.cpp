@@ -11,7 +11,7 @@ megamol::ngmesh::DebugGPUMeshDataSource::~DebugGPUMeshDataSource()
 
 bool megamol::ngmesh::DebugGPUMeshDataSource::create()
 {
-	m_gpu_meshes = std::make_shared<GPUMeshDataStorage>();
+	m_gpu_meshes = std::make_shared<GPUMeshCollection>();
 
 	m_bbox = { -1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f };
 

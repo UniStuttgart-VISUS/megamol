@@ -15,8 +15,8 @@
 #include "ArchVisMSMDataSource.h"
 #include "FEMDataCall.h"
 #include "FEMDataStorage.h"
-#include "FEMGPUMeshDataSource.h"
-#include "FEMGPURenderTaskDataSource.h"
+#include "FEMMeshDataSource.h"
+#include "FEMRenderTaskDataSource.h"
 #include "FEMLoader.h"
 
 

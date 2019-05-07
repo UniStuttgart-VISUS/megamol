@@ -16,7 +16,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "ng_mesh.h"
 
-#include "GPUMeshDataStorage.h"
+#include "GPUMeshCollection.h"
 
 namespace megamol
 {
@@ -65,7 +65,7 @@ namespace megamol
 			std::array<float, 6> m_bbox;
 
 
-			std::shared_ptr<GPUMeshDataStorage> m_gpu_meshes;
+			std::shared_ptr<GPUMeshCollection> m_gpu_meshes;
 
 		private:
 

@@ -25,7 +25,7 @@ megamol::ngmesh::AbstractGPUMeshDataSource::~AbstractGPUMeshDataSource()
 
 bool megamol::ngmesh::AbstractGPUMeshDataSource::create(void)
 {
-	m_gpu_meshes = std::make_shared<GPUMeshDataStorage>();
+	m_gpu_meshes = std::make_shared<GPUMeshCollection>();
 
 	return true;
 }

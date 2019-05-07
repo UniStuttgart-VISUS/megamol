@@ -1,5 +1,5 @@
 /*
-* GPUMeshDataStorage.h
+* GPUMeshCollection.h
 *
 * Copyright (C) 2019 by Universitaet Stuttgart (VISUS).
 * All rights reserved.
@@ -19,7 +19,7 @@
 namespace megamol {
 	namespace ngmesh {
 
-		class GPUMeshDataStorage
+		class GPUMeshCollection
 		{
 		public:
 			template<typename T>
@@ -56,8 +56,8 @@ namespace megamol {
 				DrawElementsCommand sub_mesh_draw_command;
 			};
 
-			GPUMeshDataStorage() = default;
-			~GPUMeshDataStorage() = default;
+			GPUMeshCollection() = default;
+			~GPUMeshCollection() = default;
 
 			template<
 				typename VertexBufferIterator,
@@ -71,6 +71,8 @@ namespace megamol {
 					GLenum                                                 primitive_type,
 					bool                                                   store_seperate = false);
 
+			void clear() { m_batched_meshes.clear(); }
+
 			std::vector<BatchedMeshes> const& getMeshes();
 
 			std::vector<SubMeshData> const& getSubMeshData();
@@ -81,7 +83,7 @@ namespace megamol {
 		};
 
 		template<typename VertexBufferIterator, typename IndexBufferIterator>
-		inline void GPUMeshDataStorage::addMesh(
+		inline void GPUMeshCollection::addMesh(
 			VertexLayout vertex_descriptor,
 			std::vector<IteratorPair<VertexBufferIterator>> const & vertex_buffers,
 			IteratorPair<IndexBufferIterator> index_buffer,

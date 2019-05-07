@@ -13,7 +13,7 @@
 
 #include "mmcore/AbstractGetData3DCall.h"
 #include "ng_mesh.h"
-#include "GPURenderTaskDataStorage.h"
+#include "GPURenderTaskCollection.h"
 
 namespace megamol
 {
@@ -63,16 +63,16 @@ namespace megamol
 				return AbstractGetData3DCall::FunctionName(idx);
 			}
 
-			void setRenderTaskData(GPURenderTaskDataStorage* render_tasks) {
+			void setRenderTaskData(GPURenderTaskCollection* render_tasks) {
 				m_gpu_render_tasks = render_tasks;
 			}
 
-			GPURenderTaskDataStorage* getRenderTaskData() {
+			GPURenderTaskCollection* getRenderTaskData() {
 				return m_gpu_render_tasks;
 			}
 
 		private:
-			GPURenderTaskDataStorage* m_gpu_render_tasks;
+			GPURenderTaskCollection* m_gpu_render_tasks;
 		};
 
 		/** Description class typedef */

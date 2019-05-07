@@ -37,7 +37,7 @@ bool megamol::ngmesh::AbstractGPURenderTaskDataSource::create(void)
 {
 	// intentionally empty ?
 
-	m_gpu_render_tasks = std::make_shared<GPURenderTaskDataStorage>();
+	m_gpu_render_tasks = std::make_shared<GPURenderTaskCollection>();
 
 	return true;
 }

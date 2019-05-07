@@ -13,7 +13,7 @@
 
 #include "ng_mesh.h"
 #include "mmcore/AbstractGetData3DCall.h"
-#include "GPUMeshDataStorage.h"
+#include "GPUMeshCollection.h"
 
 namespace megamol {
 	namespace ngmesh {
@@ -62,16 +62,16 @@ namespace megamol {
 				return AbstractGetData3DCall::FunctionName(idx);
 			}
 
-			void setGPUMeshes(GPUMeshDataStorage* gpu_meshes) {
+			void setGPUMeshes(GPUMeshCollection* gpu_meshes) {
 				m_gpu_meshes = gpu_meshes;
 			}
 
-			GPUMeshDataStorage* getGPUMeshes() {
+			GPUMeshCollection* getGPUMeshes() {
 				return m_gpu_meshes;
 			}
 
 		private:
-			GPUMeshDataStorage* m_gpu_meshes;
+			GPUMeshCollection* m_gpu_meshes;
 		};
 
 		/** Description class typedef */

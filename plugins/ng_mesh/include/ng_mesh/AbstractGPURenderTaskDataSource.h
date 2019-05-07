@@ -14,7 +14,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/CalleeSlot.h"
 #include "ng_mesh.h"
-#include "GPURenderTaskDataStorage.h"
+#include "GPURenderTaskCollection.h"
 
 namespace megamol
 {
@@ -60,7 +60,7 @@ namespace megamol
 			/**
 			* 
 			*/
-			std::shared_ptr<GPURenderTaskDataStorage> m_gpu_render_tasks;
+			std::shared_ptr<GPURenderTaskCollection> m_gpu_render_tasks;
 
 			/** The slot for requesting data */
 			megamol::core::CalleeSlot m_getData_slot;
