@@ -1,6 +1,6 @@
 /*
  * astro.h
- * Copyright (C) 2009-2015 by MegaMol Team
+ * Copyright (C) 2009-2019 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
 #ifndef ASTRO_H_INCLUDED
@@ -34,7 +34,7 @@ extern "C" {
 #endif
 
 /**
- * Returns the version of the MegaMol™ plugin api used by this plugin.
+ * Returns the version of the MegaMol plugin api used by this plugin.
  *
  * @return 200 -- (ver.: 2.00)
  */
