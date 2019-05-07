@@ -29,7 +29,7 @@ namespace megamol
 			* @return The name of this module.
 			*/
 			static const char *ClassName(void) {
-				return "FEMTxtLoader";
+				return "FEMLoader";
 			}
 
 			/**
@@ -74,6 +74,10 @@ namespace megamol
 			* Implementation of 'Release'.
 			*/
 			void release();
+
+			std::vector<FEMDataStorage::Vec3> loadNodesFromFile(std::string const& filename);
+
+			std::vector<std::array<size_t, 8>> loadElementsFromFile(std::string const& filename);
 
 		private:
 			std::shared_ptr<FEMDataStorage> m_fem_data;

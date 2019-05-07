@@ -24,6 +24,8 @@ namespace megamol {
 
 		class FEMDataStorage
 		{
+		public:
+
 			typedef vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> Mat4x4;
 			typedef vislib::math::Vector<float, 3> Vec3;
 			typedef vislib::math::Vector<float, 4> Vec4;
@@ -35,13 +37,18 @@ namespace megamol {
 				CUBE = 8 // 3D volumetric element, connects 8 nodes
 			};
 
-		public:
 			FEMDataStorage();
 			~FEMDataStorage();
 
 			FEMDataStorage(
 				std::vector<Vec3> const& nodes,
 				std::vector<std::array<size_t, 8>> const& elements);
+
+			void setNodes(std::vector<Vec3> const& nodes);
+
+			void setNodes(std::vector<Vec3> && nodes);
+
+			void setElements(std::vector<std::array<size_t, 8>> const& elements);
 
 		private:
 
@@ -137,10 +144,32 @@ namespace megamol {
 		{
 			for (size_t element_idx = 0; element_idx < elements.size(); ++element_idx)
 			{
-				m_elements[element_idx] = Element(ElementType::CUBE, elements[element_idx]);;
+				m_elements[element_idx] = Element(ElementType::CUBE, elements[element_idx]);
 			}
 		}
 
+		inline void FEMDataStorage::setNodes(std::vector<Vec3> const& nodes)
+		{
+			m_node_positions = nodes;
+			m_node_cnt = m_node_positions.size();
+		}
+
+		inline void FEMDataStorage::setNodes(std::vector<Vec3> && nodes)
+		{
+			m_node_positions = nodes;
+			m_node_cnt = m_node_positions.size();
+		}
+
+		inline void FEMDataStorage::setElements(std::vector<std::array<size_t, 8>> const& elements)
+		{
+			m_elements.clear();
+			m_elements.reserve(elements.size());
+
+			for (size_t element_idx = 0; element_idx < elements.size(); ++element_idx)
+			{
+				m_elements.push_back(Element(ElementType::CUBE, elements[element_idx]));
+			}
+		}
 	}
 }
 
