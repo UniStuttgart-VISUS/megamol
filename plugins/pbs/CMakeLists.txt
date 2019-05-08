@@ -35,7 +35,8 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
     GIT_TAG "1.1.7"
     CMAKE_ARGS
       -DBUILD_SHARED_LIBS=ON
-      -DSNAPPY_BUILD_TESTS=OFF)
+      -DSNAPPY_BUILD_TESTS=OFF
+      -DCMAKE_BUILD_TYPE=Release)
   add_external_library(snappy SHARED
     DEPENDS snappy_ext
     IMPORT_LIBRARY_DEBUG ${SNAPPY_IMPORT_LIB}
@@ -46,6 +47,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   if(MPI_C_FOUND)
     add_external_project(IceT_ext
       GIT_REPOSITORY https://gitlab.kitware.com/icet/icet.git
+      GIT_TAG "IceT-2.1.0"
       CMAKE_ARGS
         -DBUILD_SHARED_LIBS=ON
         -DICET_BUILD_TESTING=OFF
