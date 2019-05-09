@@ -1,12 +1,12 @@
 ﻿/*
- * LinearTransferFunctionEditor.cpp
+ * GUITransferFunctionEditor.cpp
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
-#include "LinearTransferFunctionEditor.h"
+#include "GUITransferFunctionEditor.h"
 
 
 using namespace megamol::gui;
@@ -16,10 +16,11 @@ using namespace megamol::core;
 /**
  * Ctor
  */
-megamol::gui::LinearTransferFunctionEditor::LinearTransferFunctionEditor(void)
+megamol::gui::GUITransferFunctionEditor::GUITransferFunctionEditor(void)
     : GUIUtility()
+    , active_param(nullptr)
     , data()
-    , interpol_mode(param::LinearTransferFunctionParam::InterpolationMode::LINEAR)
+    , interpol_mode(param::TransferFunctionParam::InterpolationMode::LINEAR)
     , tex_size(128)
     , tex_data()
     , tex_modified(false)
@@ -42,18 +43,25 @@ megamol::gui::LinearTransferFunctionEditor::LinearTransferFunctionEditor(void)
 /**
  * Dtor
  */
-megamol::gui::LinearTransferFunctionEditor::~LinearTransferFunctionEditor(void) {
+megamol::gui::GUITransferFunctionEditor::~GUITransferFunctionEditor(void) {
 
-    // nothing to do here ...
+    // Do not delete!
+    this->active_param = nullptr;
 }
 
 
 /**
- * LinearTransferFunctionEditor::SetTransferFunction
+ * GUITransferFunctionEditor::SetTransferFunction
  */
-bool megamol::gui::LinearTransferFunctionEditor::SetTransferFunction(const std::string& in_tfs) {
+bool megamol::gui::GUITransferFunctionEditor::SetTransferFunction(const std::string& in_tfs) {
 
-    bool retval = megamol::core::param::LinearTransferFunctionParam::ParseTransferFunction(
+    if (active_param == nullptr) {
+        vislib::sys::Log::DefaultLog.WriteWarn(
+            "[GUITransferFunctionEditor] Set active parameter before loading transfer function");
+        return false;
+    }
+
+    bool retval = megamol::core::param::TransferFunctionParam::ParseTransferFunction(
         in_tfs, this->data, this->interpol_mode, this->tex_size);
 
     if (retval) {
@@ -65,23 +73,30 @@ bool megamol::gui::LinearTransferFunctionEditor::SetTransferFunction(const std::
 
 
 /**
- * LinearTransferFunctionEditor::GetTransferFunction
+ * GUITransferFunctionEditor::GetTransferFunction
  */
-bool megamol::gui::LinearTransferFunctionEditor::GetTransferFunction(std::string& in_tfs) {
+bool megamol::gui::GUITransferFunctionEditor::GetTransferFunction(std::string& out_tfs) {
 
-    return megamol::core::param::LinearTransferFunctionParam::DumpTransferFunction(
-        in_tfs, this->data, this->interpol_mode, this->tex_size);
+    return megamol::core::param::TransferFunctionParam::DumpTransferFunction(
+        out_tfs, this->data, this->interpol_mode, this->tex_size);
 }
 
 
 /**
- * LinearTransferFunctionEditor::DrawTransferFunctionEditor
+ * GUITransferFunctionEditor::DrawTransferFunctionEditor
  */
-bool megamol::gui::LinearTransferFunctionEditor::DrawTransferFunctionEditor(void) {
+bool megamol::gui::GUITransferFunctionEditor::DrawTransferFunctionEditor(void) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
     ImGuiIO& io = ImGui::GetIO();
     ImGuiStyle& style = ImGui::GetStyle();
+
+    if (this->active_param == nullptr) {
+        ImGui::TextColored(style.Colors[ImGuiCol_ButtonHovered],
+            "No active parameter connected.\nChanges are ineffectual.\nLoad "
+            "transfer function via appropriate parameter.");
+        ImGui::Separator();
+    }
 
     const float tfw_height = 28.0f;
     const float tfw_item_width = ImGui::GetContentRegionAvailWidth() * 0.75f;
@@ -153,14 +168,14 @@ bool megamol::gui::LinearTransferFunctionEditor::DrawTransferFunctionEditor(void
             ImVec2 point_cur_pos = ImVec2(canvas_pos.x + this->data[i][4] * canvas_size.x,
                 canvas_pos.y + (1.0f - this->data[i][c]) * canvas_size.y);
 
-            if (this->interpol_mode == param::LinearTransferFunctionParam::InterpolationMode::LINEAR) {
+            if (this->interpol_mode == param::TransferFunctionParam::InterpolationMode::LINEAR) {
                 if (i < (this->data.size() - 1)) {
                     ImVec2 point_next_pos = ImVec2(canvas_pos.x + this->data[i + 1][4] * canvas_size.x,
                         canvas_pos.y + (1.0f - this->data[i + 1][c]) * canvas_size.y);
 
                     draw_list->AddLine(point_cur_pos, point_next_pos, line_col, 4.0f);
                 }
-            } else if (this->interpol_mode == param::LinearTransferFunctionParam::InterpolationMode::GAUSS) {
+            } else if (this->interpol_mode == param::TransferFunctionParam::InterpolationMode::GAUSS) {
                 const float ga = this->data[i][c];
                 const float gb = this->data[i][4];
                 const float gc = this->data[i][5];
@@ -176,7 +191,7 @@ bool megamol::gui::LinearTransferFunctionEditor::DrawTransferFunctionEditor(void
                     g0 = last_g1;
                     if (p == 0) {
                         x0 = (float)(-d) / canvas_size.x;
-                        g0 = param::LinearTransferFunctionParam::gauss(x0, ga, gb, gc);
+                        g0 = param::TransferFunctionParam::gauss(x0, ga, gb, gc);
                     }
                     ImVec2 pos0 = ImVec2(
                         canvas_pos.x + (x0 * canvas_size.x), canvas_pos.y + canvas_size.y - (g0 * canvas_size.y));
@@ -184,7 +199,7 @@ bool megamol::gui::LinearTransferFunctionEditor::DrawTransferFunctionEditor(void
                     if (p == ((int)canvas_size.x - 1)) {
                         x1 = (float)(canvas_size.x + d) / canvas_size.x;
                     }
-                    g1 = param::LinearTransferFunctionParam::gauss(x1, ga, gb, gc);
+                    g1 = param::TransferFunctionParam::gauss(x1, ga, gb, gc);
                     ImVec2 pos1 = ImVec2(
                         canvas_pos.x + (x1 * canvas_size.x), canvas_pos.y + canvas_size.y - (g1 * canvas_size.y));
                     last_g1 = g1;
@@ -336,7 +351,7 @@ bool megamol::gui::LinearTransferFunctionEditor::DrawTransferFunctionEditor(void
     this->HelpMarkerToolTip(help);
 
     // Sigma slider
-    if (this->interpol_mode == param::LinearTransferFunctionParam::InterpolationMode::GAUSS) {
+    if (this->interpol_mode == param::TransferFunctionParam::InterpolationMode::GAUSS) {
         float sigma = this->data[this->point_select_node][5];
         if (ImGui::SliderFloat("Selected Sigma", &sigma, 0.0f, 1.0f)) {
             this->data[this->point_select_node][5] = sigma;
@@ -364,10 +379,10 @@ bool megamol::gui::LinearTransferFunctionEditor::DrawTransferFunctionEditor(void
     // Create current texture data
     bool imm_apply_tex_modified = this->tex_modified;
     if (this->tex_modified) {
-        if (this->interpol_mode == param::LinearTransferFunctionParam::InterpolationMode::LINEAR) {
-            param::LinearTransferFunctionParam::LinearInterpolation(this->tex_data, this->tex_size, this->data);
-        } else if (this->interpol_mode == param::LinearTransferFunctionParam::InterpolationMode::GAUSS) {
-            param::LinearTransferFunctionParam::GaussInterpolation(this->tex_data, this->tex_size, this->data);
+        if (this->interpol_mode == param::TransferFunctionParam::InterpolationMode::LINEAR) {
+            param::TransferFunctionParam::LinearInterpolation(this->tex_data, this->tex_size, this->data);
+        } else if (this->interpol_mode == param::TransferFunctionParam::InterpolationMode::GAUSS) {
+            param::TransferFunctionParam::GaussInterpolation(this->tex_data, this->tex_size, this->data);
         }
         this->tex_modified = false;
     }
@@ -395,14 +410,15 @@ bool megamol::gui::LinearTransferFunctionEditor::DrawTransferFunctionEditor(void
     }
 
     // Select interpolation mode (Linear, Gauss, ...)
-    std::map<param::LinearTransferFunctionParam::InterpolationMode, std::string> opts;
-    opts[param::LinearTransferFunctionParam::InterpolationMode::LINEAR] = "Linear";
-    opts[param::LinearTransferFunctionParam::InterpolationMode::GAUSS] = "Gauss";
+    std::map<param::TransferFunctionParam::InterpolationMode, std::string> opts;
+    opts[param::TransferFunctionParam::InterpolationMode::LINEAR] = "Linear";
+    opts[param::TransferFunctionParam::InterpolationMode::GAUSS] = "Gauss";
+    int opts_cnt = opts.size();
     if (ImGui::BeginCombo("Interpolation", opts[this->interpol_mode].c_str())) {
-        for (int i = 0; i < opts.size(); ++i) {
-            if (ImGui::Selectable(opts[(param::LinearTransferFunctionParam::InterpolationMode)i].c_str(),
-                    (this->interpol_mode == (param::LinearTransferFunctionParam::InterpolationMode)i))) {
-                this->interpol_mode = (param::LinearTransferFunctionParam::InterpolationMode)i;
+        for (int i = 0; i < opts_cnt; ++i) {
+            if (ImGui::Selectable(opts[(param::TransferFunctionParam::InterpolationMode)i].c_str(),
+                    (this->interpol_mode == (param::TransferFunctionParam::InterpolationMode)i))) {
+                this->interpol_mode = (param::TransferFunctionParam::InterpolationMode)i;
                 this->tex_modified = true; /// Changes are applied in next frame
             }
         }
@@ -415,9 +431,21 @@ bool megamol::gui::LinearTransferFunctionEditor::DrawTransferFunctionEditor(void
         ret_val = true;
     }
     ImGui::SameLine();
-    ImGui::Checkbox("Apply Changes Immediately", &this->imm_apply);
+    if (ImGui::Checkbox("Apply Changes Immediately", &this->imm_apply)) {
+        ret_val = this->imm_apply;
+    }
+
     if (this->imm_apply && imm_apply_tex_modified) {
         ret_val = true;
+    }
+
+    if (ret_val) {
+        if (this->active_param != nullptr) {
+            std::string tf;
+            if (this->GetTransferFunction(tf)) {
+                this->active_param->SetValue(tf);
+            }
+        }
     }
 
     return ret_val;
