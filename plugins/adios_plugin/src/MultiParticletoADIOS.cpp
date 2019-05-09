@@ -75,6 +75,7 @@ bool MultiParticletoADIOS::getDataCallback(core::Call& call) {
             std::vector<float>& tmp_y = yCont->getVec();
             std::vector<float>& tmp_z = zCont->getVec();
             std::vector<float>& tmp_lbox = lboxCont->getVec();
+            tmp_lbox.reserve(mpdc->GetParticleListCount() * 6);
             for (auto i = 0; i < mpdc->GetParticleListCount(); i++) {
                 core::moldyn::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
                 const size_t num = parts.GetCount();
@@ -94,7 +95,7 @@ bool MultiParticletoADIOS::getDataCallback(core::Call& call) {
                     maxy = std::max(maxy, tmp_y.back());
                     maxz = std::max(maxz, tmp_z.back());
                 }
-                tmp_lbox.emplace_back(minx, miny, minz, maxx, maxy, maxz);
+                tmp_lbox.insert(tmp_lbox.end(), {minx, miny, minz, maxx, maxy, maxz});
 
             }
             dataMap["x"] = std::move(xCont);
@@ -107,6 +108,7 @@ bool MultiParticletoADIOS::getDataCallback(core::Call& call) {
             auto lboxCont = std::make_shared<FloatContainer>(FloatContainer());
             std::vector<float>& tmp_mix = mixCont->getVec();
             std::vector<float>& tmp_lbox = lboxCont->getVec();
+            tmp_lbox.reserve(mpdc->GetParticleListCount() * 6);
             for (auto i = 0; i < mpdc->GetParticleListCount(); i++) {
                 core::moldyn::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
                 const size_t num = parts.GetCount();
@@ -128,7 +130,7 @@ bool MultiParticletoADIOS::getDataCallback(core::Call& call) {
                     maxy = std::max(maxy, y);
                     maxz = std::max(maxz, z);
                 }
-                tmp_lbox.emplace_back(minx, miny, minz, maxx, maxy, maxz);
+                tmp_lbox.insert(tmp_lbox.end(), {minx, miny, minz, maxx, maxy, maxz});
             }
             dataMap["xyz"] = std::move(mixCont);
             lboxCont->shape = {mpdc->GetParticleListCount(), 6};
@@ -144,6 +146,7 @@ bool MultiParticletoADIOS::getDataCallback(core::Call& call) {
             std::vector<double>& tmp_y = yCont->getVec();
             std::vector<double>& tmp_z = zCont->getVec();
             std::vector<double>& tmp_lbox = lboxCont->getVec();
+            tmp_lbox.reserve(mpdc->GetParticleListCount() * 6);
             for (auto i = 0; i < mpdc->GetParticleListCount(); i++) {
                 core::moldyn::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
                 const size_t num = parts.GetCount();
@@ -164,7 +167,7 @@ bool MultiParticletoADIOS::getDataCallback(core::Call& call) {
                     maxy = std::max(maxy, tmp_y.back());
                     maxz = std::max(maxz, tmp_z.back());
                 }
-                tmp_lbox.emplace_back(minx, miny, minz, maxx, maxy, maxz);
+                tmp_lbox.insert(tmp_lbox.end(), {minx, miny, minz, maxx, maxy, maxz});
             }
             dataMap["x"] = std::move(xCont);
             dataMap["y"] = std::move(yCont);
@@ -176,6 +179,7 @@ bool MultiParticletoADIOS::getDataCallback(core::Call& call) {
             auto lboxCont = std::make_shared<DoubleContainer>(DoubleContainer());
             std::vector<double>& tmp_mix = mixCont->getVec();
             std::vector<double>& tmp_lbox = lboxCont->getVec();
+            tmp_lbox.reserve(mpdc->GetParticleListCount() * 6);
             for (auto i = 0; i < mpdc->GetParticleListCount(); i++) {
                 core::moldyn::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
                 const size_t num = parts.GetCount();
@@ -197,7 +201,7 @@ bool MultiParticletoADIOS::getDataCallback(core::Call& call) {
                     maxy = std::max(maxy, y);
                     maxz = std::max(maxz, z);
                 }
-                tmp_lbox.emplace_back(minx, miny, minz, maxx, maxy, maxz);
+                tmp_lbox.insert(tmp_lbox.end(), {minx, miny, minz, maxx, maxy, maxz});
             }
             dataMap["xyz"] = std::move(mixCont);
             lboxCont->shape = {mpdc->GetParticleListCount(), 6};
@@ -215,6 +219,7 @@ bool MultiParticletoADIOS::getDataCallback(core::Call& call) {
             std::vector<float>& tmp_z = zCont->getVec();
             std::vector<float>& tmp_radius = radiusCont->getVec();
             std::vector<float>& tmp_lbox = lboxCont->getVec();
+            tmp_lbox.reserve(mpdc->GetParticleListCount() * 6);
             for (auto i = 0; i < mpdc->GetParticleListCount(); i++) {
                 core::moldyn::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
                 const size_t num = parts.GetCount();
@@ -237,7 +242,7 @@ bool MultiParticletoADIOS::getDataCallback(core::Call& call) {
                     maxy = std::max(maxy, tmp_y.back());
                     maxz = std::max(maxz, tmp_z.back());
                 }
-                tmp_lbox.emplace_back(minx, miny, minz, maxx, maxy, maxz);
+                tmp_lbox.insert(tmp_lbox.end(), {minx, miny, minz, maxx, maxy, maxz});
             }
             dataMap["x"] = std::move(xCont);
             dataMap["y"] = std::move(yCont);
@@ -252,6 +257,7 @@ bool MultiParticletoADIOS::getDataCallback(core::Call& call) {
             std::vector<float>& tmp_mix = mixCont->getVec();
             std::vector<float>& tmp_radius = radiusCont->getVec();
             std::vector<float>& tmp_lbox = lboxCont->getVec();
+            tmp_lbox.reserve(mpdc->GetParticleListCount() * 6);
             for (auto i = 0; i < mpdc->GetParticleListCount(); i++) {
                 core::moldyn::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
                 const size_t num = parts.GetCount();
@@ -275,7 +281,7 @@ bool MultiParticletoADIOS::getDataCallback(core::Call& call) {
                     maxy = std::max(maxy, y);
                     maxz = std::max(maxz, z);
                 }
-                tmp_lbox.emplace_back(minx, miny, minz, maxx, maxy, maxz);
+                tmp_lbox.insert(tmp_lbox.end(), {minx, miny, minz, maxx, maxy, maxz});
             }
             dataMap["xyz"] = std::move(mixCont);
             dataMap["radius"] = std::move(radiusCont);
@@ -333,9 +339,9 @@ bool MultiParticletoADIOS::getDataCallback(core::Call& call) {
                 tmp_b.reserve(tmp_b.size() + num);
                 tmp_a.reserve(tmp_a.size() + num);
                 for (auto j = 0; j < num; j++) {
-                    tmp_r.push_back(parts.GetParticleStore().GetCRAcc()->Get_f(j) / 255.0f);
-                    tmp_g.push_back(parts.GetParticleStore().GetCGAcc()->Get_f(j) / 255.0f);
-                    tmp_b.push_back(parts.GetParticleStore().GetCBAcc()->Get_f(j) / 255.0f);
+                    tmp_r.push_back(parts.GetParticleStore().GetCRAcc()->Get_f(j));
+                    tmp_g.push_back(parts.GetParticleStore().GetCGAcc()->Get_f(j));
+                    tmp_b.push_back(parts.GetParticleStore().GetCBAcc()->Get_f(j));
                     tmp_a.push_back(1.0f);
                 }
             }
@@ -363,10 +369,10 @@ bool MultiParticletoADIOS::getDataCallback(core::Call& call) {
                 tmp_b.reserve(tmp_b.size() + num);
                 tmp_a.reserve(tmp_a.size() + num);
                 for (auto j = 0; j < num; j++) {
-                    tmp_r.push_back(parts.GetParticleStore().GetCRAcc()->Get_f(j) / 255.0f);
-                    tmp_g.push_back(parts.GetParticleStore().GetCGAcc()->Get_f(j) / 255.0f);
-                    tmp_b.push_back(parts.GetParticleStore().GetCBAcc()->Get_f(j) / 255.0f);
-                    tmp_a.push_back(parts.GetParticleStore().GetCAAcc()->Get_f(j) / 255.0f);
+                    tmp_r.push_back(parts.GetParticleStore().GetCRAcc()->Get_f(j));
+                    tmp_g.push_back(parts.GetParticleStore().GetCGAcc()->Get_f(j));
+                    tmp_b.push_back(parts.GetParticleStore().GetCBAcc()->Get_f(j));
+                    tmp_a.push_back(parts.GetParticleStore().GetCAAcc()->Get_f(j));
                 }
             }
             dataMap["r"] = std::move(rCont);
@@ -383,10 +389,15 @@ bool MultiParticletoADIOS::getDataCallback(core::Call& call) {
         std::vector<float>& tmp_g = gCont->getVec();
         std::vector<float>& tmp_b = bCont->getVec();
         std::vector<float>& tmp_a = aCont->getVec();
-        tmp_r.push_back(list0.GetParticleStore().GetCRAcc()->Get_f(0) / 255.0f);
-        tmp_g.push_back(list0.GetParticleStore().GetCGAcc()->Get_f(0) / 255.0f);
-        tmp_b.push_back(list0.GetParticleStore().GetCBAcc()->Get_f(0) / 255.0f);
-        tmp_a.push_back(list0.GetParticleStore().GetCAAcc()->Get_f(0) / 255.0f);
+        tmp_r.push_back(list0.GetParticleStore().GetCRAcc()->Get_f(0));
+        tmp_g.push_back(list0.GetParticleStore().GetCGAcc()->Get_f(0));
+        tmp_b.push_back(list0.GetParticleStore().GetCBAcc()->Get_f(0));
+        tmp_a.push_back(list0.GetParticleStore().GetCAAcc()->Get_f(0));
+
+        rCont->singleValue = true;
+        gCont->singleValue = true;
+        bCont->singleValue = true;
+        aCont->singleValue = true;
 
         dataMap["global_r"] = std::move(rCont);
         dataMap["global_g"] = std::move(gCont);
@@ -487,11 +498,14 @@ bool MultiParticletoADIOS::getDataCallback(core::Call& call) {
         auto listCont = std::make_shared<UInt64Container>(UInt64Container());
         std::vector<unsigned long long int>& tmp_list = listCont->getVec();
         tmp_list.reserve(mpdc->GetParticleListCount());
+        size_t old_num = 0;
+
         for (unsigned long long int i = 0; i < mpdc->GetParticleListCount(); i++) {
             core::moldyn::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
             const size_t num = parts.GetCount();
 
-            tmp_list.push_back(num);
+            tmp_list.push_back(old_num);
+            old_num = num;
         }
         dataMap["list_offset"] = std::move(listCont);
     }
@@ -509,13 +523,16 @@ bool MultiParticletoADIOS::getDataCallback(core::Call& call) {
     vislib::math::Cuboid<float> bbox = mpdc->GetBoundingBoxes().ObjectSpaceBBox();
     tmp_box.resize(6);
     tmp_box = {bbox.GetLeft(), bbox.GetBottom(), bbox.GetBack(), bbox.GetRight(), bbox.GetTop(), bbox.GetFront()};
-    dataMap["box"] = std::move(fc_box);
+    fc_box->singleValue = true;
+    dataMap["global_box"] = std::move(fc_box);
+
 
     // global radius
     if (cad->isInVars("global_radius")) {
         auto fc_radius = std::make_shared<FloatContainer>(FloatContainer());
         std::vector<float>& tmp_radius = fc_radius->getVec();
         tmp_radius.push_back(list0.GetParticleStore().GetRAcc()->Get_f(0));
+        fc_radius->singleValue = true;
         dataMap["global_radius"] = std::move(fc_radius);
     } else if (cad->isInVars("list_radius")) {
         auto radiusCont = std::make_shared<FloatContainer>(FloatContainer());
