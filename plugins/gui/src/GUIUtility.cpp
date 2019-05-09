@@ -31,31 +31,58 @@ megamol::gui::GUIUtility::~GUIUtility(void) {
 
 
 /**
- * GUIUtility::ResetWindowSizePos
+ * GUIUtility::FilePathExists
  */
-void megamol::gui::GUIUtility::ResetWindowSizePos(std::string win_label, float min_height) {
+bool megamol::gui::GUIUtility::FilePathExists(PathType path) { return ns_fs::exists(path); }
 
-    ImGuiIO& io = ImGui::GetIO();
-    ImGuiStyle& style = ImGui::GetStyle();
+bool megamol::gui::GUIUtility::FilePathExists(std::string path) { return this->FilePathExists(PathType(path)); }
 
-    auto win_pos = ImGui::GetWindowPos();
-    if (win_pos.x < 0) {
-        win_pos.x = style.DisplayWindowPadding.x;
-    }
-    if (win_pos.y < 0) {
-        win_pos.y = style.DisplayWindowPadding.y;
-    }
+bool megamol::gui::GUIUtility::FilePathExists(std::wstring path) { return this->FilePathExists(PathType(path)); }
 
-    auto win_width = 0.0f; // width = 0 means auto resize
-    auto win_height = io.DisplaySize.y - (win_pos.y + style.DisplayWindowPadding.y);
-    if (win_height < min_height) {
-        win_height = min_height;
-        win_pos.y = io.DisplaySize.y - (min_height + style.DisplayWindowPadding.y);
+
+/**
+ * GUIUtility::FileHasExtension
+ */
+bool megamol::gui::GUIUtility::FileHasExtension(PathType path, std::string ext) {
+
+    if (!this->FilePathExists(path)) {
+        return false;
     }
 
-    ImGui::SetWindowSize(win_label.c_str(), ImVec2(win_width, win_height), ImGuiCond_Always);
+    return (path.extension().generic_string() == ext);
+}
 
-    ImGui::SetWindowPos(win_label.c_str(), win_pos, ImGuiCond_Always);
+bool megamol::gui::GUIUtility::FileHasExtension(std::string path, std::string ext) {
+    return this->FileHasExtension(PathType(path), ext);
+}
+
+bool megamol::gui::GUIUtility::FileHasExtension(std::wstring path, std::string ext) {
+    return this->FileHasExtension(PathType(path), ext);
+}
+
+
+/**
+ * GUIUtility::SearchFilePathRecursive
+ */
+std::string megamol::gui::GUIUtility::SearchFilePathRecursive(std::string file, PathType search_path) {
+
+    std::string found_file_path;
+
+    for (auto& entry : ns_fs::recursive_directory_iterator(search_path)) {
+        if (entry.path().filename().generic_string() == file) {
+            found_file_path = entry.path().generic_string();
+            break;
+        }
+    }
+    return found_file_path;
+}
+
+std::string megamol::gui::GUIUtility::SearchFilePathRecursive(std::string file, std::string search_path) {
+    return this->SearchFilePathRecursive(file, PathType(search_path));
+}
+
+std::string megamol::gui::GUIUtility::SearchFilePathRecursive(std::string file, std::wstring search_path) {
+    return this->SearchFilePathRecursive(file, PathType(search_path));
 }
 
 
@@ -64,6 +91,7 @@ void megamol::gui::GUIUtility::ResetWindowSizePos(std::string win_label, float m
  */
 void megamol::gui::GUIUtility::HoverToolTip(std::string text, ImGuiID id, float time_start, float time_end) {
 
+    assert(ImGui::GetCurrentContext() != nullptr);
     ImGuiIO& io = ImGui::GetIO();
 
     if (ImGui::IsItemHovered()) {
@@ -102,9 +130,51 @@ void megamol::gui::GUIUtility::HoverToolTip(std::string text, ImGuiID id, float 
  */
 void megamol::gui::GUIUtility::HelpMarkerToolTip(std::string text, std::string label) {
 
+    assert(ImGui::GetCurrentContext() != nullptr);
+
     if (!text.empty()) {
         ImGui::SameLine();
         ImGui::TextDisabled(label.c_str());
         this->HoverToolTip(text);
     }
+}
+
+
+/**
+ * GUIUtility::InputDialogPopUp
+ */
+std::string megamol::gui::GUIUtility::InputDialogPopUp(std::string popup_name, std::string request, bool open) {
+
+    assert(ImGui::GetCurrentContext() != nullptr);
+
+    std::string outtext;
+
+    size_t bufferLength = GUI_MAX_BUFFER_LEN;
+    char* buffer = new char[bufferLength];
+    buffer[0] = '\0';
+
+    if (open) {
+        ImGui::OpenPopup(popup_name.c_str());
+    }
+    if (ImGui::BeginPopupModal(popup_name.c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+
+        ImGui::Text("Enter %s:", request.c_str());
+        this->HelpMarkerToolTip("Press [Enter] to confirm input.");
+
+        // ImGui::SetKeyboardFocusHere();
+        if (ImGui::InputText("", buffer, bufferLength, ImGuiInputTextFlags_EnterReturnsTrue)) {
+            outtext = buffer;
+            ImGui::CloseCurrentPopup();
+        }
+
+        if (ImGui::Button("Cancel")) {
+            ImGui::CloseCurrentPopup();
+        }
+
+        ImGui::EndPopup();
+    }
+
+    delete[] buffer;
+
+    return outtext;
 }
