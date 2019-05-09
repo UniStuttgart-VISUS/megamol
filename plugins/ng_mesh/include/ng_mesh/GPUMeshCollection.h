@@ -201,6 +201,15 @@ namespace megamol {
 			it->mesh->loadIndexSubData(reinterpret_cast<GLvoid*>(&*std::get<0>(index_buffer)), ib_byte_size, computeByteSize(index_type) * it->indices_used);
 		}
 
+		inline std::vector<GPUMeshCollection::BatchedMeshes> const & GPUMeshCollection::getMeshes()
+		{
+			return m_batched_meshes;
+		}
+
+		inline std::vector<GPUMeshCollection::SubMeshData> const & GPUMeshCollection::getSubMeshData()
+		{
+			return m_sub_mesh_data;
+		}
 	}
 }
 

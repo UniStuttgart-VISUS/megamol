@@ -37,7 +37,7 @@ namespace megamol {
 					return (lhs.shader_program == rhs.shader_program ? lhs.mesh < rhs.mesh : lhs.shader_program < rhs.shader_program);
 				}
 
-				std::shared_ptr<GLSLShader>   shader_program;
+				std::shared_ptr<Shader>       shader_program;
 				std::shared_ptr<Mesh>         mesh;
 				std::shared_ptr<BufferObject> draw_commands;
 				std::shared_ptr<BufferObject> per_draw_data;
@@ -54,17 +54,17 @@ namespace megamol {
 
 			template<typename PerDrawDataContainer>
 			void addSingleRenderTask(
-				std::shared_ptr<GLSLShader> const& shader_prgm,
-				std::shared_ptr<Mesh> const&       mesh,
-				DrawElementsCommand const&         draw_command,
-				PerDrawDataContainer const&        per_draw_data);
+				std::shared_ptr<Shader> const& shader_prgm,
+				std::shared_ptr<Mesh> const&   mesh,
+				DrawElementsCommand const&     draw_command,
+				PerDrawDataContainer const&    per_draw_data);
 
 			template<typename DrawCommandContainer, typename PerDrawDataContainer>
 			void addRenderTasks(
-				std::shared_ptr<GLSLShader> const& shader_prgm,
-				std::shared_ptr<Mesh> const&       mesh,
-				DrawCommandContainer const&        draw_commands,
-				PerDrawDataContainer const&        per_draw_data);
+				std::shared_ptr<Shader> const& shader_prgm,
+				std::shared_ptr<Mesh> const&   mesh,
+				DrawCommandContainer const&    draw_commands,
+				PerDrawDataContainer const&    per_draw_data);
 
 			//void updateGPUBuffers();
 
@@ -83,7 +83,7 @@ namespace megamol {
 
 		template<typename PerDrawDataContainer>
 		inline void GPURenderTaskCollection::addSingleRenderTask(
-			std::shared_ptr<GLSLShader> const & shader_prgm,
+			std::shared_ptr<Shader> const & shader_prgm,
 			std::shared_ptr<Mesh> const & mesh,
 			DrawElementsCommand const & draw_command,
 			PerDrawDataContainer const& per_draw_data)
@@ -139,7 +139,7 @@ namespace megamol {
 
 		template<typename DrawCommandContainer, typename PerDrawDataContainer>
 		inline void GPURenderTaskCollection::addRenderTasks(
-			std::shared_ptr<GLSLShader> const & shader_prgm,
+			std::shared_ptr<Shader> const & shader_prgm,
 			std::shared_ptr<Mesh> const & mesh,
 			DrawCommandContainer const& draw_commands,
 			PerDrawDataContainer const& per_draw_data)

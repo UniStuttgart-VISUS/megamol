@@ -65,7 +65,7 @@ namespace megamol {
 				return AbstractGetDataCall::FunctionName(idx);
 			}
 
-			void setFEMData(std::shared_ptr<FEMDataStorage> const& gltf_model);
+			void setFEMData(std::shared_ptr<FEMDataStorage> const& fem_data);
 
 			std::shared_ptr<FEMDataStorage> getFEMData();
 

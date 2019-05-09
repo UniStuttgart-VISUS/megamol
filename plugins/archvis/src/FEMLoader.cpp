@@ -52,11 +52,20 @@ namespace megamol
 
 		bool FEMLoader::create(void)
 		{
-			return false;
+			m_fem_data = std::make_shared<FEMDataStorage>();
+			return true;
 		}
 
 		bool FEMLoader::getDataCallback(core::Call & caller)
 		{
+			FEMDataCall* cd = dynamic_cast<FEMDataCall*>(&caller);
+
+			if (cd == NULL)
+				return false;
+
+			cd->clearUpdateFlag();
+			m_update_flag = std::max(0, m_update_flag - 1);
+
 			if (this->m_femNodes_filename_slot.IsDirty())
 			{
 				this->m_femNodes_filename_slot.ResetDirty();
@@ -65,6 +74,8 @@ namespace megamol
 				std::string filename(vislib_filename.PeekBuffer());
 				
 				m_fem_data->setNodes(loadNodesFromFile(filename));
+
+				m_update_flag = std::min(2, m_update_flag + 2);
 			}
 
 			if (this->m_femElements_filename_slot.IsDirty())
@@ -75,7 +86,13 @@ namespace megamol
 				std::string filename(vislib_filename.PeekBuffer());
 
 				m_fem_data->setElements(loadElementsFromFile(filename));
+
+				m_update_flag = std::min(2, m_update_flag + 2);
 			}
+
+			cd->setFEMData(m_fem_data);
+			if (m_update_flag > 0)
+				cd->setUpdateFlag();
 
 			return true;
 		}

@@ -8,7 +8,8 @@
 #ifndef GPU_MATERIAL_DATA_STORAGE_H_INCLUDED
 #define GPU_MATERIAL_DATA_STORAGE_H_INCLUDED
 
-#include "vislib/graphics/gl/GLSLShader.h"
+//#include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib/graphics/gl/GLSLGeometryShader.h"
 #include "mmcore/CoreInstance.h"
 
 #include <memory>
@@ -19,20 +20,20 @@
 namespace megamol {
 	namespace ngmesh {
 
-		typedef vislib::graphics::gl::GLSLShader GLSLShader;
+		typedef vislib::graphics::gl::GLSLGeometryShader Shader;
 
 		class GPUMaterialCollecton
 		{
 		public:
 			struct Material
 			{
-				std::shared_ptr<GLSLShader>             shader_program;
+				std::shared_ptr<Shader> shader_program;
 				std::vector<std::shared_ptr<Texture2D>> textures;
 			};
 
 			void addMaterial(megamol::core::CoreInstance* mm_core_inst, std::string shader_btf_name);
 
-			void addMaterial(std::shared_ptr<GLSLShader> const& shader);
+			void addMaterial(std::shared_ptr<Shader> const& shader);
 
 			void clearMaterials();
 

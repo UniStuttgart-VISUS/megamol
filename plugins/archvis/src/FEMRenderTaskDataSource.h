@@ -54,6 +54,10 @@ namespace megamol
 		protected:
 
 			virtual bool getDataCallback(core::Call& caller);
+
+		private:
+
+			megamol::core::CallerSlot m_fem_callerSlot;
 		};
 	}
 }

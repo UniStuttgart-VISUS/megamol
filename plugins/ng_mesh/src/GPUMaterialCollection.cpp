@@ -13,22 +13,67 @@
 
 void megamol::ngmesh::GPUMaterialCollecton::addMaterial(megamol::core::CoreInstance* mm_core_inst, std::string shader_btf_name)
 {
-	std::shared_ptr<GLSLShader> shader = std::make_shared<GLSLShader>();
+	std::shared_ptr<Shader> shader = std::make_shared<Shader>();
 
 	vislib::graphics::gl::ShaderSource vert_shader_src;
 	vislib::graphics::gl::ShaderSource frag_shader_src;
+	vislib::graphics::gl::ShaderSource geom_shader_src;
 	// TODO get rid of vislib StringA...
 	vislib::StringA shader_base_name(shader_btf_name.c_str());
 
-	mm_core_inst->ShaderSourceFactory().MakeShaderSource(shader_base_name + "::vertex", vert_shader_src);
-	mm_core_inst->ShaderSourceFactory().MakeShaderSource(shader_base_name + "::fragment", frag_shader_src);
+	auto vertShaderName = shader_base_name + "::vertex";
+	auto fragShaderName = shader_base_name + "::fragment";
+	auto geoShaderName =  shader_base_name + "::geometry";
 
-	shader->Create(vert_shader_src.Code(), vert_shader_src.Count(), frag_shader_src.Code(), frag_shader_src.Count());
+	mm_core_inst->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), vert_shader_src);
+	mm_core_inst->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), frag_shader_src);
+	if (!mm_core_inst->ShaderSourceFactory().MakeShaderSource(geoShaderName.PeekBuffer(), geom_shader_src))
+	{
+		vislib::sys::Log::DefaultLog.WriteMsg(
+			vislib::sys::Log::LEVEL_ERROR, "Fuck you!\n");
+	}
+
+	if (geom_shader_src.WholeCode().Length() > 0)
+	{
+		try {
+			if (!shader->Compile(vert_shader_src.Code(), vert_shader_src.Count(), geom_shader_src.Code(), geom_shader_src.Count(), frag_shader_src.Code(), frag_shader_src.Count())) {
+				vislib::sys::Log::DefaultLog.WriteMsg(
+					vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s: Unknown error\n", shader_base_name.PeekBuffer());
+				//return false;
+			}
+			if (!shader->Link()) {
+				vislib::sys::Log::DefaultLog.WriteMsg(
+					vislib::sys::Log::LEVEL_ERROR, "Unable to link %s: Unknown error\n", shader_base_name.PeekBuffer());
+				//return false;
+			}
+		}
+		catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+			vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s (@%s):\n%s\n",
+				shader_base_name.PeekBuffer(),
+				vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
+				ce.GetMsgA());
+			//return false;
+		}
+		catch (vislib::Exception e) {
+			vislib::sys::Log::DefaultLog.WriteMsg(
+				vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s:\n%s\n", shader_base_name.PeekBuffer(), e.GetMsgA());
+			//return false;
+		}
+		catch (...) {
+			vislib::sys::Log::DefaultLog.WriteMsg(
+				vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s: Unknown exception\n", shader_base_name.PeekBuffer());
+			//return false;
+		}
+	}
+	else
+	{
+		shader->Create(vert_shader_src.Code(), vert_shader_src.Count(), frag_shader_src.Code(), frag_shader_src.Count());
+	}
 
 	addMaterial(shader);
 }
 
-void megamol::ngmesh::GPUMaterialCollecton::addMaterial(std::shared_ptr<GLSLShader> const& shader)
+void megamol::ngmesh::GPUMaterialCollecton::addMaterial(std::shared_ptr<Shader> const& shader)
 {
 	m_materials.push_back(Material());
 	m_materials.back().shader_program = shader;

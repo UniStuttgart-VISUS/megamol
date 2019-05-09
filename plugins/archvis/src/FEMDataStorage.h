@@ -37,25 +37,12 @@ namespace megamol {
 				CUBE = 8 // 3D volumetric element, connects 8 nodes
 			};
 
-			FEMDataStorage();
-			~FEMDataStorage();
-
-			FEMDataStorage(
-				std::vector<Vec3> const& nodes,
-				std::vector<std::array<size_t, 8>> const& elements);
-
-			void setNodes(std::vector<Vec3> const& nodes);
-
-			void setNodes(std::vector<Vec3> && nodes);
-
-			void setElements(std::vector<std::array<size_t, 8>> const& elements);
-
-		private:
 
 			struct ElementConcept
 			{
 				virtual ElementConcept* clone() const = 0;
 				virtual ElementType getType() const = 0;
+				virtual std::vector<size_t> getNodeIndices() const = 0;
 			};
 
 			template<typename N>
@@ -69,7 +56,15 @@ namespace megamol {
 					return new ElementModel(m_type, m_node_indices);
 				}
 
-				ElementType getType() const { return m_type; }
+				ElementType getType() const
+				{ 
+					return m_type;
+				}
+
+				std::vector<size_t> getNodeIndices() const
+				{
+					return std::vector<size_t>(m_node_indices.begin(), m_node_indices.end());
+				}
 
 				ElementType m_type;
 				N           m_node_indices;
@@ -114,12 +109,35 @@ namespace megamol {
 					std::swap(m_element, other.m_element);
 				};
 
-				ElementType getType() { return m_element->getType(); }
+				ElementType getType() const { return m_element->getType(); }
+
+				std::vector<size_t> getNodeIndices() const { return m_element->getNodeIndices(); }
 
 			private:
 				ElementConcept* m_element;
 			};
 
+
+			FEMDataStorage();
+			~FEMDataStorage();
+
+			FEMDataStorage(
+				std::vector<Vec3> const& nodes,
+				std::vector<std::array<size_t, 8>> const& elements);
+
+			void setNodes(std::vector<Vec3> const& nodes);
+
+			void setNodes(std::vector<Vec3> && nodes);
+
+			void setElements(std::vector<std::array<size_t, 8>> const& elements);
+
+			std::vector<Vec3> const& getNodes();
+
+			size_t getElementCount();
+
+			std::vector<Element> const& getElements();
+
+		private:
 
 			size_t               m_node_cnt;
 			size_t               m_timesteps;
@@ -131,7 +149,7 @@ namespace megamol {
 		};
 
 		inline FEMDataStorage::FEMDataStorage()
-			: m_node_cnt(0), m_timesteps(0), m_node_positions(), m_elements(), m_deformations()
+			: m_node_cnt(0), m_timesteps(0)//, m_node_positions(), m_elements(), m_deformations()
 		{
 		}
 
@@ -169,6 +187,21 @@ namespace megamol {
 			{
 				m_elements.push_back(Element(ElementType::CUBE, elements[element_idx]));
 			}
+		}
+
+		inline std::vector<FEMDataStorage::Vec3> const& FEMDataStorage::getNodes()
+		{
+			return m_node_positions;
+		}
+
+		inline size_t  FEMDataStorage::getElementCount()
+		{
+			return m_elements.size();
+		}
+
+		inline std::vector<FEMDataStorage::Element> const& FEMDataStorage::getElements()
+		{
+			return m_elements;
 		}
 	}
 }

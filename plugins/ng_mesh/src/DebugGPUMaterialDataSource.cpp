@@ -40,7 +40,7 @@ bool megamol::ngmesh::DebugGPUMaterialDataSource::getDataCallback(core::Call & c
 bool megamol::ngmesh::DebugGPUMaterialDataSource::load()
 {
 	// Create shader program
-	auto shader = std::make_shared<GLSLShader>();
+	auto shader = std::make_shared<Shader>();
 
 	vislib::graphics::gl::ShaderSource vert_shader_src;
 	vislib::graphics::gl::ShaderSource frag_shader_src;
