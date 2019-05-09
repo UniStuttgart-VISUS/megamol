@@ -300,6 +300,158 @@ typedef GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D> GUIR
 
 
 /**
+ * GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIRenderer
+ */
+template <>
+GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIRenderer()
+    : core::view::Renderer2DModule()
+    , decorated_renderer_slot("decoratedRenderer", "Connects to another 2D Renderer being decorated")
+    , overlay_slot("overlayRender", "Connected with SplitView for special overlay rendering")
+    , imgui_context(nullptr)
+    , window_manager()
+    , tf_editor()
+    , last_instance_time(0.0)
+    , font_utf8_ranges()
+    , load_new_profile()
+    , load_new_font_filename()
+    , load_new_font_size(13.0f)
+    , load_new_font_index(-1)
+    , loaded_profile_list()
+    , delete_window() {
+
+    this->decorated_renderer_slot.SetCompatibleCall<core::view::CallRender2DDescription>();
+    this->MakeSlotAvailable(&this->decorated_renderer_slot);
+
+    // InputCall
+    this->overlay_slot.SetCallback(core::view::CallSplitViewOverlay::ClassName(),
+        core::view::CallSplitViewOverlay::FunctionName(core::view::CallSplitViewOverlay::FnOverlay),
+        &GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::OnOverlayCallback);
+    this->overlay_slot.SetCallback(core::view::CallSplitViewOverlay::ClassName(),
+        core::view::InputCall::FunctionName(core::view::InputCall::FnOnKey),
+        &GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::OnKeyCallback);
+    this->overlay_slot.SetCallback(core::view::CallSplitViewOverlay::ClassName(),
+        core::view::InputCall::FunctionName(core::view::InputCall::FnOnChar),
+        &GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::OnCharCallback);
+    this->overlay_slot.SetCallback(core::view::CallSplitViewOverlay::ClassName(),
+        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseButton),
+        &GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::OnMouseButtonCallback);
+    this->overlay_slot.SetCallback(core::view::CallSplitViewOverlay::ClassName(),
+        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseMove),
+        &GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::OnMouseMoveCallback);
+    this->overlay_slot.SetCallback(core::view::CallSplitViewOverlay::ClassName(),
+        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseScroll),
+        &GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::OnMouseScrollCallback);
+    this->MakeSlotAvailable(&this->overlay_slot);
+}
+
+
+/**
+ * GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GUIRenderer
+ */
+template <>
+GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GUIRenderer()
+    : core::view::Renderer3DModule()
+    , decorated_renderer_slot("decoratedRenderer", "Connects to another 2D Renderer being decorated")
+    , overlay_slot("overlayRender", "Connected with SplitView for special overlay rendering")
+    , imgui_context(nullptr)
+    , window_manager()
+    , tf_editor()
+    , last_instance_time(0.0)
+    , font_utf8_ranges()
+    , load_new_profile()
+    , load_new_font_filename()
+    , load_new_font_size(13.0f)
+    , load_new_font_index(-1)
+    , loaded_profile_list()
+    , delete_window() {
+
+    this->decorated_renderer_slot.SetCompatibleCall<core::view::CallRender3DDescription>();
+    this->MakeSlotAvailable(&this->decorated_renderer_slot);
+
+    // Overlay Call
+    this->overlay_slot.SetCallback(core::view::CallSplitViewOverlay::ClassName(),
+        core::view::CallSplitViewOverlay::FunctionName(core::view::CallSplitViewOverlay::FnOverlay),
+        &GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::OnOverlayCallback);
+    this->overlay_slot.SetCallback(core::view::CallSplitViewOverlay::ClassName(),
+        core::view::InputCall::FunctionName(core::view::InputCall::FnOnKey),
+        &GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::OnKeyCallback);
+    this->overlay_slot.SetCallback(core::view::CallSplitViewOverlay::ClassName(),
+        core::view::InputCall::FunctionName(core::view::InputCall::FnOnChar),
+        &GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::OnCharCallback);
+    this->overlay_slot.SetCallback(core::view::CallSplitViewOverlay::ClassName(),
+        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseButton),
+        &GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::OnMouseButtonCallback);
+    this->overlay_slot.SetCallback(core::view::CallSplitViewOverlay::ClassName(),
+        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseMove),
+        &GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::OnMouseMoveCallback);
+    this->overlay_slot.SetCallback(core::view::CallSplitViewOverlay::ClassName(),
+        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseScroll),
+        &GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::OnMouseScrollCallback);
+    this->MakeSlotAvailable(&this->overlay_slot);
+}
+
+
+/**
+ * GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::ClassName
+ */
+template <> const char* GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::ClassName(void) {
+
+    return "GUIRenderer2D";
+}
+
+
+/**
+ * GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::ClassName
+ */
+template <> const char* GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::ClassName(void) {
+
+    return "GUIRenderer3D";
+}
+
+
+/**
+ * GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GetExtents
+ */
+template <>
+bool GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GetExtents(core::view::CallRender2D& call) {
+
+    auto* cr = this->decorated_renderer_slot.CallAs<core::view::CallRender2D>();
+    if (cr != nullptr) {
+        (*cr) = call;
+        if ((*cr)(core::view::AbstractCallRender::FnGetExtents)) {
+            call = (*cr);
+        }
+    } else {
+        call.SetBoundingBox(vislib::math::Rectangle<float>(0, 1, 1, 0));
+    }
+
+    return true;
+}
+
+
+/**
+ * GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GetExtents
+ */
+template <>
+bool GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GetExtents(core::view::CallRender3D& call) {
+
+    auto* cr = this->decorated_renderer_slot.CallAs<core::view::CallRender3D>();
+    if (cr != nullptr) {
+        (*cr) = call;
+        if ((*cr)(core::view::AbstractCallRender::FnGetExtents)) {
+            call = (*cr);
+        }
+    } else {
+        call.AccessBoundingBoxes().Clear();
+        call.AccessBoundingBoxes().SetWorldSpaceBBox(
+            vislib::math::Cuboid<float>(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f));
+    }
+
+    return true;
+}
+
+
+/**
  * GUIRenderer<M, C>::~GUIRenderer
  */
 template <class M, class C> GUIRenderer<M, C>::~GUIRenderer() { this->Release(); }
@@ -354,28 +506,28 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
 
     // Create window configurations
     GUIWinConfig tmp_win;
-    // Main Window ------------------------------------------------------------
+    // MAIN Window ------------------------------------------------------------
     tmp_win.win_show = true;
     tmp_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F12);
     tmp_win.win_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_HorizontalScrollbar;
     tmp_win.win_callback = GUIWindowManager::WindowDrawCallback::MAIN;
     this->window_manager.AddWindowConfiguration("MegaMol", tmp_win);
 
-    // FPS overlay Window -----------------------------------------------------
+    // FPS/MS Window ----------------------------------------------------------
     tmp_win.win_show = false;
     tmp_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F11);
     tmp_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar;
     tmp_win.win_callback = GUIWindowManager::WindowDrawCallback::FPSMS;
     this->window_manager.AddWindowConfiguration("FPS", tmp_win);
 
-    // Font Selection Window --------------------------------------------------
+    // FONT Window ------------------------------------------------------------
     tmp_win.win_show = false;
     tmp_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F10);
     tmp_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize;
     tmp_win.win_callback = GUIWindowManager::WindowDrawCallback::FONT;
     this->window_manager.AddWindowConfiguration("Fonts", tmp_win);
 
-    // Demo Window --------------------------------------------------
+    // TRANSFER FUNCTION Window -----------------------------------------------
     tmp_win.win_show = false;
     tmp_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F9);
     tmp_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize;
@@ -434,7 +586,8 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
         std::string font_file, font_path;
         const vislib::Array<vislib::StringW>& searchPaths =
             this->GetCoreInstance()->Configuration().ResourceDirectories();
-        for (int i = 0; i < searchPaths.Count(); ++i) {
+        int spcnt = (int)searchPaths.Count();
+        for (int i = 0; i < spcnt; ++i) {
             font_file = "Proggy_Tiny.ttf";
             font_path = this->SearchFilePathRecursive(font_file, std::wstring(searchPaths[i].PeekBuffer()));
             if (!font_path.empty()) {
@@ -1350,7 +1503,7 @@ void GUIRenderer<M, C>::drawFpsWindowCallback(const std::string& window_name, GU
             return;
         }
 
-        size_t size = window_config.fpsms_fps_values.size();
+        int size = (int)window_config.fpsms_fps_values.size();
         if (size != window_config.fpsms_max_value_count) {
             if (size > window_config.fpsms_max_value_count) {
                 window_config.fpsms_fps_values.erase(window_config.fpsms_fps_values.begin(),
