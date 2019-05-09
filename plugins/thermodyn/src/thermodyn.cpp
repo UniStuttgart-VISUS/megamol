@@ -17,11 +17,15 @@
 #include "PathColor.h"
 #include "PathDMD.h"
 #include "PathFilter.h"
+#include "PathIColClustering.h"
 #include "PathIColSplice.h"
 #include "PathPCA.h"
 #include "PathsToLines.h"
+#include "rendering/BoxRenderer.h"
+#include "PhaseSeparator.h"
 
 #include "thermodyn/PathLineDataCall.h"
+#include "thermodyn/BoxDataCall.h"
 
 
 /* anonymous namespace hides this type from any other object files */
@@ -57,6 +61,10 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::PathColor>();
         this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::PathClustering>();
         this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::PathIColSplice>();
+        this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::PathIColClustering>();
+        this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::rendering::BoxRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::thermodyn::PhaseSeparator>();
+
         //
         // TODO: Register your plugin's modules here
         // like:
@@ -67,6 +75,7 @@ public:
 
         // register calls here:
         this->call_descriptions.RegisterAutoDescription<megamol::thermodyn::PathLineDataCall>();
+        this->call_descriptions.RegisterAutoDescription<megamol::thermodyn::BoxDataCall>();
         //
         // TODO: Register your plugin's calls here
         // like:
