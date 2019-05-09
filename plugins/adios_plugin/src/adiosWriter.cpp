@@ -1,20 +1,24 @@
 #include "stdafx.h"
 #include "adiosWriter.h"
+#include <chrono>
 #include "mmcore/cluster/mpi/MpiCall.h"
 #include "mmcore/param/FilePathParam.h"
+#include "mmcore/param/EnumParam.h"
 #include "vislib/Trace.h"
 #include "vislib/sys/CmdLineProvider.h"
 #include "vislib/sys/Log.h"
 #include "vislib/sys/SystemInformation.h"
-#include <chrono>
 
 namespace megamol {
 namespace adios {
 
-adiosWriter::adiosWriter(void) : core::AbstractDataWriter()
+adiosWriter::adiosWriter(void)
+    : core::AbstractDataWriter()
     , callRequestMpi("requestMpi", "Requests initialisation of MPI and the communicator for the view.")
     , filename("filename", "The path to the ADIOS-based file to load.")
     , getData("getdata", "Slot to request data from this data source.")
+    , outputPatternSlot("outputPattern","Sets an file IO pattern.")
+    , encodingSlot("encoding","Specifiy encoding")
     , io(nullptr) {
 
     this->filename.SetParameter(new core::param::FilePathParam(""));
@@ -23,6 +27,17 @@ adiosWriter::adiosWriter(void) : core::AbstractDataWriter()
     this->getData.SetCompatibleCall<CallADIOSDataDescription>();
     this->MakeSlotAvailable(&this->getData);
 
+    auto opat = new core::param::EnumParam(0);
+    opat->SetTypePair(0, "PerNode");
+    opat->SetTypePair(1, "Parallel");
+    this->outputPatternSlot << opat;
+    this->MakeSlotAvailable(&this->outputPatternSlot);
+
+    auto encEnum = new core::param::EnumParam(0);
+    encEnum->SetTypePair(0, "None");
+    this->encodingSlot << encEnum;
+    this->MakeSlotAvailable(&this->encodingSlot);
+
     this->callRequestMpi.SetCompatibleCall<core::cluster::mpi::MpiCallDescription>();
     this->MakeSlotAvailable(&this->callRequestMpi);
 }
@@ -30,7 +45,7 @@ adiosWriter::adiosWriter(void) : core::AbstractDataWriter()
 adiosWriter::~adiosWriter(void) {
 
     if (writer) {
-       writer.Close();
+        writer.Close();
     }
     vislib::sys::Log::DefaultLog.WriteInfo("Writer Closed");
     this->Release();
@@ -137,8 +152,8 @@ bool adiosWriter::initMPI() {
  * adiosWriter::run
  */
 bool adiosWriter::run() {
-    
-    //get data
+
+    // get data
     CallADIOSData* cad = this->getData.CallAs<CallADIOSData>();
     if (cad == nullptr) return false;
 
@@ -154,124 +169,138 @@ bool adiosWriter::run() {
 
         vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Starting frame %d", i);
 
-        try {
-        
-        cad->setFrameIDtoLoad(i);
+            cad->setFrameIDtoLoad(i);
 
-        auto avaiVars = cad->getAvailableVars();
+            auto avaiVars = cad->getAvailableVars();
 
-        for (auto var : avaiVars) {
-            cad->inquire(var);
-        }
-
-        if (!(*cad)(0)) {
-            vislib::sys::Log::DefaultLog.WriteError("ADIOS2writer: Error during GetData");
-            return false;
-        }
-
-        if (!this->writer) {
-            const std::string fname = std::string(T2A(this->filename.Param<core::param::FilePathParam>()->Value()));
-            vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2: Opening File %s", fname.c_str());
-            writer = io->Open(fname, adios2::Mode::Write);
-        }
-
-        vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: BeginStep");
-        writer.BeginStep();
-
-        std::vector<std::shared_ptr<float*>> fCollector;
-        std::vector<std::shared_ptr<int>> iCollector;
-
-
-
-        io->RemoveAllVariables();
-        for (auto var : avaiVars) {
-
-            const size_t num = cad->getData(var)->size();
-            if (cad->getData(var)->getType() == "float") {
-
-                std::vector<float>& values = dynamic_cast<FloatContainer*>(cad->getData(var).get())->getVec();
-
-                vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Defining Variables");
-                adios2::Variable<float> adiosVar =
-                    io->DefineVariable<float>(var, {static_cast<size_t>(this->mpiSize * num)},
-                        {static_cast<size_t>(this->mpiRank * num)}, {static_cast<size_t>(num)}, false);
-                adiosVar.SetShape({this->mpiSize * num});
-
-                vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Putting Variables");
-                if (adiosVar) writer.Put<float>(adiosVar, values.data());
-            } else if (cad->getData(var)->getType() == "double") {
-
-                std::vector<double>& values = dynamic_cast<DoubleContainer*>(cad->getData(var).get())->getVec();
-
-                vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Defining Variables");
-                adios2::Variable<double> adiosVar =
-                    io->DefineVariable<double>(var, {static_cast<size_t>(this->mpiSize * num)},
-                        {static_cast<size_t>(this->mpiRank * num)}, {static_cast<size_t>(num)});
-                adiosVar.SetShape({this->mpiSize * num});
-
-                vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Putting Variables");
-                if (adiosVar) writer.Put<double>(adiosVar, values.data());
-            } else if (cad->getData(var)->getType() == "int") {
-
-                std::vector<int>& values = dynamic_cast<IntContainer*>(cad->getData(var).get())->getVec();
-
-                vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Defining Variables");
-                adios2::Variable<int> adiosVar =
-                    io->DefineVariable<int>(var, {static_cast<size_t>(this->mpiSize * num)},
-                        {static_cast<size_t>(this->mpiRank * num)}, {static_cast<size_t>(num)});
-                adiosVar.SetShape({this->mpiSize * num});
-
-                vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Putting Variables");
-                if (adiosVar) writer.Put<int>(adiosVar, values.data());
-            } else if (cad->getData(var)->getType() == "unsigned long long int") {
-
-                std::vector<unsigned long long int>& values =
-                    dynamic_cast<UInt64Container*>(cad->getData(var).get())->getVec();
-
-                vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Defining Variables");
-                adios2::Variable<unsigned long long int> adiosVar =
-                    io->DefineVariable<unsigned long long int>(var, {static_cast<size_t>(this->mpiSize * num)},
-                        {static_cast<size_t>(this->mpiRank * num)}, {static_cast<size_t>(num)});
-                adiosVar.SetShape({this->mpiSize * num});
-
-                vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Putting Variables");
-                if (adiosVar) writer.Put<unsigned long long int>(adiosVar, values.data());
-            } else if (cad->getData(var)->getType() == "unsigned char") {
-
-                std::vector<unsigned char>& values =
-                    dynamic_cast<UCharContainer*>(cad->getData(var).get())->getVec();
-
-                vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Defining Variables");
-                adios2::Variable<unsigned char> adiosVar =
-                    io->DefineVariable<unsigned char>(var, {static_cast<size_t>(this->mpiSize * num)},
-                        {static_cast<size_t>(this->mpiRank * num)}, {static_cast<size_t>(num)});
-                adiosVar.SetShape({this->mpiSize * num});
-
-                vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Putting Variables");
-                if (adiosVar) writer.Put<unsigned char>(adiosVar, values.data());
-            } else if (cad->getData(var)->getType() == "unsigned int") {
-
-                std::vector<unsigned int>& values = dynamic_cast<UInt32Container*>(cad->getData(var).get())->getVec();
-
-                vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Defining Variables");
-                adios2::Variable<unsigned int> adiosVar =
-                    io->DefineVariable<unsigned int>(var, {static_cast<size_t>(this->mpiSize * num)},
-                        {static_cast<size_t>(this->mpiRank * num)}, {static_cast<size_t>(num)});
-                adiosVar.SetShape({this->mpiSize * num});
-
-                vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Putting Variables");
-                if (adiosVar) writer.Put<unsigned int>(adiosVar, values.data());
+            if (!(*cad)(0)) {
+                vislib::sys::Log::DefaultLog.WriteError("ADIOS2writer: Error during GetData");
+                return false;
             }
-            vislib::sys::Log::DefaultLog.WriteInfo(
-                "ADIOS2writer: Trying to write - var: %s size: %d", var.c_str(), num);
-        }
 
-        vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: EndStep");
-        auto t1 = std::chrono::high_resolution_clock::now();
-        writer.EndStep();
-        auto t2 = std::chrono::high_resolution_clock::now();
-        const auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
-        vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Time spent for writing frame: %d us", duration);
+        try {
+            if (!this->writer) {
+                const std::string fname = std::string(T2A(this->filename.Param<core::param::FilePathParam>()->Value()));
+                vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2: Opening File %s", fname.c_str());
+                writer = io->Open(fname, adios2::Mode::Write);
+            }
+
+            vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: BeginStep");
+            writer.BeginStep();
+
+            io->RemoveAllVariables();
+            for (auto var : avaiVars) {
+
+                std::vector<size_t> globalDim;
+                std::vector<size_t> offsets;
+                std::vector<size_t> localDim;
+
+                const size_t num = cad->getData(var)->size();
+
+                if (this->outputPatternSlot.Param<core::param::EnumParam>()->Value() == 1 && !cad->getData(var)->singleValue) {
+                    std::vector<size_t> shape;
+                    if (!cad->getData(var)->shape.empty())
+                        shape = cad->getData(var)->shape;
+                    else {
+                        shape = {cad->getData(var)->size()};
+                    }
+                    localDim = shape;
+                    globalDim = localDim;
+#ifdef WITH_MPI                  
+                    offsets.resize(shape.size());
+                    // offsets
+                    auto mpierror = MPI_Scan(localDim.data(), offsets.data(), 1, MPI_UINT64_T, MPI_SUM, this->mpi_comm_);
+                    if (mpierror != MPI_SUCCESS)
+                        vislib::sys::Log::DefaultLog.WriteError("ADIOS2writer: MPI_Allreduce of offsets failed.");
+                    offsets[0] -= localDim[0];
+                    // global dim
+                    mpierror = MPI_Allreduce(localDim.data(), globalDim.data(), 1, MPI_UINT64_T, MPI_SUM, this->mpi_comm_);
+                    if (mpierror != MPI_SUCCESS)
+                        vislib::sys::Log::DefaultLog.WriteError("ADIOS2writer: MPI_Allreduce of offsets failed.");
+                    //vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer:");
+#else
+                    globalDim = shape;
+                    offsets = std::vector<size_t>(shape.size(), 0);
+#endif
+                } else {
+                    globalDim = {static_cast<size_t>(num)};
+                    offsets = {static_cast<size_t>(0)};
+                    localDim = {static_cast<size_t>(num)};
+                }
+
+                if (cad->getData(var)->getType() == "float") {
+
+                    std::vector<float>& values = dynamic_cast<FloatContainer*>(cad->getData(var).get())->getVec();
+
+                    vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Defining Variables");
+                    adios2::Variable<float> adiosVar =
+                        io->DefineVariable<float>(var, globalDim, offsets, localDim, false);
+
+                    vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Putting Variables");
+                    if (adiosVar) writer.Put<float>(adiosVar, values.data());
+                } else if (cad->getData(var)->getType() == "double") {
+
+                    std::vector<double>& values = dynamic_cast<DoubleContainer*>(cad->getData(var).get())->getVec();
+
+                    vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Defining Variables");
+                    adios2::Variable<double> adiosVar =
+                        io->DefineVariable<double>(var, globalDim, offsets, localDim, false);
+
+                    vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Putting Variables");
+                    if (adiosVar) writer.Put<double>(adiosVar, values.data());
+                } else if (cad->getData(var)->getType() == "int") {
+
+                    std::vector<int>& values = dynamic_cast<IntContainer*>(cad->getData(var).get())->getVec();
+
+                    vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Defining Variables");
+                    adios2::Variable<int> adiosVar = io->DefineVariable<int>(var, globalDim, offsets, localDim, false);
+
+                    vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Putting Variables");
+                    if (adiosVar) writer.Put<int>(adiosVar, values.data());
+                } else if (cad->getData(var)->getType() == "unsigned long long int") {
+
+                    std::vector<unsigned long long int>& values =
+                        dynamic_cast<UInt64Container*>(cad->getData(var).get())->getVec();
+
+                    vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Defining Variables");
+                    adios2::Variable<unsigned long long int> adiosVar =
+                        io->DefineVariable<unsigned long long int>(var, globalDim, offsets, localDim, false);
+
+                    vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Putting Variables");
+                    if (adiosVar) writer.Put<unsigned long long int>(adiosVar, values.data());
+                } else if (cad->getData(var)->getType() == "unsigned char") {
+
+                    std::vector<unsigned char>& values =
+                        dynamic_cast<UCharContainer*>(cad->getData(var).get())->getVec();
+
+                    vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Defining Variables");
+                    adios2::Variable<unsigned char> adiosVar =
+                        io->DefineVariable<unsigned char>(var, globalDim, offsets, localDim, false);
+
+                    vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Putting Variables");
+                    if (adiosVar) writer.Put<unsigned char>(adiosVar, values.data());
+                } else if (cad->getData(var)->getType() == "unsigned int") {
+
+                    std::vector<unsigned int>& values =
+                        dynamic_cast<UInt32Container*>(cad->getData(var).get())->getVec();
+
+                    vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Defining Variables");
+                    adios2::Variable<unsigned int> adiosVar =
+                        io->DefineVariable<unsigned int>(var, globalDim, offsets, localDim, false);
+
+                    vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Putting Variables");
+                    if (adiosVar) writer.Put<unsigned int>(adiosVar, values.data());
+                }
+                vislib::sys::Log::DefaultLog.WriteInfo(
+                    "ADIOS2writer: Trying to write - var: %s size: %d", var.c_str(), num);
+            }
+
+            vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: EndStep");
+            auto t1 = std::chrono::high_resolution_clock::now();
+            writer.EndStep();
+            auto t2 = std::chrono::high_resolution_clock::now();
+            const auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
+            vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Time spent for writing frame: %d us", duration);
 
         } catch (std::invalid_argument& e) {
             vislib::sys::Log::DefaultLog.WriteError(
@@ -297,8 +326,8 @@ vislib::StringA adiosWriter::getCommandLine(void) {
 
 #ifdef WIN32
     retval = ::GetCommandLineA();
-#else /* _WIN32 */
-    char *arg = nullptr;
+#else  /* _WIN32 */
+    char* arg = nullptr;
     size_t size = 0;
 
     auto fp = ::fopen("/proc/self/cmdline", "rb");
@@ -313,7 +342,8 @@ vislib::StringA adiosWriter::getCommandLine(void) {
 #endif /* _WIN32 */
 
     vislib::sys::Log::DefaultLog.WriteInfo("Command line used for MPI "
-        "initialisation is \"%s\".", retval.PeekBuffer());
+                                           "initialisation is \"%s\".",
+        retval.PeekBuffer());
     return retval;
 }
 
