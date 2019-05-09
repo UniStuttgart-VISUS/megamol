@@ -33,10 +33,12 @@ bool megamol::thermodyn::PathColor::getDataCallback(core::Call& c) {
     auto inCall = dataInSlot_.CallAs<PathLineDataCall>();
     if (inCall == nullptr) return false;
 
+    inCall->SetFrameID(outCall->FrameID(), true);
     if (!(*inCall)(0)) return false;
 
-    if (inCall->DataHash() != inDataHash_) {
+    if (inCall->DataHash() != inDataHash_ || inCall->FrameID() != frameID_) {
         inDataHash_ = inCall->DataHash();
+        frameID_ = inCall->FrameID();
 
         entrySizes_ = inCall->GetEntrySize();
         auto const& dirsPresent = inCall->HasDirections();
@@ -55,11 +57,12 @@ bool megamol::thermodyn::PathColor::getDataCallback(core::Call& c) {
             if (hasCol) dirOff += 4;
             int newEntrySize = 7;
             if (hasDir) newEntrySize = 10;
-            std::vector<float> newPath(newEntrySize * ts);
             for (auto& path : pathStore_[plidx]) {
                 auto const& oldPath = path.second;
                 auto const pathsize = oldPath.size();
-                for (size_t fidx = 0; fidx < ts; ++fidx) {
+                auto const fnum = pathsize/entrySize;
+                std::vector<float> newPath(newEntrySize * fnum);
+                for (size_t fidx = 0; fidx < fnum; ++fidx) {
                     newPath[fidx * newEntrySize + 0] = oldPath[fidx*entrySize + 0];
                     newPath[fidx * newEntrySize + 1] = oldPath[fidx*entrySize + 1];
                     newPath[fidx * newEntrySize + 2] = oldPath[fidx*entrySize + 2];
@@ -87,6 +90,7 @@ bool megamol::thermodyn::PathColor::getDataCallback(core::Call& c) {
     outCall->SetEntrySizes(entrySizes_);
     outCall->SetPathStore(&pathStore_);
     outCall->SetTimeSteps(inCall->GetTimeSteps());
+    outCall->SetFrameID(frameID_);
 
     return true;
 }
@@ -107,7 +111,7 @@ bool megamol::thermodyn::PathColor::getExtentCallback(core::Call& c) {
     outCall->AccessBoundingBoxes().MakeScaledWorld(1.0f);
 
 
-    outCall->SetFrameCount(1);
+    outCall->SetFrameCount(inCall->FrameCount());
 
     outCall->SetDataHash(inDataHash_);
 

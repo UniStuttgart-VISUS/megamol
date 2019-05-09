@@ -49,6 +49,8 @@ private:
     //std::vector<bool> dirsPresent_;
 
     std::vector<std::unordered_map<uint64_t, std::vector<float>>> pathStore_;
+
+    int frameID_ = 0;
 };
 
 } // end namespace thermodyn
