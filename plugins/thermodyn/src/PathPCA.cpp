@@ -232,6 +232,7 @@ bool megamol::thermodyn::PathPCA::getDataCallback(core::Call& c) {
     outCall->SetColorFlags(colsPresent_);
     outCall->SetDirFlags(dirsPresent_);
     outCall->SetPathStore(&pathStore_);
+    outCall->SetPathFrameStore(inCall->GetPathFrameStore());
 
     outCall->AccessBoundingBoxes().SetObjectSpaceBBox(this->bbox_);
     outCall->AccessBoundingBoxes().SetObjectSpaceClipBox(this->bbox_);
