@@ -57,7 +57,9 @@ if(BUILD_CONSOLE)
         -DBUILD_SHARED_LIBS=OFF
         -DGLFW_BUILD_EXAMPLES=OFF
         -DGLFW_BUILD_TESTS=OFF
-        -DGLFW_BUILD_DOCS=OFF)
+        -DGLFW_BUILD_DOCS=OFF
+        -G ${CMAKE_GENERATOR}
+        -A ${CMAKE_GENERATOR_PLATFORM})
     find_package(glfw3 REQUIRED CONFIG)
     target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
   endif()
