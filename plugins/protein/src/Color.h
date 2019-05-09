@@ -41,7 +41,9 @@ namespace protein {
             MOVEMENT		= 13,
             BINDINGSITE		= 14,
 			HYDROPHOBICITY	= 15,
-            PER_ATOM_FLOAT  = 16
+            PER_ATOM_FLOAT  = 16,
+            HEIGHTMAP_COL   = 17,
+            HEIGHTMAP_VAL   = 18
         };
 
         /**
@@ -106,7 +108,7 @@ namespace protein {
          * @return The number of coloring modes.
          */
 		static unsigned int GetNumOfColoringModes(const megamol::protein_calls::MolecularDataCall *mol) {
-            return 10;
+            return 12;
         }
 
         /**
@@ -117,7 +119,7 @@ namespace protein {
         * @return The number of coloring modes.
         */
         static unsigned int GetNumOfColoringModes(const megamol::protein_calls::MolecularDataCall *mol, const protein_calls::BindingSiteCall *bs) {
-            return 11;
+            return 13;
         }
 
         /**
@@ -128,7 +130,7 @@ namespace protein {
         * @return The number of coloring modes.
         */
         static unsigned int GetNumOfColoringModes(const megamol::protein_calls::MolecularDataCall *mol, const protein_calls::BindingSiteCall *bs, const protein_calls::PerAtomFloatCall *pa) {
-            return 13;
+            return 15;
         }
 
         /**

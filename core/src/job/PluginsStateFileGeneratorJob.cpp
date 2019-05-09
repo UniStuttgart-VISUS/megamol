@@ -414,6 +414,7 @@ void job::PluginsStateFileGeneratorJob::WriteParamInfo(std::ofstream& file, cons
     if (p6 != nullptr) { WriteParamInfo(file, p6); return; }
     if (p7 != nullptr) { WriteParamInfo(file, p7); return; }
     if (p8 != nullptr) { WriteParamInfo(file, p8); return; }
+    if (p9 != nullptr) { WriteParamInfo(file, p9); return; }
     // fallback string:
     file << "              <Type xsi:type=\"String\">" << std::endl;
     WriteParamCommonTypeInfoe(file, "                ", param);

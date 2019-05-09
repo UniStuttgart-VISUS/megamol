@@ -57,6 +57,7 @@
 #include "vislib/UTF8Encoder.h"
 
 #include <imgui.h>
+#include <imgui_internal.h>
 #include <iomanip> // setprecision
 #include <sstream> // stringstream
 
@@ -201,10 +202,13 @@ private:
     std::list<GUIWindow> windows;
 
     /** Last instance time.  */
-    double lastInstTime;
+    double last_inst_time;
 
     /** The name of the view instance this renderer belongs to. */
     std::string inst_name;
+
+    /** Flag indicating if instance name should be retrieved. */
+    bool get_inst_name;
 
     // ---------- Main Parameter Window ----------
 
@@ -346,6 +350,11 @@ private:
     void updateFps(void);
 
     /**
+     * Check if module's parameters should be considered.
+     */
+    bool considerModule(std::string modname);
+
+    /**
      * Shutdown megmol core.
      */
     void shutdown(void);
@@ -368,9 +377,9 @@ inline GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIR
     , imgui_context(nullptr)
     , decorated_renderer_slot("decoratedRenderer", "Connects to another 2D Renderer being decorated")
     , overlay_slot("overlayRender", "Connected with SplitView for special overlay rendering")
-    , float_print_prec(3) // INIT: Float string format precision
+    , float_print_prec(7) // INIT: Float string format precision
     , windows()
-    , lastInstTime(0.0)
+    , last_inst_time(0.0)
     , main_reset_window(false)
     , param_file()
     , active_tf_param(nullptr)
@@ -387,6 +396,7 @@ inline GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIR
     , font_new_filename()
     , font_new_size(13.0f)
     , inst_name()
+    , get_inst_name(true)
     , utf8_ranges() {
 
     this->decorated_renderer_slot.SetCompatibleCall<core::view::CallRender2DDescription>();
@@ -425,9 +435,9 @@ inline GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GUIR
     , imgui_context(nullptr)
     , decorated_renderer_slot("decoratedRenderer", "Connects to another 2D Renderer being decorated")
     , overlay_slot("overlayRender", "Connected with SplitView for special overlay rendering")
-    , float_print_prec(3) // INIT: Float string format precision
+    , float_print_prec(7) // INIT: Float string format precision
     , windows()
-    , lastInstTime(0.0)
+    , last_inst_time(0.0)
     , main_reset_window(false)
     , param_file()
     , active_tf_param(nullptr)
@@ -444,6 +454,7 @@ inline GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GUIR
     , font_new_filename()
     , font_new_size(13.0f)
     , inst_name()
+    , get_inst_name(true)
     , utf8_ranges() {
 
     this->decorated_renderer_slot.SetCompatibleCall<core::view::CallRender3DDescription>();
@@ -578,13 +589,14 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
     style.Colors[ImGuiCol_Header] = ImVec4(0.26f, 0.59f, 0.98f, 0.60f);
 
     ImGui::SetColorEditOptions(ImGuiColorEditFlags_Uint8 | ImGuiColorEditFlags_RGB |
-                               ImGuiColorEditFlags_PickerHueWheel | ImGuiColorEditFlags_AlphaBar);
+                               ImGuiColorEditFlags_PickerHueWheel | ImGuiColorEditFlags_AlphaBar |
+                               ImGuiColorEditFlags_AlphaPreview);
 
     // IO settings ------------------------------------------------------------
     ImGuiIO& io = ImGui::GetIO();
-    io.IniSavingRate = 5.0f; //  in seconds
-    io.IniFilename = "imgui.ini";
-    io.LogFilename = "imgui_log.txt";
+    io.IniSavingRate = 5.0f;  //  in seconds
+    io.IniFilename = nullptr; // "imgui.ini";      // disabled, will be replaced by own more comprehensive version
+    io.LogFilename = "imgui_log.txt"; // (set to nullptr to disable)
     io.FontAllowUserScaling = true;
 
     // Adding additional utf-8 glyph ranges
@@ -599,7 +611,7 @@ template <class M, class C> bool GUIRenderer<M, C>::create() {
     this->utf8_ranges.emplace_back(0x212B); // Å
     this->utf8_ranges.emplace_back(0x0391);
     this->utf8_ranges.emplace_back(0x03D6); // greek alphabet
-    this->utf8_ranges.emplace_back(0);
+    this->utf8_ranges.emplace_back(0);      // (range termination)
 
     // Load initial fonts only once for all imgui contexts
     if (!other_context) {
@@ -791,20 +803,15 @@ bool GUIRenderer<M, C>::OnKey(core::view::Key key, core::view::KeyAction action,
     // Check for pressed parameter hotkeys
     hotkeyPressed = false;
     const core::Module* current_mod = nullptr;
-    bool current_mod_consider = false;
+    bool consider_module = false;
     this->GetCoreInstance()->EnumParameters([&, this](const auto& mod, auto& slot) {
         if (current_mod != &mod) {
             current_mod = &mod;
-            std::string label = mod.FullName().PeekBuffer();
-
             // Consider only modules belonging to same instance as gui renderer.
-            current_mod_consider = true;
-            if (label.find(this->inst_name) == std::string::npos) {
-                current_mod_consider = false;
-            }
+            consider_module = this->considerModule(mod.FullName().PeekBuffer());
         }
 
-        if (current_mod_consider) {
+        if (consider_module) {
             auto param = slot.Parameter();
             if (!param.IsNull()) {
                 if (auto* p = slot.template Param<core::param::ButtonParam>()) {
@@ -1135,10 +1142,16 @@ template <class M, class C>
 bool GUIRenderer<M, C>::renderGUI(vislib::math::Rectangle<int> viewport, double instanceTime) {
 
     // Get instance name the gui renderer belongs to (not available in create() yet)
-    if (this->inst_name.empty()) {
-        /// Parent's name of a module is the name of the instance a module is part of.
+    if (this->get_inst_name) {
+        // Parent's name of a module is the name of the instance the module belongs to.
         this->inst_name = this->Parent()->FullName().PeekBuffer();
-        this->inst_name.append("::"); // Required string search format to prevent ambiguity: "::<INSTANCE_NAME>::"
+        if (this->inst_name == "::") {
+            this->inst_name.clear();
+        } else {
+            /// Required to prevent ambiguity: "::<INSTANCE_NAME>::"
+            this->inst_name.append("::");
+        }
+        this->get_inst_name = false;
     }
 
     ImGui::SetCurrentContext(this->imgui_context);
@@ -1151,8 +1164,10 @@ bool GUIRenderer<M, C>::renderGUI(vislib::math::Rectangle<int> viewport, double 
     io.DisplaySize = ImVec2((float)viewportWidth, (float)viewportHeight);
     io.DisplayFramebufferScale = ImVec2(1.0, 1.0);
 
-    io.DeltaTime = static_cast<float>(instanceTime - this->lastInstTime);
-    this->lastInstTime = instanceTime;
+    io.DeltaTime = (instanceTime - this->last_inst_time) > 0.0 ? static_cast<float>(instanceTime - this->last_inst_time)
+                                                               : io.DeltaTime;
+    this->last_inst_time =
+        (instanceTime - this->last_inst_time) > 0.0 ? instanceTime : this->last_inst_time + io.DeltaTime;
 
     // Loading new font (before NewFrame!)
     if (this->font_new_load) {
@@ -1160,7 +1175,6 @@ bool GUIRenderer<M, C>::renderGUI(vislib::math::Rectangle<int> viewport, double 
         config.OversampleH = 4;
         config.OversampleV = 1;
         config.GlyphRanges = this->utf8_ranges.data();
-        ;
         io.Fonts->AddFontFromFileTTF(this->font_new_filename.c_str(), this->font_new_size, &config);
         ImGui_ImplOpenGL3_CreateFontsTexture();
         // Load last added font
@@ -1315,7 +1329,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawParametersCallback(std::
             std::string label = mod.FullName().PeekBuffer();
 
             // Consider only modules belonging to same instance as gui renderer.
-            if (label.find(this->inst_name) == std::string::npos) {
+            if (!this->considerModule(label)) {
                 current_mod_open = false;
                 return;
             }
@@ -1342,10 +1356,8 @@ template <class M, class C> void GUIRenderer<M, C>::drawParametersCallback(std::
             if (ImGui::BeginPopupContextItem()) {
                 if (ImGui::MenuItem("Copy to new Window")) {
                     GUIWindow tmp_win;
-                    std::stringstream stream;
-                    stream << std::fixed << std::setprecision(8) << this->lastInstTime;
-                    tmp_win.label =
-                        "Parameters###parameters" + stream.str(); /// using instance time as hidden unique id
+                    tmp_win.label = "Parameters###parameters" +
+                                    std::to_string(this->last_inst_time); /// using instance time as hidden unique id
                     tmp_win.show = true;
                     // tmp_win.hotkey = core::view::KeyCode();
                     tmp_win.flags = ImGuiWindowFlags_HorizontalScrollbar;
@@ -1440,8 +1452,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawFpsWindowCallback(std::s
     std::string val;
     if (!arr->empty()) {
         std::stringstream stream;
-        stream << std::fixed << std::setprecision(this->float_print_prec); //<< std::setw(7)
-        stream << arr->back();
+        stream << std::fixed << std::setprecision(this->float_print_prec) << arr->back();
         val = stream.str();
     }
     ImGui::PlotHistogram(
@@ -1475,7 +1486,7 @@ template <class M, class C> void GUIRenderer<M, C>::drawFpsWindowCallback(std::s
 
         if (ImGui::Button("All Values")) {
             std::stringstream stream;
-            stream << std::fixed << std::setprecision(this->float_print_prec); //<< std::setw(7)
+            stream << std::fixed << std::setprecision(this->float_print_prec);
             auto end = (*arr).rend();
             for (std::vector<float>::reverse_iterator i = (*arr).rbegin(); i != end; ++i) {
                 stream << (*i) << "\n";
@@ -1524,10 +1535,11 @@ template <class M, class C> void GUIRenderer<M, C>::drawFontSelectionWindowCallb
     this->font_new_filename = valueString.PeekBuffer();
     delete[] buffer;
 
-    label = "Font Size";
     std::stringstream float_stream;
     float_stream << "%." << this->float_print_prec << "f";
     std::string float_format = float_stream.str();
+
+    label = "Font Size";
     ImGui::InputFloat(label.c_str(), &this->font_new_size, 0.0f, 0.0f, float_format.c_str(), ImGuiInputTextFlags_None);
     // Validate font size
     if (this->font_new_size <= 0.0f) {
@@ -1587,7 +1599,6 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
     }
 
     // Windows
-    bool reset_win_size = false;
     if (ImGui::BeginMenu("View")) {
         if (ImGui::MenuItem("Reset Window", "SHIFT + 'F12'")) {
             this->main_reset_window = true;
@@ -1631,9 +1642,8 @@ template <class M, class C> void GUIRenderer<M, C>::drawMenu(void) {
     }
 
     // PopUp
-    std::stringstream about_stream;
-    about_stream << "MegaMol is GREAT!" << std::endl << "Using Dear ImGui " << IMGUI_VERSION << std::endl;
-    std::string about = about_stream.str();
+    std::string about =
+        std::string("MegaMol is GREAT!\nUsing Dear ImGui ") + std::string(IMGUI_VERSION) + std::string("\n");
     if (open_popup) {
         ImGui::OpenPopup("About");
     }
@@ -1659,7 +1669,13 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
     std::string help;
 
     auto param = slot.Parameter();
-    if (!param.IsNull()) {
+    if (!param.IsNull() && param->IsGUIVisible()) {
+        // Set different style if parameter is read-only
+        if (param->IsGUIReadOnly()) {
+            ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.25f);
+        }
+
         std::string modname = mod.FullName().PeekBuffer();
         std::string pname = slot.Name().PeekBuffer();
         std::string label = pname + "###" + modname + "::" + pname;
@@ -1695,38 +1711,64 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
                    "[CTRL+Click] on individual component to input value.\n"
                    "[Right-Click] on the individual color widget to show options.";
         } else if (auto* p = slot.template Param<core::param::LinearTransferFunctionParam>()) {
+            bool load_tf = false;
             auto value = p->Value();
 
+            ImGui::Separator();
+            ImGui::Text(pname.c_str());
+            ImGui::SameLine();
             label = "Load into Editor###editor" + modname + "::" + pname;
-            if (p != this->active_tf_param) {
-                if (ImGui::Button(label.c_str())) {
-                    this->active_tf_param = p;
-                    // Load transfer function string
-                    if (!this->SetTransferFunction(value)) {
-                        std::string name = modname + "::" + pname;
-                        vislib::sys::Log::DefaultLog.WriteWarn(
-                            "[GUIRenderer] Couldn't load transfer function of parameter: %s.", name.c_str());
-                    }
-                    // Open Transfer Function Editor window
-                    for (auto& win : this->windows) {
-                        if (win.func == &GUIRenderer<M, C>::drawTFWindowCallback) {
-                            win.show = true;
-                        }
+            if (p == this->active_tf_param) {
+                label = "Open Editor###editor" + modname + "::" + pname;
+            }
+            if (ImGui::Button(label.c_str())) {
+                this->active_tf_param = p;
+                load_tf = true;
+                // Open Transfer Function Editor window
+                for (auto& win : this->windows) {
+                    if (win.func == &GUIRenderer<M, C>::drawTFWindowCallback) {
+                        win.show = true;
                     }
                 }
-            } else {
-                ImGui::TextColored(style.Colors[ImGuiCol_ButtonHovered], "Currently loaded into Editor.");
+            }
+            if (p == this->active_tf_param) {
+                ImGui::SameLine();
+                ImGui::TextColored(style.Colors[ImGuiCol_ButtonHovered], "Currently loaded into Editor");
             }
 
-            ImGui::Text("JSON String:");
+            ImGui::Text("JSON");
             ImGui::SameLine();
             label = "Copy to Clipboard###clipboard" + modname + "::" + pname;
             if (ImGui::Button(label.c_str())) {
                 ImGui::SetClipboardText(value.c_str());
             }
+            ImGui::SameLine();
+            label = "Copy from Clipboard###fclipboard" + modname + "::" + pname;
+            if (ImGui::Button(label.c_str())) {
+                p->SetValue(ImGui::GetClipboardText());
+                load_tf = true;
+            }
+            ImGui::SameLine();
+            label = "Reset###reset" + modname + "::" + pname;
+            if (ImGui::Button(label.c_str())) {
+                p->SetValue("");
+                load_tf = true;
+            }
             ImGui::PushTextWrapPos(ImGui::GetContentRegionAvailWidth());
             ImGui::TextDisabled(value.c_str());
             ImGui::PopTextWrapPos();
+
+            // Loading transfer function string
+            if (load_tf && (p == this->active_tf_param)) {
+                value = p->Value();
+                if (!this->SetTransferFunction(value)) {
+                    std::string name = modname + "::" + pname;
+                    vislib::sys::Log::DefaultLog.WriteWarn(
+                        "[GUIRenderer] Couldn't load transfer function of parameter: %s.", name.c_str());
+                }
+            }
+
+            ImGui::Separator();
 
         } else if (auto* p = slot.template Param<core::param::EnumParam>()) {
             // XXX: no UTF8 fanciness required here?
@@ -1812,6 +1854,12 @@ void GUIRenderer<M, C>::drawParameter(const core::Module& mod, core::param::Para
         this->HoverToolTip(desc, ImGui::GetID(label.c_str()), 1.0f);
 
         this->HelpMarkerToolTip(help);
+
+        // Reset to default style
+        if (param->IsGUIReadOnly()) {
+            ImGui::PopItemFlag();
+            ImGui::PopStyleVar();
+        }
     }
 }
 
@@ -1911,6 +1959,23 @@ template <class M, class C> void GUIRenderer<M, C>::updateFps(void) {
 
         this->current_delay = 0.0f;
     }
+}
+
+
+/**
+ * GUIRenderer<M, C>::considerModule
+ */
+template <class M, class C> bool GUIRenderer<M, C>::considerModule(std::string modname) {
+
+    if (this->inst_name.empty()) {
+        return true;
+    }
+
+    bool foundInstanceName = (modname.find(this->inst_name) != std::string::npos);
+    // If no second '::' is found, the module is not assigned to any instance
+    bool noInstanceNamePresent = (modname.find("::", 2) == std::string::npos);
+
+    return (foundInstanceName || noInstanceNamePresent);
 }
 
 

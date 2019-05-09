@@ -26,6 +26,7 @@ endif()
     PATCH_COMMAND ${CMAKE_COMMAND} -E copy
       "${CMAKE_CURRENT_SOURCE_DIR}/cmake/bhtsne/CMakeLists.txt"
       "<SOURCE_DIR>/CMakeLists.txt"
+    BUILD_ALWAYS TRUE
     CMAKE_ARGS ${bhtsne_cmake_args}
 )
   add_external_library(bhtsne STATIC

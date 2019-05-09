@@ -99,7 +99,7 @@ AbstractParticleBoxFilter<T>::AbstractParticleBoxFilter()
     : AbstractManipulator<T>("dataIn", "dataOut")
     , boxSlot_("box", "Box definition for the Box Filter (minx, miny, minz, maxx, maxy, maxz)") {
     boxSlot_ << new core::param::StringParam("0.0, 0.0, 0.0, 1.0, 1.0, 1.0");
-    MakeSlotAvailable(&boxSlot_);
+    this->MakeSlotAvailable(&boxSlot_);
 }
 
 
