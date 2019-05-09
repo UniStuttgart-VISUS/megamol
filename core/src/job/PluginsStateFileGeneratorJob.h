@@ -23,7 +23,7 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/ColorParam.h"
-#include "mmcore/param/LinearTransferFunctionParam.h"
+#include "mmcore/param/TransferFunctionParam.h"
 
 
 namespace megamol {
@@ -128,16 +128,16 @@ namespace job {
             const factories::CallDescription* desc) const;
 
         /** Writes info of one parameter type */
-        void WriteParamInfo(std::ofstream& file, const param::AbstractParam               * param) const;
-        void WriteParamInfo(std::ofstream& file, const param::BoolParam                   * param) const;
-        void WriteParamInfo(std::ofstream& file, const param::ButtonParam                 * param) const;
-        void WriteParamInfo(std::ofstream& file, const param::EnumParam                   * param) const;
-        void WriteParamInfo(std::ofstream& file, const param::FlexEnumParam               * param) const;
-        void WriteParamInfo(std::ofstream& file, const param::FloatParam                  * param) const;
-        void WriteParamInfo(std::ofstream& file, const param::IntParam                    * param) const;
-        void WriteParamInfo(std::ofstream& file, const param::FilePathParam               * param) const;
-        void WriteParamInfo(std::ofstream& file, const param::ColorParam                  * param) const;
-        void WriteParamInfo(std::ofstream& file, const param::LinearTransferFunctionParam * param) const;
+        void WriteParamInfo(std::ofstream& file, const param::AbstractParam         * param) const;
+        void WriteParamInfo(std::ofstream& file, const param::BoolParam             * param) const;
+        void WriteParamInfo(std::ofstream& file, const param::ButtonParam           * param) const;
+        void WriteParamInfo(std::ofstream& file, const param::EnumParam             * param) const;
+        void WriteParamInfo(std::ofstream& file, const param::FlexEnumParam         * param) const;
+        void WriteParamInfo(std::ofstream& file, const param::FloatParam            * param) const;
+        void WriteParamInfo(std::ofstream& file, const param::IntParam              * param) const;
+        void WriteParamInfo(std::ofstream& file, const param::FilePathParam         * param) const;
+        void WriteParamInfo(std::ofstream& file, const param::ColorParam            * param) const;
+        void WriteParamInfo(std::ofstream& file, const param::TransferFunctionParam * param) const;
 
         /** The file name to store the data in */
         param::ParamSlot fileNameSlot;

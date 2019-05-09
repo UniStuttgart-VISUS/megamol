@@ -1,5 +1,5 @@
 /*
- * LinearTransferFunctionEditor.h
+ * GUITransferFunctionEditor.h
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
@@ -16,8 +16,8 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "mmcore/param/LinearTransferFunctionParam.h"
-#include "mmcore/view/LinearTransferFunction.h"
+#include "mmcore/param/TransferFunctionParam.h"
+#include "mmcore/view/TransferFunction.h"
 
 #include "vislib/sys/Log.h"
 
@@ -42,8 +42,18 @@ namespace gui {
 /**
  * 1D Transfer Function Editor using ImGui.
  */
-class LinearTransferFunctionEditor : public GUIUtility {
+class GUITransferFunctionEditor : public GUIUtility {
 public:
+    /**
+     * Ctor
+     */
+    GUITransferFunctionEditor(void);
+
+    /**
+     * Dtor
+     */
+    ~GUITransferFunctionEditor(void);
+
     /**
      * Draws the transfer function editor.
      */
@@ -65,25 +75,27 @@ public:
      */
     bool GetTransferFunction(std::string& out_tfs);
 
-protected:
     /**
-     * Ctor
+     * Set the currently active parameter.
      */
-    LinearTransferFunctionEditor(void);
+    void SetActiveParameter(core::param::TransferFunctionParam* ap) { this->active_param = ap; }
 
     /**
-     * Dtor
+     * Get the currently active parameter.
      */
-    ~LinearTransferFunctionEditor(void);
+    core::param::TransferFunctionParam* GetActiveParameter(void) { return this->active_param; }
 
 private:
     // VARIABLES -----------------------------------------------------------
 
+    /** The currently active parameter whose transfer function is currently loaded into this editor. */
+    core::param::TransferFunctionParam* active_param;
+
     /** Array holding current colors and function values. */
-    megamol::core::param::LinearTransferFunctionParam::TFDataType data;
+    megamol::core::param::TransferFunctionParam::TFDataType data;
 
     /** Current interpolation option. */
-    megamol::core::param::LinearTransferFunctionParam::InterpolationMode interpol_mode;
+    megamol::core::param::TransferFunctionParam::InterpolationMode interpol_mode;
 
     /** Current texture size. */
     UINT tex_size;

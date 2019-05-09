@@ -91,6 +91,7 @@ moldyn::SimpleSphericalParticles& moldyn::SimpleSphericalParticles::operator=(
     this->idPtr = rhs.idPtr;
     this->idStride = rhs.idStride;
     this->par_store_ = rhs.par_store_;
+    this->wsBBox = rhs.wsBBox;
     return *this;
 }
 
@@ -105,5 +106,6 @@ bool moldyn::SimpleSphericalParticles::operator==(const moldyn::SimpleSphericalP
             (this->minColI == rhs.minColI) && (this->radius == rhs.radius) &&
             (this->vertDataType == rhs.vertDataType) && (this->vertPtr == rhs.vertPtr) &&
             (this->vertStride == rhs.vertStride) && (this->clusterInfos == rhs.clusterInfos) &&
-            (this->idDataType == rhs.idDataType) && (this->idPtr == rhs.idPtr) && (this->idStride == rhs.idStride));
+            (this->idDataType == rhs.idDataType) && (this->idPtr == rhs.idPtr) && (this->idStride == rhs.idStride) &&
+            (this->wsBBox == rhs.wsBBox));
 }
