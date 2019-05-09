@@ -17,6 +17,8 @@ public:
     using entrysizes_t = std::vector<int>;
     using color_flags_t = std::vector<bool>;
     using dir_flags_t = std::vector<bool>;
+    using pathline_frame_store_t = std::unordered_map<uint64_t, std::vector<unsigned int>>;
+    using pathline_frame_store_set_t = std::vector<pathline_frame_store_t>;
 
 
     /**
@@ -57,6 +59,8 @@ public:
 
     std::vector<pathline_store_t> const* GetPathStore() const { return pathStore_; }
 
+    pathline_frame_store_set_t const* GetPathFrameStore() const { return pathFrameStore_; }
+
     size_t GetTimeSteps() const { return numTimeSteps_; }
 
     void SetEntrySizes(std::vector<int> const& entrySizes) { entrySizes_ = entrySizes; }
@@ -66,6 +70,8 @@ public:
     void SetDirFlags(std::vector<bool> const& dirsPresent) { dirsPresent_ = dirsPresent; }
 
     void SetPathStore(std::vector<pathline_store_t> const* pathStore) { pathStore_ = pathStore; }
+
+    void SetPathFrameStore(pathline_frame_store_set_t const* pathFrameStore) { pathFrameStore_ = pathFrameStore; }
 
     void SetTimeSteps(size_t numTimeSteps) { numTimeSteps_ = numTimeSteps; }
 
@@ -77,6 +83,8 @@ private:
     color_flags_t colsPresent_;
 
     pathline_store_set_t const* pathStore_ = nullptr;
+
+    pathline_frame_store_set_t const* pathFrameStore_ = nullptr;
 
     size_t numTimeSteps_;
 }; // end class PathLineDataCall
