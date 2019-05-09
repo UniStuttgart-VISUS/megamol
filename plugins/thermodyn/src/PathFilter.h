@@ -10,6 +10,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "vislib/math/Cuboid.h"
 #include "vislib/StringTokeniser.h"
+#include "thermodyn/PathLineDataCall.h"
 
 
 namespace megamol {
@@ -21,7 +22,8 @@ public:
         MainDirection = 0,
         Interface,
         Plane,
-        BoxFilter
+        BoxFilter,
+        Hotness
     };
 
     /** Return module class name */
@@ -86,6 +88,8 @@ private:
 
     core::param::ParamSlot boxSlot_;
 
+    core::param::ParamSlot percSlot_;
+
     size_t inDataHash_ = std::numeric_limits<size_t>::max();
 
     std::vector<int> entrySizes_;
@@ -95,6 +99,8 @@ private:
     std::vector<bool> dirsPresent_;
 
     std::vector<std::unordered_map<uint64_t, std::vector<float>>> pathStore_;
+
+    PathLineDataCall::pathline_frame_store_set_t pathFrameStore_;
 };
 
 } // end namespace thermodyn

@@ -18,7 +18,8 @@ megamol::thermodyn::PathFilter::PathFilter()
     , maxIntSlot_("maxInt", "Max value of interface")
     , minIntSlot_("minInt", "Min value of interface")
     , timeCutSlot_("timeCut", "Crop the time dimension")
-    , boxSlot_("box", "Box definition for the Box Filter (minx, miny, minz, maxx, maxy, maxz)") {
+    , boxSlot_("box", "Box definition for the Box Filter (minx, miny, minz, maxx, maxy, maxz)")
+    , percSlot_("percentage", "Percentage of path to pass") {
     dataInSlot_.SetCompatibleCall<PathLineDataCallDescription>();
     MakeSlotAvailable(&dataInSlot_);
 
@@ -33,6 +34,7 @@ megamol::thermodyn::PathFilter::PathFilter()
     ep->SetTypePair(static_cast<int>(FilterType::Interface),"Interface");
     ep->SetTypePair(static_cast<int>(FilterType::Plane), "Plane");
     ep->SetTypePair(static_cast<int>(FilterType::BoxFilter), "BoxFilter");
+    ep->SetTypePair(static_cast<int>(FilterType::Hotness), "Hotness");
     filterTypeSlot_ << ep;
     MakeSlotAvailable(&filterTypeSlot_);
 
@@ -60,6 +62,9 @@ megamol::thermodyn::PathFilter::PathFilter()
     
     boxSlot_ << new core::param::StringParam("0.0, 0.0, 0.0, 1.0, 1.0, 1.0");
     MakeSlotAvailable(&boxSlot_);
+
+    percSlot_ << new core::param::FloatParam(10.0f, std::numeric_limits<float>::min(), 100.0f);
+    MakeSlotAvailable(&percSlot_);
 }
 
 
@@ -90,8 +95,10 @@ bool megamol::thermodyn::PathFilter::getDataCallback(core::Call& c) {
         auto const minInt = minIntSlot_.Param<core::param::FloatParam>()->Value();
         auto const maxInt = maxIntSlot_.Param<core::param::FloatParam>()->Value();
         auto const timeCut = timeCutSlot_.Param<core::param::BoolParam>()->Value();
+        auto const perc = percSlot_.Param<core::param::FloatParam>()->Value();
 
         pathStore_ = *inCall->GetPathStore(); //< this is a copy
+        pathFrameStore_ = *inCall->GetPathFrameStore();
         dirsPresent_ = inCall->HasDirections();
         colsPresent_ = inCall->HasColors();
         entrySizes_ = inCall->GetEntrySize();
@@ -124,8 +131,10 @@ bool megamol::thermodyn::PathFilter::getDataCallback(core::Call& c) {
                     }
                 }
                 auto& ps = pathStore_[plidx];
+                auto& fs = pathFrameStore_[plidx];
                 for (auto const& idx : toRemove) {
                     ps.erase(idx);
+                    fs.erase(idx);
                 }
             }
 
@@ -154,8 +163,10 @@ bool megamol::thermodyn::PathFilter::getDataCallback(core::Call& c) {
                     if (count > 0.9f*planeCon.size()) toRemove.push_back(path.first);
                 }
                 auto& ps = pathStore_[plidx];
+                auto& fs = pathFrameStore_[plidx];
                 for (auto const& idx : toRemove) {
                     ps.erase(idx);
+                    fs.erase(idx);
                 }
             }
 
@@ -187,8 +198,71 @@ bool megamol::thermodyn::PathFilter::getDataCallback(core::Call& c) {
                     }
                 }
                 auto& ps = pathStore_[plidx];
+                auto& fs = pathFrameStore_[plidx];
                 for (auto const& idx : toRemove) {
                     ps.erase(idx);
+                    fs.erase(idx);
+                }
+            }
+
+        } break;
+            case FilterType::Hotness: {
+            auto const box = getBoxFromString(boxSlot_.Param<core::param::StringParam>()->Value());
+
+            // assumes temperature exists
+
+            for (size_t plidx = 0; plidx < pathStore_.size(); ++plidx) {
+                auto const hasDir = dirsPresent_[plidx];
+                auto const hasCol = colsPresent_[plidx];
+                auto const entrySize = entrySizes_[plidx];
+                int tempOff = 3;
+                if (hasCol) tempOff += 4;
+                if (hasDir) tempOff += 3;
+                std::vector<size_t> toRemove;
+                for (auto& path : pathStore_[plidx]) {
+                    auto const pathsize = path.second.size();
+                    auto& p = path.second;
+                    bool inBox = false;
+                    for (size_t eidx = 0; eidx < pathsize; eidx += entrySize) {
+                        vislib::math::ShallowPoint<float, 3> const pivot(p.data()+eidx);
+                        if (box.Contains(pivot)) {
+                            inBox=true;
+                            break;
+                        }
+                    }
+                    if (!inBox) {
+                        toRemove.push_back(path.first);
+                    }
+                }
+                auto& ps = pathStore_[plidx];
+                auto& fs = pathFrameStore_[plidx];
+                for (auto const& idx : toRemove) {
+                    ps.erase(idx);
+                    fs.erase(idx);
+                }
+                // check average temp in interface region for remaining paths
+                std::vector<std::pair<size_t, float>> temps;
+                for (auto& path : pathStore_[plidx]) {
+                    auto const pathsize = path.second.size();
+                    auto& p = path.second;
+
+                    std::pair<size_t, float> ret;
+                    ret.first = path.first;
+                    float val = std::numeric_limits<float>::lowest();
+
+                    for (size_t eidx = 0; eidx < pathsize; eidx += entrySize) {
+                        if (p[eidx+filterAxis] > minInt && p[eidx+filterAxis] < maxInt) {
+                            val = std::max(val, p[eidx+tempOff]);
+                        }
+                    }
+                    ret.second = val;
+                    temps.push_back(ret);
+                }
+                std::sort(temps.begin(), temps.end(), [](auto const& a, auto const& b){return a.second > b.second;});
+                size_t init = std::floorf(temps.size()*(perc/100.0f));
+                for (size_t i = init; i < temps.size(); ++i) {
+                    ps.erase(temps[i].first);
+                    fs.erase(temps[i].first);
                 }
             }
 
@@ -217,8 +291,10 @@ bool megamol::thermodyn::PathFilter::getDataCallback(core::Call& c) {
                     }
                 }
                 auto& ps = pathStore_[plidx];
+                auto& fs = pathFrameStore_[plidx];
                 for (auto const& idx : toRemove) {
                     ps.erase(idx);
+                    fs.erase(idx);
                 }
             }
         }
@@ -229,6 +305,7 @@ bool megamol::thermodyn::PathFilter::getDataCallback(core::Call& c) {
     outCall->SetDirFlags(dirsPresent_);
     outCall->SetEntrySizes(entrySizes_);
     outCall->SetPathStore(&pathStore_);
+    outCall->SetPathFrameStore(&pathFrameStore_);
     outCall->SetTimeSteps(inCall->GetTimeSteps());
     outCall->SetDataHash(inDataHash_);
 
