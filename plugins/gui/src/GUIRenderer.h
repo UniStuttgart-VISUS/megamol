@@ -303,7 +303,7 @@ typedef GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D> GUIR
  * GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIRenderer
  */
 template <>
-GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIRenderer()
+inline GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIRenderer()
     : core::view::Renderer2DModule()
     , decorated_renderer_slot("decoratedRenderer", "Connects to another 2D Renderer being decorated")
     , overlay_slot("overlayRender", "Connected with SplitView for special overlay rendering")
@@ -349,7 +349,7 @@ GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIRenderer
  * GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GUIRenderer
  */
 template <>
-GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GUIRenderer()
+inline GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GUIRenderer()
     : core::view::Renderer3DModule()
     , decorated_renderer_slot("decoratedRenderer", "Connects to another 2D Renderer being decorated")
     , overlay_slot("overlayRender", "Connected with SplitView for special overlay rendering")
@@ -394,7 +394,7 @@ GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GUIRenderer
 /**
  * GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::ClassName
  */
-template <> const char* GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::ClassName(void) {
+template <> inline const char* GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::ClassName(void) {
 
     return "GUIRenderer2D";
 }
@@ -403,7 +403,7 @@ template <> const char* GUIRenderer<core::view::Renderer2DModule, core::view::Ca
 /**
  * GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::ClassName
  */
-template <> const char* GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::ClassName(void) {
+template <> inline const char* GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::ClassName(void) {
 
     return "GUIRenderer3D";
 }
@@ -413,7 +413,8 @@ template <> const char* GUIRenderer<core::view::Renderer3DModule, core::view::Ca
  * GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GetExtents
  */
 template <>
-bool GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GetExtents(core::view::CallRender2D& call) {
+inline bool GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GetExtents(
+    core::view::CallRender2D& call) {
 
     auto* cr = this->decorated_renderer_slot.CallAs<core::view::CallRender2D>();
     if (cr != nullptr) {
@@ -433,7 +434,8 @@ bool GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GetExt
  * GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GetExtents
  */
 template <>
-bool GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GetExtents(core::view::CallRender3D& call) {
+inline bool GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GetExtents(
+    core::view::CallRender3D& call) {
 
     auto* cr = this->decorated_renderer_slot.CallAs<core::view::CallRender3D>();
     if (cr != nullptr) {
