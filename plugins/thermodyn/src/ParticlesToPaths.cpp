@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "ParticlesToPaths.h"
 
+#include <array>
+
 #include "mmcore/moldyn/DirectionalParticleDataCall.h"
 #include "mmcore/param/BoolParam.h"
 
@@ -84,6 +86,9 @@ bool megamol::thermodyn::ParticlesToPaths::getDataCallback(core::Call& c) {
         pathStore_.clear();
         pathStore_.resize(plc);
 
+        pathFrameStore_.clear();
+        pathFrameStore_.resize(plc);
+
         entrySizes_.resize(plc);
         colsPresent_.resize(plc);
         dirsPresent_.resize(plc);
@@ -117,9 +122,11 @@ bool megamol::thermodyn::ParticlesToPaths::getDataCallback(core::Call& c) {
         for (unsigned int plidx = 0; plidx < plc; ++plidx) {
             // step over all time frames to create complete pathline
             auto const& part = inCall->AccessParticles(plidx);
-            auto const& pCount = part.GetCount();
+            auto pCount = part.GetCount();
             auto& storeEntry = pathStore_[plidx];
+            auto& frameStoreEntry = pathFrameStore_[plidx];
             storeEntry.reserve(pCount);
+            frameStoreEntry.reserve(pCount);
 
             auto const idDT = part.GetIDDataType();
             if (idDT == core::moldyn::SimpleSphericalParticles::IDDATA_NONE) {
@@ -163,11 +170,16 @@ bool megamol::thermodyn::ParticlesToPaths::getDataCallback(core::Call& c) {
             colsPresent_[plidx] = colPresent;
             dirsPresent_[plidx] = dirPresent;
 
-            std::vector<float> old_pos(pCount * 3);
-            std::vector<float> dec_pos(pCount * 3);
+            //std::vector<float> old_pos(pCount * 3);
+            std::unordered_map<size_t, std::array<float, 3>> old_pos;
+            old_pos.reserve(pCount);
+            //std::vector<float> dec_pos(pCount * 3);
+            std::unordered_map<size_t, std::array<float, 3>> dec_pos;
+            dec_pos.reserve(pCount);
 
             for (size_t pidx = 0; pidx < pCount; ++pidx) {
                 storeEntry[idAcc->Get_u64(pidx)].reserve(frameCount * entrySize);
+                frameStoreEntry[idAcc->Get_u64(pidx)].reserve(frameCount);
             }
 
             auto const r_mode = fegetround();
@@ -181,6 +193,8 @@ bool megamol::thermodyn::ParticlesToPaths::getDataCallback(core::Call& c) {
 
                 if (!(*inCall)(0)) return false;
 
+                pCount = part.GetCount();
+
                 for (size_t pidx = 0; pidx < pCount; ++pidx) {
                     auto idx = idAcc->Get_u64(pidx);
 
@@ -189,17 +203,17 @@ bool megamol::thermodyn::ParticlesToPaths::getDataCallback(core::Call& c) {
                     auto z = zAcc->Get_f(pidx);
 
                     if (fidx == 0) {
-                        old_pos[pidx * 3 + 0] = xAcc->Get_f(pidx);
-                        old_pos[pidx * 3 + 1] = yAcc->Get_f(pidx);
-                        old_pos[pidx * 3 + 2] = zAcc->Get_f(pidx);
-                        dec_pos[pidx * 3 + 0] = xAcc->Get_f(pidx);
-                        dec_pos[pidx * 3 + 1] = yAcc->Get_f(pidx);
-                        dec_pos[pidx * 3 + 2] = zAcc->Get_f(pidx);
+                        old_pos[idx][0] = xAcc->Get_f(pidx);
+                        old_pos[idx][1] = yAcc->Get_f(pidx);
+                        old_pos[idx][2] = zAcc->Get_f(pidx);
+                        dec_pos[idx][0] = xAcc->Get_f(pidx);
+                        dec_pos[idx][1] = yAcc->Get_f(pidx);
+                        dec_pos[idx][2] = zAcc->Get_f(pidx);
                     }
 
-                    auto const px = old_pos[pidx * 3 + 0];
-                    auto const py = old_pos[pidx * 3 + 1];
-                    auto const pz = old_pos[pidx * 3 + 2];
+                    auto const px = old_pos[idx][0];
+                    auto const py = old_pos[idx][1];
+                    auto const pz = old_pos[idx][2];
 
                     // auto dis = std::sqrtf(std::powf(px-x, 2.0f) + std::powf(py-y, 2.0f) + std::powf(pz-z, 2.0f));
                     auto xdis = std::fabs(px - x);
@@ -223,11 +237,12 @@ bool megamol::thermodyn::ParticlesToPaths::getDataCallback(core::Call& c) {
                         zdis = (pz - z) - bbdepth * std::nearbyint((pz - z) / bbdepth);
                     }
 
-                    if (cycl_x) x = dec_pos[pidx * 3 + 0] + xdis * std::copysign(1.0f, px - x);
-                    if (cycl_y) y = dec_pos[pidx * 3 + 1] + ydis * std::copysign(1.0f, py - y);
-                    if (cycl_z) z = dec_pos[pidx * 3 + 2] + zdis * std::copysign(1.0f, pz - z);
+                    if (cycl_x) x = dec_pos[idx][0] + xdis * std::copysign(1.0f, px - x);
+                    if (cycl_y) y = dec_pos[idx][1] + ydis * std::copysign(1.0f, py - y);
+                    if (cycl_z) z = dec_pos[idx][2] + zdis * std::copysign(1.0f, pz - z);
 
                     auto& entry = storeEntry[idx];
+                    auto& frameEntry = frameStoreEntry[idx];
                     /*entry.push_back(xAcc->Get_f(pidx));
                     entry.push_back(yAcc->Get_f(pidx));
                     entry.push_back(zAcc->Get_f(pidx));*/
@@ -253,13 +268,17 @@ bool megamol::thermodyn::ParticlesToPaths::getDataCallback(core::Call& c) {
                         entry.push_back(dyAcc->Get_f(pidx));
                         entry.push_back(dzAcc->Get_f(pidx));
                     }
-                    old_pos[pidx * 3 + 0] = xAcc->Get_f(pidx);
-                    old_pos[pidx * 3 + 1] = yAcc->Get_f(pidx);
-                    old_pos[pidx * 3 + 2] = zAcc->Get_f(pidx);
-                    dec_pos[pidx * 3 + 0] = x;
-                    dec_pos[pidx * 3 + 1] = y;
-                    dec_pos[pidx * 3 + 2] = z;
+                    old_pos[idx][0] = xAcc->Get_f(pidx);
+                    old_pos[idx][1] = yAcc->Get_f(pidx);
+                    old_pos[idx][2] = zAcc->Get_f(pidx);
+                    dec_pos[idx][0] = x;
+                    dec_pos[idx][1] = y;
+                    dec_pos[idx][2] = z;
+
+                    frameEntry.push_back(fidx);
                 }
+
+                inCall->Unlock();
             }
             fesetround(r_mode);
         }
@@ -296,6 +315,7 @@ bool megamol::thermodyn::ParticlesToPaths::getDataCallback(core::Call& c) {
     outCall->SetColorFlags(colsPresent_);
     outCall->SetDirFlags(dirsPresent_);
     outCall->SetPathStore(&pathStore_);
+    outCall->SetPathFrameStore(&pathFrameStore_);
     outCall->SetTimeSteps(frameCount);
     outCall->SetDataHash(inDataHash_);
 

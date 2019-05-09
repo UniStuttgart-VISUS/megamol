@@ -7,6 +7,8 @@
 #include "mmcore/param/ParamSlot.h"
 #include "vislib/math/Cuboid.h"
 
+#include "thermodyn/PathLineDataCall.h"
+
 namespace megamol {
 namespace thermodyn {
 
@@ -58,6 +60,8 @@ private:
     std::vector<bool> dirsPresent_;
 
     std::vector<std::unordered_map<uint64_t, std::vector<float>>> pathStore_;
+
+    PathLineDataCall::pathline_frame_store_set_t pathFrameStore_;
 
     size_t inDataHash_ = std::numeric_limits<size_t>::max();
 
