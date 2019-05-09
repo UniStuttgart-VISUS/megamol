@@ -48,18 +48,30 @@ if(BUILD_CONSOLE)
     set(VERSION_LIBRARY "Version.lib")
   endif()
 
-  if(NOT USE_EGL)  
-    bootstrap_external_package(glfw_ext glfw3
-      CONFIG "lib/cmake/glfw3/glfw3Config.cmake"
-      GIT_REPOSITORY https://github.com/glfw/glfw.git
-      GIT_TAG "3.2.1"
-      CMAKE_ARGS
-        -DBUILD_SHARED_LIBS=OFF
-        -DGLFW_BUILD_EXAMPLES=OFF
-        -DGLFW_BUILD_TESTS=OFF
-        -DGLFW_BUILD_DOCS=OFF
-        -G ${CMAKE_GENERATOR}
-        -A ${CMAKE_GENERATOR_PLATFORM})
+  if(NOT USE_EGL)
+    if(WIN32)
+      bootstrap_external_package(glfw_ext glfw3
+        CONFIG "lib/cmake/glfw3/glfw3Config.cmake"
+        GIT_REPOSITORY https://github.com/glfw/glfw.git
+        GIT_TAG "3.2.1"
+        CMAKE_ARGS
+          -DBUILD_SHARED_LIBS=OFF
+          -DGLFW_BUILD_EXAMPLES=OFF
+          -DGLFW_BUILD_TESTS=OFF
+          -DGLFW_BUILD_DOCS=OFF
+          -G ${CMAKE_GENERATOR}
+          -A ${CMAKE_GENERATOR_PLATFORM})
+    else()
+      bootstrap_external_package(glfw_ext glfw3
+        CONFIG "lib/cmake/glfw3/glfw3Config.cmake"
+        GIT_REPOSITORY https://github.com/glfw/glfw.git
+        GIT_TAG "3.2.1"
+        CMAKE_ARGS
+          -DBUILD_SHARED_LIBS=OFF
+          -DGLFW_BUILD_EXAMPLES=OFF
+          -DGLFW_BUILD_TESTS=OFF
+          -DGLFW_BUILD_DOCS=OFF)
+    endif()
     find_package(glfw3 REQUIRED CONFIG)
     target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
   endif()
