@@ -7,13 +7,16 @@
 #include "mmcore/param/IntParam.h"
 #include "mmstd_datatools/DBSCAN.h"
 #include "thermodyn/PathLineDataCall.h"
+#include "mmcore/param/BoolParam.h"
 
 
 megamol::thermodyn::PathClustering::PathClustering()
     : dataInSlot_("dataIn", "Input of particle pathlines")
     , dataOutSlot_("dataOut", "Output of clustered pathlines")
     , minPtsSlot_("minPts", "MinPts param for DBSCAN")
-    , sigmaSlot_("sigma", "Sigma param for DBSCAN") {
+    , sigmaSlot_("sigma", "Sigma param for DBSCAN")
+    , conDirsSlot_("use_dirs", "Use dirs with clustering")
+    , conTempSlot_("use_temp", "Use temp with clustering") { 
     dataInSlot_.SetCompatibleCall<PathLineDataCallDescription>();
     MakeSlotAvailable(&dataInSlot_);
 
@@ -29,6 +32,12 @@ megamol::thermodyn::PathClustering::PathClustering()
     sigmaSlot_ << new core::param::FloatParam(
         0.5f, std::numeric_limits<float>::min(), std::numeric_limits<float>::max());
     MakeSlotAvailable(&sigmaSlot_);
+
+    conDirsSlot_ << new core::param::BoolParam(false);
+    MakeSlotAvailable(&conDirsSlot_);
+
+    conTempSlot_ << new core::param::BoolParam(true);
+    MakeSlotAvailable(&conTempSlot_);
 }
 
 
@@ -50,8 +59,11 @@ bool megamol::thermodyn::PathClustering::getDataCallback(core::Call& c) {
 
     if (!(*inCall)(0)) return false;
 
-    if (inCall->DataHash() != inDataHash_) {
+    if (inCall->DataHash() != inDataHash_ || isDirty()) {
         inDataHash_ = inCall->DataHash();
+        resetDirty();
+
+        vislib::sys::Log::DefaultLog.WriteInfo("PathClustering: Calculating clustering\n");
 
         auto const minPts = minPtsSlot_.Param<core::param::IntParam>()->Value();
         auto const sigma = sigmaSlot_.Param<core::param::FloatParam>()->Value();
@@ -69,6 +81,10 @@ bool megamol::thermodyn::PathClustering::getDataCallback(core::Call& c) {
         outDirsPresent_.resize(pathStore->size());
         outColsPresent_.resize(pathStore->size());
         outPathStore_.resize(pathStore->size());
+
+        auto conDirs = conDirsSlot_.Param<core::param::BoolParam>()->Value();
+        auto const conTemp = conTempSlot_.Param<core::param::BoolParam>()->Value();
+        if (conTemp) conDirs = false;
 
         for (size_t plidx = 0; plidx < pathStore->size(); ++plidx) {
             auto const& paths = pathStore->operator[](plidx);
@@ -89,14 +105,17 @@ bool megamol::thermodyn::PathClustering::getDataCallback(core::Call& c) {
 
 #define DBSCAN_DIM 4
 
-            std::variant<DB_4DIM, DB_7DIM> db;
+            std::variant<DB_3DIM, DB_4DIM, DB_7DIM> db;
             std::vector<std::vector<float>> clusters;
 
             // initialize ds with frame 0
-            prepareFrameData(db_input, paths, 0, entrySize, tempOffset, inColsPresent[plidx], inDirsPresent[plidx]);
+            prepareFrameData(db_input, paths, 0, entrySize, tempOffset, inColsPresent[plidx], inDirsPresent[plidx] && conDirs, conTemp);
             //stdplugin::datatools::DBSCAN<float, true, DBSCAN_DIM, true>::cluster_set_t clusters;
             {
-                if (inDirsPresent[plidx]) {
+                if (!conTemp) {
+                    db = DB_3DIM(paths.size(), 4, db_input, bbox, minPts, sigma);
+                    clusters = std::get<DB_3DIM>(db).Scan();
+                } else if (inDirsPresent[plidx] && conDirs && conTemp) {
                     db = DB_7DIM(paths.size(), 8, db_input, bbox, minPts, sigma);
                     clusters = std::get<DB_7DIM>(db).Scan();
                 } else {
@@ -108,8 +127,8 @@ bool megamol::thermodyn::PathClustering::getDataCallback(core::Call& c) {
             /*std::vector<size_t> assigned;
             assigned.reserve(paths.size());*/
             cluster_assoc_t cluster_assoc;
-            createClusterAssoc(0, clusters, cluster_assoc, inDirsPresent[plidx]);
-            auto localVset = getVertexList(clusters);
+            createClusterAssoc(0, clusters, cluster_assoc, inDirsPresent[plidx] && conDirs, conTemp);
+            auto localVset = getVertexList(clusters, inDirsPresent[plidx] && conDirs, conTemp);
             vertexSet.insert(vertexSet.end(), localVset.begin(), localVset.end());
 
             for (size_t fidx = 1; fidx < frameCount; ++fidx) {
@@ -117,9 +136,13 @@ bool megamol::thermodyn::PathClustering::getDataCallback(core::Call& c) {
                 // assigned.clear();
                 // continue with the rest of the frames
                 db_input.clear();
-                prepareFrameData(db_input, paths, fidx, entrySize, tempOffset, inColsPresent[plidx], inDirsPresent[plidx]);
+                prepareFrameData(db_input, paths, fidx, entrySize, tempOffset, inColsPresent[plidx],
+                    inDirsPresent[plidx] && conDirs, conTemp);
                 {
-                    if (inDirsPresent[plidx]) {
+                    if (!conTemp) {
+                        db = DB_3DIM(paths.size(), 4, db_input, bbox, minPts, sigma);
+                        clusters = std::get<DB_3DIM>(db).Scan();
+                    } else if (inDirsPresent[plidx] && conDirs) {
                         db = DB_7DIM(paths.size(), 8, db_input, bbox, minPts, sigma);
                         clusters = std::get<DB_7DIM>(db).Scan();
                     } else {
@@ -127,8 +150,8 @@ bool megamol::thermodyn::PathClustering::getDataCallback(core::Call& c) {
                         clusters = std::get<DB_4DIM>(db).Scan();
                     }
                 }
-                createClusterAssoc(vertexSet.size(), clusters, cluster_assoc, inDirsPresent[plidx]);
-                auto localVset = getVertexList(clusters);
+                createClusterAssoc(vertexSet.size(), clusters, cluster_assoc, inDirsPresent[plidx] && conDirs, conTemp);
+                auto localVset = getVertexList(clusters, inDirsPresent[plidx] && conDirs, conTemp);
                 // auto localEset = getEdgeList(cluster_assoc);
                 vertexSet.insert(vertexSet.end(), localVset.begin(), localVset.end());
                 // edgeSet.insert(edgeSet.end(), localEset.begin(), localEset.end());

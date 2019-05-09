@@ -36,6 +36,7 @@ protected:
     void release() override;
 
 private:
+    using DB_3DIM = stdplugin::datatools::DBSCAN<float, true, 3, false>;
     using DB_4DIM = stdplugin::datatools::DBSCAN<float, true, 4, true>;
     using DB_7DIM = stdplugin::datatools::DBSCAN<float, true, 7, true>;
 
@@ -68,7 +69,7 @@ private:
     }
 
     static void prepareFrameData(std::vector<float>& data, thermodyn::PathLineDataCall::pathline_store_t const& input,
-        size_t const fidx, size_t const entrySize, size_t const tempOffset, bool const colsPresent, bool const dirsPresent) {
+        size_t const fidx, size_t const entrySize, size_t const tempOffset, bool const colsPresent, bool const dirsPresent, bool const useTemp) {
         size_t dirOffset = 3;
         if (colsPresent) dirOffset += 4;
         for (auto const& el : input) {
@@ -82,7 +83,9 @@ private:
                 data.push_back(path[fidx * entrySize + dirOffset + 2]);
             }
             // temperature
-            data.push_back(path[fidx * entrySize + tempOffset]);
+            if (useTemp) {
+                data.push_back(path[fidx * entrySize + tempOffset]);
+            }
             // id
             data.push_back(static_cast<float>(el.first));
         }
@@ -100,9 +103,10 @@ private:
     }
 
     static void createClusterAssoc(size_t const idxOffset, std::vector<std::vector<float>> const& clusters,
-        cluster_assoc_t& clusterAssoc, bool const dirsPresent) {
+        cluster_assoc_t& clusterAssoc, bool const dirsPresent, bool const useTemp) {
         size_t off = 5;
         if (dirsPresent) off = 8;
+        if (!useTemp) off -= 1;
         for (size_t idx = 0; idx < clusters.size(); ++idx) {
             auto const& cluster = clusters[idx];
             for (size_t pidx = 0; pidx < cluster.size() / off; ++pidx) {
@@ -128,26 +132,29 @@ private:
         }
     }*/
 
-    static vertex_t getClusterCenter(std::vector<float> const& cluster) {
+    static vertex_t getClusterCenter(std::vector<float> const& cluster, bool const dirsPresent, bool const useTemp) {
         vertex_t p{0.0f, 0.0f, 0.0f, 0.0f};
-        for (size_t pidx = 0; pidx < cluster.size() / 5; ++pidx) {
-            p[0] += cluster[pidx * 5 + 0];
-            p[1] += cluster[pidx * 5 + 1];
-            p[2] += cluster[pidx * 5 + 2];
-            p[3] += cluster[pidx * 5 + 3];
+        size_t off = 5;
+        if (dirsPresent) off = 8;
+        if (!useTemp) off -= 1;
+        for (size_t pidx = 0; pidx < cluster.size() / off; ++pidx) {
+            p[0] += cluster[pidx * off + 0];
+            p[1] += cluster[pidx * off + 1];
+            p[2] += cluster[pidx * off + 2];
+            p[3] += cluster[pidx * off + 3];
         }
-        p[0] /= static_cast<float>(cluster.size() / 5);
-        p[1] /= static_cast<float>(cluster.size() / 5);
-        p[2] /= static_cast<float>(cluster.size() / 5);
-        p[3] /= static_cast<float>(cluster.size() / 5);
+        p[0] /= static_cast<float>(cluster.size() / off);
+        p[1] /= static_cast<float>(cluster.size() / off);
+        p[2] /= static_cast<float>(cluster.size() / off);
+        p[3] /= static_cast<float>(cluster.size() / off);
         return p;
     }
 
-    static vertex_set_t getVertexList(std::vector<std::vector<float>> const& clusters) {
+    static vertex_set_t getVertexList(std::vector<std::vector<float>> const& clusters, bool const dirsPresent, bool const useTemp) {
         vertex_set_t ret;
         ret.reserve(clusters.size());
         for (auto const& el : clusters) {
-            ret.emplace_back(getClusterCenter(el));
+            ret.emplace_back(getClusterCenter(el, dirsPresent, useTemp));
         }
         return ret;
     }
@@ -175,6 +182,17 @@ private:
         return ret;
     }
 
+    bool isDirty() const {
+        return minPtsSlot_.IsDirty() || sigmaSlot_.IsDirty() || conDirsSlot_.IsDirty() || conTempSlot_.IsDirty();
+    }
+
+    void resetDirty() {
+        minPtsSlot_.ResetDirty();
+        sigmaSlot_.ResetDirty();
+        conDirsSlot_.ResetDirty();
+        conTempSlot_.ResetDirty();
+    }
+
     /** input of pathlines */
     core::CallerSlot dataInSlot_;
 
@@ -184,6 +202,10 @@ private:
     core::param::ParamSlot minPtsSlot_;
 
     core::param::ParamSlot sigmaSlot_;
+
+    core::param::ParamSlot conDirsSlot_;
+
+    core::param::ParamSlot conTempSlot_;
 
     size_t inDataHash_ = std::numeric_limits<size_t>::max();
 
