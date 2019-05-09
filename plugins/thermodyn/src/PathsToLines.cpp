@@ -33,10 +33,12 @@ bool megamol::thermodyn::PathToLines::getDataCallback(core::Call& c) {
     auto outCall = dynamic_cast<geocalls::LinesDataCall*>(&c);
     if (outCall == nullptr) return false;
 
+    inCall->SetFrameID(outCall->FrameID(), true);
     if (!(*inCall)(0)) return false;
 
-    if (inCall->DataHash() != inDataHash_) {
+    if (inCall->DataHash() != inDataHash_ || inCall->FrameID() != frameID_) {
         inDataHash_ = inCall->DataHash();
+        frameID_ = inCall->FrameID();
 
         linesStore_.clear();
 
@@ -89,8 +91,8 @@ bool megamol::thermodyn::PathToLines::getDataCallback(core::Call& c) {
         }
     }
 
-    outCall->SetFrameCount(1);
-    outCall->SetFrameID(0);
+    outCall->SetFrameCount(inCall->FrameCount());
+    outCall->SetFrameID(frameID_);
     outCall->SetData(linesStore_.size(), linesStore_.data());
 
     return true;
@@ -106,8 +108,8 @@ bool megamol::thermodyn::PathToLines::getExtentCallback(core::Call& c) {
 
     if (!(*inCall)(1)) return false;
 
-    outCall->SetFrameCount(1);
-    outCall->SetFrameID(0);
+    outCall->SetFrameCount(inCall->FrameCount());
+    //outCall->SetFrameID(inCall->FrameID());
     outCall->AccessBoundingBoxes().SetObjectSpaceBBox(inCall->GetBoundingBoxes().ObjectSpaceBBox());
     outCall->AccessBoundingBoxes().SetObjectSpaceClipBox(inCall->GetBoundingBoxes().ObjectSpaceClipBox());
     outCall->AccessBoundingBoxes().MakeScaledWorld(1.0f);

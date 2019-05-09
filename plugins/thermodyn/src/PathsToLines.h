@@ -40,6 +40,8 @@ private:
 
     size_t inDataHash_ = std::numeric_limits<size_t>::max();
 
+    unsigned int frameID_ = 0;
+
     using Lines = geocalls::LinesDataCall::Lines;
 
     std::vector<Lines> linesStore_;
