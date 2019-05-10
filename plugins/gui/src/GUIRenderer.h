@@ -48,7 +48,6 @@
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/Vector4fParam.h"
 #include "mmcore/utility/ResourceWrapper.h"
-#include "mmcore/view/CallSplitViewOverlay.h"
 #include "mmcore/view/Renderer2DModule.h"
 #include "mmcore/view/Renderer3DModule.h"
 
@@ -168,9 +167,6 @@ private:
     enum GuiTextModHotkeys { CTRL_A = 506, CTRL_C = 507, CTRL_V = 508, CTRL_X = 509, CTRL_Y = 510, CTRL_Z = 511 };
 
     // VARIABLES --------------------------------------------------------------
-
-    /** The overlay callee slot */
-    core::CalleeSlot overlay_slot;
 
     /** The decorated renderer caller slot */
     core::CallerSlot decorated_renderer_slot;
@@ -306,7 +302,6 @@ template <>
 inline GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIRenderer()
     : core::view::Renderer2DModule()
     , decorated_renderer_slot("decoratedRenderer", "Connects to another 2D Renderer being decorated")
-    , overlay_slot("overlayRender", "Connected with SplitView for special overlay rendering")
     , imgui_context(nullptr)
     , window_manager()
     , tf_editor()
@@ -321,27 +316,6 @@ inline GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::GUIR
 
     this->decorated_renderer_slot.SetCompatibleCall<core::view::CallRender2DDescription>();
     this->MakeSlotAvailable(&this->decorated_renderer_slot);
-
-    // InputCall
-    this->overlay_slot.SetCallback(core::view::CallSplitViewOverlay::ClassName(),
-        core::view::CallSplitViewOverlay::FunctionName(core::view::CallSplitViewOverlay::FnOverlay),
-        &GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::OnOverlayCallback);
-    this->overlay_slot.SetCallback(core::view::CallSplitViewOverlay::ClassName(),
-        core::view::InputCall::FunctionName(core::view::InputCall::FnOnKey),
-        &GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::OnKeyCallback);
-    this->overlay_slot.SetCallback(core::view::CallSplitViewOverlay::ClassName(),
-        core::view::InputCall::FunctionName(core::view::InputCall::FnOnChar),
-        &GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::OnCharCallback);
-    this->overlay_slot.SetCallback(core::view::CallSplitViewOverlay::ClassName(),
-        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseButton),
-        &GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::OnMouseButtonCallback);
-    this->overlay_slot.SetCallback(core::view::CallSplitViewOverlay::ClassName(),
-        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseMove),
-        &GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::OnMouseMoveCallback);
-    this->overlay_slot.SetCallback(core::view::CallSplitViewOverlay::ClassName(),
-        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseScroll),
-        &GUIRenderer<core::view::Renderer2DModule, core::view::CallRender2D>::OnMouseScrollCallback);
-    this->MakeSlotAvailable(&this->overlay_slot);
 }
 
 
@@ -352,7 +326,6 @@ template <>
 inline GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GUIRenderer()
     : core::view::Renderer3DModule()
     , decorated_renderer_slot("decoratedRenderer", "Connects to another 2D Renderer being decorated")
-    , overlay_slot("overlayRender", "Connected with SplitView for special overlay rendering")
     , imgui_context(nullptr)
     , window_manager()
     , tf_editor()
@@ -369,6 +342,7 @@ inline GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GUIR
     this->MakeSlotAvailable(&this->decorated_renderer_slot);
 
     // Overlay Call
+    /*
     this->overlay_slot.SetCallback(core::view::CallSplitViewOverlay::ClassName(),
         core::view::CallSplitViewOverlay::FunctionName(core::view::CallSplitViewOverlay::FnOverlay),
         &GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::OnOverlayCallback);
@@ -388,6 +362,7 @@ inline GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::GUIR
         core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseScroll),
         &GUIRenderer<core::view::Renderer3DModule, core::view::CallRender3D>::OnMouseScrollCallback);
     this->MakeSlotAvailable(&this->overlay_slot);
+    */
 }
 
 
@@ -924,11 +899,6 @@ template <class M, class C> bool GUIRenderer<M, C>::OnMouseScroll(double dx, dou
  * GUIRenderer<M, C>::Render
  */
 template <class M, class C> bool GUIRenderer<M, C>::Render(C& call) {
-
-    if (this->overlay_slot.GetStatus() == core::AbstractSlot::SlotStatus::STATUS_CONNECTED) {
-        vislib::sys::Log::DefaultLog.WriteError("[GUIRenderer][Render] Only one connected callee slot is allowed!");
-        return false;
-    }
 
     auto* cr = this->decorated_renderer_slot.template CallAs<C>();
     if (cr != nullptr) {
