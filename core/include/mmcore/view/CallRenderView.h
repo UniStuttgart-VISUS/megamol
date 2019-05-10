@@ -49,7 +49,7 @@ namespace view {
          * @return A human readable description of the module.
          */
         static const char *Description(void) {
-            return "Call for registering into a single target";
+            return "Call for rendering visual elements into a single target";
         }
 
 		/** Function index of 'render' */
