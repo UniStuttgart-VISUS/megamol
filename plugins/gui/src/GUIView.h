@@ -111,6 +111,9 @@ private:
     /** The input renderview slot */
     core::CallerSlot renderview_slot;
 
+    /** The input renderview slot */
+    core::param::ParamSlot styleParam;
+
     /** The ImGui context created and used by this GUIView */
     ImGuiContext* imgui_context;
 

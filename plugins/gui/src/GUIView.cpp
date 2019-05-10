@@ -45,6 +45,7 @@
 #include "vislib/UTF8Encoder.h"
 
 #include <imgui_internal.h>
+#include "CorporateGreyStyle.h"
 #include "imgui_impl_opengl3.h"
 
 #include <iomanip>
@@ -54,9 +55,16 @@ using namespace megamol;
 using namespace megamol::gui;
 using vislib::sys::Log;
 
+enum Styles {
+    CorporateGray,
+    DarkColors,
+    LightColors,
+};
+
 GUIView::GUIView()
     : core::view::AbstractView()
     , renderview_slot("renderview", "Connects to a preceding RenderView that will be decorated with a GUI")
+    , styleParam("style", "Color style, i.e., theme")
     , imgui_context(nullptr)
     , window_manager()
     , tf_editor()
@@ -70,6 +78,14 @@ GUIView::GUIView()
     , delete_window() {
     this->renderview_slot.SetCompatibleCall<core::view::CallRenderViewDescription>();
     this->MakeSlotAvailable(&this->renderview_slot);
+
+    core::param::EnumParam* styles = new core::param::EnumParam(0);
+    styles->SetTypePair(CorporateGray, "Corporate Gray");
+    styles->SetTypePair(DarkColors, "Dark Colors");
+    styles->SetTypePair(LightColors, "Light Colors");
+    this->styleParam << styles;
+    this->styleParam.ForceSetDirty();
+    this->MakeSlotAvailable(&this->styleParam);
 }
 
 GUIView::~GUIView() { this->Release(); }
@@ -148,20 +164,6 @@ bool GUIView::create() {
     this->window_manager.AddWindowConfiguration("Transfer Function Editor", tmp_win);
 
     // Style settings ---------------------------------------------------------
-    ImGui::StyleColorsDark();
-    ImGuiStyle& style = ImGui::GetStyle();
-    style.FrameRounding = 3.0f;
-    style.WindowBorderSize = 1.0f;
-    style.FrameBorderSize = 1.0f;
-    style.PopupBorderSize = 1.0f;
-    style.AntiAliasedLines = true;
-    style.AntiAliasedFill = true;
-    style.DisplayWindowPadding = ImVec2(5.0f, 5.0f);
-    style.DisplaySafeAreaPadding = ImVec2(5.0f, 5.0f);
-    // Custom style color
-    style.Colors[ImGuiCol_PlotHistogram] = ImVec4(0.24f, 0.52f, 0.88f, 1.0f);
-    style.Colors[ImGuiCol_Header] = ImVec4(0.26f, 0.59f, 0.98f, 0.60f);
-
     ImGui::SetColorEditOptions(ImGuiColorEditFlags_Uint8 | ImGuiColorEditFlags_RGB |
                                ImGuiColorEditFlags_PickerHueWheel | ImGuiColorEditFlags_AlphaBar |
                                ImGuiColorEditFlags_AlphaPreview);
@@ -561,6 +563,22 @@ bool GUIView::OnMouseScroll(double dx, double dy) {
 
 bool GUIView::drawGUI(vislib::math::Rectangle<int> viewport, double instanceTime) {
     ImGui::SetCurrentContext(this->imgui_context);
+
+    if (this->styleParam.IsDirty()) {
+        auto style = this->styleParam.Param<core::param::EnumParam>()->Value();
+        switch (style) {
+        case CorporateGray:
+            CorporateGreyStyle();
+            break;
+        case DarkColors:
+            ImGui::StyleColorsDark();
+            break;
+        case LightColors:
+            ImGui::StyleColorsLight();
+            break;
+        }
+        this->styleParam.ResetDirty();
+    }
 
     auto viewportWidth = viewport.Width();
     auto viewportHeight = viewport.Height();
