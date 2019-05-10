@@ -1,36 +1,36 @@
 /*
- * GUIWindowManager.cpp
+ * WindowManager.cpp
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
-#include "GUIWindowManager.h"
+#include "WindowManager.h"
 
 
 using namespace megamol::gui;
 
 
 /**
- * GUIWindowManager::Ctor
+ * WindowManager::Ctor
  */
-GUIWindowManager::GUIWindowManager(std::string filename) : callbacks(), windows(), filename(filename) {
+WindowManager::WindowManager(std::string filename) : callbacks(), windows(), filename(filename) {
 
     // nothing to do here ...
 }
 
 
 /**
- * GUIWindowManager::Dtor
+ * WindowManager::Dtor
  */
-GUIWindowManager::~GUIWindowManager(void) { this->windows.clear(); }
+WindowManager::~WindowManager(void) { this->windows.clear(); }
 
 
 /**
- * GUIWindowManager::SoftResetWindowSizePos
+ * WindowManager::SoftResetWindowSizePos
  */
-void GUIWindowManager::SoftResetWindowSizePos(const std::string& window_name, WindowConfiguration& window_config) {
+void WindowManager::SoftResetWindowSizePos(const std::string& window_name, WindowConfiguration& window_config) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
 
@@ -69,9 +69,9 @@ void GUIWindowManager::SoftResetWindowSizePos(const std::string& window_name, Wi
 
 
 /**
- * GUIWindowManager::ResetWindowOnProfileLoad
+ * WindowManager::ResetWindowOnProfileLoad
  */
-void GUIWindowManager::ResetWindowOnProfileLoad(const std::string& window_name, WindowConfiguration& window_config) {
+void WindowManager::ResetWindowOnProfileLoad(const std::string& window_name, WindowConfiguration& window_config) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
 
@@ -84,17 +84,17 @@ void GUIWindowManager::ResetWindowOnProfileLoad(const std::string& window_name, 
 
 
 /**
- * GUIWindowManager::AddWindowConfiguration
+ * WindowManager::AddWindowConfiguration
  */
-bool GUIWindowManager::AddWindowConfiguration(const std::string& window_name, WindowConfiguration& window_config) {
+bool WindowManager::AddWindowConfiguration(const std::string& window_name, WindowConfiguration& window_config) {
 
     if (window_name.empty()) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[GUIWindowManager] No valid window name given.");
+        vislib::sys::Log::DefaultLog.WriteWarn("[WindowManager] No valid window name given.");
         return false;
     }
     if (this->windowConfigurationExists(window_name)) {
         vislib::sys::Log::DefaultLog.WriteWarn(
-            "[GUIWindowManager] Found already existing window with name '%s'. Window names must be unique.",
+            "[WindowManager] Found already existing window with name '%s'. Window names must be unique.",
             window_name.c_str());
         return false;
     }
@@ -104,13 +104,13 @@ bool GUIWindowManager::AddWindowConfiguration(const std::string& window_name, Wi
 
 
 /**
- * GUIWindowManager::DeleteWindowConfiguration
+ * WindowManager::DeleteWindowConfiguration
  */
-bool GUIWindowManager::DeleteWindowConfiguration(const std::string& window_name) {
+bool WindowManager::DeleteWindowConfiguration(const std::string& window_name) {
 
     if (!this->windowConfigurationExists(window_name)) {
         vislib::sys::Log::DefaultLog.WriteWarn(
-            "[GUIWindowManager] Found no existing window with name '%s'.", window_name.c_str());
+            "[WindowManager] Found no existing window with name '%s'.", window_name.c_str());
         return false;
     }
     this->windows.erase(window_name);
@@ -119,12 +119,12 @@ bool GUIWindowManager::DeleteWindowConfiguration(const std::string& window_name)
 
 
 /**
- * GUIWindowManager::LoadWindowConfigurationProfile
+ * WindowManager::LoadWindowConfigurationProfile
  */
-bool GUIWindowManager::LoadWindowConfigurationProfile(const std::string& profile_name) {
+bool WindowManager::LoadWindowConfigurationProfile(const std::string& profile_name) {
 
     if (profile_name.empty()) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[GUIWindowManager] No valid profile name given.");
+        vislib::sys::Log::DefaultLog.WriteWarn("[WindowManager] No valid profile name given.");
         return false;
     }
 
@@ -292,7 +292,7 @@ bool GUIWindowManager::LoadWindowConfigurationProfile(const std::string& profile
                     }
                 } catch (...) {
                     vislib::sys::Log::DefaultLog.WriteError(
-                        "[GUIWindowManager] Unable to reading JSON of profile '%s'", profile_name.c_str());
+                        "[WindowManager] Unable to reading JSON of profile '%s'", profile_name.c_str());
                     return false;
                 }
                 // profile reset flags
@@ -308,23 +308,23 @@ bool GUIWindowManager::LoadWindowConfigurationProfile(const std::string& profile
                 this->windows.clear();
                 this->windows = tmp_windows;
                 vislib::sys::Log::DefaultLog.WriteInfo(
-                    "[GUIWindowManager] Successfully loaded profile '%s'.", profile_name.c_str());
+                    "[WindowManager] Successfully loaded profile '%s'.", profile_name.c_str());
                 return true;
             }
         }
     }
 
-    vislib::sys::Log::DefaultLog.WriteWarn("[GUIWindowManager] Couldn't load profile '%s'.", profile_name.c_str());
+    vislib::sys::Log::DefaultLog.WriteWarn("[WindowManager] Couldn't load profile '%s'.", profile_name.c_str());
     return false;
 }
 
 /**
- * GUIWindowManager::DeleteWindowConfigurationProfile
+ * WindowManager::DeleteWindowConfigurationProfile
  */
-bool GUIWindowManager::DeleteWindowConfigurationProfile(const std::string& profile_name) {
+bool WindowManager::DeleteWindowConfigurationProfile(const std::string& profile_name) {
 
     if (profile_name.empty()) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[GUIWindowManager] No valid profile name given.");
+        vislib::sys::Log::DefaultLog.WriteWarn("[WindowManager] No valid profile name given.");
         return false;
     }
 
@@ -339,12 +339,12 @@ bool GUIWindowManager::DeleteWindowConfigurationProfile(const std::string& profi
 }
 
 /**
- * GUIWindowManager::SaveWindowConfigurationProfile
+ * WindowManager::SaveWindowConfigurationProfile
  */
-bool GUIWindowManager::SaveWindowConfigurationProfile(const std::string& profile_name) {
+bool WindowManager::SaveWindowConfigurationProfile(const std::string& profile_name) {
 
     if (profile_name.empty()) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[GUIWindowManager] No valid profile name given.");
+        vislib::sys::Log::DefaultLog.WriteWarn("[WindowManager] No valid profile name given.");
         return false;
     }
 
@@ -384,9 +384,9 @@ bool GUIWindowManager::SaveWindowConfigurationProfile(const std::string& profile
 
 
 /**
- * GUIWindowManager::GetWindowConfigurationProfileList
+ * WindowManager::GetWindowConfigurationProfileList
  */
-std::list<std::string> GUIWindowManager::GetWindowConfigurationProfileList(void) {
+std::list<std::string> WindowManager::GetWindowConfigurationProfileList(void) {
 
     std::list<std::string> out_list;
     nlohmann::json current_profiles;
@@ -401,9 +401,9 @@ std::list<std::string> GUIWindowManager::GetWindowConfigurationProfileList(void)
 
 
 /**
- * GUIWindowManager::saveWindowConfigurationFile
+ * WindowManager::saveWindowConfigurationFile
  */
-bool GUIWindowManager::saveWindowConfigurationFile(nlohmann::json& in_profiles) {
+bool WindowManager::saveWindowConfigurationFile(nlohmann::json& in_profiles) {
 
     std::ofstream profilefile;
     profilefile.open(this->filename);
@@ -417,15 +417,15 @@ bool GUIWindowManager::saveWindowConfigurationFile(nlohmann::json& in_profiles) 
     }
 
     vislib::sys::Log::DefaultLog.WriteWarn(
-        "[GUIWindowManager] Couldn't write profile to file: '%s'", this->filename.c_str());
+        "[WindowManager] Couldn't write profile to file: '%s'", this->filename.c_str());
     return false;
 }
 
 
 /**
- * GUIWindowManager::loadWindowConfigurationFile
+ * WindowManager::loadWindowConfigurationFile
  */
-bool GUIWindowManager::loadWindowConfigurationFile(nlohmann::json& out_profiles) {
+bool WindowManager::loadWindowConfigurationFile(nlohmann::json& out_profiles) {
 
     std::ifstream profilefile;
     profilefile.open(this->filename);
@@ -443,7 +443,7 @@ bool GUIWindowManager::loadWindowConfigurationFile(nlohmann::json& out_profiles)
 
         // Check for valid JSON object
         if (!parsed_json.is_object()) {
-            vislib::sys::Log::DefaultLog.WriteError("[GUIWindowManager] Profile file content is no valid JSON object.");
+            vislib::sys::Log::DefaultLog.WriteError("[WindowManager] Profile file content is no valid JSON object.");
             return false;
         }
 
@@ -453,6 +453,6 @@ bool GUIWindowManager::loadWindowConfigurationFile(nlohmann::json& out_profiles)
     }
 
     vislib::sys::Log::DefaultLog.WriteWarn(
-        "[GUIWindowManager] Couldn't read profile from file: '%s'", this->filename.c_str());
+        "[WindowManager] Couldn't read profile from file: '%s'", this->filename.c_str());
     return false;
 }

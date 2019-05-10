@@ -112,24 +112,24 @@ bool GUIView::create() {
     ImGui_ImplOpenGL3_Init(glsl_version);
 
     // Register window callbacks in window manager ----------------------------
-    this->window_manager.RegisterDrawWindowCallback(GUIWindowManager::WindowDrawCallback::MAIN,
-        [&, this](const std::string& window_name, GUIWindowManager::WindowConfiguration& window_config) {
+    this->window_manager.RegisterDrawWindowCallback(WindowManager::WindowDrawCallback::MAIN,
+        [&, this](const std::string& window_name, WindowManager::WindowConfiguration& window_config) {
             this->drawMainWindowCallback(window_name, window_config);
         });
-    this->window_manager.RegisterDrawWindowCallback(GUIWindowManager::WindowDrawCallback::PARAM,
-        [&, this](const std::string& window_name, GUIWindowManager::WindowConfiguration& window_config) {
+    this->window_manager.RegisterDrawWindowCallback(WindowManager::WindowDrawCallback::PARAM,
+        [&, this](const std::string& window_name, WindowManager::WindowConfiguration& window_config) {
             this->drawParametersCallback(window_name, window_config);
         });
-    this->window_manager.RegisterDrawWindowCallback(GUIWindowManager::WindowDrawCallback::FPSMS,
-        [&, this](const std::string& window_name, GUIWindowManager::WindowConfiguration& window_config) {
+    this->window_manager.RegisterDrawWindowCallback(WindowManager::WindowDrawCallback::FPSMS,
+        [&, this](const std::string& window_name, WindowManager::WindowConfiguration& window_config) {
             this->drawFpsWindowCallback(window_name, window_config);
         });
-    this->window_manager.RegisterDrawWindowCallback(GUIWindowManager::WindowDrawCallback::FONT,
-        [&, this](const std::string& window_name, GUIWindowManager::WindowConfiguration& window_config) {
+    this->window_manager.RegisterDrawWindowCallback(WindowManager::WindowDrawCallback::FONT,
+        [&, this](const std::string& window_name, WindowManager::WindowConfiguration& window_config) {
             this->drawFontWindowCallback(window_name, window_config);
         });
-    this->window_manager.RegisterDrawWindowCallback(GUIWindowManager::WindowDrawCallback::TF,
-        [&, this](const std::string& window_name, GUIWindowManager::WindowConfiguration& window_config) {
+    this->window_manager.RegisterDrawWindowCallback(WindowManager::WindowDrawCallback::TF,
+        [&, this](const std::string& window_name, WindowManager::WindowConfiguration& window_config) {
             this->drawTFWindowCallback(window_name, window_config);
         });
 
@@ -139,28 +139,28 @@ bool GUIView::create() {
     tmp_win.win_show = true;
     tmp_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F12);
     tmp_win.win_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_HorizontalScrollbar;
-    tmp_win.win_callback = GUIWindowManager::WindowDrawCallback::MAIN;
+    tmp_win.win_callback = WindowManager::WindowDrawCallback::MAIN;
     this->window_manager.AddWindowConfiguration("MegaMol", tmp_win);
 
     // FPS/MS Window ----------------------------------------------------------
     tmp_win.win_show = false;
     tmp_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F11);
     tmp_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar;
-    tmp_win.win_callback = GUIWindowManager::WindowDrawCallback::FPSMS;
+    tmp_win.win_callback = WindowManager::WindowDrawCallback::FPSMS;
     this->window_manager.AddWindowConfiguration("FPS", tmp_win);
 
     // FONT Window ------------------------------------------------------------
     tmp_win.win_show = false;
     tmp_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F10);
     tmp_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize;
-    tmp_win.win_callback = GUIWindowManager::WindowDrawCallback::FONT;
+    tmp_win.win_callback = WindowManager::WindowDrawCallback::FONT;
     this->window_manager.AddWindowConfiguration("Fonts", tmp_win);
 
     // TRANSFER FUNCTION Window -----------------------------------------------
     tmp_win.win_show = false;
     tmp_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F9);
     tmp_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize;
-    tmp_win.win_callback = GUIWindowManager::WindowDrawCallback::TF;
+    tmp_win.win_callback = WindowManager::WindowDrawCallback::TF;
     this->window_manager.AddWindowConfiguration("Transfer Function Editor", tmp_win);
 
     // Style settings ---------------------------------------------------------
@@ -204,22 +204,22 @@ bool GUIView::create() {
         int spcnt = (int)searchPaths.Count();
         for (int i = 0; i < spcnt; ++i) {
             font_file = "Proggy_Tiny.ttf";
-            font_path = this->SearchFilePathRecursive(font_file, std::wstring(searchPaths[i].PeekBuffer()));
+            font_path = SearchFileRecursive(font_file, std::wstring(searchPaths[i].PeekBuffer()));
             if (!font_path.empty()) {
                 io.Fonts->AddFontFromFileTTF(font_path.c_str(), 10.0f, &config);
             }
             font_file = "Roboto_Regular.ttf";
-            font_path = this->SearchFilePathRecursive(font_file, std::wstring(searchPaths[i].PeekBuffer()));
+            font_path = SearchFileRecursive(font_file, std::wstring(searchPaths[i].PeekBuffer()));
             if (!font_path.empty()) {
                 io.Fonts->AddFontFromFileTTF(font_path.c_str(), 18.0f, &config);
             }
             font_file = "Ubuntu_Mono_Regular.ttf";
-            font_path = this->SearchFilePathRecursive(font_file, std::wstring(searchPaths[i].PeekBuffer()));
+            font_path = SearchFileRecursive(font_file, std::wstring(searchPaths[i].PeekBuffer()));
             if (!font_path.empty()) {
                 io.Fonts->AddFontFromFileTTF(font_path.c_str(), 15.0f, &config);
             }
             font_file = "Evolventa-Regular.ttf";
-            font_path = this->SearchFilePathRecursive(font_file, std::wstring(searchPaths[i].PeekBuffer()));
+            font_path = SearchFileRecursive(font_file, std::wstring(searchPaths[i].PeekBuffer()));
             if (!font_path.empty()) {
                 io.Fonts->AddFontFromFileTTF(font_path.c_str(), 20.0f, &config);
             }
@@ -705,7 +705,7 @@ void GUIView::drawMainWindowCallback(const std::string& window_name, GUIWinConfi
     std::string color_param_help = "[Hover] Parameter for Description Tooltip\n"
                                    "[Right-Click] for Context Menu\n"
                                    "[Drag & Drop] Module Header to other Parameter Window";
-    this->HelpMarkerToolTip(color_param_help);
+    this->popup.HelpMarkerToolTip(color_param_help);
 
     this->drawParametersCallback(window_name, window_config);
 }
@@ -734,20 +734,20 @@ void GUIView::drawParametersCallback(const std::string& window_name, GUIWinConfi
     window_config.param_show_hotkeys = show_only_hotkeys;
 
     // Offering module filtering only for main parameter view
-    if (window_config.win_callback == GUIWindowManager::WindowDrawCallback::MAIN) {
+    if (window_config.win_callback == WindowManager::WindowDrawCallback::MAIN) {
         std::map<int, std::string> opts;
-        opts[(int)GUIWindowManager::FilterMode::ALL] = "All";
-        opts[(int)GUIWindowManager::FilterMode::INSTANCE] = "Instance";
-        opts[(int)GUIWindowManager::FilterMode::VIEW] = "View";
+        opts[(int)WindowManager::FilterMode::ALL] = "All";
+        opts[(int)WindowManager::FilterMode::INSTANCE] = "Instance";
+        opts[(int)WindowManager::FilterMode::VIEW] = "View";
         unsigned int opts_cnt = (unsigned int)opts.size();
         if (ImGui::BeginCombo("Module Filter", opts[(int)window_config.param_module_filter].c_str())) {
             for (unsigned int i = 0; i < opts_cnt; ++i) {
 
                 if (ImGui::Selectable(opts[i].c_str(), ((int)window_config.param_module_filter == i))) {
-                    window_config.param_module_filter = (GUIWindowManager::FilterMode)i;
+                    window_config.param_module_filter = (WindowManager::FilterMode)i;
                     window_config.param_modules_list.clear();
-                    if ((window_config.param_module_filter == GUIWindowManager::FilterMode::INSTANCE) ||
-                        (window_config.param_module_filter == GUIWindowManager::FilterMode::VIEW)) {
+                    if ((window_config.param_module_filter == WindowManager::FilterMode::INSTANCE) ||
+                        (window_config.param_module_filter == WindowManager::FilterMode::VIEW)) {
 
                         // Goal is to find view module with shortest call connection path to this module.
                         // Since enumeration of modules goes bottom up, result for first abstract view is
@@ -776,7 +776,7 @@ void GUIView::drawParametersCallback(const std::string& window_name, GUIWinConfi
                         this->GetCoreInstance()->EnumModulesNoLock(nullptr, view_func);
 
                         if (!viewname.empty()) {
-                            if (window_config.param_module_filter == GUIWindowManager::FilterMode::INSTANCE) {
+                            if (window_config.param_module_filter == WindowManager::FilterMode::INSTANCE) {
                                 // Considering modules depending on the INSTANCE NAME of the first view this module is
                                 // connected to.
                                 std::string instname = "";
@@ -796,7 +796,7 @@ void GUIView::drawParametersCallback(const std::string& window_name, GUIWinConfi
                                     };
                                     this->GetCoreInstance()->EnumModulesNoLock(nullptr, func);
                                 }
-                            } else { // (window_config.param_module_filter == GUIWindowManager::FilterMode::VIEW)
+                            } else { // (window_config.param_module_filter == WindowManager::FilterMode::VIEW)
                                 // Considering modules depending on their connection to the first VIEW this module is
                                 // connected to.
                                 const auto add_func = [&, this](core::Module* mod) {
@@ -811,19 +811,19 @@ void GUIView::drawParametersCallback(const std::string& window_name, GUIWinConfi
                         }
                     }
                 }
-                std::string hover = "Show all Modules."; // == GUIWindowManager::FilterMode::ALL
-                if (i == (int)GUIWindowManager::FilterMode::INSTANCE) {
+                std::string hover = "Show all Modules."; // == WindowManager::FilterMode::ALL
+                if (i == (int)WindowManager::FilterMode::INSTANCE) {
                     hover = "Show Modules with same Instance Name as current View and Modules with no Instance Name.";
-                } else if (i == (int)GUIWindowManager::FilterMode::VIEW) {
+                } else if (i == (int)WindowManager::FilterMode::VIEW) {
                     hover = "Show Modules subsequently connected to the View Module the Gui Module is connected to.";
                 }
-                this->HoverToolTip(hover);
+                this->popup.HoverToolTip(hover);
             }
             ImGui::EndCombo();
         }
-        this->HelpMarkerToolTip("Filter applies globally to all parameter windows.\n"
-                                "Selected filter is not refreshed on graph changes.\n"
-                                "Select filter again to trigger refresh.");
+        this->popup.HelpMarkerToolTip("Filter applies globally to all parameter windows.\n"
+                                      "Selected filter is not refreshed on graph changes.\n"
+                                      "Select filter again to trigger refresh.");
         ImGui::Separator();
     }
 
@@ -856,7 +856,7 @@ void GUIView::drawParametersCallback(const std::string& window_name, GUIWinConfi
             }
 
             // Main parameter window always draws all module's parameters
-            if (window_config.win_callback != GUIWindowManager::WindowDrawCallback::MAIN) {
+            if (window_config.win_callback != WindowManager::WindowDrawCallback::MAIN) {
                 // Consider only modules contained in list
                 if (std::find(window_config.param_modules_list.begin(), window_config.param_modules_list.end(),
                         label) == window_config.param_modules_list.end()) {
@@ -883,15 +883,15 @@ void GUIView::drawParametersCallback(const std::string& window_name, GUIWinConfi
                     GUIWinConfig tmp_win;
                     tmp_win.win_show = true;
                     tmp_win.win_flags = ImGuiWindowFlags_HorizontalScrollbar;
-                    tmp_win.win_callback = GUIWindowManager::WindowDrawCallback::PARAM;
+                    tmp_win.win_callback = WindowManager::WindowDrawCallback::PARAM;
                     tmp_win.param_show_hotkeys = false;
                     tmp_win.param_modules_list.emplace_back(label);
                     this->window_manager.AddWindowConfiguration(window_name, tmp_win);
                 }
                 // Deleting module's parameters is not available in main parameter window.
                 if (window_config.win_callback !=
-                    GUIWindowManager::WindowDrawCallback::MAIN) { // && (window_config.param_modules_list.size() >
-                                                                  // 1)) {
+                    WindowManager::WindowDrawCallback::MAIN) { // && (window_config.param_modules_list.size() >
+                                                               // 1)) {
                     if (ImGui::MenuItem("Delete from List")) {
                         std::vector<std::string>::iterator find_iter = std::find(
                             window_config.param_modules_list.begin(), window_config.param_modules_list.end(), label);
@@ -965,7 +965,7 @@ void GUIView::drawParametersCallback(const std::string& window_name, GUIWinConfi
             std::string payload_id = (const char*)payload->Data;
 
             // Nothing to add to main parameter window (draws always all module's parameters)
-            if ((window_config.win_callback != GUIWindowManager::WindowDrawCallback::MAIN)) {
+            if ((window_config.win_callback != WindowManager::WindowDrawCallback::MAIN)) {
                 // Insert dragged module name only if not contained in list
                 if (std::find(window_config.param_modules_list.begin(), window_config.param_modules_list.end(),
                         payload_id) == window_config.param_modules_list.end()) {
@@ -1041,21 +1041,21 @@ void GUIView::drawFpsWindowCallback(const std::string& window_name, GUIWinConfig
     }
 
     // Draw window content
-    if (ImGui::RadioButton("fps", (window_config.fpsms_mode == GUIWindowManager::FpsMsMode::FPS))) {
-        window_config.fpsms_mode = GUIWindowManager::FpsMsMode::FPS;
+    if (ImGui::RadioButton("fps", (window_config.fpsms_mode == WindowManager::FpsMsMode::FPS))) {
+        window_config.fpsms_mode = WindowManager::FpsMsMode::FPS;
     }
     ImGui::SameLine();
-    if (ImGui::RadioButton("ms", (window_config.fpsms_mode == GUIWindowManager::FpsMsMode::MS))) {
-        window_config.fpsms_mode = GUIWindowManager::FpsMsMode::MS;
+    if (ImGui::RadioButton("ms", (window_config.fpsms_mode == WindowManager::FpsMsMode::MS))) {
+        window_config.fpsms_mode = WindowManager::FpsMsMode::MS;
     }
 
     ImGui::SameLine(0.0f, 50.0f);
     ImGui::Checkbox("Options", &window_config.fpsms_show_options);
 
-    // Default for window_config.fpsms_mode == GUIWindowManager::FpsMsMode::FPS
+    // Default for window_config.fpsms_mode == WindowManager::FpsMsMode::FPS
     std::vector<float>* arr = &window_config.fpsms_fps_values;
     float val_scale = window_config.fpsms_fps_value_scale;
-    if (window_config.fpsms_mode == GUIWindowManager::FpsMsMode::MS) {
+    if (window_config.fpsms_mode == WindowManager::FpsMsMode::MS) {
         arr = &window_config.fpsms_ms_values;
         val_scale = window_config.fpsms_ms_value_scale;
     }
@@ -1080,7 +1080,7 @@ void GUIView::drawFpsWindowCallback(const std::string& window_name, GUIWinConfig
             window_config.fpsms_ms_values.clear();
         }
         std::string help = "Changes clear all values";
-        this->HelpMarkerToolTip(help);
+        this->popup.HelpMarkerToolTip(help);
 
         int mvc = window_config.fpsms_max_value_count;
         if (ImGui::InputInt("Stored Values Count", &mvc, 0, 0, ImGuiInputTextFlags_EnterReturnsTrue)) {
@@ -1106,7 +1106,7 @@ void GUIView::drawFpsWindowCallback(const std::string& window_name, GUIWinConfig
 
         ImGui::Text("Copy to Clipborad");
         help = "Values are copied in chronological order (newest first)";
-        this->HelpMarkerToolTip(help);
+        this->popup.HelpMarkerToolTip(help);
     }
 }
 
@@ -1148,7 +1148,7 @@ void GUIView::drawFontWindowCallback(const std::string& window_name, GUIWinConfi
     }
 
     // Validate font file before offering load button
-    if (this->FileHasExtension(window_config.font_new_filename, std::string(".ttf"))) {
+    if (HasFileExtension(window_config.font_new_filename, std::string(".ttf"))) {
         if (ImGui::Button("Add Font")) {
             this->load_new_font_filename = window_config.font_new_filename;
             this->load_new_font_size = window_config.font_new_size;
@@ -1157,7 +1157,7 @@ void GUIView::drawFontWindowCallback(const std::string& window_name, GUIWinConfi
         ImGui::TextColored(style.Colors[ImGuiCol_ButtonHovered], "Please enter valid font file name");
     }
     std::string help = "Same font can be loaded multiple times using different font size";
-    this->HelpMarkerToolTip(help);
+    this->popup.HelpMarkerToolTip(help);
 }
 
 void GUIView::drawMenu(void) {
@@ -1240,10 +1240,11 @@ void GUIView::drawMenu(void) {
                     }
                     ImGui::EndPopup();
                 }
-                this->HoverToolTip("[Right-Click] to open Context Menu for Deleting Window Permanently.");
+                this->popup.HoverToolTip("[Right-Click] to open Context Menu for Deleting Window Permanently.");
             } else {
-                this->HoverToolTip("['Window Hotkey'] to Show/Hide Window.\n[Shift]+['Window Hotkey'] to Reset Size "
-                                   "and Position of Window.");
+                this->popup.HoverToolTip(
+                    "['Window Hotkey'] to Show/Hide Window.\n[Shift]+['Window Hotkey'] to Reset Size "
+                    "and Position of Window.");
             }
         };
         this->window_manager.EnumWindows(func);
@@ -1261,15 +1262,15 @@ void GUIView::drawMenu(void) {
         if (ImGui::MenuItem("GitHub")) {
             ImGui::SetClipboardText(gitLink.c_str());
         }
-        this->HoverToolTip(hint);
+        this->popup.HoverToolTip(hint);
         if (ImGui::MenuItem("Readme")) {
             ImGui::SetClipboardText(helpLink.c_str());
         }
-        this->HoverToolTip(hint);
+        this->popup.HoverToolTip(hint);
         if (ImGui::MenuItem("Web Page")) {
             ImGui::SetClipboardText(mmLink.c_str());
         }
-        this->HoverToolTip(hint);
+        this->popup.HoverToolTip(hint);
         ImGui::Separator();
         if (ImGui::MenuItem("About...")) {
             open_popup = true;
@@ -1295,7 +1296,7 @@ void GUIView::drawMenu(void) {
 
     // Process request for saving current window profile
     std::string profile_name =
-        this->InputDialogPopUp("Save Current Window Configuration", "Profile Name", save_profile);
+        this->popup.InputDialogPopUp("Save Current Window Configuration", "Profile Name", save_profile);
     if (!profile_name.empty()) {
         this->window_manager.SaveWindowConfigurationProfile(profile_name);
     }
@@ -1363,7 +1364,7 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
                 load_tf = true;
                 // Open window calling the transfer function editor callback
                 const auto func = [&, this](const std::string& wn, GUIWinConfig& wc) {
-                    if (wc.win_callback == GUIWindowManager::WindowDrawCallback::TF) {
+                    if (wc.win_callback == WindowManager::WindowDrawCallback::TF) {
                         wc.win_show = true;
                     }
                 };
@@ -1487,9 +1488,9 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
             help = "Press [Return] to confirm changes.";
         }
 
-        this->HoverToolTip(param_desc, ImGui::GetID(param_label.c_str()), 1.0f);
+        this->popup.HoverToolTip(param_desc, ImGui::GetID(param_label.c_str()), 1.0f);
 
-        this->HelpMarkerToolTip(help);
+        this->popup.HelpMarkerToolTip(help);
 
         // Reset to default style
         if (param->IsGUIReadOnly()) {
@@ -1510,12 +1511,12 @@ void GUIView::drawParameterHotkey(const core::Module& mod, core::param::ParamSlo
             ImGui::Columns(2, "hotkey_columns", false);
 
             ImGui::Text(label.c_str());
-            this->HoverToolTip(desc);
+            this->popup.HoverToolTip(desc);
 
             ImGui::NextColumn();
 
             ImGui::Text(keycode.c_str());
-            this->HoverToolTip(desc);
+            this->popup.HoverToolTip(desc);
 
             // Reset colums
             ImGui::Columns(1);

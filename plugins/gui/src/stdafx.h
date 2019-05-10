@@ -32,4 +32,6 @@
 
 #include "vislib/types.h"
 
+#define GUI_MAX_BUFFER_LEN 2048
+
 #endif /* GUI_STDAFX_H_INCLUDED */

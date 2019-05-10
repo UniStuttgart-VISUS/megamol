@@ -1,23 +1,19 @@
 ﻿/*
- * GUITransferFunctionEditor.cpp
+ * TransferFunctionEditor.cpp
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
-#include "GUITransferFunctionEditor.h"
-
+#include "TransferFunctionEditor.h"
 
 using namespace megamol::gui;
 using namespace megamol::core;
 
 
-/**
- * Ctor
- */
-megamol::gui::GUITransferFunctionEditor::GUITransferFunctionEditor(void)
-    : GUIUtility()
+megamol::gui::TransferFunctionEditor::TransferFunctionEditor(void)
+    : Popup()
     , active_param(nullptr)
     , data()
     , interpol_mode(param::TransferFunctionParam::InterpolationMode::LINEAR)
@@ -39,25 +35,17 @@ megamol::gui::GUITransferFunctionEditor::GUITransferFunctionEditor(void)
     this->tex_modified = true;
 }
 
-
-/**
- * Dtor
- */
-megamol::gui::GUITransferFunctionEditor::~GUITransferFunctionEditor(void) {
+megamol::gui::TransferFunctionEditor::~TransferFunctionEditor(void) {
 
     // Do not delete!
     this->active_param = nullptr;
 }
 
-
-/**
- * GUITransferFunctionEditor::SetTransferFunction
- */
-bool megamol::gui::GUITransferFunctionEditor::SetTransferFunction(const std::string& in_tfs) {
+bool megamol::gui::TransferFunctionEditor::SetTransferFunction(const std::string& in_tfs) {
 
     if (active_param == nullptr) {
         vislib::sys::Log::DefaultLog.WriteWarn(
-            "[GUITransferFunctionEditor] Set active parameter before loading transfer function");
+            "[TransferFunctionEditor] Set active parameter before loading transfer function");
         return false;
     }
 
@@ -71,21 +59,13 @@ bool megamol::gui::GUITransferFunctionEditor::SetTransferFunction(const std::str
     return retval;
 }
 
-
-/**
- * GUITransferFunctionEditor::GetTransferFunction
- */
-bool megamol::gui::GUITransferFunctionEditor::GetTransferFunction(std::string& out_tfs) {
+bool megamol::gui::TransferFunctionEditor::GetTransferFunction(std::string& out_tfs) {
 
     return megamol::core::param::TransferFunctionParam::DumpTransferFunction(
         out_tfs, this->data, this->interpol_mode, this->tex_size);
 }
 
-
-/**
- * GUITransferFunctionEditor::DrawTransferFunctionEditor
- */
-bool megamol::gui::GUITransferFunctionEditor::DrawTransferFunctionEditor(void) {
+bool megamol::gui::TransferFunctionEditor::DrawTransferFunctionEditor(void) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
     ImGuiIO& io = ImGui::GetIO();

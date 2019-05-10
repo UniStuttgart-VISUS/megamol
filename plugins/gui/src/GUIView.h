@@ -16,9 +16,10 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/AbstractView.h"
 
-#include "GUITransferFunctionEditor.h"
-#include "GUIUtility.h"
-#include "GUIWindowManager.h"
+#include "FileUtils.h"
+#include "Popup.h"
+#include "TransferFunctionEditor.h"
+#include "WindowManager.h"
 
 #include "vislib/math/Rectangle.h"
 
@@ -28,7 +29,7 @@
 namespace megamol {
 namespace gui {
 
-class GUIView : public megamol::core::view::AbstractView, GUIUtility {
+class GUIView : public megamol::core::view::AbstractView {
 public:
     /**
      * Answer the name of this module.
@@ -65,7 +66,7 @@ protected:
     // TYPES ------------------------------------------------------------------
 
     /** Type for window configuration */
-    typedef megamol::gui::GUIWindowManager::WindowConfiguration GUIWinConfig;
+    typedef WindowManager::WindowConfiguration GUIWinConfig;
 
     // FUNCTIONS --------------------------------------------------------------
 
@@ -118,10 +119,13 @@ private:
     ImGuiContext* imgui_context;
 
     /** The window manager. */
-    GUIWindowManager window_manager;
+    WindowManager window_manager;
 
     /** The transfer function editor. */
-    GUITransferFunctionEditor tf_editor;
+    TransferFunctionEditor tf_editor;
+
+    /** A popup being used all over the place */
+    Popup popup;
 
     /** Last instance time.  */
     double last_instance_time;

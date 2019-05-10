@@ -1,5 +1,5 @@
 /*
- * GUITransferFunctionEditor.h
+ * TransferFunctionEditor.h
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
@@ -21,38 +21,30 @@
 
 #include "vislib/sys/Log.h"
 
-#include <algorithm> // sort
+#include <algorithm>
 #include <array>
 #include <cassert>
-#include <cmath> // sqrtf
+#include <cmath>
 #include <imgui.h>
 #include <map>
-#include <sstream> // stringstream
+#include <sstream>
 #include <string>
 #include <vector>
 
 #include <imgui.h>
-#include "GUIUtility.h"
-
+#include "Popup.h"
 
 namespace megamol {
 namespace gui {
 
-
 /**
  * 1D Transfer Function Editor using ImGui.
  */
-class GUITransferFunctionEditor : public GUIUtility {
+class TransferFunctionEditor : public Popup {
 public:
-    /**
-     * Ctor
-     */
-    GUITransferFunctionEditor(void);
+    TransferFunctionEditor(void);
 
-    /**
-     * Dtor
-     */
-    ~GUITransferFunctionEditor(void);
+    ~TransferFunctionEditor(void);
 
     /**
      * Draws the transfer function editor.

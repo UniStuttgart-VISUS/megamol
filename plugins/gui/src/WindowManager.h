@@ -1,5 +1,5 @@
 /*
- * GUIWindowManager.h
+ * WindowManager.h
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
@@ -15,21 +15,18 @@
 #    pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
+#include "mmcore/view/Input.h"
+
+#include "json.hpp"
+#include "vislib/sys/Log.h"
+
+#include <imgui.h>
 
 #include <fstream>
 #include <iostream>
 #include <list>
 #include <map>
 #include <string>
-
-#include <imgui.h>
-
-#include "json.hpp"
-
-#include "mmcore/view/Input.h"
-#include "vislib/sys/Log.h"
-
-#include "GUIUtility.h"
 
 
 namespace megamol {
@@ -41,18 +38,18 @@ namespace gui {
  * Profile changes are read/written directly from/to the profile file.
  *
  */
-class GUIWindowManager : public GUIUtility {
+class WindowManager {
 
 public:
     /**
      * Ctor
      */
-    GUIWindowManager(std::string filename = "mmgui.profile");
+    WindowManager(std::string filename = "mmgui.profile");
 
     /**
      * Dtor
      */
-    ~GUIWindowManager(void);
+    ~WindowManager(void);
 
     /** Identifiers for the window draw callbacks. */
     enum WindowDrawCallback { NONE = 0, MAIN = 1, PARAM = 2, FPSMS = 3, FONT = 4, TF = 5 };
