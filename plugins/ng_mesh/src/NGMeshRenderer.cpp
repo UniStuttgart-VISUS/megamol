@@ -661,6 +661,13 @@ bool NGMeshRenderer::Render(megamol::core::Call& call)
 	//glCullFace(GL_BACK);
 
 	auto gpu_render_tasks = task_call->getRenderTaskData();
+
+	auto const& per_frame_buffers = gpu_render_tasks->getPerFrameBuffers();
+
+	for (auto const& buffer : per_frame_buffers)
+	{
+        std::get<0>(buffer)->bind(std::get<1>(buffer));
+	}
 	
 	// loop through "registered" render batches
 	for (auto const& render_task : gpu_render_tasks->getRenderTasks())

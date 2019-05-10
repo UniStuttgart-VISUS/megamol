@@ -66,19 +66,36 @@ namespace megamol {
 				DrawCommandContainer const&    draw_commands,
 				PerDrawDataContainer const&    per_draw_data);
 
+			template<typename PerFrameDataContainer>
+            void addPerFrameDataBuffer(PerFrameDataContainer const& per_frame_data, uint32_t buffer_binding_point);
+
+			template <typename PerFrameDataContainer>
+            void updatePerFrameDataBuffer(PerFrameDataContainer const& per_frame_data, uint32_t buffer_binding_point);
+
 			//void updateGPUBuffers();
 
-			void clear() { m_render_tasks.clear(); }
+			void clear() {
+				m_render_tasks.clear();
+                m_per_frame_data_buffers.clear();
+			}
 
 			size_t getTotalDrawCount() { size_t retval = 0; for (auto& rt : m_render_tasks) { retval += rt.draw_cnt; } return retval; };
 
 			std::vector<RenderTasks> const& getRenderTasks() { return m_render_tasks; }
+
+			std::vector<std::pair<std::shared_ptr<BufferObject>, uint32_t>> const& getPerFrameBuffers() { return m_per_frame_data_buffers; }
 
 		private:
 			/**
 			 * Render tasks storage. Store tasks sorted by shader program and mesh.
 			 */
 			std::vector<RenderTasks> m_render_tasks;
+
+			/**
+			 * Flexible number of OpenGL Buffers (SSBOs) for data shared by all render tasks,
+			 * e.g. scene meta data, lights or (dynamic) simulation data
+			 */
+			std::vector<std::pair<std::shared_ptr<BufferObject>,uint32_t>> m_per_frame_data_buffers;
 		};
 
 		template<typename PerDrawDataContainer>
@@ -191,6 +208,42 @@ namespace megamol {
 				new_task.draw_commands = std::make_shared<BufferObject>(GL_DRAW_INDIRECT_BUFFER, draw_commands.data(), new_dcs_byte_size, GL_DYNAMIC_DRAW);
 				new_task.per_draw_data = std::make_shared<BufferObject>(GL_SHADER_STORAGE_BUFFER, per_draw_data.data(), new_pdd_byte_size, GL_DYNAMIC_DRAW);
 				new_task.draw_cnt = draw_commands.size();
+			}
+        }
+
+        template <typename PerFrameDataContainer>
+        inline void GPURenderTaskCollection::addPerFrameDataBuffer(
+            PerFrameDataContainer const& per_frame_data, uint32_t buffer_binding_point)
+		{
+			if (buffer_binding_point == 0)
+			{
+				//TODO Error, 0 already in use for per draw data
+			}
+			else
+			{
+                typedef typename PerFrameDataContainer::value_type PerFrameDataType;
+                size_t pfd_byte_size = sizeof(PerFrameDataType) * per_frame_data.size();
+
+                auto new_buffer = std::make_shared<BufferObject>(
+                    GL_SHADER_STORAGE_BUFFER, per_frame_data.data(), pfd_byte_size, GL_DYNAMIC_DRAW);
+
+                m_per_frame_data_buffers.push_back{new_buffer, buffer_binding_point};
+			}
+		}
+
+        template <typename PerFrameDataContainer>
+        inline void GPURenderTaskCollection::updatePerFrameDataBuffer(
+            PerFrameDataContainer const& per_frame_data, uint32_t buffer_binding_point)
+		{
+            typedef typename PerFrameDataContainer::value_type PerFrameDataType;
+
+			for (auto& buffer : m_per_frame_data_buffers)
+			{
+				if (buffer_binding_point == std::get<1>(buffer))
+				{   
+                    size_t pfd_byte_size = sizeof(PerFrameDataType) * per_frame_data.size();
+                    std::get<0>(buffer)->loadSubData(per_frame_data);
+				}
 			}
 		}
 

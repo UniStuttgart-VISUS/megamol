@@ -40,6 +40,13 @@ bool megamol::archvis::FEMMeshDataSource::getDataCallback(core::Call & caller)
 	{
 		m_gpu_meshes->clear();
 
+		m_bbox[0] = std::numeric_limits<float>::max();
+		m_bbox[1] = std::numeric_limits<float>::max();
+		m_bbox[2] = std::numeric_limits<float>::max();
+		m_bbox[3] = std::numeric_limits<float>::min();
+		m_bbox[4] = std::numeric_limits<float>::min();
+		m_bbox[5] = std::numeric_limits<float>::min();
+
 		auto fem_data = fem_call->getFEMData();
 
 		// TODO generate vertex and index data
@@ -52,6 +59,13 @@ bool megamol::archvis::FEMMeshDataSource::getDataCallback(core::Call & caller)
 			vbs[0].push_back(node.X()); // position data buffer
 			vbs[0].push_back(node.Y());
 			vbs[0].push_back(node.Z());
+
+			m_bbox[0] = std::min(m_bbox[0], static_cast<float>(node.X()));
+			m_bbox[1] = std::min(m_bbox[1], static_cast<float>(node.Y()));
+			m_bbox[2] = std::min(m_bbox[2], static_cast<float>(node.Z()));
+			m_bbox[3] = std::max(m_bbox[3], static_cast<float>(node.X()));
+			m_bbox[4] = std::max(m_bbox[4], static_cast<float>(node.Y()));
+			m_bbox[5] = std::max(m_bbox[5], static_cast<float>(node.Z()));
 		}
 		// Create std-container holding vertex attribute descriptions
 		std::vector<ngmesh::VertexLayout::Attribute> attribs = {ngmesh::VertexLayout::Attribute(3,GL_FLOAT,GL_FALSE,0)};

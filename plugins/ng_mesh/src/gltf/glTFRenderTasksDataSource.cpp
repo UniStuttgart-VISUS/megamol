@@ -89,8 +89,6 @@ bool megamol::ngmesh::GlTFRenderTasksDataSource::getDataCallback(core::Call & ca
 					}
 				}
 
-				//TODO bounding box ?
-
 				// compute submesh offset by iterating over all meshes before the given mesh and summing up their primitive counts
 				size_t submesh_offset = 0;
 				for (int mesh_idx = 0; mesh_idx < model->nodes[node_idx].mesh; ++mesh_idx)
@@ -114,6 +112,9 @@ bool megamol::ngmesh::GlTFRenderTasksDataSource::getDataCallback(core::Call & ca
 				}
 			}
 		}
+
+		// add some lights to the scene to test the per frame buffers
+		//m_gpu_render_tasks->addPerFrameDataBuffer();
 
 		gltf_call->clearUpdateFlag();
 	}
