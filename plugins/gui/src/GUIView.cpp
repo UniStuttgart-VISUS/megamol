@@ -6,10 +6,9 @@
  */
 
 /**
- * TODO
+ * TODO:
  *
  * - Fix lost keyboard/mouse input for low frame rates
- *
  *
  * USED HOKEYS:
  *
@@ -65,16 +64,16 @@ GUIView::GUIView()
     : core::view::AbstractView()
     , renderview_slot("renderview", "Connects to a preceding RenderView that will be decorated with a GUI")
     , styleParam("style", "Color style, i.e., theme")
+    , profileParam("profile", "Profile")
+    , ignoreProfileParamOnce(false)
     , imgui_context(nullptr)
     , window_manager()
     , tf_editor()
     , last_instance_time(0.0)
     , font_utf8_ranges()
-    , load_new_profile()
     , load_new_font_filename()
     , load_new_font_size(13.0f)
     , load_new_font_index(-1)
-    , loaded_profile_list()
     , delete_window() {
     this->renderview_slot.SetCompatibleCall<core::view::CallRenderViewDescription>();
     this->MakeSlotAvailable(&this->renderview_slot);
@@ -86,6 +85,9 @@ GUIView::GUIView()
     this->styleParam << styles;
     this->styleParam.ForceSetDirty();
     this->MakeSlotAvailable(&this->styleParam);
+
+    this->profileParam << new core::param::StringParam("");
+    this->MakeSlotAvailable(&this->profileParam);
 }
 
 GUIView::~GUIView() { this->Release(); }
@@ -134,7 +136,7 @@ bool GUIView::create() {
         });
 
     // Create window configurations
-    GUIWinConfig tmp_win;
+    WindowManager::WindowConfiguration tmp_win;
     // MAIN Window ------------------------------------------------------------
     tmp_win.win_show = true;
     tmp_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F12);
@@ -392,7 +394,7 @@ bool GUIView::OnKey(core::view::Key key, core::view::KeyAction action, core::vie
     }
 
     // Hotkeys of window(s)
-    const auto func = [&, this](const std::string& wn, GUIWinConfig& wc) {
+    const auto func = [&, this](const std::string& wn, WindowManager::WindowConfiguration& wc) {
         hotkeyPressed = (ImGui::IsKeyDown(static_cast<int>(wc.win_hotkey.key))); /// Ignoring additional modifiers
         if (hotkeyPressed) {
             if (io.KeyShift) {
@@ -412,7 +414,7 @@ bool GUIView::OnKey(core::view::Key key, core::view::KeyAction action, core::vie
 
     // Check only considered modules for pressed parameter hotkeys
     std::vector<std::string> modules_list;
-    const auto modfunc = [&, this](const std::string& wn, GUIWinConfig& wc) {
+    const auto modfunc = [&, this](const std::string& wn, WindowManager::WindowConfiguration& wc) {
         for (auto& m : wc.param_modules_list) {
             modules_list.emplace_back(m);
         }
@@ -561,9 +563,7 @@ bool GUIView::OnMouseScroll(double dx, double dy) {
     return true;
 }
 
-bool GUIView::drawGUI(vislib::math::Rectangle<int> viewport, double instanceTime) {
-    ImGui::SetCurrentContext(this->imgui_context);
-
+void GUIView::validateGUI() {
     if (this->styleParam.IsDirty()) {
         auto style = this->styleParam.Param<core::param::EnumParam>()->Value();
         switch (style) {
@@ -579,6 +579,32 @@ bool GUIView::drawGUI(vislib::math::Rectangle<int> viewport, double instanceTime
         }
         this->styleParam.ResetDirty();
     }
+
+    static unsigned int profileMagic = 0;
+    profileMagic++;
+
+    if (this->profileParam.IsDirty()) {
+        if (!ignoreProfileParamOnce) {
+            auto profile = this->profileParam.Param<core::param::StringParam>()->Value();
+            this->window_manager.ProfileFromJSON(std::string(profile));
+        }
+        this->profileParam.ResetDirty();
+        ignoreProfileParamOnce = false;
+    } else if (profileMagic % 1000 == 0) {
+        // TODO: serialize back to parameter only on demand, i.e., deferred after a couple of milliseconds without any
+        // UI changes.
+        std::string profile;
+        this->window_manager.ProfileToJSON(profile);
+        this->profileParam.Param<core::param::StringParam>()->SetValue(profile.c_str());
+        ignoreProfileParamOnce = true;
+        profileMagic = 0;
+    }
+}
+
+bool GUIView::drawGUI(vislib::math::Rectangle<int> viewport, double instanceTime) {
+    ImGui::SetCurrentContext(this->imgui_context);
+
+    this->validateGUI();
 
     auto viewportWidth = viewport.Width();
     auto viewportHeight = viewport.Height();
@@ -617,11 +643,6 @@ bool GUIView::drawGUI(vislib::math::Rectangle<int> viewport, double instanceTime
         }
         this->load_new_font_index = -1;
     }
-    // Applying new window configuration profile
-    if (!this->load_new_profile.empty()) {
-        this->window_manager.LoadWindowConfigurationProfile(this->load_new_profile);
-        this->load_new_profile.clear();
-    }
     // Deleting window
     if (!this->delete_window.empty()) {
         this->window_manager.DeleteWindowConfiguration(this->delete_window);
@@ -632,7 +653,7 @@ bool GUIView::drawGUI(vislib::math::Rectangle<int> viewport, double instanceTime
     ImGui_ImplOpenGL3_NewFrame();
     ImGui::NewFrame();
 
-    const auto func = [&, this](const std::string& wn, GUIWinConfig& wc) {
+    const auto func = [&, this](const std::string& wn, WindowManager::WindowConfiguration& wc) {
         // Loading font from font window configuration independant if font window is shown
         if (wc.font_reset) {
             if (!wc.font_name.empty()) {
@@ -692,7 +713,8 @@ bool GUIView::drawGUI(vislib::math::Rectangle<int> viewport, double instanceTime
     return true;
 }
 
-void GUIView::drawMainWindowCallback(const std::string& window_name, GUIWinConfig& window_config) {
+void GUIView::drawMainWindowCallback(
+    const std::string& window_name, WindowManager::WindowConfiguration& window_config) {
     // Menu -------------------------------------------------------------------
     /// Requires window flag ImGuiWindowFlags_MenuBar
     if (ImGui::BeginMenuBar()) {
@@ -710,11 +732,12 @@ void GUIView::drawMainWindowCallback(const std::string& window_name, GUIWinConfi
     this->drawParametersCallback(window_name, window_config);
 }
 
-void GUIView::drawTFWindowCallback(const std::string& window_name, GUIWinConfig& window_config) {
+void GUIView::drawTFWindowCallback(const std::string& window_name, WindowManager::WindowConfiguration& window_config) {
     this->tf_editor.DrawTransferFunctionEditor();
 }
 
-void GUIView::drawParametersCallback(const std::string& window_name, GUIWinConfig& window_config) {
+void GUIView::drawParametersCallback(
+    const std::string& window_name, WindowManager::WindowConfiguration& window_config) {
     ImGuiStyle& style = ImGui::GetStyle();
 
     ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() * 0.5f); // set general proportional item width
@@ -880,7 +903,7 @@ void GUIView::drawParametersCallback(const std::string& window_name, GUIWinConfi
                     std::string window_name =
                         "Parameters###parameters" +
                         std::to_string(this->last_instance_time); /// using instance time as hidden unique id
-                    GUIWinConfig tmp_win;
+                    WindowManager::WindowConfiguration tmp_win;
                     tmp_win.win_show = true;
                     tmp_win.win_flags = ImGuiWindowFlags_HorizontalScrollbar;
                     tmp_win.win_callback = WindowManager::WindowDrawCallback::PARAM;
@@ -979,7 +1002,7 @@ void GUIView::drawParametersCallback(const std::string& window_name, GUIWinConfi
     ImGui::PopItemWidth();
 }
 
-void GUIView::drawFpsWindowCallback(const std::string& window_name, GUIWinConfig& window_config) {
+void GUIView::drawFpsWindowCallback(const std::string& window_name, WindowManager::WindowConfiguration& window_config) {
     ImGuiIO& io = ImGui::GetIO();
 
     window_config.fpsms_current_delay += io.DeltaTime;
@@ -1110,7 +1133,8 @@ void GUIView::drawFpsWindowCallback(const std::string& window_name, GUIWinConfig
     }
 }
 
-void GUIView::drawFontWindowCallback(const std::string& window_name, GUIWinConfig& window_config) {
+void GUIView::drawFontWindowCallback(
+    const std::string& window_name, WindowManager::WindowConfiguration& window_config) {
     ImGuiIO& io = ImGui::GetIO();
     ImGuiStyle& style = ImGui::GetStyle();
 
@@ -1163,42 +1187,7 @@ void GUIView::drawFontWindowCallback(const std::string& window_name, GUIWinConfi
 void GUIView::drawMenu(void) {
     // App
     bool save_profile = false;
-    if (ImGui::BeginMenu("App")) {
-        // Window configuration profile
-        if (ImGui::BeginMenu("Window Settings")) {
-            // Loading available profiles (only once at menu opening)
-            if (this->loaded_profile_list.empty()) {
-                this->loaded_profile_list = this->window_manager.GetWindowConfigurationProfileList();
-                // Add empty profile to prevent consecutive loading when no profile is available.
-                if (this->loaded_profile_list.empty()) {
-                    this->loaded_profile_list.emplace_back("");
-                }
-            }
-            if (ImGui::BeginMenu("Load Profile")) {
-                for (auto& p : this->loaded_profile_list) {
-                    if (ImGui::MenuItem(p.c_str())) {
-                        /// Remember profile name for delayed loading (before ImGui::Begin)
-                        this->load_new_profile = p;
-                    }
-                }
-                ImGui::EndMenu();
-            }
-            if (ImGui::BeginMenu("Delete Profile")) {
-                for (auto& p : this->loaded_profile_list) {
-                    if (ImGui::MenuItem(p.c_str())) {
-                        this->window_manager.DeleteWindowConfigurationProfile(p);
-                    }
-                }
-                ImGui::EndMenu();
-            }
-            if (ImGui::MenuItem("Save Profile")) {
-                /// Processed below because of popup ...
-                save_profile = true;
-            }
-            ImGui::EndMenu();
-        } else {
-            this->loaded_profile_list.clear();
-        }
+    if (ImGui::BeginMenu("File")) {
         ImGui::Separator();
 
         // if (ImGui::BeginMenu("Parameter File")) {
@@ -1222,8 +1211,7 @@ void GUIView::drawMenu(void) {
 
     // Windows
     if (ImGui::BeginMenu("Views")) {
-
-        const auto func = [&, this](const std::string& wn, GUIWinConfig& wc) {
+        const auto func = [&, this](const std::string& wn, WindowManager::WindowConfiguration& wc) {
             bool win_open = wc.win_show;
             std::string hotkey_label = wc.win_hotkey.ToString();
             if (!hotkey_label.empty()) {
@@ -1293,13 +1281,6 @@ void GUIView::drawMenu(void) {
         ImGui::SetItemDefaultFocus();
         ImGui::EndPopup();
     }
-
-    // Process request for saving current window profile
-    std::string profile_name =
-        this->popup.InputDialogPopUp("Save Current Window Configuration", "Profile Name", save_profile);
-    if (!profile_name.empty()) {
-        this->window_manager.SaveWindowConfigurationProfile(profile_name);
-    }
 }
 
 void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slot) {
@@ -1363,7 +1344,7 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
                 this->tf_editor.SetActiveParameter(p);
                 load_tf = true;
                 // Open window calling the transfer function editor callback
-                const auto func = [&, this](const std::string& wn, GUIWinConfig& wc) {
+                const auto func = [&, this](const std::string& wn, WindowManager::WindowConfiguration& wc) {
                     if (wc.win_callback == WindowManager::WindowDrawCallback::TF) {
                         wc.win_show = true;
                     }
@@ -1470,7 +1451,6 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
                 p->SetValue(value);
             }
         } else { // if (auto* p = slot.Param<core::param::StringParam>()) {
-
             // XXX: UTF8 conversion and allocation every frame is horrific inefficient.
             vislib::StringA valueString;
             vislib::UTF8Encoder::Encode(valueString, param->ValueString());

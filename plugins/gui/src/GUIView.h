@@ -63,11 +63,6 @@ public:
     virtual ~GUIView();
 
 protected:
-    // TYPES ------------------------------------------------------------------
-
-    /** Type for window configuration */
-    typedef WindowManager::WindowConfiguration GUIWinConfig;
-
     // FUNCTIONS --------------------------------------------------------------
 
     virtual bool create() override;
@@ -112,8 +107,12 @@ private:
     /** The input renderview slot */
     core::CallerSlot renderview_slot;
 
-    /** The input renderview slot */
+    /** A parameter to select the style */
     core::param::ParamSlot styleParam;
+
+    /** A parameter to store the profile */
+    core::param::ParamSlot profileParam;
+    bool ignoreProfileParamOnce;
 
     /** The ImGui context created and used by this GUIView */
     ImGuiContext* imgui_context;
@@ -135,9 +134,6 @@ private:
 
     // Window state buffer variables: -----------------------------------------
 
-    /** Flag indicating that this window configuration profile should be applied. */
-    std::string load_new_profile;
-
     /** File name of font file to load. */
     std::string load_new_font_filename;
 
@@ -147,13 +143,15 @@ private:
     /** Load font by index. */
     int load_new_font_index;
 
-    /** List of available profiles (should be only loaded once on menu open). */
-    std::list<std::string> loaded_profile_list;
-
     /** Name of window to delete. */
     std::string delete_window;
 
     // FUNCTIONS --------------------------------------------------------------
+
+    /**
+     * Validates GUI parameters.
+     */
+    void validateGUI();
 
     /**
      * Draws the GUI.
@@ -169,7 +167,7 @@ private:
      * @param window_name    The label of the calling window.
      * @param window_config  The configuration of the calling window.
      */
-    void drawMainWindowCallback(const std::string& window_name, GUIWinConfig& window_config);
+    void drawMainWindowCallback(const std::string& window_name, WindowManager::WindowConfiguration& window_config);
 
     /**
      * Draws parameters and options.
@@ -177,7 +175,7 @@ private:
      * @param window_name    The label of the calling window.
      * @param window_config  The configuration of the calling window.
      */
-    void drawParametersCallback(const std::string& window_name, GUIWinConfig& window_config);
+    void drawParametersCallback(const std::string& window_name, WindowManager::WindowConfiguration& window_config);
 
     /**
      * Draws fps overlay window.
@@ -185,7 +183,7 @@ private:
      * @param window_name    The label of the calling window.
      * @param window_config  The configuration of the calling window.
      */
-    void drawFpsWindowCallback(const std::string& window_name, GUIWinConfig& window_config);
+    void drawFpsWindowCallback(const std::string& window_name, WindowManager::WindowConfiguration& window_config);
 
     /**
      * Callback for drawing font selection window.
@@ -193,7 +191,7 @@ private:
      * @param window_name    The label of the calling window.
      * @param window_config  The configuration of the calling window.
      */
-    void drawFontWindowCallback(const std::string& window_name, GUIWinConfig& window_config);
+    void drawFontWindowCallback(const std::string& window_name, WindowManager::WindowConfiguration& window_config);
 
     /**
      * Callback for drawing the demo window.
@@ -201,7 +199,7 @@ private:
      * @param window_name    The label of the calling window.
      * @param window_config  The configuration of the calling window.
      */
-    void drawTFWindowCallback(const std::string& window_name, GUIWinConfig& window_config);
+    void drawTFWindowCallback(const std::string& window_name, WindowManager::WindowConfiguration& window_config);
 
     /**
      * Draws the menu bar.
