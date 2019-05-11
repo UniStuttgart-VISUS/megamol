@@ -12,6 +12,10 @@
 #include "mmcore/versioninfo.h"
 #include "vislib/vislibversion.h"
 
+#include "astro/AstroDataCall.h"
+#include "AstroParticleConverter.h"
+#include "Contest2019DataLoader.h"
+
 
 /* anonymous namespace hides this type from any other object files */
 namespace {
@@ -23,7 +27,7 @@ namespace {
             : ::megamol::core::utility::plugins::Plugin200Instance(
 
                 /* machine-readable plugin assembly name */
-                "astro", // TODO: Change this!
+                "astro",
 
                 /* human-readable plugin description */
                 "Describing astro (TODO: Change this!)") {
@@ -46,6 +50,8 @@ namespace {
             //   this->module_descriptions.RegisterAutoDescription<megamol::astro::MyModule2>();
             //   ...
             //
+            this->module_descriptions.RegisterAutoDescription<megamol::astro::Contest2019DataLoader>();
+			this->module_descriptions.RegisterAutoDescription<megamol::astro::AstroParticleConverter>();
 
             // register calls here:
 
@@ -56,7 +62,7 @@ namespace {
             //   this->call_descriptions.RegisterAutoDescription<megamol::astro::MyCall2>();
             //   ...
             //
-
+            this->call_descriptions.RegisterAutoDescription<megamol::astro::AstroDataCall>();
         }
         MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics
     };
