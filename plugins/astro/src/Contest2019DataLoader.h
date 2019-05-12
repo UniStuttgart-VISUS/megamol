@@ -187,6 +187,8 @@ protected:
     vislib::math::Cuboid<float> clipBox;
 
     size_t data_hash;
+
+    std::vector<std::string> filenames;
 };
 
 } // namespace astro
