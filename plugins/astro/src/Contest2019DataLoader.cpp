@@ -7,6 +7,7 @@
 
 #include "stdafx.h"
 #include "Contest2019DataLoader.h"
+#include "astro/AstroDataCall.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
@@ -35,17 +36,21 @@ Contest2019DataLoader::Contest2019DataLoader(void)
     : view::AnimDataModule()
     , getDataSlot("getData", "Slot for handling the file loading requests")
     , firstFilename("firstFilename", "The name of the first file to load")
-    , filesToLoad("filesToLoad", "The total number of files that should be loaded. A value of -1 means all available "
+    , filesToLoad("filesToLoad", "The total number of files that should be loaded. A value smaller than 0 means all available "
                                  "ones from the first given are loaded.") {
 
-    // TODO setup getDataSlot
+    this->getDataSlot.SetCallback(AstroDataCall::ClassName(),
+        AstroDataCall::FunctionName(AstroDataCall::CallForGetData), &Contest2019DataLoader::getDataCallback);
+    this->getDataSlot.SetCallback(AstroDataCall::ClassName(),
+        AstroDataCall::FunctionName(AstroDataCall::CallForGetExtent), &Contest2019DataLoader::getExtentCallback);
+    this->MakeSlotAvailable(&this->getDataSlot);
 
     this->firstFilename.SetParameter(new param::FilePathParam(""));
     this->firstFilename.SetUpdateCallback(&Contest2019DataLoader::filenameChangedCallback);
     this->MakeSlotAvailable(&this->firstFilename);
 
     this->filesToLoad.SetParameter(new param::IntParam(-1));
-    this->MakeSlotAvailable(&this->firstFilename);
+    this->MakeSlotAvailable(&this->filesToLoad);
 
     this->setFrameCount(1);
     this->initFrameCache(1);
