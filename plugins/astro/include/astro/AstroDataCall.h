@@ -307,6 +307,27 @@ public:
         return positions->size();
     }
 
+	/**
+	 * Clears all of the stored values for a clean start.
+	 */
+	inline void ClearValues(void) {
+		this->positions.reset();
+		this->velocities.reset();
+		this->temperatures.reset();
+		this->masses.reset();
+		this->internalEnergies.reset();
+		this->smoothingLengths.reset();
+		this->molecularWeights.reset();
+		this->densities.reset();
+		this->gravitationalPotentials.reset();
+		this->isBaryonFlags.reset();
+		this->isStarFlags.reset();
+		this->isWindFlags.reset();
+		this->isStarFormingGasFlags.reset();
+		this->isAGNFlags.reset();
+		this->particleIDs.reset();
+	}
+
 private:
     /** Pointer to the position array */
     vec3ArrayPtr positions;

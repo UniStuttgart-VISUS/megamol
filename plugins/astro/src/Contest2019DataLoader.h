@@ -98,8 +98,11 @@ protected:
          * Sets the data pointers of a given call to the internally stored values
          *
          * @param call The call that will be filled with the new data
+         * @param boundingBox The bounding box of the data set
+         * @param clipBox The clip box of the data set
          */
-        void SetData(AstroDataCall& call);
+        void SetData(AstroDataCall& call, const vislib::math::Cuboid<float>& boundingBox,
+            const vislib::math::Cuboid<float>& clipBox);
 
     private:
         /** Pointer to the position array */

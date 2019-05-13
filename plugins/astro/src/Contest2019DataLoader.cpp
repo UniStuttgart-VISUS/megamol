@@ -20,25 +20,57 @@ using namespace megamol::astro;
 
 #define MAX_MISSED_FILE_NUMBER 5
 
+/*
+ * Contest2019DataLoader::Frame::Frame
+ */
 Contest2019DataLoader::Frame::Frame(view::AnimDataModule& owner) : view::AnimDataModule::Frame(owner) {
     // intentionally empty
 }
 
+/*
+ * Contest2019DataLoader::Frame::~Frame
+ */
 Contest2019DataLoader::Frame::~Frame(void) {
     // all the smart pointers are deleted automatically
 }
 
-// TODO Frame::loadFrame
+/*
+ * Contest2019DataLoader::Frame::LoadFrame
+ */
 bool Contest2019DataLoader::Frame::LoadFrame(std::string filepath, unsigned int frameIdx) {
     this->frame = frameIdx;
-
+    // TODO implement
     return true;
 }
 
-void Contest2019DataLoader::Frame::SetData(AstroDataCall& call) {}
+/*
+ * Contest2019DataLoader::Frame::SetData
+ */
+void Contest2019DataLoader::Frame::SetData(
+    AstroDataCall& call, const vislib::math::Cuboid<float>& boundingBox, const vislib::math::Cuboid<float>& clipBox) {
+    if (this->positions == nullptr || this->positions->empty()) {
+        call.ClearValues();
+    }
+	call.SetPositions(this->positions);
+	call.SetVelocities(this->velocities);
+	call.SetTemperature(this->temperatures);
+	call.SetMass(this->masses);
+	call.SetInternalEnergy(this->internalEnergies);
+	call.SetSmoothingLength(this->smoothingLengths);
+	call.SetMolecularWeights(this->molecularWeights);
+	call.SetDensity(this->densities);
+	call.SetGravitationalPotential(this->gravitationalPotentials);
+	call.SetIsBaryonFlags(this->isBaryonFlags);
+	call.SetIsStarFlags(this->isStarFlags);
+	call.SetIsWindFlags(this->isWindFlags);
+	call.SetIsStarFormingGasFlags(this->isStarFormingGasFlags);
+	call.SetIsAGNFlags(this->isAGNFlags);
+	call.SetParticleIDs(this->particleIDs);
+}
 
-// TODO Frame::setData
-
+/*
+ * Contest2019DataLoader::Contest2019DataLoader
+ */
 Contest2019DataLoader::Contest2019DataLoader(void)
     : view::AnimDataModule()
     , getDataSlot("getData", "Slot for handling the file loading requests")
@@ -65,31 +97,53 @@ Contest2019DataLoader::Contest2019DataLoader(void)
     this->initFrameCache(1);
 }
 
+/*
+ * Contest2019DataLoader::~Contest2019DataLoader
+ */
 Contest2019DataLoader::~Contest2019DataLoader(void) { this->Release(); }
 
+/*
+ * Contest2019DataLoader::constructFrame
+ */
 view::AnimDataModule::Frame* Contest2019DataLoader::constructFrame(void) const {
     Frame* f = new Frame(*const_cast<Contest2019DataLoader*>(this));
     return f;
 }
 
+/*
+ * Contest2019DataLoader::create
+ */
 bool Contest2019DataLoader::create(void) { return true; }
 
+/*
+ * Contest2019DataLoader::loadFrame
+ */
 void Contest2019DataLoader::loadFrame(view::AnimDataModule::Frame* frame, unsigned int idx) {
     using vislib::sys::Log;
     Frame* f = dynamic_cast<Frame*>(frame);
     if (f == nullptr) return;
     ASSERT(idx < this->FrameCount());
-    std::string filename; // TODO determine correct filename and frame idx
-    unsigned int frameID;
+    unsigned int frameID = idx % this->FrameCount();
+    std::string filename = "";
+    if (frameID < this->filenames.size()) {
+        filename = this->filenames.at(frameID);
+    }
     if (!f->LoadFrame(filename, frameID)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to read frame %d from file\n", idx);
     }
 }
 
+/*
+ * Contest2019DataLoader::release
+ */
 void Contest2019DataLoader::release(void) { this->resetFrameCache(); }
 
+/*
+ * Contest2019DataLoader::filenameChangedCallback
+ */
 bool Contest2019DataLoader::filenameChangedCallback(param::ParamSlot& slot) {
     this->filenames.clear();
+    this->resetFrameCache();
     std::string firstfile = T2A(this->firstFilename.Param<param::FilePathParam>()->Value());
     int toLoadCount = this->filesToLoad.Param<param::IntParam>()->Value();
 
@@ -137,11 +191,14 @@ bool Contest2019DataLoader::filenameChangedCallback(param::ParamSlot& slot) {
         }
     }
     this->setFrameCount(static_cast<unsigned int>(this->filenames.size()));
-    this->initFrameCache(100); // TODO change this to a dynamic / user selected value
+    this->initFrameCache(std::min(this->FrameCount(), 100u)); // TODO change this to a dynamic / user selected value
 
     return true;
 }
 
+/*
+ * Contest2019DataLoader::getDataCallback
+ */
 bool Contest2019DataLoader::getDataCallback(Call& caller) {
     AstroDataCall* ast = dynamic_cast<AstroDataCall*>(&caller);
     if (ast == nullptr) return false;
@@ -151,11 +208,14 @@ bool Contest2019DataLoader::getDataCallback(Call& caller) {
     ast->SetUnlocker(new Unlocker(*f));
     ast->SetFrameID(f->FrameNumber());
     ast->SetDataHash(this->data_hash);
-    f->SetData(*ast);
+    f->SetData(*ast, this->boundingBox, this->clipBox);
 
     return true;
 }
 
+/*
+ * Contest2019DataLoader::getExtentCallback
+ */
 bool Contest2019DataLoader::getExtentCallback(Call& caller) {
     AstroDataCall* ast = dynamic_cast<AstroDataCall*>(&caller);
     if (ast == nullptr) return false;
