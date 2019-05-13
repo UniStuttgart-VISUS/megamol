@@ -9,7 +9,6 @@
  * TODO:
  *
  * - Fix lost keyboard/mouse input for low frame rates
- * - TextInput should not be limited to GUI_MAX_BUFFER_LEN
  * - The WindowManager should be managing window positions (or start using ImguiDock?)
  *
  * USED HOKEYS:
@@ -48,6 +47,7 @@
 #include <imgui_internal.h>
 #include "CorporateGreyStyle.h"
 #include "imgui_impl_opengl3.h"
+#include "imgui_stdlib.h"
 
 #include <iomanip>
 #include <sstream>
@@ -66,8 +66,8 @@ GUIView::GUIView()
     : core::view::AbstractView()
     , renderViewSlot("renderview", "Connects to a preceding RenderView that will be decorated with a GUI")
     , styleParam("style", "Color style, i.e., theme")
-    , profileParam("profile", "Profile")
-    , ignoreProfileParamOnce(false)
+    , stateParam("state", "Current state of all windows")
+    , ignoreStateParamOnce(false)
     , context(nullptr)
     , windowManager()
     , tfEditor()
@@ -88,8 +88,8 @@ GUIView::GUIView()
     this->styleParam.ForceSetDirty();
     this->MakeSlotAvailable(&this->styleParam);
 
-    this->profileParam << new core::param::StringParam("");
-    this->MakeSlotAvailable(&this->profileParam);
+    this->stateParam << new core::param::StringParam("");
+    this->MakeSlotAvailable(&this->stateParam);
 }
 
 GUIView::~GUIView() { this->Release(); }
@@ -576,24 +576,24 @@ void GUIView::validateGUI() {
         this->styleParam.ResetDirty();
     }
 
-    static unsigned int profileMagic = 0;
-    profileMagic++;
+    static unsigned int stateMagic = 0;
+    stateMagic++;
 
-    if (this->profileParam.IsDirty()) {
-        if (!ignoreProfileParamOnce) {
-            auto profile = this->profileParam.Param<core::param::StringParam>()->Value();
-            this->windowManager.ProfileFromJSON(std::string(profile));
+    if (this->stateParam.IsDirty()) {
+        if (!ignoreStateParamOnce) {
+            auto state = this->stateParam.Param<core::param::StringParam>()->Value();
+            this->windowManager.StateFromJSON(std::string(state));
         }
-        this->profileParam.ResetDirty();
-        ignoreProfileParamOnce = false;
-    } else if (profileMagic % 1000 == 0) {
+        this->stateParam.ResetDirty();
+        ignoreStateParamOnce = false;
+    } else if (stateMagic % 500 == 0) {
         // TODO: serialize back to parameter only on demand, i.e., deferred after a couple of milliseconds without any
         // UI changes.
-        std::string profile;
-        this->windowManager.ProfileToJSON(profile);
-        this->profileParam.Param<core::param::StringParam>()->SetValue(profile.c_str());
-        ignoreProfileParamOnce = true;
-        profileMagic = 0;
+        std::string state;
+        this->windowManager.StateToJSON(state);
+        this->stateParam.Param<core::param::StringParam>()->SetValue(state.c_str());
+        ignoreStateParamOnce = true;
+        stateMagic = 0;
     }
 }
 
@@ -632,7 +632,7 @@ bool GUIView::drawGUI(vislib::math::Rectangle<int> viewport, double instanceTime
         io.FontDefault = io.Fonts->Fonts[(io.Fonts->Fonts.Size - 1)];
         this->newFontFilenameToLoad.clear();
     }
-    // Loading new font from profile
+    // Loading new font from state
     if (this->newFontIndexToLoad >= 0) {
         if (this->newFontIndexToLoad < io.Fonts->Fonts.Size) {
             io.FontDefault = io.Fonts->Fonts[this->newFontIndexToLoad];
@@ -661,7 +661,7 @@ bool GUIView::drawGUI(vislib::math::Rectangle<int> viewport, double instanceTime
                 }
                 if (this->newFontIndexToLoad < 0) {
                     vislib::sys::Log::DefaultLog.WriteWarn(
-                        "[GUIView] Could not find font '%s' for loaded profile.", wc.font_name.c_str());
+                        "[GUIView] Could not find font '%s' for loaded state.", wc.font_name.c_str());
                 }
             }
             wc.font_reset = false;
@@ -678,9 +678,9 @@ bool GUIView::drawGUI(vislib::math::Rectangle<int> viewport, double instanceTime
                 this->windowManager.SoftResetWindowSizePos(wn, wc);
                 wc.win_soft_reset = false;
             }
-            // Apply reset after new profile has been loaded
+            // Apply reset after new state has been loaded
             if (wc.win_reset) {
-                this->windowManager.ResetWindowOnProfileLoad(wn, wc);
+                this->windowManager.ResetWindowOnStateLoad(wn, wc);
                 wc.win_reset = false;
             }
 
@@ -693,7 +693,7 @@ bool GUIView::drawGUI(vislib::math::Rectangle<int> viewport, double instanceTime
                     "[GUIView] Missing valid callback for WindowDrawCallback: '%d'", (int)wc.win_callback);
             }
 
-            // Saving current window position and size for all window configurations for possible profile saving.
+            // Saving current window position and size for all window configurations for possible state saving.
             wc.win_position = ImGui::GetWindowPos();
             wc.win_size = ImGui::GetWindowSize();
 
@@ -850,7 +850,7 @@ void GUIView::drawParametersCallback(
     // Listing parameters
     const core::Module* current_mod = nullptr;
     bool current_mod_open = false;
-    size_t dnd_size = GUI_MAX_BUFFER_LEN; // Set same max size of all module labels for drag and drop.
+    const size_t dnd_size = 2048; // Set same max size of all module labels for drag and drop.
     std::string param_namespace = "";
     unsigned int param_indent_stack = 0;
     bool param_namespace_open = true;
@@ -897,9 +897,9 @@ void GUIView::drawParametersCallback(
             // Context menu
             if (ImGui::BeginPopupContextItem()) {
                 if (ImGui::MenuItem("Copy to new Window")) {
-                    std::string window_name =
-                        "Parameters###parameters" +
-                        std::to_string(this->lastInstanceTime); /// using instance time as hidden unique id
+                    // using instance time as hidden unique id
+                    std::string window_name = "Parameters###parameters" + std::to_string(this->lastInstanceTime);
+
                     WindowManager::WindowConfiguration tmp_win;
                     tmp_win.win_show = true;
                     tmp_win.win_flags = ImGuiWindowFlags_HorizontalScrollbar;
@@ -909,9 +909,7 @@ void GUIView::drawParametersCallback(
                     this->windowManager.AddWindowConfiguration(window_name, tmp_win);
                 }
                 // Deleting module's parameters is not available in main parameter window.
-                if (window_config.win_callback !=
-                    WindowManager::WindowDrawCallback::MAIN) { // && (window_config.param_modules_list.size() >
-                                                               // 1)) {
+                if (window_config.win_callback != WindowManager::WindowDrawCallback::MAIN) {
                     if (ImGui::MenuItem("Delete from List")) {
                         std::vector<std::string>::iterator find_iter = std::find(
                             window_config.param_modules_list.begin(), window_config.param_modules_list.end(), label);
@@ -1153,10 +1151,9 @@ void GUIView::drawFontWindowCallback(
     std::string label = "Font Filename (.ttf)";
     vislib::StringA valueString;
     vislib::UTF8Encoder::Encode(valueString, vislib::StringA(window_config.font_new_filename.c_str()));
-    std::vector<char> buffer(GUI_MAX_BUFFER_LEN, '\0');
-    memcpy(buffer.data(), valueString.PeekBuffer(), valueString.Length() + 1);
-    ImGui::InputText(label.c_str(), buffer.data(), buffer.size());
-    vislib::UTF8Encoder::Decode(valueString, vislib::StringA(buffer.data()));
+    std::string valueUtf8String = valueString;
+    ImGui::InputText(label.c_str(), &valueUtf8String);
+    vislib::UTF8Encoder::Decode(valueString, vislib::StringA(valueUtf8String.data()));
     window_config.font_new_filename = valueString.PeekBuffer();
 
 
@@ -1181,25 +1178,17 @@ void GUIView::drawFontWindowCallback(
 }
 
 void GUIView::drawMenu(void) {
-    // App
-    bool save_profile = false;
     if (ImGui::BeginMenu("File")) {
-        ImGui::Separator();
-
-        // if (ImGui::BeginMenu("Parameter File")) {
-        //    // Load/save parameter values to LUA file
-        //    if (ImGui::MenuItem("Save", "(not yet available)")) {
-        //        // TODO:  Save parameter file
-        //    }
-        //    if (ImGui::MenuItem("Load", "(not yet available)")) {
-        //        // TODO:  Load parameter file
-        //    }
-        //    ImGui::EndMenu();
+        //// Load/save parameter values to LUA file
+        // if (ImGui::MenuItem("Save", "(not yet available)")) {
+        //    // TODO:  Save parameter file
         //}
-        // ImGui::Separator();
-
-        // Exit program
+        // if (ImGui::MenuItem("Load", "(not yet available)")) {
+        //    // TODO:  Load parameter file
+        //}
+        ImGui::Separator();
         if (ImGui::MenuItem("Exit", "'Esc', ALT + 'F4'")) {
+            // Exit program
             this->shutdown();
         }
         ImGui::EndMenu();
@@ -1240,19 +1229,14 @@ void GUIView::drawMenu(void) {
     bool open_popup = false;
     if (ImGui::BeginMenu("Help")) {
         const std::string gitLink = "https://github.com/UniStuttgart-VISUS/megamol";
-        const std::string mmLink = "https://megamol.org/";
-        const std::string helpLink = "https://github.com/UniStuttgart-VISUS/megamol/blob/master/Readme.md";
+        const std::string webLink = "https://megamol.org/";
         const std::string hint = "Copy Link to Clipboard";
+        if (ImGui::MenuItem("Website")) {
+            ImGui::SetClipboardText(webLink.c_str());
+        }
+        this->popup.HoverToolTip(hint);
         if (ImGui::MenuItem("GitHub")) {
             ImGui::SetClipboardText(gitLink.c_str());
-        }
-        this->popup.HoverToolTip(hint);
-        if (ImGui::MenuItem("Readme")) {
-            ImGui::SetClipboardText(helpLink.c_str());
-        }
-        this->popup.HoverToolTip(hint);
-        if (ImGui::MenuItem("Web Page")) {
-            ImGui::SetClipboardText(mmLink.c_str());
         }
         this->popup.HoverToolTip(hint);
         ImGui::Separator();
@@ -1262,7 +1246,7 @@ void GUIView::drawMenu(void) {
         ImGui::EndMenu();
     }
 
-    // PopUps
+    // Popups
     std::string about =
         std::string("MegaMol is GREAT!\nUsing Dear ImGui ") + std::string(IMGUI_VERSION) + std::string("\n");
     if (open_popup) {
@@ -1310,7 +1294,8 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
             std::string hotkey = " (";
             hotkey.append(p->GetKeyCode().ToString());
             hotkey.append(")");
-            auto insert_pos = param_label.find("###"); // no check if found -> should be present
+            // no check if found -> should be present
+            auto insert_pos = param_label.find("###");
             param_label.insert(insert_pos, hotkey);
 
             if (ImGui::Button(param_label.c_str())) {
@@ -1450,13 +1435,10 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
             // XXX: UTF8 conversion and allocation every frame is horrific inefficient.
             vislib::StringA valueString;
             vislib::UTF8Encoder::Encode(valueString, param->ValueString());
+            std::string valueUtf8String = valueString;
 
-            std::vector<char> buffer(GUI_MAX_BUFFER_LEN, '\0');
-            memcpy(buffer.data(), valueString.PeekBuffer(), std::min(GUI_MAX_BUFFER_LEN, valueString.Length() + 1));
-
-            if (ImGui::InputText(
-                    param_label.c_str(), buffer.data(), buffer.size(), ImGuiInputTextFlags_EnterReturnsTrue)) {
-                vislib::UTF8Encoder::Decode(valueString, vislib::StringA(buffer.data()));
+            if (ImGui::InputText(param_label.c_str(), &valueUtf8String, ImGuiInputTextFlags_EnterReturnsTrue)) {
+                vislib::UTF8Encoder::Decode(valueString, vislib::StringA(valueUtf8String.data()));
                 param->ParseValue(valueString);
             }
 

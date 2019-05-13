@@ -8,6 +8,7 @@
 #include "stdafx.h"
 #include "Popup.h"
 
+#include <imgui_stdlib.h>
 #include <vector>
 
 using namespace megamol::gui;
@@ -72,9 +73,7 @@ std::string Popup::InputDialogPopUp(std::string title, std::string request, bool
         this->HelpMarkerToolTip("Press [Enter] to confirm.");
 
         // ImGui::SetKeyboardFocusHere();
-        std::vector<char> buffer(GUI_MAX_BUFFER_LEN, '\0');
-        if (ImGui::InputText("", buffer.data(), buffer.size(), ImGuiInputTextFlags_EnterReturnsTrue)) {
-            response = std::string(buffer.begin(), buffer.end());
+        if (ImGui::InputText("", &response, ImGuiInputTextFlags_EnterReturnsTrue)) {
             ImGui::CloseCurrentPopup();
         }
 

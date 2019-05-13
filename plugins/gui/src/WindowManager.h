@@ -49,9 +49,9 @@ public:
         ImGuiWindowFlags win_flags;      // imgui window flags
         WindowDrawCallback win_callback; // id of the callback drawing the window content
         core::view::KeyCode win_hotkey;  // hotkey for opening/closing window
-        bool win_reset;        // flag for reset window position and size on profile loading  (not saved in profile)
-        ImVec2 win_position;   // position for reset on profile loading (current position)
-        ImVec2 win_size;       // size for reset on profile loading (current size)
+        bool win_reset;        // flag for reset window position and size on state loading  (not saved in state)
+        ImVec2 win_position;   // position for reset on state loading (current position)
+        ImVec2 win_size;       // size for reset on state loading (current size)
         bool win_soft_reset;   // soft reset of window position and size
         ImVec2 win_reset_size; // minimum window size for soft reset
         // ---------- Parameter specific condfiguration ----------
@@ -63,16 +63,16 @@ public:
         int fpsms_max_value_count;           // Maximum count of values in value array
         float fpsms_max_delay;               // Maximum delay when fps/ms value should be renewed.
         TimingMode fpsms_mode;               // mode for displaying either FPS or MS
-        float fpsms_current_delay;           // current delay between frames (not saved in profile)
-        std::vector<float> fpsms_fps_values; // current fps values (not saved in profile)
-        std::vector<float> fpsms_ms_values;  // current ms values (not saved in profile)
-        float fpsms_fps_value_scale;         // current scaling factor for fps values (not saved in profile)
-        float fpsms_ms_value_scale;          // current scaling factor for ms values (not saved in profile)
+        float fpsms_current_delay;           // current delay between frames (not saved in state)
+        std::vector<float> fpsms_fps_values; // current fps values (not saved in state)
+        std::vector<float> fpsms_ms_values;  // current ms values (not saved in state)
+        float fpsms_fps_value_scale;         // current scaling factor for fps values (not saved in state)
+        float fpsms_ms_value_scale;          // current scaling factor for ms values (not saved in state)
         // ---------- Font specific condfiguration ----------
-        bool font_reset;               // flag for reset font on profile loading  (not saved in profile)
+        bool font_reset;               // flag for reset font on state loading  (not saved in state)
         std::string font_name;         // the currently used font (only already loaded font names will be restored)
-        std::string font_new_filename; // temporary storage of new filename (not saved in profile)
-        float font_new_size;           // temporary storage of new font size (not saved in profile)
+        std::string font_new_filename; // temporary storage of new filename (not saved in state)
+        float font_new_size;           // temporary storage of new font size (not saved in state)
 
         // Ctor for default values
         WindowConfiguration(void)
@@ -147,15 +147,15 @@ public:
     void SoftResetWindowSizePos(const std::string& window_name, WindowConfiguration& window_config);
 
     /**
-     * Reset position and size after new profile has been loaded.
-     * Should be triggered via the window configuration flag: profile_reset
-     * Processes window configuration flags: profile_position and profile_size
+     * Reset position and size after new state has been loaded.
+     * Should be triggered via the window configuration flag: state_reset
+     * Processes window configuration flags: state_position and state_size
      * Should be called between ImGui::Begin() and ImGui::End().
      *
      * @param window_name    The window name.
      * @param window_config  The window configuration.
      */
-    void ResetWindowOnProfileLoad(const std::string& window_name, WindowConfiguration& window_config);
+    void ResetWindowOnStateLoad(const std::string& window_name, WindowConfiguration& window_config);
 
     // --------------------------------------------------------------------
     // CONFIGURATIONs
@@ -187,17 +187,17 @@ public:
     bool DeleteWindowConfiguration(const std::string& window_name);
 
     // --------------------------------------------------------------------
-    // PROFILEs
+    // STATE
 
     /**
-     * Deserializes a window configuration profile.
+     * Deserializes a window configuration state.
      * Should be called before(!) ImGui::Begin() because existing window configurations are overwritten.
      *
      * @param json  The string to deserialize from.
      *
      * @return True on success, false otherwise.
      */
-    bool ProfileFromJSON(const std::string& json_string);
+    bool StateFromJSON(const std::string& json_string);
 
 
     /**
@@ -207,7 +207,7 @@ public:
      *
      * @return True on success, false otherwise.
      */
-    bool ProfileToJSON(std::string& json_string);
+    bool StateToJSON(std::string& json_string);
 
 private:
     /**

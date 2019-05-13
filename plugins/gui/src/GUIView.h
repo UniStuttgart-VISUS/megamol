@@ -111,8 +111,8 @@ private:
     core::param::ParamSlot styleParam;
 
     /** A parameter to store the profile */
-    core::param::ParamSlot profileParam;
-    bool ignoreProfileParamOnce;
+    core::param::ParamSlot stateParam;
+    bool ignoreStateParamOnce;
 
     /** The ImGui context created and used by this GUIView */
     ImGuiContext* context;

@@ -48,7 +48,7 @@ void WindowManager::SoftResetWindowSizePos(const std::string& window_name, Windo
     ImGui::SetWindowPos(window_name.c_str(), win_pos, ImGuiCond_Always);
 }
 
-void WindowManager::ResetWindowOnProfileLoad(const std::string& window_name, WindowConfiguration& window_config) {
+void WindowManager::ResetWindowOnStateLoad(const std::string& window_name, WindowConfiguration& window_config) {
     assert(ImGui::GetCurrentContext() != nullptr);
 
     ImVec2 pos = window_config.win_position;
@@ -83,10 +83,10 @@ bool WindowManager::DeleteWindowConfiguration(const std::string& window_name) {
     return true;
 }
 
-bool WindowManager::ProfileFromJSON(const std::string& json_string) {
+bool WindowManager::StateFromJSON(const std::string& json_string) {
     nlohmann::json json = nlohmann::json::parse(json_string);
     if (!json.is_object()) {
-        vislib::sys::Log::DefaultLog.WriteError("[WindowManager] Profile file content is no valid JSON object.");
+        vislib::sys::Log::DefaultLog.WriteError("[WindowManager] State has to be a valid JSON object.");
         return false;
     }
 
@@ -243,10 +243,10 @@ bool WindowManager::ProfileFromJSON(const std::string& json_string) {
                 valid = false;
             }
         } catch (...) {
-            vislib::sys::Log::DefaultLog.WriteError("[WindowManager] Unable to reading JSON of profile");
+            vislib::sys::Log::DefaultLog.WriteError("[WindowManager] Unable to reading JSON of state");
             return false;
         }
-        // profile reset flags
+        // state reset flags
         tmp_config.win_reset = true;
         tmp_config.font_reset = false;
         if (!tmp_config.font_name.empty()) {
@@ -257,7 +257,7 @@ bool WindowManager::ProfileFromJSON(const std::string& json_string) {
     }
 
     if (!valid) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[WindowManager] Could not load profile.");
+        vislib::sys::Log::DefaultLog.WriteWarn("[WindowManager] Could not load state.");
         return false;
     }
 
@@ -267,7 +267,7 @@ bool WindowManager::ProfileFromJSON(const std::string& json_string) {
     return true;
 }
 
-bool WindowManager::ProfileToJSON(std::string& json_string) {
+bool WindowManager::StateToJSON(std::string& json_string) {
     json_string = "";
 
     nlohmann::json json;
@@ -297,7 +297,7 @@ bool WindowManager::ProfileToJSON(std::string& json_string) {
     }
 
     std::stringstream ss;
-    ss << json.dump(4);
+    ss << json.dump(2);
     json_string = ss.str();
 
     return true;
