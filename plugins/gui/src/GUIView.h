@@ -105,7 +105,7 @@ private:
     // VARIABLES --------------------------------------------------------------
 
     /** The input renderview slot */
-    core::CallerSlot renderview_slot;
+    core::CallerSlot renderViewSlot;
 
     /** A parameter to select the style */
     core::param::ParamSlot styleParam;
@@ -115,36 +115,36 @@ private:
     bool ignoreProfileParamOnce;
 
     /** The ImGui context created and used by this GUIView */
-    ImGuiContext* imgui_context;
+    ImGuiContext* context;
 
     /** The window manager. */
-    WindowManager window_manager;
+    WindowManager windowManager;
 
     /** The transfer function editor. */
-    TransferFunctionEditor tf_editor;
+    TransferFunctionEditor tfEditor;
 
     /** A popup being used all over the place */
     Popup popup;
 
     /** Last instance time.  */
-    double last_instance_time;
+    double lastInstanceTime;
 
     /** Additional UTF-8 glyph ranges for ImGui fonts. */
-    std::vector<ImWchar> font_utf8_ranges;
+    std::vector<ImWchar> fontUtf8Ranges;
 
     // Window state buffer variables: -----------------------------------------
 
     /** File name of font file to load. */
-    std::string load_new_font_filename;
+    std::string newFontFilenameToLoad;
 
     /** Font size of font to load. */
-    float load_new_font_size;
+    float newFontSizeToLoad;
 
     /** Load font by index. */
-    int load_new_font_index;
+    int newFontIndexToLoad;
 
     /** Name of window to delete. */
-    std::string delete_window;
+    std::string windowToDelete;
 
     // FUNCTIONS --------------------------------------------------------------
 

@@ -62,21 +62,21 @@ enum Styles {
 
 GUIView::GUIView()
     : core::view::AbstractView()
-    , renderview_slot("renderview", "Connects to a preceding RenderView that will be decorated with a GUI")
+    , renderViewSlot("renderview", "Connects to a preceding RenderView that will be decorated with a GUI")
     , styleParam("style", "Color style, i.e., theme")
     , profileParam("profile", "Profile")
     , ignoreProfileParamOnce(false)
-    , imgui_context(nullptr)
-    , window_manager()
-    , tf_editor()
-    , last_instance_time(0.0)
-    , font_utf8_ranges()
-    , load_new_font_filename()
-    , load_new_font_size(13.0f)
-    , load_new_font_index(-1)
-    , delete_window() {
-    this->renderview_slot.SetCompatibleCall<core::view::CallRenderViewDescription>();
-    this->MakeSlotAvailable(&this->renderview_slot);
+    , context(nullptr)
+    , windowManager()
+    , tfEditor()
+    , lastInstanceTime(0.0)
+    , fontUtf8Ranges()
+    , newFontFilenameToLoad()
+    , newFontSizeToLoad(13.0f)
+    , newFontIndexToLoad(-1)
+    , windowToDelete() {
+    this->renderViewSlot.SetCompatibleCall<core::view::CallRenderViewDescription>();
+    this->MakeSlotAvailable(&this->renderViewSlot);
 
     core::param::EnumParam* styles = new core::param::EnumParam(0);
     styles->SetTypePair(CorporateGray, "Corporate Gray");
@@ -102,35 +102,35 @@ bool GUIView::create() {
         current_fonts = current_io.Fonts;
     }
     IMGUI_CHECKVERSION();
-    this->imgui_context = ImGui::CreateContext(current_fonts);
-    if (this->imgui_context == nullptr) {
+    this->context = ImGui::CreateContext(current_fonts);
+    if (this->context == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError("[GUIView] Could not create ImGui context");
         return false;
     }
-    ImGui::SetCurrentContext(this->imgui_context);
+    ImGui::SetCurrentContext(this->context);
 
     // Init OpenGL for ImGui --------------------------------------------------
     const char* glsl_version = "#version 130"; /// "#version 150"
     ImGui_ImplOpenGL3_Init(glsl_version);
 
     // Register window callbacks in window manager ----------------------------
-    this->window_manager.RegisterDrawWindowCallback(WindowManager::WindowDrawCallback::MAIN,
+    this->windowManager.RegisterDrawWindowCallback(WindowManager::WindowDrawCallback::MAIN,
         [&, this](const std::string& window_name, WindowManager::WindowConfiguration& window_config) {
             this->drawMainWindowCallback(window_name, window_config);
         });
-    this->window_manager.RegisterDrawWindowCallback(WindowManager::WindowDrawCallback::PARAM,
+    this->windowManager.RegisterDrawWindowCallback(WindowManager::WindowDrawCallback::PARAM,
         [&, this](const std::string& window_name, WindowManager::WindowConfiguration& window_config) {
             this->drawParametersCallback(window_name, window_config);
         });
-    this->window_manager.RegisterDrawWindowCallback(WindowManager::WindowDrawCallback::FPSMS,
+    this->windowManager.RegisterDrawWindowCallback(WindowManager::WindowDrawCallback::FPSMS,
         [&, this](const std::string& window_name, WindowManager::WindowConfiguration& window_config) {
             this->drawFpsWindowCallback(window_name, window_config);
         });
-    this->window_manager.RegisterDrawWindowCallback(WindowManager::WindowDrawCallback::FONT,
+    this->windowManager.RegisterDrawWindowCallback(WindowManager::WindowDrawCallback::FONT,
         [&, this](const std::string& window_name, WindowManager::WindowConfiguration& window_config) {
             this->drawFontWindowCallback(window_name, window_config);
         });
-    this->window_manager.RegisterDrawWindowCallback(WindowManager::WindowDrawCallback::TF,
+    this->windowManager.RegisterDrawWindowCallback(WindowManager::WindowDrawCallback::TF,
         [&, this](const std::string& window_name, WindowManager::WindowConfiguration& window_config) {
             this->drawTFWindowCallback(window_name, window_config);
         });
@@ -142,28 +142,28 @@ bool GUIView::create() {
     tmp_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F12);
     tmp_win.win_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_HorizontalScrollbar;
     tmp_win.win_callback = WindowManager::WindowDrawCallback::MAIN;
-    this->window_manager.AddWindowConfiguration("MegaMol", tmp_win);
+    this->windowManager.AddWindowConfiguration("MegaMol", tmp_win);
 
     // FPS/MS Window ----------------------------------------------------------
     tmp_win.win_show = false;
     tmp_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F11);
     tmp_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar;
     tmp_win.win_callback = WindowManager::WindowDrawCallback::FPSMS;
-    this->window_manager.AddWindowConfiguration("FPS", tmp_win);
+    this->windowManager.AddWindowConfiguration("FPS", tmp_win);
 
     // FONT Window ------------------------------------------------------------
     tmp_win.win_show = false;
     tmp_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F10);
     tmp_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize;
     tmp_win.win_callback = WindowManager::WindowDrawCallback::FONT;
-    this->window_manager.AddWindowConfiguration("Fonts", tmp_win);
+    this->windowManager.AddWindowConfiguration("Fonts", tmp_win);
 
     // TRANSFER FUNCTION Window -----------------------------------------------
     tmp_win.win_show = false;
     tmp_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F9);
     tmp_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize;
     tmp_win.win_callback = WindowManager::WindowDrawCallback::TF;
-    this->window_manager.AddWindowConfiguration("Transfer Function Editor", tmp_win);
+    this->windowManager.AddWindowConfiguration("Transfer Function Editor", tmp_win);
 
     // Style settings ---------------------------------------------------------
     ImGui::SetColorEditOptions(ImGuiColorEditFlags_Uint8 | ImGuiColorEditFlags_RGB |
@@ -179,24 +179,24 @@ bool GUIView::create() {
 
     // Adding additional utf-8 glyph ranges
     /// (there is no error if glyph has no representation in font atlas)
-    this->font_utf8_ranges.emplace_back(0x0020);
-    this->font_utf8_ranges.emplace_back(0x00FF); // Basic Latin + Latin Supplement
-    this->font_utf8_ranges.emplace_back(0x20AC);
-    this->font_utf8_ranges.emplace_back(0x20AC); // €
-    this->font_utf8_ranges.emplace_back(0x2122);
-    this->font_utf8_ranges.emplace_back(0x2122); // ™
-    this->font_utf8_ranges.emplace_back(0x212B);
-    this->font_utf8_ranges.emplace_back(0x212B); // Å
-    this->font_utf8_ranges.emplace_back(0x0391);
-    this->font_utf8_ranges.emplace_back(0x03D6); // greek alphabet
-    this->font_utf8_ranges.emplace_back(0);      // (range termination)
+    this->fontUtf8Ranges.emplace_back(0x0020);
+    this->fontUtf8Ranges.emplace_back(0x00FF); // Basic Latin + Latin Supplement
+    this->fontUtf8Ranges.emplace_back(0x20AC);
+    this->fontUtf8Ranges.emplace_back(0x20AC); // €
+    this->fontUtf8Ranges.emplace_back(0x2122);
+    this->fontUtf8Ranges.emplace_back(0x2122); // ™
+    this->fontUtf8Ranges.emplace_back(0x212B);
+    this->fontUtf8Ranges.emplace_back(0x212B); // Å
+    this->fontUtf8Ranges.emplace_back(0x0391);
+    this->fontUtf8Ranges.emplace_back(0x03D6); // greek alphabet
+    this->fontUtf8Ranges.emplace_back(0);      // (range termination)
 
     // Load initial fonts only once for all imgui contexts
     if (!other_context) {
         ImFontConfig config;
         config.OversampleH = 4;
         config.OversampleV = 1;
-        config.GlyphRanges = this->font_utf8_ranges.data();
+        config.GlyphRanges = this->fontUtf8Ranges.data();
         // Add default font
         io.Fonts->AddFontDefault(&config);
         // Add other known fonts
@@ -255,9 +255,9 @@ bool GUIView::create() {
 } // namespace gui
 
 void GUIView::release() {
-    if (this->imgui_context != nullptr) {
+    if (this->context != nullptr) {
         ImGui_ImplOpenGL3_Shutdown();
-        ImGui::DestroyContext(this->imgui_context);
+        ImGui::DestroyContext(this->context);
     }
 }
 
@@ -281,7 +281,7 @@ void GUIView::DeserialiseCamera(vislib::Serialiser& serialiser) {
 }
 
 void GUIView::Render(const mmcRenderViewContext& context) {
-    auto* crv = this->renderview_slot.CallAs<core::view::CallRenderView>();
+    auto* crv = this->renderViewSlot.CallAs<core::view::CallRenderView>();
     if (crv) {
         crv->SetOutputBuffer(GL_BACK);
         crv->SetInstanceTime(context.InstanceTime);
@@ -295,14 +295,14 @@ void GUIView::Render(const mmcRenderViewContext& context) {
 }
 
 void GUIView::ResetView(void) {
-    auto* crv = this->renderview_slot.CallAs<core::view::CallRenderView>();
+    auto* crv = this->renderViewSlot.CallAs<core::view::CallRenderView>();
     if (crv) {
         (*crv)(core::view::CallRenderView::CALL_RESETVIEW);
     }
 }
 
 void GUIView::Resize(unsigned int width, unsigned int height) {
-    auto* crv = this->renderview_slot.CallAs<core::view::CallRenderView>();
+    auto* crv = this->renderViewSlot.CallAs<core::view::CallRenderView>();
     if (crv) {
         // der ganz ganz dicke "because-i-know"-Knüppel
         AbstractView* view = const_cast<AbstractView*>(
@@ -314,7 +314,7 @@ void GUIView::Resize(unsigned int width, unsigned int height) {
 }
 
 void GUIView::UpdateFreeze(bool freeze) {
-    auto* crv = this->renderview_slot.CallAs<core::view::CallRenderView>();
+    auto* crv = this->renderViewSlot.CallAs<core::view::CallRenderView>();
     if (crv) {
         auto callType = freeze ? core::view::CallRenderView::CALL_FREEZE : core::view::CallRenderView::CALL_UNFREEZE;
         (*crv)(callType);
@@ -322,7 +322,7 @@ void GUIView::UpdateFreeze(bool freeze) {
 }
 
 bool GUIView::OnKey(core::view::Key key, core::view::KeyAction action, core::view::Modifiers mods) {
-    ImGui::SetCurrentContext(this->imgui_context);
+    ImGui::SetCurrentContext(this->context);
 
     ImGuiIO& io = ImGui::GetIO();
 
@@ -404,7 +404,7 @@ bool GUIView::OnKey(core::view::Key key, core::view::KeyAction action, core::vie
             }
         }
     };
-    this->window_manager.EnumWindows(func);
+    this->windowManager.EnumWindows(func);
 
     // Always consume keyboard input if requested by any imgui widget (e.g. text input).
     // User expects hotkey priority of text input thus needs to be processed before parameter hotkeys.
@@ -419,7 +419,7 @@ bool GUIView::OnKey(core::view::Key key, core::view::KeyAction action, core::vie
             modules_list.emplace_back(m);
         }
     };
-    this->window_manager.EnumWindows(modfunc);
+    this->windowManager.EnumWindows(modfunc);
     hotkeyPressed = false;
     const core::Module* current_mod = nullptr;
     bool consider_module = false;
@@ -452,7 +452,7 @@ bool GUIView::OnKey(core::view::Key key, core::view::KeyAction action, core::vie
 
     // ------------------------------------------------------------------------
 
-    auto* crv = this->renderview_slot.template CallAs<core::view::CallRenderView>();
+    auto* crv = this->renderViewSlot.template CallAs<core::view::CallRenderView>();
     if (crv == nullptr) return false;
 
     core::view::InputEvent evt;
@@ -467,13 +467,13 @@ bool GUIView::OnKey(core::view::Key key, core::view::KeyAction action, core::vie
 }
 
 bool GUIView::OnChar(unsigned int codePoint) {
-    ImGui::SetCurrentContext(this->imgui_context);
+    ImGui::SetCurrentContext(this->context);
 
     ImGuiIO& io = ImGui::GetIO();
     io.ClearInputCharacters();
     if (codePoint > 0 && codePoint < 0x10000) io.AddInputCharacter((unsigned short)codePoint);
 
-    auto* crv = this->renderview_slot.CallAs<core::view::CallRenderView>();
+    auto* crv = this->renderViewSlot.CallAs<core::view::CallRenderView>();
     if (crv) {
         core::view::InputEvent evt;
         evt.tag = core::view::InputEvent::Tag::Char;
@@ -486,7 +486,7 @@ bool GUIView::OnChar(unsigned int codePoint) {
 }
 
 bool GUIView::OnMouseMove(double x, double y) {
-    ImGui::SetCurrentContext(this->imgui_context);
+    ImGui::SetCurrentContext(this->context);
 
     ImGuiIO& io = ImGui::GetIO();
     io.MousePos = ImVec2((float)x, (float)y);
@@ -495,7 +495,7 @@ bool GUIView::OnMouseMove(double x, double y) {
                       ImGuiHoveredFlags_AllowWhenBlockedByPopup | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem;
 
     if (!ImGui::IsWindowHovered(hoverFlags)) {
-        auto* crv = this->renderview_slot.CallAs<core::view::CallRenderView>();
+        auto* crv = this->renderViewSlot.CallAs<core::view::CallRenderView>();
         if (crv == nullptr) return false;
 
         core::view::InputEvent evt;
@@ -512,7 +512,7 @@ bool GUIView::OnMouseMove(double x, double y) {
 bool GUIView::OnMouseButton(
     core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) {
 
-    ImGui::SetCurrentContext(this->imgui_context);
+    ImGui::SetCurrentContext(this->context);
 
     bool down = (action == core::view::MouseButtonAction::PRESS);
     auto buttonIndex = static_cast<size_t>(button);
@@ -523,7 +523,7 @@ bool GUIView::OnMouseButton(
                       ImGuiHoveredFlags_AllowWhenBlockedByPopup | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem;
 
     if (!ImGui::IsWindowHovered(hoverFlags)) {
-        auto* crv = this->renderview_slot.CallAs<core::view::CallRenderView>();
+        auto* crv = this->renderViewSlot.CallAs<core::view::CallRenderView>();
         if (crv == nullptr) return false;
 
         core::view::InputEvent evt;
@@ -539,7 +539,7 @@ bool GUIView::OnMouseButton(
 }
 
 bool GUIView::OnMouseScroll(double dx, double dy) {
-    ImGui::SetCurrentContext(this->imgui_context);
+    ImGui::SetCurrentContext(this->context);
 
     ImGuiIO& io = ImGui::GetIO();
     io.MouseWheelH += (float)dx;
@@ -549,7 +549,7 @@ bool GUIView::OnMouseScroll(double dx, double dy) {
                       ImGuiHoveredFlags_AllowWhenBlockedByPopup | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem;
 
     if (!ImGui::IsWindowHovered(hoverFlags)) {
-        auto* crv = this->renderview_slot.CallAs<core::view::CallRenderView>();
+        auto* crv = this->renderViewSlot.CallAs<core::view::CallRenderView>();
         if (crv == nullptr) return false;
 
         core::view::InputEvent evt;
@@ -586,7 +586,7 @@ void GUIView::validateGUI() {
     if (this->profileParam.IsDirty()) {
         if (!ignoreProfileParamOnce) {
             auto profile = this->profileParam.Param<core::param::StringParam>()->Value();
-            this->window_manager.ProfileFromJSON(std::string(profile));
+            this->windowManager.ProfileFromJSON(std::string(profile));
         }
         this->profileParam.ResetDirty();
         ignoreProfileParamOnce = false;
@@ -594,7 +594,7 @@ void GUIView::validateGUI() {
         // TODO: serialize back to parameter only on demand, i.e., deferred after a couple of milliseconds without any
         // UI changes.
         std::string profile;
-        this->window_manager.ProfileToJSON(profile);
+        this->windowManager.ProfileToJSON(profile);
         this->profileParam.Param<core::param::StringParam>()->SetValue(profile.c_str());
         ignoreProfileParamOnce = true;
         profileMagic = 0;
@@ -602,7 +602,7 @@ void GUIView::validateGUI() {
 }
 
 bool GUIView::drawGUI(vislib::math::Rectangle<int> viewport, double instanceTime) {
-    ImGui::SetCurrentContext(this->imgui_context);
+    ImGui::SetCurrentContext(this->context);
 
     this->validateGUI();
 
@@ -614,39 +614,39 @@ bool GUIView::drawGUI(vislib::math::Rectangle<int> viewport, double instanceTime
     io.DisplaySize = ImVec2((float)viewportWidth, (float)viewportHeight);
     io.DisplayFramebufferScale = ImVec2(1.0, 1.0);
 
-    if ((instanceTime - this->last_instance_time) < 0.0) {
+    if ((instanceTime - this->lastInstanceTime) < 0.0) {
         vislib::sys::Log::DefaultLog.WriteWarn("[GUIView] Current instance time results in negative time delta.");
     }
-    io.DeltaTime = ((instanceTime - this->last_instance_time) > 0.0)
-                       ? (static_cast<float>(instanceTime - this->last_instance_time))
+    io.DeltaTime = ((instanceTime - this->lastInstanceTime) > 0.0)
+                       ? (static_cast<float>(instanceTime - this->lastInstanceTime))
                        : (io.DeltaTime);
-    this->last_instance_time =
-        ((instanceTime - this->last_instance_time) > 0.0) ? (instanceTime) : (this->last_instance_time + io.DeltaTime);
+    this->lastInstanceTime =
+        ((instanceTime - this->lastInstanceTime) > 0.0) ? (instanceTime) : (this->lastInstanceTime + io.DeltaTime);
 
     // Changes that need to be applied before next ImGui::Begin ---------------
     // Loading new font from font window
-    if (!this->load_new_font_filename.empty()) {
+    if (!this->newFontFilenameToLoad.empty()) {
         ImFontConfig config;
         config.OversampleH = 4;
         config.OversampleV = 1;
-        config.GlyphRanges = this->font_utf8_ranges.data();
-        io.Fonts->AddFontFromFileTTF(this->load_new_font_filename.c_str(), this->load_new_font_size, &config);
+        config.GlyphRanges = this->fontUtf8Ranges.data();
+        io.Fonts->AddFontFromFileTTF(this->newFontFilenameToLoad.c_str(), this->newFontSizeToLoad, &config);
         ImGui_ImplOpenGL3_CreateFontsTexture();
         /// Load last added font
         io.FontDefault = io.Fonts->Fonts[(io.Fonts->Fonts.Size - 1)];
-        this->load_new_font_filename.clear();
+        this->newFontFilenameToLoad.clear();
     }
     // Loading new font from profile
-    if (this->load_new_font_index >= 0) {
-        if (this->load_new_font_index < io.Fonts->Fonts.Size) {
-            io.FontDefault = io.Fonts->Fonts[this->load_new_font_index];
+    if (this->newFontIndexToLoad >= 0) {
+        if (this->newFontIndexToLoad < io.Fonts->Fonts.Size) {
+            io.FontDefault = io.Fonts->Fonts[this->newFontIndexToLoad];
         }
-        this->load_new_font_index = -1;
+        this->newFontIndexToLoad = -1;
     }
     // Deleting window
-    if (!this->delete_window.empty()) {
-        this->window_manager.DeleteWindowConfiguration(this->delete_window);
-        this->delete_window.clear();
+    if (!this->windowToDelete.empty()) {
+        this->windowManager.DeleteWindowConfiguration(this->windowToDelete);
+        this->windowToDelete.clear();
     }
 
     // Start new frame --------------------------------------------------------
@@ -657,13 +657,13 @@ bool GUIView::drawGUI(vislib::math::Rectangle<int> viewport, double instanceTime
         // Loading font from font window configuration independant if font window is shown
         if (wc.font_reset) {
             if (!wc.font_name.empty()) {
-                this->load_new_font_index = -1;
+                this->newFontIndexToLoad = -1;
                 for (int n = 0; n < io.Fonts->Fonts.Size; n++) {
                     if (std::string(io.Fonts->Fonts[n]->GetDebugName()) == wc.font_name) {
-                        this->load_new_font_index = n;
+                        this->newFontIndexToLoad = n;
                     }
                 }
-                if (this->load_new_font_index < 0) {
+                if (this->newFontIndexToLoad < 0) {
                     vislib::sys::Log::DefaultLog.WriteWarn(
                         "[GUIView] Could not find font '%s' for loaded profile.", wc.font_name.c_str());
                 }
@@ -679,16 +679,16 @@ bool GUIView::drawGUI(vislib::math::Rectangle<int> viewport, double instanceTime
             }
             // Apply soft reset of window position and size
             if (wc.win_soft_reset) {
-                this->window_manager.SoftResetWindowSizePos(wn, wc);
+                this->windowManager.SoftResetWindowSizePos(wn, wc);
                 wc.win_soft_reset = false;
             }
             // Apply reset after new profile has been loaded
             if (wc.win_reset) {
-                this->window_manager.ResetWindowOnProfileLoad(wn, wc);
+                this->windowManager.ResetWindowOnProfileLoad(wn, wc);
                 wc.win_reset = false;
             }
             // Calling callback drawing window content
-            auto cb = this->window_manager.WindowCallback(wc.win_callback);
+            auto cb = this->windowManager.WindowCallback(wc.win_callback);
             if (cb) {
                 cb(wn, wc);
             } else {
@@ -703,7 +703,7 @@ bool GUIView::drawGUI(vislib::math::Rectangle<int> viewport, double instanceTime
             ImGui::End();
         }
     };
-    this->window_manager.EnumWindows(func);
+    this->windowManager.EnumWindows(func);
 
     // Render the frame -------------------------------------------------------
     glViewport(0, 0, viewportWidth, viewportHeight);
@@ -733,7 +733,7 @@ void GUIView::drawMainWindowCallback(
 }
 
 void GUIView::drawTFWindowCallback(const std::string& window_name, WindowManager::WindowConfiguration& window_config) {
-    this->tf_editor.DrawTransferFunctionEditor();
+    this->tfEditor.DrawTransferFunctionEditor();
 }
 
 void GUIView::drawParametersCallback(
@@ -902,14 +902,14 @@ void GUIView::drawParametersCallback(
                 if (ImGui::MenuItem("Copy to new Window")) {
                     std::string window_name =
                         "Parameters###parameters" +
-                        std::to_string(this->last_instance_time); /// using instance time as hidden unique id
+                        std::to_string(this->lastInstanceTime); /// using instance time as hidden unique id
                     WindowManager::WindowConfiguration tmp_win;
                     tmp_win.win_show = true;
                     tmp_win.win_flags = ImGuiWindowFlags_HorizontalScrollbar;
                     tmp_win.win_callback = WindowManager::WindowDrawCallback::PARAM;
                     tmp_win.param_show_hotkeys = false;
                     tmp_win.param_modules_list.emplace_back(label);
-                    this->window_manager.AddWindowConfiguration(window_name, tmp_win);
+                    this->windowManager.AddWindowConfiguration(window_name, tmp_win);
                 }
                 // Deleting module's parameters is not available in main parameter window.
                 if (window_config.win_callback !=
@@ -1174,8 +1174,8 @@ void GUIView::drawFontWindowCallback(
     // Validate font file before offering load button
     if (HasFileExtension(window_config.font_new_filename, std::string(".ttf"))) {
         if (ImGui::Button("Add Font")) {
-            this->load_new_font_filename = window_config.font_new_filename;
-            this->load_new_font_size = window_config.font_new_size;
+            this->newFontFilenameToLoad = window_config.font_new_filename;
+            this->newFontSizeToLoad = window_config.font_new_size;
         }
     } else {
         ImGui::TextColored(style.Colors[ImGuiCol_ButtonHovered], "Please enter valid font file name");
@@ -1224,7 +1224,7 @@ void GUIView::drawMenu(void) {
             if (wc.win_hotkey.GetKey() == core::view::Key::KEY_UNKNOWN) {
                 if (ImGui::BeginPopupContextItem()) {
                     if (ImGui::MenuItem("Delete Window")) {
-                        this->delete_window = wn;
+                        this->windowToDelete = wn;
                     }
                     ImGui::EndPopup();
                 }
@@ -1235,7 +1235,7 @@ void GUIView::drawMenu(void) {
                     "and Position of Window.");
             }
         };
-        this->window_manager.EnumWindows(func);
+        this->windowManager.EnumWindows(func);
 
         ImGui::EndMenu();
     }
@@ -1337,11 +1337,11 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
 
             bool load_tf = false;
             param_label = "Load into Editor###editor" + param_id;
-            if (p == this->tf_editor.GetActiveParameter()) {
+            if (p == this->tfEditor.GetActiveParameter()) {
                 param_label = "Open Editor###editor" + param_id;
             }
             if (ImGui::Button(param_label.c_str())) {
-                this->tf_editor.SetActiveParameter(p);
+                this->tfEditor.SetActiveParameter(p);
                 load_tf = true;
                 // Open window calling the transfer function editor callback
                 const auto func = [&, this](const std::string& wn, WindowManager::WindowConfiguration& wc) {
@@ -1349,7 +1349,7 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
                         wc.win_show = true;
                     }
                 };
-                this->window_manager.EnumWindows(func);
+                this->windowManager.EnumWindows(func);
             }
             ImGui::SameLine();
             param_label = "Copy to Clipboard###clipboard" + param_id;
@@ -1371,7 +1371,7 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
             ImGui::SameLine();
             ImGui::Text("JSON");
 
-            if (p == this->tf_editor.GetActiveParameter()) {
+            if (p == this->tfEditor.GetActiveParameter()) {
                 ImGui::TextColored(style.Colors[ImGuiCol_ButtonHovered], "Currently loaded into Editor");
             }
 
@@ -1380,8 +1380,8 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
             ImGui::PopTextWrapPos();
 
             // Loading new transfer function string from parameter into editor
-            if (load_tf && (p == this->tf_editor.GetActiveParameter())) {
-                if (!this->tf_editor.SetTransferFunction(p->Value())) {
+            if (load_tf && (p == this->tfEditor.GetActiveParameter())) {
+                if (!this->tfEditor.SetTransferFunction(p->Value())) {
                     vislib::sys::Log::DefaultLog.WriteWarn(
                         "[GUIView] Could not load transfer function of parameter: %s.", param_id.c_str());
                 }

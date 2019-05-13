@@ -12,69 +12,57 @@ using namespace megamol::gui;
 using namespace megamol::core;
 
 
-megamol::gui::TransferFunctionEditor::TransferFunctionEditor(void)
+TransferFunctionEditor::TransferFunctionEditor(void)
     : Popup()
-    , active_param(nullptr)
+    , activeParameter(nullptr)
     , data()
-    , interpol_mode(param::TransferFunctionParam::InterpolationMode::LINEAR)
-    , tex_size(128)
-    , tex_data()
-    , tex_modified(false)
-    , plot_channels{false, false, false, true}
-    , point_select_node(0)
-    , point_select_chan(0)
-    , point_select_delta()
-    , imm_apply(false) {
-
+    , mode(param::TransferFunctionParam::InterpolationMode::LINEAR)
+    , textureSize(128)
+    , texturePixels()
+    , textureInvalid(false)
+    , activeChannels{false, false, false, true}
+    , currentNode(0)
+    , currentChannel(0)
+    , currentDragChange()
+    , immediateMode(false) {
     // Init transfer function colors
     this->data.clear();
     std::array<float, TFP_VAL_CNT> zero = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.05f};
     std::array<float, TFP_VAL_CNT> one = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.05f};
     this->data.emplace_back(zero);
     this->data.emplace_back(one);
-    this->tex_modified = true;
+    this->textureInvalid = true;
 }
 
-megamol::gui::TransferFunctionEditor::~TransferFunctionEditor(void) {
-
-    // Do not delete!
-    this->active_param = nullptr;
-}
-
-bool megamol::gui::TransferFunctionEditor::SetTransferFunction(const std::string& in_tfs) {
-
-    if (active_param == nullptr) {
+bool TransferFunctionEditor::SetTransferFunction(const std::string& tfs) {
+    if (activeParameter == nullptr) {
         vislib::sys::Log::DefaultLog.WriteWarn(
             "[TransferFunctionEditor] Set active parameter before loading transfer function");
         return false;
     }
 
-    bool retval = megamol::core::param::TransferFunctionParam::ParseTransferFunction(
-        in_tfs, this->data, this->interpol_mode, this->tex_size);
-
-    if (retval) {
-        this->tex_modified = true;
+    bool result = megamol::core::param::TransferFunctionParam::ParseTransferFunction(
+        tfs, this->data, this->mode, this->textureSize);
+    if (result) {
+        this->textureInvalid = true;
     }
 
-    return retval;
+    return result;
 }
 
-bool megamol::gui::TransferFunctionEditor::GetTransferFunction(std::string& out_tfs) {
-
+bool TransferFunctionEditor::GetTransferFunction(std::string& tfs) {
     return megamol::core::param::TransferFunctionParam::DumpTransferFunction(
-        out_tfs, this->data, this->interpol_mode, this->tex_size);
+        tfs, this->data, this->mode, this->textureSize);
 }
 
-bool megamol::gui::TransferFunctionEditor::DrawTransferFunctionEditor(void) {
-
+bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
     assert(ImGui::GetCurrentContext() != nullptr);
     ImGuiIO& io = ImGui::GetIO();
     ImGuiStyle& style = ImGui::GetStyle();
 
-    if (this->active_param == nullptr) {
-        ImGui::TextColored(style.Colors[ImGuiCol_ButtonHovered],
-            "No active parameter connected.\nChanges are ineffectual.\nLoad "
-            "transfer function via appropriate parameter.");
+    if (this->activeParameter == nullptr) {
+        ImGui::TextColored(style.Colors[ImGuiCol_ButtonHovered], "Changes have no effect.\n"
+                                                                 "Please set an active parameter!\n");
         ImGui::Separator();
     }
 
@@ -88,18 +76,18 @@ bool megamol::gui::TransferFunctionEditor::DrawTransferFunctionEditor(void) {
     assert(this->data.size() > 1);
 
     // Check if selected node is still in range
-    if (this->data.size() <= this->point_select_node) {
-        this->point_select_node = 0;
+    if (this->data.size() <= this->currentNode) {
+        this->currentNode = 0;
     }
 
     // Select color channels
-    ImGui::Checkbox("Red", &this->plot_channels[0]);
+    ImGui::Checkbox("Red", &this->activeChannels[0]);
     ImGui::SameLine();
-    ImGui::Checkbox("Green", &this->plot_channels[1]);
+    ImGui::Checkbox("Green", &this->activeChannels[1]);
     ImGui::SameLine();
-    ImGui::Checkbox("Blue", &this->plot_channels[2]);
+    ImGui::Checkbox("Blue", &this->activeChannels[2]);
     ImGui::SameLine();
-    ImGui::Checkbox("Alpha", &this->plot_channels[3]);
+    ImGui::Checkbox("Alpha", &this->activeChannels[3]);
     ImGui::SameLine(tfw_item_width + style.ItemSpacing.x + style.ItemInnerSpacing.x);
     ImGui::Text("Color Channels");
 
@@ -136,7 +124,7 @@ bool megamol::gui::TransferFunctionEditor::DrawTransferFunctionEditor(void) {
 
         // For each enabled color channel
         for (int c = 0; c < 4; ++c) {
-            if (!this->plot_channels[c]) continue;
+            if (!this->activeChannels[c]) continue;
 
             // Define line color
             ImU32 line_col = IM_COL32(255, 255, 255, 255); // for c == 3 (alpha)
@@ -148,14 +136,14 @@ bool megamol::gui::TransferFunctionEditor::DrawTransferFunctionEditor(void) {
             ImVec2 point_cur_pos = ImVec2(canvas_pos.x + this->data[i][4] * canvas_size.x,
                 canvas_pos.y + (1.0f - this->data[i][c]) * canvas_size.y);
 
-            if (this->interpol_mode == param::TransferFunctionParam::InterpolationMode::LINEAR) {
+            if (this->mode == param::TransferFunctionParam::InterpolationMode::LINEAR) {
                 if (i < (this->data.size() - 1)) {
                     ImVec2 point_next_pos = ImVec2(canvas_pos.x + this->data[i + 1][4] * canvas_size.x,
                         canvas_pos.y + (1.0f - this->data[i + 1][c]) * canvas_size.y);
 
                     draw_list->AddLine(point_cur_pos, point_next_pos, line_col, 4.0f);
                 }
-            } else if (this->interpol_mode == param::TransferFunctionParam::InterpolationMode::GAUSS) {
+            } else if (this->mode == param::TransferFunctionParam::InterpolationMode::GAUSS) {
                 const float ga = this->data[i][c];
                 const float gb = this->data[i][4];
                 const float gc = this->data[i][5];
@@ -190,7 +178,7 @@ bool megamol::gui::TransferFunctionEditor::DrawTransferFunctionEditor(void) {
 
             // Draw node point
             ImU32 point_border_col = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_TextDisabled]);
-            if (i == this->point_select_node) {
+            if (i == this->currentNode) {
                 point_border_col = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ButtonActive]);
             }
             draw_list->AddCircleFilled(point_cur_pos, point_radius, frame_back_col, circle_subdiv);
@@ -216,52 +204,48 @@ bool megamol::gui::TransferFunctionEditor::DrawTransferFunctionEditor(void) {
         (mouse_cur_pos.x < (canvas_pos.x + canvas_size.x + delta_border.x)) &&
         (mouse_cur_pos.y < (canvas_pos.y + canvas_size.y + delta_border.y))) {
 
-        // Left Click -> Change selected node selecteed node
         if (io.MouseClicked[0]) {
+            // Left Click -> Change selected node selected node
             if (selected_node >= 0) {
-                this->point_select_node = selected_node;
-                this->point_select_chan = selected_chan;
-                this->point_select_delta = selected_delta;
+                this->currentNode = selected_node;
+                this->currentChannel = selected_chan;
+                this->currentDragChange = selected_delta;
             }
-        }
-        // Left Move -> Move selected node
-        else if (io.MouseDown[0]) {
-
-            float new_x = (mouse_cur_pos.x - canvas_pos.x + this->point_select_delta.x) / canvas_size.x;
+        } else if (io.MouseDown[0]) {
+            // Left Move -> Move selected node
+            float new_x = (mouse_cur_pos.x - canvas_pos.x + this->currentDragChange.x) / canvas_size.x;
             new_x = std::max(0.0f, std::min(new_x, 1.0f));
-            if (this->point_select_node == 0) {
+            if (this->currentNode == 0) {
                 new_x = 0.0f;
-            } else if (this->point_select_node == (this->data.size() - 1)) {
+            } else if (this->currentNode == (this->data.size() - 1)) {
                 new_x = 1.0f;
-            } else if ((new_x <= this->data[this->point_select_node - 1][4]) ||
-                       (new_x >= this->data[this->point_select_node + 1][4])) {
-                new_x = this->data[this->point_select_node][4];
+            } else if ((new_x <= this->data[this->currentNode - 1][4]) ||
+                       (new_x >= this->data[this->currentNode + 1][4])) {
+                new_x = this->data[this->currentNode][4];
             }
-            this->data[this->point_select_node][4] = new_x;
+            this->data[this->currentNode][4] = new_x;
 
-            float new_y = 1.0f - ((mouse_cur_pos.y - canvas_pos.y + this->point_select_delta.y) / canvas_size.y);
+            float new_y = 1.0f - ((mouse_cur_pos.y - canvas_pos.y + this->currentDragChange.y) / canvas_size.y);
             new_y = std::max(0.0f, std::min(new_y, 1.0f));
 
-            if (this->plot_channels[0] && (this->point_select_chan == 0)) {
-                this->data[this->point_select_node][0] = new_y;
+            if (this->activeChannels[0] && (this->currentChannel == 0)) {
+                this->data[this->currentNode][0] = new_y;
             }
-            if (this->plot_channels[1] && (this->point_select_chan == 1)) {
-                this->data[this->point_select_node][1] = new_y;
+            if (this->activeChannels[1] && (this->currentChannel == 1)) {
+                this->data[this->currentNode][1] = new_y;
             }
-            if (this->plot_channels[2] && (this->point_select_chan == 2)) {
-                this->data[this->point_select_node][2] = new_y;
+            if (this->activeChannels[2] && (this->currentChannel == 2)) {
+                this->data[this->currentNode][2] = new_y;
             }
-            if (this->plot_channels[3] && (this->point_select_chan == 3)) {
-                this->data[this->point_select_node][3] = new_y;
+            if (this->activeChannels[3] && (this->currentChannel == 3)) {
+                this->data[this->currentNode][3] = new_y;
             }
-            this->tex_modified = true;
+            this->textureInvalid = true;
 
-        }
-        // Right Click -> Add/delete Node
-        else if (io.MouseClicked[1]) {
-
-            // Add new at current position
+        } else if (io.MouseClicked[1]) {
+            // Right Click -> Add/delete Node
             if (selected_node < 0) {
+                // Add new at current position
                 float new_x = (mouse_cur_pos.x - canvas_pos.x) / canvas_size.x;
                 new_x = std::max(0.0f, std::min(new_x, 1.0f));
 
@@ -278,32 +262,31 @@ bool megamol::gui::TransferFunctionEditor::DrawTransferFunctionEditor(void) {
                             (prev_col[1] + fol_col[1]) / 2.0f, (prev_col[2] + fol_col[2]) / 2.0f,
                             (prev_col[3] + fol_col[3]) / 2.0f, new_x, 0.05f};
 
-                        if (this->plot_channels[0]) {
+                        if (this->activeChannels[0]) {
                             new_col[0] = new_y;
                         }
-                        if (this->plot_channels[1]) {
+                        if (this->activeChannels[1]) {
                             new_col[1] = new_y;
                         }
-                        if (this->plot_channels[2]) {
+                        if (this->activeChannels[2]) {
                             new_col[2] = new_y;
                         }
-                        if (this->plot_channels[3]) {
+                        if (this->activeChannels[3]) {
                             new_col[3] = new_y;
                         }
                         this->data.insert(it, new_col);
-                        this->tex_modified = true;
+                        this->textureInvalid = true;
                         break;
                     }
                 }
-            }
-            // Delete currently hovered
-            else {
+            } else {
+                // Delete currently hovered
                 if ((selected_node > 0) && (selected_node < (this->data.size() - 1))) {
                     this->data.erase(this->data.begin() + selected_node);
-                    if (this->point_select_node == selected_node) {
-                        this->point_select_node = (unsigned int)std::max(0, (int)this->point_select_node - 1);
+                    if (this->currentNode == selected_node) {
+                        this->currentNode = (unsigned int)std::max(0, (int)this->currentNode - 1);
                     }
-                    this->tex_modified = true;
+                    this->textureInvalid = true;
                 }
             }
         }
@@ -313,43 +296,42 @@ bool megamol::gui::TransferFunctionEditor::DrawTransferFunctionEditor(void) {
     this->HelpMarkerToolTip("[Left-Click] Select Node\n[Left-Drag] Move Node\n[Right-Click] Add/Delete Node");
 
     // Value slider
-    float value = this->data[this->point_select_node][4];
+    float value = this->data[this->currentNode][4];
     if (ImGui::SliderFloat("Selected Value", &value, 0.0f, 1.0f)) {
         float new_x = value;
-        if (this->point_select_node == 0) {
+        if (this->currentNode == 0) {
             new_x = 0.0f;
-        } else if (this->point_select_node == (this->data.size() - 1)) {
+        } else if (this->currentNode == (this->data.size() - 1)) {
             new_x = 1.0f;
-        } else if ((new_x <= this->data[this->point_select_node - 1][4]) ||
-                   (new_x >= this->data[this->point_select_node + 1][4])) {
-            new_x = this->data[this->point_select_node][4];
+        } else if ((new_x <= this->data[this->currentNode - 1][4]) || (new_x >= this->data[this->currentNode + 1][4])) {
+            new_x = this->data[this->currentNode][4];
         }
-        this->data[this->point_select_node][4] = new_x;
-        this->tex_modified = true;
+        this->data[this->currentNode][4] = new_x;
+        this->textureInvalid = true;
     }
     std::string help = "[Ctrl-Click] for keyboard input";
     this->HelpMarkerToolTip(help);
 
     // Sigma slider
-    if (this->interpol_mode == param::TransferFunctionParam::InterpolationMode::GAUSS) {
-        float sigma = this->data[this->point_select_node][5];
+    if (this->mode == param::TransferFunctionParam::InterpolationMode::GAUSS) {
+        float sigma = this->data[this->currentNode][5];
         if (ImGui::SliderFloat("Selected Sigma", &sigma, 0.0f, 1.0f)) {
-            this->data[this->point_select_node][5] = sigma;
-            this->tex_modified = true;
+            this->data[this->currentNode][5] = sigma;
+            this->textureInvalid = true;
         }
         std::string help = "[Ctrl-Click] for keyboard input";
         this->HelpMarkerToolTip(help);
     }
 
     // Color editor for selected node
-    float edit_col[4] = {this->data[this->point_select_node][0], this->data[this->point_select_node][1],
-        this->data[this->point_select_node][2], this->data[this->point_select_node][3]};
+    float edit_col[4] = {this->data[this->currentNode][0], this->data[this->currentNode][1],
+        this->data[this->currentNode][2], this->data[this->currentNode][3]};
     if (ImGui::ColorEdit4("Selected Color", edit_col)) {
-        this->data[this->point_select_node][0] = edit_col[0];
-        this->data[this->point_select_node][1] = edit_col[1];
-        this->data[this->point_select_node][2] = edit_col[2];
-        this->data[this->point_select_node][3] = edit_col[3];
-        this->tex_modified = true;
+        this->data[this->currentNode][0] = edit_col[0];
+        this->data[this->currentNode][1] = edit_col[1];
+        this->data[this->currentNode][2] = edit_col[2];
+        this->data[this->currentNode][3] = edit_col[3];
+        this->textureInvalid = true;
     }
     help = "[Click] on the colored square to open a color picker.\n"
            "[CTRL+Click] on individual component to input value.\n"
@@ -357,24 +339,24 @@ bool megamol::gui::TransferFunctionEditor::DrawTransferFunctionEditor(void) {
     this->HelpMarkerToolTip(help);
 
     // Create current texture data
-    bool imm_apply_tex_modified = this->tex_modified;
-    if (this->tex_modified) {
-        if (this->interpol_mode == param::TransferFunctionParam::InterpolationMode::LINEAR) {
-            param::TransferFunctionParam::LinearInterpolation(this->tex_data, this->tex_size, this->data);
-        } else if (this->interpol_mode == param::TransferFunctionParam::InterpolationMode::GAUSS) {
-            param::TransferFunctionParam::GaussInterpolation(this->tex_data, this->tex_size, this->data);
+    bool imm_apply_tex_modified = this->textureInvalid;
+    if (this->textureInvalid) {
+        if (this->mode == param::TransferFunctionParam::InterpolationMode::LINEAR) {
+            param::TransferFunctionParam::LinearInterpolation(this->texturePixels, this->textureSize, this->data);
+        } else if (this->mode == param::TransferFunctionParam::InterpolationMode::GAUSS) {
+            param::TransferFunctionParam::GaussInterpolation(this->texturePixels, this->textureSize, this->data);
         }
-        this->tex_modified = false;
+        this->textureInvalid = false;
     }
 
     // Draw current transfer function texture
     const float texture_height = 30.0f;
     ImVec2 texture_pos = ImGui::GetCursorScreenPos();
-    ImVec2 rect_size = ImVec2(tfw_item_width / (float)this->tex_size, texture_height);
+    ImVec2 rect_size = ImVec2(tfw_item_width / (float)this->textureSize, texture_height);
     ImGui::InvisibleButton("texture", ImVec2(tfw_item_width, rect_size.y));
-    for (unsigned int i = 0; i < this->tex_size; ++i) {
-        ImU32 rect_col = ImGui::ColorConvertFloat4ToU32(ImVec4(
-            this->tex_data[4 * i], this->tex_data[4 * i + 1], this->tex_data[4 * i + 2], this->tex_data[4 * i + 3]));
+    for (unsigned int i = 0; i < this->textureSize; ++i) {
+        ImU32 rect_col = ImGui::ColorConvertFloat4ToU32(ImVec4(this->texturePixels[4 * i],
+            this->texturePixels[4 * i + 1], this->texturePixels[4 * i + 2], this->texturePixels[4 * i + 3]));
         ImVec2 rect_pos_a = ImVec2(texture_pos.x + (float)i * rect_size.x, texture_pos.y);
         ImVec2 rect_pos_b = ImVec2(rect_pos_a.x + rect_size.x, rect_pos_a.y + rect_size.y);
         draw_list->AddRectFilled(rect_pos_a, rect_pos_b, rect_col, 0.0f, 10);
@@ -383,10 +365,10 @@ bool megamol::gui::TransferFunctionEditor::DrawTransferFunctionEditor(void) {
     ImGui::Text("1D Texture");
 
     // Get new texture size
-    int tfw_texsize = (int)this->tex_size;
+    int tfw_texsize = (int)this->textureSize;
     if (ImGui::InputInt("Texture Size", &tfw_texsize, 1, 10, ImGuiInputTextFlags_EnterReturnsTrue)) {
-        this->tex_size = (UINT)std::max(1, tfw_texsize);
-        this->tex_modified = true; /// Changes are applied in next frame
+        this->textureSize = (UINT)std::max(1, tfw_texsize);
+        this->textureInvalid = true; /// Changes are applied in next frame
     }
 
     // Select interpolation mode (Linear, Gauss, ...)
@@ -394,12 +376,12 @@ bool megamol::gui::TransferFunctionEditor::DrawTransferFunctionEditor(void) {
     opts[param::TransferFunctionParam::InterpolationMode::LINEAR] = "Linear";
     opts[param::TransferFunctionParam::InterpolationMode::GAUSS] = "Gauss";
     int opts_cnt = opts.size();
-    if (ImGui::BeginCombo("Interpolation", opts[this->interpol_mode].c_str())) {
+    if (ImGui::BeginCombo("Interpolation", opts[this->mode].c_str())) {
         for (int i = 0; i < opts_cnt; ++i) {
             if (ImGui::Selectable(opts[(param::TransferFunctionParam::InterpolationMode)i].c_str(),
-                    (this->interpol_mode == (param::TransferFunctionParam::InterpolationMode)i))) {
-                this->interpol_mode = (param::TransferFunctionParam::InterpolationMode)i;
-                this->tex_modified = true; /// Changes are applied in next frame
+                    (this->mode == (param::TransferFunctionParam::InterpolationMode)i))) {
+                this->mode = (param::TransferFunctionParam::InterpolationMode)i;
+                this->textureInvalid = true; /// Changes are applied in next frame
             }
         }
         ImGui::EndCombo();
@@ -411,19 +393,19 @@ bool megamol::gui::TransferFunctionEditor::DrawTransferFunctionEditor(void) {
         ret_val = true;
     }
     ImGui::SameLine();
-    if (ImGui::Checkbox("Apply Changes Immediately", &this->imm_apply)) {
-        ret_val = this->imm_apply;
+    if (ImGui::Checkbox("Apply Changes Immediately", &this->immediateMode)) {
+        ret_val = this->immediateMode;
     }
 
-    if (this->imm_apply && imm_apply_tex_modified) {
+    if (this->immediateMode && imm_apply_tex_modified) {
         ret_val = true;
     }
 
     if (ret_val) {
-        if (this->active_param != nullptr) {
+        if (this->activeParameter != nullptr) {
             std::string tf;
             if (this->GetTransferFunction(tf)) {
-                this->active_param->SetValue(tf);
+                this->activeParameter->SetValue(tf);
             }
         }
     }

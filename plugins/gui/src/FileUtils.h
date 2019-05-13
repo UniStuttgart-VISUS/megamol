@@ -13,7 +13,6 @@
 #    pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-#include <cassert>
 #include <string>
 
 #if _HAS_CXX17
@@ -60,19 +59,19 @@ inline bool HasFileExtension(PathType path, std::string ext) {
  * Search recursively for file or path beginning at given directory.
  *
  * @param file          The file to search for.
- * @param search_path   The path of a directory as start for recursive search.
+ * @param searchPath   The path of a directory as start for recursive search.
  *
  * @return              The complete path of the found file, empty string otherwise.
  */
-inline std::string SearchFileRecursive(std::string file, PathType search_path) {
-    std::string found_file_path;
-    for (auto& entry : ns_fs::recursive_directory_iterator(search_path)) {
+inline std::string SearchFileRecursive(std::string file, PathType searchPath) {
+    std::string foundPath;
+    for (const auto& entry : ns_fs::recursive_directory_iterator(searchPath)) {
         if (entry.path().filename().generic_string() == file) {
-            found_file_path = entry.path().generic_string();
+            foundPath = entry.path().generic_string();
             break;
         }
     }
-    return found_file_path;
+    return foundPath;
 }
 
 } // namespace gui

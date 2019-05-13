@@ -6,8 +6,8 @@
  */
 
 
-#ifndef MEGAMOL_GUI_WIDGETUTILS_H_INCLUDED
-#define MEGAMOL_GUI_WIDGETUTILS_H_INCLUDED
+#ifndef MEGAMOL_GUI_POPUP_H_INCLUDED
+#define MEGAMOL_GUI_POPUP_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -52,24 +52,24 @@ public:
     /**
      * Open PopUp asking for user input.
      *
-     * @param popup_name   The popup title.
-     * @param request      The descriptopn of the requested text input (e.g. file name).
-     * @param open         The flag indicating that the popup should be opened.
+     * @param title    The popup title.
+     * @param request  The descriptopn of the requested text input (e.g. file name).
+     * @param open     The flag indicating that the popup should be opened.
      *
      * @return The captured text input.
      */
-    std::string InputDialogPopUp(std::string popup_name, std::string request, bool open);
+    std::string InputDialogPopUp(std::string title, std::string request, bool open);
 
 private:
     /** Current tooltip hover time. */
-    float tooltip_time;
+    float tooltipTime;
 
     /** Current hovered tooltip item. */
-    ImGuiID tooltip_id;
+    ImGuiID tooltipId;
 };
 
 
 } // namespace gui
 } // namespace megamol
 
-#endif // MEGAMOL_GUI_WIDGETUTILS_H_INCLUDED
+#endif // MEGAMOL_GUI_POPUP_H_INCLUDED
