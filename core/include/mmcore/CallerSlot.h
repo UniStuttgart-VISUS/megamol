@@ -77,7 +77,7 @@ namespace core {
         bool ConnectCall(megamol::core::Call *call) {
             vislib::sys::AbstractReaderWriterLock *lock = NULL;
             if (this->Parent()) {
-                lock = &this->Parent()->ModuleGraphLock();
+                lock = &this->Parent()->ModuleGraphLock(); // TODO << This is a potential HAZARD!!!! Can lock ModuleGraph while ModuleGraph is already locked
                 lock->LockExclusive();
             }
 

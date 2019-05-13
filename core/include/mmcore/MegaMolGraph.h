@@ -6,6 +6,7 @@
 
 #include <functional>
 #include <mutex>
+#include <shared_mutex>
 #include <string>
 #include <vector>
 #include "mmcore/Call.h"
@@ -70,6 +71,14 @@ public:
     using CallInstantiationRequest_t = CallInstantiationRequest;
 
     using CallInstantiationQueue_t = AbstractUpdateQueue<CallInstantiationRequest_t>;
+
+    using ModuleDescr_t = std::pair<Module::ptr_type, std::string>;
+
+    using ModuleList_t = std::vector<ModuleDescr_t>;
+
+    using CallDescr_t = std::pair<Call::ptr_type, std::string>;
+
+    using CallList_t = std::vector<CallDescr_t>;
 
 
     //////////////////////////// ctor / dtor ///////////////////////////////
@@ -175,6 +184,12 @@ public:
     //////////////////////////// find methods ////////////////////////////////////
     std::shared_ptr<param::AbstractParam> FindParameter(std::string const& name, bool quiet = false) const;
 
+    //////////////////////////// enumerators /////////////////////////////////////
+    /*
+     * ModulGraph braucht einen ReadWriterLock. Enumerate const Operatoren können endlich sinnvoll implementiert werden.
+     * 
+     */
+
 private:
     template <typename Q, typename Arg> bool push_queue_element(Q& q, Arg&& arg) {
         q.Push(std::forward<Arg>(arg));
@@ -200,6 +215,13 @@ private:
 
     /** Queue for call instantiations */
     CallInstantiationQueue_t call_instantiation_queue_;
+
+    ModuleList_t module_list_;
+
+    CallList_t call_list_;
+
+    /** Reader/Writer mutex for the graph */
+    std::shared_mutex graph_lock_;
 
 
     ////////////////////////// old interface stuff //////////////////////////////////////////////

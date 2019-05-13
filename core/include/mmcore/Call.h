@@ -11,6 +11,8 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include <memory>
+
 #include "mmcore/api/MegaMolCore.std.h"
 
 
@@ -28,7 +30,7 @@ namespace core {
     /**
      * Base class of rendering graph calls
      */
-    class MEGAMOLCORE_API Call {
+    class MEGAMOLCORE_API Call : public std::enable_shared_from_this<Call> {
     public:
 
         /** The description generates the function map */
@@ -39,6 +41,15 @@ namespace core {
 
         /** The caller slot registeres itself in the call */
         friend class CallerSlot;
+
+        /** Shared ptr type alias */
+        using ptr_type = std::shared_ptr<Call>;
+
+        /** Shared ptr type alias */
+        using const_ptr_type = std::shared_ptr<const Call>;
+
+        /** Weak ptr type alias */
+        using weak_ptr_type = std::weak_ptr<Call>;
 
         /** Ctor. */
         Call(void);

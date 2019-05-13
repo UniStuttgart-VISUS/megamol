@@ -246,37 +246,49 @@ public:
     /**
      * Request deletion of the module with the given id.
      */
+    #ifdef REMOVE_GRAPH
     bool GOES_INTO_GRAPH RequestModuleDeletion(const vislib::StringA& id);
+    #endif
+    
 
     /**
      * Request deletion of call connecting callerslot from
      * to calleeslot to.
      */
+#    ifdef REMOVE_GRAPH
     bool GOES_INTO_GRAPH RequestCallDeletion(const vislib::StringA& from, const vislib::StringA& to);
+    #endif
 
     /**
      * Request instantiation of a module of class className
      * with the name id.
      */
+#        ifdef REMOVE_GRAPH
     bool GOES_INTO_GRAPH RequestModuleInstantiation(const vislib::StringA& className, const vislib::StringA& id);
+    #endif
 
     /**
      * Request instantiation of a call of class className, connecting
      * Callerslot from to Calleeslot to.
      */
+#            ifdef REMOVE_GRAPH
     bool GOES_INTO_GRAPH RequestCallInstantiation(
         const vislib::StringA& className, const vislib::StringA& from, const vislib::StringA& to);
+    #endif
 
     /**
      * Request instantiation of a call at the end of a chain of calls of
      * type className. See Daisy-Chaining Paradigm.
      */
+#    ifdef REMOVE_GRAPH
     bool GOES_INTO_GRAPH RequestChainCallInstantiation(
         const vislib::StringA& className, const vislib::StringA& chainStart, const vislib::StringA& to);
+    #endif
 
     /**
      * Request setting the parameter id to the value.
      */
+#    ifdef REMOVE_GRAPH
     bool GOES_INTO_GRAPH RequestParamValue(const vislib::StringA& id, const vislib::StringA& value);
 
     bool GOES_INTO_GRAPH CreateParamGroup(const vislib::StringA& name, const int size);
@@ -322,6 +334,7 @@ public:
                !this->pendingChainCallInstRequests.IsEmpty() || !this->pendingModuleDelRequests.IsEmpty() ||
                !this->pendingModuleInstRequests.IsEmpty() || !this->pendingParamSetRequests.IsEmpty();
     }
+    #endif
 
     vislib::StringA GetPendingViewName(void);
 
@@ -347,6 +360,7 @@ public:
      */
     JobInstance::ptr_type InstantiatePendingJob(void);
 
+    #    ifdef REMOVE_GRAPH
     /**
      * Returns a pointer to the parameter with the given name.
      *
@@ -394,11 +408,12 @@ public:
      * @return The found parameter or NULL if no parameter with this name
      *         exists.
      */
-    inline vislib::SmartPtr<param::AbstractParam> FindParameter(
+    inline vislib::SmartPtr<param::AbstractParam> GOES_INTO_GRAPH FindParameter(
         const vislib::StringW& name, bool quiet = false, bool create = false) {
         // absolutly sufficient, since module namespaces use ANSI strings
         return this->FindParameter(vislib::StringA(name), quiet, create);
     }
+    #endif
 
     /**
      * Loads a project into the core.
@@ -414,6 +429,7 @@ public:
      */
     void LoadProject(const vislib::StringW& filename);
 
+    #    ifdef REMOVE_GRAPH
     /**
      * Serializes the current graph into lua commands.
      *
@@ -610,6 +626,7 @@ public:
     inline vislib::StringA GOES_INTO_GRAPH FindParameterName(const vislib::SmartPtr<param::AbstractParam>& param) const {
         return this->findParameterName(this->namespaceRoot, param);
     }
+    #endif
 
     /**
      * Answer the time of this instance in seconds.
@@ -628,10 +645,12 @@ public:
      */
     void OffsetInstanceTime(double offset);
 
+    #    ifdef REMOVE_GRAPH
     /**
      * Removes all obsolete modules from the module graph
      */
     void GOES_INTO_GRAPH CleanupModuleGraph(void);
+    #endif
 
     /**
      * Closes a view or job handle (the corresponding instance object will
@@ -646,6 +665,7 @@ public:
      */
     void Shutdown(void);
 
+    #    ifdef REMOVE_GRAPH
     /**
      * Sets up the module graph based on the serialized graph description
      * from the head node of the network rendering cluster.
@@ -703,6 +723,7 @@ public:
     inline void GOES_INTO_GRAPH UnregisterParamUpdateListener(param::ParamUpdateListener* pul) {
         this->paramUpdateListeners.RemoveAll(pul);
     }
+    #endif
 
     /**
      * Tries to perform a quickstart with the given data file
@@ -728,6 +749,7 @@ public:
     void QuickstartRegistry(const vislib::TString& frontend, const vislib::TString& feparams,
         const vislib::TString& filetype, bool unreg, bool overwrite);
 
+    #    ifdef REMOVE_GRAPH
     /**
      * Answer the root object of the module graph.
      * Used for internal computations only
@@ -735,6 +757,7 @@ public:
      * @return The root object of the module graph
      */
     inline RootModuleNamespace::const_ptr_type GOES_INTO_TRASH ModuleGraphRoot(void) const { return this->namespaceRoot; }
+#endif
 
     /**
      * Writes the current state of the call graph to an xml file.
@@ -1013,6 +1036,7 @@ private:
      */
     void addProject(megamol::core::utility::xml::XmlReader& reader);
 
+    #    ifdef REMOVE_GRAPH
     /**
      * Enumerates all parameters to collect parameter hashes.
      *
@@ -1046,6 +1070,7 @@ private:
      */
     vislib::StringA GOES_INTO_TRASH findParameterName(
         ModuleNamespace::const_ptr_type path, const vislib::SmartPtr<param::AbstractParam>& param) const;
+    #endif
 
     /**
      * Closes a view or job handle (the corresponding instance object will
@@ -1071,6 +1096,7 @@ private:
      */
     void loadPlugin(const vislib::TString& filename);
 
+    #    ifdef REMOVE_GRAPH
     /**
      * Compares two maps storing the association between
      * parameter names and hashes.
@@ -1081,6 +1107,7 @@ private:
      * @return      True, if map "one" and "other" are the same
      */
     bool GOES_INTO_GRAPH mapCompare(ParamHashMap_t& one, ParamHashMap_t& other);
+    #endif
 
     /**
      * Auto-connects a view module graph from 'from' to 'to' upwards
@@ -1126,6 +1153,7 @@ private:
     void unregisterQuickstart(const vislib::TString& frontend, const vislib::TString& feparams,
         const vislib::TString& fnext, const vislib::TString& fnname, bool keepothers);
 
+    #    ifdef REMOVE_GRAPH
     /**
      * Updates flush index list after flush has been performed
      *
@@ -1151,6 +1179,7 @@ private:
      * @param list The flush index list to update
      */
     void GOES_INTO_GRAPH shortenFlushIdxList(size_t const eventCount, std::vector<size_t>& list);
+    #endif
 
 #ifdef _WIN32
 #    pragma warning(disable : 4251)
@@ -1196,6 +1225,7 @@ private:
     /** The list of pending jobs to be instantiated */
     vislib::SingleLinkedList<JobInstanceRequest> pendingJobInstRequests;
 
+    #    ifdef REMOVE_GRAPH
     /** the list of calls to be instantiated: (class,(from,to))* */
     vislib::SingleLinkedList<core::InstanceDescription::CallInstanceRequest> GOES_INTO_GRAPH pendingCallInstRequests;
 
@@ -1259,6 +1289,7 @@ private:
      * invoked from another thread (the LuaRemoteHost, for example).
      */
     mutable vislib::sys::CriticalSection GOES_INTO_GRAPH graphUpdateLock;
+    #endif
 
     /** The module namespace root */
     RootModuleNamespace::ptr_type namespaceRoot;
@@ -1266,8 +1297,10 @@ private:
     /** the time offset */
     double timeOffset;
 
+    #    ifdef REMOVE_GRAPH
     /** List of registered param update listeners */
     vislib::SingleLinkedList<param::ParamUpdateListener*> GOES_INTO_GRAPH paramUpdateListeners;
+    #endif
 
     /** The manager of loaded plugins */
     utility::plugins::PluginManager* plugins;
@@ -1275,11 +1308,13 @@ private:
     /** The manager of registered services */
     utility::ServiceManager* services;
 
+    #    ifdef REMOVE_GRAPH
     /** Map of all parameter hashes (as requested by GetFullParameterHash)*/
     ParamHashMap_t GOES_INTO_GRAPH lastParamMap;
 
     /** Global hash of all parameters (is increased if any parameter defintion changes) */
     size_t GOES_INTO_GRAPH parameterHash;
+    #endif
 
 #ifdef _WIN32
 #    pragma warning(default : 4251)
