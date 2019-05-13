@@ -38,7 +38,7 @@ public:
     enum WindowDrawCallback { NONE = 0, MAIN = 1, PARAM = 2, FPSMS = 3, FONT = 4, TF = 5 };
 
     /** Performance mode for fps/ms windows. */
-    enum FpsMsMode { FPS = 0, MS = 1 };
+    enum TimingMode { FPS = 0, MS = 1 };
 
     /** Module filter mode for parameter windows. */
     enum FilterMode { ALL = 0, INSTANCE = 1, VIEW = 2 };
@@ -62,7 +62,7 @@ public:
         bool fpsms_show_options;             // Show/hide fps/ms options.
         int fpsms_max_value_count;           // Maximum count of values in value array
         float fpsms_max_delay;               // Maximum delay when fps/ms value should be renewed.
-        FpsMsMode fpsms_mode;                // mode for displaying either FPS or MS
+        TimingMode fpsms_mode;               // mode for displaying either FPS or MS
         float fpsms_current_delay;           // current delay between frames (not saved in profile)
         std::vector<float> fpsms_fps_values; // current fps values (not saved in profile)
         std::vector<float> fpsms_ms_values;  // current ms values (not saved in profile)
@@ -92,7 +92,7 @@ public:
             , fpsms_show_options(false)
             , fpsms_max_value_count(20)
             , fpsms_max_delay(2.0f)
-            , fpsms_mode(FpsMsMode::FPS)
+            , fpsms_mode(TimingMode::FPS)
             , fpsms_current_delay(0.0f)
             , fpsms_fps_values()
             , fpsms_ms_values()

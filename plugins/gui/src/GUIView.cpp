@@ -140,8 +140,11 @@ bool GUIView::create() {
     // MAIN Window ------------------------------------------------------------
     tmp_win.win_show = true;
     tmp_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F12);
-    tmp_win.win_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_HorizontalScrollbar;
+    tmp_win.win_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoTitleBar;
     tmp_win.win_callback = WindowManager::WindowDrawCallback::MAIN;
+    tmp_win.win_position = ImVec2(12, 12);
+    tmp_win.win_size = ImVec2(250, 600);
+    tmp_win.win_reset = true;
     this->windowManager.AddWindowConfiguration("MegaMol", tmp_win);
 
     // FPS/MS Window ----------------------------------------------------------
@@ -149,14 +152,14 @@ bool GUIView::create() {
     tmp_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F11);
     tmp_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar;
     tmp_win.win_callback = WindowManager::WindowDrawCallback::FPSMS;
-    this->windowManager.AddWindowConfiguration("FPS", tmp_win);
+    this->windowManager.AddWindowConfiguration("Performance Metrics", tmp_win);
 
     // FONT Window ------------------------------------------------------------
     tmp_win.win_show = false;
     tmp_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F10);
     tmp_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize;
     tmp_win.win_callback = WindowManager::WindowDrawCallback::FONT;
-    this->windowManager.AddWindowConfiguration("Fonts", tmp_win);
+    this->windowManager.AddWindowConfiguration("Font Settings", tmp_win);
 
     // TRANSFER FUNCTION Window -----------------------------------------------
     tmp_win.win_show = false;
@@ -194,8 +197,7 @@ bool GUIView::create() {
     // Load initial fonts only once for all imgui contexts
     if (!other_context) {
         ImFontConfig config;
-        config.OversampleH = 4;
-        config.OversampleV = 1;
+        config.OversampleH = 6;
         config.GlyphRanges = this->fontUtf8Ranges.data();
         // Add default font
         io.Fonts->AddFontDefault(&config);
@@ -203,27 +205,19 @@ bool GUIView::create() {
         std::string font_file, font_path;
         const vislib::Array<vislib::StringW>& searchPaths =
             this->GetCoreInstance()->Configuration().ResourceDirectories();
-        int spcnt = (int)searchPaths.Count();
-        for (int i = 0; i < spcnt; ++i) {
-            font_file = "Proggy_Tiny.ttf";
-            font_path = SearchFileRecursive(font_file, std::wstring(searchPaths[i].PeekBuffer()));
-            if (!font_path.empty()) {
-                io.Fonts->AddFontFromFileTTF(font_path.c_str(), 10.0f, &config);
-            }
-            font_file = "Roboto_Regular.ttf";
-            font_path = SearchFileRecursive(font_file, std::wstring(searchPaths[i].PeekBuffer()));
-            if (!font_path.empty()) {
-                io.Fonts->AddFontFromFileTTF(font_path.c_str(), 18.0f, &config);
-            }
-            font_file = "Ubuntu_Mono_Regular.ttf";
-            font_path = SearchFileRecursive(font_file, std::wstring(searchPaths[i].PeekBuffer()));
+        for (size_t i = 0; i < searchPaths.Count(); ++i) {
+            std::wstring searchPath(searchPaths[i].PeekBuffer());
+            font_file = "Roboto-Regular.ttf";
+            font_path = SearchFileRecursive(font_file, searchPath);
             if (!font_path.empty()) {
                 io.Fonts->AddFontFromFileTTF(font_path.c_str(), 15.0f, &config);
+                // Set as default.
+                io.FontDefault = io.Fonts->Fonts[(io.Fonts->Fonts.Size - 1)];
             }
-            font_file = "Evolventa-Regular.ttf";
-            font_path = SearchFileRecursive(font_file, std::wstring(searchPaths[i].PeekBuffer()));
+            font_file = "SourceCodePro-Regular.ttf";
+            font_path = SearchFileRecursive(font_file, searchPath);
             if (!font_path.empty()) {
-                io.Fonts->AddFontFromFileTTF(font_path.c_str(), 20.0f, &config);
+                io.Fonts->AddFontFromFileTTF(font_path.c_str(), 15.0f, &config);
             }
         }
     }
@@ -687,6 +681,7 @@ bool GUIView::drawGUI(vislib::math::Rectangle<int> viewport, double instanceTime
                 this->windowManager.ResetWindowOnProfileLoad(wn, wc);
                 wc.win_reset = false;
             }
+
             // Calling callback drawing window content
             auto cb = this->windowManager.WindowCallback(wc.win_callback);
             if (cb) {
@@ -1064,21 +1059,21 @@ void GUIView::drawFpsWindowCallback(const std::string& window_name, WindowManage
     }
 
     // Draw window content
-    if (ImGui::RadioButton("fps", (window_config.fpsms_mode == WindowManager::FpsMsMode::FPS))) {
-        window_config.fpsms_mode = WindowManager::FpsMsMode::FPS;
+    if (ImGui::RadioButton("fps", (window_config.fpsms_mode == WindowManager::TimingMode::FPS))) {
+        window_config.fpsms_mode = WindowManager::TimingMode::FPS;
     }
     ImGui::SameLine();
-    if (ImGui::RadioButton("ms", (window_config.fpsms_mode == WindowManager::FpsMsMode::MS))) {
-        window_config.fpsms_mode = WindowManager::FpsMsMode::MS;
+    if (ImGui::RadioButton("ms", (window_config.fpsms_mode == WindowManager::TimingMode::MS))) {
+        window_config.fpsms_mode = WindowManager::TimingMode::MS;
     }
 
     ImGui::SameLine(0.0f, 50.0f);
     ImGui::Checkbox("Options", &window_config.fpsms_show_options);
 
-    // Default for window_config.fpsms_mode == WindowManager::FpsMsMode::FPS
+    // Default for window_config.fpsms_mode == WindowManager::TimingMode::FPS
     std::vector<float>* arr = &window_config.fpsms_fps_values;
     float val_scale = window_config.fpsms_fps_value_scale;
-    if (window_config.fpsms_mode == WindowManager::FpsMsMode::MS) {
+    if (window_config.fpsms_mode == WindowManager::TimingMode::MS) {
         arr = &window_config.fpsms_ms_values;
         val_scale = window_config.fpsms_ms_value_scale;
     }
@@ -1091,7 +1086,7 @@ void GUIView::drawFpsWindowCallback(const std::string& window_name, WindowManage
         stream << std::fixed << std::setprecision(3) << arr->back();
         val = stream.str();
     }
-    ImGui::PlotHistogram(
+    ImGui::PlotLines(
         "###fpsmsplot", data, count, 0, val.c_str(), 0.0f, val_scale, ImVec2(0.0f, 50.0f)); /// use hidden label
 
     if (window_config.fpsms_show_options) {
@@ -1106,7 +1101,7 @@ void GUIView::drawFpsWindowCallback(const std::string& window_name, WindowManage
         this->popup.HelpMarkerToolTip(help);
 
         int mvc = window_config.fpsms_max_value_count;
-        if (ImGui::InputInt("Stored Values Count", &mvc, 0, 0, ImGuiInputTextFlags_EnterReturnsTrue)) {
+        if (ImGui::InputInt("History Size", &mvc, 0, 0, ImGuiInputTextFlags_EnterReturnsTrue)) {
             // Validate refresh rate
             window_config.fpsms_max_value_count = std::max(0, mvc);
         }
@@ -1210,7 +1205,7 @@ void GUIView::drawMenu(void) {
     }
 
     // Windows
-    if (ImGui::BeginMenu("Views")) {
+    if (ImGui::BeginMenu("Window")) {
         const auto func = [&, this](const std::string& wn, WindowManager::WindowConfiguration& wc) {
             bool win_open = wc.win_show;
             std::string hotkey_label = wc.win_hotkey.ToString();
@@ -1455,15 +1450,14 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
             vislib::StringA valueString;
             vislib::UTF8Encoder::Encode(valueString, param->ValueString());
 
-            size_t bufferLength = GUI_MAX_BUFFER_LEN; /// std::min(4096, (valueString.Length() + 1) * 2);
-            char* buffer = new char[bufferLength];
-            memcpy(buffer, valueString.PeekBuffer(), valueString.Length() + 1);
+            std::vector<char> buffer(GUI_MAX_BUFFER_LEN, '\0');
+            memcpy(buffer.data(), valueString.PeekBuffer(), std::min(GUI_MAX_BUFFER_LEN, valueString.Length() + 1));
 
-            if (ImGui::InputText(param_label.c_str(), buffer, bufferLength, ImGuiInputTextFlags_EnterReturnsTrue)) {
-                vislib::UTF8Encoder::Decode(valueString, vislib::StringA(buffer));
+            if (ImGui::InputText(
+                    param_label.c_str(), buffer.data(), buffer.size(), ImGuiInputTextFlags_EnterReturnsTrue)) {
+                vislib::UTF8Encoder::Decode(valueString, vislib::StringA(buffer.data()));
                 param->ParseValue(valueString);
             }
-            delete[] buffer;
 
             help = "Press [Return] to confirm changes.";
         }

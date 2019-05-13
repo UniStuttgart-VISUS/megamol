@@ -231,7 +231,7 @@ bool WindowManager::ProfileFromJSON(const std::string& json_string) {
             }
             // mode
             if (config_values.at("fpsms_mode").is_number_integer()) {
-                tmp_config.fpsms_mode = (FpsMsMode)config_values.at("fpsms_mode").get<int>();
+                tmp_config.fpsms_mode = (TimingMode)config_values.at("fpsms_mode").get<int>();
             } else {
                 valid = false;
             }
