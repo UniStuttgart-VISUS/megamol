@@ -9,6 +9,8 @@
  * TODO:
  *
  * - Fix lost keyboard/mouse input for low frame rates
+ * - TextInput should not be limited to GUI_MAX_BUFFER_LEN
+ * - The WindowManager should be managing window positions (or start using ImguiDock?)
  *
  * USED HOKEYS:
  *
@@ -210,7 +212,7 @@ bool GUIView::create() {
             font_file = "Roboto-Regular.ttf";
             font_path = SearchFileRecursive(font_file, searchPath);
             if (!font_path.empty()) {
-                io.Fonts->AddFontFromFileTTF(font_path.c_str(), 15.0f, &config);
+                io.Fonts->AddFontFromFileTTF(font_path.c_str(), 11.0f, &config);
                 // Set as default.
                 io.FontDefault = io.Fonts->Fonts[(io.Fonts->Fonts.Size - 1)];
             }
@@ -1151,13 +1153,12 @@ void GUIView::drawFontWindowCallback(
     std::string label = "Font Filename (.ttf)";
     vislib::StringA valueString;
     vislib::UTF8Encoder::Encode(valueString, vislib::StringA(window_config.font_new_filename.c_str()));
-    size_t bufferLength = GUI_MAX_BUFFER_LEN;
-    char* buffer = new char[bufferLength];
-    memcpy(buffer, valueString.PeekBuffer(), valueString.Length() + 1);
-    ImGui::InputText(label.c_str(), buffer, bufferLength);
-    vislib::UTF8Encoder::Decode(valueString, vislib::StringA(buffer));
+    std::vector<char> buffer(GUI_MAX_BUFFER_LEN, '\0');
+    memcpy(buffer.data(), valueString.PeekBuffer(), valueString.Length() + 1);
+    ImGui::InputText(label.c_str(), buffer.data(), buffer.size());
+    vislib::UTF8Encoder::Decode(valueString, vislib::StringA(buffer.data()));
     window_config.font_new_filename = valueString.PeekBuffer();
-    delete[] buffer;
+
 
     label = "Font Size";
     ImGui::InputFloat(label.c_str(), &window_config.font_new_size, 0.0f, 0.0f, "%.2f", ImGuiInputTextFlags_None);
