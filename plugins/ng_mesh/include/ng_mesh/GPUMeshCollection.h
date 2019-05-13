@@ -71,7 +71,10 @@ namespace megamol {
 					GLenum                                                 primitive_type,
 					bool                                                   store_seperate = false);
 
-			void clear() { m_batched_meshes.clear(); }
+			void clear() {
+				m_batched_meshes.clear();
+                m_sub_mesh_data.clear();
+			}
 
 			std::vector<BatchedMeshes> const& getMeshes();
 

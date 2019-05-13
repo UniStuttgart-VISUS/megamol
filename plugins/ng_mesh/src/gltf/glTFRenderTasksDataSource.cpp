@@ -119,23 +119,26 @@ bool megamol::ngmesh::GlTFRenderTasksDataSource::getDataCallback(core::Call & ca
 		};
 
 		// Place lights in icosahedron pattern
-        float x = 0.525731112119133606f * 90.9f;
-        float z = 0.850650808352039932f * 90.9f;
+        float x = 0.525731112119133606f * 1000.0f;
+        float z = 0.850650808352039932f * 1000.0f;
 
         std::vector<LightParams> lights = {
-			{-x, 0.0f, z,  0.1f},
-			{x, 0.0f, z,   0.1f}, 
-			{-x, 0.0f, -z, 0.1f},
-			{x, 0.0f, -z,  0.1f},
-			{0.0f, z, x,   0.1f},
-			{0.0f, z, -x,  0.1f},
-			{0.0f, -z, x,  0.1f},
-			{0.0f, -z, -x, 0.1f},
-			{z, x, 0.0f,   0.1f},
-			{-z, x, 0.0f,  0.1f},
-			{z, -x, 0.0f,  0.1f},
-			{-z, -x, 0.0f, 0.1f}
+			{-x, 0.0f, z,  1.0f},
+			{x, 0.0f, z,   1.0f}, 
+			{-x, 0.0f, -z, 1.0f},
+			{x, 0.0f, -z,  1.0f},
+			{0.0f, z, x,   1.0f},
+			{0.0f, z, -x,  1.0f},
+			{0.0f, -z, x,  1.0f},
+			{0.0f, -z, -x, 1.0f},
+			{z, x, 0.0f,   1.0f},
+			{-z, x, 0.0f,  1.0f},
+			{z, -x, 0.0f,  1.0f},
+			{-z, -x, 0.0f, 1.0f}
         };
+
+		// Add a key light
+		lights.push_back({-5000.0,5000.0,-5000.0,1000.0f});
 
 		m_gpu_render_tasks->addPerFrameDataBuffer(lights,1);
 
