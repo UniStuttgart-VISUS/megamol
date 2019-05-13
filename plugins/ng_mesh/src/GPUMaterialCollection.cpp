@@ -27,15 +27,11 @@ void megamol::ngmesh::GPUMaterialCollecton::addMaterial(megamol::core::CoreInsta
 
 	mm_core_inst->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), vert_shader_src);
 	mm_core_inst->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), frag_shader_src);
-	if (!mm_core_inst->ShaderSourceFactory().MakeShaderSource(geoShaderName.PeekBuffer(), geom_shader_src))
-	{
-		vislib::sys::Log::DefaultLog.WriteMsg(
-			vislib::sys::Log::LEVEL_ERROR, "Fuck you!\n");
-	}
+    auto geom_shdr_success = mm_core_inst->ShaderSourceFactory().MakeShaderSource(geoShaderName.PeekBuffer(), geom_shader_src);
+	
+	try {
 
-	if (geom_shader_src.WholeCode().Length() > 0)
-	{
-		try {
+		if (geom_shdr_success){
 			if (!shader->Compile(vert_shader_src.Code(), vert_shader_src.Count(), geom_shader_src.Code(), geom_shader_src.Count(), frag_shader_src.Code(), frag_shader_src.Count())) {
 				vislib::sys::Log::DefaultLog.WriteMsg(
 					vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s: Unknown error\n", shader_base_name.PeekBuffer());
@@ -47,27 +43,27 @@ void megamol::ngmesh::GPUMaterialCollecton::addMaterial(megamol::core::CoreInsta
 				//return false;
 			}
 		}
-		catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-			vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s (@%s):\n%s\n",
-				shader_base_name.PeekBuffer(),
-				vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
-				ce.GetMsgA());
-			//return false;
-		}
-		catch (vislib::Exception e) {
-			vislib::sys::Log::DefaultLog.WriteMsg(
-				vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s:\n%s\n", shader_base_name.PeekBuffer(), e.GetMsgA());
-			//return false;
-		}
-		catch (...) {
-			vislib::sys::Log::DefaultLog.WriteMsg(
-				vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s: Unknown exception\n", shader_base_name.PeekBuffer());
-			//return false;
-		}
+		else {
+            shader->Create(
+                vert_shader_src.Code(), vert_shader_src.Count(), frag_shader_src.Code(), frag_shader_src.Count());
+        }
 	}
-	else
-	{
-		shader->Create(vert_shader_src.Code(), vert_shader_src.Count(), frag_shader_src.Code(), frag_shader_src.Count());
+	catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s (@%s):\n%s\n",
+			shader_base_name.PeekBuffer(),
+			vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
+			ce.GetMsgA());
+		//return false;
+	}
+	catch (vislib::Exception e) {
+		vislib::sys::Log::DefaultLog.WriteMsg(
+			vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s:\n%s\n", shader_base_name.PeekBuffer(), e.GetMsgA());
+		//return false;
+	}
+	catch (...) {
+		vislib::sys::Log::DefaultLog.WriteMsg(
+			vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s: Unknown exception\n", shader_base_name.PeekBuffer());
+		//return false;
 	}
 
 	addMaterial(shader);

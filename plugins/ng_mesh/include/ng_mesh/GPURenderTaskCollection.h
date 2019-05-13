@@ -227,7 +227,7 @@ namespace megamol {
                 auto new_buffer = std::make_shared<BufferObject>(
                     GL_SHADER_STORAGE_BUFFER, per_frame_data.data(), pfd_byte_size, GL_DYNAMIC_DRAW);
 
-                m_per_frame_data_buffers.push_back{new_buffer, buffer_binding_point};
+                m_per_frame_data_buffers.push_back(std::make_pair(new_buffer, buffer_binding_point));
 			}
 		}
 

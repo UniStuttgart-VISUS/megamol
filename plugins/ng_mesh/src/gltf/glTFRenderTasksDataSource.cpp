@@ -114,7 +114,30 @@ bool megamol::ngmesh::GlTFRenderTasksDataSource::getDataCallback(core::Call & ca
 		}
 
 		// add some lights to the scene to test the per frame buffers
-		//m_gpu_render_tasks->addPerFrameDataBuffer();
+        struct LightParams {
+            float x,y,z,intensity;
+		};
+
+		// Place lights in icosahedron pattern
+        float x = 0.525731112119133606f * 90.9f;
+        float z = 0.850650808352039932f * 90.9f;
+
+        std::vector<LightParams> lights = {
+			{-x, 0.0f, z,  0.1f},
+			{x, 0.0f, z,   0.1f}, 
+			{-x, 0.0f, -z, 0.1f},
+			{x, 0.0f, -z,  0.1f},
+			{0.0f, z, x,   0.1f},
+			{0.0f, z, -x,  0.1f},
+			{0.0f, -z, x,  0.1f},
+			{0.0f, -z, -x, 0.1f},
+			{z, x, 0.0f,   0.1f},
+			{-z, x, 0.0f,  0.1f},
+			{z, -x, 0.0f,  0.1f},
+			{-z, -x, 0.0f, 0.1f}
+        };
+
+		m_gpu_render_tasks->addPerFrameDataBuffer(lights,1);
 
 		gltf_call->clearUpdateFlag();
 	}

@@ -45,7 +45,7 @@ bool megamol::ngmesh::DebugGPUMaterialDataSource::load()
 	vislib::graphics::gl::ShaderSource vert_shader_src;
 	vislib::graphics::gl::ShaderSource frag_shader_src;
 	// TODO get rid of vislib StringA...
-	vislib::StringA shader_base_name("NGMeshDebug");
+	vislib::StringA shader_base_name("MeshDebug");
 	instance()->ShaderSourceFactory().MakeShaderSource(shader_base_name + "::vertex", vert_shader_src);
 	instance()->ShaderSourceFactory().MakeShaderSource(shader_base_name + "::fragment", frag_shader_src);
 	shader->Create(vert_shader_src.Code(), vert_shader_src.Count(), frag_shader_src.Code(), frag_shader_src.Count());
