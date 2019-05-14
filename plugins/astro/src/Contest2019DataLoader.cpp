@@ -7,6 +7,7 @@
 
 #include "stdafx.h"
 #include "Contest2019DataLoader.h"
+#include <algorithm>
 #include <fstream>
 #include "astro/AstroDataCall.h"
 #include "mmcore/param/BoolParam.h"
@@ -38,9 +39,109 @@ Contest2019DataLoader::Frame::~Frame(void) {
  * Contest2019DataLoader::Frame::LoadFrame
  */
 bool Contest2019DataLoader::Frame::LoadFrame(std::string filepath, unsigned int frameIdx) {
+    if (filepath.empty()) return false;
     this->frame = frameIdx;
-    // TODO implement
-    return true;
+    std::vector<SavedData> readDataVec;
+
+    std::ifstream file(filepath, std::ios::binary);
+    if (!file.is_open()) {
+        vislib::sys::Log::DefaultLog.WriteError("Could not open input file \"%s\"", filepath.c_str());
+        return false;
+    }
+    // determine size of the file
+    file.seekg(0, std::ios_base::end);
+    uint64_t size = file.tellg();
+    uint64_t partCount = size / sizeof(SavedData);
+    readDataVec.resize(partCount);
+
+    // read the data
+    file.seekg(0, std::ios_base::beg);
+    file.read(reinterpret_cast<char*>(readDataVec.data()), sizeof(SavedData) * partCount);
+
+    // init the fields if necessary
+    if (this->positions == nullptr) {
+        this->positions = std::make_shared<std::vector<glm::vec3>>();
+    }
+    if (this->velocities == nullptr) {
+        this->velocities = std::make_shared<std::vector<glm::vec3>>();
+    }
+    if (this->temperatures == nullptr) {
+        this->temperatures = std::make_shared<std::vector<float>>();
+    }
+    if (this->masses == nullptr) {
+        this->masses = std::make_shared<std::vector<float>>();
+    }
+    if (this->internalEnergies == nullptr) {
+        this->internalEnergies = std::make_shared<std::vector<float>>();
+    }
+    if (this->smoothingLengths == nullptr) {
+        this->smoothingLengths = std::make_shared<std::vector<float>>();
+    }
+    if (this->molecularWeights == nullptr) {
+        this->molecularWeights = std::make_shared<std::vector<float>>();
+    }
+    if (this->densities == nullptr) {
+        this->densities = std::make_shared<std::vector<float>>();
+    }
+    if (this->gravitationalPotentials == nullptr) {
+        this->gravitationalPotentials = std::make_shared<std::vector<float>>();
+    }
+    if (this->isBaryonFlags == nullptr) {
+        this->isBaryonFlags = std::make_shared<std::vector<bool>>();
+    }
+    if (this->isStarFlags == nullptr) {
+        this->isStarFlags = std::make_shared<std::vector<bool>>();
+    }
+    if (this->isWindFlags == nullptr) {
+        this->isWindFlags = std::make_shared<std::vector<bool>>();
+    }
+    if (this->isStarFormingGasFlags == nullptr) {
+        this->isStarFormingGasFlags = std::make_shared<std::vector<bool>>();
+    }
+    if (this->isAGNFlags == nullptr) {
+        this->isAGNFlags = std::make_shared<std::vector<bool>>();
+    }
+    if (this->particleIDs == nullptr) {
+        this->particleIDs = std::make_shared<std::vector<int64_t>>();
+    }
+
+    this->positions->resize(partCount);
+    this->velocities->resize(partCount);
+    this->temperatures->resize(partCount);
+    this->masses->resize(partCount);
+    this->internalEnergies->resize(partCount);
+    this->smoothingLengths->resize(partCount);
+    this->molecularWeights->resize(partCount);
+    this->densities->resize(partCount);
+    this->gravitationalPotentials->resize(partCount);
+    this->isBaryonFlags->resize(partCount);
+    this->isStarFlags->resize(partCount);
+    this->isWindFlags->resize(partCount);
+    this->isStarFormingGasFlags->resize(partCount);
+    this->isAGNFlags->resize(partCount);
+    this->particleIDs->resize(partCount);
+
+    // copy the data over
+
+    // TODO parallel copy?
+    for (uint64_t i = 0; i < partCount; ++i) {
+        const auto& s = readDataVec[i];
+        this->positions->operator[](i) = glm::vec3(s.x, s.y, s.z);
+        this->velocities->operator[](i) = glm::vec3(s.vx, s.vy, s.vz);
+        this->temperatures->operator[](i) = 0.0f; // oops, we do not have temperatures
+		this->masses->operator[](i) = s.mass;
+		this->internalEnergies->operator[](i) = s.internalEnergy;
+		this->smoothingLengths->operator[](i) = s.smoothingLength;
+		this->molecularWeights->operator[](i) = s.molecularWeight;
+		this->densities->operator[](i) = s.density;
+		this->gravitationalPotentials->operator[](i) = s.gravitationalPotential;
+		this->isBaryonFlags->operator[](i) = (s.bitmask >> 1) & 0x1;
+		this->isStarFlags->operator[](i) = (s.bitmask >> 5) & 0x1;
+		this->isWindFlags->operator[](i) = (s.bitmask >> 6) & 0x1;
+		this->isStarFormingGasFlags->operator[](i) = (s.bitmask >> 7) & 0x1;
+		this->isAGNFlags->operator[](i) = (s.bitmask >> 8) & 0x1;
+    }
+	return true;
 }
 
 /*
@@ -51,21 +152,21 @@ void Contest2019DataLoader::Frame::SetData(
     if (this->positions == nullptr || this->positions->empty()) {
         call.ClearValues();
     }
-	call.SetPositions(this->positions);
-	call.SetVelocities(this->velocities);
-	call.SetTemperature(this->temperatures);
-	call.SetMass(this->masses);
-	call.SetInternalEnergy(this->internalEnergies);
-	call.SetSmoothingLength(this->smoothingLengths);
-	call.SetMolecularWeights(this->molecularWeights);
-	call.SetDensity(this->densities);
-	call.SetGravitationalPotential(this->gravitationalPotentials);
-	call.SetIsBaryonFlags(this->isBaryonFlags);
-	call.SetIsStarFlags(this->isStarFlags);
-	call.SetIsWindFlags(this->isWindFlags);
-	call.SetIsStarFormingGasFlags(this->isStarFormingGasFlags);
-	call.SetIsAGNFlags(this->isAGNFlags);
-	call.SetParticleIDs(this->particleIDs);
+    call.SetPositions(this->positions);
+    call.SetVelocities(this->velocities);
+    call.SetTemperature(this->temperatures);
+    call.SetMass(this->masses);
+    call.SetInternalEnergy(this->internalEnergies);
+    call.SetSmoothingLength(this->smoothingLengths);
+    call.SetMolecularWeights(this->molecularWeights);
+    call.SetDensity(this->densities);
+    call.SetGravitationalPotential(this->gravitationalPotentials);
+    call.SetIsBaryonFlags(this->isBaryonFlags);
+    call.SetIsStarFlags(this->isStarFlags);
+    call.SetIsWindFlags(this->isWindFlags);
+    call.SetIsStarFormingGasFlags(this->isStarFormingGasFlags);
+    call.SetIsAGNFlags(this->isAGNFlags);
+    call.SetParticleIDs(this->particleIDs);
 }
 
 /*
@@ -92,6 +193,12 @@ Contest2019DataLoader::Contest2019DataLoader(void)
     this->filesToLoad.SetParameter(new param::IntParam(-1));
     this->filesToLoad.SetUpdateCallback(&Contest2019DataLoader::filenameChangedCallback);
     this->MakeSlotAvailable(&this->filesToLoad);
+
+	// static bounding box size, because we know (TM)
+	this->boundingBox = vislib::math::Cuboid<float>(0.0f, 0.0f, 0.0f, 64.0f, 64.0f, 64.0f);
+	this->clipBox = this->boundingBox;
+
+	this->data_hash = 0;
 
     this->setFrameCount(1);
     this->initFrameCache(1);
@@ -122,14 +229,15 @@ void Contest2019DataLoader::loadFrame(view::AnimDataModule::Frame* frame, unsign
     using vislib::sys::Log;
     Frame* f = dynamic_cast<Frame*>(frame);
     if (f == nullptr) return;
-    ASSERT(idx < this->FrameCount());
     unsigned int frameID = idx % this->FrameCount();
     std::string filename = "";
     if (frameID < this->filenames.size()) {
         filename = this->filenames.at(frameID);
     }
-    if (!f->LoadFrame(filename, frameID)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to read frame %d from file\n", idx);
+    if (!filename.empty()) {
+        if (!f->LoadFrame(filename, frameID)) {
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to read frame %d from file\n", idx);
+        }
     }
 }
 
@@ -144,11 +252,12 @@ void Contest2019DataLoader::release(void) { this->resetFrameCache(); }
 bool Contest2019DataLoader::filenameChangedCallback(param::ParamSlot& slot) {
     this->filenames.clear();
     this->resetFrameCache();
+	this->data_hash++;
     std::string firstfile = T2A(this->firstFilename.Param<param::FilePathParam>()->Value());
     int toLoadCount = this->filesToLoad.Param<param::IntParam>()->Value();
 
-    /* Note for all debugging purposes: The application will land here once on startup with only the default values for
-     * the input parameters. This first call can be ignored.*/
+    /* Note for all debugging purposes: The application will land here once on startup with only the default values
+     * for the input parameters. This first call can be ignored.*/
 
     if (firstfile.empty()) return false;
     if (toLoadCount == 0) return false;

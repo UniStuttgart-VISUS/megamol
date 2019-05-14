@@ -50,37 +50,61 @@ public:
     virtual ~Contest2019DataLoader(void);
 
 protected:
+    /**
+     * Constructs a new frame
+     */
     virtual core::view::AnimDataModule::Frame* constructFrame(void) const;
 
+    /**
+     * Function that is called once upon initialization.
+     *
+     * @return True on success, false otherwise
+     */
     virtual bool create(void);
 
+    /**
+     * Loads the data of a single frame from disk
+     *
+     * @param frame Pointer to the frame that will contain the data
+     * @param idx The index of the frame
+     */
     virtual void loadFrame(core::view::AnimDataModule::Frame* frame, unsigned int idx);
 
+    /**
+     * Function that is called once upon destruction
+     */
     virtual void release(void);
 
+    /**
+     * Frame description
+     */
     class Frame : public core::view::AnimDataModule::Frame {
     public:
+        /** Frame Copy Ctor. */
         Frame(core::view::AnimDataModule& owner);
 
+        /** Frame Dtor. */
         virtual ~Frame(void);
 
+        /**
+         * Clears the frame data by deleting all contained pointers
+         */
         inline void Clear(void) {
-            this->positions->clear();
-            this->velocities->clear();
-            this->temperatures->clear();
-            this->masses->clear();
-            this->internalEnergies->clear();
-            this->smoothingLengths->clear();
-            this->molecularWeights->clear();
-            this->densities->clear();
-            this->gravitationalPotentials->clear();
-            this->isBaryonFlags->clear();
-            this->isStarFlags->clear();
-            this->isWindFlags->clear();
-            this->isStarFormingGasFlags->clear();
-            this->isAGNFlags->clear();
-            this->particleIDs->clear();
-            // TODO shrink to fit?
+            this->positions.reset();
+            this->velocities.reset();
+            this->temperatures.reset();
+            this->masses.reset();
+            this->internalEnergies.reset();
+            this->smoothingLengths.reset();
+            this->molecularWeights.reset();
+            this->densities.reset();
+            this->gravitationalPotentials.reset();
+            this->isBaryonFlags.reset();
+            this->isStarFlags.reset();
+            this->isWindFlags.reset();
+            this->isStarFormingGasFlags.reset();
+            this->isAGNFlags.reset();
+            this->particleIDs.reset();
         }
 
         /**
@@ -105,6 +129,28 @@ protected:
             const vislib::math::Cuboid<float>& clipBox);
 
     private:
+#pragma pack(push, 1)
+        /**
+         * Struct representing one particle in the file stored on disk
+         */
+        struct SavedData {
+            float x;
+            float vx;
+            float y;
+            float vy;
+            float z;
+            float vz;
+            float mass;
+            float internalEnergy;
+            float smoothingLength;
+            float molecularWeight;
+            float density;
+            float gravitationalPotential;
+            int64_t particleID;
+            uint16_t bitmask;
+        };
+#pragma pack(pop)
+
         /** Pointer to the position array */
         vec3ArrayPtr positions = nullptr;
 
@@ -151,17 +197,23 @@ protected:
         idArrayPtr particleIDs = nullptr;
     };
 
+    /**
+     * Unlocker for the frame data
+     */
     class Unlocker : public AstroDataCall::Unlocker {
     public:
+        /** Copy Ctor. */
         Unlocker(Frame& frame) : AstroDataCall::Unlocker(), frame(&frame) {
             // intentionally empty
         }
 
+        /** Dtor. */
         virtual ~Unlocker(void) {
             this->Unlock();
             ASSERT(this->frame == nullptr);
         }
 
+        /** Overload of the unlock method */
         virtual void Unlock(void) {
             if (this->frame != nullptr) {
                 this->frame->Unlock();
@@ -170,27 +222,53 @@ protected:
         }
 
     private:
+        /** Pointer to the contained frame */
         Frame* frame;
     };
-
+#
+    /**
+     * Function to retrieve the stored data
+     *
+     * @param caller The calling call
+     * @return True on success, false otherwise
+     */
     bool getDataCallback(core::Call& caller);
 
+    /**
+     * Function to retrieve the stored data set extents
+     *
+     * @param caller The calling call
+     * @return True on success, false otherwise
+     */
     bool getExtentCallback(core::Call& caller);
 
+    /**
+     * Callback function that is called when the filename or the count of filenames to read is changed
+     *
+     * @param slot The calling slot
+     * @return True on success, false otherwise
+     */
     bool filenameChangedCallback(core::param::ParamSlot& slot);
 
+    /** Slot containing the name of the first loaded file */
     core::param::ParamSlot firstFilename;
 
+    /** Slot containing the number of files that should be loaded< */
     core::param::ParamSlot filesToLoad;
 
+    /** Slot to send the data over */
     core::CalleeSlot getDataSlot;
 
+    /** The bounding box of the data */
     vislib::math::Cuboid<float> boundingBox;
 
+    /** The clip box of the data */
     vislib::math::Cuboid<float> clipBox;
 
+    /** Hash that changes with changing data */
     size_t data_hash;
 
+    /** Vector containing the paths to all loadable files */
     std::vector<std::string> filenames;
 };
 
