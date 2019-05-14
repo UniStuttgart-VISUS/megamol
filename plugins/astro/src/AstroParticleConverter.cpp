@@ -68,12 +68,12 @@ bool AstroParticleConverter::getData(Call& call) {
     ast->SetFrameID(mpdc->FrameID(), mpdc->IsFrameForced());
 
     if ((*ast)(AstroDataCall::CallForGetData)) {
-        if (this->lastDataHash != mpdc->DataHash()) {
-            this->lastDataHash = mpdc->DataHash();
+        if (this->lastDataHash != ast->DataHash()) {
+            this->lastDataHash = ast->DataHash();
             this->colmin =
-                *std::min_element(ast->GetGravitationalPotential()->begin(), ast->GetGravitationalPotential()->end());
+                *std::min_element(ast->GetDensity()->begin(), ast->GetDensity()->end());
             this->colmax =
-                *std::max_element(ast->GetGravitationalPotential()->begin(), ast->GetGravitationalPotential()->end());
+                *std::max_element(ast->GetDensity()->begin(), ast->GetDensity()->end());
         }
         auto particleCount = ast->GetParticleCount();
         mpdc->SetDataHash(this->lastDataHash + this->hashOffset);
@@ -83,7 +83,7 @@ bool AstroParticleConverter::getData(Call& call) {
         if (p.GetCount() > 0) {
             p.SetVertexData(MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ, ast->GetPositions()->data());
             p.SetColourData(
-                MultiParticleDataCall::Particles::COLDATA_FLOAT_I, ast->GetGravitationalPotential()->data());
+                MultiParticleDataCall::Particles::COLDATA_FLOAT_I, ast->GetDensity()->data());
             p.SetColourMapIndexValues(this->colmin, this->colmax);
         }
 
