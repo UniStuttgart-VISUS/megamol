@@ -70,10 +70,16 @@ bool megamol::archvis::FEMRenderTaskDataSource::getDataCallback(core::Call & cal
 		
 			object_transform[9].SetAt(0, 3, 0.0f);
 			object_transform[9].SetAt(1, 3, 0.0f);
-			object_transform[9].SetAt(2, 3, 0.0f);			
+			object_transform[9].SetAt(2, 3, 0.0f);
 		
 			m_gpu_render_tasks->addRenderTasks(shader, gpu_batch_mesh, draw_commands, object_transform);
 		}
+
+        auto const& node_deformation = fem_call->getFEMData()->getNodeDeformations();
+
+        m_gpu_render_tasks->addPerFrameDataBuffer(node_deformation, 1);
+
+        fem_call->clearUpdateFlag();
 	}
 
 	rtc->setRenderTaskData(m_gpu_render_tasks.get());

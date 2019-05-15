@@ -1,209 +1,181 @@
 /*
-* FEMDataStorage.h
-*
-* Copyright (C) 2019 by Universitaet Stuttgart (VISUS).
-* All rights reserved.
-*/
+ * FEMDataStorage.h
+ *
+ * Copyright (C) 2019 by Universitaet Stuttgart (VISUS).
+ * All rights reserved.
+ */
 
 #ifndef FEM_DATA_STORAGE_H_INCLUDED
 #define FEM_DATA_STORAGE_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#pragma once
+#    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include <array>
-#include <vector>
 #include <tuple>
+#include <vector>
 
 #include "vislib/math/Matrix.h"
 #include "vislib/math/Quaternion.h"
 #include "vislib/math/Vector.h"
 
 namespace megamol {
-	namespace archvis {
+namespace archvis {
 
-		class FEMDataStorage
-		{
-		public:
+class FEMDataStorage {
+public:
+    typedef vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> Mat4x4;
+    typedef vislib::math::Vector<float, 3> Vec3;
+    typedef vislib::math::Vector<float, 4> Vec4;
+    typedef vislib::math::Quaternion<float> Quat;
 
-			typedef vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> Mat4x4;
-			typedef vislib::math::Vector<float, 3> Vec3;
-			typedef vislib::math::Vector<float, 4> Vec4;
-			typedef vislib::math::Quaternion<float> Quat;
+    enum ElementType {
+        LINE = 2,  // 2D line element, connects 2 nodes
+        PLANE = 4, // 2D surface element, connects 4 nodes
+        CUBE = 8   // 3D volumetric element, connects 8 nodes
+    };
 
-			enum ElementType {
-				LINE = 2, // 2D line element, connects 2 nodes
-				PLANE = 4, // 2D surface element, connects 4 nodes
-				CUBE = 8 // 3D volumetric element, connects 8 nodes
-			};
+    struct ElementConcept {
+        virtual ElementConcept* clone() const = 0;
+        virtual ElementType getType() const = 0;
+        virtual std::vector<size_t> getNodeIndices() const = 0;
+    };
 
+    template <typename N> struct ElementModel : ElementConcept {
+        ElementModel(ElementType type, N node_indices) : m_type(type), m_node_indices(node_indices) {}
 
-			struct ElementConcept
-			{
-				virtual ElementConcept* clone() const = 0;
-				virtual ElementType getType() const = 0;
-				virtual std::vector<size_t> getNodeIndices() const = 0;
-			};
+        ElementConcept* clone() const { return new ElementModel(m_type, m_node_indices); }
 
-			template<typename N>
-			struct ElementModel : ElementConcept
-			{
-				ElementModel(ElementType type, N node_indices)
-					: m_type(type), m_node_indices(node_indices) {}
+        ElementType getType() const { return m_type; }
 
-				ElementConcept* clone() const
-				{
-					return new ElementModel(m_type, m_node_indices);
-				}
+        std::vector<size_t> getNodeIndices() const {
+            return std::vector<size_t>(m_node_indices.begin(), m_node_indices.end());
+        }
 
-				ElementType getType() const
-				{ 
-					return m_type;
-				}
+        ElementType m_type;
+        N m_node_indices;
+    };
 
-				std::vector<size_t> getNodeIndices() const
-				{
-					return std::vector<size_t>(m_node_indices.begin(), m_node_indices.end());
-				}
+    class Element {
+    public:
+        template <typename N>
+        Element(ElementType type, N node_indices) : m_element(new ElementModel<N>(type, node_indices)) {}
 
-				ElementType m_type;
-				N           m_node_indices;
-			};
+        Element() : m_element(nullptr){};
 
-			class Element
-			{
-			public:
-				template<typename N>
-				Element(ElementType type, N node_indices)
-					: m_element(new ElementModel<N>(type, node_indices)) {}
+        ~Element() {
+            if (m_element != nullptr) delete m_element;
+        }
 
-				Element() : m_element(nullptr) {};
+        Element(Element const& other) : m_element(nullptr) {
+            if (other.m_element != nullptr) m_element = other.m_element->clone();
+        }
 
-				~Element()
-				{
-					if (m_element != nullptr)
-						delete m_element;
-				}
+        Element(Element&& other) : Element() { std::swap(m_element, other.m_element); }
 
-				Element(Element const& other) : m_element(nullptr) {
-					if (other.m_element != nullptr)
-						m_element = other.m_element->clone();
-				}
+        Element& operator=(Element const& rhs) {
+            delete m_element;
+            if (rhs.m_element != nullptr)
+                m_element = rhs.m_element->clone();
+            else
+                m_element = nullptr;
 
-				Element(Element&& other) : Element() {
-					std::swap(m_element, other.m_element);
-				}
+            return *this;
+        }
 
-				Element& operator=(Element const& rhs)
-				{
-					delete m_element;
-					if (rhs.m_element != nullptr)
-						m_element = rhs.m_element->clone();
-					else
-						m_element = nullptr;
+        Element& operator=(Element&& other) { std::swap(m_element, other.m_element); };
 
-					return *this;
-				}
+        ElementType getType() const { return m_element->getType(); }
 
-				Element& operator=(Element&& other) {
-					std::swap(m_element, other.m_element);
-				};
+        std::vector<size_t> getNodeIndices() const { return m_element->getNodeIndices(); }
 
-				ElementType getType() const { return m_element->getType(); }
+    private:
+        ElementConcept* m_element;
+    };
 
-				std::vector<size_t> getNodeIndices() const { return m_element->getNodeIndices(); }
+    FEMDataStorage();
+    ~FEMDataStorage();
 
-			private:
-				ElementConcept* m_element;
-			};
+    FEMDataStorage(std::vector<Vec3> const& nodes, std::vector<std::array<size_t, 8>> const& elements);
 
+    void setNodes(std::vector<Vec3> const& nodes);
 
-			FEMDataStorage();
-			~FEMDataStorage();
+    void setNodes(std::vector<Vec3>&& nodes);
 
-			FEMDataStorage(
-				std::vector<Vec3> const& nodes,
-				std::vector<std::array<size_t, 8>> const& elements);
+    void setElements(std::vector<std::array<size_t, 8>> const& elements);
 
-			void setNodes(std::vector<Vec3> const& nodes);
+    void setNodeDeformations(std::vector<Vec4> const& deformations);
 
-			void setNodes(std::vector<Vec3> && nodes);
+    std::vector<Vec3> const& getNodes();
 
-			void setElements(std::vector<std::array<size_t, 8>> const& elements);
+    size_t getElementCount();
 
-			std::vector<Vec3> const& getNodes();
+    std::vector<Element> const& getElements();
 
-			size_t getElementCount();
+    std::vector<Vec4> const& getNodeDeformations();
 
-			std::vector<Element> const& getElements();
+private:
+    size_t m_node_cnt;
+    size_t m_timesteps;
 
-		private:
+    std::vector<Vec3> m_node_positions;
+    std::vector<Element> m_elements;
 
-			size_t               m_node_cnt;
-			size_t               m_timesteps;
+    std::vector<Vec4> m_deformations;
+};
 
-			std::vector<Vec3>    m_node_positions;
-			std::vector<Element> m_elements;
+inline FEMDataStorage::FEMDataStorage()
+    : m_node_cnt(0)
+    , m_timesteps(0) //, m_node_positions(), m_elements(), m_deformations()
+{}
 
-			std::vector<Vec3>    m_deformations;
-		};
+inline FEMDataStorage::~FEMDataStorage() {}
 
-		inline FEMDataStorage::FEMDataStorage()
-			: m_node_cnt(0), m_timesteps(0)//, m_node_positions(), m_elements(), m_deformations()
-		{
-		}
-
-		inline FEMDataStorage::~FEMDataStorage()
-		{
-		}
-
-		inline FEMDataStorage::FEMDataStorage(std::vector<Vec3> const & nodes, std::vector<std::array<size_t, 8>> const & elements)
-			: m_node_cnt(nodes.size()), m_timesteps(0), m_node_positions(nodes), m_elements(elements.size()), m_deformations()
-		{
-			for (size_t element_idx = 0; element_idx < elements.size(); ++element_idx)
-			{
-				m_elements[element_idx] = Element(ElementType::CUBE, elements[element_idx]);
-			}
-		}
-
-		inline void FEMDataStorage::setNodes(std::vector<Vec3> const& nodes)
-		{
-			m_node_positions = nodes;
-			m_node_cnt = m_node_positions.size();
-		}
-
-		inline void FEMDataStorage::setNodes(std::vector<Vec3> && nodes)
-		{
-			m_node_positions = nodes;
-			m_node_cnt = m_node_positions.size();
-		}
-
-		inline void FEMDataStorage::setElements(std::vector<std::array<size_t, 8>> const& elements)
-		{
-			m_elements.clear();
-			m_elements.reserve(elements.size());
-
-			for (size_t element_idx = 0; element_idx < elements.size(); ++element_idx)
-			{
-				m_elements.push_back(Element(ElementType::CUBE, elements[element_idx]));
-			}
-		}
-
-		inline std::vector<FEMDataStorage::Vec3> const& FEMDataStorage::getNodes()
-		{
-			return m_node_positions;
-		}
-
-		inline size_t  FEMDataStorage::getElementCount()
-		{
-			return m_elements.size();
-		}
-
-		inline std::vector<FEMDataStorage::Element> const& FEMDataStorage::getElements()
-		{
-			return m_elements;
-		}
-	}
+inline FEMDataStorage::FEMDataStorage(
+    std::vector<Vec3> const& nodes, std::vector<std::array<size_t, 8>> const& elements)
+    : m_node_cnt(nodes.size()), m_timesteps(0), m_node_positions(nodes), m_elements(elements.size()), m_deformations()
+{
+    for (size_t element_idx = 0; element_idx < elements.size(); ++element_idx) {
+        m_elements[element_idx] = Element(ElementType::CUBE, elements[element_idx]);
+    }
 }
+
+inline void FEMDataStorage::setNodes(std::vector<Vec3> const& nodes)
+{
+    m_node_positions = nodes;
+    m_node_cnt = m_node_positions.size();
+}
+
+inline void FEMDataStorage::setNodes(std::vector<Vec3>&& nodes)
+{
+    m_node_positions = nodes;
+    m_node_cnt = m_node_positions.size();
+}
+
+inline void FEMDataStorage::setElements(std::vector<std::array<size_t, 8>> const& elements)
+{
+    m_elements.clear();
+    m_elements.reserve(elements.size());
+
+    for (size_t element_idx = 0; element_idx < elements.size(); ++element_idx) {
+        m_elements.push_back(Element(ElementType::CUBE, elements[element_idx]));
+    }
+}
+
+inline void FEMDataStorage::setNodeDeformations(std::vector<Vec4> const& deformations)
+{
+    m_deformations = deformations;
+}
+
+inline std::vector<FEMDataStorage::Vec3> const& FEMDataStorage::getNodes() { return m_node_positions; }
+
+inline size_t FEMDataStorage::getElementCount() { return m_elements.size(); }
+
+inline std::vector<FEMDataStorage::Element> const& FEMDataStorage::getElements() { return m_elements; }
+
+inline std::vector<FEMDataStorage::Vec4> const& FEMDataStorage::getNodeDeformations() { return m_deformations; }
+
+} // namespace archvis
+} // namespace megamol
 
 #endif // !FEM_DATA_STORAGE_H_INCLUDED
