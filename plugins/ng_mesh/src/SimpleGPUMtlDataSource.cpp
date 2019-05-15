@@ -46,8 +46,3 @@ bool megamol::ngmesh::SimpleGPUMtlDataSource::getDataCallback(core::Call & calle
 
 	return true;
 }
-
-bool megamol::ngmesh::SimpleGPUMtlDataSource::load()
-{
-	return false;
-}

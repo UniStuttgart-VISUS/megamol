@@ -16,6 +16,7 @@
 #include "FEMDataCall.h"
 #include "FEMDataStorage.h"
 #include "FEMMeshDataSource.h"
+#include "FEMMaterialDataSource.h"
 #include "FEMRenderTaskDataSource.h"
 #include "FEMLoader.h"
 
@@ -56,6 +57,7 @@ namespace {
 			this->module_descriptions.RegisterAutoDescription<megamol::archvis::ArchVisMSMDataSource>();
 
 			this->module_descriptions.RegisterAutoDescription<megamol::archvis::FEMMeshDataSource>();
+            this->module_descriptions.RegisterAutoDescription<megamol::archvis::FEMMaterialDataSource>();
 			this->module_descriptions.RegisterAutoDescription<megamol::archvis::FEMRenderTaskDataSource>();
 			this->module_descriptions.RegisterAutoDescription<megamol::archvis::FEMLoader>();
 

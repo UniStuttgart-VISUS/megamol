@@ -5,8 +5,11 @@
 * All rights reserved.
 */
 
-#ifndef GPU_MATERIAL_DATA_STORAGE_H_INCLUDED
-#define GPU_MATERIAL_DATA_STORAGE_H_INCLUDED
+#ifndef GPU_MATERIAL_COLLECTION_H_INCLUDED
+#define GPU_MATERIAL_COLLECTION_H_INCLUDED
+#if (defined(_MSC_VER) && (_MSC_VER > 1000))
+#    pragma once
+#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 //#include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/GLSLGeometryShader.h"
@@ -15,6 +18,8 @@
 #include <memory>
 #include <vector>
 
+#include "ng_mesh.h"
+
 #include "glowl/Texture2D.h"
 
 namespace megamol {
@@ -22,7 +27,7 @@ namespace megamol {
 
 		typedef vislib::graphics::gl::GLSLGeometryShader Shader;
 
-		class GPUMaterialCollecton
+		class NG_MESH_API GPUMaterialCollecton
 		{
 		public:
 			struct Material
@@ -43,11 +48,11 @@ namespace megamol {
 			std::vector<Material> m_materials;
 		};
 
-		inline std::vector<megamol::ngmesh::GPUMaterialCollecton::Material> const & megamol::ngmesh::GPUMaterialCollecton::getMaterials()
+		inline std::vector<GPUMaterialCollecton::Material> const & GPUMaterialCollecton::getMaterials()
 		{
 			return m_materials;
 		}
 	}
 }
 
-#endif // !GPU_MATERIAL_DATA_STORAGE_H_INCLUDED
+#endif // !GPU_MATERIAL_COLLECTION_H_INCLUDED

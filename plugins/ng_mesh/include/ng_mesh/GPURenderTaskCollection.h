@@ -12,15 +12,17 @@
 #include <set>
 #include <vector>
 
-#include "glowl/Mesh.h"
+#include "ng_mesh.h"
+
 #include "glowl/BufferObject.h"
+#include "glowl/Mesh.h"
 
 #include "GPUMaterialCollection.h"
 
 namespace megamol {
 	namespace ngmesh {
 
-		class GPURenderTaskCollection
+		class NG_MESH_API GPURenderTaskCollection
 		{
 		public:
 			//template<typename T>

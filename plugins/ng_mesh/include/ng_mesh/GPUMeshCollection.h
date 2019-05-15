@@ -14,12 +14,13 @@
 #include <memory>
 #include <vector>
 
+#include "ng_mesh.h"
 #include "glowl/Mesh.h"
 
 namespace megamol {
 	namespace ngmesh {
 
-		class GPUMeshCollection
+		class NG_MESH_API GPUMeshCollection
 		{
 		public:
 			template<typename T>

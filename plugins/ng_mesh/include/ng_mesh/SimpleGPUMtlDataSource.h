@@ -14,7 +14,6 @@
 #include "mmcore/param/ParamSlot.h"
 
 #include "ng_mesh/AbstractGPUMaterialDataSource.h"
-#include "ng_mesh/GPUMaterialCollection.h"
 
 namespace megamol
 {
@@ -59,13 +58,6 @@ namespace megamol
 			virtual bool create();
 
 			virtual bool getDataCallback(core::Call& caller);
-
-			/**
-			* Generat mesh data for debugging BatchedMeshesDataCall and rendering
-			*
-			* @return True on success
-			*/
-			virtual bool load();
 
 		private:
 

@@ -1,5 +1,5 @@
 /*
-* GPUMaterialCollection.h
+* GPUMaterialCollection.pp
 *
 * Copyright (C) 2019 by Universitaet Stuttgart (VISUS).
 * All rights reserved.
@@ -11,7 +11,11 @@
 #include "mmcore/CoreInstance.h"
 #include "vislib/graphics/gl/ShaderSource.h"
 
-void megamol::ngmesh::GPUMaterialCollecton::addMaterial(megamol::core::CoreInstance* mm_core_inst, std::string shader_btf_name)
+
+namespace megamol {
+namespace ngmesh {
+
+void GPUMaterialCollecton::addMaterial(core::CoreInstance* mm_core_inst, std::string shader_btf_name)
 {
 	std::shared_ptr<Shader> shader = std::make_shared<Shader>();
 
@@ -69,13 +73,16 @@ void megamol::ngmesh::GPUMaterialCollecton::addMaterial(megamol::core::CoreInsta
 	addMaterial(shader);
 }
 
-void megamol::ngmesh::GPUMaterialCollecton::addMaterial(std::shared_ptr<Shader> const& shader)
+void GPUMaterialCollecton::addMaterial(std::shared_ptr<Shader> const& shader)
 {
 	m_materials.push_back(Material());
 	m_materials.back().shader_program = shader;
 }
 
-void megamol::ngmesh::GPUMaterialCollecton::clearMaterials()
+void GPUMaterialCollecton::clearMaterials()
 {
 	m_materials.clear();
+}
+
+}
 }
