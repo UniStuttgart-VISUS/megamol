@@ -12,7 +12,7 @@
 #include "mmcore/versioninfo.h"
 #include "vislib/vislibversion.h"
 
-#include "GUIRenderer.h"
+#include "GUIView.h"
 
 
 /* anonymous namespace hides this type from any other object files */
@@ -37,10 +37,7 @@ public:
         // here we could perform addition de-initialization
     }
     /** Registers modules and calls */
-    virtual void registerClasses(void) {
-        this->module_descriptions.RegisterAutoDescription<megamol::gui::GUIRenderer2D>();
-        this->module_descriptions.RegisterAutoDescription<megamol::gui::GUIRenderer3D>();
-    }
+    virtual void registerClasses(void) { this->module_descriptions.RegisterAutoDescription<megamol::gui::GUIView>(); }
     MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics
 };
 } // namespace
