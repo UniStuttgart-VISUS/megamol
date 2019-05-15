@@ -1151,7 +1151,7 @@ void GUIView::drawFontWindowCallback(
     std::string label = "Font Filename (.ttf)";
     vislib::StringA valueString;
     vislib::UTF8Encoder::Encode(valueString, vislib::StringA(window_config.font_new_filename.c_str()));
-    std::string valueUtf8String = valueString;
+    std::string valueUtf8String(valueString.PeekBuffer());
     ImGui::InputText(label.c_str(), &valueUtf8String);
     vislib::UTF8Encoder::Decode(valueString, vislib::StringA(valueUtf8String.data()));
     window_config.font_new_filename = valueString.PeekBuffer();
@@ -1435,7 +1435,7 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
             // XXX: UTF8 conversion and allocation every frame is horrific inefficient.
             vislib::StringA valueString;
             vislib::UTF8Encoder::Encode(valueString, param->ValueString());
-            std::string valueUtf8String = valueString;
+            std::string valueUtf8String(valueString.PeekBuffer());
 
             if (ImGui::InputText(param_label.c_str(), &valueUtf8String, ImGuiInputTextFlags_EnterReturnsTrue)) {
                 vislib::UTF8Encoder::Decode(valueString, vislib::StringA(valueUtf8String.data()));
