@@ -1,5 +1,5 @@
 /*
- * GUITransferFunctionEditor.h
+ * TransferFunctionEditor.h
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
@@ -15,44 +15,29 @@
 #    pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-
 #include "mmcore/param/TransferFunctionParam.h"
 #include "mmcore/view/TransferFunction.h"
 
 #include "vislib/sys/Log.h"
 
-#include <algorithm> // sort
-#include <array>
-#include <cassert>
-#include <cmath> // sqrtf
-#include <imgui.h>
-#include <map>
-#include <sstream> // stringstream
+#include <cmath>
 #include <string>
 #include <vector>
 
 #include <imgui.h>
-#include "GUIUtility.h"
-
+#include "Popup.h"
 
 namespace megamol {
 namespace gui {
 
-
 /**
- * 1D Transfer Function Editor using ImGui.
+ * 1D Transfer Function Editor.
  */
-class GUITransferFunctionEditor : public GUIUtility {
+class TransferFunctionEditor : public Popup {
 public:
-    /**
-     * Ctor
-     */
-    GUITransferFunctionEditor(void);
+    TransferFunctionEditor(void);
 
-    /**
-     * Dtor
-     */
-    ~GUITransferFunctionEditor(void);
+    ~TransferFunctionEditor(void) = default;
 
     /**
      * Draws the transfer function editor.
@@ -66,60 +51,60 @@ public:
      *
      * @return True if string was successfully converted into transfer function data, false otherwise.
      */
-    bool SetTransferFunction(const std::string& in_tfs);
+    bool SetTransferFunction(const std::string& tfs);
 
     /**
      * Get current transfer function data.
      *
      * @return The transfer function encoded as string in JSON format
      */
-    bool GetTransferFunction(std::string& out_tfs);
+    bool GetTransferFunction(std::string& tfs);
 
     /**
      * Set the currently active parameter.
      */
-    void SetActiveParameter(core::param::TransferFunctionParam* ap) { this->active_param = ap; }
+    void SetActiveParameter(core::param::TransferFunctionParam* param) { this->activeParameter = param; }
 
     /**
      * Get the currently active parameter.
      */
-    core::param::TransferFunctionParam* GetActiveParameter(void) { return this->active_param; }
+    core::param::TransferFunctionParam* GetActiveParameter(void) { return this->activeParameter; }
 
 private:
     // VARIABLES -----------------------------------------------------------
 
     /** The currently active parameter whose transfer function is currently loaded into this editor. */
-    core::param::TransferFunctionParam* active_param;
+    core::param::TransferFunctionParam* activeParameter;
 
     /** Array holding current colors and function values. */
     megamol::core::param::TransferFunctionParam::TFDataType data;
 
     /** Current interpolation option. */
-    megamol::core::param::TransferFunctionParam::InterpolationMode interpol_mode;
+    megamol::core::param::TransferFunctionParam::InterpolationMode mode;
 
     /** Current texture size. */
-    UINT tex_size;
+    UINT textureSize;
 
     /** Indicating modified transfer function. Recalculate texture data. */
-    bool tex_modified;
+    bool textureInvalid;
 
     /** Current texture data. */
-    std::vector<float> tex_data;
+    std::vector<float> texturePixels;
 
     /** Currently active color channels in plot. */
-    std::array<bool, 4> plot_channels;
+    std::array<bool, 4> activeChannels;
 
-    /** Currently slected node. */
-    unsigned int point_select_node;
+    /** Currently selected node. */
+    unsigned int currentNode;
 
     /** Currently selected color channel of selected node. */
-    unsigned int point_select_chan;
+    unsigned int currentChannel;
 
     /** Offset from center of point to initial drag position. */
-    ImVec2 point_select_delta;
+    ImVec2 currentDragChange;
 
     /** Flag for applying all changes immediately. */
-    bool imm_apply;
+    bool immediateMode;
 };
 
 } // namespace gui
