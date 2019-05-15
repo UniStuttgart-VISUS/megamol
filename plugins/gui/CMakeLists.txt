@@ -16,7 +16,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   # Add ImGui.
   add_external_project(ImGui_ext
     GIT_REPOSITORY https://github.com/ocornut/imgui.git
-    GIT_TAG "v1.64"
+    GIT_TAG "v1.70"
     PATCH_COMMAND ${CMAKE_COMMAND} -E copy
       "${CMAKE_CURRENT_SOURCE_DIR}/cmake/ImGui/CMakeLists.txt"
       "<SOURCE_DIR>/CMakeLists.txt")
@@ -28,7 +28,9 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   ExternalProject_Get_property(ImGui_ext SOURCE_DIR)
   set(imgui_files
     "${SOURCE_DIR}/examples/imgui_impl_opengl3.cpp"
-    "${SOURCE_DIR}/examples/imgui_impl_opengl3.h")
+    "${SOURCE_DIR}/examples/imgui_impl_opengl3.h"
+    "${SOURCE_DIR}/misc/cpp/imgui_stdlib.cpp"
+    "${SOURCE_DIR}/misc/cpp/imgui_stdlib.h")
   set_source_files_properties(${imgui_files} PROPERTIES GENERATED TRUE)
 
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
@@ -46,7 +48,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   target_include_directories(${PROJECT_NAME} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     "include" "src"
-    "${SOURCE_DIR}/examples/")
+    "${SOURCE_DIR}/examples/" "${SOURCE_DIR}/misc/cpp/")
   target_link_libraries(${PROJECT_NAME} PRIVATE vislib core glad PUBLIC ImGui)
 
   # Installation rules for generated files
