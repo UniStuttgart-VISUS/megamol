@@ -7,3 +7,7 @@
 
 #include "stdafx.h"
 #include "GUIRenderer.h"
+
+
+using namespace megamol;
+using namespace megamol::gui;
