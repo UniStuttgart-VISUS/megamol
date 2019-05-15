@@ -46,6 +46,7 @@
 
 #include <imgui_internal.h>
 #include "CorporateGreyStyle.h"
+#include "CorporateWhiteStyle.h"
 #include "imgui_impl_opengl3.h"
 #include "imgui_stdlib.h"
 
@@ -58,6 +59,7 @@ using vislib::sys::Log;
 
 enum Styles {
     CorporateGray,
+    CorporateWhite,
     DarkColors,
     LightColors,
 };
@@ -82,6 +84,7 @@ GUIView::GUIView()
 
     core::param::EnumParam* styles = new core::param::EnumParam(0);
     styles->SetTypePair(CorporateGray, "Corporate Gray");
+    styles->SetTypePair(CorporateWhite, "Corporate White");
     styles->SetTypePair(DarkColors, "Dark Colors");
     styles->SetTypePair(LightColors, "Light Colors");
     this->styleParam << styles;
@@ -565,6 +568,9 @@ void GUIView::validateGUI() {
         switch (style) {
         case CorporateGray:
             CorporateGreyStyle();
+            break;
+        case CorporateWhite:
+            CorporateWhiteStyle();
             break;
         case DarkColors:
             ImGui::StyleColorsDark();
