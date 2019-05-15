@@ -14,6 +14,11 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
+#include "mmcore/param/ColorParam.h"
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/ParamSlot.h"
 
 #include "astro/AstroDataCall.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
@@ -40,17 +45,46 @@ protected:
     virtual void release(void);
 
 private:
+    enum class ColoringMode : uint8_t {
+        MASS = 0,
+        INTERNAL_ENERGY = 1,
+        SMOOTHING_LENGTH = 2,
+        MOLECULAR_WEIGHT = 3,
+        DENSITY = 4,
+        GRAVITATIONAL_POTENTIAL = 5,
+        IS_BARYON = 6,
+        IS_STAR = 7,
+        IS_WIND = 8,
+        IS_STAR_FORMING_GAS = 9,
+        IS_AGN = 10,
+        IS_DARK_MATTER = 11
+    };
+
     bool getData(core::Call& call);
     bool getExtent(core::Call& call);
+
+    void calcMinMaxValues(const AstroDataCall& ast);
+	void calcColorTable(const AstroDataCall& ast);
+
+	glm::vec4 interpolateColor(const glm::vec4& minCol, const glm::vec4& midCol, const glm::vec4& maxCol, const float alpha, const bool useMidValue = false);
+
+    core::param::ParamSlot colorModeSlot;
+    core::param::ParamSlot minColorSlot;
+    core::param::ParamSlot midColorSlot;
+    core::param::ParamSlot maxColorSlot;
+	core::param::ParamSlot useMidColorSlot;
+
+    std::vector<glm::vec4> usedColors;
 
     core::CalleeSlot sphereDataSlot;
     core::CallerSlot astroDataSlot;
     size_t lastDataHash;
     size_t hashOffset;
-	float colmin, colmax;
+	unsigned int lastFrame = 0;
+    float valmin, valmax;
 };
 
 } // namespace astro
 } // namespace megamol
 
-#endif /*  */
+#endif /* MEGAMOLCORE_ASTROPARTICLECONVERTER_H_INCLUDED */
