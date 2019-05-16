@@ -1,5 +1,5 @@
 /*
- * ProteinExploder.cpp
+ * ProteinAligner.cpp
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VISUS).
  * Author: Karsten Schatz
