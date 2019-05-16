@@ -39,7 +39,7 @@ bool megamol::archvis::FEMMaterialDataSource::getDataCallback(core::Call& caller
 
     core::view::CallGetTransferFunction* tf_call = this->m_transferFunction_slot.CallAs<core::view::CallGetTransferFunction>();
     if (tf_call == nullptr) return false;
-    if (!((*tf_call)())) return false;
+    //if (!((*tf_call)())) return false;
 
     auto tf_texture_name = tf_call->OpenGLTexture();
 
@@ -53,8 +53,19 @@ bool megamol::archvis::FEMMaterialDataSource::getDataCallback(core::Call& caller
 
         m_gpu_materials->clearMaterials();
 
-        m_gpu_materials->addMaterial(this->instance(), filename);
+        m_gpu_materials->addMaterial(this->instance(), filename, {tf_texture_name});
     }
+
+    if (tf_call->isDirty())
+    {
+        if (!m_gpu_materials->getMaterials().empty())
+        {
+            tf_call->resetDirty();
+
+            m_gpu_materials->updateMaterialTexture(0, 0, tf_texture_name);
+        }
+    }
+
 
     mtl_call->setMaterialStorage(m_gpu_materials);
 

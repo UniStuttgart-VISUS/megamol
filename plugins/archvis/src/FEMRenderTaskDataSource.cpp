@@ -51,6 +51,8 @@ bool megamol::archvis::FEMRenderTaskDataSource::getDataCallback(core::Call & cal
 
 	if (fem_call->getUpdateFlag())
 	{
+        m_gpu_render_tasks->clear();
+
 		for (auto& sub_mesh : gpu_mesh_storage->getSubMeshData())
 		{
 			auto const& gpu_batch_mesh = gpu_mesh_storage->getMeshes()[sub_mesh.batch_index].mesh;
@@ -78,6 +80,16 @@ bool megamol::archvis::FEMRenderTaskDataSource::getDataCallback(core::Call & cal
         auto const& node_deformation = fem_call->getFEMData()->getNodeDeformations();
 
         m_gpu_render_tasks->addPerFrameDataBuffer(node_deformation, 1);
+
+        // TODO get transfer function texture and add as per frame data
+        std::vector<GLuint64> texture_handles;
+        auto textures = gpu_mtl_storage->getMaterials().front().textures_names;
+        for (auto texture : textures)
+        {
+            texture_handles.push_back(glGetTextureHandleARB(texture));
+            glMakeTextureHandleResidentARB(texture_handles.back());
+        }
+        m_gpu_render_tasks->addPerFrameDataBuffer(texture_handles, 2);
 
         fem_call->clearUpdateFlag();
 	}

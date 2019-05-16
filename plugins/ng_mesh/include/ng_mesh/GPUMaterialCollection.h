@@ -33,12 +33,18 @@ namespace megamol {
 			struct Material
 			{
 				std::shared_ptr<Shader> shader_program;
-				std::vector<std::shared_ptr<Texture2D>> textures;
+				std::vector<GLuint>     textures_names;
 			};
 
-			void addMaterial(megamol::core::CoreInstance* mm_core_inst, std::string shader_btf_name);
+			void addMaterial(
+                megamol::core::CoreInstance* mm_core_inst,
+                std::string                  shader_btf_name,
+                std::vector<GLuint>          texture_names = {}
+            );
 
-			void addMaterial(std::shared_ptr<Shader> const& shader);
+			void addMaterial(std::shared_ptr<Shader> const& shader, std::vector<GLuint> texture_names);
+
+            void updateMaterialTexture(size_t mtl_idx, size_t tex_idx, GLuint texture_name);
 
 			void clearMaterials();
 
@@ -46,6 +52,11 @@ namespace megamol {
 
 		private:
 			std::vector<Material> m_materials;
+
+            /**
+             * Storage for textures created and managed by this class
+             */
+            std::vector<std::shared_ptr<Texture2D>> m_texture;
 		};
 
 		inline std::vector<GPUMaterialCollecton::Material> const & GPUMaterialCollecton::getMaterials()

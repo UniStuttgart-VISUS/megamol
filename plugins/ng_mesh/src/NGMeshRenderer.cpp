@@ -136,7 +136,6 @@ bool NGMeshRenderer::create()
 
 void NGMeshRenderer::release()
 {
-	//m_render_batches.clear();
 	m_per_frame_data.reset();
 }
 
@@ -145,19 +144,6 @@ bool NGMeshRenderer::GetExtents(megamol::core::Call& call)
 	view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
 	if (cr == NULL)
 		return false;
-
-	//CallNGMeshRenderBatches* render_batch_call = this->m_renderBatches_callerSlot.CallAs<CallNGMeshRenderBatches>();
-	//
-	//if (render_batch_call == NULL)
-	//	return false;
-	//
-	//if (!(*render_batch_call)(1))
-	//	return false;
-	//
-	//cr->SetTimeFramesCount(render_batch_call->FrameCount());
-	//cr->AccessBoundingBoxes() = render_batch_call->GetBoundingBoxes();
-	//cr->AccessBoundingBoxes().MakeScaledWorld(1.0f);
-
 
 	GPURenderTaskDataCall* rtc = this->m_render_task_callerSlot.CallAs<GPURenderTaskDataCall>();
 	
@@ -592,64 +578,13 @@ bool NGMeshRenderer::Render(megamol::core::Call& call)
     glGetFloatv(GL_MODELVIEW_MATRIX, view_matrix.data());
     glGetFloatv(GL_PROJECTION_MATRIX, projection_matrix.data());
 	
-	//GPUMeshDataCall*       mesh_call = this->m_mesh_callerSlot.CallAs<GPUMeshDataCall>();
-	//GPUMaterialDataCall*   matl_call = this->m_material_callerSlot.CallAs<GPUMaterialDataCall>();
 	GPURenderTaskDataCall* task_call = this->m_render_task_callerSlot.CallAs<GPURenderTaskDataCall>();
 	
-	if (/*mesh_call == NULL || matl_call == NULL ||*/ task_call == NULL)
+	if (task_call == NULL)
 		return false;
 	
-	if ( /*(!(*mesh_call)(0)) || (!(*matl_call)(0)) ||*/ (!(*task_call)(0)) )
+	if ((!(*task_call)(0)) )
 		return false;
-		
-	//	if (mesh_call->getUpdateFlags() > 0) {
-	//		updateMeshes(*(mesh_call->getBatchedMeshesDataAccessor()), mesh_call->getUpdateFlags());
-	//		mesh_call->resetUpdateFlags();
-	//	}
-	//	
-	//	if (matl_call->getUpdateFlags() > 0) {
-	//		updateMaterials(matl_call->getMaterialsData(), matl_call->getUpdateFlags());
-	//		matl_call->resetUpdateFlags();
-	//	}
-	//	
-	//	if (task_call->getUpdateFlags() > 0) {
-	//		updateRenderTasks(task_call->getRenderTaskData(), task_call->getUpdateFlags());
-	//		task_call->resetUpdateFlags();
-	//	}
-	
-	//   CallNGMeshRenderBatches* render_batch_call = this->m_renderBatches_callerSlot.CallAs<CallNGMeshRenderBatches>();
-	//   
-	//   if (render_batch_call == NULL)
-	//   	return false;
-	//   
-	//   if (!(*render_batch_call)(0))
-	//   	return false;
-	//   
-	//   // loop through render batches data, update GPU render batches if necessary
-	//   auto render_batches = render_batch_call->getRenderBatches();
-	//   
-	//   if (render_batches == nullptr)
-	//   	return true;
-	//   
-	//   for (size_t batch_idx = 0; batch_idx < render_batches->getBatchCount(); ++batch_idx)
-	//   {
-	//   	if (render_batches->getUpdateFlags(batch_idx) > 0) // check if at least a single flag is set to 1
-	//   	{
-	//   		updateRenderBatch(
-	//   			batch_idx,
-	//   			render_batches->getShaderProgramData(batch_idx),
-	//   			render_batches->getMeshData(batch_idx),
-	//   			render_batches->getDrawCommandData(batch_idx),
-	//   			render_batches->getObjectShaderParams(batch_idx),
-	//   			render_batches->getMaterialShaderParams(batch_idx),
-	//   			render_batches->getUpdateFlags(batch_idx)
-	//   		);
-	//   
-	//   		render_batches->resetUpdateFlags(batch_idx);
-	//   	}
-	//   }
-	
-	// TODO update data from calls
 	
 	//vislib::sys::Log::DefaultLog.WriteError("Hey listen!");
 	

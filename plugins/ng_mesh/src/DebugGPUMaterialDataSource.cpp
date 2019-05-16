@@ -50,7 +50,7 @@ bool megamol::ngmesh::DebugGPUMaterialDataSource::load()
 	instance()->ShaderSourceFactory().MakeShaderSource(shader_base_name + "::fragment", frag_shader_src);
 	shader->Create(vert_shader_src.Code(), vert_shader_src.Count(), frag_shader_src.Code(), frag_shader_src.Count());
 
-	m_gpu_materials->addMaterial(shader);
+	m_gpu_materials->addMaterial(shader,{});
 	//m_gpu_materials->addMaterial("NGMeshDebug");
 
 	return true;

@@ -15,7 +15,10 @@
 namespace megamol {
 namespace ngmesh {
 
-void GPUMaterialCollecton::addMaterial(core::CoreInstance* mm_core_inst, std::string shader_btf_name)
+void GPUMaterialCollecton::addMaterial(
+    megamol::core::CoreInstance* mm_core_inst,
+    std::string shader_btf_name,
+    std::vector<GLuint> texture_names)
 {
 	std::shared_ptr<Shader> shader = std::make_shared<Shader>();
 
@@ -70,13 +73,20 @@ void GPUMaterialCollecton::addMaterial(core::CoreInstance* mm_core_inst, std::st
 		//return false;
 	}
 
-	addMaterial(shader);
+	addMaterial(shader,texture_names);
 }
 
-void GPUMaterialCollecton::addMaterial(std::shared_ptr<Shader> const& shader)
+void GPUMaterialCollecton::addMaterial(
+    std::shared_ptr<Shader> const& shader,
+    std::vector<GLuint> texture_names)
 {
 	m_materials.push_back(Material());
 	m_materials.back().shader_program = shader;
+    m_materials.back().textures_names = texture_names;
+}
+
+void GPUMaterialCollecton::updateMaterialTexture(size_t mtl_idx, size_t tex_idx, GLuint texture_name) {
+    m_materials[mtl_idx].textures_names[tex_idx] = texture_name;
 }
 
 void GPUMaterialCollecton::clearMaterials()
