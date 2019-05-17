@@ -92,7 +92,16 @@ bool megamol::archvis::FEMRenderTaskDataSource::getDataCallback(core::Call & cal
         m_gpu_render_tasks->addPerFrameDataBuffer(texture_handles, 2);
 
         fem_call->clearUpdateFlag();
-	}
+    } else {
+        // TODO get transfer function texture and add as per frame data
+        std::vector<GLuint64> texture_handles;
+        auto textures = gpu_mtl_storage->getMaterials().front().textures_names;
+        for (auto texture : textures) {
+            texture_handles.push_back(glGetTextureHandleARB(texture));
+            glMakeTextureHandleResidentARB(texture_handles.back());
+        }
+        m_gpu_render_tasks->updatePerFrameDataBuffer(texture_handles, 2);
+    }
 
 	rtc->setRenderTaskData(m_gpu_render_tasks.get());
 

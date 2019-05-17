@@ -92,6 +92,10 @@ bool TransferFunction::requestTF(Call& call) {
             param::TransferFunctionParam::GaussInterpolation(this->tex, this->texSize, tfdata);
         }
 
+        if (this->texID != 0) {
+            glDeleteTextures(1, &this->texID);
+        }
+
         bool t1de = (glIsEnabled(GL_TEXTURE_1D) == GL_TRUE);
         if (!t1de) glEnable(GL_TEXTURE_1D);
         if (this->texID == 0) glGenTextures(1, &this->texID);
