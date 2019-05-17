@@ -10,7 +10,9 @@
 
 #include <sstream>
 
+
 using namespace megamol::gui;
+
 
 void WindowManager::SoftResetWindowSizePos(const std::string& window_name, WindowConfiguration& window_config) {
     assert(ImGui::GetCurrentContext() != nullptr);

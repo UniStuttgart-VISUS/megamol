@@ -354,9 +354,9 @@ bool TransferFunctionParam::CheckTransferFunctionString(const std::string &tfs) 
                     }
                     else {
                         for (UINT k = 0; k < TFP_VAL_CNT; ++k) {
-                            if (!json.at("Nodes")[i][k].is_number_float()) {
+                            if (!json.at("Nodes")[i][k].is_number()) {
                                 vislib::sys::Log::DefaultLog.WriteError(
-                                    "[CheckTransferFunctionString] Values in 'Nodes' arrays should be floating point numbers.");
+                                    "[CheckTransferFunctionString] Values in 'Nodes' arrays should be numbers.");
                                 check = false;
                            }
                         }

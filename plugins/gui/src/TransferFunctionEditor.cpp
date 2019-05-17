@@ -8,6 +8,7 @@
 #include "stdafx.h"
 #include "TransferFunctionEditor.h"
 
+
 using namespace megamol::gui;
 using namespace megamol::core;
 

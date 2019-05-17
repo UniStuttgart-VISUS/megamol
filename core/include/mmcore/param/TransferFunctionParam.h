@@ -7,6 +7,13 @@
 
 #ifndef MEGAMOLCORE_TRANSFERFUNCTIONPARAM_H_INCLUDED
 #define MEGAMOLCORE_TRANSFERFUNCTIONPARAM_H_INCLUDED
+#define MEGAMOL_GUI_FILEUTILS_H_INCLUDED
+#if (defined(_MSC_VER) && (_MSC_VER > 1000))
+#    pragma once
+#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
+#if defined(_WIN32) && defined(_MANAGED)
+#    pragma managed(push, off)
+#endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
 #include <string>
@@ -142,7 +149,15 @@ public:
     */
     static void GaussInterpolation(std::vector<float> &out_texdata, unsigned int in_texsize, const TFDataType &in_tfdata);
 
-    /** Calculates gauss function for given parameters. */
+    /** Calculates gauss function value. 
+    *
+    * @param x  The current x position to calculate the gauss function value for.
+    * @param a  The scaling of the gauss function (bell) in direction of the y axis.
+    * @param b  The translation of the gauss function (bell) center in direction of the x axis.
+    * @param c  The width (= sigma) of the gauss function (bell).
+    * 
+    * @return The gauss funtion value.
+    */
     static inline float gauss(float x, float a, float b, float c) {
         return (a * expf(-1.0f * (x - b) * (x - b) / (2.0f * c * c)));
     }

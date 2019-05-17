@@ -1,7 +1,23 @@
+/*
+ * CorporateGreyStyle.h
+ *
+ * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
+ * Alle Rechte vorbehalten.
+ */
+
 #ifndef MEGAMOL_GUI_CORPORATEGREY_H_INCLUDED
 #define MEGAMOL_GUI_CORPORATEGREY_H_INCLUDED
+#define MEGAMOL_GUI_GUIVIEW_H_INCLUDED
+#if (defined(_MSC_VER) && (_MSC_VER > 1000))
+#    pragma once
+#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
+#if defined(_WIN32) && defined(_MANAGED)
+#    pragma managed(push, off)
+#endif /* defined(_WIN32) && defined(_MANAGED) */
+
 
 #include <imgui.h>
+
 
 /**
  * Slightly modified "CorporateGrey"-Style, as proposed by Aiden Koss.

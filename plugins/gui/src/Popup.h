@@ -1,10 +1,9 @@
 /*
- * WidgetUtils.h
+ * PopUp.h
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
-
 
 #ifndef MEGAMOL_GUI_POPUP_H_INCLUDED
 #define MEGAMOL_GUI_POPUP_H_INCLUDED
@@ -15,9 +14,11 @@
 #    pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
+
 #include <string>
 
 #include <imgui.h>
+
 
 namespace megamol {
 namespace gui {

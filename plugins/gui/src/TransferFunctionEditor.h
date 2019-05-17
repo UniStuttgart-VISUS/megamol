@@ -5,7 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-
 #ifndef MEGAMOL_GUI_TRANSFERFUNCTIONEDITOR_H_INCLUDED
 #define MEGAMOL_GUI_TRANSFERFUNCTIONEDITOR_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
@@ -14,6 +13,7 @@
 #if defined(_WIN32) && defined(_MANAGED)
 #    pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
+
 
 #include "mmcore/param/TransferFunctionParam.h"
 #include "mmcore/view/TransferFunction.h"
@@ -26,6 +26,7 @@
 
 #include <imgui.h>
 #include "Popup.h"
+
 
 namespace megamol {
 namespace gui {
