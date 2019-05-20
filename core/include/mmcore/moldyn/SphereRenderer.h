@@ -1,18 +1,18 @@
 /*
- * SimpleSphereRenderer.h
+ * SphereRenderer.h
  *
  * Copyright (C) 2009 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_SIMPLESPHERERENDERER_H_INCLUDED
-#define MEGAMOLCORE_SIMPLESPHERERENDERER_H_INCLUDED
+#ifndef MEGAMOLCORE_SphereRenderer_H_INCLUDED
+#define MEGAMOLCORE_SphereRenderer_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 
-#include "mmcore/moldyn/AbstractSimpleSphereRenderer.h"
+#include "mmcore/moldyn/AbstractSphereRenderer.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/utility/MDAO2ShaderUtilities.h"
 #include "mmcore/utility/MDAO2VolumeGenerator.h"
@@ -75,7 +75,7 @@ namespace moldyn {
     /**
      * Renderer for simple sphere glyphs.
      */
-    class SimpleSphereRenderer : public AbstractSimpleSphereRenderer {
+    class SphereRenderer : public AbstractSphereRenderer {
     public:
        
         /**
@@ -84,7 +84,7 @@ namespace moldyn {
          * @return The name of this module.
          */
         static const char *ClassName(void) {
-            return "SimpleSphereRenderer";
+            return "SphereRenderer";
         }
 
         /**
@@ -109,11 +109,11 @@ namespace moldyn {
             HGLRC rc = ::wglGetCurrentContext();
             if (dc == nullptr) {
                 vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, 
-                    "[SimpleSphereRenderer] There is no OpenGL rendering context available.");
+                    "[SphereRenderer] There is no OpenGL rendering context available.");
             }
             if (rc == nullptr) {
                 vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, 
-                    "[SimpleSphereRenderer] There is no current OpenGL rendering context available from the calling thread.");
+                    "[SphereRenderer] There is no current OpenGL rendering context available from the calling thread.");
             }
             ASSERT(dc != nullptr);
             ASSERT(rc != nullptr);
@@ -125,22 +125,22 @@ namespace moldyn {
             // Minimum requirements for all render modes
             if (!vislib::graphics::gl::GLSLShader::AreExtensionsAvailable()) {
                 vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, 
-                    "[SimpleSphereRenderer] No render mode is available. Shader extensions are not available.");
+                    "[SphereRenderer] No render mode is available. Shader extensions are not available.");
                 retval = false;
             }
             if (!ogl_IsVersionGEQ(3, 2)) {
                 vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, 
-                    "[SimpleSphereRenderer] No render mode available. Minimum OpenGL version is 3.2");
+                    "[SphereRenderer] No render mode available. Minimum OpenGL version is 3.2");
                 retval = false;
             }
             if (!isExtAvailable("GL_ARB_explicit_attrib_location")) {
                 vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
-                    "[SimpleSphereRenderer] No render mode is available. Extension GL_ARB_explicit_attrib_location is not available.");
+                    "[SphereRenderer] No render mode is available. Extension GL_ARB_explicit_attrib_location is not available.");
                 retval = false;
             }
             if (!isExtAvailable("GL_ARB_conservative_depth")) {
                 vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
-                    "[SimpleSphereRenderer] No render mode is available. Extension GL_ARB_conservative_depth is not available.");
+                    "[SphereRenderer] No render mode is available. Extension GL_ARB_conservative_depth is not available.");
                 retval = false;
             }
 
@@ -148,10 +148,10 @@ namespace moldyn {
         }
 
         /** Ctor. */
-        SimpleSphereRenderer(void);
+        SphereRenderer(void);
 
         /** Dtor. */
-        virtual ~SimpleSphereRenderer(void);
+        virtual ~SphereRenderer(void);
 
     protected:
 
@@ -499,4 +499,4 @@ namespace moldyn {
 } /* end namespace core */
 } /* end namespace megamol */
 
-#endif /* MEGAMOLCORE_SIMPLESPHERERENDERER_H_INCLUDED */
+#endif /* MEGAMOLCORE_SphereRenderer_H_INCLUDED */

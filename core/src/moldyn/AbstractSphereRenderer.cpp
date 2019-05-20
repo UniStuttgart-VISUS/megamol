@@ -1,5 +1,5 @@
 /*
- * AbstractSimpleSphereRenderer.cpp
+ * AbstractSphereRenderer.cpp
  *
  * Copyright (C) 2012 by CGV (TU Dresden)
  * Alle Rechte vorbehalten.
@@ -7,16 +7,16 @@
 
 
 #include "stdafx.h"
-#include "mmcore/moldyn/AbstractSimpleSphereRenderer.h"
+#include "mmcore/moldyn/AbstractSphereRenderer.h"
 
 
 using namespace megamol::core;
 
 
 /*
- * moldyn::AbstractSimpleSphereRenderer::AbstractSimpleSphereRenderer
+ * moldyn::AbstractSphereRenderer::AbstractSphereRenderer
  */
-moldyn::AbstractSimpleSphereRenderer::AbstractSimpleSphereRenderer(void) : Renderer3DModule(),
+moldyn::AbstractSphereRenderer::AbstractSphereRenderer(void) : Renderer3DModule(),
         getDataSlot("getdata", "Connects to the data source"),
         getTFSlot("gettransferfunction", "Connects to the transfer function module"),
         getClipPlaneSlot("getclipplane", "Connects to a clipping plane module"),
@@ -42,17 +42,17 @@ moldyn::AbstractSimpleSphereRenderer::AbstractSimpleSphereRenderer(void) : Rende
 
 
 /*
- * moldyn::AbstractSimpleSphereRenderer::~AbstractSimpleSphereRenderer
+ * moldyn::AbstractSphereRenderer::~AbstractSphereRenderer
  */
-moldyn::AbstractSimpleSphereRenderer::~AbstractSimpleSphereRenderer(void) {
+moldyn::AbstractSphereRenderer::~AbstractSphereRenderer(void) {
     this->Release();
 }
 
 
 /*
- * moldyn::AbstractSimpleSphereRenderer::create
+ * moldyn::AbstractSphereRenderer::create
  */
-bool moldyn::AbstractSimpleSphereRenderer::create(void) {
+bool moldyn::AbstractSphereRenderer::create(void) {
     //if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) {
     //    return false;
     //}
@@ -112,9 +112,9 @@ bool moldyn::AbstractSimpleSphereRenderer::create(void) {
 
 
 /*
- * moldyn::AbstractSimpleSphereRenderer::GetExtents
+ * moldyn::AbstractSphereRenderer::GetExtents
  */
-bool moldyn::AbstractSimpleSphereRenderer::GetExtents(view::CallRender3D& call) {
+bool moldyn::AbstractSphereRenderer::GetExtents(view::CallRender3D& call) {
     view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
     if (cr == NULL) return false;
 
@@ -157,18 +157,18 @@ bool moldyn::AbstractSimpleSphereRenderer::GetExtents(view::CallRender3D& call) 
 
 
 /*
- * moldyn::AbstractSimpleSphereRenderer::release
+ * moldyn::AbstractSphereRenderer::release
  */
-void moldyn::AbstractSimpleSphereRenderer::release(void) {
+void moldyn::AbstractSphereRenderer::release(void) {
     //this->sphereShader.Release();
     ::glDeleteTextures(1, &this->greyTF);
 }
 
 
 /*
- * moldyn::AbstractSimpleSphereRenderer::getData
+ * moldyn::AbstractSphereRenderer::getData
  */
-moldyn::MultiParticleDataCall *moldyn::AbstractSimpleSphereRenderer::getData(unsigned int t, float& outScaling) {
+moldyn::MultiParticleDataCall *moldyn::AbstractSphereRenderer::getData(unsigned int t, float& outScaling) {
     MultiParticleDataCall *c2 = this->getDataSlot.CallAs<MultiParticleDataCall>();
     outScaling = 1.0f;
     if (c2 != NULL) {
@@ -205,9 +205,9 @@ moldyn::MultiParticleDataCall *moldyn::AbstractSimpleSphereRenderer::getData(uns
 
 
 /*
- * moldyn::AbstractSimpleSphereRenderer::getClipData
+ * moldyn::AbstractSphereRenderer::getClipData
  */
-void moldyn::AbstractSimpleSphereRenderer::getClipData(float *clipDat, float *clipCol) {
+void moldyn::AbstractSphereRenderer::getClipData(float *clipDat, float *clipCol) {
     view::CallClipPlane *ccp = this->getClipPlaneSlot.CallAs<view::CallClipPlane>();
     if ((ccp != NULL) && (*ccp)()) {
         clipDat[0] = ccp->GetPlane().Normal().X();
@@ -230,9 +230,9 @@ void moldyn::AbstractSimpleSphereRenderer::getClipData(float *clipDat, float *cl
 
 
 ///*
-// * moldyn::AbstractSimpleSphereRenderer::Render
+// * moldyn::AbstractSphereRenderer::Render
 // */
-//bool moldyn::AbstractSimpleSphereRenderer::Render(view::CallRender3D& call) {
+//bool moldyn::AbstractSphereRenderer::Render(view::CallRender3D& call) {
 //    view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
 //    if (cr == NULL) return false;
 //
@@ -404,6 +404,6 @@ void moldyn::AbstractSimpleSphereRenderer::getClipData(float *clipDat, float *cl
 //    return true;
 //}
 
-bool moldyn::AbstractSimpleSphereRenderer::isTimeForced(void) const {
+bool moldyn::AbstractSphereRenderer::isTimeForced(void) const {
     return this->forceTimeSlot.Param<param::BoolParam>()->Value();
 }

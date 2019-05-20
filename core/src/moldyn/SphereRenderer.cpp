@@ -1,5 +1,5 @@
 /*
- * SimpleSphereRenderer.cpp
+ * SphereRenderer.cpp
  *
  * Copyright (C) 2009 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
@@ -8,7 +8,7 @@
 
 
 #include "stdafx.h"
-#include "mmcore/moldyn/SimpleSphereRenderer.h"
+#include "mmcore/moldyn/SphereRenderer.h"
 
 
 using namespace megamol::core;
@@ -126,10 +126,10 @@ void APIENTRY DebugGLCallback(GLenum source, GLenum type, GLuint id, GLenum seve
 
 
  /*
-  * moldyn::SimpleSphereRenderer::SimpleSphereRenderer
+  * moldyn::SphereRenderer::SphereRenderer
   */
-moldyn::SimpleSphereRenderer::SimpleSphereRenderer(void)
-    : AbstractSimpleSphereRenderer()
+moldyn::SphereRenderer::SphereRenderer(void)
+    : AbstractSphereRenderer()
     , curViewAttrib()
     , curClipDat()
     , oldClipDat()
@@ -260,15 +260,15 @@ moldyn::SimpleSphereRenderer::SimpleSphereRenderer(void)
 
 
 /*
- * moldyn::SimpleSphereRenderer::~SimpleSphereRenderer
+ * moldyn::SphereRenderer::~SphereRenderer
  */
-moldyn::SimpleSphereRenderer::~SimpleSphereRenderer(void) { this->Release(); }
+moldyn::SphereRenderer::~SphereRenderer(void) { this->Release(); }
 
 
 /*
- * moldyn::SimpleSphereRenderer::create
+ * moldyn::SphereRenderer::create
  */
-bool moldyn::SimpleSphereRenderer::create(void) {
+bool moldyn::SphereRenderer::create(void) {
 
     ASSERT(IsAvailable());
     // At least the simple render mode must be available
@@ -320,24 +320,24 @@ bool moldyn::SimpleSphereRenderer::create(void) {
     // timer.SetSummaryFileName("summary.csv");
     // timer.SetMaximumFrames(20, 100);
 
-    return (AbstractSimpleSphereRenderer::create());
+    return (AbstractSphereRenderer::create());
 }
 
 
 /*
- * moldyn::SimpleSphereRenderer::release
+ * moldyn::SphereRenderer::release
  */
-void moldyn::SimpleSphereRenderer::release(void) {
+void moldyn::SphereRenderer::release(void) {
 
     this->resetResources();
-    AbstractSimpleSphereRenderer::release();
+    AbstractSphereRenderer::release();
 }
 
 
 /*
- * moldyn::SimpleSphereRenderer::resetResources
+ * moldyn::SphereRenderer::resetResources
  */
-bool moldyn::SimpleSphereRenderer::resetResources(void) {
+bool moldyn::SphereRenderer::resetResources(void) {
 
     this->sphereShader.Release();
     this->sphereGeometryShader.Release();
@@ -407,9 +407,9 @@ bool moldyn::SimpleSphereRenderer::resetResources(void) {
 
 
 /*
- * moldyn::SimpleSphereRenderer::createResources
+ * moldyn::SphereRenderer::createResources
  */
-bool moldyn::SimpleSphereRenderer::createResources() {
+bool moldyn::SphereRenderer::createResources() {
 
     this->resetResources();
 
@@ -618,9 +618,9 @@ bool moldyn::SimpleSphereRenderer::createResources() {
 
 
 /*
- * moldyn::SimpleSphereRenderer::Render
+ * moldyn::SphereRenderer::Render
  */
-bool moldyn::SimpleSphereRenderer::Render(view::CallRender3D& call) {
+bool moldyn::SphereRenderer::Render(view::CallRender3D& call) {
 
 #ifdef DEBUG_GL_CALLBACK
     glEnable(GL_DEBUG_OUTPUT);
@@ -743,9 +743,9 @@ bool moldyn::SimpleSphereRenderer::Render(view::CallRender3D& call) {
 
 
 /*
- * moldyn::SimpleSphereRenderer::renderSimple
+ * moldyn::SphereRenderer::renderSimple
  */
-bool moldyn::SimpleSphereRenderer::renderSimple(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc) {
+bool moldyn::SphereRenderer::renderSimple(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc) {
 
     this->sphereShader.Enable();
 
@@ -812,9 +812,9 @@ bool moldyn::SimpleSphereRenderer::renderSimple(view::CallRender3D* cr3d, MultiP
 
 
 /*
- * moldyn::SimpleSphereRenderer::renderNG
+ * moldyn::SphereRenderer::renderNG
  */
-bool moldyn::SimpleSphereRenderer::renderNG(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc) {
+bool moldyn::SphereRenderer::renderNG(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc) {
 
 #ifdef CHRONOTIMING
     std::vector<std::chrono::steady_clock::time_point> deltas;
@@ -1023,9 +1023,9 @@ bool moldyn::SimpleSphereRenderer::renderNG(view::CallRender3D* cr3d, MultiParti
 
 
 /*
- * moldyn::SimpleSphereRenderer::renderNGSplat
+ * moldyn::SphereRenderer::renderNGSplat
  */
-bool moldyn::SimpleSphereRenderer::renderNGSplat(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc) {
+bool moldyn::SphereRenderer::renderNGSplat(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc) {
 
     glDisable(GL_DEPTH_TEST);
 
@@ -1192,9 +1192,9 @@ bool moldyn::SimpleSphereRenderer::renderNGSplat(view::CallRender3D* cr3d, Multi
 
 
 /*
- * moldyn::SimpleSphereRenderer::renderNGBufferArray
+ * moldyn::SphereRenderer::renderNGBufferArray
  */
-bool moldyn::SimpleSphereRenderer::renderNGBufferArray(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc) {
+bool moldyn::SphereRenderer::renderNGBufferArray(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc) {
 
     this->sphereShader.Enable();
 
@@ -1283,9 +1283,9 @@ bool moldyn::SimpleSphereRenderer::renderNGBufferArray(view::CallRender3D* cr3d,
 
 
 /*
- * moldyn::SimpleSphereRenderer::renderGeo
+ * moldyn::SphereRenderer::renderGeo
  */
-bool moldyn::SimpleSphereRenderer::renderGeo(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc) {
+bool moldyn::SphereRenderer::renderGeo(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc) {
 
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 
@@ -1351,9 +1351,9 @@ bool moldyn::SimpleSphereRenderer::renderGeo(view::CallRender3D* cr3d, MultiPart
 
 
 /*
- * moldyn::SimpleSphereRenderer::renderAmbientOcclusion
+ * moldyn::SphereRenderer::renderAmbientOcclusion
  */
-bool moldyn::SimpleSphereRenderer::renderAmbientOcclusion(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc) {
+bool moldyn::SphereRenderer::renderAmbientOcclusion(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc) {
 
     // We need to regenerate the shader if certain settings are changed
     if (this->enableAOSlot.IsDirty() || this->enableLightingSlot.IsDirty() || this->aoConeApexSlot.IsDirty()) {
@@ -1400,10 +1400,10 @@ bool moldyn::SimpleSphereRenderer::renderAmbientOcclusion(view::CallRender3D* cr
 
 
 /*
- * moldyn::SimpleSphereRenderer::setPointers
+ * moldyn::SphereRenderer::setPointers
  */
 template <typename T>
-void moldyn::SimpleSphereRenderer::setPointers(MultiParticleDataCall::Particles& parts, T& shader, GLuint vertBuf,
+void moldyn::SphereRenderer::setPointers(MultiParticleDataCall::Particles& parts, T& shader, GLuint vertBuf,
     const void* vertPtr, GLuint vertAttribLoc, GLuint colBuf, const void* colPtr, GLuint colAttribLoc,
     GLuint colIdxAttribLoc) {
 
@@ -1501,9 +1501,9 @@ void moldyn::SimpleSphereRenderer::setPointers(MultiParticleDataCall::Particles&
 
 
 /*
- * moldyn::SimpleSphereRenderer::makeColorString
+ * moldyn::SphereRenderer::makeColorString
  */
-bool moldyn::SimpleSphereRenderer::makeColorString(
+bool moldyn::SphereRenderer::makeColorString(
     MultiParticleDataCall::Particles& parts, std::string& code, std::string& declaration, bool interleaved) {
 
     bool ret = true;
@@ -1595,9 +1595,9 @@ bool moldyn::SimpleSphereRenderer::makeColorString(
 
 
 /*
- * moldyn::SimpleSphereRenderer::makeVertexString
+ * moldyn::SphereRenderer::makeVertexString
  */
-bool moldyn::SimpleSphereRenderer::makeVertexString(
+bool moldyn::SphereRenderer::makeVertexString(
     MultiParticleDataCall::Particles& parts, std::string& code, std::string& declaration, bool interleaved) {
 
     bool ret = true;
@@ -1663,9 +1663,9 @@ bool moldyn::SimpleSphereRenderer::makeVertexString(
 
 
 /*
- * moldyn::SimpleSphereRenderer::makeShader
+ * moldyn::SphereRenderer::makeShader
  */
-std::shared_ptr<GLSLShader> moldyn::SimpleSphereRenderer::makeShader(
+std::shared_ptr<GLSLShader> moldyn::SphereRenderer::makeShader(
     vislib::SmartPtr<ShaderSource> vert, vislib::SmartPtr<ShaderSource> frag) {
 
     std::shared_ptr<GLSLShader> sh = std::make_shared<GLSLShader>(GLSLShader());
@@ -1699,9 +1699,9 @@ std::shared_ptr<GLSLShader> moldyn::SimpleSphereRenderer::makeShader(
 
 
 /*
- * moldyn::SimpleSphereRenderer::generateShader
+ * moldyn::SphereRenderer::generateShader
  */
-std::shared_ptr<vislib::graphics::gl::GLSLShader> moldyn::SimpleSphereRenderer::generateShader(
+std::shared_ptr<vislib::graphics::gl::GLSLShader> moldyn::SphereRenderer::generateShader(
     MultiParticleDataCall::Particles& parts) {
 
     int c = parts.GetColourDataType();
@@ -1784,9 +1784,9 @@ std::shared_ptr<vislib::graphics::gl::GLSLShader> moldyn::SimpleSphereRenderer::
 
 
 /*
- * moldyn::SimpleSphereRenderer::getBytesAndStride
+ * moldyn::SphereRenderer::getBytesAndStride
  */
-void moldyn::SimpleSphereRenderer::getBytesAndStride(MultiParticleDataCall::Particles& parts, unsigned int& colBytes,
+void moldyn::SphereRenderer::getBytesAndStride(MultiParticleDataCall::Particles& parts, unsigned int& colBytes,
     unsigned int& vertBytes, unsigned int& colStride, unsigned int& vertStride, bool& interleaved) {
 
     vertBytes = MultiParticleDataCall::Particles::VertexDataSize[parts.GetVertexDataType()];
@@ -1805,9 +1805,9 @@ void moldyn::SimpleSphereRenderer::getBytesAndStride(MultiParticleDataCall::Part
 
 
 /*
- * moldyn::SimpleSphereRenderer::lockSingle
+ * moldyn::SphereRenderer::lockSingle
  */
-void moldyn::SimpleSphereRenderer::lockSingle(GLsync& syncObj) {
+void moldyn::SphereRenderer::lockSingle(GLsync& syncObj) {
     if (syncObj) {
         glDeleteSync(syncObj);
     }
@@ -1816,9 +1816,9 @@ void moldyn::SimpleSphereRenderer::lockSingle(GLsync& syncObj) {
 
 
 /*
- * moldyn::SimpleSphereRenderer::waitSingle
+ * moldyn::SphereRenderer::waitSingle
  */
-void moldyn::SimpleSphereRenderer::waitSingle(GLsync& syncObj) {
+void moldyn::SphereRenderer::waitSingle(GLsync& syncObj) {
     if (syncObj) {
         while (1) {
             GLenum wait = glClientWaitSync(syncObj, GL_SYNC_FLUSH_COMMANDS_BIT, 1);
@@ -1834,9 +1834,9 @@ void moldyn::SimpleSphereRenderer::waitSingle(GLsync& syncObj) {
 
 
 /*
- * moldyn::SimpleSphereRenderer::rebuildShader
+ * moldyn::SphereRenderer::rebuildShader
  */
-bool moldyn::SimpleSphereRenderer::rebuildShader() {
+bool moldyn::SphereRenderer::rebuildShader() {
     vislib::graphics::gl::ShaderSource vert, frag;
     core::utility::ShaderSourceFactory& factory = instance()->ShaderSourceFactory();
 
@@ -1899,9 +1899,9 @@ bool moldyn::SimpleSphereRenderer::rebuildShader() {
 
 
 /*
- * moldyn::SimpleSphereRenderer::rebuildGBuffer
+ * moldyn::SphereRenderer::rebuildGBuffer
  */
-bool moldyn::SimpleSphereRenderer::rebuildGBuffer() {
+bool moldyn::SphereRenderer::rebuildGBuffer() {
 
     if (!this->triggerRebuildGBuffer && (this->curVpWidth == this->lastVpWidth) && (this->curVpHeight == this->lastVpHeight) &&
         !this->useHPTexturesSlot.IsDirty()) {
@@ -1967,9 +1967,9 @@ bool moldyn::SimpleSphereRenderer::rebuildGBuffer() {
 
 
 /*
- * moldyn::SimpleSphereRenderer::rebuildWorkingData
+ * moldyn::SphereRenderer::rebuildWorkingData
  */
-void moldyn::SimpleSphereRenderer::rebuildWorkingData(
+void moldyn::SphereRenderer::rebuildWorkingData(
     megamol::core::view::CallRender3D* cr3d, megamol::core::moldyn::MultiParticleDataCall* dataCall) {
 
     // Upload new data if neccessary
@@ -2077,9 +2077,9 @@ void moldyn::SimpleSphereRenderer::rebuildWorkingData(
 
 
 /*
- * moldyn::SimpleSphereRenderer::renderParticlesGeometry
+ * moldyn::SphereRenderer::renderParticlesGeometry
  */
-void moldyn::SimpleSphereRenderer::renderParticlesGeometry(
+void moldyn::SphereRenderer::renderParticlesGeometry(
     megamol::core::view::CallRender3D* cr3d, megamol::core::moldyn::MultiParticleDataCall* dataCall) {
 
     bool highPrecision = this->useHPTexturesSlot.Param<megamol::core::param::BoolParam>()->Value();
@@ -2149,9 +2149,9 @@ void moldyn::SimpleSphereRenderer::renderParticlesGeometry(
 
 
 /*
- * moldyn::SimpleSphereRenderer::renderDeferredPass
+ * moldyn::SphereRenderer::renderDeferredPass
  */
-void moldyn::SimpleSphereRenderer::renderDeferredPass(megamol::core::view::CallRender3D* cr3d) {
+void moldyn::SphereRenderer::renderDeferredPass(megamol::core::view::CallRender3D* cr3d) {
     bool enableAO = this->enableAOSlot.Param<megamol::core::param::BoolParam>()->Value();
     bool enableLighting = this->enableLightingSlot.Param<megamol::core::param::BoolParam>()->Value();
     bool highPrecision = this->useHPTexturesSlot.Param<megamol::core::param::BoolParam>()->Value();
@@ -2215,9 +2215,9 @@ void moldyn::SimpleSphereRenderer::renderDeferredPass(megamol::core::view::CallR
 
 
 /*
- * moldyn::SimpleSphereRenderer::getTransferFunctionHandle
+ * moldyn::SphereRenderer::getTransferFunctionHandle
  */
-GLuint moldyn::SimpleSphereRenderer::getTransferFunctionHandle() {
+GLuint moldyn::SphereRenderer::getTransferFunctionHandle() {
     core::view::CallGetTransferFunction* cgtf = this->getTFSlot.CallAs<core::view::CallGetTransferFunction>();
     if ((cgtf != nullptr) && (*cgtf)()) return cgtf->OpenGLTexture();
 
@@ -2226,9 +2226,9 @@ GLuint moldyn::SimpleSphereRenderer::getTransferFunctionHandle() {
 
 
 /*
- * moldyn::SimpleSphereRenderer::uploadDataToGPU
+ * moldyn::SphereRenderer::uploadDataToGPU
  */
-void moldyn::SimpleSphereRenderer::uploadDataToGPU(const moldyn::SimpleSphereRenderer::gpuParticleDataType& gpuData,
+void moldyn::SphereRenderer::uploadDataToGPU(const moldyn::SphereRenderer::gpuParticleDataType& gpuData,
     megamol::core::moldyn::MultiParticleDataCall::Particles& particles) {
 
     glBindVertexArray(gpuData.vertexArray);
@@ -2309,9 +2309,9 @@ void moldyn::SimpleSphereRenderer::uploadDataToGPU(const moldyn::SimpleSphereRen
 
 
 /*
- * moldyn::SimpleSphereRenderer::generate3ConeDirections
+ * moldyn::SphereRenderer::generate3ConeDirections
  */
-void moldyn::SimpleSphereRenderer::generate3ConeDirections(
+void moldyn::SphereRenderer::generate3ConeDirections(
     std::vector<vislib::math::Vector<float, 4>>& directions, float apex) {
     directions.clear();
 
@@ -2330,9 +2330,9 @@ void moldyn::SimpleSphereRenderer::generate3ConeDirections(
 
 
 /*
- * moldyn::SimpleSphereRenderer::generateDirectionShaderArrayString
+ * moldyn::SphereRenderer::generateDirectionShaderArrayString
  */
-std::string moldyn::SimpleSphereRenderer::generateDirectionShaderArrayString(
+std::string moldyn::SphereRenderer::generateDirectionShaderArrayString(
     const std::vector<vislib::math::Vector<float, 4>>& directions, const std::string& directionsName) {
     std::stringstream result;
 
@@ -2356,9 +2356,9 @@ std::string moldyn::SimpleSphereRenderer::generateDirectionShaderArrayString(
 
 
 /*
- * moldyn::SimpleSphereRenderer::isRenderModeAvailable
+ * moldyn::SphereRenderer::isRenderModeAvailable
  */
-bool moldyn::SimpleSphereRenderer::isRenderModeAvailable(RenderMode rm) {
+bool moldyn::SphereRenderer::isRenderModeAvailable(RenderMode rm) {
 
     bool retval = true;
 
@@ -2371,81 +2371,81 @@ bool moldyn::SimpleSphereRenderer::isRenderModeAvailable(RenderMode rm) {
     case(RenderMode::SIMPLE_GEO):
         if (!vislib::graphics::gl::GLSLGeometryShader::AreExtensionsAvailable()) {
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, 
-                "[SimpleSphereRenderer] Render Mode 'SIMPLE_GEO' is not available. Geometry shader extensions are not available.");
+                "[SphereRenderer] Render Mode 'SIMPLE_GEO' is not available. Geometry shader extensions are not available.");
             retval = false;
         }
         if (!isExtAvailable("GL_EXT_geometry_shader4")) {
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, 
-                "[SimpleSphereRenderer] Render Mode 'SIMPLE_GEO' is not available. Extension GL_EXT_geometry_shader4 is not available.");
+                "[SphereRenderer] Render Mode 'SIMPLE_GEO' is not available. Extension GL_EXT_geometry_shader4 is not available.");
             retval = false;
         }
         if (!isExtAvailable("GL_EXT_gpu_shader4")) {
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, 
-                "[SimpleSphereRenderer] Render Mode 'SIMPLE_GEO' is not available. Extension GL_EXT_gpu_shader4 is not available.");
+                "[SphereRenderer] Render Mode 'SIMPLE_GEO' is not available. Extension GL_EXT_gpu_shader4 is not available.");
             retval = false;
         }
         if (!isExtAvailable("GL_EXT_bindable_uniform")) {
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, 
-                "[SimpleSphereRenderer] Render Mode 'SIMPLE_GEO' is not available. Extension GL_EXT_bindable_uniform is not available.");
+                "[SphereRenderer] Render Mode 'SIMPLE_GEO' is not available. Extension GL_EXT_bindable_uniform is not available.");
             retval = false;
         }
         if (!isExtAvailable("GL_ARB_shader_objects")) {
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, 
-                "[SimpleSphereRenderer] Render Mode 'SIMPLE_GEO' is not available. Extension GL_ARB_shader_objects is not available.");
+                "[SphereRenderer] Render Mode 'SIMPLE_GEO' is not available. Extension GL_ARB_shader_objects is not available.");
             retval = false;
         }
         break;
     case(RenderMode::NG):
         if (!ogl_IsVersionGEQ(4, 5)) {
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, 
-                "[SimpleSphereRenderer] Render Mode 'NG' is not available. Minimum OpenGL version is 4.5");
+                "[SphereRenderer] Render Mode 'NG' is not available. Minimum OpenGL version is 4.5");
             retval = false;
         }
         if (!isExtAvailable("GL_ARB_buffer_storage")) {
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, 
-                "[SimpleSphereRenderer] Render Mode 'NG' is not available. Extension GL_ARB_buffer_storage is not available.");
+                "[SphereRenderer] Render Mode 'NG' is not available. Extension GL_ARB_buffer_storage is not available.");
             retval = false;
         }
         break;
     case(RenderMode::NG_SPLAT):
         if (!ogl_IsVersionGEQ(4, 5)) {
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, 
-                "[SimpleSphereRenderer] Render Mode 'NG_SPLAT' is not available. Minimum OpenGL version is 4.5");
+                "[SphereRenderer] Render Mode 'NG_SPLAT' is not available. Minimum OpenGL version is 4.5");
             retval = false;
         }
         if (!isExtAvailable("GL_ARB_buffer_storage")) {
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, 
-                "[SimpleSphereRenderer] Render Mode 'NG_SPLAT' is not available. Extension GL_ARB_buffer_storage is not available.");
+                "[SphereRenderer] Render Mode 'NG_SPLAT' is not available. Extension GL_ARB_buffer_storage is not available.");
             retval = false;
         }
         break;
     case(RenderMode::NG_BUFFER_ARRAY):
         if (!ogl_IsVersionGEQ(4, 5)) {
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, 
-                "[SimpleSphereRenderer] Render Mode 'NG_BUFFER_ARRAY' is not available. Minimum OpenGL version is 4.5");
+                "[SphereRenderer] Render Mode 'NG_BUFFER_ARRAY' is not available. Minimum OpenGL version is 4.5");
             retval = false;
         }
         if (!isExtAvailable("GL_ARB_buffer_storage")) {
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, 
-                "[SimpleSphereRenderer] Render Mode 'NG_BUFFER_ARRAY' is not available. Extension GL_ARB_buffer_storage is not available.");
+                "[SphereRenderer] Render Mode 'NG_BUFFER_ARRAY' is not available. Extension GL_ARB_buffer_storage is not available.");
             retval = false;
         }
         break;
     case(RenderMode::AMBIENT_OCCLUSION):
         if (!vislib::graphics::gl::GLSLGeometryShader::AreExtensionsAvailable()) {
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, 
-                "[SimpleSphereRenderer] Render Mode 'AMBIENT_OCCLUSION' is not available. Geometry shader extensions are not available.");
+                "[SphereRenderer] Render Mode 'AMBIENT_OCCLUSION' is not available. Geometry shader extensions are not available.");
             retval = false;
         }    
         if (!isExtAvailable("GL_ARB_gpu_shader_fp64")) {
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
-                "[SimpleSphereRenderer] Render Mode 'AMBIENT_OCCLUSION' is not available. Extension GL_ARB_gpu_shader_fp64 is not available.");
+                "[SphereRenderer] Render Mode 'AMBIENT_OCCLUSION' is not available. Extension GL_ARB_gpu_shader_fp64 is not available.");
             retval = false;
         }
         break;
     default: 
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, 
-                "[SimpleSphereRenderer] BUG: Unknown render mode ...");
+                "[SphereRenderer] BUG: Unknown render mode ...");
         retval = false; 
         break;
     }
