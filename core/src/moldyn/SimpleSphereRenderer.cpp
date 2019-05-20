@@ -178,7 +178,6 @@ moldyn::SimpleSphereRenderer::SimpleSphereRenderer(void)
     , triggerRebuildGBuffer(false)
     // , timer()
     , renderModeParam("renderMode", "The sphere render mode.")
-    , toggleModeParam("renderModeButton", "Toggle sphere render modes.")
     , radiusScalingParam("scaling", "Scaling factor for particle radii.")
     , alphaScalingParam("splat::alphaScaling", "NG Splat: Scaling factor for particle alpha.")
     , attenuateSubpixelParam(
@@ -233,10 +232,6 @@ moldyn::SimpleSphereRenderer::SimpleSphereRenderer(void)
 
     this->useHPTexturesSlot << (new core::param::BoolParam(false));
     this->MakeSlotAvailable(&this->useHPTexturesSlot);
-
-    this->toggleModeParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_R));
-    this->toggleModeParam.SetUpdateCallback(&SimpleSphereRenderer::toggleRenderMode);
-    this->MakeSlotAvailable(&this->toggleModeParam);
 
     // Initialising enum param with all possible modes (needed for configurator) 
     // (Removing not available render modes later in create function)
@@ -336,27 +331,6 @@ void moldyn::SimpleSphereRenderer::release(void) {
 
     this->resetResources();
     AbstractSimpleSphereRenderer::release();
-}
-
-
-/*
- * moldyn::SimpleSphereRenderer::toggleRenderMode
- */
-bool moldyn::SimpleSphereRenderer::toggleRenderMode(param::ParamSlot& slot) {
-
-    ASSERT((&slot == &this->toggleModeParam));
-    // At least the simple render mode must be available
-    ASSERT(this->isRenderModeAvailable(RenderMode::SIMPLE));
-
-    // Only changing value of parameter.
-    auto currentRenderMode = this->renderModeParam.Param<param::EnumParam>()->Value();
-    do {
-        currentRenderMode = (currentRenderMode + 1) % (static_cast<int>(RenderMode::__COUNT__));
-    } while (!this->isRenderModeAvailable(static_cast<RenderMode>(currentRenderMode)));
-
-    this->renderModeParam.Param<param::EnumParam>()->SetValue(currentRenderMode);
-
-    return true;
 }
 
 
