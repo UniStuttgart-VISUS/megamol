@@ -74,6 +74,8 @@ public:
 
     using ModuleDescr_t = std::pair<Module::ptr_type, std::string>;
 
+    using ModuleConstDescr_t = std::pair<Module::const_ptr_type, std::string>;
+
     using ModuleList_t = std::vector<ModuleDescr_t>;
 
     using CallDescr_t = std::pair<Call::ptr_type, std::string>;
@@ -182,7 +184,16 @@ public:
     }
 
     //////////////////////////// find methods ////////////////////////////////////
-    std::shared_ptr<param::AbstractParam> FindParameter(std::string const& name, bool quiet = false) const;
+    [[nodiscard]] std::shared_ptr<param::AbstractParam> FindParameter(
+        std::string const& name, bool quiet = false) const;
+
+    template <class A>
+    typename std::enable_if<std::is_convertible<A*, Module*>::value, bool>::type FindModule(
+        std::string const& module_name, std::function<void(A const&)>&& cb) const;
+
+    template <class A>
+    typename std::enable_if<std::is_convertible<A*, Module*>::value, bool>::type FindModule(
+        std::string const& module_name, std::function<void(A const&)> const& cb) const;
 
     //////////////////////////// enumerators /////////////////////////////////////
     /*
@@ -201,8 +212,30 @@ private:
         return true;
     }
 
+    [[nodiscard]] ModuleDescr_t find_module(std::string const& name) {
+        auto const it = std::find(this->module_list_.begin(), this->module_list_.end(),
+            [&name](auto const& el) { return el.second == name; });
+
+        if (it != this->module_list_.end()) {
+            return *it;
+        }
+
+        return ModuleDescr_t();
+    }
+
+    [[nodiscard]] ModuleConstDescr_t find_module(std::string const& name) const {
+        auto const it = std::find(this->module_list_.cbegin(), this->module_list_.cend(),
+            [&name](auto const& el) { return el.second == name; });
+
+        if (it != this->module_list_.cend()) {
+            return static_cast<ModuleConstDescr_t>(*it);
+        }
+
+        return ModuleConstDescr_t();
+    }
+
     /** The MegaMolGraph is the owner of the root module namespace*/
-    std::unique_ptr<RootModuleNamespace> root_module_namespace_;
+    //std::unique_ptr<RootModuleNamespace> root_module_namespace_;
 
     /** Queue for module deletions */
     ModuleDeletionQueue_t module_deletion_queue_;
@@ -216,8 +249,10 @@ private:
     /** Queue for call instantiations */
     CallInstantiationQueue_t call_instantiation_queue_;
 
+    /** List of modules that this graph owns */
     ModuleList_t module_list_;
 
+    /** List of call that this graph owns */
     CallList_t call_list_;
 
     /** Reader/Writer mutex for the graph */
@@ -256,9 +291,7 @@ public:
         bool>::type
     EnumerateCallerSlots(std::string module_name, std::function<void(C&)> cb) const;
 
-    template <class A>
-    typename std::enable_if<std::is_convertible<A*, Module*>::value, bool>::type FindModule(
-        std::string module_name, std::function<void(A&)> cb) const;
+    
 
     // WHY??? this is just EnumerateParameters(FindModule()...) GET RID OF IT!
     template <class A>
@@ -303,6 +336,30 @@ private:
     bool checkForFlushEvent(size_t const eventIdx, std::vector<size_t>& list) const;
     void shortenFlushIdxList(size_t const eventCount, std::vector<size_t>& list);
 };
+
+
+template <class A>
+typename std::enable_if<std::is_convertible<A*, megamol::core::Module*>::value, bool>::type
+megamol::core::MegaMolGraph::FindModule(std::string const& module_name, std::function<void(A const&)>&& cb) const {
+    return FindModule(module_name, cb);
+}
+
+
+template <class A>
+typename std::enable_if<std::is_convertible<A*, megamol::core::Module*>::value, bool>::type
+megamol::core::MegaMolGraph::FindModule(std::string const& module_name, std::function<void(A const&)> const& cb) const {
+    auto const mod = find_module(module_name);
+
+    if (mod.first != nullptr) {
+        cb(*(mod.first));
+        return true;
+    }
+
+    vislib::sys::Log::DefaultLog.WriteInfo("MegaMolGraph: Could not find module %s\n", module_name.c_str());
+
+    return false;
+}
+
 
 } /* namespace core */
 } /* namespace megamol */
