@@ -36,7 +36,7 @@ It runs also on Linux with Mono 3.2.8 (except for the analysis function and indi
 
 
 ## How to use MegaMol
-For a detailed description have a look at the [manual](https://github.com/UniStuttgart-VISUS/megamol/blob/master/docs/manual.md).
+For a detailed description take a have at the [manual](docs/manual.md).
 
 
 ## Using the plugin template
