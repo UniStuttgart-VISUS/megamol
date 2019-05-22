@@ -5,8 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef CINEMATICCAMERA_STDAFX_H_INCLUDED
-#define CINEMATICCAMERA_STDAFX_H_INCLUDED
+#ifndef CINEMATIC_STDAFX_H_INCLUDED
+#define CINEMATIC_STDAFX_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -34,4 +34,4 @@
 
 #include "vislib/types.h"
 
-#endif /* CINEMATICCAMERA_STDAFX_H_INCLUDED */
+#endif /* CINEMATIC_STDAFX_H_INCLUDED */

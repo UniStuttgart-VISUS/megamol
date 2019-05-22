@@ -1,13 +1,13 @@
 #
-# MegaMol™ cinematiccamera Plugin
+# MegaMol Plugin: CINEMATIC
 # Copyright 2017, by MegaMol Team
 # Alle Rechte vorbehalten. All rights reserved.
 #
-string(TOUPPER cinematiccamera EXPORT_NAME)
-option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build Cinematic Camera Plugin" ON)
+string(TOUPPER cinematic EXPORT_NAME)
+option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build Cinematic Plugin" ON)
 
 if(BUILD_${EXPORT_NAME}_PLUGIN)
-  project(cinematiccamera)
+  project(cinematic)
 
   # Check option dependencies: First list item is always the current build option,
   # afterwards list the dependencies.

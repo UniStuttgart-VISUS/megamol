@@ -1,20 +1,17 @@
 /*
  *CinematicView.h
- *
- * Copyright (C) 2017 by VISUS (Universitaet Stuttgart).
- * Alle Rechte vorbehalten.
- *
- * DISCLAIMER: Code for png export is adapted from "ScreenShooter.cpp".
- */
+*
+* Copyright (C) 2018 by VISUS (Universitaet Stuttgart).
+* Alle Rechte vorbehalten.
+*/
 
-
-#ifndef MEGAMOL_CINEMATICCAMERA_CINEMATICVIEW_H_INCLUDED
-#define MEGAMOL_CINEMATICCAMERA_CINEMATICVIEW_H_INCLUDED
+#ifndef MEGAMOL_CINEMATIC_CINEMATICVIEW_H_INCLUDED
+#define MEGAMOL_CINEMATIC_CINEMATICVIEW_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "CinematicCamera/CinematicCamera.h"
+#include "Cinematic/Cinematic.h"
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/View3D.h"
@@ -43,13 +40,13 @@
 #include "vislib/sys/FastFile.h"
 #include "vislib/sys/Path.h"
 
-#include "CallCinematicCamera.h"
+#include "CallKeyframeKeeper.h"
 #include "Keyframe.h"
 #include "png.h"
 
 
 namespace megamol {
-namespace cinematiccamera {
+namespace cinematic {
 
 class CinematicView : public core::view::View3D {
 
@@ -252,7 +249,7 @@ private:
     core::param::ParamSlot addSBSideToNameParam;
 };
 
-} /* end namespace cinematiccamera */
+} /* end namespace cinematic */
 } /* end namespace megamol */
 
-#endif /* MEGAMOL_CINEMATICCAMERA_CINEMATICVIEW_H_INCLUDED */
+#endif /* MEGAMOL_CINEMATIC_CINEMATICVIEW_H_INCLUDED */

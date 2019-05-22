@@ -1,17 +1,17 @@
 /*
 * KeyframeKeeper.h
 *
-* Copyright (C) 2017 by VISUS (Universitaet Stuttgart).
+* Copyright (C) 2018 by VISUS (Universitaet Stuttgart).
 * Alle Rechte vorbehalten.
 */
 
-#ifndef MEGAMOL_CINEMATICCAMERA_KEYKEEP_H_INCLUDED
-#define MEGAMOL_CINEMATICCAMERA_KEYKEEP_H_INCLUDED
+#ifndef MEGAMOL_CINEMATIC_KEYKEEP_H_INCLUDED
+#define MEGAMOL_CINEMATIC_KEYKEEP_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "CinematicCamera/CinematicCamera.h"
+#include "Cinematic/Cinematic.h"
 
 #include "mmcore/AbstractGetDataCall.h"
 #include "mmcore/Module.h"
@@ -25,7 +25,7 @@
 #include "Keyframe.h"
 
 namespace megamol {
-	namespace cinematiccamera {
+	namespace cinematic {
 
 		/**
 		* Call transporting keyframe data
@@ -49,7 +49,7 @@ namespace megamol {
 			* @return A human readable description of the module.
 			*/
 			static const char *Description(void) {
-				return "Manages Keyframes";
+				return "Manages keyframes";
 			}
 
 			/** Ctor */
@@ -302,7 +302,7 @@ namespace megamol {
 		/** Description class typedef */
 		typedef core::factories::CallAutoDescription<KeyframeKeeper> KeyframeKeeperDescription;
 
-	} /* end namespace cinematiccamera */
+	} /* end namespace cinematic */
 } /* end namespace megamol */
 
-#endif /* MEGAMOL_CINEMATICCAMERA_KEYKEEP_H_INCLUDED */
+#endif /* MEGAMOL_CINEMATIC_KEYKEEP_H_INCLUDED */

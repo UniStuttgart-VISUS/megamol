@@ -12,7 +12,7 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::cinematiccamera;
+using namespace megamol::cinematic;
 
 #ifndef CC_PI
     #define CC_PI 3.1415926535897
@@ -630,7 +630,7 @@ bool KeyframeManipulator::Draw(void) {
     glGetFloatv(GL_LINE_WIDTH, &tmpLw);
     glLineWidth(2.0f);
 
-    // Rest of necessary OpenGl settings are already done in CinematicRenderer ...
+    // Rest of necessary OpenGl settings are already done in TrackingShotRenderer ...
 
     // Get the foreground color (inverse background color)
     float bgColor[4];

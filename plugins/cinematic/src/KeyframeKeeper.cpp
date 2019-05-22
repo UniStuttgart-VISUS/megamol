@@ -28,10 +28,10 @@
 #include <ctime>
 
 #include "KeyframeKeeper.h"
-#include "CallCinematicCamera.h"
+#include "CallKeyframeKeeper.h"
 
 using namespace megamol;
-using namespace megamol::cinematiccamera;
+using namespace megamol::cinematic;
 using namespace vislib;
 using namespace vislib::math;
 using namespace megamol::core;
@@ -86,32 +86,32 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
 {
 
     // setting up callback
-    this->cinematicCallSlot.SetCallback(CallCinematicCamera::ClassName(),
-        CallCinematicCamera::FunctionName(CallCinematicCamera::CallForGetUpdatedKeyframeData), &KeyframeKeeper::CallForGetUpdatedKeyframeData);
+    this->cinematicCallSlot.SetCallback(CallKeyframeKeeper::ClassName(),
+        CallKeyframeKeeper::FunctionName(CallKeyframeKeeper::CallForGetUpdatedKeyframeData), &KeyframeKeeper::CallForGetUpdatedKeyframeData);
 
-    this->cinematicCallSlot.SetCallback(CallCinematicCamera::ClassName(),
-        CallCinematicCamera::FunctionName(CallCinematicCamera::CallForSetSimulationData), &KeyframeKeeper::CallForSetSimulationData);
+    this->cinematicCallSlot.SetCallback(CallKeyframeKeeper::ClassName(),
+        CallKeyframeKeeper::FunctionName(CallKeyframeKeeper::CallForSetSimulationData), &KeyframeKeeper::CallForSetSimulationData);
 
-    this->cinematicCallSlot.SetCallback(CallCinematicCamera::ClassName(),
-        CallCinematicCamera::FunctionName(CallCinematicCamera::CallForGetInterpolCamPositions), &KeyframeKeeper::CallForGetInterpolCamPositions);
+    this->cinematicCallSlot.SetCallback(CallKeyframeKeeper::ClassName(),
+        CallKeyframeKeeper::FunctionName(CallKeyframeKeeper::CallForGetInterpolCamPositions), &KeyframeKeeper::CallForGetInterpolCamPositions);
 
-    this->cinematicCallSlot.SetCallback(CallCinematicCamera::ClassName(),
-        CallCinematicCamera::FunctionName(CallCinematicCamera::CallForSetSelectedKeyframe), &KeyframeKeeper::CallForSetSelectedKeyframe);
+    this->cinematicCallSlot.SetCallback(CallKeyframeKeeper::ClassName(),
+        CallKeyframeKeeper::FunctionName(CallKeyframeKeeper::CallForSetSelectedKeyframe), &KeyframeKeeper::CallForSetSelectedKeyframe);
 
-    this->cinematicCallSlot.SetCallback(CallCinematicCamera::ClassName(),
-        CallCinematicCamera::FunctionName(CallCinematicCamera::CallForGetSelectedKeyframeAtTime), &KeyframeKeeper::CallForGetSelectedKeyframeAtTime);
+    this->cinematicCallSlot.SetCallback(CallKeyframeKeeper::ClassName(),
+        CallKeyframeKeeper::FunctionName(CallKeyframeKeeper::CallForGetSelectedKeyframeAtTime), &KeyframeKeeper::CallForGetSelectedKeyframeAtTime);
 
-    this->cinematicCallSlot.SetCallback(CallCinematicCamera::ClassName(),
-        CallCinematicCamera::FunctionName(CallCinematicCamera::CallForSetCameraForKeyframe), &KeyframeKeeper::CallForSetCameraForKeyframe);
+    this->cinematicCallSlot.SetCallback(CallKeyframeKeeper::ClassName(),
+        CallKeyframeKeeper::FunctionName(CallKeyframeKeeper::CallForSetCameraForKeyframe), &KeyframeKeeper::CallForSetCameraForKeyframe);
 
-    this->cinematicCallSlot.SetCallback(CallCinematicCamera::ClassName(),
-        CallCinematicCamera::FunctionName(CallCinematicCamera::CallForSetDragKeyframe), &KeyframeKeeper::CallForSetDragKeyframe);
+    this->cinematicCallSlot.SetCallback(CallKeyframeKeeper::ClassName(),
+        CallKeyframeKeeper::FunctionName(CallKeyframeKeeper::CallForSetDragKeyframe), &KeyframeKeeper::CallForSetDragKeyframe);
 
-    this->cinematicCallSlot.SetCallback(CallCinematicCamera::ClassName(),
-        CallCinematicCamera::FunctionName(CallCinematicCamera::CallForSetDropKeyframe), &KeyframeKeeper::CallForSetDropKeyframe);
+    this->cinematicCallSlot.SetCallback(CallKeyframeKeeper::ClassName(),
+        CallKeyframeKeeper::FunctionName(CallKeyframeKeeper::CallForSetDropKeyframe), &KeyframeKeeper::CallForSetDropKeyframe);
 
-    this->cinematicCallSlot.SetCallback(CallCinematicCamera::ClassName(),
-        CallCinematicCamera::FunctionName(CallCinematicCamera::CallForSetCtrlPoints), &KeyframeKeeper::CallForSetCtrlPoints);
+    this->cinematicCallSlot.SetCallback(CallKeyframeKeeper::ClassName(),
+        CallKeyframeKeeper::FunctionName(CallKeyframeKeeper::CallForSetCtrlPoints), &KeyframeKeeper::CallForSetCtrlPoints);
 
     this->MakeSlotAvailable(&this->cinematicCallSlot);
 
@@ -212,7 +212,7 @@ void KeyframeKeeper::release(void) {
 */
 bool KeyframeKeeper::CallForSetSimulationData(core::Call& c) {
 
-    CallCinematicCamera *ccc = dynamic_cast<CallCinematicCamera*>(&c);
+    CallKeyframeKeeper *ccc = dynamic_cast<CallKeyframeKeeper*>(&c);
     if (ccc == nullptr) return false;
 
     // Get bounding box center
@@ -236,7 +236,7 @@ bool KeyframeKeeper::CallForSetSimulationData(core::Call& c) {
 */
 bool KeyframeKeeper::CallForGetInterpolCamPositions(core::Call& c) {
 
-    CallCinematicCamera *ccc = dynamic_cast<CallCinematicCamera*>(&c);
+    CallKeyframeKeeper *ccc = dynamic_cast<CallKeyframeKeeper*>(&c);
     if (ccc == nullptr) return false;
 
     this->interpolSteps = ccc->getInterpolationSteps();
@@ -252,7 +252,7 @@ bool KeyframeKeeper::CallForGetInterpolCamPositions(core::Call& c) {
 */
 bool KeyframeKeeper::CallForSetSelectedKeyframe(core::Call& c) {
 
-    CallCinematicCamera *ccc = dynamic_cast<CallCinematicCamera*>(&c);
+    CallKeyframeKeeper *ccc = dynamic_cast<CallKeyframeKeeper*>(&c);
     if (ccc == nullptr) return false;
 
     bool appliedChanges = false;
@@ -282,7 +282,7 @@ bool KeyframeKeeper::CallForSetSelectedKeyframe(core::Call& c) {
 */
 bool KeyframeKeeper::CallForGetSelectedKeyframeAtTime(core::Call& c) {
 
-    CallCinematicCamera *ccc = dynamic_cast<CallCinematicCamera*>(&c);
+    CallKeyframeKeeper *ccc = dynamic_cast<CallKeyframeKeeper*>(&c);
     if (ccc == nullptr) return false;
 
     Keyframe prevSelKf = this->selectedKeyframe;
@@ -304,7 +304,7 @@ bool KeyframeKeeper::CallForGetSelectedKeyframeAtTime(core::Call& c) {
 */
 bool KeyframeKeeper::CallForSetCameraForKeyframe(core::Call& c) {
 
-    CallCinematicCamera *ccc = dynamic_cast<CallCinematicCamera*>(&c);
+    CallKeyframeKeeper *ccc = dynamic_cast<CallKeyframeKeeper*>(&c);
     if (ccc == nullptr) return false;
 
     this->camViewUp            = ccc->getCameraParameters()->Up();
@@ -321,7 +321,7 @@ bool KeyframeKeeper::CallForSetCameraForKeyframe(core::Call& c) {
 */
 bool KeyframeKeeper::CallForSetDragKeyframe(core::Call& c) {
 
-    CallCinematicCamera *ccc = dynamic_cast<CallCinematicCamera*>(&c);
+    CallKeyframeKeeper *ccc = dynamic_cast<CallKeyframeKeeper*>(&c);
     if (ccc == nullptr) return false;
 
     // Checking if selected keyframe exists in keyframe array is done by caller
@@ -344,7 +344,7 @@ bool KeyframeKeeper::CallForSetDragKeyframe(core::Call& c) {
 */
 bool KeyframeKeeper::CallForSetDropKeyframe(core::Call& c) {
 
-    CallCinematicCamera *ccc = dynamic_cast<CallCinematicCamera*>(&c);
+    CallKeyframeKeeper *ccc = dynamic_cast<CallKeyframeKeeper*>(&c);
     if (ccc == nullptr) return false;
 
     // Insert dragged keyframe at new position
@@ -365,7 +365,7 @@ bool KeyframeKeeper::CallForSetDropKeyframe(core::Call& c) {
 */
 bool KeyframeKeeper::CallForSetCtrlPoints(core::Call& c) {
 
-    CallCinematicCamera *ccc = dynamic_cast<CallCinematicCamera*>(&c);
+    CallKeyframeKeeper *ccc = dynamic_cast<CallKeyframeKeeper*>(&c);
     if (ccc == nullptr) return false;
 
     auto prev_StartCP = this->startCtrllPos;
@@ -395,7 +395,7 @@ bool KeyframeKeeper::CallForSetCtrlPoints(core::Call& c) {
 */
 bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
 
-    CallCinematicCamera *ccc = dynamic_cast<CallCinematicCamera*>(&c);
+    CallKeyframeKeeper *ccc = dynamic_cast<CallKeyframeKeeper*>(&c);
     if (ccc == nullptr) return false;
 
 

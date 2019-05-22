@@ -1,5 +1,5 @@
 /*
-* CallCinematicCamera.cpp
+* CallKeyframeKeeper.cpp
 *
 * Copyright (C) 2017 by VISUS (Universitaet Stuttgart).
 * Alle Rechte vorbehalten.
@@ -7,19 +7,19 @@
 
 #include "stdafx.h"
 
-#include "CallCinematicCamera.h"
+#include "CallKeyframeKeeper.h"
 
 #include "vislib/graphics/gl/IncludeAllGL.h"
 
 
 using namespace megamol;
-using namespace megamol::cinematiccamera;
+using namespace megamol::cinematic;
 
 
 /*
-* CallCinematicCamera::CallCinematicCamera
+* CallKeyframeKeeper::CallKeyframeKeeper
 */
-CallCinematicCamera::CallCinematicCamera(void) : core::AbstractGetDataCall(),
+CallKeyframeKeeper::CallKeyframeKeeper(void) : core::AbstractGetDataCall(),
     cameraParam(nullptr),
     interpolCamPos(nullptr),
     keyframes(nullptr),
@@ -41,9 +41,9 @@ CallCinematicCamera::CallCinematicCamera(void) : core::AbstractGetDataCall(),
 
 
 /*
-* CallCinematicCamera::~CallCinematicCamera
+* CallKeyframeKeeper::~CallKeyframeKeeper
 */
-CallCinematicCamera::~CallCinematicCamera(void) {
+CallKeyframeKeeper::~CallKeyframeKeeper(void) {
 	this->keyframes      = nullptr;
     this->interpolCamPos = nullptr;
     this->boundingbox    = nullptr;

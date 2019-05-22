@@ -13,7 +13,7 @@ using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::core::view;
 using namespace megamol::core::utility;
-using namespace megamol::cinematiccamera;
+using namespace megamol::cinematic;
 
 using namespace vislib;
 
@@ -57,7 +57,7 @@ CinematicView::CinematicView(void)
     , pngdata() {
 
     // init callback
-    this->keyframeKeeperSlot.SetCompatibleCall<CallCinematicCameraDescription>();
+    this->keyframeKeeperSlot.SetCompatibleCall<CallKeyframeKeeperDescription>();
     this->MakeSlotAvailable(&this->keyframeKeeperSlot);
 
     // init parameters
@@ -166,10 +166,10 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     if (cr3d == nullptr) return;
     if (!(*cr3d)(view::AbstractCallRender::FnGetExtents)) return;
 
-    CallCinematicCamera* ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
+    CallKeyframeKeeper* ccc = this->keyframeKeeperSlot.CallAs<CallKeyframeKeeper>();
     if (ccc == nullptr) return;
     // Updated data from cinematic camera call
-    if (!(*ccc)(CallCinematicCamera::CallForGetUpdatedKeyframeData)) return;
+    if (!(*ccc)(CallKeyframeKeeper::CallForGetUpdatedKeyframeData)) return;
 
     // Set bounding box center of model
     ccc->setBboxCenter(cr3d->AccessBoundingBoxes().WorldSpaceBBox().CalcCenter());
@@ -177,7 +177,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     ccc->setTotalSimTime(static_cast<float>(cr3d->TimeFramesCount()));
     // Set FPS to call
     ccc->setFps(this->fps);
-    if (!(*ccc)(CallCinematicCamera::CallForSetSimulationData)) return;
+    if (!(*ccc)(CallKeyframeKeeper::CallForSetSimulationData)) return;
 
     bool loadNewCamParams = false;
 
@@ -265,7 +265,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
             throw vislib::Exception("[CINEMATIC VIEW] Invalid animation time.", __FILE__, __LINE__);
         }
         ccc->setSelectedKeyframeTime(this->pngdata.animTime);
-        if (!(*ccc)(CallCinematicCamera::CallForGetSelectedKeyframeAtTime)) return;
+        if (!(*ccc)(CallKeyframeKeeper::CallForGetSelectedKeyframeAtTime)) return;
         loadNewCamParams = true;
     } else {
         // If time is set by running ANIMATION
@@ -280,7 +280,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
                 animTime = 0.0f;
             }
             ccc->setSelectedKeyframeTime(animTime);
-            if (!(*ccc)(CallCinematicCamera::CallForGetSelectedKeyframeAtTime)) return;
+            if (!(*ccc)(CallKeyframeKeeper::CallForGetSelectedKeyframeAtTime)) return;
             loadNewCamParams = true;
         }
     }
@@ -404,7 +404,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
 
     // Propagate camera parameters to keyframe keeper (sky box camera params are propageted too!)
     ccc->setCameraParameters(this->cam.Parameters());
-    if (!(*ccc)(CallCinematicCamera::CallForSetCameraForKeyframe)) return;
+    if (!(*ccc)(CallKeyframeKeeper::CallForSetCameraForKeyframe)) return;
 
         // Render to texture ------------------------------------------------------------
 
@@ -647,7 +647,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
  */
 bool CinematicView::render2file_setup() {
 
-    CallCinematicCamera* ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
+    CallKeyframeKeeper* ccc = this->keyframeKeeperSlot.CallAs<CallKeyframeKeeper>();
     if (ccc == nullptr) return false;
 
     // init png data struct
@@ -727,7 +727,7 @@ bool CinematicView::render2file_write_png() {
 
     if (this->pngdata.write_lock == 0) {
 
-        CallCinematicCamera* ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
+        CallKeyframeKeeper* ccc = this->keyframeKeeperSlot.CallAs<CallKeyframeKeeper>();
         if (ccc == nullptr) return false;
 
         vislib::StringA tmpFilename, tmpStr;

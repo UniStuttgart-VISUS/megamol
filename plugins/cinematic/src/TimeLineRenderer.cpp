@@ -26,20 +26,20 @@
 #include "vislib/math/Matrix.h"
 
 #include "TimeLineRenderer.h"
-#include "CallCinematicCamera.h"
+#include "CallKeyframeKeeper.h"
 
 
 using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::core::view;
 using namespace megamol::core::utility;
-using namespace megamol::cinematiccamera;
+using namespace megamol::cinematic;
 
 using namespace vislib;
 
 
 /*
-* cinematiccamera::TimeLineRenderer::TimeLineRenderer
+* cinematic::TimeLineRenderer::TimeLineRenderer
 */
 TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule(),
 
@@ -91,7 +91,7 @@ TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule(),
     mouseAction(MouseButtonAction::RELEASE)
 {
 
-    this->keyframeKeeperSlot.SetCompatibleCall<CallCinematicCameraDescription>();
+    this->keyframeKeeperSlot.SetCompatibleCall<CallKeyframeKeeperDescription>();
     this->MakeSlotAvailable(&this->keyframeKeeperSlot);
 
     // init parameters
@@ -110,7 +110,7 @@ TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule(),
 
 
 /*
-* cinematiccamera::TimeLineRenderer::~TimeLineRenderer
+* cinematic::TimeLineRenderer::~TimeLineRenderer
 */
 TimeLineRenderer::~TimeLineRenderer(void) {
 
@@ -119,7 +119,7 @@ TimeLineRenderer::~TimeLineRenderer(void) {
 
 
 /*
-* cinematiccamera::TimeLineRenderer::create
+* cinematic::TimeLineRenderer::create
 */
 bool TimeLineRenderer::create(void) {
 	
@@ -140,7 +140,7 @@ bool TimeLineRenderer::create(void) {
 
 
 /*
-* cinematiccamera::TimeLineRenderer::release
+* cinematic::TimeLineRenderer::release
 */
 void TimeLineRenderer::release(void) {
 
@@ -149,7 +149,7 @@ void TimeLineRenderer::release(void) {
 
 
 /*
-* cinematiccamera::TimeLineRenderer::GetExtents
+* cinematic::TimeLineRenderer::GetExtents
 */
 bool TimeLineRenderer::GetExtents(view::CallRender2D& call) {
 
@@ -199,7 +199,7 @@ bool TimeLineRenderer::GetExtents(view::CallRender2D& call) {
 
 
 /*
- * cinematiccamera::TimeLineRenderer::axisAdaptation
+ * cinematic::TimeLineRenderer::axisAdaptation
  */
 void TimeLineRenderer::axisAdaptation(void) {
 
@@ -325,7 +325,7 @@ void TimeLineRenderer::axisAdaptation(void) {
 
 
 /*
-* cinematiccamera::TimeLineRenderer::Render
+* cinematic::TimeLineRenderer::Render
 */
 bool TimeLineRenderer::Render(view::CallRender2D& call) {
 
@@ -333,10 +333,10 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     if (cr == nullptr) return false;
 
     // Update data in cinematic camera call
-    CallCinematicCamera *ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
+    CallKeyframeKeeper *ccc = this->keyframeKeeperSlot.CallAs<CallKeyframeKeeper>();
     if (!ccc) return false;
     // Updated data from cinematic camera call
-    if (!(*ccc)(CallCinematicCamera::CallForGetUpdatedKeyframeData)) return false;
+    if (!(*ccc)(CallKeyframeKeeper::CallForGetUpdatedKeyframeData)) return false;
 
     vislib::Array<Keyframe> *keyframes = ccc->getKeyframes();
     if (keyframes == nullptr) {
@@ -376,7 +376,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
         }
         t = (t > this->animTotalTime) ? (this->animTotalTime) : (t);
         ccc->setSelectedKeyframeTime(t);
-        if (!(*ccc)(CallCinematicCamera::CallForGetSelectedKeyframeAtTime)) return false;
+        if (!(*ccc)(CallKeyframeKeeper::CallForGetSelectedKeyframeAtTime)) return false;
         std::cout << "right: " << t << std::endl;
     }
     if (this->moveLeftFrameParam.IsDirty()) {
@@ -391,7 +391,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
         }
         t = (t < 0.0f) ? (0.0f) : (t);
         ccc->setSelectedKeyframeTime(t);
-        if (!(*ccc)(CallCinematicCamera::CallForGetSelectedKeyframeAtTime)) return false;
+        if (!(*ccc)(CallKeyframeKeeper::CallForGetSelectedKeyframeAtTime)) return false;
         std::cout << "left: " << t << std::endl;
     }
     if (this->resetPanScaleParam.IsDirty()) {
@@ -653,7 +653,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
 
 
 /*
-* cinematiccamera::TimeLineRenderer::drawKeyframeMarker
+* cinematic::TimeLineRenderer::drawKeyframeMarker
 */
 void TimeLineRenderer::drawKeyframeMarker(float posX, float posY) {
 
@@ -685,7 +685,7 @@ void TimeLineRenderer::drawKeyframeMarker(float posX, float posY) {
 
 
 /*
-* cinematiccamera::TimeLineRenderer::loadTexture
+* cinematic::TimeLineRenderer::loadTexture
 */
 bool TimeLineRenderer::loadTexture(vislib::StringA filename) {
     static vislib::graphics::BitmapImage img;
@@ -732,7 +732,7 @@ bool TimeLineRenderer::loadTexture(vislib::StringA filename) {
 
 
 /*
-* cinematiccamera::TimeLineRenderer::OnMouseButton
+* cinematic::TimeLineRenderer::OnMouseButton
 */
 bool TimeLineRenderer::OnMouseButton(megamol::core::view::MouseButton button, megamol::core::view::MouseButtonAction action, megamol::core::view::Modifiers mods) {
 
@@ -740,10 +740,10 @@ bool TimeLineRenderer::OnMouseButton(megamol::core::view::MouseButton button, me
     this->mouseAction = action;
     this->mouseButton = button;
 
-    CallCinematicCamera *ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
+    CallKeyframeKeeper *ccc = this->keyframeKeeperSlot.CallAs<CallKeyframeKeeper>();
     if (ccc == nullptr) return false;
     // Updated data from cinematic camera call
-    if (!(*ccc)(CallCinematicCamera::CallForGetUpdatedKeyframeData)) return false;
+    if (!(*ccc)(CallKeyframeKeeper::CallForGetUpdatedKeyframeData)) return false;
 
     //Get keyframes
     vislib::Array<Keyframe> *keyframes = ccc->getKeyframes();
@@ -787,7 +787,7 @@ bool TimeLineRenderer::OnMouseButton(megamol::core::view::MouseButton button, me
         }
         if (hit) {
             // Set hit keyframe as selected
-            if (!(*ccc)(CallCinematicCamera::CallForGetSelectedKeyframeAtTime)) return false;
+            if (!(*ccc)(CallKeyframeKeeper::CallForGetSelectedKeyframeAtTime)) return false;
         }
         else {
             // Get interpolated keyframe selection
@@ -795,7 +795,7 @@ bool TimeLineRenderer::OnMouseButton(megamol::core::view::MouseButton button, me
                 // Set an interpolated keyframe as selected
                 float at = (((-1.0f)*this->animScaleOffset + (this->mouseX - this->axisStartPos.X())) / this->animScaleFac) / this->animAxisLen * this->animTotalTime;
                 ccc->setSelectedKeyframeTime(at);
-                if (!(*ccc)(CallCinematicCamera::CallForGetSelectedKeyframeAtTime)) return false;
+                if (!(*ccc)(CallKeyframeKeeper::CallForGetSelectedKeyframeAtTime)) return false;
             }
         }
     } // RIGHT-CLICK --- Drag & Drop of keyframe OR pan axes ...
@@ -839,7 +839,7 @@ bool TimeLineRenderer::OnMouseButton(megamol::core::view::MouseButton button, me
                 // Store hit keyframe locally
                 this->dragDropActive = true;
                 this->dragDropAxis = 0;
-                if (!(*ccc)(CallCinematicCamera::CallForSetDragKeyframe)) return false;
+                if (!(*ccc)(CallKeyframeKeeper::CallForSetDragKeyframe)) return false;
             }
             this->lastMouseX = this->mouseX;
             this->lastMouseY = this->mouseY;
@@ -870,7 +870,7 @@ bool TimeLineRenderer::OnMouseButton(megamol::core::view::MouseButton button, me
                     at = this->dragDropKeyframe.GetAnimTime();
                 }
                 ccc->setDropTimes(at, st);
-                if (!(*ccc)(CallCinematicCamera::CallForSetDropKeyframe)) return false;
+                if (!(*ccc)(CallKeyframeKeeper::CallForSetDropKeyframe)) return false;
 
                 this->dragDropActive = false;
                 this->dragDropAxis = 0;
@@ -897,14 +897,14 @@ bool TimeLineRenderer::OnMouseButton(megamol::core::view::MouseButton button, me
 
 
 /*
-* cinematiccamera::TimeLineRenderer::OnMouseMove
+* cinematic::TimeLineRenderer::OnMouseMove
 */
 bool TimeLineRenderer::OnMouseMove(double x, double y) {
 
-    CallCinematicCamera *ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
+    CallKeyframeKeeper *ccc = this->keyframeKeeperSlot.CallAs<CallKeyframeKeeper>();
     if (ccc == nullptr) return false;
     // Updated data from cinematic camera call
-    if (!(*ccc)(CallCinematicCamera::CallForGetUpdatedKeyframeData)) return false;
+    if (!(*ccc)(CallKeyframeKeeper::CallForGetUpdatedKeyframeData)) return false;
 
     bool down = (this->mouseAction == MouseButtonAction::PRESS);
 
@@ -920,7 +920,7 @@ bool TimeLineRenderer::OnMouseMove(double x, double y) {
                 // Set an interpolated keyframe as selected
                 float at = (((-1.0f)*this->animScaleOffset + (this->mouseX - this->axisStartPos.X())) / this->animScaleFac) / this->animAxisLen * this->animTotalTime;
                 ccc->setSelectedKeyframeTime(at);
-                if (!(*ccc)(CallCinematicCamera::CallForGetSelectedKeyframeAtTime)) return false;
+                if (!(*ccc)(CallKeyframeKeeper::CallForGetSelectedKeyframeAtTime)) return false;
             }
         }
     } // RIGHT-CLICK --- Drag & Drop of keyframe OR pan axes ...

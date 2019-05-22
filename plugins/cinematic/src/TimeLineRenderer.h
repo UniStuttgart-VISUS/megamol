@@ -1,17 +1,17 @@
 /*
 * TimeLineRenderer.h
 *
-* Copyright (C) 2017 by VISUS (Universitaet Stuttgart).
+* Copyright (C) 2018 by VISUS (Universitaet Stuttgart).
 * Alle Rechte vorbehalten.
 */
 
-#ifndef MEGAMOL_CINEMATICCAMERA_TIMELINERENDERER_H_INCLUDED
-#define MEGAMOL_CINEMATICCAMERA_TIMELINERENDERER_H_INCLUDED
+#ifndef MEGAMOL_CINEMATIC_TIMELINERENDERER_H_INCLUDED
+#define MEGAMOL_CINEMATIC_TIMELINERENDERER_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "CinematicCamera/CinematicCamera.h"
+#include "Cinematic/Cinematic.h"
 
 #include "mmcore/view/Renderer2DModule.h"
 #include "mmcore/CallerSlot.h"
@@ -29,7 +29,7 @@
 
 
 namespace megamol {
-	namespace cinematiccamera {
+	namespace cinematic {
 
 		/**
 		* Mesh-based renderer for bézier curve tubes
@@ -52,7 +52,7 @@ namespace megamol {
 			* @return A human readable description of this module.
 			*/
 			static const char *Description(void) {
-				return "Renders the Timeline of keyframes";
+				return "Renders the timeline of keyframes";
 			}
 
 			/**
@@ -207,7 +207,7 @@ namespace megamol {
             megamol::core::param::ParamSlot resetPanScaleParam;
 		};
 
-	} /* end namespace cinematiccamera */
+	} /* end namespace cinematic */
 } /* end namespace megamol */
 
-#endif /* MEGAMOL_CINEMATICCAMERA_TIMELINERENDERER_H_INCLUDED */
+#endif /* MEGAMOL_CINEMATIC_TIMELINERENDERER_H_INCLUDED */

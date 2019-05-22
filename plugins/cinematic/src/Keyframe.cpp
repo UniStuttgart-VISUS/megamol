@@ -9,7 +9,7 @@
 
 #include "Keyframe.h"
 
-using namespace megamol::cinematiccamera;
+using namespace megamol::cinematic;
 
 
 /*

@@ -1,17 +1,17 @@
 /*
-* CallCinematicCamera.h
+* CallKeyframeKeeper.h
 *
-* Copyright (C) 2017 by VISUS (Universitaet Stuttgart).
+* Copyright (C) 2018 by VISUS (Universitaet Stuttgart).
 * Alle Rechte vorbehalten.
 */
 
-#ifndef MEGAMOL_CINEMATICCAMERA_CALLCINCAM_H_INCLUDED
-#define MEGAMOL_CINEMATICCAMERA_CALLCINCAM_H_INCLUDED
+#ifndef MEGAMOL_CINEMATIC_CALLKEYKEEP_H_INCLUDED
+#define MEGAMOL_CINEMATIC_CALLKEYKEEP_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "CinematicCamera/CinematicCamera.h"
+#include "Cinematic/Cinematic.h"
 
 #include "mmcore/AbstractGetDataCall.h"
 #include "mmcore/factories/CallAutoDescription.h"
@@ -30,13 +30,13 @@
 
 
 namespace megamol {
-	namespace cinematiccamera {
+	namespace cinematic {
 
 		/**
 		* Call transporting keyframe data
 		*
 		*/
-		class CallCinematicCamera : public core::AbstractGetDataCall {
+		class CallKeyframeKeeper : public core::AbstractGetDataCall {
 		public:
 
 			/** function name for getting all Keyframes */
@@ -56,7 +56,7 @@ namespace megamol {
 			* @return The name of the objects of this description.
 			*/
 			static const char *ClassName(void) {
-				return "CallCinematicCamera";
+				return "CallKeyframeKeeper";
 			}
 
 			/**
@@ -100,10 +100,10 @@ namespace megamol {
 			}
 
 			/** Ctor */
-			CallCinematicCamera(void);
+			CallKeyframeKeeper(void);
 
 			/** Dtor */
-			virtual ~CallCinematicCamera(void);
+			virtual ~CallKeyframeKeeper(void);
 
 
             /**********************************************************************
@@ -242,9 +242,9 @@ namespace megamol {
 		};
 
 		/** Description class typedef */
-		typedef core::factories::CallAutoDescription<CallCinematicCamera> CallCinematicCameraDescription;
+		typedef core::factories::CallAutoDescription<CallKeyframeKeeper> CallKeyframeKeeperDescription;
 
-	} /* end namespace cinematiccamera */
+	} /* end namespace cinematic */
 } /* end namespace megamol */
 
-#endif /* MEGAMOL_CINEMATICCAMERA_CALLCINCAM_H_INCLUDED */
+#endif /* MEGAMOL_CINEMATIC_CALLKEYKEEP_H_INCLUDED */

@@ -1,17 +1,17 @@
 /*
  *Keyframe.h
- *
- * Copyright (C) 2017 by VISUS (Universitaet Stuttgart).
- * Alle Rechte vorbehalten.
- */
+*
+* Copyright (C) 2018 by VISUS (Universitaet Stuttgart).
+* Alle Rechte vorbehalten.
+*/
 
-#ifndef MEGAMOL_CINEMATICCAMERA_KEYFRAME_H_INCLUDED
-#define MEGAMOL_CINEMATICCAMERA_KEYFRAME_H_INCLUDED
+#ifndef MEGAMOL_CINEMATIC_KEYFRAME_H_INCLUDED
+#define MEGAMOL_CINEMATIC_KEYFRAME_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "CinematicCamera/CinematicCamera.h"
+#include "Cinematic/Cinematic.h"
 
 #include "vislib/graphics/Camera.h"
 #include "vislib/math/Point.h"
@@ -19,7 +19,7 @@
 #include "vislib/math/Vector.h"
 
 namespace megamol {
-	namespace cinematiccamera {
+	namespace cinematic {
 
 		class Keyframe{
 
@@ -138,6 +138,6 @@ namespace megamol {
 
 		};
 
-	} /* end namespace cinematiccamera */
+	} /* end namespace cinematic */
 } /* end namespace megamol */
-#endif /* MEGAMOL_CINEMATICCAMERA_KEYFRAME_H_INCLUDED */
+#endif /* MEGAMOL_CINEMATIC_KEYFRAME_H_INCLUDED */

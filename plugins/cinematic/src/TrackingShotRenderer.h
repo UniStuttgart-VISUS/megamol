@@ -1,17 +1,17 @@
 /*
-* CinematicRenderer.h
+* TrackingShotRenderer.h
 *
-* Copyright (C) 2017 by VISUS (Universitaet Stuttgart).
+* Copyright (C) 2018 by VISUS (Universitaet Stuttgart).
 * Alle Rechte vorbehalten.
 */
 
-#ifndef MEGAMOL_CINEMATICCAMERA_CINEMATICRENDERER_H_INCLUDED
-#define MEGAMOL_CINEMATICCAMERA_CINEMATICRENDERER_H_INCLUDED
+#ifndef MEGAMOL_CINEMATIC_TRACKINGSHOTRENDERER_H_INCLUDED
+#define MEGAMOL_CINEMATIC_TRACKINGSHOTRENDERER_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "CinematicCamera/CinematicCamera.h"
+#include "Cinematic/Cinematic.h"
 
 #include "mmcore/BoundingBoxes.h"
 #include "mmcore/CallerSlot.h"
@@ -55,19 +55,19 @@
 #include "vislib/graphics/CameraParameters.h"
 #include "vislib/graphics/CameraParamsStore.h"
 
-#include "CallCinematicCamera.h"
+#include "CallKeyframeKeeper.h"
 #include "ReplacementRenderer.h"
 #include "KeyframeManipulator.h"
 
 
 namespace megamol {
-	namespace cinematiccamera {
+	namespace cinematic {
 		
 		/**
 		* A renderer that passes the render call to another renderer
 		*/
 		
-		class CinematicRenderer : public core::view::Renderer3DModule {
+		class TrackingShotRenderer : public core::view::Renderer3DModule {
 		public:
 
 			/**
@@ -76,7 +76,7 @@ namespace megamol {
 			* @return The name of this module.
 			*/
 			static const char *ClassName(void) {
-				return "CinematicRenderer";
+				return "TrackingShotRenderer";
 			}
 
 			/**
@@ -85,7 +85,7 @@ namespace megamol {
 			* @return A human readable description of the module.
 			*/
 			static const char *Description(void) {
-				return "Renderer that passes the render call to another renderer";
+				return "Renders the tracking shot and passes the render call to another renderer.";
 			}
 
 			/**
@@ -107,10 +107,10 @@ namespace megamol {
 			}
 
 			/** Ctor. */
-			CinematicRenderer(void);
+			TrackingShotRenderer(void);
 
 			/** Dtor. */
-			virtual ~CinematicRenderer(void);
+			virtual ~TrackingShotRenderer(void);
 
 		protected:
 
@@ -207,7 +207,7 @@ namespace megamol {
 
 		};
 
-	} /* end namespace cinematiccamera */
+	} /* end namespace cinematic */
 } /* end namespace megamol */
 
-#endif /* MEGAMOL_CINEMATICCAMERA_CINEMATICRENDERER_H_INCLUDED */
+#endif /* MEGAMOL_CINEMATIC_TRACKINGSHOTRENDERER_H_INCLUDED */

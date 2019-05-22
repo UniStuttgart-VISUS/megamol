@@ -21,7 +21,7 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::cinematiccamera;
+using namespace megamol::cinematic;
 using namespace vislib;
 
 /*

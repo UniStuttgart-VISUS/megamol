@@ -1,11 +1,12 @@
 /*
- * CinematicCamera.cpp
- * Copyright (C) 2009-2015 by MegaMol Team
- * Alle Rechte vorbehalten.
- */
+ * Cinematic.cpp
+*
+* Copyright (C) 2018 by VISUS (Universitaet Stuttgart).
+* Alle Rechte vorbehalten.
+*/
 
 #include "stdafx.h"
-#include "CinematicCamera/CinematicCamera.h"
+#include "Cinematic/Cinematic.h"
 
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/utility/plugins/Plugin200Instance.h"
@@ -13,9 +14,9 @@
 
 #include "vislib/vislibversion.h"
 
-#include "CinematicRenderer.h"
+#include "TrackingShotRenderer.h"
 #include "TimeLineRenderer.h"
-#include "CallCinematicCamera.h"
+#include "CallKeyframeKeeper.h"
 #include "KeyframeKeeper.h"
 #include "CinematicView.h"
 #include "ReplacementRenderer.h"
@@ -31,10 +32,11 @@ namespace {
             : ::megamol::core::utility::plugins::Plugin200Instance(
 
                 /* machine-readable plugin assembly name */
-                "CinematicCamera", 
+                "Cinematic", 
 
                 /* human-readable plugin description */
-                "Describing CinematicCamera (TODO: Change this!)") {
+                "The Cinematic plugin allows the video rendering (separate file per frame) of any rendering output in MegaMol." 
+                "By defining fixed keyframes for desired camera positions and specific animation times, arbitrary tracking shots can be created.") {
 			
             // here we could perform addition initialization
         };
@@ -46,14 +48,14 @@ namespace {
         virtual void registerClasses(void) {
 			
             // register modules here:
-			this->module_descriptions.RegisterAutoDescription<megamol::cinematiccamera::CinematicRenderer>();
-			this->module_descriptions.RegisterAutoDescription<megamol::cinematiccamera::TimeLineRenderer>();
-			this->module_descriptions.RegisterAutoDescription<megamol::cinematiccamera::KeyframeKeeper>();
-			this->module_descriptions.RegisterAutoDescription<megamol::cinematiccamera::CinematicView>();
-            this->module_descriptions.RegisterAutoDescription<megamol::cinematiccamera::ReplacementRenderer>();
+			this->module_descriptions.RegisterAutoDescription<megamol::cinematic::TrackingShotRenderer>();
+			this->module_descriptions.RegisterAutoDescription<megamol::cinematic::TimeLineRenderer>();
+			this->module_descriptions.RegisterAutoDescription<megamol::cinematic::KeyframeKeeper>();
+			this->module_descriptions.RegisterAutoDescription<megamol::cinematic::CinematicView>();
+            this->module_descriptions.RegisterAutoDescription<megamol::cinematic::ReplacementRenderer>();
 
             // register calls here:
-			this->call_descriptions.RegisterAutoDescription < megamol::cinematiccamera::CallCinematicCamera>();
+			this->call_descriptions.RegisterAutoDescription < megamol::cinematic::CallKeyframeKeeper>();
 
         }
         MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics
@@ -64,7 +66,7 @@ namespace {
 /*
  * mmplgPluginAPIVersion
  */
-CINEMATICCAMERA_API int mmplgPluginAPIVersion(void) {
+CINEMATIC_API int mmplgPluginAPIVersion(void) {
     MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_mmplgPluginAPIVersion
 }
 
@@ -72,7 +74,7 @@ CINEMATICCAMERA_API int mmplgPluginAPIVersion(void) {
 /*
  * mmplgGetPluginCompatibilityInfo
  */
-CINEMATICCAMERA_API
+CINEMATIC_API
 ::megamol::core::utility::plugins::PluginCompatibilityInfo *
 mmplgGetPluginCompatibilityInfo(
         ::megamol::core::utility::plugins::ErrorCallback onError) {
@@ -114,7 +116,7 @@ mmplgGetPluginCompatibilityInfo(
 /*
  * mmplgReleasePluginCompatibilityInfo
  */
-CINEMATICCAMERA_API
+CINEMATIC_API
 void mmplgReleasePluginCompatibilityInfo(
         ::megamol::core::utility::plugins::PluginCompatibilityInfo* ci) {
     // release compatiblity data on the correct heap
@@ -125,7 +127,7 @@ void mmplgReleasePluginCompatibilityInfo(
 /*
  * mmplgGetPluginInstance
  */
-CINEMATICCAMERA_API
+CINEMATIC_API
 ::megamol::core::utility::plugins::AbstractPluginInstance*
 mmplgGetPluginInstance(
         ::megamol::core::utility::plugins::ErrorCallback onError) {
@@ -136,7 +138,7 @@ mmplgGetPluginInstance(
 /*
  * mmplgReleasePluginInstance
  */
-CINEMATICCAMERA_API
+CINEMATIC_API
 void mmplgReleasePluginInstance(
         ::megamol::core::utility::plugins::AbstractPluginInstance* pi) {
     MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_mmplgReleasePluginInstance(pi)
