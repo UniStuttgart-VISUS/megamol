@@ -78,6 +78,7 @@ public:
 
     using ModuleList_t = std::vector<ModuleDescr_t>;
 
+    // Full qualified name of a call is: <full qualified name of from>;<call class>;<full qualified name of to>
     using CallDescr_t = std::pair<Call::ptr_type, std::string>;
 
     using CallList_t = std::vector<CallDescr_t>;
@@ -198,7 +199,7 @@ public:
     //////////////////////////// enumerators /////////////////////////////////////
     /*
      * ModulGraph braucht einen ReadWriterLock. Enumerate const Operatoren können endlich sinnvoll implementiert werden.
-     * 
+     *
      */
 
 private:
@@ -212,30 +213,70 @@ private:
         return true;
     }
 
-    [[nodiscard]] ModuleDescr_t find_module(std::string const& name) {
-        auto const it = std::find(this->module_list_.begin(), this->module_list_.end(),
+    [[nodiscard]] ModuleList_t::iterator find_module(std::string const& name) {
+        std::shared_lock<std::shared_mutex> lock(graph_lock_);
+
+        auto it = std::find(this->module_list_.begin(), this->module_list_.end(),
             [&name](auto const& el) { return el.second == name; });
 
-        if (it != this->module_list_.end()) {
-            return *it;
-        }
-
-        return ModuleDescr_t();
+        return it;
     }
 
-    [[nodiscard]] ModuleConstDescr_t find_module(std::string const& name) const {
-        auto const it = std::find(this->module_list_.cbegin(), this->module_list_.cend(),
+    [[nodiscard]] ModuleList_t::const_iterator find_module(std::string const& name) const {
+        std::shared_lock<std::shared_mutex> lock(graph_lock_);
+
+        auto it = std::find(this->module_list_.cbegin(), this->module_list_.cend(),
             [&name](auto const& el) { return el.second == name; });
 
-        if (it != this->module_list_.cend()) {
-            return static_cast<ModuleConstDescr_t>(*it);
+        return it;
+    }
+
+    bool delete_module(std::string const& name) {
+        auto const it = find_module(name);
+
+        std::unique_lock<std::shared_mutex> lock(graph_lock_);
+
+        if (it == this->module_list_.end()) {
+            return false;
         }
 
-        return ModuleConstDescr_t();
+        this->module_list_.erase(it);
+        return true;
+    }
+
+    [[nodiscard]] CallList_t::iterator find_call(std::string const& name) {
+        std::shared_lock<std::shared_mutex> lock(graph_lock_);
+
+        auto it = std::find(
+            this->call_list_.begin(), this->call_list_.end(), [&name](auto const& el) { return el.second == name; });
+
+        return it;
+    }
+
+    [[nodiscard]] CallList_t::const_iterator find_call(std::string const& name) const {
+        std::shared_lock<std::shared_mutex> lock(graph_lock_);
+
+        auto it = std::find(
+            this->call_list_.cbegin(), this->call_list_.cend(), [&name](auto const& el) { return el.second == name; });
+
+        return it;
+    }
+
+    bool delete_call(std::string const& name) {
+        auto const it = find_call(name);
+
+        std::unique_lock<std::shared_mutex> lock(graph_lock_);
+
+        if (it == this->call_list_.end()) {
+            return false;
+        }
+
+        this->call_list_.erase(it);
+        return true;
     }
 
     /** The MegaMolGraph is the owner of the root module namespace*/
-    //std::unique_ptr<RootModuleNamespace> root_module_namespace_;
+    // std::unique_ptr<RootModuleNamespace> root_module_namespace_;
 
     /** Queue for module deletions */
     ModuleDeletionQueue_t module_deletion_queue_;
@@ -256,7 +297,7 @@ private:
     CallList_t call_list_;
 
     /** Reader/Writer mutex for the graph */
-    std::shared_mutex graph_lock_;
+    mutable std::shared_mutex graph_lock_;
 
 
     ////////////////////////// old interface stuff //////////////////////////////////////////////
@@ -277,7 +318,7 @@ public:
     // to lock?
     ////////////////////////////
 
-    //vislib::SmartPtr<param::AbstractParam> FindParameter(const std::string name, bool quiet = false) const;
+    // vislib::SmartPtr<param::AbstractParam> FindParameter(const std::string name, bool quiet = false) const;
 
     // todo: optionally ask for the parameters of a specific module (name OR module pointer?)
     inline void EnumerateParameters(std::function<void(const Module&, param::ParamSlot&)> cb) const;
@@ -291,7 +332,6 @@ public:
         bool>::type
     EnumerateCallerSlots(std::string module_name, std::function<void(C&)> cb) const;
 
-    
 
     // WHY??? this is just EnumerateParameters(FindModule()...) GET RID OF IT!
     template <class A>
@@ -350,14 +390,14 @@ typename std::enable_if<std::is_convertible<A*, megamol::core::Module*>::value, 
 megamol::core::MegaMolGraph::FindModule(std::string const& module_name, std::function<void(A const&)> const& cb) const {
     auto const mod = find_module(module_name);
 
-    if (mod.first != nullptr) {
-        cb(*(mod.first));
-        return true;
+    if (mod == module_list_.cend() || mod->first != nullptr) {
+        vislib::sys::Log::DefaultLog.WriteInfo("MegaMolGraph: Could not find module %s\n", module_name.c_str());
+
+        return false;
     }
 
-    vislib::sys::Log::DefaultLog.WriteInfo("MegaMolGraph: Could not find module %s\n", module_name.c_str());
-
-    return false;
+    cb(*(mod->first));
+    return true;
 }
 
 
