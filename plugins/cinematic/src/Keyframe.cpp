@@ -11,16 +11,11 @@
 
 using namespace megamol::cinematic;
 
-
-/*
-* Keyframe::Keyframe
-*/
 Keyframe::Keyframe() :
     animTime(0.0f),
     simTime(0.0f),
     camera()
 {
-
     this->camera.position      = vislib::math::Point<float, 3>(1.0f, 0.0f, 0.0f);
     this->camera.lookat        = vislib::math::Point<float, 3>(0.0f, 0.0f, 0.0f);
     this->camera.up            = vislib::math::Vector<float, 3>(0.0f, 1.0f, 0.0f);
@@ -39,18 +34,15 @@ Keyframe::Keyframe(float at, float st, vislib::math::Point<float, 3> pos, vislib
     this->camera.apertureangle  = aperture;
 }
 
-/*
-* Keyframe::~Keyframe
-*/
+
 Keyframe::~Keyframe() {
-    // intentionally empty
+
+    // nothing to do here ...
 }
 
 
-/*
-* Keyframe::Serialise
-*/
 void Keyframe::Serialise(vislib::Serialiser& serialiser) {
+
     serialiser.Serialise((float)this->animTime, "AnimationTime");
     serialiser.Serialise((float)this->simTime, "SimulationTime");
     serialiser.Serialise((float)this->camera.apertureangle, "ApertureAngle");
@@ -66,10 +58,8 @@ void Keyframe::Serialise(vislib::Serialiser& serialiser) {
 }
 
 
-/*
-* Keyframe::Deserialise
-*/
 void Keyframe::Deserialise(vislib::Serialiser& serialiser) {
+
     float f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11;
     serialiser.Deserialise(f0, "AnimationTime");
     serialiser.Deserialise(f1, "SimulationTime");
@@ -89,5 +79,4 @@ void Keyframe::Deserialise(vislib::Serialiser& serialiser) {
     this->camera.position = vislib::math::Point<float, 3>(f3, f4, f5);
     this->camera.lookat = vislib::math::Point<float, 3>(f6, f7, f8);
     this->camera.up = vislib::math::Vector<float, 3>(f9, f10, f11);
-
 }

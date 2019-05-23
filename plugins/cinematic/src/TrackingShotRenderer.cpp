@@ -6,6 +6,7 @@
 */
 
 #include "stdafx.h"
+
 #include "TrackingShotRenderer.h"
 
 using namespace megamol;
@@ -16,17 +17,13 @@ using namespace megamol::cinematic;
 
 using namespace vislib;
 
-
-/*
-* TrackingShotRenderer::TrackingShotRenderer
-*/
 TrackingShotRenderer::TrackingShotRenderer(void) : Renderer3DModule(),
     rendererCallerSlot("renderer", "outgoing renderer"),
     keyframeKeeperSlot("keyframeKeeper", "Connects to the Keyframe Keeper."),
-    stepsParam(                "01_splineSubdivision", "Amount of interpolation steps between keyframes."),
-    toggleManipulateParam(     "02_toggleManipulators", "Toggle different manipulators for the selected keyframe."),
-    toggleHelpTextParam(       "03_toggleHelpText", "Show/hide help text for key assignments."),
-    toggleManipOusideBboxParam("04_manipOutsideModel", "Keep manipulators always outside of model bounding box."),
+    stepsParam(                "splineSubdivision", "Amount of interpolation steps between keyframes."),
+    toggleManipulateParam(     "toggleManipulators", "Toggle different manipulators for the selected keyframe."),
+    toggleHelpTextParam(       "helpText", "Show/hide help text for key assignments."),
+    toggleManipOusideBboxParam("manipulatorsOutsideBBox", "Keep manipulators always outside of model bounding box."),
 
     theFont(megamol::core::utility::SDFFont::FontName::ROBOTO_SANS), 
     interpolSteps(20),
@@ -41,13 +38,13 @@ TrackingShotRenderer::TrackingShotRenderer(void) : Renderer3DModule(),
     mouseY(0.0f)
 {
 
-    // init parameters
     this->rendererCallerSlot.SetCompatibleCall<CallRender3DDescription>();
     this->MakeSlotAvailable(&this->rendererCallerSlot);
 
     this->keyframeKeeperSlot.SetCompatibleCall<CallKeyframeKeeperDescription>();
     this->MakeSlotAvailable(&this->keyframeKeeperSlot);
 
+    // init parameters
     this->stepsParam.SetParameter(new param::IntParam((int)this->interpolSteps, 1));
     this->MakeSlotAvailable(&this->stepsParam);
 
@@ -62,31 +59,25 @@ TrackingShotRenderer::TrackingShotRenderer(void) : Renderer3DModule(),
 
     // Load spline interpolation keyframes at startup
     this->stepsParam.ForceSetDirty();
-
 }
 
-/*
-* TrackingShotRenderer::~TrackingShotRenderer
-*/
+
 TrackingShotRenderer::~TrackingShotRenderer(void) {
 	this->Release();
 }
 
-/*
-* TrackingShotRenderer::create
-*/
 
 bool TrackingShotRenderer::create(void) {
 
     vislib::graphics::gl::ShaderSource vert, frag;
 
-    const char *shaderName = "TrackingShotRenderer_Render2Texture_Shader";
+    const char *shaderName = "TrackingShotShader_Render2Texturer";
 
     try {
-        if (!megamol::core::Module::instance()->ShaderSourceFactory().MakeShaderSource("TrackingShotRenderer::vertex", vert)) {
+        if (!megamol::core::Module::instance()->ShaderSourceFactory().MakeShaderSource("TrackingShotShader::vertex", vert)) {
             return false;
         }
-        if (!megamol::core::Module::instance()->ShaderSourceFactory().MakeShaderSource("TrackingShotRenderer::fragment", frag)) {
+        if (!megamol::core::Module::instance()->ShaderSourceFactory().MakeShaderSource("TrackingShotShader::fragment", frag)) {
             return false;
         }
         if (!this->textureShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
@@ -121,9 +112,6 @@ bool TrackingShotRenderer::create(void) {
 }
 
 
-/*
-* TrackingShotRenderer::release
-*/
 void TrackingShotRenderer::release(void) {
 
     this->textureShader.Release();
@@ -135,9 +123,6 @@ void TrackingShotRenderer::release(void) {
 }
 
 
-/*
-* TrackingShotRenderer::GetExtents
-*/
 bool TrackingShotRenderer::GetExtents(megamol::core::view::CallRender3D& call) {
 
     view::CallRender3D *cr3d_in = dynamic_cast<CallRender3D*>(&call);
@@ -192,9 +177,6 @@ bool TrackingShotRenderer::GetExtents(megamol::core::view::CallRender3D& call) {
 }
 
 
-/*
-* TrackingShotRenderer::Render
-*/
 bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D& call) {
 
     view::CallRender3D *cr3d_in = dynamic_cast<CallRender3D*>(&call);
@@ -440,11 +422,11 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D& call) {
     float vpH = (float)(vpHeight);
     float vpW = (float)(vpWidth);
 
-    vislib::StringA leftLabel  = " TRACKING SHOT VIEW ";
+    vislib::StringA leftLabel  = " TRACKING SHOT ";
     vislib::StringA midLabel   = "";
-    vislib::StringA rightLabel = " [h] show help text ";
+    vislib::StringA rightLabel = " [h] Show Help Text ";
     if (this->showHelpText) {
-        rightLabel = " [h] hide help text ";
+        rightLabel = " [h] Hide Help Text ";
     }
 
     float lbFontSize        = (CC_MENU_HEIGHT); 
@@ -482,28 +464,27 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D& call) {
         helpText += "-----[ GLOBAL ]-----\n";
         helpText += "[a] Apply current settings to selected/new keyframe. \n";
         helpText += "[d] Delete selected keyframe. \n";
-        helpText += "[ctrl+s] Save keyframes to file. \n";
-        helpText += "[ctrl+l] Load keyframes from file. \n";
-        helpText += "[ctrl+z] Undo keyframe changes. \n";
-        helpText += "[ctrl+y] Redo keyframe changes. \n";
-        helpText += "-----[ TRACKING SHOT VIEW ]----- \n";
+        helpText += "[Ctrl+s] Save keyframes to file. \n";
+        helpText += "[Ctrl+l] Load keyframes from file. \n";
+        helpText += "[Ctrl+z] Undo keyframe changes. \n";
+        helpText += "[Ctrl+y] Redo keyframe changes. \n";
+        helpText += "-----[ TRACKING SHOT ]----- \n";
         helpText += "[m] Toggle different manipulators for the selected keyframe. \n";
         helpText += "[w] Show manipulators inside/outside of model bounding box. \n";
-        helpText += "[l] Reset Look-At of selected keyframe. \n";
-        helpText += "-----[ CINEMATIC VIEW ]----- \n";
+        helpText += "[l] Reset look-at vector of selected keyframe. \n";
+        helpText += "-----[ CINEMATIC ]----- \n";
         helpText += "[r] Start/Stop rendering complete animation. \n";
-        helpText += "[space] Start/Stop animation preview. \n";
-        helpText += "-----[ TIME LINE VIEW ]----- \n";
-        helpText += "[right/left] Move selected keyframe on animation time axis. \n";
+        helpText += "[Space] Start/Stop animation preview. \n";
+        helpText += "-----[ TIMELINE ]----- \n";
+        helpText += "[Right/Left Arrow] Move selected keyframe on animation time axis. \n";
         helpText += "[f] Snap all keyframes to animation frames. \n";
         helpText += "[g] Snap all keyframes to simulation frames. \n";
         helpText += "[t] Linearize simulation time between two keyframes. \n";
+        helpText += "[v] Set same velocity between all keyframes (Experimental).\n"; // Calcualation is not correct yet ...
         helpText += "[p] Reset shifted and scaled time axes. \n";
-        helpText += "[left mouse button] Select keyframe. \n";
-        helpText += "[middle mouse button] Axes scaling in mouse direction. \n";
-        helpText += "[right mouse button] Drag & drop keyframe / pan axes. \n";
-        //UNUSED helpText += "[v] Set same velocity between all keyframes.\n";    // Calcualation is not correct yet ...
-        //UNUSED helpText += "[?] Toggle rendering of model or replacement.\n";   // Key assignment is user defined ... (ReplacementRenderer is no "direct" part of cinematic)
+        helpText += "[Left Mouse Button] Select keyframe. \n";
+        helpText += "[Middle Mouse Button] Axes scaling in mouse direction. \n";
+        helpText += "[Right Mouse Button] Drag & drop keyframe / pan axes. \n";
 
         float htNumOfRows = 24.0f; // Number of rows the help text has
 
@@ -548,9 +529,6 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D& call) {
 }
 
 
-/*
-* TrackingShotRenderer::OnMouseButton
-*/
 bool TrackingShotRenderer::OnMouseButton(megamol::core::view::MouseButton button, megamol::core::view::MouseButtonAction action, megamol::core::view::Modifiers mods) {
 
     auto* cr = this->rendererCallerSlot.CallAs<view::CallRender3D>();
@@ -615,9 +593,6 @@ bool TrackingShotRenderer::OnMouseButton(megamol::core::view::MouseButton button
 }
 
 
-/*
-* TrackingShotRenderer::OnMouseMove
-*/
 bool TrackingShotRenderer::OnMouseMove(double x, double y) {
 
     auto* cr = this->rendererCallerSlot.CallAs<view::CallRender3D>();

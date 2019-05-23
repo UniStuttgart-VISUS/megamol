@@ -19,12 +19,11 @@
 #include "mmcore/param/ParamSlot.h"
 
 namespace megamol {
-    namespace cinematic {
+namespace cinematic {
 
     /*
-     * Replacement Renderer class
+     * Replacement rendering.
      */
-
     class ReplacementRenderer : public megamol::core::view::Renderer3DModule
     {
     public:
@@ -117,13 +116,13 @@ namespace megamol {
         };
 
         vislib::math::Cuboid<float> bbox;
+
         bool toggleReplacementRendering;
 
          /**********************************************************************
          * functions
          **********************************************************************/
 
-         /** */
         void drawBoundingBox(void);
 
         /**********************************************************************
@@ -144,8 +143,7 @@ namespace megamol {
 
     };
 
-
-    } /* end namespace cinematic */
+} /* end namespace cinematic */
 } /* end namespace megamol */
 
 #endif // MEGAMOL_CINEMATIC_REPLACEMENTRENDERER_H_INCLUDED

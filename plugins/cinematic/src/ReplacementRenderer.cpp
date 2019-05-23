@@ -18,34 +18,30 @@
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/sys/Log.h"
 
-
 using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::cinematic;
+
 using namespace vislib;
 
-/*
- * ReplacementRenderer::ReplacementRenderer (CTOR)
- */
 ReplacementRenderer::ReplacementRenderer(void) : Renderer3DModule(),
     rendererCallerSlot("renderer", "outgoing renderer"),
-    replacementRenderingParam(      "01_replacementRendering", "Show/hide replacement rendering for the model."),
-    toggleReplacementRenderingParam("02_toggleReplacement", "Toggle replacement rendering."),
-    replacementKeyParam(            "03_replacmentKeyAssign", "Assign a key to replacement rendering button."),
-    alphaParam(                     "04_alpha", "The alpha value of the replacement rendering."),
-
+    alphaParam(                     "alpha", "The alpha value of the replacement rendering."),
+    replacementRenderingParam(      "replacementRendering", "Show/hide replacement rendering for the model."),
+    replacementKeyParam(            "replacmentKeyAssign", "Assign a key to replacement rendering button."),
+    toggleReplacementRenderingParam("toggleReplacement", "Toggle replacement rendering."),
     bbox(),
     toggleReplacementRendering(false)
 {
-
     this->rendererCallerSlot.SetCompatibleCall<view::CallRender3DDescription>();
     this->MakeSlotAvailable(&this->rendererCallerSlot);
 
-    this->replacementRenderingParam.SetParameter(new param::BoolParam(this->toggleReplacementRendering));
-    this->MakeSlotAvailable(&this->replacementRenderingParam);
-
+    // init parameters
     alphaParam.SetParameter(new param::FloatParam(0.75f, 0.0f, 1.0f));
     this->MakeSlotAvailable(&alphaParam);
+
+    this->replacementRenderingParam.SetParameter(new param::BoolParam(this->toggleReplacementRendering));
+    this->MakeSlotAvailable(&this->replacementRenderingParam);
 
     param::EnumParam *tmpEnum = new param::EnumParam(static_cast<int>(keyAssignment::KEY_ASSIGN_NONE));
     tmpEnum->SetTypePair(keyAssignment::KEY_ASSIGN_NONE, "Choose key assignment for button.");
@@ -59,31 +55,25 @@ ReplacementRenderer::ReplacementRenderer(void) : Renderer3DModule(),
     this->MakeSlotAvailable(&this->replacementKeyParam);
 }
 
-/*
- * ReplacementRenderer::~ReplacementRenderer (DTOR)
- */
+
 ReplacementRenderer::~ReplacementRenderer(void) {
+
     this->Release();
 }
 
-/*
- * ReplacementRenderer::release
- */
+
 void ReplacementRenderer::release(void) {
 
+    // nothing to do here ...
 }
 
-/*
- * ReplacementRenderer::create
- */
+
 bool ReplacementRenderer::create(void) {
    
     return true;
 }
 
-/*
- * ReplacementRenderer::GetExtents
- */
+
 bool ReplacementRenderer::GetExtents(megamol::core::view::CallRender3D& call) {
 
     view::CallRender3D *cr3d_in = dynamic_cast<view::CallRender3D*>(&call);
@@ -113,9 +103,6 @@ bool ReplacementRenderer::GetExtents(megamol::core::view::CallRender3D& call) {
 }
 
 
-/*
- * ReplacementRenderer::Render
- */
 bool ReplacementRenderer::Render(megamol::core::view::CallRender3D& call) {
 
     view::CallRender3D *cr3d_in = dynamic_cast<view::CallRender3D*>(&call);
@@ -157,7 +144,7 @@ bool ReplacementRenderer::Render(megamol::core::view::CallRender3D& call) {
         this->SetSlotUnavailable(static_cast<AbstractSlot*>(&this->replacementKeyParam));
     }
 
-    // Render ...
+    // Render 
     if (this->toggleReplacementRendering) {
 
         // Set opengl states
@@ -192,9 +179,6 @@ bool ReplacementRenderer::Render(megamol::core::view::CallRender3D& call) {
 }
 
 
-/*
-* ReplacementRenderer::drawBoundingBox
-*/
 void ReplacementRenderer::drawBoundingBox() {
 
     float alpha = alphaParam.Param<param::FloatParam>()->Value();

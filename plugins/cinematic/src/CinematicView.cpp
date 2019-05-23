@@ -17,29 +17,25 @@ using namespace megamol::cinematic;
 
 using namespace vislib;
 
-
-/*
- * CinematicView::CinematicView
- */
 CinematicView::CinematicView(void)
     : View3D()
     , keyframeKeeperSlot("keyframeKeeper", "Connects to the Keyframe Keeper.")
-    , renderParam(               "01_renderAnim", "Toggle rendering of complete animation to PNG files.")
-    , toggleAnimPlayParam(       "02_playPreview", "Toggle playing animation as preview")
-    , selectedSkyboxSideParam(   "03_skyboxSide", "Select the skybox side.")
-    , cubeModeRenderParam(       "04_cubeMode", "Render cube around dataset with skyboxSide as side selector.")
-    , resWidthParam(             "05_cinematicWidth", "The width resolution of the cineamtic view to render.")
-    , resHeightParam(            "06_cinematicHeight", "The height resolution of the cineamtic view to render.")
-    , fpsParam(                  "07_fps", "Frames per second the animation should be rendered.")
-    , startRenderFrameParam(     "08_firstRenderFrame", "Set first frame number to start rendering with " 
-                                                        "(allows continuing aborted rendering without starting "
-                                                        "from the beginning).")
-    , delayFirstRenderFrameParam("09_delayFirstRenderFrame", "Delay (in seconds) to wait until first frame "
-                                                             "for rendering is written (needed to get right "
-                                                             "first frame especially for high resolutions and "
-                                                             "for distributed rendering).")
-    , frameFolderParam(          "10_frameFolder", "Specify folder where the frame files should be stored.")
-    , addSBSideToNameParam(      "11_addSBSideToName", "Toggle whether skybox side should be added to output filename")
+    , renderParam(               "renderAnim", "Toggle rendering of complete animation to PNG files.")
+    , toggleAnimPlayParam(       "playPreview", "Toggle playing animation as preview")
+    , selectedSkyboxSideParam(   "skyboxSide", "Select the skybox side.")
+    , cubeModeRenderParam(       "cubeMode", "Render cube around dataset with skyboxSide as side selector.")
+    , resWidthParam(             "cinematicWidth", "The width resolution of the cineamtic view to render.")
+    , resHeightParam(            "cinematicHeight", "The height resolution of the cineamtic view to render.")
+    , fpsParam(                  "fps", "Frames per second the animation should be rendered.")
+    , startRenderFrameParam(     "firstRenderFrame", "Set first frame number to start rendering with " 
+                                                     "(allows continuing aborted rendering without starting "
+                                                     "from the beginning).")
+    , delayFirstRenderFrameParam("delayFirstRenderFrame", "Delay (in seconds) to wait until first frame "
+                                                          "for rendering is written (needed to get right "
+                                                          "first frame especially for high resolutions and "
+                                                          "for distributed rendering).")
+    , frameFolderParam(          "frameFolder", "Specify folder where the frame files should be stored.")
+    , addSBSideToNameParam(      "addSBSideToName", "Toggle whether skybox side should be added to output filename")
     , eyeParam(                  "stereo::eye", "Select eye position (for stereo view).")
     , projectionParam(           "stereo::projection", "Select camera projection.")
     , theFont(megamol::core::utility::SDFFont::FontName::ROBOTO_SANS)
@@ -61,6 +57,12 @@ CinematicView::CinematicView(void)
     this->MakeSlotAvailable(&this->keyframeKeeperSlot);
 
     // init parameters
+    this->renderParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_R));
+    this->MakeSlotAvailable(&this->renderParam);
+
+    this->toggleAnimPlayParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_SPACE));
+    this->MakeSlotAvailable(&this->toggleAnimPlayParam);
+
     param::EnumParam* sbs = new param::EnumParam(this->sbSide);
     sbs->SetTypePair(CinematicView::SkyboxSides::SKYBOX_NONE, "None");
     sbs->SetTypePair(CinematicView::SkyboxSides::SKYBOX_FRONT, "Front");
@@ -75,20 +77,26 @@ CinematicView::CinematicView(void)
     this->cubeModeRenderParam << new param::BoolParam(false);
     this->MakeSlotAvailable(&this->cubeModeRenderParam);
 
-    this->resHeightParam.SetParameter(new param::IntParam(this->cineHeight, 1));
-    this->MakeSlotAvailable(&this->resHeightParam);
-
     this->resWidthParam.SetParameter(new param::IntParam(this->cineWidth, 1));
     this->MakeSlotAvailable(&this->resWidthParam);
+
+    this->resHeightParam.SetParameter(new param::IntParam(this->cineHeight, 1));
+    this->MakeSlotAvailable(&this->resHeightParam);
 
     this->fpsParam.SetParameter(new param::IntParam(static_cast<int>(this->fps), 1));
     this->MakeSlotAvailable(&this->fpsParam);
 
-    this->renderParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_R));
-    this->MakeSlotAvailable(&this->renderParam);
+    this->startRenderFrameParam.SetParameter(new param::IntParam(0, 0));
+    this->MakeSlotAvailable(&this->startRenderFrameParam);
 
-    this->toggleAnimPlayParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_SPACE));
-    this->MakeSlotAvailable(&this->toggleAnimPlayParam);
+    this->delayFirstRenderFrameParam.SetParameter(new param::FloatParam(1.0f));
+    this->MakeSlotAvailable(&this->delayFirstRenderFrameParam);
+
+    this->frameFolderParam.SetParameter(new param::FilePathParam(""));
+    this->MakeSlotAvailable(&this->frameFolderParam);
+
+    this->addSBSideToNameParam << new param::BoolParam(false);
+    this->MakeSlotAvailable(&this->addSBSideToNameParam);
 
     param::EnumParam* enp = new param::EnumParam(vislib::graphics::CameraParameters::StereoEye::LEFT_EYE);
     enp->SetTypePair(vislib::graphics::CameraParameters::StereoEye::LEFT_EYE, "Left");
@@ -104,24 +112,9 @@ CinematicView::CinematicView(void)
     pep->SetTypePair(vislib::graphics::CameraParameters::ProjectionType::STEREO_TOE_IN, "Stereo ToeIn");
     this->projectionParam << pep;
     this->MakeSlotAvailable(&this->projectionParam);
-
-    this->delayFirstRenderFrameParam.SetParameter(new param::FloatParam(1.0f));
-    this->MakeSlotAvailable(&this->delayFirstRenderFrameParam);
-
-    this->startRenderFrameParam.SetParameter(new param::IntParam(0, 0));
-    this->MakeSlotAvailable(&this->startRenderFrameParam);
-
-    this->frameFolderParam.SetParameter(new param::FilePathParam(""));
-    this->MakeSlotAvailable(&this->frameFolderParam);
-
-    this->addSBSideToNameParam << new param::BoolParam(false);
-    this->MakeSlotAvailable(&this->addSBSideToNameParam);
 }
 
 
-/*
- * CinematicView::~CinematicView
- */
 CinematicView::~CinematicView(void) {
 
     if (this->pngdata.ptr != nullptr) {
@@ -157,9 +150,6 @@ CinematicView::~CinematicView(void) {
 }
 
 
-/*
- * CinematicView::Render
- */
 void CinematicView::Render(const mmcRenderViewContext& context) {
 
     view::CallRender3D* cr3d = this->rendererSlot.CallAs<core::view::CallRender3D>();
@@ -588,12 +578,12 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
         return;
     }
 
-    vislib::StringA leftLabel = " CINEMATIC VIEW ";
+    vislib::StringA leftLabel = " CINEMATIC ";
     vislib::StringA midLabel = "";
     if (this->rendering) {
         midLabel = "! RENDERING IN PROGRESS !";
     } else if (this->playAnim) {
-        midLabel = " playing animation ";
+        midLabel = " Playing Animation ";
     }
     vislib::StringA rightLabel = "";
 
@@ -642,9 +632,6 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
 }
 
 
-/*
- * CinematicView::render2file_setup
- */
 bool CinematicView::render2file_setup() {
 
     CallKeyframeKeeper* ccc = this->keyframeKeeperSlot.CallAs<CallKeyframeKeeper>();
@@ -720,9 +707,6 @@ bool CinematicView::render2file_setup() {
 }
 
 
-/*
- * CinematicView::render2file_write_png
- */
 bool CinematicView::render2file_write_png() {
 
     if (this->pngdata.write_lock == 0) {
@@ -849,9 +833,6 @@ bool CinematicView::render2file_write_png() {
 }
 
 
-/*
- * CinematicView::render2file_finish
- */
 bool CinematicView::render2file_finish() {
 
     if (this->pngdata.ptr != nullptr) {
@@ -880,9 +861,6 @@ bool CinematicView::render2file_finish() {
 }
 
 
-/*
- * CinematicView::setSimTime
- */
 bool CinematicView::setSimTime(float st) {
 
     view::CallRender3D* cr3d = this->rendererSlot.CallAs<core::view::CallRender3D>();

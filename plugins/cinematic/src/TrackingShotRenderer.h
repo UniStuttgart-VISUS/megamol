@@ -59,155 +59,154 @@
 #include "ReplacementRenderer.h"
 #include "KeyframeManipulator.h"
 
-
 namespace megamol {
-	namespace cinematic {
+namespace cinematic {
 		
+	/**
+	* Tracking shot rendering.
+	*/
+	class TrackingShotRenderer : public core::view::Renderer3DModule {
+	public:
+
 		/**
-		* A renderer that passes the render call to another renderer
+		* Gets the name of this module.
+		*
+		* @return The name of this module.
 		*/
-		
-		class TrackingShotRenderer : public core::view::Renderer3DModule {
-		public:
+		static const char *ClassName(void) {
+			return "TrackingShotRenderer";
+		}
 
-			/**
-			* Gets the name of this module.
-			*
-			* @return The name of this module.
-			*/
-			static const char *ClassName(void) {
-				return "TrackingShotRenderer";
-			}
+		/**
+		* Gets a human readable description of the module.
+		*
+		* @return A human readable description of the module.
+		*/
+		static const char *Description(void) {
+			return "Renders the tracking shot and passes the render call to another renderer.";
+		}
 
-			/**
-			* Gets a human readable description of the module.
-			*
-			* @return A human readable description of the module.
-			*/
-			static const char *Description(void) {
-				return "Renders the tracking shot and passes the render call to another renderer.";
-			}
+		/**
+		* Gets whether this module is available on the current system.
+		*
+		* @return 'true' if the module is available, 'false' otherwise.
+		*/
+		static bool IsAvailable(void) {
+			return true;
+		}
 
-			/**
-			* Gets whether this module is available on the current system.
-			*
-			* @return 'true' if the module is available, 'false' otherwise.
-			*/
-			static bool IsAvailable(void) {
-				return true;
-			}
+		/**
+		* Disallow usage in quickstarts
+		*
+		* @return false
+		*/
+		static bool SupportQuickstart(void) {
+			return false;
+		}
 
-			/**
-			* Disallow usage in quickstarts
-			*
-			* @return false
-			*/
-			static bool SupportQuickstart(void) {
-				return false;
-			}
+		/** Ctor. */
+		TrackingShotRenderer(void);
 
-			/** Ctor. */
-			TrackingShotRenderer(void);
+		/** Dtor. */
+		virtual ~TrackingShotRenderer(void);
 
-			/** Dtor. */
-			virtual ~TrackingShotRenderer(void);
+	protected:
 
-		protected:
+        /**
+        * Implementation of 'Create'.
+        *
+        * @return 'true' on success, 'false' otherwise.
+        */
+        virtual bool create(void);
 
-            /**
-            * Implementation of 'Create'.
-            *
-            * @return 'true' on success, 'false' otherwise.
-            */
-            virtual bool create(void);
+        /**
+        * Implementation of 'Release'.
+        */
+        virtual void release(void);
 
-            /**
-            * Implementation of 'Release'.
-            */
-            virtual void release(void);
+		/**
+		* The get extents callback. The module should set the members of
+		* 'call' to tell the caller the extents of its data (bounding boxes
+		* and times).
+		*
+		* @param call The calling call.
+		*
+		* @return The return value of the function.
+		*/
+		virtual bool GetExtents(megamol::core::view::CallRender3D& call);
 
-			/**
-			* The get extents callback. The module should set the members of
-			* 'call' to tell the caller the extents of its data (bounding boxes
-			* and times).
-			*
-			* @param call The calling call.
-			*
-			* @return The return value of the function.
-			*/
-			virtual bool GetExtents(megamol::core::view::CallRender3D& call);
+		/**
+		* The render callback.
+		*
+		* @param call The calling call.
+		*
+		* @return The return value of the function.
+		*/
+		virtual bool Render(megamol::core::view::CallRender3D& call);
 
-			/**
-			* The render callback.
-			*
-			* @param call The calling call.
-			*
-			* @return The return value of the function.
-			*/
-			virtual bool Render(megamol::core::view::CallRender3D& call);
+        /** 
+        * The mouse button pressed/released callback. 
+        */
+        virtual bool OnMouseButton(megamol::core::view::MouseButton button, megamol::core::view::MouseButtonAction action, megamol::core::view::Modifiers mods) override;
 
-            /** The mouse button pressed/released callback. */
-            virtual bool OnMouseButton(megamol::core::view::MouseButton button, megamol::core::view::MouseButtonAction action, megamol::core::view::Modifiers mods) override;
+        /** 
+        * The mouse movement callback. 
+        */
+        virtual bool OnMouseMove(double x, double y) override;
 
-            /** The mouse movement callback. */
-            virtual bool OnMouseMove(double x, double y) override;
+	private:
 
-		private:
+        /**********************************************************************
+        * variables
+        **********************************************************************/
 
-            /**********************************************************************
-            * variables
-            **********************************************************************/
+        // font rendering
+        megamol::core::utility::SDFFont theFont;
 
-            // font rendering
-            megamol::core::utility::SDFFont theFont;
+        unsigned int                     interpolSteps;
+        unsigned int                     toggleManipulator;
+        bool                             manipOutsideModel;
+        bool                             showHelpText;
 
-            unsigned int                     interpolSteps;
-            unsigned int                     toggleManipulator;
-            bool                             manipOutsideModel;
-            bool                             showHelpText;
+        KeyframeManipulator              manipulator;
+        bool                             manipulatorGrabbed;
 
-            KeyframeManipulator              manipulator;
-            bool                             manipulatorGrabbed;
+        vislib::graphics::gl::FramebufferObject fbo;
 
-            vislib::graphics::gl::FramebufferObject fbo;
+        /** The render to texture shader */
+        vislib::graphics::gl::GLSLShader textureShader;
 
-            /** The render to texture shader */
-            vislib::graphics::gl::GLSLShader textureShader;
+        bool isSelecting;
 
-            /*** INPUT ********************************************************/
+        /*** INPUT ***/
 
-            /** The mouse coordinates */
-            float                            mouseX;
-            float                            mouseY;
+        /** The mouse coordinates */
+        float                            mouseX;
+        float                            mouseY;
 
-            /**********************************************************************
-            * callback stuff
-            **********************************************************************/
+        /**********************************************************************
+        * callback stuff
+        **********************************************************************/
 
-			/** The renderer caller slot */
-			core::CallerSlot rendererCallerSlot;
+		/** The renderer caller slot */
+		core::CallerSlot rendererCallerSlot;
 
-			/** The keyframe keeper caller slot */
-			core::CallerSlot keyframeKeeperSlot;
+		/** The keyframe keeper caller slot */
+		core::CallerSlot keyframeKeeperSlot;
 
-            /**********************************************************************
-            * parameters
-            **********************************************************************/
+        /**********************************************************************
+        * parameters
+        **********************************************************************/
 			
-            /** Amount of interpolation steps between keyframes */
-            core::param::ParamSlot stepsParam;
-            /**  */
-            core::param::ParamSlot toggleManipulateParam;
-            /**  */
-            core::param::ParamSlot toggleHelpTextParam;
-            /**  */
-            core::param::ParamSlot toggleManipOusideBboxParam;
+        /** Amount of interpolation steps between keyframes */
+        core::param::ParamSlot stepsParam;
+        core::param::ParamSlot toggleManipulateParam;
+        core::param::ParamSlot toggleHelpTextParam;
+        core::param::ParamSlot toggleManipOusideBboxParam;
 
-			bool isSelecting;
+	};
 
-		};
-
-	} /* end namespace cinematic */
+} /* end namespace cinematic */
 } /* end namespace megamol */
 
 #endif /* MEGAMOL_CINEMATIC_TRACKINGSHOTRENDERER_H_INCLUDED */

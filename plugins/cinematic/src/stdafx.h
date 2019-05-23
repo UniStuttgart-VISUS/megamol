@@ -34,4 +34,8 @@
 
 #include "vislib/types.h"
 
+#ifndef CINEMATIC_PI
+    #define CINEMATIC_PI 3.1415926535897
+#endif
+
 #endif /* CINEMATIC_STDAFX_H_INCLUDED */

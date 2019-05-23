@@ -6,6 +6,7 @@
 */
 
 #include "stdafx.h"
+
 #include "KeyframeManipulator.h"
 
 #include "vislib/sys/Log.h"
@@ -14,21 +15,12 @@ using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::cinematic;
 
-#ifndef CC_PI
-    #define CC_PI 3.1415926535897
-#endif
-
-/*
-* KeyframeManipulator::KeyframeManipulator
-*/
 KeyframeManipulator::KeyframeManipulator(void) :
-
     circleRadiusFac(0.0075f), // const
     axisLengthFac(0.06f),     // const
     circleSubDiv(20),         // const
     lineWidth(2.5),           // const
     sensitivity(0.01f),       // const
-
     kfArray(),
     selectedKf(),
     manipArray(),
@@ -52,21 +44,15 @@ KeyframeManipulator::KeyframeManipulator(void) :
     circleVertices()
 {
 
-
 }
 
 
-/*
-* KeyframeManipulator::~KeyframeManipulator
-*/
 KeyframeManipulator::~KeyframeManipulator(void) {
-    // intentionally empty
+
+    // nothing to do here ...
 }
 
 
-/*
-* KeyframeManipulator::Update
-*/
 bool KeyframeManipulator::Update(vislib::Array<KeyframeManipulator::manipType> am, vislib::Array<Keyframe>* kfa, Keyframe skf, float vph, float vpw,
     vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> mvpm, vislib::math::Vector<float, 3> wclad, vislib::math::Vector<float, 3> wcmd, bool mob,
     vislib::math::Vector<float, 3> scp, vislib::math::Vector<float, 3> ecp) {
@@ -159,9 +145,6 @@ bool KeyframeManipulator::Update(vislib::Array<KeyframeManipulator::manipType> a
 }
 
 
-/*
-* KeyframeManipulator::updateManipulatorPositions
-*/
 bool KeyframeManipulator::updateManipulatorPositions() {
 
     vislib::math::Vector<float, 3> skfPosV = this->selectedKf.GetCamPosition().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>();
@@ -314,9 +297,6 @@ bool KeyframeManipulator::updateManipulatorPositions() {
 }
 
 
-/*
-* KeyframeManipulator::SetExtents
-*/
 void KeyframeManipulator::SetExtents(vislib::math::Cuboid<float> *bb) {
 
     // Store hard copy current bounding box of model
@@ -333,9 +313,6 @@ void KeyframeManipulator::SetExtents(vislib::math::Cuboid<float> *bb) {
 }
 
 
-/*
-* KeyframeManipulator::CheckKeyframePositionHit
-*/
 int KeyframeManipulator::CheckKeyframePositionHit(float x, float y) {
 
     if (!isDataSet) {
@@ -362,9 +339,6 @@ int KeyframeManipulator::CheckKeyframePositionHit(float x, float y) {
 }
 
 
-/*
-* KeyframeManipulator::CheckManipulatorHit
-*/
 bool KeyframeManipulator::CheckManipulatorHit(float x, float y) {
 
     if (!isDataSet) {
@@ -391,9 +365,7 @@ bool KeyframeManipulator::CheckManipulatorHit(float x, float y) {
     return false;
 }
 
-/*
-* KeyframeManipulator::ProcessManipulatorHit
-*/
+
 bool KeyframeManipulator::ProcessManipulatorHit(float x, float y) {
 
     if (!isDataSet) {
@@ -531,39 +503,27 @@ bool KeyframeManipulator::ProcessManipulatorHit(float x, float y) {
 }
 
 
-/*
-* KeyframeManipulator::GetManipulatedKeyframe
-*/
 Keyframe KeyframeManipulator::GetManipulatedKeyframe(void) {
 
     return this->selectedKf;
 }
 
 
-/*
-* KeyframeManipulator::GetFirstControlPointPosition
-*/
 vislib::math::Vector<float, 3> KeyframeManipulator::GetFirstControlPointPosition() {
 
     return this->startCtrllPos;
 }
 
 
-/*
-* KeyframeManipulator::GetLastControlPointPosition
-*/
 vislib::math::Vector<float, 3> KeyframeManipulator::GetLastControlPointPosition() {
 
     return this->endCtrllPos;
 }
 
 
-/*
-* KeyframeManipulator::getScreenSpace
-*
-* Transform position from world space to screen space
-*/
 vislib::math::Vector<float, 2> KeyframeManipulator::getScreenSpace(vislib::math::Vector<float, 3> wp) {
+
+    // Transforming position from world space to screen space:
 
     // World space position
     vislib::math::Vector<float, 4> wsPos = vislib::math::Vector<float, 4>(wp.X(), wp.Y(), wp.Z(), 1.0f);
@@ -580,9 +540,6 @@ vislib::math::Vector<float, 2> KeyframeManipulator::getScreenSpace(vislib::math:
 }
 
 
-/*
-* KeyframeManipulator::initCircleVertices
-*/
 void KeyframeManipulator::calculateCircleVertices(void) {
 
     this->circleVertices.Clear();
@@ -602,7 +559,7 @@ void KeyframeManipulator::calculateCircleVertices(void) {
     vislib::math::Vector<float, 3> rot = vislib::math::Vector<float, 3>(normal.Z(), 0.0f, -(normal.X()));
     rot.ScaleToLength(radius);
     // rotate up vector aroung lookat vector with the "Rodrigues' rotation formula" 
-    float t = 2.0f*(float)(CC_PI) / (float)(this->circleSubDiv); // theta angle for rotation   
+    float t = 2.0f*(float)(CINEMATIC_PI) / (float)(this->circleSubDiv); // theta angle for rotation   
     // First vertex is center of triangle fan
     this->circleVertices.Add(vislib::math::Vector<float, 3>(0.0f, 0.0f, 0.0f));
     for (unsigned int i = 0; i <= this->circleSubDiv; i++) {
@@ -613,9 +570,6 @@ void KeyframeManipulator::calculateCircleVertices(void) {
 }
 
 
-/*
-* KeyframeManipulator::Draw
-*/
 bool KeyframeManipulator::Draw(void) {
 
     if (!isDataSet) {
@@ -747,9 +701,6 @@ bool KeyframeManipulator::Draw(void) {
 }
 
 
-/*
-* KeyframeManipulator::drawCircle
-*/
 void KeyframeManipulator::drawCircle(vislib::math::Vector<float, 3> pos, float factor) {
 
     glBegin(GL_TRIANGLE_FAN);
@@ -760,9 +711,6 @@ void KeyframeManipulator::drawCircle(vislib::math::Vector<float, 3> pos, float f
 }
 
 
-/*
-* KeyframeManipulator::drawManipulator
-*/
 void KeyframeManipulator::drawManipulator(vislib::math::Vector<float, 3> kp, vislib::math::Vector<float, 3> mp) {
 
     this->drawCircle(mp, 1.0f);

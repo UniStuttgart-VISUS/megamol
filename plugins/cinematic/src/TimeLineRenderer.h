@@ -27,187 +27,184 @@
 
 #include "Keyframe.h"
 
-
 namespace megamol {
-	namespace cinematic {
+namespace cinematic {
+
+	/**
+	* Timeline rendering.
+	*/
+	class TimeLineRenderer : public core::view::Renderer2DModule {
+	public:
 
 		/**
-		* Mesh-based renderer for bézier curve tubes
+		* Answer the name of this module.
+		*
+		* @return The name of this module.
 		*/
-		class TimeLineRenderer : public core::view::Renderer2DModule {
-		public:
+		static const char *ClassName(void) {
+			return "TimeLineRenderer";
+		}
 
-			/**
-			* Answer the name of this module.
-			*
-			* @return The name of this module.
-			*/
-			static const char *ClassName(void) {
-				return "TimeLineRenderer";
-			}
+		/**
+		* Answer a human readable description of this module.
+		*
+		* @return A human readable description of this module.
+		*/
+		static const char *Description(void) {
+			return "Renders the timeline of keyframes";
+		}
 
-			/**
-			* Answer a human readable description of this module.
-			*
-			* @return A human readable description of this module.
-			*/
-			static const char *Description(void) {
-				return "Renders the timeline of keyframes";
-			}
+		/**
+		* Answers whether this module is available on the current system.
+		*
+		* @return 'true' if the module is available, 'false' otherwise.
+		*/
+		static bool IsAvailable(void) {
+			return true;
+		}
 
-			/**
-			* Answers whether this module is available on the current system.
-			*
-			* @return 'true' if the module is available, 'false' otherwise.
-			*/
-			static bool IsAvailable(void) {
-				return true;
-			}
+		/** Ctor. */
+		TimeLineRenderer(void);
 
-			/** Ctor. */
-			TimeLineRenderer(void);
+		/** Dtor. */
+		virtual ~TimeLineRenderer(void);
 
-			/** Dtor. */
-			virtual ~TimeLineRenderer(void);
+	protected:
 
-		protected:
+		/**
+		* Implementation of 'Create'.
+		*
+		* @return 'true' on success, 'false' otherwise.
+		*/
+		virtual bool create(void);
 
-			/**
-			* Implementation of 'Create'.
-			*
-			* @return 'true' on success, 'false' otherwise.
-			*/
-			virtual bool create(void);
-
-			/**
-			* Implementation of 'Release'.
-			*/
-			virtual void release(void);
+		/**
+		* Implementation of 'Release'.
+		*/
+		virtual void release(void);
 			
-            /**
-            * The get extents callback. The module should set the members of
-            * 'call' to tell the caller the extents of its data (bounding boxes
-            * and times).
-            *
-            * @param call The calling call.
-            *
-            * @return The return value of the function.
-            */
-            virtual bool GetExtents(core::view::CallRender2D& call);
+        /**
+        * The get extents callback. The module should set the members of
+        * 'call' to tell the caller the extents of its data (bounding boxes
+        * and times).
+        *
+        * @param call The calling call.
+        *
+        * @return The return value of the function.
+        */
+        virtual bool GetExtents(core::view::CallRender2D& call);
 
-            /**
-            * The render callback.
-            *
-            * @param call The calling call.
-            *
-            * @return The return value of the function.
-            */
-            virtual bool Render(core::view::CallRender2D& call);
+        /**
+        * The render callback.
+        *
+        * @param call The calling call.
+        *
+        * @return The return value of the function.
+        */
+        virtual bool Render(core::view::CallRender2D& call);
 
-            /** The mouse button pressed/released callback. */
-            virtual bool OnMouseButton(megamol::core::view::MouseButton button, megamol::core::view::MouseButtonAction action, megamol::core::view::Modifiers mods) override;
+        /** 
+        * The mouse button pressed/released callback. 
+        */
+        virtual bool OnMouseButton(megamol::core::view::MouseButton button, megamol::core::view::MouseButtonAction action, megamol::core::view::Modifiers mods) override;
 
-            /** The mouse movement callback. */
-            virtual bool OnMouseMove(double x, double y) override;
+        /** 
+        * The mouse movement callback.
+        */
+        virtual bool OnMouseMove(double x, double y) override;
 
-		private:
+	private:
 			
-            /**********************************************************************
-            * variables
-            **********************************************************************/
+        /**********************************************************************
+        * variables
+        **********************************************************************/
 
-            // font rendering
-            megamol::core::utility::SDFFont theFont;
+        megamol::core::utility::SDFFont theFont;
 
-            vislib::Array<vislib::SmartPtr<vislib::graphics::gl::OpenGLTexture2D> > markerTextures;
+        vislib::Array<vislib::SmartPtr<vislib::graphics::gl::OpenGLTexture2D> > markerTextures;
 
-            vislib::math::Vector<float, 2> axisStartPos;       // joint start position for both axis
+        vislib::math::Vector<float, 2> axisStartPos;       // joint start position for both axis
 
-            vislib::math::Vector<float, 2> animAxisEndPos;     // end position of animation axis
-            float                          animAxisLen;        // length of the animation axis
-            float                          animTotalTime;      // the total animation time
-            float                          animSegmSize;       // the world space size of one segment of the animation time ruler
-            float                          animSegmValue;      // the animation time value of on segment on the ruler 
-            float                          animScaleFac;       // the scaling factor of the animation axis
-            float                          animScaleOffset;    // (negative) offset to keep position on the ruler during scaling in focus 
-            float                          animLenTimeFrac;    // the scaled fraction of the animation axis length and the total animation time
-            float                          animScalePos;       // the ruler position to be kept in focus during scaling
-            float                          animScaleDelta;     // animScaleOffset for new animScalePos to get new animScaleOffset for new scaling factor
-            vislib::StringA                animFormatStr;      // string with adapted floating point formatting
+        vislib::math::Vector<float, 2> animAxisEndPos;     // end position of animation axis
+        float                          animAxisLen;        // length of the animation axis
+        float                          animTotalTime;      // the total animation time
+        float                          animSegmSize;       // the world space size of one segment of the animation time ruler
+        float                          animSegmValue;      // the animation time value of on segment on the ruler 
+        float                          animScaleFac;       // the scaling factor of the animation axis
+        float                          animScaleOffset;    // (negative) offset to keep position on the ruler during scaling in focus 
+        float                          animLenTimeFrac;    // the scaled fraction of the animation axis length and the total animation time
+        float                          animScalePos;       // the ruler position to be kept in focus during scaling
+        float                          animScaleDelta;     // animScaleOffset for new animScalePos to get new animScaleOffset for new scaling factor
+        vislib::StringA                animFormatStr;      // string with adapted floating point formatting
 
-            vislib::math::Vector<float, 2> simAxisEndPos;
-            float                          simAxisLen;
-            float                          simTotalTime;
-            float                          simSegmSize;
-            float                          simSegmValue;
-            float                          simScaleFac;
-            float                          simScaleOffset;
-            float                          simLenTimeFrac;
-            float                          simScalePos;
-            float                          simScaleDelta;
-            vislib::StringA                simFormatStr;
+        vislib::math::Vector<float, 2> simAxisEndPos;
+        float                          simAxisLen;
+        float                          simTotalTime;
+        float                          simSegmSize;
+        float                          simSegmValue;
+        float                          simScaleFac;
+        float                          simScaleOffset;
+        float                          simLenTimeFrac;
+        float                          simScalePos;
+        float                          simScaleDelta;
+        vislib::StringA                simFormatStr;
 
+        unsigned int                   scaleAxis;
 
-            unsigned int                   scaleAxis;
+        Keyframe                       dragDropKeyframe;
+        bool                           dragDropActive;
+        unsigned int                   dragDropAxis;
 
-            Keyframe                       dragDropKeyframe;
-            bool                           dragDropActive;
-            unsigned int                   dragDropAxis;
+        float                          fontSize;
+        float                          keyfMarkSize;
+        float                          rulerMarkSize;
+        unsigned int                   fps;
+        vislib::math::Vector<float, 2> viewport;
 
-            float                          fontSize;
-            float                          keyfMarkSize;
-            float                          rulerMarkSize;
-            unsigned int                   fps;
-            vislib::math::Vector<float, 2> viewport;
+        /*** INPUT ********************************************************/
 
-            /*** INPUT ********************************************************/
+        /** The current mouse coordinates */
+        float mouseX;
+        float mouseY;
 
-            /** The current mouse coordinates */
-            float mouseX;
-            float mouseY;
+        /** The last mouse coordinates */
+        float lastMouseX;
+        float lastMouseY;
 
-            /** The last mouse coordinates */
-            float lastMouseX;
-            float lastMouseY;
+        core::view::MouseButton       mouseButton;
+        core::view::MouseButtonAction mouseAction;
 
-            core::view::MouseButton       mouseButton;
-            core::view::MouseButtonAction mouseAction;
+        /**********************************************************************
+        * functions
+        **********************************************************************/
 
-            /**********************************************************************
-            * functions
-            **********************************************************************/
+        /** Loading texture for keyframe marker. */
+        bool loadTexture(vislib::StringA filename);
 
-            /** Loading texture for keyframe marker. */
-            bool loadTexture(vislib::StringA filename);
+        /** Draw the keyframe marker. */
+        void drawKeyframeMarker(float posX, float posY);
 
-            /** Draw the keyframe marker. */
-            void drawKeyframeMarker(float posX, float posY);
+        /** Adapt axis scaling. */
+        void axisAdaptation(void);
 
-            /** Adapt axis scaling. */
-            void axisAdaptation(void);
+        /**********************************************************************
+        * callback stuff
+        **********************************************************************/
 
-            /**********************************************************************
-            * callback stuff
-            **********************************************************************/
+		/** The call for keyframe data */
+        core::CallerSlot keyframeKeeperSlot;
 
-			/** The call for keyframe data */
-            core::CallerSlot keyframeKeeperSlot;
+        /**********************************************************************
+        * parameter
+        **********************************************************************/
 
-            /**********************************************************************
-            * parameter
-            **********************************************************************/
+        megamol::core::param::ParamSlot rulerFontParam;
+        megamol::core::param::ParamSlot moveRightFrameParam;
+        megamol::core::param::ParamSlot moveLeftFrameParam;
+        megamol::core::param::ParamSlot resetPanScaleParam;
+	};
 
-            /**  */
-            megamol::core::param::ParamSlot rulerFontParam;
-            /**  */
-            megamol::core::param::ParamSlot moveRightFrameParam;
-            /**  */
-            megamol::core::param::ParamSlot moveLeftFrameParam;
-            /**  */
-            megamol::core::param::ParamSlot resetPanScaleParam;
-		};
-
-	} /* end namespace cinematic */
+} /* end namespace cinematic */
 } /* end namespace megamol */
 
 #endif /* MEGAMOL_CINEMATIC_TIMELINERENDERER_H_INCLUDED */

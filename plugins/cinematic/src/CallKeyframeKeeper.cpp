@@ -11,14 +11,9 @@
 
 #include "vislib/graphics/gl/IncludeAllGL.h"
 
-
 using namespace megamol;
 using namespace megamol::cinematic;
 
-
-/*
-* CallKeyframeKeeper::CallKeyframeKeeper
-*/
 CallKeyframeKeeper::CallKeyframeKeeper(void) : core::AbstractGetDataCall(),
     cameraParam(nullptr),
     interpolCamPos(nullptr),
@@ -36,14 +31,11 @@ CallKeyframeKeeper::CallKeyframeKeeper(void) : core::AbstractGetDataCall(),
     endCtrllPos(0.0f, 0.0f, 0.0f)
 {
 
-
 }
 
 
-/*
-* CallKeyframeKeeper::~CallKeyframeKeeper
-*/
 CallKeyframeKeeper::~CallKeyframeKeeper(void) {
+
 	this->keyframes      = nullptr;
     this->interpolCamPos = nullptr;
     this->boundingbox    = nullptr;

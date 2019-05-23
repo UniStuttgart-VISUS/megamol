@@ -28,7 +28,6 @@
 #include "TimeLineRenderer.h"
 #include "CallKeyframeKeeper.h"
 
-
 using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::core::view;
@@ -37,17 +36,13 @@ using namespace megamol::cinematic;
 
 using namespace vislib;
 
-
-/*
-* cinematic::TimeLineRenderer::TimeLineRenderer
-*/
 TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule(),
 
 	keyframeKeeperSlot("getkeyframes", "Connects to the KeyframeKeeper"),
-    rulerFontParam(      "01_fontSize", "The font size."),
-    moveRightFrameParam( "02_rightFrame", "Move to right animation time frame."),
-    moveLeftFrameParam(  "03_leftFrame", "Move to left animation time frame."),
-    resetPanScaleParam(  "04_resetAxes", "Reset shifted and scaled time axes."),
+    rulerFontParam(      "fontSize", "The font size."),
+    moveRightFrameParam( "gotoRightFrame", "Move to right animation time frame."),
+    moveLeftFrameParam(  "gotoLeftFrame", "Move to left animation time frame."),
+    resetPanScaleParam(  "resetAxes", "Reset shifted and scaled time axes."),
 
     theFont(megamol::core::utility::SDFFont::FontName::ROBOTO_SANS),
     markerTextures(),
@@ -109,18 +104,12 @@ TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule(),
 }
 
 
-/*
-* cinematic::TimeLineRenderer::~TimeLineRenderer
-*/
 TimeLineRenderer::~TimeLineRenderer(void) {
 
 	this->Release();
 }
 
 
-/*
-* cinematic::TimeLineRenderer::create
-*/
 bool TimeLineRenderer::create(void) {
 	
     // Initialise font
@@ -139,18 +128,12 @@ bool TimeLineRenderer::create(void) {
 }
 
 
-/*
-* cinematic::TimeLineRenderer::release
-*/
 void TimeLineRenderer::release(void) {
 
     // nothing to do here ...
 }
 
 
-/*
-* cinematic::TimeLineRenderer::GetExtents
-*/
 bool TimeLineRenderer::GetExtents(view::CallRender2D& call) {
 
 	core::view::CallRender2D *cr = dynamic_cast<core::view::CallRender2D*>(&call);
@@ -198,9 +181,6 @@ bool TimeLineRenderer::GetExtents(view::CallRender2D& call) {
 }
 
 
-/*
- * cinematic::TimeLineRenderer::axisAdaptation
- */
 void TimeLineRenderer::axisAdaptation(void) {
 
     vislib::StringA tmpStr;
@@ -324,9 +304,6 @@ void TimeLineRenderer::axisAdaptation(void) {
 }
 
 
-/*
-* cinematic::TimeLineRenderer::Render
-*/
 bool TimeLineRenderer::Render(view::CallRender2D& call) {
 
     core::view::CallRender2D *cr = dynamic_cast<core::view::CallRender2D*>(&call);
@@ -377,7 +354,6 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
         t = (t > this->animTotalTime) ? (this->animTotalTime) : (t);
         ccc->setSelectedKeyframeTime(t);
         if (!(*ccc)(CallKeyframeKeeper::CallForGetSelectedKeyframeAtTime)) return false;
-        std::cout << "right: " << t << std::endl;
     }
     if (this->moveLeftFrameParam.IsDirty()) {
         this->moveLeftFrameParam.ResetDirty();
@@ -392,7 +368,6 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
         t = (t < 0.0f) ? (0.0f) : (t);
         ccc->setSelectedKeyframeTime(t);
         if (!(*ccc)(CallKeyframeKeeper::CallForGetSelectedKeyframeAtTime)) return false;
-        std::cout << "left: " << t << std::endl;
     }
     if (this->resetPanScaleParam.IsDirty()) {
         this->resetPanScaleParam.ResetDirty();
@@ -402,7 +377,6 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
         this->animScaleOffset = 0.0f;
         this->axisAdaptation();
     }
-
 
     // COLORS
     float bgColor[4];
@@ -581,12 +555,12 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     }
 
     // axis captions
-    tmpStr = "animation time / frames ";
+    tmpStr = "Animation Time and Frames ";
     strWidth = this->theFont.LineWidth(this->fontSize, tmpStr);
     this->theFont.DrawString(fgColor, this->axisStartPos.X() + this->animAxisLen / 2.0f - strWidth / 2.0f, this->axisStartPos.Y() - this->theFont.LineHeight(this->fontSize) - this->rulerMarkSize, 
         this->fontSize, false, tmpStr, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
     glRotatef(90.0f, 0.0f, 0.0f, 1.0f);
-    tmpStr = "simulation time ";
+    tmpStr = "Simulation Time ";
     strWidth = this->theFont.LineWidth(this->fontSize, tmpStr);
     this->theFont.DrawString(fgColor, this->axisStartPos.Y() + this->simAxisLen / 2.0f - strWidth / 2.0f, (-1.0f)*this->axisStartPos.X() + tmpStrWidth + this->rulerMarkSize + 1.5f*strHeight, 
         this->fontSize, false, tmpStr, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
@@ -608,9 +582,9 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     float vpH = static_cast<float>(cr->GetViewport().GetSize().GetHeight());
     float vpW = static_cast<float>(cr->GetViewport().GetSize().GetWidth());
 
-    vislib::StringA leftLabel = " TIME LINE VIEW ";
+    vislib::StringA leftLabel = " TIMELINE ";
     vislib::StringA midLabel = "";
-    midLabel.Format("animation time: %.3f | animation frame: %.0f | simulation time: %.3f ", aT, std::floor(aF), sT);
+    midLabel.Format("Animation Time: %.3f | Animation Frame: %.0f | Simulation Time: %.3f ", aT, std::floor(aF), sT);
     vislib::StringA rightLabel = "";
     
     float lbFontSize = (CC_MENU_HEIGHT);
@@ -652,9 +626,6 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
 }
 
 
-/*
-* cinematic::TimeLineRenderer::drawKeyframeMarker
-*/
 void TimeLineRenderer::drawKeyframeMarker(float posX, float posY) {
 
     glEnable(GL_TEXTURE_2D);
@@ -684,10 +655,8 @@ void TimeLineRenderer::drawKeyframeMarker(float posX, float posY) {
 }
 
 
-/*
-* cinematic::TimeLineRenderer::loadTexture
-*/
 bool TimeLineRenderer::loadTexture(vislib::StringA filename) {
+
     static vislib::graphics::BitmapImage img;
     static sg::graphics::PngBitmapCodec pbc;
     pbc.Image() = &img;
@@ -731,9 +700,6 @@ bool TimeLineRenderer::loadTexture(vislib::StringA filename) {
 }
 
 
-/*
-* cinematic::TimeLineRenderer::OnMouseButton
-*/
 bool TimeLineRenderer::OnMouseButton(megamol::core::view::MouseButton button, megamol::core::view::MouseButtonAction action, megamol::core::view::Modifiers mods) {
 
     auto down         = action == MouseButtonAction::PRESS;
@@ -896,9 +862,6 @@ bool TimeLineRenderer::OnMouseButton(megamol::core::view::MouseButton button, me
 }
 
 
-/*
-* cinematic::TimeLineRenderer::OnMouseMove
-*/
 bool TimeLineRenderer::OnMouseMove(double x, double y) {
 
     CallKeyframeKeeper *ccc = this->keyframeKeeperSlot.CallAs<CallKeyframeKeeper>();
