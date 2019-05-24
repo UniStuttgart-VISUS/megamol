@@ -75,6 +75,8 @@ namespace core {
             return this->callee;
         }
 
+        CalleeSlot* PeekCalleeSlotNoConst() const { return this->callee; }
+
         /**
          * Answers the caller slot this call is connected to.
          *
@@ -83,6 +85,8 @@ namespace core {
         inline const CallerSlot * PeekCallerSlot(void) const {
             return this->caller;
         }
+
+        CallerSlot* PeekCallerSlotNoConst() const { return this->caller; }
 
         inline void SetClassName(const char *name) {
             this->className = name;

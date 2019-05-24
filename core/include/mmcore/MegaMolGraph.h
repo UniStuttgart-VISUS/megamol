@@ -22,6 +22,8 @@
 #include "mmcore/deferrable_construction.h"
 #include "mmcore/lockable.h"
 #include "mmcore/serializable.h"
+#include "mmcore/CalleeSlot.h"
+#include "mmcore/CallerSlot.h"
 
 #include "AbstractUpdateQueue.h"
 #include "RootModuleNamespace.h"
@@ -240,6 +242,8 @@ private:
             return false;
         }
 
+        // TODO remove connections and corresponding calls
+
         this->module_list_.erase(it);
         return true;
     }
@@ -270,6 +274,11 @@ private:
         if (it == this->call_list_.end()) {
             return false;
         }
+
+        // TODO remove connections
+        auto source = it->first->PeekCallerSlotNoConst();
+        source->SetCleanupMark(true);
+        source->DisconnectCalls();
 
         this->call_list_.erase(it);
         return true;
