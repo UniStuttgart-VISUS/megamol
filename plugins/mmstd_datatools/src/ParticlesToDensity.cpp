@@ -260,6 +260,8 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
     // TODO: the whole code is wrong since we might not have the bounding box for the actual
     // cyclic boundary conditions. Also, these CBC are not applied currently.
 
+    // TODO: what about near-zero or zero radii? This currently blows the whole thing up.
+
     bool cycl_x = this->cyclXSlot.Param<megamol::core::param::BoolParam>()->Value();
     bool cycl_y = this->cyclYSlot.Param<megamol::core::param::BoolParam>()->Value();
     bool cycl_z = this->cyclZSlot.Param<megamol::core::param::BoolParam>()->Value();
