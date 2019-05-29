@@ -47,6 +47,7 @@ protected:
 
 private:
     core::param::ParamSlot overrideBBoxSlot;
+    core::param::ParamSlot overrideLBBoxSlot;
     core::param::ParamSlot bboxMinSlot;
     core::param::ParamSlot bboxMaxSlot;
     core::param::ParamSlot resetSlot;

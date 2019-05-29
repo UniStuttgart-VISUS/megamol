@@ -138,7 +138,7 @@ namespace moldyn {
              *
              * @param call The call to receive the data
              */
-            void SetData(MultiParticleDataCall& call);
+            void SetData(MultiParticleDataCall& call, vislib::math::Cuboid<float> const& bbox, bool overrideBBox);
 
         private:
 
@@ -223,6 +223,9 @@ namespace moldyn {
 
         /** Specifies the size limit of the memory cache */
         param::ParamSlot limitMemorySizeSlot;
+
+        /** Override local bbox */
+        param::ParamSlot overrideBBoxSlot;
 
         /** The slot for requesting data */
         CalleeSlot getData;

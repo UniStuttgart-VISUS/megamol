@@ -76,8 +76,10 @@ private:
     int mpiRank = -1, mpiSize = -1;
 #endif
 
-    /** The file name of the file to be written */
+    /** Param Slots */
     core::param::ParamSlot filename;
+    core::param::ParamSlot outputPatternSlot;
+    core::param::ParamSlot encodingSlot;    
 
     /** The slot asking for data */
     core::CallerSlot getData;

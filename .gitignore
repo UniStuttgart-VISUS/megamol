@@ -1,6 +1,7 @@
 build/**/*
 build-*/**/*
 build_*/**/*
+cmake-build-*/**/*
 bin/**/*
 include/**/*
 external/**/*
@@ -17,6 +18,7 @@ configurator/packages/
 configurator/MegaMolConf/Properties/AssemblyInfo\.cs
 configurator/MegaMolConf/Resources/mmconfig\.res
 .vscode/**/*.bat
+.idea/**/*
 .gitmodules
 *.orig
 utils/MMPLD/mmpld.bat

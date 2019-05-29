@@ -32,7 +32,7 @@ namespace MegaMolConf
 
         public static bool IsEditable(GraphicalModule gm)
         {
-            return gm.Module.Name == "LinearTransferFunction";
+            return gm.Module.Name == "TransferFunction";
         }
 
         public TransferFunctionDialog(Form1 parentForm, GraphicalModule gm)
@@ -127,7 +127,7 @@ namespace MegaMolConf
                 return false;
             };
 
-            if (this.gm.Module.Name == "LinearTransferFunction")
+            if (this.gm.Module.Name == "TransferFunction")
             {
                 List<Color> colors = new List<Color>();
                 //List<float> values = new List<float>();
@@ -182,7 +182,7 @@ namespace MegaMolConf
                 return false;
             };
 
-            if (this.gm.Module.Name == "LinearTransferFunction")
+            if (this.gm.Module.Name == "TransferFunction")
             {
                 for (int i = 0; i < Math.Min(11, res); ++i)
                 {
