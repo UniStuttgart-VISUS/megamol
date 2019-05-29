@@ -22,8 +22,8 @@ bool megamol::ngmesh::SimpleGPUMtlDataSource::create()
 
 bool megamol::ngmesh::SimpleGPUMtlDataSource::getDataCallback(core::Call & caller)
 {
-	GPUMaterialDataCall* mtl_call = dynamic_cast<GPUMaterialDataCall*>(&caller);
-	if (mtl_call == NULL)
+	GPUMaterialDataCall* lhs_mtl_call = dynamic_cast<GPUMaterialDataCall*>(&caller);
+    if (lhs_mtl_call == NULL)
 		return false;
 
 	// clear update?
@@ -40,7 +40,7 @@ bool megamol::ngmesh::SimpleGPUMtlDataSource::getDataCallback(core::Call & calle
 		m_gpu_materials->addMaterial(this->instance(),filename);
 	}
 
-	mtl_call->setMaterialStorage(m_gpu_materials);
+	lhs_mtl_call->setMaterialStorage(m_gpu_materials);
 
 	// set update?
 

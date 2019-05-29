@@ -62,10 +62,13 @@ namespace megamol
 			*/
 			std::shared_ptr<GPURenderTaskCollection> m_gpu_render_tasks;
 
-			/** The slot for requesting data */
+			/** The slot for requesting data from this module, i.e. lhs connection */
 			megamol::core::CalleeSlot m_getData_slot;
 
+            /** The slot for querying mesh data, i.e. a rhs connection */
 			megamol::core::CallerSlot m_mesh_callerSlot;
+
+            /** The slot for querying material data, i.e. a rhs connection */
 			megamol::core::CallerSlot m_material_callerSlot;
 		};
 	}
