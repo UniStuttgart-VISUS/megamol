@@ -30,7 +30,7 @@ moldyn::ParticleListFilter::ParticleListFilter(void) : Module(),
         datahashParticlesIn(0), datahashParticlesOut(0),
         frameID(0) {
 
-    this->inParticlesDataSlot.SetCompatibleCall<moldyn::DirectionalParticleDataCallDescription>();
+    //this->inParticlesDataSlot.SetCompatibleCall<moldyn::DirectionalParticleDataCallDescription>();
     this->inParticlesDataSlot.SetCompatibleCall<moldyn::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->inParticlesDataSlot);
 
