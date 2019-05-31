@@ -47,6 +47,18 @@ namespace megamol {
 				size_t                        draw_cnt;
 			};
 
+            /**
+             * Meta data describing an individual render task.
+             */
+            struct RenderTaskMetaData
+            {
+                size_t rts_idx; // index of the render task bundle that contains this render task
+
+                size_t draw_command_byteOffset;
+                size_t per_draw_data_byteOffset;
+                size_t per_draw_data_byteSize;
+            };
+
 			//void reserveRenderTask(
 			//	std::shared_ptr<GLSLShader> const& shader_prgm,
 			//	std::shared_ptr<Mesh> const&       mesh,
@@ -59,14 +71,23 @@ namespace megamol {
 				std::shared_ptr<Shader> const& shader_prgm,
 				std::shared_ptr<Mesh> const&   mesh,
 				DrawElementsCommand const&     draw_command,
-				PerDrawDataContainer const&    per_draw_data);
+				PerDrawDataContainer const&    per_draw_data); // single struct of per draw data assumed?
 
 			template<typename DrawCommandContainer, typename PerDrawDataContainer>
 			void addRenderTasks(
 				std::shared_ptr<Shader> const& shader_prgm,
 				std::shared_ptr<Mesh> const&   mesh,
 				DrawCommandContainer const&    draw_commands,
-				PerDrawDataContainer const&    per_draw_data);
+				PerDrawDataContainer const&    per_draw_data); // list of per draw data assumed?
+
+            template<typename PerDrawDataContainer>
+            void updateSingleRenderTask(
+                size_t rt_idx,
+                std::shared_ptr<Shader> const& shader_prgm,
+                std::shared_ptr<Mesh> const& mesh,
+                DrawElementsCommand const& draw_command,
+                PerDrawDataContainer const& per_draw_data
+            );
 
 			template<typename PerFrameDataContainer>
             void addPerFrameDataBuffer(PerFrameDataContainer const& per_frame_data, uint32_t buffer_binding_point);
@@ -92,6 +113,9 @@ namespace megamol {
 			 * Render tasks storage. Store tasks sorted by shader program and mesh.
 			 */
 			std::vector<RenderTasks> m_render_tasks;
+
+            //TODO store offline copy of per render task data to be able to update specific, single render tasks
+            //TODO store byte offset and size of per draw data for being able to update ?
 
 			/**
 			 * Flexible number of OpenGL Buffers (SSBOs) for data shared by all render tasks,
