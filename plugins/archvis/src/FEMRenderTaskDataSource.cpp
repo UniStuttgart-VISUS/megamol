@@ -103,7 +103,7 @@ bool megamol::archvis::FEMRenderTaskDataSource::getDataCallback(core::Call & cal
         m_gpu_render_tasks->updatePerFrameDataBuffer(texture_handles, 2);
     }
 
-	rtc->setRenderTaskData(m_gpu_render_tasks.get());
+	rtc->setRenderTaskData(m_gpu_render_tasks);
 
 	return true;
 }

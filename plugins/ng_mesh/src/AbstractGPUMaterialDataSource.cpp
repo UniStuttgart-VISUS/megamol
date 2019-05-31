@@ -19,7 +19,7 @@ megamol::ngmesh::AbstractGPUMaterialDataSource::AbstractGPUMaterialDataSource()
 	this->m_getData_slot.SetCallback(GPUMaterialDataCall::ClassName(), "GetData", &AbstractGPUMaterialDataSource::getDataCallback);
 	this->MakeSlotAvailable(&this->m_getData_slot);
 
-    this->m_mtl_callerSlot.SetCompatibleCall<GPUMaterialDataCall>();
+    this->m_mtl_callerSlot.SetCompatibleCall<GPUMaterialDataCallDescription>();
     this->MakeSlotAvailable(&this->m_mtl_callerSlot);
 }
 

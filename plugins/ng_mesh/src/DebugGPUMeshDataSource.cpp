@@ -24,7 +24,7 @@ bool megamol::ngmesh::DebugGPUMeshDataSource::getDataCallback(core::Call & calle
 	if (mc == NULL)
 		return false;
 
-	mc->setGPUMeshes(m_gpu_meshes.get());
+	mc->setGPUMeshes(m_gpu_meshes);
 
 	return true;
 }

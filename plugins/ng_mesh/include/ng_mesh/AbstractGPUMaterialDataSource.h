@@ -49,13 +49,13 @@ namespace megamol
 
 			std::shared_ptr<GPUMaterialCollecton> m_gpu_materials;
 
+            /** The slot for querying additional material data, i.e. a rhs chaining connection */
+            megamol::core::CallerSlot m_mtl_callerSlot;
+
 		private:
 
 			/** The slot for requesting data from this module, i.e. lhs connection */
 			megamol::core::CalleeSlot m_getData_slot;
-
-            /** The slot for querying additional material data, i.e. a rhs chaining connection */
-            megamol::core::CallerSlot m_mtl_callerSlot;
 		};
 	}
 }

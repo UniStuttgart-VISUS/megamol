@@ -26,6 +26,20 @@ bool megamol::ngmesh::SimpleGPUMtlDataSource::getDataCallback(core::Call & calle
     if (lhs_mtl_call == NULL)
 		return false;
 
+    std::shared_ptr<GPUMaterialCollecton> mtl_collection(nullptr);
+
+    if (lhs_mtl_call->getMaterialStorage() == nullptr)
+    {
+        // no incoming material -> use your own material storage
+        mtl_collection = this->m_gpu_materials;
+        lhs_mtl_call->setMaterialStorage(mtl_collection);
+    }
+    else
+    {
+        // incoming material -> use it (delete local?)
+        mtl_collection = lhs_mtl_call->getMaterialStorage();
+    }
+
 	// clear update?
 
 	if (this->m_btf_filename_slot.IsDirty())
@@ -35,14 +49,18 @@ bool megamol::ngmesh::SimpleGPUMtlDataSource::getDataCallback(core::Call & calle
 		auto vislib_filename = m_btf_filename_slot.Param<core::param::FilePathParam>()->Value();
 		std::string filename(vislib_filename.PeekBuffer());
 
-		m_gpu_materials->clearMaterials();
+		mtl_collection->clearMaterials();
 
-		m_gpu_materials->addMaterial(this->instance(),filename);
+		mtl_collection->addMaterial(this->instance(), filename);
 	}
 
-	lhs_mtl_call->setMaterialStorage(m_gpu_materials);
-
 	// set update?
+
+    // if there is a material connection to the right, pass on the material collection
+    GPUMaterialDataCall* rhs_mtl_call = this->m_mtl_callerSlot.CallAs<GPUMaterialDataCall>();
+    if (rhs_mtl_call != NULL) {
+        rhs_mtl_call->setMaterialStorage(mtl_collection);
+    }
 
 	return true;
 }

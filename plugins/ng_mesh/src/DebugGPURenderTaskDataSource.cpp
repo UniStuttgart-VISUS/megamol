@@ -89,7 +89,7 @@ bool megamol::ngmesh::DebugGPURenderTaskDataSource::getDataCallback(core::Call &
 		//);
 	}
 
-	rtc->setRenderTaskData(m_gpu_render_tasks.get());
+	rtc->setRenderTaskData(m_gpu_render_tasks);
 
 	return true;
 }

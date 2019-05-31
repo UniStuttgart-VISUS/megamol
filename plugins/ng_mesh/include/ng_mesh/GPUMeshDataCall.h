@@ -62,16 +62,16 @@ namespace megamol {
 				return AbstractGetData3DCall::FunctionName(idx);
 			}
 
-			void setGPUMeshes(GPUMeshCollection* gpu_meshes) {
+			void setGPUMeshes(std::shared_ptr<GPUMeshCollection> gpu_meshes) {
 				m_gpu_meshes = gpu_meshes;
 			}
 
-			GPUMeshCollection* getGPUMeshes() {
+			std::shared_ptr<GPUMeshCollection> getGPUMeshes() {
 				return m_gpu_meshes;
 			}
 
 		private:
-			GPUMeshCollection* m_gpu_meshes;
+			std::shared_ptr<GPUMeshCollection> m_gpu_meshes;
 		};
 
 		/** Description class typedef */

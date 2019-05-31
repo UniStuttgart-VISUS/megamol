@@ -26,9 +26,20 @@ bool megamol::ngmesh::GlTFMeshesDataSource::create()
 
 bool megamol::ngmesh::GlTFMeshesDataSource::getDataCallback(core::Call & caller)
 {
-	GPUMeshDataCall* mc = dynamic_cast<GPUMeshDataCall*>(&caller);
-	if (mc == NULL)
+	GPUMeshDataCall* lhs_mesh_call = dynamic_cast<GPUMeshDataCall*>(&caller);
+    if (lhs_mesh_call == NULL)
 		return false;
+
+    std::shared_ptr<GPUMeshCollection> mesh_collection(nullptr);
+
+    if (lhs_mesh_call->getGPUMeshes() == nullptr) {
+        // no incoming material -> use your own material storage
+        mesh_collection = this->m_gpu_meshes;
+        lhs_mesh_call->setGPUMeshes(mesh_collection);
+    } else {
+        // incoming material -> use it (delete local?)
+        mesh_collection = lhs_mesh_call->getGPUMeshes();
+    }
 
 	GlTFDataCall* gltf_call = this->m_glTF_callerSlot.CallAs<GlTFDataCall>();
 	if (gltf_call == NULL)
@@ -113,7 +124,11 @@ bool megamol::ngmesh::GlTFMeshesDataSource::getDataCallback(core::Call & caller)
 		// set update_all_flag?
 	}
 
-	mc->setGPUMeshes(m_gpu_meshes.get());
+    // if there is a material connection to the right, pass on the material collection
+    GPUMeshDataCall* rhs_mesh_call = this->m_mesh_callerSlot.CallAs<GPUMeshDataCall>();
+    if (rhs_mesh_call != NULL) {
+        rhs_mesh_call->setGPUMeshes(mesh_collection);
+    }
 
 	return true;
 }

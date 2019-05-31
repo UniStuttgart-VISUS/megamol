@@ -14,6 +14,7 @@
 #include <array>
 
 #include "mmcore/CalleeSlot.h"
+#include "mmcore/CallerSlot.h"
 #include "ng_mesh.h"
 
 #include "GPUMeshCollection.h"
@@ -66,6 +67,9 @@ namespace megamol
 
 
 			std::shared_ptr<GPUMeshCollection> m_gpu_meshes;
+
+            /** The slot for querying additional mesh data, i.e. a rhs chaining connection */
+            megamol::core::CallerSlot m_mesh_callerSlot;
 
 		private:
 

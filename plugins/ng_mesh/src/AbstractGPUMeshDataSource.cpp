@@ -11,11 +11,16 @@
 
 
 megamol::ngmesh::AbstractGPUMeshDataSource::AbstractGPUMeshDataSource()
-	: core::Module(), m_getData_slot("getData", "The slot publishing the loaded data")
+	: core::Module(),
+    m_getData_slot("getData", "The slot publishing the loaded data"),
+    m_mesh_callerSlot("getMesh", "The slot for chaining material data sources")
 {
 	this->m_getData_slot.SetCallback(GPUMeshDataCall::ClassName(), "GetData", &AbstractGPUMeshDataSource::getDataCallback);
 	this->m_getData_slot.SetCallback(GPUMeshDataCall::ClassName(), "GetExtent", &AbstractGPUMeshDataSource::getExtentCallback);
 	this->MakeSlotAvailable(&this->m_getData_slot);
+
+    this->m_mesh_callerSlot.SetCompatibleCall<GPUMeshDataCallDescription>();
+    this->MakeSlotAvailable(&this->m_mesh_callerSlot);
 }
 
 megamol::ngmesh::AbstractGPUMeshDataSource::~AbstractGPUMeshDataSource()

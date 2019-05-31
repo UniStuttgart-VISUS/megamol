@@ -63,16 +63,16 @@ namespace megamol
 				return AbstractGetData3DCall::FunctionName(idx);
 			}
 
-			void setRenderTaskData(GPURenderTaskCollection* render_tasks) {
+			void setRenderTaskData(std::shared_ptr<GPURenderTaskCollection> render_tasks) {
 				m_gpu_render_tasks = render_tasks;
 			}
 
-			GPURenderTaskCollection* getRenderTaskData() {
+			std::shared_ptr<GPURenderTaskCollection> getRenderTaskData() {
 				return m_gpu_render_tasks;
 			}
 
 		private:
-			GPURenderTaskCollection* m_gpu_render_tasks;
+			std::shared_ptr<GPURenderTaskCollection> m_gpu_render_tasks;
 		};
 
 		/** Description class typedef */

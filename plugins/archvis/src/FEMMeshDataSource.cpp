@@ -116,7 +116,7 @@ bool megamol::archvis::FEMMeshDataSource::getDataCallback(core::Call & caller)
 
 		m_gpu_meshes->addMesh(vertex_descriptor, vb_iterators, ib_iterators, GL_UNSIGNED_INT, GL_STATIC_DRAW, GL_TRIANGLES);
 
-		mc->setGPUMeshes(m_gpu_meshes.get());
+		mc->setGPUMeshes(m_gpu_meshes);
 	}
 
 	return true;

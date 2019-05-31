@@ -22,9 +22,18 @@ megamol::ngmesh::GlTFRenderTasksDataSource::~GlTFRenderTasksDataSource()
 
 bool megamol::ngmesh::GlTFRenderTasksDataSource::getDataCallback(core::Call & caller)
 {
-	GPURenderTaskDataCall* rtc = dynamic_cast<GPURenderTaskDataCall*>(&caller);
-	if (rtc == NULL)
+	GPURenderTaskDataCall* lhs_rtc = dynamic_cast<GPURenderTaskDataCall*>(&caller);
+    if (lhs_rtc == NULL)
 		return false;
+
+    std::shared_ptr<GPURenderTaskCollection> rt_collection(nullptr);
+    
+    if (lhs_rtc->getRenderTaskData() == nullptr){
+        rt_collection = this->m_gpu_render_tasks;
+        lhs_rtc->setRenderTaskData(rt_collection);
+    } else {
+        rt_collection = lhs_rtc->getRenderTaskData();
+    }
 
 	GPUMaterialDataCall* mtlc = this->m_material_callerSlot.CallAs<GPUMaterialDataCall>();
 	if (mtlc == NULL)
@@ -54,7 +63,7 @@ bool megamol::ngmesh::GlTFRenderTasksDataSource::getDataCallback(core::Call & ca
 
 	if (gltf_call->getUpdateFlag())
 	{
-		m_gpu_render_tasks->clear();
+		rt_collection->clear();
 
 		auto model = gltf_call->getGlTFModel();
 
@@ -104,7 +113,7 @@ bool megamol::ngmesh::GlTFRenderTasksDataSource::getDataCallback(core::Call & ca
 					auto const& gpu_batch_mesh = gpu_mesh_storage->getMeshes()[sub_mesh.batch_index].mesh;
 					auto const& shader = gpu_mtl_storage->getMaterials().front().shader_program;
 
-					m_gpu_render_tasks->addSingleRenderTask(
+					rt_collection->addSingleRenderTask(
 						shader,
 						gpu_batch_mesh,
 						sub_mesh.sub_mesh_draw_command,
@@ -140,12 +149,18 @@ bool megamol::ngmesh::GlTFRenderTasksDataSource::getDataCallback(core::Call & ca
 		// Add a key light
 		lights.push_back({-5000.0,5000.0,-5000.0,1000.0f});
 
-		m_gpu_render_tasks->addPerFrameDataBuffer(lights,1);
+		rt_collection->addPerFrameDataBuffer(lights,1);
 
 		gltf_call->clearUpdateFlag();
 	}
 
-	rtc->setRenderTaskData(m_gpu_render_tasks.get());
+
+    GPURenderTaskDataCall* rhs_rtc = this->m_renderTask_callerSlot.CallAs<GPURenderTaskDataCall>();
+    if (rhs_rtc != NULL) {
+        rhs_rtc->setRenderTaskData(rt_collection);
+
+        (*rhs_rtc)(0);
+    }
 
 	return true;
 }
