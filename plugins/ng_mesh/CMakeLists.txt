@@ -16,6 +16,19 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   set(LIBS vislib core glad)
   include_directories("include" "src" "external")
 
+
+  add_external_project(quickhull_ext
+    GIT_REPOSITORY https://github.com/akuukka/quickhull.git
+    #GIT_TAG 
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ""
+    INSTALL_COMMAND ""
+    TEST_COMMAND "")
+  add_external_library(quickhull INTERFACE
+    DEPENDS quickhull_ext
+    INCLUDE_DIR "src/quickhull_ext/")
+  get_target_property(quickhull_include quickhull INTERFACE_INCLUDE_DIRECTORIES)
+
   # Build MegaMol Plugin
   # public header files for installation
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
@@ -27,13 +40,15 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   # Target definition
   #add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files})
   add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${source_files})
-  add_dependencies(${PROJECT_NAME} vislib core)
+  add_dependencies(${PROJECT_NAME} vislib core quickhull)
   set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 17)
   # Set target naming conventions for different build types
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg" CXX_STANDARD 17)
   # Dependent projects only need to link against the core.so itself.
   target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS})
-  target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
+  target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+                                                    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/external>
+                                                    $<BUILD_INTERFACE:${quickhull_include}>)
 
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
 

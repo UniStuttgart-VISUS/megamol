@@ -127,6 +127,28 @@ namespace megamol {
 				glBindBuffer(GL_COPY_WRITE_BUFFER, 0);
 			}
 
+            static void copy(BufferObject* src, BufferObject* tgt, GLintptr readOffset, GLintptr writeOffset, GLsizeiptr size)
+            {
+                if ((readOffset + size) > src->m_byte_size)
+                {
+                    // std::cerr << "Error: ShaderStorageBufferObject::copy - target buffer smaller than source." <<
+                    // std::endl;
+                    return;
+                }
+                else if ((writeOffset + size) > tgt->m_byte_size)
+                {
+                    return;
+                }
+
+                glBindBuffer(GL_COPY_READ_BUFFER, src->m_handle);
+                glBindBuffer(GL_COPY_WRITE_BUFFER, tgt->m_handle);
+
+                glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, readOffset, writeOffset, size);
+
+                glBindBuffer(GL_COPY_READ_BUFFER, 0);
+                glBindBuffer(GL_COPY_WRITE_BUFFER, 0);
+            }
+
 		private:
 			GLenum		m_target;
 			GLuint		m_handle;
