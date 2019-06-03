@@ -1,12 +1,12 @@
 /*
- * LinearTransferFunctionParam.h
+ * TransferFunctionParam.h
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_LINEARTRANSFERFUNCTIONPARAM_H_INCLUDED
-#define MEGAMOLCORE_LINEARTRANSFERFUNCTIONPARAM_H_INCLUDED
+#ifndef MEGAMOLCORE_TRANSFERFUNCTIONPARAM_H_INCLUDED
+#define MEGAMOLCORE_TRANSFERFUNCTIONPARAM_H_INCLUDED
 
 
 #include <string>
@@ -31,7 +31,7 @@ namespace param {
 /**
  * Class for parameter holding transfer function as JSON string.
  */
-class MEGAMOLCORE_API LinearTransferFunctionParam : public AbstractParam {
+class MEGAMOLCORE_API TransferFunctionParam : public AbstractParam {
 public:
 
     /** Interpolstion modes. */
@@ -154,14 +154,14 @@ public:
      *
      * @param initVal The initial value
      */
-    LinearTransferFunctionParam(const std::string& initVal = "");
+    TransferFunctionParam(const std::string& initVal = "");
 
     /**
      * Ctor.
      *
      * @param initVal The initial value
      */
-    LinearTransferFunctionParam(const char *initVal);
+    TransferFunctionParam(const char *initVal);
 
     /**
      * Ctor.
@@ -169,12 +169,12 @@ public:
      * @param initVal The initial value
      * @param visible If 'true' the parameter is visible in the gui.
      */
-    LinearTransferFunctionParam(const vislib::StringA& initVal);
+    TransferFunctionParam(const vislib::StringA& initVal);
 
     /**
      * Dtor.
      */
-    virtual ~LinearTransferFunctionParam(void);
+    virtual ~TransferFunctionParam(void);
 
     /**
      * Returns a machine-readable definition of the parameter.
@@ -243,10 +243,10 @@ private:
 #pragma warning (disable: 4251)
 #endif /* _WIN32 */
 
-}; /* end class LinearTransferFunctionParam */
+}; /* end class TransferFunctionParam */
 
 } /* end namespace param */
 } /* end namespace core */
 } /* end namespace megamol */
 
-#endif /* end ifndef MEGAMOLCORE_LINEARTRANSFERFUNCTIONPARAM_H_INCLUDED */
+#endif /* end ifndef MEGAMOLCORE_TRANSFERFUNCTIONPARAM_H_INCLUDED */
