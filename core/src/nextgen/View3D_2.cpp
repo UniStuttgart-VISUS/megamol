@@ -454,7 +454,45 @@ void View3D_2::Resize(unsigned int width, unsigned int height) {
  * View3D_2::OnRenderView
  */
 bool View3D_2::OnRenderView(Call& call) {
-    // TODO implement
+    std::array<float, 3> overBC;
+    std::array<int, 4> overVP = {0, 0, 0, 0};
+    view::CallRenderView* crv = dynamic_cast<view::CallRenderView*>(&call);
+    if (crv == nullptr) return false;
+
+    this->overrideViewport = overVP.data();
+    if (crv->IsViewportSet()) {
+        overVP[2] = crv->ViewportWidth();
+        overVP[3] = crv->ViewportHeight();
+        if (!crv->IsTileSet()) {
+            // TODO
+        }
+    }
+    if (crv->IsBackgroundSet()) {
+        overBC[0] = static_cast<float>(crv->BackgroundRed()) / 255.0f;
+        overBC[1] = static_cast<float>(crv->BackgroundGreen()) / 255.0f;
+        overBC[2] = static_cast<float>(crv->BackgroundBlue()) / 255.0f;
+        this->overrideBkgndCol = overBC.data(); // hurk
+    }
+
+    this->overrideCall = dynamic_cast<view::AbstractCallRender*>(&call);
+
+    float time = crv->Time();
+    if (time < 0.0f) time = this->DefaultTime(crv->InstanceTime());
+    mmcRenderViewContext context;
+    ::ZeroMemory(&context, sizeof(context));
+    context.Time = time;
+    context.InstanceTime = crv->InstanceTime();
+
+    this->Render(context);
+
+    if (this->overrideCall != nullptr) {
+        this->overrideCall->DisableOutputBuffer();
+        this->overrideCall = nullptr;
+    }
+
+    this->overrideBkgndCol = nullptr;
+    this->overrideViewport = nullptr;
+
     return true;
 }
 
@@ -580,9 +618,9 @@ bool nextgen::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButto
                     glm::vec3 curPos = static_cast<glm::vec4>(this->cam.eye_position());
                     glm::vec3 camDir = static_cast<glm::vec4>(this->cam.view_vector());
                     glm::vec3 rotCenter = curPos + this->arcballCenterDistance * glm::normalize(camDir);
-                    //glm::vec3 rotCenter = static_cast<glm::vec4>(this->arcballManipulator.rotation_centre());
+                    // glm::vec3 rotCenter = static_cast<glm::vec4>(this->arcballManipulator.rotation_centre());
                     this->arcballManipulator.set_rotation_centre(glm::vec4(rotCenter, 1.0f));
-                    //this->arcballManipulator.set_radius(glm::distance(rotCenter, curPos));
+                    // this->arcballManipulator.set_radius(glm::distance(rotCenter, curPos));
                     this->arcballManipulator.set_radius(1.0f);
                     auto wndSize = this->cam.resolution_gate();
                     this->arcballManipulator.on_drag_start(
