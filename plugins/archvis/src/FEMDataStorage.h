@@ -133,27 +133,23 @@ inline FEMDataStorage::~FEMDataStorage() {}
 
 inline FEMDataStorage::FEMDataStorage(
     std::vector<Vec3> const& nodes, std::vector<std::array<size_t, 8>> const& elements)
-    : m_node_cnt(nodes.size()), m_timesteps(0), m_node_positions(nodes), m_elements(elements.size()), m_deformations()
-{
+    : m_node_cnt(nodes.size()), m_timesteps(0), m_node_positions(nodes), m_elements(elements.size()), m_deformations() {
     for (size_t element_idx = 0; element_idx < elements.size(); ++element_idx) {
         m_elements[element_idx] = Element(ElementType::CUBE, elements[element_idx]);
     }
 }
 
-inline void FEMDataStorage::setNodes(std::vector<Vec3> const& nodes)
-{
+inline void FEMDataStorage::setNodes(std::vector<Vec3> const& nodes) {
     m_node_positions = nodes;
     m_node_cnt = m_node_positions.size();
 }
 
-inline void FEMDataStorage::setNodes(std::vector<Vec3>&& nodes)
-{
+inline void FEMDataStorage::setNodes(std::vector<Vec3>&& nodes) {
     m_node_positions = nodes;
     m_node_cnt = m_node_positions.size();
 }
 
-inline void FEMDataStorage::setElements(std::vector<std::array<size_t, 8>> const& elements)
-{
+inline void FEMDataStorage::setElements(std::vector<std::array<size_t, 8>> const& elements) {
     m_elements.clear();
     m_elements.reserve(elements.size());
 
@@ -162,8 +158,7 @@ inline void FEMDataStorage::setElements(std::vector<std::array<size_t, 8>> const
     }
 }
 
-inline void FEMDataStorage::setNodeDeformations(std::vector<Vec4> const& deformations)
-{
+inline void FEMDataStorage::setNodeDeformations(std::vector<Vec4> const& deformations) {
     m_deformations = deformations;
 }
 

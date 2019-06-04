@@ -168,7 +168,8 @@ std::vector<FEMDataStorage::Vec4> FEMLoader::loadNodeDeformationsFromFile(std::s
             auto sl = split(line, ',');
 
             if (sl.size() == 4)
-                retval.push_back(FEMDataStorage::Vec4(std::stof(sl[1]), std::stof(sl[2]), std::stof(sl[3]), 0.0f/*padding*/));
+                retval.push_back(
+                    FEMDataStorage::Vec4(std::stof(sl[1]), std::stof(sl[2]), std::stof(sl[3]), 0.0f /*padding*/));
         }
     }
 

@@ -19,8 +19,7 @@
 namespace megamol {
 namespace archvis {
 
-class FEMMaterialDataSource : public ngmesh::AbstractGPUMaterialDataSource
-{
+class FEMMaterialDataSource : public ngmesh::AbstractGPUMaterialDataSource {
 public:
     /**
      * Answer the name of this module.

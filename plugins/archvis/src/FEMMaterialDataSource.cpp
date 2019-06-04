@@ -15,11 +15,10 @@
 
 namespace megamol {
 namespace archvis {
-    
+
 FEMMaterialDataSource::FEMMaterialDataSource()
-    : m_btf_filename_slot("BTF filename", "The name of the btf file to load"),
-    m_transferFunction_slot("gettransferfunction", "Connects to the transfer function module") 
-{
+    : m_btf_filename_slot("BTF filename", "The name of the btf file to load")
+    , m_transferFunction_slot("gettransferfunction", "Connects to the transfer function module") {
     this->m_btf_filename_slot << new core::param::FilePathParam("");
     this->MakeSlotAvailable(&this->m_btf_filename_slot);
 
@@ -32,12 +31,12 @@ FEMMaterialDataSource::~FEMMaterialDataSource() {}
 
 bool FEMMaterialDataSource::create() { return true; }
 
-bool megamol::archvis::FEMMaterialDataSource::getDataCallback(core::Call& caller)
-{
+bool megamol::archvis::FEMMaterialDataSource::getDataCallback(core::Call& caller) {
     ngmesh::GPUMaterialDataCall* mtl_call = dynamic_cast<ngmesh::GPUMaterialDataCall*>(&caller);
     if (mtl_call == NULL) return false;
 
-    core::view::CallGetTransferFunction* tf_call = this->m_transferFunction_slot.CallAs<core::view::CallGetTransferFunction>();
+    core::view::CallGetTransferFunction* tf_call =
+        this->m_transferFunction_slot.CallAs<core::view::CallGetTransferFunction>();
     if (tf_call == nullptr) return false;
     if (!((*tf_call)())) return false;
 
@@ -56,10 +55,8 @@ bool megamol::archvis::FEMMaterialDataSource::getDataCallback(core::Call& caller
         m_gpu_materials->addMaterial(this->instance(), filename, {tf_texture_name});
     }
 
-    if (tf_call->isDirty())
-    {
-        if (!m_gpu_materials->getMaterials().empty())
-        {
+    if (tf_call->isDirty()) {
+        if (!m_gpu_materials->getMaterials().empty()) {
             tf_call->resetDirty();
 
             m_gpu_materials->updateMaterialTexture(0, 0, tf_texture_name);
@@ -73,5 +70,5 @@ bool megamol::archvis::FEMMaterialDataSource::getDataCallback(core::Call& caller
     return true;
 }
 
-} // namespace archivs
+} // namespace archvis
 } // namespace megamol

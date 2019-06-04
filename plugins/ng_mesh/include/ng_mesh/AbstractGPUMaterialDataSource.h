@@ -1,63 +1,61 @@
 /*
-* AbstractGPUMaterialDataSource.cpp
-*
-* Copyright (C) 2019 by Universitaet Stuttgart (VISUS).
-* All rights reserved.
-*/
+ * AbstractGPUMaterialDataSource.cpp
+ *
+ * Copyright (C) 2019 by Universitaet Stuttgart (VISUS).
+ * All rights reserved.
+ */
 
 #ifndef ABSTRACT_GPU_MATERIAL_DATA_SOURCE_H_INCLUDED
 #define ABSTRACT_GPU_MATERIAL_DATA_SOURCE_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#pragma once
+#    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include "GPUMaterialCollection.h"
 #include "mmcore/CalleeSlot.h"
 #include "ng_mesh/ng_mesh.h"
-#include "GPUMaterialCollection.h"
 
-namespace megamol
-{
-	namespace ngmesh
-	{
-		class NG_MESH_API AbstractGPUMaterialDataSource : public core::Module
-		{
-		public:
-			AbstractGPUMaterialDataSource();
-			virtual ~AbstractGPUMaterialDataSource();
+namespace megamol {
+namespace ngmesh {
 
-		protected:
-			/**
-			* Implementation of 'Create'.
-			*
-			* @return 'true' on success, 'false' otherwise.
-			*/
-			virtual bool create(void);
+class NG_MESH_API AbstractGPUMaterialDataSource : public core::Module {
+public:
+    AbstractGPUMaterialDataSource();
+    virtual ~AbstractGPUMaterialDataSource();
 
-			/**
-			* Gets the data from the source.
-			*
-			* @param caller The calling call.
-			*
-			* @return 'true' on success, 'false' on failure.
-			*/
-			virtual bool getDataCallback(core::Call& caller) = 0;
+protected:
+    /**
+     * Implementation of 'Create'.
+     *
+     * @return 'true' on success, 'false' otherwise.
+     */
+    virtual bool create(void);
 
-			/**
-			* Implementation of 'Release'.
-			*/
-			virtual void release();
+    /**
+     * Gets the data from the source.
+     *
+     * @param caller The calling call.
+     *
+     * @return 'true' on success, 'false' on failure.
+     */
+    virtual bool getDataCallback(core::Call& caller) = 0;
 
-			std::shared_ptr<GPUMaterialCollecton> m_gpu_materials;
+    /**
+     * Implementation of 'Release'.
+     */
+    virtual void release();
 
-            /** The slot for querying additional material data, i.e. a rhs chaining connection */
-            megamol::core::CallerSlot m_mtl_callerSlot;
+    std::shared_ptr<GPUMaterialCollecton> m_gpu_materials;
 
-		private:
+    /** The slot for querying additional material data, i.e. a rhs chaining connection */
+    megamol::core::CallerSlot m_mtl_callerSlot;
 
-			/** The slot for requesting data from this module, i.e. lhs connection */
-			megamol::core::CalleeSlot m_getData_slot;
-		};
-	}
-}
+private:
+    /** The slot for requesting data from this module, i.e. lhs connection */
+    megamol::core::CalleeSlot m_getData_slot;
+};
+
+} // namespace ngmesh
+} // namespace megamol
 
 #endif // !ABSTRACT_GPU_MATERIAL_DATA_SOURCE_H_INCLUDED

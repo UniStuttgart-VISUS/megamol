@@ -5,56 +5,44 @@
 #include "ng_mesh/GPUMaterialDataCall.h"
 
 megamol::ngmesh::SimpleGPUMtlDataSource::SimpleGPUMtlDataSource()
-	: m_btf_filename_slot("BTF filename", "The name of the btf file to load")
-{
-	this->m_btf_filename_slot << new core::param::FilePathParam("");
-	this->MakeSlotAvailable(&this->m_btf_filename_slot);
+    : m_btf_filename_slot("BTF filename", "The name of the btf file to load") {
+    this->m_btf_filename_slot << new core::param::FilePathParam("");
+    this->MakeSlotAvailable(&this->m_btf_filename_slot);
 }
 
-megamol::ngmesh::SimpleGPUMtlDataSource::~SimpleGPUMtlDataSource()
-{
-}
+megamol::ngmesh::SimpleGPUMtlDataSource::~SimpleGPUMtlDataSource() {}
 
-bool megamol::ngmesh::SimpleGPUMtlDataSource::create()
-{
-	return true;
-}
+bool megamol::ngmesh::SimpleGPUMtlDataSource::create() { return true; }
 
-bool megamol::ngmesh::SimpleGPUMtlDataSource::getDataCallback(core::Call & caller)
-{
-	GPUMaterialDataCall* lhs_mtl_call = dynamic_cast<GPUMaterialDataCall*>(&caller);
-    if (lhs_mtl_call == NULL)
-		return false;
+bool megamol::ngmesh::SimpleGPUMtlDataSource::getDataCallback(core::Call& caller) {
+    GPUMaterialDataCall* lhs_mtl_call = dynamic_cast<GPUMaterialDataCall*>(&caller);
+    if (lhs_mtl_call == NULL) return false;
 
     std::shared_ptr<GPUMaterialCollecton> mtl_collection(nullptr);
 
-    if (lhs_mtl_call->getMaterialStorage() == nullptr)
-    {
+    if (lhs_mtl_call->getMaterialStorage() == nullptr) {
         // no incoming material -> use your own material storage
         mtl_collection = this->m_gpu_materials;
         lhs_mtl_call->setMaterialStorage(mtl_collection);
-    }
-    else
-    {
+    } else {
         // incoming material -> use it (delete local?)
         mtl_collection = lhs_mtl_call->getMaterialStorage();
     }
 
-	// clear update?
+    // clear update?
 
-	if (this->m_btf_filename_slot.IsDirty())
-	{
-		m_btf_filename_slot.ResetDirty();
+    if (this->m_btf_filename_slot.IsDirty()) {
+        m_btf_filename_slot.ResetDirty();
 
-		auto vislib_filename = m_btf_filename_slot.Param<core::param::FilePathParam>()->Value();
-		std::string filename(vislib_filename.PeekBuffer());
+        auto vislib_filename = m_btf_filename_slot.Param<core::param::FilePathParam>()->Value();
+        std::string filename(vislib_filename.PeekBuffer());
 
-		mtl_collection->clearMaterials();
+        mtl_collection->clearMaterials();
 
-		mtl_collection->addMaterial(this->instance(), filename);
-	}
+        mtl_collection->addMaterial(this->instance(), filename);
+    }
 
-	// set update?
+    // set update?
 
     // if there is a material connection to the right, pass on the material collection
     GPUMaterialDataCall* rhs_mtl_call = this->m_mtl_callerSlot.CallAs<GPUMaterialDataCall>();
@@ -62,5 +50,5 @@ bool megamol::ngmesh::SimpleGPUMtlDataSource::getDataCallback(core::Call & calle
         rhs_mtl_call->setMaterialStorage(mtl_collection);
     }
 
-	return true;
+    return true;
 }
