@@ -71,7 +71,7 @@ bool megamol::ngmesh::GlTFRenderTasksDataSource::getDataCallback(core::Call & ca
 		{
 			if (node_idx < model->nodes.size() && model->nodes[node_idx].mesh != -1)
 			{
-				std::vector<vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>> object_transform(1);
+				vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> object_transform;
 
 				if (model->nodes[node_idx].matrix.size() != 0) // has matrix transform
 				{
@@ -84,9 +84,9 @@ bool megamol::ngmesh::GlTFRenderTasksDataSource::getDataCallback(core::Call & ca
 					auto& rotation = model->nodes[node_idx].rotation;
 
 					if (translation.size() != 0) {
-						object_transform[0].SetAt(0, 3, translation[0]);
-						object_transform[0].SetAt(1, 3, translation[1]);
-						object_transform[0].SetAt(2, 3, translation[2]);
+						object_transform.SetAt(0, 3, translation[0]);
+						object_transform.SetAt(1, 3, translation[1]);
+						object_transform.SetAt(2, 3, translation[2]);
 					}
 
 					if (scale.size() != 0) {

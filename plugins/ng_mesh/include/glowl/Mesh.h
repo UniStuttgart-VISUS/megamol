@@ -43,17 +43,17 @@ namespace megamol {
 				: stride(byte_size), attributes(attributes) {}
 
 			inline bool operator==(VertexLayout const& other) {
-				bool rtn = false;
-				rtn = rtn && (stride == other.stride);
-				rtn = rtn && (attributes.size() == other.attributes.size());
+				bool retval = true;
+                retval = retval && (stride == other.stride);
+                retval = retval && (attributes.size() == other.attributes.size());
 
-				if (rtn)
-				{
-					for (int i = 0; i < attributes.size(); ++i)
-						rtn = rtn && (attributes[i] == other.attributes[i]);
+				if (retval){
+                    for (int i = 0; i < attributes.size(); ++i) {
+                        retval = retval && (attributes[i] == other.attributes[i]);
+                    }
 				}
 
-				return rtn;
+				return retval;
 			}
 
 			GLsizei stride;

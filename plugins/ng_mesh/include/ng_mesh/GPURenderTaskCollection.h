@@ -156,7 +156,7 @@ namespace megamol {
 					BufferObject::copy(rts.per_draw_data.get(), new_pdd_buffer.get());
 
 					new_dcs_buffer->loadSubData(&draw_command, sizeof(DrawElementsCommand), old_dcs_byte_size);
-					new_pdd_buffer->loadSubData(per_draw_data.data(), sizeof(PerDrawDataType), old_pdd_byte_size);
+					new_pdd_buffer->loadSubData(&per_draw_data, sizeof(PerDrawDataType), old_pdd_byte_size);
 
 					rts.draw_commands = new_dcs_buffer;
 					rts.per_draw_data = new_pdd_buffer;
@@ -189,7 +189,7 @@ namespace megamol {
 				new_task.shader_program = shader_prgm;
 				new_task.mesh = mesh;
 				new_task.draw_commands = std::make_shared<BufferObject>(GL_DRAW_INDIRECT_BUFFER, &draw_command, new_dcs_byte_size, GL_DYNAMIC_DRAW);
-				new_task.per_draw_data = std::make_shared<BufferObject>(GL_SHADER_STORAGE_BUFFER, per_draw_data.data(), new_pdd_byte_size, GL_DYNAMIC_DRAW);
+				new_task.per_draw_data = std::make_shared<BufferObject>(GL_SHADER_STORAGE_BUFFER, &per_draw_data, new_pdd_byte_size, GL_DYNAMIC_DRAW);
 				new_task.draw_cnt = 1;
 
                 // Add render task meta data entry

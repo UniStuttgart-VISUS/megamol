@@ -169,14 +169,14 @@ namespace megamol {
 				std::vector<GLvoid*> alloc_data(vertex_buffers.size(), nullptr);
 				std::vector<size_t> alloc_vb_byte_sizes;
 				for (size_t attrib_byte_size : vb_attrib_byte_sizes) {
-					alloc_vb_byte_sizes.push_back(attrib_byte_size * req_vertex_cnt);
+                    alloc_vb_byte_sizes.push_back(attrib_byte_size * new_allocation_vertex_cnt);
 				}
 
 				m_batched_meshes.back().mesh = std::make_shared<Mesh>(
 					alloc_data,
 					alloc_vb_byte_sizes,
 					nullptr,
-					req_index_cnt * computeByteSize(index_type),
+                    new_allocation_index_cnt * computeByteSize(index_type),
 					vertex_descriptor,
 					index_type,
 					usage,
@@ -203,6 +203,10 @@ namespace megamol {
 			}
 
 			it->mesh->loadIndexSubData(reinterpret_cast<GLvoid*>(&*std::get<0>(index_buffer)), ib_byte_size, computeByteSize(index_type) * it->indices_used);
+
+            // updated vertices and indices used
+            it->vertices_used += req_vertex_cnt;
+            it->indices_used += req_index_cnt;
 		}
 
 		inline std::vector<GPUMeshCollection::BatchedMeshes> const & GPUMeshCollection::getMeshes()
