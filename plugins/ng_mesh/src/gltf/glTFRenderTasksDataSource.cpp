@@ -63,7 +63,17 @@ bool megamol::ngmesh::GlTFRenderTasksDataSource::getDataCallback(core::Call & ca
 
 	if (gltf_call->getUpdateFlag())
 	{
-		rt_collection->clear();
+		//rt_collection->clear();
+        if (!m_rt_collection_indices.empty())
+        {
+            // TODO delete all exisiting render task from this module
+            for (auto& rt_idx : m_rt_collection_indices)
+            {
+                rt_collection->deleteSingleRenderTask(rt_idx);   
+            }
+
+            m_rt_collection_indices.clear();
+        }
 
 		auto model = gltf_call->getGlTFModel();
 
@@ -113,11 +123,13 @@ bool megamol::ngmesh::GlTFRenderTasksDataSource::getDataCallback(core::Call & ca
 					auto const& gpu_batch_mesh = gpu_mesh_storage->getMeshes()[sub_mesh.batch_index].mesh;
 					auto const& shader = gpu_mtl_storage->getMaterials().front().shader_program;
 
-					rt_collection->addSingleRenderTask(
+					size_t rt_idx = rt_collection->addSingleRenderTask(
 						shader,
 						gpu_batch_mesh,
 						sub_mesh.sub_mesh_draw_command,
 						object_transform);
+
+                    m_rt_collection_indices.push_back(rt_idx);
 				}
 			}
 		}

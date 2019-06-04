@@ -67,14 +67,14 @@ namespace megamol {
 			//);
 
 			template <typename PerDrawDataType>
-			void addSingleRenderTask(
+			size_t addSingleRenderTask(
 				std::shared_ptr<Shader> const& shader_prgm,
 				std::shared_ptr<Mesh> const&   mesh,
 				DrawElementsCommand const&     draw_command,
                 PerDrawDataType const& per_draw_data); // single struct of per draw data assumed?
 
 			template<typename DrawCommandContainer, typename PerDrawDataContainer>
-			void addRenderTasks(
+			size_t addRenderTasks(
 				std::shared_ptr<Shader> const& shader_prgm,
 				std::shared_ptr<Mesh> const&   mesh,
 				DrawCommandContainer const&    draw_commands,
@@ -129,7 +129,7 @@ namespace megamol {
 		};
 
 		template<typename PerDrawDataType>
-		inline void GPURenderTaskCollection::addSingleRenderTask(
+		inline size_t GPURenderTaskCollection::addSingleRenderTask(
 			std::shared_ptr<Shader> const & shader_prgm,
 			std::shared_ptr<Mesh> const & mesh,
 			DrawElementsCommand const & draw_command,
@@ -138,6 +138,8 @@ namespace megamol {
 			bool task_added = false;
 
             size_t rts_idx = 0;
+
+            size_t retval;
 
 			// find matching RenderTasks set
 			for (auto& rts : m_render_tasks)
@@ -166,10 +168,13 @@ namespace megamol {
 
                     // Add render task meta data entry
                     RenderTaskMetaData rt_meta;
+                    rt_meta.rts_idx = rts_idx;
                     rt_meta.draw_command_byteOffset = old_dcs_byte_size;
                     rt_meta.per_draw_data_byteOffset = old_pdd_byte_size;
                     rt_meta.per_draw_data_byteSize = sizeof(PerDrawDataType);
                     m_render_task_meta_data.push_back(rt_meta);
+
+                    retval = m_render_task_meta_data.size() - 1;
 				}
 
                 ++rts_idx;
@@ -199,11 +204,15 @@ namespace megamol {
                 rt_meta.per_draw_data_byteOffset = 0;
                 rt_meta.per_draw_data_byteSize = sizeof(PerDrawDataType);
                 m_render_task_meta_data.push_back(rt_meta);
+
+                retval = m_render_task_meta_data.size() - 1;
 			}
+
+            return retval;
 		}
 
 		template<typename DrawCommandContainer, typename PerDrawDataContainer>
-		inline void GPURenderTaskCollection::addRenderTasks(
+		inline size_t GPURenderTaskCollection::addRenderTasks(
 			std::shared_ptr<Shader> const & shader_prgm,
 			std::shared_ptr<Mesh> const & mesh,
 			DrawCommandContainer const& draw_commands,
@@ -215,6 +224,8 @@ namespace megamol {
 			bool task_added = false;
 
             size_t rts_idx = 0;
+
+            size_t retval;
 
 			// find matching RenderTasks set
 			for (auto& rts : m_render_tasks)
@@ -240,6 +251,8 @@ namespace megamol {
 					rts.draw_cnt += draw_commands.size();
 
 					task_added = true;
+
+                    retval = m_render_task_meta_data.size();
 
                     for (int dc_idx = 0; dc_idx < draw_commands.size(); ++dc_idx)
                     {
@@ -274,6 +287,7 @@ namespace megamol {
 				new_task.per_draw_data = std::make_shared<BufferObject>(GL_SHADER_STORAGE_BUFFER, per_draw_data.data(), new_pdd_byte_size, GL_DYNAMIC_DRAW);
 				new_task.draw_cnt = draw_commands.size();
 
+                retval = m_render_task_meta_data.size();
 
                 for (int dc_idx = 0; dc_idx < draw_commands.size(); ++dc_idx) {
                     // Add render task meta data entry
@@ -285,6 +299,8 @@ namespace megamol {
                     m_render_task_meta_data.push_back(rt_meta);
                 }
 			}
+
+            return retval;
         }
 
         template <typename PerDrawDataContainer>
