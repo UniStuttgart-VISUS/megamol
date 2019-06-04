@@ -59,13 +59,10 @@ datatools::ParticleNeighborhood::ParticleNeighborhood(void)
     this->particleNumberSlot.SetParameter(new core::param::IntParam(-1));
     this->MakeSlotAvailable(&this->particleNumberSlot);
 
-    this->outDataSlot.SetCallback(megamol::core::moldyn::DirectionalParticleDataCall::ClassName(), "GetData", &ParticleNeighborhood::getDataCallback);
-    this->outDataSlot.SetCallback(megamol::core::moldyn::DirectionalParticleDataCall::ClassName(), "GetExtent", &ParticleNeighborhood::getExtentCallback);
     this->outDataSlot.SetCallback(megamol::core::moldyn::MultiParticleDataCall::ClassName(), "GetData", &ParticleNeighborhood::getDataCallback);
     this->outDataSlot.SetCallback(megamol::core::moldyn::MultiParticleDataCall::ClassName(), "GetExtent", &ParticleNeighborhood::getExtentCallback);
     this->MakeSlotAvailable(&this->outDataSlot);
 
-    this->inDataSlot.SetCompatibleCall<megamol::core::moldyn::DirectionalParticleDataCallDescription>();
     this->inDataSlot.SetCompatibleCall<megamol::core::moldyn::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->inDataSlot);
 }
@@ -93,33 +90,23 @@ void datatools::ParticleNeighborhood::release(void) {
 }
 
 bool isListOK(megamol::core::AbstractGetData3DCall *c, unsigned int i) {
-    using megamol::core::moldyn::DirectionalParticleDataCall;
     using megamol::core::moldyn::MultiParticleDataCall;
 
-    DirectionalParticleDataCall *dpdc = dynamic_cast<DirectionalParticleDataCall*>(c);
     MultiParticleDataCall *mpdc = dynamic_cast<MultiParticleDataCall*>(c);
-    if (dpdc != nullptr) {
-        auto& pl = dpdc->AccessParticles(i);
-        return pl.GetVertexDataType() == DirectionalParticleDataCall::Particles::VertexDataType::VERTDATA_FLOAT_XYZ
-            || DirectionalParticleDataCall::Particles::VertexDataType::VERTDATA_FLOAT_XYZR;
-    }
     if (mpdc != nullptr) {
         auto& pl = mpdc->AccessParticles(i);
-        return pl.GetVertexDataType() == MultiParticleDataCall::Particles::VertexDataType::VERTDATA_FLOAT_XYZ
-            || MultiParticleDataCall::Particles::VertexDataType::VERTDATA_FLOAT_XYZR;
+        return pl.GetVertexDataType() == MultiParticleDataCall::Particles::VertexDataType::VERTDATA_FLOAT_XYZ ||
+               pl.GetVertexDataType() == MultiParticleDataCall::Particles::VertexDataType::VERTDATA_FLOAT_XYZR;
+       // TODO: that does not work, PointcloudHelpers yields pointers to vec3 basically 
+       // pl.GetVertexDataType() == MultiParticleDataCall::Particles::VertexDataType::VERTDATA_DOUBLE_XYZ;
     }
     return false;
 }
 
 UINT64 getListCount(megamol::core::AbstractGetData3DCall *c, unsigned int i) {
-    using megamol::core::moldyn::DirectionalParticleDataCall;
     using megamol::core::moldyn::MultiParticleDataCall;
 
-    DirectionalParticleDataCall *dpdc = dynamic_cast<DirectionalParticleDataCall*>(c);
     MultiParticleDataCall *mpdc = dynamic_cast<MultiParticleDataCall*>(c);
-    if (dpdc != nullptr) {
-        return dpdc->AccessParticles(i).GetCount();
-    }
     if (mpdc != nullptr) {
         return mpdc->AccessParticles(i).GetCount();
     }
@@ -129,17 +116,14 @@ UINT64 getListCount(megamol::core::AbstractGetData3DCall *c, unsigned int i) {
 bool datatools::ParticleNeighborhood::assertData(megamol::core::AbstractGetData3DCall *in,
         megamol::core::AbstractGetData3DCall *out) {
 
-    using megamol::core::moldyn::DirectionalParticleDataCall;
     using megamol::core::moldyn::MultiParticleDataCall;
 
-    DirectionalParticleDataCall *outDpdc = dynamic_cast<DirectionalParticleDataCall*>(out);
     MultiParticleDataCall *outMpdc = dynamic_cast<MultiParticleDataCall*>(out);
-    DirectionalParticleDataCall *inDpdc = dynamic_cast<DirectionalParticleDataCall*>(in);
     MultiParticleDataCall *inMpdc = dynamic_cast<MultiParticleDataCall*>(in);
 
     unsigned int time = out->FrameID();
 
-    unsigned int plc = (inMpdc == nullptr) ? inDpdc->GetParticleListCount() : inMpdc->GetParticleListCount();
+    unsigned int plc = inMpdc->GetParticleListCount();
 
     float theRadius = this->radiusSlot.Param<core::param::FloatParam>()->Value();
     theRadius = theRadius * theRadius;
@@ -155,7 +139,7 @@ bool datatools::ParticleNeighborhood::assertData(megamol::core::AbstractGetData3
             return false;
         }
 
-        plc = (inMpdc == nullptr) ? inDpdc->GetParticleListCount() : inMpdc->GetParticleListCount();
+        plc = inMpdc->GetParticleListCount();
 
         size_t totalParts = 0;
         for (unsigned int i = 0; i < plc; i++) {
@@ -190,19 +174,9 @@ bool datatools::ParticleNeighborhood::assertData(megamol::core::AbstractGetData3
         // allocate nanoflann data structures for border
         assert(allpartcnt == totalParts);
 
-        if (inMpdc != nullptr) {
-            this->myPts = std::make_shared<simplePointcloud>(inMpdc, allParts);
-            particleTree = std::make_shared<my_kd_tree_t>(3 /* dim */, *myPts, nanoflann::KDTreeSingleIndexAdaptorParams(10 /* max leaf */));
-            particleTree->buildIndex();
-            this->myDirPts = nullptr;
-            dirParticleTree = nullptr;
-        } else {
-            this->myPts = nullptr;
-            particleTree = nullptr;
-            this->myDirPts = std::make_shared<directionalPointcloud>(inDpdc, allParts);
-            dirParticleTree = std::make_shared<my_dir_kd_tree_t>(3 /* dim */, *myDirPts, nanoflann::KDTreeSingleIndexAdaptorParams(10 /* max leaf */));;
-            dirParticleTree->buildIndex();
-        }
+        this->myPts = std::make_shared<simplePointcloud>(inMpdc, allParts);
+        particleTree = std::make_shared<my_kd_tree_t>(3 /* dim */, *myPts, nanoflann::KDTreeSingleIndexAdaptorParams(10 /* max leaf */));
+        particleTree->buildIndex();
         this->datahash = in->DataHash();
         this->lastTime = time;
         this->radiusSlot.ForceSetDirty();
@@ -224,12 +198,7 @@ bool datatools::ParticleNeighborhood::assertData(megamol::core::AbstractGetData3
                 }
             }
 
-            const float *vbase;
-            if (inDpdc != nullptr) {
-                vbase = myDirPts->get_position(thePart);
-            } else {
-                vbase = myPts->get_position(thePart);
-            }
+            const float *vbase = myPts->get_position(thePart);
             float theVertex[3];
             maxDist = 0.0f;
             std::vector<std::pair<size_t, float> > ret_matches;
@@ -262,27 +231,14 @@ bool datatools::ParticleNeighborhood::assertData(megamol::core::AbstractGetData3
                         if (y_s > 0) theVertex[1] = theVertex[1] + ((theVertex[1] > bbox_cntr.Y()) ? -bbox.Height() : bbox.Height());
                         if (z_s > 0) theVertex[2] = theVertex[2] + ((theVertex[2] > bbox_cntr.Z()) ? -bbox.Depth() : bbox.Depth());
 
-                        if (inMpdc != nullptr) {
-                            if (theSearchType == searchTypeEnum::RADIUS) {
-                                particleTree->radiusSearch(theVertex, theRadius, ret_localMatches, params);
-                                ret_matches.insert(ret_matches.end(), ret_localMatches.begin(), ret_localMatches.end());
-                            } else {
-                                resultSet.init(ret_index.data(), out_dist_sqr.data());
-                                particleTree->findNeighbors(resultSet, theVertex, params);
-                                for (size_t i = 0; i < resultSet.size(); ++i) {
-                                    ret_matches.push_back(std::pair<size_t, float>(ret_index[i], out_dist_sqr[i]));
-                                }
-                            }
+                        if (theSearchType == searchTypeEnum::RADIUS) {
+                            particleTree->radiusSearch(theVertex, theRadius, ret_localMatches, params);
+                            ret_matches.insert(ret_matches.end(), ret_localMatches.begin(), ret_localMatches.end());
                         } else {
-                            if (theSearchType == searchTypeEnum::RADIUS) {
-                                dirParticleTree->radiusSearch(theVertex, theRadius, ret_localMatches, params);
-                                ret_matches.insert(ret_matches.end(), ret_localMatches.begin(), ret_localMatches.end());
-                            } else {
-                                resultSet.init(ret_index.data(), out_dist_sqr.data());
-                                dirParticleTree->findNeighbors(resultSet, theVertex, params);
-                                for (size_t i = 0; i < resultSet.size(); ++i) {
-                                    ret_matches.push_back(std::pair<size_t, float>(ret_index[i], out_dist_sqr[i]));
-                                }
+                            resultSet.init(ret_index.data(), out_dist_sqr.data());
+                            particleTree->findNeighbors(resultSet, theVertex, params);
+                            for (size_t i = 0; i < resultSet.size(); ++i) {
+                                ret_matches.push_back(std::pair<size_t, float>(ret_index[i], out_dist_sqr[i]));
                             }
                         }
                     }
@@ -337,40 +293,13 @@ bool datatools::ParticleNeighborhood::assertData(megamol::core::AbstractGetData3
             }
             auto theCount = getListCount(in, i);
             outMpdc->AccessParticles(i).SetCount(theCount);
-            if (inMpdc != nullptr) {
-                outMpdc->AccessParticles(i).SetVertexData(inMpdc->AccessParticles(i).GetVertexDataType(),
-                    inMpdc->AccessParticles(i).GetVertexData(), inMpdc->AccessParticles(i).GetVertexDataStride());
-            } else {
-                outMpdc->AccessParticles(i).SetVertexData(inDpdc->AccessParticles(i).GetVertexDataType(),
-                    inDpdc->AccessParticles(i).GetVertexData(), inDpdc->AccessParticles(i).GetVertexDataStride());
-            }
+            outMpdc->AccessParticles(i).SetVertexData(inMpdc->AccessParticles(i).GetVertexDataType(),
+                inMpdc->AccessParticles(i).GetVertexData(), inMpdc->AccessParticles(i).GetVertexDataStride());
+            outMpdc->AccessParticles(i).SetDirData(inMpdc->AccessParticles(i).GetDirDataType(),
+                    inMpdc->AccessParticles(i).GetDirData(), inMpdc->AccessParticles(i).GetDirDataStride());
             outMpdc->AccessParticles(i).SetColourData(core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I,
                 this->newColors.data() + allpartcnt, 0);
             outMpdc->AccessParticles(i).SetColourMapIndexValues(0.0f, maxDist);
-            allpartcnt += theCount;
-        }
-    } else if (outDpdc != nullptr) {
-        outDpdc->SetParticleListCount(plc);
-        for (unsigned int i = 0; i < plc; ++i) {
-            if (!isListOK(in, i)) {
-                outDpdc->AccessParticles(i).SetCount(0);
-                continue;
-            }
-            auto theCount = getListCount(in, i);
-            outDpdc->AccessParticles(i).SetCount(theCount);
-            if (inMpdc != nullptr) {
-                outDpdc->AccessParticles(i).SetVertexData(inMpdc->AccessParticles(i).GetVertexDataType(), 
-                    inMpdc->AccessParticles(i).GetVertexData(), inMpdc->AccessParticles(i).GetVertexDataStride());
-                outDpdc->AccessParticles(i).SetDirData(DirectionalParticleDataCall::Particles::DirDataType::DIRDATA_NONE, nullptr, 0);
-            } else {
-                outDpdc->AccessParticles(i).SetVertexData(inDpdc->AccessParticles(i).GetVertexDataType(),
-                    inDpdc->AccessParticles(i).GetVertexData(), inDpdc->AccessParticles(i).GetVertexDataStride());
-                outDpdc->AccessParticles(i).SetDirData(inDpdc->AccessParticles(i).GetDirDataType(),
-                    inDpdc->AccessParticles(i).GetDirData(), inDpdc->AccessParticles(i).GetDirDataStride());
-            }
-            outDpdc->AccessParticles(i).SetColourData(core::moldyn::DirectionalParticleDataCall::Particles::COLDATA_FLOAT_I,
-                this->newColors.data() + allpartcnt, 0);
-            outDpdc->AccessParticles(i).SetColourMapIndexValues(0.0f, maxDist);
             allpartcnt += theCount;
         }
     }
@@ -381,21 +310,16 @@ bool datatools::ParticleNeighborhood::assertData(megamol::core::AbstractGetData3
 
 bool datatools::ParticleNeighborhood::getExtentCallback(megamol::core::Call& c) {
     using megamol::core::moldyn::MultiParticleDataCall;
-    using megamol::core::moldyn::DirectionalParticleDataCall;
 
-    DirectionalParticleDataCall *outDpdc = dynamic_cast<DirectionalParticleDataCall*>(&c);
     MultiParticleDataCall *outMpdc = dynamic_cast<MultiParticleDataCall*>(&c);
-    if (outMpdc == nullptr && outDpdc == nullptr) return false;
+    if (outMpdc == nullptr) return false;
 
-    DirectionalParticleDataCall *inDpdc = this->inDataSlot.CallAs<DirectionalParticleDataCall>();
     MultiParticleDataCall *inMpdc = this->inDataSlot.CallAs<MultiParticleDataCall>();
-    if (inDpdc == nullptr && inMpdc == nullptr) return false;
+    if (inMpdc == nullptr) return false;
 
     megamol::core::AbstractGetData3DCall *out;
     if (outMpdc != nullptr) out = outMpdc;
-    if (outDpdc != nullptr) out = outDpdc;
     megamol::core::AbstractGetData3DCall *in;
-    if (inDpdc != nullptr) in = inDpdc;
     if (inMpdc != nullptr) in = inMpdc;
 
 
@@ -421,29 +345,14 @@ bool datatools::ParticleNeighborhood::getExtentCallback(megamol::core::Call& c) 
 
 bool datatools::ParticleNeighborhood::getDataCallback(megamol::core::Call& c) {
     using megamol::core::moldyn::MultiParticleDataCall;
-    using megamol::core::moldyn::DirectionalParticleDataCall;
 
-    DirectionalParticleDataCall *outDpdc = dynamic_cast<DirectionalParticleDataCall*>(&c);
     MultiParticleDataCall *outMpdc = dynamic_cast<MultiParticleDataCall*>(&c);
-    if (outMpdc == nullptr && outDpdc == nullptr) return false;
+    if (outMpdc == nullptr) return false;
 
-    DirectionalParticleDataCall *inDpdc = this->inDataSlot.CallAs<DirectionalParticleDataCall>();
     MultiParticleDataCall *inMpdc = this->inDataSlot.CallAs<MultiParticleDataCall>();
-    if (inDpdc == nullptr && inMpdc == nullptr) return false;
+    if (inMpdc == nullptr) return false;
 
-    core::AbstractGetData3DCall *in, *out;
-    if (inDpdc == nullptr) {
-        in = inMpdc;
-    } else {
-        in = inDpdc;
-    }
-    if (outDpdc == nullptr) {
-        out = outMpdc;
-    } else {
-        out = outDpdc;
-    }
-
-    if (!this->assertData(in, out)) return false;
+    if (!this->assertData(inMpdc, outMpdc)) return false;
 
     //inMpdc->Unlock();
 

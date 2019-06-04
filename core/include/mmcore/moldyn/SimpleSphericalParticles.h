@@ -32,6 +32,7 @@ public:
         VERTDATA_FLOAT_XYZR = 2,
         VERTDATA_SHORT_XYZ = 3, //< quantized positions and global radius
         VERTDATA_DOUBLE_XYZ = 4
+        // TODO: what about DOUBLE_XYZR?
     };
 
     /** possible values for the colour data */
