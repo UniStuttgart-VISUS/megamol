@@ -49,7 +49,7 @@ FEMLoader::FEMLoader()
 FEMLoader::~FEMLoader() {}
 
 bool FEMLoader::create(void) {
-    m_fem_data = std::make_shared<FEMDataStorage>();
+    m_fem_data = std::make_shared<FEMModel>();
     return true;
 }
 
@@ -102,8 +102,8 @@ bool FEMLoader::getDataCallback(core::Call& caller) {
 
 void FEMLoader::release() {}
 
-std::vector<FEMDataStorage::Vec3> FEMLoader::loadNodesFromFile(std::string const& filename) {
-    std::vector<FEMDataStorage::Vec3> retval;
+std::vector<FEMModel::Vec3> FEMLoader::loadNodesFromFile(std::string const& filename) {
+    std::vector<FEMModel::Vec3> retval;
 
     std::ifstream file;
     file.open(filename, std::ifstream::in);
@@ -119,7 +119,7 @@ std::vector<FEMDataStorage::Vec3> FEMLoader::loadNodesFromFile(std::string const
             auto sl = split(line, ',');
 
             if (sl.size() == 4)
-                retval.push_back(FEMDataStorage::Vec3(std::stof(sl[1]), std::stof(sl[2]), std::stof(sl[3])));
+                retval.push_back(FEMModel::Vec3(std::stof(sl[1]), std::stof(sl[2]), std::stof(sl[3])));
         }
     }
 
@@ -151,8 +151,8 @@ std::vector<std::array<size_t, 8>> FEMLoader::loadElementsFromFile(std::string c
     return retval;
 }
 
-std::vector<FEMDataStorage::Vec4> FEMLoader::loadNodeDeformationsFromFile(std::string const& filename) {
-    std::vector<FEMDataStorage::Vec4> retval;
+std::vector<FEMModel::Vec4> FEMLoader::loadNodeDeformationsFromFile(std::string const& filename) {
+    std::vector<FEMModel::Vec4> retval;
 
     std::ifstream file;
     file.open(filename, std::ifstream::in);
@@ -169,7 +169,7 @@ std::vector<FEMDataStorage::Vec4> FEMLoader::loadNodeDeformationsFromFile(std::s
 
             if (sl.size() == 4)
                 retval.push_back(
-                    FEMDataStorage::Vec4(std::stof(sl[1]), std::stof(sl[2]), std::stof(sl[3]), 0.0f /*padding*/));
+                    FEMModel::Vec4(std::stof(sl[1]), std::stof(sl[2]), std::stof(sl[3]), 0.0f /*padding*/));
         }
     }
 

@@ -13,8 +13,9 @@
 #include "vislib/vislibversion.h"
 
 #include "ArchVisMSMDataSource.h"
+#include "CreateFEMModel.h"
 #include "FEMDataCall.h"
-#include "FEMDataStorage.h"
+#include "FEMModel.h"
 #include "FEMMeshDataSource.h"
 #include "FEMMaterialDataSource.h"
 #include "FEMRenderTaskDataSource.h"
@@ -56,6 +57,7 @@ namespace {
             //
 			this->module_descriptions.RegisterAutoDescription<megamol::archvis::ArchVisMSMDataSource>();
 
+            this->module_descriptions.RegisterAutoDescription<megamol::archvis::CreateFEMModel>();
 			this->module_descriptions.RegisterAutoDescription<megamol::archvis::FEMMeshDataSource>();
             this->module_descriptions.RegisterAutoDescription<megamol::archvis::FEMMaterialDataSource>();
 			this->module_descriptions.RegisterAutoDescription<megamol::archvis::FEMRenderTaskDataSource>();

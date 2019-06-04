@@ -13,7 +13,7 @@
 
 #include "mmcore/AbstractGetDataCall.h"
 
-#include "FEMDataStorage.h"
+#include "FEMModel.h"
 
 namespace megamol {
 	namespace archvis {
@@ -65,9 +65,9 @@ namespace megamol {
 				return AbstractGetDataCall::FunctionName(idx);
 			}
 
-			void setFEMData(std::shared_ptr<FEMDataStorage> const& fem_data);
+			void setFEMData(std::shared_ptr<FEMModel> const& fem_data);
 
-			std::shared_ptr<FEMDataStorage> getFEMData();
+			std::shared_ptr<FEMModel> getFEMData();
 
 			void setUpdateFlag();
 
@@ -76,7 +76,7 @@ namespace megamol {
 			void clearUpdateFlag();
 
 		private:
-			std::shared_ptr<FEMDataStorage> m_fem_data;
+			std::shared_ptr<FEMModel> m_fem_data;
 			bool                            m_update_flag;
 		};
 

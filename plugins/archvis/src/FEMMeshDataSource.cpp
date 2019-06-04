@@ -68,7 +68,7 @@ bool megamol::archvis::FEMMeshDataSource::getDataCallback(core::Call& caller) {
 
         for (auto& element : fem_data->getElements()) {
             switch (element.getType()) {
-            case FEMDataStorage::CUBE:
+            case FEMModel::CUBE:
 
                 // TODO indices for a cube....
                 node_indices = element.getNodeIndices();

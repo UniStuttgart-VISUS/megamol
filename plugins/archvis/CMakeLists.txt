@@ -13,7 +13,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   # afterwards list the dependencies.
   set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE BUILD_NG_MESH_PLUGIN" CACHE INTERNAL "")
 
-  set(LIBS vislib core ng_mesh glad)
+  set(LIBS vislib core ng_mesh glad mmstd_datatools)
   include_directories("include" "src" "external")
 
   # Build MegaMol Plugin

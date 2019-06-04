@@ -1,12 +1,12 @@
 /*
- * FEMTxtLoader.h
+ * CreateFEMModel.h
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VISUS).
  * All rights reserved.
  */
 
-#ifndef FEM_TXT_LOADER_H_INCLUDED
-#define FEM_TXT_LOADER_H_INCLUDED
+#ifndef CREATE_FEM_MODEL_H_INCLUDED
+#define CREATE_FEM_MODEL_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -14,26 +14,26 @@
 #include "FEMDataCall.h"
 #include "archvis/archvis.h"
 #include "mmcore/CalleeSlot.h"
-#include "mmcore/param/ParamSlot.h"
+#include "mmcore/CallerSlot.h"
 
 namespace megamol {
 namespace archvis {
 
-class FEMLoader : public megamol::core::Module {
+class CreateFEMModel : public megamol::core::Module {
 public:
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "FEMLoader"; }
+    static const char* ClassName(void) { return "CreateFEMModel"; }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "Data source for simply loading txt-based FEM files from disk"; }
+    static const char* Description(void) { return "Create FEM model from float table input."; }
 
     /**
      * Answers whether this module is available on the current system.
@@ -42,8 +42,8 @@ public:
      */
     static bool IsAvailable(void) { return true; }
 
-    FEMLoader();
-    ~FEMLoader();
+    CreateFEMModel();
+    ~CreateFEMModel();
 
 protected:
     /**
@@ -67,31 +67,31 @@ protected:
      */
     void release();
 
-    std::vector<FEMModel::Vec3> loadNodesFromFile(std::string const& filename);
-
-    std::vector<std::array<size_t, 8>> loadElementsFromFile(std::string const& filename);
-
-    std::vector<FEMModel::Vec4> loadNodeDeformationsFromFile(std::string const& filename);
-
 private:
-    std::shared_ptr<FEMModel> m_fem_data;
-
-    int m_update_flag;
-
-    /** The fem node file name */
-    core::param::ParamSlot m_femNodes_filename_slot;
-
-    /** The fem elements file name */
-    core::param::ParamSlot m_femElements_filename_slot;
-
-    /** Example displacement data */
-    core::param::ParamSlot m_femDeformation_filename_slot;
+    std::shared_ptr<FEMModel> m_FEM_model;
 
     /** The slot for requesting data */
     megamol::core::CalleeSlot m_getData_slot;
+
+    /** The data callee slot. */
+    megamol::core::CallerSlot m_node_floatTable_slot;
+
+    /** The data callee slot. */
+    megamol::core::CallerSlot m_element_floatTable_slot;
+
+    /** The data callee slot. */
+    megamol::core::CallerSlot m_displacement_floatTable_slot;
+
+    //TODO additional inputs?
+
+    uint64_t m_node_input_hash;
+    uint64_t m_element_input_hash;
+    uint64_t m_displ_input_hash;
+
+    uint64_t m_my_hash;
 };
 
 } // namespace archvis
 } // namespace megamol
 
-#endif // !FEM_TXT_LOADER_H_INCLUDED
+#endif // !CREATE_FEM_MODEL_H_INCLUDED

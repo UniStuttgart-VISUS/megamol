@@ -1,12 +1,12 @@
 /*
- * FEMDataStorage.h
+ * FEMModel.h
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VISUS).
  * All rights reserved.
  */
 
-#ifndef FEM_DATA_STORAGE_H_INCLUDED
-#define FEM_DATA_STORAGE_H_INCLUDED
+#ifndef FEM_MODEL_H_INCLUDED
+#define FEM_MODEL_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -22,7 +22,7 @@
 namespace megamol {
 namespace archvis {
 
-class FEMDataStorage {
+class FEMModel {
 public:
     typedef vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> Mat4x4;
     typedef vislib::math::Vector<float, 3> Vec3;
@@ -93,10 +93,10 @@ public:
         ElementConcept* m_element;
     };
 
-    FEMDataStorage();
-    ~FEMDataStorage();
+    FEMModel();
+    ~FEMModel();
 
-    FEMDataStorage(std::vector<Vec3> const& nodes, std::vector<std::array<size_t, 8>> const& elements);
+    FEMModel(std::vector<Vec3> const& nodes, std::vector<std::array<size_t, 8>> const& elements);
 
     void setNodes(std::vector<Vec3> const& nodes);
 
@@ -124,14 +124,14 @@ private:
     std::vector<Vec4> m_deformations;
 };
 
-inline FEMDataStorage::FEMDataStorage()
+inline FEMModel::FEMModel()
     : m_node_cnt(0)
     , m_timesteps(0) //, m_node_positions(), m_elements(), m_deformations()
 {}
 
-inline FEMDataStorage::~FEMDataStorage() {}
+inline FEMModel::~FEMModel() {}
 
-inline FEMDataStorage::FEMDataStorage(
+inline FEMModel::FEMModel(
     std::vector<Vec3> const& nodes, std::vector<std::array<size_t, 8>> const& elements)
     : m_node_cnt(nodes.size()), m_timesteps(0), m_node_positions(nodes), m_elements(elements.size()), m_deformations() {
     for (size_t element_idx = 0; element_idx < elements.size(); ++element_idx) {
@@ -139,17 +139,17 @@ inline FEMDataStorage::FEMDataStorage(
     }
 }
 
-inline void FEMDataStorage::setNodes(std::vector<Vec3> const& nodes) {
+inline void FEMModel::setNodes(std::vector<Vec3> const& nodes) {
     m_node_positions = nodes;
     m_node_cnt = m_node_positions.size();
 }
 
-inline void FEMDataStorage::setNodes(std::vector<Vec3>&& nodes) {
+inline void FEMModel::setNodes(std::vector<Vec3>&& nodes) {
     m_node_positions = nodes;
     m_node_cnt = m_node_positions.size();
 }
 
-inline void FEMDataStorage::setElements(std::vector<std::array<size_t, 8>> const& elements) {
+inline void FEMModel::setElements(std::vector<std::array<size_t, 8>> const& elements) {
     m_elements.clear();
     m_elements.reserve(elements.size());
 
@@ -158,19 +158,19 @@ inline void FEMDataStorage::setElements(std::vector<std::array<size_t, 8>> const
     }
 }
 
-inline void FEMDataStorage::setNodeDeformations(std::vector<Vec4> const& deformations) {
+inline void FEMModel::setNodeDeformations(std::vector<Vec4> const& deformations) {
     m_deformations = deformations;
 }
 
-inline std::vector<FEMDataStorage::Vec3> const& FEMDataStorage::getNodes() { return m_node_positions; }
+inline std::vector<FEMModel::Vec3> const& FEMModel::getNodes() { return m_node_positions; }
 
-inline size_t FEMDataStorage::getElementCount() { return m_elements.size(); }
+inline size_t FEMModel::getElementCount() { return m_elements.size(); }
 
-inline std::vector<FEMDataStorage::Element> const& FEMDataStorage::getElements() { return m_elements; }
+inline std::vector<FEMModel::Element> const& FEMModel::getElements() { return m_elements; }
 
-inline std::vector<FEMDataStorage::Vec4> const& FEMDataStorage::getNodeDeformations() { return m_deformations; }
+inline std::vector<FEMModel::Vec4> const& FEMModel::getNodeDeformations() { return m_deformations; }
 
 } // namespace archvis
 } // namespace megamol
 
-#endif // !FEM_DATA_STORAGE_H_INCLUDED
+#endif // !FEM_MODEL_H_INCLUDED
