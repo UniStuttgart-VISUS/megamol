@@ -10,7 +10,6 @@
 #pragma once
 
 #include "mmcore/moldyn/MultiParticleDataCall.h"
-#include "mmcore/moldyn/DirectionalParticleDataCall.h"
 #include <vector>
 
 namespace megamol {

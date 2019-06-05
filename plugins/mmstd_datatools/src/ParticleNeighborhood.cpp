@@ -33,7 +33,7 @@ datatools::ParticleNeighborhood::ParticleNeighborhood(void)
         outDataSlot("outData", "Provides colors based on local particle temperature"),
         inDataSlot("inData", "Takes the directional particle data"),
         datahash(0), lastTime(-1), newColors(), maxDist(0),
-        allParts(), particleTree(nullptr), dirParticleTree(nullptr), myPts(nullptr), myDirPts(nullptr) {
+        allParts(), particleTree(nullptr), myPts(nullptr) {
 
     this->cyclXSlot.SetParameter(new core::param::BoolParam(true));
     this->MakeSlotAvailable(&this->cyclXSlot);

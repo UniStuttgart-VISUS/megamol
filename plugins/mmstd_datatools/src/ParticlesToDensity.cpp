@@ -133,7 +133,6 @@ datatools::ParticlesToDensity::~ParticlesToDensity(void) { this->Release(); }
 
 
 bool datatools::ParticlesToDensity::getExtentCallback(megamol::core::Call& c) {
-    using megamol::core::moldyn::DirectionalParticleDataCall;
     using megamol::core::moldyn::MultiParticleDataCall;
 
     auto* out = dynamic_cast<core::misc::VolumetricDataCall*>(&c);
