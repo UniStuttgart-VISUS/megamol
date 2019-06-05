@@ -283,9 +283,9 @@ bool FloatTableToParticles::assertData(floattable::CallFloatTableData* ft) {
     vx = vy = vz = false;
     std::string c = cleanUpColumnHeader(this->slotColumnVX.Param<core::param::FlexEnumParam>()->ValueString());
     if (this->columnIndex.find(c) != columnIndex.end()) vx = true;
-    std::string c = cleanUpColumnHeader(this->slotColumnVY.Param<core::param::FlexEnumParam>()->ValueString());
+    c = cleanUpColumnHeader(this->slotColumnVY.Param<core::param::FlexEnumParam>()->ValueString());
     if (this->columnIndex.find(c) != columnIndex.end()) vy = true;
-    std::string c = cleanUpColumnHeader(this->slotColumnVZ.Param<core::param::FlexEnumParam>()->ValueString());
+    c = cleanUpColumnHeader(this->slotColumnVZ.Param<core::param::FlexEnumParam>()->ValueString());
     if (this->columnIndex.find(c) != columnIndex.end()) vz = true;
 
     if (vx && vy && vz) {
