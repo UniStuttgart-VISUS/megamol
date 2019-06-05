@@ -58,44 +58,44 @@ bool FEMLoader::getDataCallback(core::Call& caller) {
 
     if (cd == NULL) return false;
 
-    cd->clearUpdateFlag();
-    m_update_flag = std::max(0, m_update_flag - 1);
-
-    if (this->m_femNodes_filename_slot.IsDirty()) {
-        this->m_femNodes_filename_slot.ResetDirty();
-
-        auto vislib_filename = m_femNodes_filename_slot.Param<megamol::core::param::FilePathParam>()->Value();
-        std::string filename(vislib_filename.PeekBuffer());
-
-        m_fem_data->setNodes(loadNodesFromFile(filename));
-
-        m_update_flag = std::min(2, m_update_flag + 2);
-    }
-
-    if (this->m_femElements_filename_slot.IsDirty()) {
-        this->m_femElements_filename_slot.ResetDirty();
-
-        auto vislib_filename = m_femElements_filename_slot.Param<megamol::core::param::FilePathParam>()->Value();
-        std::string filename(vislib_filename.PeekBuffer());
-
-        m_fem_data->setElements(loadElementsFromFile(filename));
-
-        m_update_flag = std::min(2, m_update_flag + 2);
-    }
-
-    if (this->m_femDeformation_filename_slot.IsDirty()) {
-        this->m_femDeformation_filename_slot.ResetDirty();
-
-        auto vislib_filename = m_femDeformation_filename_slot.Param<megamol::core::param::FilePathParam>()->Value();
-        std::string filename(vislib_filename.PeekBuffer());
-
-        m_fem_data->setNodeDeformations(loadNodeDeformationsFromFile(filename));
-
-        m_update_flag = std::min(2, m_update_flag + 2);
-    }
-
-    cd->setFEMData(m_fem_data);
-    if (m_update_flag > 0) cd->setUpdateFlag();
+    //      cd->clearUpdateFlag();
+    //      m_update_flag = std::max(0, m_update_flag - 1);
+    //      
+    //      if (this->m_femNodes_filename_slot.IsDirty()) {
+    //          this->m_femNodes_filename_slot.ResetDirty();
+    //      
+    //          auto vislib_filename = m_femNodes_filename_slot.Param<megamol::core::param::FilePathParam>()->Value();
+    //          std::string filename(vislib_filename.PeekBuffer());
+    //      
+    //          m_fem_data->setNodes(loadNodesFromFile(filename));
+    //      
+    //          m_update_flag = std::min(2, m_update_flag + 2);
+    //      }
+    //      
+    //      if (this->m_femElements_filename_slot.IsDirty()) {
+    //          this->m_femElements_filename_slot.ResetDirty();
+    //      
+    //          auto vislib_filename = m_femElements_filename_slot.Param<megamol::core::param::FilePathParam>()->Value();
+    //          std::string filename(vislib_filename.PeekBuffer());
+    //      
+    //          m_fem_data->setElements(loadElementsFromFile(filename));
+    //      
+    //          m_update_flag = std::min(2, m_update_flag + 2);
+    //      }
+    //      
+    //      if (this->m_femDeformation_filename_slot.IsDirty()) {
+    //          this->m_femDeformation_filename_slot.ResetDirty();
+    //      
+    //          auto vislib_filename = m_femDeformation_filename_slot.Param<megamol::core::param::FilePathParam>()->Value();
+    //          std::string filename(vislib_filename.PeekBuffer());
+    //      
+    //          m_fem_data->setNodeDeformations(loadNodeDeformationsFromFile(filename));
+    //      
+    //          m_update_flag = std::min(2, m_update_flag + 2);
+    //      }
+    //      
+    //      cd->setFEMData(m_fem_data);
+    //      if (m_update_flag > 0) cd->setUpdateFlag();
 
     return true;
 }

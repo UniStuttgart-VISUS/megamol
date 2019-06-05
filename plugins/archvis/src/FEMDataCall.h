@@ -23,8 +23,7 @@ namespace megamol {
 		public:
 			inline FEMDataCall()
 				: AbstractGetDataCall(),
-				m_fem_data(nullptr),
-				m_update_flag(false) {}
+				m_fem_data(nullptr) {}
 			~FEMDataCall() = default;
 
 			/**
@@ -69,15 +68,8 @@ namespace megamol {
 
 			std::shared_ptr<FEMModel> getFEMData();
 
-			void setUpdateFlag();
-
-			bool getUpdateFlag();
-
-			void clearUpdateFlag();
-
 		private:
 			std::shared_ptr<FEMModel> m_fem_data;
-			bool                            m_update_flag;
 		};
 
 		/** Description class typedef */

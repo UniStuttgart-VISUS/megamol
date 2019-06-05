@@ -13,20 +13,5 @@ namespace megamol
 		{
 			return m_fem_data;
 		}
-
-		void FEMDataCall::setUpdateFlag()
-		{
-			m_update_flag = true;
-		}
-
-		bool FEMDataCall::getUpdateFlag()
-		{
-			return m_update_flag;
-		}
-
-		void FEMDataCall::clearUpdateFlag()
-		{
-			m_update_flag = false;
-		}
 	}
 }

@@ -48,6 +48,8 @@ protected:
 
 private:
     megamol::core::CallerSlot m_fem_callerSlot;
+
+    uint64_t m_FEM_model_hash;
 };
 
 } // namespace archvis

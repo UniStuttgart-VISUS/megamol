@@ -83,7 +83,11 @@ public:
             return *this;
         }
 
-        Element& operator=(Element&& other) { std::swap(m_element, other.m_element); };
+        Element& operator=(Element&& other) { 
+            std::swap(m_element, other.m_element);
+
+            return *this;
+        };
 
         ElementType getType() const { return m_element->getType(); }
 

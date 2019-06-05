@@ -80,13 +80,13 @@ private:
     megamol::core::CallerSlot m_element_floatTable_slot;
 
     /** The data callee slot. */
-    megamol::core::CallerSlot m_displacement_floatTable_slot;
+    megamol::core::CallerSlot m_deformation_floatTable_slot;
 
     //TODO additional inputs?
 
     uint64_t m_node_input_hash;
     uint64_t m_element_input_hash;
-    uint64_t m_displ_input_hash;
+    uint64_t m_deform_input_hash;
 
     uint64_t m_my_hash;
 };
