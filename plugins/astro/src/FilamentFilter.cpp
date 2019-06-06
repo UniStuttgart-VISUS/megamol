@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <climits>
+#include <set>
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
 
@@ -42,7 +43,7 @@ FilamentFilter::FilamentFilter(void)
     this->isActiveSlot.SetParameter(new param::BoolParam(true));
     this->MakeSlotAvailable(&this->isActiveSlot);
 
-    this->radiusSlot.SetParameter(new param::FloatParam(1.0f, 0.0f));
+    this->radiusSlot.SetParameter(new param::FloatParam(0.1f, 0.0f));
     this->MakeSlotAvailable(&this->radiusSlot);
 
     this->densitySeedPercentageSlot.SetParameter(new param::FloatParam(10.0f, 0.0f, 100.0f));
@@ -224,15 +225,43 @@ void FilamentFilter::retrieveDensityCandidateList(
     float percentage = this->densitySeedPercentageSlot.Param<param::FloatParam>()->Value();
     percentage /= 100.0f;
     float minDensity = percentage * minmax.second;
-    auto foundval = std::find_if(result.begin(), result.end(), [&minDensity](const auto& x) { return minDensity > x.first; });
+    auto foundval =
+        std::find_if(result.begin(), result.end(), [&minDensity](const auto& x) { return minDensity > x.first; });
     result.erase(foundval, result.end());
+}
+
+/*
+ * FilamentFilter::initSearchStructure
+ */
+void FilamentFilter::initSearchStructure(const AstroDataCall& call) {
+    const auto& posPtr = call.GetPositions();
+    this->pointCloud.pts.resize(posPtr->size());
+    std::memcpy(this->pointCloud.pts.data(), posPtr->data(), posPtr->size() * sizeof(glm::vec3));
+    if (this->searchIndexPtr != nullptr) {
+        this->searchIndexPtr.reset();
+    }
+    this->searchIndexPtr =
+        std::make_shared<my_kd_tree_t>(3, this->pointCloud, nanoflann::KDTreeSingleIndexAdaptorParams(10));
+    this->searchIndexPtr->buildIndex();
 }
 
 /*
  * FilamentFilter::filterFilaments
  */
 bool FilamentFilter::filterFilaments(const AstroDataCall& call) {
+    if (call.GetPositions() == nullptr) return false;
     std::vector<std::pair<float, uint64_t>> densityPeaks;
     this->retrieveDensityCandidateList(call, densityPeaks);
+    this->initSearchStructure(call);
+    if (this->searchIndexPtr == nullptr) return false;
+    // the following approach is not really performant, but it should work
+    std::vector<std::set<uint64_t>> setVec(densityPeaks.size());
+    std::vector<size_t> vertSetIndex(call.GetPositions()->size());
+    std::vector<bool> calculatedFlags(call.GetPositions()->size(), false);
+    for (size_t i = 0; i < setVec.size(); ++i) {
+        setVec[i].insert(densityPeaks[i].second);
+        vertSetIndex[densityPeaks[i].second] = i;
+    }
+    // TODO insert elements into working queue, determine sets to insert into, ...
     return true;
 }

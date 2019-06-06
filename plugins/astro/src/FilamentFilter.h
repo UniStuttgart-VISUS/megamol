@@ -11,6 +11,9 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
+#include "nanoflann.hpp"
+#include "utils.h"
+
 
 namespace megamol {
 namespace astro {
@@ -30,15 +33,17 @@ public:
 protected:
     virtual bool create(void);
     virtual void release(void);
+
 private:
     bool getData(core::Call& call);
     bool getExtent(core::Call& call);
-    
+
     void initFields(void);
     std::pair<float, float> getMinMaxDensity(const AstroDataCall& call) const;
     void retrieveDensityCandidateList(const AstroDataCall& call, std::vector<std::pair<float, uint64_t>>& result);
     bool filterFilaments(const AstroDataCall& call);
     bool copyContentToOutCall(AstroDataCall& outCall);
+    void initSearchStructure(const AstroDataCall& call);
 
     core::CalleeSlot filamentOutSlot;
     core::CallerSlot particlesInSlot;
@@ -46,6 +51,13 @@ private:
     core::param::ParamSlot radiusSlot;
     core::param::ParamSlot densitySeedPercentageSlot;
     core::param::ParamSlot isActiveSlot;
+
+    typedef nanoflann::KDTreeSingleIndexAdaptor<nanoflann::L2_Simple_Adaptor<float, PointCloud<float>>,
+        PointCloud<float>, 3>
+        my_kd_tree_t;
+    
+    std::shared_ptr<my_kd_tree_t> searchIndexPtr = nullptr;
+    PointCloud<float> pointCloud;
 
     /** Pointer to the position array */
     vec3ArrayPtr positions = nullptr;
