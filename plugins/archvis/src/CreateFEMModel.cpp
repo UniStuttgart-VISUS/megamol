@@ -117,14 +117,14 @@ bool megamol::archvis::CreateFEMModel::getDataCallback(core::Call& caller) {
 
             auto curr_idx = elem_idx * 10;
             elements.push_back({
-                    static_cast<size_t>(elem_accesssor[curr_idx + 1] - 1),
-                    static_cast<size_t>(elem_accesssor[curr_idx + 2] - 1),
-                    static_cast<size_t>(elem_accesssor[curr_idx + 3] - 1),
-                    static_cast<size_t>(elem_accesssor[curr_idx + 4] - 1),
-                    static_cast<size_t>(elem_accesssor[curr_idx + 5] - 1),
-                    static_cast<size_t>(elem_accesssor[curr_idx + 6] - 1),
-                    static_cast<size_t>(elem_accesssor[curr_idx + 7] - 1),
-                    static_cast<size_t>(elem_accesssor[curr_idx + 8] - 1)
+                    static_cast<size_t>(elem_accesssor[curr_idx + 1]),
+                    static_cast<size_t>(elem_accesssor[curr_idx + 2]),
+                    static_cast<size_t>(elem_accesssor[curr_idx + 3]),
+                    static_cast<size_t>(elem_accesssor[curr_idx + 4]),
+                    static_cast<size_t>(elem_accesssor[curr_idx + 5]),
+                    static_cast<size_t>(elem_accesssor[curr_idx + 6]),
+                    static_cast<size_t>(elem_accesssor[curr_idx + 7]),
+                    static_cast<size_t>(elem_accesssor[curr_idx + 8])
                 }
             );
         }
