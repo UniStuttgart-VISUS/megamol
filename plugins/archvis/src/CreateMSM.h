@@ -80,6 +80,9 @@ private:
     megamol::core::CallerSlot m_element_floatTable_slot;
 
     /** The data callee slot. */
+    megamol::core::CallerSlot m_inputElement_floatTable_slot;
+
+    /** The data callee slot. */
     megamol::core::CallerSlot m_displacement_floatTable_slot;
 
     // TODO additional inputs?

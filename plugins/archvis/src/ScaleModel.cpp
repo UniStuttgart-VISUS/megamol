@@ -10,7 +10,8 @@
 using namespace megamol::archvis;
 
 
-ScaleModel::ScaleModel(std::vector<Vec3> node_positions,
+ScaleModel::ScaleModel(
+    std::vector<Vec3> node_positions,
 	std::vector<std::tuple<int, int, int, int, int>> elements,
 	std::vector<int> input_elements)
 	: m_node_positions(node_positions),
