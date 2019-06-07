@@ -836,9 +836,13 @@ bool view::View3D::create(void) {
         this->rotator2.SetInvertX(invertX);
         this->rotator2.SetInvertY(invertY);
         this->viewKeyZoomInSlot.Param<param::ButtonParam>()->SetKey(view::Key::KEY_W);
+        this->viewKeyZoomInSlot.Param<param::ButtonParam>()->SetModifier(Modifier::NONE);
         this->viewKeyZoomOutSlot.Param<param::ButtonParam>()->SetKey(view::Key::KEY_S);
+        this->viewKeyZoomOutSlot.Param<param::ButtonParam>()->SetModifier(Modifier::NONE);
         this->viewKeyMoveLeftSlot.Param<param::ButtonParam>()->SetKey(view::Key::KEY_A);
+        this->viewKeyMoveLeftSlot.Param<param::ButtonParam>()->SetModifier(Modifier::NONE);
         this->viewKeyMoveRightSlot.Param<param::ButtonParam>()->SetKey(view::Key::KEY_D);
+        this->viewKeyMoveRightSlot.Param<param::ButtonParam>()->SetModifier(Modifier::NONE);
     }
     this->rotator2.SetCameraParams(this->camParams);
     this->rotator2.SetTestButton(0 /* left mouse button */);
