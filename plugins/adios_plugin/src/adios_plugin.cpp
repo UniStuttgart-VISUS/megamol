@@ -49,7 +49,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::adios::ADIOStoMultiParticle>();
             this->module_descriptions.RegisterAutoDescription<megamol::adios::adiosWriter>();
             this->module_descriptions.RegisterAutoDescription<megamol::adios::MultiParticletoADIOS>();
-            this->module_descriptions.RegisterAutoDescription<megamol::adios::FloatTabletoADIOS>();
+            this->module_descriptions.RegisterAutoDescription<megamol::adios::TableToADIOS>();
 
             // register calls here:
 

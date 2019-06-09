@@ -15,11 +15,11 @@ using namespace megamol::stdplugin::datatools;
 using namespace megamol;
 
 /*
- * FloatTableToParticles::FloatTableToParticles
+ * TableToParticles::TableToParticles
  */
-FloatTableToParticles::FloatTableToParticles(void) : Module(),
+TableToParticles::TableToParticles(void) : Module(),
         slotCallMultiPart("multidata", "Provides the data as MultiParticle call."),
-        slotCallFloatTable("table", "float table input call"),
+        slotCallTable("table", "table input call"),
         slotColumnR("redcolumnname", "The name of the column holding the red colour channel value."),
         slotColumnG("greencolumnname", "The name of the column holding the green colour channel value."),
         slotColumnB("bluecolumnname", "The name of the column holding the blue colour channel value."),
@@ -91,22 +91,22 @@ FloatTableToParticles::FloatTableToParticles(void) : Module(),
     this->slotCallMultiPart.SetCallback(
         core::moldyn::MultiParticleDataCall::ClassName(),
         "GetData",
-        &FloatTableToParticles::getMultiParticleData);
+        &TableToParticles::getMultiParticleData);
     this->slotCallMultiPart.SetCallback(
         core::moldyn::MultiParticleDataCall::ClassName(),
         "GetExtent",
-        &FloatTableToParticles::getMultiparticleExtent);
+        &TableToParticles::getMultiparticleExtent);
     this->MakeSlotAvailable(&this->slotCallMultiPart);
 
-    this->slotCallFloatTable.SetCompatibleCall<table::CallFloatTableDataDescription>();
-    this->MakeSlotAvailable(&this->slotCallFloatTable);
+    this->slotCallTable.SetCompatibleCall<table::TableDataCallDescription>();
+    this->MakeSlotAvailable(&this->slotCallTable);
 }
 
 
 /*
- * FloatTableToParticles::~FloatTableToParticles
+ * TableToParticles::~TableToParticles
  */
-FloatTableToParticles::~FloatTableToParticles(void) {
+TableToParticles::~TableToParticles(void) {
     this->Release();
 }
 
@@ -114,12 +114,12 @@ FloatTableToParticles::~FloatTableToParticles(void) {
 /*
  * megamol::pcl::PclDataSource::create
  */
-bool FloatTableToParticles::create(void) {
+bool TableToParticles::create(void) {
     bool retval = true;
     return true;
 }
 
-bool FloatTableToParticles::anythingDirty() {
+bool TableToParticles::anythingDirty() {
     return this->slotColumnR.IsDirty()
         || this->slotColumnG.IsDirty()
         || this->slotColumnB.IsDirty()
@@ -134,7 +134,7 @@ bool FloatTableToParticles::anythingDirty() {
         || this->slotColumnZ.IsDirty();
 }
 
-void FloatTableToParticles::resetAllDirty() {
+void TableToParticles::resetAllDirty() {
     this->slotColumnR.ResetDirty();
     this->slotColumnG.ResetDirty();
     this->slotColumnB.ResetDirty();
@@ -149,18 +149,18 @@ void FloatTableToParticles::resetAllDirty() {
     this->slotColumnZ.ResetDirty();
 }
 
-std::string FloatTableToParticles::cleanUpColumnHeader(const std::string& header) const {
+std::string TableToParticles::cleanUpColumnHeader(const std::string& header) const {
     return this->cleanUpColumnHeader(vislib::TString(header.data()));
 }
 
-std::string FloatTableToParticles::cleanUpColumnHeader(const vislib::TString& header) const {
+std::string TableToParticles::cleanUpColumnHeader(const vislib::TString& header) const {
     vislib::TString h(header);
     h.TrimSpaces();
     h.ToLowerCase();
     return std::string(T2A(h.PeekBuffer()));
 }
 
-bool FloatTableToParticles::pushColumnIndex(std::vector<size_t>& cols, const vislib::TString& colName) {
+bool TableToParticles::pushColumnIndex(std::vector<size_t>& cols, const vislib::TString& colName) {
     std::string c = cleanUpColumnHeader(colName);
     if (this->columnIndex.find(c) != columnIndex.end()) {
         cols.push_back(columnIndex[c]);
@@ -171,11 +171,11 @@ bool FloatTableToParticles::pushColumnIndex(std::vector<size_t>& cols, const vis
     }
 }
 
-bool FloatTableToParticles::assertData(table::CallFloatTableData *ft) {
+bool TableToParticles::assertData(table::TableDataCall *ft) {
     if (this->inputHash == ft->DataHash() && !anythingDirty()) return true;
 
     if (this->inputHash != ft->DataHash()) {
-        vislib::sys::Log::DefaultLog.WriteInfo("FloatTableToParticles: Dataset changed -> Updating EnumParams\n");
+        vislib::sys::Log::DefaultLog.WriteInfo("TableToParticles: Dataset changed -> Updating EnumParams\n");
         this->columnIndex.clear();
 
         this->slotColumnX.Param<core::param::FlexEnumParam>()->ClearValues();
@@ -289,11 +289,11 @@ bool FloatTableToParticles::assertData(table::CallFloatTableData *ft) {
 /*
  * megamol::pcl::PclDataSource::getMultiParticleData
  */
-bool FloatTableToParticles::getMultiParticleData(core::Call& call) {
+bool TableToParticles::getMultiParticleData(core::Call& call) {
     try {
         core::moldyn::MultiParticleDataCall& c = dynamic_cast<
             core::moldyn::MultiParticleDataCall&>(call);
-        table::CallFloatTableData *ft = this->slotCallFloatTable.CallAs<table::CallFloatTableData>();
+        table::TableDataCall *ft = this->slotCallTable.CallAs<table::TableDataCall>();
         if (ft == NULL) return false;
         (*ft)();
 
@@ -360,11 +360,11 @@ bool FloatTableToParticles::getMultiParticleData(core::Call& call) {
 /*
  * megamol::pcl::PclDataSource::getMultiparticleExtent
  */
-bool FloatTableToParticles::getMultiparticleExtent(core::Call& call) {
+bool TableToParticles::getMultiparticleExtent(core::Call& call) {
     try {
         core::moldyn::MultiParticleDataCall& c = dynamic_cast<
             core::moldyn::MultiParticleDataCall&>(call);
-        table::CallFloatTableData *ft = this->slotCallFloatTable.CallAs<table::CallFloatTableData>();
+        table::TableDataCall *ft = this->slotCallTable.CallAs<table::TableDataCall>();
         if (ft == NULL) return false;
         (*ft)();
 
@@ -393,5 +393,5 @@ bool FloatTableToParticles::getMultiparticleExtent(core::Call& call) {
 /*
  * megamol::pcl::PclDataSource::release
  */
-void FloatTableToParticles::release(void) {
+void TableToParticles::release(void) {
 }

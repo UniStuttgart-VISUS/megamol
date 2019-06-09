@@ -33,7 +33,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static inline const char* Description(void) { return "Parallel coordinates renderer for generic float tables"; }
+    static inline const char* Description(void) { return "Parallel coordinates renderer for generic tables"; }
 
     /**
      * Answers whether this module is available on the current system.

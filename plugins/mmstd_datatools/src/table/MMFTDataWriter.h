@@ -108,7 +108,7 @@ namespace table {
 
     };
 
-} /* end namespace floattable */
+} /* end namespace table */
 } /* end namespace datatools */
 } /* end namespace stdplugin */
 } /* end namespace megamol */

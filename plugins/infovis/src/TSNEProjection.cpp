@@ -28,13 +28,13 @@ TSNEProjection::TSNEProjection(void)
 
     TSNE* tsne = new TSNE(); // lib load test
 
-    this->dataInSlot.SetCompatibleCall<megamol::stdplugin::datatools::table::CallFloatTableDataDescription>();
+    this->dataInSlot.SetCompatibleCall<megamol::stdplugin::datatools::table::TableDataCallDescription>();
     this->MakeSlotAvailable(&this->dataInSlot);
 
-    this->dataOutSlot.SetCallback(megamol::stdplugin::datatools::table::CallFloatTableData::ClassName(),
-        megamol::stdplugin::datatools::table::CallFloatTableData::FunctionName(0), &TSNEProjection::getDataCallback);
-    this->dataOutSlot.SetCallback(megamol::stdplugin::datatools::table::CallFloatTableData::ClassName(),
-        megamol::stdplugin::datatools::table::CallFloatTableData::FunctionName(1), &TSNEProjection::getHashCallback);
+    this->dataOutSlot.SetCallback(megamol::stdplugin::datatools::table::TableDataCall::ClassName(),
+        megamol::stdplugin::datatools::table::TableDataCall::FunctionName(0), &TSNEProjection::getDataCallback);
+    this->dataOutSlot.SetCallback(megamol::stdplugin::datatools::table::TableDataCall::ClassName(),
+        megamol::stdplugin::datatools::table::TableDataCall::FunctionName(1), &TSNEProjection::getHashCallback);
     this->MakeSlotAvailable(&this->dataOutSlot);
 
     reduceToNSlot << new ::megamol::core::param::IntParam(2);
@@ -61,12 +61,12 @@ void TSNEProjection::release(void) {}
 
 bool TSNEProjection::getDataCallback(core::Call& c) {
     try {
-        megamol::stdplugin::datatools::table::CallFloatTableData* outCall =
-            dynamic_cast<megamol::stdplugin::datatools::table::CallFloatTableData*>(&c);
+        megamol::stdplugin::datatools::table::TableDataCall* outCall =
+            dynamic_cast<megamol::stdplugin::datatools::table::TableDataCall*>(&c);
         if (outCall == NULL) return false;
 
-        megamol::stdplugin::datatools::table::CallFloatTableData* inCall =
-            this->dataInSlot.CallAs<megamol::stdplugin::datatools::table::CallFloatTableData>();
+        megamol::stdplugin::datatools::table::TableDataCall* inCall =
+            this->dataInSlot.CallAs<megamol::stdplugin::datatools::table::TableDataCall>();
         if (inCall == NULL) return false;
 
         inCall->SetFrameID(outCall->GetFrameID());
@@ -96,12 +96,12 @@ bool TSNEProjection::getDataCallback(core::Call& c) {
 
 bool TSNEProjection::getHashCallback(core::Call& c) {
     try {
-        megamol::stdplugin::datatools::table::CallFloatTableData* outCall =
-            dynamic_cast<megamol::stdplugin::datatools::table::CallFloatTableData*>(&c);
+        megamol::stdplugin::datatools::table::TableDataCall* outCall =
+            dynamic_cast<megamol::stdplugin::datatools::table::TableDataCall*>(&c);
         if (outCall == NULL) return false;
 
-        megamol::stdplugin::datatools::table::CallFloatTableData* inCall =
-            this->dataInSlot.CallAs<megamol::stdplugin::datatools::table::CallFloatTableData>();
+        megamol::stdplugin::datatools::table::TableDataCall* inCall =
+            this->dataInSlot.CallAs<megamol::stdplugin::datatools::table::TableDataCall>();
         if (inCall == NULL) return false;
 
         inCall->SetFrameID(outCall->GetFrameID());
@@ -117,7 +117,7 @@ bool TSNEProjection::getHashCallback(core::Call& c) {
     return true;
 }
 
-bool megamol::infovis::TSNEProjection::computeTSNE(megamol::stdplugin::datatools::table::CallFloatTableData* inCall) {
+bool megamol::infovis::TSNEProjection::computeTSNE(megamol::stdplugin::datatools::table::TableDataCall* inCall) {
     // check if inData has changed and if Slots have changed
     if (this->dataInHash == inCall->DataHash()) {
         if (!reduceToNSlot.IsDirty() && !maxIterSlot.IsDirty() && !thetaSlot.IsDirty() && !perplexitySlot.IsDirty() &&
@@ -189,7 +189,7 @@ bool megamol::infovis::TSNEProjection::computeTSNE(megamol::stdplugin::datatools
     for (int indexX = 0; indexX < outputColumnCount; indexX++) {
         this->columnInfos[indexX]
             .SetName("TSNE" + std::to_string(indexX))
-            .SetType(megamol::stdplugin::datatools::table::CallFloatTableData::ColumnType::QUANTITATIVE)
+            .SetType(megamol::stdplugin::datatools::table::TableDataCall::ColumnType::QUANTITATIVE)
             .SetMinimumValue(minimas[indexX])
             .SetMaximumValue(maximas[indexX]);
     }

@@ -26,8 +26,8 @@ MMFTDataSource::MMFTDataSource(void) : core::Module(),
     this->filenameSlot << new core::param::FilePathParam("");
     this->MakeSlotAvailable(&this->filenameSlot);
 
-    this->getDataSlot.SetCallback(CallFloatTableData::ClassName(), "GetData", &MMFTDataSource::getDataCallback);
-    this->getDataSlot.SetCallback(CallFloatTableData::ClassName(), "GetHash", &MMFTDataSource::getHashCallback);
+    this->getDataSlot.SetCallback(TableDataCall::ClassName(), "GetData", &MMFTDataSource::getDataCallback);
+    this->getDataSlot.SetCallback(TableDataCall::ClassName(), "GetHash", &MMFTDataSource::getHashCallback);
     this->MakeSlotAvailable(&this->getDataSlot);
 
 }
@@ -84,7 +84,7 @@ void MMFTDataSource::assertData(void) {
     columns.resize(colCnt);
 
     for (uint32_t c = 0; c < colCnt; ++c) {
-        CallFloatTableData::ColumnInfo& ci = columns[c];
+        TableDataCall::ColumnInfo& ci = columns[c];
         uint16_t nameLen;
         ASSERT_READ(&nameLen, 2);
         vislib::StringA name;
@@ -93,8 +93,8 @@ void MMFTDataSource::assertData(void) {
         uint8_t type;
         ASSERT_READ(&type, 1);
         ci.SetType(
-            (type == 1) ? CallFloatTableData::ColumnType::CATEGORICAL
-            : CallFloatTableData::ColumnType::QUANTITATIVE);
+            (type == 1) ? TableDataCall::ColumnType::CATEGORICAL
+            : TableDataCall::ColumnType::QUANTITATIVE);
         float f;
         ASSERT_READ(&f, 4);
         ci.SetMinimumValue(f);
@@ -113,7 +113,7 @@ void MMFTDataSource::assertData(void) {
 }
 
 bool MMFTDataSource::getDataCallback(core::Call& caller) {
-    CallFloatTableData *tfd = dynamic_cast<CallFloatTableData*>(&caller);
+    TableDataCall *tfd = dynamic_cast<TableDataCall*>(&caller);
     if (tfd == nullptr) return false;
 
     this->assertData();
@@ -131,7 +131,7 @@ bool MMFTDataSource::getDataCallback(core::Call& caller) {
 }
 
 bool MMFTDataSource::getHashCallback(core::Call& caller) {
-    CallFloatTableData *tfd = dynamic_cast<CallFloatTableData*>(&caller);
+    TableDataCall *tfd = dynamic_cast<TableDataCall*>(&caller);
     if (tfd == nullptr) return false;
 
     this->assertData();

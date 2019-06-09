@@ -18,7 +18,7 @@ namespace megamol {
 namespace infovis {
 
 /**
- * Module to select a specific column from FloatTable as diagram series.
+ * Module to select a specific column from a table as diagram series.
  * Select multiple columns via cascading this module.
  * This module does not store a copy of the selected column.
  */
@@ -36,9 +36,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
-        return "Module to select a specific column from FloatTable as diagram series";
-    }
+    static const char* Description(void) { return "Module to select a specific column from a table as diagram series"; }
 
     /**
      * Answers whether this module is available on the current system.
@@ -78,7 +76,7 @@ private:
     /**
      * Updates selector parameter and creates info item about selected column.
      */
-    bool assertData(const stdplugin::datatools::table::CallFloatTableData* const ft);
+    bool assertData(const stdplugin::datatools::table::TableDataCall* const ft);
 
     /**
      * Checks if any parameter is dirty.
@@ -95,12 +93,12 @@ private:
      *
      * @param colIdx [out] Column idx of column 'columnName'.
      * @param columnName Column to find.
-     * @param ft FloatTable call containing column infos to search.
+     * @param ft call containing the table column infos to search.
      *
      * @return True, if column exists.
      */
     bool getColumnIdx(uint32_t& colIdx, const vislib::TString& columnName,
-        const stdplugin::datatools::table::CallFloatTableData* const ft) const;
+        const stdplugin::datatools::table::TableDataCall* const ft) const;
 
     /** Selected columns output call */
     core::CalleeSlot seriesOutSlot;
@@ -108,7 +106,7 @@ private:
     /** Selected columns input call */
     core::CallerSlot seriesInSlot;
 
-    /** FloatTable input */
+    /** Table input */
     core::CallerSlot ftInSlot;
 
     /** Column selector enum */
@@ -126,7 +124,7 @@ private:
     /** Color of series */
     std::array<float, 3> color;
 
-    /** The hash of the FloatTable */
+    /** The hash of the Table */
     size_t inputHash;
 
     /** Internal hash incremented if selection, etc. changes */

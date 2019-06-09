@@ -91,7 +91,7 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     , valueSSBO("Values")
     , plotSSBO("Plots")
     , labelsValid(false) {
-    this->floatTableInSlot.SetCompatibleCall<table::CallFloatTableDataDescription>();
+    this->floatTableInSlot.SetCompatibleCall<table::TableDataCallDescription>();
     this->MakeSlotAvailable(&this->floatTableInSlot);
 
     this->transferFunctionInSlot.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();
@@ -255,7 +255,7 @@ void ScatterplotMatrixRenderer2D::resetDirty(void) {
 }
 
 bool ScatterplotMatrixRenderer2D::validateData(void) {
-    this->floatTable = this->floatTableInSlot.CallAs<table::CallFloatTableData>();
+    this->floatTable = this->floatTableInSlot.CallAs<table::TableDataCall>();
     if (this->floatTable == nullptr || !(*(this->floatTable))(0)) return false;
 
     this->transferFunction = this->transferFunctionInSlot.CallAs<megamol::core::view::CallGetTransferFunction>();

@@ -25,7 +25,7 @@ MMFTDataWriter::MMFTDataWriter(void) : core::AbstractDataWriter(),
     this->filenameSlot << new core::param::FilePathParam("");
     this->MakeSlotAvailable(&this->filenameSlot);
 
-    this->dataSlot.SetCompatibleCall<CallFloatTableDataDescription>();
+    this->dataSlot.SetCompatibleCall<TableDataCallDescription>();
     this->MakeSlotAvailable(&this->dataSlot);
 }
 
@@ -52,7 +52,7 @@ bool MMFTDataWriter::run(void) {
         return false;
     }
 
-    CallFloatTableData *cftd = this->dataSlot.CallAs<CallFloatTableData>();
+    TableDataCall *cftd = this->dataSlot.CallAs<TableDataCall>();
     if (cftd == NULL) {
         Log::DefaultLog.WriteError("No data source connected. Abort.");
         return false;
@@ -90,11 +90,11 @@ bool MMFTDataWriter::run(void) {
     ASSERT_WRITEOUT(&colCnt, 4);
 
     for (uint32_t c = 0; c < colCnt; ++c) {
-        const CallFloatTableData::ColumnInfo& ci = cftd->GetColumnsInfos()[c];
+        const TableDataCall::ColumnInfo& ci = cftd->GetColumnsInfos()[c];
         uint16_t nameLen = static_cast<uint16_t>(ci.Name().size());
         ASSERT_WRITEOUT(&nameLen, 2);
         ASSERT_WRITEOUT(ci.Name().data(), nameLen);
-        uint8_t type = (ci.Type() == CallFloatTableData::ColumnType::CATEGORICAL) ? 1 : 0;
+        uint8_t type = (ci.Type() == TableDataCall::ColumnType::CATEGORICAL) ? 1 : 0;
         ASSERT_WRITEOUT(&type, 1);
         float f = ci.MinimumValue();
         ASSERT_WRITEOUT(&f, 4);

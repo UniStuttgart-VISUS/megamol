@@ -1,5 +1,5 @@
 /*
- * FloatTableJoin.cpp
+ * TableJoin.cpp
  *
  * Copyright (C) 2016-2017 by VISUS (University of Stuttgart)
  * Alle Rechte vorbehalten.
@@ -14,61 +14,61 @@ using namespace megamol::stdplugin::datatools;
 using namespace megamol::stdplugin::datatools::table;
 using namespace megamol;
 
-std::string FloatTableJoin::ModuleName
-    = std::string("FloatTableJoin");
+std::string TableJoin::ModuleName
+    = std::string("TableJoin");
 
 size_t hash_combine(size_t lhs, size_t rhs) {
     lhs ^= rhs + 0x9e3779b9 + (lhs << 6) + (lhs >> 2);
     return lhs;
 }
 
-FloatTableJoin::FloatTableJoin(void) : core::Module(),
-    firstFloatTableInSlot("firstFloatTableIn", "First input"),
-    secondFloatTableInSlot("secondFloatTableIn", "Second input"),
+TableJoin::TableJoin(void) : core::Module(),
+    firstTableInSlot("firstTableIn", "First input"),
+    secondTableInSlot("secondTableIn", "Second input"),
     dataOutSlot("dataOut", "Output"),
     frameID(-1),
     firstDataHash(std::numeric_limits<unsigned long>::max()), secondDataHash(std::numeric_limits<unsigned long>::max()) {
-    this->firstFloatTableInSlot.SetCompatibleCall<CallFloatTableDataDescription>();
-    this->MakeSlotAvailable(&this->firstFloatTableInSlot);
+    this->firstTableInSlot.SetCompatibleCall<TableDataCallDescription>();
+    this->MakeSlotAvailable(&this->firstTableInSlot);
 
-    this->secondFloatTableInSlot.SetCompatibleCall<CallFloatTableDataDescription>();
-    this->MakeSlotAvailable(&this->secondFloatTableInSlot);
+    this->secondTableInSlot.SetCompatibleCall<TableDataCallDescription>();
+    this->MakeSlotAvailable(&this->secondTableInSlot);
 
-    this->dataOutSlot.SetCallback(CallFloatTableData::ClassName(),
-        CallFloatTableData::FunctionName(0),
-        &FloatTableJoin::processData);
-    this->dataOutSlot.SetCallback(CallFloatTableData::ClassName(),
-        CallFloatTableData::FunctionName(1),
-        &FloatTableJoin::getExtent);
+    this->dataOutSlot.SetCallback(TableDataCall::ClassName(),
+        TableDataCall::FunctionName(0),
+        &TableJoin::processData);
+    this->dataOutSlot.SetCallback(TableDataCall::ClassName(),
+        TableDataCall::FunctionName(1),
+        &TableJoin::getExtent);
     this->MakeSlotAvailable(&this->dataOutSlot);
 }
 
-FloatTableJoin::~FloatTableJoin(void) {
+TableJoin::~TableJoin(void) {
     this->Release();
 }
 
-bool FloatTableJoin::create(void) {
+bool TableJoin::create(void) {
     return true;
 }
 
-void FloatTableJoin::release(void) {
+void TableJoin::release(void) {
 
 }
 
-bool FloatTableJoin::processData(core::Call &c) {
+bool TableJoin::processData(core::Call &c) {
     try {
-        CallFloatTableData *outCall = dynamic_cast<CallFloatTableData *>(&c);
+        TableDataCall *outCall = dynamic_cast<TableDataCall *>(&c);
         if (outCall == NULL) return false;
 
-        CallFloatTableData *firstInCall = this->firstFloatTableInSlot.CallAs<CallFloatTableData>();
+        TableDataCall *firstInCall = this->firstTableInSlot.CallAs<TableDataCall>();
         if (firstInCall == NULL) return false;
 
-        CallFloatTableData *secondInCall = this->secondFloatTableInSlot.CallAs<CallFloatTableData>();
+        TableDataCall *secondInCall = this->secondTableInSlot.CallAs<TableDataCall>();
         if (secondInCall == NULL) return false;
 
         // check time compatibility
         if (firstInCall->GetFrameCount() != secondInCall->GetFrameCount()) {
-            vislib::sys::Log::DefaultLog.WriteError(_T("%hs: Cannot join float tables. ")
+            vislib::sys::Log::DefaultLog.WriteError(_T("%hs: Cannot join tables. ")
                 _T("They are required to have equal frame count\n"), ModuleName.c_str());
             return false;
         }
@@ -105,9 +105,9 @@ bool FloatTableJoin::processData(core::Call &c) {
             this->column_info.clear();
             this->column_info.reserve(this->column_count);
             memcpy(this->column_info.data(), firstColumnInfos,
-                sizeof(CallFloatTableData::ColumnInfo)*firstColumnCount);
+                sizeof(TableDataCall::ColumnInfo)*firstColumnCount);
             memcpy(&(this->column_info.data()[firstColumnCount]), secondColumnInfos,
-                sizeof(CallFloatTableData::ColumnInfo)*secondColumnCount);
+                sizeof(TableDataCall::ColumnInfo)*secondColumnCount);
             this->data.clear();
             this->data.resize(this->rows_count * this->column_count);
 
@@ -129,7 +129,7 @@ bool FloatTableJoin::processData(core::Call &c) {
     return true;
 }
 
-void FloatTableJoin::concatenate(
+void TableJoin::concatenate(
 	float* const out, const size_t rowCount, const size_t columnCount,
 	const float* const first, const size_t firstRowCount, const size_t firstColumnCount, 
     const float* const second,  const size_t secondRowCount, const size_t secondColumnCount) {
@@ -157,12 +157,12 @@ void FloatTableJoin::concatenate(
     }
 }
 
-bool FloatTableJoin::getExtent(core::Call &c) {
+bool TableJoin::getExtent(core::Call &c) {
     try {
-        CallFloatTableData *outCall = dynamic_cast<CallFloatTableData *>(&c);
+        TableDataCall *outCall = dynamic_cast<TableDataCall *>(&c);
         if (outCall == NULL) return false;
 
-        CallFloatTableData *inCall = this->firstFloatTableInSlot.CallAs<CallFloatTableData>();
+        TableDataCall *inCall = this->firstTableInSlot.CallAs<TableDataCall>();
         if (inCall == NULL) return false;
 
         inCall->SetFrameID(outCall->GetFrameID());

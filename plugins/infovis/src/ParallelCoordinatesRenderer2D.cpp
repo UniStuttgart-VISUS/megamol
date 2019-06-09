@@ -88,7 +88,7 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
     , pickedIndicatorIndex(-1)
     , font("Evolventa-SansSerif", core::utility::SDFFont::RenderType::RENDERTYPE_FILL) {
 
-    this->getDataSlot.SetCompatibleCall<table::CallFloatTableDataDescription>();
+    this->getDataSlot.SetCompatibleCall<table::TableDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
 
     this->getTFSlot.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();
@@ -458,7 +458,7 @@ bool ParallelCoordinatesRenderer2D::resetFiltersSlotCallback(core::param::ParamS
 }
 
 void ParallelCoordinatesRenderer2D::assertData(void) {
-    auto floats = getDataSlot.CallAs<megamol::stdplugin::datatools::table::CallFloatTableData>();
+    auto floats = getDataSlot.CallAs<megamol::stdplugin::datatools::table::TableDataCall>();
     if (floats == nullptr) return;
     auto tc = getTFSlot.CallAs<megamol::core::view::CallGetTransferFunction>();
     if (tc == nullptr) {
@@ -543,7 +543,7 @@ void ParallelCoordinatesRenderer2D::assertData(void) {
 }
 
 void ParallelCoordinatesRenderer2D::computeScaling(void) {
-    auto fc = getDataSlot.CallAs<megamol::stdplugin::datatools::table::CallFloatTableData>();
+    auto fc = getDataSlot.CallAs<megamol::stdplugin::datatools::table::TableDataCall>();
     if (fc == nullptr) return;
 
     this->marginX = 20.f;
@@ -931,7 +931,7 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
 
     this->assertData();
 
-    auto fc = getDataSlot.CallAs<megamol::stdplugin::datatools::table::CallFloatTableData>();
+    auto fc = getDataSlot.CallAs<megamol::stdplugin::datatools::table::TableDataCall>();
     if (fc == nullptr) return false;
     auto tc = getTFSlot.CallAs<megamol::core::view::CallGetTransferFunction>();
     if (tc == nullptr) {

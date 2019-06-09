@@ -1,5 +1,5 @@
 /*
- * FloatTableColumnFilter.cpp
+ * TableColumnFilter.cpp
  *
  * Copyright (C) 2016-2017 by VISUS (University of Stuttgart)
  * Alle Rechte vorbehalten.
@@ -18,10 +18,10 @@ using namespace megamol::stdplugin::datatools;
 using namespace megamol::stdplugin::datatools::table;
 using namespace megamol;
 
-std::string FloatTableColumnFilter::ModuleName
-    = std::string("FloatTableColumnFilter");
+std::string TableColumnFilter::ModuleName
+    = std::string("TableColumnFilter");
 
-FloatTableColumnFilter::FloatTableColumnFilter(void) :
+TableColumnFilter::TableColumnFilter(void) :
     core::Module(),
     dataOutSlot("dataOut", "Ouput"),
     dataInSlot("dataIn", "Input"),
@@ -29,38 +29,38 @@ FloatTableColumnFilter::FloatTableColumnFilter(void) :
     frameID(-1),
     datahash(std::numeric_limits<unsigned long>::max()) {
 
-    this->dataInSlot.SetCompatibleCall<CallFloatTableDataDescription>();
+    this->dataInSlot.SetCompatibleCall<TableDataCallDescription>();
     this->MakeSlotAvailable(&this->dataInSlot);
 
-    this->dataOutSlot.SetCallback(CallFloatTableData::ClassName(),
-        CallFloatTableData::FunctionName(0),
-        &FloatTableColumnFilter::processData);
-    this->dataOutSlot.SetCallback(CallFloatTableData::ClassName(),
-        CallFloatTableData::FunctionName(1),
-        &FloatTableColumnFilter::getExtent);
+    this->dataOutSlot.SetCallback(TableDataCall::ClassName(),
+        TableDataCall::FunctionName(0),
+        &TableColumnFilter::processData);
+    this->dataOutSlot.SetCallback(TableDataCall::ClassName(),
+        TableDataCall::FunctionName(1),
+        &TableColumnFilter::getExtent);
     this->MakeSlotAvailable(&this->dataOutSlot);
 
     this->selectionStringSlot << new core::param::StringParam("x; y; z");
     this->MakeSlotAvailable(&this->selectionStringSlot);
 }
 
-FloatTableColumnFilter::~FloatTableColumnFilter(void) {
+TableColumnFilter::~TableColumnFilter(void) {
     this->Release();
 }
 
-bool FloatTableColumnFilter::create(void) {
+bool TableColumnFilter::create(void) {
     return true;
 }
 
-void FloatTableColumnFilter::release(void) {
+void TableColumnFilter::release(void) {
 }
 
-bool FloatTableColumnFilter::processData(core::Call &c) {
+bool TableColumnFilter::processData(core::Call &c) {
     try {
-        CallFloatTableData *outCall = dynamic_cast<CallFloatTableData *>(&c);
+        TableDataCall *outCall = dynamic_cast<TableDataCall *>(&c);
         if (outCall == NULL) return false;
 
-        CallFloatTableData *inCall = this->dataInSlot.CallAs<CallFloatTableData>();
+        TableDataCall *inCall = this->dataInSlot.CallAs<TableDataCall>();
         if (inCall == NULL) return false;
 
         inCall->SetFrameID(outCall->GetFrameID());
@@ -142,12 +142,12 @@ bool FloatTableColumnFilter::processData(core::Call &c) {
     return true;
 }
 
-bool FloatTableColumnFilter::getExtent(core::Call &c) {
+bool TableColumnFilter::getExtent(core::Call &c) {
 	try {
-		CallFloatTableData *outCall = dynamic_cast<CallFloatTableData *>(&c);
+		TableDataCall *outCall = dynamic_cast<TableDataCall *>(&c);
 		if (outCall == NULL) return false;
 
-		CallFloatTableData *inCall = this->dataInSlot.CallAs<CallFloatTableData>();
+		TableDataCall *inCall = this->dataInSlot.CallAs<TableDataCall>();
 		if (inCall == NULL) return false;
 
 		inCall->SetFrameID(outCall->GetFrameID());

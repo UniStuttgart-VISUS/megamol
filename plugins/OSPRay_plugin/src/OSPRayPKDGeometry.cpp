@@ -168,7 +168,7 @@ bool OSPRayPKDGeometry::getExtendsCallback(core::Call& call) {
 
     if (cd == NULL) return false;
     cd->SetFrameID(os->FrameID(), true); // isTimeForced flag set to true
-    // if (!(*cd)(1)) return false; // floattable returns flase at first attempt and breaks everything
+    // if (!(*cd)(1)) return false; // table returns flase at first attempt and breaks everything
     (*cd)(1);
 
     os->SetExtent(cd->FrameCount(), cd->AccessBoundingBoxes());

@@ -23,10 +23,10 @@ using namespace megamol;
 /*
  * FloattableToLines::FloattableToLines
  */
-FloatTableToLines::FloatTableToLines(void) : Module(),
+TableToLines::TableToLines(void) : Module(),
         slotTF("gettransferfunction", "Connects to the transfer function module"),
         slotDeployData("linedata", "Provides the data as line data call."),
-        slotCallFloatTable("table", "float table input call"),
+        slotCallTable("table", "table input call"),
         slotColumnR("redcolumnname", "The name of the column holding the red colour channel value."),
         slotColumnG("greencolumnname", "The name of the column holding the green colour channel value."),
         slotColumnB("bluecolumnname", "The name of the column holding the blue colour channel value."),
@@ -96,22 +96,22 @@ FloatTableToLines::FloatTableToLines(void) : Module(),
     this->slotDeployData.SetCallback(
         geocalls::LinesDataCall::ClassName(),
         "GetData",
-        &FloatTableToLines::getLineData);
+        &TableToLines::getLineData);
     this->slotDeployData.SetCallback(
         geocalls::LinesDataCall::ClassName(),
         "GetExtent",
-        &FloatTableToLines::getLineDataExtent);
+        &TableToLines::getLineDataExtent);
     this->MakeSlotAvailable(&this->slotDeployData);
 
-    this->slotCallFloatTable.SetCompatibleCall<table::CallFloatTableDataDescription>();
-    this->MakeSlotAvailable(&this->slotCallFloatTable);
+    this->slotCallTable.SetCompatibleCall<table::TableDataCallDescription>();
+    this->MakeSlotAvailable(&this->slotCallTable);
 }
 
 
 /*
  * FloattableToLines::~FloattableToLines
  */
-FloatTableToLines::~FloatTableToLines(void) {
+TableToLines::~TableToLines(void) {
     this->Release();
 }
 
@@ -119,12 +119,12 @@ FloatTableToLines::~FloatTableToLines(void) {
 /*
  * megamol::pcl::PclDataSource::create
  */
-bool FloatTableToLines::create(void) {
+bool TableToLines::create(void) {
     bool retval = true;
     return true;
 }
 
-bool FloatTableToLines::anythingDirty() {
+bool TableToLines::anythingDirty() {
     return this->slotColumnR.IsDirty()
         || this->slotColumnG.IsDirty()
         || this->slotColumnB.IsDirty()
@@ -138,7 +138,7 @@ bool FloatTableToLines::anythingDirty() {
         || this->slotConnectionType.IsDirty();
 }
 
-void FloatTableToLines::resetAllDirty() {
+void TableToLines::resetAllDirty() {
     this->slotColumnR.ResetDirty();
     this->slotColumnG.ResetDirty();
     this->slotColumnB.ResetDirty();
@@ -152,18 +152,18 @@ void FloatTableToLines::resetAllDirty() {
     this->slotConnectionType.ResetDirty();
 }
 
-std::string FloatTableToLines::cleanUpColumnHeader(const std::string& header) const {
+std::string TableToLines::cleanUpColumnHeader(const std::string& header) const {
     return this->cleanUpColumnHeader(vislib::TString(header.data()));
 }
 
-std::string FloatTableToLines::cleanUpColumnHeader(const vislib::TString& header) const {
+std::string TableToLines::cleanUpColumnHeader(const vislib::TString& header) const {
     vislib::TString h(header);
     h.TrimSpaces();
     h.ToLowerCase();
     return std::string(T2A(h.PeekBuffer()));
 }
 
-bool FloatTableToLines::pushColumnIndex(std::vector<size_t>& cols, const vislib::TString& colName) {
+bool TableToLines::pushColumnIndex(std::vector<size_t>& cols, const vislib::TString& colName) {
     std::string c = cleanUpColumnHeader(colName);
     if (this->columnIndex.find(c) != columnIndex.end()) {
         cols.push_back(columnIndex[c]);
@@ -174,11 +174,11 @@ bool FloatTableToLines::pushColumnIndex(std::vector<size_t>& cols, const vislib:
     }
 }
 
-bool FloatTableToLines::assertData(table::CallFloatTableData *ft) {
+bool TableToLines::assertData(table::TableDataCall *ft) {
     if (this->inputHash == ft->DataHash() && !anythingDirty()) return true;
 
     if (this->inputHash != ft->DataHash()) {
-        vislib::sys::Log::DefaultLog.WriteInfo("FloatTableToLines: Dataset changed -> Updating EnumParams\n");
+        vislib::sys::Log::DefaultLog.WriteInfo("TableToLines: Dataset changed -> Updating EnumParams\n");
         this->columnIndex.clear();
 
         this->slotColumnX.Param<core::param::FlexEnumParam>()->ClearValues();
@@ -462,11 +462,11 @@ bool FloatTableToLines::assertData(table::CallFloatTableData *ft) {
 /*
  * megamol::pcl::PclDataSource::getMultiParticleData
  */
-bool FloatTableToLines::getLineData(core::Call& call) {
+bool TableToLines::getLineData(core::Call& call) {
     try {
         geocalls::LinesDataCall& c = dynamic_cast<
             geocalls::LinesDataCall&>(call);
-        table::CallFloatTableData *ft = this->slotCallFloatTable.CallAs<table::CallFloatTableData>();
+        table::TableDataCall *ft = this->slotCallTable.CallAs<table::TableDataCall>();
         if (ft == NULL) return false;
         (*ft)();
 
@@ -510,11 +510,11 @@ bool FloatTableToLines::getLineData(core::Call& call) {
 /*
  * megamol::pcl::PclDataSource::getMultiparticleExtent
  */
-bool FloatTableToLines::getLineDataExtent(core::Call& call) {
+bool TableToLines::getLineDataExtent(core::Call& call) {
     try {
         geocalls::LinesDataCall& c = dynamic_cast<
             geocalls::LinesDataCall&>(call);
-        table::CallFloatTableData *ft = this->slotCallFloatTable.CallAs<table::CallFloatTableData>();
+        table::TableDataCall *ft = this->slotCallTable.CallAs<table::TableDataCall>();
         if (ft == NULL) return false;
         (*ft)();
 
@@ -543,11 +543,11 @@ bool FloatTableToLines::getLineDataExtent(core::Call& call) {
 /*
  * megamol::pcl::PclDataSource::release
  */
-void FloatTableToLines::release(void) {
+void TableToLines::release(void) {
 }
 
 
-void FloatTableToLines::colorTransferGray(std::vector<float> &grayArray, float const* transferTable, unsigned int tableSize, std::vector<float> &rgbaArray, unsigned int target_length=3) {
+void TableToLines::colorTransferGray(std::vector<float> &grayArray, float const* transferTable, unsigned int tableSize, std::vector<float> &rgbaArray, unsigned int target_length=3) {
 
     if (grayArray.size() == 0) {
         return;

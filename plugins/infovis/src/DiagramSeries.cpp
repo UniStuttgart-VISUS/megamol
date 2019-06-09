@@ -17,8 +17,8 @@ DiagramSeries::DiagramSeries(void)
     : core::Module()
     , seriesInSlot("seriesIn", "Input of series for passthrough")
     , seriesOutSlot("seriesOut", "Output of owned series")
-    , ftInSlot("ftIn", "Input of FloatTable to select series from")
-    , columnSelectorParam("columnSelector", "Param to select specific column from FloatTable")
+    , ftInSlot("ftIn", "Input table to select series from")
+    , columnSelectorParam("columnSelector", "Param to select specific column from the table")
     , scalingParam("scaling", "Param to set a scaling factor for selected column")
     , colorParam("color", "Selecto color for series")
     , myHash(0)
@@ -32,7 +32,7 @@ DiagramSeries::DiagramSeries(void)
         DiagramSeriesCall::FunctionName(DiagramSeriesCall::CallForGetSeries), &DiagramSeries::seriesSelectionCB);
     this->MakeSlotAvailable(&this->seriesOutSlot);
 
-    this->ftInSlot.SetCompatibleCall<table::CallFloatTableDataDescription>();
+    this->ftInSlot.SetCompatibleCall<table::TableDataCallDescription>();
     this->MakeSlotAvailable(&this->ftInSlot);
 
     core::param::FlexEnumParam* columnSelectorEP = new core::param::FlexEnumParam("undef");
@@ -76,7 +76,7 @@ bool megamol::infovis::DiagramSeries::seriesSelectionCB(core::Call& c) {
 
         DiagramSeriesCall* inSeries = this->seriesInSlot.CallAs<DiagramSeriesCall>();
 
-        table::CallFloatTableData* ft = this->ftInSlot.CallAs<table::CallFloatTableData>();
+        table::TableDataCall* ft = this->ftInSlot.CallAs<table::TableDataCall>();
         if (ft == NULL) return false;
         if (!(*ft)(1)) return false;
         if (!(*ft)(0)) return false;
@@ -104,7 +104,7 @@ bool megamol::infovis::DiagramSeries::seriesSelectionCB(core::Call& c) {
 /*
  * DiagramSeries::assertData
  */
-bool DiagramSeries::assertData(const table::CallFloatTableData* const ft) {
+bool DiagramSeries::assertData(const table::TableDataCall* const ft) {
     if (this->inputHash == ft->DataHash() && !isAnythingDirty()) return true;
 
     if (this->inputHash != ft->DataHash()) {
@@ -161,7 +161,7 @@ void DiagramSeries::resetDirtyFlags(void) {
  * DiagramSeries::getColumnIdx
  */
 bool DiagramSeries::getColumnIdx(
-    uint32_t& colIdx, const vislib::TString& columnName, const table::CallFloatTableData* const ft) const {
+    uint32_t& colIdx, const vislib::TString& columnName, const table::TableDataCall* const ft) const {
     std::string name = std::string(T2A(columnName));
 
     for (size_t i = 0; i < ft->GetColumnsCount(); i++) {

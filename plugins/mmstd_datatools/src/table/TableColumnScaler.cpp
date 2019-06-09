@@ -1,5 +1,5 @@
 /*
- * FloatTableColumnScaler.cpp
+ * TableColumnScaler.cpp
  *
  * Copyright (C) 2016-2016 by VISUS (University of Stuttgart)
  * Alle Rechte vorbehalten.
@@ -21,16 +21,16 @@ using namespace megamol;
 
 
 /*
- * FloatTableColumnScaler::ModuleName
+ * TableColumnScaler::ModuleName
  */
-std::string FloatTableColumnScaler::ModuleName
-    = std::string("FloatTableColumnScaler");
+std::string TableColumnScaler::ModuleName
+    = std::string("TableColumnScaler");
 
 
 /*
- * FloatTableColumnSelector::FloatTableColumnSelector
+ * TableColumnSelector::TableColumnSelector
  */
-FloatTableColumnScaler::FloatTableColumnScaler(void) :
+TableColumnScaler::TableColumnScaler(void) :
     core::Module(),
     dataInSlot("dataIn", "Input"),
     dataOutSlot("dataOut", "Output"),
@@ -38,15 +38,15 @@ FloatTableColumnScaler::FloatTableColumnScaler(void) :
     columnSelectorSlot("columns", "Select columns to scale separated by \";\""),
     frameID(-1),
     datahash((std::numeric_limits<size_t>::max)()) {
-    this->dataInSlot.SetCompatibleCall<CallFloatTableDataDescription>();
+    this->dataInSlot.SetCompatibleCall<TableDataCallDescription>();
     this->MakeSlotAvailable(&this->dataInSlot);
 
-    this->dataOutSlot.SetCallback(CallFloatTableData::ClassName(),
-        CallFloatTableData::FunctionName(0),
-        &FloatTableColumnScaler::processData);
-    this->dataOutSlot.SetCallback(CallFloatTableData::ClassName(),
-        CallFloatTableData::FunctionName(1),
-        &FloatTableColumnScaler::getExtent);
+    this->dataOutSlot.SetCallback(TableDataCall::ClassName(),
+        TableDataCall::FunctionName(0),
+        &TableColumnScaler::processData);
+    this->dataOutSlot.SetCallback(TableDataCall::ClassName(),
+        TableDataCall::FunctionName(1),
+        &TableColumnScaler::getExtent);
     this->MakeSlotAvailable(&this->dataOutSlot);
 
     this->scalingFactorSlot << new core::param::FloatParam(1.0f);
@@ -58,38 +58,38 @@ FloatTableColumnScaler::FloatTableColumnScaler(void) :
 
 
 /*
- * FloatTableColumnSelector::~FloatTableColumnSelector
+ * TableColumnSelector::~TableColumnSelector
  */
-FloatTableColumnScaler::~FloatTableColumnScaler(void) {
+TableColumnScaler::~TableColumnScaler(void) {
     this->Release();
 }
 
 
 /*
- * FloatTableColumnSelector::create
+ * TableColumnSelector::create
  */
-bool FloatTableColumnScaler::create(void) {
+bool TableColumnScaler::create(void) {
     return true;
 }
 
 
 /*
- * FloatTableColumnSelector::release
+ * TableColumnSelector::release
  */
-void FloatTableColumnScaler::release(void) {
+void TableColumnScaler::release(void) {
 
 }
 
 
 /*
- * FloatTableColumnSelector::processData
+ * TableColumnSelector::processData
  */
-bool FloatTableColumnScaler::processData(core::Call &c) {
+bool TableColumnScaler::processData(core::Call &c) {
     try {
-        CallFloatTableData *outCall = dynamic_cast<CallFloatTableData *>(&c);
+        TableDataCall *outCall = dynamic_cast<TableDataCall *>(&c);
         if (outCall == NULL) return false;
 
-        CallFloatTableData *inCall = this->dataInSlot.CallAs<CallFloatTableData>();
+        TableDataCall *inCall = this->dataInSlot.CallAs<TableDataCall>();
         if (inCall == NULL) return false;
 
         inCall->SetFrameID(outCall->GetFrameID());
@@ -181,14 +181,14 @@ bool FloatTableColumnScaler::processData(core::Call &c) {
 
 
 /*
- * FloatTableColumnSelector::getExtent
+ * TableColumnSelector::getExtent
  */
-bool FloatTableColumnScaler::getExtent(core::Call &c) {
+bool TableColumnScaler::getExtent(core::Call &c) {
     try {
-        CallFloatTableData *outCall = dynamic_cast<CallFloatTableData *>(&c);
+        TableDataCall *outCall = dynamic_cast<TableDataCall *>(&c);
         if (outCall == NULL) return false;
 
-        CallFloatTableData *inCall = this->dataInSlot.CallAs<CallFloatTableData>();
+        TableDataCall *inCall = this->dataInSlot.CallAs<TableDataCall>();
         if (inCall == NULL) return false;
 
         inCall->SetFrameID(outCall->GetFrameID());

@@ -19,9 +19,9 @@ namespace datatools {
 namespace table {
 
     /**
-     * This module converts from a generic float table to the MultiParticleDataCall.
+     * This module converts from a generic table to the MultiParticleDataCall.
      */
-    class FloatTableObserverPlane : public megamol::core::Module {
+    class TableObserverPlane : public megamol::core::Module {
 
     public:
 
@@ -31,7 +31,7 @@ namespace table {
          * @return The name of this module.
          */
         static inline const char *ClassName(void)  {
-            return "FloatTableObserverPlane";
+            return "TableObserverPlane";
         }
 
         /**
@@ -55,12 +55,12 @@ namespace table {
         /**
          * Initialises a new instance.
          */
-        FloatTableObserverPlane(void);
+        TableObserverPlane(void);
 
         /**
          * Finalises an instance.
          */
-        virtual ~FloatTableObserverPlane(void);
+        virtual ~TableObserverPlane(void);
 
     protected:
 
@@ -82,7 +82,7 @@ namespace table {
 
     private:
 
-        bool assertData(table::CallFloatTableData *ft, megamol::core::view::CallClipPlane *cp, table::CallFloatTableData& out);
+        bool assertData(table::TableDataCall *ft, megamol::core::view::CallClipPlane *cp, table::TableDataCall& out);
 
 		bool anythingDirty();
 
@@ -106,7 +106,7 @@ namespace table {
         core::CalleeSlot slotCallObservedTable;
 
         /** The data callee slot. */
-        core::CallerSlot slotCallFloatTable;
+        core::CallerSlot slotCallInputTable;
 
         /** The clip plane slot defining the observation plane. */
         core::CallerSlot slotCallClipPlane;
@@ -151,7 +151,7 @@ namespace table {
 
     };
 
-} /* end namespace floattable */
+} /* end namespace table */
 } /* end namespace datatools */
 } /* end namespace stdplugin */
 } /* end namespace megamol */

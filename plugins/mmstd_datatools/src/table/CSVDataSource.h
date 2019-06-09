@@ -59,12 +59,12 @@ namespace table {
 
         SIZE_T dataHash;
 
-        std::vector<CallFloatTableData::ColumnInfo> columns;
+        std::vector<TableDataCall::ColumnInfo> columns;
         std::vector<float> values;
 
     };
 
-} /* end namespace floattable */
+} /* end namespace table */
 } /* end namespace datatools */
 } /* end namespace stdplugin */
 } /* end namespace megamol */

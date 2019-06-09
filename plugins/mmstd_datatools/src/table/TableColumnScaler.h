@@ -1,5 +1,5 @@
 /*
- * FloatTableColumnScaler.h
+ * TableColumnScaler.h
  *
  * Copyright (C) 2016-2016 by VISUS (University of Stuttgart)
  * Alle Rechte vorbehalten.
@@ -25,7 +25,7 @@ namespace table {
 /**
  * Module to scale selected columns with a given value.
  */
-class FloatTableColumnScaler : public core::Module {
+class TableColumnScaler : public core::Module {
 public:
     /** Name of this Module. */
     static std::string ModuleName;
@@ -45,7 +45,7 @@ public:
      * @return A human readable description of this module.
      */
     static inline const char *Description(void) {
-        return "Scales specified float table columns";
+        return "Scales specified table columns";
     }
 
     /**
@@ -58,10 +58,10 @@ public:
     }
 
     /** ctor */
-    FloatTableColumnScaler(void);
+    TableColumnScaler(void);
 
     /** dtor */
-    virtual ~FloatTableColumnScaler(void);
+    virtual ~TableColumnScaler(void);
 protected:
     /**
      * Implementation of 'Create'.
@@ -91,12 +91,12 @@ private:
 
     size_t datahash;
 
-    std::vector<CallFloatTableData::ColumnInfo> columnInfos;
+    std::vector<TableDataCall::ColumnInfo> columnInfos;
 
     std::vector<float> data;
-}; /* end class FloatTableColumnScaler */
+}; /* end class TableColumnScaler */
 
-} /* end namespace floattable */
+} /* end namespace table */
 } /* end namespace datatools */
 } /* end namespace stdplugin */
 } /* end namespace megamol */

@@ -128,8 +128,8 @@ dataHash(0), columns(), values() {
     this->shuffleSlot.SetParameter(new core::param::BoolParam(false));
     this->MakeSlotAvailable(&this->shuffleSlot);
 
-    this->getDataSlot.SetCallback(CallFloatTableData::ClassName(), "GetData", &CSVDataSource::getDataCallback);
-    this->getDataSlot.SetCallback(CallFloatTableData::ClassName(), "GetHash", &CSVDataSource::getHashCallback);
+    this->getDataSlot.SetCallback(TableDataCall::ClassName(), "GetData", &CSVDataSource::getDataCallback);
+    this->getDataSlot.SetCallback(TableDataCall::ClassName(), "GetHash", &CSVDataSource::getHashCallback);
     this->MakeSlotAvailable(&this->getDataSlot);
 }
 
@@ -262,9 +262,9 @@ void CSVDataSource::assertData(void) {
         if (headerTypesSlot.Param<core::param::BoolParam>()->Value()) {
             vislib::Array<vislib::StringA> tokens(vislib::StringTokeniserA::Split(file[firstHeaRow], colSep, false));
             for (SIZE_T i = 0; i < dimNames.Count(); i++) {
-                CallFloatTableData::ColumnType type = CallFloatTableData::ColumnType::QUANTITATIVE;
+                TableDataCall::ColumnType type = TableDataCall::ColumnType::QUANTITATIVE;
                 if (tokens.Count() > i && tokens[i].Equals("CATEGORICAL", true)) {
-                    type = CallFloatTableData::ColumnType::CATEGORICAL;
+                    type = TableDataCall::ColumnType::CATEGORICAL;
                     hasCatDims = true;
                 }
                 this->columns[i].SetName(dimNames[i].PeekBuffer())
@@ -275,7 +275,7 @@ void CSVDataSource::assertData(void) {
         } else {
             for (SIZE_T i = 0; i < dimNames.Count(); i++) {
                 this->columns[i].SetName(dimNames[i].PeekBuffer())
-                    .SetType(CallFloatTableData::ColumnType::QUANTITATIVE)
+                    .SetType(TableDataCall::ColumnType::QUANTITATIVE)
                     .SetMinimumValue(0.0f)
                     .SetMaximumValue(1.0f);
             }
@@ -324,7 +324,7 @@ void CSVDataSource::assertData(void) {
                     ++end;
                 }
 
-                if (this->columns[col].Type() == CallFloatTableData::ColumnType::QUANTITATIVE) {
+                if (this->columns[col].Type() == TableDataCall::ColumnType::QUANTITATIVE) {
                     if (decType == DecimalSeparator::DE) {
                         for (char *ez = const_cast<char*>(start); ez != end; ++ez) if (*ez == ',') *ez = '.';
                     }
@@ -333,7 +333,7 @@ void CSVDataSource::assertData(void) {
                     if (std::isnan(value)) {
                         hasInvalids = true;
                     }
-                } else if (this->columns[col].Type() == CallFloatTableData::ColumnType::CATEGORICAL) {
+                } else if (this->columns[col].Type() == TableDataCall::ColumnType::CATEGORICAL) {
                     assert(hasCatDims);
                     std::map<std::string, float>::iterator cmi = catMap.find(start);
                     if (cmi == catMap.end()) {
@@ -383,7 +383,7 @@ void CSVDataSource::assertData(void) {
         // Merge categorical data so that all `value indices` map to one `string key`
         if (hasCatDims) {
             for (size_t c = 0; c < colCnt; ++c) {
-                if (columns[c].Type() != CallFloatTableData::ColumnType::CATEGORICAL) continue;
+                if (columns[c].Type() != TableDataCall::ColumnType::CATEGORICAL) continue;
                 std::map<int, int> catRemap;
                 std::map<std::string, int> catMap;
                 for (int ci = static_cast<int>(c) * thCnt; ci < static_cast<int>(c + 1) * thCnt; ++ci) {
@@ -459,7 +459,7 @@ void CSVDataSource::shuffleData() {
 }
 
 bool CSVDataSource::getDataCallback(core::Call& caller) {
-    CallFloatTableData *tfd = dynamic_cast<CallFloatTableData*>(&caller);
+    TableDataCall *tfd = dynamic_cast<TableDataCall*>(&caller);
     if (tfd == nullptr) return false;
 
     this->assertData();
@@ -477,7 +477,7 @@ bool CSVDataSource::getDataCallback(core::Call& caller) {
 }
 
 bool CSVDataSource::getHashCallback(core::Call& caller) {
-    CallFloatTableData *tfd = dynamic_cast<CallFloatTableData*>(&caller);
+    TableDataCall *tfd = dynamic_cast<TableDataCall*>(&caller);
     if (tfd == nullptr) return false;
 
     this->assertData();
