@@ -26,8 +26,9 @@
 #include <limits>
 #include <omp.h>
 
+using namespace megamol::stdplugin::datatools;
+using namespace megamol::stdplugin::datatools::table;
 using namespace megamol;
-using namespace megamol::stdplugin;
 
 enum class DecimalSeparator : int {
     Unknown = 0,
@@ -83,7 +84,7 @@ double parseValue(const char* tokenStart, const char* tokenEnd) {
     return NAN;
 }
 
-datatools::floattable::CSVDataSource::CSVDataSource(void) : core::Module(),
+CSVDataSource::CSVDataSource(void) : core::Module(),
 filenameSlot("filename", "Filename to read from"),
 skipPrefaceSlot("skipPreface", "Number of lines to skip before parsing"),
 headerNamesSlot("headerNames", "Interpret the first data row as column names"),
@@ -132,21 +133,21 @@ dataHash(0), columns(), values() {
     this->MakeSlotAvailable(&this->getDataSlot);
 }
 
-datatools::floattable::CSVDataSource::~CSVDataSource(void) {
+CSVDataSource::~CSVDataSource(void) {
     this->Release();
 }
 
-bool datatools::floattable::CSVDataSource::create(void) {
+bool CSVDataSource::create(void) {
     // nothing to do
     return true;
 }
 
-void datatools::floattable::CSVDataSource::release(void) {
+void CSVDataSource::release(void) {
     this->columns.clear();
     this->values.clear();
 }
 
-void datatools::floattable::CSVDataSource::assertData(void) {
+void CSVDataSource::assertData(void) {
     if (!this->filenameSlot.IsDirty()
         && !this->skipPrefaceSlot.IsDirty()
         && !this->headerNamesSlot.IsDirty()
@@ -439,7 +440,7 @@ void datatools::floattable::CSVDataSource::assertData(void) {
     this->dataHash++;
 }
 
-void datatools::floattable::CSVDataSource::shuffleData() {
+void CSVDataSource::shuffleData() {
     if (!this->shuffleSlot.Param<core::param::BoolParam>()->Value()) {
                 // Do not shuffle, unless requested
         return;
@@ -457,7 +458,7 @@ void datatools::floattable::CSVDataSource::shuffleData() {
     }
 }
 
-bool datatools::floattable::CSVDataSource::getDataCallback(core::Call& caller) {
+bool CSVDataSource::getDataCallback(core::Call& caller) {
     CallFloatTableData *tfd = dynamic_cast<CallFloatTableData*>(&caller);
     if (tfd == nullptr) return false;
 
@@ -475,7 +476,7 @@ bool datatools::floattable::CSVDataSource::getDataCallback(core::Call& caller) {
     return true;
 }
 
-bool datatools::floattable::CSVDataSource::getHashCallback(core::Call& caller) {
+bool CSVDataSource::getHashCallback(core::Call& caller) {
     CallFloatTableData *tfd = dynamic_cast<CallFloatTableData*>(&caller);
     if (tfd == nullptr) return false;
 
@@ -489,7 +490,7 @@ bool datatools::floattable::CSVDataSource::getHashCallback(core::Call& caller) {
     return true;
 }
 
-bool datatools::floattable::CSVDataSource::clearData(core::param::ParamSlot& caller) {
+bool CSVDataSource::clearData(core::param::ParamSlot& caller) {
     this->columns.clear();
     this->values.clear();
 

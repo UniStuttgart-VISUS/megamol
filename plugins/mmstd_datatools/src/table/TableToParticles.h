@@ -81,7 +81,7 @@ namespace datatools {
 
     private:
 
-		bool assertData(floattable::CallFloatTableData *ft);
+		bool assertData(table::CallFloatTableData *ft);
 
 		bool anythingDirty();
 

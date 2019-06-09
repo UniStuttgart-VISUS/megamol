@@ -14,11 +14,14 @@
 #include "vislib/sys/Log.h"
 #include <limits>
 
+using namespace megamol::stdplugin::datatools;
+using namespace megamol::stdplugin::datatools::table;
+using namespace megamol;
 
-std::string megamol::stdplugin::datatools::floattable::FloatTableColumnFilter::ModuleName
+std::string FloatTableColumnFilter::ModuleName
     = std::string("FloatTableColumnFilter");
 
-megamol::stdplugin::datatools::floattable::FloatTableColumnFilter::FloatTableColumnFilter(void) :
+FloatTableColumnFilter::FloatTableColumnFilter(void) :
     core::Module(),
     dataOutSlot("dataOut", "Ouput"),
     dataInSlot("dataIn", "Input"),
@@ -41,18 +44,18 @@ megamol::stdplugin::datatools::floattable::FloatTableColumnFilter::FloatTableCol
     this->MakeSlotAvailable(&this->selectionStringSlot);
 }
 
-megamol::stdplugin::datatools::floattable::FloatTableColumnFilter::~FloatTableColumnFilter(void) {
+FloatTableColumnFilter::~FloatTableColumnFilter(void) {
     this->Release();
 }
 
-bool megamol::stdplugin::datatools::floattable::FloatTableColumnFilter::create(void) {
+bool FloatTableColumnFilter::create(void) {
     return true;
 }
 
-void megamol::stdplugin::datatools::floattable::FloatTableColumnFilter::release(void) {
+void FloatTableColumnFilter::release(void) {
 }
 
-bool megamol::stdplugin::datatools::floattable::FloatTableColumnFilter::processData(core::Call &c) {
+bool FloatTableColumnFilter::processData(core::Call &c) {
     try {
         CallFloatTableData *outCall = dynamic_cast<CallFloatTableData *>(&c);
         if (outCall == NULL) return false;
@@ -139,7 +142,7 @@ bool megamol::stdplugin::datatools::floattable::FloatTableColumnFilter::processD
     return true;
 }
 
-bool megamol::stdplugin::datatools::floattable::FloatTableColumnFilter::getExtent(core::Call &c) {
+bool FloatTableColumnFilter::getExtent(core::Call &c) {
 	try {
 		CallFloatTableData *outCall = dynamic_cast<CallFloatTableData *>(&c);
 		if (outCall == NULL) return false;

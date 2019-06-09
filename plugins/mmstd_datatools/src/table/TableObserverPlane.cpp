@@ -17,14 +17,14 @@
 #include <cmath>
 
 using namespace megamol::stdplugin::datatools;
-using namespace megamol::stdplugin::datatools::floattable;
+using namespace megamol::stdplugin::datatools::table;
 using namespace megamol;
 
 /*
  * FloatTableToParticles::FloatTableObserverPlane
  */
 FloatTableObserverPlane::FloatTableObserverPlane(void) : Module(),
-        slotCallFloatTable("floattable", "float table input call"),
+        slotCallFloatTable("table", "float table input call"),
         slotCallClipPlane("clipplabe", "clip plane input call"),
         slotCallObservedTable("observation", "resulting float table"),
         slotColumnX("xcolumnname", "The name of the column holding the x-coordinate."),
@@ -82,16 +82,16 @@ FloatTableObserverPlane::FloatTableObserverPlane(void) : Module(),
 
     /* Register calls. */
     this->slotCallObservedTable.SetCallback(
-        stdplugin::datatools::floattable::CallFloatTableData::ClassName(),
+        stdplugin::datatools::table::CallFloatTableData::ClassName(),
         "GetData",
         &FloatTableObserverPlane::getObservedData);
     this->slotCallObservedTable.SetCallback(
-        stdplugin::datatools::floattable::CallFloatTableData::ClassName(),
+        stdplugin::datatools::table::CallFloatTableData::ClassName(),
         "GetHash",
         &FloatTableObserverPlane::getHash);
     this->MakeSlotAvailable(&this->slotCallObservedTable);
 
-    this->slotCallFloatTable.SetCompatibleCall<floattable::CallFloatTableDataDescription>();
+    this->slotCallFloatTable.SetCompatibleCall<table::CallFloatTableDataDescription>();
     this->MakeSlotAvailable(&this->slotCallFloatTable);
     this->slotCallClipPlane.SetCompatibleCall<megamol::core::view::CallClipPlaneDescription>();
     this->MakeSlotAvailable(&this->slotCallClipPlane);
@@ -173,7 +173,7 @@ bool FloatTableObserverPlane::pushColumnIndex(std::vector<size_t>& cols, const v
     }
 }
 
-bool FloatTableObserverPlane::assertData(floattable::CallFloatTableData *ft, megamol::core::view::CallClipPlane *cp, floattable::CallFloatTableData& out) {
+bool FloatTableObserverPlane::assertData(table::CallFloatTableData *ft, megamol::core::view::CallClipPlane *cp, table::CallFloatTableData& out) {
     if (this->inputHash == ft->DataHash() && !anythingDirty()) return true;
     (*ft)();
     if (this->inputHash != ft->DataHash()) {
@@ -322,9 +322,9 @@ bool FloatTableObserverPlane::assertData(floattable::CallFloatTableData *ft, meg
  */
 bool FloatTableObserverPlane::getObservedData(core::Call& call) {
     try {
-        floattable::CallFloatTableData& out = dynamic_cast<
-            floattable::CallFloatTableData&>(call);
-        floattable::CallFloatTableData *ft = this->slotCallFloatTable.CallAs<floattable::CallFloatTableData>();
+        table::CallFloatTableData& out = dynamic_cast<
+            table::CallFloatTableData&>(call);
+        table::CallFloatTableData *ft = this->slotCallFloatTable.CallAs<table::CallFloatTableData>();
         if (ft == NULL) return false;
         megamol::core::view::CallClipPlane *cp = this->slotCallClipPlane.CallAs<megamol::core::view::CallClipPlane>();
         if (cp == NULL) return false;
@@ -353,9 +353,9 @@ bool FloatTableObserverPlane::getObservedData(core::Call& call) {
  */
 bool FloatTableObserverPlane::getHash(core::Call& call) {
     try {
-        floattable::CallFloatTableData& out = dynamic_cast<
-            floattable::CallFloatTableData&>(call);
-        floattable::CallFloatTableData *ft = this->slotCallFloatTable.CallAs<floattable::CallFloatTableData>();
+        table::CallFloatTableData& out = dynamic_cast<
+            table::CallFloatTableData&>(call);
+        table::CallFloatTableData *ft = this->slotCallFloatTable.CallAs<table::CallFloatTableData>();
         if (ft == NULL) return false;
         megamol::core::view::CallClipPlane *cp = this->slotCallClipPlane.CallAs<megamol::core::view::CallClipPlane>();
         if (cp == NULL) return false;

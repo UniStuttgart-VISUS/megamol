@@ -16,7 +16,7 @@
 namespace megamol {
 namespace stdplugin {
 namespace datatools {
-namespace floattable {
+namespace table {
 
     /**
      * This module converts from a generic float table to the MultiParticleDataCall.
@@ -82,7 +82,7 @@ namespace floattable {
 
     private:
 
-        bool assertData(floattable::CallFloatTableData *ft, megamol::core::view::CallClipPlane *cp, floattable::CallFloatTableData& out);
+        bool assertData(table::CallFloatTableData *ft, megamol::core::view::CallClipPlane *cp, table::CallFloatTableData& out);
 
 		bool anythingDirty();
 

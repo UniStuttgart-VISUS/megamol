@@ -188,7 +188,7 @@ private:
 
     size_t dataHash;
 
-    stdplugin::datatools::floattable::CallFloatTableData* floatTable;
+    stdplugin::datatools::table::CallFloatTableData* floatTable;
 
     core::view::CallGetTransferFunction* transferFunction;
 

@@ -15,18 +15,22 @@
 #include "vislib/sys/Log.h"
 #include <limits>
 
+using namespace megamol::stdplugin::datatools;
+using namespace megamol::stdplugin::datatools::table;
+using namespace megamol;
+
 
 /*
  * FloatTableColumnScaler::ModuleName
  */
-std::string megamol::stdplugin::datatools::floattable::FloatTableColumnScaler::ModuleName
+std::string FloatTableColumnScaler::ModuleName
     = std::string("FloatTableColumnScaler");
 
 
 /*
  * FloatTableColumnSelector::FloatTableColumnSelector
  */
-megamol::stdplugin::datatools::floattable::FloatTableColumnScaler::FloatTableColumnScaler(void) :
+FloatTableColumnScaler::FloatTableColumnScaler(void) :
     core::Module(),
     dataInSlot("dataIn", "Input"),
     dataOutSlot("dataOut", "Output"),
@@ -56,7 +60,7 @@ megamol::stdplugin::datatools::floattable::FloatTableColumnScaler::FloatTableCol
 /*
  * FloatTableColumnSelector::~FloatTableColumnSelector
  */
-megamol::stdplugin::datatools::floattable::FloatTableColumnScaler::~FloatTableColumnScaler(void) {
+FloatTableColumnScaler::~FloatTableColumnScaler(void) {
     this->Release();
 }
 
@@ -64,7 +68,7 @@ megamol::stdplugin::datatools::floattable::FloatTableColumnScaler::~FloatTableCo
 /*
  * FloatTableColumnSelector::create
  */
-bool megamol::stdplugin::datatools::floattable::FloatTableColumnScaler::create(void) {
+bool FloatTableColumnScaler::create(void) {
     return true;
 }
 
@@ -72,7 +76,7 @@ bool megamol::stdplugin::datatools::floattable::FloatTableColumnScaler::create(v
 /*
  * FloatTableColumnSelector::release
  */
-void megamol::stdplugin::datatools::floattable::FloatTableColumnScaler::release(void) {
+void FloatTableColumnScaler::release(void) {
 
 }
 
@@ -80,7 +84,7 @@ void megamol::stdplugin::datatools::floattable::FloatTableColumnScaler::release(
 /*
  * FloatTableColumnSelector::processData
  */
-bool megamol::stdplugin::datatools::floattable::FloatTableColumnScaler::processData(core::Call &c) {
+bool FloatTableColumnScaler::processData(core::Call &c) {
     try {
         CallFloatTableData *outCall = dynamic_cast<CallFloatTableData *>(&c);
         if (outCall == NULL) return false;
@@ -179,7 +183,7 @@ bool megamol::stdplugin::datatools::floattable::FloatTableColumnScaler::processD
 /*
  * FloatTableColumnSelector::getExtent
  */
-bool megamol::stdplugin::datatools::floattable::FloatTableColumnScaler::getExtent(core::Call &c) {
+bool FloatTableColumnScaler::getExtent(core::Call &c) {
     try {
         CallFloatTableData *outCall = dynamic_cast<CallFloatTableData *>(&c);
         if (outCall == NULL) return false;

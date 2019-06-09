@@ -14,14 +14,11 @@
 #include "vislib/sys/FastFile.h"
 #include "vislib/String.h"
 
+using namespace megamol::stdplugin::datatools;
+using namespace megamol::stdplugin::datatools::table;
 using namespace megamol;
-using namespace megamol::stdplugin;
 
-
-/*
- * datatools::floattable::MMFTDataWriter::MMFTDataWriter
- */
-datatools::floattable::MMFTDataWriter::MMFTDataWriter(void) : core::AbstractDataWriter(),
+MMFTDataWriter::MMFTDataWriter(void) : core::AbstractDataWriter(),
         filenameSlot("filename", "The path to the MMFT file to be written"),
         dataSlot("data", "The slot requesting the data to be written") {
 
@@ -33,33 +30,21 @@ datatools::floattable::MMFTDataWriter::MMFTDataWriter(void) : core::AbstractData
 }
 
 
-/*
- * datatools::floattable::MMFTDataWriter::~MMFTDataWriter
- */
-datatools::floattable::MMFTDataWriter::~MMFTDataWriter(void) {
+MMFTDataWriter::~MMFTDataWriter(void) {
     this->Release();
 }
 
 
-/*
- * datatools::floattable::MMFTDataWriter::create
- */
-bool datatools::floattable::MMFTDataWriter::create(void) {
+bool MMFTDataWriter::create(void) {
     return true;
 }
 
 
-/*
- * datatools::floattable::MMFTDataWriter::release
- */
-void datatools::floattable::MMFTDataWriter::release(void) {
+void MMFTDataWriter::release(void) {
 }
 
 
-/*
- * datatools::floattable::MMFTDataWriter::run
- */
-bool datatools::floattable::MMFTDataWriter::run(void) {
+bool MMFTDataWriter::run(void) {
     using vislib::sys::Log;
     vislib::TString filename(this->filenameSlot.Param<core::param::FilePathParam>()->Value());
     if (filename.IsEmpty()) {
@@ -126,10 +111,7 @@ bool datatools::floattable::MMFTDataWriter::run(void) {
 }
 
 
-/*
- * datatools::floattable::MMFTDataWriter::getCapabilities
- */
-bool datatools::floattable::MMFTDataWriter::getCapabilities(core::DataWriterCtrlCall& call) {
+bool MMFTDataWriter::getCapabilities(core::DataWriterCtrlCall& call) {
     call.SetAbortable(false);
     return true;
 }

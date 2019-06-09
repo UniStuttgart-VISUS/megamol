@@ -32,7 +32,7 @@ DiagramSeries::DiagramSeries(void)
         DiagramSeriesCall::FunctionName(DiagramSeriesCall::CallForGetSeries), &DiagramSeries::seriesSelectionCB);
     this->MakeSlotAvailable(&this->seriesOutSlot);
 
-    this->ftInSlot.SetCompatibleCall<floattable::CallFloatTableDataDescription>();
+    this->ftInSlot.SetCompatibleCall<table::CallFloatTableDataDescription>();
     this->MakeSlotAvailable(&this->ftInSlot);
 
     core::param::FlexEnumParam* columnSelectorEP = new core::param::FlexEnumParam("undef");
@@ -76,7 +76,7 @@ bool megamol::infovis::DiagramSeries::seriesSelectionCB(core::Call& c) {
 
         DiagramSeriesCall* inSeries = this->seriesInSlot.CallAs<DiagramSeriesCall>();
 
-        floattable::CallFloatTableData* ft = this->ftInSlot.CallAs<floattable::CallFloatTableData>();
+        table::CallFloatTableData* ft = this->ftInSlot.CallAs<table::CallFloatTableData>();
         if (ft == NULL) return false;
         if (!(*ft)(1)) return false;
         if (!(*ft)(0)) return false;
@@ -104,7 +104,7 @@ bool megamol::infovis::DiagramSeries::seriesSelectionCB(core::Call& c) {
 /*
  * DiagramSeries::assertData
  */
-bool DiagramSeries::assertData(const floattable::CallFloatTableData* const ft) {
+bool DiagramSeries::assertData(const table::CallFloatTableData* const ft) {
     if (this->inputHash == ft->DataHash() && !isAnythingDirty()) return true;
 
     if (this->inputHash != ft->DataHash()) {
@@ -161,7 +161,7 @@ void DiagramSeries::resetDirtyFlags(void) {
  * DiagramSeries::getColumnIdx
  */
 bool DiagramSeries::getColumnIdx(
-    uint32_t& colIdx, const vislib::TString& columnName, const floattable::CallFloatTableData* const ft) const {
+    uint32_t& colIdx, const vislib::TString& columnName, const table::CallFloatTableData* const ft) const {
     std::string name = std::string(T2A(columnName));
 
     for (size_t i = 0; i < ft->GetColumnsCount(); i++) {

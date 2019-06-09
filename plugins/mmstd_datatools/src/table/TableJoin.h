@@ -20,7 +20,7 @@
 namespace megamol {
 namespace stdplugin {
 namespace datatools {
-namespace floattable {
+namespace table {
 
 /**
  * This module joins two float tables by copying the values together into one matrix

@@ -78,7 +78,7 @@ private:
     /**
      * Updates selector parameter and creates info item about selected column.
      */
-    bool assertData(const stdplugin::datatools::floattable::CallFloatTableData* const ft);
+    bool assertData(const stdplugin::datatools::table::CallFloatTableData* const ft);
 
     /**
      * Checks if any parameter is dirty.
@@ -100,7 +100,7 @@ private:
      * @return True, if column exists.
      */
     bool getColumnIdx(uint32_t& colIdx, const vislib::TString& columnName,
-        const stdplugin::datatools::floattable::CallFloatTableData* const ft) const;
+        const stdplugin::datatools::table::CallFloatTableData* const ft) const;
 
     /** Selected columns output call */
     core::CalleeSlot seriesOutSlot;

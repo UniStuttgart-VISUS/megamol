@@ -19,7 +19,7 @@ using namespace megamol;
  */
 FloatTableToParticles::FloatTableToParticles(void) : Module(),
         slotCallMultiPart("multidata", "Provides the data as MultiParticle call."),
-        slotCallFloatTable("floattable", "float table input call"),
+        slotCallFloatTable("table", "float table input call"),
         slotColumnR("redcolumnname", "The name of the column holding the red colour channel value."),
         slotColumnG("greencolumnname", "The name of the column holding the green colour channel value."),
         slotColumnB("bluecolumnname", "The name of the column holding the blue colour channel value."),
@@ -98,7 +98,7 @@ FloatTableToParticles::FloatTableToParticles(void) : Module(),
         &FloatTableToParticles::getMultiparticleExtent);
     this->MakeSlotAvailable(&this->slotCallMultiPart);
 
-    this->slotCallFloatTable.SetCompatibleCall<floattable::CallFloatTableDataDescription>();
+    this->slotCallFloatTable.SetCompatibleCall<table::CallFloatTableDataDescription>();
     this->MakeSlotAvailable(&this->slotCallFloatTable);
 }
 
@@ -171,7 +171,7 @@ bool FloatTableToParticles::pushColumnIndex(std::vector<size_t>& cols, const vis
     }
 }
 
-bool FloatTableToParticles::assertData(floattable::CallFloatTableData *ft) {
+bool FloatTableToParticles::assertData(table::CallFloatTableData *ft) {
     if (this->inputHash == ft->DataHash() && !anythingDirty()) return true;
 
     if (this->inputHash != ft->DataHash()) {
@@ -293,7 +293,7 @@ bool FloatTableToParticles::getMultiParticleData(core::Call& call) {
     try {
         core::moldyn::MultiParticleDataCall& c = dynamic_cast<
             core::moldyn::MultiParticleDataCall&>(call);
-        floattable::CallFloatTableData *ft = this->slotCallFloatTable.CallAs<floattable::CallFloatTableData>();
+        table::CallFloatTableData *ft = this->slotCallFloatTable.CallAs<table::CallFloatTableData>();
         if (ft == NULL) return false;
         (*ft)();
 
@@ -364,7 +364,7 @@ bool FloatTableToParticles::getMultiparticleExtent(core::Call& call) {
     try {
         core::moldyn::MultiParticleDataCall& c = dynamic_cast<
             core::moldyn::MultiParticleDataCall&>(call);
-        floattable::CallFloatTableData *ft = this->slotCallFloatTable.CallAs<floattable::CallFloatTableData>();
+        table::CallFloatTableData *ft = this->slotCallFloatTable.CallAs<table::CallFloatTableData>();
         if (ft == NULL) return false;
         (*ft)();
 

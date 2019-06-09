@@ -29,7 +29,7 @@ FloatTabletoADIOS::FloatTabletoADIOS(void)
         CallADIOSData::ClassName(), CallADIOSData::FunctionName(1), &FloatTabletoADIOS::getHeaderCallback);
     this->MakeSlotAvailable(&this->adiosSlot);
 
-    this->ftSlot.SetCompatibleCall<stdplugin::datatools::floattable::CallFloatTableDataDescription>();
+    this->ftSlot.SetCompatibleCall<stdplugin::datatools::table::CallFloatTableDataDescription>();
     this->MakeSlotAvailable(&this->ftSlot);
 }
 
@@ -43,7 +43,7 @@ bool FloatTabletoADIOS::getDataCallback(core::Call& call) {
     CallADIOSData* cad = dynamic_cast<CallADIOSData*>(&call);
     if (cad == nullptr) return false;
 
-    stdplugin::datatools::floattable::CallFloatTableData* cftd = this->ftSlot.CallAs<stdplugin::datatools::floattable::CallFloatTableData>();
+    stdplugin::datatools::table::CallFloatTableData* cftd = this->ftSlot.CallAs<stdplugin::datatools::table::CallFloatTableData>();
     if (cftd == nullptr) return false;
 
     if (!(*cftd)(1)) return false;
@@ -85,7 +85,7 @@ bool FloatTabletoADIOS::getHeaderCallback(core::Call& call) {
     CallADIOSData* cad = dynamic_cast<CallADIOSData*>(&call);
     if (cad == nullptr) return false;
 
-    stdplugin::datatools::floattable::CallFloatTableData* cftd = this->ftSlot.CallAs<stdplugin::datatools::floattable::CallFloatTableData>();
+    stdplugin::datatools::table::CallFloatTableData* cftd = this->ftSlot.CallAs<stdplugin::datatools::table::CallFloatTableData>();
     if (cftd == nullptr) return false;
 
     if (!(*cftd)(1)) return false;

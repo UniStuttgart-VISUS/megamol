@@ -26,15 +26,13 @@ PCAProjection::PCAProjection(void)
     , dataInHash(0)
     , columnInfos() {
 
-    this->dataInSlot.SetCompatibleCall<megamol::stdplugin::datatools::floattable::CallFloatTableDataDescription>();
+    this->dataInSlot.SetCompatibleCall<megamol::stdplugin::datatools::table::CallFloatTableDataDescription>();
     this->MakeSlotAvailable(&this->dataInSlot);
 
-    this->dataOutSlot.SetCallback(megamol::stdplugin::datatools::floattable::CallFloatTableData::ClassName(),
-        megamol::stdplugin::datatools::floattable::CallFloatTableData::FunctionName(0),
-        &PCAProjection::getDataCallback);
-    this->dataOutSlot.SetCallback(megamol::stdplugin::datatools::floattable::CallFloatTableData::ClassName(),
-        megamol::stdplugin::datatools::floattable::CallFloatTableData::FunctionName(1),
-        &PCAProjection::getHashCallback);
+    this->dataOutSlot.SetCallback(megamol::stdplugin::datatools::table::CallFloatTableData::ClassName(),
+        megamol::stdplugin::datatools::table::CallFloatTableData::FunctionName(0), &PCAProjection::getDataCallback);
+    this->dataOutSlot.SetCallback(megamol::stdplugin::datatools::table::CallFloatTableData::ClassName(),
+        megamol::stdplugin::datatools::table::CallFloatTableData::FunctionName(1), &PCAProjection::getHashCallback);
     this->MakeSlotAvailable(&this->dataOutSlot);
 
     reduceToNSlot << new ::megamol::core::param::IntParam(2);
@@ -57,12 +55,12 @@ void PCAProjection::release(void) {}
 bool PCAProjection::getDataCallback(core::Call& c) {
 
     try {
-        megamol::stdplugin::datatools::floattable::CallFloatTableData* outCall =
-            dynamic_cast<megamol::stdplugin::datatools::floattable::CallFloatTableData*>(&c);
+        megamol::stdplugin::datatools::table::CallFloatTableData* outCall =
+            dynamic_cast<megamol::stdplugin::datatools::table::CallFloatTableData*>(&c);
         if (outCall == NULL) return false;
 
-        megamol::stdplugin::datatools::floattable::CallFloatTableData* inCall =
-            this->dataInSlot.CallAs<megamol::stdplugin::datatools::floattable::CallFloatTableData>();
+        megamol::stdplugin::datatools::table::CallFloatTableData* inCall =
+            this->dataInSlot.CallAs<megamol::stdplugin::datatools::table::CallFloatTableData>();
         if (inCall == NULL) return false;
 
         inCall->SetFrameID(outCall->GetFrameID());
@@ -92,12 +90,12 @@ bool PCAProjection::getDataCallback(core::Call& c) {
 
 bool PCAProjection::getHashCallback(core::Call& c) {
     try {
-        megamol::stdplugin::datatools::floattable::CallFloatTableData* outCall =
-            dynamic_cast<megamol::stdplugin::datatools::floattable::CallFloatTableData*>(&c);
+        megamol::stdplugin::datatools::table::CallFloatTableData* outCall =
+            dynamic_cast<megamol::stdplugin::datatools::table::CallFloatTableData*>(&c);
         if (outCall == NULL) return false;
 
-        megamol::stdplugin::datatools::floattable::CallFloatTableData* inCall =
-            this->dataInSlot.CallAs<megamol::stdplugin::datatools::floattable::CallFloatTableData>();
+        megamol::stdplugin::datatools::table::CallFloatTableData* inCall =
+            this->dataInSlot.CallAs<megamol::stdplugin::datatools::table::CallFloatTableData>();
         if (inCall == NULL) return false;
 
         inCall->SetFrameID(outCall->GetFrameID());
@@ -113,8 +111,7 @@ bool PCAProjection::getHashCallback(core::Call& c) {
     return true;
 }
 
-bool megamol::infovis::PCAProjection::computePCA(
-    megamol::stdplugin::datatools::floattable::CallFloatTableData* inCall) {
+bool megamol::infovis::PCAProjection::computePCA(megamol::stdplugin::datatools::table::CallFloatTableData* inCall) {
 
     // check if inData has changed and if Slots have changed
     if (this->dataInHash == inCall->DataHash()) {
@@ -232,7 +229,7 @@ bool megamol::infovis::PCAProjection::computePCA(
     for (int indexX = 0; indexX < outputDimCount; indexX++) {
         columnInfos[indexX]
             .SetName("PC" + std::to_string(indexX))
-            .SetType(megamol::stdplugin::datatools::floattable::CallFloatTableData::ColumnType::QUANTITATIVE)
+            .SetType(megamol::stdplugin::datatools::table::CallFloatTableData::ColumnType::QUANTITATIVE)
             .SetMinimumValue(result.col(indexX).minCoeff())
             .SetMaximumValue(result.col(indexX).maxCoeff());
     }

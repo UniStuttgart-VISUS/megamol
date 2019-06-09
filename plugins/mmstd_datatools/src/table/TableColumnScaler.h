@@ -20,7 +20,7 @@
 namespace megamol {
 namespace stdplugin {
 namespace datatools {
-namespace floattable {
+namespace table {
 
 /**
  * Module to scale selected columns with a given value.

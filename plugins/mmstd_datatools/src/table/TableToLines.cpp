@@ -26,7 +26,7 @@ using namespace megamol;
 FloatTableToLines::FloatTableToLines(void) : Module(),
         slotTF("gettransferfunction", "Connects to the transfer function module"),
         slotDeployData("linedata", "Provides the data as line data call."),
-        slotCallFloatTable("floattable", "float table input call"),
+        slotCallFloatTable("table", "float table input call"),
         slotColumnR("redcolumnname", "The name of the column holding the red colour channel value."),
         slotColumnG("greencolumnname", "The name of the column holding the green colour channel value."),
         slotColumnB("bluecolumnname", "The name of the column holding the blue colour channel value."),
@@ -103,7 +103,7 @@ FloatTableToLines::FloatTableToLines(void) : Module(),
         &FloatTableToLines::getLineDataExtent);
     this->MakeSlotAvailable(&this->slotDeployData);
 
-    this->slotCallFloatTable.SetCompatibleCall<floattable::CallFloatTableDataDescription>();
+    this->slotCallFloatTable.SetCompatibleCall<table::CallFloatTableDataDescription>();
     this->MakeSlotAvailable(&this->slotCallFloatTable);
 }
 
@@ -174,7 +174,7 @@ bool FloatTableToLines::pushColumnIndex(std::vector<size_t>& cols, const vislib:
     }
 }
 
-bool FloatTableToLines::assertData(floattable::CallFloatTableData *ft) {
+bool FloatTableToLines::assertData(table::CallFloatTableData *ft) {
     if (this->inputHash == ft->DataHash() && !anythingDirty()) return true;
 
     if (this->inputHash != ft->DataHash()) {
@@ -466,7 +466,7 @@ bool FloatTableToLines::getLineData(core::Call& call) {
     try {
         geocalls::LinesDataCall& c = dynamic_cast<
             geocalls::LinesDataCall&>(call);
-        floattable::CallFloatTableData *ft = this->slotCallFloatTable.CallAs<floattable::CallFloatTableData>();
+        table::CallFloatTableData *ft = this->slotCallFloatTable.CallAs<table::CallFloatTableData>();
         if (ft == NULL) return false;
         (*ft)();
 
@@ -514,7 +514,7 @@ bool FloatTableToLines::getLineDataExtent(core::Call& call) {
     try {
         geocalls::LinesDataCall& c = dynamic_cast<
             geocalls::LinesDataCall&>(call);
-        floattable::CallFloatTableData *ft = this->slotCallFloatTable.CallAs<floattable::CallFloatTableData>();
+        table::CallFloatTableData *ft = this->slotCallFloatTable.CallAs<table::CallFloatTableData>();
         if (ft == NULL) return false;
         (*ft)();
 

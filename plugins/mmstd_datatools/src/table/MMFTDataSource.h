@@ -19,7 +19,7 @@
 namespace megamol {
 namespace stdplugin {
 namespace datatools {
-namespace floattable {
+namespace table {
 
     class MMFTDataSource : public core::Module {
     public:

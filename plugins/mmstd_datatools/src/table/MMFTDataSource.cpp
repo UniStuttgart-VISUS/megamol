@@ -14,11 +14,11 @@
 #include "vislib/sys/FastFile.h"
 #include "vislib/String.h"
 
+using namespace megamol::stdplugin::datatools;
+using namespace megamol::stdplugin::datatools::table;
 using namespace megamol;
-using namespace megamol::stdplugin;
 
-
-datatools::floattable::MMFTDataSource::MMFTDataSource(void) : core::Module(),
+MMFTDataSource::MMFTDataSource(void) : core::Module(),
         filenameSlot("filename", "The file name"),
         getDataSlot("getData", "Slot providing the data"),
         dataHash(0), columns(), values() {
@@ -32,21 +32,21 @@ datatools::floattable::MMFTDataSource::MMFTDataSource(void) : core::Module(),
 
 }
 
-datatools::floattable::MMFTDataSource::~MMFTDataSource(void) {
+MMFTDataSource::~MMFTDataSource(void) {
     this->Release();
 }
 
-bool datatools::floattable::MMFTDataSource::create(void) {
+bool MMFTDataSource::create(void) {
     // nothing to do
     return true;
 }
 
-void datatools::floattable::MMFTDataSource::release(void) {
+void MMFTDataSource::release(void) {
     this->columns.clear();
     this->values.clear();
 }
 
-void datatools::floattable::MMFTDataSource::assertData(void) {
+void MMFTDataSource::assertData(void) {
     if (!this->filenameSlot.IsDirty()) {
         return; // nothing to do
     }
@@ -112,7 +112,7 @@ void datatools::floattable::MMFTDataSource::assertData(void) {
     this->dataHash++;
 }
 
-bool datatools::floattable::MMFTDataSource::getDataCallback(core::Call& caller) {
+bool MMFTDataSource::getDataCallback(core::Call& caller) {
     CallFloatTableData *tfd = dynamic_cast<CallFloatTableData*>(&caller);
     if (tfd == nullptr) return false;
 
@@ -130,7 +130,7 @@ bool datatools::floattable::MMFTDataSource::getDataCallback(core::Call& caller) 
     return true;
 }
 
-bool datatools::floattable::MMFTDataSource::getHashCallback(core::Call& caller) {
+bool MMFTDataSource::getHashCallback(core::Call& caller) {
     CallFloatTableData *tfd = dynamic_cast<CallFloatTableData*>(&caller);
     if (tfd == nullptr) return false;
 

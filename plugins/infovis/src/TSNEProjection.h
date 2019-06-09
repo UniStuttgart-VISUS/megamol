@@ -46,7 +46,7 @@ private:
 
     bool getHashCallback(core::Call& c);
 
-    bool computeTSNE(megamol::stdplugin::datatools::floattable::CallFloatTableData* inCall);
+    bool computeTSNE(megamol::stdplugin::datatools::table::CallFloatTableData* inCall);
 
     /** Data output slot */
     CalleeSlot dataOutSlot;
@@ -69,7 +69,7 @@ private:
     size_t dataInHash;
 
     /** Vector storing information about columns */
-    std::vector<megamol::stdplugin::datatools::floattable::CallFloatTableData::ColumnInfo> columnInfos;
+    std::vector<megamol::stdplugin::datatools::table::CallFloatTableData::ColumnInfo> columnInfos;
 
     /** Vector stroing the actual float data */
     std::vector<float> data;

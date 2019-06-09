@@ -10,7 +10,11 @@
 
 #include <limits>
 
-std::string megamol::stdplugin::datatools::floattable::FloatTableJoin::ModuleName
+using namespace megamol::stdplugin::datatools;
+using namespace megamol::stdplugin::datatools::table;
+using namespace megamol;
+
+std::string FloatTableJoin::ModuleName
     = std::string("FloatTableJoin");
 
 size_t hash_combine(size_t lhs, size_t rhs) {
@@ -18,7 +22,7 @@ size_t hash_combine(size_t lhs, size_t rhs) {
     return lhs;
 }
 
-megamol::stdplugin::datatools::floattable::FloatTableJoin::FloatTableJoin(void) : core::Module(),
+FloatTableJoin::FloatTableJoin(void) : core::Module(),
     firstFloatTableInSlot("firstFloatTableIn", "First input"),
     secondFloatTableInSlot("secondFloatTableIn", "Second input"),
     dataOutSlot("dataOut", "Output"),
@@ -39,19 +43,19 @@ megamol::stdplugin::datatools::floattable::FloatTableJoin::FloatTableJoin(void) 
     this->MakeSlotAvailable(&this->dataOutSlot);
 }
 
-megamol::stdplugin::datatools::floattable::FloatTableJoin::~FloatTableJoin(void) {
+FloatTableJoin::~FloatTableJoin(void) {
     this->Release();
 }
 
-bool megamol::stdplugin::datatools::floattable::FloatTableJoin::create(void) {
+bool FloatTableJoin::create(void) {
     return true;
 }
 
-void megamol::stdplugin::datatools::floattable::FloatTableJoin::release(void) {
+void FloatTableJoin::release(void) {
 
 }
 
-bool megamol::stdplugin::datatools::floattable::FloatTableJoin::processData(core::Call &c) {
+bool FloatTableJoin::processData(core::Call &c) {
     try {
         CallFloatTableData *outCall = dynamic_cast<CallFloatTableData *>(&c);
         if (outCall == NULL) return false;
@@ -125,7 +129,7 @@ bool megamol::stdplugin::datatools::floattable::FloatTableJoin::processData(core
     return true;
 }
 
-void megamol::stdplugin::datatools::floattable::FloatTableJoin::concatenate(
+void FloatTableJoin::concatenate(
 	float* const out, const size_t rowCount, const size_t columnCount,
 	const float* const first, const size_t firstRowCount, const size_t firstColumnCount, 
     const float* const second,  const size_t secondRowCount, const size_t secondColumnCount) {
@@ -153,7 +157,7 @@ void megamol::stdplugin::datatools::floattable::FloatTableJoin::concatenate(
     }
 }
 
-bool megamol::stdplugin::datatools::floattable::FloatTableJoin::getExtent(core::Call &c) {
+bool FloatTableJoin::getExtent(core::Call &c) {
     try {
         CallFloatTableData *outCall = dynamic_cast<CallFloatTableData *>(&c);
         if (outCall == NULL) return false;

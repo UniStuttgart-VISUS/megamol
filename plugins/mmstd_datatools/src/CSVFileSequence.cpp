@@ -62,12 +62,12 @@ stdplugin::datatools::CSVFileSequence::CSVFileSequence(void) : core::Module(),
     this->MakeSlotAvailable(&this->useClipBoxAsBBox);
 
     this->outDataSlot.SetCallback(
-        floattable::CallFloatTableData::ClassName(), "GetData", &CSVFileSequence::getDataCallback);
+        table::CallFloatTableData::ClassName(), "GetData", &CSVFileSequence::getDataCallback);
     this->outDataSlot.SetCallback(
-        floattable::CallFloatTableData::ClassName(), "GetHash", &CSVFileSequence::getExtentCallback);
+        table::CallFloatTableData::ClassName(), "GetHash", &CSVFileSequence::getExtentCallback);
     this->MakeSlotAvailable(&this->outDataSlot);
 
-    this->inDataSlot.SetCompatibleCall<floattable::CallFloatTableDataDescription>();
+    this->inDataSlot.SetCompatibleCall<table::CallFloatTableDataDescription>();
     this->MakeSlotAvailable(&this->inDataSlot);
 
     //core::CallDescriptionManager::DescriptionIterator iter(core::CallDescriptionManager::Instance()->GetIterator());
@@ -124,10 +124,10 @@ bool stdplugin::datatools::CSVFileSequence::getDataCallback(core::Call& caller) 
     this->checkParameters();
     this->assertData();
 
-    floattable::CallFloatTableData* pgdc = dynamic_cast<floattable::CallFloatTableData*>(&caller);
+    table::CallFloatTableData* pgdc = dynamic_cast<table::CallFloatTableData*>(&caller);
     if (pgdc == NULL) return false;
 
-    floattable::CallFloatTableData* ggdc = this->inDataSlot.CallAs<floattable::CallFloatTableData>();
+    table::CallFloatTableData* ggdc = this->inDataSlot.CallAs<table::CallFloatTableData>();
     if (ggdc == NULL) return false;
 
     core::param::ParamSlot *fnSlot = this->findFileNameSlot();
@@ -180,10 +180,10 @@ bool stdplugin::datatools::CSVFileSequence::getExtentCallback(core::Call& caller
     this->checkParameters();
     this->assertData();
 
-    floattable::CallFloatTableData* pgdc = dynamic_cast<floattable::CallFloatTableData*>(&caller);
+    table::CallFloatTableData* pgdc = dynamic_cast<table::CallFloatTableData*>(&caller);
     if (pgdc == NULL) return false;
 
-    floattable::CallFloatTableData* ggdc = this->inDataSlot.CallAs<floattable::CallFloatTableData>();
+    table::CallFloatTableData* ggdc = this->inDataSlot.CallAs<table::CallFloatTableData>();
     if (ggdc == NULL) return false;
 
     core::param::ParamSlot *fnSlot = this->findFileNameSlot();
@@ -479,7 +479,7 @@ void stdplugin::datatools::CSVFileSequence::assertData(void) {
         return;
     }
 
-    floattable::CallFloatTableData* gdc = this->inDataSlot.CallAs<floattable::CallFloatTableData>();
+    table::CallFloatTableData* gdc = this->inDataSlot.CallAs<table::CallFloatTableData>();
     if (gdc == NULL) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to get input data call");
         return;
