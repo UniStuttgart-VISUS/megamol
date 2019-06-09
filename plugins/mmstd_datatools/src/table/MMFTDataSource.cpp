@@ -6,9 +6,11 @@
  */
 
 #include "stdafx.h"
-#include "floattable/MMFTDataSource.h"
+#include "MMFTDataSource.h"
+
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/CoreInstance.h"
+
 #include "vislib/sys/FastFile.h"
 #include "vislib/String.h"
 

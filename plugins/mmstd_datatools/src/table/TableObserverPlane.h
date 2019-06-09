@@ -9,7 +9,7 @@
 #include "mmcore/Module.h"
 
 #include "mmcore/param/ParamSlot.h"
-#include "mmstd_datatools/floattable/CallFloatTableData.h"
+#include "mmstd_datatools/table/TableDataCall.h"
 #include "mmcore/view/CallClipPlane.h"
 #include <map>
 

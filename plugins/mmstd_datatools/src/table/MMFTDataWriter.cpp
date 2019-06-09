@@ -6,8 +6,10 @@
  */
 
 #include "stdafx.h"
-#include "floattable/MMFTDataWriter.h"
+#include "MMFTDataWriter.h"
+
 #include "mmcore/param/FilePathParam.h"
+
 #include "vislib/sys/Log.h"
 #include "vislib/sys/FastFile.h"
 #include "vislib/String.h"

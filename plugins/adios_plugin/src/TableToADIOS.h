@@ -10,8 +10,8 @@
 #include "mmcore/Module.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "CallADIOSData.h"
 #include "mmcore/param/ParamSlot.h"
+#include "CallADIOSData.h"
 
 namespace megamol {
 namespace adios {

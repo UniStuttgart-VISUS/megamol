@@ -15,7 +15,7 @@
 
 #include "mmcore/param/ParamSlot.h"
 
-#include "mmstd_datatools/floattable/CallFloatTableData.h"
+#include "mmstd_datatools/table/TableDataCall.h"
 
 namespace megamol {
 namespace stdplugin {

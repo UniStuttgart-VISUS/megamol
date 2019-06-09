@@ -8,7 +8,7 @@
 #include "mmcore/utility/SDFFont.h"
 #include "mmcore/view/CallRender2D.h"
 #include "mmcore/view/Renderer2DModule.h"
-#include "mmstd_datatools/floattable/CallFloatTableData.h"
+#include "mmstd_datatools/table/TableDataCall.h"
 
 #include "vislib/graphics/gl/FramebufferObject.h"
 

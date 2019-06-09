@@ -10,7 +10,7 @@
 
 #include "mmcore/AbstractDataWriter.h"
 #include "mmcore/CallerSlot.h"
-#include "mmstd_datatools/floattable/CallFloatTableData.h"
+#include "mmstd_datatools/table/TableDataCall.h"
 #include "mmcore/param/ParamSlot.h"
 
 

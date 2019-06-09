@@ -6,16 +6,14 @@
  */
 
 #include "stdafx.h"
-#include "FloatTableColumnScaler.h"
-
-#include <limits>
+#include "TableColumnScaler.h"
 
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/StringParam.h"
 
 #include "vislib/StringTokeniser.h"
-
 #include "vislib/sys/Log.h"
+#include <limits>
 
 
 /*

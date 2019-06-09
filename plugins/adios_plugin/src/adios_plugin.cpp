@@ -17,7 +17,7 @@
 #include "ADIOStoMultiParticle.h"
 #include "MultiParticletoADIOS.h"
 #include "adiosWriter.h"
-#include "FloatTabletoADIOS.h"
+#include "TableToADIOS.h"
 
 /* anonymous namespace hides this type from any other object files */
 namespace {

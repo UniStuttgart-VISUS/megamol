@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "FloatTableToParticles.h"
+#include "TableToParticles.h"
 
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/StringParam.h"
@@ -10,7 +10,6 @@
 #include "vislib/sys/Log.h"
 #include "vislib/sys/PerformanceCounter.h"
 #include "vislib/Trace.h"
-
 
 using namespace megamol::stdplugin::datatools;
 using namespace megamol;

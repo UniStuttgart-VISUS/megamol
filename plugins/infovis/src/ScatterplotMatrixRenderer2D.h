@@ -10,7 +10,7 @@
 #include "mmcore/view/CallRender2D.h"
 #include "mmcore/view/MouseFlags.h"
 #include "mmcore/view/Renderer2DModule.h"
-#include "mmstd_datatools/floattable/CallFloatTableData.h"
+#include "mmstd_datatools/table/TableDataCall.h"
 
 #include "FlagCall.h"
 #include "Renderer2D.h"

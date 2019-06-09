@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "FloatTableObserverPlane.h"
+#include "TableObserverPlane.h"
 
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/StringParam.h"
@@ -11,7 +11,6 @@
 #include "vislib/sys/Log.h"
 #include "vislib/sys/PerformanceCounter.h"
 #include "vislib/Trace.h"
-
 #include "vislib/math/Plane.h"
 #include "vislib/math/ShallowPoint.h"
 #include "vislib/math/Matrix4.h"

@@ -3,7 +3,7 @@
 
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/IntParam.h"
-#include "mmstd_datatools/floattable/CallFloatTableData.h"
+#include "mmstd_datatools/table/TableDataCall.h"
 
 #include <Eigen/Dense>
 #include <Eigen/SVD>

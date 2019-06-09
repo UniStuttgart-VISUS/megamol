@@ -10,7 +10,7 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore/view/CallGetTransferFunction.h"
-#include "mmstd_datatools/floattable/CallFloatTableData.h"
+#include "mmstd_datatools/table/TableDataCall.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/graphics/gl/ShaderSource.h"
 

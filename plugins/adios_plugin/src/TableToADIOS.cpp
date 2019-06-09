@@ -6,10 +6,12 @@
  */
 
 #include "stdafx.h"
-#include "FloatTabletoADIOS.h"
+#include "TableToADIOS.h"
+
 #include "CallADIOSData.h"
-#include "mmstd_datatools/floattable/CallFloatTableData.h"
+#include "mmstd_datatools/table/TableDataCall.h"
 #include "mmcore/param/EnumParam.h"
+
 #include "vislib/sys/Log.h"
 
 namespace megamol {

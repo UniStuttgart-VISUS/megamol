@@ -1,6 +1,6 @@
 #include "stdafx.h"
+#include "TableToLines.h"
 
-#include "FloatTableToLines.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FlexEnumParam.h"
@@ -16,7 +16,6 @@
 
 #include "nanoflann.hpp"
 #include "utils.h"
-
 
 using namespace megamol::stdplugin::datatools;
 using namespace megamol;

@@ -6,7 +6,8 @@
  */
 
 #include "stdafx.h"
-#include "FloatTableJoin.h"
+#include "TableJoin.h"
+
 #include <limits>
 
 std::string megamol::stdplugin::datatools::floattable::FloatTableJoin::ModuleName

@@ -6,15 +6,17 @@
  */
 
 #include "stdafx.h"
-#include "floattable/CSVDataSource.h"
+#include "CSVDataSource.h"
+
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/IntParam.h"
-#include "vislib/sys/ASCIIFileBuffer.h"
 #include "mmcore/CoreInstance.h"
+
+#include "vislib/sys/ASCIIFileBuffer.h"
 #include "vislib/StringTokeniser.h"
 #include <sstream>
 #include <vector>

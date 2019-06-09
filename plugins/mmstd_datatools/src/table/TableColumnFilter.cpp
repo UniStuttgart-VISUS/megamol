@@ -6,9 +6,10 @@
  */
 
 #include "stdafx.h"
-#include "FloatTableColumnFilter.h"
+#include "TableColumnFilter.h"
 
 #include "mmcore/param/StringParam.h"
+
 #include "vislib/StringTokeniser.h"
 #include "vislib/sys/Log.h"
 #include <limits>
