@@ -10,7 +10,7 @@
 
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmstd_datatools/floattable/CallFloatTableData.h"
+#include "mmstd_datatools/table/TableDataCall.h"
 #include <map>
 
 namespace megamol {
@@ -18,9 +18,9 @@ namespace stdplugin {
 namespace datatools {
 
     /**
-     * This module converts from a generic float table to the MultiParticleDataCall.
+     * This module converts from a generic table to the MultiParticleDataCall.
      */
-    class FloatTableToParticles : public megamol::core::Module {
+    class TableToParticles : public megamol::core::Module {
 
     public:
 
@@ -30,7 +30,7 @@ namespace datatools {
          * @return The name of this module.
          */
         static inline const char *ClassName(void)  {
-            return "FloatTableToParticles";
+            return "TableToParticles";
         }
 
         /**
@@ -39,7 +39,7 @@ namespace datatools {
          * @return A human readable description of this module.
          */
         static inline const char *Description(void) {
-            return "Converts generic float tables to Particles.";
+            return "Converts generic tables to Particles.";
         }
 
         /**
@@ -54,12 +54,12 @@ namespace datatools {
         /**
          * Initialises a new instance.
          */
-        FloatTableToParticles(void);
+        TableToParticles(void);
 
         /**
          * Finalises an instance.
          */
-        virtual ~FloatTableToParticles(void);
+        virtual ~TableToParticles(void);
 
     protected:
 
@@ -81,7 +81,7 @@ namespace datatools {
 
     private:
 
-		bool assertData(floattable::CallFloatTableData *ft);
+		bool assertData(table::TableDataCall *ft);
 
 		bool anythingDirty();
 
@@ -104,7 +104,7 @@ namespace datatools {
         core::CalleeSlot slotCallMultiPart;
 
         /** The data callee slot. */
-        core::CallerSlot slotCallFloatTable;
+        core::CallerSlot slotCallTable;
 
         /** The name of the float column holding the red colour channel. */
         core::param::ParamSlot slotColumnB;

@@ -10,14 +10,14 @@
 
 #include "mmcore/AbstractDataWriter.h"
 #include "mmcore/CallerSlot.h"
-#include "mmstd_datatools/floattable/CallFloatTableData.h"
+#include "mmstd_datatools/table/TableDataCall.h"
 #include "mmcore/param/ParamSlot.h"
 
 
 namespace megamol {
 namespace stdplugin {
 namespace datatools {
-namespace floattable {
+namespace table {
 
 
     /**
@@ -108,7 +108,7 @@ namespace floattable {
 
     };
 
-} /* end namespace floattable */
+} /* end namespace table */
 } /* end namespace datatools */
 } /* end namespace stdplugin */
 } /* end namespace megamol */

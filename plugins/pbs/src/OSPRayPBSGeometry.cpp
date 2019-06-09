@@ -119,7 +119,7 @@ bool OSPRayPBSGeometry::getExtends(megamol::core::Call &call) {
 
     if (cd == NULL) return false;
     cd->SetFrameID(os->getTime(), true); // isTimeForced flag set to true
-                                         // if (!(*cd)(1)) return false; // floattable returns flase at first attempt and breaks everything
+                                         // if (!(*cd)(1)) return false; // table returns flase at first attempt and breaks everything
     (*cd)(1);
     (*cd)(0);
     // local bounding box is not valid if more than one chunk is loaded!

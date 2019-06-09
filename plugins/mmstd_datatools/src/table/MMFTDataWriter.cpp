@@ -6,58 +6,45 @@
  */
 
 #include "stdafx.h"
-#include "floattable/MMFTDataWriter.h"
+#include "MMFTDataWriter.h"
+
 #include "mmcore/param/FilePathParam.h"
+
 #include "vislib/sys/Log.h"
 #include "vislib/sys/FastFile.h"
 #include "vislib/String.h"
 
+using namespace megamol::stdplugin::datatools;
+using namespace megamol::stdplugin::datatools::table;
 using namespace megamol;
-using namespace megamol::stdplugin;
 
-
-/*
- * datatools::floattable::MMFTDataWriter::MMFTDataWriter
- */
-datatools::floattable::MMFTDataWriter::MMFTDataWriter(void) : core::AbstractDataWriter(),
+MMFTDataWriter::MMFTDataWriter(void) : core::AbstractDataWriter(),
         filenameSlot("filename", "The path to the MMFT file to be written"),
         dataSlot("data", "The slot requesting the data to be written") {
 
     this->filenameSlot << new core::param::FilePathParam("");
     this->MakeSlotAvailable(&this->filenameSlot);
 
-    this->dataSlot.SetCompatibleCall<CallFloatTableDataDescription>();
+    this->dataSlot.SetCompatibleCall<TableDataCallDescription>();
     this->MakeSlotAvailable(&this->dataSlot);
 }
 
 
-/*
- * datatools::floattable::MMFTDataWriter::~MMFTDataWriter
- */
-datatools::floattable::MMFTDataWriter::~MMFTDataWriter(void) {
+MMFTDataWriter::~MMFTDataWriter(void) {
     this->Release();
 }
 
 
-/*
- * datatools::floattable::MMFTDataWriter::create
- */
-bool datatools::floattable::MMFTDataWriter::create(void) {
+bool MMFTDataWriter::create(void) {
     return true;
 }
 
 
-/*
- * datatools::floattable::MMFTDataWriter::release
- */
-void datatools::floattable::MMFTDataWriter::release(void) {
+void MMFTDataWriter::release(void) {
 }
 
 
-/*
- * datatools::floattable::MMFTDataWriter::run
- */
-bool datatools::floattable::MMFTDataWriter::run(void) {
+bool MMFTDataWriter::run(void) {
     using vislib::sys::Log;
     vislib::TString filename(this->filenameSlot.Param<core::param::FilePathParam>()->Value());
     if (filename.IsEmpty()) {
@@ -65,7 +52,7 @@ bool datatools::floattable::MMFTDataWriter::run(void) {
         return false;
     }
 
-    CallFloatTableData *cftd = this->dataSlot.CallAs<CallFloatTableData>();
+    TableDataCall *cftd = this->dataSlot.CallAs<TableDataCall>();
     if (cftd == NULL) {
         Log::DefaultLog.WriteError("No data source connected. Abort.");
         return false;
@@ -103,11 +90,11 @@ bool datatools::floattable::MMFTDataWriter::run(void) {
     ASSERT_WRITEOUT(&colCnt, 4);
 
     for (uint32_t c = 0; c < colCnt; ++c) {
-        const CallFloatTableData::ColumnInfo& ci = cftd->GetColumnsInfos()[c];
+        const TableDataCall::ColumnInfo& ci = cftd->GetColumnsInfos()[c];
         uint16_t nameLen = static_cast<uint16_t>(ci.Name().size());
         ASSERT_WRITEOUT(&nameLen, 2);
         ASSERT_WRITEOUT(ci.Name().data(), nameLen);
-        uint8_t type = (ci.Type() == CallFloatTableData::ColumnType::CATEGORICAL) ? 1 : 0;
+        uint8_t type = (ci.Type() == TableDataCall::ColumnType::CATEGORICAL) ? 1 : 0;
         ASSERT_WRITEOUT(&type, 1);
         float f = ci.MinimumValue();
         ASSERT_WRITEOUT(&f, 4);
@@ -124,10 +111,7 @@ bool datatools::floattable::MMFTDataWriter::run(void) {
 }
 
 
-/*
- * datatools::floattable::MMFTDataWriter::getCapabilities
- */
-bool datatools::floattable::MMFTDataWriter::getCapabilities(core::DataWriterCtrlCall& call) {
+bool MMFTDataWriter::getCapabilities(core::DataWriterCtrlCall& call) {
     call.SetAbortable(false);
     return true;
 }
