@@ -49,6 +49,7 @@ private:
     core::CallerSlot particlesInSlot;
 
     core::param::ParamSlot radiusSlot;
+    core::param::ParamSlot minClusterSizeSlot;
     core::param::ParamSlot densitySeedPercentageSlot;
     core::param::ParamSlot isActiveSlot;
 
