@@ -34,10 +34,10 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
       set(ADIOS2_LIB_DEBUG ${ADIOS2_LIB})
     else()
       include(GNUInstallDirs)
-      set(ADIOS2_IMPORT_LIB_DEBUG "lib/libadios2.so")
-      set(ADIOS2_IMPORT_LIB "lib/libadios2.so")
-      set(ADIOS2_LIB_DEBUG "lib/libadios2.so")
-      set(ADIOS2_LIB "lib/libadios2.so")
+      set(ADIOS2_IMPORT_LIB_DEBUG "${CMAKE_INSTALL_LIBDIR}/libadios2.so")
+      set(ADIOS2_IMPORT_LIB "${CMAKE_INSTALL_LIBDIR}/libadios2.so")
+      set(ADIOS2_LIB_DEBUG "${CMAKE_INSTALL_LIBDIR}/libadios2.so")
+      set(ADIOS2_LIB "${CMAKE_INSTALL_LIBDIR}/libadios2.so")
     endif()
     add_external_library(adios2 SHARED
     DEPENDS adios2_ext
@@ -46,6 +46,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
     LIBRARY_DEBUG ${ADIOS2_LIB_DEBUG}
     LIBRARY_RELEASE ${ADIOS2_LIB})
   endif()
+
 
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
