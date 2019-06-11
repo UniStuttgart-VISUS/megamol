@@ -115,7 +115,6 @@ private:
     // OSPRay textures
     const uint32_t* fb;
     std::vector<float> db;
-    OSPTexture2D getOSPDepthTextureFromOpenGLPerspective(megamol::core::Call& call);
     void getOpenGLDepthFromOSPPerspective(megamol::core::Call& call, float* db);
 
     bool renderer_has_changed;
