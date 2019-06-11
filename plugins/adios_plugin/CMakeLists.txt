@@ -47,6 +47,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
     LIBRARY_RELEASE ${ADIOS2_LIB})
   endif()
 
+
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")

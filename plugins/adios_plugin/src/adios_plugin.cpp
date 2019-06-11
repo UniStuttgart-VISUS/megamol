@@ -19,6 +19,7 @@
 #include "adiosWriter.h"
 #include "TableToADIOS.h"
 
+
 /* anonymous namespace hides this type from any other object files */
 namespace {
     /** Implementing the instance class of this plugin */

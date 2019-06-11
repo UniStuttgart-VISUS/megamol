@@ -98,7 +98,7 @@ bool OSPRayPKDGeometry::getDataCallback(megamol::core::Call& call) {
         ospCommit(vertexData);
 
         // set bbox
-        auto bboxData = ospNewData(6, OSP_FLOAT, parts.GetBBox().PeekBounds(), OSP_DATA_SHARED_BUFFER);
+        auto bboxData = ospNewData(6, OSP_FLOAT, parts.GetBBox().PeekBounds());
         ospCommit(bboxData);
 
         ospSet1f(geo.back(), "radius", parts.GetGlobalRadius());
