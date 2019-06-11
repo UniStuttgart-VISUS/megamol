@@ -7,7 +7,7 @@
 #include "vislib/StringTokeniser.h"
 
 
-megamol::adios::StaticMMPLDProvider::StaticMMPLDProvider()
+megamol::stdplugin::datatools::StaticMMPLDProvider::StaticMMPLDProvider()
     : outDataSlot("outData", "Output"), filenamesSlot("filenames", "Set of filenames separated with ';'") {
     outDataSlot.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(),
         core::moldyn::MultiParticleDataCall::FunctionName(0), &StaticMMPLDProvider::getDataCallback);
@@ -20,16 +20,16 @@ megamol::adios::StaticMMPLDProvider::StaticMMPLDProvider()
 }
 
 
-megamol::adios::StaticMMPLDProvider::~StaticMMPLDProvider() { this->Release(); }
+megamol::stdplugin::datatools::StaticMMPLDProvider::~StaticMMPLDProvider() { this->Release(); }
 
 
-bool megamol::adios::StaticMMPLDProvider::create() { return true; }
+bool megamol::stdplugin::datatools::StaticMMPLDProvider::create() { return true; }
 
 
-void megamol::adios::StaticMMPLDProvider::release() {}
+void megamol::stdplugin::datatools::StaticMMPLDProvider::release() {}
 
 
-bool megamol::adios::StaticMMPLDProvider::assertData(core::moldyn::MultiParticleDataCall& outCall) {
+bool megamol::stdplugin::datatools::StaticMMPLDProvider::assertData(core::moldyn::MultiParticleDataCall& outCall) {
     if (filenamesSlot.IsDirty()) {
 
         auto const filenames = filenamesSlot.Param<core::param::StringParam>()->Value();
@@ -100,7 +100,7 @@ bool megamol::adios::StaticMMPLDProvider::assertData(core::moldyn::MultiParticle
 }
 
 
-bool megamol::adios::StaticMMPLDProvider::getDataCallback(core::Call& c) {
+bool megamol::stdplugin::datatools::StaticMMPLDProvider::getDataCallback(core::Call& c) {
     auto outCall = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&c);
     if (outCall == nullptr) return false;
 
@@ -108,7 +108,7 @@ bool megamol::adios::StaticMMPLDProvider::getDataCallback(core::Call& c) {
 }
 
 
-bool megamol::adios::StaticMMPLDProvider::getExtentCallback(core::Call& c) {
+bool megamol::stdplugin::datatools::StaticMMPLDProvider::getExtentCallback(core::Call& c) {
     auto outCall = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&c);
     if (outCall == nullptr) return false;
 

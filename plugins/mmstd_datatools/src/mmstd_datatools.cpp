@@ -82,6 +82,7 @@
 #include "ParticleIdentitySort.h"
 #include "ParticleBoxFilter.h"
 #include "DirParticleBoxFilter.h"
+#include "StaticMMPLDProvider.h"
 
 /*
  * mmplgPluginAPIVersion
@@ -226,6 +227,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleIdentitySort>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleBoxFilter>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::DirParticleBoxFilter>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::StaticMMPLDProvider>();
 
             // register calls here:
             this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::CallFloatTableData>();

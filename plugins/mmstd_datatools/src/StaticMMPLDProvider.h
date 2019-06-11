@@ -10,7 +10,8 @@
 #include "vislib/math/Cuboid.h"
 
 namespace megamol {
-namespace adios {
+namespace stdplugin {
+namespace datatools {
 
 class StaticMMPLDProvider : public core::Module {
 public:
@@ -85,5 +86,6 @@ private:
     size_t hash = 0;
 }; // end class StaticMMPLDProvider
 
-} // end namespace adios
+} // end namespace datatools
+} // end namespace stdplugin
 } // end namespace megamol

@@ -47,7 +47,6 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   if(MPI_C_FOUND)
     add_external_project(IceT_ext
       GIT_REPOSITORY https://gitlab.kitware.com/icet/icet.git
-      GIT_TAG "IceT-2.1.0"
       CMAKE_ARGS
         -DBUILD_SHARED_LIBS=ON
         -DICET_BUILD_TESTING=OFF

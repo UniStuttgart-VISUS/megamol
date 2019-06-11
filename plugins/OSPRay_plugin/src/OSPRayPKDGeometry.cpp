@@ -104,8 +104,8 @@ bool OSPRayPKDGeometry::getDataCallback(megamol::core::Call& call) {
         ospSet1f(geo.back(), "radius", parts.GetGlobalRadius());
         ospSet1i(geo.back(), "colorType", colorType);
         ospSetData(geo.back(), "position", vertexData);
-        ospSetData(geo.back(), "bbox", bboxData);
-        // ospSetData(geo.back(), "bbox", nullptr);
+        // ospSetData(geo.back(), "bbox", bboxData);
+        ospSetData(geo.back(), "bbox", nullptr);
         ospCommit(geo.back());
 
         // TODO: implement distributed stuff
