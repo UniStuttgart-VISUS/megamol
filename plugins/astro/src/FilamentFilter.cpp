@@ -9,8 +9,8 @@
 
 #include <algorithm>
 #include <climits>
-#include <set>
 #include <queue>
+#include <set>
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
@@ -49,7 +49,7 @@ FilamentFilter::FilamentFilter(void)
     this->radiusSlot.SetParameter(new param::FloatParam(0.1f, 0.0f));
     this->MakeSlotAvailable(&this->radiusSlot);
 
-    this->minClusterSizeSlot.SetParameter(new param::IntParam(20, 2));
+    this->minClusterSizeSlot.SetParameter(new param::IntParam(100, 2));
     this->MakeSlotAvailable(&this->minClusterSizeSlot);
 
     this->densitySeedPercentageSlot.SetParameter(new param::FloatParam(10.0f, 0.0f, 100.0f));
@@ -252,56 +252,87 @@ void FilamentFilter::initSearchStructure(const AstroDataCall& call) {
 }
 
 /*
+ * FilamentFilter::copyInCallToContent
+ */
+bool FilamentFilter::copyInCallToContent(const AstroDataCall& inCall, const std::set<uint64_t>& indexSet) {
+	// TODO
+	return true;
+}
+
+/*
  * FilamentFilter::filterFilaments
  */
 bool FilamentFilter::filterFilaments(const AstroDataCall& call) {
     if (call.GetPositions() == nullptr) return false;
     std::vector<std::pair<float, uint64_t>> densityPeaks;
     this->retrieveDensityCandidateList(call, densityPeaks);
+    std::set<uint64_t> candidateSet;
+    for (const auto& a : densityPeaks) {
+        candidateSet.insert(a.second);
+    }
     this->initSearchStructure(call);
     if (this->searchIndexPtr == nullptr) return false;
 
     // the following approach is not really performant, but it should work
-    std::vector<std::set<uint64_t>> setVec(densityPeaks.size());
-    std::vector<size_t> vertSetIndex(call.GetPositions()->size());
+    std::vector<std::set<uint64_t>> setVec;
     std::vector<bool> calculatedFlags(call.GetPositions()->size(), false);
-    std::queue<uint64_t> toProcessQueue;
-    for (size_t i = 0; i < setVec.size(); ++i) {
-        setVec[i].insert(densityPeaks[i].second);
-        vertSetIndex[densityPeaks[i].second] = i;
-        toProcessQueue.push(densityPeaks[i].second);
-        calculatedFlags[densityPeaks[i].second] = true;
-    }
 
     nanoflann::SearchParams searchParams;
     float searchRadius = this->radiusSlot.Param<param::FloatParam>()->Value();
     std::vector<std::pair<size_t, float>> searchResults;
-    std::set<uint64_t> toMergeSet;
-    while (!toProcessQueue.empty()) {
-        auto current = toProcessQueue.front();
-        auto currentSetIdx = vertSetIndex[current];
-        toProcessQueue.pop();
+    std::set<uint64_t> toProcessSet;
+
+    while (!candidateSet.empty()) {
+        auto current = *candidateSet.begin();
         auto position = call.GetPositions()->at(current);
-        searchResults.clear();
-        toMergeSet.clear();
+        setVec.push_back(std::set<uint64_t>());
+		setVec.back().insert(current);
+        toProcessSet.clear();
+        calculatedFlags[current] = true;
         const auto nMatches =
             this->searchIndexPtr->radiusSearch(&position.x, searchRadius * searchRadius, searchResults, searchParams);
+        // insert everything in the vicinity of the current candidate to the queue
         for (const auto& v : searchResults) {
             uint64_t index = v.first;
-            bool hasSet = calculatedFlags[index];
-            if (hasSet) {
-                auto setIdx = vertSetIndex[index];
-                toMergeSet.insert(setIdx);
-            } else {
-                vertSetIndex[index] = currentSetIdx;
-                setVec[currentSetIdx].insert(index);
-                toProcessQueue.push(index);
+            if (index == current) continue;
+            if (!calculatedFlags[index]) {
+                toProcessSet.insert(index);
+                setVec.back().insert(index);
+                calculatedFlags[index] = true;
             }
-            calculatedFlags[index] = true;
         }
-        for (const auto& s : toMergeSet) {
-            setVec[currentSetIdx].insert(setVec[s].begin(), setVec[s].end());
+        while (!toProcessSet.empty()) {
+            auto cur = *toProcessSet.begin();
+            auto pos = call.GetPositions()->at(cur);
+            searchResults.clear();
+            const auto matches =
+                this->searchIndexPtr->radiusSearch(&pos.x, searchRadius * searchRadius, searchResults, searchParams);
+            for (const auto& v : searchResults) {
+                uint64_t index = v.first;
+                if (index == cur) continue;
+                if (!calculatedFlags[index]) {
+                    toProcessSet.insert(index);
+                    setVec.back().insert(index);
+                    calculatedFlags[index] = true;
+                }
+            }
+            toProcessSet.erase(cur);
+            candidateSet.erase(cur);
+        }
+        candidateSet.erase(current);
+    }
+    // erase too small clusters
+    auto minClusterSize = this->minClusterSizeSlot.Param<param::IntParam>()->Value();
+    for (auto it = setVec.begin(); it != setVec.end(); /* intentionally empty*/) {
+        if ((*it).size() < minClusterSize) {
+            it = setVec.erase(it);
+        } else {
+            ++it;
         }
     }
-    return true;
+	std::set<uint64_t> endset;
+	for (const auto& s : setVec) {
+		endset.insert(s.begin(), s.end());
+	}
+    return this->copyInCallToContent(call, endset);
 }

@@ -43,6 +43,7 @@ private:
     void retrieveDensityCandidateList(const AstroDataCall& call, std::vector<std::pair<float, uint64_t>>& result);
     bool filterFilaments(const AstroDataCall& call);
     bool copyContentToOutCall(AstroDataCall& outCall);
+	bool copyInCallToContent(const AstroDataCall& inCall, const std::set<uint64_t>& indexSet);
     void initSearchStructure(const AstroDataCall& call);
 
     core::CalleeSlot filamentOutSlot;
