@@ -13,6 +13,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "nanoflann.hpp"
 #include "utils.h"
+#include <set>
 
 
 namespace megamol {

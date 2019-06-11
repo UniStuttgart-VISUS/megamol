@@ -119,10 +119,16 @@ bool FilamentFilter::getExtent(core::Call& call) {
         adc->operator=(*inCall);
         if (this->lastDataHash != inCall->DataHash() || this->radiusSlot.IsDirty() ||
             this->densitySeedPercentageSlot.IsDirty()) {
+            this->hashOffset++;
             this->lastDataHash = inCall->DataHash();
             this->radiusSlot.ResetDirty();
             this->densitySeedPercentageSlot.ResetDirty();
             this->recalculateFilaments = true;
+        }
+        if (this->isActiveSlot.IsDirty() && this->positions != nullptr && !this->positions->empty()) {
+            this->isActiveSlot.ResetDirty();
+            this->recalculateFilaments = true;
+            this->hashOffset++;           
         }
         adc->SetDataHash(this->lastDataHash + this->hashOffset);
         return true;
@@ -255,8 +261,45 @@ void FilamentFilter::initSearchStructure(const AstroDataCall& call) {
  * FilamentFilter::copyInCallToContent
  */
 bool FilamentFilter::copyInCallToContent(const AstroDataCall& inCall, const std::set<uint64_t>& indexSet) {
-	// TODO
-	return true;
+    this->positions->resize(indexSet.size());
+    this->velocities->resize(indexSet.size());
+    this->temperatures->resize(indexSet.size());
+    this->masses->resize(indexSet.size());
+    this->internalEnergies->resize(indexSet.size());
+    this->smoothingLengths->resize(indexSet.size());
+    this->molecularWeights->resize(indexSet.size());
+    this->densities->resize(indexSet.size());
+    this->gravitationalPotentials->resize(indexSet.size());
+    this->isBaryonFlags->resize(indexSet.size());
+    this->isStarFlags->resize(indexSet.size());
+    this->isWindFlags->resize(indexSet.size());
+    this->isStarFormingGasFlags->resize(indexSet.size());
+    this->isAGNFlags->resize(indexSet.size());
+    this->particleIDs->resize(indexSet.size());
+
+    std::vector<uint64_t> setVec(indexSet.begin(), indexSet.end());
+    std::sort(setVec.begin(), setVec.end());
+
+    uint64_t i = 0;
+    for (const auto id : setVec) {
+        this->positions->at(i) = inCall.GetPositions()->at(id);
+        this->velocities->at(i) = inCall.GetVelocities()->at(id);
+        this->temperatures->at(i) = inCall.GetTemperature()->at(id);
+        this->masses->at(i) = inCall.GetMass()->at(id);
+        this->internalEnergies->at(i) = inCall.GetInternalEnergy()->at(id);
+        this->smoothingLengths->at(i) = inCall.GetSmoothingLength()->at(id);
+        this->molecularWeights->at(i) = inCall.GetMolecularWeights()->at(id);
+        this->densities->at(i) = inCall.GetDensity()->at(id);
+        this->gravitationalPotentials->at(i) = inCall.GetGravitationalPotential()->at(id);
+        this->isBaryonFlags->at(i) = inCall.GetIsBaryonFlags()->at(id);
+        this->isStarFlags->at(i) = inCall.GetIsStarFlags()->at(id);
+        this->isWindFlags->at(i) = inCall.GetIsWindFlags()->at(id);
+        this->isStarFormingGasFlags->at(i) = inCall.GetIsStarFormingGasFlags()->at(id);
+        this->isAGNFlags->at(i) = inCall.GetIsAGNFlags()->at(id);
+        this->particleIDs->at(i) = inCall.GetParticleIDs()->at(id);
+        ++i;
+    }
+    return true;
 }
 
 /*
@@ -286,7 +329,7 @@ bool FilamentFilter::filterFilaments(const AstroDataCall& call) {
         auto current = *candidateSet.begin();
         auto position = call.GetPositions()->at(current);
         setVec.push_back(std::set<uint64_t>());
-		setVec.back().insert(current);
+        setVec.back().insert(current);
         toProcessSet.clear();
         calculatedFlags[current] = true;
         const auto nMatches =
@@ -330,9 +373,9 @@ bool FilamentFilter::filterFilaments(const AstroDataCall& call) {
             ++it;
         }
     }
-	std::set<uint64_t> endset;
-	for (const auto& s : setVec) {
-		endset.insert(s.begin(), s.end());
-	}
+    std::set<uint64_t> endset;
+    for (const auto& s : setVec) {
+        endset.insert(s.begin(), s.end());
+    }
     return this->copyInCallToContent(call, endset);
 }
