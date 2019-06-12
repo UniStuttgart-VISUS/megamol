@@ -172,6 +172,11 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
         this->extractBkgndColor(backgroundColor);
 
         int tilevp[4] = { xoff, yoff, tile_width, tile_height }; // define current valid pixel viewport for icet 
+#    if _DEBUG
+        vislib::sys::Log::DefaultLog.WriteError(
+            "IceT gets image with xoff: %d, yoff: %d, tile_width: %d, tile_height: %d\n", xoff, yoff, tile_width,
+            tile_height);
+#endif
         auto const icet_comp_image =
             icetCompositeImage(col_buf.data(), depth_buf.data(), tilevp, nullptr, nullptr, static_cast<const IceTFloat*>(backgroundColor.data()));
 #if    _DEBUG

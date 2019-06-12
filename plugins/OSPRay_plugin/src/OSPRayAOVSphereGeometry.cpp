@@ -119,6 +119,7 @@ bool OSPRayAOVSphereGeometry::getDataCallback(megamol::core::Call& call) {
         if (error != OSP_NO_ERROR) {
             vislib::sys::Log::DefaultLog.WriteError(
                 "Unable to load OSPRay module: AOVSpheres. Error occured in %s:%d", __FILE__, __LINE__);
+            return false;
         } else {
             isInitAOV = true;
         }
@@ -209,15 +210,15 @@ bool OSPRayAOVSphereGeometry::getDataCallback(megamol::core::Call& call) {
 
         const auto numCreateGeo = parts.GetCount() * vertStride / ispcLimit + 1;
 
-        //geo.resize(geo.size() + numCreateGeo);
+        // geo.resize(geo.size() + numCreateGeo);
         for (unsigned int i = 0; i < numCreateGeo; i++) {
-            geo.emplace_back(ospNewGeometry("aovspheres_geometry"));
 
-            long long int floatsToRead =
-                parts.GetCount() * vertStride / (numCreateGeo * sizeof(float));
+            if (parts.GetCount() == 0) continue;
+            geo.emplace_back(ospNewGeometry("aovspheres_geometry"));
+            long long int floatsToRead = parts.GetCount() * vertStride / (numCreateGeo * sizeof(float));
             floatsToRead -= floatsToRead % (vertStride / sizeof(float));
 
-            auto vertexData = ospNewData(floatsToRead/3, OSP_FLOAT3,
+            auto vertexData = ospNewData(floatsToRead / 3, OSP_FLOAT3,
                 &static_cast<const float*>(parts.GetVertexData())[i * floatsToRead], OSP_DATA_SHARED_BUFFER);
 
             ospCommit(vertexData);
@@ -306,19 +307,19 @@ bool OSPRayAOVSphereGeometry::getDataCallback(megamol::core::Call& call) {
 
                 ospCommit(aovol);
 
-                //ospStructures.push_back(std::make_pair(aovol, structureTypeEnum::VOLUME));
+                // ospStructures.push_back(std::make_pair(aovol, structureTypeEnum::VOLUME));
             }
 
             assert(aovol);
 
-            ospSet1f(geo.back(), "aothreshold", valRange * this->aoThresholdSlot.Param<core::param::FloatParam>()->Value());
+            ospSet1f(
+                geo.back(), "aothreshold", valRange * this->aoThresholdSlot.Param<core::param::FloatParam>()->Value());
             ospSet1f(geo.back(), "aoRayOffset",
                 maxGridSpacing * this->aoRayOffsetFactorSlot.Param<core::param::FloatParam>()->Value());
             ospSetObject(geo.back(), "aovol", aovol);
-            //ospCommit(geo);
-
-        }  // geometries
-    } // particle lists
+            // ospCommit(geo);
+        } // geometries
+    }     // particle lists
 
     std::vector<void*> geo_transfer(geo.size());
     for (auto i = 0; i < geo.size(); i++) {

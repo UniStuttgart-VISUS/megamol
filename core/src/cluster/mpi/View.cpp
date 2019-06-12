@@ -182,7 +182,7 @@ bool megamol::core::cluster::mpi::View::OnMessageReceived(
  * megamol::core::cluster::mpi::View::Render
  */
 void megamol::core::cluster::mpi::View::Render(const mmcRenderViewContext& context) {
-    bool canRender = false;
+    int canRender = 0;
     view::CallRenderView *crv = nullptr;
     FrameState state;
 
@@ -388,8 +388,11 @@ void megamol::core::cluster::mpi::View::Render(const mmcRenderViewContext& conte
     crv = this->getCallRenderView();
     canRender = (crv != nullptr);
 
+    int allCanRender = 0;
+    MPI_Allreduce(&canRender, &allCanRender, 1, MPI_INT, MPI_LAND, this->comm);
+
     /* Render the view if any; do fallback rendering otherwise. */
-    if (canRender) {
+    if (allCanRender) {
         ASSERT(crv != nullptr);
         this->checkParameters();
 
@@ -429,6 +432,7 @@ void megamol::core::cluster::mpi::View::Render(const mmcRenderViewContext& conte
         ::glFinish();
     } else {
         this->renderFallbackView();
+        vislib::sys::Log::DefaultLog.WriteInfo("Waiting for all nodes to create the module graph.\n");
     } /* end if (canRender) */
 
 #ifdef WITH_MPI
