@@ -46,13 +46,13 @@ FilamentFilter::FilamentFilter(void)
     this->isActiveSlot.SetParameter(new param::BoolParam(true));
     this->MakeSlotAvailable(&this->isActiveSlot);
 
-    this->radiusSlot.SetParameter(new param::FloatParam(0.1f, 0.0f));
+    this->radiusSlot.SetParameter(new param::FloatParam(0.45f, 0.0f));
     this->MakeSlotAvailable(&this->radiusSlot);
 
     this->minClusterSizeSlot.SetParameter(new param::IntParam(100, 2));
     this->MakeSlotAvailable(&this->minClusterSizeSlot);
 
-    this->densitySeedPercentageSlot.SetParameter(new param::FloatParam(10.0f, 0.0f, 100.0f));
+    this->densitySeedPercentageSlot.SetParameter(new param::FloatParam(90.0f, 0.0f, 100.0f));
     this->MakeSlotAvailable(&this->densitySeedPercentageSlot);
 
     this->initFields();
@@ -118,11 +118,12 @@ bool FilamentFilter::getExtent(core::Call& call) {
     if ((*inCall)(AstroDataCall::CallForGetExtent)) {
         adc->operator=(*inCall);
         if (this->lastDataHash != inCall->DataHash() || this->radiusSlot.IsDirty() ||
-            this->densitySeedPercentageSlot.IsDirty()) {
+            this->densitySeedPercentageSlot.IsDirty() || this->minClusterSizeSlot.IsDirty()) {
             this->hashOffset++;
             this->lastDataHash = inCall->DataHash();
             this->radiusSlot.ResetDirty();
             this->densitySeedPercentageSlot.ResetDirty();
+            this->minClusterSizeSlot.ResetDirty();
             this->recalculateFilaments = true;
         }
         if (this->isActiveSlot.IsDirty() && this->positions != nullptr && !this->positions->empty()) {
@@ -235,6 +236,7 @@ void FilamentFilter::retrieveDensityCandidateList(
     // sort all the densities in descending order and only keep a certain percentage
     std::sort(result.rbegin(), result.rend());
     float percentage = this->densitySeedPercentageSlot.Param<param::FloatParam>()->Value();
+    percentage = 100.0f - percentage;
     percentage /= 100.0f;
     float minDensity = percentage * minmax.second;
     auto foundval =
