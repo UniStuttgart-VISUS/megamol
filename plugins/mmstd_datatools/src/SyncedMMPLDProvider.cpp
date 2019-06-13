@@ -31,11 +31,14 @@ bool SyncedMMPLDProvider::setDirtyCallback(core::Call& c) {
 }
 
 
-bool SyncedMMPLDProvider::checkDirtyCallback(core::Call& c) {
-    this->filenamesSlot.ResetDirty();
+bool SyncedMMPLDProvider::checkDirtyCallback(core::Call& c) {    
     auto ss = dynamic_cast<core::cluster::SyncDataSourcesCall*>(&c);
 
-    ss->setFilenameDirty();
+    if (this->filenamesSlot.IsDirty()) {
+        ss->setFilenameDirty();
+    }
+
+    this->filenamesSlot.ResetDirty();
 
     return true;
 }
