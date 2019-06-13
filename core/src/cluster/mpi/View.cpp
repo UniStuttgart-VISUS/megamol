@@ -286,7 +286,7 @@ void megamol::core::cluster::mpi::View::Render(const mmcRenderViewContext& conte
 
 
     // Post-process status
-    if (!this->isBcastMaster() && (state.RelaySize > 0)) {
+    if (state.RelaySize > 0) {
         this->ModuleGraphLock().LockExclusive();
         _TRACE_ACQUIRE_LOCK("module graph");
         // This code only runs on MPI slaves, ie there is no concurrent access

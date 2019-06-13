@@ -258,6 +258,7 @@ bool cluster::simple::Client::OnMessageReceived(vislib::net::SimpleMessageDispat
     using vislib::sys::Log;
     vislib::net::SimpleMessage answer;
 
+
     switch (msg.GetHeader().GetMessageID()) {
         case MSG_HANDSHAKE_BACK:
             answer.GetHeader().SetMessageID(MSG_HANDSHAKE_FORTH);
@@ -300,13 +301,17 @@ bool cluster::simple::Client::OnMessageReceived(vislib::net::SimpleMessageDispat
             break;
         case MSG_MODULGRAPH:
         case MSG_MODULGRAPH_LUA:
+#if 0
             // MUST BE STORED FOR CREATING SYNCHRONOUSLY
             Log::DefaultLog.WriteInfo("Client: got a Module Graph\n");
             if (!this->views.IsEmpty()) {
                 this->views[0]->SetSetupMessage(msg);
             }
+#endif
             break;
-        case MSG_VIEWCONNECT: {
+        case MSG_VIEWCONNECT:
+#if 1
+        {
             vislib::StringA toName(msg.GetBodyAs<char>(), msg.GetHeader().GetBodySize());
             Log::DefaultLog.WriteInfo("Client: View::CalleeSlot %s to connect\n", toName.PeekBuffer());
             if (!this->views.IsEmpty()) {
@@ -317,8 +322,12 @@ bool cluster::simple::Client::OnMessageReceived(vislib::net::SimpleMessageDispat
             }
             //answer.GetHeader().SetMessageID(MSG_CAMERAUPDATE);
             //this->send(answer);
-        } break;
-        case MSG_PARAMUPDATE: {
+        }
+#endif
+            break;
+        case MSG_PARAMUPDATE:
+#if 0
+        {
             vislib::StringA name(msg.GetBodyAs<char>(), msg.GetHeader().GetBodySize());
             vislib::StringA::Size pos = name.Find('=');
             vislib::TString value;
@@ -346,9 +355,12 @@ bool cluster::simple::Client::OnMessageReceived(vislib::net::SimpleMessageDispat
                     Log::DefaultLog.WriteWarn("Client: Unable to set parameter %s; parse error\n", name.PeekBuffer());
                 }
             }
-        } break;
+        }
+#endif
+        break;
         case MSG_CAMERAUPDATE:
-            Log::DefaultLog.WriteInfo("Client: got a Camera Update\n");
+            //Log::DefaultLog.WriteInfo("Client: got a Camera Update\n");
+#if 0
             if (!this->views.IsEmpty()) {
                 vislib::RawStorageSerialiser ser(msg.GetBodyAs<BYTE>(), msg.GetHeader().GetBodySize());
                 ser.SetOffset(0);
@@ -358,6 +370,7 @@ bool cluster::simple::Client::OnMessageReceived(vislib::net::SimpleMessageDispat
                     v->DeserialiseCamera(ser);
                 }
             }
+#endif
             break;
         case MSG_TCUPDATE:
             if (!this->heartbeats.IsEmpty()) {
