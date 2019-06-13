@@ -83,6 +83,7 @@
 #include "ParticleBoxFilter.h"
 #include "DirParticleBoxFilter.h"
 #include "StaticMMPLDProvider.h"
+#include "SyncedMMPLDProvider.h"
 
 /*
  * mmplgPluginAPIVersion
@@ -228,6 +229,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleBoxFilter>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::DirParticleBoxFilter>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::StaticMMPLDProvider>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::SyncedMMPLDProvider>();
 
             // register calls here:
             this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableDataCall>();
