@@ -111,7 +111,7 @@ vislib::sys::Log::FileTarget::FileTarget(const char *path, UINT level)
         | _O_WRONLY, _SH_DENYWR, _S_IREAD | _S_IWRITE);
 #endif /* (_MSC_VER >= 1400) */
 #else /* _WIN32 */
-    newFile = open(path, O_APPEND | O_CREAT | O_LARGEFILE | _O_TRUNC
+    newFile = open(path, O_APPEND | O_CREAT | O_LARGEFILE | O_TRUNC
         | O_WRONLY, S_IRWXU | S_IRWXG);
 #endif /* _WIN32 */
     this->stream = (newFile == -1) ? NULL : 
@@ -148,7 +148,7 @@ vislib::sys::Log::FileTarget::FileTarget(const wchar_t *path, UINT level)
         | _O_WRONLY, _SH_DENYWR, _S_IREAD | _S_IWRITE);
 #endif /* (_MSC_VER >= 1400) */
 #else /* _WIN32 */
-    newFile = open(W2A(path), O_APPEND | O_CREAT | O_LARGEFILE | _O_TRUNC
+    newFile = open(W2A(path), O_APPEND | O_CREAT | O_LARGEFILE | O_TRUNC
         | O_WRONLY, S_IRWXU | S_IRWXG);
 #endif /* _WIN32 */
 
