@@ -386,14 +386,17 @@ void megamol::core::cluster::mpi::View::Render(const mmcRenderViewContext& conte
             int fnameDirty = ss->getFilenameDirty();
             int allFnameDirty = 0;
             MPI_Allreduce(&fnameDirty, &allFnameDirty, this->mpiSize, MPI_INT, MPI_LAND, this->comm);
+            vislib::sys::Log::DefaultLog.WriteInfo("MPIClusterView: allFnameDirty: %d\n", allFnameDirty);
 
             if (allFnameDirty) {
                 (*ss)(1); // finally set the filename in the data source
                 ss->resetFilenameDirty();
             } else if (fnameDirty) {
-                vislib::sys::Log::DefaultLog.WriteInfo("Waiting for data in MPI world to be ready.");
+                vislib::sys::Log::DefaultLog.WriteInfo("MPIClusterView: Waiting for data in MPI world to be ready.\n");
             }
-        }
+        } else {
+	  vislib::sys::Log::DefaultLog.WriteInfo("MPIClusterView: No sync object connected.\n");
+	}
 
         ASSERT(crv != nullptr);
         this->checkParameters();
