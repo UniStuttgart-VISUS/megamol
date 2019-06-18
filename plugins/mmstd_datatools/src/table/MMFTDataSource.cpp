@@ -6,17 +6,19 @@
  */
 
 #include "stdafx.h"
-#include "floattable/MMFTDataSource.h"
+#include "MMFTDataSource.h"
+
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/CoreInstance.h"
+
 #include "vislib/sys/FastFile.h"
 #include "vislib/String.h"
 
+using namespace megamol::stdplugin::datatools;
+using namespace megamol::stdplugin::datatools::table;
 using namespace megamol;
-using namespace megamol::stdplugin;
 
-
-datatools::floattable::MMFTDataSource::MMFTDataSource(void) : core::Module(),
+MMFTDataSource::MMFTDataSource(void) : core::Module(),
         filenameSlot("filename", "The file name"),
         getDataSlot("getData", "Slot providing the data"),
         dataHash(0), columns(), values() {
@@ -24,27 +26,27 @@ datatools::floattable::MMFTDataSource::MMFTDataSource(void) : core::Module(),
     this->filenameSlot << new core::param::FilePathParam("");
     this->MakeSlotAvailable(&this->filenameSlot);
 
-    this->getDataSlot.SetCallback(CallFloatTableData::ClassName(), "GetData", &MMFTDataSource::getDataCallback);
-    this->getDataSlot.SetCallback(CallFloatTableData::ClassName(), "GetHash", &MMFTDataSource::getHashCallback);
+    this->getDataSlot.SetCallback(TableDataCall::ClassName(), "GetData", &MMFTDataSource::getDataCallback);
+    this->getDataSlot.SetCallback(TableDataCall::ClassName(), "GetHash", &MMFTDataSource::getHashCallback);
     this->MakeSlotAvailable(&this->getDataSlot);
 
 }
 
-datatools::floattable::MMFTDataSource::~MMFTDataSource(void) {
+MMFTDataSource::~MMFTDataSource(void) {
     this->Release();
 }
 
-bool datatools::floattable::MMFTDataSource::create(void) {
+bool MMFTDataSource::create(void) {
     // nothing to do
     return true;
 }
 
-void datatools::floattable::MMFTDataSource::release(void) {
+void MMFTDataSource::release(void) {
     this->columns.clear();
     this->values.clear();
 }
 
-void datatools::floattable::MMFTDataSource::assertData(void) {
+void MMFTDataSource::assertData(void) {
     if (!this->filenameSlot.IsDirty()) {
         return; // nothing to do
     }
@@ -82,7 +84,7 @@ void datatools::floattable::MMFTDataSource::assertData(void) {
     columns.resize(colCnt);
 
     for (uint32_t c = 0; c < colCnt; ++c) {
-        CallFloatTableData::ColumnInfo& ci = columns[c];
+        TableDataCall::ColumnInfo& ci = columns[c];
         uint16_t nameLen;
         ASSERT_READ(&nameLen, 2);
         vislib::StringA name;
@@ -91,8 +93,8 @@ void datatools::floattable::MMFTDataSource::assertData(void) {
         uint8_t type;
         ASSERT_READ(&type, 1);
         ci.SetType(
-            (type == 1) ? CallFloatTableData::ColumnType::CATEGORICAL
-            : CallFloatTableData::ColumnType::QUANTITATIVE);
+            (type == 1) ? TableDataCall::ColumnType::CATEGORICAL
+            : TableDataCall::ColumnType::QUANTITATIVE);
         float f;
         ASSERT_READ(&f, 4);
         ci.SetMinimumValue(f);
@@ -110,8 +112,8 @@ void datatools::floattable::MMFTDataSource::assertData(void) {
     this->dataHash++;
 }
 
-bool datatools::floattable::MMFTDataSource::getDataCallback(core::Call& caller) {
-    CallFloatTableData *tfd = dynamic_cast<CallFloatTableData*>(&caller);
+bool MMFTDataSource::getDataCallback(core::Call& caller) {
+    TableDataCall *tfd = dynamic_cast<TableDataCall*>(&caller);
     if (tfd == nullptr) return false;
 
     this->assertData();
@@ -128,8 +130,8 @@ bool datatools::floattable::MMFTDataSource::getDataCallback(core::Call& caller) 
     return true;
 }
 
-bool datatools::floattable::MMFTDataSource::getHashCallback(core::Call& caller) {
-    CallFloatTableData *tfd = dynamic_cast<CallFloatTableData*>(&caller);
+bool MMFTDataSource::getHashCallback(core::Call& caller) {
+    TableDataCall *tfd = dynamic_cast<TableDataCall*>(&caller);
     if (tfd == nullptr) return false;
 
     this->assertData();
