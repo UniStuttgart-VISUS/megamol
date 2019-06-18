@@ -25,7 +25,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
   target_include_directories(${PROJECT_NAME} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    "include" "src")
+    "include" "src" "3rd/nanoflann")
   target_link_libraries(${PROJECT_NAME} PRIVATE core)
 
   # Installation rules for generated files
