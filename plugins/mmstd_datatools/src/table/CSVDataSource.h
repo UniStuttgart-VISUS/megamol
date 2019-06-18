@@ -13,13 +13,13 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
-#include "mmstd_datatools/floattable/CallFloatTableData.h"
+#include "mmstd_datatools/table/TableDataCall.h"
 #include <vector>
 
 namespace megamol {
 namespace stdplugin {
 namespace datatools {
-namespace floattable {
+namespace table {
 
     class CSVDataSource : public core::Module {
     public:
@@ -59,12 +59,12 @@ namespace floattable {
 
         SIZE_T dataHash;
 
-        std::vector<CallFloatTableData::ColumnInfo> columns;
+        std::vector<TableDataCall::ColumnInfo> columns;
         std::vector<float> values;
 
     };
 
-} /* end namespace floattable */
+} /* end namespace table */
 } /* end namespace datatools */
 } /* end namespace stdplugin */
 } /* end namespace megamol */
