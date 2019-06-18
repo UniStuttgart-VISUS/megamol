@@ -11,23 +11,56 @@
 #include "mpi.h"
 
 #include "FBOCommFabric.h"
+#include "DistributedProto.h"
 
 namespace megamol {
 namespace pbs {
 
 class RendernodeView : public core::view::AbstractTileView {
 public:
-    enum MessageType : unsigned char { NULL_MSG = 0u, PRJ_FILE_MSG, CAM_UPD_MSG, PARAM_UPD_MSG };
+    /**
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
+     */
+    static const char* ClassName(void) { return "RendernodeView"; }
 
-    struct Message {
-        MessageType type;
-        uint64_t size;
-        std::vector<unsigned char> msg;
+    /**
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
+     */
+    static const char* Description(void) { return "Simple MPI-based render view."; }
+
+    /**
+     * Answers whether this module is available on the current system.
+     *
+     * @return 'true' if the module is available, 'false' otherwise.
+     */
+    static bool IsAvailable(void) {
+#ifdef WITH_MPI
+        return true;
+#else
+        return false;
+#endif
     };
 
-    using Message_t = Message;
+    /**
+     * Disallow usage in quickstarts.
+     *
+     * @return false
+     */
+    static bool SupportQuickstart(void) { return false; }
 
-    using MessageList_t = std::vector<Message_t>;
+    /**
+     * Initializes a new instance.
+     */
+    RendernodeView(void);
+
+    /**
+     * Finalizes the instance.
+     */
+    virtual ~RendernodeView(void);
 
     void Render(const mmcRenderViewContext& context) override;
 
@@ -41,19 +74,17 @@ private:
 
     bool shutdown_threads();
 
-    std::vector<unsigned char> prepare_bcast_msg();
+    MsgBody_t prepare_bcast_msg();
 
-    std::vector<unsigned char> prepare_null_msg();
+    MsgBody_t prepare_null_msg();
 
-    bool process_msgs(std::vector<unsigned char>& msgs);
+    bool process_msgs(MsgBody_t const& msgs) const;
 
-    static MessageType get_msg_type(
-        std::vector<unsigned char>::const_iterator begin, std::vector<unsigned char>::const_iterator end) {
+    static MessageType get_msg_type(MsgBody_t::const_iterator const& begin, MsgBody_t::const_iterator const& end) {
         return static_cast<MessageType>(*begin);
     }
 
-    static uint64_t get_msg_size(
-        std::vector<unsigned char>::const_iterator begin, std::vector<unsigned char>::const_iterator end) {
+    static uint64_t get_msg_size(MsgBody_t::const_iterator const& begin, MsgBody_t::const_iterator const& end) {
         uint64_t ret = 0;
         if (begin + 5 <= end) {
             std::copy(begin + 1, begin + 5, &ret);
@@ -61,9 +92,9 @@ private:
         return ret;
     }
 
-    static std::vector<unsigned char> get_msg(uint64_t size, std::vector<unsigned char>::const_iterator begin,
-        std::vector<unsigned char>::const_iterator end) {
-        std::vector<unsigned char> msg;
+    static MsgBody_t get_msg(
+        uint64_t size, MsgBody_t::const_iterator const& begin, MsgBody_t::const_iterator const& end) {
+        MsgBody_t msg;
         if (begin + 1 + 4 + size >= end) {
             return msg;
         }
@@ -74,8 +105,8 @@ private:
         return msg;
     }
 
-    static std::vector<unsigned char>::const_iterator progress_msg(uint64_t size,
-        std::vector<unsigned char>::const_iterator begin, std::vector<unsigned char>::const_iterator end) {
+    static MsgBody_t::const_iterator progress_msg(
+        uint64_t size, MsgBody_t::const_iterator const& begin, MsgBody_t::const_iterator const& end) {
         if (begin + 1 + 4 + size <= end) {
             return begin + 1 + 4 + size;
         }
@@ -97,7 +128,7 @@ private:
 
     std::atomic<bool> data_has_changed_;
 
-    core::view::CallRenderView* crv_ = nullptr;
+    // core::view::CallRenderView* crv_ = nullptr;
 
     MPI_Comm comm_;
 
