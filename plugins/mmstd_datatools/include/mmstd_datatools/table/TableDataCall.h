@@ -1,12 +1,12 @@
 /*
- * CallFloatTableData.h
+ * CallTableData.h
  *
  * Copyright (C) 2015-2016 by CGV (TU Dresden)
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_DATATOOLS_CallFloatTableData_H_INCLUDED
-#define MEGAMOL_DATATOOLS_CallFloatTableData_H_INCLUDED
+#ifndef MEGAMOL_DATATOOLS_TABLEDATACALL_H_INCLUDED
+#define MEGAMOL_DATATOOLS_TABLEDATACALL_H_INCLUDED
 #pragma once
 
 #include "mmstd_datatools/mmstd_datatools.h"
@@ -20,12 +20,12 @@
 namespace megamol {
 namespace stdplugin {
 namespace datatools {
-namespace floattable {
+namespace table {
 
-    class MMSTD_DATATOOLS_API CallFloatTableData : public core::AbstractGetDataCall {
+    class MMSTD_DATATOOLS_API TableDataCall : public core::AbstractGetDataCall {
     public:
 
-        static const char *ClassName(void) { return "CallFloatTableData"; }
+        static const char *ClassName(void) { return "TableDataCall"; }
         static const char *Description(void) { return "Data of a table of floats"; }
         static unsigned int FunctionCount(void) { return 2; }
         static const char * FunctionName(unsigned int idx) { 
@@ -79,8 +79,8 @@ namespace floattable {
             float maxVal;
         };
 
-        CallFloatTableData(void);
-        virtual ~CallFloatTableData(void);
+        TableDataCall(void);
+        virtual ~TableDataCall(void);
 
         inline size_t GetColumnsCount(void) const {
             return columns_count;
@@ -150,11 +150,11 @@ namespace floattable {
         unsigned int frameID;
     };
 
-    typedef core::factories::CallAutoDescription<CallFloatTableData> CallFloatTableDataDescription;
+    typedef core::factories::CallAutoDescription<TableDataCall> TableDataCallDescription;
 
-} /* end namespace floattable */
+} /* end namespace table */
 } /* end namespace datatools */
 } /* end namespace stdplugin */
 } /* end namespace megamol */
 
-#endif /* MEGAMOL_LSP_DATA_CallFloatTableData_H_INCLUDED */
+#endif

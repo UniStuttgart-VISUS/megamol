@@ -5,16 +5,16 @@
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 #include "geometry_calls/LinesDataCall.h"
-#include "mmstd_datatools/floattable/CallFloatTableData.h"
+#include "mmstd_datatools/table/TableDataCall.h"
 #include <map>
 
 namespace megamol {
 namespace stdplugin {
 namespace datatools {
         /**
-         * This module converts from a generic float table to the LineDataCall.
+         * This module converts from a generic table to the LineDataCall.
          */
-        class FloatTableToLines : public core::Module {
+        class TableToLines : public core::Module {
 
         public:
 
@@ -24,7 +24,7 @@ namespace datatools {
              * @return The name of this module.
              */
             static inline const char *ClassName(void) {
-                return "FloatTableToLines";
+                return "TableToLines";
             }
 
             /**
@@ -33,7 +33,7 @@ namespace datatools {
              * @return A human readable description of this module.
              */
             static inline const char *Description(void) {
-                return "Converts generic float tables to Lines.";
+                return "Converts generic tables to Lines.";
             }
 
             /**
@@ -48,12 +48,12 @@ namespace datatools {
             /**
              * Initialises a new instance.
              */
-            FloatTableToLines(void);
+            TableToLines(void);
 
             /**
              * Finalises an instance.
              */
-            virtual ~FloatTableToLines(void);
+            virtual ~TableToLines(void);
 
         protected:
 
@@ -75,7 +75,7 @@ namespace datatools {
 
         private:
 
-            bool assertData(floattable::CallFloatTableData *ft);
+            bool assertData(table::TableDataCall *ft);
 
             bool anythingDirty();
 
@@ -100,7 +100,7 @@ namespace datatools {
             core::CalleeSlot slotDeployData;
 
             /** The data callee slot. */
-            core::CallerSlot slotCallFloatTable;
+            core::CallerSlot slotCallTable;
 
             /** The color transfer function slot. */
             core::CallerSlot slotTF;

@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "FloatTableObserverPlane.h"
+#include "TableObserverPlane.h"
 
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/StringParam.h"
@@ -11,23 +11,22 @@
 #include "vislib/sys/Log.h"
 #include "vislib/sys/PerformanceCounter.h"
 #include "vislib/Trace.h"
-
 #include "vislib/math/Plane.h"
 #include "vislib/math/ShallowPoint.h"
 #include "vislib/math/Matrix4.h"
 #include <cmath>
 
 using namespace megamol::stdplugin::datatools;
-using namespace megamol::stdplugin::datatools::floattable;
+using namespace megamol::stdplugin::datatools::table;
 using namespace megamol;
 
 /*
- * FloatTableToParticles::FloatTableObserverPlane
+ * TableToParticles::TableObserverPlane
  */
-FloatTableObserverPlane::FloatTableObserverPlane(void) : Module(),
-        slotCallFloatTable("floattable", "float table input call"),
+TableObserverPlane::TableObserverPlane(void) : Module(),
+        slotCallInputTable("table", "table input call"),
         slotCallClipPlane("clipplabe", "clip plane input call"),
-        slotCallObservedTable("observation", "resulting float table"),
+        slotCallObservedTable("observation", "resulting table"),
         slotColumnX("xcolumnname", "The name of the column holding the x-coordinate."),
         slotColumnY("ycolumnname", "The name of the column holding the y-coordinate."),
         slotColumnZ("zcolumnname", "The name of the column holding the z-coordinate."),
@@ -83,26 +82,26 @@ FloatTableObserverPlane::FloatTableObserverPlane(void) : Module(),
 
     /* Register calls. */
     this->slotCallObservedTable.SetCallback(
-        stdplugin::datatools::floattable::CallFloatTableData::ClassName(),
+        stdplugin::datatools::table::TableDataCall::ClassName(),
         "GetData",
-        &FloatTableObserverPlane::getObservedData);
+        &TableObserverPlane::getObservedData);
     this->slotCallObservedTable.SetCallback(
-        stdplugin::datatools::floattable::CallFloatTableData::ClassName(),
+        stdplugin::datatools::table::TableDataCall::ClassName(),
         "GetHash",
-        &FloatTableObserverPlane::getHash);
+        &TableObserverPlane::getHash);
     this->MakeSlotAvailable(&this->slotCallObservedTable);
 
-    this->slotCallFloatTable.SetCompatibleCall<floattable::CallFloatTableDataDescription>();
-    this->MakeSlotAvailable(&this->slotCallFloatTable);
+    this->slotCallInputTable.SetCompatibleCall<table::TableDataCallDescription>();
+    this->MakeSlotAvailable(&this->slotCallInputTable);
     this->slotCallClipPlane.SetCompatibleCall<megamol::core::view::CallClipPlaneDescription>();
     this->MakeSlotAvailable(&this->slotCallClipPlane);
 }
 
 
 /*
- * FloatTableToParticles::~FloatTableToParticles
+ * TableToParticles::~TableToParticles
  */
-FloatTableObserverPlane::~FloatTableObserverPlane(void) {
+TableObserverPlane::~TableObserverPlane(void) {
     this->Release();
 }
 
@@ -110,12 +109,12 @@ FloatTableObserverPlane::~FloatTableObserverPlane(void) {
 /*
  * megamol::pcl::PclDataSource::create
  */
-bool FloatTableObserverPlane::create(void) {
+bool TableObserverPlane::create(void) {
     bool retval = true;
     return true;
 }
 
-bool FloatTableObserverPlane::anythingDirty() {
+bool TableObserverPlane::anythingDirty() {
     return this->slotColumnX.IsDirty()
         || this->slotColumnY.IsDirty()
         || this->slotColumnZ.IsDirty()
@@ -129,7 +128,7 @@ bool FloatTableObserverPlane::anythingDirty() {
         || this->slotSliceOffset.IsDirty();
 }
 
-void FloatTableObserverPlane::resetAllDirty() {
+void TableObserverPlane::resetAllDirty() {
     this->slotColumnX.ResetDirty();
     this->slotColumnY.ResetDirty();
     this->slotColumnZ.ResetDirty();
@@ -143,18 +142,18 @@ void FloatTableObserverPlane::resetAllDirty() {
     this->slotSliceOffset.ResetDirty();
 }
 
-std::string FloatTableObserverPlane::cleanUpColumnHeader(const std::string& header) const {
+std::string TableObserverPlane::cleanUpColumnHeader(const std::string& header) const {
     return this->cleanUpColumnHeader(vislib::TString(header.data()));
 }
 
-std::string FloatTableObserverPlane::cleanUpColumnHeader(const vislib::TString& header) const {
+std::string TableObserverPlane::cleanUpColumnHeader(const vislib::TString& header) const {
     vislib::TString h(header);
     h.TrimSpaces();
     h.ToLowerCase();
     return std::string(vislib::StringA(h).PeekBuffer());
 }
 
-int FloatTableObserverPlane::getColumnIndex(const vislib::TString& colName) {
+int TableObserverPlane::getColumnIndex(const vislib::TString& colName) {
     std::string c = cleanUpColumnHeader(colName);
     if (this->columnIndex.find(c) != columnIndex.end()) {
         return static_cast<int>(columnIndex[c]);
@@ -163,7 +162,7 @@ int FloatTableObserverPlane::getColumnIndex(const vislib::TString& colName) {
     }
 }
 
-bool FloatTableObserverPlane::pushColumnIndex(std::vector<size_t>& cols, const vislib::TString& colName) {
+bool TableObserverPlane::pushColumnIndex(std::vector<size_t>& cols, const vislib::TString& colName) {
     std::string c = cleanUpColumnHeader(colName);
     if (this->columnIndex.find(c) != columnIndex.end()) {
         cols.push_back(columnIndex[c]);
@@ -174,7 +173,7 @@ bool FloatTableObserverPlane::pushColumnIndex(std::vector<size_t>& cols, const v
     }
 }
 
-bool FloatTableObserverPlane::assertData(floattable::CallFloatTableData *ft, megamol::core::view::CallClipPlane *cp, floattable::CallFloatTableData& out) {
+bool TableObserverPlane::assertData(table::TableDataCall *ft, megamol::core::view::CallClipPlane *cp, table::TableDataCall& out) {
     if (this->inputHash == ft->DataHash() && !anythingDirty()) return true;
     (*ft)();
     if (this->inputHash != ft->DataHash()) {
@@ -260,7 +259,7 @@ bool FloatTableObserverPlane::assertData(floattable::CallFloatTableData *ft, meg
         if (rows == 0) continue;
 
         if (ft->GetColumnsCount() != cols) {
-            vislib::sys::Log::DefaultLog.WriteError("FloatTableObserverPlane cannot cope with changing column count!");
+            vislib::sys::Log::DefaultLog.WriteError("TableObserverPlane cannot cope with changing column count!");
             return false;
         }
         // check whether the headers are the same
@@ -268,7 +267,7 @@ bool FloatTableObserverPlane::assertData(floattable::CallFloatTableData *ft, meg
         for (size_t i = 0; i < ft->GetColumnsCount(); i++) {
             std::string n = this->cleanUpColumnHeader(ft->GetColumnsInfos()[i].Name());
             if (columnIndex.find(n) == columnIndex.end() || columnIndex[n] != i) {
-                vislib::sys::Log::DefaultLog.WriteError("FloatTableObserverPlane does not trust reordered columns!");
+                vislib::sys::Log::DefaultLog.WriteError("TableObserverPlane does not trust reordered columns!");
                 return false;
             }
         }
@@ -302,7 +301,7 @@ bool FloatTableObserverPlane::assertData(floattable::CallFloatTableData *ft, meg
                     }
                     break;
                 case 1: // interpolation
-                    vislib::sys::Log::DefaultLog.WriteError("FloatTableObserverPlane has no implementation for interpolation yet!");
+                    vislib::sys::Log::DefaultLog.WriteError("TableObserverPlane has no implementation for interpolation yet!");
                     return false;
                     break;
             }
@@ -321,11 +320,11 @@ bool FloatTableObserverPlane::assertData(floattable::CallFloatTableData *ft, meg
 /*
  * megamol::pcl::PclDataSource::getMultiParticleData
  */
-bool FloatTableObserverPlane::getObservedData(core::Call& call) {
+bool TableObserverPlane::getObservedData(core::Call& call) {
     try {
-        floattable::CallFloatTableData& out = dynamic_cast<
-            floattable::CallFloatTableData&>(call);
-        floattable::CallFloatTableData *ft = this->slotCallFloatTable.CallAs<floattable::CallFloatTableData>();
+        table::TableDataCall& out = dynamic_cast<
+            table::TableDataCall&>(call);
+        table::TableDataCall *ft = this->slotCallInputTable.CallAs<table::TableDataCall>();
         if (ft == NULL) return false;
         megamol::core::view::CallClipPlane *cp = this->slotCallClipPlane.CallAs<megamol::core::view::CallClipPlane>();
         if (cp == NULL) return false;
@@ -352,11 +351,11 @@ bool FloatTableObserverPlane::getObservedData(core::Call& call) {
 /*
  * megamol::pcl::PclDataSource::getMultiparticleExtent
  */
-bool FloatTableObserverPlane::getHash(core::Call& call) {
+bool TableObserverPlane::getHash(core::Call& call) {
     try {
-        floattable::CallFloatTableData& out = dynamic_cast<
-            floattable::CallFloatTableData&>(call);
-        floattable::CallFloatTableData *ft = this->slotCallFloatTable.CallAs<floattable::CallFloatTableData>();
+        table::TableDataCall& out = dynamic_cast<
+            table::TableDataCall&>(call);
+        table::TableDataCall *ft = this->slotCallInputTable.CallAs<table::TableDataCall>();
         if (ft == NULL) return false;
         megamol::core::view::CallClipPlane *cp = this->slotCallClipPlane.CallAs<megamol::core::view::CallClipPlane>();
         if (cp == NULL) return false;
@@ -381,5 +380,5 @@ bool FloatTableObserverPlane::getHash(core::Call& call) {
 /*
  * megamol::pcl::PclDataSource::release
  */
-void FloatTableObserverPlane::release(void) {
+void TableObserverPlane::release(void) {
 }

@@ -8,7 +8,7 @@
 #include "mmcore/utility/SDFFont.h"
 #include "mmcore/view/CallRender2D.h"
 #include "mmcore/view/Renderer2DModule.h"
-#include "mmstd_datatools/floattable/CallFloatTableData.h"
+#include "mmstd_datatools/table/TableDataCall.h"
 
 #include "vislib/graphics/gl/FramebufferObject.h"
 
@@ -33,7 +33,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static inline const char* Description(void) { return "Parallel coordinates renderer for generic float tables"; }
+    static inline const char* Description(void) { return "Parallel coordinates renderer for generic tables"; }
 
     /**
      * Answers whether this module is available on the current system.
