@@ -1,6 +1,7 @@
 #pragma once
 
 #include <thread>
+#include <mutex>
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
@@ -32,7 +33,7 @@ private:
 
     bool onStartServer(core::param::ParamSlot& param);
 
-    void sender_loop(FBOCommFabric& comm, core::CallerSlot& view) const;
+    void sender_loop(FBOCommFabric& comm, core::CallerSlot& view);
 
     bool check_cam_upd(core::CallerSlot& view, unsigned int& syncnumber, MsgBody_t& msg) const;
 
@@ -47,6 +48,10 @@ private:
     std::thread sender_thread_;
 
     bool run_threads = false;
+
+    mutable std::mutex send_buffer_guard_;
+
+    MsgBody_t send_buffer_;
 }; // end class HeadnodeServer
 
 } // end namespace pbs

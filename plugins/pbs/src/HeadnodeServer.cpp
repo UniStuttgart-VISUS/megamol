@@ -1,11 +1,13 @@
 #include "stdafx.h"
 #include "HeadnodeServer.h"
 
+#include <chrono>
 #include <string>
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/AbstractParam.h"
+#include "mmcore/param/StringParam.h"
 #include "mmcore/view/AbstractView.h"
 #include "vislib/RawStorageSerialiser.h"
 
@@ -27,7 +29,8 @@ void megamol::pbs::HeadnodeServer::ParamUpdated(core::param::ParamSlot& slot) {
 }
 
 
-void megamol::pbs::HeadnodeServer::sender_loop(FBOCommFabric& comm, core::CallerSlot& view) const {
+void megamol::pbs::HeadnodeServer::sender_loop(FBOCommFabric& comm, core::CallerSlot& view) {
+    using namespace std::chrono_literals;
     unsigned int syncnumber = -1;
 
     // TODO Ensure that project is transmitted only upon request
@@ -49,6 +52,19 @@ void megamol::pbs::HeadnodeServer::sender_loop(FBOCommFabric& comm, core::Caller
         }
 
         // send messages
+        std::vector<char> buf;
+        while (!comm.Recv(buf, recv_type::RECV) && run_threads) {
+        }
+        // request received
+        // send stuff
+        // clear send buffer
+        {
+            std::lock_guard<std::mutex> lock(send_buffer_guard_);
+            comm.Send(send_buffer_, send_type::SEND);
+            send_buffer_.clear();
+        }
+
+        std::this_thread::sleep_for(1000ms / 60);
     }
 }
 
@@ -91,4 +107,17 @@ bool megamol::pbs::HeadnodeServer::check_cam_upd(
 bool megamol::pbs::HeadnodeServer::onStartServer(core::param::ParamSlot& param) {
     shutdown_threads();
     init_threads();
+    return true;
+}
+
+
+bool megamol::pbs::HeadnodeServer::init_threads() {
+    this->comm_fabric_ = FBOCommFabric(std::make_unique<ZMQCommFabric>(zmq::socket_type::rep));
+    auto const address = std::string(this->renderhead_address_slot_.Param<core::param::StringParam>()->Value());
+    this->comm_fabric_.Bind(address);
+
+    this->sender_thread_ =
+        std::thread(&HeadnodeServer::sender_loop, this, std::ref(this->comm_fabric_), std::ref(this->view_slot_));
+
+    return true;
 }
