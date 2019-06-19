@@ -7,14 +7,14 @@
 
 #include "vislib/sys/CriticalSection.h"
 
-#include "vislib/assert.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/UnsupportedOperationException.h"
+#include "vislib/assert.h"
 
 
 /*
  * vislib::sys::CriticalSection::CriticalSection
- */ 
+ */
 vislib::sys::CriticalSection::CriticalSection(void) {
 #ifdef _WIN32
     ::InitializeCriticalSection(&this->critSect);
@@ -27,7 +27,7 @@ vislib::sys::CriticalSection::CriticalSection(void) {
 
 
 /*
- * vislib::sys::CriticalSection::~CriticalSection(void) 
+ * vislib::sys::CriticalSection::~CriticalSection(void)
  */
 vislib::sys::CriticalSection::~CriticalSection(void) {
 #ifdef _WIN32
@@ -60,12 +60,11 @@ void vislib::sys::CriticalSection::Lock(void) {
 bool vislib::sys::CriticalSection::TryLock(void) {
 #ifdef _WIN32
 
-#if (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0400))
+#    if (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0400))
     return (::TryEnterCriticalSection(&this->critSect) != 0);
-#else /* (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0400)) */
-    throw UnsupportedOperationException(
-        "vislib::sys::CriticalSection::TryLock", __FILE__, __LINE__);
-#endif /* (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0400)) */
+#    else  /* (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0400)) */
+    throw UnsupportedOperationException("vislib::sys::CriticalSection::TryLock", __FILE__, __LINE__);
+#    endif /* (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0400)) */
 
 #else /* _WIN32 */
     return this->mutex.TryLock();
@@ -93,15 +92,15 @@ void vislib::sys::CriticalSection::Unlock(void) {
  */
 vislib::sys::CriticalSection::CriticalSection(const CriticalSection& rhs) {
     throw UnsupportedOperationException("vislib::sys::CriticalSection::\
-CriticalSection", __FILE__, __LINE__);
+CriticalSection",
+        __FILE__, __LINE__);
 }
 
 
 /*
  * vislib::sys::CriticalSection::operator =
  */
-vislib::sys::CriticalSection& vislib::sys::CriticalSection::operator =(
-        const CriticalSection& rhs) {
+vislib::sys::CriticalSection& vislib::sys::CriticalSection::operator=(const CriticalSection& rhs) {
     if (this != &rhs) {
         throw IllegalParamException("rhs", __FILE__, __LINE__);
     }
