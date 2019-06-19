@@ -14,12 +14,7 @@
 #    pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-
-#ifdef _WIN32
-#    include <Windows.h>
-#else /* _WIN32 */
-#    include <pthread.h>
-#endif /* _WIN32 */
+#include <mutex>
 
 #include "vislib/sys/Lockable.h"
 #include "vislib/sys/SyncObject.h"
@@ -33,7 +28,7 @@ namespace sys {
  * A platform independent mutex wrapper.
  *
  * Implementation notes: On Windows systems, this mutex can be used for
- * inter-process synchronisation tasks. If you just need to synchronise
+ * inter-process synchronization tasks. If you just need to synchronize
  * threads of a single process, consider using the critical section as it
  * is faster.
  *
@@ -45,18 +40,18 @@ public:
     /**
      * Create a new mutex, which is initially not locked.
      */
-    Mutex(void);
+    Mutex(void) = default;
 
     /** Dtor. */
-    virtual ~Mutex(void);
+    virtual ~Mutex(void) = default;
 
     /**
      * Acquire a lock on the mutex for the calling thread. The method blocks
      * until the lock is acquired.
      *
-     * @throws SystemException If the lock could not be acquired.
+     * @throws std::system_error when errors occur including OS errors
      */
-    virtual void Lock(void);
+    void Lock(void) override;
 
     /**
      * Try to acquire a lock on the mutex for the calling thread. If the
@@ -64,23 +59,16 @@ public:
      * after the specified timeout and the return value is false. The
      * method is non-blocking if the timeout is set zero.
      *
-     * On Linux, the timeout is always zero.
-     *
      * @param timeout The timeout for acquiring the mutex.
      *
      * @return true, if the lock was acquired, false, if not.
-     *
-     * @throws SystemException If an error occurred when trying to acquire
-     *                         the lock.
      */
     bool TryLock(const DWORD timeout = 0);
 
     /**
      * Release the mutex.
-     *
-     * @throw SystemException If the lock could not be released.
      */
-    virtual void Unlock(void);
+    void Unlock(void) override;
 
 private:
     /**
@@ -103,19 +91,7 @@ private:
      */
     Mutex& operator=(const Mutex& rhs);
 
-#ifdef _WIN32
-
-    /** The handle for the OS mutex. */
-    HANDLE handle;
-
-#else /* _WIN32 */
-    /** The mutex attributes. */
-    pthread_mutexattr_t attr;
-
-    /** The mutex object. */
-    pthread_mutex_t mutex;
-
-#endif /* _WIN32 */
+    std::recursive_timed_mutex mutex;
 };
 
 
