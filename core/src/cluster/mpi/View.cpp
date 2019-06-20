@@ -277,7 +277,7 @@ void megamol::core::cluster::mpi::View::Render(const mmcRenderViewContext& conte
 
     // Post-process status
     if (state.RelaySize > 0) {
-        this->ModuleGraphLock().LockExclusive();
+        vislib::sys::AutoLock lock(this->ModuleGraphLock());
         _TRACE_ACQUIRE_LOCK("module graph");
         // This code only runs on MPI slaves, ie there is no concurrent access
         // to the relay buffer. Everything runs in the rendering thread.
@@ -358,9 +358,6 @@ void megamol::core::cluster::mpi::View::Render(const mmcRenderViewContext& conte
                     "Rank %d got an unknown message with ID %d\n", this->mpiRank, msg.GetHeader().GetMessageID());
             } /* end switch (msg.GetHeader().GetMessageID()) */
         }     /* end while (offset < state.RelaySize) */
-
-        _TRACE_RELEASE_LOCK("module graph");
-        this->ModuleGraphLock().UnlockExclusive();
 
         _TRACE_MESSAGING("Rank %d has processed all relayed messages.\n", this->mpiRank);
     } /* end if (!this->isBcastMaster() && (state.RelaySize > 0)) */
