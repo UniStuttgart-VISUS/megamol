@@ -23,6 +23,8 @@ public:
 
     void LockShared() override { Lock(); };
 
+    bool TryLock(unsigned long const timeout = 0) override { return mutex.TryLock(timeout); };
+
     void Unlock() override { mutex.Unlock(); }
 
     void UnlockExclusive() override { Unlock(); };
