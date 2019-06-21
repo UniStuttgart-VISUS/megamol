@@ -25,7 +25,7 @@ void vislib::sys::Mutex::Lock(void) { mutex.lock(); }
  * vislib::sys::Mutex::TryLock
  */
 bool vislib::sys::Mutex::TryLock(const DWORD timeout) {
-    return mutex.try_lock_until(std::chrono::steady_clock::now() + std::chrono::milliseconds(timeout));
+    return mutex.try_lock_for(std::chrono::milliseconds(timeout));
 }
 
 
