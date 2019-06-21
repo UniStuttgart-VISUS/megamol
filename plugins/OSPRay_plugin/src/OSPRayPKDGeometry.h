@@ -7,12 +7,13 @@
 
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "OSPRay_plugin/AbstractOSPRayStructure.h"
+#include "mmcore/CalleeSlot.h"
+#include "mmcore/Module.h"
 
 namespace megamol {
 namespace ospray {
 
-class OSPRayPKDGeometry : public AbstractOSPRayStructure {
+class OSPRayPKDGeometry : public megamol::core::Module {
 
 public:
 
@@ -50,35 +51,29 @@ public:
     OSPRayPKDGeometry(void);
 
 protected:
-    /**
-    * color transfer helper
-    * @param array with gray scales
-    * @param transferfunction table/texture
-    * @param transferfunction table/texture size
-    * @param target array (rgba)
-    */
-    //void colorTransferGray(std::vector<float> &grayArray, float const* transferTable, unsigned int tableSize, std::vector<float> &rgbaArray);
 
     virtual bool create();
     virtual void release();
 
-    virtual bool readData(core::Call &call);
-    virtual bool getExtends(core::Call &call);
-
+    bool getDataCallback(core::Call& call);
+    bool getExtendsCallback(core::Call& call);
+    bool getDirtyCallback(core::Call& call);
 
     bool InterfaceIsDirty();
 
-    core::param::ParamSlot particleList;
+    bool InterfaceIsDirtyNoReset() const;
+
+    core::CalleeSlot deployStructureSlot;
 
     /** The call for data */
     core::CallerSlot getDataSlot;
+    SIZE_T datahash;
+    int time;
 
 private:
     megamol::core::param::ParamSlot colorTypeSlot;
 
-    // color transfer data
-    unsigned int tex_size;
-
+    long long int ispcLimit = 1ULL << 30;
 
 };
 

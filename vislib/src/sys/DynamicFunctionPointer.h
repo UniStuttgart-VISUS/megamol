@@ -35,7 +35,7 @@ namespace sys {
          * @param moduleName The name of the module.
          * @param functionName The name of the function.
          */
-        DynamicFunctionPointer(char *moduleName, char *functionName);
+        DynamicFunctionPointer(char const* moduleName, char const* functionName);
 
         /** Dtor. */
         ~DynamicFunctionPointer(void);
@@ -72,7 +72,7 @@ namespace sys {
      * vislib::sys::DynamicFunctionPointer::DynamicFunctionPointer
      */
     template<class T>
-    vislib::sys::DynamicFunctionPointer<T>::DynamicFunctionPointer(char *moduleName, char *functionName) {
+    vislib::sys::DynamicFunctionPointer<T>::DynamicFunctionPointer(char const* moduleName, char const* functionName) {
         this->func = static_cast<T>(static_cast<void*>(GetProcAddress(GetModuleHandleA(moduleName), functionName)));
     }
 

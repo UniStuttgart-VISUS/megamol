@@ -3,7 +3,7 @@
     <include file="common"/>
 
     <shader name="vertex">
-        <snippet type="version">400</snippet>
+        <snippet type="version">140</snippet>
         <snippet name="main" type="string">
             <![CDATA[
 
@@ -26,10 +26,11 @@ void main() {
     </shader>
 
     <shader name="fragment">
-        <snippet type="version">400</snippet>
+        <snippet type="version">140</snippet>
         <snippet name="main" type="string">
             <![CDATA[
         
+#extension GL_ARB_explicit_attrib_location : enable
 in      vec2      texCoord;
 uniform float     alpha;
 uniform sampler2D tex;
