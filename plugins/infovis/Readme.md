@@ -12,7 +12,7 @@ This plugin is switched on by default. It depends on mmstd_datatools.
 
 ### DiagramSeries
 
-Module that allows the selection of a specific column from a `FloatTable` (slice of that table). Multiple columns can be selected by cascading the module. No copy of the column is kept.
+Module that allows the selection of a specific column from a table. Multiple columns can be selected by cascading the module. No copy of the column is kept.
 
 ### FlagStorage
 
@@ -22,7 +22,7 @@ This module keeps flag data about some other data source. The idea is to have a 
 
 **NOTE:** This renderer **requires** the connection of a `FlagStorage` and a transfer function to work.
 
-A `Renderer2DModule` based on the code written by Alex Panagiotidis. This renderer generates a parallel coordinate plot (PCP) from all columns contained in a `CallFloatTableData`. The renderer supports 3 modes:
+A `Renderer2DModule` based on the code written by Alex Panagiotidis. This renderer generates a parallel coordinate plot (PCP) from all columns contained in a `TableDataCall`. The renderer supports 3 modes:
 * `DRAW_DISCRETE` for drawing a standard PCP
 * `DRAW_CONTINUOUS` for drawing a blended PCP that accumulates the lines into a density, which can the be mapped to color via a connected `CallGetTransferFunction`. 
 * `DRAW_HISTOGRAM` is currently *not working*.

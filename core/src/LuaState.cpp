@@ -223,7 +223,7 @@ MMC_LUA_MMLISTPARAMETERS "=" MMC_LUA_MMLISTPARAMETERS ","
 "      rep = string.rep, reverse = string.reverse, sub = string.sub, "
 "      upper = string.upper },"
 "  table = { insert = table.insert, maxn = table.maxn, remove = table.remove, "
-"      sort = table.sort },"
+"      sort = table.sort, concat = table.concat },"
 "  math = { abs = math.abs, acos = math.acos, asin = math.asin, "
 "      atan = math.atan, atan2 = math.atan2, ceil = math.ceil, cos = math.cos, "
 "      cosh = math.cosh, deg = math.deg, exp = math.exp, floor = math.floor, "
@@ -248,7 +248,7 @@ int dispatch(lua_State * L) {
 #define CHECK_LUA(call) __luaErr = call;\
     consumeError(__luaErr, __FILE__, __LINE__);
 
-void megamol::core::LuaState::consumeError(int error, char *file, int line) {
+void megamol::core::LuaState::consumeError(int error, char const* file, int line) const {
     if (error != LUA_OK) {
         const char *err = lua_tostring(L, -1); // get error from top of stack...
         vislib::sys::Log::DefaultLog.WriteError("Lua Error: %s at %s:%i\n", err, file, line);
