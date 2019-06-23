@@ -247,8 +247,10 @@ bool View3DSpaceMouse::create(void) {
 #if defined(_WIN32) && !defined(__clang__)
     this->rawInput.Initialize(); // create a raw input class to get input from 3d mouse
     // set callback functions for motion and button events from the raw input device
-    this->rawInput.SetMotionFunction(Raw3DMotionDelegate(*this, &View3DSpaceMouse::On3DMouseMotion));
-    this->rawInput.SetButtonFunction(Raw3DButtonDelegate(*this, &View3DSpaceMouse::On3DMouseButton));
+    auto mfd = Raw3DMotionDelegate(*this, &View3DSpaceMouse::On3DMouseMotion);
+    auto mbd = Raw3DButtonDelegate(*this, &View3DSpaceMouse::On3DMouseButton);
+    this->rawInput.SetMotionFunction(mfd);
+    this->rawInput.SetButtonFunction(mbd);
     // Set a speed scalar for both rotation and translation
     this->rawInput.SetTranslationSpeed(9); /* These speeds should be configurable */
     this->rawInput.SetRotationSpeed(9);

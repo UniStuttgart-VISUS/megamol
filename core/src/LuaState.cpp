@@ -1571,7 +1571,7 @@ int megamol::core::LuaState::Help(lua_State *L) {
 }
 
 int megamol::core::LuaState::Quit(lua_State *L) {
-    if (this->checkRunning(MMC_LUA_MMLISTMODULES)) {
+    if (this->checkRunning(MMC_LUA_MMQUIT)) {
         this->coreInst->Shutdown();
     }
     return 0;
