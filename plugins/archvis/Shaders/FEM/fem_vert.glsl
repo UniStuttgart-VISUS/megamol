@@ -16,9 +16,9 @@ struct TextureHandle
     uvec2 tex_handle;
 };
 
-layout(std430, binding = 0) readonly buffer MeshShaderParamsBuffer { MeshShaderParams[] mesh_shader_params; };
-layout(std430, binding = 1) readonly buffer NodeDeformationsBuffer { NodeDeformation[] node_deformations; };
-layout(std430, binding = 2) readonly buffer TextureHandlesBuffer { TextureHandle[] texture_handles; };
+layout(std430, binding = 0) readonly buffer MeshShaderParamsBuffer { MeshShaderParams mesh_shader_params[]; };
+layout(std430, binding = 1) readonly buffer NodeDeformationsBuffer { NodeDeformation node_deformations[]; };
+layout(std430, binding = 2) readonly buffer TextureHandlesBuffer { TextureHandle texture_handles[]; };
 
 
 uniform mat4 view_mx;

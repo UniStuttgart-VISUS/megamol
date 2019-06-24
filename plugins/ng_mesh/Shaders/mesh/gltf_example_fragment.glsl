@@ -3,7 +3,7 @@ struct LightParams
     float x,y,z,intensity;
 };
 
-layout(std430, binding = 1) readonly buffer LightParamsBuffer { LightParams[] light_params; };
+layout(std430, binding = 1) readonly buffer LightParamsBuffer { LightParams light_params[]; };
 
 in vec3 world_pos;
 in vec3 normal;

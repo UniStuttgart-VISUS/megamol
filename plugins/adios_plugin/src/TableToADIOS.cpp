@@ -1,47 +1,49 @@
 /*
- * FloatTabletoADIOS.h
+ * TableToADIOS.h
  *
  * Copyright (C) 2018 by Universitaet Stuttgart (VISUS).
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
-#include "FloatTabletoADIOS.h"
+#include "TableToADIOS.h"
+
 #include "CallADIOSData.h"
-#include "mmstd_datatools/floattable/CallFloatTableData.h"
+#include "mmstd_datatools/table/TableDataCall.h"
 #include "mmcore/param/EnumParam.h"
+
 #include "vislib/sys/Log.h"
 
 namespace megamol {
 namespace adios {
 
-FloatTabletoADIOS::FloatTabletoADIOS(void)
+TableToADIOS::TableToADIOS(void)
     : core::Module()
-    , ftSlot("ftSlot", "Slot to request multi particle data.")
-    , adiosSlot("adiosSlot", "Slot to send ADIOS IO") {
+    , ftSlot("ftSlot", "Slot to request table data from")
+    , adiosSlot("adiosSlot", "Slot to send ADIOS IO to") {
 
 
     this->adiosSlot.SetCallback(
-        CallADIOSData::ClassName(), CallADIOSData::FunctionName(0), &FloatTabletoADIOS::getDataCallback);
+        CallADIOSData::ClassName(), CallADIOSData::FunctionName(0), &TableToADIOS::getDataCallback);
     this->adiosSlot.SetCallback(
-        CallADIOSData::ClassName(), CallADIOSData::FunctionName(1), &FloatTabletoADIOS::getHeaderCallback);
+        CallADIOSData::ClassName(), CallADIOSData::FunctionName(1), &TableToADIOS::getHeaderCallback);
     this->MakeSlotAvailable(&this->adiosSlot);
 
-    this->ftSlot.SetCompatibleCall<stdplugin::datatools::floattable::CallFloatTableDataDescription>();
+    this->ftSlot.SetCompatibleCall<stdplugin::datatools::table::TableDataCallDescription>();
     this->MakeSlotAvailable(&this->ftSlot);
 }
 
-FloatTabletoADIOS::~FloatTabletoADIOS(void) { this->Release(); }
+TableToADIOS::~TableToADIOS(void) { this->Release(); }
 
-bool FloatTabletoADIOS::create(void) { return true; }
+bool TableToADIOS::create(void) { return true; }
 
-void FloatTabletoADIOS::release(void) {}
+void TableToADIOS::release(void) {}
 
-bool FloatTabletoADIOS::getDataCallback(core::Call& call) {
+bool TableToADIOS::getDataCallback(core::Call& call) {
     CallADIOSData* cad = dynamic_cast<CallADIOSData*>(&call);
     if (cad == nullptr) return false;
 
-    stdplugin::datatools::floattable::CallFloatTableData* cftd = this->ftSlot.CallAs<stdplugin::datatools::floattable::CallFloatTableData>();
+    stdplugin::datatools::table::TableDataCall* cftd = this->ftSlot.CallAs<stdplugin::datatools::table::TableDataCall>();
     if (cftd == nullptr) return false;
 
     if (!(*cftd)(1)) return false;
@@ -78,12 +80,12 @@ bool FloatTabletoADIOS::getDataCallback(core::Call& call) {
     return true;
 }
 
-bool FloatTabletoADIOS::getHeaderCallback(core::Call& call) {
+bool TableToADIOS::getHeaderCallback(core::Call& call) {
 
     CallADIOSData* cad = dynamic_cast<CallADIOSData*>(&call);
     if (cad == nullptr) return false;
 
-    stdplugin::datatools::floattable::CallFloatTableData* cftd = this->ftSlot.CallAs<stdplugin::datatools::floattable::CallFloatTableData>();
+    stdplugin::datatools::table::TableDataCall* cftd = this->ftSlot.CallAs<stdplugin::datatools::table::TableDataCall>();
     if (cftd == nullptr) return false;
 
     if (!(*cftd)(1)) return false;
@@ -105,7 +107,7 @@ bool FloatTabletoADIOS::getHeaderCallback(core::Call& call) {
     return true;
 }
 
-std::string FloatTabletoADIOS::cleanUpColumnHeader(const vislib::TString& header) const {
+std::string TableToADIOS::cleanUpColumnHeader(const vislib::TString& header) const {
     vislib::TString h(header);
     h.TrimSpaces();
     h.ToLowerCase();

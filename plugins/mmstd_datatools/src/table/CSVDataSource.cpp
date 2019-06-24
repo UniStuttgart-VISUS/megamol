@@ -6,15 +6,17 @@
  */
 
 #include "stdafx.h"
-#include "floattable/CSVDataSource.h"
+#include "CSVDataSource.h"
+
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/IntParam.h"
-#include "vislib/sys/ASCIIFileBuffer.h"
 #include "mmcore/CoreInstance.h"
+
+#include "vislib/sys/ASCIIFileBuffer.h"
 #include "vislib/StringTokeniser.h"
 #include <sstream>
 #include <vector>
@@ -24,8 +26,9 @@
 #include <limits>
 #include <omp.h>
 
+using namespace megamol::stdplugin::datatools;
+using namespace megamol::stdplugin::datatools::table;
 using namespace megamol;
-using namespace megamol::stdplugin;
 
 enum class DecimalSeparator : int {
     Unknown = 0,
@@ -81,7 +84,7 @@ double parseValue(const char* tokenStart, const char* tokenEnd) {
     return NAN;
 }
 
-datatools::floattable::CSVDataSource::CSVDataSource(void) : core::Module(),
+CSVDataSource::CSVDataSource(void) : core::Module(),
 filenameSlot("filename", "Filename to read from"),
 skipPrefaceSlot("skipPreface", "Number of lines to skip before parsing"),
 headerNamesSlot("headerNames", "Interpret the first data row as column names"),
@@ -125,26 +128,26 @@ dataHash(0), columns(), values() {
     this->shuffleSlot.SetParameter(new core::param::BoolParam(false));
     this->MakeSlotAvailable(&this->shuffleSlot);
 
-    this->getDataSlot.SetCallback(CallFloatTableData::ClassName(), "GetData", &CSVDataSource::getDataCallback);
-    this->getDataSlot.SetCallback(CallFloatTableData::ClassName(), "GetHash", &CSVDataSource::getHashCallback);
+    this->getDataSlot.SetCallback(TableDataCall::ClassName(), "GetData", &CSVDataSource::getDataCallback);
+    this->getDataSlot.SetCallback(TableDataCall::ClassName(), "GetHash", &CSVDataSource::getHashCallback);
     this->MakeSlotAvailable(&this->getDataSlot);
 }
 
-datatools::floattable::CSVDataSource::~CSVDataSource(void) {
+CSVDataSource::~CSVDataSource(void) {
     this->Release();
 }
 
-bool datatools::floattable::CSVDataSource::create(void) {
+bool CSVDataSource::create(void) {
     // nothing to do
     return true;
 }
 
-void datatools::floattable::CSVDataSource::release(void) {
+void CSVDataSource::release(void) {
     this->columns.clear();
     this->values.clear();
 }
 
-void datatools::floattable::CSVDataSource::assertData(void) {
+void CSVDataSource::assertData(void) {
     if (!this->filenameSlot.IsDirty()
         && !this->skipPrefaceSlot.IsDirty()
         && !this->headerNamesSlot.IsDirty()
@@ -259,9 +262,9 @@ void datatools::floattable::CSVDataSource::assertData(void) {
         if (headerTypesSlot.Param<core::param::BoolParam>()->Value()) {
             vislib::Array<vislib::StringA> tokens(vislib::StringTokeniserA::Split(file[firstHeaRow], colSep, false));
             for (SIZE_T i = 0; i < dimNames.Count(); i++) {
-                CallFloatTableData::ColumnType type = CallFloatTableData::ColumnType::QUANTITATIVE;
+                TableDataCall::ColumnType type = TableDataCall::ColumnType::QUANTITATIVE;
                 if (tokens.Count() > i && tokens[i].Equals("CATEGORICAL", true)) {
-                    type = CallFloatTableData::ColumnType::CATEGORICAL;
+                    type = TableDataCall::ColumnType::CATEGORICAL;
                     hasCatDims = true;
                 }
                 this->columns[i].SetName(dimNames[i].PeekBuffer())
@@ -272,7 +275,7 @@ void datatools::floattable::CSVDataSource::assertData(void) {
         } else {
             for (SIZE_T i = 0; i < dimNames.Count(); i++) {
                 this->columns[i].SetName(dimNames[i].PeekBuffer())
-                    .SetType(CallFloatTableData::ColumnType::QUANTITATIVE)
+                    .SetType(TableDataCall::ColumnType::QUANTITATIVE)
                     .SetMinimumValue(0.0f)
                     .SetMaximumValue(1.0f);
             }
@@ -321,7 +324,7 @@ void datatools::floattable::CSVDataSource::assertData(void) {
                     ++end;
                 }
 
-                if (this->columns[col].Type() == CallFloatTableData::ColumnType::QUANTITATIVE) {
+                if (this->columns[col].Type() == TableDataCall::ColumnType::QUANTITATIVE) {
                     if (decType == DecimalSeparator::DE) {
                         for (char *ez = const_cast<char*>(start); ez != end; ++ez) if (*ez == ',') *ez = '.';
                     }
@@ -330,7 +333,7 @@ void datatools::floattable::CSVDataSource::assertData(void) {
                     if (std::isnan(value)) {
                         hasInvalids = true;
                     }
-                } else if (this->columns[col].Type() == CallFloatTableData::ColumnType::CATEGORICAL) {
+                } else if (this->columns[col].Type() == TableDataCall::ColumnType::CATEGORICAL) {
                     assert(hasCatDims);
                     std::map<std::string, float>::iterator cmi = catMap.find(start);
                     if (cmi == catMap.end()) {
@@ -380,7 +383,7 @@ void datatools::floattable::CSVDataSource::assertData(void) {
         // Merge categorical data so that all `value indices` map to one `string key`
         if (hasCatDims) {
             for (size_t c = 0; c < colCnt; ++c) {
-                if (columns[c].Type() != CallFloatTableData::ColumnType::CATEGORICAL) continue;
+                if (columns[c].Type() != TableDataCall::ColumnType::CATEGORICAL) continue;
                 std::map<int, int> catRemap;
                 std::map<std::string, int> catMap;
                 for (int ci = static_cast<int>(c) * thCnt; ci < static_cast<int>(c + 1) * thCnt; ++ci) {
@@ -437,7 +440,7 @@ void datatools::floattable::CSVDataSource::assertData(void) {
     this->dataHash++;
 }
 
-void datatools::floattable::CSVDataSource::shuffleData() {
+void CSVDataSource::shuffleData() {
     if (!this->shuffleSlot.Param<core::param::BoolParam>()->Value()) {
                 // Do not shuffle, unless requested
         return;
@@ -455,8 +458,8 @@ void datatools::floattable::CSVDataSource::shuffleData() {
     }
 }
 
-bool datatools::floattable::CSVDataSource::getDataCallback(core::Call& caller) {
-    CallFloatTableData *tfd = dynamic_cast<CallFloatTableData*>(&caller);
+bool CSVDataSource::getDataCallback(core::Call& caller) {
+    TableDataCall *tfd = dynamic_cast<TableDataCall*>(&caller);
     if (tfd == nullptr) return false;
 
     this->assertData();
@@ -473,8 +476,8 @@ bool datatools::floattable::CSVDataSource::getDataCallback(core::Call& caller) {
     return true;
 }
 
-bool datatools::floattable::CSVDataSource::getHashCallback(core::Call& caller) {
-    CallFloatTableData *tfd = dynamic_cast<CallFloatTableData*>(&caller);
+bool CSVDataSource::getHashCallback(core::Call& caller) {
+    TableDataCall *tfd = dynamic_cast<TableDataCall*>(&caller);
     if (tfd == nullptr) return false;
 
     this->assertData();
@@ -487,7 +490,7 @@ bool datatools::floattable::CSVDataSource::getHashCallback(core::Call& caller) {
     return true;
 }
 
-bool datatools::floattable::CSVDataSource::clearData(core::param::ParamSlot& caller) {
+bool CSVDataSource::clearData(core::param::ParamSlot& caller) {
     this->columns.clear();
     this->values.clear();
 
