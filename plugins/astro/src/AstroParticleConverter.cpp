@@ -26,6 +26,8 @@ AstroParticleConverter::AstroParticleConverter(void)
     , midColorSlot("midColor", "median color of the used range")
     , maxColorSlot("maxColor", "maximum color of the used range")
     , useMidColorSlot("useMidColor", "Enables the usage of the mid color in the color interpolation")
+    , minValueSlot("minValue", "minimum value of the currently shown parameter")
+    , maxValueSlot("maxValue", "maximum value of the currently shown parameter")
     , lastDataHash(0)
     , hashOffset(0)
     , valmin(0.0f)
@@ -69,6 +71,16 @@ AstroParticleConverter::AstroParticleConverter(void)
 
     this->useMidColorSlot.SetParameter(new param::BoolParam(true));
     this->MakeSlotAvailable(&this->useMidColorSlot);
+
+    auto minPar = new param::FloatParam(0.0f);
+    minPar->SetGUIReadOnly(true);
+    this->minValueSlot.SetParameter(minPar);
+    this->MakeSlotAvailable(&this->minValueSlot);
+
+    auto maxPar = new param::FloatParam(0.0f);
+    maxPar->SetGUIReadOnly(true);
+    this->maxValueSlot.SetParameter(maxPar);
+    this->MakeSlotAvailable(&this->maxValueSlot);
 }
 
 /*
@@ -211,6 +223,8 @@ void AstroParticleConverter::calcMinMaxValues(const AstroDataCall& ast) {
         this->valmax = 1.0f;
         break;
     }
+    this->minValueSlot.Param<param::FloatParam>()->SetValue(this->valmin);
+    this->maxValueSlot.Param<param::FloatParam>()->SetValue(this->valmax);
 }
 
 /*

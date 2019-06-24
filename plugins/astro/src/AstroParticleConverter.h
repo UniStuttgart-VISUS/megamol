@@ -76,6 +76,9 @@ private:
     core::param::ParamSlot maxColorSlot;
 	core::param::ParamSlot useMidColorSlot;
 
+    core::param::ParamSlot minValueSlot;
+    core::param::ParamSlot maxValueSlot;
+
     std::vector<glm::vec4> usedColors;
 
     core::CalleeSlot sphereDataSlot;
