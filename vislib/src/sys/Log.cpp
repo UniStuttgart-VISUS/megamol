@@ -102,23 +102,23 @@ vislib::sys::Log::FileTarget::FileTarget(const char *path, UINT level)
     int newFile = -1;
 #ifdef _WIN32
 #if (_MSC_VER >= 1400)
-    if (_sopen_s(&newFile, path, _O_APPEND | _O_CREAT | _O_TEXT 
+    if (_sopen_s(&newFile, path, _O_APPEND | _O_CREAT | _O_TEXT | _O_TRUNC 
             | _O_WRONLY, _SH_DENYWR, _S_IREAD | _S_IWRITE) != 0) {
         newFile = -1;
     }
 #else /* (_MSC_VER >= 1400) */
-    newFile = _sopen(path, _O_APPEND | _O_CREAT | _O_TEXT 
+    newFile = _sopen(path, _O_APPEND | _O_CREAT | _O_TEXT | _O_TRUNC
         | _O_WRONLY, _SH_DENYWR, _S_IREAD | _S_IWRITE);
 #endif /* (_MSC_VER >= 1400) */
 #else /* _WIN32 */
-    newFile = open(path, O_APPEND | O_CREAT | O_LARGEFILE 
+    newFile = open(path, O_APPEND | O_CREAT | O_LARGEFILE | O_TRUNC
         | O_WRONLY, S_IRWXU | S_IRWXG);
 #endif /* _WIN32 */
     this->stream = (newFile == -1) ? NULL : 
 #ifdef _WIN32
-        _fdopen(newFile, "ac");
+        _fdopen(newFile, "wc");
 #else /* _WIN32 */
-        fdopen(newFile, "a");
+        fdopen(newFile, "w");
 #endif /* _WIN32 */
 
     if (this->stream != NULL) {
@@ -139,24 +139,24 @@ vislib::sys::Log::FileTarget::FileTarget(const wchar_t *path, UINT level)
     int newFile = -1;
 #ifdef _WIN32
 #if (_MSC_VER >= 1400)
-    if (_wsopen_s(&newFile, path, _O_APPEND | _O_CREAT | _O_TEXT 
+    if (_wsopen_s(&newFile, path, _O_APPEND | _O_CREAT | _O_TEXT | _O_TRUNC
             | _O_WRONLY, _SH_DENYWR, _S_IREAD | _S_IWRITE) != 0) {
         newFile = -1;
     }
 #else /* (_MSC_VER >= 1400) */
-    newFile = _wsopen(path, _O_APPEND | _O_CREAT | _O_TEXT 
+    newFile = _wsopen(path, _O_APPEND | _O_CREAT | _O_TEXT | _O_TRUNC
         | _O_WRONLY, _SH_DENYWR, _S_IREAD | _S_IWRITE);
 #endif /* (_MSC_VER >= 1400) */
 #else /* _WIN32 */
-    newFile = open(W2A(path), O_APPEND | O_CREAT | O_LARGEFILE 
+    newFile = open(W2A(path), O_APPEND | O_CREAT | O_LARGEFILE | O_TRUNC
         | O_WRONLY, S_IRWXU | S_IRWXG);
 #endif /* _WIN32 */
 
     this->stream = (newFile == -1) ? NULL : 
 #ifdef _WIN32
-        _fdopen(newFile, "ac");
+        _fdopen(newFile, "wc");
 #else /* _WIN32 */
-        fdopen(newFile, "a");
+        fdopen(newFile, "w");
 #endif /* _WIN32 */
 
     if (this->stream != NULL) {
