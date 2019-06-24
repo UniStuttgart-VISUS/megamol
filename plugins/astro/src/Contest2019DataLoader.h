@@ -99,6 +99,7 @@ protected:
             this->molecularWeights.reset();
             this->densities.reset();
             this->gravitationalPotentials.reset();
+            this->entropy.reset();
             this->isBaryonFlags.reset();
             this->isStarFlags.reset();
             this->isWindFlags.reset();
@@ -178,6 +179,9 @@ protected:
 
         /** Pointer to the gravitational potential array */
         floatArrayPtr gravitationalPotentials = nullptr;
+
+        /** Pointer to the entropy array */
+        floatArrayPtr entropy = nullptr;
 
         /** Pointer to the baryon flag array */
         boolArrayPtr isBaryonFlags = nullptr;

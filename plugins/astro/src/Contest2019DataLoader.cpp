@@ -24,7 +24,7 @@ using namespace megamol::astro;
 /*
  * Contest2019DataLoader::Frame::Frame
  */
-Contest2019DataLoader::Frame::Frame(view::AnimDataModule& owner) : view::AnimDataModule::Frame(owner) {
+Contest2019DataLoader::Frame::Frame(view::AnimDataModule& owner) : view::AnimDataModule::Frame(owner), redshift(0.0f) {
     // intentionally empty
 }
 
@@ -86,6 +86,9 @@ bool Contest2019DataLoader::Frame::LoadFrame(std::string filepath, unsigned int 
     if (this->gravitationalPotentials == nullptr) {
         this->gravitationalPotentials = std::make_shared<std::vector<float>>();
     }
+    if (this->entropy == nullptr) {
+        this->entropy = std::make_shared<std::vector<float>>();
+    }
     if (this->isBaryonFlags == nullptr) {
         this->isBaryonFlags = std::make_shared<std::vector<bool>>();
     }
@@ -114,6 +117,7 @@ bool Contest2019DataLoader::Frame::LoadFrame(std::string filepath, unsigned int 
     this->molecularWeights->resize(partCount);
     this->densities->resize(partCount);
     this->gravitationalPotentials->resize(partCount);
+    this->entropy->resize(partCount);
     this->isBaryonFlags->resize(partCount);
     this->isStarFlags->resize(partCount);
     this->isWindFlags->resize(partCount);
@@ -135,6 +139,7 @@ bool Contest2019DataLoader::Frame::LoadFrame(std::string filepath, unsigned int 
         this->molecularWeights->operator[](i) = s.molecularWeight;
         this->densities->operator[](i) = s.density;
         this->gravitationalPotentials->operator[](i) = s.gravitationalPotential;
+        this->entropy->operator[](i) = 0.0f; // we calculate it later
         this->isBaryonFlags->operator[](i) = (s.bitmask >> 1) & 0x1;
         this->isStarFlags->operator[](i) = (s.bitmask >> 5) & 0x1;
         this->isWindFlags->operator[](i) = (s.bitmask >> 6) & 0x1;
@@ -146,6 +151,12 @@ bool Contest2019DataLoader::Frame::LoadFrame(std::string filepath, unsigned int 
         if (this->isBaryonFlags->at(i)) {
             this->temperatures->operator[](i) =
                 4.8e5f * this->internalEnergies->at(i) * std::pow(1.0f + redshift, 3.0f);
+        }
+
+        // calculate the entropy ourselves
+        // formula directly from the contest description
+        if (this->isBaryonFlags->at(i) && this->temperatures->at(i) > 0.0f && this->densities->at(i) > 0.0f) {
+            this->entropy->operator[](i) = std::logf(this->temperatures->at(i) / std::powf(this->densities->at(i), 2.0f / 3.0f));
         }
     }
     return true;
@@ -168,6 +179,7 @@ void Contest2019DataLoader::Frame::SetData(
     call.SetMolecularWeights(this->molecularWeights);
     call.SetDensity(this->densities);
     call.SetGravitationalPotential(this->gravitationalPotentials);
+    call.SetEntropy(this->entropy);
     call.SetIsBaryonFlags(this->isBaryonFlags);
     call.SetIsStarFlags(this->isStarFlags);
     call.SetIsWindFlags(this->isWindFlags);

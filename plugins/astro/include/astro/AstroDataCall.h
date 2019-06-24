@@ -208,6 +208,20 @@ public:
     inline const floatArrayPtr GetGravitationalPotential(void) const { return this->gravitationalPotentials; }
 
     /**
+     * Sets the entropy vector
+     *
+     * @param entropyVec Pointer to the new entropy vector to be set
+     */
+    inline void SetEntropy(floatArrayPtr& entropyVec) { this->entropies = entropyVec; }
+
+    /**
+     * Retrieve the pointer to the vector storing the entropy
+     *
+     * @return Pointer to the entropy array
+     */
+    inline const floatArrayPtr GetEntropy(void) const { return this->entropies; }
+
+    /**
      * Sets the baryon flag vector
      *
      * @param isBaryonVec Pointer to the new baryon flag vector to be set
@@ -307,26 +321,27 @@ public:
         return positions->size();
     }
 
-	/**
-	 * Clears all of the stored values for a clean start.
-	 */
-	inline void ClearValues(void) {
-		this->positions.reset();
-		this->velocities.reset();
-		this->temperatures.reset();
-		this->masses.reset();
-		this->internalEnergies.reset();
-		this->smoothingLengths.reset();
-		this->molecularWeights.reset();
-		this->densities.reset();
-		this->gravitationalPotentials.reset();
-		this->isBaryonFlags.reset();
-		this->isStarFlags.reset();
-		this->isWindFlags.reset();
-		this->isStarFormingGasFlags.reset();
-		this->isAGNFlags.reset();
-		this->particleIDs.reset();
-	}
+    /**
+     * Clears all of the stored values for a clean start.
+     */
+    inline void ClearValues(void) {
+        this->positions.reset();
+        this->velocities.reset();
+        this->temperatures.reset();
+        this->masses.reset();
+        this->internalEnergies.reset();
+        this->smoothingLengths.reset();
+        this->molecularWeights.reset();
+        this->densities.reset();
+        this->gravitationalPotentials.reset();
+        this->entropies.reset();
+        this->isBaryonFlags.reset();
+        this->isStarFlags.reset();
+        this->isWindFlags.reset();
+        this->isStarFormingGasFlags.reset();
+        this->isAGNFlags.reset();
+        this->particleIDs.reset();
+    }
 
 private:
     /** Pointer to the position array */
@@ -355,6 +370,9 @@ private:
 
     /** Pointer to the gravitational potential array */
     floatArrayPtr gravitationalPotentials;
+
+    /** Pointer to the entropy array */
+    floatArrayPtr entropies;
 
     /** Pointer to the baryon flag array */
     boolArrayPtr isBaryonFlags;
