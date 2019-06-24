@@ -89,6 +89,9 @@ private:
     /** Pointer to the gravitational potential array */
     floatArrayPtr gravitationalPotentials = nullptr;
 
+    /** Pointer to the entropy array */
+    floatArrayPtr entropies = nullptr;
+
     /** Pointer to the baryon flag array */
     boolArrayPtr isBaryonFlags = nullptr;
 
@@ -107,9 +110,17 @@ private:
     /** Pointer to the particle ID array */
     idArrayPtr particleIDs = nullptr;
 
+    /** flag determining whether the filaments have to be recalculated */
     bool recalculateFilaments;
+
+    /** Hash of the last calculated dataset */
     uint64_t lastDataHash;
+    
+    /** Offset from the hash given by the incoming call */
     uint64_t hashOffset;
+    
+    /** ID of the last visualized timestep */
+    uint32_t lastTimestep;
 };
 
 } // namespace astro

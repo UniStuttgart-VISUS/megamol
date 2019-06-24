@@ -26,6 +26,8 @@ AstroParticleConverter::AstroParticleConverter(void)
     , midColorSlot("midColor", "median color of the used range")
     , maxColorSlot("maxColor", "maximum color of the used range")
     , useMidColorSlot("useMidColor", "Enables the usage of the mid color in the color interpolation")
+    , minValueSlot("minValue", "minimum value of the currently shown parameter")
+    , maxValueSlot("maxValue", "maximum value of the currently shown parameter")
     , lastDataHash(0)
     , hashOffset(0)
     , valmin(0.0f)
@@ -53,6 +55,8 @@ AstroParticleConverter::AstroParticleConverter(void)
     enu->SetTypePair(static_cast<int>(ColoringMode::IS_STAR_FORMING_GAS), "Star-forming Gas");
     enu->SetTypePair(static_cast<int>(ColoringMode::IS_AGN), "AGN");
     enu->SetTypePair(static_cast<int>(ColoringMode::IS_DARK_MATTER), "Dark Matter");
+    enu->SetTypePair(static_cast<int>(ColoringMode::TEMPERATURE), "Temperature");
+    enu->SetTypePair(static_cast<int>(ColoringMode::ENTROPY), "Entropy");
     this->colorModeSlot << enu;
     this->MakeSlotAvailable(&this->colorModeSlot);
 
@@ -67,6 +71,16 @@ AstroParticleConverter::AstroParticleConverter(void)
 
     this->useMidColorSlot.SetParameter(new param::BoolParam(true));
     this->MakeSlotAvailable(&this->useMidColorSlot);
+
+    auto minPar = new param::FloatParam(0.0f);
+    minPar->SetGUIReadOnly(true);
+    this->minValueSlot.SetParameter(minPar);
+    this->MakeSlotAvailable(&this->minValueSlot);
+
+    auto maxPar = new param::FloatParam(0.0f);
+    maxPar->SetGUIReadOnly(true);
+    this->maxValueSlot.SetParameter(maxPar);
+    this->MakeSlotAvailable(&this->maxValueSlot);
 }
 
 /*
@@ -100,6 +114,7 @@ bool AstroParticleConverter::getData(Call& call) {
     if (ast == nullptr) return false;
 
     ast->SetFrameID(mpdc->FrameID(), mpdc->IsFrameForced());
+    //ast->SetUnlocker(nullptr, false);
 
     if ((*ast)(AstroDataCall::CallForGetData)) {
         bool freshMinMax = false;
@@ -129,9 +144,10 @@ bool AstroParticleConverter::getData(Call& call) {
             p.SetColourData(MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA, this->usedColors.data());
             p.SetColourMapIndexValues(this->valmin, this->valmax);
         }
-
+        //ast->Unlock();
         return true;
     }
+    ast->Unlock();
     return false;
 }
 
@@ -145,11 +161,14 @@ bool AstroParticleConverter::getExtent(Call& call) {
     AstroDataCall* ast = this->astroDataSlot.CallAs<AstroDataCall>();
     if (ast == nullptr) return false;
 
+    ast->SetUnlocker(nullptr, false);
     if ((*ast)(AstroDataCall::CallForGetExtent)) {
         mpdc->SetFrameCount(ast->FrameCount());
         mpdc->AccessBoundingBoxes() = ast->AccessBoundingBoxes();
+        ast->Unlock();
         return true;
     }
+    ast->Unlock();
     return false;
 }
 
@@ -185,6 +204,14 @@ void AstroParticleConverter::calcMinMaxValues(const AstroDataCall& ast) {
         this->valmax =
             *std::max_element(ast.GetGravitationalPotential()->begin(), ast.GetGravitationalPotential()->end());
         break;
+    case megamol::astro::AstroParticleConverter::ColoringMode::TEMPERATURE:
+        this->valmin = *std::min_element(ast.GetTemperature()->begin(), ast.GetTemperature()->end());
+        this->valmax = *std::max_element(ast.GetTemperature()->begin(), ast.GetTemperature()->end());
+        break;
+    case megamol::astro::AstroParticleConverter::ColoringMode::ENTROPY:
+        this->valmin = *std::min_element(ast.GetEntropy()->begin(), ast.GetEntropy()->end());
+        this->valmax = *std::max_element(ast.GetEntropy()->begin(), ast.GetEntropy()->end());
+        break;
     case megamol::astro::AstroParticleConverter::ColoringMode::IS_BARYON:
     case megamol::astro::AstroParticleConverter::ColoringMode::IS_STAR:
     case megamol::astro::AstroParticleConverter::ColoringMode::IS_WIND:
@@ -196,6 +223,8 @@ void AstroParticleConverter::calcMinMaxValues(const AstroDataCall& ast) {
         this->valmax = 1.0f;
         break;
     }
+    this->minValueSlot.Param<param::FloatParam>()->SetValue(this->valmin);
+    this->maxValueSlot.Param<param::FloatParam>()->SetValue(this->valmax);
 }
 
 /*
@@ -249,6 +278,20 @@ void AstroParticleConverter::calcColorTable(const AstroDataCall& ast) {
     } break;
     case megamol::astro::AstroParticleConverter::ColoringMode::GRAVITATIONAL_POTENTIAL: {
         auto v = ast.GetGravitationalPotential();
+        for (size_t i = 0; i < this->usedColors.size(); ++i) {
+            float alpha = (v->at(i) - this->valmin) / denom;
+            this->usedColors[i] = this->interpolateColor(minCol, midCol, maxCol, alpha, useMid);
+        }
+    } break;
+    case megamol::astro::AstroParticleConverter::ColoringMode::TEMPERATURE: {
+        auto v = ast.GetTemperature();
+        for (size_t i = 0; i < this->usedColors.size(); ++i) {
+            float alpha = (v->at(i) - this->valmin) / denom;
+            this->usedColors[i] = this->interpolateColor(minCol, midCol, maxCol, alpha, useMid);
+        }
+    } break;
+    case megamol::astro::AstroParticleConverter::ColoringMode::ENTROPY: {
+        auto v = ast.GetEntropy();
         for (size_t i = 0; i < this->usedColors.size(); ++i) {
             float alpha = (v->at(i) - this->valmin) / denom;
             this->usedColors[i] = this->interpolateColor(minCol, midCol, maxCol, alpha, useMid);

@@ -57,7 +57,9 @@ private:
         IS_WIND = 8,
         IS_STAR_FORMING_GAS = 9,
         IS_AGN = 10,
-        IS_DARK_MATTER = 11
+        IS_DARK_MATTER = 11,
+        TEMPERATURE = 12,
+        ENTROPY = 13
     };
 
     bool getData(core::Call& call);
@@ -73,6 +75,9 @@ private:
     core::param::ParamSlot midColorSlot;
     core::param::ParamSlot maxColorSlot;
 	core::param::ParamSlot useMidColorSlot;
+
+    core::param::ParamSlot minValueSlot;
+    core::param::ParamSlot maxValueSlot;
 
     std::vector<glm::vec4> usedColors;
 

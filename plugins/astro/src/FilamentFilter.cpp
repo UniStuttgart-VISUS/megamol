@@ -89,6 +89,7 @@ bool FilamentFilter::getData(core::Call& call) {
     if (inCall == nullptr) return false;
 
     inCall->operator=(*adc);
+    inCall->SetUnlocker(nullptr, false);
     if ((*inCall)(AstroDataCall::CallForGetData)) {
         if (this->isActiveSlot.Param<param::BoolParam>()->Value()) {
             if (this->recalculateFilaments) {
@@ -99,8 +100,10 @@ bool FilamentFilter::getData(core::Call& call) {
         } else {
             adc->operator=(*inCall);
         }
+        inCall->Unlock();
         return true;
     }
+    inCall->Unlock();
     return false;
 }
 
@@ -115,11 +118,13 @@ bool FilamentFilter::getExtent(core::Call& call) {
     if (inCall == nullptr) return false;
 
     inCall->operator=(*adc);
+    adc->SetUnlocker(nullptr, false);
     if ((*inCall)(AstroDataCall::CallForGetExtent)) {
         adc->operator=(*inCall);
-        if (this->lastDataHash != inCall->DataHash() || this->radiusSlot.IsDirty() ||
+        if (this->lastDataHash != inCall->DataHash() || this->lastTimestep != adc->FrameID() || this->radiusSlot.IsDirty() ||
             this->densitySeedPercentageSlot.IsDirty() || this->minClusterSizeSlot.IsDirty()) {
             this->hashOffset++;
+            this->lastTimestep = adc->FrameID();
             this->lastDataHash = inCall->DataHash();
             this->radiusSlot.ResetDirty();
             this->densitySeedPercentageSlot.ResetDirty();
@@ -150,6 +155,7 @@ bool FilamentFilter::copyContentToOutCall(AstroDataCall& outCall) {
     outCall.SetMolecularWeights(this->molecularWeights);
     outCall.SetDensity(this->densities);
     outCall.SetGravitationalPotential(this->gravitationalPotentials);
+    outCall.SetEntropy(this->entropies);
     outCall.SetIsBaryonFlags(this->isBaryonFlags);
     outCall.SetIsStarFlags(this->isStarFlags);
     outCall.SetIsWindFlags(this->isWindFlags);
@@ -189,6 +195,9 @@ void FilamentFilter::initFields(void) {
     }
     if (this->gravitationalPotentials == nullptr) {
         this->gravitationalPotentials = std::make_shared<std::vector<float>>();
+    }
+    if (this->entropies == nullptr) {
+        this->entropies = std::make_shared<std::vector<float>>();
     }
     if (this->isBaryonFlags == nullptr) {
         this->isBaryonFlags = std::make_shared<std::vector<bool>>();
@@ -272,6 +281,7 @@ bool FilamentFilter::copyInCallToContent(const AstroDataCall& inCall, const std:
     this->molecularWeights->resize(indexSet.size());
     this->densities->resize(indexSet.size());
     this->gravitationalPotentials->resize(indexSet.size());
+    this->entropies->resize(indexSet.size());
     this->isBaryonFlags->resize(indexSet.size());
     this->isStarFlags->resize(indexSet.size());
     this->isWindFlags->resize(indexSet.size());
@@ -293,6 +303,7 @@ bool FilamentFilter::copyInCallToContent(const AstroDataCall& inCall, const std:
         this->molecularWeights->at(i) = inCall.GetMolecularWeights()->at(id);
         this->densities->at(i) = inCall.GetDensity()->at(id);
         this->gravitationalPotentials->at(i) = inCall.GetGravitationalPotential()->at(id);
+        this->entropies->at(i) = inCall.GetEntropy()->at(i);
         this->isBaryonFlags->at(i) = inCall.GetIsBaryonFlags()->at(id);
         this->isStarFlags->at(i) = inCall.GetIsStarFlags()->at(id);
         this->isWindFlags->at(i) = inCall.GetIsWindFlags()->at(id);

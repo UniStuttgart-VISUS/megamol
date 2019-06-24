@@ -24,7 +24,7 @@ using namespace megamol::astro;
 /*
  * Contest2019DataLoader::Frame::Frame
  */
-Contest2019DataLoader::Frame::Frame(view::AnimDataModule& owner) : view::AnimDataModule::Frame(owner) {
+Contest2019DataLoader::Frame::Frame(view::AnimDataModule& owner) : view::AnimDataModule::Frame(owner), redshift(0.0f) {
     // intentionally empty
 }
 
@@ -38,7 +38,7 @@ Contest2019DataLoader::Frame::~Frame(void) {
 /*
  * Contest2019DataLoader::Frame::LoadFrame
  */
-bool Contest2019DataLoader::Frame::LoadFrame(std::string filepath, unsigned int frameIdx) {
+bool Contest2019DataLoader::Frame::LoadFrame(std::string filepath, unsigned int frameIdx, float redshift) {
     if (filepath.empty()) return false;
     this->frame = frameIdx;
     std::vector<SavedData> readDataVec;
@@ -86,6 +86,9 @@ bool Contest2019DataLoader::Frame::LoadFrame(std::string filepath, unsigned int 
     if (this->gravitationalPotentials == nullptr) {
         this->gravitationalPotentials = std::make_shared<std::vector<float>>();
     }
+    if (this->entropy == nullptr) {
+        this->entropy = std::make_shared<std::vector<float>>();
+    }
     if (this->isBaryonFlags == nullptr) {
         this->isBaryonFlags = std::make_shared<std::vector<bool>>();
     }
@@ -114,6 +117,7 @@ bool Contest2019DataLoader::Frame::LoadFrame(std::string filepath, unsigned int 
     this->molecularWeights->resize(partCount);
     this->densities->resize(partCount);
     this->gravitationalPotentials->resize(partCount);
+    this->entropy->resize(partCount);
     this->isBaryonFlags->resize(partCount);
     this->isStarFlags->resize(partCount);
     this->isWindFlags->resize(partCount);
@@ -123,25 +127,39 @@ bool Contest2019DataLoader::Frame::LoadFrame(std::string filepath, unsigned int 
 
     // copy the data over
 
-    // TODO parallel copy?
+    this->redshift = redshift;
     for (uint64_t i = 0; i < partCount; ++i) {
         const auto& s = readDataVec[i];
         this->positions->operator[](i) = glm::vec3(s.x, s.y, s.z);
         this->velocities->operator[](i) = glm::vec3(s.vx, s.vy, s.vz);
         this->temperatures->operator[](i) = 0.0f; // oops, we do not have temperatures
-		this->masses->operator[](i) = s.mass;
-		this->internalEnergies->operator[](i) = s.internalEnergy;
-		this->smoothingLengths->operator[](i) = s.smoothingLength;
-		this->molecularWeights->operator[](i) = s.molecularWeight;
-		this->densities->operator[](i) = s.density;
-		this->gravitationalPotentials->operator[](i) = s.gravitationalPotential;
-		this->isBaryonFlags->operator[](i) = (s.bitmask >> 1) & 0x1;
-		this->isStarFlags->operator[](i) = (s.bitmask >> 5) & 0x1;
-		this->isWindFlags->operator[](i) = (s.bitmask >> 6) & 0x1;
-		this->isStarFormingGasFlags->operator[](i) = (s.bitmask >> 7) & 0x1;
-		this->isAGNFlags->operator[](i) = (s.bitmask >> 8) & 0x1;
+        this->masses->operator[](i) = s.mass;
+        this->internalEnergies->operator[](i) = s.internalEnergy;
+        this->smoothingLengths->operator[](i) = s.smoothingLength;
+        this->molecularWeights->operator[](i) = s.molecularWeight;
+        this->densities->operator[](i) = s.density;
+        this->gravitationalPotentials->operator[](i) = s.gravitationalPotential;
+        this->entropy->operator[](i) = 0.0f; // we calculate it later
+        this->isBaryonFlags->operator[](i) = (s.bitmask >> 1) & 0x1;
+        this->isStarFlags->operator[](i) = (s.bitmask >> 5) & 0x1;
+        this->isWindFlags->operator[](i) = (s.bitmask >> 6) & 0x1;
+        this->isStarFormingGasFlags->operator[](i) = (s.bitmask >> 7) & 0x1;
+        this->isAGNFlags->operator[](i) = (s.bitmask >> 8) & 0x1;
+
+        // calculate the temperature ourselves
+        // formula out of the mail of J.D Emberson 16.6.2019
+        if (this->isBaryonFlags->at(i)) {
+            this->temperatures->operator[](i) =
+                4.8e5f * this->internalEnergies->at(i) * std::pow(1.0f + redshift, 3.0f);
+        }
+
+        // calculate the entropy ourselves
+        // formula directly from the contest description
+        if (this->isBaryonFlags->at(i) && this->temperatures->at(i) > 0.0f && this->densities->at(i) > 0.0f) {
+            this->entropy->operator[](i) = std::logf(this->temperatures->at(i) / std::powf(this->densities->at(i), 2.0f / 3.0f));
+        }
     }
-	return true;
+    return true;
 }
 
 /*
@@ -161,6 +179,7 @@ void Contest2019DataLoader::Frame::SetData(
     call.SetMolecularWeights(this->molecularWeights);
     call.SetDensity(this->densities);
     call.SetGravitationalPotential(this->gravitationalPotentials);
+    call.SetEntropy(this->entropy);
     call.SetIsBaryonFlags(this->isBaryonFlags);
     call.SetIsStarFlags(this->isStarFlags);
     call.SetIsWindFlags(this->isWindFlags);
@@ -194,11 +213,11 @@ Contest2019DataLoader::Contest2019DataLoader(void)
     this->filesToLoad.SetUpdateCallback(&Contest2019DataLoader::filenameChangedCallback);
     this->MakeSlotAvailable(&this->filesToLoad);
 
-	// static bounding box size, because we know (TM)
-	this->boundingBox = vislib::math::Cuboid<float>(0.0f, 0.0f, 0.0f, 64.0f, 64.0f, 64.0f);
-	this->clipBox = this->boundingBox;
+    // static bounding box size, because we know (TM)
+    this->boundingBox = vislib::math::Cuboid<float>(0.0f, 0.0f, 0.0f, 64.0f, 64.0f, 64.0f);
+    this->clipBox = this->boundingBox;
 
-	this->data_hash = 0;
+    this->data_hash = 0;
 
     this->setFrameCount(1);
     this->initFrameCache(1);
@@ -231,11 +250,13 @@ void Contest2019DataLoader::loadFrame(view::AnimDataModule::Frame* frame, unsign
     if (f == nullptr) return;
     unsigned int frameID = idx % this->FrameCount();
     std::string filename = "";
-    if (frameID < this->filenames.size()) {
+    float redshift = 0.0f;
+    if (frameID < this->filenames.size() && frameID < this->redshiftsForFilename.size()) {
         filename = this->filenames.at(frameID);
+        redshift = this->redshiftsForFilename.at(frameID);
     }
     if (!filename.empty()) {
-        if (!f->LoadFrame(filename, frameID)) {
+        if (!f->LoadFrame(filename, frameID, redshift)) {
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to read frame %d from file\n", idx);
         }
     }
@@ -252,7 +273,7 @@ void Contest2019DataLoader::release(void) { this->resetFrameCache(); }
 bool Contest2019DataLoader::filenameChangedCallback(param::ParamSlot& slot) {
     this->filenames.clear();
     this->resetFrameCache();
-	this->data_hash++;
+    this->data_hash++;
     std::string firstfile(this->firstFilename.Param<param::FilePathParam>()->Value());
     int toLoadCount = this->filesToLoad.Param<param::IntParam>()->Value();
 
@@ -273,10 +294,18 @@ bool Contest2019DataLoader::filenameChangedCallback(param::ParamSlot& slot) {
     bool done = false;
     while (!done) {
         std::string curFilename = prefix + std::to_string(curID);
+
+        // TODO: WARNING: This scalefactor calculation is dependant on the used data set containing 625 time steps
+        // starting at z=200 going to z=0. For other data set sizes this calculation has to be adapted. (The physicists
+        // were too stupid to include this value into the data)
+        float scaleFactor = 1.0f / 201.0f + static_cast<float>(curID + 1) * (1.0f - 1.0f / 201.0f) / 625.0f;
+        float redshift = 1.0f / scaleFactor - 1.0f;
+
         std::ifstream file(curFilename);
         if (file.good()) {
             file.close();
             this->filenames.push_back(curFilename);
+            this->redshiftsForFilename.push_back(redshift);
         } else {
             file.close();
             if (toLoadCount < 0) {
