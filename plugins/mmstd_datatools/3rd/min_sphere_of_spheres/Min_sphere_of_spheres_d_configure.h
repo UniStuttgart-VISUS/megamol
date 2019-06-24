@@ -50,6 +50,8 @@
 #    undef CGAL_MINIBALL_DEBUG
 #endif
 
+#include <cassert>
+
 // (You should not have to alter anything below here.)
 
 // If CGAL is not being used, we need to define certain things:

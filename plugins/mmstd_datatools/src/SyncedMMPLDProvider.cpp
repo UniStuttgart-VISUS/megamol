@@ -33,6 +33,7 @@ bool SyncedMMPLDProvider::setDirtyCallback(core::Call& c) {
 
 bool SyncedMMPLDProvider::checkDirtyCallback(core::Call& c) {    
     auto ss = dynamic_cast<core::cluster::SyncDataSourcesCall*>(&c);
+    if (ss == nullptr) return false;
 
     if (this->filenamesSlot.IsDirty()) {
         ss->setFilenameDirty();

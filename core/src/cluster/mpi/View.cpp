@@ -377,18 +377,25 @@ void megamol::core::cluster::mpi::View::Render(const mmcRenderViewContext& conte
     /* Render the view if any; do fallback rendering otherwise. */
     if (allCanRender) {
 
-        auto ss = this->syncDataSlot.CallAs<SyncDataSourcesCall>();
+        SyncDataSourcesCall* ss = this->syncDataSlot.CallAs<SyncDataSourcesCall>();
         if (ss != nullptr) {
-            (*ss)(0); // check for dirty filenamesslot
+	  if (!(*ss)(0)) { // check for dirty filenamesslot
+	    vislib::sys::Log::DefaultLog.WriteError("MPIClusterView: SyncData GetDirty callback failed..\n");
+	    return;
+	  }
             int fnameDirty = ss->getFilenameDirty();
             int allFnameDirty = 0;
-            MPI_Allreduce(&fnameDirty, &allFnameDirty, this->mpiSize, MPI_INT, MPI_LAND, this->comm);
+            MPI_Allreduce(&fnameDirty, &allFnameDirty, 1, MPI_INT, MPI_LAND, this->comm);
             vislib::sys::Log::DefaultLog.WriteInfo("MPIClusterView: allFnameDirty: %d\n", allFnameDirty);
 
             if (allFnameDirty) {
-                (*ss)(1); // finally set the filename in the data source
+                if (!(*ss)(1)){ // finally set the filename in the data source
+		  vislib::sys::Log::DefaultLog.WriteError("MPIClusterView: SyncData SetFilename callback failed..\n");
+		  return;
+		}
                 ss->resetFilenameDirty();
-            } else if (fnameDirty) {
+            }
+	    if (!allFnameDirty && fnameDirty) {
                 vislib::sys::Log::DefaultLog.WriteInfo("MPIClusterView: Waiting for data in MPI world to be ready.\n");
             }
         } else {
