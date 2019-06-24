@@ -100,6 +100,7 @@ bool AstroParticleConverter::getData(Call& call) {
     if (ast == nullptr) return false;
 
     ast->SetFrameID(mpdc->FrameID(), mpdc->IsFrameForced());
+    //ast->SetUnlocker(nullptr, false);
 
     if ((*ast)(AstroDataCall::CallForGetData)) {
         bool freshMinMax = false;
@@ -129,9 +130,10 @@ bool AstroParticleConverter::getData(Call& call) {
             p.SetColourData(MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA, this->usedColors.data());
             p.SetColourMapIndexValues(this->valmin, this->valmax);
         }
-
+        //ast->Unlock();
         return true;
     }
+    ast->Unlock();
     return false;
 }
 
@@ -145,11 +147,14 @@ bool AstroParticleConverter::getExtent(Call& call) {
     AstroDataCall* ast = this->astroDataSlot.CallAs<AstroDataCall>();
     if (ast == nullptr) return false;
 
+    ast->SetUnlocker(nullptr, false);
     if ((*ast)(AstroDataCall::CallForGetExtent)) {
         mpdc->SetFrameCount(ast->FrameCount());
         mpdc->AccessBoundingBoxes() = ast->AccessBoundingBoxes();
+        ast->Unlock();
         return true;
     }
+    ast->Unlock();
     return false;
 }
 

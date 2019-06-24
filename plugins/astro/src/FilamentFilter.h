@@ -110,6 +110,7 @@ private:
     bool recalculateFilaments;
     uint64_t lastDataHash;
     uint64_t hashOffset;
+    uint32_t lastTimestep;
 };
 
 } // namespace astro
