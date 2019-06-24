@@ -1,6 +1,6 @@
 #include "CreateFEMModel.h"
 
-#include "mmstd_datatools/floattable/CallFloatTableData.h"
+#include "mmstd_datatools/table/TableDataCall.h"
 
 #include "FEMModel.h"
 
@@ -20,15 +20,15 @@ megamol::archvis::CreateFEMModel::CreateFEMModel() : Module()
     //TODO GetExtents?
 
     this->m_node_floatTable_slot
-        .SetCompatibleCall<megamol::stdplugin::datatools::floattable::CallFloatTableDataDescription>();
+        .SetCompatibleCall<megamol::stdplugin::datatools::table::TableDataCallDescription>();
     this->MakeSlotAvailable(&this->m_node_floatTable_slot);
 
     this->m_element_floatTable_slot
-        .SetCompatibleCall<megamol::stdplugin::datatools::floattable::CallFloatTableDataDescription>();
+        .SetCompatibleCall<megamol::stdplugin::datatools::table::TableDataCallDescription>();
     this->MakeSlotAvailable(&this->m_element_floatTable_slot);
 
     this->m_deformation_floatTable_slot
-        .SetCompatibleCall<megamol::stdplugin::datatools::floattable::CallFloatTableDataDescription>();
+        .SetCompatibleCall<megamol::stdplugin::datatools::table::TableDataCallDescription>();
     this->MakeSlotAvailable(&this->m_deformation_floatTable_slot);
 }
 
@@ -46,11 +46,11 @@ bool megamol::archvis::CreateFEMModel::getDataCallback(core::Call& caller) {
     }
 
     auto node_ft =
-        this->m_node_floatTable_slot.CallAs<megamol::stdplugin::datatools::floattable::CallFloatTableData>();
+        this->m_node_floatTable_slot.CallAs<megamol::stdplugin::datatools::table::TableDataCall>();
     auto element_ft =
-        this->m_element_floatTable_slot.CallAs<megamol::stdplugin::datatools::floattable::CallFloatTableData>();
+        this->m_element_floatTable_slot.CallAs<megamol::stdplugin::datatools::table::TableDataCall>();
     auto deformation_ft =
-        this->m_deformation_floatTable_slot.CallAs<megamol::stdplugin::datatools::floattable::CallFloatTableData>();
+        this->m_deformation_floatTable_slot.CallAs<megamol::stdplugin::datatools::table::TableDataCall>();
 
     // node and element data are mandatory, return false is either is not available
     if (node_ft == NULL || element_ft == NULL || deformation_ft == NULL) {
