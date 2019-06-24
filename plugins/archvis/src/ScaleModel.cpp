@@ -112,6 +112,12 @@ ScaleModel::Vec3 ScaleModel::getElementCenter(int element_idx)
 	return Vec3(m_model_transform * center);
 }
 
+std::vector<ScaleModel::Vec3> const& megamol::archvis::ScaleModel::accessNodePositions() { return m_node_positions; }
+
+std::vector<ScaleModel::Vec3> const& megamol::archvis::ScaleModel::accessNodeDisplacements() {
+    return m_node_displacements;
+}
+
 ScaleModel::Mat4x4 ScaleModel::computeElementTransform(std::tuple<int, int> node_indices,
 	std::vector<Vec3> const& node_positions,
 	std::vector<Vec3> const& node_displacements)

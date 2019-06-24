@@ -38,6 +38,9 @@ public:
 
     void updateNodeDisplacements(std::vector<Vec3> const& displacements);
 
+    //TODO
+    void addNodeDisplacements(std::vector<Vec3> const& displacements);
+
     void updateElementForces(std::vector<float> const& forces);
 
     int getNodeCount();
@@ -53,6 +56,10 @@ public:
     Mat4x4 getElementTransform(int element_idx);
 
     Vec3 getElementCenter(int element_idx);
+
+    std::vector<Vec3> const& accessNodePositions();
+
+    std::vector<Vec3> const& accessNodeDisplacements();
 
 private:
     /**
@@ -159,10 +166,13 @@ private:
     Mat4x4 m_model_transform;
 
     std::vector<Vec3> m_node_positions;
-    std::vector<Vec3> m_node_displacements;
 
     std::vector<Element> m_elements;
     std::vector<int> m_input_elements;
+
+    //TODO create "global" collections of time dependent data and history of dynamically updated values
+    std::vector<Vec3>  m_node_displacements;
+    std::vector<float> m_element_forces;
 };
 
 } // namespace archvis

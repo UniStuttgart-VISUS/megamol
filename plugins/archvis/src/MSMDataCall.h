@@ -54,9 +54,9 @@ public:
      */
     static const char* FunctionName(unsigned int idx) { return AbstractGetDataCall::FunctionName(idx); }
 
-    void setFEMData(std::shared_ptr<ScaleModel> const& msm);
+    void setMSM(std::shared_ptr<ScaleModel> const& msm);
 
-    std::shared_ptr<ScaleModel> getFEMData();
+    std::shared_ptr<ScaleModel> getMSM();
 
 private:
     std::shared_ptr<ScaleModel> m_MSM;
