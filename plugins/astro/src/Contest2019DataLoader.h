@@ -113,10 +113,11 @@ protected:
          * @param filepath The path to the file to load from. As all frames are in seperate files, no open stream is
          * necessary.
          * @param frameIdx The zero-based index of the loaded frame.
+         * @param redshift The redshift value for the frame
          *
          * @return True on success, false otherwise.
          */
-        bool LoadFrame(std::string filepath, unsigned int frameIdx);
+        bool LoadFrame(std::string filepath, unsigned int frameIdx, float redshift = 0.0f);
 
         /**
          * Sets the data pointers of a given call to the internally stored values
@@ -195,6 +196,9 @@ protected:
 
         /** Pointer to the particle ID array */
         idArrayPtr particleIDs = nullptr;
+
+        /** The redshift value of this frame */
+        float redshift;
     };
 
     /**
@@ -270,6 +274,9 @@ protected:
 
     /** Vector containing the paths to all loadable files */
     std::vector<std::string> filenames;
+
+    /** Vector containing the redshift value for all loadable files */
+    std::vector<float> redshiftsForFilename;
 };
 
 } // namespace astro

@@ -57,7 +57,8 @@ private:
         IS_WIND = 8,
         IS_STAR_FORMING_GAS = 9,
         IS_AGN = 10,
-        IS_DARK_MATTER = 11
+        IS_DARK_MATTER = 11,
+        TEMPERATURE = 12
     };
 
     bool getData(core::Call& call);

@@ -53,6 +53,7 @@ AstroParticleConverter::AstroParticleConverter(void)
     enu->SetTypePair(static_cast<int>(ColoringMode::IS_STAR_FORMING_GAS), "Star-forming Gas");
     enu->SetTypePair(static_cast<int>(ColoringMode::IS_AGN), "AGN");
     enu->SetTypePair(static_cast<int>(ColoringMode::IS_DARK_MATTER), "Dark Matter");
+    enu->SetTypePair(static_cast<int>(ColoringMode::TEMPERATURE), "Temperature");
     this->colorModeSlot << enu;
     this->MakeSlotAvailable(&this->colorModeSlot);
 
@@ -190,6 +191,10 @@ void AstroParticleConverter::calcMinMaxValues(const AstroDataCall& ast) {
         this->valmax =
             *std::max_element(ast.GetGravitationalPotential()->begin(), ast.GetGravitationalPotential()->end());
         break;
+    case megamol::astro::AstroParticleConverter::ColoringMode::TEMPERATURE:
+        this->valmin = *std::min_element(ast.GetTemperature()->begin(), ast.GetTemperature()->end());
+        this->valmax = *std::max_element(ast.GetTemperature()->begin(), ast.GetTemperature()->end());
+        break;
     case megamol::astro::AstroParticleConverter::ColoringMode::IS_BARYON:
     case megamol::astro::AstroParticleConverter::ColoringMode::IS_STAR:
     case megamol::astro::AstroParticleConverter::ColoringMode::IS_WIND:
@@ -254,6 +259,13 @@ void AstroParticleConverter::calcColorTable(const AstroDataCall& ast) {
     } break;
     case megamol::astro::AstroParticleConverter::ColoringMode::GRAVITATIONAL_POTENTIAL: {
         auto v = ast.GetGravitationalPotential();
+        for (size_t i = 0; i < this->usedColors.size(); ++i) {
+            float alpha = (v->at(i) - this->valmin) / denom;
+            this->usedColors[i] = this->interpolateColor(minCol, midCol, maxCol, alpha, useMid);
+        }
+    } break;
+    case megamol::astro::AstroParticleConverter::ColoringMode::TEMPERATURE: {
+        auto v = ast.GetTemperature();
         for (size_t i = 0; i < this->usedColors.size(); ++i) {
             float alpha = (v->at(i) - this->valmin) / denom;
             this->usedColors[i] = this->interpolateColor(minCol, midCol, maxCol, alpha, useMid);
