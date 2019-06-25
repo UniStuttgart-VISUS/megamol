@@ -244,7 +244,7 @@ namespace utility {
     private:
 
         /** error handler */
-        void consumeError(int error, char *file, int line);
+        void consumeError(int error, char const* file, int line) const;
 
         /** print table on the stack somewhat */
         void printTable(lua_State *L, std::stringstream& out);

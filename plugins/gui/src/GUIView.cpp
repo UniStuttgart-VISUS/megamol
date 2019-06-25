@@ -190,11 +190,11 @@ bool GUIView::create() {
     this->fontUtf8Ranges.emplace_back(0x0020);
     this->fontUtf8Ranges.emplace_back(0x00FF); // Basic Latin + Latin Supplement
     this->fontUtf8Ranges.emplace_back(0x20AC);
-    this->fontUtf8Ranges.emplace_back(0x20AC); // €
+    this->fontUtf8Ranges.emplace_back(0x20AC); // ï¿½
     this->fontUtf8Ranges.emplace_back(0x2122);
-    this->fontUtf8Ranges.emplace_back(0x2122); // ™
+    this->fontUtf8Ranges.emplace_back(0x2122); // ï¿½
     this->fontUtf8Ranges.emplace_back(0x212B);
-    this->fontUtf8Ranges.emplace_back(0x212B); // Å
+    this->fontUtf8Ranges.emplace_back(0x212B); // ï¿½
     this->fontUtf8Ranges.emplace_back(0x0391);
     this->fontUtf8Ranges.emplace_back(0x03D6); // greek alphabet
     this->fontUtf8Ranges.emplace_back(0);      // (range termination)
@@ -284,7 +284,7 @@ void GUIView::Render(const mmcRenderViewContext& context) {
     if (crv) {
         crv->SetOutputBuffer(GL_BACK);
         crv->SetInstanceTime(context.InstanceTime);
-        crv->SetTime(context.Time);
+        crv->SetTime(-1.0f); // context.Time or -1.0f?
         (*crv)(core::view::AbstractCallRender::FnRender);
     } else {
         ::glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -303,7 +303,7 @@ void GUIView::ResetView(void) {
 void GUIView::Resize(unsigned int width, unsigned int height) {
     auto* crv = this->renderViewSlot.CallAs<core::view::CallRenderView>();
     if (crv) {
-        // der ganz ganz dicke "because-i-know"-Knüppel
+        // der ganz ganz dicke "because-i-know"-Knï¿½ppel
         AbstractView* view = const_cast<AbstractView*>(
             dynamic_cast<const AbstractView*>(static_cast<const Module*>(crv->PeekCalleeSlot()->Owner())));
         if (view != NULL) {
