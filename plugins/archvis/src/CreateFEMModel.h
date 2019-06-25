@@ -15,6 +15,7 @@
 #include "archvis/archvis.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
+#include "mmcore/param/ParamSlot.h"
 
 namespace megamol {
 namespace archvis {
@@ -70,6 +71,12 @@ protected:
 private:
     std::shared_ptr<FEMModel> m_FEM_model;
 
+    /** First FEM parameter */
+    core::param::ParamSlot m_fem_param_0;
+
+    /** Second FEM parameter */
+    core::param::ParamSlot m_fem_param_1;
+
     /** The slot for requesting data */
     megamol::core::CalleeSlot m_getData_slot;
 
@@ -82,7 +89,7 @@ private:
     /** The data callee slot. */
     megamol::core::CallerSlot m_deformation_floatTable_slot;
 
-    //TODO additional inputs?
+    // TODO additional inputs?
 
     uint64_t m_node_input_hash;
     uint64_t m_element_input_hash;
