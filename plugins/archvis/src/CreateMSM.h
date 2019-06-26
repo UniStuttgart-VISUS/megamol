@@ -89,6 +89,7 @@ private:
 
     uint64_t m_node_input_hash;
     uint64_t m_element_input_hash;
+    uint64_t m_inputElement_input_hash;
     uint64_t m_displacement_input_hash;
 
     uint64_t m_my_hash;

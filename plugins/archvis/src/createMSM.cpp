@@ -13,6 +13,7 @@ megamol::archvis::CreateMSM::CreateMSM() : Module()
     , m_displacement_floatTable_slot("displacements", "Displacement float table input call.")
     , m_node_input_hash(0)
     , m_element_input_hash(0)
+    , m_inputElement_input_hash(0)
     , m_displacement_input_hash(0)
     , m_my_hash(0)
 {
@@ -60,19 +61,22 @@ bool megamol::archvis::CreateMSM::getDataCallback(core::Call& caller) {
         this->m_displacement_floatTable_slot.CallAs<megamol::stdplugin::datatools::table::TableDataCall>();
 
     // node and element data are mandatory, return false is either is not available
-    if (node_ft == NULL || element_ft == NULL || displacement_ft == NULL) {
+    if (node_ft == NULL || element_ft == NULL || inputElement_ft == NULL || displacement_ft == NULL) {
         return false;
     }
 
     (*node_ft)();
     (*element_ft)();
+    (*inputElement_ft)();
     (*displacement_ft)();
 
-    if (this->m_node_input_hash == node_ft->DataHash() && this->m_element_input_hash == element_ft->DataHash() &&
-        this->m_displacement_input_hash == displacement_ft->DataHash()) {
-
+    if (this->m_node_input_hash == node_ft->DataHash() &&
+        this->m_element_input_hash == element_ft->DataHash() &&
+        this->m_inputElement_input_hash == inputElement_ft->DataHash() &&
+        this->m_displacement_input_hash == displacement_ft->DataHash())
+    {
         if (m_MSM != nullptr) {
-            msm_call->setFEMData(m_MSM);
+            msm_call->setMSM(m_MSM);
             msm_call->SetDataHash(this->m_my_hash);
         }
 
@@ -86,31 +90,32 @@ bool megamol::archvis::CreateMSM::getDataCallback(core::Call& caller) {
     std::vector<ScaleModel::Vec3> nodes;
     nodes.reserve(node_ft->GetRowsCount());
 
-    //std::vector<ScaleModel::Vec4> deformations;
-    //deformations.reserve(displacement_ft->GetRowsCount());
-
     auto const node_accessor = node_ft->GetData();
     for (int node_idx = 0; node_idx < node_ft->GetRowsCount(); ++node_idx) {
         auto curr_idx = node_idx * 3;
         nodes.push_back({node_accessor[curr_idx + 0], node_accessor[curr_idx + 1], node_accessor[curr_idx + 2]});
     }
 
-    //auto displ_row_cnt = displacement_ft->GetRowsCount();
-    //auto displ_col_cnt = displacement_ft->GetColumnsCount();
-    //auto const displ_accessor = displacement_ft->GetData();
-    //for (int row_idx = 0; row_idx < displ_row_cnt; ++row_idx) {
-    //
-    //    for (int col_idx = 0; col_idx < displ_col_cnt; ++col_idx)
-    //    {
-    //        auto curr_idx = deform_idx * 5;
-    //
-    //        deformations.push_back({
-    //            displ_accessor[curr_idx + 1], displ_accessor[curr_idx + 2], displ_accessor[curr_idx + 3],
-    //            0.0f // padding
-    //        });
-    //
-    //    }
-    //}
+
+    
+    auto displ_row_cnt = displacement_ft->GetRowsCount();
+    auto displ_col_cnt = displacement_ft->GetColumnsCount();
+    std::vector<ScaleModel::Vec3> deformations;
+    deformations.reserve(displ_row_cnt * (displ_col_cnt/3));
+    auto const displ_accessor = displacement_ft->GetData();
+    for (int row_idx = 0; row_idx < displ_row_cnt; ++row_idx) {
+    
+        for (int col_idx = 0; col_idx < displ_col_cnt; col_idx = col_idx + 3)
+        {
+            auto curr_idx = col_idx + (row_idx * displ_col_cnt);
+    
+            deformations.push_back({
+                displ_accessor[curr_idx + 1], 
+                displ_accessor[curr_idx + 2], 
+                displ_accessor[curr_idx + 3]
+            });
+        }
+    }
 
     std::vector<std::tuple<int, int, int, int, int>> elements;
     elements.reserve(element_ft->GetRowsCount());
@@ -149,15 +154,15 @@ bool megamol::archvis::CreateMSM::getDataCallback(core::Call& caller) {
     }
 
 
-     m_MSM = std::make_shared<ScaleModel>(nodes, elements, inputElements);
-    // m_FEM_model->setNodeDeformations(deformations);
+    m_MSM = std::make_shared<ScaleModel>(nodes, elements, inputElements);
+    m_MSM->updateNodeDisplacements(deformations);
 
     this->m_my_hash++;
     this->m_node_input_hash = node_ft->DataHash();
     this->m_element_input_hash = element_ft->DataHash();
     this->m_displacement_input_hash = displacement_ft->DataHash();
 
-    msm_call->setFEMData(m_MSM);
+    msm_call->setMSM(m_MSM);
     msm_call->SetDataHash(this->m_my_hash);
 
 

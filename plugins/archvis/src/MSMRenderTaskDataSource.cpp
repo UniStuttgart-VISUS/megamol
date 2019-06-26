@@ -1,21 +1,23 @@
-#include "FEMRenderTaskDataSource.h"
+#include "MSMRenderTaskDataSource.h"
 
 #include "ng_mesh/GPUMaterialDataCall.h"
 #include "ng_mesh/GPUMeshCollection.h"
 #include "ng_mesh/GPUMeshDataCall.h"
 #include "ng_mesh/GPURenderTaskDataCall.h"
 
-#include "FEMDataCall.h"
+#include "MSMDataCall.h"
 
-megamol::archvis::FEMRenderTaskDataSource::FEMRenderTaskDataSource()
-    : m_fem_callerSlot("getFEMFile", "Connects the data source with loaded FEM data"), m_FEM_model_hash(0) {
-    this->m_fem_callerSlot.SetCompatibleCall<FEMDataCallDescription>();
-    this->MakeSlotAvailable(&this->m_fem_callerSlot);
+megamol::archvis::MSMRenderTaskDataSource::MSMRenderTaskDataSource()
+    : m_MSM_callerSlot("getMSM", "Connects the "), m_MSM_hash(0) {
+    this->m_MSM_callerSlot.SetCompatibleCall<MSMDataCallDescription>();
+    this->MakeSlotAvailable(&this->m_MSM_callerSlot);
 }
 
-megamol::archvis::FEMRenderTaskDataSource::~FEMRenderTaskDataSource() {}
+megamol::archvis::MSMRenderTaskDataSource::~MSMRenderTaskDataSource(){
+}
 
-bool megamol::archvis::FEMRenderTaskDataSource::getDataCallback(core::Call& caller) {
+bool megamol::archvis::MSMRenderTaskDataSource::getDataCallback(core::Call& caller) {
+
     ngmesh::GPURenderTaskDataCall* rtc = dynamic_cast<ngmesh::GPURenderTaskDataCall*>(&caller);
     if (rtc == NULL) return false;
 
@@ -34,24 +36,14 @@ bool megamol::archvis::FEMRenderTaskDataSource::getDataCallback(core::Call& call
 
     if (gpu_mtl_storage == nullptr) return false;
     if (gpu_mesh_storage == nullptr) return false;
-        
-    FEMDataCall* fem_call = this->m_fem_callerSlot.CallAs<FEMDataCall>();
-    if (fem_call == NULL) return false;
 
-    if (!(*fem_call)(0)) return false;
+    MSMDataCall* msm_call = this->m_MSM_callerSlot.CallAs<MSMDataCall>();
+    if (msm_call == NULL) return false;
 
-    // TODO get transfer function texture and add as per frame data
-    std::vector<GLuint64> texture_handles;
-    auto textures = gpu_mtl_storage->getMaterials().front().textures_names;
-    for (auto texture : textures) {
-        texture_handles.push_back(glGetTextureHandleARB(texture));
-        glMakeTextureHandleResidentARB(texture_handles.back());
-    }
-    m_gpu_render_tasks->updatePerFrameDataBuffer(texture_handles, 2);
+    if (!(*msm_call)(0)) return false;
 
-    rtc->setRenderTaskData(m_gpu_render_tasks);
 
-    if (this->m_FEM_model_hash == fem_call->DataHash()) {
+    if (this->m_MSM_hash == msm_call->DataHash()) {
         return true;
     }
 
@@ -80,24 +72,9 @@ bool megamol::archvis::FEMRenderTaskDataSource::getDataCallback(core::Call& call
         m_gpu_render_tasks->addRenderTasks(shader, gpu_batch_mesh, draw_commands, object_transform);
     }
 
-    auto const& node_deformation = fem_call->getFEMData()->getNodeDeformations();
-
-    m_gpu_render_tasks->addPerFrameDataBuffer(node_deformation, 1);
-
-    { 
-        // TODO get transfer function texture and add as per frame data
-        std::vector<GLuint64> texture_handles;
-        auto textures = gpu_mtl_storage->getMaterials().front().textures_names;
-        for (auto texture : textures) {
-            texture_handles.push_back(glGetTextureHandleARB(texture));
-            glMakeTextureHandleResidentARB(texture_handles.back());
-        }
-        m_gpu_render_tasks->addPerFrameDataBuffer(texture_handles, 2);
-    }
-
     rtc->setRenderTaskData(m_gpu_render_tasks);
 
-    this->m_FEM_model_hash = fem_call->DataHash();
+    this->m_MSM_hash = msm_call->DataHash();
 
     return true;
 }
