@@ -79,7 +79,7 @@ namespace math {
         typedef detail::vectorial_traits_base<T, D> base;
 
         /** The allocator for heap allocations of the size. */
-        template<class C> using allocator_type = typename detail::vectorial_traits_base<T, D>::allocator_type<C>;
+        template<class C> using allocator_type = typename detail::template vectorial_traits_base<T, D>::template allocator_type<C>;
 
         /** The native type used to store the size. */
         typedef typename base::native_type native_type;

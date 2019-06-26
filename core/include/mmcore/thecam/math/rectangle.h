@@ -88,7 +88,7 @@ namespace math {
         typedef detail::vectorial_traits_base<T, 4> base;
 
         /** The allocator for heap allocations of the rectangles. */
-        template<class C> using allocator_type = typename detail::vectorial_traits_base<T, 4>::allocator_type<C>;
+        template<class C> using allocator_type = typename detail::template vectorial_traits_base<T, 4>::template allocator_type<C>;
 
         /** The native type used to store the rectangle. */
         typedef typename base::native_type native_type;

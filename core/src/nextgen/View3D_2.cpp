@@ -810,7 +810,7 @@ bool View3D_2::onStoreCamera(param::ParamSlot& p) {
  */
 bool View3D_2::onRestoreCamera(param::ParamSlot& p) {
     if (!this->cameraSettingsSlot.Param<param::StringParam>()->Value().IsEmpty()) {
-        std::string camstring = T2A(this->cameraSettingsSlot.Param<param::StringParam>()->Value());
+        std::string camstring(this->cameraSettingsSlot.Param<param::StringParam>()->Value());
         cam_type::minimal_state_type minstate;
         if (!this->serializer.deserialize(minstate, camstring)) {
             vislib::sys::Log::DefaultLog.WriteWarn(
