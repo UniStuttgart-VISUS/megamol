@@ -16,7 +16,7 @@ struct Message {
 
 constexpr size_t MessageTypeSize = sizeof(MessageType);
 constexpr size_t MessageSizeSize = sizeof(uint64_t);
-constexpr size_t MessageHeaderSize = MessageTypeSize + MessageHeaderSize;
+constexpr size_t MessageHeaderSize = MessageTypeSize + MessageSizeSize;
 
 } // end namespace pbs
 } // end namespace megamol
