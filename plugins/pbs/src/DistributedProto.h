@@ -6,16 +6,17 @@ namespace megamol {
 namespace pbs {
 enum MessageType : unsigned char { NULL_MSG = 0u, PRJ_FILE_MSG, CAM_UPD_MSG, PARAM_UPD_MSG };
 
-using MsgBody_t = std::vector<std::byte>;
+using Message_t = std::vector<char>;
 
 struct Message {
     MessageType type;
     uint64_t size;
-    MsgBody_t msg;
+    Message_t msg_body;
 };
 
-using Message_t = Message;
+constexpr size_t MessageTypeSize = sizeof(MessageType);
+constexpr size_t MessageSizeSize = sizeof(uint64_t);
+constexpr size_t MessageHeaderSize = MessageTypeSize + MessageHeaderSize;
 
-using MessageList_t = std::vector<Message_t>;
 } // end namespace pbs
 } // end namespace megamol
