@@ -16,6 +16,7 @@
 #include "AstroParticleConverter.h"
 #include "Contest2019DataLoader.h"
 #include "FilamentFilter.h"
+#include "SimpleAstroFilter.h"
 
 
 /* anonymous namespace hides this type from any other object files */
@@ -54,6 +55,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::astro::Contest2019DataLoader>();
 			this->module_descriptions.RegisterAutoDescription<megamol::astro::AstroParticleConverter>();
             this->module_descriptions.RegisterAutoDescription<megamol::astro::FilamentFilter>();
+            this->module_descriptions.RegisterAutoDescription<megamol::astro::SimpleAstroFilter>();
 
             // register calls here:
 
