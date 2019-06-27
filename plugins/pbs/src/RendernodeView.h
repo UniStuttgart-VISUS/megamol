@@ -2,16 +2,19 @@
 
 #include <atomic>
 #include <memory>
+#include <mutex>
 #include <thread>
 #include <vector>
 
+#include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/AbstractTileView.h"
 
 #include "mpi.h"
 
-#include "FBOCommFabric.h"
 #include "DistributedProto.h"
+#include "FBOCommFabric.h"
+#include "mmcore/param/IntParam.h"
 
 namespace megamol {
 namespace pbs {
@@ -74,53 +77,88 @@ private:
 
     bool shutdown_threads();
 
-    MsgBody_t prepare_bcast_msg();
+    // Message_t prepare_bcast_msg();
 
-    MsgBody_t prepare_null_msg();
+    Message_t prepare_null_msg() const {
+        Message_t msg(MessageHeaderSize);
+        auto const type = MessageType::NULL_MSG;
+        uint64_t const size = 0;
+        auto const size_ptr = reinterpret_cast<char const*>(&size);
+        msg[0] = type;
+        std::copy(size_ptr, size_ptr + sizeof(uint64_t), msg.begin() + 1);
+        return msg;
+    }
 
-    bool process_msgs(MsgBody_t const& msgs) const;
+    bool process_msgs(Message_t const& msgs) const;
 
-    static MessageType get_msg_type(MsgBody_t::const_iterator const& begin, MsgBody_t::const_iterator const& end) {
+    void recv_loop();
+
+    static MessageType get_msg_type(Message_t::const_iterator const& begin, Message_t::const_iterator const& end) {
         return static_cast<MessageType>(*begin);
     }
 
-    static uint64_t get_msg_size(MsgBody_t::const_iterator const& begin, MsgBody_t::const_iterator const& end) {
+    static uint64_t get_msg_size(Message_t::const_iterator const& begin, Message_t::const_iterator const& end) {
         uint64_t ret = 0;
-        if (begin + 5 <= end) {
-            std::copy(begin + 1, begin + 5, &ret);
+        if (begin + MessageHeaderSize <= end) {
+            std::copy(begin + MessageTypeSize, begin + MessageHeaderSize, &ret);
         }
         return ret;
     }
 
-    static MsgBody_t get_msg(
-        uint64_t size, MsgBody_t::const_iterator const& begin, MsgBody_t::const_iterator const& end) {
-        MsgBody_t msg;
-        if (begin + 1 + 4 + size >= end) {
+    static Message_t get_msg(
+        uint64_t size, Message_t::const_iterator const& begin, Message_t::const_iterator const& end) {
+        Message_t msg;
+        if (begin + MessageHeaderSize + size >= end) {
             return msg;
         }
 
         msg.resize(size);
-        std::copy(begin + 5, begin + 5 + size, msg.begin());
+        std::copy(begin + MessageHeaderSize, begin + MessageHeaderSize + size, msg.begin());
 
         return msg;
     }
 
-    static MsgBody_t::const_iterator progress_msg(
-        uint64_t size, MsgBody_t::const_iterator const& begin, MsgBody_t::const_iterator const& end) {
-        if (begin + 1 + 4 + size <= end) {
-            return begin + 1 + 4 + size;
+    static Message_t::const_iterator progress_msg(
+        uint64_t size, Message_t::const_iterator const& begin, Message_t::const_iterator const& end) {
+        if (begin + MessageHeaderSize + size <= end) {
+            return begin + MessageHeaderSize + size;
         }
 
         return end;
     }
 
-    core::param::ParamSlot isBCastMasterSlot_;
+    bool onBCastRankChanged(core::param::ParamSlot& p) {
+        bcast_rank_ = BCastRankSlot_.Param<core::param::IntParam>()->Value();
+        if (!isBCastMaster()) {
+            shutdown_threads();
+        }
+        return true;
+    }
+
+    bool onAddressChanged(core::param::ParamSlot& p) {
+        if (isBCastMaster()) init_threads();
+        return true;
+    }
+
+    bool isBCastMaster() const { return rank_ == bcast_rank_; }
+
+    bool initMPI();
+
+    core::CallerSlot request_mpi_slot_;
+
+    core::CallerSlot sync_data_slot_;
+
+    // core::param::ParamSlot isBCastMasterSlot_;
 
     core::param::ParamSlot BCastRankSlot_;
 
+    core::param::ParamSlot address_slot_;
+
     std::thread receiver_thread_;
 
-    std::unique_ptr<MessageList_t> recv_msgs_;
+    mutable std::mutex recv_msgs_mtx_;
+
+    Message_t recv_msgs_;
 
     FBOCommFabric recv_comm_;
 
@@ -128,11 +166,19 @@ private:
 
     std::atomic<bool> data_has_changed_;
 
+    bool run_threads;
+
     // core::view::CallRenderView* crv_ = nullptr;
 
+#ifdef WITH_MPI
     MPI_Comm comm_;
+#else
+    int comm_;
+#endif
 
     int rank_;
+
+    int bcast_rank_;
 
     int comm_size_;
 }; // end class RendernodeView
