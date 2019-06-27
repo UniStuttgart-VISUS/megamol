@@ -148,7 +148,7 @@ private:
 
     core::CallerSlot sync_data_slot_;
 
-    //core::param::ParamSlot isBCastMasterSlot_;
+    // core::param::ParamSlot isBCastMasterSlot_;
 
     core::param::ParamSlot BCastRankSlot_;
 

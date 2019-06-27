@@ -9,11 +9,11 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 
+#include "mmcore/cluster/SyncDataSourcesCall.h"
 #include "mmcore/cluster/mpi/MpiCall.h"
 #include "vislib/RawStorageSerialiser.h"
 #include "vislib/sys/Log.h"
 #include "vislib/sys/SystemInformation.h"
-#include "mmcore/cluster/SyncDataSourcesCall.h"
 
 #define RV_DEBUG_OUTPUT = 1
 
@@ -111,16 +111,16 @@ void megamol::pbs::RendernodeView::Render(const mmcRenderViewContext& context) {
 
     // if broadcastmaster, start listening thread
     // auto isBCastMaster = isBCastMasterSlot_.Param<core::param::BoolParam>->Value();
-    auto BCastRank = BCastRankSlot_.Param<core::param::IntParam>->Value();
-    auto const isBCastMaster = BCastRank == this->rank_;
-    if (!threads_initialized_ && isBCastMaster) {
+    // auto BCastRank = BCastRankSlot_.Param<core::param::IntParam>->Value();
+    auto const BCastMaster = isBCastMaster();
+    if (!threads_initialized_ && BCastMaster) {
         init_threads();
     }
 
     // if listening thread announces new param, broadcast them
     Message_t msg;
     uint64_t msg_size = 0;
-    if (isBCastMaster) {
+    if (BCastMaster) {
         timestamps[0] = context.Time;
         timestamps[1] = context.InstanceTime;
         if (data_has_changed_.load()) {
@@ -133,10 +133,16 @@ void megamol::pbs::RendernodeView::Render(const mmcRenderViewContext& context) {
         }
         msg_size = msg.size();
     }
-    MPI_Bcast(timestamps.data(), 2, MPI_DOUBLE, BCastRank, this->comm_);
-    MPI_Bcast(&msg_size, 1, MPI_UINT64_T, BCastRank, this->comm_);
+#    ifdef RV_DEBUG_OUTPUT
+    vislib::sys::Log::DefaultLog.WriteInfo("RendernodeView: Starting broadcast.");
+#    endif
+    MPI_Bcast(timestamps.data(), 2, MPI_DOUBLE, bcast_rank_, this->comm_);
+    MPI_Bcast(&msg_size, 1, MPI_UINT64_T, bcast_rank_, this->comm_);
     msg.resize(msg_size);
-    MPI_Bcast(msg.data(), msg_size, MPI_UNSIGNED_CHAR, BCastRank, this->comm_);
+    MPI_Bcast(msg.data(), msg_size, MPI_UNSIGNED_CHAR, bcast_rank_, this->comm_);
+#    ifdef RV_DEBUG_OUTPUT
+    vislib::sys::Log::DefaultLog.WriteInfo("RendernodeView: Finished broadcast.");
+#    endif
 
     // handle new param from broadcast
     if (!process_msgs(msg)) {
@@ -154,7 +160,9 @@ void megamol::pbs::RendernodeView::Render(const mmcRenderViewContext& context) {
         int fnameDirty = ss->getFilenameDirty();
         int allFnameDirty = 0;
         MPI_Allreduce(&fnameDirty, &allFnameDirty, 1, MPI_INT, MPI_LAND, this->comm_);
+#    ifdef RV_DEBUG_OUTPUT
         vislib::sys::Log::DefaultLog.WriteInfo("RendernodeView: allFnameDirty: %d", allFnameDirty);
+#    endif
 
         if (allFnameDirty) {
             if (!(*ss)(1)) { // finally set the filename in the data source
@@ -163,11 +171,15 @@ void megamol::pbs::RendernodeView::Render(const mmcRenderViewContext& context) {
             }
             ss->resetFilenameDirty();
         }
+#    ifdef RV_DEBUG_OUTPUT
         if (!allFnameDirty && fnameDirty) {
             vislib::sys::Log::DefaultLog.WriteInfo("RendernodeView: Waiting for data in MPI world to be ready.");
         }
+#    endif
     } else {
+#    ifdef RV_DEBUG_OUTPUT
         vislib::sys::Log::DefaultLog.WriteInfo("RendernodeView: No sync object connected.");
+#    endif
     }
     // check whether rendering is possible in current state
     if (crv != nullptr) {
@@ -203,6 +215,7 @@ void megamol::pbs::RendernodeView::Render(const mmcRenderViewContext& context) {
 
 void megamol::pbs::RendernodeView::recv_loop() {
     using namespace std::chrono_literals;
+    vislib::sys::Log::DefaultLog.WriteInfo("RendernodeView: Starting recv_loop.");
     while (run_threads) {
         Message_t buf = {'r', 'e', 'q'};
         if (!recv_comm_.Send(buf, send_type::SEND)) {
@@ -217,10 +230,16 @@ void megamol::pbs::RendernodeView::recv_loop() {
 #endif
         }
 
+#ifdef RV_DEBUG_OUTPUT
+        vislib::sys::Log::DefaultLog.WriteInfo("RendernodeView: Starting data copy in recv loop.");
+#endif
         {
             std::lock_guard<std::mutex> guard(recv_msgs_mtx_);
             recv_msgs_.insert(recv_msgs_.end(), buf.begin(), buf.end());
         }
+#ifdef RV_DEBUG_OUTPUT
+        vislib::sys::Log::DefaultLog.WriteInfo("RendernodeView: Finished data copy in recv loop.");
+#endif
 
         data_has_changed_.store(true);
 
