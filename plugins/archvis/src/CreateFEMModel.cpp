@@ -58,11 +58,11 @@ bool megamol::archvis::CreateFEMModel::getDataCallback(core::Call& caller) {
         this->m_node_floatTable_slot.CallAs<megamol::stdplugin::datatools::table::TableDataCall>();
     auto element_ft =
         this->m_element_floatTable_slot.CallAs<megamol::stdplugin::datatools::table::TableDataCall>();
-    auto deformation_ft =
+    auto dynData_ft =
         this->m_deformation_floatTable_slot.CallAs<megamol::stdplugin::datatools::table::TableDataCall>();
 
     // node and element data are mandatory, return false is either is not available
-    if (node_ft == NULL || element_ft == NULL || deformation_ft == NULL) {
+    if (node_ft == NULL || element_ft == NULL || dynData_ft == NULL) {
         return false;
     }
 
@@ -73,15 +73,15 @@ bool megamol::archvis::CreateFEMModel::getDataCallback(core::Call& caller) {
 
     unsigned int frame_id = p0 * 11 + p1;
 
-    deformation_ft->SetFrameID(frame_id);
+    dynData_ft->SetFrameID(frame_id);
 
     (*node_ft)();
     (*element_ft)();
-    (*deformation_ft)();
+    (*dynData_ft)();
 
     if ( this->m_node_input_hash == node_ft->DataHash() 
         && this->m_element_input_hash == element_ft->DataHash()
-        && this->m_deform_input_hash == deformation_ft->DataHash()) {
+        && this->m_deform_input_hash == dynData_ft->DataHash()) {
 
         if (m_FEM_model != nullptr)
         {
@@ -99,8 +99,8 @@ bool megamol::archvis::CreateFEMModel::getDataCallback(core::Call& caller) {
     std::vector<FEMModel::Vec3> nodes;
     nodes.reserve(node_ft->GetRowsCount());
 
-    std::vector<FEMModel::Vec4> deformations;
-    deformations.reserve(deformation_ft->GetRowsCount());
+    std::vector<FEMModel::DynamicData> dynamic_data;
+    dynamic_data.reserve(dynData_ft->GetRowsCount());
 
     auto const node_accessor = node_ft->GetData();
     for (int node_idx = 0; node_idx < node_ft->GetRowsCount(); ++node_idx) {
@@ -113,16 +113,44 @@ bool megamol::archvis::CreateFEMModel::getDataCallback(core::Call& caller) {
         );
     }
 
-    auto const deform_accessor = deformation_ft->GetData();
-    for (int deform_idx = 0; deform_idx < deformation_ft->GetRowsCount(); ++deform_idx) {
-        auto curr_idx = deform_idx * 13;
-        deformations.push_back({
-            deform_accessor[curr_idx + 4],
-            deform_accessor[curr_idx + 5],
-            deform_accessor[curr_idx + 6],
-            0.0f //padding
-            }
-        );
+    auto const dynData_accessor = dynData_ft->GetData();
+    for (int dynData_idx = 0; dynData_idx < dynData_ft->GetRowsCount(); ++dynData_idx) {
+        auto curr_idx = dynData_idx * 13;
+        dynamic_data.push_back(FEMModel::DynamicData());
+        dynamic_data.back().node_number = dynData_accessor[curr_idx + 0];
+        dynamic_data.back().node_posX = dynData_accessor[curr_idx + 1];
+        dynamic_data.back().node_posY = dynData_accessor[curr_idx + 2];
+        dynamic_data.back().node_posZ = dynData_accessor[curr_idx + 3];
+        dynamic_data.back().node_displX = dynData_accessor[curr_idx + 4];
+        dynamic_data.back().node_displY = dynData_accessor[curr_idx + 5];
+        dynamic_data.back().node_displZ = dynData_accessor[curr_idx + 6];
+        dynamic_data.back().norm_stressX = dynData_accessor[curr_idx + 7] / 100000000;
+        dynamic_data.back().norm_stressY = dynData_accessor[curr_idx + 8] / 100000000;
+        dynamic_data.back().norm_stressZ = dynData_accessor[curr_idx + 9] / 100000000;
+        dynamic_data.back().shear_stressX = dynData_accessor[curr_idx + 10] / 100000000;
+        dynamic_data.back().shear_stressY = dynData_accessor[curr_idx + 11] / 100000000;
+        dynamic_data.back().shear_stressZ = dynData_accessor[curr_idx + 12] / 100000000;
+
+ 
+        //dynamic_data.push_back({
+        //   static_cast<int>( dynData_accessor[curr_idx + 0] ),
+        //       dynData_accessor[curr_idx + 1],
+        //       dynData_accessor[curr_idx + 2],
+        //       dynData_accessor[curr_idx + 3],
+        //       dynData_accessor[curr_idx + 4],
+        //       dynData_accessor[curr_idx + 5],
+        //       dynData_accessor[curr_idx + 6],
+        //       dynData_accessor[curr_idx + 7],
+        //       dynData_accessor[curr_idx + 8],
+        //       dynData_accessor[curr_idx + 9],
+        //       dynData_accessor[curr_idx + 10],
+        //       dynData_accessor[curr_idx + 11],
+        //       dynData_accessor[curr_idx + 12],
+        //       0.0f, //padding
+        //       0.0f, //padding
+        //       0.0f  //padding
+        //   }
+        //);
     }
 
     auto const elem_accesssor = element_ft->GetData();
@@ -148,7 +176,7 @@ bool megamol::archvis::CreateFEMModel::getDataCallback(core::Call& caller) {
         }
 
         m_FEM_model = std::make_shared<FEMModel>(nodes, elements);
-        m_FEM_model->setNodeDeformations(deformations);
+        m_FEM_model->setDynamicData(dynamic_data);
     }
     else
     {
@@ -158,7 +186,7 @@ bool megamol::archvis::CreateFEMModel::getDataCallback(core::Call& caller) {
     this->m_my_hash++;
     this->m_node_input_hash = node_ft->DataHash();
     this->m_element_input_hash = element_ft->DataHash();
-    this->m_deform_input_hash = deformation_ft->DataHash();
+    this->m_deform_input_hash = dynData_ft->DataHash();
 
     cd->setFEMData(m_FEM_model);
     cd->SetDataHash(this->m_my_hash);

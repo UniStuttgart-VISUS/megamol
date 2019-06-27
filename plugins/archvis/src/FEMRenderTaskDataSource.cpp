@@ -80,7 +80,7 @@ bool megamol::archvis::FEMRenderTaskDataSource::getDataCallback(core::Call& call
         m_gpu_render_tasks->addRenderTasks(shader, gpu_batch_mesh, draw_commands, object_transform);
     }
 
-    auto const& node_deformation = fem_call->getFEMData()->getNodeDeformations();
+    auto const& node_deformation = fem_call->getFEMData()->getDynamicData();
 
     m_gpu_render_tasks->addPerFrameDataBuffer(node_deformation, 1);
 

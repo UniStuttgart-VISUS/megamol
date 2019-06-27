@@ -29,6 +29,25 @@ public:
     typedef vislib::math::Vector<float, 4> Vec4;
     typedef vislib::math::Quaternion<float> Quat;
 
+    struct DynamicData {
+        int node_number;
+        float node_posX;
+        float node_posY;
+        float node_posZ;
+        float node_displX;
+        float node_displY;
+        float node_displZ;
+        float norm_stressX;
+        float norm_stressY;
+        float norm_stressZ;
+        float shear_stressX;
+        float shear_stressY;
+        float shear_stressZ;
+        float padding0;
+        float padding1;
+        float padding2;
+    };
+
     enum ElementType {
         LINE = 2,  // 2D line element, connects 2 nodes
         PLANE = 4, // 2D surface element, connects 4 nodes
@@ -108,7 +127,7 @@ public:
 
     void setElements(std::vector<std::array<size_t, 8>> const& elements);
 
-    void setNodeDeformations(std::vector<Vec4> const& deformations);
+    void setDynamicData(std::vector<DynamicData> const& dyn_data);
 
     std::vector<Vec3> const& getNodes();
 
@@ -116,7 +135,7 @@ public:
 
     std::vector<Element> const& getElements();
 
-    std::vector<Vec4> const& getNodeDeformations();
+    std::vector<DynamicData> const& getDynamicData();
 
 private:
     size_t m_node_cnt;
@@ -125,7 +144,7 @@ private:
     std::vector<Vec3> m_node_positions;
     std::vector<Element> m_elements;
 
-    std::vector<Vec4> m_deformations;
+    std::vector<DynamicData> m_dynamic_data;
 };
 
 inline FEMModel::FEMModel()
@@ -137,7 +156,7 @@ inline FEMModel::~FEMModel() {}
 
 inline FEMModel::FEMModel(
     std::vector<Vec3> const& nodes, std::vector<std::array<size_t, 8>> const& elements)
-    : m_node_cnt(nodes.size()), m_timesteps(0), m_node_positions(nodes), m_elements(elements.size()), m_deformations() {
+    : m_node_cnt(nodes.size()), m_timesteps(0), m_node_positions(nodes), m_elements(elements.size()), m_dynamic_data() {
     for (size_t element_idx = 0; element_idx < elements.size(); ++element_idx) {
         m_elements[element_idx] = Element(ElementType::CUBE, elements[element_idx]);
     }
@@ -162,8 +181,8 @@ inline void FEMModel::setElements(std::vector<std::array<size_t, 8>> const& elem
     }
 }
 
-inline void FEMModel::setNodeDeformations(std::vector<Vec4> const& deformations) {
-    m_deformations = deformations;
+inline void FEMModel::setDynamicData(std::vector<DynamicData> const& dyn_data) {
+    m_dynamic_data = dyn_data;
 }
 
 inline std::vector<FEMModel::Vec3> const& FEMModel::getNodes() { return m_node_positions; }
@@ -172,7 +191,7 @@ inline size_t FEMModel::getElementCount() { return m_elements.size(); }
 
 inline std::vector<FEMModel::Element> const& FEMModel::getElements() { return m_elements; }
 
-inline std::vector<FEMModel::Vec4> const& FEMModel::getNodeDeformations() { return m_deformations; }
+inline std::vector<FEMModel::DynamicData> const& FEMModel::getDynamicData() { return m_dynamic_data; }
 
 } // namespace archvis
 } // namespace megamol
