@@ -150,7 +150,7 @@ bool Contest2019DataLoader::Frame::LoadFrame(std::string filepath, unsigned int 
         // formula out of the mail of J.D Emberson 16.6.2019
         if (this->isBaryonFlags->at(i)) {
             this->temperatures->operator[](i) =
-                4.8e5f * this->internalEnergies->at(i) * std::pow(1.0f + redshift, 3.0f);
+                4.8e5f * this->internalEnergies->at(i) / std::pow(1.0f + redshift, 3.0f);
         }
 
         // calculate the entropy ourselves
@@ -300,7 +300,7 @@ bool Contest2019DataLoader::filenameChangedCallback(param::ParamSlot& slot) {
         // starting at z=200 going to z=0. For other data set sizes this calculation has to be adapted. (The physicists
         // were too stupid to include this value into the data)
         float scaleFactor = 1.0f / 201.0f + static_cast<float>(curID + 1) * (1.0f - 1.0f / 201.0f) / 625.0f;
-        float redshift = 1.0f / scaleFactor - 1.0f;
+        float redshift = (1.0f / scaleFactor) - 1.0f;
 
         std::ifstream file(curFilename);
         if (file.good()) {
