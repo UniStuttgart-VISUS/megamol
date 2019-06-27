@@ -15,43 +15,94 @@
 namespace megamol {
 namespace pbs {
 
-class HeadnodeServer : public core::Module, public core::param::ParamUpdateListener {
+class HeadnodeServer : public core::Module, public core::job::AbstractJob, public core::param::ParamUpdateListener {
 public:
     HeadnodeServer();
     ~HeadnodeServer() override;
 
+            /**
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
+     */
+    static const char* ClassName(void) { return "HeadnodeServer"; }
+
+    /**
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
+     */
+    static const char* Description(void) { return "HeadnodeServer"; }
+
+    /**
+     * Answers whether this module is available on the current system.
+     *
+     * @return 'true' if the module is available, 'false' otherwise.
+     */
+    static bool IsAvailable(void) { return true; }
+
+     /**
+     * Disallow usage in quickstarts
+     *
+     * @return false
+     */
+    static bool SupportQuickstart(void) { return false; }
+
 protected:
+    /**
+     * Answers whether or not this job is still running.
+     *
+     * @return 'true' if this job is still running, 'false' if it has
+     *         finished.
+     */
+    bool IsRunning(void) const override;
+
+    /**
+     * Starts the job thread.
+     *
+     * @return true if the job has been successfully started.
+     */
+    bool Start(void) override;
+
+    /**
+     * Terminates the job thread.
+     *
+     * @return true to acknowledge that the job will finish as soon
+     *         as possible, false if termination is not possible.
+     */
+    bool Terminate(void) override;
+
     bool create() override;
     void release() override;
 
     void ParamUpdated(core::param::ParamSlot& slot) override;
 
 private:
-    bool init_threads();
-
-    void shutdown_threads();
 
     bool onStartServer(core::param::ParamSlot& param);
 
-    void sender_loop(FBOCommFabric& comm, core::CallerSlot& view);
+    bool get_cam_upd(std::vector<std::byte>& msg);
 
-    bool check_cam_upd(core::CallerSlot& view, unsigned int& syncnumber, MsgBody_t& msg) const;
+    bool init_threads();
+    void do_communication();
 
     core::CallerSlot view_slot_;
 
-    core::param::ParamSlot renderhead_address_slot_;
+    core::param::ParamSlot renderhead_port_slot_;
 
     core::param::ParamSlot start_server_slot_;
 
     FBOCommFabric comm_fabric_;
 
-    std::thread sender_thread_;
-
-    bool run_threads = false;
-
     mutable std::mutex send_buffer_guard_;
 
-    MsgBody_t send_buffer_;
+    std::vector<std::byte> send_buffer_;
+
+    bool running_;
+
+    unsigned int syncnumber = -1;
+    std::thread comm_thread_;
+
 }; // end class HeadnodeServer
 
 } // end namespace pbs
