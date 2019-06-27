@@ -15,7 +15,7 @@
 #include "vislib/sys/Log.h"
 #include "vislib/sys/SystemInformation.h"
 
-#define RV_DEBUG_OUTPUT = 1
+//#define RV_DEBUG_OUTPUT = 1
 
 
 megamol::pbs::RendernodeView::RendernodeView()
@@ -39,7 +39,7 @@ megamol::pbs::RendernodeView::RendernodeView()
     sync_data_slot_.SetCompatibleCall<core::cluster::SyncDataSourcesCallDescription>();
     this->MakeSlotAvailable(&sync_data_slot_);
 
-    BCastRankSlot_ << new core::param::IntParam(0, 0);
+    BCastRankSlot_ << new core::param::IntParam(-1, -1);
     BCastRankSlot_.SetUpdateCallback(&RendernodeView::onBCastRankChanged);
     this->MakeSlotAvailable(&BCastRankSlot_);
 
@@ -66,10 +66,11 @@ bool megamol::pbs::RendernodeView::process_msgs(Message_t const& msgs) const {
 
     while (begin < end) {
         auto const type = get_msg_type(begin, end);
-        auto const size = get_msg_size(begin, end);
+        auto size = 0;
         switch (type) {
         case MessageType::PRJ_FILE_MSG:
         case MessageType::PARAM_UPD_MSG: {
+            size = get_msg_size(begin, end);
             auto msg = get_msg(size, begin, end);
             std::string mg(msg.begin(), msg.end());
             std::string result;
@@ -80,6 +81,7 @@ bool megamol::pbs::RendernodeView::process_msgs(Message_t const& msgs) const {
             }
         } break;
         case MessageType::CAM_UPD_MSG: {
+            size = get_msg_size(begin, end);
             auto msg = get_msg(size, begin, end);
             vislib::RawStorageSerialiser ser(reinterpret_cast<unsigned char*>(msg.data()), msg.size());
             auto view = this->getConnectedView();

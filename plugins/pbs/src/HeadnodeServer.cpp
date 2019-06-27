@@ -63,15 +63,16 @@ void megamol::pbs::HeadnodeServer::ParamUpdated(core::param::ParamSlot& slot) {
 
     std::string const name = std::string(slot.FullName());
     std::string const value = std::string(slot.Param<core::param::AbstractParam>()->ValueString());
-    std::string mg = "mmSetParamValue(" + name + "," + value + ")";
+    std::string mg = "mmSetParamValue(\"" + name + "\", \"" + value + "\")";
 
-    msg.resize(1 + 4 + mg.size());
+    msg.resize(MessageHeaderSize + mg.size());
     msg[0] = static_cast<std::byte>(MessageType::PARAM_UPD_MSG);
     auto size = mg.size();
-    std::copy(reinterpret_cast<std::byte*>(&size), reinterpret_cast<std::byte*>(&size) + 4, msg.begin() + 1);
+    std::copy(
+        reinterpret_cast<std::byte*>(&size), reinterpret_cast<std::byte*>(&size) + MessageSizeSize, msg.begin() + MessageTypeSize);
     std::vector<char> char_mg(mg.begin(), mg.end());
     std::vector<std::byte> byte_mg = reinterpret_cast<std::vector<std::byte>&>(char_mg);
-    std::copy(byte_mg.begin(), byte_mg.end(), msg.begin() + 5);
+    std::copy(byte_mg.begin(), byte_mg.end(), msg.begin() + MessageHeaderSize);
 
 
     std::lock_guard<std::mutex> guard(send_buffer_guard_);
@@ -80,15 +81,16 @@ void megamol::pbs::HeadnodeServer::ParamUpdated(core::param::ParamSlot& slot) {
         send_buffer_.resize(msg.size());
         send_buffer_.insert(send_buffer_.begin(),msg.begin(),msg.end());
     } else {
-        std::vector<std::byte> byte_old_size(sizeof(uint64_t));
-        byte_old_size.insert(byte_old_size.begin(), send_buffer_.begin() + 1, send_buffer_.begin() + 5);
+        std::vector<std::byte> byte_old_size(MessageSizeSize);
+        byte_old_size.insert(
+            byte_old_size.begin(), send_buffer_.begin() + MessageTypeSize, send_buffer_.begin() + MessageHeaderSize);
         auto old_size = reinterpret_cast<uint64_t>(&byte_old_size);
         mg = ";" + mg;
         auto new_size = old_size + mg.size();
-        std::copy(
-            reinterpret_cast<std::byte*>(&new_size), reinterpret_cast<std::byte*>(&new_size) + 4, send_buffer_.begin() + 1);
+        std::copy(reinterpret_cast<std::byte*>(&new_size), reinterpret_cast<std::byte*>(&new_size) + MessageSizeSize,
+            send_buffer_.begin() + MessageTypeSize);
         send_buffer_.resize(new_size);
-        send_buffer_.insert(send_buffer_.begin() + 5 + old_size, byte_mg.begin(), byte_mg.end());
+        send_buffer_.insert(send_buffer_.begin() + MessageHeaderSize + old_size, byte_mg.begin(), byte_mg.end());
     }
 }
 
@@ -116,11 +118,11 @@ bool megamol::pbs::HeadnodeServer::get_cam_upd(std::vector<std::byte>& msg) {
         syncnumber = csn;
         av->SerialiseCamera(serialiser);
 
-        msg.resize(1 + 4 + mem.GetSize());
+        msg.resize(MessageHeaderSize + mem.GetSize());
         msg[0] = static_cast<std::byte>(MessageType::CAM_UPD_MSG);
         auto size = mem.GetSize();
-        std::copy(reinterpret_cast<std::byte*>(&size), reinterpret_cast<std::byte*>(&size) + 4, msg.begin() + 1);
-        std::copy(mem.AsAt<std::byte>(0), mem.AsAt<std::byte>(0) + mem.GetSize(), msg.begin() + 5);
+        std::copy(reinterpret_cast<std::byte*>(&size), reinterpret_cast<std::byte*>(&size) + MessageSizeSize, msg.begin() + MessageTypeSize);
+        std::copy(mem.AsAt<std::byte>(0), mem.AsAt<std::byte>(0) + mem.GetSize(), msg.begin() + MessageHeaderSize);
 
         return true;
     }
@@ -158,12 +160,22 @@ void megamol::pbs::HeadnodeServer::do_communication() {
             std::vector<std::byte> cam_msg;
             auto const cam_updated = get_cam_upd(cam_msg);
 
-            std::lock_guard<std::mutex> lock(send_buffer_guard_);
-            auto char_sendbuff = reinterpret_cast<std::vector<char>&>(send_buffer_);
-            comm_fabric_.Send(char_sendbuff, send_type::SEND);
-            send_buffer_.clear();
+            {
+                std::lock_guard<std::mutex> lock(send_buffer_guard_);
+                if (!send_buffer_.empty()) {
+
+                    auto char_sendbuff = reinterpret_cast<std::vector<char>&>(send_buffer_);
+                    comm_fabric_.Send(char_sendbuff, send_type::SEND);
+                    send_buffer_.clear();
+                } else {
+                    buf.resize(MessageHeaderSize, 0);
+                    comm_fabric_.Send(buf, send_type::SEND);
+                }
+            }
 
             if (cam_updated) {
+                while (!comm_fabric_.Recv(buf, recv_type::RECV)) {
+                }
                 auto char_cam_msg = reinterpret_cast<std::vector<char>&>(cam_msg);
                 comm_fabric_.Send(char_cam_msg, send_type::SEND);
             }

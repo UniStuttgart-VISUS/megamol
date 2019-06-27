@@ -5,12 +5,16 @@
 #include <mutex>
 #include <thread>
 #include <vector>
+#include <string>
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/AbstractTileView.h"
+#include "mmcore/LuaState.h"
 
+#ifdef WITH_MPI
 #include "mpi.h"
+#endif
 
 #include "DistributedProto.h"
 #include "FBOCommFabric.h"
@@ -99,7 +103,7 @@ private:
 
     static uint64_t get_msg_size(Message_t::const_iterator const& begin, Message_t::const_iterator const& end) {
         uint64_t ret = 0;
-        if (begin + MessageHeaderSize <= end) {
+        if (std::distance(begin, end) > MessageHeaderSize) {
             std::copy(begin + MessageTypeSize, begin + MessageHeaderSize, &ret);
         }
         return ret;
@@ -108,7 +112,7 @@ private:
     static Message_t get_msg(
         uint64_t size, Message_t::const_iterator const& begin, Message_t::const_iterator const& end) {
         Message_t msg;
-        if (begin + MessageHeaderSize + size >= end) {
+        if (std::distance(begin, end) < MessageHeaderSize + size) {
             return msg;
         }
 
@@ -120,7 +124,7 @@ private:
 
     static Message_t::const_iterator progress_msg(
         uint64_t size, Message_t::const_iterator const& begin, Message_t::const_iterator const& end) {
-        if (begin + MessageHeaderSize + size <= end) {
+        if (std::distance(begin, end) > MessageHeaderSize + size) {
             return begin + MessageHeaderSize + size;
         }
 

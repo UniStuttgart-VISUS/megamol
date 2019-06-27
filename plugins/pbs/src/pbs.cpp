@@ -20,6 +20,7 @@
 #include "PBSDataSource.h"
 #include "PBSRenderer.h"
 #include "HeadnodeServer.h"
+#include "RendernodeView.h"
 
 // Calls
 #include "pbs/PBSDataCall.h"
@@ -57,7 +58,9 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::pbs::FBOCompositor2>();
         this->module_descriptions.RegisterAutoDescription<megamol::pbs::CPERAWDataSource>();
         this->module_descriptions.RegisterAutoDescription<megamol::pbs::HeadnodeServer>();
-        //
+        this->module_descriptions.RegisterAutoDescription<megamol::pbs::RendernodeView>();
+
+		//
         // TODO: Register your plugin's modules here
         // like:
         //   this->module_descriptions.RegisterAutoDescription<megamol::pbs::MyModule1>();
