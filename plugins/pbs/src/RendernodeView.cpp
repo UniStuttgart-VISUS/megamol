@@ -246,7 +246,7 @@ void megamol::pbs::RendernodeView::recv_loop() {
 
         data_has_changed_.store(true);
 
-        std::this_thread::sleep_for(1000ms / 60);
+        std::this_thread::sleep_for(1000ms / 120);
     }
 
     vislib::sys::Log::DefaultLog.WriteInfo("RendernodeView: Exiting recv_loop.");

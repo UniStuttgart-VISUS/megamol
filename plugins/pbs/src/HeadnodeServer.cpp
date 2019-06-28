@@ -183,7 +183,7 @@ void megamol::pbs::HeadnodeServer::do_communication() {
     } catch (...) {
         vislib::sys::Log::DefaultLog.WriteError("HeadnodeServer: Error during communication;");
     }
-    vislib::sys::Log::DefaultLog.WriteError("HeadnodeServer: Exiting sender loop.");
+    vislib::sys::Log::DefaultLog.WriteInfo("HeadnodeServer: Exiting sender loop.");
 }
 
 
