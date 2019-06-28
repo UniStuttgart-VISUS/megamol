@@ -20,8 +20,15 @@ megamol::pbs::HeadnodeServer::HeadnodeServer()
     : view_slot_("viewSlot", "Connects to the view.")
     , renderhead_port_slot_("port", "Sets to port to listen to.")
     , start_server_slot_("start", "Start listening to port.")
+    , lua_command_slot_("LUACommand", "Sends custom lua command to the RendernodeView")
     , comm_fabric_(std::make_unique<ZMQCommFabric>(zmq::socket_type::rep))
     , run_threads_(false) {
+
+    
+    lua_command_slot_ << new megamol::core::param::StringParam("");
+    lua_command_slot_.SetUpdateCallback(&HeadnodeServer::onLuaCommand);
+    this->MakeSlotAvailable(&this->lua_command_slot_);
+
     renderhead_port_slot_ << new megamol::core::param::IntParam(52000);
     this->MakeSlotAvailable(&this->renderhead_port_slot_);
 
@@ -37,7 +44,7 @@ megamol::pbs::HeadnodeServer::HeadnodeServer()
 megamol::pbs::HeadnodeServer::~HeadnodeServer() { this->Release(); }
 
 
-bool megamol::pbs::HeadnodeServer::IsRunning(void) const { return run_threads_; }
+bool megamol::pbs::HeadnodeServer::IsRunning(void) const { return true; }
 
 
 bool megamol::pbs::HeadnodeServer::Start() { return true; }
@@ -189,6 +196,26 @@ void megamol::pbs::HeadnodeServer::do_communication() {
 
 bool megamol::pbs::HeadnodeServer::onStartServer(core::param::ParamSlot& param) {
     init_threads();
+
+    return true;
+}
+
+bool megamol::pbs::HeadnodeServer::onLuaCommand(core::param::ParamSlot& param) {
+    if (!run_threads_) return true;
+
+    std::vector<char> msg;
+    std::string mg = std::string(param.Param<core::param::StringParam>()->ValueString());
+
+    msg.resize(MessageHeaderSize + mg.size());
+    msg[0] = static_cast<char>(MessageType::PARAM_UPD_MSG);
+    auto size = mg.size();
+    std::copy(reinterpret_cast<char*>(&size), reinterpret_cast<char*>(&size) + MessageSizeSize,
+        msg.begin() + MessageTypeSize);
+    std::copy(mg.begin(), mg.end(), msg.begin() + MessageHeaderSize);
+
+
+    std::lock_guard<std::mutex> guard(send_buffer_guard_);
+    send_buffer_.insert(send_buffer_.end(), msg.begin(), msg.end());
 
     return true;
 }

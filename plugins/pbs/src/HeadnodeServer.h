@@ -47,7 +47,7 @@ public:
      * @return false
      */
     static bool SupportQuickstart(void) { return false; }
-
+    
 protected:
     /**
      * Answers whether or not this job is still running.
@@ -81,6 +81,8 @@ protected:
 private:
     bool onStartServer(core::param::ParamSlot& param);
 
+    bool onLuaCommand(core::param::ParamSlot& param);
+
     bool get_cam_upd(std::vector<char>& msg);
 
     bool init_threads();
@@ -94,6 +96,8 @@ private:
     core::param::ParamSlot renderhead_port_slot_;
 
     core::param::ParamSlot start_server_slot_;
+    
+    core::param::ParamSlot lua_command_slot_;
 
     FBOCommFabric comm_fabric_;
 
