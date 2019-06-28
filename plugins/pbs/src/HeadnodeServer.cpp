@@ -1,28 +1,27 @@
 #include "stdafx.h"
 #include "HeadnodeServer.h"
 
+#include <array>
 #include <chrono>
 #include <string>
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/AbstractParam.h"
+#include "mmcore/param/ButtonParam.h"
+#include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/view/AbstractView.h"
-#include "vislib/RawStorageSerialiser.h"
-#include "mmcore/param/ButtonParam.h"
 #include "mmcore/view/CallRenderView.h"
-#include "mmcore/param/IntParam.h"
+#include "vislib/RawStorageSerialiser.h"
 
 
 megamol::pbs::HeadnodeServer::HeadnodeServer()
-    : start_server_slot_("start", "Start listening to port.")
+    : view_slot_("viewSlot", "Connects to the view.")
     , renderhead_port_slot_("port", "Sets to port to listen to.")
-    , view_slot_("viewSlot", "Connects to the view.")
+    , start_server_slot_("start", "Start listening to port.")
     , comm_fabric_(std::make_unique<ZMQCommFabric>(zmq::socket_type::rep))
-    , running_(false) {
-
-
+    , run_threads_(false) {
     renderhead_port_slot_ << new megamol::core::param::IntParam(52000);
     this->MakeSlotAvailable(&this->renderhead_port_slot_);
 
@@ -34,69 +33,60 @@ megamol::pbs::HeadnodeServer::HeadnodeServer()
     this->MakeSlotAvailable(&this->view_slot_);
 }
 
-megamol::pbs::HeadnodeServer::~HeadnodeServer() {
-    this->Release();
-}
 
-bool megamol::pbs::HeadnodeServer::IsRunning(void) const { return true; }
+megamol::pbs::HeadnodeServer::~HeadnodeServer() { this->Release(); }
+
+
+bool megamol::pbs::HeadnodeServer::IsRunning(void) const { return run_threads_; }
+
 
 bool megamol::pbs::HeadnodeServer::Start() { return true; }
 
-bool megamol::pbs::HeadnodeServer::Terminate() { return true; }
+
+bool megamol::pbs::HeadnodeServer::Terminate() {
+    shutdown_threads();
+    return true;
+}
+
 
 bool megamol::pbs::HeadnodeServer::create() {
     this->GetCoreInstance()->RegisterParamUpdateListener(this);
     return true;
 }
 
+
 void megamol::pbs::HeadnodeServer::release() {
+    shutdown_threads();
     if (this->GetCoreInstance() != nullptr) {
         this->GetCoreInstance()->UnregisterParamUpdateListener(this);
     }
 }
 
+
 void megamol::pbs::HeadnodeServer::ParamUpdated(core::param::ParamSlot& slot) {
+    // if (!running_) return;
+    if (!run_threads_) return;
 
-    if (!running_) return;
-
-    std::vector<std::byte> msg;
+    std::vector<char> msg;
 
     std::string const name = std::string(slot.FullName());
     std::string const value = std::string(slot.Param<core::param::AbstractParam>()->ValueString());
     std::string mg = "mmSetParamValue(\"" + name + "\", \"" + value + "\")";
 
     msg.resize(MessageHeaderSize + mg.size());
-    msg[0] = static_cast<std::byte>(MessageType::PARAM_UPD_MSG);
+    msg[0] = static_cast<char>(MessageType::PARAM_UPD_MSG);
     auto size = mg.size();
-    std::copy(
-        reinterpret_cast<std::byte*>(&size), reinterpret_cast<std::byte*>(&size) + MessageSizeSize, msg.begin() + MessageTypeSize);
-    std::vector<char> char_mg(mg.begin(), mg.end());
-    std::vector<std::byte> byte_mg = reinterpret_cast<std::vector<std::byte>&>(char_mg);
-    std::copy(byte_mg.begin(), byte_mg.end(), msg.begin() + MessageHeaderSize);
+    std::copy(reinterpret_cast<char*>(&size), reinterpret_cast<char*>(&size) + MessageSizeSize,
+        msg.begin() + MessageTypeSize);
+    std::copy(mg.begin(), mg.end(), msg.begin() + MessageHeaderSize);
 
 
     std::lock_guard<std::mutex> guard(send_buffer_guard_);
-
-    if (send_buffer_.empty()) {
-        send_buffer_.resize(msg.size());
-        send_buffer_.insert(send_buffer_.begin(),msg.begin(),msg.end());
-    } else {
-        std::vector<std::byte> byte_old_size(MessageSizeSize);
-        byte_old_size.insert(
-            byte_old_size.begin(), send_buffer_.begin() + MessageTypeSize, send_buffer_.begin() + MessageHeaderSize);
-        auto old_size = reinterpret_cast<uint64_t>(&byte_old_size);
-        mg = ";" + mg;
-        auto new_size = old_size + mg.size();
-        std::copy(reinterpret_cast<std::byte*>(&new_size), reinterpret_cast<std::byte*>(&new_size) + MessageSizeSize,
-            send_buffer_.begin() + MessageTypeSize);
-        send_buffer_.resize(new_size);
-        send_buffer_.insert(send_buffer_.begin() + MessageHeaderSize + old_size, byte_mg.begin(), byte_mg.end());
-    }
+    send_buffer_.insert(send_buffer_.end(), msg.begin(), msg.end());
 }
 
 
-
-bool megamol::pbs::HeadnodeServer::get_cam_upd(std::vector<std::byte>& msg) {
+bool megamol::pbs::HeadnodeServer::get_cam_upd(std::vector<char>& msg) {
 
     AbstractNamedObject::const_ptr_type avp;
     const core::view::AbstractView* av = nullptr;
@@ -119,10 +109,11 @@ bool megamol::pbs::HeadnodeServer::get_cam_upd(std::vector<std::byte>& msg) {
         av->SerialiseCamera(serialiser);
 
         msg.resize(MessageHeaderSize + mem.GetSize());
-        msg[0] = static_cast<std::byte>(MessageType::CAM_UPD_MSG);
+        msg[0] = static_cast<char>(MessageType::CAM_UPD_MSG);
         auto size = mem.GetSize();
-        std::copy(reinterpret_cast<std::byte*>(&size), reinterpret_cast<std::byte*>(&size) + MessageSizeSize, msg.begin() + MessageTypeSize);
-        std::copy(mem.AsAt<std::byte>(0), mem.AsAt<std::byte>(0) + mem.GetSize(), msg.begin() + MessageHeaderSize);
+        std::copy(reinterpret_cast<char*>(&size), reinterpret_cast<char*>(&size) + MessageSizeSize,
+            msg.begin() + MessageTypeSize);
+        std::copy(mem.AsAt<char>(0), mem.AsAt<char>(0) + mem.GetSize(), msg.begin() + MessageHeaderSize);
 
         return true;
     }
@@ -130,14 +121,15 @@ bool megamol::pbs::HeadnodeServer::get_cam_upd(std::vector<std::byte>& msg) {
     return false;
 }
 
+
 bool megamol::pbs::HeadnodeServer::init_threads() {
     try {
-
+        shutdown_threads();
         this->comm_fabric_ = FBOCommFabric(std::make_unique<ZMQCommFabric>(zmq::socket_type::rep));
         auto const port = std::to_string(this->renderhead_port_slot_.Param<core::param::IntParam>()->Value());
-        std::string address = "tcp://*:" + port;
+        std::string const address = "tcp://*:" + port;
         this->comm_fabric_.Bind(address);
-
+        run_threads_ = true;
         this->comm_thread_ = std::thread(&HeadnodeServer::do_communication, this);
     } catch (...) {
         vislib::sys::Log::DefaultLog.WriteError("HeadnodeServer: Could not initialize threads");
@@ -148,55 +140,55 @@ bool megamol::pbs::HeadnodeServer::init_threads() {
 }
 
 
+bool megamol::pbs::HeadnodeServer::shutdown_threads() {
+    run_threads_ = false;
+    if (comm_thread_.joinable()) {
+        comm_thread_.join();
+    }
+    return true;
+}
+
+
 void megamol::pbs::HeadnodeServer::do_communication() {
+    std::vector<char> const null_buf(MessageHeaderSize, 0);
+    std::vector<char> buf(3);
+    std::vector<char> cam_msg;
     try {
-        while (true) {
+        while (run_threads_) {
             // Wait for message
-            std::vector<char> buf;
-            while (!comm_fabric_.Recv(buf, recv_type::RECV)) {
+            while (!comm_fabric_.Recv(buf, recv_type::RECV) && run_threads_) {
             }
+            if (!run_threads_) break;
 
             // check whether camera has been updated
-            std::vector<std::byte> cam_msg;
             auto const cam_updated = get_cam_upd(cam_msg);
 
             {
                 std::lock_guard<std::mutex> lock(send_buffer_guard_);
                 if (!send_buffer_.empty()) {
-
-                    auto char_sendbuff = reinterpret_cast<std::vector<char>&>(send_buffer_);
-                    comm_fabric_.Send(char_sendbuff, send_type::SEND);
+                    comm_fabric_.Send(send_buffer_, send_type::SEND);
                     send_buffer_.clear();
                 } else {
-                    buf.resize(MessageHeaderSize, 0);
-                    comm_fabric_.Send(buf, send_type::SEND);
+                    comm_fabric_.Send(null_buf, send_type::SEND);
                 }
             }
 
             if (cam_updated) {
-                while (!comm_fabric_.Recv(buf, recv_type::RECV)) {
+                while (!comm_fabric_.Recv(buf, recv_type::RECV) && run_threads_) {
                 }
-                auto char_cam_msg = reinterpret_cast<std::vector<char>&>(cam_msg);
-                comm_fabric_.Send(char_cam_msg, send_type::SEND);
+                if (!run_threads_) break;
+                comm_fabric_.Send(cam_msg, send_type::SEND);
             }
         }
     } catch (...) {
         vislib::sys::Log::DefaultLog.WriteError("HeadnodeServer: Error during communication;");
     }
+    vislib::sys::Log::DefaultLog.WriteError("HeadnodeServer: Exiting sender loop.");
 }
 
 
 bool megamol::pbs::HeadnodeServer::onStartServer(core::param::ParamSlot& param) {
-    using namespace std::chrono_literals;
-
-
-    if (running_) {
-        vislib::sys::Log::DefaultLog.WriteError("HeadnodeServer: Communication already running.");
-        return true;
-    }
-
-    running_ = init_threads();
+    init_threads();
 
     return true;
 }
-

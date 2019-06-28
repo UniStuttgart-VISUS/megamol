@@ -1,13 +1,13 @@
 #pragma once
 
-#include <thread>
 #include <mutex>
+#include <thread>
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/job/AbstractJob.h"
-#include "mmcore/param/ParamUpdateListener.h"
 #include "mmcore/param/ParamSlot.h"
+#include "mmcore/param/ParamUpdateListener.h"
 
 #include "DistributedProto.h"
 #include "FBOCommFabric.h"
@@ -20,7 +20,7 @@ public:
     HeadnodeServer();
     ~HeadnodeServer() override;
 
-            /**
+    /**
      * Answer the name of this module.
      *
      * @return The name of this module.
@@ -41,7 +41,7 @@ public:
      */
     static bool IsAvailable(void) { return true; }
 
-     /**
+    /**
      * Disallow usage in quickstarts
      *
      * @return false
@@ -73,17 +73,20 @@ protected:
     bool Terminate(void) override;
 
     bool create() override;
+
     void release() override;
 
     void ParamUpdated(core::param::ParamSlot& slot) override;
 
 private:
-
     bool onStartServer(core::param::ParamSlot& param);
 
-    bool get_cam_upd(std::vector<std::byte>& msg);
+    bool get_cam_upd(std::vector<char>& msg);
 
     bool init_threads();
+
+    bool shutdown_threads();
+
     void do_communication();
 
     core::CallerSlot view_slot_;
@@ -96,12 +99,13 @@ private:
 
     mutable std::mutex send_buffer_guard_;
 
-    std::vector<std::byte> send_buffer_;
-
-    bool running_;
+    std::vector<char> send_buffer_;
 
     unsigned int syncnumber = -1;
+
     std::thread comm_thread_;
+
+    bool run_threads_;
 
 }; // end class HeadnodeServer
 

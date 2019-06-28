@@ -231,6 +231,7 @@ void megamol::pbs::RendernodeView::recv_loop() {
             vislib::sys::Log::DefaultLog.WriteWarn("RendernodeView: Failed to recv message.");
 #endif
         }
+        if (!run_threads) break;
 
 #ifdef RV_DEBUG_OUTPUT
         vislib::sys::Log::DefaultLog.WriteInfo("RendernodeView: Starting data copy in recv loop.");
