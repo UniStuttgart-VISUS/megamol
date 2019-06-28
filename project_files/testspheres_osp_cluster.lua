@@ -18,7 +18,7 @@ if role == "head" then
     mmCreateModule("FBOCompositor2", "::testview::fboc")
 
     mmCreateCall("CallRenderView", "::testview::gui::renderview", "::testview::v::render")
-    mmCreateCall("CallRender3D", "::testview::watermark::renderer", "::testview::fboc::rendering")
+    mmCreateCall("CallRender3D", "::testview::v::rendering", "::testview::fboc::rendering")
 else
 
     mmCreateModule("View3D", "::testview::v")
@@ -46,7 +46,6 @@ else
     if headNode == "127.0.0.1" and renderHead == "127.0.0.1" then
         mmSetParamValue("::testview::fbot::force_localhost", "True")
     end
-
 
     mmCreateCall("MpiCall", "::testview::fbot::requestMpi", "::testview::mpi::provideMpi")
 end
