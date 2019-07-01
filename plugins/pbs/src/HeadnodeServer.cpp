@@ -22,7 +22,8 @@ megamol::pbs::HeadnodeServer::HeadnodeServer()
     , start_server_slot_("start", "Start listening to port.")
     , lua_command_slot_("LUACommand", "Sends custom lua command to the RendernodeView")
     , comm_fabric_(std::make_unique<ZMQCommFabric>(zmq::socket_type::rep))
-    , run_threads_(false) {
+    , run_threads_(false)
+    , is_job_running_(true) {
 
     
     lua_command_slot_ << new megamol::core::param::StringParam("");
@@ -44,7 +45,7 @@ megamol::pbs::HeadnodeServer::HeadnodeServer()
 megamol::pbs::HeadnodeServer::~HeadnodeServer() { this->Release(); }
 
 
-bool megamol::pbs::HeadnodeServer::IsRunning(void) const { return true; }
+bool megamol::pbs::HeadnodeServer::IsRunning(void) const { return is_job_running_; }
 
 
 bool megamol::pbs::HeadnodeServer::Start() { return true; }
@@ -63,6 +64,7 @@ bool megamol::pbs::HeadnodeServer::create() {
 
 
 void megamol::pbs::HeadnodeServer::release() {
+    this->is_job_running_ = false;
     shutdown_threads();
     if (this->GetCoreInstance() != nullptr) {
         this->GetCoreInstance()->UnregisterParamUpdateListener(this);
