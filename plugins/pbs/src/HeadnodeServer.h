@@ -111,6 +111,8 @@ private:
 
     bool run_threads_;
 
+    bool is_job_running_;
+
 }; // end class HeadnodeServer
 
 } // end namespace pbs

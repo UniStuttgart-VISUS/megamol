@@ -61,17 +61,25 @@ bool megamol::pbs::RendernodeView::create(void) { return true; }
 
 
 bool megamol::pbs::RendernodeView::process_msgs(Message_t const& msgs) const {
-    auto begin = msgs.cbegin();
-    auto const end = msgs.cend();
 
-    while (begin < end) {
-        auto const type = get_msg_type(begin, end);
-        auto size = 0;
+    uint64_t offset = 0;
+
+    while (offset < msgs.size()) {
+        auto const type = static_cast<MessageType>(*msgs.begin());
+        auto size = msgs.size();
         switch (type) {
         case MessageType::PRJ_FILE_MSG:
         case MessageType::PARAM_UPD_MSG: {
-            size = get_msg_size(begin, end);
-            auto msg = get_msg(size, begin, end);
+
+            if (msgs.size() > MessageHeaderSize) {
+                std::copy(msgs.begin() + MessageTypeSize, msgs.begin() + MessageHeaderSize, &size);
+            }
+            Message_t msg;
+            if (msgs.size() >= MessageHeaderSize + size) {
+                msg.resize(size);
+                std::copy(msgs.begin() + MessageHeaderSize, msgs.begin() + MessageHeaderSize + size, msg.begin());
+            }
+
             std::string mg(msg.begin(), msg.end());
             std::string result;
             auto const success = this->GetCoreInstance()->GetLuaState()->RunString(mg, result);
@@ -81,8 +89,15 @@ bool megamol::pbs::RendernodeView::process_msgs(Message_t const& msgs) const {
             }
         } break;
         case MessageType::CAM_UPD_MSG: {
-            size = get_msg_size(begin, end);
-            auto msg = get_msg(size, begin, end);
+
+            if (msgs.size() > MessageHeaderSize) {
+                std::copy(msgs.begin() + MessageTypeSize, msgs.begin() + MessageHeaderSize, &size);
+            }
+            Message_t msg;
+            if (msgs.size() >= MessageHeaderSize + size) {
+                msg.resize(size);
+                std::copy(msgs.begin() + MessageHeaderSize, msgs.begin() + MessageHeaderSize + size, msg.begin());
+            }
             vislib::RawStorageSerialiser ser(reinterpret_cast<unsigned char*>(msg.data()), msg.size());
             auto view = this->getConnectedView();
             if (view != nullptr) {
@@ -96,7 +111,7 @@ bool megamol::pbs::RendernodeView::process_msgs(Message_t const& msgs) const {
         default:
             vislib::sys::Log::DefaultLog.WriteWarn("RendernodeView: Unknown msg type.");
         }
-        begin = progress_msg(size, begin, end);
+        offset += size + MessageHeaderSize;
     }
 
     return true;
