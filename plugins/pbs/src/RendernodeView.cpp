@@ -22,7 +22,7 @@ megamol::pbs::RendernodeView::RendernodeView()
     : request_mpi_slot_("requestMPI", "Requests initialization of MPI and the communicator for the view.")
     , sync_data_slot_("syncData", "Requests synchronization of data sources in the MPI world.")
     , BCastRankSlot_("BCastRank", "Set which MPI rank is the broadcast master")
-    , address_slot_("address", "Address of headnode in ZMQ syntax")
+    , address_slot_("address", "Address of headnode in ZMQ syntax (e.g. \"tcp://127.0.0.1:33333\")")
     , recv_comm_(std::make_unique<ZMQCommFabric>(zmq::socket_type::req))
     , run_threads(false)
 #ifdef WITH_MPI
