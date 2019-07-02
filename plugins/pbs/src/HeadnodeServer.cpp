@@ -134,14 +134,17 @@ bool megamol::pbs::HeadnodeServer::get_cam_upd(std::vector<char>& msg) {
 bool megamol::pbs::HeadnodeServer::init_threads() {
     try {
         shutdown_threads();
+	vislib::sys::Log::DefaultLog.WriteInfo("HeadnodeServer: Starting listener on port %d.\n");
         this->comm_fabric_ = FBOCommFabric(std::make_unique<ZMQCommFabric>(zmq::socket_type::rep));
         auto const port = std::to_string(this->renderhead_port_slot_.Param<core::param::IntParam>()->Value());
+	vislib::sys::Log::DefaultLog.WriteInfo("HeadnodeServer: Starting listener on port %s.\n", port);
         std::string const address = "tcp://*:" + port;
         this->comm_fabric_.Bind(address);
         run_threads_ = true;
         this->comm_thread_ = std::thread(&HeadnodeServer::do_communication, this);
+	vislib::sys::Log::DefaultLog.WriteInfo("HeadnodeServer: Communication thread started.\n");
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("HeadnodeServer: Could not initialize threads");
+        vislib::sys::Log::DefaultLog.WriteError("HeadnodeServer: Could not initialize threads\n");
         return false;
     }
 
@@ -152,6 +155,7 @@ bool megamol::pbs::HeadnodeServer::init_threads() {
 bool megamol::pbs::HeadnodeServer::shutdown_threads() {
     run_threads_ = false;
     if (comm_thread_.joinable()) {
+      vislib::sys::Log::DefaultLog.WriteInfo("HeadnodeServer: Joining thread.");
         comm_thread_.join();
     }
     return true;
@@ -175,6 +179,7 @@ void megamol::pbs::HeadnodeServer::do_communication() {
             {
                 std::lock_guard<std::mutex> lock(send_buffer_guard_);
                 if (!send_buffer_.empty()) {
+		    vislib::sys::Log::DefaultLog.WriteInfo("HeadnodeServer: Sending parameter update.\n");
                     comm_fabric_.Send(send_buffer_, send_type::SEND);
                     send_buffer_.clear();
                 } else {
