@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <mutex>
 #include <thread>
 
@@ -112,6 +113,8 @@ private:
     bool run_threads_;
 
     bool is_job_running_;
+
+    std::atomic<bool> buffer_has_changed_;
 
 }; // end class HeadnodeServer
 
