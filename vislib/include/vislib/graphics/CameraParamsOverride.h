@@ -18,6 +18,7 @@
 
 #include "vislib/graphics/CameraParameters.h"
 #include "vislib/SmartPtr.h"
+#include "vislib/math/equality.h"
 
 
 namespace vislib {
@@ -458,6 +459,8 @@ namespace graphics {
          */
         void indicateValueChange(void);
 
+        void indicateValueChange_Const() const;
+
         /**
          * Accesses the parameter base.
          *
@@ -477,15 +480,26 @@ namespace graphics {
          */
         virtual void resetOverride(void) = 0;
 
+        template <class T> void assign_and_sync(T& dest, T src);
+
     private:
 
         /** the syncronisation number offset of this override */
-        unsigned int syncNumberOff;
+        mutable unsigned int syncNumberOff;
 
         /** the base object */
         SmartPtr<CameraParameters> base;
 
     };
+
+
+    template <class T> void CameraParamsOverride::assign_and_sync(T& dest, T src) {
+        if (!vislib::math::almost_equal(dest, src)) {
+            dest = src;
+            indicateValueChange();
+        }
+    }
+
     
 } /* end namespace graphics */
 } /* end namespace vislib */

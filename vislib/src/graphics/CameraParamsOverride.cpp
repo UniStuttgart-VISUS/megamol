@@ -562,7 +562,7 @@ vislib::graphics::CameraParamsOverride&
 vislib::graphics::CameraParamsOverride::operator=(
         const vislib::graphics::CameraParamsOverride& rhs) {
     this->base = rhs.base;
-    this->syncNumberOff++;
+    ++this->syncNumberOff;
     return *this;
 }
 
@@ -581,8 +581,11 @@ bool vislib::graphics::CameraParamsOverride::operator==(
  * vislib::graphics::CameraParamsOverride::indicateValueChange
  */
 void vislib::graphics::CameraParamsOverride::indicateValueChange(void) {
-    this->syncNumberOff++;
+    ++this->syncNumberOff;
 }
+
+
+void vislib::graphics::CameraParamsOverride::indicateValueChange_Const(void) const { ++this->syncNumberOff; }
 
 
 /*
