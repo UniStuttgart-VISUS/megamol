@@ -171,6 +171,22 @@ void megamol::pbs::HeadnodeServer::do_communication() {
     std::vector<char> const null_buf(MessageHeaderSize, 0);
     std::vector<char> buf(3);
     std::vector<char> cam_msg;
+
+    // retrieve modulgraph
+    if (this->GetCoreInstance()->IsLuaProject()) {
+        auto const lua = std::string(this->GetCoreInstance()->GetMergedLuaProject());
+        std::vector<char> msg(MessageHeaderSize + lua.size());
+        msg[0] = MessageType::PRJ_FILE_MSG;
+        auto size = lua.size();
+        std::copy(reinterpret_cast<char*>(&size), reinterpret_cast<char*>(&size) + MessageSizeSize,
+            msg.begin() + MessageTypeSize);
+        std::copy(lua.begin(), lua.end(), msg.begin() + MessageHeaderSize);
+        {
+            std::lock_guard<std::mutex> lock(send_buffer_guard_);
+            send_buffer_.insert(send_buffer_.end(), msg.begin(), msg.end());
+        }
+    }
+
     try {
         while (run_threads_) {
             // Wait for message

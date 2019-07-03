@@ -60,24 +60,28 @@ void megamol::pbs::RendernodeView::release(void) { shutdown_threads(); }
 bool megamol::pbs::RendernodeView::create(void) { return true; }
 
 
-bool megamol::pbs::RendernodeView::process_msgs(Message_t const& msgs) const {
+bool megamol::pbs::RendernodeView::process_msgs(Message_t const& msgs) {
+    auto ibegin = msgs.cbegin();
+    auto const iend = msgs.cend();
 
-    uint64_t offset = 0;
-
-    while (offset < msgs.size()) {
-        auto const type = static_cast<MessageType>(*msgs.begin());
-        auto size = msgs.size();
+    while (ibegin < iend) {
+        auto const type = static_cast<MessageType>(*ibegin);
+        auto size = 0;
         switch (type) {
-        case MessageType::PRJ_FILE_MSG:
+        case MessageType::PRJ_FILE_MSG: {
+            auto slot = this->GetCallerSlot();
+            slot->ConnectCall(nullptr);
+            this->GetCoreInstance()->CleanupModuleGraph();
+        }
         case MessageType::PARAM_UPD_MSG: {
 
-            if (msgs.size() > MessageHeaderSize) {
-                std::copy(msgs.begin() + MessageTypeSize, msgs.begin() + MessageHeaderSize, &size);
+            if (std::distance(ibegin, iend) > MessageHeaderSize) {
+                std::copy(ibegin + MessageTypeSize, ibegin + MessageHeaderSize, reinterpret_cast<char*>(&size));
             }
             Message_t msg;
-            if (msgs.size() >= MessageHeaderSize + size) {
+            if (std::distance(ibegin, iend) >= MessageHeaderSize + size) {
                 msg.resize(size);
-                std::copy(msgs.begin() + MessageHeaderSize, msgs.begin() + MessageHeaderSize + size, msg.begin());
+                std::copy(ibegin + MessageHeaderSize, ibegin + MessageHeaderSize + size, msg.begin());
             }
 
             std::string mg(msg.begin(), msg.end());
@@ -90,13 +94,13 @@ bool megamol::pbs::RendernodeView::process_msgs(Message_t const& msgs) const {
         } break;
         case MessageType::CAM_UPD_MSG: {
 
-            if (msgs.size() > MessageHeaderSize) {
-                std::copy(msgs.begin() + MessageTypeSize, msgs.begin() + MessageHeaderSize, &size);
+            if (std::distance(ibegin, iend) > MessageHeaderSize) {
+                std::copy(ibegin + MessageTypeSize, ibegin + MessageHeaderSize, reinterpret_cast<char*>(&size));
             }
             Message_t msg;
-            if (msgs.size() >= MessageHeaderSize + size) {
+            if (std::distance(ibegin, iend) >= MessageHeaderSize + size) {
                 msg.resize(size);
-                std::copy(msgs.begin() + MessageHeaderSize, msgs.begin() + MessageHeaderSize + size, msg.begin());
+                std::copy(ibegin + MessageHeaderSize, ibegin + MessageHeaderSize + size, msg.begin());
             }
             vislib::RawStorageSerialiser ser(reinterpret_cast<unsigned char*>(msg.data()), msg.size());
             auto view = this->getConnectedView();
@@ -106,12 +110,13 @@ bool megamol::pbs::RendernodeView::process_msgs(Message_t const& msgs) const {
                 vislib::sys::Log::DefaultLog.WriteError("RendernodeView: Cannot update camera. No view connected.");
             }
         } break;
+        case MessageType::HEAD_DISC_MSG:
         case MessageType::NULL_MSG:
             break;
         default:
             vislib::sys::Log::DefaultLog.WriteWarn("RendernodeView: Unknown msg type.");
         }
-        offset += size + MessageHeaderSize;
+        ibegin += size + MessageHeaderSize;
     }
 
     return true;

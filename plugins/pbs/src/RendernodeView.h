@@ -93,7 +93,7 @@ private:
         return msg;
     }
 
-    bool process_msgs(Message_t const& msgs) const;
+    bool process_msgs(Message_t const& msgs);
 
     void recv_loop();
 
