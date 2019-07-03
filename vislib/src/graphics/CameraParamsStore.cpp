@@ -7,8 +7,8 @@
  */
 
 #include "vislib/graphics/CameraParamsStore.h"
-#include "vislib/math/mathtypes.h"
 #include "vislib/math/equality.h"
+#include "vislib/math/mathtypes.h"
 
 
 /* Default values */
@@ -512,7 +512,7 @@ void vislib::graphics::CameraParamsStore::SetStereoParameters(vislib::graphics::
         if (this->limits->MinFocalDist() > focalDistance) {
             focalDistance = this->limits->MinFocalDist();
         }
-        assign_and_sync(this->focalDistance , focalDistance);
+        assign_and_sync(this->focalDistance, focalDistance);
     }
 }
 
@@ -522,7 +522,7 @@ void vislib::graphics::CameraParamsStore::SetStereoParameters(vislib::graphics::
  */
 void vislib::graphics::CameraParamsStore::SetTileRect(
     const vislib::math::Rectangle<vislib::graphics::ImageSpaceType>& tileRect) {
-    
+
     assign_and_sync(this->tileRect, tileRect); // no need to adjust anything else
 }
 
