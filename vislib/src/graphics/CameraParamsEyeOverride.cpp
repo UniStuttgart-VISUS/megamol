@@ -49,8 +49,7 @@ vislib::graphics::CameraParamsEyeOverride::Eye(void) const {
  */
 void vislib::graphics::CameraParamsEyeOverride::SetEye(
         vislib::graphics::CameraParameters::StereoEye eye) {
-    this->eye = eye; // no need to adjust anything else
-    this->indicateValueChange();
+    assign_and_sync(this->eye, eye); // no need to adjust anything else
 }
 
 
@@ -91,6 +90,5 @@ void vislib::graphics::CameraParamsEyeOverride::preBaseSet(
  */
 void vislib::graphics::CameraParamsEyeOverride::resetOverride(void) {
     ASSERT(!this->paramsBase().IsNull());
-    this->eye = this->paramsBase()->Eye();
-    this->indicateValueChange();
+    assign_and_sync(this->eye, this->paramsBase()->Eye());
 }
