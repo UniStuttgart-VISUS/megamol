@@ -51,11 +51,13 @@ void vislib::graphics::CameraParamsVirtualViewOverride::SetVirtualViewSize(
             this->overrideValue.Height())) {
         math::Point<ImageSpaceType, 2> origin;
         ImageSpaceRectangle rect(origin, viewSize);
-        this->SetTileRect(rect);
+        if (this->TileRect() != rect) {
+            this->SetTileRect(rect);
+            this->indicateValueChange();
+        }
     }
 
-    this->overrideValue = viewSize;
-    this->indicateValueChange();
+    assign_and_sync(this->overrideValue, viewSize);
 }
 
 
