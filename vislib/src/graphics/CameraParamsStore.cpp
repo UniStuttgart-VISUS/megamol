@@ -345,7 +345,7 @@ void vislib::graphics::CameraParamsStore::SetApertureAngle(vislib::math::AngleDe
  * vislib::graphics::CameraParamsStore::SetAutoFocusOffset
  */
 void vislib::graphics::CameraParamsStore::SetAutoFocusOffset(vislib::graphics::SceneSpaceType offset) {
-    this->autoFocusOffset = offset;
+    this->autoFocusOffset = offset; // TODO Increment sync number?
 }
 
 
@@ -396,7 +396,7 @@ void vislib::graphics::CameraParamsStore::SetFarClip(vislib::graphics::SceneSpac
     ASSERT(!this->limits.IsNull());
 
     if (this->nearClip < this->limits->MinNearClipDist()) {
-        this->nearClip = this->limits->MinNearClipDist();
+        assign_and_sync(this->nearClip, this->limits->MinNearClipDist());
     }
 
     if (farClip < this->nearClip + this->limits->MinClipPlaneDist()) {
@@ -504,8 +504,8 @@ void vislib::graphics::CameraParamsStore::SetStereoParameters(vislib::graphics::
     vislib::graphics::CameraParamsStore::StereoEye eye, vislib::graphics::SceneSpaceType focalDistance) {
     ASSERT(!this->limits.IsNull());
 
-    this->halfStereoDisparity = stereoDisparity * 0.5f;
-    this->eye = eye;
+    assign_and_sync(this->halfStereoDisparity, stereoDisparity * 0.5f);
+    assign_and_sync(this->eye, eye);
     if (vislib::math::IsEqual(focalDistance, 0.0f)) {
         assign_and_sync(this->focalDistance, 0.0f); // special indication
     } else {
