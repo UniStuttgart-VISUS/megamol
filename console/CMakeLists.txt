@@ -67,8 +67,8 @@ if(BUILD_CONSOLE)
         add_external_library(glfw STATIC
         DEPENDS glfw_ext
         INCLUDE_DIR "include"
-        LIBRARY_DEBUG "lib/glfw3.a"
-        LIBRARY_RELEASE "lib/glfw3.a")
+        LIBRARY_DEBUG "lib/libglfw3.a"
+        LIBRARY_RELEASE "lib/libglfw3.a")
     endif()
     #find_package(glfw3 REQUIRED CONFIG)
     target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
