@@ -8,6 +8,7 @@
 
 #include "vislib/graphics/CameraParamsStore.h"
 #include "vislib/math/mathtypes.h"
+#include "vislib/math/equality.h"
 
 
 /* Default values */
@@ -29,26 +30,13 @@
 #define DEFAULT_TILE_RECT math::Rectangle<float>(math::Point<float, 2>(0.0f, 0.0f), DEFAULT_VIEW_SIZE)
 
 
-// https://en.cppreference.com/w/cpp/types/numeric_limits/epsilon
-template <class T>
-typename std::enable_if<std::is_floating_point<T>::value, bool>::type almost_equal(T x, T y, int ulp = 2) {
-    // the machine epsilon has to be scaled to the magnitude of the values used
-    // and multiplied by the desired precision in ULPs (units in the last place)
-    return std::abs(x - y) <= std::numeric_limits<T>::epsilon() * std::abs(x + y) * ulp
-           // unless the result is subnormal
-           || std::abs(x - y) < std::numeric_limits<T>::min();
-}
-
-template <class T> typename std::enable_if<!std::is_floating_point<T>::value, bool>::type almost_equal(T x, T y) {
-    return x == y;
-}
-
 template <class T> void vislib::graphics::CameraParamsStore::assign_and_sync(T& dest, T src) {
-    if (!almost_equal(dest, src)) {
+    if (!vislib::math::almost_equal(dest, src)) {
         dest = src;
-        this->syncNumber++;
+        ++this->syncNumber;
     }
 }
+
 
 /*
  * vislib::graphics::CameraParamsStore::CameraParamsStore
@@ -309,7 +297,7 @@ void vislib::graphics::CameraParamsStore::Reset(void) {
     this->position = DEFAULT_POSITION;
     this->projectionType = DEFAULT_PROJECTION_TYPE;
     this->right = DEFAULT_RIGHT;
-    this->syncNumber++; // Do not reset syncNumber but indicate the change!
+    ++this->syncNumber; // Do not reset syncNumber but indicate the change!
     this->tileRect = DEFAULT_TILE_RECT;
     this->up = DEFAULT_UP;
     this->virtualViewSize = DEFAULT_VIEW_SIZE;
@@ -322,7 +310,7 @@ void vislib::graphics::CameraParamsStore::Reset(void) {
 void vislib::graphics::CameraParamsStore::ResetTileRect(void) {
     this->tileRect.SetNull();
     this->tileRect.SetSize(this->virtualViewSize);
-    this->syncNumber++;
+    ++this->syncNumber;
 }
 
 
@@ -388,7 +376,7 @@ void vislib::graphics::CameraParamsStore::SetCoordSystemType(vislib::math::Coord
     if (this->coordSysType != coordSysType) {
         this->coordSysType = coordSysType;
         this->right *= static_cast<SceneSpaceType>(-1);
-        this->syncNumber++;
+        ++this->syncNumber;
     }
 }
 
@@ -620,7 +608,7 @@ void vislib::graphics::CameraParamsStore::SetVirtualViewSize(
         math::IsEqual(this->tileRect.GetTop(), this->virtualViewSize.Height())) {
         if (this->tileRect.Width() != viewSize.Width() || this->tileRect.Height() != viewSize.Height()) {
             this->tileRect.SetSize(viewSize);
-            this->syncNumber++;
+            ++this->syncNumber;
         }
     }
     assign_and_sync(this->virtualViewSize, viewSize);
@@ -679,7 +667,7 @@ vislib::graphics::CameraParamsStore& vislib::graphics::CameraParamsStore::operat
     this->position = rhs.position;
     this->projectionType = rhs.projectionType;
     this->right = rhs.right;
-    this->syncNumber++; // Do not copy syncNumber but indicate the change!
+    ++this->syncNumber; // Do not copy syncNumber but indicate the change!
     this->tileRect = rhs.tileRect;
     this->up = rhs.up;
     this->virtualViewSize = rhs.virtualViewSize;
@@ -706,7 +694,7 @@ vislib::graphics::CameraParamsStore& vislib::graphics::CameraParamsStore::operat
     this->position = rhs.Position();
     this->projectionType = rhs.Projection();
     this->right = rhs.Right();
-    this->syncNumber++; // Do not copy syncNumber but indicate the change!
+    ++this->syncNumber; // Do not copy syncNumber but indicate the change!
     this->tileRect = rhs.TileRect();
     this->up = rhs.Up();
     this->virtualViewSize = rhs.VirtualViewSize();
