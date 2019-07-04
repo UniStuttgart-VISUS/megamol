@@ -49,7 +49,7 @@ if(BUILD_CONSOLE)
   endif()
 
   if(NOT USE_EGL)
-    add_external_project(glfw_ext glfw3
+    add_external_project(glfw_ext
       GIT_REPOSITORY https://github.com/glfw/glfw.git
       GIT_TAG "3.2.1"
       CMAKE_ARGS
@@ -58,20 +58,20 @@ if(BUILD_CONSOLE)
         -DGLFW_BUILD_TESTS=OFF
         -DGLFW_BUILD_DOCS=OFF)
     if (MSVC)
-      add_external_library(glfw STATIC
+      add_external_library(glfw3 STATIC
         DEPENDS glfw_ext
         INCLUDE_DIR "include"
         LIBRARY_DEBUG "lib/glfw3.lib"
         LIBRARY_RELEASE "lib/glfw3.lib")
     else()
-        add_external_library(glfw STATIC
+        add_external_library(glfw3 STATIC
         DEPENDS glfw_ext
         INCLUDE_DIR "include"
         LIBRARY_DEBUG "lib/libglfw3.a"
         LIBRARY_RELEASE "lib/libglfw3.a")
     endif()
     #find_package(glfw3 REQUIRED CONFIG)
-    target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
+    target_link_libraries(${PROJECT_NAME} PRIVATE glfw3)
   endif()
   
   # AntTweakBar
@@ -102,6 +102,9 @@ if(BUILD_CONSOLE)
 
   # install mmconsole executable
   install(TARGETS ${PROJECT_NAME} DESTINATION "bin")
+  if (WIN32)
+    install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION bin OPTIONAL)
+  endif ()
 
   # install and configure ATB
   if (USE_ANTTWEAKBAR)
