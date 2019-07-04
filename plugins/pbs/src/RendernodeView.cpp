@@ -69,9 +69,11 @@ bool megamol::pbs::RendernodeView::process_msgs(Message_t const& msgs) {
         auto size = 0;
         switch (type) {
         case MessageType::PRJ_FILE_MSG: {
-            auto slot = this->GetCallerSlot();
-            slot->ConnectCall(nullptr);
-            this->GetCoreInstance()->CleanupModuleGraph();
+            auto const call = this->getCallRenderView();
+            if (call != nullptr) {
+                this->disconnectOutgoingRenderCall();
+                this->GetCoreInstance()->CleanupModuleGraph();
+            }
         }
         case MessageType::PARAM_UPD_MSG: {
 
@@ -128,8 +130,6 @@ void megamol::pbs::RendernodeView::Render(const mmcRenderViewContext& context) {
     this->initMPI();
     // 0 time, 1 instanceTime
     std::array<double, 2> timestamps = {0.0, 0.0};
-
-    auto crv = this->getCallRenderView();
 
     // if broadcastmaster, start listening thread
     // auto isBCastMaster = isBCastMasterSlot_.Param<core::param::BoolParam>->Value();
@@ -204,6 +204,7 @@ void megamol::pbs::RendernodeView::Render(const mmcRenderViewContext& context) {
 #    endif
     }
     // check whether rendering is possible in current state
+    auto crv = this->getCallRenderView();
     if (crv != nullptr) {
         crv->ResetAll();
         crv->SetTime(static_cast<float>(timestamps[0]));
@@ -238,43 +239,49 @@ void megamol::pbs::RendernodeView::Render(const mmcRenderViewContext& context) {
 void megamol::pbs::RendernodeView::recv_loop() {
     using namespace std::chrono_literals;
     vislib::sys::Log::DefaultLog.WriteInfo("RendernodeView: Starting recv_loop.");
-    while (run_threads) {
-        Message_t buf = {'r', 'e', 'q'};
-        auto start = std::chrono::high_resolution_clock::now();
-        if (!recv_comm_.Send(buf, send_type::SEND)) {
+    try {
+        while (run_threads) {
+            Message_t buf = {'r', 'e', 'q'};
+            auto start = std::chrono::high_resolution_clock::now();
+            if (!recv_comm_.Send(buf, send_type::SEND)) {
 #ifdef RV_DEBUG_OUTPUT
-            vislib::sys::Log::DefaultLog.WriteWarn("RendernodeView: Failed to send request.");
+                vislib::sys::Log::DefaultLog.WriteWarn("RendernodeView: Failed to send request.");
 #endif
+            }
+            vislib::sys::Log::DefaultLog.WriteInfo(
+                "RendernodeView: MSG Send took %d ms", (std::chrono::duration_cast<std::chrono::milliseconds>(
+                                                            std::chrono::high_resolution_clock::now() - start))
+                                                           .count());
+
+            start = std::chrono::high_resolution_clock::now();
+            while (!recv_comm_.Recv(buf, recv_type::RECV) && run_threads) {
+#ifdef RV_DEBUG_OUTPUT
+                vislib::sys::Log::DefaultLog.WriteWarn("RendernodeView: Failed to recv message.");
+#endif
+            }
+            vislib::sys::Log::DefaultLog.WriteInfo(
+                "RendernodeView: MSG Recv took %d ms", (std::chrono::duration_cast<std::chrono::milliseconds>(
+                                                            std::chrono::high_resolution_clock::now() - start))
+                                                           .count());
+            if (!run_threads) break;
+
+#ifdef RV_DEBUG_OUTPUT
+            vislib::sys::Log::DefaultLog.WriteInfo("RendernodeView: Starting data copy in recv loop.");
+#endif
+            {
+                std::lock_guard<std::mutex> guard(recv_msgs_mtx_);
+                recv_msgs_.insert(recv_msgs_.end(), buf.begin(), buf.end());
+            }
+#ifdef RV_DEBUG_OUTPUT
+            vislib::sys::Log::DefaultLog.WriteInfo("RendernodeView: Finished data copy in recv loop.");
+#endif
+
+            data_has_changed_.store(true);
+
+            std::this_thread::sleep_for(1000ms / 60);
         }
-        vislib::sys::Log::DefaultLog.WriteInfo("RendernodeView: MSG Send took %d ms",
-            (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start))
-                .count());
-
-        start = std::chrono::high_resolution_clock::now();
-        while (!recv_comm_.Recv(buf, recv_type::RECV) && run_threads) {
-#ifdef RV_DEBUG_OUTPUT
-            vislib::sys::Log::DefaultLog.WriteWarn("RendernodeView: Failed to recv message.");
-#endif
-        }
-        vislib::sys::Log::DefaultLog.WriteInfo("RendernodeView: MSG Recv took %d ms",
-            (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start))
-                .count());
-        if (!run_threads) break;
-
-#ifdef RV_DEBUG_OUTPUT
-        vislib::sys::Log::DefaultLog.WriteInfo("RendernodeView: Starting data copy in recv loop.");
-#endif
-        {
-            std::lock_guard<std::mutex> guard(recv_msgs_mtx_);
-            recv_msgs_.insert(recv_msgs_.end(), buf.begin(), buf.end());
-        }
-#ifdef RV_DEBUG_OUTPUT
-        vislib::sys::Log::DefaultLog.WriteInfo("RendernodeView: Finished data copy in recv loop.");
-#endif
-
-        data_has_changed_.store(true);
-
-        std::this_thread::sleep_for(1000ms / 60);
+    } catch (...) {
+        vislib::sys::Log::DefaultLog.WriteError("RendernodeView: Error during communication.");
     }
 
     vislib::sys::Log::DefaultLog.WriteInfo("RendernodeView: Exiting recv_loop.");
