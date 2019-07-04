@@ -49,8 +49,7 @@ if(BUILD_CONSOLE)
   endif()
 
   if(NOT USE_EGL)
-    bootstrap_external_package(glfw_ext glfw3
-      CONFIG "lib/cmake/glfw3/glfw3Config.cmake"
+    add_external_project(glfw_ext glfw3
       GIT_REPOSITORY https://github.com/glfw/glfw.git
       GIT_TAG "3.2.1"
       CMAKE_ARGS
@@ -58,7 +57,20 @@ if(BUILD_CONSOLE)
         -DGLFW_BUILD_EXAMPLES=OFF
         -DGLFW_BUILD_TESTS=OFF
         -DGLFW_BUILD_DOCS=OFF)
-    find_package(glfw3 REQUIRED CONFIG)
+    if (MSVC)
+      add_external_library(glfw STATIC
+        DEPENDS glfw_ext
+        INCLUDE_DIR "include"
+        LIBRARY_DEBUG "lib/glfw3.lib"
+        LIBRARY_RELEASE "lib/glfw3.lib")
+    else()
+        add_external_library(glfw STATIC
+        DEPENDS glfw_ext
+        INCLUDE_DIR "include"
+        LIBRARY_DEBUG "lib/libglfw3.a"
+        LIBRARY_RELEASE "lib/libglfw3.a")
+    endif()
+    #find_package(glfw3 REQUIRED CONFIG)
     target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
   endif()
   
