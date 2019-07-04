@@ -308,9 +308,12 @@ void vislib::graphics::CameraParamsStore::Reset(void) {
  * vislib::graphics::CameraParamsStore::ResetTileRect
  */
 void vislib::graphics::CameraParamsStore::ResetTileRect(void) {
-    this->tileRect.SetNull();
-    this->tileRect.SetSize(this->virtualViewSize);
-    ++this->syncNumber;
+    if (this->tileRect.Width() != this->virtualViewSize.Width() ||
+        this->tileRect.Height() != this->virtualViewSize.Height()) {
+        this->tileRect.SetNull();
+        this->tileRect.SetSize(this->virtualViewSize);
+        ++this->syncNumber;
+    }
 }
 
 
