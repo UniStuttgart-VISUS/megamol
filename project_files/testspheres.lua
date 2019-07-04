@@ -1,5 +1,5 @@
 mmCreateView("testspheres", "View3D", "::testview")
-mmCreateModule("SimpleSphereRenderer", "::rnd")
+mmCreateModule("SphereRenderer", "::rnd")
 mmSetParamValue("rnd::renderMode", "Simple")
 mmCreateModule("TestSpheresDataSource", "::dat")
 mmCreateCall("CallRender3D", "::testview::rendering", "::rnd::rendering")

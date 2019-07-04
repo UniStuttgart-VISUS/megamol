@@ -155,7 +155,6 @@ moldyn::SphereRenderer::SphereRenderer(void)
     , vertType(SimpleSphericalParticles::VertexDataType::VERTDATA_NONE)
     , newShader(nullptr)
     , theShaders()
-    , theShaders_splat()
     , streamer()
     , colStreamer()
     , bufArray()
@@ -236,13 +235,13 @@ moldyn::SphereRenderer::SphereRenderer(void)
     // Initialising enum param with all possible modes (needed for configurator) 
     // (Removing not available render modes later in create function)
     param::EnumParam* rmp = new param::EnumParam(this->renderMode);
-    rmp->SetTypePair(RenderMode::SIMPLE,            "Simple");
+    rmp->SetTypePair(RenderMode::SIMPLE,            "Simple"); 
     rmp->SetTypePair(RenderMode::SIMPLE_CLUSTERED,  "Simple_Clustered");
     rmp->SetTypePair(RenderMode::SIMPLE_GEO,        "Simple_Geometry_Shader");
-    rmp->SetTypePair(RenderMode::NG,                "NG");
-    rmp->SetTypePair(RenderMode::NG_SPLAT,          "NG_Splat");
-    rmp->SetTypePair(RenderMode::NG_BUFFER_ARRAY,   "NG_Buffer_Array");
-    rmp->SetTypePair(RenderMode::AMBIENT_OCCLUSION, "Ambient_Occlusion");
+    rmp->SetTypePair(RenderMode::NG,                "NG"); 
+    rmp->SetTypePair(RenderMode::NG_BUFFER_ARRAY,   "NG_Buffer_Array"); 
+    rmp->SetTypePair(RenderMode::NG_SPLAT,          "NG_Splat");   
+    rmp->SetTypePair(RenderMode::AMBIENT_OCCLUSION, "Ambient_Occlusion"); 
     this->renderModeParam << rmp;
     this->MakeSlotAvailable(&this->renderModeParam);
 
@@ -354,7 +353,6 @@ bool moldyn::SphereRenderer::resetResources(void) {
         this->newShader.reset();
     }
     this->theShaders.clear();
-    this->theShaders_splat.clear();
 
     if (this->volGen != nullptr) {
         delete this->volGen;
@@ -2374,6 +2372,11 @@ bool moldyn::SphereRenderer::isRenderModeAvailable(RenderMode rm) {
                 "[SphereRenderer] Render Mode 'SIMPLE_GEO' is not available. Geometry shader extensions are not available.");
             retval = false;
         }
+        if (!ogl_IsVersionGEQ(3, 2)) {
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                "[SphereRenderer] Render Mode 'SIMPLE_GEO' is not available. Minimum OpenGL version is 3.2 (GLSL 1.5)");
+            retval = false;
+        }
         if (!isExtAvailable("GL_EXT_geometry_shader4")) {
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, 
                 "[SphereRenderer] Render Mode 'SIMPLE_GEO' is not available. Extension GL_EXT_geometry_shader4 is not available.");
@@ -2396,9 +2399,9 @@ bool moldyn::SphereRenderer::isRenderModeAvailable(RenderMode rm) {
         }
         break;
     case(RenderMode::NG):
-        if (!ogl_IsVersionGEQ(4, 5)) {
+        if (!ogl_IsVersionGEQ(4, 5)) { // required for glUnmapNamedBuffer
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, 
-                "[SphereRenderer] Render Mode 'NG' is not available. Minimum OpenGL version is 4.5");
+                "[SphereRenderer] Render Mode 'NG' is not available. Minimum OpenGL version is 4.5 (GLSL 4.5)");
             retval = false;
         }
         if (!isExtAvailable("GL_ARB_buffer_storage")) {
@@ -2408,11 +2411,11 @@ bool moldyn::SphereRenderer::isRenderModeAvailable(RenderMode rm) {
         }
         break;
     case(RenderMode::NG_SPLAT):
-        if (!ogl_IsVersionGEQ(4, 5)) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, 
-                "[SphereRenderer] Render Mode 'NG_SPLAT' is not available. Minimum OpenGL version is 4.5");
-            retval = false;
-        }
+        //if (!ogl_IsVersionGEQ(4, 5)) {
+        //    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, 
+        //        "[SphereRenderer] Render Mode 'NG_SPLAT' is not available. Minimum OpenGL version is 4.5 (GLSL 4.5)");
+        //    retval = false;
+        //}
         if (!isExtAvailable("GL_ARB_buffer_storage")) {
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, 
                 "[SphereRenderer] Render Mode 'NG_SPLAT' is not available. Extension GL_ARB_buffer_storage is not available.");
@@ -2420,11 +2423,11 @@ bool moldyn::SphereRenderer::isRenderModeAvailable(RenderMode rm) {
         }
         break;
     case(RenderMode::NG_BUFFER_ARRAY):
-        if (!ogl_IsVersionGEQ(4, 5)) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, 
-                "[SphereRenderer] Render Mode 'NG_BUFFER_ARRAY' is not available. Minimum OpenGL version is 4.5");
-            retval = false;
-        }
+        //if (!ogl_IsVersionGEQ(4, 5)) {
+        //    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, 
+        //        "[SphereRenderer] Render Mode 'NG_BUFFER_ARRAY' is not available. Minimum OpenGL version is 4.5 (GLSL 4.5)");
+        //    retval = false;
+        //}
         if (!isExtAvailable("GL_ARB_buffer_storage")) {
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, 
                 "[SphereRenderer] Render Mode 'NG_BUFFER_ARRAY' is not available. Extension GL_ARB_buffer_storage is not available.");

@@ -5,8 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_SphereRenderer_H_INCLUDED
-#define MEGAMOLCORE_SphereRenderer_H_INCLUDED
+#ifndef MEGAMOLCORE_SIMPLESPHERERENDERER_H_INCLUDED
+#define MEGAMOLCORE_SIMPLESPHERERENDERER_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -128,9 +128,9 @@ namespace moldyn {
                     "[SphereRenderer] No render mode is available. Shader extensions are not available.");
                 retval = false;
             }
-            if (!ogl_IsVersionGEQ(3, 2)) {
+            if (!ogl_IsVersionGEQ(3, 0)) {
                 vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, 
-                    "[SphereRenderer] No render mode available. Minimum OpenGL version is 3.2");
+                    "[SphereRenderer] No render mode available. Minimum OpenGL version is 3.0 (GLSL 1.3)");
                 retval = false;
             }
             if (!isExtAvailable("GL_ARB_explicit_attrib_location")) {
@@ -182,19 +182,17 @@ namespace moldyn {
         /* VARIABLES                                                         */
         /*********************************************************************/
 
-        enum RenderMode {
-            SIMPLE            = 0,     /// Simple sphere rendering.
-            SIMPLE_CLUSTERED  = 1,     /// Same as "Simple" - Clustered rendering is not yet implemented in SimpleSphericalParticles?
-            SIMPLE_GEO        = 2,     /// Simple sphere rendering using geometry shader.
-            NG                = 3,     /// Next generation (NG) sphere rendering using shader storage buffer object.
-            NG_SPLAT          = 4,     /// NG sphere rendering using splats.
-            NG_BUFFER_ARRAY   = 5,     /// NG sphere rendering using array buffers.
-            AMBIENT_OCCLUSION = 6,     /// Sphere rendering with ambient occlusion
-            __COUNT__         = 7
+        enum RenderMode {              // Future names:      |
+            SIMPLE            = 0,     //                    | /// Sphere rendering using ...
+            SIMPLE_CLUSTERED  = 1,     //                    | /// Sphere rendering using clustered ...
+            SIMPLE_GEO        = 2,     // GEOMETRY_SHADER    | /// Sphere rendering using geometry shader.
+            NG                = 3,     // SSBO_STREAM        | /// Sphere rendering using shader storage buffer object stream.
+            NG_BUFFER_ARRAY   = 4,     //                    | /// Sphere rendering using array buffers.
+            NG_SPLAT          = 5,     // SPLAT              | /// Sphere rendering with splats.
+            AMBIENT_OCCLUSION = 6      // AMBIENT_OCCLUSION  | /// Sphere rendering with ambient occlusion
         };
 
         typedef std::map <std::tuple<int, int, bool>, std::shared_ptr<GLSLShader> > shaderMap;
-        typedef std::map <std::pair<int, int>, std::shared_ptr<GLSLShader> >        shaderMap_splat;
 
         struct gpuParticleDataType {
             GLuint vertexVBO, colorVBO, vertexArray;
@@ -239,7 +237,6 @@ namespace moldyn {
         SimpleSphericalParticles::VertexDataType vertType;
         std::shared_ptr<GLSLShader>              newShader;
         shaderMap                                theShaders;
-        shaderMap_splat                          theShaders_splat;
 
         megamol::core::utility::SSBOStreamer     streamer;
         megamol::core::utility::SSBOStreamer     colStreamer;
@@ -499,4 +496,4 @@ namespace moldyn {
 } /* end namespace core */
 } /* end namespace megamol */
 
-#endif /* MEGAMOLCORE_SphereRenderer_H_INCLUDED */
+#endif /* MEGAMOLCORE_SIMPLESPHERERENDERER_H_INCLUDED */

@@ -3,7 +3,7 @@
     <include file="common"/>
 
     <shader name="vertex">
-        <snippet type="version">150</snippet>
+        <snippet type="version">130</snippet>
         <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>
         <snippet name="Attributes"       type="file">simplesphere/geosphere_vert_attributes.glsl</snippet>
         <snippet name="Main"             type="file">simplesphere/geosphere_vert_main.glsl</snippet>
@@ -18,7 +18,7 @@
     </shader>
 
     <shader name="fragment">
-        <snippet type="version">150</snippet>
+        <snippet type="version">130</snippet>
         <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>
         <snippet name="Main"             type="file">simplesphere/geosphere_frag_main.glsl</snippet>
 

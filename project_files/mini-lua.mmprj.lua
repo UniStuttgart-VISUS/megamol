@@ -11,7 +11,7 @@ if role == "head" then
 else
     mmCreateModule("View3D", "::mini-lua::v")
 end
-mmCreateModule("SimpleSphereRenderer", "::mini-lua::ssr")
+mmCreateModule("SphereRenderer", "::mini-lua::ssr")
 mmSetParamValue("::mini-lua::ssr::renderMode", "Simple")
 mmCreateModule("MMPLDDataSource", "::mini-lua::ds")
 mmCreateModule("LinearTransferFunction", "::mini-lua::ltf")
