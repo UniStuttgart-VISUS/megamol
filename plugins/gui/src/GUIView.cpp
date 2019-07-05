@@ -195,7 +195,7 @@ bool GUIView::create() {
     this->fontUtf8Ranges.emplace_back(0x2122);
     this->fontUtf8Ranges.emplace_back(0x2122); // TM
     this->fontUtf8Ranges.emplace_back(0x212B);
-    this->fontUtf8Ranges.emplace_back(0x212B); // Angström
+    this->fontUtf8Ranges.emplace_back(0x212B); // Angstroem
     this->fontUtf8Ranges.emplace_back(0x0391);
     this->fontUtf8Ranges.emplace_back(0x03D6); // greek alphabet
     this->fontUtf8Ranges.emplace_back(0);      // (range termination)
