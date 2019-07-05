@@ -1,5 +1,5 @@
 /*
- * FloatTabletoADIOS.h
+ * TableToADIOS.h
  *
  * Copyright (C) 2018 by Universitaet Stuttgart (VISUS).
  * Alle Rechte vorbehalten.
@@ -10,13 +10,13 @@
 #include "mmcore/Module.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "CallADIOSData.h"
 #include "mmcore/param/ParamSlot.h"
+#include "CallADIOSData.h"
 
 namespace megamol {
 namespace adios {
     
-class FloatTabletoADIOS : public core::Module {
+class TableToADIOS : public core::Module {
     
 public:
     /**
@@ -24,14 +24,14 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "FloatTabletoADIOS"; }
+    static const char* ClassName(void) { return "TableToADIOS"; }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "Converts MegaMols CallFloatTableData into ADIOS-based IO."; }
+    static const char* Description(void) { return "Converts a table into ADIOS-based IO."; }
 
     /**
      * Answers whether this module is available on the current system.
@@ -41,10 +41,10 @@ public:
     static bool IsAvailable(void) { return true; }
 
     /** Ctor. */
-    FloatTabletoADIOS(void);
+    TableToADIOS(void);
 
     /** Dtor. */
-    virtual ~FloatTabletoADIOS(void);
+    virtual ~TableToADIOS(void);
 
     bool create(void);
 

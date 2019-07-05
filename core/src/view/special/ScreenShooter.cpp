@@ -513,6 +513,8 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
         };
         this->GetCoreInstance()->EnumModulesNoLock(nullptr, fun);
 
+        this->ModuleGraphLock().UnlockExclusive();
+
         auto confstr = confInstances.str() + "\n" + confModules.str() + "\n" + confCalls.str() + "\n" + confParams.str();
         std::vector<png_byte> tempvec(confstr.begin(), confstr.end());
         // auto info = new png_byte[confstr.size()];

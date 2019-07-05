@@ -5,7 +5,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmstd_datatools/floattable/CallFloatTableData.h"
+#include "mmstd_datatools/table/TableDataCall.h"
 
 
 namespace megamol {
@@ -46,7 +46,7 @@ private:
 
     bool getHashCallback(core::Call& c);
 
-    bool computeTSNE(megamol::stdplugin::datatools::floattable::CallFloatTableData* inCall);
+    bool computeTSNE(megamol::stdplugin::datatools::table::TableDataCall* inCall);
 
     /** Data output slot */
     CalleeSlot dataOutSlot;
@@ -69,7 +69,7 @@ private:
     size_t dataInHash;
 
     /** Vector storing information about columns */
-    std::vector<megamol::stdplugin::datatools::floattable::CallFloatTableData::ColumnInfo> columnInfos;
+    std::vector<megamol::stdplugin::datatools::table::TableDataCall::ColumnInfo> columnInfos;
 
     /** Vector stroing the actual float data */
     std::vector<float> data;
