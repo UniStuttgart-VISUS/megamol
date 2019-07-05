@@ -1,13 +1,13 @@
 #
-# MegaMol™ ng_mesh Plugin
+# MegaMol™ mesh Plugin
 # Copyright 2017, by MegaMol Team
 # Alle Rechte vorbehalten. All rights reserved.
 #
-string(TOUPPER ng_mesh EXPORT_NAME)
-option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build ng_mesh" ON)
+string(TOUPPER mesh EXPORT_NAME)
+option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build mesh" ON)
 
 if(BUILD_${EXPORT_NAME}_PLUGIN)
-  project(ng_mesh)
+  project(mesh)
 
   # Check option dependencies: First list item is always the current build option,
   # afterwards list the dependencies.

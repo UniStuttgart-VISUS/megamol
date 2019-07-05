@@ -15,13 +15,13 @@
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "ng_mesh.h"
+#include "mesh.h"
 
 #include "GPUMeshCollection.h"
 
 namespace megamol {
-namespace ngmesh {
-class NG_MESH_API AbstractGPUMeshDataSource : public core::Module {
+namespace mesh {
+class MESH_API AbstractGPUMeshDataSource : public core::Module {
 public:
     AbstractGPUMeshDataSource();
     virtual ~AbstractGPUMeshDataSource();
@@ -73,7 +73,7 @@ private:
     megamol::core::CalleeSlot m_getData_slot;
 };
 
-} // namespace ngmesh
+} // namespace mesh
 } // namespace megamol
 
 

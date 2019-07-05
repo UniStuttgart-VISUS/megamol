@@ -1,5 +1,5 @@
 /*
-* AbstractNGMeshDataSource.h
+* AbstractmeshDataSource.h
 *
 * Copyright (C) 2017 by Universitaet Stuttgart (VISUS).
 * All rights reserved.

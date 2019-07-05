@@ -5,21 +5,21 @@
  */
 
 #include "stdafx.h"
-#include "ng_mesh/ng_mesh.h"
+#include "mesh/mesh.h"
 
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/utility/plugins/Plugin200Instance.h"
 #include "mmcore/versioninfo.h"
 #include "vislib/vislibversion.h"
 
-//#include "ng_mesh/CallNGMeshRenderBatches.h"
-#include "NGMeshRenderer.h"
-//#include "NGMeshDebugDataSource.h"
+//#include "mesh/CallmeshRenderBatches.h"
+#include "RenderMDIMesh.h"
+//#include "meshDebugDataSource.h"
 
-#include "ng_mesh/GPUMeshDataCall.h"
-#include "ng_mesh/GPUMaterialDataCall.h"
-#include "ng_mesh/GPURenderTaskDataCall.h"
-#include "ng_mesh/glTFDataCall.h"
+#include "mesh/CallGPUMeshData.h"
+#include "mesh/CallGPUMaterialData.h"
+#include "mesh/CallGPURenderTaskData.h"
+#include "mesh/CallGlTFData.h"
 
 #include "DebugGPUMeshDataSource.h"
 #include "DebugGPUMaterialDataSource.h"
@@ -28,7 +28,7 @@
 #include "gltf/glTFMaterialDataSource.h"
 #include "gltf/glTFMeshesDataSource.h"
 #include "gltf/glTFRenderTasksDataSource.h"
-#include "ng_mesh/SimpleGPUMtlDataSource.h"
+#include "mesh/SimpleGPUMtlDataSource.h"
 
 
 /* anonymous namespace hides this type from any other object files */
@@ -56,14 +56,14 @@ namespace {
         virtual void registerClasses(void) {
 
             // register modules here:
-			this->module_descriptions.RegisterAutoDescription<megamol::ngmesh::NGMeshRenderer>();
-			this->module_descriptions.RegisterAutoDescription<megamol::ngmesh::DebugGPUMeshDataSource>();
-			this->module_descriptions.RegisterAutoDescription<megamol::ngmesh::DebugGPUMaterialDataSource>();
-			this->module_descriptions.RegisterAutoDescription<megamol::ngmesh::DebugGPURenderTaskDataSource>();
-			this->module_descriptions.RegisterAutoDescription<megamol::ngmesh::GlTFFileLoader>();
-			this->module_descriptions.RegisterAutoDescription<megamol::ngmesh::GlTFMeshesDataSource>();
-			this->module_descriptions.RegisterAutoDescription<megamol::ngmesh::GlTFRenderTasksDataSource>();
-			this->module_descriptions.RegisterAutoDescription<megamol::ngmesh::SimpleGPUMtlDataSource>();
+			this->module_descriptions.RegisterAutoDescription<megamol::mesh::RenderMDIMesh>();
+			this->module_descriptions.RegisterAutoDescription<megamol::mesh::DebugGPUMeshDataSource>();
+			this->module_descriptions.RegisterAutoDescription<megamol::mesh::DebugGPUMaterialDataSource>();
+			this->module_descriptions.RegisterAutoDescription<megamol::mesh::DebugGPURenderTaskDataSource>();
+			this->module_descriptions.RegisterAutoDescription<megamol::mesh::GlTFFileLoader>();
+			this->module_descriptions.RegisterAutoDescription<megamol::mesh::GlTFMeshesDataSource>();
+			this->module_descriptions.RegisterAutoDescription<megamol::mesh::GlTFRenderTasksDataSource>();
+			this->module_descriptions.RegisterAutoDescription<megamol::mesh::SimpleGPUMtlDataSource>();
 
             //
             // TODO: Register your plugin's modules here
@@ -74,10 +74,10 @@ namespace {
             //
 
             // register calls here:
-			this->call_descriptions.RegisterAutoDescription<megamol::ngmesh::GPUMeshDataCall>();
-			this->call_descriptions.RegisterAutoDescription<megamol::ngmesh::GPUMaterialDataCall>();
-			this->call_descriptions.RegisterAutoDescription<megamol::ngmesh::GPURenderTaskDataCall>();
-			this->call_descriptions.RegisterAutoDescription<megamol::ngmesh::GlTFDataCall>();
+			this->call_descriptions.RegisterAutoDescription<megamol::mesh::CallGPUMeshData>();
+			this->call_descriptions.RegisterAutoDescription<megamol::mesh::CallGPUMaterialData>();
+			this->call_descriptions.RegisterAutoDescription<megamol::mesh::CallGPURenderTaskData>();
+			this->call_descriptions.RegisterAutoDescription<megamol::mesh::CallGlTFData>();
 
             //
             // TODO: Register your plugin's calls here
@@ -96,7 +96,7 @@ namespace {
 /*
  * mmplgPluginAPIVersion
  */
-NG_MESH_API int mmplgPluginAPIVersion(void) {
+MESH_API int mmplgPluginAPIVersion(void) {
     MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_mmplgPluginAPIVersion
 }
 
@@ -104,7 +104,7 @@ NG_MESH_API int mmplgPluginAPIVersion(void) {
 /*
  * mmplgGetPluginCompatibilityInfo
  */
-NG_MESH_API
+MESH_API
 ::megamol::core::utility::plugins::PluginCompatibilityInfo *
 mmplgGetPluginCompatibilityInfo(
         ::megamol::core::utility::plugins::ErrorCallback onError) {
@@ -146,7 +146,7 @@ mmplgGetPluginCompatibilityInfo(
 /*
  * mmplgReleasePluginCompatibilityInfo
  */
-NG_MESH_API
+MESH_API
 void mmplgReleasePluginCompatibilityInfo(
         ::megamol::core::utility::plugins::PluginCompatibilityInfo* ci) {
     // release compatiblity data on the correct heap
@@ -157,7 +157,7 @@ void mmplgReleasePluginCompatibilityInfo(
 /*
  * mmplgGetPluginInstance
  */
-NG_MESH_API
+MESH_API
 ::megamol::core::utility::plugins::AbstractPluginInstance*
 mmplgGetPluginInstance(
         ::megamol::core::utility::plugins::ErrorCallback onError) {
@@ -168,7 +168,7 @@ mmplgGetPluginInstance(
 /*
  * mmplgReleasePluginInstance
  */
-NG_MESH_API
+MESH_API
 void mmplgReleasePluginInstance(
         ::megamol::core::utility::plugins::AbstractPluginInstance* pi) {
     MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_mmplgReleasePluginInstance(pi)

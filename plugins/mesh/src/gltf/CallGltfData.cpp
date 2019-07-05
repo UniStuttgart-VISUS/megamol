@@ -1,6 +1,6 @@
 #include "stdafx.h"
 
-#include "ng_mesh/glTFDataCall.h"
+#include "mesh/CallGlTFData.h"
 
 #ifndef TINYGLTF_IMPLEMENTATION
 #define TINYGLTF_IMPLEMENTATION
@@ -13,27 +13,27 @@
 #endif // !STB_IMAGE_WRITE_IMPLEMENTATION
 #include "tiny_gltf.h"
 
-void megamol::ngmesh::GlTFDataCall::setGlTFModel(std::shared_ptr<tinygltf::Model> const & gltf_model)
+void megamol::mesh::CallGlTFData::setGlTFModel(std::shared_ptr<tinygltf::Model> const & gltf_model)
 {
 	m_gltf_model = gltf_model;
 }
 
-std::shared_ptr<tinygltf::Model> megamol::ngmesh::GlTFDataCall::getGlTFModel()
+std::shared_ptr<tinygltf::Model> megamol::mesh::CallGlTFData::getGlTFModel()
 {
 	return m_gltf_model;
 }
 
-void megamol::ngmesh::GlTFDataCall::setUpdateFlag()
+void megamol::mesh::CallGlTFData::setUpdateFlag()
 {
 	m_update_flag = true;
 }
 
-bool megamol::ngmesh::GlTFDataCall::getUpdateFlag()
+bool megamol::mesh::CallGlTFData::getUpdateFlag()
 {
 	return m_update_flag;
 }
 
-void megamol::ngmesh::GlTFDataCall::clearUpdateFlag()
+void megamol::mesh::CallGlTFData::clearUpdateFlag()
 {
 	m_update_flag = false;
 }

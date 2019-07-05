@@ -1,5 +1,5 @@
 /*
-* NGMeshRenderer.cpp
+* RenderMDIMesh.cpp
 *
 * Copyright (C) 2017 by Universitaet Stuttgart (VISUS).
 * All rights reserved.
@@ -8,19 +8,19 @@
 #include <array>
 #include <random>
 
-#include "NGMeshRenderer.h"
+#include "RenderMDIMesh.h"
 
 #include "mmcore/CoreInstance.h"
 #include "vislib/graphics/gl/ShaderSource.h"
 
-#include "ng_mesh/GPUMeshDataCall.h"
-#include "ng_mesh/GPUMaterialDataCall.h"
-#include "ng_mesh/GPURenderTaskDataCall.h"
+#include "mesh/CallGPUMeshData.h"
+#include "mesh/CallGPUMaterialData.h"
+#include "mesh/CallGPURenderTaskData.h"
 
 using namespace megamol::core;
-using namespace megamol::ngmesh;
+using namespace megamol::mesh;
 
-NGMeshRenderer::NGMeshRenderer()
+RenderMDIMesh::RenderMDIMesh()
 	: Renderer3DModule(),
 	m_render_task_callerSlot("getRenderTaskData", "Connects the renderer with a render task data source")
 {
@@ -28,22 +28,22 @@ NGMeshRenderer::NGMeshRenderer()
 	this->MakeSlotAvailable(&this->m_render_task_callerSlot);
 }
 
-NGMeshRenderer::~NGMeshRenderer()
+RenderMDIMesh::~RenderMDIMesh()
 {
 	this->Release();
 }
 
-bool NGMeshRenderer::create()
+bool RenderMDIMesh::create()
 {
 	// generate debug render batch that doesn't rely on data call
 	/*
-	CallNGMeshRenderBatches::RenderBatchesData::ShaderPrgmData			shader_prgm_data;
-	CallNGMeshRenderBatches::RenderBatchesData::MeshData				mesh_data;
-	CallNGMeshRenderBatches::RenderBatchesData::DrawCommandData			draw_command_data;
-	CallNGMeshRenderBatches::RenderBatchesData::MeshShaderParams		obj_shader_params;
-	CallNGMeshRenderBatches::RenderBatchesData::MaterialShaderParams	mtl_shader_params;
+	CallmeshRenderBatches::RenderBatchesData::ShaderPrgmData			shader_prgm_data;
+	CallmeshRenderBatches::RenderBatchesData::MeshData				mesh_data;
+	CallmeshRenderBatches::RenderBatchesData::DrawCommandData			draw_command_data;
+	CallmeshRenderBatches::RenderBatchesData::MeshShaderParams		obj_shader_params;
+	CallmeshRenderBatches::RenderBatchesData::MaterialShaderParams	mtl_shader_params;
 
-	shader_prgm_data.raw_string = "NGMeshDebug";
+	shader_prgm_data.raw_string = "meshDebug";
 	shader_prgm_data.char_cnt = 12;
 
 	mesh_data.vertex_data.byte_size = 3 * 6 * 4;
@@ -85,7 +85,7 @@ bool NGMeshRenderer::create()
 	std::uniform_real_distribution<float> loc_distr(-0.9, 0.9);
 
 	draw_command_data.draw_cnt = 1000000;
-	draw_command_data.data = new CallNGMeshRenderBatches::RenderBatchesData::DrawCommandData::DrawElementsCommand[draw_command_data.draw_cnt];
+	draw_command_data.data = new CallmeshRenderBatches::RenderBatchesData::DrawCommandData::DrawElementsCommand[draw_command_data.draw_cnt];
 
 	obj_shader_params.byte_size = 16 * 4 * draw_command_data.draw_cnt;
 	obj_shader_params.raw_data = new uint8_t[obj_shader_params.byte_size];
@@ -122,18 +122,18 @@ bool NGMeshRenderer::create()
 	return true;
 }
 
-void NGMeshRenderer::release()
+void RenderMDIMesh::release()
 {
 	m_per_frame_data.reset();
 }
 
-bool NGMeshRenderer::GetExtents(megamol::core::Call& call)
+bool RenderMDIMesh::GetExtents(megamol::core::Call& call)
 {
 	view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
 	if (cr == NULL)
 		return false;
 
-	GPURenderTaskDataCall* rtc = this->m_render_task_callerSlot.CallAs<GPURenderTaskDataCall>();
+	CallGPURenderTaskData* rtc = this->m_render_task_callerSlot.CallAs<CallGPURenderTaskData>();
 	
 	if (rtc == NULL)
 		return false;
@@ -148,7 +148,7 @@ bool NGMeshRenderer::GetExtents(megamol::core::Call& call)
 	return true;
 }
 
-bool NGMeshRenderer::Render(megamol::core::Call& call)
+bool RenderMDIMesh::Render(megamol::core::Call& call)
 {
 	
 	megamol::core::view::CallRender3D *cr = dynamic_cast<core::view::CallRender3D*>(&call);
@@ -208,7 +208,7 @@ bool NGMeshRenderer::Render(megamol::core::Call& call)
     glGetFloatv(GL_MODELVIEW_MATRIX, view_matrix.data());
     glGetFloatv(GL_PROJECTION_MATRIX, projection_matrix.data());
 	
-	GPURenderTaskDataCall* task_call = this->m_render_task_callerSlot.CallAs<GPURenderTaskDataCall>();
+	CallGPURenderTaskData* task_call = this->m_render_task_callerSlot.CallAs<CallGPURenderTaskData>();
 	
 	if (task_call == NULL)
 		return false;
@@ -254,7 +254,7 @@ bool NGMeshRenderer::Render(megamol::core::Call& call)
 			render_task.draw_cnt,
 			0);
 
-		//CallNGMeshRenderBatches::RenderBatchesData::DrawCommandData::DrawElementsCommand command_buffer;
+		//CallmeshRenderBatches::RenderBatchesData::DrawCommandData::DrawElementsCommand command_buffer;
 		//command_buffer.cnt = 3;
 		//command_buffer.instance_cnt = 1;
 		//command_buffer.first_idx = 0;

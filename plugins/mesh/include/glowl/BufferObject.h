@@ -14,7 +14,7 @@
 #include "vislib/sys/Log.h"
 
 namespace megamol {
-namespace ngmesh {
+namespace mesh {
 
 /**
  * Generic OpenGL buffer object.
@@ -127,7 +127,7 @@ private:
     GLenum m_usage;
 };
 
-} // namespace ngmesh
+} // namespace mesh
 } // namespace megamol
 
 #endif // !BUFFER_H_INCLUDED

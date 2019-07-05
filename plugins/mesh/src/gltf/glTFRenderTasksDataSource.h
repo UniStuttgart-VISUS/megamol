@@ -13,12 +13,12 @@
 
 #include "mmcore/CallerSlot.h"
 
-#include "ng_mesh/AbstractGPURenderTaskDataSource.h"
-#include "ng_mesh/glTFDataCall.h"
+#include "mesh/AbstractGPURenderTaskDataSource.h"
+#include "mesh/CallGlTFData.h"
 
 namespace megamol
 {
-	namespace ngmesh
+	namespace mesh
 	{
 		class GlTFRenderTasksDataSource : public AbstractGPURenderTaskDataSource
 		{

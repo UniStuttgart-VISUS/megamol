@@ -13,10 +13,10 @@
 
 #include "mmcore/param/ParamSlot.h"
 
-#include "ng_mesh/AbstractGPUMaterialDataSource.h"
+#include "mesh/AbstractGPUMaterialDataSource.h"
 
 namespace megamol {
-namespace ngmesh {
+namespace mesh {
 
 class SimpleGPUMtlDataSource : public AbstractGPUMaterialDataSource {
 public:
@@ -32,7 +32,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "NGMesh data source for loading a BTF Shader file"; }
+    static const char* Description(void) { return "mesh data source for loading a BTF Shader file"; }
 
     /**
      * Answers whether this module is available on the current system.
@@ -55,7 +55,7 @@ private:
     core::param::ParamSlot m_btf_filename_slot;
 };
 
-} // namespace ngmesh
+} // namespace mesh
 } // namespace megamol
 
 #endif // !SIMPLE_GPU_MTL_DATA_SOURCE_H_INCLUDED

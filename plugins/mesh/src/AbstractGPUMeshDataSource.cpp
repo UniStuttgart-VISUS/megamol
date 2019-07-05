@@ -6,34 +6,34 @@
  */
 #include "stdafx.h"
 
-#include "ng_mesh/AbstractGPUMeshDataSource.h"
-#include "ng_mesh/GPUMeshDataCall.h"
+#include "mesh/AbstractGPUMeshDataSource.h"
+#include "mesh/CallGPUMeshData.h"
 
 
-megamol::ngmesh::AbstractGPUMeshDataSource::AbstractGPUMeshDataSource()
+megamol::mesh::AbstractGPUMeshDataSource::AbstractGPUMeshDataSource()
     : core::Module()
     , m_getData_slot("getData", "The slot publishing the loaded data")
     , m_mesh_callerSlot("getMesh", "The slot for chaining material data sources") {
     this->m_getData_slot.SetCallback(
-        GPUMeshDataCall::ClassName(), "GetData", &AbstractGPUMeshDataSource::getDataCallback);
+        CallGPUMeshData::ClassName(), "GetData", &AbstractGPUMeshDataSource::getDataCallback);
     this->m_getData_slot.SetCallback(
-        GPUMeshDataCall::ClassName(), "GetExtent", &AbstractGPUMeshDataSource::getExtentCallback);
+        CallGPUMeshData::ClassName(), "GetExtent", &AbstractGPUMeshDataSource::getExtentCallback);
     this->MakeSlotAvailable(&this->m_getData_slot);
 
-    this->m_mesh_callerSlot.SetCompatibleCall<GPUMeshDataCallDescription>();
+    this->m_mesh_callerSlot.SetCompatibleCall<CallGPUMeshDataDescription>();
     this->MakeSlotAvailable(&this->m_mesh_callerSlot);
 }
 
-megamol::ngmesh::AbstractGPUMeshDataSource::~AbstractGPUMeshDataSource() { this->Release(); }
+megamol::mesh::AbstractGPUMeshDataSource::~AbstractGPUMeshDataSource() { this->Release(); }
 
-bool megamol::ngmesh::AbstractGPUMeshDataSource::create(void) {
+bool megamol::mesh::AbstractGPUMeshDataSource::create(void) {
     m_gpu_meshes = std::make_shared<GPUMeshCollection>();
 
     return true;
 }
 
-bool megamol::ngmesh::AbstractGPUMeshDataSource::getExtentCallback(core::Call& caller) {
-    GPUMeshDataCall* mc = dynamic_cast<GPUMeshDataCall*>(&caller);
+bool megamol::mesh::AbstractGPUMeshDataSource::getExtentCallback(core::Call& caller) {
+    CallGPUMeshData* mc = dynamic_cast<CallGPUMeshData*>(&caller);
     if (mc == NULL) return false;
 
     mc->SetExtent(
@@ -42,4 +42,4 @@ bool megamol::ngmesh::AbstractGPUMeshDataSource::getExtentCallback(core::Call& c
     return true;
 }
 
-void megamol::ngmesh::AbstractGPUMeshDataSource::release() {}
+void megamol::mesh::AbstractGPUMeshDataSource::release() {}

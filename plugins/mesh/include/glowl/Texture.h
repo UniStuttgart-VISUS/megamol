@@ -13,7 +13,7 @@
 #include <vector>
 
 namespace megamol {
-	namespace ngmesh {
+	namespace mesh {
 
 		/*
 		* OpenGL TextureLayout, and Texture base class, courtesy of glOwl by Michael Becher.

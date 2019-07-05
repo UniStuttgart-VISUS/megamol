@@ -11,11 +11,11 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "ng_mesh/AbstractGPURenderTaskDataSource.h"
+#include "mesh/AbstractGPURenderTaskDataSource.h"
 
 namespace megamol
 {
-	namespace ngmesh
+	namespace mesh
 	{
 		class DebugGPURenderTaskDataSource : public AbstractGPURenderTaskDataSource
 		{
@@ -35,7 +35,7 @@ namespace megamol
 			* @return A human readable description of this module.
 			*/
 			static const char *Description(void) {
-				return "Data source for debuging NGMeshRenderer & NGMesh GPU data calls";
+				return "Data source for debuging RenderMDIMesh & mesh GPU data calls";
 			}
 
 			/**

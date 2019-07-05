@@ -5,24 +5,24 @@
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/math/Matrix.h"
 
-#include "ng_mesh/GPURenderTaskDataCall.h"
-#include "ng_mesh/GPUMaterialDataCall.h"
-#include "ng_mesh/GPUMeshDataCall.h"
+#include "mesh/CallGPURenderTaskData.h"
+#include "mesh/CallGPUMaterialData.h"
+#include "mesh/CallGPUMeshData.h"
 
-megamol::ngmesh::GlTFRenderTasksDataSource::GlTFRenderTasksDataSource()
+megamol::mesh::GlTFRenderTasksDataSource::GlTFRenderTasksDataSource()
 	: m_glTF_callerSlot("getGlTFFile", "Connects the data source with a loaded glTF file")
 {
-	this->m_glTF_callerSlot.SetCompatibleCall<GlTFDataCallDescription>();
+	this->m_glTF_callerSlot.SetCompatibleCall<CallGlTFDataDescription>();
 	this->MakeSlotAvailable(&this->m_glTF_callerSlot);
 }
 
-megamol::ngmesh::GlTFRenderTasksDataSource::~GlTFRenderTasksDataSource()
+megamol::mesh::GlTFRenderTasksDataSource::~GlTFRenderTasksDataSource()
 {
 }
 
-bool megamol::ngmesh::GlTFRenderTasksDataSource::getDataCallback(core::Call & caller)
+bool megamol::mesh::GlTFRenderTasksDataSource::getDataCallback(core::Call & caller)
 {
-	GPURenderTaskDataCall* lhs_rtc = dynamic_cast<GPURenderTaskDataCall*>(&caller);
+	CallGPURenderTaskData* lhs_rtc = dynamic_cast<CallGPURenderTaskData*>(&caller);
     if (lhs_rtc == NULL)
 		return false;
 
@@ -35,21 +35,21 @@ bool megamol::ngmesh::GlTFRenderTasksDataSource::getDataCallback(core::Call & ca
         rt_collection = lhs_rtc->getRenderTaskData();
     }
 
-	GPUMaterialDataCall* mtlc = this->m_material_callerSlot.CallAs<GPUMaterialDataCall>();
+	CallGPUMaterialData* mtlc = this->m_material_callerSlot.CallAs<CallGPUMaterialData>();
 	if (mtlc == NULL)
 		return false;
 
 	if (!(*mtlc)(0))
 		return false;
 
-	GPUMeshDataCall* mc = this->m_mesh_callerSlot.CallAs<GPUMeshDataCall>();
+	CallGPUMeshData* mc = this->m_mesh_callerSlot.CallAs<CallGPUMeshData>();
 	if (mc == NULL)
 		return false;
 
 	if (!(*mc)(0))
 		return false;
 
-	GlTFDataCall* gltf_call = this->m_glTF_callerSlot.CallAs<GlTFDataCall>();
+	CallGlTFData* gltf_call = this->m_glTF_callerSlot.CallAs<CallGlTFData>();
 	if (gltf_call == NULL)
 		return false;
 
@@ -167,7 +167,7 @@ bool megamol::ngmesh::GlTFRenderTasksDataSource::getDataCallback(core::Call & ca
 	}
 
 
-    GPURenderTaskDataCall* rhs_rtc = this->m_renderTask_callerSlot.CallAs<GPURenderTaskDataCall>();
+    CallGPURenderTaskData* rhs_rtc = this->m_renderTask_callerSlot.CallAs<CallGPURenderTaskData>();
     if (rhs_rtc != NULL) {
         rhs_rtc->setRenderTaskData(rt_collection);
 

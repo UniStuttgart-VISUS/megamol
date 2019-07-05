@@ -1,5 +1,5 @@
 /*
- * GPUMaterialDataCall.h
+ * CallGPUMaterialData.h
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VISUS).
  * All rights reserved.
@@ -13,21 +13,21 @@
 
 #include "GPUMaterialCollection.h"
 #include "mmcore/AbstractGetDataCall.h"
-#include "ng_mesh.h"
+#include "mesh.h"
 
 namespace megamol {
-namespace ngmesh {
-class NG_MESH_API GPUMaterialDataCall : public megamol::core::AbstractGetDataCall {
+namespace mesh {
+class MESH_API CallGPUMaterialData : public megamol::core::AbstractGetDataCall {
 public:
-    inline GPUMaterialDataCall() : AbstractGetDataCall(), m_gpu_materials(nullptr) {}
-    ~GPUMaterialDataCall() = default;
+    inline CallGPUMaterialData() : AbstractGetDataCall(), m_gpu_materials(nullptr) {}
+    ~CallGPUMaterialData() = default;
 
     /**
      * Answer the name of the objects of this description.
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) { return "GPUMaterialDataCall"; }
+    static const char* ClassName(void) { return "CallGPUMaterialData"; }
 
     /**
      * Gets a human readable description of the module.
@@ -63,9 +63,9 @@ private:
 };
 
 /** Description class typedef */
-typedef megamol::core::factories::CallAutoDescription<GPUMaterialDataCall> GPUMaterialDataCallDescription;
+typedef megamol::core::factories::CallAutoDescription<CallGPUMaterialData> CallGPUMaterialDataDescription;
 
-} // namespace ngmesh
+} // namespace mesh
 } // namespace megamol
 
 #endif // !GPU_MATERIAL_CALL_H_INCLUDED

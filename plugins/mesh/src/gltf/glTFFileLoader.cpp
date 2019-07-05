@@ -6,26 +6,26 @@
 
 #include "tiny_gltf.h"
 
-megamol::ngmesh::GlTFFileLoader::GlTFFileLoader()
+megamol::mesh::GlTFFileLoader::GlTFFileLoader()
     : core::Module()
     , m_glTFFilename_slot("glTF filename", "The name of the gltf file to load")
     , m_getData_slot("getData", "The slot publishing the loaded data") {
-    this->m_getData_slot.SetCallback(GlTFDataCall::ClassName(), "GetData", &GlTFFileLoader::getDataCallback);
+    this->m_getData_slot.SetCallback(CallGlTFData::ClassName(), "GetData", &GlTFFileLoader::getDataCallback);
     this->MakeSlotAvailable(&this->m_getData_slot);
 
     this->m_glTFFilename_slot << new core::param::FilePathParam("");
     this->MakeSlotAvailable(&this->m_glTFFilename_slot);
 }
 
-megamol::ngmesh::GlTFFileLoader::~GlTFFileLoader() { this->Release(); }
+megamol::mesh::GlTFFileLoader::~GlTFFileLoader() { this->Release(); }
 
-bool megamol::ngmesh::GlTFFileLoader::create(void) {
+bool megamol::mesh::GlTFFileLoader::create(void) {
     // intentionally empty ?
     return true;
 }
 
-bool megamol::ngmesh::GlTFFileLoader::getDataCallback(core::Call& caller) {
-    GlTFDataCall* cd = dynamic_cast<GlTFDataCall*>(&caller);
+bool megamol::mesh::GlTFFileLoader::getDataCallback(core::Call& caller) {
+    CallGlTFData* cd = dynamic_cast<CallGlTFData*>(&caller);
 
     if (cd == NULL) return false;
 
@@ -61,6 +61,6 @@ bool megamol::ngmesh::GlTFFileLoader::getDataCallback(core::Call& caller) {
     return true;
 }
 
-void megamol::ngmesh::GlTFFileLoader::release() {
+void megamol::mesh::GlTFFileLoader::release() {
     // intentionally empty ?
 }

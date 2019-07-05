@@ -1,17 +1,17 @@
 /*
-* glTFDataCall.h
+* CallGlTFData.h
 *
 * Copyright (C) 2019 by Universitaet Stuttgart (VISUS).
 * All rights reserved.
 */
 
-#ifndef GLTF_DATA_CALL_H_INCLUDED
-#define GLTF_DATA_CALL_H_INCLUDED
+#ifndef CALL_GLTF_DATA_H_INCLUDED
+#define CALL_GLTF_DATA_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "ng_mesh.h"
+#include "mesh.h"
 #include "mmcore/AbstractGetDataCall.h"
 
 namespace tinygltf {
@@ -19,15 +19,15 @@ namespace tinygltf {
 }
 
 namespace megamol {
-	namespace ngmesh {
-		class NG_MESH_API GlTFDataCall : public megamol::core::AbstractGetDataCall
+	namespace mesh {
+		class MESH_API CallGlTFData : public megamol::core::AbstractGetDataCall
 		{
 		public:
-			inline GlTFDataCall() 
+			inline CallGlTFData() 
 				: AbstractGetDataCall(),
 				m_gltf_model(nullptr),
 				m_update_flag(false) {}
-			~GlTFDataCall() = default;
+			~CallGlTFData() = default;
 
 			/**
 			* Answer the name of the objects of this description.
@@ -35,7 +35,7 @@ namespace megamol {
 			* @return The name of the objects of this description.
 			*/
 			static const char *ClassName(void) {
-				return "GlTFDataCall";
+				return "CallGlTFData";
 			}
 
 			/**
@@ -83,9 +83,9 @@ namespace megamol {
 		};
 
 		/** Description class typedef */
-		typedef megamol::core::factories::CallAutoDescription<GlTFDataCall> GlTFDataCallDescription;
+		typedef megamol::core::factories::CallAutoDescription<CallGlTFData> CallGlTFDataDescription;
 	}
 }
 
 
-#endif // !GLTF_DATA_CALL_H_INCLUDED
+#endif // !CALL_GLTF_DATA_H_INCLUDED

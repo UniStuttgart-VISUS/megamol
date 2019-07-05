@@ -5,25 +5,25 @@
 * All rights reserved.
 */
 
-#ifndef GPU_RENDER_TASK_DATA_CALL_H_INCLUDED
-#define GPU_RENDER_TASK_DATA_CALL_H_INCLUDED
+#ifndef CALL_GPU_RENDER_TASK_DATA_H_INCLUDED
+#define CALL_GPU_RENDER_TASK_DATA_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/AbstractGetData3DCall.h"
-#include "ng_mesh.h"
+#include "mesh.h"
 #include "GPURenderTaskCollection.h"
 
 namespace megamol
 {
-	namespace ngmesh
+	namespace mesh
 	{
-		class NG_MESH_API GPURenderTaskDataCall : public megamol::core::AbstractGetData3DCall
+		class MESH_API CallGPURenderTaskData : public megamol::core::AbstractGetData3DCall
 		{
 		public:
-			inline GPURenderTaskDataCall() : AbstractGetData3DCall(), m_gpu_render_tasks(nullptr) {}
-			~GPURenderTaskDataCall() {};
+			inline CallGPURenderTaskData() : AbstractGetData3DCall(), m_gpu_render_tasks(nullptr) {}
+			~CallGPURenderTaskData() {};
 
 			/**
 			* Answer the name of the objects of this description.
@@ -31,7 +31,7 @@ namespace megamol
 			* @return The name of the objects of this description.
 			*/
 			static const char *ClassName(void) {
-				return "GPURenderTaskDataCall";
+				return "CallGPURenderTaskData";
 			}
 
 			/**
@@ -76,8 +76,8 @@ namespace megamol
 		};
 
 		/** Description class typedef */
-		typedef megamol::core::factories::CallAutoDescription<GPURenderTaskDataCall> GPURenderTasksDataCallDescription;
+		typedef megamol::core::factories::CallAutoDescription<CallGPURenderTaskData> GPURenderTasksDataCallDescription;
 	}
 }
 
-#endif // !GPU_RENDER_TASK_DATA_CALL_H_INCLUDED
+#endif // !CALL_GPU_RENDER_TASK_DATA_H_INCLUDED

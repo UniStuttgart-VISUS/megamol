@@ -1,8 +1,8 @@
-#include "../include/ng_mesh/GPUMeshCollection.h"
+#include "../include/mesh/GPUMeshCollection.h"
 
 namespace megamol
 {
-	namespace ngmesh
+	namespace mesh
 	{
 		//std::vector<GPUMeshCollection::BatchedMeshes> const & GPUMeshCollection::getMeshes()
 		//{

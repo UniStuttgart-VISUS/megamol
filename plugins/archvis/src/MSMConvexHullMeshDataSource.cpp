@@ -1,7 +1,7 @@
 #include "MSMConvexHullMeshDataSource.h"
 
 #include "MSMDataCall.h"
-#include "ng_mesh/GPUMeshDataCall.h"
+#include "mesh/CallGPUMeshData.h"
 
 #include <QuickHull.hpp>
 
@@ -14,7 +14,7 @@ megamol::archvis::MSMConvexHullDataSource::MSMConvexHullDataSource()
 megamol::archvis::MSMConvexHullDataSource::~MSMConvexHullDataSource() {}
 
 bool megamol::archvis::MSMConvexHullDataSource::create() { 
-    m_gpu_meshes = std::make_shared<ngmesh::GPUMeshCollection>();
+    m_gpu_meshes = std::make_shared<mesh::GPUMeshCollection>();
 
     m_bbox = {-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f};
 
@@ -22,7 +22,7 @@ bool megamol::archvis::MSMConvexHullDataSource::create() {
 }
 
 bool megamol::archvis::MSMConvexHullDataSource::getDataCallback(core::Call& caller) { 
-    ngmesh::GPUMeshDataCall* mc = dynamic_cast<ngmesh::GPUMeshDataCall*>(&caller);
+    mesh::CallGPUMeshData* mc = dynamic_cast<mesh::CallGPUMeshData*>(&caller);
     if (mc == NULL) return false;
 
     MSMDataCall* msm_call = this->m_MSM_callerSlot.CallAs<MSMDataCall>();

@@ -1,11 +1,11 @@
 #include "DebugGPUMeshDataSource.h"
-#include "ng_mesh/GPUMeshDataCall.h"
+#include "mesh/CallGPUMeshData.h"
 
-megamol::ngmesh::DebugGPUMeshDataSource::DebugGPUMeshDataSource() {}
+megamol::mesh::DebugGPUMeshDataSource::DebugGPUMeshDataSource() {}
 
-megamol::ngmesh::DebugGPUMeshDataSource::~DebugGPUMeshDataSource() {}
+megamol::mesh::DebugGPUMeshDataSource::~DebugGPUMeshDataSource() {}
 
-bool megamol::ngmesh::DebugGPUMeshDataSource::create() {
+bool megamol::mesh::DebugGPUMeshDataSource::create() {
     m_gpu_meshes = std::make_shared<GPUMeshCollection>();
 
     m_bbox = {-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f};
@@ -13,8 +13,8 @@ bool megamol::ngmesh::DebugGPUMeshDataSource::create() {
     return load();
 }
 
-bool megamol::ngmesh::DebugGPUMeshDataSource::getDataCallback(core::Call& caller) {
-    GPUMeshDataCall* mc = dynamic_cast<GPUMeshDataCall*>(&caller);
+bool megamol::mesh::DebugGPUMeshDataSource::getDataCallback(core::Call& caller) {
+    CallGPUMeshData* mc = dynamic_cast<CallGPUMeshData*>(&caller);
     if (mc == NULL) return false;
 
     mc->setGPUMeshes(m_gpu_meshes);
@@ -22,7 +22,7 @@ bool megamol::ngmesh::DebugGPUMeshDataSource::getDataCallback(core::Call& caller
     return true;
 }
 
-bool megamol::ngmesh::DebugGPUMeshDataSource::load() {
+bool megamol::mesh::DebugGPUMeshDataSource::load() {
     // Create std-container for holding vertex data
     std::vector<std::vector<float>> vbs = {{0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f}, // normal data buffer
         {-0.5f, 0.0f, 0.0f, 0.5f, 0.0f, 0.0f, 0.0f, 0.5f, 0.0f}}; // position data buffer

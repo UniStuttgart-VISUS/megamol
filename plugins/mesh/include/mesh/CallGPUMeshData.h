@@ -1,5 +1,5 @@
 /*
- * GPUMeshDataCall.h
+ * CallGPUMeshData.h
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VISUS).
  * All rights reserved.
@@ -13,22 +13,22 @@
 
 #include "GPUMeshCollection.h"
 #include "mmcore/AbstractGetData3DCall.h"
-#include "ng_mesh.h"
+#include "mesh.h"
 
 namespace megamol {
-namespace ngmesh {
+namespace mesh {
 
-class GPUMeshDataCall : public megamol::core::AbstractGetData3DCall {
+class CallGPUMeshData : public megamol::core::AbstractGetData3DCall {
 public:
-    GPUMeshDataCall() : AbstractGetData3DCall(), m_gpu_meshes(nullptr) {}
-    ~GPUMeshDataCall() = default;
+    CallGPUMeshData() : AbstractGetData3DCall(), m_gpu_meshes(nullptr) {}
+    ~CallGPUMeshData() = default;
 
     /**
      * Answer the name of the objects of this description.
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) { return "GPUMeshDataCall"; }
+    static const char* ClassName(void) { return "CallGPUMeshData"; }
 
     /**
      * Gets a human readable description of the module.
@@ -64,9 +64,9 @@ private:
 };
 
 /** Description class typedef */
-typedef megamol::core::factories::CallAutoDescription<GPUMeshDataCall> GPUMeshDataCallDescription;
+typedef megamol::core::factories::CallAutoDescription<CallGPUMeshData> CallGPUMeshDataDescription;
 
-} // namespace ngmesh
+} // namespace mesh
 } // namespace megamol
 
 

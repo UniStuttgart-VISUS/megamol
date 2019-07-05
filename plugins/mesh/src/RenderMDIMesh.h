@@ -1,5 +1,5 @@
 /*
-* NGMeshRenderer.h
+* RenderMDIMesh.h
 *
 * Copyright (C) 2017 by Universitaet Stuttgart (VISUS).
 * All rights reserved.
@@ -18,13 +18,13 @@
 #include "mmcore/view/Renderer3DModule.h"
 #include "mmcore/view/CallRender3D.h"
 
-#include "ng_mesh/GPUMaterialCollection.h"
+#include "mesh/GPUMaterialCollection.h"
 
 #include "glowl/BufferObject.h"
 #include "glowl/Mesh.h"
 
 namespace megamol {
-namespace ngmesh {
+namespace mesh {
 
 
 	/**
@@ -35,7 +35,7 @@ namespace ngmesh {
 	 * Per render batch, a single call of glMultiDrawElementsIndirect is made. The data
 	 * for the indirect draw call is stored and accessed via SSBOs.
 	 */
-	class NGMeshRenderer : public megamol::core::view::Renderer3DModule
+	class RenderMDIMesh : public megamol::core::view::Renderer3DModule
 	{
 	public:
 		/**
@@ -44,7 +44,7 @@ namespace ngmesh {
 		* @return The name of this module.
 		*/
 		static const char *ClassName(void) {
-			return "NGMeshRenderer";
+			return "RenderMDIMesh";
 		}
 
 		/**
@@ -76,10 +76,10 @@ namespace ngmesh {
 		}
 
 		/** Ctor. */
-		NGMeshRenderer();
+		RenderMDIMesh();
 
 		/** Dtor. */
-		~NGMeshRenderer();
+		~RenderMDIMesh();
 
 	protected:
 

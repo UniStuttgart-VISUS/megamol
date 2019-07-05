@@ -6,14 +6,14 @@
  */
 
 #include "stdafx.h"
-#include "ng_mesh/GPUMaterialCollection.h"
+#include "mesh/GPUMaterialCollection.h"
 
 #include "mmcore/CoreInstance.h"
 #include "vislib/graphics/gl/ShaderSource.h"
 
 
 namespace megamol {
-namespace ngmesh {
+namespace mesh {
 
 void GPUMaterialCollecton::addMaterial(
     megamol::core::CoreInstance* mm_core_inst, std::string shader_btf_name, std::vector<GLuint> texture_names) {
@@ -83,5 +83,5 @@ void GPUMaterialCollecton::updateMaterialTexture(size_t mtl_idx, size_t tex_idx,
 
 void GPUMaterialCollecton::clearMaterials() { m_materials.clear(); }
 
-} // namespace ngmesh
+} // namespace mesh
 } // namespace megamol

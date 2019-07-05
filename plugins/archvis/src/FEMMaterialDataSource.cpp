@@ -11,7 +11,7 @@
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/view/CallGetTransferFunction.h"
 
-#include "ng_mesh/GPUMaterialDataCall.h"
+#include "mesh/CallGPUMaterialData.h"
 
 namespace megamol {
 namespace archvis {
@@ -32,7 +32,7 @@ FEMMaterialDataSource::~FEMMaterialDataSource() {}
 bool FEMMaterialDataSource::create() { return true; }
 
 bool megamol::archvis::FEMMaterialDataSource::getDataCallback(core::Call& caller) {
-    ngmesh::GPUMaterialDataCall* mtl_call = dynamic_cast<ngmesh::GPUMaterialDataCall*>(&caller);
+    mesh::CallGPUMaterialData* mtl_call = dynamic_cast<mesh::CallGPUMaterialData*>(&caller);
     if (mtl_call == NULL) return false;
 
     core::view::CallGetTransferFunction* tf_call =

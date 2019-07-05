@@ -13,15 +13,15 @@
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "ng_mesh/ng_mesh.h"
-#include "ng_mesh/glTFDataCall.h"
+#include "mesh/mesh.h"
+#include "mesh/CallGlTFData.h"
 
 namespace megamol
 {
-	namespace ngmesh
+	namespace mesh
 	{
 
-		class NG_MESH_API GlTFFileLoader : public core::Module
+		class MESH_API GlTFFileLoader : public core::Module
 		{
 		public:
 			/**

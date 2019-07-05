@@ -12,7 +12,7 @@
 #include <set>
 #include <vector>
 
-#include "ng_mesh.h"
+#include "mesh.h"
 
 #include "glowl/BufferObject.h"
 #include "glowl/Mesh.h"
@@ -20,9 +20,9 @@
 #include "GPUMaterialCollection.h"
 
 namespace megamol {
-namespace ngmesh {
+namespace mesh {
 
-class NG_MESH_API GPURenderTaskCollection {
+class MESH_API GPURenderTaskCollection {
 public:
     // template<typename T>
     // using IteratorPair = std::pair< T, T>;
@@ -330,7 +330,7 @@ inline void GPURenderTaskCollection::updatePerFrameDataBuffer(
     }
 }
 
-} // namespace ngmesh
+} // namespace mesh
 } // namespace megamol
 
 #endif // !GPU_RENDER_TASK_DATA_STORAGE_H_INCLUDED

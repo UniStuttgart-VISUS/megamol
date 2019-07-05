@@ -1,7 +1,7 @@
 #include "FEMMeshDataSource.h"
 
 #include "FEMDataCall.h"
-#include "ng_mesh/GPUMeshDataCall.h"
+#include "mesh/CallGPUMeshData.h"
 
 megamol::archvis::FEMMeshDataSource::FEMMeshDataSource()
     : m_fem_callerSlot("getFEMFile", "Connects the data source with loaded FEM data"), m_FEM_model_hash(0) {
@@ -12,7 +12,7 @@ megamol::archvis::FEMMeshDataSource::FEMMeshDataSource()
 megamol::archvis::FEMMeshDataSource::~FEMMeshDataSource() {}
 
 bool megamol::archvis::FEMMeshDataSource::create() {
-    m_gpu_meshes = std::make_shared<ngmesh::GPUMeshCollection>();
+    m_gpu_meshes = std::make_shared<mesh::GPUMeshCollection>();
 
     m_bbox = {-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f};
 
@@ -20,7 +20,7 @@ bool megamol::archvis::FEMMeshDataSource::create() {
 }
 
 bool megamol::archvis::FEMMeshDataSource::getDataCallback(core::Call& caller) {
-    ngmesh::GPUMeshDataCall* mc = dynamic_cast<ngmesh::GPUMeshDataCall*>(&caller);
+    mesh::CallGPUMeshData* mc = dynamic_cast<mesh::CallGPUMeshData*>(&caller);
     if (mc == NULL) return false;
 
     FEMDataCall* fem_call = this->m_fem_callerSlot.CallAs<FEMDataCall>();
@@ -61,9 +61,9 @@ bool megamol::archvis::FEMMeshDataSource::getDataCallback(core::Call& caller) {
         m_bbox[5] = std::max(m_bbox[5], static_cast<float>(node.Z()));
     }
     // Create std-container holding vertex attribute descriptions
-    std::vector<ngmesh::VertexLayout::Attribute> attribs = {
-        ngmesh::VertexLayout::Attribute(3, GL_FLOAT, GL_FALSE, 0)};
-    ngmesh::VertexLayout vertex_descriptor(0, attribs);
+    std::vector<mesh::VertexLayout::Attribute> attribs = {
+        mesh::VertexLayout::Attribute(3, GL_FLOAT, GL_FALSE, 0)};
+    mesh::VertexLayout vertex_descriptor(0, attribs);
 
     // Create std-container holding index data
     std::vector<uint32_t> indices;

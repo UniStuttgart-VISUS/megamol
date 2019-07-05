@@ -14,12 +14,12 @@
 #include "GPURenderTaskCollection.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "ng_mesh.h"
+#include "mesh.h"
 
 namespace megamol {
-namespace ngmesh {
+namespace mesh {
 
-class NG_MESH_API AbstractGPURenderTaskDataSource : public core::Module {
+class MESH_API AbstractGPURenderTaskDataSource : public core::Module {
 public:
     AbstractGPURenderTaskDataSource();
     virtual ~AbstractGPURenderTaskDataSource();
@@ -81,7 +81,7 @@ protected:
     megamol::core::CallerSlot m_mesh_callerSlot;
 };
 
-} // namespace ngmesh
+} // namespace mesh
 } // namespace megamol
 
 #endif // !ABSTRACT_RENDER_TASK_DATA_SOURCE_H_INCLUDED

@@ -13,11 +13,11 @@
 
 #include "mmcore/CallerSlot.h"
 
-#include "ng_mesh/AbstractGPUMeshDataSource.h"
-#include "ng_mesh/glTFDataCall.h"
+#include "mesh/AbstractGPUMeshDataSource.h"
+#include "mesh/CallGlTFData.h"
 
 namespace megamol {
-namespace ngmesh {
+namespace mesh {
 
 class GlTFMeshesDataSource : public AbstractGPUMeshDataSource {
 public:
@@ -55,7 +55,7 @@ private:
     megamol::core::CallerSlot m_glTF_callerSlot;
 };
 
-} // namespace ngmesh
+} // namespace mesh
 } // namespace megamol
 
 #endif // !GLTF_MESHES_DATA_SOURCE_H_INCLUDED

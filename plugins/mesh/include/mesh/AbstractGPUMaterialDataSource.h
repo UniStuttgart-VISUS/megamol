@@ -13,12 +13,12 @@
 
 #include "GPUMaterialCollection.h"
 #include "mmcore/CalleeSlot.h"
-#include "ng_mesh/ng_mesh.h"
+#include "mesh/mesh.h"
 
 namespace megamol {
-namespace ngmesh {
+namespace mesh {
 
-class NG_MESH_API AbstractGPUMaterialDataSource : public core::Module {
+class MESH_API AbstractGPUMaterialDataSource : public core::Module {
 public:
     AbstractGPUMaterialDataSource();
     virtual ~AbstractGPUMaterialDataSource();
@@ -55,7 +55,7 @@ private:
     megamol::core::CalleeSlot m_getData_slot;
 };
 
-} // namespace ngmesh
+} // namespace mesh
 } // namespace megamol
 
 #endif // !ABSTRACT_GPU_MATERIAL_DATA_SOURCE_H_INCLUDED

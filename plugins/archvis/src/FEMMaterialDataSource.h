@@ -14,12 +14,12 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 
-#include "ng_mesh/AbstractGPUMaterialDataSource.h"
+#include "mesh/AbstractGPUMaterialDataSource.h"
 
 namespace megamol {
 namespace archvis {
 
-class FEMMaterialDataSource : public ngmesh::AbstractGPUMaterialDataSource {
+class FEMMaterialDataSource : public mesh::AbstractGPUMaterialDataSource {
 public:
     /**
      * Answer the name of this module.

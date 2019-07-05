@@ -71,7 +71,7 @@ bool megamol::archvis::CreateFEMModel::getDataCallback(core::Call& caller) {
     auto p0 = this->m_fem_param_0.Param<core::param::IntParam>()->Value();
     auto p1 = this->m_fem_param_1.Param<core::param::IntParam>()->Value();
 
-    unsigned int frame_id = p0 * 11 + p1;
+    unsigned int frame_id = p1;
 
     dynData_ft->SetFrameID(frame_id);
 

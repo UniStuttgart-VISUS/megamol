@@ -13,7 +13,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   # afterwards list the dependencies.
   set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE BUILD_NG_MESH_PLUGIN" CACHE INTERNAL "")
 
-  set(LIBS vislib core ng_mesh glad mmstd_datatools)
+  set(LIBS vislib core mesh glad mmstd_datatools)
   include_directories("include" "src" "external")
 
   # Build MegaMol Plugin
@@ -27,7 +27,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   # Target definition
   #add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files})
   add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${source_files})
-  add_dependencies(${PROJECT_NAME} vislib core ng_mesh)
+  add_dependencies(${PROJECT_NAME} vislib core mesh)
   set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 17)
   # Set target naming conventions for different build types
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg" CXX_STANDARD 17)

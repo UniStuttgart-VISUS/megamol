@@ -1,18 +1,18 @@
 #include "stdafx.h"
 
 #include "glTFMeshesDataSource.h"
-#include "ng_mesh/GPUMeshDataCall.h"
+#include "mesh/CallGPUMeshData.h"
 #include "tiny_gltf.h"
 
-megamol::ngmesh::GlTFMeshesDataSource::GlTFMeshesDataSource()
+megamol::mesh::GlTFMeshesDataSource::GlTFMeshesDataSource()
     : m_glTF_callerSlot("getGlTFFile", "Connects the data source with a loaded glTF file") {
-    this->m_glTF_callerSlot.SetCompatibleCall<GlTFDataCallDescription>();
+    this->m_glTF_callerSlot.SetCompatibleCall<CallGlTFDataDescription>();
     this->MakeSlotAvailable(&this->m_glTF_callerSlot);
 }
 
-megamol::ngmesh::GlTFMeshesDataSource::~GlTFMeshesDataSource() {}
+megamol::mesh::GlTFMeshesDataSource::~GlTFMeshesDataSource() {}
 
-bool megamol::ngmesh::GlTFMeshesDataSource::create() {
+bool megamol::mesh::GlTFMeshesDataSource::create() {
     m_gpu_meshes = std::make_shared<GPUMeshCollection>();
 
     m_bbox = {-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f};
@@ -20,8 +20,8 @@ bool megamol::ngmesh::GlTFMeshesDataSource::create() {
     return true;
 }
 
-bool megamol::ngmesh::GlTFMeshesDataSource::getDataCallback(core::Call& caller) {
-    GPUMeshDataCall* lhs_mesh_call = dynamic_cast<GPUMeshDataCall*>(&caller);
+bool megamol::mesh::GlTFMeshesDataSource::getDataCallback(core::Call& caller) {
+    CallGPUMeshData* lhs_mesh_call = dynamic_cast<CallGPUMeshData*>(&caller);
     if (lhs_mesh_call == NULL) return false;
 
     std::shared_ptr<GPUMeshCollection> mesh_collection(nullptr);
@@ -35,7 +35,7 @@ bool megamol::ngmesh::GlTFMeshesDataSource::getDataCallback(core::Call& caller) 
         mesh_collection = lhs_mesh_call->getGPUMeshes();
     }
 
-    GlTFDataCall* gltf_call = this->m_glTF_callerSlot.CallAs<GlTFDataCall>();
+    CallGlTFData* gltf_call = this->m_glTF_callerSlot.CallAs<CallGlTFData>();
     if (gltf_call == NULL) return false;
 
     if (!(*gltf_call)(0)) return false;
@@ -116,7 +116,7 @@ bool megamol::ngmesh::GlTFMeshesDataSource::getDataCallback(core::Call& caller) 
     }
 
     // if there is a material connection to the right, pass on the material collection
-    GPUMeshDataCall* rhs_mesh_call = this->m_mesh_callerSlot.CallAs<GPUMeshDataCall>();
+    CallGPUMeshData* rhs_mesh_call = this->m_mesh_callerSlot.CallAs<CallGPUMeshData>();
     if (rhs_mesh_call != NULL) {
         rhs_mesh_call->setGPUMeshes(mesh_collection);
     }

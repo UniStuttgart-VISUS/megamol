@@ -1,9 +1,9 @@
 #include "MSMRenderTaskDataSource.h"
 
-#include "ng_mesh/GPUMaterialDataCall.h"
-#include "ng_mesh/GPUMeshCollection.h"
-#include "ng_mesh/GPUMeshDataCall.h"
-#include "ng_mesh/GPURenderTaskDataCall.h"
+#include "mesh/CallGPUMaterialData.h"
+#include "mesh/GPUMeshCollection.h"
+#include "mesh/CallGPUMeshData.h"
+#include "mesh/CallGPURenderTaskData.h"
 
 #include "MSMDataCall.h"
 
@@ -18,15 +18,15 @@ megamol::archvis::MSMRenderTaskDataSource::~MSMRenderTaskDataSource(){
 
 bool megamol::archvis::MSMRenderTaskDataSource::getDataCallback(core::Call& caller) {
 
-    ngmesh::GPURenderTaskDataCall* rtc = dynamic_cast<ngmesh::GPURenderTaskDataCall*>(&caller);
+    mesh::CallGPURenderTaskData* rtc = dynamic_cast<mesh::CallGPURenderTaskData*>(&caller);
     if (rtc == NULL) return false;
 
-    ngmesh::GPUMaterialDataCall* mtlc = this->m_material_callerSlot.CallAs<ngmesh::GPUMaterialDataCall>();
+    mesh::CallGPUMaterialData* mtlc = this->m_material_callerSlot.CallAs<mesh::CallGPUMaterialData>();
     if (mtlc == NULL) return false;
 
     if (!(*mtlc)(0)) return false;
 
-    ngmesh::GPUMeshDataCall* mc = this->m_mesh_callerSlot.CallAs<ngmesh::GPUMeshDataCall>();
+    mesh::CallGPUMeshData* mc = this->m_mesh_callerSlot.CallAs<mesh::CallGPUMeshData>();
     if (mc == NULL) return false;
 
     if (!(*mc)(0)) return false;
@@ -53,7 +53,7 @@ bool megamol::archvis::MSMRenderTaskDataSource::getDataCallback(core::Call& call
         auto const& gpu_batch_mesh = gpu_mesh_storage->getMeshes()[sub_mesh.batch_index].mesh;
         auto const& shader = gpu_mtl_storage->getMaterials().front().shader_program;
 
-        std::vector<ngmesh::DrawElementsCommand> draw_commands(1, sub_mesh.sub_mesh_draw_command);
+        std::vector<mesh::DrawElementsCommand> draw_commands(1, sub_mesh.sub_mesh_draw_command);
 
         std::vector<vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>> object_transform(1000);
         typedef std::vector<vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>> PerTaskData;

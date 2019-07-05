@@ -5,15 +5,15 @@
 * All rights reserved.
 */
 
-#ifndef MESH_H_INCLUDED
-#define MESH_H_INCLUDED
+#ifndef GLOWL_MESH_H_INCLUDED
+#define GLOWL_MESH_H_INCLUDED
 
 #include "glowl/BufferObject.h"
 
 #include "vislib/graphics/gl/IncludeAllGL.h"
 
 namespace megamol {
-	namespace ngmesh {
+	namespace mesh {
 
 		/**
 		* Basic Vertex Layout descriptor, courtesy of glOwl by Michael Becher.
@@ -354,4 +354,4 @@ namespace megamol {
 	}
 }
 
-#endif // !MESH_H_INCLUDED
+#endif // !GLOWL_MESH_H_INCLUDED

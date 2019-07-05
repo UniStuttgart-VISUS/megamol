@@ -1,10 +1,10 @@
 /*
- * ng_mesh.h
+ * mesh.h
  * Copyright (C) 2009-2015 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
-#ifndef NG_MESH_H_INCLUDED
-#define NG_MESH_H_INCLUDED
+#ifndef MESH_H_INCLUDED
+#define MESH_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -17,18 +17,18 @@
 // that uses this DLL. This way any other project whose source files include this file see 
 // TRISOUPPLUGIN_API functions as being imported from a DLL, whereas this DLL sees symbols
 // defined with this macro as being exported.
-#ifdef NG_MESH_EXPORTS
-#define NG_MESH_API __declspec(dllexport)
+#ifdef MESH_EXPORTS
+#define MESH_API __declspec(dllexport)
 #else
-#define NG_MESH_API __declspec(dllimport)
+#define MESH_API __declspec(dllimport)
 #endif
 #else /* _WIN32 */
-#define NG_MESH_API
+#define MESH_API
 #endif /* _WIN32 */
 
 #include "mmcore/utility/plugins/Plugin200Instance.h"
 
-#ifdef NG_MESH_EXPORTS
+#ifdef MESH_EXPORTS
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -38,7 +38,7 @@ extern "C" {
  *
  * @return 200 -- (ver.: 2.00)
  */
-NG_MESH_API int mmplgPluginAPIVersion(void);
+MESH_API int mmplgPluginAPIVersion(void);
 
 /**
  * Provides compatibility information
@@ -51,7 +51,7 @@ NG_MESH_API int mmplgPluginAPIVersion(void);
  * @remarks Always use 'mmplgReleasePluginCompatibilityInfo' to release the
  *          memory of the returned struct.
  */
-NG_MESH_API
+MESH_API
 ::megamol::core::utility::plugins::PluginCompatibilityInfo *
 mmplgGetPluginCompatibilityInfo(
     ::megamol::core::utility::plugins::ErrorCallback onError);
@@ -62,7 +62,7 @@ mmplgGetPluginCompatibilityInfo(
  *
  * @param ci The compatibility information struct to be released
  */
-NG_MESH_API void mmplgReleasePluginCompatibilityInfo(
+MESH_API void mmplgReleasePluginCompatibilityInfo(
     ::megamol::core::utility::plugins::PluginCompatibilityInfo* ci);
 
 /**
@@ -75,7 +75,7 @@ NG_MESH_API void mmplgReleasePluginCompatibilityInfo(
  * @remarks Always use 'mmplgReleasePluginInstance' to release the memory of
  *          the returned object.
  */
-NG_MESH_API
+MESH_API
 ::megamol::core::utility::plugins::AbstractPluginInstance*
 mmplgGetPluginInstance
     (::megamol::core::utility::plugins::ErrorCallback onError);
@@ -86,7 +86,7 @@ mmplgGetPluginInstance
  *
  * @param pi The plugin instance to be released
  */
-NG_MESH_API void mmplgReleasePluginInstance(
+MESH_API void mmplgReleasePluginInstance(
     ::megamol::core::utility::plugins::AbstractPluginInstance* pi);
 
 #ifdef __cplusplus
@@ -94,4 +94,4 @@ NG_MESH_API void mmplgReleasePluginInstance(
 #endif
 #endif
 
-#endif /* NG_MESH_H_INCLUDED */
+#endif /* MESH_H_INCLUDED */

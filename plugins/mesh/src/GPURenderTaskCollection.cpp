@@ -1,7 +1,7 @@
-#include "../include/ng_mesh/GPURenderTaskCollection.h"
+#include "../include/mesh/GPURenderTaskCollection.h"
 
 namespace megamol {
-namespace ngmesh {
+namespace mesh {
 
 void GPURenderTaskCollection::deleteSingleRenderTask(size_t rt_idx) {
 
@@ -64,5 +64,5 @@ std::vector<std::pair<std::shared_ptr<BufferObject>, uint32_t>> const& GPURender
     return m_per_frame_data_buffers;
 }
 
-} // namespace ngmesh
+} // namespace mesh
 } // namespace megamol

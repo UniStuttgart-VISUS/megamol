@@ -13,32 +13,32 @@
 
 #include "DebugGPURenderTaskDataSource.h"
 
-#include "ng_mesh/GPURenderTaskDataCall.h"
-#include "ng_mesh/GPUMaterialDataCall.h"
-#include "ng_mesh/GPUMeshDataCall.h"
+#include "mesh/CallGPURenderTaskData.h"
+#include "mesh/CallGPUMaterialData.h"
+#include "mesh/CallGPUMeshData.h"
 
-megamol::ngmesh::DebugGPURenderTaskDataSource::DebugGPURenderTaskDataSource()
+megamol::mesh::DebugGPURenderTaskDataSource::DebugGPURenderTaskDataSource()
 {
 }
 
-megamol::ngmesh::DebugGPURenderTaskDataSource::~DebugGPURenderTaskDataSource()
+megamol::mesh::DebugGPURenderTaskDataSource::~DebugGPURenderTaskDataSource()
 {
 }
 
-bool megamol::ngmesh::DebugGPURenderTaskDataSource::getDataCallback(core::Call & caller)
+bool megamol::mesh::DebugGPURenderTaskDataSource::getDataCallback(core::Call & caller)
 {
-	GPURenderTaskDataCall* rtc = dynamic_cast<GPURenderTaskDataCall*>(&caller);
+	CallGPURenderTaskData* rtc = dynamic_cast<CallGPURenderTaskData*>(&caller);
 	if(rtc == NULL)
 		return false;
 
-	GPUMaterialDataCall* mtlc = this->m_material_callerSlot.CallAs<GPUMaterialDataCall>();
+	CallGPUMaterialData* mtlc = this->m_material_callerSlot.CallAs<CallGPUMaterialData>();
 	if (mtlc == NULL)
 		return false;
 
 	if (!(*mtlc)(0))
 		return false;
 
-	GPUMeshDataCall* mc = this->m_mesh_callerSlot.CallAs<GPUMeshDataCall>();
+	CallGPUMeshData* mc = this->m_mesh_callerSlot.CallAs<CallGPUMeshData>();
 	if (mc == NULL)
 		return false;
 
@@ -94,7 +94,7 @@ bool megamol::ngmesh::DebugGPURenderTaskDataSource::getDataCallback(core::Call &
 	return true;
 }
 
-bool megamol::ngmesh::DebugGPURenderTaskDataSource::load()
+bool megamol::mesh::DebugGPURenderTaskDataSource::load()
 {
 
 	//m_gpu_render_tasks->addSingleRenderTask()

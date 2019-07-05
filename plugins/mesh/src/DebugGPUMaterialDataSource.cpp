@@ -9,26 +9,26 @@
 #include "mmcore/CoreInstance.h"
 #include "vislib/graphics/gl/ShaderSource.h"
 
-#include "ng_mesh/GPUMaterialDataCall.h"
+#include "mesh/CallGPUMaterialData.h"
 
-megamol::ngmesh::DebugGPUMaterialDataSource::DebugGPUMaterialDataSource()
+megamol::mesh::DebugGPUMaterialDataSource::DebugGPUMaterialDataSource()
 {
 }
 
-megamol::ngmesh::DebugGPUMaterialDataSource::~DebugGPUMaterialDataSource()
+megamol::mesh::DebugGPUMaterialDataSource::~DebugGPUMaterialDataSource()
 {
 }
 
-bool megamol::ngmesh::DebugGPUMaterialDataSource::create()
+bool megamol::mesh::DebugGPUMaterialDataSource::create()
 {
 	load();
 
 	return true;
 }
 
-bool megamol::ngmesh::DebugGPUMaterialDataSource::getDataCallback(core::Call & caller)
+bool megamol::mesh::DebugGPUMaterialDataSource::getDataCallback(core::Call & caller)
 {
-	GPUMaterialDataCall* matl_call = dynamic_cast<GPUMaterialDataCall*>(&caller);
+	CallGPUMaterialData* matl_call = dynamic_cast<CallGPUMaterialData*>(&caller);
 	if (matl_call == NULL)
 		return false;
 
@@ -37,7 +37,7 @@ bool megamol::ngmesh::DebugGPUMaterialDataSource::getDataCallback(core::Call & c
 	return true;
 }
 
-bool megamol::ngmesh::DebugGPUMaterialDataSource::load()
+bool megamol::mesh::DebugGPUMaterialDataSource::load()
 {
 	// Create shader program
 	auto shader = std::make_shared<Shader>();
@@ -51,7 +51,7 @@ bool megamol::ngmesh::DebugGPUMaterialDataSource::load()
 	shader->Create(vert_shader_src.Code(), vert_shader_src.Count(), frag_shader_src.Code(), frag_shader_src.Count());
 
 	m_gpu_materials->addMaterial(shader,{});
-	//m_gpu_materials->addMaterial("NGMeshDebug");
+	//m_gpu_materials->addMaterial("meshDebug");
 
 	return true;
 }

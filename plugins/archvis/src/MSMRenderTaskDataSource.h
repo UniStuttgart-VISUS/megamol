@@ -11,12 +11,12 @@
 #    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "ng_mesh/AbstractGPURenderTaskDataSource.h"
+#include "mesh/AbstractGPURenderTaskDataSource.h"
 
 namespace megamol{
 namespace archvis {
 
-class MSMRenderTaskDataSource : public ngmesh::AbstractGPURenderTaskDataSource {
+class MSMRenderTaskDataSource : public mesh::AbstractGPURenderTaskDataSource {
 public:
     /**
      * Answer the name of this module.

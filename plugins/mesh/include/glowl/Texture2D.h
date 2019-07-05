@@ -14,7 +14,7 @@
 #include "Texture.h"
 
 namespace megamol {
-	namespace ngmesh {
+	namespace mesh {
 
 
 		class Texture2D : public Texture

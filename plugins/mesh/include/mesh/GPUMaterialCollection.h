@@ -18,16 +18,16 @@
 #include <memory>
 #include <vector>
 
-#include "ng_mesh.h"
+#include "mesh.h"
 
 #include "glowl/Texture2D.h"
 
 namespace megamol {
-namespace ngmesh {
+namespace mesh {
 
 typedef vislib::graphics::gl::GLSLGeometryShader Shader;
 
-class NG_MESH_API GPUMaterialCollecton {
+class MESH_API GPUMaterialCollecton {
 public:
     struct Material {
         std::shared_ptr<Shader> shader_program;
@@ -56,7 +56,7 @@ private:
 
 inline std::vector<GPUMaterialCollecton::Material> const& GPUMaterialCollecton::getMaterials() { return m_materials; }
 
-} // namespace ngmesh
+} // namespace mesh
 } // namespace megamol
 
 #endif // !GPU_MATERIAL_COLLECTION_H_INCLUDED

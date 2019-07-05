@@ -15,12 +15,12 @@
 #include <vector>
 
 #include "glowl/Mesh.h"
-#include "ng_mesh.h"
+#include "mesh.h"
 
 namespace megamol {
-namespace ngmesh {
+namespace mesh {
 
-class NG_MESH_API GPUMeshCollection {
+class MESH_API GPUMeshCollection {
 public:
     template <typename T> using IteratorPair = std::pair<T, T>;
 
@@ -180,7 +180,7 @@ inline std::vector<GPUMeshCollection::SubMeshData> const& GPUMeshCollection::get
     return m_sub_mesh_data;
 }
 
-} // namespace ngmesh
+} // namespace mesh
 } // namespace megamol
 
 #endif // !GPU_MESH_DATA_STORAGE_H_INCLUDED
