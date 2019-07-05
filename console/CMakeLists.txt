@@ -53,22 +53,26 @@ if(BUILD_CONSOLE)
       GIT_REPOSITORY https://github.com/glfw/glfw.git
       GIT_TAG "3.2.1"
       CMAKE_ARGS
-        -DBUILD_SHARED_LIBS=OFF
+        -DBUILD_SHARED_LIBS=ON
         -DGLFW_BUILD_EXAMPLES=OFF
         -DGLFW_BUILD_TESTS=OFF
         -DGLFW_BUILD_DOCS=OFF)
     if (MSVC)
-      add_external_library(glfw STATIC
+      add_external_library(glfw3 SHARED
         DEPENDS glfw_ext
         INCLUDE_DIR "include"
-        LIBRARY_DEBUG "lib/glfw3.lib"
-        LIBRARY_RELEASE "lib/glfw3.lib")
+        IMPORT_LIBRARY_DEBUG "lib/glfw3dll.lib"
+        IMPORT_LIBRARY_RELEASE "lib/glfw3dll.lib"
+        LIBRARY_DEBUG "lib/glfw3.dll"
+        LIBRARY_RELEASE "lib/glfw3.dll")
     else()
-        add_external_library(glfw STATIC
+        add_external_library(glfw3 SHARED
         DEPENDS glfw_ext
         INCLUDE_DIR "include"
-        LIBRARY_DEBUG "lib/libglfw3.a"
-        LIBRARY_RELEASE "lib/libglfw3.a")
+        IMPORT_LIBRARY_DEBUG ""
+        IMPORT_LIBRARY_RELEASE ""
+        LIBRARY_DEBUG "lib/libglfw.so"
+        LIBRARY_RELEASE "lib/libglfw.so")
     endif()
     #find_package(glfw3 REQUIRED CONFIG)
     target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
@@ -101,7 +105,14 @@ if(BUILD_CONSOLE)
   source_group("Source Files" FILES ${source_files})
 
   # install mmconsole executable
-  install(TARGETS ${PROJECT_NAME} DESTINATION "bin")
+  install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
+  install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION "lib")
+  if(NOT USE_EGL)
+    install_external(TARGETS glfw3)
+  endif()
+  if (WIN32)
+    install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION bin OPTIONAL)
+  endif ()
 
   # install and configure ATB
   if (USE_ANTTWEAKBAR)
