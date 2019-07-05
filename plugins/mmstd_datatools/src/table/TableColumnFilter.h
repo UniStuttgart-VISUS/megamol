@@ -1,5 +1,5 @@
 /*
- * FloatTableColumnFilter.h
+ * TableColumnFilter.h
  *
  * Copyright (C) 2016-2016 by VISUS (University of Stuttgart)
  * Alle Rechte vorbehalten.
@@ -15,17 +15,17 @@
 
 #include "mmcore/param/ParamSlot.h"
 
-#include "mmstd_datatools/floattable/CallFloatTableData.h"
+#include "mmstd_datatools/table/TableDataCall.h"
 
 namespace megamol {
 namespace stdplugin {
 namespace datatools {
-namespace floattable {
+namespace table {
 
 /*
- * Module to filter columns from a float table.
+ * Module to filter columns from a table.
  */
-class FloatTableColumnFilter : public core::Module {
+class TableColumnFilter : public core::Module {
 public:
     static std::string ModuleName;
 
@@ -36,7 +36,7 @@ public:
 
     /** Return module class description */
     static const char *Description(void) {
-        return "Filters columns from a float table";
+        return "Filters columns from a table";
     }
 
     /** Module is always available */
@@ -45,10 +45,10 @@ public:
     }
 
     /** Ctor */
-    FloatTableColumnFilter(void);
+    TableColumnFilter(void);
 
     /** Dtor */
-    virtual ~FloatTableColumnFilter(void);
+    virtual ~TableColumnFilter(void);
 protected:
     /** Lazy initialization of the module */
     virtual bool create(void);
@@ -77,13 +77,13 @@ private:
     size_t datahash;
 
     /** Vector storing information about columns */
-    std::vector<CallFloatTableData::ColumnInfo> columnInfos;
+    std::vector<TableDataCall::ColumnInfo> columnInfos;
 
     /** Vector stroing the actual float data */
     std::vector<float> data;
-}; /* end class FloatTableColumnFilter */
+}; /* end class TableColumnFilter */
 
-} /* end namespace floattable */
+} /* end namespace table */
 } /* end namespace datatools */
 } /* end namespace stdplugin */
 } /* end namespace megamol */

@@ -1,34 +1,36 @@
 /*
- * FloatTableColumnScaler.cpp
+ * TableColumnScaler.cpp
  *
  * Copyright (C) 2016-2016 by VISUS (University of Stuttgart)
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
-#include "FloatTableColumnScaler.h"
-
-#include <limits>
+#include "TableColumnScaler.h"
 
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/StringParam.h"
 
 #include "vislib/StringTokeniser.h"
-
 #include "vislib/sys/Log.h"
+#include <limits>
+
+using namespace megamol::stdplugin::datatools;
+using namespace megamol::stdplugin::datatools::table;
+using namespace megamol;
 
 
 /*
- * FloatTableColumnScaler::ModuleName
+ * TableColumnScaler::ModuleName
  */
-std::string megamol::stdplugin::datatools::floattable::FloatTableColumnScaler::ModuleName
-    = std::string("FloatTableColumnScaler");
+std::string TableColumnScaler::ModuleName
+    = std::string("TableColumnScaler");
 
 
 /*
- * FloatTableColumnSelector::FloatTableColumnSelector
+ * TableColumnSelector::TableColumnSelector
  */
-megamol::stdplugin::datatools::floattable::FloatTableColumnScaler::FloatTableColumnScaler(void) :
+TableColumnScaler::TableColumnScaler(void) :
     core::Module(),
     dataInSlot("dataIn", "Input"),
     dataOutSlot("dataOut", "Output"),
@@ -36,15 +38,15 @@ megamol::stdplugin::datatools::floattable::FloatTableColumnScaler::FloatTableCol
     columnSelectorSlot("columns", "Select columns to scale separated by \";\""),
     frameID(-1),
     datahash((std::numeric_limits<size_t>::max)()) {
-    this->dataInSlot.SetCompatibleCall<CallFloatTableDataDescription>();
+    this->dataInSlot.SetCompatibleCall<TableDataCallDescription>();
     this->MakeSlotAvailable(&this->dataInSlot);
 
-    this->dataOutSlot.SetCallback(CallFloatTableData::ClassName(),
-        CallFloatTableData::FunctionName(0),
-        &FloatTableColumnScaler::processData);
-    this->dataOutSlot.SetCallback(CallFloatTableData::ClassName(),
-        CallFloatTableData::FunctionName(1),
-        &FloatTableColumnScaler::getExtent);
+    this->dataOutSlot.SetCallback(TableDataCall::ClassName(),
+        TableDataCall::FunctionName(0),
+        &TableColumnScaler::processData);
+    this->dataOutSlot.SetCallback(TableDataCall::ClassName(),
+        TableDataCall::FunctionName(1),
+        &TableColumnScaler::getExtent);
     this->MakeSlotAvailable(&this->dataOutSlot);
 
     this->scalingFactorSlot << new core::param::FloatParam(1.0f);
@@ -56,38 +58,38 @@ megamol::stdplugin::datatools::floattable::FloatTableColumnScaler::FloatTableCol
 
 
 /*
- * FloatTableColumnSelector::~FloatTableColumnSelector
+ * TableColumnSelector::~TableColumnSelector
  */
-megamol::stdplugin::datatools::floattable::FloatTableColumnScaler::~FloatTableColumnScaler(void) {
+TableColumnScaler::~TableColumnScaler(void) {
     this->Release();
 }
 
 
 /*
- * FloatTableColumnSelector::create
+ * TableColumnSelector::create
  */
-bool megamol::stdplugin::datatools::floattable::FloatTableColumnScaler::create(void) {
+bool TableColumnScaler::create(void) {
     return true;
 }
 
 
 /*
- * FloatTableColumnSelector::release
+ * TableColumnSelector::release
  */
-void megamol::stdplugin::datatools::floattable::FloatTableColumnScaler::release(void) {
+void TableColumnScaler::release(void) {
 
 }
 
 
 /*
- * FloatTableColumnSelector::processData
+ * TableColumnSelector::processData
  */
-bool megamol::stdplugin::datatools::floattable::FloatTableColumnScaler::processData(core::Call &c) {
+bool TableColumnScaler::processData(core::Call &c) {
     try {
-        CallFloatTableData *outCall = dynamic_cast<CallFloatTableData *>(&c);
+        TableDataCall *outCall = dynamic_cast<TableDataCall *>(&c);
         if (outCall == NULL) return false;
 
-        CallFloatTableData *inCall = this->dataInSlot.CallAs<CallFloatTableData>();
+        TableDataCall *inCall = this->dataInSlot.CallAs<TableDataCall>();
         if (inCall == NULL) return false;
 
         inCall->SetFrameID(outCall->GetFrameID());
@@ -179,14 +181,14 @@ bool megamol::stdplugin::datatools::floattable::FloatTableColumnScaler::processD
 
 
 /*
- * FloatTableColumnSelector::getExtent
+ * TableColumnSelector::getExtent
  */
-bool megamol::stdplugin::datatools::floattable::FloatTableColumnScaler::getExtent(core::Call &c) {
+bool TableColumnScaler::getExtent(core::Call &c) {
     try {
-        CallFloatTableData *outCall = dynamic_cast<CallFloatTableData *>(&c);
+        TableDataCall *outCall = dynamic_cast<TableDataCall *>(&c);
         if (outCall == NULL) return false;
 
-        CallFloatTableData *inCall = this->dataInSlot.CallAs<CallFloatTableData>();
+        TableDataCall *inCall = this->dataInSlot.CallAs<TableDataCall>();
         if (inCall == NULL) return false;
 
         inCall->SetFrameID(outCall->GetFrameID());

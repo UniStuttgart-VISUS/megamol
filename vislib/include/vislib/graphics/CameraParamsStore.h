@@ -483,6 +483,8 @@ namespace graphics {
         /** the size of the full virtual view */
         math::Dimension<ImageSpaceType, 2> virtualViewSize;
 
+        template <class T> void assign_and_sync(T& dest, T src);
+
     };
     
 } /* end namespace graphics */

@@ -9,19 +9,19 @@
 #include "mmcore/Module.h"
 
 #include "mmcore/param/ParamSlot.h"
-#include "mmstd_datatools/floattable/CallFloatTableData.h"
+#include "mmstd_datatools/table/TableDataCall.h"
 #include "mmcore/view/CallClipPlane.h"
 #include <map>
 
 namespace megamol {
 namespace stdplugin {
 namespace datatools {
-namespace floattable {
+namespace table {
 
     /**
-     * This module converts from a generic float table to the MultiParticleDataCall.
+     * This module converts from a generic table to the MultiParticleDataCall.
      */
-    class FloatTableObserverPlane : public megamol::core::Module {
+    class TableObserverPlane : public megamol::core::Module {
 
     public:
 
@@ -31,7 +31,7 @@ namespace floattable {
          * @return The name of this module.
          */
         static inline const char *ClassName(void)  {
-            return "FloatTableObserverPlane";
+            return "TableObserverPlane";
         }
 
         /**
@@ -55,12 +55,12 @@ namespace floattable {
         /**
          * Initialises a new instance.
          */
-        FloatTableObserverPlane(void);
+        TableObserverPlane(void);
 
         /**
          * Finalises an instance.
          */
-        virtual ~FloatTableObserverPlane(void);
+        virtual ~TableObserverPlane(void);
 
     protected:
 
@@ -82,7 +82,7 @@ namespace floattable {
 
     private:
 
-        bool assertData(floattable::CallFloatTableData *ft, megamol::core::view::CallClipPlane *cp, floattable::CallFloatTableData& out);
+        bool assertData(table::TableDataCall *ft, megamol::core::view::CallClipPlane *cp, table::TableDataCall& out);
 
 		bool anythingDirty();
 
@@ -106,7 +106,7 @@ namespace floattable {
         core::CalleeSlot slotCallObservedTable;
 
         /** The data callee slot. */
-        core::CallerSlot slotCallFloatTable;
+        core::CallerSlot slotCallInputTable;
 
         /** The clip plane slot defining the observation plane. */
         core::CallerSlot slotCallClipPlane;
@@ -151,7 +151,7 @@ namespace floattable {
 
     };
 
-} /* end namespace floattable */
+} /* end namespace table */
 } /* end namespace datatools */
 } /* end namespace stdplugin */
 } /* end namespace megamol */
