@@ -80,6 +80,9 @@ private:
     /** Array holding current colors and function values. */
     megamol::core::param::TransferFunctionParam::TFDataType data;
 
+    /** Min/Max intervall the data should be mapped. */
+    std::array<float, 2> range;
+
     /** Current interpolation option. */
     megamol::core::param::TransferFunctionParam::InterpolationMode mode;
 

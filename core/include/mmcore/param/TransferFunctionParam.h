@@ -57,23 +57,27 @@ public:
     //    "Interpolation": "LINEAR",
     //    "Nodes" : [
     //        [
-    //            0.0,  // = Red
-    //            0.0,  // = Green
-    //            0.0,  // = Blue
-    //            0.0,  // = Alpha
-    //            0.0,  // = Value
-    //            0.05  // = Sigma (only used for gauss interpolation)
+    //            0.0,     // = Red
+    //            0.0,     // = Green
+    //            0.0,     // = Blue
+    //            0.0,     // = Alpha
+    //            0.0,     // = Value (always in range [0,1], independent of actual given data range!)
+    //            0.05     // = Sigma (only used for gauss interpolation)
     //        ],
     //        [
-    //            1.0,  // = Red
-    //            1.0,  // = Green
-    //            1.0,  // = Blue
-    //            1.0,  // = Alpha
-    //            1.0,  // = Value
-    //            0.05  // = Sigma (only used for gauss interpolation)
+    //            1.0,
+    //            1.0, 
+    //            1.0,
+    //            1.0, 
+    //            1.0, 
+    //            0.05 
     //        ]
     //    ],
     //    "TextureSize": 128
+    //    "ValueRange": [
+    //        0.0,        // = minimum value of data range
+    //        1.0         // = maxiumum value of data range
+    //   ],
     //}
 
     /**
@@ -85,7 +89,7 @@ public:
     *
     * @return True if JSON string was successfully converted into transfer function texture, false otherwise.
     */
-    static bool TransferFunctionTexture(const std::string &in_tfs, std::vector<float> &out_data, UINT &out_texsize);
+    static bool TransferFunctionTexture(const std::string &in_tfs, std::vector<float> &out_data, UINT &out_texsize, std::array<float, 2> &out_range);
 
     /**
     * Set transfer function data from JSON string.
@@ -97,7 +101,7 @@ public:
     *
     * @return True if JSON string was successfully converted into transfer function data, false otherwise.
     */
-    static bool ParseTransferFunction(const std::string &in_tfs, TFDataType &out_data, InterpolationMode &out_interpolmode, UINT &out_texsize);
+    static bool ParseTransferFunction(const std::string &in_tfs, TFDataType &out_data, InterpolationMode &out_interpolmode, UINT &out_texsize, std::array<float, 2> &out_range);
 
     /**
      * Get transfer function JSON string from data.
@@ -109,7 +113,7 @@ public:
      *
      * @return True if transfer function data was successfully converted into JSON string, false otherwise.
      */
-    static bool DumpTransferFunction(std::string &out_tfs, const TFDataType &in_data, const InterpolationMode in_interpolmode, const UINT in_texsize);
+    static bool DumpTransferFunction(std::string &out_tfs, const TFDataType &in_data, const InterpolationMode in_interpolmode, const UINT in_texsize, std::array<float, 2> in_range);
 
     /**
      * Check given transfer function data.
@@ -120,7 +124,7 @@ public:
      *
      * @return True if given data is valid, false otherwise.
      */
-    static bool CheckTransferFunctionData(const TFDataType &data, const InterpolationMode interpolmode, const UINT texsize);
+    static bool CheckTransferFunctionData(const TFDataType &data, const InterpolationMode interpolmode, const UINT texsize, const std::array<float, 2> range);
 
     /**
      * Check given transfer function JSON string.
