@@ -15,15 +15,15 @@ layout(location = 1) in vec3 v_position;
 layout(location = 2) in vec4 v_tangent;
 layout(location = 3) in vec2 v_uv;
 
-out vec3 world_pos;
-out vec3 normal;
+out vec3 vWorldPos;
+out vec3 vNormal;
 
 void main()
 {
     //gl_Position = vec4(v_position.xy, 0.5 ,1.0);
-    normal = v_normal;
+    vNormal = v_normal;
     mat4 object_transform = mesh_shader_params[gl_DrawIDARB].transform;
-    world_pos = (object_transform * vec4(v_position,1.0)).xyz;
+    vWorldPos = (object_transform * vec4(v_position,1.0)).xyz;
     gl_Position =  proj_mx * view_mx * object_transform * vec4(v_position,1.0);
 
 }
