@@ -19,8 +19,8 @@ using namespace vislib::graphics::gl;
 #define DEBUG_GL_CALLBACK
 //#define CHRONOTIMING
 
-#define NGS_THE_INSTANCE "gl_VertexID" // "gl_InstanceID"
-#define NGS_THE_ALIGNMENT "packed"
+#define SSBO_GENERATED_SHADER_INSTANCE  "gl_VertexID" // or "gl_InstanceID"
+#define SSBO_GENERATED_SHADER_ALIGNMENT "packed"
 
 const GLuint SSBObindingPoint = 2;
 const GLuint SSBOcolorBindingPoint = 3;
@@ -33,82 +33,82 @@ const GLuint SSBOcolorBindingPoint = 3;
             std::cout << "Error in line " << __LINE__ << ": " << gluErrorString(errCode) << std::endl;                 \
     }
 
-
-// typedef void (APIENTRY *GLDEBUGPROC)(GLenum source,GLenum type,GLuint id,GLenum severity,GLsizei length,const GLchar
-// *message,const void *userParam);
-void APIENTRY DebugGLCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length,
-    const GLchar* message, const GLvoid* userParam) {
-    const char *sourceText, *typeText, *severityText;
-    switch (source) {
-    case GL_DEBUG_SOURCE_API:
-        sourceText = "API";
-        break;
-    case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
-        sourceText = "Window System";
-        break;
-    case GL_DEBUG_SOURCE_SHADER_COMPILER:
-        sourceText = "Shader Compiler";
-        break;
-    case GL_DEBUG_SOURCE_THIRD_PARTY:
-        sourceText = "Third Party";
-        break;
-    case GL_DEBUG_SOURCE_APPLICATION:
-        sourceText = "Application";
-        break;
-    case GL_DEBUG_SOURCE_OTHER:
-        sourceText = "Other";
-        break;
-    default:
-        sourceText = "Unknown";
-        break;
+#ifdef GL_VERSION_4_3
+    // typedef void (APIENTRY *GLDEBUGPROC)(GLenum source,GLenum type,GLuint id,GLenum severity,GLsizei length,const GLchar
+    // *message,const void *userParam);
+    void APIENTRY DebugGLCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length,
+        const GLchar* message, const GLvoid* userParam) {
+        const char *sourceText, *typeText, *severityText;
+        switch (source) {
+        case GL_DEBUG_SOURCE_API:
+            sourceText = "API";
+            break;
+        case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
+            sourceText = "Window System";
+            break;
+        case GL_DEBUG_SOURCE_SHADER_COMPILER:
+            sourceText = "Shader Compiler";
+            break;
+        case GL_DEBUG_SOURCE_THIRD_PARTY:
+            sourceText = "Third Party";
+            break;
+        case GL_DEBUG_SOURCE_APPLICATION:
+            sourceText = "Application";
+            break;
+        case GL_DEBUG_SOURCE_OTHER:
+            sourceText = "Other";
+            break;
+        default:
+            sourceText = "Unknown";
+            break;
+        }
+        switch (type) {
+        case GL_DEBUG_TYPE_ERROR:
+            typeText = "Error";
+            break;
+        case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
+            typeText = "Deprecated Behavior";
+            break;
+        case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
+            typeText = "Undefined Behavior";
+            break;
+        case GL_DEBUG_TYPE_PORTABILITY:
+            typeText = "Portability";
+            break;
+        case GL_DEBUG_TYPE_PERFORMANCE:
+            typeText = "Performance";
+            break;
+        case GL_DEBUG_TYPE_OTHER:
+            typeText = "Other";
+            break;
+        case GL_DEBUG_TYPE_MARKER:
+            typeText = "Marker";
+            break;
+        default:
+            typeText = "Unknown";
+            break;
+        }
+        switch (severity) {
+        case GL_DEBUG_SEVERITY_HIGH:
+            severityText = "High";
+            break;
+        case GL_DEBUG_SEVERITY_MEDIUM:
+            severityText = "Medium";
+            break;
+        case GL_DEBUG_SEVERITY_LOW:
+            severityText = "Low";
+            break;
+        case GL_DEBUG_SEVERITY_NOTIFICATION:
+            severityText = "Notification";
+            break;
+        default:
+            severityText = "Unknown";
+            break;
+        }
+        vislib::sys::Log::DefaultLog.WriteMsg(
+            vislib::sys::Log::LEVEL_ERROR, "[%s %s] (%s %u) %s\n", sourceText, severityText, typeText, id, message);
     }
-    switch (type) {
-    case GL_DEBUG_TYPE_ERROR:
-        typeText = "Error";
-        break;
-    case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
-        typeText = "Deprecated Behavior";
-        break;
-    case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
-        typeText = "Undefined Behavior";
-        break;
-    case GL_DEBUG_TYPE_PORTABILITY:
-        typeText = "Portability";
-        break;
-    case GL_DEBUG_TYPE_PERFORMANCE:
-        typeText = "Performance";
-        break;
-    case GL_DEBUG_TYPE_OTHER:
-        typeText = "Other";
-        break;
-    case GL_DEBUG_TYPE_MARKER:
-        typeText = "Marker";
-        break;
-    default:
-        typeText = "Unknown";
-        break;
-    }
-    switch (severity) {
-    case GL_DEBUG_SEVERITY_HIGH:
-        severityText = "High";
-        break;
-    case GL_DEBUG_SEVERITY_MEDIUM:
-        severityText = "Medium";
-        break;
-    case GL_DEBUG_SEVERITY_LOW:
-        severityText = "Low";
-        break;
-    case GL_DEBUG_SEVERITY_NOTIFICATION:
-        severityText = "Notification";
-        break;
-    default:
-        severityText = "Unknown";
-        break;
-    }
-    vislib::sys::Log::DefaultLog.WriteMsg(
-        vislib::sys::Log::LEVEL_ERROR, "[%s %s] (%s %u) %s\n", sourceText, severityText, typeText, id, message);
-}
-
+#endif
 
 /******************************************************************************
  * Known DebugGLCallback Errors (CAN BE IGNORED):
@@ -155,18 +155,11 @@ moldyn::SphereRenderer::SphereRenderer(void)
     , vertType(SimpleSphericalParticles::VertexDataType::VERTDATA_NONE)
     , newShader(nullptr)
     , theShaders()
-    , streamer()
-    , colStreamer()
-    , bufArray()
-    , colBufArray()
-    , fences()
     , theSingleBuffer()
     , currBuf(0)
     , bufSize(32 * 1024 * 1024)
     , numBuffers(3)
     , theSingleMappedMem(nullptr)
-    , singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT)
-    , singleBufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT)
     , gpuData()
     , gBuffer()
     , oldHash(0)
@@ -175,6 +168,20 @@ moldyn::SphereRenderer::SphereRenderer(void)
     , tfFallbackHandle(0)
     , volGen(nullptr)
     , triggerRebuildGBuffer(false)
+#if defined(SPHERE_MIN_OGL_NG_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_NG_SPLAT)
+    /// This variant should not need the fence (?)
+    // ,singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_COHERENT_BIT);
+    // ,singleBufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_COHERENT_BIT);
+    , singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT)
+    , singleBufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT)
+    , fences()
+#endif
+#ifdef SPHERE_MIN_OGL_NG
+    , streamer()
+    , colStreamer()
+    , bufArray()
+    , colBufArray()
+#endif
     // , timer()
     , renderModeParam("renderMode", "The sphere render mode.")
     , radiusScalingParam("scaling", "Scaling factor for particle radii.")
@@ -273,8 +280,8 @@ bool moldyn::SphereRenderer::create(void) {
     // At least the simple render mode must be available
     ASSERT(this->isRenderModeAvailable(RenderMode::SIMPLE));
 
-#ifdef DEBUG_GL_CALLBACK
-    glDebugMessageCallback(DebugGLCallback, nullptr);
+#if defined(DEBUG_GL_CALLBACK) && defined(GL_VERSION_4_3)
+    glDebugMessageCallback(DebugGLCallback, nullptr); // requires OpenGL version 4.3
 #endif
 
     // Reduce to available render modes
@@ -359,34 +366,9 @@ bool moldyn::SphereRenderer::resetResources(void) {
         this->volGen = nullptr;
     }
 
-    glDeleteTextures(3, reinterpret_cast<GLuint*>(&this->gBuffer));
-    glDeleteFramebuffers(1, &(this->gBuffer.fbo));
-
-    glDeleteTextures(1, &(this->tfFallbackHandle));
-
-    for (unsigned int i = 0; i < this->gpuData.size(); ++i) {
-        glDeleteVertexArrays(3, reinterpret_cast<GLuint*>(&(this->gpuData[i])));
-    }
-    this->gpuData.clear();
-
-    if (this->isRenderModeAvailable(RenderMode::NG)) { 
-        glUnmapNamedBuffer(this->theSingleBuffer); // requires OGL >= 4.5
-    }
-
-    for (auto& x : fences) {
-        if (x) {
-            glDeleteSync(x);
-        }
-    }
-
-    glDeleteBuffers(1, &(this->theSingleBuffer));
-    glDeleteVertexArrays(1, &(this->vertArray));
-
     this->currBuf = 0;
     this->bufSize = (32 * 1024 * 1024);
     this->numBuffers = 3;
-    this->fences.clear();
-    this->fences.resize(numBuffers);
 
     this->oldHash = 0;
     this->oldFrameID = 0;
@@ -394,11 +376,44 @@ bool moldyn::SphereRenderer::resetResources(void) {
     this->colType = SimpleSphericalParticles::ColourDataType::COLDATA_NONE;
     this->vertType = SimpleSphericalParticles::VertexDataType::VERTDATA_NONE;
 
-    /// This variant should not need the fence (?)
-    // singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_COHERENT_BIT);
-    // singleBufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_COHERENT_BIT);
-    this->singleBufferCreationBits = (GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT);
-    this->singleBufferMappingBits = (GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT);
+    // AMBIENT OCCLUSION
+    if (this->isRenderModeAvailable(RenderMode::AMBIENT_OCCLUSION)) {
+        for (unsigned int i = 0; i < this->gpuData.size(); ++i) {
+            glDeleteVertexArrays(3, reinterpret_cast<GLuint*>(&(this->gpuData[i])));
+        }
+        this->gpuData.clear();
+
+        glDeleteTextures(1, &(this->tfFallbackHandle));
+
+        glDeleteTextures(3, reinterpret_cast<GLuint*>(&this->gBuffer));
+        glDeleteFramebuffers(1, &(this->gBuffer.fbo));
+    }
+
+    // NG
+    if (this->isRenderModeAvailable(RenderMode::NG)) { 
+        glUnmapNamedBuffer(this->theSingleBuffer); 
+    }
+
+    // NG_SPLAT or NG_BUFFER_ARRAY
+    if (this->isRenderModeAvailable(RenderMode::NG_SPLAT) || this->isRenderModeAvailable(RenderMode::NG_BUFFER_ARRAY)) {
+        for (auto& x : fences) {
+            if (x) {
+                glDeleteSync(x);
+            }
+        }
+        this->fences.clear();
+        this->fences.resize(numBuffers);
+
+        this->singleBufferCreationBits = (GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT);
+        this->singleBufferMappingBits = (GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT);
+
+        glDeleteBuffers(1, &(this->theSingleBuffer));
+    }
+
+    // NG or NG_SPLAT or NG_BUFFER_ARRAY
+    if (this->isRenderModeAvailable(RenderMode::NG) || this->isRenderModeAvailable(RenderMode::NG_SPLAT) || this->isRenderModeAvailable(RenderMode::NG_BUFFER_ARRAY)) {
+        glDeleteVertexArrays(1, &(this->vertArray));
+    }
 
     return true;
 }
@@ -444,10 +459,20 @@ bool moldyn::SphereRenderer::createResources() {
     default:
         break;
     }
-    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, ">>>>> Using render mode: %s (%d)",
-        mode.PeekBuffer(), static_cast<int>(this->renderMode));
+
+    if (!this->isRenderModeAvailable(this->renderMode)) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, ">>>>> Render mode: %s (%d) is NOT available - falling back to SIMPLE. (BUG: This shouldn't happen)",
+            mode.PeekBuffer(), static_cast<int>(this->renderMode));
+        this->renderMode = RenderMode::SIMPLE; // Fallback render mode ...
+        return false;
+    }
+    else {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, ">>>>> Using render mode: %s (%d)",
+            mode.PeekBuffer(), static_cast<int>(this->renderMode));
+    }
 
     try {
+
         switch (this->renderMode) {
 
         case (RenderMode::SIMPLE):
@@ -620,7 +645,7 @@ bool moldyn::SphereRenderer::createResources() {
  */
 bool moldyn::SphereRenderer::Render(view::CallRender3D& call) {
 
-#ifdef DEBUG_GL_CALLBACK
+#if defined(DEBUG_GL_CALLBACK) && defined(GL_VERSION_4_3)
     glEnable(GL_DEBUG_OUTPUT);
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 #endif
@@ -697,7 +722,9 @@ bool moldyn::SphereRenderer::Render(view::CallRender3D& call) {
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS); /// default - necessary for early depth test in fragment shader to work.
 
+#ifdef GL_VERSION_2_0
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
+#endif
 
     bool retval = false;
     switch (currentRenderMode) {
@@ -720,7 +747,9 @@ bool moldyn::SphereRenderer::Render(view::CallRender3D& call) {
         break;
     }
 
+#ifdef GL_VERSION_2_0
     glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
+#endif
 
     // Save some current data
     this->lastVpHeight = this->curVpHeight;
@@ -731,7 +760,7 @@ bool moldyn::SphereRenderer::Render(view::CallRender3D& call) {
 
     // timer.EndFrame();
 
-#ifdef DEBUG_GL_CALLBACK
+#if defined(DEBUG_GL_CALLBACK) && defined(GL_VERSION_4_3)
     glDisable(GL_DEBUG_OUTPUT);
     glDisable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 #endif
@@ -1518,67 +1547,67 @@ bool moldyn::SphereRenderer::makeColorString(
     case MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
         declaration = "    uint color;\n";
         if (interleaved) {
-            code = "    theColor = unpackUnorm4x8(theBuffer[" NGS_THE_INSTANCE "+ instanceOffset].color);\n";
+            code = "    theColor = unpackUnorm4x8(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE "+ instanceOffset].color);\n";
         }
         else {
-            code = "    theColor = unpackUnorm4x8(theColBuffer[" NGS_THE_INSTANCE "+ instanceOffset].color);\n";
+            code = "    theColor = unpackUnorm4x8(theColBuffer[" SSBO_GENERATED_SHADER_INSTANCE "+ instanceOffset].color);\n";
         }
         break;
     case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
         declaration = "    float r; float g; float b;\n";
         if (interleaved) {
-            code = "    theColor = vec4(theBuffer[" NGS_THE_INSTANCE " + instanceOffset].r,\n"
-                "                       theBuffer[" NGS_THE_INSTANCE " + instanceOffset].g,\n"
-                "                       theBuffer[" NGS_THE_INSTANCE " + instanceOffset].b, 1.0); \n";
+            code = "    theColor = vec4(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].r,\n"
+                "                       theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].g,\n"
+                "                       theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].b, 1.0); \n";
         }
         else {
-            code = "    theColor = vec4(theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].r,\n"
-                "                       theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].g,\n"
-                "                       theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].b, 1.0); \n";
+            code = "    theColor = vec4(theColBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].r,\n"
+                "                       theColBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].g,\n"
+                "                       theColBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].b, 1.0); \n";
         }
         break;
     case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
         declaration = "    float r; float g; float b; float a;\n";
         if (interleaved) {
-            code = "    theColor = vec4(theBuffer[" NGS_THE_INSTANCE " + instanceOffset].r,\n"
-                "                       theBuffer[" NGS_THE_INSTANCE " + instanceOffset].g,\n"
-                "                       theBuffer[" NGS_THE_INSTANCE " + instanceOffset].b,\n"
-                "                       theBuffer[" NGS_THE_INSTANCE " + instanceOffset].a); \n";
+            code = "    theColor = vec4(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].r,\n"
+                "                       theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].g,\n"
+                "                       theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].b,\n"
+                "                       theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].a); \n";
         }
         else {
-            code = "    theColor = vec4(theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].r,\n"
-                "                       theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].g,\n"
-                "                       theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].b,\n"
-                "                       theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].a); \n";
+            code = "    theColor = vec4(theColBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].r,\n"
+                "                       theColBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].g,\n"
+                "                       theColBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].b,\n"
+                "                       theColBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].a); \n";
         }
         break;
     case MultiParticleDataCall::Particles::COLDATA_FLOAT_I: {
         declaration = "    float colorIndex;\n";
         if (interleaved) {
-            code = "    theColIdx = theBuffer[" NGS_THE_INSTANCE " + instanceOffset].colorIndex; \n";
+            code = "    theColIdx = theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].colorIndex; \n";
         }
         else {
-            code = "    theColIdx = theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].colorIndex; \n";
+            code = "    theColIdx = theColBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].colorIndex; \n";
         }
     } break;
     case MultiParticleDataCall::Particles::COLDATA_DOUBLE_I: {
         declaration = "    double colorIndex;\n";
         if (interleaved) {
-            code = "    theColIdx = float(theBuffer[" NGS_THE_INSTANCE " + instanceOffset].colorIndex); \n";
+            code = "    theColIdx = float(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].colorIndex); \n";
         }
         else {
-            code = "    theColIdx = float(theColBuffer[" NGS_THE_INSTANCE " + instanceOffset].colorIndex); \n";
+            code = "    theColIdx = float(theColBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].colorIndex); \n";
         }
     } break;
     case MultiParticleDataCall::Particles::COLDATA_USHORT_RGBA: {
         declaration = "    uint col1; uint col2;\n";
         if (interleaved) {
-            code = "    theColor.xy = unpackUnorm2x16(theBuffer[" NGS_THE_INSTANCE "+ instanceOffset].col1);\n"
-                "    theColor.zw = unpackUnorm2x16(theBuffer[" NGS_THE_INSTANCE "+ instanceOffset].col2);\n";
+            code = "    theColor.xy = unpackUnorm2x16(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE "+ instanceOffset].col1);\n"
+                "    theColor.zw = unpackUnorm2x16(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE "+ instanceOffset].col2);\n";
         }
         else {
-            code = "    theColor.xy = unpackUnorm2x16(theColBuffer[" NGS_THE_INSTANCE "+ instanceOffset].col1);\n"
-                "    theColor.zw = unpackUnorm2x16(theColBuffer[" NGS_THE_INSTANCE "+ instanceOffset].col2);\n";
+            code = "    theColor.xy = unpackUnorm2x16(theColBuffer[" SSBO_GENERATED_SHADER_INSTANCE "+ instanceOffset].col1);\n"
+                "    theColor.zw = unpackUnorm2x16(theColBuffer[" SSBO_GENERATED_SHADER_INSTANCE "+ instanceOffset].col2);\n";
         }
     } break;
     default:
@@ -1608,46 +1637,46 @@ bool moldyn::SphereRenderer::makeVertexString(
     case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
         declaration = "    float posX; float posY; float posZ;\n";
         if (interleaved) {
-            code = "    inPos = vec4(theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posX,\n"
-                "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posY,\n"
-                "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posZ, 1.0); \n"
+            code = "    inPos = vec4(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX,\n"
+                "                 theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posY,\n"
+                "                 theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posZ, 1.0); \n"
                 "    rad = CONSTRAD;";
         }
         else {
-            code = "    inPos = vec4(thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posX,\n"
-                "                 thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posY,\n"
-                "                 thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posZ, 1.0); \n"
+            code = "    inPos = vec4(thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX,\n"
+                "                 thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posY,\n"
+                "                 thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posZ, 1.0); \n"
                 "    rad = CONSTRAD;";
         }
         break;
     case MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ:
         declaration = "    double posX; double posY; double posZ;\n";
         if (interleaved) {
-            code = "    inPos = vec4(float(theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posX),\n"
-                "                 float(theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posY),\n"
-                "                 float(theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posZ), 1.0); \n"
+            code = "    inPos = vec4(float(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX),\n"
+                "                 float(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posY),\n"
+                "                 float(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posZ), 1.0); \n"
                 "    rad = CONSTRAD;";
         }
         else {
-            code = "    inPos = vec4(float(thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posX),\n"
-                "                 float(thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posY),\n"
-                "                 float(thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posZ), 1.0); \n"
+            code = "    inPos = vec4(float(thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX),\n"
+                "                 float(thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posY),\n"
+                "                 float(thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posZ), 1.0); \n"
                 "    rad = CONSTRAD;";
         }
         break;
     case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
         declaration = "    float posX; float posY; float posZ; float posR;\n";
         if (interleaved) {
-            code = "    inPos = vec4(theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posX,\n"
-                "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posY,\n"
-                "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posZ, 1.0); \n"
-                "    rad = theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posR;";
+            code = "    inPos = vec4(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX,\n"
+                "                 theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posY,\n"
+                "                 theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posZ, 1.0); \n"
+                "    rad = theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posR;";
         }
         else {
-            code = "    inPos = vec4(thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posX,\n"
-                "                 thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posY,\n"
-                "                 thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posZ, 1.0); \n"
-                "    rad = thePosBuffer[" NGS_THE_INSTANCE " + instanceOffset].posR;";
+            code = "    inPos = vec4(thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX,\n"
+                "                 thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posY,\n"
+                "                 thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posZ, 1.0); \n"
+                "    rad = thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posR;";
         }
         break;
     default:
@@ -1733,7 +1762,7 @@ std::shared_ptr<vislib::graphics::gl::GLSLShader> moldyn::SphereRenderer::genera
             }
             decl += "};\n";
 
-            decl += "layout(" NGS_THE_ALIGNMENT ", binding = " + std::to_string(SSBObindingPoint) +
+            decl += "layout(" SSBO_GENERATED_SHADER_ALIGNMENT ", binding = " + std::to_string(SSBObindingPoint) +
                 ") buffer shader_data {\n"
                 "    SphereParams theBuffer[];\n"
                 // flat float version
@@ -1750,11 +1779,11 @@ std::shared_ptr<vislib::graphics::gl::GLSLShader> moldyn::SphereRenderer::genera
             decl += "\nstruct SphereColParams {\n" + colDecl;
             decl += "};\n";
 
-            decl += "layout(" NGS_THE_ALIGNMENT ", binding = " + std::to_string(SSBObindingPoint) +
+            decl += "layout(" SSBO_GENERATED_SHADER_ALIGNMENT ", binding = " + std::to_string(SSBObindingPoint) +
                 ") buffer shader_data {\n"
                 "    SpherePosParams thePosBuffer[];\n"
                 "};\n";
-            decl += "layout(" NGS_THE_ALIGNMENT ", binding = " + std::to_string(SSBOcolorBindingPoint) +
+            decl += "layout(" SSBO_GENERATED_SHADER_ALIGNMENT ", binding = " + std::to_string(SSBOcolorBindingPoint) +
                 ") buffer shader_data2 {\n"
                 "    SphereColParams theColBuffer[];\n"
                 "};\n";
@@ -2363,18 +2392,28 @@ bool moldyn::SphereRenderer::isRenderModeAvailable(RenderMode rm) {
     // Check additonal requirements for each render mode separatly
     switch (rm) {
     case(RenderMode::SIMPLE):
+        if (!(SPHERE_MIN_OGL_SIMPLE)) {
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                "[SphereRenderer] Render Mode 'SIMPLE' is not available. Minimum OpenGL version is 1.4");
+            retval = false;
+        }
         break;
     case(RenderMode::SIMPLE_CLUSTERED):
+        if (!(SPHERE_MIN_OGL_SIMPLE_CLUSTERED)) {
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                "[SphereRenderer] Render Mode 'SIMPLE_CLUSTERED' is not available. Minimum OpenGL version is 1.4");
+            retval = false;
+        }
         break;
     case(RenderMode::SIMPLE_GEO):
+        if (!(SPHERE_MIN_OGL_SIMPLE_GEO)) {
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                "[SphereRenderer] Render Mode 'SIMPLE_GEO' is not available. Minimum OpenGL version is 3.2");
+            retval = false;
+        }
         if (!vislib::graphics::gl::GLSLGeometryShader::AreExtensionsAvailable()) {
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, 
                 "[SphereRenderer] Render Mode 'SIMPLE_GEO' is not available. Geometry shader extensions are not available.");
-            retval = false;
-        }
-        if (!ogl_IsVersionGEQ(3, 2)) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-                "[SphereRenderer] Render Mode 'SIMPLE_GEO' is not available. Minimum OpenGL version is 3.2 (GLSL 1.5)");
             retval = false;
         }
         if (!isExtAvailable("GL_EXT_geometry_shader4")) {
@@ -2399,9 +2438,9 @@ bool moldyn::SphereRenderer::isRenderModeAvailable(RenderMode rm) {
         }
         break;
     case(RenderMode::NG):
-        if (!ogl_IsVersionGEQ(4, 5)) { // required for glUnmapNamedBuffer
+        if (!(SPHERE_MIN_OGL_NG)) { // required for glUnmapNamedBuffer
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, 
-                "[SphereRenderer] Render Mode 'NG' is not available. Minimum OpenGL version is 4.5 (GLSL 4.5)");
+                "[SphereRenderer] Render Mode 'NG' is not available. Minimum OpenGL version is 4.5");
             retval = false;
         }
         if (!isExtAvailable("GL_ARB_buffer_storage")) {
@@ -2410,31 +2449,36 @@ bool moldyn::SphereRenderer::isRenderModeAvailable(RenderMode rm) {
             retval = false;
         }
         break;
+    case(RenderMode::NG_BUFFER_ARRAY):
+        if (!(SPHERE_MIN_OGL_NG_BUFFER_ARRAY)) { // required for glMapNamedBufferRange
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
+                "[SphereRenderer] Render Mode 'NG_BUFFER_ARRAY' is not available. Minimum OpenGL version is 4.5");
+            retval = false;
+        }
+        if (!isExtAvailable("GL_ARB_buffer_storage")) {
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
+                "[SphereRenderer] Render Mode 'NG_BUFFER_ARRAY' is not available. Extension GL_ARB_buffer_storage is not available.");
+            retval = false;
+        }
+        break;
     case(RenderMode::NG_SPLAT):
-        //if (!ogl_IsVersionGEQ(4, 5)) {
-        //    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, 
-        //        "[SphereRenderer] Render Mode 'NG_SPLAT' is not available. Minimum OpenGL version is 4.5 (GLSL 4.5)");
-        //    retval = false;
-        //}
+        if (!(SPHERE_MIN_OGL_NG_SPLAT)) { // required for glMapNamedBufferRange
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, 
+                "[SphereRenderer] Render Mode 'NG_SPLAT' is not available. Minimum OpenGL version is 4.5");
+            retval = false;
+        }
         if (!isExtAvailable("GL_ARB_buffer_storage")) {
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, 
                 "[SphereRenderer] Render Mode 'NG_SPLAT' is not available. Extension GL_ARB_buffer_storage is not available.");
             retval = false;
         }
         break;
-    case(RenderMode::NG_BUFFER_ARRAY):
-        //if (!ogl_IsVersionGEQ(4, 5)) {
-        //    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, 
-        //        "[SphereRenderer] Render Mode 'NG_BUFFER_ARRAY' is not available. Minimum OpenGL version is 4.5 (GLSL 4.5)");
-        //    retval = false;
-        //}
-        if (!isExtAvailable("GL_ARB_buffer_storage")) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, 
-                "[SphereRenderer] Render Mode 'NG_BUFFER_ARRAY' is not available. Extension GL_ARB_buffer_storage is not available.");
+    case(RenderMode::AMBIENT_OCCLUSION):
+        if (!(SPHERE_MIN_OGL_AMBIENT_OCCLUSION)) { // required for glMapNamedBufferRange
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
+                "[SphereRenderer] Render Mode 'AMBIENT_OCCLUSION' is not available. Minimum OpenGL version is 4.5");
             retval = false;
         }
-        break;
-    case(RenderMode::AMBIENT_OCCLUSION):
         if (!vislib::graphics::gl::GLSLGeometryShader::AreExtensionsAvailable()) {
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, 
                 "[SphereRenderer] Render Mode 'AMBIENT_OCCLUSION' is not available. Geometry shader extensions are not available.");

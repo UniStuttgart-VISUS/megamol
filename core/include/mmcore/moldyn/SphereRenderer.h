@@ -66,6 +66,16 @@
 //#include "TimeMeasure.h"
 
 
+// Minimum OpneGL version for different render modes:
+#define SPHERE_MIN_OGL_SIMPLE             (GL_VERSION_1_4)
+#define SPHERE_MIN_OGL_SIMPLE_CLUSTERED   (GL_VERSION_1_4)
+#define SPHERE_MIN_OGL_SIMPLE_GEO         (GL_VERSION_3_2)
+#define SPHERE_MIN_OGL_NG                 (GL_VERSION_4_5)
+#define SPHERE_MIN_OGL_NG_BUFFER_ARRAY    (GL_VERSION_4_5)
+#define SPHERE_MIN_OGL_NG_SPLAT           (GL_VERSION_4_5)
+#define SPHERE_MIN_OGL_AMBIENT_OCCLUSION  (GL_VERSION_4_5)
+
+
 namespace megamol {
 namespace core {
 namespace moldyn {
@@ -123,15 +133,23 @@ namespace moldyn {
             bool retval = true;
 
             // Minimum requirements for all render modes
-            if (!vislib::graphics::gl::GLSLShader::AreExtensionsAvailable()) {
+            if (!GLSLShader::AreExtensionsAvailable()) {
                 vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, 
                     "[SphereRenderer] No render mode is available. Shader extensions are not available.");
                 retval = false;
             }
-            if (!ogl_IsVersionGEQ(3, 0)) {
+            // (OpenGL Version and GLSL Version might not correlate, see Mesa 3D on Stampede ...)
+            if (!(SPHERE_MIN_OGL_SIMPLE)) {
                 vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, 
-                    "[SphereRenderer] No render mode available. Minimum OpenGL version is 3.0 (GLSL 1.3)");
+                    "[SphereRenderer] No render mode available. Minimum OpenGL version is 1.4");
                 retval = false;
+            }
+            std::string glslVerStr((char*)glGetString(GL_SHADING_LANGUAGE_VERSION));
+            float glslVer = std::stof(glslVerStr);
+            if (glslVer < 1.3f) { 
+                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, 
+                    "[SphereRenderer] No render mode available. Minimum OpenGL Shading Language version is 1.3");
+                retval = false; 
             }
             if (!isExtAvailable("GL_ARB_explicit_attrib_location")) {
                 vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
@@ -224,9 +242,9 @@ namespace moldyn {
         RenderMode                               renderMode;
         bool                                     triggerRebuildGBuffer;
 
-        vislib::graphics::gl::GLSLShader         sphereShader;
-        vislib::graphics::gl::GLSLGeometryShader sphereGeometryShader;
-        vislib::graphics::gl::GLSLShader         lightingShader;
+        GLSLShader                               sphereShader;
+        GLSLGeometryShader                       sphereGeometryShader;
+        GLSLShader                               lightingShader;
 
         vislib::SmartPtr<ShaderSource>           vertShader;
         vislib::SmartPtr<ShaderSource>           fragShader;
@@ -238,19 +256,11 @@ namespace moldyn {
         std::shared_ptr<GLSLShader>              newShader;
         shaderMap                                theShaders;
 
-        megamol::core::utility::SSBOStreamer     streamer;
-        megamol::core::utility::SSBOStreamer     colStreamer;
-        megamol::core::utility::SSBOBufferArray  bufArray;
-        megamol::core::utility::SSBOBufferArray  colBufArray;
-
-        std::vector<GLsync>                      fences;
         GLuint                                   theSingleBuffer;
         unsigned int                             currBuf;
         GLsizeiptr                               bufSize;
         int                                      numBuffers;
         void                                    *theSingleMappedMem;
-        GLuint                                   singleBufferCreationBits;
-        GLuint                                   singleBufferMappingBits;
 
         std::vector<gpuParticleDataType>         gpuData;
         gBufferDataType                          gBuffer;
@@ -261,6 +271,17 @@ namespace moldyn {
         GLuint                                   tfFallbackHandle;
         core::utility::MDAO2VolumeGenerator     *volGen;
 
+#if defined(SPHERE_MIN_OGL_NG_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_NG_SPLAT)
+        GLuint                                   singleBufferCreationBits;
+        GLuint                                   singleBufferMappingBits;
+        std::vector<GLsync>                      fences;
+#endif
+#ifdef SPHERE_MIN_OGL_NG
+        megamol::core::utility::SSBOStreamer     streamer;
+        megamol::core::utility::SSBOStreamer     colStreamer;
+        megamol::core::utility::SSBOBufferArray  bufArray;
+        megamol::core::utility::SSBOBufferArray  colBufArray;
+#endif
         //TimeMeasure                            timer;
 
         /*********************************************************************/
@@ -271,13 +292,13 @@ namespace moldyn {
 
         core::param::ParamSlot radiusScalingParam;
 
-        // NGSplat ------------------------------------------------------------
+        // Affects only Splat rendering ---------------------------------------
 
         core::param::ParamSlot alphaScalingParam;
         core::param::ParamSlot attenuateSubpixelParam;
         core::param::ParamSlot useStaticDataParam;
 
-        // Ambient Occlusion --------------------------------------------------
+        // Affects only Ambient Occlusion rendering: --------------------------
 
         // Enable or disable lighting
         megamol::core::param::ParamSlot enableLightingSlot;
@@ -404,6 +425,7 @@ namespace moldyn {
          */
         std::shared_ptr<GLSLShader> generateShader(MultiParticleDataCall::Particles &parts);
 
+#if defined(SPHERE_MIN_OGL_NG_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_NG_SPLAT)
         /**
          * Lock single.
          *
@@ -417,8 +439,9 @@ namespace moldyn {
          * @param syncObj  ...
          */
         void waitSingle(GLsync& syncObj);
+#endif
 
-        // Ambient Occlusion --------------------------------------------------
+        // ONLY used for Ambient Occlusion: -----------------------------------
 
         /**
          * Rebuild the ambient occlusion shaders.

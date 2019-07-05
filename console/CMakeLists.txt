@@ -51,7 +51,7 @@ if(BUILD_CONSOLE)
 
   # GLFW
   if(NOT USE_EGL)
-    add_external_project(glfw_ext glfw3
+    add_external_project(glfw_ext
       GIT_REPOSITORY https://github.com/glfw/glfw.git
       GIT_TAG "3.2.1"
       CMAKE_ARGS
