@@ -25,6 +25,7 @@ if(BUILD_CONSOLE)
     ${LIBUNWIND_INCLUDE_DIR} "src" "include")
   target_link_libraries(${PROJECT_NAME} PRIVATE core)
 
+  #LIBUNWIND
   if(UNIX)
     option(USE_LIBUNWIND "use libunwind" ON)
     if(USE_LIBUNWIND)
@@ -48,6 +49,7 @@ if(BUILD_CONSOLE)
     set(VERSION_LIBRARY "Version.lib")
   endif()
 
+  # GLFW
   if(NOT USE_EGL)
     add_external_project(glfw_ext glfw3
       GIT_REPOSITORY https://github.com/glfw/glfw.git
@@ -74,10 +76,11 @@ if(BUILD_CONSOLE)
         LIBRARY_DEBUG "lib/libglfw.so"
         LIBRARY_RELEASE "lib/libglfw.so")
     endif()
-    #find_package(glfw3 REQUIRED CONFIG)
-    target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
+    target_link_libraries(${PROJECT_NAME} PRIVATE glfw3)
+    ExternalProject_Get_property(glfw_ext SOURCE_DIR)
+    target_include_directories(${PROJECT_NAME} PRIVATE "${SOURCE_DIR}/include")
   endif()
-  
+
   # AntTweakBar
   option(USE_ANTTWEAKBAR "use AntTweakBar" OFF)
   if (USE_ANTTWEAKBAR)
@@ -105,14 +108,16 @@ if(BUILD_CONSOLE)
   source_group("Source Files" FILES ${source_files})
 
   # install mmconsole executable
-  install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
-  install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION "lib")
+  if(WIN32)
+    install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin" ARCHIVE DESTINATION "lib")
+    install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION bin OPTIONAL)
+  else()
+    install(TARGETS ${PROJECT_NAME} DESTINATION "lib" EXPORT ${PROJECT_NAME}-target)
+  endif()
+
   if(NOT USE_EGL)
     install_external(TARGETS glfw3)
   endif()
-  if (WIN32)
-    install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION bin OPTIONAL)
-  endif ()
 
   # install and configure ATB
   if (USE_ANTTWEAKBAR)
