@@ -2,6 +2,7 @@
 #include "FBOTransmitter2.h"
 
 #include <array>
+#include <chrono>
 
 #include "glad/glad.h"
 
@@ -28,6 +29,8 @@
 #    include <limits.h>
 #    include <unistd.h>
 #endif
+
+#define PBS_MEASUREMENTS 1
 
 //#define _DEBUG 1
 
@@ -177,8 +180,16 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
             "IceT gets image with xoff: %d, yoff: %d, tile_width: %d, tile_height: %d\n", xoff, yoff, tile_width,
             tile_height);
 #endif
-        auto const icet_comp_image =
-            icetCompositeImage(col_buf.data(), depth_buf.data(), tilevp, nullptr, nullptr, static_cast<const IceTFloat*>(backgroundColor.data()));
+#    ifdef PBS_MEASUREMENTS
+        auto const start = std::chrono::high_resolution_clock::now();
+#    endif
+        auto const icet_comp_image = icetCompositeImage(col_buf.data(), depth_buf.data(), tilevp, nullptr, nullptr,
+            static_cast<const IceTFloat*>(backgroundColor.data()));
+#    ifdef PBS_MEASUREMENTS
+        auto const end = std::chrono::high_resolution_clock::now();
+        vislib::sys::Log::DefaultLog.WriteMsg(2, "FBOTransmitter2: Compositing Time %d ms",
+            std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
+#    endif
 #if    _DEBUG
         vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: IceT - Composite Image Done\n");
 #endif
@@ -215,7 +226,7 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
         {
             std::lock_guard<std::mutex> read_guard{this->buffer_read_guard_}; //< maybe try_lock instead
 
-	    #if    _DEBUG
+        #if    _DEBUG
         vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Swapping Buffer ...\n");
 #endif
 
@@ -237,7 +248,7 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
 
             this->color_buf_read_->resize(col_buf.size());
             this->depth_buf_read_->resize(depth_buf.size());
-	    
+        
 #ifdef WITH_MPI
             // std::copy(col_buf.begin(),   col_buf.end(),   this->color_buf_read_->begin());
             memcpy(this->color_buf_read_->data(), icet_col_buf,   width * height * col_buf_el_size_);
@@ -692,7 +703,7 @@ bool megamol::pbs::FBOTransmitter2::initThreads() {
             vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Initializing IceT at rank %d\n", mpiRank);
 #endif
             // icet setup
-	    
+        
             icet_comm_ = icetCreateMPICommunicator(this->mpi_comm_);
             icet_ctx_  = icetCreateContext(icet_comm_);
             icetStrategy(ICET_STRATEGY_SEQUENTIAL);
@@ -714,14 +725,14 @@ bool megamol::pbs::FBOTransmitter2::initThreads() {
                 width = this->viewport[4] = glvp[2];
                 height = this->viewport[5] = glvp[3];
             } else {
-	        if (this->extractViewport(this->viewport)) {
+            if (this->extractViewport(this->viewport)) {
                     this->validViewport = true;
                     width = this->viewport[4];
                     height = this->viewport[5];
-	        } else {
+            } else {
                     vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: ViewPortExtraction - extractViewport failed\n");
                     return false;
-	        }
+            }
             }
 
 #ifdef _DEBUG

@@ -25,6 +25,8 @@
 #include <sstream>
 #include <stdint.h>
 
+#define OSPRAY_MEASUREMENT 1
+
 using namespace megamol::ospray;
 
 /*
@@ -257,7 +259,7 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
             ospCommit(world);
             auto t2 = std::chrono::high_resolution_clock::now();
             const auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
-            vislib::sys::Log::DefaultLog.WriteMsg(242, "OSPRayRenderer: Commiting World took: %d microseconds", duration);
+            vislib::sys::Log::DefaultLog.WriteMsg(2, "OSPRayRenderer: Commiting World took: %d microseconds", duration);
         }
         if (material_has_changed && !data_has_changed) {
             this->changeMaterial();
@@ -300,9 +302,12 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
 
         accum_time.amount += duration.count();
         accum_time.count += 1;
-        if (accum_time.amount >= static_cast<unsigned long long int>(1e6)) {
+#ifndef OSPRAY_MEASUREMENT
+        if (accum_time.amount >= static_cast<unsigned long long int>(1e6))
+#endif
+        {
             const unsigned long long int mean_rendertime = accum_time.amount / accum_time.count;
-            vislib::sys::Log::DefaultLog.WriteMsg(242, "OSPRayRenderer: Rendering took: %d microseconds", mean_rendertime);
+            vislib::sys::Log::DefaultLog.WriteMsg(2, "OSPRayRenderer: Rendering took: %d microseconds", mean_rendertime);
             accum_time.count = 0;
             accum_time.amount = 0;
         }
