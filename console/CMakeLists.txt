@@ -108,16 +108,13 @@ if(BUILD_CONSOLE)
   source_group("Source Files" FILES ${source_files})
 
   # install mmconsole executable
-  if(WIN32)
-    install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin" ARCHIVE DESTINATION "lib")
-    install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION bin OPTIONAL)
-  else()
-    install(TARGETS ${PROJECT_NAME} DESTINATION "lib" EXPORT ${PROJECT_NAME}-target)
-  endif()
-
+  install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin" ARCHIVE DESTINATION "lib")
   if(NOT USE_EGL)
     install_external(TARGETS glfw3)
   endif()
+  if (WIN32)
+    install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION bin OPTIONAL)
+  endif ()
 
   # install and configure ATB
   if (USE_ANTTWEAKBAR)
