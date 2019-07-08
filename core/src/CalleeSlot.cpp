@@ -72,11 +72,9 @@ CalleeSlot::~CalleeSlot(void) {
  * CalleeSlot::ConnectCall
  */
 bool CalleeSlot::ConnectCall(megamol::core::Call *call) {
-    vislib::sys::AbstractReaderWriterLock& lock = this->Parent()->ModuleGraphLock();
-    lock.LockExclusive();
+    vislib::sys::AutoLock lock(this->Parent()->ModuleGraphLock());
     if (call == NULL) {
         this->SetStatusDisconnected(); // TODO: This is wrong! Reference counting!
-        lock.UnlockExclusive();
         return true;
     }
     core::CoreInstance& coreInst = *this->GetCoreInstance();
@@ -89,7 +87,6 @@ bool CalleeSlot::ConnectCall(megamol::core::Call *call) {
         desc.reset();
     }
     if (!desc) {
-        lock.UnlockExclusive();
         return false;
     }
 
@@ -107,7 +104,6 @@ bool CalleeSlot::ConnectCall(megamol::core::Call *call) {
     }
     call->callee = this;
     this->SetStatusConnected();
-    lock.UnlockExclusive();
     return true;
 }
 
@@ -148,13 +144,11 @@ bool CalleeSlot::IsParamRelevant(
         searched.Add(this);
     }
 
-    vislib::sys::AbstractReaderWriterLock& lock = this->ModuleGraphLock();
-    lock.LockExclusive();
-
+    vislib::sys::AutoLock lock(this->ModuleGraphLock());
+    
     const_ptr_type ano = this->RootModule();
     AbstractNamedObjectContainer::const_ptr_type anoc = AbstractNamedObjectContainer::dynamic_pointer_cast(ano);
     if (!anoc) {
-        lock.UnlockExclusive();
         return false;
     }
 
@@ -178,14 +172,12 @@ bool CalleeSlot::IsParamRelevant(
             cs = dynamic_cast<const CallerSlot*>(ano.get());
             if ((cs != NULL) && cs->IsConnectedTo(this) && (ano->Parent() != NULL)) {
                 if (ano->Parent()->IsParamRelevant(searched, param)) {
-                    lock.UnlockExclusive();
                     return true;
                 }
             }
         }
     }
 
-    lock.UnlockExclusive();
     return false;
 }
 

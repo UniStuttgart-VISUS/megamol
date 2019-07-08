@@ -320,10 +320,10 @@ bool adiosDataSource::initMPI() {
         if (c != nullptr) {
             /* New method: let MpiProvider do all the stuff. */
             if ((*c)(core::cluster::mpi::MpiCall::IDX_PROVIDE_MPI)) {
-                vislib::sys::Log::DefaultLog.WriteInfo("Got MPI communicator.");
+                vislib::sys::Log::DefaultLog.WriteInfo("adiosDataSource: Got MPI communicator.");
                 this->mpi_comm_ = c->GetComm();
             } else {
-                vislib::sys::Log::DefaultLog.WriteError(_T("Could not ")
+                vislib::sys::Log::DefaultLog.WriteError(_T("adiosDataSource: Could not ")
                                                         _T("retrieve MPI communicator for the MPI-based view ")
                                                         _T("from the registered provider module."));
             }
@@ -340,11 +340,11 @@ bool adiosDataSource::initMPI() {
         }
 
         if (this->mpi_comm_ != MPI_COMM_NULL) {
-            vislib::sys::Log::DefaultLog.WriteInfo(_T("MPI is ready, ")
+            vislib::sys::Log::DefaultLog.WriteInfo(_T("adiosDataSource: MPI is ready, ")
                                                    _T("retrieving communicator properties ..."));
             ::MPI_Comm_rank(this->mpi_comm_, &this->mpiRank);
             ::MPI_Comm_size(this->mpi_comm_, &this->mpiSize);
-            vislib::sys::Log::DefaultLog.WriteInfo(_T("This view on %hs is %d ")
+            vislib::sys::Log::DefaultLog.WriteInfo(_T("adiosDataSource on %hs is %d ")
                                                    _T("of %d."),
                 vislib::sys::SystemInformation::ComputerNameA().PeekBuffer(), this->mpiRank, this->mpiSize);
         } /* end if (this->comm != MPI_COMM_NULL) */

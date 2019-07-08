@@ -62,8 +62,14 @@ bool datatools::MPIVolumeAggregator::manipulateData(
     if (!useMpi) {
         return true;
     }
-    if (!inData(VolumetricDataCall::IDX_GET_EXTENTS)) return false;
-    if (!inData(VolumetricDataCall::IDX_GET_METADATA)) return false;
+    if (!inData(VolumetricDataCall::IDX_GET_EXTENTS)) {
+      vislib::sys::Log::DefaultLog.WriteInfo("MPIVolumeAggregator: No extents available.\n");
+      return false;
+    }
+    if (!inData(VolumetricDataCall::IDX_GET_METADATA)) {
+      vislib::sys::Log::DefaultLog.WriteInfo("MPIVolumeAggregator: No metadata available.\n");
+      return false;
+    }
 
     vislib::sys::Log::DefaultLog.WriteInfo("MPIVolumeAggregator: starting volume aggregation");
     const auto startAllTime = std::chrono::high_resolution_clock::now();
@@ -146,9 +152,9 @@ bool datatools::MPIVolumeAggregator::manipulateData(
 
     const auto endAllTime = std::chrono::high_resolution_clock::now();
     std::chrono::duration<float, std::milli> diffAllMillis = endAllTime - startAllTime;
-    vislib::sys::Log::DefaultLog.WriteInfo("ParticlesToDensity: Allreduce of %u x %u x %u volume took %f ms.",
+    vislib::sys::Log::DefaultLog.WriteInfo("MPIVolumeAggregator: Allreduce of %u x %u x %u volume took %f ms.",
         metadata.Resolution[0], metadata.Resolution[1], metadata.Resolution[2], diffMillis.count());
-    vislib::sys::Log::DefaultLog.WriteInfo("ParticlesToDensity: volume aggregation of %u x %u x %u volume took %f ms.",
+    vislib::sys::Log::DefaultLog.WriteInfo("MPIVolumeAggregator: volume aggregation of %u x %u x %u volume took %f ms.",
         metadata.Resolution[0], metadata.Resolution[1], metadata.Resolution[2], diffAllMillis.count());
 
     outData.SetData(this->theVolume.data());
