@@ -168,7 +168,6 @@ megamol::core::CoreInstance::CoreInstance(void)
     vislib::sys::Log::DefaultLog.SetEchoLevel(vislib::sys::Log::LEVEL_ALL);
     vislib::sys::Log::DefaultLog.SetEchoTarget(new vislib::sys::Log::RedirectTarget(&this->log));
 
-    // printf("######### PerformanceCounter Frequency %I64u\n", vislib::sys::PerformanceCounter::QueryFrequency());
 #ifdef ULTRA_SOCKET_STARTUP
     vislib::net::Socket::Startup();
 #endif /* ULTRA_SOCKET_STARTUP */
@@ -210,6 +209,9 @@ megamol::core::CoreInstance::CoreInstance(void)
     //#endif
 
     this->log.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Core Instance created");
+
+    // vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO+42, "GraphUpdateLock address: %x\n",
+    // std::addressof(this->graphUpdateLock));
 }
 
 
@@ -222,17 +224,18 @@ megamol::core::CoreInstance::~CoreInstance(void) {
     this->log.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Core Instance destroyed");
 
     // Shutdown all views and jobs, which might still run
-    this->namespaceRoot->ModuleGraphLock().LockExclusive();
-    AbstractNamedObjectContainer::child_list_type::iterator iter, end;
-    while (true) {
-        iter = this->namespaceRoot->ChildList_Begin();
-        end = this->namespaceRoot->ChildList_End();
-        if (iter == end) break;
-        ModuleNamespace::ptr_type mn = ModuleNamespace::dynamic_pointer_cast(*iter);
-        //        ModuleNamespace *mn = dynamic_cast<ModuleNamespace*>((*iter).get());
-        this->closeViewJob(mn);
+    {
+        vislib::sys::AutoLock lock(this->namespaceRoot->ModuleGraphLock());
+        AbstractNamedObjectContainer::child_list_type::iterator iter, end;
+        while (true) {
+            iter = this->namespaceRoot->ChildList_Begin();
+            end = this->namespaceRoot->ChildList_End();
+            if (iter == end) break;
+            ModuleNamespace::ptr_type mn = ModuleNamespace::dynamic_pointer_cast(*iter);
+            //        ModuleNamespace *mn = dynamic_cast<ModuleNamespace*>((*iter).get());
+            this->closeViewJob(mn);
+        }
     }
-    this->namespaceRoot->ModuleGraphLock().UnlockExclusive();
 
     delete this->services;
     this->services = nullptr;
@@ -1038,8 +1041,8 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
                 // remove mod
                 n->RemoveChild(mod);
             } else {
-                vislib::sys::Log::DefaultLog.WriteError(
-                    "PerformGraphUpdates:module \"%s\" has no parent of type ModuleNamespace. Deletion makes no sense.",
+                vislib::sys::Log::DefaultLog.WriteError("PerformGraphUpdates:module \"%s\" has no parent of type "
+                                                        "ModuleNamespace. Deletion makes no sense.",
                     mdr.PeekBuffer());
                 continue;
             }
@@ -1382,7 +1385,8 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
         auto& pg = pgp.Next().Value();
         if (pg.GroupSize == pg.Requests.Count()) {
             // flush mechanism
-            if (this->checkForFlushEvent(counter, this->groupParamSetRequestsFlushIndices)) { // TODO Is this the right place?
+            if (this->checkForFlushEvent(
+                    counter, this->groupParamSetRequestsFlushIndices)) { // TODO Is this the right place?
                 this->updateFlushIdxList(counter, this->groupParamSetRequestsFlushIndices);
                 break;
             }
@@ -1437,8 +1441,7 @@ megamol::core::ViewInstance::ptr_type megamol::core::CoreInstance::InstantiatePe
     using vislib::sys::Log;
 
     vislib::sys::AutoLock l(this->graphUpdateLock);
-    AbstractNamedObject::GraphLocker locker(this->namespaceRoot, true);
-    vislib::sys::AutoLock lock(locker);
+    vislib::sys::AutoLock lock(this->namespaceRoot->ModuleGraphLock());
 
     if (this->pendingViewInstRequests.IsEmpty()) return NULL;
 
@@ -1574,8 +1577,7 @@ megamol::core::ViewInstance::ptr_type megamol::core::CoreInstance::InstantiatePe
  */
 megamol::core::view::AbstractView* megamol::core::CoreInstance::instantiateSubView(megamol::core::ViewDescription* vd) {
     using vislib::sys::Log;
-    AbstractNamedObject::GraphLocker locker(this->namespaceRoot, true);
-    vislib::sys::AutoLock lock(locker);
+    vislib::sys::AutoLock lock(this->namespaceRoot->ModuleGraphLock());
 
     bool hasErrors = false;
     view::AbstractView *view = NULL, *fallbackView = NULL;
@@ -1665,8 +1667,7 @@ megamol::core::view::AbstractView* megamol::core::CoreInstance::instantiateSubVi
 megamol::core::JobInstance::ptr_type megamol::core::CoreInstance::InstantiatePendingJob(void) {
     using vislib::sys::Log;
     vislib::sys::AutoLock l(this->graphUpdateLock);
-    AbstractNamedObject::GraphLocker locker(this->namespaceRoot, true);
-    vislib::sys::AutoLock lock(locker);
+    vislib::sys::AutoLock lock(this->namespaceRoot->ModuleGraphLock());
 
     if (this->pendingJobInstRequests.IsEmpty()) return NULL;
 
@@ -1817,8 +1818,7 @@ vislib::SmartPtr<megamol::core::param::AbstractParam> megamol::core::CoreInstanc
 vislib::SmartPtr<megamol::core::param::AbstractParam> megamol::core::CoreInstance::FindParameter(
     const vislib::StringA& name, bool quiet, bool create) {
     using vislib::sys::Log;
-    AbstractNamedObject::GraphLocker locker(this->namespaceRoot, false);
-    vislib::sys::AutoLock lock(locker);
+    vislib::sys::AutoLock lock(this->namespaceRoot->ModuleGraphLock());
 
     vislib::Array<vislib::StringA> path = vislib::StringTokeniserA::Split(name, "::", true);
     vislib::StringA slotName("");
@@ -2011,8 +2011,8 @@ void megamol::core::CoreInstance::LoadProject(const vislib::StringW& filename) {
 
 void megamol::core::CoreInstance::EnumModulesNoLock(
     core::AbstractNamedObject* entry_point, std::function<void(Module*)> cb) {
-    
-    AbstractNamedObject *ano = entry_point;
+
+    AbstractNamedObject* ano = entry_point;
     bool fromModule = true;
     if (!entry_point) {
         ano = this->namespaceRoot.get();
@@ -2020,7 +2020,7 @@ void megamol::core::CoreInstance::EnumModulesNoLock(
     }
 
     auto anoc = dynamic_cast<AbstractNamedObjectContainer*>(ano);
-    auto mod = dynamic_cast<Module *>(ano);
+    auto mod = dynamic_cast<Module*>(ano);
     std::vector<AbstractNamedObject*> anoStack;
     if (!fromModule || mod == nullptr) {
         // we start from the root or a namespace
@@ -2041,7 +2041,7 @@ void megamol::core::CoreInstance::EnumModulesNoLock(
         anoStack.pop_back();
 
         anoc = dynamic_cast<AbstractNamedObjectContainer*>(ano);
-        mod = dynamic_cast<Module *>(ano);
+        mod = dynamic_cast<Module*>(ano);
 
         if (mod) {
             cb(mod);
@@ -2052,8 +2052,7 @@ void megamol::core::CoreInstance::EnumModulesNoLock(
                     if (cs) {
                         const Call* c = cs->CallAs<Call>();
                         if (c) {
-                            this->FindModuleNoLock<core::Module>(
-                                c->PeekCalleeSlot()->Parent()->FullName().PeekBuffer(),
+                            this->FindModuleNoLock<core::Module>(c->PeekCalleeSlot()->Parent()->FullName().PeekBuffer(),
                                 [&anoStack](core::Module* mod) { anoStack.push_back(mod); });
                         }
                     }
@@ -2103,8 +2102,6 @@ vislib::StringA megamol::core::CoreInstance::GetMergedLuaProject() const {
  */
 void megamol::core::CoreInstance::getGlobalParameterHash(
     megamol::core::ModuleNamespace::const_ptr_type path, ParamHashMap_t& map) const {
-    AbstractNamedObject::GraphLocker locker(this->namespaceRoot, false);
-    vislib::sys::AutoLock lock(locker);
 
     AbstractNamedObjectContainer::child_list_type::const_iterator i, e;
     e = path->ChildList_End();
@@ -2158,8 +2155,7 @@ void megamol::core::CoreInstance::OffsetInstanceTime(double offset) {
  * megamol::core::CoreInstance::CleanupModuleGraph
  */
 void megamol::core::CoreInstance::CleanupModuleGraph(void) {
-    AbstractNamedObject::GraphLocker locker(this->namespaceRoot, true);
-    vislib::sys::AutoLock lock(locker);
+    vislib::sys::AutoLock lock(this->namespaceRoot->ModuleGraphLock());
 
     this->namespaceRoot->SetAllCleanupMarks();
 
@@ -2215,7 +2211,7 @@ void megamol::core::CoreInstance::SetupGraphFromNetwork(const void* data) {
     const AbstractSimpleMessage* dataPtr = static_cast<const AbstractSimpleMessage*>(data);
     const AbstractSimpleMessage& dat = *dataPtr;
 
-    this->namespaceRoot->ModuleGraphLock().LockExclusive();
+    vislib::sys::AutoLock lock(this->namespaceRoot->ModuleGraphLock());
     try {
 
         UINT64 cntMods = *dat.GetBodyAs<UINT64>();
@@ -2337,7 +2333,6 @@ void megamol::core::CoreInstance::SetupGraphFromNetwork(const void* data) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "Failed to setup module graph from network message: unexpected exception\n");
     }
-    this->namespaceRoot->ModuleGraphLock().UnlockExclusive();
 }
 
 
@@ -3143,11 +3138,9 @@ megamol::core::Call* megamol::core::CoreInstance::InstantiateCall(
 /*
  * megamol::core::CoreInstance::enumParameters
  */
-void megamol::core::CoreInstance::enumParameters(
-    megamol::core::ModuleNamespace::const_ptr_type path, std::function<void(const Module&, param::ParamSlot&)> cb) const {
-
-    AbstractNamedObject::GraphLocker locker(this->namespaceRoot, false);
-    vislib::sys::AutoLock lock(locker);
+void megamol::core::CoreInstance::enumParameters(megamol::core::ModuleNamespace::const_ptr_type path,
+    std::function<void(const Module&, param::ParamSlot&)> cb) const {
+    vislib::sys::AutoLock lock(this->namespaceRoot->ModuleGraphLock());
 
     // TODO use EnumModulesNoLock?!
 
@@ -3164,8 +3157,8 @@ void megamol::core::CoreInstance::enumParameters(
             for (si = mod->ChildList_Begin(); si != se; ++si) {
                 param::ParamSlot* slot = dynamic_cast<param::ParamSlot*>((*si).get());
                 if (slot) {
-					cb(*mod, *slot);
-				}
+                    cb(*mod, *slot);
+                }
             }
 
         } else if (ns) {
@@ -3181,8 +3174,7 @@ void megamol::core::CoreInstance::enumParameters(
 vislib::StringA megamol::core::CoreInstance::findParameterName(megamol::core::ModuleNamespace::const_ptr_type path,
     const vislib::SmartPtr<megamol::core::param::AbstractParam>& param) const {
 
-    AbstractNamedObject::GraphLocker locker(this->namespaceRoot, false);
-    vislib::sys::AutoLock lock(locker);
+    vislib::sys::AutoLock lock(this->namespaceRoot->ModuleGraphLock());
 
     AbstractNamedObjectContainer::child_list_type::const_iterator i, e;
     e = path->ChildList_End();
@@ -3221,8 +3213,7 @@ vislib::StringA megamol::core::CoreInstance::findParameterName(megamol::core::Mo
 void megamol::core::CoreInstance::closeViewJob(megamol::core::ModuleNamespace::ptr_type obj) {
 
     ASSERT(obj != NULL);
-    AbstractNamedObject::GraphLocker locker(this->namespaceRoot, true);
-    vislib::sys::AutoLock lock(locker);
+    vislib::sys::AutoLock lock(this->namespaceRoot->ModuleGraphLock());
 
     if (obj->Parent() != this->namespaceRoot) {
         // this happens when a job/view is removed from the graph before it's
@@ -3912,5 +3903,6 @@ bool megamol::core::CoreInstance::checkForFlushEvent(size_t const eventIdx, std:
 
 
 void megamol::core::CoreInstance::shortenFlushIdxList(size_t const eventCount, std::vector<size_t>& list) {
-    list.erase(std::remove_if(list.begin(), list.end(), [eventCount](auto el) { return (eventCount - 1) <= el; }), list.end());
+    list.erase(
+        std::remove_if(list.begin(), list.end(), [eventCount](auto el) { return (eventCount - 1) <= el; }), list.end());
 }

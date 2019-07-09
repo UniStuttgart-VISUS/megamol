@@ -7,9 +7,9 @@ set(IMGUI_PUBLIC_HDRS
   imconfig.h)
 set(IMGUI_PRIVATE_HDRS
   imgui_internal.h
-  stb_rect_pack.h
-  stb_textedit.h
-  stb_truetype.h)
+  imstb_rectpack.h
+  imstb_textedit.h
+  imstb_truetype.h)
 set(IMGUI_SRCS
   imgui.cpp
   imgui_draw.cpp

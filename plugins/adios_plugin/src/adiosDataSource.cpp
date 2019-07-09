@@ -7,6 +7,7 @@
 #include "vislib/sys/Log.h"
 #include "vislib/sys/SystemInformation.h"
 #include <algorithm>
+#include <numeric>
 
 namespace megamol {
 namespace adios {
@@ -110,23 +111,23 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
             for (auto toInq : varsToInquire) {
                 for (auto var : variables) {
 					if (var.first == toInq) {
-						size_t num = 1;
-						bool singleValue = true;
+                        std::vector<size_t> shape(1);
+                        bool singleValue = true;
 						if (var.second["SingleValue"] != std::string("true")) {
 							//num = std::stoi(var.second["Shape"]);
 							singleValue = false;
 						}
+                        auto num = 1;
 						if (var.second["Type"] == "float") {
 
                             auto fc = std::make_shared<FloatContainer>(FloatContainer());
+                            fc->singleValue = singleValue;
                             std::vector<float>& tmp_vec = fc->getVec();
                             adios2::Variable<float> advar = io->InquireVariable<float>(var.first);
                             auto info = reader.BlocksInfo(advar, cad->getFrameIDtoLoad());
-                            num = info[0].Count[0];
+                            fc->shape = info[0].Count;
+                            std::for_each(fc->shape.begin(), fc->shape.end(), [&](decltype(num) n) { num *= n; });
                             tmp_vec.resize(num);
-						    if (this->MpiInitialized && !singleValue) {
-                                advar.SetSelection({{num * this->mpiRank}, {num}});
-                            }
                             
                             reader.Get<float>(advar, tmp_vec);
                             dataMap[var.first] = std::move(fc);
@@ -134,15 +135,14 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
                         } else if (var.second["Type"] == "double") {
 
                             auto fc = std::make_shared<DoubleContainer>(DoubleContainer());
+                            fc->singleValue = singleValue;
                             std::vector<double>& tmp_vec = fc->getVec();
 
                             adios2::Variable<double> advar = io->InquireVariable<double>(var.first);
                             auto info = reader.BlocksInfo(advar, cad->getFrameIDtoLoad());
-                            num = info[0].Count[0];
+                            fc->shape = info[0].Count;
+                            std::for_each(fc->shape.begin(), fc->shape.end(), [&](decltype(num) n) { num *= n; });
                             tmp_vec.resize(num);
-                            if (this->MpiInitialized && !singleValue) {
-                                advar.SetSelection({{num * this->mpiRank}, {num}});
-                            }
 
                             reader.Get<double>(advar, tmp_vec);
                             dataMap[var.first] = std::move(fc);
@@ -150,58 +150,54 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
                         } else if (var.second["Type"] == "int") {
 
                             auto fc = std::make_shared<IntContainer>(IntContainer());
+                            fc->singleValue = singleValue;
                             std::vector<int>& tmp_vec = fc->getVec();
 
                             adios2::Variable<int> advar = io->InquireVariable<int>(var.first);
                             auto info = reader.BlocksInfo(advar, cad->getFrameIDtoLoad());
-                            num = info[0].Count[0];
+                            fc->shape = info[0].Count;
+                            std::for_each(fc->shape.begin(), fc->shape.end(), [&](decltype(num) n) { num *= n; });
                             tmp_vec.resize(num);
-                            if (this->MpiInitialized && !singleValue) {
-                                advar.SetSelection({{num * this->mpiRank}, {num}});
-                            }
 
                             reader.Get<int>(advar, tmp_vec);
                             dataMap[var.first] = std::move(fc);
                         } else if (var.second["Type"] == "unsigned long long int") {
                             auto fc = std::make_shared<UInt64Container>(UInt64Container());
+                            fc->singleValue = singleValue;
                             std::vector<unsigned long long int>& tmp_vec = fc->getVec();
 
                             adios2::Variable<unsigned long long int> advar =
                                 io->InquireVariable<unsigned long long int>(var.first);
                             auto info = reader.BlocksInfo(advar, cad->getFrameIDtoLoad());
-                            num = info[0].Count[0];
+                            fc->shape = info[0].Count;
+                            std::for_each(fc->shape.begin(), fc->shape.end(), [&](decltype(num) n) { num *= n; });
                             tmp_vec.resize(num);
-                            if (this->MpiInitialized && !singleValue) {
-                                advar.SetSelection({{num * this->mpiRank}, {num}});
-                            }
 
                             reader.Get<unsigned long long int>(advar, tmp_vec);
                             dataMap[var.first] = std::move(fc);
                         } else if (var.second["Type"] == "unsigned char") {
                             auto fc = std::make_shared<UCharContainer>(UCharContainer());
+                            fc->singleValue = singleValue;
                             std::vector<unsigned char>& tmp_vec = fc->getVec();
 
                             adios2::Variable<unsigned char> advar = io->InquireVariable<unsigned char>(var.first);
                             auto info = reader.BlocksInfo(advar, cad->getFrameIDtoLoad());
-                            num = info[0].Count[0];
+                            fc->shape = info[0].Count;
+                            std::for_each(fc->shape.begin(), fc->shape.end(), [&](decltype(num) n) { num *= n; });
                             tmp_vec.resize(num);
-                            if (this->MpiInitialized && !singleValue) {
-                                advar.SetSelection({{num * this->mpiRank}, {num}});
-                            }
 
                             reader.Get<unsigned char>(advar, tmp_vec);
                             dataMap[var.first] = std::move(fc);
                         } else if (var.second["Type"] == "unsigned int") {
                             auto fc = std::make_shared<UInt32Container>(UInt32Container());
+                            fc->singleValue = singleValue;
                             std::vector<unsigned int>& tmp_vec = fc->getVec();
 
                             adios2::Variable<unsigned int> advar = io->InquireVariable<unsigned int>(var.first);
                             auto info = reader.BlocksInfo(advar, cad->getFrameIDtoLoad());
-                            num = info[0].Count[0];
+                            fc->shape = info[0].Count;
+                            std::for_each(fc->shape.begin(), fc->shape.end(), [&](decltype(num) n) { num *= n; });
                             tmp_vec.resize(num);
-                            if (this->MpiInitialized && !singleValue) {
-                                advar.SetSelection({{num * this->mpiRank}, {num}});
-                            }
 
                             reader.Get<unsigned int>(advar, tmp_vec);
                             dataMap[var.first] = std::move(fc);
@@ -324,10 +320,10 @@ bool adiosDataSource::initMPI() {
         if (c != nullptr) {
             /* New method: let MpiProvider do all the stuff. */
             if ((*c)(core::cluster::mpi::MpiCall::IDX_PROVIDE_MPI)) {
-                vislib::sys::Log::DefaultLog.WriteInfo("Got MPI communicator.");
+                vislib::sys::Log::DefaultLog.WriteInfo("adiosDataSource: Got MPI communicator.");
                 this->mpi_comm_ = c->GetComm();
             } else {
-                vislib::sys::Log::DefaultLog.WriteError(_T("Could not ")
+                vislib::sys::Log::DefaultLog.WriteError(_T("adiosDataSource: Could not ")
                                                         _T("retrieve MPI communicator for the MPI-based view ")
                                                         _T("from the registered provider module."));
             }
@@ -344,11 +340,11 @@ bool adiosDataSource::initMPI() {
         }
 
         if (this->mpi_comm_ != MPI_COMM_NULL) {
-            vislib::sys::Log::DefaultLog.WriteInfo(_T("MPI is ready, ")
+            vislib::sys::Log::DefaultLog.WriteInfo(_T("adiosDataSource: MPI is ready, ")
                                                    _T("retrieving communicator properties ..."));
             ::MPI_Comm_rank(this->mpi_comm_, &this->mpiRank);
             ::MPI_Comm_size(this->mpi_comm_, &this->mpiSize);
-            vislib::sys::Log::DefaultLog.WriteInfo(_T("This view on %hs is %d ")
+            vislib::sys::Log::DefaultLog.WriteInfo(_T("adiosDataSource on %hs is %d ")
                                                    _T("of %d."),
                 vislib::sys::SystemInformation::ComputerNameA().PeekBuffer(), this->mpiRank, this->mpiSize);
         } /* end if (this->comm != MPI_COMM_NULL) */

@@ -50,8 +50,7 @@ vislib::graphics::CameraParamsProjectionOverride::Projection(void) const {
  */
 void vislib::graphics::CameraParamsProjectionOverride::SetProjection(
         ProjectionType projectionType) {
-    this->projection = projection;
-    this->indicateValueChange();
+    assign_and_sync(this->projection, projection);
 }
 
 
@@ -94,6 +93,5 @@ void vislib::graphics::CameraParamsProjectionOverride::preBaseSet(
  */
 void vislib::graphics::CameraParamsProjectionOverride::resetOverride(void) {
     ASSERT(!this->paramsBase().IsNull());
-    this->projection = this->paramsBase()->Projection();
-    this->indicateValueChange();
+    assign_and_sync(this->projection, this->paramsBase()->Projection());
 }

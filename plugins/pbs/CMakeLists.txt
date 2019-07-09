@@ -11,7 +11,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
 
   # Check option dependencies: First list item is always the current build option,
   # afterwards list the dependencies.
-  set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE BUILD_OSPRAY_PLUGIN" CACHE INTERNAL "")
+  set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE BUILD_OSPRAY_PLUGIN BUILD_IMAGE_CALLS_PLUGIN" CACHE INTERNAL "")
 
   if(WIN32)
     set(SNAPPY_IMPORT_LIB "lib/snappy.lib")
@@ -35,7 +35,8 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
     GIT_TAG "1.1.7"
     CMAKE_ARGS
       -DBUILD_SHARED_LIBS=ON
-      -DSNAPPY_BUILD_TESTS=OFF)
+      -DSNAPPY_BUILD_TESTS=OFF
+      -DCMAKE_BUILD_TYPE=Release)
   add_external_library(snappy SHARED
     DEPENDS snappy_ext
     IMPORT_LIBRARY_DEBUG ${SNAPPY_IMPORT_LIB}
