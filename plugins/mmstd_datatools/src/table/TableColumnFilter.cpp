@@ -1,23 +1,27 @@
 /*
- * FloatTableColumnFilter.cpp
+ * TableColumnFilter.cpp
  *
  * Copyright (C) 2016-2017 by VISUS (University of Stuttgart)
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
-#include "FloatTableColumnFilter.h"
+#include "TableColumnFilter.h"
 
 #include "mmcore/param/StringParam.h"
+
 #include "vislib/StringTokeniser.h"
 #include "vislib/sys/Log.h"
 #include <limits>
 
+using namespace megamol::stdplugin::datatools;
+using namespace megamol::stdplugin::datatools::table;
+using namespace megamol;
 
-std::string megamol::stdplugin::datatools::floattable::FloatTableColumnFilter::ModuleName
-    = std::string("FloatTableColumnFilter");
+std::string TableColumnFilter::ModuleName
+    = std::string("TableColumnFilter");
 
-megamol::stdplugin::datatools::floattable::FloatTableColumnFilter::FloatTableColumnFilter(void) :
+TableColumnFilter::TableColumnFilter(void) :
     core::Module(),
     dataOutSlot("dataOut", "Ouput"),
     dataInSlot("dataIn", "Input"),
@@ -25,38 +29,38 @@ megamol::stdplugin::datatools::floattable::FloatTableColumnFilter::FloatTableCol
     frameID(-1),
     datahash(std::numeric_limits<unsigned long>::max()) {
 
-    this->dataInSlot.SetCompatibleCall<CallFloatTableDataDescription>();
+    this->dataInSlot.SetCompatibleCall<TableDataCallDescription>();
     this->MakeSlotAvailable(&this->dataInSlot);
 
-    this->dataOutSlot.SetCallback(CallFloatTableData::ClassName(),
-        CallFloatTableData::FunctionName(0),
-        &FloatTableColumnFilter::processData);
-    this->dataOutSlot.SetCallback(CallFloatTableData::ClassName(),
-        CallFloatTableData::FunctionName(1),
-        &FloatTableColumnFilter::getExtent);
+    this->dataOutSlot.SetCallback(TableDataCall::ClassName(),
+        TableDataCall::FunctionName(0),
+        &TableColumnFilter::processData);
+    this->dataOutSlot.SetCallback(TableDataCall::ClassName(),
+        TableDataCall::FunctionName(1),
+        &TableColumnFilter::getExtent);
     this->MakeSlotAvailable(&this->dataOutSlot);
 
     this->selectionStringSlot << new core::param::StringParam("x; y; z");
     this->MakeSlotAvailable(&this->selectionStringSlot);
 }
 
-megamol::stdplugin::datatools::floattable::FloatTableColumnFilter::~FloatTableColumnFilter(void) {
+TableColumnFilter::~TableColumnFilter(void) {
     this->Release();
 }
 
-bool megamol::stdplugin::datatools::floattable::FloatTableColumnFilter::create(void) {
+bool TableColumnFilter::create(void) {
     return true;
 }
 
-void megamol::stdplugin::datatools::floattable::FloatTableColumnFilter::release(void) {
+void TableColumnFilter::release(void) {
 }
 
-bool megamol::stdplugin::datatools::floattable::FloatTableColumnFilter::processData(core::Call &c) {
+bool TableColumnFilter::processData(core::Call &c) {
     try {
-        CallFloatTableData *outCall = dynamic_cast<CallFloatTableData *>(&c);
+        TableDataCall *outCall = dynamic_cast<TableDataCall *>(&c);
         if (outCall == NULL) return false;
 
-        CallFloatTableData *inCall = this->dataInSlot.CallAs<CallFloatTableData>();
+        TableDataCall *inCall = this->dataInSlot.CallAs<TableDataCall>();
         if (inCall == NULL) return false;
 
         inCall->SetFrameID(outCall->GetFrameID());
@@ -138,12 +142,12 @@ bool megamol::stdplugin::datatools::floattable::FloatTableColumnFilter::processD
     return true;
 }
 
-bool megamol::stdplugin::datatools::floattable::FloatTableColumnFilter::getExtent(core::Call &c) {
+bool TableColumnFilter::getExtent(core::Call &c) {
 	try {
-		CallFloatTableData *outCall = dynamic_cast<CallFloatTableData *>(&c);
+		TableDataCall *outCall = dynamic_cast<TableDataCall *>(&c);
 		if (outCall == NULL) return false;
 
-		CallFloatTableData *inCall = this->dataInSlot.CallAs<CallFloatTableData>();
+		TableDataCall *inCall = this->dataInSlot.CallAs<TableDataCall>();
 		if (inCall == NULL) return false;
 
 		inCall->SetFrameID(outCall->GetFrameID());

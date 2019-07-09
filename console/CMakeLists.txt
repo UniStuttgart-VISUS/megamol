@@ -25,6 +25,7 @@ if(BUILD_CONSOLE)
     ${LIBUNWIND_INCLUDE_DIR} "src" "include")
   target_link_libraries(${PROJECT_NAME} PRIVATE core)
 
+  #LIBUNWIND
   if(UNIX)
     option(USE_LIBUNWIND "use libunwind" ON)
     if(USE_LIBUNWIND)
@@ -48,34 +49,38 @@ if(BUILD_CONSOLE)
     set(VERSION_LIBRARY "Version.lib")
   endif()
 
+  # GLFW
   if(NOT USE_EGL)
-    if(WIN32)
-      bootstrap_external_package(glfw_ext glfw3
-        CONFIG "lib/cmake/glfw3/glfw3Config.cmake"
-        GIT_REPOSITORY https://github.com/glfw/glfw.git
-        GIT_TAG "3.2.1"
-        CMAKE_ARGS
-          -DBUILD_SHARED_LIBS=OFF
-          -DGLFW_BUILD_EXAMPLES=OFF
-          -DGLFW_BUILD_TESTS=OFF
-          -DGLFW_BUILD_DOCS=OFF
-          -G ${CMAKE_GENERATOR}
-          -A ${CMAKE_GENERATOR_PLATFORM})
+    add_external_project(glfw_ext
+      GIT_REPOSITORY https://github.com/glfw/glfw.git
+      GIT_TAG "3.2.1"
+      CMAKE_ARGS
+        -DBUILD_SHARED_LIBS=ON
+        -DGLFW_BUILD_EXAMPLES=OFF
+        -DGLFW_BUILD_TESTS=OFF
+        -DGLFW_BUILD_DOCS=OFF)
+    if (MSVC)
+      add_external_library(glfw3 SHARED
+        DEPENDS glfw_ext
+        INCLUDE_DIR "include"
+        IMPORT_LIBRARY_DEBUG "lib/glfw3dll.lib"
+        IMPORT_LIBRARY_RELEASE "lib/glfw3dll.lib"
+        LIBRARY_DEBUG "lib/glfw3.dll"
+        LIBRARY_RELEASE "lib/glfw3.dll")
     else()
-      bootstrap_external_package(glfw_ext glfw3
-        CONFIG "lib/cmake/glfw3/glfw3Config.cmake"
-        GIT_REPOSITORY https://github.com/glfw/glfw.git
-        GIT_TAG "3.2.1"
-        CMAKE_ARGS
-          -DBUILD_SHARED_LIBS=OFF
-          -DGLFW_BUILD_EXAMPLES=OFF
-          -DGLFW_BUILD_TESTS=OFF
-          -DGLFW_BUILD_DOCS=OFF)
+        add_external_library(glfw3 SHARED
+        DEPENDS glfw_ext
+        INCLUDE_DIR "include"
+        IMPORT_LIBRARY_DEBUG ""
+        IMPORT_LIBRARY_RELEASE ""
+        LIBRARY_DEBUG "lib/libglfw.so"
+        LIBRARY_RELEASE "lib/libglfw.so")
     endif()
-    find_package(glfw3 REQUIRED CONFIG)
-    target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
+    target_link_libraries(${PROJECT_NAME} PRIVATE glfw3)
+    ExternalProject_Get_property(glfw_ext SOURCE_DIR)
+    target_include_directories(${PROJECT_NAME} PRIVATE "${SOURCE_DIR}/include")
   endif()
-  
+
   # AntTweakBar
   option(USE_ANTTWEAKBAR "use AntTweakBar" OFF)
   if (USE_ANTTWEAKBAR)
@@ -103,7 +108,13 @@ if(BUILD_CONSOLE)
   source_group("Source Files" FILES ${source_files})
 
   # install mmconsole executable
-  install(TARGETS ${PROJECT_NAME} DESTINATION "bin")
+  install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin" ARCHIVE DESTINATION "lib")
+  if(NOT USE_EGL)
+    install_external(TARGETS glfw3)
+  endif()
+  if (WIN32)
+    install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION bin OPTIONAL)
+  endif ()
 
   # install and configure ATB
   if (USE_ANTTWEAKBAR)
