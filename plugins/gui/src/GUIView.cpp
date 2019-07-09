@@ -13,7 +13,7 @@
  *
  * USED HOKEYS:
  *
- * - Show/hide Windows: F12 - F9
+ * - Show/hide Windows: Ctrl + F9-F12
  * - Reset windows:     Shift + (Window show/hide hotkeys)
  * - Quit program:      Esc, Alt + F4
  *
@@ -83,7 +83,7 @@ GUIView::GUIView()
     this->renderViewSlot.SetCompatibleCall<core::view::CallRenderViewDescription>();
     this->MakeSlotAvailable(&this->renderViewSlot);
 
-    core::param::EnumParam* styles = new core::param::EnumParam(0);
+    core::param::EnumParam* styles = new core::param::EnumParam(2);
     styles->SetTypePair(CorporateGray, "Corporate Gray");
     styles->SetTypePair(CorporateWhite, "Corporate White");
     styles->SetTypePair(DarkColors, "Dark Colors");
@@ -145,7 +145,7 @@ bool GUIView::create() {
     WindowManager::WindowConfiguration tmp_win;
     // MAIN Window ------------------------------------------------------------
     tmp_win.win_show = true;
-    tmp_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F12);
+    tmp_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F12, core::view::Modifier::CTRL);
     tmp_win.win_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoTitleBar;
     tmp_win.win_callback = WindowManager::WindowDrawCallback::MAIN;
     tmp_win.win_position = ImVec2(12, 12);
@@ -155,21 +155,21 @@ bool GUIView::create() {
 
     // FPS/MS Window ----------------------------------------------------------
     tmp_win.win_show = false;
-    tmp_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F11);
+    tmp_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F11, core::view::Modifier::CTRL);
     tmp_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar;
     tmp_win.win_callback = WindowManager::WindowDrawCallback::FPSMS;
     this->windowManager.AddWindowConfiguration("Performance Metrics", tmp_win);
 
     // FONT Window ------------------------------------------------------------
     tmp_win.win_show = false;
-    tmp_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F10);
+    tmp_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F10, core::view::Modifier::CTRL);
     tmp_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize;
     tmp_win.win_callback = WindowManager::WindowDrawCallback::FONT;
     this->windowManager.AddWindowConfiguration("Font Settings", tmp_win);
 
     // TRANSFER FUNCTION Window -----------------------------------------------
     tmp_win.win_show = false;
-    tmp_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F9);
+    tmp_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F9, core::view::Modifier::CTRL);
     tmp_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize;
     tmp_win.win_callback = WindowManager::WindowDrawCallback::TF;
     this->windowManager.AddWindowConfiguration("Transfer Function Editor", tmp_win);
@@ -181,8 +181,8 @@ bool GUIView::create() {
 
     // IO settings ------------------------------------------------------------
     ImGuiIO& io = ImGui::GetIO();
-    io.IniSavingRate = 5.0f;  //  in seconds
-    io.IniFilename = nullptr; // "imgui.ini";      // disabled, will be replaced by own more comprehensive version
+    io.IniSavingRate = 5.0f;          //  in seconds
+    io.IniFilename = nullptr;         // "imgui.ini"; - disabled, using own window settings profile
     io.LogFilename = "imgui_log.txt"; // (set to nullptr to disable)
     io.FontAllowUserScaling = true;
 
@@ -216,14 +216,14 @@ bool GUIView::create() {
             font_file = "Roboto-Regular.ttf";
             font_path = SearchFileRecursive(font_file, searchPath);
             if (!font_path.empty()) {
-                io.Fonts->AddFontFromFileTTF(font_path.c_str(), 11.0f, &config);
+                io.Fonts->AddFontFromFileTTF(font_path.c_str(), 12.0f, &config);
                 // Set as default.
                 io.FontDefault = io.Fonts->Fonts[(io.Fonts->Fonts.Size - 1)];
             }
             font_file = "SourceCodePro-Regular.ttf";
             font_path = SearchFileRecursive(font_file, searchPath);
             if (!font_path.empty()) {
-                io.Fonts->AddFontFromFileTTF(font_path.c_str(), 15.0f, &config);
+                io.Fonts->AddFontFromFileTTF(font_path.c_str(), 13.0f, &config);
             }
         }
     }
@@ -252,7 +252,7 @@ bool GUIView::create() {
     io.KeyMap[ImGuiKey_Z] = static_cast<int>(GuiTextModHotkeys::CTRL_Z);
 
     return true;
-} // namespace gui
+}
 
 
 void GUIView::release() {
@@ -405,7 +405,8 @@ bool GUIView::OnKey(core::view::Key key, core::view::KeyAction action, core::vie
 
     // Hotkeys of window(s)
     const auto func = [&, this](const std::string& wn, WindowManager::WindowConfiguration& wc) {
-        hotkeyPressed = (ImGui::IsKeyDown(static_cast<int>(wc.win_hotkey.key))); /// Ignoring additional modifiers
+        hotkeyPressed = (ImGui::IsKeyDown(static_cast<int>(wc.win_hotkey.key))) &&
+                        (wc.win_hotkey.mods.test(core::view::Modifier::CTRL) == io.KeyCtrl);
         if (hotkeyPressed) {
             if (io.KeyShift) {
                 wc.win_soft_reset = true;
@@ -1468,6 +1469,10 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
             vislib::UTF8Encoder::Encode(valueString, param->ValueString());
             std::string valueUtf8String(valueString.PeekBuffer());
 
+            ImGuiInputTextFlags textflags = ImGuiInputTextFlags_CtrlEnterForNewLine |
+                                            ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll;
+
+            // Determine line count
             int nlcnt = 0;
             for (auto& c : valueUtf8String) {
                 if (c == '\n') {
@@ -1475,20 +1480,22 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
                 }
             }
             nlcnt = std::min(5, nlcnt);
+            if (nlcnt > 0) {
 
-            ImVec2 ml_dim =
-                ImVec2(style.ItemInnerSpacing.x, ImGui::GetFrameHeight() + ImGui::GetFontSize() * (float)(nlcnt));
+                ImVec2 ml_dim =
+                    ImVec2(ImGui::CalcItemWidth(), ImGui::GetFrameHeight() + (ImGui::GetFontSize() * (float)(nlcnt)));
 
-            ImGuiInputTextFlags ml_flags =
-                ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_EnterReturnsTrue;
-
-            if (ImGui::InputTextMultiline(param_label.c_str(), &valueUtf8String, ml_dim, ml_flags)) {
-
-                vislib::UTF8Encoder::Decode(valueString, vislib::StringA(valueUtf8String.data()));
-                param->ParseValue(valueString);
+                if (ImGui::InputTextMultiline(param_label.c_str(), &valueUtf8String, ml_dim, textflags)) {
+                    vislib::UTF8Encoder::Decode(valueString, vislib::StringA(valueUtf8String.data()));
+                    param->ParseValue(valueString);
+                }
+            } else {
+                if (ImGui::InputText(param_label.c_str(), &valueUtf8String, textflags)) {
+                    vislib::UTF8Encoder::Decode(valueString, vislib::StringA(valueUtf8String.data()));
+                    param->ParseValue(valueString);
+                }
+                help = "[Ctrl + Enter] for new line.\nPress [Return] to confirm changes.";
             }
-
-            help = "[Ctrl + Enter] for new line.\nPress [Return] to confirm changes.";
         }
 
         this->popup.HoverToolTip(param_desc, ImGui::GetID(param_label.c_str()), 1.0f);

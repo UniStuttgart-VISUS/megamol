@@ -30,7 +30,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
     "${SOURCE_DIR}/examples/imgui_impl_opengl3.cpp"
     "${SOURCE_DIR}/examples/imgui_impl_opengl3.h"
     "${SOURCE_DIR}/misc/cpp/imgui_stdlib.cpp"
-    "${SOURCE_DIR}/misc/cpp/imgui_stdlib.h")
+    "${SOURCE_DIR}/misc/cpp/imgui_stdlib.h")    
   set_source_files_properties(${imgui_files} PROPERTIES GENERATED TRUE)
 
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
@@ -41,12 +41,9 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   # Target definition
   add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${source_files} ${imgui_files} ${resource_files})
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
-
-  target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
   if(NOT WIN32) # linux
     target_link_libraries(${PROJECT_NAME} PRIVATE "stdc++fs") # filesystem support
   endif()
-
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS IMGUI_IMPL_OPENGL_LOADER_GLAD)
   target_include_directories(${PROJECT_NAME} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -77,4 +74,5 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   add_clang_format(${PROJECT_NAME}
     STYLE "${CMAKE_SOURCE_DIR}/.clang-format"
     FILES ${public_header_files} ${header_files} ${source_files})
+
 endif()
