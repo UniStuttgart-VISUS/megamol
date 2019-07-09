@@ -19,7 +19,7 @@
 #include "mesh/CallGPUMeshData.h"
 #include "mesh/CallGPUMaterialData.h"
 #include "mesh/CallGPURenderTaskData.h"
-#include "mesh/CallGlTFData.h"
+#include "mesh/CallGltfData.h"
 
 #include "DebugGPUMeshDataSource.h"
 #include "DebugGPUMaterialDataSource.h"
