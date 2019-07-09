@@ -49,8 +49,6 @@ ReplacementRenderer::ReplacementRenderer(void) : Renderer3DModule(),
     tmpEnum->SetTypePair(keyAssignment::KEY_ASSIGN_I, "i");
     tmpEnum->SetTypePair(keyAssignment::KEY_ASSIGN_J, "j");
     tmpEnum->SetTypePair(keyAssignment::KEY_ASSIGN_K, "k");
-    tmpEnum->SetTypePair(keyAssignment::KEY_ASSIGN_X, "x");
-    tmpEnum->SetTypePair(keyAssignment::KEY_ASSIGN_Y, "y");
     this->replacementKeyParam << tmpEnum;
     this->MakeSlotAvailable(&this->replacementKeyParam);
 }
@@ -132,8 +130,6 @@ bool ReplacementRenderer::Render(megamol::core::view::CallRender3D& call) {
             case(keyAssignment::KEY_ASSIGN_I): key = core::view::Key::KEY_I; break;
             case(keyAssignment::KEY_ASSIGN_J): key = core::view::Key::KEY_J; break;
             case(keyAssignment::KEY_ASSIGN_K): key = core::view::Key::KEY_K; break;
-            case(keyAssignment::KEY_ASSIGN_X): key = core::view::Key::KEY_X; break;
-            case(keyAssignment::KEY_ASSIGN_Y): key = core::view::Key::KEY_Y; break;
             default: break;
         }
 

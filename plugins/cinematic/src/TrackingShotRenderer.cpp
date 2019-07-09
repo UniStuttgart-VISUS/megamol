@@ -48,7 +48,7 @@ TrackingShotRenderer::TrackingShotRenderer(void) : Renderer3DModule(),
     this->stepsParam.SetParameter(new param::IntParam((int)this->interpolSteps, 1));
     this->MakeSlotAvailable(&this->stepsParam);
 
-    this->toggleManipulateParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_M));
+    this->toggleManipulateParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_Q));
     this->MakeSlotAvailable(&this->toggleManipulateParam);
 
     this->toggleHelpTextParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_H));
@@ -469,12 +469,12 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D& call) {
         helpText += "[Ctrl+z] Undo keyframe changes. \n";
         helpText += "[Ctrl+y] Redo keyframe changes. \n";
         helpText += "-----[ TRACKING SHOT ]----- \n";
-        helpText += "[m] Toggle different manipulators for the selected keyframe. \n";
+        helpText += "[q] Toggle different manipulators for the selected keyframe. \n";
         helpText += "[w] Show manipulators inside/outside of model bounding box. \n";
         helpText += "[l] Reset look-at vector of selected keyframe. \n";
         helpText += "-----[ CINEMATIC ]----- \n";
-        helpText += "[r] Start/Stop rendering complete animation. \n";
-        helpText += "[Space] Start/Stop animation preview. \n";
+        helpText += "[Ctrl+r] Start/Stop rendering complete animation. \n";
+        helpText += "[Ctrl+Space] Start/Stop animation preview. \n";
         helpText += "-----[ TIMELINE ]----- \n";
         helpText += "[Right/Left Arrow] Move selected keyframe on animation time axis. \n";
         helpText += "[f] Snap all keyframes to animation frames. \n";
@@ -582,10 +582,11 @@ bool TrackingShotRenderer::OnMouseButton(megamol::core::view::MouseButton button
                 ccc->setControlPointPosition(this->manipulator.GetFirstControlPointPosition(), this->manipulator.GetLastControlPointPosition());
                 if (!(*ccc)(CallKeyframeKeeper::CallForSetCtrlPoints)) return false;
 
-                this->manipulatorGrabbed = false;
                 consumed = true;
                 //vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERER] [MouseEvent] MANIPULATOR CHANGED.");
             }
+            // ! Mode MUST alwasy be reset on left button 'up', if MOUSE moves out of viewport during manipulator is grabbed !
+            this->manipulatorGrabbed = false;
         }
     }
 

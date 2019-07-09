@@ -158,7 +158,7 @@ namespace cinematic {
         vislib::Array<manipPosData>      manipArray;   // Array of manipulators for selected keyframe
         vislib::math::Vector<float, 2>   sKfSsPos;     // Screen space position of selected keyframe
         vislib::math::Vector<float, 2>   sKfSsLookAt;  // Screen space lookat of selected keyframe
-        bool                             sKfInArray;   // Inidcates if selected keyframe exists in keyframe array
+        int                              sKfInArray;   // Inidcates if selected keyframe exists in keyframe array if >= 0
         manipType                        activeType;   // Indicates the type of the active selected manipulator
         vislib::math::Vector<float, 2>   lastMousePos;
 

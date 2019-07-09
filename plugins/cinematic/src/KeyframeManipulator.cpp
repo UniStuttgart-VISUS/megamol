@@ -86,11 +86,7 @@ bool KeyframeManipulator::Update(vislib::Array<KeyframeManipulator::manipType> a
         this->selectedKf = skf;
 
         // Check if selected keyframe exists in keyframe array
-        this->sKfInArray = false;
-        int selIndex = static_cast<int>(kfa->IndexOf(this->selectedKf));
-        if (selIndex >= 0) {
-            this->sKfInArray = true;
-        }
+        this->sKfInArray = static_cast<int>(kfa->IndexOf(this->selectedKf));
 
         this->selectedIsFirst = (this->selectedKf == kfa->First())?(true):(false);
         this->selectedIsLast  = (this->selectedKf == kfa->Last())?(true):(false);
@@ -118,7 +114,7 @@ bool KeyframeManipulator::Update(vislib::Array<KeyframeManipulator::manipType> a
     }
     else { // Update positions (which might have changed)
         for (unsigned int i = 0; i < kfACnt; i++) {
-            if (this->kfArray[i].wsPos != (*kfa)[i].GetCamPosition().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>()) { 
+            if (this->kfArray[i].wsPos    != (*kfa)[i].GetCamPosition().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>()) { 
                 this->kfArray[i].wsPos     = (*kfa)[i].GetCamPosition().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>();
                 this->kfArray[i].ssPos     = this->getScreenSpace(this->kfArray[i].wsPos);
                 this->kfArray[i].offset    = (this->getScreenSpace(this->kfArray[i].wsPos + this->circleVertices[1]) - this->kfArray[i].ssPos).Norm(); 
@@ -131,7 +127,7 @@ bool KeyframeManipulator::Update(vislib::Array<KeyframeManipulator::manipType> a
     for (unsigned int i = 0; i < static_cast<unsigned int>(this->manipArray.Count()); i++) {
         this->manipArray[i].available = false;
     }
-    if (this->sKfInArray) { // Manipulators are only available if selected keyframe exists in keyframe array
+    if (this->sKfInArray >= 0) { // Manipulators are only available if selected keyframe exists in keyframe array
         for (unsigned int i = 0; i < static_cast<unsigned int>(am.Count()); i++) {
             unsigned int index = static_cast<unsigned int>(am[i]);
             if (index < static_cast<unsigned int>(NUM_OF_SELECTED_MANIP)) {
@@ -315,7 +311,7 @@ void KeyframeManipulator::SetExtents(vislib::math::Cuboid<float> *bb) {
 
 int KeyframeManipulator::CheckKeyframePositionHit(float x, float y) {
 
-    if (!isDataSet) {
+    if (!this->isDataSet) {
         vislib::sys::Log::DefaultLog.WriteWarn("[KeyframeManipulator] [checkForHit] Data is not set. Please call 'update' first.");
         return false;
     }
@@ -341,7 +337,7 @@ int KeyframeManipulator::CheckKeyframePositionHit(float x, float y) {
 
 bool KeyframeManipulator::CheckManipulatorHit(float x, float y) {
 
-    if (!isDataSet) {
+    if (!this->isDataSet) {
         vislib::sys::Log::DefaultLog.WriteWarn("[KeyframeManipulator] [checkForHit] Data is not set. Please call 'update' first.");
         return false;
     }
@@ -368,7 +364,7 @@ bool KeyframeManipulator::CheckManipulatorHit(float x, float y) {
 
 bool KeyframeManipulator::ProcessManipulatorHit(float x, float y) {
 
-    if (!isDataSet) {
+    if (!this->isDataSet) {
         vislib::sys::Log::DefaultLog.WriteWarn("[KeyframeManipulator] [processManipHit] Data is not set. Please call 'update' first.");
         return false;
     }
@@ -572,7 +568,7 @@ void KeyframeManipulator::calculateCircleVertices(void) {
 
 bool KeyframeManipulator::Draw(void) {
 
-    if (!isDataSet) {
+    if (!this->isDataSet) {
         vislib::sys::Log::DefaultLog.WriteError("[KeyframeManipulator] [draw] Data is not set. Please call 'update' first.");
         return false;
     }
@@ -628,6 +624,7 @@ bool KeyframeManipulator::Draw(void) {
         }
     }
 
+    // get control point position for first and last keyframe
     vislib::math::Vector<float, 3> tmpCtrlPos;
     if (this->selectedIsFirst) {
         tmpCtrlPos = this->startCtrllPos;
@@ -637,7 +634,17 @@ bool KeyframeManipulator::Draw(void) {
     }
 
     // Draw manipulators
-    if (this->sKfInArray) {
+    if (this->sKfInArray >= 0) {
+
+        // Draw line between current keyframe position and dragged keyframe position
+        if (this->kfArray[this->sKfInArray].wsPos != skfPosV) {
+            glBegin(GL_LINES);
+            glColor4fv(skColor);
+                glVertex3fv(skfPosV.PeekComponents());
+                glVertex3fv(this->kfArray[this->sKfInArray].wsPos.PeekComponents());
+            glEnd();
+        }
+
         for (unsigned int i = 0; i < static_cast<unsigned int>(this->manipArray.Count()); i++) {
             if (this->manipArray[i].available) {
                 switch (static_cast<manipType>(i)) {

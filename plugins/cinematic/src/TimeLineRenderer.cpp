@@ -602,16 +602,18 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     }
 
     // Draw menu background
+    float woff = (vpW*0.005f);
+    float hoff = (vpH*0.005f);
     glColor4fv(menu);
     glBegin(GL_QUADS);
-        glVertex2f(0.0f, vpH);
-        glVertex2f(0.0f, vpH - (CC_MENU_HEIGHT));
-        glVertex2f(vpW,  vpH - (CC_MENU_HEIGHT));
-        glVertex2f(vpW,  vpH);
+        glVertex2f(-woff, vpH + hoff);
+        glVertex2f(-woff, vpH + hoff - (CC_MENU_HEIGHT));
+        glVertex2f(vpW + woff,  vpH + hoff - (CC_MENU_HEIGHT));
+        glVertex2f(vpW + woff,  vpH + hoff);
     glEnd();
 
     // Draw menu labels
-    float labelPosY = vpH - (CC_MENU_HEIGHT) / 2.0f + lbFontSize / 2.0f;
+    float labelPosY = vpH + hoff - (CC_MENU_HEIGHT) / 2.0f + lbFontSize / 2.0f;
     this->theFont.DrawString(white, 0.0f, labelPosY, lbFontSize, false, leftLabel, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
     this->theFont.DrawString(white, (vpW - midleftLabelWidth) / 2.0f, labelPosY, lbFontSize, false, midLabel, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
     this->theFont.DrawString(white, (vpW - rightLabelWidth), labelPosY, lbFontSize, false, rightLabel, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);

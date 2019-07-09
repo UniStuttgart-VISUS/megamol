@@ -110,9 +110,7 @@ namespace cinematic {
             KEY_ASSIGN_O = 1,
             KEY_ASSIGN_I = 2,
             KEY_ASSIGN_J = 3,
-            KEY_ASSIGN_K = 4,
-            KEY_ASSIGN_X = 5,
-            KEY_ASSIGN_Y = 6
+            KEY_ASSIGN_K = 4
         };
 
         vislib::math::Cuboid<float> bbox;
