@@ -52,9 +52,9 @@ bool megamol::archvis::MSMConvexHullDataSource::getDataCallback(core::Call& call
         );
     }
 
-    //  auto hull = qh.getConvexHull(point_cloud, true, false);
-    //  auto indexBuffer = hull.getIndexBuffer();
-    //  auto vertexBuffer = hull.getVertexBuffer();
+    auto hull = qh.getConvexHull(point_cloud, true, false);
+    auto indexBuffer = hull.getIndexBuffer();
+    auto vertexBuffer = hull.getVertexBuffer();
 
     mc->setGPUMeshes(m_gpu_meshes);
 
