@@ -53,14 +53,14 @@ public:
 
     template <typename Container> void loadSubData(Container const& datastorage, GLsizeiptr byte_offset = 0) const {
         // check if feasible
-        if ((byte_offset + static_cast<GLsizeiptr>(datastorage.size() * sizeof(Container::value_type))) > m_byte_size) {
+        if ((byte_offset + static_cast<GLsizeiptr>(datastorage.size() * sizeof(typename Container::value_type))) > m_byte_size) {
             // error message
             vislib::sys::Log::DefaultLog.WriteError("Invalid byte_offset or size for loadSubData");
             return;
         }
 
         glBindBuffer(m_target, m_handle);
-        glBufferSubData(m_target, byte_offset, datastorage.size() * sizeof(Container::value_type), datastorage.data());
+        glBufferSubData(m_target, byte_offset, datastorage.size() * sizeof(typename Container::value_type), datastorage.data());
         glBindBuffer(m_target, 0);
     }
 
