@@ -323,26 +323,54 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
         }
         }
 
+
+        for (int z = 0; z < sz; ++z) {
+            for (int y = 0; y < sy; ++y) {
+                for (int x = 0; x < sx; ++x) {
+#pragma omp parallel for
+                    for (int j = 0; j < parts.GetCount(); ++j) {
+                        auto const x_base = xAcc->Get_f(j);
+                        auto const y_base = yAcc->Get_f(j);
+                        auto const z_base = zAcc->Get_f(j);
+                        auto rad = globRad;
+                        if (!useGlobRad) rad = rAcc->Get_f(j);
+
+                        float x_diff = static_cast<float>(x) * sliceDistX + minOSx;
+                        x_diff = std::fabs(x_diff - x_base);
+                        float y_diff = static_cast<float>(y) * sliceDistY + minOSy;
+                        y_diff = std::fabs(y_diff - y_base);
+                        float z_diff = static_cast<float>(z) * sliceDistZ + minOSz;
+                        z_diff = std::fabs(z_diff - z_base);
+                        float const dis = std::sqrt(x_diff * x_diff + y_diff * y_diff + z_diff * z_diff);
+
+                        if (dis <= rad)
+                            volOp(j, x, y, z, dis, rad);
+                    }
+                }
+            }
+        }
+
+#if 0
 #pragma omp parallel for
         for (int j = 0; j < parts.GetCount(); ++j) {
             auto const x_base = xAcc->Get_f(j);
             auto x = static_cast<int>((x_base - minOSx) / sliceDistX);
-            if (x < 0)
+            /*if (x < 0)
                 x = 0;
             else if (x >= sx)
-                x = sx - 1;
+                x = sx - 1;*/
             auto const y_base = yAcc->Get_f(j);
             auto y = static_cast<int>((y_base - minOSy) / sliceDistY);
-            if (y < 0)
+            /*if (y < 0)
                 y = 0;
             else if (y >= sy)
-                y = sy - 1;
+                y = sy - 1;*/
             auto const z_base = zAcc->Get_f(j);
             auto z = static_cast<int>((z_base - minOSz) / sliceDistZ);
-            if (z < 0)
+            /*if (z < 0)
                 z = 0;
             else if (z >= sz)
-                z = sz - 1;
+                z = sz - 1;*/
             auto rad = globRad;
             if (!useGlobRad) rad = rAcc->Get_f(j);
 
@@ -407,6 +435,7 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
                 }
             }
         }
+#endif
     }
 
     std::vector<float> localMax(omp_get_max_threads(), 0.0f);
@@ -453,7 +482,7 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
 
 //#define PTD_DEBUG_OUTPUT
 #ifdef PTD_DEBUG_OUTPUT
-    std::ofstream raw_file{"lasercross.raw", std::ios::binary};
+    std::ofstream raw_file{"bolla.raw", std::ios::binary};
     raw_file.write(reinterpret_cast<char const*>(vol[0].data()), vol[0].size() * sizeof(float));
     raw_file.close();
     vislib::sys::Log::DefaultLog.WriteInfo("ParticlesToDensity: Debug file written\n");
