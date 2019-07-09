@@ -126,7 +126,7 @@ namespace MegaMolConf {
             else if (p.Type is Data.ParamType.Color) {
                 return new ColorEditor();
             }
-            return base.GetEditor(editorBaseType);
+            return new System.ComponentModel.Design.MultilineStringEditor();
         }
 
     }
