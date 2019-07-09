@@ -1,4 +1,4 @@
-#include "../include/mesh/GPUMeshCollection.h"
+#include "mesh/GPUMeshCollection.h"
 
 namespace megamol
 {

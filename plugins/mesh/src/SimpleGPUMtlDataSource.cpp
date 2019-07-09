@@ -1,8 +1,7 @@
-#include "..\include\mesh\SimpleGPUMtlDataSource.h"
-
+#include "mesh/SimpleGPUMtlDataSource.h"
 #include "mmcore/param/FilePathParam.h"
-
 #include "mesh/CallGPUMaterialData.h"
+
 
 megamol::mesh::SimpleGPUMtlDataSource::SimpleGPUMtlDataSource()
     : m_btf_filename_slot("BTF filename", "The name of the btf file to load") {
