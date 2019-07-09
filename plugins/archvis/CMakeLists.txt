@@ -11,10 +11,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
 
   # Check option dependencies: First list item is always the current build option,
   # afterwards list the dependencies.
-  set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE BUILD_NG_MESH_PLUGIN" CACHE INTERNAL "")
-
-  set(LIBS vislib core mesh glad mmstd_datatools)
-  include_directories("include" "src" "external")
+  set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE BUILD_MESH_PLUGIN BUILD_MMSTD_DATATOOLS_PLUGIN" CACHE INTERNAL "")
 
   # Build MegaMol Plugin
   # public header files for installation
@@ -32,9 +29,8 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   # Set target naming conventions for different build types
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg" CXX_STANDARD 17)
   # Dependent projects only need to link against the core.so itself.
-  target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS})
-  target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
-
+  target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src" "external")
+  target_link_libraries(${PROJECT_NAME} PRIVATE core mesh mmstd_datatools)
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
 
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
