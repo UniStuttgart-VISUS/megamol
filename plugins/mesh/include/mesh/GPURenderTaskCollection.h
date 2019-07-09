@@ -289,12 +289,12 @@ inline size_t GPURenderTaskCollection::addRenderTasks(std::shared_ptr<Shader> co
 
 template <typename PerDrawDataContainer>
 inline void GPURenderTaskCollection::updatePerDrawData(size_t rt_base_idx, PerDrawDataContainer const& per_draw_data) {
-    if (rt_idx > m_render_task_meta_data.size()) {
+    if (rt_base_idx > m_render_task_meta_data.size()) {
         vislib::sys::Log::DefaultLog.WriteError("RenderTask update error: Index out of bounds.");
         return;
     }
 
-    RenderTaskMetaData rt_meta = m_render_task_meta_data[rt_idx];
+    RenderTaskMetaData rt_meta = m_render_task_meta_data[rt_base_idx];
 
     auto& rts = m_render_tasks[rt_meta.rts_idx];
 
