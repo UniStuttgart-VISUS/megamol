@@ -2,6 +2,7 @@
 
 #include "glTFMeshesDataSource.h"
 #include "mesh/CallGPUMeshData.h"
+#include "mesh/CallGltfData.h"
 #include "tiny_gltf.h"
 
 megamol::mesh::GlTFMeshesDataSource::GlTFMeshesDataSource()
