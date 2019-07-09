@@ -13,21 +13,42 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   # afterwards list the dependencies.
   set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE" CACHE INTERNAL "")
 
-  set(LIBS vislib core glad)
-  include_directories("include" "src" "external")
-
+  if(UNIX)
+    set(quickhull_cmake_args -DCMAKE_C_FLAGS="-fPIC" -DCMAKE_CXX_FLAGS="-fPIC")
+  else()
+    set(quickhull_cmake_args "")
+  endif()
 
   add_external_project(quickhull_ext
     GIT_REPOSITORY https://github.com/akuukka/quickhull.git
     #GIT_TAG 
-    CONFIGURE_COMMAND ""
-    BUILD_COMMAND ""
-    INSTALL_COMMAND ""
-    TEST_COMMAND "")
-  add_external_library(quickhull INTERFACE
+    PATCH_COMMAND ${CMAKE_COMMAND} -E copy
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/quickhull/CMakeLists.txt"
+    "<SOURCE_DIR>/CMakeLists.txt"
+    CMAKE_ARGS ${quickhull_cmake_args}
+  )
+  if(WIN32)
+  set(QUICKHULL_IMPORT_LIB "lib/quickhull.lib")
+  set(QUICKHULL_IMPORT_LIB_DEBUG ${QUICKHULL_IMPORT_LIB})
+  set(QUICKHULL_LIB "bin/quickhull.dll")
+  set(QUICKHULL_LIB_DEBUG ${QUICKHULL_LIB})
+else()
+  include(GNUInstallDirs)
+  set(QUICKHULL_IMPORT_LIB_DEBUG "${CMAKE_INSTALL_LIBDIR}/libquickhull.so")
+  set(QUICKHULL_IMPORT_LIB "${CMAKE_INSTALL_LIBDIR}/libquickhull.so")
+  set(QUICKHULL_LIB_DEBUG "${CMAKE_INSTALL_LIBDIR}/libquickhull.so")
+  set(QUICKHULL_LIB "${CMAKE_INSTALL_LIBDIR}/libquickhull.so")
+endif()
+  add_external_library(quickhull SHARED
     DEPENDS quickhull_ext
-    INCLUDE_DIR "src/quickhull_ext/")
+    INCLUDE_DIR "include"
+    IMPORT_LIBRARY_DEBUG ${QUICKHULL_IMPORT_LIB_DEBUG}
+    IMPORT_LIBRARY_RELEASE ${QUICKHULL_IMPORT_LIB}
+    LIBRARY_DEBUG ${QUICKHULL_LIB_DEBUG}
+    LIBRARY_RELEASE ${QUICKHULL_LIB})
   get_target_property(quickhull_include quickhull INTERFACE_INCLUDE_DIRECTORIES)
+
+  message(STATUS "INCLUDE: ${quickhull_include}")
 
   # Build MegaMol Plugin
   # public header files for installation
@@ -45,9 +66,10 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   # Set target naming conventions for different build types
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg" CXX_STANDARD 17)
   # Dependent projects only need to link against the core.so itself.
-  target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS})
+  target_link_libraries(${PROJECT_NAME} PRIVATE core PUBLIC quickhull)
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
                                                     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/external>
+                                                    "src"
                                                     $<BUILD_INTERFACE:${quickhull_include}>)
 
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)

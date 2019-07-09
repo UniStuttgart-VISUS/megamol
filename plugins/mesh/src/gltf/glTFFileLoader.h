@@ -14,7 +14,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mesh/mesh.h"
-#include "mesh/CallGlTFData.h"
+#include "mesh/CallGltfData.h"
 
 namespace megamol
 {

@@ -1,6 +1,6 @@
 #include "stdafx.h"
 
-#include "mesh/CallGlTFData.h"
+#include "mesh/CallGltfData.h"
 
 #ifndef TINYGLTF_IMPLEMENTATION
 #define TINYGLTF_IMPLEMENTATION
