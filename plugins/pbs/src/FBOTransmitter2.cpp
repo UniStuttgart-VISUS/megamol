@@ -29,7 +29,7 @@
 #    include <unistd.h>
 #endif
 
-//#define _DEBUG 1
+#define _DEBUG 1
 
 megamol::pbs::FBOTransmitter2::FBOTransmitter2()
     : address_slot_{"port", "The port the transmitter should connect to"}
@@ -123,7 +123,9 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
     int height = this->viewport[5];
 
     #if    _DEBUG
-    vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Extracting Viewport ... Done");
+    vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Extracting Viewport at rank %d from %s: (%d, %d, %d, %d, %d, %d) ... Done",
+        this->mpiRank, ((this->validViewport) ? ("View") : ("OpenGL")),
+        this->viewport[0], this->viewport[1], this->viewport[2], this->viewport[3], this->viewport[4], this->viewport[5]);
 #endif
 
     // read FBO
@@ -271,8 +273,8 @@ void megamol::pbs::FBOTransmitter2::transmitterJob() {
                 }*/
                 while (!this->comm_->Recv(buf, recv_type::RECV) && !this->thread_stop_) {
 #if _DEBUG
-                    vislib::sys::Log::DefaultLog.WriteWarn(
-                        "FBOTransmitter2: Recv failed in 'transmitterJob' trying again\n");
+                    //vislib::sys::Log::DefaultLog.WriteWarn(
+                    //    "FBOTransmitter2: Recv failed in 'transmitterJob' trying again\n");
 #endif
                 }
 /*#if _DEBUG
@@ -634,8 +636,8 @@ bool megamol::pbs::FBOTransmitter2::initThreads() {
 #endif
                 while (!registerComm.Recv(buf)) {
 #if _DEBUG
-                    vislib::sys::Log::DefaultLog.WriteWarn(
-                        "FBOTransmitter2: Recv failed on 'registerComm', trying again\n");
+                    //vislib::sys::Log::DefaultLog.WriteWarn(
+                    //    "FBOTransmitter2: Recv failed on 'registerComm', trying again\n");
 #endif
 
                 }
@@ -709,14 +711,14 @@ bool megamol::pbs::FBOTransmitter2::initThreads() {
                 width = this->viewport[4] = glvp[2];
                 height = this->viewport[5] = glvp[3];
             } else {
-	        if (this->extractViewport(this->viewport)) {
-                    this->validViewport = true;
-                    width = this->viewport[4];
-                    height = this->viewport[5];
-	        } else {
-                    vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: ViewPortExtraction - extractViewport failed\n");
-                    return false;
-	        }
+	            if (this->extractViewport(this->viewport)) {
+                        this->validViewport = true;
+                        width = this->viewport[4];
+                        height = this->viewport[5];
+	            } else {
+                        vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: ViewPortExtraction - extractViewport failed\n");
+                        return false;
+	            }
             }
 
 #ifdef _DEBUG

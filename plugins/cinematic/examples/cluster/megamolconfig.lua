@@ -1,13 +1,12 @@
--- Cinematic Camera MegaMol Configuration File --
+-- Cinematic MegaMol Configuration File --
 
-print("I am the MegaMol VISUS CinematicCamera cluster configuration!")
+print("I am the MegaMol VISUS Cinematic cluster configuration!")
 
-basePath   = "\\\\vestastore\\Entwicklung\\braunms\\cinematiccamera\\"
+basePath   = "\\\\vestastore\\Entwicklung\\braunms\\cinematic\\"
 headNode   = "minyou"
-node_count = 20
-
 computer   = string.lower(mmGetMachineName())
 rank       = mmGetEnvValue("PMI_RANK")
+node_count = 20
 
 mmSetConfigValue("headNode",   headNode)
 mmSetConfigValue("renderHead", "10.35.1.1")

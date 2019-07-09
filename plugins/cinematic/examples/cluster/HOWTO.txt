@@ -1,10 +1,8 @@
 Required data file: "cinematic_data.mmpld" (~365 MB)
 
 Copy RELEASE build to \\vestastore\Entwicklung\<USERNAME>\cinematiccamera
-    => Build w/o INFOVIS plugin !!!
     
     \bin
-    \external
     \inlcude
     \lib
     \project_files
@@ -27,14 +25,14 @@ EDIT PARAMETERS:
 MPI JOB:
     (see job.xml)
     Command-Line:      
-        mpiexec \\vestastore\Entwicklung\<USERNAME>\cinematiccamera\bin\mmconsole.exe -i mpiclusterview t1 -v ::t1::mcview::useGsync false 
+        mpiexec \\vestastore\Entwicklung\<USERNAME>\cinematic\bin\mmconsole.exe -i mpiclusterview t1 -v ::t1::mcview::useGsync false 
     Working Directory: 
-        \\vestastore\Entwicklung\<USERNAME>\cinematiccamera
+        \\vestastore\Entwicklung\<USERNAME>\cinematic
 
 MINYOU:
     PowerShell:      
-        cd \\vestastore\Entwicklung\<USERNAME>\cinematiccamera\bin
-        .\mmconsole.exe -p \\vestastore\Entwicklung\<USERNAME>\cinematiccamera\bin\cinematic_cluster.lua -o role head
+        cd \\vestastore\Entwicklung\<USERNAME>\cinematic\bin
+        .\mmconsole.exe -p \\vestastore\Entwicklung\<USERNAME>\cinematic\bin\cinematic_cluster.lua -o role head
                      
         - Press F5 to start SimpleCLusterServer.
         - Wait 20 seconds.

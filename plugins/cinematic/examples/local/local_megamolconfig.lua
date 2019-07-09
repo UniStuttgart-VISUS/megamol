@@ -1,8 +1,8 @@
--- Cinematic Camera MegaMol Configuration File --
+-- Cinematic MegaMol Configuration File --
 
-print("I am the MegaMol VISUS CinematicCamera cluster configuration!")
+print("I am the MegaMol VISUS Cinematic cluster configuration!")
 
-basePath = "D:\\03_megamol\\cc\\"
+basePath = "D:\\03_megamol\\cinematic\\"
 
 headNode = "127.0.0.1"
 mmSetConfigValue("headNode",   headNode)

@@ -1,5 +1,5 @@
-﻿-- Cinematic Camera MegaMol Project File --
-print("I am the MegaMol VISUS CinematicCamera cluster project!")
+﻿-- Cinematic MegaMol Project File --
+print("I am the MegaMol VISUS Cinematic cluster project!")
 
 -- Parameters --
 headNode         = mmGetConfigValue("headNode")
@@ -50,20 +50,21 @@ if role == "head" then
     mmSetParamValue("::mpi_lua::v::backCol",                   "grey")  -- Set when using NGSPHERE - Ignored for OSPRAY (settings in mpi view3d are used)
     mmSetParamValue("::mpi_lua::v::viewcube::show",            "false") -- Set when using NGSPHERE - Ignored for OSPRAY (settings in mpi view3d are used)
     mmSetParamValue("::mpi_lua::v::showBBox",                  "false") -- Set when using NGSPHERE - Ignored for OSPRAY (settings in mpi view3d are used)
-    mmSetParamValue("::mpi_lua::v::05_cinematicWidth",         cc_width_str)
-    mmSetParamValue("::mpi_lua::v::06_cinematicHeight",        cc_height_str)
-    mmSetParamValue("::mpi_lua::v::07_fps",                    cc_fps_str)   
-    mmSetParamValue("::mpi_lua::v::08_firstRenderFrame",       "0")        
-    mmSetParamValue("::mpi_lua::v::09_delayFirstRenderFrame",  "10.000000")    
+    mmSetParamValue("::mpi_lua::v::cinematicWidth",            cc_width_str)
+    mmSetParamValue("::mpi_lua::v::cinematicHeight",           cc_height_str)
+    mmSetParamValue("::mpi_lua::v::fps",                       cc_fps_str)   
+    mmSetParamValue("::mpi_lua::v::firstRenderFrame",          "0")        
+    mmSetParamValue("::mpi_lua::v::delayFirstRenderFrame",     "10.000000")    
 
     mmCreateModule("FBOCompositor2", "::mpi_lua::fboc")
     mmSetParamValue("::mpi_lua::fboc::NumRenderNodes",         "1")
+    mmSetParamValue("::mpi_lua::fboc::communicator",           "ZMQ")
     mmSetParamValue("::mpi_lua::fboc::only_requested_frames",  "true")
 
     mmCreateModule("KeyframeKeeper", "::mpi_lua::kfk")
-    mmSetParamValue("::mpi_lua::kfk::storage::01_filename",    cc_keyframeFile)
+    mmSetParamValue("::mpi_lua::kfk::storage::filename",       cc_keyframeFile)
 
-    mmCreateCall("CallCinematicCamera", "::mpi_lua::v::keyframeKeeper", "::mpi_lua::kfk::scene3D")
+    mmCreateCall("CallKeyframeKeeper",  "::mpi_lua::v::keyframeKeeper", "::mpi_lua::kfk::scene3D")
     mmCreateCall("CallRender3D",        "::mpi_lua::v::rendering",      "::mpi_lua::fboc::rendering")
 
 else
@@ -77,6 +78,7 @@ else
     mmSetParamValue("::mpi_lua::v::viewcube::show",           "false")
     
     mmCreateModule("FBOTransmitter2", "::mpi_lua::fbot")
+    mmSetParamValue("::mpi_lua::fbot::tiledDisplay",          "true") 
     mmSetParamValue("::mpi_lua::fbot::view",                  "::mpi_lua::v")
     mmSetParamValue("::mpi_lua::fbot::aggregate",             aggregate)
     mmSetParamValue("::mpi_lua::fbot::port",                  tostring(34230 + rank)) -- 34242 or 34230

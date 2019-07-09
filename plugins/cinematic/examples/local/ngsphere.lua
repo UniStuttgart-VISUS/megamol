@@ -5,7 +5,8 @@ dataFile = "cinematic_data.mmpld"
 
 mmCreateView("ngsphere", "View3D", "::v3d")
 
-mmCreateModule("NGSphereRenderer", "::ngsr")
+mmCreateModule("SimpleSphereRenderer", "::ngsr")
+mmSetParamValue("::ngsr::renderMode", "NG")
 
 mmCreateModule("MMPLDDataSource", "::mmpld")
 mmSetParamValue("::mmpld::filename", dataFile)
