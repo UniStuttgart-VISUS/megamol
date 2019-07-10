@@ -40,6 +40,7 @@
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/Vector4fParam.h"
 #include "mmcore/utility/ResourceWrapper.h"
+#include "mmcore/versioninfo.h"
 #include "mmcore/view/CallRenderView.h"
 
 #include "vislib/UTF8Encoder.h"
@@ -1278,12 +1279,20 @@ void GUIView::drawMenu(void) {
     }
 
     // Popups
-    std::string about =
-        std::string("MegaMol is GREAT!\nUsing Dear ImGui ") + std::string(IMGUI_VERSION) + std::string("\n");
     if (open_popup) {
         ImGui::OpenPopup("About");
     }
     if (ImGui::BeginPopupModal("About", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+
+        std::string about =
+            std::string("MegaMol - Version ") + std::to_string(MEGAMOL_CORE_MAJOR_VER) + (".") +
+            std::to_string(MEGAMOL_CORE_MINOR_VER) + ("\n(git hash ") + std::string(MEGAMOL_CORE_COMP_REV) +
+            (")\n\nDear ImGui - Version ") + std::string(IMGUI_VERSION) +
+            std::string("\n\nContact: megamol@visus.uni-stuttgart.de\nWeb: https://megamol.org\nGit-Hub: "
+                        "https://github.com/UniStuttgart-VISUS/megamol\n\nCopyright (C) 2009-2019 by Universitaet "
+                        "Stuttgart (VIS).\nAll rights "
+                        "reserved.");
+
         ImGui::Text(about.c_str());
         ImGui::Separator();
         if (ImGui::Button("Close")) {
