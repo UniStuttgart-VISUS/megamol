@@ -72,25 +72,25 @@ The module `TrackingShotRenderer` exposes the following parameters:
 (The values in brackets indicate the default values.)
 
 * `splineSubdivision` (`20`): Amount of interpolation steps between keyframes.
-* `toggleManipulators` (Assigned key: `m`): Toggle different manipulators for the selected keyframe.            
+* `toggleManipulators` (Assigned key: `q`): Toggle different manipulators for the selected keyframe.            
 * `helpText` (Assigned key: `h`): Show/hide help text for key assignments.
 * `manipulatorsOutsideBBox` (Assigned key: `w`): Keep manipulators always outside of model bounding box.
 
 The module `CinematicView` exposes the following parameters:
 (The values in brackets indicate the default values.)
 
-* `renderAnim` (Assigned key: `r`): Toggle rendering of complete animation to png files.   
+* `renderAnim` (Assigned key: `CTRL+r`): Toggle rendering of complete animation to png files.   
    Whenever rendering is begun a new folder holding the frame image files (png) is generated.
-* `playPreview` (Assigned key: `space`): Toggle playing animation as preview.
+* `playPreview` (Assigned key: `CTRL+space`): Toggle playing animation as preview.
 * `skyboxSide` (`NONE`): Select the skybox side.
-* `cubeMode` (`false`): Activate mode that renders the bounding box side selected with `03_skyboxSide`.
+* `cubeMode` (`false`): Activate mode that renders the bounding box side selected with `skyboxSide`.
 * `cinematicWidth` (`1920`): The width resolution of the cinematic view to render.
 * `cinematicHeight`(`1080`): The height resolution of the cinematic view to render.
 * `fps` (`24`): The frames per second the animation should be rendered.
 * `firstRenderFrame` (`0`): Set first frame number to start rendering with.
 * `delayFirstRenderFrame` (`10.0`): Delay (in seconds) to wait until first frame is ready and rendering to file is started.
 * `frameFolder` Specify folder where the frame files should be stored.
-* `addSBSideToName` (`false`): If true, adds the value of `03_skyboxSide` to the filename of the written image.
+* `addSBSideToName` (`false`): If true, adds the value of `skyboxSide` to the filename of the written image.
 * `stereo - eye` (`Left`) Eye position (for stereo view).
 * `stereo - projection` (`Mono Perspective`) Camera projection.
 
@@ -107,24 +107,28 @@ The module `ReplacementRenderer` exposes the following parameters:
 
 * `alpha` (`0.75`): The alpha value of the replacement rendering.
 * `replacementRendering` (`false`): Show/hide replacement rendering for the model (coloured bounding box).
-* `replacmentKeyAssign` (` `): Assign a key for the replacement rendering button `02_toggleReplacement`.
-* `toggleReplacement` (Assigned key: ` `): Toggle replacement rendering. Key can be assigned via `03_replacmentKeyAssign` parameter. 
+* `replacmentKeyAssign` (` `): Assign a key for the replacement rendering button `toggleReplacement`.
+* `toggleReplacement` (Assigned key: ` `): Toggle replacement rendering. Key can be assigned via `replacmentKeyAssign` parameter. 
     
 ---
 
 ## How to use the modules
 
 The modules should be connected as shown in the module call graph below. 
-The yellow tagged renderer module and the data source module can be replaced by any other suitable modules. 
-The renderer module has to be connected to the `TrackingShotRenderer` as well as to the `CinematicView`!
+The yellow-tagged renderer module and the data source module can be replaced by any other suitable modules. 
+Note: The renderer module has to be connected to the `TrackingShotRenderer` as well as to the `CinematicView`.
+For simplification the preferred way of adding the cinematic graph to a new project is to use the predefined cinematic module call graph via the `../project_files/cinematic_editor.lua` project (see example below).
 
 ![megamol example module call graph](graph.png)
 
 ### Example
 
-In order to run the example change to the `bin` folder of the megamol executables in a shell and start the program with the command:   
+In order to run the example change to the `bin` folder of the megamol executables in a shell and start the program with the following command:
 *Under Windows:* `.\mmconsole.exe -p ../project_files/cinematic_editor.lua`   
 *Under Linux:* `./megamol.sh -p ../project_files/cinematic_editor.lua`
 
 #### How it works
-In the `cinematic_editor.lua` project file the testsphere project `project_files/testsphere.lua` is automatically included and modified to appended to the cinematic module graph. Additionally the corresponding keyframe file for the testsphere project `project_files/cinematic_keyframes.kf` is loaded. Any other `lua` project file can be included by changing the appropriate line in `cinematic_editor.lua`. The keyframe file can be set to the empty string for the initial loading of a new project and can be set after storing new keyframes to a new file.
+In the `cinematic_editor.lua` project file the testsphere project `project_files/testsphere.lua` is automatically appended to the cinematic module graph (see yellow modules in graph above). 
+Additionally the corresponding keyframe file for the testsphere project `project_files/cinematic_keyframes.kf` is loaded. 
+Any other `lua` project file can be included by changing the appropriate line in `cinematic_editor.lua`. 
+The keyframe file can be set to the empty string for the initial loading of a new project and can be set to a newly created keyframe file later.
