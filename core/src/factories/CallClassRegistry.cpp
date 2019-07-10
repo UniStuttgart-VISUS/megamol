@@ -29,7 +29,6 @@
 #endif /* MEGAMOLCORE_WITH_DIRECT3D11 */
 #include "mmcore/view/CallCamParams.h"
 #include "mmcore/view/CallCamParamSync.h"
-#include "mmcore/view/CallSplitViewOverlay.h"
 #include "mmcore/CallVolumeData.h"
 #include "mmcore/moldyn/VolumeDataCall.h"
 #include "mmcore/misc/BezierCurvesListDataCall.h"
@@ -42,6 +41,7 @@
 #include "mmcore/moldyn/ParticleRelistCall.h"
 #include "mmcore/job/TickCall.h"
 #include "mmcore/DirectDataWriterCall.h"
+#include "mmcore/cluster/SyncDataSourcesCall.h"
 #include "mmcore/view/special/CallbackScreenShooter.h"
 
 using namespace megamol::core;
@@ -66,7 +66,6 @@ void factories::register_call_classes(factories::CallDescriptionManager& instanc
     instance.RegisterAutoDescription<view::CallRenderDeferred3D>();
     instance.RegisterAutoDescription<view::CallRenderView>();
     instance.RegisterAutoDescription<view::CallTimeControl>();
-    instance.RegisterAutoDescription<view::CallSplitViewOverlay>();
     instance.RegisterAutoDescription<DataWriterCtrlCall>();
     instance.RegisterAutoDescription<CallVolumeData>();
     instance.RegisterAutoDescription<moldyn::VolumeDataCall>();
@@ -85,5 +84,6 @@ void factories::register_call_classes(factories::CallDescriptionManager& instanc
     instance.RegisterAutoDescription<moldyn::ParticleRelistCall>();
     instance.RegisterAutoDescription<job::TickCall>();
     instance.RegisterAutoDescription<DirectDataWriterCall>();
+    instance.RegisterAutoDescription<cluster::SyncDataSourcesCall>();
     instance.RegisterAutoDescription<view::special::CallbackScreenShooterCall>();
 }

@@ -13,7 +13,7 @@ float erf(float x) {
 }
 
 // http://www.wolframalpha.com/input/?i=integrate+e%5E(-0.5*(h%5E2%2Bx%5E2))%2F(sigma+*+2.506628274631000502415765284811)+dx+from+x%3D0+to+l%2F2
-float integral2DGauss(float h, float l) {
+float integralGauss2(float h, float l) {
     float sigma = 2.0;
     return 0.5 * exp(-0.5 * h * h) * erf(0.353553 * l) / sigma;
 }
@@ -42,17 +42,19 @@ float movingKernel(vec2 position, float width, float len) {
     }
 
     // Compute the distance between the two center points.
+    float alpha;
     switch (kernelType) {
     case 0:
-        return abs(x1 - x2) / (2.0 * width);
+        alpha = abs(x1 - x2) / (2.0 * width);
         break;
     case 1:
-        //integrate gauss2(x*6) dx from 0 to half distance with normalized distance and position
-        return 2.0 * integral2DGauss(3.0 * position.y / width, 3.0 * abs(x1 - x2) / (2.0 * width)); //
+        // Integrate gauss2(x*6) dx from 0 to half distance with normalized distance and position.
+        alpha = 2.0 * integralGauss2(3.0 * position.y / width, 3.0 * abs(x1 - x2) / (2.0 * width));
         break;
     default:
-        return 0.0;
+        alpha = 0.0;
     }
+    return alpha;
 }
 
 void main(void) {

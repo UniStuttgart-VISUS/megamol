@@ -4,8 +4,9 @@ import collections
 import functools
 import operator
 
-thePath = "\\\\etude\\Archiv\\Daten\\Partikel\\FARO\\dischingen_raw_final\\"
-numNodes = 48
+#thePath = "\\\\etude\\Archiv\\Daten\\Partikel\\FARO\\dischingen_raw_final\\"
+thePath = "\\\\paganmetal\\u$\\Dischingen\\"
+numNodes = 20
 capMax = 999 * 1024 * 1024 * 1024
 
 allFiles = [f for f in listdir(thePath) if isfile(join(thePath, f))]
@@ -20,7 +21,7 @@ for f in allFiles:
             found = True
             break
 
-    if not splitext(f)[1] == ".raw":
+    if not splitext(f)[1] == ".mmpkd":
         found = True
     
     if not found and path.getsize(thePath + f) > 48:
@@ -35,9 +36,9 @@ items = []
 for f in sortedFiles:
     items.append((1, f, path.getsize(f)))
 
-print("got " + str(len(items)) + " leaves")
-for i in items:
-    print(str(i[0]) + " " + i[1] + " " + str(i[2]) )
+print("-- got " + str(len(items)) + " leaves")
+# for i in items:
+#     print(str(i[0]) + " " + i[1] + " " + str(i[2]) )
 
 for i in items:
     smallestCap = capMax
@@ -51,7 +52,7 @@ for i in items:
     nodeCapacity[smallestIdx] += i[2]
 
 for i in range(numNodes):
-    print("node " + str(i) + " has capacity " + str(nodeCapacity[i]) + ":")
+    print("-- node " + str(i) + " has capacity " + str(nodeCapacity[i]) + ":")
 
 print("nodeFiles = {")
 for i in range(numNodes):
@@ -63,3 +64,5 @@ for i in range(numNodes):
         print('"' + ding.replace('\\', '\\\\') + '"', end='')
     print("},")
 print("}")
+
+print("return _ENV")

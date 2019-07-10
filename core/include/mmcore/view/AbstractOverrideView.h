@@ -96,6 +96,8 @@ namespace view {
 
         virtual bool OnMouseScroll(double dx, double dy) override;
 
+        CallerSlot* GetCallerSlot() { return &renderViewSlot; }
+
     protected:
 
         /**

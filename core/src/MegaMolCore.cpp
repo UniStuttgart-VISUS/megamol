@@ -610,7 +610,7 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRenderView(void *hView,
     ASSERT(sizeof(mmcRenderViewContext) == context->Size);
 
     if (view != NULL) {
-        view->ModuleGraphLock().LockExclusive();
+        vislib::sys::AutoLock lock(view->ModuleGraphLock());
 
 #ifdef MEGAMOLCORE_WITH_DIRECT3D11
         /* Pass in the D3D device that we created in the Viewer DLL. */
@@ -654,7 +654,6 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRenderView(void *hView,
             view->View()->Render(*context);
             context->ContinuousRedraw = true; // TODO: Implement the real thing
         }
-        view->ModuleGraphLock().UnlockExclusive();
     }
 }
 

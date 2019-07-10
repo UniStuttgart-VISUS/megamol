@@ -9,6 +9,7 @@
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
+#include "vislib/sys/Log.h"
 
 using namespace megamol::core;
 
@@ -42,8 +43,11 @@ Call::~Call(void) {
  * Call::operator()
  */
 bool Call::operator()(unsigned int func) {
+    bool res = false;
     if (this->callee != nullptr) {
-        return this->callee->InCall(this->funcMap[func], *this);
+        res = this->callee->InCall(this->funcMap[func], *this);
     }
-    return false;
+    //vislib::sys::Log::DefaultLog.WriteInfo("calling %s, idx %i, result %s (%s)", this->ClassName(), func,
+    //    res ? "true" : "false", this->callee == nullptr ? "no callee" : "from callee");
+    return res;
 }
