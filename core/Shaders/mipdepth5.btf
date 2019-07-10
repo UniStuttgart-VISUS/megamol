@@ -228,8 +228,10 @@ out float rad;
 #define COLTAB_SIZE inConsts1.w
 ]]>
             </snippet>
+
             <snippet name="MainParams" type="string">
-                <![CDATA[
+<![CDATA[
+
 void main(void) {
 
     // remove the sphere radius from the w coordinates to the rad varyings
@@ -251,8 +253,9 @@ void main(void) {
     squarRad = rad * rad;
 ]]>
             </snippet>
+            
             <snippet name="posTrans" type="string">
-                <![CDATA[
+<![CDATA[
 
     // object pivot point in object space    
     objPos = inPos; // no w-div needed, because w is 1.0 (Because I know)
@@ -262,9 +265,11 @@ void main(void) {
     camPos.xyz -= objPos.xyz; // cam pos to glyph space
 ]]>
             </snippet>
-            <snippet name="simplesphere::vertex::SphereTouchPlane" />
+
+            <snippet name="SphereTouchPlane" type="file">mipdepth_spheretouchplane.glsl</snippet>
+
             <snippet name="Output" type="string">
-                <![CDATA[
+<![CDATA[
     vec4 depthPos; // ass of sphere in object space
 
     vec3 v = objPos.xyz - gl_ModelViewMatrixInverse[3].xyz;

@@ -30,6 +30,7 @@
 
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/param/ParamUpdateListener.h"
+#include "mmcore/cluster/SyncDataSourcesCall.h"
 
 #include "vislib/net/AbstractSimpleMessage.h"
 #include "vislib/sys/CriticalSection.h"
@@ -316,6 +317,9 @@ namespace mpi {
 
         /* Call to initialise MPI. */
         CallerSlot callRequestMpi;
+
+        /* Call to synchronize data sources*/
+        CallerSlot syncDataSlot;
 
 #ifdef WITH_MPI
         /** The communicator that the view uses. */

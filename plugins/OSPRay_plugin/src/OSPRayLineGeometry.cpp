@@ -169,7 +169,7 @@ bool OSPRayLineGeometry::getExtends(core::Call &call) {
 
     if (cd == NULL) return false;
     cd->SetFrameID(os->getTime(), true); // isTimeForced flag set to true
-    // if (!(*cd)(1)) return false; // floattable returns flase at first attempt and breaks everything
+    // if (!(*cd)(1)) return false; // table returns flase at first attempt and breaks everything
     (*cd)(1);
     this->extendContainer.boundingBox = std::make_shared<core::BoundingBoxes>(cd->AccessBoundingBoxes());
     this->extendContainer.timeFramesCount = cd->FrameCount();

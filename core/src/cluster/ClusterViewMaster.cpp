@@ -1,7 +1,7 @@
 /*
  * ClusterViewMaster.cpp
  *
- * Copyright (C) 2010 by VISUS (Universitaet Stuttgart). 
+ * Copyright (C) 2010 by VISUS (Universitaet Stuttgart).
  * Alle Rechte vorbehalten.
  */
 
@@ -9,27 +9,27 @@
 #include "mmcore/cluster/ClusterViewMaster.h"
 #include "mmcore/AbstractNamedObject.h"
 #include "mmcore/AbstractNamedObjectContainer.h"
-#include "mmcore/factories/CallDescriptionManager.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CoreInstance.h"
-#include "mmcore/cluster/NetMessages.h"
 #include "mmcore/ModuleNamespace.h"
+#include "mmcore/cluster/NetMessages.h"
+#include "mmcore/factories/CallDescriptionManager.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/Configuration.h"
 #include "mmcore/view/AbstractView.h"
 #include "mmcore/view/CallRenderView.h"
-#include "vislib/assert.h"
-#include "vislib/sys/Log.h"
 #include "vislib/RawStorage.h"
 #include "vislib/RawStorageSerialiser.h"
-#include "vislib/net/ShallowSimpleMessage.h"
-#include "vislib/net/SimpleMessageHeaderData.h"
 #include "vislib/StringTokeniser.h"
-#include "vislib/sys/SystemInformation.h"
+#include "vislib/UTF8Encoder.h"
+#include "vislib/assert.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib/net/NetworkInformation.h"
-#include "vislib/UTF8Encoder.h"
+#include "vislib/net/ShallowSimpleMessage.h"
+#include "vislib/net/SimpleMessageHeaderData.h"
+#include "vislib/sys/Log.h"
+#include "vislib/sys/SystemInformation.h"
 
 using namespace megamol::core;
 
@@ -37,19 +37,23 @@ using namespace megamol::core;
 /*
  * cluster::ClusterViewMaster::ClusterViewMaster
  */
-cluster::ClusterViewMaster::ClusterViewMaster(void) : Module(),
-        ClusterControllerClient::Listener(), CommChannelServer::Listener(),
-        param::ParamUpdateListener(), ccc(), ctrlServer(),
-        viewNameSlot("viewname", "The name of the view to be used"),
-        viewSlot("view", "The view to be used (this value is set automatically"),
-        serverAddressSlot("serverAddress", "The TCP/IP address of the server including the port"),
-        serverEndPoint(),
-        sanityCheckTimeSlot("RemoteView::sanityCheckTime", "Runs a time sync sanity check on all cluster nodes."),
-        camUpdateThread(&ClusterViewMaster::cameraUpdateThread),
-        pauseRemoteViewSlot("RemoteView::Pause", "Enters remote view pause mode"),
-        resumeRemoteViewSlot("RemoteView::Resume", "Resumes from remote view pause mode"),
-        forceNetVSyncOnSlot("RemoteView::NetVSyncOn", "Forces network v-sync on"),
-        forceNetVSyncOffSlot("RemoteView::NetVSyncOff", "Forces network v-sync off") {
+cluster::ClusterViewMaster::ClusterViewMaster(void)
+    : Module()
+    , ClusterControllerClient::Listener()
+    , CommChannelServer::Listener()
+    , param::ParamUpdateListener()
+    , ccc()
+    , ctrlServer()
+    , viewNameSlot("viewname", "The name of the view to be used")
+    , viewSlot("view", "The view to be used (this value is set automatically")
+    , serverAddressSlot("serverAddress", "The TCP/IP address of the server including the port")
+    , serverEndPoint()
+    , sanityCheckTimeSlot("RemoteView::sanityCheckTime", "Runs a time sync sanity check on all cluster nodes.")
+    , camUpdateThread(&ClusterViewMaster::cameraUpdateThread)
+    , pauseRemoteViewSlot("RemoteView::Pause", "Enters remote view pause mode")
+    , resumeRemoteViewSlot("RemoteView::Resume", "Resumes from remote view pause mode")
+    , forceNetVSyncOnSlot("RemoteView::NetVSyncOn", "Forces network v-sync on")
+    , forceNetVSyncOffSlot("RemoteView::NetVSyncOff", "Forces network v-sync off") {
 
     this->ccc.AddListener(this);
     this->MakeSlotAvailable(&this->ccc.RegisterSlot());
@@ -88,7 +92,6 @@ cluster::ClusterViewMaster::ClusterViewMaster(void) : Module(),
     this->MakeSlotAvailable(&this->forceNetVSyncOffSlot);
 
     // TODO: Implement
-
 }
 
 
@@ -99,15 +102,15 @@ cluster::ClusterViewMaster::~ClusterViewMaster(void) {
     this->ccc.RemoveListener(this);
     this->ctrlServer.RemoveListener(this);
     if (this->camUpdateThread.IsRunning()) {
-        this->ModuleGraphLock().LockExclusive();
-        this->viewSlot.ConnectCall(NULL);
-        this->ModuleGraphLock().UnlockExclusive();
+        {
+            vislib::sys::AutoLock lock(this->ModuleGraphLock());
+            this->viewSlot.ConnectCall(NULL);
+        }
         this->camUpdateThread.Join();
     }
     this->Release();
 
     // TODO: Implement
-
 }
 
 
@@ -131,14 +134,14 @@ void cluster::ClusterViewMaster::release(void) {
     this->GetCoreInstance()->UnregisterParamUpdateListener(this);
     this->ctrlServer.Stop();
     if (this->camUpdateThread.IsRunning()) {
-        this->ModuleGraphLock().LockExclusive();
-        this->viewSlot.ConnectCall(NULL);
-        this->ModuleGraphLock().UnlockExclusive();
+        {
+            vislib::sys::AutoLock lock(this->ModuleGraphLock());
+            this->viewSlot.ConnectCall(NULL);
+        }
         this->camUpdateThread.Join();
     }
 
     // TODO: Implement
-
 }
 
 
@@ -147,90 +150,83 @@ void cluster::ClusterViewMaster::release(void) {
  */
 bool cluster::ClusterViewMaster::onViewNameChanged(param::ParamSlot& slot) {
     using vislib::sys::Log;
-    this->ModuleGraphLock().LockExclusive();
-    if (!this->viewSlot.ConnectCall(NULL)) { // disconnect old call
-        Log::DefaultLog.WriteMsg(Log::LEVEL_WARN,
-            "Unable to disconnect call from slot \"%s\"\n",
-            this->viewSlot.FullName().PeekBuffer());
+    {
+        vislib::sys::AutoLock lock(this->ModuleGraphLock());
+        if (!this->viewSlot.ConnectCall(NULL)) { // disconnect old call
+            Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "Unable to disconnect call from slot \"%s\"\n",
+                this->viewSlot.FullName().PeekBuffer());
+        }
     }
-    this->ModuleGraphLock().UnlockExclusive();
     if (this->camUpdateThread.IsRunning()) {
         this->camUpdateThread.Join();
     }
 
-    CalleeSlot *viewModSlot = NULL;
+    CalleeSlot* viewModSlot = NULL;
     vislib::StringA viewName(this->viewNameSlot.Param<param::StringParam>()->Value());
     if (viewName.IsEmpty()) {
         // user just wanted to disconnect
         return true;
     }
 
-    this->ModuleGraphLock().LockExclusive();
-    AbstractNamedObject::ptr_type ano = this->FindNamedObject(viewName);
-    view::AbstractView *av = dynamic_cast<view::AbstractView*>(ano.get());
-    if (av == NULL) {
-        ModuleNamespace *mn = dynamic_cast<ModuleNamespace*>(ano.get());
-        if (mn != NULL) {
-            view::AbstractView *av2;
-            child_list_type::iterator ci, cie;
-            ci = mn->ChildList_Begin();
-            cie = mn->ChildList_End();
-            for (; ci != cie; ++ci) {
-                av2 = dynamic_cast<view::AbstractView*>((*ci).get());
-                if (av2 != NULL) {
-                    if (av != NULL) {
-                        av = NULL;
-                        break; // too many views
-                    } else {
-                        av = av2; // if only one view present in children, use it
+    {
+        vislib::sys::AutoLock lock(this->ModuleGraphLock());
+        AbstractNamedObject::ptr_type ano = this->FindNamedObject(viewName);
+        view::AbstractView* av = dynamic_cast<view::AbstractView*>(ano.get());
+        if (av == NULL) {
+            ModuleNamespace* mn = dynamic_cast<ModuleNamespace*>(ano.get());
+            if (mn != NULL) {
+                view::AbstractView* av2;
+                child_list_type::iterator ci, cie;
+                ci = mn->ChildList_Begin();
+                cie = mn->ChildList_End();
+                for (; ci != cie; ++ci) {
+                    av2 = dynamic_cast<view::AbstractView*>((*ci).get());
+                    if (av2 != NULL) {
+                        if (av != NULL) {
+                            av = NULL;
+                            break; // too many views
+                        } else {
+                            av = av2; // if only one view present in children, use it
+                        }
                     }
                 }
             }
         }
+        if (av != NULL) {
+            viewModSlot = dynamic_cast<CalleeSlot*>(av->FindSlot("render"));
+        }
     }
-    if (av != NULL) {
-        viewModSlot = dynamic_cast<CalleeSlot*>(av->FindSlot("render"));
-    }
-    this->ModuleGraphLock().UnlockExclusive();
 
     if (viewModSlot == NULL) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "View \"%s\" not found\n",
-            viewName.PeekBuffer());
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "View \"%s\" not found\n", viewName.PeekBuffer());
         return true; // this is just for diryt flag reset
     }
 
-    factories::CallDescription::ptr cd = this->GetCoreInstance()->GetCallDescriptionManager().Find(view::CallRenderView::ClassName());
+    factories::CallDescription::ptr cd =
+        this->GetCoreInstance()->GetCallDescriptionManager().Find(view::CallRenderView::ClassName());
     if (cd == NULL) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "Cannot find description for call \"%s\"\n",
-            view::CallRenderView::ClassName());
+        Log::DefaultLog.WriteMsg(
+            Log::LEVEL_ERROR, "Cannot find description for call \"%s\"\n", view::CallRenderView::ClassName());
         return true; // this is just for diryt flag reset
     }
 
-    Call *c = cd->CreateCall();
+    Call* c = cd->CreateCall();
     if (c == NULL) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "Cannot create call \"%s\"\n",
-            view::CallRenderView::ClassName());
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Cannot create call \"%s\"\n", view::CallRenderView::ClassName());
         return true; // this is just for diryt flag reset
     }
 
     if (!viewModSlot->ConnectCall(c)) {
         delete c;
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "Cannot connect call \"%s\" to inbound-slot \"%s\"\n",
-            view::CallRenderView::ClassName(),
-            viewModSlot->FullName().PeekBuffer());
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Cannot connect call \"%s\" to inbound-slot \"%s\"\n",
+            view::CallRenderView::ClassName(), viewModSlot->FullName().PeekBuffer());
         return true; // this is just for diryt flag reset
     }
 
     if (!this->viewSlot.ConnectCall(c)) {
         delete c;
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "Cannot connect call \"%s\" to outbound-slot \"%s\"\n",
-            view::CallRenderView::ClassName(),
-            this->viewSlot.FullName().PeekBuffer());
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Cannot connect call \"%s\" to outbound-slot \"%s\"\n",
+            view::CallRenderView::ClassName(), this->viewSlot.FullName().PeekBuffer());
         return true; // this is just for diryt flag reset
     }
 
@@ -250,96 +246,100 @@ bool cluster::ClusterViewMaster::onViewNameChanged(param::ParamSlot& slot) {
  * cluster::ClusterViewMaster::OnClusterUserMessage
  */
 void cluster::ClusterViewMaster::OnClusterUserMessage(cluster::ClusterControllerClient& sender,
-        const cluster::ClusterController::PeerHandle& hPeer, bool isClusterMember,
-        const UINT32 msgType, const BYTE *msgBody) {
+    const cluster::ClusterController::PeerHandle& hPeer, bool isClusterMember, const UINT32 msgType,
+    const BYTE* msgBody) {
 
     switch (msgType) {
-        case ClusterControllerClient::USRMSG_QUERYHEAD:
-            if (isClusterMember && this->ctrlServer.IsRunning()) {
-                vislib::StringA address = this->serverEndPoint.ToStringA();
-                try {
-                    sender.SendUserMsg(ClusterControllerClient::USRMSG_HEADHERE,
-                        reinterpret_cast<const BYTE*>(address.PeekBuffer()), address.Length() + 1);
-                } catch(...) {
-                }
+    case ClusterControllerClient::USRMSG_QUERYHEAD:
+        if (isClusterMember && this->ctrlServer.IsRunning()) {
+            vislib::StringA address = this->serverEndPoint.ToStringA();
+            try {
+                sender.SendUserMsg(ClusterControllerClient::USRMSG_HEADHERE,
+                    reinterpret_cast<const BYTE*>(address.PeekBuffer()), address.Length() + 1);
+            } catch (...) {
             }
-            break;
+        }
+        break;
     }
-
 }
 
 
 /*
  * cluster::ClusterViewMaster::OnCommChannelMessage
  */
-void cluster::ClusterViewMaster::OnCommChannelMessage(cluster::CommChannelServer& server,
-        cluster::CommChannel& channel, const vislib::net::AbstractSimpleMessage& msg) {
+void cluster::ClusterViewMaster::OnCommChannelMessage(
+    cluster::CommChannelServer& server, cluster::CommChannel& channel, const vislib::net::AbstractSimpleMessage& msg) {
     using vislib::sys::Log;
     vislib::net::SimpleMessage outMsg;
 
     switch (msg.GetHeader().GetMessageID()) {
-        case cluster::netmessages::MSG_REQUEST_TIMESYNC:
-            Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Time sync started");
-            outMsg.GetHeader().SetMessageID(cluster::netmessages::MSG_PING_TIMESYNC);
-            outMsg.GetHeader().SetBodySize(sizeof(cluster::netmessages::TimeSyncData));
-            outMsg.AssertBodySize();
-            ::memset(outMsg.GetBody(), 0, sizeof(cluster::netmessages::TimeSyncData));
-            outMsg.GetBodyAs<cluster::netmessages::TimeSyncData>()->srvrTimes[0] = this->GetCoreInstance()->GetCoreInstanceTime();
-            channel.SendMessage(outMsg);
-            break;
+    case cluster::netmessages::MSG_REQUEST_TIMESYNC:
+        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Time sync started");
+        outMsg.GetHeader().SetMessageID(cluster::netmessages::MSG_PING_TIMESYNC);
+        outMsg.GetHeader().SetBodySize(sizeof(cluster::netmessages::TimeSyncData));
+        outMsg.AssertBodySize();
+        ::memset(outMsg.GetBody(), 0, sizeof(cluster::netmessages::TimeSyncData));
+        outMsg.GetBodyAs<cluster::netmessages::TimeSyncData>()->srvrTimes[0] =
+            this->GetCoreInstance()->GetCoreInstanceTime();
+        channel.SendMessage(outMsg);
+        break;
 
-        case cluster::netmessages::MSG_PING_TIMESYNC:
-            ASSERT(msg.GetHeader().GetBodySize() == sizeof(cluster::netmessages::TimeSyncData));
-            outMsg.GetHeader().SetMessageID(cluster::netmessages::MSG_PING_TIMESYNC);
-            outMsg.GetHeader().SetBodySize(sizeof(cluster::netmessages::TimeSyncData));
-            outMsg.AssertBodySize();
-            ::memcpy(outMsg.GetBody(), msg.GetBody(), sizeof(cluster::netmessages::TimeSyncData));
-            {
-                UINT32 &trip = outMsg.GetBodyAs<cluster::netmessages::TimeSyncData>()->trip;
-                trip++;
-                outMsg.GetBodyAs<cluster::netmessages::TimeSyncData>()->srvrTimes[trip] = this->GetCoreInstance()->GetCoreInstanceTime();
-                if (trip == cluster::netmessages::MAX_TIME_SYNC_PING) {
-                    outMsg.GetHeader().SetMessageID(cluster::netmessages::MSG_DONE_TIMESYNC);
-                }
+    case cluster::netmessages::MSG_PING_TIMESYNC:
+        ASSERT(msg.GetHeader().GetBodySize() == sizeof(cluster::netmessages::TimeSyncData));
+        outMsg.GetHeader().SetMessageID(cluster::netmessages::MSG_PING_TIMESYNC);
+        outMsg.GetHeader().SetBodySize(sizeof(cluster::netmessages::TimeSyncData));
+        outMsg.AssertBodySize();
+        ::memcpy(outMsg.GetBody(), msg.GetBody(), sizeof(cluster::netmessages::TimeSyncData));
+        {
+            UINT32& trip = outMsg.GetBodyAs<cluster::netmessages::TimeSyncData>()->trip;
+            trip++;
+            outMsg.GetBodyAs<cluster::netmessages::TimeSyncData>()->srvrTimes[trip] =
+                this->GetCoreInstance()->GetCoreInstanceTime();
+            if (trip == cluster::netmessages::MAX_TIME_SYNC_PING) {
+                outMsg.GetHeader().SetMessageID(cluster::netmessages::MSG_DONE_TIMESYNC);
             }
-            channel.SendMessage(outMsg);
-            break;
+        }
+        channel.SendMessage(outMsg);
+        break;
 
-        case cluster::netmessages::MSG_WHATSYOURNAME: {
-            vislib::StringA myname;
-            vislib::sys::SystemInformation::ComputerName(myname);
-            outMsg.GetHeader().SetMessageID(cluster::netmessages::MSG_MYNAMEIS);
-            outMsg.GetHeader().SetBodySize(myname.Length() + 1);
-            outMsg.AssertBodySize();
-            ::memcpy(outMsg.GetBody(), myname.PeekBuffer(), myname.Length() + 1);
-            channel.SendMessage(outMsg);
-        } break;
+    case cluster::netmessages::MSG_WHATSYOURNAME: {
+        vislib::StringA myname;
+        vislib::sys::SystemInformation::ComputerName(myname);
+        outMsg.GetHeader().SetMessageID(cluster::netmessages::MSG_MYNAMEIS);
+        outMsg.GetHeader().SetBodySize(myname.Length() + 1);
+        outMsg.AssertBodySize();
+        ::memcpy(outMsg.GetBody(), myname.PeekBuffer(), myname.Length() + 1);
+        channel.SendMessage(outMsg);
+    } break;
 
-        case cluster::netmessages::MSG_MYNAMEIS:
-            ASSERT(msg.GetHeader().GetBodySize() > 0);
-            channel.SetCounterpartName(msg.GetBodyAs<char>());
-            break;
+    case cluster::netmessages::MSG_MYNAMEIS:
+        ASSERT(msg.GetHeader().GetBodySize() > 0);
+        channel.SetCounterpartName(msg.GetBodyAs<char>());
+        break;
 
-        case cluster::netmessages::MSG_TIME_SANITYCHECK:
-            ASSERT(msg.GetHeader().GetBodySize() == sizeof(double));
-            {
-                double remoteTime = *msg.GetBodyAs<double>();
-                double localTime = this->GetCoreInstance()->GetCoreInstanceTime();
-                double diff = vislib::math::Abs(localTime - remoteTime);
-                UINT level = Log::LEVEL_INFO;
-                if (diff > 0.1) level = Log::LEVEL_ERROR;
-                else if (diff > 0.03) level = Log::LEVEL_WARN;
-                Log::DefaultLog.WriteMsg(level, "%s is off by %f seconds\n", channel.CounterpartName().PeekBuffer(), diff);
-            }
-            break;
+    case cluster::netmessages::MSG_TIME_SANITYCHECK:
+        ASSERT(msg.GetHeader().GetBodySize() == sizeof(double));
+        {
+            double remoteTime = *msg.GetBodyAs<double>();
+            double localTime = this->GetCoreInstance()->GetCoreInstanceTime();
+            double diff = vislib::math::Abs(localTime - remoteTime);
+            UINT level = Log::LEVEL_INFO;
+            if (diff > 0.1)
+                level = Log::LEVEL_ERROR;
+            else if (diff > 0.03)
+                level = Log::LEVEL_WARN;
+            Log::DefaultLog.WriteMsg(level, "%s is off by %f seconds\n", channel.CounterpartName().PeekBuffer(), diff);
+        }
+        break;
 
-        case cluster::netmessages::MSG_REQUEST_GRAPHSETUP: {
-            vislib::RawStorage mem;
-            UINT32 msgType = cluster::netmessages::MSG_GRAPHSETUP;
-            this->ModuleGraphLock().LockExclusive();
+    case cluster::netmessages::MSG_REQUEST_GRAPHSETUP: {
+        vislib::RawStorage mem;
+        UINT32 msgType = cluster::netmessages::MSG_GRAPHSETUP;
+        {
+            vislib::sys::AutoLock lock(this->ModuleGraphLock());
             try {
                 AbstractNamedObject::ptr_type root_ptr = this->RootModule();
-                RootModuleNamespace *root = dynamic_cast<RootModuleNamespace*>(root_ptr.get());
+                RootModuleNamespace* root = dynamic_cast<RootModuleNamespace*>(root_ptr.get());
                 if (root != NULL) {
                     if (this->GetCoreInstance()->IsLuaProject()) {
                         // TODO serialize lua projects
@@ -351,72 +351,74 @@ void cluster::ClusterViewMaster::OnCommChannelMessage(cluster::CommChannelServer
                         root->SerializeGraph(mem);
                     }
                 }
-            } catch(...) {
+            } catch (...) {
                 mem.EnforceSize(0);
             }
-            this->ModuleGraphLock().UnlockExclusive();
-            Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Sending module graph setup (%d Bytes)", static_cast<int>(mem.GetSize()));
-            outMsg.GetHeader().SetMessageID(msgType);
-            outMsg.GetHeader().SetBodySize(static_cast<vislib::net::SimpleMessageSize>(mem.GetSize()));
-            outMsg.AssertBodySize();
-            ::memcpy(outMsg.GetBody(), mem, mem.GetSize());
-            channel.SendMessage(outMsg);
-        } break;
+        }
+        Log::DefaultLog.WriteMsg(
+            Log::LEVEL_INFO, "Sending module graph setup (%d Bytes)", static_cast<int>(mem.GetSize()));
+        outMsg.GetHeader().SetMessageID(msgType);
+        outMsg.GetHeader().SetBodySize(static_cast<vislib::net::SimpleMessageSize>(mem.GetSize()));
+        outMsg.AssertBodySize();
+        ::memcpy(outMsg.GetBody(), mem, mem.GetSize());
+        channel.SendMessage(outMsg);
+    } break;
 
-        case cluster::netmessages::MSG_REQUEST_CAMERASETUP: {
-            AbstractNamedObject::ptr_type ano;
-            Call *call = this->viewSlot.CallAs<Call>();
-            if (call != NULL) ano = AbstractNamedObject::ptr_type(const_cast<CalleeSlot*>(call->PeekCalleeSlot()));
-            if (ano != NULL) ano = ano->Parent();
-            if (ano == NULL) {
-                Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "Cluster View Master not connected to a view. Lazy evaluation NOT implemented");
-                break;
-            }
-            vislib::StringA viewname = ano->FullName();
-            outMsg.GetHeader().SetMessageID(cluster::netmessages::MSG_SET_CLUSTERVIEW);
-            outMsg.GetHeader().SetBodySize(viewname.Length() + 1);
-            outMsg.AssertBodySize();
-            ::memcpy(outMsg.GetBody(), viewname.PeekBuffer(), viewname.Length() + 1);
-            channel.SendMessage(outMsg);
-        } break;
+    case cluster::netmessages::MSG_REQUEST_CAMERASETUP: {
+        AbstractNamedObject::ptr_type ano;
+        Call* call = this->viewSlot.CallAs<Call>();
+        if (call != NULL) ano = AbstractNamedObject::ptr_type(const_cast<CalleeSlot*>(call->PeekCalleeSlot()));
+        if (ano != NULL) ano = ano->Parent();
+        if (ano == NULL) {
+            Log::DefaultLog.WriteMsg(
+                Log::LEVEL_WARN, "Cluster View Master not connected to a view. Lazy evaluation NOT implemented");
+            break;
+        }
+        vislib::StringA viewname = ano->FullName();
+        outMsg.GetHeader().SetMessageID(cluster::netmessages::MSG_SET_CLUSTERVIEW);
+        outMsg.GetHeader().SetBodySize(viewname.Length() + 1);
+        outMsg.AssertBodySize();
+        ::memcpy(outMsg.GetBody(), viewname.PeekBuffer(), viewname.Length() + 1);
+        channel.SendMessage(outMsg);
+    } break;
 
-        case cluster::netmessages::MSG_REQUEST_CAMERAVALUES: {
-            Call *call = this->viewSlot.CallAs<Call>();
-            this->ModuleGraphLock().LockExclusive();
+    case cluster::netmessages::MSG_REQUEST_CAMERAVALUES: {
+        Call* call = this->viewSlot.CallAs<Call>();
+        const view::AbstractView* av = NULL;
+        {
+            vislib::sys::AutoLock lock(this->ModuleGraphLock());
             AbstractNamedObject::const_ptr_type avp;
-            const view::AbstractView *av = NULL;
             if ((call != NULL) && (call->PeekCalleeSlot() != NULL)) {
                 avp = call->PeekCalleeSlot()->Parent();
                 av = dynamic_cast<const view::AbstractView*>(avp.get());
             }
-            this->ModuleGraphLock().UnlockExclusive();
-            if (av != NULL) {
-                vislib::RawStorage mem;
-                mem.AssertSize(sizeof(vislib::net::SimpleMessageHeaderData));
-                vislib::RawStorageSerialiser serialiser(&mem, sizeof(vislib::net::SimpleMessageHeaderData));
-                vislib::net::ShallowSimpleMessage cmsg(mem);
-                serialiser.SetOffset(sizeof(vislib::net::SimpleMessageHeaderData));
-                av->SerialiseCamera(serialiser);
+        }
+        if (av != NULL) {
+            vislib::RawStorage mem;
+            mem.AssertSize(sizeof(vislib::net::SimpleMessageHeaderData));
+            vislib::RawStorageSerialiser serialiser(&mem, sizeof(vislib::net::SimpleMessageHeaderData));
+            vislib::net::ShallowSimpleMessage cmsg(mem);
+            serialiser.SetOffset(sizeof(vislib::net::SimpleMessageHeaderData));
+            av->SerialiseCamera(serialiser);
 
-                cmsg.SetStorage(mem, mem.GetSize());
-                cmsg.GetHeader().SetMessageID(cluster::netmessages::MSG_SET_CAMERAVALUES);
-                cmsg.GetHeader().SetBodySize(static_cast<vislib::net::SimpleMessageSize>(
-                    mem.GetSize() - sizeof(vislib::net::SimpleMessageHeaderData)));
+            cmsg.SetStorage(mem, mem.GetSize());
+            cmsg.GetHeader().SetMessageID(cluster::netmessages::MSG_SET_CAMERAVALUES);
+            cmsg.GetHeader().SetBodySize(static_cast<vislib::net::SimpleMessageSize>(
+                mem.GetSize() - sizeof(vislib::net::SimpleMessageHeaderData)));
 
-                channel.SendMessage(cmsg);
-            }
+            channel.SendMessage(cmsg);
+        }
 
-        } break;
+    } break;
 
-        case cluster::netmessages::MSG_NETVSYNC_JOIN: {
-        } break;
+    case cluster::netmessages::MSG_NETVSYNC_JOIN: {
+    } break;
 
-        default:
-            Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Unhandled message received: %u\n",
-                static_cast<unsigned int>(msg.GetHeader().GetMessageID()));
-            break;
+    default:
+        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Unhandled message received: %u\n",
+            static_cast<unsigned int>(msg.GetHeader().GetMessageID()));
+        break;
     }
-
 }
 
 
@@ -441,19 +443,18 @@ void cluster::ClusterViewMaster::ParamUpdated(param::ParamSlot& slot) {
     ::memcpy(msg.GetBodyAsAt<void>(nameL), value.PeekBuffer(), valueL);
 
     this->ctrlServer.MultiSendMessage(msg);
-
 }
 
 
 /*
  * cluster::ClusterViewMaster::cameraUpdateThread
  */
-DWORD cluster::ClusterViewMaster::cameraUpdateThread(void *userData) {
+DWORD cluster::ClusterViewMaster::cameraUpdateThread(void* userData) {
     AbstractNamedObject::const_ptr_type avp;
-    const view::AbstractView *av = NULL;
-    ClusterViewMaster *This = static_cast<ClusterViewMaster *>(userData);
+    const view::AbstractView* av = NULL;
+    ClusterViewMaster* This = static_cast<ClusterViewMaster*>(userData);
     unsigned int syncnumber = static_cast<unsigned int>(-1);
-    Call *call = NULL;
+    Call* call = NULL;
     unsigned int csn = 0;
     vislib::RawStorage mem;
     mem.AssertSize(sizeof(vislib::net::SimpleMessageHeaderData));
@@ -461,14 +462,15 @@ DWORD cluster::ClusterViewMaster::cameraUpdateThread(void *userData) {
     vislib::net::ShallowSimpleMessage msg(mem);
 
     while (true) {
-        This->ModuleGraphLock().LockExclusive();
         av = NULL;
-        call = This->viewSlot.CallAs<Call>();
-        if ((call != NULL) && (call->PeekCalleeSlot() != NULL) && (call->PeekCalleeSlot()->Parent() != NULL)) {
-            avp = call->PeekCalleeSlot()->Parent();
-            av = dynamic_cast<const view::AbstractView*>(avp.get());
+        {
+            vislib::sys::AutoLock lock(This->ModuleGraphLock());
+            call = This->viewSlot.CallAs<Call>();
+            if ((call != NULL) && (call->PeekCalleeSlot() != NULL) && (call->PeekCalleeSlot()->Parent() != NULL)) {
+                avp = call->PeekCalleeSlot()->Parent();
+                av = dynamic_cast<const view::AbstractView*>(avp.get());
+            }
         }
-        This->ModuleGraphLock().UnlockExclusive();
         if (av == NULL) break;
 
         csn = av->GetCameraSyncNumber();
@@ -484,7 +486,6 @@ DWORD cluster::ClusterViewMaster::cameraUpdateThread(void *userData) {
 
             // TODO: Better use another server
             This->ctrlServer.MultiSendMessage(msg);
-
         }
 
         vislib::sys::Thread::Sleep(1000 / 60); // ~60 fps
@@ -509,26 +510,29 @@ vislib::TString cluster::ClusterViewMaster::defaultServerHost(void) const {
     while (adapters.Count() > 0) {
         if (adapters[0].GetStatus() != NetworkInformation::Adapter::OPERSTATUS_UP) {
             adapters.RemoveFirst();
-        } else break;
+        } else
+            break;
     }
     if (adapters.Count() > 0) {
         NetworkInformation::UnicastAddressList ual = adapters[0].GetUnicastAddresses();
         for (SIZE_T i = 0; ual.Count(); i++) {
             if (ual[i].GetAddressFamily() == vislib::net::IPAgnosticAddress::FAMILY_INET) {
-                return ual[i].GetAddress()
+                return ual[i]
+                    .GetAddress()
 #if defined(UNICODE) || defined(_UNICODE)
                     .ToStringW();
-#else /* defined(UNICODE) || defined(_UNICODE) */
+#else  /* defined(UNICODE) || defined(_UNICODE) */
                     .ToStringA();
 #endif /* defined(UNICODE) || defined(_UNICODE) */
             }
         }
         if (ual.Count() > 0) {
-            vislib::TString host(ual[0].GetAddress()
+            vislib::TString host(ual[0]
+                                     .GetAddress()
 #if defined(UNICODE) || defined(_UNICODE)
-                .ToStringW());
-#else /* defined(UNICODE) || defined(_UNICODE) */
-                .ToStringA());
+                                     .ToStringW());
+#else  /* defined(UNICODE) || defined(_UNICODE) */
+                                     .ToStringA());
 #endif /* defined(UNICODE) || defined(_UNICODE) */
             if (ual[0].GetAddressFamily() == vislib::net::IPAgnosticAddress::FAMILY_INET6) {
                 host.Prepend(_T("["));
@@ -540,7 +544,7 @@ vislib::TString cluster::ClusterViewMaster::defaultServerHost(void) const {
 
 #if defined(UNICODE) || defined(_UNICODE)
     return vislib::sys::SystemInformation::ComputerNameW();
-#else /* defined(UNICODE) || defined(_UNICODE) */
+#else  /* defined(UNICODE) || defined(_UNICODE) */
     return vislib::sys::SystemInformation::ComputerNameA();
 #endif /* defined(UNICODE) || defined(_UNICODE) */
 }
@@ -553,10 +557,9 @@ unsigned short cluster::ClusterViewMaster::defaultServerPort(void) const {
     const utility::Configuration& cfg = this->GetCoreInstance()->Configuration();
     try {
         if (cfg.IsConfigValueSet("cmvport")) {
-            return static_cast<unsigned short>(vislib::CharTraitsW::ParseInt(
-                cfg.ConfigValue("cmvport")));
+            return static_cast<unsigned short>(vislib::CharTraitsW::ParseInt(cfg.ConfigValue("cmvport")));
         }
-    } catch(...) {
+    } catch (...) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
             "Unable to parse configuration value \"cmvport\" as int. Configuration value ignored.");
     }
@@ -568,8 +571,7 @@ unsigned short cluster::ClusterViewMaster::defaultServerPort(void) const {
  * cluster::ClusterViewMaster::defaultServerAddress
  */
 vislib::TString cluster::ClusterViewMaster::defaultServerAddress(void) const {
-    const utility::Configuration& cfg
-        = this->GetCoreInstance()->Configuration();
+    const utility::Configuration& cfg = this->GetCoreInstance()->Configuration();
 
     if (cfg.IsConfigValueSet("cmvaddress")) { // host and port
         return cfg.ConfigValue("cmvaddress");
@@ -585,8 +587,7 @@ vislib::TString cluster::ClusterViewMaster::defaultServerAddress(void) const {
  * cluster::ClusterViewMaster::defaultVSyncServerAddress
  */
 vislib::TString cluster::ClusterViewMaster::defaultVSyncServerAddress(void) const {
-    const utility::Configuration& cfg
-        = this->GetCoreInstance()->Configuration();
+    const utility::Configuration& cfg = this->GetCoreInstance()->Configuration();
 
     if (cfg.IsConfigValueSet("cmvvsyncaddress")) { // host and port
         return cfg.ConfigValue("cmvvsyncaddress");
@@ -595,10 +596,9 @@ vislib::TString cluster::ClusterViewMaster::defaultVSyncServerAddress(void) cons
     unsigned short netysyncport = 17226;
     try {
         if (cfg.IsConfigValueSet("cmvvsyncport")) {
-            netysyncport = static_cast<unsigned short>(vislib::CharTraitsW::ParseInt(
-                cfg.ConfigValue("cmvvsyncport")));
+            netysyncport = static_cast<unsigned short>(vislib::CharTraitsW::ParseInt(cfg.ConfigValue("cmvvsyncport")));
         }
-    } catch(...) {
+    } catch (...) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
             "Unable to parse configuration value \"cmvnetysyncportport\" as int. Configuration value ignored.");
     }
@@ -635,14 +635,15 @@ bool cluster::ClusterViewMaster::onServerAddressChanged(param::ParamSlot& slot) 
 
     if (wildness > 0.8) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-            "Guessed server end point \"%s\" from \"%s\" with too high wildness: %f\n",
-            ep.ToStringA().PeekBuffer(), address.PeekBuffer(), wildness);
+            "Guessed server end point \"%s\" from \"%s\" with too high wildness: %f\n", ep.ToStringA().PeekBuffer(),
+            address.PeekBuffer(), wildness);
         return true;
     }
 
-    vislib::sys::Log::DefaultLog.WriteMsg((wildness > 0.3) ? vislib::sys::Log::LEVEL_WARN : vislib::sys::Log::LEVEL_INFO,
-        "Starting server on \"%s\" guessed from \"%s\" with wildness: %f\n",
-        ep.ToStringA().PeekBuffer(), address.PeekBuffer(), wildness);
+    vislib::sys::Log::DefaultLog.WriteMsg(
+        (wildness > 0.3) ? vislib::sys::Log::LEVEL_WARN : vislib::sys::Log::LEVEL_INFO,
+        "Starting server on \"%s\" guessed from \"%s\" with wildness: %f\n", ep.ToStringA().PeekBuffer(),
+        address.PeekBuffer(), wildness);
 
     this->ctrlServer.Start(this->serverEndPoint);
 

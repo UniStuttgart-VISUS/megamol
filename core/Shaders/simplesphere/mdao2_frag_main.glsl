@@ -1,14 +1,10 @@
-#define CLIP
-#define DEPTH
-
-uniform vec4 inViewAttr;
-
 in vec4 vsObjPos;
 in vec4 vsCamPos;
 in float vsSquaredRad;
 in float vsRad;
-
 in vec4 vsColor;
+
+uniform vec4 inViewAttr;
 
 uniform mat4 inMvpInverse;
 uniform mat4 inMvpTrans;
