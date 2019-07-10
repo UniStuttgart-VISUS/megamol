@@ -243,14 +243,16 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
     auto const sy = this->yResSlot.Param<core::param::IntParam>()->Value();
     auto const sz = this->zResSlot.Param<core::param::IntParam>()->Value();
 
-    vol.resize(omp_get_max_threads());
+    //vol.resize(omp_get_max_threads());
+    vol.resize(1);
+    vol[0].resize(sx * sy * sz, 0.0f);
     //std::vector<std::vector<unsigned int>> weights(omp_get_max_threads());
-    int init, j;
-#pragma omp parallel for
-    for (init = 0; init < omp_get_max_threads(); init++) {
-        vol[init].resize(sx * sy * sz, 0);
-        //weights[init].resize(sx * sy * sz, 0);
-    }
+//    int init, j;
+//#pragma omp parallel for
+//    for (init = 0; init < omp_get_max_threads(); init++) {
+//        vol[init].resize(sx * sy * sz, 0);
+//        //weights[init].resize(sx * sy * sz, 0);
+//    }
 
     // TODO: the whole code is wrong since we might not have the bounding box for the actual
     // cyclic boundary conditions. Also, these CBC are not applied currently.
@@ -293,7 +295,8 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
 
         // https : // en.wikipedia.org/wiki/Radial_basis_function
         auto gauss = [](float const dist, float const epsilon) -> float {
-            return std::exp(-(dist * epsilon) * (dist * epsilon));
+            if (dist >= epsilon) return 0.0f;
+            return std::expf(-1.0f/(1.0f - std::powf((1.0f/epsilon)*dist, 2.0f)));
         };
 
         auto const& parStore = parts.GetParticleStore();
@@ -309,7 +312,7 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
             volOp = [this, &gauss, &iAcc, &sx, &sy](int const pidx, int const x, int const y, int const z,
                         float const dis, float const rad) -> void {
                 auto const val = iAcc->Get_f(pidx);
-                vol[omp_get_thread_num()][x + (y + z * sy) * sx] +=
+                vol[0][x + (y + z * sy) * sx] +=
                     gauss(dis, this->sigmaSlot.Param<core::param::FloatParam>()->Value() * rad) * val;
             };
         } break;
@@ -317,8 +320,9 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
         case 0: {
             volOp = [this, &gauss, &sx, &sy](int const pidx, int const x, int const y, int const z,
                         float const dis, float const rad) -> void {
-                vol[omp_get_thread_num()][x + (y + z * sy) * sx] +=
-                    gauss(dis, this->sigmaSlot.Param<core::param::FloatParam>()->Value() * rad);
+                auto val = gauss(dis, this->sigmaSlot.Param<core::param::FloatParam>()->Value() * rad);
+                vol[0][x + (y + z * sy) * sx] += val;
+                    
             };
         }
         }
@@ -327,7 +331,7 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
         for (int z = 0; z < sz; ++z) {
             for (int y = 0; y < sy; ++y) {
                 for (int x = 0; x < sx; ++x) {
-#pragma omp parallel for
+//#pragma omp parallel for
                     for (int j = 0; j < parts.GetCount(); ++j) {
                         auto const x_base = xAcc->Get_f(j);
                         auto const y_base = yAcc->Get_f(j);
@@ -337,14 +341,17 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
 
                         float x_diff = static_cast<float>(x) * sliceDistX + minOSx;
                         x_diff = std::fabs(x_diff - x_base);
+                        // if (x_diff > halfRangeOSx) x_diff -= rangeOSx;
                         float y_diff = static_cast<float>(y) * sliceDistY + minOSy;
                         y_diff = std::fabs(y_diff - y_base);
+                        // if (y_diff > halfRangeOSy) y_diff -= rangeOSy;
                         float z_diff = static_cast<float>(z) * sliceDistZ + minOSz;
                         z_diff = std::fabs(z_diff - z_base);
+                        //if (z_diff > halfRangeOSz) z_diff -= rangeOSz;
                         float const dis = std::sqrt(x_diff * x_diff + y_diff * y_diff + z_diff * z_diff);
 
-                        if (dis <= rad)
-                            volOp(j, x, y, z, dis, rad);
+                        //if (dis < rad) DebugBreak();
+                        volOp(j, x, y, z, dis, rad);
                     }
                 }
             }
@@ -438,46 +445,58 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
 #endif
     }
 
-    std::vector<float> localMax(omp_get_max_threads(), 0.0f);
-    std::vector<float> localMin(omp_get_max_threads(), std::numeric_limits<float>::max());
+    /*std::vector<float> localMax(omp_get_max_threads(), 0.0f);
+    std::vector<float> localMin(omp_get_max_threads(), std::numeric_limits<float>::max());*/
 
-    int i = 0;
-#pragma omp parallel for private(i)
-    for (j = 0; j < sx * sy * sz; ++j) {
-        for (i = 1; i < omp_get_max_threads(); ++i) {
-            vol[0][j] += vol[i][j];
-            //weights[0][j] += weights[i][j];
-            /*if (vol[i][j] > 0.0f) {
-                vislib::sys::Log::DefaultLog.WriteInfo("ParticlesToDensity: Thread %d found value != 0 in
-            vol[%d][%d]\n", omp_get_thread_num(), i, j);
-            }*/
-        }
-        //vol[0][j] /= weights[0][j] == 0 ? 1 : static_cast<float>(weights[0][j]);
-        //vol[0][j] /= static_cast<float>(weights[0][j]);
-        if (vol[0][j] > localMax[omp_get_thread_num()]) {
-            localMax[omp_get_thread_num()] = vol[0][j];
-            // vislib::sys::Log::DefaultLog.WriteInfo("ParticlesToDensity: Thread %d found a new max: %f\n",
-            // omp_get_thread_num(), vol[0][j]);
-        }
-        if (vol[0][j] < localMin[omp_get_thread_num()]) {
-            localMin[omp_get_thread_num()] = vol[0][j];
-            // vislib::sys::Log::DefaultLog.WriteInfo("ParticlesToDensity: Thread %d found a new max: %f\n",
-            // omp_get_thread_num(), vol[0][j]);
-        }
-    }
+    /*for (int i = 1; i < omp_get_max_threads(); ++i) {
+        std::transform(vol[i].begin(), vol[i].end(), vol[0].begin(), vol[0].begin(), std::plus<>());
+    }*/
 
-    maxDens = *std::max_element(localMax.begin(), localMax.end());
-    minDens = *std::min_element(localMin.begin(), localMin.end());
+    maxDens = *std::max_element(vol[0].begin(), vol[0].end());
+    minDens = *std::min_element(vol[0].begin(), vol[0].end());
+
+
+//    int i = 0;
+//#pragma omp parallel for private(i)
+//    for (j = 0; j < sx * sy * sz; ++j) {
+//        for (i = 1; i < omp_get_max_threads(); ++i) {
+//            vol[0][j] += vol[i][j];
+//            //weights[0][j] += weights[i][j];
+//            /*if (vol[i][j] > 0.0f) {
+//                vislib::sys::Log::DefaultLog.WriteInfo("ParticlesToDensity: Thread %d found value != 0 in
+//            vol[%d][%d]\n", omp_get_thread_num(), i, j);
+//            }*/
+//        }
+//        //vol[0][j] /= weights[0][j] == 0 ? 1 : static_cast<float>(weights[0][j]);
+//        //vol[0][j] /= static_cast<float>(weights[0][j]);
+//        if (vol[0][j] > localMax[omp_get_thread_num()]) {
+//            localMax[omp_get_thread_num()] = vol[0][j];
+//            // vislib::sys::Log::DefaultLog.WriteInfo("ParticlesToDensity: Thread %d found a new max: %f\n",
+//            // omp_get_thread_num(), vol[0][j]);
+//        }
+//        if (vol[0][j] < localMin[omp_get_thread_num()]) {
+//            localMin[omp_get_thread_num()] = vol[0][j];
+//            // vislib::sys::Log::DefaultLog.WriteInfo("ParticlesToDensity: Thread %d found a new max: %f\n",
+//            // omp_get_thread_num(), vol[0][j]);
+//        }
+//    }
+//
+//    maxDens = *std::max_element(localMax.begin(), localMax.end());
+//    minDens = *std::min_element(localMin.begin(), localMin.end());
 
     if (this->normalizeSlot.Param<core::param::BoolParam>()->Value()) {
         auto const rcpValRange = 1.0f / (maxDens - minDens);
+        std::for_each(vol[0].begin(), vol[0].end(),
+            [this, rcpValRange](float const& a) { return (a - minDens) * rcpValRange; });
+
+        /*auto const rcpValRange = 1.0f / (maxDens - minDens);
 #pragma omp parallel for
         for (int64_t i = 0; i < vol[0].size(); ++i) {
             vol[0][i] -= minDens;
             vol[0][i] *= rcpValRange;
         }
         maxDens = 1.0f;
-        minDens = 0.0f;
+        minDens = 0.0f;*/
     }
 
 //#define PTD_DEBUG_OUTPUT
