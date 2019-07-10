@@ -42,6 +42,7 @@
 #include "mmcore/job/TickCall.h"
 #include "mmcore/DirectDataWriterCall.h"
 #include "mmcore/cluster/SyncDataSourcesCall.h"
+#include "mmcore/view/special/CallbackScreenShooter.h"
 
 using namespace megamol::core;
 
@@ -84,4 +85,5 @@ void factories::register_call_classes(factories::CallDescriptionManager& instanc
     instance.RegisterAutoDescription<job::TickCall>();
     instance.RegisterAutoDescription<DirectDataWriterCall>();
     instance.RegisterAutoDescription<cluster::SyncDataSourcesCall>();
+    instance.RegisterAutoDescription<view::special::CallbackScreenShooterCall>();
 }
