@@ -55,13 +55,15 @@ namespace MegaMolConf {
             ListBox lb = new ListBox();
             lb.SelectionMode = SelectionMode.One;
             lb.SelectedValueChanged += OnListBoxSelectedValueChanged;
-
+            
             lb.DisplayMember = "DisplayName";
 
-            for (int i = 0; i < this.e.Values.Length; i++) {
+            for (int i = 0; i < this.e.Values.Length; i++)
+            {
                 Element e = new Element(this.e.Values[i]);
                 int index = lb.Items.Add(e);
-                if (e.Value == ((Element)value).Value) {
+                if (e.Value == ((Element)value).Value)
+                {
                     lb.SelectedIndex = i;
                 }
             }

@@ -95,8 +95,9 @@ bool megamol::stdplugin::datatools::StaticMMPLDProvider::assertData(core::moldyn
 
         filenamesSlot.ResetDirty();
     }
+    
 
-    return true;
+    return !output_frames.empty();
 }
 
 

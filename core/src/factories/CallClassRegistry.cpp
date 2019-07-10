@@ -43,6 +43,7 @@
 #include "mmcore/view/light/CallLight.h"
 #include "mmcore/job/TickCall.h"
 #include "mmcore/DirectDataWriterCall.h"
+#include "mmcore/cluster/SyncDataSourcesCall.h"
 
 using namespace megamol::core;
 
@@ -84,4 +85,7 @@ void factories::register_call_classes(factories::CallDescriptionManager& instanc
     instance.RegisterAutoDescription<moldyn::EllipsoidalParticleDataCall>();
     instance.RegisterAutoDescription<moldyn::ParticleRelistCall>();
     instance.RegisterAutoDescription<view::light::CallLight>();
+    instance.RegisterAutoDescription<job::TickCall>();
+    instance.RegisterAutoDescription<DirectDataWriterCall>();
+    instance.RegisterAutoDescription<cluster::SyncDataSourcesCall>();
 }

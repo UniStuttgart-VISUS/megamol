@@ -109,8 +109,10 @@ bool datatools::AbstractVolumeManipulator::getDataCallback(megamol::core::Call& 
     if (inVdc == nullptr) return false;
 
     *inVdc = *outVdc; // to get the correct request time
-    if (!(*inVdc)(VolumetricDataCall::IDX_GET_DATA)) return false;
-
+    if (!(*inVdc)(VolumetricDataCall::IDX_GET_DATA)){ 
+      vislib::sys::Log::DefaultLog.WriteInfo("AbstractVolumeManipulator: No data available.\n");
+      return false;
+    }
     if (!this->manipulateData(*outVdc, *inVdc)) {
         inVdc->Unlock();
         return false;
