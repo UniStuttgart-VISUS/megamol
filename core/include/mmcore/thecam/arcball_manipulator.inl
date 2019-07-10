@@ -128,7 +128,7 @@ void megamol::core::thecam::arcball_manipulator<T>::on_drag(const screen_type x,
         THE_ASSERT(cam != nullptr);
 
         if (this->lastSx != x || this->lastSy != y) {
-            this->currentVector = this->mapToSphere(x, y);
+            this->currentVector = thecam::math::rotate(this->mapToSphere(x, y), this->startRot);
 
             // Compute axis of rotation.
             auto axis = megamol::core::thecam::math::cross(this->startVector, this->currentVector);
@@ -136,20 +136,28 @@ void megamol::core::thecam::arcball_manipulator<T>::on_drag(const screen_type x,
             // Compute angle and rotation quaternion.
             quaternion_type quat;
             auto angle = thecam::math::dot(this->startVector, this->currentVector);
-
+            angle = glm::acos(angle);
 
             thecam::math::set_from_angle_axis(quat, angle, axis);
 
+#if 0
             // Apply the rotation.
-            auto rot = quat * this->startRot;
+            auto rot = quat * this->invStartRot;
             cam->orientation(rot);
 
             // Compute the new position of the camera.
             auto pos = this->startPos - this->rotCentre;
-            pos = thecam::math::rotate(pos, this->startRot);
+            //pos = thecam::math::rotate(pos, math::invert(this->startRot));
             pos = thecam::math::rotate(pos, rot);
             pos += this->rotCentre;
             cam->position(pos);
+#endif
+            auto qstar = quat * this->invStartRot;
+            auto pos = thecam::math::rotate(this->startPos - this->rotCentre, qstar) + this->rotCentre;
+            cam->position(pos);
+            cam->orientation(quat);
+
+            // this->startVector = this->currentVector;
 
             this->lastSx = x;
             this->lastSy = y;
@@ -165,9 +173,10 @@ template <class T>
 void megamol::core::thecam::arcball_manipulator<T>::on_drag_start(const screen_type x, const screen_type y) {
     if (!this->manipulating() && this->enabled()) {
         this->begin_manipulation();
-        this->startPos = this->camera()->position();
-        this->startRot = math::invert(this->camera()->orientation());
-        this->startVector = this->mapToSphere(x, y);
+        this->startPos = this->camera()->eye_position();
+        this->invStartRot = math::invert(this->camera()->orientation());
+        this->startRot = this->camera()->orientation();
+        this->startVector = thecam::math::rotate(this->mapToSphere(x, y), this->camera()->orientation());
         this->lastSx = x;
         this->lastSy = y;
     }
@@ -201,6 +210,5 @@ megamol::core::thecam::arcball_manipulator<T>::mapToSphere(const screen_type sx,
         // Point is mapped inside the sphere.
         bz = std::sqrt(1.0f - mag);
     }
-
     return maths_type::vector_type(bx, by, bz, static_cast<world_type>(0));
 }

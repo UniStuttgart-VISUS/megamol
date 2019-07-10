@@ -97,7 +97,8 @@ template <class T> struct quaternion_traits : public detail::vectorial_traits_ba
     typedef detail::vectorial_traits_base<T, 4> base;
 
     /** The allocator for heap allocations of the quaternions. */
-    template <class C> using allocator_type = typename detail::template vectorial_traits_base<T, 4>::template allocator_type<C>;
+    template <class C>
+    using allocator_type = typename detail::template vectorial_traits_base<T, 4>::template allocator_type<C>;
 
     /** The native type used to store the quaternion. */
     typedef typename base::native_type native_type;
@@ -958,7 +959,7 @@ inline vector<glm::vec4> rotate(const vector<glm::vec4>& vec, const quaternion<g
     std::decay<decltype(vec)>::type retval(thecam::utility::do_not_initialise);
     glm::quat h(0.0f, static_cast<glm::vec4>(vec).x, static_cast<glm::vec4>(vec).y, static_cast<glm::vec4>(vec).z);
     h = static_cast<glm::quat>(quat) * h * glm::conjugate(static_cast<glm::quat>(quat));
-    retval = glm::vec4(h.x, h.y, h.z, static_cast<glm::vec4>(vec).w); // TODO is the preservation of w correct?
+    retval = glm::vec4(h.x, h.y, h.z, 0.0f);
     return retval;
 }
 #endif
@@ -1032,6 +1033,7 @@ template <class A>
 inline quaternion<glm::quat>& set_from_angle_axis(
     quaternion<glm::quat>& quat, const A angle, const vector<glm::vec4>& axis) {
     glm::vec3 a = glm::vec3(static_cast<glm::vec4>(axis));
+    a = glm::normalize(a);
     glm::quat unit = glm::quat(1, 0, 0, 0);
     quat = glm::rotate(static_cast<glm::quat>(unit), angle, a);
     return quat;

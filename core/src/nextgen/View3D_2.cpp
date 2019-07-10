@@ -621,14 +621,14 @@ bool nextgen::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButto
                 if (!this->arcballManipulator.manipulating()) {
                     glm::vec3 curPos = static_cast<glm::vec4>(this->cam.eye_position());
                     glm::vec3 camDir = static_cast<glm::vec4>(this->cam.view_vector());
-                    glm::vec3 rotCenter = curPos + this->arcballCenterDistance * glm::normalize(camDir);
+                    // glm::vec3 rotCenter = curPos + this->arcballCenterDistance * glm::normalize(camDir);
                     // glm::vec3 rotCenter = static_cast<glm::vec4>(this->arcballManipulator.rotation_centre());
-                    this->arcballManipulator.set_rotation_centre(glm::vec4(rotCenter, 1.0f));
+                    // this->arcballManipulator.set_rotation_centre(glm::vec4(rotCenter, 1.0f));
                     // this->arcballManipulator.set_radius(glm::distance(rotCenter, curPos));
                     this->arcballManipulator.set_radius(1.0f);
                     auto wndSize = this->cam.resolution_gate();
                     this->arcballManipulator.on_drag_start(
-                        static_cast<int>(this->mouseX), wndSize.height() - static_cast<int>(this->mouseY));
+                        wndSize.width() - static_cast<int>(this->mouseX), static_cast<int>(this->mouseY));
                 }
             } else if (action == view::MouseButtonAction::RELEASE && (altPressed ^ this->arcballDefault)) {
                 this->arcballManipulator.on_drag_stop();
@@ -670,7 +670,7 @@ bool nextgen::View3D_2::OnMouseMove(double x, double y) {
         if (this->arcballManipulator.manipulating()) {
             auto wndSize = this->cam.resolution_gate();
             this->arcballManipulator.on_drag(
-                static_cast<int>(this->mouseX), wndSize.height() - static_cast<int>(this->mouseY));
+                wndSize.width() - static_cast<int>(this->mouseX), static_cast<int>(this->mouseY));
         }
     }
 

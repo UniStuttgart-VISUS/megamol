@@ -171,6 +171,8 @@ namespace thecam {
         vector_type startPos;
 
         /** The camera rotation quaterion when the drag interaction started. */
+        quaternion_type invStartRot;
+
         quaternion_type startRot;
 
         /** The point on the arcball when the drag interaction started. */
