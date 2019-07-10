@@ -30,7 +30,10 @@
 #include "vislib/sys/Thread.h"
 #include "vislib/Trace.h"
 #include <climits>
-
+#include <map>
+#include <sstream>
+#include <string>
+#include <vector>
 
 namespace megamol {
 namespace core {

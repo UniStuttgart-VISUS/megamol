@@ -14,10 +14,10 @@
 #include "mmcore/api/MegaMolCore.std.h"
 #include "AbstractParam.h"
 //#include "vislib/Map.h"
-#include <set>
 #include "vislib/String.h"
 #include "vislib/tchar.h"
-
+#include <set>
+#include <string>
 
 namespace megamol {
 namespace core {
