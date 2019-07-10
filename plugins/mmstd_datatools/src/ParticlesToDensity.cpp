@@ -322,7 +322,8 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
         }
         }
 
-#pragma omp parallel for collapse(4)
+#if 0
+#    pragma omp parallel for collapse(4)
         for (int z = 0; z < sz; ++z) {
             for (int y = 0; y < sy; ++y) {
                 for (int x = 0; x < sx; ++x) {
@@ -345,6 +346,67 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
                         float const dis = std::sqrt(x_diff * x_diff + y_diff * y_diff + z_diff * z_diff);
 
                         volOp(j, x, y, z, dis, rad);
+                    }
+                }
+            }
+        }
+#endif
+
+#pragma omp parallel for
+        for (int64_t j = 0; j < parts.GetCount(); ++j) {
+            auto const x_base = xAcc->Get_f(j);
+            auto x = static_cast<int>((x_base - minOSx) / sliceDistX);
+            auto const y_base = yAcc->Get_f(j);
+            auto y = static_cast<int>((y_base - minOSy) / sliceDistY);
+            auto const z_base = zAcc->Get_f(j);
+            auto z = static_cast<int>((z_base - minOSz) / sliceDistZ);
+            auto rad = globRad;
+            if (!useGlobRad) rad = rAcc->Get_f(j);
+
+            int const filterSizeX = static_cast<int>(std::ceilf(rad / sliceDistX));
+            int const filterSizeY = static_cast<int>(std::ceilf(rad / sliceDistY));
+            int const filterSizeZ = static_cast<int>(std::ceilf(rad / sliceDistZ));
+
+            for (int hz = z - filterSizeZ; hz <= z + filterSizeZ; ++hz) {
+                for (int hy = y - filterSizeY; hy <= y + filterSizeY; ++hy) {
+                    for (int hx = x - filterSizeX; hx <= x + filterSizeX; ++hx) {
+                        auto tmp_hx = hx;
+                        auto tmp_hy = hy;
+                        auto tmp_hz = hz;
+                        if (cycl_x) {
+                            tmp_hx = (hx + 2 * sx) % sx;
+                        } else {
+                            if (hx < 0 || hx > sx - 1) {
+                                continue;
+                            }
+                        }
+                        if (cycl_y) {
+                            tmp_hy = (hy + 2 * sy) % sy;
+                        } else {
+                            if (hy < 0 || hy > sy - 1) {
+                                continue;
+                            }
+                        }
+                        if (cycl_z) {
+                            tmp_hz = (hz + 2 * sz) % sz;
+                        } else {
+                            if (hz < 0 || hz > sz - 1) {
+                                continue;
+                            }
+                        }
+
+                        float x_diff = static_cast<float>(hx) * sliceDistX + minOSx;
+                        x_diff = std::fabs(x_diff - x_base);
+                        // if (x_diff > halfRangeOSx) x_diff -= rangeOSx;
+                        float y_diff = static_cast<float>(hy) * sliceDistY + minOSy;
+                        y_diff = std::fabs(y_diff - y_base);
+                        // if (y_diff > halfRangeOSy) y_diff -= rangeOSy;
+                        float z_diff = static_cast<float>(hz) * sliceDistZ + minOSz;
+                        z_diff = std::fabs(z_diff - z_base);
+                        // if (z_diff > halfRangeOSz) z_diff -= rangeOSz;
+                        float const dis = std::sqrt(x_diff * x_diff + y_diff * y_diff + z_diff * z_diff);
+
+                        volOp(j, tmp_hx, tmp_hy, tmp_hz, dis, rad);
                     }
                 }
             }
