@@ -3,7 +3,7 @@
 This plugin allows the video rendering (separate file per frame) of any rendering output in MegaMol.
 By defining fixed keyframes for desired camera positions and specific animation times, arbitrary tracking shots can be created.
 
-![cinematic demo picture](plugins/cinematic/demo.png)
+![cinematic demo picture](demo.png)
 
 --- 
 
@@ -118,12 +118,13 @@ The modules should be connected as shown in the module call graph below.
 The yellow tagged renderer module and the data source module can be replaced by any other suitable modules. 
 The renderer module has to be connected to the `TrackingShotRenderer` as well as to the `CinematicView`!
 
-![megamol example module call graph](plugins/cinematic/graph.png)
+![megamol example module call graph](graph.png)
 
 ### Example
 
-The sample project files (`cinematic_editor.lua`,`cinematic_keyframes.kf` ) which are supported in the `examples` folder of this plugin have to be copied into the `bin` folder of megamol.
-In a shell change to the `bin` folder of the megamol executables and start the program with the command:   
-*Under Windows:* `.\mmconsole.exe -p cinematic_editor.lua`   
-*Under Linux:* `./megamol.sh -p cinematic_editor.lua`
+In order to run the example change to the `bin` folder of the megamol executables in a shell and start the program with the command:   
+*Under Windows:* `.\mmconsole.exe -p ../project_files/cinematic_editor.lua`   
+*Under Linux:* `./megamol.sh -p ../project_files/cinematic_editor.lua`
 
+#### How it works
+In the `cinematic_editor.lua` project file the testsphere project `project_files/testsphere.lua` is automatically included and modified to appended to the cinematic module graph. Additionally the corresponding keyframe file for the testsphere project `project_files/cinematic_keyframes.kf` is loaded. Any other `lua` project file can be included by changing the appropriate line in `cinematic_editor.lua`. The keyframe file can be set to the empty string for the initial loading of a new project and can be set after storing new keyframes to a new file.
