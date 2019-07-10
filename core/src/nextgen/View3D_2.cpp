@@ -560,10 +560,11 @@ bool nextgen::View3D_2::OnKey(view::Key key, view::KeyAction action, view::Modif
             }
         } else {
             if (this->savedCameras[index].second) {
-                // As a change of camera position should not change the display resolution, we actively save and restore the old value
+                // As a change of camera position should not change the display resolution, we actively save and restore
+                // the old value of the resolution
                 auto oldResolution = this->cam.resolution_gate; // save old resolution
-                this->cam = this->savedCameras[index].first; // override current camera
-                this->cam.resolution_gate = oldResolution; // restore old resolution
+                this->cam = this->savedCameras[index].first;    // override current camera
+                this->cam.resolution_gate = oldResolution;      // restore old resolution
             }
         }
     }
