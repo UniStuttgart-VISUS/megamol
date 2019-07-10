@@ -114,7 +114,6 @@ private:
 
     /** A parameter to store the profile */
     core::param::ParamSlot stateParam;
-    bool ignoreStateParamOnce;
 
     /** The ImGui context created and used by this GUIView */
     ImGuiContext* context;
@@ -147,6 +146,10 @@ private:
 
     /** Name of window to delete. */
     std::string windowToDelete;
+
+    /** Flag indicating that window state should be written to parameter. */
+    bool saveState;
+    float saveStateDelay;
 
     // FUNCTIONS --------------------------------------------------------------
 

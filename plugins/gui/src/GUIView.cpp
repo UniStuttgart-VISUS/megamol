@@ -70,7 +70,6 @@ GUIView::GUIView()
     , renderViewSlot("renderview", "Connects to a preceding RenderView that will be decorated with a GUI")
     , styleParam("style", "Color style, i.e., theme")
     , stateParam("state", "Current state of all windows")
-    , ignoreStateParamOnce(false)
     , context(nullptr)
     , windowManager()
     , tfEditor()
@@ -79,7 +78,9 @@ GUIView::GUIView()
     , newFontFilenameToLoad()
     , newFontSizeToLoad(13.0f)
     , newFontIndexToLoad(-1)
-    , windowToDelete() {
+    , windowToDelete()
+    , saveState(false)
+    , saveStateDelay(0.0f) {
 
     this->renderViewSlot.SetCompatibleCall<core::view::CallRenderViewDescription>();
     this->MakeSlotAvailable(&this->renderViewSlot);
@@ -533,10 +534,17 @@ bool GUIView::OnMouseButton(
     bool down = (action == core::view::MouseButtonAction::PRESS);
     auto buttonIndex = static_cast<size_t>(button);
     ImGuiIO& io = ImGui::GetIO();
-    io.MouseDown[buttonIndex] = down;
 
     auto hoverFlags = ImGuiHoveredFlags_AnyWindow | ImGuiHoveredFlags_AllowWhenDisabled |
                       ImGuiHoveredFlags_AllowWhenBlockedByPopup | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem;
+
+    // Trigger saving state when mouse hoverd any window and on button mouse release event
+    if ((!down) && (io.MouseDown[buttonIndex]) && hoverFlags) {
+        this->saveState = true;
+        this->saveStateDelay = 0.0f;
+    }
+
+    io.MouseDown[buttonIndex] = down;
 
     if (!ImGui::IsWindowHovered(hoverFlags)) {
         auto* crv = this->renderViewSlot.CallAs<core::view::CallRenderView>();
@@ -601,24 +609,18 @@ void GUIView::validateGUI() {
         this->styleParam.ResetDirty();
     }
 
-    static unsigned int stateMagic = 0;
-    stateMagic++;
+    ImGuiIO& io = ImGui::GetIO();
+    this->saveStateDelay += io.DeltaTime;
 
     if (this->stateParam.IsDirty()) {
-        if (!this->ignoreStateParamOnce) {
-            auto state = this->stateParam.Param<core::param::StringParam>()->Value();
-            this->windowManager.StateFromJSON(std::string(state));
-        }
+        auto state = this->stateParam.Param<core::param::StringParam>()->Value();
+        this->windowManager.StateFromJSON(std::string(state));
         this->stateParam.ResetDirty();
-        this->ignoreStateParamOnce = false;
-    } else if (stateMagic % 500 == 0) {
-        // TODO: serialize back to parameter only on demand, i.e., deferred after a couple of milliseconds without any
-        // UI changes.
+    } else if (this->saveState && (this->saveStateDelay > 1.0f)) { // Waiting one second after triggering saving state
         std::string state;
         this->windowManager.StateToJSON(state);
-        this->stateParam.Param<core::param::StringParam>()->SetValue(state.c_str());
-        this->ignoreStateParamOnce = true;
-        stateMagic = 0;
+        this->stateParam.Param<core::param::StringParam>()->SetValue(state.c_str(), false);
+        this->saveState = false;
     }
 }
 
