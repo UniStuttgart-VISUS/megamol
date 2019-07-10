@@ -1003,10 +1003,6 @@ bool view::special::ScreenShooter::triggerButtonClicked(param::ParamSlot& slot) 
                     mvn.PeekBuffer());
             }
         }
-    } else {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "Unable to find view \"%s\" for ScreenShot",
-            mvn.PeekBuffer());
     }
 
     return true;
