@@ -198,22 +198,6 @@ bool megamol::console::WindowManager::InstantiatePendingView(void *hCore) {
         }
     }
 
-#ifdef HAS_ANTTWEAKBAR
-    bool showConGui = true;
-    ::mmcValueType conGuiDataType = MMC_TYPE_VOIDP;
-    const void* conGuiData = ::mmcGetConfigurationValue(hCore, MMC_CFGID_VARIABLE, _T("consolegui"), &conGuiDataType);
-    if (conGuiData != nullptr) {
-        try {
-            if (conGuiDataType == MMC_TYPE_CSTR) {
-                showConGui = vislib::CharTraitsA::ParseBool(static_cast<const char*>(conGuiData));
-            } else if (conGuiDataType == MMC_TYPE_WSTR) {
-                showConGui = vislib::CharTraitsW::ParseBool(static_cast<const wchar_t*>(conGuiData));
-            }
-        } catch (...) {
-        }
-    }
-#endif /* HAS_ANTTWEAKBAR */
-
     // get an existing window to share context resources
 #ifndef USE_EGL
     GLFWwindow* share = nullptr;
@@ -238,6 +222,23 @@ bool megamol::console::WindowManager::InstantiatePendingView(void *hCore) {
     ::mmcRegisterViewCloseRequestFunction(w->Handle(), &gl::Window::RequestCloseCallback, w.get());
 
 #ifdef HAS_ANTTWEAKBAR
+
+    bool showConGui = true;
+    ::mmcValueType conGuiDataType = MMC_TYPE_VOIDP;
+    const void* conGuiData = ::mmcGetConfigurationValue(hCore, MMC_CFGID_VARIABLE, _T("consolegui"), &conGuiDataType);
+    if (conGuiData != nullptr) {
+        try {
+            if (conGuiDataType == MMC_TYPE_CSTR) {
+                showConGui = vislib::CharTraitsA::ParseBool(static_cast<const char*>(conGuiData));
+            }
+            else if (conGuiDataType == MMC_TYPE_WSTR) {
+                showConGui = vislib::CharTraitsW::ParseBool(static_cast<const wchar_t*>(conGuiData));
+            }
+        }
+        catch (...) {
+        }
+    }
+
     auto atbLayer = std::make_shared<gl::ATBUILayer>(pendInstName, w->Handle(), hCore);
     w->AddUILayer(atbLayer);
 
@@ -247,9 +248,10 @@ bool megamol::console::WindowManager::InstantiatePendingView(void *hCore) {
     if (!showConGui && atbLayer->Enabled()) {
         atbLayer->ToggleEnable();
     }
-    if (showConGui && !(atbLayer->Enabled())) {
+    else if (showConGui && !(atbLayer->Enabled())) {
         atbLayer->ToggleEnable();
     }
+
 #endif /* HAS_ANTTWEAKBAR */
 
     auto viewLayer = std::make_shared<ViewUILayer>(w->Handle());
@@ -259,14 +261,13 @@ bool megamol::console::WindowManager::InstantiatePendingView(void *hCore) {
     w->AddUILayer(btnLayer);
 
 #ifdef HAS_ANTTWEAKBAR
-    // Mask ButtonParamUILayer only if AntTweakBar is enabled
-    if (atbLayer->Enabled()) {
-        btnLayer->SetMaskingLayer(atbLayer.get());
-    }
+
+    btnLayer->SetMaskingLayer(atbLayer.get());
+
 #endif /* HAS_ANTTWEAKBAR */
 
-    auto wehLayer = std::make_shared<gl::WindowEscapeHotKeysUILayer>(*w.get());
-    w->AddUILayer(wehLayer); // add as last. This allows MegaMol module buttons to use 'q' (and 'ESC') as hotkeys, overriding this hotkey
+    auto wehkLayer = std::make_shared<gl::WindowEscapeHotKeysUILayer>(*w.get());
+    w->AddUILayer(wehkLayer); // add as last. This allows MegaMol module buttons to use 'q' (and 'ESC') as hotkeys, overriding this hotkey
 
     w->ForceIssueResizeEvent();
     windows.push_back(w);
