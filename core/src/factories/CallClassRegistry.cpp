@@ -12,7 +12,6 @@
 #include "mmcore/factories/CallDescription.h"
 
 #include "mmcore/DataWriterCtrlCall.h"
-#include "mmcore/moldyn/DirectionalParticleDataCall.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/moldyn/ParticleGridDataCall.h"
 #include "mmcore/cluster/CallRegisterAtController.h"
@@ -41,6 +40,8 @@
 #include "mmcore/moldyn/ParticleRelistCall.h"
 #include "mmcore/job/TickCall.h"
 #include "mmcore/DirectDataWriterCall.h"
+#include "mmcore/cluster/SyncDataSourcesCall.h"
+#include "mmcore/view/special/CallbackScreenShooter.h"
 
 using namespace megamol::core;
 
@@ -54,7 +55,6 @@ void factories::register_call_classes(factories::CallDescriptionManager& instanc
     //////////////////////////////////////////////////////////////////////
     instance.RegisterAutoDescription<cluster::CallRegisterAtController>();
     instance.RegisterAutoDescription<cluster::simple::ClientViewRegistration>();
-    instance.RegisterAutoDescription<moldyn::DirectionalParticleDataCall>();
     instance.RegisterAutoDescription<moldyn::MultiParticleDataCall>();
     instance.RegisterAutoDescription<moldyn::ParticleGridDataCall>();
     instance.RegisterAutoDescription<view::CallClipPlane>();
@@ -82,4 +82,6 @@ void factories::register_call_classes(factories::CallDescriptionManager& instanc
     instance.RegisterAutoDescription<moldyn::ParticleRelistCall>();
     instance.RegisterAutoDescription<job::TickCall>();
     instance.RegisterAutoDescription<DirectDataWriterCall>();
+    instance.RegisterAutoDescription<cluster::SyncDataSourcesCall>();
+    instance.RegisterAutoDescription<view::special::CallbackScreenShooterCall>();
 }

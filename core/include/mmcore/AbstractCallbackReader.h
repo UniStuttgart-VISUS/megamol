@@ -66,7 +66,7 @@ namespace core {
         */
         AbstractCallbackReader() :
             outputSlot("output", "Slot for providing a callback"),
-            filePathSlot("outputFile", "Path to file which should be written into") {
+            filePathSlot("inputFile", "Path to file which should be read from") {
             
             this->outputSlot.SetCallback(CallT::ClassName(), CallT::FunctionName(0), &AbstractCallbackReader::SetCallback);
             this->MakeSlotAvailable(&this->outputSlot);

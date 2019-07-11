@@ -30,7 +30,7 @@ moldyn::ParticleListFilter::ParticleListFilter(void) : Module(),
         datahashParticlesIn(0), datahashParticlesOut(0),
         frameID(0) {
 
-    this->inParticlesDataSlot.SetCompatibleCall<moldyn::DirectionalParticleDataCallDescription>();
+    //this->inParticlesDataSlot.SetCompatibleCall<moldyn::DirectionalParticleDataCallDescription>();
     this->inParticlesDataSlot.SetCompatibleCall<moldyn::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->inParticlesDataSlot);
 
@@ -97,8 +97,7 @@ vislib::Array<unsigned int> moldyn::ParticleListFilter::getSelectedLists() {
 bool moldyn::ParticleListFilter::getDataCallback(Call& call) {
 
     MultiParticleDataCall *outMpdc = dynamic_cast<MultiParticleDataCall*>(&call);
-    DirectionalParticleDataCall *outDpdc = dynamic_cast<DirectionalParticleDataCall*>(&call);
-    if ((outMpdc == NULL) && (outDpdc == NULL)) return false;
+    if (outMpdc == NULL) return false;
 
     bool doStuff = false;
     if (this->globalColorMapComputationSlot.IsDirty()) {
@@ -182,6 +181,8 @@ bool moldyn::ParticleListFilter::getDataCallback(Call& call) {
                 inMpdc->AccessParticles(i).GetColourData(), inMpdc->AccessParticles(i).GetColourDataStride());
             outMpdc->AccessParticles(outCnt).SetVertexData(inMpdc->AccessParticles(i).GetVertexDataType(),
                 inMpdc->AccessParticles(i).GetVertexData(), inMpdc->AccessParticles(i).GetVertexDataStride());
+            outMpdc->AccessParticles(outCnt).SetDirData(inMpdc->AccessParticles(i).GetDirDataType(),
+                inMpdc->AccessParticles(i).GetDirData(), inMpdc->AccessParticles(i).GetDirDataStride());
             // TODO BUG HAZARD this is most probably wrong, as different list subsets have a different dynamic range :(
             // probably still loop over all...
             //outMpdc->AccessParticles(outCnt).SetColourMapIndexValues(inMpdc->AccessParticles(i).GetMinColourIndexValue(),
@@ -209,7 +210,9 @@ bool moldyn::ParticleListFilter::getDataCallback(Call& call) {
         this->datahashParticlesOut++;
         outMpdc->SetDataHash(this->datahashParticlesOut);
 
-    } else if (outDpdc != NULL) {
+    }
+#if 0
+    else if (outDpdc != NULL) {
         DirectionalParticleDataCall *inDpdc = this->inParticlesDataSlot.CallAs<DirectionalParticleDataCall>();
         if (inDpdc == NULL) return false;
 
@@ -312,6 +315,7 @@ bool moldyn::ParticleListFilter::getDataCallback(Call& call) {
         this->datahashParticlesOut++;
         outDpdc->SetDataHash(this->datahashParticlesOut);
     }
+#endif
     return true;
 }
 
@@ -321,8 +325,7 @@ bool moldyn::ParticleListFilter::getDataCallback(Call& call) {
  */
 bool moldyn::ParticleListFilter::getExtentCallback(Call& call) {
     MultiParticleDataCall *outMpdc = dynamic_cast<MultiParticleDataCall*>(&call);
-    DirectionalParticleDataCall *outDpdc = dynamic_cast<DirectionalParticleDataCall*>(&call);
-    if ((outMpdc == NULL) && (outDpdc == NULL)) return false;
+    if (outMpdc == NULL) return false;
 
     if (outMpdc != NULL) {
         MultiParticleDataCall *inMpdc = this->inParticlesDataSlot.CallAs<MultiParticleDataCall>();
@@ -337,7 +340,9 @@ bool moldyn::ParticleListFilter::getExtentCallback(Call& call) {
             outMpdc->SetDataHash(this->datahashParticlesOut);
             return true;
         }
-    } else if (outDpdc != NULL) {
+    }
+#if 0
+    else if (outDpdc != NULL) {
         DirectionalParticleDataCall *inDpdc = this->inParticlesDataSlot.CallAs<DirectionalParticleDataCall>();
         if (inDpdc == NULL) return false;
         // this is the devil. don't do it.
@@ -354,5 +359,6 @@ bool moldyn::ParticleListFilter::getExtentCallback(Call& call) {
             return true;
         }
     }
+#endif
     return false;
 }
