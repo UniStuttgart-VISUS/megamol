@@ -23,7 +23,7 @@ public:
     bool OnKey(core::view::Key key, core::view::KeyAction action, core::view::Modifiers mods) override;
     bool OnChar(unsigned int codePoint) override;
     bool OnMouseButton(core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) override;
-    bool OnMouseMove(double x, double y, double world_x, double world_y) override;
+    bool OnMouseMove(double x, double y) override;
     bool OnMouseScroll(double dx, double dy) override;
 
     std::shared_ptr<AbstractUILayer> lastEventCaptureUILayer(); 

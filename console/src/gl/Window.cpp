@@ -392,9 +392,9 @@ void gl::Window::glfw_onMouseMove_func(GLFWwindow* wnd, double x, double y) {
     ::glfwMakeContextCurrent(wnd);
     Window* that = static_cast<Window*>(::glfwGetWindowUserPointer(wnd));
     if (that->mouseCapture) {
-        that->mouseCapture->OnMouseMove(x, y, 0.0, 0.0);
+        that->mouseCapture->OnMouseMove(x, y);
     } else {
-        that->uiLayers.OnMouseMove(x, y, 0.0, 0.0);
+        that->uiLayers.OnMouseMove(x, y);
     }
 }
 

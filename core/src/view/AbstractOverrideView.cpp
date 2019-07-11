@@ -193,7 +193,7 @@ bool view::AbstractOverrideView::OnMouseButton(MouseButton button, MouseButtonAc
 }
 
 
-bool view::AbstractOverrideView::OnMouseMove(double x, double y, double world_x, double world_y) {
+bool view::AbstractOverrideView::OnMouseMove(double x, double y) {
     auto* cr = this->getCallRenderView();
     if (cr == NULL) return false;
 
@@ -201,8 +201,6 @@ bool view::AbstractOverrideView::OnMouseMove(double x, double y, double world_x,
     evt.tag = InputEvent::Tag::MouseMove;
     evt.mouseMoveData.x = x;
     evt.mouseMoveData.y = y;
-    evt.mouseMoveData.world_x = world_x;
-    evt.mouseMoveData.world_y = world_y;
     cr->SetInputEvent(evt);
     if (!(*cr)(view::CallRenderView::FnOnMouseMove)) return false;
 

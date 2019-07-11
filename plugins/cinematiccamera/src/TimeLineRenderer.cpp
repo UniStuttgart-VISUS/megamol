@@ -899,7 +899,7 @@ bool TimeLineRenderer::OnMouseButton(megamol::core::view::MouseButton button, me
 /*
 * cinematiccamera::TimeLineRenderer::OnMouseMove
 */
-bool TimeLineRenderer::OnMouseMove(double, double, double world_x, double world_y) {
+bool TimeLineRenderer::OnMouseMove(double x, double y) {
 
     CallCinematicCamera *ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
     if (ccc == nullptr) return false;
@@ -909,8 +909,8 @@ bool TimeLineRenderer::OnMouseMove(double, double, double world_x, double world_
     bool down = (this->mouseAction == MouseButtonAction::PRESS);
 
     // Store current mouse position
-    this->mouseX = (float)static_cast<int>(world_x);
-    this->mouseY = (float)static_cast<int>(world_y);
+    this->mouseX = (float)static_cast<int>(x);
+    this->mouseY = (float)static_cast<int>(y);
 
     // LEFT-CLICK --- keyframe selection
     if (this->mouseButton == MouseButton::BUTTON_LEFT) {

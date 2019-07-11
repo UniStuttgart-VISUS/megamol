@@ -150,7 +150,7 @@ namespace megamol {
             virtual bool OnMouseButton(megamol::core::view::MouseButton button, megamol::core::view::MouseButtonAction action, megamol::core::view::Modifiers mods) override;
 
             /** The mouse movement callback. */
-            virtual bool OnMouseMove(double x, double y, double world_x, double world_y) override;
+            virtual bool OnMouseMove(double x, double y) override;
 
 		private:
 

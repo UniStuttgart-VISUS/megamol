@@ -235,8 +235,6 @@ namespace megamol
                     this->render_data.values->min_value = 0.0f;
                     this->render_data.values->max_value = 1.0f;
                     this->render_data.values->data = std::make_shared<std::vector<GLfloat>>(this->render_data.vertices->size() / 2, 1.0f);
-
-                    new_data = true;
                 }
 
                 if (this->render_data.mask == nullptr)
@@ -247,9 +245,7 @@ namespace megamol
                 }
 
                 // Prepare OpenGL buffers
-                if (new_data)
-                {
-                    glBindVertexArray(this->render_data.vao);
+                glBindVertexArray(this->render_data.vao);
 
                     glBindBuffer(GL_ARRAY_BUFFER, this->render_data.cbo);
                     glBufferData(GL_ARRAY_BUFFER, this->render_data.values->data->size() * sizeof(GLfloat), this->render_data.values->data->data(), GL_STATIC_DRAW);
@@ -257,8 +253,16 @@ namespace megamol
                     glEnableVertexAttribArray(1);
                     glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, 0, nullptr);
 
-                    glBindVertexArray(0);
-                }
+                glBindBuffer(GL_ARRAY_BUFFER, this->render_data.cbo);
+                glBufferData(GL_ARRAY_BUFFER, this->render_data.colors->size() * sizeof(GLfloat), this->render_data.colors->data(), GL_STATIC_DRAW);
+
+                glEnableVertexAttribArray(1);
+                glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->render_data.ibo);
+                glBufferData(GL_ELEMENT_ARRAY_BUFFER, this->render_data.indices->size() * sizeof(GLuint), this->render_data.indices->data(), GL_STATIC_DRAW);
+
+                glBindVertexArray(0);
 
                 if (new_mask)
                 {
@@ -375,8 +379,8 @@ namespace megamol
 
                     this->data_set.Param<core::param::FlexEnumParam>()->ClearValues();
 
-                    this->data_set.Param<core::param::FlexEnumParam>()->AddValue("");
-                    this->data_set.Param<core::param::FlexEnumParam>()->SetValue("");
+                this->data_set.Param<core::param::FlexEnumParam>()->AddValue("");
+                this->data_set.Param<core::param::FlexEnumParam>()->SetValue("");
 
                     for (const auto& data_set : get_data->get_data_sets())
                     {

@@ -300,7 +300,7 @@ bool view::AbstractView::OnMouseMoveCallback(Call& call) {
         view::CallRenderView& cr = dynamic_cast<view::CallRenderView&>(call);
         auto& evt = cr.GetInputEvent();
         ASSERT(evt.tag == InputEvent::Tag::MouseMove && "Callback invocation mismatched input event");
-        return this->OnMouseMove(evt.mouseMoveData.x, evt.mouseMoveData.y, evt.mouseMoveData.world_x, evt.mouseMoveData.world_y);
+        return this->OnMouseMove(evt.mouseMoveData.x, evt.mouseMoveData.y);
     } catch (...) {
         ASSERT("OnMouseMoveCallback call cast failed\n");
     }

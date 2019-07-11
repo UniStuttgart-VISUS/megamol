@@ -15,8 +15,6 @@
 #include "mmcore/view/Input.h"
 #include "mmcore/view/MouseFlags.h"
 
-#include <limits>
-
 namespace megamol {
 namespace core {
 namespace view {
@@ -52,8 +50,6 @@ struct InputEvent {
         struct {
             double x;
             double y;
-            double world_x;
-            double world_y;
         } mouseMoveData;
 
         struct {

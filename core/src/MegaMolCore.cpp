@@ -733,7 +733,7 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSendMouseMoveEvent(void *hView,
         float x, float y) {
     megamol::core::ViewInstance* view = megamol::core::ApiHandle::InterpretHandle<megamol::core::ViewInstance>(hView);
     if ((view != NULL) && (view->View() != NULL)) {
-        return view->View()->OnMouseMove(x, y, 0.0, 0.0);
+        return view->View()->OnMouseMove(x, y);
     }
     return false;
 }
