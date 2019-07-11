@@ -1210,7 +1210,7 @@ void GUIView::drawFontWindowCallback(
             this->newFontSizeToLoad = window_config.font_new_size;
         }
     } else {
-        ImGui::TextColored(style.Colors[ImGuiCol_ButtonActive], "Please enter valid font file name");
+        ImGui::TextColored(ImVec4(0.9f, 0.0f, 0.0f, 1.0f), "Please enter valid font file name");
     }
     std::string help = "Same font can be loaded multiple times using different font size";
     this->popup.HelpMarkerToolTip(help);

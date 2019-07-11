@@ -222,7 +222,6 @@ bool megamol::console::WindowManager::InstantiatePendingView(void *hCore) {
     ::mmcRegisterViewCloseRequestFunction(w->Handle(), &gl::Window::RequestCloseCallback, w.get());
 
 #ifdef HAS_ANTTWEAKBAR
-
     bool showConGui = true;
     ::mmcValueType conGuiDataType = MMC_TYPE_VOIDP;
     const void* conGuiData = ::mmcGetConfigurationValue(hCore, MMC_CFGID_VARIABLE, _T("consolegui"), &conGuiDataType);
@@ -238,20 +237,14 @@ bool megamol::console::WindowManager::InstantiatePendingView(void *hCore) {
         catch (...) {
         }
     }
-
     auto atbLayer = std::make_shared<gl::ATBUILayer>(pendInstName, w->Handle(), hCore);
     w->AddUILayer(atbLayer);
+    if (!showConGui) {
+        atbLayer->ToggleEnable();
+    }
 
     auto atbthkLayer = std::make_shared<gl::ATBToggleHotKeyUILayer>(*atbLayer.get());
     w->AddUILayer(atbthkLayer);
-
-    if (!showConGui && atbLayer->Enabled()) {
-        atbLayer->ToggleEnable();
-    }
-    else if (showConGui && !(atbLayer->Enabled())) {
-        atbLayer->ToggleEnable();
-    }
-
 #endif /* HAS_ANTTWEAKBAR */
 
     auto viewLayer = std::make_shared<ViewUILayer>(w->Handle());
@@ -259,11 +252,8 @@ bool megamol::console::WindowManager::InstantiatePendingView(void *hCore) {
 
     auto btnLayer = std::make_shared<ButtonParamUILayer>(hCore, w->Handle());
     w->AddUILayer(btnLayer);
-
 #ifdef HAS_ANTTWEAKBAR
-
     btnLayer->SetMaskingLayer(atbLayer.get());
-
 #endif /* HAS_ANTTWEAKBAR */
 
     auto wehkLayer = std::make_shared<gl::WindowEscapeHotKeysUILayer>(*w.get());

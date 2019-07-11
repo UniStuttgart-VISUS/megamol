@@ -64,8 +64,8 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
     ImGuiStyle& style = ImGui::GetStyle();
 
     if (this->activeParameter == nullptr) {
-        ImGui::TextColored(style.Colors[ImGuiCol_ButtonActive], "Changes have no effect.\n"
-                                                                "Please set an active parameter!\n");
+        ImGui::TextColored(ImVec4(0.9f, 0.0f, 0.0f, 1.0f), "Changes have no effect.\n"
+                                                           "Please set an active parameter!\n");
         ImGui::Separator();
     }
 
