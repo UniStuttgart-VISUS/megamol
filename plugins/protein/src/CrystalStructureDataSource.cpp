@@ -16,7 +16,7 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/EnumParam.h"
-#include "mmcore/moldyn/DirectionalParticleDataCall.h"
+#include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "vislib/sys/Log.h"
 #include "vislib/math/Vector.h"
 
@@ -52,7 +52,7 @@ protein::CrystalStructureDataSource::CrystalStructureDataSource(void) : AnimData
     this->MakeSlotAvailable(&this->fileAtomsSlot);
 
     // Data caller slot for chkpt source
-    this->dataChkptCallerSlot.SetCompatibleCall<core::moldyn::DirectionalParticleDataCallDescription>();
+    this->dataChkptCallerSlot.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->dataChkptCallerSlot);
 
     // Data out slot
@@ -80,8 +80,8 @@ protein::CrystalStructureDataSource::CrystalStructureDataSource(void) : AnimData
             new core::param::IntParam(static_cast<int>(this->displOffs), 0, 499));
     this->MakeSlotAvailable(&this->displOffsParam);
 
-    core::moldyn::DirectionalParticleDataCall *dirc =
-            this->dataChkptCallerSlot.CallAs<core::moldyn::DirectionalParticleDataCall>();
+    core::moldyn::MultiParticleDataCall *dirc =
+            this->dataChkptCallerSlot.CallAs<core::moldyn::MultiParticleDataCall>();
 
     // Param for dipole calculation
     this->dSource = DIPOLE_DISPL;
@@ -254,8 +254,8 @@ bool protein::CrystalStructureDataSource::getExtent(core::Call& call) {
 
 
     if(this->dSource == CHKPT_SOURCE) { // Use *.chkpt source
-        core::moldyn::DirectionalParticleDataCall *dirc =
-                this->dataChkptCallerSlot.CallAs<core::moldyn::DirectionalParticleDataCall>();
+        core::moldyn::MultiParticleDataCall *dirc =
+                this->dataChkptCallerSlot.CallAs<core::moldyn::MultiParticleDataCall>();
         if(!(*dirc)(1)) { // Try call for extent
             return false;
         }
@@ -533,8 +533,8 @@ void protein::CrystalStructureDataSource::updateParams () {
         this->dSourceParam.ResetDirty();
         this->dSource = static_cast<DipoleSrc>(this->dSourceParam.Param<core::param::EnumParam>()->Value());
 
-        core::moldyn::DirectionalParticleDataCall *dirc =
-                this->dataChkptCallerSlot.CallAs<core::moldyn::DirectionalParticleDataCall>();
+        core::moldyn::MultiParticleDataCall *dirc =
+                this->dataChkptCallerSlot.CallAs<core::moldyn::MultiParticleDataCall>();
 
 
 
@@ -836,8 +836,8 @@ bool protein::CrystalStructureDataSource::WriteFrameData(
 
 
 
-        core::moldyn::DirectionalParticleDataCall *dirc =
-                this->dataChkptCallerSlot.CallAs<core::moldyn::DirectionalParticleDataCall>();
+        core::moldyn::MultiParticleDataCall *dirc =
+                this->dataChkptCallerSlot.CallAs<core::moldyn::MultiParticleDataCall>();
 
         dirc->SetFrameID(0);
         if(!(*dirc)(0)) { // Try call for data
@@ -848,7 +848,7 @@ bool protein::CrystalStructureDataSource::WriteFrameData(
         this->dipoleCnt = (unsigned int)dirc->AccessParticles(0).GetCount();
 
         // Note: we only have one particle list in this case
-        core::moldyn::DirectionalParticleDataCall::Particles &parts = dirc->AccessParticles(0);
+        core::moldyn::MultiParticleDataCall::Particles &parts = dirc->AccessParticles(0);
         const float *pos = static_cast<const float *> (dirc->AccessParticles(0).GetVertexData());
         const float *dir = static_cast<const float *> (dirc->AccessParticles(0).GetDirData());
 
@@ -856,7 +856,7 @@ bool protein::CrystalStructureDataSource::WriteFrameData(
 
         // Get dipoles
         if(parts.GetDirDataType() ==
-                core::moldyn::DirectionalParticleDataCall::Particles::DIRDATA_FLOAT_XYZ) {
+                core::moldyn::MultiParticleDataCall::Particles::DIRDATA_FLOAT_XYZ) {
 #pragma omp parallel for
             for (int c = 0; c < static_cast<int>(this->dipoleCnt); c++) {
                 fr->dipole[3*c+0] = dir[7*c+0];
