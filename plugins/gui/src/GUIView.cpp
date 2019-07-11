@@ -210,6 +210,7 @@ bool GUIView::create() {
         config.GlyphRanges = this->fontUtf8Ranges.data();
         // Add default font
         io.Fonts->AddFontDefault(&config);
+#ifdef GUI_USE_FILEUTILS
         // Add other known fonts
         std::string font_file, font_path;
         const vislib::Array<vislib::StringW>& searchPaths =
@@ -229,6 +230,7 @@ bool GUIView::create() {
                 io.Fonts->AddFontFromFileTTF(font_path.c_str(), 13.0f, &config);
             }
         }
+#endif // GUI_USE_FILEUTILS
     }
 
     // ImGui Key Map
@@ -1180,6 +1182,7 @@ void GUIView::drawFontWindowCallback(
     // Saving current font to window configuration.
     window_config.font_name = std::string(font_current->GetDebugName());
 
+#ifdef GUI_USE_FILEUTILS
     ImGui::Separator();
     ImGui::Text("Load new Font from File");
 
@@ -1199,6 +1202,7 @@ void GUIView::drawFontWindowCallback(
         window_config.font_new_size = 5.0f; /// min valid font size
     }
 
+
     // Validate font file before offering load button
     if (HasFileExtension(window_config.font_new_filename, std::string(".ttf"))) {
         if (ImGui::Button("Add Font")) {
@@ -1210,6 +1214,7 @@ void GUIView::drawFontWindowCallback(
     }
     std::string help = "Same font can be loaded multiple times using different font size";
     this->popup.HelpMarkerToolTip(help);
+#endif // GUI_USE_FILEUTILS
 }
 
 
