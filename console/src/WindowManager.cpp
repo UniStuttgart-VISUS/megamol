@@ -238,18 +238,24 @@ bool megamol::console::WindowManager::InstantiatePendingView(void *hCore) {
     ::mmcRegisterViewCloseRequestFunction(w->Handle(), &gl::Window::RequestCloseCallback, w.get());
 
 #ifdef HAS_ANTTWEAKBAR
-    std::shared_ptr<gl::ATBUILayer> atbLayer =
-        std::make_shared<gl::ATBUILayer>(pendInstName, w->Handle(), hCore);
-
+    auto atbLayer = std::make_shared<gl::ATBUILayer>(pendInstName, w->Handle(), hCore);
     w->AddUILayer(atbLayer);
-    w->AddUILayer(std::make_shared<gl::ATBToggleHotKeyUILayer>(*atbLayer.get()));
 
-    if (!showConGui) {
+    auto atbthkLayer = std::make_shared<gl::ATBToggleHotKeyUILayer>(*atbLayer.get());
+    w->AddUILayer(atbthkLayer);
+
+    if (!showConGui && atbLayer->Enabled()) {
+        atbLayer->ToggleEnable();
+    }
+    if (showConGui && !(atbLayer->Enabled())) {
         atbLayer->ToggleEnable();
     }
 #endif /* HAS_ANTTWEAKBAR */
-    w->AddUILayer(std::make_shared<ViewUILayer>(w->Handle()));
-    std::shared_ptr<ButtonParamUILayer> btnLayer = std::make_shared<ButtonParamUILayer>(hCore, w->Handle());
+
+    auto viewLayer = std::make_shared<ViewUILayer>(w->Handle());
+    w->AddUILayer(viewLayer);
+
+    auto btnLayer = std::make_shared<ButtonParamUILayer>(hCore, w->Handle());
     w->AddUILayer(btnLayer);
 
 #ifdef HAS_ANTTWEAKBAR
@@ -259,7 +265,8 @@ bool megamol::console::WindowManager::InstantiatePendingView(void *hCore) {
     }
 #endif /* HAS_ANTTWEAKBAR */
 
-    w->AddUILayer(std::make_shared<gl::WindowEscapeHotKeysUILayer>(*w.get())); // add as last. This allows MegaMol module buttons to use 'q' (and 'ESC') as hotkeys, overriding this hotkey
+    auto wehLayer = std::make_shared<gl::WindowEscapeHotKeysUILayer>(*w.get());
+    w->AddUILayer(wehLayer); // add as last. This allows MegaMol module buttons to use 'q' (and 'ESC') as hotkeys, overriding this hotkey
 
     w->ForceIssueResizeEvent();
     windows.push_back(w);
