@@ -32,7 +32,7 @@ splitWidthSlot("split.width", "The split border width"),
 splitColourSlot("split.colour", "The split border colour"),
 overrideCall(NULL),
 clientArea(), client1Area(), client2Area(), fbo1(), fbo2(),
-focus(0), mouseX(0.0f), mouseY(0.0f) {
+focus(0), mouseX(0.0f), mouseY(0.0f), dragSlider(false) {
 
     this->render1Slot.SetCompatibleCall<CallRenderViewDescription>();
     this->MakeSlotAvailable(&this->render1Slot);
@@ -468,6 +468,8 @@ bool view::SplitView::OnMouseButton(MouseButton button, MouseButtonAction action
     auto* crv1 = this->render1();
     auto* crv2 = this->render2();
 
+    this->dragSlider = false;
+
     auto down = (action == MouseButtonAction::PRESS);
     if (down) {
         if (crv == crv1) {
@@ -478,6 +480,7 @@ bool view::SplitView::OnMouseButton(MouseButton button, MouseButtonAction action
         }
         else {
             this->focus = 0;
+            this->dragSlider = true;
         }
     }
 
@@ -499,6 +502,15 @@ bool view::SplitView::OnMouseMove(double x, double y) {
     // x, y are coordinates in pixel
     this->mouseX = x;
     this->mouseY = y;
+
+    if (this->dragSlider) {
+        if (this->splitOriSlot.Param<param::EnumParam>()->Value() == 0) {
+            this->splitSlot.Param<param::FloatParam>()->SetValue(x / this->clientArea.Width());
+        }
+        else {
+            this->splitSlot.Param<param::FloatParam>()->SetValue(y / this->clientArea.Height());
+        }
+    }
 
     auto* crv = this->renderHovered();
     auto* crv1 = this->render1();
