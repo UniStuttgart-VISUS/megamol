@@ -66,7 +66,8 @@
 //#include "TimeMeasure.h"
 
 
-// Minimum OpneGL version for different render modes:
+// Minimum OpenGL version for different render modes:
+#define SPHERE_MIN_GLSL_SIMPLE            (1.3f)
 #define SPHERE_MIN_OGL_SIMPLE             (GL_VERSION_1_4)
 #define SPHERE_MIN_OGL_SIMPLE_CLUSTERED   (GL_VERSION_1_4)
 #define SPHERE_MIN_OGL_SIMPLE_GEO         (GL_VERSION_3_2)
@@ -146,7 +147,7 @@ namespace moldyn {
             }
             std::string glslVerStr((char*)glGetString(GL_SHADING_LANGUAGE_VERSION));
             float glslVer = std::stof(glslVerStr);
-            if (glslVer < 1.3f) { 
+            if (glslVer < (SPHERE_MIN_GLSL_SIMPLE)) {
                 vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, 
                     "[SphereRenderer] No render mode available. Minimum OpenGL Shading Language version is 1.3");
                 retval = false; 
@@ -201,13 +202,13 @@ namespace moldyn {
         /*********************************************************************/
 
         enum RenderMode {              // Future names:      |
-            SIMPLE            = 0,     //                    | /// Sphere rendering using ...
-            SIMPLE_CLUSTERED  = 1,     //                    | /// Sphere rendering using clustered ...
-            SIMPLE_GEO        = 2,     // GEOMETRY_SHADER    | /// Sphere rendering using geometry shader.
-            NG                = 3,     // SSBO_STREAM        | /// Sphere rendering using shader storage buffer object stream.
-            NG_BUFFER_ARRAY   = 4,     //                    | /// Sphere rendering using array buffers.
-            NG_SPLAT          = 5,     // SPLAT              | /// Sphere rendering with splats.
-            AMBIENT_OCCLUSION = 6      // AMBIENT_OCCLUSION  | /// Sphere rendering with ambient occlusion
+            SIMPLE            = 0,     //                    | Sphere rendering using ...
+            SIMPLE_CLUSTERED  = 1,     //                    | Sphere rendering using clustered ...
+            SIMPLE_GEO        = 2,     // GEOMETRY_SHADER    | Sphere rendering using geometry shader.
+            NG                = 3,     // SSBO_STREAM        | Sphere rendering using shader storage buffer object stream.
+            NG_BUFFER_ARRAY   = 4,     //                    | Sphere rendering using array buffers.
+            NG_SPLAT          = 5,     // SPLAT              | Sphere rendering with splats.
+            AMBIENT_OCCLUSION = 6      // AMBIENT_OCCLUSION  | Sphere rendering with ambient occlusion
         };
 
         typedef std::map <std::tuple<int, int, bool>, std::shared_ptr<GLSLShader> > shaderMap;
@@ -324,9 +325,14 @@ namespace moldyn {
         /*********************************************************************/
 
         /**
+         * Return specified render mode as human readable string.
+         */
+        static std::string getRenderModeString(RenderMode rm);
+
+        /**
          * Check if specified render mode or all render mode are available.
          */
-        static bool isRenderModeAvailable(RenderMode rm);
+        static bool isRenderModeAvailable(RenderMode rm, bool silent = false);
 
         /**
          * Create shaders for given render mode.
@@ -441,7 +447,7 @@ namespace moldyn {
         void waitSingle(GLsync& syncObj);
 #endif
 
-        // ONLY used for Ambient Occlusion: -----------------------------------
+        // ONLY used for Ambient Occlusion rendering: -------------------------
 
         /**
          * Rebuild the ambient occlusion shaders.

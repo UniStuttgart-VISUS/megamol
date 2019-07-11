@@ -16,113 +16,14 @@ using namespace vislib::graphics::gl;
 
 
 #define MAP_BUFFER_LOCALLY
-#define DEBUG_GL_CALLBACK
 //#define CHRONOTIMING
 
 #define SSBO_GENERATED_SHADER_INSTANCE  "gl_VertexID" // or "gl_InstanceID"
 #define SSBO_GENERATED_SHADER_ALIGNMENT "packed"
 
+
 const GLuint SSBObindingPoint = 2;
 const GLuint SSBOcolorBindingPoint = 3;
-
-
-#define checkGLError                                                                                                   \
-    {                                                                                                                  \
-        GLenum errCode = glGetError();                                                                                 \
-        if (errCode != GL_NO_ERROR)                                                                                    \
-            std::cout << "Error in line " << __LINE__ << ": " << gluErrorString(errCode) << std::endl;                 \
-    }
-
-#ifdef GL_VERSION_4_3
-    // typedef void (APIENTRY *GLDEBUGPROC)(GLenum source,GLenum type,GLuint id,GLenum severity,GLsizei length,const GLchar
-    // *message,const void *userParam);
-    void APIENTRY DebugGLCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length,
-        const GLchar* message, const GLvoid* userParam) {
-        const char *sourceText, *typeText, *severityText;
-        switch (source) {
-        case GL_DEBUG_SOURCE_API:
-            sourceText = "API";
-            break;
-        case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
-            sourceText = "Window System";
-            break;
-        case GL_DEBUG_SOURCE_SHADER_COMPILER:
-            sourceText = "Shader Compiler";
-            break;
-        case GL_DEBUG_SOURCE_THIRD_PARTY:
-            sourceText = "Third Party";
-            break;
-        case GL_DEBUG_SOURCE_APPLICATION:
-            sourceText = "Application";
-            break;
-        case GL_DEBUG_SOURCE_OTHER:
-            sourceText = "Other";
-            break;
-        default:
-            sourceText = "Unknown";
-            break;
-        }
-        switch (type) {
-        case GL_DEBUG_TYPE_ERROR:
-            typeText = "Error";
-            break;
-        case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
-            typeText = "Deprecated Behavior";
-            break;
-        case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
-            typeText = "Undefined Behavior";
-            break;
-        case GL_DEBUG_TYPE_PORTABILITY:
-            typeText = "Portability";
-            break;
-        case GL_DEBUG_TYPE_PERFORMANCE:
-            typeText = "Performance";
-            break;
-        case GL_DEBUG_TYPE_OTHER:
-            typeText = "Other";
-            break;
-        case GL_DEBUG_TYPE_MARKER:
-            typeText = "Marker";
-            break;
-        default:
-            typeText = "Unknown";
-            break;
-        }
-        switch (severity) {
-        case GL_DEBUG_SEVERITY_HIGH:
-            severityText = "High";
-            break;
-        case GL_DEBUG_SEVERITY_MEDIUM:
-            severityText = "Medium";
-            break;
-        case GL_DEBUG_SEVERITY_LOW:
-            severityText = "Low";
-            break;
-        case GL_DEBUG_SEVERITY_NOTIFICATION:
-            severityText = "Notification";
-            break;
-        default:
-            severityText = "Unknown";
-            break;
-        }
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "[%s %s] (%s %u) %s\n", sourceText, severityText, typeText, id, message);
-    }
-#endif
-
-/******************************************************************************
- * Known DebugGLCallback Errors (CAN BE IGNORED):
- *
- * >>> glUnmapNamedBuffe (only if named buffer wasn't mapped before):
- *      [API High] (Error 1282) GL_INVALID_OPERATION error generated. Buffer is unbound or is already unmapped.
- *
- * >>> glMapNamedBufferRange:
- *      [API Notification] (Other 131185) Buffer detailed info: Buffer object 1 (bound to GL_SHADER_STORAGE_BUFFER,
- *usage hint is GL_DYNAMIC_DRAW) will use SYSTEM HEAP memory as the source for buffer object operations. [API
- *Notification] (Other 131185) Buffer detailed info: Buffer object 1 (bound to GL_SHADER_STORAGE_BUFFER, usage hint is
- *GL_DYNAMIC_DRAW) has been mapped WRITE_ONLY in SYSTEM HEAP memory(fast).
- *
- ******************************************************************************/
 
 
  /*
@@ -280,10 +181,6 @@ bool moldyn::SphereRenderer::create(void) {
     // At least the simple render mode must be available
     ASSERT(this->isRenderModeAvailable(RenderMode::SIMPLE));
 
-#if defined(DEBUG_GL_CALLBACK) && defined(GL_VERSION_4_3)
-    glDebugMessageCallback(DebugGLCallback, nullptr); // requires OpenGL version 4.3
-#endif
-
     // Reduce to available render modes
     this->SetSlotUnavailable(&this->renderModeParam);
     this->renderModeParam.Param<param::EnumParam>()->ClearTypePairs();
@@ -310,6 +207,8 @@ bool moldyn::SphereRenderer::create(void) {
 
     // Check initial render mode
     if (!this->isRenderModeAvailable(this->renderMode)) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Render mode: %s is not available - falling back to SIMPLE render mode.",
+            (this->getRenderModeString(this->renderMode)).c_str());
         // Always available fallback render mode
         this->renderMode = RenderMode::SIMPLE;
     }
@@ -377,7 +276,7 @@ bool moldyn::SphereRenderer::resetResources(void) {
     this->vertType = SimpleSphericalParticles::VertexDataType::VERTDATA_NONE;
 
     // AMBIENT OCCLUSION
-    if (this->isRenderModeAvailable(RenderMode::AMBIENT_OCCLUSION)) {
+    if (this->isRenderModeAvailable(RenderMode::AMBIENT_OCCLUSION, true)) {
         for (unsigned int i = 0; i < this->gpuData.size(); ++i) {
             glDeleteVertexArrays(3, reinterpret_cast<GLuint*>(&(this->gpuData[i])));
         }
@@ -390,12 +289,12 @@ bool moldyn::SphereRenderer::resetResources(void) {
     }
 
     // NG
-    if (this->isRenderModeAvailable(RenderMode::NG)) { 
+    if (this->isRenderModeAvailable(RenderMode::NG, true)) {
         glUnmapNamedBuffer(this->theSingleBuffer); 
     }
 
     // NG_SPLAT or NG_BUFFER_ARRAY
-    if (this->isRenderModeAvailable(RenderMode::NG_SPLAT) || this->isRenderModeAvailable(RenderMode::NG_BUFFER_ARRAY)) {
+    if (this->isRenderModeAvailable(RenderMode::NG_SPLAT, true) || this->isRenderModeAvailable(RenderMode::NG_BUFFER_ARRAY, true)) {
         for (auto& x : fences) {
             if (x) {
                 glDeleteSync(x);
@@ -433,42 +332,15 @@ bool moldyn::SphereRenderer::createResources() {
     vislib::StringA fragShaderName;
     vislib::StringA geoShaderName;
 
-    vislib::StringA mode;
-    switch (this->renderMode) {
-    case (RenderMode::SIMPLE):
-        mode = "SIMPLE";
-        break;
-    case (RenderMode::SIMPLE_CLUSTERED):
-        mode = "SIMPLE CLUSTERED";
-        break;
-    case (RenderMode::SIMPLE_GEO):
-        mode = "SIMPLE GEOMETRY SHADER";
-        break;
-    case (RenderMode::NG):
-        mode = "NG";
-        break;
-    case (RenderMode::NG_SPLAT):
-        mode = "NG SPLAT";
-        break;
-    case (RenderMode::NG_BUFFER_ARRAY):
-        mode = "NG BUFFER ARRAY";
-        break;
-    case (RenderMode::AMBIENT_OCCLUSION):
-        mode = "AMBIENT OCCLUSION";
-        break;
-    default:
-        break;
-    }
-
     if (!this->isRenderModeAvailable(this->renderMode)) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, ">>>>> Render mode: %s (%d) is NOT available - falling back to SIMPLE. (BUG: This shouldn't happen)",
-            mode.PeekBuffer(), static_cast<int>(this->renderMode));
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Render mode: %s is not available - falling back to SIMPLE render mode.",
+            (this->getRenderModeString(this->renderMode)).c_str());
         this->renderMode = RenderMode::SIMPLE; // Fallback render mode ...
         return false;
     }
     else {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, ">>>>> Using render mode: %s (%d)",
-            mode.PeekBuffer(), static_cast<int>(this->renderMode));
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "[SphereRenderer] Using render mode: %s",
+            (this->getRenderModeString(this->renderMode)).c_str());
     }
 
     try {
@@ -641,14 +513,134 @@ bool moldyn::SphereRenderer::createResources() {
 
 
 /*
+ * moldyn::SphereRenderer::isRenderModeAvailable
+ */
+bool moldyn::SphereRenderer::isRenderModeAvailable(RenderMode rm, bool silent) {
+
+    std::string errorstr;
+
+    // Check additonal requirements for each render mode separatly
+    switch (rm) {
+    case(RenderMode::SIMPLE):
+        if (!(SPHERE_MIN_OGL_SIMPLE)) {
+            errorstr += "[SphereRenderer] Render Mode 'SIMPLE' is not available. Minimum OpenGL version is 1.4 \n";
+        }
+        break;
+    case(RenderMode::SIMPLE_CLUSTERED):
+        if (!(SPHERE_MIN_OGL_SIMPLE_CLUSTERED)) {
+            errorstr += "[SphereRenderer] Render Mode 'SIMPLE_CLUSTERED' is not available. Minimum OpenGL version is 1.4 \n";
+        }
+        break;
+    case(RenderMode::SIMPLE_GEO):
+        if (!(SPHERE_MIN_OGL_SIMPLE_GEO)) {
+            errorstr += "[SphereRenderer] Render Mode 'SIMPLE_GEO' is not available. Minimum OpenGL version is 3.2 \n";
+        }
+        if (!vislib::graphics::gl::GLSLGeometryShader::AreExtensionsAvailable()) {
+            errorstr += "[SphereRenderer] Render Mode 'SIMPLE_GEO' is not available. Geometry shader extensions are not available. \n";
+        }
+        if (!isExtAvailable("GL_EXT_geometry_shader4")) {
+            errorstr += "[SphereRenderer] Render Mode 'SIMPLE_GEO' is not available. Extension GL_EXT_geometry_shader4 is not available. \n";
+        }
+        if (!isExtAvailable("GL_EXT_gpu_shader4")) {
+            errorstr += "[SphereRenderer] Render Mode 'SIMPLE_GEO' is not available. Extension GL_EXT_gpu_shader4 is not available. \n";
+        }
+        if (!isExtAvailable("GL_EXT_bindable_uniform")) {
+            errorstr += "[SphereRenderer] Render Mode 'SIMPLE_GEO' is not available. Extension GL_EXT_bindable_uniform is not available. \n";
+        }
+        if (!isExtAvailable("GL_ARB_shader_objects")) {
+            errorstr += "[SphereRenderer] Render Mode 'SIMPLE_GEO' is not available. Extension GL_ARB_shader_objects is not available. \n";
+        }
+        break;
+    case(RenderMode::NG):
+        if (!(SPHERE_MIN_OGL_NG)) { // required for glUnmapNamedBuffer
+            errorstr += "[SphereRenderer] Render Mode 'NG' is not available. Minimum OpenGL version is 4.5 \n";
+        }
+        if (!isExtAvailable("GL_ARB_buffer_storage")) {
+            errorstr += "[SphereRenderer] Render Mode 'NG' is not available. Extension GL_ARB_buffer_storage is not available. \n";
+        }
+        break;
+    case(RenderMode::NG_BUFFER_ARRAY):
+        if (!(SPHERE_MIN_OGL_NG_BUFFER_ARRAY)) { // required for glMapNamedBufferRange
+            errorstr += "[SphereRenderer] Render Mode 'NG_BUFFER_ARRAY' is not available. Minimum OpenGL version is 4.5 \n";
+        }
+        if (!isExtAvailable("GL_ARB_buffer_storage")) {
+            errorstr += "[SphereRenderer] Render Mode 'NG_BUFFER_ARRAY' is not available. Extension GL_ARB_buffer_storage is not available. \n";
+        }
+        break;
+    case(RenderMode::NG_SPLAT):
+        if (!(SPHERE_MIN_OGL_NG_SPLAT)) { // required for glMapNamedBufferRange
+            errorstr += "[SphereRenderer] Render Mode 'NG_SPLAT' is not available. Minimum OpenGL version is 4.5 \n";
+        }
+        if (!isExtAvailable("GL_ARB_buffer_storage")) {
+            errorstr += "[SphereRenderer] Render Mode 'NG_SPLAT' is not available. Extension GL_ARB_buffer_storage is not available. \n";
+        }
+        break;
+    case(RenderMode::AMBIENT_OCCLUSION):
+        if (!(SPHERE_MIN_OGL_AMBIENT_OCCLUSION)) { // required for glMapNamedBufferRange
+            errorstr += "[SphereRenderer] Render Mode 'AMBIENT_OCCLUSION' is not available. Minimum OpenGL version is 4.5 \n";
+        }
+        if (!vislib::graphics::gl::GLSLGeometryShader::AreExtensionsAvailable()) {
+            errorstr += "[SphereRenderer] Render Mode 'AMBIENT_OCCLUSION' is not available. Geometry shader extensions are not available. \n";
+        }
+        if (!isExtAvailable("GL_ARB_gpu_shader_fp64")) {
+            errorstr += "[SphereRenderer] Render Mode 'AMBIENT_OCCLUSION' is not available. Extension GL_ARB_gpu_shader_fp64 is not available. \n";
+        }
+        break;
+    default:
+        errorstr += "[SphereRenderer] BUG: Unknown render mode ... \n";
+        break;
+    }
+
+    if (!silent && !errorstr.empty()) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, errorstr.c_str());
+    }
+
+    return (errorstr.empty());
+}
+
+
+/*
+ * moldyn::SphereRenderer::getRenderModeString
+ */
+std::string moldyn::SphereRenderer::getRenderModeString(RenderMode rm) {
+
+    std::string mode;
+
+    switch (rm) {
+    case (RenderMode::SIMPLE):
+        mode = "SIMPLE";
+        break;
+    case (RenderMode::SIMPLE_CLUSTERED):
+        mode = "SIMPLE CLUSTERED";
+        break;
+    case (RenderMode::SIMPLE_GEO):
+        mode = "SIMPLE GEOMETRY SHADER";
+        break;
+    case (RenderMode::NG):
+        mode = "NG";
+        break;
+    case (RenderMode::NG_SPLAT):
+        mode = "NG SPLAT";
+        break;
+    case (RenderMode::NG_BUFFER_ARRAY):
+        mode = "NG BUFFER ARRAY";
+        break;
+    case (RenderMode::AMBIENT_OCCLUSION):
+        mode = "AMBIENT OCCLUSION";
+        break;
+    default:
+        mode = "unknown";
+        break;
+    }
+
+    return mode;
+}
+
+
+/*
  * moldyn::SphereRenderer::Render
  */
 bool moldyn::SphereRenderer::Render(view::CallRender3D& call) {
-
-#if defined(DEBUG_GL_CALLBACK) && defined(GL_VERSION_4_3)
-    glEnable(GL_DEBUG_OUTPUT);
-    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-#endif
 
     // Checking for changed render mode
     auto currentRenderMode = static_cast<RenderMode>(this->renderModeParam.Param<param::EnumParam>()->Value());
@@ -759,11 +751,6 @@ bool moldyn::SphereRenderer::Render(view::CallRender3D& call) {
     }
 
     // timer.EndFrame();
-
-#if defined(DEBUG_GL_CALLBACK) && defined(GL_VERSION_4_3)
-    glDisable(GL_DEBUG_OUTPUT);
-    glDisable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-#endif
 
     return retval;
 }
@@ -1058,13 +1045,16 @@ bool moldyn::SphereRenderer::renderNGSplat(view::CallRender3D* cr3d, MultiPartic
 
     glEnable(GL_BLEND);
     glBlendEquation(GL_FUNC_ADD);
+
 #if 1
-    // maybe for blending against white, remove pre-mult alpha and use this:
+    // Should be default for splat rendering (Hint: Background colour should not be WHITE)
+    glBlendFunc(GL_ONE, GL_ONE);
+#else
+    // Maybe for blending against white, remove pre-mult alpha and use this:
     // @gl.blendFuncSeparate @gl.SRC_ALPHA, @gl.ONE_MINUS_SRC_ALPHA, @gl.ONE, @gl.ONE_MINUS_SRC_ALPHA
     glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-#else
-    // glBlendFunc(GL_SRC_ALPHA, GL_DST_ALPHA);
-    glBlendFunc(GL_ONE, GL_ONE);
+
+    //glBlendFunc(GL_SRC_ALPHA, GL_DST_ALPHA);
 #endif
 
     glEnable(GL_POINT_SPRITE);
@@ -1401,19 +1391,14 @@ bool moldyn::SphereRenderer::renderAmbientOcclusion(view::CallRender3D* cr3d, Mu
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prevFBO);
 
     glBindFramebuffer(GL_FRAMEBUFFER, this->gBuffer.fbo);
-    checkGLError;
 
     GLenum bufs[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
     glDrawBuffers(2, bufs);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    checkGLError;
 
     glBindFragDataLocation(sphereShader.ProgramHandle(), 0, "outColor");
-    checkGLError;
-
     glBindFragDataLocation(sphereShader.ProgramHandle(), 1, "outNormal");
-    checkGLError;
 
     // Render the particles' geometry
     this->renderParticlesGeometry(cr3d, mpdc);
@@ -1967,19 +1952,12 @@ bool moldyn::SphereRenderer::rebuildGBuffer() {
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prevFBO);
 
     glBindFramebuffer(GL_FRAMEBUFFER, this->gBuffer.fbo);
-    checkGLError;
-
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this->gBuffer.color, 0);
-    checkGLError;
-
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, this->gBuffer.normals, 0);
-    checkGLError;
-
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, this->gBuffer.depth, 0);
-    checkGLError;
 
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-        std::cout << "Framebuffer NOT complete!" << std::endl;
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Framebuffer NOT complete!");
     }
 
     glBindTexture(GL_TEXTURE_2D, 0);
@@ -2300,7 +2278,7 @@ void moldyn::SphereRenderer::uploadDataToGPU(const moldyn::SphereRenderer::gpuPa
             particles.GetColourData(), GL_STATIC_DRAW);
         glEnableVertexAttribArray(1);
         glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, particles.GetColourDataStride(), 0);
-        // std::cout<<"Transfer function"<<std::endl;
+        //vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "[SphereRenderer] Transfer function");
         break;
     default:
         glColor4ub(127, 127, 127, 255);
@@ -2380,122 +2358,3 @@ std::string moldyn::SphereRenderer::generateDirectionShaderArrayString(
     return result.str();
 }
 
-
-
-/*
- * moldyn::SphereRenderer::isRenderModeAvailable
- */
-bool moldyn::SphereRenderer::isRenderModeAvailable(RenderMode rm) {
-
-    bool retval = true;
-
-    // Check additonal requirements for each render mode separatly
-    switch (rm) {
-    case(RenderMode::SIMPLE):
-        if (!(SPHERE_MIN_OGL_SIMPLE)) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-                "[SphereRenderer] Render Mode 'SIMPLE' is not available. Minimum OpenGL version is 1.4");
-            retval = false;
-        }
-        break;
-    case(RenderMode::SIMPLE_CLUSTERED):
-        if (!(SPHERE_MIN_OGL_SIMPLE_CLUSTERED)) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-                "[SphereRenderer] Render Mode 'SIMPLE_CLUSTERED' is not available. Minimum OpenGL version is 1.4");
-            retval = false;
-        }
-        break;
-    case(RenderMode::SIMPLE_GEO):
-        if (!(SPHERE_MIN_OGL_SIMPLE_GEO)) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-                "[SphereRenderer] Render Mode 'SIMPLE_GEO' is not available. Minimum OpenGL version is 3.2");
-            retval = false;
-        }
-        if (!vislib::graphics::gl::GLSLGeometryShader::AreExtensionsAvailable()) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, 
-                "[SphereRenderer] Render Mode 'SIMPLE_GEO' is not available. Geometry shader extensions are not available.");
-            retval = false;
-        }
-        if (!isExtAvailable("GL_EXT_geometry_shader4")) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, 
-                "[SphereRenderer] Render Mode 'SIMPLE_GEO' is not available. Extension GL_EXT_geometry_shader4 is not available.");
-            retval = false;
-        }
-        if (!isExtAvailable("GL_EXT_gpu_shader4")) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, 
-                "[SphereRenderer] Render Mode 'SIMPLE_GEO' is not available. Extension GL_EXT_gpu_shader4 is not available.");
-            retval = false;
-        }
-        if (!isExtAvailable("GL_EXT_bindable_uniform")) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, 
-                "[SphereRenderer] Render Mode 'SIMPLE_GEO' is not available. Extension GL_EXT_bindable_uniform is not available.");
-            retval = false;
-        }
-        if (!isExtAvailable("GL_ARB_shader_objects")) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, 
-                "[SphereRenderer] Render Mode 'SIMPLE_GEO' is not available. Extension GL_ARB_shader_objects is not available.");
-            retval = false;
-        }
-        break;
-    case(RenderMode::NG):
-        if (!(SPHERE_MIN_OGL_NG)) { // required for glUnmapNamedBuffer
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, 
-                "[SphereRenderer] Render Mode 'NG' is not available. Minimum OpenGL version is 4.5");
-            retval = false;
-        }
-        if (!isExtAvailable("GL_ARB_buffer_storage")) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, 
-                "[SphereRenderer] Render Mode 'NG' is not available. Extension GL_ARB_buffer_storage is not available.");
-            retval = false;
-        }
-        break;
-    case(RenderMode::NG_BUFFER_ARRAY):
-        if (!(SPHERE_MIN_OGL_NG_BUFFER_ARRAY)) { // required for glMapNamedBufferRange
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
-                "[SphereRenderer] Render Mode 'NG_BUFFER_ARRAY' is not available. Minimum OpenGL version is 4.5");
-            retval = false;
-        }
-        if (!isExtAvailable("GL_ARB_buffer_storage")) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
-                "[SphereRenderer] Render Mode 'NG_BUFFER_ARRAY' is not available. Extension GL_ARB_buffer_storage is not available.");
-            retval = false;
-        }
-        break;
-    case(RenderMode::NG_SPLAT):
-        if (!(SPHERE_MIN_OGL_NG_SPLAT)) { // required for glMapNamedBufferRange
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, 
-                "[SphereRenderer] Render Mode 'NG_SPLAT' is not available. Minimum OpenGL version is 4.5");
-            retval = false;
-        }
-        if (!isExtAvailable("GL_ARB_buffer_storage")) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, 
-                "[SphereRenderer] Render Mode 'NG_SPLAT' is not available. Extension GL_ARB_buffer_storage is not available.");
-            retval = false;
-        }
-        break;
-    case(RenderMode::AMBIENT_OCCLUSION):
-        if (!(SPHERE_MIN_OGL_AMBIENT_OCCLUSION)) { // required for glMapNamedBufferRange
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
-                "[SphereRenderer] Render Mode 'AMBIENT_OCCLUSION' is not available. Minimum OpenGL version is 4.5");
-            retval = false;
-        }
-        if (!vislib::graphics::gl::GLSLGeometryShader::AreExtensionsAvailable()) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, 
-                "[SphereRenderer] Render Mode 'AMBIENT_OCCLUSION' is not available. Geometry shader extensions are not available.");
-            retval = false;
-        }    
-        if (!isExtAvailable("GL_ARB_gpu_shader_fp64")) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
-                "[SphereRenderer] Render Mode 'AMBIENT_OCCLUSION' is not available. Extension GL_ARB_gpu_shader_fp64 is not available.");
-            retval = false;
-        }
-        break;
-    default: 
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, 
-                "[SphereRenderer] BUG: Unknown render mode ...");
-        retval = false; 
-        break;
-    }
-
-    return retval;
-}
