@@ -5,16 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_TRANSFERFUNCTIONPARAM_H_INCLUDED
-#define MEGAMOLCORE_TRANSFERFUNCTIONPARAM_H_INCLUDED
-#define MEGAMOL_GUI_FILEUTILS_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
-#if defined(_WIN32) && defined(_MANAGED)
-#    pragma managed(push, off)
-#endif /* defined(_WIN32) && defined(_MANAGED) */
-
+#pragma once
 
 #include <string>
 #include <cmath>
@@ -267,5 +258,3 @@ private:
 } /* end namespace param */
 } /* end namespace core */
 } /* end namespace megamol */
-
-#endif /* end ifndef MEGAMOLCORE_TRANSFERFUNCTIONPARAM_H_INCLUDED */

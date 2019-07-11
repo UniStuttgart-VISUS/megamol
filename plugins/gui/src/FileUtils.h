@@ -13,30 +13,23 @@
 /// /opt/apps/gcc/7.3.0/bin/ld: final link failed: Nonrepresentable section on output
 #ifdef GUI_USE_FILEUTILS
 
-#    ifndef MEGAMOL_GUI_FILEUTILS_H_INCLUDED
-#        define MEGAMOL_GUI_FILEUTILS_H_INCLUDED
-#        if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#            pragma once
-#        endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
-#        if defined(_WIN32) && defined(_MANAGED)
-#            pragma managed(push, off)
-#        endif /* defined(_WIN32) && defined(_MANAGED) */
+#    pragma once
 
-#        include <string>
+#    include <string>
 
-#        if _HAS_CXX17
-#            include <filesystem> // directory_iterator
+#    if _HAS_CXX17
+#        include <filesystem> // directory_iterator
 namespace ns_fs = std::filesystem;
-#        else
+#    else
 // WINDOWS
-#            ifdef _WIN32
-#                include <filesystem>
-#            else
+#        ifdef _WIN32
+#            include <filesystem>
+#        else
 // LINUX
-#                include <experimental/filesystem>
-#            endif
-namespace ns_fs = std::experimental::filesystem;
+#            include <experimental/filesystem>
 #        endif
+namespace ns_fs = std::experimental::filesystem;
+#    endif
 
 
 namespace megamol {
@@ -86,7 +79,5 @@ inline std::string SearchFileRecursive(std::string file, PathType searchPath) {
 
 } // namespace gui
 } // namespace megamol
-
-#    endif // MEGAMOL_GUI_FILEUTILS_H_INCLUDED
 
 #endif // GUI_USE_FILEUTILS

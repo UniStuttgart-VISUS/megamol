@@ -5,15 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GUI_TRANSFERFUNCTIONEDITOR_H_INCLUDED
-#define MEGAMOL_GUI_TRANSFERFUNCTIONEDITOR_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
-#if defined(_WIN32) && defined(_MANAGED)
-#    pragma managed(push, off)
-#endif /* defined(_WIN32) && defined(_MANAGED) */
-
+#pragma once
 
 #include "mmcore/param/TransferFunctionParam.h"
 #include "mmcore/view/TransferFunction.h"
@@ -113,5 +105,3 @@ private:
 
 } // namespace gui
 } // namespace megamol
-
-#endif // MEGAMOL_GUI_TRANSFERFUNCTIONEDITOR_H_INCLUDED
