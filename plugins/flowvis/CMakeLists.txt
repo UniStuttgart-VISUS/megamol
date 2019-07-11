@@ -3,7 +3,7 @@
 # Copyright 2019, by MegaMol Team
 # Alle Rechte vorbehalten. All rights reserved.
 #
-option(BUILD_FLOWVIS_PLUGIN "Option to build flowvis" OFF)
+option(BUILD_FLOWVIS_PLUGIN "Option to build flowvis" ON)
 
 if(BUILD_FLOWVIS_PLUGIN)
   project(flowvis)
