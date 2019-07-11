@@ -173,6 +173,23 @@ if(BUILD_CORE)
     DEPENDS json_ext
     INCLUDE_DIR "src/json_ext/")
 
+  # include libunwind
+  if(UNIX)
+    option(USE_LIBUNWIND "use libunwind" ON)
+    if(USE_LIBUNWIND)
+      find_package(LIBUNWIND REQUIRED)
+      message(STATUS ${LIBUNWIND_LIBRARIES})
+      message(STATUS ${LIBUNWIND_INCLUDE_DIR})
+      if(LIBUNWIND_FOUND)
+        target_compile_definitions(${PROJECT_NAME} PUBLIC "HAS_LIBUNWIND")
+        target_include_directories(${PROJECT_NAME} PUBLIC ${LIBUNWIND_INCLUDE_DIR})
+        target_link_libraries(${PROJECT_NAME} PUBLIC ${LIBUNWIND_LIBRARIES} )
+      else()
+        message(FATAL_ERROR "Can not find libunwind.")
+      endif()
+    endif()
+  endif()
+
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h" "include/*.inl")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")

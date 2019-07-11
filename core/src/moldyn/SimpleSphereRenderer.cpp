@@ -275,6 +275,31 @@ moldyn::SimpleSphereRenderer::~SimpleSphereRenderer(void) { this->Release(); }
  */
 bool moldyn::SimpleSphereRenderer::create(void) {
 
+
+
+    // enable KHR debug
+    bool activateKHR = false;
+    mmcValueType khrDataType = MMC_TYPE_VOIDP;
+    const void* khrData = this->GetCoreInstance()->Configuration().GetValue(MMC_CFGID_VARIABLE, _T("useKHRdebug"), &khrDataType);
+    if (khrData != nullptr) {
+        try {
+            if (khrDataType == MMC_TYPE_CSTR) {
+                activateKHR = vislib::CharTraitsA::ParseBool(static_cast<const char*>(khrData));
+            }
+            else if (khrDataType == MMC_TYPE_WSTR) {
+                activateKHR = vislib::CharTraitsW::ParseBool(static_cast<const wchar_t*>(khrData));
+            }
+        }
+        catch (...) {
+        }
+    }
+
+
+
+
+
+
+
     ASSERT(IsAvailable());
     // At least the simple render mode must be available
     ASSERT(this->isRenderModeAvailable(RenderMode::SIMPLE));
