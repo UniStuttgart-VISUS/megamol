@@ -148,7 +148,19 @@ namespace datatools {
         /** The name of the float column holding the z-coordinate. */
         core::param::ParamSlot slotColumnZ;
 
+		/** The name of the float column holding the vx-coordinate. */
+        core::param::ParamSlot slotColumnVX;
+
+        /** The name of the float column holding the vy-coordinate. */
+        core::param::ParamSlot slotColumnVY;
+
+        /** The name of the float column holding the vz-coordinate. */
+        core::param::ParamSlot slotColumnVZ;
+
 		std::vector<float> everything;
+
+        bool haveVelocities = false;
+
 		SIZE_T inputHash;
 		SIZE_T myHash;
 		std::map<std::string, size_t> columnIndex;
