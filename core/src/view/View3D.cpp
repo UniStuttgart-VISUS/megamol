@@ -125,7 +125,7 @@ view::View3D::View3D(void)
     this->MakeSlotAvailable(&this->cameraSettingsSlot);
 
     this->storeCameraSettingsSlot << new param::ButtonParam(
-        view::Key::KEY_C, (view::Modifier::ALT | view::Modifier::SHIFT));
+        view::Key::KEY_C, (view::Modifier::ALT));
     this->storeCameraSettingsSlot.SetUpdateCallback(&View3D::onStoreCamera);
     this->MakeSlotAvailable(&this->storeCameraSettingsSlot);
 

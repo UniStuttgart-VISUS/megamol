@@ -80,7 +80,8 @@ GUIView::GUIView()
     , newFontIndexToLoad(-1)
     , windowToDelete()
     , saveState(false)
-    , saveStateDelay(0.0f) {
+    , saveStateDelay(0.0f)
+    , checkHotkeysOnce(true) {
 
     this->renderViewSlot.SetCompatibleCall<core::view::CallRenderViewDescription>();
     this->MakeSlotAvailable(&this->renderViewSlot);
@@ -611,12 +612,11 @@ void GUIView::validateGUI() {
 
     ImGuiIO& io = ImGui::GetIO();
     this->saveStateDelay += io.DeltaTime;
-
     if (this->stateParam.IsDirty()) {
         auto state = this->stateParam.Param<core::param::StringParam>()->Value();
         this->windowManager.StateFromJSON(std::string(state));
         this->stateParam.ResetDirty();
-    } else if (this->saveState && (this->saveStateDelay > 1.0f)) { // Waiting one second after triggering saving state
+    } else if (this->saveState && (this->saveStateDelay > 2.0f)) { // Delayed saving after triggering saving state
         std::string state;
         this->windowManager.StateToJSON(state);
         this->stateParam.Param<core::param::StringParam>()->SetValue(state.c_str(), false);
@@ -629,6 +629,8 @@ bool GUIView::drawGUI(vislib::math::Rectangle<int> viewport, double instanceTime
     ImGui::SetCurrentContext(this->context);
 
     this->validateGUI();
+    /// So far: Checked only once
+    this->checkMultipleHotkeyAssignement();
 
     auto viewportWidth = viewport.Width();
     auto viewportHeight = viewport.Height();
@@ -1562,6 +1564,42 @@ bool GUIView::considerModule(const std::string& modname, std::vector<std::string
         }
     }
     return retval;
+}
+
+
+void GUIView::checkMultipleHotkeyAssignement(void) {
+    if (this->checkHotkeysOnce) {
+
+        std::list<core::view::KeyCode> hotkeylist;
+        hotkeylist.clear();
+
+        this->GetCoreInstance()->EnumParameters([&, this](const auto& mod, auto& slot) {
+            auto param = slot.Parameter();
+            if (!param.IsNull()) {
+                if (auto* p = slot.template Param<core::param::ButtonParam>()) {
+                    auto hotkey = p->GetKeyCode();
+
+                    // check in hotkey map
+                    bool found = false;
+                    for (auto kc : hotkeylist) {
+                        if ((kc.GetKey() == hotkey.GetKey()) && (kc.GetModifiers().equals(hotkey.GetModifiers()))) {
+                            found = true;
+                        }
+                    }
+                    if (!found) {
+                        hotkeylist.emplace_back(hotkey);
+                    } else {
+                        vislib::sys::Log::DefaultLog.WriteWarn(
+                            "[GUIView] The hotkey [%s] of the parameter \"%s::%s\" has already been assigned. "
+                            ">>> If this hotkey is pressed, there will be no effect on this parameter!",
+                            hotkey.ToString().c_str(), mod.FullName().PeekBuffer(), slot.Name().PeekBuffer());
+                    }
+                }
+            }
+        });
+
+        this->checkHotkeysOnce = false;
+    }
 }
 
 

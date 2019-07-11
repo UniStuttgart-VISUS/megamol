@@ -151,6 +151,9 @@ private:
     bool saveState;
     float saveStateDelay;
 
+    /** WORKAROUND: Check multiple hotkey assignment once. */
+    bool checkHotkeysOnce;
+
     // FUNCTIONS --------------------------------------------------------------
 
     /**
@@ -231,6 +234,11 @@ private:
      * Check if module's parameters should be considered.
      */
     bool considerModule(const std::string& modname, std::vector<std::string>& modules_list);
+
+    /**
+     * Checks for multiple hotkey assignement.
+     */
+    void checkMultipleHotkeyAssignement(void);
 
     /**
      * Shutdown megmol program.
