@@ -500,17 +500,6 @@ bool view::SplitView::OnMouseMove(double x, double y) {
     this->mouseX = x;
     this->mouseY = y;
 
-    // Prioritize overlay renderer
-    auto* cgr = this->overlaySlot.CallAs<view::CallSplitViewOverlay>();
-    if (cgr != nullptr) {
-        InputEvent evt;
-        evt.tag = InputEvent::Tag::MouseMove;
-        evt.mouseMoveData.x = x;
-        evt.mouseMoveData.y = y;
-        cgr->SetInputEvent(evt);
-        if ((*cgr)(view::CallSplitViewOverlay::FnOnMouseMove)) return true;
-    }
-
     auto* crv = this->renderHovered();
     auto* crv1 = this->render1();
     auto* crv2 = this->render2();
