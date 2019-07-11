@@ -5,11 +5,7 @@
 * Alle Rechte vorbehalten.
 */
 
-#ifndef MEGAMOL_CINEMATIC_CINEMATICVIEW_H_INCLUDED
-#define MEGAMOL_CINEMATIC_CINEMATICVIEW_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
+#pragma once
 
 #include "Cinematic/Cinematic.h"
 
@@ -246,5 +242,3 @@ namespace cinematic {
 
 } /* end namespace cinematic */
 } /* end namespace megamol */
-
-#endif /* MEGAMOL_CINEMATIC_CINEMATICVIEW_H_INCLUDED */

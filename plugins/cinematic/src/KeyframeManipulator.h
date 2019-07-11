@@ -5,11 +5,7 @@
 * Alle Rechte vorbehalten.
 */
 
-#ifndef MEGAMOL_CINEMATIC_KEYFRAME_MANIP_H_INCLUDED
-#define MEGAMOL_CINEMATIC_KEYFRAME_MANIP_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "Cinematic/Cinematic.h"
 #include "Keyframe.h"
@@ -219,5 +215,3 @@ namespace cinematic {
 
 } /* end namespace cinematic */
 } /* end namespace megamol */
-
-#endif /* MEGAMOL_CINEMATIC_KEYFRAME_MANIP_H_INCLUDED */
