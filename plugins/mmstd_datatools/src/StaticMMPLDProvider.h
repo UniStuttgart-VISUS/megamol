@@ -47,6 +47,8 @@ protected:
 
     void release() override;
 
+    core::param::ParamSlot filenamesSlot;
+
 private:
     static core::moldyn::SimpleSphericalParticles::ColourDataType ColorTypeTranslator(mmpld::color_type ct) {
         switch (ct) {
@@ -76,8 +78,6 @@ private:
     bool getExtentCallback(core::Call& c);
 
     core::CalleeSlot outDataSlot;
-
-    core::param::ParamSlot filenamesSlot;
 
     std::vector<mmpld::frame_t> output_frames;
 

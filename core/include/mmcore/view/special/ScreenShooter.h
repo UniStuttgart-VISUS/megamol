@@ -67,8 +67,10 @@ namespace special {
 
         /**
          * Ctor
+         *
+         * @param reducedParameters True: only show necessary parameters, false: all
          */
-        ScreenShooter();
+        explicit ScreenShooter(bool reducedParameters = false);
 
         /**
          * Dtor
@@ -118,6 +120,13 @@ namespace special {
          * @param view The calling view
          */
         virtual void BeforeRender(view::AbstractView *view);
+
+        /*
+         * Create the screenshot.
+         *
+         * @param filename Filename of the output screenshot
+         */
+        void createScreenshot(const std::string& filename);
 
     private:
 

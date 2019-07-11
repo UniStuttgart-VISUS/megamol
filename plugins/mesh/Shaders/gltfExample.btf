@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<btf type="MegaMolGLSLShader" version="1.0" namespace="gltfExample">
+    <include file="common"/>
+
+    <shader name="vertex">
+        <snippet type="version">430</snippet>
+        <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>
+        <snippet name="Main"             type="file">mesh/gltf_example_vertex.glsl</snippet>
+    </shader>
+
+    <shader name="geometry">
+        <snippet type="version">430</snippet>
+        <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>
+        <snippet name="Main"             type="file">mesh/gltf_example_geom.glsl</snippet>
+    </shader>
+
+    <shader name="fragment">
+        <snippet type="version">430</snippet>
+        <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>
+        <snippet name="Main"             type="file">mesh/gltf_example_fragment.glsl</snippet>
+    </shader>
+
+</btf>
