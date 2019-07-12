@@ -15,7 +15,7 @@ using namespace megamol::core;
  * view::CallGetTransferFunction::CallGetTransferFunction
  */
 view::CallGetTransferFunction::CallGetTransferFunction(void) : Call(),
-        texID(0), texSize(1), texData(NULL) {
+    texID(0), texSize(1), texData(NULL), range({0.0f, 1.0f}) {
     // intentionally empty
 }
 

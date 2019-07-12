@@ -10,7 +10,6 @@
 #include <cmath>
 #include "mmcore/moldyn/DynDensityGradientEstimator.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
-#include "mmcore/moldyn/DirectionalParticleDataCall.h"
 #include <omp.h>
 #include "mmcore/param/IntParam.h"
 
@@ -76,7 +75,7 @@ void moldyn::DynDensityGradientEstimator::release(void) {
 bool moldyn::DynDensityGradientEstimator::getExtent(Call& call) {
 
     // Get a pointer to the incoming data call.
-    moldyn::DirectionalParticleDataCall *callIn = dynamic_cast<moldyn::DirectionalParticleDataCall*>(&call);
+    moldyn::MultiParticleDataCall* callIn = dynamic_cast<moldyn::MultiParticleDataCall*>(&call);
     if(callIn == NULL) return false;
 
     // Get a pointer to the outgoing data call.
@@ -99,8 +98,7 @@ bool moldyn::DynDensityGradientEstimator::getExtent(Call& call) {
 bool moldyn::DynDensityGradientEstimator::getData(Call& call) {
 
     // Get a pointer to the incoming data call.
-    moldyn::DirectionalParticleDataCall *callIn =
-            dynamic_cast<moldyn::DirectionalParticleDataCall*>(&call);
+    moldyn::MultiParticleDataCall* callIn = dynamic_cast<moldyn::MultiParticleDataCall*>(&call);
     if (callIn == NULL) return false;
 
     // Get a pointer to the outgoing data call.
@@ -169,7 +167,7 @@ bool moldyn::DynDensityGradientEstimator::getData(Call& call) {
                     MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR,
                     this->gridPos.PeekElements());
     callIn->AccessParticles(0).SetDirData(
-                    DirectionalParticleDataCall::Particles::DIRDATA_FLOAT_XYZ,
+                    MultiParticleDataCall::Particles::DIRDATA_FLOAT_XYZ,
                     this->dir.PeekElements());
     callIn->AccessParticles(0).SetGlobalColour(255, 0, 0);
     callIn->AccessParticles(0).SetColourData(MultiParticleDataCall::Particles::COLDATA_NONE, NULL, 0);

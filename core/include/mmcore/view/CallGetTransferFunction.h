@@ -16,6 +16,8 @@
 #include "mmcore/factories/CallAutoDescription.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 
+#include <array>
+
 
 namespace megamol {
 namespace core {
@@ -110,6 +112,13 @@ public:
     inline float const* GetTextureData(void) const { return this->texData; }
 
     /**
+     * Answer the range the texure lies within.
+     *
+     * @return The range
+     */
+    inline std::array<float, 2> Range(void) const { return this->range; }
+
+    /**
      * Answer if the interface of the transferfunction module is dirty
      *
      * @return dirty flag
@@ -174,7 +183,16 @@ public:
     }
 
     /**
-     * Copies a color from the transfer function..
+     * Set range the texture lies within
+     *
+     * @param range The range.
+     */
+    inline void SetRange(std::array<float, 2> range) {
+        this->range = range;
+    }
+
+    /**
+     * Copies a color from the transfer function
      *
      * @param index The n-th color to copy.
      * @param color A pointer to copy the color to.
@@ -187,6 +205,7 @@ public:
     }
 
 private:
+
     /** The OpenGL texture object id */
     unsigned int texID;
 
@@ -198,6 +217,9 @@ private:
 
     /** The texture format */
     TextureFormat texFormat;
+
+    /** The range the texture lies within */
+    std::array<float, 2> range;
 
     /** Dirty flag */
     bool dirty = false;

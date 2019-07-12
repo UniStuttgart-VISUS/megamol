@@ -5,9 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_TRANSFERFUNCTIONPARAM_H_INCLUDED
-#define MEGAMOLCORE_TRANSFERFUNCTIONPARAM_H_INCLUDED
-
+#pragma once
 
 #include <string>
 #include <cmath>
@@ -50,23 +48,27 @@ public:
     //    "Interpolation": "LINEAR",
     //    "Nodes" : [
     //        [
-    //            0.0,  // = Red
-    //            0.0,  // = Green
-    //            0.0,  // = Blue
-    //            0.0,  // = Alpha
-    //            0.0,  // = Value
-    //            0.05  // = Sigma (only used for gauss interpolation)
+    //            0.0,     // = Red
+    //            0.0,     // = Green
+    //            0.0,     // = Blue
+    //            0.0,     // = Alpha
+    //            0.0,     // = Value (always in range [0,1], independent of actual given data range!)
+    //            0.05     // = Sigma (only used for gauss interpolation)
     //        ],
     //        [
-    //            1.0,  // = Red
-    //            1.0,  // = Green
-    //            1.0,  // = Blue
-    //            1.0,  // = Alpha
-    //            1.0,  // = Value
-    //            0.05  // = Sigma (only used for gauss interpolation)
+    //            1.0,
+    //            1.0, 
+    //            1.0,
+    //            1.0, 
+    //            1.0, 
+    //            0.05 
     //        ]
     //    ],
     //    "TextureSize": 128
+    //    "ValueRange": [
+    //        0.0,        // = minimum value of data range
+    //        1.0         // = maxiumum value of data range
+    //   ],
     //}
 
     /**
@@ -78,7 +80,7 @@ public:
     *
     * @return True if JSON string was successfully converted into transfer function texture, false otherwise.
     */
-    static bool TransferFunctionTexture(const std::string &in_tfs, std::vector<float> &out_data, UINT &out_texsize);
+    static bool TransferFunctionTexture(const std::string &in_tfs, std::vector<float> &out_data, UINT &out_texsize, std::array<float, 2> &out_range);
 
     /**
     * Set transfer function data from JSON string.
@@ -90,7 +92,7 @@ public:
     *
     * @return True if JSON string was successfully converted into transfer function data, false otherwise.
     */
-    static bool ParseTransferFunction(const std::string &in_tfs, TFDataType &out_data, InterpolationMode &out_interpolmode, UINT &out_texsize);
+    static bool ParseTransferFunction(const std::string &in_tfs, TFDataType &out_data, InterpolationMode &out_interpolmode, UINT &out_texsize, std::array<float, 2> &out_range);
 
     /**
      * Get transfer function JSON string from data.
@@ -102,7 +104,7 @@ public:
      *
      * @return True if transfer function data was successfully converted into JSON string, false otherwise.
      */
-    static bool DumpTransferFunction(std::string &out_tfs, const TFDataType &in_data, const InterpolationMode in_interpolmode, const UINT in_texsize);
+    static bool DumpTransferFunction(std::string &out_tfs, const TFDataType &in_data, const InterpolationMode in_interpolmode, const UINT in_texsize, std::array<float, 2> in_range);
 
     /**
      * Check given transfer function data.
@@ -113,7 +115,7 @@ public:
      *
      * @return True if given data is valid, false otherwise.
      */
-    static bool CheckTransferFunctionData(const TFDataType &data, const InterpolationMode interpolmode, const UINT texsize);
+    static bool CheckTransferFunctionData(const TFDataType &data, const InterpolationMode interpolmode, const UINT texsize, const std::array<float, 2> range);
 
     /**
      * Check given transfer function JSON string.
@@ -142,7 +144,15 @@ public:
     */
     static void GaussInterpolation(std::vector<float> &out_texdata, unsigned int in_texsize, const TFDataType &in_tfdata);
 
-    /** Calculates gauss function for given parameters. */
+    /** Calculates gauss function value. 
+    *
+    * @param x  The current x position to calculate the gauss function value for.
+    * @param a  The scaling of the gauss function (bell) in direction of the y axis.
+    * @param b  The translation of the gauss function (bell) center in direction of the x axis.
+    * @param c  The width (= sigma) of the gauss function (bell).
+    * 
+    * @return The gauss funtion value.
+    */
     static inline float gauss(float x, float a, float b, float c) {
         return (a * expf(-1.0f * (x - b) * (x - b) / (2.0f * c * c)));
     }
@@ -248,5 +258,3 @@ private:
 } /* end namespace param */
 } /* end namespace core */
 } /* end namespace megamol */
-
-#endif /* end ifndef MEGAMOLCORE_TRANSFERFUNCTIONPARAM_H_INCLUDED */

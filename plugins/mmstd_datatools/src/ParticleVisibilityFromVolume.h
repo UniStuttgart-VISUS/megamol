@@ -21,6 +21,8 @@ namespace megamol {
 namespace stdplugin {
 namespace datatools {
 
+// TODO: merge this with DirPartFilter!
+
 /**
  * Module filtering particles based on volumetric data.
  * Performs trilinear interpolation and applies a user-selected

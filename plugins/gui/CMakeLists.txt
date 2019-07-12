@@ -30,7 +30,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
     "${SOURCE_DIR}/examples/imgui_impl_opengl3.cpp"
     "${SOURCE_DIR}/examples/imgui_impl_opengl3.h"
     "${SOURCE_DIR}/misc/cpp/imgui_stdlib.cpp"
-    "${SOURCE_DIR}/misc/cpp/imgui_stdlib.h")
+    "${SOURCE_DIR}/misc/cpp/imgui_stdlib.h")    
   set_source_files_properties(${imgui_files} PROPERTIES GENERATED TRUE)
 
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
@@ -41,8 +41,15 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   # Target definition
   add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${source_files} ${imgui_files} ${resource_files})
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
-  if(NOT WIN32) # linux
-    target_link_libraries(${PROJECT_NAME} PRIVATE "stdc++fs") # filesystem support
+  if(UNIX) #Linux
+    cmake_host_system_information(RESULT fqdn QUERY FQDN)
+    # C++ filesystem is not working on "stampede"
+    if(NOT fqdn MATCHES ".*stampede2.*")
+      target_link_libraries(${PROJECT_NAME} PRIVATE "stdc++fs") # filesystem support
+      target_compile_definitions(${PROJECT_NAME} PRIVATE GUI_USE_FILEUTILS)
+    endif()
+  else () # Windows
+    target_compile_definitions(${PROJECT_NAME} PRIVATE GUI_USE_FILEUTILS)
   endif()
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS IMGUI_IMPL_OPENGL_LOADER_GLAD)
   target_include_directories(${PROJECT_NAME} PUBLIC
@@ -74,4 +81,5 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   add_clang_format(${PROJECT_NAME}
     STYLE "${CMAKE_SOURCE_DIR}/.clang-format"
     FILES ${public_header_files} ${header_files} ${source_files})
+
 endif()

@@ -15,7 +15,6 @@
 #include "mmcore/CalleeSlot.h"
 #include "vislib/math/Vector.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
-#include "mmcore/moldyn/DirectionalParticleDataCall.h"
 #include <vector>
 #include <map>
 
@@ -85,7 +84,7 @@ namespace datatools {
         bool getExtentCallback(megamol::core::Call& c);
 
         bool assertData(megamol::core::moldyn::MultiParticleDataCall *in,
-            core::moldyn::MultiParticleDataCall *outMPDC,  core::moldyn::DirectionalParticleDataCall *outDPDC);
+            core::moldyn::MultiParticleDataCall *outMPDC);
 
         core::param::ParamSlot cyclXSlot;
         core::param::ParamSlot cyclYSlot;
