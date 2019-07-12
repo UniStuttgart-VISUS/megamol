@@ -36,8 +36,7 @@
 /*
  * megamol::core::thecam::utility::not_copyable::~not_copyable
  */
-megamol::core::thecam::utility::not_copyable::~not_copyable(void) {
-}
+megamol::core::thecam::utility::not_copyable::~not_copyable(void) {}
 
 
 /*
@@ -51,7 +50,8 @@ megamol::core::thecam::utility::not_copyable::not_copyable(const not_copyable& r
 /*
  * megamol::core::thecam::utility::not_copyable::operator =
  */
-megamol::core::thecam::utility::not_copyable& megamol::core::thecam::utility::not_copyable::operator =(const not_copyable& rhs) {
+megamol::core::thecam::utility::not_copyable& megamol::core::thecam::utility::not_copyable::operator=(
+    const not_copyable& rhs) {
     if (this != &rhs) {
         throw std::runtime_error("rhs");
     }

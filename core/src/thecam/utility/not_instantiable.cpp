@@ -35,8 +35,7 @@
 /*
  * megamol::core::thecam::utility::not_instantiable::~not_instantiable
  */
-megamol::core::thecam::utility::not_instantiable::~not_instantiable(void) {
-}
+megamol::core::thecam::utility::not_instantiable::~not_instantiable(void) {}
 
 
 /*

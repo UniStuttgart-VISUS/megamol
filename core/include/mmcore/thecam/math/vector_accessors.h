@@ -32,7 +32,7 @@
 #define THE_MATH_VECTOR_ACCESSORS_H_INCLUDED
 #pragma once
 #if defined(_WIN32) && defined(_MANAGED)
-#pragma managed(push, off)
+#    pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 #include "mmcore/thecam/utility/config.h"
@@ -45,116 +45,112 @@ namespace math {
 namespace detail {
 
 
-    /**
-     * A utility class that provides named accessors for vector components
-     * using the CRTP.
-     *
-     * @param V The actual vector type, which inherits from this class.
-     * @param T The traits type used for V. We need this information, because
-     *          V is not yet complete when we need to determine value_type.
-     * @param D The dimension of the vector.
-     */
-    template<class V, class T, size_t D> struct vector_accessors { };
+/**
+ * A utility class that provides named accessors for vector components
+ * using the CRTP.
+ *
+ * @param V The actual vector type, which inherits from this class.
+ * @param T The traits type used for V. We need this information, because
+ *          V is not yet complete when we need to determine value_type.
+ * @param D The dimension of the vector.
+ */
+template <class V, class T, size_t D> struct vector_accessors {};
 
 
-    /**
-     * Specialisation of vector_accessors for 1D vectors, which adds a named 
-     * accessor for the x-component.
-     *
-     * @param V The actual vector type, which inherits from this class.
-     * @param T The traits type used for V. We need this information, because
-     *          V is not yet complete when we need to determine value_type.
-     */
-    template<class V, class T>
-    struct vector_accessors<V, T, 1> {
+/**
+ * Specialisation of vector_accessors for 1D vectors, which adds a named
+ * accessor for the x-component.
+ *
+ * @param V The actual vector type, which inherits from this class.
+ * @param T The traits type used for V. We need this information, because
+ *          V is not yet complete when we need to determine value_type.
+ */
+template <class V, class T> struct vector_accessors<V, T, 1> {
 
-        typedef typename T::value_type value_type;
+    typedef typename T::value_type value_type;
 
-        inline value_type x(void) const {
-            auto that = static_cast<const V *>(this);
-            return (*that)[0];
-        }
+    inline value_type x(void) const {
+        auto that = static_cast<const V*>(this);
+        return (*that)[0];
+    }
 
-        inline value_type& x(void) {
-            auto that = static_cast<V *>(this);
-            return (*that)[0];
-        }
-    };
-
-
-    /**
-     * Specialisation of vector_accessors for 2D vectors, which inherits all
-     * accessors from 1D vectors and adds a named accessor for the y-component.
-     *
-     * @param V The actual vector type, which inherits from this class.
-     * @param T The traits type used for V. We need this information, because
-     *          V is not yet complete when we need to determine value_type.
-     */
-    template<class V, class T>
-    struct vector_accessors<V, T, 2> : public vector_accessors<V, T, 1> {
-
-        typedef typename T::value_type value_type;
-
-        inline value_type y(void) const {
-            auto that = static_cast<const V *>(this);
-            return (*that)[1];
-        }
-
-        inline value_type& y(void) {
-            auto that = static_cast<V *>(this);
-            return (*that)[1];
-        }
-    };
+    inline value_type& x(void) {
+        auto that = static_cast<V*>(this);
+        return (*that)[0];
+    }
+};
 
 
-    /**
-     * Specialisation of vector_accessors for 3D vectors, which inherits all
-     * accessors from 2D vectors and adds a named accessor for the z-component.
-     *
-     * @param V The actual vector type, which inherits from this class.
-     * @param T The traits type used for V. We need this information, because
-     *          V is not yet complete when we need to determine value_type.
-     */
-    template<class V, class T>
-    struct vector_accessors<V, T, 3> : public vector_accessors<V, T, 2> {
+/**
+ * Specialisation of vector_accessors for 2D vectors, which inherits all
+ * accessors from 1D vectors and adds a named accessor for the y-component.
+ *
+ * @param V The actual vector type, which inherits from this class.
+ * @param T The traits type used for V. We need this information, because
+ *          V is not yet complete when we need to determine value_type.
+ */
+template <class V, class T> struct vector_accessors<V, T, 2> : public vector_accessors<V, T, 1> {
 
-        typedef typename T::value_type value_type;
+    typedef typename T::value_type value_type;
 
-        inline value_type z(void) const {
-            auto that = static_cast<const V *>(this);
-            return (*that)[2];
-        }
+    inline value_type y(void) const {
+        auto that = static_cast<const V*>(this);
+        return (*that)[1];
+    }
 
-        inline value_type& z(void) {
-            auto that = static_cast<V *>(this);
-            return (*that)[2];
-        }
-    };
+    inline value_type& y(void) {
+        auto that = static_cast<V*>(this);
+        return (*that)[1];
+    }
+};
 
 
-    /**
-     * Specialisation of vector_accessors for 4D vectors, which inherits all
-     * accessors from 3D vectors and adds a named accessor for the w-component.
-     *
-     * @param V The actual vector type, which inherits from this class.
-     * @param T The traits type used for V. We need this information, because
-     *          V is not yet complete when we need to determine value_type.
-     */
-    template<class V, class T>
-    struct vector_accessors<V, T, 4> : public vector_accessors<V, T, 3> {
+/**
+ * Specialisation of vector_accessors for 3D vectors, which inherits all
+ * accessors from 2D vectors and adds a named accessor for the z-component.
+ *
+ * @param V The actual vector type, which inherits from this class.
+ * @param T The traits type used for V. We need this information, because
+ *          V is not yet complete when we need to determine value_type.
+ */
+template <class V, class T> struct vector_accessors<V, T, 3> : public vector_accessors<V, T, 2> {
 
-        typedef typename T::value_type value_type;
+    typedef typename T::value_type value_type;
 
-        inline value_type w(void) const {
-            auto that = static_cast<const V *>(this);
-            return (*that)[3];
-        }
+    inline value_type z(void) const {
+        auto that = static_cast<const V*>(this);
+        return (*that)[2];
+    }
 
-        inline value_type& w(void) {
-            auto that = static_cast<V *>(this);
-            return (*that)[3];
-        }
-    };
+    inline value_type& z(void) {
+        auto that = static_cast<V*>(this);
+        return (*that)[2];
+    }
+};
+
+
+/**
+ * Specialisation of vector_accessors for 4D vectors, which inherits all
+ * accessors from 3D vectors and adds a named accessor for the w-component.
+ *
+ * @param V The actual vector type, which inherits from this class.
+ * @param T The traits type used for V. We need this information, because
+ *          V is not yet complete when we need to determine value_type.
+ */
+template <class V, class T> struct vector_accessors<V, T, 4> : public vector_accessors<V, T, 3> {
+
+    typedef typename T::value_type value_type;
+
+    inline value_type w(void) const {
+        auto that = static_cast<const V*>(this);
+        return (*that)[3];
+    }
+
+    inline value_type& w(void) {
+        auto that = static_cast<V*>(this);
+        return (*that)[3];
+    }
+};
 
 } /* end namespace detail */
 } /* end namespace math */
@@ -163,6 +159,6 @@ namespace detail {
 } /* end namespace megamol */
 
 #if defined(_WIN32) && defined(_MANAGED)
-#pragma managed(pop)
+#    pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* THE_MATH_VECTOR_ACCESSORS_H_INCLUDED */

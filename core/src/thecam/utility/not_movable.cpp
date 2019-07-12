@@ -35,8 +35,7 @@
 /*
  * megamol::core::thecam::utility::not_movable::~not_movable
  */
-megamol::core::thecam::utility::not_movable::~not_movable(void) {
-}
+megamol::core::thecam::utility::not_movable::~not_movable(void) {}
 
 
 /*
@@ -50,7 +49,7 @@ megamol::core::thecam::utility::not_movable::not_movable(not_movable&& rhs) {
 /*
  * megamol::core::thecam::utility::not_movable::operator =
  */
-megamol::core::thecam::utility::not_movable& megamol::core::thecam::utility::not_movable::operator =(not_movable&& rhs) {
+megamol::core::thecam::utility::not_movable& megamol::core::thecam::utility::not_movable::operator=(not_movable&& rhs) {
     if (this != &rhs) {
         std::runtime_error("Invalid argument \"rhs\"");
     }
