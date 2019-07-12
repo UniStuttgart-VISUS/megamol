@@ -71,10 +71,10 @@
 #define SPHERE_MIN_OGL_SIMPLE             (GL_VERSION_1_4)
 #define SPHERE_MIN_OGL_SIMPLE_CLUSTERED   (GL_VERSION_1_4)
 #define SPHERE_MIN_OGL_SIMPLE_GEO         (GL_VERSION_3_2)
-#define SPHERE_MIN_OGL_NG                 (GL_VERSION_4_5)
-#define SPHERE_MIN_OGL_NG_BUFFER_ARRAY    (GL_VERSION_4_5)
-#define SPHERE_MIN_OGL_NG_SPLAT           (GL_VERSION_4_5)
-#define SPHERE_MIN_OGL_AMBIENT_OCCLUSION  (GL_VERSION_4_5)
+#define SPHERE_MIN_OGL_NG                 (GL_VERSION_4_5) // required for glUnmapNamedBuffer
+#define SPHERE_MIN_OGL_NG_BUFFER_ARRAY    (GL_VERSION_4_5) // required for glMapNamedBufferRange
+#define SPHERE_MIN_OGL_NG_SPLAT           (GL_VERSION_4_5) // required for glMapNamedBufferRange
+#define SPHERE_MIN_OGL_AMBIENT_OCCLUSION  (GL_VERSION_4_5) // required for glMapNamedBufferRange
 
 
 namespace megamol {
