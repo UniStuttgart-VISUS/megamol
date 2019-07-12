@@ -174,7 +174,7 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
     }
 
     // Light setup
-    CallOSPRayLight* gl = this->getLightSlot.CallAs<CallOSPRayLight>();
+    core::view::light::CallLight *gl = this->getLightSlot.CallAs<core::view::light::CallLight>();
     light_has_changed = false;
     if (gl != NULL) {
         gl->setLightMap(&lightMap);

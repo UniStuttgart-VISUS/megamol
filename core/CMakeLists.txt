@@ -135,6 +135,7 @@ if(BUILD_CORE)
     include(GNUInstallDirs)
     set(ZFP_LIB "${CMAKE_INSTALL_LIBDIR}/libzfp.a")
   endif()
+
   add_external_project(zfp_ext
     GIT_REPOSITORY https://github.com/LLNL/zfp.git
     GIT_TAG "0.5.2"
@@ -156,7 +157,8 @@ if(BUILD_CORE)
       CONFIGURE_COMMAND ""
       BUILD_COMMAND ""
       INSTALL_COMMAND ""
-      TEST_COMMAND "")
+      TEST_COMMAND ""
+      CMAKE_ARGS -DGLM_TEST_ENABLE=OFF)
   add_external_library(glm INTERFACE
     DEPENDS glm_ext
     INCLUDE_DIR "src/glm_ext/")
