@@ -23,11 +23,17 @@ if(BUILD_FLOWVIS_PLUGIN)
       "src/dllmain.cpp")
   endif()
 
-  # Find TPF
-  find_package(tpf REQUIRED)
+  # Get TPF
+  add_external_project(tpf_ext
+    GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/tpf.git
+    CONFIGURE_COMMAND "" BUILD_COMMAND "" INSTALL_COMMAND "" TEST_COMMAND "")
+  add_external_library(tpf INTERFACE DEPENDS tpf_ext INCLUDE_DIR "src/tpf_ext")
 
-  # Find Eigen
-  find_package(Eigen3 REQUIRED)
+  # Get Eigen
+  add_external_project(Eigen_ext
+    GIT_REPOSITORY https://github.com/eigenteam/eigen-git-mirror.git GIT_TAG "3.3.4"
+    CONFIGURE_COMMAND "" BUILD_COMMAND "" INSTALL_COMMAND "" TEST_COMMAND "")
+  add_external_library(Eigen INTERFACE DEPENDS Eigen_ext INCLUDE_DIR "src/Eigen_ext")
 
   # Find CGAL
   find_package(CGAL REQUIRED)
@@ -51,7 +57,7 @@ if(BUILD_FLOWVIS_PLUGIN)
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS _ENABLE_EXTENDED_ALIGNED_STORAGE)
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src" PRIVATE ${CGAL_INCLUDE_DIRS} ${CGAL_3RD_PARTY_INCLUDE_DIRS})
-  target_link_libraries(${PROJECT_NAME} PRIVATE core tpf Eigen3::Eigen CGAL::CGAL flowvis_streamlines_cuda)
+  target_link_libraries(${PROJECT_NAME} PRIVATE core tpf Eigen CGAL::CGAL flowvis_streamlines_cuda)
 
   # Installation rules for generated files
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")

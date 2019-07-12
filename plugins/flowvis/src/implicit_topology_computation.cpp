@@ -295,7 +295,7 @@ namespace megamol
 
                     if (!this->terminate_computation)
                     {
-                        std::swap(promise, std::promise<implicit_topology_results>());
+                        promise = std::promise<implicit_topology_results>();
 
                         this->current_result = promise.get_future().share();
                     }
@@ -451,7 +451,7 @@ namespace megamol
                 // Prepare new results
                 if (!finished && finished_refined_integration && !this->terminate_computation)
                 {
-                    std::swap(promise, std::promise<implicit_topology_results>());
+                    promise = std::promise<implicit_topology_results>();
 
                     this->current_result = promise.get_future().share();
                 }

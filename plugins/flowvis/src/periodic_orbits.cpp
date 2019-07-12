@@ -646,7 +646,7 @@ namespace megamol
                     // Use Poincaré map for finding the closed stream line
                     if (!output_exit_streamline)
                     {
-                        std::swap(periodic_orbit, integrate_orbit(grid, position, integration, max_poincare_error));
+                        periodic_orbit = integrate_orbit(grid, position, integration, max_poincare_error);
                     }
 
                     // Output results

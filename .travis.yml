@@ -26,6 +26,7 @@ before_install:
   - sudo apt-get install -y libxinerama-dev
   - sudo apt-get install -y libxcursor-dev
   - sudo apt-get install -y libxi-dev
+  - sudo apt-get install -y libcgal-dev
   - mkdir build && cd build
   - ../bin/cmake ..
 
