@@ -68,6 +68,9 @@ namespace core {
         /** File path parameter */
         core::param::ParamSlot filePath;
 
+        /** File path parameter */
+        core::param::ParamSlot append;
+
         /** File stream */
         std::fstream stream;
     };
