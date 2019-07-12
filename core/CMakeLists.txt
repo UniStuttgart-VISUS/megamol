@@ -12,6 +12,7 @@ if(BUILD_CORE)
   # Check option dependencies: First list item is always the current build option,
   # afterwards list the dependencies.
   set(DEP_LIST "${DEP_LIST};BUILD_CORE BUILD_VISLIB" CACHE INTERNAL "")
+  set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
   # search for 3rd party libs
   set(CMAKE_THREAD_PREFER_PTHREAD)
