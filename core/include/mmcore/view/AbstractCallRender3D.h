@@ -84,7 +84,10 @@ namespace view {
             this->camParams = camParams;
         }
 
-
+        inline void SetCameraView(const vislib::math::Point<float, 3> pos, const vislib::math::Point<float, 3> la,
+            const vislib::math::Vector<float, 3> up) {
+            this->camParams->SetView(pos, la, up);
+        }
 
         /**
          * Assignment operator

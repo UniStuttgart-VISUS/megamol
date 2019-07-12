@@ -16,7 +16,16 @@
 #include "vislib/sys/SystemInformation.h"
 
 //#define RV_DEBUG_OUTPUT = 1
+#define CINEMA = 1
 
+#ifdef CINEMA
+#include "mmcore/view/CallRender3D.h"
+#include "vislib/graphics/CameraParamsStore.h"
+#include "PNGWriter.h"
+#include <sstream>
+static std::vector<vislib::graphics::CameraParamsStore> cinemaCams;
+static unsigned index = 0;
+#endif
 
 megamol::pbs::RendernodeView::RendernodeView()
     : request_mpi_slot_("requestMPI", "Requests initialization of MPI and the communicator for the view.")
@@ -173,6 +182,7 @@ void megamol::pbs::RendernodeView::Render(const mmcRenderViewContext& context) {
     }
 
     // initialize rendering
+    int allFnameDirty = 0;
     auto ss = this->sync_data_slot_.CallAs<core::cluster::SyncDataSourcesCall>();
     if (ss != nullptr) {
         if (!(*ss)(0)) { // check for dirty filenamesslot
@@ -180,7 +190,6 @@ void megamol::pbs::RendernodeView::Render(const mmcRenderViewContext& context) {
             return;
         }
         int fnameDirty = ss->getFilenameDirty();
-        int allFnameDirty = 0;
         MPI_Allreduce(&fnameDirty, &allFnameDirty, 1, MPI_INT, MPI_LAND, this->comm_);
 #    ifdef RV_DEBUG_OUTPUT
         vislib::sys::Log::DefaultLog.WriteInfo("RendernodeView: allFnameDirty: %d", allFnameDirty);
@@ -222,6 +231,143 @@ void megamol::pbs::RendernodeView::Render(const mmcRenderViewContext& context) {
         if (!crv->operator()(core::view::CallRenderView::CALL_RENDER)) {
             vislib::sys::Log::DefaultLog.WriteError("RendernodeView: Failed to call render on dependend view.");
         }
+
+#    ifdef CINEMA
+
+        if (index > 0 && this->rank_ == bcast_rank_) {
+            std::stringstream filename;
+            filename << "test_" << this->rank_ << "_" << index << ".png";
+
+            // read FBO
+            std::vector<char> col_buf(crv->ViewportWidth() * crv->ViewportHeight() * 3);
+            glReadPixels(0, 0, crv->ViewportWidth(), crv->ViewportHeight(), GL_RGB, GL_UNSIGNED_BYTE, col_buf.data());
+
+            try {
+                PNGWriter png_writer;
+                png_writer.setup(filename.str().c_str());
+                png_writer.set_buffer(
+                    reinterpret_cast<BYTE*>(col_buf.data()), crv->ViewportWidth(), crv->ViewportHeight(), 3);
+                png_writer.render2file();
+                png_writer.finish();
+            } catch (...) {
+                vislib::sys::Log::DefaultLog.WriteError("RendernodeView: Exception while writing PNG\n");
+            }
+        }
+
+        // Rank 0 calculates the camera positions and distributes them to all
+        if (allFnameDirty) {
+            index = 0;
+            auto view = this->getConnectedView();
+            core::CallerSlot* crSlot = dynamic_cast<core::CallerSlot*>(view->FindSlot("rendering"));
+            if (crSlot == nullptr) return;
+            core::view::CallRender3D* cr = crSlot->CallAs<core::view::CallRender3D>();
+            if (cr == nullptr) return;
+
+            // auto box = cr->GetBoundingBoxes().ObjectSpaceBBox();
+            auto box = cr->GetBoundingBoxes().WorldSpaceBBox();
+            std::array<float, 3> dims = {box.Width(), box.Height(), box.Depth()};
+            unsigned int max_dim = std::distance(dims.begin(), std::max_element(dims.begin(), dims.end()));
+
+            unsigned int num_sections = 14;
+            unsigned int num_angles = 16;
+            float length_step_size = box.LongestEdge() / (num_sections - 3); // includes end of cylinder
+            float angle_step_size = 2 * 3.14159265358979f / num_angles;
+            vislib::math::Point<float, 3> la;
+            vislib::math::Point<float, 3> pos;
+
+            std::function<std::array<float, 3>(float,float)> parametrization;
+            float radius;
+            std::array<float, 3> start;
+            std::array<float, 3> direction;
+            //= []() { print_num(42); }
+            if (max_dim == 0) { // x
+                radius = std::sqrt(std::pow(box.Height(), 2) + std::pow(box.Depth(), 2))/2;
+                start = {box.GetLeft(), box.GetBottom() + box.Height() / 2, box.GetFront() + box.Depth() / 2};
+                direction = {-1, 0, 0};
+
+                parametrization = [](float r, float angle) {
+                    return std::array<float, 3>{0, r * cos(angle), r * sin(angle)};
+                };
+
+            } else if (max_dim == 1) { // y
+                radius = std::sqrt(std::pow(box.Width(), 2) + std::pow(box.Depth(), 2))/2;
+                start = {box.GetLeft() + box.Width()/2, box.GetBottom(), box.GetFront() + box.Depth() / 2};
+                direction = {0, -1, 0};
+
+                parametrization = [](float r, float angle) {
+                    return std::array<float, 3>{r * cos(angle), 0, r * sin(angle)};
+                };
+            } else { // z
+                radius = std::sqrt(std::pow(box.Height(), 2) + std::pow(box.Width(), 2)) / 2;
+                start = {box.GetLeft() + box.Width() / 2, box.GetBottom() + box.Height() / 2,
+                    box.GetFront()};
+                direction = {0, 0, -1};
+
+                parametrization = [](float r, float angle) {
+                    return std::array<float, 3>{r * cos(angle), r * sin(angle), 0};
+                };
+            }
+
+            cinemaCams.resize(num_sections * num_angles);
+
+            float radius_offset_cylinder = 5.0f;
+            float radius_offset_spheres = 2.0f;
+
+            // start sphere
+            for (unsigned int j = 0; j < num_angles; j++) {
+                for (unsigned int n = 0; n < 3; n++) {
+
+                    pos[n] = start[n] + parametrization((radius + radius_offset_spheres), angle_step_size * j)[n] +
+                             -(radius + radius_offset_spheres) * direction[n];
+
+                    la[n] = start[n];
+                }
+                cinemaCams[j].SetView(pos, la, {direction[0], direction[1], direction[2]});
+            }
+
+
+            // middle part
+            for (unsigned int i = 0; i < num_sections-2; i++) {
+                for (unsigned int j = 0; j < num_angles; j++) {
+                    for (unsigned int n = 0; n < 3; n++) {
+
+                        pos[n] = start[n] + parametrization(radius + radius_offset_cylinder, angle_step_size * j)[n] +
+                                 length_step_size * i * direction[n];
+
+                        la[n] = start[n] + length_step_size * i * direction[n];
+                    }
+                    cinemaCams[(i+1) * num_angles + j].SetView(pos, la, {direction[0], direction[1], direction[2]});
+                }
+            }
+
+            // end sphere
+            for (unsigned int j = 0; j < num_angles; j++) {
+                for (unsigned int n = 0; n < 3; n++) {
+
+                    pos[n] = start[n] + parametrization((radius + radius_offset_spheres), angle_step_size * j)[n] +
+                             (radius + radius_offset_spheres + box.LongestEdge()) * direction[n];
+
+                    la[n] = start[n] + box.LongestEdge() * direction[n];
+                }
+                cinemaCams[(num_sections - 1)*(num_angles) + j].SetView(pos, la, {direction[0], direction[1], direction[2]});
+            }
+
+        } else if (!cinemaCams.empty()) {
+            auto view = this->getConnectedView();
+            core::CallerSlot* crSlot = dynamic_cast<core::CallerSlot*>(view->FindSlot("rendering"));
+            if (crSlot == nullptr) return;
+            core::view::CallRender3D* cr = crSlot->CallAs<core::view::CallRender3D>();
+            if (cr == nullptr) return;
+
+            //std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+            if (index < cinemaCams.size())  {
+                cr->SetCameraView(cinemaCams[index].Position(), cinemaCams[index].LookAt(), cinemaCams[index].Up());
+                index++;
+            }
+        }
+#    endif
+
 
         glFinish();
     } else {
