@@ -10,10 +10,13 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/AbstractView.h"
 
-#include "FileUtils.h"
 #include "Popup.h"
 #include "TransferFunctionEditor.h"
 #include "WindowManager.h"
+/// CMake exeption for the cluster "stampede2" running CentOS. (C++ filesystem support is not working)
+#ifdef GUI_USE_FILEUTILS
+#    include "FileUtils.h"
+#endif // GUI_USE_FILEUTILS
 
 #include "vislib/math/Rectangle.h"
 

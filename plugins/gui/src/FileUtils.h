@@ -5,31 +5,23 @@
  * Alle Rechte vorbehalten.
  */
 
-/// Exeption for the cluster "Stampede" running CentOS.
-/// C++ filesystem support is not working:
-/// /opt/apps/gcc/7.3.0/bin/ld:
-/// /opt/apps/gcc/7.3.0/lib/gcc/x86_64-pc-linux-gnu/7.3.0/../../../../lib64/libstdc++fs.a(ops.o)(.text._ZN9__gnu_cxx13stdio_filebufIcSt11char_traitsIcEED2Ev[_ZN9__gnu_cxx13stdio_filebufIcSt11char_traitsIcEED5Ev]+0x3):
-/// unresolvable R_X86_64_NONE relocation against symbol `_ZTVSt13basic_filebufIcSt11char_traitsIcEE@@GLIBCXX_3.4'
-/// /opt/apps/gcc/7.3.0/bin/ld: final link failed: Nonrepresentable section on output
-#ifdef GUI_USE_FILEUTILS
+#pragma once
 
-#    pragma once
+#include <string>
 
-#    include <string>
-
-#    if _HAS_CXX17
-#        include <filesystem> // directory_iterator
+#if _HAS_CXX17
+#    include <filesystem> // directory_iterator
 namespace ns_fs = std::filesystem;
-#    else
+#else
 // WINDOWS
-#        ifdef _WIN32
-#            include <filesystem>
-#        else
+#    ifdef _WIN32
+#        include <filesystem>
+#    else
 // LINUX
-#            include <experimental/filesystem>
-#        endif
-namespace ns_fs = std::experimental::filesystem;
+#        include <experimental/filesystem>
 #    endif
+namespace ns_fs = std::experimental::filesystem;
+#endif
 
 
 namespace megamol {
@@ -79,5 +71,3 @@ inline std::string SearchFileRecursive(std::string file, PathType searchPath) {
 
 } // namespace gui
 } // namespace megamol
-
-#endif // GUI_USE_FILEUTILS
