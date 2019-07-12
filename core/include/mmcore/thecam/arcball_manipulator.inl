@@ -128,36 +128,16 @@ void megamol::core::thecam::arcball_manipulator<T>::on_drag(const screen_type x,
         THE_ASSERT(cam != nullptr);
 
         if (this->lastSx != x || this->lastSy != y) {
-            this->currentVector = thecam::math::rotate(this->mapToSphere(x, y), this->startRot);
-
-            // Compute axis of rotation.
-            auto axis = megamol::core::thecam::math::cross(this->startVector, this->currentVector);
+            this->currentVector = this->mapToSphere(x, y);
 
             // Compute angle and rotation quaternion.
             quaternion_type quat;
-            auto angle = thecam::math::dot(this->startVector, this->currentVector);
-            angle = glm::acos(angle);
+            thecam::math::set_from_vectors(quat, startVector, currentVector);
 
-            thecam::math::set_from_angle_axis(quat, angle, axis);
-
-#if 0
-            // Apply the rotation.
-            auto rot = quat * this->invStartRot;
-            cam->orientation(rot);
-
-            // Compute the new position of the camera.
-            auto pos = this->startPos - this->rotCentre;
-            //pos = thecam::math::rotate(pos, math::invert(this->startRot));
-            pos = thecam::math::rotate(pos, rot);
-            pos += this->rotCentre;
+            auto const qstar = quat * this->startRot;
+            auto pos = thecam::math::rotate(this->startPos - this->rotCentre, quat) + this->rotCentre;
             cam->position(pos);
-#endif
-            auto qstar = quat * this->invStartRot;
-            auto pos = thecam::math::rotate(this->startPos - this->rotCentre, qstar) + this->rotCentre;
-            cam->position(pos);
-            cam->orientation(quat);
-
-            // this->startVector = this->currentVector;
+            cam->orientation(qstar);
 
             this->lastSx = x;
             this->lastSy = y;
@@ -176,7 +156,7 @@ void megamol::core::thecam::arcball_manipulator<T>::on_drag_start(const screen_t
         this->startPos = this->camera()->eye_position();
         this->invStartRot = math::invert(this->camera()->orientation());
         this->startRot = this->camera()->orientation();
-        this->startVector = thecam::math::rotate(this->mapToSphere(x, y), this->camera()->orientation());
+        this->startVector = this->mapToSphere(x, y);
         this->lastSx = x;
         this->lastSy = y;
     }
