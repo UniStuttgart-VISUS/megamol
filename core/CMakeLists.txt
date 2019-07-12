@@ -181,13 +181,6 @@ if(BUILD_CORE)
       find_package(LIBUNWIND REQUIRED)
       message(STATUS ${LIBUNWIND_LIBRARIES})
       message(STATUS ${LIBUNWIND_INCLUDE_DIR})
-      if(LIBUNWIND_FOUND)
-        target_compile_definitions(${PROJECT_NAME} PUBLIC "HAS_LIBUNWIND")
-        target_include_directories(${PROJECT_NAME} PUBLIC ${LIBUNWIND_INCLUDE_DIR})
-        target_link_libraries(${PROJECT_NAME} PUBLIC ${LIBUNWIND_LIBRARIES} )
-      else()
-        message(FATAL_ERROR "Can not find libunwind.")
-      endif()
     endif()
   endif()
 
@@ -214,6 +207,16 @@ if(BUILD_CORE)
 
   # Target definition
   add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files} ${version_files})
+
+  if (UNIX)
+    if(LIBUNWIND_FOUND)
+      target_compile_definitions(${PROJECT_NAME} PUBLIC "HAS_LIBUNWIND")
+      target_include_directories(${PROJECT_NAME} PUBLIC ${LIBUNWIND_INCLUDE_DIR})
+      target_link_libraries(${PROJECT_NAME} PUBLIC ${LIBUNWIND_LIBRARIES} )
+    else()
+      message(FATAL_ERROR "Can not find libunwind.")
+    endif()
+  endif()
   target_compile_definitions(${PROJECT_NAME} PRIVATE MEGAMOLCORE_EXPORTS)
   target_include_directories(${PROJECT_NAME}
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "src" "include"
