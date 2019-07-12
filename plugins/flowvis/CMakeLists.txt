@@ -3,7 +3,7 @@
 # Copyright 2019, by MegaMol Team
 # Alle Rechte vorbehalten. All rights reserved.
 #
-option(BUILD_FLOWVIS_PLUGIN "Option to build flowvis" ON)
+option(BUILD_FLOWVIS_PLUGIN "Option to build flowvis" OFF)
 
 if(BUILD_FLOWVIS_PLUGIN)
   project(flowvis)
@@ -19,21 +19,20 @@ if(BUILD_FLOWVIS_PLUGIN)
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
 
   if(UNIX)
-    list(REMOVE_ITEM source_files
-      "src/dllmain.cpp")
+    list(REMOVE_ITEM source_files "src/dllmain.cpp")
   endif()
 
   # Get TPF
   add_external_project(tpf_ext
-    GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/tpf.git
-    CONFIGURE_COMMAND "" BUILD_COMMAND "" INSTALL_COMMAND "" TEST_COMMAND "")
-  add_external_library(tpf INTERFACE DEPENDS tpf_ext INCLUDE_DIR "src/tpf_ext")
+    GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/tpf.git)
 
-  # Get Eigen
-  add_external_project(Eigen_ext
-    GIT_REPOSITORY https://github.com/eigenteam/eigen-git-mirror.git GIT_TAG "3.3.4"
-    CONFIGURE_COMMAND "" BUILD_COMMAND "" INSTALL_COMMAND "" TEST_COMMAND "")
-  add_external_library(Eigen INTERFACE DEPENDS Eigen_ext INCLUDE_DIR "src/Eigen_ext")
+  add_external_library(tpf INTERFACE DEPENDS tpf_ext INCLUDE_DIR "include")
+
+  set(tpf_compile_definitions __tpf_use_openmp)
+
+  if(USE_MPI)
+    set(tpf_compile_definitions ${tpf_compile_definitions} __tpf_use_mpi)
+  endif()
 
   # Find CGAL
   find_package(CGAL REQUIRED)
@@ -55,9 +54,9 @@ if(BUILD_FLOWVIS_PLUGIN)
   add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${source_files})
   # Set target naming conventions for different build types
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
-  target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS _ENABLE_EXTENDED_ALIGNED_STORAGE)
+  target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS _ENABLE_EXTENDED_ALIGNED_STORAGE ${tpf_compile_definitions})
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src" PRIVATE ${CGAL_INCLUDE_DIRS} ${CGAL_3RD_PARTY_INCLUDE_DIRS})
-  target_link_libraries(${PROJECT_NAME} PRIVATE core tpf Eigen CGAL::CGAL flowvis_streamlines_cuda)
+  target_link_libraries(${PROJECT_NAME} PRIVATE core mmstd_datatools tpf Eigen CGAL::CGAL flowvis_streamlines_cuda)
 
   # Installation rules for generated files
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")

@@ -28,7 +28,7 @@ before_install:
   - sudo apt-get install -y libxi-dev
   - sudo apt-get install -y libcgal-dev
   - mkdir build && cd build
-  - ../bin/cmake ..
+  - ../bin/cmake .. -DBUILD_FLOWVIS_PLUGIN=ON
 
 install:
   - make install

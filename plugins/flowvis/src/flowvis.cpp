@@ -10,6 +10,7 @@
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/utility/plugins/Plugin200Instance.h"
 #include "mmcore/versioninfo.h"
+
 #include "vislib/vislibversion.h"
 
 #include "critical_points.h"
