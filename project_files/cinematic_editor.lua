@@ -4,17 +4,37 @@ keyframeFile = "../project_files/cinematic_keyframes.kf"
 
 
 function trafo(str)
-  local newcontent = str:gsub("mmCreateView%(.-%)", "")
-  newcontent = newcontent:gsub("mmCreateModule%(\"View.-%)", "")
+
+  -- Break if SplitView or CinematicView occure anywhere in the project
+  local startpos, endpos, word = str:find("SplitView")
+  if not (startpos == nil) then
+    print( "lua ERROR: Cinematic Editor can not be used with projects containing \"SplitView\"."  )
+    return ""
+  end
+  startpos, endpos, word = str:find("CinematicView")
+  if not (startpos == nil) then
+    print( "lua ERROR: Cinematic Editor can not be used with projects containing \"CinematicView\"."  )
+    return ""
+  end  
+
+  local viewclass, viewmoduleinst
+  startpos, endpos, word = str:find("mmCreateView%(.-,%s*[\"\']([^\"\']+)[\"\']%s*,.-%)")
+  if word == "GUIView" then
+    print( "lua INFO: Found \"GUIView\" as head view." )
+    startpos, endpos, word = str:find("mmCreateModule%(.-View.-%)")
+    local substring = str:sub(startpos, endpos)
+    viewclass, viewmoduleinst = substring:match(
+      'mmCreateModule%(%s*[\"\']([^\"\']+)[\"\']%s*,%s*[\"\']([^\"\']+)[\"\']%s*%)')
+  else
+     viewclass, viewmoduleinst = str:match(
+      'mmCreateView%(.-,%s*[\"\']([^\"\']+)[\"\']%s*,%s*[\"\']([^\"\']+)[\"\']%s*%)')
+  end
+  print("lua INFO: View Class = " .. viewclass)
+  print("lua INFO: View Module Instance = " .. viewmoduleinst)
+
+  local newcontent  = str:gsub("mmCreateView%(.-%)", "")
+  newcontent = newcontent:gsub("mmCreateModule%(.-\"View.-%)", "")
   newcontent = newcontent:gsub("mmCreateCall%(\"CallRenderView.-%)", "")
-
-  local viewname, viewclass, viewmoduleinst = str:match(
-      '%(%s*[\"\']([^\"\']+)[\"\']%s*,%s*[\"\']([^\"\']+)[\"\']%s*,%s*[\"\']([^\"\']+)[\"\']%s*%)')
-
-  print("viewname = " .. viewname)
-  print("viewclass = " .. viewclass)
-  print("viewmoduleinst = " .. viewmoduleinst)
-
   newcontent = newcontent:gsub('mmCreateCall%([\"\']CallRender3D[\'\"],%s*[\'\"]' 
       .. '.-' .. viewmoduleinst .. '::rendering[\'\"],([^,]+)%)', 'mmCreateCall("CallRender3D", "::ReplacementRenderer1::renderer",%1)'
       .. "\n" .. 'mmCreateCall("CallRender3D", "::ReplacementRenderer2::renderer",%1)')
@@ -22,9 +42,9 @@ function trafo(str)
   return newcontent
 end
 
-local content = mmReadTextFile(fileToRender, trafo)
 
-print("read: " .. content)
+local content = mmReadTextFile(fileToRender, trafo)
+print("lua INFO: Transformed Include Project File =\n" .. content .. "\n\n")
 code = load(content)
 code()
 
@@ -61,11 +81,11 @@ mmSetParamValue("::CinematicView1::07_fps", "24")
 mmSetParamValue("::CinematicView1::stereo::projection", "2")
 
 mmCreateModule("ReplacementRenderer", "::ReplacementRenderer1")
-mmSetParamValue("::ReplacementRenderer1::03_replacmentKeyAssign", "6")
+mmSetParamValue("::ReplacementRenderer1::03_replacmentKeyAssign", "4")
 mmSetParamValue("::ReplacementRenderer1::01_replacementRendering", "on")
 
 mmCreateModule("ReplacementRenderer", "::ReplacementRenderer2")
-mmSetParamValue("::ReplacementRenderer2::03_replacmentKeyAssign", "5")
+mmSetParamValue("::ReplacementRenderer2::03_replacmentKeyAssign", "3")
 mmSetParamValue("::ReplacementRenderer2::01_replacementRendering", "off")
 
 
