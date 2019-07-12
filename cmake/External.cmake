@@ -3,6 +3,17 @@ include(ExternalProject)
 
 set(CURRENT_LIST_DIR "${CMAKE_CURRENT_LIST_DIR}")
 
+function(_cmake_args_propagate VARIABLE)
+  set(ARGS "-G${CMAKE_GENERATOR}")
+  if(CMAKE_GENERATOR_PLATFORM AND CMAKE_VERSION VERSION_GREATER "3.14.0")
+    list(APPEND ARGS "-A${CMAKE_GENERATOR_PLATFORM}")
+  endif()
+  if(CMAKE_TOOLCHAIN_FILE)
+    list(APPEND ARGS "-DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}")
+  endif()
+  set(${VARIABLE} "${ARGS}" PARENT_SCOPE)
+endfunction(_cmake_args_propagate)
+
 function(_argument_default VARIABLE)
   if(args_${VARIABLE})
     set(${VARIABLE} "${args_${VARIABLE}}" PARENT_SCOPE)
@@ -41,13 +52,13 @@ function(bootstrap_external_package TARGET NAME)
     message(STATUS "${TARGET} tag: ${GIT_TAG}")
 
     # Compose arguments for ExternalProject_Add.
+    _cmake_args_propagate(BASE_ARGS)
     set(ARGN_EXT "${ARGN}")
     list(FIND ARGN_EXT "CONFIG" CONFIG_INDEX)
     list(REMOVE_AT ARGN_EXT ${CONFIG_INDEX})
     list(REMOVE_AT ARGN_EXT ${CONFIG_INDEX})
     list(APPEND ARGN_EXT CMAKE_ARGS
-      "-G${CMAKE_GENERATOR}"
-      "-DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}"
+      ${BASE_ARGS}
       "-DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>")
 
     # Generate a CMakeLists.txt.
@@ -60,9 +71,7 @@ function(bootstrap_external_package TARGET NAME)
     # Configure package.
     message(STATUS "Configuring ${TARGET}...")
     execute_process(
-      COMMAND ${CMAKE_COMMAND} ${SOURCE_DIR}
-        "-G${CMAKE_GENERATOR}"
-        "-DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}"
+      COMMAND ${CMAKE_COMMAND} ${SOURCE_DIR} ${BASE_ARGS}
       WORKING_DIRECTORY ${BUILD_DIR}
       OUTPUT_QUIET
       RESULT_VARIABLE CONFIG_RESULT)
@@ -95,10 +104,10 @@ function(add_external_project TARGET)
   endif()
 
   # Compose arguments for ExternalProject_Add.
+  _cmake_args_propagate(BASE_ARGS)
   set(ARGN_EXT "${ARGN}")
   list(APPEND ARGN_EXT CMAKE_ARGS
-    "-G${CMAKE_GENERATOR}"
-    "-DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}"
+    ${BASE_ARGS}
     "-DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>")
 
   # Add external project.

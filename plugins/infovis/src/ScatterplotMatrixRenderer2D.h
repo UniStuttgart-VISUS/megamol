@@ -10,7 +10,7 @@
 #include "mmcore/view/CallRender2D.h"
 #include "mmcore/view/MouseFlags.h"
 #include "mmcore/view/Renderer2DModule.h"
-#include "mmstd_datatools/floattable/CallFloatTableData.h"
+#include "mmstd_datatools/table/TableDataCall.h"
 
 #include "FlagCall.h"
 #include "Renderer2D.h"
@@ -32,7 +32,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "Scatterplot matrix renderer for generic float tables."; }
+    static const char* Description(void) { return "Scatterplot matrix renderer for generic tables."; }
 
     /**
      * Answers whether this module is available on the current system.
@@ -188,7 +188,7 @@ private:
 
     size_t dataHash;
 
-    stdplugin::datatools::floattable::CallFloatTableData* floatTable;
+    stdplugin::datatools::table::TableDataCall* floatTable;
 
     core::view::CallGetTransferFunction* transferFunction;
 

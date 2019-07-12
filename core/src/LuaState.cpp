@@ -223,7 +223,7 @@ MMC_LUA_MMLISTPARAMETERS "=" MMC_LUA_MMLISTPARAMETERS ","
 "      rep = string.rep, reverse = string.reverse, sub = string.sub, "
 "      upper = string.upper },"
 "  table = { insert = table.insert, maxn = table.maxn, remove = table.remove, "
-"      sort = table.sort },"
+"      sort = table.sort, concat = table.concat },"
 "  math = { abs = math.abs, acos = math.acos, asin = math.asin, "
 "      atan = math.atan, atan2 = math.atan2, ceil = math.ceil, cos = math.cos, "
 "      cosh = math.cosh, deg = math.deg, exp = math.exp, floor = math.floor, "
@@ -248,7 +248,7 @@ int dispatch(lua_State * L) {
 #define CHECK_LUA(call) __luaErr = call;\
     consumeError(__luaErr, __FILE__, __LINE__);
 
-void megamol::core::LuaState::consumeError(int error, char *file, int line) {
+void megamol::core::LuaState::consumeError(int error, char const* file, int line) const {
     if (error != LUA_OK) {
         const char *err = lua_tostring(L, -1); // get error from top of stack...
         vislib::sys::Log::DefaultLog.WriteError("Lua Error: %s at %s:%i\n", err, file, line);
@@ -1466,27 +1466,33 @@ int megamol::core::LuaState::ListModules(lua_State* L) {
         const int n = lua_gettop(L);
 
         // TODO I am not sure whether reading information from the MegaMol Graph is safe without locking
-        vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
+        //vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
+        if (this->coreInst->ModuleGraphRoot()->ModuleGraphLock().TryLock(100)) {
 
-        std::stringstream answer;
+            std::stringstream answer;
 
-        const auto fun = [&answer](Module* mod) {
-            answer << mod->ClassName() << ";" << mod->Name() << std::endl;
-        };
+            const auto fun = [&answer](Module* mod) { answer << mod->ClassName() << ";" << mod->Name() << std::endl; };
 
-        if (n == 1) {
-            const auto starting_point = luaL_checkstring(L, 1);
-            if (!std::string(starting_point).empty()) {
-                this->coreInst->EnumModulesNoLock(starting_point, fun);
+            if (n == 1) {
+                const auto starting_point = luaL_checkstring(L, 1);
+                if (!std::string(starting_point).empty()) {
+                    this->coreInst->EnumModulesNoLock(starting_point, fun);
+                } else {
+                    this->coreInst->EnumModulesNoLock(nullptr, fun);
+                }
             } else {
                 this->coreInst->EnumModulesNoLock(nullptr, fun);
             }
+
+            lua_pushstring(L, answer.str().c_str());
+            this->coreInst->ModuleGraphRoot()->ModuleGraphLock().Unlock();
+            return 1;            
         } else {
-            this->coreInst->EnumModulesNoLock(nullptr, fun);
+            std::stringstream answer;
+            answer << "Could not acquire module graph lock" << std::endl;
+            lua_pushstring(L, answer.str().c_str());
+            return 1;
         }
-        
-        lua_pushstring(L, answer.str().c_str());
-        return 1;
     }
     return 0;
 }
@@ -1571,7 +1577,7 @@ int megamol::core::LuaState::Help(lua_State *L) {
 }
 
 int megamol::core::LuaState::Quit(lua_State *L) {
-    if (this->checkRunning(MMC_LUA_MMLISTMODULES)) {
+    if (this->checkRunning(MMC_LUA_MMQUIT)) {
         this->coreInst->Shutdown();
     }
     return 0;

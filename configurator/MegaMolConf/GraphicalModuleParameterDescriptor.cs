@@ -35,7 +35,7 @@ namespace MegaMolConf {
                     }
                 }
                 throw new Exception("Internal Error 72");
-            } else if (p.Type is Data.ParamType.FlexEnum) {
+            } else if (p.Type is Data.ParamType.FlexEnum && ((Data.ParamType.FlexEnum)p.Type).Values.Length > 0) {
                 return new FlexEnumParamEditor.Element(((GraphicalModule)component).ParameterValues[p]);
                 throw new Exception("Internal Error 73");
             }
@@ -52,7 +52,7 @@ namespace MegaMolConf {
                 if (p.Type is Data.ParamType.Int) return typeof(int);
                 if (p.Type is Data.ParamType.Float) return typeof(float);
                 if (p.Type is Data.ParamType.Enum) return typeof(EnumParamEditor.Element); // TODO: Change!
-                if (p.Type is Data.ParamType.FlexEnum) return typeof(FlexEnumParamEditor.Element); // TODO: Change!
+                if (p.Type is Data.ParamType.FlexEnum && ((Data.ParamType.FlexEnum)p.Type).Values.Length > 0) return typeof(FlexEnumParamEditor.Element); // TODO: Change!
                 if (p.Type is Data.ParamType.FilePath) return typeof(string); // TODO: is this really the sensible solution?
                 if (p.Type is Data.ParamType.TransferFunction) return typeof(string); // TODO: is this really the sensible solution?
                 return typeof(string); // all else is string (because buttons are handled by another class)
@@ -117,7 +117,7 @@ namespace MegaMolConf {
             if (p.Type is Data.ParamType.Enum) {
                 return new EnumParamEditor((Data.ParamType.Enum)p.Type);
             }
-            else if (p.Type is Data.ParamType.FlexEnum) {
+            else if (p.Type is Data.ParamType.FlexEnum && ((Data.ParamType.FlexEnum)p.Type).Values.Length > 0) {
                 return new FlexEnumParamEditor((Data.ParamType.FlexEnum)p.Type);
             }
             else if (p.Type is Data.ParamType.FilePath) {
@@ -126,7 +126,7 @@ namespace MegaMolConf {
             else if (p.Type is Data.ParamType.Color) {
                 return new ColorEditor();
             }
-            return base.GetEditor(editorBaseType);
+            return new System.ComponentModel.Design.MultilineStringEditor();
         }
 
     }

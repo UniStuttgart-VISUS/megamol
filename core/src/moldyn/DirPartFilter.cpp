@@ -1,7 +1,7 @@
 /*
  * DirPartFilter.cpp
  *
- * Copyright (C) 2009 by Universitaet Stuttgart (VISUS). 
+ * Copyright (C) 2009 by Universitaet Stuttgart (VISUS).
  * Alle Rechte vorbehalten.
  */
 
@@ -18,26 +18,30 @@ using namespace megamol::core;
 /*
  * moldyn::DirPartFilter::DirPartFilter
  */
-moldyn::DirPartFilter::DirPartFilter(void) : Module(),
-        inParticlesDataSlot("inPartData", "Input for oriented particle data"),
-        inVolumeDataSlot("inVolData", "Input for volume data"),
-        outDataSlot("outData", "Output of oriented particle data"),
-        attributeSlot("attr", "The volume attribute to use"),
-        attrMinValSlot("attrMinVal", "The minimum value"),
-        attrMaxValSlot("attrMaxVal", "The maximum value"),
-        datahashOut(0), datahashParticlesIn(0), datahashVolumeIn(0),
-        frameID(0), vertData() {
+moldyn::DirPartFilter::DirPartFilter(void)
+    : Module()
+    , inParticlesDataSlot("inPartData", "Input for oriented particle data")
+    , inVolumeDataSlot("inVolData", "Input for volume data")
+    , outDataSlot("outData", "Output of oriented particle data")
+    , attributeSlot("attr", "The volume attribute to use")
+    , attrMinValSlot("attrMinVal", "The minimum value")
+    , attrMaxValSlot("attrMaxVal", "The maximum value")
+    , datahashOut(0)
+    , datahashParticlesIn(0)
+    , datahashVolumeIn(0)
+    , frameID(0)
+    , vertData() {
 
-    this->inParticlesDataSlot.SetCompatibleCall<moldyn::DirectionalParticleDataCallDescription>();
+    this->inParticlesDataSlot.SetCompatibleCall<moldyn::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->inParticlesDataSlot);
 
     this->inVolumeDataSlot.SetCompatibleCall<CallVolumeDataDescription>();
     this->MakeSlotAvailable(&this->inVolumeDataSlot);
 
-    this->outDataSlot.SetCallback(moldyn::DirectionalParticleDataCall::ClassName(),
-        moldyn::DirectionalParticleDataCall::FunctionName(0), &DirPartFilter::getData);
-    this->outDataSlot.SetCallback(moldyn::DirectionalParticleDataCall::ClassName(),
-        moldyn::DirectionalParticleDataCall::FunctionName(1), &DirPartFilter::getExtend);
+    this->outDataSlot.SetCallback(moldyn::MultiParticleDataCall::ClassName(),
+        moldyn::MultiParticleDataCall::FunctionName(0), &DirPartFilter::getData);
+    this->outDataSlot.SetCallback(moldyn::MultiParticleDataCall::ClassName(),
+        moldyn::MultiParticleDataCall::FunctionName(1), &DirPartFilter::getExtend);
     this->MakeSlotAvailable(&this->outDataSlot);
 
     this->attributeSlot << new param::StringParam("0");
@@ -83,11 +87,11 @@ bool moldyn::DirPartFilter::getData(Call& call) {
     bool rebuildData = false;
     if (this->datahashOut == 0) rebuildData = true;
 
-    DirectionalParticleDataCall *outDpdc = dynamic_cast<DirectionalParticleDataCall*>(&call);
+    MultiParticleDataCall* outDpdc = dynamic_cast<MultiParticleDataCall*>(&call);
     if (outDpdc == NULL) return false;
-    DirectionalParticleDataCall *inDpdc = this->inParticlesDataSlot.CallAs<DirectionalParticleDataCall>();
+    MultiParticleDataCall* inDpdc = this->inParticlesDataSlot.CallAs<MultiParticleDataCall>();
     if (inDpdc == NULL) return false;
-    CallVolumeData *inCvd = this->inVolumeDataSlot.CallAs<CallVolumeData>();
+    CallVolumeData* inCvd = this->inVolumeDataSlot.CallAs<CallVolumeData>();
     if (inCvd == NULL) return false;
 
     if (this->attributeSlot.IsDirty()) {
@@ -110,16 +114,14 @@ bool moldyn::DirPartFilter::getData(Call& call) {
     *outDpdc = *inDpdc;
     // We really only support XYZ ATM
     for (int i = outDpdc->GetParticleListCount() - 1; i >= 0; i--) {
-        //switch (outDpdc->AccessParticles(i).GetColourDataType()) {
+        // switch (outDpdc->AccessParticles(i).GetColourDataType()) {
         //    case DirectionalParticleDataCall::Particles::COLDATA_FLOAT_I: // falls through
         //    case DirectionalParticleDataCall::Particles::COLDATA_NONE: // falls through
         //        return false;
         //}
         switch (outDpdc->AccessParticles(i).GetVertexDataType()) {
-            case DirectionalParticleDataCall::Particles::VERTDATA_NONE: // falls through
-            case DirectionalParticleDataCall::Particles::VERTDATA_SHORT_XYZ: // falls through
-            case DirectionalParticleDataCall::Particles::VERTDATA_FLOAT_XYZR: // falls through
-                return false;
+        case MultiParticleDataCall::Particles::VERTDATA_NONE: // falls through
+            return false;
         }
     }
     if (inDpdc->DataHash() != this->datahashParticlesIn) {
@@ -145,14 +147,15 @@ bool moldyn::DirPartFilter::getData(Call& call) {
     }
 
     if (rebuildData) {
-        //float bcR, bcG, bcB, r, g, b, v;
-        //vislib::graphics::ColourParser::FromString(this->baseColourSlot.Param<param::StringParam>()->Value(), bcR, bcG, bcB);
+        // float bcR, bcG, bcB, r, g, b, v;
+        // vislib::graphics::ColourParser::FromString(this->baseColourSlot.Param<param::StringParam>()->Value(), bcR,
+        // bcG, bcB);
         vislib::StringA attrName(this->attributeSlot.Param<param::StringParam>()->Value());
         unsigned int attrIdx = inCvd->FindAttribute(attrName);
         if (attrIdx == UINT_MAX) {
             try {
                 attrIdx = static_cast<unsigned int>(vislib::CharTraitsA::ParseInt(attrName));
-            } catch(...) {
+            } catch (...) {
                 attrIdx = UINT_MAX;
             }
         }
@@ -161,7 +164,7 @@ bool moldyn::DirPartFilter::getData(Call& call) {
             const CallVolumeData::Data& vol = inCvd->Attribute(attrIdx);
             float valMin = this->attrMinValSlot.Param<param::FloatParam>()->Value();
             float valMax = this->attrMaxValSlot.Param<param::FloatParam>()->Value();
-            //if (vislib::math::IsEqual(valRng, 0.0f)) valRng = 1.0f;
+            // if (vislib::math::IsEqual(valRng, 0.0f)) valRng = 1.0f;
             SIZE_T cnt = 0;
             unsigned int plCnt = outDpdc->GetParticleListCount();
             for (unsigned int i = 0; i < plCnt; i++) {
@@ -173,16 +176,18 @@ bool moldyn::DirPartFilter::getData(Call& call) {
             cnt = 0;
             for (unsigned int i = 0; i < plCnt; i++) {
                 SIZE_T pCnt = static_cast<SIZE_T>(outDpdc->AccessParticles(i).GetCount());
-                const float *inVertData = static_cast<const float*>(outDpdc->AccessParticles(i).GetVertexData());
-                unsigned int inVertStep = outDpdc->AccessParticles(i).GetVertexDataStride();
-                ASSERT((inVertStep % sizeof(float)) == 0);
-                float inRad = outDpdc->AccessParticles(i).GetGlobalRadius();
+                auto store = outDpdc->AccessParticles(i).GetParticleStore();
+                auto xacc = store.GetXAcc();
+                auto yacc = store.GetYAcc();
+                auto zacc = store.GetZAcc();
+                auto racc = store.GetRAcc();
 
-                for (SIZE_T p = 0; p < pCnt; p++, cnt += 4 * sizeof(float), inVertData += (inVertStep / sizeof(float))) {
-                    float x = (inVertData[0] - volBB.Left()) / volBB.Width();
-                    float y = (inVertData[1] - volBB.Bottom()) / volBB.Height();
-                    float z = (inVertData[2] - volBB.Back()) / volBB.Depth();
-                    float r = (true) ? inRad : inVertData[3];
+                for (SIZE_T p = 0; p < pCnt;
+                     p++, cnt += 4 * sizeof(float)) {
+                    float x = (xacc->Get_f(p) - volBB.Left()) / volBB.Width();
+                    float y = (yacc->Get_f(p) - volBB.Bottom()) / volBB.Height();
+                    float z = (zacc->Get_f(p) - volBB.Back()) / volBB.Depth();
+                    float r = racc->Get_f(p);
 
                     x *= static_cast<float>(inCvd->XSize());
                     y *= static_cast<float>(inCvd->YSize());
@@ -212,13 +217,18 @@ bool moldyn::DirPartFilter::getData(Call& call) {
                                 if (pz >= static_cast<int>(inCvd->ZSize())) pz = static_cast<int>(inCvd->ZSize()) - 1;
                                 switch (vol.Type()) {
                                 case CallVolumeData::TYPE_BYTE:
-                                    vv[ox + 2 * (oy + 2 * oz)] = static_cast<float>(vol.Bytes()[px + inCvd->XSize() * (py + inCvd->YSize() * pz)]) / 255.0f;
+                                    vv[ox + 2 * (oy + 2 * oz)] =
+                                        static_cast<float>(
+                                            vol.Bytes()[px + inCvd->XSize() * (py + inCvd->YSize() * pz)]) /
+                                        255.0f;
                                     break;
                                 case CallVolumeData::TYPE_DOUBLE:
-                                    vv[ox + 2 * (oy + 2 * oz)] = static_cast<float>(vol.Doubles()[px + inCvd->XSize() * (py + inCvd->YSize() * pz)]);
+                                    vv[ox + 2 * (oy + 2 * oz)] = static_cast<float>(
+                                        vol.Doubles()[px + inCvd->XSize() * (py + inCvd->YSize() * pz)]);
                                     break;
                                 case CallVolumeData::TYPE_FLOAT:
-                                    vv[ox + 2 * (oy + 2 * oz)] = vol.Floats()[px + inCvd->XSize() * (py + inCvd->YSize() * pz)];
+                                    vv[ox + 2 * (oy + 2 * oz)] =
+                                        vol.Floats()[px + inCvd->XSize() * (py + inCvd->YSize() * pz)];
                                     break;
                                 }
                             }
@@ -235,11 +245,11 @@ bool moldyn::DirPartFilter::getData(Call& call) {
 
                     vv[0] = (1.0f - z) * vv[0] + z * vv[4];
 
-                    if ((vv[0] < valMin) || (vv[0] > valMax)) r = 0.0f;
+                    if ((vv[0] < valMin) || (vv[0] > valMax)) r = 0.0f; // TODO: OMFG
 
-                    this->vertData.AsAt<float>(cnt)[0] = inVertData[0];
-                    this->vertData.AsAt<float>(cnt)[1] = inVertData[1];
-                    this->vertData.AsAt<float>(cnt)[2] = inVertData[2];
+                    this->vertData.AsAt<float>(cnt)[0] = xacc->Get_f(p);
+                    this->vertData.AsAt<float>(cnt)[1] = yacc->Get_f(p);
+                    this->vertData.AsAt<float>(cnt)[2] = zacc->Get_f(p);
                     this->vertData.AsAt<float>(cnt)[3] = r;
                 }
             }
@@ -251,14 +261,15 @@ bool moldyn::DirPartFilter::getData(Call& call) {
     if (this->vertData.IsEmpty()) {
         // no particles for you :-/
         for (int i = outDpdc->GetParticleListCount() - 1; i >= 0; i--) {
-            outDpdc->AccessParticles(i).SetVertexData(DirectionalParticleDataCall::Particles::VERTDATA_NONE, NULL);
+            outDpdc->AccessParticles(i).SetVertexData(MultiParticleDataCall::Particles::VERTDATA_NONE, NULL);
         }
 
     } else {
         unsigned int cnt = outDpdc->GetParticleListCount();
         SIZE_T off = 0;
         for (unsigned int i = 0; i < cnt; i++) {
-            outDpdc->AccessParticles(i).SetVertexData(DirectionalParticleDataCall::Particles::VERTDATA_FLOAT_XYZR, this->vertData.At(off));
+            outDpdc->AccessParticles(i).SetVertexData(
+                MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR, this->vertData.At(off));
             off += static_cast<SIZE_T>(outDpdc->AccessParticles(i).GetCount() * 4) * sizeof(float);
         }
     }
@@ -271,9 +282,9 @@ bool moldyn::DirPartFilter::getData(Call& call) {
  * moldyn::DirPartFilter::getExtend
  */
 bool moldyn::DirPartFilter::getExtend(Call& call) {
-    DirectionalParticleDataCall *outDpdc = dynamic_cast<DirectionalParticleDataCall*>(&call);
+    MultiParticleDataCall* outDpdc = dynamic_cast<MultiParticleDataCall*>(&call);
     if (outDpdc == NULL) return false;
-    DirectionalParticleDataCall *inDpdc = this->inParticlesDataSlot.CallAs<DirectionalParticleDataCall>();
+    MultiParticleDataCall* inDpdc = this->inParticlesDataSlot.CallAs<MultiParticleDataCall>();
     if (inDpdc == NULL) return false;
 
     *inDpdc = *outDpdc;
