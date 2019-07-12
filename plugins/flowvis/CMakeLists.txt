@@ -37,16 +37,8 @@ if(BUILD_FLOWVIS_PLUGIN)
   # Find CGAL
   find_package(CGAL REQUIRED)
 
-  if(TARGET CGAL::CGAL)
-    set(CGAL_TARGET CGAL::CGAL)
-  elseif(TARGET CGAL)
-    set(CGAL_TARGET CGAL)
-  else()
-    message(FATAL_ERROR "CGAL target not found")
-  endif()
-
-  get_target_property(CGAL_minsizerel ${CGAL_TARGET} IMPORTED_LOCATION_MINSIZEREL)
-  get_target_property(CGAL_relwithdebinfo ${CGAL_TARGET} IMPORTED_LOCATION_RELWITHDEBINFO)
+  get_target_property(CGAL_minsizerel CGAL::CGAL IMPORTED_LOCATION_MINSIZEREL)
+  get_target_property(CGAL_relwithdebinfo CGAL::CGAL IMPORTED_LOCATION_RELWITHDEBINFO)
 
   if(NOT CGAL_minsizerel)
     set_target_properties(${CGAL_TARGET} PROPERTIES MAP_IMPORTED_CONFIG_MINSIZEREL Release)
@@ -64,7 +56,7 @@ if(BUILD_FLOWVIS_PLUGIN)
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS _ENABLE_EXTENDED_ALIGNED_STORAGE ${tpf_compile_definitions})
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src" PRIVATE ${CGAL_INCLUDE_DIRS} ${CGAL_3RD_PARTY_INCLUDE_DIRS})
-  target_link_libraries(${PROJECT_NAME} PRIVATE core mmstd_datatools tpf Eigen ${CGAL_TARGET} flowvis_streamlines_cuda)
+  target_link_libraries(${PROJECT_NAME} PRIVATE core mmstd_datatools tpf Eigen CGAL::CGAL flowvis_streamlines_cuda)
 
   # Installation rules for generated files
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
