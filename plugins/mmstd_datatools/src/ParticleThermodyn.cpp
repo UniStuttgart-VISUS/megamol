@@ -109,11 +109,6 @@ datatools::ParticleThermodyn::ParticleThermodyn(void)
     this->extremeValueSlot.SetParameter(new core::param::FloatParam(50.0));
     this->MakeSlotAvailable(&this->extremeValueSlot);
 
-    this->outDataSlot.SetCallback(megamol::core::moldyn::MultiParticleDataCall::ClassName(), "GetData",
-        &ParticleThermodyn::getDataCallback);
-    this->outDataSlot.SetCallback(
-        megamol::core::moldyn::MultiParticleDataCall::ClassName(), "GetExtent",
-        &ParticleThermodyn::getExtentCallback);
     this->outDataSlot.SetCallback(
         megamol::core::moldyn::MultiParticleDataCall::ClassName(), "GetData", &ParticleThermodyn::getDataCallback);
     this->outDataSlot.SetCallback(

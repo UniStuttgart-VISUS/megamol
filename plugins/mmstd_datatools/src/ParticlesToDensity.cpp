@@ -247,7 +247,8 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
     vol.resize(omp_get_max_threads());
 #pragma omp parallel for
     for (int init = 0; init < omp_get_max_threads(); ++init) {
-        vol[init].resize(sx * sy * sz, 0);
+        vol[init].resize(sx * sy * sz);
+        std::fill(vol[init].begin(), vol[init].end(), 0.0f);
     }
 
     // TODO: the whole code is wrong since we might not have the bounding box for the actual cyclic boundary conditions.

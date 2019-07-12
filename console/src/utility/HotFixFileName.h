@@ -11,7 +11,7 @@ namespace megamol {
 namespace console {
 namespace utility {
 
-    /** Utility class closing a window when ESC (or 'q') is pressed */
+    /** Utility class closing a window when ESC is pressed */
     class HotFixFileName : public AbstractUILayer {
     public:
         HotFixFileName(void* hCore);
@@ -25,3 +25,4 @@ namespace utility {
 }
 }
 }
+

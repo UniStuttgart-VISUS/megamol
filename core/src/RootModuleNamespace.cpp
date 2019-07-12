@@ -38,7 +38,7 @@ using namespace megamol::core;
  * RootModuleNamespace::RootModuleNamespace
  */
 RootModuleNamespace::RootModuleNamespace(void) : ModuleNamespace(""), lock() {
-  vislib::sys::Log::DefaultLog.WriteInfo("RootModuleNamespace Lock address: %x\n", std::addressof(this->lock));
+    // vislib::sys::Log::DefaultLog.WriteInfo("RootModuleNamespace Lock address: %x\n", std::addressof(this->lock));
     // intentionally empty ATM
 }
 

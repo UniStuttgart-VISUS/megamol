@@ -36,8 +36,6 @@ moldyn::ParticleListFilter::ParticleListFilter(void) : Module(),
 
     this->outParticlesDataSlot.SetCallback("MultiParticleDataCall", "GetData", &ParticleListFilter::getDataCallback);
     this->outParticlesDataSlot.SetCallback("MultiParticleDataCall", "GetExtent", &ParticleListFilter::getExtentCallback);
-    this->outParticlesDataSlot.SetCallback("DirectionalParticleDataCall", "GetData", &ParticleListFilter::getDataCallback);
-    this->outParticlesDataSlot.SetCallback("DirectionalParticleDataCall", "GetExtent", &ParticleListFilter::getExtentCallback);
     this->MakeSlotAvailable(&this->outParticlesDataSlot);
 
     this->includedListsSlot << new param::StringParam("");
