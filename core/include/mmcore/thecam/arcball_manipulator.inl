@@ -134,8 +134,8 @@ void megamol::core::thecam::arcball_manipulator<T>::on_drag(const screen_type x,
             quaternion_type quat;
             thecam::math::set_from_vectors(quat, startVector, currentVector);
 
-            auto const qstar = quat * this->startRot;
-            auto pos = thecam::math::rotate(this->startPos - this->rotCentre, quat) + this->rotCentre;
+            auto const qstar = this->startRot * quat;
+            auto pos = thecam::math::rotate(this->startPos - this->rotCentre, qstar * this->invStartRot) + this->rotCentre;
             cam->position(pos);
             cam->orientation(qstar);
 
