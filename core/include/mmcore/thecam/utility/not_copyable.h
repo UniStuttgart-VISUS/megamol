@@ -89,7 +89,7 @@ namespace utility{
          *
          * @param rhs The object to be cloned.
          *
-         * @throws the::not_supported_exception Unconditionally.
+         * @throws megamol::core::thecam::not_supported_exception Unconditionally.
          */
         not_copyable(const not_copyable& rhs);
 
@@ -100,7 +100,7 @@ namespace utility{
          *
          * @return *this.
          *
-         * @throws the::argument_exception If 'rhs' is not *this.
+         * @throws megamol::core::thecam::argument_exception If 'rhs' is not *this.
          */
         not_copyable& operator =(const not_copyable& rhs);
     };

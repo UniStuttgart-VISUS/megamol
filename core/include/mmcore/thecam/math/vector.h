@@ -132,7 +132,7 @@ namespace math {
          *               components of 'dst'.
          */
         template<class... P>
-        static THE_FORCE_INLINE void assign(native_type& dst, P&&... values) {
+        static THE_TRY_FORCE_INLINE void assign(native_type& dst, P&&... values) {
             static_assert(sizeof...(P) == 4, "The parameter list 'value' must "
                 "contain all 4 components of the vector.");
             dst = native_type(values...);
@@ -146,7 +146,7 @@ namespace math {
          *
          * @return The value of the 'i'th component.
          */
-        static THE_FORCE_INLINE value_type at(const native_type& data,
+        static THE_TRY_FORCE_INLINE value_type at(const native_type& data,
                 const size_type i) {
             THE_ASSERT(static_cast<size_t>(i) >= 0);
             THE_ASSERT(static_cast<size_t>(i) < 4);
@@ -161,7 +161,7 @@ namespace math {
          *
          * @return A reference to the 'i'th component.
          */
-        static THE_FORCE_INLINE value_type& at(native_type& data,
+        static THE_TRY_FORCE_INLINE value_type& at(native_type& data,
                 const size_type i) {
             THE_ASSERT(static_cast<size_t>(i) >= 0);
             THE_ASSERT(static_cast<size_t>(i) < 4);
@@ -174,7 +174,7 @@ namespace math {
          * @param dst The native storage of the destination.
          * @param src The native storage of the source.
          */
-        static THE_FORCE_INLINE void copy(native_type& dst,
+        static THE_TRY_FORCE_INLINE void copy(native_type& dst,
                 const native_type& src) {
             dst = src;
         }
@@ -187,7 +187,7 @@ namespace math {
          *
          * @return true if 'lhs' and 'rhs' are equal, false otherwise.
          */
-        static THE_FORCE_INLINE bool equals(const native_type& lhs,
+        static THE_TRY_FORCE_INLINE bool equals(const native_type& lhs,
                 const native_type& rhs) {
             return (lhs == rhs);
         }
@@ -223,7 +223,7 @@ namespace math {
          *               components of 'dst'.
          */
         template<class... P>
-        static THE_FORCE_INLINE void assign(native_type& dst, P&&... values) {
+        static THE_TRY_FORCE_INLINE void assign(native_type& dst, P&&... values) {
             static_assert(sizeof...(P) == 3, "The parameter list 'value' must "
                 "contain all 3 components of the vector.");
             dst = native_type(values...);
@@ -237,7 +237,7 @@ namespace math {
          *
          * @return The value of the 'i'th component.
          */
-        static THE_FORCE_INLINE value_type at(const native_type& data,
+        static THE_TRY_FORCE_INLINE value_type at(const native_type& data,
                 const size_type i) {
             THE_ASSERT(static_cast<size_t>(i) >= 0);
             THE_ASSERT(static_cast<size_t>(i) < 3);
@@ -252,7 +252,7 @@ namespace math {
          *
          * @return A reference to the 'i'th component.
          */
-        static THE_FORCE_INLINE value_type& at(native_type& data,
+        static THE_TRY_FORCE_INLINE value_type& at(native_type& data,
                 const size_type i) {
             THE_ASSERT(static_cast<size_t>(i) >= 0);
             THE_ASSERT(static_cast<size_t>(i) < 3);
@@ -265,7 +265,7 @@ namespace math {
          * @param dst The native storage of the destination.
          * @param src The native storage of the source.
          */
-        static THE_FORCE_INLINE void copy(native_type& dst,
+        static THE_TRY_FORCE_INLINE void copy(native_type& dst,
                 const native_type& src) {
             dst = src;
         }
@@ -278,7 +278,7 @@ namespace math {
          *
          * @return true if 'lhs' and 'rhs' are equal, false otherwise.
          */
-        static THE_FORCE_INLINE bool equals(const native_type& lhs,
+        static THE_TRY_FORCE_INLINE bool equals(const native_type& lhs,
                 const native_type& rhs) {
             return (lhs == rhs);
         }
@@ -315,7 +315,7 @@ namespace math {
          *               components of 'dst'.
          */
         template<class... P>
-        static THE_FORCE_INLINE void assign(native_type& dst, P&&... values) {
+        static THE_TRY_FORCE_INLINE void assign(native_type& dst, P&&... values) {
             static_assert(sizeof...(P) == 2, "The parameter list 'value' must "
                 "contain all 2 components of the vector.");
             dst = native_type(values...);
@@ -329,7 +329,7 @@ namespace math {
          *
          * @return The value of the 'i'th component.
          */
-        static THE_FORCE_INLINE value_type at(const native_type& data,
+        static THE_TRY_FORCE_INLINE value_type at(const native_type& data,
                 const size_type i) {
             THE_ASSERT(static_cast<size_t>(i) >= 0);
             THE_ASSERT(static_cast<size_t>(i) < 2);
@@ -344,7 +344,7 @@ namespace math {
          *
          * @return A reference to the 'i'th component.
          */
-        static THE_FORCE_INLINE value_type& at(native_type& data,
+        static THE_TRY_FORCE_INLINE value_type& at(native_type& data,
                 const size_type i) {
             THE_ASSERT(static_cast<size_t>(i) >= 0);
             THE_ASSERT(static_cast<size_t>(i) < 2);
@@ -357,7 +357,7 @@ namespace math {
          * @param dst The native storage of the destination.
          * @param src The native storage of the source.
          */
-        static THE_FORCE_INLINE void copy(native_type& dst,
+        static THE_TRY_FORCE_INLINE void copy(native_type& dst,
                 const native_type& src) {
             dst = src;
         }
@@ -370,7 +370,7 @@ namespace math {
          *
          * @return true if 'lhs' and 'rhs' are equal, false otherwise.
          */
-        static THE_FORCE_INLINE bool equals(const native_type& lhs,
+        static THE_TRY_FORCE_INLINE bool equals(const native_type& lhs,
                 const native_type& rhs) {
             return (lhs == rhs);
         }
@@ -478,7 +478,7 @@ namespace math {
          * Initialises an empty vector, all components zero.
          */
         inline vector(void) {
-            megamol::core::thecam::math::set_empty(*this);
+            set_empty(*this);
         }
 
         /**
@@ -552,7 +552,7 @@ namespace math {
          *
          * @param data The initial data.
          */
-        THE_FORCE_INLINE vector(const native_type& data) {
+        THE_TRY_FORCE_INLINE vector(const native_type& data) {
             traits_type::copy(this->data, data);
         }
 
@@ -600,7 +600,7 @@ namespace math {
          *
          * @return true if this object and 'rhs' are equal, false otherwise.
          */
-        THE_FORCE_INLINE bool equals(const vector& rhs) const {
+        THE_TRY_FORCE_INLINE bool equals(const vector& rhs) const {
             return traits_type::equals(this->data, rhs.data);
         }
 
@@ -658,7 +658,7 @@ namespace math {
          *
          * @return The 'i'th component.
          */
-        THE_FORCE_INLINE value_type operator [](const size_type i) const {
+        THE_TRY_FORCE_INLINE value_type operator [](const size_type i) const {
             return traits_type::at(this->data, i);
         }
         /**
@@ -669,7 +669,7 @@ namespace math {
          *
          * @return A reference to the 'ith component.
          */
-        THE_FORCE_INLINE value_type& operator [](const size_type i) {
+        THE_TRY_FORCE_INLINE value_type& operator [](const size_type i) {
             return traits_type::at(this->data, i);
         }
 
@@ -678,7 +678,7 @@ namespace math {
          *
          * @return The native representation of the vector.
          */
-        THE_FORCE_INLINE operator native_type& (void) {
+        THE_TRY_FORCE_INLINE operator native_type& (void) {
             return this->data;
         }
 
@@ -687,7 +687,7 @@ namespace math {
          *
          * @return The native representation of the vector.
          */
-        THE_FORCE_INLINE operator const native_type& (void) const {
+        THE_TRY_FORCE_INLINE operator const native_type& (void) const {
             return this->data;
         }
 
@@ -707,7 +707,7 @@ namespace math {
      *
      * @return A DirectX::XMVECTOR with the content of 'vec'.
      */
-    THE_FORCE_INLINE DirectX::XMVECTOR load_xmvector(
+    THE_TRY_FORCE_INLINE DirectX::XMVECTOR load_xmvector(
             const vector<DirectX::XMFLOAT2>& vec) {
         typedef std::decay<decltype(vec)>::type::native_type native_type;
         return DirectX::XMLoadFloat2(&static_cast<const native_type&>(vec));
@@ -721,7 +721,7 @@ namespace math {
      *
      * @return A DirectX::XMVECTOR with the content of 'vec'.
      */
-    THE_FORCE_INLINE DirectX::XMVECTOR load_xmvector(
+    THE_TRY_FORCE_INLINE DirectX::XMVECTOR load_xmvector(
             const vector<DirectX::XMFLOAT3>& vec) {
         typedef std::decay<decltype(vec)>::type::native_type native_type;
         return DirectX::XMLoadFloat3(&static_cast<const native_type&>(vec));
@@ -735,7 +735,7 @@ namespace math {
      *
      * @return A DirectX::XMVECTOR with the content of 'vec'.
      */
-    THE_FORCE_INLINE DirectX::XMVECTOR load_xmvector(
+    THE_TRY_FORCE_INLINE DirectX::XMVECTOR load_xmvector(
             const vector<DirectX::XMFLOAT4>& vec) {
         typedef std::decay<decltype(vec)>::type::native_type native_type;
         return DirectX::XMLoadFloat4(&static_cast<const native_type&>(vec));
@@ -750,7 +750,7 @@ namespace math {
      *
      * @return 'vec'.
      */
-    THE_FORCE_INLINE vector<DirectX::XMFLOAT2>& store_xmvector(
+    THE_TRY_FORCE_INLINE vector<DirectX::XMFLOAT2>& store_xmvector(
             vector<DirectX::XMFLOAT2>& vec,
             const DirectX::XMVECTOR& data) {
         typedef std::decay<decltype(vec)>::type::native_type native_type;
@@ -767,7 +767,7 @@ namespace math {
      *
      * @return 'vec'.
      */
-    THE_FORCE_INLINE vector<DirectX::XMFLOAT3>& store_xmvector(
+    THE_TRY_FORCE_INLINE vector<DirectX::XMFLOAT3>& store_xmvector(
             vector<DirectX::XMFLOAT3>& vec,
             const DirectX::XMVECTOR& data) {
         typedef std::decay<decltype(vec)>::type::native_type native_type;
@@ -784,7 +784,7 @@ namespace math {
      *
      * @return 'vec'.
      */
-    THE_FORCE_INLINE vector<DirectX::XMFLOAT4>& store_xmvector(
+    THE_TRY_FORCE_INLINE vector<DirectX::XMFLOAT4>& store_xmvector(
             vector<DirectX::XMFLOAT4>& vec,
             const DirectX::XMVECTOR& data) {
         typedef std::decay<decltype(vec)>::type::native_type native_type;
@@ -858,7 +858,7 @@ namespace math {
      * @return The cross product of 'lhs' and 'rhs', with the w-component
      *         being 0.
      */
-    THE_FORCE_INLINE vector<glm::vec3> cross(
+    THE_TRY_FORCE_INLINE vector<glm::vec3> cross(
             const vector<glm::vec3>& lhs,
             const vector<glm::vec3>& rhs) {
         glm::vec3 l(static_cast<const glm::vec3&>(lhs));
@@ -877,7 +877,7 @@ namespace math {
      * @return The cross product of 'lhs' and 'rhs', with the w-component
      *         being 0.
      */
-    THE_FORCE_INLINE vector<glm::vec4> cross(
+    THE_TRY_FORCE_INLINE vector<glm::vec4> cross(
             const vector<glm::vec4>& lhs,
             const vector<glm::vec4>& rhs) {
         glm::vec3 l(static_cast<const glm::vec4&>(lhs));
@@ -900,7 +900,7 @@ namespace math {
      *
      * @return The cross product of 'lhs' and 'rhs'.
      */
-    THE_FORCE_INLINE vector<DirectX::XMFLOAT2> cross(
+    THE_TRY_FORCE_INLINE vector<DirectX::XMFLOAT2> cross(
             const vector<DirectX::XMFLOAT2>& lhs,
             const vector<DirectX::XMFLOAT2>& rhs) {
         std::decay<decltype(lhs)>::type retval(megamol::core::thecam::utility::do_not_initialise);
@@ -922,7 +922,7 @@ namespace math {
      *
      * @return The cross product of 'lhs' and 'rhs'.
      */
-    THE_FORCE_INLINE vector<DirectX::XMFLOAT3> cross(
+    THE_TRY_FORCE_INLINE vector<DirectX::XMFLOAT3> cross(
             const vector<DirectX::XMFLOAT3>& lhs,
             const vector<DirectX::XMFLOAT3>& rhs) {
         std::decay<decltype(lhs)>::type retval(megamol::core::thecam::utility::do_not_initialise);
@@ -947,7 +947,7 @@ namespace math {
      * @return The cross product of 'lhs' and 'rhs', with the w-component
      *         being 0.
      */
-    THE_FORCE_INLINE vector<DirectX::XMFLOAT4> cross(
+    THE_TRY_FORCE_INLINE vector<DirectX::XMFLOAT4> cross(
             const vector<DirectX::XMFLOAT4>& lhs,
             const vector<DirectX::XMFLOAT4>& rhs) {
         std::decay<decltype(lhs)>::type retval(megamol::core::thecam::utility::do_not_initialise);
@@ -985,7 +985,7 @@ namespace math {
      *
      * @return The dot product of 'lhs' and 'rhs'.
      */
-    THE_FORCE_INLINE float dot(const vector<glm::vec2>& lhs,
+    THE_TRY_FORCE_INLINE float dot(const vector<glm::vec2>& lhs,
             const vector<glm::vec2>& rhs) {
         auto& l = static_cast<const glm::vec2&>(lhs);
         auto& r = static_cast<const glm::vec2&>(rhs);
@@ -1001,7 +1001,7 @@ namespace math {
      *
      * @return The dot product of 'lhs' and 'rhs'.
      */
-    THE_FORCE_INLINE float dot(const vector<glm::vec3>& lhs,
+    THE_TRY_FORCE_INLINE float dot(const vector<glm::vec3>& lhs,
             const vector<glm::vec3>& rhs) {
         auto& l = static_cast<const glm::vec3&>(lhs);
         auto& r = static_cast<const glm::vec3&>(rhs);
@@ -1017,7 +1017,7 @@ namespace math {
      *
      * @return The dot product of 'lhs' and 'rhs'.
      */
-    THE_FORCE_INLINE float dot(const vector<glm::vec4>& lhs,
+    THE_TRY_FORCE_INLINE float dot(const vector<glm::vec4>& lhs,
             const vector<glm::vec4>& rhs) {
         auto& l = static_cast<const glm::vec4&>(lhs);
         auto& r = static_cast<const glm::vec4&>(rhs);
@@ -1035,7 +1035,7 @@ namespace math {
      *
      * @return The dot product of 'lhs' and 'rhs'.
      */
-    THE_FORCE_INLINE float dot(const vector<DirectX::XMFLOAT2>& lhs,
+    THE_TRY_FORCE_INLINE float dot(const vector<DirectX::XMFLOAT2>& lhs,
             const vector<DirectX::XMFLOAT2>& rhs) {
         auto l = load_xmvector(lhs);
         auto r = load_xmvector(rhs);
@@ -1052,7 +1052,7 @@ namespace math {
      *
      * @return The dot product of 'lhs' and 'rhs'.
      */
-    THE_FORCE_INLINE float dot(const vector<DirectX::XMFLOAT3>& lhs,
+    THE_TRY_FORCE_INLINE float dot(const vector<DirectX::XMFLOAT3>& lhs,
             const vector<DirectX::XMFLOAT3>& rhs) {
         auto l = load_xmvector(lhs);
         auto r = load_xmvector(rhs);
@@ -1069,7 +1069,7 @@ namespace math {
      *
      * @return The dot product of 'lhs' and 'rhs'.
      */
-    THE_FORCE_INLINE float dot(const vector<DirectX::XMFLOAT4>& lhs,
+    THE_TRY_FORCE_INLINE float dot(const vector<DirectX::XMFLOAT4>& lhs,
             const vector<DirectX::XMFLOAT4>& rhs) {
         auto l = load_xmvector(lhs);
         auto r = load_xmvector(rhs);
@@ -1091,7 +1091,7 @@ namespace math {
      * @return The length of 'vec'.
      */
     template<class V, size_t D, class T>
-    THE_FORCE_INLINE typename T::value_type length(const vector<V, D, T>& vec) {
+    THE_TRY_FORCE_INLINE typename T::value_type length(const vector<V, D, T>& vec) {
         return sqrt(square_length(vec));
     }
 
@@ -1104,7 +1104,7 @@ namespace math {
      *
      * @return The length of 'vec'.
      */
-    THE_FORCE_INLINE float length(const vector<glm::vec2>& vec) {
+    THE_TRY_FORCE_INLINE float length(const vector<glm::vec2>& vec) {
         auto& v = static_cast<const glm::vec2&>(vec);
         return glm::length(v);
     }
@@ -1116,7 +1116,7 @@ namespace math {
      *
      * @return The length of 'vec'.
      */
-    THE_FORCE_INLINE float length(const vector<glm::vec3>& vec) {
+    THE_TRY_FORCE_INLINE float length(const vector<glm::vec3>& vec) {
         auto& v = static_cast<const glm::vec3&>(vec);
         return glm::length(v);
     }
@@ -1128,7 +1128,7 @@ namespace math {
      *
      * @return The length of 'vec'.
      */
-    THE_FORCE_INLINE float length(const vector<glm::vec4>& vec) {
+    THE_TRY_FORCE_INLINE float length(const vector<glm::vec4>& vec) {
         auto& v = static_cast<const glm::vec4&>(vec);
         return glm::length(v);
     }
@@ -1143,7 +1143,7 @@ namespace math {
      *
      * @return The length of 'vec'.
      */
-    THE_FORCE_INLINE float length(const vector<DirectX::XMFLOAT2>& vec) {
+    THE_TRY_FORCE_INLINE float length(const vector<DirectX::XMFLOAT2>& vec) {
         auto l = load_xmvector(vec);
         auto v = DirectX::XMVector2Length(l);
         return DirectX::XMVectorGetX(v);
@@ -1157,7 +1157,7 @@ namespace math {
      *
      * @return The length of 'vec'.
      */
-    THE_FORCE_INLINE float length(const vector<DirectX::XMFLOAT3>& vec) {
+    THE_TRY_FORCE_INLINE float length(const vector<DirectX::XMFLOAT3>& vec) {
         auto l = load_xmvector(vec);
         auto v = DirectX::XMVector3Length(l);
         return DirectX::XMVectorGetX(v);
@@ -1171,7 +1171,7 @@ namespace math {
      *
      * @return The length of 'vec'.
      */
-    THE_FORCE_INLINE float length(const vector<DirectX::XMFLOAT4>& vec) {
+    THE_TRY_FORCE_INLINE float length(const vector<DirectX::XMFLOAT4>& vec) {
         auto l = load_xmvector(vec);
         auto v = DirectX::XMVector4Length(l);
         return DirectX::XMVectorGetX(v);
@@ -1201,7 +1201,7 @@ namespace math {
      *
      * @return A normalised version of 'vec'.
      */
-    THE_FORCE_INLINE vector<glm::vec2> normalise(
+    THE_TRY_FORCE_INLINE vector<glm::vec2> normalise(
             const vector<glm::vec2>& vec) {
         return glm::normalize(static_cast<glm::vec2>(vec));
     }
@@ -1213,7 +1213,7 @@ namespace math {
      *
      * @return A normalised version of 'vec'.
      */
-    THE_FORCE_INLINE vector<glm::vec3> normalise(
+    THE_TRY_FORCE_INLINE vector<glm::vec3> normalise(
             const vector<glm::vec3>& vec) {
         return glm::normalize(static_cast<glm::vec3>(vec));
     }
@@ -1225,7 +1225,7 @@ namespace math {
      *
      * @return A normalised version of 'vec'.
      */
-    THE_FORCE_INLINE vector<glm::vec4> normalise(
+    THE_TRY_FORCE_INLINE vector<glm::vec4> normalise(
             const vector<glm::vec4>& vec) {
         return glm::normalize(static_cast<glm::vec4>(vec));
     }
@@ -1240,7 +1240,7 @@ namespace math {
      *
      * @return A normalised version of 'vec'.
      */
-    THE_FORCE_INLINE vector<DirectX::XMFLOAT2> normalise(
+    THE_TRY_FORCE_INLINE vector<DirectX::XMFLOAT2> normalise(
             const vector<DirectX::XMFLOAT2>& vec) {
         std::decay<decltype(vec)>::type retval(megamol::core::thecam::utility::do_not_initialise);
         auto l = load_xmvector(vec);
@@ -1256,7 +1256,7 @@ namespace math {
      *
      * @return A normalised version of 'vec'.
      */
-    THE_FORCE_INLINE vector<DirectX::XMFLOAT3> normalise(
+    THE_TRY_FORCE_INLINE vector<DirectX::XMFLOAT3> normalise(
             const vector<DirectX::XMFLOAT3>& vec) {
         std::decay<decltype(vec)>::type retval(megamol::core::thecam::utility::do_not_initialise);
         auto l = load_xmvector(vec);
@@ -1272,7 +1272,7 @@ namespace math {
      *
      * @return A normalised version of 'vec'.
      */
-    THE_FORCE_INLINE vector<DirectX::XMFLOAT4> normalise(
+    THE_TRY_FORCE_INLINE vector<DirectX::XMFLOAT4> normalise(
             const vector<DirectX::XMFLOAT4>& vec) {
         std::decay<decltype(vec)>::type retval(megamol::core::thecam::utility::do_not_initialise);
         auto l = load_xmvector(vec);
@@ -1293,7 +1293,7 @@ namespace math {
      */
     template<class V, class T>
     inline void orthonormalise(vector<V, 3, T>& vec1, vector<V, 3, T>& vec2) {
-        vec1 = normalise(vec1);
+        auto v1 = normalise(vec1);
         auto p = dot(vec1, vec2) * v1;
         vec2 = vec2 - p;
         vec2 = normalise(vec2);
@@ -1311,7 +1311,7 @@ namespace math {
      */
     template<class V, class T>
     inline void orthonormalise(vector<V, 4, T>& vec1, vector<V, 4, T>& vec2) {
-        vec1 = normalise(vec1);
+        auto v1 = normalise(vec1);
         auto p = dot(vec1, vec2) * v1;
         vec2 = vec2 - p;
         vec2 = normalise(vec2);
@@ -1418,7 +1418,7 @@ namespace math {
      * @return The squared length of 'vec'.
      */
     template<class V, size_t D, class T>
-    THE_FORCE_INLINE typename T::value_type square_length(
+    THE_TRY_FORCE_INLINE typename T::value_type square_length(
             const vector<V, D, T>& vec) {
         return dot(vec, vec);
     }
@@ -1450,7 +1450,7 @@ namespace math {
      *
      * @return 'lhs', scaled by 'rhs'.
      */
-    THE_FORCE_INLINE vector<glm::vec2>& operator *=(
+    THE_TRY_FORCE_INLINE vector<glm::vec2>& operator*=(
             vector<glm::vec2>& lhs,
             const vector<glm::vec2>::value_type rhs) {
         lhs = static_cast<glm::vec2>(lhs) * rhs;
@@ -1466,7 +1466,7 @@ namespace math {
      *
      * @return 'lhs', scaled by 'rhs'.
      */
-    THE_FORCE_INLINE vector<glm::vec3>& operator *=(
+    THE_TRY_FORCE_INLINE vector<glm::vec3>& operator*=(
             vector<glm::vec3>& lhs,
             const vector<glm::vec3>::value_type rhs) {
         lhs = static_cast<glm::vec3>(lhs) * rhs;
@@ -1482,7 +1482,7 @@ namespace math {
      *
      * @return 'lhs', scaled by 'rhs'.
      */
-    THE_FORCE_INLINE vector<glm::vec4>& operator *=(
+    THE_TRY_FORCE_INLINE vector<glm::vec4>& operator *=(
             vector<glm::vec4>& lhs,
             const vector<glm::vec4>::value_type rhs) {
         lhs = static_cast<glm::vec4>(lhs) * rhs;
@@ -1500,7 +1500,7 @@ namespace math {
      *
      * @return 'lhs', scaled by 'rhs'.
      */
-    THE_FORCE_INLINE vector<DirectX::XMFLOAT2>& operator *=(
+    THE_TRY_FORCE_INLINE vector<DirectX::XMFLOAT2>& operator *=(
             vector<DirectX::XMFLOAT2>& lhs,
             const vector<DirectX::XMFLOAT2>::value_type rhs) {
         auto l = load_xmvector(lhs);
@@ -1517,7 +1517,7 @@ namespace math {
      *
      * @return 'lhs', scaled by 'rhs'.
      */
-    THE_FORCE_INLINE vector<DirectX::XMFLOAT3>& operator *=(
+    THE_TRY_FORCE_INLINE vector<DirectX::XMFLOAT3>& operator *=(
             vector<DirectX::XMFLOAT3>& lhs,
             const vector<DirectX::XMFLOAT3>::value_type rhs) {
         auto l = load_xmvector(lhs);
@@ -1534,7 +1534,7 @@ namespace math {
      *
      * @return 'lhs', scaled by 'rhs'.
      */
-    THE_FORCE_INLINE vector<DirectX::XMFLOAT4>& operator *=(
+    THE_TRY_FORCE_INLINE vector<DirectX::XMFLOAT4>& operator *=(
             vector<DirectX::XMFLOAT4>& lhs,
             const vector<DirectX::XMFLOAT4>::value_type rhs) {
         auto l = load_xmvector(lhs);
@@ -1569,7 +1569,7 @@ namespace math {
      *
      * @return 'lhs', divided by 'rhs'.
      */
-    THE_FORCE_INLINE vector<glm::vec2>& operator /=(
+    THE_TRY_FORCE_INLINE vector<glm::vec2>& operator/=(
             vector<glm::vec2>& lhs,
             const vector<glm::vec2>::value_type rhs) {
         lhs *= (1.0f / rhs);
@@ -1585,7 +1585,7 @@ namespace math {
      *
      * @return 'lhs', divided by 'rhs'.
      */
-    THE_FORCE_INLINE vector<glm::vec3>& operator /=(
+    THE_TRY_FORCE_INLINE vector<glm::vec3>& operator/=(
             vector<glm::vec3>& lhs,
             const vector<glm::vec3>::value_type rhs) {
         lhs *= (1.0f / rhs);
@@ -1601,7 +1601,7 @@ namespace math {
      *
      * @return 'lhs', divided by 'rhs'.
      */
-    THE_FORCE_INLINE vector<glm::vec4>& operator /=(
+    THE_TRY_FORCE_INLINE vector<glm::vec4>& operator /=(
             vector<glm::vec4>& lhs,
             const vector<glm::vec4>::value_type rhs) {
         lhs *= (1.0f / rhs);
@@ -1619,7 +1619,7 @@ namespace math {
      *
      * @return 'lhs', divided by 'rhs'.
      */
-    THE_FORCE_INLINE vector<DirectX::XMFLOAT2>& operator /=(
+    THE_TRY_FORCE_INLINE vector<DirectX::XMFLOAT2>& operator /=(
             vector<DirectX::XMFLOAT2>& lhs,
             const vector<DirectX::XMFLOAT2>::value_type rhs) {
         lhs *= (1.0f / rhs);
@@ -1635,7 +1635,7 @@ namespace math {
      *
      * @return 'lhs', divided by 'rhs'.
      */
-    THE_FORCE_INLINE vector<DirectX::XMFLOAT3>& operator /=(
+    THE_TRY_FORCE_INLINE vector<DirectX::XMFLOAT3>& operator /=(
             vector<DirectX::XMFLOAT3>& lhs,
             const vector<DirectX::XMFLOAT3>::value_type rhs) {
         lhs *= (1.0f / rhs);
@@ -1651,7 +1651,7 @@ namespace math {
      *
      * @return 'lhs', divided by 'rhs'.
      */
-    THE_FORCE_INLINE vector<DirectX::XMFLOAT4>& operator /=(
+    THE_TRY_FORCE_INLINE vector<DirectX::XMFLOAT4>& operator /=(
             vector<DirectX::XMFLOAT4>& lhs,
             const vector<DirectX::XMFLOAT4>::value_type rhs) {
         lhs *= (1.0f / rhs);
@@ -1673,7 +1673,7 @@ namespace math {
      * @return 'lhs' * 'rhs'.
      */
     template<class V, size_t D, class T, class S>
-    THE_FORCE_INLINE vector<V, D, T> operator *(
+    THE_TRY_FORCE_INLINE vector<V, D, T> operator*(
             const typename vector<V, D, T>::value_type lhs,
             const vector<V, D, T>& rhs) {
         auto retval = rhs;
@@ -1690,7 +1690,7 @@ namespace math {
      *
      * @return 'lhs' * 'rhs'.
      */
-    THE_FORCE_INLINE vector<glm::vec2> operator *(
+    THE_TRY_FORCE_INLINE vector<glm::vec2> operator*(
             const vector<glm::vec2>::value_type lhs,
             const vector<glm::vec2>& rhs) {
         return lhs * static_cast<glm::vec2>(rhs);
@@ -1705,7 +1705,7 @@ namespace math {
      *
      * @return 'lhs' * 'rhs'.
      */
-    THE_FORCE_INLINE vector<glm::vec3> operator *(
+    THE_TRY_FORCE_INLINE vector<glm::vec3> operator*(
             const vector<glm::vec3>::value_type lhs,
             const vector<glm::vec3>& rhs) {
         return lhs * static_cast<glm::vec3>(rhs);
@@ -1720,7 +1720,7 @@ namespace math {
      *
      * @return 'lhs' * 'rhs'.
      */
-    THE_FORCE_INLINE vector<glm::vec4> operator *(
+    THE_TRY_FORCE_INLINE vector<glm::vec4> operator*(
             const vector<glm::vec4>::value_type lhs,
             const vector<glm::vec4>& rhs) {
         return lhs * static_cast<glm::vec4>(rhs);
@@ -1737,7 +1737,7 @@ namespace math {
      *
      * @return 'lhs' * 'rhs'.
      */
-    THE_FORCE_INLINE vector<DirectX::XMFLOAT2> operator *(
+    THE_TRY_FORCE_INLINE vector<DirectX::XMFLOAT2> operator *(
             const vector<DirectX::XMFLOAT2>::value_type lhs,
             const vector<DirectX::XMFLOAT2>& rhs) {
         std::decay<decltype(rhs)>::type retval(megamol::core::thecam::utility::do_not_initialise);
@@ -1755,7 +1755,7 @@ namespace math {
      *
      * @return 'lhs' * 'rhs'.
      */
-    THE_FORCE_INLINE vector<DirectX::XMFLOAT3> operator *(
+    THE_TRY_FORCE_INLINE vector<DirectX::XMFLOAT3> operator *(
             const vector<DirectX::XMFLOAT3>::value_type lhs,
             const vector<DirectX::XMFLOAT3>& rhs) {
         std::decay<decltype(rhs)>::type retval(megamol::core::thecam::utility::do_not_initialise);
@@ -1773,7 +1773,7 @@ namespace math {
      *
      * @return 'lhs' * 'rhs'.
      */
-    THE_FORCE_INLINE vector<DirectX::XMFLOAT4> operator *(
+    THE_TRY_FORCE_INLINE vector<DirectX::XMFLOAT4> operator *(
             const vector<DirectX::XMFLOAT4>::value_type lhs,
             const vector<DirectX::XMFLOAT4>& rhs) {
         std::decay<decltype(rhs)>::type retval(megamol::core::thecam::utility::do_not_initialise);
@@ -1797,7 +1797,8 @@ namespace math {
      * @return 'lhs' * 'rhs'.
      */
     template<class V, size_t D, class T>
-    THE_FORCE_INLINE vector<V, D, T> operator *(const vector<V, D, T>& lhs,
+    THE_TRY_FORCE_INLINE vector<V, D, T> operator*(
+        const vector<V, D, T>& lhs,
             const typename vector<V, D, T>::value_type rhs) {
         auto retval = lhs;
         retval *= rhs;
@@ -1814,7 +1815,7 @@ namespace math {
      *
      * @return 'lhs' * 'rhs'.
      */
-    THE_FORCE_INLINE vector<glm::vec2> operator *(
+    THE_TRY_FORCE_INLINE vector<glm::vec2> operator*(
             const vector<glm::vec2>& lhs,
             const vector<glm::vec2>::value_type rhs) {
         return static_cast<glm::vec2>(lhs) * rhs;
@@ -1829,7 +1830,7 @@ namespace math {
      *
      * @return 'lhs' * 'rhs'.
      */
-    THE_FORCE_INLINE vector<glm::vec3> operator *(
+    THE_TRY_FORCE_INLINE vector<glm::vec3> operator*(
             const vector<glm::vec3>& lhs,
             const vector<glm::vec3>::value_type rhs) {
         return static_cast<glm::vec3>(lhs) * rhs;
@@ -1844,7 +1845,7 @@ namespace math {
      *
      * @return 'lhs' * 'rhs'.
      */
-    THE_FORCE_INLINE vector<glm::vec4> operator *(
+    THE_TRY_FORCE_INLINE vector<glm::vec4> operator*(
             const vector<glm::vec4>& lhs,
             const vector<glm::vec4>::value_type rhs) {
         return static_cast<glm::vec4>(lhs) * rhs;
@@ -1861,7 +1862,7 @@ namespace math {
      *
      * @return 'lhs' * 'rhs'.
      */
-    THE_FORCE_INLINE vector<DirectX::XMFLOAT2> operator *(
+    THE_TRY_FORCE_INLINE vector<DirectX::XMFLOAT2> operator *(
             const vector<DirectX::XMFLOAT2>& lhs,
             const vector<DirectX::XMFLOAT2>::value_type rhs) {
         std::decay<decltype(lhs)>::type retval(megamol::core::thecam::utility::do_not_initialise);
@@ -1879,7 +1880,7 @@ namespace math {
      *
      * @return 'lhs' * 'rhs'.
      */
-    THE_FORCE_INLINE vector<DirectX::XMFLOAT3> operator *(
+    THE_TRY_FORCE_INLINE vector<DirectX::XMFLOAT3> operator *(
             const vector<DirectX::XMFLOAT3>& lhs,
             const vector<DirectX::XMFLOAT3>::value_type rhs) {
         std::decay<decltype(lhs)>::type retval(megamol::core::thecam::utility::do_not_initialise);
@@ -1897,7 +1898,7 @@ namespace math {
      *
      * @return 'lhs' * 'rhs'.
      */
-    THE_FORCE_INLINE vector<DirectX::XMFLOAT4> operator *(
+    THE_TRY_FORCE_INLINE vector<DirectX::XMFLOAT4> operator *(
             const vector<DirectX::XMFLOAT4>& lhs,
             const vector<DirectX::XMFLOAT4>::value_type rhs) {
         std::decay<decltype(lhs)>::type retval(megamol::core::thecam::utility::do_not_initialise);
@@ -1921,7 +1922,7 @@ namespace math {
      * @return 'lhs' / 'rhs'.
      */
     template<class V, size_t D, class T, class S>
-    THE_FORCE_INLINE vector<V, D, T> operator /(
+    THE_TRY_FORCE_INLINE vector<V, D, T> operator/(
             const vector<V, D, T>& lhs,
             const typename vector<V, D, T>::value_type rhs) {
         auto retval = lhs;
@@ -1939,7 +1940,7 @@ namespace math {
      *
      * @return 'lhs' * 'rhs'.
      */
-    THE_FORCE_INLINE vector<glm::vec2> operator /(
+    THE_TRY_FORCE_INLINE vector<glm::vec2> operator/(
             const vector<glm::vec2>& lhs,
             const vector<glm::vec2>::value_type rhs) {
         auto retval = lhs;
@@ -1956,7 +1957,7 @@ namespace math {
      *
      * @return 'lhs' * 'rhs'.
      */
-    THE_FORCE_INLINE vector<glm::vec3> operator /(
+    THE_TRY_FORCE_INLINE vector<glm::vec3> operator/(
             const vector<glm::vec3>& lhs,
             const vector<glm::vec3>::value_type rhs) {
         auto retval = lhs;
@@ -1973,7 +1974,7 @@ namespace math {
      *
      * @return 'lhs' * 'rhs'.
      */
-    THE_FORCE_INLINE vector<glm::vec4> operator /(
+    THE_TRY_FORCE_INLINE vector<glm::vec4> operator/(
             const vector<glm::vec4>& lhs,
             const vector<glm::vec4>::value_type rhs) {
         auto retval = lhs;
@@ -1992,7 +1993,7 @@ namespace math {
      *
      * @return 'lhs' * 'rhs'.
      */
-    THE_FORCE_INLINE vector<DirectX::XMFLOAT2> operator /(
+    THE_TRY_FORCE_INLINE vector<DirectX::XMFLOAT2> operator /(
             const vector<DirectX::XMFLOAT2>& lhs,
             const vector<DirectX::XMFLOAT2>::value_type rhs) {
         auto retval = lhs;
@@ -2009,7 +2010,7 @@ namespace math {
      *
      * @return 'lhs' * 'rhs'.
      */
-    THE_FORCE_INLINE vector<DirectX::XMFLOAT3> operator /(
+    THE_TRY_FORCE_INLINE vector<DirectX::XMFLOAT3> operator /(
             const vector<DirectX::XMFLOAT3>& lhs,
             const vector<DirectX::XMFLOAT3>::value_type rhs) {
         auto retval = lhs;
@@ -2026,7 +2027,7 @@ namespace math {
      *
      * @return 'lhs' * 'rhs'.
      */
-    THE_FORCE_INLINE vector<DirectX::XMFLOAT4> operator /(
+    THE_TRY_FORCE_INLINE vector<DirectX::XMFLOAT4> operator /(
             const vector<DirectX::XMFLOAT4>& lhs,
             const vector<DirectX::XMFLOAT4>::value_type rhs) {
         auto retval = lhs;
@@ -2049,7 +2050,7 @@ namespace math {
      * @return 'lhs' + 'rhs'.
      */
     template<class V, size_t D, class T>
-    THE_FORCE_INLINE vector<V, D, T> operator +(
+    THE_TRY_FORCE_INLINE vector<V, D, T> operator+(
             const vector<V, D, T>& lhs, const vector<V, D, T>& rhs) {
         auto retval = lhs;
         retval += rhs;
@@ -2085,7 +2086,7 @@ namespace math {
      *
      * @return 'lhs', which 'rhs' has been added to.
      */
-    THE_FORCE_INLINE vector<glm::vec2>& operator +=(
+    THE_TRY_FORCE_INLINE vector<glm::vec2>& operator +=(
             vector<glm::vec2>& lhs,
             const vector<glm::vec2>& rhs) {
         lhs = static_cast<glm::vec2>(lhs) + static_cast<glm::vec2>(rhs);
@@ -2101,7 +2102,7 @@ namespace math {
      *
      * @return 'lhs', which 'rhs' has been added to.
      */
-    THE_FORCE_INLINE vector<glm::vec3>& operator +=(
+    THE_TRY_FORCE_INLINE vector<glm::vec3>& operator+=(
             vector<glm::vec3>& lhs,
             const vector<glm::vec3>& rhs) {
         lhs = static_cast<glm::vec3>(lhs) + static_cast<glm::vec3>(rhs);
@@ -2117,7 +2118,7 @@ namespace math {
      *
      * @return 'lhs', which 'rhs' has been added to.
      */
-    THE_FORCE_INLINE vector<glm::vec4>& operator +=(
+    THE_TRY_FORCE_INLINE vector<glm::vec4>& operator +=(
             vector<glm::vec4>& lhs,
             const vector<glm::vec4>& rhs) {
         lhs = static_cast<glm::vec4>(lhs) + static_cast<glm::vec4>(rhs);
@@ -2135,7 +2136,7 @@ namespace math {
      *
      * @return 'lhs', which 'rhs' has been added to.
      */
-    THE_FORCE_INLINE vector<DirectX::XMFLOAT2>& operator +=(
+    THE_TRY_FORCE_INLINE vector<DirectX::XMFLOAT2>& operator +=(
             vector<DirectX::XMFLOAT2>& lhs,
             const vector<DirectX::XMFLOAT2>& rhs) {
         auto l = load_xmvector(lhs);
@@ -2153,7 +2154,7 @@ namespace math {
      *
      * @return 'lhs', which 'rhs' has been added to.
      */
-    THE_FORCE_INLINE vector<DirectX::XMFLOAT3>& operator +=(
+    THE_TRY_FORCE_INLINE vector<DirectX::XMFLOAT3>& operator +=(
             vector<DirectX::XMFLOAT3>& lhs,
             const vector<DirectX::XMFLOAT3>& rhs) {
         auto l = load_xmvector(lhs);
@@ -2171,7 +2172,7 @@ namespace math {
      *
      * @return 'lhs', which 'rhs' has been added to.
      */
-    THE_FORCE_INLINE vector<DirectX::XMFLOAT4>& operator +=(
+    THE_TRY_FORCE_INLINE vector<DirectX::XMFLOAT4>& operator +=(
             vector<DirectX::XMFLOAT4>& lhs,
             const vector<DirectX::XMFLOAT4>& rhs) {
         auto l = load_xmvector(lhs);
@@ -2195,7 +2196,7 @@ namespace math {
      * @return 'lhs' - 'rhs'.
      */
     template<class V, size_t D, class T>
-    THE_FORCE_INLINE vector<V, D, T> operator -(
+    THE_TRY_FORCE_INLINE vector<V, D, T> operator-(
             const vector<V, D, T>& lhs, const vector<V, D, T>& rhs) {
         auto retval = lhs;
         retval -= rhs;
@@ -2230,7 +2231,7 @@ namespace math {
      *
      * @return 'lhs', which 'rhs' has been subtracted from.
      */
-    THE_FORCE_INLINE vector<glm::vec2>& operator -=(
+    THE_TRY_FORCE_INLINE vector<glm::vec2>& operator-=(
             vector<glm::vec2>& lhs,
             const vector<glm::vec2>& rhs) {
         lhs = static_cast<glm::vec2>(lhs) - static_cast<glm::vec2>(rhs);
@@ -2246,7 +2247,7 @@ namespace math {
      *
      * @return 'lhs', which 'rhs' has been subtracted from.
      */
-    THE_FORCE_INLINE vector<glm::vec3>& operator -=(
+    THE_TRY_FORCE_INLINE vector<glm::vec3>& operator-=(
             vector<glm::vec3>& lhs,
             const vector<glm::vec3>& rhs) {
         lhs = static_cast<glm::vec3>(lhs) - static_cast<glm::vec3>(rhs);
@@ -2262,7 +2263,7 @@ namespace math {
      *
      * @return 'lhs', which 'rhs' has been subtracted from.
      */
-    THE_FORCE_INLINE vector<glm::vec4>& operator -=(
+    THE_TRY_FORCE_INLINE vector<glm::vec4>& operator-=(
             vector<glm::vec4>& lhs,
             const vector<glm::vec4>& rhs) {
         lhs = static_cast<glm::vec4>(lhs) - static_cast<glm::vec4>(rhs);
@@ -2280,7 +2281,7 @@ namespace math {
      *
      * @return 'lhs', which 'rhs' has been subtracted from.
      */
-    THE_FORCE_INLINE vector<DirectX::XMFLOAT2>& operator -=(
+    THE_TRY_FORCE_INLINE vector<DirectX::XMFLOAT2>& operator -=(
             vector<DirectX::XMFLOAT2>& lhs,
             const vector<DirectX::XMFLOAT2>& rhs) {
         auto l = load_xmvector(lhs);
@@ -2298,7 +2299,7 @@ namespace math {
      *
      * @return 'lhs', which 'rhs' has been subtracted from.
      */
-    THE_FORCE_INLINE vector<DirectX::XMFLOAT3>& operator -=(
+    THE_TRY_FORCE_INLINE vector<DirectX::XMFLOAT3>& operator -=(
             vector<DirectX::XMFLOAT3>& lhs,
             const vector<DirectX::XMFLOAT3>& rhs) {
         auto l = load_xmvector(lhs);
@@ -2316,7 +2317,7 @@ namespace math {
      *
      * @return 'lhs', which 'rhs' has been subtracted from.
      */
-    THE_FORCE_INLINE vector<DirectX::XMFLOAT4>& operator -=(
+    THE_TRY_FORCE_INLINE vector<DirectX::XMFLOAT4>& operator -=(
             vector<DirectX::XMFLOAT4>& lhs,
             const vector<DirectX::XMFLOAT4>& rhs) {
         auto l = load_xmvector(lhs);
@@ -2339,7 +2340,7 @@ namespace math {
      * @return -'vec'.
      */
     template<class V, size_t D, class T>
-    THE_FORCE_INLINE vector<V, D, T> operator -(const vector<V, D, T>& vec) {
+    THE_TRY_FORCE_INLINE vector<V, D, T> operator -(const vector<V, D, T>& vec) {
         auto retval = vec;
         retval *= -1;
         return retval;

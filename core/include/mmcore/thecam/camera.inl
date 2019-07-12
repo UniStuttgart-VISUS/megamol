@@ -136,7 +136,7 @@ megamol::core::thecam::camera<M, P>::view_matrix_left_handed(
     auto zAxis = snapshot.view_vector;
 
     // TODO: Does it make sense not raising an error directly?
-    if (maths_type::handedness != handedness::left_handed) {
+    if (maths_type::handedness != Handedness::left_handed) {
         zAxis *= -ONE;
     }
 
@@ -179,7 +179,7 @@ megamol::core::thecam::camera<M, P>::view_matrix_right_handed(
     auto zAxis = snapshot.view_vector;
 
     // TODO: Does it make sense not raising an error directly?
-    if (maths_type::handedness != handedness::right_handed) {
+    if (maths_type::handedness != Handedness::right_handed) {
         zAxis *= -ONE;
     }
 
@@ -222,18 +222,18 @@ void megamol::core::thecam::camera<M, P>::calc_matrices(
     this->take_snapshot(outSnapshot, sc);
 
     switch (this->handedness()) {
-        case handedness::left_handed:
+        case Handedness::left_handed:
             camera::view_matrix_left_handed(outView, outSnapshot);
             camera::projection_matrix_left_handed(outProj, outSnapshot);
             break;
 
-        case handedness::right_handed:
+        case Handedness::right_handed:
             camera::view_matrix_right_handed(outView, outSnapshot);
             camera::projection_matrix_right_handed(outProj, outSnapshot);
             break;
 
         default:
-            throw std::exception("Unknown handedness in camera::calc_matrices(). This should never happen.");
+            throw std::runtime_error("Unknown handedness in camera::calc_matrices(). This should never happen.");
     }
 }
 
@@ -315,16 +315,16 @@ megamol::core::thecam::camera<M, P>::projection_matrix(void) const {
     this->take_snapshot(snapshot, snapshot_content::camera_space_frustum);
 
     switch (this->handedness()) {
-        case handedness::left_handed:
+        case Handedness::left_handed:
             camera::projection_matrix_right_handed(retval, snapshot);
             break;
 
-        case handedness::right_handed:
+        case Handedness::right_handed:
             camera::projection_matrix_right_handed(retval, snapshot);
             break;
 
         default:
-            throw std::exception("Unknown handedness in camera::calc_matrices(). This should never happen.");
+            throw std::runtime_error("Unknown handedness in camera::calc_matrices(). This should never happen.");
     }
 
     return std::move(retval);
@@ -342,16 +342,16 @@ void megamol::core::thecam::camera<M, P>::reset(void) {
     this->centre_offset(thecam::math::vector<fractional_type, 2>());
     this->convergence_plane(WZ);
     this->half_disparity(WZ);
-    this->eye(megamol::core::thecam::eye::centre);
+    this->eye(megamol::core::thecam::Eye::centre);
     this->far_clipping_plane(WZ);
     this->film_gate(world_size_type());
-    this->gate_scaling(megamol::core::thecam::gate_scaling::none);
+    this->gate_scaling(megamol::core::thecam::Gate_scaling::none);
     this->half_aperture_angle_radians(static_cast<fractional_type>(0));
     this->image_tile(screen_rectangle_type());
     this->near_clipping_plane(WZ);
     this->orientation(quaternion_type::create_identity());
     this->position(point_type(WZ, WZ, WZ, WO));
-    this->projection_type(megamol::core::thecam::projection_type::perspective);
+    this->projection_type(megamol::core::thecam::Projection_type::perspective);
     this->resolution_gate(screen_size_type());
 }
 
@@ -387,8 +387,8 @@ megamol::core::thecam::camera<M, P>::take_snapshot(
         }
 
         if (snapshot.contains(snapshot_content::view_vector)
-                && (this->eye() != eye::centre)
-                && (this->projection_type() == projection_type::toe_in)
+                && (this->eye() != Eye::centre)
+                && (this->projection_type() == Projection_type::toe_in)
                 && (this->half_disparity() != static_cast<world_type>(0))) {
             // If we have non-trivial toe-in stereo, we need the up-vector to
             // compute the final view-vector.
@@ -419,7 +419,7 @@ megamol::core::thecam::camera<M, P>::take_snapshot(
         snapshot.gate_scaling[1] = static_cast<fractional_type>(1);
 
         switch (this->gate_scaling()) {
-            case gate_scaling::uniform_to_fill:
+            case Gate_scaling::uniform_to_fill:
                 if (snapshot.film_aspect > snapshot.resolution_aspect) {
                     THE_ASSERT(snapshot.film_aspect != 0);
                     snapshot.gate_scaling[0] = snapshot.resolution_aspect
@@ -431,7 +431,7 @@ megamol::core::thecam::camera<M, P>::take_snapshot(
                 }
                 break;
 
-            case gate_scaling::uniform_to_fit:
+            case Gate_scaling::uniform_to_fit:
                 if (snapshot.film_aspect > snapshot.resolution_aspect) {
                     THE_ASSERT(snapshot.resolution_aspect != 0);
                     snapshot.gate_scaling[1] = snapshot.film_aspect
@@ -464,10 +464,10 @@ megamol::core::thecam::camera<M, P>::take_snapshot(
         snapshot.frustum_far = this->far_clipping_plane();
 
         switch (this->projection_type()) {
-            case projection_type::perspective:
-            case projection_type::parallel:
-            case projection_type::toe_in:
-            case projection_type::off_axis: {
+            case Projection_type::perspective:
+            case Projection_type::parallel:
+            case Projection_type::toe_in:
+            case Projection_type::off_axis: {
                 // See http://paulbourke.net/stereographics/stereorender/
                 auto h = std::tan(this->half_aperture_angle_radians())
                     * snapshot.frustum_near;
@@ -492,7 +492,7 @@ megamol::core::thecam::camera<M, P>::take_snapshot(
                 // TODO: tracking here?
                 // TODO: toe-in/parallel in projection or in view matrix?
 
-                if (this->projection_type() == projection_type::off_axis) {
+                if (this->projection_type() == Projection_type::off_axis) {
                     auto c = snapshot.frustum_near + this->convergence_plane();
                     THE_ASSERT(c != static_cast<world_type>(0));
                     //w += static_cast<world_type>(this->eye()) * (snapshot.frustum_near * this->half_disparity()) / this->focal_length();  // TODO: convergence plane
@@ -508,7 +508,7 @@ megamol::core::thecam::camera<M, P>::take_snapshot(
                 snapshot.frustum_top -= h;
             } break;
 
-            case projection_type::orthographic:
+            case Projection_type::orthographic:
                 // TODO: could use SSE2 here
                 snapshot.frustum_left = tl - (iw * HALF);
                 snapshot.frustum_top = tt - (ih * HALF);
@@ -517,7 +517,7 @@ megamol::core::thecam::camera<M, P>::take_snapshot(
                 break;
 
             default:
-                throw std::exception("invalid operation");
+                throw std::runtime_error("invalid operation");
         }
 
         // TODO: gate scaling here?
@@ -555,7 +555,7 @@ megamol::core::thecam::camera<M, P>::take_snapshot(
         THE_ASSERT(snapshot.contains(snapshot_content::up_vector));
         THE_ASSERT(snapshot.contains(snapshot_content::view_vector));
 
-        if (this->handedness() == handedness::right_handed) {
+        if (this->handedness() == Handedness::right_handed) {
             snapshot.right_vector = math::cross(snapshot.view_vector,
                 snapshot.up_vector);
         } else {
@@ -582,7 +582,7 @@ megamol::core::thecam::camera<M, P>::take_snapshot(
      * view-vector now.
      */
     if (snapshot.contains(snapshot_content::view_vector)
-            && (this->projection_type() == projection_type::toe_in)
+            && (this->projection_type() == Projection_type::toe_in)
             && (EYE_DIR != static_cast<world_type>(0))
             && (this->half_disparity() != static_cast<world_type>(0))) {
         /*
@@ -602,7 +602,7 @@ megamol::core::thecam::camera<M, P>::take_snapshot(
         // TODO: is this correct?
         auto a = std::atan2(c, e);
         a = static_cast<world_type>(0.5 * math::pi<double>::value) - a;
-        if (this->handedness() == handedness::left_handed) {
+        if (this->handedness() == Handedness::left_handed) {
             // Rotation direction in left-handed systems is clockwise, ie
             // mathematically negative.
             a = -a;
@@ -741,7 +741,7 @@ SceneSpaceViewFrustum& outFrustum) const {
             break;
 
         default:
-            throw std::exception("The specified projection type is not supported");
+            throw std::runtime_error("The specified projection type is not supported");
     }
 
     outFrustum.Set(l, r, b, t, n, f);

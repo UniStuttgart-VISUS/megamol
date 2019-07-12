@@ -111,7 +111,7 @@ namespace math {
     template<class T> class MEGAMOLCORE_API epsilon : public utility::not_instantiable {
     public:
         /** The epsilon value. */
-        static constexpr const T value = static_cast<T>(megamol::core::thecam::math::epsilon<double>::value);
+        static constexpr const T value = static_cast<T>(DBL_EPSILON);
     };
 
 
@@ -135,7 +135,7 @@ namespace math {
     template<class T> class MEGAMOLCORE_API euler_e : public utility::not_instantiable {
     public:
         /* The value of Euler's number. */
-        static constexpr const T value = static_cast<T>(megamol::core::thecam::math::euler_e<double>::value);
+        static constexpr const T value = static_cast<T>(2.71828182845904523536);
     };
 
     /** Utility class for providing the value of Euler's number. */
@@ -149,7 +149,7 @@ namespace math {
     template<class T> class MEGAMOLCORE_API pi : public utility::not_instantiable {
     public:
         /* The value of Pi. */
-        static constexpr const T value = static_cast<T>(megamol::core::thecam::math::pi<double>::value);
+        static constexpr const T value = static_cast<T>(3.14159265358979323846);
     };
 
 

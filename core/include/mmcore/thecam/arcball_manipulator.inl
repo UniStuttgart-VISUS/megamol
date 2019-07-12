@@ -70,12 +70,12 @@ void Operator::on_mouse_move(const position_type x,
 
         // TODO: ultra fishy! Fix socket accessor in dispatcher?
         if (this->dispatcher.running()) {
-            the::system::net::simple_message msg(
+            megamol::core::thecam::system::net::simple_message msg(
                 CameraConfigurationDesc::BodySize);
             msg.set_id(CameraConfigurationDesc::ID);
             auto body = msg.body<CameraConfigurationDesc::Body>();
 
-            the::zero_memory(body, msg.body_size());
+            megamol::core::thecam::zero_memory(body, msg.body_size());
             body->CameraPosition[0] = DirectX::XMVectorGetX(this->camPos);
             body->CameraPosition[1] = DirectX::XMVectorGetY(this->camPos);
             body->CameraPosition[2] = DirectX::XMVectorGetZ(this->camPos);
@@ -210,5 +210,5 @@ megamol::core::thecam::arcball_manipulator<T>::mapToSphere(const screen_type sx,
         // Point is mapped inside the sphere.
         bz = std::sqrt(1.0f - mag);
     }
-    return maths_type::vector_type(bx, by, bz, static_cast<world_type>(0));
+    return typename maths_type::vector_type(bx, by, bz, static_cast<world_type>(0));
 }

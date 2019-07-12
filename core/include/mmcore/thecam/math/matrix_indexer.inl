@@ -30,48 +30,50 @@
 
 
 /*
- * ...matrix_indexer<R, C, the::math::matrix_layout::column_major>::columns
+ * ...matrix_indexer<R, C, megamol::core::thecam::math::matrix_layout::column_major>::columns
  */
+#include "matrix.h"
 template<size_t R, size_t C> 
-const size_t the::math::matrix_indexer<R, C,
-    the::math::matrix_layout::column_major>::columns = C;
+const size_t megamol::core::thecam::math::matrix_indexer<R, C,
+    megamol::core::thecam::math::matrix_layout::column_major>::columns = C;
 
 
 /*
  * ...matrix_indexer<R, C, the::math::matrix_layout::column_major>::layout
  */
-template<size_t R, size_t C> const the::math::matrix_layout
-the::math::matrix_indexer<R, C, the::math::matrix_layout::column_major>::layout
-    = the::math::matrix_layout::column_major;
+template <size_t R, size_t C>
+const megamol::core::thecam::math::matrix_layout megamol::core::thecam::math::matrix_indexer<R, C,
+    megamol::core::thecam::math::matrix_layout::column_major>::layout =
+    megamol::core::thecam::math::matrix_layout::column_major;
 
 
 /*
  * ...matrix_indexer<R, C, the::math::matrix_layout::column_major>::columns
  */
 template<size_t R, size_t C>
-const size_t the::math::matrix_indexer<R, C,
-    the::math::matrix_layout::column_major>::rows = R;
+const size_t megamol::core::thecam::math::matrix_indexer<R, C, megamol::core::thecam::math::matrix_layout::column_major>::rows =
+        R;
 
 
 /*
  * ...matrix_indexer<R, C, the::math::matrix_layout::row_major>::columns
  */
 template<size_t R, size_t C>
-const size_t the::math::matrix_indexer<R, C,
-    the::math::matrix_layout::row_major>::columns = C;
+const size_t megamol::core::thecam::math::matrix_indexer<R, C, megamol::core::thecam::math::matrix_layout::row_major>::columns =
+        C;
 
 
 /*
  * ...matrix_indexer<R, C, the::math::matrix_layout::row_major>::layout
  */
-template<size_t R, size_t C> const the::math::matrix_layout
-the::math::matrix_indexer<R, C, the::math::matrix_layout::row_major>::layout
-    = the::math::matrix_layout::row_major;
+template <size_t R, size_t C>
+const megamol::core::thecam::math::matrix_layout
+    megamol::core::thecam::math::matrix_indexer<R, C, megamol::core::thecam::math::matrix_layout::row_major>::layout =
+        megamol::core::thecam::math::matrix_layout::row_major;
 
 
 /*
  * ...matrix_indexer<R, C, the::math::matrix_layout::row_major>::columns
  */
 template<size_t R, size_t C>
-const size_t the::math::matrix_indexer<R, C,
-    the::math::matrix_layout::row_major>::rows = R;
+const size_t megamol::core::thecam::math::matrix_indexer<R, C, megamol::core::thecam::math::matrix_layout::row_major>::rows = R;

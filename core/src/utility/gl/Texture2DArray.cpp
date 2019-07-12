@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <cmath>
 
 using namespace megamol::core::utility::gl;
 
@@ -32,7 +33,7 @@ Texture2DArray::Texture2DArray(std::string id, TextureLayout const& layout, GLvo
 
     GLsizei levels = 1;
 
-    levels = std::min(layout.levels, 1 + static_cast<GLsizei>(floor(log2(std::max(m_width, m_height)))));
+    levels = std::min(layout.levels, 1 + static_cast<GLsizei>(std::floor(std::log2(std::max(m_width, m_height)))));
 
     glTexStorage3D(GL_TEXTURE_2D_ARRAY, levels, m_internal_format, m_width, m_height, m_layers);
 

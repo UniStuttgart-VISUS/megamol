@@ -136,7 +136,7 @@ template <> struct quaternion_traits<glm::quat> {
      * @param values An argument list of N values to be assigned to the
      *               components of 'dst'.
      */
-    template <class... P> static THE_FORCE_INLINE void assign(native_type& dst, P&&... values) {
+    template <class... P> static THE_TRY_FORCE_INLINE void assign(native_type& dst, P&&... values) {
         static_assert(sizeof...(P) == 4, "The parameter list 'value' must "
                                          "contain all 4 components of the vector.");
         value_type v[] = {values...};
@@ -152,7 +152,7 @@ template <> struct quaternion_traits<glm::quat> {
      *
      * @return The value of the 'i'th component.
      */
-    static THE_FORCE_INLINE value_type at(const native_type& data, const size_type i) {
+    static THE_TRY_FORCE_INLINE value_type at(const native_type& data, const size_type i) {
         THE_ASSERT(static_cast<size_type>(i) >= 0);
         THE_ASSERT(static_cast<size_type>(i) < 4);
         return data[static_cast<size_type>(i)];
@@ -166,7 +166,7 @@ template <> struct quaternion_traits<glm::quat> {
      *
      * @return A reference to the 'i'th component.
      */
-    static THE_FORCE_INLINE value_type& at(native_type& data, const size_type i) {
+    static THE_TRY_FORCE_INLINE value_type& at(native_type& data, const size_type i) {
         THE_ASSERT(static_cast<size_type>(i) >= 0);
         THE_ASSERT(static_cast<size_type>(i) < 4);
         return data[static_cast<size_type>(i)];
@@ -178,7 +178,7 @@ template <> struct quaternion_traits<glm::quat> {
      * @param dst The native storage of the destination.
      * @param src The native storage of the source.
      */
-    static THE_FORCE_INLINE void copy(native_type& dst, const native_type& src) { dst = src; }
+    static THE_TRY_FORCE_INLINE void copy(native_type& dst, const native_type& src) { dst = src; }
 
     /**
      * Test for equality of two native quaternions.
@@ -188,7 +188,7 @@ template <> struct quaternion_traits<glm::quat> {
      *
      * @return true if 'lhs' and 'rhs' are equal, false otherwise.
      */
-    static THE_FORCE_INLINE bool equals(const native_type& lhs, const native_type& rhs) { return (lhs == rhs); }
+    static THE_TRY_FORCE_INLINE bool equals(const native_type& lhs, const native_type& rhs) { return (lhs == rhs); }
 };
 #endif /* WITH_THE_GLM */
 
@@ -283,9 +283,9 @@ public:
      *
      * @return A quaternion representing the specified rotation.
      */
-    template <class V> static inline quaternion from_angle_axis(const value_type angle, const V& axis) {
-        quaternion retval(the::do_not_initialise);
-        the::math::set_from_angle_axis(retval, angle, axis);
+    template <class Y> static inline quaternion from_angle_axis(const value_type angle, const Y& axis) {
+        quaternion retval(megamol::core::thecam::utility::do_not_initialise);
+        set_from_angle_axis(retval, angle, axis);
         return retval;
     }
 
@@ -302,9 +302,9 @@ public:
      *
      * @return 'quat'.
      */
-    template <class V> static inline quaternion from_vectors(const V& u, const V& v) {
+    template <class D> static inline quaternion from_vectors(const D& u, const D& v) {
         quaternion retval(thecam::utility::do_not_initialise);
-        thecam::math::set_from_vectors(retval, u, v);
+        set_from_vectors(retval, u, v);
         return retval;
     }
 
@@ -394,7 +394,7 @@ public:
      *
      * @param rhs The object to be cloned.
      */
-    THE_FORCE_INLINE quaternion(const quaternion& rhs) { traits_type::copy(this->data, rhs.data); }
+    THE_TRY_FORCE_INLINE quaternion(const quaternion& rhs) { traits_type::copy(this->data, rhs.data); }
 
     /**
      * Convert 'rhs'.
@@ -404,7 +404,7 @@ public:
      *
      * @param rhs The object to be converted.
      */
-    template <class Vp, class Tp> THE_FORCE_INLINE quaternion(const quaternion<Vp, Tp>& rhs) { *this = rhs; }
+    template <class Vp, class Tp> THE_TRY_FORCE_INLINE quaternion(const quaternion<Vp, Tp>& rhs) { *this = rhs; }
 
     /**
      * Initialises the quaternion from its native representation.
@@ -413,7 +413,7 @@ public:
      *
      * @param data The initial data.
      */
-    THE_FORCE_INLINE quaternion(const native_type& data) { traits_type::copy(this->data, data); }
+    THE_TRY_FORCE_INLINE quaternion(const native_type& data) { traits_type::copy(this->data, data); }
 
     /**
      * Assign new values to all components of the quaternion.
@@ -423,7 +423,7 @@ public:
      * @param z The third component of the vector part.
      * @param w The real part.
      */
-    THE_FORCE_INLINE void assign(const value_type x, const value_type y, const value_type z, const value_type w) {
+    THE_TRY_FORCE_INLINE void assign(const value_type x, const value_type y, const value_type z, const value_type w) {
         traits_type::assign(this->data, x, y, z, w);
     }
 
@@ -437,7 +437,7 @@ public:
      *
      * @return true if the quaternion is empty, false otherwise.
      */
-    THE_FORCE_INLINE bool empty(void) const {
+    THE_TRY_FORCE_INLINE bool empty(void) const {
         static const quaternion EMPTY(static_cast<value_type>(0), static_cast<value_type>(0),
             static_cast<value_type>(0), static_cast<value_type>(0));
         return this->equals(EMPTY);
@@ -465,7 +465,7 @@ public:
      *
      * @return true if this object and 'rhs' are equal, false otherwise.
      */
-    THE_FORCE_INLINE bool equals(const quaternion& rhs) const { return traits_type::equals(this->data, rhs.data); }
+    THE_TRY_FORCE_INLINE bool equals(const quaternion& rhs) const { return traits_type::equals(this->data, rhs.data); }
 
     /**
      * Test for (approximate) equality.
@@ -495,7 +495,7 @@ public:
      * @return true if the quaternion is an identity quaternion,
      *         false otherwise.
      */
-    THE_FORCE_INLINE bool identity(void) const {
+    THE_TRY_FORCE_INLINE bool identity(void) const {
         static const quaternion IDENTITY(static_cast<value_type>(0), static_cast<value_type>(0),
             static_cast<value_type>(0), static_cast<value_type>(1));
         return this->equals(IDENTITY);
@@ -505,7 +505,7 @@ public:
      * Answer whether the quaternion is an identity quaternion.
      *
      * @param epsilon An epsilon value used for comparison. This defaults to
-     *                the::math::epsilon<value_type>::value.
+     *                megamol::core::thecam::math::epsilon<value_type>::value.
      *
      * @return true if the quaternion is an identity quaternion,
      *         false otherwise.
@@ -529,7 +529,7 @@ public:
      *
      * @return The x-component of the vector part.
      */
-    THE_FORCE_INLINE value_type x(void) const {
+    THE_TRY_FORCE_INLINE value_type x(void) const {
         return traits_type::at(this->data, static_cast<size_type>(quaternion_component::x));
     }
 
@@ -538,7 +538,7 @@ public:
      *
      * @return A reference to the x-component of the vector part.
      */
-    THE_FORCE_INLINE value_type& x(void) {
+    THE_TRY_FORCE_INLINE value_type& x(void) {
         return traits_type::at(this->data, static_cast<size_type>(quaternion_component::x));
     }
 
@@ -547,7 +547,7 @@ public:
      *
      * @return The y-component of the vector part.
      */
-    THE_FORCE_INLINE value_type y(void) const {
+    THE_TRY_FORCE_INLINE value_type y(void) const {
         return traits_type::at(this->data, static_cast<size_type>(quaternion_component::y));
     }
 
@@ -556,7 +556,7 @@ public:
      *
      * @return A reference to the y-component of the vector part.
      */
-    THE_FORCE_INLINE value_type& y(void) {
+    THE_TRY_FORCE_INLINE value_type& y(void) {
         return traits_type::at(this->data, static_cast<size_type>(quaternion_component::y));
     }
 
@@ -565,7 +565,7 @@ public:
      *
      * @return The z-component of the vector part.
      */
-    THE_FORCE_INLINE value_type z(void) const {
+    THE_TRY_FORCE_INLINE value_type z(void) const {
         return traits_type::at(this->data, static_cast<size_type>(quaternion_component::z));
     }
 
@@ -574,7 +574,7 @@ public:
      *
      * @return A reference to the z-component of the vector part.
      */
-    THE_FORCE_INLINE value_type& z(void) {
+    THE_TRY_FORCE_INLINE value_type& z(void) {
         return traits_type::at(this->data, static_cast<size_type>(quaternion_component::z));
     }
 
@@ -583,7 +583,7 @@ public:
      *
      * @return The real part.
      */
-    THE_FORCE_INLINE value_type w(void) const {
+    THE_TRY_FORCE_INLINE value_type w(void) const {
         return traits_type::at(this->data, static_cast<size_type>(quaternion_component::w));
     }
 
@@ -592,7 +592,7 @@ public:
      *
      * @return A reference to the real part.
      */
-    THE_FORCE_INLINE value_type& w(void) {
+    THE_TRY_FORCE_INLINE value_type& w(void) {
         return traits_type::at(this->data, static_cast<size_type>(quaternion_component::w));
     }
 
@@ -630,7 +630,7 @@ public:
      *
      * @return The 'c'th component.
      */
-    THE_FORCE_INLINE value_type operator[](const quaternion_component c) const {
+    THE_TRY_FORCE_INLINE value_type operator[](const quaternion_component c) const {
         return traits_type::at(this->data, static_cast<size_type>(c));
     }
     /**
@@ -642,7 +642,7 @@ public:
      *
      * @return A reference to the 'c'th component.
      */
-    THE_FORCE_INLINE value_type& operator[](const quaternion_component c) {
+    THE_TRY_FORCE_INLINE value_type& operator[](const quaternion_component c) {
         return traits_type::at(this->data, static_cast<size_type>(c));
     }
 
@@ -651,14 +651,14 @@ public:
      *
      * @return The native representation of the quaternion.
      */
-    THE_FORCE_INLINE operator native_type&(void) { return this->data; }
+    THE_TRY_FORCE_INLINE operator native_type&(void) { return this->data; }
 
     /**
      * Conversion to native_type.
      *
      * @return The native representation of the quaternion.
      */
-    THE_FORCE_INLINE operator const native_type&(void)const { return this->data; }
+    THE_TRY_FORCE_INLINE operator const native_type&(void)const { return this->data; }
 
 private:
     /** Actually stores the components of the quaternion. */
@@ -674,7 +674,7 @@ private:
  *
  * @return A DirectX::XMVECTOR with the content of 'quat'.
  */
-THE_FORCE_INLINE DirectX::XMVECTOR load_xmvector(const quaternion<DirectX::XMFLOAT4>& quat) {
+THE_TRY_FORCE_INLINE DirectX::XMVECTOR load_xmvector(const quaternion<DirectX::XMFLOAT4>& quat) {
     typedef std::decay<decltype(quat)>::type::native_type native_type;
     return DirectX::XMLoadFloat4(&static_cast<const native_type&>(quat));
 }
@@ -688,7 +688,7 @@ THE_FORCE_INLINE DirectX::XMVECTOR load_xmvector(const quaternion<DirectX::XMFLO
  *
  * @return 'quat'.
  */
-THE_FORCE_INLINE quaternion<DirectX::XMFLOAT4>& store_xmvector(
+THE_TRY_FORCE_INLINE quaternion<DirectX::XMFLOAT4>& store_xmvector(
     quaternion<DirectX::XMFLOAT4>& quat, const DirectX::XMVECTOR& data) {
     typedef std::decay<decltype(quat)>::type::native_type native_type;
     DirectX::XMStoreFloat4(&static_cast<native_type&>(quat), data);
@@ -722,7 +722,7 @@ template <class V, class T> inline quaternion<V, T> conjugate(const quaternion<V
  *
  * @return The conjugated quaternion.
  */
-THE_FORCE_INLINE quaternion<glm::quat> conjugate(const quaternion<glm::quat>& quat) {
+THE_TRY_FORCE_INLINE quaternion<glm::quat> conjugate(const quaternion<glm::quat>& quat) {
     return glm::conjugate(static_cast<glm::quat>(quat));
 }
 #endif /* WITH_THE_GLM */
@@ -736,8 +736,8 @@ THE_FORCE_INLINE quaternion<glm::quat> conjugate(const quaternion<glm::quat>& qu
  *
  * @return The conjugated quaternion.
  */
-THE_FORCE_INLINE quaternion<DirectX::XMFLOAT4> conjugate(const quaternion<DirectX::XMFLOAT4>& quat) {
-    std::decay<decltype(quat)>::type retval(the::do_not_initialise);
+THE_TRY_FORCE_INLINE quaternion<DirectX::XMFLOAT4> conjugate(const quaternion<DirectX::XMFLOAT4>& quat) {
+    std::decay<decltype(quat)>::type retval(megamol::core::thecam::do_not_initialise);
     auto q = load_xmvector(quat);
     auto r = DirectX::XMQuaternionConjugate(q);
     return store_xmvector(retval, r);
@@ -766,7 +766,7 @@ template <class V, class T> quaternion<V, T> invert(const quaternion<V, T>& quat
  *
  * @return The inverse quaternion.
  */
-THE_FORCE_INLINE quaternion<glm::quat> invert(const quaternion<glm::quat>& quat) {
+THE_TRY_FORCE_INLINE quaternion<glm::quat> invert(const quaternion<glm::quat>& quat) {
     return glm::inverse(static_cast<glm::quat>(quat));
 }
 #endif /* WITH_THE_GLM */
@@ -780,8 +780,8 @@ THE_FORCE_INLINE quaternion<glm::quat> invert(const quaternion<glm::quat>& quat)
  *
  * @return The inverse quaternion.
  */
-THE_FORCE_INLINE quaternion<DirectX::XMFLOAT4> invert(const quaternion<DirectX::XMFLOAT4>& quat) {
-    std::decay<decltype(quat)>::type retval(the::do_not_initialise);
+THE_TRY_FORCE_INLINE quaternion<DirectX::XMFLOAT4> invert(const quaternion<DirectX::XMFLOAT4>& quat) {
+    std::decay<decltype(quat)>::type retval(megamol::core::thecam::do_not_initialise);
     auto q = load_xmvector(quat);
     auto r = DirectX::XMQuaternionInverse(q);
     return store_xmvector(retval, r);
@@ -811,7 +811,7 @@ template <class V, class T> inline typename T::value_type norm(const quaternion<
  *
  * @return The norm of the quaternion.
  */
-THE_FORCE_INLINE float norm(const quaternion<glm::quat>& quat) { return glm::length(static_cast<glm::quat>(quat)); }
+THE_TRY_FORCE_INLINE float norm(const quaternion<glm::quat>& quat) { return glm::length(static_cast<glm::quat>(quat)); }
 #endif /* WITH_THE_GLM */
 
 
@@ -823,7 +823,7 @@ THE_FORCE_INLINE float norm(const quaternion<glm::quat>& quat) { return glm::len
  *
  * @return The norm of the quaternion.
  */
-THE_FORCE_INLINE float norm(const quaternion<DirectX::XMFLOAT4>& quat) {
+THE_TRY_FORCE_INLINE float norm(const quaternion<DirectX::XMFLOAT4>& quat) {
     auto q = load_xmvector(quat);
     return DirectX::XMVectorGetX(DirectX::XMQuaternionLength(q));
 }
@@ -851,7 +851,7 @@ template <class V, class T> quaternion<V, T> normalise(const quaternion<V, T>& q
  *
  * @return The normalised quaternion.
  */
-THE_FORCE_INLINE quaternion<glm::quat> normalise(const quaternion<glm::quat>& quat) {
+THE_TRY_FORCE_INLINE quaternion<glm::quat> normalise(const quaternion<glm::quat>& quat) {
     return glm::normalize(static_cast<glm::quat>(quat));
 }
 #endif /* WITH_THE_GLM */
@@ -865,8 +865,8 @@ THE_FORCE_INLINE quaternion<glm::quat> normalise(const quaternion<glm::quat>& qu
  *
  * @return The normalised quaternion.
  */
-THE_FORCE_INLINE quaternion<DirectX::XMFLOAT4> normalise(const quaternion<DirectX::XMFLOAT4>& quat) {
-    std::decay<decltype(quat)>::type retval(the::do_not_initialise);
+THE_TRY_FORCE_INLINE quaternion<DirectX::XMFLOAT4> normalise(const quaternion<DirectX::XMFLOAT4>& quat) {
+    std::decay<decltype(quat)>::type retval(megamol::core::thecam::do_not_initialise);
     auto q = load_xmvector(quat);
     auto r = DirectX::XMQuaternionNormalize(q);
     return store_xmvector(retval, r);
@@ -901,7 +901,7 @@ inline vector<V, 3, TV> rotate(const vector<V, 3, TV>& vec, const quaternion<V, 
  */
 inline vector<DirectX::XMFLOAT3> rotate(
     const vector<DirectX::XMFLOAT3>& vec, const quaternion<DirectX::XMFLOAT4>& quat) {
-    std::decay<decltype(vec)>::type retval(the::do_not_initialise);
+    std::decay<decltype(vec)>::type retval(megamol::core::thecam::do_not_initialise);
     auto v = DirectX::XMLoadFloat3(&static_cast<const DirectX::XMFLOAT3&>(vec));
     auto q = load_xmvector(quat);
     auto r = DirectX::XMVector3Rotate(v, q);
@@ -939,7 +939,7 @@ inline vector<glm::vec3> rotate(const vector<glm::vec3>& vec, const quaternion<g
  */
 inline vector<DirectX::XMFLOAT4> rotate(
     const vector<DirectX::XMFLOAT4>& vec, const quaternion<DirectX::XMFLOAT4>& quat) {
-    std::decay<decltype(vec)>::type retval(the::do_not_initialise);
+    std::decay<decltype(vec)>::type retval(megamol::core::thecam::do_not_initialise);
     auto v = load_xmvector(vec);
     auto q = load_xmvector(quat);
     auto r = DirectX::XMVector3Rotate(v, q);
@@ -1228,7 +1228,7 @@ template <class V, class T> inline typename T::value_type square_norm(const quat
  *
  * @return The square norm of 'quat'.
  */
-THE_FORCE_INLINE float square_norm(const quaternion<glm::quat>& quat) {
+THE_TRY_FORCE_INLINE float square_norm(const quaternion<glm::quat>& quat) {
     float l = glm::length(static_cast<glm::quat>(quat));
     return l * l;
 }
@@ -1243,7 +1243,7 @@ THE_FORCE_INLINE float square_norm(const quaternion<glm::quat>& quat) {
  *
  * @return The square norm of 'quat'.
  */
-THE_FORCE_INLINE float square_norm(const quaternion<DirectX::XMFLOAT4>& quat) {
+THE_TRY_FORCE_INLINE float square_norm(const quaternion<DirectX::XMFLOAT4>& quat) {
     auto q = load_xmvector(quat);
     return DirectX::XMVectorGetX(DirectX::XMQuaternionLengthSq(q));
 }
@@ -1273,7 +1273,7 @@ template <class V, class T> quaternion<V, T> operator*(const quaternion<V, T>& l
  *
  * @return 'lhs' * 'rhs'.
  */
-THE_FORCE_INLINE quaternion<glm::quat> operator*(const quaternion<glm::quat>& lhs, const quaternion<glm::quat>& rhs) {
+THE_TRY_FORCE_INLINE quaternion<glm::quat> operator*(const quaternion<glm::quat>& lhs, const quaternion<glm::quat>& rhs) {
     return static_cast<glm::quat>(lhs) * static_cast<glm::quat>(rhs);
 }
 #endif /* WITH_THE_GLM */
@@ -1288,9 +1288,9 @@ THE_FORCE_INLINE quaternion<glm::quat> operator*(const quaternion<glm::quat>& lh
  *
  * @return 'lhs' * 'rhs'.
  */
-THE_FORCE_INLINE quaternion<DirectX::XMFLOAT4> operator*(
+THE_TRY_FORCE_INLINE quaternion<DirectX::XMFLOAT4> operator*(
     const quaternion<DirectX::XMFLOAT4>& lhs, const quaternion<DirectX::XMFLOAT4>& rhs) {
-    std::decay<decltype(lhs)>::type retval(the::do_not_initialise);
+    std::decay<decltype(lhs)>::type retval(megamol::core::thecam::do_not_initialise);
     auto l = load_xmvector(lhs);
     auto r = load_xmvector(rhs);
     auto q = DirectX::XMQuaternionMultiply(r, l); // sic.

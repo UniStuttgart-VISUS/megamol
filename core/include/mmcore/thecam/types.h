@@ -47,7 +47,7 @@ namespace thecam {
     /**
      * Determines the possible stereo eyes that the camera can compute.
      */
-    enum class eye {
+    enum class Eye {
 
         /** The left eye. */
         left = -1,
@@ -70,7 +70,7 @@ namespace thecam {
      * Determines how the camera handles different aspect rations of the film
      * gate and the resolution.
      */
-    enum class gate_scaling {
+    enum class Gate_scaling {
 
         /** Ignore the problem and skew the image to the image aspect ratio. */
         none = 0,
@@ -97,7 +97,7 @@ namespace thecam {
 
 
     /** The handedness of Cartesian coordinate systems. */
-    enum class handedness {
+    enum class Handedness {
 
         /**
          * The coordinate system is left-handed.
@@ -134,7 +134,7 @@ namespace thecam {
 
 
     /** Possible methods to compute mono or stereo projections. */
-    enum class projection_type {
+    enum class Projection_type {
 
         /** Enables a mono perspective projection. */
         perspective = 0,

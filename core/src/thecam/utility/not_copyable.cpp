@@ -30,7 +30,8 @@
 
 #include "mmcore/thecam/utility/not_copyable.h"
 
-#include <exception>
+#include <stdexcept>
+#include <string>
 
 /*
  * megamol::core::thecam::utility::not_copyable::~not_copyable
@@ -43,7 +44,7 @@ megamol::core::thecam::utility::not_copyable::~not_copyable(void) {
  * megamol::core::thecam::utility::not_copyable::not_copyable
  */
 megamol::core::thecam::utility::not_copyable::not_copyable(const not_copyable& rhs) {
-    throw std::exception("copying not supported");
+    throw std::runtime_error("copying not supported");
 }
 
 
@@ -52,7 +53,7 @@ megamol::core::thecam::utility::not_copyable::not_copyable(const not_copyable& r
  */
 megamol::core::thecam::utility::not_copyable& megamol::core::thecam::utility::not_copyable::operator =(const not_copyable& rhs) {
     if (this != &rhs) {
-        throw std::exception("rhs");
+        throw std::runtime_error("rhs");
     }
     return *this;
 }

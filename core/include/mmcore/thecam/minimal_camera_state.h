@@ -49,7 +49,7 @@ namespace thecam {
 
     /**
      * This structure holds the minimum information that is required to fully
-     * restore the state of a the::graphics::camera::camera.
+     * restore the state of a megamol::core::thecam::graphics::camera::camera.
      *
      * The structure uses only basic types as members such that it can be
      * serialised for network transfer and persistence.
@@ -69,7 +69,7 @@ namespace thecam {
         world_type convergence_plane;
 
         /** The stereo eye. */
-        eye eye;
+        Eye eye;
 
         /** The distance of the far clipping plane. */
         world_type far_clipping_plane;
@@ -78,7 +78,7 @@ namespace thecam {
         std::array<world_type, 2> film_gate;
 
         /** The gate scaling method. */
-        gate_scaling gate_scaling;
+        Gate_scaling gate_scaling;
 
         /** Half of the aperture angle in radians. */
         fractional_type half_aperture_angle_radians;
@@ -99,7 +99,7 @@ namespace thecam {
         std::array<world_type, 3> position;
 
         /** The projection type. */
-        projection_type projection_type;
+        Projection_type projection_type;
 
         /** Width and height of the resolution gate. */
         std::array<screen_type, 2> resolution_gate;

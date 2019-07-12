@@ -404,8 +404,7 @@ namespace math {
      *
      * @return std::numeric_limits<T>::max().
      */
-    template<class T> inline T maximum(const T n) {
-        return the::math::maximum<T>();
+    template<class T> inline T maximum(const T n) { return megamol::core::thecam::math::maximum<T>();
     }
 
     /**
@@ -445,8 +444,7 @@ namespace math {
      *
      * @return std::numeric_limits<T>::min().
      */
-    template<class T> inline T minimum(const T n) {
-        return the::math::minimum<T>();
+    template<class T> inline T minimum(const T n) { return megamol::core::thecam::math::minimum<T>();
     }
 
 
@@ -576,7 +574,7 @@ namespace math {
      * Only signed integer types can be used to instantiate this function.
      * Example:
      *   -3 % 5 = -3
-     *   the::math::umod(-3, 5) = 2
+     *   megamol::core::thecam::math::umod(-3, 5) = 2
      *
      * @param left  The signed dividend.
      * @param right The unsigned divisor. must not be negative.
@@ -612,14 +610,14 @@ namespace math {
         if (absa > absb) {
             absb /= absa;
             absb *= absb;
-            return absa * ::the::math::sqrt(static_cast<T>(1) + absb);
+            return absa * megamol::core::thecam::math::sqrt(static_cast<T>(1) + absb);
         }
-        if (::the::math::is_equal(absb, static_cast<T>(0), epsilon)) {
+        if (megamol::core::thecam::math::is_equal(absb, static_cast<T>(0), epsilon)) {
             return static_cast<T>(0);
         }
         absa /= absb;
         absa *= absa;
-        return absb * ::the::math::sqrt(static_cast<T>(1) + absa);
+        return absb * megamol::core::thecam::math::sqrt(static_cast<T>(1) + absa);
     }
 
 

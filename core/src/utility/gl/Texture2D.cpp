@@ -8,6 +8,7 @@
 #include "mmcore/utility/gl/Texture2D.h"
 
 #include <algorithm>
+#include <cmath>
 #include <iostream>
 
 using namespace megamol::core::utility::gl;
@@ -31,7 +32,7 @@ Texture2D::Texture2D(std::string id, TextureLayout const& layout, GLvoid* data, 
 
     GLsizei levels = 1;
 
-    if (generateMipmap) levels = static_cast<GLsizei>(1 + floor(log2(std::max(m_width, m_height))));
+    if (generateMipmap) levels = static_cast<GLsizei>(1 + std::floor(std::log2(std::max(m_width, m_height))));
 
     glTexStorage2D(GL_TEXTURE_2D, levels, m_internal_format, m_width, m_height);
 
@@ -87,7 +88,7 @@ bool Texture2D::reload(TextureLayout const& layout, GLvoid* data, bool generateM
 
     GLsizei levels = 1;
 
-    if (generateMipmap) levels = static_cast<GLsizei>(1 + floor(log2(std::max(m_width, m_height))));
+    if (generateMipmap) levels = static_cast<GLsizei>(1 + std::floor(std::log2(std::max(m_width, m_height))));
 
     glTexStorage2D(GL_TEXTURE_2D, levels, m_internal_format, m_width, m_height);
 

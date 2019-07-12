@@ -57,7 +57,7 @@ namespace utility {
     /**
      * An STL-compatible allocator which performs aligned memory allocation.
      *
-     * the::aligned_allocator is stateless.
+     * megamol::core::thecam::utility::aligned_allocator is stateless.
      *
      * See http://en.cppreference.com/w/cpp/concept/Allocator for general
      * information about the allocator concept in the STL and
@@ -180,13 +180,13 @@ namespace utility {
             // that std::length_error be thrown in the case of integer overflow.
             if (cnt > this->max_size()) {
                 throw std::length_error("Integer overflow in "
-                    "the::aligned_allocator.");
+                    "megamol::core::thecam::utility::aligned_allocator.");
             }
 
             // Allocate the memory. We do not need to check for nullptr, because
-            // the::aligned_malloc already raises std::bad_alloc in case it
+            // megamol::core::thecam::utility::aligned_malloc already raises std::bad_alloc in case it
             // fails.
-            auto retval = the::aligned_malloc(cnt * sizeof(value_type),
+            auto retval = aligned_malloc(cnt * sizeof(value_type),
                 this->alignment());
             THE_ASSERT(retval != nullptr);
 
@@ -227,7 +227,7 @@ namespace utility {
          *            obtained.
          */
         inline void deallocate(pointer ptr, const size_type cnt) const {
-            the::aligned_free(static_cast<void *>(ptr));
+            aligned_free(static_cast<void*>(ptr));
         }
 
         /**
@@ -266,7 +266,7 @@ namespace utility {
          *
          * The operator must only return true if storage allocated from this
          * allocator can be deallocated from 'rhs', and vice versa. As
-         * the::aligned_allocator is stateless, this is always true.
+         * megamol::core::thecam::utility::aligned_allocator is stateless, this is always true.
          *
          * @param rhs The right-hand side operand.
          *

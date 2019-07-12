@@ -30,7 +30,7 @@
 
 #include "mmcore/thecam/utility/not_movable.h"
 
-#include <exception>
+#include <stdexcept>
 
 /*
  * megamol::core::thecam::utility::not_movable::~not_movable
@@ -43,7 +43,7 @@ megamol::core::thecam::utility::not_movable::~not_movable(void) {
  * megamol::core::thecam::utility::not_movable::not_movable
  */
 megamol::core::thecam::utility::not_movable::not_movable(not_movable&& rhs) {
-    throw std::exception("moving not supported");
+    throw std::runtime_error("moving not supported");
 }
 
 
@@ -52,7 +52,7 @@ megamol::core::thecam::utility::not_movable::not_movable(not_movable&& rhs) {
  */
 megamol::core::thecam::utility::not_movable& megamol::core::thecam::utility::not_movable::operator =(not_movable&& rhs) {
     if (this != &rhs) {
-        std::exception("Invalid argument \"rhs\"");
+        std::runtime_error("Invalid argument \"rhs\"");
     }
     return *this;
 }

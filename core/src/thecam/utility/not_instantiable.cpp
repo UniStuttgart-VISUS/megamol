@@ -30,7 +30,7 @@
 
 #include "mmcore/thecam/utility/not_instantiable.h"
 
-#include <exception>
+#include <stdexcept>
 
 /*
  * megamol::core::thecam::utility::not_instantiable::~not_instantiable
@@ -43,5 +43,5 @@ megamol::core::thecam::utility::not_instantiable::~not_instantiable(void) {
  * megamol::core::thecam::utility::not_instantiable::not_instantiable
  */
 megamol::core::thecam::utility::not_instantiable::not_instantiable(void) : not_copyable(), not_movable() {
-    throw std::exception("instanciation not supported");
+    throw std::runtime_error("instanciation not supported");
 }

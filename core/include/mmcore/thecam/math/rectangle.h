@@ -496,7 +496,7 @@ namespace math {
          * approximately zero!
          *
          * @param epsilon An epsilon value used for comparison. This defaults to
-         *                the::math::epsilon<value_type>::value.
+         *                megamol::core::thecam::math::epsilon<value_type>::value.
          *
          * @return true if the size is a null rectangle, false otherwise.
          */
@@ -591,7 +591,7 @@ namespace math {
          *
          * @return 4.
          */
-        inline size_type size(void) const {
+        inline size_type size_(void) const {
             return 4;
         }
 

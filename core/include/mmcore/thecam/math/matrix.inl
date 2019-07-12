@@ -186,8 +186,8 @@ template<class V, size_t D, megamol::core::thecam::math::matrix_layout L, class 
 bool megamol::core::thecam::math::invert(matrix<V, D, D, L, T>& matrix) {
 #define A(r, c) a[(r) * 2 * D + (c)]
     typedef megamol::core::thecam::math::matrix<V, D, D, L, T> matrix_type;
-    typedef matrix_type::size_type size_type;
-    typedef matrix_type::value_type value_type;
+    typedef typename matrix_type::size_type size_type;
+    typedef typename matrix_type::value_type value_type;
     double a[2 * D * D];    // Input matrix for algorithm.
     double f;               // Multiplication factor.
     double maxVal;          // Row pivotising.
@@ -329,7 +329,7 @@ megamol::core::thecam::math::matrix<V, C, R, L, T> megamol::core::thecam::math::
     typedef typename T::size_type size_type;
     typedef typename T::value_type value_type;
 
-    megamol::core::thecam::math::matrix<V, C, R, L, T> retval(megamol::core::thecam::do_not_initialise);
+    megamol::core::thecam::math::matrix<V, C, R, L, T> retval(megamol::core::thecam::utility::do_not_initialise);
 
     for (size_type r = 0; r < R; ++r) {
         for (size_type c = 0; c < C; ++c) {

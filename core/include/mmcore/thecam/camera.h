@@ -60,7 +60,7 @@ namespace thecam {
      *
      * @tparam M The configuration of the mathematical types the camera uses.
      * @tparam P The property type the camera uses. This defaults to the
-     *           non-synchronisable the::graphics::camera::parameter type.
+     *           non-synchronisable megamol::core::thecam::graphics::camera::parameter type.
      */
     template<class M, template<class> class P = property>
     class camera {
@@ -362,7 +362,7 @@ namespace thecam {
          *
          * @return The default coordinate system handedness.
          */
-        inline handedness handedness(void) const {
+        inline megamol::core::thecam::Handedness handedness(void) const {
             return maths_type::handedness;
         }
 
@@ -588,7 +588,7 @@ namespace thecam {
          * Gets or sets the stereo eye that the camera should compute the
          * transformation matrices for.
          */
-        property_type<eye> eye;
+        property_type<Eye> eye;
 
         /**
          * Gets or sets the distance of the far clipping plane in world
@@ -612,7 +612,7 @@ namespace thecam {
          * Note that no gate scaling is performed if no film gate is set for
          * the camera.
          */
-        property_type<gate_scaling> gate_scaling;
+        property_type<Gate_scaling> gate_scaling;
 
         /**
          * Gets or sets the half vertical aperture angle of the camera in
@@ -659,7 +659,7 @@ namespace thecam {
          * Gets or sets the type of projection that the camera computes matrices
          * for.
          */
-        property_type<projection_type> projection_type;
+        property_type<Projection_type> projection_type;
 
         /**
          * Gets or sets the size of the (total) image in pixels.

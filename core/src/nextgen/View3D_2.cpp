@@ -408,8 +408,8 @@ void View3D_2::ResetView(void) {
     this->cam.far_clipping_plane(100.0f);
     this->cam.aperture_angle(30.0f);
     this->cam.disparity(0.05f);
-    this->cam.eye(thecam::eye::mono);
-    this->cam.projection_type(thecam::projection_type::perspective);
+    this->cam.eye(thecam::Eye::mono);
+    this->cam.projection_type(thecam::Projection_type::perspective);
     // TODO set distance between eyes
     if (!this->bboxs.IsBoundingBoxValid()) {
         this->bboxs.SetBoundingBox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);

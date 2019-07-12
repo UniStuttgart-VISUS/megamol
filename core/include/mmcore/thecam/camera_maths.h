@@ -71,7 +71,7 @@ namespace thecam {
      * @tparam H
      */
     template<class W = float, class S = int, class F = float,
-        handedness H = handedness::right_handed>
+        Handedness H = Handedness::right_handed>
     struct camera_maths {
 
         typedef F fractional_type;
@@ -96,7 +96,7 @@ namespace thecam {
         typedef math::size<world_type, 2> world_size_type;
 
         /* The handedness of the coordinate system used. */
-        static const handedness handedness = H;
+        static const Handedness handedness = H;
 
         /**
          * The up-vector in the initial rest position of the camera; in this
@@ -114,7 +114,7 @@ namespace thecam {
 
 #ifdef WITH_THE_GLM
 
-    template<handedness H = handedness::right_handed>
+    template<Handedness H = Handedness::right_handed>
     struct glm_camera_maths {
         typedef float fractional_type;
 
@@ -128,15 +128,15 @@ namespace thecam {
 
         typedef math::quaternion<glm::quat> quaternion_type;
 
-        typedef math::rectangle<RECT> screen_rectangle_type;
+        typedef math::rectangle<screen_type> screen_rectangle_type;
 
-        typedef math::size<SIZE> screen_size_type; // TODO replace this with glm::ivec2 or glm::uivec2?
+        typedef math::size<glm::ivec2> screen_size_type;
 
         typedef math::vector<glm::vec4> vector_type;
 
         typedef math::size<world_type, 2> world_size_type;
 
-        static const handedness handedness = H;
+        static const Handedness handedness = H;
 
         static const vector_type up_vector;
 
@@ -144,10 +144,10 @@ namespace thecam {
     };
 
     /** Left-handed XMATH camera maths types. */
-    typedef glm_camera_maths<handedness::left_handed> glm_camera_maths_lh;
+    typedef glm_camera_maths<Handedness::left_handed> glm_camera_maths_lh;
 
     /** Right-handed XMATH camera maths types. */
-    typedef glm_camera_maths<handedness::right_handed> glm_camera_maths_rh;
+    typedef glm_camera_maths<Handedness::right_handed> glm_camera_maths_rh;
 #endif /* WITH_THE_GLM */
 
 
@@ -207,7 +207,7 @@ namespace thecam {
 /*
  * megamol::core::thecam::camera_maths<W, S, F, H>::up_vector
  */
-template<class W, class S, class F, megamol::core::thecam::handedness H>
+template<class W, class S, class F, megamol::core::thecam::Handedness H>
 const typename megamol::core::thecam::camera_maths<W, S, F, H>::vector_type
 megamol::core::thecam::camera_maths<W, S, F, H>::up_vector(static_cast<F>(0),
     static_cast<F>(1), static_cast<F>(0), static_cast<F>(0));
@@ -216,18 +216,18 @@ megamol::core::thecam::camera_maths<W, S, F, H>::up_vector(static_cast<F>(0),
 /*
  * megamol::core::thecam::camera_maths<W, S, F, H>::view_vector
  */
-template<class W, class S, class F, megamol::core::thecam::handedness H>
+template<class W, class S, class F, megamol::core::thecam::Handedness H>
 const typename megamol::core::thecam::camera_maths<W, S, F, H>::vector_type
 megamol::core::thecam::camera_maths<W, S, F, H>::view_vector(static_cast<F>(0),
     static_cast<F>(0),
-    static_cast<F>(H == megamol::core::thecam::handedness::right_handed ? -1 : 1),
+    static_cast<F>(H == megamol::core::thecam::Handedness::right_handed ? -1 : 1),
     static_cast<F>(0));
 
 #ifdef WITH_THE_GLM
 /*
  * thecam::xmath_camera_maths<H>::up_vector
  */
-template<megamol::core::thecam::handedness H>
+template<megamol::core::thecam::Handedness H>
 const typename megamol::core::thecam::glm_camera_maths<H>::vector_type
 megamol::core::thecam::glm_camera_maths<H>::up_vector(0.0f, 1.0f, 0.0f, 0.0f);
 
@@ -235,10 +235,10 @@ megamol::core::thecam::glm_camera_maths<H>::up_vector(0.0f, 1.0f, 0.0f, 0.0f);
 /*
  * thecam::xmath_camera_maths<H>::view_vector
  */
-template<megamol::core::thecam::handedness H>
+template<megamol::core::thecam::Handedness H>
 const typename megamol::core::thecam::glm_camera_maths<H>::vector_type
 megamol::core::thecam::glm_camera_maths<H>::view_vector(0.0f, 0.0f,
-    (H == thecam::handedness::right_handed) ? -1.0f : 1.0f,
+    (H == thecam::Handedness::right_handed) ? -1.0f : 1.0f,
     0.0f);
 #endif
 

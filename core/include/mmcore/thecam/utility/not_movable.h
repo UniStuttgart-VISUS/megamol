@@ -73,7 +73,7 @@ namespace utility {
          *
          * @param rhs The object to be moved.
          *
-         * @throws the::not_supported_exception Unconditionally.
+         * @throws megamol::core::thecam::not_supported_exception Unconditionally.
          */
         not_movable(not_movable&& rhs);
 
@@ -84,7 +84,7 @@ namespace utility {
          *
          * @return *this.
          *
-         * @throws the::argument_exception If 'rhs' is not *this.
+         * @throws megamol::core::thecam::argument_exception If 'rhs' is not *this.
          */
         not_movable& operator =(not_movable&& rhs);
 

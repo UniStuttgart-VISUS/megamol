@@ -35,7 +35,7 @@
  */
 template<class V, class T>
 template<class P, class S>
-static megamol::core::thecam::math::rectangle<V, T> megamol::core::thecam::math::rectangle<V, T>::from_bottom_left(
+megamol::core::thecam::math::rectangle<V, T> megamol::core::thecam::math::rectangle<V, T>::from_bottom_left(
         const P& point, const S& size) {
     return rectangle::from_bottom_left(static_cast<value_type>(point.x()),
         static_cast<value_type>(point.y()),
@@ -49,7 +49,7 @@ static megamol::core::thecam::math::rectangle<V, T> megamol::core::thecam::math:
  */
 template<class V, class T>
 template<class P, class S>
-static megamol::core::thecam::math::rectangle<V, T> megamol::core::thecam::math::rectangle<V, T>::from_top_left(
+megamol::core::thecam::math::rectangle<V, T> megamol::core::thecam::math::rectangle<V, T>::from_top_left(
         const P& point, const S& size) {
     return rectangle::from_top_left(static_cast<value_type>(point.x()),
         static_cast<value_type>(point.y()),
@@ -76,10 +76,10 @@ megamol::core::thecam::math::rectangle<V, T>::rectangle(std::initializer_list<va
     size_type i = 0;
     auto it = il.begin();
 
-    for (; (i < this->size()) && (it != il.end()); ++i, ++it) {
+    for (; (i < this->size_()) && (it != il.end()); ++i, ++it) {
         traits_type::at(this->data, i) = *it;
     }
-    for (; i < this->size(); ++i) {
+    for (; i < this->size_(); ++i) {
         traits_type::at(this->data, i) = static_cast<value_type>(0);
     }
 }

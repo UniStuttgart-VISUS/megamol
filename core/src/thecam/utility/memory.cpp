@@ -34,6 +34,7 @@
 #include <exception>
 
 #include "mmcore/thecam/math/functions.h"
+#include <stdexcept>
 
 
 /*
@@ -44,7 +45,7 @@ void *megamol::core::thecam::utility::aligned_malloc(const size_t size, const si
 
     /* Sanity checks. */
     if (!megamol::core::thecam::math::is_power_of_two(alignment)) {
-        throw std::exception("alignment");
+        throw std::runtime_error("alignment");
     }
 
     /* Allocate the memory. */

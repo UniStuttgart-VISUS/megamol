@@ -65,7 +65,7 @@ typedef wchar_t TCHAR;
 #define _tsystem wsystem
 #define _tcscmp wcscmp
 #define _tcsicmp wcscasecmp
-//#define _ttoi the::text::char_utility::parse_int // unsure about that one
+//#define _ttoi megamol::core::thecam::text::char_utility::parse_int // unsure about that one
 
 #else /* defined(UNICODE) || defined(_UNICODE) */
 

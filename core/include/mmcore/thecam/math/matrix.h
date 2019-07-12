@@ -156,7 +156,7 @@ namespace detail {
     struct matrix_traits {
 
         /** The allocator for heap allocations of the matrix class. */
-        template<class C> using allocator_type = std::allocator<C>;
+        template<class U> using allocator_type = std::allocator<U>;
 
         /** The type of matrix indexer for locating a single component. */
         typedef matrix_indexer<R, C, L> indexer_type;
@@ -182,7 +182,7 @@ namespace detail {
          *
          * @return The value of the 'i'th component.
          */
-        static THE_FORCE_INLINE value_type at(const native_type& data,
+        static THE_TRY_FORCE_INLINE value_type at(const native_type& data,
                 const size_type row, const size_type column) {
             THE_ASSERT(indexer_type::valid(row, column));
             return data[indexer_type::index(row, column)];
@@ -197,7 +197,7 @@ namespace detail {
          *
          * @return The value of the 'i'th component.
          */
-        static THE_FORCE_INLINE value_type& at(native_type& data,
+        static THE_TRY_FORCE_INLINE value_type& at(native_type& data,
                 const size_type row, const size_type column) {
             THE_ASSERT(indexer_type::valid(row, column));
             return data[indexer_type::index(row, column)];
@@ -209,7 +209,7 @@ namespace detail {
          * @param dst The native storage of the destination.
          * @param src The native storage of the source.
          */
-        static THE_FORCE_INLINE void copy(native_type& dst,
+        static THE_TRY_FORCE_INLINE void copy(native_type& dst,
                 const native_type& src) {
             std::copy(src.cbegin(), src.cend(), dst.begin());
         }
@@ -223,7 +223,7 @@ namespace detail {
          *
          * @return A pointer to the first element.
          */
-        static THE_FORCE_INLINE const value_type *data(
+        static THE_TRY_FORCE_INLINE const value_type *data(
                 const native_type& data) {
             return data.data();
         }
@@ -237,7 +237,7 @@ namespace detail {
          *
          * @return A pointer to the first element.
          */
-        static THE_FORCE_INLINE value_type *data(native_type& data) {
+        static THE_TRY_FORCE_INLINE value_type *data(native_type& data) {
             return data.data();
         }
 
@@ -249,7 +249,7 @@ namespace detail {
          *
          * @return true if 'lhs' and 'rhs' are equal, false otherwise.
          */
-        static THE_FORCE_INLINE bool equals(const native_type& lhs,
+        static THE_TRY_FORCE_INLINE bool equals(const native_type& lhs,
                 const native_type& rhs) {
             return (lhs == rhs);
         }
@@ -290,7 +290,7 @@ namespace detail {
          *
          * @return The value of the 'i'th component.
          */
-        static THE_FORCE_INLINE value_type at(const native_type& data,
+        static THE_TRY_FORCE_INLINE value_type at(const native_type& data,
                 const size_type row, const size_type column) {
             THE_ASSERT(indexer_type::valid(row, column));
             return data.m[row][column];
@@ -305,7 +305,7 @@ namespace detail {
          *
          * @return The value of the 'i'th component.
          */
-        static THE_FORCE_INLINE value_type& at(native_type& data,
+        static THE_TRY_FORCE_INLINE value_type& at(native_type& data,
                 const size_type row, const size_type column) {
             THE_ASSERT(indexer_type::valid(row, column));
             return data.m[row][column];
@@ -317,7 +317,7 @@ namespace detail {
          * @param dst The native storage of the destination.
          * @param src The native storage of the source.
          */
-        static THE_FORCE_INLINE void copy(native_type& dst,
+        static THE_TRY_FORCE_INLINE void copy(native_type& dst,
                 const native_type& src) {
             dst = src;
         }
@@ -330,7 +330,7 @@ namespace detail {
          *
          * @return true if 'lhs' and 'rhs' are equal, false otherwise.
          */
-        static THE_FORCE_INLINE bool equals(const native_type& lhs,
+        static THE_TRY_FORCE_INLINE bool equals(const native_type& lhs,
                 const native_type& rhs) {
             return (::memcmp(&lhs.m, &rhs.m, sizeof(lhs)) == 0);
         }
@@ -371,7 +371,7 @@ namespace detail {
          *
          * @return The value of the 'i'th component.
          */
-        static THE_FORCE_INLINE value_type at(const native_type& data,
+        static THE_TRY_FORCE_INLINE value_type at(const native_type& data,
                 const size_type row, const size_type column) {
             THE_ASSERT(indexer_type::valid(row, column));
             return data[row][column];
@@ -386,7 +386,7 @@ namespace detail {
          *
          * @return The value of the 'i'th component.
          */
-        static THE_FORCE_INLINE value_type& at(native_type& data,
+        static THE_TRY_FORCE_INLINE value_type& at(native_type& data,
                 const size_type row, const size_type column) {
             THE_ASSERT(indexer_type::valid(row, column));
             return data[row][column];
@@ -398,7 +398,7 @@ namespace detail {
          * @param dst The native storage of the destination.
          * @param src The native storage of the source.
          */
-        static THE_FORCE_INLINE void copy(native_type& dst,
+        static THE_TRY_FORCE_INLINE void copy(native_type& dst,
                 const native_type& src) {
             dst = src;
         }
@@ -411,7 +411,7 @@ namespace detail {
          *
          * @return true if 'lhs' and 'rhs' are equal, false otherwise.
          */
-        static THE_FORCE_INLINE bool equals(const native_type& lhs,
+        static THE_TRY_FORCE_INLINE bool equals(const native_type& lhs,
                 const native_type& rhs) {
             return (::memcmp(glm::value_ptr(lhs), glm::value_ptr(rhs), sizeof(lhs)) == 0);
         }
@@ -521,7 +521,7 @@ namespace detail {
          */
         static inline matrix make_identity(void) {
             matrix retval(megamol::core::thecam::utility::do_not_initialise);
-            megamol::core::thecam::math::set_identity(retval);
+            set_identity(retval);
             return retval;
         }
 
@@ -581,7 +581,7 @@ namespace detail {
          * Initialise all elements with zero.
          */
         inline matrix(void) {
-            megamol::core::thecam::math::set_empty(*this);
+            set_empty(*this);
         }
 
         /**
@@ -629,7 +629,7 @@ namespace detail {
          *
          * @param data The initial data.
          */
-        THE_FORCE_INLINE matrix(const native_type& data) {
+        THE_TRY_FORCE_INLINE matrix(const native_type& data) {
             traits_type::copy(this->data, data);
         }
 
@@ -651,7 +651,7 @@ namespace detail {
          *
          * @return true if the matrix is empty, false otherwise.
          */
-        THE_FORCE_INLINE bool empty(void) const {
+        THE_TRY_FORCE_INLINE bool empty(void) const {
             static const matrix EMPTY;
             return this->equals(EMPTY);
         }
@@ -672,7 +672,7 @@ namespace detail {
          *
          * @return true if this object and 'rhs' are equal, false otherwise.
          */
-        THE_FORCE_INLINE bool equals(const matrix& rhs) const {
+        THE_TRY_FORCE_INLINE bool equals(const matrix& rhs) const {
             return traits_type::equals(this->data, rhs.data);
         }
 
@@ -786,7 +786,7 @@ namespace detail {
          *
          * @return The native representation of the matrix.
          */
-        THE_FORCE_INLINE operator native_type& (void) {
+        THE_TRY_FORCE_INLINE operator native_type& (void) {
             return this->data;
         }
 
@@ -795,7 +795,7 @@ namespace detail {
          *
          * @return The native representation of the matrix.
          */
-        THE_FORCE_INLINE operator const native_type& (void) const {
+        THE_TRY_FORCE_INLINE operator const native_type& (void) const {
             return this->data;
         }
 
@@ -837,7 +837,7 @@ namespace detail {
      *
      * @return A DirectX::XMFLOAT4X4 with the content of 'mat'.
      */
-    THE_FORCE_INLINE DirectX::XMMATRIX load_xmmatrix(
+    THE_TRY_FORCE_INLINE DirectX::XMMATRIX load_xmmatrix(
             const matrix<DirectX::XMFLOAT4X4>& mat) {
         typedef std::decay<decltype(mat)>::type::native_type native_type;
         return DirectX::XMLoadFloat4x4(&static_cast<const native_type&>(mat));
@@ -852,7 +852,7 @@ namespace detail {
      *
      * @return 'mat'.
      */
-    THE_FORCE_INLINE matrix<DirectX::XMFLOAT4X4>& store_xmmatrix(
+    THE_TRY_FORCE_INLINE matrix<DirectX::XMFLOAT4X4>& store_xmmatrix(
             matrix<DirectX::XMFLOAT4X4>& mat,
             const DirectX::XMMATRIX& data) {
         typedef std::decay<decltype(mat)>::type::native_type native_type;

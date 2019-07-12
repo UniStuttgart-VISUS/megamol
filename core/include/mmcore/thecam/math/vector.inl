@@ -196,7 +196,7 @@ megamol::core::thecam::math::vector<V, D, T> megamol::core::thecam::math::normal
 
     if (l != static_cast<value_type>(0)) {
         l = sqrt(l);
-        vector<V, D, T> retval(the::do_not_initialise);
+        vector<V, D, T> retval(megamol::core::thecam::utility::do_not_initialise);
         for (size_type i = 0; i < vec.size(); ++i) {
             retval[i] = vec[i] / l;
         }

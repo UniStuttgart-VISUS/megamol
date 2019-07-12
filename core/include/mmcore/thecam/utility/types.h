@@ -71,19 +71,19 @@ namespace utility {
      */
     typedef int discard_return_t;
     
-    /** Dummy for requesting uninitialised objects (eg the::math::vector). */
+    /** Dummy for requesting uninitialised objects (eg megamol::core::thecam::math::vector). */
     typedef int do_not_initialise_t;
     
     
     /**
-     * A constant that can be passed to some methods (eg the::ring_buffer::pop)
+     * A constant that can be passed to some methods (eg megamol::core::thecam::ring_buffer::pop)
      * for omitting return values.
      */
     extern const discard_return_t discard_return;
     
     /**
      * A constant that can be passed to some constructors (eg of
-     * the::math::vector) for omitting initialisation.
+     * megamol::core::thecam::math::vector) for omitting initialisation.
      */
     extern const do_not_initialise_t do_not_initialise;
 

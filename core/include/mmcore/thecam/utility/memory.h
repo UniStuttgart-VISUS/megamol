@@ -49,6 +49,7 @@
 #include <malloc.h>
 #include <memory>
 #include <new>
+#include <cstring>
 
 #include "mmcore/thecam/utility/assert.h"
 #include "mmcore/thecam/utility/types.h"
@@ -75,9 +76,9 @@ namespace thecam {
 namespace utility{
 
     /**
-     * Frees memory that has been obtained from the::aligned_malloc().
+     * Frees memory that has been obtained from aligned_malloc().
      *
-     * @param ptr A pointer to the memory allocated by the::aligned_malloc().
+     * @param ptr A pointer to the memory allocated by aligned_malloc().
      */
     inline void aligned_free(void *ptr) {
 #if defined(THE_WINDOWS)
@@ -87,7 +88,7 @@ namespace utility{
         ::free(ptr);
 
 #else /* defined(THE_WINDOWS) */
-#error "Implementation of the::aligned_free is missing!"
+#error "Implementation of aligned_free is missing!"
 
 #endif /* defined(THE_WINDOWS) */
     }
@@ -103,7 +104,7 @@ namespace utility{
      * @return The pointer to the memory block. This memory must be released
      *         by calling the::aligned_free().
      *
-     * @throws the::argument_exception If 'alignment' is not a power of two.
+     * @throws megamol::core::thecam::argument_exception If 'alignment' is not a power of two.
      * @throws std::bad_alloc If the allocation could not be made (eg due to
      *                        memory pressure).
      */
@@ -111,7 +112,7 @@ namespace utility{
 
 
     /**
-     * Performes an aligned allocation using the::aligned_malloc and casts the
+     * Performes an aligned allocation using megamol::core::thecam::aligned_malloc and casts the
      * pointer to the specified type.
      *
      * Note that no constructors are called! This is simply a convenience method
@@ -121,15 +122,15 @@ namespace utility{
      * @param alignment The alignment in bytes, which must be a power of two.
      *
      * @return The pointer to the memory block. This memory must be released
-     *         by calling the::aligned_free().
+     *         by calling aligned_free().
      *
-     * @throws the::argument_exception If 'alignment' is not a power of two.
+     * @throws megamol::core::thecam::argument_exception If 'alignment' is not a power of two.
      * @throws std::bad_alloc If the allocation could not be made (eg due to
      *                        memory pressure).
      */
     template<class T>
     inline T *aligned_malloc(const size_t size, const size_t alignment) {
-        return static_cast<T *>(the::aligned_malloc(size, alignment));
+        return static_cast<T*>(aligned_malloc(size, alignment));
     }
 
 
@@ -167,8 +168,8 @@ namespace utility{
 
     /**
      * If not nullptr, release the memory designated by 'inOutPtr', which
-     * must have been allocated by the::aligned_malloc(), using
-     * the::aligned_free() and set 'inOutPtR' nullptr afterwards.
+     * must have been allocated by megamol::core::thecam::aligned_malloc(), using
+     * megamol::core::thecam::aligned_free() and set 'inOutPtR' nullptr afterwards.
      *
      * @param inOutPtr The pointer designating the memory to be released.
      *
@@ -176,7 +177,7 @@ namespace utility{
      */
     template<class T> inline void safe_aligned_free(T *& inOutPtr) {
         if (inOutPtr != nullptr) {
-            the::aligned_free(inOutPtr);
+            aligned_free(inOutPtr);
             inOutPtr = nullptr;
         }
     }
@@ -266,12 +267,12 @@ namespace utility{
 
     /**
      * Fills the memory block beginning at 'ptr' with zeros in a more secure
-     * manner than the::zero_memory.
+     * manner than megamol::core::thecam::zero_memory.
      *
      * On Windows, this method will ensure that the memory is overwritten
      * promptly.
      *
-     * On Linux, this method is equivalent to the::zero_memory;
+     * On Linux, this method is equivalent to megamol::core::thecam::zero_memory;
      *
      * @param ptr  A pointer to the starting address of the block of memory to
      *             fill with zeros.
@@ -283,19 +284,19 @@ namespace utility{
 #ifdef THE_WINDOWS
         ::SecureZeroMemory(ptr, size);
 #else /* THE_WINDOWS */
-        ::memset(ptr, 0, size);
+        std::memset(ptr, 0, size);
 #endif /* THE_WINDOWS */
     }
 
 
     /**
      * Fills the memory block starting at 'ptr' with sizeof(T) zeros in a more
-     * secure manner than the::zero_memory.
+     * secure manner than megamol::core::thecam::zero_memory.
      *
      * On Windows, this method will ensure that the memory is overwritten
      * promptly.
      *
-     * On Linux, this method is equivalent to the::zero_memory;
+     * On Linux, this method is equivalent to megamol::core::thecam::zero_memory;
      *
      * @param ptr  A pointer to the starting address of the block of memory to
      *             fill with zeros.
@@ -303,7 +304,7 @@ namespace utility{
      * @tparam T The type of the pointer designating the memory block.
      */
     template<class T> inline void secure_zero_memory(T *ptr) {
-        the::secure_zero_memory(ptr, sizeof(T));
+        secure_zero_memory(ptr, sizeof(T));
     }
 
 
@@ -320,7 +321,7 @@ namespace utility{
 #ifdef THE_WINDOWS
         ::ZeroMemory(ptr, size);
 #else /* THE_WINDOWS */
-        ::memset(ptr, 0, size);
+        std::memset(ptr, 0, size);
 #endif /* THE_WINDOWS */
     }
 
@@ -333,8 +334,7 @@ namespace utility{
      *
      * @tparam T The type of the pointer designating the memory block.
      */
-    template<class T> inline void zero_memory(T *ptr) {
-        the::zero_memory(ptr, sizeof(T));
+    template<class T> inline void zero_memory(T *ptr) { zero_memory(ptr, sizeof(T));
     }
 
 } /* end namespace utility */
