@@ -119,7 +119,7 @@ namespace megamol
             /**
             * Forwards character events.
             */
-            virtual bool OnMouseMove(double x, double y, double world_x, double world_y) override;
+            virtual bool OnMouseMove(double x, double y) override;
 
             /**
             * Forwards scroll events.

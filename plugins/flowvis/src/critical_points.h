@@ -96,7 +96,7 @@ namespace megamol
             *
             * @return Critical point and its corresponding type
             */
-            std::pair<type, Eigen::Vector2f> critical_points::extract_critical_point(const cell_t& cell) const;
+            std::pair<type, Eigen::Vector2f> extract_critical_point(const cell_t& cell) const;
 
             /**
             * Linear interpolate position based on value

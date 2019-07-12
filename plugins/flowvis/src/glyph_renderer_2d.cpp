@@ -9,9 +9,11 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
-#include "mmcore/param/LinearTransferFunctionParam.h"
+#include "mmcore/param/TransferFunctionParam.h"
 #include "mmcore/view/CallRender2D.h"
 #include "mmcore/view/MouseFlags.h"
+
+#include "vislib/sys/Log.h"
 
 #include "glad/glad.h"
 
@@ -52,7 +54,7 @@ namespace megamol
             this->line_width << new core::param::IntParam(1);
             this->MakeSlotAvailable(&this->line_width);
 
-            this->transfer_function << new core::param::LinearTransferFunctionParam("");
+            this->transfer_function << new core::param::TransferFunctionParam("");
             this->MakeSlotAvailable(&this->transfer_function);
 
             this->range_fixed << new core::param::BoolParam(false);
@@ -245,8 +247,8 @@ namespace megamol
                 // Get transfer function texture data
                 std::vector<GLfloat> texture_data;
 
-                core::param::LinearTransferFunctionParam::TransferFunctionTexture(
-                    this->transfer_function.Param<core::param::LinearTransferFunctionParam>()->Value(),
+                core::param::TransferFunctionParam::TransferFunctionTexture(
+                    this->transfer_function.Param<core::param::TransferFunctionParam>()->Value(),
                     texture_data, this->render_data.tf_size);
 
                 // Create transfer funtion texture
@@ -445,11 +447,11 @@ namespace megamol
             return (*input_renderer)(core::view::InputCall::FnOnMouseButton);
         }
 
-        bool glyph_renderer_2d::OnMouseMove(double x, double y, double world_x, double world_y)
+        bool glyph_renderer_2d::OnMouseMove(double x, double y)
         {
             // Track mouse position
-            this->mouse_state.x = world_x;
-            this->mouse_state.y = world_y;
+            this->mouse_state.x = x;
+            this->mouse_state.y = y;
 
             // Forward event
             auto* input_renderer = this->render_input_slot.template CallAs<core::view::CallRender2D>();
@@ -459,8 +461,6 @@ namespace megamol
             evt.tag = core::view::InputEvent::Tag::MouseMove;
             evt.mouseMoveData.x = x;
             evt.mouseMoveData.y = y;
-            evt.mouseMoveData.world_x = world_x;
-            evt.mouseMoveData.world_y = world_y;
 
             input_renderer->SetInputEvent(evt);
             return (*input_renderer)(core::view::InputCall::FnOnMouseMove);

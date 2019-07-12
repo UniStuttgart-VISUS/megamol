@@ -9,7 +9,7 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/FlexEnumParam.h"
-#include "mmcore/param/LinearTransferFunctionParam.h"
+#include "mmcore/param/TransferFunctionParam.h"
 #include "mmcore/view/CallRender2D.h"
 #include "mmcore/view/MouseFlags.h"
 
@@ -247,17 +247,11 @@ namespace megamol
                 // Prepare OpenGL buffers
                 glBindVertexArray(this->render_data.vao);
 
-                    glBindBuffer(GL_ARRAY_BUFFER, this->render_data.cbo);
-                    glBufferData(GL_ARRAY_BUFFER, this->render_data.values->data->size() * sizeof(GLfloat), this->render_data.values->data->data(), GL_STATIC_DRAW);
-
-                    glEnableVertexAttribArray(1);
-                    glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, 0, nullptr);
-
                 glBindBuffer(GL_ARRAY_BUFFER, this->render_data.cbo);
-                glBufferData(GL_ARRAY_BUFFER, this->render_data.colors->size() * sizeof(GLfloat), this->render_data.colors->data(), GL_STATIC_DRAW);
+                glBufferData(GL_ARRAY_BUFFER, this->render_data.values->data->size() * sizeof(GLfloat), this->render_data.values->data->data(), GL_STATIC_DRAW);
 
                 glEnableVertexAttribArray(1);
-                glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
+                glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, 0, nullptr);
 
                 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->render_data.ibo);
                 glBufferData(GL_ELEMENT_ARRAY_BUFFER, this->render_data.indices->size() * sizeof(GLuint), this->render_data.indices->data(), GL_STATIC_DRAW);
@@ -282,7 +276,7 @@ namespace megamol
                     // Get transfer function texture data
                     std::vector<GLfloat> texture_data;
 
-                    core::param::LinearTransferFunctionParam::TransferFunctionTexture(this->render_data.values->transfer_function,
+                    core::param::TransferFunctionParam::TransferFunctionTexture(this->render_data.values->transfer_function,
                         texture_data, this->render_data.tf_size);
 
                     // Create transfer funtion texture
@@ -460,7 +454,7 @@ namespace megamol
             return (*input_renderer)(core::view::InputCall::FnOnMouseButton);
         }
 
-        bool triangle_mesh_renderer_2d::OnMouseMove(double x, double y, double world_x, double world_y)
+        bool triangle_mesh_renderer_2d::OnMouseMove(double x, double y)
         {
             auto* input_renderer = this->render_input_slot.template CallAs<core::view::CallRender2D>();
             if (input_renderer == nullptr) return false;
@@ -469,8 +463,6 @@ namespace megamol
             evt.tag = core::view::InputEvent::Tag::MouseMove;
             evt.mouseMoveData.x = x;
             evt.mouseMoveData.y = y;
-            evt.mouseMoveData.world_x = world_x;
-            evt.mouseMoveData.world_y = world_y;
 
             input_renderer->SetInputEvent(evt);
             return (*input_renderer)(core::view::InputCall::FnOnMouseMove);

@@ -110,11 +110,11 @@ namespace megamol
             std::function<std::ostream&()> get_performance_callback;
 
             /** Callbacks for starting/stopping/resetting the computation */
-            bool start_computation_callback(core::param::ParamSlot& parameter = core::param::ParamSlot("", ""));
-            bool stop_computation_callback(core::param::ParamSlot& parameter = core::param::ParamSlot("", ""));
-            bool reset_computation_callback(core::param::ParamSlot& parameter = core::param::ParamSlot("", ""));
-            bool load_computation_callback(core::param::ParamSlot& parameter = core::param::ParamSlot("", ""));
-            bool save_computation_callback(core::param::ParamSlot& parameter = core::param::ParamSlot("", ""));
+            bool start_computation_callback(core::param::ParamSlot& parameter);
+            bool stop_computation_callback(core::param::ParamSlot& parameter);
+            bool reset_computation_callback(core::param::ParamSlot& parameter);
+            bool load_computation_callback(core::param::ParamSlot& parameter);
+            bool save_computation_callback(core::param::ParamSlot& parameter);
 
             /**
             * Initialize computation.

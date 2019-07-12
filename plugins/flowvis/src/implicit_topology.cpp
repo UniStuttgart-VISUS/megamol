@@ -17,9 +17,8 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/FilePathParam.h"
-#include "mmcore/param/GroupParam.h"
 #include "mmcore/param/IntParam.h"
-#include "mmcore/param/LinearTransferFunctionParam.h"
+#include "mmcore/param/TransferFunctionParam.h"
 #include "mmcore/view/special/CallbackScreenShooter.h"
 
 #include "vislib/math/Rectangle.h"
@@ -192,10 +191,7 @@ namespace megamol
             this->MakeSlotAvailable(&this->auto_save_screenshots);
 
             // Create transfer function parameters
-            this->label_group << new core::param::GroupParam("Label field");
-            this->MakeSlotAvailable(&this->label_group);
-
-            this->label_transfer_function << new core::param::LinearTransferFunctionParam(
+            this->label_transfer_function << new core::param::TransferFunctionParam(
                 "{\"Interpolation\":\"LINEAR\",\"Nodes\":[[0.0,0.0,0.423499,1.0,0.0],[0.0,0.119346,0.529237,1.0,0.125]," \
                 "[0.0,0.238691,0.634976,1.0,0.1875],[0.0,0.346852,0.68788,1.0,0.25],[0.0,0.45022,0.718141,1.0,0.3125]," \
                 "[0.0,0.553554,0.664839,1.0,0.375],[0.0,0.651082,0.519303,1.0,0.4375],[0.115841,0.72479,0.352857,1.0,0.5]," \
@@ -219,13 +215,7 @@ namespace megamol
             this->label_range_max.Parameter()->SetGUIReadOnly(true);
             this->MakeSlotAvailable(&this->label_range_max);
 
-            this->label_end_group << new core::param::GroupEndParam();
-            this->MakeSlotAvailable(&this->label_end_group);
-
-            this->distance_group << new core::param::GroupParam("Distance field");
-            this->MakeSlotAvailable(&this->distance_group);
-
-            this->distance_transfer_function << new core::param::LinearTransferFunctionParam(
+            this->distance_transfer_function << new core::param::TransferFunctionParam(
                 "{\"Interpolation\":\"LINEAR\",\"Nodes\":[[0.0,0.0,0.0,1.0,0.0],[0.9019607901573181,0.0,0.0,1.0,0.39500004053115845]," \
                 "[0.9019607901573181,0.9019607901573181,0.0,1.0,0.7990000247955322],[1.0,1.0,1.0,1.0,1.0]],\"TextureSize\":128}");
             this->MakeSlotAvailable(&this->distance_transfer_function);
@@ -241,13 +231,7 @@ namespace megamol
             this->distance_range_max.Parameter()->SetGUIReadOnly(true);
             this->MakeSlotAvailable(&this->distance_range_max);
 
-            this->distance_end_group << new core::param::GroupEndParam();
-            this->MakeSlotAvailable(&this->distance_end_group);
-
-            this->termination_group << new core::param::GroupParam("Termination field");
-            this->MakeSlotAvailable(&this->termination_group);
-
-            this->termination_transfer_function << new core::param::LinearTransferFunctionParam(
+            this->termination_transfer_function << new core::param::TransferFunctionParam(
                 "{\"Interpolation\":\"LINEAR\",\"Nodes\":[[0.23137255012989044,0.2980392277240753,0.7529411911964417,1.0,0.0]," \
                 "[0.8627451062202454,0.8627451062202454,0.8627451062202454,1.0,0.4989999830722809]," \
                 "[0.7058823704719543,0.01568627543747425,0.14901961386203766,1.0,1.0]],\"TextureSize\":4}");
@@ -262,13 +246,7 @@ namespace megamol
             this->termination_range_max << new core::param::FloatParam(2.0f);
             this->MakeSlotAvailable(&this->termination_range_max);
 
-            this->termination_end_group << new core::param::GroupEndParam();
-            this->MakeSlotAvailable(&this->termination_end_group);
-
-            this->gradient_group << new core::param::GroupParam("Gradient field");
-            this->MakeSlotAvailable(&this->gradient_group);
-
-            this->gradient_transfer_function << new core::param::LinearTransferFunctionParam(
+            this->gradient_transfer_function << new core::param::TransferFunctionParam(
                 "{\"Interpolation\":\"LINEAR\",\"Nodes\":[[1.0,1.0,1.0,1.0,0.0],[0.0,0.0,0.0,1.0,1.0]],\"TextureSize\":128}");
             this->MakeSlotAvailable(&this->gradient_transfer_function);
 
@@ -282,9 +260,6 @@ namespace megamol
             this->gradient_range_max << new core::param::FloatParam(1.0f);
             this->gradient_range_max.Parameter()->SetGUIReadOnly(true);
             this->MakeSlotAvailable(&this->gradient_range_max);
-
-            this->gradient_end_group << new core::param::GroupEndParam();
-            this->MakeSlotAvailable(&this->gradient_end_group);
         }
 
         implicit_topology::~implicit_topology()
@@ -855,35 +830,35 @@ namespace megamol
 
             if (this->label_transfer_function.IsDirty())
             {
-                set_transfer_function(data_call->get_data("labels"), this->label_transfer_function.Param<core::param::LinearTransferFunctionParam>()->Value());
-                set_transfer_function(data_call->get_data("labels (forward)"), this->label_transfer_function.Param<core::param::LinearTransferFunctionParam>()->Value());
-                set_transfer_function(data_call->get_data("labels (backward)"), this->label_transfer_function.Param<core::param::LinearTransferFunctionParam>()->Value());
+                set_transfer_function(data_call->get_data("labels"), this->label_transfer_function.Param<core::param::TransferFunctionParam>()->Value());
+                set_transfer_function(data_call->get_data("labels (forward)"), this->label_transfer_function.Param<core::param::TransferFunctionParam>()->Value());
+                set_transfer_function(data_call->get_data("labels (backward)"), this->label_transfer_function.Param<core::param::TransferFunctionParam>()->Value());
 
                 this->label_transfer_function.ResetDirty();
             }
 
             if (this->distance_transfer_function.IsDirty())
             {
-                set_transfer_function(data_call->get_data("distances"), this->distance_transfer_function.Param<core::param::LinearTransferFunctionParam>()->Value());
-                set_transfer_function(data_call->get_data("distances (forward)"), this->distance_transfer_function.Param<core::param::LinearTransferFunctionParam>()->Value());
-                set_transfer_function(data_call->get_data("distances (backward)"), this->distance_transfer_function.Param<core::param::LinearTransferFunctionParam>()->Value());
+                set_transfer_function(data_call->get_data("distances"), this->distance_transfer_function.Param<core::param::TransferFunctionParam>()->Value());
+                set_transfer_function(data_call->get_data("distances (forward)"), this->distance_transfer_function.Param<core::param::TransferFunctionParam>()->Value());
+                set_transfer_function(data_call->get_data("distances (backward)"), this->distance_transfer_function.Param<core::param::TransferFunctionParam>()->Value());
 
                 this->distance_transfer_function.ResetDirty();
             }
 
             if (this->termination_transfer_function.IsDirty())
             {
-                set_transfer_function(data_call->get_data("reasons for termination (forward)"), this->termination_transfer_function.Param<core::param::LinearTransferFunctionParam>()->Value());
-                set_transfer_function(data_call->get_data("reasons for termination (backward)"), this->termination_transfer_function.Param<core::param::LinearTransferFunctionParam>()->Value());
+                set_transfer_function(data_call->get_data("reasons for termination (forward)"), this->termination_transfer_function.Param<core::param::TransferFunctionParam>()->Value());
+                set_transfer_function(data_call->get_data("reasons for termination (backward)"), this->termination_transfer_function.Param<core::param::TransferFunctionParam>()->Value());
 
                 this->termination_transfer_function.ResetDirty();
             }
 
             if (this->gradient_transfer_function.IsDirty())
             {
-                set_transfer_function(data_call->get_data("gradients"), this->gradient_transfer_function.Param<core::param::LinearTransferFunctionParam>()->Value());
-                set_transfer_function(data_call->get_data("gradients (forward)"), this->gradient_transfer_function.Param<core::param::LinearTransferFunctionParam>()->Value());
-                set_transfer_function(data_call->get_data("gradients (backward)"), this->gradient_transfer_function.Param<core::param::LinearTransferFunctionParam>()->Value());
+                set_transfer_function(data_call->get_data("gradients"), this->gradient_transfer_function.Param<core::param::TransferFunctionParam>()->Value());
+                set_transfer_function(data_call->get_data("gradients (forward)"), this->gradient_transfer_function.Param<core::param::TransferFunctionParam>()->Value());
+                set_transfer_function(data_call->get_data("gradients (backward)"), this->gradient_transfer_function.Param<core::param::TransferFunctionParam>()->Value());
 
                 this->gradient_transfer_function.ResetDirty();
             }
@@ -994,10 +969,10 @@ namespace megamol
             return true;
         }
 
-        bool implicit_topology::reset_computation_callback(core::param::ParamSlot&)
+        bool implicit_topology::reset_computation_callback(core::param::ParamSlot& slot)
         {
             // Terminate earlier computation
-            stop_computation_callback();
+            stop_computation_callback(slot);
 
             this->computation = nullptr;
             this->previous_result = nullptr;
@@ -1017,7 +992,7 @@ namespace megamol
             if (call != nullptr && (*call)(0))
             {
                 // Reset computation
-                reset_computation_callback();
+                reset_computation_callback(slot);
 
                 // Load previous results
                 implicit_topology_results previous_results;

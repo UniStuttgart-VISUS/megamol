@@ -125,12 +125,10 @@ namespace megamol
              *
              * @param x Current x-coordinate of the mouse in screen space
              * @param y Current y-coordinate of the mouse in screen space
-             * @param world_x Current x-coordinate of the mouse in world space
-             * @param world_y Current y-coordinate of the mouse in world space
              *
              * @return 'true' if mouse event was handled, 'false' otherwise.
              */
-            virtual bool OnMouseMove(double x, double y, double world_x, double world_y) override;
+            virtual bool OnMouseMove(double x, double y) override;
 
             /**
             * Forwards scroll events.
