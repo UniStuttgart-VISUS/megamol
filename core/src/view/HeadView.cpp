@@ -13,6 +13,8 @@
 #include "vislib/sys/Log.h"
 #include "vislib/Trace.h"
 
+#include <memory>
+
 using namespace megamol;
 using namespace megamol::core;
 using vislib::sys::Log;
@@ -22,7 +24,8 @@ using vislib::sys::Log;
  */
 view::HeadView::HeadView(void) : AbstractView(),
 viewSlot("view", "Connects to a view"),
-tickSlot("tick", "Connects to a module that needs a tick") {
+tickSlot("tick", "Connects to a module that needs a tick"),
+override_view_call(nullptr) {
 
     this->viewSlot.SetCompatibleCall<view::CallRenderViewDescription>();
     this->MakeSlotAvailable(&this->viewSlot);
@@ -81,12 +84,32 @@ void view::HeadView::Render(const mmcRenderViewContext& context) {
     CallRenderView *view = this->viewSlot.CallAs<CallRenderView>();
 
     if (view != nullptr) {
+        std::unique_ptr<CallRenderView> last_view_call = nullptr;
+
+        if (this->override_view_call != nullptr) {
+            last_view_call = std::make_unique<CallRenderView>(*view);
+            *view = *this->override_view_call;
+        }
+        else {
+            const_cast<vislib::math::Rectangle<int>&>(view->GetViewport()).Set(0, 0, this->width, this->height);
+        }
+
         view->SetInstanceTime(context.InstanceTime);
         view->SetTime(static_cast<float>(context.Time));
 
-        const_cast<vislib::math::Rectangle<int>&>(view->GetViewport()).Set(0, 0, this->width, this->height);
+        if (this->doHookCode()) {
+            this->doBeforeRenderHook();
+        }
 
         (*view)(CallRenderView::CALL_RENDER);
+
+        if (this->doHookCode()) {
+            this->doAfterRenderHook();
+        }
+
+        if (last_view_call != nullptr) {
+            *view = *last_view_call;
+        }
     }
 
     auto* tick = this->tickSlot.CallAs<job::TickCall>();
@@ -134,6 +157,8 @@ bool view::HeadView::OnRenderView(Call& call) {
     view::CallRenderView *view = dynamic_cast<view::CallRenderView *>(&call);
     if (view == nullptr) return false;
 
+    this->override_view_call = view;
+
     mmcRenderViewContext context;
     ::ZeroMemory(&context, sizeof(context));
 
@@ -141,6 +166,8 @@ bool view::HeadView::OnRenderView(Call& call) {
     context.InstanceTime = view->InstanceTime();
 
     this->Render(context);
+
+    this->override_view_call = nullptr;
 
     return true;
 }
