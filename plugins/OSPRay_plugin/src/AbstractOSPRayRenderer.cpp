@@ -850,7 +850,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
 
         case structureTypeEnum::OSPRAY_API_STRUCTURES:
              if (element.ospStructures.first.empty()) {
-                returnValue = false;
+                // returnValue = false;
                 break;
             }
             for (auto structure : element.ospStructures.first) {
@@ -879,7 +879,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
             switch (element.geometryType) {
              case geometryTypeEnum::SPHERES:
                 if (element.vertexData == NULL) {
-                    returnValue = false;
+                    // returnValue = false;
                     break;
                 }
 
@@ -937,7 +937,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
 
             case geometryTypeEnum::NHSPHERES:
                 if (element.raw == NULL) {
-                    returnValue = false;
+                    // returnValue = false;
                     break;
                 }
 
@@ -987,7 +987,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
                 break;
             case geometryTypeEnum::PBS:
                 if (element.xData == NULL || element.yData == NULL || element.zData == NULL) {
-                    returnValue = false;
+                    // returnValue = false;
                     break;
                 }
                 {
@@ -1018,7 +1018,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
                 break;
             case geometryTypeEnum::TRIANGLES:
                 if (element.vertexData == NULL) {
-                    returnValue = false;
+                    // returnValue = false;
                     break;
                 }
 
@@ -1068,7 +1068,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
                 break;
             case geometryTypeEnum::STREAMLINES:
                 if (element.vertexData == NULL) {
-                    returnValue = false;
+                    // returnValue = false;
                     break;
                 }
                 {
@@ -1137,7 +1137,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
         case structureTypeEnum::VOLUME:
 
                 if (element.voxels == NULL) {
-                    returnValue = false;
+                    // returnValue = false;
                     break;
                 }
 
