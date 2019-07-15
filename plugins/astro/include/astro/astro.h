@@ -1,10 +1,10 @@
 /*
- * MegaMolPlugin.h
+ * astro.h
  * Copyright (C) 2009-2019 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
-#ifndef MEGAMOLPLUGIN_H_INCLUDED
-#define MEGAMOLPLUGIN_H_INCLUDED
+#ifndef ASTRO_H_INCLUDED
+#define ASTRO_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -17,18 +17,18 @@
 // that uses this DLL. This way any other project whose source files include this file see 
 // TRISOUPPLUGIN_API functions as being imported from a DLL, whereas this DLL sees symbols
 // defined with this macro as being exported.
-#ifdef MEGAMOLPLUGIN_EXPORTS
-#define MEGAMOLPLUGIN_API __declspec(dllexport)
+#ifdef ASTRO_EXPORTS
+#define ASTRO_API __declspec(dllexport)
 #else
-#define MEGAMOLPLUGIN_API __declspec(dllimport)
+#define ASTRO_API __declspec(dllimport)
 #endif
 #else /* _WIN32 */
-#define MEGAMOLPLUGIN_API
+#define ASTRO_API
 #endif /* _WIN32 */
 
 #include "mmcore/utility/plugins/Plugin200Instance.h"
 
-#ifdef MEGAMOLPLUGIN_EXPORTS
+#ifdef ASTRO_EXPORTS
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -38,7 +38,7 @@ extern "C" {
  *
  * @return 200 -- (ver.: 2.00)
  */
-MEGAMOLPLUGIN_API int mmplgPluginAPIVersion(void);
+ASTRO_API int mmplgPluginAPIVersion(void);
 
 /**
  * Provides compatibility information
@@ -51,7 +51,7 @@ MEGAMOLPLUGIN_API int mmplgPluginAPIVersion(void);
  * @remarks Always use 'mmplgReleasePluginCompatibilityInfo' to release the
  *          memory of the returned struct.
  */
-MEGAMOLPLUGIN_API
+ASTRO_API
 ::megamol::core::utility::plugins::PluginCompatibilityInfo *
 mmplgGetPluginCompatibilityInfo(
     ::megamol::core::utility::plugins::ErrorCallback onError);
@@ -62,7 +62,7 @@ mmplgGetPluginCompatibilityInfo(
  *
  * @param ci The compatibility information struct to be released
  */
-MEGAMOLPLUGIN_API void mmplgReleasePluginCompatibilityInfo(
+ASTRO_API void mmplgReleasePluginCompatibilityInfo(
     ::megamol::core::utility::plugins::PluginCompatibilityInfo* ci);
 
 /**
@@ -75,7 +75,7 @@ MEGAMOLPLUGIN_API void mmplgReleasePluginCompatibilityInfo(
  * @remarks Always use 'mmplgReleasePluginInstance' to release the memory of
  *          the returned object.
  */
-MEGAMOLPLUGIN_API
+ASTRO_API
 ::megamol::core::utility::plugins::AbstractPluginInstance*
 mmplgGetPluginInstance
     (::megamol::core::utility::plugins::ErrorCallback onError);
@@ -86,7 +86,7 @@ mmplgGetPluginInstance
  *
  * @param pi The plugin instance to be released
  */
-MEGAMOLPLUGIN_API void mmplgReleasePluginInstance(
+ASTRO_API void mmplgReleasePluginInstance(
     ::megamol::core::utility::plugins::AbstractPluginInstance* pi);
 
 #ifdef __cplusplus
@@ -94,4 +94,4 @@ MEGAMOLPLUGIN_API void mmplgReleasePluginInstance(
 #endif
 #endif
 
-#endif /* MEGAMOLPLUGIN_H_INCLUDED */
+#endif /* ASTRO_H_INCLUDED */

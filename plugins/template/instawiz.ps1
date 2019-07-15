@@ -1,6 +1,6 @@
 #
 # MegaMol Plugin Instantiation Wizard
-# Copyright 2018 by MegaMol Team
+# Copyright 2018-2019 by MegaMol Team
 # Alle Rechte vorbehalten.
 #
 
@@ -55,24 +55,25 @@ if (-not [string]::IsNullOrEmpty($accept)) {
 
 # perform instantiation
 Move-Item -Path ".\include\MegaMolPlugin\" -Destination ".\include\$pluginname\"
+$uppername = $pluginname.ToUpper()
 
 $fn = ".\include\$pluginname\$pluginname.h"
 Move-Item -Path ".\include\$pluginname\MegaMolPlugin.h" -Destination $fn
 $temp = [IO.File]::ReadAllText($fn)
-$temp = $temp -replace "MegaMolPlugin", "$pluginname"
-$temp = $temp -replace "MEGAMOLPLUGIN", "${$pluginname.ToUpper()}"
+$temp = $temp -creplace "MegaMolPlugin", "$pluginname"
+$temp = $temp -creplace "MEGAMOLPLUGIN", "$uppername"
 [IO.File]::WriteAllText($fn, $temp)
 
 $fn = ".\src\$pluginname.cpp"
 Move-Item -Path ".\src\MegaMolPlugin.cpp" -Destination $fn
 $temp = [IO.File]::ReadAllText($fn)
-$temp = $temp -replace "MegaMolPlugin", "$pluginname"
-$temp = $temp -replace "MEGAMOLPLUGIN", "${$pluginname.ToUpper()}"
+$temp = $temp -creplace "MegaMolPlugin", "$pluginname"
+$temp = $temp -creplace "MEGAMOLPLUGIN", "$uppername"
 [IO.File]::WriteAllText($fn, $temp)
 
 $fn = ".\src\stdafx.h";
 $temp = [IO.File]::ReadAllText($fn)
-$temp = $temp -replace "MEGAMOLPLUGIN", "${$pluginname.ToUpper()}"
+$temp = $temp -creplace "MEGAMOLPLUGIN", "$uppername"
 [IO.File]::WriteAllText($fn, $temp)
 
 
@@ -80,7 +81,7 @@ $temp = $temp -replace "MEGAMOLPLUGIN", "${$pluginname.ToUpper()}"
 
 $fn = ".\CMakeLists.txt";
 $temp = [IO.File]::ReadAllText($fn)
-$temp = $temp -replace "MegaMolPlugin", "$pluginname"
+$temp = $temp -creplace "MegaMolPlugin", "$pluginname"
 [IO.File]::WriteAllText($fn, $temp)
 
 # Completed

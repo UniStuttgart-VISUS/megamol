@@ -25,7 +25,6 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *************************************************************************/
-
 #pragma once
 
 #include <cstdlib>
@@ -170,15 +169,4 @@ void generateRandomPointCloud_Orient(PointCloud_Orient<T> &point, const size_t N
 	for (size_t i=0;i<N;i++) {
 		point.pts[i].theta = ( 2 * M_PI * (((double)rand()) / RAND_MAX) ) - M_PI;
 	}
-}
-
-void dump_mem_usage()
-{
-	FILE* f = fopen("/proc/self/statm","rt");
-	if (!f) return;
-	char str[300];
-	size_t n = fread(str, 1, 200, f);
-	str[n] = 0;
-	printf("MEM: %s\n", str);
-	fclose(f);
 }
