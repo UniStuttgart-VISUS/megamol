@@ -23,6 +23,7 @@ before_install:
   - . install-cuda-xenial.sh
   - sudo apt-get -qq update
   - sudo apt-get install -y libgl1-mesa-dev
+  - sudo apt-get install -y libglu1-mesa-dev
   - sudo apt-get install -y uuid-dev
   - sudo apt-get install -y libunwind8-dev
   - sudo apt-get install -y libxrandr-dev
