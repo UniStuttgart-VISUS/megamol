@@ -58,6 +58,7 @@
 #include "utility/ServiceManager.h"
 #include "utility/plugins/PluginManager.h"
 
+#include "png.h"
 #include "vislib/Array.h"
 #include "vislib/Map.h"
 #include "vislib/MultiSz.h"
@@ -1505,9 +1506,7 @@ megamol::core::ViewInstance::ptr_type megamol::core::CoreInstance::InstantiatePe
                     fallbackView = av;
                 }
             }
-
         }
-
     }
 
     if (view == NULL) {
@@ -1944,7 +1943,6 @@ vislib::SmartPtr<megamol::core::param::AbstractParam> megamol::core::CoreInstanc
  * megamol::core::CoreInstance::LoadProject
  */
 void megamol::core::CoreInstance::LoadProject(const vislib::StringA& filename) {
-    // TODO if endswith lua, execute, save for later
     if (filename.EndsWith(".lua")) {
         vislib::StringA content;
         std::string result;
@@ -1959,6 +1957,48 @@ void megamol::core::CoreInstance::LoadProject(const vislib::StringA& filename) {
                     "Failed loading project file \"%s\": %s", filename.PeekBuffer(), result.c_str());
             } else {
                 this->loadedLuaProjects.Add(vislib::Pair<vislib::StringA, vislib::StringA>(filename, content));
+            }
+        }
+    } else if (filename.EndsWith(".png")) {
+        png_structp png = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+        if (!png) {
+            vislib::sys::Log::DefaultLog.WriteError("LoadProject: Unable to create png struct");
+        } else {
+            FILE* fp = fopen(filename.PeekBuffer(), "rb");
+            if (fp == nullptr) {
+                vislib::sys::Log::DefaultLog.WriteError(
+                    "LoadProject: Unable to open png file \"%s\"", filename.PeekBuffer());
+            } else {
+                png_infop info = png_create_info_struct(png);
+                if (!info) {
+                    vislib::sys::Log::DefaultLog.WriteError("LoadProject: Unable to create png info struct");
+                } else {
+                    setjmp(png_jmpbuf(png));
+                    png_init_io(png, fp);
+                    png_read_info(png, info);
+                    png_uint_32 exif_size;
+                    png_bytep exif_data;
+                    png_get_eXIf_1(png, info, &exif_size, &exif_data);
+                    if (exif_size > 0) {
+                        const vislib::StringA content(reinterpret_cast<char*>(exif_data));
+                        fclose(fp);
+                        png_destroy_read_struct(&png, &info, nullptr);
+                        // TODO: dispose exif_data buffer...?
+                        std::string result;
+                        vislib::sys::Log::DefaultLog.WriteInfo(
+                            "Loaded project from png:\n%s", content.PeekBuffer());
+                        if (!this->lua->RunString(content.PeekBuffer(), result, filename.PeekBuffer())) {
+                            vislib::sys::Log::DefaultLog.WriteError(vislib::sys::Log::LEVEL_INFO,
+                                "Failed loading project file \"%s\": %s", filename.PeekBuffer(), result.c_str());
+                        } else {
+                            this->loadedLuaProjects.Add(
+                                vislib::Pair<vislib::StringA, vislib::StringA>(filename, content));
+                        }
+                    } else {
+                        vislib::sys::Log::DefaultLog.WriteError(
+                            "LoadProject: Unable to extract png exif data");
+                    }
+                }
             }
         }
     } else {
@@ -1979,7 +2019,6 @@ void megamol::core::CoreInstance::LoadProject(const vislib::StringA& filename) {
  * megamol::core::CoreInstance::LoadProject
  */
 void megamol::core::CoreInstance::LoadProject(const vislib::StringW& filename) {
-    // TODO if endswith lua, execute, save for later
     if (filename.EndsWith(L".lua")) {
         vislib::StringA content;
         std::string result;
@@ -1995,6 +2034,46 @@ void megamol::core::CoreInstance::LoadProject(const vislib::StringW& filename) {
             } else {
                 this->loadedLuaProjects.Add(
                     vislib::Pair<vislib::StringA, vislib::StringA>(vislib::StringA(filename), content));
+            }
+        }
+    } else if (filename.EndsWith(L".png")) {
+        png_structp png = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+        if (!png) {
+            vislib::sys::Log::DefaultLog.WriteError("LoadProject: Unable to create png struct");
+        } else {
+            FILE* fp = fopen(W2A(filename.PeekBuffer()), "rb");
+            if (fp == nullptr) {
+                vislib::sys::Log::DefaultLog.WriteError(
+                    "LoadProject: Unable to open png file \"%s\"", filename.PeekBuffer());
+            } else {
+                png_infop info = png_create_info_struct(png);
+                if (!info) {
+                    vislib::sys::Log::DefaultLog.WriteError("LoadProject: Unable to create png info struct");
+                } else {
+                    setjmp(png_jmpbuf(png));
+                    png_init_io(png, fp);
+                    png_read_info(png, info);
+                    png_uint_32 exif_size;
+                    png_bytep exif_data;
+                    png_get_eXIf_1(png, info, &exif_size, &exif_data);
+                    if (exif_size > 0) {
+                        const vislib::StringA content(reinterpret_cast<char*>(exif_data));
+                        fclose(fp);
+                        png_destroy_read_struct(&png, &info, nullptr);
+                        // TODO: dispose exif_data buffer...?
+                        std::string result;
+                        vislib::sys::Log::DefaultLog.WriteInfo("Loaded project from png:\n%s", content.PeekBuffer());
+                        if (!this->lua->RunString(content.PeekBuffer(), result, W2A(filename.PeekBuffer()))) {
+                            vislib::sys::Log::DefaultLog.WriteError(vislib::sys::Log::LEVEL_INFO,
+                                "Failed loading project file \"%s\": %s", filename.PeekBuffer(), result.c_str());
+                        } else {
+                            this->loadedLuaProjects.Add(
+                                vislib::Pair<vislib::StringA, vislib::StringA>(filename, content));
+                        }
+                    } else {
+                        vislib::sys::Log::DefaultLog.WriteError("LoadProject: Unable to extract png exif data");
+                    }
+                }
             }
         }
     } else {

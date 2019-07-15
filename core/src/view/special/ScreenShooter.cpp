@@ -494,7 +494,7 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
                                 val.replace(start_pos, from.length(), to);
                                 start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
                             }
-                            confParams << "mmSetParamValue(\"" << slot->FullName() << "\",\"" << val << "\")\n";
+                            confParams << "mmSetParamValue(\"" << slot->FullName() << "\",[[" << val << "]])\n";
                         }
                     }
                     const auto cslot = dynamic_cast<CallerSlot*>((*si).get());
@@ -514,12 +514,13 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
         }
 
         auto confstr =
-            confInstances.str() + "\n" + confModules.str() + "\n" + confCalls.str() + "\n" + confParams.str();
+            confInstances.str() + "\n" + confModules.str() + "\n" + confCalls.str() + "\n" + confParams.str() + "\n";
         std::vector<png_byte> tempvec(confstr.begin(), confstr.end());
+        tempvec.push_back('\0');
         // auto info = new png_byte[confstr.size()];
         // memcpy(info, confstr.c_str(), confstr.size());
         // png_set_eXIf_1(data.pngPtr, data.pngInfoPtr, sizeof(info), info);
-        png_set_eXIf_1(data.pngPtr, data.pngInfoPtr, confstr.size(), tempvec.data());
+        png_set_eXIf_1(data.pngPtr, data.pngInfoPtr, tempvec.size(), tempvec.data());
 
         // check how complex the upcoming action is
         if ((data.imgWidth <= data.tileWidth) && (data.imgHeight <= data.tileHeight)) {
