@@ -1,7 +1,8 @@
 #pragma once
 
+#include "helper_math.h"
+
 #include <vector_types.h>
-#include <helper_math.h>
 
 #include <type_traits>
 

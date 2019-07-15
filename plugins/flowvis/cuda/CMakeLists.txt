@@ -15,7 +15,6 @@ if(BUILD_FLOWVIS_PLUGIN)
   find_package(CUDA REQUIRED)
   cuda_include_directories("${CUDA_TOOLKIT_ROOT_DIR}/include")
   link_directories("${CUDA_TOOLKIT_ROOT_DIR}/lib/x64")
-  include_directories(${CUDA_SDK_ROOT_DIR}/common/inc/)
 
   # Set architecture flags
   set(FLOWVIS_CUDA_FLAGS "-gencode arch=compute_61,code=sm_61" CACHE STRING "CUDA flags for setting, e.g., the used architecture")
