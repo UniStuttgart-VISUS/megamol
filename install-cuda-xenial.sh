@@ -30,7 +30,7 @@ travis_retry() {
 }
 
 export CUDA=10-1-local-10.1.168-418.67_1.0-1
-travis_retry wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64/cuda-repo-ubuntu1604_${CUDA}_amd64.deb
+travis_retry wget https://developer.nvidia.com/compute/cuda/10.1/Prod/local_installers/cuda-repo-ubuntu1604-${CUDA}_amd64.deb
 travis_retry sudo apt-key adv --fetch-keys http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64/7fa2af80.pub
 travis_retry sudo dpkg -i cuda-repo-ubuntu1604_${CUDA}_amd64.deb
 travis_retry sudo apt-get update -qq
