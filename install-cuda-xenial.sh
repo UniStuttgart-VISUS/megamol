@@ -63,7 +63,7 @@ if [ ${CUDA_INSTALL_EXTRA_LIBS:-1} -ne 0 ]; then
   if [ ${CUDA_VER_MAJOR} -ge 7 ]; then
     CUDA_PKGS+=" cuda-cusolver-dev-${CUDA_APT} "
   fi
-  CUDA_PKGS+="cuda-cublas-dev-${CUDA_APT} "
+  CUDA_PKGS+="libcublas-dev "
 fi
 
 travis_retry sudo apt-get install -y ${CUDA_PKGS}
