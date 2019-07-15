@@ -29,7 +29,6 @@
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/utility/SSBOStreamer.h"
 #include "mmcore/utility/SSBOBufferArray.h"
-#include "mmcore/utility/KHR.h"
 
 #include "vislib/types.h"
 #include "vislib/assert.h"
