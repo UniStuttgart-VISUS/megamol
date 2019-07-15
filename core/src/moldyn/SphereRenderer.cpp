@@ -65,7 +65,7 @@ moldyn::SphereRenderer::SphereRenderer(void)
     , tfFallbackHandle(0)
     , volGen(nullptr)
     , triggerRebuildGBuffer(false)
-#if defined(SPHERE_MIN_OGL_NG_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_NG_SPLAT)
+#if defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
     /// This variant should not need the fence (?)
     // ,singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_COHERENT_BIT);
     // ,singleBufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_COHERENT_BIT);
@@ -141,10 +141,10 @@ moldyn::SphereRenderer::SphereRenderer(void)
     param::EnumParam* rmp = new param::EnumParam(this->renderMode);
     rmp->SetTypePair(RenderMode::SIMPLE,            "Simple"); 
     rmp->SetTypePair(RenderMode::SIMPLE_CLUSTERED,  "Simple_Clustered");
-    rmp->SetTypePair(RenderMode::SIMPLE_GEO,        "Simple_Geometry_Shader");
-    rmp->SetTypePair(RenderMode::NG,                "NG"); 
-    rmp->SetTypePair(RenderMode::NG_BUFFER_ARRAY,   "NG_Buffer_Array"); 
-    rmp->SetTypePair(RenderMode::NG_SPLAT,          "NG_Splat");   
+    rmp->SetTypePair(RenderMode::GEOMETRY_SHADER,   "Geometry_Shader");
+    rmp->SetTypePair(RenderMode::SSBO_STREAM,       "SSBO_Stream"); 
+    rmp->SetTypePair(RenderMode::BUFFER_ARRAY,      "Buffer_Array"); 
+    rmp->SetTypePair(RenderMode::SPLAT,             "Splat");   
     rmp->SetTypePair(RenderMode::AMBIENT_OCCLUSION, "Ambient_Occlusion"); 
     this->renderModeParam << rmp;
     this->MakeSlotAvailable(&this->renderModeParam);
@@ -178,17 +178,17 @@ bool moldyn::SphereRenderer::create(void) {
     if (this->isRenderModeAvailable(RenderMode::SIMPLE_CLUSTERED)) {
         this->renderModeParam.Param<param::EnumParam>()->SetTypePair(RenderMode::SIMPLE_CLUSTERED, "Simple_Clustered");
     }
-    if (this->isRenderModeAvailable(RenderMode::SIMPLE_GEO)) {
-        this->renderModeParam.Param<param::EnumParam>()->SetTypePair(RenderMode::SIMPLE_GEO, "Simple_Geometry_Shader");
+    if (this->isRenderModeAvailable(RenderMode::GEOMETRY_SHADER)) {
+        this->renderModeParam.Param<param::EnumParam>()->SetTypePair(RenderMode::GEOMETRY_SHADER, "Geometry_Shader");
     }
-    if (this->isRenderModeAvailable(RenderMode::NG)) {
-        this->renderModeParam.Param<param::EnumParam>()->SetTypePair(RenderMode::NG, "NG");
+    if (this->isRenderModeAvailable(RenderMode::SSBO_STREAM)) {
+        this->renderModeParam.Param<param::EnumParam>()->SetTypePair(RenderMode::SSBO_STREAM, "SSBO_Stream");
     }
-    if (this->isRenderModeAvailable(RenderMode::NG_SPLAT)) {
-        this->renderModeParam.Param<param::EnumParam>()->SetTypePair(RenderMode::NG_SPLAT, "NG_Splat");
+    if (this->isRenderModeAvailable(RenderMode::SPLAT)) {
+        this->renderModeParam.Param<param::EnumParam>()->SetTypePair(RenderMode::SPLAT, "Splat");
     }
-    if (this->isRenderModeAvailable(RenderMode::NG_BUFFER_ARRAY)) {
-        this->renderModeParam.Param<param::EnumParam>()->SetTypePair(RenderMode::NG_BUFFER_ARRAY, "NG_Buffer_Array");
+    if (this->isRenderModeAvailable(RenderMode::BUFFER_ARRAY)) {
+        this->renderModeParam.Param<param::EnumParam>()->SetTypePair(RenderMode::BUFFER_ARRAY, "Buffer_Array");
     }
     if (this->isRenderModeAvailable(RenderMode::AMBIENT_OCCLUSION)) {
         this->renderModeParam.Param<param::EnumParam>()->SetTypePair(RenderMode::AMBIENT_OCCLUSION, "Ambient_Occlusion");
@@ -273,12 +273,12 @@ bool moldyn::SphereRenderer::resetResources(void) {
     }
 
     // NG
-    if (this->isRenderModeAvailable(RenderMode::NG, true)) {
+    if (this->isRenderModeAvailable(RenderMode::SSBO_STREAM, true)) {
         glUnmapNamedBuffer(this->theSingleBuffer); 
     }
 
-    // NG_SPLAT or NG_BUFFER_ARRAY
-    if (this->isRenderModeAvailable(RenderMode::NG_SPLAT, true) || this->isRenderModeAvailable(RenderMode::NG_BUFFER_ARRAY, true)) {
+    // SPLAT or BUFFER_ARRAY
+    if (this->isRenderModeAvailable(RenderMode::SPLAT, true) || this->isRenderModeAvailable(RenderMode::BUFFER_ARRAY, true)) {
         for (auto& x : fences) {
             if (x) {
                 glDeleteSync(x);
@@ -293,8 +293,8 @@ bool moldyn::SphereRenderer::resetResources(void) {
         glDeleteBuffers(1, &(this->theSingleBuffer));
     }
 
-    // NG or NG_SPLAT or NG_BUFFER_ARRAY
-    if (this->isRenderModeAvailable(RenderMode::NG) || this->isRenderModeAvailable(RenderMode::NG_SPLAT) || this->isRenderModeAvailable(RenderMode::NG_BUFFER_ARRAY)) {
+    // NG or SPLAT or BUFFER_ARRAY
+    if (this->isRenderModeAvailable(RenderMode::SSBO_STREAM) || this->isRenderModeAvailable(RenderMode::SPLAT) || this->isRenderModeAvailable(RenderMode::BUFFER_ARRAY)) {
         glDeleteVertexArrays(1, &(this->vertArray));
     }
 
@@ -346,7 +346,7 @@ bool moldyn::SphereRenderer::createResources() {
             }
         } break;
 
-        case (RenderMode::SIMPLE_GEO):
+        case (RenderMode::GEOMETRY_SHADER):
             this->geoShader = new ShaderSource();
             vertShaderName = "geosphere::vertex";
             fragShaderName = "geosphere::fragment";
@@ -374,7 +374,7 @@ bool moldyn::SphereRenderer::createResources() {
             }
             break;
 
-        case (RenderMode::NG):
+        case (RenderMode::SSBO_STREAM):
             vertShaderName = "ngsphere::vertex";
             fragShaderName = "ngsphere::fragment";
             if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
@@ -388,7 +388,7 @@ bool moldyn::SphereRenderer::createResources() {
             glBindVertexArray(0);
             break;
 
-        case (RenderMode::NG_SPLAT):
+        case (RenderMode::SPLAT):
             vertShaderName = "ngsplat::vertex";
             fragShaderName = "ngsplat::fragment";
             if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
@@ -409,7 +409,7 @@ bool moldyn::SphereRenderer::createResources() {
             glBindVertexArray(0);
             break;
 
-        case (RenderMode::NG_BUFFER_ARRAY):
+        case (RenderMode::BUFFER_ARRAY):
             vertShaderName = "ngbufferarray::vertex";
             fragShaderName = "ngbufferarray::fragment";
             if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
@@ -509,48 +509,48 @@ bool moldyn::SphereRenderer::isRenderModeAvailable(RenderMode rm, bool silent) {
             errorstr += "[SphereRenderer] Render Mode 'SIMPLE_CLUSTERED' is not available. Minimum OpenGL version is 1.4 \n";
         }
         break;
-    case(RenderMode::SIMPLE_GEO):
-        if (!(SPHERE_MIN_OGL_SIMPLE_GEO)) {
-            errorstr += "[SphereRenderer] Render Mode 'SIMPLE_GEO' is not available. Minimum OpenGL version is 3.2 \n";
+    case(RenderMode::GEOMETRY_SHADER):
+        if (!(SPHERE_MIN_OGL_GEOMETRY_SHADER)) {
+            errorstr += "[SphereRenderer] Render Mode 'GEOMETRY_SHADER' is not available. Minimum OpenGL version is 3.2 \n";
         }
         if (!vislib::graphics::gl::GLSLGeometryShader::AreExtensionsAvailable()) {
-            errorstr += "[SphereRenderer] Render Mode 'SIMPLE_GEO' is not available. Geometry shader extensions are not available. \n";
+            errorstr += "[SphereRenderer] Render Mode 'GEOMETRY_SHADER' is not available. Geometry shader extensions are not available. \n";
         }
         if (!isExtAvailable("GL_EXT_geometry_shader4")) {
-            errorstr += "[SphereRenderer] Render Mode 'SIMPLE_GEO' is not available. Extension GL_EXT_geometry_shader4 is not available. \n";
+            errorstr += "[SphereRenderer] Render Mode 'GEOMETRY_SHADER' is not available. Extension GL_EXT_geometry_shader4 is not available. \n";
         }
         if (!isExtAvailable("GL_EXT_gpu_shader4")) {
-            errorstr += "[SphereRenderer] Render Mode 'SIMPLE_GEO' is not available. Extension GL_EXT_gpu_shader4 is not available. \n";
+            errorstr += "[SphereRenderer] Render Mode 'GEOMETRY_SHADER' is not available. Extension GL_EXT_gpu_shader4 is not available. \n";
         }
         if (!isExtAvailable("GL_EXT_bindable_uniform")) {
-            errorstr += "[SphereRenderer] Render Mode 'SIMPLE_GEO' is not available. Extension GL_EXT_bindable_uniform is not available. \n";
+            errorstr += "[SphereRenderer] Render Mode 'GEOMETRY_SHADER' is not available. Extension GL_EXT_bindable_uniform is not available. \n";
         }
         if (!isExtAvailable("GL_ARB_shader_objects")) {
-            errorstr += "[SphereRenderer] Render Mode 'SIMPLE_GEO' is not available. Extension GL_ARB_shader_objects is not available. \n";
+            errorstr += "[SphereRenderer] Render Mode 'GEOMETRY_SHADER' is not available. Extension GL_ARB_shader_objects is not available. \n";
         }
         break;
-    case(RenderMode::NG):
-        if (!(SPHERE_MIN_OGL_NG)) { 
+    case(RenderMode::SSBO_STREAM):
+        if (!(SPHERE_MIN_OGL_SSBO_STREAM)) { 
             errorstr += "[SphereRenderer] Render Mode 'NG' is not available. Minimum OpenGL version is 4.5 \n";
         }
         if (!isExtAvailable("GL_ARB_buffer_storage")) {
             errorstr += "[SphereRenderer] Render Mode 'NG' is not available. Extension GL_ARB_buffer_storage is not available. \n";
         }
         break;
-    case(RenderMode::NG_BUFFER_ARRAY):
-        if (!(SPHERE_MIN_OGL_NG_BUFFER_ARRAY)) {
-            errorstr += "[SphereRenderer] Render Mode 'NG_BUFFER_ARRAY' is not available. Minimum OpenGL version is 4.5 \n";
+    case(RenderMode::BUFFER_ARRAY):
+        if (!(SPHERE_MIN_OGL_BUFFER_ARRAY)) {
+            errorstr += "[SphereRenderer] Render Mode 'BUFFER_ARRAY' is not available. Minimum OpenGL version is 4.5 \n";
         }
         if (!isExtAvailable("GL_ARB_buffer_storage")) {
-            errorstr += "[SphereRenderer] Render Mode 'NG_BUFFER_ARRAY' is not available. Extension GL_ARB_buffer_storage is not available. \n";
+            errorstr += "[SphereRenderer] Render Mode 'BUFFER_ARRAY' is not available. Extension GL_ARB_buffer_storage is not available. \n";
         }
         break;
-    case(RenderMode::NG_SPLAT):
-        if (!(SPHERE_MIN_OGL_NG_SPLAT)) { 
-            errorstr += "[SphereRenderer] Render Mode 'NG_SPLAT' is not available. Minimum OpenGL version is 4.5 \n";
+    case(RenderMode::SPLAT):
+        if (!(SPHERE_MIN_OGL_SPLAT)) { 
+            errorstr += "[SphereRenderer] Render Mode 'SPLAT' is not available. Minimum OpenGL version is 4.5 \n";
         }
         if (!isExtAvailable("GL_ARB_buffer_storage")) {
-            errorstr += "[SphereRenderer] Render Mode 'NG_SPLAT' is not available. Extension GL_ARB_buffer_storage is not available. \n";
+            errorstr += "[SphereRenderer] Render Mode 'SPLAT' is not available. Extension GL_ARB_buffer_storage is not available. \n";
         }
         break;
     case(RenderMode::AMBIENT_OCCLUSION):
@@ -588,16 +588,16 @@ std::string moldyn::SphereRenderer::getRenderModeString(RenderMode rm) {
     case (RenderMode::SIMPLE_CLUSTERED):
         mode = "SIMPLE CLUSTERED";
         break;
-    case (RenderMode::SIMPLE_GEO):
+    case (RenderMode::GEOMETRY_SHADER):
         mode = "SIMPLE GEOMETRY SHADER";
         break;
-    case (RenderMode::NG):
+    case (RenderMode::SSBO_STREAM):
         mode = "NG";
         break;
-    case (RenderMode::NG_SPLAT):
+    case (RenderMode::SPLAT):
         mode = "NG SPLAT";
         break;
-    case (RenderMode::NG_BUFFER_ARRAY):
+    case (RenderMode::BUFFER_ARRAY):
         mode = "NG BUFFER ARRAY";
         break;
     case (RenderMode::AMBIENT_OCCLUSION):
@@ -696,13 +696,13 @@ bool moldyn::SphereRenderer::Render(view::CallRender3D& call) {
         retval = this->renderSimple(cr3d, mpdc); break;
     case (RenderMode::SIMPLE_CLUSTERED):
         retval = this->renderSimple(cr3d, mpdc); break;
-    case (RenderMode::SIMPLE_GEO):
+    case (RenderMode::GEOMETRY_SHADER):
         retval = this->renderGeo(cr3d, mpdc); break;
-    case (RenderMode::NG):
+    case (RenderMode::SSBO_STREAM):
         retval = this->renderNG(cr3d, mpdc); break;
-    case (RenderMode::NG_SPLAT):
+    case (RenderMode::SPLAT):
         retval = this->renderNGSplat(cr3d, mpdc); break;
-    case (RenderMode::NG_BUFFER_ARRAY):
+    case (RenderMode::BUFFER_ARRAY):
         retval = this->renderNGBufferArray(cr3d, mpdc); break;
     case (RenderMode::AMBIENT_OCCLUSION):
         retval = this->renderAmbientOcclusion(cr3d, mpdc); 

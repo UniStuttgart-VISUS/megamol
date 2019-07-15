@@ -1,7 +1,7 @@
 mmCreateView("testspheres", "GUIView", "::gui")
 mmCreateModule("View3D", "::view")
 mmCreateModule("SphereRenderer", "::renderer")
-mmSetParamValue("::renderer::renderMode", "NG")
+mmSetParamValue("::renderer::renderMode", "SSBO_Stream")
 mmCreateModule("TestSpheresDataSource", "::data")
 mmCreateCall("CallRenderView", "::gui::renderview", "::view::render")
 mmCreateCall("CallRender3D", "::view::rendering", "::renderer::rendering")

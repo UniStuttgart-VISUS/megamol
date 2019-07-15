@@ -350,13 +350,13 @@ foreach my $r (@renderers) {
                 print $fh qq{mmSetParamValue("::rnd::renderMode", "Simple")\n};
             }
             elsif ($r =~ /^SimpleGeoSphereRenderer/) {
-                print $fh qq{mmSetParamValue("::rnd::renderMode", "Simple_Geometry_Shader")\n};
+                print $fh qq{mmSetParamValue("::rnd::renderMode", "Geometry_Shader")\n};
             }
             elsif ($r =~ /^NGSphereRenderer/) {
-                print $fh qq{mmSetParamValue("::rnd::renderMode", "NG")\n};
+                print $fh qq{mmSetParamValue("::rnd::renderMode", "SSBO_Stream")\n};
             }
             elsif ($r =~ /^NGSphereBufferArray/) {
-                print $fh qq{mmSetParamValue("::rnd::renderMode", "NG_Buffer_Array")\n};
+                print $fh qq{mmSetParamValue("::rnd::renderMode", "Buffer_Array")\n};
             }
         }
         print $fh qq{mmCreateCall("MultiParticleDataCall", "::rnd::getdata", "::dat::getData")\n};

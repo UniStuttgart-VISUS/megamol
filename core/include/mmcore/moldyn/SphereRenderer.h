@@ -70,10 +70,10 @@
 #define SPHERE_MIN_GLSL_SIMPLE            (1.3f)
 #define SPHERE_MIN_OGL_SIMPLE             (GL_VERSION_1_4)
 #define SPHERE_MIN_OGL_SIMPLE_CLUSTERED   (GL_VERSION_1_4)
-#define SPHERE_MIN_OGL_SIMPLE_GEO         (GL_VERSION_3_2)
-#define SPHERE_MIN_OGL_NG                 (GL_VERSION_4_5) // required for glUnmapNamedBuffer
-#define SPHERE_MIN_OGL_NG_BUFFER_ARRAY    (GL_VERSION_4_5) // required for glMapNamedBufferRange
-#define SPHERE_MIN_OGL_NG_SPLAT           (GL_VERSION_4_5) // required for glMapNamedBufferRange
+#define SPHERE_MIN_OGL_GEOMETRY_SHADER    (GL_VERSION_3_2)
+#define SPHERE_MIN_OGL_SSBO_STREAM        (GL_VERSION_4_5) // required for glUnmapNamedBuffer
+#define SPHERE_MIN_OGL_BUFFER_ARRAY       (GL_VERSION_4_5) // required for glMapNamedBufferRange
+#define SPHERE_MIN_OGL_SPLAT              (GL_VERSION_4_5) // required for glMapNamedBufferRange
 #define SPHERE_MIN_OGL_AMBIENT_OCCLUSION  (GL_VERSION_4_5) // required for glMapNamedBufferRange
 
 
@@ -201,14 +201,14 @@ namespace moldyn {
         /* VARIABLES                                                         */
         /*********************************************************************/
 
-        enum RenderMode {              // Future names:      |
-            SIMPLE            = 0,     //                    | Sphere rendering using ...
-            SIMPLE_CLUSTERED  = 1,     //                    | Sphere rendering using clustered ...
-            SIMPLE_GEO        = 2,     // GEOMETRY_SHADER    | Sphere rendering using geometry shader.
-            NG                = 3,     // SSBO_STREAM        | Sphere rendering using shader storage buffer object stream.
-            NG_BUFFER_ARRAY   = 4,     //                    | Sphere rendering using array buffers.
-            NG_SPLAT          = 5,     // SPLAT              | Sphere rendering with splats.
-            AMBIENT_OCCLUSION = 6      // AMBIENT_OCCLUSION  | Sphere rendering with ambient occlusion
+        enum RenderMode {              
+            SIMPLE            = 0,     // Sphere rendering using ...
+            SIMPLE_CLUSTERED  = 1,     // Sphere rendering using clustered ...
+            GEOMETRY_SHADER   = 2,     // Sphere rendering using geometry shader.
+            SSBO_STREAM       = 3,     // Sphere rendering using shader storage buffer object stream.
+            BUFFER_ARRAY      = 4,     // Sphere rendering using array buffers.
+            SPLAT             = 5,     // Sphere rendering with splats.
+            AMBIENT_OCCLUSION = 6      // Sphere rendering with ambient occlusion
         };
 
         typedef std::map <std::tuple<int, int, bool>, std::shared_ptr<GLSLShader> > shaderMap;
@@ -272,12 +272,12 @@ namespace moldyn {
         GLuint                                   tfFallbackHandle;
         core::utility::MDAO2VolumeGenerator     *volGen;
 
-#if defined(SPHERE_MIN_OGL_NG_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_NG_SPLAT)
+#if defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
         GLuint                                   singleBufferCreationBits;
         GLuint                                   singleBufferMappingBits;
         std::vector<GLsync>                      fences;
 #endif
-#ifdef SPHERE_MIN_OGL_NG
+#ifdef SPHERE_MIN_OGL_SSBO_STREAM
         megamol::core::utility::SSBOStreamer     streamer;
         megamol::core::utility::SSBOStreamer     colStreamer;
         megamol::core::utility::SSBOBufferArray  bufArray;
@@ -431,7 +431,7 @@ namespace moldyn {
          */
         std::shared_ptr<GLSLShader> generateShader(MultiParticleDataCall::Particles &parts);
 
-#if defined(SPHERE_MIN_OGL_NG_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_NG_SPLAT)
+#if defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
         /**
          * Lock single.
          *
