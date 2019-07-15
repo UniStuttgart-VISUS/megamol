@@ -355,9 +355,9 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
 
     if (this->overrideCall != NULL) {
         if (cr3d != nullptr) {
-            RenderOutput* ro = dynamic_cast<RenderOutput*>(overrideCall);
+            RenderOutputOpenGL* ro = dynamic_cast<RenderOutputOpenGL*>(overrideCall);
             if (ro != nullptr) {
-                *static_cast<RenderOutput*>(cr3d) = *ro;
+                *static_cast<RenderOutputOpenGL*>(cr3d) = *ro;
             }
         }
         this->overrideCall->EnableOutputBuffer();

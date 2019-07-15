@@ -263,6 +263,8 @@ private:
     float mouseX;
 
     float mouseY;
+
+    bool dragSlider;
 };
 
 

@@ -96,6 +96,11 @@ namespace utility {
          */
         bool StateOk();
 
+        /**
+         * Answers the current project file path
+         */
+        std::string GetScriptPath(void);
+
         // ************************************************************
         // Lua interface routines, published to Lua as mm<name>
         // ************************************************************

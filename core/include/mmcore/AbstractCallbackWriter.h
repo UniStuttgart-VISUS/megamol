@@ -7,13 +7,13 @@
 #pragma once
 
 #include "mmcore/AbstractCallbackCall.h"
+#include "mmcore/AbstractWriterParams.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/job/AbstractTickJob.h"
-#include "mmcore/param/FilePathParam.h"
-#include "mmcore/param/ParamSlot.h"
+
+#include "vislib/sys/Log.h"
 
 #include <functional>
-#include <iostream>
 #include <string>
 #include <type_traits>
 
@@ -53,7 +53,7 @@ namespace core {
     * @author Alexander Straub
     */
     template <typename CallDescT, typename... ContentT>
-    class AbstractCallbackWriter : public job::AbstractTickJob {
+    class AbstractCallbackWriter : public job::AbstractTickJob, protected AbstractWriterParams {
 
     public:
         using FunctionT = std::function<bool(ContentT...)>;
@@ -65,14 +65,11 @@ namespace core {
         * Constructor
         */
         AbstractCallbackWriter() :
-            inputSlot("input", "Slot for providing a callback"),
-            filePathSlot("outputFile", "Path to file which should be written into") {
+            AbstractWriterParams(std::bind(&AbstractCallbackWriter::MakeSlotAvailable, this, std::placeholders::_1)),
+            inputSlot("input", "Slot for providing a callback") {
             
             this->inputSlot.SetCompatibleCall<CallDescT>();
             this->MakeSlotAvailable(&this->inputSlot);
-
-            this->filePathSlot << new param::FilePathParam("");
-            this->MakeSlotAvailable(&this->filePathSlot);
         }
 
         /**
@@ -132,14 +129,17 @@ namespace core {
         * @return 'true' on success, 'false' otherwise.
         */
         bool Write(ContentT... content) {
-            return write(static_cast<std::string>(this->filePathSlot.template Param<param::FilePathParam>()->Value()), content...);
+            const auto filename = AbstractWriterParams::getNextFilename();
+
+            if (filename.first) {
+                return write(filename.second, content...);
+            }
+
+            return false;
         }
 
         /** Input slot */
         CallerSlot inputSlot;
-
-        /** File path parameter */
-        param::ParamSlot filePathSlot;
     };
 
 }

@@ -31,7 +31,7 @@ namespace view {
 
 
     /**
-     * Module defining a piecewise linear transfer function based on the interval [0..1]
+     * Module defining a transfer function.
      */
     class MEGAMOLCORE_API TransferFunction : public Module {
     public:
@@ -68,7 +68,6 @@ namespace view {
 
         /** Dtor. */
         virtual ~TransferFunction(void);
-
 
     private:
 
@@ -139,6 +138,9 @@ namespace view {
 
         /** The interpolation mode */
         param::TransferFunctionParam::InterpolationMode interpolMode;
+
+        /** The value range */
+        std::array<float, 2> range;
 
 #ifdef _WIN32
 #pragma warning (default: 4251)

@@ -1,5 +1,5 @@
 /*
- * WidgetUtils.cpp
+ * PopUp.cpp
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
@@ -11,7 +11,9 @@
 #include <imgui_stdlib.h>
 #include <vector>
 
+
 using namespace megamol::gui;
+
 
 Popup::Popup(void) : tooltipTime(0.0f), tooltipId(-1) {
     // nothing to do here ...
