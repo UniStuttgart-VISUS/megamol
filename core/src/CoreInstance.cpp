@@ -1977,16 +1977,13 @@ void megamol::core::CoreInstance::LoadProject(const vislib::StringA& filename) {
                     png_init_io(png, fp);
                     png_read_info(png, info);
                     png_uint_32 exif_size;
-                    png_bytep exif_data;
+                    png_bytep exif_data = nullptr;
                     png_get_eXIf_1(png, info, &exif_size, &exif_data);
                     if (exif_size > 0) {
                         const vislib::StringA content(reinterpret_cast<char*>(exif_data));
-                        fclose(fp);
-                        png_destroy_read_struct(&png, &info, nullptr);
-                        // TODO: dispose exif_data buffer...?
                         std::string result;
-                        vislib::sys::Log::DefaultLog.WriteInfo(
-                            "Loaded project from png:\n%s", content.PeekBuffer());
+                        //vislib::sys::Log::DefaultLog.WriteInfo(
+                        //    "Loaded project from png:\n%s", content.PeekBuffer());
                         if (!this->lua->RunString(content.PeekBuffer(), result, filename.PeekBuffer())) {
                             vislib::sys::Log::DefaultLog.WriteError(vislib::sys::Log::LEVEL_INFO,
                                 "Failed loading project file \"%s\": %s", filename.PeekBuffer(), result.c_str());
@@ -1999,6 +1996,9 @@ void megamol::core::CoreInstance::LoadProject(const vislib::StringA& filename) {
                             "LoadProject: Unable to extract png exif data");
                     }
                 }
+                fclose(fp);
+                png_destroy_read_struct(&png, &info, nullptr);
+                // TODO: dispose exif_data buffer...?
             }
         }
     } else {
@@ -2054,15 +2054,12 @@ void megamol::core::CoreInstance::LoadProject(const vislib::StringW& filename) {
                     png_init_io(png, fp);
                     png_read_info(png, info);
                     png_uint_32 exif_size;
-                    png_bytep exif_data;
+                    png_bytep exif_data = nullptr;
                     png_get_eXIf_1(png, info, &exif_size, &exif_data);
                     if (exif_size > 0) {
                         const vislib::StringA content(reinterpret_cast<char*>(exif_data));
-                        fclose(fp);
-                        png_destroy_read_struct(&png, &info, nullptr);
-                        // TODO: dispose exif_data buffer...?
                         std::string result;
-                        vislib::sys::Log::DefaultLog.WriteInfo("Loaded project from png:\n%s", content.PeekBuffer());
+                        //vislib::sys::Log::DefaultLog.WriteInfo("Loaded project from png:\n%s", content.PeekBuffer());
                         if (!this->lua->RunString(content.PeekBuffer(), result, W2A(filename.PeekBuffer()))) {
                             vislib::sys::Log::DefaultLog.WriteError(vislib::sys::Log::LEVEL_INFO,
                                 "Failed loading project file \"%s\": %s", filename.PeekBuffer(), result.c_str());
@@ -2074,6 +2071,9 @@ void megamol::core::CoreInstance::LoadProject(const vislib::StringW& filename) {
                         vislib::sys::Log::DefaultLog.WriteError("LoadProject: Unable to extract png exif data");
                     }
                 }
+                fclose(fp);
+                png_destroy_read_struct(&png, &info, nullptr);
+                // TODO: dispose exif_data buffer...?
             }
         }
     } else {
