@@ -275,9 +275,10 @@ namespace megamol
                 {
                     // Get transfer function texture data
                     std::vector<GLfloat> texture_data;
+                    std::array<float, 2> _unused__texture_range;
 
                     core::param::TransferFunctionParam::TransferFunctionTexture(this->render_data.values->transfer_function,
-                        texture_data, this->render_data.tf_size);
+                        texture_data, this->render_data.tf_size, _unused__texture_range);
 
                     // Create transfer funtion texture
                     glActiveTexture(GL_TEXTURE0);
