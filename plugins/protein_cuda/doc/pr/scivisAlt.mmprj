@@ -28,14 +28,14 @@
 
 	
 	<!-- atoms w/o dipoles (mux 2) -->
-    <module class="SimpleSphereRenderer" name="sr" />
+    <module class="SphererRenderer" name="sr" />
     <call class="CallRender3D" from="mux::renderer2" to="sr::rendering" />
     <module class="LinearTransferFunction" name="stf" />
     <call class="CallGetTransferFunction" from="sr::gettransferfunction" to="stf::gettransferfunction" />
   </view>
   
 <view name="dipoleview" viewmod="view3d">
-    <module class="SimpleSphereRenderer" name="r" />
+    <module class="SphererRenderer" name="r" />
     <module class="View3D" name="v">
       <param name="backCol" value="dimgrey" />
     </module>

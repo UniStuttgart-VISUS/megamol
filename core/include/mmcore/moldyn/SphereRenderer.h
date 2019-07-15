@@ -5,8 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_SIMPLESPHERERENDERER_H_INCLUDED
-#define MEGAMOLCORE_SIMPLESPHERERENDERER_H_INCLUDED
+#ifndef MEGAMOLCORE_SPHERERENDERER_H_INCLUDED
+#define MEGAMOLCORE_SPHERERENDERER_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -29,6 +29,7 @@
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/utility/SSBOStreamer.h"
 #include "mmcore/utility/SSBOBufferArray.h"
+#include "mmcore/utility/KHR.h"
 
 #include "vislib/types.h"
 #include "vislib/assert.h"
@@ -525,4 +526,4 @@ namespace moldyn {
 } /* end namespace core */
 } /* end namespace megamol */
 
-#endif /* MEGAMOLCORE_SIMPLESPHERERENDERER_H_INCLUDED */
+#endif /* MEGAMOLCORE_SPHERERENDERER_H_INCLUDED */

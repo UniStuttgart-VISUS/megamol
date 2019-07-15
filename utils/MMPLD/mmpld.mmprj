@@ -3,8 +3,8 @@
 	<view name="mmpldview" viewmod="view">
 		<module class="MMPLDDataSource" name="data" confpos="{X=727,Y=141}" />
 		<module class="View3D" name="view" confpos="{X=84,Y=86}" />
-		<module class="SimpleSphereRenderer" name="SimpleSphereRenderer1" confpos="{X=396,Y=136}" />
-		<call class="MultiParticleDataCall" from="SimpleSphereRenderer1::getdata" to="data::getdata" />
-		<call class="CallRender3D" from="view::rendering" to="SimpleSphereRenderer1::rendering" />
+		<module class="SphererRenderer" name="SphererRenderer1" confpos="{X=396,Y=136}" />
+		<call class="MultiParticleDataCall" from="SphererRenderer1::getdata" to="data::getdata" />
+		<call class="CallRender3D" from="view::rendering" to="SphererRenderer1::rendering" />
 	</view>
 </MegaMol>

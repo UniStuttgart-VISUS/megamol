@@ -344,7 +344,7 @@ foreach my $r (@renderers) {
             print $fh qq{mmCreateCall("CallOSPRayMaterial", "::rnd::getMaterialSlot", "::mat::deployMaterialSlot")\n};
             print $fh qq{mmSetParamValue("::osp::useDBcomponent", "false")\n};
         } else {
-            print $fh qq{mmCreateModule("SimpleSphereRenderer", "::rnd")\n};
+            print $fh qq{mmCreateModule("SphereRenderer", "::rnd")\n};
             print $fh qq{mmCreateCall("CallRender3D", "::v::rendering", "::rnd::rendering")\n};
             if ($r =~ /^SimpleSphereRenderer/) {
                 print $fh qq{mmSetParamValue("::rnd::renderMode", "Simple")\n};

@@ -16,7 +16,7 @@
       <param name="ao::shadeMode" value="3" />
       <param name="ao::stepLen" value="0.5" />
     </module>
-    <!--<module class="SimpleSphereRenderer" name="r" />-->
+    <!--<module class="SphererRenderer" name="r" />-->
     <module class="View3D" name="v">
       <param name="backCol" value="dimgrey" />
 	 <param name="showBBox" value="OFF" />

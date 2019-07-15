@@ -11,7 +11,7 @@ Use this command line arguments to start MegaMol™
 		<!-- data -->
 		<module class="SIFFDataSource" name="data" />
 		<!-- renderer -->
-		<module class="SimpleSphereRenderer" name="renderer" />
+		<module class="SphereRenderer" name="renderer" />
 		<!-- view & setup -->
 		<module class="View3D" name="view" />
 		<module class="LinearTransferFunction" name="colors">

@@ -4,7 +4,7 @@
     <!-- view definition used for viewing and setting up -->
     <view name="imdview" viewmod="view">
         <module class="View3D" name="view" />
-        <module class="SimpleSphereRenderer" name="spheres" />
+        <module class="SphererRenderer" name="spheres" />
         <call class="CallRender3D" from="view::rendering" to="spheres::rendering" />
 
         <module class="IMDAtomData" name="data" />

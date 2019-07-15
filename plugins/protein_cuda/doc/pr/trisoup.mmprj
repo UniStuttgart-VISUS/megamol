@@ -15,7 +15,7 @@
 
     <view name="vimview" viewmod="view">
         <module class="View3D" name="view" />
-        <module class="SimpleSphereRenderer" name="spheres" />
+        <module class="SphererRenderer" name="spheres" />
         <call class="CallRender3D" from="view::rendering" to="spheres::rendering" />
         <module class="VIMDataSource" name="data" />
         <call class="MultiParticleDataCall" from="spheres::getdata" to="data::getdata" />
