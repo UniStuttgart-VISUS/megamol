@@ -100,6 +100,8 @@ private:
     
     core::param::ParamSlot lua_command_slot_;
 
+    core::param::ParamSlot deploy_project_slot_;
+
     FBOCommFabric comm_fabric_;
 
     mutable std::mutex send_buffer_guard_;
