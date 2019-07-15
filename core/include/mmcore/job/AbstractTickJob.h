@@ -15,7 +15,7 @@ namespace core {
 namespace job {
 
     /**
-    * Call for propagating a tick.
+    * Module for propagating a tick.
     *
     * @author Alexander Straub
     */

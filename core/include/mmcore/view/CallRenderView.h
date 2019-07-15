@@ -14,7 +14,7 @@
 #include "mmcore/api/MegaMolCore.h"
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/view/AbstractCallRender.h"
-#include "mmcore/view/RenderOutput.h" 
+#include "mmcore/view/RenderOutputOpenGL.h" 
 #include "mmcore/view/Input.h"
 #include "vislib/graphics/CameraParameters.h"
 #include "vislib/graphics/graphicstypes.h"
@@ -31,7 +31,7 @@ namespace view {
      * Call for rendering visual elements (from separate sources) into a single target, i.e.,
 	 * FBO-based compositing and cluster display.
      */
-    class MEGAMOLCORE_API CallRenderView : public AbstractCallRender, public RenderOutput {
+    class MEGAMOLCORE_API CallRenderView : public AbstractCallRender, public RenderOutputOpenGL {
     public:
 
         /**

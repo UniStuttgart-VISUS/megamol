@@ -5,7 +5,7 @@
 
 #include "mmstd_datatools/AbstractManipulator.h"
 
-#include "mmcore/moldyn/DirectionalParticleDataCall.h"
+#include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/param/StringParam.h"
 #include "vislib/StringTokeniser.h"
@@ -19,8 +19,7 @@ template <class T> class AbstractParticleBoxFilter : public AbstractManipulator<
 public:
     /** Return module class name */
     static constexpr const char* ClassName(void) {
-        return std::is_same<T, core::moldyn::DirectionalParticleDataCall>::value ? "DirParticleBoxFilter"
-                                                                                 : "ParticleBoxFilter";
+        return "ParticleBoxFilter";
     }
 
     /** Return module class description */
@@ -36,7 +35,6 @@ public:
     virtual ~AbstractParticleBoxFilter(void);
 
 protected:
-    static bool const isDirCall = std::is_same<T, core::moldyn::DirectionalParticleDataCall>::value;
 
     /**
      * Manipulates the particle data
@@ -136,7 +134,7 @@ template <class T> bool AbstractParticleBoxFilter<T>::manipulateData(T& outData,
         auto const idt = part.GetIDDataType();
         auto const vdt = part.GetVertexDataType();
         auto const cdt = part.GetColourDataType();
-        auto const ddt = getDirDataType(part, std::integral_constant<bool, isDirCall>());
+        auto const ddt = part.GetDirDataType();
 
         if (vdt == core::moldyn::SimpleSphericalParticles::VERTDATA_NONE) {
             vislib::sys::Log::DefaultLog.WriteError(
@@ -154,7 +152,7 @@ template <class T> bool AbstractParticleBoxFilter<T>::manipulateData(T& outData,
         auto const is = core::moldyn::SimpleSphericalParticles::IDDataSize[idt];
         auto const vs = core::moldyn::SimpleSphericalParticles::VertexDataSize[vdt];
         auto const cs = core::moldyn::SimpleSphericalParticles::ColorDataSize[cdt];
-        auto const ds = core::moldyn::DirectionalParticles::DirDataSize[ddt];
+        auto const ds = core::moldyn::SimpleSphericalParticles::DirDataSize[ddt];
 
         auto const& stride = 0 == part.GetVertexDataStride() ? vs : part.GetVertexDataStride();
 
@@ -196,16 +194,16 @@ template <class T> bool AbstractParticleBoxFilter<T>::manipulateData(T& outData,
             if (cdt != core::moldyn::SimpleSphericalParticles::COLDATA_NONE) {
                 part.SetColourData(cdt, cur_data_ptr + is + vs, stride);
             }
-            if (ddt != core::moldyn::DirectionalParticles::DIRDATA_NONE) {
-                setDirData(part, ddt, cur_data_ptr + is + vs + cs, stride, std::integral_constant<bool, isDirCall>());
+            if (ddt != core::moldyn::SimpleSphericalParticles::DIRDATA_NONE) {
+                part.SetDirData(ddt, cur_data_ptr + is + vs + cs, stride);
             }
         } else {
             part.SetVertexData(vdt, cur_data_ptr, stride);
             if (cdt != core::moldyn::SimpleSphericalParticles::COLDATA_NONE) {
                 part.SetColourData(cdt, cur_data_ptr + vs, stride);
             }
-            if (ddt != core::moldyn::DirectionalParticles::DIRDATA_NONE) {
-                setDirData(part, ddt, cur_data_ptr + vs + cs, stride, std::integral_constant<bool, isDirCall>());
+            if (ddt != core::moldyn::SimpleSphericalParticles::DIRDATA_NONE) {
+                part.SetDirData(ddt, cur_data_ptr + vs + cs, stride);
             }
             if (idt != core::moldyn::SimpleSphericalParticles::IDDATA_NONE) {
                 part.SetIDData(idt, cur_data_ptr + vs + cs + ds, stride);

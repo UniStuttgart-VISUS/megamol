@@ -9,7 +9,7 @@
 #define USE_MATH_DEFINES
 #include "DirPartVolume.h"
 #include "mmcore/CallVolumeData.h"
-#include "mmcore/moldyn/DirectionalParticleDataCall.h"
+#include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/FloatParam.h"
@@ -172,7 +172,7 @@ volume::DirPartVolume::DirPartVolume(void) : core::Module(),
         rebuildSlot("rebuild", "Force a rebuild of the volume"),
         dataHash(0), frameID(0), bbox(), data(NULL) {
 
-    this->inDataSlot.SetCompatibleCall<core::moldyn::DirectionalParticleDataCallDescription>();
+    this->inDataSlot.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->inDataSlot);
 
     this->outDataSlot.SetCallback("CallVolumeData", "GetData", &DirPartVolume::outData);
@@ -230,7 +230,7 @@ bool volume::DirPartVolume::outExtend(core::Call& caller) {
     if (cvd == NULL) return false;
 
     cvd->AccessBoundingBoxes().Clear();
-    core::moldyn::DirectionalParticleDataCall *dpd = this->inDataSlot.CallAs<core::moldyn::DirectionalParticleDataCall>();
+    core::moldyn::MultiParticleDataCall* dpd = this->inDataSlot.CallAs<core::moldyn::MultiParticleDataCall>();
     dpd->SetFrameID(cvd->FrameID(), cvd->IsFrameForced());
     if ((dpd == NULL) || (!(*dpd)(1))) {
         // no input data
@@ -268,7 +268,7 @@ bool volume::DirPartVolume::outData(core::Call& caller) {
     core::CallVolumeData *cvd = dynamic_cast<core::CallVolumeData*>(&caller);
     if (cvd == NULL) return false;
 
-    core::moldyn::DirectionalParticleDataCall *dpd = this->inDataSlot.CallAs<core::moldyn::DirectionalParticleDataCall>();
+    core::moldyn::MultiParticleDataCall* dpd = this->inDataSlot.CallAs<core::moldyn::MultiParticleDataCall>();
     if (dpd == NULL) return false;
     dpd->SetFrameID(cvd->FrameID(), cvd->IsFrameForced());
     if (!(*dpd)(0)) return false;
@@ -343,7 +343,7 @@ bool volume::DirPartVolume::outData(core::Call& caller) {
         UINT64 allPartCnt = 0;
 
         for (unsigned int pli = 0; pli < plCnt; pli++) {
-            core::moldyn::DirectionalParticleDataCall::Particles& parts = dpd->AccessParticles(pli);
+            core::moldyn::MultiParticleDataCall::Particles& parts = dpd->AccessParticles(pli);
             UINT64 partCnt = parts.GetCount();
             if (partCnt == 0) continue;
 
@@ -352,12 +352,12 @@ bool volume::DirPartVolume::outData(core::Call& caller) {
             unsigned int vertStp = parts.GetVertexDataStride();
 
             const unsigned char *dirPtr = static_cast<const unsigned char*>(parts.GetDirData());
-            core::moldyn::DirectionalParticles::DirDataType dirDT = parts.GetDirDataType();
+            core::moldyn::SimpleSphericalParticles::DirDataType dirDT = parts.GetDirDataType();
             unsigned int dirStp = parts.GetDirDataStride();
             if (dirStp < sizeof(float) * 3) dirStp = sizeof(float) * 3; // everything between 0 and this is stupid anyway
 
             if ((vertDT == core::moldyn::SimpleSphericalParticles::VERTDATA_NONE)
-                || (dirDT == core::moldyn::DirectionalParticles::DIRDATA_NONE)) continue;
+                || (dirDT == core::moldyn::SimpleSphericalParticles::DIRDATA_NONE)) continue;
 
             if (vertDT == core::moldyn::SimpleSphericalParticles::VERTDATA_SHORT_XYZ) continue; // I don't care for shorts
 
@@ -368,7 +368,7 @@ bool volume::DirPartVolume::outData(core::Call& caller) {
 
         UINT64 allPartIdx = 0;
         for (unsigned int pli = 0; pli < plCnt; pli++) {
-            core::moldyn::DirectionalParticleDataCall::Particles& parts = dpd->AccessParticles(pli);
+            core::moldyn::MultiParticleDataCall::Particles& parts = dpd->AccessParticles(pli);
             UINT64 partCnt = parts.GetCount();
             if (partCnt == 0) continue;
 
@@ -377,12 +377,13 @@ bool volume::DirPartVolume::outData(core::Call& caller) {
             unsigned int vertStp = parts.GetVertexDataStride();
 
             const unsigned char *dirPtr = static_cast<const unsigned char*>(parts.GetDirData());
-            core::moldyn::DirectionalParticles::DirDataType dirDT = parts.GetDirDataType();
+            core::moldyn::SimpleSphericalParticles::DirDataType dirDT = parts.GetDirDataType();
             unsigned int dirStp = parts.GetDirDataStride();
             if (dirStp < sizeof(float) * 3) dirStp = sizeof(float) * 3; // everything between 0 and this is stupid anyway
 
-            if ((vertDT == core::moldyn::SimpleSphericalParticles::VERTDATA_NONE)
-                || (dirDT == core::moldyn::DirectionalParticles::DIRDATA_NONE)) continue;
+            if ((vertDT == core::moldyn::SimpleSphericalParticles::VERTDATA_NONE) ||
+                (dirDT == core::moldyn::SimpleSphericalParticles::DIRDATA_NONE))
+                continue;
 
             if (vertDT == core::moldyn::SimpleSphericalParticles::VERTDATA_SHORT_XYZ) continue; // I don't care for shorts
 

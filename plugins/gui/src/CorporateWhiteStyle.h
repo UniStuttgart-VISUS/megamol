@@ -1,7 +1,14 @@
-#ifndef MEGAMOL_GUI_CORPORATEWHITE_H_INCLUDED
-#define MEGAMOL_GUI_CORPORATEWHITE_H_INCLUDED
+/*
+ * CorporateWhiteStyle.h
+ *
+ * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
+ * Alle Rechte vorbehalten.
+ */
+
+#pragma once
 
 #include <imgui.h>
+
 
 /**
  * A "CorporateWhite"-Style.
@@ -115,5 +122,3 @@ inline void CorporateWhiteStyle(int is3D = 0) {
     }
 #endif
 }
-
-#endif

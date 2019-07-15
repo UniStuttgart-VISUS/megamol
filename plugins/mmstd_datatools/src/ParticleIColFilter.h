@@ -21,6 +21,8 @@ namespace stdplugin {
 namespace datatools {
 
 
+    // TODO: make operators available: larger, smaller, between, epsilon-equal
+
     /**
      * Removes particles outside a specific interval for I color values
      */
