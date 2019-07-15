@@ -122,12 +122,12 @@ namespace megamol
             * Extract periodic orbits.
             *
             * @param grid Vector field
-            * @param critical_points Critical points
+            * @param input_critical_points Critical points
             * @param seed Seed of the stream line used to find the periodic orbit
             * @param sign Direction of integration
             */
             void extract_periodic_orbit(const tpf::data::grid<double, double, 2, 2>& grid,
-                const std::vector<std::pair<critical_points::type, Eigen::Vector2d>>& critical_points, const Eigen::Vector2d& seed, float sign);
+                const std::vector<std::pair<critical_points::type, Eigen::Vector2d>>& input_critical_points, const Eigen::Vector2d& seed, float sign);
 
             /**
             * Advect using the predefined method
@@ -169,7 +169,7 @@ namespace megamol
             * Find a turn, i.e., return a closed sequence of cell coordinates
             *
             * @param grid Vector field
-            * @param critical_points Critical points
+            * @param input_critical_points Critical points
             * @param position Original/Output position
             * @param integration_parameter Parameter for time step control
             * @param critical_point_detection Detect critical points
@@ -177,7 +177,7 @@ namespace megamol
             * @return List of coordinates, defining a turn
             */
             tpf::utility::optional<std::pair<std::list<coords_t>, std::list<kernel::Point_2>>> find_turn(const tpf::data::grid<double, double, 2, 2>& grid,
-                const std::vector<std::pair<critical_points::type, Eigen::Vector2d>>& critical_points, Eigen::Vector2d& position,
+                const std::vector<std::pair<critical_points::type, Eigen::Vector2d>>& input_critical_points, Eigen::Vector2d& position,
                 integration_parameter_t& integration_parameter, bool critical_point_detection) const;
 
             /**
@@ -329,7 +329,7 @@ namespace megamol
             tpf::data::grid<double, double, 2, 2> grid;
 
             /** Stored critical points */
-            std::vector<std::pair<critical_points::type, Eigen::Vector2d>> critical_points;
+            std::vector<std::pair<critical_points::type, Eigen::Vector2d>> input_critical_points;
 
             /** Mutex for synchronization */
             std::mutex lock;

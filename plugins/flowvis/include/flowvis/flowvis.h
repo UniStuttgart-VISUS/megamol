@@ -94,6 +94,6 @@ FLOWVIS_API void mmplgReleasePluginInstance(
 } /* extern "C" */
 #endif
 
-#endif FLOWVIS_EXPORTS
+#endif /* FLOWVIS_EXPORTS */
 
 #endif /* FLOWVIS_H_INCLUDED */

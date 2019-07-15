@@ -261,11 +261,11 @@ namespace megamol
                     this->orbit_cells.clear();
 
                     // Store critical points
-                    this->critical_points.reserve(critical_points_indices.size());
+                    this->input_critical_points.reserve(critical_points_indices.size());
 
                     for (auto index : critical_points_indices)
                     {
-                        this->critical_points.push_back(std::make_pair(static_cast<flowvis::critical_points::type>(static_cast<int>(critical_points_values[index])),
+                        this->input_critical_points.push_back(std::make_pair(static_cast<critical_points::type>(static_cast<int>(critical_points_values[index])),
                             Eigen::Vector2d(critical_points_vertices[index * 2 + 0], critical_points_vertices[index * 2 + 1])));
                     }
                 }
@@ -321,12 +321,12 @@ namespace megamol
 
                 if (direction == 0 || direction == 1)
                 {
-                    std::thread(&periodic_orbits::extract_periodic_orbit, this, this->grid, this->critical_points, seed, 1.0f).detach();
+                    std::thread(&periodic_orbits::extract_periodic_orbit, this, this->grid, this->input_critical_points, seed, 1.0f).detach();
                 }
 
                 if (direction == 0 || direction == 2)
                 {
-                    std::thread(&periodic_orbits::extract_periodic_orbit, this, this->grid, this->critical_points, seed, -1.0f).detach();
+                    std::thread(&periodic_orbits::extract_periodic_orbit, this, this->grid, this->input_critical_points, seed, -1.0f).detach();
                 }
             }
 
@@ -347,7 +347,7 @@ namespace megamol
                 {
                     this->get_output() << "# Critical points" << std::endl;
 
-                    for (const auto& critical_point : this->critical_points)
+                    for (const auto& critical_point : this->input_critical_points)
                     {
                         this->get_output() << critical_point.second[0] << "," << critical_point.second[1] << std::endl;
                     }
@@ -395,7 +395,7 @@ namespace megamol
         }
 
         void periodic_orbits::extract_periodic_orbit(const tpf::data::grid<double, double, 2, 2>& grid,
-            const std::vector<std::pair<flowvis::critical_points::type, Eigen::Vector2d>>& critical_points, const Eigen::Vector2d& seed, const float sign)
+            const std::vector<std::pair<critical_points::type, Eigen::Vector2d>>& input_critical_points, const Eigen::Vector2d& seed, const float sign)
         {
             try
             {
@@ -460,7 +460,7 @@ namespace megamol
                 while (has_exit && !this->terminate)
                 {
                     // Find turn
-                    const auto visited_cells = find_turn(grid, critical_points, position, integration, critical_point_detection);
+                    const auto visited_cells = find_turn(grid, input_critical_points, position, integration, critical_point_detection);
 
                     if (!this->terminate)
                     {
@@ -832,7 +832,7 @@ namespace megamol
 
         tpf::utility::optional<std::pair<std::list<periodic_orbits::coords_t>, std::list<periodic_orbits::kernel::Point_2>>>
             periodic_orbits::find_turn(const tpf::data::grid<double, double, 2, 2>& grid,
-                const std::vector<std::pair<flowvis::critical_points::type, Eigen::Vector2d>>& critical_points,
+                const std::vector<std::pair<critical_points::type, Eigen::Vector2d>>& input_critical_points,
                 Eigen::Vector2d& position, integration_parameter_t& integration_param, const bool critical_point_detection) const
         {
             // Initialize cell list
@@ -882,13 +882,13 @@ namespace megamol
 
                         if (critical_point_detection)
                         {
-                            for (const auto& point : critical_points)
+                            for (const auto& point : input_critical_points)
                             {
                                 const bool attracting =
-                                    (integration_param.sign < 0.0f && (point.first == flowvis::critical_points::type::REPELLING_FOCUS
-                                        || point.first == flowvis::critical_points::type::REPELLING_NODE)) ||
-                                        (integration_param.sign > 0.0f && (point.first == flowvis::critical_points::type::ATTRACTING_FOCUS
-                                            || point.first == flowvis::critical_points::type::ATTRACTING_NODE));
+                                    (integration_param.sign < 0.0f && (point.first == critical_points::type::REPELLING_FOCUS
+                                        || point.first == critical_points::type::REPELLING_NODE)) ||
+                                        (integration_param.sign > 0.0f && (point.first == critical_points::type::ATTRACTING_FOCUS
+                                            || point.first == critical_points::type::ATTRACTING_NODE));
 
                                 if (attracting && *grid.find_staggered_cell(point.second) == current_cell.first)
                                 {
