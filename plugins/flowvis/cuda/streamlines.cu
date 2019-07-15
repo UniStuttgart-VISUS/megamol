@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <float.h>
 #include <iostream>
 #include <memory>
 #include <sstream>
