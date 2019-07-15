@@ -4,14 +4,8 @@
  * Copyright (C) 2018 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
-#ifndef MEGAMOL_GUI_GUIVIEW_H_INCLUDED
-#define MEGAMOL_GUI_GUIVIEW_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
-#if defined(_WIN32) && defined(_MANAGED)
-#    pragma managed(push, off)
-#endif /* defined(_WIN32) && defined(_MANAGED) */
+
+#pragma once
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/AbstractView.h"
@@ -112,7 +106,6 @@ private:
 
     /** A parameter to store the profile */
     core::param::ParamSlot stateParam;
-    bool ignoreStateParamOnce;
 
     /** The ImGui context created and used by this GUIView */
     ImGuiContext* context;
@@ -145,6 +138,13 @@ private:
 
     /** Name of window to delete. */
     std::string windowToDelete;
+
+    /** Flag indicating that window state should be written to parameter. */
+    bool saveState;
+    float saveStateDelay;
+
+    /** WORKAROUND: Check multiple hotkey assignment once. */
+    bool checkHotkeysOnce;
 
     // FUNCTIONS --------------------------------------------------------------
 
@@ -228,6 +228,11 @@ private:
     bool considerModule(const std::string& modname, std::vector<std::string>& modules_list);
 
     /**
+     * Checks for multiple hotkey assignement.
+     */
+    void checkMultipleHotkeyAssignement(void);
+
+    /**
      * Shutdown megmol program.
      */
     void shutdown(void);
@@ -237,5 +242,3 @@ private:
 
 } // namespace gui
 } // namespace megamol
-
-#endif // MEGAMOL_GUI_GUIVIEW_H_INCLUDED
