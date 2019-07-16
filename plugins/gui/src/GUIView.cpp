@@ -6,17 +6,11 @@
  */
 
 /**
- * TODO:
- *
- * - Fix lost keyboard/mouse input for low frame rates
- * - The WindowManager should be managing window positions (or start using ImguiDock?)
- *
- * USED HOKEYS:
+ * USED HOTKEYS:
  *
  * - Show/hide Windows: Ctrl + F9-F12
  * - Reset windows:     Shift + (Window show/hide hotkeys)
  * - Quit program:      Esc, Alt + F4
- *
  */
 
 #include "stdafx.h"
