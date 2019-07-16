@@ -96,6 +96,21 @@ add_subdirectory(plugins)
 ###############################
 add_subdirectory(utils)
 
+###############################
+# Examples
+###############################
+option(EXAMPLES "Get the MegaMol example repository" ON)
+if(EXAMPLES)
+  if(NOT EXISTS "${CMAKE_SOURCE_DIR}/examples")
+    message(STATUS "Downloading examples")
+    execute_process(COMMAND
+      ${GIT_EXECUTABLE} clone https://github.com/UniStuttgart-VISUS/megamol-examples.git examples
+      WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+      ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE
+      )
+  endif()
+endif()
+
 # Check dependencies and throw error
 foreach(d ${DEP_LIST})
   string(REGEX REPLACE " +" ";" SINGLE_LIST "${d}")
