@@ -63,6 +63,7 @@ private:
     };
 
     bool getData(core::Call& call);
+    bool getSpecialData(core::Call& call);
     bool getExtent(core::Call& call);
 
     void calcMinMaxValues(const AstroDataCall& ast);
@@ -82,11 +83,13 @@ private:
     std::vector<glm::vec4> usedColors;
 
     core::CalleeSlot sphereDataSlot;
+    core::CalleeSlot sphereSpecialSlot;
     core::CallerSlot astroDataSlot;
     size_t lastDataHash;
     size_t hashOffset;
 	unsigned int lastFrame = 0;
     float valmin, valmax;
+    float densityMin, densityMax;
 };
 
 } // namespace astro
