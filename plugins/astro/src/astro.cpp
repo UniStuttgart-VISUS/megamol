@@ -14,6 +14,7 @@
 
 #include "astro/AstroDataCall.h"
 #include "AstroParticleConverter.h"
+#include "AstroSchulz.h"#
 #include "Contest2019DataLoader.h"
 #include "FilamentFilter.h"
 
@@ -54,6 +55,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::astro::Contest2019DataLoader>();
 			this->module_descriptions.RegisterAutoDescription<megamol::astro::AstroParticleConverter>();
             this->module_descriptions.RegisterAutoDescription<megamol::astro::FilamentFilter>();
+            this->module_descriptions.RegisterAutoDescription<megamol::astro::AstroSchulz>();
 
             // register calls here:
 
