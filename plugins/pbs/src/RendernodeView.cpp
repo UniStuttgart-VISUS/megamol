@@ -24,8 +24,8 @@
 #include "vislib/graphics/CameraParamsStore.h"
 #include "PNGWriter.h"
 #include <sstream>
-static std::vector<vislib::graphics::CameraParamsStore> cinemaCams;
-static unsigned index = 0;
+static std::vector<vislib::graphics::CameraParamsStore> _cinemaCams;
+static unsigned int _index = 0;
 #endif
 
 megamol::pbs::RendernodeView::RendernodeView()
@@ -236,10 +236,10 @@ void megamol::pbs::RendernodeView::Render(const mmcRenderViewContext& context) {
 #    ifdef CINEMA
         std::stringstream path;
         std::stringstream filename;
-        if (index > 0 && this->rank_ == bcast_rank_) {
+        if (_index > 0 && this->rank_ == bcast_rank_) {
 
 
-            filename << index << ".png";
+            filename << _index << ".png";
 
 #        ifndef _WIN32
             path << "/dev/shm/";
@@ -268,7 +268,7 @@ void megamol::pbs::RendernodeView::Render(const mmcRenderViewContext& context) {
 
         // Rank 0 calculates the camera positions and distributes them to all
         if (allFnameDirty) {
-            index = 0;
+            _index = 0;
             auto view = this->getConnectedView();
             core::CallerSlot* crSlot = dynamic_cast<core::CallerSlot*>(view->FindSlot("rendering"));
             if (crSlot == nullptr) return;
@@ -320,7 +320,7 @@ void megamol::pbs::RendernodeView::Render(const mmcRenderViewContext& context) {
                 };
             }
 
-            cinemaCams.resize(num_sections * num_angles);
+            _cinemaCams.resize(num_sections * num_angles);
 
             float radius_offset_cylinder = 5.0f;
             float radius_offset_spheres = 2.0f;
@@ -334,7 +334,7 @@ void megamol::pbs::RendernodeView::Render(const mmcRenderViewContext& context) {
 
                     la[n] = start[n];
                 }
-                cinemaCams[j].SetView(pos, la, {direction[0], direction[1], direction[2]});
+                _cinemaCams[j].SetView(pos, la, {direction[0], direction[1], direction[2]});
             }
 
 
@@ -348,7 +348,7 @@ void megamol::pbs::RendernodeView::Render(const mmcRenderViewContext& context) {
 
                         la[n] = start[n] + length_step_size * i * direction[n];
                     }
-                    cinemaCams[(i+1) * num_angles + j].SetView(pos, la, {direction[0], direction[1], direction[2]});
+                    _cinemaCams[(i+1) * num_angles + j].SetView(pos, la, {direction[0], direction[1], direction[2]});
                 }
             }
 
@@ -361,10 +361,10 @@ void megamol::pbs::RendernodeView::Render(const mmcRenderViewContext& context) {
 
                     la[n] = start[n] + box.LongestEdge() * direction[n];
                 }
-                cinemaCams[(num_sections - 1)*(num_angles) + j].SetView(pos, la, {direction[0], direction[1], direction[2]});
+                _cinemaCams[(num_sections - 1)*(num_angles) + j].SetView(pos, la, {direction[0], direction[1], direction[2]});
             }
 
-        } else if (!cinemaCams.empty()) {
+        } else if (!_cinemaCams.empty()) {
             auto view = this->getConnectedView();
             core::CallerSlot* crSlot = dynamic_cast<core::CallerSlot*>(view->FindSlot("rendering"));
             if (crSlot == nullptr) return;
@@ -373,10 +373,10 @@ void megamol::pbs::RendernodeView::Render(const mmcRenderViewContext& context) {
 
             //std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-            if (index < cinemaCams.size())  {
-                cr->SetCameraView(cinemaCams[index].Position(), cinemaCams[index].LookAt(), cinemaCams[index].Up());
-                index++;
-            } else if (index >= cinemaCams.size()) {
+            if (_index < _cinemaCams.size())  {
+                cr->SetCameraView(_cinemaCams[_index].Position(), _cinemaCams[_index].LookAt(), _cinemaCams[_index].Up());
+                _index++;
+            } else if (_index >= _cinemaCams.size()) {
                 vislib::sys::Log::DefaultLog.WriteInfo("RendernodeView: All screenshots taken. Shutting down.");
 #ifndef _WIN32
                 std::string scratch = std::string(vislib::sys::Environment::GetVariable("SCRATCH"));
