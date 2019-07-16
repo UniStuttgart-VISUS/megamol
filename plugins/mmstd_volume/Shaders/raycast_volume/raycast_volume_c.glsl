@@ -5,7 +5,7 @@
 /* matrix that transforms a set of coordinates from world space to volume texture space */
 uniform mat4 volume_model_mx;
 /* camera inverse view projection matrix */
-uniform mat4 camera_inv_view_proj_mx;
+//uniform mat4 camera_inv_view_proj_mx;
 
 uniform mat4 view_mx;
 uniform mat4 proj_mx;
@@ -96,11 +96,11 @@ void main() {
     Ray ray;
     // Unproject a point on the near plane and use as an origin.
     mat4 inv_view_proj_mx = inverse(proj_mx * view_mx);
-    vec4 unproj = camera_inv_view_proj_mx * vec4(clip_space_pixel_coords, -1.0f, 1.0f);
+    vec4 unproj = inv_view_proj_mx * vec4(clip_space_pixel_coords, -1.0f, 1.0f);
     ray.o = unproj.xyz / unproj.w;
     // Unproject a point at the same pixel, but further away from the near plane
     // to compute a ray direction in world space.
-    unproj = camera_inv_view_proj_mx * vec4(clip_space_pixel_coords, 0.0f, 1.0f);
+    unproj = inv_view_proj_mx * vec4(clip_space_pixel_coords, 0.0f, 1.0f);
     ray.d = normalize((unproj.xyz / unproj.w) - ray.o);
 
     // Just for safety.
@@ -108,7 +108,7 @@ void main() {
     float rayStep = voxelSize * rayStepRatio;
     vec3 box_range = boxMax - boxMin;
     float max_bbox_length = max(max(box_range.x, box_range.y), box_range.z);
-    int maxSteps = int((1.0f / rayStep) * 1.74f * 2.0f * max_bbox_length); // todo
+    //int maxSteps = int((1.0f / rayStep) * 1.74f * 2.0f * max_bbox_length); // todo
 
     // Generate a random value in [0, 1] range.
     // float randomTemp = sin(dot(vec2(pixel_coords.y * rt_resolution.x + pixel_coords.x), vec2(12.9898f, 78.233f))) *
@@ -125,11 +125,11 @@ void main() {
         vec4 result = vec4(0.0f);
         int steps = 0;
 
-        while (t < tfar && result.w < opacityThreshold && steps < maxSteps) {
+        while (t < tfar && result.w < opacityThreshold /*&& steps < maxSteps*/) {
             vec3 pos = ray.o + t * ray.d;
             // Compute volume tex coordinates in [0,1] range.
             vec3 texCoords = (pos - boxMin) / (boxMax - boxMin);
-            texCoords *= 1 - 2 * halfVoxelSize;
+            texCoords *= 1.0 - 2.0 * halfVoxelSize;
             texCoords += halfVoxelSize;
 
             vec4 vol_sample = texture(transfer_function_tx2D, vec2(texture(volume_tx3D, texCoords).x, 1));
@@ -141,15 +141,13 @@ void main() {
             // TF "Brightness". Make sure to not over-saturate the opacity.
             // (Which will lead to color oversaturation.)
             // vol_sample.w = min(vol_sample.w * cSeriesDesc.BrightnessPerSeries[series], 1.0f)
-            vol_sample.x *= vol_sample.w;
-            vol_sample.y *= vol_sample.w;
-            vol_sample.z *= vol_sample.w;
+            vol_sample.xyz *= vol_sample.w;
             // if (useLighting)
             //{
             //    vec3 gradient = fetchGradientEstimate(cVolumesToRender.List[series],
             //                                            cSeriesDesc.ComponentsPerSeries[series],
             //                                            cTfs.List[series],
-            texCoords,
+            // texCoords,
                 //                                            rayStep * 8.0f);
                 //    float3 normal = normalize(-gradient);
                 //    float3 lightDir = normalize(cLightDesc.Pos - pos);

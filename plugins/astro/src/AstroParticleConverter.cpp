@@ -20,6 +20,8 @@ using namespace megamol::core::moldyn;
 AstroParticleConverter::AstroParticleConverter(void)
     : Module()
     , sphereDataSlot("sphereData", "Output slot for the resulting sphere data")
+    , sphereSpecialSlot(
+          "formattedSphereData", "Output slot for the sphere data containing density and velocity informaton")
     , astroDataSlot("astroData", "Input slot for astronomical data")
     , colorModeSlot("colorMode", "Coloring mode for the output particles")
     , minColorSlot("minColor", "minimum color of the used range")
@@ -31,7 +33,9 @@ AstroParticleConverter::AstroParticleConverter(void)
     , lastDataHash(0)
     , hashOffset(0)
     , valmin(0.0f)
-    , valmax(1.0f) {
+    , valmax(1.0f)
+    , densityMin(0.0f)
+    , densityMax(0.0f) {
 
     this->astroDataSlot.SetCompatibleCall<AstroDataCallDescription>();
     this->MakeSlotAvailable(&this->astroDataSlot);
@@ -41,6 +45,12 @@ AstroParticleConverter::AstroParticleConverter(void)
     this->sphereDataSlot.SetCallback(
         MultiParticleDataCall::ClassName(), MultiParticleDataCall::FunctionName(1), &AstroParticleConverter::getExtent);
     this->MakeSlotAvailable(&this->sphereDataSlot);
+
+    this->sphereSpecialSlot.SetCallback(MultiParticleDataCall::ClassName(), MultiParticleDataCall::FunctionName(0),
+        &AstroParticleConverter::getSpecialData);
+    this->sphereSpecialSlot.SetCallback(
+        MultiParticleDataCall::ClassName(), MultiParticleDataCall::FunctionName(1), &AstroParticleConverter::getExtent);
+    this->MakeSlotAvailable(&this->sphereSpecialSlot);
 
     param::EnumParam* enu = new param::EnumParam(static_cast<int>(ColoringMode::MASS));
     enu->SetTypePair(static_cast<int>(ColoringMode::MASS), "Mass");
@@ -114,7 +124,7 @@ bool AstroParticleConverter::getData(Call& call) {
     if (ast == nullptr) return false;
 
     ast->SetFrameID(mpdc->FrameID(), mpdc->IsFrameForced());
-    //ast->SetUnlocker(nullptr, false);
+    // ast->SetUnlocker(nullptr, false);
 
     if ((*ast)(AstroDataCall::CallForGetData)) {
         bool freshMinMax = false;
@@ -143,12 +153,62 @@ bool AstroParticleConverter::getData(Call& call) {
             }
             p.SetColourData(MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA, this->usedColors.data());
             p.SetColourMapIndexValues(this->valmin, this->valmax);
+            p.SetDirData(SimpleSphericalParticles::DirDataType::DIRDATA_FLOAT_XYZ, ast->GetVelocities()->data());
         }
-        //ast->Unlock();
+        // ast->Unlock();
         return true;
     }
     ast->Unlock();
     return false;
+}
+
+/*
+ * AstroParticleConverter::getSpecialData
+ */
+bool AstroParticleConverter::getSpecialData(Call& call) {
+    MultiParticleDataCall* mpdc = dynamic_cast<MultiParticleDataCall*>(&call);
+    if (mpdc == nullptr) return false;
+
+    AstroDataCall* ast = this->astroDataSlot.CallAs<AstroDataCall>();
+    if (ast == nullptr) return false;
+
+    ast->SetFrameID(mpdc->FrameID(), mpdc->IsFrameForced());
+    // ast->SetUnlocker(nullptr, false);
+
+    if ((*ast)(AstroDataCall::CallForGetData)) {
+        bool freshMinMax = false;
+        if (this->lastDataHash != ast->DataHash() || this->colorModeSlot.IsDirty() ||
+            this->lastFrame != mpdc->FrameID()) {
+            this->lastFrame = mpdc->FrameID();
+            this->lastDataHash = ast->DataHash();
+            this->colorModeSlot.ResetDirty();
+            this->calcMinMaxValues(*ast);
+            freshMinMax = true;
+        }
+        auto particleCount = ast->GetParticleCount();
+        mpdc->SetDataHash(this->lastDataHash + this->hashOffset);
+        mpdc->SetParticleListCount(1);
+        MultiParticleDataCall::Particles& p = mpdc->AccessParticles(0);
+        p.SetCount(particleCount);
+        if (p.GetCount() > 0) {
+            p.SetVertexData(MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ, ast->GetPositions()->data());
+            if (freshMinMax || this->minColorSlot.IsDirty() || this->midColorSlot.IsDirty() ||
+                this->maxColorSlot.IsDirty() || this->useMidColorSlot.IsDirty()) {
+                this->calcColorTable(*ast);
+                this->minColorSlot.ResetDirty();
+                this->midColorSlot.ResetDirty();
+                this->maxColorSlot.ResetDirty();
+                this->useMidColorSlot.ResetDirty();
+            }
+            p.SetColourData(MultiParticleDataCall::Particles::COLDATA_FLOAT_I, ast->GetDensity()->data());
+            p.SetColourMapIndexValues(this->densityMin, this->densityMax);
+            p.SetDirData(SimpleSphericalParticles::DirDataType::DIRDATA_FLOAT_XYZ, ast->GetVelocities()->data());
+        }
+        // ast->Unlock();
+        return true;
+    }
+    ast->Unlock();
+    return true;
 }
 
 /*
@@ -164,6 +224,11 @@ bool AstroParticleConverter::getExtent(Call& call) {
     ast->SetUnlocker(nullptr, false);
     if ((*ast)(AstroDataCall::CallForGetExtent)) {
         mpdc->SetFrameCount(ast->FrameCount());
+        if (this->colorModeSlot.IsDirty() || this->minColorSlot.IsDirty() || this->midColorSlot.IsDirty() ||
+            this->maxColorSlot.IsDirty() || this->useMidColorSlot.IsDirty()) {
+            this->hashOffset++;
+        }
+        mpdc->SetDataHash(ast->DataHash() + this->hashOffset);
         mpdc->AccessBoundingBoxes() = ast->AccessBoundingBoxes();
         ast->Unlock();
         return true;
@@ -225,6 +290,9 @@ void AstroParticleConverter::calcMinMaxValues(const AstroDataCall& ast) {
     }
     this->minValueSlot.Param<param::FloatParam>()->SetValue(this->valmin);
     this->maxValueSlot.Param<param::FloatParam>()->SetValue(this->valmax);
+
+    this->densityMin = *std::min_element(ast.GetDensity()->begin(), ast.GetDensity()->end());
+    this->densityMax = *std::max_element(ast.GetDensity()->begin(), ast.GetDensity()->end());
 }
 
 /*
