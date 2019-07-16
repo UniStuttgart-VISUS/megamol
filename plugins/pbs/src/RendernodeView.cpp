@@ -14,11 +14,13 @@
 #include "vislib/RawStorageSerialiser.h"
 #include "vislib/sys/Log.h"
 #include "vislib/sys/SystemInformation.h"
+#include "vislib/sys/Environment.h"
 
 //#define RV_DEBUG_OUTPUT = 1
 #define CINEMA = 1
 
 #ifdef CINEMA
+#include <filesystem>
 #include "mmcore/view/CallRender3D.h"
 #include "vislib/graphics/CameraParamsStore.h"
 #include "PNGWriter.h"
@@ -233,10 +235,21 @@ void megamol::pbs::RendernodeView::Render(const mmcRenderViewContext& context) {
         }
 
 #    ifdef CINEMA
-
+        std::stringstream path;
+        std::stringstream filename;
         if (index > 0 && this->rank_ == bcast_rank_) {
-            std::stringstream filename;
-            filename << "test_" << this->rank_ << "_" << index << ".png";
+
+
+            filename << index << ".png";
+
+#        ifndef _WIN32
+            path << "/dev/shm/";
+            // get job number
+            std::string jobID = std::string(vislib::sys::Environment::GetVariable("SLURM_JOB_ID"));
+            if (jobID.empty()) jobID = "test";
+            path << jobID << "/";
+#        endif
+
 
             // read FBO
             std::vector<char> col_buf(crv->ViewportWidth() * crv->ViewportHeight() * 3);
@@ -244,7 +257,7 @@ void megamol::pbs::RendernodeView::Render(const mmcRenderViewContext& context) {
 
             try {
                 PNGWriter png_writer;
-                png_writer.setup(filename.str().c_str());
+                png_writer.setup((path.str()+filename.str()).c_str());
                 png_writer.set_buffer(
                     reinterpret_cast<BYTE*>(col_buf.data()), crv->ViewportWidth(), crv->ViewportHeight(), 3);
                 png_writer.render2file();
@@ -282,8 +295,8 @@ void megamol::pbs::RendernodeView::Render(const mmcRenderViewContext& context) {
             //= []() { print_num(42); }
             if (max_dim == 0) { // x
                 radius = std::sqrt(std::pow(box.Height(), 2) + std::pow(box.Depth(), 2))/2;
-                start = {box.GetLeft(), box.GetBottom() + box.Height() / 2, box.GetFront() + box.Depth() / 2};
-                direction = {-1, 0, 0};
+                start = {box.GetLeft(), box.GetBottom() + box.Height() / 2, box.GetFront() - box.Depth() / 2};
+                direction = {1, 0, 0};
 
                 parametrization = [](float r, float angle) {
                     return std::array<float, 3>{0, r * cos(angle), r * sin(angle)};
@@ -291,8 +304,8 @@ void megamol::pbs::RendernodeView::Render(const mmcRenderViewContext& context) {
 
             } else if (max_dim == 1) { // y
                 radius = std::sqrt(std::pow(box.Width(), 2) + std::pow(box.Depth(), 2))/2;
-                start = {box.GetLeft() + box.Width()/2, box.GetBottom(), box.GetFront() + box.Depth() / 2};
-                direction = {0, -1, 0};
+                start = {box.GetLeft() + box.Width()/2, box.GetBottom(), box.GetFront() - box.Depth() / 2};
+                direction = {0, 1, 0};
 
                 parametrization = [](float r, float angle) {
                     return std::array<float, 3>{r * cos(angle), 0, r * sin(angle)};
@@ -301,7 +314,7 @@ void megamol::pbs::RendernodeView::Render(const mmcRenderViewContext& context) {
                 radius = std::sqrt(std::pow(box.Height(), 2) + std::pow(box.Width(), 2)) / 2;
                 start = {box.GetLeft() + box.Width() / 2, box.GetBottom() + box.Height() / 2,
                     box.GetFront()};
-                direction = {0, 0, -1};
+                direction = {0, 0, 1};
 
                 parametrization = [](float r, float angle) {
                     return std::array<float, 3>{r * cos(angle), r * sin(angle), 0};
@@ -364,9 +377,17 @@ void megamol::pbs::RendernodeView::Render(const mmcRenderViewContext& context) {
             if (index < cinemaCams.size())  {
                 cr->SetCameraView(cinemaCams[index].Position(), cinemaCams[index].LookAt(), cinemaCams[index].Up());
                 index++;
+            } else if (index >= cinemaCams.size()) {
+                vislib::sys::Log::DefaultLog.WriteInfo("RendernodeView: All screenshots taken. Shutting down.");
+#ifndef _WIN32
+                std::string scratch = std::string(vislib::sys::Environment::GetVariable("SCRATCH"));
+                std::filesystem::rename(path.str(), scratch);
+#endif
+                this->GetCoreInstance()->Shutdown();
+                return;
             }
         }
-#    endif
+#    endif // CINEMA
 
 
         glFinish();
