@@ -208,44 +208,7 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
             vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: IceT - ImageGet Done\n");
 #    endif
             if (this->render_comp_img_slot_.Param<core::param::BoolParam>()->Value()) {
-
-                if (this->fbo == nullptr) {
-                    vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: No framebuffer object available\n");
-                    return;
-                }
-                if (fbo->IsValid()) {
-                    if ((fbo->GetWidth() != tile_width) || (fbo->GetHeight() != tile_height)) {
-                        fbo->Release();
-                    }
-                }
-                if (!fbo->IsValid()) {
-                    fbo->Create(tile_width, tile_height, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE,
-                        vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE, GL_DEPTH_COMPONENT);
-                }
-                if (fbo->IsValid() && !fbo->IsEnabled()) {
-                    fbo->Enable();
-                }
-
-                fbo->BindColourTexture();
-                glClear(GL_COLOR_BUFFER_BIT);
-                glTexImage2D(
-                    GL_TEXTURE_2D, 0, GL_RGBA, tile_width, tile_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, icet_col_buf);
-                glBindTexture(GL_TEXTURE_2D, 0);
-
-                fbo->BindDepthTexture();
-                glClear(GL_DEPTH_BUFFER_BIT);
-                glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, tile_width, tile_height, 0, GL_DEPTH_COMPONENT,
-                    GL_FLOAT, icet_depth_buf);
-                glBindTexture(GL_TEXTURE_2D, 0);
-
-                glBlitNamedFramebuffer(this->fbo->GetID(), 0, 0, 0, width, height, 0, 0, width, height,
-                    GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT, GL_NEAREST);
-
-                if (fbo->IsValid()) {
-                    fbo->Disable();
-                    // fbo->DrawColourTexture();
-                    // fbo->DrawDepthTexture();
-                }
+                glDrawPixels(tile_width, tile_height, GL_RGBA, GL_UNSIGNED_BYTE, icet_col_buf);
             }
         }
     }
