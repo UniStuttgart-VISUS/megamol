@@ -224,6 +224,11 @@ bool AstroParticleConverter::getExtent(Call& call) {
     ast->SetUnlocker(nullptr, false);
     if ((*ast)(AstroDataCall::CallForGetExtent)) {
         mpdc->SetFrameCount(ast->FrameCount());
+        if (this->colorModeSlot.IsDirty() || this->minColorSlot.IsDirty() || this->midColorSlot.IsDirty() ||
+            this->maxColorSlot.IsDirty() || this->useMidColorSlot.IsDirty()) {
+            this->hashOffset++;
+        }
+        mpdc->SetDataHash(ast->DataHash() + this->hashOffset);
         mpdc->AccessBoundingBoxes() = ast->AccessBoundingBoxes();
         ast->Unlock();
         return true;
