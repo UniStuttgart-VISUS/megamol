@@ -20,7 +20,6 @@
 #define CINEMA = 1
 
 #ifdef CINEMA
-#include <filesystem>
 #include "mmcore/view/CallRender3D.h"
 #include "vislib/graphics/CameraParamsStore.h"
 #include "PNGWriter.h"
@@ -381,7 +380,7 @@ void megamol::pbs::RendernodeView::Render(const mmcRenderViewContext& context) {
                 vislib::sys::Log::DefaultLog.WriteInfo("RendernodeView: All screenshots taken. Shutting down.");
 #ifndef _WIN32
                 std::string scratch = std::string(vislib::sys::Environment::GetVariable("SCRATCH"));
-                std::filesystem::rename(path.str(), scratch);
+                vislib::sys::File::Rename(path.str(), scratch);
 #endif
                 this->GetCoreInstance()->Shutdown();
                 return;
