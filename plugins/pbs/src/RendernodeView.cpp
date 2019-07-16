@@ -380,7 +380,7 @@ void megamol::pbs::RendernodeView::Render(const mmcRenderViewContext& context) {
                 vislib::sys::Log::DefaultLog.WriteInfo("RendernodeView: All screenshots taken. Shutting down.");
 #ifndef _WIN32
                 std::string scratch = std::string(vislib::sys::Environment::GetVariable("SCRATCH"));
-                vislib::sys::File::Rename(path.str(), scratch);
+                vislib::sys::File::Rename(path.str().c_str(), scratch.c_str());
 #endif
                 this->GetCoreInstance()->Shutdown();
                 return;
