@@ -202,7 +202,7 @@ if(BUILD_CORE)
 
   # add libunwind
   if(UNIX)
-    option(USE_LIBUNWIND "use libunwind" ON)
+    option(USE_LIBUNWIND "use libunwind" OFF)
     if(USE_LIBUNWIND)
       find_package(LIBUNWIND REQUIRED)
       message(STATUS ${LIBUNWIND_LIBRARIES})
