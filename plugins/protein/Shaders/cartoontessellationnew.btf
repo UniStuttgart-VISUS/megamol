@@ -453,9 +453,6 @@ uniform vec4 viewAttr;
 
 uniform vec4 lightPos;
 uniform vec4 phong = vec4(0.4, 0.8, 0.4, 10.0);
-uniform vec4 diffuseColor = vec4(1);
-uniform vec4 ambientColor = vec4(1); 
-uniform vec4 specularColor = vec4(1);
 
 in vec4 mycol;
 in vec3 normal;
