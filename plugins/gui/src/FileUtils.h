@@ -97,7 +97,7 @@ inline std::string SearchFileRecursive(std::string file, PathType searchPath) {
 inline bool SaveProjectFile(std::string projectFilename, megamol::core::CoreInstance* coreInstance) {
 
     if (coreInstance == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError("[SaveProjectFile] CoreInstance is nullptr.");
+        vislib::sys::Log::DefaultLog.WriteError("[SaveProjectFile] Pointer to CoreInstance is nullptr.");
         return false;
     }
     std::string serInstances, serModules, serCalls, serParams;

@@ -402,7 +402,7 @@ public:
     void LoadProject(const vislib::StringW& filename);
 
     /**
-     * Serializes the current graph into lua.
+     * Serializes the current graph into lua commands.
      *
      * @param serInstances The serialized instances.
      * @param serModules   The serialized modules.
