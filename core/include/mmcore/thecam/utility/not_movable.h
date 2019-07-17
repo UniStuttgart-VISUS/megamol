@@ -31,10 +31,10 @@
 #ifndef THE_NOT_MOVABLE_H_INCLUDED
 #define THE_NOT_MOVABLE_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#pragma once
+#    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
-#pragma managed(push, off)
+#    pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 #include "mmcore/thecam/utility/config.h"
@@ -45,50 +45,45 @@ namespace core {
 namespace thecam {
 namespace utility {
 
+/**
+ * Super class for all classes which do not support move semantics.
+ *
+ * Please note that, according to the standard, the existence of a
+ * destructor already prevents the implicit generation of move constructors.
+ */
+class not_movable {
+
+public:
+    /** Dtor. */
+    virtual ~not_movable(void);
+
+protected:
     /**
-     * Super class for all classes which do not support move semantics.
-     *
-     * Please note that, according to the standard, the existence of a
-     * destructor already prevents the implicit generation of move constructors.
+     * Initialises a new instance.
      */
-    class not_movable {
+    inline not_movable(void) {}
 
-    public:
+private:
+    /**
+     * Forbidden move ctor.
+     *
+     * @param rhs The object to be moved.
+     *
+     * @throws megamol::core::thecam::not_supported_exception Unconditionally.
+     */
+    not_movable(not_movable&& rhs);
 
-        /** Dtor. */
-        virtual ~not_movable(void);
-
-    protected:
-
-        /**
-         * Initialises a new instance.
-         */
-        inline not_movable(void) {
-        }
-
-    private:
-
-        /**
-         * Forbidden move ctor.
-         *
-         * @param rhs The object to be moved.
-         *
-         * @throws megamol::core::thecam::not_supported_exception Unconditionally.
-         */
-        not_movable(not_movable&& rhs);
-
-        /**
-         * Forbidden move operator.
-         *
-         * @param rhs The right hand side operand.
-         *
-         * @return *this.
-         *
-         * @throws megamol::core::thecam::argument_exception If 'rhs' is not *this.
-         */
-        not_movable& operator =(not_movable&& rhs);
-
-    };
+    /**
+     * Forbidden move operator.
+     *
+     * @param rhs The right hand side operand.
+     *
+     * @return *this.
+     *
+     * @throws megamol::core::thecam::argument_exception If 'rhs' is not *this.
+     */
+    not_movable& operator=(not_movable&& rhs);
+};
 
 } /* end namespace utility*/
 } /* end namespace thecam */
@@ -96,6 +91,6 @@ namespace utility {
 } /* end namespace megamol */
 
 #if defined(_WIN32) && defined(_MANAGED)
-#pragma managed(pop)
+#    pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* THE_NOT_MOVABLE_H_INCLUDED */

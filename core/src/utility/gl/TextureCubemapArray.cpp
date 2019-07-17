@@ -1,7 +1,7 @@
 /*
  * TextureCubemapArray.cpp
  *
- * Copyright (C) 2018 by Universitaet Stuttgart (VISUS). 
+ * Copyright (C) 2018 by Universitaet Stuttgart (VISUS).
  * Alle Rechte vorbehalten.
  */
 #include "stdafx.h"

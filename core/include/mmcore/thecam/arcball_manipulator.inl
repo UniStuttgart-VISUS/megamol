@@ -28,82 +28,6 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-#if 0
-https://www.gamedev.net/articles/programming/math-and-physics/a-simple-quaternion-based-camera-r1997/
-
-/*
-* Operator::on_mouse_down
-*/
-void Operator::on_mouse_down(const int button) throw() {
-    POINT cursorPos;
-    if (::GetCursorPos(&cursorPos)) {
-        this->isLeftMouseDown = (button == 0);
-        this->arcBallStart = this->MapToSphere(cursorPos.x, cursorPos.y);
-    }
-}
-
-
-/*
-* Operator::on_mouse_move
-*/
-void Operator::on_mouse_move(const position_type x,
-    const position_type y) throw() {
-
-    if (this->isLeftMouseDown) {
-        this->arcBallCurrent = this->MapToSphere(x, y);
-
-        auto dp = DirectX::XMVectorGetX(DirectX::XMVector3Dot(
-            this->arcBallStart, this->arcBallCurrent));
-        auto cp = DirectX::XMVector3Cross(this->arcBallStart,
-            this->arcBallCurrent);
-        auto axis = DirectX::XMVectorSet(DirectX::XMVectorGetX(cp),
-            DirectX::XMVectorGetY(cp), DirectX::XMVectorGetZ(cp), 1.0f);
-        auto quat = DirectX::XMQuaternionRotationNormal(axis, dp);
-
-        auto view = DirectX::XMVectorSubtract(this->camLookAt, this->camPos);
-        auto invView = DirectX::XMVectorScale(view, -1.0f);
-
-        this->camUp = DirectX::XMVector3InverseRotate(this->camUp, quat);
-        invView = DirectX::XMVector3InverseRotate(invView, quat);
-        this->camPos = DirectX::XMVectorAdd(this->camLookAt, invView);
-
-        // TODO: ultra fishy! Fix socket accessor in dispatcher?
-        if (this->dispatcher.running()) {
-            megamol::core::thecam::system::net::simple_message msg(
-                CameraConfigurationDesc::BodySize);
-            msg.set_id(CameraConfigurationDesc::ID);
-            auto body = msg.body<CameraConfigurationDesc::Body>();
-
-            megamol::core::thecam::zero_memory(body, msg.body_size());
-            body->CameraPosition[0] = DirectX::XMVectorGetX(this->camPos);
-            body->CameraPosition[1] = DirectX::XMVectorGetY(this->camPos);
-            body->CameraPosition[2] = DirectX::XMVectorGetZ(this->camPos);
-            body->FieldOfViewY = this->fovy;
-            body->LookAtPosition[0] = DirectX::XMVectorGetX(this->camLookAt);
-            body->LookAtPosition[1] = DirectX::XMVectorGetY(this->camLookAt);
-            body->LookAtPosition[2] = DirectX::XMVectorGetZ(this->camLookAt);
-            body->UpVector[0] = DirectX::XMVectorGetX(this->camUp);
-            body->UpVector[1] = DirectX::XMVectorGetY(this->camUp);
-            body->UpVector[2] = DirectX::XMVectorGetZ(this->camUp);
-
-            this->dispatcher.send(msg, msg.size());
-        }
-    }
-}
-
-/*
-* Operator::on_mouse_up
-*/
-void Operator::on_mouse_up(const int button) throw() {
-    if (button == 0) {
-        this->isLeftMouseDown = false;
-    }
-}
-
-#endif
-
-
 /*
  * megamol::core::thecam::arcball_manipulator<T>::arcball_manipulator
  */
@@ -135,7 +59,8 @@ void megamol::core::thecam::arcball_manipulator<T>::on_drag(const screen_type x,
             thecam::math::set_from_vectors(quat, startVector, currentVector);
 
             auto const qstar = this->startRot * quat;
-            auto pos = thecam::math::rotate(this->startPos - this->rotCentre, qstar * this->invStartRot) + this->rotCentre;
+            auto pos =
+                thecam::math::rotate(this->startPos - this->rotCentre, qstar * this->invStartRot) + this->rotCentre;
             cam->position(pos);
             cam->orientation(qstar);
 

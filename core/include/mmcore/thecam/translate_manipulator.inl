@@ -32,24 +32,21 @@
 /*
  * megamol::core::thecam::translate_manipulator<T>::translate_manipulator
  */
-template<class T>
-megamol::core::thecam::translate_manipulator<T>::translate_manipulator(
-    const world_type stepSize) : stepSize(stepSize) { }
+template <class T>
+megamol::core::thecam::translate_manipulator<T>::translate_manipulator(const world_type stepSize)
+    : stepSize(stepSize) {}
 
 
 /*
  * megamol::core::thecam::translate_manipulator<T>::~translate_manipulator
  */
-template<class T>
-megamol::core::thecam::translate_manipulator<T>::~translate_manipulator(void) { }
+template <class T> megamol::core::thecam::translate_manipulator<T>::~translate_manipulator(void) {}
 
 
 /*
  *  megamol::core::thecam::translate_manipulator<T>::move_forward
  */
-template<class T>
-void megamol::core::thecam::translate_manipulator<T>::move_forward(
-        const world_type dist) {
+template <class T> void megamol::core::thecam::translate_manipulator<T>::move_forward(const world_type dist) {
     if (this->enabled()) {
         auto cam = this->camera();
         auto pos = cam->position();
@@ -63,9 +60,7 @@ void megamol::core::thecam::translate_manipulator<T>::move_forward(
 /*
  * megamol::core::thecam::translate_manipulator<T>::move_horizontally
  */
-template<class T>
-void megamol::core::thecam::translate_manipulator<T>::move_horizontally(
-        const world_type dist) {
+template <class T> void megamol::core::thecam::translate_manipulator<T>::move_horizontally(const world_type dist) {
     if (this->enabled()) {
         auto cam = this->camera();
         auto pos = cam->position();
@@ -79,9 +74,7 @@ void megamol::core::thecam::translate_manipulator<T>::move_horizontally(
 /*
  * megamol::core::thecam::translate_manipulator<T>::move_vertically
  */
-template<class T>
-void megamol::core::thecam::translate_manipulator<T>::move_vertically(
-        const world_type dist) {
+template <class T> void megamol::core::thecam::translate_manipulator<T>::move_vertically(const world_type dist) {
     if (this->enabled()) {
         auto cam = this->camera();
         auto pos = cam->position();

@@ -29,40 +29,34 @@
  */
 
 
-
 /*
  * megamol::core::thecam::math::rectangle<V, T>::from_bottom_left
  */
-template<class V, class T>
-template<class P, class S>
+template <class V, class T>
+template <class P, class S>
 megamol::core::thecam::math::rectangle<V, T> megamol::core::thecam::math::rectangle<V, T>::from_bottom_left(
-        const P& point, const S& size) {
-    return rectangle::from_bottom_left(static_cast<value_type>(point.x()),
-        static_cast<value_type>(point.y()),
-        static_cast<value_type>(size.width()),
-        static_cast<value_type>(size.height()));
+    const P& point, const S& size) {
+    return rectangle::from_bottom_left(static_cast<value_type>(point.x()), static_cast<value_type>(point.y()),
+        static_cast<value_type>(size.width()), static_cast<value_type>(size.height()));
 }
 
 
 /*
  * megamol::core::thecam::math::rectangle<V, T>::from_top_left
  */
-template<class V, class T>
-template<class P, class S>
+template <class V, class T>
+template <class P, class S>
 megamol::core::thecam::math::rectangle<V, T> megamol::core::thecam::math::rectangle<V, T>::from_top_left(
-        const P& point, const S& size) {
-    return rectangle::from_top_left(static_cast<value_type>(point.x()),
-        static_cast<value_type>(point.y()),
-        static_cast<value_type>(size.width()),
-        static_cast<value_type>(size.height()));
+    const P& point, const S& size) {
+    return rectangle::from_top_left(static_cast<value_type>(point.x()), static_cast<value_type>(point.y()),
+        static_cast<value_type>(size.width()), static_cast<value_type>(size.height()));
 }
 
 
 /*
  * megamol::core::thecam::math::rectangle<V, T>::rectangle
  */
-template<class V, class T>
-megamol::core::thecam::math::rectangle<V, T>::rectangle(void) {
+template <class V, class T> megamol::core::thecam::math::rectangle<V, T>::rectangle(void) {
     const auto ZERO = static_cast<value_type>(0);
     traits_type::assign(this->data, ZERO, ZERO, ZERO, ZERO);
 }
@@ -71,7 +65,7 @@ megamol::core::thecam::math::rectangle<V, T>::rectangle(void) {
 /*
  * megamol::core::thecam::math::rectangle<V, T>::rectangle
  */
-template<class V, class T>
+template <class V, class T>
 megamol::core::thecam::math::rectangle<V, T>::rectangle(std::initializer_list<value_type> il) {
     size_type i = 0;
     auto it = il.begin();
@@ -88,47 +82,41 @@ megamol::core::thecam::math::rectangle<V, T>::rectangle(std::initializer_list<va
 /*
  * megamol::core::thecam::math::rectangle<V, T>::empty
  */
-template<class V, class T>
-bool megamol::core::thecam::math::rectangle<V, T>::empty(void) const {
-    return ((this->left() == static_cast<value_type>(0))
-        && (this->top() == static_cast<value_type>(0))
-        && (this->right() == static_cast<value_type>(0))
-        && (this->bottom() == static_cast<value_type>(0)));
+template <class V, class T> bool megamol::core::thecam::math::rectangle<V, T>::empty(void) const {
+    return ((this->left() == static_cast<value_type>(0)) && (this->top() == static_cast<value_type>(0)) &&
+            (this->right() == static_cast<value_type>(0)) && (this->bottom() == static_cast<value_type>(0)));
 }
 
 
 /*
  * megamol::core::thecam::math::rectangle<V, T>::empty
  */
-template<class V, class T>
-bool megamol::core::thecam::math::rectangle<V, T>::empty(const value_type epsilon) const {
-    return ((std::abs(this->left()) < epsilon)
-        && (std::abs(this->top()) < epsilon)
-        && (std::abs(this->right()) < epsilon)
-        && (std::abs(this->bottom()) < epsilon));
+template <class V, class T> bool megamol::core::thecam::math::rectangle<V, T>::empty(const value_type epsilon) const {
+    return ((std::abs(this->left()) < epsilon) && (std::abs(this->top()) < epsilon) &&
+            (std::abs(this->right()) < epsilon) && (std::abs(this->bottom()) < epsilon));
 }
 
 
 /*
  * megamol::core::thecam::math::rectangle<V, T>::equals
  */
-template<class V, class T>
-template<class Vp, class Tp>
-bool megamol::core::thecam::math::rectangle<V, T>::equals(const rectangle<Vp, Tp>& rhs,
-        const value_type epsilon) const {
-    return (is_equal(this->left(), static_cast<value_type>(rhs.left()), epsilon)
-        && is_equal(this->top(), static_cast<value_type>(rhs.top()), epsilon)
-        && is_equal(this->right(), static_cast<value_type>(rhs.right()), epsilon)
-        && is_equal(this->bottom(), static_cast<value_type>(rhs.bottom()), epsilon));
+template <class V, class T>
+template <class Vp, class Tp>
+bool megamol::core::thecam::math::rectangle<V, T>::equals(
+    const rectangle<Vp, Tp>& rhs, const value_type epsilon) const {
+    return (is_equal(this->left(), static_cast<value_type>(rhs.left()), epsilon) &&
+            is_equal(this->top(), static_cast<value_type>(rhs.top()), epsilon) &&
+            is_equal(this->right(), static_cast<value_type>(rhs.right()), epsilon) &&
+            is_equal(this->bottom(), static_cast<value_type>(rhs.bottom()), epsilon));
 }
 
 
 /*
  * megamol::core::thecam::math::rectangle<V, T>::operator =
  */
-template<class V, class T>
-megamol::core::thecam::math::rectangle<V, T>& megamol::core::thecam::math::rectangle<V, T>::operator =(
-        const rectangle& rhs) {
+template <class V, class T>
+megamol::core::thecam::math::rectangle<V, T>& megamol::core::thecam::math::rectangle<V, T>::operator=(
+    const rectangle& rhs) {
     if (this != std::addressof(rhs)) {
         traits_type::copy(this->data, rhs.data);
     }
@@ -139,13 +127,12 @@ megamol::core::thecam::math::rectangle<V, T>& megamol::core::thecam::math::recta
 /*
  * megamol::core::thecam::math::rectangle<V, T>::operator =
  */
-template<class V, class T>
-template<class Vp, class Tp>
-megamol::core::thecam::math::rectangle<V, T>& megamol::core::thecam::math::rectangle<V, T>::operator =(
-        const rectangle<Vp, Tp>& rhs) {
+template <class V, class T>
+template <class Vp, class Tp>
+megamol::core::thecam::math::rectangle<V, T>& megamol::core::thecam::math::rectangle<V, T>::operator=(
+    const rectangle<Vp, Tp>& rhs) {
     THE_ASSERT(this != std::addressof(rhs));
-    traits_type::assign(this->data, static_cast<value_type>(rhs.left()),
-        static_cast<value_type>(rhs.top()), static_cast<value_type>(rhs.right()),
-        static_cast<value_type>(rhs.bottom()));
+    traits_type::assign(this->data, static_cast<value_type>(rhs.left()), static_cast<value_type>(rhs.top()),
+        static_cast<value_type>(rhs.right()), static_cast<value_type>(rhs.bottom()));
     return *this;
 }
