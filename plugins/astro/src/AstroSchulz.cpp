@@ -88,19 +88,19 @@ megamol::astro::AstroSchulz::AstroSchulz(void)
     this->columns.back().SetMaximumValue((std::numeric_limits<float>::max)());
 
     this->columns.emplace_back();
-    this->columns.back().SetName("Internal energy");
+    this->columns.back().SetName("InternalEnergy");
     this->columns.back().SetType(TableDataCall::ColumnType::QUANTITATIVE);
     this->columns.back().SetMinimumValue(std::numeric_limits<float>::lowest());
     this->columns.back().SetMaximumValue((std::numeric_limits<float>::max)());
 
     this->columns.emplace_back();
-    this->columns.back().SetName("Smoothing length");
+    this->columns.back().SetName("SmoothingLength");
     this->columns.back().SetType(TableDataCall::ColumnType::QUANTITATIVE);
     this->columns.back().SetMinimumValue(std::numeric_limits<float>::lowest());
     this->columns.back().SetMaximumValue((std::numeric_limits<float>::max)());
 
     this->columns.emplace_back();
-    this->columns.back().SetName("Molecular weight");
+    this->columns.back().SetName("MolecularWeight");
     this->columns.back().SetType(TableDataCall::ColumnType::QUANTITATIVE);
     this->columns.back().SetMinimumValue(std::numeric_limits<float>::lowest());
     this->columns.back().SetMaximumValue((std::numeric_limits<float>::max)());
@@ -112,7 +112,7 @@ megamol::astro::AstroSchulz::AstroSchulz(void)
     this->columns.back().SetMaximumValue((std::numeric_limits<float>::max)());
 
     this->columns.emplace_back();
-    this->columns.back().SetName("Graviational potential");
+    this->columns.back().SetName("GraviationalPotential");
     this->columns.back().SetType(TableDataCall::ColumnType::QUANTITATIVE);
     this->columns.back().SetMinimumValue(std::numeric_limits<float>::lowest());
     this->columns.back().SetMaximumValue((std::numeric_limits<float>::max)());
@@ -142,22 +142,22 @@ megamol::astro::AstroSchulz::AstroSchulz(void)
     this->columns.back().SetMaximumValue(1.0f);
 
     this->columns.emplace_back();
-    this->columns.back().SetName("Star-forming gas");
+    this->columns.back().SetName("StarFormingGas");
     this->columns.back().SetType(TableDataCall::ColumnType::CATEGORICAL);
     this->columns.back().SetMinimumValue(0.0f);
     this->columns.back().SetMaximumValue(1.0f);
 
     this->columns.emplace_back();
-    this->columns.back().SetName("Active galactic nucleus");
+    this->columns.back().SetName("ActiveGalacticNucleus");
     this->columns.back().SetType(TableDataCall::ColumnType::CATEGORICAL);
     this->columns.back().SetMinimumValue(0.0f);
     this->columns.back().SetMaximumValue(1.0f);
 
-    //this->columns.emplace_back();
-    //this->columns.back().SetName("ID");
-    //this->columns.back().SetType(TableDataCall::ColumnType::CATEGORICAL);
-    //this->columns.back().SetMinimumValue(0);
-    //this->columns.back().SetMaximumValue((std::numeric_limits<float>::max)());
+    this->columns.emplace_back();
+    this->columns.back().SetName("ID");
+    this->columns.back().SetType(TableDataCall::ColumnType::CATEGORICAL);
+    this->columns.back().SetMinimumValue(0);
+    this->columns.back().SetMaximumValue((std::numeric_limits<float>::max)());
 }
 
 
@@ -331,7 +331,7 @@ float *megamol::astro::AstroSchulz::convert(float *dst, ColumnInfo& ci,
     assert(dst != nullptr);
     assert(src != nullptr);
     auto i = (std::numeric_limits<float>::max)();
-    auto a = (std::numeric_limits<float>::lowest)();
+    auto a = std::numeric_limits<float>::lowest();
 
     for (auto s : *src) {
         *dst++ = s;
@@ -358,23 +358,27 @@ float *megamol::astro::AstroSchulz::convert(float *dst, ColumnInfo& ci,
         const boolArrayPtr& src) {
     assert(dst != nullptr);
     assert(src != nullptr);
-    auto i = (std::numeric_limits<float>::max)();
-    auto a = (std::numeric_limits<float>::lowest)();
+    //auto i = (std::numeric_limits<float>::max)();
+    //auto a = std::numeric_limits<float>::lowest();
 
-    for (auto s : *src) {
-        auto t = s ? 1.0f : 0.0f;
-        *dst++ = t;
+    //for (auto s : *src) {
+    //    auto t = s ? 1.0f : 0.0f;
+    //    *dst++ = t;
 
-        if (t < i) {
-            i = t;
-        }
-        if (t > a) {
-            a = t;
-        }
-    }
+    //    if (t < i) {
+    //        i = t;
+    //    }
+    //    if (t > a) {
+    //        a = t;
+    //    }
+    //}
 
     //ci.SetMinimumValue(i);
     //ci.SetMaximumValue(a);
+
+    for (auto s : *src) {
+        *dst++ = s ? 1.0f : 0.0f;
+    }
 
     return dst;
 }
@@ -388,7 +392,7 @@ float *megamol::astro::AstroSchulz::convert(float *dst, ColumnInfo& ci,
     assert(dst != nullptr);
     assert(src != nullptr);
     auto i = (std::numeric_limits<float>::max)();
-    auto a = (std::numeric_limits<float>::lowest)();
+    auto a = std::numeric_limits<float>::lowest();
 
     for (auto s : *src) {
         auto t = static_cast<float>(s);
@@ -400,6 +404,11 @@ float *megamol::astro::AstroSchulz::convert(float *dst, ColumnInfo& ci,
         if (t > a) {
             a = t;
         }
+    }
+
+    if (i == a) {
+        // Fix parallel coordinates breaking apart.
+        a = (std::numeric_limits<float>::max)();
     }
 
     ci.SetMinimumValue(i);
