@@ -117,18 +117,18 @@ The module `ReplacementRenderer` exposes the following parameters:
 The modules should be connected as shown in the module call graph below. 
 The yellow-tagged renderer module and the data source module can be replaced by any other suitable modules. 
 Note: The renderer module has to be connected to the `TrackingShotRenderer` as well as to the `CinematicView`.
-For simplification the preferred way of adding the cinematic graph to a new project is to use the predefined cinematic module call graph via the `../project_files/cinematic_editor.lua` project (see example below).
+For simplification the preferred way of adding the cinematic graph to a new project is to use the predefined cinematic module call graph via the `examples/cinematic/cinematic_editor.lua` project (see example below).
 
 ![megamol example module call graph](graph.png)
 
 ### Example
 
 In order to run the example change to the `bin` folder of the megamol executables in a shell and start the program with the following command:
-*Under Windows:* `.\mmconsole.exe -p ../project_files/cinematic_editor.lua`   
-*Under Linux:* `./megamol.sh -p ../project_files/cinematic_editor.lua`
+*Under Windows:* `.\mmconsole.exe -p ../examples/cinematic/cinematic_editor.lua`   
+*Under Linux:* `./megamol.sh -p ../examples/cinematic/cinematic_editor.lua`
 
 #### How it works
-In the `cinematic_editor.lua` project file the testsphere project `project_files/testsphere.lua` is automatically appended to the cinematic module graph (see yellow modules in graph above). 
-Additionally the corresponding keyframe file for the testsphere project `project_files/cinematic_keyframes.kf` is loaded. 
+In the `cinematic_editor.lua` project file the testsphere project `examples/testsphere.lua` is automatically appended to the cinematic module graph (see yellow modules in graph above). 
+Additionally the corresponding keyframe file for the testsphere project `examples/cinematic/cinematic_keyframes.kf` is loaded. 
 Any other `lua` project file can be included by changing the appropriate line in `cinematic_editor.lua`. 
 The keyframe file can be set to the empty string for the initial loading of a new project and can be set to a newly created keyframe file later.
