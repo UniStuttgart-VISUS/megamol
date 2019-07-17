@@ -411,6 +411,16 @@ public:
     void LoadProject(const vislib::StringW& filename);
 
     /**
+     * Serializes the current graph into lua commands.
+     *
+     * @param serInstances The serialized instances.
+     * @param serModules   The serialized modules.
+     * @param serCalls     The serialized calls.
+     * @param serParams    The serialized parameters.
+     */
+    void SerializeGraph(std::string& serInstances, std::string& serModules, std::string& serCalls, std::string& serParams);
+
+    /**
      * Enumerates all parameters. The callback function is called for each
      * parameter slot.
      *

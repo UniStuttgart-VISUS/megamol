@@ -12,11 +12,11 @@
 
 
 #include "mmcore/api/MegaMolCore.std.h"
+#include "mmcore/thecam/arcball_manipulator.h"
 #include "mmcore/thecam/camera.h"
 #include "mmcore/thecam/camera_maths.h"
-#include "mmcore/thecam/arcball_manipulator.h"
-#include "mmcore/thecam/translate_manipulator.h"
 #include "mmcore/thecam/rotate_manipulator.h"
+#include "mmcore/thecam/translate_manipulator.h"
 
 #include "mmcore/BoundingBoxes_2.h"
 
@@ -34,7 +34,6 @@ namespace nextgen {
  */
 class MEGAMOLCORE_API Camera_2 : public cam_type {
 public:
-
     /**
      * Constructor
      */
@@ -52,7 +51,7 @@ public:
      */
     virtual ~Camera_2(void);
 
-    /** 
+    /**
      * Assign the camera's properties from a minimal state snapshot.
      *
      * @param rhs The minimal camera state to be applied.

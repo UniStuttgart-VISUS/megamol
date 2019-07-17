@@ -31,10 +31,10 @@
 #ifndef THE_GRAPHICS_CAMERA_PROPERTY_BASE_H_INCLUDED
 #define THE_GRAPHICS_CAMERA_PROPERTY_BASE_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#pragma once
+#    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
-#pragma managed(push, off)
+#    pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 #include "mmcore/thecam/utility/config.h"
@@ -45,29 +45,27 @@ namespace core {
 namespace thecam {
 namespace detail {
 
-    /**
-     * Provides some shared implementation parts, most importantly derived
-     * types.
-     *
-     * @tparam T The type that is used to pass the property around. The type
-     *           that is stored is the decayed version of this type.
-     */
-    template<class T> class property_base {
+/**
+ * Provides some shared implementation parts, most importantly derived
+ * types.
+ *
+ * @tparam T The type that is used to pass the property around. The type
+ *           that is stored is the decayed version of this type.
+ */
+template <class T> class property_base {
 
-    public:
+public:
+    /** The type used to store the actual value. */
+    typedef typename std::decay<T>::type value_type;
 
-        /** The type used to store the actual value. */
-        typedef typename std::decay<T>::type value_type;
+    /** The type of the property that is used in the parameter list. */
+    typedef typename std::conditional<std::is_scalar<value_type>::value, value_type, const value_type&>::type
+        parameter_type;
 
-        /** The type of the property that is used in the parameter list. */
-        typedef typename std::conditional<std::is_scalar<value_type>::value,
-            value_type, const value_type&>::type parameter_type;
-
-    protected:
-
-        /* Disallow direct instances. */
-        inline property_base(void) { };
-    };
+protected:
+    /* Disallow direct instances. */
+    inline property_base(void){};
+};
 
 } /* end namespace detail */
 } /* end namespace thecam */
@@ -76,6 +74,6 @@ namespace detail {
 
 
 #if defined(_WIN32) && defined(_MANAGED)
-#pragma managed(pop)
+#    pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* THE_GRAPHICS_CAMERA_PROPERTY_BASE_H_INCLUDED */

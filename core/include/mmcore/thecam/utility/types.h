@@ -36,22 +36,22 @@
 #ifndef THE_TYPES_H_INCLUDED
 #define THE_TYPES_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#pragma once
+#    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
-#pragma managed(push, off)
+#    pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 #include "mmcore/thecam/utility/config.h"
 
 #if defined(THE_WINDOWS)
-#include <windows.h>
+#    include <windows.h>
 
 #elif defined(THE_LINUX)
 
-#define __STDC_LIMIT_MACROS
-#include <cstddef>
-#include <inttypes.h>
+#    define __STDC_LIMIT_MACROS
+#    include <cstddef>
+#    include <inttypes.h>
 
 typedef uint8_t byte;
 
@@ -65,27 +65,27 @@ namespace core {
 namespace thecam {
 namespace utility {
 
-    /**
-     * Dummy for providing overloads of parameterless methods that should
-     * have a return value or not (similar hack like operator ++).
-     */
-    typedef int discard_return_t;
-    
-    /** Dummy for requesting uninitialised objects (eg megamol::core::thecam::math::vector). */
-    typedef int do_not_initialise_t;
-    
-    
-    /**
-     * A constant that can be passed to some methods (eg megamol::core::thecam::ring_buffer::pop)
-     * for omitting return values.
-     */
-    extern const discard_return_t discard_return;
-    
-    /**
-     * A constant that can be passed to some constructors (eg of
-     * megamol::core::thecam::math::vector) for omitting initialisation.
-     */
-    extern const do_not_initialise_t do_not_initialise;
+/**
+ * Dummy for providing overloads of parameterless methods that should
+ * have a return value or not (similar hack like operator ++).
+ */
+typedef int discard_return_t;
+
+/** Dummy for requesting uninitialised objects (eg megamol::core::thecam::math::vector). */
+typedef int do_not_initialise_t;
+
+
+/**
+ * A constant that can be passed to some methods (eg megamol::core::thecam::ring_buffer::pop)
+ * for omitting return values.
+ */
+extern const discard_return_t discard_return;
+
+/**
+ * A constant that can be passed to some constructors (eg of
+ * megamol::core::thecam::math::vector) for omitting initialisation.
+ */
+extern const do_not_initialise_t do_not_initialise;
 
 } /* end namespace utility */
 } /* end namespace thecam */
@@ -94,6 +94,6 @@ namespace utility {
 
 
 #if defined(_WIN32) && defined(_MANAGED)
-#pragma managed(pop)
+#    pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* THE_TYPES_H_INCLUDED */

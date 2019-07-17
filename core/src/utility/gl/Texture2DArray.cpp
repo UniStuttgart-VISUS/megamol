@@ -1,15 +1,15 @@
 /*
  * Texture2DArray.cpp
  *
- * Copyright (C) 2018 by Universitaet Stuttgart (VISUS). 
+ * Copyright (C) 2018 by Universitaet Stuttgart (VISUS).
  * Alle Rechte vorbehalten.
  */
 #include "stdafx.h"
 #include "mmcore/utility/gl/Texture2DArray.h"
 
 #include <algorithm>
-#include <iostream>
 #include <cmath>
+#include <iostream>
 
 using namespace megamol::core::utility::gl;
 

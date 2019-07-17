@@ -2063,6 +2063,89 @@ void megamol::core::CoreInstance::LoadProject(const vislib::StringW& filename) {
 }
 
 
+void megamol::core::CoreInstance::SerializeGraph(std::string& serInstances, std::string& serModules, std::string& serCalls, std::string& serParams) {
+
+    std::stringstream confInstances, confModules, confCalls, confParams;
+
+    std::map<std::string, std::string> view_instances;
+    std::map<std::string, std::string> job_instances;
+    {
+        vislib::sys::AutoLock lock(this->namespaceRoot->ModuleGraphLock());
+        AbstractNamedObjectContainer::ptr_type anoc = AbstractNamedObjectContainer::dynamic_pointer_cast(this->namespaceRoot);
+        int job_counter = 0;
+        for (auto ano = anoc->ChildList_Begin(); ano != anoc->ChildList_End(); ++ano) {
+            auto vi = dynamic_cast<ViewInstance*>(ano->get());
+            auto ji = dynamic_cast<JobInstance*>(ano->get());
+            if (vi && vi->View()) {
+                std::string vin = vi->Name().PeekBuffer();
+                view_instances[vi->View()->FullName().PeekBuffer()] = vin;
+                vislib::sys::Log::DefaultLog.WriteInfo(
+                    "ScreenShooter: found view instance \"%s\" with view \"%s\".",
+                    view_instances[vi->View()->FullName().PeekBuffer()].c_str(),
+                    vi->View()->FullName().PeekBuffer());
+            }
+            if (ji && ji->Job()) {
+                std::string jin = ji->Name().PeekBuffer();
+                // todo: find job module! WTF!
+                job_instances[jin] = std::string("job") + std::to_string(job_counter);
+                vislib::sys::Log::DefaultLog.WriteInfo("ScreenShooter: found job instance \"%s\" with job \"%s\".",
+                    jin.c_str(), job_instances[jin].c_str());
+                ++job_counter;
+            }
+        }
+
+        const auto fun = [&confInstances, &confModules, &confCalls, &confParams, &view_instances](Module* mod) {
+            if (view_instances.find(mod->FullName().PeekBuffer()) != view_instances.end()) {
+                confInstances << "mmCreateView(\"" << view_instances[mod->FullName().PeekBuffer()] << "\",\""
+                    << mod->ClassName() << "\",\"" << mod->FullName().PeekBuffer() << "\")\n";
+            }
+            else {
+                // todo: jobs??
+                confModules << "mmCreateModule(\"" << mod->ClassName() << "\",\"" << mod->FullName().PeekBuffer()
+                    << "\")\n";
+            }
+            AbstractNamedObjectContainer::child_list_type::const_iterator se = mod->ChildList_End();
+            for (AbstractNamedObjectContainer::child_list_type::const_iterator si = mod->ChildList_Begin();
+                si != se; ++si) {
+                const auto slot = dynamic_cast<param::ParamSlot*>((*si).get());
+                if (slot) {
+                    const auto bp = slot->Param<param::ButtonParam>();
+                    if (!bp) {
+                        std::string val = slot->Parameter()->ValueString().PeekBuffer();
+                        // caution: value strings could contain unescaped quotes, so fix that:
+                        //std::string from = "\"";
+                        //std::string to = "\\\"";
+                        //size_t start_pos = 0;
+                        //while ((start_pos = val.find(from, start_pos)) != std::string::npos) {
+                        //    val.replace(start_pos, from.length(), to);
+                        //    start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
+                        //}
+                        confParams << "mmSetParamValue(\"" << slot->FullName() << "\",[=[" << val << "]=])\n";
+                    }
+                }
+                const auto cslot = dynamic_cast<CallerSlot*>((*si).get());
+                if (cslot) {
+                    const Call* c = const_cast<CallerSlot*>(cslot)->CallAs<Call>();
+                    if (c != nullptr) {
+                        confCalls << "mmCreateCall(\"" << c->ClassName() << "\",\""
+                            << c->PeekCallerSlot()->Parent()->FullName().PeekBuffer()
+                            << "::" << c->PeekCallerSlot()->Name().PeekBuffer() << "\",\""
+                            << c->PeekCalleeSlot()->Parent()->FullName().PeekBuffer()
+                            << "::" << c->PeekCalleeSlot()->Name().PeekBuffer() << "\")\n";
+                    }
+                }
+            }
+        };
+        this->EnumModulesNoLock(nullptr, fun);
+
+        serInstances = confInstances.str();
+        serModules = confModules.str();
+        serCalls = confCalls.str();
+        serParams = confParams.str();
+    }
+}
+
+
 void megamol::core::CoreInstance::EnumModulesNoLock(
     core::AbstractNamedObject* entry_point, std::function<void(Module*)> cb) {
 

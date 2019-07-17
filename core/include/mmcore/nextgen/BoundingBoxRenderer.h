@@ -11,9 +11,9 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/api/MegaMolCore.std.h"
-#include "mmcore/view/RendererModule.h"
 #include "mmcore/nextgen/CallRender3D_2.h"
 #include "mmcore/param/ParamSlot.h"
+#include "mmcore/view/RendererModule.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 
 namespace megamol {
@@ -22,7 +22,7 @@ namespace nextgen {
 
 /**
  * Renderer responsible for the rendering of the currently active bounding box as well as the view cube etc.
- * This is a special renderer without the typical structure of other renderers, since it does not inherit from 
+ * This is a special renderer without the typical structure of other renderers, since it does not inherit from
  * Renderer3DModule_2.
  */
 class MEGAMOLCORE_API BoundingBoxRenderer : public view::RendererModule<CallRender3D_2> {

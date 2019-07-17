@@ -30,24 +30,6 @@
 
 #include "mmcore/thecam/math/matrix.h"
 
-
-#ifdef WITH_THE_XMATH
-/*
- * megamol::core::thecam::math::invert
- */
-bool megamol::core::thecam::math::invert(matrix<DirectX::XMFLOAT4X4>& matrix) {
-    auto m = load_xmmatrix(matrix);
-    auto d = DirectX::XMMatrixDeterminant(m);
-    if (DirectX::XMVectorGetX(d) == 0.0f) {
-        return false;
-    } else {
-        auto r = DirectX::XMMatrixInverse(&d, m);
-        store_xmmatrix(matrix, r);
-        return true;
-    }
-}
-#endif /* WITH_THE_XMATH */
-
 #ifdef WITH_THE_GLM
 /*
  * thecam::math::invert

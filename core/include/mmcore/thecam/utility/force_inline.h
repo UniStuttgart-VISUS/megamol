@@ -30,7 +30,7 @@
 /*
  * forceinline.h
  *
- * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  * Copyright (C) 2008 by Christoph Mueller. Alle Rechte vorbehalten.
  */
@@ -38,32 +38,32 @@
 #ifndef THE_FORCE_INLINE_H_INCLUDED
 #define THE_FORCE_INLINE_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#pragma once
+#    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
-#pragma managed(push, off)
+#    pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
 #if defined(_MSC_VER)
-#define THE_FORCE_INLINE __forceinline
+#    define THE_FORCE_INLINE __forceinline
 #elif defined(__GNUC__)
-#define THE_FORCE_INLINE __attribute__((always_inline))
+#    define THE_FORCE_INLINE __attribute__((always_inline))
 #else /* defined(_MSC_VER) */
-#define THE_FORCE_INLINE inline
+#    define THE_FORCE_INLINE inline
 #endif /* defined(_MSC_VER) */
 
 
 #if defined(_MSC_VER)
-#define THE_TRY_FORCE_INLINE THE_FORCE_INLINE
+#    define THE_TRY_FORCE_INLINE THE_FORCE_INLINE
 #elif defined(__GNUC__)
-#define THE_TRY_FORCE_INLINE inline
+#    define THE_TRY_FORCE_INLINE inline
 #else /* defined(_MSC_VER) */
-#define THE_TRY_FORCE_INLINE inline
+#    define THE_TRY_FORCE_INLINE inline
 #endif /* defined(_MSC_VER) */
 
 
 #if defined(_WIN32) && defined(_MANAGED)
-#pragma managed(pop)
+#    pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* THE_FORCE_INLINE_H_INCLUDED */

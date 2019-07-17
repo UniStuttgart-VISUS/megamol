@@ -32,7 +32,7 @@
 #define THE_MATH_SIZE_ACCESSORS_H_INCLUDED
 #pragma once
 #if defined(_WIN32) && defined(_MANAGED)
-#pragma managed(push, off)
+#    pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 #include "mmcore/thecam/utility/config.h"
@@ -45,75 +45,73 @@ namespace math {
 namespace detail {
 
 
-    /**
-     * A utility class that provides named accessors for size components
-     * using the CRTP.
-     *
-     * @param S The actual size type, which inherits from this class.
-     * @param T The traits type used for S. We need this information, because
-     *          S is not yet complete when we need to determine value_type.
-     * @param D The dimension the size is for..
-     */
-    template<class S, class T, size_t D> struct size_accessors { };
+/**
+ * A utility class that provides named accessors for size components
+ * using the CRTP.
+ *
+ * @param S The actual size type, which inherits from this class.
+ * @param T The traits type used for S. We need this information, because
+ *          S is not yet complete when we need to determine value_type.
+ * @param D The dimension the size is for..
+ */
+template <class S, class T, size_t D> struct size_accessors {};
 
 
-    /**
-     * Specialisation of size_accessors for 2D, which adds width() and height().
-     *
-     * @param S The actual size type, which inherits from this class.
-     * @param T The traits type used for S. We need this information, because
-     *          S is not yet complete when we need to determine value_type.
-     */
-    template<class S, class T>
-    struct size_accessors<S, T, 2> {
+/**
+ * Specialisation of size_accessors for 2D, which adds width() and height().
+ *
+ * @param S The actual size type, which inherits from this class.
+ * @param T The traits type used for S. We need this information, because
+ *          S is not yet complete when we need to determine value_type.
+ */
+template <class S, class T> struct size_accessors<S, T, 2> {
 
-        typedef typename T::value_type value_type;
+    typedef typename T::value_type value_type;
 
-        inline value_type height(void) const {
-            auto that = static_cast<const S *>(this);
-            return (*that)[1];
-        }
+    inline value_type height(void) const {
+        auto that = static_cast<const S*>(this);
+        return (*that)[1];
+    }
 
-        inline value_type& height(void) {
-            auto that = static_cast<S *>(this);
-            return (*that)[1];
-        }
+    inline value_type& height(void) {
+        auto that = static_cast<S*>(this);
+        return (*that)[1];
+    }
 
-        inline value_type width(void) const {
-            auto that = static_cast<const S *>(this);
-            return (*that)[0];
-        }
+    inline value_type width(void) const {
+        auto that = static_cast<const S*>(this);
+        return (*that)[0];
+    }
 
-        inline value_type& width(void) {
-            auto that = static_cast<S *>(this);
-            return (*that)[0];
-        }
-    };
+    inline value_type& width(void) {
+        auto that = static_cast<S*>(this);
+        return (*that)[0];
+    }
+};
 
 
-    /**
-     * Specialisation of size_accessors for 3D, which inherits from the 2D
-     * specialisation and adds depth().
-     *
-     * @param S The actual size type, which inherits from this class.
-     * @param T The traits type used for S. We need this information, because
-     *          S is not yet complete when we need to determine value_type.
-     */
-    template<class S, class T>
-    struct size_accessors<S, T, 3> : public size_accessors<S, T, 2> {
+/**
+ * Specialisation of size_accessors for 3D, which inherits from the 2D
+ * specialisation and adds depth().
+ *
+ * @param S The actual size type, which inherits from this class.
+ * @param T The traits type used for S. We need this information, because
+ *          S is not yet complete when we need to determine value_type.
+ */
+template <class S, class T> struct size_accessors<S, T, 3> : public size_accessors<S, T, 2> {
 
-        typedef typename T::value_type value_type;
+    typedef typename T::value_type value_type;
 
-        inline value_type depth(void) const {
-            auto that = static_cast<const S *>(this);
-            return (*that)[2];
-        }
+    inline value_type depth(void) const {
+        auto that = static_cast<const S*>(this);
+        return (*that)[2];
+    }
 
-        inline value_type& depth(void) {
-            auto that = static_cast<S *>(this);
-            return (*that)[2];
-        }
-    };
+    inline value_type& depth(void) {
+        auto that = static_cast<S*>(this);
+        return (*that)[2];
+    }
+};
 
 } /* end namespace detail */
 } /* end namespace math */
@@ -122,6 +120,6 @@ namespace detail {
 } /* end namespace megamol */
 
 #if defined(_WIN32) && defined(_MANAGED)
-#pragma managed(pop)
+#    pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* THE_MATH_SIZE_ACCESSORS_H_INCLUDED */
