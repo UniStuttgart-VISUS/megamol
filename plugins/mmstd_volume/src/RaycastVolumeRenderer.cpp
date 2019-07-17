@@ -136,81 +136,13 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
     megamol::core::view::CallRender3D* cr = dynamic_cast<core::view::CallRender3D*>(&call);
     if (cr == NULL) return false;
 
-    // manual creation of projection and view matrix
-    GLfloat fovy = (cr->GetCameraParameters()->ApertureAngle() / 180.0f) * 3.14f;
-    GLfloat near_clip = cr->GetCameraParameters()->NearClip();
-    GLfloat far_clip = cr->GetCameraParameters()->FarClip();
-    GLfloat f = 1.0f / std::tan(fovy / 2.0f);
-    GLfloat nf = 1.0f / (near_clip - far_clip);
-    GLfloat aspect_ratio = static_cast<GLfloat>(cr->GetViewport().AspectRatio());
 
-    mat4x4 proj_mx;
-    mat4x4_perspective(proj_mx, fovy, aspect_ratio, near_clip, far_clip);
-    // std::array<GLfloat, 16> projection_matrix;
-    // projection_matrix[0] = f / aspect_ratio;
-    // projection_matrix[1] = 0.0f;
-    // projection_matrix[2] = 0.0f;
-    // projection_matrix[3] = 0.0f;
-    // projection_matrix[4] = 0.0f;
-    // projection_matrix[5] = f;
-    // projection_matrix[6] = 0.0f;
-    // projection_matrix[7] = 0.0f;
-    // projection_matrix[8] = 0.0f;
-    // projection_matrix[9] = 0.0f;
-    // projection_matrix[10] = (far_clip + near_clip) * nf;
-    // projection_matrix[11] = -1.0f;
-    // projection_matrix[12] = 0.0f;
-    // projection_matrix[13] = 0.0f;
-    // projection_matrix[14] = (2.0f * far_clip * near_clip) * nf;
-    // projection_matrix[15] = 0.0f;
-
-    auto cam_right = cr->GetCameraParameters()->Right();
-    auto cam_up = cr->GetCameraParameters()->Up();
-    auto cam_front = -cr->GetCameraParameters()->Front();
-    auto cam_position = cr->GetCameraParameters()->Position();
-
-    mat4x4 view_mx;
-    // std::array<GLfloat, 16> view_matrix;
-    // view_matrix[0] = cam_right.X();
-    // view_matrix[1] = cam_up.X();
-    // view_matrix[2] = cam_front.X();
-    // view_matrix[3] = 0.0f;
-    //
-    // view_matrix[4] = cam_right.Y();
-    // view_matrix[5] = cam_up.Y();
-    // view_matrix[6] = cam_front.Y();
-    // view_matrix[7] = 0.0f;
-    //
-    // view_matrix[8] = cam_right.Z();
-    // view_matrix[9] = cam_up.Z();
-    // view_matrix[10] = cam_front.Z();
-    // view_matrix[11] = 0.0f;
-    //
-    // view_matrix[12] = -(cam_position.X()*cam_right.X() + cam_position.Y()*cam_right.Y() +
-    // cam_position.Z()*cam_right.Z()); view_matrix[13] = -(cam_position.X()*cam_up.X() + cam_position.Y()*cam_up.Y() +
-    // cam_position.Z()*cam_up.Z()); view_matrix[14] = -(cam_position.X()*cam_front.X() + cam_position.Y()*cam_front.Y()
-    // + cam_position.Z()*cam_front.Z()); view_matrix[15] = 1.0f;
-    view_mx[0][0] = cam_right.X();
-    view_mx[0][1] = cam_up.X();
-    view_mx[0][2] = cam_front.X();
-    view_mx[0][3] = 0.0f;
-
-    view_mx[1][0] = cam_right.Y();
-    view_mx[1][1] = cam_up.Y();
-    view_mx[1][2] = cam_front.Y();
-    view_mx[1][3] = 0.0f;
-
-    view_mx[2][0] = cam_right.Z();
-    view_mx[2][1] = cam_up.Z();
-    view_mx[2][2] = cam_front.Z();
-    view_mx[2][3] = 0.0f;
-
-    view_mx[3][0] =
-        -(cam_position.X() * cam_right.X() + cam_position.Y() * cam_right.Y() + cam_position.Z() * cam_right.Z());
-    view_mx[3][1] = -(cam_position.X() * cam_up.X() + cam_position.Y() * cam_up.Y() + cam_position.Z() * cam_up.Z());
-    view_mx[3][2] =
-        -(cam_position.X() * cam_front.X() + cam_position.Y() * cam_front.Y() + cam_position.Z() * cam_front.Z());
-    view_mx[3][3] = 1.0f;
+    // this is the apex of suck and must die
+    GLfloat modelViewMatrix_column[16];
+    glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
+    GLfloat projMatrix_column[16];
+    glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
+    // end suck
 
     if (!updateVolumeData()) return false;
     if (!updateTransferFunction()) return false;
@@ -218,21 +150,9 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
     // enable raycast volume rendering program
     m_raycast_volume_compute_shdr->Enable();
 
-    // TODO set uniform values
-    mat4x4 volume_model_mx;
-    mat4x4_identity(volume_model_mx);
-
-    mat4x4 view_proj_mx;
-    mat4x4 inv_view_proj_mx;
-    mat4x4_mul(view_proj_mx, proj_mx, view_mx);
-    mat4x4_invert(inv_view_proj_mx, view_proj_mx);
-    glUniformMatrix4fv(m_raycast_volume_compute_shdr->ParameterLocation("camera_inv_view_proj_mx"), 1, GL_FALSE,
-        reinterpret_cast<float*>(&inv_view_proj_mx));
-
     glUniformMatrix4fv(
-        m_raycast_volume_compute_shdr->ParameterLocation("view_mx"), 1, GL_FALSE, reinterpret_cast<float*>(&view_mx));
-    glUniformMatrix4fv(
-        m_raycast_volume_compute_shdr->ParameterLocation("proj_mx"), 1, GL_FALSE, reinterpret_cast<float*>(&proj_mx));
+        m_raycast_volume_compute_shdr->ParameterLocation("view_mx"), 1, GL_FALSE, modelViewMatrix_column);
+    glUniformMatrix4fv(m_raycast_volume_compute_shdr->ParameterLocation("proj_mx"), 1, GL_FALSE, projMatrix_column);
 
     vec2 rt_resolution;
     rt_resolution[0] = static_cast<float>(m_render_target->getWidth());
@@ -254,7 +174,10 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
     glUniform3f(m_raycast_volume_compute_shdr->ParameterLocation("halfVoxelSize"),
         1.0f / (2.0f * (m_volume_resolution[0] - 1)), 1.0f / (2.0f * (m_volume_resolution[1] - 1)),
         1.0f / (2.0f * (m_volume_resolution[2] - 1)));
-    glUniform1f(m_raycast_volume_compute_shdr->ParameterLocation("voxelSize"), 1.0);
+    auto const maxResolution =
+        std::fmax(m_volume_resolution[0], std::fmax(m_volume_resolution[1], m_volume_resolution[2]));
+    auto const maxExtents = std::fmax(m_volume_extents[0], std::fmax(m_volume_extents[1], m_volume_extents[2]));
+    glUniform1f(m_raycast_volume_compute_shdr->ParameterLocation("voxelSize"), maxExtents / (maxResolution - 1.0f));
     glUniform1f(m_raycast_volume_compute_shdr->ParameterLocation("rayStepRatio"),
         this->m_ray_step_ratio_param.Param<core::param::FloatParam>()->Value());
     glUniform1f(m_raycast_volume_compute_shdr->ParameterLocation("opacityThreshold"), 1.0);
