@@ -1333,11 +1333,13 @@ void GUIView::drawMenu(void) {
         } else {
             valid = true;
         }
+        if (PathExists(this->projectFilename)) {
+            ImGui::TextColored(ImVec4(0.9f, 0.0f, 0.0f, 1.0f), "File name already exists and will be overwritten!");
+        }
 
         if (ImGui::Button("Save")) {
             if (valid) {
-                if (SaveProjectFile(
-                        this->projectFilename, this->ModuleGraphLock(), this->RootModule(), this->GetCoreInstance())) {
+                if (SaveProjectFile(this->projectFilename, this->GetCoreInstance())) {
                     ImGui::CloseCurrentPopup();
                 }
             }
