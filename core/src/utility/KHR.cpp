@@ -1,21 +1,23 @@
 /*
-* utility/KHR.cpp
+* KHR.cpp
 *
 * Copyright (C) 2017 by MegaMol Team
 * Alle Rechte vorbehalten.
 */
 
 #include "stdafx.h"
-#include "KHR.h"
+#include "mmcore/utility/KHR.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/sys/Log.h"
 
-using namespace megamol::console::utility;
+
+using namespace megamol::core::utility;
+
 
 int KHR::startDebug() {
 #if (!defined(_WIN32) && !defined(HAS_LIBUNWIND))
-    vislib::sys::Log::DefaultLog.WriteError("Libunwind is required to use KHR debug.");
-    vislib::sys::Log::DefaultLog.WriteError("You need to set the compilerflag USE_LIBUNWIND=true.");
+    vislib::sys::Log::DefaultLog.WriteError("LibUnwind is required to use KHR debug.");
+    vislib::sys::Log::DefaultLog.WriteError("You need to set the CMake compiler flag USE_LIBUNWIND=true.");
     return 1;
 }
 #else
