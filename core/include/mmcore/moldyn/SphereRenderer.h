@@ -67,7 +67,6 @@
 
 
 // Minimum OpenGL version for different render modes:
-#define SPHERE_MIN_GLSL_SIMPLE            (1.3f)
 #define SPHERE_MIN_OGL_SIMPLE             (GL_VERSION_1_4)
 #define SPHERE_MIN_OGL_SIMPLE_CLUSTERED   (GL_VERSION_1_4)
 #define SPHERE_MIN_OGL_GEOMETRY_SHADER    (GL_VERSION_3_2)
@@ -75,6 +74,8 @@
 #define SPHERE_MIN_OGL_BUFFER_ARRAY       (GL_VERSION_4_5) // required for glMapNamedBufferRange
 #define SPHERE_MIN_OGL_SPLAT              (GL_VERSION_4_5) // required for glMapNamedBufferRange
 #define SPHERE_MIN_OGL_AMBIENT_OCCLUSION  (GL_VERSION_4_5) // required for glMapNamedBufferRange
+// Minimum GLSL version for all render modes
+#define SPHERE_MIN_GLSL_SIMPLE            (1.3f)
 
 
 namespace megamol {
@@ -202,13 +203,13 @@ namespace moldyn {
         /*********************************************************************/
 
         enum RenderMode {              
-            SIMPLE            = 0,     // Sphere rendering using ...
-            SIMPLE_CLUSTERED  = 1,     // Sphere rendering using clustered ...
-            GEOMETRY_SHADER   = 2,     // Sphere rendering using geometry shader.
-            SSBO_STREAM       = 3,     // Sphere rendering using shader storage buffer object stream.
-            BUFFER_ARRAY      = 4,     // Sphere rendering using array buffers.
-            SPLAT             = 5,     // Sphere rendering with splats.
-            AMBIENT_OCCLUSION = 6      // Sphere rendering with ambient occlusion
+            SIMPLE            = 0,
+            SIMPLE_CLUSTERED  = 1,
+            GEOMETRY_SHADER   = 2,
+            SSBO_STREAM       = 3,
+            BUFFER_ARRAY      = 4,
+            SPLAT             = 5,
+            AMBIENT_OCCLUSION = 6 
         };
 
         typedef std::map <std::tuple<int, int, bool>, std::shared_ptr<GLSLShader> > shaderMap;
