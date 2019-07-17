@@ -40,7 +40,7 @@ TransferFunctionEditor::TransferFunctionEditor(void)
 bool TransferFunctionEditor::SetTransferFunction(const std::string& tfs) {
     if (activeParameter == nullptr) {
         vislib::sys::Log::DefaultLog.WriteWarn(
-            "[TransferFunctionEditor] Set active parameter before loading transfer function");
+            "[TransferFunctionEditor] Load parameter before editing transfer function");
         return false;
     }
 
@@ -65,7 +65,7 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
 
     if (this->activeParameter == nullptr) {
         ImGui::TextColored(ImVec4(0.9f, 0.0f, 0.0f, 1.0f), "Changes have no effect.\n"
-                                                           "Please set an active parameter!\n");
+                                                           "Please load transfer function parameter.\n");
         ImGui::Separator();
     }
 
