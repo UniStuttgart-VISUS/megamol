@@ -152,7 +152,7 @@ bool TransferFunctionParam::ParseTransferFunction(const std::string &in_tfs, TFD
         if (!TransferFunctionParam::CheckTransferFunctionString(in_tfs)) {
             return false;
         }
-        nlohmann::json json = nlohmann::json::parse(in_tfs);;
+        nlohmann::json json = nlohmann::json::parse(in_tfs);
 
         // Get texture size
         json.at("TextureSize").get_to(tmp_texsize);
