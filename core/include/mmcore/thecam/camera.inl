@@ -32,10 +32,9 @@
 /*
  * megamol::core::thecam::camera<M, P>::projection_matrix_left_handed
  */
-template<class M, template<class> class P>
+template <class M, template <class> class P>
 typename megamol::core::thecam::camera<M, P>::matrix_type&
-megamol::core::thecam::camera<M, P>::projection_matrix_left_handed(
-        matrix_type& outMat, const snapshot_type& snapshot) {
+megamol::core::thecam::camera<M, P>::projection_matrix_left_handed(matrix_type& outMat, const snapshot_type& snapshot) {
     THE_ASSERT(snapshot.contains(snapshot_content::camera_space_frustum));
     THE_ASSERT(snapshot.frustum_near != snapshot.frustum_far);
 
@@ -77,10 +76,10 @@ megamol::core::thecam::camera<M, P>::projection_matrix_left_handed(
 /*
  * megamol::core::thecam::camera<M, P>::projection_matrix_right_handed
  */
-template<class M, template<class> class P>
+template <class M, template <class> class P>
 typename megamol::core::thecam::camera<M, P>::matrix_type&
 megamol::core::thecam::camera<M, P>::projection_matrix_right_handed(
-        matrix_type& outMat, const snapshot_type& snapshot) {
+    matrix_type& outMat, const snapshot_type& snapshot) {
     THE_ASSERT(snapshot.contains(snapshot_content::camera_space_frustum));
     THE_ASSERT(snapshot.frustum_near != snapshot.frustum_far);
     static const auto ZERO = static_cast<world_type>(0);
@@ -114,7 +113,7 @@ megamol::core::thecam::camera<M, P>::projection_matrix_right_handed(
 
     outMat(3, 0) = ZERO;
     outMat(3, 1) = ZERO;
-    outMat(3, 2) = (n * f) / (n - f);   // -((2 * f * n) / (f - n)
+    outMat(3, 2) = (n * f) / (n - f); // -((2 * f * n) / (f - n)
     outMat(3, 3) = ZERO;
 
     return outMat;
@@ -124,10 +123,9 @@ megamol::core::thecam::camera<M, P>::projection_matrix_right_handed(
 /*
  * megamol::core::thecam::camera<M, P>::view_matrix_left_handed
  */
-template<class M, template<class> class P>
-typename megamol::core::thecam::camera<M, P>::matrix_type&
-megamol::core::thecam::camera<M, P>::view_matrix_left_handed(
-        matrix_type& outMat, const snapshot_type& snapshot) {
+template <class M, template <class> class P>
+typename megamol::core::thecam::camera<M, P>::matrix_type& megamol::core::thecam::camera<M, P>::view_matrix_left_handed(
+    matrix_type& outMat, const snapshot_type& snapshot) {
     static const auto ZERO = static_cast<world_type>(0);
     static const auto ONE = static_cast<world_type>(1);
 
@@ -167,10 +165,9 @@ megamol::core::thecam::camera<M, P>::view_matrix_left_handed(
 /*
  * megamol::core::thecam::camera<M, P>::view_matrix_right_handed
  */
-template<class M, template<class> class P>
+template <class M, template <class> class P>
 typename megamol::core::thecam::camera<M, P>::matrix_type&
-megamol::core::thecam::camera<M, P>::view_matrix_right_handed(
-        matrix_type& outMat, const snapshot_type& snapshot) {
+megamol::core::thecam::camera<M, P>::view_matrix_right_handed(matrix_type& outMat, const snapshot_type& snapshot) {
     static const auto ZERO = static_cast<world_type>(0);
     static const auto ONE = static_cast<world_type>(1);
 
@@ -183,9 +180,9 @@ megamol::core::thecam::camera<M, P>::view_matrix_right_handed(
         zAxis *= -ONE;
     }
 
-    //https://msdn.microsoft.com/de-de/library/windows/desktop/bb205342(v=vs.85).aspx
-    //EDIT by schatzkn: the signs have been adapted to comply with the opengl coordinate system with inversed z-axis
-    //this is hacky because it does not work for direct3D anymore.
+    // https://msdn.microsoft.com/de-de/library/windows/desktop/bb205342(v=vs.85).aspx
+    // EDIT by schatzkn: the signs have been adapted to comply with the opengl coordinate system with inversed z-axis
+    // this is hacky because it does not work for direct3D anymore.
     outMat(0, 0) = xAxis.x();
     outMat(1, 0) = xAxis.y();
     outMat(2, 0) = xAxis.z();
@@ -213,27 +210,26 @@ megamol::core::thecam::camera<M, P>::view_matrix_right_handed(
 /*
  * megamol::core::thecam::camera<M, P>::calc_matrices
  */
-template<class M, template<class> class P>
+template <class M, template <class> class P>
 void megamol::core::thecam::camera<M, P>::calc_matrices(
-        snapshot_type& outSnapshot, matrix_type& outView,
-        matrix_type& outProj, snapshot_content sc) const {
-    sc |= snapshot_content::camera_coordinate_system;   // Just paranoia ...
-    sc |= snapshot_content::camera_space_frustum;       // Just paranoia ...
+    snapshot_type& outSnapshot, matrix_type& outView, matrix_type& outProj, snapshot_content sc) const {
+    sc |= snapshot_content::camera_coordinate_system; // Just paranoia ...
+    sc |= snapshot_content::camera_space_frustum;     // Just paranoia ...
     this->take_snapshot(outSnapshot, sc);
 
     switch (this->handedness()) {
-        case Handedness::left_handed:
-            camera::view_matrix_left_handed(outView, outSnapshot);
-            camera::projection_matrix_left_handed(outProj, outSnapshot);
-            break;
+    case Handedness::left_handed:
+        camera::view_matrix_left_handed(outView, outSnapshot);
+        camera::projection_matrix_left_handed(outProj, outSnapshot);
+        break;
 
-        case Handedness::right_handed:
-            camera::view_matrix_right_handed(outView, outSnapshot);
-            camera::projection_matrix_right_handed(outProj, outSnapshot);
-            break;
+    case Handedness::right_handed:
+        camera::view_matrix_right_handed(outView, outSnapshot);
+        camera::projection_matrix_right_handed(outProj, outSnapshot);
+        break;
 
-        default:
-            throw std::runtime_error("Unknown handedness in camera::calc_matrices(). This should never happen.");
+    default:
+        throw std::runtime_error("Unknown handedness in camera::calc_matrices(). This should never happen.");
     }
 }
 
@@ -241,14 +237,13 @@ void megamol::core::thecam::camera<M, P>::calc_matrices(
 /*
  * megamol::core::thecam::camera<M, P>::focal_length
  */
-template<class M, template<class> class P>
-typename megamol::core::thecam::camera<M, P>::world_type
-megamol::core::thecam::camera<M, P>::focal_length(void) const {
-    // See http://www.scratchapixel.com/lessons/3d-basic-rendering/3d-viewing-pinhole-camera/how-pinhole-camera-works-part-2
+template <class M, template <class> class P>
+typename megamol::core::thecam::camera<M, P>::world_type megamol::core::thecam::camera<M, P>::focal_length(void) const {
+    // See
+    // http://www.scratchapixel.com/lessons/3d-basic-rendering/3d-viewing-pinhole-camera/how-pinhole-camera-works-part-2
     // for connection between film gate, resolution gate and focal length.
-    auto w = this->has_film_gate()
-        ? static_cast<world_type>(this->film_gate().width())
-        : static_cast<world_type>(this->resolution_gate().width());
+    auto w = this->has_film_gate() ? static_cast<world_type>(this->film_gate().width())
+                                   : static_cast<world_type>(this->resolution_gate().width());
     auto t = std::tan(this->aperture_angle_radians());
     return (w / t);
 }
@@ -257,10 +252,9 @@ megamol::core::thecam::camera<M, P>::focal_length(void) const {
 /*
  * megamol::core::thecam::camera<M, P>::get_minimal_state
  */
-template<class M, template<class> class P>
+template <class M, template <class> class P>
 typename megamol::core::thecam::camera<M, P>::minimal_state_type&
-megamol::core::thecam::camera<M, P>::get_minimal_state(
-        minimal_state_type& outState) {
+megamol::core::thecam::camera<M, P>::get_minimal_state(minimal_state_type& outState) {
     outState.centre_offset[0] = this->centre_offset().x();
     outState.centre_offset[1] = this->centre_offset().y();
     outState.convergence_plane = this->convergence_plane();
@@ -290,11 +284,10 @@ megamol::core::thecam::camera<M, P>::get_minimal_state(
 }
 
 
-
 /*
  * megamol::core::thecam::camera<M, P>::look_at
  */
-template<class M, template<class> class P>
+template <class M, template <class> class P>
 void megamol::core::thecam::camera<M, P>::look_at(const point_type& lookAt) {
     // http://lolengine.net/blog/2013/09/18/beautiful-maths-quaternion-from-vectors
     const auto& sv = maths_type::view_vector;
@@ -306,25 +299,25 @@ void megamol::core::thecam::camera<M, P>::look_at(const point_type& lookAt) {
 /*
  * megamol::core::thecam::camera<M, P>::projection_matrix
  */
-template<class M, template<class> class P>
-typename megamol::core::thecam::camera<M, P>::matrix_type
-megamol::core::thecam::camera<M, P>::projection_matrix(void) const {
+template <class M, template <class> class P>
+typename megamol::core::thecam::camera<M, P>::matrix_type megamol::core::thecam::camera<M, P>::projection_matrix(
+    void) const {
     matrix_type retval;
     snapshot_type snapshot;
 
     this->take_snapshot(snapshot, snapshot_content::camera_space_frustum);
 
     switch (this->handedness()) {
-        case Handedness::left_handed:
-            camera::projection_matrix_right_handed(retval, snapshot);
-            break;
+    case Handedness::left_handed:
+        camera::projection_matrix_right_handed(retval, snapshot);
+        break;
 
-        case Handedness::right_handed:
-            camera::projection_matrix_right_handed(retval, snapshot);
-            break;
+    case Handedness::right_handed:
+        camera::projection_matrix_right_handed(retval, snapshot);
+        break;
 
-        default:
-            throw std::runtime_error("Unknown handedness in camera::calc_matrices(). This should never happen.");
+    default:
+        throw std::runtime_error("Unknown handedness in camera::calc_matrices(). This should never happen.");
     }
 
     return std::move(retval);
@@ -334,8 +327,7 @@ megamol::core::thecam::camera<M, P>::projection_matrix(void) const {
 /*
  * megamol::core::thecam::camera<M, P>::reset
  */
-template<class M, template<class> class P>
-void megamol::core::thecam::camera<M, P>::reset(void) {
+template <class M, template <class> class P> void megamol::core::thecam::camera<M, P>::reset(void) {
     const auto WZ = static_cast<world_type>(0);
     const auto WO = static_cast<world_type>(1);
 
@@ -359,10 +351,9 @@ void megamol::core::thecam::camera<M, P>::reset(void) {
 /*
  * megamol::core::thecam::camera<M, P>::take_snapshot
  */
-template<class M, template<class> class P>
-typename megamol::core::thecam::camera<M, P>::snapshot_type&
-megamol::core::thecam::camera<M, P>::take_snapshot(
-        snapshot_type& snapshot, const snapshot_content which) const {
+template <class M, template <class> class P>
+typename megamol::core::thecam::camera<M, P>::snapshot_type& megamol::core::thecam::camera<M, P>::take_snapshot(
+    snapshot_type& snapshot, const snapshot_content which) const {
     const auto EYE_DIR = static_cast<world_type>(this->eye());
     const auto HALF = static_cast<world_type>(0.5);
 
@@ -377,7 +368,6 @@ megamol::core::thecam::camera<M, P>::take_snapshot(
             snapshot.content |= snapshot_content::gate_scaling;
             snapshot.content |= snapshot_content::resolution_aspect;
             snapshot.content |= snapshot_content::film_aspect;
-
         }
 
         if (snapshot.contains(snapshot_content::gate_scaling)) {
@@ -386,10 +376,9 @@ megamol::core::thecam::camera<M, P>::take_snapshot(
             snapshot.content |= snapshot_content::film_aspect;
         }
 
-        if (snapshot.contains(snapshot_content::view_vector)
-                && (this->eye() != Eye::centre)
-                && (this->projection_type() == Projection_type::toe_in)
-                && (this->half_disparity() != static_cast<world_type>(0))) {
+        if (snapshot.contains(snapshot_content::view_vector) && (this->eye() != Eye::centre) &&
+            (this->projection_type() == Projection_type::toe_in) &&
+            (this->half_disparity() != static_cast<world_type>(0))) {
             // If we have non-trivial toe-in stereo, we need the up-vector to
             // compute the final view-vector.
             snapshot.content |= snapshot_content::up_vector;
@@ -419,29 +408,25 @@ megamol::core::thecam::camera<M, P>::take_snapshot(
         snapshot.gate_scaling[1] = static_cast<fractional_type>(1);
 
         switch (this->gate_scaling()) {
-            case Gate_scaling::uniform_to_fill:
-                if (snapshot.film_aspect > snapshot.resolution_aspect) {
-                    THE_ASSERT(snapshot.film_aspect != 0);
-                    snapshot.gate_scaling[0] = snapshot.resolution_aspect
-                        / snapshot.film_aspect;
-                } else {
-                    THE_ASSERT(snapshot.resolution_aspect != 0);
-                    snapshot.gate_scaling[1] = snapshot.film_aspect
-                        / snapshot.resolution_aspect;
-                }
-                break;
+        case Gate_scaling::uniform_to_fill:
+            if (snapshot.film_aspect > snapshot.resolution_aspect) {
+                THE_ASSERT(snapshot.film_aspect != 0);
+                snapshot.gate_scaling[0] = snapshot.resolution_aspect / snapshot.film_aspect;
+            } else {
+                THE_ASSERT(snapshot.resolution_aspect != 0);
+                snapshot.gate_scaling[1] = snapshot.film_aspect / snapshot.resolution_aspect;
+            }
+            break;
 
-            case Gate_scaling::uniform_to_fit:
-                if (snapshot.film_aspect > snapshot.resolution_aspect) {
-                    THE_ASSERT(snapshot.resolution_aspect != 0);
-                    snapshot.gate_scaling[1] = snapshot.film_aspect
-                        / snapshot.resolution_aspect;
-                } else {
-                    THE_ASSERT(snapshot.film_aspect != 0);
-                    snapshot.gate_scaling[0] = snapshot.resolution_aspect
-                        / snapshot.film_aspect;
-                }
-                break;
+        case Gate_scaling::uniform_to_fit:
+            if (snapshot.film_aspect > snapshot.resolution_aspect) {
+                THE_ASSERT(snapshot.resolution_aspect != 0);
+                snapshot.gate_scaling[1] = snapshot.film_aspect / snapshot.resolution_aspect;
+            } else {
+                THE_ASSERT(snapshot.film_aspect != 0);
+                snapshot.gate_scaling[0] = snapshot.resolution_aspect / snapshot.film_aspect;
+            }
+            break;
         }
     }
 
@@ -464,67 +449,66 @@ megamol::core::thecam::camera<M, P>::take_snapshot(
         snapshot.frustum_far = this->far_clipping_plane();
 
         switch (this->projection_type()) {
-            case Projection_type::perspective:
-            case Projection_type::parallel:
-            case Projection_type::toe_in:
-            case Projection_type::off_axis: {
-                // See http://paulbourke.net/stereographics/stereorender/
-                auto h = std::tan(this->half_aperture_angle_radians())
-                    * snapshot.frustum_near;
-                auto w = h * snapshot.resolution_aspect;            // TODO: film gate
+        case Projection_type::perspective:
+        case Projection_type::parallel:
+        case Projection_type::toe_in:
+        case Projection_type::off_axis: {
+            // See http://paulbourke.net/stereographics/stereorender/
+            auto h = std::tan(this->half_aperture_angle_radians()) * snapshot.frustum_near;
+            auto w = h * snapshot.resolution_aspect; // TODO: film gate
 
-                /*
-                l = this->Parameters()->TileRect().GetLeft()
-                    * w / (this->Parameters()->VirtualViewSize().Width() * 0.5f);
-                r = this->Parameters()->TileRect().GetRight()
-                    * w / (this->Parameters()->VirtualViewSize().Width() * 0.5f);
-                b = this->Parameters()->TileRect().GetBottom()
-                    * h / (this->Parameters()->VirtualViewSize().Height() * 0.5f);
-                t = this->Parameters()->TileRect().GetTop()
-                    * h / (this->Parameters()->VirtualViewSize().Height() * 0.5f);
-                */
-                // TODO: could use SSE2 here
-                snapshot.frustum_left = (tl * w) / (iw * HALF);
-                snapshot.frustum_top = (tt * h) / (ih * HALF);
-                snapshot.frustum_right = (tr * w) / (iw * HALF);
-                snapshot.frustum_bottom = (tb * h) / (ih * HALF);
+            /*
+            l = this->Parameters()->TileRect().GetLeft()
+                * w / (this->Parameters()->VirtualViewSize().Width() * 0.5f);
+            r = this->Parameters()->TileRect().GetRight()
+                * w / (this->Parameters()->VirtualViewSize().Width() * 0.5f);
+            b = this->Parameters()->TileRect().GetBottom()
+                * h / (this->Parameters()->VirtualViewSize().Height() * 0.5f);
+            t = this->Parameters()->TileRect().GetTop()
+                * h / (this->Parameters()->VirtualViewSize().Height() * 0.5f);
+            */
+            // TODO: could use SSE2 here
+            snapshot.frustum_left = (tl * w) / (iw * HALF);
+            snapshot.frustum_top = (tt * h) / (ih * HALF);
+            snapshot.frustum_right = (tr * w) / (iw * HALF);
+            snapshot.frustum_bottom = (tb * h) / (ih * HALF);
 
-                // TODO: tracking here?
-                // TODO: toe-in/parallel in projection or in view matrix?
+            // TODO: tracking here?
+            // TODO: toe-in/parallel in projection or in view matrix?
 
-                if (this->projection_type() == Projection_type::off_axis) {
-                    auto c = snapshot.frustum_near + this->convergence_plane();
-                    THE_ASSERT(c != static_cast<world_type>(0));
-                    //w += static_cast<world_type>(this->eye()) * (snapshot.frustum_near * this->half_disparity()) / this->focal_length();  // TODO: convergence plane
-                    w += EYE_DIR * this->half_disparity()
-                        * snapshot.frustum_near / c;
-                }
+            if (this->projection_type() == Projection_type::off_axis) {
+                auto c = snapshot.frustum_near + this->convergence_plane();
+                THE_ASSERT(c != static_cast<world_type>(0));
+                // w += static_cast<world_type>(this->eye()) * (snapshot.frustum_near * this->half_disparity()) /
+                // this->focal_length();  // TODO: convergence plane
+                w += EYE_DIR * this->half_disparity() * snapshot.frustum_near / c;
+            }
 
-                // TODO: could use SSE2 here
-                // cut out local frustum for tile rect
-                snapshot.frustum_left -= w;
-                snapshot.frustum_right -= w;
-                snapshot.frustum_bottom -= h;
-                snapshot.frustum_top -= h;
-            } break;
+            // TODO: could use SSE2 here
+            // cut out local frustum for tile rect
+            snapshot.frustum_left -= w;
+            snapshot.frustum_right -= w;
+            snapshot.frustum_bottom -= h;
+            snapshot.frustum_top -= h;
+        } break;
 
-            case Projection_type::orthographic:
-                // TODO: could use SSE2 here
-                snapshot.frustum_left = tl - (iw * HALF);
-                snapshot.frustum_top = tt - (ih * HALF);
-                snapshot.frustum_right = tr - (iw * HALF);
-                snapshot.frustum_bottom = tb - (ih * HALF);
-                break;
+        case Projection_type::orthographic:
+            // TODO: could use SSE2 here
+            snapshot.frustum_left = tl - (iw * HALF);
+            snapshot.frustum_top = tt - (ih * HALF);
+            snapshot.frustum_right = tr - (iw * HALF);
+            snapshot.frustum_bottom = tb - (ih * HALF);
+            break;
 
-            default:
-                throw std::runtime_error("invalid operation");
+        default:
+            throw std::runtime_error("invalid operation");
         }
 
         // TODO: gate scaling here?
     }
 
     // TODO: normalise only once?
-    //const auto q = math::normalise(this->orientation());
+    // const auto q = math::normalise(this->orientation());
 
     /* Compute final up-vector. */
     if (snapshot.contains(snapshot_content::up_vector)) {
@@ -532,10 +516,10 @@ megamol::core::thecam::camera<M, P>::take_snapshot(
         auto q = math::normalise(this->orientation());
 
         snapshot.up_vector = math::rotate(v, q);
-        THE_ASSERT(math::is_equal(snapshot.up_vector.w(),
-            static_cast<world_type>(0), static_cast<world_type>(0.00001)));
-        THE_ASSERT(math::is_equal(math::length(snapshot.up_vector),
-            static_cast<world_type>(1), static_cast<world_type>(0.00001)));
+        THE_ASSERT(
+            math::is_equal(snapshot.up_vector.w(), static_cast<world_type>(0), static_cast<world_type>(0.00001)));
+        THE_ASSERT(math::is_equal(
+            math::length(snapshot.up_vector), static_cast<world_type>(1), static_cast<world_type>(0.00001)));
     }
 
     /* Compute final view-vector. */
@@ -544,10 +528,10 @@ megamol::core::thecam::camera<M, P>::take_snapshot(
         auto q = math::normalise(this->orientation());
 
         snapshot.view_vector = math::rotate(v, q);
-        THE_ASSERT(math::is_equal(snapshot.view_vector.w(),
-            static_cast<world_type>(0), static_cast<world_type>(0.00001)));
-        THE_ASSERT(math::is_equal(math::length(snapshot.view_vector),
-            static_cast<world_type>(1), static_cast<world_type>(0.00001)));
+        THE_ASSERT(
+            math::is_equal(snapshot.view_vector.w(), static_cast<world_type>(0), static_cast<world_type>(0.00001)));
+        THE_ASSERT(math::is_equal(
+            math::length(snapshot.view_vector), static_cast<world_type>(1), static_cast<world_type>(0.00001)));
     }
 
     /* Compute final position and the right-vector of the camera. */
@@ -556,16 +540,14 @@ megamol::core::thecam::camera<M, P>::take_snapshot(
         THE_ASSERT(snapshot.contains(snapshot_content::view_vector));
 
         if (this->handedness() == Handedness::right_handed) {
-            snapshot.right_vector = math::cross(snapshot.view_vector,
-                snapshot.up_vector);
+            snapshot.right_vector = math::cross(snapshot.view_vector, snapshot.up_vector);
         } else {
-            snapshot.right_vector = math::cross(snapshot.up_vector,
-                snapshot.view_vector);
+            snapshot.right_vector = math::cross(snapshot.up_vector, snapshot.view_vector);
         }
-        THE_ASSERT(math::is_equal(math::length(snapshot.right_vector),
-            static_cast<world_type>(1), static_cast<world_type>(0.00001)));
+        THE_ASSERT(math::is_equal(
+            math::length(snapshot.right_vector), static_cast<world_type>(1), static_cast<world_type>(0.00001)));
 
-        if (this->half_disparity() != static_cast<world_type>(0)){
+        if (this->half_disparity() != static_cast<world_type>(0)) {
             auto p = vector_type(this->position());
             auto e = static_cast<world_type>(this->eye());
             auto d = e * this->half_disparity() * snapshot.right_vector;
@@ -581,10 +563,8 @@ megamol::core::thecam::camera<M, P>::take_snapshot(
      * Note that the right-vector must have been computed before rotating the
      * view-vector now.
      */
-    if (snapshot.contains(snapshot_content::view_vector)
-            && (this->projection_type() == Projection_type::toe_in)
-            && (EYE_DIR != static_cast<world_type>(0))
-            && (this->half_disparity() != static_cast<world_type>(0))) {
+    if (snapshot.contains(snapshot_content::view_vector) && (this->projection_type() == Projection_type::toe_in) &&
+        (EYE_DIR != static_cast<world_type>(0)) && (this->half_disparity() != static_cast<world_type>(0))) {
         /*
          *                   look at
          *                      ^
@@ -625,340 +605,24 @@ megamol::core::thecam::camera<M, P>::take_snapshot(
 /*
  * megamol::core::thecam::camera<M, P>::operator =
  */
-template<class M, template<class> class P>
-megamol::core::thecam::camera<M, P>&
-megamol::core::thecam::camera<M, P>::operator =(const minimal_state_type& rhs) {
-    this->centre_offset({ rhs.centre_offset[0], rhs.centre_offset[1] }); // TODO is this correct for all template possibilities?
+template <class M, template <class> class P>
+megamol::core::thecam::camera<M, P>& megamol::core::thecam::camera<M, P>::operator=(const minimal_state_type& rhs) {
+    this->centre_offset(
+        {rhs.centre_offset[0], rhs.centre_offset[1]}); // TODO is this correct for all template possibilities?
     this->convergence_plane(rhs.convergence_plane);
     this->eye(rhs.eye);
     this->far_clipping_plane(rhs.far_clipping_plane);
-    this->film_gate({ rhs.film_gate[0], rhs.film_gate[1] }); // TODO is this correct for all template possibilities?
+    this->film_gate({rhs.film_gate[0], rhs.film_gate[1]}); // TODO is this correct for all template possibilities?
     this->gate_scaling(rhs.gate_scaling);
     this->half_aperture_angle_radians(rhs.half_aperture_angle_radians);
     this->half_disparity(rhs.half_disparity);
-    this->image_tile({ rhs.image_tile[0], rhs.image_tile[1], rhs.image_tile[2], rhs.image_tile[3] }); // TODO is this correct for all template possibilities?
+    this->image_tile({rhs.image_tile[0], rhs.image_tile[1], rhs.image_tile[2],
+        rhs.image_tile[3]}); // TODO is this correct for all template possibilities?
     this->near_clipping_plane(rhs.near_clipping_plane);
-    this->orientation(quaternion_type(rhs.orientation[0], rhs.orientation[1],
-        rhs.orientation[2], rhs.orientation[3]));
-    this->position(vector_type(rhs.position[0], rhs.position[1],
-        rhs.position[2], 1.0f));
+    this->orientation(quaternion_type(rhs.orientation[0], rhs.orientation[1], rhs.orientation[2], rhs.orientation[3]));
+    this->position(vector_type(rhs.position[0], rhs.position[1], rhs.position[2], 1.0f));
     this->projection_type(rhs.projection_type);
-    this->resolution_gate({ rhs.resolution_gate[0], rhs.resolution_gate[1] }); // TODO is this correct for all template possibilities?
+    this->resolution_gate(
+        {rhs.resolution_gate[0], rhs.resolution_gate[1]}); // TODO is this correct for all template possibilities?
     return *this;
 }
-
-
-#if 0
-/*
-* vislib::graphics::Camera::CalcViewFrustum
-*/
-vislib::graphics::SceneSpaceViewFrustum&
-vislib::graphics::Camera::CalcViewFrustum(
-SceneSpaceViewFrustum& outFrustum) const {
-    SceneSpaceType h;   // Height of the frustum.
-    SceneSpaceType w;   // Width of the frustum.
-    SceneSpaceType l;   // Left clipping plane.
-    SceneSpaceType r;   // Right clipping plane.
-    SceneSpaceType b;   // Bottom clipping plane.
-    SceneSpaceType t;   // Top clipping plane.
-    SceneSpaceType n;   // Near clipping plane.
-    SceneSpaceType f;   // Far clipping plane.
-
-    n = this->Parameters()->NearClip();
-    f = this->Parameters()->FarClip();
-
-    // TODO: This computation is taken from the OpenGL camera. I think this 
-    // step should be identical for D3D, but check this.
-    switch (this->Parameters()->Projection()) {
-
-        case CameraParameters::MONO_PERSPECTIVE:
-            /* falls through. */
-        case CameraParameters::STEREO_PARALLEL:
-            /* falls through. */
-        case CameraParameters::STEREO_TOE_IN: {
-            // symmetric main frustum
-            h = tan(this->Parameters()->HalfApertureAngle()) * n;
-            w = h * this->Parameters()->VirtualViewSize().Width()
-                / this->Parameters()->VirtualViewSize().Height();
-
-            // recalc tile rect on near clipping plane
-            l = this->Parameters()->TileRect().GetLeft()
-                * w / (this->Parameters()->VirtualViewSize().Width() * 0.5f);
-            r = this->Parameters()->TileRect().GetRight()
-                * w / (this->Parameters()->VirtualViewSize().Width() * 0.5f);
-            b = this->Parameters()->TileRect().GetBottom()
-                * h / (this->Parameters()->VirtualViewSize().Height() * 0.5f);
-            t = this->Parameters()->TileRect().GetTop()
-                * h / (this->Parameters()->VirtualViewSize().Height() * 0.5f);
-
-            // cut out local frustum for tile rect
-            l -= w;
-            r -= w;
-            b -= h;
-            t -= h;
-        } break;
-
-        case CameraParameters::STEREO_OFF_AXIS: {
-            // symmetric main frustum
-            h = tan(this->Parameters()->HalfApertureAngle()) * n;
-            w = h * this->Parameters()->VirtualViewSize().Width()
-                / this->Parameters()->VirtualViewSize().Height();
-
-            // recalc tile rect on near clipping plane
-            l = this->Parameters()->TileRect().GetLeft()
-                * w / (this->Parameters()->VirtualViewSize().Width() * 0.5f);
-            r = this->Parameters()->TileRect().GetRight()
-                * w / (this->Parameters()->VirtualViewSize().Width() * 0.5f);
-            b = this->Parameters()->TileRect().GetBottom()
-                * h / (this->Parameters()->VirtualViewSize().Height() * 0.5f);
-            t = this->Parameters()->TileRect().GetTop()
-                * h / (this->Parameters()->VirtualViewSize().Height() * 0.5f);
-
-            // shear frustum
-            w += static_cast<SceneSpaceType>((
-                (this->Parameters()->Eye() == CameraParameters::LEFT_EYE)
-                ? -1.0 : 1.0)
-                * (n * this->Parameters()->StereoDisparity() * 0.5)
-                / this->Parameters()->FocalDistance());
-
-            // cut out local frustum for tile rect
-            l -= w;
-            r -= w;
-            b -= h;
-            t -= h;
-        } break;
-
-        case CameraParameters::MONO_ORTHOGRAPHIC:
-            // return shifted tile
-            l = this->Parameters()->TileRect().GetLeft()
-                - this->Parameters()->VirtualViewSize().Width() * 0.5f;
-            r = this->Parameters()->TileRect().GetRight()
-                - this->Parameters()->VirtualViewSize().Width() * 0.5f;
-            b = this->Parameters()->TileRect().GetBottom()
-                - this->Parameters()->VirtualViewSize().Height() * 0.5f;
-            t = this->Parameters()->TileRect().GetTop()
-                - this->Parameters()->VirtualViewSize().Height() * 0.5f;
-            break;
-
-        default:
-            throw std::runtime_error("The specified projection type is not supported");
-    }
-
-    outFrustum.Set(l, r, b, t, n, f);
-    return outFrustum;
-}
-#endif
-
-#if 0
-
-/*
-* vislib::graphics::d3d::D3DCamera::CalcViewMatrix
-*/
-vislib::graphics::d3d::D3DMatrix&
-vislib::graphics::d3d::D3DCamera::CalcViewMatrix(D3DMatrix& outMatrix,
-const bool isLeftHanded) const {
-    this->updateCache();
-    SceneSpaceVector3D right = this->Parameters()->EyeRightVector();
-
-    if (isLeftHanded) {
-        ::D3DXMatrixLookAtLH(
-            static_cast<D3DXMATRIX *>(outMatrix),
-            static_cast<D3DXVECTOR3 *>(this->cacheEye),
-            static_cast<D3DXVECTOR3 *>(this->cacheAt),
-            static_cast<D3DXVECTOR3 *>(this->cacheUp));
-
-        zaxis = normal(At - Eye)
-            xaxis = normal(cross(Up, zaxis))
-            yaxis = cross(zaxis, xaxis)
-
-            xaxis.x           yaxis.x           zaxis.x          0
-            xaxis.y           yaxis.y           zaxis.y          0
-            xaxis.z           yaxis.z           zaxis.z          0
-            -dot(xaxis, eye)  -dot(yaxis, eye)  -dot(zaxis, eye)  1
-
-    } else {
-        ::D3DXMatrixLookAtRH(
-            static_cast<D3DXMATRIX *>(outMatrix),
-            static_cast<D3DXVECTOR3 *>(this->cacheEye),
-            static_cast<D3DXVECTOR3 *>(this->cacheAt),
-            static_cast<D3DXVECTOR3 *>(this->cacheUp));
-
-        zaxis = normal(Eye - At)
-            xaxis = normal(cross(Up, zaxis))
-            yaxis = cross(zaxis, xaxis)
-
-            xaxis.x           yaxis.x           zaxis.x          0
-            xaxis.y           yaxis.y           zaxis.y          0
-            xaxis.z           yaxis.z           zaxis.z          0
-            dot(xaxis, eye)   dot(yaxis, eye)   dot(zaxis, eye)  1
-
-    }
-
-    return outMatrix;
-}
-#endif
-
-#if 0
-// TOE IN
-glMatrixMode(GL_PROJECTION);
-glLoadIdentity();
-gluPerspective(camera.aperture,screenwidth/(double)screenheight,0.1,10000.0);
-
-if (stereo) {
-
-    CROSSPROD(camera.vd,camera.vu,right);
-    Normalise(&right);
-    right.x *= camera.eyesep / 2.0;
-    right.y *= camera.eyesep / 2.0;
-    right.z *= camera.eyesep / 2.0;
-
-    glMatrixMode(GL_MODELVIEW);
-    glDrawBuffer(GL_BACK_RIGHT);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glLoadIdentity();
-    gluLookAt(camera.vp.x + right.x,
-        camera.vp.y + right.y,
-        camera.vp.z + right.z,
-        focus.x,focus.y,focus.z,
-        camera.vu.x,camera.vu.y,camera.vu.z);
-    MakeLighting();
-    MakeGeometry();
-
-    glMatrixMode(GL_MODELVIEW);
-    glDrawBuffer(GL_BACK_LEFT);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glLoadIdentity();
-    gluLookAt(camera.vp.x - right.x,
-        camera.vp.y - right.y,
-        camera.vp.z - right.z,
-        focus.x,focus.y,focus.z,
-        camera.vu.x,camera.vu.y,camera.vu.z);
-    MakeLighting();
-    MakeGeometry();
-
-} else {
-
-    glMatrixMode(GL_MODELVIEW);
-    glDrawBuffer(GL_BACK);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glLoadIdentity();
-    gluLookAt(camera.vp.x,
-        camera.vp.y,
-        camera.vp.z,
-        focus.x,focus.y,focus.z,
-        camera.vu.x,camera.vu.y,camera.vu.z);
-    MakeLighting();
-    MakeGeometry();
-}
-
-/* glFlush(); This isn't necessary for double buffers */
-glutSwapBuffers();
-
-
-// OFF-AXIS
-/* Misc stuff */
-ratio = camera.screenwidth / (double) camera.screenheight;
-radians = DTOR * camera.aperture / 2;
-wd2 = near * tan(radians);
-ndfl = near / camera.focallength;
-
-if (stereo) {
-
-    /* Derive the two eye positions */
-    CROSSPROD(camera.vd, camera.vu, r);
-    Normalise(&r);
-    r.x *= camera.eyesep / 2.0;
-    r.y *= camera.eyesep / 2.0;
-    r.z *= camera.eyesep / 2.0;
-
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    left = -ratio * wd2 - 0.5 * camera.eyesep * ndfl;
-    right = ratio * wd2 - 0.5 * camera.eyesep * ndfl;
-    top = wd2;
-    bottom = -wd2;
-    glFrustum(left, right, bottom, top, near, far);
-
-    glMatrixMode(GL_MODELVIEW);
-    glDrawBuffer(GL_BACK_RIGHT);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glLoadIdentity();
-    gluLookAt(camera.vp.x + r.x, camera.vp.y + r.y, camera.vp.z + r.z,
-        camera.vp.x + r.x + camera.vd.x,
-        camera.vp.y + r.y + camera.vd.y,
-        camera.vp.z + r.z + camera.vd.z,
-        camera.vu.x, camera.vu.y, camera.vu.z);
-    MakeLighting();
-    MakeGeometry();
-
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    left = -ratio * wd2 + 0.5 * camera.eyesep * ndfl;
-    right = ratio * wd2 + 0.5 * camera.eyesep * ndfl;
-    top = wd2;
-    bottom = -wd2;
-    glFrustum(left, right, bottom, top, near, far);
-
-    glMatrixMode(GL_MODELVIEW);
-    glDrawBuffer(GL_BACK_LEFT);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glLoadIdentity();
-    gluLookAt(camera.vp.x - r.x, camera.vp.y - r.y, camera.vp.z - r.z,
-        camera.vp.x - r.x + camera.vd.x,
-        camera.vp.y - r.y + camera.vd.y,
-        camera.vp.z - r.z + camera.vd.z,
-        camera.vu.x, camera.vu.y, camera.vu.z);
-    MakeLighting();
-    MakeGeometry();
-
-} else {
-
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    left = -ratio * wd2;
-    right = ratio * wd2;
-    top = wd2;
-    bottom = -wd2;
-    glFrustum(left, right, bottom, top, near, far);
-
-    glMatrixMode(GL_MODELVIEW);
-    glDrawBuffer(GL_BACK);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glLoadIdentity();
-    gluLookAt(camera.vp.x, camera.vp.y, camera.vp.z,
-        camera.vp.x + camera.vd.x,
-        camera.vp.y + camera.vd.y,
-        camera.vp.z + camera.vd.z,
-        camera.vu.x, camera.vu.y, camera.vu.z);
-    MakeLighting();
-    MakeGeometry();
-}
-
-/* glFlush(); This isn't necessary for double buffers */
-glutSwapBuffers();
-
-
-
-D3DXMATRIX* D3DXMatrixLookAtLH(
-    zaxis = normal(At - Eye)
-    xaxis = normal(cross(Up, zaxis))
-    yaxis = cross(zaxis, xaxis)
-
-    xaxis.x           yaxis.x           zaxis.x          0
-    xaxis.y           yaxis.y           zaxis.y          0
-    xaxis.z           yaxis.z           zaxis.z          0
-    - dot(xaxis, eye) - dot(yaxis, eye) - dot(zaxis, eye)  1
-
-    D3DXMatrixLookAtRH
-
-    zaxis = normal(Eye - At)
-    xaxis = normal(cross(Up, zaxis))
-    yaxis = cross(zaxis, xaxis)
-
-    xaxis.x           yaxis.x           zaxis.x          0
-    xaxis.y           yaxis.y           zaxis.y          0
-    xaxis.z           yaxis.z           zaxis.z          0
-    dot(xaxis, eye)   dot(yaxis, eye)   dot(zaxis, eye)  1
-
-
-#endif

@@ -1,7 +1,7 @@
 /*
  * Texture3DView.h
  *
- * Copyright (C) 2018 by Universitaet Stuttgart (VISUS). 
+ * Copyright (C) 2018 by Universitaet Stuttgart (VISUS).
  * Alle Rechte vorbehalten.
  */
 #ifndef MEGAMOLCORE_TEXTURE3DVIEW_H_INCLUDED
@@ -53,7 +53,7 @@ public:
 
     /**
      * Get the layout of the texture
-     * 
+     *
      * @return The layout of the texture
      */
     TextureLayout getTextureLayout() const;
@@ -71,7 +71,7 @@ public:
      * @return The textures height
      */
     unsigned int getHeight();
-    
+
     /**
      * Get the depth of the texture
      *

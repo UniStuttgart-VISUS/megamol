@@ -29,26 +29,3 @@
  */
 
 #include "mmcore/thecam/math/vector.h"
-
-
-#ifdef WITH_THE_XMATH
-/*
- * megamol::core::thecam::math::orthonormalise
- */
-void megamol::core::thecam::math::orthonormalise(vector<DirectX::XMFLOAT4>& vec1,
-        vector<DirectX::XMFLOAT4>& vec2) {
-    auto v1 = load_xmvector(vec1);
-    auto v2 = load_xmvector(vec2);
-
-    v1 = DirectX::XMVector3Normalize(v1);
-
-    auto dp = DirectX::XMVector3Dot(v1, v2);
-    auto p = DirectX::XMVectorMultiply(dp, v1);
-
-    v2 = DirectX::XMVectorSubtract(v2, p);
-    v2 = DirectX::XMVector3Normalize(v2);
-
-    store_xmvector(vec1, v1);
-    store_xmvector(vec2, v2);
-}
-#endif /* WITH_THE_XMATH */

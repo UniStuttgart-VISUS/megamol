@@ -1,7 +1,7 @@
 /*
  * Texture3D.h
  *
- * Copyright (C) 2018 by Universitaet Stuttgart (VISUS). 
+ * Copyright (C) 2018 by Universitaet Stuttgart (VISUS).
  * Alle Rechte vorbehalten.
  */
 #ifndef MEGAMOLCORE_TEXTURE3D_H_INCLUDED
@@ -37,13 +37,13 @@ public:
 
     /** Deleted copy constructor */
     Texture3D(const Texture3D&) = delete;
-    
+
     /** Deleted move constructor */
     Texture3D(Texture3D&& other) = delete;
-    
+
     /** Deleted assignment operator */
     Texture3D& operator=(const Texture3D& rhs) = delete;
-    
+
     /** Deleted move operator */
     Texture3D& operator=(Texture3D&& rhs) = delete;
 
@@ -59,7 +59,7 @@ public:
 
     /**
      * Reload the texture.
-     * 
+     *
      * @param layout The layout of the texture
      * @param data Pointer to the new texture data
      * @return True on success, false otherwise
@@ -68,7 +68,7 @@ public:
 
     /**
      * Get the layout of the texture
-     * 
+     *
      * @return The layout of the texture
      */
     TextureLayout getTextureLayout() const;
@@ -86,7 +86,7 @@ public:
      * @return The textures height
      */
     unsigned int getHeight();
-    
+
     /**
      * Get the depth of the texture
      *
@@ -95,7 +95,6 @@ public:
     unsigned int getDepth();
 
 private:
-
     /** The width of the texture */
     unsigned int m_width;
 

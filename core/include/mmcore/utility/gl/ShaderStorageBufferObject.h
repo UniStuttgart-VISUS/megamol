@@ -1,7 +1,7 @@
 /*
  * ShaderStorageBufferObject.h
  *
- * Copyright (C) 2018 by Universitaet Stuttgart (VISUS). 
+ * Copyright (C) 2018 by Universitaet Stuttgart (VISUS).
  * Alle Rechte vorbehalten.
  */
 #ifndef MEGAMOLCORE_SHADERSTORAGEBUFFEROBJECT_H_INCLUDED
@@ -97,7 +97,7 @@ public:
 
     /**
      * Changes the data in a part of the SSBO
-     * 
+     *
      * @param datastorage Container storing the new data
      * @param offset Offset of the target location from the start of the SSBO in bytes
      * @return True on success, false otherwise
@@ -129,7 +129,7 @@ public:
 
     /**
      * Copies the data from one SSBO into another
-     * 
+     *
      * @param src The source buffer
      * @param tgt The buffer the data gets copied to
      */

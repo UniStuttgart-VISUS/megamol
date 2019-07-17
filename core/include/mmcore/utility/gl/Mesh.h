@@ -1,7 +1,7 @@
 /*
  * Mesh.h
  *
- * Copyright (C) 2018 by Universitaet Stuttgart (VISUS). 
+ * Copyright (C) 2018 by Universitaet Stuttgart (VISUS).
  * Alle Rechte vorbehalten.
  */
 #ifndef MEGAMOLCORE_MESH_H_INCLUDED
@@ -136,7 +136,7 @@ public:
 
     /**
      * Updates the data in the vertex buffer
-     * 
+     *
      * @param vertices Container with the new vertex data
      * @param descriptor New vertex layout description
      */

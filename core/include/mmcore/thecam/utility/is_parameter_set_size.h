@@ -31,10 +31,10 @@
 #ifndef THE_IS_PARAMETER_SET_SIZE_H_INCLUDED
 #define THE_IS_PARAMETER_SET_SIZE_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#pragma once
+#    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
-#pragma managed(push, off)
+#    pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 #include "mmcore/thecam/utility/config.h"
@@ -44,25 +44,25 @@ namespace megamol {
 namespace core {
 namespace thecam {
 
-    /**
-     * This helper class works around VS 2013 not handling expression SFINAE
-     * correctly. It answers the question whether a parameter set has a specific
-     * number of elements.
-     *
-     * @tparam P The parameter set to be tested.
-     * @tparam S The expected size of the parameter set.
-     */
-    template<size_t S, class... P> struct is_parameter_set_size {
+/**
+ * This helper class works around VS 2013 not handling expression SFINAE
+ * correctly. It answers the question whether a parameter set has a specific
+ * number of elements.
+ *
+ * @tparam P The parameter set to be tested.
+ * @tparam S The expected size of the parameter set.
+ */
+template <size_t S, class... P> struct is_parameter_set_size {
 
-        /** true if the parameter set 'P' has size 'S', false otherwise. */
-        static const bool value = (sizeof...(P) == S);
-    };
+    /** true if the parameter set 'P' has size 'S', false otherwise. */
+    static const bool value = (sizeof...(P) == S);
+};
 
 } /* end namespace thecam */
 } /* end namespace core */
 } /* end namespace megamol */
 
 #if defined(_WIN32) && defined(_MANAGED)
-#pragma managed(pop)
+#    pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* THE_IS_PARAMETER_SET_SIZE_H_INCLUDED */
