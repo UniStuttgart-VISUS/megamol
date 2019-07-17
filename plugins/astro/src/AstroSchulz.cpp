@@ -26,14 +26,10 @@ megamol::astro::AstroSchulz::AstroSchulz(void)
     this->slotAstroData.SetCompatibleCall<AstroDataCallDescription>();
     this->MakeSlotAvailable(&this->slotAstroData);
 
-    this->slotTableData.SetCallback(
-        megamol::stdplugin::datatools::table::TableDataCall::ClassName(),
-        megamol::stdplugin::datatools::table::TableDataCall::FunctionName(0),
-        &AstroSchulz::getData);
-    this->slotTableData.SetCallback(
-        megamol::stdplugin::datatools::table::TableDataCall::ClassName(),
-        megamol::stdplugin::datatools::table::TableDataCall::FunctionName(1),
-        &AstroSchulz::getHash);
+    this->slotTableData.SetCallback(megamol::stdplugin::datatools::table::TableDataCall::ClassName(),
+        megamol::stdplugin::datatools::table::TableDataCall::FunctionName(0), &AstroSchulz::getData);
+    this->slotTableData.SetCallback(megamol::stdplugin::datatools::table::TableDataCall::ClassName(),
+        megamol::stdplugin::datatools::table::TableDataCall::FunctionName(1), &AstroSchulz::getHash);
     this->MakeSlotAvailable(&this->slotTableData);
 
     // Define the data format of the output.
@@ -229,11 +225,10 @@ bool megamol::astro::AstroSchulz::getData(core::Call& call) {
         dst = AstroSchulz::convert(dst, this->columns[16], ast->GetIsWindFlags());
         dst = AstroSchulz::convert(dst, this->columns[17], ast->GetIsStarFormingGasFlags());
         dst = AstroSchulz::convert(dst, this->columns[18], ast->GetIsAGNFlags());
-        //dst = AstroSchulz::convert(dst, this->columns[19], ast->GetParticleIDs());
+        dst = AstroSchulz::convert(dst, this->columns[19], ast->GetParticleIDs());
 
         tab->SetDataHash(this->hash);
-        tab->Set(this->columns.size(), cnt, this->columns.data(),
-            this->values.data());
+        tab->Set(this->columns.size(), cnt, this->columns.data(), this->values.data());
 
         retval = true;
     } /* end if ((*ast)(AstroDataCall::CallForGetData)) */
@@ -271,51 +266,60 @@ float *megamol::astro::AstroSchulz::convert(float *dst, ColumnInfo& ciX,
     assert(dst != nullptr);
     assert(src != nullptr);
 
-    auto minX = (std::numeric_limits<float>::max)();
-    auto minY = (std::numeric_limits<float>::max)();
-    auto minZ = (std::numeric_limits<float>::max)();
-
-    auto maxX = (std::numeric_limits<float>::lowest)();
-    auto maxY = (std::numeric_limits<float>::lowest)();
-    auto maxZ = (std::numeric_limits<float>::lowest)();
+    auto rangeX = std::make_pair(
+        (std::numeric_limits<float>::max)(),
+        std::numeric_limits<float>::lowest());
+    auto rangeY = rangeX;
+    auto rangeZ = rangeX;
 
     auto cnt = src->size();
 
     for (auto s : *src) {
-        dst[0] = s.x;
-        dst[cnt] = s.y;
+        dst[0 * cnt] = s.x;
+        dst[1 * cnt] = s.y;
         dst[2 * cnt] = s.z;
 
-        if (s.x < minX) {
-            minX = s.x;
+        if (s.x < rangeX.first) {
+            rangeX.first = s.x;
         }
-        if (s.y < minY) {
-            minY = s.y;
-        }
-        if (s.z < minZ) {
-            minZ = s.z;
+        if (s.x > rangeX.second) {
+            rangeX.second = s.x;
         }
 
-        if (s.x > maxX) {
-            maxX = s.x;
+        if (s.y < rangeY.first) {
+            rangeY.first = s.y;
         }
-        if (s.y > maxY) {
-            maxY = s.y;
+        if (s.y > rangeY.second) {
+            rangeY.second = s.y;
         }
-        if (s.z > maxZ) {
-            maxZ = s.z;
+
+        if (s.z < rangeZ.first) {
+            rangeZ.first = s.z;
         }
+        if (s.z > rangeZ.second) {
+            rangeZ.second = s.z;
+        }
+
+        assert(rangeX.first <= rangeX.second);
+        assert(rangeY.first <= rangeY.second);
+        assert(rangeZ.first <= rangeZ.second);
+        assert(dst[0 * cnt] >= rangeX.first);
+        assert(dst[0 * cnt] <= rangeX.second);
+        assert(dst[1 * cnt] >= rangeY.first);
+        assert(dst[1 * cnt] <= rangeY.second);
+        assert(dst[2 * cnt] >= rangeZ.first);
+        assert(dst[2 * cnt] <= rangeZ.second);
 
         ++dst;
     }
 
-    ciX.SetMinimumValue(minX);
-    ciY.SetMinimumValue(minY);
-    ciZ.SetMinimumValue(minZ);
+    ciX.SetMinimumValue(rangeX.first);
+    ciY.SetMinimumValue(rangeY.first);
+    ciZ.SetMinimumValue(rangeZ.first);
 
-    ciX.SetMaximumValue(maxX);
-    ciY.SetMaximumValue(maxY);
-    ciZ.SetMaximumValue(maxZ);
+    ciX.SetMaximumValue(rangeX.second);
+    ciY.SetMaximumValue(rangeY.second);
+    ciZ.SetMaximumValue(rangeZ.second);
 
     dst += 2 * cnt;
 
@@ -327,25 +331,30 @@ float *megamol::astro::AstroSchulz::convert(float *dst, ColumnInfo& ciX,
  * megamol::astro::AstroSchulz::convert
  */
 float *megamol::astro::AstroSchulz::convert(float *dst, ColumnInfo& ci,
-        const floatArrayPtr &src) {
+        const floatArrayPtr& src) {
     assert(dst != nullptr);
     assert(src != nullptr);
-    auto i = (std::numeric_limits<float>::max)();
-    auto a = std::numeric_limits<float>::lowest();
+    auto range = std::make_pair(
+        (std::numeric_limits<float>::max)(),
+        std::numeric_limits<float>::lowest());
 
     for (auto s : *src) {
         *dst++ = s;
 
-        if (s < i) {
-            i = s;
+        if (s < range.first) {
+            range.first = s;
         }
-        if (s > a) {
-            a = s;
+        if (s > range.second) {
+            range.second = s;
         }
+
+        assert(range.first <= range.second);
+        assert(s >= range.first);
+        assert(s <= range.second);
     }
 
-    ci.SetMinimumValue(i);
-    ci.SetMaximumValue(a);
+    ci.SetMinimumValue(range.first);
+    ci.SetMaximumValue(range.second);
 
     return dst;
 }
@@ -354,30 +363,17 @@ float *megamol::astro::AstroSchulz::convert(float *dst, ColumnInfo& ci,
 /*
  * megamol::astro::AstroSchulz::convert
  */
-float *megamol::astro::AstroSchulz::convert(float *dst, ColumnInfo& ci,
-        const boolArrayPtr& src) {
+float *megamol::astro::AstroSchulz::convert(float *dst,
+        ColumnInfo& ci, const boolArrayPtr& src) {
     assert(dst != nullptr);
     assert(src != nullptr);
-    //auto i = (std::numeric_limits<float>::max)();
-    //auto a = std::numeric_limits<float>::lowest();
-
-    //for (auto s : *src) {
-    //    auto t = s ? 1.0f : 0.0f;
-    //    *dst++ = t;
-
-    //    if (t < i) {
-    //        i = t;
-    //    }
-    //    if (t > a) {
-    //        a = t;
-    //    }
-    //}
-
-    //ci.SetMinimumValue(i);
-    //ci.SetMaximumValue(a);
 
     for (auto s : *src) {
-        *dst++ = s ? 1.0f : 0.0f;
+        auto value = s ? 1.0f : 0.0f;
+        *dst++ = value;
+        assert((value == 0.0f) || (value == 1.0f));
+        assert(value >= ci.MinimumValue());
+        assert(value <= ci.MaximumValue());
     }
 
     return dst;
@@ -391,28 +387,28 @@ float *megamol::astro::AstroSchulz::convert(float *dst, ColumnInfo& ci,
         const idArrayPtr& src) {
     assert(dst != nullptr);
     assert(src != nullptr);
-    auto i = (std::numeric_limits<float>::max)();
-    auto a = std::numeric_limits<float>::lowest();
+    auto range = std::make_pair(
+        (std::numeric_limits<float>::max)(),
+        std::numeric_limits<float>::lowest());
 
     for (auto s : *src) {
-        auto t = static_cast<float>(s);
-        *dst++ = t;
+        auto value = static_cast<float>(s);
+        *dst++ = value;
 
-        if (t < i) {
-            i = t;
+        if (value < range.first) {
+            range.first = value;
         }
-        if (t > a) {
-            a = t;
+        if (value > range.second) {
+            range.second = value;
         }
+
+        assert(range.first <= range.second);
+        assert(value >= range.first);
+        assert(value <= range.second);
     }
 
-    if (i == a) {
-        // Fix parallel coordinates breaking apart.
-        a = (std::numeric_limits<float>::max)();
-    }
-
-    ci.SetMinimumValue(i);
-    ci.SetMaximumValue(a);
+    ci.SetMinimumValue(range.first);
+    ci.SetMaximumValue(range.second);
 
     return dst;
 }
