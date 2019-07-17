@@ -152,8 +152,7 @@ bool TransferFunctionParam::ParseTransferFunction(const std::string &in_tfs, TFD
         if (!TransferFunctionParam::CheckTransferFunctionString(in_tfs)) {
             return false;
         }
-
-        nlohmann::json json = nlohmann::json::parse(in_tfs);
+        nlohmann::json json = nlohmann::json::parse(in_tfs);;
 
         // Get texture size
         json.at("TextureSize").get_to(tmp_texsize);
@@ -175,8 +174,8 @@ bool TransferFunctionParam::ParseTransferFunction(const std::string &in_tfs, TFD
         }
 
         // Get data range
-        json.at("ValueRange")[0].get_to(tmp_data[0]);
-        json.at("ValueRange")[1].get_to(tmp_data[1]);
+        json.at("ValueRange")[0].get_to(tmp_range[0]);
+        json.at("ValueRange")[1].get_to(tmp_range[1]);
 
     }
     else { // Loading default values for empty transfer function
@@ -316,12 +315,11 @@ bool TransferFunctionParam::CheckTransferFunctionString(const std::string &tfs) 
     if (!tfs.empty()) {
 
         nlohmann::json json;
-
-        try
-        {
+        try {
             json = nlohmann::json::parse(tfs);
         }
         catch (...) {
+            vislib::sys::Log::DefaultLog.WriteError("[CheckTransferFunctionString] Unable to parse JSON string (there should be no escaped quotes, e.g.).");
             return false;
         }
 

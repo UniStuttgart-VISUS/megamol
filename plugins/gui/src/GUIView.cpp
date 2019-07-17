@@ -69,6 +69,7 @@ GUIView::GUIView()
     , tfEditor()
     , lastInstanceTime(0.0)
     , fontUtf8Ranges()
+    , projectFilename()
     , newFontFilenameToLoad()
     , newFontSizeToLoad(13.0f)
     , newFontIndexToLoad(-1)
@@ -1184,10 +1185,10 @@ void GUIView::drawFontWindowCallback(
     vislib::StringA valueString;
     vislib::UTF8Encoder::Encode(valueString, vislib::StringA(window_config.font_new_filename.c_str()));
     std::string valueUtf8String(valueString.PeekBuffer());
-    ImGui::InputText(label.c_str(), &valueUtf8String);
+    ImGuiInputTextFlags textflags = ImGuiInputTextFlags_AutoSelectAll;
+    ImGui::InputText(label.c_str(), &valueUtf8String, textflags);
     vislib::UTF8Encoder::Decode(valueString, vislib::StringA(valueUtf8String.data()));
     window_config.font_new_filename = valueString.PeekBuffer();
-
 
     label = "Font Size";
     ImGui::InputFloat(label.c_str(), &window_config.font_new_size, 0.0f, 0.0f, "%.2f", ImGuiInputTextFlags_None);
@@ -1196,9 +1197,8 @@ void GUIView::drawFontWindowCallback(
         window_config.font_new_size = 5.0f; /// min valid font size
     }
 
-
     // Validate font file before offering load button
-    if (HasFileExtension(window_config.font_new_filename, std::string(".ttf"))) {
+    if (HasExistingFileExtension(window_config.font_new_filename, std::string(".ttf"))) {
         if (ImGui::Button("Add Font")) {
             this->newFontFilenameToLoad = window_config.font_new_filename;
             this->newFontSizeToLoad = window_config.font_new_size;
@@ -1213,15 +1213,21 @@ void GUIView::drawFontWindowCallback(
 
 
 void GUIView::drawMenu(void) {
+
+    bool open_popup_project = false;
     if (ImGui::BeginMenu("File")) {
-        //// Load/save parameter values to LUA file
-        // if (ImGui::MenuItem("Save", "(not yet available)")) {
-        //    // TODO:  Save parameter file
-        //}
-        // if (ImGui::MenuItem("Load", "(not yet available)")) {
+#ifdef GUI_USE_FILEUTILS
+        // Load/save parameter values to LUA file
+        if (ImGui::MenuItem("Save Project")) {
+            open_popup_project = true;
+        }
+        // if (ImGui::MenuItem("Load Project")) {
         //    // TODO:  Load parameter file
+        //    std::string projectFilename;
+        //    this->GetCoreInstance()->LoadProject(vislib::StringA(projectFilename.c_str()));
         //}
         ImGui::Separator();
+#endif // GUI_USE_FILEUTILS
         if (ImGui::MenuItem("Exit", "'Esc', ALT + 'F4'")) {
             // Exit program
             this->shutdown();
@@ -1230,7 +1236,7 @@ void GUIView::drawMenu(void) {
     }
 
     // Windows
-    if (ImGui::BeginMenu("Window")) {
+    if (ImGui::BeginMenu("Windows")) {
         const auto func = [&, this](const std::string& wn, WindowManager::WindowConfiguration& wc) {
             bool win_open = wc.win_show;
             std::string hotkey_label = wc.win_hotkey.ToString();
@@ -1261,7 +1267,7 @@ void GUIView::drawMenu(void) {
     }
 
     // Help
-    bool open_popup = false;
+    bool open_popup_about = false;
     if (ImGui::BeginMenu("Help")) {
         const std::string gitLink = "https://github.com/UniStuttgart-VISUS/megamol";
         const std::string webLink = "https://megamol.org/";
@@ -1276,13 +1282,13 @@ void GUIView::drawMenu(void) {
         this->popup.HoverToolTip(hint);
         ImGui::Separator();
         if (ImGui::MenuItem("About...")) {
-            open_popup = true;
+            open_popup_about = true;
         }
         ImGui::EndMenu();
     }
 
     // Popups
-    if (open_popup) {
+    if (open_popup_about) {
         ImGui::OpenPopup("About");
     }
     if (ImGui::BeginPopupModal("About", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
@@ -1304,6 +1310,46 @@ void GUIView::drawMenu(void) {
         ImGui::SetItemDefaultFocus();
         ImGui::EndPopup();
     }
+
+#ifdef GUI_USE_FILEUTILS
+    if (open_popup_project) {
+        ImGui::OpenPopup("Save Project");
+    }
+    if (ImGui::BeginPopupModal("Save Project", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+
+
+        std::string label = "File Name";
+        vislib::StringA valueString;
+        vislib::UTF8Encoder::Encode(valueString, vislib::StringA(this->projectFilename.c_str()));
+        std::string valueUtf8String(valueString.PeekBuffer());
+        ImGuiInputTextFlags textflags = ImGuiInputTextFlags_AutoSelectAll;
+        ImGui::InputText(label.c_str(), &valueUtf8String, textflags);
+        vislib::UTF8Encoder::Decode(valueString, vislib::StringA(valueUtf8String.data()));
+        this->projectFilename = valueString.PeekBuffer();
+
+        bool valid = false;
+        if (!HasFileExtension(this->projectFilename, std::string(".lua"))) {
+            ImGui::TextColored(ImVec4(0.9f, 0.0f, 0.0f, 1.0f), "File name needs to have the ending '.lua'");
+        } else {
+            valid = true;
+        }
+
+        if (ImGui::Button("Save")) {
+            if (valid) {
+                if (SaveProjectFile(
+                        this->projectFilename, this->ModuleGraphLock(), this->RootModule(), this->GetCoreInstance())) {
+                    ImGui::CloseCurrentPopup();
+                }
+            }
+        }
+        ImGui::SetItemDefaultFocus();
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel")) {
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndPopup();
+    }
+#endif // GUI_USE_FILEUTILS
 }
 
 

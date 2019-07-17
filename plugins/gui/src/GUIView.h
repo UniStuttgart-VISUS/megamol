@@ -129,6 +129,9 @@ private:
     /** Additional UTF-8 glyph ranges for ImGui fonts. */
     std::vector<ImWchar> fontUtf8Ranges;
 
+    /** Saving the last given project filename. */
+    std::string projectFilename;
+
     // Window state buffer variables: -----------------------------------------
 
     /** File name of font file to load. */
