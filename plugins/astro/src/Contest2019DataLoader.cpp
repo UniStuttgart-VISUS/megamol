@@ -156,7 +156,7 @@ bool Contest2019DataLoader::Frame::LoadFrame(std::string filepath, unsigned int 
         // calculate the entropy ourselves
         // formula directly from the contest description
         if (this->isBaryonFlags->at(i) && this->temperatures->at(i) > 0.0f && this->densities->at(i) > 0.0f) {
-            this->entropy->operator[](i) = std::logf(this->temperatures->at(i) / std::powf(this->densities->at(i), 2.0f / 3.0f));
+            this->entropy->operator[](i) = std::log(this->temperatures->at(i) / std::pow(this->densities->at(i), 2.0f / 3.0f));
         }
     }
     return true;
