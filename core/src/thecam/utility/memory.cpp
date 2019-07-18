@@ -33,15 +33,15 @@
 #include <cstdlib>
 #include <exception>
 
-#include "mmcore/thecam/math/functions.h"
 #include <stdexcept>
+#include "mmcore/thecam/math/functions.h"
 
 
 /*
  * megamol::core::thecam::utility::aligned_malloc
  */
-void *megamol::core::thecam::utility::aligned_malloc(const size_t size, const size_t alignment) {
-    void *retval = nullptr;
+void* megamol::core::thecam::utility::aligned_malloc(const size_t size, const size_t alignment) {
+    void* retval = nullptr;
 
     /* Sanity checks. */
     if (!megamol::core::thecam::math::is_power_of_two(alignment)) {
@@ -58,7 +58,7 @@ void *megamol::core::thecam::utility::aligned_malloc(const size_t size, const si
     }
 
 #else /* defined(THE_WINDOWS) */
-#error "Implementation of megamol::core::thecam::aligned_malloc is missing!"
+#    error "Implementation of megamol::core::thecam::aligned_malloc is missing!"
 
 #endif /* defined(THE_WINDOWS) */
 

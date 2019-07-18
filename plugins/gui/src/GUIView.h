@@ -10,12 +10,16 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/AbstractView.h"
 
-#include "FileUtils.h"
+#include "vislib/math/Rectangle.h"
+
 #include "Popup.h"
 #include "TransferFunctionEditor.h"
 #include "WindowManager.h"
 
-#include "vislib/math/Rectangle.h"
+/// CMake exeption for the cluster "stampede2" running CentOS. (C++ filesystem support is not working?)
+#ifdef GUI_USE_FILEUTILS
+#    include "FileUtils.h"
+#endif // GUI_USE_FILEUTILS
 
 #include <imgui.h>
 
@@ -124,6 +128,9 @@ private:
 
     /** Additional UTF-8 glyph ranges for ImGui fonts. */
     std::vector<ImWchar> fontUtf8Ranges;
+
+    /** Saving the last given project filename. */
+    std::string projectFilename;
 
     // Window state buffer variables: -----------------------------------------
 

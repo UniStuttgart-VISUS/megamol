@@ -17,7 +17,7 @@
 #include "JobManager.h"
 #include "utility/HotFixFileName.h"
 #include "utility/HotFixes.h"
-#include "utility/KHR.h"
+#include "mmcore/utility/KHR.h"
 
 #include "ButtonParamUILayer.h"
 #include "ViewUILayer.h"
@@ -215,7 +215,7 @@ bool megamol::console::WindowManager::InstantiatePendingView(void *hCore) {
         return false;
     }
 
-    if (activateKHR) megamol::console::utility::KHR::startDebug();
+    if (activateKHR) megamol::core::utility::KHR::startDebug();
     if (vsync) w->EnableVSync();
 
     ::mmcInstantiatePendingView(hCore, w->Handle()); // pending view is instantiated and linked to windows w->Handle(), which is a core handle hView

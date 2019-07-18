@@ -31,10 +31,10 @@
 #ifndef THE_EQUATABLE_H_INCLUDED
 #define THE_EQUATABLE_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#pragma once
+#    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
-#pragma managed(push, off)
+#    pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 #include "mmcore/thecam/utility/config.h"
@@ -45,76 +45,65 @@ namespace core {
 namespace thecam {
 namespace utility {
 
+/**
+ * This abstract class implements a consistent behaviour of
+ * operator == and operator != for classes that can provide a method
+ * bool equals(const T& rhs) const.
+ *
+ * Subclasses (which must provide their type via the T parameter) only
+ * must implement the equals() method with the above mentioned signature.
+ *
+ * This class uses curiously recurring template pattern (CRTP) to avoid the
+ * necessity for a virtual table.
+ *
+ * @tparam T The type of the direct specialisation.
+ */
+template <class T> class equatable {
+
+public:
+    /** Dtor. */
+    inline ~equatable(void) {}
+
     /**
-     * This abstract class implements a consistent behaviour of
-     * operator == and operator != for classes that can provide a method
-     * bool equals(const T& rhs) const.
+     * Test for equality.
      *
-     * Subclasses (which must provide their type via the T parameter) only
-     * must implement the equals() method with the above mentioned signature.
+     * @param rhs The right hand side operand.
      *
-     * This class uses curiously recurring template pattern (CRTP) to avoid the
-     * necessity for a virtual table.
-     *
-     * @tparam T The type of the direct specialisation.
+     * @return true if this object and 'rhs' are equal, false otherwise.
      */
-    template<class T> class equatable {
+    inline bool operator==(const T& rhs) const { return static_cast<const T*>(this)->equals(rhs); }
 
-    public:
+    /**
+     * Test for inequality.
+     *
+     * @param rhs The right hand side operand.
+     *
+     * @return true if this object and 'rhs' are not equal, false otherwise.
+     */
+    inline bool operator!=(const T& rhs) const { return !static_cast<const T*>(this)->equals(rhs); }
 
-        /** Dtor. */
-        inline ~equatable(void) { }
+protected:
+    /**
+     * Initialises a new instance.
+     */
+    inline equatable(void) {}
 
-        /**
-         * Test for equality.
-         *
-         * @param rhs The right hand side operand.
-         *
-         * @return true if this object and 'rhs' are equal, false otherwise.
-         */
-        inline bool operator ==(const T& rhs) const {
-            return static_cast<const T *>(this)->equals(rhs);
-        }
+    /**
+     * Create a clone of 'rhs'.
+     *
+     * @param rhs The object to be cloned.
+     */
+    inline equatable(const equatable& rhs) { *this = rhs; }
 
-        /**
-         * Test for inequality.
-         *
-         * @param rhs The right hand side operand.
-         *
-         * @return true if this object and 'rhs' are not equal, false otherwise.
-         */
-        inline bool operator !=(const T& rhs) const {
-            return !static_cast<const T *>(this)->equals(rhs);
-        }
-
-    protected:
-
-        /**
-         * Initialises a new instance.
-         */
-        inline equatable(void) { }
-
-        /**
-         * Create a clone of 'rhs'.
-         *
-         * @param rhs The object to be cloned.
-         */
-        inline equatable(const equatable& rhs) {
-            *this = rhs;
-        }
-
-        /**
-         * Assign values of 'rhs' to this object.
-         *
-         * @param rhs The right hand side operand.
-         *
-         * @return *this.
-         */
-        inline equatable& operator =(const equatable& rhs) {
-            return *this;
-        }
-
-    };
+    /**
+     * Assign values of 'rhs' to this object.
+     *
+     * @param rhs The right hand side operand.
+     *
+     * @return *this.
+     */
+    inline equatable& operator=(const equatable& rhs) { return *this; }
+};
 
 } /* end namespace utility*/
 } /* end namespace thecam */
@@ -122,6 +111,6 @@ namespace utility {
 } /* end namespace megamol */
 
 #if defined(_WIN32) && defined(_MANAGED)
-#pragma managed(pop)
+#    pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* THE_EQUATABLE_H_INCLUDED */

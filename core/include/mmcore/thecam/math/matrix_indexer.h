@@ -32,7 +32,7 @@
 #define THE_MATH_MATRIX_FUNCTIONS_H_INCLUDED
 #pragma once
 #if defined(_WIN32) && defined(_MANAGED)
-#pragma managed(push, off)
+#    pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 #include "mmcore/thecam/utility/config.h"
@@ -47,177 +47,158 @@ namespace core {
 namespace thecam {
 namespace math {
 
-    /**
-     * Provides static methods for getting the index of a matrix entry for a
-     * specific memory layout.
-     *
-     * The default implementation does not provide any implementation, only the
-     * partial specialisations for the supported layouts work correctly.
-     *
-     * @tparam R The total number of rows in the matrix to compute the indices
-     *           for.
-     * @tparam C The total number of columns in the matrix to compute the
-     *           indices for.
-     * @tparam L The memory layout of the matrix to compute the indices for.
-     */
-    template<size_t R, size_t C, matrix_layout L>
-    struct matrix_indexer { };
+/**
+ * Provides static methods for getting the index of a matrix entry for a
+ * specific memory layout.
+ *
+ * The default implementation does not provide any implementation, only the
+ * partial specialisations for the supported layouts work correctly.
+ *
+ * @tparam R The total number of rows in the matrix to compute the indices
+ *           for.
+ * @tparam C The total number of columns in the matrix to compute the
+ *           indices for.
+ * @tparam L The memory layout of the matrix to compute the indices for.
+ */
+template <size_t R, size_t C, matrix_layout L> struct matrix_indexer {};
 
 
-    /**
-     * Provides static methods for getting the index of a matrix entry for a
-     * specific memory layout.
-     *
-     * The default implementation does not provide any implementation, only the
-     * partial specialisations for the supported layouts work correctly.
-     *
-     * @tparam R The total number of rows in the matrix to compute the indices
-     *           for.
-     * @tparam C The total number of columns in the matrix to compute the
-     *           indices for.
-     * @tparam L The memory layout of the matrix to compute the indices for.
-     */
-    template<size_t R, size_t C>
-    struct matrix_indexer<R, C, matrix_layout::column_major> {
+/**
+ * Provides static methods for getting the index of a matrix entry for a
+ * specific memory layout.
+ *
+ * The default implementation does not provide any implementation, only the
+ * partial specialisations for the supported layouts work correctly.
+ *
+ * @tparam R The total number of rows in the matrix to compute the indices
+ *           for.
+ * @tparam C The total number of columns in the matrix to compute the
+ *           indices for.
+ * @tparam L The memory layout of the matrix to compute the indices for.
+ */
+template <size_t R, size_t C> struct matrix_indexer<R, C, matrix_layout::column_major> {
 
-        /** The type of the indices. */
-        typedef size_t index_type;
-
-        /**
-         * Answer the number of columns in the matrix that the indexer is for.
-         *
-         * @return The number of columns the indexer is for.
-         */
-        static THE_FORCE_INLINE size_t columns(void) {
-            return C;
-        }
-
-        /**
-         * Answer the index of the given element.
-         *
-         * Please note that the method does not perform any range-checks! Use
-         * matrix_indexer::valid if you are unsure.
-         *
-         * @param row    The zero-based row index.
-         * @param column The zero-based column index.
-         *
-         * @return The position of the given element in the matrix.
-         */
-        static THE_FORCE_INLINE index_type index(const index_type row,
-                const index_type column) {
-            return (column * R + row);
-        }
-
-        /**
-         * Answer the memory layout that the indexer is for.
-         *
-         * @return The memory layout the indexer is for.
-         */
-        static THE_FORCE_INLINE matrix_layout layout(void) {
-            return matrix_layout::column_major;
-        }
-
-        /**
-         * Answer the number of rows in the matrix that the indexer is for.
-         *
-         * @return The number of rows the indexer is for.
-         */
-        static THE_FORCE_INLINE size_t rows(void) {
-            return R;
-        }
-
-        /**
-         * Answer whether (row, column) designates a valid element of the matrix
-         * that the indexer is for.
-         *
-         * @param row    The zero-based row index.
-         * @param column The zero-based column index.
-         *
-         * @return true if the given element is valid, false otherwise.
-         */
-        static THE_FORCE_INLINE bool valid(const index_type row,
-                const index_type column) {
-            return ((row < R) && (column < C));
-        }
-    };
-
+    /** The type of the indices. */
+    typedef size_t index_type;
 
     /**
-     * Provides static methods for getting the index of a matrix entry for a
-     * specific memory layout.
+     * Answer the number of columns in the matrix that the indexer is for.
      *
-     * The default implementation does not provide any implementation, only the
-     * partial specialisations for the supported layouts work correctly.
-     *
-     * @tparam R The total number of rows in the matrix to compute the indices
-     *           for.
-     * @tparam C The total number of columns in the matrix to compute the
-     *           indices for.
-     * @tparam L The memory layout of the matrix to compute the indices for.
+     * @return The number of columns the indexer is for.
      */
-    template<size_t R, size_t C>
-    struct matrix_indexer<R, C, matrix_layout::row_major> {
+    static THE_FORCE_INLINE size_t columns(void) { return C; }
 
-        /** The type of the indices. */
-        typedef size_t index_type;
+    /**
+     * Answer the index of the given element.
+     *
+     * Please note that the method does not perform any range-checks! Use
+     * matrix_indexer::valid if you are unsure.
+     *
+     * @param row    The zero-based row index.
+     * @param column The zero-based column index.
+     *
+     * @return The position of the given element in the matrix.
+     */
+    static THE_FORCE_INLINE index_type index(const index_type row, const index_type column) {
+        return (column * R + row);
+    }
 
-        /**
-         * Answer the number of columns in the matrix that the indexer is for.
-         *
-         * @return The number of columns the indexer is for.
-         */
-        static THE_FORCE_INLINE size_t columns(void) {
-            return C;
-        }
+    /**
+     * Answer the memory layout that the indexer is for.
+     *
+     * @return The memory layout the indexer is for.
+     */
+    static THE_FORCE_INLINE matrix_layout layout(void) { return matrix_layout::column_major; }
 
-        /**
-         * Answer the index of the given element.
-         *
-         * Please note that the method does not perform any range-checks! Use
-         * matrix_indexer::valid if you are unsure.
-         *
-         * @param row    The zero-based row index.
-         * @param column The zero-based column index.
-         *
-         * @return The position of the given element in the matrix.
-         */
-        static THE_FORCE_INLINE index_type index(const index_type row,
-                const index_type column) {
-            return (row * C + column);
-        }
+    /**
+     * Answer the number of rows in the matrix that the indexer is for.
+     *
+     * @return The number of rows the indexer is for.
+     */
+    static THE_FORCE_INLINE size_t rows(void) { return R; }
 
-        /**
-         * Answer the memory layout that the indexer is for.
-         *
-         * @return The memory layout the indexer is for.
-         */
-        static THE_FORCE_INLINE matrix_layout layout(void) {
-            return matrix_layout::row_major;
-        }
+    /**
+     * Answer whether (row, column) designates a valid element of the matrix
+     * that the indexer is for.
+     *
+     * @param row    The zero-based row index.
+     * @param column The zero-based column index.
+     *
+     * @return true if the given element is valid, false otherwise.
+     */
+    static THE_FORCE_INLINE bool valid(const index_type row, const index_type column) {
+        return ((row < R) && (column < C));
+    }
+};
 
-        /**
-         * Answer the number of rows in the matrix that the indexer is for.
-         *
-         * @return The number of rows the indexer is for.
-         */
-        static THE_FORCE_INLINE size_t rows(void) {
-            return R;
-        }
 
-        /**
-         * Answer whether (row, column) designates a valid element of the matrix
-         * that the indexer is for.
-         *
-         * @param row    The zero-based row index.
-         * @param column The zero-based column index.
-         *
-         * @return true if the given element is valid, false otherwise.
-         */
-        static THE_FORCE_INLINE bool valid(const index_type row,
-                const index_type column) {
-            return ((row < R) && (column < C));
-        }
-    };
+/**
+ * Provides static methods for getting the index of a matrix entry for a
+ * specific memory layout.
+ *
+ * The default implementation does not provide any implementation, only the
+ * partial specialisations for the supported layouts work correctly.
+ *
+ * @tparam R The total number of rows in the matrix to compute the indices
+ *           for.
+ * @tparam C The total number of columns in the matrix to compute the
+ *           indices for.
+ * @tparam L The memory layout of the matrix to compute the indices for.
+ */
+template <size_t R, size_t C> struct matrix_indexer<R, C, matrix_layout::row_major> {
+
+    /** The type of the indices. */
+    typedef size_t index_type;
+
+    /**
+     * Answer the number of columns in the matrix that the indexer is for.
+     *
+     * @return The number of columns the indexer is for.
+     */
+    static THE_FORCE_INLINE size_t columns(void) { return C; }
+
+    /**
+     * Answer the index of the given element.
+     *
+     * Please note that the method does not perform any range-checks! Use
+     * matrix_indexer::valid if you are unsure.
+     *
+     * @param row    The zero-based row index.
+     * @param column The zero-based column index.
+     *
+     * @return The position of the given element in the matrix.
+     */
+    static THE_FORCE_INLINE index_type index(const index_type row, const index_type column) {
+        return (row * C + column);
+    }
+
+    /**
+     * Answer the memory layout that the indexer is for.
+     *
+     * @return The memory layout the indexer is for.
+     */
+    static THE_FORCE_INLINE matrix_layout layout(void) { return matrix_layout::row_major; }
+
+    /**
+     * Answer the number of rows in the matrix that the indexer is for.
+     *
+     * @return The number of rows the indexer is for.
+     */
+    static THE_FORCE_INLINE size_t rows(void) { return R; }
+
+    /**
+     * Answer whether (row, column) designates a valid element of the matrix
+     * that the indexer is for.
+     *
+     * @param row    The zero-based row index.
+     * @param column The zero-based column index.
+     *
+     * @return true if the given element is valid, false otherwise.
+     */
+    static THE_FORCE_INLINE bool valid(const index_type row, const index_type column) {
+        return ((row < R) && (column < C));
+    }
+};
 
 } /* end namespace math */
 } /* end namespace thecam */
@@ -225,6 +206,6 @@ namespace math {
 } /* end namespace megamol */
 
 #if defined(_WIN32) && defined(_MANAGED)
-#pragma managed(pop)
+#    pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* THE_MATH_MATRIX_FUNCTIONS_H_INCLUDED */

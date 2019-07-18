@@ -194,32 +194,6 @@ inline megamol::core::thecam::math::quaternion<glm::quat>& megamol::core::thecam
 }
 #endif /* WITH_THE_GLM */
 
-
-#ifdef WITH_THE_XMATH
-/*
- * megamol::core::thecam::math::set_from_vectors
- */
-inline megamol::core::thecam::math::quaternion<DirectX::XMFLOAT4>& megamol::core::thecam::math::set_from_vectors(
-    quaternion<DirectX::XMFLOAT4>& quat, const vector<DirectX::XMFLOAT4>& u, const vector<DirectX::XMFLOAT4>& v) {
-    const auto TWO = DirectX::XMVectorSet(2.0f, 2.0f, 2.0f, 2.0f);
-    auto uu = load_xmvector(u);
-    auto vv = load_xmvector(v);
-
-    auto m = DirectX::XMVector3Dot(uu, vv);
-    m = DirectX::XMVectorScale(m, 2.0f);
-    m = DirectX::XMVectorAdd(m, TWO);
-    m = DirectX::XMVectorSqrt(m);
-
-    auto w = DirectX::XMVector3Cross(uu, vv);
-    w = DirectX::XMVectorDivide(w, m);
-
-    quat.assign(
-        DirectX::XMVectorGetX(w), DirectX::XMVectorGetY(w), DirectX::XMVectorGetZ(w), 0.5f * DirectX::XMVectorGetX(m));
-    return quat;
-}
-#endif /* WITH_THE_XMATH */
-
-
 /*
  * megamol::core::thecam::math::operator *
  */

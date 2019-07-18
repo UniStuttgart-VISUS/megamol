@@ -358,6 +358,15 @@ public:
         const vislib::StringA& name, bool quiet = false, bool create = false);
 
     /**
+     * Returns the project lua contained in the exif data of a PNG file.
+     * 
+     * @param filename the png file name
+     * 
+     * @return the lua project
+     */
+    static std::string GetProjectFromPNG(std::string filename);
+
+    /**
      * Returns a pointer to the parameter with the given name.
      * If the parameter value is the name of a valid parameter, it follows the path..
      *
@@ -400,6 +409,16 @@ public:
      * @param filename The path to the project file to load.
      */
     void LoadProject(const vislib::StringW& filename);
+
+    /**
+     * Serializes the current graph into lua commands.
+     *
+     * @param serInstances The serialized instances.
+     * @param serModules   The serialized modules.
+     * @param serCalls     The serialized calls.
+     * @param serParams    The serialized parameters.
+     */
+    void SerializeGraph(std::string& serInstances, std::string& serModules, std::string& serCalls, std::string& serParams);
 
     /**
      * Enumerates all parameters. The callback function is called for each
