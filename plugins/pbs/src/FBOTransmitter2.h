@@ -87,7 +87,7 @@ private:
 
     bool extractMetaData(float bbox[6], float frame_times[2], float cam_params[9]);
         
-    bool extractBkgndColor(std::array<float, 4> bkgnd_color);
+    bool extractBkgndColor(std::array<float, 4>& bkgnd_color);
 
     bool extractViewport(int vvpt[6]);
 

@@ -513,7 +513,7 @@ bool megamol::pbs::FBOTransmitter2::extractViewport(int vvpt[6]) {
 }
 
 
-bool megamol::pbs::FBOTransmitter2::extractBkgndColor(std::array<float, 4> bkgnd_color) {
+bool megamol::pbs::FBOTransmitter2::extractBkgndColor(std::array<float, 4>& bkgnd_color) {
     using vislib::sys::Log;
 
     bool success = true;
@@ -527,7 +527,7 @@ bool megamol::pbs::FBOTransmitter2::extractBkgndColor(std::array<float, 4> bkgnd
                 bkgnd_color[0] = bkgndCol[0];
                 bkgnd_color[1] = bkgndCol[1];
                 bkgnd_color[2] = bkgndCol[2];
-                bkgnd_color[3] = 0.0f;
+                bkgnd_color[3] = 1.0f;
             }
         });
 
