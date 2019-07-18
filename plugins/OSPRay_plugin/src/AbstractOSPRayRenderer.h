@@ -7,12 +7,12 @@
 
 #include <map>
 #include <stdint.h>
-#include "CallOSPRayLight.h"
 #include "OSPRay_plugin/CallOSPRayStructure.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/CallRender3D.h"
 #include "mmcore/view/Renderer3DModule.h"
+#include "mmcore/view/light/CallLight.h"
 #include "ospray/ospray.h"
 #include "vislib/graphics/gl/FramebufferObject.h"
 #include "vislib/graphics/gl/GLSLShader.h"
@@ -131,7 +131,6 @@ protected:
 
     // Fix for deprecated material (ospNewMaterial2 now)
     std::string rd_type_string;
-    
 
     megamol::core::param::ParamSlot deviceTypeSlot;
 
@@ -165,7 +164,7 @@ protected:
     std::vector<OSPVolume> vol;
 
     // Light map
-    OSPRayLightMap lightMap;
+    core::view::light::LightMap lightMap;
     // Structure map
     OSPRayStrcutrureMap structureMap;
     // extend map

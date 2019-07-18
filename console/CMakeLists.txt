@@ -21,29 +21,8 @@ if(BUILD_CONSOLE)
   set_target_properties(${PROJECT_NAME}
     PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
     OUTPUT_NAME ${PROJECT_NAME})
-  target_include_directories(${PROJECT_NAME} PRIVATE
-    ${LIBUNWIND_INCLUDE_DIR} "src" "include")
+  target_include_directories(${PROJECT_NAME} PRIVATE "src" "include")
   target_link_libraries(${PROJECT_NAME} PRIVATE core)
-
-  #LIBUNWIND
-  if(UNIX)
-    option(USE_LIBUNWIND "use libunwind" ON)
-    if(USE_LIBUNWIND)
-      find_package(LIBUNWIND REQUIRED)
-      message(STATUS ${LIBUNWIND_LIBRARIES})
-      message(STATUS ${LIBUNWIND_INCLUDE_DIR})
-      if(LIBUNWIND_FOUND)
-        target_compile_definitions(${PROJECT_NAME} PRIVATE "HAS_LIBUNWIND=1")
-      else()
-        message(FATAL_ERROR "Cannot find libunwind")
-      endif()
-    endif()
-    if(USE_EGL)
-      find_package(EGL REQUIRED)
-      target_include_directories(${PROJECT_NAME} PRIVATE ${EGL_INCLUDE_DIR})
-      target_link_libraries(${PROJECT_NAME} PRIVATE ${EGL_LIBRARIES})
-    endif()
-  endif()
 
   if(WIN32)
     set(VERSION_LIBRARY "Version.lib")
@@ -81,6 +60,15 @@ if(BUILD_CONSOLE)
     target_include_directories(${PROJECT_NAME} PRIVATE "${SOURCE_DIR}/include")
   endif()
 
+  # EGL
+  if(UNIX)
+    if(USE_EGL)
+      find_package(EGL REQUIRED)
+      target_include_directories(${PROJECT_NAME} PRIVATE ${EGL_INCLUDE_DIR})
+      target_link_libraries(${PROJECT_NAME} PRIVATE ${EGL_LIBRARIES})
+    endif()
+  endif()
+
   # AntTweakBar
   option(USE_ANTTWEAKBAR "use AntTweakBar" OFF)
   if (USE_ANTTWEAKBAR)
@@ -99,8 +87,7 @@ if(BUILD_CONSOLE)
     endif()
   endif()
 
-  target_link_libraries(${PROJECT_NAME} PRIVATE
-	  ${VERSION_LIBRARY} ${LIBUNWIND_LIBRARIES} ${CMAKE_DL_LIBS})
+  target_link_libraries(${PROJECT_NAME} PRIVATE ${VERSION_LIBRARY} ${CMAKE_DL_LIBS})
 
   # Grouping in Visual Studio
   set_target_properties(${CONSOLE_NAME} PROPERTIES FOLDER base)

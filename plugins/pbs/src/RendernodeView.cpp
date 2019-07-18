@@ -248,10 +248,10 @@ void megamol::pbs::RendernodeView::recv_loop() {
                 vislib::sys::Log::DefaultLog.WriteWarn("RendernodeView: Failed to send request.");
 #endif
             }
-            vislib::sys::Log::DefaultLog.WriteInfo(
-                "RendernodeView: MSG Send took %d ms", (std::chrono::duration_cast<std::chrono::milliseconds>(
-                                                            std::chrono::high_resolution_clock::now() - start))
-                                                           .count());
+            // vislib::sys::Log::DefaultLog.WriteInfo(
+            //     "RendernodeView: MSG Send took %d ms", (std::chrono::duration_cast<std::chrono::milliseconds>(
+            //                                                 std::chrono::high_resolution_clock::now() - start))
+            //                                                .count());
 
             start = std::chrono::high_resolution_clock::now();
             while (!recv_comm_.Recv(buf, recv_type::RECV) && run_threads) {
@@ -259,10 +259,10 @@ void megamol::pbs::RendernodeView::recv_loop() {
                 vislib::sys::Log::DefaultLog.WriteWarn("RendernodeView: Failed to recv message.");
 #endif
             }
-            vislib::sys::Log::DefaultLog.WriteInfo(
-                "RendernodeView: MSG Recv took %d ms", (std::chrono::duration_cast<std::chrono::milliseconds>(
-                                                            std::chrono::high_resolution_clock::now() - start))
-                                                           .count());
+            // vislib::sys::Log::DefaultLog.WriteInfo(
+            //     "RendernodeView: MSG Recv took %d ms", (std::chrono::duration_cast<std::chrono::milliseconds>(
+            //                                                 std::chrono::high_resolution_clock::now() - start))
+            //                                                .count());
             if (!run_threads) break;
 
 #ifdef RV_DEBUG_OUTPUT

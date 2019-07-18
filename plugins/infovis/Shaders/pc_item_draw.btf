@@ -15,7 +15,7 @@ flat vec4 color;
 
   <snippet name="uniforms" type="string">
     <![CDATA[
-layout(binding = 0) uniform sampler1D transferFunction;
+layout(binding = 5) uniform sampler1D transferFunction;
     ]]>
   </snippet>
   
@@ -62,7 +62,7 @@ void main()
   
   out_.dataID = pc_item_dataID(out_.itemID, out_.dataDimension);
   
-  float value = out_.itemID / float(itemCount);//pc_item_dataValue(pc_item_dataID(out_.itemID, 0), 0);
+  float value = out_.itemID / float(itemCount - 1);//pc_item_dataValue(pc_item_dataID(out_.itemID, 0), 0);
   if (bitflag_test(flags[out_.itemID], FLAG_SELECTED, FLAG_SELECTED)) {
     out_.color = color;
   } else {

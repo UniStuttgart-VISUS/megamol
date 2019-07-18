@@ -10,7 +10,7 @@
 #include <cfloat>
 #include "CallSpheres.h"
 #include "mmcore/param/BoolParam.h"
-#include "mmcore/param/Vector4fParam.h"
+#include "mmcore/param/ColorParam.h"
 #include "vislib/math/ShallowVector.h"
 
 using namespace megamol;
@@ -39,14 +39,11 @@ SphereColoringModule::SphereColoringModule(void)
     this->inSlot.SetCompatibleCall<CallSpheresDescription>();
     this->MakeSlotAvailable(&this->inSlot);
 
-    vislib::math::Vector<float, 4> minCol(0.0f, 0.0f, 1.0f, 1.0f);
-    vislib::math::Vector<float, 4> maxCol(1.0f, 0.0f, 0.0f, 1.0f);
-
     // TUTORIAL: For each ParamSlot a default value has to be set
-    this->minColorSlot.SetParameter(new core::param::Vector4fParam(minCol));
+    this->minColorSlot.SetParameter(new core::param::ColorParam(0.0f, 0.0f, 1.0f, 1.0f));
     this->MakeSlotAvailable(&this->minColorSlot);
 
-    this->maxColorSlot.SetParameter(new core::param::Vector4fParam(maxCol));
+    this->maxColorSlot.SetParameter(new core::param::ColorParam(1.0f, 0.0f, 0.0f, 1.0f));
     this->MakeSlotAvailable(&this->maxColorSlot);
 
     this->singleColorSlot.SetParameter(new core::param::BoolParam(false));
@@ -165,8 +162,10 @@ void SphereColoringModule::modifyColors(CallSpheres* cs) {
         cs->SetColors(this->colors);
     }
 
-    auto minColor = this->minColorSlot.Param<core::param::Vector4fParam>()->Value();
-    auto maxColor = this->maxColorSlot.Param<core::param::Vector4fParam>()->Value();
+    auto minColorP = this->minColorSlot.Param<core::param::ColorParam>()->Value();
+    auto maxColorP = this->maxColorSlot.Param<core::param::ColorParam>()->Value();
+    vislib::math::ShallowVector<float, 4> minColor(minColorP.data());
+    vislib::math::ShallowVector<float, 4> maxColor(maxColorP.data());
 
     // this pointer might be to the array stored by this module or to an array stored by another one
     float* colPtr = cs->GetColors();
