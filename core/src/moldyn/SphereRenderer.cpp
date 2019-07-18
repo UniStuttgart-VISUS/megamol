@@ -330,8 +330,8 @@ bool moldyn::SphereRenderer::createResources() {
 
         case (RenderMode::SIMPLE):
         case (RenderMode::SIMPLE_CLUSTERED): {
-            vertShaderName = "simplesphere::vertex";
-            fragShaderName = "simplesphere::fragment";
+            vertShaderName = "sphere_simple::vertex";
+            fragShaderName = "sphere_simple::fragment";
             if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
                 return false;
             }
@@ -348,9 +348,9 @@ bool moldyn::SphereRenderer::createResources() {
 
         case (RenderMode::GEOMETRY_SHADER):
             this->geoShader = new ShaderSource();
-            vertShaderName = "geosphere::vertex";
-            fragShaderName = "geosphere::fragment";
-            geoShaderName = "geosphere::geometry";
+            vertShaderName = "sphere_geo::vertex";
+            fragShaderName = "sphere_geo::fragment";
+            geoShaderName = "sphere_geo::geometry";
             if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
                 return false;
             }
@@ -375,8 +375,8 @@ bool moldyn::SphereRenderer::createResources() {
             break;
 
         case (RenderMode::SSBO_STREAM):
-            vertShaderName = "ngsphere::vertex";
-            fragShaderName = "ngsphere::fragment";
+            vertShaderName = "sphere_ssbo::vertex";
+            fragShaderName = "sphere_ssbo::fragment";
             if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
                 return false;
             }
@@ -389,8 +389,8 @@ bool moldyn::SphereRenderer::createResources() {
             break;
 
         case (RenderMode::SPLAT):
-            vertShaderName = "ngsplat::vertex";
-            fragShaderName = "ngsplat::fragment";
+            vertShaderName = "sphere_splat::vertex";
+            fragShaderName = "sphere_splat::fragment";
             if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
                 return false;
             }
@@ -410,8 +410,8 @@ bool moldyn::SphereRenderer::createResources() {
             break;
 
         case (RenderMode::BUFFER_ARRAY):
-            vertShaderName = "ngbufferarray::vertex";
-            fragShaderName = "ngbufferarray::fragment";
+            vertShaderName = "sphere_bufferarray::vertex";
+            fragShaderName = "sphere_bufferarray::fragment";
             if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
                 return false;
             }
@@ -1780,30 +1780,30 @@ bool moldyn::SphereRenderer::rebuildShader() {
 
     // Create the sphere shader if neccessary
     if (!vislib::graphics::gl::GLSLShader::IsValidHandle(this->sphereShader) &&
-        !megamol::core::utility::InitializeShader(&factory, this->sphereShader, "mdao2::vertex", "mdao2::fragment")) {
+        !megamol::core::utility::InitializeShader(&factory, this->sphereShader, "mdao::vertex", "mdao::fragment")) {
         return false;
     }
 
     if (!vislib::graphics::gl::GLSLGeometryShader::IsValidHandle(this->sphereGeometryShader) &&
-        !megamol::core::utility::InitializeShader(&factory, this->sphereGeometryShader, "mdao2::geometry::vertex",
-            "mdao2::fragment", "mdao2::geometry::geometry")) {
+        !megamol::core::utility::InitializeShader(&factory, this->sphereGeometryShader, "mdao::geometry::vertex",
+            "mdao::fragment", "mdao::geometry::geometry")) {
         return false;
     }
 
 
     // Load the vertex shader
-    if (!factory.MakeShaderSource("mdao2::deferred::vertex", vert)) return false;
+    if (!factory.MakeShaderSource("mdao::deferred::vertex", vert)) return false;
 
     bool enableAO = this->enableAOSlot.Param<megamol::core::param::BoolParam>()->Value();
     bool enableLighting = this->enableLightingSlot.Param<megamol::core::param::BoolParam>()->Value();
 
-    frag.Append(factory.MakeShaderSnippet("mdao2::deferred::fragment::Main"));
+    frag.Append(factory.MakeShaderSnippet("mdao::deferred::fragment::Main"));
 
     if (enableLighting) {
-        frag.Append(factory.MakeShaderSnippet("mdao2::deferred::fragment::Lighting"));
+        frag.Append(factory.MakeShaderSnippet("mdao::deferred::fragment::Lighting"));
     }
     else {
-        frag.Append(factory.MakeShaderSnippet("mdao2::deferred::fragment::LightingStub"));
+        frag.Append(factory.MakeShaderSnippet("mdao::deferred::fragment::LightingStub"));
     }
 
     if (enableAO) {
@@ -1817,10 +1817,10 @@ bool moldyn::SphereRenderer::rebuildShader() {
             new vislib::graphics::gl::ShaderSource::StringSnippet(directionsCode.c_str());
         frag.Append(dirSnippet);
 
-        frag.Append(factory.MakeShaderSnippet("mdao2::deferred::fragment::AmbientOcclusion"));
+        frag.Append(factory.MakeShaderSnippet("mdao::deferred::fragment::AmbientOcclusion"));
     }
     else {
-        frag.Append(factory.MakeShaderSnippet("mdao2::deferred::fragment::AmbientOcclusionStub"));
+        frag.Append(factory.MakeShaderSnippet("mdao::deferred::fragment::AmbientOcclusionStub"));
     }
 
     try {
