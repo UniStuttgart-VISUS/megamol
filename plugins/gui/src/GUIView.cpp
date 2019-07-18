@@ -1525,12 +1525,12 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
             }
         } else { // if (auto* p = slot.Param<core::param::StringParam>()) {
             // XXX: UTF8 conversion and allocation every frame is horrific inefficient.
-            vislib::StringA valueString;
-            vislib::UTF8Encoder::Encode(valueString, param->ValueString());
-            std::string valueUtf8String(valueString.PeekBuffer());
+            // vislib::StringA valueString;
+            // vislib::UTF8Encoder::Encode(valueString, param->ValueString());
+            std::string valueUtf8String(param->ValueString.PeekBuffer());
 
             ImGuiInputTextFlags textflags = ImGuiInputTextFlags_CtrlEnterForNewLine |
-                                            ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll;
+                                            ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue;
 
             // Determine line count
             int nlcnt = 0;
@@ -1540,19 +1540,19 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
                 }
             }
             nlcnt = std::min(5, nlcnt);
-            if (nlcnt > 0) {
 
+            if (nlcnt > 0) {
                 ImVec2 ml_dim =
                     ImVec2(ImGui::CalcItemWidth(), ImGui::GetFrameHeight() + (ImGui::GetFontSize() * (float)(nlcnt)));
 
                 if (ImGui::InputTextMultiline(param_label.c_str(), &valueUtf8String, ml_dim, textflags)) {
-                    vislib::UTF8Encoder::Decode(valueString, vislib::StringA(valueUtf8String.data()));
-                    param->ParseValue(valueString);
+                    // vislib::UTF8Encoder::Decode(valueString, vislib::StringA(valueUtf8String.c_str()));
+                    param->ParseValue(vislib::StringA(valueUtf8String.c_str()));
                 }
             } else {
                 if (ImGui::InputText(param_label.c_str(), &valueUtf8String, textflags)) {
-                    vislib::UTF8Encoder::Decode(valueString, vislib::StringA(valueUtf8String.data()));
-                    param->ParseValue(valueString);
+                    /// vislib::UTF8Encoder::Decode(valueString, vislib::StringA(valueUtf8String.data()));
+                    param->ParseValue(vislib::StringA(valueUtf8String.c_str()));
                 }
                 help = "[Ctrl + Enter] for new line.\nPress [Return] to confirm changes.";
             }
@@ -1619,6 +1619,20 @@ void GUIView::checkMultipleHotkeyAssignement(void) {
 
         std::list<core::view::KeyCode> hotkeylist;
         hotkeylist.clear();
+
+        // Fill with camera hotkeys for which no button parameters exist
+        hotkeylist.emplace_back(core::view::KeyCode(core::view::Key::KEY_W));
+        hotkeylist.emplace_back(core::view::KeyCode(core::view::Key::KEY_A));
+        hotkeylist.emplace_back(core::view::KeyCode(core::view::Key::KEY_S));
+        hotkeylist.emplace_back(core::view::KeyCode(core::view::Key::KEY_D));
+        hotkeylist.emplace_back(core::view::KeyCode(core::view::Key::KEY_C));
+        hotkeylist.emplace_back(core::view::KeyCode(core::view::Key::KEY_V));
+        hotkeylist.emplace_back(core::view::KeyCode(core::view::Key::KEY_Q));
+        hotkeylist.emplace_back(core::view::KeyCode(core::view::Key::KEY_E));
+        hotkeylist.emplace_back(core::view::KeyCode(core::view::Key::KEY_UP));
+        hotkeylist.emplace_back(core::view::KeyCode(core::view::Key::KEY_DOWN));
+        hotkeylist.emplace_back(core::view::KeyCode(core::view::Key::KEY_LEFT));
+        hotkeylist.emplace_back(core::view::KeyCode(core::view::Key::KEY_RIGHT));
 
         this->GetCoreInstance()->EnumParameters([&, this](const auto& mod, auto& slot) {
             auto param = slot.Parameter();
