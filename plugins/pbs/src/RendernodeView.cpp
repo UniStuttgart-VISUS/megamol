@@ -18,6 +18,7 @@
 
 //#define RV_DEBUG_OUTPUT = 1
 #define CINEMA = 1
+#define MEASUREMENTS = 1
 
 #ifdef CINEMA
 #    include <iomanip>
@@ -139,6 +140,9 @@ bool megamol::pbs::RendernodeView::process_msgs(Message_t const& msgs) {
 
 
 void megamol::pbs::RendernodeView::Render(const mmcRenderViewContext& context) {
+#ifdef MEASUREMENTS
+    auto const start = std::chrono::high_resolution_clock::now();
+#endif
 #ifdef WITH_MPI
     this->initMPI();
     // 0 time, 1 instanceTime
@@ -431,6 +435,12 @@ void megamol::pbs::RendernodeView::Render(const mmcRenderViewContext& context) {
 
     // sync barrier
     MPI_Barrier(this->comm_);
+#endif
+
+#ifdef MEASUREMENTS
+    auto const end = std::chrono::high_resolution_clock::now();
+    vislib::sys::Log::DefaultLog.WriteMsg(2, "RendernodeView: Rendering Time %d ms",
+        std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
 #endif
 }
 
