@@ -531,10 +531,10 @@ bool moldyn::SphereRenderer::isRenderModeAvailable(RenderMode rm, bool silent) {
         break;
     case(RenderMode::SSBO_STREAM):
         if (!(SPHERE_MIN_OGL_SSBO_STREAM)) { 
-            errorstr += "[SphereRenderer] Render Mode 'NG' is not available. Minimum OpenGL version is 4.5 \n";
+            errorstr += "[SphereRenderer] Render Mode 'SSBO_STREAM' is not available. Minimum OpenGL version is 4.5 \n";
         }
         if (!isExtAvailable("GL_ARB_buffer_storage")) {
-            errorstr += "[SphereRenderer] Render Mode 'NG' is not available. Extension GL_ARB_buffer_storage is not available. \n";
+            errorstr += "[SphereRenderer] Render Mode 'SSBO_STREAM' is not available. Extension GL_ARB_buffer_storage is not available. \n";
         }
         break;
     case(RenderMode::BUFFER_ARRAY):
