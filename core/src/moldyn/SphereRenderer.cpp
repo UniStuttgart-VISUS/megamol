@@ -446,7 +446,7 @@ bool moldyn::SphereRenderer::createResources() {
             bool enableAO = this->enableAOSlot.Param<megamol::core::param::BoolParam>()->Value();
 
             if (enableAO) {
-                this->volGen = new megamol::core::utility::MDAO2VolumeGenerator();
+                this->volGen = new megamol::core::utility::MDAOVolumeGenerator();
                 this->volGen->SetShaderSourceFactory(&this->GetCoreInstance()->ShaderSourceFactory());
                 if (!this->volGen->Init()) {
                     vislib::sys::Log::DefaultLog.WriteMsg(
@@ -1936,7 +1936,7 @@ void moldyn::SphereRenderer::rebuildWorkingData(
             this->volGen = nullptr;
         }
         if (enableAO && this->volGen == nullptr) {
-            this->volGen = new megamol::core::utility::MDAO2VolumeGenerator();
+            this->volGen = new megamol::core::utility::MDAOVolumeGenerator();
             this->volGen->SetShaderSourceFactory(&instance()->ShaderSourceFactory());
             this->volGen->Init();
         }

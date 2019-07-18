@@ -14,8 +14,8 @@
 
 #include "mmcore/moldyn/AbstractSphereRenderer.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
-#include "mmcore/utility/MDAO2ShaderUtilities.h"
-#include "mmcore/utility/MDAO2VolumeGenerator.h"
+#include "mmcore/utility/MDAOShaderUtilities.h"
+#include "mmcore/utility/MDAOVolumeGenerator.h"
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/view/CallClipPlane.h"
@@ -284,7 +284,7 @@ namespace moldyn {
         bool                                     stateInvalid;
         vislib::math::Vector<float, 2>           ambConeConstants;
         GLuint                                   tfFallbackHandle;
-        core::utility::MDAO2VolumeGenerator     *volGen;
+        core::utility::MDAOVolumeGenerator     *volGen;
 
 #if defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
         GLuint                                   singleBufferCreationBits;
