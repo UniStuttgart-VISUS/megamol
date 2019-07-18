@@ -1780,30 +1780,30 @@ bool moldyn::SphereRenderer::rebuildShader() {
 
     // Create the sphere shader if neccessary
     if (!vislib::graphics::gl::GLSLShader::IsValidHandle(this->sphereShader) &&
-        !megamol::core::utility::InitializeShader(&factory, this->sphereShader, "mdao::vertex", "mdao::fragment")) {
+        !megamol::core::utility::InitializeShader(&factory, this->sphereShader, "sphere_mdao::vertex", "sphere_mdao::fragment")) {
         return false;
     }
 
     if (!vislib::graphics::gl::GLSLGeometryShader::IsValidHandle(this->sphereGeometryShader) &&
-        !megamol::core::utility::InitializeShader(&factory, this->sphereGeometryShader, "mdao::geometry::vertex",
-            "mdao::fragment", "mdao::geometry::geometry")) {
+        !megamol::core::utility::InitializeShader(&factory, this->sphereGeometryShader, "sphere_mdao::geometry::vertex",
+            "sphere_mdao::fragment", "sphere_mdao::geometry::geometry")) {
         return false;
     }
 
 
     // Load the vertex shader
-    if (!factory.MakeShaderSource("mdao::deferred::vertex", vert)) return false;
+    if (!factory.MakeShaderSource("sphere_mdao::deferred::vertex", vert)) return false;
 
     bool enableAO = this->enableAOSlot.Param<megamol::core::param::BoolParam>()->Value();
     bool enableLighting = this->enableLightingSlot.Param<megamol::core::param::BoolParam>()->Value();
 
-    frag.Append(factory.MakeShaderSnippet("mdao::deferred::fragment::Main"));
+    frag.Append(factory.MakeShaderSnippet("sphere_mdao::deferred::fragment::Main"));
 
     if (enableLighting) {
-        frag.Append(factory.MakeShaderSnippet("mdao::deferred::fragment::Lighting"));
+        frag.Append(factory.MakeShaderSnippet("sphere_mdao::deferred::fragment::Lighting"));
     }
     else {
-        frag.Append(factory.MakeShaderSnippet("mdao::deferred::fragment::LightingStub"));
+        frag.Append(factory.MakeShaderSnippet("sphere_mdao::deferred::fragment::LightingStub"));
     }
 
     if (enableAO) {
@@ -1817,10 +1817,10 @@ bool moldyn::SphereRenderer::rebuildShader() {
             new vislib::graphics::gl::ShaderSource::StringSnippet(directionsCode.c_str());
         frag.Append(dirSnippet);
 
-        frag.Append(factory.MakeShaderSnippet("mdao::deferred::fragment::AmbientOcclusion"));
+        frag.Append(factory.MakeShaderSnippet("sphere_mdao::deferred::fragment::AmbientOcclusion"));
     }
     else {
-        frag.Append(factory.MakeShaderSnippet("mdao::deferred::fragment::AmbientOcclusionStub"));
+        frag.Append(factory.MakeShaderSnippet("sphere_mdao::deferred::fragment::AmbientOcclusionStub"));
     }
 
     try {

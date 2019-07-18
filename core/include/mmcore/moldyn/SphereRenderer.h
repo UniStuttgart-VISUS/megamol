@@ -75,7 +75,8 @@
 #define SPHERE_MIN_OGL_SPLAT              (GL_VERSION_4_5) // required for glMapNamedBufferRange
 #define SPHERE_MIN_OGL_AMBIENT_OCCLUSION  (GL_VERSION_4_5) // required for glMapNamedBufferRange
 // Minimum GLSL version for all render modes
-#define SPHERE_MIN_GLSL_SIMPLE            (1.3f)
+#define SPHERE_MIN_GLSL_MAJOR             (int(1))
+#define SPHERE_MIN_GLSL_MINOR             (int(3))
 
 
 namespace megamol {
@@ -147,8 +148,20 @@ namespace moldyn {
                 retval = false;
             }
             std::string glslVerStr((char*)glGetString(GL_SHADING_LANGUAGE_VERSION));
-            float glslVer = std::stof(glslVerStr);
-            if (glslVer < (SPHERE_MIN_GLSL_SIMPLE)) {
+            std::size_t found = glslVerStr.find(".");
+            int major = -1;
+            int minor = -1;
+            if (found != std::string::npos) {
+                major = std::atoi(glslVerStr.substr(0, 1).c_str());
+                minor = std::atoi(glslVerStr.substr(found+1, 1).c_str());
+            }
+            else {
+                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                    "[SphereRenderer] No valid GL_SHADING_LANGUAGE_VERSION string: %s", glslVerStr.c_str());
+            }
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+                "[SphereRenderer] Found GLSL version %d.%d (%s).", major, minor, glslVerStr.c_str());
+            if ((major < (SPHERE_MIN_GLSL_MAJOR)) || (major == (SPHERE_MIN_GLSL_MAJOR) && minor < (SPHERE_MIN_GLSL_MINOR))) {
                 vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, 
                     "[SphereRenderer] No render mode available. Minimum OpenGL Shading Language version is 1.3");
                 retval = false; 
