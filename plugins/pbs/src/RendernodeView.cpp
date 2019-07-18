@@ -9,23 +9,26 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 
+
 #include "mmcore/cluster/SyncDataSourcesCall.h"
 #include "mmcore/cluster/mpi/MpiCall.h"
 #include "vislib/RawStorageSerialiser.h"
 #include "vislib/sys/Log.h"
 #include "vislib/sys/SystemInformation.h"
-#include "vislib/sys/Environment.h"
 
 //#define RV_DEBUG_OUTPUT = 1
 #define CINEMA = 1
 
 #ifdef CINEMA
-#include "mmcore/view/CallRender3D.h"
-#include "vislib/graphics/CameraParamsStore.h"
-#include "PNGWriter.h"
-#include <sstream>
+#    include <iomanip>
+#    include <sstream>
+#    include "PNGWriter.h"
+#    include "mmcore/view/CallRender3D.h"
+#    include "vislib/graphics/CameraParamsStore.h"
+#    include "vislib/sys/Environment.h"
 static std::vector<vislib::graphics::CameraParamsStore> _cinemaCams;
 static unsigned int _index = 0;
+static unsigned int _loopID = 0;
 #endif
 
 megamol::pbs::RendernodeView::RendernodeView()
@@ -227,47 +230,17 @@ void megamol::pbs::RendernodeView::Render(const mmcRenderViewContext& context) {
                 this->getTileW(), this->getTileH());
         }
 
-        crv->SetOutputBuffer(GL_BACK, this->getViewportWidth(), this->getViewportHeight());
-
-        if (!crv->operator()(core::view::CallRenderView::CALL_RENDER)) {
-            vislib::sys::Log::DefaultLog.WriteError("RendernodeView: Failed to call render on dependend view.");
-        }
 
 #    ifdef CINEMA
-        std::stringstream _path;
-        std::stringstream _filename;
-        if (_index > 0 && this->rank_ == bcast_rank_) {
+        unsigned int numLoops = 5;
 
 
-            _filename << _index << ".png";
-
-//#        ifndef _WIN32
-            _path << "/dev/shm/";
-            // get job number
-            std::string jobID = std::string(vislib::sys::Environment::GetVariable("SLURM_JOB_ID"));
-            if (jobID.empty()) jobID = "test";
-            _path << jobID << "/";
-//#        endif
-
-
-            // read FBO
-            std::vector<char> col_buf(crv->ViewportWidth() * crv->ViewportHeight() * 3);
-            glReadPixels(0, 0, crv->ViewportWidth(), crv->ViewportHeight(), GL_RGB, GL_UNSIGNED_BYTE, col_buf.data());
-
-            try {
-                PNGWriter png_writer;
-                png_writer.setup((_path.str()+_filename.str()).c_str());
-                png_writer.set_buffer(
-                    reinterpret_cast<BYTE*>(col_buf.data()), crv->ViewportWidth(), crv->ViewportHeight(), 3);
-                png_writer.render2file();
-                png_writer.finish();
-            } catch (...) {
-                vislib::sys::Log::DefaultLog.WriteError("RendernodeView: Exception while writing PNG\n");
-            }
-        }
-
-        // Rank 0 calculates the camera positions and distributes them to all
+        // All ranks calculate the camera positions 
         if (allFnameDirty) {
+            // we need to call the render callback to get the correct bbox
+            if (!crv->operator()(core::view::CallRenderView::CALL_RENDER)) {
+                vislib::sys::Log::DefaultLog.WriteError("RendernodeView: Failed to call render on dependend view.");
+            }
             _index = 0;
             auto view = this->getConnectedView();
             core::CallerSlot* crSlot = dynamic_cast<core::CallerSlot*>(view->FindSlot("rendering"));
@@ -280,20 +253,20 @@ void megamol::pbs::RendernodeView::Render(const mmcRenderViewContext& context) {
             std::array<float, 3> dims = {box.Width(), box.Height(), box.Depth()};
             unsigned int max_dim = std::distance(dims.begin(), std::max_element(dims.begin(), dims.end()));
 
-            unsigned int num_sections = 14;
+            unsigned int num_sections = 16;
             unsigned int num_angles = 16;
             float length_step_size = box.LongestEdge() / (num_sections - 3); // includes end of cylinder
             float angle_step_size = 2 * 3.14159265358979f / num_angles;
             vislib::math::Point<float, 3> la;
             vislib::math::Point<float, 3> pos;
 
-            std::function<std::array<float, 3>(float,float)> parametrization;
+            std::function<std::array<float, 3>(float, float)> parametrization;
             float radius;
             std::array<float, 3> start;
             std::array<float, 3> direction;
             //= []() { print_num(42); }
             if (max_dim == 0) { // x
-                radius = std::sqrt(std::pow(box.Height(), 2) + std::pow(box.Depth(), 2))/2;
+                radius = std::sqrt(std::pow(box.Height(), 2) + std::pow(box.Depth(), 2)) / 2;
                 start = {box.GetLeft(), box.GetBottom() + box.Height() / 2, box.GetFront() - box.Depth() / 2};
                 direction = {1, 0, 0};
 
@@ -302,8 +275,8 @@ void megamol::pbs::RendernodeView::Render(const mmcRenderViewContext& context) {
                 };
 
             } else if (max_dim == 1) { // y
-                radius = std::sqrt(std::pow(box.Width(), 2) + std::pow(box.Depth(), 2))/2;
-                start = {box.GetLeft() + box.Width()/2, box.GetBottom(), box.GetFront() - box.Depth() / 2};
+                radius = std::sqrt(std::pow(box.Width(), 2) + std::pow(box.Depth(), 2)) / 2;
+                start = {box.GetLeft() + box.Width() / 2, box.GetBottom(), box.GetFront() - box.Depth() / 2};
                 direction = {0, 1, 0};
 
                 parametrization = [](float r, float angle) {
@@ -311,8 +284,7 @@ void megamol::pbs::RendernodeView::Render(const mmcRenderViewContext& context) {
                 };
             } else { // z
                 radius = std::sqrt(std::pow(box.Height(), 2) + std::pow(box.Width(), 2)) / 2;
-                start = {box.GetLeft() + box.Width() / 2, box.GetBottom() + box.Height() / 2,
-                    box.GetFront()};
+                start = {box.GetLeft() + box.Width() / 2, box.GetBottom() + box.Height() / 2, box.GetFront()};
                 direction = {0, 0, 1};
 
                 parametrization = [](float r, float angle) {
@@ -339,7 +311,7 @@ void megamol::pbs::RendernodeView::Render(const mmcRenderViewContext& context) {
 
 
             // middle part
-            for (unsigned int i = 0; i < num_sections-2; i++) {
+            for (unsigned int i = 0; i < num_sections - 2; i++) {
                 for (unsigned int j = 0; j < num_angles; j++) {
                     for (unsigned int n = 0; n < 3; n++) {
 
@@ -348,7 +320,7 @@ void megamol::pbs::RendernodeView::Render(const mmcRenderViewContext& context) {
 
                         la[n] = start[n] + length_step_size * i * direction[n];
                     }
-                    _cinemaCams[(i+1) * num_angles + j].SetView(pos, la, {direction[0], direction[1], direction[2]});
+                    _cinemaCams[(i + 1) * num_angles + j].SetView(pos, la, {direction[0], direction[1], direction[2]});
                 }
             }
 
@@ -361,7 +333,8 @@ void megamol::pbs::RendernodeView::Render(const mmcRenderViewContext& context) {
 
                     la[n] = start[n] + box.LongestEdge() * direction[n];
                 }
-                _cinemaCams[(num_sections - 1)*(num_angles) + j].SetView(pos, la, {direction[0], direction[1], direction[2]});
+                _cinemaCams[(num_sections - 1) * (num_angles) + j].SetView(
+                    pos, la, {direction[0], direction[1], direction[2]});
             }
 
         } else if (!_cinemaCams.empty()) {
@@ -371,14 +344,69 @@ void megamol::pbs::RendernodeView::Render(const mmcRenderViewContext& context) {
             core::view::CallRender3D* cr = crSlot->CallAs<core::view::CallRender3D>();
             if (cr == nullptr) return;
 
-            //std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            // std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-            if (_index < _cinemaCams.size())  {
-                cr->SetCameraView(_cinemaCams[_index].Position(), _cinemaCams[_index].LookAt(), _cinemaCams[_index].Up());
+            if (_index  < _cinemaCams.size()) {
+                cr->SetCameraView(
+                    _cinemaCams[_index].Position(), _cinemaCams[_index].LookAt(), _cinemaCams[_index].Up());
+            }
+        }
+#    endif
+
+
+        crv->SetOutputBuffer(GL_BACK, this->getViewportWidth(), this->getViewportHeight());
+
+        if (!crv->operator()(core::view::CallRenderView::CALL_RENDER)) {
+            vislib::sys::Log::DefaultLog.WriteError("RendernodeView: Failed to call render on dependend view.");
+        }
+
+
+#    ifdef CINEMA
+        if (!_cinemaCams.empty()) {
+            std::stringstream _path;
+            std::stringstream _filename;
+            if (_index >= 0 && this->rank_ == bcast_rank_) {
+
+
+                _filename << _loopID << "_" << std::setfill('0') << std::setw(3) << _index << ".png";
+
+#        ifndef _WIN32
+                _path << "/dev/shm/";
+                // get job number
+                std::string jobID = std::string(vislib::sys::Environment::GetVariable("SLURM_JOB_ID"));
+                if (jobID.empty()) jobID = "test";
+                _path << jobID << "/";
+#        endif
+
+
+                // read FBO
+                std::vector<char> col_buf(crv->ViewportWidth() * crv->ViewportHeight() * 3);
+                glReadPixels(
+                    0, 0, crv->ViewportWidth(), crv->ViewportHeight(), GL_RGB, GL_UNSIGNED_BYTE, col_buf.data());
+
+                try {
+                    PNGWriter png_writer;
+                    png_writer.setup((_path.str() + _filename.str()).c_str());
+                    png_writer.set_buffer(
+                        reinterpret_cast<BYTE*>(col_buf.data()), crv->ViewportWidth(), crv->ViewportHeight(), 3);
+                    png_writer.render2file();
+                    png_writer.finish();
+                } catch (...) {
+                    vislib::sys::Log::DefaultLog.WriteError("RendernodeView: Exception while writing PNG\n");
+                }
+            }
+
+
+            if (_index >= _cinemaCams.size() - 1) {
+                _index = 0;
+                _loopID++;
+            } else {
                 _index++;
-            } else if (_index >= _cinemaCams.size()) {
+            }
+
+            if (_loopID + 1 >= numLoops) {
                 vislib::sys::Log::DefaultLog.WriteInfo("RendernodeView: All screenshots taken. Shutting down.");
-#      ifndef _WIN32
+#        ifndef _WIN32
                 if (this->rank_ == bcast_rank_) {
                     const std::string scratch = std::string(vislib::sys::Environment::GetVariable("SCRATCH")) + "/";
                     std::stringstream move_command;
@@ -390,6 +418,7 @@ void megamol::pbs::RendernodeView::Render(const mmcRenderViewContext& context) {
                 return;
             }
         }
+
 #    endif // CINEMA
 
 
