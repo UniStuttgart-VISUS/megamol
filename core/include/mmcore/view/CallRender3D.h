@@ -15,7 +15,7 @@
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/view/AbstractCallRender3D.h"
 #include "mmcore/view/MouseFlags.h"
-#include "mmcore/view/RenderOutput.h"
+#include "mmcore/view/RenderOutputOpenGL.h"
 
 
 namespace megamol {
@@ -35,7 +35,7 @@ namespace view {
      * Function "GetExtents" asks the callee to fill the extents member of the
      * call (bounding boxes, temporal extents).
      */
-    class MEGAMOLCORE_API CallRender3D : public AbstractCallRender3D, public RenderOutput {
+    class MEGAMOLCORE_API CallRender3D : public AbstractCallRender3D, public RenderOutputOpenGL {
     public:
         /**
          * Answer the name of the objects of this description.

@@ -40,6 +40,7 @@
 #include "LayeredIsosurfaceRenderer.h"
 #include "CartoonRenderer.h"
 #include "CartoonTessellationRenderer.h"
+#include "CartoonTessellationRenderer2000GT.h"
 
 // 2D renderers
 #include "VolumeSliceRenderer.h"
@@ -184,6 +185,7 @@ namespace {
 			this->module_descriptions.RegisterAutoDescription<megamol::protein::PDBInterpolator>();
 			this->module_descriptions.RegisterAutoDescription<megamol::protein::CartoonRenderer>();
 			this->module_descriptions.RegisterAutoDescription<megamol::protein::CartoonTessellationRenderer>();
+            this->module_descriptions.RegisterAutoDescription<megamol::protein::CartoonTessellationRenderer2000GT>();
 			this->module_descriptions.RegisterAutoDescription<megamol::protein::ProteinExploder>();
 			this->module_descriptions.RegisterAutoDescription<megamol::protein::MolecularNeighborhood>();
 			this->module_descriptions.RegisterAutoDescription<megamol::protein::HydroBondFilter>();

@@ -20,8 +20,8 @@ using namespace megamol::core;
 view::Renderer3DModuleDS::Renderer3DModuleDS(void) : Renderer3DModule(),
         renderSlotDS("renderingDS", "Connects the renderer to a calling renderer") {
     this->renderSlotDS.SetCallback(CallRenderDeferred3D::ClassName(),
-        CallRenderDeferred3D::FunctionName(0), &Renderer3DModuleDS::RenderCallback);
+        CallRenderDeferred3D::FunctionName(0), &Renderer3DModuleDS::RenderChainCallback);
     this->renderSlotDS.SetCallback(CallRenderDeferred3D::ClassName(),
-        CallRenderDeferred3D::FunctionName(1), &Renderer3DModuleDS::GetExtentsCallback);
+        CallRenderDeferred3D::FunctionName(1), &Renderer3DModuleDS::GetExtentsChainCallback);
     this->MakeSlotAvailable(&this->renderSlotDS);
 }
