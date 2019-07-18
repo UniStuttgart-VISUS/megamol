@@ -41,7 +41,7 @@ megamol::pbs::RendernodeView::RendernodeView()
     , comm_(0x04000000)
 #endif
     , rank_(-1)
-    , bcast_rank_(-2)
+    , bcast_rank_(0)
     , comm_size_(0) {
     request_mpi_slot_.SetCompatibleCall<core::cluster::mpi::MpiCallDescription>();
     this->MakeSlotAvailable(&request_mpi_slot_);
@@ -234,20 +234,20 @@ void megamol::pbs::RendernodeView::Render(const mmcRenderViewContext& context) {
         }
 
 #    ifdef CINEMA
-        std::stringstream path;
-        std::stringstream filename;
+        std::stringstream _path;
+        std::stringstream _filename;
         if (_index > 0 && this->rank_ == bcast_rank_) {
 
 
-            filename << _index << ".png";
+            _filename << _index << ".png";
 
-#        ifndef _WIN32
-            path << "/dev/shm/";
+//#        ifndef _WIN32
+            _path << "/dev/shm/";
             // get job number
             std::string jobID = std::string(vislib::sys::Environment::GetVariable("SLURM_JOB_ID"));
             if (jobID.empty()) jobID = "test";
-            path << jobID << "/";
-#        endif
+            _path << jobID << "/";
+//#        endif
 
 
             // read FBO
@@ -256,7 +256,7 @@ void megamol::pbs::RendernodeView::Render(const mmcRenderViewContext& context) {
 
             try {
                 PNGWriter png_writer;
-                png_writer.setup((path.str()+filename.str()).c_str());
+                png_writer.setup((_path.str()+_filename.str()).c_str());
                 png_writer.set_buffer(
                     reinterpret_cast<BYTE*>(col_buf.data()), crv->ViewportWidth(), crv->ViewportHeight(), 3);
                 png_writer.render2file();
@@ -378,10 +378,14 @@ void megamol::pbs::RendernodeView::Render(const mmcRenderViewContext& context) {
                 _index++;
             } else if (_index >= _cinemaCams.size()) {
                 vislib::sys::Log::DefaultLog.WriteInfo("RendernodeView: All screenshots taken. Shutting down.");
-#ifndef _WIN32
-                std::string scratch = std::string(vislib::sys::Environment::GetVariable("SCRATCH"));
-                vislib::sys::File::Rename(path.str().c_str(), scratch.c_str());
-#endif
+#      ifndef _WIN32
+                if (this->rank_ == bcast_rank_) {
+                    const std::string scratch = std::string(vislib::sys::Environment::GetVariable("SCRATCH")) + "/";
+                    std::stringstream move_command;
+                    move_command << "mv " << _path.str() << " " << scratch;
+                    ::system(move_command.str().c_str());
+                }
+#        endif
                 this->GetCoreInstance()->Shutdown();
                 return;
             }
