@@ -108,7 +108,9 @@ function(add_external_project TARGET)
   set(ARGN_EXT "${ARGN}")
   list(APPEND ARGN_EXT CMAKE_ARGS
     ${BASE_ARGS}
-    "-DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>")
+    "-DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>"
+    "-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}"
+    "-DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}")
 
   # Add external project.
   ExternalProject_Add(${TARGET} "${ARGN_EXT}")
