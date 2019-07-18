@@ -27,3 +27,4 @@ utils/MMPLD/test*.mmpld
 utils/MMPLD/test*.lua
 utils/MMPLD/test*.png
 utils/MMPLD/SphereTest.bat
+examples/

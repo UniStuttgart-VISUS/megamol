@@ -970,7 +970,9 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         }
     }
 
-    drawAxes();
+    if (this->drawAxesSlot.Param<core::param::BoolParam>()->Value()) {
+        drawAxes();
+    }
 
     glDepthMask(GL_TRUE);
 
