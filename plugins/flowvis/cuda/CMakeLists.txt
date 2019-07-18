@@ -16,11 +16,8 @@ if(BUILD_FLOWVIS_PLUGIN)
   cuda_include_directories("${CUDA_TOOLKIT_ROOT_DIR}/include")
   link_directories("${CUDA_TOOLKIT_ROOT_DIR}/lib/x64")
 
-  # Set architecture flags
-  set(FLOWVIS_CUDA_ARCH_FLAGS "-gencode arch=compute_61,code=sm_61" CACHE STRING "CUDA flags for setting, e.g., the used architecture")
-
-  # Set architecture and suppress non-standard pragma warnings
-  set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} ${FLOWVIS_CUDA_ARCH_FLAGS} -Xcudafe \"--diag_suppress=nonstd_pp_directive\"")
+  # Suppress non-standard pragma warnings
+  list(APPEND CUDA_NVCC_FLAGS "-Xcudafe --diag_suppress=nonstd_pp_directive")
 
   # Create CUDA library
   cuda_add_library(flowvis_streamlines_cuda ${source_files} ${header_files})
