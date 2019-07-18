@@ -152,13 +152,13 @@ namespace MegaMolConf.Io {
                     string calltoname = oe.Attributes["to"].Value;
 
                     foreach (Module m in modules) {
-                        if (callfromname.StartsWith(m.Name)) {
+                        if (callfromname.StartsWith(m.Name + "::")) {
                             cl.FromModule = m;
                             Debug.Assert(callfromname[m.Name.Length] == ':');
                             Debug.Assert(callfromname[m.Name.Length + 1] == ':');
                             cl.FromSlot = callfromname.Substring(m.Name.Length + 2);
                         }
-                        if (calltoname.StartsWith(m.Name)) {
+                        if (calltoname.StartsWith(m.Name + "::")) {
                             cl.ToModule = m;
                             Debug.Assert(calltoname[m.Name.Length] == ':');
                             Debug.Assert(calltoname[m.Name.Length + 1] == ':');

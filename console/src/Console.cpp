@@ -597,7 +597,7 @@ void countProjects(vislib::SingleLinkedList<vislib::TString> &projects, int &loa
         // HAZARD: Legacy Projects vs. new Projects
         ::mmcLoadProject(hCore, project);
         loadedProjects++;
-        if (project.EndsWith(".lua")) {
+        if (project.EndsWith(".lua") || project.EndsWith(".png")) {
             loadedLuaProjects++;
             processPendingActions();
         }
