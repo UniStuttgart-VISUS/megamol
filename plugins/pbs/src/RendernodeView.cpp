@@ -341,7 +341,8 @@ void megamol::pbs::RendernodeView::Render(const mmcRenderViewContext& context) {
                     pos, la, {direction[0], direction[1], direction[2]});
             }
 
-        } else if (!_cinemaCams.empty()) {
+        } 
+        if (!_cinemaCams.empty()) {
             auto view = this->getConnectedView();
             core::CallerSlot* crSlot = dynamic_cast<core::CallerSlot*>(view->FindSlot("rendering"));
             if (crSlot == nullptr) return;
