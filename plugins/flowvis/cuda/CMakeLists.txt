@@ -18,10 +18,11 @@ if(BUILD_FLOWVIS_PLUGIN)
 
   # Set architecture flags
   set(FLOWVIS_CUDA_ARCH_FLAGS "-gencode arch=compute_61,code=sm_61" CACHE STRING "CUDA flags for setting, e.g., the used architecture")
-  set(FLOWVIS_CUDA_FLAGS "-Xcudafe --display_error_number")
 
   list(APPEND CUDA_NVCC_FLAGS ${FLOWVIS_CUDA_ARCH_FLAGS})
-  list(APPEND CUDA_NVCC_FLAGS ${FLOWVIS_CUDA_FLAGS})
+
+  # Set warning flags
+  set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcudafe --display_error_number")
 
   # Create CUDA library
   cuda_add_library(flowvis_streamlines_cuda ${source_files} ${header_files})
