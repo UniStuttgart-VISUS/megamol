@@ -36,7 +36,7 @@ namespace graphics {
     /**
      * Abstract base class of camera parameters used by the camera objects
      */
-    class CameraParameters : public vislib::Serialisable {
+    class [[deprecated]] CameraParameters : public vislib::Serialisable {
     public:
         
         /** possible values for the projection type */
