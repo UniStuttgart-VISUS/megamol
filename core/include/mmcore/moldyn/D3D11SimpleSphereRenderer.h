@@ -13,7 +13,7 @@
 
 #include "mmcore/mmd3d.h"
 
-#include "mmcore/moldyn/AbstractSimpleSphereRenderer.h"
+#include "mmcore/moldyn/AbstractSphereRenderer.h"
 
 #include "mmcore/utility/AbstractD3D11RenderObject.h"
 #include "mmcore/utility/D3D11BoundingBox.h"
@@ -26,7 +26,7 @@ namespace megamol {
 namespace core {
 namespace moldyn {
 
-    class D3D11SimpleSphereRenderer : public AbstractSimpleSphereRenderer,
+    class D3D11SimpleSphereRenderer : public AbstractSphereRenderer,
         protected utility::AbstractD3D11RenderObject {
 
     public:
