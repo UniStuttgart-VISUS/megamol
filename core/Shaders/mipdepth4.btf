@@ -62,7 +62,7 @@ void main(void) {
     } else {
         inPos = vec4(cellPos + (cellPos - gl_Vertex.xyz), gl_Vertex.w);
     }
-    gl_Position = gl_ModelViewProjectionMatrix * inPos;;
+    gl_Position = gl_ModelViewProjectionMatrix * inPos;
 }
 ]]>
             </snippet>

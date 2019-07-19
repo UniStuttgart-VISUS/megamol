@@ -284,7 +284,7 @@ The runtime functionality of MegaMol is constructed by *modules* and *calls*. Th
 <a name="examplegraph"></a>
 <img src="pics/example_graph.png" alt="Example graph" style="width: 1024px;"/>
 <p style="text-align: left; width: 1024px;">
-An example module graph. Left-most module view of class View3D represents the rendering content of a window. The center module renderer of class SimpleSphereRenderer is called by the window using the corresponding call of type CallRenderer3D. The right modules provide data and additional information for the renderer, namely a color map function and a clip plane.An example module graph.
+An example module graph. Left-most module view of class View3D represents the rendering content of a window. The center module renderer of class SphererRenderer is called by the window using the corresponding call of type CallRenderer3D. The right modules provide data and additional information for the renderer, namely a color map function and a clip plane.An example module graph.
 </p>
 </center>
 
@@ -294,7 +294,7 @@ The module graph follows the pull pattern. This means that modules request funct
 
 *Modules* are the functional entities of MegaMol . They provide several programmatic access points, the *slots*. Two types of these slots are shown in figure [Example Graph](#examplegraph) as colored arrowheads.
 
-*CalleeSlots* are access points of modules, through which these can be called to perform a function. For example, modules of class `SimpleSphereRenderer` provide a CalleeSlot rendering through which the rendering function can be invoked.The counterparts are CallerSlots which are outgoing access points. These allow modules to call other modules. Modules of class `View3D` provide a corresponding slot `rendering` to call a connected renderer.
+*CalleeSlots* are access points of modules, through which these can be called to perform a function. For example, modules of class `SphererRenderer` provide a CalleeSlot rendering through which the rendering function can be invoked.The counterparts are CallerSlots which are outgoing access points. These allow modules to call other modules. Modules of class `View3D` provide a corresponding slot `rendering` to call a connected renderer.
 These two types of slots are connected using objects of *call* classes. These are shown as gray boxes in figure [Example Graph](#examplegraph). Both *CalleeSlots* and *CallerSlots* specify types of calls they are compatible with. In the case of the above examples of renderings-relates slots, this is the type `CallRender3D`.
 
 *Calls* should be lightweight. Instead, they are thin interfaces meant for data transport. For example, data to be visualized is loaded by data source modules. In [Example Graph](#examplegraph) the module *data* of class *MMPLDDataSource* loads a specified data set into main memory and provides the data through its  CalleeSlot*. The data is accessed through a *MultiParticleDataCall*. The call, however, does not copy the data but provides access to the data in terms of memory pointers, and metadata. This avoidance of copy operations is most important and one of the core design ideas of MegaMol .
@@ -334,7 +334,7 @@ Example 1: `simple_siff.mmprj`
         <!-- data loader -->
         <module class="SIFFDataSource" name="data" />
         <!-- renderer -->
-        <module class="SimpleSphereRenderer" name="renderer" />
+        <module class="SphererRenderer" name="renderer" />
         <!-- view & setup -->
         <module class="View3D" name="view" />
         <module class="LinearTransferFunction" name="colors">
@@ -385,7 +385,7 @@ After the data sources, the renderer is defined:
         <!-- renderer pdbcartoonview.mmprj-->
         <module class="MoleculeCartoonRenderer" name="cartoonren" />
         <!-- renderer simple_siff.mmprj-->
-        <module class="SimpleSphereRenderer" name="renderer" />
+        <module class="SphererRenderer" name="renderer" />
 ```
 
 After this, the *view* module is specified.
@@ -429,7 +429,7 @@ Additionally, the `simple_siff.mmprj` project includes the module *ScreenShooter
         </module>
 ```
 
-<b>Note</b>: If you experience problems with one of the renderers, for example, due to problems with your graphics card or graphics driver, try to select another one by specifying it in line 7, i.e., change the *class* value from `SimpleSphereRenderer` to `SimpleGeoSphereRenderer`.
+<b>Note</b>: If you experience problems with one of the renderers, for example, due to problems with your graphics card or graphics driver, try to select another one by specifying it in line 7, i.e., change the *class* value from `SphererRenderer` to `SimpleGeoSphereRenderer`.
 
 ### View Interaction
 

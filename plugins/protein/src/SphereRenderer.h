@@ -41,7 +41,8 @@ namespace protein {
          */
         static const char *ClassName(void) 
         {
-            return "SphereRenderer";
+            /// braunms: Changed name to prevent name ambiguity with core::moldyn::SphereRenderer in Configurartor
+            return "MolecularSphereRenderer";
         }
 
         /**
