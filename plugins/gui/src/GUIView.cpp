@@ -1524,13 +1524,14 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
                 p->SetValue(value);
             }
         } else { // if (auto* p = slot.Param<core::param::StringParam>()) {
-            // XXX: UTF8 conversion and allocation every frame is horrific inefficient.
-            // vislib::StringA valueString;
-            // vislib::UTF8Encoder::Encode(valueString, param->ValueString());
-            std::string valueUtf8String(param->ValueString.PeekBuffer());
+                 // XXX: UTF8 conversion and allocation every frame is horrific inefficient.
+            vislib::StringA valueString;
+            vislib::UTF8Encoder::Encode(valueString, param->ValueString());
+            std::string valueUtf8String(valueString.PeekBuffer());
 
-            ImGuiInputTextFlags textflags = ImGuiInputTextFlags_CtrlEnterForNewLine |
-                                            ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue;
+            ImGuiInputTextFlags textflags =
+                ImGuiInputTextFlags_CtrlEnterForNewLine |
+                ImGuiInputTextFlags_AutoSelectAll; // | ImGuiInputTextFlags_EnterReturnsTrue;
 
             // Determine line count
             int nlcnt = 0;
@@ -1546,13 +1547,13 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
                     ImVec2(ImGui::CalcItemWidth(), ImGui::GetFrameHeight() + (ImGui::GetFontSize() * (float)(nlcnt)));
 
                 if (ImGui::InputTextMultiline(param_label.c_str(), &valueUtf8String, ml_dim, textflags)) {
-                    // vislib::UTF8Encoder::Decode(valueString, vislib::StringA(valueUtf8String.c_str()));
-                    param->ParseValue(vislib::StringA(valueUtf8String.c_str()));
+                    vislib::UTF8Encoder::Decode(valueString, vislib::StringA(valueUtf8String.c_str()));
+                    param->ParseValue(valueString);
                 }
             } else {
                 if (ImGui::InputText(param_label.c_str(), &valueUtf8String, textflags)) {
-                    /// vislib::UTF8Encoder::Decode(valueString, vislib::StringA(valueUtf8String.data()));
-                    param->ParseValue(vislib::StringA(valueUtf8String.c_str()));
+                    vislib::UTF8Encoder::Decode(valueString, vislib::StringA(valueUtf8String.data()));
+                    param->ParseValue(valueString);
                 }
                 help = "[Ctrl + Enter] for new line.\nPress [Return] to confirm changes.";
             }
