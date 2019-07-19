@@ -11,7 +11,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
 
   # Check option dependencies: First list item is always the current build option,
   # afterwards list the dependencies.
-  set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE BUILD_OSPRAY_PLUGIN" CACHE INTERNAL "")
+  set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE BUILD_OSPRAY_PLUGIN BUILD_IMAGE_CALLS_PLUGIN" CACHE INTERNAL "")
 
   if(WIN32)
     set(SNAPPY_IMPORT_LIB "lib/snappy.lib")

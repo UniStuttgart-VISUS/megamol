@@ -110,7 +110,7 @@ namespace view {
         bool firstFrame;
 
         /** TODO */
-        RenderOutput * outCtrl;
+        RenderOutputOpenGL * outCtrl;
 
     };
 

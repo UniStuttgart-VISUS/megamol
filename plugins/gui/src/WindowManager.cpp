@@ -10,7 +10,9 @@
 
 #include <sstream>
 
+
 using namespace megamol::gui;
+
 
 void WindowManager::SoftResetWindowSizePos(const std::string& window_name, WindowConfiguration& window_config) {
     assert(ImGui::GetCurrentContext() != nullptr);
@@ -48,6 +50,7 @@ void WindowManager::SoftResetWindowSizePos(const std::string& window_name, Windo
     ImGui::SetWindowPos(window_name.c_str(), win_pos, ImGuiCond_Always);
 }
 
+
 void WindowManager::ResetWindowOnStateLoad(const std::string& window_name, WindowConfiguration& window_config) {
     assert(ImGui::GetCurrentContext() != nullptr);
 
@@ -57,6 +60,7 @@ void WindowManager::ResetWindowOnStateLoad(const std::string& window_name, Windo
     ImGui::SetWindowSize(window_name.c_str(), size, ImGuiCond_Always);
     ImGui::SetWindowPos(window_name.c_str(), pos, ImGuiCond_Always);
 }
+
 
 bool WindowManager::AddWindowConfiguration(const std::string& window_name, WindowConfiguration& window_config) {
     if (window_name.empty()) {
@@ -73,6 +77,7 @@ bool WindowManager::AddWindowConfiguration(const std::string& window_name, Windo
     return true;
 }
 
+
 bool WindowManager::DeleteWindowConfiguration(const std::string& window_name) {
     if (!this->windowConfigurationExists(window_name)) {
         vislib::sys::Log::DefaultLog.WriteWarn(
@@ -83,8 +88,18 @@ bool WindowManager::DeleteWindowConfiguration(const std::string& window_name) {
     return true;
 }
 
+
 bool WindowManager::StateFromJSON(const std::string& json_string) {
-    nlohmann::json json = nlohmann::json::parse(json_string);
+
+    nlohmann::json json;
+    try {
+        json = nlohmann::json::parse(json_string);
+    } catch (...) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "[WindowManager] Unable to parse JSON string (there should be no escaped quotes, e.g.).");
+        return false;
+    }
+
     if (!json.is_object()) {
         vislib::sys::Log::DefaultLog.WriteError("[WindowManager] State has to be a valid JSON object.");
         return false;
@@ -266,6 +281,7 @@ bool WindowManager::StateFromJSON(const std::string& json_string) {
 
     return true;
 }
+
 
 bool WindowManager::StateToJSON(std::string& json_string) {
     json_string = "";

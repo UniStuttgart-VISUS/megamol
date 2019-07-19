@@ -26,7 +26,8 @@ namespace MegaMolConf.Data {
                     || Name.Equals("AnaglyphStereoView")
                     || Name.Equals("TileView3D")
                     || Name.Equals("RemoteTileView")
-                    || Name.Equals("HeadView");
+                    || Name.Equals("HeadView")
+                    || Name.Equals("View3D_2");
             }
         }
     }

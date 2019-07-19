@@ -111,18 +111,18 @@ vislib::TString TransferFunctionParam::ValueString(void) const {
 /**
  * TransferFunctionParam::TransferFunctionTexture
  */
-bool TransferFunctionParam::TransferFunctionTexture(const std::string &in_tfs, std::vector<float> &out_data, UINT &out_texsize) {
+bool TransferFunctionParam::TransferFunctionTexture(const std::string &in_tfs, std::vector<float> &out_data, UINT &out_texsize, std::array<float, 2> &out_range) {
 
-    TFDataType temp;
+    TFDataType data;
     InterpolationMode mode;
 
-    if (ParseTransferFunction(in_tfs, temp, mode, out_texsize))
+    if (ParseTransferFunction(in_tfs, data, mode, out_texsize, out_range))
     {
         if (mode == InterpolationMode::LINEAR) {
-            LinearInterpolation(out_data, out_texsize, temp);
+            LinearInterpolation(out_data, out_texsize, data);
         }
         else if (mode == InterpolationMode::GAUSS) {
-            GaussInterpolation(out_data, out_texsize, temp);
+            GaussInterpolation(out_data, out_texsize, data);
         }
         else {
             return false;
@@ -138,12 +138,13 @@ bool TransferFunctionParam::TransferFunctionTexture(const std::string &in_tfs, s
 /**
  * TransferFunctionParam::ParseTransferFunction
  */
-bool TransferFunctionParam::ParseTransferFunction(const std::string &in_tfs, TFDataType &out_data, InterpolationMode &out_interpolmode, UINT &out_texsize) {
+bool TransferFunctionParam::ParseTransferFunction(const std::string &in_tfs, TFDataType &out_data, InterpolationMode &out_interpolmode, UINT &out_texsize, std::array<float, 2> &out_range) {
 
     TFDataType tmp_data;
     std::string tmp_interpolmode_str;
     InterpolationMode tmp_interpolmode;
     UINT tmp_texsize;
+    std::array<float, 2> tmp_range;
 
     if (!in_tfs.empty()) {
 
@@ -151,7 +152,6 @@ bool TransferFunctionParam::ParseTransferFunction(const std::string &in_tfs, TFD
         if (!TransferFunctionParam::CheckTransferFunctionString(in_tfs)) {
             return false;
         }
-
         nlohmann::json json = nlohmann::json::parse(in_tfs);
 
         // Get texture size
@@ -172,6 +172,11 @@ bool TransferFunctionParam::ParseTransferFunction(const std::string &in_tfs, TFD
         for (UINT i = 0; i < tf_size; ++i) {
             json.at("Nodes")[i].get_to(tmp_data[i]);
         }
+
+        // Get data range
+        json.at("ValueRange")[0].get_to(tmp_range[0]);
+        json.at("ValueRange")[1].get_to(tmp_range[1]);
+
     }
     else { // Loading default values for empty transfer function
         tmp_data.clear();
@@ -181,14 +186,17 @@ bool TransferFunctionParam::ParseTransferFunction(const std::string &in_tfs, TFD
         tmp_data.emplace_back(one);
         tmp_interpolmode = InterpolationMode::LINEAR;
         tmp_texsize = 128;
+        tmp_range[0] = 0.0f;
+        tmp_range[1] = 1.0f;
     }
 
-    if (!TransferFunctionParam::CheckTransferFunctionData(tmp_data, tmp_interpolmode, tmp_texsize)) {
+    if (!TransferFunctionParam::CheckTransferFunctionData(tmp_data, tmp_interpolmode, tmp_texsize, tmp_range)) {
         return false;
     }
     out_data = tmp_data;
     out_interpolmode = tmp_interpolmode;
     out_texsize = tmp_texsize;
+    out_range = tmp_range;
 
     return true;
 }
@@ -197,11 +205,11 @@ bool TransferFunctionParam::ParseTransferFunction(const std::string &in_tfs, TFD
 /**
  * TransferFunctionParam::DumpTransferFunction
  */
-bool TransferFunctionParam::DumpTransferFunction(std::string &out_tfs, const TFDataType &in_data, const InterpolationMode in_interpolmode, const UINT in_texsize) {
+bool TransferFunctionParam::DumpTransferFunction(std::string &out_tfs, const TFDataType &in_data, const InterpolationMode in_interpolmode, const UINT in_texsize, std::array<float, 2> in_range) {
 
     nlohmann::json json;
 
-    if (!TransferFunctionParam::CheckTransferFunctionData(in_data, in_interpolmode, in_texsize)) {
+    if (!TransferFunctionParam::CheckTransferFunctionData(in_data, in_interpolmode, in_texsize, in_range)) {
         return false;
     }
 
@@ -218,6 +226,7 @@ bool TransferFunctionParam::DumpTransferFunction(std::string &out_tfs, const TFD
     json["Interpolation"] = interpolation_str;
     json["TextureSize"] = in_texsize;
     json["Nodes"] = in_data;
+    json["ValueRange"] = in_range;
 
     out_tfs = json.dump(); // pass 'true' for pretty printing with newlines
 
@@ -228,19 +237,32 @@ bool TransferFunctionParam::DumpTransferFunction(std::string &out_tfs, const TFD
 /**
  * TransferFunctionParam::CheckTransferFunctionData
  */
-bool TransferFunctionParam::CheckTransferFunctionData(const TFDataType &data, const InterpolationMode interpolmode, const UINT texsize) {
+bool TransferFunctionParam::CheckTransferFunctionData(const TFDataType &data, const InterpolationMode interpolmode, const UINT texsize, const std::array<float, 2> range) {
 
     bool check = true;
+
+    // Range
+    if (range[0] == range[1]) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "[CheckTransferFunctionData] Range values should not be equal.");
+        check = false;
+    }
+
+    // Texture Size
     if (texsize < 1) {
         vislib::sys::Log::DefaultLog.WriteError(
             "[CheckTransferFunctionData] Texture size should be greater than 0.");
         check = false;
     }
+
+    // Dat Size
     if (data.size() < 2) {
         vislib::sys::Log::DefaultLog.WriteError(
             "[CheckTransferFunctionData] There should be at least two nodes.");
         check = false;
     }
+
+    // Data
     float last_value = -1.0f;
     for (auto& a : data) {
         for (int i = 0; i < 5; ++i) {
@@ -293,12 +315,11 @@ bool TransferFunctionParam::CheckTransferFunctionString(const std::string &tfs) 
     if (!tfs.empty()) {
 
         nlohmann::json json;
-
-        try
-        {
+        try {
             json = nlohmann::json::parse(tfs);
         }
         catch (...) {
+            vislib::sys::Log::DefaultLog.WriteError("[CheckTransferFunctionString] Unable to parse JSON string (there should be no escaped quotes, e.g.).");
             return false;
         }
 
@@ -354,9 +375,9 @@ bool TransferFunctionParam::CheckTransferFunctionString(const std::string &tfs) 
                     }
                     else {
                         for (UINT k = 0; k < TFP_VAL_CNT; ++k) {
-                            if (!json.at("Nodes")[i][k].is_number_float()) {
+                            if (!json.at("Nodes")[i][k].is_number()) {
                                 vislib::sys::Log::DefaultLog.WriteError(
-                                    "[CheckTransferFunctionString] Values in 'Nodes' arrays should be floating point numbers.");
+                                    "[CheckTransferFunctionString] Values in 'Nodes' arrays should be numbers.");
                                 check = false;
                            }
                         }
@@ -370,6 +391,28 @@ bool TransferFunctionParam::CheckTransferFunctionString(const std::string &tfs) 
                 "[CheckTransferFunctionString] Couldn't read 'Nodes' as array.");
             check = false;
         }
+
+        // Check data range
+        if (json.at("ValueRange").is_array()) {
+            UINT tmp_size = (UINT)json.at("ValueRange").size();
+            if (tmp_size != 2) {
+                vislib::sys::Log::DefaultLog.WriteError(
+                    "[CheckTransferFunctionString] There should be at two entries in 'ValueRange' array.");
+                check = false;
+            }
+            for (UINT i = 0; i < tmp_size; ++i) {
+                if (!json.at("ValueRange")[i].is_number()) {
+                    vislib::sys::Log::DefaultLog.WriteError(
+                        "[CheckTransferFunctionString] Values in 'ValueRange' array should be numbers.");
+                    check = false;
+                }
+            }
+        }
+        else {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "[CheckTransferFunctionString] Couldn't read 'ValueRange' as array.");
+            check = false;
+        }
     }
 
     return check;
@@ -380,6 +423,10 @@ bool TransferFunctionParam::CheckTransferFunctionString(const std::string &tfs) 
  * TransferFunctionParam::LinearInterpolation
  */
 void TransferFunctionParam::LinearInterpolation(std::vector<float> &out_texdata, unsigned int in_texsize, const TFDataType &in_tfdata) {
+
+    if (in_texsize == 0) {
+        return;
+    }
 
     out_texdata.resize(4 * in_texsize);
     std::array<float, TFP_VAL_CNT> cx1 = in_tfdata[0];
@@ -413,6 +460,10 @@ void TransferFunctionParam::LinearInterpolation(std::vector<float> &out_texdata,
  * TransferFunctionParam::GaussInterpolation
  */
 void TransferFunctionParam::GaussInterpolation(std::vector<float> &out_texdata, unsigned int in_texsize, const TFDataType &in_tfdata) {
+
+    if (in_texsize == 0) {
+        return;
+    }
 
     out_texdata.resize(4 * in_texsize);
     out_texdata.assign(out_texdata.size(), 0.0f);

@@ -21,6 +21,8 @@
 namespace megamol {
 namespace protein {
 
+    // TODO: merge this with ParticleIColFilter
+
     /**
      * Filters particle data by a given attribute.
      */

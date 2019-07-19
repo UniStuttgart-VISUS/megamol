@@ -81,8 +81,8 @@
 #include "IColToIdentity.h"
 #include "ParticleIdentitySort.h"
 #include "ParticleBoxFilter.h"
-#include "DirParticleBoxFilter.h"
 #include "StaticMMPLDProvider.h"
+#include "SyncedMMPLDProvider.h"
 
 /*
  * mmplgPluginAPIVersion
@@ -226,8 +226,8 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::IColToIdentity>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleIdentitySort>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleBoxFilter>();
-            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::DirParticleBoxFilter>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::StaticMMPLDProvider>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::SyncedMMPLDProvider>();
 
             // register calls here:
             this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableDataCall>();

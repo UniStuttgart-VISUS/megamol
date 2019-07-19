@@ -1,7 +1,14 @@
-#ifndef MEGAMOL_GUI_CORPORATEGREY_H_INCLUDED
-#define MEGAMOL_GUI_CORPORATEGREY_H_INCLUDED
+/*
+ * CorporateGreyStyle.h
+ *
+ * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
+ * Alle Rechte vorbehalten.
+ */
+
+#pragma once
 
 #include <imgui.h>
+
 
 /**
  * Slightly modified "CorporateGrey"-Style, as proposed by Aiden Koss.
@@ -93,5 +100,3 @@ inline void CorporateGreyStyle(int is3D = 0) {
     }
 #endif
 }
-
-#endif

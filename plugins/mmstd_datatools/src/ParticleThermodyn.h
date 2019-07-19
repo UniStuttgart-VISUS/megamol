@@ -13,7 +13,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
-#include "mmcore/moldyn/DirectionalParticleDataCall.h"
+#include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "PointcloudHelpers.h"
 #include <vector>
 #include "nanoflann.hpp"
@@ -92,8 +92,8 @@ namespace datatools {
 
     private:
 
-        bool assertData(core::moldyn::DirectionalParticleDataCall *in,
-            core::moldyn::MultiParticleDataCall *outMPDC, core::moldyn::DirectionalParticleDataCall *outDPDC);
+        bool assertData(core::moldyn::MultiParticleDataCall *in,
+            core::moldyn::MultiParticleDataCall *outMPDC);
 
         float computeTemperature(std::vector<std::pair<size_t, float> > &matches, size_t num_matches, float mass, float freedom);
         float computeFractionalAnisotropy(std::vector<std::pair<size_t, float> > &matches, size_t num_matches);
@@ -124,13 +124,13 @@ namespace datatools {
         Eigen::SelfAdjointEigenSolver<Eigen::Matrix3f> eigensolver;
 
         typedef nanoflann::KDTreeSingleIndexAdaptor<
-            nanoflann::L2_Simple_Adaptor<float, directionalPointcloud>,
-            directionalPointcloud,
+            nanoflann::L2_Simple_Adaptor<float, simplePointcloud>,
+            simplePointcloud,
             3 /* dim */
         > my_kd_tree_t;
 
         std::shared_ptr<my_kd_tree_t> particleTree;
-        std::shared_ptr<directionalPointcloud> myPts;
+        std::shared_ptr<simplePointcloud> myPts;
 
         /** The slot providing access to the manipulated data */
         megamol::core::CalleeSlot outDataSlot;

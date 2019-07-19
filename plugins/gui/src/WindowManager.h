@@ -4,14 +4,8 @@
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
-#ifndef MEGAMOL_GUI_WINDOWMANAGER_H_INCLUDED
-#define MEGAMOL_GUI_WINDOWMANAGER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
-#if defined(_WIN32) && defined(_MANAGED)
-#    pragma managed(push, off)
-#endif /* defined(_WIN32) && defined(_MANAGED) */
+
+#pragma once
 
 #include "mmcore/view/Input.h"
 
@@ -54,11 +48,11 @@ public:
         ImVec2 win_size;       // size for reset on state loading (current size)
         bool win_soft_reset;   // soft reset of window position and size
         ImVec2 win_reset_size; // minimum window size for soft reset
-        // ---------- Parameter specific condfiguration ----------
+        // ---------- Parameter specific configuration ----------
         bool param_show_hotkeys;                     // flag to toggle showing only parameter hotkeys
         std::vector<std::string> param_modules_list; // modules to show in a parameter window (show all if empty)
         FilterMode param_module_filter;              // module filter
-        // ---------- FPS/MS specific condfiguration ----------
+        // ---------- FPS/MS specific configuration ----------
         bool fpsms_show_options;             // Show/hide fps/ms options.
         int fpsms_max_value_count;           // Maximum count of values in value array
         float fpsms_max_delay;               // Maximum delay when fps/ms value should be renewed.
@@ -68,7 +62,7 @@ public:
         std::vector<float> fpsms_ms_values;  // current ms values (not saved in state)
         float fpsms_fps_value_scale;         // current scaling factor for fps values (not saved in state)
         float fpsms_ms_value_scale;          // current scaling factor for ms values (not saved in state)
-        // ---------- Font specific condfiguration ----------
+        // ---------- Font specific configuration ----------
         bool font_reset;               // flag for reset font on state loading  (not saved in state)
         std::string font_name;         // the currently used font (only already loaded font names will be restored)
         std::string font_new_filename; // temporary storage of new filename (not saved in state)
@@ -232,5 +226,3 @@ private:
 
 } // namespace gui
 } // namespace megamol
-
-#endif // MEGAMOL_GUI_WINDOWMANAGER_H_INCLUDED

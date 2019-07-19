@@ -27,6 +27,7 @@ TransferFunction::TransferFunction(void)
     , tex()
     , texFormat(CallGetTransferFunction::TEXTURE_FORMAT_RGB)
     , interpolMode(param::TransferFunctionParam::InterpolationMode::LINEAR)
+    , range({0.0f, 1.0f})
 {
 
     CallGetTransferFunctionDescription cgtfd;
@@ -78,9 +79,12 @@ bool TransferFunction::requestTF(Call& call) {
 
         param::TransferFunctionParam::TFDataType tfdata;
 
-        // Get current values from parameter string. Values are checked, too.
+        // Get current range which might be updated in the call.
+        this->range = cgtf->Range();
+
+        // Get current values from parameter string (Values are checked, too).
         if (!megamol::core::param::TransferFunctionParam::ParseTransferFunction(
-            this->tfParam.Param<param::TransferFunctionParam>()->Value(), tfdata, this->interpolMode, this->texSize)) {
+            this->tfParam.Param<param::TransferFunctionParam>()->Value(), tfdata, this->interpolMode, this->texSize, this->range)) {
             return false;
         }
 
@@ -90,6 +94,10 @@ bool TransferFunction::requestTF(Call& call) {
         }
         else if (this->interpolMode == param::TransferFunctionParam::InterpolationMode::GAUSS) {
             param::TransferFunctionParam::GaussInterpolation(this->tex, this->texSize, tfdata);
+        }
+
+        if (this->texID != 0) {
+            glDeleteTextures(1, &this->texID);
         }
 
         bool t1de = (glIsEnabled(GL_TEXTURE_1D) == GL_TRUE);
@@ -112,6 +120,7 @@ bool TransferFunction::requestTF(Call& call) {
     }
 
     cgtf->SetTexture(this->texID, this->texSize, this->tex.data(), CallGetTransferFunction::TEXTURE_FORMAT_RGBA);
+    cgtf->SetRange(this->range);
 
     return true;
 }
