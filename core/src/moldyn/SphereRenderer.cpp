@@ -73,7 +73,7 @@ moldyn::SphereRenderer::SphereRenderer(void)
     , singleBufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT)
     , fences()
 #endif
-#ifdef SPHERE_MIN_OGL_NG
+#ifdef SPHERE_MIN_OGL_SSBO_STREAM
     , streamer()
     , colStreamer()
     , bufArray()
@@ -82,10 +82,10 @@ moldyn::SphereRenderer::SphereRenderer(void)
     // , timer()
     , renderModeParam("renderMode", "The sphere render mode.")
     , radiusScalingParam("scaling", "Scaling factor for particle radii.")
-    , alphaScalingParam("splat::alphaScaling", "NG Splat: Scaling factor for particle alpha.")
+    , alphaScalingParam("splat::alphaScaling", "Splat: Scaling factor for particle alpha.")
     , attenuateSubpixelParam(
-        "splat::attenuateSubpixel", "NG Splat: Attenuate alpha of points that should have subpixel size.")
-    , useStaticDataParam("ng::staticData", "NG: Upload data only once per hash change and keep data static on GPU")
+        "splat::attenuateSubpixel", "Splat: Attenuate alpha of points that should have subpixel size.")
+    , useStaticDataParam("ssbo::staticData", "SSBO: Upload data only once per hash change and keep data static on GPU")
     , enableLightingSlot("ao::enable_lighting", "Ambient Occlusion: Enable Lighting")
     , enableAOSlot("ao::enable_ao", "Ambient Occlusion: Enable Ambient Occlusion")
     , enableGeometryShader(
@@ -272,13 +272,11 @@ bool moldyn::SphereRenderer::resetResources(void) {
         glDeleteFramebuffers(1, &(this->gBuffer.fbo));
     }
 
-    // NG
-    if (this->isRenderModeAvailable(RenderMode::SSBO_STREAM, true)) {
-        glUnmapNamedBuffer(this->theSingleBuffer); 
-    }
-
     // SPLAT or BUFFER_ARRAY
     if (this->isRenderModeAvailable(RenderMode::SPLAT, true) || this->isRenderModeAvailable(RenderMode::BUFFER_ARRAY, true)) {
+
+        glUnmapNamedBuffer(this->theSingleBuffer);
+
         for (auto& x : fences) {
             if (x) {
                 glDeleteSync(x);
@@ -293,7 +291,7 @@ bool moldyn::SphereRenderer::resetResources(void) {
         glDeleteBuffers(1, &(this->theSingleBuffer));
     }
 
-    // NG or SPLAT or BUFFER_ARRAY
+    // SSBO or SPLAT or BUFFER_ARRAY
     if (this->isRenderModeAvailable(RenderMode::SSBO_STREAM) || this->isRenderModeAvailable(RenderMode::SPLAT) || this->isRenderModeAvailable(RenderMode::BUFFER_ARRAY)) {
         glDeleteVertexArrays(1, &(this->vertArray));
     }
@@ -598,13 +596,13 @@ std::string moldyn::SphereRenderer::getRenderModeString(RenderMode rm) {
         mode = "SIMPLE GEOMETRY SHADER";
         break;
     case (RenderMode::SSBO_STREAM):
-        mode = "NG";
+        mode = "SSBO STREAM";
         break;
     case (RenderMode::SPLAT):
-        mode = "NG SPLAT";
+        mode = "SPLAT";
         break;
     case (RenderMode::BUFFER_ARRAY):
-        mode = "NG BUFFER ARRAY";
+        mode = "BUFFER ARRAY";
         break;
     case (RenderMode::AMBIENT_OCCLUSION):
         mode = "AMBIENT OCCLUSION";
@@ -703,13 +701,13 @@ bool moldyn::SphereRenderer::Render(view::CallRender3D& call) {
     case (RenderMode::SIMPLE_CLUSTERED):
         retval = this->renderSimple(cr3d, mpdc); break;
     case (RenderMode::GEOMETRY_SHADER):
-        retval = this->renderGeo(cr3d, mpdc); break;
+        retval = this->renderGeometryShader(cr3d, mpdc); break;
     case (RenderMode::SSBO_STREAM):
-        retval = this->renderNG(cr3d, mpdc); break;
+        retval = this->renderSSBO(cr3d, mpdc); break;
     case (RenderMode::SPLAT):
-        retval = this->renderNGSplat(cr3d, mpdc); break;
+        retval = this->renderSplat(cr3d, mpdc); break;
     case (RenderMode::BUFFER_ARRAY):
-        retval = this->renderNGBufferArray(cr3d, mpdc); break;
+        retval = this->renderBufferArray(cr3d, mpdc); break;
     case (RenderMode::AMBIENT_OCCLUSION):
         retval = this->renderAmbientOcclusion(cr3d, mpdc); 
         break;
@@ -800,7 +798,7 @@ bool moldyn::SphereRenderer::renderSimple(view::CallRender3D* cr3d, MultiParticl
 }
 
 
-bool moldyn::SphereRenderer::renderNG(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc) {
+bool moldyn::SphereRenderer::renderSSBO(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc) {
 
 #ifdef CHRONOTIMING
     std::vector<std::chrono::steady_clock::time_point> deltas;
@@ -1008,7 +1006,7 @@ bool moldyn::SphereRenderer::renderNG(view::CallRender3D* cr3d, MultiParticleDat
 }
 
 
-bool moldyn::SphereRenderer::renderNGSplat(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc) {
+bool moldyn::SphereRenderer::renderSplat(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc) {
 
     glDisable(GL_DEPTH_TEST);
 
@@ -1158,7 +1156,7 @@ bool moldyn::SphereRenderer::renderNGSplat(view::CallRender3D* cr3d, MultiPartic
         }
         else {
             vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_ERROR, "NGSplat mode does not support not interleaved data so far ...");
+                vislib::sys::Log::LEVEL_ERROR, "Splat mode does not support not interleaved data so far ...");
         }
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
@@ -1177,7 +1175,7 @@ bool moldyn::SphereRenderer::renderNGSplat(view::CallRender3D* cr3d, MultiPartic
 }
 
 
-bool moldyn::SphereRenderer::renderNGBufferArray(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc) {
+bool moldyn::SphereRenderer::renderBufferArray(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc) {
 
     this->sphereShader.Enable();
 
@@ -1246,7 +1244,7 @@ bool moldyn::SphereRenderer::renderNGBufferArray(view::CallRender3D* cr3d, Multi
         }
         else {
             vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_ERROR, "NGBufferArray mode does not support not interleaved data so far ...");
+                vislib::sys::Log::LEVEL_ERROR, "BufferArray mode does not support not interleaved data so far ...");
         }
 
         // Reset states set in setPointers()
@@ -1265,7 +1263,7 @@ bool moldyn::SphereRenderer::renderNGBufferArray(view::CallRender3D* cr3d, Multi
 }
 
 
-bool moldyn::SphereRenderer::renderGeo(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc) {
+bool moldyn::SphereRenderer::renderGeometryShader(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc) {
 
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 

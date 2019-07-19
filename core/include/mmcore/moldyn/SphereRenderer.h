@@ -371,10 +371,10 @@ namespace moldyn {
          * @return           True if success, false otherwise.
          */
         bool renderSimple(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc);
-        bool renderNG(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc);
-        bool renderNGSplat(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc);
-        bool renderNGBufferArray(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc);
-        bool renderGeo(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc);
+        bool renderGeometryShader(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc);
+        bool renderSSBO(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc);
+        bool renderSplat(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc);
+        bool renderBufferArray(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc);
         bool renderAmbientOcclusion(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc);
 
         /**
@@ -409,7 +409,7 @@ namespace moldyn {
             unsigned int &colStride, unsigned int &vertStride, bool &interleaved);
 
         /**
-         * Make NG vertex shader color string.
+         * Make SSBO vertex shader color string.
          *
          * @param parts        ...
          * @param code         ...
@@ -420,7 +420,7 @@ namespace moldyn {
         bool makeColorString(MultiParticleDataCall::Particles &parts, std::string &code, std::string &declaration, bool interleaved);
 
         /**
-         * Make NG vertex shader position string.
+         * Make SSBO vertex shader position string.
          *
          * @param parts        ...
          * @param code         ...
@@ -430,7 +430,7 @@ namespace moldyn {
         bool makeVertexString(MultiParticleDataCall::Particles &parts, std::string &code, std::string &declaration, bool interleaved);
 
         /**
-         * Make NG shaders.
+         * Make SSBO shaders.
          *
          * @param vert  ...
          * @param frag  ...
@@ -438,7 +438,7 @@ namespace moldyn {
         std::shared_ptr<GLSLShader> makeShader(vislib::SmartPtr<ShaderSource> vert, vislib::SmartPtr<ShaderSource> frag);
 
         /**
-         * Generate NG shaders.
+         * Generate SSBO shaders.
          *
          * @param parts  ...
          *
