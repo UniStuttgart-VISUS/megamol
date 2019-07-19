@@ -1,6 +1,7 @@
 #include "stdafx.h"
 
-#include "mmcore/utility/MDAO2VolumeGenerator.h"
+#include "mmcore/utility/MDAOVolumeGenerator.h"
+#include "mmcore/utility/MDAOShaderUtilities.h"
 
 #include <iostream>
 #include <vector>
@@ -13,19 +14,18 @@
 #include "vislib/graphics/gl/ShaderSource.h"
 #include <GL/glu.h>
 
-#include "mmcore/utility/MDAO2ShaderUtilities.h"
 
 using namespace megamol::core::utility;
 
 #define checkGLError { GLenum errCode = glGetError(); if (errCode != GL_NO_ERROR) std::cout<<"Error in line "<<__LINE__<<": "<<gluErrorString(errCode)<<std::endl;}
 
-MDAO2VolumeGenerator::MDAO2VolumeGenerator(): fboHandle(0), volumeHandle(0), factory(nullptr), dataVersion(0)
+MDAOVolumeGenerator::MDAOVolumeGenerator(): fboHandle(0), volumeHandle(0), factory(nullptr), dataVersion(0)
 {
 	clearBuffer = nullptr;
 }
 
 
-MDAO2VolumeGenerator::~MDAO2VolumeGenerator()
+MDAOVolumeGenerator::~MDAOVolumeGenerator()
 {
 	glDeleteTextures(1, &volumeHandle);
 	volumeShader.Release();
@@ -36,13 +36,13 @@ MDAO2VolumeGenerator::~MDAO2VolumeGenerator()
 }
 
 
-void MDAO2VolumeGenerator::SetShaderSourceFactory(megamol::core::utility::ShaderSourceFactory* factory)
+void MDAOVolumeGenerator::SetShaderSourceFactory(megamol::core::utility::ShaderSourceFactory* factory)
 {
 	this->factory = factory;
 }
 
 
-GLuint MDAO2VolumeGenerator::GetVolumeTextureHandle()
+GLuint MDAOVolumeGenerator::GetVolumeTextureHandle()
 {
 	return volumeHandle;
 }
@@ -50,7 +50,7 @@ GLuint MDAO2VolumeGenerator::GetVolumeTextureHandle()
 
 
 
-bool MDAO2VolumeGenerator::Init()
+bool MDAOVolumeGenerator::Init()
 {
 	// Generate and initialize the volume texture
 	glGenTextures(1, &this->volumeHandle);
@@ -83,7 +83,7 @@ bool MDAO2VolumeGenerator::Init()
 	if (computeAvailable) {
 		// Try to initialize the compute shader
 		vislib::SmartPtr<vislib::graphics::gl::ShaderSource::Snippet> mipmapSrc;
-		mipmapSrc = factory->MakeShaderSnippet("mdao2mipmap::Compute");
+		mipmapSrc = factory->MakeShaderSnippet("sphere_mdao_mipmap::Compute");
 		try {
 			mipmapShader.Compile(mipmapSrc->PeekCode());
 			mipmapShader.Link();
@@ -98,12 +98,12 @@ bool MDAO2VolumeGenerator::Init()
 		}	
 	}
 	
-	return InitializeShader(this->factory, this->volumeShader, "mdao2volume::vertex", "mdao2volume::fragment", "mdao2volume::geometry");
+	return InitializeShader(this->factory, this->volumeShader, "sphere_mdao_volume::vertex", "sphere_mdao_volume::fragment", "sphere_mdao_volume::geometry");
 }
 
 
 
-void MDAO2VolumeGenerator::SetResolution(float resX, float resY, float resZ)
+void MDAOVolumeGenerator::SetResolution(float resX, float resY, float resZ)
 {
 	if (volumeRes.Width() == resX && volumeRes.Height() == resY && volumeRes.Depth() == resZ)
 		return;
@@ -122,7 +122,7 @@ void MDAO2VolumeGenerator::SetResolution(float resX, float resY, float resZ)
 }
 
 
-void MDAO2VolumeGenerator::StartInsertion(const vislib::math::Cuboid< float >& obb, const vislib::math::Vector<float, 4> &clipDat)
+void MDAOVolumeGenerator::StartInsertion(const vislib::math::Cuboid< float >& obb, const vislib::math::Vector<float, 4> &clipDat)
 {
 	this->clipDat = clipDat;
 	
@@ -155,7 +155,7 @@ void MDAO2VolumeGenerator::StartInsertion(const vislib::math::Cuboid< float >& o
 
 
 
-void MDAO2VolumeGenerator::ClearVolume()
+void MDAOVolumeGenerator::ClearVolume()
 {
 	if (clearAvailable) {
 		unsigned char clearData = 0;
@@ -174,7 +174,7 @@ void MDAO2VolumeGenerator::ClearVolume()
 
 
 
-void MDAO2VolumeGenerator::EndInsertion()
+void MDAOVolumeGenerator::EndInsertion()
 {
 	volumeShader.Disable(); checkGLError;
 
@@ -202,7 +202,7 @@ void MDAO2VolumeGenerator::EndInsertion()
 
 
 
-void MDAO2VolumeGenerator::InsertParticles(unsigned int count, float globalRadius, GLuint vertexArray)
+void MDAOVolumeGenerator::InsertParticles(unsigned int count, float globalRadius, GLuint vertexArray)
 {
 	volumeShader.SetParameter("inGlobalRadius", globalRadius);checkGLError;
 
@@ -211,7 +211,7 @@ void MDAO2VolumeGenerator::InsertParticles(unsigned int count, float globalRadiu
 }
 
 
-void MDAO2VolumeGenerator::RecreateMipmap() {
+void MDAOVolumeGenerator::RecreateMipmap() {
 	
 	if (!computeAvailable) {
 		glBindTexture(GL_TEXTURE_3D, this->volumeHandle);
@@ -245,14 +245,14 @@ void MDAO2VolumeGenerator::RecreateMipmap() {
 
 
 
-const vislib::math::Dimension< float, 3 >& MDAO2VolumeGenerator::GetExtents()
+const vislib::math::Dimension< float, 3 >& MDAOVolumeGenerator::GetExtents()
 {
 	return volumeRes;
 }
 
 
 
-unsigned int MDAO2VolumeGenerator::GetDataVersion()
+unsigned int MDAOVolumeGenerator::GetDataVersion()
 {
 	return dataVersion;
 }

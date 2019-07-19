@@ -487,7 +487,7 @@ void megamol::core::CoreInstance::Initialise(void) {
     // test view for sphere rendering
     vd = std::make_shared<ViewDescription>("testspheres");
     vd->AddModule(this->GetModuleDescriptionManager().Find("View3D"), "view");
-    vd->AddModule(this->GetModuleDescriptionManager().Find("SimpleSphereRenderer"), "rnd");
+    vd->AddModule(this->GetModuleDescriptionManager().Find("SphereRenderer"), "rnd");
     vd->AddModule(this->GetModuleDescriptionManager().Find("TestSpheresDataSource"), "dat");
     vd->AddCall(this->GetCallDescriptionManager().Find("CallRender3D"), "view::rendering", "rnd::rendering");
     vd->AddCall(this->GetCallDescriptionManager().Find("MultiParticleDataCall"), "rnd::getData", "dat::getData");

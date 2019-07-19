@@ -167,7 +167,7 @@ bool BrickStatsRenderer::makeProgram(std::string name, vislib::graphics::gl::GLS
 }
 
 /*
- * moldyn::SimpleSphereRenderer::create
+ * moldyn::BrickStatsRenderer::create
  */
 bool BrickStatsRenderer::create(void) {
 #ifdef DEBUG_BLAHBLAH
@@ -215,7 +215,7 @@ bool BrickStatsRenderer::create(void) {
 
 
 /*
-* moldyn::AbstractSimpleSphereRenderer::GetExtents
+* moldyn::BrickStatsRenderer::GetExtents
 */
 bool BrickStatsRenderer::GetExtents(Call& call) {
     this->assertData(call);
@@ -224,7 +224,7 @@ bool BrickStatsRenderer::GetExtents(Call& call) {
 }
 
 /*
- * moldyn::SimpleSphereRenderer::release
+ * moldyn::BrickStatsRenderer::release
  */
 void BrickStatsRenderer::release(void) {
     glDeleteBuffers(1, &this->statsBuffer);
@@ -273,7 +273,7 @@ bool BrickStatsRenderer::assertData(Call& call) {
 
 
 /*
- * moldyn::SimpleSphereRenderer::Render
+ * moldyn::BrickStatsRenderer::Render
  */
 bool BrickStatsRenderer::Render(Call& call) {
 #ifdef DEBUG_BLAHBLAH

@@ -1,21 +1,21 @@
 /*
- * SimpleSphereRenderer.h
+ * SphereRenderer.h
  *
  * Copyright (C) 2009 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_SIMPLESPHERERENDERER_H_INCLUDED
-#define MEGAMOLCORE_SIMPLESPHERERENDERER_H_INCLUDED
+#ifndef MEGAMOLCORE_SPHERERENDERER_H_INCLUDED
+#define MEGAMOLCORE_SPHERERENDERER_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 
-#include "mmcore/moldyn/AbstractSimpleSphereRenderer.h"
+#include "mmcore/moldyn/AbstractSphereRenderer.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
-#include "mmcore/utility/MDAO2ShaderUtilities.h"
-#include "mmcore/utility/MDAO2VolumeGenerator.h"
+#include "mmcore/utility/MDAOShaderUtilities.h"
+#include "mmcore/utility/MDAOVolumeGenerator.h"
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/view/CallClipPlane.h"
@@ -66,6 +66,31 @@
 //#include "TimeMeasure.h"
 
 
+// Minimum OpenGL version for different render modes
+#ifdef GL_VERSION_1_4
+#define SPHERE_MIN_OGL_SIMPLE
+#define SPHERE_MIN_OGL_SIMPLE_CLUSTERED 
+#endif // GL_VERSION_1_4
+
+#ifdef GL_VERSION_3_2
+#define SPHERE_MIN_OGL_GEOMETRY_SHADER
+#endif // GL_VERSION_3_2
+
+#ifdef GL_VERSION_4_2
+#define SPHERE_MIN_OGL_SSBO_STREAM
+#endif // GL_VERSION_4_2
+
+#ifdef GL_VERSION_4_5
+#define SPHERE_MIN_OGL_BUFFER_ARRAY 
+#define SPHERE_MIN_OGL_SPLAT 
+#define SPHERE_MIN_OGL_AMBIENT_OCCLUSION
+#endif // GL_VERSION_4_5
+
+// Minimum GLSL version for all render modes
+#define SPHERE_MIN_GLSL_MAJOR (int(1))
+#define SPHERE_MIN_GLSL_MINOR (int(3))
+
+
 namespace megamol {
 namespace core {
 namespace moldyn {
@@ -75,7 +100,7 @@ namespace moldyn {
     /**
      * Renderer for simple sphere glyphs.
      */
-    class SimpleSphereRenderer : public AbstractSimpleSphereRenderer {
+    class SphereRenderer : public AbstractSphereRenderer {
     public:
        
         /**
@@ -84,7 +109,7 @@ namespace moldyn {
          * @return The name of this module.
          */
         static const char *ClassName(void) {
-            return "SimpleSphereRenderer";
+            return "SphereRenderer";
         }
 
         /**
@@ -109,11 +134,11 @@ namespace moldyn {
             HGLRC rc = ::wglGetCurrentContext();
             if (dc == nullptr) {
                 vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, 
-                    "[SimpleSphereRenderer] There is no OpenGL rendering context available.");
+                    "[SphereRenderer] There is no OpenGL rendering context available.");
             }
             if (rc == nullptr) {
                 vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, 
-                    "[SimpleSphereRenderer] There is no current OpenGL rendering context available from the calling thread.");
+                    "[SphereRenderer] There is no current OpenGL rendering context available from the calling thread.");
             }
             ASSERT(dc != nullptr);
             ASSERT(rc != nullptr);
@@ -123,24 +148,44 @@ namespace moldyn {
             bool retval = true;
 
             // Minimum requirements for all render modes
-            if (!vislib::graphics::gl::GLSLShader::AreExtensionsAvailable()) {
+            if (!GLSLShader::AreExtensionsAvailable()) {
                 vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, 
-                    "[SimpleSphereRenderer] No render mode is available. Shader extensions are not available.");
+                    "[SphereRenderer] No render mode is available. Shader extensions are not available.");
                 retval = false;
             }
-            if (!ogl_IsVersionGEQ(3, 2)) {
+            // (OpenGL Version and GLSL Version might not correlate, see Mesa 3D on Stampede ...)
+            if (ogl_IsVersionGEQ(1, 4) == 0) {
                 vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, 
-                    "[SimpleSphereRenderer] No render mode available. Minimum OpenGL version is 3.2");
+                    "[SphereRenderer] No render mode available. Minimum OpenGL version is 1.4");
                 retval = false;
+            }
+            std::string glslVerStr((char*)glGetString(GL_SHADING_LANGUAGE_VERSION));
+            std::size_t found = glslVerStr.find(".");
+            int major = -1;
+            int minor = -1;
+            if (found != std::string::npos) {
+                major = std::atoi(glslVerStr.substr(0, 1).c_str());
+                minor = std::atoi(glslVerStr.substr(found+1, 1).c_str());
+            }
+            else {
+                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                    "[SphereRenderer] No valid GL_SHADING_LANGUAGE_VERSION string: %s", glslVerStr.c_str());
+            }
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+                "[SphereRenderer] Found GLSL version %d.%d (%s).", major, minor, glslVerStr.c_str());
+            if ((major < (SPHERE_MIN_GLSL_MAJOR)) || (major == (SPHERE_MIN_GLSL_MAJOR) && minor < (SPHERE_MIN_GLSL_MINOR))) {
+                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, 
+                    "[SphereRenderer] No render mode available. Minimum OpenGL Shading Language version is 1.3");
+                retval = false; 
             }
             if (!isExtAvailable("GL_ARB_explicit_attrib_location")) {
                 vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
-                    "[SimpleSphereRenderer] No render mode is available. Extension GL_ARB_explicit_attrib_location is not available.");
+                    "[SphereRenderer] No render mode is available. Extension GL_ARB_explicit_attrib_location is not available.");
                 retval = false;
             }
             if (!isExtAvailable("GL_ARB_conservative_depth")) {
                 vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
-                    "[SimpleSphereRenderer] No render mode is available. Extension GL_ARB_conservative_depth is not available.");
+                    "[SphereRenderer] No render mode is available. Extension GL_ARB_conservative_depth is not available.");
                 retval = false;
             }
 
@@ -148,10 +193,10 @@ namespace moldyn {
         }
 
         /** Ctor. */
-        SimpleSphereRenderer(void);
+        SphereRenderer(void);
 
         /** Dtor. */
-        virtual ~SimpleSphereRenderer(void);
+        virtual ~SphereRenderer(void);
 
     protected:
 
@@ -182,19 +227,17 @@ namespace moldyn {
         /* VARIABLES                                                         */
         /*********************************************************************/
 
-        enum RenderMode {
-            SIMPLE            = 0,     /// Simple sphere rendering.
-            SIMPLE_CLUSTERED  = 1,     /// Same as "Simple" - Clustered rendering is not yet implemented in SimpleSphericalParticles?
-            SIMPLE_GEO        = 2,     /// Simple sphere rendering using geometry shader.
-            NG                = 3,     /// Next generation (NG) sphere rendering using shader storage buffer object.
-            NG_SPLAT          = 4,     /// NG sphere rendering using splats.
-            NG_BUFFER_ARRAY   = 5,     /// NG sphere rendering using array buffers.
-            AMBIENT_OCCLUSION = 6,     /// Sphere rendering with ambient occlusion
-            __COUNT__         = 7
+        enum RenderMode {              
+            SIMPLE            = 0,
+            SIMPLE_CLUSTERED  = 1,
+            GEOMETRY_SHADER   = 2,
+            SSBO_STREAM       = 3,
+            BUFFER_ARRAY      = 4,
+            SPLAT             = 5,
+            AMBIENT_OCCLUSION = 6 
         };
 
         typedef std::map <std::tuple<int, int, bool>, std::shared_ptr<GLSLShader> > shaderMap;
-        typedef std::map <std::pair<int, int>, std::shared_ptr<GLSLShader> >        shaderMap_splat;
 
         struct gpuParticleDataType {
             GLuint vertexVBO, colorVBO, vertexArray;
@@ -226,9 +269,9 @@ namespace moldyn {
         RenderMode                               renderMode;
         bool                                     triggerRebuildGBuffer;
 
-        vislib::graphics::gl::GLSLShader         sphereShader;
-        vislib::graphics::gl::GLSLGeometryShader sphereGeometryShader;
-        vislib::graphics::gl::GLSLShader         lightingShader;
+        GLSLShader                               sphereShader;
+        GLSLGeometryShader                       sphereGeometryShader;
+        GLSLShader                               lightingShader;
 
         vislib::SmartPtr<ShaderSource>           vertShader;
         vislib::SmartPtr<ShaderSource>           fragShader;
@@ -239,21 +282,12 @@ namespace moldyn {
         SimpleSphericalParticles::VertexDataType vertType;
         std::shared_ptr<GLSLShader>              newShader;
         shaderMap                                theShaders;
-        shaderMap_splat                          theShaders_splat;
 
-        megamol::core::utility::SSBOStreamer     streamer;
-        megamol::core::utility::SSBOStreamer     colStreamer;
-        megamol::core::utility::SSBOBufferArray  bufArray;
-        megamol::core::utility::SSBOBufferArray  colBufArray;
-
-        std::vector<GLsync>                      fences;
         GLuint                                   theSingleBuffer;
         unsigned int                             currBuf;
         GLsizeiptr                               bufSize;
         int                                      numBuffers;
         void                                    *theSingleMappedMem;
-        GLuint                                   singleBufferCreationBits;
-        GLuint                                   singleBufferMappingBits;
 
         std::vector<gpuParticleDataType>         gpuData;
         gBufferDataType                          gBuffer;
@@ -262,8 +296,19 @@ namespace moldyn {
         bool                                     stateInvalid;
         vislib::math::Vector<float, 2>           ambConeConstants;
         GLuint                                   tfFallbackHandle;
-        core::utility::MDAO2VolumeGenerator     *volGen;
+        core::utility::MDAOVolumeGenerator     *volGen;
 
+#if defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
+        GLuint                                   singleBufferCreationBits;
+        GLuint                                   singleBufferMappingBits;
+        std::vector<GLsync>                      fences;
+#endif
+#ifdef SPHERE_MIN_OGL_SSBO_STREAM
+        megamol::core::utility::SSBOStreamer     streamer;
+        megamol::core::utility::SSBOStreamer     colStreamer;
+        megamol::core::utility::SSBOBufferArray  bufArray;
+        megamol::core::utility::SSBOBufferArray  colBufArray;
+#endif
         //TimeMeasure                            timer;
 
         /*********************************************************************/
@@ -271,17 +316,16 @@ namespace moldyn {
         /*********************************************************************/
 
         core::param::ParamSlot renderModeParam;
-        core::param::ParamSlot toggleModeParam;
 
         core::param::ParamSlot radiusScalingParam;
 
-        // NGSplat ------------------------------------------------------------
+        // Affects only Splat rendering ---------------------------------------
 
         core::param::ParamSlot alphaScalingParam;
         core::param::ParamSlot attenuateSubpixelParam;
         core::param::ParamSlot useStaticDataParam;
 
-        // Ambient Occlusion --------------------------------------------------
+        // Affects only Ambient Occlusion rendering: --------------------------
 
         // Enable or disable lighting
         megamol::core::param::ParamSlot enableLightingSlot;
@@ -307,18 +351,14 @@ namespace moldyn {
         /*********************************************************************/
 
         /**
+         * Return specified render mode as human readable string.
+         */
+        static std::string getRenderModeString(RenderMode rm);
+
+        /**
          * Check if specified render mode or all render mode are available.
          */
-        static bool isRenderModeAvailable(RenderMode rm);
-        
-        /**
-         * Toggle render mode on button press.
-         *
-         * @param slot The calling parameter slot.
-         *
-         * @return True if success, false otherwise.
-         */
-        bool toggleRenderMode(param::ParamSlot& slot);
+        static bool isRenderModeAvailable(RenderMode rm, bool silent = false);
 
         /**
          * Create shaders for given render mode.
@@ -343,10 +383,10 @@ namespace moldyn {
          * @return           True if success, false otherwise.
          */
         bool renderSimple(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc);
-        bool renderNG(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc);
-        bool renderNGSplat(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc);
-        bool renderNGBufferArray(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc);
-        bool renderGeo(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc);
+        bool renderGeometryShader(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc);
+        bool renderSSBO(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc);
+        bool renderSplat(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc);
+        bool renderBufferArray(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc);
         bool renderAmbientOcclusion(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc);
 
         /**
@@ -381,7 +421,7 @@ namespace moldyn {
             unsigned int &colStride, unsigned int &vertStride, bool &interleaved);
 
         /**
-         * Make NG vertex shader color string.
+         * Make SSBO vertex shader color string.
          *
          * @param parts        ...
          * @param code         ...
@@ -392,7 +432,7 @@ namespace moldyn {
         bool makeColorString(MultiParticleDataCall::Particles &parts, std::string &code, std::string &declaration, bool interleaved);
 
         /**
-         * Make NG vertex shader position string.
+         * Make SSBO vertex shader position string.
          *
          * @param parts        ...
          * @param code         ...
@@ -402,7 +442,7 @@ namespace moldyn {
         bool makeVertexString(MultiParticleDataCall::Particles &parts, std::string &code, std::string &declaration, bool interleaved);
 
         /**
-         * Make NG shaders.
+         * Make SSBO shaders.
          *
          * @param vert  ...
          * @param frag  ...
@@ -410,13 +450,14 @@ namespace moldyn {
         std::shared_ptr<GLSLShader> makeShader(vislib::SmartPtr<ShaderSource> vert, vislib::SmartPtr<ShaderSource> frag);
 
         /**
-         * Generate NG shaders.
+         * Generate SSBO shaders.
          *
          * @param parts  ...
          *
          */
         std::shared_ptr<GLSLShader> generateShader(MultiParticleDataCall::Particles &parts);
 
+#if defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
         /**
          * Lock single.
          *
@@ -430,8 +471,9 @@ namespace moldyn {
          * @param syncObj  ...
          */
         void waitSingle(GLsync& syncObj);
+#endif // defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
 
-        // Ambient Occlusion --------------------------------------------------
+        // ONLY used for Ambient Occlusion rendering: -------------------------
 
         /**
          * Rebuild the ambient occlusion shaders.
@@ -509,4 +551,4 @@ namespace moldyn {
 } /* end namespace core */
 } /* end namespace megamol */
 
-#endif /* MEGAMOLCORE_SIMPLESPHERERENDERER_H_INCLUDED */
+#endif /* MEGAMOLCORE_SPHERERENDERER_H_INCLUDED */
