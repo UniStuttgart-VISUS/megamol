@@ -66,31 +66,29 @@
 //#include "TimeMeasure.h"
 
 
-#define SPHERE_MIN_OGL_SIMPLE            (false)
-#define SPHERE_MIN_OGL_SIMPLE_CLUSTERED  (false)
-#define SPHERE_MIN_OGL_GEOMETRY_SHADER   (false)
-#define SPHERE_MIN_OGL_SSBO_STREAM       (false)
-#define SPHERE_MIN_OGL_BUFFER_ARRAY      (false)
-#define SPHERE_MIN_OGL_SPLAT             (false)
-#define SPHERE_MIN_OGL_AMBIENT_OCCLUSION (false)
-// Minimum OpenGL version for different render modes:
+// Minimum OpenGL version for different render modes
 #ifdef GL_VERSION_1_4
-#define SPHERE_MIN_OGL_SIMPLE            (true)
-#define SPHERE_MIN_OGL_SIMPLE_CLUSTERED  (true)
+#define SPHERE_MIN_OGL_SIMPLE
+#define SPHERE_MIN_OGL_SIMPLE_CLUSTERED 
 #endif // GL_VERSION_1_4
+
 #ifdef GL_VERSION_3_2
-#define SPHERE_MIN_OGL_GEOMETRY_SHADER   (true)
+#define SPHERE_MIN_OGL_GEOMETRY_SHADER
 #endif // GL_VERSION_3_2
+
+#ifdef GL_VERSION_4_2
+#define SPHERE_MIN_OGL_SSBO_STREAM
+#endif // GL_VERSION_4_2
+
 #ifdef GL_VERSION_4_5
-#define SPHERE_MIN_OGL_SSBO_STREAM       (true)
-#define SPHERE_MIN_OGL_BUFFER_ARRAY      (true)
-#define SPHERE_MIN_OGL_SPLAT             (true)
-#define SPHERE_MIN_OGL_AMBIENT_OCCLUSION (true)
+#define SPHERE_MIN_OGL_BUFFER_ARRAY 
+#define SPHERE_MIN_OGL_SPLAT 
+#define SPHERE_MIN_OGL_AMBIENT_OCCLUSION
 #endif // GL_VERSION_4_5
 
 // Minimum GLSL version for all render modes
-#define SPHERE_MIN_GLSL_MAJOR           (int(1))
-#define SPHERE_MIN_GLSL_MINOR           (int(3))
+#define SPHERE_MIN_GLSL_MAJOR (int(1))
+#define SPHERE_MIN_GLSL_MINOR (int(3))
 
 
 namespace megamol {
@@ -156,7 +154,7 @@ namespace moldyn {
                 retval = false;
             }
             // (OpenGL Version and GLSL Version might not correlate, see Mesa 3D on Stampede ...)
-            if (!(SPHERE_MIN_OGL_SIMPLE)) {
+            if (ogl_IsVersionGEQ(1, 4) == 0) {
                 vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, 
                     "[SphereRenderer] No render mode available. Minimum OpenGL version is 1.4");
                 retval = false;
@@ -473,7 +471,7 @@ namespace moldyn {
          * @param syncObj  ...
          */
         void waitSingle(GLsync& syncObj);
-#endif
+#endif // defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
 
         // ONLY used for Ambient Occlusion rendering: -------------------------
 

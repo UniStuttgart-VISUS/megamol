@@ -72,13 +72,13 @@ moldyn::SphereRenderer::SphereRenderer(void)
     , singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT)
     , singleBufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT)
     , fences()
-#endif
+#endif // defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
 #ifdef SPHERE_MIN_OGL_SSBO_STREAM
     , streamer()
     , colStreamer()
     , bufArray()
     , colBufArray()
-#endif
+#endif // SPHERE_MIN_OGL_SSBO_STREAM
     // , timer()
     , renderModeParam("renderMode", "The sphere render mode.")
     , radiusScalingParam("scaling", "Scaling factor for particle radii.")
@@ -498,17 +498,17 @@ bool moldyn::SphereRenderer::isRenderModeAvailable(RenderMode rm, bool silent) {
     // Check additonal requirements for each render mode separatly
     switch (rm) {
     case(RenderMode::SIMPLE):
-        if (!(SPHERE_MIN_OGL_SIMPLE)) {
+        if (ogl_IsVersionGEQ(1, 4) == 0) {
             errorstr += "[SphereRenderer] Render Mode 'SIMPLE' is not available. Minimum OpenGL version is 1.4 \n";
         }
         break;
     case(RenderMode::SIMPLE_CLUSTERED):
-        if (!(SPHERE_MIN_OGL_SIMPLE_CLUSTERED)) {
+        if (ogl_IsVersionGEQ(1, 4) == 0) {
             errorstr += "[SphereRenderer] Render Mode 'SIMPLE_CLUSTERED' is not available. Minimum OpenGL version is 1.4 \n";
         }
         break;
     case(RenderMode::GEOMETRY_SHADER):
-        if (!(SPHERE_MIN_OGL_GEOMETRY_SHADER)) {
+        if (ogl_IsVersionGEQ(3, 2) == 0) {
             errorstr += "[SphereRenderer] Render Mode 'GEOMETRY_SHADER' is not available. Minimum OpenGL version is 3.2 \n";
         }
         if (!vislib::graphics::gl::GLSLGeometryShader::AreExtensionsAvailable()) {
@@ -528,8 +528,8 @@ bool moldyn::SphereRenderer::isRenderModeAvailable(RenderMode rm, bool silent) {
         }
         break;
     case(RenderMode::SSBO_STREAM):
-        if (!(SPHERE_MIN_OGL_SSBO_STREAM)) { 
-            errorstr += "[SphereRenderer] Render Mode 'SSBO_STREAM' is not available. Minimum OpenGL version is 4.5 \n";
+        if (ogl_IsVersionGEQ(4, 2) == 0) {
+            errorstr += "[SphereRenderer] Render Mode 'SSBO_STREAM' is not available. Minimum OpenGL version is 4.2 \n";
         }
         if (!isExtAvailable("GL_ARB_shader_storage_buffer_object")) {
             errorstr += "[SphereRenderer] Render Mode 'SSBO_STREAM' is not available. Extension GL_ARB_shader_storage_buffer_object is not available. \n";
@@ -542,23 +542,23 @@ bool moldyn::SphereRenderer::isRenderModeAvailable(RenderMode rm, bool silent) {
         }
         break;
     case(RenderMode::SPLAT):
-        if (!(SPHERE_MIN_OGL_SPLAT)) { 
+        if (ogl_IsVersionGEQ(4, 5) == 0) {
             errorstr += "[SphereRenderer] Render Mode 'SPLAT' is not available. Minimum OpenGL version is 4.5 \n";
         }
         if (!isExtAvailable("GL_ARB_shader_storage_buffer_object")) {
             errorstr += "[SphereRenderer] Render Mode 'SPLAT' is not available. Extension GL_ARB_shader_storage_buffer_object is not available. \n";
         }
         if (!isExtAvailable("GL_EXT_gpu_shader4")) {
-            errorstr += "[SphereRenderer] Render Mode 'SSBO_STREAM' is not available. Extension GL_EXT_gpu_shader4 is not available. \n";
+            errorstr += "[SphereRenderer] Render Mode 'SPLAT' is not available. Extension GL_EXT_gpu_shader4 is not available. \n";
         }
         break;
     case(RenderMode::BUFFER_ARRAY):
-        if (!(SPHERE_MIN_OGL_BUFFER_ARRAY)) {
+        if (ogl_IsVersionGEQ(4, 5) == 0) {
             errorstr += "[SphereRenderer] Render Mode 'BUFFER_ARRAY' is not available. Minimum OpenGL version is 4.5 \n";
         }
         break;
     case(RenderMode::AMBIENT_OCCLUSION):
-        if (!(SPHERE_MIN_OGL_AMBIENT_OCCLUSION)) { 
+        if (ogl_IsVersionGEQ(4, 5) == 0) {
             errorstr += "[SphereRenderer] Render Mode 'AMBIENT_OCCLUSION' is not available. Minimum OpenGL version is 4.5 \n";
         }
         if (!vislib::graphics::gl::GLSLGeometryShader::AreExtensionsAvailable()) {
@@ -1756,6 +1756,8 @@ void moldyn::SphereRenderer::getBytesAndStride(MultiParticleDataCall::Particles&
 }
 
 
+#if defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
+
 void moldyn::SphereRenderer::lockSingle(GLsync& syncObj) {
     if (syncObj) {
         glDeleteSync(syncObj);
@@ -1774,6 +1776,8 @@ void moldyn::SphereRenderer::waitSingle(GLsync& syncObj) {
         }
     }
 }
+
+#endif // defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
 
 
 // Ambient Occlusion ----------------------------------------------------------
