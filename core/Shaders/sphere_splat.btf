@@ -3,7 +3,7 @@
     <include file="common"/>
 
     <shader name="vertex">
-        <snippet type="version">130</snippet>
+        <snippet type="version">150</snippet>
         <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>
         <snippet name="Attributes"       type="file">sphere/splat_vert_attributes.glsl</snippet>
         <snippet name="MainParams"       type="file">sphere/ssbosphere_vert_mainparams.glsl</snippet>

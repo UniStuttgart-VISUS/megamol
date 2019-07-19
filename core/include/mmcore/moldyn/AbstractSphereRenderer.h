@@ -57,15 +57,6 @@ namespace moldyn {
          */
         virtual bool GetExtents(megamol::core::view::CallRender3D& call);
 
-        ///**
-        // * The render callback.
-        // *
-        // * @param call The calling call.
-        // *
-        // * @return The return value of the function.
-        // */
-        //virtual bool Render(megamol::core::view::CallRender3D& call);
-
     protected:
 
         /**
@@ -98,7 +89,6 @@ namespace moldyn {
          */
         void getClipData(float *clipDat, float *clipCol);
 
-
         /**
          * Answer the value of the forceTimeSlot parameter
          *
@@ -125,10 +115,6 @@ namespace moldyn {
 
         /** The call for clipping plane */
         CallerSlot getClipPlaneSlot;
-
-        ///** The sphere shader */
-        //vislib::graphics::gl::GLSLShader sphereShader;
-
     };
 
 } /* end namespace moldyn */

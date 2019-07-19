@@ -533,24 +533,30 @@ bool moldyn::SphereRenderer::isRenderModeAvailable(RenderMode rm, bool silent) {
         if (!(SPHERE_MIN_OGL_SSBO_STREAM)) { 
             errorstr += "[SphereRenderer] Render Mode 'SSBO_STREAM' is not available. Minimum OpenGL version is 4.5 \n";
         }
-        if (!isExtAvailable("GL_ARB_buffer_storage")) {
-            errorstr += "[SphereRenderer] Render Mode 'SSBO_STREAM' is not available. Extension GL_ARB_buffer_storage is not available. \n";
+        if (!isExtAvailable("GL_ARB_shader_storage_buffer_object")) {
+            errorstr += "[SphereRenderer] Render Mode 'SSBO_STREAM' is not available. Extension GL_ARB_shader_storage_buffer_object is not available. \n";
         }
-        break;
-    case(RenderMode::BUFFER_ARRAY):
-        if (!(SPHERE_MIN_OGL_BUFFER_ARRAY)) {
-            errorstr += "[SphereRenderer] Render Mode 'BUFFER_ARRAY' is not available. Minimum OpenGL version is 4.5 \n";
+        if (!isExtAvailable("GL_ARB_gpu_shader5")) {
+            errorstr += "[SphereRenderer] Render Mode 'SSBO_STREAM' is not available. Extension GL_ARB_gpu_shader5 is not available. \n";
         }
-        if (!isExtAvailable("GL_ARB_buffer_storage")) {
-            errorstr += "[SphereRenderer] Render Mode 'BUFFER_ARRAY' is not available. Extension GL_ARB_buffer_storage is not available. \n";
+        if (!isExtAvailable("GL_ARB_gpu_shader_fp64")) {
+            errorstr += "[SphereRenderer] Render Mode 'SSBO_STREAM' is not available. Extension GL_ARB_gpu_shader_fp64 is not available. \n";
         }
         break;
     case(RenderMode::SPLAT):
         if (!(SPHERE_MIN_OGL_SPLAT)) { 
             errorstr += "[SphereRenderer] Render Mode 'SPLAT' is not available. Minimum OpenGL version is 4.5 \n";
         }
-        if (!isExtAvailable("GL_ARB_buffer_storage")) {
-            errorstr += "[SphereRenderer] Render Mode 'SPLAT' is not available. Extension GL_ARB_buffer_storage is not available. \n";
+        if (!isExtAvailable("GL_ARB_shader_storage_buffer_object")) {
+            errorstr += "[SphereRenderer] Render Mode 'SPLAT' is not available. Extension GL_ARB_shader_storage_buffer_object is not available. \n";
+        }
+        if (!isExtAvailable("GL_EXT_gpu_shader4")) {
+            errorstr += "[SphereRenderer] Render Mode 'SSBO_STREAM' is not available. Extension GL_EXT_gpu_shader4 is not available. \n";
+        }
+        break;
+    case(RenderMode::BUFFER_ARRAY):
+        if (!(SPHERE_MIN_OGL_BUFFER_ARRAY)) {
+            errorstr += "[SphereRenderer] Render Mode 'BUFFER_ARRAY' is not available. Minimum OpenGL version is 4.5 \n";
         }
         break;
     case(RenderMode::AMBIENT_OCCLUSION):
