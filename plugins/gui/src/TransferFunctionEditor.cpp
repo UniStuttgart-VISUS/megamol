@@ -186,25 +186,25 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
                 const float ga = this->data[i][c];
                 const float gb = this->data[i][4];
                 const float gc = this->data[i][5];
-                const int d = 3; // step width in x direction
+                const int step = 3; // step width in x direction
                 float x0, x1;
                 float g0, g1;
                 float last_g1 = 0.0f;
 
-                for (int p = 0; p < (int)canvas_size.x; p += d) {
+                for (int p = 0; p < (int)canvas_size.x; p += step) {
                     x0 = (float)p / canvas_size.x;
-                    x1 = (float)(p + d) / canvas_size.x;
+                    x1 = (float)(p + step) / canvas_size.x;
 
                     g0 = last_g1;
                     if (p == 0) {
-                        x0 = (float)(-d) / canvas_size.x;
+                        x0 = (float)(-step) / canvas_size.x;
                         g0 = param::TransferFunctionParam::gauss(x0, ga, gb, gc);
                     }
                     ImVec2 pos0 = ImVec2(
                         canvas_pos.x + (x0 * canvas_size.x), canvas_pos.y + canvas_size.y - (g0 * canvas_size.y));
 
                     if (p == ((int)canvas_size.x - 1)) {
-                        x1 = (float)(canvas_size.x + d) / canvas_size.x;
+                        x1 = (float)(canvas_size.x + step) / canvas_size.x;
                     }
                     g1 = param::TransferFunctionParam::gauss(x1, ga, gb, gc);
                     ImVec2 pos1 = ImVec2(
@@ -320,9 +320,10 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
                 }
             } else {
                 // Delete currently hovered
-                if ((selected_node > 0) && (selected_node < (this->data.size() - 1))) {
+                if ((selected_node > 0) &&
+                    (selected_node < (this->data.size() - 1))) { // First and last node can't be deleted
                     this->data.erase(this->data.begin() + selected_node);
-                    if (this->currentNode == selected_node) {
+                    if (this->currentNode >= selected_node) {
                         this->currentNode = (unsigned int)std::max(0, (int)this->currentNode - 1);
                     }
                     this->textureInvalid = true;
