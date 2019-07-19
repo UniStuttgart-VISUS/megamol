@@ -66,23 +66,31 @@
 //#include "TimeMeasure.h"
 
 
+#define SPHERE_MIN_OGL_SIMPLE            (false)
+#define SPHERE_MIN_OGL_SIMPLE_CLUSTERED  (false)
+#define SPHERE_MIN_OGL_GEOMETRY_SHADER   (false)
+#define SPHERE_MIN_OGL_SSBO_STREAM       (false)
+#define SPHERE_MIN_OGL_BUFFER_ARRAY      (false)
+#define SPHERE_MIN_OGL_SPLAT             (false)
+#define SPHERE_MIN_OGL_AMBIENT_OCCLUSION (false)
 // Minimum OpenGL version for different render modes:
 #ifdef GL_VERSION_1_4
-#define SPHERE_MIN_OGL_SIMPLE 1
-#define SPHERE_MIN_OGL_SIMPLE_CLUSTERED 1
+#define SPHERE_MIN_OGL_SIMPLE            (true)
+#define SPHERE_MIN_OGL_SIMPLE_CLUSTERED  (true)
 #endif // GL_VERSION_1_4
 #ifdef GL_VERSION_3_2
-#define SPHERE_MIN_OGL_GEOMETRY_SHADER 1
+#define SPHERE_MIN_OGL_GEOMETRY_SHADER   (true)
 #endif // GL_VERSION_3_2
 #ifdef GL_VERSION_4_5
-#define SPHERE_MIN_OGL_SSBO_STREAM 1
-#define SPHERE_MIN_OGL_BUFFER_ARRAY 1
-#define SPHERE_MIN_OGL_SPLAT 1
-#define SPHERE_MIN_OGL_AMBIENT_OCCLUSION 1
+#define SPHERE_MIN_OGL_SSBO_STREAM       (true)
+#define SPHERE_MIN_OGL_BUFFER_ARRAY      (true)
+#define SPHERE_MIN_OGL_SPLAT             (true)
+#define SPHERE_MIN_OGL_AMBIENT_OCCLUSION (true)
 #endif // GL_VERSION_4_5
+
 // Minimum GLSL version for all render modes
-#define SPHERE_MIN_GLSL_MAJOR             (int(1))
-#define SPHERE_MIN_GLSL_MINOR             (int(3))
+#define SPHERE_MIN_GLSL_MAJOR           (int(1))
+#define SPHERE_MIN_GLSL_MINOR           (int(3))
 
 
 namespace megamol {
