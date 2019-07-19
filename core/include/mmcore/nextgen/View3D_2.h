@@ -335,6 +335,23 @@ protected:
     /** whether to reset the view when the object bounding box changes */
     param::ParamSlot resetViewOnBBoxChangeSlot;
 
+    /** Invisible parameters for lua manipulation */
+    param::ParamSlot cameraPositionParam;
+    param::ParamSlot cameraOrientationParam;
+    param::ParamSlot cameraProjectionTypeParam;
+    param::ParamSlot cameraNearPlaneParam;
+    param::ParamSlot cameraFarPlaneParam;
+    param::ParamSlot cameraConvergencePlaneParam;
+    param::ParamSlot cameraEyeParam;
+    param::ParamSlot cameraGateScalingParam;
+    param::ParamSlot cameraFilmGateParam;
+    param::ParamSlot cameraCenterOffsetParam;
+    param::ParamSlot cameraHalfApertureRadiansParam;
+    param::ParamSlot cameraHalfDisparityParam;
+
+    core::thecam::Projection_type currentProjectionSelection;
+    core::thecam::Eye currentEyeSelection;
+
     /** The mouse x coordinate */
     float mouseX;
 
