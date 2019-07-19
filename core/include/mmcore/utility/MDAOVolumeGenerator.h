@@ -1,4 +1,5 @@
 #pragma once
+
 #include "stdafx.h"
 
 #include "vislib/graphics/gl/GLSLGeometryShader.h"
@@ -10,10 +11,10 @@ namespace megamol {
     namespace core {
         namespace utility {
 
-            class MDAO2VolumeGenerator {
+            class MDAOVolumeGenerator {
             public:
-                MDAO2VolumeGenerator();
-                ~MDAO2VolumeGenerator();
+                MDAOVolumeGenerator();
+                ~MDAOVolumeGenerator();
 
                 bool Init();
 

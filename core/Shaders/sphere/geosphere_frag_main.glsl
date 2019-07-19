@@ -1,4 +1,4 @@
-#extension GL_ARB_explicit_attrib_location : enable   // glsl version 150
+#extension GL_ARB_explicit_attrib_location : require   // glsl version 130
 
 uniform vec4 viewAttr; // TODO: check fragment position if viewport starts not in (0, 0)
 
