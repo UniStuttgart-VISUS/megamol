@@ -17,7 +17,9 @@ if(BUILD_FLOWVIS_PLUGIN)
   link_directories("${CUDA_TOOLKIT_ROOT_DIR}/lib/x64")
 
   # Suppress warnings
-  list(APPEND CUDA_NVCC_FLAGS "-Xcudafe --no_warnings")
+  if(SUPPRESS_CUDA_WARNINGS)
+    list(APPEND CUDA_NVCC_FLAGS "-Xcompiler \"-w\"")
+  endif()
 
   # Create CUDA library
   cuda_add_library(flowvis_streamlines_cuda ${source_files} ${header_files})
