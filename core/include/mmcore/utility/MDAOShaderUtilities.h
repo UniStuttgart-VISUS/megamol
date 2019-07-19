@@ -1,4 +1,5 @@
 #pragma once
+
 #include "stdafx.h"
 #include "vislib/graphics/gl/GLSLGeometryShader.h"
 #include "mmcore/utility/ShaderSourceFactory.h"

@@ -1,13 +1,13 @@
 /*
- * AbstractSimpleSphereRenderer.h
+ * AbstractSphereRenderer.h
  *
  * Copyright (C) 2012 by CGV (TU Dresden)
  * Copyright (C) 2018 by MegaMol Dev Team
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_ABSTRACTSIMPLESPHERERENDERER_H_INCLUDED
-#define MEGAMOLCORE_ABSTRACTSIMPLESPHERERENDERER_H_INCLUDED
+#ifndef MEGAMOLCORE_ABSTRACTSPHERERENDERER_H_INCLUDED
+#define MEGAMOLCORE_ABSTRACTSPHERERENDERER_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -35,16 +35,16 @@ namespace moldyn {
     /**
      * Abstract renderer for simple sphere glyphs.
      */
-    class MEGAMOLCORE_API AbstractSimpleSphereRenderer : public view::Renderer3DModule {
+    class MEGAMOLCORE_API AbstractSphereRenderer : public view::Renderer3DModule {
     public:
 
     protected:
 
         /** Ctor. */
-        AbstractSimpleSphereRenderer(void);
+        AbstractSphereRenderer(void);
 
         /** Dtor. */
-        virtual ~AbstractSimpleSphereRenderer(void);
+        virtual ~AbstractSphereRenderer(void);
 
         /**
          * The get extents callback. The module should set the members of
@@ -56,15 +56,6 @@ namespace moldyn {
          * @return The return value of the function.
          */
         virtual bool GetExtents(megamol::core::view::CallRender3D& call);
-
-        ///**
-        // * The render callback.
-        // *
-        // * @param call The calling call.
-        // *
-        // * @return The return value of the function.
-        // */
-        //virtual bool Render(megamol::core::view::CallRender3D& call);
 
     protected:
 
@@ -98,7 +89,6 @@ namespace moldyn {
          */
         void getClipData(float *clipDat, float *clipCol);
 
-
         /**
          * Answer the value of the forceTimeSlot parameter
          *
@@ -125,14 +115,10 @@ namespace moldyn {
 
         /** The call for clipping plane */
         CallerSlot getClipPlaneSlot;
-
-        ///** The sphere shader */
-        //vislib::graphics::gl::GLSLShader sphereShader;
-
     };
 
 } /* end namespace moldyn */
 } /* end namespace core */
 } /* end namespace megamol */
 
-#endif /* MEGAMOLCORE_ABSTRACTSIMPLESPHERERENDERER_H_INCLUDED */
+#endif /* MEGAMOLCORE_ABSTRACTSPHERERENDERER_H_INCLUDED */

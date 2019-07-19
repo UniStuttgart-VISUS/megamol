@@ -197,11 +197,11 @@ bool view::special::ScreenShooter::IsAvailable(void) {
  * view::special::ScreenShooter::release
  */
 view::special::ScreenShooter::ScreenShooter(const bool reducedParameters) : job::AbstractJob(), Module(),
-        viewNameSlot("view", "The name of the view instance to be used"),
-        imgWidthSlot("imgWidth", "The width in pixel of the resulting image"),
-        imgHeightSlot("imgHeight", "The height in pixel of the resulting image"),
-        tileWidthSlot("tileWidth", "The width of a rendering tile in pixel"),
-        tileHeightSlot("tileHeight", "The height of a rendering tile in pixel"),
+        viewNameSlot("view", "The name of the view instance or view to be used"),
+        imgWidthSlot("imgWidth", "The width in pixels of the resulting image"),
+        imgHeightSlot("imgHeight", "The height in pixels of the resulting image"),
+        tileWidthSlot("tileWidth", "The width of a rendering tile in pixels"),
+        tileHeightSlot("tileHeight", "The height of a rendering tile in pixels"),
         imageFilenameSlot("filename", "The file name to store the resulting image under"),
         backgroundSlot("background", "The background to be used"),
         triggerButtonSlot("trigger", "The trigger button"),
@@ -443,10 +443,11 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
         this->GetCoreInstance()->SerializeGraph(serInstances, serModules, serCalls, serParams);
         auto confstr = serInstances + "\n" + serModules + "\n" + serCalls + "\n" + serParams;
         std::vector<png_byte> tempvec(confstr.begin(), confstr.end());
+        tempvec.push_back('\0');
         // auto info = new png_byte[confstr.size()];
         // memcpy(info, confstr.c_str(), confstr.size());
         // png_set_eXIf_1(data.pngPtr, data.pngInfoPtr, sizeof(info), info);
-        png_set_eXIf_1(data.pngPtr, data.pngInfoPtr, confstr.size(), tempvec.data());
+        png_set_eXIf_1(data.pngPtr, data.pngInfoPtr, tempvec.size(), tempvec.data());
 
         // check how complex the upcoming action is
         if ((data.imgWidth <= data.tileWidth) && (data.imgHeight <= data.tileHeight)) {
@@ -912,22 +913,22 @@ bool view::special::ScreenShooter::triggerButtonClicked(param::ParamSlot& slot) 
     vislib::StringA mvn(this->viewNameSlot.Param<param::StringParam>()->Value());
     Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 100, "ScreenShot of \"%s\" requested", mvn.PeekBuffer());
 
+    vislib::sys::AutoLock lock(this->ModuleGraphLock());
     {
-        vislib::sys::AutoLock lock(this->ModuleGraphLock());
         AbstractNamedObjectContainer::ptr_type anoc =
             AbstractNamedObjectContainer::dynamic_pointer_cast(this->RootModule());
         AbstractNamedObject::ptr_type ano = anoc->FindChild(mvn);
         ViewInstance* vi = dynamic_cast<ViewInstance*>(ano.get());
         auto av = dynamic_cast<AbstractView*>(ano.get());
-        if (vi != NULL) {
-            if (vi->View() != NULL) {
+        if (vi != nullptr) {
+            if (vi->View() != nullptr) {
                 av = vi->View();
             }
         }
-        if (av != NULL) {
+        if (av != nullptr) {
             if (this->makeAnimSlot.Param<param::BoolParam>()->Value()) {
                 param::ParamSlot* timeSlot = this->findTimeParam(vi->View());
-                if (timeSlot != NULL) {
+                if (timeSlot != nullptr) {
                     timeSlot->Param<param::FloatParam>()->SetValue(
                         static_cast<float>(this->animFromSlot.Param<param::IntParam>()->Value()));
                     this->animLastFrameTime = (float)UINT_MAX;
@@ -943,15 +944,23 @@ bool view::special::ScreenShooter::triggerButtonClicked(param::ParamSlot& slot) 
             }
             av->RegisterHook(this);
         } else {
-            if (vi == NULL) {
-                Log::DefaultLog.WriteMsg(
-                    Log::LEVEL_ERROR, "Unable to find viewInstance \"%s\" for ScreenShot", mvn.PeekBuffer());
-            } else if (av == NULL) {
-                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                    "ViewInstance \"%s\" is not usable for ScreenShot (Not initialized) and AbstractView \"%s\" does "
-                    "not "
-                    "exist either",
-                    mvn.PeekBuffer());
+            // suppose a view was actually intended!
+            bool found = false;
+            const auto fun = [this, &found](AbstractView* v) {
+                v->RegisterHook(this);
+                found = true;
+            };
+            this->GetCoreInstance()->FindModuleNoLock<AbstractView>(mvn.PeekBuffer(), fun);
+            if (!found) {
+                if (vi == nullptr) {
+                    Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                        "Unable to find view or viewInstance \"%s\" for ScreenShot", mvn.PeekBuffer());
+                } else if (av == nullptr) {
+                    Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                        "ViewInstance \"%s\" is not usable for ScreenShot (Not initialized) and AbstractView \"%s\" "
+                        "does not exist either",
+                        vi->FullName().PeekBuffer(), mvn.PeekBuffer());
+                }
             }
         }
     }

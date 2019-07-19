@@ -196,7 +196,7 @@ void CartoonTessellationRenderer::waitSignal(GLsync& syncObj) {
 
 
 /*
- * moldyn::SimpleSphereRenderer::create
+ * moldyn::CartoonTessellationRenderer::create
  */
 bool CartoonTessellationRenderer::create(void) {
     using namespace vislib::sys;
@@ -352,7 +352,7 @@ bool CartoonTessellationRenderer::create(void) {
 }
 
 /*
- * moldyn::SimpleSphereRenderer::release
+ * moldyn::CartoonTessellationRenderer::release
  */
 void CartoonTessellationRenderer::release(void) {
     glUnmapNamedBufferEXT(this->theSingleBuffer);
@@ -453,7 +453,7 @@ MolecularDataCall* CartoonTessellationRenderer::getData(unsigned int t, float& o
 }
 
 /*
- * moldyn::SimpleSphereRenderer::Render
+ * moldyn::CartoonTessellationRenderer::Render
  */
 bool CartoonTessellationRenderer::Render(Call& call) {
 #ifdef DEBUG_BLAHBLAH
