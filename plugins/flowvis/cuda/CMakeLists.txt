@@ -16,8 +16,8 @@ if(BUILD_FLOWVIS_PLUGIN)
   cuda_include_directories("${CUDA_TOOLKIT_ROOT_DIR}/include")
   link_directories("${CUDA_TOOLKIT_ROOT_DIR}/lib/x64")
 
-  # Suppress non-standard pragma warnings
-  list(APPEND CUDA_NVCC_FLAGS "-Xcudafe --diag_suppress=nonstd_pp_directive")
+  # Suppress warnings
+  list(APPEND CUDA_NVCC_FLAGS "-Xcudafe --no_warnings")
 
   # Create CUDA library
   cuda_add_library(flowvis_streamlines_cuda ${source_files} ${header_files})
