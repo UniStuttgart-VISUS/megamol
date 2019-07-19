@@ -13,26 +13,18 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   # afterwards list the dependencies.
   set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE BUILD_MMSTD_DATATOOLS_PLUGIN" CACHE INTERNAL "")
 
-if(UNIX)
-  set(bhtsne_cmake_args -DCMAKE_C_FLAGS="-fPIC" -DCMAKE_CXX_FLAGS="-fPIC")
-else()
-  set(bhtsne_cmake_args "")
-endif()
-
   # Add Barnes-Hut t-SNE.
   add_external_project(bhtsne_ext
     GIT_REPOSITORY  https://github.com/lvdmaaten/bhtsne.git
     GIT_TAG "36b169c88250d0afe51828448dfdeeaa508f13bc" 
     PATCH_COMMAND ${CMAKE_COMMAND} -E copy
       "${CMAKE_CURRENT_SOURCE_DIR}/cmake/bhtsne/CMakeLists.txt"
-      "<SOURCE_DIR>/CMakeLists.txt"
-    BUILD_ALWAYS TRUE
-    CMAKE_ARGS ${bhtsne_cmake_args}
-)
+      "<SOURCE_DIR>/CMakeLists.txt")
   add_external_library(bhtsne STATIC
     DEPENDS bhtsne_ext
     INCLUDE_DIR "src/bhtsne_ext"
-    LIBRARY "lib/${CMAKE_STATIC_LIBRARY_PREFIX}bhtsne${CMAKE_STATIC_LIBRARY_SUFFIX}")
+    LIBRARY_DEBUG "lib/${CMAKE_STATIC_LIBRARY_PREFIX}bhtsned${CMAKE_STATIC_LIBRARY_SUFFIX}"
+    LIBRARY_RELEASE "lib/${CMAKE_STATIC_LIBRARY_PREFIX}bhtsne${CMAKE_STATIC_LIBRARY_SUFFIX}")
 
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
