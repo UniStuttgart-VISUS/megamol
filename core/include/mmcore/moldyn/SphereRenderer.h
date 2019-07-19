@@ -67,13 +67,19 @@
 
 
 // Minimum OpenGL version for different render modes:
-#define SPHERE_MIN_OGL_SIMPLE             (GL_VERSION_1_4)
-#define SPHERE_MIN_OGL_SIMPLE_CLUSTERED   (GL_VERSION_1_4)
-#define SPHERE_MIN_OGL_GEOMETRY_SHADER    (GL_VERSION_3_2)
-#define SPHERE_MIN_OGL_SSBO_STREAM        (GL_VERSION_4_5) // required for glUnmapNamedBuffer
-#define SPHERE_MIN_OGL_BUFFER_ARRAY       (GL_VERSION_4_5) // required for glMapNamedBufferRange
-#define SPHERE_MIN_OGL_SPLAT              (GL_VERSION_4_5) // required for glMapNamedBufferRange
-#define SPHERE_MIN_OGL_AMBIENT_OCCLUSION  (GL_VERSION_4_5) // required for glMapNamedBufferRange
+#ifdef GL_VERSION_1_4
+#define SPHERE_MIN_OGL_SIMPLE 1
+#define SPHERE_MIN_OGL_SIMPLE_CLUSTERED 1
+#endif // GL_VERSION_1_4
+#ifdef GL_VERSION_3_2
+#define SPHERE_MIN_OGL_GEOMETRY_SHADER 1
+#endif // GL_VERSION_3_2
+#ifdef GL_VERSION_4_5
+#define SPHERE_MIN_OGL_SSBO_STREAM 1
+#define SPHERE_MIN_OGL_BUFFER_ARRAY 1
+#define SPHERE_MIN_OGL_SPLAT 1
+#define SPHERE_MIN_OGL_AMBIENT_OCCLUSION 1
+#endif // GL_VERSION_4_5
 // Minimum GLSL version for all render modes
 #define SPHERE_MIN_GLSL_MAJOR             (int(1))
 #define SPHERE_MIN_GLSL_MINOR             (int(3))
