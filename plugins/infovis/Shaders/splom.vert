@@ -4,6 +4,7 @@ uniform mat4 modelViewProjection;
 uniform sampler1D colorTable;
 uniform int colorCount;
 uniform int colorColumn;
+uniform vec2 colorColumnMinMax;
 
 uniform int rowStride;
 
@@ -25,8 +26,10 @@ void main(void) {
     const int rowOffset = gl_VertexID * rowStride;
 
     // Fetch color from table.
-    const float colorIndex = values[rowOffset + colorColumn];
-    const float colorOffset = clamp(colorIndex / float(colorCount - 1), 0.0, 1.0) + 0.5 / float(colorCount);
+    const float colorValue = values[rowOffset + colorColumn];
+    const float colorValueNormalized = (colorValue - colorColumnMinMax.x) / 
+        (colorColumnMinMax.y - colorColumnMinMax.x);
+    const float colorOffset = colorValueNormalized + 0.5 / float(colorCount);
     vsColor = texture(colorTable, colorOffset);
 
     // Map value pair to position.
