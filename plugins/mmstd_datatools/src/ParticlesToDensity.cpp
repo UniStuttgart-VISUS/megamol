@@ -421,11 +421,14 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
 
     maxDens = *std::max_element(vol[0].begin(), vol[0].end());
     minDens = *std::min_element(vol[0].begin(), vol[0].end());
+    vislib::sys::Log::DefaultLog.WriteInfo("ParticlesToDensity: Captured density %f -> %f", minDens, maxDens);
 
     if (this->normalizeSlot.Param<core::param::BoolParam>()->Value()) {
         auto const rcpValRange = 1.0f / (maxDens - minDens);
-        std::for_each(
-            vol[0].begin(), vol[0].end(), [this, rcpValRange](float const& a) { return (a - minDens) * rcpValRange; });
+        std::transform(
+            vol[0].begin(), vol[0].end(), vol[0].begin(), [this, rcpValRange](float const& a) { return (a - minDens) * rcpValRange; });
+        minDens = 0.0f;
+        maxDens = 1.0f;
     }
 
 //#define PTD_DEBUG_OUTPUT
