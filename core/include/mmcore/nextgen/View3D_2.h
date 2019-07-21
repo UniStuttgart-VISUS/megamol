@@ -172,6 +172,13 @@ protected:
      */
     virtual void unpackMouseCoordinates(float& x, float& y);
 
+	/**
+	 * Sets all parameters to the currently used camera values
+	 *
+	 * @param cam Camera containing the values that will be set
+	 */
+	void setCameraValues(const core::nextgen::Camera_2& cam);
+
     /**
      * Implementation of 'Create'.
      *
@@ -348,9 +355,6 @@ protected:
     param::ParamSlot cameraCenterOffsetParam;
     param::ParamSlot cameraHalfApertureRadiansParam;
     param::ParamSlot cameraHalfDisparityParam;
-
-    core::thecam::Projection_type currentProjectionSelection;
-    core::thecam::Eye currentEyeSelection;
 
     /** The mouse x coordinate */
     float mouseX;
