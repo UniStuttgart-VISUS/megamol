@@ -33,7 +33,7 @@ namespace astro {
 
     /// <summary>
     /// Converts from <see cref="AstroDataCall" /> to a table for data
-    /// visualisaion.
+    /// visualisation.
     /// </summary>
     class AstroSchulz : public core::Module {
 
@@ -44,7 +44,8 @@ namespace astro {
         }
 
         static inline const char *Description(void) {
-            return "Converts data contained in a AstroDataCall to a MultiParticleDataCall";
+            return "Converts data contained in a AstroDataCall to a "
+                "TableDataCall";
         }
 
         static bool IsAvailable(void) {
@@ -68,17 +69,13 @@ namespace astro {
         typedef megamol::stdplugin::datatools::table::TableDataCall::ColumnInfo
             ColumnInfo;
 
-        static float* convert(float* dst, ColumnInfo& ciX, ColumnInfo& ciY,
-            ColumnInfo& ciZ, const vec3ArrayPtr& src);
+        void convert(float *dst, const std::size_t col, const vec3ArrayPtr& src);
 
-        static float *convert(float *dst, ColumnInfo& ci,
-            const floatArrayPtr& src);
+        void convert(float *dst, const std::size_t col, const floatArrayPtr& src);
 
-        static float *convert(float *dst, ColumnInfo& ci,
-            const boolArrayPtr& src);
+        void convert(float *dst, const std::size_t col, const boolArrayPtr& src);
 
-        static float *convert(float *dst, ColumnInfo& ci,
-            const idArrayPtr& src);
+        void convert(float *dst, const std::size_t col, const idArrayPtr& src);
 
         bool getData(core::Call& call);
 
@@ -92,7 +89,7 @@ namespace astro {
         std::vector<float> values;
     };
 
-} // namespace astro
-} // namespace megamol
+} /* end namespace astro */
+} /* end namespace megamol */
 
 #endif /* MEGAMOL_ASTRO_ASTROSCHULZ_H_INCLUDED */
