@@ -318,23 +318,23 @@ void megamol::astro::AstroSchulz::convert(float *dst, const std::size_t col,
 
     auto mn = (std::numeric_limits<float>::max)();
     auto mx = std::numeric_limits<float>::lowest();
-    auto retval = std::make_pair(std::array<float, 3> { mn, mn, mn },
+    auto range = std::make_pair(std::array<float, 3> { mn, mn, mn },
         std::array<float, 3> { mx, mx, mx });
 
     for (auto s : *src) {
         for (std::size_t i = 0; i < s.length(); ++i) {
             dst[i] = s[i];
 
-            if (s[i] < retval.first[i]) {
-                retval.first[i] = s[i];
+            if (s[i] < range.first[i]) {
+                range.first[i] = s[i];
             }
-            if (s[i] > retval.second[i]) {
-                retval.second[i] = s[i];
+            if (s[i] > range.second[i]) {
+                range.second[i] = s[i];
             }
 
-            assert(retval.first[i] <= retval.second[i]);
-            assert(dst[i] >= retval.first[i]);
-            assert(dst[i] <= retval.second[i]);
+            assert(range.first[i] <= range.second[i]);
+            assert(dst[i] >= range.first[i]);
+            assert(dst[i] <= range.second[i]);
 
             dst += this->columns.size();
         }
