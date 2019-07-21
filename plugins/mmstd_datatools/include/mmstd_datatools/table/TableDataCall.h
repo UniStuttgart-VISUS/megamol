@@ -22,6 +22,13 @@ namespace stdplugin {
 namespace datatools {
 namespace table {
 
+	/**
+	 * Call for passing around tabular data.
+	 *
+	 * Tabular data is composed from cells that are subdivided into columns and rows.
+	 * Cells are expected to be stored in a consecutive row-major format 
+	 * (until the shitty API no longer provides unsafe pointer access).
+	 */
     class MMSTD_DATATOOLS_API TableDataCall : public core::AbstractGetDataCall {
     public:
         static const char *ClassName(void) { return "TableDataCall"; }
