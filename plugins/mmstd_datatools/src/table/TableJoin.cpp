@@ -138,21 +138,19 @@ void TableJoin::concatenate(
     for (size_t row = 0; row < firstRowCount; row++) {
         float* outR = &out[row * columnCount];
         memcpy(outR, &first[row * firstColumnCount], sizeof(float) * firstColumnCount);
-	}
+    }
     for (size_t row = firstRowCount; row < rowCount; row++) {
         for (size_t col = 0; col < firstColumnCount; col++) {
             out[col + row * columnCount] = NAN;
-		}
-	}
-    for (size_t row = 0; row < secondRowCount; row++) {
-        for (size_t col = 0; col < secondColumnCount; col++) {
-            float* outR = &out[(col + firstColumnCount) + row * columnCount];
-            memcpy(outR, &second[col + row * secondColumnCount], sizeof(float) * secondColumnCount);
         }
+    }
+    for (size_t row = 0; row < secondRowCount; row++) {
+        float* outR = &out[firstColumnCount + row * columnCount];
+        memcpy(outR, &second[row * secondColumnCount], sizeof(float) * secondColumnCount);
     }
     for (size_t row = secondRowCount; row < rowCount; row++) {
         for (size_t col = 0; col < secondColumnCount; col++) {
-            out[(col + firstColumnCount) + row * columnCount] = NAN;
+            out[col + firstColumnCount + row * columnCount] = NAN;
         }
     }
 }
