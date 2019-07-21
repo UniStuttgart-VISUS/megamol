@@ -69,6 +69,14 @@ namespace astro {
         typedef megamol::stdplugin::datatools::table::TableDataCall::ColumnInfo
             ColumnInfo;
 
+        static constexpr inline std::pair<float, float> initialiseRange(void) {
+            return std::make_pair((std::numeric_limits<float>::max)(),
+                std::numeric_limits<float>::lowest());
+        }
+
+        static void updateRange(std::pair<float, float>& range,
+            const float value);
+
         void convert(float *dst, const std::size_t col, const vec3ArrayPtr& src);
 
         void convert(float *dst, const std::size_t col, const floatArrayPtr& src);

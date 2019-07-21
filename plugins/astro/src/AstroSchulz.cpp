@@ -14,12 +14,10 @@
 /*
  * megamol::astro::AstroSchulz::AstroSchulz
  */
-megamol::astro::AstroSchulz::AstroSchulz(void)
-    : Module()
-    , frameID(0)
-    , hash(0)
-    , slotAstroData("astroData", "Input slot for astronomical data")
-    , slotTableData("tableData", "Output slot for the resulting sphere data") {
+megamol::astro::AstroSchulz::AstroSchulz(void) : Module(),
+        frameID(0), hash(0),
+        slotAstroData("astroData", "Input slot for astronomical data"),
+        slotTableData("tableData", "Output slot for the resulting sphere data") {
     using megamol::stdplugin::datatools::table::TableDataCall;
 
     // Connect the slots.
@@ -160,14 +158,16 @@ megamol::astro::AstroSchulz::AstroSchulz(void)
 /*
  * megamol::astro::AstroSchulz::~AstroSchulz
  */
-megamol::astro::AstroSchulz::~AstroSchulz(void) { this->Release(); }
+megamol::astro::AstroSchulz::~AstroSchulz(void) {
+    // TODO: This is toxic!
+    this->Release();
+}
 
 
 /*
  * megamol::astro::AstroSchulz::create
  */
 bool megamol::astro::AstroSchulz::create(void) {
-    // intentionally empty
     return true;
 }
 
@@ -175,9 +175,7 @@ bool megamol::astro::AstroSchulz::create(void) {
 /*
  * megamol::astro::AstroSchulz::release
  */
-void megamol::astro::AstroSchulz::release(void) {
-    // intentionally empty
-}
+void megamol::astro::AstroSchulz::release(void) { }
 
 
 /*
@@ -212,11 +210,11 @@ bool megamol::astro::AstroSchulz::getData(core::Call& call) {
         auto col = 0;
         auto dst = this->values.data();
 
-        AstroSchulz::convert(dst, col, ast->GetPositions()); 
+        this->convert(dst, col, ast->GetPositions()); 
         col += 3;
         dst += 3;
 
-        AstroSchulz::convert(dst, col, ast->GetVelocities());
+        this->convert(dst, col, ast->GetVelocities());
         col += 3;
         dst += 3;
 
@@ -309,6 +307,20 @@ bool megamol::astro::AstroSchulz::getHash(core::Call& call) {
 
 
 /*
+ * megamol::astro::AstroSchulz::updateRange
+ */
+void megamol::astro::AstroSchulz::updateRange(std::pair<float, float>& range,
+        const float value) {
+    if (value < range.first) {
+        range.first = value;
+    }
+    if (value > range.second) {
+        range.second = value;
+    }
+}
+
+
+/*
  * megamol::astro::AstroSchulz::convert
  */
 void megamol::astro::AstroSchulz::convert(float *dst, const std::size_t col,
@@ -316,33 +328,28 @@ void megamol::astro::AstroSchulz::convert(float *dst, const std::size_t col,
     assert(dst != nullptr);
     assert(src != nullptr);
 
-    auto mn = (std::numeric_limits<float>::max)();
-    auto mx = std::numeric_limits<float>::lowest();
-    auto range = std::make_pair(std::array<float, 3> { mn, mn, mn },
-        std::array<float, 3> { mx, mx, mx });
+    std::array<std::pair<float, float>, 3> range = {
+        AstroSchulz::initialiseRange(),
+        AstroSchulz::initialiseRange(),
+        AstroSchulz::initialiseRange()
+    };
 
     for (auto s : *src) {
         for (std::size_t i = 0; i < s.length(); ++i) {
             dst[i] = s[i];
 
-            if (s[i] < range.first[i]) {
-                range.first[i] = s[i];
-            }
-            if (s[i] > range.second[i]) {
-                range.second[i] = s[i];
-            }
-
-            assert(range.first[i] <= range.second[i]);
-            assert(dst[i] >= range.first[i]);
-            assert(dst[i] <= range.second[i]);
+            AstroSchulz::updateRange(range[i], dst[i]);
+            assert(range[i].first <= range[i].second);
+            assert(dst[i] >= range[i].first);
+            assert(dst[i] <= range[i].second);
 
             dst += this->columns.size();
         }
     }
 
     for (std::size_t i = 0; i < 3; ++i) {
-        this->columns[col + i].SetMinimumValue(range.first[i]);
-        this->columns[col + i].SetMaximumValue(range.second[i]);
+        this->columns[col + i].SetMinimumValue(range[i].first);
+        this->columns[col + i].SetMaximumValue(range[i].second);
     }
 }
 
@@ -354,20 +361,12 @@ void megamol::astro::AstroSchulz::convert(float *dst, const std::size_t col,
         const floatArrayPtr& src) {
     assert(dst != nullptr);
     assert(src != nullptr);
-    auto range = std::make_pair(
-        (std::numeric_limits<float>::max)(),
-        std::numeric_limits<float>::lowest());
+    auto range = AstroSchulz::initialiseRange();
 
     for (auto s : *src) {
-        *dst++ = s;
+        *dst = s;
 
-        if (s < range.first) {
-            range.first = s;
-        }
-        if (s > range.second) {
-            range.second = s;
-        }
-
+        AstroSchulz::updateRange(range, *dst);
         assert(range.first <= range.second);
         assert(s >= range.first);
         assert(s <= range.second);
@@ -387,21 +386,13 @@ void megamol::astro::AstroSchulz::convert(float *dst, const std::size_t col,
         const boolArrayPtr& src) {
     assert(dst != nullptr);
     assert(src != nullptr);
-    auto range = std::make_pair(
-        (std::numeric_limits<float>::max)(),
-        std::numeric_limits<float>::lowest());
+    auto range = AstroSchulz::initialiseRange();
 
     for (auto s : *src) {
         *dst = s ? 1.0f : 0.0f;
         assert((*dst == 0.0f) || (*dst == 1.0f));
 
-        if (*dst < range.first) {
-            range.first = *dst;
-        }
-        if (*dst > range.second) {
-            range.second = *dst;
-        }
-
+        AstroSchulz::updateRange(range, *dst);
         assert(range.first <= range.second);
         assert(*dst >= range.first);
         assert(*dst <= range.second);
@@ -421,20 +412,12 @@ void megamol::astro::AstroSchulz::convert(float *dst, const std::size_t col,
         const idArrayPtr& src) {
     assert(dst != nullptr);
     assert(src != nullptr);
-    auto range = std::make_pair(
-        (std::numeric_limits<float>::max)(),
-        std::numeric_limits<float>::lowest());
+    auto range = AstroSchulz::initialiseRange();
 
     for (auto s : *src) {
         *dst = static_cast<float>(s);
 
-        if (*dst < range.first) {
-            range.first = *dst;
-        }
-        if (*dst > range.second) {
-            range.second = *dst;
-        }
-
+        AstroSchulz::updateRange(range, *dst);
         assert(range.first <= range.second);
         assert(*dst >= range.first);
         assert(*dst <= range.second);
