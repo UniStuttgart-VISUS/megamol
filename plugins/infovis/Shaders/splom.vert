@@ -1,3 +1,5 @@
+//#define DEBUG_MINMAX 1
+
 uniform vec4 viewport;
 uniform mat4 modelViewProjection;
 
@@ -35,8 +37,16 @@ void main(void) {
     // Map value pair to position.
     const vec2 point = vec2(values[rowOffset + plot.indexX],
                             values[rowOffset + plot.indexY]);
-    const vec2 unitPoint = vec2((point.x - plot.minX) / (plot.maxX - plot.minX),
+    vec2 unitPoint = vec2((point.x - plot.minX) / (plot.maxX - plot.minX),
                                 (point.y - plot.minY) / (plot.maxY - plot.minY));
+#if DEBUG_MINMAX
+    // To debug column min/max and thus normalization, we clamp the result and set it to red.
+    vec2 unitPointClamped = clamp(unitPoint, vec2(0.0), vec2(1.0));
+    if (unitPoint != unitPointClamped) {
+        unitPoint = unitPointClamped;
+        vsColor = vec4(1.0, 0.0, 0.0, 1.0);
+    }
+#endif
     vsPosition = vec4(unitPoint.x * plot.sizeX + plot.offsetX,
                       unitPoint.y * plot.sizeY + plot.offsetY,
                       0.0, 1.0);

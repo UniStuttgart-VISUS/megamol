@@ -295,6 +295,7 @@ bool ScatterplotMatrixRenderer2D::validate(void) {
     this->floatTable = this->floatTableInSlot.CallAs<table::TableDataCall>();
     if (this->floatTable == nullptr || !(*(this->floatTable))(0)) return false;
     if (this->floatTable->GetColumnsCount() == 0) return false;
+    // this->floatTable->AssertColumnInfos();
 
     this->flagStorage = this->flagStorageInSlot.CallAs<FlagCall>();
     if (this->flagStorage != nullptr && !(*(this->flagStorage))()) return false;
