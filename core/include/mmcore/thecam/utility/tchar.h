@@ -36,59 +36,59 @@
 #ifndef THE_TCHAR_H_INCLUDED
 #define THE_TCHAR_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#pragma once
+#    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
-#pragma managed(push, off)
+#    pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 #include "mmcore/thecam/utility/config.h"
 
 #ifdef THE_WINDOWS
-#include <tchar.h>
+#    include <tchar.h>
 #else /* THE_WINDOWS */
 
-#if defined(UNICODE) || defined(_UNICODE)
+#    if defined(UNICODE) || defined(_UNICODE)
 
-#include <wchar.h>
+#        include <wchar.h>
 
 typedef wchar_t TCHAR;
 
-#define _T(x) L##x
+#        define _T(x) L##x
 
-#define _tprintf wprintf
-#define _ftprintf fwprintf
-#define _vftprintf vfwprintf
-#define _tcslen wcslen
-#define _vsntprintf vswprintf
-#define _tcscpy wcscpy
-#define _tsystem wsystem
-#define _tcscmp wcscmp
-#define _tcsicmp wcscasecmp
+#        define _tprintf wprintf
+#        define _ftprintf fwprintf
+#        define _vftprintf vfwprintf
+#        define _tcslen wcslen
+#        define _vsntprintf vswprintf
+#        define _tcscpy wcscpy
+#        define _tsystem wsystem
+#        define _tcscmp wcscmp
+#        define _tcsicmp wcscasecmp
 //#define _ttoi megamol::core::thecam::text::char_utility::parse_int // unsure about that one
 
-#else /* defined(UNICODE) || defined(_UNICODE) */
+#    else /* defined(UNICODE) || defined(_UNICODE) */
 
 typedef char TCHAR;
 
-#define _T(x) x
+#        define _T(x) x
 
-#define _tprintf printf
-#define _ftprintf fprintf
-#define _vftprintf vfprintf
-#define _tcslen strlen
-#define _vsntprintf vsnprintf
-#define _tcscpy strcpy
-#define _tsystem system
-#define _tcscmp strcmp
-#define _tcsicmp strcasecmp
-#define _ttoi atoi
+#        define _tprintf printf
+#        define _ftprintf fprintf
+#        define _vftprintf vfprintf
+#        define _tcslen strlen
+#        define _vsntprintf vsnprintf
+#        define _tcscpy strcpy
+#        define _tsystem system
+#        define _tcscmp strcmp
+#        define _tcsicmp strcasecmp
+#        define _ttoi atoi
 
-#endif /* defined(UNICODE) || defined(_UNICODE) */
+#    endif /* defined(UNICODE) || defined(_UNICODE) */
 
 #endif /* THE_WINDOWS */
 
 #if defined(_WIN32) && defined(_MANAGED)
-#pragma managed(pop)
+#    pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* THE_TCHAR_H_INCLUDED */

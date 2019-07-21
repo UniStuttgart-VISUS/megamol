@@ -31,10 +31,10 @@
 #ifndef THE_MATH_POINT_H_INCLUDED
 #define THE_MATH_POINT_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#pragma once
+#    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
-#pragma managed(push, off)
+#    pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 #include "mmcore/thecam/utility/config.h"
@@ -48,13 +48,11 @@ namespace thecam {
 namespace math {
 
 
-    /**
-     * Implements a point as its position vector.
-     */
-    template<class V,
-        size_t D = detail::implicit_dimension<V>::value,
-        class T = vector_traits<V, D>>
-    using point = vector<V, D, T>;
+/**
+ * Implements a point as its position vector.
+ */
+template <class V, size_t D = detail::implicit_dimension<V>::value, class T = vector_traits<V, D>>
+using point = vector<V, D, T>;
 
 } /* end namespace math */
 } /* end namespace thecam */
@@ -63,6 +61,6 @@ namespace math {
 
 
 #if defined(_WIN32) && defined(_MANAGED)
-#pragma managed(pop)
+#    pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* THE_MATH_POINT_H_INCLUDED */

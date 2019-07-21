@@ -1,1 +1,0 @@
-mmCreateView("emptyview2d", "View2D", "view")
