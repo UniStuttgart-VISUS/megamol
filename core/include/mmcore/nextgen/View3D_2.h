@@ -172,12 +172,19 @@ protected:
      */
     virtual void unpackMouseCoordinates(float& x, float& y);
 
-	/**
-	 * Sets all parameters to the currently used camera values
-	 *
-	 * @param cam Camera containing the values that will be set
-	 */
-	void setCameraValues(const core::nextgen::Camera_2& cam);
+    /**
+     * Sets all parameters to the currently used camera values
+     *
+     * @param cam Camera containing the values that will be set
+     */
+    void setCameraValues(const core::nextgen::Camera_2& cam);
+
+    /**
+     * Adapts camera values set by the user if necessary
+     *
+     * @param cam The camera the newly set parameters will be stored in
+     */
+    void adaptCameraValues(core::nextgen::Camera_2& cam);
 
     /**
      * Implementation of 'Create'.
@@ -389,7 +396,7 @@ protected:
     /**  */
     std::chrono::time_point<std::chrono::high_resolution_clock> lastFrameTime;
 
-	std::chrono::microseconds lastFrameDuration;
+    std::chrono::microseconds lastFrameDuration;
 };
 
 } // namespace nextgen
