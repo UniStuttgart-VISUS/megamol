@@ -278,14 +278,15 @@ bool ScatterplotMatrixRenderer2D::GetExtents(core::view::CallRender2D& call) {
 
 bool ScatterplotMatrixRenderer2D::isDirty(void) const {
     return this->colorSelectorParam.IsDirty() || this->labelSelectorParam.IsDirty() || this->labelSizeParam.IsDirty() ||
-           this->triangulationSmoothnessParam.IsDirty() || this->cellSizeParam.IsDirty() ||
-           this->cellMarginParam.IsDirty();
+           this->triangulationSelectorParam.IsDirty() || this->triangulationSmoothnessParam.IsDirty() ||
+           this->cellSizeParam.IsDirty() || this->cellMarginParam.IsDirty();
 }
 
 void ScatterplotMatrixRenderer2D::resetDirty(void) {
     this->colorSelectorParam.ResetDirty();
     this->labelSelectorParam.ResetDirty();
     this->labelSizeParam.ResetDirty();
+    this->triangulationSelectorParam.ResetDirty();
     this->triangulationSmoothnessParam.ResetDirty();
     this->cellSizeParam.ResetDirty();
     this->cellMarginParam.ResetDirty();
@@ -295,7 +296,6 @@ bool ScatterplotMatrixRenderer2D::validate(void) {
     this->floatTable = this->floatTableInSlot.CallAs<table::TableDataCall>();
     if (this->floatTable == nullptr || !(*(this->floatTable))(0)) return false;
     if (this->floatTable->GetColumnsCount() == 0) return false;
-    // this->floatTable->AssertColumnInfos();
 
     this->flagStorage = this->flagStorageInSlot.CallAs<FlagCall>();
     if (this->flagStorage != nullptr && !(*(this->flagStorage))()) return false;
@@ -312,9 +312,11 @@ bool ScatterplotMatrixRenderer2D::validate(void) {
         // Update dynamic parameters.
         this->colorSelectorParam.Param<core::param::FlexEnumParam>()->ClearValues();
         this->labelSelectorParam.Param<core::param::FlexEnumParam>()->ClearValues();
+        this->triangulationSelectorParam.Param<core::param::FlexEnumParam>()->ClearValues();
         for (size_t i = 0; i < colCount; i++) {
             this->colorSelectorParam.Param<core::param::FlexEnumParam>()->AddValue(columnInfos[i].Name());
             this->labelSelectorParam.Param<core::param::FlexEnumParam>()->AddValue(columnInfos[i].Name());
+            this->triangulationSelectorParam.Param<core::param::FlexEnumParam>()->AddValue(columnInfos[i].Name());
         }
     }
 
@@ -793,6 +795,7 @@ void ScatterplotMatrixRenderer2D::drawTriangulation() {
     this->validateTriangulation();
 
     triangleShader.Enable();
+    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     // Bind buffers.
     glBindBuffer(GL_ARRAY_BUFFER, triangleVBO);
@@ -805,11 +808,9 @@ void ScatterplotMatrixRenderer2D::drawTriangulation() {
 
     // Set uniforms.
     const int contourLevels = 3;                       // 3; // TODO: param!
-    const float contourWidth = 1.0;                    // 3; // TODO: param!
-    const float contourColor[] = {1.0, 1.0, 1.0, 1.0}; // 3; // TODO: param!
+    const float contourColor[] = {1.0, 0.0, 0.0, 1.0}; // 3; // TODO: param!
     auto mvpMatrix = getModelViewProjection();
     glUniform1i(triangleShader.ParameterLocation("contourLevels"), contourLevels);
-    glUniform1f(triangleShader.ParameterLocation("contourWidth"), contourWidth);
     glUniform4fv(triangleShader.ParameterLocation("contourColor"), 1, contourColor);
     glUniformMatrix4fv(
         this->triangleShader.ParameterLocation("modelViewProjection"), 1, GL_FALSE, mvpMatrix.PeekComponents());

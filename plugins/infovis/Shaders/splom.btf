@@ -53,10 +53,6 @@
       <snippet type="version">430</snippet>
       <snippet type="file">splom_triangle.vert</snippet>
     </shader>
-    <shader name="geom">
-      <snippet type="version">430</snippet>
-      <snippet type="file">splom_triangle.geom</snippet>
-    </shader>
     <shader name="frag">
       <snippet type="version">430</snippet>
       <snippet type="file">splom_triangle.frag</snippet>

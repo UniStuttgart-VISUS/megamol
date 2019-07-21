@@ -222,7 +222,7 @@ private:
 
     vislib::graphics::gl::GLSLGeometryShader lineShader;
 
-    vislib::graphics::gl::GLSLGeometryShader triangleShader;
+    vislib::graphics::gl::GLSLShader triangleShader;
 
     core::utility::SSBOStreamer valueSSBO;
 
