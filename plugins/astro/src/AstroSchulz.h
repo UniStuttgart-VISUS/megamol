@@ -19,10 +19,6 @@
 
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 
-#include "mmcore/param/ColorParam.h"
-#include "mmcore/param/EnumParam.h"
-#include "mmcore/param/FloatParam.h"
-#include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ParamSlot.h"
 
 #include "mmstd_datatools/table/TableDataCall.h"
@@ -91,9 +87,13 @@ namespace astro {
 
         void norm(float *dst, const std::size_t col, const vec3ArrayPtr& src);
 
+        void setRange(const std::size_t col, const std::pair<float, float>& src);
+
         std::vector<ColumnInfo> columns;
         unsigned int frameID;
         std::size_t hash;
+        core::param::ParamSlot paramIncrementalRange;
+        std::vector<std::pair<float, float>> ranges;
         core::CallerSlot slotAstroData;
         core::CalleeSlot slotTableData;
         std::vector<float> values;
