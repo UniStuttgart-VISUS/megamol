@@ -60,8 +60,8 @@ bool moldyn::MipDepthSphereRenderer::create(void) {
     try {
 
         shaderName = "sphere";
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("simplesphere::vertex", vert)) { return false; }
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("simplesphere::fragment", frag)) { return false; }
+        if (!instance()->ShaderSourceFactory().MakeShaderSource("sphere_simple::vertex", vert)) { return false; }
+        if (!instance()->ShaderSourceFactory().MakeShaderSource("sphere_simple::fragment", frag)) { return false; }
         //printf("\nVertex Shader:\n%s\n\nFragment Shader:\n%s\n",
         //    vert.WholeCode().PeekBuffer(),
         //    frag.WholeCode().PeekBuffer());

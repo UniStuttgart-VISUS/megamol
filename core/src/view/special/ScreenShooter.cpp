@@ -197,11 +197,11 @@ bool view::special::ScreenShooter::IsAvailable(void) {
  * view::special::ScreenShooter::release
  */
 view::special::ScreenShooter::ScreenShooter(const bool reducedParameters) : job::AbstractJob(), Module(),
-        viewNameSlot("view", "The name of the view instance to be used"),
-        imgWidthSlot("imgWidth", "The width in pixel of the resulting image"),
-        imgHeightSlot("imgHeight", "The height in pixel of the resulting image"),
-        tileWidthSlot("tileWidth", "The width of a rendering tile in pixel"),
-        tileHeightSlot("tileHeight", "The height of a rendering tile in pixel"),
+        viewNameSlot("view", "The name of the view instance or view to be used"),
+        imgWidthSlot("imgWidth", "The width in pixels of the resulting image"),
+        imgHeightSlot("imgHeight", "The height in pixels of the resulting image"),
+        tileWidthSlot("tileWidth", "The width of a rendering tile in pixels"),
+        tileHeightSlot("tileHeight", "The height of a rendering tile in pixels"),
         imageFilenameSlot("filename", "The file name to store the resulting image under"),
         backgroundSlot("background", "The background to be used"),
         triggerButtonSlot("trigger", "The trigger button"),
@@ -439,87 +439,15 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
 
         // todo: camera settings are not stored without magic knowledge about the view
 
-        std::stringstream confInstances, confModules, confCalls, confParams;
-
-        std::map<std::string, std::string> view_instances;
-        std::map<std::string, std::string> job_instances;
-        {
-            vislib::sys::AutoLock lock(this->ModuleGraphLock());
-            AbstractNamedObjectContainer::ptr_type anoc =
-                AbstractNamedObjectContainer::dynamic_pointer_cast(this->RootModule());
-            int job_counter = 0;
-            for (auto ano = anoc->ChildList_Begin(); ano != anoc->ChildList_End(); ++ano) {
-                auto vi = dynamic_cast<ViewInstance*>(ano->get());
-                auto ji = dynamic_cast<JobInstance*>(ano->get());
-                if (vi && vi->View()) {
-                    std::string vin = vi->Name().PeekBuffer();
-                    view_instances[vi->View()->FullName().PeekBuffer()] = vin;
-                    vislib::sys::Log::DefaultLog.WriteInfo(
-                        "ScreenShooter: found view instance \"%s\" with view \"%s\".",
-                        view_instances[vi->View()->FullName().PeekBuffer()].c_str(),
-                        vi->View()->FullName().PeekBuffer());
-                }
-                if (ji && ji->Job()) {
-                    std::string jin = ji->Name().PeekBuffer();
-                    // todo: find job module! WTF!
-                    job_instances[jin] = std::string("job") + std::to_string(job_counter);
-                    vislib::sys::Log::DefaultLog.WriteInfo("ScreenShooter: found job instance \"%s\" with job \"%s\".",
-                        jin.c_str(), job_instances[jin].c_str());
-                    ++job_counter;
-                }
-            }
-
-            const auto fun = [&confInstances, &confModules, &confCalls, &confParams, &view_instances](Module* mod) {
-                if (view_instances.find(mod->FullName().PeekBuffer()) != view_instances.end()) {
-                    confInstances << "mmCreateView(\"" << view_instances[mod->FullName().PeekBuffer()] << "\",\""
-                                  << mod->ClassName() << "\",\"" << mod->FullName().PeekBuffer() << "\")\n";
-                } else {
-                    // todo: jobs??
-                    confModules << "mmCreateModule(\"" << mod->ClassName() << "\",\"" << mod->FullName().PeekBuffer()
-                                << "\")\n";
-                }
-                AbstractNamedObjectContainer::child_list_type::const_iterator se = mod->ChildList_End();
-                for (AbstractNamedObjectContainer::child_list_type::const_iterator si = mod->ChildList_Begin();
-                     si != se; ++si) {
-                    const auto slot = dynamic_cast<param::ParamSlot*>((*si).get());
-                    if (slot) {
-                        const auto bp = slot->Param<param::ButtonParam>();
-                        if (!bp) {
-                            // caution: value strings could contain unescaped quotes, so fix that:
-                            std::string from = "\"";
-                            std::string to = "\\\"";
-                            std::string val = slot->Parameter()->ValueString().PeekBuffer();
-                            size_t start_pos = 0;
-                            while ((start_pos = val.find(from, start_pos)) != std::string::npos) {
-                                val.replace(start_pos, from.length(), to);
-                                start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
-                            }
-                            confParams << "mmSetParamValue(\"" << slot->FullName() << "\",\"" << val << "\")\n";
-                        }
-                    }
-                    const auto cslot = dynamic_cast<CallerSlot*>((*si).get());
-                    if (cslot) {
-                        const Call* c = const_cast<CallerSlot*>(cslot)->CallAs<Call>();
-                        if (c != nullptr) {
-                            confCalls << "mmCreateCall(\"" << c->ClassName() << "\",\""
-                                      << c->PeekCallerSlot()->Parent()->FullName().PeekBuffer()
-                                      << "::" << c->PeekCallerSlot()->Name().PeekBuffer() << "\",\""
-                                      << c->PeekCalleeSlot()->Parent()->FullName().PeekBuffer()
-                                      << "::" << c->PeekCalleeSlot()->Name().PeekBuffer() << "\")\n";
-                        }
-                    }
-                }
-            };
-            this->GetCoreInstance()->EnumModulesNoLock(nullptr, fun);
-        }
-
-        auto confstr =
-            confInstances.str() + "\n" + confModules.str() + "\n" + confCalls.str() + "\n" + confParams.str();
+        std::string serInstances, serModules, serCalls, serParams;
+        this->GetCoreInstance()->SerializeGraph(serInstances, serModules, serCalls, serParams);
+        auto confstr = serInstances + "\n" + serModules + "\n" + serCalls + "\n" + serParams;
         std::vector<png_byte> tempvec(confstr.begin(), confstr.end());
+        tempvec.push_back('\0');
         // auto info = new png_byte[confstr.size()];
         // memcpy(info, confstr.c_str(), confstr.size());
         // png_set_eXIf_1(data.pngPtr, data.pngInfoPtr, sizeof(info), info);
-        png_set_eXIf_1(data.pngPtr, data.pngInfoPtr, confstr.size(), tempvec.data());
+        png_set_eXIf_1(data.pngPtr, data.pngInfoPtr, tempvec.size(), tempvec.data());
 
         // check how complex the upcoming action is
         if ((data.imgWidth <= data.tileWidth) && (data.imgHeight <= data.tileHeight)) {
@@ -985,22 +913,22 @@ bool view::special::ScreenShooter::triggerButtonClicked(param::ParamSlot& slot) 
     vislib::StringA mvn(this->viewNameSlot.Param<param::StringParam>()->Value());
     Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 100, "ScreenShot of \"%s\" requested", mvn.PeekBuffer());
 
+    vislib::sys::AutoLock lock(this->ModuleGraphLock());
     {
-        vislib::sys::AutoLock lock(this->ModuleGraphLock());
         AbstractNamedObjectContainer::ptr_type anoc =
             AbstractNamedObjectContainer::dynamic_pointer_cast(this->RootModule());
         AbstractNamedObject::ptr_type ano = anoc->FindChild(mvn);
         ViewInstance* vi = dynamic_cast<ViewInstance*>(ano.get());
         auto av = dynamic_cast<AbstractView*>(ano.get());
-        if (vi != NULL) {
-            if (vi->View() != NULL) {
+        if (vi != nullptr) {
+            if (vi->View() != nullptr) {
                 av = vi->View();
             }
         }
-        if (av != NULL) {
+        if (av != nullptr) {
             if (this->makeAnimSlot.Param<param::BoolParam>()->Value()) {
                 param::ParamSlot* timeSlot = this->findTimeParam(vi->View());
-                if (timeSlot != NULL) {
+                if (timeSlot != nullptr) {
                     timeSlot->Param<param::FloatParam>()->SetValue(
                         static_cast<float>(this->animFromSlot.Param<param::IntParam>()->Value()));
                     this->animLastFrameTime = (float)UINT_MAX;
@@ -1016,15 +944,23 @@ bool view::special::ScreenShooter::triggerButtonClicked(param::ParamSlot& slot) 
             }
             av->RegisterHook(this);
         } else {
-            if (vi == NULL) {
-                Log::DefaultLog.WriteMsg(
-                    Log::LEVEL_ERROR, "Unable to find viewInstance \"%s\" for ScreenShot", mvn.PeekBuffer());
-            } else if (av == NULL) {
-                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                    "ViewInstance \"%s\" is not usable for ScreenShot (Not initialized) and AbstractView \"%s\" does "
-                    "not "
-                    "exist either",
-                    mvn.PeekBuffer());
+            // suppose a view was actually intended!
+            bool found = false;
+            const auto fun = [this, &found](AbstractView* v) {
+                v->RegisterHook(this);
+                found = true;
+            };
+            this->GetCoreInstance()->FindModuleNoLock<AbstractView>(mvn.PeekBuffer(), fun);
+            if (!found) {
+                if (vi == nullptr) {
+                    Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                        "Unable to find view or viewInstance \"%s\" for ScreenShot", mvn.PeekBuffer());
+                } else if (av == nullptr) {
+                    Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                        "ViewInstance \"%s\" is not usable for ScreenShot (Not initialized) and AbstractView \"%s\" "
+                        "does not exist either",
+                        vi->FullName().PeekBuffer(), mvn.PeekBuffer());
+                }
             }
         }
     }

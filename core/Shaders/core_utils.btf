@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<btf namespace="core_utils" type="MegaMolGLSLShader" version="1.0">
+  <snippet name="transform_to_TF_coordinates" type="string">
+    // value is normalized [0.0;1.0]
+    // texcoords need to come straight from CallGetTransferFunction::TextureCoordinates (min, max-min)
+    float transform_to_TF_coordinates(float value, vec2 texcoords) {
+        return value * texcoords.y + texcoords.x;
+    }
+  </snippet>
+</btf>

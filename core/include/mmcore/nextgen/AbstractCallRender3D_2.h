@@ -68,7 +68,7 @@ public:
      * Things like the view matrix are not calculated yet and have still to be retrieved from the object
      * by using the appropriate functions. THIS METHOD PERFORMS A COPY OF A WHOLE CAMERA OBJECT.
      * TO AVOID THIS, USE GetCameraState() or GetCamera(Camera_2&) INSTEAD.
-     * 
+     *
      * @return A camera object containing the minimal state transferred by this call.
      */
     inline const Camera_2 GetCamera(void) const {
@@ -78,13 +78,12 @@ public:
 
     /**
      * Stores the transferred camera state in a given Camera_2 object to avoid the copy of whole camera objects.
-     * This invalidates all present parameters in the given object. They have to be calculated again, using the appropriate functions.
+     * This invalidates all present parameters in the given object. They have to be calculated again, using the
+     * appropriate functions.
      *
      * @param cam The camera object the transferred state is stored in
      */
-    inline void GetCamera(Camera_2& cam) const {
-        cam = this->minCamState;
-    }
+    inline void GetCamera(Camera_2& cam) const { cam = this->minCamState; }
 
     /**
      * Sets the camera state. This has to be set by the

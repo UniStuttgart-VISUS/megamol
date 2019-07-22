@@ -12,6 +12,7 @@ if(BUILD_CORE)
   # Check option dependencies: First list item is always the current build option,
   # afterwards list the dependencies.
   set(DEP_LIST "${DEP_LIST};BUILD_CORE BUILD_VISLIB" CACHE INTERNAL "")
+  set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
   # search for 3rd party libs
   set(CMAKE_THREAD_PREFER_PTHREAD)
@@ -198,6 +199,23 @@ if(BUILD_CORE)
 
   # Target definition
   add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files} ${version_files})
+
+  # add libunwind
+  if(UNIX)
+    option(USE_LIBUNWIND "use libunwind" OFF)
+    if(USE_LIBUNWIND)
+      find_package(LIBUNWIND REQUIRED)
+      message(STATUS ${LIBUNWIND_LIBRARIES})
+      message(STATUS ${LIBUNWIND_INCLUDE_DIR})
+      if(LIBUNWIND_FOUND)
+        target_compile_definitions(${PROJECT_NAME} PUBLIC "HAS_LIBUNWIND")
+        target_include_directories(${PROJECT_NAME} PUBLIC ${LIBUNWIND_INCLUDE_DIR})
+        target_link_libraries(${PROJECT_NAME} PUBLIC ${LIBUNWIND_LIBRARIES} )
+      else()
+        message(FATAL_ERROR "Can not find libunwind.")
+      endif()
+    endif()
+  endif()
   target_compile_definitions(${PROJECT_NAME} PRIVATE MEGAMOLCORE_EXPORTS)
   target_include_directories(${PROJECT_NAME}
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "src" "include"

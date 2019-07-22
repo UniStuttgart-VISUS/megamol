@@ -37,10 +37,10 @@
 #ifndef THE_ASSERT_H_INCLUDED
 #define THE_ASSERT_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#pragma once
+#    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
-#pragma managed(push, off)
+#    pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
@@ -48,38 +48,38 @@
 
 
 #ifdef THE_DEBUG
-#define THE_ASSERT(exp) assert(exp)
+#    define THE_ASSERT(exp) assert(exp)
 #else /* THE_DEBUG */
-#define THE_ASSERT(exp) ((void) 0)
+#    define THE_ASSERT(exp) ((void)0)
 #endif /* THE_DEBUG */
 
 
 #ifndef ASSERT
-#define ASSERT(exp) THE_ASSERT(exp)
+#    define ASSERT(exp) THE_ASSERT(exp)
 #endif /* ASSERT */
 
 
 // If DEBUG and NDEBUG are defined at the same time, the VERIFY macro goes mad!
 #if (defined(DEBUG) || defined(_DEBUG)) && defined(NDEBUG)
-#error "{ DEBUG | _DEBUG } and NDEBUG must not be defined at the same time!"
+#    error "{ DEBUG | _DEBUG } and NDEBUG must not be defined at the same time!"
 #endif /* (defined(DEBUG) || defined(_DEBUG)) && defined(NDEBUG) */
 
 
 #ifndef THE_VERIFY
-#if (defined(DEBUG) || defined(_DEBUG))
-#define THE_VERIFY(exp) THE_ASSERT(exp)
-#else
-#define THE_VERIFY(exp) (exp)
-#endif /* (defined(DEBUG) || defined(_DEBUG)) */
-#endif /* THE_VERIFY */
+#    if (defined(DEBUG) || defined(_DEBUG))
+#        define THE_VERIFY(exp) THE_ASSERT(exp)
+#    else
+#        define THE_VERIFY(exp) (exp)
+#    endif /* (defined(DEBUG) || defined(_DEBUG)) */
+#endif     /* THE_VERIFY */
 
 
 #ifndef VERIFY
-#define VERIFY(exp) THE_VERIFY(exp)
+#    define VERIFY(exp) THE_VERIFY(exp)
 #endif /* VERIFY */
 
 
 #if defined(_WIN32) && defined(_MANAGED)
-#pragma managed(pop)
+#    pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* THE_ASSERT_H_INCLUDED */

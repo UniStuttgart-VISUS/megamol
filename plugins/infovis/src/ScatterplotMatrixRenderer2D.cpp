@@ -13,6 +13,7 @@
 #include "vislib/math/ShallowMatrix.h"
 
 #include <sstream>
+#include "delaunator.hpp"
 
 using namespace megamol;
 using namespace megamol::infovis;
@@ -62,6 +63,19 @@ inline float rangeToSmallStep(double min, double max) {
     return mantissa * power;
 }
 
+size_t nameToIndex(
+    stdplugin::datatools::table::TableDataCall* tableDataCall, const std::string& name, size_t defaultIdx) {
+    auto columnInfos = tableDataCall->GetColumnsInfos();
+    const size_t colCount = tableDataCall->GetColumnsCount();
+
+    for (size_t i = 0; i < colCount; i++) {
+        if (columnInfos[i].Name().compare(name) == 0) {
+            return i;
+        }
+    }
+    return defaultIdx;
+}
+
 ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     : Renderer2D()
     , floatTableInSlot("ftIn", "Float table input")
@@ -73,6 +87,9 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     , geometryTypeParam("geometryType", "Geometry type to map data to")
     , kernelWidthParam("kernelWidth", "Kernel width of the geometry, i.e., point size or line width")
     , kernelTypeParam("kernelType", "Kernel function, i.e., box or gaussian kernel")
+    , triangulationSelectorParam("triangulationSelector",
+          "Column to compute the Delaunay triangulation for (linear interpolated scalar field)")
+    , triangulationSmoothnessParam("triangulationSmoothness", "Number of iterations to smooth the triangulation")
     , axisModeParam("axisMode", "Axis drawing mode")
     , axisColorParam("axisColor", "Color of axis")
     , axisWidthParam("axisWidth", "Line width for the axis")
@@ -90,7 +107,11 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     , labelFont("Evolventa-SansSerif", core::utility::SDFFont::RenderType::RENDERTYPE_FILL)
     , valueSSBO("Values")
     , plotSSBO("Plots")
-    , labelsValid(false) {
+    , triangleVBO(0)
+    , triangleIBO(0)
+    , triangleVertexCount(0)
+    , trianglesValid(false)
+    , textValid(false) {
     this->floatTableInSlot.SetCompatibleCall<table::TableDataCallDescription>();
     this->MakeSlotAvailable(&this->floatTableInSlot);
 
@@ -109,10 +130,17 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     this->labelSizeParam << new core::param::FloatParam(0.1f, std::numeric_limits<float>::epsilon());
     this->MakeSlotAvailable(&this->labelSizeParam);
 
+    this->triangulationSelectorParam << new core::param::FlexEnumParam("undef");
+    this->MakeSlotAvailable(&this->triangulationSelectorParam);
+
+    this->triangulationSmoothnessParam << new core::param::IntParam(0);
+    this->MakeSlotAvailable(&this->triangulationSmoothnessParam);
+
     core::param::EnumParam* geometryTypes = new core::param::EnumParam(0);
     geometryTypes->SetTypePair(GEOMETRY_TYPE_POINT, "Point");
     geometryTypes->SetTypePair(GEOMETRY_TYPE_LINE, "Line");
     geometryTypes->SetTypePair(GEOMETRY_TYPE_TEXT, "Text");
+    geometryTypes->SetTypePair(GEOMETRY_TYPE_TRIANGULATION, "Delaunay Triangulation");
     this->geometryTypeParam << geometryTypes;
     this->MakeSlotAvailable(&this->geometryTypeParam);
 
@@ -125,7 +153,8 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     this->kernelTypeParam << kernelTypes;
     this->MakeSlotAvailable(&this->kernelTypeParam);
 
-    core::param::EnumParam* axisModes = new core::param::EnumParam(0);
+    core::param::EnumParam* axisModes = new core::param::EnumParam(1);
+    axisModes->SetTypePair(AXIS_MODE_NONE, "None");
     axisModes->SetTypePair(AXIS_MODE_MINIMALISTIC, "Minimalistic");
     axisModes->SetTypePair(AXIS_MODE_SCIENTIFIC, "Scientific");
     this->axisModeParam << axisModes;
@@ -167,7 +196,6 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
 
 ScatterplotMatrixRenderer2D::~ScatterplotMatrixRenderer2D() { this->Release(); }
 
-
 bool ScatterplotMatrixRenderer2D::create(void) {
     if (!this->axisFont.Initialise(this->GetCoreInstance())) return false;
     if (!this->labelFont.Initialise(this->GetCoreInstance())) return false;
@@ -175,6 +203,7 @@ bool ScatterplotMatrixRenderer2D::create(void) {
     if (!makeProgram("::splom::scientificAxis", this->scientificAxisShader)) return false;
     if (!makeProgram("::splom::point", this->pointShader)) return false;
     if (!makeProgram("::splom::line", this->lineShader)) return false;
+    if (!makeProgram("::splom::triangle", this->triangleShader)) return false;
 
     this->axisFont.SetBatchDrawMode(true);
     this->labelFont.SetBatchDrawMode(true);
@@ -204,10 +233,13 @@ bool ScatterplotMatrixRenderer2D::MouseEvent(float x, float y, core::view::Mouse
 
 bool ScatterplotMatrixRenderer2D::Render(core::view::CallRender2D& call) {
     try {
-        if (!this->validateData()) return false;
+        if (!this->validate()) return false;
 
         auto axisMode = this->axisModeParam.Param<core::param::EnumParam>()->Value();
         switch (axisMode) {
+        case AXIS_MODE_NONE:
+            // NOP.
+            break;
         case AXIS_MODE_MINIMALISTIC:
             this->drawMinimalisticAxis();
             break;
@@ -224,6 +256,9 @@ bool ScatterplotMatrixRenderer2D::Render(core::view::CallRender2D& call) {
         case GEOMETRY_TYPE_LINE:
             this->drawLines();
             break;
+        case GEOMETRY_TYPE_TRIANGULATION:
+            this->drawTriangulation();
+            break;
         case GEOMETRY_TYPE_TEXT:
             this->drawText();
             break;
@@ -236,13 +271,14 @@ bool ScatterplotMatrixRenderer2D::Render(core::view::CallRender2D& call) {
 }
 
 bool ScatterplotMatrixRenderer2D::GetExtents(core::view::CallRender2D& call) {
-    this->validateData();
+    this->validate();
     call.SetBoundingBox(this->bounds);
     return true;
 }
 
 bool ScatterplotMatrixRenderer2D::isDirty(void) const {
     return this->colorSelectorParam.IsDirty() || this->labelSelectorParam.IsDirty() || this->labelSizeParam.IsDirty() ||
+           this->triangulationSelectorParam.IsDirty() || this->triangulationSmoothnessParam.IsDirty() ||
            this->cellSizeParam.IsDirty() || this->cellMarginParam.IsDirty();
 }
 
@@ -250,20 +286,22 @@ void ScatterplotMatrixRenderer2D::resetDirty(void) {
     this->colorSelectorParam.ResetDirty();
     this->labelSelectorParam.ResetDirty();
     this->labelSizeParam.ResetDirty();
+    this->triangulationSelectorParam.ResetDirty();
+    this->triangulationSmoothnessParam.ResetDirty();
     this->cellSizeParam.ResetDirty();
     this->cellMarginParam.ResetDirty();
 }
 
-bool ScatterplotMatrixRenderer2D::validateData(void) {
+bool ScatterplotMatrixRenderer2D::validate(void) {
     this->floatTable = this->floatTableInSlot.CallAs<table::TableDataCall>();
     if (this->floatTable == nullptr || !(*(this->floatTable))(0)) return false;
+    if (this->floatTable->GetColumnsCount() == 0) return false;
+
+    this->flagStorage = this->flagStorageInSlot.CallAs<FlagCall>();
+    if (this->flagStorage != nullptr && !(*(this->flagStorage))()) return false;
 
     this->transferFunction = this->transferFunctionInSlot.CallAs<megamol::core::view::CallGetTransferFunction>();
     if (this->transferFunction == nullptr || !(*(this->transferFunction))()) return false;
-
-    // TODO: store selection inside flag storage.
-    this->flagStorage = this->flagStorageInSlot.CallAs<FlagCall>();
-    if (this->flagStorage == nullptr || !(*(this->flagStorage))()) return false;
 
     if (this->dataHash == this->floatTable->DataHash() && !isDirty()) return true;
 
@@ -274,27 +312,23 @@ bool ScatterplotMatrixRenderer2D::validateData(void) {
         // Update dynamic parameters.
         this->colorSelectorParam.Param<core::param::FlexEnumParam>()->ClearValues();
         this->labelSelectorParam.Param<core::param::FlexEnumParam>()->ClearValues();
+        this->triangulationSelectorParam.Param<core::param::FlexEnumParam>()->ClearValues();
         for (size_t i = 0; i < colCount; i++) {
             this->colorSelectorParam.Param<core::param::FlexEnumParam>()->AddValue(columnInfos[i].Name());
             this->labelSelectorParam.Param<core::param::FlexEnumParam>()->AddValue(columnInfos[i].Name());
+            this->triangulationSelectorParam.Param<core::param::FlexEnumParam>()->AddValue(columnInfos[i].Name());
         }
     }
 
     // Resolve selectors.
-    auto nameToIndex = [&](const std::string& name, size_t defaultIdx) -> size_t {
-        for (size_t i = 0; i < colCount; i++) {
-            if (columnInfos[i].Name().compare(name) == 0) {
-                return i;
-            }
-        }
-        return defaultIdx;
-    };
-    map.colorIdx = nameToIndex(this->colorSelectorParam.Param<core::param::FlexEnumParam>()->Value(), 0);
-    map.labelIdx = nameToIndex(this->labelSelectorParam.Param<core::param::FlexEnumParam>()->Value(), 0);
+    map.colorIdx =
+        nameToIndex(this->floatTable, this->colorSelectorParam.Param<core::param::FlexEnumParam>()->Value(), 0);
+    map.labelIdx =
+        nameToIndex(this->floatTable, this->labelSelectorParam.Param<core::param::FlexEnumParam>()->Value(), 0);
 
-    updateColumns();
-
-    this->labelsValid = false;
+    this->trianglesValid = false;
+    this->textValid = false;
+    this->updateColumns();
 
     this->dataHash = this->floatTable->DataHash();
     this->resetDirty();
@@ -371,10 +405,12 @@ void ScatterplotMatrixRenderer2D::drawMinimalisticAxis(void) {
     const auto axisColor = this->axisColorParam.Param<core::param::ColorParam>()->Value();
     const auto columnCount = this->floatTable->GetColumnsCount();
     const auto columnInfos = this->floatTable->GetColumnsInfos();
+
     const float size = this->cellSizeParam.Param<core::param::FloatParam>()->Value();
     const float margin = this->cellMarginParam.Param<core::param::FloatParam>()->Value();
     const float nameSize = this->cellNameSizeParam.Param<core::param::FloatParam>()->Value();
     const float tickSize = this->axisTickSizeParam.Param<core::param::FloatParam>()->Value();
+
     for (size_t i = 0; i < columnCount; ++i) {
         const float xyBL = i * (size + margin);
         const float xyTL = i * (size + margin) + size;
@@ -528,12 +564,15 @@ void ScatterplotMatrixRenderer2D::drawPoints(void) {
         getModelViewProjection().PeekComponents());
 
     // Color map uniforms.
+    auto columnInfos = this->floatTable->GetColumnsInfos();
+    GLfloat colorColumnMinMax[] = {columnInfos[map.colorIdx].MinimumValue(), columnInfos[map.colorIdx].MaximumValue()};
     glEnable(GL_TEXTURE_1D);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_1D, this->transferFunction->OpenGLTexture());
     glUniform1i(this->pointShader.ParameterLocation("colorTable"), 0);
     glUniform1i(this->pointShader.ParameterLocation("colorCount"), this->transferFunction->TextureSize());
     glUniform1i(this->pointShader.ParameterLocation("colorColumn"), map.colorIdx);
+    glUniform2fv(this->pointShader.ParameterLocation("colorColumnMinMax"), 1, colorColumnMinMax);
 
     // Other uniforms.
     const auto columnCount = this->floatTable->GetColumnsCount();
@@ -655,16 +694,139 @@ void ScatterplotMatrixRenderer2D::drawLines(void) {
     glEnable(GL_DEPTH_TEST);
 }
 
+struct TriangulationVertex {
+    float x;
+    float y;
+    float value;
+};
 
-void ScatterplotMatrixRenderer2D::drawText(void) {
-    if (this->labelsValid) {
-        this->labelFont.BatchDrawString();
+void ScatterplotMatrixRenderer2D::validateTriangulation() {
+    if (this->trianglesValid) {
+        return;
+    }
+    auto rowCount = this->floatTable->GetRowsCount();
+    auto columnIndex =
+        nameToIndex(this->floatTable, this->triangulationSelectorParam.Param<core::param::FlexEnumParam>()->Value(), 0);
+    auto columnInfos = this->floatTable->GetColumnsInfos()[columnIndex];
+    auto minValue = columnInfos.MinimumValue();
+    auto maxValue = columnInfos.MaximumValue();
+
+    std::vector<TriangulationVertex> vertices;
+    std::vector<GLuint> indices;
+    for (const auto& plot : this->plots) {
+        std::vector<double> coords;
+        std::vector<double> values;
+
+        // Copy coordinates for Delaunator.
+        for (size_t i = 0; i < rowCount; ++i) {
+            const float xValue = this->floatTable->GetData(plot.indexX, i);
+            const float yValue = this->floatTable->GetData(plot.indexY, i);
+            const float xPos = (xValue - plot.minX) / (plot.maxX - plot.minX);
+            const float yPos = (yValue - plot.minY) / (plot.maxY - plot.minY);
+            coords.push_back(plot.offsetX + xPos * plot.sizeX);
+            coords.push_back(plot.offsetY + yPos * plot.sizeY);
+            // Normalize value.
+            float value = this->floatTable->GetData(columnIndex, i);
+            values.push_back((value - minValue) / (maxValue - minValue));
+        }
+
+        // Compute initial Delauney triangulation.
+        delaunator::Delaunator d(coords);
+
+        // Smooth triangulation by adding new vertices.
+        auto smoothIterations = this->triangulationSmoothnessParam.Param<core::param::IntParam>()->Value();
+        for (size_t i = 0; i < smoothIterations; i++) {
+            for (int triangleIndex = 0; triangleIndex < d.triangles.size(); triangleIndex += 3) {
+                size_t aIndex = d.triangles[triangleIndex];
+                size_t bIndex = d.triangles[triangleIndex + 1];
+                size_t cIndex = d.triangles[triangleIndex + 2];
+
+                // Insert centroid.
+                double sumX = d.coords[2 * aIndex] + d.coords[2 * bIndex] + d.coords[2 * cIndex];
+                double sumY = d.coords[2 * aIndex + 1] + d.coords[2 * bIndex + 1] + d.coords[2 * cIndex + 1];
+                double sumValue = values[aIndex] + values[bIndex] + values[cIndex];
+                coords.push_back(sumX / 3.0);
+                coords.push_back(sumY / 3.0);
+                values.push_back(sumValue / 3.0);
+            }
+
+            // Recompute Delauney triangulation.
+            d.~Delaunator();
+            new (&d) delaunator::Delaunator(coords);
+        }
+
+        // We need to offset indices, thus rember one before adding vertices.
+        const GLuint indexOffset = static_cast<GLuint>(vertices.size());
+
+        // Copy vertices to vertex buffer.
+        for (int vertexIndex = 0; vertexIndex < values.size(); vertexIndex++) {
+            TriangulationVertex vertex = {coords[vertexIndex * 2], coords[vertexIndex * 2 + 1], values[vertexIndex]};
+            vertices.push_back(vertex);
+        }
+
+        // Copy indices to index buffer.
+        for (int triangleIndex = 0; triangleIndex < d.triangles.size(); triangleIndex++) {
+            indices.push_back(indexOffset + d.triangles[triangleIndex]);
+        }
+    }
+
+    // Delete old buffers, if present.
+    if (triangleVBO != 0 || triangleIBO != 0) {
+        glDeleteBuffers(1, &triangleVBO);
+        glDeleteBuffers(1, &triangleIBO);
+        triangleVBO = 0;
+        triangleIBO = 0;
+        triangleVertexCount = 0;
+    }
+
+    // Create vertex buffer and index buffer (streaming is not possible due to triangulation, anyway)
+    glGenBuffers(1, &triangleVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, triangleVBO);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(TriangulationVertex), &vertices[0], GL_STATIC_DRAW);
+    glGenBuffers(1, &triangleIBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, triangleIBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), &indices[0], GL_STATIC_DRAW);
+    triangleVertexCount = indices.size();
+
+    this->trianglesValid = true;
+}
+
+void ScatterplotMatrixRenderer2D::drawTriangulation() {
+    this->validateTriangulation();
+
+    triangleShader.Enable();
+    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+    // Bind buffers.
+    glBindBuffer(GL_ARRAY_BUFFER, triangleVBO);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(TriangulationVertex), reinterpret_cast<GLvoid**>(0));
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(
+        1, 1, GL_FLOAT, GL_FALSE, sizeof(TriangulationVertex), reinterpret_cast<GLvoid**>(sizeof(float) * 2));
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, triangleIBO);
+
+    // Set uniforms.
+    const int contourLevels = 3;                       // 3; // TODO: param!
+    const float contourColor[] = {1.0, 0.0, 0.0, 1.0}; // 3; // TODO: param!
+    auto mvpMatrix = getModelViewProjection();
+    glUniform1i(triangleShader.ParameterLocation("contourLevels"), contourLevels);
+    glUniform4fv(triangleShader.ParameterLocation("contourColor"), 1, contourColor);
+    glUniformMatrix4fv(
+        this->triangleShader.ParameterLocation("modelViewProjection"), 1, GL_FALSE, mvpMatrix.PeekComponents());
+
+    // Emit draw call.
+    glDrawElements(GL_TRIANGLES, triangleVertexCount, GL_UNSIGNED_INT, 0);
+    triangleShader.Disable();
+}
+
+void ScatterplotMatrixRenderer2D::validateText() {
+    if (this->textValid) {
         return;
     }
 
     this->labelFont.ClearBatchDrawCache();
 
-    const auto columnCount = this->floatTable->GetColumnsCount();
     const auto columnInfos = this->floatTable->GetColumnsInfos();
     const auto rowCount = this->floatTable->GetRowsCount();
 
@@ -677,8 +839,7 @@ void ScatterplotMatrixRenderer2D::drawText(void) {
             const float yPos = (yValue - plot.minY) / (plot.maxY - plot.minY);
 
             const size_t colorIndex = this->floatTable->GetData(this->map.colorIdx, i);
-            float labelColor[4];
-            this->transferFunction->CopyColor(colorIndex, labelColor, sizeof(labelColor));
+            float labelColor[4] = {0, 0, 0, 1}; // TODO: param please!
 
             // XXX: this will be a lot more useful when have support for string-columns!
             std::string label = to_string(this->floatTable->GetData(map.labelIdx, i));
@@ -688,8 +849,14 @@ void ScatterplotMatrixRenderer2D::drawText(void) {
         }
     }
 
+    this->textValid = true;
+}
+
+
+void ScatterplotMatrixRenderer2D::drawText() {
+    validateText();
+
     this->labelFont.BatchDrawString();
-    this->labelsValid = true;
 }
 
 int ScatterplotMatrixRenderer2D::itemAt(const float x, const float y) {
@@ -704,8 +871,8 @@ int ScatterplotMatrixRenderer2D::itemAt(const float x, const float y) {
         float dis[1] = {0.0f};
         this->tree->index->knnSearch(qp, 1, idx, dis);
 
-        idx[0] = *reinterpret_cast<unsigned int *>(&this->series[0][idx[0] * 4 + 3]); //< toxic, which is the correct
-    series?
+        idx[0] = *reinterpret_cast<unsigned int *>(&this->series[0][idx[0] * 4 + 3]); //< toxic, which is the
+    correct series?
 
         auto ssp = this->nvgTrans*vislib::math::Vector<float, 3>(x, y, 1.0f);
         TraceInfoCall *tic = this->getPointInfoSlot.CallAs<TraceInfoCall>();
@@ -737,9 +904,8 @@ int ScatterplotMatrixRenderer2D::itemAt(const float x, const float y) {
             float rb = std::get<0>(r);
             float re = std::get<1>(r);
             if ((rb / this->abcissa.size()*std::get<0>(this->viewport)*aspect) <= x && x <= (re /
-    this->abcissa.size()*std::get<0>(this->viewport)*aspect)) { //< abcissa missing size_t symbolIdx = std::get<2>(r);
-                TraceInfoCall *tic = this->getPointInfoSlot.CallAs<TraceInfoCall>();
-                if (tic == nullptr) {
+    this->abcissa.size()*std::get<0>(this->viewport)*aspect)) { //< abcissa missing size_t symbolIdx =
+    std::get<2>(r); TraceInfoCall *tic = this->getPointInfoSlot.CallAs<TraceInfoCall>(); if (tic == nullptr) {
                     // show tool tip
                     this->drawToolTip(ssp.X() + 10, ssp.Y() + 10, std::string("No Info Call"));
                 } else {

@@ -1,1 +1,0 @@
-mmCreateJob("screengrabber", "ScreenShooter", "::grabber")
