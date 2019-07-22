@@ -33,7 +33,7 @@ namespace astro {
 
     /// <summary>
     /// Converts from <see cref="AstroDataCall" /> to a table for data
-    /// visualisaion.
+    /// visualisation.
     /// </summary>
     class AstroSchulz : public core::Module {
 
@@ -44,7 +44,8 @@ namespace astro {
         }
 
         static inline const char *Description(void) {
-            return "Converts data contained in a AstroDataCall to a MultiParticleDataCall";
+            return "Converts data contained in a AstroDataCall to a "
+                "TableDataCall";
         }
 
         static bool IsAvailable(void) {
@@ -68,21 +69,27 @@ namespace astro {
         typedef megamol::stdplugin::datatools::table::TableDataCall::ColumnInfo
             ColumnInfo;
 
-        static float* convert(float* dst, ColumnInfo& ciX, ColumnInfo& ciY,
-            ColumnInfo& ciZ, const vec3ArrayPtr& src);
+        static constexpr inline std::pair<float, float> initialiseRange(void) {
+            return std::make_pair((std::numeric_limits<float>::max)(),
+                std::numeric_limits<float>::lowest());
+        }
 
-        static float *convert(float *dst, ColumnInfo& ci,
-            const floatArrayPtr& src);
+        static void updateRange(std::pair<float, float>& range,
+            const float value);
 
-        static float *convert(float *dst, ColumnInfo& ci,
-            const boolArrayPtr& src);
+        void convert(float *dst, const std::size_t col, const vec3ArrayPtr& src);
 
-        static float *convert(float *dst, ColumnInfo& ci,
-            const idArrayPtr& src);
+        void convert(float *dst, const std::size_t col, const floatArrayPtr& src);
+
+        void convert(float *dst, const std::size_t col, const boolArrayPtr& src);
+
+        void convert(float *dst, const std::size_t col, const idArrayPtr& src);
 
         bool getData(core::Call& call);
 
         bool getHash(core::Call& call);
+
+        void norm(float *dst, const std::size_t col, const vec3ArrayPtr& src);
 
         std::vector<ColumnInfo> columns;
         unsigned int frameID;
@@ -92,7 +99,7 @@ namespace astro {
         std::vector<float> values;
     };
 
-} // namespace astro
-} // namespace megamol
+} /* end namespace astro */
+} /* end namespace megamol */
 
 #endif /* MEGAMOL_ASTRO_ASTROSCHULZ_H_INCLUDED */

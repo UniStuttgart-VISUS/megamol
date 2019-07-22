@@ -1,7 +1,7 @@
 /*
  * GLSLProgram.h
  *
- * Copyright (C) 2018 by Universitaet Stuttgart (VISUS). 
+ * Copyright (C) 2018 by Universitaet Stuttgart (VISUS).
  * Alle Rechte vorbehalten.
  */
 #ifndef MEGAMOLCORE_GLSLPROGRAM_H_INCLUDED
@@ -127,7 +127,7 @@ public:
     void bindAttribLocation(GLuint location, const char* name);
 
     /**
-     * Bind a named attribute to a fragment shader output location 
+     * Bind a named attribute to a fragment shader output location
      *
      * @param location The id of the location
      * @param name The name of the attribute

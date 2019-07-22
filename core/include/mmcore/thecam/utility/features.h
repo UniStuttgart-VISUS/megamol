@@ -30,15 +30,15 @@
 #ifndef THE_FEATURES_H_INCLUDED
 #define THE_FEATURES_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#pragma once
+#    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
-#pragma managed(push, off)
+#    pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 /* ensure the definds from 'config.h' are available */
 #ifndef THE_CONFIG_H_INCLUDED
-#error "Do not include 'features.h' directly. Instead include 'config.h'."
+#    error "Do not include 'features.h' directly. Instead include 'config.h'."
 #endif /* THE_CONFIG_H_INCLUDED */
 
 
@@ -63,18 +63,18 @@
 
 /* Enable Network Direct features if the SDK is installed. */
 #ifdef HAVE_THE_NETWORK_DIRECT
-#define WITH_THE_NETWORK_DIRECT
+#    define WITH_THE_NETWORK_DIRECT
 #endif /* HAVE_THE_NETWORK_DIRECT */
 
 
 #ifdef THE_WINDOWS
 /* If Win7 or newer */
-#define WITH_THE_WINDOWS_7 (1)
+#    define WITH_THE_WINDOWS_7 (1)
 #endif /* THE_WINDOWS */
 
 //#define WITH_THE_VULKAN
 
 #if defined(_WIN32) && defined(_MANAGED)
-#pragma managed(pop)
+#    pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* THE_FEATURES_H_INCLUDED */

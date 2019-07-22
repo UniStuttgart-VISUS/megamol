@@ -18,8 +18,8 @@
 #define WINVER 0x0501
 #endif
 
-#ifndef _WIN32_WINNT // Windows XP or later.
-#define _WIN32_WINNT 0x0501
+#ifndef _WIN32_WINNT // Windows Vista or later. (Required for "CaptureStackBackTrace" in core/utility/KHR.cpp)
+#define _WIN32_WINNT 0x0600
 #endif
 
 #ifndef _WIN32_WINDOWS // Windows 98 or later.

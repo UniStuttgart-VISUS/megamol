@@ -1,7 +1,7 @@
 /*
  * Texture2DArray.h
  *
- * Copyright (C) 2018 by Universitaet Stuttgart (VISUS). 
+ * Copyright (C) 2018 by Universitaet Stuttgart (VISUS).
  * Alle Rechte vorbehalten.
  */
 #ifndef MEGAMOLCORE_TEXTURE2DARRAY_H_INCLUDED
@@ -70,14 +70,14 @@ public:
      * @return The texture width
      */
     unsigned int getWidth() const;
-    
+
     /**
      * Get the height of the texture
      *
      * @return The texture height
      */
     unsigned int getHeigth() const;
-    
+
     /**
      * Get the number of layers of the texture
      *

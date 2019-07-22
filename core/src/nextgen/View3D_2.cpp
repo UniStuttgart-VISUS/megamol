@@ -11,6 +11,7 @@
 #ifdef _WIN32
 #    include <windows.h>
 #endif /* _WIN32 */
+#include <chrono>
 #include <fstream>
 #include "mmcore/CoreInstance.h"
 #include "mmcore/misc/PngBitmapCodec.h"
@@ -347,6 +348,7 @@ void View3D_2::Render(const mmcRenderViewContext& context) {
                 if (this->autoLoadCamSettingsSlot.Param<param::BoolParam>()->Value()) {
                     this->onRestoreCamera(this->restoreCameraSettingsSlot);
                 }
+                this->lastFrameTime = std::chrono::high_resolution_clock::now();
             } else if (resetViewOnBBoxChangeSlot.Param<param::BoolParam>()->Value()) {
                 this->ResetView();
             }
@@ -363,6 +365,11 @@ void View3D_2::Render(const mmcRenderViewContext& context) {
         // TODO
         // cr3d->SetCameraParameters(this->cam.Parameters()); // < here we use the 'active' parameters!
         cr3d->SetLastFrameTime(AbstractRenderingView::lastFrameTime());
+
+        auto currentTime = std::chrono::high_resolution_clock::now();
+        this->lastFrameDuration =
+            std::chrono::duration_cast<std::chrono::microseconds>(currentTime - this->lastFrameTime);
+        this->lastFrameTime = currentTime;
     }
 
     // TODO
@@ -890,6 +897,11 @@ std::string View3D_2::determineCameraFilePath(void) const {
  */
 void View3D_2::handleCameraMovement(void) {
     float step = this->viewKeyMoveStepSlot.Param<param::FloatParam>()->Value();
+	// the default case is 60 fps therefore we calculate the multiples for the step factor using that
+	auto constexpr micros = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::seconds(1)) / 60.0f;
+	float factor = this->lastFrameDuration / micros;
+	step *= factor;
+
     const float runFactor = this->viewKeyRunFactorSlot.Param<param::FloatParam>()->Value();
     if (this->modkeys.test(view::Modifier::SHIFT)) {
         step *= runFactor;
@@ -897,6 +909,7 @@ void View3D_2::handleCameraMovement(void) {
 
     bool anymodpressed = !this->modkeys.none();
     float rotationStep = this->viewKeyAngleStepSlot.Param<param::FloatParam>()->Value();
+	rotationStep *= factor;
 
     if (!(this->arcballDefault ^ this->modkeys.test(view::Modifier::ALT))) {
         auto resolution = this->cam.resolution_gate();

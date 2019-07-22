@@ -148,10 +148,10 @@ bool Contest2019DataLoader::Frame::LoadFrame(std::string filepath, unsigned int 
         this->particleIDs->operator[](i) = s.particleID;
 
         // calculate the temperature ourselves
-        // formula out of the mail of J.D Emberson 16.6.2019
+        // formula out of the mail of J.D Emberson 20.6.2019
         if (this->isBaryonFlags->at(i)) {
             this->temperatures->operator[](i) =
-                4.8e5f * this->internalEnergies->at(i) * std::pow(1.0f + redshift, 3.0f);
+                4.8e5f * this->internalEnergies->at(i) / std::pow(1.0f + redshift, 3.0f);
         }
 
         // calculate the entropy ourselves
