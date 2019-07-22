@@ -164,16 +164,31 @@ namespace megamol
         implicit_topology_computation::implicit_topology_computation(std::ostream& log_stream, std::ostream& performance_stream,
             std::array<unsigned int, 2> resolution, std::array<float, 4> domain, std::vector<float> positions, std::vector<float> vectors,
             std::vector<float> points, std::vector<int> point_ids, std::vector<float> lines, std::vector<int> line_ids, implicit_topology_results previous_result)
-            : log_output(log_stream), performance_output(performance_stream), resolution(std::move(resolution)), domain(std::move(domain)),
-            positions(std::move(positions)), vectors(std::move(vectors)), points(std::move(points)), point_ids(std::move(point_ids)),
-            lines(std::move(lines)), line_ids(std::move(line_ids)), integration_timestep(previous_result.computation_state.integration_timestep),
+            :
+            resolution(std::move(resolution)),
+            domain(std::move(domain)),
+            positions(std::move(positions)),
+            vectors(std::move(vectors)),
+            points(std::move(points)),
+            lines(std::move(lines)),
+            point_ids(std::move(point_ids)),
+            line_ids(std::move(line_ids)),
+            integration_timestep(previous_result.computation_state.integration_timestep),
             max_integration_error(previous_result.computation_state.max_integration_error),
-            num_integration_steps_performed(previous_result.computation_state.num_integration_steps), terminate_computation(false),
-            positions_forward(*previous_result.positions_forward), positions_backward(*previous_result.positions_backward),
-            labels_forward(*previous_result.labels_forward), distances_forward(*previous_result.distances_forward),
-            terminations_forward(*previous_result.terminations_forward), labels_backward(*previous_result.labels_backward),
-            distances_backward(*previous_result.distances_backward), terminations_backward(*previous_result.terminations_backward),
-            delaunay(*previous_result.vertices), method(previous_result.computation_state.method)
+            method(previous_result.computation_state.method),
+            positions_forward(*previous_result.positions_forward),
+            positions_backward(*previous_result.positions_backward),
+            labels_forward(*previous_result.labels_forward),
+            distances_forward(*previous_result.distances_forward),
+            terminations_forward(*previous_result.terminations_forward),
+            labels_backward(*previous_result.labels_backward),
+            distances_backward(*previous_result.distances_backward),
+            terminations_backward(*previous_result.terminations_backward),
+            num_integration_steps_performed(previous_result.computation_state.num_integration_steps),
+            delaunay(*previous_result.vertices),
+            terminate_computation(false),
+            log_output(log_stream),
+            performance_output(performance_stream)
         {
             this->log_output << "Initializing computation from previous results..." << std::endl;
             this->log_output << "Resolution:                            " << this->resolution[0] << " x " << this->resolution[1] << std::endl;
