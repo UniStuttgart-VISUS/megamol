@@ -89,6 +89,8 @@ namespace astro {
 
         bool getHash(core::Call& call);
 
+        void norm(float *dst, const std::size_t col, const vec3ArrayPtr& src);
+
         std::vector<ColumnInfo> columns;
         unsigned int frameID;
         std::size_t hash;
