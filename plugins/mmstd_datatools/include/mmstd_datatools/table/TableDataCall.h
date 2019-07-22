@@ -22,9 +22,15 @@ namespace stdplugin {
 namespace datatools {
 namespace table {
 
+	/**
+	 * Call for passing around tabular data.
+	 *
+	 * Tabular data is composed from cells that are subdivided into columns and rows.
+	 * Cells are expected to be stored in a consecutive row-major format 
+	 * (until the shitty API no longer provides unsafe pointer access).
+	 */
     class MMSTD_DATATOOLS_API TableDataCall : public core::AbstractGetDataCall {
     public:
-
         static const char *ClassName(void) { return "TableDataCall"; }
         static const char *Description(void) { return "Data of a table of floats"; }
         static unsigned int FunctionCount(void) { return 2; }
@@ -85,20 +91,25 @@ namespace table {
         inline size_t GetColumnsCount(void) const {
             return columns_count;
         }
+
         inline size_t GetRowsCount(void) const {
             return rows_count;
         }
+
         inline const ColumnInfo* GetColumnsInfos(void) const {
             return columns;
         }
+
         inline const float* GetData(void) const {
             return data;
         }
+
         inline const float* GetData(size_t row) const {
             assert(row >= 0);
             assert(row < rows_count);
             return data + row * columns_count;
         }
+
         inline float GetData(size_t col, size_t row) const {
             assert(col >= 0);
             assert(col < columns_count);
@@ -140,8 +151,18 @@ namespace table {
             return this->frameID;
         }
 
-    private:
+		inline void AssertColumnInfos() {
+			for (int c = 0; c < columns_count; ++c) {
+                const auto& column = columns[c];
+                for (int r = 0; r < rows_count; ++r) {
+                    float cell = data[r * columns_count + c];
+                    assert(cell > column.MaximumValue() && "Value beyond maximum found");
+					assert(cell < column.MinimumValue() && "Value beyond maximum found");
+				}
+			}
+		}
 
+    private:
         size_t columns_count;
         size_t rows_count;
         const ColumnInfo *columns;

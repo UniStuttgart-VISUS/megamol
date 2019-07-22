@@ -14,11 +14,11 @@
 /*
  * megamol::astro::AstroSchulz::AstroSchulz
  */
-megamol::astro::AstroSchulz::AstroSchulz(void) : Module(),
-        frameID(0),
-        hash(0),
-        slotAstroData("astroData", "Input slot for astronomical data"),
-        slotTableData("tableData", "Output slot for the resulting sphere data") {
+megamol::astro::AstroSchulz::AstroSchulz(void) : Module(), 
+    frameID(0),
+    hash(0),
+    slotAstroData("astroData", "Input slot for astronomical data"), 
+    slotTableData("tableData", "Output slot for the resulting sphere data") {
     using megamol::stdplugin::datatools::table::TableDataCall;
 
     // Connect the slots.
@@ -316,8 +316,9 @@ bool megamol::astro::AstroSchulz::getData(core::Call& call) {
         return false;
     }
 
-    auto frameID = tab->GetFrameID();
-    ast->SetFrameID(frameID, false);
+    if (!(*ast)(AstroDataCall::CallForGetExtent)) return false;
+    tab->SetFrameCount(ast->FrameCount());
+    ast->SetFrameID(tab->GetFrameID(), false);
 
     if ((*ast)(AstroDataCall::CallForGetData)) {
         if ((this->hash != ast->DataHash()) || (this->frameID == frameID)) {
@@ -417,12 +418,22 @@ bool megamol::astro::AstroSchulz::getData(core::Call& call) {
 bool megamol::astro::AstroSchulz::getHash(core::Call& call) {
     using megamol::stdplugin::datatools::table::TableDataCall;
 
+    auto ast = this->slotAstroData.CallAs<AstroDataCall>();
     auto tab = dynamic_cast<TableDataCall*>(&call);
     if (tab == nullptr) {
         return false;
     }
+    if (ast == nullptr) {
+        return false;
+    }
 
     //???? this->assertData();
+    if (!(*ast)(AstroDataCall::CallForGetExtent)) {
+        return false;
+    }
+
+    auto fc = ast->FrameCount();
+    tab->SetFrameCount(ast->FrameCount());
 
     tab->SetDataHash(this->hash);
     tab->SetUnlocker(nullptr);

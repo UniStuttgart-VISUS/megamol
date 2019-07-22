@@ -13,11 +13,17 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   # afterwards list the dependencies.
   set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE BUILD_MMSTD_DATATOOLS_PLUGIN" CACHE INTERNAL "")
 
-if(UNIX)
-  set(bhtsne_cmake_args -DCMAKE_C_FLAGS="-fPIC" -DCMAKE_CXX_FLAGS="-fPIC")
-else()
-  set(bhtsne_cmake_args "")
-endif()
+  # Add Delaunator.
+  add_external_project(Delau_ext
+    GIT_REPOSITORY https://github.com/delfrrr/delaunator-cpp.git
+    GIT_TAG "v0.4.0"
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ""
+    INSTALL_COMMAND ""
+    TEST_COMMAND "")
+  add_external_library(Delau INTERFACE
+    DEPENDS Delau_ext
+    INCLUDE_DIR "src/Delau_ext/include")
 
   # Add Barnes-Hut t-SNE.
   add_external_project(bhtsne_ext
@@ -25,14 +31,12 @@ endif()
     GIT_TAG "36b169c88250d0afe51828448dfdeeaa508f13bc" 
     PATCH_COMMAND ${CMAKE_COMMAND} -E copy
       "${CMAKE_CURRENT_SOURCE_DIR}/cmake/bhtsne/CMakeLists.txt"
-      "<SOURCE_DIR>/CMakeLists.txt"
-    BUILD_ALWAYS TRUE
-    CMAKE_ARGS ${bhtsne_cmake_args}
-)
+      "<SOURCE_DIR>/CMakeLists.txt")
   add_external_library(bhtsne STATIC
     DEPENDS bhtsne_ext
     INCLUDE_DIR "src/bhtsne_ext"
-    LIBRARY "lib/${CMAKE_STATIC_LIBRARY_PREFIX}bhtsne${CMAKE_STATIC_LIBRARY_SUFFIX}")
+    LIBRARY_DEBUG "lib/${CMAKE_STATIC_LIBRARY_PREFIX}bhtsned${CMAKE_STATIC_LIBRARY_SUFFIX}"
+    LIBRARY_RELEASE "lib/${CMAKE_STATIC_LIBRARY_PREFIX}bhtsne${CMAKE_STATIC_LIBRARY_SUFFIX}")
 
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
@@ -47,7 +51,7 @@ endif()
   target_include_directories(${PROJECT_NAME}
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     PUBLIC "include" "src")
-  target_link_libraries(${PROJECT_NAME} PRIVATE core mmstd_datatools Eigen bhtsne)
+  target_link_libraries(${PROJECT_NAME} PRIVATE core mmstd_datatools Eigen bhtsne Delau)
 
   # Installation rules for generated files
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")

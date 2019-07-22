@@ -17,33 +17,6 @@
 #include <string>
 #include <type_traits>
 
-#ifndef __VARIADIC_BIND__
-#define __VARIADIC_BIND__
-namespace {
-    template <int>
-    struct variadic_placeholder {};
-}
-
-namespace std {
-    template <int N>
-    struct is_placeholder<variadic_placeholder<N>> : integral_constant<int, N + 1>
-    {
-    };
-}
-
-namespace {
-    template <typename Ret, typename Class, typename... Args, size_t... Is, typename... Args2>
-    inline auto bind(std::index_sequence<Is...>, Ret(Class::*fptr)(Args...), Args2&&... args) {
-        return std::bind(fptr, std::forward<Args2>(args)..., variadic_placeholder<Is>{}...);
-    }
-
-    template <typename Ret, typename Class, typename... Args, typename... Args2>
-    inline auto bind(Ret(Class::*fptr)(Args...), Args2&&... args) {
-        return bind(std::make_index_sequence<sizeof...(Args) - sizeof...(Args2) + 1>{}, fptr, std::forward<Args2>(args)...);
-    }
-}
-#endif
-
 namespace megamol {
 namespace core {
 
@@ -112,7 +85,8 @@ namespace core {
 
             if (call != nullptr)
             {
-                call->SetCallback(bind(&AbstractCallbackWriter::Write, this));
+                auto proxy = [this](ContentT... content) -> bool { return Write(content...); };
+                call->SetCallback(proxy);
 
                 return (*call)(0);
             }

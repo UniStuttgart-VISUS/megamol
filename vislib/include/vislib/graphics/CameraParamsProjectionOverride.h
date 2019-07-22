@@ -25,7 +25,7 @@ namespace graphics {
     /**
      * Camera parameters for overriding the projection type on specific nodes.
      */
-    class CameraParamsProjectionOverride : public CameraParamsOverride {
+    class [[deprecated]] CameraParamsProjectionOverride : public CameraParamsOverride {
 
     public:
 
