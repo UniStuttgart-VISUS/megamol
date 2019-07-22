@@ -45,7 +45,7 @@ private:
 
     bool getHashCallback(core::Call& c);
 
-    bool computePCA(megamol::stdplugin::datatools::table::TableDataCall* inCall);
+    bool project(megamol::stdplugin::datatools::table::TableDataCall* inCall);
 
     /** Data output slot */
     CalleeSlot dataOutSlot;

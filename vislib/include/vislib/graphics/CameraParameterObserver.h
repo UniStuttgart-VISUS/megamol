@@ -26,7 +26,7 @@ namespace graphics {
      * Classes that inherit from this one can be informed about camera parameter
      * changes if they register to a parameter class.
      */
-    class CameraParameterObserver {
+    class [[deprecated]] CameraParameterObserver {
 
     public:
 

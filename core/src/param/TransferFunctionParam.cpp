@@ -15,13 +15,12 @@ using namespace megamol::core::param;
 /**
  * TransferFunctionParam::TransferFunctionParam
  */
-TransferFunctionParam::TransferFunctionParam(const std::string& initVal) : AbstractParam()
-{
+TransferFunctionParam::TransferFunctionParam(const std::string& initVal) : AbstractParam() {
     if (this->CheckTransferFunctionString(initVal)) {
         this->val = initVal;
-    }
-    else {
-        vislib::sys::Log::DefaultLog.WriteError("[TransferFunctionParam] No valid parameter value for constructor given.");
+    } else {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "[TransferFunctionParam] No valid parameter value for constructor given.");
     }
 }
 
@@ -29,13 +28,12 @@ TransferFunctionParam::TransferFunctionParam(const std::string& initVal) : Abstr
 /**
  * TransferFunctionParam::TransferFunctionParam
  */
-TransferFunctionParam::TransferFunctionParam(const char *initVal) : AbstractParam()
-{
+TransferFunctionParam::TransferFunctionParam(const char* initVal) : AbstractParam() {
     if (this->CheckTransferFunctionString(std::string(initVal))) {
         this->val = std::string(initVal);
-    }
-    else {
-        vislib::sys::Log::DefaultLog.WriteError("[TransferFunctionParam] No valid parameter value for constructor given.");
+    } else {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "[TransferFunctionParam] No valid parameter value for constructor given.");
     }
 }
 
@@ -43,13 +41,12 @@ TransferFunctionParam::TransferFunctionParam(const char *initVal) : AbstractPara
 /**
  * TransferFunctionParam::TransferFunctionParam
  */
-TransferFunctionParam::TransferFunctionParam(const vislib::StringA& initVal) : AbstractParam()
-{
+TransferFunctionParam::TransferFunctionParam(const vislib::StringA& initVal) : AbstractParam() {
     if (this->CheckTransferFunctionString(std::string(initVal.PeekBuffer()))) {
         this->val = std::string(initVal.PeekBuffer());
-    }
-    else {
-        vislib::sys::Log::DefaultLog.WriteError("[TransferFunctionParam] No valid parameter value for constructor given.");
+    } else {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "[TransferFunctionParam] No valid parameter value for constructor given.");
     }
 }
 
@@ -103,28 +100,24 @@ void TransferFunctionParam::SetValue(const std::string& v, bool setDirty) {
 /**
  * TransferFunctionParam::ValueString
  */
-vislib::TString TransferFunctionParam::ValueString(void) const {
-    return vislib::TString(this->val.c_str());
-}
+vislib::TString TransferFunctionParam::ValueString(void) const { return vislib::TString(this->val.c_str()); }
 
 
 /**
  * TransferFunctionParam::TransferFunctionTexture
  */
-bool TransferFunctionParam::TransferFunctionTexture(const std::string &in_tfs, std::vector<float> &out_data, UINT &out_texsize, std::array<float, 2> &out_range) {
+bool TransferFunctionParam::TransferFunctionTexture(
+    const std::string& in_tfs, std::vector<float>& out_data, UINT& out_texsize, std::array<float, 2>& out_range) {
 
     TFDataType data;
     InterpolationMode mode;
 
-    if (ParseTransferFunction(in_tfs, data, mode, out_texsize, out_range))
-    {
+    if (ParseTransferFunction(in_tfs, data, mode, out_texsize, out_range)) {
         if (mode == InterpolationMode::LINEAR) {
             LinearInterpolation(out_data, out_texsize, data);
-        }
-        else if (mode == InterpolationMode::GAUSS) {
+        } else if (mode == InterpolationMode::GAUSS) {
             GaussInterpolation(out_data, out_texsize, data);
-        }
-        else {
+        } else {
             return false;
         }
 
@@ -138,7 +131,8 @@ bool TransferFunctionParam::TransferFunctionTexture(const std::string &in_tfs, s
 /**
  * TransferFunctionParam::ParseTransferFunction
  */
-bool TransferFunctionParam::ParseTransferFunction(const std::string &in_tfs, TFDataType &out_data, InterpolationMode &out_interpolmode, UINT &out_texsize, std::array<float, 2> &out_range) {
+bool TransferFunctionParam::ParseTransferFunction(const std::string& in_tfs, TFDataType& out_data,
+    InterpolationMode& out_interpolmode, UINT& out_texsize, std::array<float, 2>& out_range) {
 
     TFDataType tmp_data;
     std::string tmp_interpolmode_str;
@@ -161,8 +155,7 @@ bool TransferFunctionParam::ParseTransferFunction(const std::string &in_tfs, TFD
         json.at("Interpolation").get_to(tmp_interpolmode_str);
         if (tmp_interpolmode_str == "LINEAR") {
             tmp_interpolmode = InterpolationMode::LINEAR;
-        }
-        else if (tmp_interpolmode_str == "GAUSS") {
+        } else if (tmp_interpolmode_str == "GAUSS") {
             tmp_interpolmode = InterpolationMode::GAUSS;
         }
 
@@ -177,11 +170,10 @@ bool TransferFunctionParam::ParseTransferFunction(const std::string &in_tfs, TFD
         json.at("ValueRange")[0].get_to(tmp_range[0]);
         json.at("ValueRange")[1].get_to(tmp_range[1]);
 
-    }
-    else { // Loading default values for empty transfer function
+    } else { // Loading default values for empty transfer function
         tmp_data.clear();
-        std::array<float, TFP_VAL_CNT> zero = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.05f };
-        std::array<float, TFP_VAL_CNT> one = { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.05f };
+        std::array<float, TFP_VAL_CNT> zero = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.05f};
+        std::array<float, TFP_VAL_CNT> one = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.05f};
         tmp_data.emplace_back(zero);
         tmp_data.emplace_back(one);
         tmp_interpolmode = InterpolationMode::LINEAR;
@@ -205,7 +197,8 @@ bool TransferFunctionParam::ParseTransferFunction(const std::string &in_tfs, TFD
 /**
  * TransferFunctionParam::DumpTransferFunction
  */
-bool TransferFunctionParam::DumpTransferFunction(std::string &out_tfs, const TFDataType &in_data, const InterpolationMode in_interpolmode, const UINT in_texsize, std::array<float, 2> in_range) {
+bool TransferFunctionParam::DumpTransferFunction(std::string& out_tfs, const TFDataType& in_data,
+    const InterpolationMode in_interpolmode, const UINT in_texsize, std::array<float, 2> in_range) {
 
     nlohmann::json json;
 
@@ -237,28 +230,26 @@ bool TransferFunctionParam::DumpTransferFunction(std::string &out_tfs, const TFD
 /**
  * TransferFunctionParam::CheckTransferFunctionData
  */
-bool TransferFunctionParam::CheckTransferFunctionData(const TFDataType &data, const InterpolationMode interpolmode, const UINT texsize, const std::array<float, 2> range) {
+bool TransferFunctionParam::CheckTransferFunctionData(const TFDataType& data, const InterpolationMode interpolmode,
+    const UINT texsize, const std::array<float, 2> range) {
 
     bool check = true;
 
     // Range
     if (range[0] == range[1]) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "[CheckTransferFunctionData] Range values should not be equal.");
+        vislib::sys::Log::DefaultLog.WriteError("[CheckTransferFunctionData] Range values should not be equal.");
         check = false;
     }
 
     // Texture Size
     if (texsize < 1) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "[CheckTransferFunctionData] Texture size should be greater than 0.");
+        vislib::sys::Log::DefaultLog.WriteError("[CheckTransferFunctionData] Texture size should be greater than 0.");
         check = false;
     }
 
     // Dat Size
     if (data.size() < 2) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "[CheckTransferFunctionData] There should be at least two nodes.");
+        vislib::sys::Log::DefaultLog.WriteError("[CheckTransferFunctionData] There should be at least two nodes.");
         check = false;
     }
 
@@ -270,8 +261,7 @@ bool TransferFunctionParam::CheckTransferFunctionData(const TFDataType &data, co
                 vislib::sys::Log::DefaultLog.WriteError(
                     "[CheckTransferFunctionData] Values must be greater than or equal to 0.");
                 check = false;
-            }
-            else if (a[i] > 1.0f) {
+            } else if (a[i] > 1.0f) {
                 vislib::sys::Log::DefaultLog.WriteError(
                     "[CheckTransferFunctionData] Values must be less than or equal to 1.");
                 check = false;
@@ -281,24 +271,20 @@ bool TransferFunctionParam::CheckTransferFunctionData(const TFDataType &data, co
             vislib::sys::Log::DefaultLog.WriteError(
                 "[TransferFunction] 'Values' should be sorted from 0 to 1 and all 'Values' must be distinct.");
             return false;
-        }
-        else {
+        } else {
             last_value = a[4];
         }
         if (a[5] <= 0.0f) {
-            vislib::sys::Log::DefaultLog.WriteError(
-                "[CheckTransferFunctionData] Sigma value must be greater than 0.");
+            vislib::sys::Log::DefaultLog.WriteError("[CheckTransferFunctionData] Sigma value must be greater than 0.");
             check = false;
         }
     }
     if (data.front()[4] != 0.0f) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "[CheckTransferFunctionData] First node should have 'Value' = 0.");
+        vislib::sys::Log::DefaultLog.WriteError("[CheckTransferFunctionData] First node should have 'Value' = 0.");
         check = false;
     }
     if (data.back()[4] != 1.0f) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "[CheckTransferFunctionData] Last node should have 'Value' = 1.");
+        vislib::sys::Log::DefaultLog.WriteError("[CheckTransferFunctionData] Last node should have 'Value' = 1.");
         check = false;
     }
 
@@ -309,7 +295,7 @@ bool TransferFunctionParam::CheckTransferFunctionData(const TFDataType &data, co
 /**
  * TransferFunctionParam::CheckTransferFunctionData
  */
-bool TransferFunctionParam::CheckTransferFunctionString(const std::string &tfs) {
+bool TransferFunctionParam::CheckTransferFunctionString(const std::string& tfs) {
 
     bool check = true;
     if (!tfs.empty()) {
@@ -317,8 +303,7 @@ bool TransferFunctionParam::CheckTransferFunctionString(const std::string &tfs) 
         nlohmann::json json;
         try {
             json = nlohmann::json::parse(tfs);
-        }
-        catch (...) {
+        } catch (...) {
             vislib::sys::Log::DefaultLog.WriteError("[CheckTransferFunctionString] Unable to parse JSON string (there should be no escaped quotes, e.g.).");
             return false;
         }
@@ -342,12 +327,11 @@ bool TransferFunctionParam::CheckTransferFunctionString(const std::string &tfs) 
             std::string tmp_str;
             json.at("Interpolation").get_to(tmp_str);
             if ((tmp_str != "LINEAR") && (tmp_str != "GAUSS")) {
-                vislib::sys::Log::DefaultLog.WriteError( 
+                vislib::sys::Log::DefaultLog.WriteError(
                     "[CheckTransferFunctionString] Couldn't find 'Interpolation' mode.");
                 check = false;
             }
-        }
-        else {
+        } else {
             vislib::sys::Log::DefaultLog.WriteError(
                 "[CheckTransferFunctionString] Couldn't read 'Interpolation' as string value.");
             check = false;
@@ -366,29 +350,25 @@ bool TransferFunctionParam::CheckTransferFunctionString(const std::string &tfs) 
                     vislib::sys::Log::DefaultLog.WriteError(
                         "[CheckTransferFunctionString] Entries of 'Nodes' should be arrays.");
                     check = false;
-                }
-                else {
+                } else {
                     if (json.at("Nodes")[i].size() != TFP_VAL_CNT) {
                         vislib::sys::Log::DefaultLog.WriteError(
-                            "[CheckTransferFunctionString] Entries of 'Nodes' should be arrays of size %d.", TFP_VAL_CNT);
+                            "[CheckTransferFunctionString] Entries of 'Nodes' should be arrays of size %d.",
+                            TFP_VAL_CNT);
                         check = false;
-                    }
-                    else {
+                    } else {
                         for (UINT k = 0; k < TFP_VAL_CNT; ++k) {
                             if (!json.at("Nodes")[i][k].is_number()) {
                                 vislib::sys::Log::DefaultLog.WriteError(
                                     "[CheckTransferFunctionString] Values in 'Nodes' arrays should be numbers.");
                                 check = false;
-                           }
+                            }
                         }
                     }
-
                 }
             }
-        }
-        else {
-            vislib::sys::Log::DefaultLog.WriteError(
-                "[CheckTransferFunctionString] Couldn't read 'Nodes' as array.");
+        } else {
+            vislib::sys::Log::DefaultLog.WriteError("[CheckTransferFunctionString] Couldn't read 'Nodes' as array.");
             check = false;
         }
 
@@ -407,8 +387,7 @@ bool TransferFunctionParam::CheckTransferFunctionString(const std::string &tfs) 
                     check = false;
                 }
             }
-        }
-        else {
+        } else {
             vislib::sys::Log::DefaultLog.WriteError(
                 "[CheckTransferFunctionString] Couldn't read 'ValueRange' as array.");
             check = false;
@@ -422,7 +401,8 @@ bool TransferFunctionParam::CheckTransferFunctionString(const std::string &tfs) 
 /*
  * TransferFunctionParam::LinearInterpolation
  */
-void TransferFunctionParam::LinearInterpolation(std::vector<float> &out_texdata, unsigned int in_texsize, const TFDataType &in_tfdata) {
+void TransferFunctionParam::LinearInterpolation(
+    std::vector<float>& out_texdata, unsigned int in_texsize, const TFDataType& in_tfdata) {
 
     if (in_texsize == 0) {
         return;
@@ -459,7 +439,8 @@ void TransferFunctionParam::LinearInterpolation(std::vector<float> &out_texdata,
 /*
  * TransferFunctionParam::GaussInterpolation
  */
-void TransferFunctionParam::GaussInterpolation(std::vector<float> &out_texdata, unsigned int in_texsize, const TFDataType &in_tfdata) {
+void TransferFunctionParam::GaussInterpolation(
+    std::vector<float>& out_texdata, unsigned int in_texsize, const TFDataType& in_tfdata) {
 
     if (in_texsize == 0) {
         return;
@@ -483,7 +464,7 @@ void TransferFunctionParam::GaussInterpolation(std::vector<float> &out_texdata, 
             a = param::TransferFunctionParam::gauss(x, in_tfdata[i][3], gb, gc);
 
             // Max
-            out_texdata[t * 4]     = std::max(r, out_texdata[t * 4]);
+            out_texdata[t * 4] = std::max(r, out_texdata[t * 4]);
             out_texdata[t * 4 + 1] = std::max(g, out_texdata[t * 4 + 1]);
             out_texdata[t * 4 + 2] = std::max(b, out_texdata[t * 4 + 2]);
             out_texdata[t * 4 + 3] = std::max(a, out_texdata[t * 4 + 3]);
