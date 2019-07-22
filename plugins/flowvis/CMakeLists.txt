@@ -41,10 +41,10 @@ if(BUILD_FLOWVIS_PLUGIN)
   get_target_property(CGAL_relwithdebinfo CGAL::CGAL IMPORTED_LOCATION_RELWITHDEBINFO)
 
   if(NOT CGAL_minsizerel)
-    set_target_properties(${CGAL_TARGET} PROPERTIES MAP_IMPORTED_CONFIG_MINSIZEREL Release)
+    set_target_properties(CGAL::CGAL PROPERTIES MAP_IMPORTED_CONFIG_MINSIZEREL Release)
   endif()
   if(NOT CGAL_relwithdebinfo)
-    set_target_properties(${CGAL_TARGET} PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO Release)
+    set_target_properties(CGAL::CGAL PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO Release)
   endif()
 
   # Create CUDA library
