@@ -27,11 +27,22 @@ namespace megamol
             std::array<unsigned int, 2> resolution, std::array<float, 4> domain, std::vector<float> positions, std::vector<float> vectors,
             std::vector<float> points, std::vector<int> point_ids, std::vector<float> lines, std::vector<int> line_ids,
             const float integration_timestep, const float max_integration_error, const streamlines_cuda::integration_method method)
-            : log_output(log_stream), performance_output(performance_stream), resolution(std::move(resolution)),
-            domain(std::move(domain)), positions(std::move(positions)), vectors(std::move(vectors)),
-            points(std::move(points)), point_ids(std::move(point_ids)), lines(std::move(lines)),
-            line_ids(std::move(line_ids)), integration_timestep(integration_timestep), max_integration_error(max_integration_error),
-            num_integration_steps_performed(0), terminate_computation(false), method(method)
+            :
+            resolution(std::move(resolution)),
+            domain(std::move(domain)),
+            positions(std::move(positions)),
+            vectors(std::move(vectors)),
+            points(std::move(points)),
+            lines(std::move(lines)),
+            point_ids(std::move(point_ids)),
+            line_ids(std::move(line_ids)),
+            integration_timestep(integration_timestep),
+            max_integration_error(max_integration_error),
+            method(method),
+            num_integration_steps_performed(0),
+            terminate_computation(false),
+            log_output(log_stream),
+            performance_output(performance_stream)
         {
             this->log_output << "Initializing computation..." << std::endl;
             this->log_output << "Resolution:                            " << this->resolution[0] << " x " << this->resolution[1] << std::endl;
@@ -329,7 +340,7 @@ namespace megamol
             std::vector<float> new_terminations_forward;
             std::vector<float> new_terminations_backward;
 
-            unsigned int num_refined_integration_steps;
+            unsigned int num_refined_integration_steps = 0;
 
             duration_t time_refinement;
             std::chrono::time_point<clock_t> time_start_refined_integration;

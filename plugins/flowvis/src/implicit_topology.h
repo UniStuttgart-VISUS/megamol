@@ -190,26 +190,26 @@ namespace megamol
             core::param::ParamSlot reset_computation;
             core::param::ParamSlot load_computation;
             core::param::ParamSlot save_computation;
-            
-            /** Transfer function for labels, distances, reasons of termination, and gradients */
+
+            /** Settings for labels */
             core::param::ParamSlot label_transfer_function;
-            core::param::ParamSlot distance_transfer_function;
-            core::param::ParamSlot termination_transfer_function;
-            core::param::ParamSlot gradient_transfer_function;
-
-            /** Checkboxes for fixing the data range */
             core::param::ParamSlot label_fixed_range;
-            core::param::ParamSlot distance_fixed_range;
-            core::param::ParamSlot termination_fixed_range;
-            core::param::ParamSlot gradient_fixed_range;
-
-            /** Field for showing the number of labels combined */
+            core::param::ParamSlot label_range_min, label_range_max;
             core::param::ParamSlot num_labels_combined;
 
-            /** Values of the fixed range */
-            core::param::ParamSlot label_range_min, label_range_max;
+            /** Settings for distances */
+            core::param::ParamSlot distance_transfer_function;
+            core::param::ParamSlot distance_fixed_range;
             core::param::ParamSlot distance_range_min, distance_range_max;
+
+            /** Settings for reasons of termination */
+            core::param::ParamSlot termination_transfer_function;
+            core::param::ParamSlot termination_fixed_range;
             core::param::ParamSlot termination_range_min, termination_range_max;
+
+            /** Settings for gradients */
+            core::param::ParamSlot gradient_transfer_function;
+            core::param::ParamSlot gradient_fixed_range;
             core::param::ParamSlot gradient_range_min, gradient_range_max;
 
             /** Parameters for stream line computation */
@@ -228,12 +228,6 @@ namespace megamol
             /** Parameters for automatical saving of results and screenshots */
             core::param::ParamSlot auto_save_results;
             core::param::ParamSlot auto_save_screenshots;
-
-            /** Groups */
-            core::param::ParamSlot label_group, label_end_group;
-            core::param::ParamSlot distance_group, distance_end_group;
-            core::param::ParamSlot termination_group, termination_end_group;
-            core::param::ParamSlot gradient_group, gradient_end_group;
 
             /** Input information */
             std::array<unsigned int, 2> resolution;

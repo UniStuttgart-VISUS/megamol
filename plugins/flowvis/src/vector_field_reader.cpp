@@ -206,7 +206,7 @@ namespace megamol
 
                         // Read extents from file
                         float x_min, x_max, y_min, y_max;
-                        unsigned int x_num, y_num, num;
+                        unsigned int x_num, y_num;
 
                         vectors_ifs.read(reinterpret_cast<char*>(&x_num), sizeof(unsigned int));
                         vectors_ifs.read(reinterpret_cast<char*>(&x_min), sizeof(float));
@@ -214,8 +214,6 @@ namespace megamol
                         vectors_ifs.read(reinterpret_cast<char*>(&y_num), sizeof(unsigned int));
                         vectors_ifs.read(reinterpret_cast<char*>(&y_min), sizeof(float));
                         vectors_ifs.read(reinterpret_cast<char*>(&y_max), sizeof(float));
-
-                        num = x_num * y_num;
 
                         vf_call->set_resolution(this->stored_data.resolution = { static_cast<unsigned int>(x_num), static_cast<unsigned int>(y_num) });
                         vf_call->set_bounding_rectangle(this->stored_data.bounding_rectangle = vislib::math::Rectangle<float>(x_min, y_min, x_max, y_max));

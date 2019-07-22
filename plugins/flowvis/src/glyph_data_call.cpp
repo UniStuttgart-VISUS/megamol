@@ -101,7 +101,7 @@ namespace megamol
 
         void glyph_data_call::add_line(const std::vector<Eigen::Vector2f>& points, float value)
         {
-            unsigned int next_index = this->line_vertices->size() / 2;
+            unsigned int next_index = static_cast<unsigned int>(this->line_vertices->size() / 2);
 
             float min_x, min_y, max_x, max_y;
             min_x = max_x = points[0][0];

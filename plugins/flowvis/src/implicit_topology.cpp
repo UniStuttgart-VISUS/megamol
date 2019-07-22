@@ -57,31 +57,23 @@ namespace megamol
             reset_computation("reset_computation", "Reset the computation"),
             load_computation("load_computation", "Load computation from file"),
             save_computation("save_computation", "Save computation to file"),
-            label_group("label_group", "Label group"),
             label_transfer_function("label_transfer_function", "Transfer function for labels"),
             label_fixed_range("label_fixed_range", "Fixed or dynamic value range for labels"),
             label_range_min("label_range_min", "Minimum value for labels in the transfer function"),
             label_range_max("label_range_max", "Maximum value for labels in the transfer function"),
             num_labels_combined("num_labels_combined", "Number of labels in the combined label field"),
-            label_end_group("label_end_group", "Label end group"),
-            distance_group("distance_group", "Distance group"),
             distance_transfer_function("distance_transfer_function", "Transfer function for distances"),
             distance_fixed_range("distance_fixed_range", "Fixed or dynamic value range for labels"),
             distance_range_min("distance_range_min", "Minimum value for distances in the transfer function"),
             distance_range_max("distance_range_max", "Maximum value for distances in the transfer function"),
-            distance_end_group("distance_end_group", "Distance end group"),
-            termination_group("termination_group", "Termination group"),
             termination_transfer_function("termination_transfer_function", "Transfer function for reasons of termination"),
             termination_fixed_range("termination_fixed_range", "Fixed or dynamic value range for reasons of termination"),
             termination_range_min("termination_range_min", "Minimum value for reasons of termination in the transfer function"),
             termination_range_max("termination_range_max", "Maximum value for reasons of termination in the transfer function"),
-            termination_end_group("termination_end_group", "Termination end group"),
-            gradient_group("gradient_group", "Gradient group"),
             gradient_transfer_function("gradient_transfer_function", "Transfer function for gradients"),
             gradient_fixed_range("gradient_fixed_range", "Fixed or dynamic value range for gradients"),
             gradient_range_min("gradient_range_min", "Minimum value for gradients in the transfer function"),
             gradient_range_max("gradient_range_max", "Maximum value for gradients in the transfer function"),
-            gradient_end_group("gradient_end_group", "Gradient end group"),
             integration_method("integration_method", "Method for stream line integration"),
             num_integration_steps("num_integration_steps", "Number of stream line integration steps"),
             integration_timestep("integration_timestep", "Initial time step for stream line integration"),
@@ -757,7 +749,6 @@ namespace megamol
                     auto& valid_forward = *(this->valid_forward = std::make_shared<std::vector<GLfloat>>(this->labels->size(), 1.0f));
                     auto& valid_backward = *(this->valid_backward = std::make_shared<std::vector<GLfloat>>(this->labels->size(), 1.0f));
 
-                    const auto& vertices = *this->vertices;
                     const auto& indices = *this->indices;
 
                     const auto& terminations_forward = *this->terminations_forward;
