@@ -26,7 +26,7 @@ namespace graphics {
 /**
  * Camera parameter override for the virtual view dimension.
  */
-class CameraParamsVirtualViewOverride : public CameraParamsOverride {
+class [[deprecated]] CameraParamsVirtualViewOverride : public CameraParamsOverride {
 
 public:
     /** Ctor. */
