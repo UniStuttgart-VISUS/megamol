@@ -1190,7 +1190,7 @@ void GUIView::drawFontWindowCallback(
         window_config.font_new_size = 5.0f; /// min valid font size
     }
 
-    label = "Font Filename (.ttf)";
+    label = "Font File Name (.ttf)";
     vislib::StringA valueString;
     vislib::UTF8Encoder::Encode(valueString, vislib::StringA(window_config.font_new_filename.c_str()));
     std::string valueUtf8String(valueString.PeekBuffer());

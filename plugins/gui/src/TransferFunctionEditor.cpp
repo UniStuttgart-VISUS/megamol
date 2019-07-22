@@ -108,18 +108,14 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
     ImGui::Checkbox("Options", &this->showOptions);
 
 
-    // Scale ------------------------------------------------------------------
-
-    //    ImGui::PlotLines();
-
+    // Ruler ------------------------------------------------------------------
     std::stringstream stream;
     stream << std::fixed << this->range[0];
     std::string val = stream.str();
     ImGui::Text(val.c_str());
 
     ImGui::SameLine();
-    float font_width = 50.0f;
-    ImGui::SetCursorPosX(tfw_item_width + style.ItemSpacing.x + style.ItemInnerSpacing.x - font_width);
+    ImGui::SetCursorPosX(tfw_item_width + style.ItemSpacing.x + style.ItemInnerSpacing.x);
 
     stream.str(std::string());
     stream << std::fixed << this->range[1];
@@ -366,11 +362,11 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
         }
         float min = this->range[0];
         float max = this->range[1];
-        if (ImGui::InputFloat("min", &min, ImGuiInputTextFlags_EnterReturnsTrue)) {
+        if (ImGui::InputFloat("min", &min, 1.0f, 10.0f, "%.6f", ImGuiInputTextFlags_EnterReturnsTrue)) {
             this->range[0] = (min < this->range[1]) ? (min) : (this->range[0]);
         }
         ImGui::SameLine();
-        if (ImGui::InputFloat("max", &max, ImGuiInputTextFlags_EnterReturnsTrue)) {
+        if (ImGui::InputFloat("max", &max, 1.0f, 10.0f, "%.6f", ImGuiInputTextFlags_EnterReturnsTrue)) {
             this->range[1] = (max > this->range[0]) ? (max) : (this->range[1]);
         }
         ImGui::PopItemWidth();
