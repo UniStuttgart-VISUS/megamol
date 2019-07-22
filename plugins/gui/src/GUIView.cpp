@@ -767,7 +767,7 @@ void GUIView::drawParametersCallback(
     const std::string& window_name, WindowManager::WindowConfiguration& window_config) {
     ImGuiStyle& style = ImGui::GetStyle();
 
-    ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() * 0.5f); // set general proportional item width
+    ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.5f); // set general proportional item width
 
     // Options
     int overrideState = -1; /// invalid
@@ -1005,7 +1005,7 @@ void GUIView::drawParametersCallback(
         ImGui::Unindent();
     }
     // Drop target
-    ImGui::InvisibleButton("Drop Area", ImVec2(ImGui::GetContentRegionAvailWidth(), ImGui::GetFontSize()));
+    ImGui::InvisibleButton("Drop Area", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetFontSize()));
     if (ImGui::BeginDragDropTarget()) {
         if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("DND_COPY_MODULE_PARAMETERS")) {
 
@@ -1030,6 +1030,7 @@ void GUIView::drawParametersCallback(
 
 void GUIView::drawFpsWindowCallback(const std::string& window_name, WindowManager::WindowConfiguration& window_config) {
     ImGuiIO& io = ImGui::GetIO();
+    ImGuiStyle& style = ImGui::GetStyle();
 
     window_config.fpsms_current_delay += io.DeltaTime;
     if (window_config.fpsms_max_delay <= 0.0f) {
@@ -1119,6 +1120,7 @@ void GUIView::drawFpsWindowCallback(const std::string& window_name, WindowManage
     }
     ImGui::PlotLines(
         "###fpsmsplot", data, count, 0, val.c_str(), 0.0f, val_scale, ImVec2(0.0f, 50.0f)); /// use hidden label
+    float item_width = ImGui::GetItemRectSize().x;
 
     if (window_config.fpsms_show_options) {
         float rate = window_config.fpsms_max_delay;
@@ -1152,7 +1154,7 @@ void GUIView::drawFpsWindowCallback(const std::string& window_name, WindowManage
             ImGui::SetClipboardText(stream.str().c_str());
         }
         ImGui::SameLine();
-
+        ImGui::SetCursorPosX(item_width + style.ItemSpacing.x + style.ItemInnerSpacing.x);
         ImGui::Text("Copy to Clipborad");
         help = "Values are copied in chronological order (newest first)";
         this->popup.HelpMarkerToolTip(help);
@@ -1181,7 +1183,14 @@ void GUIView::drawFontWindowCallback(
     ImGui::Separator();
     ImGui::Text("Load new Font from File");
 
-    std::string label = "Font Filename (.ttf)";
+    std::string label = "Font Size";
+    ImGui::InputFloat(label.c_str(), &window_config.font_new_size, 0.0f, 0.0f, "%.2f", ImGuiInputTextFlags_None);
+    // Validate font size
+    if (window_config.font_new_size <= 0.0f) {
+        window_config.font_new_size = 5.0f; /// min valid font size
+    }
+
+    label = "Font Filename (.ttf)";
     vislib::StringA valueString;
     vislib::UTF8Encoder::Encode(valueString, vislib::StringA(window_config.font_new_filename.c_str()));
     std::string valueUtf8String(valueString.PeekBuffer());
@@ -1189,13 +1198,6 @@ void GUIView::drawFontWindowCallback(
     ImGui::InputText(label.c_str(), &valueUtf8String, textflags);
     vislib::UTF8Encoder::Decode(valueString, vislib::StringA(valueUtf8String.data()));
     window_config.font_new_filename = valueString.PeekBuffer();
-
-    label = "Font Size";
-    ImGui::InputFloat(label.c_str(), &window_config.font_new_size, 0.0f, 0.0f, "%.2f", ImGuiInputTextFlags_None);
-    // Validate font size
-    if (window_config.font_new_size <= 0.0f) {
-        window_config.font_new_size = 5.0f; /// min valid font size
-    }
 
     // Validate font file before offering load button
     if (HasExistingFileExtension(window_config.font_new_filename, std::string(".ttf"))) {
@@ -1446,7 +1448,7 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
                 ImGui::TextColored(style.Colors[ImGuiCol_ButtonActive], "Currently loaded into Editor");
             }
 
-            ImGui::PushTextWrapPos(ImGui::GetContentRegionAvailWidth());
+            ImGui::PushTextWrapPos(ImGui::GetContentRegionAvail().x);
             ImGui::Text("JSON: ");
             ImGui::SameLine();
             ImGui::TextDisabled(p->Value().c_str());

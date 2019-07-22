@@ -79,9 +79,6 @@ bool TransferFunction::requestTF(Call& call) {
 
         param::TransferFunctionParam::TFDataType tfdata;
 
-        // Get current range which might be updated in the call.
-        this->range = cgtf->Range();
-
         // Get current values from parameter string (Values are checked, too).
         if (!megamol::core::param::TransferFunctionParam::ParseTransferFunction(
             this->tfParam.Param<param::TransferFunctionParam>()->Value(), tfdata, this->interpolMode, this->texSize, this->range)) {
