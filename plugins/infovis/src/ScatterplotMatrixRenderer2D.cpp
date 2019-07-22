@@ -204,7 +204,7 @@ bool ScatterplotMatrixRenderer2D::MouseEvent(float x, float y, core::view::Mouse
 
 bool ScatterplotMatrixRenderer2D::Render(core::view::CallRender2D& call) {
     try {
-        if (!this->validateData()) return false;
+        if (!this->validateData(call)) return false;
 
         auto axisMode = this->axisModeParam.Param<core::param::EnumParam>()->Value();
         switch (axisMode) {
@@ -236,7 +236,8 @@ bool ScatterplotMatrixRenderer2D::Render(core::view::CallRender2D& call) {
 }
 
 bool ScatterplotMatrixRenderer2D::GetExtents(core::view::CallRender2D& call) {
-    this->validateData();
+    this->validateData(call);
+
     call.SetBoundingBox(this->bounds);
     return true;
 }
@@ -254,8 +255,13 @@ void ScatterplotMatrixRenderer2D::resetDirty(void) {
     this->cellMarginParam.ResetDirty();
 }
 
-bool ScatterplotMatrixRenderer2D::validateData(void) {
+bool ScatterplotMatrixRenderer2D::validateData(core::view::CallRender2D& call) {
     this->floatTable = this->floatTableInSlot.CallAs<table::TableDataCall>();
+    if (this->floatTable == nullptr || !(*this->floatTable)(1)) return false;
+
+    call.SetTimeFramesCount(this->floatTable->GetFrameCount());
+    this->floatTable->SetFrameID(static_cast<unsigned int>(call.Time()));
+
     if (this->floatTable == nullptr || !(*(this->floatTable))(0)) return false;
 
     this->transferFunction = this->transferFunctionInSlot.CallAs<megamol::core::view::CallGetTransferFunction>();

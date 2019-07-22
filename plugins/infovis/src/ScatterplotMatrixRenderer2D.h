@@ -128,7 +128,7 @@ private:
 
     void resetDirty(void);
 
-    bool validateData(void);
+    bool validateData(core::view::CallRender2D& call);
 
     void updateColumns(void);
 
