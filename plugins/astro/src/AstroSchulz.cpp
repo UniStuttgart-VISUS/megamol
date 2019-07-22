@@ -342,9 +342,9 @@ void megamol::astro::AstroSchulz::convert(float *dst, const std::size_t col,
             assert(range[i].first <= range[i].second);
             assert(dst[i] >= range[i].first);
             assert(dst[i] <= range[i].second);
-
-            dst += this->columns.size();
         }
+
+        dst += this->columns.size();
     }
 
     for (std::size_t i = 0; i < 3; ++i) {
