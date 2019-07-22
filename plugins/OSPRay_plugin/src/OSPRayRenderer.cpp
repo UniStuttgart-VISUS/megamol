@@ -49,6 +49,9 @@ OSPRayRenderer::OSPRayRenderer(void)
     renderer = NULL;
     camera = NULL;
     world = NULL;
+
+    accum_time.count = 0;
+    accum_time.amount = 0;
 }
 
 
@@ -171,7 +174,7 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
     }
 
     // Light setup
-    CallOSPRayLight* gl = this->getLightSlot.CallAs<CallOSPRayLight>();
+    core::view::light::CallLight *gl = this->getLightSlot.CallAs<core::view::light::CallLight>();
     light_has_changed = false;
     if (gl != NULL) {
         gl->setLightMap(&lightMap);
@@ -254,7 +257,7 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
             ospCommit(world);
             auto t2 = std::chrono::high_resolution_clock::now();
             const auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
-            vislib::sys::Log::DefaultLog.WriteInfo("OSPRayRenderer: Commiting World took: %d microseconds", duration);
+            vislib::sys::Log::DefaultLog.WriteMsg(242, "OSPRayRenderer: Commiting World took: %d microseconds", duration);
         }
         if (material_has_changed && !data_has_changed) {
             this->changeMaterial();
@@ -285,14 +288,25 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
         ospSetObject(renderer, "model", world);
         ospCommit(renderer);
 
+        // setup framebuffer and measure time
+        auto t1 = std::chrono::high_resolution_clock::now();
 
-        // setup framebuffer
         ospFrameBufferClear(framebuffer, OSP_FB_COLOR | OSP_FB_DEPTH | OSP_FB_ACCUM);
         ospRenderFrame(framebuffer, renderer, OSP_FB_COLOR | OSP_FB_DEPTH | OSP_FB_ACCUM);
-
-
         // get the texture from the framebuffer
         fb = (uint32_t*)ospMapFrameBuffer(framebuffer, OSP_FB_COLOR);
+        auto t2 = std::chrono::high_resolution_clock::now();
+        const auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
+
+        accum_time.amount += duration.count();
+        accum_time.count += 1;
+        if (accum_time.amount >= static_cast<unsigned long long int>(1e6)) {
+            const unsigned long long int mean_rendertime = accum_time.amount / accum_time.count;
+            vislib::sys::Log::DefaultLog.WriteMsg(242, "OSPRayRenderer: Rendering took: %d microseconds", mean_rendertime);
+            accum_time.count = 0;
+            accum_time.amount = 0;
+        }
+
         if (this->useDB.Param<core::param::BoolParam>()->Value()) {
             getOpenGLDepthFromOSPPerspective(*cr, db.data());
         }

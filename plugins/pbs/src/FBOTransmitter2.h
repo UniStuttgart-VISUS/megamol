@@ -14,6 +14,9 @@
 #include "FBOCommFabric.h"
 #include "FBOProto.h"
 #include "mmcore/CallerSlot.h"
+#include "mmcore/utility/gl/FramebufferObject.h"
+#include "vislib/graphics/gl/CameraOpenGL.h"
+#include "vislib/graphics/gl/FramebufferObject.h"
 
 #ifdef WITH_MPI
 #include "IceT.h"
@@ -84,7 +87,7 @@ private:
 
     bool extractMetaData(float bbox[6], float frame_times[2], float cam_params[9]);
         
-    bool extractBkgndColor(std::array<float, 4> bkgnd_color);
+    bool extractBkgndColor(std::array<float, 4>& bkgnd_color);
 
     bool extractViewport(int vvpt[6]);
 
@@ -121,6 +124,13 @@ private:
     core::CallerSlot callRequestMpi;
 
     megamol::core::param::ParamSlot toggle_aggregate_slot_;
+
+    megamol::core::param::ParamSlot render_comp_img_slot_;
+    vislib::graphics::gl::FramebufferObject* fbo;
+
+    bool renderCompChanged(core::param::ParamSlot& slot);
+
+    void initIceT();
 
     bool useMpi = false;
     int mpiRank = -1, mpiSize = -1;

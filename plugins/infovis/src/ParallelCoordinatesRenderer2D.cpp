@@ -698,6 +698,8 @@ void ParallelCoordinatesRenderer2D::drawItemsDiscrete(
     glUniform4fv(prog.ParameterLocation("color"), 1, color);
     glUniform1f(prog.ParameterLocation("tfColorFactor"), tfColorFactor);
     glUniform1i(prog.ParameterLocation("transferFunction"), 5);
+    auto tc = tf->TextureCoordinates();
+    glUniform2f(prog.ParameterLocation("transferFunctionTexCoords"), tc[0], tc[1]);
     glUniform1ui(prog.ParameterLocation("fragmentTestMask"), testMask);
     glUniform1ui(prog.ParameterLocation("fragmentPassMask"), passMask);
 
@@ -841,6 +843,8 @@ void ParallelCoordinatesRenderer2D::drawItemsContinuous(void) {
     glActiveTexture(GL_TEXTURE5);
     glBindTexture(GL_TEXTURE_1D, tf->OpenGLTexture());
     glUniform1i(this->drawItemContinuousProgram.ParameterLocation("transferFunction"), 5);
+    auto tc = tf->TextureCoordinates();
+    glUniform2f(this->drawItemContinuousProgram.ParameterLocation("transferFunctionTexCoords"), tc[0], tc[1]);
     glUniform1i(this->drawItemContinuousProgram.ParameterLocation("fragmentCount"), 1);
     glUniform4fv(this->drawItemContinuousProgram.ParameterLocation("clearColor"), 1, backgroundColor);
     glUniform1i(this->drawItemContinuousProgram.ParameterLocation("sqrtDensity"),
@@ -970,7 +974,9 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         }
     }
 
-    drawAxes();
+    if (this->drawAxesSlot.Param<core::param::BoolParam>()->Value()) {
+        drawAxes();
+    }
 
     glDepthMask(GL_TRUE);
 

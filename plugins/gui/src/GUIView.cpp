@@ -6,17 +6,11 @@
  */
 
 /**
- * TODO:
+ * USED HOTKEYS:
  *
- * - Fix lost keyboard/mouse input for low frame rates
- * - The WindowManager should be managing window positions (or start using ImguiDock?)
- *
- * USED HOKEYS:
- *
- * - Show/hide Windows: F12 - F9
+ * - Show/hide Windows: Ctrl + F9-F12
  * - Reset windows:     Shift + (Window show/hide hotkeys)
  * - Quit program:      Esc, Alt + F4
- *
  */
 
 #include "stdafx.h"
@@ -40,6 +34,7 @@
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/Vector4fParam.h"
 #include "mmcore/utility/ResourceWrapper.h"
+#include "mmcore/versioninfo.h"
 #include "mmcore/view/CallRenderView.h"
 
 #include "vislib/UTF8Encoder.h"
@@ -69,20 +64,24 @@ GUIView::GUIView()
     , renderViewSlot("renderview", "Connects to a preceding RenderView that will be decorated with a GUI")
     , styleParam("style", "Color style, i.e., theme")
     , stateParam("state", "Current state of all windows")
-    , ignoreStateParamOnce(false)
     , context(nullptr)
     , windowManager()
     , tfEditor()
     , lastInstanceTime(0.0)
     , fontUtf8Ranges()
+    , projectFilename()
     , newFontFilenameToLoad()
     , newFontSizeToLoad(13.0f)
     , newFontIndexToLoad(-1)
-    , windowToDelete() {
+    , windowToDelete()
+    , saveState(false)
+    , saveStateDelay(0.0f)
+    , checkHotkeysOnce(true) {
+
     this->renderViewSlot.SetCompatibleCall<core::view::CallRenderViewDescription>();
     this->MakeSlotAvailable(&this->renderViewSlot);
 
-    core::param::EnumParam* styles = new core::param::EnumParam(0);
+    core::param::EnumParam* styles = new core::param::EnumParam(2);
     styles->SetTypePair(CorporateGray, "Corporate Gray");
     styles->SetTypePair(CorporateWhite, "Corporate White");
     styles->SetTypePair(DarkColors, "Dark Colors");
@@ -144,7 +143,7 @@ bool GUIView::create() {
     WindowManager::WindowConfiguration tmp_win;
     // MAIN Window ------------------------------------------------------------
     tmp_win.win_show = true;
-    tmp_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F12);
+    tmp_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F12, core::view::Modifier::CTRL);
     tmp_win.win_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoTitleBar;
     tmp_win.win_callback = WindowManager::WindowDrawCallback::MAIN;
     tmp_win.win_position = ImVec2(12, 12);
@@ -154,21 +153,21 @@ bool GUIView::create() {
 
     // FPS/MS Window ----------------------------------------------------------
     tmp_win.win_show = false;
-    tmp_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F11);
+    tmp_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F11, core::view::Modifier::CTRL);
     tmp_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar;
     tmp_win.win_callback = WindowManager::WindowDrawCallback::FPSMS;
     this->windowManager.AddWindowConfiguration("Performance Metrics", tmp_win);
 
     // FONT Window ------------------------------------------------------------
     tmp_win.win_show = false;
-    tmp_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F10);
+    tmp_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F10, core::view::Modifier::CTRL);
     tmp_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize;
     tmp_win.win_callback = WindowManager::WindowDrawCallback::FONT;
     this->windowManager.AddWindowConfiguration("Font Settings", tmp_win);
 
     // TRANSFER FUNCTION Window -----------------------------------------------
     tmp_win.win_show = false;
-    tmp_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F9);
+    tmp_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F9, core::view::Modifier::CTRL);
     tmp_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize;
     tmp_win.win_callback = WindowManager::WindowDrawCallback::TF;
     this->windowManager.AddWindowConfiguration("Transfer Function Editor", tmp_win);
@@ -180,8 +179,8 @@ bool GUIView::create() {
 
     // IO settings ------------------------------------------------------------
     ImGuiIO& io = ImGui::GetIO();
-    io.IniSavingRate = 5.0f;  //  in seconds
-    io.IniFilename = nullptr; // "imgui.ini";      // disabled, will be replaced by own more comprehensive version
+    io.IniSavingRate = 5.0f;          //  in seconds
+    io.IniFilename = nullptr;         // "imgui.ini"; - disabled, using own window settings profile
     io.LogFilename = "imgui_log.txt"; // (set to nullptr to disable)
     io.FontAllowUserScaling = true;
 
@@ -190,11 +189,11 @@ bool GUIView::create() {
     this->fontUtf8Ranges.emplace_back(0x0020);
     this->fontUtf8Ranges.emplace_back(0x00FF); // Basic Latin + Latin Supplement
     this->fontUtf8Ranges.emplace_back(0x20AC);
-    this->fontUtf8Ranges.emplace_back(0x20AC); // �
+    this->fontUtf8Ranges.emplace_back(0x20AC); // Euro
     this->fontUtf8Ranges.emplace_back(0x2122);
-    this->fontUtf8Ranges.emplace_back(0x2122); // �
+    this->fontUtf8Ranges.emplace_back(0x2122); // TM
     this->fontUtf8Ranges.emplace_back(0x212B);
-    this->fontUtf8Ranges.emplace_back(0x212B); // �
+    this->fontUtf8Ranges.emplace_back(0x212B); // Angstroem
     this->fontUtf8Ranges.emplace_back(0x0391);
     this->fontUtf8Ranges.emplace_back(0x03D6); // greek alphabet
     this->fontUtf8Ranges.emplace_back(0);      // (range termination)
@@ -206,6 +205,7 @@ bool GUIView::create() {
         config.GlyphRanges = this->fontUtf8Ranges.data();
         // Add default font
         io.Fonts->AddFontDefault(&config);
+#ifdef GUI_USE_FILEUTILS
         // Add other known fonts
         std::string font_file, font_path;
         const vislib::Array<vislib::StringW>& searchPaths =
@@ -215,16 +215,17 @@ bool GUIView::create() {
             font_file = "Roboto-Regular.ttf";
             font_path = SearchFileRecursive(font_file, searchPath);
             if (!font_path.empty()) {
-                io.Fonts->AddFontFromFileTTF(font_path.c_str(), 11.0f, &config);
+                io.Fonts->AddFontFromFileTTF(font_path.c_str(), 12.0f, &config);
                 // Set as default.
                 io.FontDefault = io.Fonts->Fonts[(io.Fonts->Fonts.Size - 1)];
             }
             font_file = "SourceCodePro-Regular.ttf";
             font_path = SearchFileRecursive(font_file, searchPath);
             if (!font_path.empty()) {
-                io.Fonts->AddFontFromFileTTF(font_path.c_str(), 15.0f, &config);
+                io.Fonts->AddFontFromFileTTF(font_path.c_str(), 13.0f, &config);
             }
         }
+#endif // GUI_USE_FILEUTILS
     }
 
     // ImGui Key Map
@@ -251,7 +252,8 @@ bool GUIView::create() {
     io.KeyMap[ImGuiKey_Z] = static_cast<int>(GuiTextModHotkeys::CTRL_Z);
 
     return true;
-} // namespace gui
+}
+
 
 void GUIView::release() {
     if (this->context != nullptr) {
@@ -266,25 +268,30 @@ float GUIView::DefaultTime(double instTime) const {
     return 0.0f;
 }
 
+
 unsigned int GUIView::GetCameraSyncNumber(void) const {
     Log::DefaultLog.WriteWarn("GUIView::GetCameraSyncNumber unsupported");
     return 0u;
 }
 
+
 void GUIView::SerialiseCamera(vislib::Serialiser& serialiser) const {
     Log::DefaultLog.WriteWarn("GUIView::SerialiseCamera unsupported");
 }
 
+
 void GUIView::DeserialiseCamera(vislib::Serialiser& serialiser) {
     Log::DefaultLog.WriteWarn("GUIView::DeserialiseCamera unsupported");
 }
+
 
 void GUIView::Render(const mmcRenderViewContext& context) {
     auto* crv = this->renderViewSlot.CallAs<core::view::CallRenderView>();
     if (crv) {
         crv->SetOutputBuffer(GL_BACK);
         crv->SetInstanceTime(context.InstanceTime);
-        crv->SetTime(-1.0f); // context.Time or -1.0f?
+        crv->SetTime(
+            -1.0f); // Should be negative to trigger animation! (see View3D.cpp line ~660 | View2D.cpp line ~350)
         (*crv)(core::view::AbstractCallRender::FnRender);
     } else {
         ::glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -293,6 +300,7 @@ void GUIView::Render(const mmcRenderViewContext& context) {
     this->drawGUI(crv->GetViewport(), crv->InstanceTime());
 }
 
+
 void GUIView::ResetView(void) {
     auto* crv = this->renderViewSlot.CallAs<core::view::CallRenderView>();
     if (crv) {
@@ -300,10 +308,11 @@ void GUIView::ResetView(void) {
     }
 }
 
+
 void GUIView::Resize(unsigned int width, unsigned int height) {
     auto* crv = this->renderViewSlot.CallAs<core::view::CallRenderView>();
     if (crv) {
-        // der ganz ganz dicke "because-i-know"-Kn�ppel
+        // der ganz ganz dicke "because-i-know"-Knueppel
         AbstractView* view = const_cast<AbstractView*>(
             dynamic_cast<const AbstractView*>(static_cast<const Module*>(crv->PeekCalleeSlot()->Owner())));
         if (view != NULL) {
@@ -312,6 +321,7 @@ void GUIView::Resize(unsigned int width, unsigned int height) {
     }
 }
 
+
 void GUIView::UpdateFreeze(bool freeze) {
     auto* crv = this->renderViewSlot.CallAs<core::view::CallRenderView>();
     if (crv) {
@@ -319,6 +329,7 @@ void GUIView::UpdateFreeze(bool freeze) {
         (*crv)(callType);
     }
 }
+
 
 bool GUIView::OnKey(core::view::Key key, core::view::KeyAction action, core::view::Modifiers mods) {
     ImGui::SetCurrentContext(this->context);
@@ -394,7 +405,8 @@ bool GUIView::OnKey(core::view::Key key, core::view::KeyAction action, core::vie
 
     // Hotkeys of window(s)
     const auto func = [&, this](const std::string& wn, WindowManager::WindowConfiguration& wc) {
-        hotkeyPressed = (ImGui::IsKeyDown(static_cast<int>(wc.win_hotkey.key))); /// Ignoring additional modifiers
+        hotkeyPressed = (ImGui::IsKeyDown(static_cast<int>(wc.win_hotkey.key))) &&
+                        (wc.win_hotkey.mods.test(core::view::Modifier::CTRL) == io.KeyCtrl);
         if (hotkeyPressed) {
             if (io.KeyShift) {
                 wc.win_soft_reset = true;
@@ -434,6 +446,7 @@ bool GUIView::OnKey(core::view::Key key, core::view::KeyAction action, core::vie
                 if (auto* p = slot.template Param<core::param::ButtonParam>()) {
                     auto keyCode = p->GetKeyCode();
 
+                    // Break loop after first occurrence of parameter hotkey
                     if (hotkeyPressed) return;
 
                     hotkeyPressed = (ImGui::IsKeyDown(static_cast<int>(keyCode.key))) &&
@@ -465,6 +478,7 @@ bool GUIView::OnKey(core::view::Key key, core::view::KeyAction action, core::vie
     return false;
 }
 
+
 bool GUIView::OnChar(unsigned int codePoint) {
     ImGui::SetCurrentContext(this->context);
 
@@ -483,6 +497,7 @@ bool GUIView::OnChar(unsigned int codePoint) {
 
     return true;
 }
+
 
 bool GUIView::OnMouseMove(double x, double y) {
     ImGui::SetCurrentContext(this->context);
@@ -508,6 +523,7 @@ bool GUIView::OnMouseMove(double x, double y) {
     return true;
 }
 
+
 bool GUIView::OnMouseButton(
     core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) {
 
@@ -516,10 +532,17 @@ bool GUIView::OnMouseButton(
     bool down = (action == core::view::MouseButtonAction::PRESS);
     auto buttonIndex = static_cast<size_t>(button);
     ImGuiIO& io = ImGui::GetIO();
-    io.MouseDown[buttonIndex] = down;
 
     auto hoverFlags = ImGuiHoveredFlags_AnyWindow | ImGuiHoveredFlags_AllowWhenDisabled |
                       ImGuiHoveredFlags_AllowWhenBlockedByPopup | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem;
+
+    // Trigger saving state when mouse hoverd any window and on button mouse release event
+    if ((!down) && (io.MouseDown[buttonIndex]) && hoverFlags) {
+        this->saveState = true;
+        this->saveStateDelay = 0.0f;
+    }
+
+    io.MouseDown[buttonIndex] = down;
 
     if (!ImGui::IsWindowHovered(hoverFlags)) {
         auto* crv = this->renderViewSlot.CallAs<core::view::CallRenderView>();
@@ -536,6 +559,7 @@ bool GUIView::OnMouseButton(
 
     return true;
 }
+
 
 bool GUIView::OnMouseScroll(double dx, double dy) {
     ImGui::SetCurrentContext(this->context);
@@ -562,6 +586,7 @@ bool GUIView::OnMouseScroll(double dx, double dy) {
     return true;
 }
 
+
 void GUIView::validateGUI() {
     if (this->styleParam.IsDirty()) {
         auto style = this->styleParam.Param<core::param::EnumParam>()->Value();
@@ -582,31 +607,27 @@ void GUIView::validateGUI() {
         this->styleParam.ResetDirty();
     }
 
-    static unsigned int stateMagic = 0;
-    stateMagic++;
-
+    ImGuiIO& io = ImGui::GetIO();
+    this->saveStateDelay += io.DeltaTime;
     if (this->stateParam.IsDirty()) {
-        if (!ignoreStateParamOnce) {
-            auto state = this->stateParam.Param<core::param::StringParam>()->Value();
-            this->windowManager.StateFromJSON(std::string(state));
-        }
+        auto state = this->stateParam.Param<core::param::StringParam>()->Value();
+        this->windowManager.StateFromJSON(std::string(state));
         this->stateParam.ResetDirty();
-        ignoreStateParamOnce = false;
-    } else if (stateMagic % 500 == 0) {
-        // TODO: serialize back to parameter only on demand, i.e., deferred after a couple of milliseconds without any
-        // UI changes.
+    } else if (this->saveState && (this->saveStateDelay > 2.0f)) { // Delayed saving after triggering saving state
         std::string state;
         this->windowManager.StateToJSON(state);
-        this->stateParam.Param<core::param::StringParam>()->SetValue(state.c_str());
-        ignoreStateParamOnce = true;
-        stateMagic = 0;
+        this->stateParam.Param<core::param::StringParam>()->SetValue(state.c_str(), false);
+        this->saveState = false;
     }
 }
+
 
 bool GUIView::drawGUI(vislib::math::Rectangle<int> viewport, double instanceTime) {
     ImGui::SetCurrentContext(this->context);
 
     this->validateGUI();
+    /// So far: Checked only once
+    this->checkMultipleHotkeyAssignement();
 
     auto viewportWidth = viewport.Width();
     auto viewportHeight = viewport.Height();
@@ -716,6 +737,7 @@ bool GUIView::drawGUI(vislib::math::Rectangle<int> viewport, double instanceTime
     return true;
 }
 
+
 void GUIView::drawMainWindowCallback(
     const std::string& window_name, WindowManager::WindowConfiguration& window_config) {
     // Menu -------------------------------------------------------------------
@@ -735,9 +757,11 @@ void GUIView::drawMainWindowCallback(
     this->drawParametersCallback(window_name, window_config);
 }
 
+
 void GUIView::drawTFWindowCallback(const std::string& window_name, WindowManager::WindowConfiguration& window_config) {
     this->tfEditor.DrawTransferFunctionEditor();
 }
+
 
 void GUIView::drawParametersCallback(
     const std::string& window_name, WindowManager::WindowConfiguration& window_config) {
@@ -1003,6 +1027,7 @@ void GUIView::drawParametersCallback(
     ImGui::PopItemWidth();
 }
 
+
 void GUIView::drawFpsWindowCallback(const std::string& window_name, WindowManager::WindowConfiguration& window_config) {
     ImGuiIO& io = ImGui::GetIO();
 
@@ -1134,6 +1159,7 @@ void GUIView::drawFpsWindowCallback(const std::string& window_name, WindowManage
     }
 }
 
+
 void GUIView::drawFontWindowCallback(
     const std::string& window_name, WindowManager::WindowConfiguration& window_config) {
     ImGuiIO& io = ImGui::GetIO();
@@ -1151,6 +1177,7 @@ void GUIView::drawFontWindowCallback(
     // Saving current font to window configuration.
     window_config.font_name = std::string(font_current->GetDebugName());
 
+#ifdef GUI_USE_FILEUTILS
     ImGui::Separator();
     ImGui::Text("Load new Font from File");
 
@@ -1158,10 +1185,10 @@ void GUIView::drawFontWindowCallback(
     vislib::StringA valueString;
     vislib::UTF8Encoder::Encode(valueString, vislib::StringA(window_config.font_new_filename.c_str()));
     std::string valueUtf8String(valueString.PeekBuffer());
-    ImGui::InputText(label.c_str(), &valueUtf8String);
+    ImGuiInputTextFlags textflags = ImGuiInputTextFlags_AutoSelectAll;
+    ImGui::InputText(label.c_str(), &valueUtf8String, textflags);
     vislib::UTF8Encoder::Decode(valueString, vislib::StringA(valueUtf8String.data()));
     window_config.font_new_filename = valueString.PeekBuffer();
-
 
     label = "Font Size";
     ImGui::InputFloat(label.c_str(), &window_config.font_new_size, 0.0f, 0.0f, "%.2f", ImGuiInputTextFlags_None);
@@ -1171,28 +1198,36 @@ void GUIView::drawFontWindowCallback(
     }
 
     // Validate font file before offering load button
-    if (HasFileExtension(window_config.font_new_filename, std::string(".ttf"))) {
+    if (HasExistingFileExtension(window_config.font_new_filename, std::string(".ttf"))) {
         if (ImGui::Button("Add Font")) {
             this->newFontFilenameToLoad = window_config.font_new_filename;
             this->newFontSizeToLoad = window_config.font_new_size;
         }
     } else {
-        ImGui::TextColored(style.Colors[ImGuiCol_ButtonHovered], "Please enter valid font file name");
+        ImGui::TextColored(ImVec4(0.9f, 0.0f, 0.0f, 1.0f), "Please enter valid font file name");
     }
     std::string help = "Same font can be loaded multiple times using different font size";
     this->popup.HelpMarkerToolTip(help);
+#endif // GUI_USE_FILEUTILS
 }
 
+
 void GUIView::drawMenu(void) {
+
+    bool open_popup_project = false;
     if (ImGui::BeginMenu("File")) {
-        //// Load/save parameter values to LUA file
-        // if (ImGui::MenuItem("Save", "(not yet available)")) {
-        //    // TODO:  Save parameter file
-        //}
-        // if (ImGui::MenuItem("Load", "(not yet available)")) {
+#ifdef GUI_USE_FILEUTILS
+        // Load/save parameter values to LUA file
+        if (ImGui::MenuItem("Save Project")) {
+            open_popup_project = true;
+        }
+        // if (ImGui::MenuItem("Load Project")) {
         //    // TODO:  Load parameter file
+        //    std::string projectFilename;
+        //    this->GetCoreInstance()->LoadProject(vislib::StringA(projectFilename.c_str()));
         //}
         ImGui::Separator();
+#endif // GUI_USE_FILEUTILS
         if (ImGui::MenuItem("Exit", "'Esc', ALT + 'F4'")) {
             // Exit program
             this->shutdown();
@@ -1201,7 +1236,7 @@ void GUIView::drawMenu(void) {
     }
 
     // Windows
-    if (ImGui::BeginMenu("Window")) {
+    if (ImGui::BeginMenu("Windows")) {
         const auto func = [&, this](const std::string& wn, WindowManager::WindowConfiguration& wc) {
             bool win_open = wc.win_show;
             std::string hotkey_label = wc.win_hotkey.ToString();
@@ -1232,7 +1267,7 @@ void GUIView::drawMenu(void) {
     }
 
     // Help
-    bool open_popup = false;
+    bool open_popup_about = false;
     if (ImGui::BeginMenu("Help")) {
         const std::string gitLink = "https://github.com/UniStuttgart-VISUS/megamol";
         const std::string webLink = "https://megamol.org/";
@@ -1247,18 +1282,26 @@ void GUIView::drawMenu(void) {
         this->popup.HoverToolTip(hint);
         ImGui::Separator();
         if (ImGui::MenuItem("About...")) {
-            open_popup = true;
+            open_popup_about = true;
         }
         ImGui::EndMenu();
     }
 
     // Popups
-    std::string about =
-        std::string("MegaMol is GREAT!\nUsing Dear ImGui ") + std::string(IMGUI_VERSION) + std::string("\n");
-    if (open_popup) {
+    if (open_popup_about) {
         ImGui::OpenPopup("About");
     }
     if (ImGui::BeginPopupModal("About", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+
+        std::string about =
+            std::string("MegaMol - Version ") + std::to_string(MEGAMOL_CORE_MAJOR_VER) + (".") +
+            std::to_string(MEGAMOL_CORE_MINOR_VER) + ("\n(git hash ") + std::string(MEGAMOL_CORE_COMP_REV) +
+            (")\n\nDear ImGui - Version ") + std::string(IMGUI_VERSION) +
+            std::string("\n\nContact: megamol@visus.uni-stuttgart.de\nWeb: https://megamol.org\nGit-Hub: "
+                        "https://github.com/UniStuttgart-VISUS/megamol\n\nCopyright (C) 2009-2019 by Universitaet "
+                        "Stuttgart (VIS).\nAll rights "
+                        "reserved.");
+
         ImGui::Text(about.c_str());
         ImGui::Separator();
         if (ImGui::Button("Close")) {
@@ -1267,7 +1310,50 @@ void GUIView::drawMenu(void) {
         ImGui::SetItemDefaultFocus();
         ImGui::EndPopup();
     }
+
+#ifdef GUI_USE_FILEUTILS
+    if (open_popup_project) {
+        ImGui::OpenPopup("Save Project");
+    }
+    if (ImGui::BeginPopupModal("Save Project", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+
+
+        std::string label = "File Name";
+        vislib::StringA valueString;
+        vislib::UTF8Encoder::Encode(valueString, vislib::StringA(this->projectFilename.c_str()));
+        std::string valueUtf8String(valueString.PeekBuffer());
+        ImGuiInputTextFlags textflags = ImGuiInputTextFlags_AutoSelectAll;
+        ImGui::InputText(label.c_str(), &valueUtf8String, textflags);
+        vislib::UTF8Encoder::Decode(valueString, vislib::StringA(valueUtf8String.data()));
+        this->projectFilename = valueString.PeekBuffer();
+
+        bool valid = false;
+        if (!HasFileExtension(this->projectFilename, std::string(".lua"))) {
+            ImGui::TextColored(ImVec4(0.9f, 0.0f, 0.0f, 1.0f), "File name needs to have the ending '.lua'");
+        } else {
+            valid = true;
+        }
+        if (PathExists(this->projectFilename)) {
+            ImGui::TextColored(ImVec4(0.9f, 0.0f, 0.0f, 1.0f), "File name already exists and will be overwritten!");
+        }
+
+        if (ImGui::Button("Save")) {
+            if (valid) {
+                if (SaveProjectFile(this->projectFilename, this->GetCoreInstance())) {
+                    ImGui::CloseCurrentPopup();
+                }
+            }
+        }
+        ImGui::SetItemDefaultFocus();
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel")) {
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndPopup();
+    }
+#endif // GUI_USE_FILEUTILS
 }
+
 
 void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slot) {
     ImGuiStyle& style = ImGui::GetStyle();
@@ -1355,14 +1441,14 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
                 p->SetValue("");
                 load_tf = true;
             }
-            ImGui::SameLine();
-            ImGui::Text("JSON");
 
             if (p == this->tfEditor.GetActiveParameter()) {
-                ImGui::TextColored(style.Colors[ImGuiCol_ButtonHovered], "Currently loaded into Editor");
+                ImGui::TextColored(style.Colors[ImGuiCol_ButtonActive], "Currently loaded into Editor");
             }
 
             ImGui::PushTextWrapPos(ImGui::GetContentRegionAvailWidth());
+            ImGui::Text("JSON: ");
+            ImGui::SameLine();
             ImGui::TextDisabled(p->Value().c_str());
             ImGui::PopTextWrapPos();
 
@@ -1443,12 +1529,33 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
             vislib::UTF8Encoder::Encode(valueString, param->ValueString());
             std::string valueUtf8String(valueString.PeekBuffer());
 
-            if (ImGui::InputText(param_label.c_str(), &valueUtf8String, ImGuiInputTextFlags_EnterReturnsTrue)) {
-                vislib::UTF8Encoder::Decode(valueString, vislib::StringA(valueUtf8String.data()));
-                param->ParseValue(valueString);
-            }
+            ImGuiInputTextFlags textflags = ImGuiInputTextFlags_CtrlEnterForNewLine |
+                                            ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll;
 
-            help = "Press [Return] to confirm changes.";
+            // Determine line count
+            int nlcnt = 0;
+            for (auto& c : valueUtf8String) {
+                if (c == '\n') {
+                    nlcnt++;
+                }
+            }
+            nlcnt = std::min(5, nlcnt);
+            if (nlcnt > 0) {
+
+                ImVec2 ml_dim =
+                    ImVec2(ImGui::CalcItemWidth(), ImGui::GetFrameHeight() + (ImGui::GetFontSize() * (float)(nlcnt)));
+
+                if (ImGui::InputTextMultiline(param_label.c_str(), &valueUtf8String, ml_dim, textflags)) {
+                    vislib::UTF8Encoder::Decode(valueString, vislib::StringA(valueUtf8String.data()));
+                    param->ParseValue(valueString);
+                }
+            } else {
+                if (ImGui::InputText(param_label.c_str(), &valueUtf8String, textflags)) {
+                    vislib::UTF8Encoder::Decode(valueString, vislib::StringA(valueUtf8String.data()));
+                    param->ParseValue(valueString);
+                }
+                help = "[Ctrl + Enter] for new line.\nPress [Return] to confirm changes.";
+            }
         }
 
         this->popup.HoverToolTip(param_desc, ImGui::GetID(param_label.c_str()), 1.0f);
@@ -1462,6 +1569,7 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
         }
     }
 }
+
 
 void GUIView::drawParameterHotkey(const core::Module& mod, core::param::ParamSlot& slot) {
     auto param = slot.Parameter();
@@ -1489,6 +1597,7 @@ void GUIView::drawParameterHotkey(const core::Module& mod, core::param::ParamSlo
     }
 }
 
+
 bool GUIView::considerModule(const std::string& modname, std::vector<std::string>& modules_list) {
     bool retval = false;
     if (modules_list.empty()) {
@@ -1503,6 +1612,43 @@ bool GUIView::considerModule(const std::string& modname, std::vector<std::string
     }
     return retval;
 }
+
+
+void GUIView::checkMultipleHotkeyAssignement(void) {
+    if (this->checkHotkeysOnce) {
+
+        std::list<core::view::KeyCode> hotkeylist;
+        hotkeylist.clear();
+
+        this->GetCoreInstance()->EnumParameters([&, this](const auto& mod, auto& slot) {
+            auto param = slot.Parameter();
+            if (!param.IsNull()) {
+                if (auto* p = slot.template Param<core::param::ButtonParam>()) {
+                    auto hotkey = p->GetKeyCode();
+
+                    // check in hotkey map
+                    bool found = false;
+                    for (auto kc : hotkeylist) {
+                        if ((kc.GetKey() == hotkey.GetKey()) && (kc.GetModifiers().equals(hotkey.GetModifiers()))) {
+                            found = true;
+                        }
+                    }
+                    if (!found) {
+                        hotkeylist.emplace_back(hotkey);
+                    } else {
+                        vislib::sys::Log::DefaultLog.WriteWarn(
+                            "[GUIView] The hotkey [%s] of the parameter \"%s::%s\" has already been assigned. "
+                            ">>> If this hotkey is pressed, there will be no effect on this parameter!",
+                            hotkey.ToString().c_str(), mod.FullName().PeekBuffer(), slot.Name().PeekBuffer());
+                    }
+                }
+            }
+        });
+
+        this->checkHotkeysOnce = false;
+    }
+}
+
 
 void GUIView::shutdown(void) {
     vislib::sys::Log::DefaultLog.WriteInfo("[GUIView] Triggering MegaMol instance shutdown...");

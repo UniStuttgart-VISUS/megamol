@@ -8,13 +8,15 @@
 #ifndef MEGAMOLCORE_CALLGETTRANSFERFUNCTION_H_INCLUDED
 #define MEGAMOLCORE_CALLGETTRANSFERFUNCTION_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#pragma once
+#    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/Call.h"
 #include "mmcore/api/MegaMolCore.h"
 #include "mmcore/factories/CallAutoDescription.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
+
+#include <array>
 
 
 namespace megamol {
@@ -93,6 +95,19 @@ public:
     inline unsigned int TextureSize(void) const { return this->texSize; }
 
     /**
+     * Answer the correct texture coordinates from the first texel center to
+     * the last to ensure proper interpolation (see docs/volumes/Readme.md).
+     * Note this returns the offset and the reduced range!
+     * You can upload this to a uniform vec2 transferFunctionTexCoords; // offset (min), range (max - min)
+     * and include the convenience function float transform_to_TF_coordinates(float value, vec2 texcoords)
+     * via <include file="core_utils" /> in a btf. Remember to insert the snippet
+     * <snippet name="::core_utils::transform_to_TF_coordinates" /> in the respective shader!
+     * 
+     * @return the texture coordinates: (min, max - min)
+     */
+    inline std::array<float, 2> TextureCoordinates(void) const { return this->texCoords; }
+
+    /**
      * Answer the OpenGL format of the texture
      *
      * @return The OpenGL format of the texture
@@ -108,6 +123,13 @@ public:
      * @return The OpenGL texture data
      */
     inline float const* GetTextureData(void) const { return this->texData; }
+
+    /**
+     * Answer the range the texure lies within.
+     *
+     * @return The range
+     */
+    inline std::array<float, 2> Range(void) const { return this->range; }
 
     /**
      * Answer if the interface of the transferfunction module is dirty
@@ -150,6 +172,7 @@ public:
         if (this->texSize == 0) {
             this->texSize = 1;
         }
+        this->updateTexCoords();
     }
 
     /**
@@ -171,10 +194,18 @@ public:
         if (this->texSize == 0) {
             this->texSize = 1;
         }
+        this->updateTexCoords();
     }
 
     /**
-     * Copies a color from the transfer function..
+     * Set range the texture lies within
+     *
+     * @param range The range.
+     */
+    inline void SetRange(std::array<float, 2> range) { this->range = range; }
+
+    /**
+     * Copies a color from the transfer function
      *
      * @param index The n-th color to copy.
      * @param color A pointer to copy the color to.
@@ -187,6 +218,13 @@ public:
     }
 
 private:
+    inline void updateTexCoords() {
+        float half_tex = 1.0f / static_cast<float>(this->texSize);
+        half_tex *= 0.5f;
+        this->texCoords[0] = half_tex;
+        this->texCoords[1] = 1.0f - 2.0f * half_tex;
+    }
+
     /** The OpenGL texture object id */
     unsigned int texID;
 
@@ -198,6 +236,12 @@ private:
 
     /** The texture format */
     TextureFormat texFormat;
+
+    /** The range the texture lies within */
+    std::array<float, 2> range;
+
+    /** for convenience, tex coords with the half texel removed at both ends */
+    std::array<float, 2> texCoords;
 
     /** Dirty flag */
     bool dirty = false;

@@ -145,6 +145,7 @@ bool Contest2019DataLoader::Frame::LoadFrame(std::string filepath, unsigned int 
         this->isWindFlags->operator[](i) = (s.bitmask >> 6) & 0x1;
         this->isStarFormingGasFlags->operator[](i) = (s.bitmask >> 7) & 0x1;
         this->isAGNFlags->operator[](i) = (s.bitmask >> 8) & 0x1;
+        this->particleIDs->operator[](i) = s.particleID;
 
         // calculate the temperature ourselves
         // formula out of the mail of J.D Emberson 16.6.2019

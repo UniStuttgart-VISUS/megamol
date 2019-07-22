@@ -12,13 +12,13 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/CalleeSlot.h"
+#include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/view/AbstractCallRender.h"
 #include "mmcore/view/AbstractInputScope.h"
-#include "mmcore/view/MouseFlags.h"
 #include "mmcore/view/InputCall.h"
-#include "mmcore/view/AbstractCallRender.h"
+#include "mmcore/view/MouseFlags.h"
 
 namespace megamol {
 namespace core {
@@ -30,24 +30,32 @@ namespace view {
 template <class C> class MEGAMOLCORE_API RendererModule : public Module, public AbstractInputScope {
 public:
     /** Ctor. */
-    RendererModule() : Module(), renderSlot("rendering", "Connects the Renderer to a calling renderer or view") {
+    RendererModule()
+        : Module()
+        , chainRenderSlot("chainRendering", "Connects the renderer to and additional renderer")
+        , renderSlot("rendering", "Connects the Renderer to a calling renderer or view") {
+
+        // OutputCall
+        this->chainRenderSlot.SetCompatibleCall<factories::CallAutoDescription<C>>();
+        // Do not make it available yet (features has to be turned off for legacy code).
+
         // InputCall
         this->renderSlot.SetCallback(
-            C::ClassName(), InputCall::FunctionName(InputCall::FnOnKey), &RendererModule::OnKeyCallback);
+            C::ClassName(), InputCall::FunctionName(InputCall::FnOnKey), &RendererModule::OnKeyChainCallback);
         this->renderSlot.SetCallback(
-            C::ClassName(), InputCall::FunctionName(InputCall::FnOnChar), &RendererModule::OnCharCallback);
+            C::ClassName(), InputCall::FunctionName(InputCall::FnOnChar), &RendererModule::OnCharChainCallback);
         this->renderSlot.SetCallback(C::ClassName(), InputCall::FunctionName(InputCall::FnOnMouseButton),
-            &RendererModule::OnMouseButtonCallback);
-        this->renderSlot.SetCallback(
-            C::ClassName(), InputCall::FunctionName(InputCall::FnOnMouseMove), &RendererModule::OnMouseMoveCallback);
+            &RendererModule::OnMouseButtonChainCallback);
+        this->renderSlot.SetCallback(C::ClassName(), InputCall::FunctionName(InputCall::FnOnMouseMove),
+            &RendererModule::OnMouseMoveChainCallback);
         this->renderSlot.SetCallback(C::ClassName(), InputCall::FunctionName(InputCall::FnOnMouseScroll),
-            &RendererModule::OnMouseScrollCallback);
+            &RendererModule::OnMouseScrollChainCallback);
         // AbstractCallRender
         this->renderSlot.SetCallback(C::ClassName(), AbstractCallRender::FunctionName(AbstractCallRender::FnRender),
-            &RendererModule::RenderCallback);
+            &RendererModule::RenderChainCallback);
         this->renderSlot.SetCallback(C::ClassName(), AbstractCallRender::FunctionName(AbstractCallRender::FnGetExtents),
-            &RendererModule::GetExtentsCallback);
-        // Do not make it avaiable yet (extensibility).
+            &RendererModule::GetExtentsChainCallback);
+        // Do not make it available yet (extensibility).
     }
 
     /** Dtor. */
@@ -97,11 +105,12 @@ protected:
         } else if (button == MouseButton::BUTTON_MIDDLE) {
             view::MouseFlagsSetFlag(mouseFlags, view::MOUSEFLAG_BUTTON_MIDDLE_DOWN, down);
         }
-		//TODO: Verify semantics of (X,Y) coordinates...
-		// - Could be "world space" (see View2D/View3D) instead of window space!
-		// - If so, then provide a freaking method in the Call to the the transformation instead of passing around black magic!
+        // TODO: Verify semantics of (X,Y) coordinates...
+        // - Could be "world space" (see View2D/View3D) instead of window space!
+        // - If so, then provide a freaking method in the Call to the the transformation instead of passing around black
+        // magic!
         this->MouseEvent(lastX, lastY, mouseFlags);
-		// Ignore deprecated "event was processed" flag because too many renderers fail to use it properly
+        // Ignore deprecated "event was processed" flag because too many renderers fail to use it properly
         return false;
     }
 
@@ -110,60 +119,52 @@ protected:
         this->lastX = x;
         this->lastY = y;
         this->MouseEvent(x, y, 0);
-		// Ignore deprecated "event was processed" flag because too many renderers fail to use it properly
+        // Ignore deprecated "event was processed" flag because too many renderers fail to use it properly
         return false;
     }
 
-    bool RenderCallback(Call& call) {
-        try {
-            C& cr = dynamic_cast<C&>(call);
-            return this->Render(cr);
-        } catch (...) {
-            ASSERT("onRenderCallback call cast failed\n");
-        }
-        return false;
+    virtual bool RenderChain(C& call) { return this->Render(call); }
+
+    virtual bool GetExtentsChain(C& call) { return this->GetExtents(call); }
+
+    virtual bool OnKeyChain(Key key, KeyAction action, Modifiers mods) { return this->OnKey(key, action, mods); }
+
+    virtual bool OnCharChain(unsigned int codePoint) { return this->OnChar(codePoint); }
+
+    virtual bool OnMouseButtonChain(MouseButton button, MouseButtonAction action, Modifiers mods) {
+        return this->OnMouseButton(button, action, mods);
     }
 
-    bool GetExtentsCallback(Call& call) {
+    virtual bool OnMouseMoveChain(double x, double y) { return this->OnMouseMove(x, y); }
+
+    virtual bool OnMouseScrollChain(double dx, double dy) { return this->OnMouseScroll(dx, dy); }
+
+    bool GetExtentsChainCallback(Call& call) {
         try {
             C& cr = dynamic_cast<C&>(call);
-            return this->GetExtents(cr);
+            return this->GetExtentsChain(cr);
         } catch (...) {
             ASSERT("onGetExtentsCallback call cast failed\n");
         }
         return false;
     }
 
-    bool OnKeyCallback(Call& call) {
+    bool RenderChainCallback(Call& call) {
         try {
             C& cr = dynamic_cast<C&>(call);
-            auto& evt = cr.GetInputEvent();
-            ASSERT(evt.tag == InputEvent::Tag::Key && "Callback invocation mismatched input event");
-            return this->OnKey(evt.keyData.key, evt.keyData.action, evt.keyData.mods);
+            return this->RenderChain(cr);
         } catch (...) {
             ASSERT("onRenderCallback call cast failed\n");
         }
         return false;
     }
 
-    bool OnCharCallback(Call& call) {
-        try {
-            C& cr = dynamic_cast<C&>(call);
-            auto& evt = cr.GetInputEvent();
-            ASSERT(evt.tag == InputEvent::Tag::Char && "Callback invocation mismatched input event");
-            return this->OnChar(evt.charData.codePoint);
-        } catch (...) {
-            ASSERT("onRenderCallback call cast failed\n");
-        }
-        return false;
-    }
-
-    bool OnMouseButtonCallback(Call& call) {
+    bool OnMouseButtonChainCallback(Call& call) {
         try {
             C& cr = dynamic_cast<C&>(call);
             auto& evt = cr.GetInputEvent();
             ASSERT(evt.tag == InputEvent::Tag::MouseButton && "Callback invocation mismatched input event");
-            return this->OnMouseButton(
+            return this->OnMouseButtonChain(
                 evt.mouseButtonData.button, evt.mouseButtonData.action, evt.mouseButtonData.mods);
         } catch (...) {
             ASSERT("onRenderCallback call cast failed\n");
@@ -171,29 +172,56 @@ protected:
         return false;
     }
 
-    bool OnMouseMoveCallback(Call& call) {
+    bool OnMouseMoveChainCallback(Call& call) {
         try {
             C& cr = dynamic_cast<C&>(call);
             auto& evt = cr.GetInputEvent();
             ASSERT(evt.tag == InputEvent::Tag::MouseMove && "Callback invocation mismatched input event");
-            return this->OnMouseMove(evt.mouseMoveData.x, evt.mouseMoveData.y);
+            return this->OnMouseMoveChain(evt.mouseMoveData.x, evt.mouseMoveData.y);
         } catch (...) {
             ASSERT("onRenderCallback call cast failed\n");
         }
         return false;
     }
 
-    bool OnMouseScrollCallback(Call& call) {
+    bool OnMouseScrollChainCallback(Call& call) {
         try {
             C& cr = dynamic_cast<C&>(call);
             auto& evt = cr.GetInputEvent();
             ASSERT(evt.tag == InputEvent::Tag::MouseScroll && "Callback invocation mismatched input event");
-            return this->OnMouseScroll(evt.mouseScrollData.dx, evt.mouseScrollData.dy);
+            return this->OnMouseScrollChain(evt.mouseScrollData.dx, evt.mouseScrollData.dy);
         } catch (...) {
             ASSERT("onRenderCallback call cast failed\n");
         }
         return false;
     }
+
+    bool OnCharChainCallback(Call& call) {
+        try {
+            C& cr = dynamic_cast<C&>(call);
+            auto& evt = cr.GetInputEvent();
+            ASSERT(evt.tag == InputEvent::Tag::Char && "Callback invocation mismatched input event");
+            return this->OnCharChain(evt.charData.codePoint);
+        } catch (...) {
+            ASSERT("onRenderCallback call cast failed\n");
+        }
+        return false;
+    }
+
+    bool OnKeyChainCallback(Call& call) {
+        try {
+            C& cr = dynamic_cast<C&>(call);
+            auto& evt = cr.GetInputEvent();
+            ASSERT(evt.tag == InputEvent::Tag::Key && "Callback invocation mismatched input event");
+            return this->OnKeyChain(evt.keyData.key, evt.keyData.action, evt.keyData.mods);
+        } catch (...) {
+            ASSERT("onRenderCallback call cast failed\n");
+        }
+        return false;
+    }
+
+    /** Slot for the daisy-chained renderer */
+    CallerSlot chainRenderSlot;
 
     /** The render callee slot */
     CalleeSlot renderSlot;

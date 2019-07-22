@@ -14,8 +14,11 @@ mmPluginLoaderInfo(basePath .. "${MMPLG_DIR}", "*.mmplg", "include")
 
 computer = mmGetMachineName()
 
-mmSetConfigValue("*-window",   "x5y35w1280h720")
-mmSetConfigValue("consolegui", "on")
-mmSetConfigValue("topmost",    "off")
-mmSetConfigValue("fullscreen", "off")
-mmSetConfigValue("vsync",      "off")
+mmSetConfigValue("*-window",    "x5y35w1280h720")
+mmSetConfigValue("consolegui",  "on")
+mmSetConfigValue("topmost",     "off")
+mmSetConfigValue("fullscreen",  "off")
+mmSetConfigValue("vsync",       "off")
+mmSetConfigValue("useKHRdebug", "off")
+mmSetConfigValue("arcball",     "off")
+

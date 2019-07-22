@@ -1,8 +1,0 @@
-mmCreateView("testspheres", "View3D", "::testview")
-mmCreateModule("GUIRenderer3D", "::gui")
-mmCreateModule("SimpleSphereRenderer", "::rnd")
-mmSetParamValue("rnd::renderMode", "Simple")
-mmCreateModule("TestSpheresDataSource", "::dat")
-mmCreateCall("CallRender3D", "::testview::rendering", "::gui::rendering")
-mmCreateCall("CallRender3D", "::gui::decoratedRenderer", "::rnd::rendering")
-mmCreateCall("MultiParticleDataCall", "::rnd::getData", "::dat::getData")
