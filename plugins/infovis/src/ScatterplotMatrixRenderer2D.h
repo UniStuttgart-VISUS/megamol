@@ -74,9 +74,9 @@ protected:
     virtual bool MouseEvent(float x, float y, core::view::MouseFlags flags);
 
 private:
-    enum GeometryType { GEOMETRY_TYPE_POINT = 0, GEOMETRY_TYPE_LINE, GEOMETRY_TYPE_TEXT };
+    enum GeometryType { GEOMETRY_TYPE_POINT = 0, GEOMETRY_TYPE_LINE, GEOMETRY_TYPE_TEXT, GEOMETRY_TYPE_TRIANGULATION };
     enum KernelType { KERNEL_TYPE_BOX = 0, KERNEL_TYPE_GAUSSIAN };
-    enum AxisMode { AXIS_MODE_MINIMALISTIC = 0, AXIS_MODE_SCIENTIFIC };
+    enum AxisMode { AXIS_MODE_NONE = 0, AXIS_MODE_MINIMALISTIC, AXIS_MODE_SCIENTIFIC };
 
     struct ParamState {
         size_t colorIdx;
@@ -128,7 +128,7 @@ private:
 
     void resetDirty(void);
 
-    bool validateData(void);
+    bool validate(void);
 
     void updateColumns(void);
 
@@ -140,7 +140,13 @@ private:
 
     void drawLines(void);
 
-    void drawText(void);
+    void validateTriangulation();
+
+    void drawTriangulation();
+
+    void validateText();
+
+    void drawText();
 
     int itemAt(const float x, const float y);
 
@@ -161,6 +167,10 @@ private:
     core::param::ParamSlot kernelWidthParam;
 
     core::param::ParamSlot kernelTypeParam;
+
+    core::param::ParamSlot triangulationSelectorParam;
+
+    core::param::ParamSlot triangulationSmoothnessParam;
 
     core::param::ParamSlot axisModeParam;
 
@@ -212,14 +222,21 @@ private:
 
     vislib::graphics::gl::GLSLGeometryShader lineShader;
 
+    vislib::graphics::gl::GLSLShader triangleShader;
+
     core::utility::SSBOStreamer valueSSBO;
 
     core::utility::SSBOStreamer plotSSBO;
     GLsizeiptr plotDstOffset;
     GLsizeiptr plotDstLength;
 
+    GLuint triangleVBO;
+    GLuint triangleIBO;
+    GLsizei triangleVertexCount;
+
     megamol::core::utility::SDFFont labelFont;
-    bool labelsValid;
+    bool trianglesValid;
+    bool textValid;
 };
 
 } // end namespace infovis

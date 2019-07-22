@@ -46,7 +46,7 @@ private:
 
     bool getHashCallback(core::Call& c);
 
-    bool computeTSNE(megamol::stdplugin::datatools::table::TableDataCall* inCall);
+    bool project(megamol::stdplugin::datatools::table::TableDataCall* inCall);
 
     /** Data output slot */
     CalleeSlot dataOutSlot;
