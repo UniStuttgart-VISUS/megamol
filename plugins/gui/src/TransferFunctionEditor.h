@@ -106,6 +106,11 @@ private:
 
     /** Flag indicating if all options should be shown*/
     bool showOptions;
+
+    // FUNCTIONS --------------------------------------------------------------
+
+    /** Returns width of text drawn as item. */
+    float guiTextWidth(std::string text);
 };
 
 } // namespace gui

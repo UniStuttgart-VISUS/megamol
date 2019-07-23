@@ -1318,8 +1318,6 @@ void GUIView::drawMenu(void) {
         ImGui::OpenPopup("Save Project");
     }
     if (ImGui::BeginPopupModal("Save Project", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-
-
         std::string label = "File Name";
         vislib::StringA valueString;
         vislib::UTF8Encoder::Encode(valueString, vislib::StringA(this->projectFilename.c_str()));

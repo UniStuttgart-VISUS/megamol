@@ -114,12 +114,11 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
     std::string val = stream.str();
     ImGui::Text(val.c_str());
 
-    ImGui::SameLine();
-    ImGui::SetCursorPosX(tfw_item_width + style.ItemSpacing.x + style.ItemInnerSpacing.x);
-
     stream.str(std::string());
     stream << std::fixed << this->range[1];
     val = stream.str();
+    ImGui::SameLine();
+    ImGui::SetCursorPosX(tfw_item_width + style.ItemSpacing.x - this->guiTextWidth(val));
     ImGui::Text(val.c_str());
 
 
@@ -490,4 +489,20 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
     }
 
     return ret_val;
+}
+
+
+float TransferFunctionEditor::guiTextWidth(std::string text) {
+    assert(ImGui::GetCurrentContext() != nullptr);
+    ImGuiIO& io = ImGui::GetIO();
+    ImGuiStyle& style = ImGui::GetStyle();
+
+    ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.0f);
+    ImGui::SameLine();
+    float xPos = ImGui::GetCursorPosX();
+    ImGui::Text(text.c_str());
+    ImGui::PopStyleVar();
+    ImGui::SameLine(0.0f, xPos);
+
+    return ImGui::GetItemRectSize().x;
 }
