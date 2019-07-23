@@ -77,7 +77,14 @@ protected:
 
     virtual bool GetExtents(core::view::CallRender2D& call);
 
-    virtual bool MouseEvent(float x, float y, core::view::MouseFlags flags);
+    // virtual bool MouseEvent(float x, float y, core::view::MouseFlags flags);
+
+    bool OnMouseButton(
+        core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) override;
+
+    bool OnMouseMove(double x, double y) override;
+
+    bool OnKey(core::view::Key key, core::view::KeyAction action, core::view::Modifiers mods) override;
 
     bool selectedItemsColorSlotCallback(core::param::ParamSlot& caller);
     bool otherItemsColorSlotCallback(core::param::ParamSlot& caller);
@@ -154,7 +161,6 @@ private:
     float mouseReleasedY;
     float mouseX;
     float mouseY;
-    core::view::MouseFlags mouseFlags;
 
     core::param::ParamSlot drawModeSlot;
 
@@ -246,8 +252,12 @@ private:
     std::vector<std::string> names;
 
     int pickedAxis;
+    bool leftDown = false, leftUp = false, ctrlDown = false, altDown = false, shiftDown = false;
     bool dragging;
+    bool stoppedDragging;
     bool filtering;
+    bool stroking = false;
+    bool stoppedFiltering;
     int pickedIndicatorAxis;
     // int lastPickedIndicatorAxis;
     int pickedIndicatorIndex;
