@@ -747,42 +747,42 @@ namespace megamol
             const Eigen::Vector2d& position, integration_parameter_t& integration) const
         {
             // Cash-Karp parameters
-            constexpr auto b_21 = 0.2;
-            constexpr auto b_31 = 0.075;
-            constexpr auto b_41 = 0.3;
-            constexpr auto b_51 = -11.0 / 54.0;
-            constexpr auto b_61 = 1631.0 / 55296.0;
-            constexpr auto b_32 = 0.225;
-            constexpr auto b_42 = -0.9;
-            constexpr auto b_52 = 2.5;
-            constexpr auto b_62 = 175.0 / 512.0;
-            constexpr auto b_43 = 1.2;
-            constexpr auto b_53 = -70.0 / 27.0;
-            constexpr auto b_63 = 575.0 / 13824.0;
-            constexpr auto b_54 = 35.0 / 27.0;
-            constexpr auto b_64 = 44275.0 / 110592.0;
-            constexpr auto b_65 = 253.0 / 4096.0;
+            const auto b_21 = 0.2;
+            const auto b_31 = 0.075;
+            const auto b_41 = 0.3;
+            const auto b_51 = -11.0 / 54.0;
+            const auto b_61 = 1631.0 / 55296.0;
+            const auto b_32 = 0.225;
+            const auto b_42 = -0.9;
+            const auto b_52 = 2.5;
+            const auto b_62 = 175.0 / 512.0;
+            const auto b_43 = 1.2;
+            const auto b_53 = -70.0 / 27.0;
+            const auto b_63 = 575.0 / 13824.0;
+            const auto b_54 = 35.0 / 27.0;
+            const auto b_64 = 44275.0 / 110592.0;
+            const auto b_65 = 253.0 / 4096.0;
 
-            constexpr auto c_1 = 37.0 / 378.0;
-            constexpr auto c_2 = 0.0;
-            constexpr auto c_3 = 250.0 / 621.0;
-            constexpr auto c_4 = 125.0 / 594.0;
-            constexpr auto c_5 = 0.0;
-            constexpr auto c_6 = 512.0 / 1771.0;
+            const auto c_1 = 37.0 / 378.0;
+            const auto c_2 = 0.0;
+            const auto c_3 = 250.0 / 621.0;
+            const auto c_4 = 125.0 / 594.0;
+            const auto c_5 = 0.0;
+            const auto c_6 = 512.0 / 1771.0;
 
-            constexpr auto c_1s = 2825.0 / 27648.0;
-            constexpr auto c_2s = 0.0;
-            constexpr auto c_3s = 18575.0 / 48384.0;
-            constexpr auto c_4s = 13525.0 / 55296.0;
-            constexpr auto c_5s = 277.0 / 14336.0;
-            constexpr auto c_6s = 0.25;
+            const auto c_1s = 2825.0 / 27648.0;
+            const auto c_2s = 0.0;
+            const auto c_3s = 18575.0 / 48384.0;
+            const auto c_4s = 13525.0 / 55296.0;
+            const auto c_5s = 277.0 / 14336.0;
+            const auto c_6s = 0.25;
 
             // Constants
-            constexpr auto grow_exponent = -0.2;
-            constexpr auto shrink_exponent = -0.25;
-            constexpr auto max_growth = 5.0;
-            constexpr auto max_shrink = 0.1;
-            constexpr auto safety = 0.9;
+            const auto grow_exponent = -0.2;
+            const auto shrink_exponent = -0.25;
+            const auto max_growth = 5.0;
+            const auto max_shrink = 0.1;
+            const auto safety = 0.9;
 
             // Calculate Runge-Kutta coefficients
             Eigen::Vector2d output_position;

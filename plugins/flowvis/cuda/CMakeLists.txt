@@ -4,7 +4,7 @@
 # Alle Rechte vorbehalten. All rights reserved.
 #
 if(BUILD_FLOWVIS_PLUGIN)
-  project(flowvis_cuda CXX CUDA)
+  project(flowvis_cuda)
 
   # Check option dependencies: First list item is always the current build option,
   # afterwards list the dependencies.
@@ -18,8 +18,15 @@ if(BUILD_FLOWVIS_PLUGIN)
     set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcompiler \"-w\"")
   endif()
 
+  # Set fPIC
+  if(NOT WIN32)
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcompiler \"-fPIC\"")
+  endif()
+
   # Create CUDA library
   add_library(flowvis_streamlines_cuda ${source_files} ${header_files})
+
+  set_property(TARGET flowvis_streamlines_cuda PROPERTY CUDA_STANDARD 14)
 
   # Installation rules for generated files
   if(WIN32)
