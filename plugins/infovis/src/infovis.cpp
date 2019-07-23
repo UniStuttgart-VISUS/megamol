@@ -14,8 +14,6 @@
 
 #include "DiagramSeries.h"
 #include "DiagramSeriesCall.h"
-#include "FlagCall.h"
-#include "FlagStorage.h"
 #include "MDSProjection.h"
 #include "PCAProjection.h"
 #include "ParallelCoordinatesRenderer2D.h"
@@ -45,7 +43,6 @@ public:
     /** Registers modules and calls */
     virtual void registerClasses(void) {
         // register modules here:
-        this->module_descriptions.RegisterAutoDescription<megamol::infovis::FlagStorage>();
         this->module_descriptions.RegisterAutoDescription<megamol::infovis::ParallelCoordinatesRenderer2D>();
         this->module_descriptions.RegisterAutoDescription<megamol::infovis::ScatterplotMatrixRenderer2D>();
         this->module_descriptions.RegisterAutoDescription<megamol::infovis::PCAProjection>();
@@ -54,7 +51,6 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::infovis::DiagramSeries>();
 
         // register calls here:
-        this->call_descriptions.RegisterAutoDescription<megamol::infovis::FlagCall>();
         this->call_descriptions.RegisterAutoDescription<megamol::infovis::DiagramSeriesCall>();
     }
     MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics

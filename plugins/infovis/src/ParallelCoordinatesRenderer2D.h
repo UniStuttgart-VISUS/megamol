@@ -3,6 +3,7 @@
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
+#include "mmcore/FlagStorage.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/utility/SDFFont.h"
@@ -142,6 +143,8 @@ private:
     core::CallerSlot getFlagsSlot;
 
     size_t currentHash;
+
+    core::FlagStorage::FlagVersionType currentFlagsVersion;
 
     ::vislib::graphics::gl::FramebufferObject densityFBO;
 

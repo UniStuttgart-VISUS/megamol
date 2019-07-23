@@ -1,8 +1,8 @@
 #include "stdafx.h"
 #include "ParallelCoordinatesRenderer2D.h"
 
-#include "FlagCall.h"
 #include "mmcore/CoreInstance.h"
+#include "mmcore/FlagCall.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -86,6 +86,8 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
     , pickedAxis(-1)
     , pickedIndicatorAxis(-1)
     , pickedIndicatorIndex(-1)
+    , currentHash(0xFFFFFFFF)
+    , currentFlagsVersion(0xFFFFFFFF)
     , font("Evolventa-SansSerif", core::utility::SDFFont::RenderType::RENDERTYPE_FILL) {
 
     this->getDataSlot.SetCompatibleCall<table::TableDataCallDescription>();
@@ -94,7 +96,7 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
     this->getTFSlot.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();
     this->MakeSlotAvailable(&this->getTFSlot);
 
-    this->getFlagsSlot.SetCompatibleCall<FlagCallDescription>();
+    this->getFlagsSlot.SetCompatibleCall<core::FlagCallDescription>();
     this->MakeSlotAvailable(&this->getFlagsSlot);
 
     auto drawModes = new core::param::EnumParam(DRAW_DISCRETE);
@@ -466,7 +468,7 @@ void ParallelCoordinatesRenderer2D::assertData(void) {
             vislib::sys::Log::LEVEL_ERROR, "ParallelCoordinatesRenderer2D requires a transfer function!");
         return;
     }
-    auto flagsc = getFlagsSlot.CallAs<FlagCall>();
+    auto flagsc = getFlagsSlot.CallAs<core::FlagCall>();
     if (flagsc == nullptr) {
         vislib::sys::Log::DefaultLog.WriteMsg(
             vislib::sys::Log::LEVEL_ERROR, "ParallelCoordinatesRenderer2D requires a flag storage!");
@@ -476,62 +478,66 @@ void ParallelCoordinatesRenderer2D::assertData(void) {
     (*floats)(0);
     auto hash = floats->DataHash();
     (*tc)(0);
-    (*flagsc)(0);
+    (*flagsc)(core::FlagCall::CallMapFlags);
+    auto version = flagsc->GetVersion();
 
-    if (hash == this->currentHash) return;
+    if (hash != this->currentHash) {
 
-    this->currentHash = hash;
+        this->computeScaling();
 
-    this->computeScaling();
-
-    this->columnCount = static_cast<GLuint>(floats->GetColumnsCount());
-    this->itemCount = static_cast<GLuint>(floats->GetRowsCount());
-    this->axisIndirection.resize(columnCount);
-    this->filters.resize(columnCount);
-    this->minimums.resize(columnCount);
-    this->maximums.resize(columnCount);
-    this->names.resize(columnCount);
-    for (GLuint x = 0; x < columnCount; x++) {
-        axisIndirection[x] = x;
-        filters[x].dimension = 0;
-        filters[x].flags = 0;
-        minimums[x] = floats->GetColumnsInfos()[x].MinimumValue();
-        maximums[x] = floats->GetColumnsInfos()[x].MaximumValue();
-        names[x] = floats->GetColumnsInfos()[x].Name();
-        // TODO this is shit the user needs his real values DAMMIT!
-        // hopefully fixed through proper axis labels.
-        filters[x].lower = 0.0f; // minimums[x];
-        filters[x].upper = 1.0f; // maximums[x];
+        this->columnCount = static_cast<GLuint>(floats->GetColumnsCount());
+        this->itemCount = static_cast<GLuint>(floats->GetRowsCount());
+        this->axisIndirection.resize(columnCount);
+        this->filters.resize(columnCount);
+        this->minimums.resize(columnCount);
+        this->maximums.resize(columnCount);
+        this->names.resize(columnCount);
+        for (GLuint x = 0; x < columnCount; x++) {
+            axisIndirection[x] = x;
+            filters[x].dimension = 0;
+            filters[x].flags = 0;
+            minimums[x] = floats->GetColumnsInfos()[x].MinimumValue();
+            maximums[x] = floats->GetColumnsInfos()[x].MaximumValue();
+            names[x] = floats->GetColumnsInfos()[x].Name();
+            // TODO this is shit the user needs his real values DAMMIT!
+            // hopefully fixed through proper axis labels.
+            filters[x].lower = 0.0f; // minimums[x];
+            filters[x].upper = 1.0f; // maximums[x];
+        }
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, dataBuffer);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, this->columnCount * this->itemCount * sizeof(float), floats->GetData(),
+            GL_STATIC_DRAW); // TODO: huh.
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, minimumsBuffer);
+        glBufferData(
+            GL_SHADER_STORAGE_BUFFER, this->columnCount * sizeof(GLfloat), this->minimums.data(), GL_STATIC_DRAW);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, maximumsBuffer);
+        glBufferData(
+            GL_SHADER_STORAGE_BUFFER, this->columnCount * sizeof(GLfloat), this->maximums.data(), GL_STATIC_DRAW);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, axisIndirectionBuffer);
+        glBufferData(
+            GL_SHADER_STORAGE_BUFFER, this->columnCount * sizeof(GLuint), axisIndirection.data(), GL_STATIC_DRAW);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, filtersBuffer);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, this->columnCount * sizeof(DimensionFilter), this->filters.data(),
+            GL_STATIC_DRAW);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, minmaxBuffer);
+        glBufferData(
+            GL_SHADER_STORAGE_BUFFER, 2 * sizeof(GLfloat), fragmentMinMax.data(), GL_DYNAMIC_READ); // TODO: huh.
+        this->currentHash = hash;
     }
 
-    if (!flagsc->has_data() || flagsc->GetFlags().size() != itemCount) {
-        std::shared_ptr<FlagStorage::FlagVectorType> v;
-        v = std::make_shared<FlagStorage::FlagVectorType>();
-        v->assign(itemCount, FlagStorage::ENABLED);
-        flagsc->SetFlags(v);
-        (*flagsc)(1); // set flags
+    if (version != this->currentFlagsVersion || version == 0) {
+        flagsc->assertFlagsCount(itemCount);
+        auto flagsvector = flagsc->GetFlags();
+
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, flagsBuffer);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, this->itemCount * sizeof(core::FlagStorage::FlagItemType),
+            flagsvector.get()->data(), GL_STATIC_DRAW);
+
+        // give the data back
+        flagsc->SetFlags(flagsvector);
+        this->currentFlagsVersion = flagsc->GetVersion();
     }
-
-    auto flagvector = flagsc->GetFlags();
-
-    // dataBuffer, flagsBuffer, minimumsBuffer, maximumsBuffer, axisIndirectionBuffer, filtersBuffer, minmaxBuffer;
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, dataBuffer);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, this->columnCount * this->itemCount * sizeof(float), floats->GetData(),
-        GL_STATIC_DRAW); // TODO: huh.
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, flagsBuffer);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, this->itemCount * sizeof(FlagStorage::FlagItemType), flagvector.data(),
-        GL_DYNAMIC_COPY);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, minimumsBuffer);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, this->columnCount * sizeof(GLfloat), this->minimums.data(), GL_STATIC_DRAW);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, maximumsBuffer);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, this->columnCount * sizeof(GLfloat), this->maximums.data(), GL_STATIC_DRAW);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, axisIndirectionBuffer);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, this->columnCount * sizeof(GLuint), axisIndirection.data(), GL_STATIC_DRAW);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, filtersBuffer);
-    glBufferData(
-        GL_SHADER_STORAGE_BUFFER, this->columnCount * sizeof(DimensionFilter), this->filters.data(), GL_STATIC_DRAW);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, minmaxBuffer);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, 2 * sizeof(GLfloat), fragmentMinMax.data(), GL_DYNAMIC_READ); // TODO: huh.
+    (*flagsc)(core::FlagCall::CallUnmapFlags);
 
     makeDebugLabel(GL_BUFFER, DEBUG_NAME(dataBuffer));
     makeDebugLabel(GL_BUFFER, DEBUG_NAME(flagsBuffer));
@@ -666,12 +672,12 @@ void ParallelCoordinatesRenderer2D::drawAxes(void) {
 void ParallelCoordinatesRenderer2D::drawDiscrete(
     const float otherColor[4], const float selectedColor[4], float tfColorFactor) {
     if (this->drawOtherItemsSlot.Param<core::param::BoolParam>()->Value()) {
-        this->drawItemsDiscrete(FlagStorage::ENABLED | FlagStorage::SELECTED | FlagStorage::FILTERED,
-            FlagStorage::ENABLED, otherColor, tfColorFactor);
+        this->drawItemsDiscrete(core::FlagStorage::ENABLED | core::FlagStorage::SELECTED | core::FlagStorage::FILTERED,
+            core::FlagStorage::ENABLED, otherColor, tfColorFactor);
     }
     if (this->drawSelectedItemsSlot.Param<core::param::BoolParam>()->Value()) {
-        this->drawItemsDiscrete(FlagStorage::ENABLED | FlagStorage::SELECTED | FlagStorage::FILTERED,
-            FlagStorage::ENABLED | FlagStorage::SELECTED, selectedColor, tfColorFactor);
+        this->drawItemsDiscrete(core::FlagStorage::ENABLED | core::FlagStorage::SELECTED | core::FlagStorage::FILTERED,
+            core::FlagStorage::ENABLED | core::FlagStorage::SELECTED, selectedColor, tfColorFactor);
     }
 }
 
@@ -971,6 +977,20 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
                     this->selectionIndicatorColor);
             }
             break;
+        }
+        // HAZARD: downloading everything over and over is slowish
+        auto flagsc = getFlagsSlot.CallAs<core::FlagCall>();
+        if (flagsc != nullptr) {
+            (*flagsc)(core::FlagCall::CallMapFlags);
+            auto version = flagsc->GetVersion();
+            auto flags = flagsc->GetFlags();
+            auto f = flags.get();
+            glBindBuffer(GL_SHADER_STORAGE_BUFFER, flagsBuffer);
+            glGetBufferSubData(
+                GL_SHADER_STORAGE_BUFFER, 0, f->size() * sizeof(core::FlagStorage::FlagItemType), f->data());
+            this->currentFlagsVersion = version + 1;
+            flagsc->SetFlags(flags, this->currentFlagsVersion);
+            (*flagsc)(core::FlagCall::CallUnmapFlags);
         }
     }
 
