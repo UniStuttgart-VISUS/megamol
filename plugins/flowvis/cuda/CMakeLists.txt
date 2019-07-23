@@ -4,25 +4,22 @@
 # Alle Rechte vorbehalten. All rights reserved.
 #
 if(BUILD_FLOWVIS_PLUGIN)
-  project(flowvis_cuda)
+  project(flowvis_cuda CXX CUDA)
 
   # Check option dependencies: First list item is always the current build option,
   # afterwards list the dependencies.
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "*.cu")
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "*.cuh")
 
-  # Find CUDA
-  find_package(CUDA REQUIRED)
-  cuda_include_directories("${CUDA_TOOLKIT_ROOT_DIR}/include")
-  link_directories("${CUDA_TOOLKIT_ROOT_DIR}/lib/x64")
+  set_source_files_properties(source_files PROPERTIES LANGUAGE CUDA)
 
   # Suppress warnings
   if(SUPPRESS_CUDA_WARNINGS)
-    list(APPEND CUDA_NVCC_FLAGS "-Xcompiler \"-w\"")
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcompiler \"-w\"")
   endif()
 
   # Create CUDA library
-  cuda_add_library(flowvis_streamlines_cuda ${source_files} ${header_files})
+  add_library(flowvis_streamlines_cuda ${source_files} ${header_files})
 
   # Installation rules for generated files
   if(WIN32)
