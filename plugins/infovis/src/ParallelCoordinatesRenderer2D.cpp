@@ -805,6 +805,7 @@ void ParallelCoordinatesRenderer2D::doPicking(float x, float y, float pickRadius
         static_cast<GLuint>((std::max)(1.0f, std::ceil(static_cast<float>(groups) / maxWorkgroupCount[1]))), 1};
 
     pickProgram.Dispatch(groupCounts[0], groupCounts[1], groupCounts[2]);
+    ::glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
     pickProgram.Disable();
     debugPop();
@@ -910,6 +911,7 @@ void ParallelCoordinatesRenderer2D::drawParcos(void) {
     GLuint groupCounts[3] = {(groups % maxWorkgroupCount[0]) + 1, (groups / maxWorkgroupCount[0]) + 1, 1};
     this->enableProgramAndBind(this->filterProgram);
     filterProgram.Dispatch(groupCounts[0], groupCounts[1], groupCounts[2]);
+    ::glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
     const float red[] = {1.0f, 0.0f, 0.0f, 1.0};
     const float moreRed[] = {10.0f, 0.0f, 0.0f, 1.0};
