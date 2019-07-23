@@ -111,7 +111,8 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     , triangleIBO(0)
     , triangleVertexCount(0)
     , trianglesValid(false)
-    , textValid(false) {
+    , textValid(false)
+    , timestep(0) {
     this->floatTableInSlot.SetCompatibleCall<table::TableDataCallDescription>();
     this->MakeSlotAvailable(&this->floatTableInSlot);
 
@@ -297,7 +298,8 @@ bool ScatterplotMatrixRenderer2D::validateData(core::view::CallRender2D& call) {
     if (this->floatTable == nullptr || !(*this->floatTable)(1)) return false;
 
     call.SetTimeFramesCount(this->floatTable->GetFrameCount());
-    this->floatTable->SetFrameID(static_cast<unsigned int>(call.Time()));
+    auto ts = static_cast<unsigned int>(call.Time());
+    this->floatTable->SetFrameID(ts);
 
     if (this->floatTable == nullptr || !(*(this->floatTable))(0)) return false;
     if (this->floatTable->GetColumnsCount() == 0) return false;
@@ -308,7 +310,7 @@ bool ScatterplotMatrixRenderer2D::validateData(core::view::CallRender2D& call) {
     this->transferFunction = this->transferFunctionInSlot.CallAs<megamol::core::view::CallGetTransferFunction>();
     if (this->transferFunction == nullptr || !(*(this->transferFunction))()) return false;
 
-    if (this->dataHash == this->floatTable->DataHash() && !isDirty()) return true;
+    if (this->dataHash == this->floatTable->DataHash() && !isDirty() && ts == this->timestep) return true;
 
     auto columnInfos = this->floatTable->GetColumnsInfos();
     const size_t colCount = this->floatTable->GetColumnsCount();
@@ -336,6 +338,7 @@ bool ScatterplotMatrixRenderer2D::validateData(core::view::CallRender2D& call) {
     this->updateColumns();
 
     this->dataHash = this->floatTable->DataHash();
+    this->timestep = ts;
     this->resetDirty();
 
     return true;

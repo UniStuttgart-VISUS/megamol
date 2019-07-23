@@ -198,6 +198,8 @@ private:
 
     size_t dataHash;
 
+    unsigned int timestep;
+
     stdplugin::datatools::table::TableDataCall* floatTable;
 
     core::view::CallGetTransferFunction* transferFunction;
