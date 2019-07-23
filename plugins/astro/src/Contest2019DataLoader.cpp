@@ -300,7 +300,7 @@ bool Contest2019DataLoader::filenameChangedCallback(param::ParamSlot& slot) {
         // starting at z=200 going to z=0. For other data set sizes this calculation has to be adapted. (The physicists
         // were too stupid to include this value into the data)
         float scaleFactor = 1.0f / 201.0f + static_cast<float>(curID + 1) * (1.0f - 1.0f / 201.0f) / 625.0f;
-        float redshift = 1.0f / scaleFactor - 1.0f;
+        float redshift = (1.0f / scaleFactor) - 1.0f;
 
         std::ifstream file(curFilename);
         if (file.good()) {
