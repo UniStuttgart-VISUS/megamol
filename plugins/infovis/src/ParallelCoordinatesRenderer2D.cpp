@@ -157,7 +157,7 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
     selectionModeSlot.SetParameter(pickModes);
     this->MakeSlotAvailable(&selectionModeSlot);
 
-    pickRadiusSlot << new core::param::FloatParam(0.1f, 0.01f, 1.0f);
+    pickRadiusSlot << new core::param::FloatParam(0.1f, 0.01f, 10.0f);
     this->MakeSlotAvailable(&pickRadiusSlot);
 
     // scalingFactorSlot << new core::param::Vector2fParam(::vislib::math::Vector< float, 2 >(1.0, 1.0));
@@ -798,11 +798,32 @@ void ParallelCoordinatesRenderer2D::doPicking(float x, float y, float pickRadius
     glUniform2f(pickProgram.ParameterLocation("mouse"), x, y);
     glUniform1f(pickProgram.ParameterLocation("pickRadius"), pickRadius);
 
+    size_t needed_groups =
+        std::ceil(itemCount / static_cast<float>(pickWorkgroupSize[0] * pickWorkgroupSize[1] * pickWorkgroupSize[2]));
 
-    size_t groups = itemCount / (pickWorkgroupSize[0] * pickWorkgroupSize[1] * pickWorkgroupSize[2]);
-    GLuint groupCounts[3] = {
-        static_cast<GLuint>((std::max)(1.0f, std::ceil(static_cast<float>(groups) / maxWorkgroupCount[0]))),
-        static_cast<GLuint>((std::max)(1.0f, std::ceil(static_cast<float>(groups) / maxWorkgroupCount[1]))), 1};
+    GLuint groupCounts[3];
+    if (needed_groups > maxWorkgroupCount[0]) {
+        groupCounts[0] = maxWorkgroupCount[0];
+        needed_groups = (needed_groups + maxWorkgroupCount[0] - 1) / maxWorkgroupCount[0];
+        if (needed_groups > maxWorkgroupCount[1]) {
+            groupCounts[1] = maxWorkgroupCount[1];
+            needed_groups = (needed_groups + maxWorkgroupCount[1] - 1) / maxWorkgroupCount[1];
+            if (needed_groups > maxWorkgroupCount[2]) {
+                vislib::sys::Log::DefaultLog.WriteError(
+                    "ParallelCoordinateRenderer2D: cannot perform picking on that many items!");
+                groupCounts[2] = maxWorkgroupCount[2];
+            } else {
+                groupCounts[2] = needed_groups;
+            }
+        } else {
+            groupCounts[1] = needed_groups;
+            groupCounts[2] = 1;
+        }
+    } else {
+        groupCounts[0] = needed_groups;
+        groupCounts[1] = 1;
+        groupCounts[2] = 1;
+    }
 
     pickProgram.Dispatch(groupCounts[0], groupCounts[1], groupCounts[2]);
     ::glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
