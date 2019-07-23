@@ -321,7 +321,7 @@ int ParallelCoordinatesRenderer2D::mouseXtoAxis(float x) {
     float frac = f - static_cast<long>(f);
     int integral = static_cast<int>(std::round(f));
     if (integral >= static_cast<int>(this->columnCount) || integral < 0) return -1;
-    if (frac > 0.8 || frac < 0.2) {
+    if (frac > 0.7 || frac < 0.3) {
         // vislib::sys::Log::DefaultLog.WriteInfo("picking axis %i at mouse position of axis %i",
         // axisIndirection[integral], integral);
         return axisIndirection[integral];
@@ -581,7 +581,7 @@ bool ParallelCoordinatesRenderer2D::OnMouseMove(double x, double y) {
             int checkAxis, checkIndex;
             pickIndicator(mouseX, mouseY, checkAxis, checkIndex);
             if (pickedIndicatorAxis != -1 && checkAxis == pickedIndicatorAxis && checkIndex == pickedIndicatorIndex) {
-                float val = (mouseReleasedY - this->marginY) / axisHeight;
+                float val = (mouseY - this->marginY) / axisHeight;
                 val = (std::max)(0.0f, val);
                 val = (std::min)(val, 1.0f);
                 // if (val >= 0.0f && val <= 1.0f) {
@@ -998,7 +998,6 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
             break;
         case SELECT_PICK:
             if (stroking) {
-                printf("picking");
                 this->doPicking(
                     mouseX, mouseY, this->pickRadiusSlot.Param<megamol::core::param::FloatParam>()->Value());
             }
@@ -1022,7 +1021,7 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         break;
     }
 
-    if (stoppedDragging || filtering) {
+    if (stoppedDragging || filtering || stroking) {
         // HAZARD: downloading everything over and over is slowish
         auto flagsc = getFlagsSlot.CallAs<core::FlagCall>();
         if (flagsc != nullptr) {
