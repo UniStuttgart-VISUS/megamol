@@ -28,7 +28,7 @@ typedef megamol::core::thecam::rotate_manipulator<cam_type> rotate_type;
 
 namespace megamol {
 namespace core {
-namespace nextgen {
+namespace view {
 /*
  * Wrapper for the template-heavy camera class
  */
@@ -71,7 +71,7 @@ public:
      */
     virtual void CalcClipping(const vislib::math::Cuboid<float>& bbox, float border);
 };
-} // namespace nextgen
+} // namespace view
 } // namespace core
 } // namespace megamol
 

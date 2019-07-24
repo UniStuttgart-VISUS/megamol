@@ -6,22 +6,22 @@
  */
 
 #include "stdafx.h"
-#include "mmcore/nextgen/CallRender3D_2.h"
+#include "mmcore/view/CallRender3D_2.h"
 
 using namespace megamol::core;
 
 /*
- * nextgen::CallRender3D_2::CallRender3D_2
+ * view::CallRender3D_2::CallRender3D_2
  */
-nextgen::CallRender3D_2::CallRender3D_2(void) : nextgen::AbstractCallRender3D_2(), RenderOutputOpenGL() {
+view::CallRender3D_2::CallRender3D_2(void) : view::AbstractCallRender3D_2(), RenderOutputOpenGL() {
     // intentionally empty
 }
 
 
 /*
- * nextgen::CallRender3D_2::~CallRender3D_2
+ * view::CallRender3D_2::~CallRender3D_2
  */
-nextgen::CallRender3D_2::~CallRender3D_2(void) {
+view::CallRender3D_2::~CallRender3D_2(void) {
     // intentionally empty
 }
 
@@ -29,8 +29,8 @@ nextgen::CallRender3D_2::~CallRender3D_2(void) {
 /*
  * view::CallRender3D_2::operator=
  */
-nextgen::CallRender3D_2& nextgen::CallRender3D_2::operator=(const nextgen::CallRender3D_2& rhs) {
-    nextgen::AbstractCallRender3D_2::operator=(rhs);
+view::CallRender3D_2& view::CallRender3D_2::operator=(const view::CallRender3D_2& rhs) {
+    view::AbstractCallRender3D_2::operator=(rhs);
     view::RenderOutputOpenGL::operator=(rhs);
     this->mouseX = rhs.mouseX;
     this->mouseY = rhs.mouseY;

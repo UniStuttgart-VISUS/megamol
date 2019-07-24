@@ -5,10 +5,10 @@
  * Alle Rechte vorbehalten.
  */
 #include "stdafx.h"
-#include "mmcore/nextgen/CameraSerializer.h"
+#include "mmcore/view/CameraSerializer.h"
 
 using namespace megamol::core;
-using namespace megamol::core::nextgen;
+using namespace megamol::core::view;
 
 /*
  * CameraSerializer::CameraSerializer
@@ -76,7 +76,7 @@ bool CameraSerializer::deserialize(
     for (nlohmann::json::iterator it = obj.begin(); it != obj.end(); ++it) {
         size_t index = static_cast<size_t>(it - obj.begin());
         auto cur = *it;
-        megamol::core::nextgen::Camera_2::minimal_state_type cam;
+        megamol::core::view::Camera_2::minimal_state_type cam;
         bool result = this->getCamFromJsonObject(cam, cur);
         if (!result) {
             cam = {}; // empty the cam if it is garbage

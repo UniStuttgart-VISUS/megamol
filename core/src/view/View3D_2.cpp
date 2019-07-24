@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "mmcore/nextgen/View3D_2.h"
+#include "mmcore/view/View3D_2.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #ifdef _WIN32
 #    include <windows.h>
@@ -15,7 +15,7 @@
 #include <fstream>
 #include "mmcore/CoreInstance.h"
 #include "mmcore/misc/PngBitmapCodec.h"
-#include "mmcore/nextgen/CallRender3D_2.h"
+#include "mmcore/view/CallRender3D_2.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -46,7 +46,7 @@
 #include "mmcore/utility/gl/Texture2D.h"
 
 using namespace megamol::core;
-using namespace megamol::core::nextgen;
+using namespace megamol::core::view;
 
 /*
  * View3D_2::View3D_2
@@ -303,7 +303,7 @@ View3D_2::~View3D_2(void) {
 /*
  * View3D_2::GetCameraSyncNumber
  */
-unsigned int nextgen::View3D_2::GetCameraSyncNumber(void) const {
+unsigned int view::View3D_2::GetCameraSyncNumber(void) const {
     // TODO implement
     return 0;
 }
@@ -312,7 +312,7 @@ unsigned int nextgen::View3D_2::GetCameraSyncNumber(void) const {
 /*
  * View3D_2::SerialiseCamera
  */
-void nextgen::View3D_2::SerialiseCamera(vislib::Serialiser& serialiser) const {
+void view::View3D_2::SerialiseCamera(vislib::Serialiser& serialiser) const {
     // TODO currently emtpy because the old serialization sucks
 }
 
@@ -320,7 +320,7 @@ void nextgen::View3D_2::SerialiseCamera(vislib::Serialiser& serialiser) const {
 /*
  * View3D_2::DeserialiseCamera
  */
-void nextgen::View3D_2::DeserialiseCamera(vislib::Serialiser& serialiser) {
+void view::View3D_2::DeserialiseCamera(vislib::Serialiser& serialiser) {
     // TODO currently empty because the old serialization sucks
 }
 
@@ -604,7 +604,7 @@ void View3D_2::UpdateFreeze(bool freeze) {
 /*
  * View3D_2::OnKey
  */
-bool nextgen::View3D_2::OnKey(view::Key key, view::KeyAction action, view::Modifiers mods) {
+bool view::View3D_2::OnKey(view::Key key, view::KeyAction action, view::Modifiers mods) {
     auto* cr = this->rendererSlot.CallAs<CallRender3D_2>();
     if (cr != nullptr) {
         view::InputEvent evt;
@@ -673,15 +673,15 @@ bool nextgen::View3D_2::OnKey(view::Key key, view::KeyAction action, view::Modif
 /*
  * View3D_2::OnChar
  */
-bool nextgen::View3D_2::OnChar(unsigned int codePoint) {
-    auto* cr = this->rendererSlot.CallAs<nextgen::CallRender3D_2>();
+bool view::View3D_2::OnChar(unsigned int codePoint) {
+    auto* cr = this->rendererSlot.CallAs<view::CallRender3D_2>();
     if (cr == NULL) return false;
 
     view::InputEvent evt;
     evt.tag = view::InputEvent::Tag::Char;
     evt.charData.codePoint = codePoint;
     cr->SetInputEvent(evt);
-    if (!(*cr)(nextgen::CallRender3D_2::FnOnChar)) return false;
+    if (!(*cr)(view::CallRender3D_2::FnOnChar)) return false;
 
     return true;
 }
@@ -689,7 +689,7 @@ bool nextgen::View3D_2::OnChar(unsigned int codePoint) {
 /*
  * View3D_2::OnMouseButton
  */
-bool nextgen::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButtonAction action, view::Modifiers mods) {
+bool view::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButtonAction action, view::Modifiers mods) {
     auto* cr = this->rendererSlot.CallAs<CallRender3D_2>();
     if (cr != nullptr) {
         view::InputEvent evt;
@@ -746,7 +746,7 @@ bool nextgen::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButto
 /*
  * View3D_2::OnMouseMove
  */
-bool nextgen::View3D_2::OnMouseMove(double x, double y) {
+bool view::View3D_2::OnMouseMove(double x, double y) {
     this->mouseX = (float)static_cast<int>(x);
     this->mouseY = (float)static_cast<int>(y);
 
@@ -776,8 +776,8 @@ bool nextgen::View3D_2::OnMouseMove(double x, double y) {
 /*
  * View3D_2::OnMouseScroll
  */
-bool nextgen::View3D_2::OnMouseScroll(double dx, double dy) {
-    auto* cr = this->rendererSlot.CallAs<nextgen::CallRender3D_2>();
+bool view::View3D_2::OnMouseScroll(double dx, double dy) {
+    auto* cr = this->rendererSlot.CallAs<view::CallRender3D_2>();
     if (cr == NULL) return false;
 
     view::InputEvent evt;
@@ -785,7 +785,7 @@ bool nextgen::View3D_2::OnMouseScroll(double dx, double dy) {
     evt.mouseScrollData.dx = dx;
     evt.mouseScrollData.dy = dy;
     cr->SetInputEvent(evt);
-    if (!(*cr)(nextgen::CallRender3D_2::FnOnMouseScroll)) return false;
+    if (!(*cr)(view::CallRender3D_2::FnOnMouseScroll)) return false;
 
     return true;
 }
@@ -1055,7 +1055,7 @@ void View3D_2::handleCameraMovement(void) {
 /*
  * View3D_2::setCameraValues
  */
-void View3D_2::setCameraValues(const nextgen::Camera_2& cam) {
+void View3D_2::setCameraValues(const view::Camera_2& cam) {
     glm::vec4 pos = cam.position();
     this->cameraPositionParam.Param<param::Vector3fParam>()->SetValue(
         vislib::math::Vector<float, 3>(pos.x, pos.y, pos.z), false);
@@ -1079,7 +1079,7 @@ void View3D_2::setCameraValues(const nextgen::Camera_2& cam) {
 /*
  * View3D_2::adaptCameraValues
  */
-void View3D_2::adaptCameraValues(nextgen::Camera_2& cam) {
+void View3D_2::adaptCameraValues(view::Camera_2& cam) {
     if (this->cameraPositionParam.IsDirty()) {
         auto val = this->cameraPositionParam.Param<param::Vector3fParam>()->Value();
         this->cam.position(glm::vec4(val.GetX(), val.GetY(), val.GetZ(), 1.0f));

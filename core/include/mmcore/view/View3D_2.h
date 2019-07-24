@@ -18,12 +18,12 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/api/MegaMolCore.std.h"
-#include "mmcore/nextgen/CameraSerializer.h"
-#include "mmcore/nextgen/Camera_2.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/AbstractCallRender.h"
 #include "mmcore/view/AbstractCamParamSync.h"
 #include "mmcore/view/AbstractRenderingView.h"
+#include "mmcore/view/CameraSerializer.h"
+#include "mmcore/view/Camera_2.h"
 #include "mmcore/view/MouseFlags.h"
 #include "mmcore/view/TimeControl.h"
 #include "vislib/graphics/CameraLookAtDist.h"
@@ -44,7 +44,7 @@
 
 namespace megamol {
 namespace core {
-namespace nextgen {
+namespace view {
 
 class MEGAMOLCORE_API View3D_2 : public view::AbstractRenderingView /*, public view::AbstractCamParamSync*/ {
 
@@ -177,14 +177,14 @@ protected:
      *
      * @param cam Camera containing the values that will be set
      */
-    void setCameraValues(const core::nextgen::Camera_2& cam);
+    void setCameraValues(const core::view::Camera_2& cam);
 
     /**
      * Adapts camera values set by the user if necessary
      *
      * @param cam The camera the newly set parameters will be stored in
      */
-    void adaptCameraValues(core::nextgen::Camera_2& cam);
+    void adaptCameraValues(core::view::Camera_2& cam);
 
     /**
      * Implementation of 'Create'.
@@ -399,7 +399,7 @@ protected:
     std::chrono::microseconds lastFrameDuration;
 };
 
-} // namespace nextgen
+} // namespace view
 } /* end namespace core */
 } /* end namespace megamol */
 

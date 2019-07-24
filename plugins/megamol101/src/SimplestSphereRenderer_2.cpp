@@ -9,8 +9,8 @@
 #include "SimplestSphereRenderer_2.h"
 #include "CallSpheres.h"
 #include "mmcore/CoreInstance.h"
-#include "mmcore/nextgen/CallRender3D_2.h"
-#include "mmcore/nextgen/Camera_2.h"
+#include "mmcore/view/CallRender3D_2.h"
+#include "mmcore/view/Camera_2.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
@@ -24,7 +24,7 @@ using namespace megamol::megamol101;
  * SimplestSphereRenderer_2::SimplestSphereRenderer_2
  */
 SimplestSphereRenderer_2::SimplestSphereRenderer_2(void)
-    : core::nextgen::Renderer3DModule_2()
+    : core::view::Renderer3DModule_2()
     , sphereDataSlot("inData", "The input data slot for sphere data.")
     , sphereModeSlot("sphere rendering", "Switch for the pretty sphere rendering mode")
     , sizeScalingSlot("scaling factor", "Scaling factor for the size of the rendered GL_POINTS") {
@@ -126,8 +126,8 @@ bool SimplestSphereRenderer_2::create(void) {
 /*
  * SimplestSphereRenderer_2::GetExtents
  */
-bool SimplestSphereRenderer_2::GetExtents(core::nextgen::CallRender3D_2& call) {
-    core::nextgen::CallRender3D_2* cr3d = dynamic_cast<core::nextgen::CallRender3D_2*>(&call);
+bool SimplestSphereRenderer_2::GetExtents(core::view::CallRender3D_2& call) {
+    core::view::CallRender3D_2* cr3d = dynamic_cast<core::view::CallRender3D_2*>(&call);
     if (cr3d == nullptr) return false;
 
     CallSpheres* cs = this->sphereDataSlot.CallAs<CallSpheres>();
@@ -155,8 +155,8 @@ void SimplestSphereRenderer_2::release(void) {
 /*
  * SimplestSphereRenderer_2::Render
  */
-bool SimplestSphereRenderer_2::Render(core::nextgen::CallRender3D_2& call) {
-    core::nextgen::CallRender3D_2* cr3d = dynamic_cast<core::nextgen::CallRender3D_2*>(&call);
+bool SimplestSphereRenderer_2::Render(core::view::CallRender3D_2& call) {
+    core::view::CallRender3D_2* cr3d = dynamic_cast<core::view::CallRender3D_2*>(&call);
     if (cr3d == nullptr) return false;
 
     // before rendering, call all necessary data
@@ -210,7 +210,7 @@ bool SimplestSphereRenderer_2::Render(core::nextgen::CallRender3D_2& call) {
 
     cr3d->AccessBoundingBoxes() = cs->AccessBoundingBoxes();
 
-    core::nextgen::Camera_2 localCam;
+    core::view::Camera_2 localCam;
     cr3d->GetCamera(localCam);
 
     cam_type::snapshot_type camsnap;

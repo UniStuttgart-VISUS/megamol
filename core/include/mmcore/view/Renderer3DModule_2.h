@@ -14,7 +14,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/api/MegaMolCore.std.h"
-#include "mmcore/nextgen/CallRender3D_2.h"
+#include "mmcore/view/CallRender3D_2.h"
 #include "mmcore/view/MouseFlags.h"
 #include "mmcore/view/RendererModule.h"
 #include "mmcore/view/light/CallLight.h"
@@ -22,7 +22,7 @@
 
 namespace megamol {
 namespace core {
-namespace nextgen {
+namespace view {
 
 /**
  * New and improved base class of rendering graph 3D renderer modules.
@@ -94,7 +94,7 @@ private:
     CallerSlot lightSlot;
 };
 
-} // namespace nextgen
+} // namespace view
 } /* end namespace core */
 } /* end namespace megamol */
 

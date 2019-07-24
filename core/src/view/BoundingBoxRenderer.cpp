@@ -5,7 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 #include "stdafx.h"
-#include "mmcore/nextgen/BoundingBoxRenderer.h"
+#include "mmcore/view/BoundingBoxRenderer.h"
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
@@ -14,7 +14,7 @@
 #include "vislib/sys/Log.h"
 
 using namespace megamol::core;
-using namespace megamol::core::nextgen;
+using namespace megamol::core::view;
 using namespace megamol::core::view;
 
 /*
