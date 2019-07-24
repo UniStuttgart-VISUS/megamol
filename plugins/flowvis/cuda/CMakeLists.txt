@@ -4,7 +4,7 @@
 # Alle Rechte vorbehalten. All rights reserved.
 #
 if(BUILD_FLOWVIS_PLUGIN)
-  project(flowvis_cuda)
+  project(flowvis_cuda LANGUAGES CXX CUDA)
 
   # Check option dependencies: First list item is always the current build option,
   # afterwards list the dependencies.
@@ -26,7 +26,7 @@ if(BUILD_FLOWVIS_PLUGIN)
   # Create CUDA library
   add_library(flowvis_streamlines_cuda ${source_files} ${header_files})
 
-  set_property(TARGET flowvis_streamlines_cuda PROPERTY CUDA_STANDARD 14)
+  set_target_properties(flowvis_streamlines_cuda PROPERTIES CUDA_STANDARD 14)
 
   # Installation rules for generated files
   if(WIN32)
