@@ -924,6 +924,10 @@ void GUIView::drawParametersCallback(
             ImGui::GetStateStorage()->SetInt(headerId, headerState);
             current_mod_open = ImGui::CollapsingHeader(label.c_str(), nullptr);
 
+            // Adding module description as hover tooltip
+            // this->popup.HoverToolTip(std::string(mod.Description().PeekBuffer()));
+            this->popup.HoverToolTip(std::string(mod.FullName().PeekBuffer()));
+
             // Context menu
             if (ImGui::BeginPopupContextItem()) {
                 if (ImGui::MenuItem("Copy to new Window")) {
@@ -1192,12 +1196,14 @@ void GUIView::drawFontWindowCallback(
 
     label = "Font File Name (.ttf)";
     vislib::StringA valueString;
+    // XXX: UTF8 conversion and allocation every frame is horrific inefficient.
     vislib::UTF8Encoder::Encode(valueString, vislib::StringA(window_config.font_new_filename.c_str()));
-    std::string valueUtf8String(valueString.PeekBuffer());
+    static std::string valueUtf8String(valueString.PeekBuffer()); /// ImGui::InputText string varaiable MUST be static!
     ImGuiInputTextFlags textflags = ImGuiInputTextFlags_AutoSelectAll;
-    ImGui::InputText(label.c_str(), &valueUtf8String, textflags);
-    vislib::UTF8Encoder::Decode(valueString, vislib::StringA(valueUtf8String.data()));
-    window_config.font_new_filename = valueString.PeekBuffer();
+    if (ImGui::InputText(label.c_str(), &valueUtf8String, textflags)) {
+        vislib::UTF8Encoder::Decode(valueString, vislib::StringA(valueUtf8String.c_str()));
+        window_config.font_new_filename = valueString.PeekBuffer();
+    }
 
     // Validate font file before offering load button
     if (HasExistingFileExtension(window_config.font_new_filename, std::string(".ttf"))) {
@@ -1320,12 +1326,15 @@ void GUIView::drawMenu(void) {
     if (ImGui::BeginPopupModal("Save Project", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
         std::string label = "File Name";
         vislib::StringA valueString;
+        // XXX: UTF8 conversion and allocation every frame is horrific inefficient.
         vislib::UTF8Encoder::Encode(valueString, vislib::StringA(this->projectFilename.c_str()));
-        std::string valueUtf8String(valueString.PeekBuffer());
+        static std::string valueUtf8String(
+            valueString.PeekBuffer()); /// ImGui::InputText string varaiable MUST be static!
         ImGuiInputTextFlags textflags = ImGuiInputTextFlags_AutoSelectAll;
-        ImGui::InputText(label.c_str(), &valueUtf8String, textflags);
-        vislib::UTF8Encoder::Decode(valueString, vislib::StringA(valueUtf8String.data()));
-        this->projectFilename = valueString.PeekBuffer();
+        if (ImGui::InputText(label.c_str(), &valueUtf8String, textflags)) {
+            vislib::UTF8Encoder::Decode(valueString, vislib::StringA(valueUtf8String.c_str()));
+            this->projectFilename = valueString.PeekBuffer();
+        }
 
         bool valid = false;
         if (!HasFileExtension(this->projectFilename, std::string(".lua"))) {
@@ -1524,42 +1533,41 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
                 p->SetValue(value);
             }
         } else { // if (auto* p = slot.Param<core::param::StringParam>()) {
-                 // XXX: UTF8 conversion and allocation every frame is horrific inefficient.
             vislib::StringA valueString;
+            // XXX: UTF8 conversion and allocation every frame is horrific inefficient.
             vislib::UTF8Encoder::Encode(valueString, param->ValueString());
-            std::string valueUtf8String(valueString.PeekBuffer());
-
-            ImGuiInputTextFlags textflags =
-                ImGuiInputTextFlags_CtrlEnterForNewLine |
-                ImGuiInputTextFlags_AutoSelectAll; // | ImGuiInputTextFlags_EnterReturnsTrue;
+            static std::string valueUtf8String(
+                valueString.PeekBuffer()); /// ImGui::InputText string varaiable MUST be static!
 
             // Determine line count
+            const int minnlcnt = 5;
             int nlcnt = 0;
             for (auto& c : valueUtf8String) {
                 if (c == '\n') {
                     nlcnt++;
                 }
             }
-            nlcnt = std::min(5, nlcnt);
+            nlcnt = std::min(minnlcnt, nlcnt);
 
+            ImGuiInputTextFlags textflags = ImGuiInputTextFlags_CtrlEnterForNewLine |
+                                            ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue;
             if (nlcnt > 0) {
                 ImVec2 ml_dim =
                     ImVec2(ImGui::CalcItemWidth(), ImGui::GetFrameHeight() + (ImGui::GetFontSize() * (float)(nlcnt)));
-
                 if (ImGui::InputTextMultiline(param_label.c_str(), &valueUtf8String, ml_dim, textflags)) {
                     vislib::UTF8Encoder::Decode(valueString, vislib::StringA(valueUtf8String.c_str()));
                     param->ParseValue(valueString);
                 }
             } else {
                 if (ImGui::InputText(param_label.c_str(), &valueUtf8String, textflags)) {
-                    vislib::UTF8Encoder::Decode(valueString, vislib::StringA(valueUtf8String.data()));
+                    vislib::UTF8Encoder::Decode(valueString, vislib::StringA(valueUtf8String.c_str()));
                     param->ParseValue(valueString);
                 }
                 help = "[Ctrl + Enter] for new line.\nPress [Return] to confirm changes.";
             }
         }
 
-        this->popup.HoverToolTip(param_desc, ImGui::GetID(param_label.c_str()), 1.0f);
+        this->popup.HoverToolTip(param_desc, ImGui::GetID(param_label.c_str()), 0.5f);
 
         this->popup.HelpMarkerToolTip(help);
 
