@@ -553,7 +553,7 @@ bool ParallelCoordinatesRenderer2D::OnMouseButton(
     if ((pickedIndicatorAxis != -1) && shiftDown && leftDown && !dragging) {
         this->filtering = true;
     }
-    if (pickedIndicatorAxis == -1) {
+    if (pickedIndicatorAxis == -1 || !shiftDown) {
         this->filtering = false;
     }
     if (!filtering && !dragging && !altDown && !shiftDown) {
