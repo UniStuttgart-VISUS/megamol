@@ -27,7 +27,7 @@ namespace graphics {
      * Cursor2DEvent performing a track (not pan) move of a camera by changing
      * its position and lookat position.
      */
-    class CameraMove2D : public AbstractCursor2DEvent, 
+    class [[deprecated]] CameraMove2D : public AbstractCursor2DEvent, 
         public AbstractCameraController {
     public:
 

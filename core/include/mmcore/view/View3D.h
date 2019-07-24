@@ -45,7 +45,7 @@ namespace view {
     /**
      * Base class of rendering graph calls
      */
-    class MEGAMOLCORE_API View3D : public AbstractRenderingView,
+    class MEGAMOLCORE_API [[deprecated]] View3D : public AbstractRenderingView,
             public AbstractCamParamSync {
 
     public:

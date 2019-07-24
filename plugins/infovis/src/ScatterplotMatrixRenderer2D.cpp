@@ -118,7 +118,7 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     this->transferFunctionInSlot.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();
     this->MakeSlotAvailable(&this->transferFunctionInSlot);
 
-    this->flagStorageInSlot.SetCompatibleCall<FlagCallDescription>();
+    this->flagStorageInSlot.SetCompatibleCall<core::FlagCallDescription>();
     this->MakeSlotAvailable(&this->flagStorageInSlot);
 
     this->colorSelectorParam << new core::param::FlexEnumParam("undef");
@@ -297,7 +297,7 @@ bool ScatterplotMatrixRenderer2D::validate(void) {
     if (this->floatTable == nullptr || !(*(this->floatTable))(0)) return false;
     if (this->floatTable->GetColumnsCount() == 0) return false;
 
-    this->flagStorage = this->flagStorageInSlot.CallAs<FlagCall>();
+    this->flagStorage = this->flagStorageInSlot.CallAs<core::FlagCall>();
     if (this->flagStorage != nullptr && !(*(this->flagStorage))()) return false;
 
     this->transferFunction = this->transferFunctionInSlot.CallAs<megamol::core::view::CallGetTransferFunction>();

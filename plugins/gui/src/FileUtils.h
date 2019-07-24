@@ -85,7 +85,6 @@ inline std::string SearchFileRecursive(std::string file, PathType searchPath) {
     return foundPath;
 }
 
-
 /**
  * Save project to file.
  *

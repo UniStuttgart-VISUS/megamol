@@ -27,7 +27,7 @@ namespace gl {
     /**
      * Class of the openGL implementation of 'Camera'
      */
-    class CameraOpenGL : public Camera {
+    class [[deprecated]] CameraOpenGL : public Camera {
     public:
 
         /** Ctor. */

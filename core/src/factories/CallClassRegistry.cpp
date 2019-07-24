@@ -44,6 +44,7 @@
 #include "mmcore/DirectDataWriterCall.h"
 #include "mmcore/cluster/SyncDataSourcesCall.h"
 #include "mmcore/view/special/CallbackScreenShooter.h"
+#include "mmcore/FlagCall.h"
 
 using namespace megamol::core;
 
@@ -88,4 +89,5 @@ void factories::register_call_classes(factories::CallDescriptionManager& instanc
     instance.RegisterAutoDescription<DirectDataWriterCall>();
     instance.RegisterAutoDescription<cluster::SyncDataSourcesCall>();
     instance.RegisterAutoDescription<view::special::CallbackScreenShooterCall>();
+    instance.RegisterAutoDescription<FlagCall>();
 }
