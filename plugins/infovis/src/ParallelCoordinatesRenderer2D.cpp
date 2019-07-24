@@ -1040,6 +1040,21 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
             glBindBuffer(GL_SHADER_STORAGE_BUFFER, flagsBuffer);
             glGetBufferSubData(
                 GL_SHADER_STORAGE_BUFFER, 0, f->size() * sizeof(core::FlagStorage::FlagItemType), f->data());
+#if 0
+
+            core::FlagStorage::FlagVectorType::size_type numFiltered = 0, numEnabled = 0, numSelected = 0,
+                                                         numSoftSelected = 0;
+            for (unsigned int& i : *f) {
+                if ((i & core::FlagStorage::FILTERED) > 0) numFiltered++;
+                if ((i & core::FlagStorage::ENABLED) > 0) numEnabled++;
+                if ((i & core::FlagStorage::SELECTED) > 0) numSelected++;
+                if ((i & core::FlagStorage::SOFTSELECTED) > 0) numSoftSelected++;
+            }
+            vislib::sys::Log::DefaultLog.WriteInfo(
+                "ParallelCoordinateRenderer2D: %lu items: %lu enabled, %lu filtered, %lu selected, %lu "
+                "soft-selected.",
+                f->size(), numEnabled, numFiltered, numSelected, numSoftSelected);
+#endif
             this->currentFlagsVersion = version + 1;
             flagsc->SetFlags(flags, this->currentFlagsVersion);
             (*flagsc)(core::FlagCall::CallUnmapFlags);

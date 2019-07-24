@@ -34,7 +34,11 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static inline const char* Description(void) { return "Parallel coordinates renderer for generic tables"; }
+    static inline const char* Description(void) {
+        return "Parallel coordinates renderer for generic tables.\n"
+               "Left-Click to pick/stroke\npress [Shift] to filter axis using the two delimiters (hats)\n"
+               "press [Alt] to re-order axes";
+    }
 
     /**
      * Answers whether this module is available on the current system.
