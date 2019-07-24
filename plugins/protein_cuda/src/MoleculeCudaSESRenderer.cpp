@@ -467,7 +467,7 @@ bool MoleculeCudaSESRenderer::initCuda( MolecularDataCall *protein, uint gridDim
 		cudaGLSetGLDevice(gpuGetMaxGflopsDeviceId());
     }
 #else
-    cudaGLSetGLDevice( cutGetMaxGflopsDeviceId());
+    cudaGLSetGLDevice(gpuGetMaxGflopsDeviceId());
 #endif
     printf( "cudaGLSetGLDevice: %s\n", cudaGetErrorString( cudaGetLastError()));
 
