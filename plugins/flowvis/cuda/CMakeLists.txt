@@ -24,7 +24,7 @@ if(BUILD_FLOWVIS_PLUGIN)
   endif()
 
   # Create CUDA library
-  add_library(flowvis_streamlines_cuda ${source_files} ${header_files})
+  add_library(flowvis_streamlines_cuda STATIC ${source_files} ${header_files})
 
   set_target_properties(flowvis_streamlines_cuda PROPERTIES CUDA_STANDARD 14)
 
