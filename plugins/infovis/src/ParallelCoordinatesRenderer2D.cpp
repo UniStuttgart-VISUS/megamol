@@ -32,13 +32,13 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
     , getDataSlot("getdata", "Float table input")
     , getTFSlot("getTF", "connects to the transfer function")
     , getFlagsSlot("getFlags", "connects to the flag storage")
+    , currentHash(0xFFFFFFFF)
+    , currentFlagsVersion(0xFFFFFFFF)
     , densityFBO()
     , mousePressedX()
     , mousePressedY()
     , mouseReleasedX()
     , mouseReleasedY()
-    , stoppedDragging(false)
-    , stoppedFiltering(false)
     , drawModeSlot("drawMode", "Draw mode")
     , drawSelectedItemsSlot("drawSelectedItems", "Draw selected items")
     , selectedItemsColorSlot("selectedItemsColor", "Color for selected items")
@@ -59,38 +59,29 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
     , selectionIndicatorColor()
     , pickRadiusSlot("pickRadius", "Picking radius in object-space")
     , scaleToFitSlot("scaleToFit", "fit the diagram in the viewport")
-    ,
-    // scalingFactorSlot("scalingFactor", "Scaling factor"),
-    // scaleFullscreenSlot("scaleFullscreen", "Scale to fullscreen"),
-    // projectionMatrixSlot("projectionMatrix", "Projection matrix"),
-    // viewMatrixSlot("viewMatrix", "View matrix"),
-    // useCustomMatricesSlot("useCustomMatrices", "Use custom matrices"),
-    // storeCamSlot("storeCam", "Store current matrices"),
-    glDepthTestSlot("glEnableDepthTest", "Toggle GLDEPTHTEST")
+    , glDepthTestSlot("glEnableDepthTest", "Toggle GLDEPTHTEST")
     , glLineSmoothSlot("glEnableLineSmooth", "Toggle GLLINESMOOTH")
     , glLineWidthSlot("glLineWidth", "Value for glLineWidth")
     , sqrtDensitySlot("sqrtDensity", "map root of density to transfer function (instead of linear mapping)")
     , resetFlagsSlot("resetFlags", "Reset item flags to initial state")
     , resetFiltersSlot("resetFilters", "Reset dimension filters to initial state")
-    ,
-    // selectedItemsColor(), otherItemsColor(), axesColor(), selectionIndicatorColor(),
-    dataBuffer(0)
+    , numTicks(5)
+    , columnCount(0)
+    , itemCount(0)
+    , dataBuffer(0)
     , flagsBuffer(0)
     , minimumsBuffer(0)
     , maximumsBuffer(0)
     , axisIndirectionBuffer(0)
     , filtersBuffer(0)
     , minmaxBuffer(0)
-    , itemCount(0)
-    , columnCount(0)
-    , dragging(false)
-    , filtering(false)
-    , numTicks(5)
     , pickedAxis(-1)
+    , dragging(false)
+    , stoppedDragging(false)
+    , filtering(false)
+    , stoppedFiltering(false)
     , pickedIndicatorAxis(-1)
     , pickedIndicatorIndex(-1)
-    , currentHash(0xFFFFFFFF)
-    , currentFlagsVersion(0xFFFFFFFF)
     , font("Evolventa-SansSerif", core::utility::SDFFont::RenderType::RENDERTYPE_FILL) {
 
     this->getDataSlot.SetCompatibleCall<table::TableDataCallDescription>();
@@ -161,28 +152,9 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
     pickRadiusSlot << new core::param::FloatParam(0.1f, 0.01f, 10.0f);
     this->MakeSlotAvailable(&pickRadiusSlot);
 
-    // scalingFactorSlot << new core::param::Vector2fParam(::vislib::math::Vector< float, 2 >(1.0, 1.0));
-    // this->MakeSlotAvailable(&scalingFactorSlot);
-    //
-    // scaleFullscreenSlot_ << new core::param::BoolParam(false);
-    // this->MakeSlotAvailable(&scaleFullscreenSlot_);
-
     scaleToFitSlot << new core::param::BoolParam(false);
     scaleToFitSlot.SetUpdateCallback(this, &ParallelCoordinatesRenderer2D::scalingChangedCallback);
     this->MakeSlotAvailable(&scaleToFitSlot);
-
-    // projectionMatrixSlot_ << new core::param::StringParam("");
-    // this->MakeSlotAvailable(&projectionMatrixSlot_);
-
-    // viewMatrixSlot_ << new core::param::StringParam("");
-    // this->MakeSlotAvailable(&viewMatrixSlot_);
-
-    // useCustomMatricesSlot_ << new core::param::BoolParam(false);
-    // this->MakeSlotAvailable(&useCustomMatricesSlot_);
-
-    // storeCamSlot_ << new core::param::ButtonParam();
-    // storeCamSlot_.SetUpdateCallback(this, &ParallelCoordinatesRenderer2D::storeCamSlotCallback);
-    // this->MakeSlotAvailable(&storeCamSlot_);
 
     glDepthTestSlot << new core::param::BoolParam(false);
     this->MakeSlotAvailable(&glDepthTestSlot);
@@ -234,28 +206,6 @@ bool ParallelCoordinatesRenderer2D::enableProgramAndBind(vislib::graphics::gl::G
 }
 
 bool ParallelCoordinatesRenderer2D::create(void) {
-    // std::array< zen::gl::debug_action, 1 > actions =
-    //{
-    //    //zen::gl::make_debug_action_ostream(std::cerr)
-    //    zen::gl::make_debug_action_Log(vislib::sys::Log::DefaultLog)
-    //    //, zen::gl::debug_action_throw
-    //};
-
-    // zen::gl::enable_debug_callback(nullptr, true, std::begin(actions), std::end(actions));
-    // zen::gl::enable_all_debug_messages();
-
-    // zen::gl::ignore_debug_messages(
-    //{
-    //    //zen::gl::debug_message_spec{ GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_ERROR, 1282 },
-    //    //zen::gl::debug_message_spec{ GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_ERROR, 131204 },
-    //    // Buffer object ... will use VIDEO memory as the source for buffer object operations.
-    //    zen::gl::debug_message_spec{ GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_OTHER, 131185 },
-    //    zen::gl::debug_message_spec{ GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_OTHER, 131188 },
-    //    zen::gl::debug_message_spec{ GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_OTHER, 131184 }
-    //    // Buffer performance warning: Buffer object ... is being copied / moved from VIDEO memory to HOST memory.
-    //    //zen::gl::debug_message_spec{ GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_PERFORMANCE, 131186 },
-    //});
-
     glGenBuffers(1, &dataBuffer);
     glGenBuffers(1, &flagsBuffer);
     glGenBuffers(1, &minimumsBuffer);

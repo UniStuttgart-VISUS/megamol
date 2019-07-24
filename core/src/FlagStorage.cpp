@@ -28,8 +28,6 @@ bool FlagStorage::create(void) { return true; }
 
 void FlagStorage::release(void) {
     // intentionally empty
-    //this->mut.try_lock();
-    //this->mut.unlock();
 }
 
 
