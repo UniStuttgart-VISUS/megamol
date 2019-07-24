@@ -10,10 +10,11 @@
  *
  * - Show/hide Windows: Ctrl + F9-F12
  * - Reset windows:     Shift + (Window show/hide hotkeys)
- * - Quit program:      Esc, Alt + F4
+ * - Quit program:      Alt + F4
  */
 
 #include "stdafx.h"
+#include "GUIView.h"
 #include "GUIView.h"
 
 #include "mmcore/CoreInstance.h"
@@ -396,8 +397,7 @@ bool GUIView::OnKey(core::view::Key key, core::view::KeyAction action, core::vie
     // Hotkeys always trigger just oneevent.
 
     // Exit megamol
-    hotkeyPressed = (ImGui::IsKeyDown(io.KeyMap[ImGuiKey_Escape])) ||                               // Escape
-                    ((io.KeyAlt) && (ImGui::IsKeyDown(static_cast<int>(core::view::Key::KEY_F4)))); // Alt + F4
+    hotkeyPressed = ((io.KeyAlt) && (ImGui::IsKeyDown(static_cast<int>(core::view::Key::KEY_F4)))); // Alt + F4
     if (hotkeyPressed) {
         this->shutdown();
         return true;
