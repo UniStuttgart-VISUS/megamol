@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "ParallelCoordinatesRenderer2D.h"
 
+#include <algorithm>
 #include "mmcore/CoreInstance.h"
 #include "mmcore/FlagCall.h"
 #include "mmcore/param/BoolParam.h"
@@ -788,42 +789,29 @@ void ParallelCoordinatesRenderer2D::drawStrokeIndicator(float x0, float y0, floa
     prog.Disable();
 }
 
+void computeDispatchSizes(
+    uint64_t numItems, GLint const localSizes[3], GLint const maxCounts[3], GLuint dispatchCounts[3]) {
+    const auto localSize = localSizes[0] * localSizes[1] * localSizes[2];
+    const uint64_t needed_groups = (numItems + localSize - 1) / localSize; // round up int div
+    dispatchCounts[0] = std::clamp<GLint>(needed_groups, 1, maxCounts[0]);
+    dispatchCounts[1] = std::clamp<GLint>((needed_groups + dispatchCounts[0] - 1) / dispatchCounts[0], 1, maxCounts[1]);
+    const auto tmp = dispatchCounts[0] * dispatchCounts[1];
+    dispatchCounts[2] = std::clamp<GLint>((needed_groups + tmp - 1) / tmp, 1, maxCounts[2]);
+    const uint64_t totalCounts = dispatchCounts[0] * dispatchCounts[1] * dispatchCounts[2];
+    ASSERT(totalCounts * localSize >= numItems);
+    ASSERT(totalCounts * localSize - numItems < localSize);
+}
 
 void ParallelCoordinatesRenderer2D::doPicking(float x, float y, float pickRadius) {
     debugPush(3, "doPicking");
-    // TODO, plus shader is broken
 
     this->enableProgramAndBind(pickProgram);
 
     glUniform2f(pickProgram.ParameterLocation("mouse"), x, y);
     glUniform1f(pickProgram.ParameterLocation("pickRadius"), pickRadius);
 
-    size_t needed_groups =
-        std::ceil(itemCount / static_cast<float>(pickWorkgroupSize[0] * pickWorkgroupSize[1] * pickWorkgroupSize[2]));
-
     GLuint groupCounts[3];
-    if (needed_groups > maxWorkgroupCount[0]) {
-        groupCounts[0] = maxWorkgroupCount[0];
-        needed_groups = (needed_groups + maxWorkgroupCount[0] - 1) / maxWorkgroupCount[0];
-        if (needed_groups > maxWorkgroupCount[1]) {
-            groupCounts[1] = maxWorkgroupCount[1];
-            needed_groups = (needed_groups + maxWorkgroupCount[1] - 1) / maxWorkgroupCount[1];
-            if (needed_groups > maxWorkgroupCount[2]) {
-                vislib::sys::Log::DefaultLog.WriteError(
-                    "ParallelCoordinateRenderer2D: cannot perform picking on that many items!");
-                groupCounts[2] = maxWorkgroupCount[2];
-            } else {
-                groupCounts[2] = needed_groups;
-            }
-        } else {
-            groupCounts[1] = needed_groups;
-            groupCounts[2] = 1;
-        }
-    } else {
-        groupCounts[0] = needed_groups;
-        groupCounts[1] = 1;
-        groupCounts[2] = 1;
-    }
+    computeDispatchSizes(itemCount, pickWorkgroupSize, maxWorkgroupCount, groupCounts);
 
     pickProgram.Dispatch(groupCounts[0], groupCounts[1], groupCounts[2]);
     ::glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
@@ -834,17 +822,14 @@ void ParallelCoordinatesRenderer2D::doPicking(float x, float y, float pickRadius
 
 void ParallelCoordinatesRenderer2D::doStroking(float x0, float y0, float x1, float y1) {
     debugPush(3, "doStroking");
-    // TODO, plus shader is broken
 
     this->enableProgramAndBind(strokeProgram);
 
     glUniform2f(strokeProgram.ParameterLocation("mousePressed"), x0, y0);
     glUniform2f(strokeProgram.ParameterLocation("mouseReleased"), x1, y1);
 
-    size_t groups = itemCount / (strokeWorkgroupSize[0] * strokeWorkgroupSize[1] * strokeWorkgroupSize[2]);
-    GLuint groupCounts[3] = {
-        static_cast<GLuint>((std::max)(1.0f, std::ceil(static_cast<float>(groups) / maxWorkgroupCount[0]))),
-        static_cast<GLuint>((std::max)(1.0f, std::ceil(static_cast<float>(groups) / maxWorkgroupCount[1]))), 1};
+    GLuint groupCounts[3];
+    computeDispatchSizes(itemCount, strokeWorkgroupSize, maxWorkgroupCount, groupCounts);
 
     strokeProgram.Dispatch(groupCounts[0], groupCounts[1], groupCounts[2]);
 
