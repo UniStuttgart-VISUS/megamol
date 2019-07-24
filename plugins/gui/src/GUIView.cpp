@@ -924,9 +924,9 @@ void GUIView::drawParametersCallback(
             ImGui::GetStateStorage()->SetInt(headerId, headerState);
             current_mod_open = ImGui::CollapsingHeader(label.c_str(), nullptr);
 
-            // Adding module description as hover tooltip
-            // this->popup.HoverToolTip(std::string(mod.Description().PeekBuffer()));
-            this->popup.HoverToolTip(std::string(mod.FullName().PeekBuffer()));
+            // TODO:  Add module description as hover tooltip
+            // this->popup.HoverToolTip(std::string(mod.Description()), ImGui::GetID(label.c_str()), 0.5f);
+            // this->popup.HoverToolTip(std::string(mod.FullName().PeekBuffer()), ImGui::GetID(label.c_str()), 0.5f);
 
             // Context menu
             if (ImGui::BeginPopupContextItem()) {
