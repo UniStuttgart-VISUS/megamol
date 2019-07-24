@@ -113,7 +113,7 @@ public:
      * Makes sure there are enough flags for count items. The storage is initialized
      * with FlagStorage::ENABLED by default.
      */
-    inline void assertFlagsCount(const uint32_t count, FlagStorage::FlagItemType init = FlagStorage::ENABLED) {
+    inline void validateFlagsCount(const uint32_t count, FlagStorage::FlagItemType init = FlagStorage::ENABLED) {
         auto f = this->flags.get();
         if (f && f->size() != count) {
             f->resize(count, init);

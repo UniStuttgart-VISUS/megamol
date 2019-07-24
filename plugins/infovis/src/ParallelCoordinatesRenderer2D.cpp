@@ -460,7 +460,7 @@ void ParallelCoordinatesRenderer2D::assertData(void) {
     }
 
     if (version != this->currentFlagsVersion || version == 0) {
-        flagsc->assertFlagsCount(itemCount);
+        flagsc->validateFlagsCount(itemCount);
         auto flagsvector = flagsc->GetFlags();
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, flagsBuffer);

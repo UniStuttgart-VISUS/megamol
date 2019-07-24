@@ -338,7 +338,7 @@ bool moldyn::ArrowRenderer::Render(Call& call) {
             unsigned int fal = 0;
             if (useFlags) {
                 (*cflags)(core::FlagCall::CallMapFlags);
-                cflags->assertFlagsCount(parts.GetCount());
+                cflags->validateFlagsCount(parts.GetCount());
                 flags = cflags->GetFlags();
                 fal = glGetAttribLocationARB(this->arrowShader, "flags");
                 ::glEnableVertexAttribArrayARB(fal);
