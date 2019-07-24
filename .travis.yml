@@ -33,7 +33,7 @@ before_install:
   - sudo apt-get install -y libcgal-qt5-dev
   - sudo apt-get install -y libcgal-dev
   - mkdir build && cd build
-  - ../bin/cmake .. -DCMAKE_CXX_FLAGS=-Wno-deprecated-declarations -DENABLE_CUDA=ON -DSUPPRESS_CUDA_WARNINGS=TRUE
+  - cmake ../ -DCMAKE_CXX_FLAGS=-Wno-deprecated-declarations -DENABLE_CUDA=ON -DSUPPRESS_CUDA_WARNINGS=TRUE -DBUILD_PROTEIN_CUDA_PLUGIN=ON
 
 install:
   - make install
