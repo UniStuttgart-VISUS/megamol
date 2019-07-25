@@ -11,7 +11,7 @@
 
 #include "ParticlesToMeshConverter.h"
 #include "mmcore/CoreInstance.h"
-#include <gl/GLU.h>
+#include <GL/glu.h>
 #include "geometry_calls/CallTriMeshData.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/FloatParam.h"
@@ -22,6 +22,8 @@
 
 #include <channel_descriptor.h>
 #include <driver_functions.h>
+
+#include <limits>
 
 using namespace megamol;
 using namespace megamol::core;
@@ -251,8 +253,8 @@ void ParticlesToMeshConverter::makeMesh(float * volumeData, cudaExtent volSize, 
 
     data = new float[extents.x * extents.y * extents.z];
 
-    float newMin = FLT_MAX;
-    float newMax = FLT_MIN;
+    float newMin = std::numeric_limits<float>::max();
+    float newMax = std::numeric_limits<float>::min();
 
 	for (int index = 0; index < static_cast<int>(chunkmaxverts / 3); index++) {
         int i = (index % (extents.x * extents.y)) % extents.x;
