@@ -15,7 +15,6 @@
 
 #include "stdafx.h"
 #include "GUIView.h"
-#include "GUIView.h"
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/Module.h"
@@ -1009,7 +1008,7 @@ void GUIView::drawParametersCallback(
         ImGui::Unindent();
     }
     // Drop target
-    ImGui::InvisibleButton("Drop Area", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetFontSize()));
+    ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetFontSize()));
     if (ImGui::BeginDragDropTarget()) {
         if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("DND_COPY_MODULE_PARAMETERS")) {
 
@@ -1564,6 +1563,11 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
                     param->ParseValue(valueString);
                 }
                 help = "[Ctrl + Enter] for new line.\nPress [Return] to confirm changes.";
+            }
+            // Apply changes when focus on InputTExt widget is lost via 'tab' or 'mouse click'
+            if (ImGui::IsItemDeactivatedAfterEdit()) {
+                vislib::UTF8Encoder::Decode(valueString, vislib::StringA(valueUtf8String.c_str()));
+                param->ParseValue(valueString);
             }
         }
 

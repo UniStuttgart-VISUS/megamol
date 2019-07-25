@@ -90,7 +90,7 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
     const float texture_height = 30.0f;
     ImVec2 texture_pos = ImGui::GetCursorScreenPos();
     ImVec2 rect_size = ImVec2(tfw_item_width / (float)this->textureSize, texture_height);
-    ImGui::InvisibleButton("texture", ImVec2(tfw_item_width, rect_size.y));
+    ImGui::Dummy(ImVec2(tfw_item_width, rect_size.y));
     // Draw black background
     draw_list->AddRectFilled(texture_pos, ImVec2(texture_pos.x + tfw_item_width, texture_pos.y + texture_height),
         IM_COL32(0, 0, 0, 255), 0.0f, 10);
@@ -109,14 +109,11 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
 
 
     // Ruler ------------------------------------------------------------------
-    std::stringstream stream;
-    stream << std::fixed << this->range[0];
-    std::string val = stream.str();
-    ImGui::Text(val.c_str());
+    ImGui::Text("%f", this->range[0]);
 
-    stream.str(std::string());
+    std::stringstream stream;
     stream << std::fixed << this->range[1];
-    val = stream.str();
+    std::string val = stream.str();
     ImGui::SameLine();
     ImGui::SetCursorPosX(tfw_item_width + style.ItemSpacing.x - this->guiTextWidth(val));
     ImGui::Text(val.c_str());
@@ -254,7 +251,7 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
         draw_list->PopClipRect();
 
         // Process mouse interaction
-        ImGui::InvisibleButton("plot", canvas_size);
+        ImGui::InvisibleButton("plot", canvas_size); // Needs to catch mouse input
         if (ImGui::IsItemHovered() && (mouse_cur_pos.x > (canvas_pos.x - delta_border.x)) &&
             (mouse_cur_pos.y > (canvas_pos.y - delta_border.y)) &&
             (mouse_cur_pos.x < (canvas_pos.x + canvas_size.x + delta_border.x)) &&
