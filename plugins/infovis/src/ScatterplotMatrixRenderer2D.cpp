@@ -103,14 +103,15 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     , alphaScalingParam("alphaScaling", "Scaling factor for overall alpha")
     , alphaAttenuateSubpixelParam("alphaAttenuateSubpixel", "Attenuate alpha of points that have subpixel size")
     , mouse({0, 0, false, false})
-    , axisFont("Evolventa-SansSerif", core::utility::SDFFont::RenderType::RENDERTYPE_FILL)
-    , labelFont("Evolventa-SansSerif", core::utility::SDFFont::RenderType::RENDERTYPE_FILL)
-    , valueSSBO("Values")
     , plotSSBO("Plots")
+    , valueSSBO("Values")
     , triangleVBO(0)
     , triangleIBO(0)
     , triangleVertexCount(0)
     , trianglesValid(false)
+    , screenFBO(nullptr)
+    , axisFont("Evolventa-SansSerif", core::utility::SDFFont::RenderType::RENDERTYPE_FILL)
+    , textFont("Evolventa-SansSerif", core::utility::SDFFont::RenderType::RENDERTYPE_FILL)
     , textValid(false) {
     this->floatTableInSlot.SetCompatibleCall<table::TableDataCallDescription>();
     this->MakeSlotAvailable(&this->floatTableInSlot);
@@ -198,15 +199,16 @@ ScatterplotMatrixRenderer2D::~ScatterplotMatrixRenderer2D() { this->Release(); }
 
 bool ScatterplotMatrixRenderer2D::create(void) {
     if (!this->axisFont.Initialise(this->GetCoreInstance())) return false;
-    if (!this->labelFont.Initialise(this->GetCoreInstance())) return false;
+    if (!this->textFont.Initialise(this->GetCoreInstance())) return false;
     if (!makeProgram("::splom::minimalisticAxis", this->minimalisticAxisShader)) return false;
     if (!makeProgram("::splom::scientificAxis", this->scientificAxisShader)) return false;
     if (!makeProgram("::splom::point", this->pointShader)) return false;
     if (!makeProgram("::splom::line", this->lineShader)) return false;
     if (!makeProgram("::splom::triangle", this->triangleShader)) return false;
+    if (!makeProgram("::splom::screen", this->screenShader)) return false;
 
     this->axisFont.SetBatchDrawMode(true);
-    this->labelFont.SetBatchDrawMode(true);
+    this->textFont.SetBatchDrawMode(true);
 
     return true;
 }
@@ -794,8 +796,8 @@ void ScatterplotMatrixRenderer2D::validateTriangulation() {
 void ScatterplotMatrixRenderer2D::drawTriangulation() {
     this->validateTriangulation();
 
-    triangleShader.Enable();
-    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    this->triangleShader.Enable();
+    this->bindScreen();
 
     // Bind buffers.
     glBindBuffer(GL_ARRAY_BUFFER, triangleVBO);
@@ -807,17 +809,63 @@ void ScatterplotMatrixRenderer2D::drawTriangulation() {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, triangleIBO);
 
     // Set uniforms.
-    const int contourLevels = 3;                       // 3; // TODO: param!
-    const float contourColor[] = {1.0, 0.0, 0.0, 1.0}; // 3; // TODO: param!
     auto mvpMatrix = getModelViewProjection();
-    glUniform1i(triangleShader.ParameterLocation("contourLevels"), contourLevels);
-    glUniform4fv(triangleShader.ParameterLocation("contourColor"), 1, contourColor);
     glUniformMatrix4fv(
         this->triangleShader.ParameterLocation("modelViewProjection"), 1, GL_FALSE, mvpMatrix.PeekComponents());
 
     // Emit draw call.
     glDrawElements(GL_TRIANGLES, triangleVertexCount, GL_UNSIGNED_INT, 0);
-    triangleShader.Disable();
+    this->unbindScreen();
+    this->triangleShader.Disable();
+
+    // Do the post-processing.
+    this->drawScreen();
+}
+
+void ScatterplotMatrixRenderer2D::bindScreen() {
+    GLfloat viewport[4];
+    glGetFloatv(GL_VIEWPORT, viewport);
+
+    if (!this->screenFBO || this->screenFBO->getHeight() != static_cast<int>(viewport[2]) ||
+        this->screenFBO->getWidth() != static_cast<int>(viewport[3])) {
+        this->screenFBO.reset(new core::utility::gl::FramebufferObject());
+        // this->screenFBO->create(viewport[2] * 2.0f, viewport[3] * 2.0f); // XXXX: el supersampling, hahaha
+        this->screenFBO->create(viewport[2], viewport[3]);
+        this->screenFBO->createColorAttachment(GL_RGBA32F, GL_RGBA, GL_FLOAT);
+    }
+
+    // glViewport(viewport[0], viewport[1], viewport[2] * 2.0, viewport[3] * 2.0);
+    this->screenFBO->bind();
+
+    glClearColor(0.0, 0.0, 0.0, 0.0);
+    glClear(GL_COLOR_BUFFER_BIT);
+}
+
+void ScatterplotMatrixRenderer2D::unbindScreen() {
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    // glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+}
+
+void ScatterplotMatrixRenderer2D::drawScreen() {
+    // Enable shader.
+    this->screenShader.Enable();
+
+    // glEnable(GL_BLEND);
+    // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDisable(GL_DEPTH_TEST);
+
+    glEnable(GL_TEXTURE_2D);
+    glActiveTexture(0);
+    glUniform1i(this->screenShader.ParameterLocation("densityTexture"), 0);
+    this->screenFBO->bindColorbuffer(0);
+
+    // Emit draw call.
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    // glDisable(GL_BLEND);
+    glEnable(GL_DEPTH_TEST);
+
+    this->screenShader.Disable();
 }
 
 void ScatterplotMatrixRenderer2D::validateText() {
@@ -825,7 +873,7 @@ void ScatterplotMatrixRenderer2D::validateText() {
         return;
     }
 
-    this->labelFont.ClearBatchDrawCache();
+    this->textFont.ClearBatchDrawCache();
 
     const auto columnInfos = this->floatTable->GetColumnsInfos();
     const auto rowCount = this->floatTable->GetRowsCount();
@@ -844,7 +892,7 @@ void ScatterplotMatrixRenderer2D::validateText() {
             // XXX: this will be a lot more useful when have support for string-columns!
             std::string label = to_string(this->floatTable->GetData(map.labelIdx, i));
 
-            this->labelFont.DrawString(labelColor, plot.offsetX + xPos * plot.sizeX, plot.offsetY + yPos * plot.sizeY,
+            this->textFont.DrawString(labelColor, plot.offsetX + xPos * plot.sizeX, plot.offsetY + yPos * plot.sizeY,
                 labelSize, false, label.c_str(), core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
         }
     }
@@ -856,7 +904,7 @@ void ScatterplotMatrixRenderer2D::validateText() {
 void ScatterplotMatrixRenderer2D::drawText() {
     validateText();
 
-    this->labelFont.BatchDrawString();
+    this->textFont.BatchDrawString();
 }
 
 int ScatterplotMatrixRenderer2D::itemAt(const float x, const float y) {

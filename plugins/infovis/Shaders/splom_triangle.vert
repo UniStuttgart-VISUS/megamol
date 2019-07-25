@@ -3,9 +3,9 @@ uniform mat4 modelViewProjection;
 in vec2 position;
 in float value;
 
-out vec3 vsPoint;
+out float vsValue;
 
 void main() {
-    vsPoint = vec3(position, value);
+    vsValue = value;
     gl_Position = modelViewProjection * vec4(position, 0.0, 1.0);
 }

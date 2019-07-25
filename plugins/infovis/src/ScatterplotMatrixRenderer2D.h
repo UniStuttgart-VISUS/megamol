@@ -6,12 +6,14 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/utility/SDFFont.h"
 #include "mmcore/utility/SSBOStreamer.h"
+#include "mmcore/utility/gl/FramebufferObject.h"
 #include "mmcore/view/CallGetTransferFunction.h"
 #include "mmcore/view/CallRender2D.h"
 #include "mmcore/view/MouseFlags.h"
 #include "mmcore/view/Renderer2DModule.h"
 #include "mmstd_datatools/table/TableDataCall.h"
 
+#include <memory>
 #include "FlagCall.h"
 #include "Renderer2D.h"
 
@@ -144,6 +146,12 @@ private:
 
     void drawTriangulation();
 
+    void unbindScreen();
+
+    void bindScreen();
+
+    void drawScreen();
+
     void validateText();
 
     void drawText();
@@ -212,8 +220,6 @@ private:
 
     vislib::math::Rectangle<float> bounds;
 
-    megamol::core::utility::SDFFont axisFont;
-
     vislib::graphics::gl::GLSLShader minimalisticAxisShader;
 
     vislib::graphics::gl::GLSLShader scientificAxisShader;
@@ -224,18 +230,23 @@ private:
 
     vislib::graphics::gl::GLSLShader triangleShader;
 
-    core::utility::SSBOStreamer valueSSBO;
+    vislib::graphics::gl::GLSLShader screenShader;
 
     core::utility::SSBOStreamer plotSSBO;
     GLsizeiptr plotDstOffset;
     GLsizeiptr plotDstLength;
 
+    core::utility::SSBOStreamer valueSSBO;
+
     GLuint triangleVBO;
     GLuint triangleIBO;
     GLsizei triangleVertexCount;
-
-    megamol::core::utility::SDFFont labelFont;
     bool trianglesValid;
+
+    std::unique_ptr<core::utility::gl::FramebufferObject> screenFBO;
+
+    megamol::core::utility::SDFFont axisFont;
+    megamol::core::utility::SDFFont textFont;
     bool textValid;
 };
 

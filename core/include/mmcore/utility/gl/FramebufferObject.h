@@ -7,6 +7,9 @@
 #ifndef MEGAMOLCORE_FRAMEBUFFEROBJECT_H_INCLUDED
 #define MEGAMOLCORE_FRAMEBUFFEROBJECT_H_INCLUDED
 
+/* Because MEGAMOLCORE_API */
+#include "mmcore/CoreInstance.h"
+
 /*	Include space-lion files */
 #include "mmcore/utility/gl/Texture2D.h"
 
@@ -30,7 +33,7 @@ namespace gl {
  *
  * @author Michael Becher
  */
-class FramebufferObject {
+class MEGAMOLCORE_API FramebufferObject {
 public:
     /**
      * Constructor for a FramebufferObject
