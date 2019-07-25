@@ -162,6 +162,32 @@ if(BUILD_CORE)
     DEPENDS glm_ext
     INCLUDE_DIR "src/glm_ext/")
 
+  # include glowl
+  if(MSVC)
+    set(GLOWL_DEBUG "lib/glowlstaticd${CMAKE_STATIC_LIBRARY_SUFFIX}")
+    set(GLOWL_RELEASE "lib/glowlstatic${CMAKE_STATIC_LIBRARY_SUFFIX}")
+  else()
+    include(GNUInstallDirs)
+    #set(GLOWL_DEBUG "${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}z${CMAKE_STATIC_LIBRARY_SUFFIX}")
+    #set(GLOWL_RELEASE "${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}z${CMAKE_STATIC_LIBRARY_SUFFIX}")
+    set(GLOWL_DEBUG "lib/${CMAKE_STATIC_LIBRARY_PREFIX}z${CMAKE_STATIC_LIBRARY_SUFFIX}")
+    set(GLOWL_RELEASE "lib/${CMAKE_STATIC_LIBRARY_PREFIX}z${CMAKE_STATIC_LIBRARY_SUFFIX}")
+  endif()
+  add_external_project(glowl_ext
+    GIT_REPOSITORY https://github.com/invor/glowl.git
+    GIT_TAG "v0.1"
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ""
+    INSTALL_COMMAND ""
+    TEST_COMMAND ""
+    CMAKE_ARGS
+  )
+  add_external_library(glowl STATIC
+    DEPENDS glowl_ext
+    INCLUDE_DIR "include"
+    LIBRARY_DEBUG ${GLOWL_DEBUG}
+    LIBRARY_RELEASE ${GLOWL_RELEASE})
+
   #include nlohmann/json
   add_external_project(json_ext
       GIT_REPOSITORY https://github.com/azadkuh/nlohmann_json_release.git
