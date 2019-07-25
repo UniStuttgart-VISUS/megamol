@@ -12,7 +12,8 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 
-#include "mmcore/moldyn/AbstractSphereRenderer.h"
+#include "mmcore/nextgen/Renderer3DModule_2.h"
+#include "mmcore/nextgen/CallRender3D_2.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/utility/MDAOShaderUtilities.h"
 #include "mmcore/utility/MDAOVolumeGenerator.h"
@@ -100,7 +101,7 @@ namespace moldyn {
     /**
      * Renderer for simple sphere glyphs.
      */
-    class SphereRenderer : public AbstractSphereRenderer {
+    class MEGAMOLCORE_API SphereRenderer : public nextgen::Renderer3DModule_2 {
     public:
        
         /**
@@ -213,15 +214,35 @@ namespace moldyn {
         virtual void release(void);
 
         /**
+         * The get extents callback. The module should set the members of
+         * 'call' to tell the caller the extents of its data (bounding boxes
+         * and times).
+         *
+         * @param call The calling call.
+         *
+         * @return The return value of the function.
+         */
+        virtual bool GetExtents(megamol::core::nextgen::CallRender3D_2& call);
+
+        /**
          * The render callback.
          *
          * @param call The calling call.
          *
          * @return The return value of the function.
          */
-        virtual bool Render(megamol::core::view::CallRender3D& call);
+        virtual bool Render(megamol::core::nextgen::CallRender3D_2& call);
 
     private:
+        /*********************************************************************/
+        /* SLOTS                                                         */
+        /*********************************************************************/
+
+        /** The call for data */
+        CallerSlot getDataSlot;
+
+        /** The call for clipping plane */
+        CallerSlot getClipPlaneSlot;
 
         /*********************************************************************/
         /* VARIABLES                                                         */
@@ -250,19 +271,25 @@ namespace moldyn {
 
         // Current Render State -----------------------------------------------
 
-        float curViewAttrib[4];
-        float curClipDat[4];
-        float oldClipDat[4];
-        float curClipCol[4];
-        float curLightPos[4];
-        int   curVpWidth;
-        int   curVpHeight;
-        int   lastVpWidth;
-        int   lastVpHeight;
-        vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> curMVinv;
-        vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> curMVP;
-        vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> curMVPinv;
-        vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> curMVPtransp;
+        int                         curVpWidth;
+        int                         curVpHeight;
+        int                         lastVpWidth;
+        int                         lastVpHeight;
+        glm::vec4                   curViewAttrib;
+        glm::vec4                   curClipDat;
+        glm::vec4                   oldClipDat;
+        glm::vec4                   curClipCol;
+        glm::vec4                   curLightPos;
+        glm::vec4                   curCamUp;
+        float                       curCamNearClip;
+        glm::vec4                   curCamView;
+        glm::vec4                   curCamRight;
+        glm::vec4                   curCamPos;
+        glm::mat4                   curMVinv;
+        glm::mat4                   curMVP;
+        glm::mat4                   curMVPinv;
+        glm::mat4                   curMVPtransp;
+        vislib::math::Cuboid<float> curClipBox;
 
         // --------------------------------------------------------------------
 
@@ -296,7 +323,7 @@ namespace moldyn {
         bool                                     stateInvalid;
         vislib::math::Vector<float, 2>           ambConeConstants;
         GLuint                                   tfFallbackHandle;
-        core::utility::MDAOVolumeGenerator     *volGen;
+        core::utility::MDAOVolumeGenerator      *volGen;
 
 #if defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
         GLuint                                   singleBufferCreationBits;
@@ -377,17 +404,52 @@ namespace moldyn {
         /**
          * Render spheres in different render modes.
          *
-         * @param cr3d       Pointer to the current calling render call.
          * @param mpdc       Pointer to the current multi particle data call.
          *
          * @return           True if success, false otherwise.
          */
-        bool renderSimple(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc);
-        bool renderGeometryShader(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc);
-        bool renderSSBO(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc);
-        bool renderSplat(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc);
-        bool renderBufferArray(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc);
-        bool renderAmbientOcclusion(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc);
+        bool renderSimple(MultiParticleDataCall* mpdc);
+        bool renderGeometryShader(MultiParticleDataCall* mpdc);
+        bool renderSSBO(MultiParticleDataCall* mpdc);
+        bool renderSplat(MultiParticleDataCall* mpdc);
+        bool renderBufferArray(MultiParticleDataCall* mpdc);
+        bool renderAmbientOcclusion(MultiParticleDataCall* mpdc);
+
+        /**
+         * TODO: Document
+         *
+         * @param t           ...
+         *
+         * @return Pointer to MultiParticleDataCall ...
+         */
+        MultiParticleDataCall *getData(unsigned int t);
+
+        /**
+         * TODO: Document
+         *
+         * @param clipDat  Points to four floats ...
+         * @param clipCol  Points to four floats ....
+         */
+        void getClipData(glm::vec4 clipDat, glm::vec4 clipCol);
+
+        /**
+         * Answer the value of the forceTimeSlot parameter
+         *
+         * @return True if the time value requested from the data source should be forced
+         */
+        bool isTimeForced(void) const;
+
+        /** The call for Transfer function */
+        CallerSlot getTFSlot;
+
+        /** A simple black-to-white transfer function texture as fallback */
+        unsigned int greyTF;
+
+        /** Bool parameter slot to force time */
+        param::ParamSlot forceTimeSlot;
+
+        /** Determine whether global or local bbox should be used */
+        param::ParamSlot useLocalBBoxParam;
 
         /**
          * Set pointers to vertex and color buffers and corresponding shader variables.
@@ -492,25 +554,21 @@ namespace moldyn {
         /**
          * Rebuild working data.
          *
-         * @param cr3d  ...
          * @param dataCall    ...
          */
-        void rebuildWorkingData(megamol::core::view::CallRender3D* cr3d, megamol::core::moldyn::MultiParticleDataCall* dataCall);
+        void rebuildWorkingData(megamol::core::moldyn::MultiParticleDataCall* dataCall);
 
         /**
          * Render particles geometry.
          *
-         * @param cr3d  ...
          * @param dataCall    ...
          */
-        void renderParticlesGeometry(megamol::core::view::CallRender3D* cr3d, megamol::core::moldyn::MultiParticleDataCall* dataCall);
+        void renderParticlesGeometry(megamol::core::moldyn::MultiParticleDataCall* dataCall);
 
         /**
          * Render deferred pass.
-         *
-         * @param cr3d  ...
          */
-        void renderDeferredPass(megamol::core::view::CallRender3D* cr3d);
+        void renderDeferredPass(void);
 
         /**
          * Upload data to GPU.
