@@ -143,7 +143,6 @@ public:
 
     /**
      * Resets dirtyness of the interface of the transferfunction module is dirty
-     *
      */
     inline void resetDirty() {
         (*this)(2);
@@ -152,10 +151,8 @@ public:
 
     /**
      * Sets the dirty flag in the call
-     *
      */
     inline void setDirty(bool dty) { this->dirty = dty; }
-
 
     /**
      * Sets the 1D texture information

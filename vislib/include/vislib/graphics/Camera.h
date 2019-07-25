@@ -63,7 +63,7 @@ namespace graphics {
      * derived from AbstractCursorEvent. Read the respective documentation for
      * more information about cursor events.
      */
-    class Camera {
+    class [[deprecated]] Camera {
 
     public:
 

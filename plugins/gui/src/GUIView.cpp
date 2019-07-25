@@ -767,7 +767,7 @@ void GUIView::drawParametersCallback(
     const std::string& window_name, WindowManager::WindowConfiguration& window_config) {
     ImGuiStyle& style = ImGui::GetStyle();
 
-    ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() * 0.5f); // set general proportional item width
+    ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.5f); // set general proportional item width
 
     // Options
     int overrideState = -1; /// invalid
@@ -924,6 +924,10 @@ void GUIView::drawParametersCallback(
             ImGui::GetStateStorage()->SetInt(headerId, headerState);
             current_mod_open = ImGui::CollapsingHeader(label.c_str(), nullptr);
 
+            // TODO:  Add module description as hover tooltip
+            // this->popup.HoverToolTip(std::string(mod.Description()), ImGui::GetID(label.c_str()), 0.5f);
+            // this->popup.HoverToolTip(std::string(mod.FullName().PeekBuffer()), ImGui::GetID(label.c_str()), 0.5f);
+
             // Context menu
             if (ImGui::BeginPopupContextItem()) {
                 if (ImGui::MenuItem("Copy to new Window")) {
@@ -1005,7 +1009,7 @@ void GUIView::drawParametersCallback(
         ImGui::Unindent();
     }
     // Drop target
-    ImGui::InvisibleButton("Drop Area", ImVec2(ImGui::GetContentRegionAvailWidth(), ImGui::GetFontSize()));
+    ImGui::InvisibleButton("Drop Area", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetFontSize()));
     if (ImGui::BeginDragDropTarget()) {
         if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("DND_COPY_MODULE_PARAMETERS")) {
 
@@ -1030,6 +1034,7 @@ void GUIView::drawParametersCallback(
 
 void GUIView::drawFpsWindowCallback(const std::string& window_name, WindowManager::WindowConfiguration& window_config) {
     ImGuiIO& io = ImGui::GetIO();
+    ImGuiStyle& style = ImGui::GetStyle();
 
     window_config.fpsms_current_delay += io.DeltaTime;
     if (window_config.fpsms_max_delay <= 0.0f) {
@@ -1119,6 +1124,7 @@ void GUIView::drawFpsWindowCallback(const std::string& window_name, WindowManage
     }
     ImGui::PlotLines(
         "###fpsmsplot", data, count, 0, val.c_str(), 0.0f, val_scale, ImVec2(0.0f, 50.0f)); /// use hidden label
+    float item_width = ImGui::GetItemRectSize().x;
 
     if (window_config.fpsms_show_options) {
         float rate = window_config.fpsms_max_delay;
@@ -1152,7 +1158,7 @@ void GUIView::drawFpsWindowCallback(const std::string& window_name, WindowManage
             ImGui::SetClipboardText(stream.str().c_str());
         }
         ImGui::SameLine();
-
+        ImGui::SetCursorPosX(item_width + style.ItemSpacing.x + style.ItemInnerSpacing.x);
         ImGui::Text("Copy to Clipborad");
         help = "Values are copied in chronological order (newest first)";
         this->popup.HelpMarkerToolTip(help);
@@ -1181,20 +1187,22 @@ void GUIView::drawFontWindowCallback(
     ImGui::Separator();
     ImGui::Text("Load new Font from File");
 
-    std::string label = "Font Filename (.ttf)";
-    vislib::StringA valueString;
-    vislib::UTF8Encoder::Encode(valueString, vislib::StringA(window_config.font_new_filename.c_str()));
-    std::string valueUtf8String(valueString.PeekBuffer());
-    ImGuiInputTextFlags textflags = ImGuiInputTextFlags_AutoSelectAll;
-    ImGui::InputText(label.c_str(), &valueUtf8String, textflags);
-    vislib::UTF8Encoder::Decode(valueString, vislib::StringA(valueUtf8String.data()));
-    window_config.font_new_filename = valueString.PeekBuffer();
-
-    label = "Font Size";
+    std::string label = "Font Size";
     ImGui::InputFloat(label.c_str(), &window_config.font_new_size, 0.0f, 0.0f, "%.2f", ImGuiInputTextFlags_None);
     // Validate font size
     if (window_config.font_new_size <= 0.0f) {
         window_config.font_new_size = 5.0f; /// min valid font size
+    }
+
+    label = "Font File Name (.ttf)";
+    vislib::StringA valueString;
+    // XXX: UTF8 conversion and allocation every frame is horrific inefficient.
+    vislib::UTF8Encoder::Encode(valueString, vislib::StringA(window_config.font_new_filename.c_str()));
+    static std::string valueUtf8String(valueString.PeekBuffer()); /// ImGui::InputText string varaiable MUST be static!
+    ImGuiInputTextFlags textflags = ImGuiInputTextFlags_AutoSelectAll;
+    if (ImGui::InputText(label.c_str(), &valueUtf8String, textflags)) {
+        vislib::UTF8Encoder::Decode(valueString, vislib::StringA(valueUtf8String.c_str()));
+        window_config.font_new_filename = valueString.PeekBuffer();
     }
 
     // Validate font file before offering load button
@@ -1316,16 +1324,17 @@ void GUIView::drawMenu(void) {
         ImGui::OpenPopup("Save Project");
     }
     if (ImGui::BeginPopupModal("Save Project", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-
-
         std::string label = "File Name";
         vislib::StringA valueString;
+        // XXX: UTF8 conversion and allocation every frame is horrific inefficient.
         vislib::UTF8Encoder::Encode(valueString, vislib::StringA(this->projectFilename.c_str()));
-        std::string valueUtf8String(valueString.PeekBuffer());
+        static std::string valueUtf8String(
+            valueString.PeekBuffer()); /// ImGui::InputText string varaiable MUST be static!
         ImGuiInputTextFlags textflags = ImGuiInputTextFlags_AutoSelectAll;
-        ImGui::InputText(label.c_str(), &valueUtf8String, textflags);
-        vislib::UTF8Encoder::Decode(valueString, vislib::StringA(valueUtf8String.data()));
-        this->projectFilename = valueString.PeekBuffer();
+        if (ImGui::InputText(label.c_str(), &valueUtf8String, textflags)) {
+            vislib::UTF8Encoder::Decode(valueString, vislib::StringA(valueUtf8String.c_str()));
+            this->projectFilename = valueString.PeekBuffer();
+        }
 
         bool valid = false;
         if (!HasFileExtension(this->projectFilename, std::string(".lua"))) {
@@ -1446,7 +1455,7 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
                 ImGui::TextColored(style.Colors[ImGuiCol_ButtonActive], "Currently loaded into Editor");
             }
 
-            ImGui::PushTextWrapPos(ImGui::GetContentRegionAvailWidth());
+            ImGui::PushTextWrapPos(ImGui::GetContentRegionAvail().x);
             ImGui::Text("JSON: ");
             ImGui::SameLine();
             ImGui::TextDisabled(p->Value().c_str());
@@ -1524,41 +1533,41 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
                 p->SetValue(value);
             }
         } else { // if (auto* p = slot.Param<core::param::StringParam>()) {
-            // XXX: UTF8 conversion and allocation every frame is horrific inefficient.
             vislib::StringA valueString;
+            // XXX: UTF8 conversion and allocation every frame is horrific inefficient.
             vislib::UTF8Encoder::Encode(valueString, param->ValueString());
-            std::string valueUtf8String(valueString.PeekBuffer());
-
-            ImGuiInputTextFlags textflags = ImGuiInputTextFlags_CtrlEnterForNewLine |
-                                            ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll;
+            static std::string valueUtf8String(
+                valueString.PeekBuffer()); /// ImGui::InputText string varaiable MUST be static!
 
             // Determine line count
+            const int minnlcnt = 5;
             int nlcnt = 0;
             for (auto& c : valueUtf8String) {
                 if (c == '\n') {
                     nlcnt++;
                 }
             }
-            nlcnt = std::min(5, nlcnt);
-            if (nlcnt > 0) {
+            nlcnt = std::min(minnlcnt, nlcnt);
 
+            ImGuiInputTextFlags textflags = ImGuiInputTextFlags_CtrlEnterForNewLine |
+                                            ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue;
+            if (nlcnt > 0) {
                 ImVec2 ml_dim =
                     ImVec2(ImGui::CalcItemWidth(), ImGui::GetFrameHeight() + (ImGui::GetFontSize() * (float)(nlcnt)));
-
                 if (ImGui::InputTextMultiline(param_label.c_str(), &valueUtf8String, ml_dim, textflags)) {
-                    vislib::UTF8Encoder::Decode(valueString, vislib::StringA(valueUtf8String.data()));
+                    vislib::UTF8Encoder::Decode(valueString, vislib::StringA(valueUtf8String.c_str()));
                     param->ParseValue(valueString);
                 }
             } else {
                 if (ImGui::InputText(param_label.c_str(), &valueUtf8String, textflags)) {
-                    vislib::UTF8Encoder::Decode(valueString, vislib::StringA(valueUtf8String.data()));
+                    vislib::UTF8Encoder::Decode(valueString, vislib::StringA(valueUtf8String.c_str()));
                     param->ParseValue(valueString);
                 }
                 help = "[Ctrl + Enter] for new line.\nPress [Return] to confirm changes.";
             }
         }
 
-        this->popup.HoverToolTip(param_desc, ImGui::GetID(param_label.c_str()), 1.0f);
+        this->popup.HoverToolTip(param_desc, ImGui::GetID(param_label.c_str()), 0.5f);
 
         this->popup.HelpMarkerToolTip(help);
 
@@ -1619,6 +1628,20 @@ void GUIView::checkMultipleHotkeyAssignement(void) {
 
         std::list<core::view::KeyCode> hotkeylist;
         hotkeylist.clear();
+
+        // Fill with camera hotkeys for which no button parameters exist
+        hotkeylist.emplace_back(core::view::KeyCode(core::view::Key::KEY_W));
+        hotkeylist.emplace_back(core::view::KeyCode(core::view::Key::KEY_A));
+        hotkeylist.emplace_back(core::view::KeyCode(core::view::Key::KEY_S));
+        hotkeylist.emplace_back(core::view::KeyCode(core::view::Key::KEY_D));
+        hotkeylist.emplace_back(core::view::KeyCode(core::view::Key::KEY_C));
+        hotkeylist.emplace_back(core::view::KeyCode(core::view::Key::KEY_V));
+        hotkeylist.emplace_back(core::view::KeyCode(core::view::Key::KEY_Q));
+        hotkeylist.emplace_back(core::view::KeyCode(core::view::Key::KEY_E));
+        hotkeylist.emplace_back(core::view::KeyCode(core::view::Key::KEY_UP));
+        hotkeylist.emplace_back(core::view::KeyCode(core::view::Key::KEY_DOWN));
+        hotkeylist.emplace_back(core::view::KeyCode(core::view::Key::KEY_LEFT));
+        hotkeylist.emplace_back(core::view::KeyCode(core::view::Key::KEY_RIGHT));
 
         this->GetCoreInstance()->EnumParameters([&, this](const auto& mod, auto& slot) {
             auto param = slot.Parameter();

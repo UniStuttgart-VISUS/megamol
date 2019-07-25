@@ -25,7 +25,7 @@ namespace graphics {
     /**
      * Abstract base class for camera controller classes
      */
-    class AbstractCameraController {
+    class [[deprecated]] AbstractCameraController {
     public:
 
         /** 

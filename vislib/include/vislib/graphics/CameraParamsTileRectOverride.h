@@ -26,7 +26,7 @@ namespace graphics {
 /**
  * Camera parameter override class overriding the view tile rectangle.
  */
-class CameraParamsTileRectOverride : public CameraParamsOverride {
+class [[deprecated]] CameraParamsTileRectOverride : public CameraParamsOverride {
 
 public:
     /** Ctor. */

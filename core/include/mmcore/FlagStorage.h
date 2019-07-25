@@ -11,17 +11,17 @@
 #    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include <mutex>
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/param/ParamSlot.h"
 #include "vislib/RawStorage.h"
 #include "vislib/math/Cuboid.h"
-#include "vislib/sys/CriticalSection.h"
 
 
 namespace megamol {
-namespace infovis {
+namespace core {
 
 
 /**
@@ -29,11 +29,12 @@ namespace infovis {
  * about a synchronized other piece of data (index equality).
  * Can be used for storing selection etc.
  */
-class FlagStorage : public core::Module {
+class MEGAMOLCORE_API FlagStorage : public core::Module {
 public:
     enum { ENABLED = 1 << 0, FILTERED = 1 << 1, SELECTED = 1 << 2, SOFTSELECTED = 1 << 3 };
 
     typedef uint32_t FlagItemType;
+    typedef uint32_t FlagVersionType;
 
     typedef std::vector<FlagItemType> FlagVectorType;
 
@@ -79,33 +80,38 @@ protected:
 
 private:
     /**
-     * Gets the data from the source.
+     * Gets the data from the source, locking and removing it.
      *
      * @param caller The calling call.
      *
      * @return 'true' on success, 'false' on failure.
      */
-    bool getFlagsCallback(core::Call& caller);
+    bool mapFlagsCallback(core::Call& caller);
 
     /**
-     * Sets the data from the source.
+     * Returns the data to the source, version in the call indicating
+     * whether it has changed. Then the data is unlocked for other
+     * threads to access.
      *
      * @param caller The calling call.
      *
      * @return 'true' on success, 'false' on failure.
      */
-    bool setFlagsCallback(core::Call& caller);
+    bool unmapFlagsCallback(core::Call& caller);
 
     /** The slot for requesting data */
     core::CalleeSlot getFlagsSlot;
 
     /** The data */
-    std::shared_ptr<const FlagVectorType> flags;
+    std::shared_ptr<FlagVectorType> flags;
 
-    vislib::sys::CriticalSection crit;
+    FlagVersionType version;
+
+    // std::recursive_mutex mut;
+    std::mutex mut;
 };
 
-} // namespace infovis
+} // namespace core
 } /* end namespace megamol */
 
 #endif /* MEGAMOL_FLAGSTORAGE_H_INCLUDED */

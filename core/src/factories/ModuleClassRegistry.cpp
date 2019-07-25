@@ -82,6 +82,7 @@
 #include "../job/TickSwitch.h"
 #include "mmcore/FileStreamProvider.h"
 #include "mmcore/view/special/CallbackScreenShooter.h"
+#include "mmcore/FlagStorage.h"
 
 using namespace megamol::core;
 
@@ -168,4 +169,5 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<view::light::PointLight>();
     instance.RegisterAutoDescription<view::light::QuadLight>();
     instance.RegisterAutoDescription<view::light::SpotLight>();
+    instance.RegisterAutoDescription<FlagStorage>();
 }

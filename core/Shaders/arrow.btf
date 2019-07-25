@@ -1,9 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <btf type="MegaMolGLSLShader" version="1.0" namespace="arrow">
   <include file="common"/>
+  <include file="bitflags"/>
 
   <shader name="vertex">
         <snippet type="version">110</snippet>
+        <snippet type="string">
+#extension GL_EXT_gpu_shader4 : enable
+        </snippet>
         <snippet name="common::defines"/>
     <snippet name="attributes" type="string">
       <![CDATA[
@@ -36,10 +40,12 @@ varying vec3 rotMatT1;
 varying vec3 rotMatT2;
 ]]>
         </snippet>
+        <snippet name="::bitflags::main" />
         <snippet type="string">
             <![CDATA[
 attribute float colIdx;
-attribute vec3 dir;            
+attribute vec3 dir;
+attribute uint flags;            
             
 void main(void) {
 ]]>
@@ -225,11 +231,18 @@ void main(void) {
       max(max(p1.x, p2.x), max(p3.x, p4.x)),
       max(max(p1.y, p2.y), max(p3.y, p4.y)));
 
+    if (bitflag_test(flags, FLAG_SELECTED, FLAG_SELECTED)) {
+        gl_FrontColor = vec4(1.0, 0.0, 0.0, 1.0);
+    } else {
+    }
+    if (bitflag_test(flags, FLAG_FILTERED, FLAG_FILTERED)) {
+    } else {
     gl_Position = vec4(
       (minP + maxP) * 0.5,
       0.5, 
       ( CYL_HALF_LEN < lengthFilter * 0.5) ? 0.0 : 1.0
       );
+    }
     maxP = (maxP - minP) * 0.5 * winHalf;
     gl_PointSize = max(maxP.x, maxP.y) + 0.5;
 
