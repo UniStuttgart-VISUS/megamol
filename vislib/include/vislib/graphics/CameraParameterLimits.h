@@ -30,7 +30,7 @@ namespace graphics {
      * Class of limit values to camera parameters used by CameraParameter
      * objects.
      */
-    class CameraParameterLimits : public vislib::Serialisable {
+    class [[deprecated]] CameraParameterLimits : public vislib::Serialisable {
     public:
 
         /** 

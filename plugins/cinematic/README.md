@@ -48,20 +48,20 @@ Therefore only a coloured bounding box of the model is drawn.
 The module `KeyframeKeeper` exposes the following parameters:
 (The values in brackets indicate the default values.)
 
-* `applyKeyframe` (Assigned key: `a`): Apply current settings to selected or new keyframe.
+* `applyKeyframe` (Assigned key: `CTRL+a`): Apply current settings to selected or new keyframe.
 * `undoChanges` (Assigned key: `CTRL+z`): Undo keyframe changes.
 * `redoChanges` (Assigned key: `CTRL+y`): Redo keyframe changes.
-* `deleteKeyframe` (Assigned key: `d`): Deletes the currently selected keyframe.
+* `deleteKeyframe` (Assigned key: `CTRL+d`): Deletes the currently selected keyframe.
 * `maxAnimTime` (`1.0`): The total timespan of the animation.
-* `snapAnimFrames` (Assigned key: `f`): Snap animation time of all keyframes to fixed frames.
-* `snapSimFrames` (Assigned key: `g`): Snap simulation time of all keyframes to integer simulation frames.
-* `linearizeSimTime` (Assigned key: `t`): Linearize simulation time between two keyframes between currently selected keyframe and subsequently selected keyframe.
+* `snapAnimFrames` (Assigned key: `CTRL+f`): Snap animation time of all keyframes to fixed frames.
+* `snapSimFrames` (Assigned key: `CTRL+g`): Snap simulation time of all keyframes to integer simulation frames.
+* `linearizeSimTime` (Assigned key: `CTRL+t`): Linearize simulation time between two keyframes between currently selected keyframe and subsequently selected keyframe.
 * `interpolTangent` (`0.5`): Length of keyframe tangets affecting curvature of interpolation spline.
 * `editSelected - animTime` (`1.0`): Edit animation time of the selected keyframe.
 * `editSelected - simTime` (`1.0`): Edit simulation time of the selected keyframe.
 * `editSelected - positionVector`: Edit the position vector of the selected keyframe.
 * `editSelected - lookatVector`: Edit the look-at vector of the selected keyframe.
-* `editSelected - resetLookat` (Assigned key: `l`): Reset the LookAt vector of the selected keyframe.
+* `editSelected - resetLookat` (Assigned key: `CTRL+l`): Reset the LookAt vector of the selected keyframe.
 * `editSelected - upVector`:  Edit the up vector of the selected keyframe.
 * `editSelected - apertureAngle`: Edit aperture angle of the selected keyframe.
 * `storage - filename`:  The name of the file to load or save keyframes. 
@@ -72,9 +72,9 @@ The module `TrackingShotRenderer` exposes the following parameters:
 (The values in brackets indicate the default values.)
 
 * `splineSubdivision` (`20`): Amount of interpolation steps between keyframes.
-* `toggleManipulators` (Assigned key: `q`): Toggle different manipulators for the selected keyframe.            
-* `helpText` (Assigned key: `h`): Show/hide help text for key assignments.
-* `manipulatorsOutsideBBox` (Assigned key: `w`): Keep manipulators always outside of model bounding box.
+* `toggleManipulators` (Assigned key: `CTRL+q`): Toggle different manipulators for the selected keyframe.            
+* `helpText` (Assigned key: `CTRL+h`): Show/hide help text for key assignments.
+* `manipulatorsOutsideBBox` (Assigned key: `CTRL+w`): Keep manipulators always outside of model bounding box.
 
 The module `CinematicView` exposes the following parameters:
 (The values in brackets indicate the default values.)
@@ -100,7 +100,7 @@ The module `TimeLineRenderer` exposes the following parameters:
 * `fontSize` (`22.0`): The font size.
 * `gotoRightFrame` (Assigned key: `right arrow`): Move to right animation time frame.
 * `gotoLeftFrame` (Assigned key: `left arrow`): Move to left animation time frame.
-* `resetAxes` (Assigned key: `p`): Reset all shifted and scaled time axes.
+* `resetAxes` (Assigned key: `CTRL+p`): Reset all shifted and scaled time axes.
 
 The module `ReplacementRenderer` exposes the following parameters:
 (The values in brackets indicate the default values.)
@@ -117,18 +117,18 @@ The module `ReplacementRenderer` exposes the following parameters:
 The modules should be connected as shown in the module call graph below. 
 The yellow-tagged renderer module and the data source module can be replaced by any other suitable modules. 
 Note: The renderer module has to be connected to the `TrackingShotRenderer` as well as to the `CinematicView`.
-For simplification the preferred way of adding the cinematic graph to a new project is to use the predefined cinematic module call graph via the `../project_files/cinematic_editor.lua` project (see example below).
+For simplification the preferred way of adding the cinematic graph to a new project is to use the predefined cinematic module call graph via the `examples/cinematic/cinematic_editor.lua` project (see example below).
 
 ![megamol example module call graph](graph.png)
 
 ### Example
 
 In order to run the example change to the `bin` folder of the megamol executables in a shell and start the program with the following command:
-*Under Windows:* `.\mmconsole.exe -p ../project_files/cinematic_editor.lua`   
-*Under Linux:* `./megamol.sh -p ../project_files/cinematic_editor.lua`
+*Under Windows:* `.\mmconsole.exe -p ../examples/cinematic/cinematic_editor.lua`   
+*Under Linux:* `./megamol.sh -p ../examples/cinematic/cinematic_editor.lua`
 
 #### How it works
-In the `cinematic_editor.lua` project file the testsphere project `project_files/testsphere.lua` is automatically appended to the cinematic module graph (see yellow modules in graph above). 
-Additionally the corresponding keyframe file for the testsphere project `project_files/cinematic_keyframes.kf` is loaded. 
+In the `cinematic_editor.lua` project file the testsphere project `examples/testsphere.lua` is automatically appended to the cinematic module graph (see yellow modules in graph above). 
+Additionally the corresponding keyframe file for the testsphere project `examples/cinematic/cinematic_keyframes.kf` is loaded. 
 Any other `lua` project file can be included by changing the appropriate line in `cinematic_editor.lua`. 
 The keyframe file can be set to the empty string for the initial loading of a new project and can be set to a newly created keyframe file later.

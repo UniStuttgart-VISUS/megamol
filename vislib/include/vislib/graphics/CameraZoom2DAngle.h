@@ -28,7 +28,7 @@ namespace graphics {
      * Cursor2DEvent manipulating the camera aperture angle by the Y 
      * coordinate of the 2d cursor to zoom in and out.
      */
-    class CameraZoom2DAngle : public AbstractCursor2DEvent, 
+    class [[deprecated]] CameraZoom2DAngle : public AbstractCursor2DEvent, 
         public AbstractCameraController {
     public:
 

@@ -3315,7 +3315,7 @@ bool VolumeMeshRenderer::GetCenterLineDiagramData(core::Call& call) {
             }
             // set marker if the last node was a start node
             if( node2 != nullptr && node2->isStartNode ) {
-                ds->AddMarker(new DiagramCall::DiagramMarker(ms->GetDataCount() - 1, DiagramCall::DIAGRAM_MARKER_EXIT, "Channel exit!"));
+                ds->AddMarker(new DiagramCall::DiagramMarker(ms->GetDataCount() - 1, DiagramCall::DIAGRAM_MARKER_EXIT, const_cast<char*>("Channel exit!")));
             }
         }
         //prevMS = static_cast<MolecularSurfaceFeature*>(ds->GetMappable());

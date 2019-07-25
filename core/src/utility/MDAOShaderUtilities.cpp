@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "mmcore/utility/MDAO2ShaderUtilities.h"
+#include "mmcore/utility/MDAOShaderUtilities.h"
 
 #include <iostream>
 #include <string>

@@ -113,7 +113,7 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
     this->MakeSlotAvailable(&this->cinematicCallSlot);
 
     // init parameters
-    this->applyKeyframeParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_A));
+    this->applyKeyframeParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_A, core::view::Modifier::CTRL));
     this->MakeSlotAvailable(&this->applyKeyframeParam);
 
     this->undoChangesParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_Y, core::view::Modifier::CTRL)); // = z in german keyboard layout
@@ -122,19 +122,19 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
     this->redoChangesParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_Z, core::view::Modifier::CTRL)); // = y in german keyboard layout
     this->MakeSlotAvailable(&this->redoChangesParam);
 
-    this->deleteSelectedKeyframeParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_D));
+    this->deleteSelectedKeyframeParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_D, core::view::Modifier::CTRL));
     this->MakeSlotAvailable(&this->deleteSelectedKeyframeParam);
 
     this->setTotalAnimTimeParam.SetParameter(new param::FloatParam(this->totalAnimTime, 0.000001f));
     this->MakeSlotAvailable(&this->setTotalAnimTimeParam);
 
-    this->snapAnimFramesParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_F));
+    this->snapAnimFramesParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_F, core::view::Modifier::CTRL));
     this->MakeSlotAvailable(&this->snapAnimFramesParam);
 
-    this->snapSimFramesParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_G));
+    this->snapSimFramesParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_G, core::view::Modifier::CTRL));
     this->MakeSlotAvailable(&this->snapSimFramesParam);
 
-    this->simTangentParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_T));
+    this->simTangentParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_T, core::view::Modifier::CTRL));
     this->MakeSlotAvailable(&this->simTangentParam);
 
     this->interpolTangentParam.SetParameter(new param::FloatParam(this->tl)); // , -10.0f, 10.0f));
@@ -155,7 +155,7 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
     this->editCurrentLookAtParam.SetParameter(new param::Vector3fParam(this->selectedKeyframe.GetCamLookAt()));
     this->MakeSlotAvailable(&this->editCurrentLookAtParam);
 
-    this->resetLookAtParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_L));
+    this->resetLookAtParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_U, core::view::Modifier::CTRL));
     this->MakeSlotAvailable(&this->resetLookAtParam);
     
     this->editCurrentUpParam.SetParameter(new param::Vector3fParam(this->selectedKeyframe.GetCamUp()));

@@ -161,8 +161,8 @@ void view::AbstractRenderingView::endFrame(bool abort) {
             //    name = ano->FullName();
             //}
             // okey, does not make any sense when multiple windows are rendering, but better than nothing
-            //printf("%s FPS: %f\n", name.PeekBuffer(), this->fpsCounter.FPS());
-            fflush(stdout); // grr
+            // printf("%s FPS: %f\n", name.PeekBuffer(), this->fpsCounter.FPS()); //Stop spamming the console
+            // fflush(stdout); // grr
         }
     }
 

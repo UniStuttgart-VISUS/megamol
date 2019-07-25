@@ -1,6 +1,6 @@
 /*
  *	SecStructRenderer2D.cpp
- *	
+ *
  *	Copyright (C) 2016 by Universitaet Stuttgart (VISUS).
  *	All Rights reserved.
  */
@@ -18,6 +18,7 @@
 #include "vislib/math/ShallowMatrix.h"
 #include "vislib/graphics/gl/ShaderSource.h"
 #include <map>
+#include <limits>
 
 #include "protein_calls/MolecularDataCall.h"
 #include "PlaneDataCall.h"
@@ -418,7 +419,7 @@ bool SecStructRenderer2D::GetExtents(view::CallRender2D& call) {
 		this->lastDataHash = mdc->DataHash();
 
 		// compute bounding box of the c alphas
-		this->bbRect.Set(FLT_MAX, FLT_MAX, FLT_MIN, FLT_MIN);
+		this->bbRect.Set(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::min(), std::numeric_limits<float>::min());
 		for (unsigned int i = 0; i < this->cAlphas.size(); i++) {
 			if (this->cAlphas[i].pos[0] < this->bbRect.Left()) {
 				this->bbRect.SetLeft(this->cAlphas[i].pos[0]);
