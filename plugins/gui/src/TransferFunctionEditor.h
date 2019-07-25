@@ -13,6 +13,8 @@
 #include "vislib/sys/Log.h"
 
 #include <cmath>
+#include <iomanip>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -101,6 +103,14 @@ private:
 
     /** Flag for applying all changes immediately. */
     bool immediateMode;
+
+    /** Flag indicating if all options should be shown*/
+    bool showOptions;
+
+    // FUNCTIONS --------------------------------------------------------------
+
+    /** Returns width of text drawn as item. */
+    float guiTextWidth(std::string text);
 };
 
 } // namespace gui

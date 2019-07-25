@@ -34,7 +34,7 @@ namespace graphics {
  * 'SetParametersBase' (which may make the object valid) or 'IsValid' to
  * retreive the validity of the object.
  */
-class CameraParamsOverride : public CameraParameters {
+class [[deprecated]] CameraParamsOverride : public CameraParameters {
 public:
     /**
      * Ctor. This object will be invalid until 'SetParametersBase' is called with
