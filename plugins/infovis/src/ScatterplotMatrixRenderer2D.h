@@ -12,8 +12,8 @@
 #include "mmcore/view/Renderer2DModule.h"
 #include "mmstd_datatools/table/TableDataCall.h"
 
-#include "FlagCall.h"
 #include "Renderer2D.h"
+#include "mmcore/FlagCall.h"
 
 namespace megamol {
 namespace infovis {
@@ -204,7 +204,7 @@ private:
 
     core::view::CallGetTransferFunction* transferFunction;
 
-    FlagCall* flagStorage;
+    core::FlagCall* flagStorage;
 
     ParamState map;
 

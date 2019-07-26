@@ -93,13 +93,13 @@ TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule(),
     this->rulerFontParam.SetParameter(new param::FloatParam(this->fontSize, 0.000001f));
     this->MakeSlotAvailable(&this->rulerFontParam);
 
-    this->moveRightFrameParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_RIGHT));
+    this->moveRightFrameParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_RIGHT, core::view::Modifier::CTRL));
     this->MakeSlotAvailable(&this->moveRightFrameParam);
 
-    this->moveLeftFrameParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_LEFT));
+    this->moveLeftFrameParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_LEFT, core::view::Modifier::CTRL));
     this->MakeSlotAvailable(&this->moveLeftFrameParam);
 
-    this->resetPanScaleParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_P));
+    this->resetPanScaleParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_P, core::view::Modifier::CTRL));
     this->MakeSlotAvailable(&this->resetPanScaleParam);
 }
 
