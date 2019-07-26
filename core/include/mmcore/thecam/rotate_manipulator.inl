@@ -13,8 +13,7 @@ template <class T> megamol::core::thecam::rotate_manipulator<T>::~rotate_manipul
 /*
  * megamol::core::thecam::rotate_manipulator<T>::pitch
  */
-template<class T>
-void megamol::core::thecam::rotate_manipulator<T>::pitch(const world_type angle) {
+template <class T> void megamol::core::thecam::rotate_manipulator<T>::pitch(const world_type angle) {
     if (this->enabled()) {
         auto cam = this->camera();
         quaternion_type rotquat;
@@ -27,8 +26,7 @@ void megamol::core::thecam::rotate_manipulator<T>::pitch(const world_type angle)
 /*
  * megamol::core::thecam::rotate_manipulator<T>::yaw
  */
-template<class T>
-void megamol::core::thecam::rotate_manipulator<T>::yaw(const world_type angle) {
+template <class T> void megamol::core::thecam::rotate_manipulator<T>::yaw(const world_type angle) {
     if (this->enabled()) {
         auto cam = this->camera();
         quaternion_type rotquat;
@@ -41,8 +39,7 @@ void megamol::core::thecam::rotate_manipulator<T>::yaw(const world_type angle) {
 /*
  * megamol::core::thecam::rotate_manipulator<T>::roll
  */
-template<class T>
-void megamol::core::thecam::rotate_manipulator<T>::roll(const world_type angle) {
+template <class T> void megamol::core::thecam::rotate_manipulator<T>::roll(const world_type angle) {
     if (this->enabled()) {
         auto cam = this->camera();
         quaternion_type rotquat;

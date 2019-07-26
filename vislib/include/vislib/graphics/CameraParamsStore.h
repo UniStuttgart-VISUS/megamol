@@ -26,7 +26,7 @@ namespace graphics {
     /**
      * Implementation of 'CameraParameters' storing all values.
      */
-    class CameraParamsStore : public CameraParameters {
+    class [[deprecated]] CameraParamsStore : public CameraParameters {
     public:
 
         /** Ctor. */

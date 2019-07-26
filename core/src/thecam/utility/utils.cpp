@@ -39,17 +39,18 @@
 /*
  * megamol::core::thecam::utility::uint_rle_encode
  */
-bool megamol::core::thecam::utility::uint_rle_encode(unsigned char *dst, unsigned int &len, uint64_t src) {
+bool megamol::core::thecam::utility::uint_rle_encode(unsigned char* dst, unsigned int& len, uint64_t src) {
     unsigned int pos = 0;
     if (src == 0) {
         if (len == 0) return false; // dst insufficient
         dst[0] = 0;
         pos = 1;
-    } else while (src > 0) {
-        if (pos == len) return false; // dst insufficient
-        dst[pos++] = (src & 0x7F) + ((src > 128) ? 128 : 0);
-        src >>= 7;
-    }
+    } else
+        while (src > 0) {
+            if (pos == len) return false; // dst insufficient
+            dst[pos++] = (src & 0x7F) + ((src > 128) ? 128 : 0);
+            src >>= 7;
+        }
     len = pos;
     return true;
 }
@@ -58,13 +59,14 @@ bool megamol::core::thecam::utility::uint_rle_encode(unsigned char *dst, unsigne
 /*
  * megamol::core::thecam::utility::uint_rle_decode
  */
-bool megamol::core::thecam::utility::uint_rle_decode(uint64_t &dst, unsigned char *src, unsigned int &len) {
+bool megamol::core::thecam::utility::uint_rle_decode(uint64_t& dst, unsigned char* src, unsigned int& len) {
     unsigned int pos = 0;
     uint64_t mult = 0;
     dst = 0;
     do {
         if ((pos == 10) // would be reading the 11th byte
-            || (pos == len)) return false; // insufficient data
+            || (pos == len))
+            return false; // insufficient data
         dst += (static_cast<uint64_t>(src[pos++] & 0x7F) << mult);
         mult += 7;
     } while (src[pos - 1] >= 128);

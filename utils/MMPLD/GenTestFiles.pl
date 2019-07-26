@@ -344,19 +344,19 @@ foreach my $r (@renderers) {
             print $fh qq{mmCreateCall("CallOSPRayMaterial", "::rnd::getMaterialSlot", "::mat::deployMaterialSlot")\n};
             print $fh qq{mmSetParamValue("::osp::useDBcomponent", "false")\n};
         } else {
-            print $fh qq{mmCreateModule("SimpleSphereRenderer", "::rnd")\n};
+            print $fh qq{mmCreateModule("SphereRenderer", "::rnd")\n};
             print $fh qq{mmCreateCall("CallRender3D", "::v::rendering", "::rnd::rendering")\n};
             if ($r =~ /^SimpleSphereRenderer/) {
                 print $fh qq{mmSetParamValue("::rnd::renderMode", "Simple")\n};
             }
             elsif ($r =~ /^SimpleGeoSphereRenderer/) {
-                print $fh qq{mmSetParamValue("::rnd::renderMode", "Simple_Geometry_Shader")\n};
+                print $fh qq{mmSetParamValue("::rnd::renderMode", "Geometry_Shader")\n};
             }
             elsif ($r =~ /^NGSphereRenderer/) {
-                print $fh qq{mmSetParamValue("::rnd::renderMode", "NG")\n};
+                print $fh qq{mmSetParamValue("::rnd::renderMode", "SSBO_Stream")\n};
             }
             elsif ($r =~ /^NGSphereBufferArray/) {
-                print $fh qq{mmSetParamValue("::rnd::renderMode", "NG_Buffer_Array")\n};
+                print $fh qq{mmSetParamValue("::rnd::renderMode", "Buffer_Array")\n};
             }
         }
         print $fh qq{mmCreateCall("MultiParticleDataCall", "::rnd::getdata", "::dat::getData")\n};

@@ -46,10 +46,6 @@
 #    include <glm/gtc/quaternion.hpp>
 #endif /* WITH_THE_GLM */
 
-#ifdef WITH_THE_XMATH
-#    include <DirectXMath.h>
-#endif /* WITH_THE_XMATH */
-
 #include "mmcore/thecam/utility/assert.h"
 #include "mmcore/thecam/utility/equatable.h"
 #include "mmcore/thecam/utility/force_inline.h"
@@ -665,38 +661,6 @@ private:
     native_type data;
 };
 
-
-#ifdef WITH_THE_XMATH
-/**
- * Load the given quaternion into a SSE2 register.
- *
- * @param quat The quaternion to be loaded.
- *
- * @return A DirectX::XMVECTOR with the content of 'quat'.
- */
-THE_TRY_FORCE_INLINE DirectX::XMVECTOR load_xmvector(const quaternion<DirectX::XMFLOAT4>& quat) {
-    typedef std::decay<decltype(quat)>::type::native_type native_type;
-    return DirectX::XMLoadFloat4(&static_cast<const native_type&>(quat));
-}
-
-
-/**
- * Store the contents of an SSE2 register in a quaternion.
- *
- * @param quat The quaternion to be store the data to.
- * @param data The data to be stored.
- *
- * @return 'quat'.
- */
-THE_TRY_FORCE_INLINE quaternion<DirectX::XMFLOAT4>& store_xmvector(
-    quaternion<DirectX::XMFLOAT4>& quat, const DirectX::XMVECTOR& data) {
-    typedef std::decay<decltype(quat)>::type::native_type native_type;
-    DirectX::XMStoreFloat4(&static_cast<native_type&>(quat), data);
-    return quat;
-}
-#endif /* WITH_THE_XMATH */
-
-
 /**
  * Conjugate a quaternion.
  *
@@ -728,23 +692,6 @@ THE_TRY_FORCE_INLINE quaternion<glm::quat> conjugate(const quaternion<glm::quat>
 #endif /* WITH_THE_GLM */
 
 
-#ifdef WITH_THE_XMATH
-/**
- * Conjugate a quaternion.
- *
- * @param quat The quaternion to be conjugated.
- *
- * @return The conjugated quaternion.
- */
-THE_TRY_FORCE_INLINE quaternion<DirectX::XMFLOAT4> conjugate(const quaternion<DirectX::XMFLOAT4>& quat) {
-    std::decay<decltype(quat)>::type retval(megamol::core::thecam::do_not_initialise);
-    auto q = load_xmvector(quat);
-    auto r = DirectX::XMQuaternionConjugate(q);
-    return store_xmvector(retval, r);
-}
-#endif /* WITH_THE_XMATH */
-
-
 /**
  * Invert a quaternion.
  *
@@ -772,23 +719,6 @@ THE_TRY_FORCE_INLINE quaternion<glm::quat> invert(const quaternion<glm::quat>& q
 #endif /* WITH_THE_GLM */
 
 
-#ifdef WITH_THE_XMATH
-/**
- * Invert a quaternion.
- *
- * @param quat The quaternion to be inverted.
- *
- * @return The inverse quaternion.
- */
-THE_TRY_FORCE_INLINE quaternion<DirectX::XMFLOAT4> invert(const quaternion<DirectX::XMFLOAT4>& quat) {
-    std::decay<decltype(quat)>::type retval(megamol::core::thecam::do_not_initialise);
-    auto q = load_xmvector(quat);
-    auto r = DirectX::XMQuaternionInverse(q);
-    return store_xmvector(retval, r);
-}
-#endif /* WITH_THE_XMATH */
-
-
 /**
  * Compute the norm of a quaternion.
  *
@@ -813,21 +743,6 @@ template <class V, class T> inline typename T::value_type norm(const quaternion<
  */
 THE_TRY_FORCE_INLINE float norm(const quaternion<glm::quat>& quat) { return glm::length(static_cast<glm::quat>(quat)); }
 #endif /* WITH_THE_GLM */
-
-
-#ifdef WITH_THE_XMATH
-/**
- * Compute the norm of a quaternion.
- *
- * @param quat The quaternion to compute the norm for.
- *
- * @return The norm of the quaternion.
- */
-THE_TRY_FORCE_INLINE float norm(const quaternion<DirectX::XMFLOAT4>& quat) {
-    auto q = load_xmvector(quat);
-    return DirectX::XMVectorGetX(DirectX::XMQuaternionLength(q));
-}
-#endif /* WITH_THE_XMATH */
 
 
 /**
@@ -857,23 +772,6 @@ THE_TRY_FORCE_INLINE quaternion<glm::quat> normalise(const quaternion<glm::quat>
 #endif /* WITH_THE_GLM */
 
 
-#ifdef WITH_THE_XMATH
-/**
- * Compute a normalised version of a quaternion.
- *
- * @param quat The quaternion to be normalised.
- *
- * @return The normalised quaternion.
- */
-THE_TRY_FORCE_INLINE quaternion<DirectX::XMFLOAT4> normalise(const quaternion<DirectX::XMFLOAT4>& quat) {
-    std::decay<decltype(quat)>::type retval(megamol::core::thecam::do_not_initialise);
-    auto q = load_xmvector(quat);
-    auto r = DirectX::XMQuaternionNormalize(q);
-    return store_xmvector(retval, r);
-}
-#endif /* WITH_THE_XMATH */
-
-
 /**
  * Rotate the vector 'vec' with the given quaternion 'quat'.
  *
@@ -889,25 +787,6 @@ THE_TRY_FORCE_INLINE quaternion<DirectX::XMFLOAT4> normalise(const quaternion<Di
 template <class V, class TQ, class TV>
 inline vector<V, 3, TV> rotate(const vector<V, 3, TV>& vec, const quaternion<V, TQ>& quat);
 
-
-#ifdef WITH_THE_XMATH
-/**
- * Rotate the vector 'vec' with the given quaternion 'quat'.
- *
- * @param vec  The vector to be rotated.
- * @param quat The quaternion describing the rotation.
- *
- * @return The rotated vector, having a 0 z-component.
- */
-inline vector<DirectX::XMFLOAT3> rotate(
-    const vector<DirectX::XMFLOAT3>& vec, const quaternion<DirectX::XMFLOAT4>& quat) {
-    std::decay<decltype(vec)>::type retval(megamol::core::thecam::do_not_initialise);
-    auto v = DirectX::XMLoadFloat3(&static_cast<const DirectX::XMFLOAT3&>(vec));
-    auto q = load_xmvector(quat);
-    auto r = DirectX::XMVector3Rotate(v, q);
-    return store_xmvector(retval, r);
-}
-#endif /* WITH_THE_XMATH */
 
 #ifdef WITH_THE_GLM
 /**
@@ -927,25 +806,6 @@ inline vector<glm::vec3> rotate(const vector<glm::vec3>& vec, const quaternion<g
 }
 #endif /* WITH_THE_GLM */
 
-
-#ifdef WITH_THE_XMATH
-/**
- * Rotate the vector 'vec' with the given quaternion 'quat'.
- *
- * @param vec  The vector to be rotated.
- * @param quat The quaternion describing the rotation.
- *
- * @return The rotated vector, having a 0 z-component.
- */
-inline vector<DirectX::XMFLOAT4> rotate(
-    const vector<DirectX::XMFLOAT4>& vec, const quaternion<DirectX::XMFLOAT4>& quat) {
-    std::decay<decltype(vec)>::type retval(megamol::core::thecam::do_not_initialise);
-    auto v = load_xmvector(vec);
-    auto q = load_xmvector(quat);
-    auto r = DirectX::XMVector3Rotate(v, q);
-    return store_xmvector(retval, r);
-}
-#endif /* WITH_THE_XMATH */
 
 #ifdef WITH_THE_GLM
 /**
@@ -1040,34 +900,6 @@ inline quaternion<glm::quat>& set_from_angle_axis(
 }
 #endif
 
-#ifdef WITH_THE_XMATH
-/**
- * Update 'quat' such that it represents a rotation by 'angle' radians
- * around 'axis'.
- *
- * @param A The type to specify the angle.
- *
- * @param quat  The quaternion to be updated.
- * @param angle The angle to rotate (in radians).
- * @param angle The angle to rotate (in radians). Depending on the
- *              coordinate system used, the direction of a positive
- *              rotation turns in the directions your fingers curl when
- *              the left/right thumb points along the rotation axis.
- * @param axis  The axis to rotate around. Note that the vector does not
- *              need to be normalised.
- *
- * @return 'quat'.
- */
-template <class A>
-inline quaternion<DirectX::XMFLOAT4>& set_from_angle_axis(
-    quaternion<DirectX::XMFLOAT4>& quat, const A angle, const vector<DirectX::XMFLOAT4>& axis) {
-    auto& a = load_xmvector(axis);
-    auto q = DirectX::XMQuaternionRotationAxis(a, static_cast<float>(angle));
-    DirectX::XMStoreFloat4(&static_cast<DirectX::XMFLOAT4&>(quat), q);
-    return quat;
-}
-#endif /* WITH_THE_XMATH */
-
 
 /**
  * Update 'quat' such that it represents a rotation from the angle 'u' to
@@ -1138,25 +970,6 @@ inline quaternion<glm::quat>& set_from_vectors(
 #endif /* WITH_THE_GLM */
 
 
-#ifdef WITH_THE_XMATH
-/**
- * Update 'quat' such that it represents a rotation from the angle 'u' to
- * the angle 'v'.
- *
- * @param Q
- * @param V
- *
- * @param quat
- * @param u    The original vector.
- * @param v    The target vector.
- *
- * @return 'quat'.
- */
-inline quaternion<DirectX::XMFLOAT4>& set_from_vectors(
-    quaternion<DirectX::XMFLOAT4>& quat, const vector<DirectX::XMFLOAT4>& u, const vector<DirectX::XMFLOAT4>& v);
-#endif /* WITH_THE_XMATH */
-
-
 /**
  * Makes a quaternion an identity quaternion.
  *
@@ -1189,22 +1002,6 @@ inline quaternion<glm::quat>& set_identity(quaternion<glm::quat>& quat) {
 #endif /* WITH_THE_GLM */
 
 
-#ifdef WITH_THE_XMATH
-/**
- * Makes a quaternion an identity quaternion.
- *
- * @param quat The quaternion to modify.
- *
- * @return 'quat'.
- */
-inline quaternion<DirectX::XMFLOAT4>& set_identity(quaternion<DirectX::XMFLOAT4>& quat) {
-    auto q = DirectX::XMQuaternionIdentity();
-    DirectX::XMStoreFloat4(&static_cast<DirectX::XMFLOAT4&>(quat), q);
-    return quat;
-}
-#endif /* WITH_THE_XMATH */
-
-
 /**
  * Compute the squared norm of the given quaternion.
  *
@@ -1235,21 +1032,6 @@ THE_TRY_FORCE_INLINE float square_norm(const quaternion<glm::quat>& quat) {
 #endif /* WITH_THE_GLM */
 
 
-#ifdef WITH_THE_XMATH
-/**
- * Compute the squared norm of the given quaternion.
- *
- * @param quat a quaternion.
- *
- * @return The square norm of 'quat'.
- */
-THE_TRY_FORCE_INLINE float square_norm(const quaternion<DirectX::XMFLOAT4>& quat) {
-    auto q = load_xmvector(quat);
-    return DirectX::XMVectorGetX(DirectX::XMQuaternionLengthSq(q));
-}
-#endif /* WITH_THE_XMATH */
-
-
 /**
  * Multiply two quaternions.
  *
@@ -1273,30 +1055,11 @@ template <class V, class T> quaternion<V, T> operator*(const quaternion<V, T>& l
  *
  * @return 'lhs' * 'rhs'.
  */
-THE_TRY_FORCE_INLINE quaternion<glm::quat> operator*(const quaternion<glm::quat>& lhs, const quaternion<glm::quat>& rhs) {
+THE_TRY_FORCE_INLINE quaternion<glm::quat> operator*(
+    const quaternion<glm::quat>& lhs, const quaternion<glm::quat>& rhs) {
     return static_cast<glm::quat>(lhs) * static_cast<glm::quat>(rhs);
 }
 #endif /* WITH_THE_GLM */
-
-
-#ifdef WITH_THE_XMATH
-/**
- * Multiply two quaternions.
- *
- * @param lhs The left-hand side operand.
- * @param rhs The right-hand side operand.
- *
- * @return 'lhs' * 'rhs'.
- */
-THE_TRY_FORCE_INLINE quaternion<DirectX::XMFLOAT4> operator*(
-    const quaternion<DirectX::XMFLOAT4>& lhs, const quaternion<DirectX::XMFLOAT4>& rhs) {
-    std::decay<decltype(lhs)>::type retval(megamol::core::thecam::do_not_initialise);
-    auto l = load_xmvector(lhs);
-    auto r = load_xmvector(rhs);
-    auto q = DirectX::XMQuaternionMultiply(r, l); // sic.
-    return store_xmvector(retval, q);
-}
-#endif /* WITH_THE_XMATH */
 
 } /* end namespace math */
 } /* end namespace thecam */

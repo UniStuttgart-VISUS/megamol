@@ -90,7 +90,16 @@ bool WindowManager::DeleteWindowConfiguration(const std::string& window_name) {
 
 
 bool WindowManager::StateFromJSON(const std::string& json_string) {
-    nlohmann::json json = nlohmann::json::parse(json_string);
+
+    nlohmann::json json;
+    try {
+        json = nlohmann::json::parse(json_string);
+    } catch (...) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "[WindowManager] Unable to parse JSON string (there should be no escaped quotes, e.g.).");
+        return false;
+    }
+
     if (!json.is_object()) {
         vislib::sys::Log::DefaultLog.WriteError("[WindowManager] State has to be a valid JSON object.");
         return false;

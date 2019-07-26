@@ -32,8 +32,7 @@
 /*
  * megamol::core::thecam::math::size<V, D, T>::size
  */
-template<class V, size_t D, class T>
-megamol::core::thecam::math::size<V, D, T>::size(void) {
+template <class V, size_t D, class T> megamol::core::thecam::math::size<V, D, T>::size(void) {
     for (size_type i = 0; i < this->dimensions(); ++i) {
         traits_type::at(this->data, i) = static_cast<value_type>(0);
     }
@@ -43,7 +42,7 @@ megamol::core::thecam::math::size<V, D, T>::size(void) {
 /*
  * megamol::core::thecam::math::size<V, D, T>::size
  */
-template<class V, size_t D, class T>
+template <class V, size_t D, class T>
 megamol::core::thecam::math::size<V, D, T>::size(std::initializer_list<value_type> il) {
     auto it = il.begin();
     for (size_type i = 0; i < this->dimensions(); ++i) {
@@ -59,11 +58,10 @@ megamol::core::thecam::math::size<V, D, T>::size(std::initializer_list<value_typ
 /*
  * megamol::core::thecam::math::size<V, D, T>::empty
  */
-template<class V, size_t D, class T>
+template <class V, size_t D, class T>
 bool megamol::core::thecam::math::size<V, D, T>::empty(const value_type epsilon) const {
     for (size_type i = 0; i < this->dimensions(); ++i) {
-        if (!is_equal(traits_type::at(this->data, i),
-                static_cast<value_type>(0), epsilon)) {
+        if (!is_equal(traits_type::at(this->data, i), static_cast<value_type>(0), epsilon)) {
             return false;
         }
     }
@@ -74,10 +72,9 @@ bool megamol::core::thecam::math::size<V, D, T>::empty(const value_type epsilon)
 /*
  * megamol::core::thecam::math::size<V, D, T>::equals
  */
-template<class V, size_t D, class T>
-template<class Vp, size_t Dp, class Tp>
-bool megamol::core::thecam::math::size<V, D, T>::equals(const size<Vp, Dp, Tp>& rhs,
-        const value_type epsilon) const {
+template <class V, size_t D, class T>
+template <class Vp, size_t Dp, class Tp>
+bool megamol::core::thecam::math::size<V, D, T>::equals(const size<Vp, Dp, Tp>& rhs, const value_type epsilon) const {
     if (D == Dp) {
         for (size_type i = 0; i < this->dimensions(); ++i) {
             if (!is_equal(traits_type::at(this->data, i), rhs[i], epsilon)) {
@@ -96,9 +93,9 @@ bool megamol::core::thecam::math::size<V, D, T>::equals(const size<Vp, Dp, Tp>& 
 /*
  * megamol::core::thecam::math::size<V, D, T>::volume
  */
-template<class V, size_t D, class T>
-typename megamol::core::thecam::math::size<V, D, T>::value_type
-megamol::core::thecam::math::size<V, D, T>::volume(void) const {
+template <class V, size_t D, class T>
+typename megamol::core::thecam::math::size<V, D, T>::value_type megamol::core::thecam::math::size<V, D, T>::volume(
+    void) const {
     auto retval = static_cast<value_type>(1);
 
     for (size_type i = 0; i < this->dimensions(); ++i) {
@@ -112,9 +109,8 @@ megamol::core::thecam::math::size<V, D, T>::volume(void) const {
 /*
  * megamol::core::thecam::math::size<V, D, T>::operator =
  */
-template<class V, size_t D, class T>
-megamol::core::thecam::math::size<V, D, T>& megamol::core::thecam::math::size<V, D, T>::operator =(
-        const size& rhs) {
+template <class V, size_t D, class T>
+megamol::core::thecam::math::size<V, D, T>& megamol::core::thecam::math::size<V, D, T>::operator=(const size& rhs) {
     if (this != std::addressof(rhs)) {
         traits_type::copy(this->data, rhs.data);
     }
@@ -125,12 +121,11 @@ megamol::core::thecam::math::size<V, D, T>& megamol::core::thecam::math::size<V,
 /*
  * megamol::core::thecam::math::size<V, D, T>::operator =
  */
-template<class V, size_t D, class T>
-template<class Vp, class Tp>
-megamol::core::thecam::math::size<V, D, T>& megamol::core::thecam::math::size<V, D, T>::operator =(
-        const size<Vp, D, Tp>& rhs) {
-    THE_ASSERT(static_cast<void *>(this)
-        != static_cast<const void *>(std::addressof(rhs)));
+template <class V, size_t D, class T>
+template <class Vp, class Tp>
+megamol::core::thecam::math::size<V, D, T>& megamol::core::thecam::math::size<V, D, T>::operator=(
+    const size<Vp, D, Tp>& rhs) {
+    THE_ASSERT(static_cast<void*>(this) != static_cast<const void*>(std::addressof(rhs)));
     for (size_type i = 0; i < this->dimensions(); ++i) {
         traits_type::at(this->data, i) = static_cast<value_type>(rhs[i]);
     }

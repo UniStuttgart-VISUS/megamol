@@ -31,10 +31,10 @@
 #ifndef THE_NOT_INSTANTIABLE_H_INCLUDED
 #define THE_NOT_INSTANTIABLE_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#pragma once
+#    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
-#pragma managed(push, off)
+#    pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 #include "mmcore/thecam/utility/config.h"
@@ -46,33 +46,30 @@
 namespace megamol {
 namespace core {
 namespace thecam {
-namespace utility{
+namespace utility {
 
+/**
+ * Super class for all classes which do not support instances.
+ *
+ * Classes that do not allow instances do not allow copies, too. Therefore
+ * all not_instantiables are also not_copyables and not_movables.
+ */
+class not_instantiable : public not_copyable, public not_movable {
+
+protected:
     /**
-     * Super class for all classes which do not support instances.
-     *
-     * Classes that do not allow instances do not allow copies, too. Therefore
-     * all not_instantiables are also not_copyables and not_movables.
+     * Dtor.
      */
-    class not_instantiable : public not_copyable, public not_movable {
+    virtual ~not_instantiable(void);
 
-    protected:
-
-        /**
-         * Dtor.
-         */
-        virtual ~not_instantiable(void);
-
-    private:
-
-        /**
-         * Forbidden ctor.
-         *
-         * @throws megamol::core::thecam::not_supported_exception Unconditionally.
-         */
-        not_instantiable(void);
-
-    };
+private:
+    /**
+     * Forbidden ctor.
+     *
+     * @throws megamol::core::thecam::not_supported_exception Unconditionally.
+     */
+    not_instantiable(void);
+};
 
 } /* end namespace utility */
 } /* end namespace thecam */
@@ -81,6 +78,6 @@ namespace utility{
 
 
 #if defined(_WIN32) && defined(_MANAGED)
-#pragma managed(pop)
+#    pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* THE_NOT_INSTANTIABLE_H_INCLUDED */

@@ -31,85 +31,85 @@
 #ifndef THE_GRAPHICS_CAMERA_MINIMAL_CAMERA_STATE_H_INCLUDED
 #define THE_GRAPHICS_CAMERA_MINIMAL_CAMERA_STATE_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#pragma once
+#    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
-#pragma managed(push, off)
+#    pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 #include "mmcore/thecam/utility/config.h"
 
-#include "mmcore/thecam/types.h"
 #include <array>
+#include "mmcore/thecam/types.h"
 
 
 namespace megamol {
 namespace core {
 namespace thecam {
 
-    /**
-     * This structure holds the minimum information that is required to fully
-     * restore the state of a megamol::core::thecam::graphics::camera::camera.
-     *
-     * The structure uses only basic types as members such that it can be
-     * serialised for network transfer and persistence.
-     *
-     * @tparam M The configuration of the mathematical types the camera uses.
-     */
-    template<class M> struct minimal_camera_state {
+/**
+ * This structure holds the minimum information that is required to fully
+ * restore the state of a megamol::core::thecam::graphics::camera::camera.
+ *
+ * The structure uses only basic types as members such that it can be
+ * serialised for network transfer and persistence.
+ *
+ * @tparam M The configuration of the mathematical types the camera uses.
+ */
+template <class M> struct minimal_camera_state {
 
-        typedef typename M::fractional_type fractional_type;
-        typedef typename M::screen_type screen_type;
-        typedef typename M::world_type world_type;
+    typedef typename M::fractional_type fractional_type;
+    typedef typename M::screen_type screen_type;
+    typedef typename M::world_type world_type;
 
-        /** The relative offset (x, y) of the projection centre. */
-		std::array<fractional_type, 2> centre_offset;
+    /** The relative offset (x, y) of the projection centre. */
+    std::array<fractional_type, 2> centre_offset;
 
-        /** The distance of the plane of zero parallax.*/
-        world_type convergence_plane;
+    /** The distance of the plane of zero parallax.*/
+    world_type convergence_plane;
 
-        /** The stereo eye. */
-        Eye eye;
+    /** The stereo eye. */
+    Eye eye;
 
-        /** The distance of the far clipping plane. */
-        world_type far_clipping_plane;
+    /** The distance of the far clipping plane. */
+    world_type far_clipping_plane;
 
-        /** With and height of the film gate. */
-        std::array<world_type, 2> film_gate;
+    /** With and height of the film gate. */
+    std::array<world_type, 2> film_gate;
 
-        /** The gate scaling method. */
-        Gate_scaling gate_scaling;
+    /** The gate scaling method. */
+    Gate_scaling gate_scaling;
 
-        /** Half of the aperture angle in radians. */
-        fractional_type half_aperture_angle_radians;
+    /** Half of the aperture angle in radians. */
+    fractional_type half_aperture_angle_radians;
 
-        /** Half of the stereo disparity. */
-        world_type half_disparity;
+    /** Half of the stereo disparity. */
+    world_type half_disparity;
 
-        /** Left, top, right, bottom of the image tile. */
-        std::array<screen_type, 4> image_tile;
+    /** Left, top, right, bottom of the image tile. */
+    std::array<screen_type, 4> image_tile;
 
-        /** The distance of the near clipping plane. */
-        world_type near_clipping_plane;
+    /** The distance of the near clipping plane. */
+    world_type near_clipping_plane;
 
-        /** The components (x, y, z, w) of the orientation quaternion. */
-        std::array<world_type, 4> orientation;
+    /** The components (x, y, z, w) of the orientation quaternion. */
+    std::array<world_type, 4> orientation;
 
-        /** The position of the camera. */
-        std::array<world_type, 3> position;
+    /** The position of the camera. */
+    std::array<world_type, 3> position;
 
-        /** The projection type. */
-        Projection_type projection_type;
+    /** The projection type. */
+    Projection_type projection_type;
 
-        /** Width and height of the resolution gate. */
-        std::array<screen_type, 2> resolution_gate;
-    };
+    /** Width and height of the resolution gate. */
+    std::array<screen_type, 2> resolution_gate;
+};
 
 } /* end namespace thecam */
 } /* end namespace core */
 } /* end namespace megamol */
 
 #if defined(_WIN32) && defined(_MANAGED)
-#pragma managed(pop)
+#    pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* THE_GRAPHICS_CAMERA_MINIMAL_CAMERA_STATE_H_INCLUDED */
