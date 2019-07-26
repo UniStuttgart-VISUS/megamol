@@ -66,45 +66,54 @@ def listFramedata(parseResult, frame):
     return parseResult.v and (parseResult.v > 1) or (parseResult.v == 1 and frame == 0)
 
 def readParticles(number, vertType, colType, file):
+    mins = [sys.float_info.max, sys.float_info.max, sys.float_info.max]
+    maxs = [-sys.float_info.max, -sys.float_info.max, -sys.float_info.max]
     for p in range(number):
         if (vertType == 0):
-            print("        no position", end ='')
+            parseResult.bboxonly or print("        no position", end ='')
         elif (vertType == 1):
             pos = [getFloat(file) for x in range(3)]
-            print("        pos = (%f, %f, %f)" % (tuple(pos)), end ='')
+            parseResult.bboxonly or print("        pos = (%f, %f, %f)" % (tuple(pos)), end ='')
         elif (vertType == 2):
             pos = [getFloat(file) for x in range(4)]
-            print("        pos = (%f, %f, %f), rad = %f" % (tuple(pos)), end ='')
+            parseResult.bboxonly or print("        pos = (%f, %f, %f), rad = %f" % (tuple(pos)), end ='')
         elif (vertType == 3):            
             pos = [getUShort(file) for x in range(3)]
-            print("        pos = (%f, %f, %f)" % (tuple(pos)), end ='')
+            parseResult.bboxonly or print("        pos = (%f, %f, %f)" % (tuple(pos)), end ='')
         elif (vertType == 4):
             pos = [getDouble(file) for x in range(3)]
-            print("        pos = (%f, %f, %f)" % (tuple(pos)), end ='')
+            parseResult.bboxonly or print("        pos = (%f, %f, %f)" % (tuple(pos)), end ='')
+        for x in range(3):
+            if (pos[x] < mins[x]):
+                mins[x] = pos[x]
+            if (pos[x] > maxs[x]):
+                maxs[x] = pos[x]
 
         if (colType == 0):
             print(", no color")
         elif (colType == 1):
             col = [getByte(file) for x in range(3)]
-            print(", col = (%d, %d, %d)" % (tuple(col)))
+            parseResult.bboxonly or print(", col = (%d, %d, %d)" % (tuple(col)))
         elif (colType == 2):
             col = [getByte(file) for x in range(4)]
-            print(", col = (%d, %d, %d, %d)" % (tuple(col)))
+            parseResult.bboxonly or print(", col = (%d, %d, %d, %d)" % (tuple(col)))
         elif (colType == 3):
             col = [getFloat(file) for x in range(1)]
-            print(", col = (%f)" % (tuple(col)))
+            parseResult.bboxonly or print(", col = (%f)" % (tuple(col)))
         elif (colType == 4):
             col = [getFloat(file) for x in range(3)]
-            print(", col = (%f, %f, %f)" % (tuple(col)))
+            parseResult.bboxonly or print(", col = (%f, %f, %f)" % (tuple(col)))
         elif (colType == 5):
             col = [getFloat(file) for x in range(4)]
-            print(", col = (%f, %f, %f, %f)" % (tuple(col)))
+            parseResult.bboxonly or print(", col = (%f, %f, %f, %f)" % (tuple(col)))
         elif (colType == 6):
             col = [getUShort(file) for x in range(4)]
-            print(", col = (%d, %d, %d, %d)" % (tuple(col)))
+            parseResult.bboxonly or print(", col = (%d, %d, %d, %d)" % (tuple(col)))
         elif (colType == 7):
             col = [getDouble(file) for x in range(1)]
-            print(", col = (%f)" % (tuple(col)))
+            parseResult.bboxonly or print(", col = (%f)" % (tuple(col)))
+    if (number > 0):
+        print("        bounding box of these particles: (%f, %f, %f) - (%f, %f, %f)" % tuple(mins + maxs))
 
 vertexSizes = [0, 12, 16, 5, 24]
 vertexNames = ["VERTDATA_NONE", "VERTDATA_FLOAT_XYZ", "VERTDATA_FLOAT_XYZR", "VERTDATA_SHORT_XYZ", "VERTDATA_DOUBLE_XYZ"]
@@ -121,8 +130,9 @@ print("")
 parser = argparse.ArgumentParser(description='display information about .mmpld file(s)')
 parser.add_argument('inputfiles', metavar='file', nargs='+', help='file to get info about')
 parser.add_argument('-v', action='count', help='show verbose frame info (add another v for more verbosity)')
-parser.add_argument('--head', action='store', help='show that many particles at the start of each shown frame)')
-parser.add_argument('--tail', action='store', help='show that many particles at the end of each shown frame)')
+parser.add_argument('--head', action='store', help='show that many particles at the start of each shown frame (or "all"))')
+parser.add_argument('--tail', action='store', help='show that many particles at the end of each shown frame (or "all"))')
+parser.add_argument('--bboxonly', action='count', help='only print the bbox of head/tail, not the particles)')
 parseResult = parser.parse_args()
 
 for filename in parseResult.inputfiles:
@@ -238,26 +248,32 @@ for filename in parseResult.inputfiles:
 
                 if (version == 103):
                     box = [getFloat(f) for x in range(6)]
-                    listFramedata(parseResult, fi) and print("list bounding box: (%f, %f, %f) - (%f, %f, %f)" % (tuple(box)))
+                    listFramedata(parseResult, fi) and print("        list bounding box: (%f, %f, %f) - (%f, %f, %f)" % (tuple(box)))
 
                 if (listFramedata(parseResult, fi)):
                     if (parseResult.head):
-                        numHead = min(int(parseResult.head), listNumParts)
+                        if (parseResult.head == "all"):
+                            numHead = listNumParts
+                        else:
+                            numHead = min(int(parseResult.head), listNumParts)
                     else:
                         numHead = 0
                     if (parseResult.tail):
-                        numTail = min(int(parseResult.tail), listNumParts)
+                        if (parseResult.head == "all"):
+                            numTail = listNumParts
+                        else:
+                            numTail = min(int(parseResult.tail), listNumParts)
                     else:
                         numTail = 0
                     if (numHead > 0):
-                        print("        list head (%d):" % numHead)
+                        print("        list head (%d particles):" % numHead)
                     readParticles(numHead, vertType, colType, f)
                     if (numTail + numHead > listNumParts):
                         print("        not enough particles to also list tail")
                         numTail = 0
                     f.seek((listNumParts - numHead - numTail) * stride, os.SEEK_CUR)
                     if (numTail > 0):
-                        print("        list tail (%d):" % numTail)
+                        print("        list tail (%d particles):" % numTail)
                     readParticles(numTail, vertType, colType, f)
                 else:
                     f.seek(listNumParts * stride, os.SEEK_CUR)
