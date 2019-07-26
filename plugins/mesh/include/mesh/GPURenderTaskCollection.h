@@ -14,8 +14,8 @@
 
 #include "mesh.h"
 
-#include "glowl/BufferObject.h"
-#include "glowl/Mesh.h"
+#include "glowl/BufferObject.hpp"
+#include "glowl/Mesh.hpp"
 
 #include "GPUMaterialCollection.h"
 
@@ -38,12 +38,12 @@ public:
                                                              : lhs.shader_program < rhs.shader_program);
         }
 
-        std::shared_ptr<Shader> shader_program;
-        std::shared_ptr<Mesh> mesh;
-        std::shared_ptr<BufferObject> draw_commands;
-        std::shared_ptr<BufferObject> per_draw_data;
+        std::shared_ptr<Shader>              shader_program;
+        std::shared_ptr<glowl::Mesh>         mesh;
+        std::shared_ptr<glowl::BufferObject> draw_commands;
+        std::shared_ptr<glowl::BufferObject> per_draw_data;
 
-        size_t draw_cnt;
+        size_t                               draw_cnt;
     };
 
     /**
@@ -65,12 +65,12 @@ public:
     //);
 
     template <typename PerDrawDataType>
-    size_t addSingleRenderTask(std::shared_ptr<Shader> const& shader_prgm, std::shared_ptr<Mesh> const& mesh,
-        DrawElementsCommand const& draw_command,
+    size_t addSingleRenderTask(std::shared_ptr<Shader> const& shader_prgm, std::shared_ptr<glowl::Mesh> const& mesh,
+        glowl::DrawElementsCommand const& draw_command,
         PerDrawDataType const& per_draw_data); // single struct of per draw data assumed?
 
     template <typename DrawCommandContainer, typename PerDrawDataContainer>
-    size_t addRenderTasks(std::shared_ptr<Shader> const& shader_prgm, std::shared_ptr<Mesh> const& mesh,
+    size_t addRenderTasks(std::shared_ptr<Shader> const& shader_prgm, std::shared_ptr<glowl::Mesh> const& mesh,
         DrawCommandContainer const& draw_commands,
         PerDrawDataContainer const& per_draw_data); // list of per draw data assumed?
 
@@ -96,7 +96,7 @@ public:
 
     std::vector<RenderTasks> const& getRenderTasks();
 
-    std::vector<std::pair<std::shared_ptr<BufferObject>, uint32_t>> const& getPerFrameBuffers();
+    std::vector<std::pair<std::shared_ptr<glowl::BufferObject>, uint32_t>> const& getPerFrameBuffers();
 
 private:
     /**
@@ -113,12 +113,13 @@ private:
      * Flexible number of OpenGL Buffers (SSBOs) for data shared by all render tasks,
      * e.g. scene meta data, lights or (dynamic) simulation data
      */
-    std::vector<std::pair<std::shared_ptr<BufferObject>, uint32_t>> m_per_frame_data_buffers;
+    std::vector<std::pair<std::shared_ptr<glowl::BufferObject>, uint32_t>> m_per_frame_data_buffers;
 };
 
 template <typename PerDrawDataType>
 inline size_t GPURenderTaskCollection::addSingleRenderTask(std::shared_ptr<Shader> const& shader_prgm,
-    std::shared_ptr<Mesh> const& mesh, DrawElementsCommand const& draw_command, PerDrawDataType const& per_draw_data) {
+    std::shared_ptr<glowl::Mesh> const& mesh, glowl::DrawElementsCommand const& draw_command,
+    PerDrawDataType const& per_draw_data) {
     bool task_added = false;
 
     size_t rts_idx = 0;
@@ -130,19 +131,19 @@ inline size_t GPURenderTaskCollection::addSingleRenderTask(std::shared_ptr<Shade
         if (rts.shader_program == shader_prgm && rts.mesh == mesh) {
             size_t old_dcs_byte_size = rts.draw_commands->getByteSize();
             size_t old_pdd_byte_size = rts.per_draw_data->getByteSize();
-            size_t new_dcs_byte_size = old_dcs_byte_size + sizeof(DrawElementsCommand);
+            size_t new_dcs_byte_size = old_dcs_byte_size + sizeof(glowl::DrawElementsCommand);
             size_t new_pdd_byte_size = old_pdd_byte_size + sizeof(PerDrawDataType);
 
-            auto new_dcs_buffer =
-                std::make_shared<BufferObject>(GL_DRAW_INDIRECT_BUFFER, nullptr, new_dcs_byte_size, GL_DYNAMIC_DRAW);
-            auto new_pdd_buffer =
-                std::make_shared<BufferObject>(GL_SHADER_STORAGE_BUFFER, nullptr, new_pdd_byte_size, GL_DYNAMIC_DRAW);
+            auto new_dcs_buffer = std::make_shared<glowl::BufferObject>(
+                GL_DRAW_INDIRECT_BUFFER, nullptr, new_dcs_byte_size, GL_DYNAMIC_DRAW);
+            auto new_pdd_buffer = std::make_shared<glowl::BufferObject>(
+                GL_SHADER_STORAGE_BUFFER, nullptr, new_pdd_byte_size, GL_DYNAMIC_DRAW);
 
-            BufferObject::copy(rts.draw_commands.get(), new_dcs_buffer.get());
-            BufferObject::copy(rts.per_draw_data.get(), new_pdd_buffer.get());
+            glowl::BufferObject::copy(rts.draw_commands.get(), new_dcs_buffer.get());
+            glowl::BufferObject::copy(rts.per_draw_data.get(), new_pdd_buffer.get());
 
-            new_dcs_buffer->loadSubData(&draw_command, sizeof(DrawElementsCommand), old_dcs_byte_size);
-            new_pdd_buffer->loadSubData(&per_draw_data, sizeof(PerDrawDataType), old_pdd_byte_size);
+            new_dcs_buffer->bufferSubData(&draw_command, sizeof(glowl::DrawElementsCommand), old_dcs_byte_size);
+            new_pdd_buffer->bufferSubData(&per_draw_data, sizeof(PerDrawDataType), old_pdd_byte_size);
 
             rts.draw_commands = new_dcs_buffer;
             rts.per_draw_data = new_pdd_buffer;
@@ -171,14 +172,14 @@ inline size_t GPURenderTaskCollection::addSingleRenderTask(std::shared_ptr<Shade
 
         RenderTasks& new_task = m_render_tasks.back();
 
-        size_t new_dcs_byte_size = sizeof(DrawElementsCommand);
+        size_t new_dcs_byte_size = sizeof(glowl::DrawElementsCommand);
         size_t new_pdd_byte_size = sizeof(PerDrawDataType);
 
         new_task.shader_program = shader_prgm;
         new_task.mesh = mesh;
-        new_task.draw_commands =
-            std::make_shared<BufferObject>(GL_DRAW_INDIRECT_BUFFER, &draw_command, new_dcs_byte_size, GL_DYNAMIC_DRAW);
-        new_task.per_draw_data = std::make_shared<BufferObject>(
+        new_task.draw_commands = std::make_shared<glowl::BufferObject>(
+            GL_DRAW_INDIRECT_BUFFER, &draw_command, new_dcs_byte_size, GL_DYNAMIC_DRAW);
+        new_task.per_draw_data = std::make_shared<glowl::BufferObject>(
             GL_SHADER_STORAGE_BUFFER, &per_draw_data, new_pdd_byte_size, GL_DYNAMIC_DRAW);
         new_task.draw_cnt = 1;
 
@@ -198,7 +199,7 @@ inline size_t GPURenderTaskCollection::addSingleRenderTask(std::shared_ptr<Shade
 
 template <typename DrawCommandContainer, typename PerDrawDataContainer>
 inline size_t GPURenderTaskCollection::addRenderTasks(std::shared_ptr<Shader> const& shader_prgm,
-    std::shared_ptr<Mesh> const& mesh, DrawCommandContainer const& draw_commands,
+    std::shared_ptr<glowl::Mesh> const& mesh, DrawCommandContainer const& draw_commands,
     PerDrawDataContainer const& per_draw_data) {
     typedef typename PerDrawDataContainer::value_type PerDrawDataType;
     typedef typename DrawCommandContainer::value_type DrawCommandType;
@@ -217,17 +218,17 @@ inline size_t GPURenderTaskCollection::addRenderTasks(std::shared_ptr<Shader> co
             size_t new_dcs_byte_size = old_dcs_byte_size + sizeof(DrawCommandType) * draw_commands.size();
             size_t new_pdd_byte_size = old_pdd_byte_size + sizeof(PerDrawDataType) * per_draw_data.size();
 
-            auto new_dcs_buffer =
-                std::make_shared<BufferObject>(GL_DRAW_INDIRECT_BUFFER, nullptr, new_dcs_byte_size, GL_DYNAMIC_DRAW);
-            auto new_pdd_buffer =
-                std::make_shared<BufferObject>(GL_SHADER_STORAGE_BUFFER, nullptr, new_pdd_byte_size, GL_DYNAMIC_DRAW);
+            auto new_dcs_buffer = std::make_shared<glowl::BufferObject>(
+                GL_DRAW_INDIRECT_BUFFER, nullptr, new_dcs_byte_size, GL_DYNAMIC_DRAW);
+            auto new_pdd_buffer = std::make_shared<glowl::BufferObject>(
+                GL_SHADER_STORAGE_BUFFER, nullptr, new_pdd_byte_size, GL_DYNAMIC_DRAW);
 
-            BufferObject::copy(rts.draw_commands.get(), new_dcs_buffer.get());
-            BufferObject::copy(rts.per_draw_data.get(), new_pdd_buffer.get());
+            glowl::BufferObject::copy(rts.draw_commands.get(), new_dcs_buffer.get());
+            glowl::BufferObject::copy(rts.per_draw_data.get(), new_pdd_buffer.get());
 
-            new_dcs_buffer->loadSubData(
+            new_dcs_buffer->bufferSubData(
                 draw_commands.data(), sizeof(DrawCommandType) * draw_commands.size(), old_dcs_byte_size);
-            new_pdd_buffer->loadSubData(
+            new_pdd_buffer->bufferSubData(
                 per_draw_data.data(), sizeof(PerDrawDataType) * per_draw_data.size(), old_pdd_byte_size);
 
             rts.draw_commands = new_dcs_buffer;
@@ -265,9 +266,9 @@ inline size_t GPURenderTaskCollection::addRenderTasks(std::shared_ptr<Shader> co
 
         new_task.shader_program = shader_prgm;
         new_task.mesh = mesh;
-        new_task.draw_commands = std::make_shared<BufferObject>(
+        new_task.draw_commands = std::make_shared<glowl::BufferObject>(
             GL_DRAW_INDIRECT_BUFFER, draw_commands.data(), new_dcs_byte_size, GL_DYNAMIC_DRAW);
-        new_task.per_draw_data = std::make_shared<BufferObject>(
+        new_task.per_draw_data = std::make_shared<glowl::BufferObject>(
             GL_SHADER_STORAGE_BUFFER, per_draw_data.data(), new_pdd_byte_size, GL_DYNAMIC_DRAW);
         new_task.draw_cnt = draw_commands.size();
 
@@ -310,7 +311,7 @@ inline void GPURenderTaskCollection::addPerFrameDataBuffer(
         typedef typename PerFrameDataContainer::value_type PerFrameDataType;
         size_t pfd_byte_size = sizeof(PerFrameDataType) * per_frame_data.size();
 
-        auto new_buffer = std::make_shared<BufferObject>(
+        auto new_buffer = std::make_shared<glowl::BufferObject>(
             GL_SHADER_STORAGE_BUFFER, per_frame_data.data(), pfd_byte_size, GL_DYNAMIC_DRAW);
 
         m_per_frame_data_buffers.push_back(std::make_pair(new_buffer, buffer_binding_point));
@@ -325,7 +326,7 @@ inline void GPURenderTaskCollection::updatePerFrameDataBuffer(
     for (auto& buffer : m_per_frame_data_buffers) {
         if (buffer_binding_point == std::get<1>(buffer)) {
             size_t pfd_byte_size = sizeof(PerFrameDataType) * per_frame_data.size();
-            std::get<0>(buffer)->loadSubData(per_frame_data);
+            std::get<0>(buffer)->bufferSubData(per_frame_data);
         }
     }
 }
