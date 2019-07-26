@@ -63,6 +63,7 @@
 #include "table/TableObserverPlane.h"
 #include "table/TableJoin.h"
 #include "table/TableColumnFilter.h"
+#include "table/TableWhere.h"
 #include "ParticleVelocities.h"
 #include "ParticleNeighborhood.h"
 #include "ParticleThermodyn.h"
@@ -208,6 +209,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableObserverPlane>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableJoin>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableColumnFilter>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableWhere>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleVelocities>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleNeighborhood>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleThermodyn>();
