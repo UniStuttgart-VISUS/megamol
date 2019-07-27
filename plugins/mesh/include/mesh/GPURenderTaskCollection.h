@@ -299,7 +299,7 @@ inline void GPURenderTaskCollection::updatePerDrawData(size_t rt_base_idx, PerDr
 
     auto& rts = m_render_tasks[rt_meta.rts_idx];
 
-    rts.per_draw_data->loadSubData(per_draw_data, rt_meta.per_draw_data_byteOffset);
+    rts.per_draw_data->bufferSubData(per_draw_data, rt_meta.per_draw_data_byteOffset);
 }
 
 template <typename PerFrameDataContainer>
