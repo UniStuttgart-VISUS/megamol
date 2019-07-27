@@ -13,8 +13,7 @@
 
 #include <memory>
 #include <vector>
-
-#include "glowl/Mesh.h"
+#include "glowl/Mesh.hpp"
 #include "mesh.h"
 
 namespace megamol {
@@ -35,7 +34,7 @@ public:
             , indices_allocated(indices_allocated)
             , indices_used(0) {}
 
-        std::shared_ptr<Mesh> mesh;
+        std::shared_ptr<glowl::Mesh> mesh;
         unsigned int vertices_allocated;
         unsigned int vertices_used;
         unsigned int indices_allocated;
@@ -44,14 +43,15 @@ public:
 
     struct SubMeshData {
         size_t batch_index;
-        DrawElementsCommand sub_mesh_draw_command;
+        glowl::DrawElementsCommand sub_mesh_draw_command;
     };
 
     GPUMeshCollection() = default;
     ~GPUMeshCollection() = default;
 
     template <typename VertexBufferIterator, typename IndexBufferIterator>
-    void addMesh(VertexLayout vertex_descriptor, std::vector<IteratorPair<VertexBufferIterator>> const& vertex_buffers,
+    void addMesh(glowl::VertexLayout vertex_descriptor,
+        std::vector<IteratorPair<VertexBufferIterator>> const& vertex_buffers,
         IteratorPair<IndexBufferIterator> index_buffer, GLenum index_type, GLenum usage, GLenum primitive_type,
         bool store_seperate = false);
 
@@ -70,7 +70,7 @@ private:
 };
 
 template <typename VertexBufferIterator, typename IndexBufferIterator>
-inline void GPUMeshCollection::addMesh(VertexLayout vertex_descriptor,
+inline void GPUMeshCollection::addMesh(glowl::VertexLayout vertex_descriptor,
     std::vector<IteratorPair<VertexBufferIterator>> const& vertex_buffers,
     IteratorPair<IndexBufferIterator> index_buffer, GLenum index_type, GLenum usage, GLenum primitive_type,
     bool store_seperate) {
@@ -104,7 +104,7 @@ inline void GPUMeshCollection::addMesh(VertexLayout vertex_descriptor,
 
     // computer number of requested vertices and indices
     size_t req_vertex_cnt = vb_byte_sizes.front() / vb_attrib_byte_sizes.front();
-    size_t req_index_cnt = ib_byte_size / computeByteSize(index_type);
+    size_t req_index_cnt = ib_byte_size / glowl::computeByteSize(index_type);
 
     auto it = m_batched_meshes.begin();
     if (!store_seperate) {
@@ -112,7 +112,7 @@ inline void GPUMeshCollection::addMesh(VertexLayout vertex_descriptor,
         for (; it != m_batched_meshes.end(); ++it) {
             bool layout_check = (vertex_descriptor == it->mesh->getVertexLayout());
             // TODO check interleaved vs non-interleaved
-            bool idx_type_check = (index_type == it->mesh->getIndicesType());
+            bool idx_type_check = (index_type == it->mesh->getIndexType());
 
             if (layout_check && idx_type_check) {
                 // check whether there is enough space left in batch
@@ -143,8 +143,8 @@ inline void GPUMeshCollection::addMesh(VertexLayout vertex_descriptor,
             alloc_vb_byte_sizes.push_back(attrib_byte_size * new_allocation_vertex_cnt);
         }
 
-        m_batched_meshes.back().mesh = std::make_shared<Mesh>(alloc_data, alloc_vb_byte_sizes, nullptr,
-            new_allocation_index_cnt * computeByteSize(index_type), vertex_descriptor, index_type, usage,
+        m_batched_meshes.back().mesh = std::make_shared<glowl::Mesh>(alloc_data, alloc_vb_byte_sizes, nullptr,
+            new_allocation_index_cnt * glowl::computeByteSize(index_type), vertex_descriptor, index_type, usage,
             primitive_type);
 
         it = m_batched_meshes.end();
@@ -163,11 +163,11 @@ inline void GPUMeshCollection::addMesh(VertexLayout vertex_descriptor,
     for (size_t i = 0; i < vb_data.size(); ++i) {
         // at this point, it should be guaranteed that it points at a mesh with matching vertex layout,
         // hence it's legal to multiply requested attrib byte sizes with vertex used count
-        it->mesh->loadVertexSubData(i, vb_data[i], vb_byte_sizes[i], vb_attrib_byte_sizes[i] * (it->vertices_used));
+        it->mesh->bufferVertexSubData(i, vb_data[i], vb_byte_sizes[i], vb_attrib_byte_sizes[i] * (it->vertices_used));
     }
 
-    it->mesh->loadIndexSubData(reinterpret_cast<GLvoid*>(&*std::get<0>(index_buffer)), ib_byte_size,
-        computeByteSize(index_type) * it->indices_used);
+    it->mesh->bufferIndexSubData(reinterpret_cast<GLvoid*>(&*std::get<0>(index_buffer)), ib_byte_size,
+        glowl::computeByteSize(index_type) * it->indices_used);
 
     // updated vertices and indices used
     it->vertices_used += req_vertex_cnt;

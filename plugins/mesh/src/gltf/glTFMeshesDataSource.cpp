@@ -57,7 +57,7 @@ bool megamol::mesh::GlTFMeshesDataSource::getDataCallback(core::Call& caller) {
             auto primitive_cnt = model->meshes[mesh_idx].primitives.size();
 
             for (size_t primitive_idx = 0; primitive_idx < primitive_cnt; ++primitive_idx) {
-                std::vector<VertexLayout::Attribute> attribs;
+                std::vector<glowl::VertexLayout::Attribute> attribs;
                 std::vector<std::pair<std::vector<unsigned char>::iterator, std::vector<unsigned char>::iterator>>
                     vb_iterators;
                 std::pair<std::vector<unsigned char>::iterator, std::vector<unsigned char>::iterator> ib_iterators;
@@ -78,7 +78,7 @@ bool megamol::mesh::GlTFMeshesDataSource::getDataCallback(core::Call& caller) {
                     auto& vertexAttrib_buffer = model->buffers[vertexAttrib_bufferView.buffer];
 
                     attribs.push_back(
-                        VertexLayout::Attribute(vertexAttrib_accessor.type, vertexAttrib_accessor.componentType,
+                        glowl::VertexLayout::Attribute(vertexAttrib_accessor.type, vertexAttrib_accessor.componentType,
                             vertexAttrib_accessor.normalized, vertexAttrib_accessor.byteOffset));
 
                     // TODO vb_iterators
@@ -89,7 +89,7 @@ bool megamol::mesh::GlTFMeshesDataSource::getDataCallback(core::Call& caller) {
                             (vertexAttrib_accessor.count * vertexAttrib_accessor.ByteStride(vertexAttrib_bufferView))});
                 }
 
-                VertexLayout vertex_descriptor(0, attribs);
+                glowl::VertexLayout vertex_descriptor(0, attribs);
                 m_gpu_meshes->addMesh(vertex_descriptor, vb_iterators, ib_iterators, indices_accessor.componentType,
                     GL_STATIC_DRAW, GL_TRIANGLES);
 
