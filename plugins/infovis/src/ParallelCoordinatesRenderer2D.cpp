@@ -82,6 +82,7 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
     , stoppedFiltering(false)
     , pickedIndicatorAxis(-1)
     , pickedIndicatorIndex(-1)
+	, lastTimeStep(0)
     , font("Evolventa-SansSerif", core::utility::SDFFont::RenderType::RENDERTYPE_FILL) {
 
     this->getDataSlot.SetCompatibleCall<table::TableDataCallDescription>();
@@ -343,7 +344,7 @@ bool ParallelCoordinatesRenderer2D::resetFiltersSlotCallback(core::param::ParamS
     return true;
 }
 
-void ParallelCoordinatesRenderer2D::assertData(void) {
+void ParallelCoordinatesRenderer2D::assertData(core::view::CallRender2D& call) {
     auto floats = getDataSlot.CallAs<megamol::stdplugin::datatools::table::TableDataCall>();
     if (floats == nullptr) return;
     auto tc = getTFSlot.CallAs<megamol::core::view::CallGetTransferFunction>();
@@ -359,13 +360,15 @@ void ParallelCoordinatesRenderer2D::assertData(void) {
         return;
     }
 
+	floats->SetFrameID(static_cast<unsigned int>(call.Time()));
     (*floats)(0);
+	call.SetTimeFramesCount(floats->GetFrameCount());
     auto hash = floats->DataHash();
     (*tc)(0);
     (*flagsc)(core::FlagCall::CallMapFlags);
     auto version = flagsc->GetVersion();
 
-    if (hash != this->currentHash) {
+    if (hash != this->currentHash || this->lastTimeStep != static_cast<unsigned int>(call.Time())) {
 
         this->computeScaling();
 
@@ -407,6 +410,7 @@ void ParallelCoordinatesRenderer2D::assertData(void) {
         glBufferData(
             GL_SHADER_STORAGE_BUFFER, 2 * sizeof(GLfloat), fragmentMinMax.data(), GL_DYNAMIC_READ); // TODO: huh.
         this->currentHash = hash;
+		this->lastTimeStep = static_cast<unsigned int>(call.Time());
     }
 
     if (version != this->currentFlagsVersion || version == 0) {
@@ -456,7 +460,7 @@ void ParallelCoordinatesRenderer2D::computeScaling(void) {
 bool ParallelCoordinatesRenderer2D::GetExtents(core::view::CallRender2D& call) {
     windowAspect = static_cast<float>(call.GetViewport().AspectRatio());
 
-    this->assertData();
+    this->assertData(call);
 
     call.SetBoundingBox(this->bounds);
 
@@ -928,7 +932,7 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
     backgroundColor[2] = bg[2] / 255.0f;
     backgroundColor[3] = bg[3] / 255.0f;
 
-    this->assertData();
+    this->assertData(call);
 
     auto fc = getDataSlot.CallAs<megamol::stdplugin::datatools::table::TableDataCall>();
     if (fc == nullptr) return false;
