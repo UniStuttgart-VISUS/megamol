@@ -81,7 +81,7 @@ namespace datatools {
 
     private:
 
-		bool assertData(table::TableDataCall *ft);
+		bool assertData(table::TableDataCall *ft, unsigned int frameID = 0);
 
 		bool anythingDirty();
 
@@ -156,6 +156,9 @@ namespace datatools {
 
         /** The name of the float column holding the vz-coordinate. */
         core::param::ParamSlot slotColumnVZ;
+
+		/** The lastly calculated time step */
+		unsigned int lastTimeStep;
 
 		std::vector<float> everything;
 

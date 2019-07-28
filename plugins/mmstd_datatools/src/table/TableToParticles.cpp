@@ -39,6 +39,7 @@ TableToParticles::TableToParticles(void)
     , slotColumnVZ("vzcolumnname", "The name of the column holding the vz-coordinate.")
     , inputHash(0)
     , myHash(0)
+	, lastTimeStep(0)
     , columnIndex() {
 
     /* Register parameters. */
@@ -180,8 +181,8 @@ bool TableToParticles::pushColumnIndex(std::vector<size_t>& cols, const vislib::
     }
 }
 
-bool TableToParticles::assertData(table::TableDataCall* ft) {
-    if (this->inputHash == ft->DataHash() && !anythingDirty()) return true;
+bool TableToParticles::assertData(table::TableDataCall* ft, unsigned int frameID) {
+    if (this->inputHash == ft->DataHash() && !anythingDirty() && this->lastTimeStep == frameID) return true;
 
     if (this->inputHash != ft->DataHash()) {
         vislib::sys::Log::DefaultLog.WriteInfo("TableToParticles: Dataset changed -> Updating EnumParams\n");
@@ -316,6 +317,7 @@ bool TableToParticles::assertData(table::TableDataCall* ft) {
         this->bboxMax[i] = ft->GetColumnsInfos()[indicesToCollect[i]].MaximumValue();
     }
 
+	this->lastTimeStep = frameID;
     this->myHash++;
     this->resetAllDirty();
     this->inputHash = ft->DataHash();
@@ -330,15 +332,17 @@ bool TableToParticles::getMultiParticleData(core::Call& call) {
         core::moldyn::MultiParticleDataCall& c = dynamic_cast<core::moldyn::MultiParticleDataCall&>(call);
         table::TableDataCall* ft = this->slotCallTable.CallAs<table::TableDataCall>();
         if (ft == NULL) return false;
-        (*ft)();
 
-        if (!assertData(ft)) return false;
+		ft->SetFrameID(c.FrameID());
+        (*ft)(1);
+		(*ft)(0);
 
-        c.SetFrameCount(1);
-        c.SetFrameID(0);
+        if (!assertData(ft, c.FrameID())) return false;
+
+        c.SetFrameCount(ft->GetFrameCount());
         c.SetDataHash(this->myHash);
 
-        c.SetExtent(1, this->bboxMin[0], this->bboxMin[1], this->bboxMin[2], this->bboxMax[0], this->bboxMax[1],
+        c.SetExtent(ft->GetFrameCount(), this->bboxMin[0], this->bboxMin[1], this->bboxMin[2], this->bboxMax[0], this->bboxMax[1],
             this->bboxMax[2]);
         c.SetParticleListCount(1);
         c.AccessParticles(0).SetCount(ft->GetRowsCount());
@@ -412,15 +416,16 @@ bool TableToParticles::getMultiparticleExtent(core::Call& call) {
         core::moldyn::MultiParticleDataCall& c = dynamic_cast<core::moldyn::MultiParticleDataCall&>(call);
         table::TableDataCall* ft = this->slotCallTable.CallAs<table::TableDataCall>();
         if (ft == NULL) return false;
-        (*ft)();
 
-        if (!assertData(ft)) return false;
+		ft->SetFrameID(c.FrameID());
+		(*ft)(1);
+		(*ft)(0); // the bounding box is calculated from the data, so we have to call getData here
 
-        c.SetFrameCount(1);
-        c.SetFrameID(0);
+        if (!assertData(ft, c.FrameID())) return false;
+        c.SetFrameCount(ft->GetFrameCount());
         c.SetDataHash(this->myHash);
 
-        c.SetExtent(1, this->bboxMin[0], this->bboxMin[1], this->bboxMin[2], this->bboxMax[0], this->bboxMax[1],
+        c.SetExtent(ft->GetFrameCount(), this->bboxMin[0], this->bboxMin[1], this->bboxMin[2], this->bboxMax[0], this->bboxMax[1],
             this->bboxMax[2]);
         c.SetUnlocker(NULL);
         return true;
