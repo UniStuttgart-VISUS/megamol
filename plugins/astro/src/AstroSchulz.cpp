@@ -384,7 +384,7 @@ bool megamol::astro::AstroSchulz::getData(const unsigned int frameID) {
         return false;
     }
 
-    Log::DefaultLog.WriteInfo(L"Requesting astro frame %u ...", frameID);
+    //Log::DefaultLog.WriteInfo(L"Requesting astro frame %u ...", frameID);
     ast->SetFrameID(frameID, true);
 
     do {

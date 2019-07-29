@@ -203,8 +203,9 @@ bool megamol::stdplugin::datatools::table::TableWhere::getData(
             }
 
         } else {
-            Log::DefaultLog.WriteError(_T("The column \"%hs\" to be filtered ")
-                _T("was not found in the data set."), c.c_str());
+            Log::DefaultLog.WriteWarn(_T("The column \"%hs\" to be filtered ")
+                _T("was not found in the data set. The %hs module will copy ")
+                _T("all input rows."), c.c_str(), TableWhere::ClassName());
         }
 
         this->paramColumn.ResetDirty();
@@ -220,22 +221,31 @@ bool megamol::stdplugin::datatools::table::TableWhere::getData(
             || (this->frameID != src->GetFrameID())) {
         const auto data = src->GetData();
 
-        std::vector<std::size_t> selection;
-        selection.reserve(src->GetRowsCount());
+        if (selector) {
+            // Copy selection.
+            std::vector<std::size_t> selection;
+            selection.reserve(src->GetRowsCount());
 
-        for (auto r = 0; r < src->GetRowsCount(); ++r) {
-            if (selector(data[r * this->columns.size() + column])) {
-                selection.push_back(r);
+            for (auto r = 0; r < src->GetRowsCount(); ++r) {
+                if (selector(data[r * this->columns.size() + column])) {
+                    selection.push_back(r);
+                }
             }
-        }
 
-        this->values.resize(selection.size() * this->columns.size());
-        auto d = this->values.data();
-        for (auto r : selection) {
-            std::copy(data + r * this->columns.size(),
-                data + (r + 1) * this->columns.size(),
-                d);
-            d += this->columns.size();
+            this->values.resize(selection.size() * this->columns.size());
+            auto d = this->values.data();
+            for (auto r : selection) {
+                std::copy(data + r * this->columns.size(),
+                    data + (r + 1) * this->columns.size(),
+                    d);
+                d += this->columns.size();
+            }
+
+        } else {
+            // Copy everything.
+            this->values.resize(src->GetRowsCount() * this->columns.size());
+            std::copy(src->GetData(), src->GetData() + this->values.size(),
+                this->values.begin());
         }
 
         this->frameID = dst->GetFrameID();
