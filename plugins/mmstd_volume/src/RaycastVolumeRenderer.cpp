@@ -178,6 +178,7 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
         std::fmax(m_volume_resolution[0], std::fmax(m_volume_resolution[1], m_volume_resolution[2]));
     auto const maxExtents = std::fmax(m_volume_extents[0], std::fmax(m_volume_extents[1], m_volume_extents[2]));
     glUniform1f(m_raycast_volume_compute_shdr->ParameterLocation("voxelSize"), maxExtents / (maxResolution - 1.0f));
+    glUniform2fv(m_raycast_volume_compute_shdr->ParameterLocation("valRange"), 1, valRange.data());
     glUniform1f(m_raycast_volume_compute_shdr->ParameterLocation("rayStepRatio"),
         this->m_ray_step_ratio_param.Param<core::param::FloatParam>()->Value());
     glUniform1f(m_raycast_volume_compute_shdr->ParameterLocation("opacityThreshold"), 1.0);
@@ -343,6 +344,7 @@ bool RaycastVolumeRenderer::updateVolumeData() {
 bool RaycastVolumeRenderer::updateTransferFunction() {
     core::view::CallGetTransferFunction* ct =
         this->m_transferFunction_callerSlot.CallAs<core::view::CallGetTransferFunction>();
+    //ct->SetRange(valRange);
     if (ct != NULL && ((*ct)())) {
         float const* tf_tex = ct->GetTextureData();
         unsigned int tf_size = ct->TextureSize();
