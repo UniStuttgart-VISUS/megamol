@@ -21,7 +21,7 @@
 #include "RenderVolumeSlice.h"
 #include "VolumetricDataSource.h"
 #include "RaycastVolumeRenderer.h"
-
+#include "DatRawWriter.h"
 
 /*
  * mmplgPluginAPIVersion
@@ -64,7 +64,7 @@ MMSTD_VOLUME_API const void * mmplgCoreCompatibilityValue(void) {
  * mmplgModuleCount
  */
 MMSTD_VOLUME_API int mmplgModuleCount(void) {
-    return 9;
+    return 10;
 }
 
 
@@ -82,6 +82,7 @@ MMSTD_VOLUME_API void* mmplgModuleDescription(int idx) {
     case 6: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::volume::RenderVolumeSlice>();
 	case 7: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::volume::VolumetricDataSource>();
 	case 8: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::volume::RaycastVolumeRenderer>();
+	case 9: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::volume::DatRawWriter>();
     }
     return NULL;
 }
