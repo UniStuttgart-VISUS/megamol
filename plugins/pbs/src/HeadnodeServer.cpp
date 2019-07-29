@@ -143,10 +143,9 @@ bool megamol::pbs::HeadnodeServer::get_cam_upd(std::vector<char>& msg) {
 bool megamol::pbs::HeadnodeServer::init_threads() {
     try {
         shutdown_threads();
-        vislib::sys::Log::DefaultLog.WriteInfo("HeadnodeServer: Starting listener on port %d.\n");
         this->comm_fabric_ = FBOCommFabric(std::make_unique<ZMQCommFabric>(zmq::socket_type::rep));
         auto const port = std::to_string(this->renderhead_port_slot_.Param<core::param::IntParam>()->Value());
-        vislib::sys::Log::DefaultLog.WriteInfo("HeadnodeServer: Starting listener on port %s.\n", port);
+        vislib::sys::Log::DefaultLog.WriteInfo("HeadnodeServer: Starting listener on port %s.\n", port.c_str());
         std::string const address = "tcp://*:" + port;
         this->comm_fabric_.Bind(address);
         run_threads_ = true;
