@@ -163,6 +163,18 @@ if(BUILD_CORE)
     DEPENDS glm_ext
     INCLUDE_DIR "src/glm_ext/")
 
+  # include glowl
+  add_external_project(glowl_ext
+    GIT_REPOSITORY https://github.com/invor/glowl.git
+    GIT_TAG "v0.1"
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ""
+    INSTALL_COMMAND ""
+    TEST_COMMAND "")
+  add_external_library(glowl INTERFACE
+    DEPENDS glowl_ext
+    INCLUDE_DIR "src/glowl_ext/include")
+
   #include nlohmann/json
   add_external_project(json_ext
       GIT_REPOSITORY https://github.com/azadkuh/nlohmann_json_release.git
@@ -221,7 +233,7 @@ if(BUILD_CORE)
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "src" "include"
     PUBLIC ${EXPAT_INCLUDE_DIRS})
   target_link_libraries(${PROJECT_NAME} 
-    PUBLIC vislib glad glm zlib libpng json ${EXPAT_LIBRARIES}
+    PUBLIC vislib glad glm glowl zlib libpng json ${EXPAT_LIBRARIES}
     PRIVATE lua libzmq libcppzmq ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT})
   if(WIN32)
     set_target_properties(${PROJECT_NAME} PROPERTIES
