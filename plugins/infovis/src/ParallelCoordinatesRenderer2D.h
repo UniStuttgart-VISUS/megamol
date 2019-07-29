@@ -117,7 +117,7 @@ private:
 
     void pickIndicator(float x, float y, int& axis, int& index);
 
-    void assertData(void);
+    void assertData(core::view::CallRender2D& call);
 
     void computeScaling(void);
 
@@ -221,6 +221,7 @@ private:
     int windowHeight;
     float backgroundColor[4];
     vislib::math::Rectangle<float> bounds;
+	unsigned int lastTimeStep;
 
     GLuint columnCount;
     GLuint itemCount;
