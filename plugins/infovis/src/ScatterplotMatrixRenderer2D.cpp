@@ -304,13 +304,13 @@ bool ScatterplotMatrixRenderer2D::validateData(core::view::CallRender2D& call) {
     if (this->floatTable == nullptr || !(*(this->floatTable))(0)) return false;
     if (this->floatTable->GetColumnsCount() == 0) return false;
 
-    this->flagStorage = this->flagStorageInSlot.CallAs<core::FlagCall>();
-    if (this->flagStorage != nullptr && !(*(this->flagStorage))()) return false;
-
     this->transferFunction = this->transferFunctionInSlot.CallAs<megamol::core::view::CallGetTransferFunction>();
     if (this->transferFunction == nullptr || !(*(this->transferFunction))()) return false;
 
     if (this->dataHash == this->floatTable->DataHash() && !isDirty() && ts == this->timestep) return true;
+
+    this->flagStorage = this->flagStorageInSlot.CallAs<core::FlagCall>();
+    if (this->flagStorage != nullptr && !(*(this->flagStorage))(core::FlagCall::CallMapFlags)) return false;
 
     auto columnInfos = this->floatTable->GetColumnsInfos();
     const size_t colCount = this->floatTable->GetColumnsCount();
@@ -340,6 +340,11 @@ bool ScatterplotMatrixRenderer2D::validateData(core::view::CallRender2D& call) {
     this->dataHash = this->floatTable->DataHash();
     this->timestep = ts;
     this->resetDirty();
+
+    assert(this->flagStorage != nullptr);
+    if (!(*(this->flagStorage))(core::FlagCall::CallUnmapFlags)) {
+        std::abort();   // This should never happen.
+    }
 
     return true;
 }
