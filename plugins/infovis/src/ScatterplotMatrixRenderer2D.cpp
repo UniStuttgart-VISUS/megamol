@@ -343,7 +343,7 @@ bool ScatterplotMatrixRenderer2D::validateData(core::view::CallRender2D& call) {
 
     assert(this->flagStorage != nullptr);
     if (!(*(this->flagStorage))(core::FlagCall::CallUnmapFlags)) {
-        std::abort();   // This should never happen.
+        std::abort(); // This should never happen.
     }
 
     return true;

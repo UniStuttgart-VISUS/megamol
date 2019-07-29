@@ -82,7 +82,7 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
     , stoppedFiltering(false)
     , pickedIndicatorAxis(-1)
     , pickedIndicatorIndex(-1)
-	, lastTimeStep(0)
+    , lastTimeStep(0)
     , font("Evolventa-SansSerif", core::utility::SDFFont::RenderType::RENDERTYPE_FILL) {
 
     this->getDataSlot.SetCompatibleCall<table::TableDataCallDescription>();
@@ -360,9 +360,9 @@ void ParallelCoordinatesRenderer2D::assertData(core::view::CallRender2D& call) {
         return;
     }
 
-	floats->SetFrameID(static_cast<unsigned int>(call.Time()));
+    floats->SetFrameID(static_cast<unsigned int>(call.Time()));
     (*floats)(0);
-	call.SetTimeFramesCount(floats->GetFrameCount());
+    call.SetTimeFramesCount(floats->GetFrameCount());
     auto hash = floats->DataHash();
     (*tc)(0);
     (*flagsc)(core::FlagCall::CallMapFlags);
@@ -410,7 +410,7 @@ void ParallelCoordinatesRenderer2D::assertData(core::view::CallRender2D& call) {
         glBufferData(
             GL_SHADER_STORAGE_BUFFER, 2 * sizeof(GLfloat), fragmentMinMax.data(), GL_DYNAMIC_READ); // TODO: huh.
         this->currentHash = hash;
-		this->lastTimeStep = static_cast<unsigned int>(call.Time());
+        this->lastTimeStep = static_cast<unsigned int>(call.Time());
     }
 
     if (version != this->currentFlagsVersion || version == 0) {

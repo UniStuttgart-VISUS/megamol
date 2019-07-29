@@ -221,7 +221,7 @@ private:
     int windowHeight;
     float backgroundColor[4];
     vislib::math::Rectangle<float> bounds;
-	unsigned int lastTimeStep;
+    unsigned int lastTimeStep;
 
     GLuint columnCount;
     GLuint itemCount;
