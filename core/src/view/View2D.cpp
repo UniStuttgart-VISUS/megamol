@@ -532,3 +532,20 @@ bool view::View2D::onResetView(param::ParamSlot& p) {
     this->ResetView();
     return true;
 }
+
+/*
+ * view::View2D::GetExtents
+ */
+bool view::View2D::GetExtents(Call& call) { 
+    view::CallRenderView* crv = dynamic_cast<view::CallRenderView*>(&call);
+    if (crv == nullptr) return false;
+
+    CallRender2D* cr2d = this->rendererSlot.CallAs<CallRender2D>();
+    if (cr2d == nullptr) return false;
+
+    if (!(*cr2d)(CallRender2D::FnGetExtents)) return false;
+
+    crv->SetTimeFramesCount(cr2d->TimeFramesCount());
+    crv->SetIsInSituTime(cr2d->IsInSituTime());
+    return true; 
+}

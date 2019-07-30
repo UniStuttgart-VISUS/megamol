@@ -1571,3 +1571,20 @@ void view::View3D::renderViewCube(void) {
     glLineWidth(1.0f);
     glDisable(GL_CULL_FACE);
 }
+
+/*
+ * view::View3D::GetExtents
+ */
+bool view::View3D::GetExtents(Call& call) { 
+    view::CallRenderView* crv = dynamic_cast<view::CallRenderView*>(&call);
+    if (crv == nullptr) return false;
+
+    CallRender3D* cr3d = this->rendererSlot.CallAs<CallRender3D>();
+    if (cr3d == nullptr) return false;
+
+    if (!(*cr3d)(CallRender3D::FnGetExtents)) return false;
+
+    crv->SetTimeFramesCount(cr3d->TimeFramesCount());
+    crv->SetIsInSituTime(cr3d->IsInSituTime());
+    return true; 
+}
