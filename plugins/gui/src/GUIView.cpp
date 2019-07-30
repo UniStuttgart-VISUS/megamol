@@ -16,6 +16,7 @@
 #include "stdafx.h"
 #include "GUIView.h"
 
+#include "mmcore/Call.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/BoolParam.h"
@@ -582,6 +583,26 @@ bool GUIView::OnMouseScroll(double dx, double dy) {
         crv->SetInputEvent(evt);
         if (!(*crv)(core::view::InputCall::FnOnMouseScroll)) return false;
     }
+
+    return true;
+}
+
+
+bool GUIView::OnRenderView(core::Call& call) {
+    core::view::CallRenderView* view = dynamic_cast<core::view::CallRenderView*>(&call);
+    if (view == nullptr) return false;
+
+    this->overrideViewCall = view;
+
+    mmcRenderViewContext context;
+    ::ZeroMemory(&context, sizeof(context));
+
+    context.Time = view->Time();
+    context.InstanceTime = view->InstanceTime();
+
+    this->Render(context);
+
+    this->overrideViewCall = nullptr;
 
     return true;
 }
