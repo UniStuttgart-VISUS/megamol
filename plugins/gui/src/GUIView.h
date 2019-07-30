@@ -7,8 +7,10 @@
 
 #pragma once
 
+#include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/AbstractView.h"
+#include "mmcore/view/CallRenderView.h"
 
 #include "vislib/math/Rectangle.h"
 
@@ -94,6 +96,8 @@ protected:
 
     virtual bool OnMouseScroll(double dx, double dy) override;
 
+    virtual bool OnRenderView(core::Call& call) override;
+
 private:
     // ENUMS ------------------------------------------------------------------
 
@@ -104,6 +108,9 @@ private:
 
     /** The input renderview slot */
     core::CallerSlot renderViewSlot;
+
+    /** Temporary override */
+    core::view::CallRenderView* overrideViewCall;
 
     /** A parameter to select the style */
     core::param::ParamSlot styleParam;
