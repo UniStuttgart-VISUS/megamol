@@ -56,6 +56,7 @@ datatools::ParticlesToDensity::ParticlesToDensity(void)
     , cyclZSlot("cyclZ", "Considers cyclic boundary conditions in Z direction")
     , normalizeSlot("normalize", "Normalize the output volume")
     , sigmaSlot("sigma", "Sigma for Gauss in multiple of rad")
+    , normalizeDirections("normalizeDirections", "Normalize direction vectors")
     //, datahash(std::numeric_limits<size_t>::max())
     , datahash(0)
     , time(std::numeric_limits<unsigned int>::max())
@@ -100,11 +101,9 @@ datatools::ParticlesToDensity::ParticlesToDensity(void)
     this->MakeSlotAvailable(&this->outDataSlot);
 
     this->outParticlesSlot.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(),
-        core::moldyn::MultiParticleDataCall::FunctionName(0),
-        &ParticlesToDensity::getDataCallback);
+        core::moldyn::MultiParticleDataCall::FunctionName(0), &ParticlesToDensity::getDataCallback);
     this->outParticlesSlot.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(),
-        core::moldyn::MultiParticleDataCall::FunctionName(1),
-        &ParticlesToDensity::getExtentCallback);
+        core::moldyn::MultiParticleDataCall::FunctionName(1), &ParticlesToDensity::getExtentCallback);
     this->MakeSlotAvailable(&this->outParticlesSlot);
 
     this->xResSlot << new core::param::IntParam(16);
@@ -127,6 +126,9 @@ datatools::ParticlesToDensity::ParticlesToDensity(void)
     this->sigmaSlot << new core::param::FloatParam(
         1.0f, std::numeric_limits<float>::min(), std::numeric_limits<float>::max());
     this->MakeSlotAvailable(&this->sigmaSlot);
+
+    this->normalizeDirections << new core::param::BoolParam(false);
+    this->MakeSlotAvailable(&this->normalizeDirections);
 
     this->inDataSlot.SetCompatibleCall<megamol::core::moldyn::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->inDataSlot);
@@ -168,7 +170,7 @@ bool datatools::ParticlesToDensity::getExtentCallback(megamol::core::Call& c) {
         outGrid->AccessBoundingBoxes().SetObjectSpaceClipBox(inMpdc->GetBoundingBoxes().ObjectSpaceClipBox());
         outGrid->SetFrameCount(inMpdc->FrameCount());
     }
-    
+
     // TODO: what am I actually doing here
     // inMpdc->SetUnlocker(nullptr, false);
     // inMpdc->Unlock();
@@ -266,10 +268,16 @@ bool datatools::ParticlesToDensity::getDataCallback(megamol::core::Call& c) {
         p.SetCount(this->colors.size());
 
         if (p.GetCount() > 0) {
-            p.SetVertexData(
-                core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ, this->grid.data());
+            p.SetVertexData(core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ, this->grid.data());
 
-            p.SetDirData(core::moldyn::SimpleSphericalParticles::DirDataType::DIRDATA_FLOAT_XYZ, this->directions.data());
+            if (this->normalizeDirections.Param<core::param::BoolParam>()->Value()) {
+                p.SetDirData(
+                    core::moldyn::SimpleSphericalParticles::DirDataType::DIRDATA_FLOAT_XYZ, this->directions.data());
+            } else {
+                p.SetDirData(
+                    core::moldyn::SimpleSphericalParticles::DirDataType::DIRDATA_FLOAT_XYZ, this->vol[0].data());
+            }
+
             p.SetColourData(core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I, this->colors.data());
 
             p.SetGlobalRadius(inMpdc->AccessBoundingBoxes().ObjectSpaceBBox().Width() /
@@ -510,7 +518,7 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
         this->colors.resize(vol[0].size() / 3);
         maxDens = 0.0f;
         minDens = std::numeric_limits<float>::max();
-        for (std::size_t i = 0; i < vol[0].size() / 3; i += 3) {
+        for (std::size_t i = 0; i < vol[0].size() / 3; ++i) {
             vol[0][i * 3 + 0] /= weights[0][i] == 0.0f ? 1.0f : weights[0][i];
             vol[0][i * 3 + 1] /= weights[0][i] == 0.0f ? 1.0f : weights[0][i];
             vol[0][i * 3 + 2] /= weights[0][i] == 0.0f ? 1.0f : weights[0][i];
@@ -523,10 +531,15 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
             this->directions[i * 3 + 1] = vol[0][i * 3 + 1] / density;
             this->directions[i * 3 + 2] = vol[0][i * 3 + 2] / density;
 
-            this->colors[i] = density;
-
             maxDens = std::max(maxDens, density);
             minDens = std::min(minDens, density);
+        }
+        for (std::size_t i = 0; i < vol[0].size() / 3; ++i) {
+            const float density =
+                std::sqrt(vol[0][i * 3 + 0] * vol[0][i * 3 + 0] + vol[0][i * 3 + 1] * vol[0][i * 3 + 1] +
+                          vol[0][i * 3 + 2] * vol[0][i * 3 + 2]);
+
+            this->colors[i] = (density - minDens) / (maxDens - minDens);
         }
     } else {
         maxDens = *std::max_element(vol[0].begin(), vol[0].end());

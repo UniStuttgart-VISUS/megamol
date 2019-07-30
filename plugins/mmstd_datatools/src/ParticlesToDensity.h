@@ -108,6 +108,8 @@ private:
 
     core::param::ParamSlot sigmaSlot;
 
+    core::param::ParamSlot normalizeDirections;
+
     std::vector<std::vector<float>> vol;
     std::vector<float> directions, colors;
     std::vector<float> grid;
