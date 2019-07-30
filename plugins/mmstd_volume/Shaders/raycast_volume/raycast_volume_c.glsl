@@ -20,11 +20,32 @@ uniform vec3 boxMax;
 uniform float voxelSize;
 /**/
 uniform vec3 halfVoxelSize;
+
 uniform float rayStepRatio;
 /**/
 uniform float opacityThreshold;
 
 uniform vec2 valRange;
+
+uniform vec3 background;
+
+uniform bool use_lighting;
+
+uniform float ka;
+
+uniform float kd;
+
+uniform float ks;
+
+uniform float shininess;
+
+uniform vec3 light;
+
+uniform vec3 ambient_col;
+
+uniform vec3 specular_col;
+
+uniform vec3 light_col;
 
 /*	texture that houses the volume data */
 uniform highp sampler3D volume_tx3D;
@@ -84,6 +105,14 @@ float wang_hash(uint seed) {
 }
 /////////////////////////////// End - Random Number Generator
 
+vec3 phong(vec3 color, vec3 normal, vec3 eye, vec3 light) {
+    vec3 ambient = ka * ambient_col * color;
+    vec3 diffuse = kd * light_col * color * max(0, dot(normal, light));
+    vec3 specular = ks * light_col * specular_col * pow(max(0, dot(normal, normalize(light+eye))), shininess);
+
+    return clamp(ambient+diffuse+specular, vec3(0), vec3(1));
+}
+
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
 void main() {
@@ -126,51 +155,40 @@ void main() {
         float t = tnear >= 0.0f ? tnear : 0.0f;
         t += random * rayStep; // Randomly offset the ray origin to prevent ringing artifacts
         vec4 result = vec4(0.0f);
-        int steps = 0;
 
-        while (t < tfar && result.w < opacityThreshold /*&& steps < maxSteps*/) {
+        while (t < tfar && result.w < opacityThreshold) {
             vec3 pos = ray.o + t * ray.d;
             // Compute volume tex coordinates in [0,1] range.
             vec3 texCoords = (pos - boxMin) / (boxMax - boxMin);
             texCoords *= 1.0 - 2.0 * halfVoxelSize;
             texCoords += halfVoxelSize;
 
-            //vec4 vol_sample = texture(transfer_function_tx2D, vec2(texture(volume_tx3D, texCoords).x, 1));
-            vec4 vol_sample = texture(tf_tx1D, (texture(volume_tx3D, texCoords).x - valRange.x)/valRange.y);
-            
-            // vec4 vol_sample = texture(volume_tx3D,texCoords);
-            // vol_sample.w = vol_sample.x;
+            vec4 vol_sample = texture(tf_tx1D, (texture(volume_tx3D, texCoords).x - valRange.x) / (valRange.y - valRange.x));
 
+            if (use_lighting) {
+                vec3 normal;
+                normal.x = textureOffset(volume_tx3D, texCoords, ivec3(1, 0, 0)).x - textureOffset(volume_tx3D, texCoords, ivec3(-1, 0, 0)).x;
+                normal.y = textureOffset(volume_tx3D, texCoords, ivec3(0, 1, 0)).x - textureOffset(volume_tx3D, texCoords, ivec3(0, -1, 0)).x;
+                normal.z = textureOffset(volume_tx3D, texCoords, ivec3(0, 0, 1)).x - textureOffset(volume_tx3D, texCoords, ivec3(0, 0, -1)).x;
+                normal = -normalize(normal);
+                vol_sample.xyz = phong(vol_sample.xyz, normal, -ray.d, normalize(light-pos));
+            }
+            
             // Opacity correction.
             vol_sample.w = (1.0f - pow(1.0f - vol_sample.w, rayStepRatio));
             // TF "Brightness". Make sure to not over-saturate the opacity.
             // (Which will lead to color oversaturation.)
-            // vol_sample.w = min(vol_sample.w * cSeriesDesc.BrightnessPerSeries[series], 1.0f)
+            
             vol_sample.xyz *= vol_sample.w;
-            // if (useLighting)
-            //{
-            //    vec3 gradient = fetchGradientEstimate(cVolumesToRender.List[series],
-            //                                            cSeriesDesc.ComponentsPerSeries[series],
-            //                                            cTfs.List[series],
-            // texCoords,
-                //                                            rayStep * 8.0f);
-                //    float3 normal = normalize(-gradient);
-                //    float3 lightDir = normalize(cLightDesc.Pos - pos);
-                //    float lambert = max(0.0f, dot(normal, lightDir));
-                //    float3 lightColorContribution = cLightDesc.Color * cLightDesc.Intensity * lambert;
-                //    float3 surfaceColor = make_float3(mappedSample)
-                //    mappedSample += make_float4(surfaceColor * lightColorContribution, 0.0f);
-                //}
+            
+            result += (1.0f - result.w) * vol_sample;
 
-                result += (1.0f - result.w) * vol_sample;
-
-            steps++;
             t += rayStep;
         }
 
         // Blend with white background. (Helps to make the renderings look more consistent.)
         // todo Is this correct? What if bg was transparent? The result would change with this formula.
-        // result = (result.w) * result + vec4(1.0f,0.0,0.0,0.0) * (1.0f - result.w);
+        result = result.w * result + vec4(background, 1.0f) * (1.0f - result.w);
         // result.w = 1.0f;
         imageStore(render_target_tx2D, pixel_coords, result);
 

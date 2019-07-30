@@ -460,6 +460,16 @@ private:
 
     core::param::ParamSlot m_ray_step_ratio_param;
 
+    core::param::ParamSlot use_lighting_slot_;
+
+    core::param::ParamSlot ka_slot_;
+
+    core::param::ParamSlot kd_slot_;
+
+    core::param::ParamSlot ks_slot_;
+
+    core::param::ParamSlot shininess_slot_;
+
     std::array<float, 2> valRange;
 };
 

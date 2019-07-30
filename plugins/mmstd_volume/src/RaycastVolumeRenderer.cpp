@@ -14,9 +14,11 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/misc/VolumetricDataCall.h"
 #include "mmcore/param/FloatParam.h"
+#include "mmcore/param/BoolParam.h"
 #include "mmcore/view/CallGetTransferFunction.h"
 
 #include "linmath.h"
+#include "mmcore/view/AbstractRenderingView.h"
 
 using namespace megamol::stdplugin::volume;
 
@@ -24,7 +26,12 @@ RaycastVolumeRenderer::RaycastVolumeRenderer()
     : Renderer3DModule()
     , m_volumetricData_callerSlot("getData", "Connects the volume renderer with a voluemtric data source")
     , m_transferFunction_callerSlot("getTranfserFunction", "Connects the volume renderer with a transfer function")
-    , m_ray_step_ratio_param("ray step ratio", "") {
+    , m_ray_step_ratio_param("ray step ratio", "")
+    , use_lighting_slot_("use_lighting", "Enable simple volumetric illumination")
+    , ka_slot_("ka", "")
+    , kd_slot_("kd", "")
+    , ks_slot_("ks", "")
+    , shininess_slot_("shininess", "") {
     this->m_volumetricData_callerSlot.SetCompatibleCall<megamol::core::misc::VolumetricDataCallDescription>();
     this->MakeSlotAvailable(&this->m_volumetricData_callerSlot);
 
@@ -34,6 +41,21 @@ RaycastVolumeRenderer::RaycastVolumeRenderer()
     auto* ep = new megamol::core::param::FloatParam(1.0);
     this->m_ray_step_ratio_param << ep;
     this->MakeSlotAvailable(&this->m_ray_step_ratio_param);
+
+    use_lighting_slot_ << new core::param::BoolParam(false);
+    MakeSlotAvailable(&use_lighting_slot_);
+
+    ka_slot_ << new core::param::FloatParam(0.1f, 0.0f);
+    MakeSlotAvailable(&ka_slot_);
+
+    kd_slot_ << new core::param::FloatParam(0.5f, 0.0f);
+    MakeSlotAvailable(&kd_slot_);
+
+    ks_slot_ << new core::param::FloatParam(0.4f, 0.0f);
+    MakeSlotAvailable(&ks_slot_);
+
+    shininess_slot_ << new core::param::FloatParam(10.0f, 0.0f);
+    MakeSlotAvailable(&shininess_slot_);
 }
 
 RaycastVolumeRenderer::~RaycastVolumeRenderer() { this->Release(); }
@@ -142,6 +164,11 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
     glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
     GLfloat projMatrix_column[16];
     glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
+    std::array<float, 4> light = {0.0f, 0.0f, 1.0f, 1.0f};
+    glGetLightfv(GL_LIGHT0, GL_POSITION, light.data());
+    std::array<float, 3> ambient_col = {1.0f, 1.0f, 1.0f};
+    std::array<float, 4> specular_col = {1.0f, 1.0f, 1.0f};
+    std::array<float, 4> light_col = {1.0f, 1.0f, 1.0f};
     // end suck
 
     if (!updateVolumeData()) return false;
@@ -158,7 +185,7 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
     rt_resolution[0] = static_cast<float>(m_render_target->getWidth());
     rt_resolution[1] = static_cast<float>(m_render_target->getHeight());
     glUniform2fv(m_raycast_volume_compute_shdr->ParameterLocation("rt_resolution"), 1, rt_resolution);
-
+    
     // bbox sizes
     vec3 box_min;
     box_min[0] = m_volume_origin[0];
@@ -182,6 +209,29 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
     glUniform1f(m_raycast_volume_compute_shdr->ParameterLocation("rayStepRatio"),
         this->m_ray_step_ratio_param.Param<core::param::FloatParam>()->Value());
     glUniform1f(m_raycast_volume_compute_shdr->ParameterLocation("opacityThreshold"), 1.0);
+
+    glUniform1ui(m_raycast_volume_compute_shdr->ParameterLocation("use_lighting"), use_lighting_slot_.Param<core::param::BoolParam>()->Value());
+    glUniform1f(m_raycast_volume_compute_shdr->ParameterLocation("ka"), ka_slot_.Param<core::param::FloatParam>()->Value());
+    glUniform1f(
+        m_raycast_volume_compute_shdr->ParameterLocation("kd"), kd_slot_.Param<core::param::FloatParam>()->Value());
+    glUniform1f(
+        m_raycast_volume_compute_shdr->ParameterLocation("ks"), ks_slot_.Param<core::param::FloatParam>()->Value());
+    glUniform1f(m_raycast_volume_compute_shdr->ParameterLocation("shininess"),
+        shininess_slot_.Param<core::param::FloatParam>()->Value());
+    glUniform3fv(m_raycast_volume_compute_shdr->ParameterLocation("light"), 1, light.data());
+    glUniform3fv(m_raycast_volume_compute_shdr->ParameterLocation("ambient_col"), 1, ambient_col.data());
+    glUniform3fv(m_raycast_volume_compute_shdr->ParameterLocation("specular_col"), 1, specular_col.data());
+    glUniform3fv(m_raycast_volume_compute_shdr->ParameterLocation("light_col"), 1, light_col.data());
+
+    auto const arv = std::dynamic_pointer_cast<core::view::AbstractRenderingView const>(cr->PeekCallerSlot()->Parent());
+    std::array<float, 3> bkgndCol = {1.0f, 1.0f, 1.0f}; 
+    if (arv != nullptr) {
+        auto const ptr = arv->BkgndColour();
+        bkgndCol[0] = ptr[0];
+        bkgndCol[1] = ptr[1];
+        bkgndCol[2] = ptr[2];
+    }
+    glUniform3fv(m_raycast_volume_compute_shdr->ParameterLocation("background"), 1, bkgndCol.data());
 
     // bind volume texture
     glActiveTexture(GL_TEXTURE0);
