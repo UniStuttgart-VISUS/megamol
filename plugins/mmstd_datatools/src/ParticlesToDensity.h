@@ -109,6 +109,8 @@ private:
     core::param::ParamSlot sigmaSlot;
 
     std::vector<std::vector<float>> vol;
+    std::vector<float> directions, colors;
+    std::vector<float> grid;
 
     size_t in_datahash = std::numeric_limits<size_t>::max();
     size_t datahash = 0;
@@ -118,6 +120,7 @@ private:
 
     /** The slot providing access to the manipulated data */
     megamol::core::CalleeSlot outDataSlot;
+    megamol::core::CalleeSlot outParticlesSlot;
 
     /** The slot accessing the original data */
     megamol::core::CallerSlot inDataSlot;
