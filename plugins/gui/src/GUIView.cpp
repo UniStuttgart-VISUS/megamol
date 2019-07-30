@@ -1198,7 +1198,7 @@ void GUIView::drawFontWindowCallback(
     vislib::StringA valueString;
     // XXX: UTF8 conversion and allocation every frame is horrific inefficient.
     vislib::UTF8Encoder::Encode(valueString, vislib::StringA(window_config.font_new_filename.c_str()));
-    static std::string valueUtf8String(valueString.PeekBuffer()); /// ImGui::InputText string varaiable MUST be static!
+    std::string valueUtf8String(valueString.PeekBuffer());
     ImGuiInputTextFlags textflags = ImGuiInputTextFlags_AutoSelectAll;
     if (ImGui::InputText(label.c_str(), &valueUtf8String, textflags)) {
         vislib::UTF8Encoder::Decode(valueString, vislib::StringA(valueUtf8String.c_str()));
@@ -1328,8 +1328,7 @@ void GUIView::drawMenu(void) {
         vislib::StringA valueString;
         // XXX: UTF8 conversion and allocation every frame is horrific inefficient.
         vislib::UTF8Encoder::Encode(valueString, vislib::StringA(this->projectFilename.c_str()));
-        static std::string valueUtf8String(
-            valueString.PeekBuffer()); /// ImGui::InputText string varaiable MUST be static!
+        std::string valueUtf8String(valueString.PeekBuffer());
         ImGuiInputTextFlags textflags = ImGuiInputTextFlags_AutoSelectAll;
         if (ImGui::InputText(label.c_str(), &valueUtf8String, textflags)) {
             vislib::UTF8Encoder::Decode(valueString, vislib::StringA(valueUtf8String.c_str()));
@@ -1536,8 +1535,7 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
             vislib::StringA valueString;
             // XXX: UTF8 conversion and allocation every frame is horrific inefficient.
             vislib::UTF8Encoder::Encode(valueString, param->ValueString());
-            static std::string valueUtf8String(
-                valueString.PeekBuffer()); /// ImGui::InputText string varaiable MUST be static!
+            std::string valueUtf8String(valueString.PeekBuffer());
 
             // Determine line count
             const int minnlcnt = 5;
