@@ -9,6 +9,7 @@
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/IntParam.h"
 #include "vislib/sys/Log.h"
+#include <string>
 
 using namespace megamol;
 using namespace megamol::core;
