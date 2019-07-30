@@ -65,6 +65,7 @@ datatools::ParticlesToDensity::ParticlesToDensity(void)
     auto* ep = new core::param::EnumParam(0);
     ep->SetTypePair(0, "PosToSingleCell_Volume");
     ep->SetTypePair(1, "IColToSingleCell_Volume");
+    ep->SetTypePair(2, "IVecToSingleCell_Volume");
     this->aggregatorSlot << ep;
     this->MakeSlotAvailable(&this->aggregatorSlot);
 
@@ -181,18 +182,24 @@ bool datatools::ParticlesToDensity::getDataCallback(megamol::core::Call& c) {
     }
 
     // TODO set data
+    const bool is_vector = this->aggregatorSlot.Param<core::param::EnumParam>()->Value() == 2;
+
     outVol->SetData(this->vol[0].data());
-    metadata.Components = 1;
+    metadata.Components = is_vector ? 3 : 1;
     metadata.GridType = core::misc::GridType_t::CARTESIAN;
     metadata.Resolution[0] = static_cast<size_t>(this->xResSlot.Param<core::param::IntParam>()->Value());
     metadata.Resolution[1] = static_cast<size_t>(this->yResSlot.Param<core::param::IntParam>()->Value());
     metadata.Resolution[2] = static_cast<size_t>(this->zResSlot.Param<core::param::IntParam>()->Value());
     metadata.ScalarType = core::misc::ScalarType_t::FLOATING_POINT;
     metadata.ScalarLength = sizeof(float);
-    metadata.MinValues = new double[1];
+    metadata.MinValues = new double[is_vector ? 3 : 1];
     metadata.MinValues[0] = this->minDens;
-    metadata.MaxValues = new double[1];
+    if (is_vector) metadata.MinValues[1] = this->minDens;
+    if (is_vector) metadata.MinValues[2] = this->minDens;
+    metadata.MaxValues = new double[is_vector ? 3 : 1];
     metadata.MaxValues[0] = this->maxDens;
+    if (is_vector) metadata.MaxValues[1] = this->maxDens;
+    if (is_vector) metadata.MaxValues[2] = this->maxDens;
     auto bbox = inMpdc->AccessBoundingBoxes().ObjectSpaceBBox();
     metadata.Extents[0] = bbox.Width();
     metadata.Extents[1] = bbox.Height();
@@ -244,10 +251,12 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
     auto const sy = this->yResSlot.Param<core::param::IntParam>()->Value();
     auto const sz = this->zResSlot.Param<core::param::IntParam>()->Value();
 
+    bool const is_vector = this->aggregatorSlot.Param<core::param::EnumParam>()->Value() == 2;
+
     vol.resize(omp_get_max_threads());
 #pragma omp parallel for
     for (int init = 0; init < omp_get_max_threads(); ++init) {
-        vol[init].resize(sx * sy * sz);
+        vol[init].resize(sx * sy * sz * (is_vector ? 3 : 1));
         std::fill(vol[init].begin(), vol[init].end(), 0.0f);
     }
 
@@ -301,11 +310,25 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
         auto const& zAcc = parStore.GetZAcc();
         auto const& rAcc = parStore.GetRAcc();
         auto const& iAcc = parStore.GetCRAcc();
+        auto const& dxAcc = parStore.GetDXAcc();
+        auto const& dyAcc = parStore.GetDYAcc();
+        auto const& dzAcc = parStore.GetDZAcc();
 
         auto const sigma = this->sigmaSlot.Param<core::param::FloatParam>()->Value();
 
         std::function<void(int, int, int, int, float, float)> volOp;
         switch (this->aggregatorSlot.Param<core::param::EnumParam>()->Value()) {
+        case 2: {
+            volOp = [this, &gauss, dxAcc, dyAcc, dzAcc, sx, sy, sigma](int const pidx, int const x, int const y,
+                        int const z, float const dis, float const rad) -> void {
+                auto const val_x = dxAcc->Get_f(pidx);
+                auto const val_y = dyAcc->Get_f(pidx);
+                auto const val_z = dzAcc->Get_f(pidx);
+                vol[omp_get_thread_num()][(x + (y + z * sy) * sx) * 3 + 0] += gauss(dis, sigma * rad) * val_x;
+                vol[omp_get_thread_num()][(x + (y + z * sy) * sx) * 3 + 1] += gauss(dis, sigma * rad) * val_y;
+                vol[omp_get_thread_num()][(x + (y + z * sy) * sx) * 3 + 2] += gauss(dis, sigma * rad) * val_z;
+            };
+        } break;
         case 1: {
             volOp = [this, &gauss, iAcc, sx, sy, sigma](int const pidx, int const x, int const y, int const z,
                         float const dis, float const rad) -> void {
@@ -419,8 +442,21 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
         std::transform(vol[i].begin(), vol[i].end(), vol[0].begin(), vol[0].begin(), std::plus<>());
     }
 
-    maxDens = *std::max_element(vol[0].begin(), vol[0].end());
-    minDens = *std::min_element(vol[0].begin(), vol[0].end());
+    if (is_vector) {
+        maxDens = 0.0f;
+        minDens = std::numeric_limits<float>::max();
+        for (std::size_t i = 0; i < vol[0].size() / 3; i += 3) {
+            const float density = std::sqrt(vol[0][i * 3 + 0] * vol[0][i * 3 + 0] + vol[0][i * 3 + 1] * vol[0][i * 3 + 1] +
+                                  vol[0][i * 3 + 2] * vol[0][i * 3 + 2]);
+
+            maxDens = std::max(maxDens, density);
+            minDens = std::min(minDens, density);
+        }
+    } else {
+        maxDens = *std::max_element(vol[0].begin(), vol[0].end());
+        minDens = *std::min_element(vol[0].begin(), vol[0].end());
+    }
+
     vislib::sys::Log::DefaultLog.WriteInfo("ParticlesToDensity: Captured density %f -> %f", minDens, maxDens);
 
     if (this->normalizeSlot.Param<core::param::BoolParam>()->Value()) {
