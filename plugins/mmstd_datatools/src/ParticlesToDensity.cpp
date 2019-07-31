@@ -205,25 +205,19 @@ bool datatools::ParticlesToDensity::getDataCallback(megamol::core::Call& c) {
     }
 
     // TODO set data
-    const bool is_vector = this->aggregatorSlot.Param<core::param::EnumParam>()->Value() == 2;
-
     if (outVol != nullptr) {
         outVol->SetData(this->vol[0].data());
-        metadata.Components = is_vector ? 3 : 1;
+        metadata.Components = 1;
         metadata.GridType = core::misc::GridType_t::CARTESIAN;
         metadata.Resolution[0] = static_cast<size_t>(this->xResSlot.Param<core::param::IntParam>()->Value());
         metadata.Resolution[1] = static_cast<size_t>(this->yResSlot.Param<core::param::IntParam>()->Value());
         metadata.Resolution[2] = static_cast<size_t>(this->zResSlot.Param<core::param::IntParam>()->Value());
         metadata.ScalarType = core::misc::ScalarType_t::FLOATING_POINT;
         metadata.ScalarLength = sizeof(float);
-        metadata.MinValues = new double[is_vector ? 3 : 1];
+        metadata.MinValues = new double[1];
         metadata.MinValues[0] = this->minDens;
-        if (is_vector) metadata.MinValues[1] = this->minDens;
-        if (is_vector) metadata.MinValues[2] = this->minDens;
-        metadata.MaxValues = new double[is_vector ? 3 : 1];
+        metadata.MaxValues = new double[1];
         metadata.MaxValues[0] = this->maxDens;
-        if (is_vector) metadata.MaxValues[1] = this->maxDens;
-        if (is_vector) metadata.MaxValues[2] = this->maxDens;
         auto bbox = inMpdc->AccessBoundingBoxes().ObjectSpaceBBox();
         metadata.Extents[0] = bbox.Width();
         metadata.Extents[1] = bbox.Height();
@@ -269,15 +263,7 @@ bool datatools::ParticlesToDensity::getDataCallback(megamol::core::Call& c) {
 
         if (p.GetCount() > 0) {
             p.SetVertexData(core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ, this->grid.data());
-
-            if (this->normalizeDirections.Param<core::param::BoolParam>()->Value()) {
-                p.SetDirData(
-                    core::moldyn::SimpleSphericalParticles::DirDataType::DIRDATA_FLOAT_XYZ, this->directions.data());
-            } else {
-                p.SetDirData(
-                    core::moldyn::SimpleSphericalParticles::DirDataType::DIRDATA_FLOAT_XYZ, this->vol[0].data());
-            }
-
+            p.SetDirData(core::moldyn::SimpleSphericalParticles::DirDataType::DIRDATA_FLOAT_XYZ, this->directions.data());
             p.SetColourData(core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I, this->colors.data());
 
             p.SetGlobalRadius(inMpdc->AccessBoundingBoxes().ObjectSpaceBBox().Width() /
@@ -540,7 +526,9 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
                           vol[0][i * 3 + 2] * vol[0][i * 3 + 2]);
 
             this->colors[i] = (density - minDens) / (maxDens - minDens);
+            this->vol[0][i] = density;
         }
+        this->vol[0].resize(this->vol[0].size() / 3);
     } else {
         maxDens = *std::max_element(vol[0].begin(), vol[0].end());
         minDens = *std::min_element(vol[0].begin(), vol[0].end());
