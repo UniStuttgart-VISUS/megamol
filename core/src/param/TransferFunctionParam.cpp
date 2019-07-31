@@ -71,12 +71,9 @@ void TransferFunctionParam::Definition(vislib::RawStorage& outDef) const {
  */
 bool TransferFunctionParam::ParseValue(vislib::TString const& v) {
 
-    try {
-        if (this->CheckTransferFunctionString(std::string(v.PeekBuffer()))) {
-            this->val = std::string(v.PeekBuffer());
-            return true;
-        }
-    } catch (...) {
+    if (this->CheckTransferFunctionString(std::string(v.PeekBuffer()))) {
+        this->val = std::string(v.PeekBuffer());
+        return true;
     }
 
     return false;
@@ -146,30 +143,55 @@ bool TransferFunctionParam::ParseTransferFunction(const std::string& in_tfs, TFD
         if (!TransferFunctionParam::CheckTransferFunctionString(in_tfs)) {
             return false;
         }
-        nlohmann::json json = nlohmann::json::parse(in_tfs);
+        try {
+            nlohmann::json json = nlohmann::json::parse(in_tfs);
 
-        // Get texture size
-        json.at("TextureSize").get_to(tmp_texsize);
+            // Get texture size
+            json.at("TextureSize").get_to(tmp_texsize);
 
-        // Get interpolation method
-        json.at("Interpolation").get_to(tmp_interpolmode_str);
-        if (tmp_interpolmode_str == "LINEAR") {
-            tmp_interpolmode = InterpolationMode::LINEAR;
-        } else if (tmp_interpolmode_str == "GAUSS") {
-            tmp_interpolmode = InterpolationMode::GAUSS;
+            // Get interpolation method
+            json.at("Interpolation").get_to(tmp_interpolmode_str);
+            if (tmp_interpolmode_str == "LINEAR") {
+                tmp_interpolmode = InterpolationMode::LINEAR;
+            } else if (tmp_interpolmode_str == "GAUSS") {
+                tmp_interpolmode = InterpolationMode::GAUSS;
+            }
+
+            // Get nodes data
+            UINT tf_size = (UINT)json.at("Nodes").size();
+            tmp_data.resize(tf_size);
+            for (UINT i = 0; i < tf_size; ++i) {
+                json.at("Nodes")[i].get_to(tmp_data[i]);
+            }
+
+            // Get data range
+            json.at("ValueRange")[0].get_to(tmp_range[0]);
+            json.at("ValueRange")[1].get_to(tmp_range[1]);
+
         }
-
-        // Get nodes data
-        UINT tf_size = (UINT)json.at("Nodes").size();
-        tmp_data.resize(tf_size);
-        for (UINT i = 0; i < tf_size; ++i) {
-            json.at("Nodes")[i].get_to(tmp_data[i]);
+        catch (nlohmann::json::type_error& e) {
+            vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         }
-
-        // Get data range
-        json.at("ValueRange")[0].get_to(tmp_range[0]);
-        json.at("ValueRange")[1].get_to(tmp_range[1]);
-
+        catch (nlohmann::json::exception& e) {
+            vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        }
+        catch (nlohmann::json::parse_error& e) {
+            vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        }
+        catch (nlohmann::json::invalid_iterator& e) {
+            vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        }
+        catch (nlohmann::json::out_of_range& e) {
+            vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        }
+        catch (nlohmann::json::other_error& e) {
+            vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        }
+        catch (...) {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "[ParseTransferFunction] Unknown Error - Unable to read transfer function from JSON string.");
+            return false;
+        }
     } else { // Loading default values for empty transfer function
         tmp_data.clear();
         std::array<float, TFP_VAL_CNT> zero = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.05f};
@@ -190,6 +212,7 @@ bool TransferFunctionParam::ParseTransferFunction(const std::string& in_tfs, TFD
     out_texsize = tmp_texsize;
     out_range = tmp_range;
 
+
     return true;
 }
 
@@ -200,28 +223,54 @@ bool TransferFunctionParam::ParseTransferFunction(const std::string& in_tfs, TFD
 bool TransferFunctionParam::DumpTransferFunction(std::string& out_tfs, const TFDataType& in_data,
     const InterpolationMode in_interpolmode, const UINT in_texsize, std::array<float, 2> in_range) {
 
-    nlohmann::json json;
+    try {
+        nlohmann::json json;
 
-    if (!TransferFunctionParam::CheckTransferFunctionData(in_data, in_interpolmode, in_texsize, in_range)) {
+        if (!TransferFunctionParam::CheckTransferFunctionData(in_data, in_interpolmode, in_texsize, in_range)) {
+            return false;
+        }
+
+        std::string interpolation_str;
+        switch (in_interpolmode) {
+        case (InterpolationMode::LINEAR):
+            interpolation_str = "LINEAR";
+            break;
+        case (InterpolationMode::GAUSS):
+            interpolation_str = "GAUSS";
+            break;
+        }
+
+        json["Interpolation"] = interpolation_str;
+        json["TextureSize"] = in_texsize;
+        json["Nodes"] = in_data;
+        json["ValueRange"] = in_range;
+
+        out_tfs = json.dump(); // pass 'true' for pretty printing with newlines
+
+    }
+    catch (nlohmann::json::type_error& e) {
+        vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+    }
+    catch (nlohmann::json::exception& e) {
+        vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+    }
+    catch (nlohmann::json::parse_error& e) {
+        vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+    }
+    catch (nlohmann::json::invalid_iterator& e) {
+        vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+    }
+    catch (nlohmann::json::out_of_range& e) {
+        vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+    }
+    catch (nlohmann::json::other_error& e) {
+        vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+    }
+    catch (...) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "[DumpTransferFunction] Unknown Error - Unable to write transfer function to JSON string.");
         return false;
     }
-
-    std::string interpolation_str;
-    switch (in_interpolmode) {
-    case (InterpolationMode::LINEAR):
-        interpolation_str = "LINEAR";
-        break;
-    case (InterpolationMode::GAUSS):
-        interpolation_str = "GAUSS";
-        break;
-    }
-
-    json["Interpolation"] = interpolation_str;
-    json["TextureSize"] = in_texsize;
-    json["Nodes"] = in_data;
-    json["ValueRange"] = in_range;
-
-    out_tfs = json.dump(); // pass 'true' for pretty printing with newlines
 
     return true;
 }
@@ -300,97 +349,116 @@ bool TransferFunctionParam::CheckTransferFunctionString(const std::string& tfs) 
     bool check = true;
     if (!tfs.empty()) {
 
-        nlohmann::json json;
         try {
+            nlohmann::json json;
             json = nlohmann::json::parse(tfs);
-        } catch (...) {
-            vislib::sys::Log::DefaultLog.WriteError("[CheckTransferFunctionString] Unable to parse JSON string (there should be no escaped quotes, e.g.).");
-            return false;
-        }
 
-        // Check for valid JSON object
-        if (!json.is_object()) {
-            vislib::sys::Log::DefaultLog.WriteError(
-                "[CheckTransferFunctionString] Given string is no valid JSON object.");
-            return false;
-        }
-
-        // Check texture size
-        if (!json.at("TextureSize").is_number_integer()) {
-            vislib::sys::Log::DefaultLog.WriteError(
-                "[CheckTransferFunctionString] Couldn't read 'TextureSize' as integer value.");
-            check = false;
-        }
-
-        // Check interpolation mode
-        if (json.at("Interpolation").is_string()) {
-            std::string tmp_str;
-            json.at("Interpolation").get_to(tmp_str);
-            if ((tmp_str != "LINEAR") && (tmp_str != "GAUSS")) {
+            // Check for valid JSON object
+            if (!json.is_object()) {
                 vislib::sys::Log::DefaultLog.WriteError(
-                    "[CheckTransferFunctionString] Couldn't find 'Interpolation' mode.");
+                    "[CheckTransferFunctionString] Given string is no valid JSON object.");
+                return false;
+            }
+
+            // Check texture size
+            if (!json.at("TextureSize").is_number_integer()) {
+                vislib::sys::Log::DefaultLog.WriteError(
+                    "[CheckTransferFunctionString] Couldn't read 'TextureSize' as integer value.");
                 check = false;
             }
-        } else {
-            vislib::sys::Log::DefaultLog.WriteError(
-                "[CheckTransferFunctionString] Couldn't read 'Interpolation' as string value.");
-            check = false;
-        }
 
-        // Check transfer function node data
-        if (json.at("Nodes").is_array()) {
-            UINT tmp_size = (UINT)json.at("Nodes").size();
-            if (tmp_size < 2) {
-                vislib::sys::Log::DefaultLog.WriteError(
-                    "[CheckTransferFunctionString] There should be at least two entries in 'Nodes' array.");
-                check = false;
-            }
-            for (UINT i = 0; i < tmp_size; ++i) {
-                if (!json.at("Nodes")[i].is_array()) {
+            // Check interpolation mode
+            if (json.at("Interpolation").is_string()) {
+                std::string tmp_str;
+                json.at("Interpolation").get_to(tmp_str);
+                if ((tmp_str != "LINEAR") && (tmp_str != "GAUSS")) {
                     vislib::sys::Log::DefaultLog.WriteError(
-                        "[CheckTransferFunctionString] Entries of 'Nodes' should be arrays.");
+                        "[CheckTransferFunctionString] Couldn't find 'Interpolation' mode.");
                     check = false;
-                } else {
-                    if (json.at("Nodes")[i].size() != TFP_VAL_CNT) {
+                }
+            } else {
+                vislib::sys::Log::DefaultLog.WriteError(
+                    "[CheckTransferFunctionString] Couldn't read 'Interpolation' as string value.");
+                check = false;
+            }
+
+            // Check transfer function node data
+            if (json.at("Nodes").is_array()) {
+                UINT tmp_size = (UINT)json.at("Nodes").size();
+                if (tmp_size < 2) {
+                    vislib::sys::Log::DefaultLog.WriteError(
+                        "[CheckTransferFunctionString] There should be at least two entries in 'Nodes' array.");
+                    check = false;
+                }
+                for (UINT i = 0; i < tmp_size; ++i) {
+                    if (!json.at("Nodes")[i].is_array()) {
                         vislib::sys::Log::DefaultLog.WriteError(
-                            "[CheckTransferFunctionString] Entries of 'Nodes' should be arrays of size %d.",
-                            TFP_VAL_CNT);
+                            "[CheckTransferFunctionString] Entries of 'Nodes' should be arrays.");
                         check = false;
                     } else {
-                        for (UINT k = 0; k < TFP_VAL_CNT; ++k) {
-                            if (!json.at("Nodes")[i][k].is_number()) {
-                                vislib::sys::Log::DefaultLog.WriteError(
-                                    "[CheckTransferFunctionString] Values in 'Nodes' arrays should be numbers.");
-                                check = false;
+                        if (json.at("Nodes")[i].size() != TFP_VAL_CNT) {
+                            vislib::sys::Log::DefaultLog.WriteError(
+                                "[CheckTransferFunctionString] Entries of 'Nodes' should be arrays of size %d.",
+                                TFP_VAL_CNT);
+                            check = false;
+                        } else {
+                            for (UINT k = 0; k < TFP_VAL_CNT; ++k) {
+                                if (!json.at("Nodes")[i][k].is_number()) {
+                                    vislib::sys::Log::DefaultLog.WriteError(
+                                        "[CheckTransferFunctionString] Values in 'Nodes' arrays should be numbers.");
+                                    check = false;
+                                }
                             }
                         }
                     }
                 }
-            }
-        } else {
-            vislib::sys::Log::DefaultLog.WriteError("[CheckTransferFunctionString] Couldn't read 'Nodes' as array.");
-            check = false;
-        }
-
-        // Check data range
-        if (json.at("ValueRange").is_array()) {
-            UINT tmp_size = (UINT)json.at("ValueRange").size();
-            if (tmp_size != 2) {
-                vislib::sys::Log::DefaultLog.WriteError(
-                    "[CheckTransferFunctionString] There should be at two entries in 'ValueRange' array.");
+            } else {
+                vislib::sys::Log::DefaultLog.WriteError("[CheckTransferFunctionString] Couldn't read 'Nodes' as array.");
                 check = false;
             }
-            for (UINT i = 0; i < tmp_size; ++i) {
-                if (!json.at("ValueRange")[i].is_number()) {
+
+            // Check data range
+            if (json.at("ValueRange").is_array()) {
+                UINT tmp_size = (UINT)json.at("ValueRange").size();
+                if (tmp_size != 2) {
                     vislib::sys::Log::DefaultLog.WriteError(
-                        "[CheckTransferFunctionString] Values in 'ValueRange' array should be numbers.");
+                        "[CheckTransferFunctionString] There should be at two entries in 'ValueRange' array.");
                     check = false;
                 }
+                for (UINT i = 0; i < tmp_size; ++i) {
+                    if (!json.at("ValueRange")[i].is_number()) {
+                        vislib::sys::Log::DefaultLog.WriteError(
+                            "[CheckTransferFunctionString] Values in 'ValueRange' array should be numbers.");
+                        check = false;
+                    }
+                }
+            } else {
+                vislib::sys::Log::DefaultLog.WriteError(
+                    "[CheckTransferFunctionString] Couldn't read 'ValueRange' as array.");
+                check = false;
             }
-        } else {
-            vislib::sys::Log::DefaultLog.WriteError(
-                "[CheckTransferFunctionString] Couldn't read 'ValueRange' as array.");
-            check = false;
+        }
+        catch (nlohmann::json::type_error& e) {
+            vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        }
+        catch (nlohmann::json::exception& e) {
+            vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        }
+        catch (nlohmann::json::parse_error& e) {
+            vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        }
+        catch (nlohmann::json::invalid_iterator& e) {
+            vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        }
+        catch (nlohmann::json::out_of_range& e) {
+            vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        }
+        catch (nlohmann::json::other_error& e) {
+            vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        }
+        catch (...) {
+            vislib::sys::Log::DefaultLog.WriteError("[CheckTransferFunctionString] Unknown Error - Unable to parse JSON string.");
+            return false;
         }
     }
 

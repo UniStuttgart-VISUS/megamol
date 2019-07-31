@@ -1,5 +1,5 @@
 /*
- * PopUp.h
+ * GUIUtils.h
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
@@ -16,13 +16,13 @@ namespace megamol {
 namespace gui {
 
 /**
- * Utility class for popup-style widgets.
+ * Utility class for GUIUtils-style widgets.
  */
-class Popup {
+class GUIUtils {
 public:
-    Popup(void);
+    GUIUtils(void);
 
-    ~Popup(void) = default;
+    ~GUIUtils(void) = default;
 
     /**
      * Show tooltip on hover.
@@ -43,15 +43,9 @@ public:
     void HelpMarkerToolTip(std::string text, std::string label = "(?)");
 
     /**
-     * Open PopUp asking for user input.
-     *
-     * @param title    The popup title.
-     * @param request  The descriptopn of the requested text input (e.g. file name).
-     * @param open     The flag indicating that the popup should be opened.
-     *
-     * @return The captured text input.
+     * Returns width of text drawn as widget.
      */
-    std::string InputDialogPopUp(std::string title, std::string request, bool open);
+    float TextWidgetWidth(std::string text);
 
 private:
     /** Current tooltip hover time. */

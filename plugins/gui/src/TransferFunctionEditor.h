@@ -19,7 +19,7 @@
 #include <vector>
 
 #include <imgui.h>
-#include "Popup.h"
+#include "GUIUtils.h"
 
 
 namespace megamol {
@@ -28,7 +28,7 @@ namespace gui {
 /**
  * 1D Transfer Function Editor.
  */
-class TransferFunctionEditor : public Popup {
+class TransferFunctionEditor : public GUIUtils {
 public:
     TransferFunctionEditor(void);
 
@@ -66,6 +66,15 @@ public:
     core::param::TransferFunctionParam* GetActiveParameter(void) { return this->activeParameter; }
 
 private:
+    /** The global input widget state buffer. */
+    struct WidgetBuffer {
+        float min_range;
+        float max_range;
+        float gauss_sigma;
+        float range_value;
+        int tex_size;
+    };
+
     // VARIABLES -----------------------------------------------------------
 
     /** The currently active parameter whose transfer function is currently loaded into this editor. */
@@ -107,10 +116,8 @@ private:
     /** Flag indicating if all options should be shown*/
     bool showOptions;
 
-    // FUNCTIONS --------------------------------------------------------------
-
-    /** Returns width of text drawn as item. */
-    float guiTextWidth(std::string text);
+    /** The global input widget state buffer. */
+    WidgetBuffer widget_buffer;
 };
 
 } // namespace gui

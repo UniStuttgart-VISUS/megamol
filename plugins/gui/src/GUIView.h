@@ -12,7 +12,7 @@
 
 #include "vislib/math/Rectangle.h"
 
-#include "Popup.h"
+#include "GUIUtils.h"
 #include "TransferFunctionEditor.h"
 #include "WindowManager.h"
 
@@ -95,63 +95,47 @@ protected:
     virtual bool OnMouseScroll(double dx, double dy) override;
 
 private:
-    // ENUMS ------------------------------------------------------------------
-
     /** ImGui key map assignment for text manipulation hotkeys (using last unused indices < 512) */
     enum GuiTextModHotkeys { CTRL_A = 506, CTRL_C = 507, CTRL_V = 508, CTRL_X = 509, CTRL_Y = 510, CTRL_Z = 511 };
+
+    /** The global state (for settings to be applied before ImGui::Begin). */
+    struct StateBuffer {
+        std::string font_file;                 // Apply changed font file name.
+        float font_size;                       // Apply changed font size.
+        int font_index;                        // Apply cahnged font by index.
+        std::vector<ImWchar> font_utf8_ranges; // Additional UTF-8 glyph ranges for all ImGui fonts.
+        bool win_save_state;                   // Flag indicating that window state should be written to parameter.
+        float win_save_delay;      // Flag indicating how long to wait for saving window state since last user action.
+        std::string win_delete;    // Name of the window to delete.
+        double last_instance_time; // Last instance time.
+        bool hotkeys_check_once;   // WORKAROUND: Check multiple hotkey assignments once.
+    };
 
     // VARIABLES --------------------------------------------------------------
 
     /** The input renderview slot */
-    core::CallerSlot renderViewSlot;
+    core::CallerSlot render_view_slot;
 
     /** A parameter to select the style */
-    core::param::ParamSlot styleParam;
+    core::param::ParamSlot style_param;
 
     /** A parameter to store the profile */
-    core::param::ParamSlot stateParam;
+    core::param::ParamSlot state_param;
 
     /** The ImGui context created and used by this GUIView */
     ImGuiContext* context;
 
     /** The window manager. */
-    WindowManager windowManager;
+    WindowManager window_manager;
 
     /** The transfer function editor. */
-    TransferFunctionEditor tfEditor;
+    TransferFunctionEditor tf_editor;
 
-    /** A popup being used all over the place */
-    Popup popup;
+    /** Utils being used all over the place */
+    GUIUtils utils;
 
-    /** Last instance time.  */
-    double lastInstanceTime;
-
-    /** Additional UTF-8 glyph ranges for ImGui fonts. */
-    std::vector<ImWchar> fontUtf8Ranges;
-
-    /** Saving the last given project filename. */
-    std::string projectFilename;
-
-    // Window state buffer variables: -----------------------------------------
-
-    /** File name of font file to load. */
-    std::string newFontFilenameToLoad;
-
-    /** Font size of font to load. */
-    float newFontSizeToLoad;
-
-    /** Load font by index. */
-    int newFontIndexToLoad;
-
-    /** Name of window to delete. */
-    std::string windowToDelete;
-
-    /** Flag indicating that window state should be written to parameter. */
-    bool saveState;
-    float saveStateDelay;
-
-    /** WORKAROUND: Check multiple hotkey assignment once. */
-    bool checkHotkeysOnce;
+    /** The current local state of the gui. */
+    StateBuffer state_buffer;
 
     // FUNCTIONS --------------------------------------------------------------
 
@@ -174,7 +158,7 @@ private:
      * @param window_name    The label of the calling window.
      * @param window_config  The configuration of the calling window.
      */
-    void drawMainWindowCallback(const std::string& window_name, WindowManager::WindowConfiguration& window_config);
+    void drawMainWindowCallback(const std::string& wn, WindowManager::WindowConfiguration& wc);
 
     /**
      * Draws parameters and options.
@@ -182,7 +166,7 @@ private:
      * @param window_name    The label of the calling window.
      * @param window_config  The configuration of the calling window.
      */
-    void drawParametersCallback(const std::string& window_name, WindowManager::WindowConfiguration& window_config);
+    void drawParametersCallback(const std::string& wn, WindowManager::WindowConfiguration& wc);
 
     /**
      * Draws fps overlay window.
@@ -190,7 +174,7 @@ private:
      * @param window_name    The label of the calling window.
      * @param window_config  The configuration of the calling window.
      */
-    void drawFpsWindowCallback(const std::string& window_name, WindowManager::WindowConfiguration& window_config);
+    void drawFpsWindowCallback(const std::string& wn, WindowManager::WindowConfiguration& wc);
 
     /**
      * Callback for drawing font selection window.
@@ -198,7 +182,7 @@ private:
      * @param window_name    The label of the calling window.
      * @param window_config  The configuration of the calling window.
      */
-    void drawFontWindowCallback(const std::string& window_name, WindowManager::WindowConfiguration& window_config);
+    void drawFontWindowCallback(const std::string& wn, WindowManager::WindowConfiguration& wc);
 
     /**
      * Callback for drawing the demo window.
@@ -206,15 +190,17 @@ private:
      * @param window_name    The label of the calling window.
      * @param window_config  The configuration of the calling window.
      */
-    void drawTFWindowCallback(const std::string& window_name, WindowManager::WindowConfiguration& window_config);
+    void drawTFWindowCallback(const std::string& wn, WindowManager::WindowConfiguration& wc);
 
     /**
      * Draws the menu bar.
+     *
+     * @param window_config  The configuration of the calling window.
      */
-    void drawMenu(void);
+    void drawMenu(const std::string& wn, WindowManager::WindowConfiguration& wc);
 
     /**
-     * Draws a parameter.
+     * Draws one parameter.
      *
      * @param mod   Module the paramter belongs to.
      * @param slot  The current parameter slot.
@@ -230,7 +216,7 @@ private:
     void drawParameterHotkey(const core::Module& mod, core::param::ParamSlot& slot);
 
     /**
-     * Check if module's parameters should be considered.
+     * Check if module's parameters should be visible.
      */
     bool considerModule(const std::string& modname, std::vector<std::string>& modules_list);
 

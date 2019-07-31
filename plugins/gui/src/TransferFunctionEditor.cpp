@@ -14,7 +14,7 @@ using namespace megamol::core;
 
 
 TransferFunctionEditor::TransferFunctionEditor(void)
-    : Popup()
+    : GUIUtils()
     , activeParameter(nullptr)
     , data()
     , range({0.0f, 1.0f})
@@ -27,7 +27,8 @@ TransferFunctionEditor::TransferFunctionEditor(void)
     , currentChannel(0)
     , currentDragChange()
     , immediateMode(false)
-    , showOptions(true) {
+    , showOptions(true)
+    , widget_buffer() {
 
     // Init transfer function colors
     this->data.clear();
@@ -35,6 +36,13 @@ TransferFunctionEditor::TransferFunctionEditor(void)
     std::array<float, TFP_VAL_CNT> one = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.05f};
     this->data.emplace_back(zero);
     this->data.emplace_back(one);
+
+    this->widget_buffer.min_range = 0.0f;
+    this->widget_buffer.max_range = 1.0f;
+    this->widget_buffer.tex_size = 128;
+    this->widget_buffer.gauss_sigma = zero[5];
+    this->widget_buffer.range_value = zero[4];
+
     this->textureInvalid = true;
 }
 
@@ -48,6 +56,21 @@ bool TransferFunctionEditor::SetTransferFunction(const std::string& tfs) {
     bool result = megamol::core::param::TransferFunctionParam::ParseTransferFunction(
         tfs, this->data, this->mode, this->textureSize, this->range);
     if (result) {
+        // Check for required initial node data
+        assert(this->data.size() > 1);
+
+        this->currentNode = 0;
+        this->currentChannel = 0;
+        this->currentDragChange = ImVec2(0.0f, 0.0f);
+
+        this->widget_buffer.min_range = this->range[0];
+        this->widget_buffer.max_range = this->range[1];
+        this->widget_buffer.tex_size = this->textureSize;
+
+        this->widget_buffer.range_value =
+            (this->data[this->currentNode][4] * (this->range[1] - this->range[0])) + this->range[0];
+        this->widget_buffer.gauss_sigma = this->data[this->currentNode][5];
+
         this->textureInvalid = true;
     }
 
@@ -115,7 +138,7 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
     stream << std::fixed << this->range[1];
     std::string val = stream.str();
     ImGui::SameLine();
-    ImGui::SetCursorPosX(tfw_item_width + style.ItemSpacing.x - this->guiTextWidth(val));
+    ImGui::SetCursorPosX(tfw_item_width + style.ItemSpacing.x - this->TextWidgetWidth(val));
     ImGui::Text(val.c_str());
 
 
@@ -263,6 +286,10 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
                     this->currentNode = selected_node;
                     this->currentChannel = selected_chan;
                     this->currentDragChange = selected_delta;
+
+                    this->widget_buffer.range_value =
+                        (this->data[this->currentNode][4] * (this->range[1] - this->range[0])) + this->range[0];
+                    this->widget_buffer.gauss_sigma = this->data[this->currentNode][5];
                 }
             } else if (io.MouseDown[0]) {
                 // Left Move -> Move selected node
@@ -277,6 +304,7 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
                     new_x = this->data[this->currentNode][4];
                 }
                 this->data[this->currentNode][4] = new_x;
+                this->widget_buffer.range_value = new_x;
 
                 float new_y = 1.0f - ((mouse_cur_pos.y - canvas_pos.y + this->currentDragChange.y) / canvas_size.y);
                 new_y = std::max(0.0f, std::min(new_y, 1.0f));
@@ -352,18 +380,26 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
 
         // Interval range -----------------------------------------------------
         ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.3f);
-        // Check range (delta should not equal zero)
-        if (this->range[0] >= this->range[1]) {
-            this->range[0] = this->range[1] - 0.000001f;
-        }
-        float min = this->range[0];
-        float max = this->range[1];
-        if (ImGui::InputFloat("min", &min, 1.0f, 10.0f, "%.6f", ImGuiInputTextFlags_EnterReturnsTrue)) {
-            this->range[0] = (min < this->range[1]) ? (min) : (this->range[0]);
+
+        ImGui::InputFloat("min", &this->widget_buffer.min_range, 1.0f, 10.0f, "%.6f", ImGuiInputTextFlags_None);
+        if (ImGui::IsItemDeactivatedAfterEdit()) {
+            this->range[0] =
+                (this->widget_buffer.min_range < this->range[1]) ? (this->widget_buffer.min_range) : (this->range[0]);
+            if (this->range[0] >= this->range[1]) {
+                this->range[0] = this->range[1] - 0.000001f;
+            }
+            this->widget_buffer.min_range = this->range[0];
         }
         ImGui::SameLine();
-        if (ImGui::InputFloat("max", &max, 1.0f, 10.0f, "%.6f", ImGuiInputTextFlags_EnterReturnsTrue)) {
-            this->range[1] = (max > this->range[0]) ? (max) : (this->range[1]);
+
+        ImGui::InputFloat("max", &this->widget_buffer.max_range, 1.0f, 10.0f, "%.6f", ImGuiInputTextFlags_None);
+        if (ImGui::IsItemDeactivatedAfterEdit()) {
+            this->range[1] =
+                (this->widget_buffer.max_range > this->range[0]) ? (this->widget_buffer.max_range) : (this->range[1]);
+            if (this->range[0] >= this->range[1]) {
+                this->range[1] = this->range[0] + 0.000001f;
+            }
+            this->widget_buffer.max_range = this->range[1];
         }
         ImGui::PopItemWidth();
         ImGui::SameLine();
@@ -372,10 +408,8 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
 
 
         // Value slider -------------------------------------------------------
-        float delta_range = (this->range[1] - this->range[0]);
-        float value = (this->data[this->currentNode][4] * delta_range) + this->range[0];
-        if (ImGui::SliderFloat("Selected Value", &value, this->range[0], this->range[1])) {
-            float new_x = (value - this->range[0]) / delta_range;
+        if (ImGui::SliderFloat("Selected Value", &this->widget_buffer.range_value, this->range[0], this->range[1])) {
+            float new_x = (this->widget_buffer.range_value - this->range[0]) / (this->range[1] - this->range[0]);
             if (this->currentNode == 0) {
                 new_x = 0.0f;
             } else if (this->currentNode == (this->data.size() - 1)) {
@@ -385,6 +419,8 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
                 new_x = this->data[this->currentNode][4];
             }
             this->data[this->currentNode][4] = new_x;
+            this->widget_buffer.range_value = new_x;
+
             this->textureInvalid = true;
         }
         std::string help = "[Ctrl-Click] for keyboard input";
@@ -393,9 +429,10 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
 
         // Sigma slider -------------------------------------------------------
         if (this->mode == param::TransferFunctionParam::InterpolationMode::GAUSS) {
-            float sigma = this->data[this->currentNode][5];
-            if (ImGui::SliderFloat("Selected Sigma", &sigma, 0.0f, 1.0f)) {
-                this->data[this->currentNode][5] = sigma;
+
+            ImGui::SliderFloat("Selected Sigma", &this->widget_buffer.gauss_sigma, 0.0f, 1.0f);
+            if (ImGui::IsItemDeactivatedAfterEdit()) {
+                this->data[this->currentNode][5] = this->widget_buffer.gauss_sigma;
                 this->textureInvalid = true;
             }
             std::string help = "[Ctrl-Click] for keyboard input";
@@ -427,9 +464,10 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
         this->HelpMarkerToolTip(help);
 
         // Texture size -------------------------------------------------------
-        int tfw_texsize = (int)this->textureSize;
-        if (ImGui::InputInt("Texture Size", &tfw_texsize, 1, 10, ImGuiInputTextFlags_EnterReturnsTrue)) {
-            this->textureSize = (UINT)std::max(1, tfw_texsize);
+        ImGui::InputInt("Texture Size", &this->widget_buffer.tex_size, 1, 10, ImGuiInputTextFlags_None);
+        if (ImGui::IsItemDeactivatedAfterEdit()) {
+            this->textureSize = (UINT)std::max(1, this->widget_buffer.tex_size);
+            this->widget_buffer.tex_size = this->textureSize;
             this->textureInvalid = true;
         }
 
@@ -486,20 +524,4 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
     }
 
     return ret_val;
-}
-
-
-float TransferFunctionEditor::guiTextWidth(std::string text) {
-    assert(ImGui::GetCurrentContext() != nullptr);
-    ImGuiIO& io = ImGui::GetIO();
-    ImGuiStyle& style = ImGui::GetStyle();
-
-    ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.0f);
-    ImGui::SameLine();
-    float xPos = ImGui::GetCursorPosX();
-    ImGui::Text(text.c_str());
-    ImGui::PopStyleVar();
-    ImGui::SameLine(0.0f, xPos);
-
-    return ImGui::GetItemRectSize().x;
 }

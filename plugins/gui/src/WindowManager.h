@@ -43,30 +43,35 @@ public:
         ImGuiWindowFlags win_flags;      // imgui window flags
         WindowDrawCallback win_callback; // id of the callback drawing the window content
         core::view::KeyCode win_hotkey;  // hotkey for opening/closing window
-        bool win_reset;        // flag for reset window position and size on state loading  (not saved in state)
-        ImVec2 win_position;   // position for reset on state loading (current position)
-        ImVec2 win_size;       // size for reset on state loading (current size)
-        bool win_soft_reset;   // soft reset of window position and size
-        ImVec2 win_reset_size; // minimum window size for soft reset
+        ImVec2 win_position;             // position for reset on state loading (current position)
+        ImVec2 win_size;                 // size for reset on state loading (current size)
+        bool win_soft_reset;             // soft reset of window position and size
+        ImVec2 win_reset_size;           // minimum window size for soft reset
+        bool buf_win_reset; // flag for reset window position and size on state loading  (not saved in state)
+        // ---------- Main window configuration ----------
+        std::string main_project_file;     // project file name
+        std::string buf_main_project_file; // temporary buffer for project file name input widget (not saved in state)
         // ---------- Parameter specific configuration ----------
         bool param_show_hotkeys;                     // flag to toggle showing only parameter hotkeys
         std::vector<std::string> param_modules_list; // modules to show in a parameter window (show all if empty)
         FilterMode param_module_filter;              // module filter
         // ---------- FPS/MS specific configuration ----------
-        bool fpsms_show_options;             // Show/hide fps/ms options.
-        int fpsms_max_value_count;           // Maximum count of values in value array
-        float fpsms_max_delay;               // Maximum delay when fps/ms value should be renewed.
-        TimingMode fpsms_mode;               // mode for displaying either FPS or MS
-        float fpsms_current_delay;           // current delay between frames (not saved in state)
-        std::vector<float> fpsms_fps_values; // current fps values (not saved in state)
-        std::vector<float> fpsms_ms_values;  // current ms values (not saved in state)
-        float fpsms_fps_value_scale;         // current scaling factor for fps values (not saved in state)
-        float fpsms_ms_value_scale;          // current scaling factor for ms values (not saved in state)
-        // ---------- Font specific configuration ----------
-        bool font_reset;               // flag for reset font on state loading  (not saved in state)
-        std::string font_name;         // the currently used font (only already loaded font names will be restored)
-        std::string font_new_filename; // temporary storage of new filename (not saved in state)
-        float font_new_size;           // temporary storage of new font size (not saved in state)
+        bool fpsms_show_options;           // show/hide fps/ms options.
+        int fpsms_max_history_count;       // maximum count of values in value array
+        float fpsms_refresh_rate;          // maximum delay when fps/ms value should be renewed.
+        TimingMode fpsms_mode;             // mode for displaying either FPS or MS
+        int buf_max_history_count;         // temporary buffer for maximum count input widget (not saved in state)
+        float buf_refresh_rate;            // temporary buffer for maximum delay input widget (not saved in state)
+        float buf_current_delay;           // current delay between frames (not saved in state)
+        std::vector<float> buf_fps_values; // current fps values (not saved in state)
+        std::vector<float> buf_ms_values;  // current ms values (not saved in state)
+        float buf_fps_scale;               // current scaling factor for fps values (not saved in state)
+        float buf_ms_scale;                // current scaling factor for ms values (not saved in state)
+        // ---------- Font specific configuration ---------
+        std::string font_name;     // font name (only already loaded font names will be restored)
+        bool buf_font_reset;       // flag for reset of font on state loading  (not saved in state)
+        std::string buf_font_file; // current font file name (not saved in state)
+        float buf_font_size;       // current font size (not saved in state)
 
         // Ctor for default values
         WindowConfiguration(void)
@@ -74,27 +79,32 @@ public:
             , win_flags(0)
             , win_callback(WindowDrawCallback::NONE)
             , win_hotkey(megamol::core::view::KeyCode())
-            , win_reset(false)
             , win_position(ImVec2(0.0f, 0.0f))
             , win_size(ImVec2(0.0f, 0.0f))
             , win_soft_reset(true)
             , win_reset_size(ImVec2(500.0f, 300.0f))
+            , buf_win_reset(true)
             // Window specific configurations
+            , main_project_file("")
+            , buf_main_project_file("")
             , param_show_hotkeys(false)
             , param_modules_list()
             , param_module_filter(FilterMode::ALL)
             , fpsms_show_options(false)
-            , fpsms_max_value_count(20)
-            , fpsms_max_delay(2.0f)
+            , fpsms_max_history_count(20)
+            , fpsms_refresh_rate(2.0f)
             , fpsms_mode(TimingMode::FPS)
-            , fpsms_current_delay(0.0f)
-            , fpsms_fps_values()
-            , fpsms_ms_values()
-            , fpsms_fps_value_scale(1.0f)
-            , fpsms_ms_value_scale(1.0f)
+            , buf_max_history_count(20)
+            , buf_current_delay(0.0f)
+            , buf_refresh_rate(2.0f)
+            , buf_fps_values()
+            , buf_ms_values()
+            , buf_fps_scale(1.0f)
+            , buf_ms_scale(1.0f)
             , font_name()
-            , font_new_filename()
-            , font_new_size(13.0f) {}
+            , buf_font_reset(false)
+            , buf_font_file()
+            , buf_font_size(13.0f) {}
     };
 
     /** Type for callback function. */

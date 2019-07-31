@@ -2080,7 +2080,7 @@ void megamol::core::CoreInstance::SerializeGraph(std::string& serInstances, std:
                 std::string vin = vi->Name().PeekBuffer();
                 view_instances[vi->View()->FullName().PeekBuffer()] = vin;
                 vislib::sys::Log::DefaultLog.WriteInfo(
-                    "ScreenShooter: found view instance \"%s\" with view \"%s\".",
+                    "SerializeGraph: Found view instance \"%s\" with view \"%s\".",
                     view_instances[vi->View()->FullName().PeekBuffer()].c_str(),
                     vi->View()->FullName().PeekBuffer());
             }
@@ -2088,7 +2088,7 @@ void megamol::core::CoreInstance::SerializeGraph(std::string& serInstances, std:
                 std::string jin = ji->Name().PeekBuffer();
                 // todo: find job module! WTF!
                 job_instances[jin] = std::string("job") + std::to_string(job_counter);
-                vislib::sys::Log::DefaultLog.WriteInfo("ScreenShooter: found job instance \"%s\" with job \"%s\".",
+                vislib::sys::Log::DefaultLog.WriteInfo("SerializeGraph: Found job instance \"%s\" with job \"%s\".",
                     jin.c_str(), job_instances[jin].c_str());
                 ++job_counter;
             }

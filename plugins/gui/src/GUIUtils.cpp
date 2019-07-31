@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "Popup.h"
+#include "GUIUtils.h"
 
 #include <imgui_stdlib.h>
 #include <vector>
@@ -15,11 +15,11 @@
 using namespace megamol::gui;
 
 
-Popup::Popup(void) : tooltipTime(0.0f), tooltipId(-1) {
+GUIUtils::GUIUtils(void) : tooltipTime(0.0f), tooltipId(-1) {
     // nothing to do here ...
 }
 
-void Popup::HoverToolTip(std::string text, ImGuiID id, float time_start, float time_end) {
+void GUIUtils::HoverToolTip(std::string text, ImGuiID id, float time_start, float time_end) {
     assert(ImGui::GetCurrentContext() != nullptr);
     ImGuiIO& io = ImGui::GetIO();
 
@@ -53,7 +53,7 @@ void Popup::HoverToolTip(std::string text, ImGuiID id, float time_start, float t
     }
 }
 
-void Popup::HelpMarkerToolTip(std::string text, std::string label) {
+void GUIUtils::HelpMarkerToolTip(std::string text, std::string label) {
     assert(ImGui::GetCurrentContext() != nullptr);
 
     if (!text.empty()) {
@@ -63,28 +63,17 @@ void Popup::HelpMarkerToolTip(std::string text, std::string label) {
     }
 }
 
-std::string Popup::InputDialogPopUp(std::string title, std::string request, bool open) {
+
+float GUIUtils::TextWidgetWidth(std::string text) {
     assert(ImGui::GetCurrentContext() != nullptr);
-    std::string response;
+    ImGuiIO& io = ImGui::GetIO();
+    ImGuiStyle& style = ImGui::GetStyle();
 
-    if (open) {
-        ImGui::OpenPopup(title.c_str());
-    }
-    if (ImGui::BeginPopupModal(title.c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-        ImGui::Text("Enter %s:", request.c_str());
-        this->HelpMarkerToolTip("Press [Enter] to confirm.");
+    ImVec2 pos = ImGui::GetCursorPos();
+    ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.0f);
+    ImGui::Text(text.c_str());
+    ImGui::PopStyleVar();
+    ImGui::SetCursorPos(pos);
 
-        // ImGui::SetKeyboardFocusHere();
-        if (ImGui::InputText("", &response, ImGuiInputTextFlags_EnterReturnsTrue)) {
-            ImGui::CloseCurrentPopup();
-        }
-
-        if (ImGui::Button("Cancel")) {
-            ImGui::CloseCurrentPopup();
-        }
-
-        ImGui::EndPopup();
-    }
-
-    return response;
+    return ImGui::GetItemRectSize().x;
 }
