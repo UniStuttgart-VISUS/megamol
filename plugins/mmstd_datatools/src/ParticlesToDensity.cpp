@@ -21,6 +21,7 @@
 #include <functional>
 #include <math.h>
 #include "mmcore/param/FloatParam.h"
+#include "mmstd_datatools/table/TableDataCall.h"
 
 using namespace megamol;
 using namespace megamol::stdplugin;
@@ -56,12 +57,13 @@ datatools::ParticlesToDensity::ParticlesToDensity(void)
     , cyclZSlot("cyclZ", "Considers cyclic boundary conditions in Z direction")
     , normalizeSlot("normalize", "Normalize the output volume")
     , sigmaSlot("sigma", "Sigma for Gauss in multiple of rad")
-    , normalizeDirections("normalizeDirections", "Normalize direction vectors")
     //, datahash(std::numeric_limits<size_t>::max())
     , datahash(0)
     , time(std::numeric_limits<unsigned int>::max())
+    , has_data(false)
     , outDataSlot("outData", "Provides a density volume for the particles")
     , outParticlesSlot("outParticles", "Provides particles forming a regular grid with the sampled values")
+    , outInfoSlot("outInfo", "Provides information which can be used for visualization and filtering")
     , inDataSlot("inData", "Takes the particle data") {
 
     auto* ep = new core::param::EnumParam(0);
@@ -106,6 +108,12 @@ datatools::ParticlesToDensity::ParticlesToDensity(void)
         core::moldyn::MultiParticleDataCall::FunctionName(1), &ParticlesToDensity::getExtentCallback);
     this->MakeSlotAvailable(&this->outParticlesSlot);
 
+    this->outInfoSlot.SetCallback(stdplugin::datatools::table::TableDataCall::ClassName(),
+        stdplugin::datatools::table::TableDataCall::FunctionName(0), &ParticlesToDensity::getDataCallback);
+    this->outInfoSlot.SetCallback(stdplugin::datatools::table::TableDataCall::ClassName(),
+        stdplugin::datatools::table::TableDataCall::FunctionName(1), &ParticlesToDensity::getExtentCallback);
+    this->MakeSlotAvailable(&this->outInfoSlot);
+
     this->xResSlot << new core::param::IntParam(16);
     this->MakeSlotAvailable(&this->xResSlot);
     this->yResSlot << new core::param::IntParam(16);
@@ -127,9 +135,6 @@ datatools::ParticlesToDensity::ParticlesToDensity(void)
         1.0f, std::numeric_limits<float>::min(), std::numeric_limits<float>::max());
     this->MakeSlotAvailable(&this->sigmaSlot);
 
-    this->normalizeDirections << new core::param::BoolParam(false);
-    this->MakeSlotAvailable(&this->normalizeDirections);
-
     this->inDataSlot.SetCompatibleCall<megamol::core::moldyn::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->inDataSlot);
 }
@@ -146,13 +151,12 @@ bool datatools::ParticlesToDensity::getExtentCallback(megamol::core::Call& c) {
 
     auto* out = dynamic_cast<core::misc::VolumetricDataCall*>(&c);
     auto* outGrid = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&c);
-    if (out == nullptr && outGrid == nullptr) return false;
+    auto* outInfo = dynamic_cast<stdplugin::datatools::table::TableDataCall*>(&c);
 
     auto* inMpdc = this->inDataSlot.CallAs<MultiParticleDataCall>();
     if (inMpdc == nullptr) return false;
 
-    // if (!this->assertData(inMpdc, outDpdc)) return false;
-    inMpdc->SetFrameID(out != nullptr ? out->FrameID() : outGrid->FrameID(), true);
+    inMpdc->SetFrameID(out != nullptr ? out->FrameID() : (outGrid != nullptr ? outGrid->FrameID() : 0), true);
     if (!(*inMpdc)(1)) {
         vislib::sys::Log::DefaultLog.WriteError(
             "ParticlesToDensity: could not get current frame extents (%u)", time - 1);
@@ -171,6 +175,12 @@ bool datatools::ParticlesToDensity::getExtentCallback(megamol::core::Call& c) {
         outGrid->SetFrameCount(inMpdc->FrameCount());
     }
 
+    if (outInfo != nullptr) {
+        outInfo->SetDataHash(this->datahash);
+        outInfo->SetUnlocker(nullptr);
+        outInfo->SetFrameCount(inMpdc->FrameCount());
+    }
+
     // TODO: what am I actually doing here
     // inMpdc->SetUnlocker(nullptr, false);
     // inMpdc->Unlock();
@@ -185,23 +195,26 @@ bool datatools::ParticlesToDensity::getDataCallback(megamol::core::Call& c) {
 
     auto* outVol = dynamic_cast<core::misc::VolumetricDataCall*>(&c);
     auto* outGrid = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&c);
-    if (outVol == nullptr && outGrid == nullptr) return false;
+    auto* outInfo = dynamic_cast<stdplugin::datatools::table::TableDataCall*>(&c);
 
-    inMpdc->SetFrameID(outVol != nullptr ? outVol->FrameID() : outGrid->FrameID(), true);
-    if (!(*inMpdc)(1)) {
-        vislib::sys::Log::DefaultLog.WriteError("ParticlesToDensity: Unable to get extents.");
-        return false;
-    }
-    if (!(*inMpdc)(0)) {
-        vislib::sys::Log::DefaultLog.WriteError("ParticlesToDensity: Unable to get data.");
-        return false;
-    }
-    if (this->time != inMpdc->FrameID() || this->in_datahash != inMpdc->DataHash() || this->anythingDirty()) {
-        if (!this->createVolumeCPU(inMpdc)) return false;
-        this->time = inMpdc->FrameID();
-        this->in_datahash = inMpdc->DataHash();
-        ++this->datahash;
-        this->resetDirty();
+    if (outVol != nullptr || outGrid != nullptr) {
+        inMpdc->SetFrameID(outVol != nullptr ? outVol->FrameID() : outGrid->FrameID(), true);
+        if (!(*inMpdc)(1)) {
+            vislib::sys::Log::DefaultLog.WriteError("ParticlesToDensity: Unable to get extents.");
+            return false;
+        }
+        if (!(*inMpdc)(0)) {
+            vislib::sys::Log::DefaultLog.WriteError("ParticlesToDensity: Unable to get data.");
+            return false;
+        }
+        if (this->time != inMpdc->FrameID() || this->in_datahash != inMpdc->DataHash() || this->anythingDirty()) {
+            if (!this->createVolumeCPU(inMpdc)) return false;
+            this->time = inMpdc->FrameID();
+            this->in_datahash = inMpdc->DataHash();
+            ++this->datahash;
+            this->resetDirty();
+            this->has_data = true;
+        }
     }
 
     // TODO set data
@@ -253,7 +266,7 @@ bool datatools::ParticlesToDensity::getDataCallback(megamol::core::Call& c) {
         // inMpdc->Unlock();
     }
 
-    if (outGrid != nullptr) {
+    if (outGrid != nullptr && this->aggregatorSlot.Param<core::param::EnumParam>()->Value() == 2) {
         outGrid->SetDataHash(this->datahash);
         outGrid->SetParticleListCount(1);
 
@@ -263,12 +276,71 @@ bool datatools::ParticlesToDensity::getDataCallback(megamol::core::Call& c) {
 
         if (p.GetCount() > 0) {
             p.SetVertexData(core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ, this->grid.data());
-            p.SetDirData(core::moldyn::SimpleSphericalParticles::DirDataType::DIRDATA_FLOAT_XYZ, this->directions.data());
+            p.SetDirData(
+                core::moldyn::SimpleSphericalParticles::DirDataType::DIRDATA_FLOAT_XYZ, this->directions.data());
             p.SetColourData(core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I, this->colors.data());
 
             p.SetGlobalRadius(inMpdc->AccessBoundingBoxes().ObjectSpaceBBox().Width() /
                               static_cast<float>(this->xResSlot.Param<core::param::IntParam>()->Value()) / 5.0f);
         }
+    }
+
+    if (outInfo != nullptr &&
+        this->aggregatorSlot.Param<core::param::EnumParam>()->Value() == 2) {
+
+        this->info[0].SetName("PositionX");
+        this->info[0].SetType(stdplugin::datatools::table::TableDataCall::ColumnType::QUANTITATIVE);
+
+        this->info[1].SetName("PositionY");
+        this->info[1].SetType(stdplugin::datatools::table::TableDataCall::ColumnType::QUANTITATIVE);
+
+        this->info[2].SetName("PositionZ");
+        this->info[2].SetType(stdplugin::datatools::table::TableDataCall::ColumnType::QUANTITATIVE);
+
+        this->info[3].SetName("VelocityX");
+        this->info[3].SetType(stdplugin::datatools::table::TableDataCall::ColumnType::QUANTITATIVE);
+
+        this->info[4].SetName("VelocityY");
+        this->info[4].SetType(stdplugin::datatools::table::TableDataCall::ColumnType::QUANTITATIVE);
+
+        this->info[5].SetName("VelocityZ");
+        this->info[5].SetType(stdplugin::datatools::table::TableDataCall::ColumnType::QUANTITATIVE);
+
+        this->info[6].SetName("VelocityMag");
+        this->info[6].SetType(stdplugin::datatools::table::TableDataCall::ColumnType::QUANTITATIVE);
+
+        if (!this->has_data) {
+            this->infoData.reserve(1);
+            this->infoData.resize(0);
+
+            outInfo->SetDataHash(0);
+        } else {
+            this->info[0].SetMinimumValue(inMpdc->AccessBoundingBoxes().ObjectSpaceBBox().Left());
+            this->info[0].SetMaximumValue(inMpdc->AccessBoundingBoxes().ObjectSpaceBBox().Right());
+
+            this->info[1].SetMinimumValue(inMpdc->AccessBoundingBoxes().ObjectSpaceBBox().Bottom());
+            this->info[1].SetMaximumValue(inMpdc->AccessBoundingBoxes().ObjectSpaceBBox().Top());
+
+            this->info[2].SetMinimumValue(inMpdc->AccessBoundingBoxes().ObjectSpaceBBox().Back());
+            this->info[2].SetMaximumValue(inMpdc->AccessBoundingBoxes().ObjectSpaceBBox().Front());
+
+            this->info[3].SetMinimumValue(-1.0f);
+            this->info[3].SetMaximumValue(1.0f);
+
+            this->info[4].SetMinimumValue(-1.0f);
+            this->info[4].SetMaximumValue(1.0f);
+
+            this->info[5].SetMinimumValue(-1.0f);
+            this->info[5].SetMaximumValue(1.0f);
+
+            this->info[6].SetMinimumValue(this->minDens);
+            this->info[6].SetMaximumValue(this->maxDens);
+
+            outInfo->SetDataHash(this->datahash);
+        }
+
+        outInfo->Set(
+            this->info.size(), this->infoData.size() / this->info.size(), this->info.data(), this->infoData.data());
     }
 
     return true;
@@ -326,6 +398,7 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
     float const maxCellSize = std::max(sliceDistX, std::max(sliceDistY, sliceDistZ));
 
     this->grid.resize(sx * sy * sz * 3);
+    this->infoData.resize(this->info.size() * sx * sy * sz);
     for (std::size_t z = 0; z < sz; ++z) {
         for (std::size_t y = 0; y < sy; ++y) {
             for (std::size_t x = 0; x < sx; ++x) {
@@ -333,9 +406,15 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
                 const float pos_y = minOSy + sliceDistY * y;
                 const float pos_z = minOSz + sliceDistZ * z;
 
-                this->grid[(x + (y + z * sy) * sx) * 3 + 0] = pos_x;
-                this->grid[(x + (y + z * sy) * sx) * 3 + 1] = pos_y;
-                this->grid[(x + (y + z * sy) * sx) * 3 + 2] = pos_z;
+                const auto i = x + (y + z * sy) * sx;
+
+                this->grid[i * 3 + 0] = pos_x;
+                this->grid[i * 3 + 1] = pos_y;
+                this->grid[i * 3 + 2] = pos_z;
+
+                this->infoData[i * this->info.size() + 0] = pos_x;
+                this->infoData[i * this->info.size() + 1] = pos_y;
+                this->infoData[i * this->info.size() + 2] = pos_z;
             }
         }
     }
@@ -513,9 +592,13 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
                 std::sqrt(vol[0][i * 3 + 0] * vol[0][i * 3 + 0] + vol[0][i * 3 + 1] * vol[0][i * 3 + 1] +
                           vol[0][i * 3 + 2] * vol[0][i * 3 + 2]);
 
-            this->directions[i * 3 + 0] = vol[0][i * 3 + 0] / density;
-            this->directions[i * 3 + 1] = vol[0][i * 3 + 1] / density;
-            this->directions[i * 3 + 2] = vol[0][i * 3 + 2] / density;
+            this->directions[i * 3 + 0] = density == 0.0f ? 0.0f : vol[0][i * 3 + 0] / density;
+            this->directions[i * 3 + 1] = density == 0.0f ? 0.0f : vol[0][i * 3 + 1] / density;
+            this->directions[i * 3 + 2] = density == 0.0f ? 0.0f : vol[0][i * 3 + 2] / density;
+
+            this->infoData[i * this->info.size() + 3] = this->directions[i * 3 + 0];
+            this->infoData[i * this->info.size() + 4] = this->directions[i * 3 + 1];
+            this->infoData[i * this->info.size() + 5] = this->directions[i * 3 + 2];
 
             maxDens = std::max(maxDens, density);
             minDens = std::min(minDens, density);
@@ -527,6 +610,12 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
 
             this->colors[i] = (density - minDens) / (maxDens - minDens);
             this->vol[0][i] = density;
+
+            if (this->normalizeSlot.Param<core::param::BoolParam>()->Value()) {
+                this->infoData[i * this->info.size() + 6] = (density - minDens) / (maxDens - minDens);
+            } else {
+                this->infoData[i * this->info.size() + 6] = density;
+            }
         }
         this->vol[0].resize(this->vol[0].size() / 3);
     } else {
