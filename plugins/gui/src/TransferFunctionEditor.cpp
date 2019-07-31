@@ -299,12 +299,14 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
                     new_x = 0.0f;
                 } else if (this->currentNode == (this->data.size() - 1)) {
                     new_x = 1.0f;
-                } else if ((new_x <= this->data[this->currentNode - 1][4]) ||
-                           (new_x >= this->data[this->currentNode + 1][4])) {
-                    new_x = this->data[this->currentNode][4];
+                } else if (new_x < this->data[this->currentNode - 1][4]) {
+                    new_x = this->data[this->currentNode - 1][4];
+                } else if (new_x > this->data[this->currentNode + 1][4]) {
+                    new_x = this->data[this->currentNode + 1][4];
                 }
                 this->data[this->currentNode][4] = new_x;
-                this->widget_buffer.range_value = new_x;
+                this->widget_buffer.range_value =
+                    (this->data[this->currentNode][4] * (this->range[1] - this->range[0])) + this->range[0];
 
                 float new_y = 1.0f - ((mouse_cur_pos.y - canvas_pos.y + this->currentDragChange.y) / canvas_size.y);
                 new_y = std::max(0.0f, std::min(new_y, 1.0f));
@@ -408,19 +410,20 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
 
 
         // Value slider -------------------------------------------------------
+        this->widget_buffer.range_value =
+            (this->data[this->currentNode][4] * (this->range[1] - this->range[0])) + this->range[0];
         if (ImGui::SliderFloat("Selected Value", &this->widget_buffer.range_value, this->range[0], this->range[1])) {
             float new_x = (this->widget_buffer.range_value - this->range[0]) / (this->range[1] - this->range[0]);
             if (this->currentNode == 0) {
                 new_x = 0.0f;
             } else if (this->currentNode == (this->data.size() - 1)) {
                 new_x = 1.0f;
-            } else if ((new_x <= this->data[this->currentNode - 1][4]) ||
-                       (new_x >= this->data[this->currentNode + 1][4])) {
-                new_x = this->data[this->currentNode][4];
+            } else if (new_x < this->data[this->currentNode - 1][4]) {
+                new_x = this->data[this->currentNode - 1][4];
+            } else if (new_x > this->data[this->currentNode + 1][4]) {
+                new_x = this->data[this->currentNode + 1][4];
             }
             this->data[this->currentNode][4] = new_x;
-            this->widget_buffer.range_value = new_x;
-
             this->textureInvalid = true;
         }
         std::string help = "[Ctrl-Click] for keyboard input";
@@ -430,8 +433,7 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
         // Sigma slider -------------------------------------------------------
         if (this->mode == param::TransferFunctionParam::InterpolationMode::GAUSS) {
 
-            ImGui::SliderFloat("Selected Sigma", &this->widget_buffer.gauss_sigma, 0.0f, 1.0f);
-            if (ImGui::IsItemDeactivatedAfterEdit()) {
+            if (ImGui::SliderFloat("Selected Sigma", &this->widget_buffer.gauss_sigma, 0.0f, 1.0f)) {
                 this->data[this->currentNode][5] = this->widget_buffer.gauss_sigma;
                 this->textureInvalid = true;
             }

@@ -2112,14 +2112,12 @@ void megamol::core::CoreInstance::SerializeGraph(std::string& serInstances, std:
                     const auto bp = slot->Param<param::ButtonParam>();
                     if (!bp) {
                         std::string val = slot->Parameter()->ValueString().PeekBuffer();
-                        // caution: value strings could contain unescaped quotes, so fix that:
-                        //std::string from = "\"";
-                        //std::string to = "\\\"";
-                        //size_t start_pos = 0;
-                        //while ((start_pos = val.find(from, start_pos)) != std::string::npos) {
-                        //    val.replace(start_pos, from.length(), to);
-                        //    start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
-                        //}
+
+                        // Encode to UTF-8 string
+                        vislib::StringA valueString;
+                        vislib::UTF8Encoder::Encode(valueString, vislib::StringA(val.c_str()));
+                        val = valueString.PeekBuffer();
+
                         confParams << "mmSetParamValue(\"" << slot->FullName() << "\",[=[" << val << "]=])\n";
                     }
                 }

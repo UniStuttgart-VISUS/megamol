@@ -49,8 +49,7 @@ public:
         ImVec2 win_reset_size;           // minimum window size for soft reset
         bool buf_win_reset; // flag for reset window position and size on state loading  (not saved in state)
         // ---------- Main window configuration ----------
-        std::string main_project_file;     // project file name
-        std::string buf_main_project_file; // temporary buffer for project file name input widget (not saved in state)
+        std::string main_project_file; // project file name
         // ---------- Parameter specific configuration ----------
         bool param_show_hotkeys;                     // flag to toggle showing only parameter hotkeys
         std::vector<std::string> param_modules_list; // modules to show in a parameter window (show all if empty)
@@ -86,7 +85,6 @@ public:
             , buf_win_reset(true)
             // Window specific configurations
             , main_project_file("")
-            , buf_main_project_file("")
             , param_show_hotkeys(false)
             , param_modules_list()
             , param_module_filter(FilterMode::ALL)

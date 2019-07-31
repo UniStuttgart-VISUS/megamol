@@ -221,6 +221,17 @@ bool GUIView::create() {
             if (!font_path.empty()) {
                 io.Fonts->AddFontFromFileTTF(font_path.c_str(), 13.0f, &config);
             }
+
+            font_file = "Vk€.ttf";
+            font_path = SearchFileRecursive(font_file, searchPath);
+            if (!font_path.empty()) {
+
+                vislib::StringA utf8Conv;
+                vislib::UTF8Encoder::Encode(utf8Conv, vislib::StringA(font_path.c_str()));
+                font_path = utf8Conv.PeekBuffer();
+
+                io.Fonts->AddFontFromFileTTF(font_path.c_str(), 20.0f, &config);
+            }
         }
 #endif // GUI_USE_FILEUTILS
     }
@@ -290,11 +301,14 @@ void GUIView::Render(const mmcRenderViewContext& context) {
         crv->SetTime(
             -1.0f); // Should be negative to trigger animation! (see View3D.cpp line ~660 | View2D.cpp line ~350)
         (*crv)(core::view::AbstractCallRender::FnRender);
+        this->drawGUI(crv->GetViewport(), crv->InstanceTime());
     } else {
         ::glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         ::glClear(GL_COLOR_BUFFER_BIT);
+        if (this->overrideCall != nullptr) {
+            this->drawGUI(this->overrideCall->GetViewport(), context.InstanceTime);
+        }
     }
-    this->drawGUI(crv->GetViewport(), crv->InstanceTime());
 }
 
 
@@ -583,6 +597,25 @@ bool GUIView::OnMouseScroll(double dx, double dy) {
 }
 
 
+bool GUIView::OnRenderView(megamol::core::Call& call) {
+    megamol::core::view::CallRenderView* crv = dynamic_cast<megamol::core::view::CallRenderView*>(&call);
+    if (crv == NULL) return false;
+
+    this->overrideCall = crv;
+
+    mmcRenderViewContext context;
+    ::ZeroMemory(&context, sizeof(context));
+    context.Time = crv->Time();
+    context.InstanceTime = crv->InstanceTime();
+    // TODO: Affinity
+    this->Render(context);
+
+    this->overrideCall = NULL;
+
+    return true;
+}
+
+
 void GUIView::validateGUI() {
     if (this->style_param.IsDirty()) {
         auto style = this->style_param.Param<core::param::EnumParam>()->Value();
@@ -652,6 +685,11 @@ bool GUIView::drawGUI(vislib::math::Rectangle<int> viewport, double instanceTime
         config.OversampleH = 4;
         config.OversampleV = 1;
         config.GlyphRanges = this->state_buffer.font_utf8_ranges.data();
+
+        vislib::StringA utf8Conv;
+        vislib::UTF8Encoder::Encode(utf8Conv, vislib::StringA(this->state_buffer.font_file.c_str()));
+        this->state_buffer.font_file = utf8Conv.PeekBuffer();
+
         io.Fonts->AddFontFromFileTTF(this->state_buffer.font_file.c_str(), this->state_buffer.font_size, &config);
         ImGui_ImplOpenGL3_CreateFontsTexture();
         /// Load last added font
@@ -683,7 +721,10 @@ bool GUIView::drawGUI(vislib::math::Rectangle<int> viewport, double instanceTime
             if (!wc.font_name.empty()) {
                 this->state_buffer.font_index = -1;
                 for (int n = 0; n < io.Fonts->Fonts.Size; n++) {
-                    if (std::string(io.Fonts->Fonts[n]->GetDebugName()) == wc.font_name) {
+
+                    vislib::StringA utf8Conv;
+                    vislib::UTF8Encoder::Decode(utf8Conv, vislib::StringA(io.Fonts->Fonts[n]->GetDebugName()));
+                    if (std::string(utf8Conv.PeekBuffer()) == wc.font_name) {
                         this->state_buffer.font_index = n;
                     }
                 }
@@ -1187,7 +1228,9 @@ void GUIView::drawFontWindowCallback(const std::string& wn, WindowManager::Windo
     }
 
     // Saving current font to window configuration.
-    wc.font_name = std::string(font_current->GetDebugName());
+    vislib::StringA utf8Conv;
+    vislib::UTF8Encoder::Decode(utf8Conv, vislib::StringA(font_current->GetDebugName()));
+    wc.font_name = utf8Conv.PeekBuffer();
 
 #ifdef GUI_USE_FILEUTILS
     ImGui::Separator();
@@ -1204,12 +1247,11 @@ void GUIView::drawFontWindowCallback(const std::string& wn, WindowManager::Windo
 
     label = "Font File Name (.ttf)";
     /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
-    vislib::StringA valueString;
-    vislib::UTF8Encoder::Encode(valueString, vislib::StringA(wc.buf_font_file.c_str()));
-    wc.buf_font_file = valueString.PeekBuffer();
+    vislib::UTF8Encoder::Encode(utf8Conv, vislib::StringA(wc.buf_font_file.c_str()));
+    wc.buf_font_file = utf8Conv.PeekBuffer();
     ImGui::InputText(label.c_str(), &wc.buf_font_file, ImGuiInputTextFlags_AutoSelectAll);
-    vislib::UTF8Encoder::Decode(valueString, vislib::StringA(wc.buf_font_file.c_str()));
-    wc.buf_font_file = valueString.PeekBuffer();
+    vislib::UTF8Encoder::Decode(utf8Conv, vislib::StringA(wc.buf_font_file.c_str()));
+    wc.buf_font_file = utf8Conv.PeekBuffer();
 
     // Validate font file before offering load button
     if (HasExistingFileExtension(wc.buf_font_file, std::string(".ttf"))) {
@@ -1342,7 +1384,7 @@ void GUIView::drawMenu(const std::string& wn, WindowManager::WindowConfiguration
         if (ImGui::Button("Close")) {
             ImGui::CloseCurrentPopup();
         }
-        ImGui::SetItemDefaultFocus();
+
         ImGui::EndPopup();
     }
 
@@ -1354,12 +1396,12 @@ void GUIView::drawMenu(const std::string& wn, WindowManager::WindowConfiguration
     if (ImGui::BeginPopupModal("Save Project", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
         /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
         std::string label = "File Name";
-        vislib::StringA valueString;
-        vislib::UTF8Encoder::Encode(valueString, vislib::StringA(wc.main_project_file.c_str()));
-        wc.buf_main_project_file = valueString.PeekBuffer();
-        ImGui::InputText(label.c_str(), &wc.buf_main_project_file, ImGuiInputTextFlags_AutoSelectAll);
-        vislib::UTF8Encoder::Decode(valueString, vislib::StringA(wc.buf_main_project_file.c_str()));
-        wc.main_project_file = valueString.PeekBuffer();
+        vislib::StringA utf8Conv;
+        vislib::UTF8Encoder::Encode(utf8Conv, vislib::StringA(wc.main_project_file.c_str()));
+        wc.main_project_file = utf8Conv.PeekBuffer();
+        ImGui::InputText(label.c_str(), &wc.main_project_file, ImGuiInputTextFlags_None);
+        vislib::UTF8Encoder::Decode(utf8Conv, vislib::StringA(wc.main_project_file.c_str()));
+        wc.main_project_file = utf8Conv.PeekBuffer();
 
         bool valid = false;
         if (!HasFileExtension(wc.main_project_file, std::string(".lua"))) {
@@ -1383,7 +1425,7 @@ void GUIView::drawMenu(const std::string& wn, WindowManager::WindowConfiguration
                 }
             }
         }
-        ImGui::SetItemDefaultFocus();
+
         ImGui::SameLine();
         if (ImGui::Button("Cancel")) {
             ImGui::CloseCurrentPopup();
@@ -1564,14 +1606,14 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
             }
         } else if (auto* p = slot.Param<core::param::StringParam>()) {
             // XXX: UTF8 conversion and allocation every frame is horrific inefficient.
-            vislib::StringA valueString;
-            vislib::UTF8Encoder::Encode(valueString, p->ValueString());
-            std::string valueUtf8String(valueString.PeekBuffer());
+            vislib::StringA utf8Conv;
+            vislib::UTF8Encoder::Encode(utf8Conv, p->ValueString());
+            std::string utf8String(utf8Conv.PeekBuffer());
 
             // Determine line count
             const int minnlcnt = 5;
             int nlcnt = 0;
-            for (auto& c : valueUtf8String) {
+            for (auto& c : utf8String) {
                 if (c == '\n') {
                     nlcnt++;
                 }
@@ -1581,27 +1623,26 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
             if (nlcnt > 0) {
                 ImVec2 ml_dim =
                     ImVec2(ImGui::CalcItemWidth(), ImGui::GetFrameHeight() + (ImGui::GetFontSize() * (float)(nlcnt)));
-                ImGui::InputTextMultiline(param_label.c_str(), &valueUtf8String, ml_dim, ImGuiInputTextFlags_None);
+                ImGui::InputTextMultiline(param_label.c_str(), &utf8String, ml_dim, ImGuiInputTextFlags_None);
             } else {
-                ImGui::InputText(param_label.c_str(), &valueUtf8String, ImGuiInputTextFlags_None);
+                ImGui::InputText(param_label.c_str(), &utf8String, ImGuiInputTextFlags_None);
+                help = "[Ctrl + Enter] for new line.\nPress [Return] to confirm changes.";
             }
 
             if (ImGui::IsItemDeactivatedAfterEdit()) {
-                vislib::UTF8Encoder::Decode(valueString, vislib::StringA(valueUtf8String.c_str()));
-                p->SetValue(valueString);
+                vislib::UTF8Encoder::Decode(utf8Conv, vislib::StringA(utf8String.c_str()));
+                p->SetValue(utf8Conv);
             }
-            help = "[Ctrl + Enter] for new line.\nPress [Return] to confirm changes.";
         } else if (auto* p = slot.Param<core::param::FilePathParam>()) {
             // XXX: UTF8 conversion and allocation every frame is horrific inefficient.
-            vislib::StringA valueString;
-            vislib::UTF8Encoder::Encode(valueString, p->ValueString());
-            std::string valueUtf8String(valueString.PeekBuffer());
+            vislib::StringA utf8Conv;
+            vislib::UTF8Encoder::Encode(utf8Conv, p->ValueString());
+            std::string utf8String(utf8Conv.PeekBuffer());
 
-            ImGui::InputText(param_label.c_str(), &valueUtf8String, ImGuiInputTextFlags_None);
-
+            ImGui::InputText(param_label.c_str(), &utf8String, ImGuiInputTextFlags_None);
             if (ImGui::IsItemDeactivatedAfterEdit()) {
-                vislib::UTF8Encoder::Decode(valueString, vislib::StringA(valueUtf8String.c_str()));
-                p->SetValue(valueString);
+                vislib::UTF8Encoder::Decode(utf8Conv, vislib::StringA(utf8String.c_str()));
+                p->SetValue(utf8Conv);
             }
             help = "[Ctrl + Enter] for new line.\nPress [Return] to confirm changes.";
         } else {

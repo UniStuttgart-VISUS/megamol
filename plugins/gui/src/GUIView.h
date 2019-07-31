@@ -9,6 +9,7 @@
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/AbstractView.h"
+#include "mmcore/view/CallRenderView.h"
 
 #include "vislib/math/Rectangle.h"
 
@@ -75,6 +76,8 @@ protected:
 
     virtual void DeserialiseCamera(vislib::Serialiser& serialiser) override;
 
+    virtual bool OnRenderView(megamol::core::Call& call);
+
     virtual void Render(const mmcRenderViewContext& context) override;
 
     virtual void ResetView(void) override;
@@ -112,6 +115,9 @@ private:
     };
 
     // VARIABLES --------------------------------------------------------------
+
+    /** The override call */
+    megamol::core::view::CallRenderView* overrideCall;
 
     /** The input renderview slot */
     core::CallerSlot render_view_slot;
