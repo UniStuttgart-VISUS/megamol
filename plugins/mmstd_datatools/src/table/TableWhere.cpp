@@ -139,8 +139,7 @@ bool megamol::stdplugin::datatools::table::TableWhere::getData(
     std::function<bool(const float)> selector;
 
     /* Process updates in the configuration. */
-    if (this->paramColumn.IsDirty() || this->paramOperator.IsDirty()
-            || this->paramReference.IsDirty()) {
+    {
         auto c = this->paramColumn.Param<FlexEnumParam>()->Value();
         auto e = this->paramEpsilon.Param<FloatParam>()->Value();
         auto o = this->paramOperator.Param<EnumParam>()->Value();
@@ -207,17 +206,14 @@ bool megamol::stdplugin::datatools::table::TableWhere::getData(
                 _T("was not found in the data set. The %hs module will copy ")
                 _T("all input rows."), c.c_str(), TableWhere::ClassName());
         }
-
-        this->paramColumn.ResetDirty();
-        this->paramOperator.ResetDirty();
-        this->paramReference.ResetDirty();
-
-        ++this->localHash;
     }
     assert(((column >= 0) && (column < this->columns.size())) || !selector);
 
     /* (Re-) Generate the data. */
-    if (selector || (this->inputHash != src->DataHash())
+    if (this->paramColumn.IsDirty()
+            || this->paramOperator.IsDirty()
+            || this->paramReference.IsDirty()
+            || (this->inputHash != src->DataHash())
             || (this->frameID != src->GetFrameID())) {
         const auto data = src->GetData();
 
@@ -250,6 +246,11 @@ bool megamol::stdplugin::datatools::table::TableWhere::getData(
 
         this->frameID = dst->GetFrameID();
         this->inputHash = src->DataHash();
+        ++this->localHash;
+
+        this->paramColumn.ResetDirty();
+        this->paramOperator.ResetDirty();
+        this->paramReference.ResetDirty();
     } /* end if (selector || (this->inputHash != src->DataHash()) ... */
 
     dst->SetFrameCount(src->GetFrameCount());
