@@ -1,5 +1,5 @@
 /*
-** $Id: lobject.h,v 2.124 2017/06/27 11:35:31 roberto Exp roberto $
+** $Id: lobject.h,v 2.117.1.1 2017/04/19 17:39:34 roberto Exp $
 ** Type definitions for Lua objects
 ** See Copyright Notice in lua.h
 */
@@ -19,11 +19,11 @@
 /*
 ** Extra tags for non-values
 */
-#define LUA_TUPVAL	LUA_NUMTAGS  /* upvalues */
-#define LUA_TPROTO	(LUA_NUMTAGS+1)  /* function prototypes */
+#define LUA_TPROTO	LUA_NUMTAGS		/* function prototypes */
+#define LUA_TDEADKEY	(LUA_NUMTAGS+1)		/* removed keys in tables */
 
 /*
-** number of all possible tags (including LUA_TNONE)
+** number of all possible tags (including LUA_TNONE but excluding DEADKEY)
 */
 #define LUA_TOTALTAGS	(LUA_TPROTO + 2)
 
@@ -107,10 +107,10 @@ typedef union Value {
 } Value;
 
 
-#define TValuefields	Value value_; lu_byte tt_
+#define TValuefields	Value value_; int tt_
 
 
-typedef struct TValue {
+typedef struct lua_TValue {
   TValuefields;
 } TValue;
 
@@ -121,7 +121,6 @@ typedef struct TValue {
 
 
 #define val_(o)		((o)->value_)
-#define valraw(o)	(&val_(o))
 
 
 /* raw type tag of a TValue */
@@ -131,8 +130,7 @@ typedef struct TValue {
 #define novariant(x)	((x) & 0x0F)
 
 /* type tag of a TValue (bits 0-3 for tags + variant bits 4-5) */
-#define ttyperaw(t)	((t) & 0x3F)
-#define ttype(o)	ttyperaw(rttype(o))
+#define ttype(o)	(rttype(o) & 0x3F)
 
 /* type tag of a TValue with no variants (bits 0-3) */
 #define ttnov(o)	(novariant(rttype(o)))
@@ -158,19 +156,7 @@ typedef struct TValue {
 #define ttislcf(o)		checktag((o), LUA_TLCF)
 #define ttisfulluserdata(o)	checktag((o), ctb(LUA_TUSERDATA))
 #define ttisthread(o)		checktag((o), ctb(LUA_TTHREAD))
-
-
-/*
-** Macros to access unstructured values (may come both from
-** 'TValue's and table keys)
-*/
-#define ivalueraw(v)	((v).i)
-#define fltvalueraw(v)	((v).n)
-#define gcvalueraw(v)	((v).gc)
-#define pvalueraw(v)	((v).p)
-#define tsvalueraw(v)	(gco2ts((v).gc))
-#define fvalueraw(v)	((v).f)
-#define bvalueraw(v)	((v).b)
+#define ttisdeadkey(o)		checktag((o), LUA_TDEADKEY)
 
 
 /* Macros to access values */
@@ -189,17 +175,13 @@ typedef struct TValue {
 #define hvalue(o)	check_exp(ttistable(o), gco2t(val_(o).gc))
 #define bvalue(o)	check_exp(ttisboolean(o), val_(o).b)
 #define thvalue(o)	check_exp(ttisthread(o), gco2th(val_(o).gc))
+/* a dead value may get the 'gc' field, but cannot access its contents */
+#define deadvalue(o)	check_exp(ttisdeadkey(o), cast(void *, val_(o).gc))
 
 #define l_isfalse(o)	(ttisnil(o) || (ttisboolean(o) && bvalue(o) == 0))
 
 
 #define iscollectable(o)	(rttype(o) & BIT_ISCOLLECTABLE)
-
-
-/*
-** Protected access to objects in values
-*/
-#define gcvalueN(o)	(iscollectable(o) ? gcvalue(o) : NULL)
 
 
 /* Macros for internal tests */
@@ -270,11 +252,12 @@ typedef struct TValue {
     val_(io).gc = obj2gco(x_); settt_(io, ctb(LUA_TTABLE)); \
     checkliveness(L,io); }
 
+#define setdeadvalue(obj)	settt_(obj, LUA_TDEADKEY)
+
 
 
 #define setobj(L,obj1,obj2) \
-	{ TValue *io1=(obj1); const TValue *io2=(obj2); \
-          io1->value_ = io2->value_; io1->tt_ = io2->tt_; \
+	{ TValue *io1=(obj1); *io1 = *(obj2); \
 	  (void)L; checkliveness(L,io1); }
 
 
@@ -282,22 +265,21 @@ typedef struct TValue {
 ** different types of assignments, according to destination
 */
 
-/* from stack to stack */
-#define setobjs2s(L,o1,o2)	setobj(L,s2v(o1),s2v(o2))
+/* from stack to (same) stack */
+#define setobjs2s	setobj
 /* to stack (not from same stack) */
-#define setobj2s(L,o1,o2)	setobj(L,s2v(o1),o2)
-#define setsvalue2s(L,o,s)	setsvalue(L,s2v(o),s)
-#define sethvalue2s(L,o,h)	sethvalue(L,s2v(o),h)
-#define setthvalue2s(L,o,t)	setthvalue(L,s2v(o),t)
-#define setptvalue2s(L,o,p)	setptvalue(L,s2v(o),p)
-#define setclLvalue2s(L,o,cl)	setclLvalue(L,s2v(o),cl)
+#define setobj2s	setobj
+#define setsvalue2s	setsvalue
+#define sethvalue2s	sethvalue
+#define setptvalue2s	setptvalue
 /* from table to same table */
 #define setobjt2t	setobj
 /* to new object */
 #define setobj2n	setobj
 #define setsvalue2n	setsvalue
-/* to table */
-#define setobj2t	setobj
+
+/* to table (define it as an expression to be used in macros) */
+#define setobj2t(L,o1,o2)  ((void)L, *(o1)=*(o2), checkliveness(L,(o1)))
 
 
 
@@ -309,15 +291,8 @@ typedef struct TValue {
 */
 
 
-typedef union StackValue {
-  TValue val;
-} StackValue;
+typedef TValue *StkId;  /* index to stack elements */
 
-
-typedef StackValue *StkId;  /* index to stack elements */
-
-/* convert a 'StackValue' to a 'TValue' */
-#define s2v(o)	(&(o)->val)
 
 
 
@@ -341,7 +316,7 @@ typedef struct TString {
 ** Ensures that address after this type is always fully aligned.
 */
 typedef union UTString {
-  LUAI_MAXALIGN;  /* ensures maximum alignment for strings */
+  L_Umaxalign dummy;  /* ensures maximum alignment for strings */
   TString tsv;
 } UTString;
 
@@ -381,7 +356,7 @@ typedef struct Udata {
 ** Ensures that address after this type is always fully aligned.
 */
 typedef union UUdata {
-  LUAI_MAXALIGN;  /* ensures maximum alignment for 'local' udata */
+  L_Umaxalign dummy;  /* ensures maximum alignment for 'local' udata */
   Udata uv;
 } UUdata;
 
@@ -427,21 +402,6 @@ typedef struct LocVar {
 
 
 /*
-** Associates the absolute line source for a given instruction ('pc').
-** The array 'lineinfo' gives, for each instruction, the difference in
-** lines from the previous instruction. When that difference does not
-** fit into a byte, Lua saves the absolute line for that instruction.
-** (Lua also saves the absolute line periodically, to speed up the
-** computation of a line number: we can use binary search in the
-** absolute-line array, but we must traverse the 'lineinfo' array
-** linearly to compute a line.)
-*/
-typedef struct AbsLineInfo {
-  int pc;
-  int line;
-} AbsLineInfo;
-
-/*
 ** Function Prototypes
 */
 typedef struct Proto {
@@ -449,24 +409,21 @@ typedef struct Proto {
   lu_byte numparams;  /* number of fixed parameters */
   lu_byte is_vararg;
   lu_byte maxstacksize;  /* number of registers needed by this function */
-  lu_byte cachemiss;  /* count for successive misses for 'cache' field */
   int sizeupvalues;  /* size of 'upvalues' */
   int sizek;  /* size of 'k' */
   int sizecode;
   int sizelineinfo;
   int sizep;  /* size of 'p' */
   int sizelocvars;
-  int sizeabslineinfo;  /* size of 'abslineinfo' */
   int linedefined;  /* debug information  */
   int lastlinedefined;  /* debug information  */
   TValue *k;  /* constants used by the function */
-  struct LClosure *cache;  /* last-created closure with this prototype */
   Instruction *code;  /* opcodes */
   struct Proto **p;  /* functions defined inside the function */
-  Upvaldesc *upvalues;  /* upvalue information */
-  ls_byte *lineinfo;  /* information about source lines (debug information) */
-  AbsLineInfo *abslineinfo;  /* idem */
+  int *lineinfo;  /* map from opcodes to source lines (debug information) */
   LocVar *locvars;  /* information about local variables (debug information) */
+  Upvaldesc *upvalues;  /* upvalue information */
+  struct LClosure *cache;  /* last-created closure with this prototype */
   TString  *source;  /* used for debug information */
   GCObject *gclist;
 } Proto;
@@ -474,20 +431,9 @@ typedef struct Proto {
 
 
 /*
-** Upvalues for Lua closures
+** Lua Upvalues
 */
-typedef struct UpVal {
-  CommonHeader;
-  TValue *v;  /* points to stack or to its own value */
-  union {
-    struct {  /* (when open) */
-      struct UpVal *next;  /* linked list */
-      struct UpVal **previous;
-    } open;
-    TValue value;  /* the value (when closed) */
-  } u;
-} UpVal;
-
+typedef struct UpVal UpVal;
 
 
 /*
@@ -526,37 +472,26 @@ typedef union Closure {
 ** Tables
 */
 
+typedef union TKey {
+  struct {
+    TValuefields;
+    int next;  /* for chaining (offset for next node) */
+  } nk;
+  TValue tvk;
+} TKey;
 
-/*
-** Nodes for Hash tables. A pack of two TValue's (key-value pairs)
-** plus a 'next' field to link colliding entries. The distribuition
-** of the key's fields ('key_tt' and 'key_val') not forming a proper
-** 'TValue' allows for a smaller size for 'Node' both in 4-byte
-** and 8-byte alignments.
-*/
-typedef union Node {
-  struct NodeKey {
-    TValuefields;  /* fields for value */
-    lu_byte key_tt;  /* key type */
-    int next;  /* for chaining */
-    Value key_val;  /* key value */
-  } u;
-  TValue i_val;  /* direct access to node's value as a proper 'TValue' */
+
+/* copy a value into a key without messing up field 'next' */
+#define setnodekey(L,key,obj) \
+	{ TKey *k_=(key); const TValue *io_=(obj); \
+	  k_->nk.value_ = io_->value_; k_->nk.tt_ = io_->tt_; \
+	  (void)L; checkliveness(L,io_); }
+
+
+typedef struct Node {
+  TValue i_val;
+  TKey i_key;
 } Node;
-
-
-/* copy a value into a key */
-#define setnodekey(L,node,obj) \
-	{ Node *n_=(node); const TValue *io_=(obj); \
-	  n_->u.key_val = io_->value_; n_->u.key_tt = io_->tt_; \
-	  (void)L; checkliveness(L,io_); }
-
-
-/* copy a value from a key */
-#define getnodekey(L,obj,node) \
-	{ TValue *io_=(obj); const Node *n_=(node); \
-	  io_->value_ = n_->u.key_val; io_->tt_ = n_->u.key_tt; \
-	  (void)L; checkliveness(L,io_); }
 
 
 typedef struct Table {
@@ -570,36 +505,6 @@ typedef struct Table {
   struct Table *metatable;
   GCObject *gclist;
 } Table;
-
-
-/*
-** Macros to manipulate keys inserted in nodes
-*/
-#define keytt(node)		((node)->u.key_tt)
-#define keyval(node)		((node)->u.key_val)
-
-#define keyisnil(node)		(keytt(node) == LUA_TNIL)
-#define keyisinteger(node)	(keytt(node) == LUA_TNUMINT)
-#define keyival(node)		(keyval(node).i)
-#define keyisshrstr(node)	(keytt(node) == ctb(LUA_TSHRSTR))
-#define keystrval(node)		(gco2ts(keyval(node).gc))
-
-#define setnilkey(node)		(keytt(node) = LUA_TNIL)
-
-#define keyiscollectable(n)	(keytt(n) & BIT_ISCOLLECTABLE)
-
-#define gckey(n)	(keyval(n).gc)
-#define gckeyN(n)	(keyiscollectable(n) ? gckey(n) : NULL)
-
-
-/*
-** Use a "nil table" to mark dead keys in a table. Those keys serve
-** only to keep space for removed entries, which may still be part of
-** chains. Note that the 'keytt' does not have the BIT_ISCOLLECTABLE
-** set, so these values are considered not collectable and are different
-** from any valid value.
-*/
-#define setdeadkey(n)	(keytt(n) = LUA_TTABLE, gckey(n) = NULL)
 
 
 
@@ -629,13 +534,11 @@ LUAI_FUNC int luaO_int2fb (unsigned int x);
 LUAI_FUNC int luaO_fb2int (int x);
 LUAI_FUNC int luaO_utf8esc (char *buff, unsigned long x);
 LUAI_FUNC int luaO_ceillog2 (unsigned int x);
-LUAI_FUNC int luaO_rawarith (lua_State *L, int op, const TValue *p1,
-                             const TValue *p2, TValue *res);
 LUAI_FUNC void luaO_arith (lua_State *L, int op, const TValue *p1,
-                           const TValue *p2, StkId res);
+                           const TValue *p2, TValue *res);
 LUAI_FUNC size_t luaO_str2num (const char *s, TValue *o);
 LUAI_FUNC int luaO_hexavalue (int c);
-LUAI_FUNC void luaO_tostring (lua_State *L, TValue *obj);
+LUAI_FUNC void luaO_tostring (lua_State *L, StkId obj);
 LUAI_FUNC const char *luaO_pushvfstring (lua_State *L, const char *fmt,
                                                        va_list argp);
 LUAI_FUNC const char *luaO_pushfstring (lua_State *L, const char *fmt, ...);

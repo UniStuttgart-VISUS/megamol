@@ -1,5 +1,5 @@
 /*
-** $Id: ltm.c,v 2.41 2017/05/13 12:57:20 roberto Exp roberto $
+** $Id: ltm.c,v 2.38.1.1 2017/04/19 17:39:34 roberto Exp $
 ** Tag methods
 ** See Copyright Notice in lua.h
 */
@@ -30,7 +30,7 @@ LUAI_DDEF const char *const luaT_typenames_[LUA_TOTALTAGS] = {
   "no value",
   "nil", "boolean", udatatypename, "number",
   "string", "table", "function", udatatypename, "thread",
-  "upvalue", "proto" /* these last cases are used for tests only */
+  "proto" /* this last case is used for tests only */
 };
 
 
@@ -100,53 +100,41 @@ const char *luaT_objtypename (lua_State *L, const TValue *o) {
 
 
 void luaT_callTM (lua_State *L, const TValue *f, const TValue *p1,
-                  const TValue *p2, const TValue *p3) {
-  StkId func = L->top;
-  setobj2s(L, func, f);  /* push function (assume EXTRA_STACK) */
-  setobj2s(L, func + 1, p1);  /* 1st argument */
-  setobj2s(L, func + 2, p2);  /* 2nd argument */
-  setobj2s(L, func + 3, p3);  /* 3rd argument */
-  L->top += 4;
-  /* metamethod may yield only when called from Lua code */
-  if (isLua(L->ci))
-    luaD_call(L, func, 0);
-  else
-    luaD_callnoyield(L, func, 0);
-}
-
-
-void luaT_callTMres (lua_State *L, const TValue *f, const TValue *p1,
-                     const TValue *p2, StkId res) {
-  ptrdiff_t result = savestack(L, res);
+                  const TValue *p2, TValue *p3, int hasres) {
+  ptrdiff_t result = savestack(L, p3);
   StkId func = L->top;
   setobj2s(L, func, f);  /* push function (assume EXTRA_STACK) */
   setobj2s(L, func + 1, p1);  /* 1st argument */
   setobj2s(L, func + 2, p2);  /* 2nd argument */
   L->top += 3;
+  if (!hasres)  /* no result? 'p3' is third argument */
+    setobj2s(L, L->top++, p3);  /* 3rd argument */
   /* metamethod may yield only when called from Lua code */
   if (isLua(L->ci))
-    luaD_call(L, func, 1);
+    luaD_call(L, func, hasres);
   else
-    luaD_callnoyield(L, func, 1);
-  res = restorestack(L, result);
-  setobjs2s(L, res, --L->top);  /* more result to its place */
+    luaD_callnoyield(L, func, hasres);
+  if (hasres) {  /* if has result, move it to its place */
+    p3 = restorestack(L, result);
+    setobjs2s(L, p3, --L->top);
+  }
 }
 
 
-static int callbinTM (lua_State *L, const TValue *p1, const TValue *p2,
-                      StkId res, TMS event) {
+int luaT_callbinTM (lua_State *L, const TValue *p1, const TValue *p2,
+                    StkId res, TMS event) {
   const TValue *tm = luaT_gettmbyobj(L, p1, event);  /* try first operand */
   if (ttisnil(tm))
     tm = luaT_gettmbyobj(L, p2, event);  /* try second operand */
   if (ttisnil(tm)) return 0;
-  luaT_callTMres(L, tm, p1, p2, res);
+  luaT_callTM(L, tm, p1, p2, res, 1);
   return 1;
 }
 
 
 void luaT_trybinTM (lua_State *L, const TValue *p1, const TValue *p2,
                     StkId res, TMS event) {
-  if (!callbinTM(L, p1, p2, res, event)) {
+  if (!luaT_callbinTM(L, p1, p2, res, event)) {
     switch (event) {
       case TM_CONCAT:
         luaG_concaterror(L, p1, p2);
@@ -169,47 +157,9 @@ void luaT_trybinTM (lua_State *L, const TValue *p1, const TValue *p2,
 
 int luaT_callorderTM (lua_State *L, const TValue *p1, const TValue *p2,
                       TMS event) {
-  if (!callbinTM(L, p1, p2, L->top, event))
+  if (!luaT_callbinTM(L, p1, p2, L->top, event))
     return -1;  /* no metamethod */
   else
-    return !l_isfalse(s2v(L->top));
+    return !l_isfalse(L->top);
 }
 
-
-void luaT_adjustvarargs (lua_State *L, Proto *p, int actual) {
-  int i;
-  Table *vtab;
-  TValue nname;
-  int nfixparams = p->numparams - 1;  /* number of fixed parameters */
-  actual -= nfixparams;  /* number of extra arguments */
-  vtab = luaH_new(L);  /* create vararg table */
-  sethvalue2s(L, L->top, vtab);  /* anchor it for resizing */
-  L->top++;  /* space ensured by caller */
-  luaH_resize(L, vtab, actual, 1);
-  for (i = 0; i < actual; i++)  /* put extra arguments into vararg table */
-    setobj2n(L, &vtab->array[i], s2v(L->top - actual + i - 1));
-  setsvalue(L, &nname, luaS_newliteral(L, "n"));  /* get field 'n' */
-  setivalue(luaH_set(L, vtab, &nname), actual);  /* store counter there */
-  L->top -= actual;  /* remove extra elements from the stack */
-  sethvalue2s(L, L->top - 1, vtab);  /* move table to new top */
-}
-
-
-void luaT_getvarargs (lua_State *L, TValue *t, StkId where, int wanted) {
-  if (!ttistable(t))
-    luaG_runerror(L, "'vararg' parameter is not a table");
-  else {
-    int i;
-    Table *h = hvalue(t);
-    if (wanted < 0) {  /* get all? */
-      const TValue *ns = luaH_getstr(h, luaS_newliteral(L, "n"));
-      int n = (ttisinteger(ns)) ? ivalue(ns) : 0;
-      wanted = n;
-      checkstackp(L, n, where);
-      L->top = where + n;
-    }
-    for (i = 0; i < wanted; i++)  /* get what is available */
-      setobj2s(L, where + i, luaH_getint(h, i + 1));
-    return;
-  }
-}
