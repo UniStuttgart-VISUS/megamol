@@ -20,8 +20,6 @@ matrix:
         - CXX=g++-7
 
 before_install:
-  - wget https://cmake.org/files/v3.12/cmake-3.12.4-Linux-x86_64.sh
-  - sh cmake-3.12.4-Linux-x86_64.sh --prefix=. --exclude-subdir
   - . travis/install-cuda-xenial.sh
   - sudo apt-get -qq update
   - sudo apt-get install -y libgl1-mesa-dev
@@ -35,7 +33,7 @@ before_install:
   - sudo apt-get install -y libcgal-qt5-dev
   - sudo apt-get install -y libcgal-dev
   - mkdir build && cd build
-  - ../bin/cmake .. -DCMAKE_CXX_FLAGS=-Wno-deprecated-declarations -DSUPPRESS_CUDA_WARNINGS=TRUE
+  - cmake ../ -DCMAKE_CXX_FLAGS=-Wno-deprecated-declarations -DENABLE_CUDA=ON -DSUPPRESS_CUDA_WARNINGS=TRUE -DBUILD_PROTEIN_CUDA_PLUGIN=ON
 
 install:
   - make install

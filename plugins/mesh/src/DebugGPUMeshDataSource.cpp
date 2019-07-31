@@ -27,10 +27,10 @@ bool megamol::mesh::DebugGPUMeshDataSource::load() {
     std::vector<std::vector<float>> vbs = {{0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f}, // normal data buffer
         {-0.5f, 0.0f, 0.0f, 0.5f, 0.0f, 0.0f, 0.0f, 0.5f, 0.0f}}; // position data buffer
     // Create std-container holding vertex attribute descriptions
-    std::vector<VertexLayout::Attribute> attribs = {
-        VertexLayout::Attribute(3, GL_FLOAT, GL_FALSE, 0), VertexLayout::Attribute(3, GL_FLOAT, GL_FALSE, 0)};
+    std::vector<glowl::VertexLayout::Attribute> attribs = {glowl::VertexLayout::Attribute(3, GL_FLOAT, GL_FALSE, 0),
+        glowl::VertexLayout::Attribute(3, GL_FLOAT, GL_FALSE, 0)};
 
-    VertexLayout vertex_descriptor(0, attribs);
+    glowl::VertexLayout vertex_descriptor(0, attribs);
 
     // Create std-container holding index data
     std::vector<uint32_t> indices = {0, 1, 2};
