@@ -294,11 +294,16 @@ void GUIView::Render(const mmcRenderViewContext& context) {
         crv->SetTime(
             -1.0f); // Should be negative to trigger animation! (see View3D.cpp line ~660 | View2D.cpp line ~350)
         (*crv)(core::view::AbstractCallRender::FnRender);
+
+        this->drawGUI(crv->GetViewport(), context.InstanceTime);
     } else {
         ::glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         ::glClear(GL_COLOR_BUFFER_BIT);
+
+        if (this->overrideViewCall != nullptr) {
+            this->drawGUI(this->overrideViewCall->GetViewport(), context.InstanceTime);
+        }
     }
-    this->drawGUI(crv->GetViewport(), crv->InstanceTime());
 }
 
 
