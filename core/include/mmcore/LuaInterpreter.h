@@ -4,10 +4,10 @@
 #include <fstream>
 #include <functional>
 #include <iostream>
+#include <map>
 #include <memory>
 #include <sstream>
 #include <string>
-#include <map>
 
 #include "vislib/sys/Log.h"
 
@@ -109,6 +109,12 @@ public:
 
 private:
 
+#ifdef ATTACH_LUA_DEBUGGER
+    const char *dbg = "\npackage.cpath = [[T:/Utilities/zerobrane/x64/clibs53/?.dll;]] .. package.cpath\n"
+        "package.path = package.path.. [[;T:/Utilities/zerobrane/lualibs/mobdebug/?.lua;T:/Utilities/zerobrane/lualibs/?.lua]]\n"
+        "require('mobdebug').start()\n"
+        "print(debug.getinfo(1,'S').source)\n";
+#endif
     static std::string const DEFAULT_ENV;
 
     /** error handler */
@@ -227,12 +233,9 @@ template <class T> void LuaInterpreter<T>::Initialize(std::string const &env) {
     luaL_requiref(L, LUA_DBLIBNAME, luaopen_debug, 1);
     lua_pop(L, 1);
 
-    USES_CHECK_LUA
-    std::string dbg = "package.cpath = [[T:/Utilities/zerobrane/x64/clibs53/?.dll;]] .. package.cpath\n"
-        "package.path = package.path.. [[;T:/Utilities/zerobrane/lualibs/mobdebug/?.lua;T:/Utilities/zerobrane/lualibs/?.lua]]\n"
-        "require('mobdebug').start()\n"
-        "print(debug.getinfo(1,'S').source)\n";
-    CHECK_LUA(luaL_dostring(L, dbg.c_str()));
+    // you need lua53.dll in your path to do this!!!
+    //USES_CHECK_LUA
+    //CHECK_LUA(luaL_dostring(L, dbg));
 #endif
 
     auto tmp = env;
@@ -294,7 +297,13 @@ template <class T> bool megamol::core::LuaInterpreter<T>::LoadEnviromentString(c
         USES_CHECK_LUA;
         auto n = envString.find('=');
         envName = envString.substr(0, n);
+#ifdef ATTACH_LUA_DEBUGGER
+        std::string x = envString;
+        x.append(dbg);
+        CHECK_LUA(luaL_loadbuffer(L, x.c_str(), x.length(), envName.c_str()));
+#else
         CHECK_LUA(luaL_loadbuffer(L, envString.c_str(), envString.length(), envName.c_str()));
+#endif
         CHECK_LUA(lua_pcall(L, 0, LUA_MULTRET, 0));
         return true;
     } else {
