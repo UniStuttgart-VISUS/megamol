@@ -37,7 +37,9 @@ namespace astro {
         enum Mode {
             Hsl = 0,
             HelmholtzComplementary,
-            IttenComplementary
+            IttenComplementary,
+            MaxHelmholtzComplementary,
+            MaxIttenComplementary
         };
 
         static inline const char *ClassName(void) {
@@ -80,7 +82,7 @@ namespace astro {
             const std::uint8_t *directions, const std::uint64_t cntParticles,
             const std::size_t stride, const glm::vec3& x1, const glm::vec3& x2,
             const glm::vec3& y1, const glm::vec3& y2, const glm::vec3& z1,
-            const glm::vec3& z2);
+            const glm::vec3& z2, const bool mix);
 
         static std::vector<float> makeHslColouring(const std::uint8_t *directions,
             const std::uint64_t cntParticles, const std::size_t stride);

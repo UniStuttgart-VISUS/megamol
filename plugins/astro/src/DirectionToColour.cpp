@@ -49,8 +49,10 @@ megamol::astro::DirectionToColour::DirectionToColour(void) : Module(),
     {
         auto param = new core::param::EnumParam(Mode::Hsl);
         param->SetTypePair(Mode::Hsl, "HSL plane & lightness");
-        param->SetTypePair(Mode::HelmholtzComplementary, "Complementary colours (Helmholtz)");
-        param->SetTypePair(Mode::IttenComplementary, "Complementary colours (Itten)");
+        param->SetTypePair(Mode::HelmholtzComplementary, "Mixed complementary colours (Helmholtz)");
+        param->SetTypePair(Mode::IttenComplementary, "Mixed complementary colours (Itten)");
+        param->SetTypePair(Mode::MaxHelmholtzComplementary, "Maximum complementary colours (Helmholtz)");
+        param->SetTypePair(Mode::MaxIttenComplementary, "Maximum complementary colours (Itten)");
         this->paramMode << param;
         this->MakeSlotAvailable(&this->paramMode);
     }
@@ -174,7 +176,7 @@ std::vector<float> megamol::astro::DirectionToColour::makeComplementaryColouring
         const std::uint8_t *directions, const std::uint64_t cntParticles,
         const std::size_t stride, const glm::vec3& x1, const glm::vec3& x2,
         const glm::vec3& y1, const glm::vec3& y2, const glm::vec3& z1,
-        const glm::vec3& z2) {
+        const glm::vec3& z2, const bool mix) {
     assert(directions != nullptr);
 
     std::vector<float> retval(3 * cntParticles);
@@ -190,11 +192,24 @@ std::vector<float> megamol::astro::DirectionToColour::makeComplementaryColouring
             dir *= 0.5f;
             dir += 0.5f;
 
-            auto x = glm::mix(x1, x2, dir.x);
-            auto y = glm::mix(y1, y2, dir.y);
-            auto z = glm::mix(z1, z2, dir.z);
+            glm::vec3 hsl;
 
-            auto hsl = dir.x *  + dir.y * y + dir.z * z;
+            if (!mix && (dir.x > dir.y) && (dir.x > dir.z)) {
+                hsl = glm::mix(x1, x2, dir.x);
+
+            } else if (!mix && (dir.y > dir.x) && (dir.y > dir.z)) {
+                hsl = glm::mix(y1, y2, dir.y);
+
+            } else if (!mix && (dir.z > dir.x) && (dir.z > dir.y)) {
+                hsl = glm::mix(z1, z2, dir.z);
+
+            } else {
+                auto x = glm::mix(x1, x2, dir.x);
+                auto y = glm::mix(y1, y2, dir.y);
+                auto z = glm::mix(z1, z2, dir.z);
+                hsl = dir.x * +dir.y * y + dir.z * z;
+
+            }
 
             DirectionToColour::hsl2Rgb(retval.data() + 3 * i, hsl.x, hsl.y,
                 hsl.z);
@@ -277,6 +292,7 @@ bool megamol::astro::DirectionToColour::getData(core::Call& call) {
             if (directions != nullptr) {
                 switch (mode) {
                     case Mode::HelmholtzComplementary:
+                    case Mode::MaxHelmholtzComplementary:
                         this->colours.emplace_back(
                             DirectionToColour::makeComplementaryColouring(
                                 directions,
@@ -287,10 +303,12 @@ bool megamol::astro::DirectionToColour::getData(core::Call& call) {
                                 glm::vec3(120.0f, 1.0f, 0.5f),  // green
                                 glm::vec3(300.0f, 1.0f, 0.5f),  // magenta
                                 glm::vec3(240.0f, 1.0f, 0.5f),  // blue
-                                glm::vec3(60.0f, 1.0f, 0.5f))); // yellow
+                                glm::vec3(60.0f, 1.0f, 0.5f),   // yellow
+                                mode == Mode::HelmholtzComplementary));
                         break;
 
                     case Mode::IttenComplementary:
+                    case Mode::MaxIttenComplementary:
                         this->colours.emplace_back(
                             DirectionToColour::makeComplementaryColouring(
                                 directions,
@@ -301,7 +319,8 @@ bool megamol::astro::DirectionToColour::getData(core::Call& call) {
                                 glm::vec3(240, 1.0f, 0.5f),     // blue
                                 glm::vec3(30.0f, 1.0f, 0.5f),   // orange
                                 glm::vec3(60.0f, 1.0f, 0.5f),   // yellow
-                                glm::vec3(270.0f, 1.0f, 0.5f)));// violet
+                                glm::vec3(270.0f, 1.0f, 0.5f),  // violet
+                                mode == Mode::IttenComplementary));
                         break;
 
                     case Mode::Hsl:
