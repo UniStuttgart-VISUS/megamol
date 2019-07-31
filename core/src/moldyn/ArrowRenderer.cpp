@@ -334,6 +334,7 @@ bool moldyn::ArrowRenderer::Render(Call& call) {
                         "ArrowRenderer: cannot render arrows without directional data!");
                     continue;
             }
+
             std::shared_ptr<FlagStorage::FlagVectorType> flags;
             unsigned int fal = 0;
             if (useFlags) {
@@ -342,16 +343,15 @@ bool moldyn::ArrowRenderer::Render(Call& call) {
                 flags = cflags->GetFlags();
                 fal = glGetAttribLocationARB(this->arrowShader, "flags");
                 ::glEnableVertexAttribArrayARB(fal);
-                ::glVertexAttribIPointer(
-                    fal, 1, GL_UNSIGNED_INT, sizeof(FlagStorage::FlagItemType), flags.get()->data());
+                ::glVertexAttribIPointer(fal, 1, GL_UNSIGNED_INT, 0, flags->data());
             }
 
             glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(parts.GetCount()));
 
             if (useFlags) {
+                glDisableVertexAttribArrayARB(fal);
                 cflags->SetFlags(flags);
                 (*cflags)(core::FlagCall::CallUnmapFlags);
-                glDisableVertexAttribArrayARB(fal);
             }
 
             glDisableClientState(GL_COLOR_ARRAY);
