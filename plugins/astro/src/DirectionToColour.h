@@ -7,11 +7,15 @@
 
 #pragma once
 
+#include <array>
+
 #include <glm/glm.hpp>
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
+
+#include "mmcore/param/ParamSlot.h"
 
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 
@@ -26,6 +30,15 @@ namespace astro {
     class DirectionToColour : public core::Module {
 
     public:
+
+        /// <summary>
+        /// Specifies the possible colouring modes.
+        /// </summary>
+        enum Mode {
+            Hsl = 0,
+            HelmholtzComplementary,
+            IttenComplementary
+        };
 
         static inline const char *ClassName(void) {
             return "DirectionToColour"; 
@@ -65,7 +78,9 @@ namespace astro {
 
         static std::vector<float> makeComplementaryColouring(
             const std::uint8_t *directions, const std::uint64_t cntParticles,
-            const std::size_t stride);
+            const std::size_t stride, const glm::vec3& x1, const glm::vec3& x2,
+            const glm::vec3& y1, const glm::vec3& y2, const glm::vec3& z1,
+            const glm::vec3& z2);
 
         static std::vector<float> makeHslColouring(const std::uint8_t *directions,
             const std::uint64_t cntParticles, const std::size_t stride);
@@ -92,6 +107,7 @@ namespace astro {
         unsigned int frameID;
         std::size_t hashData;
         std::size_t hashState;
+        core::param::ParamSlot paramMode;
         core::CallerSlot slotInput;
         core::CalleeSlot slotOutput;
     };

@@ -15,24 +15,10 @@
 
 #include <glm/gtx/vector_angle.hpp>
 
+#include "mmcore/param/EnumParam.h"
+
 #include "vislib/sys/Log.h"
 
-
-#if 0
-if (s == 0.0f) {
-    *oit++ = 1.0f;
-    *oit++ = 1.0f;
-    *oit++ = 1.0f;
-
-} else {
-    auto v2 = (l < 0.5f) ? (l * (1.0f + s)) : ((l + s) - (l * s));
-    auto v1 = 2.0f * l - v2;
-
-    *oit++ = hueToChannel(oit, v1, v2, hue + (1.0f / 3.0f));
-    *oit++ = hueToChannel(oit, v1, v2, hue);
-    *oit++ = hueToChannel(oit, v1, v2, hue - (1.0f / 3.0f));
-}
-#endif
 
 
 /*
@@ -42,6 +28,7 @@ megamol::astro::DirectionToColour::DirectionToColour(void) : Module(),
         frameID(0),
         hashData((std::numeric_limits<std::size_t>::max)()),
         hashState((std::numeric_limits<std::size_t>::max)()),
+        paramMode("mode", "Changes the colouring mode for mapping direction to colour."),
         slotInput("input", "Obtains the input particle data."),
         slotOutput("output", "Output of the coloured data.") {
     using namespace core::moldyn;
@@ -57,6 +44,16 @@ megamol::astro::DirectionToColour::DirectionToColour(void) : Module(),
         MultiParticleDataCall::FunctionName(1),
         &DirectionToColour::getExtent);
     this->MakeSlotAvailable(&this->slotOutput);
+
+    /* Configure and publish parameters. */
+    {
+        auto param = new core::param::EnumParam(Mode::Hsl);
+        param->SetTypePair(Mode::Hsl, "HSL plane & lightness");
+        param->SetTypePair(Mode::HelmholtzComplementary, "Complementary colours (Helmholtz)");
+        param->SetTypePair(Mode::IttenComplementary, "Complementary colours (Itten)");
+        this->paramMode << param;
+        this->MakeSlotAvailable(&this->paramMode);
+    }
 }
 
 
@@ -144,7 +141,6 @@ std::vector<float> megamol::astro::DirectionToColour::makeHslColouring(
             auto lightness = dir.y;
             lightness *= 0.5f * SCALE;
             lightness += 0.5f + 0.5f * (1.0f - SCALE);
-            //lightness = 0.5f;
 
             // Project direction on xz-plane, which defines the hue.
             auto proj = glm::vec2(dir.x, dir.y);
@@ -158,20 +154,8 @@ std::vector<float> megamol::astro::DirectionToColour::makeHslColouring(
             assert(hue >= 0.0f);
             hue = glm::degrees(hue);
 
-            glm::vec2 v1(1.0f, 0.0f);
-            glm::vec2 v2(-1.0f, 0.0f);
-            glm::vec2 v3(0.0f, 1.0f);
-            glm::vec2 v4(0.0f, -1.0f);
-
-            auto a1 = angle(X, v1);
-            auto a2 = angle(X, v2);
-            auto a3 = angle(X, v3);
-            auto a4 = angle(X, v4);
-
             DirectionToColour::hsl2Rgb(retval.data() + 3 * i, hue, 1.0f,
                 lightness);
-
-            //retval[3 * i + 0] = retval[3 * i + 1] = retval[3 * i + 2] = 1.0f;
 
         } else {
             /* Zero-length vectors are black. */
@@ -184,15 +168,42 @@ std::vector<float> megamol::astro::DirectionToColour::makeHslColouring(
 
 
 /*
- * megamol::astro::DirectionToColour::complementaryColouring
+ * megamol::astro::DirectionToColour::makeComplementaryColouring
  */
 std::vector<float> megamol::astro::DirectionToColour::makeComplementaryColouring(
         const std::uint8_t *directions, const std::uint64_t cntParticles,
-        const std::size_t stride) {
+        const std::size_t stride, const glm::vec3& x1, const glm::vec3& x2,
+        const glm::vec3& y1, const glm::vec3& y2, const glm::vec3& z1,
+        const glm::vec3& z2) {
     assert(directions != nullptr);
+
     std::vector<float> retval(3 * cntParticles);
 
-    assert(false);
+    for (UINT64 i = 0; i < cntParticles; ++i, directions += stride) {
+        auto ptr = reinterpret_cast<const float *>(directions);
+        glm::vec3 dir(ptr[0], ptr[1], ptr[2]);
+        auto len = glm::length(dir);
+
+        if (len != 0.0f) {
+            /* Vector has a direction, so compute a colour. */
+            dir /= len;
+            dir *= 0.5f;
+            dir += 0.5f;
+
+            auto x = glm::mix(x1, x2, dir.x);
+            auto y = glm::mix(y1, y2, dir.y);
+            auto z = glm::mix(z1, z2, dir.z);
+
+            auto hsl = dir.x *  + dir.y * y + dir.z * z;
+
+            DirectionToColour::hsl2Rgb(retval.data() + 3 * i, hsl.x, hsl.y,
+                hsl.z);
+
+        } else {
+            /* Zero-length vectors are black. */
+            retval[3 * i + 0] = retval[3 * i + 1] = retval[3 * i + 2] = 0.0f;
+        }
+    }
 
     return retval;
 }
@@ -222,6 +233,7 @@ void megamol::astro::DirectionToColour::hsl2Rgb(float *dst, const float h,
 bool megamol::astro::DirectionToColour::getData(core::Call& call) {
     using core::moldyn::MultiParticleDataCall;
     using core::moldyn::SimpleSphericalParticles;
+    using core::param::EnumParam;
     using vislib::sys::Log;
 
     auto src = this->slotInput.CallAs<MultiParticleDataCall>();
@@ -251,8 +263,11 @@ bool megamol::astro::DirectionToColour::getData(core::Call& call) {
     *dst = *src;
 
     /* Generate the colours. */
-    if ((this->hashData != src->DataHash())
+    if (this->paramMode.IsDirty()
+            || (this->hashData != src->DataHash())
             || (this->frameID != src->FrameID())) {
+        const auto mode = static_cast<Mode>(this->paramMode.Param<EnumParam>()
+            ->Value());
         this->colours.clear();
 
         for (UINT i = 0; i < dst->GetParticleListCount(); ++i) {
@@ -260,13 +275,44 @@ bool megamol::astro::DirectionToColour::getData(core::Call& call) {
             auto directions = getDirections(particles);
 
             if (directions != nullptr) {
-                this->colours.emplace_back(DirectionToColour::makeHslColouring(
-                    directions,
-                    particles.GetCount(),
-                    particles.GetDirDataStride()));
-                particles.SetColourData(
-                    SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGB,
-                    this->colours.back().data());
+                switch (mode) {
+                    case Mode::HelmholtzComplementary:
+                        this->colours.emplace_back(
+                            DirectionToColour::makeComplementaryColouring(
+                                directions,
+                                particles.GetCount(),
+                                particles.GetDirDataStride(),
+                                glm::vec3(0.0f, 1.0f, 0.5f),    // red
+                                glm::vec3(180.0f, 1.0f, 0.5f),  // cyan
+                                glm::vec3(120.0f, 1.0f, 0.5f),  // green
+                                glm::vec3(300.0f, 1.0f, 0.5f),  // magenta
+                                glm::vec3(240.0f, 1.0f, 0.5f),  // blue
+                                glm::vec3(60.0f, 1.0f, 0.5f))); // yellow
+                        break;
+
+                    case Mode::IttenComplementary:
+                        this->colours.emplace_back(
+                            DirectionToColour::makeComplementaryColouring(
+                                directions,
+                                particles.GetCount(),
+                                particles.GetDirDataStride(),
+                                glm::vec3(0.0f, 1.0f, 0.5f),    // red
+                                glm::vec3(120.0f, 1.0f, 0.5f),  // green
+                                glm::vec3(240, 1.0f, 0.5f),     // blue
+                                glm::vec3(30.0f, 1.0f, 0.5f),   // orange
+                                glm::vec3(60.0f, 1.0f, 0.5f),   // yellow
+                                glm::vec3(270.0f, 1.0f, 0.5f)));// violet
+                        break;
+
+                    case Mode::Hsl:
+                    default:
+                        this->colours.emplace_back(
+                            DirectionToColour::makeHslColouring(
+                                directions,
+                                particles.GetCount(),
+                                particles.GetDirDataStride()));
+                        break;
+                }
 
             } else {
                 this->colours.emplace_back();
@@ -275,6 +321,11 @@ bool megamol::astro::DirectionToColour::getData(core::Call& call) {
 
         this->frameID = src->FrameID();
         this->hashData = src->DataHash();
+
+        if (this->paramMode.IsDirty()) {
+            this->paramMode.ResetDirty();
+            ++this->hashState;
+        }
     }
 
     /* Assign the new colours. */
