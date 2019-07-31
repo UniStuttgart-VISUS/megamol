@@ -361,6 +361,7 @@ void ParallelCoordinatesRenderer2D::assertData(core::view::CallRender2D& call) {
     }
 
     floats->SetFrameID(static_cast<unsigned int>(call.Time()));
+    (*floats)(1);
     (*floats)(0);
     call.SetTimeFramesCount(floats->GetFrameCount());
     auto hash = floats->DataHash();
