@@ -1,0 +1,100 @@
+/*
+ * DirectionToColour.h
+ *
+ * Copyright (C) 2019 by VISUS (Universitaet Stuttgart)
+ * Alle Rechte vorbehalten.
+ */
+
+#pragma once
+
+#include <glm/glm.hpp>
+
+#include "mmcore/CalleeSlot.h"
+#include "mmcore/CallerSlot.h"
+#include "mmcore/Module.h"
+
+#include "mmcore/moldyn/MultiParticleDataCall.h"
+
+
+namespace megamol {
+namespace astro {
+
+    /// <summary>
+    /// Converts from <see cref="AstroDataCall" /> to a table for data
+    /// visualisation.
+    /// </summary>
+    class DirectionToColour : public core::Module {
+
+    public:
+
+        static inline const char *ClassName(void) {
+            return "DirectionToColour"; 
+        }
+
+        static inline const char *Description(void) {
+            return "Generates particle colours based on directional vectors "
+                "and the HSL colour model.";
+        }
+
+        static bool IsAvailable(void) {
+            return true;
+        }
+
+        /// <summary>
+        /// Initialises a new instance.
+        /// </summary>
+        DirectionToColour(void);
+
+        /// <summary>
+        /// Finalises the instance.
+        /// </summary>
+        virtual ~DirectionToColour(void);
+
+    protected:
+
+        virtual bool create(void);
+
+        virtual void release(void);
+
+    private:
+
+        static float angle(const glm::vec2& v1, const glm::vec2& v2);
+
+        static const std::uint8_t *getDirections(
+            const core::moldyn::SimpleSphericalParticles& particles);
+
+        static std::vector<float> makeComplementaryColouring(
+            const std::uint8_t *directions, const std::uint64_t cntParticles,
+            const std::size_t stride);
+
+        static std::vector<float> makeHslColouring(const std::uint8_t *directions,
+            const std::uint64_t cntParticles, const std::size_t stride);
+
+        static void hsl2Rgb(float *dst, const float h, const float s,
+            const float l);
+
+        static inline float min3(const float x, const float y, const float z) {
+            return (std::min)((std::min)(x, y), z);
+        }
+
+        bool getData(core::Call& call);
+
+        bool getExtent(core::Call& call);
+
+        inline std::size_t getHash(void) {
+            auto retval = this->hashData;
+            retval ^= this->hashState + 0x9e3779b9 + (retval << 6)
+                + (retval >> 2);
+            return retval;
+        }
+
+        std::vector<std::vector<float>> colours;
+        unsigned int frameID;
+        std::size_t hashData;
+        std::size_t hashState;
+        core::CallerSlot slotInput;
+        core::CalleeSlot slotOutput;
+    };
+
+} /* end namespace astro */
+} /* end namespace megamol */
