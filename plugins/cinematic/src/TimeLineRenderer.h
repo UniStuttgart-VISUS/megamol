@@ -5,7 +5,8 @@
 * Alle Rechte vorbehalten.
 */
 
-#pragma once
+#ifndef MEGAMOL_CINEMATIC_TIMELINERENDERER_H_INCLUDED
+#define MEGAMOL_CINEMATIC_TIMELINERENDERER_H_INCLUDED
 
 #include "Cinematic/Cinematic.h"
 
@@ -202,3 +203,5 @@ namespace cinematic {
 
 } /* end namespace cinematic */
 } /* end namespace megamol */
+
+#endif // MEGAMOL_CINEMATIC_TIMELINERENDERER_H_INCLUDED
