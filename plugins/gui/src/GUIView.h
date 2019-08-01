@@ -119,9 +119,9 @@ private:
         float win_save_delay;      // Flag indicating how long to wait for saving window state since last user action.
         std::string win_delete;    // Name of the window to delete.
         double last_instance_time; // Last instance time.
-        std::string widget_text;   // Input text widget buffer for parameter strings
         bool hotkeys_check_once;   // WORKAROUND: Check multiple hotkey assignments once.
     };
+
 
     // VARIABLES --------------------------------------------------------------
 
@@ -151,6 +151,14 @@ private:
 
     /** The current local state of the gui. */
     StateBuffer state;
+
+    /** Input Widget Buffers. */
+    std::map<std::string, std::string> widgtmap_text;
+    std::map<std::string, int> widgtmap_int;
+    std::map<std::string, float> widgtmap_float;
+    std::map<std::string, vislib::math::Vector<float, 2>> widgtmap_vec2;
+    std::map<std::string, vislib::math::Vector<float, 3>> widgtmap_vec3;
+    std::map<std::string, vislib::math::Vector<float, 4>> widgtmap_vec4;
 
     // FUNCTIONS --------------------------------------------------------------
 

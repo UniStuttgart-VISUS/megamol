@@ -60,7 +60,13 @@ GUIView::GUIView()
     , window_manager()
     , tf_editor()
     , utils()
-    , state() {
+    , state()
+    , widgtmap_text()
+    , widgtmap_float()
+    , widgtmap_int()
+    , widgtmap_vec2()
+    , widgtmap_vec3()
+    , widgtmap_vec4() {
 
     this->render_view_slot.SetCompatibleCall<core::view::CallRenderViewDescription>();
     this->MakeSlotAvailable(&this->render_view_slot);
@@ -178,7 +184,6 @@ bool GUIView::create() {
     this->state.win_delete = "";
     this->state.last_instance_time = 0.0f;
     this->state.hotkeys_check_once = true;
-    this->state.widget_text.clear();
     // Adding additional utf-8 glyph ranges
     /// (there is no error if glyph has no representation in font atlas)
     this->state.font_utf8_ranges.clear();
@@ -1232,7 +1237,6 @@ void GUIView::drawFontWindowCallback(const std::string& wn, WindowManager::Windo
     this->utils.utf8Encode(wc.buf_font_file);
     ImGui::InputText(label.c_str(), &wc.buf_font_file, ImGuiInputTextFlags_AutoSelectAll);
     this->utils.utf8Decode(wc.buf_font_file);
-
     // Validate font file before offering load button
     if (HasExistingFileExtension(wc.buf_font_file, std::string(".ttf"))) {
         if (ImGui::Button("Add Font")) {
@@ -1381,16 +1385,15 @@ void GUIView::drawMenu(const std::string& wn, WindowManager::WindowConfiguration
         ImGui::InputText(label.c_str(), &wc.main_project_file, ImGuiInputTextFlags_None);
         this->utils.utf8Decode(wc.main_project_file);
 
-        bool valid = false;
+        bool valid = true;
         if (!HasFileExtension(wc.main_project_file, std::string(".lua"))) {
             ImGui::TextColored(ImVec4(0.9f, 0.0f, 0.0f, 1.0f), "File name needs to have the ending '.lua'");
-        } else {
-            valid = true;
+            valid = false;
         }
+        // Warn when file already exists
         if (PathExists(wc.main_project_file)) {
-            ImGui::TextColored(ImVec4(0.9f, 0.0f, 0.0f, 1.0f), "File name already exists and will be overwritten!");
+            ImGui::TextColored(ImVec4(0.9f, 0.0f, 0.0f, 1.0f), "File name already exists and will be overwritten.");
         }
-
         if (ImGui::Button("Save")) {
             if (valid) {
                 // Serialize current state to parameter.
@@ -1403,7 +1406,6 @@ void GUIView::drawMenu(const std::string& wn, WindowManager::WindowConfiguration
                 }
             }
         }
-
         ImGui::SameLine();
         if (ImGui::Button("Cancel")) {
             ImGui::CloseCurrentPopup();
@@ -1445,10 +1447,9 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
             std::string hotkey = " (";
             hotkey.append(p->GetKeyCode().ToString());
             hotkey.append(")");
-            // no check if found -> should be present
+            // no check if hidden label tag '###' is found -> should be present (see obove)
             auto insert_pos = param_label.find("###");
             param_label.insert(insert_pos, hotkey);
-
             if (ImGui::Button(param_label.c_str())) {
                 p->setDirty();
             }
@@ -1458,12 +1459,10 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
             if (ImGui::ColorEdit4(param_label.c_str(), (float*)value.data(), color_flags)) {
                 p->SetValue(value);
             }
-
             help = "[Click] on the colored square to open a color picker.\n"
                    "[CTRL+Click] on individual component to input value.\n"
                    "[Right-Click] on the individual color widget to show options.";
         } else if (auto* p = slot.template Param<core::param::TransferFunctionParam>()) {
-
             ImGui::Separator();
             ImGui::Text(param_name.c_str());
 
@@ -1518,7 +1517,6 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
                         "[GUIView] Could not load transfer function of parameter: %s.", param_id.c_str());
                 }
             }
-
             ImGui::Separator();
         } else if (auto* p = slot.template Param<core::param::EnumParam>()) {
             /// XXX: no UTF8 fanciness required here?
@@ -1554,70 +1552,103 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
                 ImGui::EndCombo();
             }
         } else if (auto* p = slot.template Param<core::param::FloatParam>()) {
-            auto value = p->Value();
+            auto it = this->widgtmap_float.find(param_id);
+            if (it == this->widgtmap_float.end()) {
+                this->widgtmap_float.emplace(param_id, p->Value());
+                it = this->widgtmap_float.find(param_id);
+            }
             ImGui::InputFloat(
-                param_label.c_str(), &value, 1.0f, 10.0f, float_format.c_str(), ImGuiInputTextFlags_EnterReturnsTrue);
+                param_label.c_str(), &it->second, 1.0f, 10.0f, float_format.c_str(), ImGuiInputTextFlags_None);
             if (ImGui::IsItemDeactivatedAfterEdit()) {
-                p->SetValue(std::max(p->MinValue(), std::min(value, p->MaxValue())));
+                p->SetValue(std::max(p->MinValue(), std::min(it->second, p->MaxValue())));
+                this->widgtmap_float.erase(it);
             }
         } else if (auto* p = slot.template Param<core::param::IntParam>()) {
-            auto value = p->Value();
-            if (ImGui::InputInt(param_label.c_str(), &value, 1, 10, ImGuiInputTextFlags_EnterReturnsTrue)) {
-                p->SetValue(std::max(p->MinValue(), std::min(value, p->MaxValue())));
+            auto it = this->widgtmap_int.find(param_id);
+            if (it == this->widgtmap_int.end()) {
+                this->widgtmap_int.emplace(param_id, p->Value());
+                it = this->widgtmap_int.find(param_id);
+            }
+            ImGui::InputInt(param_label.c_str(), &it->second, 1, 10, ImGuiInputTextFlags_None);
+            if (ImGui::IsItemDeactivatedAfterEdit()) {
+                p->SetValue(std::max(p->MinValue(), std::min(it->second, p->MaxValue())));
+                this->widgtmap_int.erase(it);
             }
         } else if (auto* p = slot.template Param<core::param::Vector2fParam>()) {
-            auto value = p->Value();
-            if (ImGui::InputFloat2(param_label.c_str(), value.PeekComponents(), float_format.c_str(),
-                    ImGuiInputTextFlags_EnterReturnsTrue)) {
-                p->SetValue(value);
+            auto it = this->widgtmap_vec2.find(param_id);
+            if (it == this->widgtmap_vec2.end()) {
+                this->widgtmap_vec2.emplace(param_id, p->Value());
+                it = this->widgtmap_vec2.find(param_id);
+            }
+            ImGui::InputFloat2(
+                param_label.c_str(), it->second.PeekComponents(), float_format.c_str(), ImGuiInputTextFlags_None);
+            if (ImGui::IsItemDeactivatedAfterEdit()) {
+                p->SetValue(it->second);
+                this->widgtmap_vec2.erase(it);
             }
         } else if (auto* p = slot.template Param<core::param::Vector3fParam>()) {
-            auto value = p->Value();
-            if (ImGui::InputFloat3(param_label.c_str(), value.PeekComponents(), float_format.c_str(),
-                    ImGuiInputTextFlags_EnterReturnsTrue)) {
-                p->SetValue(value);
+            auto it = this->widgtmap_vec3.find(param_id);
+            if (it == this->widgtmap_vec3.end()) {
+                this->widgtmap_vec3.emplace(param_id, p->Value());
+                it = this->widgtmap_vec3.find(param_id);
+            }
+            ImGui::InputFloat3(
+                param_label.c_str(), it->second.PeekComponents(), float_format.c_str(), ImGuiInputTextFlags_None);
+            if (ImGui::IsItemDeactivatedAfterEdit()) {
+                p->SetValue(it->second);
+                this->widgtmap_vec3.erase(it);
             }
         } else if (auto* p = slot.template Param<core::param::Vector4fParam>()) {
-            auto value = p->Value();
-            if (ImGui::InputFloat4(param_label.c_str(), value.PeekComponents(), float_format.c_str(),
-                    ImGuiInputTextFlags_EnterReturnsTrue)) {
-                p->SetValue(value);
+            auto it = this->widgtmap_vec4.find(param_id);
+            if (it == this->widgtmap_vec4.end()) {
+                this->widgtmap_vec4.emplace(param_id, p->Value());
+                it = this->widgtmap_vec4.find(param_id);
+            }
+            ImGui::InputFloat4(
+                param_label.c_str(), it->second.PeekComponents(), float_format.c_str(), ImGuiInputTextFlags_None);
+            if (ImGui::IsItemDeactivatedAfterEdit()) {
+                p->SetValue(it->second);
+                this->widgtmap_vec4.erase(it);
             }
         } else if (auto* p = slot.Param<core::param::StringParam>()) {
             /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
-            auto size = this->state.widget_text.size();
-            this->state.widget_text = std::string(p->ValueString().PeekBuffer());
-            this->utils.utf8Encode(this->state.widget_text);
-            this->state.widget_text.resize(std::max(size, 2 * this->state.widget_text.size()), '\0');
-
+            auto it = this->widgtmap_text.find(param_id);
+            if (it == this->widgtmap_text.end()) {
+                std::string utf8Str = std::string(p->ValueString().PeekBuffer());
+                this->utils.utf8Encode(utf8Str);
+                this->widgtmap_text.emplace(param_id, utf8Str);
+                it = this->widgtmap_text.find(param_id);
+            }
             // Determine multi line count of string
-            int lcnt =
-                static_cast<int>(std::count(this->state.widget_text.begin(), this->state.widget_text.end(), '\n'));
-            lcnt = std::min(5, lcnt);
+            int lcnt = static_cast<int>(std::count(it->second.begin(), it->second.end(), '\n'));
+            lcnt = std::min(7, lcnt);
             if (lcnt > 0) {
                 ImVec2 ml_dim = ImVec2(ImGui::CalcItemWidth(),
                     ImGui::GetFrameHeight() + (ImGui::GetFontSize() * static_cast<float>(lcnt)));
-                ImGui::InputTextMultiline(
-                    param_label.c_str(), &this->state.widget_text, ml_dim, ImGuiInputTextFlags_None);
+                ImGui::InputTextMultiline(param_label.c_str(), &it->second, ml_dim, ImGuiInputTextFlags_None);
             } else {
-                ImGui::InputText(param_label.c_str(), &this->state.widget_text, ImGuiInputTextFlags_None);
+                ImGui::InputText(param_label.c_str(), &it->second, ImGuiInputTextFlags_None);
                 help = "[Ctrl + Enter] for new line.\nPress [Return] to confirm changes.";
             }
             if (ImGui::IsItemDeactivatedAfterEdit()) {
-                this->utils.utf8Decode(this->state.widget_text);
-                p->SetValue(vislib::StringA(this->state.widget_text.c_str()));
+                this->utils.utf8Decode(it->second);
+                p->SetValue(vislib::StringA(it->second.c_str()));
+                this->widgtmap_text.erase(it);
             }
         } else if (auto* p = slot.Param<core::param::FilePathParam>()) {
             /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
-            auto size = this->state.widget_text.size();
-            this->state.widget_text = std::string(p->ValueString().PeekBuffer());
-            this->utils.utf8Encode(this->state.widget_text);
-            this->state.widget_text.resize(std::max(size, 2 * this->state.widget_text.size()), '\0');
-
-            ImGui::InputText(param_label.c_str(), &this->state.widget_text, ImGuiInputTextFlags_None);
+            auto it = this->widgtmap_text.find(param_id);
+            if (it == this->widgtmap_text.end()) {
+                std::string utf8Str = std::string(p->ValueString().PeekBuffer());
+                this->utils.utf8Encode(utf8Str);
+                this->widgtmap_text.emplace(param_id, utf8Str);
+                it = this->widgtmap_text.find(param_id);
+            }
+            ImGui::InputText(param_label.c_str(), &it->second, ImGuiInputTextFlags_None);
             if (ImGui::IsItemDeactivatedAfterEdit()) {
-                this->utils.utf8Decode(this->state.widget_text);
-                p->SetValue(vislib::StringA(this->state.widget_text.c_str()));
+                this->utils.utf8Decode(it->second);
+                p->SetValue(vislib::StringA(it->second.c_str()));
+                this->widgtmap_text.erase(it);
             }
             help = "[Ctrl + Enter] for new line.\nPress [Return] to confirm changes.";
         } else {
@@ -1625,15 +1656,14 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
             return;
         }
 
-        this->utils.HoverToolTip(param_desc, ImGui::GetID(param_label.c_str()), 0.5f);
-
-        this->utils.HelpMarkerToolTip(help);
-
         // Reset to default style
         if (param->IsGUIReadOnly()) {
             ImGui::PopItemFlag();
             ImGui::PopStyleVar();
         }
+
+        this->utils.HoverToolTip(param_desc, ImGui::GetID(param_label.c_str()), 0.5f);
+        this->utils.HelpMarkerToolTip(help);
     }
 }
 
