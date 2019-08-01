@@ -1268,7 +1268,7 @@ void GUIView::drawMenu(const std::string& wn, WindowManager::WindowConfiguration
         //}
 #endif // GUI_USE_FILEUTILS
 
-        if (ImGui::MenuItem("Exit", "'Esc', ALT + 'F4'")) {
+        if (ImGui::MenuItem("Exit", "ALT + 'F4'")) {
             // Exit program
             this->shutdown();
         }
@@ -1294,11 +1294,10 @@ void GUIView::drawMenu(const std::string& wn, WindowManager::WindowConfiguration
                     }
                     ImGui::EndPopup();
                 }
-                this->utils.HoverToolTip("[Right-Click] to open Context Menu for Deleting Window Permanently.");
+                this->utils.HoverToolTip("[Right-Click] Open Context Menu for Deleting Window Permanently.");
             } else {
-                this->utils.HoverToolTip(
-                    "['Window Hotkey'] to Show/Hide Window.\n[Shift]+['Window Hotkey'] to Reset Size "
-                    "and Position of Window.");
+                this->utils.HoverToolTip("['Window Hotkey'] Show/Hide Window.\n[Shift]+['Window Hotkey'] Reset Size "
+                                         "and Position of Window.");
             }
         };
         this->window_manager.EnumWindows(func);
