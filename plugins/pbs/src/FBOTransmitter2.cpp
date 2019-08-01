@@ -10,19 +10,21 @@
 #include "vislib/sys/Log.h"
 
 #include "mmcore/CallerSlot.h"
+#include "mmcore/CoreInstance.h"
 #include "mmcore/cluster/mpi/MpiCall.h"
+#include "mmcore/cluster/simple/Client.h"
+#include "mmcore/cluster/simple/View.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
+#include "mmcore/utility/gl/FramebufferObject.h"
+#include "mmcore/view/CallRender2D.h"
 #include "mmcore/view/CallRender3D.h"
-#include "mmcore/CoreInstance.h"
-#include "mmcore/cluster/simple/View.h"
+#include "mmcore/view/View3D.h"
 #include "vislib/Trace.h"
 #include "vislib/sys/SystemInformation.h"
-#include "mmcore/view/View3D.h"
-#include "mmcore/cluster/simple/Client.h"
 
 #ifdef __unix__
 #    include <limits.h>
@@ -44,12 +46,22 @@ megamol::pbs::FBOTransmitter2::FBOTransmitter2()
 #ifdef WITH_MPI
     , callRequestMpi("requestMpi", "Requests initialisation of MPI and the communicator for the view.")
     , toggle_aggregate_slot_{"aggregate", "Toggle whether to aggregate and composite FBOs prior to transmission"}
+    , render_comp_img_slot_("renderCompImage", "Renders the complete composited image on the broadcast master")
+    , fbo(new vislib::graphics::gl::FramebufferObject())
 #endif // WITH_MPI
     , aggregate_{false}
-    , frame_id_{0}, thread_stop_{false}, fbo_msg_read_{new fbo_msg_header_t}, fbo_msg_send_{new fbo_msg_header_t},
-    color_buf_read_{new std::vector<char>}, depth_buf_read_{new std::vector<char>},
-    color_buf_send_{new std::vector<char>}, depth_buf_send_{new std::vector<char>}, col_buf_el_size_{4},
-    depth_buf_el_size_{4}, connected_{false}, validViewport(false) {
+    , frame_id_{0}
+    , thread_stop_{false}
+    , fbo_msg_read_{new fbo_msg_header_t}
+    , fbo_msg_send_{new fbo_msg_header_t}
+    , color_buf_read_{new std::vector<char>}
+    , depth_buf_read_{new std::vector<char>}
+    , color_buf_send_{new std::vector<char>}
+    , depth_buf_send_{new std::vector<char>}
+    , col_buf_el_size_{4}
+    , depth_buf_el_size_{4}
+    , connected_{false}
+    , validViewport(false) {
     this->address_slot_ << new megamol::core::param::StringParam{"34242"};
     this->MakeSlotAvailable(&this->address_slot_);
     this->handshake_port_slot_ << new megamol::core::param::IntParam(42000);
@@ -61,7 +73,8 @@ megamol::pbs::FBOTransmitter2::FBOTransmitter2()
     this->MakeSlotAvailable(&commSelectSlot_);
     this->view_name_slot_ << new megamol::core::param::StringParam{"::inst::view"};
     this->MakeSlotAvailable(&this->view_name_slot_);
-    this->trigger_button_slot_ << new megamol::core::param::ButtonParam{ core::view::Key::KEY_T, core::view::Modifier::ALT};
+    this->trigger_button_slot_ << new megamol::core::param::ButtonParam{
+        core::view::Key::KEY_T, core::view::Modifier::ALT};
     this->trigger_button_slot_.SetUpdateCallback(&FBOTransmitter2::triggerButtonClicked);
     this->MakeSlotAvailable(&this->trigger_button_slot_);
     this->target_machine_slot_ << new megamol::core::param::StringParam{"127.0.0.1"};
@@ -73,6 +86,9 @@ megamol::pbs::FBOTransmitter2::FBOTransmitter2()
     this->MakeSlotAvailable(&this->callRequestMpi);
     toggle_aggregate_slot_ << new megamol::core::param::BoolParam{false};
     this->MakeSlotAvailable(&toggle_aggregate_slot_);
+    render_comp_img_slot_ << new megamol::core::param::BoolParam{false};
+    this->render_comp_img_slot_.SetUpdateCallback(&FBOTransmitter2::renderCompChanged);
+    this->MakeSlotAvailable(&render_comp_img_slot_);
 #endif // WITH_MPI
     reconnect_slot_ << new megamol::core::param::ButtonParam{};
     reconnect_slot_.SetUpdateCallback(&FBOTransmitter2::reconnectCallback);
@@ -98,12 +114,13 @@ void megamol::pbs::FBOTransmitter2::release() { shutdownThreads(); }
 
 
 void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractView* view) {
-    initThreads();
-#if    _DEBUG
-    vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: initThreads ... Done");
+    if (!this->render_comp_img_slot_.Param<core::param::BoolParam>()->Value()) {
+        initThreads();
+#if _DEBUG
+        vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: initThreads ... Done");
 #endif
+    }
 
-   
     if (!this->validViewport) {
         if (!this->tiled_slot_.Param<core::param::BoolParam>()->Value() || !this->extractViewport(this->viewport)) {
             GLint glvp[4];
@@ -122,7 +139,7 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
     int width = this->viewport[4];
     int height = this->viewport[5];
 
-    #if    _DEBUG
+#if _DEBUG
     vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Extracting Viewport ... Done");
 #endif
 
@@ -140,86 +157,88 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
         glReadPixels(0, 0, tile_width, tile_height, GL_RGBA, GL_UNSIGNED_BYTE, col_buf_tile.data());
         glReadPixels(0, 0, tile_width, tile_height, GL_DEPTH_COMPONENT, GL_FLOAT, depth_buf_tile.data());
 
-        int row_offset           = yoff  * width; // y * width = row offset * tile width
-        int column_offset        = xoff;          // x  = column offset 
-        int color_row_tile_width = col_buf_el_size_   * tile_width;
+        int row_offset = yoff * width; // y * width = row offset * tile width
+        int column_offset = xoff;      // x  = column offset
+        int color_row_tile_width = col_buf_el_size_ * tile_width;
         int depth_row_tile_width = depth_buf_el_size_ * tile_width;
 
         // Copy tile rows to right position to fit row major format
         int offset = 0;
         for (int i = 0; i < tile_height; ++i) {
             offset = row_offset + column_offset + (i * width);
-            memcpy(col_buf.data()   + (col_buf_el_size_   * offset), col_buf_tile.data()   + (i * color_row_tile_width), color_row_tile_width);
-            memcpy(depth_buf.data() + (depth_buf_el_size_ * offset), depth_buf_tile.data() + (i * depth_row_tile_width), depth_row_tile_width);
+            memcpy(col_buf.data() + (col_buf_el_size_ * offset), col_buf_tile.data() + (i * color_row_tile_width),
+                color_row_tile_width);
+            memcpy(depth_buf.data() + (depth_buf_el_size_ * offset), depth_buf_tile.data() + (i * depth_row_tile_width),
+                depth_row_tile_width);
         }
     }
 
-#if    _DEBUG
+#if _DEBUG
     vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: readFBO ... Done");
 #endif
 
 
-
 #ifdef WITH_MPI
-    IceTUByte* icet_col_buf   = reinterpret_cast<IceTUByte*>(col_buf.data());
+    IceTUByte* icet_col_buf = reinterpret_cast<IceTUByte*>(col_buf.data());
     IceTFloat* icet_depth_buf = reinterpret_cast<IceTFloat*>(depth_buf.data());
 
     if (aggregate_) {
-#if    _DEBUG
+#    if _DEBUG
         vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Simple IceT commit at rank %d\n", mpiRank);
-#endif
-        std::array<float, 4> backgroundColor = { 0.0f, 0.0f, 0.0f, 1.0f };
+#    endif
+        std::array<float, 4> backgroundColor = {0.0f, 0.0f, 0.0f, 1.0f};
         this->extractBkgndColor(backgroundColor);
 
-        int tilevp[4] = { xoff, yoff, tile_width, tile_height }; // define current valid pixel viewport for icet 
+        int tilevp[4] = {xoff, yoff, tile_width, tile_height}; // define current valid pixel viewport for icet
 #    if _DEBUG
-        vislib::sys::Log::DefaultLog.WriteError(
+        vislib::sys::Log::DefaultLog.WriteInfo(
             "IceT gets image with xoff: %d, yoff: %d, tile_width: %d, tile_height: %d\n", xoff, yoff, tile_width,
             tile_height);
-#endif
-        auto const icet_comp_image =
-            icetCompositeImage(col_buf.data(), depth_buf.data(), tilevp, nullptr, nullptr, static_cast<const IceTFloat*>(backgroundColor.data()));
-#if    _DEBUG
+#    endif
+        auto const icet_comp_image = icetCompositeImage(col_buf.data(), depth_buf.data(), tilevp, nullptr, nullptr,
+            static_cast<const IceTFloat*>(backgroundColor.data()));
+#    if _DEBUG
         vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: IceT - Composite Image Done\n");
-#endif
+#    endif
 
         if (mpiRank == 0) {
-            icet_col_buf   = icetImageGetColorub(icet_comp_image);
+            icet_col_buf = icetImageGetColorub(icet_comp_image);
             icet_depth_buf = icetImageGetDepthf(icet_comp_image);
-#if    _DEBUG
-        vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: IceT - ImageGet Done\n");
-#endif
+#    if _DEBUG
+            vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: IceT - ImageGet Done\n");
+#    endif
+            if (this->render_comp_img_slot_.Param<core::param::BoolParam>()->Value()) {
+                glDrawPixels(tile_width, tile_height, GL_RGBA, GL_UNSIGNED_BYTE, icet_col_buf);
+            }
         }
-
-
     }
 
     if ((aggregate_ && mpiRank == 0) || !aggregate_) {
 #endif // WITH_MPI
 
-        
-#if    _DEBUG
+
+#if _DEBUG
         vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Extracting Meta Data ...\n");
 #endif
-        // extract meta data 
-        float times[2]  = { 0.0f, 0.0f };
-        float bbox[6]   = {0.0f, 0.0f , 0.0f , 1.0f , 1.0f , 1.0f };
-        float camera[9] = { 0.0f, 0.0f, 0.0f, 0.0f , 1.0f , 0.0f , 0.0f, 0.0f, -1.0f };
+        // extract meta data
+        float times[2] = {0.0f, 0.0f};
+        float bbox[6] = {0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f};
+        float camera[9] = {0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, -1.0f};
         if (!this->extractMetaData(bbox, times, camera)) {
             vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: Could not extract meta data.\n");
         }
-#if    _DEBUG
+#if _DEBUG
         vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Extracting Meta Data ... Done\n");
 #endif
-       // copy data to read buffer, if possible
+        // copy data to read buffer, if possible
         {
             std::lock_guard<std::mutex> read_guard{this->buffer_read_guard_}; //< maybe try_lock instead
 
-	    #if    _DEBUG
-        vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Swapping Buffer ...\n");
+#if _DEBUG
+            vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Swapping Buffer ...\n");
 #endif
 
-            int vp[4] = { 0, 0, width, height }; // full viewport is needed here
+            int vp[4] = {0, 0, width, height}; // full viewport is needed here
             for (int i = 0; i < 4; ++i) {
                 this->fbo_msg_read_->screen_area[i] = this->fbo_msg_read_->updated_area[i] = vp[i];
             }
@@ -237,22 +256,22 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
 
             this->color_buf_read_->resize(col_buf.size());
             this->depth_buf_read_->resize(depth_buf.size());
-	    
+
 #ifdef WITH_MPI
             // std::copy(col_buf.begin(),   col_buf.end(),   this->color_buf_read_->begin());
-            memcpy(this->color_buf_read_->data(), icet_col_buf,   width * height * col_buf_el_size_);
+            memcpy(this->color_buf_read_->data(), icet_col_buf, width * height * col_buf_el_size_);
             // std::copy(depth_buf.begin(), depth_buf.end(), this->depth_buf_read_->begin());
             memcpy(this->depth_buf_read_->data(), icet_depth_buf, width * height * depth_buf_el_size_);
 #else
-            std::copy(col_buf.begin(),   col_buf.end(),   this->color_buf_read_->begin());
-            std::copy(depth_buf.begin(), depth_buf.end(), this->depth_buf_read_->begin());
+        std::copy(col_buf.begin(), col_buf.end(), this->color_buf_read_->begin());
+        std::copy(depth_buf.begin(), depth_buf.end(), this->depth_buf_read_->begin());
 #endif // WITH_MPI
 
             this->fbo_msg_read_->frame_id = this->frame_id_.fetch_add(1);
         }
 
         this->swapBuffers();
-   #if    _DEBUG
+#if _DEBUG
         vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Swapping Buffer ... Done\n");
 #endif
 
@@ -280,11 +299,11 @@ void megamol::pbs::FBOTransmitter2::transmitterJob() {
                         "FBOTransmitter2: Recv failed in 'transmitterJob' trying again\n");
 #endif
                 }
-/*#if _DEBUG
-                else {
-                    vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Request received\n");
-                }
-#endif*/
+                /*#if _DEBUG
+                                else {
+                                    vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Request received\n");
+                                }
+                #endif*/
             } catch (zmq::error_t const& e) {
                 vislib::sys::Log::DefaultLog.WriteError(
                     "FBOTransmitter2: Exception during recv in 'transmitterJob': %s\n", e.what());
@@ -382,19 +401,22 @@ bool megamol::pbs::FBOTransmitter2::triggerButtonClicked(megamol::core::param::P
     // happy trigger finger hit button action happened
     using vislib::sys::Log;
 
+    initIceT();
+
     bool success = true;
     std::string mvn(view_name_slot_.Param<megamol::core::param::StringParam>()->Value());
 
     Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 100, "Transmission of \"%s\" requested", mvn.c_str());
 
-    //this->ModuleGraphLock().LockExclusive();
+    // this->ModuleGraphLock().LockExclusive();
     const auto ret = this->GetCoreInstance()->FindModuleNoLock<megamol::core::view::AbstractView>(
         mvn, [this](megamol::core::view::AbstractView* vi) { vi->RegisterHook(this); });
     if (!ret) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "FBOTransmitter2: Unable to find VIEW \"%s\" for transmission", mvn.c_str());
+        Log::DefaultLog.WriteMsg(
+            Log::LEVEL_ERROR, "FBOTransmitter2: Unable to find VIEW \"%s\" for transmission", mvn.c_str());
         success = false;
     }
-    //this->ModuleGraphLock().UnlockExclusive();
+    // this->ModuleGraphLock().UnlockExclusive();
 
     return true;
 }
@@ -421,39 +443,37 @@ bool megamol::pbs::FBOTransmitter2::extractMetaData(float bbox[6], float frame_t
 
     const auto retTimes =
         this->GetCoreInstance()
-        ->EnumerateCallerSlotsNoLock<megamol::core::view::AbstractView, megamol::core::view::CallRender3D>(
-            mvn, [frame_times](megamol::core::view::CallRender3D& cr3d) {
-                frame_times[0] = cr3d.Time();
-                frame_times[1] = static_cast<float>(cr3d.TimeFramesCount());
-            });
+            ->EnumerateCallerSlotsNoLock<megamol::core::view::AbstractView, megamol::core::view::CallRender3D>(
+                mvn, [frame_times](megamol::core::view::CallRender3D& cr3d) {
+                    frame_times[0] = cr3d.Time();
+                    frame_times[1] = static_cast<float>(cr3d.TimeFramesCount());
+                });
 
     const auto retCam =
         this->GetCoreInstance()
-        ->EnumerateCallerSlotsNoLock<megamol::core::view::AbstractView, megamol::core::view::CallRender3D>(
-            mvn, [cam_params](megamol::core::view::CallRender3D& cr3d) {
-                cam_params[0] = cr3d.GetCameraParameters()->Position()[0];
-                cam_params[1] = cr3d.GetCameraParameters()->Position()[1];
-                cam_params[2] = cr3d.GetCameraParameters()->Position()[2];
-                cam_params[3] = cr3d.GetCameraParameters()->Up()[0];
-                cam_params[4] = cr3d.GetCameraParameters()->Up()[1];
-                cam_params[5] = cr3d.GetCameraParameters()->Up()[2];
-                cam_params[6] = cr3d.GetCameraParameters()->LookAt()[0];
-                cam_params[7] = cr3d.GetCameraParameters()->LookAt()[1];
-                cam_params[8] = cr3d.GetCameraParameters()->LookAt()[2];
-            });
+            ->EnumerateCallerSlotsNoLock<megamol::core::view::AbstractView, megamol::core::view::CallRender3D>(
+                mvn, [cam_params](megamol::core::view::CallRender3D& cr3d) {
+                    cam_params[0] = cr3d.GetCameraParameters()->Position()[0];
+                    cam_params[1] = cr3d.GetCameraParameters()->Position()[1];
+                    cam_params[2] = cr3d.GetCameraParameters()->Position()[2];
+                    cam_params[3] = cr3d.GetCameraParameters()->Up()[0];
+                    cam_params[4] = cr3d.GetCameraParameters()->Up()[1];
+                    cam_params[5] = cr3d.GetCameraParameters()->Up()[2];
+                    cam_params[6] = cr3d.GetCameraParameters()->LookAt()[0];
+                    cam_params[7] = cr3d.GetCameraParameters()->LookAt()[1];
+                    cam_params[8] = cr3d.GetCameraParameters()->LookAt()[2];
+                });
 
     if (!(retBbox && retTimes && retCam)) {
         if (!mvn.empty()) {
             vislib::sys::Log::DefaultLog.WriteError(
                 "FBOTransmitter2: Unable to find VIEW \"%s\" to extract meta data.\n");
-        }
-        else {
-            vislib::sys::Log::DefaultLog.WriteError(
-                "FBOTransmitter2: Could not find VIEW with empty name.\n");
+        } else {
+            vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: Could not find VIEW with empty name.\n");
         }
         success = false;
     }
-    //this->ModuleGraphLock().UnlockExclusive();
+    // this->ModuleGraphLock().UnlockExclusive();
 
     return success;
 }
@@ -466,24 +486,24 @@ bool megamol::pbs::FBOTransmitter2::extractViewport(int vvpt[6]) {
     std::string mvn(view_name_slot_.Param<megamol::core::param::StringParam>()->Value());
 
     // this->ModuleGraphLock().LockExclusive();
-    auto const ret = this->GetCoreInstance()
-                   ->EnumerateCallerSlotsNoLock<megamol::core::view::AbstractView, megamol::core::view::CallRender3D>(
-                       mvn, [vvpt](megamol::core::view::CallRender3D& cr3d) {
-                           vvpt[0] = static_cast<int>(cr3d.GetCameraParameters()->TileRect().GetLeft());
-                           vvpt[1] = static_cast<int>(cr3d.GetCameraParameters()->TileRect().GetBottom());
-                           vvpt[2] = static_cast<int>(cr3d.GetCameraParameters()->TileRect().Width());
-                           vvpt[3] = static_cast<int>(cr3d.GetCameraParameters()->TileRect().Height());
-                           vvpt[4] = static_cast<int>(cr3d.GetCameraParameters()->VirtualViewSize().Width());
-                           vvpt[5] = static_cast<int>(cr3d.GetCameraParameters()->VirtualViewSize().Height());
-                       });
+    auto const ret =
+        this->GetCoreInstance()
+            ->EnumerateCallerSlotsNoLock<megamol::core::view::AbstractView, megamol::core::view::CallRender3D>(
+                mvn, [vvpt](megamol::core::view::CallRender3D& cr3d) {
+                    vvpt[0] = static_cast<int>(cr3d.GetCameraParameters()->TileRect().GetLeft());
+                    vvpt[1] = static_cast<int>(cr3d.GetCameraParameters()->TileRect().GetBottom());
+                    vvpt[2] = static_cast<int>(cr3d.GetCameraParameters()->TileRect().Width());
+                    vvpt[3] = static_cast<int>(cr3d.GetCameraParameters()->TileRect().Height());
+                    vvpt[4] = static_cast<int>(cr3d.GetCameraParameters()->VirtualViewSize().Width());
+                    vvpt[5] = static_cast<int>(cr3d.GetCameraParameters()->VirtualViewSize().Height());
+                });
 
     if (!ret) {
         if (!mvn.empty()) {
-            vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: Unable to find VIEW \"%s\" to extract viewport.\n");
-        }
-        else {
             vislib::sys::Log::DefaultLog.WriteError(
-                "FBOTransmitter2: Could not find VIEW with empty name.\n");
+                "FBOTransmitter2: Unable to find VIEW \"%s\" to extract viewport.\n");
+        } else {
+            vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: Could not find VIEW with empty name.\n");
         }
         success = false;
     }
@@ -493,7 +513,7 @@ bool megamol::pbs::FBOTransmitter2::extractViewport(int vvpt[6]) {
 }
 
 
-bool megamol::pbs::FBOTransmitter2::extractBkgndColor(std::array<float, 4> bkgnd_color) {
+bool megamol::pbs::FBOTransmitter2::extractBkgndColor(std::array<float, 4>& bkgnd_color) {
     using vislib::sys::Log;
 
     bool success = true;
@@ -507,17 +527,16 @@ bool megamol::pbs::FBOTransmitter2::extractBkgndColor(std::array<float, 4> bkgnd
                 bkgnd_color[0] = bkgndCol[0];
                 bkgnd_color[1] = bkgndCol[1];
                 bkgnd_color[2] = bkgndCol[2];
-                bkgnd_color[3] = 0.0f;
+                bkgnd_color[3] = 1.0f;
             }
         });
 
     if (!ret) {
         if (!mvn.empty()) {
-            vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: Unable to find VIEW \"%s\" to extract background color.\n");
-        }
-        else {
             vislib::sys::Log::DefaultLog.WriteError(
-                "FBOTransmitter2: Could not find VIEW with empty name.\n");
+                "FBOTransmitter2: Unable to find VIEW \"%s\" to extract background color.\n");
+        } else {
+            vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: Could not find VIEW with empty name.\n");
         }
         success = false;
     }
@@ -580,13 +599,6 @@ bool megamol::pbs::FBOTransmitter2::initThreads() {
 #endif
 #ifdef WITH_MPI
 
-        useMpi = initMPI();
-        aggregate_ = this->toggle_aggregate_slot_.Param<megamol::core::param::BoolParam>()->Value();
-        if (aggregate_ && !useMpi) {
-            vislib::sys::Log::DefaultLog.WriteError("Cannot aggregate without MPI!\n");
-            this->toggle_aggregate_slot_.Param<megamol::core::param::BoolParam>()->SetValue(false);
-        }
-
         if ((aggregate_ && mpiRank == 0) || !aggregate_) {
 #    ifdef _DEBUG
             vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Connecting rank %d\n", mpiRank);
@@ -603,7 +615,7 @@ bool megamol::pbs::FBOTransmitter2::initThreads() {
             FBOCommFabric registerComm = FBOCommFabric{std::make_unique<ZMQCommFabric>(zmq::socket_type::req)};
             std::string const registerAddress = std::string("tcp://") + target + std::string(":") + handshake;
 
-#if _DEBUG	    
+#if _DEBUG
             vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: registerAddress: %s\n", registerAddress.c_str());
 #endif
             registerComm.Connect(registerAddress);
@@ -642,7 +654,6 @@ bool megamol::pbs::FBOTransmitter2::initThreads() {
                     vislib::sys::Log::DefaultLog.WriteWarn(
                         "FBOTransmitter2: Recv failed on 'registerComm', trying again\n");
 #endif
-
                 }
 #if _DEBUG
                 vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Received client ack\n");
@@ -686,60 +697,6 @@ bool megamol::pbs::FBOTransmitter2::initThreads() {
         }
 #endif // WITH_MPI
         connected_ = true;
-#ifdef WITH_MPI
-        if (aggregate_) {
-#if    _DEBUG
-            vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Initializing IceT at rank %d\n", mpiRank);
-#endif
-            // icet setup
-	    
-            icet_comm_ = icetCreateMPICommunicator(this->mpi_comm_);
-            icet_ctx_  = icetCreateContext(icet_comm_);
-            icetStrategy(ICET_STRATEGY_SEQUENTIAL);
-            icetSingleImageStrategy(ICET_SINGLE_IMAGE_STRATEGY_AUTOMATIC);
-            icetCompositeMode(ICET_COMPOSITE_MODE_Z_BUFFER);
-            icetSetColorFormat(ICET_IMAGE_COLOR_RGBA_UBYTE);
-            icetSetDepthFormat(ICET_IMAGE_DEPTH_FLOAT);
-            icetDisable(ICET_COMPOSITE_ONE_BUFFER);
-
-            // extract viewport or get if from opengl context
-            auto width = 0;
-            auto height = 0;
-            if (!this->tiled_slot_.Param<core::param::BoolParam>()->Value()) {
-                GLint glvp[4];
-                glGetIntegerv(GL_VIEWPORT, glvp);
-                for (int i = 0; i < 4; ++i) {
-                    this->viewport[i] = glvp[i];
-                }
-                width = this->viewport[4] = glvp[2];
-                height = this->viewport[5] = glvp[3];
-            } else {
-	        if (this->extractViewport(this->viewport)) {
-                    this->validViewport = true;
-                    width = this->viewport[4];
-                    height = this->viewport[5];
-	        } else {
-                    vislib::sys::Log::DefaultLog.WriteError("FBOTransmitter2: ViewPortExtraction - extractViewport failed\n");
-                    return false;
-	        }
-            }
-
-#ifdef _DEBUG
-            vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: IceT viewport for rank %d extracted from %s: (%d, %d, %d, %d, %d, %d).",
-                this->mpiRank, ((this->validViewport)?("View"):("OpenGL")),
-                this->viewport[0], this->viewport[1], this->viewport[2], this->viewport[3], this->viewport[4], this->viewport[5]);
-#endif
-
-            int displayRank = 0;
-            icetPhysicalRenderSize(width, height);
-            icetResetTiles();
-            icetAddTile(0, 0, width, height, displayRank);
-
-#ifdef _DEBUG
-            vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Initialized IceT at rank %d\n", mpiRank);
-#endif
-        }
-#endif // WITH_MPI
     }
 
     return true;
@@ -761,4 +718,92 @@ bool megamol::pbs::FBOTransmitter2::shutdownThreads() {
 
     connected_ = false;
     return true;
+}
+
+bool megamol::pbs::FBOTransmitter2::renderCompChanged(core::param::ParamSlot& slot) {
+    using vislib::sys::Log;
+
+    initIceT();
+
+    bool success = true;
+    std::string mvn(view_name_slot_.Param<megamol::core::param::StringParam>()->Value());
+
+    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 100, "FBOTransmitter2: Rendering to of \"%s\" requested", mvn.c_str());
+
+    const auto ret = this->GetCoreInstance()->FindModuleNoLock<megamol::core::view::AbstractView>(
+        mvn, [this](megamol::core::view::AbstractView* vi) { vi->RegisterHook(this); });
+    if (!ret) {
+        Log::DefaultLog.WriteMsg(
+            Log::LEVEL_ERROR, "FBOTransmitter2: Unable to find VIEW \"%s\" for transmission", mvn.c_str());
+        success = false;
+    }
+
+
+    return true;
+}
+
+void megamol::pbs::FBOTransmitter2::initIceT() {
+    useMpi = initMPI();
+    aggregate_ = this->toggle_aggregate_slot_.Param<megamol::core::param::BoolParam>()->Value();
+    if (aggregate_ && !useMpi) {
+        vislib::sys::Log::DefaultLog.WriteError("Cannot aggregate without MPI!\n");
+        this->toggle_aggregate_slot_.Param<megamol::core::param::BoolParam>()->SetValue(false);
+    }
+
+#ifdef WITH_MPI
+    if (aggregate_) {
+#    if _DEBUG
+        vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Initializing IceT at rank %d\n", mpiRank);
+#    endif
+        // icet setup
+
+        icet_comm_ = icetCreateMPICommunicator(this->mpi_comm_);
+        icet_ctx_ = icetCreateContext(icet_comm_);
+        icetStrategy(ICET_STRATEGY_SEQUENTIAL);
+        icetSingleImageStrategy(ICET_SINGLE_IMAGE_STRATEGY_AUTOMATIC);
+        icetCompositeMode(ICET_COMPOSITE_MODE_Z_BUFFER);
+        icetSetColorFormat(ICET_IMAGE_COLOR_RGBA_UBYTE);
+        icetSetDepthFormat(ICET_IMAGE_DEPTH_FLOAT);
+        icetDisable(ICET_COMPOSITE_ONE_BUFFER);
+
+        // extract viewport or get if from opengl context
+        auto width = 0;
+        auto height = 0;
+        if (!this->tiled_slot_.Param<core::param::BoolParam>()->Value()) {
+            GLint glvp[4];
+            glGetIntegerv(GL_VIEWPORT, glvp);
+            for (int i = 0; i < 4; ++i) {
+                this->viewport[i] = glvp[i];
+            }
+            width = this->viewport[4] = glvp[2];
+            height = this->viewport[5] = glvp[3];
+        } else {
+            if (this->extractViewport(this->viewport)) {
+                this->validViewport = true;
+                width = this->viewport[4];
+                height = this->viewport[5];
+            } else {
+                vislib::sys::Log::DefaultLog.WriteError(
+                    "FBOTransmitter2: ViewPortExtraction - extractViewport failed\n");
+                return;
+            }
+        }
+
+#    ifdef _DEBUG
+        vislib::sys::Log::DefaultLog.WriteInfo(
+            "FBOTransmitter2: IceT viewport for rank %d extracted from %s: (%d, %d, %d, %d, %d, %d).", this->mpiRank,
+            ((this->validViewport) ? ("View") : ("OpenGL")), this->viewport[0], this->viewport[1], this->viewport[2],
+            this->viewport[3], this->viewport[4], this->viewport[5]);
+#    endif
+
+        int displayRank = 0;
+        icetPhysicalRenderSize(width, height);
+        icetResetTiles();
+        icetAddTile(0, 0, width, height, displayRank);
+
+#    ifdef _DEBUG
+        vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Initialized IceT at rank %d\n", mpiRank);
+#    endif
+    }
+#endif // WITH_MPI
 }

@@ -485,6 +485,11 @@ bool megamol::core::LuaState::StateOk() {
 }
 
 
+std::string megamol::core::LuaState::GetScriptPath(void) {
+    return this->currentScriptPath;
+}
+
+
 bool megamol::core::LuaState::LoadEnviromentFile(const std::string& fileName) {
     std::ifstream input(fileName, std::ios::in);
     std::stringstream buffer;

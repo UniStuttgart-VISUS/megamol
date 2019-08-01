@@ -72,7 +72,7 @@ bool TSNEProjection::getDataCallback(core::Call& c) {
         inCall->SetFrameID(outCall->GetFrameID());
         if (!(*inCall)()) return false;
 
-        bool finished = computeTSNE(inCall);
+        bool finished = project(inCall);
         if (finished == false) return false;
 
         outCall->SetFrameCount(inCall->GetFrameCount());
@@ -117,7 +117,7 @@ bool TSNEProjection::getHashCallback(core::Call& c) {
     return true;
 }
 
-bool megamol::infovis::TSNEProjection::computeTSNE(megamol::stdplugin::datatools::table::TableDataCall* inCall) {
+bool megamol::infovis::TSNEProjection::project(megamol::stdplugin::datatools::table::TableDataCall* inCall) {
     // check if inData has changed and if Slots have changed
     if (this->dataInHash == inCall->DataHash()) {
         if (!reduceToNSlot.IsDirty() && !maxIterSlot.IsDirty() && !thetaSlot.IsDirty() && !perplexitySlot.IsDirty() &&

@@ -48,4 +48,14 @@
       <snippet type="file">splom_line.frag</snippet>
     </shader>
   </namespace>
+  <namespace name="triangle">
+    <shader name="vert">
+      <snippet type="version">430</snippet>
+      <snippet type="file">splom_triangle.vert</snippet>
+    </shader>
+    <shader name="frag">
+      <snippet type="version">430</snippet>
+      <snippet type="file">splom_triangle.frag</snippet>
+    </shader>
+  </namespace>
 </btf>

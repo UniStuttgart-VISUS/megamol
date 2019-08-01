@@ -8,6 +8,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/AbstractParam.h"
+#include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
@@ -21,6 +22,7 @@ megamol::pbs::HeadnodeServer::HeadnodeServer()
     , renderhead_port_slot_("port", "Sets to port to listen to.")
     , start_server_slot_("start", "Start listening to port.")
     , lua_command_slot_("LUACommand", "Sends custom lua command to the RendernodeView")
+    , deploy_project_slot_("deployProject", "Sends project file on connect")
     , comm_fabric_(std::make_unique<ZMQCommFabric>(zmq::socket_type::rep))
     , run_threads_(false)
     , is_job_running_(true) {
@@ -33,9 +35,13 @@ megamol::pbs::HeadnodeServer::HeadnodeServer()
     renderhead_port_slot_ << new megamol::core::param::IntParam(52000);
     this->MakeSlotAvailable(&this->renderhead_port_slot_);
 
+    deploy_project_slot_ << new megamol::core::param::BoolParam(true);
+    this->MakeSlotAvailable(&this->deploy_project_slot_);
+
     start_server_slot_ << new megamol::core::param::ButtonParam(core::view::Key::KEY_F8);
     start_server_slot_.SetUpdateCallback(&HeadnodeServer::onStartServer);
     this->MakeSlotAvailable(&this->start_server_slot_);
+
 
     this->view_slot_.SetCompatibleCall<core::view::CallRenderViewDescription>();
     this->MakeSlotAvailable(&this->view_slot_);
@@ -137,10 +143,9 @@ bool megamol::pbs::HeadnodeServer::get_cam_upd(std::vector<char>& msg) {
 bool megamol::pbs::HeadnodeServer::init_threads() {
     try {
         shutdown_threads();
-        vislib::sys::Log::DefaultLog.WriteInfo("HeadnodeServer: Starting listener on port %d.\n");
         this->comm_fabric_ = FBOCommFabric(std::make_unique<ZMQCommFabric>(zmq::socket_type::rep));
         auto const port = std::to_string(this->renderhead_port_slot_.Param<core::param::IntParam>()->Value());
-        vislib::sys::Log::DefaultLog.WriteInfo("HeadnodeServer: Starting listener on port %s.\n", port);
+        vislib::sys::Log::DefaultLog.WriteInfo("HeadnodeServer: Starting listener on port %s.\n", port.c_str());
         std::string const address = "tcp://*:" + port;
         this->comm_fabric_.Bind(address);
         run_threads_ = true;
@@ -173,6 +178,7 @@ void megamol::pbs::HeadnodeServer::do_communication() {
     std::vector<char> cam_msg;
 
     // retrieve modulgraph
+    if (this->deploy_project_slot_.Param<core::param::BoolParam>()->Value()) {
     if (this->GetCoreInstance()->IsLuaProject()) {
         auto const lua = std::string(this->GetCoreInstance()->GetMergedLuaProject());
         std::vector<char> msg(MessageHeaderSize + lua.size());
@@ -186,7 +192,7 @@ void megamol::pbs::HeadnodeServer::do_communication() {
             send_buffer_.insert(send_buffer_.end(), msg.begin(), msg.end());
         }
     }
-
+    }
     try {
         while (run_threads_) {
             // Wait for message
@@ -209,7 +215,7 @@ void megamol::pbs::HeadnodeServer::do_communication() {
                 }
 
                 if (!send_buffer_.empty()) {
-                    vislib::sys::Log::DefaultLog.WriteInfo("HeadnodeServer: Sending parameter update.\n");
+		    // vislib::sys::Log::DefaultLog.WriteInfo("HeadnodeServer: Sending parameter update.\n");
                     comm_fabric_.Send(send_buffer_, send_type::SEND);
                     send_buffer_.clear();
                     buffer_has_changed_.store(false);

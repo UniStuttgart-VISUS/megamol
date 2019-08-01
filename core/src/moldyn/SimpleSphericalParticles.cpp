@@ -10,6 +10,8 @@ unsigned int megamol::core::moldyn::SimpleSphericalParticles::VertexDataSize[] =
 
 unsigned int megamol::core::moldyn::SimpleSphericalParticles::ColorDataSize[] = {0, 3, 4, 12, 16, 4, 8, 8};
 
+unsigned int megamol::core::moldyn::SimpleSphericalParticles::DirDataSize[] = {0, 12};
+
 unsigned int megamol::core::moldyn::SimpleSphericalParticles::IDDataSize[] = {0, 4, 8};
 
 
@@ -18,19 +20,22 @@ unsigned int megamol::core::moldyn::SimpleSphericalParticles::IDDataSize[] = {0,
  */
 moldyn::SimpleSphericalParticles::SimpleSphericalParticles(void)
     : colDataType(COLDATA_NONE)
-    , colPtr(NULL)
+    , colPtr(nullptr)
     , colStride(0)
+    , dirDataType(DIRDATA_NONE)
+    , dirPtr(nullptr)
+    , dirStride(0)
     , count(0)
     , maxColI(1.0f)
     , minColI(0.0f)
     , radius(0.5f)
     , particleType(0)
     , vertDataType(VERTDATA_NONE)
-    , vertPtr(NULL)
+    , vertPtr(nullptr)
     , vertStride(0)
     , disabledNullChecks(false)
     , isVAO(false)
-    , clusterInfos(NULL)
+    , clusterInfos(nullptr)
     , idDataType{IDDATA_NONE}
     , idPtr{nullptr}
     , idStride{0} {
@@ -41,6 +46,7 @@ moldyn::SimpleSphericalParticles::SimpleSphericalParticles(void)
 
     this->par_store_->SetVertexData(VERTDATA_NONE, nullptr);
     this->par_store_->SetColorData(COLDATA_NONE, nullptr);
+    this->par_store_->SetDirData(DIRDATA_NONE, nullptr);
     this->par_store_->SetIDData(IDDATA_NONE, nullptr);
 }
 
@@ -56,10 +62,12 @@ moldyn::SimpleSphericalParticles::SimpleSphericalParticles(const moldyn::SimpleS
  */
 moldyn::SimpleSphericalParticles::~SimpleSphericalParticles(void) {
     this->colDataType = COLDATA_NONE;
-    this->colPtr = NULL; // DO NOT DELETE
+    this->colPtr = nullptr; // DO NOT DELETE
     this->count = 0;
     this->vertDataType = VERTDATA_NONE;
-    this->vertPtr = NULL; // DO NOT DELETE
+    this->vertPtr = nullptr; // DO NOT DELETE
+    this->dirDataType = DIRDATA_NONE;
+    this->dirPtr = nullptr; // DO NOT DELETE
     this->idDataType = IDDATA_NONE;
     this->idPtr = nullptr;
 }
@@ -87,6 +95,9 @@ moldyn::SimpleSphericalParticles& moldyn::SimpleSphericalParticles::operator=(
     this->vertStride = rhs.vertStride;
     this->disabledNullChecks = rhs.disabledNullChecks;
     this->clusterInfos = rhs.clusterInfos;
+    this->dirDataType = rhs.dirDataType;
+    this->dirPtr = rhs.dirPtr;
+    this->dirStride = rhs.dirStride;
     this->idDataType = rhs.idDataType;
     this->idPtr = rhs.idPtr;
     this->idStride = rhs.idStride;
@@ -106,6 +117,8 @@ bool moldyn::SimpleSphericalParticles::operator==(const moldyn::SimpleSphericalP
             (this->minColI == rhs.minColI) && (this->radius == rhs.radius) &&
             (this->vertDataType == rhs.vertDataType) && (this->vertPtr == rhs.vertPtr) &&
             (this->vertStride == rhs.vertStride) && (this->clusterInfos == rhs.clusterInfos) &&
+            (this->dirDataType == rhs.dirDataType) && (this->dirPtr == rhs.dirPtr) &&
+            (this->dirStride == rhs.dirStride) &&
             (this->idDataType == rhs.idDataType) && (this->idPtr == rhs.idPtr) && (this->idStride == rhs.idStride) &&
             (this->wsBBox == rhs.wsBBox));
 }

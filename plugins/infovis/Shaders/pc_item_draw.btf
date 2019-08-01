@@ -2,6 +2,7 @@
 <btf namespace="pc_item_draw" type="MegaMolGLSLShader" version="1.0">
 
   <include file="pc" />
+  <include file="core_utils" />
 
   <snippet name="interface" type="string">
     <![CDATA[
@@ -15,7 +16,8 @@ flat vec4 color;
 
   <snippet name="uniforms" type="string">
     <![CDATA[
-layout(binding = 0) uniform sampler1D transferFunction;
+layout(binding = 5) uniform sampler1D transferFunction;
+uniform vec2 transferFunctionTexCoords; // offset (min), range (max - min)
     ]]>
   </snippet>
   
@@ -62,11 +64,12 @@ void main()
   
   out_.dataID = pc_item_dataID(out_.itemID, out_.dataDimension);
   
-  float value = out_.itemID / float(itemCount);//pc_item_dataValue(pc_item_dataID(out_.itemID, 0), 0);
+  float value = out_.itemID / float(itemCount - 1);//pc_item_dataValue(pc_item_dataID(out_.itemID, 0), 0);
   if (bitflag_test(flags[out_.itemID], FLAG_SELECTED, FLAG_SELECTED)) {
     out_.color = color;
   } else {
-    out_.color = mix(color, texture(transferFunction, value), tfColorFactor);
+    float tc = transform_to_TF_coordinates(value, transferFunctionTexCoords);
+    out_.color = mix(color, texture(transferFunction, tc), tfColorFactor);
   }
 
   vec4 vertex = pc_item_vertex(out_.itemID, out_.dataID, out_.dataDimension, out_.worldSpaceAxis);
@@ -113,6 +116,7 @@ out Interface
         ]]>
       </snippet>
       <!-- END Output data -->
+      <snippet name="::core_utils::transform_to_TF_coordinates" />
       <snippet name="::pc_item_draw::vertexShaderMain" />
     </shader>
 
@@ -278,6 +282,7 @@ void main()
       <snippet name="::pc::uniforms" />
       <snippet name="::pc_item_draw::uniforms" />
       <snippet name="::pc_item_draw::continuous::uniforms" />
+      <snippet name="::core_utils::transform_to_TF_coordinates" />
       <snippet type="string">
         <![CDATA[
 smooth in vec2 texCoord;
@@ -292,7 +297,7 @@ void main()
   {
     float value = (frags.r - minFragmentCount) / (maxFragmentCount - minFragmentCount);
     value = clamp(value, 0.0, 1.0);
-    fragColor = texture(transferFunction, value);
+    fragColor = texture(transferFunction, transform_to_TF_coordinates(value, transferFunctionTexCoords));
   }
   else
   {

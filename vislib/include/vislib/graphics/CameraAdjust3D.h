@@ -35,7 +35,7 @@ namespace graphics {
      * schema adjusts the camera. It is possible to invert the axes to rotate
      * the camera around its focal point.
      */
-    class CameraAdjust3D : public AbstractCursor3DEvent, 
+    class [[deprecated]] CameraAdjust3D : public AbstractCursor3DEvent, 
         public AbstractCameraController {
     public:
 

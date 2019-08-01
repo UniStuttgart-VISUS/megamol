@@ -106,6 +106,9 @@ namespace moldyn {
         /** The call for Transfer function */
         CallerSlot getTFSlot;
 
+        /** The call for selection flags */
+        CallerSlot getFlagsSlot;
+
         ///** The call for clipping plane */
         //CallerSlot getClipPlaneSlot;
 
@@ -114,7 +117,7 @@ namespace moldyn {
         
         /** Scaling factor for arrow lengths */
         param::ParamSlot lengthScaleSlot;
-		
+        
         /** Length filter for arrow lengths */
         param::ParamSlot lengthFilterSlot;
 

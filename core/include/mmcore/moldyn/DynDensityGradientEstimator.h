@@ -18,6 +18,7 @@ namespace megamol {
 namespace core {
 namespace moldyn {
 
+// TODO this module does not seem to be in a good shape, to put it mildly
 class DynDensityGradientEstimator : public core::Module {
     public:
 

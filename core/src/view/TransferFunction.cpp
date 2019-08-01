@@ -27,6 +27,7 @@ TransferFunction::TransferFunction(void)
     , tex()
     , texFormat(CallGetTransferFunction::TEXTURE_FORMAT_RGB)
     , interpolMode(param::TransferFunctionParam::InterpolationMode::LINEAR)
+    , range({0.0f, 1.0f})
 {
 
     CallGetTransferFunctionDescription cgtfd;
@@ -76,12 +77,20 @@ bool TransferFunction::requestTF(Call& call) {
     if ((this->texID == 0) || this->tfParam.IsDirty()) {
         this->tfParam.ResetDirty();
 
+        // Get current values from parameter string (Values are checked, too).
         param::TransferFunctionParam::TFDataType tfdata;
-
-        // Get current values from parameter string. Values are checked, too.
         if (!megamol::core::param::TransferFunctionParam::ParseTransferFunction(
-            this->tfParam.Param<param::TransferFunctionParam>()->Value(), tfdata, this->interpolMode, this->texSize)) {
+            this->tfParam.Param<param::TransferFunctionParam>()->Value(), tfdata, this->interpolMode, this->texSize, this->range)) {
             return false;
+        }
+
+        // Apply changes made by calling module
+        if (this->range != cgtf->Range()) {
+            this->range = cgtf->Range();
+            std::string tfstr;
+            if (megamol::core::param::TransferFunctionParam::DumpTransferFunction(tfstr, tfdata, this->interpolMode, this->texSize, this->range)) {
+                this->tfParam.Param<param::TransferFunctionParam>()->SetValue(tfstr);
+            }
         }
 
         // Apply interpolation and generate texture data.
@@ -90,6 +99,10 @@ bool TransferFunction::requestTF(Call& call) {
         }
         else if (this->interpolMode == param::TransferFunctionParam::InterpolationMode::GAUSS) {
             param::TransferFunctionParam::GaussInterpolation(this->tex, this->texSize, tfdata);
+        }
+
+        if (this->texID != 0) {
+            glDeleteTextures(1, &this->texID);
         }
 
         bool t1de = (glIsEnabled(GL_TEXTURE_1D) == GL_TRUE);
@@ -112,6 +125,7 @@ bool TransferFunction::requestTF(Call& call) {
     }
 
     cgtf->SetTexture(this->texID, this->texSize, this->tex.data(), CallGetTransferFunction::TEXTURE_FORMAT_RGBA);
+    cgtf->SetRange(this->range);
 
     return true;
 }

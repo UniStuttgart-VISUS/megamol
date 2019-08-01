@@ -66,7 +66,7 @@ bool PCAProjection::getDataCallback(core::Call& c) {
         inCall->SetFrameID(outCall->GetFrameID());
         if (!(*inCall)()) return false;
 
-        bool finished = computePCA(inCall);
+        bool finished = project(inCall);
         if (finished == false) return false;
 
         outCall->SetFrameCount(inCall->GetFrameCount());
@@ -111,7 +111,7 @@ bool PCAProjection::getHashCallback(core::Call& c) {
     return true;
 }
 
-bool megamol::infovis::PCAProjection::computePCA(megamol::stdplugin::datatools::table::TableDataCall* inCall) {
+bool megamol::infovis::PCAProjection::project(megamol::stdplugin::datatools::table::TableDataCall* inCall) {
 
     // check if inData has changed and if Slots have changed
     if (this->dataInHash == inCall->DataHash()) {
