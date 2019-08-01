@@ -45,13 +45,13 @@ public:
     /**
      * Returns width of text drawn as widget.
      */
-    float TextWidgetWidth(std::string text);
+    float TextWidgetWidth(std::string text) const;
 
     /** Decode string from UTF-8. */
-    std::string utf8Decode(std::string str);
+    std::string utf8Decode(std::string str) const;
 
     /** Encode string into UTF-8. */
-    std::string utf8Encode(std::string str);
+    std::string utf8Encode(std::string str) const;
 
 private:
     /** Current tooltip hover time. */

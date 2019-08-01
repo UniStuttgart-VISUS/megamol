@@ -43,6 +43,7 @@
 #include "imgui_impl_opengl3.h"
 #include "imgui_stdlib.h"
 
+#include <algorithm>
 #include <iomanip>
 #include <sstream>
 
@@ -182,7 +183,7 @@ bool GUIView::create() {
     /// (there is no error if glyph has no representation in font atlas)
     this->state_buffer.font_utf8_ranges.clear();
     this->state_buffer.font_utf8_ranges.emplace_back(0x0020);
-    this->state_buffer.font_utf8_ranges.emplace_back(0x00FF); // Basic Latin + Latin Supplement
+    this->state_buffer.font_utf8_ranges.emplace_back(0x03FF); // Basic Latin + Latin Supplement + Greek Alphabet
     this->state_buffer.font_utf8_ranges.emplace_back(0x20AC);
     this->state_buffer.font_utf8_ranges.emplace_back(0x20AC); // Euro
     this->state_buffer.font_utf8_ranges.emplace_back(0x2122);
@@ -190,8 +191,7 @@ bool GUIView::create() {
     this->state_buffer.font_utf8_ranges.emplace_back(0x212B);
     this->state_buffer.font_utf8_ranges.emplace_back(0x212B); // Angstroem
     this->state_buffer.font_utf8_ranges.emplace_back(0x0391);
-    this->state_buffer.font_utf8_ranges.emplace_back(0x03D6); // greek alphabet
-    this->state_buffer.font_utf8_ranges.emplace_back(0);      // (range termination)
+    this->state_buffer.font_utf8_ranges.emplace_back(0); // (range termination)
 
     // Load initial fonts only once for all imgui contexts --------------------
     if (!other_context) {
@@ -665,7 +665,6 @@ bool GUIView::drawGUI(vislib::math::Rectangle<int> viewport, double instanceTime
                                                 : (this->state_buffer.last_instance_time + io.DeltaTime);
 
     // Changes that need to be applied before next ImGui::Begin: ---------------
-
     // Loading new font (set in FONT window)
     if (!this->state_buffer.font_file.empty()) {
         ImFontConfig config;
@@ -1553,8 +1552,8 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
             }
         } else if (auto* p = slot.template Param<core::param::FloatParam>()) {
             auto value = p->Value();
-            if (ImGui::InputFloat(param_label.c_str(), &value, 1.0f, 10.0f, float_format.c_str(),
-                    ImGuiInputTextFlags_EnterReturnsTrue)) {
+            ImGui::InputFloat(param_label.c_str(), &value, 1.0f, 10.0f, float_format.c_str(), ImGuiInputTextFlags_None);
+            if (ImGui::IsItemDeactivatedAfterEdit()) {
                 p->SetValue(std::max(p->MinValue(), std::min(value, p->MaxValue())));
             }
         } else if (auto* p = slot.template Param<core::param::IntParam>()) {
@@ -1584,19 +1583,12 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
             /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
             std::string utf8Str = this->utils.utf8Encode(std::string(p->ValueString()));
 
-            // Determine line count
-            const int minnlcnt = 5;
-            int nlcnt = 0;
-            for (auto& c : utf8Str) {
-                if (c == '\n') {
-                    nlcnt++;
-                }
-            }
-            nlcnt = std::min(minnlcnt, nlcnt);
-
-            if (nlcnt > 0) {
-                ImVec2 ml_dim =
-                    ImVec2(ImGui::CalcItemWidth(), ImGui::GetFrameHeight() + (ImGui::GetFontSize() * (float)(nlcnt)));
+            // Determine multi line count of string
+            int lcnt = static_cast<int>(std::count(utf8Str.begin(), utf8Str.end(), '\n'));
+            lcnt = std::min(5, lcnt);
+            if (lcnt > 0) {
+                ImVec2 ml_dim = ImVec2(ImGui::CalcItemWidth(),
+                    ImGui::GetFrameHeight() + (ImGui::GetFontSize() * static_cast<float>(lcnt)));
                 ImGui::InputTextMultiline(param_label.c_str(), &utf8Str, ml_dim, ImGuiInputTextFlags_None);
             } else {
                 ImGui::InputText(param_label.c_str(), &utf8Str, ImGuiInputTextFlags_None);

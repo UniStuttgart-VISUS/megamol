@@ -314,7 +314,7 @@ bool WindowManager::StateFromJSON(const std::string& json_string) {
             // font_name (supports UTF-8)
             if (config_values.at("font_name").is_string()) {
                 config_values.at("font_name").get_to(tmp_config.font_name);
-                tmp_config.font_name = this->utils.utf8Encode(tmp_config.font_name);
+                tmp_config.font_name = this->utils.utf8Decode(tmp_config.font_name);
             } else {
                 vislib::sys::Log::DefaultLog.WriteError(
                     "[WindowManager] JSON state: Failed to read 'font_name' as string.");

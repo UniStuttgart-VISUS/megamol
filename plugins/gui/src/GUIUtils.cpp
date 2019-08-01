@@ -66,7 +66,7 @@ void GUIUtils::HelpMarkerToolTip(std::string text, std::string label) {
 }
 
 
-float GUIUtils::TextWidgetWidth(std::string text) {
+float GUIUtils::TextWidgetWidth(std::string text) const {
     assert(ImGui::GetCurrentContext() != nullptr);
     ImGuiIO& io = ImGui::GetIO();
     ImGuiStyle& style = ImGui::GetStyle();
@@ -81,16 +81,16 @@ float GUIUtils::TextWidgetWidth(std::string text) {
 }
 
 
-std::string GUIUtils::utf8Decode(std::string str) {
+std::string GUIUtils::utf8Decode(std::string str) const {
     std::string dec_ret;
     vislib::StringA dec_tmp;
-    vislib::UTF8Encoder::Encode(dec_tmp, vislib::StringA(str.c_str()));
+    vislib::UTF8Encoder::Decode(dec_tmp, vislib::StringA(str.c_str()));
     dec_ret = dec_tmp.PeekBuffer();
     return dec_ret;
 }
 
 
-std::string GUIUtils::utf8Encode(std::string str) {
+std::string GUIUtils::utf8Encode(std::string str) const {
     std::string enc_ret;
     vislib::StringA enc_tmp;
     vislib::UTF8Encoder::Encode(enc_tmp, vislib::StringA(str.c_str()));
