@@ -34,6 +34,7 @@ view::SplitView::SplitView(void)
     , splitColourSlot("split.colour", "The split border colour")
     , enableTimeSyncSlot("timeLord",
           "Enables time synchronization between the connected views. The time of this view is then used instead")
+    , inputToBothSlot("inputToBoth", "Forward input to both child views")
     , overrideCall(NULL)
     , timeCtrl()
     , clientArea()
@@ -41,7 +42,6 @@ view::SplitView::SplitView(void)
     , client2Area()
     , fbo1()
     , fbo2()
-    , focus(0)
     , mouseX(0.0f)
     , mouseY(0.0f)
     , dragSlider(false) {
@@ -71,6 +71,9 @@ view::SplitView::SplitView(void)
 
     this->enableTimeSyncSlot << new param::BoolParam(false);
     this->MakeSlotAvailable(&this->enableTimeSyncSlot);
+
+    this->inputToBothSlot << new param::BoolParam(false);
+    this->MakeSlotAvailable(&this->inputToBothSlot);
 
     for (unsigned int i = 0; this->timeCtrl.GetSlot(i) != nullptr; i++) {
         this->MakeSlotAvailable(this->timeCtrl.GetSlot(i));
@@ -455,58 +458,61 @@ void view::SplitView::UpdateFreeze(bool freeze) {
 
 bool view::SplitView::OnKey(Key key, KeyAction action, Modifiers mods) {
 
-    bool consumed = false;
+    auto* crv = this->renderHovered();
+    auto* crv1 = this->render1();
+    auto* crv2 = this->render2();
 
-    auto* crv = this->render1();
     if (crv != nullptr) {
         InputEvent evt;
         evt.tag = InputEvent::Tag::Key;
         evt.keyData.key = key;
         evt.keyData.action = action;
         evt.keyData.mods = mods;
-        crv->SetInputEvent(evt);
-        if ((*crv)(view::CallRenderView::FnOnKey)) consumed = true;
+
+        if (this->inputToBothSlot.Param<param::BoolParam>()->Value()) {
+            crv1->SetInputEvent(evt);
+            auto consumed = (*crv1)(view::CallRenderView::FnOnKey);
+
+            crv2->SetInputEvent(evt);
+            consumed |= (*crv2)(view::CallRenderView::FnOnKey);
+
+            return consumed;
+        } else {
+            crv->SetInputEvent(evt);
+            if (!(*crv)(view::CallRenderView::FnOnKey)) return false;
+        }
     }
 
-    crv = this->render2();
-    if (crv != nullptr) {
-
-        InputEvent evt;
-        evt.tag = InputEvent::Tag::Key;
-        evt.keyData.key = key;
-        evt.keyData.action = action;
-        evt.keyData.mods = mods;
-        crv->SetInputEvent(evt);
-        if ((*crv)(view::CallRenderView::FnOnKey)) consumed = true;
-    }
-
-    return consumed;
+    return false;
 }
 
 
 bool view::SplitView::OnChar(unsigned int codePoint) {
 
-    bool consumed = false;
+    auto* crv = this->renderHovered();
+    auto* crv1 = this->render1();
+    auto* crv2 = this->render2();
 
-    auto* crv = this->render1();
     if (crv != nullptr) {
         InputEvent evt;
         evt.tag = InputEvent::Tag::Char;
         evt.charData.codePoint = codePoint;
-        crv->SetInputEvent(evt);
-        if ((*crv)(view::CallRenderView::FnOnChar)) consumed = true;
+
+        if (this->inputToBothSlot.Param<param::BoolParam>()->Value()) {
+            crv1->SetInputEvent(evt);
+            auto consumed = (*crv1)(view::CallRenderView::FnOnChar);
+
+            crv2->SetInputEvent(evt);
+            consumed |= (*crv2)(view::CallRenderView::FnOnChar);
+
+            return consumed;
+        } else {
+            crv->SetInputEvent(evt);
+            if (!(*crv)(view::CallRenderView::FnOnChar)) return false;
+        }
     }
 
-    crv = this->render2();
-    if (crv != nullptr) {
-        InputEvent evt;
-        evt.tag = InputEvent::Tag::Char;
-        evt.charData.codePoint = codePoint;
-        crv->SetInputEvent(evt);
-        if ((*crv)(view::CallRenderView::FnOnChar)) consumed = true;
-    }
-
-    return consumed;
+    return false;
 }
 
 
@@ -519,28 +525,32 @@ bool view::SplitView::OnMouseButton(MouseButton button, MouseButtonAction action
     this->dragSlider = false;
 
     auto down = (action == MouseButtonAction::PRESS);
-    if (down) {
-        if (crv == crv1) {
-            this->focus = 1;
-        } else if (crv == crv2) {
-            this->focus = 2;
-        } else {
-            this->focus = 0;
-            this->dragSlider = true;
-        }
+    if (down && crv != crv1 && crv != crv2) {
+        this->dragSlider = true;
     }
 
-    if (crv) {
+    if (crv != nullptr) {
         InputEvent evt;
         evt.tag = InputEvent::Tag::MouseButton;
         evt.mouseButtonData.button = button;
         evt.mouseButtonData.action = action;
         evt.mouseButtonData.mods = mods;
-        crv->SetInputEvent(evt);
-        if (!(*crv)(view::CallRenderView::FnOnMouseButton)) return false;
+
+        if (this->inputToBothSlot.Param<param::BoolParam>()->Value()) {
+            crv1->SetInputEvent(evt);
+            auto consumed = (*crv1)(view::CallRenderView::FnOnMouseButton);
+
+            crv2->SetInputEvent(evt);
+            consumed |= (*crv2)(view::CallRenderView::FnOnMouseButton);
+
+            return consumed;
+        } else {
+            crv->SetInputEvent(evt);
+            if (!(*crv)(view::CallRenderView::FnOnMouseButton)) return false;
+        }
     }
 
-    return true;
+    return false;
 }
 
 
@@ -579,27 +589,52 @@ bool view::SplitView::OnMouseMove(double x, double y) {
         evt.tag = InputEvent::Tag::MouseMove;
         evt.mouseMoveData.x = mx;
         evt.mouseMoveData.y = my;
-        crv->SetInputEvent(evt);
-        if (!(*crv)(view::CallRenderView::FnOnMouseMove)) return false;
+
+        if (this->inputToBothSlot.Param<param::BoolParam>()->Value()) {
+            crv1->SetInputEvent(evt);
+            auto consumed = (*crv1)(view::CallRenderView::FnOnMouseMove);
+
+            crv2->SetInputEvent(evt);
+            consumed |= (*crv2)(view::CallRenderView::FnOnMouseMove);
+
+            return consumed;
+        } else {
+            crv->SetInputEvent(evt);
+            if (!(*crv)(view::CallRenderView::FnOnMouseMove)) return false;
+        }
     }
 
-    return true;
+    return false;
 }
 
 
 bool view::SplitView::OnMouseScroll(double dx, double dy) {
 
     auto* crv = this->renderHovered();
-    if (crv == NULL) return false;
+    auto* crv1 = this->render1();
+    auto* crv2 = this->render2();
 
-    InputEvent evt;
-    evt.tag = InputEvent::Tag::MouseScroll;
-    evt.mouseScrollData.dx = dx;
-    evt.mouseScrollData.dy = dy;
-    crv->SetInputEvent(evt);
-    if (!(*crv)(view::CallRenderView::FnOnMouseScroll)) return false;
+    if (crv != nullptr) {
+        InputEvent evt;
+        evt.tag = InputEvent::Tag::MouseScroll;
+        evt.mouseScrollData.dx = dx;
+        evt.mouseScrollData.dy = dy;
 
-    return true;
+        if (this->inputToBothSlot.Param<param::BoolParam>()->Value()) {
+            crv1->SetInputEvent(evt);
+            auto consumed = (*crv1)(view::CallRenderView::FnOnMouseScroll);
+
+            crv2->SetInputEvent(evt);
+            consumed |= (*crv2)(view::CallRenderView::FnOnMouseScroll);
+
+            return consumed;
+        } else {
+            crv->SetInputEvent(evt);
+            if (!(*crv)(view::CallRenderView::FnOnMouseScroll)) return false;
+        }
+    }
+
+    return false;
 }
 
 

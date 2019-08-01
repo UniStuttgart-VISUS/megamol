@@ -40,7 +40,7 @@ view::View2D::View2D(void) : view::AbstractRenderingView(),
     this->rendererSlot.SetCompatibleCall<CallRender2DDescription>();
     this->MakeSlotAvailable(&this->rendererSlot);
 
-    this->resetViewSlot << new param::ButtonParam(core::view::Key::KEY_HOME);
+    this->resetViewSlot << new param::ButtonParam();
     this->resetViewSlot.SetUpdateCallback(&View2D::onResetView);
     this->MakeSlotAvailable(&this->resetViewSlot);
 
@@ -374,6 +374,10 @@ void view::View2D::UpdateFreeze(bool freeze) {
 bool view::View2D::OnKey(Key key, KeyAction action, Modifiers mods) {
     auto* cr = this->rendererSlot.CallAs<view::CallRender2D>();
     if (cr == NULL) return false;
+
+    if (key == Key::KEY_HOME) {
+        onResetView(this->resetViewSlot);
+    }
 
     InputEvent evt;
     evt.tag = InputEvent::Tag::Key;
