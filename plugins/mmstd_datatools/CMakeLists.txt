@@ -92,7 +92,7 @@ if(BUILD_MMSTD_DATATOOLS_PLUGIN)
   # Target definition
   add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${source_files})
   # Set target naming conventions for different build types
-  set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
+  set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg" CXX_STANDARD 17 CXX_STANDARD_REQUIRED ON)
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src"
     "3rd/nanoflann" "3rd/min_sphere_of_spheres")

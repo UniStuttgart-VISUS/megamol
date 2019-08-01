@@ -20,6 +20,8 @@
 #include <chrono>
 #include <functional>
 #include <math.h>
+#include <numeric>
+#include "3rdparty/simultaneous_sort/simultaneous_sort.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmstd_datatools/table/TableDataCall.h"
 
@@ -285,8 +287,7 @@ bool datatools::ParticlesToDensity::getDataCallback(megamol::core::Call& c) {
         }
     }
 
-    if (outInfo != nullptr &&
-        this->aggregatorSlot.Param<core::param::EnumParam>()->Value() == 2) {
+    if (outInfo != nullptr && this->aggregatorSlot.Param<core::param::EnumParam>()->Value() == 2) {
 
         this->info[0].SetName("PositionX");
         this->info[0].SetType(stdplugin::datatools::table::TableDataCall::ColumnType::QUANTITATIVE);
@@ -631,6 +632,55 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
             [this, rcpValRange](float const& a) { return (a - minDens) * rcpValRange; });
         minDens = 0.0f;
         maxDens = 1.0f;
+    }
+
+    // Remove elements which represent zero-sized vectors
+    if (is_vector) {
+        std::vector<std::size_t> indices(this->vol[0].size());
+        std::iota(indices.begin(), indices.end(), 0);
+
+        sort_with(std::greater<float>(), this->vol[0], indices);
+
+        const auto cut_pos = std::find(this->vol[0].begin(), this->vol[0].end(), 0.0f);
+        const auto new_size = std::distance(this->vol[0].begin(), cut_pos);
+
+        std::vector<float> new_vol(this->vol[0].size());
+        std::vector<float> new_colors(this->colors.size());
+        std::vector<float> new_directions(this->directions.size());
+        std::vector<float> new_grid(this->grid.size());
+        std::vector<float> new_infoData(this->infoData.size());
+
+        for (std::size_t new_index = 0; new_index < indices.size(); ++new_index) {
+            const std::size_t old_index = indices[new_index];
+
+            std::swap(this->vol[0][old_index], new_vol[new_index]);
+
+            std::swap(this->colors[old_index], new_colors[new_index]);
+
+            std::swap(this->directions[old_index * 3 + 0], new_directions[new_index * 3 + 0]);
+            std::swap(this->directions[old_index * 3 + 1], new_directions[new_index * 3 + 1]);
+            std::swap(this->directions[old_index * 3 + 2], new_directions[new_index * 3 + 2]);
+
+            std::swap(this->grid[old_index * 3 + 0], new_grid[new_index * 3 + 0]);
+            std::swap(this->grid[old_index * 3 + 1], new_grid[new_index * 3 + 1]);
+            std::swap(this->grid[old_index * 3 + 2], new_grid[new_index * 3 + 2]);
+
+            for (std::size_t comp = 0; comp < this->info.size(); ++comp) {
+                std::swap(this->infoData[old_index * this->info.size() + comp],
+                    new_infoData[new_index * this->info.size() + comp]);
+            }
+        }
+
+        new_colors.resize(new_size);
+        new_directions.resize(3 * new_size);
+        new_grid.resize(3 * new_size);
+        new_infoData.resize(this->info.size() * new_size);
+
+        this->vol[0] = std::move(new_vol);
+        this->colors = std::move(new_colors);
+        this->directions = std::move(new_directions);
+        this->grid = std::move(new_grid);
+        this->infoData = std::move(new_infoData);
     }
 
 //#define PTD_DEBUG_OUTPUT
