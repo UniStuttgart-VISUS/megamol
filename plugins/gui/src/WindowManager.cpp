@@ -8,8 +8,6 @@
 #include "stdafx.h"
 #include "WindowManager.h"
 
-#include <sstream>
-
 
 using namespace megamol::gui;
 
@@ -407,9 +405,8 @@ bool WindowManager::StateToJSON(std::string& json_string) {
             json[window_name]["font_name"] = window_config.font_name;
         }
 
-        std::stringstream ss;
-        ss << json.dump(2);
-        json_string = ss.str();
+        json_string = json.dump(2); // Dump with indent of 2 spaces and new lines.
+
     } catch (nlohmann::json::type_error& e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);

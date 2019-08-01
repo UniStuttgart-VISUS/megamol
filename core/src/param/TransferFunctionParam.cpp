@@ -245,8 +245,7 @@ bool TransferFunctionParam::DumpTransferFunction(std::string& out_tfs, const TFD
         json["Nodes"] = in_data;
         json["ValueRange"] = in_range;
 
-        out_tfs = json.dump(); // pass 'true' for pretty printing with newlines
-
+        out_tfs = json.dump(2); // Dump with indent of 2 spaces and new lines.
     }
     catch (nlohmann::json::type_error& e) {
         vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);

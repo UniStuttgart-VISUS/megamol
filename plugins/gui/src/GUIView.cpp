@@ -47,9 +47,14 @@
 #include <iomanip>
 #include <sstream>
 
+
+#define GUI_MAX_MULITLINE 7
+
+
 using namespace megamol;
 using namespace megamol::gui;
 using vislib::sys::Log;
+
 
 GUIView::GUIView()
     : core::view::AbstractView()
@@ -1482,6 +1487,25 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
                 this->window_manager.EnumWindows(func);
             }
             ImGui::SameLine();
+            param_label = "Reset###reset" + param_id;
+            if (ImGui::Button(param_label.c_str())) {
+                p->SetValue("");
+                load_tf = true;
+            }
+            if (p == this->tf_editor.GetActiveParameter()) {
+                ImGui::TextColored(style.Colors[ImGuiCol_ButtonActive], "Currently loaded into Editor");
+            }
+
+            // Print JSON string
+            ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+            std::string json = p->Value();
+            ImVec2 ml_dim = ImVec2(ImGui::CalcItemWidth(),
+                ImGui::GetFrameHeight() + (ImGui::GetFontSize() * static_cast<float>(GUI_MAX_MULITLINE)));
+            ImGui::InputTextMultiline("JSON", &json, ml_dim, ImGuiInputTextFlags_None);
+            ImGui::PopItemFlag();
+            ImGui::PopStyleVar();
+
             param_label = "Copy to Clipboard###clipboard" + param_id;
             if (ImGui::Button(param_label.c_str())) {
                 ImGui::SetClipboardText(p->Value().c_str());
@@ -1492,22 +1516,6 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
                 p->SetValue(ImGui::GetClipboardText());
                 load_tf = true;
             }
-            ImGui::SameLine();
-            param_label = "Reset###reset" + param_id;
-            if (ImGui::Button(param_label.c_str())) {
-                p->SetValue("");
-                load_tf = true;
-            }
-
-            if (p == this->tf_editor.GetActiveParameter()) {
-                ImGui::TextColored(style.Colors[ImGuiCol_ButtonActive], "Currently loaded into Editor");
-            }
-
-            ImGui::PushTextWrapPos(ImGui::GetContentRegionAvail().x);
-            ImGui::Text("JSON: ");
-            ImGui::SameLine();
-            ImGui::TextDisabled(p->Value().c_str());
-            ImGui::PopTextWrapPos();
 
             // Loading new transfer function string from parameter into editor
             if (load_tf && (p == this->tf_editor.GetActiveParameter())) {
@@ -1620,7 +1628,7 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
             }
             // Determine multi line count of string
             int lcnt = static_cast<int>(std::count(it->second.begin(), it->second.end(), '\n'));
-            lcnt = std::min(7, lcnt);
+            lcnt = std::min(static_cast<int>(GUI_MAX_MULITLINE), lcnt);
             if (lcnt > 0) {
                 ImVec2 ml_dim = ImVec2(ImGui::CalcItemWidth(),
                     ImGui::GetFrameHeight() + (ImGui::GetFontSize() * static_cast<float>(lcnt)));
