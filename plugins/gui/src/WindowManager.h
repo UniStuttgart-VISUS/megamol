@@ -30,36 +30,36 @@ class WindowManager {
 
 public:
     /** Identifiers for the window draw callbacks. */
-    enum WindowDrawCallback { NONE = 0, MAIN = 1, PARAM = 2, FPSMS = 3, FONT = 4, TF = 5 };
+    enum DrawCallbacks { NONE = 0, MAIN = 1, PARAM = 2, FPSMS = 3, FONT = 4, TF = 5 };
 
     /** Performance mode for fps/ms windows. */
-    enum TimingMode { FPS = 0, MS = 1 };
+    enum TimingModes { FPS = 0, MS = 1 };
 
     /** Module filter mode for parameter windows. */
-    enum FilterMode { ALL = 0, INSTANCE = 1, VIEW = 2 };
+    enum FilterModes { ALL = 0, INSTANCE = 1, VIEW = 2 };
 
     /** Struct holding a window configuration. */
     struct WindowConfiguration {
-        bool win_show;                   // show/hide window
-        ImGuiWindowFlags win_flags;      // imgui window flags
-        WindowDrawCallback win_callback; // id of the callback drawing the window content
-        core::view::KeyCode win_hotkey;  // hotkey for opening/closing window
-        ImVec2 win_position;             // position for reset on state loading (current position)
-        ImVec2 win_size;                 // size for reset on state loading (current size)
-        bool win_soft_reset;             // soft reset of window position and size
-        ImVec2 win_reset_size;           // minimum window size for soft reset
+        bool win_show;                  // show/hide window
+        ImGuiWindowFlags win_flags;     // imgui window flags
+        DrawCallbacks win_callback;     // id of the callback drawing the window content
+        core::view::KeyCode win_hotkey; // hotkey for opening/closing window
+        ImVec2 win_position;            // position for reset on state loading (current position)
+        ImVec2 win_size;                // size for reset on state loading (current size)
+        bool win_soft_reset;            // soft reset of window position and size
+        ImVec2 win_reset_size;          // minimum window size for soft reset
         bool buf_win_reset; // flag for reset window position and size on state loading  (not saved in state)
         // ---------- Main window configuration ----------
         std::string main_project_file; // project file name
         // ---------- Parameter specific configuration ----------
         bool param_show_hotkeys;                     // flag to toggle showing only parameter hotkeys
         std::vector<std::string> param_modules_list; // modules to show in a parameter window (show all if empty)
-        FilterMode param_module_filter;              // module filter
+        FilterModes param_module_filter;             // module filter
         // ---------- FPS/MS specific configuration ----------
         bool fpsms_show_options;           // show/hide fps/ms options.
         int fpsms_max_history_count;       // maximum count of values in value array
         float fpsms_refresh_rate;          // maximum delay when fps/ms value should be renewed.
-        TimingMode fpsms_mode;             // mode for displaying either FPS or MS
+        TimingModes fpsms_mode;            // mode for displaying either FPS or MS
         int buf_max_history_count;         // temporary buffer for maximum count input widget (not saved in state)
         float buf_refresh_rate;            // temporary buffer for maximum delay input widget (not saved in state)
         float buf_current_delay;           // current delay between frames (not saved in state)
@@ -77,7 +77,7 @@ public:
         WindowConfiguration(void)
             : win_show(false)
             , win_flags(0)
-            , win_callback(WindowDrawCallback::NONE)
+            , win_callback(DrawCallbacks::NONE)
             , win_hotkey(megamol::core::view::KeyCode())
             , win_position(ImVec2(0.0f, 0.0f))
             , win_size(ImVec2(0.0f, 0.0f))
@@ -88,11 +88,11 @@ public:
             , main_project_file("")
             , param_show_hotkeys(false)
             , param_modules_list()
-            , param_module_filter(FilterMode::ALL)
+            , param_module_filter(FilterModes::ALL)
             , fpsms_show_options(false)
             , fpsms_max_history_count(20)
             , fpsms_refresh_rate(2.0f)
-            , fpsms_mode(TimingMode::FPS)
+            , fpsms_mode(TimingModes::FPS)
             , buf_max_history_count(20)
             , buf_current_delay(0.0f)
             , buf_refresh_rate(2.0f)
@@ -122,7 +122,7 @@ public:
      * @param cbid  The callback id.
      * @param id    The callback function that should be matched to callback id.
      */
-    inline bool RegisterDrawWindowCallback(WindowDrawCallback cbid, GuiCallbackFunc cb) {
+    inline bool RegisterDrawWindowCallback(DrawCallbacks cbid, GuiCallbackFunc cb) {
         /// Overwrites existing entry with same WindowDrawCallback id.
         this->callbacks[cbid] = cb;
         return true;
@@ -133,7 +133,7 @@ public:
      *
      * @param window_name  The name of the calling window.
      */
-    inline GuiCallbackFunc WindowCallback(WindowDrawCallback cbid) {
+    inline GuiCallbackFunc WindowCallback(DrawCallbacks cbid) {
         // Creates new entry if no callback for cbid is registered (default ctory)
         return this->callbacks[cbid];
     }
@@ -230,7 +230,7 @@ private:
     GUIUtils utils;
 
     /** The list of the window names and their configurations. */
-    std::map<WindowDrawCallback, GuiCallbackFunc> callbacks;
+    std::map<DrawCallbacks, GuiCallbackFunc> callbacks;
 
     /** The list of the window names and their configurations. */
     std::map<std::string, WindowConfiguration> windows;

@@ -81,19 +81,21 @@ float GUIUtils::TextWidgetWidth(std::string text) const {
 }
 
 
-std::string GUIUtils::utf8Decode(std::string str) const {
-    std::string dec_ret;
+bool GUIUtils::utf8Decode(std::string& str) const {
     vislib::StringA dec_tmp;
-    vislib::UTF8Encoder::Decode(dec_tmp, vislib::StringA(str.c_str()));
-    dec_ret = dec_tmp.PeekBuffer();
-    return dec_ret;
+    if (vislib::UTF8Encoder::Decode(dec_tmp, vislib::StringA(str.c_str()))) {
+        str = std::string(dec_tmp.PeekBuffer());
+        return true;
+    }
+    return false;
 }
 
 
-std::string GUIUtils::utf8Encode(std::string str) const {
-    std::string enc_ret;
-    vislib::StringA enc_tmp;
-    vislib::UTF8Encoder::Encode(enc_tmp, vislib::StringA(str.c_str()));
-    enc_ret = enc_tmp.PeekBuffer();
-    return enc_ret;
+bool GUIUtils::utf8Encode(std::string& str) const {
+    vislib::StringA dec_tmp;
+    if (vislib::UTF8Encoder::Encode(dec_tmp, vislib::StringA(str.c_str()))) {
+        str = std::string(dec_tmp.PeekBuffer());
+        return true;
+    }
+    return false;
 }

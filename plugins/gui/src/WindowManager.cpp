@@ -129,7 +129,7 @@ bool WindowManager::StateFromJSON(const std::string& json_string) {
             }
             // flags
             if (config_values.at("win_flags").is_number_integer()) {
-                tmp_config.win_flags = (ImGuiWindowFlags)config_values.at("win_flags").get<int>();
+                tmp_config.win_flags = static_cast<ImGuiWindowFlags>(config_values.at("win_flags").get<int>());
             } else {
                 vislib::sys::Log::DefaultLog.WriteError(
                     "[WindowManager] JSON state: Failed to read 'win_flags' as integer.");
@@ -137,7 +137,7 @@ bool WindowManager::StateFromJSON(const std::string& json_string) {
             }
             // callback
             if (config_values.at("win_callback").is_number_integer()) {
-                tmp_config.win_callback = (WindowDrawCallback)config_values.at("win_callback").get<int>();
+                tmp_config.win_callback = static_cast<DrawCallbacks>(config_values.at("win_callback").get<int>());
             } else {
                 vislib::sys::Log::DefaultLog.WriteError(
                     "[WindowManager] JSON state: Failed to read 'win_callback' as integer.");
@@ -149,7 +149,8 @@ bool WindowManager::StateFromJSON(const std::string& json_string) {
                     config_values.at("win_hotkey")[1].is_number_integer()) {
                     int key = config_values.at("win_hotkey")[0].get<int>();
                     int mods = config_values.at("win_hotkey")[1].get<int>();
-                    tmp_config.win_hotkey = core::view::KeyCode((core::view::Key)key, (core::view::Modifiers)mods);
+                    tmp_config.win_hotkey = core::view::KeyCode(
+                        static_cast<core::view::Key>(key), static_cast<core::view::Modifiers>(mods));
                 } else {
                     vislib::sys::Log::DefaultLog.WriteError(
                         "[WindowManager] JSON state: Failed to read 'win_hotkey' values as integers.");
@@ -235,7 +236,7 @@ bool WindowManager::StateFromJSON(const std::string& json_string) {
             // main_project_file (supports UTF-8)
             if (config_values.at("main_project_file").is_string()) {
                 config_values.at("main_project_file").get_to(tmp_config.main_project_file);
-                tmp_config.main_project_file = this->utils.utf8Decode(tmp_config.main_project_file);
+                this->utils.utf8Decode(tmp_config.main_project_file);
             } else {
                 vislib::sys::Log::DefaultLog.WriteError(
                     "[WindowManager] JSON state: Failed to read 'main_project_file' as string.");
@@ -271,7 +272,8 @@ bool WindowManager::StateFromJSON(const std::string& json_string) {
             }
             // module_filter
             if (config_values.at("param_module_filter").is_number_integer()) {
-                tmp_config.param_module_filter = (FilterMode)config_values.at("param_module_filter").get<int>();
+                tmp_config.param_module_filter =
+                    static_cast<FilterModes>(config_values.at("param_module_filter").get<int>());
             } else {
                 vislib::sys::Log::DefaultLog.WriteError(
                     "[WindowManager] JSON state: Failed to read 'param_module_filter' as integer.");
@@ -304,7 +306,7 @@ bool WindowManager::StateFromJSON(const std::string& json_string) {
             }
             // mode
             if (config_values.at("fpsms_mode").is_number_integer()) {
-                tmp_config.fpsms_mode = (TimingMode)config_values.at("fpsms_mode").get<int>();
+                tmp_config.fpsms_mode = static_cast<TimingModes>(config_values.at("fpsms_mode").get<int>());
             } else {
                 vislib::sys::Log::DefaultLog.WriteError(
                     "[WindowManager] JSON state: Failed to read 'fpsms_mode' as integer.");
@@ -314,15 +316,16 @@ bool WindowManager::StateFromJSON(const std::string& json_string) {
             // font_name (supports UTF-8)
             if (config_values.at("font_name").is_string()) {
                 config_values.at("font_name").get_to(tmp_config.font_name);
-                tmp_config.font_name = this->utils.utf8Decode(tmp_config.font_name);
+                this->utils.utf8Decode(tmp_config.font_name);
             } else {
                 vislib::sys::Log::DefaultLog.WriteError(
                     "[WindowManager] JSON state: Failed to read 'font_name' as string.");
                 valid = false;
             }
 
-            // state reset flags
+            // set reset flags
             tmp_config.buf_win_reset = true;
+
             tmp_config.buf_font_reset = false;
             if (!tmp_config.font_name.empty()) {
                 tmp_config.buf_font_reset = true;
@@ -379,28 +382,29 @@ bool WindowManager::StateToJSON(std::string& json_string) {
             std::string window_name = w.first;
             WindowConfiguration window_config = w.second;
             json[window_name]["win_show"] = window_config.win_show;
-            json[window_name]["win_flags"] = (int)(window_config.win_flags);
-            json[window_name]["win_callback"] = window_config.win_callback;
+            json[window_name]["win_flags"] = static_cast<int>(window_config.win_flags);
+            json[window_name]["win_callback"] = static_cast<int>(window_config.win_callback);
             json[window_name]["win_hotkey"] = {
-                (int)(window_config.win_hotkey.GetKey()), window_config.win_hotkey.GetModifiers().toInt()};
+                static_cast<int>(window_config.win_hotkey.GetKey()), window_config.win_hotkey.GetModifiers().toInt()};
             json[window_name]["win_position"] = {window_config.win_position.x, window_config.win_position.y};
             json[window_name]["win_size"] = {window_config.win_size.x, window_config.win_size.y};
             json[window_name]["win_soft_reset"] = window_config.win_soft_reset;
             json[window_name]["win_reset_size"] = {window_config.win_reset_size.x, window_config.win_reset_size.y};
 
-            json[window_name]["main_project_file"] = this->utils.utf8Encode(window_config.main_project_file);
+            this->utils.utf8Encode(window_config.main_project_file);
+            json[window_name]["main_project_file"] = window_config.main_project_file;
 
             json[window_name]["param_show_hotkeys"] = window_config.param_show_hotkeys;
             json[window_name]["param_modules_list"] = window_config.param_modules_list;
-            json[window_name]["param_module_filter"] = window_config.param_module_filter;
+            json[window_name]["param_module_filter"] = static_cast<int>(window_config.param_module_filter);
 
             json[window_name]["fpsms_show_options"] = window_config.fpsms_show_options;
             json[window_name]["fpsms_max_history_count"] = window_config.fpsms_max_history_count;
             json[window_name]["fpsms_refresh_rate"] = window_config.fpsms_refresh_rate;
-            json[window_name]["fpsms_mode"] = (int)window_config.fpsms_mode;
+            json[window_name]["fpsms_mode"] = static_cast<int>(window_config.fpsms_mode);
 
-            json[window_name]["font_name"] = this->utils.utf8Encode(window_config.font_name);
-            ;
+            this->utils.utf8Encode(window_config.font_name);
+            json[window_name]["font_name"] = window_config.font_name;
         }
 
         std::stringstream ss;

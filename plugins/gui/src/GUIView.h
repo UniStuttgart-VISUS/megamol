@@ -30,6 +30,14 @@ namespace gui {
 
 class GUIView : public megamol::core::view::AbstractView {
 public:
+    /** Available GUI styles. */
+    enum Styles {
+        CorporateGray,
+        CorporateWhite,
+        DarkColors,
+        LightColors,
+    };
+
     /**
      * Answer the name of this module.
      *
@@ -111,6 +119,7 @@ private:
         float win_save_delay;      // Flag indicating how long to wait for saving window state since last user action.
         std::string win_delete;    // Name of the window to delete.
         double last_instance_time; // Last instance time.
+        std::string widget_text;   // Input text widget buffer for parameter strings
         bool hotkeys_check_once;   // WORKAROUND: Check multiple hotkey assignments once.
     };
 
@@ -141,7 +150,7 @@ private:
     GUIUtils utils;
 
     /** The current local state of the gui. */
-    StateBuffer state_buffer;
+    StateBuffer state;
 
     // FUNCTIONS --------------------------------------------------------------
 

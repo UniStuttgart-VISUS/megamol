@@ -51,38 +51,32 @@ using namespace megamol;
 using namespace megamol::gui;
 using vislib::sys::Log;
 
-enum Styles {
-    CorporateGray,
-    CorporateWhite,
-    DarkColors,
-    LightColors,
-};
-
 GUIView::GUIView()
     : core::view::AbstractView()
     , render_view_slot("renderview", "Connects to a preceding RenderView that will be decorated with a GUI")
-    , style_param("style", "Color style, i.e., theme")
-    , state_param("state", "Current state of all windows")
+    , style_param("style", "Color style, theme")
+    , state_param("state", "Current state of all windows. Automatically updated.")
     , context(nullptr)
     , window_manager()
     , tf_editor()
     , utils()
-    , state_buffer() {
+    , state() {
 
     this->render_view_slot.SetCompatibleCall<core::view::CallRenderViewDescription>();
     this->MakeSlotAvailable(&this->render_view_slot);
 
-    core::param::EnumParam* styles = new core::param::EnumParam(2);
-    styles->SetTypePair(CorporateGray, "Corporate Gray");
-    styles->SetTypePair(CorporateWhite, "Corporate White");
-    styles->SetTypePair(DarkColors, "Dark Colors");
-    styles->SetTypePair(LightColors, "Light Colors");
+    core::param::EnumParam* styles = new core::param::EnumParam((int)(Styles::DarkColors));
+    styles->SetTypePair(Styles::CorporateGray, "Corporate Gray");
+    styles->SetTypePair(Styles::CorporateWhite, "Corporate White");
+    styles->SetTypePair(Styles::DarkColors, "Dark Colors");
+    styles->SetTypePair(Styles::LightColors, "Light Colors");
     this->style_param << styles;
     this->style_param.ForceSetDirty();
     this->MakeSlotAvailable(&this->style_param);
 
     this->state_param << new core::param::StringParam("");
     this->MakeSlotAvailable(&this->state_param);
+    this->state_param.Param<core::param::StringParam>()->SetGUIReadOnly(true);
 }
 
 GUIView::~GUIView() { this->Release(); }
@@ -109,21 +103,26 @@ bool GUIView::create() {
     ImGui_ImplOpenGL3_Init(glsl_version);
 
     // Register window callbacks in window manager ----------------------------
-    this->window_manager.RegisterDrawWindowCallback(WindowManager::WindowDrawCallback::MAIN,
-        [&, this](
-            const std::string& wn, WindowManager::WindowConfiguration& wc) { this->drawMainWindowCallback(wn, wc); });
-    this->window_manager.RegisterDrawWindowCallback(WindowManager::WindowDrawCallback::PARAM,
-        [&, this](
-            const std::string& wn, WindowManager::WindowConfiguration& wc) { this->drawParametersCallback(wn, wc); });
-    this->window_manager.RegisterDrawWindowCallback(WindowManager::WindowDrawCallback::FPSMS,
-        [&, this](
-            const std::string& wn, WindowManager::WindowConfiguration& wc) { this->drawFpsWindowCallback(wn, wc); });
-    this->window_manager.RegisterDrawWindowCallback(WindowManager::WindowDrawCallback::FONT,
-        [&, this](
-            const std::string& wn, WindowManager::WindowConfiguration& wc) { this->drawFontWindowCallback(wn, wc); });
-    this->window_manager.RegisterDrawWindowCallback(WindowManager::WindowDrawCallback::TF,
-        [&, this](
-            const std::string& wn, WindowManager::WindowConfiguration& wc) { this->drawTFWindowCallback(wn, wc); });
+    this->window_manager.RegisterDrawWindowCallback(
+        WindowManager::DrawCallbacks::MAIN, [&, this](const std::string& wn, WindowManager::WindowConfiguration& wc) {
+            this->drawMainWindowCallback(wn, wc);
+        });
+    this->window_manager.RegisterDrawWindowCallback(
+        WindowManager::DrawCallbacks::PARAM, [&, this](const std::string& wn, WindowManager::WindowConfiguration& wc) {
+            this->drawParametersCallback(wn, wc);
+        });
+    this->window_manager.RegisterDrawWindowCallback(
+        WindowManager::DrawCallbacks::FPSMS, [&, this](const std::string& wn, WindowManager::WindowConfiguration& wc) {
+            this->drawFpsWindowCallback(wn, wc);
+        });
+    this->window_manager.RegisterDrawWindowCallback(
+        WindowManager::DrawCallbacks::FONT, [&, this](const std::string& wn, WindowManager::WindowConfiguration& wc) {
+            this->drawFontWindowCallback(wn, wc);
+        });
+    this->window_manager.RegisterDrawWindowCallback(
+        WindowManager::DrawCallbacks::TF, [&, this](const std::string& wn, WindowManager::WindowConfiguration& wc) {
+            this->drawTFWindowCallback(wn, wc);
+        });
 
     // Create window configurations
     WindowManager::WindowConfiguration buf_win;
@@ -132,7 +131,7 @@ bool GUIView::create() {
     buf_win.win_show = true;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F12, core::view::Modifier::CTRL);
     buf_win.win_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoTitleBar;
-    buf_win.win_callback = WindowManager::WindowDrawCallback::MAIN;
+    buf_win.win_callback = WindowManager::DrawCallbacks::MAIN;
     buf_win.win_position = ImVec2(12, 12);
     buf_win.win_size = ImVec2(250, 600);
     this->window_manager.AddWindowConfiguration("Main Window", buf_win);
@@ -141,21 +140,21 @@ bool GUIView::create() {
     buf_win.win_show = false;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F11, core::view::Modifier::CTRL);
     buf_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar;
-    buf_win.win_callback = WindowManager::WindowDrawCallback::FPSMS;
+    buf_win.win_callback = WindowManager::DrawCallbacks::FPSMS;
     this->window_manager.AddWindowConfiguration("Performance Metrics", buf_win);
 
     // FONT Window ------------------------------------------------------------
     buf_win.win_show = false;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F10, core::view::Modifier::CTRL);
     buf_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize;
-    buf_win.win_callback = WindowManager::WindowDrawCallback::FONT;
+    buf_win.win_callback = WindowManager::DrawCallbacks::FONT;
     this->window_manager.AddWindowConfiguration("Font Settings", buf_win);
 
     // TRANSFER FUNCTION Window -----------------------------------------------
     buf_win.win_show = false;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F9, core::view::Modifier::CTRL);
     buf_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize;
-    buf_win.win_callback = WindowManager::WindowDrawCallback::TF;
+    buf_win.win_callback = WindowManager::DrawCallbacks::TF;
     this->window_manager.AddWindowConfiguration("Transfer Function Editor", buf_win);
 
     // Style settings ---------------------------------------------------------
@@ -171,33 +170,34 @@ bool GUIView::create() {
     io.FontAllowUserScaling = true;
 
     // Init global state -------------------------------------------------------
-    this->state_buffer.font_file = "";
-    this->state_buffer.font_size = 13.0f;
-    this->state_buffer.font_index = -1;
-    this->state_buffer.win_save_state = false;
-    this->state_buffer.win_save_delay = 0.0f;
-    this->state_buffer.win_delete = "";
-    this->state_buffer.last_instance_time = 0.0f;
-    bool hotkeys_check_once = true;
+    this->state.font_file = "";
+    this->state.font_size = 13.0f;
+    this->state.font_index = -1;
+    this->state.win_save_state = false;
+    this->state.win_save_delay = 0.0f;
+    this->state.win_delete = "";
+    this->state.last_instance_time = 0.0f;
+    this->state.hotkeys_check_once = true;
+    this->state.widget_text.clear();
     // Adding additional utf-8 glyph ranges
     /// (there is no error if glyph has no representation in font atlas)
-    this->state_buffer.font_utf8_ranges.clear();
-    this->state_buffer.font_utf8_ranges.emplace_back(0x0020);
-    this->state_buffer.font_utf8_ranges.emplace_back(0x03FF); // Basic Latin + Latin Supplement + Greek Alphabet
-    this->state_buffer.font_utf8_ranges.emplace_back(0x20AC);
-    this->state_buffer.font_utf8_ranges.emplace_back(0x20AC); // Euro
-    this->state_buffer.font_utf8_ranges.emplace_back(0x2122);
-    this->state_buffer.font_utf8_ranges.emplace_back(0x2122); // TM
-    this->state_buffer.font_utf8_ranges.emplace_back(0x212B);
-    this->state_buffer.font_utf8_ranges.emplace_back(0x212B); // Angstroem
-    this->state_buffer.font_utf8_ranges.emplace_back(0x0391);
-    this->state_buffer.font_utf8_ranges.emplace_back(0); // (range termination)
+    this->state.font_utf8_ranges.clear();
+    this->state.font_utf8_ranges.emplace_back(0x0020);
+    this->state.font_utf8_ranges.emplace_back(0x03FF); // Basic Latin + Latin Supplement + Greek Alphabet
+    this->state.font_utf8_ranges.emplace_back(0x20AC);
+    this->state.font_utf8_ranges.emplace_back(0x20AC); // Euro
+    this->state.font_utf8_ranges.emplace_back(0x2122);
+    this->state.font_utf8_ranges.emplace_back(0x2122); // TM
+    this->state.font_utf8_ranges.emplace_back(0x212B);
+    this->state.font_utf8_ranges.emplace_back(0x212B); // Angstroem
+    this->state.font_utf8_ranges.emplace_back(0x0391);
+    this->state.font_utf8_ranges.emplace_back(0); // (range termination)
 
     // Load initial fonts only once for all imgui contexts --------------------
     if (!other_context) {
         ImFontConfig config;
         config.OversampleH = 6;
-        config.GlyphRanges = this->state_buffer.font_utf8_ranges.data();
+        config.GlyphRanges = this->state.font_utf8_ranges.data();
         // Add default font
         io.Fonts->AddFontDefault(&config);
 #ifdef GUI_USE_FILEUTILS
@@ -535,8 +535,8 @@ bool GUIView::OnMouseButton(
 
     // Trigger saving state when mouse hoverd any window and on button mouse release event
     if ((!down) && (io.MouseDown[buttonIndex]) && hoverFlags) {
-        this->state_buffer.win_save_state = true;
-        this->state_buffer.win_save_delay = 0.0f;
+        this->state.win_save_state = true;
+        this->state.win_save_delay = 0.0f;
     }
 
     io.MouseDown[buttonIndex] = down;
@@ -605,18 +605,18 @@ bool GUIView::OnRenderView(megamol::core::Call& call) {
 
 void GUIView::validateGUI() {
     if (this->style_param.IsDirty()) {
-        auto style = this->style_param.Param<core::param::EnumParam>()->Value();
+        auto style = static_cast<Styles>(this->style_param.Param<core::param::EnumParam>()->Value());
         switch (style) {
-        case CorporateGray:
+        case Styles::CorporateGray:
             CorporateGreyStyle();
             break;
-        case CorporateWhite:
+        case Styles::CorporateWhite:
             CorporateWhiteStyle();
             break;
-        case DarkColors:
+        case Styles::DarkColors:
             ImGui::StyleColorsDark();
             break;
-        case LightColors:
+        case Styles::LightColors:
             ImGui::StyleColorsLight();
             break;
         }
@@ -624,17 +624,17 @@ void GUIView::validateGUI() {
     }
 
     ImGuiIO& io = ImGui::GetIO();
-    this->state_buffer.win_save_delay += io.DeltaTime;
+    this->state.win_save_delay += io.DeltaTime;
     if (this->state_param.IsDirty()) {
         auto state = this->state_param.Param<core::param::StringParam>()->Value();
         this->window_manager.StateFromJSON(std::string(state));
         this->state_param.ResetDirty();
-    } else if (this->state_buffer.win_save_state &&
-               (this->state_buffer.win_save_delay > 2.0f)) { // Delayed saving after triggering saving state
+    } else if (this->state.win_save_state &&
+               (this->state.win_save_delay > 2.0f)) { // Delayed saving after triggering saving state
         std::string state;
         this->window_manager.StateToJSON(state);
         this->state_param.Param<core::param::StringParam>()->SetValue(state.c_str(), false);
-        this->state_buffer.win_save_state = false;
+        this->state.win_save_state = false;
     }
 }
 
@@ -654,44 +654,44 @@ bool GUIView::drawGUI(vislib::math::Rectangle<int> viewport, double instanceTime
     io.DisplaySize = ImVec2((float)viewportWidth, (float)viewportHeight);
     io.DisplayFramebufferScale = ImVec2(1.0, 1.0);
 
-    if ((instanceTime - this->state_buffer.last_instance_time) < 0.0) {
+    if ((instanceTime - this->state.last_instance_time) < 0.0) {
         vislib::sys::Log::DefaultLog.WriteWarn("[GUIView] Current instance time results in negative time delta.");
     }
-    io.DeltaTime = ((instanceTime - this->state_buffer.last_instance_time) > 0.0)
-                       ? (static_cast<float>(instanceTime - this->state_buffer.last_instance_time))
+    io.DeltaTime = ((instanceTime - this->state.last_instance_time) > 0.0)
+                       ? (static_cast<float>(instanceTime - this->state.last_instance_time))
                        : (io.DeltaTime);
-    this->state_buffer.last_instance_time = ((instanceTime - this->state_buffer.last_instance_time) > 0.0)
-                                                ? (instanceTime)
-                                                : (this->state_buffer.last_instance_time + io.DeltaTime);
+    this->state.last_instance_time = ((instanceTime - this->state.last_instance_time) > 0.0)
+                                         ? (instanceTime)
+                                         : (this->state.last_instance_time + io.DeltaTime);
 
     // Changes that need to be applied before next ImGui::Begin: ---------------
     // Loading new font (set in FONT window)
-    if (!this->state_buffer.font_file.empty()) {
+    if (!this->state.font_file.empty()) {
         ImFontConfig config;
         config.OversampleH = 4;
         config.OversampleV = 1;
-        config.GlyphRanges = this->state_buffer.font_utf8_ranges.data();
+        config.GlyphRanges = this->state.font_utf8_ranges.data();
 
-        this->state_buffer.font_file = this->utils.utf8Encode(this->state_buffer.font_file);
-        io.Fonts->AddFontFromFileTTF(this->state_buffer.font_file.c_str(), this->state_buffer.font_size, &config);
+        this->utils.utf8Encode(this->state.font_file);
+        io.Fonts->AddFontFromFileTTF(this->state.font_file.c_str(), this->state.font_size, &config);
         ImGui_ImplOpenGL3_CreateFontsTexture();
         /// Load last added font
         io.FontDefault = io.Fonts->Fonts[(io.Fonts->Fonts.Size - 1)];
-        this->state_buffer.font_file.clear();
+        this->state.font_file.clear();
     }
 
     // Loading new font from state (set in loaded FONT window configuration)
-    if (this->state_buffer.font_index >= 0) {
-        if (this->state_buffer.font_index < io.Fonts->Fonts.Size) {
-            io.FontDefault = io.Fonts->Fonts[this->state_buffer.font_index];
+    if (this->state.font_index >= 0) {
+        if (this->state.font_index < io.Fonts->Fonts.Size) {
+            io.FontDefault = io.Fonts->Fonts[this->state.font_index];
         }
-        this->state_buffer.font_index = -1;
+        this->state.font_index = -1;
     }
 
     // Deleting window (set in menu of MAIN window)
-    if (!this->state_buffer.win_delete.empty()) {
-        this->window_manager.DeleteWindowConfiguration(this->state_buffer.win_delete);
-        this->state_buffer.win_delete.clear();
+    if (!this->state.win_delete.empty()) {
+        this->window_manager.DeleteWindowConfiguration(this->state.win_delete);
+        this->state.win_delete.clear();
     }
 
     // Start new frame --------------------------------------------------------
@@ -702,14 +702,16 @@ bool GUIView::drawGUI(vislib::math::Rectangle<int> viewport, double instanceTime
         // Loading font (from FONT window configuration - even if FONT window is not shown)
         if (wc.buf_font_reset) {
             if (!wc.font_name.empty()) {
-                this->state_buffer.font_index = -1;
+                this->state.font_index = -1;
                 for (int n = 0; n < io.Fonts->Fonts.Size; n++) {
 
-                    if (this->utils.utf8Decode(std::string(io.Fonts->Fonts[n]->GetDebugName())) == wc.font_name) {
-                        this->state_buffer.font_index = n;
+                    std::string font_name = std::string(io.Fonts->Fonts[n]->GetDebugName());
+                    this->utils.utf8Decode(font_name);
+                    if (font_name == wc.font_name) {
+                        this->state.font_index = n;
                     }
                 }
-                if (this->state_buffer.font_index < 0) {
+                if (this->state.font_index < 0) {
                     vislib::sys::Log::DefaultLog.WriteWarn(
                         "[GUIView] Could not find font '%s' for loaded state.", wc.font_name.c_str());
                 }
@@ -807,20 +809,20 @@ void GUIView::drawParametersCallback(const std::string& wn, WindowManager::Windo
     wc.param_show_hotkeys = show_only_hotkeys;
 
     // Offering module filtering only for main parameter view
-    if (wc.win_callback == WindowManager::WindowDrawCallback::MAIN) {
+    if (wc.win_callback == WindowManager::DrawCallbacks::MAIN) {
         std::map<int, std::string> opts;
-        opts[(int)WindowManager::FilterMode::ALL] = "All";
-        opts[(int)WindowManager::FilterMode::INSTANCE] = "Instance";
-        opts[(int)WindowManager::FilterMode::VIEW] = "View";
+        opts[static_cast<int>(WindowManager::FilterModes::ALL)] = "All";
+        opts[static_cast<int>(WindowManager::FilterModes::INSTANCE)] = "Instance";
+        opts[static_cast<int>(WindowManager::FilterModes::VIEW)] = "View";
         unsigned int opts_cnt = (unsigned int)opts.size();
         if (ImGui::BeginCombo("Module Filter", opts[(int)wc.param_module_filter].c_str())) {
             for (unsigned int i = 0; i < opts_cnt; ++i) {
 
-                if (ImGui::Selectable(opts[i].c_str(), ((int)wc.param_module_filter == i))) {
-                    wc.param_module_filter = (WindowManager::FilterMode)i;
+                if (ImGui::Selectable(opts[i].c_str(), (static_cast<int>(wc.param_module_filter) == i))) {
+                    wc.param_module_filter = static_cast<WindowManager::FilterModes>(i);
                     wc.param_modules_list.clear();
-                    if ((wc.param_module_filter == WindowManager::FilterMode::INSTANCE) ||
-                        (wc.param_module_filter == WindowManager::FilterMode::VIEW)) {
+                    if ((wc.param_module_filter == WindowManager::FilterModes::INSTANCE) ||
+                        (wc.param_module_filter == WindowManager::FilterModes::VIEW)) {
 
                         // Goal is to find view module with shortest call connection path to this module.
                         // Since enumeration of modules goes bottom up, result for first abstract view is
@@ -849,7 +851,7 @@ void GUIView::drawParametersCallback(const std::string& wn, WindowManager::Windo
                         this->GetCoreInstance()->EnumModulesNoLock(nullptr, view_func);
 
                         if (!viewname.empty()) {
-                            if (wc.param_module_filter == WindowManager::FilterMode::INSTANCE) {
+                            if (wc.param_module_filter == WindowManager::FilterModes::INSTANCE) {
                                 // Considering modules depending on the INSTANCE NAME of the first view this module is
                                 // connected to.
                                 std::string instname = "";
@@ -869,7 +871,7 @@ void GUIView::drawParametersCallback(const std::string& wn, WindowManager::Windo
                                     };
                                     this->GetCoreInstance()->EnumModulesNoLock(nullptr, func);
                                 }
-                            } else { // (wc.param_module_filter == WindowManager::FilterMode::VIEW)
+                            } else { // (wc.param_module_filter == WindowManager::FilterModes::VIEW)
                                 // Considering modules depending on their connection to the first VIEW this module is
                                 // connected to.
                                 const auto add_func = [&, this](core::Module* mod) {
@@ -884,10 +886,10 @@ void GUIView::drawParametersCallback(const std::string& wn, WindowManager::Windo
                         }
                     }
                 }
-                std::string hover = "Show all Modules."; // == WindowManager::FilterMode::ALL
-                if (i == (int)WindowManager::FilterMode::INSTANCE) {
+                std::string hover = "Show all Modules."; // == WindowManager::FilterModes::ALL
+                if (i == static_cast<int>(WindowManager::FilterModes::INSTANCE)) {
                     hover = "Show Modules with same Instance Name as current View and Modules with no Instance Name.";
-                } else if (i == (int)WindowManager::FilterMode::VIEW) {
+                } else if (i == static_cast<int>(WindowManager::FilterModes::VIEW)) {
                     hover = "Show Modules subsequently connected to the View Module the Gui Module is connected to.";
                 }
                 this->utils.HoverToolTip(hover);
@@ -929,7 +931,7 @@ void GUIView::drawParametersCallback(const std::string& wn, WindowManager::Windo
             }
 
             // Main parameter window always draws all module's parameters
-            if (wc.win_callback != WindowManager::WindowDrawCallback::MAIN) {
+            if (wc.win_callback != WindowManager::DrawCallbacks::MAIN) {
                 // Consider only modules contained in list
                 if (std::find(wc.param_modules_list.begin(), wc.param_modules_list.end(), label) ==
                     wc.param_modules_list.end()) {
@@ -956,18 +958,18 @@ void GUIView::drawParametersCallback(const std::string& wn, WindowManager::Windo
                 if (ImGui::MenuItem("Copy to new Window")) {
                     // using instance time as hidden unique id
                     std::string window_name =
-                        "Parameters###parameters" + std::to_string(this->state_buffer.last_instance_time);
+                        "Parameters###parameters" + std::to_string(this->state.last_instance_time);
 
                     WindowManager::WindowConfiguration buf_win;
                     buf_win.win_show = true;
                     buf_win.win_flags = ImGuiWindowFlags_HorizontalScrollbar;
-                    buf_win.win_callback = WindowManager::WindowDrawCallback::PARAM;
+                    buf_win.win_callback = WindowManager::DrawCallbacks::PARAM;
                     buf_win.param_show_hotkeys = false;
                     buf_win.param_modules_list.emplace_back(label);
                     this->window_manager.AddWindowConfiguration(window_name, buf_win);
                 }
                 // Deleting module's parameters is not available in main parameter window.
-                if (wc.win_callback != WindowManager::WindowDrawCallback::MAIN) {
+                if (wc.win_callback != WindowManager::DrawCallbacks::MAIN) {
                     if (ImGui::MenuItem("Delete from List")) {
                         std::vector<std::string>::iterator find_iter =
                             std::find(wc.param_modules_list.begin(), wc.param_modules_list.end(), label);
@@ -1045,7 +1047,7 @@ void GUIView::drawParametersCallback(const std::string& wn, WindowManager::Windo
             std::string payload_id = (const char*)payload->Data;
 
             // Nothing to add to main parameter window (draws always all module's parameters)
-            if ((wc.win_callback != WindowManager::WindowDrawCallback::MAIN)) {
+            if ((wc.win_callback != WindowManager::DrawCallbacks::MAIN)) {
                 // Insert dragged module name only if not contained in list
                 if (std::find(wc.param_modules_list.begin(), wc.param_modules_list.end(), payload_id) ==
                     wc.param_modules_list.end()) {
@@ -1121,21 +1123,21 @@ void GUIView::drawFpsWindowCallback(const std::string& wn, WindowManager::Window
     }
 
     // Draw window content
-    if (ImGui::RadioButton("fps", (wc.fpsms_mode == WindowManager::TimingMode::FPS))) {
-        wc.fpsms_mode = WindowManager::TimingMode::FPS;
+    if (ImGui::RadioButton("fps", (wc.fpsms_mode == WindowManager::TimingModes::FPS))) {
+        wc.fpsms_mode = WindowManager::TimingModes::FPS;
     }
     ImGui::SameLine();
-    if (ImGui::RadioButton("ms", (wc.fpsms_mode == WindowManager::TimingMode::MS))) {
-        wc.fpsms_mode = WindowManager::TimingMode::MS;
+    if (ImGui::RadioButton("ms", (wc.fpsms_mode == WindowManager::TimingModes::MS))) {
+        wc.fpsms_mode = WindowManager::TimingModes::MS;
     }
 
     ImGui::SameLine(0.0f, 50.0f);
     ImGui::Checkbox("Options", &wc.fpsms_show_options);
 
-    // Default for wc.fpsms_mode == WindowManager::TimingMode::FPS
+    // Default for wc.fpsms_mode == WindowManager::TimingModes::FPS
     std::vector<float>* arr = &wc.buf_fps_values;
     float val_scale = wc.buf_fps_scale;
-    if (wc.fpsms_mode == WindowManager::TimingMode::MS) {
+    if (wc.fpsms_mode == WindowManager::TimingModes::MS) {
         arr = &wc.buf_ms_values;
         val_scale = wc.buf_ms_scale;
     }
@@ -1209,7 +1211,8 @@ void GUIView::drawFontWindowCallback(const std::string& wn, WindowManager::Windo
     }
 
     // Saving current font to window configuration.
-    wc.font_name = this->utils.utf8Decode(std::string(font_current->GetDebugName()));
+    wc.font_name = std::string(font_current->GetDebugName());
+    this->utils.utf8Decode(wc.font_name);
 
 #ifdef GUI_USE_FILEUTILS
     ImGui::Separator();
@@ -1226,15 +1229,15 @@ void GUIView::drawFontWindowCallback(const std::string& wn, WindowManager::Windo
 
     label = "Font File Name (.ttf)";
     /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
-    wc.buf_font_file = this->utils.utf8Encode(wc.buf_font_file);
+    this->utils.utf8Encode(wc.buf_font_file);
     ImGui::InputText(label.c_str(), &wc.buf_font_file, ImGuiInputTextFlags_AutoSelectAll);
-    wc.buf_font_file = this->utils.utf8Decode(wc.buf_font_file);
+    this->utils.utf8Decode(wc.buf_font_file);
 
     // Validate font file before offering load button
     if (HasExistingFileExtension(wc.buf_font_file, std::string(".ttf"))) {
         if (ImGui::Button("Add Font")) {
-            this->state_buffer.font_file = wc.buf_font_file;
-            this->state_buffer.font_size = wc.buf_font_size;
+            this->state.font_file = wc.buf_font_file;
+            this->state.font_size = wc.buf_font_size;
         }
     } else {
         ImGui::TextColored(ImVec4(0.9f, 0.0f, 0.0f, 1.0f), "Please enter valid font file name.");
@@ -1283,7 +1286,7 @@ void GUIView::drawMenu(const std::string& wn, WindowManager::WindowConfiguration
             if (wc.win_hotkey.GetKey() == core::view::Key::KEY_UNKNOWN) {
                 if (ImGui::BeginPopupContextItem()) {
                     if (ImGui::MenuItem("Delete Window")) {
-                        this->state_buffer.win_delete = wn;
+                        this->state.win_delete = wn;
                     }
                     ImGui::EndPopup();
                 }
@@ -1374,9 +1377,9 @@ void GUIView::drawMenu(const std::string& wn, WindowManager::WindowConfiguration
 
         std::string label = "File Name";
         /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
-        wc.main_project_file = this->utils.utf8Encode(wc.main_project_file);
+        this->utils.utf8Encode(wc.main_project_file);
         ImGui::InputText(label.c_str(), &wc.main_project_file, ImGuiInputTextFlags_None);
-        wc.main_project_file = this->utils.utf8Decode(wc.main_project_file);
+        this->utils.utf8Decode(wc.main_project_file);
 
         bool valid = false;
         if (!HasFileExtension(wc.main_project_file, std::string(".lua"))) {
@@ -1420,7 +1423,7 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
         // Set different style if parameter is read-only
         if (param->IsGUIReadOnly()) {
             ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.25f);
+            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
         }
 
         std::string param_name = slot.Name().PeekBuffer();
@@ -1474,7 +1477,7 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
                 load_tf = true;
                 // Open window calling the transfer function editor callback
                 const auto func = [&, this](const std::string& wn, WindowManager::WindowConfiguration& wc) {
-                    if (wc.win_callback == WindowManager::WindowDrawCallback::TF) {
+                    if (wc.win_callback == WindowManager::DrawCallbacks::TF) {
                         wc.win_show = true;
                     }
                 };
@@ -1552,7 +1555,8 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
             }
         } else if (auto* p = slot.template Param<core::param::FloatParam>()) {
             auto value = p->Value();
-            ImGui::InputFloat(param_label.c_str(), &value, 1.0f, 10.0f, float_format.c_str(), ImGuiInputTextFlags_None);
+            ImGui::InputFloat(
+                param_label.c_str(), &value, 1.0f, 10.0f, float_format.c_str(), ImGuiInputTextFlags_EnterReturnsTrue);
             if (ImGui::IsItemDeactivatedAfterEdit()) {
                 p->SetValue(std::max(p->MinValue(), std::min(value, p->MaxValue())));
             }
@@ -1581,29 +1585,39 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
             }
         } else if (auto* p = slot.Param<core::param::StringParam>()) {
             /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
-            std::string utf8Str = this->utils.utf8Encode(std::string(p->ValueString()));
+            auto size = this->state.widget_text.size();
+            this->state.widget_text = std::string(p->ValueString().PeekBuffer());
+            this->utils.utf8Encode(this->state.widget_text);
+            this->state.widget_text.resize(std::max(size, 2 * this->state.widget_text.size()), '\0');
 
             // Determine multi line count of string
-            int lcnt = static_cast<int>(std::count(utf8Str.begin(), utf8Str.end(), '\n'));
+            int lcnt =
+                static_cast<int>(std::count(this->state.widget_text.begin(), this->state.widget_text.end(), '\n'));
             lcnt = std::min(5, lcnt);
             if (lcnt > 0) {
                 ImVec2 ml_dim = ImVec2(ImGui::CalcItemWidth(),
                     ImGui::GetFrameHeight() + (ImGui::GetFontSize() * static_cast<float>(lcnt)));
-                ImGui::InputTextMultiline(param_label.c_str(), &utf8Str, ml_dim, ImGuiInputTextFlags_None);
+                ImGui::InputTextMultiline(
+                    param_label.c_str(), &this->state.widget_text, ml_dim, ImGuiInputTextFlags_None);
             } else {
-                ImGui::InputText(param_label.c_str(), &utf8Str, ImGuiInputTextFlags_None);
+                ImGui::InputText(param_label.c_str(), &this->state.widget_text, ImGuiInputTextFlags_None);
                 help = "[Ctrl + Enter] for new line.\nPress [Return] to confirm changes.";
             }
             if (ImGui::IsItemDeactivatedAfterEdit()) {
-                p->SetValue(vislib::StringA(this->utils.utf8Decode(utf8Str).c_str()));
+                this->utils.utf8Decode(this->state.widget_text);
+                p->SetValue(vislib::StringA(this->state.widget_text.c_str()));
             }
         } else if (auto* p = slot.Param<core::param::FilePathParam>()) {
             /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
-            std::string utf8Str = this->utils.utf8Encode(std::string(p->ValueString()));
+            auto size = this->state.widget_text.size();
+            this->state.widget_text = std::string(p->ValueString().PeekBuffer());
+            this->utils.utf8Encode(this->state.widget_text);
+            this->state.widget_text.resize(std::max(size, 2 * this->state.widget_text.size()), '\0');
 
-            ImGui::InputText(param_label.c_str(), &utf8Str, ImGuiInputTextFlags_None);
+            ImGui::InputText(param_label.c_str(), &this->state.widget_text, ImGuiInputTextFlags_None);
             if (ImGui::IsItemDeactivatedAfterEdit()) {
-                p->SetValue(vislib::StringA(this->utils.utf8Decode(utf8Str).c_str()));
+                this->utils.utf8Decode(this->state.widget_text);
+                p->SetValue(vislib::StringA(this->state.widget_text.c_str()));
             }
             help = "[Ctrl + Enter] for new line.\nPress [Return] to confirm changes.";
         } else {
@@ -1668,7 +1682,7 @@ bool GUIView::considerModule(const std::string& modname, std::vector<std::string
 
 
 void GUIView::checkMultipleHotkeyAssignement(void) {
-    if (this->state_buffer.hotkeys_check_once) {
+    if (this->state.hotkeys_check_once) {
 
         std::list<core::view::KeyCode> hotkeylist;
         hotkeylist.clear();
@@ -1712,7 +1726,7 @@ void GUIView::checkMultipleHotkeyAssignement(void) {
             }
         });
 
-        this->state_buffer.hotkeys_check_once = false;
+        this->state.hotkeys_check_once = false;
     }
 }
 
