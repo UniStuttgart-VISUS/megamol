@@ -47,6 +47,12 @@ public:
      */
     float TextWidgetWidth(std::string text);
 
+    /** Decode string from UTF-8. */
+    std::string utf8Decode(std::string str);
+
+    /** Encode string into UTF-8. */
+    std::string utf8Encode(std::string str);
+
 private:
     /** Current tooltip hover time. */
     float tooltipTime;

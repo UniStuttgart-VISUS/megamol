@@ -28,7 +28,7 @@ namespace gui {
 /**
  * 1D Transfer Function Editor.
  */
-class TransferFunctionEditor : public GUIUtils {
+class TransferFunctionEditor {
 public:
     TransferFunctionEditor(void);
 
@@ -76,6 +76,9 @@ private:
     };
 
     // VARIABLES -----------------------------------------------------------
+
+    /** Utils being used all over the place */
+    GUIUtils utils;
 
     /** The currently active parameter whose transfer function is currently loaded into this editor. */
     core::param::TransferFunctionParam* activeParameter;

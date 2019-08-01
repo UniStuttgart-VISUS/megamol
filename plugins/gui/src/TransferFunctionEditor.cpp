@@ -14,7 +14,7 @@ using namespace megamol::core;
 
 
 TransferFunctionEditor::TransferFunctionEditor(void)
-    : GUIUtils()
+    : utils()
     , activeParameter(nullptr)
     , data()
     , range({0.0f, 1.0f})
@@ -138,7 +138,7 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
     stream << std::fixed << this->range[1];
     std::string val = stream.str();
     ImGui::SameLine();
-    ImGui::SetCursorPosX(tfw_item_width + style.ItemSpacing.x - this->TextWidgetWidth(val));
+    ImGui::SetCursorPosX(tfw_item_width + style.ItemSpacing.x - this->utils.TextWidgetWidth(val));
     ImGui::Text(val.c_str());
 
 
@@ -377,7 +377,7 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
         }
         ImGui::SameLine(0.0f, style.ItemInnerSpacing.x);
         ImGui::Text("Transfer Function");
-        this->HelpMarkerToolTip("[Left-Click] Select Node\n[Left-Drag] Move Node\n[Right-Click] Add/Delete Node");
+        this->utils.HelpMarkerToolTip("[Left-Click] Select Node\n[Left-Drag] Move Node\n[Right-Click] Add/Delete Node");
 
 
         // Interval range -----------------------------------------------------
@@ -427,7 +427,7 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
             this->textureInvalid = true;
         }
         std::string help = "[Ctrl-Click] for keyboard input";
-        this->HelpMarkerToolTip(help);
+        this->utils.HelpMarkerToolTip(help);
 
 
         // Sigma slider -------------------------------------------------------
@@ -438,7 +438,7 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
                 this->textureInvalid = true;
             }
             std::string help = "[Ctrl-Click] for keyboard input";
-            this->HelpMarkerToolTip(help);
+            this->utils.HelpMarkerToolTip(help);
         }
 
 
@@ -463,7 +463,7 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
         help = "[Click] on the colored square to open a color picker.\n"
                "[CTRL+Click] on individual component to input value.\n"
                "[Right-Click] on the individual color widget to show options.";
-        this->HelpMarkerToolTip(help);
+        this->utils.HelpMarkerToolTip(help);
 
         // Texture size -------------------------------------------------------
         ImGui::InputInt("Texture Size", &this->widget_buffer.tex_size, 1, 10, ImGuiInputTextFlags_None);

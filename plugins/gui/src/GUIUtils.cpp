@@ -8,6 +8,8 @@
 #include "stdafx.h"
 #include "GUIUtils.h"
 
+#include "vislib/UTF8Encoder.h"
+
 #include <imgui_stdlib.h>
 #include <vector>
 
@@ -76,4 +78,22 @@ float GUIUtils::TextWidgetWidth(std::string text) {
     ImGui::SetCursorPos(pos);
 
     return ImGui::GetItemRectSize().x;
+}
+
+
+std::string GUIUtils::utf8Decode(std::string str) {
+    std::string dec_ret;
+    vislib::StringA dec_tmp;
+    vislib::UTF8Encoder::Encode(dec_tmp, vislib::StringA(str.c_str()));
+    dec_ret = dec_tmp.PeekBuffer();
+    return dec_ret;
+}
+
+
+std::string GUIUtils::utf8Encode(std::string str) {
+    std::string enc_ret;
+    vislib::StringA enc_tmp;
+    vislib::UTF8Encoder::Encode(enc_tmp, vislib::StringA(str.c_str()));
+    enc_ret = enc_tmp.PeekBuffer();
+    return enc_ret;
 }

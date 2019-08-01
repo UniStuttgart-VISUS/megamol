@@ -13,6 +13,7 @@
 #include "vislib/sys/Log.h"
 
 #include <imgui.h>
+#include "GUIUtils.h"
 
 #include <list>
 #include <map>
@@ -224,6 +225,9 @@ private:
     }
 
     // VARIABLES ------------------------------------------------------
+
+    /** Utils being used all over the place */
+    GUIUtils utils;
 
     /** The list of the window names and their configurations. */
     std::map<WindowDrawCallback, GuiCallbackFunc> callbacks;
