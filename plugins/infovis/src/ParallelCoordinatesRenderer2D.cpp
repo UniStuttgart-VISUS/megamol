@@ -787,6 +787,7 @@ void ParallelCoordinatesRenderer2D::doStroking(float x0, float y0, float x1, flo
     computeDispatchSizes(itemCount, strokeWorkgroupSize, maxWorkgroupCount, groupCounts);
 
     strokeProgram.Dispatch(groupCounts[0], groupCounts[1], groupCounts[2]);
+    ::glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
     strokeProgram.Disable();
     debugPop();
