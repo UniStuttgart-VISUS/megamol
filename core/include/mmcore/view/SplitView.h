@@ -188,19 +188,6 @@ private:
     inline CallRenderView* render2(void) const { return this->render2Slot.CallAs<CallRenderView>(); }
 
     /**
-     * Returns the focused (keyboard input) renderer.
-     */
-    inline CallRenderView* renderFocused() const {
-        if (this->focus == 1) {
-            return this->render1();
-        } else if (this->focus == 2) {
-            return this->render2();
-        } else {
-            return nullptr;
-        }
-    }
-
-    /**
      * Returns the hovered (mouse input) renderer.
      */
     inline CallRenderView* renderHovered() const {
@@ -249,6 +236,9 @@ private:
     /** Slot enabling time synchronization */
     param::ParamSlot enableTimeSyncSlot;
 
+    /** Option for forwarding mouse and keyboard events to both child views */
+    param::ParamSlot inputToBothSlot;
+
     /** The parameter storage for time control */
     TimeControl timeCtrl;
 
@@ -267,8 +257,6 @@ private:
     vislib::graphics::gl::FramebufferObject fbo1;
 
     vislib::graphics::gl::FramebufferObject fbo2;
-
-    int focus;
 
     float mouseX;
 
