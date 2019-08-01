@@ -12,6 +12,7 @@
 #include <cassert>
 #include <functional>
 #include <limits>
+#include <numeric>
 
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FlexEnumParam.h"
@@ -28,7 +29,13 @@ enum Operator : int {
     Equal = 0,
     GreaterOrEqual = 1,
     Greater = 2,
-    NotEqual = 3
+    NotEqual,
+    LowerRange,
+    MiddleRange,
+    UpperRange,
+    LowerPercentile,
+    MiddlePercentile,
+    UpperPercentile
 };
 
 
@@ -71,6 +78,12 @@ megamol::stdplugin::datatools::table::TableWhere::TableWhere(void) : frameID(0),
         param->SetTypePair(Operator::GreaterOrEqual, "greater or equal than");
         param->SetTypePair(Operator::Greater, "greater than");
         param->SetTypePair(Operator::NotEqual, "does not equal");
+        param->SetTypePair(Operator::LowerRange, "relative less than");
+        param->SetTypePair(Operator::MiddleRange, "around mean");
+        param->SetTypePair(Operator::UpperRange, "relative greater than");
+        param->SetTypePair(Operator::LowerPercentile, "in bottom percentile");
+        param->SetTypePair(Operator::MiddlePercentile, "around median");
+        param->SetTypePair(Operator::UpperPercentile, "in top percentile");
         this->paramOperator << param;
         this->MakeSlotAvailable(&this->paramOperator);
     }
@@ -136,6 +149,7 @@ bool megamol::stdplugin::datatools::table::TableWhere::getData(
     }
 
     auto column = 0;
+    auto isSort = false;
     std::function<bool(const float)> selector;
 
     /* Process updates in the configuration. */
@@ -166,6 +180,9 @@ bool megamol::stdplugin::datatools::table::TableWhere::getData(
         }
 
         if (column != this->columns.size()) {
+            auto range = std::make_pair(this->columns[column].MinimumValue(),
+                this->columns[column].MaximumValue());
+
             switch (o) {
                 case Operator::Less:
                     selector = [r](const float v) { return (v < r); };
@@ -195,6 +212,40 @@ bool megamol::stdplugin::datatools::table::TableWhere::getData(
                     };
                     break;
 
+                case Operator::LowerRange:
+                    selector = [r, range](const float v) {
+                        assert(range.second >= range.first);
+                        auto d = (range.second - range.first) * r;
+                        return (v <= (range.first + d));
+
+                    };
+                    break;
+
+                case Operator::MiddleRange:
+                    selector = [r, range](const float v) {
+                        assert(range.second >= range.first);
+                        auto d = 1.0f - 0.5f * (range.second - range.first) * r;
+                        return ((v >= (range.first + d))
+                            && (v <= (range.second - d)));
+
+                    };
+                    break;
+
+                case Operator::UpperRange:
+                    selector = [r, range](const float v) {
+                        assert(range.second >= range.first);
+                        auto d = (range.second - range.first) * r;
+                        return (v >= (range.second - d));
+
+                    };
+                    break;
+
+                case Operator::LowerPercentile:
+                case Operator::MiddlePercentile:
+                case Operator::UpperPercentile:
+                    isSort = true;
+                    break;
+
                 default:
                     Log::DefaultLog.WriteError(_T("The comparison operator %d ")
                         _T("is unsupported."), o);
@@ -217,14 +268,57 @@ bool megamol::stdplugin::datatools::table::TableWhere::getData(
             || (this->frameID != src->GetFrameID())) {
         const auto data = src->GetData();
 
-        if (selector) {
+        if (selector || isSort) {
             // Copy selection.
             std::vector<std::size_t> selection;
             selection.reserve(src->GetRowsCount());
 
-            for (auto r = 0; r < src->GetRowsCount(); ++r) {
-                if (selector(data[r * this->columns.size() + column])) {
-                    selection.push_back(r);
+            if (selector) {
+                // Selection is based on predicate.
+                for (auto r = 0; r < src->GetRowsCount(); ++r) {
+                    if (selector(data[r * this->columns.size() + column])) {
+                        selection.push_back(r);
+                    }
+                }
+            } else {
+                // Selection requires sorting.
+                const auto o = this->paramOperator.Param<EnumParam>()->Value();
+                const auto r = (std::min)((std::max)(this->paramReference.Param<FloatParam>()->Value(), 0.0f), 1.0f);
+
+                selection.resize(src->GetRowsCount());
+                std::iota(selection.begin(), selection.end(), 0);
+
+                std::stable_sort(selection.begin(), selection.end(),
+                    [this, data, column](const std::size_t l, const std::size_t r) {
+                    auto lhs = data[l * this->columns.size() + column];
+                    auto rhs = data[r * this->columns.size() + column];
+                    return (lhs < rhs);
+                });
+
+                // Compute the number of elements we want to retain.
+                const auto cnt = static_cast<std::size_t>(static_cast<double>(r)
+                    * src->GetRowsCount());
+
+                switch (o) {
+                    case Operator::LowerPercentile:
+                        // Take first 'cnt' values.
+                        selection.resize(cnt);
+                        break;
+
+                    case Operator::MiddlePercentile: {
+                        auto c = (src->GetRowsCount() - cnt) / 2;
+                        selection.erase(selection.begin(), selection.begin() + c);
+                        selection.resize(cnt);
+                        } break;
+
+                    case Operator::UpperPercentile:
+                        // Remove everything up to last 'cnt' values.
+                        selection.erase(selection.begin(), selection.end() - cnt);
+                        break;
+
+                default:
+                    assert(false);
+                    break;
                 }
             }
 
