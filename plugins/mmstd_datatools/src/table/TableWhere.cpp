@@ -303,17 +303,35 @@ bool megamol::stdplugin::datatools::table::TableWhere::getData(
                     case Operator::LowerPercentile:
                         // Take first 'cnt' values.
                         selection.resize(cnt);
+                        if (!selection.empty()) {
+                            Log::DefaultLog.WriteWarn(_T("Selected range is ")
+                                _T("within [%f, %f]."),
+                                data[selection.front() * this->columns.size() + column],
+                                data[selection.back() * this->columns.size() + column]);
+                        }
                         break;
 
                     case Operator::MiddlePercentile: {
                         auto c = (src->GetRowsCount() - cnt) / 2;
                         selection.erase(selection.begin(), selection.begin() + c);
                         selection.resize(cnt);
+                        if (!selection.empty()) {
+                            Log::DefaultLog.WriteWarn(_T("Selected range is ")
+                                _T("within [%f, %f]."),
+                                data[selection.front() * this->columns.size() + column],
+                                data[selection.back() * this->columns.size() + column]);
+                        }
                         } break;
 
                     case Operator::UpperPercentile:
                         // Remove everything up to last 'cnt' values.
                         selection.erase(selection.begin(), selection.end() - cnt);
+                        if (!selection.empty()) {
+                            Log::DefaultLog.WriteWarn(_T("Selected range is ")
+                                _T("within [%f, %f]."),
+                                data[selection.front() * this->columns.size() + column],
+                                data[selection.back() * this->columns.size() + column]);
+                        }
                         break;
 
                 default:
@@ -322,6 +340,7 @@ bool megamol::stdplugin::datatools::table::TableWhere::getData(
                 }
             }
 
+            /* Copy the data. */
             this->values.resize(selection.size() * this->columns.size());
             auto d = this->values.data();
             for (auto r : selection) {
