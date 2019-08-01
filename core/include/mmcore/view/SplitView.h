@@ -12,10 +12,11 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/CallerSlot.h"
+#include "mmcore/param/ColorParam.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/AbstractView.h"
 #include "mmcore/view/CallRenderView.h"
-#include "mmcore/param/ColorParam.h"
+#include "mmcore/view/TimeControl.h"
 #include "vislib/graphics/ColourRGBAu8.h"
 #include "vislib/graphics/gl/FramebufferObject.h"
 
@@ -168,6 +169,9 @@ protected:
      */
     virtual void unpackMouseCoordinates(float& x, float& y);
 
+    /** Override of GetExtents */
+    virtual bool GetExtents(core::Call& call) override;
+
 private:
     /**
      * Answer the renderer 1 call
@@ -193,7 +197,7 @@ private:
             return this->render2();
         } else {
             return nullptr;
-		}
+        }
     }
 
     /**
@@ -207,7 +211,7 @@ private:
             return this->render2();
         } else {
             return nullptr;
-		}
+        }
     }
 
     /**
@@ -241,6 +245,12 @@ private:
 
     /** The splitter colour slot */
     param::ParamSlot splitColourSlot;
+
+    /** Slot enabling time synchronization */
+    param::ParamSlot enableTimeSyncSlot;
+
+    /** The parameter storage for time control */
+    TimeControl timeCtrl;
 
     /** The splitter colour */
     param::ColorParam::ColorType splitColour;
