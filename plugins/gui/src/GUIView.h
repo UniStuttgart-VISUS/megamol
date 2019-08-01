@@ -5,7 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#pragma once
+#ifndef MEGAMOL_GUI_GUIVIEW_H_INCLUDED
+#define MEGAMOL_GUI_GUIVIEW_H_INCLUDED
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/AbstractView.h"
@@ -258,3 +259,5 @@ private:
 
 } // namespace gui
 } // namespace megamol
+
+#endif // MEGAMOL_GUI_GUIVIEW_H_INCLUDED

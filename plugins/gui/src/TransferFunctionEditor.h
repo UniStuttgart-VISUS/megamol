@@ -5,7 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#pragma once
+#ifndef MEGAMOL_GUI_TRANSFERFUNCTIONEDITOR_INCLUDED
+#define MEGAMOL_GUI_TRANSFERFUNCTIONEDITOR_INCLUDED
 
 #include "mmcore/param/TransferFunctionParam.h"
 #include "mmcore/view/TransferFunction.h"
@@ -125,3 +126,5 @@ private:
 
 } // namespace gui
 } // namespace megamol
+
+#endif // MEGAMOL_GUI_TRANSFERFUNCTIONEDITOR_INCLUDED

@@ -5,7 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#pragma once
+#ifndef MEGAMOL_GUI_GUIUTILS_INCLUDED
+#define MEGAMOL_GUI_GUIUTILS_INCLUDED
 
 #include <string>
 
@@ -64,3 +65,5 @@ private:
 
 } // namespace gui
 } // namespace megamol
+
+#endif // MEGAMOL_GUI_GUIUTILS_INCLUDED

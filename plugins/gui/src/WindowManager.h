@@ -5,7 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#pragma once
+#ifndef MEGAMOL_GUI_WINDOWMANAGER_INCLUDED
+#define MEGAMOL_GUI_WINDOWMANAGER_INCLUDED
 
 #include "mmcore/view/Input.h"
 
@@ -238,3 +239,5 @@ private:
 
 } // namespace gui
 } // namespace megamol
+
+#endif // MEGAMOL_GUI_WINDOWMANAGER_INCLUDED
