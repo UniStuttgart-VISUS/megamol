@@ -33,6 +33,7 @@ uniform highp sampler3D volume_tx3D;
 uniform highp sampler2D depth_tx2D;
 
 layout(rgba32f, binding = 0) writeonly uniform highp image2D render_target_tx2D;
+layout(r32f, binding = 1) writeonly uniform highp image2D depth_target_tx2D;
 
 struct Ray {
     vec3 o;
@@ -143,6 +144,7 @@ void main() {
         float t = tnear >= 0.0f ? tnear : 0.0f;
         t += random * rayStep; // Randomly offset the ray origin to prevent ringing artifacts
         vec4 result = vec4(0.0f);
+        float depth = FLT_MAX;
 
         vec3 old_pos = ray.o + t * ray.d;
         float old_value = 0.0f;
@@ -165,7 +167,8 @@ void main() {
 
                 const vec3 surface_pos = old_pos + distance * direction;
 
-                const float depth = t + length(distance * direction);
+                depth = t + length(distance * direction);
+                depth = (depth - tnear) / (tfar - tnear);
 
                 // Compute normal
                 const float left = textureOffset(volume_tx3D, texCoords, ivec3(-1, 0, 0)).x;
@@ -202,8 +205,10 @@ void main() {
 
         // Write results
         imageStore(render_target_tx2D, pixel_coords, result);
+        imageStore(depth_target_tx2D, pixel_coords, vec4(depth));
     } else {
         // Always write out to make sure that data from the previous frame is overwritten.
         imageStore(render_target_tx2D, pixel_coords, vec4(0.0));
+        imageStore(depth_target_tx2D, pixel_coords, vec4(FLT_MAX));
     }
 }

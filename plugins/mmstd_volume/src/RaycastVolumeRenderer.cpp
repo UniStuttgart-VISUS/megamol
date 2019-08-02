@@ -109,6 +109,14 @@ bool RaycastVolumeRenderer::create() {
         {});
     m_render_target = std::make_unique<Texture2D>("raycast_volume_render_target", render_tgt_layout, nullptr);
 
+    // create depth target texture
+    TextureLayout depth_tgt_layout(GL_R8, 1920, 1080, 1, GL_R, GL_UNSIGNED_BYTE, 1,
+        {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
+            {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
+            {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
+        {});
+    m_depth_target = std::make_unique<Texture2D>("raycast_volume_depth_target", depth_tgt_layout, nullptr);
+
     // create empty volume texture
     TextureLayout volume_layout(GL_R32F, 1, 1, 1, GL_RED, GL_FLOAT, 1,
         {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
@@ -130,6 +138,7 @@ void RaycastVolumeRenderer::release() {
     m_raycast_volume_compute_shdr.reset(nullptr);
     m_raycast_volume_compute_iso_shdr.reset(nullptr);
     m_render_target.reset(nullptr);
+    m_depth_target.reset(nullptr);
 }
 
 bool RaycastVolumeRenderer::GetExtents(megamol::core::Call& call) {
@@ -239,36 +248,60 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
     // bind image texture
     m_render_target->bindImage(0, GL_WRITE_ONLY);
 
+    if (this->m_mode.Param<core::param::EnumParam>()->Value() == 1) {
+        m_depth_target->bindImage(1, GL_WRITE_ONLY);
+    }
+
     // dispatch compute
     compute_shdr->Dispatch(static_cast<int>(std::ceil(rt_resolution[0] / 8.0f)),
         static_cast<int>(std::ceil(rt_resolution[1] / 8.0f)), 1);
 
     compute_shdr->Disable();
 
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_1D, 0);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_3D, 0);
+
     glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT);
 
     // copy image to framebuffer
     // TODO query gl state and reset to previous state?
-    glDisable(GL_DEPTH_TEST);
+    if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0) {
+        glDisable(GL_DEPTH_TEST);
+    } else if (this->m_mode.Param<core::param::EnumParam>()->Value() == 1) {
+        glEnable(GL_DEPTH_TEST);
+    }
+
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     m_render_to_framebuffer_shdr->Enable();
 
-    glActiveTexture(GL_TEXTURE1);
+    glActiveTexture(GL_TEXTURE0);
     m_render_target->bindTexture();
-    glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("src_tx2D"), 1);
+    glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("src_tx2D"), 0);
+
+    if (this->m_mode.Param<core::param::EnumParam>()->Value() == 1) {
+        glActiveTexture(GL_TEXTURE1);
+        m_depth_target->bindTexture();
+        glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("depth_tx2D"), 1);
+    }
 
     glDrawArrays(GL_TRIANGLES, 0, 6);
+
+    if (this->m_mode.Param<core::param::EnumParam>()->Value() == 1) {
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, 0);
+    }
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, 0);
 
     m_render_to_framebuffer_shdr->Disable();
 
     // cleanup
     glUseProgram(0);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_3D, 0);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
