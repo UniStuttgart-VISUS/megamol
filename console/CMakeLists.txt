@@ -100,7 +100,9 @@ if(BUILD_CONSOLE)
     install_external(TARGETS glfw3)
   endif()
   if (WIN32)
-    install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION bin OPTIONAL)
+    if(MSVC)
+      install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION bin OPTIONAL)
+    endif()
   endif ()
 
   # install and configure ATB
