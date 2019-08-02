@@ -296,6 +296,7 @@ void view::SplitView::Render(const mmcRenderViewContext& context) {
             }
 
             ::glEnable(GL_TEXTURE_2D);
+            glActiveTexture(GL_TEXTURE0);
             ::glDisable(GL_LIGHTING);
             ::glDisable(GL_CULL_FACE);
             ::glDisable(GL_DEPTH_TEST);
