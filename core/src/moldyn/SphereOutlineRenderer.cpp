@@ -39,6 +39,7 @@ moldyn::SphereOutlineRenderer::SphereOutlineRenderer(void) : Renderer3DModule(),
         circleSegSlot("seg", "The number of line segments to construct the circle"),
         multiOutlineCntSlot("multiOutline::count", "The (half) number of additional outlines"),
         multiOutLineDistSlot("multiOutline::dist", "The distance of the additional outlines as angles in radians"),
+        paramScaling("scaling", "A scaling factor for the radius"),
         sphereQuadric(NULL) {
 
     this->getDataSlot.SetCompatibleCall<moldyn::MultiParticleDataCallDescription>();
@@ -61,6 +62,9 @@ moldyn::SphereOutlineRenderer::SphereOutlineRenderer(void) : Renderer3DModule(),
 
     this->multiOutLineDistSlot << new param::FloatParam(0.1f, 0.0f);
     this->MakeSlotAvailable(&this->multiOutLineDistSlot);
+
+    this->paramScaling << new param::FloatParam(1.0f, (std::numeric_limits<float>::min)());
+    this->MakeSlotAvailable(&this->paramScaling);
 
 }
 
@@ -207,6 +211,9 @@ bool moldyn::SphereOutlineRenderer::Render(Call& call) {
                     vislib::math::Point<float, 3> posP(const_cast<float*>(posData));
                     posP.Set(posP.X() * scaling, posP.Y() * scaling, posP.Z() * scaling);
 
+                    // Apply user-defined scaling.
+                    rad *= this->paramScaling.Param<param::FloatParam>()->Value();
+
                     // Calculate outline angles
                     float d = cr->GetCameraParameters()->EyePosition().Distance(posP);
                     float p = (rad * rad * scaling * scaling) / d;
@@ -276,6 +283,9 @@ bool moldyn::SphereOutlineRenderer::Render(Call& call) {
                 vislib::math::ShallowVector<float, 3> pos(const_cast<float*>(posData));
                 if (loadRad) rad = posData[3];
                 vislib::math::Point<float, 3> posP(const_cast<float*>(posData));
+
+                // Apply user-defined scaling.
+                rad *= this->paramScaling.Param<param::FloatParam>()->Value();
 
                 ::glPushMatrix();
                 ::glTranslatef(posP.X(), posP.Y(), posP.Z());
