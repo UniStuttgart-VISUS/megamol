@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <btf type="MegaMolGLSLShader" version="1.0" namespace="sphere_ssbo">
     
-    <include file="common"/>
-
     <shader name="vertex">
         <snippet type="version">150</snippet>
         <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>
