@@ -11,6 +11,7 @@
 #include "mmcore/AbstractNamedObject.h"
 #include "vislib/String.h"
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/param/ColorParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore/view/special/TitleRenderer.h"
@@ -95,8 +96,7 @@ view::AbstractRenderingView::AbstractRenderingView(void) : AbstractView(),
     this->bkgndCol[1] = 0.0f;
     this->bkgndCol[2] = 0.125f;
 
-    this->bkgndColSlot << new param::StringParam(utility::ColourParser::ToString(
-        this->bkgndCol[0], this->bkgndCol[1], this->bkgndCol[2]));
+    this->bkgndColSlot << new param::ColorParam(this->bkgndCol[0], this->bkgndCol[1], this->bkgndCol[2], 1.0f);
     this->MakeSlotAvailable(&this->bkgndColSlot);
 
     this->softCursorSlot << new param::BoolParam(this->softCursor);
@@ -121,9 +121,7 @@ view::AbstractRenderingView::~AbstractRenderingView(void) {
 const float *view::AbstractRenderingView::BkgndColour(void) const {
     if (this->bkgndColSlot.IsDirty()) {
         this->bkgndColSlot.ResetDirty();
-        utility::ColourParser::FromString(
-            this->bkgndColSlot.Param<param::StringParam>()->Value(),
-            this->bkgndCol[0], this->bkgndCol[1], this->bkgndCol[2]);
+        this->bkgndColSlot.Param<param::ColorParam>()->Value(this->bkgndCol[0], this->bkgndCol[1], this->bkgndCol[2]);
     }
     return this->bkgndCol;
 }
@@ -157,14 +155,14 @@ void view::AbstractRenderingView::endFrame(bool abort) {
         unsigned int ticks = vislib::sys::GetTicksOfDay();
         if ((ticks < this->fpsOutputTimer) || (ticks >= this->fpsOutputTimer + 1000)) {
             this->fpsOutputTimer = ticks;
-            vislib::StringA name("UNKNOWN");
-            AbstractNamedObject *ano = dynamic_cast<AbstractNamedObject*>(this);
-            if (ano != NULL) {
-                name = ano->FullName();
-            }
+            //vislib::StringA name("UNKNOWN");
+            //AbstractNamedObject *ano = dynamic_cast<AbstractNamedObject*>(this);
+            //if (ano != NULL) {
+            //    name = ano->FullName();
+            //}
             // okey, does not make any sense when multiple windows are rendering, but better than nothing
-            printf("%s FPS: %f\n", name.PeekBuffer(), this->fpsCounter.FPS());
-            fflush(stdout); // grr
+            // printf("%s FPS: %f\n", name.PeekBuffer(), this->fpsCounter.FPS()); //Stop spamming the console
+            // fflush(stdout); // grr
         }
     }
 

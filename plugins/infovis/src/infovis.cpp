@@ -13,14 +13,12 @@
 #include "vislib/vislibversion.h"
 
 #include "DiagramSeries.h"
-#include "FlagStorage.h"
+#include "DiagramSeriesCall.h"
+#include "MDSProjection.h"
 #include "PCAProjection.h"
 #include "ParallelCoordinatesRenderer2D.h"
 #include "ScatterplotMatrixRenderer2D.h"
 #include "TSNEProjection.h"
-
-#include "infovis/DiagramSeriesCall.h"
-#include "infovis/FlagCall.h"
 
 /* anonymous namespace hides this type from any other object files */
 namespace {
@@ -45,15 +43,14 @@ public:
     /** Registers modules and calls */
     virtual void registerClasses(void) {
         // register modules here:
-        this->module_descriptions.RegisterAutoDescription<megamol::infovis::FlagStorage>();
         this->module_descriptions.RegisterAutoDescription<megamol::infovis::ParallelCoordinatesRenderer2D>();
         this->module_descriptions.RegisterAutoDescription<megamol::infovis::ScatterplotMatrixRenderer2D>();
         this->module_descriptions.RegisterAutoDescription<megamol::infovis::PCAProjection>();
         this->module_descriptions.RegisterAutoDescription<megamol::infovis::TSNEProjection>();
+        this->module_descriptions.RegisterAutoDescription<megamol::infovis::MDSProjection>();
         this->module_descriptions.RegisterAutoDescription<megamol::infovis::DiagramSeries>();
 
         // register calls here:
-        this->call_descriptions.RegisterAutoDescription<megamol::infovis::FlagCall>();
         this->call_descriptions.RegisterAutoDescription<megamol::infovis::DiagramSeriesCall>();
     }
     MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics

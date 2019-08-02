@@ -11,6 +11,7 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
+#include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/StringParam.h"
@@ -30,7 +31,7 @@
 #include "vislib/sys/Log.h"
 #include "vislib/sys/sysfunctions.h"
 #ifdef ENABLE_KEYBOARD_VIEW_CONTROL
-#    include "vislib/sys/KeyCode.h"
+#    include "mmcore/view/Input.h"
 #endif /* ENABLE_KEYBOARD_VIEW_CONTROL */
 #include "vislib/Trace.h"
 #include "vislib/math/Vector.h"
@@ -87,33 +88,18 @@ view::View3D::View3D(void)
     , viewKeyAngleStepSlot("viewKey::AngleStep", "The angle rotate step in degrees")
     , mouseSensitivitySlot("viewKey::MouseSensitivity", "used for WASD mode")
     , viewKeyRotPointSlot("viewKey::RotPoint", "The point around which the view will be roateted")
-    , viewKeyRotLeftSlot("viewKey::RotLeft", "Rotates the view to the left (around the up-axis)")
-    , viewKeyRotRightSlot("viewKey::RotRight", "Rotates the view to the right (around the up-axis)")
-    , viewKeyRotUpSlot("viewKey::RotUp", "Rotates the view to the top (around the right-axis)")
-    , viewKeyRotDownSlot("viewKey::RotDown", "Rotates the view to the bottom (around the right-axis)")
-    , viewKeyRollLeftSlot("viewKey::RollLeft", "Rotates the view counter-clockwise (around the view-axis)")
-    , viewKeyRollRightSlot("viewKey::RollRight", "Rotates the view clockwise (around the view-axis)")
-    , viewKeyZoomInSlot("viewKey::ZoomIn", "Zooms in (moves the camera)")
-    , viewKeyZoomOutSlot("viewKey::ZoomOut", "Zooms out (moves the camera)")
-    , viewKeyMoveLeftSlot("viewKey::MoveLeft", "Moves to the left")
-    , viewKeyMoveRightSlot("viewKey::MoveRight", "Moves to the right")
-    , viewKeyMoveUpSlot("viewKey::MoveUp", "Moves to the top")
-    , viewKeyMoveDownSlot("viewKey::MoveDown", "Moves to the bottom")
     ,
 #endif /* ENABLE_KEYBOARD_VIEW_CONTROL */
     toggleBBoxSlot("toggleBBox", "Button to toggle the bounding box")
     , toggleSoftCursorSlot("toggleSoftCursor", "Button to toggle the soft cursor")
     , bboxCol{1.0f, 1.0f, 1.0f, 0.625f}
     , bboxColSlot("bboxCol", "Sets the colour for the bounding box")
-    , enableMouseSelectionSlot("enableMouseSelection", "Enable selecting and picking with the mouse")
     , showViewCubeSlot("viewcube::show", "Shows the view cube helper")
     , resetViewOnBBoxChangeSlot("resetViewOnBBoxChange", "whether to reset the view when the bounding boxes change")
     , mouseX(0.0f)
     , mouseY(0.0f)
     , timeCtrl()
-    , toggleMouseSelection(false)
     , hookOnChangeOnlySlot("hookOnChange", "whether post-hooks are triggered when the frame would be identical") {
-    using vislib::sys::KeyCode;
 
     this->camParams = this->cam.Parameters();
     this->camOverrides = new CameraParamOverride(this->camParams);
@@ -139,15 +125,15 @@ view::View3D::View3D(void)
     this->MakeSlotAvailable(&this->cameraSettingsSlot);
 
     this->storeCameraSettingsSlot << new param::ButtonParam(
-        vislib::sys::KeyCode::KEY_MOD_ALT | vislib::sys::KeyCode::KEY_MOD_SHIFT | 'C');
+        view::Key::KEY_C, (view::Modifier::ALT | view::Modifier::SHIFT));
     this->storeCameraSettingsSlot.SetUpdateCallback(&View3D::onStoreCamera);
     this->MakeSlotAvailable(&this->storeCameraSettingsSlot);
 
-    this->restoreCameraSettingsSlot << new param::ButtonParam(vislib::sys::KeyCode::KEY_MOD_ALT | 'c');
+    this->restoreCameraSettingsSlot << new param::ButtonParam(view::Key::KEY_C, view::Modifier::ALT);
     this->restoreCameraSettingsSlot.SetUpdateCallback(&View3D::onRestoreCamera);
     this->MakeSlotAvailable(&this->restoreCameraSettingsSlot);
 
-    this->resetViewSlot << new param::ButtonParam(vislib::sys::KeyCode::KEY_HOME);
+    this->resetViewSlot << new param::ButtonParam(view::Key::KEY_HOME);
     this->resetViewSlot.SetUpdateCallback(&View3D::onResetView);
     this->MakeSlotAvailable(&this->resetViewSlot);
 
@@ -163,12 +149,12 @@ view::View3D::View3D(void)
     this->lightColAmb[0] = this->lightColAmb[1] = this->lightColAmb[2] = 0.2f;
     this->lightColAmb[3] = 1.0f;
 
-    this->lightColDifSlot << new param::StringParam(
-        utility::ColourParser::ToString(this->lightColDif[0], this->lightColDif[1], this->lightColDif[2]));
+    this->lightColDifSlot << new param::ColorParam(
+        this->lightColDif[0], this->lightColDif[1], this->lightColDif[2], 1.0f);
     this->MakeSlotAvailable(&this->lightColDifSlot);
 
-    this->lightColAmbSlot << new param::StringParam(
-        utility::ColourParser::ToString(this->lightColAmb[0], this->lightColAmb[1], this->lightColAmb[2]));
+    this->lightColAmbSlot << new param::ColorParam(
+        this->lightColAmb[0], this->lightColAmb[1], this->lightColAmb[2], 1.0f);
     this->MakeSlotAvailable(&this->lightColAmbSlot);
 
     this->ResetView();
@@ -199,78 +185,20 @@ view::View3D::View3D(void)
     this->viewKeyRotPointSlot << vrpsev;
     this->MakeSlotAvailable(&this->viewKeyRotPointSlot);
 
-    this->viewKeyRotLeftSlot << new param::ButtonParam(KeyCode::KEY_LEFT | KeyCode::KEY_MOD_CTRL);
-    this->viewKeyRotLeftSlot.SetUpdateCallback(&View3D::viewKeyPressed);
-    this->MakeSlotAvailable(&this->viewKeyRotLeftSlot);
-
-    this->viewKeyRotRightSlot << new param::ButtonParam(KeyCode::KEY_RIGHT | KeyCode::KEY_MOD_CTRL);
-    this->viewKeyRotRightSlot.SetUpdateCallback(&View3D::viewKeyPressed);
-    this->MakeSlotAvailable(&this->viewKeyRotRightSlot);
-
-    this->viewKeyRotUpSlot << new param::ButtonParam(KeyCode::KEY_UP | KeyCode::KEY_MOD_CTRL);
-    this->viewKeyRotUpSlot.SetUpdateCallback(&View3D::viewKeyPressed);
-    this->MakeSlotAvailable(&this->viewKeyRotUpSlot);
-
-    this->viewKeyRotDownSlot << new param::ButtonParam(KeyCode::KEY_DOWN | KeyCode::KEY_MOD_CTRL);
-    this->viewKeyRotDownSlot.SetUpdateCallback(&View3D::viewKeyPressed);
-    this->MakeSlotAvailable(&this->viewKeyRotDownSlot);
-
-    this->viewKeyRollLeftSlot << new param::ButtonParam(
-        KeyCode::KEY_LEFT | KeyCode::KEY_MOD_CTRL | KeyCode::KEY_MOD_SHIFT);
-    this->viewKeyRollLeftSlot.SetUpdateCallback(&View3D::viewKeyPressed);
-    this->MakeSlotAvailable(&this->viewKeyRollLeftSlot);
-
-    this->viewKeyRollRightSlot << new param::ButtonParam(
-        KeyCode::KEY_RIGHT | KeyCode::KEY_MOD_CTRL | KeyCode::KEY_MOD_SHIFT);
-    this->viewKeyRollRightSlot.SetUpdateCallback(&View3D::viewKeyPressed);
-    this->MakeSlotAvailable(&this->viewKeyRollRightSlot);
-
-    this->viewKeyZoomInSlot << new param::ButtonParam(KeyCode::KEY_UP | KeyCode::KEY_MOD_CTRL | KeyCode::KEY_MOD_SHIFT);
-    this->viewKeyZoomInSlot.SetUpdateCallback(&View3D::viewKeyPressed);
-    this->MakeSlotAvailable(&this->viewKeyZoomInSlot);
-
-    this->viewKeyZoomOutSlot << new param::ButtonParam(
-        KeyCode::KEY_DOWN | KeyCode::KEY_MOD_CTRL | KeyCode::KEY_MOD_SHIFT);
-    this->viewKeyZoomOutSlot.SetUpdateCallback(&View3D::viewKeyPressed);
-    this->MakeSlotAvailable(&this->viewKeyZoomOutSlot);
-
-    this->viewKeyMoveLeftSlot << new param::ButtonParam(
-        KeyCode::KEY_LEFT | KeyCode::KEY_MOD_CTRL | KeyCode::KEY_MOD_ALT);
-    this->viewKeyMoveLeftSlot.SetUpdateCallback(&View3D::viewKeyPressed);
-    this->MakeSlotAvailable(&this->viewKeyMoveLeftSlot);
-
-    this->viewKeyMoveRightSlot << new param::ButtonParam(
-        KeyCode::KEY_RIGHT | KeyCode::KEY_MOD_CTRL | KeyCode::KEY_MOD_ALT);
-    this->viewKeyMoveRightSlot.SetUpdateCallback(&View3D::viewKeyPressed);
-    this->MakeSlotAvailable(&this->viewKeyMoveRightSlot);
-
-    this->viewKeyMoveUpSlot << new param::ButtonParam(KeyCode::KEY_UP | KeyCode::KEY_MOD_CTRL | KeyCode::KEY_MOD_ALT);
-    this->viewKeyMoveUpSlot.SetUpdateCallback(&View3D::viewKeyPressed);
-    this->MakeSlotAvailable(&this->viewKeyMoveUpSlot);
-
-    this->viewKeyMoveDownSlot << new param::ButtonParam(
-        KeyCode::KEY_DOWN | KeyCode::KEY_MOD_CTRL | KeyCode::KEY_MOD_ALT);
-    this->viewKeyMoveDownSlot.SetUpdateCallback(&View3D::viewKeyPressed);
-    this->MakeSlotAvailable(&this->viewKeyMoveDownSlot);
 #endif /* ENABLE_KEYBOARD_VIEW_CONTROL */
 
-    this->toggleSoftCursorSlot << new param::ButtonParam('i' | KeyCode::KEY_MOD_CTRL);
+    this->toggleSoftCursorSlot << new param::ButtonParam(view::Key::KEY_I, view::Modifier::CTRL);
     this->toggleSoftCursorSlot.SetUpdateCallback(&View3D::onToggleButton);
     this->MakeSlotAvailable(&this->toggleSoftCursorSlot);
 
-    this->toggleBBoxSlot << new param::ButtonParam('i' | KeyCode::KEY_MOD_ALT);
+    this->toggleBBoxSlot << new param::ButtonParam(view::Key::KEY_I, view::Modifier::ALT);
     this->toggleBBoxSlot.SetUpdateCallback(&View3D::onToggleButton);
     this->MakeSlotAvailable(&this->toggleBBoxSlot);
-
-    this->enableMouseSelectionSlot << new param::ButtonParam(KeyCode::KEY_TAB);
-    this->enableMouseSelectionSlot.SetUpdateCallback(&View3D::onToggleButton);
-    this->MakeSlotAvailable(&this->enableMouseSelectionSlot);
 
     this->resetViewOnBBoxChangeSlot << new param::BoolParam(false);
     this->MakeSlotAvailable(&this->resetViewOnBBoxChangeSlot);
 
-    this->bboxColSlot << new param::StringParam(
-        utility::ColourParser::ToString(this->bboxCol[0], this->bboxCol[1], this->bboxCol[2], this->bboxCol[3]));
+    this->bboxColSlot << new param::ColorParam(this->bboxCol[0], this->bboxCol[1], this->bboxCol[2], this->bboxCol[3]);
     this->MakeSlotAvailable(&this->bboxColSlot);
 
     this->showViewCubeSlot << new param::BoolParam(true);
@@ -329,6 +257,83 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
 
     CallRender3D* cr3d = this->rendererSlot.CallAs<CallRender3D>();
 
+    if (this->viewKeyRotLeft || this->viewKeyRotRight || this->viewKeyRotUp || this->viewKeyRotDown ||
+        this->viewKeyRollLeft || this->viewKeyRollRight) {
+        // rotate
+        float angle = vislib::math::AngleDeg2Rad(this->viewKeyAngleStepSlot.Param<param::FloatParam>()->Value());
+        vislib::math::Quaternion<float> q;
+        int ptIdx = this->viewKeyRotPointSlot.Param<param::EnumParam>()->Value();
+        // ptIdx == 0 : Position
+        // ptIdx == 1 : LookAt
+
+        if (this->viewKeyRotLeft) {
+            q.Set(angle, this->camParams->Up());
+        } else if (this->viewKeyRotRight) {
+            q.Set(-angle, this->camParams->Up());
+        } else if (this->viewKeyRotUp) {
+            q.Set(angle, this->camParams->Right());
+        } else if (this->viewKeyRotDown) {
+            q.Set(-angle, this->camParams->Right());
+        } else if (this->viewKeyRollLeft) {
+            q.Set(angle, this->camParams->Front());
+        } else if (this->viewKeyRollRight) {
+            q.Set(-angle, this->camParams->Front());
+        }
+
+        vislib::math::Vector<float, 3> pos(this->camParams->Position().PeekCoordinates());
+        vislib::math::Vector<float, 3> lat(this->camParams->LookAt().PeekCoordinates());
+        vislib::math::Vector<float, 3> up(this->camParams->Up());
+
+        if (ptIdx == 0) {
+            lat -= pos;
+            lat = q * lat;
+            up = q * up;
+            lat += pos;
+
+        } else if (ptIdx == 1) {
+            pos -= lat;
+            pos = q * pos;
+            up = q * up;
+            pos += lat;
+        }
+
+        this->camParams->SetView(vislib::math::Point<float, 3>(pos.PeekComponents()),
+            vislib::math::Point<float, 3>(lat.PeekComponents()), up);
+
+    } else if (this->viewKeyZoomIn || viewKeyZoomOut || this->viewKeyMoveLeft || this->viewKeyMoveRight ||
+               this->viewKeyMoveUp || this->viewKeyMoveDown) {
+        // move
+        float step = this->viewKeyMoveStepSlot.Param<param::FloatParam>()->Value();
+        const float runFactor = this->viewKeyRunFactorSlot.Param<param::FloatParam>()->Value();
+        if (this->running) {
+            step *= runFactor;
+        }
+        vislib::math::Vector<float, 3> move;
+
+        if (this->viewKeyZoomIn) {
+            move = this->camParams->Front();
+            move *= step;
+        } else if (this->viewKeyZoomOut) {
+            move = this->camParams->Front();
+            move *= -step;
+        } else if (this->viewKeyMoveLeft) {
+            move = this->camParams->Right();
+            move *= -step;
+        } else if (this->viewKeyMoveRight) {
+            move = this->camParams->Right();
+            move *= step;
+        } else if (this->viewKeyMoveUp) {
+            move = this->camParams->Up();
+            move *= step;
+        } else if (this->viewKeyMoveDown) {
+            move = this->camParams->Up();
+            move *= -step;
+        }
+
+        this->camParams->SetView(this->camParams->Position() + move, this->camParams->LookAt() + move,
+            vislib::math::Vector<float, 3>(this->camParams->Up()));
+    }
+
     AbstractRenderingView::beginFrame();
 
     // Conditionally synchronise camera from somewhere else.
@@ -350,9 +355,9 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
 
     if (this->overrideCall != NULL) {
         if (cr3d != nullptr) {
-            RenderOutput* ro = dynamic_cast<RenderOutput*>(overrideCall);
+            RenderOutputOpenGL* ro = dynamic_cast<RenderOutputOpenGL*>(overrideCall);
             if (ro != nullptr) {
-                *static_cast<RenderOutput*>(cr3d) = *ro;
+                *static_cast<RenderOutputOpenGL*>(cr3d) = *ro;
             }
         }
         this->overrideCall->EnableOutputBuffer();
@@ -458,7 +463,8 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
     }
 
     if (this->bboxColSlot.IsDirty()) {
-        utility::ColourParser::FromString(this->bboxColSlot.Param<param::StringParam>()->Value(), 4, this->bboxCol);
+        this->bboxColSlot.Param<param::ColorParam>()->Value(
+            this->bboxCol[0], this->bboxCol[1], this->bboxCol[2], this->bboxCol[3]);
         this->bboxColSlot.ResetDirty();
     }
 
@@ -473,13 +479,13 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
     }
     if (this->lightColAmbSlot.IsDirty()) {
         this->lightColAmbSlot.ResetDirty();
-        utility::ColourParser::FromString(this->lightColAmbSlot.Param<param::StringParam>()->Value(),
-            this->lightColAmb[0], lightColAmb[1], lightColAmb[2]);
+        this->lightColAmbSlot.Param<param::ColorParam>()->Value(
+            this->lightColAmb[0], this->lightColAmb[1], this->lightColAmb[2]);
     }
     if (this->lightColDifSlot.IsDirty()) {
         this->lightColDifSlot.ResetDirty();
-        utility::ColourParser::FromString(this->lightColDifSlot.Param<param::StringParam>()->Value(),
-            this->lightColDif[0], lightColDif[1], lightColDif[2]);
+        this->lightColDifSlot.Param<param::ColorParam>()->Value(
+            this->lightColDif[0], this->lightColDif[1], this->lightColDif[2]);
     }
     ::glEnable(GL_LIGHTING); // TODO: check renderer capabilities
     ::glEnable(GL_LIGHT0);
@@ -527,8 +533,7 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
     }
     ::glPushMatrix();
 
-    if (this->overrideCall) {
-        (*static_cast<AbstractCallRender*>(cr3d)) = *this->overrideCall;
+    if (cr3d != NULL) {
         cr3d->SetInstanceTime(instTime);
 #ifndef ROTATOR_HACK
         cr3d->SetTime(time);
@@ -704,15 +709,123 @@ bool view::View3D::OnKey(Key key, KeyAction action, Modifiers mods) {
     auto* cr = this->rendererSlot.CallAs<view::CallRender3D>();
     if (cr == NULL) return false;
 
-    InputEvent evt;
-    evt.tag = InputEvent::Tag::Key;
-    evt.keyData.key = key;
-    evt.keyData.action = action;
-    evt.keyData.mods = mods;
-    cr->SetInputEvent(evt);
-    if (!(*cr)(view::CallRender3D::FnOnKey)) return false;
+    running = mods.test(Modifier::SHIFT);
+    bool down = (action == KeyAction::PRESS || action == KeyAction::REPEAT) && (action != KeyAction::RELEASE);
+    bool ret = true;
+    if (wasd) {
+        switch (key) {
+        case Key::KEY_W:
+            this->viewKeyZoomIn = down;
+            break;
+        case Key::KEY_S:
+            this->viewKeyZoomOut = down;
+            break;
+        case Key::KEY_A:
+            this->viewKeyMoveLeft = down;
+            break;
+        case Key::KEY_D:
+            this->viewKeyMoveRight = down;
+            break;
+        case Key::KEY_Q:
+            this->viewKeyRollLeft = down;
+            break;
+        case Key::KEY_E:
+            this->viewKeyRollRight = down;
+            break;
+        case Key::KEY_R:
+            this->viewKeyMoveUp = down;
+            break;
+        case Key::KEY_F:
+            this->viewKeyMoveDown = down;
+            break;
+        case Key::KEY_UP:
+            if (invertY)
+                this->viewKeyRotDown = down;
+            else
+                this->viewKeyRotUp = down;
+            break;
+        case Key::KEY_DOWN:
+            if (invertY)
+                this->viewKeyRotUp = down;
+            else
+                this->viewKeyRotDown = down;
+            break;
+        case Key::KEY_LEFT:
+            if (invertX)
+                this->viewKeyRotRight = down;
+            else
+                this->viewKeyRotLeft = down;
+            break;
+        case Key::KEY_RIGHT:
+            if (invertX)
+                this->viewKeyRotLeft = down;
+            else
+                this->viewKeyRotRight = down;
+            break;
+        default:
+            ret = false;
+        }
+    } else {
+        auto ctrlshift = mods.test(Modifier::CTRL) && mods.test(Modifier::SHIFT) && !mods.test(Modifier::ALT);
+        auto ctrlalt = mods.test(Modifier::CTRL) && mods.test(Modifier::ALT) && !mods.test(Modifier::SHIFT);
+        auto ctrl = mods.test(Modifier::CTRL) && !mods.test(Modifier::ALT) && !mods.test(Modifier::SHIFT);
+        switch (key) {
+        case Key::KEY_UP:
+            this->viewKeyZoomIn = ctrlshift && down;
+            this->viewKeyMoveUp = ctrlalt && down;
+            if (ctrl) {
+                if (invertY)
+                    this->viewKeyRotDown = down;
+                else
+                    this->viewKeyRotUp = down;
+            }
+            break;
+        case Key::KEY_DOWN:
+            this->viewKeyZoomOut = ctrlshift && down;
+            this->viewKeyMoveDown = ctrlalt && down;
+            if (ctrl) {
+                if (!invertY)
+                    this->viewKeyRotDown = down;
+                else
+                    this->viewKeyRotUp = down;
+            }
+            break;
+        case Key::KEY_LEFT:
+            this->viewKeyMoveLeft = ctrlshift && down;
+            this->viewKeyRollLeft = ctrlalt && down;
+            if (ctrl) {
+                if (invertX)
+                    this->viewKeyRotRight = down;
+                else
+                    this->viewKeyRotLeft = down;
+            }
+            break;
+        case Key::KEY_RIGHT:
+            this->viewKeyMoveRight = ctrlshift && down;
+            this->viewKeyRollRight = ctrlalt && down;
+            if (ctrl) {
+                if (!invertX)
+                    this->viewKeyRotRight = down;
+                else
+                    this->viewKeyRotLeft = down;
+            }
+            break;
+        default:
+            ret = false;
+        }
+    }
 
-    return true;
+    if (!ret) {
+        InputEvent evt;
+        evt.tag = InputEvent::Tag::Key;
+        evt.keyData.key = key;
+        evt.keyData.action = action;
+        evt.keyData.mods = mods;
+        cr->SetInputEvent(evt);
+        if (!(*cr)(view::CallRender3D::FnOnKey)) return false;
+    }
+
+    return ret;
 }
 
 
@@ -731,66 +844,59 @@ bool view::View3D::OnChar(unsigned int codePoint) {
 
 
 bool view::View3D::OnMouseButton(MouseButton button, MouseButtonAction action, Modifiers mods) {
-	// This mouse handling/mapping is so utterly weird and should die!
-    auto down = action == MouseButtonAction::PRESS;
-    if (mods.test(Modifier::SHIFT)) {
-        this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_SHIFT, down);
-    } else if (mods.test(Modifier::CTRL)) {
-        this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_CTRL, down);
-    } else if (mods.test(Modifier::ALT)) {
-        this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_ALT, down);
-    }
-
-    if (!this->toggleMouseSelection) {
-        switch (button) {
-        case megamol::core::view::MouseButton::BUTTON_LEFT:
-            this->cursor2d.SetButtonState(0, down);
-            break;
-        case megamol::core::view::MouseButton::BUTTON_RIGHT:
-            this->cursor2d.SetButtonState(1, down);
-            break;
-        case megamol::core::view::MouseButton::BUTTON_MIDDLE:
-            this->cursor2d.SetButtonState(2, down);
-            break;
-        default:
-            break;
-        }
-    } else {
-        auto* cr = this->rendererSlot.CallAs<view::CallRender3D>();
-        if (cr == NULL) return false;
-
+    auto* cr = this->rendererSlot.CallAs<view::CallRender3D>();
+    if (cr) {
         InputEvent evt;
         evt.tag = InputEvent::Tag::MouseButton;
         evt.mouseButtonData.button = button;
         evt.mouseButtonData.action = action;
         evt.mouseButtonData.mods = mods;
         cr->SetInputEvent(evt);
-        if (!(*cr)(view::CallRender3D::FnOnMouseButton)) return false;
+        if ((*cr)(view::CallRender3D::FnOnMouseButton)) return true;
     }
+
+    auto down = action == MouseButtonAction::PRESS;
+    if (mods.test(view::Modifier::SHIFT)) {
+        this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_SHIFT, down);
+    } else if (mods.test(view::Modifier::CTRL)) {
+        this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_CTRL, down);
+    } else if (mods.test(view::Modifier::ALT)) {
+        this->modkeys.SetModifierState(vislib::graphics::InputModifiers::MODIFIER_ALT, down);
+    }
+
+    switch (button) {
+    case view::MouseButton::BUTTON_LEFT:
+        this->cursor2d.SetButtonState(0, down);
+        break;
+    case view::MouseButton::BUTTON_RIGHT:
+        this->cursor2d.SetButtonState(1, down);
+        break;
+    case view::MouseButton::BUTTON_MIDDLE:
+        this->cursor2d.SetButtonState(2, down);
+        break;
+    default:
+        break;
+    }
+
     return true;
 }
 
 
 bool view::View3D::OnMouseMove(double x, double y) {
+    auto* cr = this->rendererSlot.CallAs<view::CallRender3D>();
+    if (cr) {
+        InputEvent evt;
+        evt.tag = InputEvent::Tag::MouseMove;
+        evt.mouseMoveData.x = x;
+        evt.mouseMoveData.y = y;
+        cr->SetInputEvent(evt);
+        if ((*cr)(view::CallRender3D::FnOnMouseMove)) return true;
+    }
+
     this->mouseX = (float)static_cast<int>(x);
     this->mouseY = (float)static_cast<int>(y);
 
-	// This mouse handling/mapping is so utterly weird and should die!
-	if (!this->toggleMouseSelection) {
-        this->cursor2d.SetPosition(x, y, true);
-    } else {
-        auto* cr = this->rendererSlot.CallAs<view::CallRender3D>();
-        if (cr) {
-            InputEvent evt;
-            evt.tag = InputEvent::Tag::MouseMove;
-            evt.mouseMoveData.x = x;
-            evt.mouseMoveData.y = y;
-            cr->SetInputEvent(evt);
-            if (!(*cr)(view::CallRender3D::FnOnMouseMove)) {
-                return false;
-			}
-        }
-    }
+    this->cursor2d.SetPosition(x, y, true);
 
     return true;
 }
@@ -826,9 +932,6 @@ void view::View3D::unpackMouseCoordinates(float& x, float& y) {
  */
 bool view::View3D::create(void) {
 
-    bool wasd = false;
-    bool invertX = true;
-    bool invertY = true;
     try {
         wasd = vislib::CharTraitsW::ParseBool(this->GetCoreInstance()->Configuration().ConfigValue("wasd"));
     } catch (...) {
@@ -855,10 +958,6 @@ bool view::View3D::create(void) {
     if (wasd) {
         this->rotator2.SetInvertX(invertX);
         this->rotator2.SetInvertY(invertY);
-        this->viewKeyZoomInSlot.Param<param::ButtonParam>()->SetKeyCode('w');
-        this->viewKeyZoomOutSlot.Param<param::ButtonParam>()->SetKeyCode('s');
-        this->viewKeyMoveLeftSlot.Param<param::ButtonParam>()->SetKeyCode('a');
-        this->viewKeyMoveRightSlot.Param<param::ButtonParam>()->SetKeyCode('d');
     }
     this->rotator2.SetCameraParams(this->camParams);
     this->rotator2.SetTestButton(0 /* left mouse button */);
@@ -1301,98 +1400,6 @@ bool view::View3D::onResetView(param::ParamSlot& p) {
 }
 
 
-#ifdef ENABLE_KEYBOARD_VIEW_CONTROL
-
-/*
- * view::View3D::viewKeyPressed
- */
-bool view::View3D::viewKeyPressed(param::ParamSlot& p) {
-
-    if ((&p == &this->viewKeyRotLeftSlot) || (&p == &this->viewKeyRotRightSlot) || (&p == &this->viewKeyRotUpSlot) ||
-        (&p == &this->viewKeyRotDownSlot) || (&p == &this->viewKeyRollLeftSlot) ||
-        (&p == &this->viewKeyRollRightSlot)) {
-        // rotate
-        float angle = vislib::math::AngleDeg2Rad(this->viewKeyAngleStepSlot.Param<param::FloatParam>()->Value());
-        vislib::math::Quaternion<float> q;
-        int ptIdx = this->viewKeyRotPointSlot.Param<param::EnumParam>()->Value();
-        // ptIdx == 0 : Position
-        // ptIdx == 1 : LookAt
-
-        if (&p == &this->viewKeyRotLeftSlot) {
-            q.Set(angle, this->camParams->Up());
-        } else if (&p == &this->viewKeyRotRightSlot) {
-            q.Set(-angle, this->camParams->Up());
-        } else if (&p == &this->viewKeyRotUpSlot) {
-            q.Set(angle, this->camParams->Right());
-        } else if (&p == &this->viewKeyRotDownSlot) {
-            q.Set(-angle, this->camParams->Right());
-        } else if (&p == &this->viewKeyRollLeftSlot) {
-            q.Set(angle, this->camParams->Front());
-        } else if (&p == &this->viewKeyRollRightSlot) {
-            q.Set(-angle, this->camParams->Front());
-        }
-
-        vislib::math::Vector<float, 3> pos(this->camParams->Position().PeekCoordinates());
-        vislib::math::Vector<float, 3> lat(this->camParams->LookAt().PeekCoordinates());
-        vislib::math::Vector<float, 3> up(this->camParams->Up());
-
-        if (ptIdx == 0) {
-            lat -= pos;
-            lat = q * lat;
-            up = q * up;
-            lat += pos;
-
-        } else if (ptIdx == 1) {
-            pos -= lat;
-            pos = q * pos;
-            up = q * up;
-            pos += lat;
-        }
-
-        this->camParams->SetView(vislib::math::Point<float, 3>(pos.PeekComponents()),
-            vislib::math::Point<float, 3>(lat.PeekComponents()), up);
-
-    } else if ((&p == &this->viewKeyZoomInSlot) || (&p == &this->viewKeyZoomOutSlot) ||
-               (&p == &this->viewKeyMoveLeftSlot) || (&p == &this->viewKeyMoveRightSlot) ||
-               (&p == &this->viewKeyMoveUpSlot) || (&p == &this->viewKeyMoveDownSlot)) {
-        // move
-        float step = this->viewKeyMoveStepSlot.Param<param::FloatParam>()->Value();
-        const float runFactor = this->viewKeyRunFactorSlot.Param<param::FloatParam>()->Value();
-        if (this->modkeys.GetModifierState(vislib::graphics::InputModifiers::MODIFIER_SHIFT)) {
-            step *= runFactor;
-        }
-        vislib::math::Vector<float, 3> move;
-
-        if (&p == &this->viewKeyZoomInSlot) {
-            move = this->camParams->Front();
-            move *= step;
-        } else if (&p == &this->viewKeyZoomOutSlot) {
-            move = this->camParams->Front();
-            move *= -step;
-        } else if (&p == &this->viewKeyMoveLeftSlot) {
-            move = this->camParams->Right();
-            move *= -step;
-        } else if (&p == &this->viewKeyMoveRightSlot) {
-            move = this->camParams->Right();
-            move *= step;
-        } else if (&p == &this->viewKeyMoveUpSlot) {
-            move = this->camParams->Up();
-            move *= step;
-        } else if (&p == &this->viewKeyMoveDownSlot) {
-            move = this->camParams->Up();
-            move *= -step;
-        }
-
-        this->camParams->SetView(this->camParams->Position() + move, this->camParams->LookAt() + move,
-            vislib::math::Vector<float, 3>(this->camParams->Up()));
-    }
-
-    return true;
-}
-
-#endif /* ENABLE_KEYBOARD_VIEW_CONTROL */
-
-
 /*
  * view::View3D::onToggleButton
  */
@@ -1401,9 +1408,6 @@ bool view::View3D::onToggleButton(param::ParamSlot& p) {
 
     if (&p == &this->toggleSoftCursorSlot) {
         this->toggleSoftCurse();
-        return true;
-    } else if (&p == &this->enableMouseSelectionSlot) {
-        this->toggleMouseSelection = !this->toggleMouseSelection;
         return true;
     } else if (&p == &this->toggleBBoxSlot) {
         bp = this->showBBox.Param<param::BoolParam>();

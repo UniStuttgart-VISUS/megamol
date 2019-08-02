@@ -98,6 +98,7 @@ bool iequals(const std::string& one, const std::string& other) {
 #define MMC_LUA_MMREADTEXTFILE "mmReadTextFile"
 #define MMC_LUA_MMFLUSH "mmFlush"
 #define MMC_LUA_MMCURRENTSCRIPTPATH "mmCurrentScriptPath"
+#define MMC_LUA_MMLISTPARAMETERS "mmListParameters"
 
 
 const std::map<std::string, std::string> MM_LUA_HELP = {
@@ -145,11 +146,16 @@ const std::map<std::string, std::string> MM_LUA_HELP = {
     { MMC_LUA_MMGETENVVALUE, MMC_LUA_MMGETENVVALUE "(string name)\n\tReturn the value of env variable <name>."},
     { MMC_LUA_MMLISTCALLS, MMC_LUA_MMLISTCALLS"()\n\tReturn a list of instantiated calls (class id, instance id, from, to)."},
     { MMC_LUA_MMLISTINSTANTIATIONS, MMC_LUA_MMLISTINSTANTIATIONS "()\n\tReturn a list of instantiation names"},
-    { MMC_LUA_MMLISTMODULES, MMC_LUA_MMLISTMODULES"()\n\tReturn a list of instantiated modules (class id, instance id)."},
+    { MMC_LUA_MMLISTMODULES, MMC_LUA_MMLISTMODULES"(string basemodule_or_namespace)"
+        "\n\tReturn a list of instantiated modules (class id, instance id), starting from a certain module downstream or inside a namespace."
+        "\n\tWill use the graph root if an empty string is passed."},
     { MMC_LUA_MMQUIT, MMC_LUA_MMQUIT"()\n\tClose the MegaMol instance."},
     {MMC_LUA_MMREADTEXTFILE, MMC_LUA_MMREADTEXTFILE "(string fileName, function func)\n\tReturn the file contents after processing it with func(content)."},
     {MMC_LUA_MMFLUSH, MMC_LUA_MMFLUSH "()\n\tInserts a flush event into graph manipulation queues."},
-    {MMC_LUA_MMCURRENTSCRIPTPATH, MMC_LUA_MMCURRENTSCRIPTPATH "()\n\tReturns the path of the currently running script, if possible. Empty string otherwise."}
+    {MMC_LUA_MMCURRENTSCRIPTPATH, MMC_LUA_MMCURRENTSCRIPTPATH "()\n\tReturns the path of the currently running script, if possible. Empty string otherwise."},
+    {MMC_LUA_MMLISTPARAMETERS, MMC_LUA_MMLISTPARAMETERS "(string baseModule_or_namespace)"
+        "\n\tReturn all parameters, their type and value, starting from a certain module downstream or inside a namespace."
+        "\n\tWill use the graph root if an empty string is passed."}
 };
 
 const std::string megamol::core::LuaState::MEGAMOL_ENV = "megamol_env = {"
@@ -197,6 +203,7 @@ MMC_LUA_MMQUIT "=" MMC_LUA_MMQUIT ","
 MMC_LUA_MMREADTEXTFILE "=" MMC_LUA_MMREADTEXTFILE ","
 MMC_LUA_MMFLUSH "=" MMC_LUA_MMFLUSH ","
 MMC_LUA_MMCURRENTSCRIPTPATH "=" MMC_LUA_MMCURRENTSCRIPTPATH ","
+MMC_LUA_MMLISTPARAMETERS "=" MMC_LUA_MMLISTPARAMETERS ","
 "  ipairs = ipairs,"
 "  load = load,"
 "  next = next,"
@@ -216,7 +223,7 @@ MMC_LUA_MMCURRENTSCRIPTPATH "=" MMC_LUA_MMCURRENTSCRIPTPATH ","
 "      rep = string.rep, reverse = string.reverse, sub = string.sub, "
 "      upper = string.upper },"
 "  table = { insert = table.insert, maxn = table.maxn, remove = table.remove, "
-"      sort = table.sort },"
+"      sort = table.sort, concat = table.concat },"
 "  math = { abs = math.abs, acos = math.acos, asin = math.asin, "
 "      atan = math.atan, atan2 = math.atan2, ceil = math.ceil, cos = math.cos, "
 "      cosh = math.cosh, deg = math.deg, exp = math.exp, floor = math.floor, "
@@ -241,7 +248,7 @@ int dispatch(lua_State * L) {
 #define CHECK_LUA(call) __luaErr = call;\
     consumeError(__luaErr, __FILE__, __LINE__);
 
-void megamol::core::LuaState::consumeError(int error, char *file, int line) {
+void megamol::core::LuaState::consumeError(int error, char const* file, int line) const {
     if (error != LUA_OK) {
         const char *err = lua_tostring(L, -1); // get error from top of stack...
         vislib::sys::Log::DefaultLog.WriteError("Lua Error: %s at %s:%i\n", err, file, line);
@@ -388,6 +395,7 @@ void megamol::core::LuaState::commonInit() {
         lua_register(L, MMC_LUA_MMLISTCALLS, &dispatch<&LuaState::ListCalls>);
         lua_register(L, MMC_LUA_MMLISTMODULES, &dispatch<&LuaState::ListModules>);
         lua_register(L, MMC_LUA_MMLISTINSTANTIATIONS, &dispatch<&LuaState::ListInstatiations>);
+        lua_register(L, MMC_LUA_MMLISTPARAMETERS, &dispatch<&LuaState::ListParameters>);
 
         lua_register(L, MMC_LUA_MMGETENVVALUE, &dispatch<&LuaState::GetEnvValue>);
 
@@ -474,6 +482,11 @@ megamol::core::LuaState::~LuaState() {
 
 bool megamol::core::LuaState::StateOk() {
     return L != nullptr;
+}
+
+
+std::string megamol::core::LuaState::GetScriptPath(void) {
+    return this->currentScriptPath;
 }
 
 
@@ -1412,62 +1425,39 @@ int megamol::core::LuaState::QueryModuleGraph(lua_State *L) {
 int megamol::core::LuaState::ListCalls(lua_State* L) {
     if (this->checkRunning(MMC_LUA_MMLISTCALLS)) {
 
-        int n = lua_gettop(L);
-        const char *ns = nullptr;
-        if (n == 1) {
-            ns = luaL_checkstring(L, 1);
-        }
+        const int n = lua_gettop(L);
+
         // TODO I am not sure whether reading information from the MegaMol Graph is safe without locking
         vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
 
-        AbstractNamedObject::const_ptr_type ano = this->coreInst->ModuleGraphRoot();
-        AbstractNamedObjectContainer::const_ptr_type anor = std::dynamic_pointer_cast<const AbstractNamedObjectContainer>(ano);
-        if (!ano) {
-            lua_pushstring(L, MMC_LUA_MMLISTCALLS": no root");
-            lua_error(L);
-            return 0;
-        }
-
         std::stringstream answer;
-        std::vector<AbstractNamedObject::const_ptr_type> anoStack;
 
-        const auto it_end = anor->ChildList_End();
-        for (auto it = anor->ChildList_Begin(); it != it_end; ++it) {
-            if (std::dynamic_pointer_cast<const AbstractNamedObjectContainer>(*it)) {
-                if (dynamic_cast<const Module *>(it->get())) {
-                    // no namespaces, modules directly
-                    anoStack.push_back(*it);
-                } else if (ns == nullptr || it->get()->FullName().Equals(ns)) {
-                    // namespaces
-                    anoStack.push_back(*it);
+        const auto fun = [&answer](Module* mod) {
+            AbstractNamedObjectContainer::child_list_type::const_iterator se = mod->ChildList_End();
+            for (AbstractNamedObjectContainer::child_list_type::const_iterator si = mod->ChildList_Begin(); si != se; ++si) {
+                const auto slot = dynamic_cast<CallerSlot*>((*si).get());
+                if (slot) {
+                    const Call *c = const_cast<CallerSlot *>(slot)->CallAs<Call>();
+                    if (c != nullptr) {
+                        answer << c->ClassName() << ";"
+                        << c->PeekCallerSlot()->Parent()->Name() << "," << c->PeekCalleeSlot()->Parent()->Name() << ";"
+                        << c->PeekCallerSlot()->Name() << "," << c->PeekCalleeSlot()->Name() << std::endl;
+                    }
                 }
             }
+        };
+
+        if (n == 1) {
+            const auto starting_point = luaL_checkstring(L, 1);
+            if (!std::string(starting_point).empty()) {
+                this->coreInst->EnumModulesNoLock(starting_point, fun);
+            } else {
+                this->coreInst->EnumModulesNoLock(nullptr, fun);
+            }
+        } else {
+            this->coreInst->EnumModulesNoLock(nullptr, fun);
         }
-
-        while (!anoStack.empty()) {
-            AbstractNamedObject::const_ptr_type ano = anoStack.back();
-            anoStack.pop_back();
-
-            AbstractNamedObjectContainer::const_ptr_type anoc = std::dynamic_pointer_cast<const AbstractNamedObjectContainer>(ano);
-            const CallerSlot *caller = dynamic_cast<const CallerSlot *>(ano.get());
-
-            if (caller) {
-                // TODO there must be a better way
-                const Call *c = const_cast<CallerSlot *>(caller)->CallAs<Call>();
-                if (c != nullptr) {
-                    answer << c->ClassName() << ";"
-                    << c->PeekCallerSlot()->Parent()->Name() << "," << c->PeekCalleeSlot()->Parent()->Name() << ";"
-                    << c->PeekCallerSlot()->Name() << "," << c->PeekCalleeSlot()->Name() << std::endl;
-                }
-            }
-
-            if (anoc) {
-                const auto it_end2 = anoc->ChildList_End();
-                for (auto it = anoc->ChildList_Begin(); it != it_end2; ++it) {
-                    anoStack.push_back(*it);
-                }
-            }
-        }
+        
         lua_pushstring(L, answer.str().c_str());
         return 1;
     }
@@ -1477,59 +1467,37 @@ int megamol::core::LuaState::ListCalls(lua_State* L) {
 
 int megamol::core::LuaState::ListModules(lua_State* L) {
     if (this->checkRunning(MMC_LUA_MMLISTMODULES)) {
-        
-        int n = lua_gettop(L);
-        const char *ns = nullptr;
-        if (n == 1) {
-            ns = luaL_checkstring(L, 1);
-        }
+
+        const int n = lua_gettop(L);
+
         // TODO I am not sure whether reading information from the MegaMol Graph is safe without locking
-        vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
+        //vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
+        if (this->coreInst->ModuleGraphRoot()->ModuleGraphLock().TryLock(100)) {
 
-        AbstractNamedObject::const_ptr_type ano = this->coreInst->ModuleGraphRoot();
-        AbstractNamedObjectContainer::const_ptr_type anor = std::dynamic_pointer_cast<const AbstractNamedObjectContainer>(ano);
-        if (!ano) {
-            lua_pushstring(L, MMC_LUA_MMLISTMODULES": no root");
-            lua_error(L);
-            return 0;
-        }
+            std::stringstream answer;
 
-        std::stringstream answer;
-        std::vector<AbstractNamedObject::const_ptr_type> anoStack;
+            const auto fun = [&answer](Module* mod) { answer << mod->ClassName() << ";" << mod->Name() << std::endl; };
 
-        const auto it_end = anor->ChildList_End();
-        for (auto it = anor->ChildList_Begin(); it != it_end; ++it) {
-            if (std::dynamic_pointer_cast<const AbstractNamedObjectContainer>(*it)) {
-                if (dynamic_cast<const Module *>(it->get())) {
-                    // no namespaces, modules directly
-                    anoStack.push_back(*it);
-                } else if (ns == nullptr || it->get()->FullName().Equals(ns)) {
-                    // namespaces
-                    anoStack.push_back(*it);
+            if (n == 1) {
+                const auto starting_point = luaL_checkstring(L, 1);
+                if (!std::string(starting_point).empty()) {
+                    this->coreInst->EnumModulesNoLock(starting_point, fun);
+                } else {
+                    this->coreInst->EnumModulesNoLock(nullptr, fun);
                 }
+            } else {
+                this->coreInst->EnumModulesNoLock(nullptr, fun);
             }
+
+            lua_pushstring(L, answer.str().c_str());
+            this->coreInst->ModuleGraphRoot()->ModuleGraphLock().Unlock();
+            return 1;            
+        } else {
+            std::stringstream answer;
+            answer << "Could not acquire module graph lock" << std::endl;
+            lua_pushstring(L, answer.str().c_str());
+            return 1;
         }
-
-        while (!anoStack.empty()) {
-            AbstractNamedObject::const_ptr_type ano = anoStack.back();
-            anoStack.pop_back();
-
-            AbstractNamedObjectContainer::const_ptr_type anoc = std::dynamic_pointer_cast<const AbstractNamedObjectContainer>(ano);
-            const Module *mod = dynamic_cast<const Module *>(ano.get());
-
-            if (mod) {
-                answer << mod->ClassName() << ";" << mod->Name() << std::endl;
-            }
-
-            if (anoc) {
-                const auto it_end2 = anoc->ChildList_End();
-                for (auto it = anoc->ChildList_Begin(); it != it_end2; ++it) {
-                    anoStack.push_back(*it);
-                }
-            }
-        }
-        lua_pushstring(L, answer.str().c_str());
-        return 1;
     }
     return 0;
 }
@@ -1555,10 +1523,48 @@ int megamol::core::LuaState::ListInstatiations(lua_State* L) {
                 if (!dynamic_cast<const Module *>(it->get())) {
                     AbstractNamedObjectContainer::const_ptr_type anoc = std::dynamic_pointer_cast<const AbstractNamedObjectContainer>(*it);
                     answer << anoc->FullName() << std::endl;
+                    // TODO: the immediate child view should be it, generally
                 }
             }
         }
 
+        lua_pushstring(L, answer.str().c_str());
+        return 1;
+    }
+    return 0;
+}
+
+int megamol::core::LuaState::ListParameters(lua_State* L) {
+    if (this->checkRunning(MMC_LUA_MMLISTPARAMETERS)) {
+
+        const int n = lua_gettop(L);
+
+        // TODO I am not sure whether reading information from the MegaMol Graph is safe without locking
+        vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
+
+        std::stringstream answer;
+
+        const auto fun = [&answer](Module* mod) {
+            AbstractNamedObjectContainer::child_list_type::const_iterator se = mod->ChildList_End();
+            for (AbstractNamedObjectContainer::child_list_type::const_iterator si = mod->ChildList_Begin(); si != se; ++si) {
+                const auto slot = dynamic_cast<param::ParamSlot*>((*si).get());
+                if (slot) {
+                    answer << slot->FullName() << "\1" << slot->Parameter()->ValueString() << "\1";
+                }
+            }
+        };
+
+        if (n == 1) {
+            const auto starting_point = luaL_checkstring(L, 1);
+            if (!std::string(starting_point).empty()) {
+                this->coreInst->EnumModulesNoLock(starting_point, fun);
+            } else {
+                this->coreInst->EnumModulesNoLock(nullptr, fun);
+            }
+        } else {
+            this->coreInst->EnumModulesNoLock(nullptr, fun);
+        }
+        
         lua_pushstring(L, answer.str().c_str());
         return 1;
     }
@@ -1576,7 +1582,7 @@ int megamol::core::LuaState::Help(lua_State *L) {
 }
 
 int megamol::core::LuaState::Quit(lua_State *L) {
-    if (this->checkRunning(MMC_LUA_MMLISTMODULES)) {
+    if (this->checkRunning(MMC_LUA_MMQUIT)) {
         this->coreInst->Shutdown();
     }
     return 0;
@@ -1595,17 +1601,23 @@ int megamol::core::LuaState::ReadTextFile(lua_State* L) {
 
             lua_remove(L, 1); // get rid of the filename on the stack, leaving the function pointer
             lua_pushstring(L, buffer.str().c_str()); // put string parameter on top of stack
-            // call the function pointer
-            lua_pcall(L, 1, 1, 0);
-            n = lua_gettop(L);
-            if (n != 1) {
-                std::string err = MMC_LUA_MMREADTEXTFILE ": function did not return a string, this is bad.";
-                lua_pushstring(L, err.c_str());
-                lua_error(L);
-            } else {
-                const auto newString = luaL_checkstring(L, 1);
-                //vislib::sys::Log::DefaultLog.WriteInfo(MMC_LUA_MMREADTEXTFILE ": transformed into:\n%s\n", newString);
+            if (lua_type(L, 1) == LUA_TNIL) {
+                // no transformation function, just return the string
                 return 1;
+            } else {
+                // call the function pointer
+                lua_pcall(L, 1, 1, 0);
+                n = lua_gettop(L);
+                if (n != 1) {
+                    std::string err = MMC_LUA_MMREADTEXTFILE ": function did not return a string, this is bad.";
+                    lua_pushstring(L, err.c_str());
+                    lua_error(L);
+                } else {
+                    const auto newString = luaL_checkstring(L, 1);
+                    // vislib::sys::Log::DefaultLog.WriteInfo(MMC_LUA_MMREADTEXTFILE ": transformed into:\n%s\n",
+                    // newString);
+                    return 1;
+                }
             }
         } else {
             std::string err = MMC_LUA_MMREADTEXTFILE ": cannot open file '";
@@ -1635,3 +1647,4 @@ int megamol::core::LuaState::CurrentScriptPath(struct lua_State* L) {
     lua_pushstring(L, this->currentScriptPath.c_str());
     return 1;
 }
+

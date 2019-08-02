@@ -24,7 +24,7 @@ namespace gl {
     /** Base class for AntTweakBar bars */
     class ATWinBar : public ATBar {
     public:
-        ATWinBar(Window& wnd, ATBUILayer& layer, const char* wndName);
+        ATWinBar(ATBUILayer& layer, const char* wndName);
         virtual ~ATWinBar();
 
     private:
@@ -45,9 +45,10 @@ namespace gl {
         static void loadParamFile(void *ctxt);
         static void saveParamFile(void *ctxt);
 
-        Window& wnd;
+        //Window& wnd;
         ATBUILayer& layer;
 
+		float fps = -0.0f; // TODO: broken but needed to kick gl::Window reference in class
         int winX, winY;
         unsigned int winW, winH;
         std::array<std::tuple<ATWinBar*, unsigned int, unsigned int>, 5> winSizePresets;

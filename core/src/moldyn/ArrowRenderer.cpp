@@ -8,12 +8,13 @@
 #include "stdafx.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "mmcore/moldyn/ArrowRenderer.h"
-#include "mmcore/moldyn/DirectionalParticleDataCall.h"
+#include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/view/CallClipPlane.h"
 #include "mmcore/view/CallGetTransferFunction.h"
 #include "mmcore/view/CallRender3D.h"
+#include "mmcore/FlagCall.h"
 #include "vislib/assert.h"
 
 using namespace megamol::core;
@@ -25,22 +26,26 @@ using namespace megamol::core;
 moldyn::ArrowRenderer::ArrowRenderer(void) : Renderer3DModule(),
         arrowShader(), getDataSlot("getdata", "Connects to the data source"),
         getTFSlot("gettransferfunction", "Connects to the transfer function module"),
+        getFlagsSlot("getflags", "connects to a FlagStorage"),
         //getClipPlaneSlot("getclipplane", "Connects to a clipping plane module"),
         greyTF(0),
         lengthScaleSlot("lengthScale", ""), lengthFilterSlot("lengthFilter", "Filters the arrows by length") {
 
-    this->getDataSlot.SetCompatibleCall<moldyn::DirectionalParticleDataCallDescription>();
+    this->getDataSlot.SetCompatibleCall<moldyn::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
 
     this->getTFSlot.SetCompatibleCall<view::CallGetTransferFunctionDescription>();
     this->MakeSlotAvailable(&this->getTFSlot);
+
+    this->getFlagsSlot.SetCompatibleCall<FlagCallDescription>();
+    this->MakeSlotAvailable(&this->getFlagsSlot);
 
     //this->getClipPlaneSlot.SetCompatibleCall<view::CallClipPlaneDescription>();
     //this->MakeSlotAvailable(&this->getClipPlaneSlot);
     
     this->lengthScaleSlot << new param::FloatParam(1.0f);
     this->MakeSlotAvailable(&this->lengthScaleSlot);
-	
+    
     this->lengthFilterSlot << new param::FloatParam( 0.0f, 0.0);
     this->MakeSlotAvailable(&this->lengthFilterSlot);
 }
@@ -118,7 +123,7 @@ bool moldyn::ArrowRenderer::GetExtents(Call& call) {
     view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
     if (cr == NULL) return false;
 
-    DirectionalParticleDataCall *c2 = this->getDataSlot.CallAs<DirectionalParticleDataCall>();
+    MultiParticleDataCall* c2 = this->getDataSlot.CallAs<MultiParticleDataCall>();
     if ((c2 != NULL) && ((*c2)(1))) {
         cr->SetTimeFramesCount(c2->FrameCount());
         cr->AccessBoundingBoxes() = c2->AccessBoundingBoxes();
@@ -156,7 +161,7 @@ bool moldyn::ArrowRenderer::Render(Call& call) {
     view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
     if (cr == NULL) return false;
 
-    DirectionalParticleDataCall *c2 = this->getDataSlot.CallAs<DirectionalParticleDataCall>();
+    MultiParticleDataCall *c2 = this->getDataSlot.CallAs<MultiParticleDataCall>();
     float scaling = 1.0f;
     if (c2 != NULL) {
         c2->SetFrameID(static_cast<unsigned int>(cr->Time()));
@@ -175,8 +180,10 @@ bool moldyn::ArrowRenderer::Render(Call& call) {
     } else {
         return false;
     }
+
+    auto* cflags = this->getFlagsSlot.CallAs<FlagCall>();
   
-	float lengthScale = this->lengthScaleSlot.Param<param::FloatParam>()->Value();
+    float lengthScale = this->lengthScaleSlot.Param<param::FloatParam>()->Value();
     float lengthFilter = this->lengthFilterSlot.Param<param::FloatParam>()->Value();
 
     //view::CallClipPlane *ccp = this->getClipPlaneSlot.CallAs<view::CallClipPlane>();
@@ -221,14 +228,24 @@ bool moldyn::ArrowRenderer::Render(Call& call) {
     //glUniform4fvARB(this->arrowShader.ParameterLocation("clipDat"), 1, clipDat);
     //glUniform3fvARB(this->arrowShader.ParameterLocation("clipCol"), 1, clipCol);
 
-	glScalef(scaling, scaling, scaling);
+    glScalef(scaling, scaling, scaling);
 
     if (c2 != NULL) {
         unsigned int cial = glGetAttribLocationARB(this->arrowShader, "colIdx");
         unsigned int tpal = glGetAttribLocationARB(this->arrowShader, "dir");
+        bool useFlags = false;
+
+        if (cflags != nullptr) {
+            if (c2->GetParticleListCount() > 1) {
+                vislib::sys::Log::DefaultLog.WriteWarn(
+                    "ArrowRenderer: cannot use FlagStorage together with multiple particle lists!");
+            } else {
+                useFlags = true;
+            }
+        }
 
         for (unsigned int i = 0; i < c2->GetParticleListCount(); i++) {
-            DirectionalParticleDataCall::Particles &parts = c2->AccessParticles(i);
+            MultiParticleDataCall::Particles &parts = c2->AccessParticles(i);
             float minC = 0.0f, maxC = 0.0f;
             unsigned int colTabSize = 0;
 
@@ -253,9 +270,16 @@ bool moldyn::ArrowRenderer::Render(Call& call) {
                     glEnableClientState(GL_COLOR_ARRAY);
                     glColorPointer(4, GL_FLOAT, parts.GetColourDataStride(), parts.GetColourData());
                     break;
+                case MultiParticleDataCall::Particles::COLDATA_DOUBLE_I:
                 case MultiParticleDataCall::Particles::COLDATA_FLOAT_I: {
                     glEnableVertexAttribArrayARB(cial);
-                    glVertexAttribPointerARB(cial, 1, GL_FLOAT, GL_FALSE, parts.GetColourDataStride(), parts.GetColourData());
+                    if (parts.GetColourDataType() == MultiParticleDataCall::Particles::COLDATA_FLOAT_I) {
+                        glVertexAttribPointerARB(
+                            cial, 1, GL_FLOAT, GL_FALSE, parts.GetColourDataStride(), parts.GetColourData());
+                    } else {
+                        glVertexAttribPointerARB(
+                            cial, 1, GL_DOUBLE, GL_FALSE, parts.GetColourDataStride(), parts.GetColourData());
+                    }
 
                     glEnable(GL_TEXTURE_1D);
                     view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
@@ -291,25 +315,51 @@ bool moldyn::ArrowRenderer::Render(Call& call) {
                     glUniform4f(this->arrowShader.ParameterLocation("inConsts1"), -1.0f, minC, maxC, float(colTabSize));
                     glVertexPointer(4, GL_FLOAT, parts.GetVertexDataStride(), parts.GetVertexData());
                     break;
+                case MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ:
+                    glEnableClientState(GL_VERTEX_ARRAY);
+                    glUniform4f(this->arrowShader.ParameterLocation("inConsts1"), -1.0f, minC, maxC, float(colTabSize));
+                    glVertexPointer(3, GL_DOUBLE, parts.GetVertexDataStride(), parts.GetVertexData());
                 default:
                     continue;
             }
 
             // direction
             switch (parts.GetDirDataType()) {
-                case DirectionalParticleDataCall::Particles::DIRDATA_FLOAT_XYZ:
+                case MultiParticleDataCall::Particles::DIRDATA_FLOAT_XYZ:
                     ::glEnableVertexAttribArrayARB(tpal);
                     ::glVertexAttribPointerARB(tpal, 3, GL_FLOAT, GL_FALSE, parts.GetDirDataStride(), parts.GetDirData());
                     break;
                 default:
+                    vislib::sys::Log::DefaultLog.WriteWarn(
+                        "ArrowRenderer: cannot render arrows without directional data!");
                     continue;
+            }
+            std::shared_ptr<FlagStorage::FlagVectorType> flags;
+            unsigned int fal = 0;
+            if (useFlags) {
+                (*cflags)(core::FlagCall::CallMapFlags);
+                cflags->validateFlagsCount(parts.GetCount());
+                flags = cflags->GetFlags();
+                fal = glGetAttribLocationARB(this->arrowShader, "flags");
+                ::glEnableVertexAttribArrayARB(fal);
+                ::glVertexAttribIPointer(
+                    fal, 1, GL_UNSIGNED_INT, sizeof(FlagStorage::FlagItemType), flags.get()->data());
             }
 
             glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(parts.GetCount()));
 
+            if (useFlags) {
+                cflags->SetFlags(flags);
+                (*cflags)(core::FlagCall::CallUnmapFlags);
+                glDisableVertexAttribArrayARB(fal);
+            }
+
             glDisableClientState(GL_COLOR_ARRAY);
             glDisableClientState(GL_VERTEX_ARRAY);
-            glDisableVertexAttribArrayARB(cial);
+            if (parts.GetColourDataType() == MultiParticleDataCall::Particles::COLDATA_DOUBLE_I ||
+                parts.GetColourDataType() == MultiParticleDataCall::Particles::COLDATA_FLOAT_I) {
+                glDisableVertexAttribArrayARB(cial);
+            }
             glDisableVertexAttribArrayARB(tpal);
             glDisable(GL_TEXTURE_1D);
         }

@@ -28,9 +28,6 @@ namespace protein {
  */
 class MSMSMeshLoader : public core::Module {
 public:
-    const int m_hightmp_col = -2; // colourmode index for hightmap colouring
-    const int m_hightmp_val = -3; // colourmode index for hightmap intensity
-
 
     /**
      * Answer the name of this module.

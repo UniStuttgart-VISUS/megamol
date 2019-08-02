@@ -12,8 +12,8 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/Call.h"
-#include "mmcore/CallAutoDescription.h"
-#include "protein_calls/MolecularDataCall.h"
+#include "mmcore/factories/CallAutoDescription.h"
+#include "MolecularDataCall.h"
 
 namespace megamol {
 namespace protein_calls {
@@ -81,7 +81,7 @@ namespace protein_calls {
         }
 
         unsigned int Count(void) const {
-            return data.Count();
+            return static_cast<unsigned int>(data.Count());
         }
 
         void SetData(vislib::Array<float> dat) {
@@ -134,7 +134,7 @@ namespace protein_calls {
     };
 
     /** Description class typedef */
-    typedef megamol::core::CallAutoDescription<PerAtomFloatCall> PerAtomFloatCallDescription;
+    typedef megamol::core::factories::CallAutoDescription<PerAtomFloatCall> PerAtomFloatCallDescription;
 
 } // end namespace molecularmaps
 } // end namespace megamol

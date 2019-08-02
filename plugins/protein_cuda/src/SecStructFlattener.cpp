@@ -20,6 +20,8 @@
 #include "vislib/math/ShallowVector.h"
 #include "vislib/sys/Log.h"
 
+#include <limits>
+
 using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::protein_cuda;
@@ -72,7 +74,7 @@ SecStructFlattener::SecStructFlattener(void) :
 	this->timestepsPerFrameParam.SetParameter(new param::IntParam(1, 1, 100));
 	this->MakeSlotAvailable(&this->timestepsPerFrameParam);
 
-	this->maxTimestepParam.SetParameter(new param::IntParam(-1, -1, INT_MAX));
+	this->maxTimestepParam.SetParameter(new param::IntParam(-1, -1, std::numeric_limits<int>::max()));
 	this->MakeSlotAvailable(&this->maxTimestepParam);
 
 	float minConstant = 0.0f;
@@ -95,15 +97,15 @@ SecStructFlattener::SecStructFlattener(void) :
 	this->playParam.SetParameter(new param::BoolParam(false));
 	this->MakeSlotAvailable(&this->playParam);
 
-	this->playButtonParam << new param::ButtonParam('p');
+	this->playButtonParam << new param::ButtonParam(core::view::Key::KEY_P);
 	this->playButtonParam.SetUpdateCallback(this, &SecStructFlattener::onPlayToggleButton);
 	this->MakeSlotAvailable(&this->playButtonParam);
 
-	this->singleStepButtonParam << new param::ButtonParam('o');
+	this->singleStepButtonParam << new param::ButtonParam(core::view::Key::KEY_O);
 	this->singleStepButtonParam.SetUpdateCallback(this, &SecStructFlattener::onSingleStepButton);
 	this->MakeSlotAvailable(&this->singleStepButtonParam);
 
-	this->resetButtonParam << new param::ButtonParam('r');
+	this->resetButtonParam << new param::ButtonParam(core::view::Key::KEY_R);
 	this->resetButtonParam.SetUpdateCallback(this, &SecStructFlattener::onResetButton);
 	this->MakeSlotAvailable(&this->resetButtonParam);
 

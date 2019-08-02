@@ -101,10 +101,6 @@ MSMSMeshLoader::MSMSMeshLoader(void)
     delete mol;
     delete bs;
     delete pa;
-    cm0->SetTypePair(m_hightmp_col, "Heightmap Colouring");
-    cm1->SetTypePair(m_hightmp_col, "Heightmap Colouring");
-    cm0->SetTypePair(m_hightmp_val, "Heightmap Intensity");
-    cm1->SetTypePair(m_hightmp_val, "Heightmap Intensity");
     this->coloringModeParam0 << cm0;
     this->coloringModeParam1 << cm1;
     this->MakeSlotAvailable(&this->coloringModeParam0);
@@ -202,33 +198,17 @@ bool MSMSMeshLoader::getDataCallback(core::Call& caller) {
                 Color::ColoringMode currentColoringMode1 =
                     static_cast<Color::ColoringMode>(this->coloringModeParam1.Param<param::EnumParam>()->Value());
                 vislib::Array<float> atomColorTable;
+                vislib::Array<float> atomColorTable2;
 
-                unsigned char* intensity = new unsigned char[this->obj[ctmd->FrameID()]->GetVertexCount()];
-                // Mix two coloring modes
-                if (currentColoringMode0 == m_hightmp_col || currentColoringMode1 == m_hightmp_col) {
-                    Color::ColoringMode non_negative = std::max(currentColoringMode0, currentColoringMode1);
-                    Color::MakeColorTable(mol, non_negative, atomColorTable, this->colorLookupTable,
-                        this->rainbowColors, this->minGradColorParam.Param<param::StringParam>()->Value(),
-                        this->midGradColorParam.Param<param::StringParam>()->Value(),
-                        this->maxGradColorParam.Param<param::StringParam>()->Value(), true, bs, false, pa,
-                        bs->isEnzymeMode(), bs->isOfGxType());
+                Color::MakeColorTable(mol, currentColoringMode0, atomColorTable, this->colorLookupTable,
+                    this->rainbowColors, this->minGradColorParam.Param<param::StringParam>()->Value(),
+                    this->midGradColorParam.Param<param::StringParam>()->Value(),
+                    this->maxGradColorParam.Param<param::StringParam>()->Value(), true, bs, false, pa);
 
-                } else if (currentColoringMode0 == m_hightmp_val || currentColoringMode1 == m_hightmp_val) {
-                    Color::ColoringMode non_negative = std::max(currentColoringMode0, currentColoringMode1);
-                    Color::MakeColorTable(mol, non_negative, atomColorTable, this->colorLookupTable,
-                        this->rainbowColors, this->minGradColorParam.Param<param::StringParam>()->Value(),
-                        this->midGradColorParam.Param<param::StringParam>()->Value(),
-                        this->maxGradColorParam.Param<param::StringParam>()->Value(), true, bs, false, pa,
-                        bs->isEnzymeMode(), bs->isOfGxType());
-                } else {
-                    Color::MakeColorTable(mol, currentColoringMode0, currentColoringMode1,
-                        colorWeightParam.Param<param::FloatParam>()->Value(),
-                        1.0f - colorWeightParam.Param<param::FloatParam>()->Value(), atomColorTable,
-                        this->colorLookupTable, this->rainbowColors,
-                        this->minGradColorParam.Param<param::StringParam>()->Value(),
-                        this->midGradColorParam.Param<param::StringParam>()->Value(),
-                        this->maxGradColorParam.Param<param::StringParam>()->Value(), true, bs, false, pa);
-                }
+                Color::MakeColorTable(mol, currentColoringMode1, atomColorTable2, this->colorLookupTable,
+                    this->rainbowColors, this->minGradColorParam.Param<param::StringParam>()->Value(),
+                    this->midGradColorParam.Param<param::StringParam>()->Value(),
+                    this->maxGradColorParam.Param<param::StringParam>()->Value(), true, bs, false, pa);
 
                 // loop over atoms and compute color
                 float* vertex = new float[this->obj[ctmd->FrameID()]->GetVertexCount() * 3];
@@ -338,6 +318,18 @@ bool MSMSMeshLoader::getDataCallback(core::Call& caller) {
                     this->attIdx = this->obj[ctmd->FrameID()]->AddVertexAttribPointer(atomIndex);
                 }
 
+                // weighting factors
+                float weight0 = this->colorWeightParam.Param<param::FloatParam>()->Value();
+                float weight1 = 1.0f - weight0;
+
+                // Clamp weights to zero
+                if (weight0 < 0.0) weight0 = 0.0;
+                if (weight1 < 0.0) weight1 = 0.0;
+
+                // Normalize weights
+                weight0 = weight0 / (weight0 + weight1);
+                weight1 = weight1 / (weight0 + weight1);
+
                 for (unsigned int i = 0; i < this->obj[ctmd->FrameID()]->GetVertexCount(); i++) {
                     vertex[i * 3 + 0] = this->obj[ctmd->FrameID()]->GetVertexPointerFloat()[i * 3 + 0];
                     vertex[i * 3 + 1] = this->obj[ctmd->FrameID()]->GetVertexPointerFloat()[i * 3 + 1];
@@ -345,10 +337,13 @@ bool MSMSMeshLoader::getDataCallback(core::Call& caller) {
                     normal[i * 3 + 0] = this->obj[ctmd->FrameID()]->GetNormalPointerFloat()[i * 3 + 0];
                     normal[i * 3 + 1] = this->obj[ctmd->FrameID()]->GetNormalPointerFloat()[i * 3 + 1];
                     normal[i * 3 + 2] = this->obj[ctmd->FrameID()]->GetNormalPointerFloat()[i * 3 + 2];
+                    color[i * 3 + 0] = 0;
+                    color[i * 3 + 1] = 0;
+                    color[i * 3 + 2] = 0;
                     atomIndex[i] = this->obj[ctmd->FrameID()]->GetVertexAttribPointerUInt32(attIdx)[i];
 
                     // create hightmap colours or read per atom colours
-                    if (currentColoringMode0 == m_hightmp_col || currentColoringMode1 == m_hightmp_col) {
+                    if (currentColoringMode0 == Color::HEIGHTMAP_COL || currentColoringMode0 == Color::HEIGHTMAP_VAL) {
                         col = std::vector<unsigned char>(3, 0);
                         dist =
                             sqrt(pow(centroid[0] - this->obj[ctmd->FrameID()]->GetVertexPointerFloat()[i * 3 + 0], 2) +
@@ -358,78 +353,68 @@ bool MSMSMeshLoader::getDataCallback(core::Call& caller) {
                         lower_bound = float(bin) * steps;
                         upper_bound = float(bin + 1) * steps;
                         alpha = (dist - lower_bound) / (upper_bound - lower_bound);
-                        col[0] =
-                            static_cast<unsigned char>((1.0f - alpha) * colours[bin][0] + alpha * colours[bin + 1][0]);
-                        col[1] =
-                            static_cast<unsigned char>((1.0f - alpha) * colours[bin][1] + alpha * colours[bin + 1][1]);
-                        col[2] =
-                            static_cast<unsigned char>((1.0f - alpha) * colours[bin][2] + alpha * colours[bin + 1][2]);
+                        dist /= max_dist;
 
-                        float weightparam = colorWeightParam.Param<param::FloatParam>()->Value();
-                        if (currentColoringMode0 == m_hightmp_col) {
-                            color[i * 3 + 0] = static_cast<unsigned char>(
-                                (1.0f - weightparam) * (atomColorTable[atomIndex[i] * 3 + 0] * 255));
-                            color[i * 3 + 1] = static_cast<unsigned char>(
-                                (1.0f - weightparam) * (atomColorTable[atomIndex[i] * 3 + 1] * 255));
-                            color[i * 3 + 2] = static_cast<unsigned char>(
-                                (1.0f - weightparam) * (atomColorTable[atomIndex[i] * 3 + 2] * 255));
-
-                            color[i * 3 + 0] += static_cast<unsigned char>(weightparam * col[0]);
-                            color[i * 3 + 1] += static_cast<unsigned char>(weightparam * col[1]);
-                            color[i * 3 + 2] += static_cast<unsigned char>(weightparam * col[2]);
-                        } else {
-                            color[i * 3 + 0] =
-                                static_cast<unsigned char>(weightparam * (atomColorTable[atomIndex[i] * 3 + 0] * 255));
-                            color[i * 3 + 1] =
-                                static_cast<unsigned char>(weightparam * (atomColorTable[atomIndex[i] * 3 + 1] * 255));
-                            color[i * 3 + 2] =
-                                static_cast<unsigned char>(weightparam * (atomColorTable[atomIndex[i] * 3 + 2] * 255));
-
-                            color[i * 3 + 0] += static_cast<unsigned char>((1.0f - weightparam) * col[0]);
-                            color[i * 3 + 1] += static_cast<unsigned char>((1.0f - weightparam) * col[1]);
-                            color[i * 3 + 2] += static_cast<unsigned char>((1.0f - weightparam) * col[2]);
+                        if (currentColoringMode0 == Color::HEIGHTMAP_COL) {
+                            col[0] = static_cast<unsigned char>(
+                                (1.0f - alpha) * colours[bin][0] + alpha * colours[bin + 1][0]);
+                            col[1] = static_cast<unsigned char>(
+                                (1.0f - alpha) * colours[bin][1] + alpha * colours[bin + 1][1]);
+                            col[2] = static_cast<unsigned char>(
+                                (1.0f - alpha) * colours[bin][2] + alpha * colours[bin + 1][2]);
+                        } else { // currentColoringMode0 == Color::HEIGHTMAP_VAL
+                            unsigned char dist_uc = static_cast<unsigned char>(dist * 255.0f);
+                            col[0] = dist_uc;
+                            col[1] = dist_uc;
+                            col[2] = dist_uc;
                         }
-                    } else if (currentColoringMode0 == m_hightmp_val || currentColoringMode1 == m_hightmp_val) {
+                        color[i * 3 + 0] += static_cast<unsigned char>(weight0 * col[0]);
+                        color[i * 3 + 1] += static_cast<unsigned char>(weight0 * col[1]);
+                        color[i * 3 + 2] += static_cast<unsigned char>(weight0 * col[2]);
+                    } else {
+                        color[i * 3 + 0] +=
+                            static_cast<unsigned char>(weight0 * atomColorTable[atomIndex[i] * 3 + 0] * 255);
+                        color[i * 3 + 1] +=
+                            static_cast<unsigned char>(weight0 * atomColorTable[atomIndex[i] * 3 + 1] * 255);
+                        color[i * 3 + 2] +=
+                            static_cast<unsigned char>(weight0 * atomColorTable[atomIndex[i] * 3 + 2] * 255);
+                    }
+
+                    if (currentColoringMode1 == Color::HEIGHTMAP_COL || currentColoringMode1 == Color::HEIGHTMAP_VAL) {
                         col = std::vector<unsigned char>(3, 0);
                         dist =
                             sqrt(pow(centroid[0] - this->obj[ctmd->FrameID()]->GetVertexPointerFloat()[i * 3 + 0], 2) +
                                  pow(centroid[1] - this->obj[ctmd->FrameID()]->GetVertexPointerFloat()[i * 3 + 1], 2) +
                                  pow(centroid[2] - this->obj[ctmd->FrameID()]->GetVertexPointerFloat()[i * 3 + 2], 2));
+                        bin = static_cast<unsigned int>(std::truncf(dist / steps));
+                        lower_bound = float(bin) * steps;
+                        upper_bound = float(bin + 1) * steps;
+                        alpha = (dist - lower_bound) / (upper_bound - lower_bound);
                         dist /= max_dist;
-                        unsigned char dist_uc = static_cast<unsigned char>(dist * 255.0f);
-                        col[0] = dist_uc;
-                        col[1] = dist_uc;
-                        col[2] = dist_uc;
 
-                        float weightparam = colorWeightParam.Param<param::FloatParam>()->Value();
-                        if (currentColoringMode0 == m_hightmp_val) {
-                            color[i * 3 + 0] = static_cast<unsigned char>(
-                                (1.0f - weightparam) * (atomColorTable[atomIndex[i] * 3 + 0] * 255));
-                            color[i * 3 + 1] = static_cast<unsigned char>(
-                                (1.0f - weightparam) * (atomColorTable[atomIndex[i] * 3 + 1] * 255));
-                            color[i * 3 + 2] = static_cast<unsigned char>(
-                                (1.0f - weightparam) * (atomColorTable[atomIndex[i] * 3 + 2] * 255));
-
-                            color[i * 3 + 0] += static_cast<unsigned char>(weightparam * col[0]);
-                            color[i * 3 + 1] += static_cast<unsigned char>(weightparam * col[1]);
-                            color[i * 3 + 2] += static_cast<unsigned char>(weightparam * col[2]);
-
-                        } else {
-                            color[i * 3 + 0] =
-                                static_cast<unsigned char>(weightparam * (atomColorTable[atomIndex[i] * 3 + 0] * 255));
-                            color[i * 3 + 1] =
-                                static_cast<unsigned char>(weightparam * (atomColorTable[atomIndex[i] * 3 + 1] * 255));
-                            color[i * 3 + 2] =
-                                static_cast<unsigned char>(weightparam * (atomColorTable[atomIndex[i] * 3 + 2] * 255));
-
-                            color[i * 3 + 0] += static_cast<unsigned char>((1.0f - weightparam) * col[0]);
-                            color[i * 3 + 1] += static_cast<unsigned char>((1.0f - weightparam) * col[1]);
-                            color[i * 3 + 2] += static_cast<unsigned char>((1.0f - weightparam) * col[2]);
+                        if (currentColoringMode1 == Color::HEIGHTMAP_COL) {
+                            col[0] = static_cast<unsigned char>(
+                                (1.0f - alpha) * colours[bin][0] + alpha * colours[bin + 1][0]);
+                            col[1] = static_cast<unsigned char>(
+                                (1.0f - alpha) * colours[bin][1] + alpha * colours[bin + 1][1]);
+                            col[2] = static_cast<unsigned char>(
+                                (1.0f - alpha) * colours[bin][2] + alpha * colours[bin + 1][2]);
+                        } else { // currentColoringMode1 == Color::HEIGHTMAP_VAL
+                            unsigned char dist_uc = static_cast<unsigned char>(dist * 255.0f);
+                            col[0] = dist_uc;
+                            col[1] = dist_uc;
+                            col[2] = dist_uc;
                         }
+                        color[i * 3 + 0] += static_cast<unsigned char>(weight1 * col[0]);
+                        color[i * 3 + 1] += static_cast<unsigned char>(weight1 * col[1]);
+                        color[i * 3 + 2] += static_cast<unsigned char>(weight1 * col[2]);
                     } else {
-                        color[i * 3 + 0] = static_cast<unsigned char>(atomColorTable[atomIndex[i] * 3 + 0] * 255);
-                        color[i * 3 + 1] = static_cast<unsigned char>(atomColorTable[atomIndex[i] * 3 + 1] * 255);
-                        color[i * 3 + 2] = static_cast<unsigned char>(atomColorTable[atomIndex[i] * 3 + 2] * 255);
+                        color[i * 3 + 0] +=
+                            static_cast<unsigned char>(weight1 * atomColorTable2[atomIndex[i] * 3 + 0] * 255);
+                        color[i * 3 + 1] +=
+                            static_cast<unsigned char>(weight1 * atomColorTable2[atomIndex[i] * 3 + 1] * 255);
+                        color[i * 3 + 2] +=
+                            static_cast<unsigned char>(weight1 * atomColorTable2[atomIndex[i] * 3 + 2] * 255);
                     }
                 }
 
@@ -484,23 +469,6 @@ bool MSMSMeshLoader::getExtentCallback(core::Call& caller) {
             if ((*mol)(MolecularDataCall::CallForGetExtent)) {
                 frameCnt = mol->FrameCount();
                 this->bbox = mol->AccessBoundingBoxes().ObjectSpaceBBox();
-//#define SCALING_ISSUE
-#ifdef SCALING_ISSUE
-                float width = bbox.Width();
-                float height = bbox.Height();
-                float depth = bbox.Depth();
-
-                float widthadd = 85.0f - width;
-                float heightadd = 75.0f - height;
-                float depthadd = 68.0f - depth;
-
-                this->bbox.SetLeft(this->bbox.GetLeft() - (widthadd / 2.0f));
-                this->bbox.SetBottom(this->bbox.GetBottom() - (heightadd / 2.0f));
-                this->bbox.SetBack(this->bbox.GetBack() - (depthadd / 2.0f));
-                this->bbox.SetRight(this->bbox.GetRight() + (widthadd / 2.0f));
-                this->bbox.SetTop(this->bbox.GetTop() + (heightadd / 2.0f));
-                this->bbox.SetFront(this->bbox.GetFront() + (depthadd / 2.0f));
-#endif
             }
         }
     }
@@ -683,22 +651,6 @@ bool MSMSMeshLoader::load(const vislib::TString& filename, unsigned int frameID)
             for (unsigned int i = 1; i < this->vertexCount; i++) {
                 this->bbox.GrowToPoint(vertex[i * 3], vertex[i * 3 + 1], vertex[i * 3 + 2]);
             }
-#ifdef SCALING_ISSUE
-            float width = bbox.Width();
-            float height = bbox.Height();
-            float depth = bbox.Depth();
-
-            float widthadd = 85.0f - width;
-            float heightadd = 75.0f - height;
-            float depthadd = 68.0f - depth;
-
-            this->bbox.SetLeft(this->bbox.GetLeft() - (widthadd / 2.0f));
-            this->bbox.SetBottom(this->bbox.GetBottom() - (heightadd / 2.0f));
-            this->bbox.SetBack(this->bbox.GetBack() - (depthadd / 2.0f));
-            this->bbox.SetRight(this->bbox.GetRight() + (widthadd / 2.0f));
-            this->bbox.SetTop(this->bbox.GetTop() + (heightadd / 2.0f));
-            this->bbox.SetFront(this->bbox.GetFront() + (depthadd / 2.0f));
-#endif
         }
 
         // try to call molecular data and compute colors

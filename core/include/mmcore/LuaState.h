@@ -40,7 +40,7 @@ namespace utility {
      * string, table, math, package, and os (see LUA_FULL_ENVIRONMENT define).
      * Lua constants LOGINFO, LOGWARNING, LOGERROR are provided for MegaMol log output.
      */
-    class LuaState {
+    class MEGAMOLCORE_API LuaState {
     public:
 
         static const std::string MEGAMOL_ENV;
@@ -95,6 +95,11 @@ namespace utility {
          * Answer whether the wrapped lua state is valid
          */
         bool StateOk();
+
+        /**
+         * Answers the current project file path
+         */
+        std::string GetScriptPath(void);
 
         // ************************************************************
         // Lua interface routines, published to Lua as mm<name>
@@ -226,6 +231,7 @@ namespace utility {
         int ListCalls(lua_State *L);
         int ListModules(lua_State *L);
         int ListInstatiations(lua_State *L);
+        int ListParameters(lua_State *L);
 
         int Help(lua_State *L);
         int Quit(lua_State *L);
@@ -238,7 +244,7 @@ namespace utility {
     private:
 
         /** error handler */
-        void consumeError(int error, char *file, int line);
+        void consumeError(int error, char const* file, int line) const;
 
         /** print table on the stack somewhat */
         void printTable(lua_State *L, std::stringstream& out);

@@ -20,13 +20,16 @@ namespace MegaMolConf.Data {
                     || Name.Equals("View3D")
                     || Name.Equals("View3DMouse")
                     || Name.Equals("View3DSpaceMouse")
+                    || Name.Equals("GUIView")
                     || Name.Equals("SimpleClusterView")
                     || Name.Equals("TileView")
                     || Name.Equals("PowerwallView")
                     || Name.Equals("QuadBufferStereoView")
                     || Name.Equals("AnaglyphStereoView")
                     || Name.Equals("TileView3D")
-                    || Name.Equals("RemoteTileView");
+                    || Name.Equals("RemoteTileView")
+                    || Name.Equals("HeadView")
+                    || Name.Equals("View3D_2");
             }
         }
     }

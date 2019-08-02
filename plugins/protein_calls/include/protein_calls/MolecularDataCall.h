@@ -1625,6 +1625,7 @@ namespace protein_calls {
 			this->neighborhoodSizes = s.neighborhoodSizes;
 			this->hydrogenBonds = s.hydrogenBonds;
 			this->numHydrogenBonds = s.numHydrogenBonds;
+            this->pdbFilename = s.pdbFilename;
             return *this;
         }
 
@@ -1636,6 +1637,22 @@ namespace protein_calls {
             const Molecule& molecule = this->Molecules()[idx];
             const Chain& chain = this->Chains()[molecule.ChainIndex()];
             return chain.Type() == MolecularDataCall::Chain::SOLVENT;
+        }
+
+        /*
+         * Sets the filename of the pdb file
+         *
+         * @param pdbFilename The filename of the pdb file
+         */
+        inline void SetPDBFilename(vislib::TString pdbFilename) {
+            this->pdbFilename = pdbFilename;
+        }
+
+        /*
+         * Returns the filename of the containing pdb file.
+         */
+        inline vislib::TString GetPDBFilename(void) const {
+            return this->pdbFilename;
         }
 
     private:
@@ -1735,6 +1752,10 @@ namespace protein_calls {
 
 		/** The number of hydrogen bonds in the hydrogen bonds array */
 		unsigned int numHydrogenBonds;
+
+        /** The name of the pdb file the data is from */
+        VISLIB_MSVC_SUPPRESS_WARNING(4251)
+        vislib::TString pdbFilename;
     };
 
     /** Description class typedef */

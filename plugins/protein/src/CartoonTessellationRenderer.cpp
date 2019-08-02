@@ -150,7 +150,7 @@ CartoonTessellationRenderer::CartoonTessellationRenderer(void) : Renderer3DModul
 	this->lineDebugParam << new core::param::BoolParam(false);
 	this->MakeSlotAvailable(&this->lineDebugParam);
 
-	this->buttonParam << new core::param::ButtonParam(vislib::sys::KeyCode::KEY_F5);
+	this->buttonParam << new core::param::ButtonParam(core::view::Key::KEY_F5);
 	this->MakeSlotAvailable(&this->buttonParam);
 
 	this->colorInterpolationParam << new core::param::BoolParam(false);
@@ -196,7 +196,7 @@ void CartoonTessellationRenderer::waitSignal(GLsync& syncObj) {
 
 
 /*
- * moldyn::SimpleSphereRenderer::create
+ * moldyn::CartoonTessellationRenderer::create
  */
 bool CartoonTessellationRenderer::create(void) {
     using namespace vislib::sys;
@@ -352,7 +352,7 @@ bool CartoonTessellationRenderer::create(void) {
 }
 
 /*
- * moldyn::SimpleSphereRenderer::release
+ * moldyn::CartoonTessellationRenderer::release
  */
 void CartoonTessellationRenderer::release(void) {
     glUnmapNamedBufferEXT(this->theSingleBuffer);
@@ -453,7 +453,7 @@ MolecularDataCall* CartoonTessellationRenderer::getData(unsigned int t, float& o
 }
 
 /*
- * moldyn::SimpleSphereRenderer::Render
+ * moldyn::CartoonTessellationRenderer::Render
  */
 bool CartoonTessellationRenderer::Render(Call& call) {
 #ifdef DEBUG_BLAHBLAH

@@ -3,12 +3,13 @@
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
+#include "mmcore/FlagStorage.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/utility/SDFFont.h"
 #include "mmcore/view/CallRender2D.h"
 #include "mmcore/view/Renderer2DModule.h"
-#include "mmstd_datatools/floattable/CallFloatTableData.h"
+#include "mmstd_datatools/table/TableDataCall.h"
 
 #include "vislib/graphics/gl/FramebufferObject.h"
 
@@ -33,7 +34,11 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static inline const char* Description(void) { return "Parallel coordinates renderer for generic float tables"; }
+    static inline const char* Description(void) {
+        return "Parallel coordinates renderer for generic tables.\n"
+               "Left-Click to pick/stroke\npress [Shift] to filter axis using the two delimiters (hats)\n"
+               "press [Alt] to re-order axes";
+    }
 
     /**
      * Answers whether this module is available on the current system.
@@ -76,7 +81,14 @@ protected:
 
     virtual bool GetExtents(core::view::CallRender2D& call);
 
-    virtual bool MouseEvent(float x, float y, core::view::MouseFlags flags);
+    // virtual bool MouseEvent(float x, float y, core::view::MouseFlags flags);
+
+    bool OnMouseButton(
+        core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) override;
+
+    bool OnMouseMove(double x, double y) override;
+
+    bool OnKey(core::view::Key key, core::view::KeyAction action, core::view::Modifiers mods) override;
 
     bool selectedItemsColorSlotCallback(core::param::ParamSlot& caller);
     bool otherItemsColorSlotCallback(core::param::ParamSlot& caller);
@@ -143,6 +155,8 @@ private:
 
     size_t currentHash;
 
+    core::FlagStorage::FlagVersionType currentFlagsVersion;
+
     ::vislib::graphics::gl::FramebufferObject densityFBO;
 
     float mousePressedX;
@@ -151,7 +165,6 @@ private:
     float mouseReleasedY;
     float mouseX;
     float mouseY;
-    core::view::MouseFlags mouseFlags;
 
     core::param::ParamSlot drawModeSlot;
 
@@ -243,8 +256,12 @@ private:
     std::vector<std::string> names;
 
     int pickedAxis;
+    bool leftDown = false, leftUp = false, ctrlDown = false, altDown = false, shiftDown = false;
     bool dragging;
+    bool stoppedDragging;
     bool filtering;
+    bool stroking = false;
+    bool stoppedFiltering;
     int pickedIndicatorAxis;
     // int lastPickedIndicatorAxis;
     int pickedIndicatorIndex;

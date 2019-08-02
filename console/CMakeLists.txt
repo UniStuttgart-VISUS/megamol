@@ -21,22 +21,47 @@ if(BUILD_CONSOLE)
   set_target_properties(${PROJECT_NAME}
     PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
     OUTPUT_NAME ${PROJECT_NAME})
-  target_include_directories(${PROJECT_NAME} PRIVATE
-    ${LIBUNWIND_INCLUDE_DIR} "src" "include")
+  target_include_directories(${PROJECT_NAME} PRIVATE "src" "include")
   target_link_libraries(${PROJECT_NAME} PRIVATE core)
 
-  if(UNIX)
-    option(USE_LIBUNWIND "use libunwind" ON)
-    if(USE_LIBUNWIND)
-      find_package(LIBUNWIND REQUIRED)
-      message(STATUS ${LIBUNWIND_LIBRARIES})
-      message(STATUS ${LIBUNWIND_INCLUDE_DIR})
-      if(LIBUNWIND_FOUND)
-        target_compile_definitions(${PROJECT_NAME} PRIVATE "HAS_LIBUNWIND=1")
-      else()
-        message(FATAL_ERROR "Cannot find libunwind")
-      endif()
+  if(WIN32)
+    set(VERSION_LIBRARY "Version.lib")
+  endif()
+
+  # GLFW
+  if(NOT USE_EGL)
+    add_external_project(glfw_ext
+      GIT_REPOSITORY https://github.com/glfw/glfw.git
+      GIT_TAG "3.2.1"
+      CMAKE_ARGS
+        -DBUILD_SHARED_LIBS=ON
+        -DGLFW_BUILD_EXAMPLES=OFF
+        -DGLFW_BUILD_TESTS=OFF
+        -DGLFW_BUILD_DOCS=OFF)
+    if (MSVC)
+      add_external_library(glfw3 SHARED
+        DEPENDS glfw_ext
+        INCLUDE_DIR "include"
+        IMPORT_LIBRARY_DEBUG "lib/glfw3dll.lib"
+        IMPORT_LIBRARY_RELEASE "lib/glfw3dll.lib"
+        LIBRARY_DEBUG "lib/glfw3.dll"
+        LIBRARY_RELEASE "lib/glfw3.dll")
+    else()
+        add_external_library(glfw3 SHARED
+        DEPENDS glfw_ext
+        INCLUDE_DIR "include"
+        IMPORT_LIBRARY_DEBUG ""
+        IMPORT_LIBRARY_RELEASE ""
+        LIBRARY_DEBUG "lib/libglfw.so"
+        LIBRARY_RELEASE "lib/libglfw.so")
     endif()
+    target_link_libraries(${PROJECT_NAME} PRIVATE glfw3)
+    ExternalProject_Get_property(glfw_ext SOURCE_DIR)
+    target_include_directories(${PROJECT_NAME} PRIVATE "${SOURCE_DIR}/include")
+  endif()
+
+  # EGL
+  if(UNIX)
     if(USE_EGL)
       find_package(EGL REQUIRED)
       target_include_directories(${PROJECT_NAME} PRIVATE ${EGL_INCLUDE_DIR})
@@ -44,26 +69,10 @@ if(BUILD_CONSOLE)
     endif()
   endif()
 
-  if(WIN32)
-    set(VERSION_LIBRARY "Version.lib")
-  endif()
-
-  if(NOT USE_EGL)  
-    bootstrap_external_package(glfw_ext glfw3
-      CONFIG "lib/cmake/glfw3/glfw3Config.cmake"
-      GIT_REPOSITORY https://github.com/glfw/glfw.git
-      GIT_TAG "3.2.1"
-      CMAKE_ARGS
-        -DBUILD_SHARED_LIBS=OFF
-        -DGLFW_BUILD_EXAMPLES=OFF
-        -DGLFW_BUILD_TESTS=OFF
-        -DGLFW_BUILD_DOCS=OFF)
-    find_package(glfw3 REQUIRED CONFIG)
-    target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
-  endif()
-  
   # AntTweakBar
-  if(NOT USE_EGL AND NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  option(USE_ANTTWEAKBAR "use AntTweakBar" OFF)
+  if (USE_ANTTWEAKBAR)
+    if(NOT USE_EGL AND NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     option(USE_INTERNAL_ANTTWEAKBAR "use internal AntTweakBar" ON)
     if(USE_INTERNAL_ANTTWEAKBAR)
       add_subdirectory(AntTweakBar)
@@ -75,24 +84,36 @@ if(BUILD_CONSOLE)
       target_include_directories(${PROJECT_NAME} PRIVATE ${AntTweakBar_INCLUDE_DIR})
       target_link_libraries(${PROJECT_NAME} PRIVATE ${AntTweakBar_LIBRARIES})
     endif()
+    endif()
   endif()
-  
-  target_link_libraries(${PROJECT_NAME} PRIVATE
-	  ${VERSION_LIBRARY} ${LIBUNWIND_LIBRARIES} ${CMAKE_DL_LIBS})
+
+  target_link_libraries(${PROJECT_NAME} PRIVATE ${VERSION_LIBRARY} ${CMAKE_DL_LIBS})
 
   # Grouping in Visual Studio
   set_target_properties(${CONSOLE_NAME} PROPERTIES FOLDER base)
   source_group("Header Files" FILES ${header_files})
   source_group("Source Files" FILES ${source_files})
 
+  # install mmconsole executable
+  install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin" ARCHIVE DESTINATION "lib")
+  if(NOT USE_EGL)
+    install_external(TARGETS glfw3)
+  endif()
+  if (WIN32)
+    if(MSVC)
+      install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION bin OPTIONAL)
+    endif()
+  endif ()
+
   # install and configure ATB
-  install(TARGETS ${PROJECT_NAME} DESTINATION "bin")
-  if(AntTweakBar_FOUND)
+  if (USE_ANTTWEAKBAR)
+    if(AntTweakBar_FOUND)
     install(FILES ${AntTweakBar_LIBRARIES} DESTINATION "lib")
     configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/linkAntTweakBar.cmake.in ${CMAKE_BINARY_DIR}/linkAntTweakBar.cmake @ONLY)
     install(SCRIPT ${CMAKE_BINARY_DIR}/linkAntTweakBar.cmake)
     if(WIN32)
-      install(FILES ${AntTweakBar_DLL} DESTINATION "bin")
+        install(FILES ${AntTweakBar_DLL} DESTINATION "bin")
+    endif()
     endif()
   endif()
 

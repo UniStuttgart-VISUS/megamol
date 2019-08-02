@@ -1,5 +1,0 @@
-mmCreateView("testgeospheres", "View3D", "::testgview")
-mmCreateModule("SimpleGeoSphereRenderer", "::grnd")
-mmCreateModule("TestSpheresDataSource", "::dat")
-mmCreateCall("CallRender3D", "::testgview::rendering", "::grnd::rendering")
-mmCreateCall("MultiParticleDataCall", "::grnd::getData", "::dat::getData")

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<btf type="MegaMolGLSLShader" version="1.0" namespace="sphere_mdao_volume">
+
+    <shader name="vertex">
+        <snippet type="version">150</snippet>
+        <snippet name="Main"   type="file">sphere/mdao_volume_vert_main.glsl</snippet>
+    </shader>
+
+    <shader name="geometry">
+        <snippet type="version">150</snippet>
+        <snippet name="MainEnd" type="file">sphere/mdao_volume_geo_main.glsl</snippet>
+    </shader>
+
+    <shader name="fragment">
+        <snippet type="version">150</snippet>
+        <snippet name="Main"    type="file">sphere/mdao_volume_frag_main.glsl</snippet>
+    </shader>
+
+</btf>

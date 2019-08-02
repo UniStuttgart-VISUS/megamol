@@ -22,8 +22,8 @@ using namespace megamol::console;
 
 int gl::ATBUILayer::nextWinID = 0;
 
-gl::ATBUILayer::ATBUILayer(Window& wnd, const char* wndName, void* hView, void *hCore)
-        : AbstractUILayer(wnd), atb(), atbWinID(-1), atbKeyMod(0), hView(hView), winBar(), paramBar(), enabled(true), lastParamUpdateTime() {
+gl::ATBUILayer::ATBUILayer(const char* wndName, void* hView, void *hCore)
+        : atb(), atbWinID(-1), atbKeyMod(0), hView(hView), winBar(), paramBar(), enabled(true), lastParamUpdateTime(), wndName(wndName) {
     atb = atbInst::Instance();
     if (atb->OK()) {
         atbWinID = nextWinID++;
@@ -37,7 +37,7 @@ gl::ATBUILayer::ATBUILayer(Window& wnd, const char* wndName, void* hView, void *
             ::TwDefine(def.str().c_str());
         }
 
-        winBar = std::make_shared<ATWinBar>(wnd, *this, wndName);
+        winBar = std::make_shared<ATWinBar>(*this, this->wndName.c_str());
         paramBar = std::make_shared<ATParamBar>(hCore);
     }
     lastParamUpdateTime = std::chrono::system_clock::now() - std::chrono::seconds(1);
@@ -57,7 +57,7 @@ bool gl::ATBUILayer::Enabled() {
 
 void gl::ATBUILayer::ToggleEnable() {
     enabled = !enabled;
-    vislib::sys::Log::DefaultLog.WriteInfo("ATB GUI Layer in Window '%s' %sabled. F12 to toggle.", wnd.Name(), enabled ? "en" : "dis");
+    vislib::sys::Log::DefaultLog.WriteInfo("ATB GUI Layer in Window '%s' %sabled. F12 to toggle.", this->wndName.c_str(), enabled ? "en" : "dis");
 }
 
 #if 1 /* REGION INPUT CONTROL */
@@ -118,9 +118,9 @@ bool gl::ATBUILayer::OnKey(core::view::Key key, core::view::KeyAction action, co
         atbKeyMod |= TW_KMOD_ALT;
     }
 
-
     // Process key pressed
     if (action == core::view::KeyAction::PRESS || action == core::view::KeyAction::REPEAT) {
+
         bool testkp = ((atbKeyMod & TW_KMOD_CTRL) || (atbKeyMod & TW_KMOD_ALT)) ? true : false;
 
         if ((atbKeyMod == TW_KMOD_CTRL) && (key > static_cast<core::view::Key>(0)) && (key < core::view::Key::KEY_ESCAPE)) {
@@ -129,8 +129,9 @@ bool gl::ATBUILayer::OnKey(core::view::Key key, core::view::KeyAction action, co
             if (::TwKeyPressed(static_cast<int>(key), atbKeyMod)) {
                 return true;
             }
+        }
+        else if (key >= core::view::Key::KEY_ESCAPE) {
 
-        } else if (key >= core::view::Key::KEY_ESCAPE) {
             int k = 0;
             switch (key) {
             case core::view::Key::KEY_SPACE: k = TW_KEY_SPACE; break;
@@ -181,8 +182,8 @@ bool gl::ATBUILayer::OnKey(core::view::Key key, core::view::KeyAction action, co
             case core::view::Key::KEY_BACKSLASH: k = '\\'; break;
             case core::view::Key::KEY_RIGHT_BRACKET: k = ')'; break;
             case core::view::Key::KEY_GRAVE_ACCENT: k = '´'; break;
-            //case core::view::Key::KEY_WORLD_1: k = TW_KEY_WORLD_1; break;
-            //case core::view::Key::KEY_WORLD_2: k = TW_KEY_WORLD_2; break;
+                //case core::view::Key::KEY_WORLD_1: k = TW_KEY_WORLD_1; break;
+                //case core::view::Key::KEY_WORLD_2: k = TW_KEY_WORLD_2; break;
             case core::view::Key::KEY_ESCAPE: k = TW_KEY_ESCAPE; break;
             case core::view::Key::KEY_ENTER: k = TW_KEY_RETURN; break;
             case core::view::Key::KEY_TAB: k = TW_KEY_TAB; break;
@@ -197,10 +198,10 @@ bool gl::ATBUILayer::OnKey(core::view::Key key, core::view::KeyAction action, co
             case core::view::Key::KEY_PAGE_DOWN: k = TW_KEY_PAGE_DOWN; break;
             case core::view::Key::KEY_HOME: k = TW_KEY_HOME; break;
             case core::view::Key::KEY_END: k = TW_KEY_END; break;
-            //case core::view::Key::KEY_CAPS_LOCK: k = TW_KEY_CAPS_LOCK; break;
-            //case core::view::Key::KEY_SCROLL_LOCK: k = TW_KEY_SCROLL_LOCK; break;
-            //case core::view::Key::KEY_NUM_LOCK: k = TW_KEY_NUM_LOCK; break;
-            //case core::view::Key::KEY_PRINT_SCREEN: k = TW_KEY_PRINT_SCREEN; break;
+                //case core::view::Key::KEY_CAPS_LOCK: k = TW_KEY_CAPS_LOCK; break;
+                //case core::view::Key::KEY_SCROLL_LOCK: k = TW_KEY_SCROLL_LOCK; break;
+                //case core::view::Key::KEY_NUM_LOCK: k = TW_KEY_NUM_LOCK; break;
+                //case core::view::Key::KEY_PRINT_SCREEN: k = TW_KEY_PRINT_SCREEN; break;
             case core::view::Key::KEY_PAUSE: k = TW_KEY_PAUSE; break;
             case core::view::Key::KEY_F1: k = TW_KEY_F1; break;
             case core::view::Key::KEY_F2: k = TW_KEY_F2; break;
@@ -244,15 +245,15 @@ bool gl::ATBUILayer::OnKey(core::view::Key key, core::view::KeyAction action, co
             case core::view::Key::KEY_KP_ADD: if (testkp) k = '+'; break;
             case core::view::Key::KEY_KP_ENTER: k = TW_KEY_RETURN; break;
             case core::view::Key::KEY_KP_EQUAL: if (testkp) k = '='; break;
-            //case core::view::Key::KEY_LEFT_SHIFT: k = TW_KEY_LEFT_SHIFT; break;
-            //case core::view::Key::KEY_LEFT_CONTROL: k = TW_KEY_LEFT_CONTROL; break;
-            //case core::view::Key::KEY_LEFT_ALT: k = TW_KEY_LEFT_ALT; break;
-            //case core::view::Key::KEY_LEFT_SUPER: k = TW_KEY_LEFT_SUPER; break;
-            //case core::view::Key::KEY_RIGHT_SHIFT: k = TW_KEY_RIGHT_SHIFT; break;
-            //case core::view::Key::KEY_RIGHT_CONTROL: k = TW_KEY_RIGHT_CONTROL; break;
-            //case core::view::Key::KEY_RIGHT_ALT: k = TW_KEY_RIGHT_ALT; break;
-            //case core::view::Key::KEY_RIGHT_SUPER: k = TW_KEY_RIGHT_SUPER; break;
-            //case core::view::Key::KEY_MENU: k = TW_KEY_MENU; break;
+                //case core::view::Key::KEY_LEFT_SHIFT: k = TW_KEY_LEFT_SHIFT; break;
+                //case core::view::Key::KEY_LEFT_CONTROL: k = TW_KEY_LEFT_CONTROL; break;
+                //case core::view::Key::KEY_LEFT_ALT: k = TW_KEY_LEFT_ALT; break;
+                //case core::view::Key::KEY_LEFT_SUPER: k = TW_KEY_LEFT_SUPER; break;
+                //case core::view::Key::KEY_RIGHT_SHIFT: k = TW_KEY_RIGHT_SHIFT; break;
+                //case core::view::Key::KEY_RIGHT_CONTROL: k = TW_KEY_RIGHT_CONTROL; break;
+                //case core::view::Key::KEY_RIGHT_ALT: k = TW_KEY_RIGHT_ALT; break;
+                //case core::view::Key::KEY_RIGHT_SUPER: k = TW_KEY_RIGHT_SUPER; break;
+                //case core::view::Key::KEY_MENU: k = TW_KEY_MENU; break;
             default: break;
             }
 
@@ -278,20 +279,20 @@ bool gl::ATBUILayer::OnKey(core::view::Key key, core::view::KeyAction action, co
     }
 
     if (wasdHotfixed) {
-        const bool down = action != core::view::KeyAction::RELEASE;
+        const bool down = (action != core::view::KeyAction::RELEASE);
         switch (key) {
-            case core::view::Key::KEY_W:
-                this->fwd = down;
-                break;
-            case core::view::Key::KEY_A:
-                this->left = down;
-                break;
-            case core::view::Key::KEY_S:
-                this->back = down;
-                break;
-            case core::view::Key::KEY_D:
-                this->right = down;
-                break;
+	        case core::view::Key::KEY_W:
+	            this->fwd = down;
+	            break;
+	        case core::view::Key::KEY_A:
+	            this->left = down;
+	            break;
+	        case core::view::Key::KEY_S:
+	            this->back = down;
+	            break;
+	        case core::view::Key::KEY_D:
+	            this->right = down;
+	            break;
         }
     }
 

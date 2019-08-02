@@ -24,6 +24,9 @@
 #include <channel_descriptor.h>
 #include <driver_functions.h>
 
+#include <cmath>
+#include <limits>
+
 using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::core::moldyn;
@@ -83,7 +86,7 @@ QuickSurfRaycaster::QuickSurfRaycaster(void) : Renderer3DModule(),
 	this->convertedIsoValueParam.SetParameter(new param::FloatParam(0.1f, 0.0f, 1.0f));
 	this->MakeSlotAvailable(&this->convertedIsoValueParam);
 
-	this->triggerConvertButtonParam.SetParameter(new param::ButtonParam('I'));
+	this->triggerConvertButtonParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_I));
 	this->MakeSlotAvailable(&this->triggerConvertButtonParam);
 
 	this->scalingFactor.SetParameter(new param::FloatParam(1.0f, 0.0f));
@@ -229,8 +232,8 @@ void QuickSurfRaycaster::convertToMesh(float * volumeData, cudaExtent volSize, f
 
 	data = new float[extents.x * extents.y * extents.z];
 
-	float newMin = FLT_MAX;
-	float newMax = FLT_MIN;
+	float newMin = std::numeric_limits<float>::max();
+	float newMax = std::numeric_limits<float>::min();
 
 	for (int index = 0; index < static_cast<int>(chunkmaxverts / 3); index++) {
 		int i = (index % (extents.x * extents.y)) % extents.x;
@@ -606,8 +609,8 @@ bool QuickSurfRaycaster::Render(Call& call) {
 	float3 clipBoxMin;
 	float3 clipBoxMax;
 
-	float concMin = FLT_MAX;
-	float concMax = FLT_MIN;
+	float concMin = std::numeric_limits<float>::max();
+	float concMax = std::numeric_limits<float>::min();
 
 	bool onlyVolumetric = false;
 
@@ -848,7 +851,7 @@ bool QuickSurfRaycaster::Render(Call& call) {
 		c = ccp->GetPlane().C();
 		d = ccp->GetPlane().D();
 		// we have to normalise the parameters:
-		float len = std::sqrtf(a * a + b * b + c * c);
+		float len = std::sqrt(a * a + b * b + c * c);
 		if (!vislib::math::IsEqual(len, 0.0f)) {
 			a = a / len;
 			b = b / len;
@@ -962,14 +965,14 @@ bool QuickSurfRaycaster::Render(Call& call) {
 		auto voxelNumber = volumeExtentSmall.width * volumeExtentSmall.height * volumeExtentSmall.depth;
 		float * fPtr = reinterpret_cast<float*>(volPtr);
 
-		concMin = FLT_MAX;
-		concMax = FLT_MIN;
+		concMin = std::numeric_limits<float>::max();
+		concMax = std::numeric_limits<float>::min();
 
 		for (int i = 0; i < voxelNumber; i++) {
 			if (fPtr[i] < concMin) concMin = fPtr[i];
 			if (fPtr[i] > concMax) concMax = fPtr[i];
 		}
-			
+
 		if (volPtr != NULL){
 			transferVolumeDirect(volPtr, volumeExtentSmall, concMin, concMax);
 			checkCudaErrors(cudaDeviceSynchronize());
@@ -980,7 +983,6 @@ bool QuickSurfRaycaster::Render(Call& call) {
 		}
 
 		if (this->triggerConvertButtonParam.IsDirty()) {
-		
 			printf("Converting the isosurface of %f to a mesh\n", this->convertedIsoValueParam.Param<param::FloatParam>()->Value());
 			convertToMesh(static_cast<float*>(volPtr), volumeExtentSmall, bbMin, bbMax, this->convertedIsoValueParam.Param<param::FloatParam>()->Value(), concMin, concMax);
 			this->triggerConvertButtonParam.ResetDirty();

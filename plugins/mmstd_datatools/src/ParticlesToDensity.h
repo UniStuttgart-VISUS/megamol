@@ -15,7 +15,6 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/misc/VolumetricDataCall.h"
-#include "mmcore/moldyn/DirectionalParticleDataCall.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/param/ParamSlot.h"
 #include "vislib/math/Vector.h"
@@ -80,7 +79,7 @@ private:
     inline bool anythingDirty() const {
         return this->aggregatorSlot.IsDirty() || this->xResSlot.IsDirty() || this->yResSlot.IsDirty() ||
                this->zResSlot.IsDirty() || this->cyclXSlot.IsDirty() || this->cyclYSlot.IsDirty() ||
-               this->cyclZSlot.IsDirty() || this->normalizeSlot.IsDirty() || this->filterSizeSlot.IsDirty();
+               this->cyclZSlot.IsDirty() || this->normalizeSlot.IsDirty() || this->sigmaSlot.IsDirty();
     }
 
     inline void resetDirty() {
@@ -92,7 +91,7 @@ private:
         this->cyclYSlot.ResetDirty();
         this->cyclZSlot.ResetDirty();
         this->normalizeSlot.ResetDirty();
-        this->filterSizeSlot.ResetDirty();
+        this->sigmaSlot.ResetDirty();
     }
 
     core::param::ParamSlot aggregatorSlot;
@@ -106,10 +105,12 @@ private:
     core::param::ParamSlot cyclZSlot;
 
     core::param::ParamSlot normalizeSlot;
-    core::param::ParamSlot filterSizeSlot;
+
+    core::param::ParamSlot sigmaSlot;
 
     std::vector<std::vector<float>> vol;
 
+    size_t in_datahash = std::numeric_limits<size_t>::max();
     size_t datahash = 0;
     unsigned int time = 0;
     float maxDens = 0.0f;

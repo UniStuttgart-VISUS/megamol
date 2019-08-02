@@ -15,9 +15,10 @@
 #include "mmcore/ModuleNamespace.h"
 #include "vislib/Array.h"
 #include "vislib/RawStorage.h"
-#include "vislib/sys/FatReaderWriterLock.h"
+//#include "vislib/sys/FatReaderWriterLock.h"
+#include "vislib/sys/ReaderWriterMutexWrapper.h"
 #if defined(DEBUG) || defined(_DEBUG)
-#include "vislib/sys/CriticalSection.h"
+//#include "vislib/sys/CriticalSection.h"
 #include "vislib/SingleLinkedList.h"
 #endif
 
@@ -160,7 +161,8 @@ namespace core {
 #endif /* _WIN32 */
 
         /** The graph access synchronization object */
-        mutable vislib::sys::FatReaderWriterLock lock;
+        //mutable vislib::sys::FatReaderWriterLock lock;
+        mutable vislib::sys::ReaderWriterMutexWrapper lock;
 
         CoreInstance *core_inst;
 

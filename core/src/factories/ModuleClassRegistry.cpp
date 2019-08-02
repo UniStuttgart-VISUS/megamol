@@ -34,9 +34,7 @@
 #include "mmcore/moldyn/MMPLDDataSource.h"
 #include "mmcore/moldyn/MMPLDWriter.h"
 #include "mmcore/moldyn/OracleSphereRenderer.h"
-#include "mmcore/moldyn/SimpleGeoSphereRenderer.h"
-#include "mmcore/moldyn/SimpleSphereRenderer.h"
-#include "mmcore/moldyn/ClusteredSphereRenderer.h"
+#include "mmcore/moldyn/SphereRenderer.h"
 #include "mmcore/moldyn/SphereOutlineRenderer.h"
 #include "mmcore/moldyn/DirPartColModulate.h"
 #include "mmcore/moldyn/DirPartFilter.h"
@@ -44,7 +42,7 @@
 //#include "mmcore/special/ColStereoDisplay.h"
 #include "mmcore/special/StubModule.h"
 #include "mmcore/view/ClipPlane.h"
-#include "mmcore/view/LinearTransferFunction.h"
+#include "mmcore/view/TransferFunction.h"
 #include "mmcore/view/TransferFunctionRenderer.h"
 #include "mmcore/view/MuxRenderer3D.h"
 #include "mmcore/view/special/AnaglyphStereoView.h"
@@ -56,6 +54,8 @@
 #include "mmcore/view/TileView.h"
 #include "mmcore/view/View2D.h"
 #include "mmcore/view/View3D.h"
+#include "mmcore/nextgen/View3D_2.h"
+#include "mmcore/nextgen/BoundingBoxRenderer.h"
 #include "mmcore/view/RendererRegistration.h"
 #ifdef MEGAMOLCORE_WITH_DIRECT3D11
 #include "mmcore/view/ViewDirect3D.h"
@@ -63,6 +63,7 @@
 #endif /* MEGAMOLCORE_WITH_DIRECT3D11 */
 #include "mmcore/view/BlinnPhongRendererDeferred.h"
 #include "mmcore/view/SplitView.h"
+#include "mmcore/view/HeadView.h"
 #include "mmcore/view/SharedCameraParameters.h"
 #include "mmcore/view/LinkedView3D.h"
 #include "mmcore/job/DataWriterJob.h"
@@ -72,6 +73,16 @@
 #include "mmcore/moldyn/DynDensityGradientEstimator.h"
 #include "job/PluginsStateFileGeneratorJob.h"
 #include "mmcore/utility/LuaHostSettingsModule.h"
+#include "mmcore/view/light/AmbientLight.h"
+#include "mmcore/view/light/DistantLight.h"
+#include "mmcore/view/light/HDRILight.h"
+#include "mmcore/view/light/PointLight.h"
+#include "mmcore/view/light/QuadLight.h"
+#include "mmcore/view/light/SpotLight.h"
+#include "../job/TickSwitch.h"
+#include "mmcore/FileStreamProvider.h"
+#include "mmcore/view/special/CallbackScreenShooter.h"
+#include "mmcore/FlagStorage.h"
 
 using namespace megamol::core;
 
@@ -106,9 +117,7 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<moldyn::MMPGDWriter>();
     instance.RegisterAutoDescription<moldyn::MMPLDDataSource>();
     instance.RegisterAutoDescription<moldyn::MMPLDWriter>();
-    instance.RegisterAutoDescription<moldyn::SimpleGeoSphereRenderer>();
-    instance.RegisterAutoDescription<moldyn::SimpleSphereRenderer>();
-    instance.RegisterAutoDescription<moldyn::ClusteredSphereRenderer>();
+    instance.RegisterAutoDescription<moldyn::SphereRenderer>();
     instance.RegisterAutoDescription<moldyn::SphereOutlineRenderer>();
     instance.RegisterAutoDescription<moldyn::OracleSphereRenderer>();
     instance.RegisterAutoDescription<moldyn::DirPartColModulate>();
@@ -117,7 +126,7 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     //instance.RegisterAutoDescription<special::ColStereoDisplay>();
     instance.RegisterAutoDescription<special::StubModule>();
     instance.RegisterAutoDescription<view::ClipPlane>();
-    instance.RegisterAutoDescription<view::LinearTransferFunction>();
+    instance.RegisterAutoDescription<view::TransferFunction>();
     instance.RegisterAutoDescription<view::TransferFunctionRenderer>();
     instance.RegisterAutoDescription<view::MuxRenderer3D<2> >();
     instance.RegisterAutoDescription<view::MuxRenderer3D<3> >();
@@ -133,8 +142,11 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<view::TileView>();
     instance.RegisterAutoDescription<view::View2D>();
     instance.RegisterAutoDescription<view::View3D>();
+	instance.RegisterAutoDescription<nextgen::View3D_2>();
+    instance.RegisterAutoDescription<nextgen::BoundingBoxRenderer>();
     instance.RegisterAutoDescription<view::BlinnPhongRendererDeferred>();
     instance.RegisterAutoDescription<view::SplitView>();
+    instance.RegisterAutoDescription<view::HeadView>();
     instance.RegisterAutoDescription<view::SharedCameraParameters>();
     instance.RegisterAutoDescription<view::LinkedView3D>();
     instance.RegisterAutoDescription<view::RendererRegistration>();
@@ -148,4 +160,14 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
 #endif /* MEGAMOLCORE_WITH_DIRECT3D11 */
     instance.RegisterAutoDescription<job::PluginsStateFileGeneratorJob>();
     instance.RegisterAutoDescription<core::utility::LuaHostSettingsModule>();
+    instance.RegisterAutoDescription<core::job::TickSwitch>();
+    instance.RegisterAutoDescription<core::FileStreamProvider>();
+    instance.RegisterAutoDescription<view::special::CallbackScreenShooter>();
+    instance.RegisterAutoDescription<view::light::AmbientLight>();
+    instance.RegisterAutoDescription<view::light::DistantLight>();
+    instance.RegisterAutoDescription<view::light::HDRILight>();
+    instance.RegisterAutoDescription<view::light::PointLight>();
+    instance.RegisterAutoDescription<view::light::QuadLight>();
+    instance.RegisterAutoDescription<view::light::SpotLight>();
+    instance.RegisterAutoDescription<FlagStorage>();
 }

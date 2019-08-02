@@ -55,8 +55,18 @@ if(BUILD_MMSTD_DATATOOLS_PLUGIN)
     DEPENDS Eigen_ext
     INCLUDE_DIR "src/Eigen_ext")
 
+  add_external_project(mmpld_io_ext
+    GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/mmpld_io.git
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ""
+    INSTALL_COMMAND ""
+    TEST_COMMAND "")
+  add_external_library(mmpld_io INTERFACE
+    DEPENDS mmpld_io_ext
+    INCLUDE_DIR "src/mmpld_io_ext/include")
+
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
-  file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
+  file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp" "3rd/min_sphere_of_spheres/*.cpp")
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
 
   # Grouping in Visual Studio
@@ -85,8 +95,8 @@ if(BUILD_MMSTD_DATATOOLS_PLUGIN)
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src"
-    "3rd/nanoflann")
-  target_link_libraries(${PROJECT_NAME} PRIVATE core geometry_calls tinyply Eigen)
+    "3rd/nanoflann" "3rd/min_sphere_of_spheres")
+  target_link_libraries(${PROJECT_NAME} PRIVATE core geometry_calls tinyply Eigen mmpld_io)
 
   if(MPI_C_FOUND)
     target_include_directories(${PROJECT_NAME} PUBLIC ${MPI_C_INCLUDE_PATH})
@@ -104,7 +114,9 @@ if(BUILD_MMSTD_DATATOOLS_PLUGIN)
   if(WIN32)
     install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
     install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION "lib")
-    install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION bin OPTIONAL)
+    if(MSVC)
+      install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION bin OPTIONAL)
+    endif()
   else()
     install(TARGETS ${PROJECT_NAME} DESTINATION "lib" EXPORT ${PROJECT_NAME}-target)
   endif()

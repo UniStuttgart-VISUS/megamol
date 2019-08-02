@@ -11,10 +11,10 @@ namespace megamol {
 namespace console {
 namespace utility {
 
-    /** Utility class closing a window when ESC (or 'q') is pressed */
+    /** Utility class closing a window when ESC is pressed */
     class HotFixFileName : public AbstractUILayer {
     public:
-        HotFixFileName(gl::Window& wnd, void* hCore);
+        HotFixFileName(void* hCore);
         virtual ~HotFixFileName();
 
         virtual bool OnKey(core::view::Key key, core::view::KeyAction action, core::view::Modifiers mods);
@@ -25,3 +25,4 @@ namespace utility {
 }
 }
 }
+

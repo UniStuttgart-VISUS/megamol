@@ -40,6 +40,7 @@
 #include "LayeredIsosurfaceRenderer.h"
 #include "CartoonRenderer.h"
 #include "CartoonTessellationRenderer.h"
+#include "CartoonTessellationRenderer2000GT.h"
 
 // 2D renderers
 #include "VolumeSliceRenderer.h"
@@ -93,6 +94,7 @@
 #include "HydroBondFilter.h"
 #include "SolventCounter.h"
 #include "MSMSMeshLoader.h"
+#include "ProteinAligner.h"
 
 #include "mmcore/versioninfo.h"
 #include "vislib/vislibversion.h"
@@ -183,11 +185,13 @@ namespace {
 			this->module_descriptions.RegisterAutoDescription<megamol::protein::PDBInterpolator>();
 			this->module_descriptions.RegisterAutoDescription<megamol::protein::CartoonRenderer>();
 			this->module_descriptions.RegisterAutoDescription<megamol::protein::CartoonTessellationRenderer>();
+            this->module_descriptions.RegisterAutoDescription<megamol::protein::CartoonTessellationRenderer2000GT>();
 			this->module_descriptions.RegisterAutoDescription<megamol::protein::ProteinExploder>();
 			this->module_descriptions.RegisterAutoDescription<megamol::protein::MolecularNeighborhood>();
 			this->module_descriptions.RegisterAutoDescription<megamol::protein::HydroBondFilter>();
 			this->module_descriptions.RegisterAutoDescription<megamol::protein::SolventCounter>();
 			this->module_descriptions.RegisterAutoDescription<megamol::protein::MSMSMeshLoader>();
+            this->module_descriptions.RegisterAutoDescription<megamol::protein::ProteinAligner>();
 
             // register calls here:
 			this->call_descriptions.RegisterAutoDescription<megamol::protein::SolPathDataCall>();
@@ -284,3 +288,4 @@ void mmplgReleasePluginInstance(
         ::megamol::core::utility::plugins::AbstractPluginInstance* pi) {
     MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_mmplgReleasePluginInstance(pi)
 }
+

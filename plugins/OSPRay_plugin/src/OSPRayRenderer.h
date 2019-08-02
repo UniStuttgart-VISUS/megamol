@@ -11,6 +11,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
+#include <chrono>
 
 
 namespace megamol {
@@ -108,16 +109,21 @@ private:
 
     vislib::SmartPtr<vislib::graphics::CameraParameters> camParams;
     float time;
+    size_t frameID;
 
     osp::vec2i imgSize;
 
     // OSPRay textures
     const uint32_t* fb;
     std::vector<float> db;
-    OSPTexture2D getOSPDepthTextureFromOpenGLPerspective(megamol::core::Call& call);
     void getOpenGLDepthFromOSPPerspective(megamol::core::Call& call, float* db);
 
     bool renderer_has_changed;
+
+    struct {
+        unsigned long long int count;
+        unsigned long long int amount;
+    } accum_time;
 };
 
 } /*end namespace ospray*/

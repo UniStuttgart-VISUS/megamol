@@ -38,7 +38,7 @@ namespace view {
      * Function "GetExtents" asks the callee to fill the extents member of the
      * call (bounding boxes, temporal extents).
      */
-    class MEGAMOLCORE_API AbstractCallRender3D : public AbstractCallRender {
+    class MEGAMOLCORE_API [[deprecated]] AbstractCallRender3D : public AbstractCallRender {
     public:
         /** Dtor. */
         virtual ~AbstractCallRender3D(void);
@@ -84,23 +84,7 @@ namespace view {
             this->camParams = camParams;
         }
 
-        /**
-         * Gets the number of milliseconds required to render the last frame.
-         *
-         * @return The time required to render the last frame
-         */
-        inline double LastFrameTime(void) const {
-            return this->lastFrameTime;
-        }
 
-        /**
-         * Sets the number of milliseconds required to render the last frame.
-         *
-         * @param time The time required to render the last frame
-         */
-        inline void SetLastFrameTime(double time) {
-            this->lastFrameTime = time;
-        }
 
         /**
          * Assignment operator
@@ -129,9 +113,6 @@ namespace view {
 
         /** The bounding boxes */
         BoundingBoxes bboxs;
-
-        /** The number of milliseconds required to render the last frame */
-        double lastFrameTime;
 
     };
 #ifdef _WIN32

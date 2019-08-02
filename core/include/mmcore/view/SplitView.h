@@ -15,6 +15,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/AbstractView.h"
 #include "mmcore/view/CallRenderView.h"
+#include "mmcore/param/ColorParam.h"
 #include "vislib/graphics/ColourRGBAu8.h"
 #include "vislib/graphics/gl/FramebufferObject.h"
 
@@ -242,7 +243,7 @@ private:
     param::ParamSlot splitColourSlot;
 
     /** The splitter colour */
-    vislib::graphics::ColourRGBAu8 splitColour;
+    param::ColorParam::ColorType splitColour;
 
     /** The override call */
     CallRenderView* overrideCall;
@@ -262,6 +263,8 @@ private:
     float mouseX;
 
     float mouseY;
+
+    bool dragSlider;
 };
 
 

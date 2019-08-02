@@ -11,21 +11,28 @@
 using namespace megamol;
 using namespace megamol::console;
 
-gl::WindowEscapeHotKeysUILayer::WindowEscapeHotKeysUILayer(gl::Window& wnd) : AbstractUILayer(wnd) {}
+gl::WindowEscapeHotKeysUILayer::WindowEscapeHotKeysUILayer(gl::Window& _wnd) : wndPtr(&_wnd) {}
+
+gl::WindowEscapeHotKeysUILayer::WindowEscapeHotKeysUILayer(std::function<void()> func) : actionFunc{func} {}
 
 gl::WindowEscapeHotKeysUILayer::~WindowEscapeHotKeysUILayer() {}
 
 bool gl::WindowEscapeHotKeysUILayer::OnKey(
     core::view::Key key, core::view::KeyAction action, core::view::Modifiers mods) {
-    bool isQuit = (key == core::view::Key::KEY_ESCAPE) || (key == core::view::Key::KEY_Q);
+    bool isQuit = (key == core::view::Key::KEY_ESCAPE);
+//    || (key == core::view::Key::KEY_Q);
     bool isPressed = (action == core::view::KeyAction::PRESS);
     bool isNotShift = !(mods ^ core::view::Modifier::SHIFT).none();
 
     if (isQuit && isPressed && isNotShift) {
         if (mods.test(core::view::Modifier::CTRL)) {
-            wnd.RequestClose();
+            if (wndPtr) {
+                wndPtr->RequestClose(); // TODO: better solution?
+            } else {
+                actionFunc();
+            }
         } else {
-            WindowManager::Instance().Shutdown();
+            WindowManager::Instance().Shutdown(); // TODO: WHY?!
         }
         return true;
     }

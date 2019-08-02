@@ -11,7 +11,6 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/moldyn/DirectionalParticleDataCall.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "vislib/RawStorage.h"
 #include "vislib/types.h"
@@ -28,8 +27,9 @@ namespace moldyn {
 namespace misc {
 
     /**
-     * Module to filter calls with multiple particle lists (currently directional and spherical) by list index
+     * Module to filter calls with multiple particle lists by list index
      */
+    // TODO this module looks quite broken and will probably not work at all for particles having a direction
 	class ParticleWorker : public core::Module {
     public:
 

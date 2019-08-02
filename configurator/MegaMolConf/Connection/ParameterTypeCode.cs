@@ -63,7 +63,11 @@
         /// <summary>
         /// ColorParam
         /// </summary>
-        MMCOLO = 95869144943949
+        MMCOLO = 87189165919565,
+        /// <summary>
+        /// TransferFunctionParam
+        /// </summary>
+        MMTFFC = 73969106701645
     }
 
 }

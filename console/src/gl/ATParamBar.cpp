@@ -11,7 +11,6 @@
 #include "vislib/StringTokeniser.h"
 #include <algorithm>
 #include <cstdint>
-#include "vislib/sys/KeyCode.h"
 #include <cassert>
 #include "vislib/sys/Log.h"
 
@@ -213,62 +212,94 @@ gl::ATParamBar::Param::Param(Param && src) : id(src.id), name(std::move(src.name
 /****************************************************************************/
 
 gl::ATParamBar::ButtonParam::ButtonParam(std::shared_ptr<Param> src, TwBar* bar, std::stringstream& def, const std::vector<unsigned char>& desc) : Param(std::move(*src.get())) {
-    uint16_t keyCode = 0;
-    if (desc.size() == 7) keyCode = *reinterpret_cast<const char*>(desc.data() + 6);
-    else if (desc.size() == 8) keyCode = *reinterpret_cast<const uint16_t*>(desc.data() + 6);
-    vislib::sys::KeyCode key(keyCode);
 
-    if (key.NoModKeys() != 0) {
+    // extract key
+    WORD key, mods;
+    if (desc.size() == (6 + (2 * sizeof(WORD)))) {
+        key = *reinterpret_cast<const WORD*>(desc.data() + 6);
+        mods = *reinterpret_cast<const WORD*>(desc.data() + 6 + sizeof(WORD));
+    }
+    else return; // something is strange with the hotkey
+
+    core::view::KeyCode keyCode(static_cast<core::view::Key>(static_cast<int>(key)), core::view::Modifiers(static_cast<int>(mods)));
+
+    if (keyCode.key != core::view::Key::KEY_UNKNOWN) {
         vislib::StringA keyStr;
-        if (key.IsSpecial()) {
-            switch (key.NoModKeys()) {
-            case vislib::sys::KeyCode::KEY_ENTER: keyStr = "RET"; break;
-            case vislib::sys::KeyCode::KEY_ESC: keyStr = "ESC"; break;
-            case vislib::sys::KeyCode::KEY_TAB: keyStr = "TAB"; break;
-            case vislib::sys::KeyCode::KEY_LEFT: keyStr = "LEFT"; break;
-            case vislib::sys::KeyCode::KEY_UP: keyStr = "UP"; break;
-            case vislib::sys::KeyCode::KEY_RIGHT: keyStr = "RIGHT"; break;
-            case vislib::sys::KeyCode::KEY_DOWN: keyStr = "DOWN"; break;
-            case vislib::sys::KeyCode::KEY_PAGE_UP: keyStr = "PGUP"; break;
-            case vislib::sys::KeyCode::KEY_PAGE_DOWN: keyStr = "PGDOWN"; break;
-            case vislib::sys::KeyCode::KEY_HOME: keyStr = "HOME"; break;
-            case vislib::sys::KeyCode::KEY_END: keyStr = "END"; break;
-            case vislib::sys::KeyCode::KEY_INSERT: keyStr = "INS"; break;
-            case vislib::sys::KeyCode::KEY_DELETE: keyStr = "DEL"; break;
-            case vislib::sys::KeyCode::KEY_BACKSPACE: keyStr = "BS"; break;
-            case vislib::sys::KeyCode::KEY_F1: keyStr = "F1"; break;
-            case vislib::sys::KeyCode::KEY_F2: keyStr = "F2"; break;
-            case vislib::sys::KeyCode::KEY_F3: keyStr = "F3"; break;
-            case vislib::sys::KeyCode::KEY_F4: keyStr = "F4"; break;
-            case vislib::sys::KeyCode::KEY_F5: keyStr = "F5"; break;
-            case vislib::sys::KeyCode::KEY_F6: keyStr = "F6"; break;
-            case vislib::sys::KeyCode::KEY_F7: keyStr = "F7"; break;
-            case vislib::sys::KeyCode::KEY_F8: keyStr = "F8"; break;
-            case vislib::sys::KeyCode::KEY_F9: keyStr = "F9"; break;
-            case vislib::sys::KeyCode::KEY_F10: keyStr = "F10"; break;
-            case vislib::sys::KeyCode::KEY_F11: keyStr = "F11"; break;
-            case vislib::sys::KeyCode::KEY_F12: keyStr = "F12"; break;
-            }
-        } else if (key.NoModKeys() == ' ') {
-            keyStr = "SPACE";
-        } else {
-            keyStr.Format("%c", static_cast<char>(key.NoModKeys()));
+        switch (keyCode.key) {
+            case core::view::Key::KEY_ENTER: keyStr = "RET"; break;
+            case core::view::Key::KEY_ESCAPE: keyStr = "ESC"; break;
+            case core::view::Key::KEY_TAB: keyStr = "TAB"; break;
+            case core::view::Key::KEY_LEFT: keyStr = "LEFT"; break;
+            case core::view::Key::KEY_UP: keyStr = "UP"; break;
+            case core::view::Key::KEY_RIGHT: keyStr = "RIGHT"; break;
+            case core::view::Key::KEY_DOWN: keyStr = "DOWN"; break;
+            case core::view::Key::KEY_PAGE_UP: keyStr = "PGUP"; break;
+            case core::view::Key::KEY_PAGE_DOWN: keyStr = "PGDOWN"; break;
+            case core::view::Key::KEY_HOME: keyStr = "HOME"; break;
+            case core::view::Key::KEY_END: keyStr = "END"; break;
+            case core::view::Key::KEY_INSERT: keyStr = "INS"; break;
+            case core::view::Key::KEY_DELETE: keyStr = "DEL"; break;
+            case core::view::Key::KEY_BACKSPACE: keyStr = "BS"; break;
+            case core::view::Key::KEY_F1: keyStr = "F1"; break;
+            case core::view::Key::KEY_F2: keyStr = "F2"; break;
+            case core::view::Key::KEY_F3: keyStr = "F3"; break;
+            case core::view::Key::KEY_F4: keyStr = "F4"; break;
+            case core::view::Key::KEY_F5: keyStr = "F5"; break;
+            case core::view::Key::KEY_F6: keyStr = "F6"; break;
+            case core::view::Key::KEY_F7: keyStr = "F7"; break;
+            case core::view::Key::KEY_F8: keyStr = "F8"; break;
+            case core::view::Key::KEY_F9: keyStr = "F9"; break;
+            case core::view::Key::KEY_F10: keyStr = "F10"; break;
+            case core::view::Key::KEY_F11: keyStr = "F11"; break;
+            case core::view::Key::KEY_F12: keyStr = "F12"; break;
+            case core::view::Key::KEY_SPACE: keyStr = "Space"; break;
+            case core::view::Key::KEY_A: keyStr = "a"; break;
+            case core::view::Key::KEY_B: keyStr = "b"; break;
+            case core::view::Key::KEY_C: keyStr = "c"; break;
+            case core::view::Key::KEY_D: keyStr = "d"; break;
+            case core::view::Key::KEY_E: keyStr = "e"; break;
+            case core::view::Key::KEY_F: keyStr = "f"; break;
+            case core::view::Key::KEY_G: keyStr = "g"; break;
+            case core::view::Key::KEY_H: keyStr = "h"; break;
+            case core::view::Key::KEY_I: keyStr = "i"; break;
+            case core::view::Key::KEY_J: keyStr = "j"; break;
+            case core::view::Key::KEY_K: keyStr = "k"; break;
+            case core::view::Key::KEY_L: keyStr = "l"; break;
+            case core::view::Key::KEY_M: keyStr = "m"; break;
+            case core::view::Key::KEY_N: keyStr = "n"; break;
+            case core::view::Key::KEY_O: keyStr = "o"; break;
+            case core::view::Key::KEY_P: keyStr = "p"; break;
+            case core::view::Key::KEY_Q: keyStr = "q"; break;
+            case core::view::Key::KEY_R: keyStr = "r"; break;
+            case core::view::Key::KEY_S: keyStr = "s"; break;
+            case core::view::Key::KEY_T: keyStr = "t"; break;
+            case core::view::Key::KEY_U: keyStr = "u"; break;
+            case core::view::Key::KEY_V: keyStr = "v"; break;
+            case core::view::Key::KEY_W: keyStr = "w"; break;
+            case core::view::Key::KEY_X: keyStr = "x"; break;
+            case core::view::Key::KEY_Y: keyStr = "y"; break;
+            case core::view::Key::KEY_Z: keyStr = "z"; break;
+            default: keyStr.Format("%c", static_cast<char>(keyCode.key)); break;
         }
+
         if (!keyStr.IsEmpty()) {
-            if (key.IsAltMod()) {
+            if (keyCode.mods.test(core::view::Modifier::ALT)) {
                 keyStr.Prepend("ALT+");
             }
-            if (key.IsCtrlMod()) {
+            if (keyCode.mods.test(core::view::Modifier::CTRL)) {
                 keyStr.Prepend("CTRL+");
             }
-            if (key.IsShiftMod()) {
+            if (keyCode.mods.test(core::view::Modifier::SHIFT)) {
                 keyStr.Prepend("SHIFT+");
             }
         }
 
-        if (!keyStr.IsEmpty()) def << " key='" << keyStr.PeekBuffer() << "' ";
+        if (!keyStr.IsEmpty()) {
+            def << " key='" << keyStr.PeekBuffer() << "' ";
+        }
     }
 
+    // ATB ignores hotkeys starting/containing ALT + [a-z] ! ...
     ::TwAddButton(bar, GetKey().c_str(), reinterpret_cast<TwButtonCallback>(&ButtonParam::twCallback), this, def.str().c_str());
 
 }

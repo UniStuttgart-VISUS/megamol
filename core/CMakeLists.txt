@@ -12,6 +12,7 @@ if(BUILD_CORE)
   # Check option dependencies: First list item is always the current build option,
   # afterwards list the dependencies.
   set(DEP_LIST "${DEP_LIST};BUILD_CORE BUILD_VISLIB" CACHE INTERNAL "")
+  set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
   # search for 3rd party libs
   set(CMAKE_THREAD_PREFER_PTHREAD)
@@ -76,7 +77,6 @@ if(BUILD_CORE)
     #set(ZLIB_RELEASE "${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}z${CMAKE_STATIC_LIBRARY_SUFFIX}")
     set(ZLIB_DEBUG "lib/${CMAKE_STATIC_LIBRARY_PREFIX}z${CMAKE_STATIC_LIBRARY_SUFFIX}")
     set(ZLIB_RELEASE "lib/${CMAKE_STATIC_LIBRARY_PREFIX}z${CMAKE_STATIC_LIBRARY_SUFFIX}")
-
   endif()
   add_external_project(zlib_ext
     GIT_REPOSITORY https://github.com/madler/zlib.git
@@ -135,6 +135,7 @@ if(BUILD_CORE)
     include(GNUInstallDirs)
     set(ZFP_LIB "${CMAKE_INSTALL_LIBDIR}/libzfp.a")
   endif()
+
   add_external_project(zfp_ext
     GIT_REPOSITORY https://github.com/LLNL/zfp.git
     GIT_TAG "0.5.2"
@@ -156,12 +157,38 @@ if(BUILD_CORE)
       CONFIGURE_COMMAND ""
       BUILD_COMMAND ""
       INSTALL_COMMAND ""
-      TEST_COMMAND "")
+      TEST_COMMAND ""
+      CMAKE_ARGS -DGLM_TEST_ENABLE=OFF)
   add_external_library(glm INTERFACE
     DEPENDS glm_ext
     INCLUDE_DIR "src/glm_ext/")
 
-  file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
+  # include glowl
+  add_external_project(glowl_ext
+    GIT_REPOSITORY https://github.com/invor/glowl.git
+    GIT_TAG "v0.1"
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ""
+    INSTALL_COMMAND ""
+    TEST_COMMAND "")
+  add_external_library(glowl INTERFACE
+    DEPENDS glowl_ext
+    INCLUDE_DIR "src/glowl_ext/include")
+
+  #include nlohmann/json
+  add_external_project(json_ext
+      GIT_REPOSITORY https://github.com/azadkuh/nlohmann_json_release.git
+      GIT_TAG "v3.5.0"
+      CONFIGURE_COMMAND ""
+      BUILD_COMMAND ""
+      INSTALL_COMMAND ""
+      TEST_COMMAND ""
+      CMAKE_ARGS -DBUILD_TESTING=OFF)
+  add_external_library(json INTERFACE
+    DEPENDS json_ext
+    INCLUDE_DIR "src/json_ext/")
+
+  file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h" "include/*.inl")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
   file(GLOB_RECURSE shader_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Shaders/*")
@@ -184,12 +211,29 @@ if(BUILD_CORE)
 
   # Target definition
   add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files} ${version_files})
+
+  # add libunwind
+  if(UNIX)
+    option(USE_LIBUNWIND "use libunwind" OFF)
+    if(USE_LIBUNWIND)
+      find_package(LIBUNWIND REQUIRED)
+      message(STATUS ${LIBUNWIND_LIBRARIES})
+      message(STATUS ${LIBUNWIND_INCLUDE_DIR})
+      if(LIBUNWIND_FOUND)
+        target_compile_definitions(${PROJECT_NAME} PUBLIC "HAS_LIBUNWIND")
+        target_include_directories(${PROJECT_NAME} PUBLIC ${LIBUNWIND_INCLUDE_DIR})
+        target_link_libraries(${PROJECT_NAME} PUBLIC ${LIBUNWIND_LIBRARIES} )
+      else()
+        message(FATAL_ERROR "Can not find libunwind.")
+      endif()
+    endif()
+  endif()
   target_compile_definitions(${PROJECT_NAME} PRIVATE MEGAMOLCORE_EXPORTS)
   target_include_directories(${PROJECT_NAME}
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "src" "include"
     PUBLIC ${EXPAT_INCLUDE_DIRS})
   target_link_libraries(${PROJECT_NAME} 
-    PUBLIC vislib glad zlib libpng ${EXPAT_LIBRARIES}
+    PUBLIC vislib glad glm glowl zlib libpng json ${EXPAT_LIBRARIES}
     PRIVATE lua libzmq libcppzmq ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT})
   if(WIN32)
     set_target_properties(${PROJECT_NAME} PROPERTIES
@@ -229,10 +273,14 @@ if(BUILD_CORE)
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders/ DESTINATION "share/shaders")
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Resources/ DESTINATION "share/resources")
   install_external(TARGETS libzmq)
+  get_target_property(zmqcpp_include libcppzmq INTERFACE_INCLUDE_DIRECTORIES)
+  install(DIRECTORY ${zmqcpp_include} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/libzmq FILES_MATCHING PATTERN "*.hpp")
   if(WIN32)
     install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
     install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION "lib")
-    install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION bin OPTIONAL)
+    if (MSVC)
+      install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION bin OPTIONAL)
+    endif()
   else()
     install(TARGETS ${PROJECT_NAME} DESTINATION "lib" EXPORT ${PROJECT_NAME}-target)
   endif()

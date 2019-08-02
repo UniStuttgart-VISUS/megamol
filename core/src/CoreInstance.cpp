@@ -58,6 +58,7 @@
 #include "utility/ServiceManager.h"
 #include "utility/plugins/PluginManager.h"
 
+#include "png.h"
 #include "vislib/Array.h"
 #include "vislib/Map.h"
 #include "vislib/MultiSz.h"
@@ -168,7 +169,6 @@ megamol::core::CoreInstance::CoreInstance(void)
     vislib::sys::Log::DefaultLog.SetEchoLevel(vislib::sys::Log::LEVEL_ALL);
     vislib::sys::Log::DefaultLog.SetEchoTarget(new vislib::sys::Log::RedirectTarget(&this->log));
 
-    // printf("######### PerformanceCounter Frequency %I64u\n", vislib::sys::PerformanceCounter::QueryFrequency());
 #ifdef ULTRA_SOCKET_STARTUP
     vislib::net::Socket::Startup();
 #endif /* ULTRA_SOCKET_STARTUP */
@@ -210,6 +210,9 @@ megamol::core::CoreInstance::CoreInstance(void)
     //#endif
 
     this->log.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Core Instance created");
+
+    // vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO+42, "GraphUpdateLock address: %x\n",
+    // std::addressof(this->graphUpdateLock));
 }
 
 
@@ -222,17 +225,18 @@ megamol::core::CoreInstance::~CoreInstance(void) {
     this->log.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Core Instance destroyed");
 
     // Shutdown all views and jobs, which might still run
-    this->namespaceRoot->ModuleGraphLock().LockExclusive();
-    AbstractNamedObjectContainer::child_list_type::iterator iter, end;
-    while (true) {
-        iter = this->namespaceRoot->ChildList_Begin();
-        end = this->namespaceRoot->ChildList_End();
-        if (iter == end) break;
-        ModuleNamespace::ptr_type mn = ModuleNamespace::dynamic_pointer_cast(*iter);
-        //        ModuleNamespace *mn = dynamic_cast<ModuleNamespace*>((*iter).get());
-        this->closeViewJob(mn);
+    {
+        vislib::sys::AutoLock lock(this->namespaceRoot->ModuleGraphLock());
+        AbstractNamedObjectContainer::child_list_type::iterator iter, end;
+        while (true) {
+            iter = this->namespaceRoot->ChildList_Begin();
+            end = this->namespaceRoot->ChildList_End();
+            if (iter == end) break;
+            ModuleNamespace::ptr_type mn = ModuleNamespace::dynamic_pointer_cast(*iter);
+            //        ModuleNamespace *mn = dynamic_cast<ModuleNamespace*>((*iter).get());
+            this->closeViewJob(mn);
+        }
     }
-    this->namespaceRoot->ModuleGraphLock().UnlockExclusive();
 
     delete this->services;
     this->services = nullptr;
@@ -483,7 +487,7 @@ void megamol::core::CoreInstance::Initialise(void) {
     // test view for sphere rendering
     vd = std::make_shared<ViewDescription>("testspheres");
     vd->AddModule(this->GetModuleDescriptionManager().Find("View3D"), "view");
-    vd->AddModule(this->GetModuleDescriptionManager().Find("SimpleSphereRenderer"), "rnd");
+    vd->AddModule(this->GetModuleDescriptionManager().Find("SphereRenderer"), "rnd");
     vd->AddModule(this->GetModuleDescriptionManager().Find("TestSpheresDataSource"), "dat");
     vd->AddCall(this->GetCallDescriptionManager().Find("CallRender3D"), "view::rendering", "rnd::rendering");
     vd->AddCall(this->GetCallDescriptionManager().Find("MultiParticleDataCall"), "rnd::getData", "dat::getData");
@@ -1038,8 +1042,8 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
                 // remove mod
                 n->RemoveChild(mod);
             } else {
-                vislib::sys::Log::DefaultLog.WriteError(
-                    "PerformGraphUpdates:module \"%s\" has no parent of type ModuleNamespace. Deletion makes no sense.",
+                vislib::sys::Log::DefaultLog.WriteError("PerformGraphUpdates:module \"%s\" has no parent of type "
+                                                        "ModuleNamespace. Deletion makes no sense.",
                     mdr.PeekBuffer());
                 continue;
             }
@@ -1382,7 +1386,8 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
         auto& pg = pgp.Next().Value();
         if (pg.GroupSize == pg.Requests.Count()) {
             // flush mechanism
-            if (this->checkForFlushEvent(counter, this->groupParamSetRequestsFlushIndices)) { // TODO Is this the right place?
+            if (this->checkForFlushEvent(
+                    counter, this->groupParamSetRequestsFlushIndices)) { // TODO Is this the right place?
                 this->updateFlushIdxList(counter, this->groupParamSetRequestsFlushIndices);
                 break;
             }
@@ -1437,8 +1442,7 @@ megamol::core::ViewInstance::ptr_type megamol::core::CoreInstance::InstantiatePe
     using vislib::sys::Log;
 
     vislib::sys::AutoLock l(this->graphUpdateLock);
-    AbstractNamedObject::GraphLocker locker(this->namespaceRoot, true);
-    vislib::sys::AutoLock lock(locker);
+    vislib::sys::AutoLock lock(this->namespaceRoot->ModuleGraphLock());
 
     if (this->pendingViewInstRequests.IsEmpty()) return NULL;
 
@@ -1574,8 +1578,7 @@ megamol::core::ViewInstance::ptr_type megamol::core::CoreInstance::InstantiatePe
  */
 megamol::core::view::AbstractView* megamol::core::CoreInstance::instantiateSubView(megamol::core::ViewDescription* vd) {
     using vislib::sys::Log;
-    AbstractNamedObject::GraphLocker locker(this->namespaceRoot, true);
-    vislib::sys::AutoLock lock(locker);
+    vislib::sys::AutoLock lock(this->namespaceRoot->ModuleGraphLock());
 
     bool hasErrors = false;
     view::AbstractView *view = NULL, *fallbackView = NULL;
@@ -1665,8 +1668,7 @@ megamol::core::view::AbstractView* megamol::core::CoreInstance::instantiateSubVi
 megamol::core::JobInstance::ptr_type megamol::core::CoreInstance::InstantiatePendingJob(void) {
     using vislib::sys::Log;
     vislib::sys::AutoLock l(this->graphUpdateLock);
-    AbstractNamedObject::GraphLocker locker(this->namespaceRoot, true);
-    vislib::sys::AutoLock lock(locker);
+    vislib::sys::AutoLock lock(this->namespaceRoot->ModuleGraphLock());
 
     if (this->pendingJobInstRequests.IsEmpty()) return NULL;
 
@@ -1817,8 +1819,7 @@ vislib::SmartPtr<megamol::core::param::AbstractParam> megamol::core::CoreInstanc
 vislib::SmartPtr<megamol::core::param::AbstractParam> megamol::core::CoreInstance::FindParameter(
     const vislib::StringA& name, bool quiet, bool create) {
     using vislib::sys::Log;
-    AbstractNamedObject::GraphLocker locker(this->namespaceRoot, false);
-    vislib::sys::AutoLock lock(locker);
+    vislib::sys::AutoLock lock(this->namespaceRoot->ModuleGraphLock());
 
     vislib::Array<vislib::StringA> path = vislib::StringTokeniserA::Split(name, "::", true);
     vislib::StringA slotName("");
@@ -1938,11 +1939,45 @@ vislib::SmartPtr<megamol::core::param::AbstractParam> megamol::core::CoreInstanc
 }
 
 
+std::string megamol::core::CoreInstance::GetProjectFromPNG(std::string filename) {
+    png_structp png = png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
+    if (!png) {
+        vislib::sys::Log::DefaultLog.WriteError("getProjectFromPNG: Unable to create png struct");
+    } else {
+        FILE* fp = fopen(filename.c_str(), "rb");
+        if (fp == nullptr) {
+            vislib::sys::Log::DefaultLog.WriteError("getProjectFromPNG: Unable to open png file \"%s\"", filename.c_str());
+        } else {
+            png_infop info = png_create_info_struct(png);
+            if (!info) {
+                vislib::sys::Log::DefaultLog.WriteError("getProjectFromPNG: Unable to create png info struct");
+            } else {
+                setjmp(png_jmpbuf(png));
+                png_init_io(png, fp);
+                png_read_info(png, info);
+                png_uint_32 exif_size = 0;
+                png_bytep exif_data = nullptr;
+                png_get_eXIf_1(png, info, &exif_size, &exif_data);
+                if (exif_size > 0) {
+                    std::string content(reinterpret_cast<char*>(exif_data));
+                    return content;
+                } else {
+                    vislib::sys::Log::DefaultLog.WriteError("LoadProject: Unable to extract png exif data");
+                }
+                png_destroy_info_struct(png, &info);
+            }
+            fclose(fp);
+        }
+        png_destroy_read_struct(&png, nullptr, nullptr);
+        // exif_data buffer seems to live inside exif_info and is disposed automatically
+    }
+    return "";
+}
+
 /*
  * megamol::core::CoreInstance::LoadProject
  */
 void megamol::core::CoreInstance::LoadProject(const vislib::StringA& filename) {
-    // TODO if endswith lua, execute, save for later
     if (filename.EndsWith(".lua")) {
         vislib::StringA content;
         std::string result;
@@ -1958,6 +1993,16 @@ void megamol::core::CoreInstance::LoadProject(const vislib::StringA& filename) {
             } else {
                 this->loadedLuaProjects.Add(vislib::Pair<vislib::StringA, vislib::StringA>(filename, content));
             }
+        }
+    } else if (filename.EndsWith(".png")) {
+        std::string result;
+        std::string content = GetProjectFromPNG(filename.PeekBuffer());
+        //vislib::sys::Log::DefaultLog.WriteInfo("Loaded project from png:\n%s", content.c_str());
+        if (!this->lua->RunString(content.c_str(), result, filename.PeekBuffer())) {
+            vislib::sys::Log::DefaultLog.WriteError(vislib::sys::Log::LEVEL_INFO,
+                "Failed loading project file \"%s\": %s", filename.PeekBuffer(), result.c_str());
+        } else {
+            this->loadedLuaProjects.Add(vislib::Pair<vislib::StringA, vislib::StringA>(filename, content.c_str()));
         }
     } else {
         megamol::core::utility::xml::XmlReader reader;
@@ -1977,7 +2022,6 @@ void megamol::core::CoreInstance::LoadProject(const vislib::StringA& filename) {
  * megamol::core::CoreInstance::LoadProject
  */
 void megamol::core::CoreInstance::LoadProject(const vislib::StringW& filename) {
-    // TODO if endswith lua, execute, save for later
     if (filename.EndsWith(L".lua")) {
         vislib::StringA content;
         std::string result;
@@ -1995,6 +2039,16 @@ void megamol::core::CoreInstance::LoadProject(const vislib::StringW& filename) {
                     vislib::Pair<vislib::StringA, vislib::StringA>(vislib::StringA(filename), content));
             }
         }
+    } else if (filename.EndsWith(L".png")) {
+        std::string result;
+        std::string content = GetProjectFromPNG(W2A(filename.PeekBuffer()));
+        // vislib::sys::Log::DefaultLog.WriteInfo("Loaded project from png:\n%s", content.c_str());
+        if (!this->lua->RunString(content.c_str(), result, W2A(filename.PeekBuffer()))) {
+            vislib::sys::Log::DefaultLog.WriteError(vislib::sys::Log::LEVEL_INFO,
+                "Failed loading project file \"%s\": %s", filename.PeekBuffer(), result.c_str());
+        } else {
+            this->loadedLuaProjects.Add(vislib::Pair<vislib::StringA, vislib::StringA>(filename, content.c_str()));
+        }
     } else {
         megamol::core::utility::xml::XmlReader reader;
         if (!reader.OpenFile(filename)) {
@@ -2005,6 +2059,148 @@ void megamol::core::CoreInstance::LoadProject(const vislib::StringW& filename) {
         vislib::sys::Log::DefaultLog.WriteMsg(
             vislib::sys::Log::LEVEL_INFO, "Loading project file \"%s\"", vislib::StringA(filename).PeekBuffer());
         this->addProject(reader);
+    }
+}
+
+
+void megamol::core::CoreInstance::SerializeGraph(std::string& serInstances, std::string& serModules, std::string& serCalls, std::string& serParams) {
+
+    std::stringstream confInstances, confModules, confCalls, confParams;
+
+    std::map<std::string, std::string> view_instances;
+    std::map<std::string, std::string> job_instances;
+    {
+        vislib::sys::AutoLock lock(this->namespaceRoot->ModuleGraphLock());
+        AbstractNamedObjectContainer::ptr_type anoc = AbstractNamedObjectContainer::dynamic_pointer_cast(this->namespaceRoot);
+        int job_counter = 0;
+        for (auto ano = anoc->ChildList_Begin(); ano != anoc->ChildList_End(); ++ano) {
+            auto vi = dynamic_cast<ViewInstance*>(ano->get());
+            auto ji = dynamic_cast<JobInstance*>(ano->get());
+            if (vi && vi->View()) {
+                std::string vin = vi->Name().PeekBuffer();
+                view_instances[vi->View()->FullName().PeekBuffer()] = vin;
+                vislib::sys::Log::DefaultLog.WriteInfo(
+                    "ScreenShooter: found view instance \"%s\" with view \"%s\".",
+                    view_instances[vi->View()->FullName().PeekBuffer()].c_str(),
+                    vi->View()->FullName().PeekBuffer());
+            }
+            if (ji && ji->Job()) {
+                std::string jin = ji->Name().PeekBuffer();
+                // todo: find job module! WTF!
+                job_instances[jin] = std::string("job") + std::to_string(job_counter);
+                vislib::sys::Log::DefaultLog.WriteInfo("ScreenShooter: found job instance \"%s\" with job \"%s\".",
+                    jin.c_str(), job_instances[jin].c_str());
+                ++job_counter;
+            }
+        }
+
+        const auto fun = [&confInstances, &confModules, &confCalls, &confParams, &view_instances](Module* mod) {
+            if (view_instances.find(mod->FullName().PeekBuffer()) != view_instances.end()) {
+                confInstances << "mmCreateView(\"" << view_instances[mod->FullName().PeekBuffer()] << "\",\""
+                    << mod->ClassName() << "\",\"" << mod->FullName().PeekBuffer() << "\")\n";
+            }
+            else {
+                // todo: jobs??
+                confModules << "mmCreateModule(\"" << mod->ClassName() << "\",\"" << mod->FullName().PeekBuffer()
+                    << "\")\n";
+            }
+            AbstractNamedObjectContainer::child_list_type::const_iterator se = mod->ChildList_End();
+            for (AbstractNamedObjectContainer::child_list_type::const_iterator si = mod->ChildList_Begin();
+                si != se; ++si) {
+                const auto slot = dynamic_cast<param::ParamSlot*>((*si).get());
+                if (slot) {
+                    const auto bp = slot->Param<param::ButtonParam>();
+                    if (!bp) {
+                        std::string val = slot->Parameter()->ValueString().PeekBuffer();
+                        // caution: value strings could contain unescaped quotes, so fix that:
+                        //std::string from = "\"";
+                        //std::string to = "\\\"";
+                        //size_t start_pos = 0;
+                        //while ((start_pos = val.find(from, start_pos)) != std::string::npos) {
+                        //    val.replace(start_pos, from.length(), to);
+                        //    start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
+                        //}
+                        confParams << "mmSetParamValue(\"" << slot->FullName() << "\",[=[" << val << "]=])\n";
+                    }
+                }
+                const auto cslot = dynamic_cast<CallerSlot*>((*si).get());
+                if (cslot) {
+                    const Call* c = const_cast<CallerSlot*>(cslot)->CallAs<Call>();
+                    if (c != nullptr) {
+                        confCalls << "mmCreateCall(\"" << c->ClassName() << "\",\""
+                            << c->PeekCallerSlot()->Parent()->FullName().PeekBuffer()
+                            << "::" << c->PeekCallerSlot()->Name().PeekBuffer() << "\",\""
+                            << c->PeekCalleeSlot()->Parent()->FullName().PeekBuffer()
+                            << "::" << c->PeekCalleeSlot()->Name().PeekBuffer() << "\")\n";
+                    }
+                }
+            }
+        };
+        this->EnumModulesNoLock(nullptr, fun);
+
+        serInstances = confInstances.str();
+        serModules = confModules.str();
+        serCalls = confCalls.str();
+        serParams = confParams.str();
+    }
+}
+
+
+void megamol::core::CoreInstance::EnumModulesNoLock(
+    core::AbstractNamedObject* entry_point, std::function<void(Module*)> cb) {
+
+    AbstractNamedObject* ano = entry_point;
+    bool fromModule = true;
+    if (!entry_point) {
+        ano = this->namespaceRoot.get();
+        fromModule = false;
+    }
+
+    auto anoc = dynamic_cast<AbstractNamedObjectContainer*>(ano);
+    auto mod = dynamic_cast<Module*>(ano);
+    std::vector<AbstractNamedObject*> anoStack;
+    if (!fromModule || mod == nullptr) {
+        // we start from the root or a namespace
+        const auto it_end = anoc->ChildList_End();
+        for (auto it = anoc->ChildList_Begin(); it != it_end; ++it) {
+            if (dynamic_cast<AbstractNamedObjectContainer*>((*it).get())) {
+                anoStack.push_back((*it).get());
+            }
+        }
+        // if it was a namespace, we do not want to dig into calls!
+        fromModule = false;
+    } else {
+        anoStack.push_back(anoc);
+    }
+
+    while (!anoStack.empty()) {
+        ano = anoStack.back();
+        anoStack.pop_back();
+
+        anoc = dynamic_cast<AbstractNamedObjectContainer*>(ano);
+        mod = dynamic_cast<Module*>(ano);
+
+        if (mod) {
+            cb(mod);
+            if (fromModule) {
+                const auto it_end = mod->ChildList_End();
+                for (auto it = mod->ChildList_Begin(); it != it_end; ++it) {
+                    auto cs = dynamic_cast<CallerSlot*>((*it).get());
+                    if (cs) {
+                        const Call* c = cs->CallAs<Call>();
+                        if (c) {
+                            this->FindModuleNoLock<core::Module>(c->PeekCalleeSlot()->Parent()->FullName().PeekBuffer(),
+                                [&anoStack](core::Module* mod) { anoStack.push_back(mod); });
+                        }
+                    }
+                }
+            }
+        } else if (anoc) {
+            const auto it_end2 = anoc->ChildList_End();
+            for (auto it = anoc->ChildList_Begin(); it != it_end2; ++it) {
+                anoStack.push_back((*it).get());
+            }
+        }
     }
 }
 
@@ -2043,8 +2239,6 @@ vislib::StringA megamol::core::CoreInstance::GetMergedLuaProject() const {
  */
 void megamol::core::CoreInstance::getGlobalParameterHash(
     megamol::core::ModuleNamespace::const_ptr_type path, ParamHashMap_t& map) const {
-    AbstractNamedObject::GraphLocker locker(this->namespaceRoot, false);
-    vislib::sys::AutoLock lock(locker);
 
     AbstractNamedObjectContainer::child_list_type::const_iterator i, e;
     e = path->ChildList_End();
@@ -2098,8 +2292,7 @@ void megamol::core::CoreInstance::OffsetInstanceTime(double offset) {
  * megamol::core::CoreInstance::CleanupModuleGraph
  */
 void megamol::core::CoreInstance::CleanupModuleGraph(void) {
-    AbstractNamedObject::GraphLocker locker(this->namespaceRoot, true);
-    vislib::sys::AutoLock lock(locker);
+    vislib::sys::AutoLock lock(this->namespaceRoot->ModuleGraphLock());
 
     this->namespaceRoot->SetAllCleanupMarks();
 
@@ -2155,7 +2348,7 @@ void megamol::core::CoreInstance::SetupGraphFromNetwork(const void* data) {
     const AbstractSimpleMessage* dataPtr = static_cast<const AbstractSimpleMessage*>(data);
     const AbstractSimpleMessage& dat = *dataPtr;
 
-    this->namespaceRoot->ModuleGraphLock().LockExclusive();
+    vislib::sys::AutoLock lock(this->namespaceRoot->ModuleGraphLock());
     try {
 
         UINT64 cntMods = *dat.GetBodyAs<UINT64>();
@@ -2277,7 +2470,6 @@ void megamol::core::CoreInstance::SetupGraphFromNetwork(const void* data) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "Failed to setup module graph from network message: unexpected exception\n");
     }
-    this->namespaceRoot->ModuleGraphLock().UnlockExclusive();
 }
 
 
@@ -3083,11 +3275,11 @@ megamol::core::Call* megamol::core::CoreInstance::InstantiateCall(
 /*
  * megamol::core::CoreInstance::enumParameters
  */
-void megamol::core::CoreInstance::enumParameters(
-    megamol::core::ModuleNamespace::const_ptr_type path, std::function<void(const Module&, param::ParamSlot&)> cb) const {
+void megamol::core::CoreInstance::enumParameters(megamol::core::ModuleNamespace::const_ptr_type path,
+    std::function<void(const Module&, param::ParamSlot&)> cb) const {
+    vislib::sys::AutoLock lock(this->namespaceRoot->ModuleGraphLock());
 
-    AbstractNamedObject::GraphLocker locker(this->namespaceRoot, false);
-    vislib::sys::AutoLock lock(locker);
+    // TODO use EnumModulesNoLock?!
 
     AbstractNamedObjectContainer::child_list_type::const_iterator i, e;
     e = path->ChildList_End();
@@ -3102,8 +3294,8 @@ void megamol::core::CoreInstance::enumParameters(
             for (si = mod->ChildList_Begin(); si != se; ++si) {
                 param::ParamSlot* slot = dynamic_cast<param::ParamSlot*>((*si).get());
                 if (slot) {
-					cb(*mod, *slot);
-				}
+                    cb(*mod, *slot);
+                }
             }
 
         } else if (ns) {
@@ -3119,8 +3311,7 @@ void megamol::core::CoreInstance::enumParameters(
 vislib::StringA megamol::core::CoreInstance::findParameterName(megamol::core::ModuleNamespace::const_ptr_type path,
     const vislib::SmartPtr<megamol::core::param::AbstractParam>& param) const {
 
-    AbstractNamedObject::GraphLocker locker(this->namespaceRoot, false);
-    vislib::sys::AutoLock lock(locker);
+    vislib::sys::AutoLock lock(this->namespaceRoot->ModuleGraphLock());
 
     AbstractNamedObjectContainer::child_list_type::const_iterator i, e;
     e = path->ChildList_End();
@@ -3159,8 +3350,7 @@ vislib::StringA megamol::core::CoreInstance::findParameterName(megamol::core::Mo
 void megamol::core::CoreInstance::closeViewJob(megamol::core::ModuleNamespace::ptr_type obj) {
 
     ASSERT(obj != NULL);
-    AbstractNamedObject::GraphLocker locker(this->namespaceRoot, true);
-    vislib::sys::AutoLock lock(locker);
+    vislib::sys::AutoLock lock(this->namespaceRoot->ModuleGraphLock());
 
     if (obj->Parent() != this->namespaceRoot) {
         // this happens when a job/view is removed from the graph before it's
@@ -3386,7 +3576,8 @@ bool megamol::core::CoreInstance::quickConnectUp(
         if (to == NULL) {
             for (SIZE_T i = 0; i < connInfo.Count(); i++) {
                 if (vislib::StringA("View2D").Equals(connInfo[i].nextMod->ClassName(), false) ||
-                    vislib::StringA("View3D").Equals(connInfo[i].nextMod->ClassName(), false)) {
+                    vislib::StringA("View3D").Equals(connInfo[i].nextMod->ClassName(), false) ||
+                    vislib::StringA("View3D_2").Equals(connInfo[i].nextMod->ClassName(), false)) {
 
                     vislib::StringA prevModName(from);
                     for (SIZE_T j = 1; j < list.Count(); j++) {
@@ -3850,5 +4041,6 @@ bool megamol::core::CoreInstance::checkForFlushEvent(size_t const eventIdx, std:
 
 
 void megamol::core::CoreInstance::shortenFlushIdxList(size_t const eventCount, std::vector<size_t>& list) {
-    list.erase(std::remove_if(list.begin(), list.end(), [eventCount](auto el) { return (eventCount - 1) <= el; }), list.end());
+    list.erase(
+        std::remove_if(list.begin(), list.end(), [eventCount](auto el) { return (eventCount - 1) <= el; }), list.end());
 }

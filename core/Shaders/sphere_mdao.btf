@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<btf type="MegaMolGLSLShader" version="1.0" namespace="sphere_mdao">
+
+    <shader name="vertex">
+        <snippet type="version">150</snippet>
+        <snippet name="CommonDefines"             type="file">commondefines.glsl</snippet>        
+        <snippet name="MainStart"                 type="file">sphere/mdao_vert_mainstart.glsl</snippet>
+        <snippet name="Corners"                   type="file">sphere/mdao_vert_corners.glsl</snippet> <!-- see simple_vert_spheretouchplane.glsl -->
+        <snippet name="MainEnd"                   type="file">sphere/mdao_vert_mainend.glsl</snippet>
+    </shader>
+
+    <shader name="fragment">
+        <snippet type="version">150</snippet>
+        <snippet name="Main"                      type="file">sphere/mdao_frag_main.glsl</snippet>
+    </shader>
+
+
+  
+    <namespace name="geometry">
+        
+        <shader name="vertex">
+            <snippet type="version">150</snippet>
+            <snippet name="Main"                  type="file">sphere/mdao_geometry_vert_main.glsl</snippet>
+        </shader>
+
+        <shader name="geometry">
+            <snippet type="version">150</snippet>
+            <snippet name="CommonDefines"         type="file">commondefines.glsl</snippet>            
+            <snippet name="MainStart"             type="file">sphere/mdao_geometry_geo_mainstart.glsl</snippet>
+            <snippet name="Corners"               type="file">sphere/mdao_vert_corners.glsl</snippet>  <!-- see simple_vert_spheretouchplane.glsl -->
+            <snippet name="MainEnd"               type="file">sphere/mdao_geometry_geo_mainend.glsl</snippet>
+        </shader>
+        
+    </namespace>
+    
+    
+   
+    <namespace name="deferred">
+
+        <shader name="vertex">
+            <snippet type="version">150</snippet>
+            <snippet name="Main"                  type="file">sphere/mdao_deferred_vert_main.glsl</snippet>
+        </shader>
+
+        <shader name="fragment"> <!-- Snippets are merged depending on need. -->
+            <snippet name="Main"                  type="file">sphere/mdao_deferred_frag_main.glsl</snippet>
+
+            <snippet name="Lighting"              type="file">sphere/mdao_deferred_frag_lighting.glsl</snippet>
+            <snippet name="LightingStub"          type="file">sphere/mdao_deferred_frag_lighting_stub.glsl</snippet>
+            <snippet name="AmbientOcclusion"      type="file">sphere/mdao_deferred_frag_ambocc.glsl</snippet>
+            <snippet name="AmbientOcclusionStub"  type="file">sphere/mdao_deferred_frag_ambocc_stub.glsl</snippet>
+        </shader>
+
+    </namespace>
+    
+</btf>

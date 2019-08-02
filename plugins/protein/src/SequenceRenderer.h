@@ -18,6 +18,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/Renderer2DModule.h"
+#include "mmcore/view/Input.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "protein_calls/BindingSiteCall.h"
 #include "vislib/graphics/gl/GLSLShader.h"
