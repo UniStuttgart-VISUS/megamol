@@ -6,7 +6,9 @@
  */
 
 #include "stdafx.h"
-#include "Popup.h"
+#include "GUIUtils.h"
+
+#include "vislib/UTF8Encoder.h"
 
 #include <imgui_stdlib.h>
 #include <vector>
@@ -15,11 +17,11 @@
 using namespace megamol::gui;
 
 
-Popup::Popup(void) : tooltipTime(0.0f), tooltipId(-1) {
+GUIUtils::GUIUtils(void) : tooltipTime(0.0f), tooltipId(-1) {
     // nothing to do here ...
 }
 
-void Popup::HoverToolTip(std::string text, ImGuiID id, float time_start, float time_end) {
+void GUIUtils::HoverToolTip(std::string text, ImGuiID id, float time_start, float time_end) {
     assert(ImGui::GetCurrentContext() != nullptr);
     ImGuiIO& io = ImGui::GetIO();
 
@@ -53,7 +55,7 @@ void Popup::HoverToolTip(std::string text, ImGuiID id, float time_start, float t
     }
 }
 
-void Popup::HelpMarkerToolTip(std::string text, std::string label) {
+void GUIUtils::HelpMarkerToolTip(std::string text, std::string label) {
     assert(ImGui::GetCurrentContext() != nullptr);
 
     if (!text.empty()) {
@@ -63,28 +65,37 @@ void Popup::HelpMarkerToolTip(std::string text, std::string label) {
     }
 }
 
-std::string Popup::InputDialogPopUp(std::string title, std::string request, bool open) {
+
+float GUIUtils::TextWidgetWidth(std::string text) const {
     assert(ImGui::GetCurrentContext() != nullptr);
-    std::string response;
+    ImGuiIO& io = ImGui::GetIO();
+    ImGuiStyle& style = ImGui::GetStyle();
 
-    if (open) {
-        ImGui::OpenPopup(title.c_str());
+    ImVec2 pos = ImGui::GetCursorPos();
+    ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.0f);
+    ImGui::Text(text.c_str());
+    ImGui::PopStyleVar();
+    ImGui::SetCursorPos(pos);
+
+    return ImGui::GetItemRectSize().x;
+}
+
+
+bool GUIUtils::utf8Decode(std::string& str) const {
+    vislib::StringA dec_tmp;
+    if (vislib::UTF8Encoder::Decode(dec_tmp, vislib::StringA(str.c_str()))) {
+        str = std::string(dec_tmp.PeekBuffer());
+        return true;
     }
-    if (ImGui::BeginPopupModal(title.c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-        ImGui::Text("Enter %s:", request.c_str());
-        this->HelpMarkerToolTip("Press [Enter] to confirm.");
+    return false;
+}
 
-        // ImGui::SetKeyboardFocusHere();
-        if (ImGui::InputText("", &response, ImGuiInputTextFlags_EnterReturnsTrue)) {
-            ImGui::CloseCurrentPopup();
-        }
 
-        if (ImGui::Button("Cancel")) {
-            ImGui::CloseCurrentPopup();
-        }
-
-        ImGui::EndPopup();
+bool GUIUtils::utf8Encode(std::string& str) const {
+    vislib::StringA dec_tmp;
+    if (vislib::UTF8Encoder::Encode(dec_tmp, vislib::StringA(str.c_str()))) {
+        str = std::string(dec_tmp.PeekBuffer());
+        return true;
     }
-
-    return response;
+    return false;
 }
