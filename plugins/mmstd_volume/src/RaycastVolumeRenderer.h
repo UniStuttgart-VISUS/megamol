@@ -437,6 +437,7 @@ private:
     };
 
     std::unique_ptr<vislib::graphics::gl::GLSLComputeShader> m_raycast_volume_compute_shdr;
+    std::unique_ptr<vislib::graphics::gl::GLSLComputeShader> m_raycast_volume_compute_iso_shdr;
     std::unique_ptr<vislib::graphics::gl::GLSLShader> m_render_to_framebuffer_shdr;
 
     std::unique_ptr<Texture2D> m_render_target;
@@ -454,11 +455,16 @@ private:
     float m_volume_extents[3];
     float m_volume_resolution[3];
 
+    /** Parameters for changing the behavior */
+    core::param::ParamSlot m_mode;
+
+    core::param::ParamSlot m_ray_step_ratio_param;
+    core::param::ParamSlot m_opacity_threshold;
+    core::param::ParamSlot m_iso_value;
+
     /** caller slot */
     megamol::core::CallerSlot m_volumetricData_callerSlot;
     megamol::core::CallerSlot m_transferFunction_callerSlot;
-
-    core::param::ParamSlot m_ray_step_ratio_param;
 
     std::array<float, 2> valRange;
 };

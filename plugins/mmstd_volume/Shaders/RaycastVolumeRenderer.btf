@@ -7,6 +7,11 @@
         <snippet name="body" type="file">raycast_volume/raycast_volume_c.glsl</snippet>
     </shader>
 
+    <shader name="compute_iso">
+        <snippet type="version">430</snippet>
+        <snippet name="body" type="file">raycast_volume/raycast_volume_iso.glsl</snippet>
+    </shader>
+
     <shader name="vert">
         <snippet type="version">430</snippet>
         <snippet name="body" type="file">raycast_volume/render_to_framebuffer_v.glsl</snippet>
