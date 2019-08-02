@@ -16,6 +16,7 @@
 #include "stdafx.h"
 #include "GUIView.h"
 
+#include "mmcore/Call.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/BoolParam.h"
@@ -293,11 +294,16 @@ void GUIView::Render(const mmcRenderViewContext& context) {
         crv->SetTime(
             -1.0f); // Should be negative to trigger animation! (see View3D.cpp line ~660 | View2D.cpp line ~350)
         (*crv)(core::view::AbstractCallRender::FnRender);
+
+        this->drawGUI(crv->GetViewport(), context.InstanceTime);
     } else {
         ::glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         ::glClear(GL_COLOR_BUFFER_BIT);
+
+        if (this->overrideViewCall != nullptr) {
+            this->drawGUI(this->overrideViewCall->GetViewport(), context.InstanceTime);
+        }
     }
-    this->drawGUI(crv->GetViewport(), crv->InstanceTime());
 }
 
 
@@ -582,6 +588,26 @@ bool GUIView::OnMouseScroll(double dx, double dy) {
         crv->SetInputEvent(evt);
         if (!(*crv)(core::view::InputCall::FnOnMouseScroll)) return false;
     }
+
+    return true;
+}
+
+
+bool GUIView::OnRenderView(core::Call& call) {
+    core::view::CallRenderView* view = dynamic_cast<core::view::CallRenderView*>(&call);
+    if (view == nullptr) return false;
+
+    this->overrideViewCall = view;
+
+    mmcRenderViewContext context;
+    ::ZeroMemory(&context, sizeof(context));
+
+    context.Time = view->Time();
+    context.InstanceTime = view->InstanceTime();
+
+    this->Render(context);
+
+    this->overrideViewCall = nullptr;
 
     return true;
 }

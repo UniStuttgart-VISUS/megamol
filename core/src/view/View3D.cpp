@@ -133,7 +133,7 @@ view::View3D::View3D(void)
     this->restoreCameraSettingsSlot.SetUpdateCallback(&View3D::onRestoreCamera);
     this->MakeSlotAvailable(&this->restoreCameraSettingsSlot);
 
-    this->resetViewSlot << new param::ButtonParam(view::Key::KEY_HOME);
+    this->resetViewSlot << new param::ButtonParam();
     this->resetViewSlot.SetUpdateCallback(&View3D::onResetView);
     this->MakeSlotAvailable(&this->resetViewSlot);
 
@@ -708,6 +708,10 @@ void view::View3D::UpdateFreeze(bool freeze) {
 bool view::View3D::OnKey(Key key, KeyAction action, Modifiers mods) {
     auto* cr = this->rendererSlot.CallAs<view::CallRender3D>();
     if (cr == NULL) return false;
+
+    if (key == Key::KEY_HOME) {
+        onResetView(this->resetViewSlot);
+    }
 
     running = mods.test(Modifier::SHIFT);
     bool down = (action == KeyAction::PRESS || action == KeyAction::REPEAT) && (action != KeyAction::RELEASE);
