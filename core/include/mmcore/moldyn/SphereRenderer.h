@@ -7,17 +7,19 @@
 
 #ifndef MEGAMOLCORE_SPHERERENDERER_H_INCLUDED
 #define MEGAMOLCORE_SPHERERENDERER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 
-#include "mmcore/moldyn/AbstractSphereRenderer.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/utility/MDAOShaderUtilities.h"
 #include "mmcore/utility/MDAOVolumeGenerator.h"
 
+#include "mmcore/Call.h"
+#include "mmcore/CallerSlot.h"
+#include "mmcore/param/ParamSlot.h"
 #include "mmcore/CoreInstance.h"
+#include "mmcore/FlagStorage.h"
+#include "mmcore/FlagCall.h"
+#include "mmcore/view/Renderer3DModule.h"
 #include "mmcore/view/CallClipPlane.h"
 #include "mmcore/view/CallGetTransferFunction.h"
 #include "mmcore/view/CallRender3D.h"
@@ -100,7 +102,7 @@ namespace moldyn {
     /**
      * Renderer for simple sphere glyphs.
      */
-    class SphereRenderer : public AbstractSphereRenderer {
+    class MEGAMOLCORE_API SphereRenderer : public megamol::core::view::Renderer3DModule {
     public:
        
         /**
@@ -192,6 +194,17 @@ namespace moldyn {
             return retval;
         }
 
+        /**
+         * The get extents callback. The module should set the members of
+         * 'call' to tell the caller the extents of its data (bounding boxes
+         * and times).
+         *
+         * @param call The calling call.
+         *
+         * @return The return value of the function.
+         */
+        virtual bool GetExtents(megamol::core::view::CallRender3D& call);
+
         /** Ctor. */
         SphereRenderer(void);
 
@@ -267,7 +280,9 @@ namespace moldyn {
         // --------------------------------------------------------------------
 
         RenderMode                               renderMode;
+        unsigned int                             greyTF;
         bool                                     triggerRebuildGBuffer;
+        FlagStorage::FlagVersionType             currentFlagsVersion;
 
         GLSLShader                               sphereShader;
         GLSLGeometryShader                       sphereGeometryShader;
@@ -295,8 +310,7 @@ namespace moldyn {
         unsigned int                             oldFrameID;
         bool                                     stateInvalid;
         vislib::math::Vector<float, 2>           ambConeConstants;
-        GLuint                                   tfFallbackHandle;
-        core::utility::MDAOVolumeGenerator     *volGen;
+        core::utility::MDAOVolumeGenerator      *volGen;
 
 #if defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
         GLuint                                   singleBufferCreationBits;
@@ -311,13 +325,24 @@ namespace moldyn {
 #endif
         //TimeMeasure                            timer;
 
+
+        /*********************************************************************/
+        /* SLOTS                                                             */
+        /*********************************************************************/
+
+        megamol::core::CallerSlot getDataSlot;
+        megamol::core::CallerSlot getClipPlaneSlot;
+        megamol::core::CallerSlot getTFSlot;
+        megamol::core::CallerSlot getFlagsSlot;
+
         /*********************************************************************/
         /* PARAMETERS                                                        */
         /*********************************************************************/
 
-        core::param::ParamSlot renderModeParam;
-
-        core::param::ParamSlot radiusScalingParam;
+        megamol::core::param::ParamSlot renderModeParam;
+        megamol::core::param::ParamSlot radiusScalingParam;
+        megamol::core::param::ParamSlot forceTimeSlot;
+        megamol::core::param::ParamSlot useLocalBBoxParam;
 
         // Affects only Splat rendering ---------------------------------------
 
@@ -327,24 +352,15 @@ namespace moldyn {
 
         // Affects only Ambient Occlusion rendering: --------------------------
 
-        // Enable or disable lighting
         megamol::core::param::ParamSlot enableLightingSlot;
-        // Enable Ambient Occlusion
         megamol::core::param::ParamSlot enableAOSlot;
         megamol::core::param::ParamSlot enableGeometryShader;
-        // AO texture size 
         megamol::core::param::ParamSlot aoVolSizeSlot;
-        // Cone Apex Angle 
         megamol::core::param::ParamSlot aoConeApexSlot;
-        // AO offset from surface
         megamol::core::param::ParamSlot aoOffsetSlot;
-        // AO strength
         megamol::core::param::ParamSlot aoStrengthSlot;
-        // AO cone length
         megamol::core::param::ParamSlot aoConeLengthSlot;
-        // High precision textures slot
         megamol::core::param::ParamSlot useHPTexturesSlot;
-
 
         /*********************************************************************/
         /* FUNCTIONS                                                         */
@@ -354,6 +370,24 @@ namespace moldyn {
          * Return specified render mode as human readable string.
          */
         static std::string getRenderModeString(RenderMode rm);
+
+        /**
+         * TODO: Document
+         *
+         * @param t           ...
+         * @param outScaling  ...
+         *
+         * @return Pointer to MultiParticleDataCall ...
+         */
+        MultiParticleDataCall *getData(unsigned int t, float& outScaling);
+
+        /**
+         * TODO: Document
+         *
+         * @param clipDat  Points to four floats ...
+         * @param clipCol  Points to four floats ....
+         */
+        void getClipData(float *clipDat, float *clipCol);
 
         /**
          * Check if specified render mode or all render mode are available.
@@ -406,6 +440,16 @@ namespace moldyn {
         void setPointers(MultiParticleDataCall::Particles &parts, T &shader,
             GLuint vertBuf, const void *vertPtr, GLuint vertAttribLoc,
             GLuint colBuf,  const void *colPtr,  GLuint colAttribLoc, GLuint colIdxAttribLoc);
+
+
+        /**
+         * Enables the transfer function texture.
+         *
+         * @param out_size  ...
+         *
+         * @return  ...
+         */
+        bool enableTransferFunctionTexture(unsigned int& out_size);
 
         /**
          * Get bytes and stride.
@@ -537,13 +581,6 @@ namespace moldyn {
          * @param apex        ...
          */
         void generate3ConeDirections(std::vector< vislib::math::Vector< float, int(4) > >& directions, float apex);
-
-        /**
-         * Get transfer function handle.
-         *
-         * @return ...  ...
-         */
-        GLuint getTransferFunctionHandle(void);
 
     };
 

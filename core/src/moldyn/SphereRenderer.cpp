@@ -14,7 +14,6 @@ using namespace megamol::core;
 using namespace vislib::graphics::gl;
 
 
-#define MAP_BUFFER_LOCALLY
 //#define CHRONOTIMING
 
 #define SSBO_GENERATED_SHADER_INSTANCE  "gl_VertexID" // or "gl_InstanceID"
@@ -25,15 +24,18 @@ const GLuint SSBObindingPoint = 2;
 const GLuint SSBOcolorBindingPoint = 3;
 
 
-moldyn::SphereRenderer::SphereRenderer(void)
-    : AbstractSphereRenderer()
+moldyn::SphereRenderer::SphereRenderer(void) : view::Renderer3DModule()
+    , getDataSlot("getdata", "Connects to the data source")
+    , getTFSlot("gettransferfunction", "Connects to the transfer function module")
+    , getClipPlaneSlot("getclipplane", "Connects to a clipping plane module")
+    , getFlagsSlot("getflags", "Connects to a flag storage module")
     , curViewAttrib()
     , curClipDat()
     , oldClipDat()
     , curClipCol()
     , curLightPos()
-    , curVpWidth(0)
-    , curVpHeight(0)
+    , curVpWidth(-1)
+    , curVpHeight(-1)
     , lastVpWidth(0)
     , lastVpHeight(0)
     , curMVinv()
@@ -41,6 +43,7 @@ moldyn::SphereRenderer::SphereRenderer(void)
     , curMVPinv()
     , curMVPtransp()
     , renderMode(RenderMode::SIMPLE)
+    , greyTF(0)
     , sphereShader()
     , sphereGeometryShader()
     , lightingShader()
@@ -59,10 +62,9 @@ moldyn::SphereRenderer::SphereRenderer(void)
     , theSingleMappedMem(nullptr)
     , gpuData()
     , gBuffer()
-    , oldHash(0)
+    , oldHash(-1)
     , oldFrameID(0)
     , ambConeConstants()
-    , tfFallbackHandle(0)
     , volGen(nullptr)
     , triggerRebuildGBuffer(false)
 #if defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
@@ -82,23 +84,56 @@ moldyn::SphereRenderer::SphereRenderer(void)
     // , timer()
     , renderModeParam("renderMode", "The sphere render mode.")
     , radiusScalingParam("scaling", "Scaling factor for particle radii.")
+    , forceTimeSlot("forceTime", "Flag to force the time code to the specified value. Set to true when rendering a video.")
+    , useLocalBBoxParam("useLocalBBox", "Enforce usage of local bbox for camera setup")
     , alphaScalingParam("splat::alphaScaling", "Splat: Scaling factor for particle alpha.")
     , attenuateSubpixelParam(
         "splat::attenuateSubpixel", "Splat: Attenuate alpha of points that should have subpixel size.")
     , useStaticDataParam("ssbo::staticData", "SSBO: Upload data only once per hash change and keep data static on GPU")
-    , enableLightingSlot("ao::enable_lighting", "Ambient Occlusion: Enable Lighting")
-    , enableAOSlot("ao::enable_ao", "Ambient Occlusion: Enable Ambient Occlusion")
+    , enableLightingSlot("ambient occlusion::enable_lighting", "Ambient Occlusion: Enable Lighting")
+    , enableAOSlot("ambient occlusion::enable_ao", "Ambient Occlusion: Enable Ambient Occlusion")
     , enableGeometryShader(
-        "ao::use_gs_proxies", "Ambient Occlusion: Enables rendering using triangle strips from the geometry shader")
-    , aoVolSizeSlot("ao::volsize", "Ambient Occlusion: Longest volume edge")
-    , aoConeApexSlot("ao::apex", "Ambient Occlusion: Cone Apex Angle")
-    , aoOffsetSlot("ao::offset", "Ambient Occlusion: Offset from Surface")
-    , aoStrengthSlot("ao::strength", "Ambient Occlusion: Strength")
-    , aoConeLengthSlot("ao::conelen", "Ambient Occlusion: Cone length")
-    , useHPTexturesSlot("ao::high_prec_tex", "Ambient Occlusion: Use high precision textures") {
+        "ambient occlusion::use_gs_proxies", "Ambient Occlusion: Enables rendering using triangle strips from the geometry shader")
+    , aoVolSizeSlot("ambient occlusion::volsize", "Ambient Occlusion: Longest volume edge")
+    , aoConeApexSlot("ambient occlusion::apex", "Ambient Occlusion: Cone Apex Angle")
+    , aoOffsetSlot("ambient occlusion::offset", "Ambient Occlusion: Offset from Surface")
+    , aoStrengthSlot("ambient occlusion::strength", "Ambient Occlusion: Strength")
+    , aoConeLengthSlot("ambient occlusion::conelen", "Ambient Occlusion: Cone length")
+    , useHPTexturesSlot("ambient occlusion::high_prec_tex", "Ambient Occlusion: Use high precision textures") {
+
+    this->getDataSlot.SetCompatibleCall<moldyn::MultiParticleDataCallDescription>();
+    this->MakeSlotAvailable(&this->getDataSlot);
+
+    this->getTFSlot.SetCompatibleCall<view::CallGetTransferFunctionDescription>();
+    this->MakeSlotAvailable(&this->getTFSlot);
+
+    this->getClipPlaneSlot.SetCompatibleCall<view::CallClipPlaneDescription>();
+    this->MakeSlotAvailable(&this->getClipPlaneSlot);
+
+    this->getFlagsSlot.SetCompatibleCall<FlagCallDescription>();
+    this->MakeSlotAvailable(&this->getFlagsSlot);
+
+    // Initialising enum param with all possible modes (needed for configurator) 
+    // (Removing not available render modes later in create function)
+    param::EnumParam* rmp = new param::EnumParam(this->renderMode);
+    rmp->SetTypePair(RenderMode::SIMPLE, "Simple");
+    rmp->SetTypePair(RenderMode::SIMPLE_CLUSTERED, "Simple_Clustered");
+    rmp->SetTypePair(RenderMode::GEOMETRY_SHADER, "Geometry_Shader");
+    rmp->SetTypePair(RenderMode::SSBO_STREAM, "SSBO_Stream");
+    rmp->SetTypePair(RenderMode::BUFFER_ARRAY, "Buffer_Array");
+    rmp->SetTypePair(RenderMode::SPLAT, "Splat");
+    rmp->SetTypePair(RenderMode::AMBIENT_OCCLUSION, "Ambient_Occlusion");
+    this->renderModeParam << rmp;
+    this->MakeSlotAvailable(&this->renderModeParam);
 
     this->radiusScalingParam << new core::param::FloatParam(1.0f);
     this->MakeSlotAvailable(&this->radiusScalingParam);
+
+    this->forceTimeSlot.SetParameter(new param::BoolParam(false));
+    this->MakeSlotAvailable(&this->forceTimeSlot);
+
+    this->useLocalBBoxParam << new param::BoolParam(false);
+    this->MakeSlotAvailable(&this->useLocalBBoxParam);
 
     this->alphaScalingParam << new core::param::FloatParam(5.0f);
     this->MakeSlotAvailable(&this->alphaScalingParam);
@@ -136,33 +171,56 @@ moldyn::SphereRenderer::SphereRenderer(void)
     this->useHPTexturesSlot << (new core::param::BoolParam(false));
     this->MakeSlotAvailable(&this->useHPTexturesSlot);
 
-    // Initialising enum param with all possible modes (needed for configurator) 
-    // (Removing not available render modes later in create function)
-    param::EnumParam* rmp = new param::EnumParam(this->renderMode);
-    rmp->SetTypePair(RenderMode::SIMPLE,            "Simple"); 
-    rmp->SetTypePair(RenderMode::SIMPLE_CLUSTERED,  "Simple_Clustered");
-    rmp->SetTypePair(RenderMode::GEOMETRY_SHADER,   "Geometry_Shader");
-    rmp->SetTypePair(RenderMode::SSBO_STREAM,       "SSBO_Stream"); 
-    rmp->SetTypePair(RenderMode::BUFFER_ARRAY,      "Buffer_Array"); 
-    rmp->SetTypePair(RenderMode::SPLAT,             "Splat");   
-    rmp->SetTypePair(RenderMode::AMBIENT_OCCLUSION, "Ambient_Occlusion"); 
-    this->renderModeParam << rmp;
-    this->MakeSlotAvailable(&this->renderModeParam);
-
-    // this->forceTimeSlot.SetParameter(new core::param::BoolParam(false));
-    // this->MakeSlotAvailable(&this->forceTimeSlot);
-
     // this->resetResources();
-
-    // Ambient Occlusion ------------------------------------------------------
-    oldHash = -1;
-    curVpWidth = -1;
-    curVpHeight = -1;
-    this->volGen = nullptr;
 }
 
 
 moldyn::SphereRenderer::~SphereRenderer(void) { this->Release(); }
+
+
+bool moldyn::SphereRenderer::GetExtents(view::CallRender3D& call) {
+    view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
+    if (cr == NULL) return false;
+
+    MultiParticleDataCall *c2 = this->getDataSlot.CallAs<MultiParticleDataCall>();
+    if ((c2 != NULL)) {
+        c2->SetFrameID(static_cast<unsigned int>(cr->Time()), this->forceTimeSlot.Param<param::BoolParam>()->Value());
+        if (!(*c2)(1)) return false;
+        cr->SetTimeFramesCount(c2->FrameCount());
+        auto const plcount = c2->GetParticleListCount();
+        if (this->useLocalBBoxParam.Param<param::BoolParam>()->Value() && plcount > 0) {
+            auto bbox = c2->AccessParticles(0).GetBBox();
+            auto cbbox = bbox;
+            cbbox.Grow(c2->AccessParticles(0).GetGlobalRadius());
+            for (unsigned pidx = 1; pidx < plcount; ++pidx) {
+                auto temp = c2->AccessParticles(pidx).GetBBox();
+                bbox.Union(temp);
+                temp.Grow(c2->AccessParticles(pidx).GetGlobalRadius());
+                cbbox.Union(temp);
+            }
+            cr->AccessBoundingBoxes().SetObjectSpaceBBox(bbox);
+            cr->AccessBoundingBoxes().SetObjectSpaceClipBox(cbbox);
+        }
+        else {
+            cr->AccessBoundingBoxes() = c2->AccessBoundingBoxes();
+        }
+
+        float scaling = cr->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
+        if (scaling > 0.0000001) {
+            scaling = 10.0f / scaling;
+        }
+        else {
+            scaling = 1.0f;
+        }
+        cr->AccessBoundingBoxes().MakeScaledWorld(scaling);
+    }
+    else {
+        cr->SetTimeFramesCount(1);
+        cr->AccessBoundingBoxes().Clear();
+    }
+
+    return true;
+}
 
 
 bool moldyn::SphereRenderer::create(void) {
@@ -215,18 +273,19 @@ bool moldyn::SphereRenderer::create(void) {
     // timer.SetSummaryFileName("summary.csv");
     // timer.SetMaximumFrames(20, 100);
 
-    return (AbstractSphereRenderer::create());
+    return true;
 }
 
 
 void moldyn::SphereRenderer::release(void) {
 
     this->resetResources();
-    AbstractSphereRenderer::release();
 }
 
 
 bool moldyn::SphereRenderer::resetResources(void) {
+
+    glDeleteTextures(1, &this->greyTF);
 
     this->sphereShader.Release();
     this->sphereGeometryShader.Release();
@@ -265,8 +324,6 @@ bool moldyn::SphereRenderer::resetResources(void) {
             glDeleteVertexArrays(3, reinterpret_cast<GLuint*>(&(this->gpuData[i])));
         }
         this->gpuData.clear();
-
-        glDeleteTextures(1, &(this->tfFallbackHandle));
 
         glDeleteTextures(3, reinterpret_cast<GLuint*>(&this->gBuffer));
         glDeleteFramebuffers(1, &(this->gBuffer.fbo));
@@ -323,6 +380,20 @@ bool moldyn::SphereRenderer::createResources() {
     }
 
     try {
+        // Fallback transfer function texture
+        glEnable(GL_TEXTURE_1D);
+        glGenTextures(1, &this->greyTF);
+        unsigned char tex[6] = {
+            0, 0, 0,  255, 255, 255
+        };
+        glBindTexture(GL_TEXTURE_1D, this->greyTF);
+        glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, 2, 0, GL_RGB, GL_UNSIGNED_BYTE, tex);
+        glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+        glBindTexture(GL_TEXTURE_1D, 0);
+
+        glDisable(GL_TEXTURE_1D);
 
         switch (this->renderMode) {
 
@@ -452,16 +523,6 @@ bool moldyn::SphereRenderer::createResources() {
                     return false;
                 }
             }
-
-            glGenTextures(1, &this->tfFallbackHandle);
-            unsigned char tex[6] = { 0, 0, 0, 255, 255, 255 };
-            glBindTexture(GL_TEXTURE_1D, this->tfFallbackHandle);
-            glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, 2, 0, GL_RGB, GL_UNSIGNED_BYTE, tex);
-            glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-            glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-            glBindTexture(GL_TEXTURE_1D, 0);
-
             this->triggerRebuildGBuffer = true;
         } break;
 
@@ -488,6 +549,68 @@ bool moldyn::SphereRenderer::createResources() {
     }
 
     return true;
+}
+
+
+
+moldyn::MultiParticleDataCall *moldyn::SphereRenderer::getData(unsigned int t, float& outScaling) {
+    MultiParticleDataCall *c2 = this->getDataSlot.CallAs<MultiParticleDataCall>();
+    outScaling = 1.0f;
+    if (c2 != NULL) {
+        c2->SetFrameID(t, this->forceTimeSlot.Param<param::BoolParam>()->Value());
+        if (!(*c2)(1)) return NULL;
+
+        // calculate scaling
+        auto const plcount = c2->GetParticleListCount();
+        if (this->useLocalBBoxParam.Param<param::BoolParam>()->Value() && plcount > 0) {
+            outScaling = c2->AccessParticles(0).GetBBox().LongestEdge();
+            for (unsigned pidx = 0; pidx < plcount; ++pidx) {
+                auto const temp = c2->AccessParticles(pidx).GetBBox().LongestEdge();
+                if (outScaling < temp) {
+                    outScaling = temp;
+                }
+            }
+        }
+        else {
+            outScaling = c2->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
+        }
+        if (outScaling > 0.0000001) {
+            outScaling = 10.0f / outScaling;
+        }
+        else {
+            outScaling = 1.0f;
+        }
+
+        c2->SetFrameID(t, this->forceTimeSlot.Param<param::BoolParam>()->Value());
+        if (!(*c2)(0)) return NULL;
+
+        return c2;
+    }
+    else {
+        return NULL;
+    }
+}
+
+
+void moldyn::SphereRenderer::getClipData(float *clipDat, float *clipCol) {
+    view::CallClipPlane *ccp = this->getClipPlaneSlot.CallAs<view::CallClipPlane>();
+    if ((ccp != NULL) && (*ccp)()) {
+        clipDat[0] = ccp->GetPlane().Normal().X();
+        clipDat[1] = ccp->GetPlane().Normal().Y();
+        clipDat[2] = ccp->GetPlane().Normal().Z();
+        vislib::math::Vector<float, 3> grr(ccp->GetPlane().Point().PeekCoordinates());
+        clipDat[3] = grr.Dot(ccp->GetPlane().Normal());
+        clipCol[0] = static_cast<float>(ccp->GetColour()[0]) / 255.0f;
+        clipCol[1] = static_cast<float>(ccp->GetColour()[1]) / 255.0f;
+        clipCol[2] = static_cast<float>(ccp->GetColour()[2]) / 255.0f;
+        clipCol[3] = static_cast<float>(ccp->GetColour()[3]) / 255.0f;
+
+    }
+    else {
+        clipDat[0] = clipDat[1] = clipDat[2] = clipDat[3] = 0.0f;
+        clipCol[0] = clipCol[1] = clipCol[2] = 0.75f;
+        clipCol[3] = 1.0f;
+    }
 }
 
 
@@ -846,16 +969,7 @@ bool moldyn::SphereRenderer::renderSSBO(view::CallRender3D* cr3d, MultiParticleD
         } break;
         case MultiParticleDataCall::Particles::COLDATA_FLOAT_I:
         case MultiParticleDataCall::Particles::COLDATA_DOUBLE_I: {
-            glEnable(GL_TEXTURE_1D);
-            view::CallGetTransferFunction* cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
-            if ((cgtf != nullptr) && ((*cgtf)())) {
-                glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
-                colTabSize = cgtf->TextureSize();
-            }
-            else {
-                glBindTexture(GL_TEXTURE_1D, this->greyTF);
-                colTabSize = 2;
-            }
+            this->enableTransferFunctionTexture(colTabSize);
             glUniform1i(this->newShader->ParameterLocation("colTab"), 0);
             minC = parts.GetMinColourIndexValue();
             maxC = parts.GetMaxColourIndexValue();
@@ -1074,16 +1188,7 @@ bool moldyn::SphereRenderer::renderSplat(view::CallRender3D* cr3d, MultiParticle
         } break;
         case MultiParticleDataCall::Particles::COLDATA_FLOAT_I:
         case MultiParticleDataCall::Particles::COLDATA_DOUBLE_I: {
-            glEnable(GL_TEXTURE_1D);
-            view::CallGetTransferFunction* cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
-            if ((cgtf != nullptr) && ((*cgtf)())) {
-                glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
-                colTabSize = cgtf->TextureSize();
-            }
-            else {
-                glBindTexture(GL_TEXTURE_1D, this->greyTF);
-                colTabSize = 2;
-            }
+            this->enableTransferFunctionTexture(colTabSize);
             glUniform1i(this->newShader->ParameterLocation("colTab"), 0);
             minC = parts.GetMinColourIndexValue();
             maxC = parts.GetMaxColourIndexValue();
@@ -1410,19 +1515,7 @@ void moldyn::SphereRenderer::setPointers(MultiParticleDataCall::Particles& parts
         else {
             glVertexAttribPointer(colIdxAttribLoc, 1, GL_DOUBLE, GL_FALSE, parts.GetColourDataStride(), colPtr);
         }
-
-        glEnable(GL_TEXTURE_1D);
-
-        view::CallGetTransferFunction* cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
-        if ((cgtf != nullptr) && ((*cgtf)())) {
-            glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
-            colTabSize = cgtf->TextureSize();
-        }
-        else {
-            glBindTexture(GL_TEXTURE_1D, this->greyTF);
-            colTabSize = 2;
-        }
-
+        this->enableTransferFunctionTexture(colTabSize);
         glUniform1i(shader.ParameterLocation("colTab"), 0);
         minC = parts.GetMinColourIndexValue();
         maxC = parts.GetMaxColourIndexValue();
@@ -1464,6 +1557,22 @@ void moldyn::SphereRenderer::setPointers(MultiParticleDataCall::Particles& parts
     default:
         break;
     }
+}
+
+
+bool moldyn::SphereRenderer::enableTransferFunctionTexture(unsigned int& out_size) {
+    core::view::CallGetTransferFunction* cgtf = this->getTFSlot.CallAs<core::view::CallGetTransferFunction>();
+    //glActiveTexture(GL_TEXTURE0);
+    glEnable(GL_TEXTURE_1D);
+    if ((cgtf != nullptr) && (*cgtf)()) {
+        glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
+        out_size = cgtf->TextureSize();
+    }
+    else {
+        glBindTexture(GL_TEXTURE_1D, this->greyTF);
+        out_size = 2;
+    }
+    return true;
 }
 
 
@@ -2059,9 +2168,9 @@ void moldyn::SphereRenderer::renderParticlesGeometry(
 
         bool useTransferFunction = false;
         if (parts.GetColourDataType() == megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I) {
+            unsigned int texSize;
+            this->enableTransferFunctionTexture(texSize);
             useTransferFunction = true;
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_1D, getTransferFunctionHandle());
             theShader.SetParameter("inTransferFunction", static_cast<int>(0));
             float tfRange[2] = { parts.GetMinColourIndexValue(), parts.GetMaxColourIndexValue() };
             theShader.SetParameterArray2("inIndexRange", 1, tfRange);
@@ -2138,14 +2247,6 @@ void moldyn::SphereRenderer::renderDeferredPass(megamol::core::view::CallRender3
     glBindTexture(GL_TEXTURE_3D, 0);
 
     this->lightingShader.Disable();
-}
-
-
-GLuint moldyn::SphereRenderer::getTransferFunctionHandle() {
-    core::view::CallGetTransferFunction* cgtf = this->getTFSlot.CallAs<core::view::CallGetTransferFunction>();
-    if ((cgtf != nullptr) && (*cgtf)()) return cgtf->OpenGLTexture();
-
-    return tfFallbackHandle;
 }
 
 
