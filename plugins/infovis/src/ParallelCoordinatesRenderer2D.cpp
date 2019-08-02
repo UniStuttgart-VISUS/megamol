@@ -361,6 +361,7 @@ void ParallelCoordinatesRenderer2D::assertData(core::view::CallRender2D& call) {
     }
 
     floats->SetFrameID(static_cast<unsigned int>(call.Time()));
+    (*floats)(1);
     (*floats)(0);
     call.SetTimeFramesCount(floats->GetFrameCount());
     auto hash = floats->DataHash();
@@ -786,6 +787,7 @@ void ParallelCoordinatesRenderer2D::doStroking(float x0, float y0, float x1, flo
     computeDispatchSizes(itemCount, strokeWorkgroupSize, maxWorkgroupCount, groupCounts);
 
     strokeProgram.Dispatch(groupCounts[0], groupCounts[1], groupCounts[2]);
+    ::glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
     strokeProgram.Disable();
     debugPop();

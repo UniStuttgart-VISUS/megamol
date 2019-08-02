@@ -8,6 +8,7 @@
 #ifndef MEGAMOL_GUI_GUIVIEW_H_INCLUDED
 #define MEGAMOL_GUI_GUIVIEW_H_INCLUDED
 
+#include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/AbstractView.h"
 #include "mmcore/view/CallRenderView.h"
@@ -106,6 +107,8 @@ protected:
 
     virtual bool OnMouseScroll(double dx, double dy) override;
 
+    virtual bool OnRenderView(core::Call& call) override;
+
 private:
     /** ImGui key map assignment for text manipulation hotkeys (using last unused indices < 512) */
     enum GuiTextModHotkeys { CTRL_A = 506, CTRL_C = 507, CTRL_V = 508, CTRL_X = 509, CTRL_Y = 510, CTRL_Z = 511 };
@@ -131,6 +134,9 @@ private:
 
     /** The input renderview slot */
     core::CallerSlot render_view_slot;
+
+    /** Temporary override */
+    core::view::CallRenderView* overrideViewCall;
 
     /** A parameter to select the style */
     core::param::ParamSlot style_param;
