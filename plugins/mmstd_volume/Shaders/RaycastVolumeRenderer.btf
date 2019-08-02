@@ -11,8 +11,6 @@
 #define PI      3.14159265
 
 /* matrices */
-uniform mat4 volume_model_mx;
-
 uniform mat4 view_mx;
 uniform mat4 proj_mx;
 
@@ -90,6 +88,10 @@ float wang_hash(uint seed) {
 
     return float(seed) / 4294967296.0;
 }
+
+float calculate_depth(vec3 pos, mat4 view_mx, float near, float far) {
+    return (1.0f / (-(view_mx * vec4(pos, 1.0f)).z) - 1.0f / near) / (1.0f / far - 1.0f / near);
+}
             ]]>
         </snippet>
         <snippet name="ray_generation" type="string">
@@ -135,10 +137,16 @@ void main() {
     float tnear, tfar;
 
     if (intersectBox(ray, boxMin, boxMax, tnear, tfar) && (tnear > 0.0f || tfar > 0.0f)) {
-        // Initialize ray origin and randomly offset it to prevent ringing artifacts
+        // Compute near and far clipping distance
+        const vec4 near_point = inverse(proj_mx) * vec4(0.0f, 0.0f, -1.0f, 1.0f);
+        const vec4 far_point = inverse(proj_mx) * vec4(0.0f, 0.0f, 1.0f, 1.0f);
+        const float cam_near = length(near_point.xyz / near_point.w);
+        const float cam_far = length(far_point.xyz / far_point.w);
+
+        // Initialize ray start and randomly offset it to prevent ringing artifacts
         float t = tnear >= 0.0f ? tnear : 0.0f;
         t += random * rayStep;
-        
+
         // Initialize results
         vec4 result = vec4(0.0f);
             ]]>
@@ -187,6 +195,11 @@ uniform float opacityThreshold;
 
 /* texture containing transfer function */
 uniform highp sampler1D tf_tx1D;
+
+/* texture containing a depth buffer */
+uniform highp sampler2D color_tx2D;
+uniform highp sampler2D depth_tx2D;
+uniform int use_depth_tx;
             ]]>
         </snippet>
         <snippet name="::RaycastVolumeRenderer::common::output" />
@@ -200,6 +213,22 @@ uniform highp sampler1D tf_tx1D;
         <snippet name="::RaycastVolumeRenderer::common::ray_step" />
         <snippet type="string">
             <![CDATA[
+            if (use_depth_tx != 0) {
+                // Compare depth values and decide to abort
+                vec2 pixel_tex_coords = vec2(gID.x / rt_resolution.x, gID.y / rt_resolution.y);
+                const float input_depth = texture(depth_tx2D, pixel_tex_coords).x;
+                
+                const float depth = calculate_depth(pos, view_mx, cam_near, cam_far);
+
+                if (depth > input_depth) {
+                    const vec4 color = texture(color_tx2D, pixel_tex_coords);
+
+                    result += (1.0f - result.w) * color;
+
+                    break;
+                }
+            }
+            
             // Get sample
             vec4 vol_sample = texture(tf_tx1D, (texture(volume_tx3D, texCoords).x - valRange.x) / valRange.y);
 
@@ -283,8 +312,7 @@ vec3 blinnPhong(vec3 n, vec3 l, vec3 v) {
 
                 const vec3 surface_pos = old_pos + distance * direction;
 
-                depth = t + length(distance * direction);
-                depth = (depth - tnear) / (tfar - tnear);
+                depth = calculate_depth(surface_pos, view_mx, cam_near, cam_far);
 
                 // Compute normal
                 const float left = textureOffset(volume_tx3D, texCoords, ivec3(-1, 0, 0)).x;

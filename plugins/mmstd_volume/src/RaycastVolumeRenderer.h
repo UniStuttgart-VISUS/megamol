@@ -15,6 +15,7 @@
 
 #include "vislib/graphics/gl/GLSLComputeShader.h"
 #include "vislib/graphics/gl/OpenGLTexture2D.h"
+#include "vislib/graphics/gl/FramebufferObject.h"
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
@@ -464,10 +465,14 @@ private:
     core::param::ParamSlot m_iso_value;
 
     /** caller slot */
+    megamol::core::CallerSlot m_renderer_callerSlot;
     megamol::core::CallerSlot m_volumetricData_callerSlot;
     megamol::core::CallerSlot m_transferFunction_callerSlot;
 
     std::array<float, 2> valRange;
+
+    /** FBO for chaining renderers */
+    vislib::graphics::gl::FramebufferObject fbo;
 };
 
 } // namespace volume

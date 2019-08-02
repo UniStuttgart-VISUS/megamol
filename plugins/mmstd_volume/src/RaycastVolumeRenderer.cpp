@@ -16,6 +16,7 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/view/CallGetTransferFunction.h"
+#include "mmcore/view/CallRender3D.h"
 
 #include "linmath.h"
 
@@ -27,8 +28,12 @@ RaycastVolumeRenderer::RaycastVolumeRenderer()
     , m_ray_step_ratio_param("ray step ratio", "Adjust sampling rate")
     , m_opacity_threshold("opacity threshold", "Opacity threshold for integrative rendering")
     , m_iso_value("isovalue", "Isovalue for isosurface rendering")
+    , m_renderer_callerSlot("Renderer", "Renderer for chaining")
     , m_volumetricData_callerSlot("getData", "Connects the volume renderer with a voluemtric data source")
     , m_transferFunction_callerSlot("getTranfserFunction", "Connects the volume renderer with a transfer function") {
+
+    this->m_renderer_callerSlot.SetCompatibleCall<megamol::core::view::CallRender3DDescription>();
+    this->MakeSlotAvailable(&this->m_renderer_callerSlot);
 
     this->m_volumetricData_callerSlot.SetCompatibleCall<megamol::core::misc::VolumetricDataCallDescription>();
     this->MakeSlotAvailable(&this->m_volumetricData_callerSlot);
@@ -139,11 +144,13 @@ void RaycastVolumeRenderer::release() {
     m_raycast_volume_compute_iso_shdr.reset(nullptr);
     m_render_target.reset(nullptr);
     m_depth_target.reset(nullptr);
+    if (this->fbo.IsValid()) this->fbo.Release();
 }
 
 bool RaycastVolumeRenderer::GetExtents(megamol::core::Call& call) {
     auto cr = dynamic_cast<core::view::CallRender3D*>(&call);
     auto cd = m_volumetricData_callerSlot.CallAs<megamol::core::misc::VolumetricDataCall>();
+    auto ci = m_renderer_callerSlot.CallAs<megamol::core::view::CallRender3D>();
 
     if (cr == nullptr) return false;
     if (cd == nullptr) return false;
@@ -158,7 +165,21 @@ bool RaycastVolumeRenderer::GetExtents(megamol::core::Call& call) {
     if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_METADATA)) return false;
 
     cr->SetTimeFramesCount(cd->FrameCount());
-    cr->AccessBoundingBoxes() = cd->GetBoundingBoxes();
+
+    auto bb = cd->GetBoundingBoxes();
+
+    if (ci != nullptr) {
+        if (!(*ci)(core::view::CallRender3D::FnGetExtents)) return false;
+
+        const auto bb1 = bb.ObjectSpaceBBox();
+        const auto bb2 = ci->GetBoundingBoxes().ObjectSpaceBBox();
+
+        bb.SetObjectSpaceBBox(std::min(bb1.Left(), bb2.Left()), std::min(bb1.Bottom(), bb2.Bottom()),
+            std::min(bb1.Back(), bb2.Back()), std::min(bb1.Right(), bb2.Right()), std::min(bb1.Top(), bb2.Top()),
+            std::min(bb1.Front(), bb2.Front()));
+    }
+
+    cr->AccessBoundingBoxes() = bb;
     cr->AccessBoundingBoxes().MakeScaledWorld(1.0f);
 
     return true;
@@ -167,6 +188,26 @@ bool RaycastVolumeRenderer::GetExtents(megamol::core::Call& call) {
 bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
     megamol::core::view::CallRender3D* cr = dynamic_cast<core::view::CallRender3D*>(&call);
     if (cr == NULL) return false;
+
+    // Chain renderer
+    auto ci = m_renderer_callerSlot.CallAs<megamol::core::view::CallRender3D>();
+
+    if (ci != nullptr) {
+        if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0) {
+            if (this->fbo.IsValid()) this->fbo.Release();
+            this->fbo.Create(ci->GetViewport().Width(), ci->GetViewport().Height(), GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE,
+                vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
+            this->fbo.Enable();
+
+            ::glClear(GL_DEPTH_BUFFER_BIT);
+        }
+
+        if (!(*ci)(core::view::CallRender3D::FnRender)) return false;
+
+        if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0) {
+            this->fbo.Disable();
+        }
+    }
 
     // this is the apex of suck and must die
     GLfloat modelViewMatrix_column[16];
@@ -214,9 +255,8 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
     glUniform3fv(compute_shdr->ParameterLocation("boxMin"), 1, box_min);
     glUniform3fv(compute_shdr->ParameterLocation("boxMax"), 1, box_max);
 
-    glUniform3f(compute_shdr->ParameterLocation("halfVoxelSize"),
-        1.0f / (2.0f * (m_volume_resolution[0] - 1)), 1.0f / (2.0f * (m_volume_resolution[1] - 1)),
-        1.0f / (2.0f * (m_volume_resolution[2] - 1)));
+    glUniform3f(compute_shdr->ParameterLocation("halfVoxelSize"), 1.0f / (2.0f * (m_volume_resolution[0] - 1)),
+        1.0f / (2.0f * (m_volume_resolution[1] - 1)), 1.0f / (2.0f * (m_volume_resolution[2] - 1)));
     auto const maxResolution =
         std::fmax(m_volume_resolution[0], std::fmax(m_volume_resolution[1], m_volume_resolution[2]));
     auto const maxExtents = std::fmax(m_volume_extents[0], std::fmax(m_volume_extents[1], m_volume_extents[2]));
@@ -229,8 +269,8 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
         glUniform1f(compute_shdr->ParameterLocation("opacityThreshold"),
             this->m_opacity_threshold.Param<core::param::FloatParam>()->Value());
     } else if (this->m_mode.Param<core::param::EnumParam>()->Value() == 1) {
-        glUniform1f(compute_shdr->ParameterLocation("isoValue"),
-            this->m_iso_value.Param<core::param::FloatParam>()->Value());
+        glUniform1f(
+            compute_shdr->ParameterLocation("isoValue"), this->m_iso_value.Param<core::param::FloatParam>()->Value());
     }
 
     // bind volume texture
@@ -243,6 +283,20 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_1D, tf_texture);
         glUniform1i(compute_shdr->ParameterLocation("tf_tx1D"), 1);
+
+        if (ci != nullptr) {
+            glActiveTexture(GL_TEXTURE2);
+            this->fbo.BindColourTexture();
+            glUniform1i(compute_shdr->ParameterLocation("color_tx2D"), 2);
+
+            glActiveTexture(GL_TEXTURE3);
+            this->fbo.BindDepthTexture();
+            glUniform1i(compute_shdr->ParameterLocation("depth_tx2D"), 3);
+
+            glUniform1i(compute_shdr->ParameterLocation("use_depth_tx"), 1);
+        } else {
+            glUniform1i(compute_shdr->ParameterLocation("use_depth_tx"), 0);
+        }
     }
 
     // bind image texture
@@ -253,11 +307,15 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
     }
 
     // dispatch compute
-    compute_shdr->Dispatch(static_cast<int>(std::ceil(rt_resolution[0] / 8.0f)),
-        static_cast<int>(std::ceil(rt_resolution[1] / 8.0f)), 1);
+    compute_shdr->Dispatch(
+        static_cast<int>(std::ceil(rt_resolution[0] / 8.0f)), static_cast<int>(std::ceil(rt_resolution[1] / 8.0f)), 1);
 
     compute_shdr->Disable();
 
+    glActiveTexture(GL_TEXTURE3);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, 0);
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_1D, 0);
     glActiveTexture(GL_TEXTURE0);
