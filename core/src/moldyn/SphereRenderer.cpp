@@ -285,6 +285,23 @@ void moldyn::SphereRenderer::release(void) {
 
 bool moldyn::SphereRenderer::resetResources(void) {
 
+    // Set all render mode dependent parameter to GUI invisible
+    // SPLAT 
+    this->alphaScalingParam.Param<param::FloatParam>()->SetGUIVisible(false);
+    this->attenuateSubpixelParam.Param<param::BoolParam>()->SetGUIVisible(false);
+    // SSBO
+    this->useStaticDataParam.Param<param::BoolParam>()->SetGUIVisible(false);
+    // Ambient Occlusion
+    this->enableLightingSlot.Param<megamol::core::param::BoolParam>()->SetGUIVisible(false);
+    this->enableAOSlot.Param<megamol::core::param::BoolParam>()->SetGUIVisible(false);
+    this->enableGeometryShader.Param<megamol::core::param::BoolParam>()->SetGUIVisible(false);
+    this->aoVolSizeSlot.Param<megamol::core::param::IntParam>()->SetGUIVisible(false);
+    this->aoConeApexSlot.Param<megamol::core::param::FloatParam>()->SetGUIVisible(false);
+    this->aoOffsetSlot.Param<megamol::core::param::FloatParam>()->SetGUIVisible(false);
+    this->aoStrengthSlot.Param<megamol::core::param::FloatParam>()->SetGUIVisible(false);
+    this->aoConeLengthSlot.Param<megamol::core::param::FloatParam>()->SetGUIVisible(false);
+    this->useHPTexturesSlot.Param<megamol::core::param::BoolParam>()->SetGUIVisible(false);
+
     glDeleteTextures(1, &this->greyTF);
 
     this->sphereShader.Release();
@@ -444,6 +461,8 @@ bool moldyn::SphereRenderer::createResources() {
             break;
 
         case (RenderMode::SSBO_STREAM):
+            this->useStaticDataParam.Param<param::BoolParam>()->SetGUIVisible(true);
+
             vertShaderName = "sphere_ssbo::vertex";
             fragShaderName = "sphere_ssbo::fragment";
             if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
@@ -458,6 +477,9 @@ bool moldyn::SphereRenderer::createResources() {
             break;
 
         case (RenderMode::SPLAT):
+            this->alphaScalingParam.Param<param::FloatParam>()->SetGUIVisible(true);
+            this->attenuateSubpixelParam.Param<param::BoolParam>()->SetGUIVisible(true);
+
             vertShaderName = "sphere_splat::vertex";
             fragShaderName = "sphere_splat::fragment";
             if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
@@ -505,6 +527,16 @@ bool moldyn::SphereRenderer::createResources() {
             break;
 
         case (RenderMode::AMBIENT_OCCLUSION): {
+            this->enableLightingSlot.Param<megamol::core::param::BoolParam>()->SetGUIVisible(true);
+            this->enableAOSlot.Param<megamol::core::param::BoolParam>()->SetGUIVisible(true);
+            this->enableGeometryShader.Param<megamol::core::param::BoolParam>()->SetGUIVisible(true);
+            this->aoVolSizeSlot.Param<megamol::core::param::IntParam>()->SetGUIVisible(true);
+            this->aoConeApexSlot.Param<megamol::core::param::FloatParam>()->SetGUIVisible(true);
+            this->aoOffsetSlot.Param<megamol::core::param::FloatParam>()->SetGUIVisible(true);
+            this->aoStrengthSlot.Param<megamol::core::param::FloatParam>()->SetGUIVisible(true);
+            this->aoConeLengthSlot.Param<megamol::core::param::FloatParam>()->SetGUIVisible(true);
+            this->useHPTexturesSlot.Param<megamol::core::param::BoolParam>()->SetGUIVisible(true);
+
             // Generate texture and frame buffer handles
             glGenTextures(3, reinterpret_cast<GLuint*>(&this->gBuffer));
             glGenFramebuffers(1, &(this->gBuffer.fbo));
