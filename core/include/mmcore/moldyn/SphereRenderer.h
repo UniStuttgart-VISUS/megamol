@@ -82,6 +82,10 @@
 #define SPHERE_MIN_OGL_SSBO_STREAM
 #endif // GL_VERSION_4_2
 
+#ifdef GL_VERSION_4_4
+#define SPHERE_FLAG_STORAGE_AVAILABLE
+#endif // GL_VERSION_4_4
+
 #ifdef GL_VERSION_4_5
 #define SPHERE_MIN_OGL_BUFFER_ARRAY 
 #define SPHERE_MIN_OGL_SPLAT 
@@ -158,7 +162,7 @@ namespace moldyn {
             // (OpenGL Version and GLSL Version might not correlate, see Mesa 3D on Stampede ...)
             if (ogl_IsVersionGEQ(1, 4) == 0) {
                 vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, 
-                    "[SphereRenderer] No render mode available. Minimum OpenGL version is 1.4");
+                    "[SphereRenderer] No render mode available. OpenGL version 1.4 or greater is required.");
                 retval = false;
             }
             std::string glslVerStr((char*)glGetString(GL_SHADING_LANGUAGE_VERSION));
@@ -177,7 +181,7 @@ namespace moldyn {
                 "[SphereRenderer] Found GLSL version %d.%d (%s).", major, minor, glslVerStr.c_str());
             if ((major < (SPHERE_MIN_GLSL_MAJOR)) || (major == (SPHERE_MIN_GLSL_MAJOR) && minor < (SPHERE_MIN_GLSL_MINOR))) {
                 vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, 
-                    "[SphereRenderer] No render mode available. Minimum OpenGL Shading Language version is 1.3");
+                    "[SphereRenderer] No render mode available. OpenGL Shading Language version 1.3 or greater is required.");
                 retval = false; 
             }
             if (!isExtAvailable("GL_ARB_explicit_attrib_location")) {
@@ -190,6 +194,11 @@ namespace moldyn {
                     "[SphereRenderer] No render mode is available. Extension GL_ARB_conservative_depth is not available.");
                 retval = false;
             }
+
+#ifdef SPHERE_FLAG_STORAGE_AVAILABLE
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
+                "[SphereRenderer] No flag storage available. OpenGL version 4.3 or greater is required.");
+#endif // SPHERE_FLAG_STORAGE_AVAILABLE
 
             return retval;
         }
@@ -282,7 +291,6 @@ namespace moldyn {
         RenderMode                               renderMode;
         unsigned int                             greyTF;
         bool                                     triggerRebuildGBuffer;
-        FlagStorage::FlagVersionType             currentFlagsVersion;
 
         GLSLShader                               sphereShader;
         GLSLGeometryShader                       sphereGeometryShader;
@@ -312,19 +320,26 @@ namespace moldyn {
         vislib::math::Vector<float, 2>           ambConeConstants;
         core::utility::MDAOVolumeGenerator      *volGen;
 
+#ifdef SPHERE_FLAG_STORAGE_AVAILABLE
+        // Flag Storage
+        FlagStorage::FlagVersionType             currentFlagsVersion;
+        GLuint                                   flagsBuffer;
+#endif // SPHERE_FLAG_STORAGE_AVAILABLE
+
 #if defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
         GLuint                                   singleBufferCreationBits;
         GLuint                                   singleBufferMappingBits;
         std::vector<GLsync>                      fences;
-#endif
+#endif // defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
+
 #ifdef SPHERE_MIN_OGL_SSBO_STREAM
         megamol::core::utility::SSBOStreamer     streamer;
         megamol::core::utility::SSBOStreamer     colStreamer;
         megamol::core::utility::SSBOBufferArray  bufArray;
         megamol::core::utility::SSBOBufferArray  colBufArray;
-#endif
-        //TimeMeasure                            timer;
+#endif // SPHERE_MIN_OGL_SSBO_STREAM
 
+        //TimeMeasure                            timer;
 
         /*********************************************************************/
         /* SLOTS                                                             */
@@ -387,7 +402,7 @@ namespace moldyn {
          * @param clipDat  Points to four floats ...
          * @param clipCol  Points to four floats ....
          */
-        void getClipData(float *clipDat, float *clipCol);
+        void getClipData(float clipDat[4], float clipCol[4]);
 
         /**
          * Check if specified render mode or all render mode are available.
@@ -501,7 +516,13 @@ namespace moldyn {
          */
         std::shared_ptr<GLSLShader> generateShader(MultiParticleDataCall::Particles &parts);
 
-#if defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
+        /**
+         * Update flag storage.
+         *
+         * @param partsCount The sum of all particles in all particle lists.
+         */
+        bool getFlagStorage(unsigned int partsCount);
+
         /**
          * Lock single.
          *
@@ -515,7 +536,6 @@ namespace moldyn {
          * @param syncObj  ...
          */
         void waitSingle(GLsync& syncObj);
-#endif // defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
 
         // ONLY used for Ambient Occlusion rendering: -------------------------
 

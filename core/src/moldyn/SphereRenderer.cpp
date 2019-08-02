@@ -44,6 +44,10 @@ moldyn::SphereRenderer::SphereRenderer(void) : view::Renderer3DModule()
     , curMVPtransp()
     , renderMode(RenderMode::SIMPLE)
     , greyTF(0)
+#ifdef SPHERE_FLAG_STORAGE_AVAILABLE
+    , currentFlagsVersion(0xFFFFFFFF)
+    , flagsBuffer(0)
+#endif // SPHERE_FLAG_STORAGE_AVAILABLE
     , sphereShader()
     , sphereGeometryShader()
     , lightingShader()
@@ -335,6 +339,10 @@ bool moldyn::SphereRenderer::resetResources(void) {
     this->colType = SimpleSphericalParticles::ColourDataType::COLDATA_NONE;
     this->vertType = SimpleSphericalParticles::VertexDataType::VERTDATA_NONE;
 
+#ifdef SPHERE_FLAG_STORAGE_AVAILABLE
+    glDeleteBuffers(1, &this->flagsBuffer);
+#endif // SPHERE_FLAG_STORAGE_AVAILABLE
+
     // AMBIENT OCCLUSION
     if (this->isRenderModeAvailable(RenderMode::AMBIENT_OCCLUSION, true)) {
         for (unsigned int i = 0; i < this->gpuData.size(); ++i) {
@@ -396,22 +404,28 @@ bool moldyn::SphereRenderer::createResources() {
             (this->getRenderModeString(this->renderMode)).c_str());
     }
 
+#ifdef SPHERE_FLAG_STORAGE_AVAILABLE
+    glGenBuffers(1, &this->flagsBuffer);
+#else
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
+                "[SphereRenderer] No flag storage available. OpenGL version 4.3 or greater is required.");
+#endif // SPHERE_FLAG_STORAGE_AVAILABLE
+
+    // Fallback transfer function texture
+    glEnable(GL_TEXTURE_1D);
+    glGenTextures(1, &this->greyTF);
+    unsigned char tex[6] = {
+        0, 0, 0,  255, 255, 255
+    };
+    glBindTexture(GL_TEXTURE_1D, this->greyTF);
+    glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, 2, 0, GL_RGB, GL_UNSIGNED_BYTE, tex);
+    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+    glBindTexture(GL_TEXTURE_1D, 0);
+    glDisable(GL_TEXTURE_1D);
+
     try {
-        // Fallback transfer function texture
-        glEnable(GL_TEXTURE_1D);
-        glGenTextures(1, &this->greyTF);
-        unsigned char tex[6] = {
-            0, 0, 0,  255, 255, 255
-        };
-        glBindTexture(GL_TEXTURE_1D, this->greyTF);
-        glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, 2, 0, GL_RGB, GL_UNSIGNED_BYTE, tex);
-        glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-        glBindTexture(GL_TEXTURE_1D, 0);
-
-        glDisable(GL_TEXTURE_1D);
-
         switch (this->renderMode) {
 
         case (RenderMode::SIMPLE):
@@ -624,7 +638,7 @@ moldyn::MultiParticleDataCall *moldyn::SphereRenderer::getData(unsigned int t, f
 }
 
 
-void moldyn::SphereRenderer::getClipData(float *clipDat, float *clipCol) {
+void moldyn::SphereRenderer::getClipData(float clipDat[4], float clipCol[4]) {
     view::CallClipPlane *ccp = this->getClipPlaneSlot.CallAs<view::CallClipPlane>();
     if ((ccp != NULL) && (*ccp)()) {
         clipDat[0] = ccp->GetPlane().Normal().X();
@@ -654,73 +668,73 @@ bool moldyn::SphereRenderer::isRenderModeAvailable(RenderMode rm, bool silent) {
     switch (rm) {
     case(RenderMode::SIMPLE):
         if (ogl_IsVersionGEQ(1, 4) == 0) {
-            errorstr += "[SphereRenderer] Render Mode 'SIMPLE' is not available. Minimum OpenGL version is 1.4 \n";
+            errorstr += "[SphereRenderer] Render Mode 'SIMPLE' is not available. OpenGL version 1.4 or greater is required.\n";
         }
         break;
     case(RenderMode::SIMPLE_CLUSTERED):
         if (ogl_IsVersionGEQ(1, 4) == 0) {
-            errorstr += "[SphereRenderer] Render Mode 'SIMPLE_CLUSTERED' is not available. Minimum OpenGL version is 1.4 \n";
+            errorstr += "[SphereRenderer] Render Mode 'SIMPLE_CLUSTERED' is not available. OpenGL version 1.4 or greater is required.\n";
         }
         break;
     case(RenderMode::GEOMETRY_SHADER):
         if (ogl_IsVersionGEQ(3, 2) == 0) {
-            errorstr += "[SphereRenderer] Render Mode 'GEOMETRY_SHADER' is not available. Minimum OpenGL version is 3.2 \n";
+            errorstr += "[SphereRenderer] Render Mode 'GEOMETRY_SHADER' is not available. OpenGL version 3.2 or greater is required.\n";
         }
         if (!vislib::graphics::gl::GLSLGeometryShader::AreExtensionsAvailable()) {
-            errorstr += "[SphereRenderer] Render Mode 'GEOMETRY_SHADER' is not available. Geometry shader extensions are not available. \n";
+            errorstr += "[SphereRenderer] Render Mode 'GEOMETRY_SHADER' is not available. Geometry shader extensions are required. \n";
         }
         if (!isExtAvailable("GL_EXT_geometry_shader4")) {
-            errorstr += "[SphereRenderer] Render Mode 'GEOMETRY_SHADER' is not available. Extension GL_EXT_geometry_shader4 is not available. \n";
+            errorstr += "[SphereRenderer] Render Mode 'GEOMETRY_SHADER' is not available. Extension GL_EXT_geometry_shader4 is required. \n";
         }
         if (!isExtAvailable("GL_EXT_gpu_shader4")) {
-            errorstr += "[SphereRenderer] Render Mode 'GEOMETRY_SHADER' is not available. Extension GL_EXT_gpu_shader4 is not available. \n";
+            errorstr += "[SphereRenderer] Render Mode 'GEOMETRY_SHADER' is not available. Extension GL_EXT_gpu_shader4 is required. \n";
         }
         if (!isExtAvailable("GL_EXT_bindable_uniform")) {
-            errorstr += "[SphereRenderer] Render Mode 'GEOMETRY_SHADER' is not available. Extension GL_EXT_bindable_uniform is not available. \n";
+            errorstr += "[SphereRenderer] Render Mode 'GEOMETRY_SHADER' is not available. Extension GL_EXT_bindable_uniform is required. \n";
         }
         if (!isExtAvailable("GL_ARB_shader_objects")) {
-            errorstr += "[SphereRenderer] Render Mode 'GEOMETRY_SHADER' is not available. Extension GL_ARB_shader_objects is not available. \n";
+            errorstr += "[SphereRenderer] Render Mode 'GEOMETRY_SHADER' is not available. Extension GL_ARB_shader_objects is required. \n";
         }
         break;
     case(RenderMode::SSBO_STREAM):
         if (ogl_IsVersionGEQ(4, 2) == 0) {
-            errorstr += "[SphereRenderer] Render Mode 'SSBO_STREAM' is not available. Minimum OpenGL version is 4.2 \n";
+            errorstr += "[SphereRenderer] Render Mode 'SSBO_STREAM' is not available. OpenGL version 4.2 or greater is required. \n";
         }
         if (!isExtAvailable("GL_ARB_shader_storage_buffer_object")) {
-            errorstr += "[SphereRenderer] Render Mode 'SSBO_STREAM' is not available. Extension GL_ARB_shader_storage_buffer_object is not available. \n";
+            errorstr += "[SphereRenderer] Render Mode 'SSBO_STREAM' is not available. Extension GL_ARB_shader_storage_buffer_object is required. \n";
         }
         if (!isExtAvailable("GL_ARB_gpu_shader5")) {
-            errorstr += "[SphereRenderer] Render Mode 'SSBO_STREAM' is not available. Extension GL_ARB_gpu_shader5 is not available. \n";
+            errorstr += "[SphereRenderer] Render Mode 'SSBO_STREAM' is not available. Extension GL_ARB_gpu_shader5 is required. \n";
         }
         if (!isExtAvailable("GL_ARB_gpu_shader_fp64")) {
-            errorstr += "[SphereRenderer] Render Mode 'SSBO_STREAM' is not available. Extension GL_ARB_gpu_shader_fp64 is not available. \n";
+            errorstr += "[SphereRenderer] Render Mode 'SSBO_STREAM' is not available. Extension GL_ARB_gpu_shader_fp64 is required. \n";
         }
         break;
     case(RenderMode::SPLAT):
         if (ogl_IsVersionGEQ(4, 5) == 0) {
-            errorstr += "[SphereRenderer] Render Mode 'SPLAT' is not available. Minimum OpenGL version is 4.5 \n";
+            errorstr += "[SphereRenderer] Render Mode 'SPLAT' is not available. OpenGL version 4.5 or greater is required. \n";
         }
         if (!isExtAvailable("GL_ARB_shader_storage_buffer_object")) {
-            errorstr += "[SphereRenderer] Render Mode 'SPLAT' is not available. Extension GL_ARB_shader_storage_buffer_object is not available. \n";
+            errorstr += "[SphereRenderer] Render Mode 'SPLAT' is not available. Extension GL_ARB_shader_storage_buffer_object is required. \n";
         }
         if (!isExtAvailable("GL_EXT_gpu_shader4")) {
-            errorstr += "[SphereRenderer] Render Mode 'SPLAT' is not available. Extension GL_EXT_gpu_shader4 is not available. \n";
+            errorstr += "[SphereRenderer] Render Mode 'SPLAT' is not available. Extension GL_EXT_gpu_shader4 is required. \n";
         }
         break;
     case(RenderMode::BUFFER_ARRAY):
         if (ogl_IsVersionGEQ(4, 5) == 0) {
-            errorstr += "[SphereRenderer] Render Mode 'BUFFER_ARRAY' is not available. Minimum OpenGL version is 4.5 \n";
+            errorstr += "[SphereRenderer] Render Mode 'BUFFER_ARRAY' is not available. OpenGL version 4.5 or greater is required. \n";
         }
         break;
     case(RenderMode::AMBIENT_OCCLUSION):
         if (ogl_IsVersionGEQ(4, 5) == 0) {
-            errorstr += "[SphereRenderer] Render Mode 'AMBIENT_OCCLUSION' is not available. Minimum OpenGL version is 4.5 \n";
+            errorstr += "[SphereRenderer] Render Mode 'AMBIENT_OCCLUSION' is not available. OpenGL version 4.5 or greater is required. \n";
         }
         if (!vislib::graphics::gl::GLSLGeometryShader::AreExtensionsAvailable()) {
-            errorstr += "[SphereRenderer] Render Mode 'AMBIENT_OCCLUSION' is not available. Geometry shader extensions are not available. \n";
+            errorstr += "[SphereRenderer] Render Mode 'AMBIENT_OCCLUSION' is not available. Geometry shader extensions are required. \n";
         }
         if (!isExtAvailable("GL_ARB_gpu_shader_fp64")) {
-            errorstr += "[SphereRenderer] Render Mode 'AMBIENT_OCCLUSION' is not available. Extension GL_ARB_gpu_shader_fp64 is not available. \n";
+            errorstr += "[SphereRenderer] Render Mode 'AMBIENT_OCCLUSION' is not available. Extension GL_ARB_gpu_shader_fp64 is required. \n";
         }
         break;
     default:
@@ -773,6 +787,11 @@ std::string moldyn::SphereRenderer::getRenderModeString(RenderMode rm) {
 
 bool moldyn::SphereRenderer::Render(view::CallRender3D& call) {
 
+    view::CallRender3D* cr3d = dynamic_cast<view::CallRender3D*>(&call);
+    if (cr3d == nullptr) return false;
+
+    // timer.BeginFrame();
+
     // Checking for changed render mode
     auto currentRenderMode = static_cast<RenderMode>(this->renderModeParam.Param<param::EnumParam>()->Value());
     if (currentRenderMode != this->renderMode) {
@@ -781,12 +800,7 @@ bool moldyn::SphereRenderer::Render(view::CallRender3D& call) {
             return false;
         }
     }
-
-    // timer.BeginFrame();
-
-    view::CallRender3D* cr3d = dynamic_cast<view::CallRender3D*>(&call);
-    if (cr3d == nullptr) return false;
-
+    // Get data
     float scaling = 1.0f;
     MultiParticleDataCall* mpdc = this->getData(static_cast<unsigned int>(cr3d->Time()), scaling);
     if (mpdc == nullptr) return false;
@@ -805,9 +819,17 @@ bool moldyn::SphereRenderer::Render(view::CallRender3D& call) {
 
     // Check if we got a new data set
     this->stateInvalid = ((hash != this->oldHash) || (frameID != this->oldFrameID));
-
     this->oldHash = hash;
     this->oldFrameID = frameID;
+
+#ifdef SPHERE_FLAG_STORAGE_AVAILABLE
+    unsigned int partsCount = 0;
+    for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
+        MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
+        partsCount += parts.GetCount();
+    }
+    this->getFlagStorage(partsCount);
+#endif // SPHERE_FLAG_STORAGE_AVAILABLE
 
     glPointSize(static_cast<GLfloat>(std::max(this->curVpWidth, this->curVpHeight)));
 
@@ -891,6 +913,10 @@ bool moldyn::SphereRenderer::renderSimple(view::CallRender3D* cr3d, MultiParticl
 
     this->sphereShader.Enable();
 
+#ifdef SPHERE_FLAG_STORAGE_AVAILABLE
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, this->flagsBuffer);
+#endif // SPHERE_FLAG_STORAGE_AVAILABLE
+
     GLuint vertAttribLoc = glGetAttribLocationARB(this->sphereShader, "inVertex");
     GLuint colAttribLoc = glGetAttribLocationARB(this->sphereShader, "inColor");
     GLuint colIdxAttribLoc = glGetAttribLocationARB(this->sphereShader, "colIdx");
@@ -947,6 +973,10 @@ bool moldyn::SphereRenderer::renderSimple(view::CallRender3D* cr3d, MultiParticl
 
     mpdc->Unlock();
 
+#ifdef SPHERE_FLAG_STORAGE_AVAILABLE
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, 0);
+#endif // SPHERE_FLAG_STORAGE_AVAILABLE
+
     this->sphereShader.Disable();
 
     return true;
@@ -969,6 +999,10 @@ bool moldyn::SphereRenderer::renderSSBO(view::CallRender3D* cr3d, MultiParticleD
         }
 
         this->newShader->Enable();
+
+#ifdef SPHERE_FLAG_STORAGE_AVAILABLE
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, this->flagsBuffer);
+#endif // SPHERE_FLAG_STORAGE_AVAILABLE
 
         glUniform4fv(this->newShader->ParameterLocation("viewAttr"), 1, this->curViewAttrib);
         glUniform3fv(
@@ -1135,6 +1169,10 @@ bool moldyn::SphereRenderer::renderSSBO(view::CallRender3D* cr3d, MultiParticleD
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
         glDisable(GL_TEXTURE_1D);
 
+#ifdef SPHERE_FLAG_STORAGE_AVAILABLE
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, 0);
+#endif // SPHERE_FLAG_STORAGE_AVAILABLE
+
         this->newShader->Disable();
 
 #ifdef CHRONOTIMING
@@ -1183,6 +1221,10 @@ bool moldyn::SphereRenderer::renderSplat(view::CallRender3D* cr3d, MultiParticle
         }
 
         this->newShader->Enable();
+
+#ifdef SPHERE_FLAG_STORAGE_AVAILABLE
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, this->flagsBuffer);
+#endif // SPHERE_FLAG_STORAGE_AVAILABLE
 
         glUniform4fv(this->newShader->ParameterLocation("viewAttr"), 1, this->curViewAttrib);
         glUniform3fv(
@@ -1299,6 +1341,10 @@ bool moldyn::SphereRenderer::renderSplat(view::CallRender3D* cr3d, MultiParticle
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
         glDisable(GL_TEXTURE_1D);
 
+#ifdef SPHERE_FLAG_STORAGE_AVAILABLE
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, 0);
+#endif // SPHERE_FLAG_STORAGE_AVAILABLE
+
         newShader->Disable();
     }
 
@@ -1315,6 +1361,10 @@ bool moldyn::SphereRenderer::renderSplat(view::CallRender3D* cr3d, MultiParticle
 bool moldyn::SphereRenderer::renderBufferArray(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc) {
 
     this->sphereShader.Enable();
+
+#ifdef SPHERE_FLAG_STORAGE_AVAILABLE
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, this->flagsBuffer);
+#endif // SPHERE_FLAG_STORAGE_AVAILABLE
 
     GLuint vertAttribLoc = glGetAttribLocationARB(this->sphereShader, "inVertex");
     GLuint colAttribLoc = glGetAttribLocationARB(this->sphereShader, "inColor");
@@ -1394,6 +1444,10 @@ bool moldyn::SphereRenderer::renderBufferArray(view::CallRender3D* cr3d, MultiPa
 
     mpdc->Unlock();
 
+#ifdef SPHERE_FLAG_STORAGE_AVAILABLE
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, 0);
+#endif // SPHERE_FLAG_STORAGE_AVAILABLE
+
     this->sphereShader.Disable();
 
     return true;
@@ -1412,6 +1466,10 @@ bool moldyn::SphereRenderer::renderGeometryShader(view::CallRender3D* cr3d, Mult
     // glEnable(GL_VERTEX_PROGRAM_TWO_SIDE); /// ! Has significant negative performance impact ....
 
     this->sphereGeometryShader.Enable();
+
+#ifdef SPHERE_FLAG_STORAGE_AVAILABLE
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, this->flagsBuffer);
+#endif // SPHERE_FLAG_STORAGE_AVAILABLE
 
     GLuint vertAttribLoc = glGetAttribLocationARB(this->sphereGeometryShader, "inVertex");
     GLuint colAttribLoc = glGetAttribLocationARB(this->sphereGeometryShader, "inColor");
@@ -1455,6 +1513,10 @@ bool moldyn::SphereRenderer::renderGeometryShader(view::CallRender3D* cr3d, Mult
     }
 
     mpdc->Unlock();
+
+#ifdef SPHERE_FLAG_STORAGE_AVAILABLE
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, 0);
+#endif // SPHERE_FLAG_STORAGE_AVAILABLE
 
     this->sphereGeometryShader.Disable();
 
@@ -1594,7 +1656,7 @@ void moldyn::SphereRenderer::setPointers(MultiParticleDataCall::Particles& parts
 
 bool moldyn::SphereRenderer::enableTransferFunctionTexture(unsigned int& out_size) {
     core::view::CallGetTransferFunction* cgtf = this->getTFSlot.CallAs<core::view::CallGetTransferFunction>();
-    //glActiveTexture(GL_TEXTURE0);
+    glActiveTexture(GL_TEXTURE0);
     glEnable(GL_TEXTURE_1D);
     if ((cgtf != nullptr) && (*cgtf)()) {
         glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
@@ -1897,17 +1959,48 @@ void moldyn::SphereRenderer::getBytesAndStride(MultiParticleDataCall::Particles&
 }
 
 
-#if defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
+bool moldyn::SphereRenderer::getFlagStorage(unsigned int partsCount) {
+#ifdef SPHERE_FLAG_STORAGE_AVAILABLE
+
+    auto flagc = getFlagsSlot.CallAs<core::FlagCall>();
+    if ((flagc == nullptr) ||!((*flagc)(core::FlagCall::CallMapFlags))) {
+        return false;
+    }
+
+    auto version = flagc->GetVersion();
+    if ((version != this->currentFlagsVersion) || (version == 0)) {
+
+        flagc->validateFlagsCount(partsCount);
+        auto flagsvector = flagc->GetFlags();
+
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->flagsBuffer);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, partsCount * sizeof(core::FlagStorage::FlagItemType),
+            flagsvector.get()->data(), GL_STATIC_DRAW);
+
+        // give the data back
+        flagc->SetFlags(flagsvector);
+
+        this->currentFlagsVersion = flagc->GetVersion();
+    }
+
+    return (*flagc)(core::FlagCall::CallUnmapFlags);
+#endif // SPHERE_FLAG_STORAGE_AVAILABLE
+}
+
+
 
 void moldyn::SphereRenderer::lockSingle(GLsync& syncObj) {
+#if defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
     if (syncObj) {
         glDeleteSync(syncObj);
     }
     syncObj = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+#endif // defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
 }
 
 
 void moldyn::SphereRenderer::waitSingle(GLsync& syncObj) {
+#if defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
     if (syncObj) {
         while (1) {
             GLenum wait = glClientWaitSync(syncObj, GL_SYNC_FLUSH_COMMANDS_BIT, 1);
@@ -1916,9 +2009,8 @@ void moldyn::SphereRenderer::waitSingle(GLsync& syncObj) {
             }
         }
     }
-}
-
 #endif // defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
+}
 
 
 // Ambient Occlusion ----------------------------------------------------------
@@ -2160,6 +2252,10 @@ void moldyn::SphereRenderer::renderParticlesGeometry(
 
     theShader.Enable();
 
+#ifdef SPHERE_FLAG_STORAGE_AVAILABLE
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, this->flagsBuffer);
+#endif // SPHERE_FLAG_STORAGE_AVAILABLE
+
     glUniformMatrix4fv(theShader.ParameterLocation("inMvp"), 1, GL_FALSE, this->curMVP.PeekComponents());
     glUniformMatrix4fv(theShader.ParameterLocation("inMvpInverse"), 1, GL_FALSE, this->curMVPinv.PeekComponents());
     glUniformMatrix4fv(theShader.ParameterLocation("inMvpTrans"), 1, GL_FALSE, this->curMVPtransp.PeekComponents());
@@ -2214,6 +2310,10 @@ void moldyn::SphereRenderer::renderParticlesGeometry(
 
     glBindTexture(GL_TEXTURE_1D, 0);
     glBindVertexArray(0);
+
+#ifdef SPHERE_FLAG_STORAGE_AVAILABLE
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, 0);
+#endif // SPHERE_FLAG_STORAGE_AVAILABLE
 
     theShader.Disable();
 }
