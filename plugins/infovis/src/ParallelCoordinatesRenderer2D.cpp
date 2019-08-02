@@ -527,35 +527,37 @@ bool ParallelCoordinatesRenderer2D::OnMouseMove(double x, double y) {
     mouseX = x;
     mouseY = y;
 
-    if (!ctrlDown) {
-        if (altDown && pickedAxis != -1 && this->leftDown &&
-            (fabs(mousePressedX - mouseX) > this->axisDistance * 0.5f)) {
-            this->dragging = true;
-            return true;
-        }
-        if (shiftDown && leftDown && filtering) {
-            int checkAxis, checkIndex;
-            pickIndicator(mouseX, mouseY, checkAxis, checkIndex);
-            if (pickedIndicatorAxis != -1 && checkAxis == pickedIndicatorAxis && checkIndex == pickedIndicatorIndex) {
-                float val = (mouseY - this->marginY) / axisHeight;
-                val = (std::max)(0.0f, val);
-                val = (std::min)(val, 1.0f);
-                // if (val >= 0.0f && val <= 1.0f) {
-                // val = relToAbsValue(pickedIndicatorAxis, val);
-                if (pickedIndicatorIndex == 0) {
-                    this->filters[pickedIndicatorAxis].lower = val;
-                } else {
-                    this->filters[pickedIndicatorAxis].upper = val;
-                }
-                //}
-            }
-            return true;
-        } else {
-            return false;
-        }
-    } else {
+    if (ctrlDown) {
+        // these clicks go to the view
         return false;
     }
+
+    if (altDown && pickedAxis != -1 && this->leftDown &&
+        (fabs(mousePressedX - mouseX) > this->axisDistance * 0.5f)) {
+        this->dragging = true;
+        return true;
+    }
+
+    if (shiftDown && leftDown && filtering) {
+        int checkAxis, checkIndex;
+        pickIndicator(mouseX, mouseY, checkAxis, checkIndex);
+        if (pickedIndicatorAxis != -1 && checkAxis == pickedIndicatorAxis && checkIndex == pickedIndicatorIndex) {
+            float val = (mouseY - this->marginY) / axisHeight;
+            val = (std::max)(0.0f, val);
+            val = (std::min)(val, 1.0f);
+            // if (val >= 0.0f && val <= 1.0f) {
+            // val = relToAbsValue(pickedIndicatorAxis, val);
+            if (pickedIndicatorIndex == 0) {
+                this->filters[pickedIndicatorAxis].lower = val;
+            } else {
+                this->filters[pickedIndicatorAxis].upper = val;
+            }
+            //}
+        }
+        return true;
+    }
+
+    return false;
 }
 
 bool ParallelCoordinatesRenderer2D::OnKey(
