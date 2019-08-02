@@ -44,10 +44,6 @@ moldyn::SphereRenderer::SphereRenderer(void) : view::Renderer3DModule()
     , curMVPtransp()
     , renderMode(RenderMode::SIMPLE)
     , greyTF(0)
-#ifdef SPHERE_FLAG_STORAGE_AVAILABLE
-    , currentFlagsVersion(0xFFFFFFFF)
-    , flagsBuffer(0)
-#endif // SPHERE_FLAG_STORAGE_AVAILABLE
     , sphereShader()
     , sphereGeometryShader()
     , lightingShader()
@@ -71,6 +67,11 @@ moldyn::SphereRenderer::SphereRenderer(void) : view::Renderer3DModule()
     , ambConeConstants()
     , volGen(nullptr)
     , triggerRebuildGBuffer(false)
+    // , timer()
+#ifdef SPHERE_FLAG_STORAGE_AVAILABLE
+    , currentFlagsVersion(0xFFFFFFFF)
+    , flagsBuffer(0)
+#endif // SPHERE_FLAG_STORAGE_AVAILABLE
 #if defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
     /// This variant should not need the fence (?)
     // ,singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_COHERENT_BIT);
@@ -85,7 +86,6 @@ moldyn::SphereRenderer::SphereRenderer(void) : view::Renderer3DModule()
     , bufArray()
     , colBufArray()
 #endif // SPHERE_MIN_OGL_SSBO_STREAM
-    // , timer()
     , renderModeParam("renderMode", "The sphere render mode.")
     , radiusScalingParam("scaling", "Scaling factor for particle radii.")
     , forceTimeSlot("forceTime", "Flag to force the time code to the specified value. Set to true when rendering a video.")
@@ -406,9 +406,6 @@ bool moldyn::SphereRenderer::createResources() {
 
 #ifdef SPHERE_FLAG_STORAGE_AVAILABLE
     glGenBuffers(1, &this->flagsBuffer);
-#else
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
-                "[SphereRenderer] No flag storage available. OpenGL version 4.3 or greater is required.");
 #endif // SPHERE_FLAG_STORAGE_AVAILABLE
 
     // Fallback transfer function texture
@@ -1984,6 +1981,7 @@ bool moldyn::SphereRenderer::getFlagStorage(unsigned int partsCount) {
     }
 
     return (*flagc)(core::FlagCall::CallUnmapFlags);
+
 #endif // SPHERE_FLAG_STORAGE_AVAILABLE
 }
 
@@ -1991,16 +1989,19 @@ bool moldyn::SphereRenderer::getFlagStorage(unsigned int partsCount) {
 
 void moldyn::SphereRenderer::lockSingle(GLsync& syncObj) {
 #if defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
+
     if (syncObj) {
         glDeleteSync(syncObj);
     }
     syncObj = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+
 #endif // defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
 }
 
 
 void moldyn::SphereRenderer::waitSingle(GLsync& syncObj) {
 #if defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
+
     if (syncObj) {
         while (1) {
             GLenum wait = glClientWaitSync(syncObj, GL_SYNC_FLUSH_COMMANDS_BIT, 1);
@@ -2009,6 +2010,7 @@ void moldyn::SphereRenderer::waitSingle(GLsync& syncObj) {
             }
         }
     }
+
 #endif // defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
 }
 

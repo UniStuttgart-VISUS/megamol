@@ -82,9 +82,9 @@
 #define SPHERE_MIN_OGL_SSBO_STREAM
 #endif // GL_VERSION_4_2
 
-#ifdef GL_VERSION_4_4
+#ifdef GL_VERSION_4_3
 #define SPHERE_FLAG_STORAGE_AVAILABLE
-#endif // GL_VERSION_4_4
+#endif // GL_VERSION_4_3
 
 #ifdef GL_VERSION_4_5
 #define SPHERE_MIN_OGL_BUFFER_ARRAY 
@@ -195,7 +195,7 @@ namespace moldyn {
                 retval = false;
             }
 
-#ifdef SPHERE_FLAG_STORAGE_AVAILABLE
+#ifndef SPHERE_FLAG_STORAGE_AVAILABLE
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
                 "[SphereRenderer] No flag storage available. OpenGL version 4.3 or greater is required.");
 #endif // SPHERE_FLAG_STORAGE_AVAILABLE
@@ -320,6 +320,8 @@ namespace moldyn {
         vislib::math::Vector<float, 2>           ambConeConstants;
         core::utility::MDAOVolumeGenerator      *volGen;
 
+        //TimeMeasure                            timer;
+
 #ifdef SPHERE_FLAG_STORAGE_AVAILABLE
         // Flag Storage
         FlagStorage::FlagVersionType             currentFlagsVersion;
@@ -338,8 +340,6 @@ namespace moldyn {
         megamol::core::utility::SSBOBufferArray  bufArray;
         megamol::core::utility::SSBOBufferArray  colBufArray;
 #endif // SPHERE_MIN_OGL_SSBO_STREAM
-
-        //TimeMeasure                            timer;
 
         /*********************************************************************/
         /* SLOTS                                                             */
