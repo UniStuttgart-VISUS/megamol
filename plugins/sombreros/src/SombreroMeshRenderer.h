@@ -208,6 +208,8 @@ private:
 
     std::set<unsigned int> flagSet;
 
+    uint32_t flagVersion;
+
     std::vector<std::vector<float>> newColors;
 
     bool changedFlags;

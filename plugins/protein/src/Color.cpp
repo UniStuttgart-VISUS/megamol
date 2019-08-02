@@ -327,7 +327,7 @@ void Color::MakeColorTable(const megamol::protein_calls::MolecularDataCall* mol,
     vislib::Array<float>& atomColorTable, vislib::Array<vislib::math::Vector<float, 3>>& colorLookupTable,
     vislib::Array<vislib::math::Vector<float, 3>>& rainbowColors, vislib::TString minGradColor,
     vislib::TString midGradColor, vislib::TString maxGradColor, bool forceRecompute,
-    const protein_calls::BindingSiteCall* bs, bool useNeighbors, const protein_calls::PerAtomFloatCall* pa) {
+    const protein_calls::BindingSiteCall* bs, bool useNeighbors, const protein_calls::PerAtomFloatCall* pa, bool enzymeMode, bool gxtype) {
 
     // temporary variables
     unsigned int cnt, idx, cntAtom, cntRes, cntChain, cntMol, cntSecS, atomIdx, atomCnt;
@@ -1016,7 +1016,7 @@ void Color::MakeColorTable(const megamol::protein_calls::MolecularDataCall* mol,
     vislib::Array<vislib::math::Vector<float, 3>>& colorLookupTable,
     vislib::Array<vislib::math::Vector<float, 3>>& rainbowColors, vislib::TString minGradColor,
     vislib::TString midGradColor, vislib::TString maxGradColor, bool forceRecompute,
-    const protein_calls::BindingSiteCall* bs, bool useNeighbors, const protein_calls::PerAtomFloatCall* pa) {
+    const protein_calls::BindingSiteCall* bs, bool useNeighbors, const protein_calls::PerAtomFloatCall* pa, bool enzymeMode, bool gxtype) {
 
     // if recomputation is forced: clear current color table
     if (forceRecompute) {

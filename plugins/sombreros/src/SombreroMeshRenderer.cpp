@@ -14,7 +14,7 @@
 #include "mmcore/view/CallRender3D.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 
-#include "infovis/FlagCall.h"
+#include "mmcore/FlagCall.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/StringParam.h"
@@ -65,7 +65,7 @@ SombreroMeshRenderer::SombreroMeshRenderer(void)
     this->getDataSlot.SetCompatibleCall<megamol::geocalls::CallTriMeshDataDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
 
-    this->getFlagDataSlot.SetCompatibleCall<megamol::infovis::FlagCallDescription>();
+    this->getFlagDataSlot.SetCompatibleCall<megamol::core::FlagCallDescription>();
     this->MakeSlotAvailable(&this->getFlagDataSlot);
 
     this->showVertices.SetParameter(new param::BoolParam(false));
@@ -124,6 +124,7 @@ SombreroMeshRenderer::SombreroMeshRenderer(void)
     this->MakeSlotAvailable(&this->showSweatBandSlot);
 
     this->lastTime = 0.0f;
+    this->flagVersion = 0;
 }
 
 
@@ -184,7 +185,7 @@ bool SombreroMeshRenderer::MouseEvent(float x, float y, megamol::core::view::Mou
 
     // vislib::sys::Log::DefaultLog.WriteInfo("%s %f %f", this->Name(), x, y);
 
-    auto flagsc = this->getFlagDataSlot.CallAs<infovis::FlagCall>();
+    auto flagsc = this->getFlagDataSlot.CallAs<core::FlagCall>();
     if (flagsc == nullptr) {
         return false;
     }
@@ -212,10 +213,11 @@ bool SombreroMeshRenderer::MouseEvent(float x, float y, megamol::core::view::Mou
 
         // this stuff kinda rapes the flag storage because we use arbitrary flags.
         // but hey, it works ;-)
-        (*flagsc)(infovis::FlagCall::CallForGetFlags);
-        if (flagsc->has_data()) {
+        (*flagsc)(core::FlagCall::CallMapFlags);
+        if (this->flagVersion != flagsc->GetVersion()) {
+            this->flagVersion = flagsc->GetVersion();
             const auto& fl = flagsc->GetFlags();
-            this->flagSet.insert(fl.cbegin(), fl.cend());
+            this->flagSet.insert(fl->cbegin(), fl->cend());
         }
 
         if (flags & view::MOUSEFLAG_BUTTON_LEFT_DOWN) {
@@ -231,13 +233,14 @@ bool SombreroMeshRenderer::MouseEvent(float x, float y, megamol::core::view::Mou
                 this->flagSet.erase(std::get<3>(mark));
             }
         }
-        std::shared_ptr<infovis::FlagStorage::FlagVectorType> v;
-        v = std::make_shared<infovis::FlagStorage::FlagVectorType>();
+        std::shared_ptr<core::FlagStorage::FlagVectorType> v;
+        v = std::make_shared<core::FlagStorage::FlagVectorType>();
         v->resize(this->flagSet.size());
         v->assign(this->flagSet.begin(), this->flagSet.end());
 
-        flagsc->SetFlags(v);
-        (*flagsc)(infovis::FlagCall::CallForSetFlags);
+        this->flagVersion++;
+        flagsc->SetFlags(v, this->flagVersion);
+        (*flagsc)(core::FlagCall::CallUnmapFlags);
 
         consume = true;
     }
@@ -252,10 +255,10 @@ bool SombreroMeshRenderer::rayTriIntersect(const vislib::math::Vector<float, 3>&
     const vislib::math::Vector<float, 3>& dir, const vislib::math::Vector<float, 3>& p1,
     const vislib::math::Vector<float, 3>& p2, const vislib::math::Vector<float, 3>& p3, float& intersectDist) {
 
-    const auto& e_1 = p2 - p1;
-    const auto& e_2 = p3 - p1;
+    const vislib::math::Vector<float, 3> e_1 = p2 - p1;
+    const vislib::math::Vector<float, 3> e_2 = p3 - p1;
 
-    auto& n = e_1.Cross(e_2);
+    vislib::math::Vector<float, 3> n = e_1.Cross(e_2);
     n.Normalise();
     const auto& q = dir.Cross(e_2);
     const float a = e_1.Dot(q);
@@ -369,14 +372,16 @@ bool SombreroMeshRenderer::Render(Call& call) {
         this->lastDataHash = ctmd->DataHash();
     }
 
-    auto flagsc = this->getFlagDataSlot.CallAs<infovis::FlagCall>();
+    auto flagsc = this->getFlagDataSlot.CallAs<core::FlagCall>();
     if (flagsc != nullptr) {
-        (*flagsc)(infovis::FlagCall::CallForGetFlags);
-        if (flagsc->has_data()) {
+        (*flagsc)(core::FlagCall::CallMapFlags);
+        if (flagVersion != flagsc->GetVersion()) {
+            this->flagVersion = flagsc->GetVersion();
             const auto& fl = flagsc->GetFlags();
             this->flagSet.clear();
-            this->flagSet.insert(fl.begin(), fl.end());
+            this->flagSet.insert(fl->begin(), fl->end());
         }
+        (*flagsc)(core::FlagCall::CallUnmapFlags);
     }
 
     auto bb = ctmd->AccessBoundingBoxes().ObjectSpaceBBox();
