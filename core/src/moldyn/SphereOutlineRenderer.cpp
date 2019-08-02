@@ -270,6 +270,8 @@ bool moldyn::SphereOutlineRenderer::Render(Call& call) {
         ::gluQuadricDrawStyle(static_cast<GLUquadric*>(this->sphereQuadric), GLU_FILL);
         ::glEnable(GL_CULL_FACE);
 
+        ::glDisable(GL_LIGHTING);   // Der Hass!!!
+
         for (unsigned int i = 0; i < c2->GetParticleListCount(); i++) {
             MultiParticleDataCall::Particles &parts = c2->AccessParticles(i);
             float rad = parts.GetGlobalRadius();
