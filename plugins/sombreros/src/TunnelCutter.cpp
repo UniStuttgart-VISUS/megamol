@@ -360,7 +360,7 @@ bool TunnelCutter::cutMeshEqually(CallTriMeshData* meshCall, CallTriMeshData* ca
     // init distance vector
     std::vector<unsigned int> vertexDistances(vertCount, UINT_MAX);
     for (int j = 0; j < static_cast<int>(vertCount); j++) {
-        if (this->vertexKeepFlags[j]) {
+        if (foundindices.count(j) > 0) {
             vertexDistances[j] = 0;
         }
     }
