@@ -95,6 +95,7 @@ namespace table {
         core::param::ParamSlot paramEpsilon;
         core::param::ParamSlot paramOperator;
         core::param::ParamSlot paramReference;
+        core::param::ParamSlot paramUpdateRange;
         core::CallerSlot slotInput;
         core::CalleeSlot slotOutput;
         std::vector<float> values;

@@ -14,6 +14,7 @@
 #include <limits>
 #include <numeric>
 
+#include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/FloatParam.h"
@@ -49,6 +50,7 @@ megamol::stdplugin::datatools::table::TableWhere::TableWhere(void) : frameID(0),
         paramEpsilon("epsilon", "The epsilon value for testing (in-) equality."),
         paramOperator("operator", "The comparison operator."),
         paramReference("reference", "The reference value to compare to."),
+        paramUpdateRange("updateRange", "Update the min/max range as the filter changes."),
         slotInput("input", "The input slot providing the unfiltered data."),
         slotOutput("output", "The input slot for the filtered data.") {
     /* Export the calls. */
@@ -90,6 +92,9 @@ megamol::stdplugin::datatools::table::TableWhere::TableWhere(void) : frameID(0),
 
     this->paramReference << new core::param::FloatParam(0.0f);
     this->MakeSlotAvailable(&this->paramReference);
+
+    this->paramUpdateRange << new core::param::BoolParam(false);
+    this->MakeSlotAvailable(&this->paramUpdateRange);
 }
 
 
@@ -148,42 +153,51 @@ bool megamol::stdplugin::datatools::table::TableWhere::getData(
         return false;
     }
 
-    auto column = 0;
-    auto isSort = false;
-    std::function<bool(const float)> selector;
+    auto isParamsChanged = this->paramUpdateRange.IsDirty()
+        || this->paramColumn.IsDirty()
+        || this->paramOperator.IsDirty()
+        || this->paramReference.IsDirty();
 
-    /* Process updates in the configuration. */
-    {
-        auto c = this->paramColumn.Param<FlexEnumParam>()->Value();
-        auto e = this->paramEpsilon.Param<FloatParam>()->Value();
-        auto o = this->paramOperator.Param<EnumParam>()->Value();
-        auto r = this->paramReference.Param<FloatParam>()->Value();
+    /* (Re-) Generate the data. */
+    if (isParamsChanged || (this->inputHash != src->DataHash())
+            || (this->frameID != src->GetFrameID())) {
+        auto column = 0;
+        const auto data = src->GetData();
+        auto isSort = false;
+        std::function<bool(const float)> selector;
 
-        this->columns.resize(src->GetColumnsCount());
-        std::copy(src->GetColumnsInfos(),
-            src->GetColumnsInfos() + this->columns.size(),
-            this->columns.begin());
-
+        /* Process updates in the configuration. */
         {
-            auto param = this->paramColumn.Param<FlexEnumParam>();
-            param->ClearValues();
-            for (auto& c : this->columns) {
-                param->AddValue(c.Name());
+            auto c = this->paramColumn.Param<FlexEnumParam>()->Value();
+            auto e = this->paramEpsilon.Param<FloatParam>()->Value();
+            auto o = this->paramOperator.Param<EnumParam>()->Value();
+            auto r = this->paramReference.Param<FloatParam>()->Value();
+
+            this->columns.resize(src->GetColumnsCount());
+            std::copy(src->GetColumnsInfos(),
+                src->GetColumnsInfos() + this->columns.size(),
+                this->columns.begin());
+
+            {
+                auto param = this->paramColumn.Param<FlexEnumParam>();
+                param->ClearValues();
+                for (auto& c : this->columns) {
+                    param->AddValue(c.Name());
+                }
             }
-        }
 
-        for (auto& ci : this->columns) {
-            if (ci.Name() == c) {
-                break;
+            for (auto& ci : this->columns) {
+                if (ci.Name() == c) {
+                    break;
+                }
+                ++column;
             }
-            ++column;
-        }
 
-        if (column != this->columns.size()) {
-            auto range = std::make_pair(this->columns[column].MinimumValue(),
-                this->columns[column].MaximumValue());
+            if (column != this->columns.size()) {
+                auto range = std::make_pair(this->columns[column].MinimumValue(),
+                    this->columns[column].MaximumValue());
 
-            switch (o) {
+                switch (o) {
                 case Operator::Less:
                     selector = [r](const float v) { return (v < r); };
                     break;
@@ -250,23 +264,15 @@ bool megamol::stdplugin::datatools::table::TableWhere::getData(
                     Log::DefaultLog.WriteError(_T("The comparison operator %d ")
                         _T("is unsupported."), o);
                     break;
+                }
+
+            } else {
+                Log::DefaultLog.WriteWarn(_T("The column \"%hs\" to be filtered ")
+                    _T("was not found in the data set. The %hs module will copy ")
+                    _T("all input rows."), c.c_str(), TableWhere::ClassName());
             }
-
-        } else {
-            Log::DefaultLog.WriteWarn(_T("The column \"%hs\" to be filtered ")
-                _T("was not found in the data set. The %hs module will copy ")
-                _T("all input rows."), c.c_str(), TableWhere::ClassName());
         }
-    }
-    assert(((column >= 0) && (column < this->columns.size())) || !selector);
-
-    /* (Re-) Generate the data. */
-    if (this->paramColumn.IsDirty()
-            || this->paramOperator.IsDirty()
-            || this->paramReference.IsDirty()
-            || (this->inputHash != src->DataHash())
-            || (this->frameID != src->GetFrameID())) {
-        const auto data = src->GetData();
+        assert(((column >= 0) && (column < this->columns.size())) || !selector);
 
         if (selector || isSort) {
             // Copy selection.
@@ -283,7 +289,9 @@ bool megamol::stdplugin::datatools::table::TableWhere::getData(
             } else {
                 // Selection requires sorting.
                 const auto o = this->paramOperator.Param<EnumParam>()->Value();
-                const auto r = (std::min)((std::max)(this->paramReference.Param<FloatParam>()->Value(), 0.0f), 1.0f);
+                const auto r = vislib::math::Clamp(
+                    this->paramReference.Param<FloatParam>()->Value(),
+                    0.0f, 1.0f);
 
                 selection.resize(src->GetRowsCount());
                 std::iota(selection.begin(), selection.end(), 0);
@@ -350,20 +358,46 @@ bool megamol::stdplugin::datatools::table::TableWhere::getData(
                 d += this->columns.size();
             }
 
+            /* Update the min/max range if requested. */
+            if (this->paramUpdateRange.Param<BoolParam>()->Value()) {
+                const auto rows = this->values.size() / this->columns.size();
+
+                for (std::size_t c = 0; c < this->columns.size(); ++c) {
+                    auto minimum = (std::numeric_limits<float>::max)();
+                    auto maximum = (std::numeric_limits<float>::min)();
+
+                    for (std::size_t r = 0; r < rows; ++r) {
+                        auto value = this->values[r * this->columns.size() + c];
+                        if (value < minimum) {
+                            minimum = value;
+                        }
+                        if (value > maximum) {
+                            maximum = value;
+                        }
+
+                        this->columns[c].SetMinimumValue(minimum);
+                        this->columns[c].SetMaximumValue(maximum);
+                    }
+                }
+            } /* end if (this->paramUpdateRange.Param<BoolParam>()->Value()) */
+
         } else {
             // Copy everything.
             this->values.resize(src->GetRowsCount() * this->columns.size());
             std::copy(src->GetData(), src->GetData() + this->values.size(),
                 this->values.begin());
-        }
+        } /* end if (selector || isSort) */
 
         this->frameID = dst->GetFrameID();
         this->inputHash = src->DataHash();
-        ++this->localHash;
 
-        this->paramColumn.ResetDirty();
-        this->paramOperator.ResetDirty();
-        this->paramReference.ResetDirty();
+        if (isParamsChanged) {
+            ++this->localHash;
+            this->paramColumn.ResetDirty();
+            this->paramOperator.ResetDirty();
+            this->paramReference.ResetDirty();
+            this->paramUpdateRange.ResetDirty();
+        }
     } /* end if (selector || (this->inputHash != src->DataHash()) ... */
 
     dst->SetFrameCount(src->GetFrameCount());
