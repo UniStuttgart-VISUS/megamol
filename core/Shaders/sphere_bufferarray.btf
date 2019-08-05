@@ -2,14 +2,16 @@
 <btf type="MegaMolGLSLShader" version="1.0" namespace="sphere_bufferarray">
 
     <shader name="vertex">
-        <snippet type="version">130</snippet>
+        <snippet type="version">430</snippet>
         <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>
+        <snippet name="FlagAttributes"   type="file">sphere/flags_vert_attributes.glsl</snippet>
         <snippet name="Attributes"       type="file">sphere/simple_vert_attributes.glsl</snippet>
         <snippet name="MainStart"        type="file">sphere/simple_vert_mainstart.glsl</snippet>
         <snippet name="PosTrans"         type="file">sphere/simple_vert_postrans.glsl</snippet>
         <snippet name="ClippingPlane"    type="file">sphere/simple_vert_clipping.glsl</snippet>
         <snippet name="SphereTouchPlane" type="file">sphere/simple_vert_spheretouchplane.glsl</snippet>
         <snippet name="PosOutput"        type="file">sphere/simple_vert_posout.glsl</snippet>
+        <snippet name="Flags"            type="file">sphere/flags_vert_main.glsl</snippet>
         <snippet name="MainEnd"          type="file">sphere/simple_vert_mainend.glsl</snippet>
     </shader>
 

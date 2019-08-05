@@ -1744,6 +1744,7 @@ void GUIView::checkMultipleHotkeyAssignement(void) {
                 if (auto* p = slot.template Param<core::param::ButtonParam>()) {
                     auto hotkey = p->GetKeyCode();
 
+                    // Ignore not set hotekey
                     if (hotkey.GetKey() == core::view::Key::KEY_UNKNOWN) {
                         return;
                     }

@@ -87,8 +87,8 @@
 #endif // GL_VERSION_4_3
 
 #ifdef GL_VERSION_4_5
-#define SPHERE_MIN_OGL_BUFFER_ARRAY 
-#define SPHERE_MIN_OGL_SPLAT 
+#define SPHERE_MIN_OGL_SPLAT
+#define SPHERE_MIN_OGL_BUFFER_ARRAY
 #define SPHERE_MIN_OGL_AMBIENT_OCCLUSION
 #endif // GL_VERSION_4_5
 
@@ -322,9 +322,10 @@ namespace moldyn {
 
         //TimeMeasure                            timer;
 
+        bool                                     flagsEnabled;
 #ifdef SPHERE_FLAG_STORAGE_AVAILABLE
         // Flag Storage
-        FlagStorage::FlagVersionType             currentFlagsVersion;
+        FlagStorage::FlagVersionType             flagsCurrentVersion;
         GLuint                                   flagsBuffer;
 #endif // SPHERE_FLAG_STORAGE_AVAILABLE
 
@@ -516,12 +517,18 @@ namespace moldyn {
          */
         std::shared_ptr<GLSLShader> generateShader(MultiParticleDataCall::Particles &parts);
 
+#ifdef SPHERE_FLAG_STORAGE_AVAILABLE
+
         /**
          * Update flag storage.
          *
          * @param partsCount The sum of all particles in all particle lists.
          */
         bool getFlagStorage(unsigned int partsCount);
+
+#endif // SPHERE_FLAG_STORAGE_AVAILABLE
+
+#if defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
 
         /**
          * Lock single.
@@ -536,6 +543,9 @@ namespace moldyn {
          * @param syncObj  ...
          */
         void waitSingle(GLsync& syncObj);
+
+#endif // defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
+
 
         // ONLY used for Ambient Occlusion rendering: -------------------------
 

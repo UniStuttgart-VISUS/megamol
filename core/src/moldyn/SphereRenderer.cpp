@@ -68,8 +68,9 @@ moldyn::SphereRenderer::SphereRenderer(void) : view::Renderer3DModule()
     , volGen(nullptr)
     , triggerRebuildGBuffer(false)
     // , timer()
+    , flagsEnabled(false)
 #ifdef SPHERE_FLAG_STORAGE_AVAILABLE
-    , currentFlagsVersion(0xFFFFFFFF)
+    , flagsCurrentVersion(0xFFFFFFFF)
     , flagsBuffer(0)
 #endif // SPHERE_FLAG_STORAGE_AVAILABLE
 #if defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
@@ -910,10 +911,6 @@ bool moldyn::SphereRenderer::renderSimple(view::CallRender3D* cr3d, MultiParticl
 
     this->sphereShader.Enable();
 
-#ifdef SPHERE_FLAG_STORAGE_AVAILABLE
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, this->flagsBuffer);
-#endif // SPHERE_FLAG_STORAGE_AVAILABLE
-
     GLuint vertAttribLoc = glGetAttribLocationARB(this->sphereShader, "inVertex");
     GLuint colAttribLoc = glGetAttribLocationARB(this->sphereShader, "inColor");
     GLuint colIdxAttribLoc = glGetAttribLocationARB(this->sphereShader, "colIdx");
@@ -970,10 +967,6 @@ bool moldyn::SphereRenderer::renderSimple(view::CallRender3D* cr3d, MultiParticl
 
     mpdc->Unlock();
 
-#ifdef SPHERE_FLAG_STORAGE_AVAILABLE
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, 0);
-#endif // SPHERE_FLAG_STORAGE_AVAILABLE
-
     this->sphereShader.Disable();
 
     return true;
@@ -996,10 +989,6 @@ bool moldyn::SphereRenderer::renderSSBO(view::CallRender3D* cr3d, MultiParticleD
         }
 
         this->newShader->Enable();
-
-#ifdef SPHERE_FLAG_STORAGE_AVAILABLE
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, this->flagsBuffer);
-#endif // SPHERE_FLAG_STORAGE_AVAILABLE
 
         glUniform4fv(this->newShader->ParameterLocation("viewAttr"), 1, this->curViewAttrib);
         glUniform3fv(
@@ -1166,10 +1155,6 @@ bool moldyn::SphereRenderer::renderSSBO(view::CallRender3D* cr3d, MultiParticleD
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
         glDisable(GL_TEXTURE_1D);
 
-#ifdef SPHERE_FLAG_STORAGE_AVAILABLE
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, 0);
-#endif // SPHERE_FLAG_STORAGE_AVAILABLE
-
         this->newShader->Disable();
 
 #ifdef CHRONOTIMING
@@ -1218,10 +1203,6 @@ bool moldyn::SphereRenderer::renderSplat(view::CallRender3D* cr3d, MultiParticle
         }
 
         this->newShader->Enable();
-
-#ifdef SPHERE_FLAG_STORAGE_AVAILABLE
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, this->flagsBuffer);
-#endif // SPHERE_FLAG_STORAGE_AVAILABLE
 
         glUniform4fv(this->newShader->ParameterLocation("viewAttr"), 1, this->curViewAttrib);
         glUniform3fv(
@@ -1338,10 +1319,6 @@ bool moldyn::SphereRenderer::renderSplat(view::CallRender3D* cr3d, MultiParticle
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
         glDisable(GL_TEXTURE_1D);
 
-#ifdef SPHERE_FLAG_STORAGE_AVAILABLE
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, 0);
-#endif // SPHERE_FLAG_STORAGE_AVAILABLE
-
         newShader->Disable();
     }
 
@@ -1359,9 +1336,9 @@ bool moldyn::SphereRenderer::renderBufferArray(view::CallRender3D* cr3d, MultiPa
 
     this->sphereShader.Enable();
 
-#ifdef SPHERE_FLAG_STORAGE_AVAILABLE
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, this->flagsBuffer);
-#endif // SPHERE_FLAG_STORAGE_AVAILABLE
+    if (this->flagsEnabled) {
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, this->flagsBuffer);
+    }
 
     GLuint vertAttribLoc = glGetAttribLocationARB(this->sphereShader, "inVertex");
     GLuint colAttribLoc = glGetAttribLocationARB(this->sphereShader, "inColor");
@@ -1384,8 +1361,13 @@ bool moldyn::SphereRenderer::renderBufferArray(view::CallRender3D* cr3d, MultiPa
     glUniformMatrix4fv(
         this->sphereShader.ParameterLocation("MVPtransp"), 1, GL_FALSE, this->curMVPtransp.PeekComponents());
 
+    unsigned int partsCount = 0;
     for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
         MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
+
+        if (this->flagsEnabled) {
+            glUniform1ui(this->sphereShader.ParameterLocation("flag_offset"), partsCount);
+        }
 
         unsigned int colBytes, vertBytes, colStride, vertStride;
         bool interleaved;
@@ -1437,13 +1419,15 @@ bool moldyn::SphereRenderer::renderBufferArray(view::CallRender3D* cr3d, MultiPa
         glDisableVertexAttribArrayARB(colAttribLoc);
         glDisableVertexAttribArrayARB(colIdxAttribLoc);
         glDisable(GL_TEXTURE_1D);
+
+        partsCount += parts.GetCount();
     }
 
     mpdc->Unlock();
 
-#ifdef SPHERE_FLAG_STORAGE_AVAILABLE
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, 0);
-#endif // SPHERE_FLAG_STORAGE_AVAILABLE
+    if (this->flagsEnabled) {
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, 0);
+    }
 
     this->sphereShader.Disable();
 
@@ -1463,10 +1447,6 @@ bool moldyn::SphereRenderer::renderGeometryShader(view::CallRender3D* cr3d, Mult
     // glEnable(GL_VERTEX_PROGRAM_TWO_SIDE); /// ! Has significant negative performance impact ....
 
     this->sphereGeometryShader.Enable();
-
-#ifdef SPHERE_FLAG_STORAGE_AVAILABLE
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, this->flagsBuffer);
-#endif // SPHERE_FLAG_STORAGE_AVAILABLE
 
     GLuint vertAttribLoc = glGetAttribLocationARB(this->sphereGeometryShader, "inVertex");
     GLuint colAttribLoc = glGetAttribLocationARB(this->sphereGeometryShader, "inColor");
@@ -1510,10 +1490,6 @@ bool moldyn::SphereRenderer::renderGeometryShader(view::CallRender3D* cr3d, Mult
     }
 
     mpdc->Unlock();
-
-#ifdef SPHERE_FLAG_STORAGE_AVAILABLE
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, 0);
-#endif // SPHERE_FLAG_STORAGE_AVAILABLE
 
     this->sphereGeometryShader.Disable();
 
@@ -1956,8 +1932,10 @@ void moldyn::SphereRenderer::getBytesAndStride(MultiParticleDataCall::Particles&
 }
 
 
-bool moldyn::SphereRenderer::getFlagStorage(unsigned int partsCount) {
 #ifdef SPHERE_FLAG_STORAGE_AVAILABLE
+
+bool moldyn::SphereRenderer::getFlagStorage(unsigned int partsCount) {
+    this->flagsEnabled = false;
 
     auto flagc = getFlagsSlot.CallAs<core::FlagCall>();
     if ((flagc == nullptr) ||!((*flagc)(core::FlagCall::CallMapFlags))) {
@@ -1965,7 +1943,7 @@ bool moldyn::SphereRenderer::getFlagStorage(unsigned int partsCount) {
     }
 
     auto version = flagc->GetVersion();
-    if ((version != this->currentFlagsVersion) || (version == 0)) {
+    if ((version != this->flagsCurrentVersion) || (version == 0)) {
 
         flagc->validateFlagsCount(partsCount);
         auto flagsvector = flagc->GetFlags();
@@ -1977,31 +1955,27 @@ bool moldyn::SphereRenderer::getFlagStorage(unsigned int partsCount) {
         // give the data back
         flagc->SetFlags(flagsvector);
 
-        this->currentFlagsVersion = flagc->GetVersion();
+        this->flagsCurrentVersion = flagc->GetVersion();
+        this->flagsEnabled = true;
     }
 
     return (*flagc)(core::FlagCall::CallUnmapFlags);
-
-#endif // SPHERE_FLAG_STORAGE_AVAILABLE
 }
 
+#endif // SPHERE_FLAG_STORAGE_AVAILABLE
 
 
-void moldyn::SphereRenderer::lockSingle(GLsync& syncObj) {
 #if defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
 
+void moldyn::SphereRenderer::lockSingle(GLsync& syncObj) {
     if (syncObj) {
         glDeleteSync(syncObj);
     }
     syncObj = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
-
-#endif // defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
 }
 
 
 void moldyn::SphereRenderer::waitSingle(GLsync& syncObj) {
-#if defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
-
     if (syncObj) {
         while (1) {
             GLenum wait = glClientWaitSync(syncObj, GL_SYNC_FLUSH_COMMANDS_BIT, 1);
@@ -2010,9 +1984,9 @@ void moldyn::SphereRenderer::waitSingle(GLsync& syncObj) {
             }
         }
     }
+}
 
 #endif // defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
-}
 
 
 // Ambient Occlusion ----------------------------------------------------------
@@ -2254,10 +2228,6 @@ void moldyn::SphereRenderer::renderParticlesGeometry(
 
     theShader.Enable();
 
-#ifdef SPHERE_FLAG_STORAGE_AVAILABLE
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, this->flagsBuffer);
-#endif // SPHERE_FLAG_STORAGE_AVAILABLE
-
     glUniformMatrix4fv(theShader.ParameterLocation("inMvp"), 1, GL_FALSE, this->curMVP.PeekComponents());
     glUniformMatrix4fv(theShader.ParameterLocation("inMvpInverse"), 1, GL_FALSE, this->curMVPinv.PeekComponents());
     glUniformMatrix4fv(theShader.ParameterLocation("inMvpTrans"), 1, GL_FALSE, this->curMVPtransp.PeekComponents());
@@ -2312,10 +2282,6 @@ void moldyn::SphereRenderer::renderParticlesGeometry(
 
     glBindTexture(GL_TEXTURE_1D, 0);
     glBindVertexArray(0);
-
-#ifdef SPHERE_FLAG_STORAGE_AVAILABLE
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, 0);
-#endif // SPHERE_FLAG_STORAGE_AVAILABLE
 
     theShader.Disable();
 }
