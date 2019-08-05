@@ -35,10 +35,6 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
     , currentHash(0xFFFFFFFF)
     , currentFlagsVersion(0xFFFFFFFF)
     , densityFBO()
-    , mousePressedX()
-    , mousePressedY()
-    , mouseReleasedX()
-    , mouseReleasedY()
     , drawModeSlot("drawMode", "Draw mode")
     , drawSelectedItemsSlot("drawSelectedItems", "Draw selected items")
     , selectedItemsColorSlot("selectedItemsColor", "Color for selected items")
@@ -75,13 +71,16 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
     , axisIndirectionBuffer(0)
     , filtersBuffer(0)
     , minmaxBuffer(0)
+    , interactionState(InteractionState::NONE)
     , pickedAxis(-1)
-    , dragging(false)
-    , stoppedDragging(false)
-    , filtering(false)
-    , stoppedFiltering(false)
     , pickedIndicatorAxis(-1)
     , pickedIndicatorIndex(-1)
+    , strokeStartX(0)
+    , strokeStartY(0)
+    , strokeEndX(0)
+    , strokeEndY(0)
+    , needSelectionUpdate(false)
+    , needFlagsUpdate(false)
     , lastTimeStep(0)
     , font("Evolventa-SansSerif", core::utility::SDFFont::RenderType::RENDERTYPE_FILL) {
 
@@ -297,6 +296,9 @@ void ParallelCoordinatesRenderer2D::pickIndicator(float x, float y, int& axis, i
             index = 0;
         }
     }
+    if (index == -1) {
+        axis = -1;
+    }
 }
 
 bool ParallelCoordinatesRenderer2D::selectedItemsColorSlotCallback(core::param::ParamSlot& caller) {
@@ -470,53 +472,50 @@ bool ParallelCoordinatesRenderer2D::GetExtents(core::view::CallRender2D& call) {
 bool ParallelCoordinatesRenderer2D::OnMouseButton(
     core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) {
 
-    if (ctrlDown) {
+    if (this->ctrlDown) {
         // these clicks go to the view
         return false;
     }
 
+    // TODO could values from mouse move be updated from other threads? otherwise this copy is useless
+    float mousePressedX = this->mouseX;
+    float mousePressedY = this->mouseY;
 
-    const auto down = (action == core::view::MouseButtonAction::PRESS);
-    leftDown = false, leftUp = false;
+    if (button != core::view::MouseButton::BUTTON_LEFT) {
+        // ignore everything which is not left mouse button
+        return false;
+    }
 
-    if (button == core::view::MouseButton::BUTTON_LEFT) {
-        if (down) {
-            mousePressedX = mouseX;
-            mousePressedY = mouseY;
-            leftDown = true;
-        } else {
-            mouseReleasedX = mouseX;
-            mouseReleasedY = mouseY;
-            leftUp = true;
+    // any up/down event stops interaction, but only down changes selection
+    this->interactionState = InteractionState::NONE;
+    if (action == core::view::MouseButtonAction::PRESS) {
+        this->pickedAxis = -1;
+        this->pickedIndicatorAxis = -1;
+        this->pickedIndicatorIndex = -1;
+
+        if (this->altDown) {
+            this->pickedAxis = mouseXtoAxis(mousePressedX);
+            if (this->pickedAxis != -1) {
+                this->interactionState = InteractionState::INTERACTION_DRAG;
+            }
+            return true;
         }
-    }
 
-    if (pickedAxis != -1 && this->dragging && leftUp) {
-        this->dragging = false;
-        this->stoppedDragging = true;
-    }
-
-    if (altDown && leftUp && !dragging) {
-        pickedAxis = mouseXtoAxis(mouseReleasedX);
-    }
-
-    if (!altDown && shiftDown && leftUp && !dragging) {
-        pickIndicator(mouseReleasedX, mouseReleasedY, pickedIndicatorAxis, pickedIndicatorIndex);
-    }
-
-    if ((pickedIndicatorAxis != -1) && shiftDown && leftDown && !dragging) {
-        this->filtering = true;
-    }
-    if (pickedIndicatorAxis == -1 || !shiftDown) {
-        this->filtering = false;
-    }
-    if (!filtering && !dragging && !altDown && !shiftDown) {
-        if (this->leftDown) {
-            this->stroking = true;
+        if (this->shiftDown) {
+            pickIndicator(mousePressedX, mousePressedY, this->pickedIndicatorAxis, this->pickedIndicatorIndex);
+            if (this->pickedIndicatorAxis != -1) {
+                this->interactionState = InteractionState::INTERACTION_FILTER;
+            }
+            return true;
         }
-        if (this->leftUp) {
-            this->stroking = false;
-        }
+
+        this->interactionState = InteractionState::INTERACTION_SELECT;
+        this->strokeStartX = mousePressedX;
+        this->strokeStartY = mousePressedY;
+        this->strokeEndX = mousePressedX;
+        this->strokeEndY = mousePressedY;
+        this->needSelectionUpdate = true;
+        return true;
     }
 
     return true;
@@ -531,9 +530,7 @@ bool ParallelCoordinatesRenderer2D::OnMouseMove(double x, double y) {
         return false;
     }
 
-    if (this->altDown && this->leftDown && this->pickedAxis != -1) {
-        this->dragging = true;
-
+    if (this->interactionState == InteractionState::INTERACTION_DRAG) {
         int currAxis = mouseXtoAxis(this->mouseX);
         if (currAxis != this->pickedAxis && currAxis >= 0 && currAxis < static_cast<int>(this->columnCount)) {
             auto pickedAxisIt = std::find(this->axisIndirection.begin(), this->axisIndirection.end(), this->pickedAxis);
@@ -546,20 +543,34 @@ bool ParallelCoordinatesRenderer2D::OnMouseMove(double x, double y) {
                 currAxisIt++;
             }
             this->axisIndirection.insert(currAxisIt, this->pickedAxis);
+
+            this->needFlagsUpdate = true;
         }
 
         return true;
     }
 
-    if (shiftDown && leftDown && filtering) {
-        float val = (mouseY - this->marginY) / this->axisHeight;
+    if (this->interactionState == InteractionState::INTERACTION_FILTER) {
+        float val = (this->mouseY - this->marginY) / this->axisHeight;
         if (this->pickedIndicatorIndex == 0) {
             val = std::clamp(val, 0.0f, this->filters[pickedIndicatorAxis].upper);
-            this->filters[pickedIndicatorAxis].lower = val;
+            this->filters[this->pickedIndicatorAxis].lower = val;
         } else {
             val = std::clamp(val, this->filters[pickedIndicatorAxis].lower, 1.0f);
-            this->filters[pickedIndicatorAxis].upper = val;
+            this->filters[this->pickedIndicatorAxis].upper = val;
         }
+        this->needFlagsUpdate = true;
+
+        return true;
+    }
+
+    if (this->interactionState == InteractionState::INTERACTION_SELECT) {
+        if (this->mouseX != this->strokeEndX || this->mouseY != this->strokeEndY) {
+            this->strokeEndX = this->mouseX;
+            this->strokeEndY = this->mouseY;
+            this->needSelectionUpdate = true;
+        }
+
         return true;
     }
 
@@ -931,39 +942,42 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, filtersBuffer);
     glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, this->columnCount * sizeof(DimensionFilter), this->filters.data());
 
-    if (!shiftDown && !altDown && !ctrlDown) {
+    // Do stroking/picking
+    if (this->needSelectionUpdate) {
+        this->needSelectionUpdate = false;
+
         switch (selectionModeSlot.Param<core::param::EnumParam>()->Value()) {
         case SELECT_STROKE:
-            if (stroking) {
-                this->doStroking(mousePressedX, mousePressedY, mouseX, mouseY);
-            }
+            this->doStroking(this->strokeStartX, this->strokeStartY, this->strokeEndX, this->strokeEndY);
             break;
         case SELECT_PICK:
-            if (stroking) {
-                this->doPicking(
-                    mouseX, mouseY, this->pickRadiusSlot.Param<megamol::core::param::FloatParam>()->Value());
-            }
+            this->doPicking(this->strokeEndX, this->strokeEndY,
+                this->pickRadiusSlot.Param<megamol::core::param::FloatParam>()->Value());
             break;
         }
+
+        this->needFlagsUpdate = true;
     }
 
     drawParcos();
 
-    switch (selectionModeSlot.Param<core::param::EnumParam>()->Value()) {
-    case SELECT_STROKE:
-        if (drawSelectionIndicatorSlot.Param<core::param::BoolParam>()->Value() && stroking) {
-            this->drawStrokeIndicator(mousePressedX, mousePressedY, mouseX, mouseY, this->selectionIndicatorColor);
-        }
-        break;
-    case SELECT_PICK:
-        if (drawSelectionIndicatorSlot.Param<core::param::BoolParam>()->Value()) {
-            this->drawPickIndicator(mouseX, mouseY,
+    // Draw stroking/picking indicator
+    if (this->drawSelectionIndicatorSlot.Param<core::param::BoolParam>()->Value()) {
+        switch (selectionModeSlot.Param<core::param::EnumParam>()->Value()) {
+        case SELECT_STROKE:
+            if (this->interactionState == InteractionState::INTERACTION_SELECT) {
+                this->drawStrokeIndicator(this->strokeStartX, this->strokeStartY, this->strokeEndX, this->strokeEndY, this->selectionIndicatorColor);
+            }
+            break;
+        case SELECT_PICK:
+            this->drawPickIndicator(this->mouseX, this->mouseY,
                 this->pickRadiusSlot.Param<megamol::core::param::FloatParam>()->Value(), this->selectionIndicatorColor);
+            break;
         }
-        break;
     }
 
-    if (stoppedDragging || filtering || stroking) {
+    if (needFlagsUpdate) {
+        needFlagsUpdate = false;
         // HAZARD: downloading everything over and over is slowish
         auto flagsc = getFlagsSlot.CallAs<core::FlagCall>();
         if (flagsc != nullptr) {
