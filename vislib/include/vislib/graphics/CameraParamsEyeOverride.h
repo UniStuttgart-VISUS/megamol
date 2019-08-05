@@ -26,7 +26,7 @@ namespace graphics {
 /**
  * Camera parameter override class overriding the eye.
  */
-class CameraParamsEyeOverride : public CameraParamsOverride {
+class [[deprecated]] CameraParamsEyeOverride : public CameraParamsOverride {
 
 public:
     /** Ctor. */

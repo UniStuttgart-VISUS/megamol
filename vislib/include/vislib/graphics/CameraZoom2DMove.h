@@ -27,7 +27,7 @@ namespace graphics {
      * Cursor2DEvent manipulating performing a zoom by moving the camera 
      * position based on the Y coordinate of the 2d cursor.
      */
-    class CameraZoom2DMove : public AbstractCursor2DEvent, 
+    class [[deprecated]] CameraZoom2DMove : public AbstractCursor2DEvent, 
         public AbstractCameraController {
     public:
 

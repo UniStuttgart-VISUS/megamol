@@ -11,10 +11,10 @@
 #include "mmcore/view/CallRender2D.h"
 #include "mmcore/view/MouseFlags.h"
 #include "mmcore/view/Renderer2DModule.h"
+#include "mmcore/FlagCall.h"
 #include "mmstd_datatools/table/TableDataCall.h"
 
 #include <memory>
-#include "FlagCall.h"
 #include "Renderer2D.h"
 
 namespace megamol {
@@ -210,7 +210,7 @@ private:
 
     core::view::CallGetTransferFunction* transferFunction;
 
-    FlagCall* flagStorage;
+    core::FlagCall* flagStorage;
 
     ParamState map;
 

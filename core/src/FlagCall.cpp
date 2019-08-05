@@ -1,24 +1,24 @@
 #include "stdafx.h"
-#include "FlagCall.h"
+#include "mmcore/FlagCall.h"
 
 using namespace megamol;
-using namespace megamol::infovis;
+using namespace megamol::core;
 
 /*
  * IntSelectionCall::CallForGetSelection
  */
-const unsigned int FlagCall::CallForGetFlags = 0;
+const unsigned int FlagCall::CallMapFlags = 0;
 
 
 /*
  * IntSelectionCall::CallForSetSelection
  */
-const unsigned int FlagCall::CallForSetFlags = 1;
+const unsigned int FlagCall::CallUnmapFlags = 1;
 
 /*
  *	IntSelectionCall:IntSelectionCall
  */
-FlagCall::FlagCall(void) : flags(NULL) {}
+FlagCall::FlagCall(void) : flags() {}
 
 /*
  *	IntSelectionCall::~IntSelectionCall

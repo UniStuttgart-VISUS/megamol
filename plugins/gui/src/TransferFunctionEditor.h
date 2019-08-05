@@ -5,7 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#pragma once
+#ifndef MEGAMOL_GUI_TRANSFERFUNCTIONEDITOR_INCLUDED
+#define MEGAMOL_GUI_TRANSFERFUNCTIONEDITOR_INCLUDED
 
 #include "mmcore/param/TransferFunctionParam.h"
 #include "mmcore/view/TransferFunction.h"
@@ -13,11 +14,13 @@
 #include "vislib/sys/Log.h"
 
 #include <cmath>
+#include <iomanip>
+#include <sstream>
 #include <string>
 #include <vector>
 
 #include <imgui.h>
-#include "Popup.h"
+#include "GUIUtils.h"
 
 
 namespace megamol {
@@ -26,7 +29,7 @@ namespace gui {
 /**
  * 1D Transfer Function Editor.
  */
-class TransferFunctionEditor : public Popup {
+class TransferFunctionEditor {
 public:
     TransferFunctionEditor(void);
 
@@ -64,7 +67,19 @@ public:
     core::param::TransferFunctionParam* GetActiveParameter(void) { return this->activeParameter; }
 
 private:
+    /** The global input widget state buffer. */
+    struct WidgetBuffer {
+        float min_range;
+        float max_range;
+        float gauss_sigma;
+        float range_value;
+        int tex_size;
+    };
+
     // VARIABLES -----------------------------------------------------------
+
+    /** Utils being used all over the place */
+    GUIUtils utils;
 
     /** The currently active parameter whose transfer function is currently loaded into this editor. */
     core::param::TransferFunctionParam* activeParameter;
@@ -101,7 +116,15 @@ private:
 
     /** Flag for applying all changes immediately. */
     bool immediateMode;
+
+    /** Flag indicating if all options should be shown*/
+    bool showOptions;
+
+    /** The global input widget state buffer. */
+    WidgetBuffer widget_buffer;
 };
 
 } // namespace gui
 } // namespace megamol
+
+#endif // MEGAMOL_GUI_TRANSFERFUNCTIONEDITOR_INCLUDED

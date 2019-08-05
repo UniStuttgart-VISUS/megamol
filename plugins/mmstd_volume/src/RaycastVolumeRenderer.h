@@ -11,6 +11,8 @@
 #    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include <array>
+
 #include "vislib/graphics/gl/GLSLComputeShader.h"
 #include "vislib/graphics/gl/OpenGLTexture2D.h"
 
@@ -443,6 +445,8 @@ private:
 
     std::unique_ptr<Texture2D> m_transfer_function;
 
+    GLuint tf_texture;
+
     size_t m_volume_datahash = std::numeric_limits<size_t>::max();
     int m_frame_id = -1;
 
@@ -455,6 +459,8 @@ private:
     megamol::core::CallerSlot m_transferFunction_callerSlot;
 
     core::param::ParamSlot m_ray_step_ratio_param;
+
+    std::array<float, 2> valRange;
 };
 
 } // namespace volume
