@@ -3,17 +3,17 @@
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
+#include "mmcore/FlagCall.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/utility/SDFFont.h"
 #include "mmcore/utility/SSBOStreamer.h"
-#include "mmcore/utility/gl/FramebufferObject.h"
 #include "mmcore/view/CallGetTransferFunction.h"
 #include "mmcore/view/CallRender2D.h"
 #include "mmcore/view/MouseFlags.h"
 #include "mmcore/view/Renderer2DModule.h"
-#include "mmcore/FlagCall.h"
 #include "mmstd_datatools/table/TableDataCall.h"
 
+#include <glowl/FramebufferObject.hpp>
 #include <memory>
 #include "Renderer2D.h"
 
@@ -243,7 +243,7 @@ private:
     GLsizei triangleVertexCount;
     bool trianglesValid;
 
-    std::unique_ptr<core::utility::gl::FramebufferObject> screenFBO;
+    std::unique_ptr<glowl::FramebufferObject> screenFBO;
 
     megamol::core::utility::SDFFont axisFont;
     megamol::core::utility::SDFFont textFont;

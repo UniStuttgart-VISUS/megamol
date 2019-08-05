@@ -828,9 +828,8 @@ void ScatterplotMatrixRenderer2D::bindScreen() {
 
     if (!this->screenFBO || this->screenFBO->getHeight() != static_cast<int>(viewport[2]) ||
         this->screenFBO->getWidth() != static_cast<int>(viewport[3])) {
-        this->screenFBO.reset(new core::utility::gl::FramebufferObject());
+        this->screenFBO.reset(new glowl::FramebufferObject(viewport[2], viewport[3]));
         // this->screenFBO->create(viewport[2] * 2.0f, viewport[3] * 2.0f); // XXXX: el supersampling, hahaha
-        this->screenFBO->create(viewport[2], viewport[3]);
         this->screenFBO->createColorAttachment(GL_RGBA32F, GL_RGBA, GL_FLOAT);
     }
 
