@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<btf type="MegaMolGLSLShader" version="1.0" namespace="SurfaceLICRenderer">
+    <include file="common"/>
+
+    <shader name="compute">
+        <snippet type="version">430</snippet>
+        <snippet type="string">
+            <![CDATA[
+#extension GL_ARB_compute_shader: enable
+#define FLT_MAX 3.402823466e+38
+#define FLT_MIN 1.175494351e-38
+#define PI      3.14159265
+
+/* matrices */
+uniform mat4 view_mx;
+uniform mat4 proj_mx;
+
+/* near and far clipping planes */
+uniform float cam_near;
+uniform float cam_far;
+
+/* render targete resolution */
+uniform vec2 rt_resolution;
+
+/* color for the LIC */
+uniform vec4 lic_color;
+
+/* input textures */
+uniform highp sampler2D color_tx2D;
+uniform highp sampler2D depth_tx2D;
+uniform highp sampler3D velocity_tx3D;
+uniform highp sampler2D noise_tx2D;
+
+/* output image */
+layout(rgba32f, binding = 0) writeonly uniform highp image2D render_target;
+
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+void main() {
+    // Get pixel coordinates
+    vec3 gID = gl_GlobalInvocationID.xyz;
+
+    if (gID.x >= rt_resolution.x || gID.y >= rt_resolution.y) return;
+
+    ivec2 pixel_coords = ivec2(gID.xy);
+    vec2 pixel_tex_coords = pixel_coords / rt_resolution.xy;
+    
+    // Check for surface at this pixel    
+    vec4 color = texture(color_tx2D, pixel_tex_coords);
+    const float depth = texture(depth_tx2D, pixel_tex_coords).x;
+        
+    if (depth >= 0.0f && depth < 1.0f) {
+        
+        
+        const float noise = texture(noise_tx2D, pixel_tex_coords).x;
+        color = noise * lic_color;
+        
+    }
+
+    imageStore(render_target, pixel_coords, color);
+}
+            ]]>
+        </snippet>
+    </shader>
+</btf>
