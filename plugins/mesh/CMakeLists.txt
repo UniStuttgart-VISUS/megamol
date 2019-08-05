@@ -47,8 +47,6 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
     LIBRARY_RELEASE ${QUICKHULL_LIB})
   get_target_property(quickhull_include quickhull INTERFACE_INCLUDE_DIRECTORIES)
 
-  message(STATUS "INCLUDE: ${quickhull_include}")
-
   # Build MegaMol Plugin
   # public header files for installation
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
