@@ -76,12 +76,17 @@ protected:
     virtual bool MouseEvent(float x, float y, core::view::MouseFlags flags);
 
 private:
+    enum ValueMapping {
+        VALUE_MAPPING_KERNEL_BLEND = 0,
+        VALUE_MAPPING_KERNEL_DENSITY,
+        VALUE_MAPPING_WEIGHTED_KERNEL_DENSITY
+    };
     enum GeometryType { GEOMETRY_TYPE_POINT = 0, GEOMETRY_TYPE_LINE, GEOMETRY_TYPE_TEXT, GEOMETRY_TYPE_TRIANGULATION };
     enum KernelType { KERNEL_TYPE_BOX = 0, KERNEL_TYPE_GAUSSIAN };
     enum AxisMode { AXIS_MODE_NONE = 0, AXIS_MODE_MINIMALISTIC, AXIS_MODE_SCIENTIFIC };
 
     struct ParamState {
-        size_t colorIdx;
+        size_t valueIdx;
         size_t labelIdx;
     };
 
@@ -126,9 +131,13 @@ private:
      */
     virtual bool GetExtents(core::view::CallRender2D& call);
 
-    bool isDirty(void) const;
+    bool hasDirtyData(void) const;
 
-    void resetDirty(void);
+    void resetDirtyData(void);
+
+    bool hasDirtyScreen(void) const;
+
+    void resetDirtyScreen(void);
 
     bool validate(void);
 
@@ -137,6 +146,8 @@ private:
     void drawMinimalisticAxis(void);
 
     void drawScientificAxis(void);
+
+    void bindValueUniforms(vislib::graphics::gl::GLSLShader& shader);
 
     void drawPoints(void);
 
@@ -164,7 +175,9 @@ private:
 
     core::CallerSlot flagStorageInSlot;
 
-    core::param::ParamSlot colorSelectorParam;
+    core::param::ParamSlot valueMappingParam;
+
+    core::param::ParamSlot valueSelectorParam;
 
     core::param::ParamSlot labelSelectorParam;
 
@@ -175,8 +188,6 @@ private:
     core::param::ParamSlot kernelWidthParam;
 
     core::param::ParamSlot kernelTypeParam;
-
-    core::param::ParamSlot triangulationSelectorParam;
 
     core::param::ParamSlot triangulationSmoothnessParam;
 
@@ -244,10 +255,15 @@ private:
     bool trianglesValid;
 
     std::unique_ptr<glowl::FramebufferObject> screenFBO;
+    vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> screenLastMVP;
+    bool screenValid;
 
     megamol::core::utility::SDFFont axisFont;
     megamol::core::utility::SDFFont textFont;
     bool textValid;
+
+    std::vector<::megamol::core::param::ParamSlot*> dataParams;
+    std::vector<::megamol::core::param::ParamSlot*> screenParams;
 };
 
 } // end namespace infovis

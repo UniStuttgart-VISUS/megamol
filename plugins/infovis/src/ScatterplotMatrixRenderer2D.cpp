@@ -81,14 +81,13 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     , floatTableInSlot("ftIn", "Float table input")
     , transferFunctionInSlot("tfIn", "Transfer function input")
     , flagStorageInSlot("fsIn", "Flag storage input")
-    , colorSelectorParam("colorSelector", "Sets a color column")
+    , valueMappingParam("valueMappingMode", "Value mapping")
+    , valueSelectorParam("valueSelector", "Sets a value column to as additional domain")
     , labelSelectorParam("labelSelector", "Sets a label column (text mode)")
     , labelSizeParam("labelSize", "Sets the fontsize for labels (text mode)")
     , geometryTypeParam("geometryType", "Geometry type to map data to")
     , kernelWidthParam("kernelWidth", "Kernel width of the geometry, i.e., point size or line width")
     , kernelTypeParam("kernelType", "Kernel function, i.e., box or gaussian kernel")
-    , triangulationSelectorParam("triangulationSelector",
-          "Column to compute the Delaunay triangulation for (linear interpolated scalar field)")
     , triangulationSmoothnessParam("triangulationSmoothness", "Number of iterations to smooth the triangulation")
     , axisModeParam("axisMode", "Axis drawing mode")
     , axisColorParam("axisColor", "Color of axis")
@@ -110,6 +109,7 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     , triangleVertexCount(0)
     , trianglesValid(false)
     , screenFBO(nullptr)
+    , screenValid(false)
     , axisFont("Evolventa-SansSerif", core::utility::SDFFont::RenderType::RENDERTYPE_FILL)
     , textFont("Evolventa-SansSerif", core::utility::SDFFont::RenderType::RENDERTYPE_FILL)
     , textValid(false) {
@@ -122,17 +122,21 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     this->flagStorageInSlot.SetCompatibleCall<core::FlagCallDescription>();
     this->MakeSlotAvailable(&this->flagStorageInSlot);
 
-    this->colorSelectorParam << new core::param::FlexEnumParam("undef");
-    this->MakeSlotAvailable(&this->colorSelectorParam);
+    core::param::EnumParam* valueMappings = new core::param::EnumParam(0);
+    valueMappings->SetTypePair(VALUE_MAPPING_KERNEL_BLEND, "Kernel Blending");
+    valueMappings->SetTypePair(VALUE_MAPPING_KERNEL_DENSITY, "Kernel Density Estimation");
+    valueMappings->SetTypePair(VALUE_MAPPING_WEIGHTED_KERNEL_DENSITY, "Weighted Kernel Density Estimation");
+    this->valueMappingParam << valueMappings;
+    this->MakeSlotAvailable(&this->valueMappingParam);
+
+    this->valueSelectorParam << new core::param::FlexEnumParam("undef");
+    this->MakeSlotAvailable(&this->valueSelectorParam);
 
     this->labelSelectorParam << new core::param::FlexEnumParam("undef");
     this->MakeSlotAvailable(&this->labelSelectorParam);
 
     this->labelSizeParam << new core::param::FloatParam(0.1f, std::numeric_limits<float>::epsilon());
     this->MakeSlotAvailable(&this->labelSizeParam);
-
-    this->triangulationSelectorParam << new core::param::FlexEnumParam("undef");
-    this->MakeSlotAvailable(&this->triangulationSelectorParam);
 
     this->triangulationSmoothnessParam << new core::param::IntParam(0);
     this->MakeSlotAvailable(&this->triangulationSmoothnessParam);
@@ -193,6 +197,30 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
 
     this->alphaAttenuateSubpixelParam << new core::param::BoolParam(false);
     this->MakeSlotAvailable(&this->alphaAttenuateSubpixelParam);
+
+    // Create list of data-sensitive parameters.
+    dataParams.push_back(&this->valueSelectorParam);
+    dataParams.push_back(&this->labelSelectorParam);
+    dataParams.push_back(&this->labelSizeParam);
+    dataParams.push_back(&this->triangulationSmoothnessParam);
+    dataParams.push_back(&this->cellSizeParam);
+    dataParams.push_back(&this->cellMarginParam);
+
+    // Create list of screen-sensitive parameters.
+    screenParams.push_back(&this->valueMappingParam);
+    screenParams.push_back(&this->geometryTypeParam);
+    screenParams.push_back(&this->kernelWidthParam);
+    screenParams.push_back(&this->kernelTypeParam);
+    screenParams.push_back(&this->axisModeParam);
+    screenParams.push_back(&this->axisColorParam);
+    screenParams.push_back(&this->axisWidthParam);
+    screenParams.push_back(&this->axisTicksParam);
+    screenParams.push_back(&this->axisTicksRedundantParam);
+    screenParams.push_back(&this->axisTickLengthParam);
+    screenParams.push_back(&this->axisTickSizeParam);
+    screenParams.push_back(&this->cellNameSizeParam);
+    screenParams.push_back(&this->alphaScalingParam);
+    screenParams.push_back(&this->alphaAttenuateSubpixelParam);
 }
 
 ScatterplotMatrixRenderer2D::~ScatterplotMatrixRenderer2D() { this->Release(); }
@@ -265,6 +293,9 @@ bool ScatterplotMatrixRenderer2D::Render(core::view::CallRender2D& call) {
             this->drawText();
             break;
         }
+
+        this->drawScreen();
+
     } catch (...) {
         return false;
     }
@@ -278,20 +309,30 @@ bool ScatterplotMatrixRenderer2D::GetExtents(core::view::CallRender2D& call) {
     return true;
 }
 
-bool ScatterplotMatrixRenderer2D::isDirty(void) const {
-    return this->colorSelectorParam.IsDirty() || this->labelSelectorParam.IsDirty() || this->labelSizeParam.IsDirty() ||
-           this->triangulationSelectorParam.IsDirty() || this->triangulationSmoothnessParam.IsDirty() ||
-           this->cellSizeParam.IsDirty() || this->cellMarginParam.IsDirty();
+bool ScatterplotMatrixRenderer2D::hasDirtyData(void) const {
+    for (auto* param : this->dataParams) {
+        if (param->IsDirty()) return true;
+    }
+    return false;
 }
 
-void ScatterplotMatrixRenderer2D::resetDirty(void) {
-    this->colorSelectorParam.ResetDirty();
-    this->labelSelectorParam.ResetDirty();
-    this->labelSizeParam.ResetDirty();
-    this->triangulationSelectorParam.ResetDirty();
-    this->triangulationSmoothnessParam.ResetDirty();
-    this->cellSizeParam.ResetDirty();
-    this->cellMarginParam.ResetDirty();
+void ScatterplotMatrixRenderer2D::resetDirtyData(void) {
+    for (auto* param : this->dataParams) {
+        param->ResetDirty();
+    }
+}
+
+bool ScatterplotMatrixRenderer2D::hasDirtyScreen(void) const {
+    for (auto* param : this->screenParams) {
+        if (param->IsDirty()) return true;
+    }
+    return false;
+}
+
+void ScatterplotMatrixRenderer2D::resetDirtyScreen(void) {
+    for (auto* param : this->screenParams) {
+        param->ResetDirty();
+    }
 }
 
 bool ScatterplotMatrixRenderer2D::validate(void) {
@@ -309,26 +350,31 @@ bool ScatterplotMatrixRenderer2D::validate(void) {
     this->transferFunction = this->transferFunctionInSlot.CallAs<megamol::core::view::CallGetTransferFunction>();
     if (this->transferFunction == nullptr || !(*(this->transferFunction))()) return false;
 
-    if (this->dataHash == this->floatTable->DataHash() && !isDirty()) return true;
+    auto mvp = getModelViewProjection();
+    if (hasDirtyScreen() || screenLastMVP != mvp) {
+        this->screenValid = false;
+        resetDirtyScreen();
+        screenLastMVP = mvp;
+    }
+
+    if (this->dataHash == this->floatTable->DataHash() && !hasDirtyData()) return true;
 
     auto columnInfos = this->floatTable->GetColumnsInfos();
     const size_t colCount = this->floatTable->GetColumnsCount();
 
     if (this->dataHash != this->floatTable->DataHash()) {
         // Update dynamic parameters.
-        this->colorSelectorParam.Param<core::param::FlexEnumParam>()->ClearValues();
+        this->valueSelectorParam.Param<core::param::FlexEnumParam>()->ClearValues();
         this->labelSelectorParam.Param<core::param::FlexEnumParam>()->ClearValues();
-        this->triangulationSelectorParam.Param<core::param::FlexEnumParam>()->ClearValues();
         for (size_t i = 0; i < colCount; i++) {
-            this->colorSelectorParam.Param<core::param::FlexEnumParam>()->AddValue(columnInfos[i].Name());
+            this->valueSelectorParam.Param<core::param::FlexEnumParam>()->AddValue(columnInfos[i].Name());
             this->labelSelectorParam.Param<core::param::FlexEnumParam>()->AddValue(columnInfos[i].Name());
-            this->triangulationSelectorParam.Param<core::param::FlexEnumParam>()->AddValue(columnInfos[i].Name());
         }
     }
 
     // Resolve selectors.
-    map.colorIdx =
-        nameToIndex(this->floatTable, this->colorSelectorParam.Param<core::param::FlexEnumParam>()->Value(), 0);
+    map.valueIdx =
+        nameToIndex(this->floatTable, this->valueSelectorParam.Param<core::param::FlexEnumParam>()->Value(), 0);
     map.labelIdx =
         nameToIndex(this->floatTable, this->labelSelectorParam.Param<core::param::FlexEnumParam>()->Value(), 0);
 
@@ -337,7 +383,7 @@ bool ScatterplotMatrixRenderer2D::validate(void) {
     this->updateColumns();
 
     this->dataHash = this->floatTable->DataHash();
-    this->resetDirty();
+    this->resetDirtyData();
 
     return true;
 }
@@ -547,15 +593,29 @@ void ScatterplotMatrixRenderer2D::drawScientificAxis(void) {
     this->axisFont.BatchDrawString();
 }
 
+void ScatterplotMatrixRenderer2D::bindValueUniforms(vislib::graphics::gl::GLSLShader& shader) {
+    auto columnInfos = this->floatTable->GetColumnsInfos();
+    GLfloat valueColumnMinMax[] = {columnInfos[map.valueIdx].MinimumValue(), columnInfos[map.valueIdx].MaximumValue()};
+    glUniform1i(shader.ParameterLocation("valueColumn"), map.valueIdx);
+    glUniform2fv(shader.ParameterLocation("valueColumnMinMax"), 1, valueColumnMinMax);
+
+    glEnable(GL_TEXTURE_1D);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_1D, this->transferFunction->OpenGLTexture());
+    glUniform1i(shader.ParameterLocation("colorTable"), 0);
+    glUniform1i(shader.ParameterLocation("colorCount"), this->transferFunction->TextureSize());
+
+    glUniform1f(this->lineShader.ParameterLocation("alphaScaling"),
+        this->alphaScalingParam.Param<core::param::FloatParam>()->Value());
+}
+
 void ScatterplotMatrixRenderer2D::drawPoints(void) {
+    if (this->screenValid) {
+        return;
+    }
+
     GLfloat viewport[4];
     glGetFloatv(GL_VIEWPORT, viewport);
-
-    // Blending.
-    glEnable(GL_BLEND);
-    glBlendEquation(GL_FUNC_ADD);
-    glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-    glDisable(GL_DEPTH_TEST);
 
     // Point sprites.
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
@@ -563,22 +623,13 @@ void ScatterplotMatrixRenderer2D::drawPoints(void) {
     glPointSize(std::max(viewport[2], viewport[3]));
 
     this->pointShader.Enable();
+    this->bindScreen();
+    this->bindValueUniforms(this->pointShader);
 
     // Transformation uniforms.
     glUniform4fv(this->pointShader.ParameterLocation("viewport"), 1, viewport);
     glUniformMatrix4fv(this->pointShader.ParameterLocation("modelViewProjection"), 1, GL_FALSE,
         getModelViewProjection().PeekComponents());
-
-    // Color map uniforms.
-    auto columnInfos = this->floatTable->GetColumnsInfos();
-    GLfloat colorColumnMinMax[] = {columnInfos[map.colorIdx].MinimumValue(), columnInfos[map.colorIdx].MaximumValue()};
-    glEnable(GL_TEXTURE_1D);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_1D, this->transferFunction->OpenGLTexture());
-    glUniform1i(this->pointShader.ParameterLocation("colorTable"), 0);
-    glUniform1i(this->pointShader.ParameterLocation("colorCount"), this->transferFunction->TextureSize());
-    glUniform1i(this->pointShader.ParameterLocation("colorColumn"), map.colorIdx);
-    glUniform2fv(this->pointShader.ParameterLocation("colorColumnMinMax"), 1, colorColumnMinMax);
 
     // Other uniforms.
     const auto columnCount = this->floatTable->GetColumnsCount();
@@ -587,8 +638,6 @@ void ScatterplotMatrixRenderer2D::drawPoints(void) {
         this->kernelWidthParam.Param<core::param::FloatParam>()->Value());
     glUniform1i(this->pointShader.ParameterLocation("kernelType"),
         this->kernelTypeParam.Param<core::param::EnumParam>()->Value());
-    glUniform1f(this->pointShader.ParameterLocation("alphaScaling"),
-        this->alphaScalingParam.Param<core::param::FloatParam>()->Value());
     glUniform1i(this->pointShader.ParameterLocation("attenuateSubpixel"),
         this->alphaAttenuateSubpixelParam.Param<core::param::BoolParam>()->Value() ? 1 : 0);
 
@@ -619,39 +668,29 @@ void ScatterplotMatrixRenderer2D::drawPoints(void) {
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     glBindTexture(GL_TEXTURE_1D, 0);
-
+    this->unbindScreen();
     this->pointShader.Disable();
 
     glDisable(GL_TEXTURE_1D);
     glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
-    glDisable(GL_BLEND);
-    glEnable(GL_DEPTH_TEST);
 }
 
 void ScatterplotMatrixRenderer2D::drawLines(void) {
+    if (this->screenValid) {
+        return;
+    }
+
     GLfloat viewport[4];
     glGetFloatv(GL_VIEWPORT, viewport);
 
-    // Blending.
-    glEnable(GL_BLEND);
-    glBlendEquation(GL_FUNC_ADD);
-    glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-    glDisable(GL_DEPTH_TEST);
-
     this->lineShader.Enable();
+    this->bindScreen();
+    this->bindValueUniforms(this->lineShader);
 
     // Transformation uniforms.
     glUniform4fv(this->lineShader.ParameterLocation("viewport"), 1, viewport);
     glUniformMatrix4fv(this->lineShader.ParameterLocation("modelViewProjection"), 1, GL_FALSE,
         getModelViewProjection().PeekComponents());
-
-    // Color map uniforms.
-    glEnable(GL_TEXTURE_1D);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_1D, this->transferFunction->OpenGLTexture());
-    glUniform1i(this->lineShader.ParameterLocation("colorTable"), 0);
-    glUniform1i(this->lineShader.ParameterLocation("colorCount"), this->transferFunction->TextureSize());
-    glUniform1i(this->lineShader.ParameterLocation("colorColumn"), map.colorIdx);
 
     // Other uniforms.
     const auto columnCount = this->floatTable->GetColumnsCount();
@@ -660,8 +699,6 @@ void ScatterplotMatrixRenderer2D::drawLines(void) {
         this->kernelWidthParam.Param<core::param::FloatParam>()->Value());
     glUniform1i(this->lineShader.ParameterLocation("kernelType"),
         this->kernelTypeParam.Param<core::param::EnumParam>()->Value());
-    glUniform1f(this->lineShader.ParameterLocation("alphaScaling"),
-        this->alphaScalingParam.Param<core::param::FloatParam>()->Value());
     glUniform1i(this->lineShader.ParameterLocation("attenuateSubpixel"),
         this->alphaAttenuateSubpixelParam.Param<core::param::BoolParam>()->Value() ? 1 : 0);
 
@@ -692,12 +729,10 @@ void ScatterplotMatrixRenderer2D::drawLines(void) {
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     glBindTexture(GL_TEXTURE_1D, 0);
-
+    this->unbindScreen();
     this->lineShader.Disable();
 
     glDisable(GL_TEXTURE_1D);
-    glDisable(GL_BLEND);
-    glEnable(GL_DEPTH_TEST);
 }
 
 struct TriangulationVertex {
@@ -711,8 +746,7 @@ void ScatterplotMatrixRenderer2D::validateTriangulation() {
         return;
     }
     auto rowCount = this->floatTable->GetRowsCount();
-    auto columnIndex =
-        nameToIndex(this->floatTable, this->triangulationSelectorParam.Param<core::param::FlexEnumParam>()->Value(), 0);
+    auto columnIndex = this->map.valueIdx;
     auto columnInfos = this->floatTable->GetColumnsInfos()[columnIndex];
     auto minValue = columnInfos.MinimumValue();
     auto maxValue = columnInfos.MaximumValue();
@@ -798,10 +832,15 @@ void ScatterplotMatrixRenderer2D::validateTriangulation() {
 }
 
 void ScatterplotMatrixRenderer2D::drawTriangulation() {
+    if (this->screenValid) {
+        return;
+    }
+
     this->validateTriangulation();
 
     this->triangleShader.Enable();
     this->bindScreen();
+    this->bindValueUniforms(this->triangleShader);
 
     // Bind buffers.
     glBindBuffer(GL_ARRAY_BUFFER, triangleVBO);
@@ -821,9 +860,6 @@ void ScatterplotMatrixRenderer2D::drawTriangulation() {
     glDrawElements(GL_TRIANGLES, triangleVertexCount, GL_UNSIGNED_INT, 0);
     this->unbindScreen();
     this->triangleShader.Disable();
-
-    // Do the post-processing.
-    this->drawScreen();
 }
 
 void ScatterplotMatrixRenderer2D::bindScreen() {
@@ -833,39 +869,78 @@ void ScatterplotMatrixRenderer2D::bindScreen() {
     if (!this->screenFBO || this->screenFBO->getHeight() != static_cast<int>(viewport[2]) ||
         this->screenFBO->getWidth() != static_cast<int>(viewport[3])) {
         this->screenFBO.reset(new glowl::FramebufferObject(viewport[2], viewport[3]));
-        // this->screenFBO->create(viewport[2] * 2.0f, viewport[3] * 2.0f); // XXXX: el supersampling, hahaha
         this->screenFBO->createColorAttachment(GL_RGBA32F, GL_RGBA, GL_FLOAT);
     }
 
-    // glViewport(viewport[0], viewport[1], viewport[2] * 2.0, viewport[3] * 2.0);
     this->screenFBO->bind();
 
+    // Value mapping.
+    auto valueMapping = this->valueMappingParam.Param<core::param::EnumParam>()->Value();
+    glUniform1i(this->screenShader.ParameterLocation("valueMapping"), valueMapping);
+
+    // Blending.
+    glEnable(GL_BLEND);
+    glBlendEquation(GL_FUNC_ADD);
+    switch (valueMapping) {
+    case VALUE_MAPPING_KERNEL_BLEND:
+        glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+        break;
+    case VALUE_MAPPING_KERNEL_DENSITY:
+        glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ONE);
+        break;
+    case VALUE_MAPPING_WEIGHTED_KERNEL_DENSITY:
+        glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ONE);
+        break;
+    default:
+        assert(false && "Unexpected value");
+    }
+    glDisable(GL_DEPTH_TEST);
+
+    // Clear.
     glClearColor(0.0, 0.0, 0.0, 0.0);
     glClear(GL_COLOR_BUFFER_BIT);
 }
 
 void ScatterplotMatrixRenderer2D::unbindScreen() {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    // glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+
+    glDisable(GL_BLEND);
+    glEnable(GL_DEPTH_TEST);
+
+    this->screenValid = true;
 }
 
 void ScatterplotMatrixRenderer2D::drawScreen() {
     // Enable shader.
     this->screenShader.Enable();
 
-    // glEnable(GL_BLEND);
-    // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDisable(GL_DEPTH_TEST);
 
     glEnable(GL_TEXTURE_2D);
     glActiveTexture(0);
-    glUniform1i(this->screenShader.ParameterLocation("densityTexture"), 0);
+    glUniform1i(this->screenShader.ParameterLocation("screenTexture"), 0);
     this->screenFBO->bindColorbuffer(0);
+
+    // Value mapping.
+    auto valueMapping = this->valueMappingParam.Param<core::param::EnumParam>()->Value();
+    glUniform1i(this->screenShader.ParameterLocation("valueMapping"), valueMapping);
+
+    // Other uniforms.
+    const float contourColor[] = {1.0, 0.0, 0.0, 1.0};                                   // TODO: param
+    const float contourSize = 0.5;                                                       // TODO: param
+    const float contourIsoValues[] = {0.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; // TODO: param
+    const int contourIsoValueCount = 1;                                                  // TODO: infer
+    glUniform4fv(this->screenShader.ParameterLocation("contourColor"), 1, contourColor);
+    glUniform1f(this->screenShader.ParameterLocation("contourSize"), contourSize);
+    glUniform1fv(this->screenShader.ParameterLocation("contourIsoValues"), 10, contourIsoValues);
+    glUniform1i(this->screenShader.ParameterLocation("contourIsoValueCount"), contourIsoValueCount);
 
     // Emit draw call.
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     glBindTexture(GL_TEXTURE_2D, 0);
-    // glDisable(GL_BLEND);
+    glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
 
     this->screenShader.Disable();
@@ -889,7 +964,7 @@ void ScatterplotMatrixRenderer2D::validateText() {
             const float xPos = (xValue - plot.minX) / (plot.maxX - plot.minX);
             const float yPos = (yValue - plot.minY) / (plot.maxY - plot.minY);
 
-            const size_t colorIndex = this->floatTable->GetData(this->map.colorIdx, i);
+            const size_t colorIndex = this->floatTable->GetData(this->map.valueIdx, i);
             float labelColor[4] = {0, 0, 0, 1}; // TODO: param please!
 
             // XXX: this will be a lot more useful when have support for string-columns!
