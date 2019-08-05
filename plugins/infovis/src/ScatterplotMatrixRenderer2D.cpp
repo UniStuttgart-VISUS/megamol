@@ -300,7 +300,11 @@ bool ScatterplotMatrixRenderer2D::validate(void) {
     if (this->floatTable->GetColumnsCount() == 0) return false;
 
     this->flagStorage = this->flagStorageInSlot.CallAs<core::FlagCall>();
-    if (this->flagStorage != nullptr && !(*(this->flagStorage))()) return false;
+    if (this->flagStorage != nullptr) {
+        if (!(*(this->flagStorage))(core::FlagCall::CallMapFlags)) return false;
+
+        if (!(*(this->flagStorage))(core::FlagCall::CallUnmapFlags)) return false;
+    }
 
     this->transferFunction = this->transferFunctionInSlot.CallAs<megamol::core::view::CallGetTransferFunction>();
     if (this->transferFunction == nullptr || !(*(this->transferFunction))()) return false;
