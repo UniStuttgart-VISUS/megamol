@@ -169,18 +169,26 @@ bool RaycastVolumeRenderer::GetExtents(megamol::core::Call& call) {
     auto bb = cd->GetBoundingBoxes();
 
     if (ci != nullptr) {
+        *ci = *cr;
+
         if (!(*ci)(core::view::CallRender3D::FnGetExtents)) return false;
 
-        const auto bb1 = bb.ObjectSpaceBBox();
-        const auto bb2 = ci->GetBoundingBoxes().ObjectSpaceBBox();
+        auto bb1 = bb.ObjectSpaceBBox();
+        bb1.Union(ci->GetBoundingBoxes().ObjectSpaceBBox());
 
-        bb.SetObjectSpaceBBox(std::min(bb1.Left(), bb2.Left()), std::min(bb1.Bottom(), bb2.Bottom()),
-            std::min(bb1.Back(), bb2.Back()), std::min(bb1.Right(), bb2.Right()), std::min(bb1.Top(), bb2.Top()),
-            std::min(bb1.Front(), bb2.Front()));
+        bb.SetObjectSpaceBBox(bb1);
     }
 
+    // there be magic
+    float scaling = bb.ObjectSpaceBBox().LongestEdge();
+    if (scaling > 0.0000001) {
+        scaling = 10.0f / scaling;
+    } else {
+        scaling = 1.0f;
+    }
+    bb.MakeScaledWorld(scaling);
+
     cr->AccessBoundingBoxes() = bb;
-    cr->AccessBoundingBoxes().MakeScaledWorld(1.0f);
 
     return true;
 }
@@ -193,6 +201,8 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
     auto ci = m_renderer_callerSlot.CallAs<megamol::core::view::CallRender3D>();
 
     if (ci != nullptr) {
+        ci->SetCameraParameters(cr->GetCameraParameters());
+
         if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0) {
             if (this->fbo.IsValid()) this->fbo.Release();
             this->fbo.Create(ci->GetViewport().Width(), ci->GetViewport().Height(), GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE,
@@ -238,6 +248,11 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
 
     glUniformMatrix4fv(compute_shdr->ParameterLocation("view_mx"), 1, GL_FALSE, modelViewMatrix_column);
     glUniformMatrix4fv(compute_shdr->ParameterLocation("proj_mx"), 1, GL_FALSE, projMatrix_column);
+
+    const auto cam_near = cr->GetCameraParameters()->NearClip();
+    const auto cam_far = cr->GetCameraParameters()->FarClip();
+    glUniform1f(compute_shdr->ParameterLocation("cam_near"), cam_near);
+    glUniform1f(compute_shdr->ParameterLocation("cam_far"), cam_far);
 
     vec2 rt_resolution;
     rt_resolution[0] = static_cast<float>(m_render_target->getWidth());

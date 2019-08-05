@@ -110,7 +110,7 @@ private:
     core::param::ParamSlot sigmaSlot;
 
     std::vector<std::vector<float>> vol;
-    std::vector<float> directions, colors;
+    std::vector<float> directions, colors, densities;
     std::vector<float> grid;
 
     std::array<stdplugin::datatools::table::TableDataCall::ColumnInfo, 7> info;

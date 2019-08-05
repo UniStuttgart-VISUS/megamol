@@ -14,6 +14,10 @@
 uniform mat4 view_mx;
 uniform mat4 proj_mx;
 
+/* near and far clipping planes */
+uniform float cam_near;
+uniform float cam_far;
+
 /* render targete resolution*/
 uniform vec2 rt_resolution;
 
@@ -89,8 +93,11 @@ float wang_hash(uint seed) {
     return float(seed) / 4294967296.0;
 }
 
-float calculate_depth(vec3 pos, mat4 view_mx, float near, float far) {
-    return (1.0f / (-(view_mx * vec4(pos, 1.0f)).z) - 1.0f / near) / (1.0f / far - 1.0f / near);
+float calculate_depth(vec3 pos, mat4 view_mx, float cam_near, float cam_far) {
+    vec4 view_pos = view_mx * vec4(pos, 1.0f);
+    view_pos /= view_pos.w;
+    
+    return (1.0f / -view_pos.z - 1.0f / cam_near) / (1.0f / cam_far - 1.0f / cam_near);
 }
             ]]>
         </snippet>
@@ -140,8 +147,6 @@ void main() {
         // Compute near and far clipping distance
         const vec4 near_point = inverse(proj_mx) * vec4(0.0f, 0.0f, -1.0f, 1.0f);
         const vec4 far_point = inverse(proj_mx) * vec4(0.0f, 0.0f, 1.0f, 1.0f);
-        const float cam_near = length(near_point.xyz / near_point.w);
-        const float cam_far = length(far_point.xyz / far_point.w);
 
         // Initialize ray start and randomly offset it to prevent ringing artifacts
         float t = tnear >= 0.0f ? tnear : 0.0f;

@@ -168,12 +168,14 @@ bool datatools::ParticlesToDensity::getExtentCallback(megamol::core::Call& c) {
     if (out != nullptr) {
         out->AccessBoundingBoxes().SetObjectSpaceBBox(inMpdc->GetBoundingBoxes().ObjectSpaceBBox());
         out->AccessBoundingBoxes().SetObjectSpaceClipBox(inMpdc->GetBoundingBoxes().ObjectSpaceClipBox());
+        out->AccessBoundingBoxes().MakeScaledWorld(1.0f);
         out->SetFrameCount(inMpdc->FrameCount());
     }
 
     if (outGrid != nullptr) {
         outGrid->AccessBoundingBoxes().SetObjectSpaceBBox(inMpdc->GetBoundingBoxes().ObjectSpaceBBox());
         outGrid->AccessBoundingBoxes().SetObjectSpaceClipBox(inMpdc->GetBoundingBoxes().ObjectSpaceClipBox());
+        outGrid->AccessBoundingBoxes().MakeScaledWorld(1.0f);
         outGrid->SetFrameCount(inMpdc->FrameCount());
     }
 
@@ -219,20 +221,26 @@ bool datatools::ParticlesToDensity::getDataCallback(megamol::core::Call& c) {
         }
     }
 
+    const bool is_vector = this->aggregatorSlot.Param<core::param::EnumParam>()->Value() == 2;
+
     // TODO set data
     if (outVol != nullptr) {
         outVol->SetData(this->vol[0].data());
-        metadata.Components = 1;
+        metadata.Components = is_vector ? 3 : 1;
         metadata.GridType = core::misc::GridType_t::CARTESIAN;
         metadata.Resolution[0] = static_cast<size_t>(this->xResSlot.Param<core::param::IntParam>()->Value());
         metadata.Resolution[1] = static_cast<size_t>(this->yResSlot.Param<core::param::IntParam>()->Value());
         metadata.Resolution[2] = static_cast<size_t>(this->zResSlot.Param<core::param::IntParam>()->Value());
         metadata.ScalarType = core::misc::ScalarType_t::FLOATING_POINT;
         metadata.ScalarLength = sizeof(float);
-        metadata.MinValues = new double[1];
+        metadata.MinValues = new double[is_vector ? 3 : 1];
         metadata.MinValues[0] = this->minDens;
-        metadata.MaxValues = new double[1];
+        if (is_vector) metadata.MinValues[1] = this->minDens;
+        if (is_vector) metadata.MinValues[2] = this->minDens;
+        metadata.MaxValues = new double[is_vector ? 3 : 1];
         metadata.MaxValues[0] = this->maxDens;
+        if (is_vector) metadata.MaxValues[1] = this->maxDens;
+        if (is_vector) metadata.MaxValues[2] = this->maxDens;
         auto bbox = inMpdc->AccessBoundingBoxes().ObjectSpaceBBox();
         metadata.Extents[0] = bbox.Width();
         metadata.Extents[1] = bbox.Height();
@@ -268,7 +276,7 @@ bool datatools::ParticlesToDensity::getDataCallback(megamol::core::Call& c) {
         // inMpdc->Unlock();
     }
 
-    if (outGrid != nullptr && this->aggregatorSlot.Param<core::param::EnumParam>()->Value() == 2) {
+    if (outGrid != nullptr && is_vector) {
         outGrid->SetDataHash(this->datahash);
         outGrid->SetParticleListCount(1);
 
@@ -287,7 +295,7 @@ bool datatools::ParticlesToDensity::getDataCallback(megamol::core::Call& c) {
         }
     }
 
-    if (outInfo != nullptr && this->aggregatorSlot.Param<core::param::EnumParam>()->Value() == 2) {
+    if (outInfo != nullptr && is_vector) {
 
         this->info[0].SetName("PositionX");
         this->info[0].SetType(stdplugin::datatools::table::TableDataCall::ColumnType::QUANTITATIVE);
@@ -582,6 +590,7 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
     if (is_vector) {
         this->directions.resize(vol[0].size());
         this->colors.resize(vol[0].size() / 3);
+        this->densities.resize(vol[0].size() / 3);
         maxDens = 0.0f;
         minDens = std::numeric_limits<float>::max();
         for (std::size_t i = 0; i < vol[0].size() / 3; ++i) {
@@ -610,7 +619,7 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
                           vol[0][i * 3 + 2] * vol[0][i * 3 + 2]);
 
             this->colors[i] = (density - minDens) / (maxDens - minDens);
-            this->vol[0][i] = density;
+            this->densities[i] = density;
 
             if (this->normalizeSlot.Param<core::param::BoolParam>()->Value()) {
                 this->infoData[i * this->info.size() + 6] = (density - minDens) / (maxDens - minDens);
@@ -618,7 +627,6 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
                 this->infoData[i * this->info.size() + 6] = density;
             }
         }
-        this->vol[0].resize(this->vol[0].size() / 3);
     } else {
         maxDens = *std::max_element(vol[0].begin(), vol[0].end());
         minDens = *std::min_element(vol[0].begin(), vol[0].end());
@@ -636,15 +644,14 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
 
     // Remove elements which represent zero-sized vectors
     if (is_vector) {
-        std::vector<std::size_t> indices(this->vol[0].size());
+        std::vector<std::size_t> indices(this->densities.size());
         std::iota(indices.begin(), indices.end(), 0);
 
-        sort_with(std::greater<float>(), this->vol[0], indices);
+        sort_with(std::greater<float>(), this->densities, indices);
 
-        const auto cut_pos = std::find(this->vol[0].begin(), this->vol[0].end(), 0.0f);
-        const auto new_size = std::distance(this->vol[0].begin(), cut_pos);
+        const auto cut_pos = std::find(this->densities.begin(), this->densities.end(), 0.0f);
+        const auto new_size = std::distance(this->densities.begin(), cut_pos);
 
-        std::vector<float> new_vol(this->vol[0].size());
         std::vector<float> new_colors(this->colors.size());
         std::vector<float> new_directions(this->directions.size());
         std::vector<float> new_grid(this->grid.size());
@@ -652,8 +659,6 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
 
         for (std::size_t new_index = 0; new_index < indices.size(); ++new_index) {
             const std::size_t old_index = indices[new_index];
-
-            std::swap(this->vol[0][old_index], new_vol[new_index]);
 
             std::swap(this->colors[old_index], new_colors[new_index]);
 
@@ -676,7 +681,6 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
         new_grid.resize(3 * new_size);
         new_infoData.resize(this->info.size() * new_size);
 
-        this->vol[0] = std::move(new_vol);
         this->colors = std::move(new_colors);
         this->directions = std::move(new_directions);
         this->grid = std::move(new_grid);
