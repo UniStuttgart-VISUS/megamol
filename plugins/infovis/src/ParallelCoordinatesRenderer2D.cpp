@@ -524,17 +524,31 @@ bool ParallelCoordinatesRenderer2D::OnMouseButton(
 }
 
 bool ParallelCoordinatesRenderer2D::OnMouseMove(double x, double y) {
-    mouseX = x;
-    mouseY = y;
+    this->mouseX = x;
+    this->mouseY = y;
 
-    if (ctrlDown) {
+    if (this->ctrlDown) {
         // these clicks go to the view
         return false;
     }
 
-    if (altDown && pickedAxis != -1 && this->leftDown &&
-        (fabs(mousePressedX - mouseX) > this->axisDistance * 0.5f)) {
+    if (this->altDown && this->leftDown && this->pickedAxis != -1) {
         this->dragging = true;
+
+        int currAxis = mouseXtoAxis(this->mouseX);
+        if (currAxis != this->pickedAxis && currAxis >= 0 && currAxis < static_cast<int>(this->columnCount)) {
+            auto pickedAxisIt = std::find(this->axisIndirection.begin(), this->axisIndirection.end(), this->pickedAxis);
+            int pickedIdx = std::distance(this->axisIndirection.begin(), pickedAxisIt);
+            this->axisIndirection.erase(pickedAxisIt);
+
+            auto currAxisIt = std::find(this->axisIndirection.begin(), this->axisIndirection.end(), currAxis);
+            int currIdx = std::distance(this->axisIndirection.begin(), currAxisIt);
+            if (pickedIdx <= currIdx) {
+                currAxisIt++;
+            }
+            this->axisIndirection.insert(currAxisIt, this->pickedAxis);
+        }
+
         return true;
     }
 
@@ -571,36 +585,6 @@ bool ParallelCoordinatesRenderer2D::OnKey(
 void ParallelCoordinatesRenderer2D::drawAxes(void) {
     debugPush(1, "drawAxes");
     if (this->columnCount > 0) {
-
-        // if ((mouseFlags & core::view::MOUSEFLAG_BUTTON_LEFT_DOWN)
-        //	&& (mouseFlags & core::view::MOUSEFLAG_MODKEY_ALT_DOWN)
-        //	&& pickedAxis != -1) {
-        if (dragging) {
-            // we are dragging an axis!
-
-            int currAxis = mouseXtoAxis(mouseX);
-            // printf("trying to drag to axis %i\n", currAxis);
-            if (currAxis != pickedAxis && currAxis >= 0 && currAxis < static_cast<int>(this->columnCount)) {
-                for (auto ax = this->axisIndirection.begin(), e = this->axisIndirection.end(); ax != e; ax++) {
-                    if (*ax == pickedAxis) {
-                        this->axisIndirection.erase(ax);
-                        break;
-                    }
-                }
-                for (auto ax = this->axisIndirection.begin(), e = this->axisIndirection.end(); ax != e; ax++) {
-                    if (*ax == currAxis) {
-                        if (mouseX > mousePressedX) {
-                            ax++;
-                            this->axisIndirection.insert(ax, pickedAxis);
-                        } else {
-                            this->axisIndirection.insert(ax, pickedAxis);
-                        }
-                        break;
-                    }
-                }
-            }
-        }
-
         this->enableProgramAndBind(this->drawAxesProgram);
         glUniform4fv(this->drawAxesProgram.ParameterLocation("color"), 1, this->axesColor);
         glUniform1i(this->drawAxesProgram.ParameterLocation("pickedAxis"), pickedAxis);
