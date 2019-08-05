@@ -284,18 +284,17 @@ int ParallelCoordinatesRenderer2D::mouseXtoAxis(float x) {
 
 void ParallelCoordinatesRenderer2D::pickIndicator(float x, float y, int& axis, int& index) {
     axis = mouseXtoAxis(x);
-    float val = (y - this->marginY) / axisHeight;
-    if (val >= 0.0f && val <= 1.0f && axis != -1) {
-        // float thresh = this->maximums[axis] - this->minimums[axis];
-        // thresh /= 10.0f;
+    index = -1;
+    if (axis != -1) {
+        float val = (y - this->marginY) / this->axisHeight;
         float thresh = 0.1f;
-        // val = relToAbsValue(axis, val);
-        if (fabs(this->filters[axis].upper - val) < thresh) {
+
+        float middle = (this->filters[axis].upper + this->filters[axis].lower) * 0.5f;
+
+        if (fabs(this->filters[axis].upper - val) < thresh && val > middle) {
             index = 1;
         } else if (fabs(this->filters[axis].lower - val) < thresh) {
             index = 0;
-        } else {
-            index = -1;
         }
     }
 }
@@ -553,20 +552,13 @@ bool ParallelCoordinatesRenderer2D::OnMouseMove(double x, double y) {
     }
 
     if (shiftDown && leftDown && filtering) {
-        int checkAxis, checkIndex;
-        pickIndicator(mouseX, mouseY, checkAxis, checkIndex);
-        if (pickedIndicatorAxis != -1 && checkAxis == pickedIndicatorAxis && checkIndex == pickedIndicatorIndex) {
-            float val = (mouseY - this->marginY) / axisHeight;
-            val = (std::max)(0.0f, val);
-            val = (std::min)(val, 1.0f);
-            // if (val >= 0.0f && val <= 1.0f) {
-            // val = relToAbsValue(pickedIndicatorAxis, val);
-            if (pickedIndicatorIndex == 0) {
-                this->filters[pickedIndicatorAxis].lower = val;
-            } else {
-                this->filters[pickedIndicatorAxis].upper = val;
-            }
-            //}
+        float val = (mouseY - this->marginY) / this->axisHeight;
+        if (this->pickedIndicatorIndex == 0) {
+            val = std::clamp(val, 0.0f, this->filters[pickedIndicatorAxis].upper);
+            this->filters[pickedIndicatorAxis].lower = val;
+        } else {
+            val = std::clamp(val, this->filters[pickedIndicatorAxis].lower, 1.0f);
+            this->filters[pickedIndicatorAxis].upper = val;
         }
         return true;
     }
