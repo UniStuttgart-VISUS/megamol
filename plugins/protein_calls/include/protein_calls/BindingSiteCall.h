@@ -210,6 +210,28 @@ namespace protein_calls {
             this->bindingSiteColors = nPtr;
         }
 
+        /**
+         * Sets the enzyme mode flag
+         */
+        inline void SetEnzymeMode(bool mode) {
+            this->enzymeCase = mode;
+        }
+
+        /**
+         * Sets whether the binding site is of a gx type
+         */
+        inline void SetGXTypeFlag(bool isGX) {
+            this->isGxType = isGX;
+        }
+
+        inline bool isEnzymeMode(void) const {
+            return this->enzymeCase;
+        }
+
+        inline bool isOfGxType(void) const {
+            return this->isGxType;
+        }
+
         BindingSiteCall(void);
         virtual ~BindingSiteCall(void);
 
@@ -224,6 +246,10 @@ namespace protein_calls {
         vislib::Array<vislib::StringA> *bindingSiteDescriptions;
         // color table
         vislib::Array<vislib::math::Vector<float, 3> > *bindingSiteColors;
+        /** are we in the special enzyme case? */
+        bool enzymeCase;
+        /** is the current enzyme type the gx type? */
+        bool isGxType;
     };
 
     /** Description class typedef */
