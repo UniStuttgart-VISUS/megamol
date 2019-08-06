@@ -199,6 +199,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::protein::CaverTunnelResidueLoader>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::MSMSCavityFinder>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::TunnelCutter>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein::SombreroMeshRenderer>();
 
         // register calls here:
         this->call_descriptions.RegisterAutoDescription<megamol::protein::SolPathDataCall>();
