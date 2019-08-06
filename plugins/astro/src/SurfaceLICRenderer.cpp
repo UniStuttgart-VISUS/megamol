@@ -4,6 +4,9 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/misc/VolumetricDataCall.h"
 #include "mmcore/param/ColorParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/utility/ScaledBoundingBoxes.h"
 #include "mmcore/view/AbstractCallRender3D.h"
 
 #include "vislib/graphics/gl/GLSLComputeShader.h"
@@ -25,6 +28,10 @@ SurfaceLICRenderer::SurfaceLICRenderer()
     : m_input_renderer("input_renderer", "Renderer producing the surface and depth used for drawing the LIC upon")
     , m_input_velocities("input_velocities", "Grid with velocities")
     , color("color", "Color of the LIC")
+    , stencil_size("stencil_size", "Stencil size for thicker LIC")
+    , num_advections("num_advections", "Number of advection steps")
+    , timestep("timestep", "Timestep for scaling the input velocities")
+    , epsilon("epsilon", "Threshold for detecting coherent structures")
     , m_lic_compute_shdr(nullptr)
     , m_render_to_framebuffer_shdr(nullptr)
     , m_render_target(nullptr) {
@@ -37,6 +44,18 @@ SurfaceLICRenderer::SurfaceLICRenderer()
 
     this->color << new core::param::ColorParam(0.41f, 0.62f, 0.31f, 1.0f);
     this->MakeSlotAvailable(&this->color);
+
+    this->stencil_size << new core::param::IntParam(3);
+    this->MakeSlotAvailable(&this->stencil_size);
+
+    this->num_advections << new core::param::IntParam(10);
+    this->MakeSlotAvailable(&this->num_advections);
+
+    this->timestep << new core::param::FloatParam(1.0f);
+    this->MakeSlotAvailable(&this->timestep);
+
+    this->epsilon << new core::param::FloatParam(0.01f);
+    this->MakeSlotAvailable(&this->epsilon);
 }
 
 SurfaceLICRenderer::~SurfaceLICRenderer() { this->Release(); }
@@ -126,8 +145,8 @@ bool SurfaceLICRenderer::GetExtents(core::Call& call) {
     if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS)) return false;
 
     cr->SetTimeFramesCount(cd->FrameCount());
-    cr->AccessBoundingBoxes() = cd->GetBoundingBoxes();
-    cr->AccessBoundingBoxes().MakeScaledWorld(1.0f);
+    cr->AccessBoundingBoxes() =
+        core::utility::combineAndMagicScaleBoundingBoxes({cd->GetBoundingBoxes(), ci->GetBoundingBoxes()});
 
     return true;
 }
@@ -143,8 +162,24 @@ bool SurfaceLICRenderer::Render(core::Call& call) {
     ci->SetCameraParameters(cr->GetCameraParameters());
 
     if (this->fbo.IsValid()) this->fbo.Release();
-    this->fbo.Create(ci->GetViewport().Width(), ci->GetViewport().Height(), GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE,
-        vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
+
+    std::array<vislib::graphics::gl::FramebufferObject::ColourAttachParams, 2> cap;
+    cap[0].internalFormat = GL_RGBA8;
+    cap[0].format = GL_RGBA;
+    cap[0].type = GL_UNSIGNED_BYTE;
+    cap[1].internalFormat = GL_RGB8;
+    cap[1].format = GL_RGB;
+    cap[1].type = GL_UNSIGNED_BYTE;
+
+    vislib::graphics::gl::FramebufferObject::DepthAttachParams dap;
+    dap.format = GL_DEPTH_COMPONENT24;
+    dap.state = vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE;
+
+    vislib::graphics::gl::FramebufferObject::StencilAttachParams sap;
+    sap.format = GL_STENCIL_INDEX;
+    sap.state = vislib::graphics::gl::FramebufferObject::ATTACHMENT_DISABLED;
+
+    this->fbo.Create(ci->GetViewport().Width(), ci->GetViewport().Height(), cap.size(), cap.data(), dap, sap);
     this->fbo.Enable();
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -202,6 +237,9 @@ bool SurfaceLICRenderer::Render(core::Call& call) {
     // Compute surface LIC
     this->m_lic_compute_shdr->Enable();
 
+    core::utility::glMagicScale scaling;
+    scaling.apply(cr->GetBoundingBoxes());
+
     std::array<GLfloat, 16> mv_matrix, proj_matrix;
     glGetFloatv(GL_MODELVIEW_MATRIX, mv_matrix.data());
     glGetFloatv(GL_PROJECTION_MATRIX, proj_matrix.data());
@@ -213,13 +251,32 @@ bool SurfaceLICRenderer::Render(core::Call& call) {
     glUniform1f(this->m_lic_compute_shdr->ParameterLocation("cam_near"), cam_near);
     glUniform1f(this->m_lic_compute_shdr->ParameterLocation("cam_far"), cam_far);
 
-    std::array<float, 2> rt_resolution;
-    rt_resolution[0] = static_cast<float>(this->m_render_target->getWidth());
-    rt_resolution[1] = static_cast<float>(this->m_render_target->getHeight());
+    const std::array<float, 2> rt_resolution{
+        static_cast<float>(this->m_render_target->getWidth()), static_cast<float>(this->m_render_target->getHeight())};
     glUniform2fv(this->m_lic_compute_shdr->ParameterLocation("rt_resolution"), 1, rt_resolution.data());
+
+    const std::array<float, 3> origin{cr->GetBoundingBoxes().ObjectSpaceBBox().Left(),
+        cr->GetBoundingBoxes().ObjectSpaceBBox().Bottom(), cr->GetBoundingBoxes().ObjectSpaceBBox().Back()};
+    glUniform3fv(this->m_lic_compute_shdr->ParameterLocation("origin"), 1, origin.data());
+
+    const std::array<float, 3> resolution{cr->GetBoundingBoxes().ObjectSpaceBBox().Width(),
+        cr->GetBoundingBoxes().ObjectSpaceBBox().Height(), cr->GetBoundingBoxes().ObjectSpaceBBox().Depth()};
+    glUniform3fv(this->m_lic_compute_shdr->ParameterLocation("resolution"), 1, resolution.data());
 
     glUniform4fv(this->m_lic_compute_shdr->ParameterLocation("lic_color"), 1,
         this->color.Param<core::param::ColorParam>()->Value().data());
+
+    glUniform1i(this->m_lic_compute_shdr->ParameterLocation("stencil"),
+        this->stencil_size.Param<core::param::IntParam>()->Value());
+
+    glUniform1i(this->m_lic_compute_shdr->ParameterLocation("num_advections"),
+        this->num_advections.Param<core::param::IntParam>()->Value());
+
+    glUniform1f(this->m_lic_compute_shdr->ParameterLocation("timestep"),
+        this->timestep.Param<core::param::FloatParam>()->Value());
+
+    glUniform1f(this->m_lic_compute_shdr->ParameterLocation("epsilon"),
+        this->epsilon.Param<core::param::FloatParam>()->Value());
 
     // ...
 
@@ -239,12 +296,19 @@ bool SurfaceLICRenderer::Render(core::Call& call) {
     this->m_noise_texture->bindTexture();
     glUniform1i(this->m_lic_compute_shdr->ParameterLocation("noise_tx2D"), 3);
 
+    glActiveTexture(GL_TEXTURE4);
+    this->fbo.BindColourTexture(1);
+    glUniform1i(this->m_lic_compute_shdr->ParameterLocation("normal_tx2D"), 0);
+
     this->m_render_target->bindImage(0, GL_WRITE_ONLY);
 
     this->m_lic_compute_shdr->Dispatch(
         static_cast<int>(std::ceil(rt_resolution[0] / 8.0f)), static_cast<int>(std::ceil(rt_resolution[1] / 8.0f)), 1);
 
     this->m_lic_compute_shdr->Disable();
+
+    glActiveTexture(GL_TEXTURE4);
+    glBindTexture(GL_TEXTURE_2D, 0);
 
     glActiveTexture(GL_TEXTURE3);
     glBindTexture(GL_TEXTURE_2D, 0);

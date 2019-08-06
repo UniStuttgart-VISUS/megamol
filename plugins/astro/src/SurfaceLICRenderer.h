@@ -423,6 +423,10 @@ private:
 
     /** Parameters */
     core::param::ParamSlot color;
+    core::param::ParamSlot stencil_size;
+    core::param::ParamSlot num_advections;
+    core::param::ParamSlot timestep;
+    core::param::ParamSlot epsilon;
 
     /** Shader */
     std::unique_ptr<vislib::graphics::gl::GLSLComputeShader> m_lic_compute_shdr;
