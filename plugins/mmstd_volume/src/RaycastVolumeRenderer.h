@@ -442,6 +442,7 @@ private:
     std::unique_ptr<vislib::graphics::gl::GLSLShader> m_render_to_framebuffer_shdr;
 
     std::unique_ptr<Texture2D> m_render_target;
+    std::unique_ptr<Texture2D> m_normal_target;
     std::unique_ptr<Texture2D> m_depth_target;
 
     std::unique_ptr<Texture3D> m_volume_texture;

@@ -15,6 +15,7 @@
 #include "mmcore/misc/VolumetricDataCall.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
+#include "mmcore/utility/ScaledBoundingBoxes.h"
 #include "mmcore/view/CallGetTransferFunction.h"
 #include "mmcore/view/CallRender3D.h"
 
@@ -114,6 +115,14 @@ bool RaycastVolumeRenderer::create() {
         {});
     m_render_target = std::make_unique<Texture2D>("raycast_volume_render_target", render_tgt_layout, nullptr);
 
+    // create normal target texture
+    TextureLayout normal_tgt_layout(GL_RGB8, 1920, 1080, 1, GL_RGB, GL_UNSIGNED_BYTE, 1,
+        {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
+            {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
+            {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
+        {});
+    m_normal_target = std::make_unique<Texture2D>("raycast_volume_normal_target", normal_tgt_layout, nullptr);
+
     // create depth target texture
     TextureLayout depth_tgt_layout(GL_R8, 1920, 1080, 1, GL_R, GL_UNSIGNED_BYTE, 1,
         {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
@@ -143,6 +152,7 @@ void RaycastVolumeRenderer::release() {
     m_raycast_volume_compute_shdr.reset(nullptr);
     m_raycast_volume_compute_iso_shdr.reset(nullptr);
     m_render_target.reset(nullptr);
+    m_normal_target.reset(nullptr);
     m_depth_target.reset(nullptr);
     if (this->fbo.IsValid()) this->fbo.Release();
 }
@@ -166,29 +176,17 @@ bool RaycastVolumeRenderer::GetExtents(megamol::core::Call& call) {
 
     cr->SetTimeFramesCount(cd->FrameCount());
 
-    auto bb = cd->GetBoundingBoxes();
+    std::vector<core::BoundingBoxes> bbs{ cd->GetBoundingBoxes() };
 
     if (ci != nullptr) {
         *ci = *cr;
 
         if (!(*ci)(core::view::CallRender3D::FnGetExtents)) return false;
 
-        auto bb1 = bb.ObjectSpaceBBox();
-        bb1.Union(ci->GetBoundingBoxes().ObjectSpaceBBox());
-
-        bb.SetObjectSpaceBBox(bb1);
+        bbs.push_back(ci->GetBoundingBoxes());
     }
-
-    // there be magic
-    float scaling = bb.ObjectSpaceBBox().LongestEdge();
-    if (scaling > 0.0000001) {
-        scaling = 10.0f / scaling;
-    } else {
-        scaling = 1.0f;
-    }
-    bb.MakeScaledWorld(scaling);
-
-    cr->AccessBoundingBoxes() = bb;
+    
+    cr->AccessBoundingBoxes() = core::utility::combineAndMagicScaleBoundingBoxes(bbs);
 
     return true;
 }
@@ -220,6 +218,9 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
     }
 
     // this is the apex of suck and must die
+    core::utility::glMagicScale scaling;
+    scaling.apply(cr->GetBoundingBoxes());
+
     GLfloat modelViewMatrix_column[16];
     glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
     GLfloat projMatrix_column[16];
@@ -248,11 +249,6 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
 
     glUniformMatrix4fv(compute_shdr->ParameterLocation("view_mx"), 1, GL_FALSE, modelViewMatrix_column);
     glUniformMatrix4fv(compute_shdr->ParameterLocation("proj_mx"), 1, GL_FALSE, projMatrix_column);
-
-    const auto cam_near = cr->GetCameraParameters()->NearClip();
-    const auto cam_far = cr->GetCameraParameters()->FarClip();
-    glUniform1f(compute_shdr->ParameterLocation("cam_near"), cam_near);
-    glUniform1f(compute_shdr->ParameterLocation("cam_far"), cam_far);
 
     vec2 rt_resolution;
     rt_resolution[0] = static_cast<float>(m_render_target->getWidth());
@@ -318,7 +314,8 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
     m_render_target->bindImage(0, GL_WRITE_ONLY);
 
     if (this->m_mode.Param<core::param::EnumParam>()->Value() == 1) {
-        m_depth_target->bindImage(1, GL_WRITE_ONLY);
+        m_normal_target->bindImage(1, GL_WRITE_ONLY);
+        m_depth_target->bindImage(2, GL_WRITE_ONLY);
     }
 
     // dispatch compute
@@ -357,17 +354,18 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
 
     if (this->m_mode.Param<core::param::EnumParam>()->Value() == 1) {
         glActiveTexture(GL_TEXTURE1);
+        m_normal_target->bindTexture();
+        glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("normal_tx2D"), 1);
+
+        glActiveTexture(GL_TEXTURE2);
         m_depth_target->bindTexture();
-        glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("depth_tx2D"), 1);
+        glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("depth_tx2D"), 2);
     }
 
     glDrawArrays(GL_TRIANGLES, 0, 6);
 
-    if (this->m_mode.Param<core::param::EnumParam>()->Value() == 1) {
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, 0);
-    }
-
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, 0);
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, 0);
     glActiveTexture(GL_TEXTURE0);

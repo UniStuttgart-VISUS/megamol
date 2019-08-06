@@ -14,10 +14,6 @@
 uniform mat4 view_mx;
 uniform mat4 proj_mx;
 
-/* near and far clipping planes */
-uniform float cam_near;
-uniform float cam_far;
-
 /* render targete resolution*/
 uniform vec2 rt_resolution;
 
@@ -93,11 +89,10 @@ float wang_hash(uint seed) {
     return float(seed) / 4294967296.0;
 }
 
-float calculate_depth(vec3 pos, mat4 view_mx, float cam_near, float cam_far) {
-    vec4 view_pos = view_mx * vec4(pos, 1.0f);
-    view_pos /= view_pos.w;
+float calculate_depth(vec3 pos) {
+    vec4 clip_pos = proj_mx * view_mx * vec4(pos, 1.0f);
     
-    return (1.0f / -view_pos.z - 1.0f / cam_near) / (1.0f / cam_far - 1.0f / cam_near);
+    return ((clip_pos.z / clip_pos.w) + 1.0f) / 2.0f;
 }
             ]]>
         </snippet>
@@ -223,7 +218,7 @@ uniform int use_depth_tx;
                 vec2 pixel_tex_coords = vec2(gID.x / rt_resolution.x, gID.y / rt_resolution.y);
                 const float input_depth = texture(depth_tx2D, pixel_tex_coords).x;
                 
-                const float depth = calculate_depth(pos, view_mx, cam_near, cam_far);
+                const float depth = calculate_depth(pos);
 
                 if (depth > input_depth) {
                     const vec4 color = texture(color_tx2D, pixel_tex_coords);
@@ -261,8 +256,11 @@ uniform float isoValue;
         <snippet name="::RaycastVolumeRenderer::common::output" />
         <snippet type="string">
             <![CDATA[
+/* output normal */
+layout(r32f, binding = 1) writeonly uniform highp image2D normal_target_tx2D;
+
 /* output depth */
-layout(r32f, binding = 1) writeonly uniform highp image2D depth_target_tx2D;
+layout(r32f, binding = 2) writeonly uniform highp image2D depth_target_tx2D;
             ]]>
         </snippet>
         <snippet name="::RaycastVolumeRenderer::common::functionality" />
@@ -294,8 +292,9 @@ vec3 blinnPhong(vec3 n, vec3 l, vec3 v) {
         <snippet name="::RaycastVolumeRenderer::common::ray_generation" />
         <snippet type="string">
             <![CDATA[
-        // Initialize output depth value
+        // Initialize output depth and normal value
         float depth = FLT_MAX;
+        vec3 normal = vec3(0.0f);
 
         // Store value and position from previous step
         vec3 old_pos = ray.o + t * ray.d;
@@ -303,10 +302,10 @@ vec3 blinnPhong(vec3 n, vec3 l, vec3 v) {
 
         while (t < tfar) {
             ]]>
-        </snippet>
-        <snippet name="::RaycastVolumeRenderer::common::ray_step" />
-        <snippet type="string">
-            <![CDATA[
+    </snippet>
+    <snippet name="::RaycastVolumeRenderer::common::ray_step" />
+    <snippet type="string">
+        <![CDATA[
             // Get volume sample
             float vol_sample = texture(volume_tx3D, texCoords).x;
 
@@ -317,7 +316,7 @@ vec3 blinnPhong(vec3 n, vec3 l, vec3 v) {
 
                 const vec3 surface_pos = old_pos + distance * direction;
 
-                depth = calculate_depth(surface_pos, view_mx, cam_near, cam_far);
+                depth = calculate_depth(surface_pos);
 
                 // Compute normal
                 const float left = textureOffset(volume_tx3D, texCoords, ivec3(-1, 0, 0)).x;
@@ -329,7 +328,6 @@ vec3 blinnPhong(vec3 n, vec3 l, vec3 v) {
                 const float front = textureOffset(volume_tx3D, texCoords, ivec3(0, 0, -1)).x;
                 const float back = textureOffset(volume_tx3D, texCoords, ivec3(0, 0, 1)).x;
 
-                vec3 normal;
                 normal.x = (right - left) / (4.0f * halfVoxelSize.x);
                 normal.y = (top - bottom) / (4.0f * halfVoxelSize.y);
                 normal.z = (back - front) / (4.0f * halfVoxelSize.z);
@@ -354,12 +352,14 @@ vec3 blinnPhong(vec3 n, vec3 l, vec3 v) {
         <snippet name="::RaycastVolumeRenderer::common::loop_end" />
         <snippet type="string">
             <![CDATA[
+        imageStore(normal_target_tx2D, pixel_coords, vec4(normal, 0.0f));
         imageStore(depth_target_tx2D, pixel_coords, vec4(depth));
             ]]>
         </snippet>
         <snippet name="::RaycastVolumeRenderer::common::else" />
         <snippet type="string">
             <![CDATA[
+        imageStore(normal_target_tx2D, pixel_coords, vec4(0.0f));
         imageStore(depth_target_tx2D, pixel_coords, vec4(FLT_MAX));
             ]]>
         </snippet>
@@ -396,15 +396,19 @@ void main()
         <snippet name="body" type="string">
             <![CDATA[
 uniform sampler2D src_tx2D;
+uniform sampler2D normal_tx2D;
 uniform sampler2D depth_tx2D;
 
 in vec2 uv_coord;
 
-out vec4 frag_out;
+layout (location = 0) out vec4 frag_out;
+layout (location = 1) out vec4 normal_out;
 
 void main()
 {
     frag_out = texture(src_tx2D, uv_coord);
+    normal_out = texture(normal_tx2D, uv_coord);
+    
     gl_FragDepth = texture(depth_tx2D, uv_coord).x;
 }
             ]]>
