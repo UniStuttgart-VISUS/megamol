@@ -15,6 +15,7 @@
 #include "mmcore/view/CallGetTransferFunction.h"
 #include "mmcore/view/CallRender3D.h"
 #include "mmcore/FlagCall.h"
+#include "mmcore/utility/ScaledBoundingBoxes.h"
 #include "vislib/assert.h"
 
 using namespace megamol::core;
@@ -126,15 +127,7 @@ bool moldyn::ArrowRenderer::GetExtents(Call& call) {
     MultiParticleDataCall* c2 = this->getDataSlot.CallAs<MultiParticleDataCall>();
     if ((c2 != NULL) && ((*c2)(1))) {
         cr->SetTimeFramesCount(c2->FrameCount());
-        cr->AccessBoundingBoxes() = c2->AccessBoundingBoxes();
-
-        float scaling = cr->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
-        if (scaling > 0.0000001) {
-            scaling = 10.0f / scaling;
-        } else {
-            scaling = 1.0f;
-        }
-        cr->AccessBoundingBoxes().MakeScaledWorld(scaling);
+        cr->AccessBoundingBoxes() = core::utility::magicScaleBoundingBoxes(c2->AccessBoundingBoxes());
 
     } else {
         cr->SetTimeFramesCount(1);
@@ -162,18 +155,9 @@ bool moldyn::ArrowRenderer::Render(Call& call) {
     if (cr == NULL) return false;
 
     MultiParticleDataCall *c2 = this->getDataSlot.CallAs<MultiParticleDataCall>();
-    float scaling = 1.0f;
     if (c2 != NULL) {
         c2->SetFrameID(static_cast<unsigned int>(cr->Time()));
         if (!(*c2)(1)) return false;
-
-        // calculate scaling
-        scaling = c2->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
-        if (scaling > 0.0000001) {
-            scaling = 10.0f / scaling;
-        } else {
-            scaling = 1.0f;
-        }
 
         c2->SetFrameID(static_cast<unsigned int>(cr->Time()));
         if (!(*c2)(0)) return false;
@@ -228,7 +212,8 @@ bool moldyn::ArrowRenderer::Render(Call& call) {
     //glUniform4fvARB(this->arrowShader.ParameterLocation("clipDat"), 1, clipDat);
     //glUniform3fvARB(this->arrowShader.ParameterLocation("clipCol"), 1, clipCol);
 
-    glScalef(scaling, scaling, scaling);
+    core::utility::glMagicScale scaling;
+    scaling.apply(cr->GetBoundingBoxes());
 
     if (c2 != NULL) {
         unsigned int cial = glGetAttribLocationARB(this->arrowShader, "colIdx");
