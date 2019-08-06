@@ -41,6 +41,7 @@
 #include "UnstructuredGridRenderer.h"
 #include "VariantMatchRenderer.h"
 #include "VolumeDirectionRenderer.h"
+#include "SombreroMeshRenderer.h"
 
 // 2D renderers
 #include "Diagram2DRenderer.h"
