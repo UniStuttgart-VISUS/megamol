@@ -82,10 +82,6 @@
 #define SPHERE_MIN_OGL_SSBO_STREAM
 #endif // GL_VERSION_4_2
 
-#ifdef GL_VERSION_4_3
-#define SPHERE_FLAG_STORAGE_AVAILABLE
-#endif // GL_VERSION_4_3
-
 #ifdef GL_VERSION_4_5
 #define SPHERE_MIN_OGL_SPLAT
 #define SPHERE_MIN_OGL_BUFFER_ARRAY
@@ -195,11 +191,6 @@ namespace moldyn {
                 retval = false;
             }
 
-#ifndef SPHERE_FLAG_STORAGE_AVAILABLE
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
-                "[SphereRenderer] No flag storage available. OpenGL version 4.3 or greater is required.");
-#endif // SPHERE_FLAG_STORAGE_AVAILABLE
-
             return retval;
         }
 
@@ -290,7 +281,12 @@ namespace moldyn {
 
         RenderMode                               renderMode;
         unsigned int                             greyTF;
-        bool                                     triggerRebuildGBuffer;
+
+        bool                                     flagsEnabled;
+        GLuint                                   flagsBuffer;
+        bool                                     flagsUseSSBO;
+        FlagStorage::FlagVersionType             flagsCurrentVersion;
+        std::shared_ptr<FlagStorage::FlagVectorType> flagsData;
 
         GLSLShader                               sphereShader;
         GLSLGeometryShader                       sphereGeometryShader;
@@ -319,15 +315,9 @@ namespace moldyn {
         bool                                     stateInvalid;
         vislib::math::Vector<float, 2>           ambConeConstants;
         core::utility::MDAOVolumeGenerator      *volGen;
+        bool                                     triggerRebuildGBuffer;
 
         //TimeMeasure                            timer;
-
-        bool                                     flagsEnabled;
-#ifdef SPHERE_FLAG_STORAGE_AVAILABLE
-        // Flag Storage
-        FlagStorage::FlagVersionType             flagsCurrentVersion;
-        GLuint                                   flagsBuffer;
-#endif // SPHERE_FLAG_STORAGE_AVAILABLE
 
 #if defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
         GLuint                                   singleBufferCreationBits;
@@ -517,16 +507,22 @@ namespace moldyn {
          */
         std::shared_ptr<GLSLShader> generateShader(MultiParticleDataCall::Particles &parts);
 
-#ifdef SPHERE_FLAG_STORAGE_AVAILABLE
+        /**
+         * Enable or disable flag storage.
+         *
+         * @param enable     Flag indicating whether flag storage should be anbled or disabled.
+         * @param partsCount The sum of all particles in all particle lists.
+         * @param mpdc       Pointer to the current multi particle data call.
+         */
+        bool flagStorage(bool enable, vislib::graphics::gl::GLSLShader& activeShader, MultiParticleDataCall* mpdc = nullptr);
 
         /**
-         * Update flag storage.
+         * Returns GLSL minor and major version.
          *
-         * @param partsCount The sum of all particles in all particle lists.
+         * @param major The major version of the currently available GLSL version.
+         * @param minor The minor version of the currently available GLSL version.
          */
-        bool getFlagStorage(unsigned int partsCount);
-
-#endif // SPHERE_FLAG_STORAGE_AVAILABLE
+        void getGLSLVersion(int &major, int &minor) const;
 
 #if defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
 
@@ -545,7 +541,6 @@ namespace moldyn {
         void waitSingle(GLsync& syncObj);
 
 #endif // defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
-
 
         // ONLY used for Ambient Occlusion rendering: -------------------------
 

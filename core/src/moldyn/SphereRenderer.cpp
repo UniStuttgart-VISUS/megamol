@@ -44,6 +44,11 @@ moldyn::SphereRenderer::SphereRenderer(void) : view::Renderer3DModule()
     , curMVPtransp()
     , renderMode(RenderMode::SIMPLE)
     , greyTF(0)
+    , flagsEnabled(false)
+    , flagsBuffer(0)
+    , flagsUseSSBO(false)
+    , flagsCurrentVersion(0xFFFFFFFF)
+    , flagsData(nullptr)
     , sphereShader()
     , sphereGeometryShader()
     , lightingShader()
@@ -68,11 +73,6 @@ moldyn::SphereRenderer::SphereRenderer(void) : view::Renderer3DModule()
     , volGen(nullptr)
     , triggerRebuildGBuffer(false)
     // , timer()
-    , flagsEnabled(false)
-#ifdef SPHERE_FLAG_STORAGE_AVAILABLE
-    , flagsCurrentVersion(0xFFFFFFFF)
-    , flagsBuffer(0)
-#endif // SPHERE_FLAG_STORAGE_AVAILABLE
 #if defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
     /// This variant should not need the fence (?)
     // ,singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_COHERENT_BIT);
@@ -175,8 +175,6 @@ moldyn::SphereRenderer::SphereRenderer(void) : view::Renderer3DModule()
 
     this->useHPTexturesSlot << (new core::param::BoolParam(false));
     this->MakeSlotAvailable(&this->useHPTexturesSlot);
-
-    // this->resetResources();
 }
 
 
@@ -340,9 +338,9 @@ bool moldyn::SphereRenderer::resetResources(void) {
     this->colType = SimpleSphericalParticles::ColourDataType::COLDATA_NONE;
     this->vertType = SimpleSphericalParticles::VertexDataType::VERTDATA_NONE;
 
-#ifdef SPHERE_FLAG_STORAGE_AVAILABLE
-    glDeleteBuffers(1, &this->flagsBuffer);
-#endif // SPHERE_FLAG_STORAGE_AVAILABLE
+    if (this->flagsUseSSBO) {
+        glDeleteBuffers(1, &this->flagsBuffer);
+    }
 
     // AMBIENT OCCLUSION
     if (this->isRenderModeAvailable(RenderMode::AMBIENT_OCCLUSION, true)) {
@@ -405,9 +403,17 @@ bool moldyn::SphereRenderer::createResources() {
             (this->getRenderModeString(this->renderMode)).c_str());
     }
 
-#ifdef SPHERE_FLAG_STORAGE_AVAILABLE
-    glGenBuffers(1, &this->flagsBuffer);
-#endif // SPHERE_FLAG_STORAGE_AVAILABLE
+    // Flag Storage
+    int major = -1;
+    int minor = -1;
+    this->flagsUseSSBO = false;
+    this->getGLSLVersion(major, minor);
+    if ((major == 4) && (minor >= 3) || (major > 4)) {
+        this->flagsUseSSBO = true;
+    }
+    if (this->flagsUseSSBO) {
+        glGenBuffers(1, &this->flagsBuffer);
+    }
 
     // Fallback transfer function texture
     glEnable(GL_TEXTURE_1D);
@@ -819,15 +825,6 @@ bool moldyn::SphereRenderer::Render(view::CallRender3D& call) {
     this->stateInvalid = ((hash != this->oldHash) || (frameID != this->oldFrameID));
     this->oldHash = hash;
     this->oldFrameID = frameID;
-
-#ifdef SPHERE_FLAG_STORAGE_AVAILABLE
-    unsigned int partsCount = 0;
-    for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
-        MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
-        partsCount += parts.GetCount();
-    }
-    this->getFlagStorage(partsCount);
-#endif // SPHERE_FLAG_STORAGE_AVAILABLE
 
     glPointSize(static_cast<GLfloat>(std::max(this->curVpWidth, this->curVpHeight)));
 
@@ -1336,9 +1333,7 @@ bool moldyn::SphereRenderer::renderBufferArray(view::CallRender3D* cr3d, MultiPa
 
     this->sphereShader.Enable();
 
-    if (this->flagsEnabled) {
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, this->flagsBuffer);
-    }
+    this->flagStorage(true, this->sphereShader, mpdc);
 
     GLuint vertAttribLoc = glGetAttribLocationARB(this->sphereShader, "inVertex");
     GLuint colAttribLoc = glGetAttribLocationARB(this->sphereShader, "inColor");
@@ -1361,12 +1356,12 @@ bool moldyn::SphereRenderer::renderBufferArray(view::CallRender3D* cr3d, MultiPa
     glUniformMatrix4fv(
         this->sphereShader.ParameterLocation("MVPtransp"), 1, GL_FALSE, this->curMVPtransp.PeekComponents());
 
-    unsigned int partsCount = 0;
+    unsigned int flagPartsCount = 0;
     for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
         MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
 
         if (this->flagsEnabled) {
-            glUniform1ui(this->sphereShader.ParameterLocation("flag_offset"), partsCount);
+            glUniform1ui(this->sphereShader.ParameterLocation("flag_offset"), flagPartsCount);
         }
 
         unsigned int colBytes, vertBytes, colStride, vertStride;
@@ -1420,14 +1415,12 @@ bool moldyn::SphereRenderer::renderBufferArray(view::CallRender3D* cr3d, MultiPa
         glDisableVertexAttribArrayARB(colIdxAttribLoc);
         glDisable(GL_TEXTURE_1D);
 
-        partsCount += parts.GetCount();
+        flagPartsCount += parts.GetCount();
     }
 
     mpdc->Unlock();
 
-    if (this->flagsEnabled) {
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, 0);
-    }
+    this->flagStorage(false, this->sphereShader);
 
     this->sphereShader.Disable();
 
@@ -1932,37 +1925,81 @@ void moldyn::SphereRenderer::getBytesAndStride(MultiParticleDataCall::Particles&
 }
 
 
-#ifdef SPHERE_FLAG_STORAGE_AVAILABLE
+bool moldyn::SphereRenderer::flagStorage(bool enable, vislib::graphics::gl::GLSLShader& activeShader, MultiParticleDataCall* mpdc) {
 
-bool moldyn::SphereRenderer::getFlagStorage(unsigned int partsCount) {
     this->flagsEnabled = false;
 
     auto flagc = getFlagsSlot.CallAs<core::FlagCall>();
-    if ((flagc == nullptr) ||!((*flagc)(core::FlagCall::CallMapFlags))) {
+    if (flagc == nullptr) {
         return false;
     }
 
-    auto version = flagc->GetVersion();
-    if ((version != this->flagsCurrentVersion) || (version == 0)) {
+    if (enable) {
+        if (mpdc == nullptr) {
+            return false;
+        }
+        unsigned int partsCount = 0;
+        for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
+            MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
+            partsCount += parts.GetCount();
+        }
 
+        ((*flagc)(core::FlagCall::CallMapFlags));
         flagc->validateFlagsCount(partsCount);
-        auto flagsvector = flagc->GetFlags();
+        this->flagsData = nullptr;
+        this->flagsData = flagc->GetFlags();
 
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->flagsBuffer);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, partsCount * sizeof(core::FlagStorage::FlagItemType),
-            flagsvector.get()->data(), GL_STATIC_DRAW);
-
-        // give the data back
-        flagc->SetFlags(flagsvector);
-
-        this->flagsCurrentVersion = flagc->GetVersion();
+        auto version = flagc->GetVersion();
+        if (this->flagsUseSSBO) {
+            if ((version != this->flagsCurrentVersion) || (version == 0)) {
+                glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->flagsBuffer);
+                glBufferData(GL_SHADER_STORAGE_BUFFER, partsCount * sizeof(core::FlagStorage::FlagItemType),
+                    this->flagsData.get()->data(), GL_STATIC_DRAW);
+                this->flagsCurrentVersion = flagc->GetVersion();
+            }
+            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, this->flagsBuffer);
+        }
+        else {
+            unsigned int flagAttrib = glGetAttribLocationARB(activeShader, "flags");
+            glEnableVertexAttribArrayARB(flagAttrib);
+            glVertexAttribIPointer(flagAttrib, 1, GL_UNSIGNED_INT, sizeof(core::FlagStorage::FlagItemType), this->flagsData.get()->data());
+        }
         this->flagsEnabled = true;
     }
+    else {
+        flagc->SetFlags(this->flagsData);
+        (*flagc)(core::FlagCall::CallUnmapFlags);
 
-    return (*flagc)(core::FlagCall::CallUnmapFlags);
+        if (this->flagsUseSSBO) {
+            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, 0);
+        }
+        else {
+            unsigned int flagAttrib = glGetAttribLocationARB(activeShader, "flags");
+            glDisableVertexAttribArrayARB(flagAttrib);
+        }
+        this->flagsEnabled = false;
+    }
+
+    return true;
 }
 
-#endif // SPHERE_FLAG_STORAGE_AVAILABLE
+
+void moldyn::SphereRenderer::getGLSLVersion(int &major, int &minor) const {
+    
+    major = -1;
+    minor = -1;
+
+    std::string glslVerStr((char*)glGetString(GL_SHADING_LANGUAGE_VERSION));
+    std::size_t found = glslVerStr.find(".");
+    if (found != std::string::npos) {
+        major = std::atoi(glslVerStr.substr(0, 1).c_str());
+        minor = std::atoi(glslVerStr.substr(found + 1, 1).c_str());
+    }
+    else {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "[SphereRenderer] No valid GL_SHADING_LANGUAGE_VERSION string found: %s", glslVerStr.c_str());
+    }
+}
 
 
 #if defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
