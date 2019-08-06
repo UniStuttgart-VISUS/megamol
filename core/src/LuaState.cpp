@@ -178,8 +178,6 @@ void megamol::core::LuaState::commonInit() {
 
     theLua.RegisterCallback<LuaState, &LuaState::Flush>(MMC_LUA_MMFLUSH, "()\n\tInserts a flush event into graph manipulation queues.");
     theLua.RegisterCallback<LuaState, &LuaState::CurrentScriptPath>(MMC_LUA_MMCURRENTSCRIPTPATH, "()\n\tReturns the path of the currently running script, if possible. Empty string otherwise.");
-
-    theLua.Initialize();
 }
 
 
@@ -204,7 +202,7 @@ megamol::core::LuaState::~LuaState() {
 }
 
 
-bool megamol::core::LuaState::StateOk() { return theLua.OK(); }
+bool megamol::core::LuaState::StateOk() { return true; }
 
 
 std::string megamol::core::LuaState::GetScriptPath(void) { return this->currentScriptPath; }

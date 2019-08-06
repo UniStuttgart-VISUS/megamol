@@ -4,7 +4,7 @@
 #include <fstream>
 #include <functional>
 #include <iostream>
-#include <map>
+#include <vector>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -12,13 +12,31 @@
 #include "vislib/sys/Log.h"
 
 #include "lua.hpp"
-// extern "C" {
-//#include "lauxlib.h"
-//#include "lua.h"
-//#include "lualib.h"
-//}
 
-#define ATTACH_LUA_DEBUGGER
+//#define ATTACH_LUA_DEBUGGER
+//#ifdef ATTACH_LUA_DEBUGGER
+//// you need lua53.dll in your path to actually attach the debugger!
+//luaL_requiref(L, LUA_IOLIBNAME, luaopen_io, 1);
+//lua_pop(L, 1);
+//luaL_requiref(L, LUA_DBLIBNAME, luaopen_debug, 1);
+//lua_pop(L, 1);
+//#endif
+//void attachDebugger() {
+//    static bool first = true;
+//    if (first) {
+//        luaL_dostring(L, "\npackage.cpath = [[T:/Utilities/zerobrane/x64/clibs53/?.dll;]] .. package.cpath\n"
+//                         "package.path = package.path.. "
+//                         "[[;T:/Utilities/zerobrane/lualibs/mobdebug/?.lua;T:/Utilities/zerobrane/lualibs/?.lua]]\n"
+//                         "require('mobdebug').start()\n"
+//                         "print(debug.getinfo(1,'S').source)\n"
+//                         "require('mobdebug').off()\n");
+//        first = false;
+//    } else {
+//        luaL_dostring(L, "require('mobdebug').on()\n"
+//                         "print(debug.getinfo(1,'S').source)\n"
+//                         "require('mobdebug').off()\n");
+//    }
+//}
 
 namespace megamol {
 namespace core {
@@ -29,7 +47,6 @@ template <class C, luaCallbackFunc<C> func> int dispatch(lua_State* L) {
     C* ptr = *static_cast<C**>(lua_getextraspace(L));
     return (ptr->*func)(L);
 }
-
 
 // clang-format off
 #define MMC_LUA_MMLOG "mmLog"
@@ -42,7 +59,7 @@ template <class C, luaCallbackFunc<C> func> int dispatch(lua_State* L) {
 template <class T> class LuaInterpreter {
 public:
 
-    explicit LuaInterpreter(T* t);
+    explicit LuaInterpreter(T* t, std::string const& env = DEFAULT_ENV);
 
     LuaInterpreter(LuaInterpreter const& rhs) = delete;
 
@@ -53,8 +70,6 @@ public:
     LuaInterpreter& operator=(LuaInterpreter&& rhs) = delete;
 
     ~LuaInterpreter(void);
-
-    void Initialize(std::string const& env = DEFAULT_ENV);
 
     /**
      * Load an environment from a file. The environment is a table
@@ -79,20 +94,31 @@ public:
     bool RunString(const std::string& script, std::string& result);
 
     /**
-     * Register callback function to lua state
+     * Register callback function to lua and all environments known to date
      */
     template <class C, luaCallbackFunc<C> func> void RegisterCallback(std::string const& name, std::string const& help) {
-        this->theCallbacks += name + "=" + name + ",";
+        //this->theCallbacks += name + "=" + name + ",";
         this->theHelp += name + help + "\n";
         lua_register(L, name.c_str(), &(dispatch<C, func>));
+        for(auto &x: theEnvironments) {
+            luaL_dostring(L, (x + "." + name + "="+name).c_str());
+        }
     }
 
     void RegisterAlias(std::string const& name, std::string const&alias) {
-        this->theCallbacks += name + "=" + alias + ",";
+        //this->theCallbacks += name + "=" + alias + ",";
+        for(auto &x: theEnvironments) {
+            luaL_dostring(L, (x + "." + alias + "="+name).c_str());
+        }
     }
 
     void RegisterConstant(std::string const &name, uint32_t value) {
-        this->theConstants[name] = value;
+        //this->theConstants[name] = value;
+        lua_pushinteger(L, value);
+        lua_setglobal(L, name.c_str());
+        for(auto &x: theEnvironments) {
+            luaL_dostring(L, (x + "." + name + "="+name).c_str());
+        }
     }
 
     /** print the stack somewhat */
@@ -103,18 +129,8 @@ public:
         lua_error(L);
     }
 
-    bool OK() {
-        return this->initialized; // todo: what can go wrong?
-    }
-
 private:
 
-#ifdef ATTACH_LUA_DEBUGGER
-    const char *dbg = "\npackage.cpath = [[T:/Utilities/zerobrane/x64/clibs53/?.dll;]] .. package.cpath\n"
-        "package.path = package.path.. [[;T:/Utilities/zerobrane/lualibs/mobdebug/?.lua;T:/Utilities/zerobrane/lualibs/?.lua]]\n"
-        "require('mobdebug').start()\n"
-        "print(debug.getinfo(1,'S').source)\n";
-#endif
     static std::string const DEFAULT_ENV;
 
     /** error handler */
@@ -147,13 +163,9 @@ private:
 
     T* that;
 
-    std::string theCallbacks = "";
-
     std::string theHelp;
 
-    std::map<std::string, uint32_t> theConstants;
-
-    bool initialized = false;
+    std::vector<std::string> theEnvironments;
 
     // std::vector<std::function<int(lua_State*)>> registry;
 }; /* end class LuaInterpreter */
@@ -209,9 +221,31 @@ std::string const megamol::core::LuaInterpreter<T>::DEFAULT_ENV =
     "}";
 
 
-template <class T> void LuaInterpreter<T>::Initialize(std::string const &env) {
+//template <class T> void LuaInterpreter<T>::Initialize(std::string const &env) {
+//    USES_CHECK_LUA
+//    // load parts of the environment
+//
+//
+//    auto tmp = env;
+//    std::string envName;
+//    auto end = tmp.find_last_of("}");
+//    tmp.insert(end, theCallbacks);
+//    if (LoadEnviromentString(tmp, envName)) {
+//
+//        if (!this->theConstants.empty()) {
+//            for (auto &c: this->theConstants) {
+//                lua_pushinteger(L, c.second);
+//                lua_setglobal(L, c.first.c_str());
+//            }
+//        }
+//
+//        initialized = true;
+//    }
+//}
 
-    // load parts of the environment
+template <class T> megamol::core::LuaInterpreter<T>::LuaInterpreter(T* t, std::string const& env) : L{luaL_newstate()}, that{t} {
+    *static_cast<T**>(lua_getextraspace(L)) = that;
+
     luaL_requiref(L, "_G", luaopen_base, 1);
     lua_pop(L, 1);
     luaL_requiref(L, LUA_COLIBNAME, luaopen_coroutine, 1);
@@ -227,47 +261,12 @@ template <class T> void LuaInterpreter<T>::Initialize(std::string const &env) {
     luaL_requiref(L, LUA_LOADLIBNAME, luaopen_package, 1);
     lua_pop(L, 1);
 
-#ifdef ATTACH_LUA_DEBUGGER
-    luaL_requiref(L, LUA_IOLIBNAME, luaopen_io, 1);
-    lua_pop(L, 1);
-    luaL_requiref(L, LUA_DBLIBNAME, luaopen_debug, 1);
-    lua_pop(L, 1);
-
-    // you need lua53.dll in your path to do this!!!
-    //USES_CHECK_LUA
-    //CHECK_LUA(luaL_dostring(L, dbg));
-#endif
-
-    auto tmp = env;
     std::string envName;
-    auto end = tmp.find_last_of("}");
-    tmp.insert(end, theCallbacks);
-    if (LoadEnviromentString(tmp, envName)) {
-
-        if (!this->theConstants.empty()) {
-            auto typ = lua_getglobal(L, envName.c_str());
-
-            for (auto &c: this->theConstants) {
-                lua_pushstring(L, c.first.c_str());
-                lua_pushinteger(L, c.second);
-                lua_rawset(L, -3);
-                //lua_pushinteger(L, c.second);
-                //lua_setglobal(L, c.first.c_str());
-            }
-            lua_pop(L, 1);
-        }
-
-        initialized = true;
-    }
-}
-
-template <class T> megamol::core::LuaInterpreter<T>::LuaInterpreter(T* t) : L{luaL_newstate()}, that{t} {
-    *static_cast<T**>(lua_getextraspace(L)) = that;
+    LoadEnviromentString(env, envName);
 
     RegisterCallback<LuaInterpreter, &LuaInterpreter::log>(MMC_LUA_MMLOG, "(int level, ...)\n\tLog to MegaMol console. Level constants are LOGINFO, LOGWARNING, LOGERROR.");
     RegisterCallback<LuaInterpreter, &LuaInterpreter::logInfo>(MMC_LUA_MMLOGINFO, "(...)\n\tLog to MegaMol console with LOGINFO level.");
-    //RegisterCallback<LuaInterpreter, &LuaInterpreter::logInfo>("print", "(...)\n\tLog to MegaMol console with LOGINFO level.");
-    RegisterAlias("print", MMC_LUA_MMLOGINFO);
+    RegisterAlias(MMC_LUA_MMLOGINFO, "print");
     RegisterCallback<LuaInterpreter, &LuaInterpreter::logInfo>(MMC_LUA_MMDEBUGPRINT, "(...)\n\tLog to MegaMol console with LOGINFO level.");
     RegisterCallback<LuaInterpreter, &LuaInterpreter::help>(MMC_LUA_MMHELP, "()\n\tShow this help.");
 
@@ -297,13 +296,14 @@ template <class T> bool megamol::core::LuaInterpreter<T>::LoadEnviromentString(c
         USES_CHECK_LUA;
         auto n = envString.find('=');
         envName = envString.substr(0, n);
-#ifdef ATTACH_LUA_DEBUGGER
-        std::string x = envString;
-        x.append(dbg);
-        CHECK_LUA(luaL_loadbuffer(L, x.c_str(), x.length(), envName.c_str()));
-#else
+        const std::string whitespace = " \t\n";
+        const auto strBegin = envName.find_first_not_of(whitespace);
+        if (strBegin == std::string::npos)
+            return false;
+        const auto strEnd = envName.find_last_not_of(whitespace);
+        const auto strRange = strEnd - strBegin + 1;
+        theEnvironments.push_back(envName.substr(strBegin, strRange));
         CHECK_LUA(luaL_loadbuffer(L, envString.c_str(), envString.length(), envName.c_str()));
-#endif
         CHECK_LUA(lua_pcall(L, 0, LUA_MULTRET, 0));
         return true;
     } else {
@@ -320,7 +320,7 @@ template <class T> bool megamol::core::LuaInterpreter<T>::RunString(const std::s
 template <class T>
 bool megamol::core::LuaInterpreter<T>::RunString(
     const std::string& envName, const std::string& script, std::string& result) {
-    if (L != nullptr && initialized) {
+    if (L != nullptr) {
         luaL_loadbuffer(L, script.c_str(), script.length(), "LuaInterpreter::RunString");
         lua_getglobal(L, envName.c_str());
         lua_setupvalue(
