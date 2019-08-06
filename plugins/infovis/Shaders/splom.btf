@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <btf namespace="splom" type="MegaMolGLSLShader" version="1.0">
+  <include file="core_utils" />
   <namespace name="minimalisticAxis">
     <shader name="vert">
       <snippet type="version">430</snippet>
-      <snippet type="file">splom_mapping.glsl</snippet>
       <snippet type="file">splom_plots.glsl</snippet>
       <snippet type="file">splom_axis_minimalistic.vert</snippet>
     </shader>
@@ -15,7 +15,6 @@
   <namespace name="scientificAxis">
     <shader name="vert">
       <snippet type="version">430</snippet>
-      <snippet type="file">splom_mapping.glsl</snippet>
       <snippet type="file">splom_plots.glsl</snippet>
       <snippet type="file">splom_axis_scientific.vert</snippet>
     </shader>
@@ -27,12 +26,16 @@
   <namespace name="point">
     <shader name="vert">
       <snippet type="version">430</snippet>
+      <snippet name="::core_utils::tflookup" />
+      <snippet name="::core_utils::tfconvenience" />
       <snippet type="file">splom_mapping.glsl</snippet>
       <snippet type="file">splom_plots.glsl</snippet>
       <snippet type="file">splom.vert</snippet>
     </shader>
     <shader name="frag">
       <snippet type="version">430</snippet>
+      <snippet name="::core_utils::tflookup" />
+      <snippet name="::core_utils::tfconvenience" />
       <snippet type="file">splom_mapping.glsl</snippet>
       <snippet type="file">splom_point.frag</snippet>
     </shader>
@@ -40,6 +43,8 @@
   <namespace name="line">
     <shader name="vert">
       <snippet type="version">430</snippet>
+      <snippet name="::core_utils::tflookup" />
+      <snippet name="::core_utils::tfconvenience" />
       <snippet type="file">splom_mapping.glsl</snippet>
       <snippet type="file">splom_plots.glsl</snippet>
       <snippet type="file">splom.vert</snippet>
@@ -50,6 +55,8 @@
     </shader>
     <shader name="frag">
       <snippet type="version">430</snippet>
+      <snippet name="::core_utils::tflookup" />
+      <snippet name="::core_utils::tfconvenience" />
       <snippet type="file">splom_mapping.glsl</snippet>
       <snippet type="file">splom_line.frag</snippet>
     </shader>
@@ -57,11 +64,15 @@
   <namespace name="triangle">
     <shader name="vert">
       <snippet type="version">430</snippet>
+      <snippet name="::core_utils::tflookup" />
+      <snippet name="::core_utils::tfconvenience" />
       <snippet type="file">splom_mapping.glsl</snippet>
       <snippet type="file">splom_triangle.vert</snippet>
     </shader>
     <shader name="frag">
       <snippet type="version">430</snippet>
+      <snippet name="::core_utils::tflookup" />
+      <snippet name="::core_utils::tfconvenience" />
       <snippet type="file">splom_mapping.glsl</snippet>
       <snippet type="file">splom_triangle.frag</snippet>
     </shader>
@@ -73,6 +84,8 @@
     </shader>
     <shader name="frag">
       <snippet type="version">430</snippet>
+      <snippet name="::core_utils::tflookup" />
+      <snippet name="::core_utils::tfconvenience" />
       <snippet type="file">splom_mapping.glsl</snippet>
       <snippet type="file">splom_screen.frag</snippet>
     </shader>

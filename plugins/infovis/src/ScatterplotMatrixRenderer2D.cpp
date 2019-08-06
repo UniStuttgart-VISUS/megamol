@@ -593,20 +593,19 @@ void ScatterplotMatrixRenderer2D::drawScientificAxis(void) {
     this->axisFont.BatchDrawString();
 }
 
-void ScatterplotMatrixRenderer2D::bindValueUniforms(vislib::graphics::gl::GLSLShader& shader) {
+void ScatterplotMatrixRenderer2D::bindMappingUniforms(vislib::graphics::gl::GLSLShader& shader) {
+    auto valueMapping = this->valueMappingParam.Param<core::param::EnumParam>()->Value();
+    glUniform1i(shader.ParameterLocation("valueMapping"), valueMapping);
+
     auto columnInfos = this->floatTable->GetColumnsInfos();
     GLfloat valueColumnMinMax[] = {columnInfos[map.valueIdx].MinimumValue(), columnInfos[map.valueIdx].MaximumValue()};
     glUniform1i(shader.ParameterLocation("valueColumn"), map.valueIdx);
     glUniform2fv(shader.ParameterLocation("valueColumnMinMax"), 1, valueColumnMinMax);
 
-    glEnable(GL_TEXTURE_1D);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_1D, this->transferFunction->OpenGLTexture());
-    glUniform1i(shader.ParameterLocation("colorTable"), 0);
-    glUniform1i(shader.ParameterLocation("colorCount"), this->transferFunction->TextureSize());
+    glUniform1f(
+        shader.ParameterLocation("alphaScaling"), this->alphaScalingParam.Param<core::param::FloatParam>()->Value());
 
-    glUniform1f(this->lineShader.ParameterLocation("alphaScaling"),
-        this->alphaScalingParam.Param<core::param::FloatParam>()->Value());
+    this->transferFunction->BindConvenience(shader, GL_TEXTURE0, 0);
 }
 
 void ScatterplotMatrixRenderer2D::drawPoints(void) {
@@ -623,8 +622,8 @@ void ScatterplotMatrixRenderer2D::drawPoints(void) {
     glPointSize(std::max(viewport[2], viewport[3]));
 
     this->pointShader.Enable();
-    this->bindScreen();
-    this->bindValueUniforms(this->pointShader);
+    this->bindAndClearScreen();
+    this->bindMappingUniforms(this->pointShader);
 
     // Transformation uniforms.
     glUniform4fv(this->pointShader.ParameterLocation("viewport"), 1, viewport);
@@ -684,8 +683,8 @@ void ScatterplotMatrixRenderer2D::drawLines(void) {
     glGetFloatv(GL_VIEWPORT, viewport);
 
     this->lineShader.Enable();
-    this->bindScreen();
-    this->bindValueUniforms(this->lineShader);
+    this->bindAndClearScreen();
+    this->bindMappingUniforms(this->lineShader);
 
     // Transformation uniforms.
     glUniform4fv(this->lineShader.ParameterLocation("viewport"), 1, viewport);
@@ -839,8 +838,8 @@ void ScatterplotMatrixRenderer2D::drawTriangulation() {
     this->validateTriangulation();
 
     this->triangleShader.Enable();
-    this->bindScreen();
-    this->bindValueUniforms(this->triangleShader);
+    this->bindAndClearScreen();
+    this->bindMappingUniforms(this->triangleShader);
 
     // Bind buffers.
     glBindBuffer(GL_ARRAY_BUFFER, triangleVBO);
@@ -862,7 +861,7 @@ void ScatterplotMatrixRenderer2D::drawTriangulation() {
     this->triangleShader.Disable();
 }
 
-void ScatterplotMatrixRenderer2D::bindScreen() {
+void ScatterplotMatrixRenderer2D::bindAndClearScreen() {
     GLfloat viewport[4];
     glGetFloatv(GL_VIEWPORT, viewport);
 
@@ -874,30 +873,25 @@ void ScatterplotMatrixRenderer2D::bindScreen() {
 
     this->screenFBO->bind();
 
-    // Value mapping.
-    auto valueMapping = this->valueMappingParam.Param<core::param::EnumParam>()->Value();
-    glUniform1i(this->screenShader.ParameterLocation("valueMapping"), valueMapping);
-
-    // Blending.
+    // Blending and clear color.
     glEnable(GL_BLEND);
     glBlendEquation(GL_FUNC_ADD);
-    switch (valueMapping) {
+    switch (this->valueMappingParam.Param<core::param::EnumParam>()->Value()) {
     case VALUE_MAPPING_KERNEL_BLEND:
+        // Assuming the View's background color is still set as clear color.
         glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
         break;
     case VALUE_MAPPING_KERNEL_DENSITY:
-        glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ONE);
-        break;
     case VALUE_MAPPING_WEIGHTED_KERNEL_DENSITY:
-        glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ONE);
+        glClearColor(0.0, 0.0, 0.0, 0.0);
+        glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
         break;
     default:
         assert(false && "Unexpected value");
     }
     glDisable(GL_DEPTH_TEST);
 
-    // Clear.
-    glClearColor(0.0, 0.0, 0.0, 0.0);
+    // Clear FBO.
     glClear(GL_COLOR_BUFFER_BIT);
 }
 
@@ -913,22 +907,21 @@ void ScatterplotMatrixRenderer2D::unbindScreen() {
 void ScatterplotMatrixRenderer2D::drawScreen() {
     // Enable shader.
     this->screenShader.Enable();
+    this->bindMappingUniforms(this->screenShader);
 
     glEnable(GL_BLEND);
+    glBlendEquation(GL_FUNC_ADD);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDisable(GL_DEPTH_TEST);
 
+    // Screen texture.
     glEnable(GL_TEXTURE_2D);
-    glActiveTexture(0);
-    glUniform1i(this->screenShader.ParameterLocation("screenTexture"), 0);
+    glActiveTexture(GL_TEXTURE1);
+    glUniform1i(this->screenShader.ParameterLocation("screenTexture"), 1);
     this->screenFBO->bindColorbuffer(0);
 
-    // Value mapping.
-    auto valueMapping = this->valueMappingParam.Param<core::param::EnumParam>()->Value();
-    glUniform1i(this->screenShader.ParameterLocation("valueMapping"), valueMapping);
-
     // Other uniforms.
-    const float contourColor[] = {1.0, 0.0, 0.0, 1.0};                                   // TODO: param
+    const float contourColor[] = {0.0, 1.0, 0.0, 1.0};                                   // TODO: param
     const float contourSize = 0.5;                                                       // TODO: param
     const float contourIsoValues[] = {0.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; // TODO: param
     const int contourIsoValueCount = 1;                                                  // TODO: infer

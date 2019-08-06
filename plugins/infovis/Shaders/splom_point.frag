@@ -12,11 +12,12 @@ float circle2(vec2 p) {
     return length(p) < 0.5 ? 1.0 : 0.0;
 }
 
-// 2D gaussian kernel.
-// Source: http://mathworld.wolfram.com/GaussianFunction.html
+// 2D gaussian kernel, leveled to zero and scaled to be [0.0;1.0].
 float gauss2(vec2 p) {
-    const float sigma = 2.0f;
-    return exp(-(0.5 * dot(p, p))) / (sigma * 2.506628274631000502415765284811);
+    const vec2 x = p * 6.0;
+    const float g = exp(-dot(x, x) * 0.5);
+    const float gAtPlusMinus3 = exp(-4.5);
+    return (g - gAtPlusMinus3) / (1.0 - gAtPlusMinus3);
 }
 
 void main(void) {
@@ -27,7 +28,7 @@ void main(void) {
         density = circle2(distance);
         break;
     case 1:
-        density = gauss2(distance * 6);
+        density = gauss2(distance);
         break;
     default:
         density = 0.0;

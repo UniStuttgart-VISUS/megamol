@@ -9,20 +9,25 @@ in vec2 vsUV;
 
 layout(location = 0) out vec4 fsColor;
 
+float sample1(vec2 uv) {
+    //TODO: +0.5?
+    vec4 screen = texture(screenTexture, uv);
+    return screen.x / screen.w;
+}
+
 mat3 sample3x3(vec2 uv) {
     float dx = 1.0 / textureSize(screenTexture, 0).x;
     float dy = 1.0 / textureSize(screenTexture, 0).y;
-
     return mat3(
-        texture(screenTexture, uv + vec2(-dx, dy)).r,
-        texture(screenTexture, uv + vec2(-dx, 0.0)).r,
-        texture(screenTexture, uv + vec2(-dx, -dy)).r,
-        texture(screenTexture, uv + vec2(0.0, dy)).r,
-        texture(screenTexture, uv).r,
-        texture(screenTexture, uv + vec2(0.0, -dy)).r,
-        texture(screenTexture, uv + vec2(dx, dy)).r,
-        texture(screenTexture, uv + vec2(dx, 0.0)).r,
-        texture(screenTexture, uv + vec2(dx, -dy)).r);
+        sample1(uv + vec2(-dx, dy)),
+        sample1(uv + vec2(-dx, 0.0)),
+        sample1(uv + vec2(-dx, -dy)),
+        sample1(uv + vec2(0.0, dy)),
+        sample1(uv),
+        sample1(uv + vec2(0.0, -dy)),
+        sample1(uv + vec2(dx, dy)),
+        sample1(uv + vec2(dx, 0.0)),
+        sample1(uv + vec2(dx, -dy)));
 }
 
 float blur3x3(mat3 a) {
@@ -43,7 +48,8 @@ float centralDifferences(mat3 a) {
     return magnitude;
 }
 
-float contourLine(mat3 a) {
+float contourLine() {
+    mat3 a = sample3x3(vsUV);
     float density = blur3x3(a);
     float densityGradient = centralDifferences(a);
     float contour = 0.0;
@@ -52,17 +58,18 @@ float contourLine(mat3 a) {
         float distanceToContour = delta / densityGradient;
 
         //XXX: one must not violate smoothing kernel radius >= contour radius, otherwise one will see discontinuities.
-        float size = min(contourSize, 1.5);
+        float size = clamp(contourSize, 0.0, 1.5);
         contour = max(contour, 1.0 - smoothstep(size - 0.5, size + 0.5, distanceToContour));
     }
     return contour;
 }
 
 void main() {
-    mat3 a = sample3x3(vsUV);
-
-    vec4 valueColor = vec4(1.0, 0.0, 0.0, a[1][1]);//TODO: lookup!
-    float contour = contourLine(a);
-
-    fsColor = mix(valueColor, contourColor, contour);
+    vec4 color = fromScreen(texture(screenTexture, vsUV));
+    //vec4 color = vec4(texture(screenTexture, vsUV).w, 0.0, 0.0, 1.0);
+    float contour = 0.0;
+    if (valueMapping > 0) {
+        //contour = contourLine();
+    }
+    fsColor = mix(color, contourColor, contour);
 }

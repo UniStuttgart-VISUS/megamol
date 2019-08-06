@@ -49,7 +49,7 @@ void main() {
     gl_PointSize = vsPixelKernelSize;
 
     vsValue = normalizeValue(values[rowOffset + valueColumn]);
-    vsValueColor = normalizedValueToColor(vsValue);
+    vsValueColor = tflookup(vsValue);
 
     vsPosition = valuesToPosition(plot, 
         vec2(values[rowOffset + plot.indexX],

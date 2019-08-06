@@ -147,7 +147,7 @@ private:
 
     void drawScientificAxis(void);
 
-    void bindValueUniforms(vislib::graphics::gl::GLSLShader& shader);
+    void bindMappingUniforms(vislib::graphics::gl::GLSLShader& shader);
 
     void drawPoints(void);
 
@@ -159,7 +159,7 @@ private:
 
     void unbindScreen();
 
-    void bindScreen();
+    void bindAndClearScreen();
 
     void drawScreen();
 
