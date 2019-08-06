@@ -96,6 +96,7 @@
 #include "ProteinAligner.h"
 #include "ProteinExploder.h"
 #include "SolventCounter.h"
+#include "MSMSCavityFinder.h"
 
 #include "mmcore/versioninfo.h"
 #include "vislib/vislibversion.h"
@@ -194,6 +195,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::protein::MSMSMeshLoader>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::ProteinAligner>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::CaverTunnelResidueLoader>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein::MSMSCavityFinder>();
 
         // register calls here:
         this->call_descriptions.RegisterAutoDescription<megamol::protein::SolPathDataCall>();
