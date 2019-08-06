@@ -139,7 +139,7 @@ private:
 
     void resetDirtyScreen(void);
 
-    bool validate(void);
+    bool validate(core::view::CallRender2D& call);
 
     void updateColumns(void);
 
@@ -216,6 +216,7 @@ private:
     core::param::ParamSlot alphaAttenuateSubpixelParam;
 
     size_t dataHash;
+    unsigned int dataTime;
 
     stdplugin::datatools::table::TableDataCall* floatTable;
 

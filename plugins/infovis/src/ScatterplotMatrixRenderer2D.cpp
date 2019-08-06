@@ -112,7 +112,8 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     , screenValid(false)
     , axisFont("Evolventa-SansSerif", core::utility::SDFFont::RenderType::RENDERTYPE_FILL)
     , textFont("Evolventa-SansSerif", core::utility::SDFFont::RenderType::RENDERTYPE_FILL)
-    , textValid(false) {
+    , textValid(false)
+    , dataTime(0) {
     this->floatTableInSlot.SetCompatibleCall<table::TableDataCallDescription>();
     this->MakeSlotAvailable(&this->floatTableInSlot);
 
@@ -263,7 +264,7 @@ bool ScatterplotMatrixRenderer2D::MouseEvent(float x, float y, core::view::Mouse
 
 bool ScatterplotMatrixRenderer2D::Render(core::view::CallRender2D& call) {
     try {
-        if (!this->validate()) return false;
+        if (!this->validate(call)) return false;
 
         auto axisMode = this->axisModeParam.Param<core::param::EnumParam>()->Value();
         switch (axisMode) {
@@ -304,7 +305,7 @@ bool ScatterplotMatrixRenderer2D::Render(core::view::CallRender2D& call) {
 }
 
 bool ScatterplotMatrixRenderer2D::GetExtents(core::view::CallRender2D& call) {
-    this->validate();
+    this->validate(call);
     call.SetBoundingBox(this->bounds);
     return true;
 }
@@ -335,8 +336,14 @@ void ScatterplotMatrixRenderer2D::resetDirtyScreen(void) {
     }
 }
 
-bool ScatterplotMatrixRenderer2D::validate(void) {
+bool ScatterplotMatrixRenderer2D::validate(core::view::CallRender2D& call) {
     this->floatTable = this->floatTableInSlot.CallAs<table::TableDataCall>();
+
+    if (this->floatTable == nullptr || !(*this->floatTable)(1)) return false;
+    auto ts = this->floatTable->GetFrameCount();
+    call.SetTimeFramesCount(ts);
+    this->floatTable->SetFrameID(static_cast<unsigned int>(call.Time()));
+
     if (this->floatTable == nullptr || !(*(this->floatTable))(0)) return false;
     if (this->floatTable->GetColumnsCount() == 0) return false;
 
@@ -357,7 +364,7 @@ bool ScatterplotMatrixRenderer2D::validate(void) {
         screenLastMVP = mvp;
     }
 
-    if (this->dataHash == this->floatTable->DataHash() && !hasDirtyData()) return true;
+    if (this->dataHash == this->floatTable->DataHash() && ts == this->dataTime && !hasDirtyData()) return true;
 
     auto columnInfos = this->floatTable->GetColumnsInfos();
     const size_t colCount = this->floatTable->GetColumnsCount();
@@ -383,6 +390,7 @@ bool ScatterplotMatrixRenderer2D::validate(void) {
     this->updateColumns();
 
     this->dataHash = this->floatTable->DataHash();
+    this->dataTime = ts;
     this->resetDirtyData();
 
     return true;
