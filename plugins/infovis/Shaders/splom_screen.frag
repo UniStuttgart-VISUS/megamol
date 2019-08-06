@@ -65,10 +65,11 @@ float contourLine() {
 }
 
 void main() {
-    vec4 color = fromScreen(texture(screenTexture, vsUV));
-    //vec4 color = vec4(texture(screenTexture, vsUV).w, 0.0, 0.0, 1.0);
+    vec4 screen = texture(screenTexture, vsUV);
+    vec4 color = fromScreen(screen);
     float contour = 0.0;
-    if (valueMapping > 0) {
+    if (valueMapping > 0 && screen.a > 0.0) {
+        //TODO: cleanup contours.
         //contour = contourLine();
     }
     fsColor = mix(color, contourColor, contour);
