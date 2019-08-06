@@ -68,29 +68,29 @@
 //#include "TimeMeasure.h"
 
 
+// Minimum GLSL version for all render modes
+#define SPHERE_MIN_GLSL_MAJOR 1
+#define SPHERE_MIN_GLSL_MINOR 3
+
 // Minimum OpenGL version for different render modes
 #ifdef GL_VERSION_1_4
 #define SPHERE_MIN_OGL_SIMPLE
 #define SPHERE_MIN_OGL_SIMPLE_CLUSTERED 
 #endif // GL_VERSION_1_4
 
-#ifdef GL_VERSION_3_2
+#ifdef GL_VERSION_3_2 
 #define SPHERE_MIN_OGL_GEOMETRY_SHADER
 #endif // GL_VERSION_3_2
 
-#ifdef GL_VERSION_4_2
+#ifdef GL_VERSION_4_3
 #define SPHERE_MIN_OGL_SSBO_STREAM
-#endif // GL_VERSION_4_2
+#endif // GL_VERSION_4_3
 
 #ifdef GL_VERSION_4_5
 #define SPHERE_MIN_OGL_SPLAT
 #define SPHERE_MIN_OGL_BUFFER_ARRAY
 #define SPHERE_MIN_OGL_AMBIENT_OCCLUSION
 #endif // GL_VERSION_4_5
-
-// Minimum GLSL version for all render modes
-#define SPHERE_MIN_GLSL_MAJOR (int(1))
-#define SPHERE_MIN_GLSL_MINOR (int(3))
 
 
 namespace megamol {
@@ -175,7 +175,7 @@ namespace moldyn {
             }
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
                 "[SphereRenderer] Found GLSL version %d.%d (%s).", major, minor, glslVerStr.c_str());
-            if ((major < (SPHERE_MIN_GLSL_MAJOR)) || (major == (SPHERE_MIN_GLSL_MAJOR) && minor < (SPHERE_MIN_GLSL_MINOR))) {
+            if ((major < (int)(SPHERE_MIN_GLSL_MAJOR)) || (major == (int)(SPHERE_MIN_GLSL_MAJOR) && minor < (int)(SPHERE_MIN_GLSL_MINOR))) {
                 vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, 
                     "[SphereRenderer] No render mode available. OpenGL Shading Language version 1.3 or greater is required.");
                 retval = false; 

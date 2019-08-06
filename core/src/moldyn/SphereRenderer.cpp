@@ -19,8 +19,8 @@ using namespace vislib::graphics::gl;
 #define SSBO_GENERATED_SHADER_INSTANCE  "gl_VertexID" // or "gl_InstanceID"
 #define SSBO_GENERATED_SHADER_ALIGNMENT "packed"
 
-
-const GLuint SSBObindingPoint = 2;
+const GLuint SSBOflagsBindingPoint = 1;
+const GLuint SSBOvertexBindingPoint = 2;
 const GLuint SSBOcolorBindingPoint = 3;
 
 
@@ -403,17 +403,20 @@ bool moldyn::SphereRenderer::createResources() {
             (this->getRenderModeString(this->renderMode)).c_str());
     }
 
+
     // Flag Storage
     int major = -1;
     int minor = -1;
     this->flagsUseSSBO = false;
     this->getGLSLVersion(major, minor);
+    // Check availbility of ssbo flag storage
     if ((major == 4) && (minor >= 3) || (major > 4)) {
         this->flagsUseSSBO = true;
     }
-    if (this->flagsUseSSBO) {
-        glGenBuffers(1, &this->flagsBuffer);
-    }
+    vislib::SmartPtr<ShaderSource::Snippet> flagSnippet;
+    std::string flagDefine = "\n#define FLAG_STORAGE_SSBO\n\n";
+    flagSnippet = new ShaderSource::StringSnippet(flagDefine.c_str());
+
 
     // Fallback transfer function texture
     glEnable(GL_TEXTURE_1D);
@@ -429,11 +432,14 @@ bool moldyn::SphereRenderer::createResources() {
     glBindTexture(GL_TEXTURE_1D, 0);
     glDisable(GL_TEXTURE_1D);
 
+
     try {
         switch (this->renderMode) {
 
         case (RenderMode::SIMPLE):
         case (RenderMode::SIMPLE_CLUSTERED): {
+            this->flagsUseSSBO = false;
+
             vertShaderName = "sphere_simple::vertex";
             fragShaderName = "sphere_simple::fragment";
             if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
@@ -451,6 +457,8 @@ bool moldyn::SphereRenderer::createResources() {
         } break;
 
         case (RenderMode::GEOMETRY_SHADER):
+            this->flagsUseSSBO = false;
+
             this->geoShader = new ShaderSource();
             vertShaderName = "sphere_geo::vertex";
             fragShaderName = "sphere_geo::fragment";
@@ -486,6 +494,9 @@ bool moldyn::SphereRenderer::createResources() {
             if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
                 return false;
             }
+            if (this->flagsUseSSBO) {
+                this->vertShader->Insert(1, flagSnippet);
+            }
             if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
                 return false;
             }
@@ -503,6 +514,10 @@ bool moldyn::SphereRenderer::createResources() {
             if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
                 return false;
             }
+            if (this->flagsUseSSBO) {
+                this->vertShader->Insert(1, flagSnippet);
+            }
+            this->flagsUseSSBO = true;
             if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
                 return false;
             }
@@ -524,6 +539,10 @@ bool moldyn::SphereRenderer::createResources() {
             if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
                 return false;
             }
+            if (this->flagsUseSSBO) {
+                this->vertShader->Insert(1, flagSnippet);
+            }
+            this->flagsUseSSBO = true;
             if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
                 return false;
             }
@@ -560,6 +579,7 @@ bool moldyn::SphereRenderer::createResources() {
             glGenFramebuffers(1, &(this->gBuffer.fbo));
 
             // Build the sphere shader
+            ///TODO: add flagSnippet to vertex shader
             this->rebuildShader();
 
             bool enableAO = this->enableAOSlot.Param<megamol::core::param::BoolParam>()->Value();
@@ -597,6 +617,12 @@ bool moldyn::SphereRenderer::createResources() {
             vislib::sys::Log::LEVEL_ERROR, "Unable to compile sphere shader: Unknown exception\n");
         return false;
     }
+
+    if (this->flagsUseSSBO) {
+        glGenBuffers(1, &this->flagsBuffer);
+    }
+
+    //printf("%s \n", this->vertShader->WholeCode().PeekBuffer());
 
     return true;
 }
@@ -908,6 +934,8 @@ bool moldyn::SphereRenderer::renderSimple(view::CallRender3D* cr3d, MultiParticl
 
     this->sphereShader.Enable();
 
+    this->flagStorage(true, this->sphereShader, mpdc);
+
     GLuint vertAttribLoc = glGetAttribLocationARB(this->sphereShader, "inVertex");
     GLuint colAttribLoc = glGetAttribLocationARB(this->sphereShader, "inColor");
     GLuint colIdxAttribLoc = glGetAttribLocationARB(this->sphereShader, "colIdx");
@@ -929,8 +957,13 @@ bool moldyn::SphereRenderer::renderSimple(view::CallRender3D* cr3d, MultiParticl
     glUniformMatrix4fv(
         this->sphereShader.ParameterLocation("MVPtransp"), 1, GL_FALSE, this->curMVPtransp.PeekComponents());
 
+    unsigned int flagPartsCount = 0;
     for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
         MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
+
+        if (this->flagsEnabled) {
+            glUniform1ui(this->sphereShader.ParameterLocation("flag_offset"), flagPartsCount);
+        }
 
         GLuint vao, vb, cb;
         if (this->renderMode == RenderMode::SIMPLE_CLUSTERED) {
@@ -960,9 +993,13 @@ bool moldyn::SphereRenderer::renderSimple(view::CallRender3D* cr3d, MultiParticl
         glDisableVertexAttribArrayARB(colAttribLoc);
         glDisableVertexAttribArrayARB(colIdxAttribLoc);
         glDisable(GL_TEXTURE_1D);
+
+        flagPartsCount += parts.GetCount();
     }
 
     mpdc->Unlock();
+
+    this->flagStorage(false, this->sphereShader);
 
     this->sphereShader.Disable();
 
@@ -1065,8 +1102,8 @@ bool moldyn::SphereRenderer::renderSSBO(view::CallRender3D* cr3d, MultiParticleD
                     glUniform1i(this->newShader->ParameterLocation("instanceOffset"), 0);
                     auto actualItems = this->bufArray.GetNumItems(x);
                     glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->bufArray.GetHandle(x));
-                    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->bufArray.GetHandle(x));
-                    glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->bufArray.GetHandle(x), 0,
+                    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBOvertexBindingPoint, this->bufArray.GetHandle(x));
+                    glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBOvertexBindingPoint, this->bufArray.GetHandle(x), 0,
                         this->bufArray.GetMaxNumItemsPerChunk() * vertStride);
                     glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(actualItems));
                     this->bufArray.SignalCompletion();
@@ -1076,7 +1113,7 @@ bool moldyn::SphereRenderer::renderSSBO(view::CallRender3D* cr3d, MultiParticleD
                 const GLuint numChunks = this->streamer.SetDataWithSize(
                     parts.GetVertexData(), vertStride, vertStride, parts.GetCount(), 3, (GLuint)(32 * 1024 * 1024)); // 32 MB
                 glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->streamer.GetHandle());
-                glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->streamer.GetHandle());
+                glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBOvertexBindingPoint, this->streamer.GetHandle());
 
                 for (GLuint x = 0; x < numChunks; ++x) {
                     GLuint numItems, sync;
@@ -1088,7 +1125,7 @@ bool moldyn::SphereRenderer::renderSSBO(view::CallRender3D* cr3d, MultiParticleD
                     glUniform1i(this->newShader->ParameterLocation("instanceOffset"), 0);
                     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
                     glBindBufferRange(
-                        GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->streamer.GetHandle(), dstOff, dstLen);
+                        GL_SHADER_STORAGE_BUFFER, SSBOvertexBindingPoint, this->streamer.GetHandle(), dstOff, dstLen);
                     glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(numItems));
                     this->streamer.SignalCompletion(sync);
                 }
@@ -1108,8 +1145,8 @@ bool moldyn::SphereRenderer::renderSSBO(view::CallRender3D* cr3d, MultiParticleD
                     glUniform1i(this->newShader->ParameterLocation("instanceOffset"), 0);
                     auto actualItems = this->bufArray.GetNumItems(x);
                     glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->bufArray.GetHandle(x));
-                    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->bufArray.GetHandle(x));
-                    glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->bufArray.GetHandle(x), 0,
+                    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBOvertexBindingPoint, this->bufArray.GetHandle(x));
+                    glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBOvertexBindingPoint, this->bufArray.GetHandle(x), 0,
                         this->bufArray.GetMaxNumItemsPerChunk() * vertStride);
                     glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->colBufArray.GetHandle(x));
                     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBOcolorBindingPoint, this->colBufArray.GetHandle(x));
@@ -1126,7 +1163,7 @@ bool moldyn::SphereRenderer::renderSSBO(view::CallRender3D* cr3d, MultiParticleD
                 const GLuint colSize = this->colStreamer.SetDataWithItems(parts.GetColourData(), colStride, colStride,
                     parts.GetCount(), 3, this->streamer.GetMaxNumItemsPerChunk());
                 glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->streamer.GetHandle());
-                glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->streamer.GetHandle());
+                glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBOvertexBindingPoint, this->streamer.GetHandle());
                 glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->colStreamer.GetHandle());
                 glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBOcolorBindingPoint, this->colStreamer.GetHandle());
 
@@ -1139,7 +1176,7 @@ bool moldyn::SphereRenderer::renderSSBO(view::CallRender3D* cr3d, MultiParticleD
                     glUniform1i(this->newShader->ParameterLocation("instanceOffset"), 0);
                     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
                     glBindBufferRange(
-                        GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->streamer.GetHandle(), dstOff, dstLen);
+                        GL_SHADER_STORAGE_BUFFER, SSBOvertexBindingPoint, this->streamer.GetHandle(), dstOff, dstLen);
                     glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBOcolorBindingPoint, this->colStreamer.GetHandle(),
                         dstOff2, dstLen2);
                     glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(numItems));
@@ -1188,8 +1225,8 @@ bool moldyn::SphereRenderer::renderSplat(view::CallRender3D* cr3d, MultiParticle
 #endif
 
     glEnable(GL_POINT_SPRITE);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, theSingleBuffer);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->theSingleBuffer);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->theSingleBuffer);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBOvertexBindingPoint, this->theSingleBuffer);
 
     // currBuf = 0;
     for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
@@ -1296,7 +1333,7 @@ bool moldyn::SphereRenderer::renderSplat(view::CallRender3D* cr3d, MultiParticle
                 // this->theSingleBuffer, reinterpret_cast<const void *>(currCol - whence));
                 // glBindBuffer(GL_ARRAY_BUFFER, 0);
                 glBindBufferRange(
-                    GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->theSingleBuffer, bufSize * currBuf, bufSize);
+                    GL_SHADER_STORAGE_BUFFER, SSBOvertexBindingPoint, this->theSingleBuffer, bufSize * currBuf, bufSize);
                 glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(vertsThisTime));
                 // glDrawArraysInstanced(GL_POINTS, 0, 1, vertsThisTime);
                 this->lockSingle(fences[currBuf]);
@@ -1859,7 +1896,7 @@ std::shared_ptr<vislib::graphics::gl::GLSLShader> moldyn::SphereRenderer::genera
             }
             decl += "};\n";
 
-            decl += "layout(" SSBO_GENERATED_SHADER_ALIGNMENT ", binding = " + std::to_string(SSBObindingPoint) +
+            decl += "layout(" SSBO_GENERATED_SHADER_ALIGNMENT ", binding = " + std::to_string(SSBOvertexBindingPoint) +
                 ") buffer shader_data {\n"
                 "    SphereParams theBuffer[];\n"
                 // flat float version
@@ -1876,7 +1913,7 @@ std::shared_ptr<vislib::graphics::gl::GLSLShader> moldyn::SphereRenderer::genera
             decl += "\nstruct SphereColParams {\n" + colDecl;
             decl += "};\n";
 
-            decl += "layout(" SSBO_GENERATED_SHADER_ALIGNMENT ", binding = " + std::to_string(SSBObindingPoint) +
+            decl += "layout(" SSBO_GENERATED_SHADER_ALIGNMENT ", binding = " + std::to_string(SSBOvertexBindingPoint) +
                 ") buffer shader_data {\n"
                 "    SpherePosParams thePosBuffer[];\n"
                 "};\n";
@@ -1946,18 +1983,20 @@ bool moldyn::SphereRenderer::flagStorage(bool enable, vislib::graphics::gl::GLSL
 
         ((*flagc)(core::FlagCall::CallMapFlags));
         flagc->validateFlagsCount(partsCount);
+
         this->flagsData = nullptr;
         this->flagsData = flagc->GetFlags();
 
         auto version = flagc->GetVersion();
         if (this->flagsUseSSBO) {
+
             if ((version != this->flagsCurrentVersion) || (version == 0)) {
                 glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->flagsBuffer);
                 glBufferData(GL_SHADER_STORAGE_BUFFER, partsCount * sizeof(core::FlagStorage::FlagItemType),
                     this->flagsData.get()->data(), GL_STATIC_DRAW);
                 this->flagsCurrentVersion = flagc->GetVersion();
             }
-            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, this->flagsBuffer);
+            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBOflagsBindingPoint, this->flagsBuffer);
         }
         else {
             unsigned int flagAttrib = glGetAttribLocationARB(activeShader, "flags");
@@ -1967,9 +2006,6 @@ bool moldyn::SphereRenderer::flagStorage(bool enable, vislib::graphics::gl::GLSL
         this->flagsEnabled = true;
     }
     else {
-        flagc->SetFlags(this->flagsData);
-        (*flagc)(core::FlagCall::CallUnmapFlags);
-
         if (this->flagsUseSSBO) {
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, 0);
         }
@@ -1977,6 +2013,9 @@ bool moldyn::SphereRenderer::flagStorage(bool enable, vislib::graphics::gl::GLSL
             unsigned int flagAttrib = glGetAttribLocationARB(activeShader, "flags");
             glDisableVertexAttribArrayARB(flagAttrib);
         }
+
+        flagc->SetFlags(this->flagsData);
+        (*flagc)(core::FlagCall::CallUnmapFlags);
         this->flagsEnabled = false;
     }
 
