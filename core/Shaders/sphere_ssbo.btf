@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <btf type="MegaMolGLSLShader" version="1.0" namespace="sphere_ssbo">
     
+    <include file="flag_storage"/>
+
     <shader name="vertex">
-        <snippet type="version">150</snippet>
+        <snippet type="version">430</snippet>
         <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>
+        <snippet name="flag_storage::vert_attributes"/>          
         <snippet name="Attributes"       type="file">sphere/ssbosphere_vert_attributes.glsl</snippet>
         <snippet name="MainParams"       type="file">sphere/ssbosphere_vert_mainparams.glsl</snippet>
         <snippet name="MainStart"        type="file">sphere/ssbosphere_vert_mainstart.glsl</snippet>
@@ -11,6 +14,7 @@
         <snippet name="ClippingPlane"    type="file">sphere/simple_vert_clipping.glsl</snippet>
         <snippet name="SphereTouchPlane" type="file">sphere/simple_vert_spheretouchplane.glsl</snippet>
         <snippet name="PosOutput"        type="file">sphere/simple_vert_posout.glsl</snippet>
+        <snippet name="flag_storage::vert_code"/>           
         <snippet name="MainEnd"          type="file">sphere/simple_vert_mainend.glsl</snippet>
     </shader>
 

@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <btf type="MegaMolGLSLShader" version="1.0" namespace="sphere_geo">
 
+    <include file="flag_storage"/>
+
     <shader name="vertex">
         <snippet type="version">130</snippet>
         <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>
+        <snippet name="flag_storage::vert_attributes"/>          
         <snippet name="Attributes"       type="file">sphere/geosphere_vert_attributes.glsl</snippet>
         <snippet name="Main"             type="file">sphere/geosphere_vert_main.glsl</snippet>
     </shader>

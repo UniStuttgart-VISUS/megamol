@@ -438,8 +438,6 @@ bool moldyn::SphereRenderer::createResources() {
 
         case (RenderMode::SIMPLE):
         case (RenderMode::SIMPLE_CLUSTERED): {
-            this->flagsUseSSBO = false;
-
             vertShaderName = "sphere_simple::vertex";
             fragShaderName = "sphere_simple::fragment";
             if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
@@ -451,14 +449,13 @@ bool moldyn::SphereRenderer::createResources() {
             if (!this->sphereShader.Create(this->vertShader->Code(), this->vertShader->Count(),
                 this->fragShader->Code(), this->fragShader->Count())) {
                 vislib::sys::Log::DefaultLog.WriteMsg(
-                    vislib::sys::Log::LEVEL_ERROR, "Unable to compile sphere shader: Unknown error\n");
+                    vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Unable to compile sphere shader: Unknown error\n");
                 return false;
             }
+            this->flagsUseSSBO = false;
         } break;
 
-        case (RenderMode::GEOMETRY_SHADER):
-            this->flagsUseSSBO = false;
-
+        case (RenderMode::GEOMETRY_SHADER): {
             this->geoShader = new ShaderSource();
             vertShaderName = "sphere_geo::vertex";
             fragShaderName = "sphere_geo::fragment";
@@ -476,19 +473,19 @@ bool moldyn::SphereRenderer::createResources() {
                 this->geoShader->Code(), this->geoShader->Count(), this->fragShader->Code(),
                 this->fragShader->Count())) {
                 vislib::sys::Log::DefaultLog.WriteMsg(
-                    vislib::sys::Log::LEVEL_ERROR, "Unable to compile sphere geometry shader: Unknown error\n");
+                    vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Unable to compile sphere geometry shader: Unknown error\n");
                 return false;
             }
             if (!this->sphereGeometryShader.Link()) {
                 vislib::sys::Log::DefaultLog.WriteMsg(
-                    vislib::sys::Log::LEVEL_ERROR, "Unable to link sphere geometry shader: Unknown error\n");
+                    vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Unable to link sphere geometry shader: Unknown error\n");
                 return false;
             }
-            break;
+            this->flagsUseSSBO = false;
+        } break;
 
-        case (RenderMode::SSBO_STREAM):
+        case (RenderMode::SSBO_STREAM): {
             this->useStaticDataParam.Param<param::BoolParam>()->SetGUIVisible(true);
-
             vertShaderName = "sphere_ssbo::vertex";
             fragShaderName = "sphere_ssbo::fragment";
             if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
@@ -503,12 +500,11 @@ bool moldyn::SphereRenderer::createResources() {
             glGenVertexArrays(1, &this->vertArray);
             glBindVertexArray(this->vertArray);
             glBindVertexArray(0);
-            break;
+        } break;
 
-        case (RenderMode::SPLAT):
+        case (RenderMode::SPLAT): {
             this->alphaScalingParam.Param<param::FloatParam>()->SetGUIVisible(true);
             this->attenuateSubpixelParam.Param<param::BoolParam>()->SetGUIVisible(true);
-
             vertShaderName = "sphere_splat::vertex";
             fragShaderName = "sphere_splat::fragment";
             if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
@@ -517,7 +513,6 @@ bool moldyn::SphereRenderer::createResources() {
             if (this->flagsUseSSBO) {
                 this->vertShader->Insert(1, flagSnippet);
             }
-            this->flagsUseSSBO = true;
             if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
                 return false;
             }
@@ -531,9 +526,9 @@ bool moldyn::SphereRenderer::createResources() {
                 this->theSingleBuffer, 0, this->bufSize * this->numBuffers, singleBufferMappingBits);
             glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
             glBindVertexArray(0);
-            break;
+        } break;
 
-        case (RenderMode::BUFFER_ARRAY):
+        case (RenderMode::BUFFER_ARRAY): {
             vertShaderName = "sphere_bufferarray::vertex";
             fragShaderName = "sphere_bufferarray::fragment";
             if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
@@ -542,14 +537,13 @@ bool moldyn::SphereRenderer::createResources() {
             if (this->flagsUseSSBO) {
                 this->vertShader->Insert(1, flagSnippet);
             }
-            this->flagsUseSSBO = true;
             if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
                 return false;
             }
             if (!this->sphereShader.Create(this->vertShader->Code(), this->vertShader->Count(),
                 this->fragShader->Code(), this->fragShader->Count())) {
                 vislib::sys::Log::DefaultLog.WriteMsg(
-                    vislib::sys::Log::LEVEL_ERROR, "Unable to compile sphere shader: Unknown error\n");
+                    vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Unable to compile sphere shader: Unknown error\n");
                 return false;
             }
             glGenVertexArrays(1, &this->vertArray);
@@ -561,7 +555,7 @@ bool moldyn::SphereRenderer::createResources() {
                 this->theSingleBuffer, 0, this->bufSize * this->numBuffers, singleBufferMappingBits);
             glBindBuffer(GL_ARRAY_BUFFER, 0);
             glBindVertexArray(0);
-            break;
+        }  break;
 
         case (RenderMode::AMBIENT_OCCLUSION): {
             this->enableLightingSlot.Param<megamol::core::param::BoolParam>()->SetGUIVisible(true);
@@ -602,26 +596,25 @@ bool moldyn::SphereRenderer::createResources() {
     }
     catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-            "Unable to compile sphere shader (@%s): %s\n",
+            "[SphereRenderer] Unable to compile sphere shader (@%s): %s\n",
             vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         return false;
     }
     catch (vislib::Exception e) {
         vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "Unable to compile sphere shader: %s\n", e.GetMsgA());
+            vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Unable to compile sphere shader: %s\n", e.GetMsgA());
         return false;
     }
     catch (...) {
         vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "Unable to compile sphere shader: Unknown exception\n");
+            vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Unable to compile sphere shader: Unknown exception\n");
         return false;
     }
 
     if (this->flagsUseSSBO) {
         glGenBuffers(1, &this->flagsBuffer);
     }
-
     //printf("%s \n", this->vertShader->WholeCode().PeekBuffer());
 
     return true;
@@ -1015,6 +1008,7 @@ bool moldyn::SphereRenderer::renderSSBO(view::CallRender3D* cr3d, MultiParticleD
 #endif
 
     // currBuf = 0;
+    unsigned int flagPartsCount = 0;
     for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
         MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
 
@@ -1023,6 +1017,11 @@ bool moldyn::SphereRenderer::renderSSBO(view::CallRender3D* cr3d, MultiParticleD
         }
 
         this->newShader->Enable();
+
+        this->flagStorage(true, *this->newShader, mpdc);
+        if (this->flagsEnabled) {
+            glUniform1ui(this->sphereShader.ParameterLocation("flag_offset"), flagPartsCount);
+        }
 
         glUniform4fv(this->newShader->ParameterLocation("viewAttr"), 1, this->curViewAttrib);
         glUniform3fv(
@@ -1121,7 +1120,7 @@ bool moldyn::SphereRenderer::renderSSBO(view::CallRender3D* cr3d, MultiParticleD
                     this->streamer.UploadChunk(x, numItems, sync, dstOff, dstLen);
                     // streamer.UploadChunk<float, float>(x, [](float f) -> float { return f + 100.0; },
                     //    numItems, sync, dstOff, dstLen);
-                    // vislib::sys::Log::DefaultLog.WriteInfo("uploading chunk %u at %lu len %lu", x, dstOff, dstLen);
+                    // vislib::sys::Log::DefaultLog.WriteInfo("[SphereRenderer] Uploading chunk %u at %lu len %lu", x, dstOff, dstLen);
                     glUniform1i(this->newShader->ParameterLocation("instanceOffset"), 0);
                     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
                     glBindBufferRange(
@@ -1189,6 +1188,9 @@ bool moldyn::SphereRenderer::renderSSBO(view::CallRender3D* cr3d, MultiParticleD
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
         glDisable(GL_TEXTURE_1D);
 
+        this->flagStorage(false, *this->newShader);
+        flagPartsCount += parts.GetCount();
+
         this->newShader->Disable();
 
 #ifdef CHRONOTIMING
@@ -1229,6 +1231,7 @@ bool moldyn::SphereRenderer::renderSplat(view::CallRender3D* cr3d, MultiParticle
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBOvertexBindingPoint, this->theSingleBuffer);
 
     // currBuf = 0;
+    unsigned int flagPartsCount = 0;
     for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
         MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
 
@@ -1237,6 +1240,11 @@ bool moldyn::SphereRenderer::renderSplat(view::CallRender3D* cr3d, MultiParticle
         }
 
         this->newShader->Enable();
+
+        this->flagStorage(true, *this->newShader, mpdc);
+        if (this->flagsEnabled) {
+            glUniform1ui(this->sphereShader.ParameterLocation("flag_offset"), flagPartsCount);
+        }
 
         glUniform4fv(this->newShader->ParameterLocation("viewAttr"), 1, this->curViewAttrib);
         glUniform3fv(
@@ -1321,7 +1329,7 @@ bool moldyn::SphereRenderer::renderSplat(view::CallRender3D* cr3d, MultiParticle
                 const char* whence = currVert < currCol ? currVert : currCol;
                 UINT64 vertsThisTime = vislib::math::Min(parts.GetCount() - vertCounter, numVerts);
                 this->waitSingle(this->fences[currBuf]);
-                // vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "memcopying %u bytes from %016"
+                // vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Memcopying %u bytes from %016"
                 // PRIxPTR " to %016" PRIxPTR "\n", vertsThisTime * vertStride, whence, mem);
                 memcpy(mem, whence, vertsThisTime * vertStride);
                 glFlushMappedNamedBufferRange(theSingleBuffer, bufSize * currBuf, vertsThisTime * vertStride);
@@ -1347,11 +1355,14 @@ bool moldyn::SphereRenderer::renderSplat(view::CallRender3D* cr3d, MultiParticle
         }
         else {
             vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_ERROR, "Splat mode does not support not interleaved data so far ...");
+                vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Splat mode does not support not interleaved data so far ...");
         }
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
         glDisable(GL_TEXTURE_1D);
+
+        this->flagStorage(false, *this->newShader);
+        flagPartsCount += parts.GetCount();
 
         newShader->Disable();
     }
@@ -1421,7 +1432,7 @@ bool moldyn::SphereRenderer::renderBufferArray(view::CallRender3D* cr3d, MultiPa
                 const char* whence = currVert < currCol ? currVert : currCol;
                 UINT64 vertsThisTime = vislib::math::Min(parts.GetCount() - vertCounter, numVerts);
                 this->waitSingle(this->fences[this->currBuf]);
-                // vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "memcopying %u bytes from %016"
+                // vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Memcopying %u bytes from %016"
                 // PRIxPTR " to %016" PRIxPTR "\n", vertsThisTime * vertStride, whence, mem);
                 memcpy(mem, whence, vertsThisTime * vertStride);
                 glFlushMappedNamedBufferRange(
@@ -1442,7 +1453,7 @@ bool moldyn::SphereRenderer::renderBufferArray(view::CallRender3D* cr3d, MultiPa
         }
         else {
             vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_ERROR, "BufferArray mode does not support not interleaved data so far ...");
+                vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] BufferArray mode does not support not interleaved data so far ...");
         }
 
         // Reset states set in setPointers()
@@ -1478,6 +1489,8 @@ bool moldyn::SphereRenderer::renderGeometryShader(view::CallRender3D* cr3d, Mult
 
     this->sphereGeometryShader.Enable();
 
+    this->flagStorage(true, this->sphereGeometryShader, mpdc);
+
     GLuint vertAttribLoc = glGetAttribLocationARB(this->sphereGeometryShader, "inVertex");
     GLuint colAttribLoc = glGetAttribLocationARB(this->sphereGeometryShader, "inColor");
     GLuint colIdxAttribLoc = glGetAttribLocationARB(this->sphereGeometryShader, "colIdx");
@@ -1503,8 +1516,13 @@ bool moldyn::SphereRenderer::renderGeometryShader(view::CallRender3D* cr3d, Mult
     glUniformMatrix4fv(
         this->sphereGeometryShader.ParameterLocation("MVPtransp"), 1, GL_FALSE, this->curMVPtransp.PeekComponents());
 
+    unsigned int flagPartsCount = 0;
     for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
         MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
+
+        if (this->flagsEnabled) {
+            glUniform1ui(this->sphereShader.ParameterLocation("flag_offset"), flagPartsCount);
+        }
 
         this->setPointers<GLSLGeometryShader>(parts, this->sphereGeometryShader, 0, parts.GetVertexData(),
             vertAttribLoc, 0, parts.GetColourData(), colAttribLoc, colIdxAttribLoc);
@@ -1517,9 +1535,13 @@ bool moldyn::SphereRenderer::renderGeometryShader(view::CallRender3D* cr3d, Mult
         glDisableVertexAttribArray(colAttribLoc);
         glDisableVertexAttribArray(colIdxAttribLoc);
         glDisable(GL_TEXTURE_1D);
+
+        flagPartsCount += parts.GetCount();
     }
 
     mpdc->Unlock();
+
+    this->flagStorage(false, this->sphereGeometryShader);
 
     this->sphereGeometryShader.Disable();
 
@@ -1684,7 +1706,7 @@ bool moldyn::SphereRenderer::makeColorString(
         code = "    theColor = globalCol;\n";
         break;
     case MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
-        vislib::sys::Log::DefaultLog.WriteError("Cannot pack an unaligned RGB color into an SSBO! Giving up.");
+        vislib::sys::Log::DefaultLog.WriteError("[SphereRenderer] Cannot pack an unaligned RGB color into an SSBO! Giving up.");
         ret = false;
         break;
     case MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
@@ -1836,26 +1858,26 @@ std::shared_ptr<GLSLShader> moldyn::SphereRenderer::makeShader(
     try {
         if (!sh->Create(vert->Code(), vert->Count(), frag->Code(), frag->Count())) {
             vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_ERROR, "Unable to compile sphere shader: Unknown error\n");
+                vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Unable to compile sphere shader: Unknown error\n");
             return nullptr;
         }
 
     }
     catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-            "Unable to compile sphere shader (@%s): %s\n",
+            "[SphereRenderer] Unable to compile sphere shader (@%s): %s\n",
             vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         return nullptr;
     }
     catch (vislib::Exception e) {
         vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "Unable to compile sphere shader: %s\n", e.GetMsgA());
+            vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Unable to compile sphere shader: %s\n", e.GetMsgA());
         return nullptr;
     }
     catch (...) {
         vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "Unable to compile sphere shader: Unknown exception\n");
+            vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Unable to compile sphere shader: Unknown exception\n");
         return nullptr;
     }
     return sh;
@@ -1930,10 +1952,18 @@ std::shared_ptr<vislib::graphics::gl::GLSLShader> moldyn::SphereRenderer::genera
 
         /// Generated shader declaration snippet is inserted between 2nd and 3rd snippet (after
         /// ngsphere_vert_attributes.glsl)
-        v2->Insert(3, declarationSnip);
+        size_t pos = 3;
+        if (this->flagsUseSSBO) {
+            pos = 4;
+        }
+        v2->Insert(pos, declarationSnip);
         /// Generated shader code snippet is inserted between 4th and 5th snippet (after ngsphere_vert_mainstart.glsl)
         /// => consider new index through first Insertion!
-        v2->Insert(5, codeSnip);
+        pos = 5;
+        if (this->flagsUseSSBO) {
+            pos = 6;
+        }
+        v2->Insert(pos, codeSnip);
         // std::string s(v2->WholeCode());
 
         vislib::SmartPtr<ShaderSource> vss(v2);
@@ -2121,7 +2151,7 @@ bool moldyn::SphereRenderer::rebuildShader() {
     }
     catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
         vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "Unable to compile mdao shader: %s", ce.GetMsg());
+            vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Unable to compile mdao shader: %s", ce.GetMsg());
         return false;
     }
 
@@ -2471,7 +2501,6 @@ void moldyn::SphereRenderer::uploadDataToGPU(const moldyn::SphereRenderer::gpuPa
             particles.GetColourData(), GL_STATIC_DRAW);
         glEnableVertexAttribArray(1);
         glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, particles.GetColourDataStride(), 0);
-        //vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "[SphereRenderer] Transfer function");
         break;
     default:
         glColor4ub(127, 127, 127, 255);

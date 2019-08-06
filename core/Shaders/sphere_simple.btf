@@ -4,7 +4,7 @@
     <include file="flag_storage"/>
 
     <shader name="vertex">
-        <snippet type="version">430</snippet>
+        <snippet type="version">130</snippet>
         <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>
         <snippet name="flag_storage::vert_attributes"/>        
         <snippet name="Attributes"       type="file">sphere/simple_vert_attributes.glsl</snippet>

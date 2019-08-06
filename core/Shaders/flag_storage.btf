@@ -34,7 +34,7 @@ uniform uint flags_offset;
 
  #ifdef FLAG_STORAGE
 
-    uint flag = 0;
+    uint flag = uint(0);
 
 #ifdef FLAG_STORAGE_SSBO
 
@@ -42,7 +42,7 @@ uniform uint flags_offset;
 
 #else
 
-    flag = flags; // flags_offset + flags;
+    flag = flags_offset + flags;
 
 #endif // FLAG_STORAGE_SSBO
 
