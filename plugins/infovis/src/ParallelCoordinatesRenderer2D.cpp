@@ -681,13 +681,10 @@ void ParallelCoordinatesRenderer2D::drawItemsDiscrete(
 #endif
 
     this->enableProgramAndBind(prog);
-    glActiveTexture(GL_TEXTURE5);
-    glBindTexture(GL_TEXTURE_1D, tf->OpenGLTexture());
+    tf->BindConvenience(prog, GL_TEXTURE5, 5);
+
     glUniform4fv(prog.ParameterLocation("color"), 1, color);
     glUniform1f(prog.ParameterLocation("tfColorFactor"), tfColorFactor);
-    glUniform1i(prog.ParameterLocation("transferFunction"), 5);
-    auto tc = tf->TextureCoordinates();
-    glUniform2f(prog.ParameterLocation("transferFunctionTexCoords"), tc[0], tc[1]);
     glUniform1ui(prog.ParameterLocation("fragmentTestMask"), testMask);
     glUniform1ui(prog.ParameterLocation("fragmentPassMask"), passMask);
 
@@ -832,13 +829,8 @@ void ParallelCoordinatesRenderer2D::drawItemsContinuous(void) {
     this->enableProgramAndBind(drawItemContinuousProgram);
     // glUniform2f(drawItemContinuousProgram.ParameterLocation("bottomLeft"), 0.0f, 0.0f);
     // glUniform2f(drawItemContinuousProgram.ParameterLocation("topRight"), windowWidth, windowHeight);
-    glActiveTexture(GL_TEXTURE1);
     densityFBO.BindColourTexture();
-    glActiveTexture(GL_TEXTURE5);
-    glBindTexture(GL_TEXTURE_1D, tf->OpenGLTexture());
-    glUniform1i(this->drawItemContinuousProgram.ParameterLocation("transferFunction"), 5);
-    auto tc = tf->TextureCoordinates();
-    glUniform2f(this->drawItemContinuousProgram.ParameterLocation("transferFunctionTexCoords"), tc[0], tc[1]);
+    tf->BindConvenience(drawItemContinuousProgram, GL_TEXTURE5, 5);
     glUniform1i(this->drawItemContinuousProgram.ParameterLocation("fragmentCount"), 1);
     glUniform4fv(this->drawItemContinuousProgram.ParameterLocation("clearColor"), 1, backgroundColor);
     glUniform1i(this->drawItemContinuousProgram.ParameterLocation("sqrtDensity"),
