@@ -14,6 +14,8 @@
 #include "mmcore/AbstractGetDataCall.h"
 #include "mesh.h"
 
+#include "3DInteractionCollection.h"
+
 namespace megamol {
 namespace mesh {
 
@@ -52,11 +54,24 @@ public:
      */
     static const char* FunctionName(unsigned int idx) { return AbstractGetDataCall::FunctionName(idx); }
 
+    void setInteractionCollection(std::shared_ptr<ThreeDimensionalInteractionCollection> interaction_collection)
+    {
+        m_interaction_collection = interaction_collection;
+    }
+
+    std::shared_ptr<ThreeDimensionalInteractionCollection> getInteractionCollection()
+    {
+        return m_interaction_collection;
+    }
+
 private:
 
+    std::shared_ptr<ThreeDimensionalInteractionCollection> m_interaction_collection;
 
 };
 
+/** Description class typedef */
+typedef megamol::core::factories::CallAutoDescription<Call3DInteraction> Call3DInteractionDescription;
 
 }
 }

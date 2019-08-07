@@ -227,6 +227,8 @@ bool RenderMDIMesh::Render(megamol::core::Call& call)
 
 	auto gpu_render_tasks = task_call->getRenderTaskData();
 
+    // TODO yet another nullptr check for gpu render tasks
+
 	auto const& per_frame_buffers = gpu_render_tasks->getPerFrameBuffers();
 
 	for (auto const& buffer : per_frame_buffers)
