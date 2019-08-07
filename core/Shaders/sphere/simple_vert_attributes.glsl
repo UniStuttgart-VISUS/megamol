@@ -23,7 +23,7 @@ uniform sampler1D colTab;
 
 in vec4 inVertex;
 in vec4 inColor;
-in float colIdx;
+in float inColIdx;
 
 out vec4 objPos;
 out vec4 camPos;

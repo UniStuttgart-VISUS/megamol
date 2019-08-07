@@ -11,9 +11,9 @@
         <snippet name="flag_storage::vert_attributes"/>     
         <!-- <snippet name="core_utils::tflookup" /> -->
         <!-- <snippet name="core_utils::tfconvenience" /> -->        
-        <snippet name="MainStart"        type="file">sphere/simple_vert_mainstart.glsl</snippet>
-        <snippet name="MainParams"       type="file">sphere/ssbosphere_vert_params.glsl</snippet>
-        <snippet name="MainStart"        type="file">sphere/simple_vert_color.glsl</snippet>
+        <snippet name="MainStart"        type="file">sphere/ssbo_vert_mainstart.glsl</snippet>
+        <snippet name="Main"             type="file">sphere/ssbo_vert_main.glsl</snippet>
+        <snippet name="Color"            type="file">sphere/simple_vert_color.glsl</snippet>
         <snippet name="flag_storage::vert_code"/>              
         <snippet name="PosTrans"         type="file">sphere/simple_vert_postrans.glsl</snippet>
         <snippet name="clippingPlane"    type="file">sphere/simple_vert_clipping.glsl</snippet>
@@ -24,7 +24,7 @@
     <shader name="fragment">
         <snippet type="version">130</snippet>
         <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>
-        <snippet name="Main"             type="file">sphere/splat_frag_attributes.glsl</snippet>
+        <snippet name="Attributes"       type="file">sphere/splat_frag_attributes.glsl</snippet>
         <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet> 
         <snippet name="Main"             type="file">sphere/splat_frag_main.glsl</snippet>
     </shader>

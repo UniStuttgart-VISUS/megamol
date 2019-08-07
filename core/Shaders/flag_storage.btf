@@ -13,10 +13,10 @@ const uint FLAG_SOFTSELECTED = 1u << 3;
 
 uniform uint flags_offset;
 
-uniform uint flag_color_enabled;
-uniform uint flag_color_filtered;
-uniform uint flag_color_selected;
-uniform uint flag_color_softselected;
+uniform vec4 flag_color_enabled;
+uniform vec4 flag_color_filtered;
+uniform vec4 flag_color_selected;
+uniform vec4 flag_color_softselected;
 
 #ifdef FLAG_STORAGE_SSBO
 
@@ -53,28 +53,28 @@ uniform uint flag_color_softselected;
 
     // Enabled
     if ((flag & FLAG_ENABLED) == FLAG_ENABLED) {
-
+        //vertColor = flag_color_enabled;
     } else {
 
     }   
 
-    // Selected
-    if ((flag & FLAG_SELECTED) == FLAG_SELECTED) {
-        vertColor = vec4(0.0, 0.0, 0.0, 1.0);
+    // Filtered
+    if ((flag & FLAG_FILTERED) == FLAG_FILTERED) {
+        //vertColor = flag_color_filtered;
     } else {
 
     }
 
-    // Filtered
-    if ((flag & FLAG_FILTERED) == FLAG_FILTERED) {
-
+    // Selected
+    if ((flag & FLAG_SELECTED) == FLAG_SELECTED) {
+        vertColor = flag_color_selected;
     } else {
 
     }
 
     // Soft Selected
     if ((flag & FLAG_SOFTSELECTED) == FLAG_SOFTSELECTED) {
-
+        //vertColor = flag_color_softselected;
     } else {
 
     }    
