@@ -1,14 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <btf type="MegaMolGLSLShader" version="1.0" namespace="sphere_geo">
 
+    <include file="core_utils"/>
     <include file="flag_storage"/>
 
     <shader name="vertex">
         <snippet type="version">130</snippet>
         <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>
-        <snippet name="flag_storage::vert_attributes"/>          
+        <snippet name="flag_storage::vert_attributes"/>     
+        <!-- <snippet name="core_utils::tflookup" /> -->
+        <!-- <snippet name="core_utils::tfconvenience" /> -->     
         <snippet name="Attributes"       type="file">sphere/geosphere_vert_attributes.glsl</snippet>
-        <snippet name="Main"             type="file">sphere/geosphere_vert_main.glsl</snippet>
+        <snippet name="Main"             type="file">sphere/geosphere_vert_mainstart.glsl</snippet>
+        <snippet name="MainStart"        type="file">sphere/simple_vert_color.glsl</snippet>
+        <snippet name="flag_storage::vert_code"/>                   
+        <snippet name="Main"             type="file">sphere/geosphere_vert_mainend.glsl</snippet>
     </shader>
 
     <shader name="geometry">
@@ -22,9 +28,9 @@
     <shader name="fragment">
         <snippet type="version">130</snippet>
         <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>
+        <snippet name="Main"             type="file">sphere/geosphere_frag_attributes.glsl</snippet>
+        <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>        
         <snippet name="Main"             type="file">sphere/geosphere_frag_main.glsl</snippet>
-
-        <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
     </shader>
         
 </btf>

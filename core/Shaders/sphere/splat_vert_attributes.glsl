@@ -5,9 +5,6 @@ uniform vec4 viewAttr;
 uniform float scaling;
 uniform vec4 lpos;
 
-uniform float alphaScaling;
-uniform float zNear;
-
 #ifndef CALC_CAM_SYS
 uniform vec3 camIn;
 uniform vec3 camUp;
@@ -19,10 +16,10 @@ uniform vec4 clipDat;
 uniform vec4 clipCol;
 uniform int instanceOffset;
 
-uniform int attenuateSubpixel;
-
-uniform mat4 MVP;
 uniform mat4 MVinv;
+uniform mat4 MVP;
+uniform mat4 MVPinv;
+uniform mat4 MVPtransp;
 
 uniform vec4 inConsts1;
 uniform sampler1D colTab;
@@ -34,8 +31,6 @@ out vec4 lightPos;
 out float squarRad;
 out float rad;
 out vec4 vertColor;
-
-out float effectiveDiameter;
 
 #ifdef DEFERRED_SHADING
 out float pointSize;
@@ -49,3 +44,6 @@ out vec2 centerFragment;
 #define MIN_COLV inConsts1.y
 #define MAX_COLV inConsts1.z
 #define COLTAB_SIZE inConsts1.w
+
+uniform int attenuateSubpixel;
+out float effectiveDiameter;

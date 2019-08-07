@@ -19,10 +19,9 @@ using namespace vislib::graphics::gl;
 #define SSBO_GENERATED_SHADER_INSTANCE  "gl_VertexID" // or "gl_InstanceID"
 #define SSBO_GENERATED_SHADER_ALIGNMENT "packed"
 
-const GLuint SSBOflagsBindingPoint = 1;
 const GLuint SSBOvertexBindingPoint = 2;
 const GLuint SSBOcolorBindingPoint = 3;
-
+const GLuint SSBOflagsBindingPoint = 4;
 
 moldyn::SphereRenderer::SphereRenderer(void) : view::Renderer3DModule()
     , getDataSlot("getdata", "Connects to the data source")
@@ -96,7 +95,6 @@ moldyn::SphereRenderer::SphereRenderer(void) : view::Renderer3DModule()
         "splat::attenuateSubpixel", "Splat: Attenuate alpha of points that should have subpixel size.")
     , useStaticDataParam("ssbo::staticData", "SSBO: Upload data only once per hash change and keep data static on GPU")
     , enableLightingSlot("ambient occlusion::enable_lighting", "Ambient Occlusion: Enable Lighting")
-    , enableAOSlot("ambient occlusion::enable_ao", "Ambient Occlusion: Enable Ambient Occlusion")
     , enableGeometryShader(
         "ambient occlusion::use_gs_proxies", "Ambient Occlusion: Enables rendering using triangle strips from the geometry shader")
     , aoVolSizeSlot("ambient occlusion::volsize", "Ambient Occlusion: Longest volume edge")
@@ -151,9 +149,6 @@ moldyn::SphereRenderer::SphereRenderer(void) : view::Renderer3DModule()
 
     this->enableLightingSlot << (new core::param::BoolParam(false));
     this->MakeSlotAvailable(&this->enableLightingSlot);
-
-    this->enableAOSlot << (new core::param::BoolParam(true));
-    this->MakeSlotAvailable(&this->enableAOSlot);
 
     this->enableGeometryShader << (new core::param::BoolParam(false));
     this->MakeSlotAvailable(&this->enableGeometryShader);
@@ -296,7 +291,6 @@ bool moldyn::SphereRenderer::resetResources(void) {
     this->useStaticDataParam.Param<param::BoolParam>()->SetGUIVisible(false);
     // Ambient Occlusion
     this->enableLightingSlot.Param<megamol::core::param::BoolParam>()->SetGUIVisible(false);
-    this->enableAOSlot.Param<megamol::core::param::BoolParam>()->SetGUIVisible(false);
     this->enableGeometryShader.Param<megamol::core::param::BoolParam>()->SetGUIVisible(false);
     this->aoVolSizeSlot.Param<megamol::core::param::IntParam>()->SetGUIVisible(false);
     this->aoConeApexSlot.Param<megamol::core::param::FloatParam>()->SetGUIVisible(false);
@@ -537,6 +531,7 @@ bool moldyn::SphereRenderer::createResources() {
             if (this->flagsUseSSBO) {
                 this->vertShader->Insert(1, flagSnippet);
             }
+            //this->flagsUseSSBO = false;
             if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
                 return false;
             }
@@ -559,7 +554,6 @@ bool moldyn::SphereRenderer::createResources() {
 
         case (RenderMode::AMBIENT_OCCLUSION): {
             this->enableLightingSlot.Param<megamol::core::param::BoolParam>()->SetGUIVisible(true);
-            this->enableAOSlot.Param<megamol::core::param::BoolParam>()->SetGUIVisible(true);
             this->enableGeometryShader.Param<megamol::core::param::BoolParam>()->SetGUIVisible(true);
             this->aoVolSizeSlot.Param<megamol::core::param::IntParam>()->SetGUIVisible(true);
             this->aoConeApexSlot.Param<megamol::core::param::FloatParam>()->SetGUIVisible(true);
@@ -572,21 +566,89 @@ bool moldyn::SphereRenderer::createResources() {
             glGenTextures(3, reinterpret_cast<GLuint*>(&this->gBuffer));
             glGenFramebuffers(1, &(this->gBuffer.fbo));
 
-            // Build the sphere shader
-            ///TODO: add flagSnippet to vertex shader
-            this->rebuildShader();
-
-            bool enableAO = this->enableAOSlot.Param<megamol::core::param::BoolParam>()->Value();
-
-            if (enableAO) {
-                this->volGen = new megamol::core::utility::MDAOVolumeGenerator();
-                this->volGen->SetShaderSourceFactory(&this->GetCoreInstance()->ShaderSourceFactory());
-                if (!this->volGen->Init()) {
-                    vislib::sys::Log::DefaultLog.WriteMsg(
-                        vislib::sys::Log::LEVEL_ERROR, "Error initializing volume generator!\n");
-                    return false;
-                }
+            // Create the sphere shader if neccessary
+            vertShaderName = "sphere_mdao::vertex";
+            fragShaderName = "sphere_mdao::fragment";
+            if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
+                return false;
             }
+            if (this->flagsUseSSBO) {
+                this->vertShader->Insert(1, flagSnippet);
+            }
+            if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
+                return false;
+            }
+            if (!this->sphereShader.Create(this->vertShader->Code(), this->vertShader->Count(),
+                this->fragShader->Code(), this->fragShader->Count())) {
+                vislib::sys::Log::DefaultLog.WriteMsg(
+                    vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Unable to compile sphere shader: Unknown error\n");
+                return false;
+            }
+
+            // Create the geometry shader
+            vertShaderName = "sphere_mdao::geometry::vertex";
+            geoShaderName = "sphere_mdao::geometry::geometry";
+            fragShaderName = "sphere_mdao::fragment";
+            if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
+                return false;
+            }
+            if (this->flagsUseSSBO) {
+                this->vertShader->Insert(1, flagSnippet);
+            }
+            if (!instance()->ShaderSourceFactory().MakeShaderSource(geoShaderName.PeekBuffer(), *this->geoShader)) {
+                return false;
+            }
+            if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
+                return false;
+            }
+            if (!this->sphereGeometryShader.Compile(this->vertShader->Code(), this->vertShader->Count(),
+                this->geoShader->Code(), this->geoShader->Count(), this->fragShader->Code(),
+                this->fragShader->Count())) {
+                vislib::sys::Log::DefaultLog.WriteMsg(
+                    vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Unable to compile sphere geometry shader: Unknown error\n");
+                return false;
+            }
+            if (!this->sphereGeometryShader.Link()) {
+                vislib::sys::Log::DefaultLog.WriteMsg(
+                    vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Unable to link sphere geometry shader: Unknown error\n");
+                return false;
+            }
+
+            // Create the deferred shader
+            if (!instance()->ShaderSourceFactory().MakeShaderSource("sphere_mdao::deferred::vertex", *this->vertShader)) {
+                return false;
+            }
+            bool enableLighting = this->enableLightingSlot.Param<megamol::core::param::BoolParam>()->Value();
+            this->fragShader->Append(instance()->ShaderSourceFactory().MakeShaderSnippet("sphere_mdao::deferred::fragment::Main"));
+            if (enableLighting) {
+                this->fragShader->Append(instance()->ShaderSourceFactory().MakeShaderSnippet("sphere_mdao::deferred::fragment::Lighting"));
+            }
+            else {
+                this->fragShader->Append(instance()->ShaderSourceFactory().MakeShaderSnippet("sphere_mdao::deferred::fragment::LightingStub"));
+            }
+            float apex = this->aoConeApexSlot.Param<megamol::core::param::FloatParam>()->Value();
+            std::vector<vislib::math::Vector<float, 4>> directions;
+            this->generate3ConeDirections(directions, apex * static_cast<float>(M_PI) / 180.0f);
+            std::string directionsCode = this->generateDirectionShaderArrayString(directions, "coneDirs");
+            vislib::graphics::gl::ShaderSource::StringSnippet* dirSnippet =
+                new vislib::graphics::gl::ShaderSource::StringSnippet(directionsCode.c_str());
+            this->fragShader->Append(dirSnippet);
+            this->fragShader->Append(instance()->ShaderSourceFactory().MakeShaderSnippet("sphere_mdao::deferred::fragment::AmbientOcclusion"));
+            if (!this->lightingShader.Create(this->vertShader->Code(), this->vertShader->Count(), this->fragShader->Code(), this->fragShader->Count())) {
+                vislib::sys::Log::DefaultLog.WriteMsg(
+                    vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Unable to compile mdao lightning shader.");
+                return false;
+            }
+
+            // Init volume generator
+            this->volGen = new megamol::core::utility::MDAOVolumeGenerator();
+            this->volGen->SetShaderSourceFactory(&this->GetCoreInstance()->ShaderSourceFactory());
+            if (!this->volGen->Init()) {
+                vislib::sys::Log::DefaultLog.WriteMsg(
+                    vislib::sys::Log::LEVEL_ERROR, "Error initializing volume generator!\n");
+                return false;
+            }
+          
             this->triggerRebuildGBuffer = true;
         } break;
 
@@ -934,21 +996,17 @@ bool moldyn::SphereRenderer::renderSimple(view::CallRender3D* cr3d, MultiParticl
     GLuint colIdxAttribLoc = glGetAttribLocationARB(this->sphereShader, "colIdx");
 
     glUniform4fv(this->sphereShader.ParameterLocation("viewAttr"), 1, this->curViewAttrib);
-    glUniform3fv(
-        this->sphereShader.ParameterLocation("camIn"), 1, cr3d->GetCameraParameters()->Front().PeekComponents());
-    glUniform3fv(
-        this->sphereShader.ParameterLocation("camRight"), 1, cr3d->GetCameraParameters()->Right().PeekComponents());
+    glUniform3fv(this->sphereShader.ParameterLocation("camIn"), 1, cr3d->GetCameraParameters()->Front().PeekComponents());
+    glUniform3fv(this->sphereShader.ParameterLocation("camRight"), 1, cr3d->GetCameraParameters()->Right().PeekComponents());
     glUniform3fv(this->sphereShader.ParameterLocation("camUp"), 1, cr3d->GetCameraParameters()->Up().PeekComponents());
-    glUniform1f(
-        this->sphereShader.ParameterLocation("scaling"), this->radiusScalingParam.Param<param::FloatParam>()->Value());
+    glUniform1f(this->sphereShader.ParameterLocation("scaling"), this->radiusScalingParam.Param<param::FloatParam>()->Value());
     glUniform4fv(this->sphereShader.ParameterLocation("clipDat"), 1, this->curClipDat);
     glUniform4fv(this->sphereShader.ParameterLocation("clipCol"), 1, this->curClipCol);
     glUniform4fv(this->sphereShader.ParameterLocation("lpos"), 1, this->curLightPos);
     glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVinv"), 1, GL_FALSE, this->curMVinv.PeekComponents());
     glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVP"), 1, GL_FALSE, this->curMVP.PeekComponents());
     glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVPinv"), 1, GL_FALSE, this->curMVPinv.PeekComponents());
-    glUniformMatrix4fv(
-        this->sphereShader.ParameterLocation("MVPtransp"), 1, GL_FALSE, this->curMVPtransp.PeekComponents());
+    glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVPtransp"), 1, GL_FALSE, this->curMVPtransp.PeekComponents());
 
     unsigned int flagPartsCount = 0;
     for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
@@ -1024,22 +1082,17 @@ bool moldyn::SphereRenderer::renderSSBO(view::CallRender3D* cr3d, MultiParticleD
         }
 
         glUniform4fv(this->newShader->ParameterLocation("viewAttr"), 1, this->curViewAttrib);
-        glUniform3fv(
-            this->newShader->ParameterLocation("camIn"), 1, cr3d->GetCameraParameters()->Front().PeekComponents());
-        glUniform3fv(
-            this->newShader->ParameterLocation("camRight"), 1, cr3d->GetCameraParameters()->Right().PeekComponents());
-        glUniform3fv(
-            this->newShader->ParameterLocation("camUp"), 1, cr3d->GetCameraParameters()->Up().PeekComponents());
-        glUniform1f(this->newShader->ParameterLocation("scaling"),
-            this->radiusScalingParam.Param<param::FloatParam>()->Value());
+        glUniform3fv(this->newShader->ParameterLocation("camIn"), 1, cr3d->GetCameraParameters()->Front().PeekComponents());
+        glUniform3fv(this->newShader->ParameterLocation("camRight"), 1, cr3d->GetCameraParameters()->Right().PeekComponents());
+        glUniform3fv(this->newShader->ParameterLocation("camUp"), 1, cr3d->GetCameraParameters()->Up().PeekComponents());
+        glUniform1f(this->newShader->ParameterLocation("scaling"), this->radiusScalingParam.Param<param::FloatParam>()->Value());
         glUniform4fv(this->newShader->ParameterLocation("clipDat"), 1, this->curClipDat);
         glUniform4fv(this->newShader->ParameterLocation("clipCol"), 1, this->curClipCol);
         glUniform4fv(this->newShader->ParameterLocation("lpos"), 1, this->curLightPos);
         glUniformMatrix4fv(this->newShader->ParameterLocation("MVinv"), 1, GL_FALSE, this->curMVinv.PeekComponents());
         glUniformMatrix4fv(this->newShader->ParameterLocation("MVP"), 1, GL_FALSE, this->curMVP.PeekComponents());
         glUniformMatrix4fv(this->newShader->ParameterLocation("MVPinv"), 1, GL_FALSE, this->curMVPinv.PeekComponents());
-        glUniformMatrix4fv(
-            this->newShader->ParameterLocation("MVPtransp"), 1, GL_FALSE, this->curMVPtransp.PeekComponents());
+        glUniformMatrix4fv(this->newShader->ParameterLocation("MVPtransp"), 1, GL_FALSE, this->curMVPtransp.PeekComponents());
 
         float minC = 0.0f, maxC = 0.0f;
         unsigned int colTabSize = 0;
@@ -1247,27 +1300,20 @@ bool moldyn::SphereRenderer::renderSplat(view::CallRender3D* cr3d, MultiParticle
         }
 
         glUniform4fv(this->newShader->ParameterLocation("viewAttr"), 1, this->curViewAttrib);
-        glUniform3fv(
-            this->newShader->ParameterLocation("camIn"), 1, cr3d->GetCameraParameters()->Front().PeekComponents());
-        glUniform3fv(
-            this->newShader->ParameterLocation("camRight"), 1, cr3d->GetCameraParameters()->Right().PeekComponents());
-        glUniform3fv(
-            this->newShader->ParameterLocation("camUp"), 1, cr3d->GetCameraParameters()->Up().PeekComponents());
-        glUniform1f(this->newShader->ParameterLocation("scaling"),
-            this->radiusScalingParam.Param<param::FloatParam>()->Value());
+        glUniform3fv(this->newShader->ParameterLocation("camIn"), 1, cr3d->GetCameraParameters()->Front().PeekComponents());
+        glUniform3fv(this->newShader->ParameterLocation("camRight"), 1, cr3d->GetCameraParameters()->Right().PeekComponents());
+        glUniform3fv(this->newShader->ParameterLocation("camUp"), 1, cr3d->GetCameraParameters()->Up().PeekComponents());
+        glUniform1f(this->newShader->ParameterLocation("scaling"), this->radiusScalingParam.Param<param::FloatParam>()->Value());
         glUniform4fv(this->newShader->ParameterLocation("clipDat"), 1, this->curClipDat);
         glUniform4fv(this->newShader->ParameterLocation("clipCol"), 1, this->curClipCol);
         glUniform4fv(this->newShader->ParameterLocation("lpos"), 1, this->curLightPos);
         glUniformMatrix4fv(this->newShader->ParameterLocation("MVinv"), 1, GL_FALSE, this->curMVinv.PeekComponents());
         glUniformMatrix4fv(this->newShader->ParameterLocation("MVP"), 1, GL_FALSE, this->curMVP.PeekComponents());
         glUniformMatrix4fv(this->newShader->ParameterLocation("MVPinv"), 1, GL_FALSE, this->curMVPinv.PeekComponents());
-        glUniformMatrix4fv(
-            this->newShader->ParameterLocation("MVPtransp"), 1, GL_FALSE, this->curMVPtransp.PeekComponents());
-        glUniform1f(this->newShader->ParameterLocation("alphaScaling"),
-            this->alphaScalingParam.Param<param::FloatParam>()->Value());
-        glUniform1i(this->newShader->ParameterLocation("attenuateSubpixel"),
-            this->attenuateSubpixelParam.Param<param::BoolParam>()->Value() ? 1 : 0);
-        glUniform1f(this->newShader->ParameterLocation("zNear"), cr3d->GetCameraParameters()->NearClip());
+        glUniformMatrix4fv(this->newShader->ParameterLocation("MVPtransp"), 1, GL_FALSE, this->curMVPtransp.PeekComponents());
+
+        glUniform1f(this->newShader->ParameterLocation("alphaScaling"), this->alphaScalingParam.Param<param::FloatParam>()->Value());
+        glUniform1i(this->newShader->ParameterLocation("attenuateSubpixel"), this->attenuateSubpixelParam.Param<param::BoolParam>()->Value() ? 1 : 0);
 
         float minC = 0.0f, maxC = 0.0f;
         unsigned int colTabSize = 0;
@@ -1388,21 +1434,17 @@ bool moldyn::SphereRenderer::renderBufferArray(view::CallRender3D* cr3d, MultiPa
     GLuint colIdxAttribLoc = glGetAttribLocationARB(this->sphereShader, "colIdx");
 
     glUniform4fv(this->sphereShader.ParameterLocation("viewAttr"), 1, this->curViewAttrib);
-    glUniform3fv(
-        this->sphereShader.ParameterLocation("camIn"), 1, cr3d->GetCameraParameters()->Front().PeekComponents());
-    glUniform3fv(
-        this->sphereShader.ParameterLocation("camRight"), 1, cr3d->GetCameraParameters()->Right().PeekComponents());
+    glUniform3fv(this->sphereShader.ParameterLocation("camIn"), 1, cr3d->GetCameraParameters()->Front().PeekComponents());
+    glUniform3fv(this->sphereShader.ParameterLocation("camRight"), 1, cr3d->GetCameraParameters()->Right().PeekComponents());
     glUniform3fv(this->sphereShader.ParameterLocation("camUp"), 1, cr3d->GetCameraParameters()->Up().PeekComponents());
-    glUniform1f(
-        this->sphereShader.ParameterLocation("scaling"), this->radiusScalingParam.Param<param::FloatParam>()->Value());
+    glUniform1f(this->sphereShader.ParameterLocation("scaling"), this->radiusScalingParam.Param<param::FloatParam>()->Value());
     glUniform4fv(this->sphereShader.ParameterLocation("clipDat"), 1, this->curClipDat);
     glUniform4fv(this->sphereShader.ParameterLocation("clipCol"), 1, this->curClipCol);
     glUniform4fv(this->sphereShader.ParameterLocation("lpos"), 1, this->curLightPos);
     glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVinv"), 1, GL_FALSE, this->curMVinv.PeekComponents());
     glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVP"), 1, GL_FALSE, this->curMVP.PeekComponents());
     glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVPinv"), 1, GL_FALSE, this->curMVPinv.PeekComponents());
-    glUniformMatrix4fv(
-        this->sphereShader.ParameterLocation("MVPtransp"), 1, GL_FALSE, this->curMVPtransp.PeekComponents());
+    glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVPtransp"), 1, GL_FALSE, this->curMVPtransp.PeekComponents());
 
     unsigned int flagPartsCount = 0;
     for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
@@ -1501,20 +1543,15 @@ bool moldyn::SphereRenderer::renderGeometryShader(view::CallRender3D* cr3d, Mult
         cr3d->GetCameraParameters()->Front().PeekComponents());
     glUniform3fv(this->sphereGeometryShader.ParameterLocation("camRight"), 1,
         cr3d->GetCameraParameters()->Right().PeekComponents());
-    glUniform3fv(
-        this->sphereGeometryShader.ParameterLocation("camUp"), 1, cr3d->GetCameraParameters()->Up().PeekComponents());
-    glUniform1f(
-        this->sphereGeometryShader.ParameterLocation("scaling"), this->radiusScalingParam.Param<param::FloatParam>()->Value());
+    glUniform3fv(this->sphereGeometryShader.ParameterLocation("camUp"), 1, cr3d->GetCameraParameters()->Up().PeekComponents());
+    glUniform1f(this->sphereGeometryShader.ParameterLocation("scaling"), this->radiusScalingParam.Param<param::FloatParam>()->Value());
     glUniform4fv(this->sphereGeometryShader.ParameterLocation("clipDat"), 1, this->curClipDat);
     glUniform4fv(this->sphereGeometryShader.ParameterLocation("clipCol"), 1, this->curClipCol);
     glUniform4fv(this->sphereGeometryShader.ParameterLocation("lpos"), 1, this->curLightPos);
-    glUniformMatrix4fv(
-        this->sphereGeometryShader.ParameterLocation("MVinv"), 1, GL_FALSE, this->curMVinv.PeekComponents());
+    glUniformMatrix4fv(this->sphereGeometryShader.ParameterLocation("MVinv"), 1, GL_FALSE, this->curMVinv.PeekComponents());
     glUniformMatrix4fv(this->sphereGeometryShader.ParameterLocation("MVP"), 1, GL_FALSE, this->curMVP.PeekComponents());
-    glUniformMatrix4fv(
-        this->sphereGeometryShader.ParameterLocation("MVPinv"), 1, GL_FALSE, this->curMVPinv.PeekComponents());
-    glUniformMatrix4fv(
-        this->sphereGeometryShader.ParameterLocation("MVPtransp"), 1, GL_FALSE, this->curMVPtransp.PeekComponents());
+    glUniformMatrix4fv(this->sphereGeometryShader.ParameterLocation("MVPinv"), 1, GL_FALSE, this->curMVPinv.PeekComponents());
+    glUniformMatrix4fv(this->sphereGeometryShader.ParameterLocation("MVPtransp"), 1, GL_FALSE, this->curMVPtransp.PeekComponents());
 
     unsigned int flagPartsCount = 0;
     for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
@@ -1555,12 +1592,11 @@ bool moldyn::SphereRenderer::renderGeometryShader(view::CallRender3D* cr3d, Mult
 bool moldyn::SphereRenderer::renderAmbientOcclusion(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc) {
 
     // We need to regenerate the shader if certain settings are changed
-    if (this->enableAOSlot.IsDirty() || this->enableLightingSlot.IsDirty() || this->aoConeApexSlot.IsDirty()) {
+    if (this->enableLightingSlot.IsDirty() || this->aoConeApexSlot.IsDirty()) {
         this->aoConeApexSlot.ResetDirty();
         this->enableLightingSlot.ResetDirty();
-        this->enableAOSlot.ResetDirty();
 
-        this->rebuildShader();
+        this->createResources();
     }
 
     // Rebuild the GBuffer if neccessary
@@ -1952,16 +1988,16 @@ std::shared_ptr<vislib::graphics::gl::GLSLShader> moldyn::SphereRenderer::genera
 
         /// Generated shader declaration snippet is inserted between 2nd and 3rd snippet (after
         /// ngsphere_vert_attributes.glsl)
-        size_t pos = 3;
+        size_t pos = 4;
         if (this->flagsUseSSBO) {
-            pos = 4;
+            pos = 5;
         }
         v2->Insert(pos, declarationSnip);
         /// Generated shader code snippet is inserted between 4th and 5th snippet (after ngsphere_vert_mainstart.glsl)
         /// => consider new index through first Insertion!
-        pos = 5;
+        pos = 6;
         if (this->flagsUseSSBO) {
-            pos = 6;
+            pos = 7;
         }
         v2->Insert(pos, codeSnip);
         // std::string s(v2->WholeCode());
@@ -2025,6 +2061,7 @@ bool moldyn::SphereRenderer::flagStorage(bool enable, vislib::graphics::gl::GLSL
                 glBufferData(GL_SHADER_STORAGE_BUFFER, partsCount * sizeof(core::FlagStorage::FlagItemType),
                     this->flagsData.get()->data(), GL_STATIC_DRAW);
                 this->flagsCurrentVersion = flagc->GetVersion();
+                glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
             }
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBOflagsBindingPoint, this->flagsBuffer);
         }
@@ -2096,68 +2133,6 @@ void moldyn::SphereRenderer::waitSingle(GLsync& syncObj) {
 
 
 // Ambient Occlusion ----------------------------------------------------------
-
-bool moldyn::SphereRenderer::rebuildShader() {
-    vislib::graphics::gl::ShaderSource vert, frag;
-    core::utility::ShaderSourceFactory& factory = instance()->ShaderSourceFactory();
-
-    // Create the sphere shader if neccessary
-    if (!vislib::graphics::gl::GLSLShader::IsValidHandle(this->sphereShader) &&
-        !megamol::core::utility::InitializeShader(&factory, this->sphereShader, "sphere_mdao::vertex", "sphere_mdao::fragment")) {
-        return false;
-    }
-
-    if (!vislib::graphics::gl::GLSLGeometryShader::IsValidHandle(this->sphereGeometryShader) &&
-        !megamol::core::utility::InitializeShader(&factory, this->sphereGeometryShader, "sphere_mdao::geometry::vertex",
-            "sphere_mdao::fragment", "sphere_mdao::geometry::geometry")) {
-        return false;
-    }
-
-
-    // Load the vertex shader
-    if (!factory.MakeShaderSource("sphere_mdao::deferred::vertex", vert)) return false;
-
-    bool enableAO = this->enableAOSlot.Param<megamol::core::param::BoolParam>()->Value();
-    bool enableLighting = this->enableLightingSlot.Param<megamol::core::param::BoolParam>()->Value();
-
-    frag.Append(factory.MakeShaderSnippet("sphere_mdao::deferred::fragment::Main"));
-
-    if (enableLighting) {
-        frag.Append(factory.MakeShaderSnippet("sphere_mdao::deferred::fragment::Lighting"));
-    }
-    else {
-        frag.Append(factory.MakeShaderSnippet("sphere_mdao::deferred::fragment::LightingStub"));
-    }
-
-    if (enableAO) {
-        float apex = this->aoConeApexSlot.Param<megamol::core::param::FloatParam>()->Value();
-
-        std::vector<vislib::math::Vector<float, 4>> directions;
-        this->generate3ConeDirections(directions, apex * static_cast<float>(M_PI) / 180.0f);
-        std::string directionsCode = this->generateDirectionShaderArrayString(directions, "coneDirs");
-
-        vislib::graphics::gl::ShaderSource::StringSnippet* dirSnippet =
-            new vislib::graphics::gl::ShaderSource::StringSnippet(directionsCode.c_str());
-        frag.Append(dirSnippet);
-
-        frag.Append(factory.MakeShaderSnippet("sphere_mdao::deferred::fragment::AmbientOcclusion"));
-    }
-    else {
-        frag.Append(factory.MakeShaderSnippet("sphere_mdao::deferred::fragment::AmbientOcclusionStub"));
-    }
-
-    try {
-        this->lightingShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count());
-    }
-    catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Unable to compile mdao shader: %s", ce.GetMsg());
-        return false;
-    }
-
-    return true;
-}
-
 
 bool moldyn::SphereRenderer::rebuildGBuffer() {
 
@@ -2251,19 +2226,12 @@ void moldyn::SphereRenderer::rebuildWorkingData(
     }
 
     // Check if voxelization is even needed
-    if (this->enableAOSlot.IsDirty()) {
-        bool enableAO = this->enableAOSlot.Param<megamol::core::param::BoolParam>()->Value();
-
-        if (!enableAO && this->volGen != nullptr) {
-            delete this->volGen;
-            this->volGen = nullptr;
-        }
-        if (enableAO && this->volGen == nullptr) {
-            this->volGen = new megamol::core::utility::MDAOVolumeGenerator();
-            this->volGen->SetShaderSourceFactory(&instance()->ShaderSourceFactory());
-            this->volGen->Init();
-        }
+    if (this->volGen == nullptr) {
+        this->volGen = new megamol::core::utility::MDAOVolumeGenerator();
+        this->volGen->SetShaderSourceFactory(&instance()->ShaderSourceFactory());
+        this->volGen->Init();
     }
+  
 
     // Recreate the volume if neccessary
     bool equalClipData = true;
@@ -2274,7 +2242,7 @@ void moldyn::SphereRenderer::rebuildWorkingData(
         }
     }
     if (volGen != nullptr &&
-        (stateInvalid || this->enableAOSlot.IsDirty() || this->aoVolSizeSlot.IsDirty() || !equalClipData)) {
+        (stateInvalid || this->aoVolSizeSlot.IsDirty() || !equalClipData)) {
         int volSize = this->aoVolSizeSlot.Param<megamol::core::param::IntParam>()->Value();
 
         const vislib::math::Cuboid<float>& cube = cr3d->AccessBoundingBoxes().ObjectSpaceClipBox();
@@ -2319,7 +2287,6 @@ void moldyn::SphereRenderer::rebuildWorkingData(
     glDisableVertexAttribArray(1);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    this->enableAOSlot.ResetDirty();
     this->aoVolSizeSlot.ResetDirty();
 }
 
@@ -2337,18 +2304,14 @@ void moldyn::SphereRenderer::renderParticlesGeometry(
     glUniformMatrix4fv(theShader.ParameterLocation("inMvp"), 1, GL_FALSE, this->curMVP.PeekComponents());
     glUniformMatrix4fv(theShader.ParameterLocation("inMvpInverse"), 1, GL_FALSE, this->curMVPinv.PeekComponents());
     glUniformMatrix4fv(theShader.ParameterLocation("inMvpTrans"), 1, GL_FALSE, this->curMVPtransp.PeekComponents());
-
     glUniform1f(theShader.ParameterLocation("scaling"), this->radiusScalingParam.Param<param::FloatParam>()->Value());
-
     theShader.SetParameterArray4("inViewAttr", 1, this->curViewAttrib);
     theShader.SetParameterArray3("inCamFront", 1, cr3d->GetCameraParameters()->Front().PeekComponents());
     theShader.SetParameterArray3("inCamRight", 1, cr3d->GetCameraParameters()->Right().PeekComponents());
     theShader.SetParameterArray3("inCamUp", 1, cr3d->GetCameraParameters()->Up().PeekComponents());
     theShader.SetParameterArray4("inCamPos", 1, this->curMVinv.GetColumn(3).PeekComponents());
-
     theShader.SetParameterArray4("inClipDat", 1, this->curClipDat);
     theShader.SetParameterArray4("inClipCol", 1, this->curClipCol);
-
     theShader.SetParameter("inUseHighPrecision", highPrecision);
 
     for (unsigned int i = 0; i < gpuData.size(); ++i) {
@@ -2394,7 +2357,6 @@ void moldyn::SphereRenderer::renderParticlesGeometry(
 
 
 void moldyn::SphereRenderer::renderDeferredPass(megamol::core::view::CallRender3D* cr3d) {
-    bool enableAO = this->enableAOSlot.Param<megamol::core::param::BoolParam>()->Value();
     bool enableLighting = this->enableLightingSlot.Param<megamol::core::param::BoolParam>()->Value();
     bool highPrecision = this->useHPTexturesSlot.Param<megamol::core::param::BoolParam>()->Value();
 
@@ -2409,12 +2371,10 @@ void moldyn::SphereRenderer::renderDeferredPass(megamol::core::view::CallRender3
 
     this->lightingShader.SetParameter("inWidth", static_cast<float>(this->curVpWidth));
     this->lightingShader.SetParameter("inHeight", static_cast<float>(this->curVpHeight));
-    glUniformMatrix4fv(
-        this->lightingShader.ParameterLocation("inMvpInverse"), 1, GL_FALSE, this->curMVPinv.PeekComponents());
+    glUniformMatrix4fv(this->lightingShader.ParameterLocation("inMvpInverse"), 1, GL_FALSE, this->curMVPinv.PeekComponents());
     this->lightingShader.SetParameter("inColorTex", static_cast<int>(0));
     this->lightingShader.SetParameter("inNormalsTex", static_cast<int>(1));
     this->lightingShader.SetParameter("inDepthTex", static_cast<int>(2));
-
     this->lightingShader.SetParameter("inUseHighPrecision", highPrecision);
 
     if (enableLighting) {
@@ -2424,27 +2384,25 @@ void moldyn::SphereRenderer::renderDeferredPass(megamol::core::view::CallRender3
         this->lightingShader.SetParameterArray3("inObjCamPos", 1, this->curMVinv.GetColumn(3).PeekComponents());
     }
 
-    if (enableAO) {
-        float aoOffset = this->aoOffsetSlot.Param<megamol::core::param::FloatParam>()->Value();
-        float aoStrength = this->aoStrengthSlot.Param<megamol::core::param::FloatParam>()->Value();
-        float aoConeLength = this->aoConeLengthSlot.Param<megamol::core::param::FloatParam>()->Value();
-        if (volGen != nullptr) {
-            glActiveTexture(GL_TEXTURE3);
-            glBindTexture(GL_TEXTURE_3D, this->volGen->GetVolumeTextureHandle());
-            glActiveTexture(GL_TEXTURE0);
-        }
-        this->lightingShader.SetParameter("inAOOffset", aoOffset);
-        this->lightingShader.SetParameter("inDensityTex", static_cast<int>(3));
-        this->lightingShader.SetParameter("inAOStrength", aoStrength);
-        this->lightingShader.SetParameter("inAOConeLength", aoConeLength);
-        this->lightingShader.SetParameter("inAmbVolShortestEdge", this->ambConeConstants[0]);
-        this->lightingShader.SetParameter("inAmbVolMaxLod", this->ambConeConstants[1]);
-        this->lightingShader.SetParameterArray3(
-            "inBoundsMin", 1, cr3d->AccessBoundingBoxes().ObjectSpaceClipBox().GetLeftBottomBack().PeekCoordinates());
-        this->lightingShader.SetParameterArray3(
-            "inBoundsSize", 1, cr3d->AccessBoundingBoxes().ObjectSpaceClipBox().GetSize().PeekDimension());
+    float aoOffset = this->aoOffsetSlot.Param<megamol::core::param::FloatParam>()->Value();
+    float aoStrength = this->aoStrengthSlot.Param<megamol::core::param::FloatParam>()->Value();
+    float aoConeLength = this->aoConeLengthSlot.Param<megamol::core::param::FloatParam>()->Value();
+    if (volGen != nullptr) {
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture(GL_TEXTURE_3D, this->volGen->GetVolumeTextureHandle());
+        glActiveTexture(GL_TEXTURE0);
     }
-
+    this->lightingShader.SetParameter("inAOOffset", aoOffset);
+    this->lightingShader.SetParameter("inDensityTex", static_cast<int>(3));
+    this->lightingShader.SetParameter("inAOStrength", aoStrength);
+    this->lightingShader.SetParameter("inAOConeLength", aoConeLength);
+    this->lightingShader.SetParameter("inAmbVolShortestEdge", this->ambConeConstants[0]);
+    this->lightingShader.SetParameter("inAmbVolMaxLod", this->ambConeConstants[1]);
+    this->lightingShader.SetParameterArray3(
+        "inBoundsMin", 1, cr3d->AccessBoundingBoxes().ObjectSpaceClipBox().GetLeftBottomBack().PeekCoordinates());
+    this->lightingShader.SetParameterArray3(
+        "inBoundsSize", 1, cr3d->AccessBoundingBoxes().ObjectSpaceClipBox().GetSize().PeekDimension());
+  
     glBegin(GL_POINTS);
     glVertex2f(0.0f, 0.0f);
     glEnd();

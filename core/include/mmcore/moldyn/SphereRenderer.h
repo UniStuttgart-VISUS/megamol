@@ -10,7 +10,6 @@
 
 
 #include "mmcore/moldyn/MultiParticleDataCall.h"
-#include "mmcore/utility/MDAOShaderUtilities.h"
 #include "mmcore/utility/MDAOVolumeGenerator.h"
 
 #include "mmcore/Call.h"
@@ -359,7 +358,6 @@ namespace moldyn {
         // Affects only Ambient Occlusion rendering: --------------------------
 
         megamol::core::param::ParamSlot enableLightingSlot;
-        megamol::core::param::ParamSlot enableAOSlot;
         megamol::core::param::ParamSlot enableGeometryShader;
         megamol::core::param::ParamSlot aoVolSizeSlot;
         megamol::core::param::ParamSlot aoConeApexSlot;
@@ -543,13 +541,6 @@ namespace moldyn {
 #endif // defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
 
         // ONLY used for Ambient Occlusion rendering: -------------------------
-
-        /**
-         * Rebuild the ambient occlusion shaders.
-         *
-         * @return ...  
-         */
-        bool rebuildShader(void);
 
         /**
          * Rebuild the ambient occlusion gBuffer.

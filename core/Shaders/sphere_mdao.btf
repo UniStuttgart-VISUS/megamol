@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <btf type="MegaMolGLSLShader" version="1.0" namespace="sphere_mdao">
 
+    <include file="core_utils"/>
+    <include file="flag_storage"/>
+
     <shader name="vertex">
         <snippet type="version">150</snippet>
         <snippet name="CommonDefines"             type="file">commondefines.glsl</snippet>        
@@ -46,7 +49,6 @@
             <snippet name="Lighting"              type="file">sphere/mdao_deferred_frag_lighting.glsl</snippet>
             <snippet name="LightingStub"          type="file">sphere/mdao_deferred_frag_lighting_stub.glsl</snippet>
             <snippet name="AmbientOcclusion"      type="file">sphere/mdao_deferred_frag_ambocc.glsl</snippet>
-            <snippet name="AmbientOcclusionStub"  type="file">sphere/mdao_deferred_frag_ambocc_stub.glsl</snippet>
         </shader>
 
     </namespace>

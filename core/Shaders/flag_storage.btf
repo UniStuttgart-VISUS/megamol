@@ -13,6 +13,11 @@ const uint FLAG_SOFTSELECTED = 1u << 3;
 
 uniform uint flags_offset;
 
+uniform uint flag_color_enabled;
+uniform uint flag_color_filtered;
+uniform uint flag_color_selected;
+uniform uint flag_color_softselected;
+
 #ifdef FLAG_STORAGE_SSBO
 
     layout(std430, binding = 1) buffer Flags
