@@ -330,7 +330,7 @@ void megamol::core::CoreInstance::Initialise(void) {
         throw vislib::IllegalStateException("Cannot initalise Lua", __FILE__, __LINE__);
     }
     std::string result;
-    int ok = lua->RunString("mmLog(LOGINFO, 'Lua loaded OK: Running on ', "
+    const bool ok = lua->RunString("mmLog(LOGINFO, 'Lua loaded OK: Running on ', "
                             "mmGetBitWidth(), ' bit ', mmGetOS(), ' in ', mmGetConfiguration(),"
                             "' mode on ', mmGetMachineName(), '.')",
         result);
