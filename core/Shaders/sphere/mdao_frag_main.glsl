@@ -1,13 +1,13 @@
-in vec4 vsObjPos;
-in vec4 vsCamPos;
-in float vsSquaredRad;
-in float vsRad;
+in vec4 objPos;
+in vec4 camPos;
+in float squareRad;
+in float rad;
 in vec4 vsColor;
 
 uniform vec4 inViewAttr;
 
-uniform mat4 inMvpInverse;
-uniform mat4 inMvpTrans;
+uniform mat4 MVPinv;
+uniform mat4 MVPtransp;
 
 uniform vec4 inClipDat;
 uniform vec4 inClipCol;
@@ -31,23 +31,23 @@ void main(void) {
 
 
     // transform fragment coordinates from view coordinates to object coordinates.
-    coord = inMvpInverse * coord;
+    coord = MVPinv * coord;
     coord /= coord.w;
-    coord -= vsObjPos; // ... and to glyph space
+    coord -= objPos; // ... and to glyph space
 
     // calc the viewing ray
-    ray = normalize(coord.xyz - vsCamPos.xyz);
+    ray = normalize(coord.xyz - camPos.xyz);
 
     // chose color for lighting
     vec4 color = vsColor;
 	
     // calculate the geometry-ray-intersection
-	float cam_dot_ray = dot(vsCamPos.xyz, ray);
-	float cam_dot_cam = dot(vsCamPos.xyz, vsCamPos.xyz);
+	float cam_dot_ray = dot(camPos.xyz, ray);
+	float cam_dot_cam = dot(camPos.xyz, camPos.xyz);
 	
 	// off axis of cam-sphere-vector and ray
     float d2s = cam_dot_cam - cam_dot_ray * cam_dot_ray;      
-    float radicand = vsSquaredRad - d2s;                        // square of difference of projected length and lambda
+    float radicand = squareRad - d2s;                        // square of difference of projected length and lambda
     if (radicand < 0.0) {
         discard; 
     }
@@ -55,20 +55,20 @@ void main(void) {
     float sqrtRadicand = sqrt(radicand);
     lambda = -cam_dot_ray - sqrtRadicand;                           // lambda
 
-    vec3 sphereintersection = lambda * ray + vsCamPos.xyz;    // intersection point in camera coordinates
-    vec4 normal = vec4(sphereintersection / vsRad, 0.0);
+    vec3 sphereintersection = lambda * ray + camPos.xyz;    // intersection point in camera coordinates
+    vec4 normal = vec4(sphereintersection / rad, 0.0);
 	
 	if (any(notEqual(inClipDat.xyz, vec3(0.0, 0.0, 0.0)))) {
 		vec3 planeNormal = normalize(inClipDat.xyz);
 		vec3 clipPlaneBase = planeNormal * inClipDat.w;
-		float d = -dot(planeNormal, clipPlaneBase - vsObjPos.xyz);
+		float d = -dot(planeNormal, clipPlaneBase - objPos.xyz);
 		float dist1 = dot(sphereintersection, planeNormal) + d;
 		float dist2 = d;
-		float t = -(dot(planeNormal, vsCamPos.xyz) + d) / dot(planeNormal, ray);
-		vec3 planeintersect = vsCamPos.xyz + t * ray;
+		float t = -(dot(planeNormal, camPos.xyz) + d) / dot(planeNormal, ray);
+		vec3 planeintersect = camPos.xyz + t * ray;
 		if (dist1 > 0.0) {
-			if (dist2*dist2 < vsSquaredRad) {
-				if (dot(planeintersect, planeintersect) < vsSquaredRad) {
+			if (dist2*dist2 < squareRad) {
+				if (dot(planeintersect, planeintersect) < squareRad) {
 					sphereintersection = planeintersect;
 					normal = vec4(planeNormal, 1.0);
 					color = mix(color, vec4(inClipCol.rgb, 1.0), inClipCol.a);
@@ -86,8 +86,8 @@ void main(void) {
 	if (!inUseHighPrecision)
 		outNormal = outNormal * 0.5 + 0.5;
 	
-	vec4 hitPosObj = vec4(sphereintersection + vsObjPos.xyz, 1.0);
-    float depth = dot(inMvpTrans[2], hitPosObj);
-    float depthW = dot(inMvpTrans[3], hitPosObj);
+	vec4 hitPosObj = vec4(sphereintersection + objPos.xyz, 1.0);
+    float depth = dot(MVPtransp[2], hitPosObj);
+    float depthW = dot(MVPtransp[3], hitPosObj);
     gl_FragDepth = ((depth / depthW) + 1.0) * 0.5;
 }

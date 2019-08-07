@@ -16,7 +16,7 @@ uniform vec3 inCamRight;
 uniform vec4 inCamPos;
 
 uniform mat4 inMvp;
-uniform mat4 inMvpInverse;
+uniform mat4 MVPinv;
 
 uniform float inGlobalRadius;
 uniform bool inUseGlobalColor;
@@ -29,17 +29,17 @@ uniform vec2 inIndexRange;
 uniform vec4 inClipDat;
 uniform vec4 inClipCol;
 
-out vec4 vsObjPos;
-out vec4 vsCamPos;
-out float vsSquaredRad;
-out float vsRad;
+out vec4 objPos;
+out vec4 camPos;
+out float squareRad;
+out float rad;
 
 void main(void) {
 
     // remove the sphere radius from the w coordinates to the rad varyings
-    vsObjPos = gl_in[0].gl_Position;
-    vsRad = (inGlobalRadius == 0.0) ? vsObjPos.w : inGlobalRadius;
-    vsObjPos.w = 1.0;
+    objPos = gl_in[0].gl_Position;
+    rad = (inGlobalRadius == 0.0) ? objPos.w : inGlobalRadius;
+    objPos.w = 1.0;
 
 	vsColor = colorgs[0];
 	if (inUseGlobalColor)
@@ -52,13 +52,11 @@ void main(void) {
 	}
 
 #ifdef WITH_SCALING
-    vsRad *= scaling;
+    rad *= scaling;
 #endif // WITH_SCALING
 
-    vsSquaredRad = vsRad * vsRad;
+    squareRad = rad * rad;
 
-    // calculate cam position
-    vsCamPos.xyz = inCamPos.xyz -  vsObjPos.xyz; // cam pos to glyph space
-
-    // Sphere-Touch-Plane-Approach
-    vec2 winHalf = 2.0 / inViewAttr.zw; // window size
+    // calculate cam position 
+    camPos = MVinv[3]; // (C) by Christoph 
+    camPos.xyz -= objPos.xyz; // cam pos to glyph space 

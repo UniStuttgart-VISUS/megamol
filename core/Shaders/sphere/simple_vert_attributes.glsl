@@ -21,7 +21,7 @@ uniform mat4 MVP;
 uniform vec4 inConsts1;
 uniform sampler1D colTab;
 
-in vec4 inVertex;
+in vec4 inPosition;
 in vec4 inColor;
 in float inColIdx;
 

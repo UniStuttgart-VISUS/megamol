@@ -3,7 +3,7 @@
 uniform float inWidth;
 uniform float inHeight;
 
-uniform mat4 inMvpInverse;
+uniform mat4 MVPinv;
 
 uniform sampler2D inColorTex;
 uniform sampler2D inNormalsTex;
@@ -33,7 +33,7 @@ void main()
 	}
 
 	// Reconstruct object coordinates
-	vec4 objPos = inMvpInverse * (vec4(gl_FragCoord.xy/vec2(inWidth, inHeight), depth, 1.0) * 2.0 - 1.0);
+	vec4 objPos = MVPinv * (vec4(gl_FragCoord.xy/vec2(inWidth, inHeight), depth, 1.0) * 2.0 - 1.0);
 	objPos /= objPos.w;
 
 	vec3 color = texelFetch(inColorTex, texelCoord, 0).xyz;

@@ -10,7 +10,7 @@ uniform vec3 inCamRight;
 uniform vec4 inCamPos;
 
 uniform mat4 inMvp;
-uniform mat4 inMvpInverse;
+uniform mat4 MVPinv;
 
 uniform float inGlobalRadius;
 uniform bool inUseGlobalColor;

@@ -11,7 +11,7 @@ const uint FLAG_FILTERED = 1u << 1;
 const uint FLAG_SELECTED = 1u << 2;
 const uint FLAG_SOFTSELECTED = 1u << 3;
 
-uniform uint flags_offset;
+uniform uint flag_offset;
 
 uniform vec4 flag_color_enabled;
 uniform vec4 flag_color_filtered;
@@ -43,11 +43,11 @@ uniform vec4 flag_color_softselected;
 
 #ifdef FLAG_STORAGE_SSBO
 
-    flag = flags[(flags_offset + gl_VertexID)];
+    flag = flags[(flag_offset + gl_VertexID)];
 
 #else
 
-    flag = flags_offset + flags;
+    flag = flag_offset + flags;
 
 #endif // FLAG_STORAGE_SSBO
 

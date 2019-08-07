@@ -5,7 +5,7 @@ uniform sampler1D colTab;
 uniform vec4 clipDat;
 uniform vec4 clipCol;
 
-in vec4 inVertex;
+in vec4 inPosition;
 in vec4 inColor;
 in float inColIdx;
 

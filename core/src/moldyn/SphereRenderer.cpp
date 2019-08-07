@@ -562,59 +562,71 @@ bool moldyn::SphereRenderer::createResources() {
             this->aoConeLengthSlot.Param<megamol::core::param::FloatParam>()->SetGUIVisible(true);
             this->useHPTexturesSlot.Param<megamol::core::param::BoolParam>()->SetGUIVisible(true);
 
+            this->aoConeApexSlot.ResetDirty();
+            this->enableLightingSlot.ResetDirty();
+
             // Generate texture and frame buffer handles
             glGenTextures(3, reinterpret_cast<GLuint*>(&this->gBuffer));
             glGenFramebuffers(1, &(this->gBuffer.fbo));
 
-            // Create the sphere shader if neccessary
-            vertShaderName = "sphere_mdao::vertex";
-            fragShaderName = "sphere_mdao::fragment";
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
-                return false;
-            }
-            if (this->flagsUseSSBO) {
-                this->vertShader->Insert(1, flagSnippet);
-            }
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
-                return false;
-            }
-            if (!this->sphereShader.Create(this->vertShader->Code(), this->vertShader->Count(),
-                this->fragShader->Code(), this->fragShader->Count())) {
-                vislib::sys::Log::DefaultLog.WriteMsg(
-                    vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Unable to compile sphere shader: Unknown error\n");
-                return false;
+            // Create the sphere shader (only if necessary)
+            if (!vislib::graphics::gl::GLSLShader::IsValidHandle(this->sphereShader)) {
+                vertShaderName = "sphere_mdao::vertex";
+                    fragShaderName = "sphere_mdao::fragment";
+                    if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
+                        return false;
+                    }
+                if (this->flagsUseSSBO) {
+                    this->vertShader->Insert(1, flagSnippet);
+                }
+                if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
+                    return false;
+                }
+                if (!this->sphereShader.Create(this->vertShader->Code(), this->vertShader->Count(),
+                    this->fragShader->Code(), this->fragShader->Count())) {
+                    vislib::sys::Log::DefaultLog.WriteMsg(
+                        vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Unable to compile sphere shader: Unknown error\n");
+                    return false;
+                }
             }
 
-            // Create the geometry shader
-            vertShaderName = "sphere_mdao::geometry::vertex";
-            geoShaderName = "sphere_mdao::geometry::geometry";
-            fragShaderName = "sphere_mdao::fragment";
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
-                return false;
-            }
-            if (this->flagsUseSSBO) {
-                this->vertShader->Insert(1, flagSnippet);
-            }
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(geoShaderName.PeekBuffer(), *this->geoShader)) {
-                return false;
-            }
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
-                return false;
-            }
-            if (!this->sphereGeometryShader.Compile(this->vertShader->Code(), this->vertShader->Count(),
-                this->geoShader->Code(), this->geoShader->Count(), this->fragShader->Code(),
-                this->fragShader->Count())) {
-                vislib::sys::Log::DefaultLog.WriteMsg(
-                    vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Unable to compile sphere geometry shader: Unknown error\n");
-                return false;
-            }
-            if (!this->sphereGeometryShader.Link()) {
-                vislib::sys::Log::DefaultLog.WriteMsg(
-                    vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Unable to link sphere geometry shader: Unknown error\n");
-                return false;
+            // Create the geometry shader (only if necessary)
+            if (!vislib::graphics::gl::GLSLGeometryShader::IsValidHandle(this->sphereGeometryShader)) {
+                this->geoShader = new ShaderSource();
+                this->vertShader->Clear();
+                this->fragShader->Clear();
+                vertShaderName = "sphere_mdao::geometry::vertex";
+                geoShaderName = "sphere_mdao::geometry::geometry";
+                fragShaderName = "sphere_mdao::fragment";
+                if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
+                    return false;
+                }
+                if (this->flagsUseSSBO) {
+                    this->vertShader->Insert(1, flagSnippet);
+                }
+                if (!instance()->ShaderSourceFactory().MakeShaderSource(geoShaderName.PeekBuffer(), *this->geoShader)) {
+                    return false;
+                }
+                if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
+                    return false;
+                }
+                if (!this->sphereGeometryShader.Compile(this->vertShader->Code(), this->vertShader->Count(),
+                    this->geoShader->Code(), this->geoShader->Count(), this->fragShader->Code(),
+                    this->fragShader->Count())) {
+                    vislib::sys::Log::DefaultLog.WriteMsg(
+                        vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Unable to compile sphere geometry shader: Unknown error\n");
+                    return false;
+                }
+                if (!this->sphereGeometryShader.Link()) {
+                    vislib::sys::Log::DefaultLog.WriteMsg(
+                        vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Unable to link sphere geometry shader: Unknown error\n");
+                    return false;
+                }
             }
 
             // Create the deferred shader
+            this->vertShader->Clear();
+            this->fragShader->Clear();
             if (!instance()->ShaderSourceFactory().MakeShaderSource("sphere_mdao::deferred::vertex", *this->vertShader)) {
                 return false;
             }
@@ -902,12 +914,13 @@ bool moldyn::SphereRenderer::Render(view::CallRender3D& call) {
     const SIZE_T hash = mpdc->DataHash();
     const unsigned int frameID = mpdc->FrameID();
 
+    //NB: Required for Ambient Occlusion
+    glPointSize(static_cast<GLfloat>(std::max(this->curVpWidth, this->curVpHeight)));
+
     // Check if we got a new data set
     this->stateInvalid = ((hash != this->oldHash) || (frameID != this->oldFrameID));
     this->oldHash = hash;
     this->oldFrameID = frameID;
-
-    glPointSize(static_cast<GLfloat>(std::max(this->curVpWidth, this->curVpHeight)));
 
     this->getClipData(this->curClipDat, this->curClipCol);
 
@@ -991,7 +1004,7 @@ bool moldyn::SphereRenderer::renderSimple(view::CallRender3D* cr3d, MultiParticl
 
     this->flagStorage(true, this->sphereShader, mpdc);
 
-    GLuint vertAttribLoc = glGetAttribLocationARB(this->sphereShader, "inVertex");
+    GLuint vertAttribLoc = glGetAttribLocationARB(this->sphereShader, "inPosition");
     GLuint colAttribLoc = glGetAttribLocationARB(this->sphereShader, "inColor");
     GLuint colIdxAttribLoc = glGetAttribLocationARB(this->sphereShader, "inColIdx");
 
@@ -1444,7 +1457,7 @@ bool moldyn::SphereRenderer::renderBufferArray(view::CallRender3D* cr3d, MultiPa
 
     this->flagStorage(true, this->sphereShader, mpdc);
 
-    GLuint vertAttribLoc = glGetAttribLocationARB(this->sphereShader, "inVertex");
+    GLuint vertAttribLoc = glGetAttribLocationARB(this->sphereShader, "inPosition");
     GLuint colAttribLoc = glGetAttribLocationARB(this->sphereShader, "inColor");
     GLuint colIdxAttribLoc = glGetAttribLocationARB(this->sphereShader, "inColIdx");
 
@@ -1553,7 +1566,7 @@ bool moldyn::SphereRenderer::renderGeometryShader(view::CallRender3D* cr3d, Mult
 
     this->flagStorage(true, this->sphereGeometryShader, mpdc);
 
-    GLuint vertAttribLoc = glGetAttribLocationARB(this->sphereGeometryShader, "inVertex");
+    GLuint vertAttribLoc = glGetAttribLocationARB(this->sphereGeometryShader, "inPosition");
     GLuint colAttribLoc = glGetAttribLocationARB(this->sphereGeometryShader, "inColor");
     GLuint colIdxAttribLoc = glGetAttribLocationARB(this->sphereGeometryShader, "inColIdx");
 
@@ -1742,8 +1755,8 @@ void moldyn::SphereRenderer::setPointers(MultiParticleDataCall::Particles& parts
 
 bool moldyn::SphereRenderer::enableTransferFunctionTexture(unsigned int& out_size) {
     core::view::CallGetTransferFunction* cgtf = this->getTFSlot.CallAs<core::view::CallGetTransferFunction>();
+    glEnable(GL_TEXTURE_2D);
     glActiveTexture(GL_TEXTURE0);
-    glEnable(GL_TEXTURE_1D);
     if ((cgtf != nullptr) && (*cgtf)()) {
         glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
         out_size = cgtf->TextureSize();
@@ -1860,13 +1873,13 @@ bool moldyn::SphereRenderer::makeVertexString(
     case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
         declaration = "    float posX; float posY; float posZ;\n";
         if (interleaved) {
-            code = "    inVertex = vec4(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX,\n"
+            code = "    inPosition = vec4(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX,\n"
                 "                 theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posY,\n"
                 "                 theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posZ, 1.0); \n"
                 "    rad = CONSTRAD;";
         }
         else {
-            code = "    inVertex = vec4(thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX,\n"
+            code = "    inPosition = vec4(thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX,\n"
                 "                 thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posY,\n"
                 "                 thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posZ, 1.0); \n"
                 "    rad = CONSTRAD;";
@@ -1875,13 +1888,13 @@ bool moldyn::SphereRenderer::makeVertexString(
     case MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ:
         declaration = "    double posX; double posY; double posZ;\n";
         if (interleaved) {
-            code = "    inVertex = vec4(float(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX),\n"
+            code = "    inPosition = vec4(float(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX),\n"
                 "                 float(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posY),\n"
                 "                 float(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posZ), 1.0); \n"
                 "    rad = CONSTRAD;";
         }
         else {
-            code = "    inVertex = vec4(float(thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX),\n"
+            code = "    inPosition = vec4(float(thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX),\n"
                 "                 float(thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posY),\n"
                 "                 float(thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posZ), 1.0); \n"
                 "    rad = CONSTRAD;";
@@ -1890,13 +1903,13 @@ bool moldyn::SphereRenderer::makeVertexString(
     case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
         declaration = "    float posX; float posY; float posZ; float posR;\n";
         if (interleaved) {
-            code = "    inVertex = vec4(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX,\n"
+            code = "    inPosition = vec4(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX,\n"
                 "                 theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posY,\n"
                 "                 theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posZ, 1.0); \n"
                 "    rad = theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posR;";
         }
         else {
-            code = "    inVertex = vec4(thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX,\n"
+            code = "    inPosition = vec4(thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX,\n"
                 "                 thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posY,\n"
                 "                 thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posZ, 1.0); \n"
                 "    rad = thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posR;";
@@ -2326,18 +2339,18 @@ void moldyn::SphereRenderer::renderParticlesGeometry(
 
     theShader.Enable();
 
-    glUniformMatrix4fv(theShader.ParameterLocation("inMvp"), 1, GL_FALSE, this->curMVP.PeekComponents());
-    glUniformMatrix4fv(theShader.ParameterLocation("inMvpInverse"), 1, GL_FALSE, this->curMVPinv.PeekComponents());
-    glUniformMatrix4fv(theShader.ParameterLocation("inMvpTrans"), 1, GL_FALSE, this->curMVPtransp.PeekComponents());
+    glUniformMatrix4fv(theShader.ParameterLocation("MVP"), 1, GL_FALSE, this->curMVP.PeekComponents());
+    glUniformMatrix4fv(theShader.ParameterLocation("MVPinv"), 1, GL_FALSE, this->curMVPinv.PeekComponents());
+    glUniformMatrix4fv(theShader.ParameterLocation("MVinv"), 1, GL_FALSE, this->curMVinv.PeekComponents());
+    glUniformMatrix4fv(theShader.ParameterLocation("MVPtransp"), 1, GL_FALSE, this->curMVPtransp.PeekComponents());
     glUniform1f(theShader.ParameterLocation("scaling"), this->radiusScalingParam.Param<param::FloatParam>()->Value());
-    theShader.SetParameterArray4("inViewAttr", 1, this->curViewAttrib);
-    theShader.SetParameterArray3("inCamFront", 1, cr3d->GetCameraParameters()->Front().PeekComponents());
-    theShader.SetParameterArray3("inCamRight", 1, cr3d->GetCameraParameters()->Right().PeekComponents());
-    theShader.SetParameterArray3("inCamUp", 1, cr3d->GetCameraParameters()->Up().PeekComponents());
-    theShader.SetParameterArray4("inCamPos", 1, this->curMVinv.GetColumn(3).PeekComponents());
-    theShader.SetParameterArray4("inClipDat", 1, this->curClipDat);
-    theShader.SetParameterArray4("inClipCol", 1, this->curClipCol);
-    theShader.SetParameter("inUseHighPrecision", highPrecision);
+    glUniform4fv(theShader.ParameterLocation("viewAttr"), 1, this->curViewAttrib);
+    glUniform3fv(theShader.ParameterLocation("camRight"), 1, cr3d->GetCameraParameters()->Right().PeekComponents());
+    glUniform3fv(theShader.ParameterLocation("camUp"), 1, cr3d->GetCameraParameters()->Up().PeekComponents());
+    glUniform3fv(theShader.ParameterLocation("camIn"), 1, cr3d->GetCameraParameters()->Front().PeekComponents());
+    glUniform4fv(theShader.ParameterLocation("inClipDat"), 1, this->curClipDat);
+    glUniform4fv(theShader.ParameterLocation("inClipCol"), 1, this->curClipCol);
+    glUniform1i(theShader.ParameterLocation("inUseHighPrecision"), (int)highPrecision);
 
     for (unsigned int i = 0; i < gpuData.size(); ++i) {
         glBindVertexArray(gpuData[i].vertexArray);
