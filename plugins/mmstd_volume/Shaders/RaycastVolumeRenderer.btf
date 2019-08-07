@@ -257,7 +257,7 @@ uniform float isoValue;
         <snippet type="string">
             <![CDATA[
 /* output normal */
-layout(r32f, binding = 1) writeonly uniform highp image2D normal_target_tx2D;
+layout(rgba32f, binding = 1) writeonly uniform highp image2D normal_target_tx2D;
 
 /* output depth */
 layout(r32f, binding = 2) writeonly uniform highp image2D depth_target_tx2D;
@@ -328,9 +328,9 @@ vec3 blinnPhong(vec3 n, vec3 l, vec3 v) {
                 const float front = textureOffset(volume_tx3D, texCoords, ivec3(0, 0, -1)).x;
                 const float back = textureOffset(volume_tx3D, texCoords, ivec3(0, 0, 1)).x;
 
-                normal.x = (right - left) / (4.0f * halfVoxelSize.x);
-                normal.y = (top - bottom) / (4.0f * halfVoxelSize.y);
-                normal.z = (back - front) / (4.0f * halfVoxelSize.z);
+                normal.x = (left - right) / halfVoxelSize.x;
+                normal.y = (bottom - top) / halfVoxelSize.y;
+                normal.z = (front - back) / halfVoxelSize.z;
                 normal = normalize(normal);
 
                 // Compute illumination from fixed light
@@ -352,7 +352,7 @@ vec3 blinnPhong(vec3 n, vec3 l, vec3 v) {
         <snippet name="::RaycastVolumeRenderer::common::loop_end" />
         <snippet type="string">
             <![CDATA[
-        imageStore(normal_target_tx2D, pixel_coords, vec4(normal, 0.0f));
+        imageStore(normal_target_tx2D, pixel_coords, vec4(normal, 1.0f));
         imageStore(depth_target_tx2D, pixel_coords, vec4(depth));
             ]]>
         </snippet>

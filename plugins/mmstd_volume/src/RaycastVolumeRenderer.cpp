@@ -116,7 +116,7 @@ bool RaycastVolumeRenderer::create() {
     m_render_target = std::make_unique<Texture2D>("raycast_volume_render_target", render_tgt_layout, nullptr);
 
     // create normal target texture
-    TextureLayout normal_tgt_layout(GL_RGB8, 1920, 1080, 1, GL_RGB, GL_UNSIGNED_BYTE, 1,
+    TextureLayout normal_tgt_layout(GL_RGBA8, 1920, 1080, 1, GL_RGBA, GL_UNSIGNED_BYTE, 1,
         {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
             {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
             {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
@@ -207,7 +207,7 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
                 vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
             this->fbo.Enable();
 
-            ::glClear(GL_DEPTH_BUFFER_BIT);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         }
 
         if (!(*ci)(core::view::CallRender3D::FnRender)) return false;
@@ -360,6 +360,9 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
         glActiveTexture(GL_TEXTURE2);
         m_depth_target->bindTexture();
         glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("depth_tx2D"), 2);
+
+        GLenum buffers[] = {GL_COLOR_ATTACHMENT0_EXT, GL_COLOR_ATTACHMENT1_EXT};
+        glDrawBuffers(2, buffers);
     }
 
     glDrawArrays(GL_TRIANGLES, 0, 6);
