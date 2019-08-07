@@ -85,7 +85,7 @@ bool RenderMDIMesh::create()
 	std::uniform_real_distribution<float> loc_distr(-0.9, 0.9);
 
 	draw_command_data.draw_cnt = 1000000;
-	draw_command_data.data = new CallmeshRenderBatches::RenderBatchesData::DrawCommandData::DrawElementsCommand[draw_command_data.draw_cnt];
+	draw_command_data.data = new CallmeshRenderBatches::RenderBatchesData::DrawCommandData::glowl::DrawElementsCommand[draw_command_data.draw_cnt];
 
 	obj_shader_params.byte_size = 16 * 4 * draw_command_data.draw_cnt;
 	obj_shader_params.raw_data = new uint8_t[obj_shader_params.byte_size];
@@ -249,19 +249,19 @@ bool RenderMDIMesh::Render(megamol::core::Call& call)
 		render_task.mesh->bindVertexArray();
 		
 		glMultiDrawElementsIndirect(render_task.mesh->getPrimitiveType(),
-			render_task.mesh->getIndicesType(),
+			render_task.mesh->getIndexType(),
 			(GLvoid*)0,
 			render_task.draw_cnt,
 			0);
 
-		//CallmeshRenderBatches::RenderBatchesData::DrawCommandData::DrawElementsCommand command_buffer;
+		//CallmeshRenderBatches::RenderBatchesData::DrawCommandData::glowl::DrawElementsCommand command_buffer;
 		//command_buffer.cnt = 3;
 		//command_buffer.instance_cnt = 1;
 		//command_buffer.first_idx = 0;
 		//command_buffer.base_vertex = 0;
 		//command_buffer.base_instance = 0;
 
-		//DrawElementsCommand command_buffer;
+		//glowl::DrawElementsCommand command_buffer;
 		//command_buffer.cnt = 3;
 		//command_buffer.instance_cnt = 1;
 		//command_buffer.first_idx = 0;

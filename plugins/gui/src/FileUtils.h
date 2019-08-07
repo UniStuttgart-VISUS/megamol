@@ -5,7 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#pragma once
+#ifndef MEGAMOL_GUI_FILEUTILS_INCLUDED
+#define MEGAMOL_GUI_FILEUTILS_INCLUDED
 
 #if _HAS_CXX17
 #    include <filesystem> // directory_iterator
@@ -123,3 +124,5 @@ inline bool SaveProjectFile(std::string projectFilename, megamol::core::CoreInst
 
 } // namespace gui
 } // namespace megamol
+
+#endif // MEGAMOL_GUI_FILEUTILS_INCLUDED

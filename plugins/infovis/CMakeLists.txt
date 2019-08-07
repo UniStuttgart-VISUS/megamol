@@ -13,18 +13,6 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   # afterwards list the dependencies.
   set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE BUILD_MMSTD_DATATOOLS_PLUGIN" CACHE INTERNAL "")
 
-  # Add Delaunator.
-  add_external_project(Delau_ext
-    GIT_REPOSITORY https://github.com/delfrrr/delaunator-cpp.git
-    GIT_TAG "v0.4.0"
-    CONFIGURE_COMMAND ""
-    BUILD_COMMAND ""
-    INSTALL_COMMAND ""
-    TEST_COMMAND "")
-  add_external_library(Delau INTERFACE
-    DEPENDS Delau_ext
-    INCLUDE_DIR "src/Delau_ext/include")
-
   # Add Barnes-Hut t-SNE.
   add_external_project(bhtsne_ext
     GIT_REPOSITORY  https://github.com/lvdmaaten/bhtsne.git
@@ -38,6 +26,11 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
     LIBRARY_DEBUG "lib/${CMAKE_STATIC_LIBRARY_PREFIX}bhtsned${CMAKE_STATIC_LIBRARY_SUFFIX}"
     LIBRARY_RELEASE "lib/${CMAKE_STATIC_LIBRARY_PREFIX}bhtsne${CMAKE_STATIC_LIBRARY_SUFFIX}")
 
+  # Add externals.
+  require_external(Eigen)
+  require_external(nanoflann)
+  require_external(Delaunator)
+  
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
@@ -51,7 +44,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   target_include_directories(${PROJECT_NAME}
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     PUBLIC "include" "src")
-  target_link_libraries(${PROJECT_NAME} PRIVATE core mmstd_datatools Eigen bhtsne Delau)
+  target_link_libraries(${PROJECT_NAME} PRIVATE core mmstd_datatools Eigen bhtsne Delaunator)
 
   # Installation rules for generated files
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
@@ -59,7 +52,9 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   if(WIN32)
     install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
     install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION "lib")
-    install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION bin OPTIONAL)
+    if(MSVC)
+      install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION bin OPTIONAL)
+    endif()
   else()
     install(TARGETS ${PROJECT_NAME} DESTINATION "lib" EXPORT ${PROJECT_NAME}-target)
   endif()
