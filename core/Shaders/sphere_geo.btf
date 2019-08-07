@@ -6,31 +6,31 @@
 
     <shader name="vertex">
         <snippet type="version">130</snippet>
-        <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>
+        <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>  
+        <snippet name="Attributes"       type="file">sphere/geo_vert_attributes.glsl</snippet>
         <snippet name="flag_storage::vert_attributes"/>     
         <!-- <snippet name="core_utils::tflookup" /> -->
-        <!-- <snippet name="core_utils::tfconvenience" /> -->     
-        <snippet name="Attributes"       type="file">sphere/geosphere_vert_attributes.glsl</snippet>
-        <snippet name="MainStart"        type="file">sphere/geosphere_vert_mainstart.glsl</snippet>
+        <!-- <snippet name="core_utils::tfconvenience" /> -->           
+        <snippet name="MainStart"        type="file">sphere/geo_vert_mainstart.glsl</snippet>
         <snippet name="Color"            type="file">sphere/simple_vert_color.glsl</snippet>
         <snippet name="flag_storage::vert_code"/>                   
-        <snippet name="MainEnd"             type="file">sphere/geosphere_vert_mainend.glsl</snippet>
+        <snippet name="MainEnd"             type="file">sphere/geo_vert_mainend.glsl</snippet>
     </shader>
 
     <shader name="geometry">
         <snippet type="version">150</snippet>
         <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>        
-        <snippet name="MainStart"        type="file">sphere/geosphere_geo_mainstart.glsl</snippet>
+        <snippet name="MainStart"        type="file">sphere/geo_geo_mainstart.glsl</snippet>
         <snippet name="SphereTouchPlane" type="file">sphere/simple_vert_spheretouchplane.glsl</snippet>
-        <snippet name="MainEnd"          type="file">sphere/geosphere_geo_mainend.glsl</snippet>
+        <snippet name="MainEnd"          type="file">sphere/geo_geo_mainend.glsl</snippet>
     </shader>
 
     <shader name="fragment">
         <snippet type="version">130</snippet>
         <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>
-        <snippet name="Attributes"       type="file">sphere/geosphere_frag_attributes.glsl</snippet>
+        <snippet name="Attributes"       type="file">sphere/geo_frag_attributes.glsl</snippet>
         <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>        
-        <snippet name="Main"             type="file">sphere/geosphere_frag_main.glsl</snippet>
+        <snippet name="Main"             type="file">sphere/geo_frag_main.glsl</snippet>
     </shader>
         
 </btf>

@@ -993,7 +993,7 @@ bool moldyn::SphereRenderer::renderSimple(view::CallRender3D* cr3d, MultiParticl
 
     GLuint vertAttribLoc = glGetAttribLocationARB(this->sphereShader, "inVertex");
     GLuint colAttribLoc = glGetAttribLocationARB(this->sphereShader, "inColor");
-    GLuint colIdxAttribLoc = glGetAttribLocationARB(this->sphereShader, "colIdx");
+    GLuint colIdxAttribLoc = glGetAttribLocationARB(this->sphereShader, "inColIdx");
 
     glUniform4fv(this->sphereShader.ParameterLocation("viewAttr"), 1, this->curViewAttrib);
     glUniform3fv(this->sphereShader.ParameterLocation("camIn"), 1, cr3d->GetCameraParameters()->Front().PeekComponents());
@@ -1446,7 +1446,7 @@ bool moldyn::SphereRenderer::renderBufferArray(view::CallRender3D* cr3d, MultiPa
 
     GLuint vertAttribLoc = glGetAttribLocationARB(this->sphereShader, "inVertex");
     GLuint colAttribLoc = glGetAttribLocationARB(this->sphereShader, "inColor");
-    GLuint colIdxAttribLoc = glGetAttribLocationARB(this->sphereShader, "colIdx");
+    GLuint colIdxAttribLoc = glGetAttribLocationARB(this->sphereShader, "inColIdx");
 
     glUniform4fv(this->sphereShader.ParameterLocation("viewAttr"), 1, this->curViewAttrib);
     glUniform3fv(this->sphereShader.ParameterLocation("camIn"), 1, cr3d->GetCameraParameters()->Front().PeekComponents());
@@ -1555,7 +1555,7 @@ bool moldyn::SphereRenderer::renderGeometryShader(view::CallRender3D* cr3d, Mult
 
     GLuint vertAttribLoc = glGetAttribLocationARB(this->sphereGeometryShader, "inVertex");
     GLuint colAttribLoc = glGetAttribLocationARB(this->sphereGeometryShader, "inColor");
-    GLuint colIdxAttribLoc = glGetAttribLocationARB(this->sphereGeometryShader, "colIdx");
+    GLuint colIdxAttribLoc = glGetAttribLocationARB(this->sphereGeometryShader, "inColIdx");
 
     // Set shader variables
     glUniform4fv(this->sphereGeometryShader.ParameterLocation("viewAttr"), 1, this->curViewAttrib);
@@ -1578,12 +1578,12 @@ bool moldyn::SphereRenderer::renderGeometryShader(view::CallRender3D* cr3d, Mult
         MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
 
         if (this->flagsEnabled) {
-            glUniform1ui(this->sphereShader.ParameterLocation("flag_offset"), flagPartsCount);
+            glUniform1ui(this->sphereGeometryShader.ParameterLocation("flag_offset"), flagPartsCount);
             float col[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
-            glUniform4fv(this->sphereShader.ParameterLocation("flag_color_enabled"), 1, col);
-            glUniform4fv(this->sphereShader.ParameterLocation("flag_color_filtered"), 1, col);
-            glUniform4fv(this->sphereShader.ParameterLocation("flag_color_selected"), 1, col);
-            glUniform4fv(this->sphereShader.ParameterLocation("flag_color_softselected"), 1, col);
+            glUniform4fv(this->sphereGeometryShader.ParameterLocation("flag_color_enabled"), 1, col);
+            glUniform4fv(this->sphereGeometryShader.ParameterLocation("flag_color_filtered"), 1, col);
+            glUniform4fv(this->sphereGeometryShader.ParameterLocation("flag_color_selected"), 1, col);
+            glUniform4fv(this->sphereGeometryShader.ParameterLocation("flag_color_softselected"), 1, col);
         }
 
         this->setPointers<GLSLGeometryShader>(parts, this->sphereGeometryShader, 0, parts.GetVertexData(),
@@ -2091,7 +2091,7 @@ bool moldyn::SphereRenderer::flagStorage(bool enable, vislib::graphics::gl::GLSL
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBOflagsBindingPoint, this->flagsBuffer);
         }
         else {
-            unsigned int flagAttrib = glGetAttribLocationARB(activeShader, "flags");
+            GLuint flagAttrib = glGetAttribLocationARB(activeShader, "flags");
             glEnableVertexAttribArrayARB(flagAttrib);
             glVertexAttribIPointer(flagAttrib, 1, GL_UNSIGNED_INT, sizeof(core::FlagStorage::FlagItemType), this->flagsData.get()->data());
         }
@@ -2102,7 +2102,7 @@ bool moldyn::SphereRenderer::flagStorage(bool enable, vislib::graphics::gl::GLSL
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, 0);
         }
         else {
-            unsigned int flagAttrib = glGetAttribLocationARB(activeShader, "flags");
+            GLuint flagAttrib = glGetAttribLocationARB(activeShader, "flags");
             glDisableVertexAttribArrayARB(flagAttrib);
         }
 

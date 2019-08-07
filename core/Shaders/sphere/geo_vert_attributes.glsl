@@ -7,7 +7,7 @@ uniform vec4 clipCol;
 
 in vec4 inVertex;
 in vec4 inColor;
-in float colIdx;
+in float inColIdx;
 
 out vec4 vertColor;
 
