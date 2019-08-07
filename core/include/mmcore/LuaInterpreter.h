@@ -94,7 +94,7 @@ public:
     bool RunString(const std::string& script, std::string& result);
 
     /**
-     * Register callback function to lua and all environments known to date
+     * Register callback function in lua and all environments known to date
      */
     template <class C, luaCallbackFunc<C> func> void RegisterCallback(std::string const& name, std::string const& help) {
         //this->theCallbacks += name + "=" + name + ",";
@@ -105,6 +105,10 @@ public:
         }
     }
 
+    /**
+     * Register an alias to a callback function in lua and all environments known to date.
+     * Only works if the function has already been registered.
+     */
     void RegisterAlias(std::string const& name, std::string const&alias) {
         //this->theCallbacks += name + "=" + alias + ",";
         for(auto &x: theEnvironments) {
@@ -112,6 +116,9 @@ public:
         }
     }
 
+    /**
+     * Register a constant in lua and all environments known to date.
+     */
     void RegisterConstant(std::string const &name, uint32_t value) {
         //this->theConstants[name] = value;
         lua_pushinteger(L, value);
@@ -150,7 +157,7 @@ private:
     }
 
     // ************************************************************
-    // Lua interface routines, published to Lua as mmli<name>
+    // Lua interface routines, published to Lua as mm<name>
     // ************************************************************
 
     int log(lua_State* L);
@@ -219,29 +226,6 @@ std::string const megamol::core::LuaInterpreter<T>::DEFAULT_ENV =
     "      sqrt = math.sqrt, tan = math.tan, tanh = math.tanh },"
     "  os = { clock = os.clock, difftime = os.difftime, time = os.time },"
     "}";
-
-
-//template <class T> void LuaInterpreter<T>::Initialize(std::string const &env) {
-//    USES_CHECK_LUA
-//    // load parts of the environment
-//
-//
-//    auto tmp = env;
-//    std::string envName;
-//    auto end = tmp.find_last_of("}");
-//    tmp.insert(end, theCallbacks);
-//    if (LoadEnviromentString(tmp, envName)) {
-//
-//        if (!this->theConstants.empty()) {
-//            for (auto &c: this->theConstants) {
-//                lua_pushinteger(L, c.second);
-//                lua_setglobal(L, c.first.c_str());
-//            }
-//        }
-//
-//        initialized = true;
-//    }
-//}
 
 template <class T> megamol::core::LuaInterpreter<T>::LuaInterpreter(T* t, std::string const& env) : L{luaL_newstate()}, that{t} {
     *static_cast<T**>(lua_getextraspace(L)) = that;
