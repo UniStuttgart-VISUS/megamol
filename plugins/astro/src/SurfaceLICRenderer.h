@@ -420,12 +420,12 @@ private:
     /** caller slot */
     core::CallerSlot m_input_renderer;
     core::CallerSlot m_input_velocities;
+    core::CallerSlot m_input_transfer_function;
 
     /** Parameters */
-    core::param::ParamSlot color;
     core::param::ParamSlot stencil_size;
+    core::param::ParamSlot arc_length;
     core::param::ParamSlot num_advections;
-    core::param::ParamSlot timestep;
     core::param::ParamSlot epsilon;
 
     /** Shader */
