@@ -1,7 +1,7 @@
 /*
  * SphereOutlineRenderer.h
  *
- * Copyright (C) 2009 by VISUS (Universitaet Stuttgart)
+ * Copyright (C) 2009 - 2019 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 
@@ -113,6 +113,9 @@ namespace moldyn {
 
         /** The distance of the additional outlines as angles in radians */
         param::ParamSlot multiOutLineDistSlot;
+
+        /** A user-defined scaling factor applied on the radius. */
+        param::ParamSlot paramScaling;
 
         /** The sphere quadric */
         void *sphereQuadric;
