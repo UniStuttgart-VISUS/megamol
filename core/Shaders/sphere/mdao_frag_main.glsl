@@ -1,16 +1,16 @@
 in vec4 objPos;
 in vec4 camPos;
-in float squareRad;
+in float squarRad;
 in float rad;
-in vec4 vsColor;
+in vec4 vertColor;
 
-uniform vec4 inViewAttr;
+uniform vec4 viewAttr;
 
 uniform mat4 MVPinv;
 uniform mat4 MVPtransp;
 
-uniform vec4 inClipDat;
-uniform vec4 inClipCol;
+uniform vec4 clipDat;
+uniform vec4 clipCol;
 
 uniform bool inUseHighPrecision;
 
@@ -26,7 +26,7 @@ void main(void) {
 
 	// transform fragment coordinates from window coordinates to view coordinates.
 	coord = gl_FragCoord 
-		* vec4(inViewAttr.z, inViewAttr.w, 2.0, 0.0)
+		* vec4(viewAttr.z, viewAttr.w, 2.0, 0.0)
 		+ vec4(-1.0, -1.0, -1.0, 1.0);
 
 
@@ -39,7 +39,7 @@ void main(void) {
     ray = normalize(coord.xyz - camPos.xyz);
 
     // chose color for lighting
-    vec4 color = vsColor;
+    vec4 color = vertColor;
 	
     // calculate the geometry-ray-intersection
 	float cam_dot_ray = dot(camPos.xyz, ray);
@@ -47,7 +47,7 @@ void main(void) {
 	
 	// off axis of cam-sphere-vector and ray
     float d2s = cam_dot_cam - cam_dot_ray * cam_dot_ray;      
-    float radicand = squareRad - d2s;                        // square of difference of projected length and lambda
+    float radicand = squarRad - d2s;                        // square of difference of projected length and lambda
     if (radicand < 0.0) {
         discard; 
     }
@@ -58,20 +58,20 @@ void main(void) {
     vec3 sphereintersection = lambda * ray + camPos.xyz;    // intersection point in camera coordinates
     vec4 normal = vec4(sphereintersection / rad, 0.0);
 	
-	if (any(notEqual(inClipDat.xyz, vec3(0.0, 0.0, 0.0)))) {
-		vec3 planeNormal = normalize(inClipDat.xyz);
-		vec3 clipPlaneBase = planeNormal * inClipDat.w;
+	if (any(notEqual(clipDat.xyz, vec3(0.0, 0.0, 0.0)))) {
+		vec3 planeNormal = normalize(clipDat.xyz);
+		vec3 clipPlaneBase = planeNormal * clipDat.w;
 		float d = -dot(planeNormal, clipPlaneBase - objPos.xyz);
 		float dist1 = dot(sphereintersection, planeNormal) + d;
 		float dist2 = d;
 		float t = -(dot(planeNormal, camPos.xyz) + d) / dot(planeNormal, ray);
 		vec3 planeintersect = camPos.xyz + t * ray;
 		if (dist1 > 0.0) {
-			if (dist2*dist2 < squareRad) {
-				if (dot(planeintersect, planeintersect) < squareRad) {
+			if (dist2*dist2 < squarRad) {
+				if (dot(planeintersect, planeintersect) < squarRad) {
 					sphereintersection = planeintersect;
 					normal = vec4(planeNormal, 1.0);
-					color = mix(color, vec4(inClipCol.rgb, 1.0), inClipCol.a);
+					color = mix(color, vec4(clipCol.rgb, 1.0), clipCol.a);
 				} else {
 					discard;
 				}

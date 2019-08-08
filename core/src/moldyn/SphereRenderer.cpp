@@ -570,60 +570,56 @@ bool moldyn::SphereRenderer::createResources() {
             glGenFramebuffers(1, &(this->gBuffer.fbo));
 
             // Create the sphere shader (only if necessary)
-            if (!vislib::graphics::gl::GLSLShader::IsValidHandle(this->sphereShader)) {
-                vertShaderName = "sphere_mdao::vertex";
-                    fragShaderName = "sphere_mdao::fragment";
-                    if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
-                        return false;
-                    }
-                if (this->flagsUseSSBO) {
-                    this->vertShader->Insert(1, flagSnippet);
-                }
-                if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
-                    return false;
-                }
-                if (!this->sphereShader.Create(this->vertShader->Code(), this->vertShader->Count(),
-                    this->fragShader->Code(), this->fragShader->Count())) {
-                    vislib::sys::Log::DefaultLog.WriteMsg(
-                        vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Unable to compile sphere shader: Unknown error\n");
-                    return false;
-                }
+            vertShaderName = "sphere_mdao::vertex";
+            fragShaderName = "sphere_mdao::fragment";
+            if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
+                return false;
+            }
+            if (this->flagsUseSSBO) {
+                this->vertShader->Insert(1, flagSnippet);
+            }
+            if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
+                return false;
+            }
+            if (!this->sphereShader.Create(this->vertShader->Code(), this->vertShader->Count(),
+                this->fragShader->Code(), this->fragShader->Count())) {
+                vislib::sys::Log::DefaultLog.WriteMsg(
+                    vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Unable to compile sphere shader: Unknown error\n");
+                return false;
             }
 
             // Create the geometry shader (only if necessary)
-            if (!vislib::graphics::gl::GLSLGeometryShader::IsValidHandle(this->sphereGeometryShader)) {
-                this->geoShader = new ShaderSource();
-                this->vertShader->Clear();
-                this->fragShader->Clear();
-                vertShaderName = "sphere_mdao::geometry::vertex";
-                geoShaderName = "sphere_mdao::geometry::geometry";
-                fragShaderName = "sphere_mdao::fragment";
-                if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
-                    return false;
-                }
-                if (this->flagsUseSSBO) {
-                    this->vertShader->Insert(1, flagSnippet);
-                }
-                if (!instance()->ShaderSourceFactory().MakeShaderSource(geoShaderName.PeekBuffer(), *this->geoShader)) {
-                    return false;
-                }
-                if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
-                    return false;
-                }
-                if (!this->sphereGeometryShader.Compile(this->vertShader->Code(), this->vertShader->Count(),
-                    this->geoShader->Code(), this->geoShader->Count(), this->fragShader->Code(),
-                    this->fragShader->Count())) {
-                    vislib::sys::Log::DefaultLog.WriteMsg(
-                        vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Unable to compile sphere geometry shader: Unknown error\n");
-                    return false;
-                }
-                if (!this->sphereGeometryShader.Link()) {
-                    vislib::sys::Log::DefaultLog.WriteMsg(
-                        vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Unable to link sphere geometry shader: Unknown error\n");
-                    return false;
-                }
+            this->geoShader = new ShaderSource();
+            this->vertShader->Clear();
+            this->fragShader->Clear();
+            vertShaderName = "sphere_mdao::geometry::vertex";
+            geoShaderName = "sphere_mdao::geometry::geometry";
+            fragShaderName = "sphere_mdao::fragment";
+            if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
+                return false;
             }
-
+            if (this->flagsUseSSBO) {
+                this->vertShader->Insert(1, flagSnippet);
+            }
+            if (!instance()->ShaderSourceFactory().MakeShaderSource(geoShaderName.PeekBuffer(), *this->geoShader)) {
+                return false;
+            }
+            if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
+                return false;
+            }
+            if (!this->sphereGeometryShader.Compile(this->vertShader->Code(), this->vertShader->Count(),
+                this->geoShader->Code(), this->geoShader->Count(), this->fragShader->Code(),
+                this->fragShader->Count())) {
+                vislib::sys::Log::DefaultLog.WriteMsg(
+                    vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Unable to compile sphere geometry shader: Unknown error\n");
+                return false;
+            }
+            if (!this->sphereGeometryShader.Link()) {
+                vislib::sys::Log::DefaultLog.WriteMsg(
+                    vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Unable to link sphere geometry shader: Unknown error\n");
+                return false;
+            }
+           
             // Create the deferred shader
             this->vertShader->Clear();
             this->fragShader->Clear();
@@ -2231,11 +2227,11 @@ bool moldyn::SphereRenderer::rebuildGBuffer() {
 
 
 void moldyn::SphereRenderer::rebuildWorkingData(
-    megamol::core::view::CallRender3D* cr3d, megamol::core::moldyn::MultiParticleDataCall* dataCall) {
+    megamol::core::view::CallRender3D* cr3d, megamol::core::moldyn::MultiParticleDataCall* mpdc) {
 
     // Upload new data if neccessary
     if (stateInvalid) {
-        unsigned int partsCount = dataCall->GetParticleListCount();
+        unsigned int partsCount = mpdc->GetParticleListCount();
 
         // Add buffers if neccessary
         for (unsigned int i = static_cast<unsigned int>(this->gpuData.size()); i < partsCount; ++i) {
@@ -2259,7 +2255,7 @@ void moldyn::SphereRenderer::rebuildWorkingData(
 
         // Reupload buffers
         for (unsigned int i = 0; i < partsCount; ++i) {
-            uploadDataToGPU(this->gpuData[i], dataCall->AccessParticles(i));
+            uploadDataToGPU(this->gpuData[i], mpdc->AccessParticles(i));
         }
     }
 
@@ -2308,10 +2304,10 @@ void moldyn::SphereRenderer::rebuildWorkingData(
             this->curClipDat[2], this->curClipDat[3]));
         for (unsigned int i = 0; i < this->gpuData.size(); ++i) {
             float globalRadius = 0.0f;
-            if (dataCall->AccessParticles(i).GetVertexDataType() !=
+            if (mpdc->AccessParticles(i).GetVertexDataType() !=
                 megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR)
-                globalRadius = dataCall->AccessParticles(i).GetGlobalRadius();
-            this->volGen->InsertParticles(static_cast<unsigned int>(dataCall->AccessParticles(i).GetCount()),
+                globalRadius = mpdc->AccessParticles(i).GetGlobalRadius();
+            this->volGen->InsertParticles(static_cast<unsigned int>(mpdc->AccessParticles(i).GetCount()),
                 globalRadius, this->gpuData[i].vertexArray);
         }
         this->volGen->EndInsertion();
@@ -2330,7 +2326,7 @@ void moldyn::SphereRenderer::rebuildWorkingData(
 
 
 void moldyn::SphereRenderer::renderParticlesGeometry(
-    megamol::core::view::CallRender3D* cr3d, megamol::core::moldyn::MultiParticleDataCall* dataCall) {
+    megamol::core::view::CallRender3D* cr3d, megamol::core::moldyn::MultiParticleDataCall* mpdc) {
 
     bool highPrecision = this->useHPTexturesSlot.Param<megamol::core::param::BoolParam>()->Value();
 
@@ -2338,6 +2334,8 @@ void moldyn::SphereRenderer::renderParticlesGeometry(
     vislib::graphics::gl::GLSLShader& theShader = useGeo ? this->sphereGeometryShader : this->sphereShader;
 
     theShader.Enable();
+
+    this->flagStorage(true, theShader, mpdc);
 
     glUniformMatrix4fv(theShader.ParameterLocation("MVP"), 1, GL_FALSE, this->curMVP.PeekComponents());
     glUniformMatrix4fv(theShader.ParameterLocation("MVPinv"), 1, GL_FALSE, this->curMVPinv.PeekComponents());
@@ -2348,14 +2346,23 @@ void moldyn::SphereRenderer::renderParticlesGeometry(
     glUniform3fv(theShader.ParameterLocation("camRight"), 1, cr3d->GetCameraParameters()->Right().PeekComponents());
     glUniform3fv(theShader.ParameterLocation("camUp"), 1, cr3d->GetCameraParameters()->Up().PeekComponents());
     glUniform3fv(theShader.ParameterLocation("camIn"), 1, cr3d->GetCameraParameters()->Front().PeekComponents());
-    glUniform4fv(theShader.ParameterLocation("inClipDat"), 1, this->curClipDat);
-    glUniform4fv(theShader.ParameterLocation("inClipCol"), 1, this->curClipCol);
+    glUniform4fv(theShader.ParameterLocation("clipDat"), 1, this->curClipDat);
+    glUniform4fv(theShader.ParameterLocation("clipCol"), 1, this->curClipCol);
     glUniform1i(theShader.ParameterLocation("inUseHighPrecision"), (int)highPrecision);
 
-    for (unsigned int i = 0; i < gpuData.size(); ++i) {
-        glBindVertexArray(gpuData[i].vertexArray);
+    unsigned int flagPartsCount = 0;
+    for (unsigned int i = 0; i < this->gpuData.size(); ++i) {
+        glBindVertexArray(this->gpuData[i].vertexArray);
+        core::moldyn::SimpleSphericalParticles& parts = mpdc->AccessParticles(i);
 
-        core::moldyn::SimpleSphericalParticles& parts = dataCall->AccessParticles(i);
+        if (this->flagsEnabled) {
+            glUniform1ui(this->sphereShader.ParameterLocation("flag_offset"), flagPartsCount);
+            float col[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+            glUniform4fv(this->sphereShader.ParameterLocation("flag_color_enabled"), 1, col);
+            glUniform4fv(this->sphereShader.ParameterLocation("flag_color_filtered"), 1, col);
+            glUniform4fv(this->sphereShader.ParameterLocation("flag_color_selected"), 1, col);
+            glUniform4fv(this->sphereShader.ParameterLocation("flag_color_softselected"), 1, col);
+        }
 
         float globalRadius = 0.0f;
         if (parts.GetVertexDataType() != megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR)
@@ -2384,11 +2391,15 @@ void moldyn::SphereRenderer::renderParticlesGeometry(
         }
         theShader.SetParameter("inUseTransferFunction", useTransferFunction);
 
-        glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(dataCall->AccessParticles(i).GetCount()));
+        glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(mpdc->AccessParticles(i).GetCount()));
+
+        flagPartsCount += parts.GetCount();
     }
 
     glBindTexture(GL_TEXTURE_1D, 0);
     glBindVertexArray(0);
+
+    this->flagStorage(false, theShader);
 
     theShader.Disable();
 }

@@ -5,9 +5,14 @@
     <include file="flag_storage"/>
 
     <shader name="vertex">
-        <snippet type="version">150</snippet>
-        <snippet name="CommonDefines"             type="file">commondefines.glsl</snippet>        
+        <snippet type="version">430</snippet>
+        <snippet name="CommonDefines"             type="file">commondefines.glsl</snippet> 
+        <snippet name="Attributes"                type="file">sphere/mdao_vert_attributes.glsl</snippet>        
+        <snippet name="flag_storage::vert_attributes"/>     
+        <!-- <snippet name="core_utils::tflookup" /> -->
+        <!-- <snippet name="core_utils::tfconvenience" /> -->        
         <snippet name="MainStart"                 type="file">sphere/mdao_vert_mainstart.glsl</snippet>
+        <snippet name="flag_storage::vert_code"/>                
         <snippet name="SphereTouchPlane"          type="file">sphere/simple_vert_spheretouchplane.glsl</snippet>
         <snippet name="MainEnd"                   type="file">sphere/mdao_vert_mainend.glsl</snippet>
     </shader>
@@ -21,14 +26,19 @@
     <namespace name="geometry">
         
         <shader name="vertex">
-            <snippet type="version">150</snippet>
+            <snippet type="version">430</snippet>
             <snippet name="Main"                  type="file">sphere/mdao_geometry_vert_main.glsl</snippet>
         </shader>
 
         <shader name="geometry">
-            <snippet type="version">150</snippet>
-            <snippet name="CommonDefines"         type="file">commondefines.glsl</snippet>            
+            <snippet type="version">430</snippet>
+            <snippet name="CommonDefines"         type="file">commondefines.glsl</snippet>
+            <snippet name="Attributes"            type="file">sphere/mdao_geometry_geo_attributes.glsl</snippet>
+            <snippet name="flag_storage::vert_attributes"/>     
+            <!-- <snippet name="core_utils::tflookup" /> -->
+            <!-- <snippet name="core_utils::tfconvenience" /> -->          
             <snippet name="MainStart"             type="file">sphere/mdao_geometry_geo_mainstart.glsl</snippet>
+            <snippet name="flag_storage::vert_code"/>                        
             <snippet name="SphereTouchPlane"      type="file">sphere/simple_vert_spheretouchplane.glsl</snippet>
             <snippet name="MainEnd"               type="file">sphere/mdao_geometry_geo_mainend.glsl</snippet>
         </shader>

@@ -8,7 +8,7 @@ uniform vec3 inBoundsSizeInverse;
 uniform vec3 inVolumeSize;
 uniform float inGlobalRadius;
 
-uniform vec4 inClipDat;
+uniform vec4 clipDat;
 
 flat out vec4 gsCenterAndSqrRadius;
 flat out float gsCellZ;
@@ -58,11 +58,11 @@ void emitHemisphere(int layer, int numSlices, float radius, float offset, int sl
 void main() {
 
     // clipping
-    float od = inClipDat.w - 1.0;
-    if (any(notEqual(inClipDat.xyz, vec3(0, 0, 0)))) {
-		od = dot(gl_PositionIn[0].xyz, inClipDat.xyz) - gl_PositionIn[0].w;
+    float od = clipDat.w - 1.0;
+    if (any(notEqual(clipDat.xyz, vec3(0, 0, 0)))) {
+		od = dot(gl_PositionIn[0].xyz, clipDat.xyz) - gl_PositionIn[0].w;
 	}
-	if (od > inClipDat.w)
+	if (od > clipDat.w)
 		return;
 		
 	// Convert object space to normalized pixel space in [0 - 1]

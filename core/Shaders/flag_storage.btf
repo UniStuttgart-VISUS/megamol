@@ -27,7 +27,7 @@ uniform vec4 flag_color_softselected;
 
 #else
 
-    in uint flags;
+    in uint flags[1];
 
 #endif // FLAG_STORAGE_SSBO 
 
@@ -47,7 +47,7 @@ uniform vec4 flag_color_softselected;
 
 #else
 
-    flag = flag_offset + flags;
+    flag = flag_offset + flags[0];
 
 #endif // FLAG_STORAGE_SSBO
 

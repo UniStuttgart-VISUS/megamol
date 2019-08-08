@@ -1,7 +1,13 @@
-in vec4 position;
-in vec4 color;
+layout (points) in;
+layout (triangle_strip, max_vertices = 4) out;
 
-out vec4 colorgs;
+in vec4 colorgs[1];
+
+out vec4 vertColor;
+
+#ifdef WITH_SCALING
+uniform float scaling;
+#endif // WITH_SCALING
 
 uniform vec4 viewAttr;
 
@@ -12,7 +18,7 @@ uniform vec3 camRight;
 #endif // CALC_CAM_SYS
 
 uniform mat4 MVP;
-uniform mat4 MVPinv;
+uniform mat4 MVinv;
 
 uniform float inGlobalRadius;
 uniform bool inUseGlobalColor;
@@ -25,7 +31,7 @@ uniform vec2 inIndexRange;
 uniform vec4 clipDat;
 uniform vec4 clipCol;
 
-void main(void) {
-    colorgs = color;
-    gl_Position = position;
-}
+out vec4 objPos;
+out vec4 camPos;
+out float squarRad;
+out float rad;

@@ -553,17 +553,17 @@ namespace moldyn {
          * Rebuild working data.
          *
          * @param cr3d  ...
-         * @param dataCall    ...
+         * @param mpdc    ...
          */
-        void rebuildWorkingData(megamol::core::view::CallRender3D* cr3d, megamol::core::moldyn::MultiParticleDataCall* dataCall);
+        void rebuildWorkingData(megamol::core::view::CallRender3D* cr3d, megamol::core::moldyn::MultiParticleDataCall* mpdc);
 
         /**
          * Render particles geometry.
          *
          * @param cr3d  ...
-         * @param dataCall    ...
+         * @param mpdc    ...
          */
-        void renderParticlesGeometry(megamol::core::view::CallRender3D* cr3d, megamol::core::moldyn::MultiParticleDataCall* dataCall);
+        void renderParticlesGeometry(megamol::core::view::CallRender3D* cr3d, megamol::core::moldyn::MultiParticleDataCall* mpdc);
 
         /**
          * Render deferred pass.

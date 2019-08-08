@@ -2,7 +2,7 @@ in vec4 position;
 // in vec4 color;
 
 uniform float inGlobalRadius;
-flat out vec4 vsColor;
+flat out vec4 vertColor;
 
 void main() {
 	float radius = (inGlobalRadius>0.0? inGlobalRadius: position.w);
