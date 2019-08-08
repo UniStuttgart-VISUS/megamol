@@ -2,12 +2,14 @@ uniform mat4 modelViewProjection;
 
 uniform float kernelWidth;
 
+in float vsValue[];
+in vec4 vsValueColor[];
 in vec4 vsPosition[];
-in vec4 vsColor[];
 
-out vec4 gsColor;
-out vec2 gsLineCoord;
+out float gsValue;
+out vec4 gsValueColor;
 out vec2 gsLineSize;
+out vec2 gsLineCoord;
 
 layout(lines) in;
 layout(triangle_strip, max_vertices = 4) out;
@@ -30,27 +32,31 @@ void main(void) {
     vec2 t2 = (p1 + lineTangent * ndcKernelWidth1) + lineNormal * ndcKernelWidth1;
     vec2 t3 = (p1 + lineTangent * ndcKernelWidth1) - lineNormal * ndcKernelWidth1;
 
-    gsColor = vsColor[0];
-    gsLineCoord = vec2(-ndcKernelWidth0, ndcKernelWidth0);
+    gsValue = vsValue[0];
+    gsValueColor = vsValueColor[0];
     gsLineSize = vec2(ndcKernelWidth0, lineLength);
+    gsLineCoord = vec2(-ndcKernelWidth0, ndcKernelWidth0);
     gl_Position = modelViewProjection * vec4(t0, 0.0, 1.0);
     EmitVertex();
 
-    gsColor = vsColor[1];
-    gsLineCoord = vec2(lineLength  + ndcKernelWidth1, ndcKernelWidth1);
+    gsValue = vsValue[1];
+    gsValueColor = vsValueColor[1];
     gsLineSize = vec2(ndcKernelWidth1, lineLength);
+    gsLineCoord = vec2(lineLength  + ndcKernelWidth1, ndcKernelWidth1);
     gl_Position = modelViewProjection * vec4(t2, 0.0, 1.0);
     EmitVertex();
 
-    gsColor = vsColor[0];
-    gsLineCoord = vec2(-ndcKernelWidth0, -ndcKernelWidth0);
+    gsValue = vsValue[0];
+    gsValueColor = vsValueColor[0];
     gsLineSize = vec2(ndcKernelWidth0, lineLength);
+    gsLineCoord = vec2(-ndcKernelWidth0, -ndcKernelWidth0);
     gl_Position = modelViewProjection * vec4(t1, 0.0, 1.0);
     EmitVertex();
 
-    gsColor = vsColor[1];
-    gsLineCoord = vec2(lineLength + ndcKernelWidth1, -ndcKernelWidth1);
+    gsValue = vsValue[1];
+    gsValueColor = vsValueColor[1];
     gsLineSize = vec2(ndcKernelWidth1, lineLength);
+    gsLineCoord = vec2(lineLength + ndcKernelWidth1, -ndcKernelWidth1);
     gl_Position = modelViewProjection * vec4(t3, 0.0, 1.0);
     EmitVertex();
 }
