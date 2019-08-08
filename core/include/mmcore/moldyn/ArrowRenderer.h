@@ -100,6 +100,9 @@ namespace moldyn {
         /** The arrow shader */
         vislib::graphics::gl::GLSLShader arrowShader;
 
+        /** The call for a chained renderer */
+        CallerSlot getRenderSlot;
+
         /** The call for data */
         CallerSlot getDataSlot;
 
