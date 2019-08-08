@@ -1,13 +1,4 @@
 
-void main(void) {
-    
-    vec4 coord;
-    vec3 ray;
-    float lambda;
-    vec3 colOut;
-    vec3 sphereintersection = vec3( 0.0);
-    vec3 normal;
-
     // transform fragment coordinates from window coordinates to view coordinates.
     coord = gl_FragCoord 
         * vec4(viewAttr.z, viewAttr.w, 2.0, 0.0) 

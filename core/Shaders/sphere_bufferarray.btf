@@ -25,8 +25,10 @@
         <snippet type="version">130</snippet>
         <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>
         <snippet name="Attributes"       type="file">sphere/simple_frag_attributes.glsl</snippet>
+        <snippet name="flag_storage::frag_attributes"/>             
         <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
         <snippet name="MainStart"        type="file">sphere/simple_frag_mainstart.glsl</snippet>
+        <snippet name="flag_storage::frag_code"/>          
         <snippet name="OutLighting"      type="file">sphere/simple_frag_out-lighting.glsl</snippet>
         <snippet name="OutDepth"         type="file">sphere/simple_frag_out-depth.glsl</snippet>
         <snippet name="MainEnd"          type="file">sphere/simple_frag_mainend.glsl</snippet>       

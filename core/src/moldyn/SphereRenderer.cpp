@@ -86,23 +86,25 @@ moldyn::SphereRenderer::SphereRenderer(void) : view::Renderer3DModule()
     , bufArray()
     , colBufArray()
 #endif // SPHERE_MIN_OGL_SSBO_STREAM
-    , renderModeParam("renderMode", "The sphere render mode.")
+    , renderModeParam("render_mode", "The sphere render mode.")
     , radiusScalingParam("scaling", "Scaling factor for particle radii.")
-    , forceTimeSlot("forceTime", "Flag to force the time code to the specified value. Set to true when rendering a video.")
-    , useLocalBBoxParam("useLocalBBox", "Enforce usage of local bbox for camera setup")
-    , alphaScalingParam("splat::alphaScaling", "Splat: Scaling factor for particle alpha.")
+    , forceTimeSlot("force_time", "Flag to force the time code to the specified value. Set to true when rendering a video.")
+    , useLocalBBoxParam("use_local_bbox", "Enforce usage of local bbox for camera setup")
+    , selectColorParam("select_color", "Color for selected spheres in flag storage.")
+    , softSelectColorParam("soft_select_color", "Color for soft selected spheres in flag storage.")
+    , alphaScalingParam("splat::alpha_scaling", "Splat: Scaling factor for particle alpha.")
     , attenuateSubpixelParam(
-        "splat::attenuateSubpixel", "Splat: Attenuate alpha of points that should have subpixel size.")
-    , useStaticDataParam("ssbo::staticData", "SSBO: Upload data only once per hash change and keep data static on GPU")
+        "splat::attenuate_subpixel", "Splat: Attenuate alpha of points that should have subpixel size.")
+    , useStaticDataParam("ssbo::static_data", "SSBO: Upload data only once per hash change and keep data static on GPU")
     , enableLightingSlot("ambient occlusion::enable_lighting", "Ambient Occlusion: Enable Lighting")
     , enableGeometryShader(
         "ambient occlusion::use_gs_proxies", "Ambient Occlusion: Enables rendering using triangle strips from the geometry shader")
-    , aoVolSizeSlot("ambient occlusion::volsize", "Ambient Occlusion: Longest volume edge")
+    , aoVolSizeSlot("ambient occlusion::volume_size", "Ambient Occlusion: Longest volume edge")
     , aoConeApexSlot("ambient occlusion::apex", "Ambient Occlusion: Cone Apex Angle")
     , aoOffsetSlot("ambient occlusion::offset", "Ambient Occlusion: Offset from Surface")
     , aoStrengthSlot("ambient occlusion::strength", "Ambient Occlusion: Strength")
-    , aoConeLengthSlot("ambient occlusion::conelen", "Ambient Occlusion: Cone length")
-    , useHPTexturesSlot("ambient occlusion::high_prec_tex", "Ambient Occlusion: Use high precision textures") {
+    , aoConeLengthSlot("ambient occlusion::cone_length", "Ambient Occlusion: Cone length")
+    , useHPTexturesSlot("ambient occlusion::high_precision_texture", "Ambient Occlusion: Use high precision textures") {
 
     this->getDataSlot.SetCompatibleCall<moldyn::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
@@ -137,6 +139,12 @@ moldyn::SphereRenderer::SphereRenderer(void) : view::Renderer3DModule()
 
     this->useLocalBBoxParam << new param::BoolParam(false);
     this->MakeSlotAvailable(&this->useLocalBBoxParam);
+
+    this->selectColorParam << new param::ColorParam(1.0f, 0.0f, 0.0f, 1.0f);
+    this->MakeSlotAvailable(&this->selectColorParam);
+
+    this->softSelectColorParam << new param::ColorParam(1.0f, 0.5f, 0.5f, 1.0f);
+    this->MakeSlotAvailable(&this->softSelectColorParam);
 
     this->alphaScalingParam << new core::param::FloatParam(5.0f);
     this->MakeSlotAvailable(&this->alphaScalingParam);
@@ -299,6 +307,14 @@ bool moldyn::SphereRenderer::resetResources(void) {
     this->aoConeLengthSlot.Param<megamol::core::param::FloatParam>()->SetGUIVisible(false);
     this->useHPTexturesSlot.Param<megamol::core::param::BoolParam>()->SetGUIVisible(false);
 
+    this->flagsCurrentVersion = (0xFFFFFFFF);
+    this->flagsEnabled = false;
+    this->flagsUseSSBO = false;
+    this->flagsData = nullptr;
+    if (this->flagsUseSSBO) {
+        glDeleteBuffers(1, &this->flagsBuffer);
+    }
+
     glDeleteTextures(1, &this->greyTF);
 
     this->sphereShader.Release();
@@ -331,10 +347,6 @@ bool moldyn::SphereRenderer::resetResources(void) {
 
     this->colType = SimpleSphericalParticles::ColourDataType::COLDATA_NONE;
     this->vertType = SimpleSphericalParticles::VertexDataType::VERTDATA_NONE;
-
-    if (this->flagsUseSSBO) {
-        glDeleteBuffers(1, &this->flagsBuffer);
-    }
 
     // AMBIENT OCCLUSION
     if (this->isRenderModeAvailable(RenderMode::AMBIENT_OCCLUSION, true)) {
@@ -410,7 +422,6 @@ bool moldyn::SphereRenderer::createResources() {
     vislib::SmartPtr<ShaderSource::Snippet> flagSnippet;
     std::string flagDefine = "\n#define FLAG_STORAGE_SSBO\n\n";
     flagSnippet = new ShaderSource::StringSnippet(flagDefine.c_str());
-
 
     // Fallback transfer function texture
     glEnable(GL_TEXTURE_1D);
@@ -1023,11 +1034,8 @@ bool moldyn::SphereRenderer::renderSimple(view::CallRender3D* cr3d, MultiParticl
 
         if (this->flagsEnabled) {
             glUniform1ui(this->sphereShader.ParameterLocation("flag_offset"), flagPartsCount);
-            float col[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
-            glUniform4fv(this->sphereShader.ParameterLocation("flag_color_enabled"), 1, col);
-            glUniform4fv(this->sphereShader.ParameterLocation("flag_color_filtered"), 1, col); 
-            glUniform4fv(this->sphereShader.ParameterLocation("flag_color_selected"), 1, col);
-            glUniform4fv(this->sphereShader.ParameterLocation("flag_color_softselected"), 1, col);
+            glUniform4fv(this->sphereShader.ParameterLocation("flagSelectedCol"), 1, this->selectColorParam.Param<param::ColorParam>()->Value().data());
+            glUniform4fv(this->sphereShader.ParameterLocation("flagSoftSelectedCol"), 1, this->softSelectColorParam.Param<param::ColorParam>()->Value().data());
         }
 
         GLuint vao, vb, cb;
@@ -1093,11 +1101,8 @@ bool moldyn::SphereRenderer::renderSSBO(view::CallRender3D* cr3d, MultiParticleD
         this->flagStorage(true, *this->newShader, mpdc);
         if (this->flagsEnabled) {
             glUniform1ui(this->sphereShader.ParameterLocation("flag_offset"), flagPartsCount);
-            float col[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
-            glUniform4fv(this->sphereShader.ParameterLocation("flag_color_enabled"), 1, col);
-            glUniform4fv(this->sphereShader.ParameterLocation("flag_color_filtered"), 1, col);
-            glUniform4fv(this->sphereShader.ParameterLocation("flag_color_selected"), 1, col);
-            glUniform4fv(this->sphereShader.ParameterLocation("flag_color_softselected"), 1, col);
+            glUniform4fv(this->sphereShader.ParameterLocation("flagSelectedCol"), 1, this->selectColorParam.Param<param::ColorParam>()->Value().data());
+            glUniform4fv(this->sphereShader.ParameterLocation("flagSoftSelectedCol"), 1, this->softSelectColorParam.Param<param::ColorParam>()->Value().data());
         }
 
         glUniform4fv(this->newShader->ParameterLocation("viewAttr"), 1, this->curViewAttrib);
@@ -1316,11 +1321,8 @@ bool moldyn::SphereRenderer::renderSplat(view::CallRender3D* cr3d, MultiParticle
         this->flagStorage(true, *this->newShader, mpdc);
         if (this->flagsEnabled) {
             glUniform1ui(this->sphereShader.ParameterLocation("flag_offset"), flagPartsCount);
-            float col[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
-            glUniform4fv(this->sphereShader.ParameterLocation("flag_color_enabled"), 1, col);
-            glUniform4fv(this->sphereShader.ParameterLocation("flag_color_filtered"), 1, col);
-            glUniform4fv(this->sphereShader.ParameterLocation("flag_color_selected"), 1, col);
-            glUniform4fv(this->sphereShader.ParameterLocation("flag_color_softselected"), 1, col);
+            glUniform4fv(this->sphereShader.ParameterLocation("flagSelectedCol"), 1, this->selectColorParam.Param<param::ColorParam>()->Value().data());
+            glUniform4fv(this->sphereShader.ParameterLocation("flagSoftSelectedCol"), 1, this->softSelectColorParam.Param<param::ColorParam>()->Value().data());
         }
 
         glUniform4fv(this->newShader->ParameterLocation("viewAttr"), 1, this->curViewAttrib);
@@ -1451,11 +1453,11 @@ bool moldyn::SphereRenderer::renderBufferArray(view::CallRender3D* cr3d, MultiPa
 
     this->sphereShader.Enable();
 
-    this->flagStorage(true, this->sphereShader, mpdc);
-
     GLuint vertAttribLoc = glGetAttribLocationARB(this->sphereShader, "inPosition");
     GLuint colAttribLoc = glGetAttribLocationARB(this->sphereShader, "inColor");
     GLuint colIdxAttribLoc = glGetAttribLocationARB(this->sphereShader, "inColIdx");
+
+    this->flagStorage(true, this->sphereShader, mpdc);
 
     glUniform4fv(this->sphereShader.ParameterLocation("viewAttr"), 1, this->curViewAttrib);
     glUniform3fv(this->sphereShader.ParameterLocation("camIn"), 1, cr3d->GetCameraParameters()->Front().PeekComponents());
@@ -1476,11 +1478,8 @@ bool moldyn::SphereRenderer::renderBufferArray(view::CallRender3D* cr3d, MultiPa
 
         if (this->flagsEnabled) {
             glUniform1ui(this->sphereShader.ParameterLocation("flag_offset"), flagPartsCount);
-            float col[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
-            glUniform4fv(this->sphereShader.ParameterLocation("flag_color_enabled"), 1, col);
-            glUniform4fv(this->sphereShader.ParameterLocation("flag_color_filtered"), 1, col);
-            glUniform4fv(this->sphereShader.ParameterLocation("flag_color_selected"), 1, col);
-            glUniform4fv(this->sphereShader.ParameterLocation("flag_color_softselected"), 1, col);
+            glUniform4fv(this->sphereShader.ParameterLocation("flagSelectedCol"), 1, this->selectColorParam.Param<param::ColorParam>()->Value().data());
+            glUniform4fv(this->sphereShader.ParameterLocation("flagSoftSelectedCol"), 1, this->softSelectColorParam.Param<param::ColorParam>()->Value().data());
         }
 
         unsigned int colBytes, vertBytes, colStride, vertStride;
@@ -1587,12 +1586,9 @@ bool moldyn::SphereRenderer::renderGeometryShader(view::CallRender3D* cr3d, Mult
         MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
 
         if (this->flagsEnabled) {
-            glUniform1ui(this->sphereGeometryShader.ParameterLocation("flag_offset"), flagPartsCount);
-            float col[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
-            glUniform4fv(this->sphereGeometryShader.ParameterLocation("flag_color_enabled"), 1, col);
-            glUniform4fv(this->sphereGeometryShader.ParameterLocation("flag_color_filtered"), 1, col);
-            glUniform4fv(this->sphereGeometryShader.ParameterLocation("flag_color_selected"), 1, col);
-            glUniform4fv(this->sphereGeometryShader.ParameterLocation("flag_color_softselected"), 1, col);
+            glUniform1ui(this->sphereShader.ParameterLocation("flag_offset"), flagPartsCount);
+            glUniform4fv(this->sphereShader.ParameterLocation("flagSelectedCol"), 1, this->selectColorParam.Param<param::ColorParam>()->Value().data());
+            glUniform4fv(this->sphereShader.ParameterLocation("flagSoftSelectedCol"), 1, this->softSelectColorParam.Param<param::ColorParam>()->Value().data());
         }
 
         this->setPointers<GLSLGeometryShader>(parts, this->sphereGeometryShader, 0, parts.GetVertexData(),
@@ -1751,8 +1747,8 @@ void moldyn::SphereRenderer::setPointers(MultiParticleDataCall::Particles& parts
 
 bool moldyn::SphereRenderer::enableTransferFunctionTexture(unsigned int& out_size) {
     core::view::CallGetTransferFunction* cgtf = this->getTFSlot.CallAs<core::view::CallGetTransferFunction>();
-    glEnable(GL_TEXTURE_2D);
     glActiveTexture(GL_TEXTURE0);
+    glEnable(GL_TEXTURE_2D);
     if ((cgtf != nullptr) && (*cgtf)()) {
         glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
         out_size = cgtf->TextureSize();
@@ -2021,20 +2017,13 @@ std::shared_ptr<vislib::graphics::gl::GLSLShader> moldyn::SphereRenderer::genera
         codeSnip = new ShaderSource::StringSnippet(code.c_str());
 
         /// Generated shader declaration snippet is inserted between 2nd and 3rd snippet (after
-        /// ngsphere_vert_attributes.glsl)
-        size_t pos = 4;
-        if (this->flagsUseSSBO) {
-            pos = 5;
-        }
-        v2->Insert(pos, declarationSnip);
-        /// Generated shader code snippet is inserted between 4th and 5th snippet (after ngsphere_vert_mainstart.glsl)
+        /// ssbo_vert_attributes.glsl)
+        v2->Insert(5, declarationSnip);
+        /// Generated shader code snippet is inserted between 4th and 5th snippet (after ssbo_vert_mainstart.glsl)
         /// => consider new index through first Insertion!
-        pos = 6;
-        if (this->flagsUseSSBO) {
-            pos = 7;
-        }
-        v2->Insert(pos, codeSnip);
+        v2->Insert(7, codeSnip);
         // std::string s(v2->WholeCode());
+        printf("%s \n", v2->WholeCode().PeekBuffer());
 
         vislib::SmartPtr<ShaderSource> vss(v2);
         this->theShaders.emplace(std::make_pair(std::make_tuple(c, p, interleaved), makeShader(v2, this->fragShader)));
@@ -2109,6 +2098,7 @@ bool moldyn::SphereRenderer::flagStorage(bool enable, vislib::graphics::gl::GLSL
     else {
         if (this->flagsUseSSBO) {
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, 0);
+            glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
         }
         else {
             GLuint flagAttrib = glGetAttribLocationARB(activeShader, "flags");
@@ -2357,11 +2347,8 @@ void moldyn::SphereRenderer::renderParticlesGeometry(
 
         if (this->flagsEnabled) {
             glUniform1ui(this->sphereShader.ParameterLocation("flag_offset"), flagPartsCount);
-            float col[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
-            glUniform4fv(this->sphereShader.ParameterLocation("flag_color_enabled"), 1, col);
-            glUniform4fv(this->sphereShader.ParameterLocation("flag_color_filtered"), 1, col);
-            glUniform4fv(this->sphereShader.ParameterLocation("flag_color_selected"), 1, col);
-            glUniform4fv(this->sphereShader.ParameterLocation("flag_color_softselected"), 1, col);
+            glUniform4fv(this->sphereShader.ParameterLocation("flagSelectedCol"), 1, this->selectColorParam.Param<param::ColorParam>()->Value().data());
+            glUniform4fv(this->sphereShader.ParameterLocation("flagSoftSelectedCol"), 1, this->softSelectColorParam.Param<param::ColorParam>()->Value().data());
         }
 
         float globalRadius = 0.0f;
@@ -2420,7 +2407,7 @@ void moldyn::SphereRenderer::renderDeferredPass(megamol::core::view::CallRender3
 
     this->lightingShader.SetParameter("inWidth", static_cast<float>(this->curVpWidth));
     this->lightingShader.SetParameter("inHeight", static_cast<float>(this->curVpHeight));
-    glUniformMatrix4fv(this->lightingShader.ParameterLocation("inMvpInverse"), 1, GL_FALSE, this->curMVPinv.PeekComponents());
+    glUniformMatrix4fv(this->lightingShader.ParameterLocation("MVPinv"), 1, GL_FALSE, this->curMVPinv.PeekComponents());
     this->lightingShader.SetParameter("inColorTex", static_cast<int>(0));
     this->lightingShader.SetParameter("inNormalsTex", static_cast<int>(1));
     this->lightingShader.SetParameter("inDepthTex", static_cast<int>(2));

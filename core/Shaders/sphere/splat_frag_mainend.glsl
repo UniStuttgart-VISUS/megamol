@@ -1,6 +1,4 @@
 
-void main(void) {
-
     //gl_FragColor = vec4((gl_PointCoord.xy - vec2(0.5)) * vec2(2.0), 0.0, 1.0);
     //gl_FragColor = vec4(gl_PointCoord.xy, 0.5, 1.0);
     //gl_FragColor = vertColor;

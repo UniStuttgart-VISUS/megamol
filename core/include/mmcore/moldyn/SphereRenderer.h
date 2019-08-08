@@ -23,6 +23,7 @@
 #include "mmcore/view/CallGetTransferFunction.h"
 #include "mmcore/view/CallRender3D.h"
 #include "mmcore/param/EnumParam.h"
+#include "mmcore/param/ColorParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/IntParam.h"
@@ -348,6 +349,8 @@ namespace moldyn {
         megamol::core::param::ParamSlot radiusScalingParam;
         megamol::core::param::ParamSlot forceTimeSlot;
         megamol::core::param::ParamSlot useLocalBBoxParam;
+        megamol::core::param::ParamSlot selectColorParam;
+        megamol::core::param::ParamSlot softSelectColorParam;
 
         // Affects only Splat rendering ---------------------------------------
 

@@ -82,7 +82,7 @@ bool MDAOVolumeGenerator::Init()
 	if (computeAvailable) {
 		// Try to initialize the compute shader
 		vislib::SmartPtr<vislib::graphics::gl::ShaderSource::Snippet> mipmapSrc;
-		mipmapSrc = factory->MakeShaderSnippet("sphere_mdao_mipmap::Compute");
+		mipmapSrc = this->factory->MakeShaderSnippet("sphere_mdao_mipmap::Compute");
 		try {
 			mipmapShader.Compile(mipmapSrc->PeekCode());
 			mipmapShader.Link();
@@ -105,19 +105,19 @@ bool MDAOVolumeGenerator::Init()
     }
     try {
         // Try to make the vertex shader
-        if (!factory->MakeShaderSource("sphere_mdao_volume::vertex", vert)) {
+        if (!this->factory->MakeShaderSource("sphere_mdao_volume::vertex", vert)) {
             std::cerr << "[MDAOVolumeGenerator] Error loading vertex shader!" << std::endl;
             return false;
         }
 
         // Try to make the geometry shader
-        if (!factory->MakeShaderSource("sphere_mdao_volume::geometry", geom)) {
+        if (!this->factory->MakeShaderSource("sphere_mdao_volume::geometry", geom)) {
             std::cerr << "[MDAOVolumeGenerator] Error loading geometry shader!" << std::endl;
             return false;
         }
 
         // Try to make the fragment shader
-        if (!factory->MakeShaderSource("sphere_mdao_volume::fragment", frag)) {
+        if (!this->factory->MakeShaderSource("sphere_mdao_volume::fragment", frag)) {
             std::cerr << "[MDAOVolumeGenerator] Error loading fragment shader!" << std::endl;
             return false;
         }
@@ -196,7 +196,7 @@ void MDAOVolumeGenerator::StartInsertion(const vislib::math::Cuboid< float >& ob
 	volumeShader.SetParameterArray3("inBoundsSizeInverse", 1, this->boundsSizeInverse.PeekDimension());
 	volumeShader.SetParameterArray3("inVolumeSize", 1, volumeRes.PeekDimension());
 	
-	volumeShader.SetParameterArray4("inClipDat", 1, clipDat.PeekComponents());
+	volumeShader.SetParameterArray4("clipDat", 1, clipDat.PeekComponents());
 }
 
 
