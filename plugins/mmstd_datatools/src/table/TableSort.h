@@ -1,5 +1,5 @@
 /*
- * TableWhere.h
+ * TableSort.h
  *
  * Copyright (C) 2019 Visualisierungsinstitut der Universität Stuttgart
  * Alle Rechte vorbehalten.
@@ -16,9 +16,9 @@ namespace datatools {
 namespace table {
 
     /**
-     * This module selects rows from a table based on a filter.
+     * This module sorts tabular data according to the specified column.
      */
-    class TableWhere : public TableProcessorBase {
+    class TableSort : public TableProcessorBase {
 
     public:
 
@@ -28,7 +28,7 @@ namespace table {
          * @return The name of this module.
          */
         static inline const char *ClassName(void) {
-            return "TableWhere";
+            return "TableSort";
         }
 
         /**
@@ -52,12 +52,12 @@ namespace table {
         /**
          * Initialises a new instance.
          */
-        TableWhere(void);
+        TableSort(void);
 
         /**
          * Finalises an instance.
          */
-        virtual ~TableWhere(void);
+        virtual ~TableSort(void);
 
     protected:
 
@@ -71,10 +71,8 @@ namespace table {
     private:
 
         core::param::ParamSlot paramColumn;
-        core::param::ParamSlot paramEpsilon;
-        core::param::ParamSlot paramOperator;
-        core::param::ParamSlot paramReference;
-        core::param::ParamSlot paramUpdateRange;
+        core::param::ParamSlot paramIsDescending;
+        core::param::ParamSlot paramIsStable;
 
     };
 
