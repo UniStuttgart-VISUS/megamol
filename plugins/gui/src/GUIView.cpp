@@ -1345,24 +1345,23 @@ void GUIView::drawMenu(const std::string& wn, WindowManager::WindowConfiguration
         ImGui::Text(about.c_str());
         ImGui::Separator();
 
-        const float offset = this->utils.TextWidgetWidth(gitstr) + style.ItemSpacing.x + style.ItemInnerSpacing.x;
-        ImGui::Text(mailstr.c_str());
-        ImGui::SameLine(offset);
         if (ImGui::Button("Copy E-Mail")) {
             ImGui::SetClipboardText(eMail.c_str());
         }
+        ImGui::SameLine();
+        ImGui::Text(mailstr.c_str());
 
-        ImGui::Text(webstr.c_str());
-        ImGui::SameLine(offset);
         if (ImGui::Button("Copy Website")) {
             ImGui::SetClipboardText(webLink.c_str());
         }
+        ImGui::SameLine();
+        ImGui::Text(webstr.c_str());
 
-        ImGui::Text(gitstr.c_str());
-        ImGui::SameLine(offset);
         if (ImGui::Button("Copy GitHub")) {
             ImGui::SetClipboardText(gitLink.c_str());
         }
+        ImGui::SameLine();
+        ImGui::Text(gitstr.c_str());
 
         ImGui::Separator();
         about = "Copyright (C) 2009-2019 by Universitaet Stuttgart "
