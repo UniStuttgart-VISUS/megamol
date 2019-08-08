@@ -792,7 +792,8 @@ void GUIView::drawMainWindowCallback(const std::string& wn, WindowManager::Windo
     ImGui::Text("Parameters");
     std::string color_param_help = "[Hover] Show Parameter Description Tooltip\n"
                                    "[Right-Click] Context Menu\n"
-                                   "[Drag & Drop] Move Module to other Parameter Window";
+                                   "[Drag & Drop] Move Module to other Parameter Window\n"
+                                   "[Enter],[Tab],[Left-Click outside Input] Confirm input changes";
     this->utils.HelpMarkerToolTip(color_param_help);
 
     this->drawParametersCallback(wn, wc);
@@ -1633,19 +1634,16 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
             // Determine multi line count of string
             int lcnt = static_cast<int>(std::count(it->second.begin(), it->second.end(), '\n'));
             lcnt = std::min(static_cast<int>(GUI_MAX_MULITLINE), lcnt);
-            if (lcnt > 0) {
-                ImVec2 ml_dim = ImVec2(ImGui::CalcItemWidth(),
-                    ImGui::GetFrameHeight() + (ImGui::GetFontSize() * static_cast<float>(lcnt)));
-                ImGui::InputTextMultiline(param_label.c_str(), &it->second, ml_dim, ImGuiInputTextFlags_None);
-            } else {
-                ImGui::InputText(param_label.c_str(), &it->second, ImGuiInputTextFlags_None);
-                help = "[Ctrl + Enter] for new line.\nPress [Return] to confirm changes.";
-            }
+            ImVec2 ml_dim = ImVec2(
+                ImGui::CalcItemWidth(), ImGui::GetFrameHeight() + (ImGui::GetFontSize() * static_cast<float>(lcnt)));
+            ImGui::InputTextMultiline(
+                param_label.c_str(), &it->second, ml_dim, ImGuiInputTextFlags_CtrlEnterForNewLine);
             if (ImGui::IsItemDeactivatedAfterEdit()) {
                 this->utils.utf8Decode(it->second);
                 p->SetValue(vislib::StringA(it->second.c_str()));
                 this->widgtmap_text.erase(it);
             }
+            help = "[Ctrl + Enter] for new line.\nPress [Return] to confirm changes.";
         } else if (auto* p = slot.Param<core::param::FilePathParam>()) {
             /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
             auto it = this->widgtmap_text.find(param_id);
@@ -1661,7 +1659,6 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
                 p->SetValue(vislib::StringA(it->second.c_str()));
                 this->widgtmap_text.erase(it);
             }
-            help = "[Ctrl + Enter] for new line.\nPress [Return] to confirm changes.";
         } else {
             vislib::sys::Log::DefaultLog.WriteWarn("[GUIView] Unknown Parameter Type.");
             return;

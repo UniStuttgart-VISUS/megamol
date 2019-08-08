@@ -3,6 +3,7 @@
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
+#include "mmcore/FlagCall.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/utility/SDFFont.h"
 #include "mmcore/utility/SSBOStreamer.h"
@@ -12,8 +13,9 @@
 #include "mmcore/view/Renderer2DModule.h"
 #include "mmstd_datatools/table/TableDataCall.h"
 
+#include <glowl/FramebufferObject.hpp>
+#include <memory>
 #include "Renderer2D.h"
-#include "mmcore/FlagCall.h"
 
 namespace megamol {
 namespace infovis {
@@ -74,12 +76,17 @@ protected:
     virtual bool MouseEvent(float x, float y, core::view::MouseFlags flags);
 
 private:
+    enum ValueMapping {
+        VALUE_MAPPING_KERNEL_BLEND = 0,
+        VALUE_MAPPING_KERNEL_DENSITY,
+        VALUE_MAPPING_WEIGHTED_KERNEL_DENSITY
+    };
     enum GeometryType { GEOMETRY_TYPE_POINT = 0, GEOMETRY_TYPE_LINE, GEOMETRY_TYPE_TEXT, GEOMETRY_TYPE_TRIANGULATION };
     enum KernelType { KERNEL_TYPE_BOX = 0, KERNEL_TYPE_GAUSSIAN };
     enum AxisMode { AXIS_MODE_NONE = 0, AXIS_MODE_MINIMALISTIC, AXIS_MODE_SCIENTIFIC };
 
     struct ParamState {
-        size_t colorIdx;
+        size_t valueIdx;
         size_t labelIdx;
     };
 
@@ -124,17 +131,23 @@ private:
      */
     virtual bool GetExtents(core::view::CallRender2D& call);
 
-    bool isDirty(void) const;
+    bool hasDirtyData(void) const;
 
-    void resetDirty(void);
+    void resetDirtyData(void);
 
-    bool validateData(core::view::CallRender2D& call);
+    bool hasDirtyScreen(void) const;
+
+    void resetDirtyScreen(void);
+
+    bool validate(core::view::CallRender2D& call);
 
     void updateColumns(void);
 
     void drawMinimalisticAxis(void);
 
     void drawScientificAxis(void);
+
+    void bindMappingUniforms(vislib::graphics::gl::GLSLShader& shader);
 
     void drawPoints(void);
 
@@ -143,6 +156,12 @@ private:
     void validateTriangulation();
 
     void drawTriangulation();
+
+    void unbindScreen();
+
+    void bindAndClearScreen();
+
+    void drawScreen();
 
     void validateText();
 
@@ -156,7 +175,9 @@ private:
 
     core::CallerSlot flagStorageInSlot;
 
-    core::param::ParamSlot colorSelectorParam;
+    core::param::ParamSlot valueMappingParam;
+
+    core::param::ParamSlot valueSelectorParam;
 
     core::param::ParamSlot labelSelectorParam;
 
@@ -167,8 +188,6 @@ private:
     core::param::ParamSlot kernelWidthParam;
 
     core::param::ParamSlot kernelTypeParam;
-
-    core::param::ParamSlot triangulationSelectorParam;
 
     core::param::ParamSlot triangulationSmoothnessParam;
 
@@ -197,8 +216,7 @@ private:
     core::param::ParamSlot alphaAttenuateSubpixelParam;
 
     size_t dataHash;
-
-    unsigned int timestep;
+    unsigned int dataTime;
 
     stdplugin::datatools::table::TableDataCall* floatTable;
 
@@ -214,8 +232,6 @@ private:
 
     vislib::math::Rectangle<float> bounds;
 
-    megamol::core::utility::SDFFont axisFont;
-
     vislib::graphics::gl::GLSLShader minimalisticAxisShader;
 
     vislib::graphics::gl::GLSLShader scientificAxisShader;
@@ -226,19 +242,29 @@ private:
 
     vislib::graphics::gl::GLSLShader triangleShader;
 
-    core::utility::SSBOStreamer valueSSBO;
+    vislib::graphics::gl::GLSLShader screenShader;
 
     core::utility::SSBOStreamer plotSSBO;
     GLsizeiptr plotDstOffset;
     GLsizeiptr plotDstLength;
 
+    core::utility::SSBOStreamer valueSSBO;
+
     GLuint triangleVBO;
     GLuint triangleIBO;
     GLsizei triangleVertexCount;
-
-    megamol::core::utility::SDFFont labelFont;
     bool trianglesValid;
+
+    std::unique_ptr<glowl::FramebufferObject> screenFBO;
+    vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> screenLastMVP;
+    bool screenValid;
+
+    megamol::core::utility::SDFFont axisFont;
+    megamol::core::utility::SDFFont textFont;
     bool textValid;
+
+    std::vector<::megamol::core::param::ParamSlot*> dataParams;
+    std::vector<::megamol::core::param::ParamSlot*> screenParams;
 };
 
 } // end namespace infovis
