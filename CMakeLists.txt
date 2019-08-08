@@ -59,6 +59,7 @@ include(ClangFormat)
 
 # External
 include(External)
+include("CMakeExternals.cmake")
 
 # NuGet
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/NuGet.Config
