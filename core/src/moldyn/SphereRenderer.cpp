@@ -1100,9 +1100,9 @@ bool moldyn::SphereRenderer::renderSSBO(view::CallRender3D* cr3d, MultiParticleD
 
         this->flagStorage(true, *this->newShader, mpdc);
         if (this->flagsEnabled) {
-            glUniform1ui(this->sphereShader.ParameterLocation("flag_offset"), flagPartsCount);
-            glUniform4fv(this->sphereShader.ParameterLocation("flagSelectedCol"), 1, this->selectColorParam.Param<param::ColorParam>()->Value().data());
-            glUniform4fv(this->sphereShader.ParameterLocation("flagSoftSelectedCol"), 1, this->softSelectColorParam.Param<param::ColorParam>()->Value().data());
+            glUniform1ui(this->newShader->ParameterLocation("flag_offset"), flagPartsCount);
+            glUniform4fv(this->newShader->ParameterLocation("flagSelectedCol"), 1, this->selectColorParam.Param<param::ColorParam>()->Value().data());
+            glUniform4fv(this->newShader->ParameterLocation("flagSoftSelectedCol"), 1, this->softSelectColorParam.Param<param::ColorParam>()->Value().data());
         }
 
         glUniform4fv(this->newShader->ParameterLocation("viewAttr"), 1, this->curViewAttrib);
@@ -1320,9 +1320,9 @@ bool moldyn::SphereRenderer::renderSplat(view::CallRender3D* cr3d, MultiParticle
 
         this->flagStorage(true, *this->newShader, mpdc);
         if (this->flagsEnabled) {
-            glUniform1ui(this->sphereShader.ParameterLocation("flag_offset"), flagPartsCount);
-            glUniform4fv(this->sphereShader.ParameterLocation("flagSelectedCol"), 1, this->selectColorParam.Param<param::ColorParam>()->Value().data());
-            glUniform4fv(this->sphereShader.ParameterLocation("flagSoftSelectedCol"), 1, this->softSelectColorParam.Param<param::ColorParam>()->Value().data());
+            glUniform1ui(this->newShader->ParameterLocation("flag_offset"), flagPartsCount);
+            glUniform4fv(this->newShader->ParameterLocation("flagSelectedCol"), 1, this->selectColorParam.Param<param::ColorParam>()->Value().data());
+            glUniform4fv(this->newShader->ParameterLocation("flagSoftSelectedCol"), 1, this->softSelectColorParam.Param<param::ColorParam>()->Value().data());
         }
 
         glUniform4fv(this->newShader->ParameterLocation("viewAttr"), 1, this->curViewAttrib);
@@ -1586,9 +1586,9 @@ bool moldyn::SphereRenderer::renderGeometryShader(view::CallRender3D* cr3d, Mult
         MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
 
         if (this->flagsEnabled) {
-            glUniform1ui(this->sphereShader.ParameterLocation("flag_offset"), flagPartsCount);
-            glUniform4fv(this->sphereShader.ParameterLocation("flagSelectedCol"), 1, this->selectColorParam.Param<param::ColorParam>()->Value().data());
-            glUniform4fv(this->sphereShader.ParameterLocation("flagSoftSelectedCol"), 1, this->softSelectColorParam.Param<param::ColorParam>()->Value().data());
+            glUniform1ui(this->sphereGeometryShader.ParameterLocation("flag_offset"), flagPartsCount);
+            glUniform4fv(this->sphereGeometryShader.ParameterLocation("flagSelectedCol"), 1, this->selectColorParam.Param<param::ColorParam>()->Value().data());
+            glUniform4fv(this->sphereGeometryShader.ParameterLocation("flagSoftSelectedCol"), 1, this->softSelectColorParam.Param<param::ColorParam>()->Value().data());
         }
 
         this->setPointers<GLSLGeometryShader>(parts, this->sphereGeometryShader, 0, parts.GetVertexData(),
@@ -2346,9 +2346,9 @@ void moldyn::SphereRenderer::renderParticlesGeometry(
         core::moldyn::SimpleSphericalParticles& parts = mpdc->AccessParticles(i);
 
         if (this->flagsEnabled) {
-            glUniform1ui(this->sphereShader.ParameterLocation("flag_offset"), flagPartsCount);
-            glUniform4fv(this->sphereShader.ParameterLocation("flagSelectedCol"), 1, this->selectColorParam.Param<param::ColorParam>()->Value().data());
-            glUniform4fv(this->sphereShader.ParameterLocation("flagSoftSelectedCol"), 1, this->softSelectColorParam.Param<param::ColorParam>()->Value().data());
+            glUniform1ui(theShader.ParameterLocation("flag_offset"), flagPartsCount);
+            glUniform4fv(theShader.ParameterLocation("flagSelectedCol"), 1, this->selectColorParam.Param<param::ColorParam>()->Value().data());
+            glUniform4fv(theShader.ParameterLocation("flagSoftSelectedCol"), 1, this->softSelectColorParam.Param<param::ColorParam>()->Value().data());
         }
 
         float globalRadius = 0.0f;
