@@ -1,7 +1,7 @@
 /*
  * AbstractView.cpp
  *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2008 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
@@ -12,11 +12,11 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/AbstractParam.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/CallRenderView.h"
 #include "mmcore/view/AbstractCallRender.h"
+#include "mmcore/view/CallRenderView.h"
 #include "vislib/Array.h"
-#include "vislib/assert.h"
 #include "vislib/UnsupportedOperationException.h"
+#include "vislib/assert.h"
 
 using namespace megamol::core;
 using vislib::sys::Log;
@@ -25,9 +25,8 @@ using vislib::sys::Log;
 /*
  * view::AbstractView::AbstractView
  */
-view::AbstractView::AbstractView(void) : Module(),
-        renderSlot("render", "Connects modules requesting renderings"),
-        hooks() {
+view::AbstractView::AbstractView(void)
+    : Module(), renderSlot("render", "Connects modules requesting renderings"), hooks() {
     // InputCall
     this->renderSlot.SetCallback(
         view::CallRenderView::ClassName(), InputCall::FunctionName(InputCall::FnOnKey), &AbstractView::OnKeyCallback);
@@ -43,7 +42,7 @@ view::AbstractView::AbstractView(void) : Module(),
     this->renderSlot.SetCallback(view::CallRenderView::ClassName(),
         AbstractCallRender::FunctionName(AbstractCallRender::FnRender), &AbstractView::OnRenderView);
     this->renderSlot.SetCallback(view::CallRenderView::ClassName(),
-        AbstractCallRender::FunctionName(AbstractCallRender::FnGetExtents), &AbstractView::GetExtentsCallback);
+        AbstractCallRender::FunctionName(AbstractCallRender::FnGetExtents), &AbstractView::GetExtents);
     // CallRenderView
     this->renderSlot.SetCallback(view::CallRenderView::ClassName(),
         view::CallRenderView::FunctionName(view::CallRenderView::CALL_FREEZE), &AbstractView::OnFreezeView);
@@ -66,8 +65,7 @@ view::AbstractView::~AbstractView(void) {
 /*
  * view::AbstractView::IsParamRelevant
  */
-bool view::AbstractView::IsParamRelevant(
-        const vislib::SmartPtr<param::AbstractParam>& param) const {
+bool view::AbstractView::IsParamRelevant(const vislib::SmartPtr<param::AbstractParam>& param) const {
     const AbstractNamedObject* ano = dynamic_cast<const AbstractNamedObject*>(this);
     if (ano == NULL) return false;
     if (param.IsNull()) return false;
@@ -80,26 +78,24 @@ bool view::AbstractView::IsParamRelevant(
 /*
  * view::AbstractView::DesiredWindowPosition
  */
-bool view::AbstractView::DesiredWindowPosition(int *x, int *y, int *w,
-        int *h, bool *nd) {
-    Module *tm = dynamic_cast<Module*>(this);
+bool view::AbstractView::DesiredWindowPosition(int* x, int* y, int* w, int* h, bool* nd) {
+    Module* tm = dynamic_cast<Module*>(this);
     if (tm != NULL) {
 
         // this is not working properly if the main module/view is placed at top namespace root
-        //vislib::StringA name(tm->Name());
-        //if (tm->Parent() != NULL) name = tm->Parent()->Name();
+        // vislib::StringA name(tm->Name());
+        // if (tm->Parent() != NULL) name = tm->Parent()->Name();
         vislib::StringA name(tm->GetDemiRootName());
 
         if (name.IsEmpty()) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO + 1200,
-                "View does not seem to have a name. Odd.");
+            vislib::sys::Log::DefaultLog.WriteMsg(
+                vislib::sys::Log::LEVEL_INFO + 1200, "View does not seem to have a name. Odd.");
         } else {
             name.Append("-Window");
 
             if (tm->GetCoreInstance()->Configuration().IsConfigValueSet(name)) {
                 if (this->desiredWindowPosition(
-                        tm->GetCoreInstance()->Configuration().ConfigValue(name),
-                        x, y, w, h, nd)) {
+                        tm->GetCoreInstance()->Configuration().ConfigValue(name), x, y, w, h, nd)) {
                     vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO + 200,
                         "Loaded desired window geometry from \"%s\"", name.PeekBuffer());
                     return true;
@@ -116,9 +112,7 @@ bool view::AbstractView::DesiredWindowPosition(int *x, int *y, int *w,
         name = "*-Window";
 
         if (tm->GetCoreInstance()->Configuration().IsConfigValueSet(name)) {
-            if (this->desiredWindowPosition(
-                    tm->GetCoreInstance()->Configuration().ConfigValue(name),
-                    x, y, w, h, nd)) {
+            if (this->desiredWindowPosition(tm->GetCoreInstance()->Configuration().ConfigValue(name), x, y, w, h, nd)) {
                 vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO + 200,
                     "Loaded desired window geometry from \"%s\"", name.PeekBuffer());
                 return true;
@@ -140,24 +134,32 @@ bool view::AbstractView::DesiredWindowPosition(int *x, int *y, int *w,
  * view::AbstractView::OnRenderView
  */
 bool view::AbstractView::OnRenderView(Call& call) {
-    throw vislib::UnsupportedOperationException(
-        "AbstractView::OnRenderView", __FILE__, __LINE__);
+    throw vislib::UnsupportedOperationException("AbstractView::OnRenderView", __FILE__, __LINE__);
 }
 
 /*
  * view::AbstractView::desiredWindowPosition
  */
-bool view::AbstractView::desiredWindowPosition(const vislib::StringW& str,
-        int *x, int *y, int *w, int *h, bool *nd) {
+bool view::AbstractView::desiredWindowPosition(const vislib::StringW& str, int* x, int* y, int* w, int* h, bool* nd) {
     vislib::StringW v = str;
     int vi = -1;
     v.TrimSpaces();
 
-    if (x != NULL) { *x = INT_MIN; }
-    if (y != NULL) { *y = INT_MIN; }
-    if (w != NULL) { *w = INT_MIN; }
-    if (h != NULL) { *h = INT_MIN; }
-    if (nd != NULL) { *nd = false; }
+    if (x != NULL) {
+        *x = INT_MIN;
+    }
+    if (y != NULL) {
+        *y = INT_MIN;
+    }
+    if (w != NULL) {
+        *w = INT_MIN;
+    }
+    if (h != NULL) {
+        *h = INT_MIN;
+    }
+    if (nd != NULL) {
+        *nd = false;
+    }
 
     while (!v.IsEmpty()) {
         if ((v[0] == L'X') || (v[0] == L'x')) {
@@ -176,8 +178,7 @@ bool view::AbstractView::desiredWindowPosition(const vislib::StringW& str,
             }
             vi = 4;
         } else {
-            Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_WARN,
+            Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
                 "Unexpected character %s in window position definition.\n",
                 vislib::StringA(vislib::StringA(v)[0], 1).PeekBuffer());
             break;
@@ -191,46 +192,59 @@ bool view::AbstractView::desiredWindowPosition(const vislib::StringW& str,
             // now we want to parse a double :-/
             int cp = 0;
             int len = v.Length();
-            while ((cp < len) && (((v[cp] >= L'0') && (v[cp] <= L'9'))
-                    || (v[cp] == L'+') /*|| (v[cp] == L'.')
-                    || (v[cp] == L',') */|| (v[cp] == L'-')
-                    /*|| (v[cp] == L'e') || (v[cp] == L'E')*/)) {
+            while ((cp < len) && (((v[cp] >= L'0') && (v[cp] <= L'9')) || (v[cp] == L'+') /*|| (v[cp] == L'.')
+                                                                       || (v[cp] == L',') */
+                                     || (v[cp] == L'-')
+                                     /*|| (v[cp] == L'e') || (v[cp] == L'E')*/)) {
                 cp++;
             }
 
             try {
                 int i = vislib::CharTraitsW::ParseInt(v.Substring(0, cp));
                 switch (vi) {
-                    case 0 :
-                        if (x != NULL) { *x = i; }
-                        break;
-                    case 1 :
-                        if (y != NULL) { *y = i; }
-                        break;
-                    case 2 :
-                        if (w != NULL) { *w = i; }
-                        break;
-                    case 3 :
-                        if (h != NULL) { *h = i; }
-                        break;
+                case 0:
+                    if (x != NULL) {
+                        *x = i;
+                    }
+                    break;
+                case 1:
+                    if (y != NULL) {
+                        *y = i;
+                    }
+                    break;
+                case 2:
+                    if (w != NULL) {
+                        *w = i;
+                    }
+                    break;
+                case 3:
+                    if (h != NULL) {
+                        *h = i;
+                    }
+                    break;
                 }
-            } catch(...) {
-                const char *str = "unknown";
+            } catch (...) {
+                const char* str = "unknown";
                 switch (vi) {
-                    case 0 : str = "X"; break;
-                    case 1 : str = "Y"; break;
-                    case 2 : str = "W"; break;
-                    case 3 : str = "H"; break;
+                case 0:
+                    str = "X";
+                    break;
+                case 1:
+                    str = "Y";
+                    break;
+                case 2:
+                    str = "W";
+                    break;
+                case 3:
+                    str = "H";
+                    break;
                 }
                 vi = -1;
-                Log::DefaultLog.WriteMsg(
-                    vislib::sys::Log::LEVEL_WARN,
-                    "Unable to parse value for %s.\n", str);
+                Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, "Unable to parse value for %s.\n", str);
             }
 
             v = v.Substring(cp);
         }
-
     }
 
     return true;
@@ -240,7 +254,7 @@ bool view::AbstractView::desiredWindowPosition(const vislib::StringW& str,
 /*
  * view::AbstractView::unpackMouseCoordinates
  */
-void view::AbstractView::unpackMouseCoordinates(float &x, float &y) {
+void view::AbstractView::unpackMouseCoordinates(float& x, float& y) {
     // intentionally empty
     // do something smart in the derived classes
 }
@@ -254,9 +268,9 @@ bool view::AbstractView::onResetView(Call& call) {
 }
 
 
-bool view::AbstractView::GetExtentsCallback(Call& call) {
-	// NOP, because thats the way it was before.
-	return false; 
+bool view::AbstractView::GetExtents(Call& call) {
+    throw vislib::UnsupportedOperationException("AbstractView::GetExtents", __FILE__, __LINE__);
+    return false;
 }
 
 bool view::AbstractView::OnKeyCallback(Call& call) {

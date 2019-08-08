@@ -19,10 +19,6 @@
 
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 
-#include "mmcore/param/ColorParam.h"
-#include "mmcore/param/EnumParam.h"
-#include "mmcore/param/FloatParam.h"
-#include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ParamSlot.h"
 
 #include "mmstd_datatools/table/TableDataCall.h"
@@ -87,13 +83,27 @@ namespace astro {
 
         bool getData(core::Call& call);
 
+        bool getData(const unsigned int frameID);
+
         bool getHash(core::Call& call);
 
+        bool getRanges(const unsigned int start, const unsigned int cnt);
+
+        inline bool isQuantitative(const std::size_t col) {
+            using megamol::stdplugin::datatools::table::TableDataCall;
+            return ((col < this->columns.size()) && (this->columns[col].Type()
+                == TableDataCall::ColumnType::QUANTITATIVE));
+        }
+
         void norm(float *dst, const std::size_t col, const vec3ArrayPtr& src);
+
+        void setRange(const std::size_t col, const std::pair<float, float>& src);
 
         std::vector<ColumnInfo> columns;
         unsigned int frameID;
         std::size_t hash;
+        core::param::ParamSlot paramFullRange;
+        std::vector<std::pair<float, float>> ranges;
         core::CallerSlot slotAstroData;
         core::CalleeSlot slotTableData;
         std::vector<float> values;

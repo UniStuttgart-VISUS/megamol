@@ -45,7 +45,7 @@ namespace view {
     /**
      * Base class of rendering graph calls
      */
-    class MEGAMOLCORE_API View3D : public AbstractRenderingView,
+    class MEGAMOLCORE_API [[deprecated]] View3D : public AbstractRenderingView,
             public AbstractCamParamSync {
 
     public:
@@ -144,6 +144,8 @@ namespace view {
          * @return The return value
          */
         virtual bool OnRenderView(Call& call);
+
+        virtual bool GetExtents(Call & call) override;
 
         /**
          * Freezes, updates, or unfreezes the view onto the scene (not the

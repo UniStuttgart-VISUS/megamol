@@ -20,7 +20,7 @@
 
 #include "mesh.h"
 
-#include "glowl/Texture2D.h"
+#include "glowl/Texture2D.hpp"
 
 namespace megamol {
 namespace mesh {
@@ -51,7 +51,7 @@ private:
     /**
      * Storage for textures created and managed by this class
      */
-    std::vector<std::shared_ptr<Texture2D>> m_texture;
+    std::vector<std::shared_ptr<glowl::Texture2D>> m_texture;
 };
 
 inline std::vector<GPUMaterialCollecton::Material> const& GPUMaterialCollecton::getMaterials() { return m_materials; }

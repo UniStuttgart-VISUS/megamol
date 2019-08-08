@@ -148,7 +148,7 @@ bool Contest2019DataLoader::Frame::LoadFrame(std::string filepath, unsigned int 
         this->particleIDs->operator[](i) = s.particleID;
 
         // calculate the temperature ourselves
-        // formula out of the mail of J.D Emberson 16.6.2019
+        // formula out of the mail of J.D Emberson 20.6.2019
         if (this->isBaryonFlags->at(i)) {
             this->temperatures->operator[](i) =
                 4.8e5f * this->internalEnergies->at(i) / std::pow(1.0f + redshift, 3.0f);
@@ -157,8 +157,14 @@ bool Contest2019DataLoader::Frame::LoadFrame(std::string filepath, unsigned int 
         // calculate the entropy ourselves
         // formula directly from the contest description
         if (this->isBaryonFlags->at(i) && this->temperatures->at(i) > 0.0f && this->densities->at(i) > 0.0f) {
-            float val = std::log(this->temperatures->at(i) / std::pow(this->densities->at(i), 2.0f / 3.0f));
-            this->entropy->operator[](i) = val;
+            auto t = (*this->temperatures)[i];
+            auto p = (*this->densities)[i];
+            this->entropy->operator[](i) = std::log(t / std::pow(p, 2.0f / 3.0f));
+
+            // This is Juhans formula:
+            //auto mu = (*this->masses)[i];
+            //auto eps = (*this->internalEnergies)[i];
+            //(*this->entropy)[i] = std::log((mu * eps) / std::pow(p, 2.0f / 3.0f));
         }
     }
     return true;

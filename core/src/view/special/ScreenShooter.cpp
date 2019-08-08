@@ -7,9 +7,12 @@
 
 #include "stdafx.h"
 #include "mmcore/view/special/ScreenShooter.h"
+
 #include <climits>
+#include <limits>
 #include <map>
 #include <sstream>
+
 #include "mmcore/AbstractNamedObject.h"
 #include "mmcore/AbstractNamedObjectContainer.h"
 #include "mmcore/CoreInstance.h"
@@ -212,7 +215,9 @@ view::special::ScreenShooter::ScreenShooter(const bool reducedParameters) : job:
         animAddTime2FrameSlot("anim::addTime2Fname", "Add animation time to the output filenames"),
         makeAnimSlot("anim::makeAnim", "Flag whether or not to make an animation of screen shots"),
         animTimeParamNameSlot("anim::paramname", "Name of the time parameter"),
-        running(false), animLastFrameTime(0), outputCounter(0) {
+        running(false),
+        animLastFrameTime(std::numeric_limits<decltype(animLastFrameTime)>::lowest()),
+        outputCounter(0) {
 
     this->viewNameSlot << new param::StringParam("");
     this->MakeSlotAvailable(&this->viewNameSlot);
@@ -929,11 +934,12 @@ bool view::special::ScreenShooter::triggerButtonClicked(param::ParamSlot& slot) 
             if (this->makeAnimSlot.Param<param::BoolParam>()->Value()) {
                 param::ParamSlot* timeSlot = this->findTimeParam(vi->View());
                 if (timeSlot != nullptr) {
-                    timeSlot->Param<param::FloatParam>()->SetValue(
-                        static_cast<float>(this->animFromSlot.Param<param::IntParam>()->Value()));
-                    this->animLastFrameTime = (float)UINT_MAX;
+                    auto startTime = static_cast<float>(this->animFromSlot.Param<param::IntParam>()->Value());
+                    Log::DefaultLog.WriteInfo("Starting animation of screen shots at %f.", time);
+                    timeSlot->Param<param::FloatParam>()->SetValue(startTime);
+                    this->animLastFrameTime = std::numeric_limits<decltype(animLastFrameTime)>::lowest();
                 } else {
-                    Log::DefaultLog.WriteError("Unable to make animation screen shots");
+                    Log::DefaultLog.WriteError("Unable to make animation screen shots.");
                     this->makeAnimSlot.Param<param::BoolParam>()->SetValue(false);
                 }
                 // this is not a good idea because the animation module interferes with the "anim::time" parameter in

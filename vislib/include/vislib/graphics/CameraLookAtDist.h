@@ -26,7 +26,7 @@ namespace graphics {
      * Cursor 2d event and camera controller chaning the distance to the look
      * at point interactively.
      */
-    class CameraLookAtDist : public AbstractCursor2DEvent, 
+    class [[deprecated]] CameraLookAtDist : public AbstractCursor2DEvent, 
         public AbstractCameraController {
     public:
 

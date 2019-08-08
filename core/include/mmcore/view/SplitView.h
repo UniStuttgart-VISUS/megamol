@@ -12,10 +12,11 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/CallerSlot.h"
+#include "mmcore/param/ColorParam.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/AbstractView.h"
 #include "mmcore/view/CallRenderView.h"
-#include "mmcore/param/ColorParam.h"
+#include "mmcore/view/TimeControl.h"
 #include "vislib/graphics/ColourRGBAu8.h"
 #include "vislib/graphics/gl/FramebufferObject.h"
 
@@ -168,6 +169,9 @@ protected:
      */
     virtual void unpackMouseCoordinates(float& x, float& y);
 
+    /** Override of GetExtents */
+    virtual bool GetExtents(core::Call& call) override;
+
 private:
     /**
      * Answer the renderer 1 call
@@ -184,19 +188,6 @@ private:
     inline CallRenderView* render2(void) const { return this->render2Slot.CallAs<CallRenderView>(); }
 
     /**
-     * Returns the focused (keyboard input) renderer.
-     */
-    inline CallRenderView* renderFocused() const {
-        if (this->focus == 1) {
-            return this->render1();
-        } else if (this->focus == 2) {
-            return this->render2();
-        } else {
-            return nullptr;
-		}
-    }
-
-    /**
      * Returns the hovered (mouse input) renderer.
      */
     inline CallRenderView* renderHovered() const {
@@ -207,7 +198,7 @@ private:
             return this->render2();
         } else {
             return nullptr;
-		}
+        }
     }
 
     /**
@@ -242,6 +233,15 @@ private:
     /** The splitter colour slot */
     param::ParamSlot splitColourSlot;
 
+    /** Slot enabling time synchronization */
+    param::ParamSlot enableTimeSyncSlot;
+
+    /** Option for forwarding mouse and keyboard events to both child views */
+    param::ParamSlot inputToBothSlot;
+
+    /** The parameter storage for time control */
+    TimeControl timeCtrl;
+
     /** The splitter colour */
     param::ColorParam::ColorType splitColour;
 
@@ -257,8 +257,6 @@ private:
     vislib::graphics::gl::FramebufferObject fbo1;
 
     vislib::graphics::gl::FramebufferObject fbo2;
-
-    int focus;
 
     float mouseX;
 

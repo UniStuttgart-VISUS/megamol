@@ -48,13 +48,13 @@ TrackingShotRenderer::TrackingShotRenderer(void) : Renderer3DModule(),
     this->stepsParam.SetParameter(new param::IntParam((int)this->interpolSteps, 1));
     this->MakeSlotAvailable(&this->stepsParam);
 
-    this->toggleManipulateParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_Q));
+    this->toggleManipulateParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_Q, core::view::Modifier::CTRL));
     this->MakeSlotAvailable(&this->toggleManipulateParam);
 
-    this->toggleHelpTextParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_H));
+    this->toggleHelpTextParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_H, core::view::Modifier::CTRL));
     this->MakeSlotAvailable(&this->toggleHelpTextParam);
 
-    this->toggleManipOusideBboxParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_W));
+    this->toggleManipOusideBboxParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_W, core::view::Modifier::CTRL));
     this->MakeSlotAvailable(&this->toggleManipOusideBboxParam);
 
     // Load spline interpolation keyframes at startup
@@ -424,9 +424,9 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D& call) {
 
     vislib::StringA leftLabel  = " TRACKING SHOT ";
     vislib::StringA midLabel   = "";
-    vislib::StringA rightLabel = " [h] Show Help Text ";
+    vislib::StringA rightLabel = " [Ctrl+h] Show Help Text ";
     if (this->showHelpText) {
-        rightLabel = " [h] Hide Help Text ";
+        rightLabel = " [Ctrl+h] Hide Help Text ";
     }
 
     float lbFontSize        = (CC_MENU_HEIGHT); 
@@ -462,26 +462,26 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D& call) {
     if (this->showHelpText) {
         vislib::StringA helpText = "";
         helpText += "-----[ GLOBAL ]-----\n";
-        helpText += "[a] Apply current settings to selected/new keyframe. \n";
-        helpText += "[d] Delete selected keyframe. \n";
+        helpText += "[Ctrl+a] Apply current settings to selected/new keyframe. \n";
+        helpText += "[Ctrl+d] Delete selected keyframe. \n";
         helpText += "[Ctrl+s] Save keyframes to file. \n";
         helpText += "[Ctrl+l] Load keyframes from file. \n";
         helpText += "[Ctrl+z] Undo keyframe changes. \n";
         helpText += "[Ctrl+y] Redo keyframe changes. \n";
         helpText += "-----[ TRACKING SHOT ]----- \n";
-        helpText += "[q] Toggle different manipulators for the selected keyframe. \n";
-        helpText += "[w] Show manipulators inside/outside of model bounding box. \n";
-        helpText += "[l] Reset look-at vector of selected keyframe. \n";
+        helpText += "[Ctrl+q] Toggle different manipulators for the selected keyframe. \n";
+        helpText += "[Ctrl+w] Show manipulators inside/outside of model bounding box. \n";
+        helpText += "[Ctrl+u] Reset look-at vector of selected keyframe. \n";
         helpText += "-----[ CINEMATIC ]----- \n";
         helpText += "[Ctrl+r] Start/Stop rendering complete animation. \n";
         helpText += "[Ctrl+Space] Start/Stop animation preview. \n";
         helpText += "-----[ TIMELINE ]----- \n";
-        helpText += "[Right/Left Arrow] Move selected keyframe on animation time axis. \n";
-        helpText += "[f] Snap all keyframes to animation frames. \n";
-        helpText += "[g] Snap all keyframes to simulation frames. \n";
-        helpText += "[t] Linearize simulation time between two keyframes. \n";
-        helpText += "[v] Set same velocity between all keyframes (Experimental).\n"; // Calcualation is not correct yet ...
-        helpText += "[p] Reset shifted and scaled time axes. \n";
+        helpText += "[Ctrl+Right/Left Arrow] Move selected keyframe on animation time axis. \n";
+        helpText += "[Ctrl+f] Snap all keyframes to animation frames. \n";
+        helpText += "[Ctrl+g] Snap all keyframes to simulation frames. \n";
+        helpText += "[Ctrl+t] Linearize simulation time between two keyframes. \n";
+        //helpText += "[Ctrl+v] Set same velocity between all keyframes (Experimental).\n"; // Calcualation is not correct yet ...
+        helpText += "[Ctrl+p] Reset shifted and scaled time axes. \n";
         helpText += "[Left Mouse Button] Select keyframe. \n";
         helpText += "[Middle Mouse Button] Axes scaling in mouse direction. \n";
         helpText += "[Right Mouse Button] Drag & drop keyframe / pan axes. \n";

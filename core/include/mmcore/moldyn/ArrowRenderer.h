@@ -100,11 +100,17 @@ namespace moldyn {
         /** The arrow shader */
         vislib::graphics::gl::GLSLShader arrowShader;
 
+        /** The call for a chained renderer */
+        CallerSlot getRenderSlot;
+
         /** The call for data */
         CallerSlot getDataSlot;
 
         /** The call for Transfer function */
         CallerSlot getTFSlot;
+
+        /** The call for selection flags */
+        CallerSlot getFlagsSlot;
 
         ///** The call for clipping plane */
         //CallerSlot getClipPlaneSlot;
@@ -114,7 +120,7 @@ namespace moldyn {
         
         /** Scaling factor for arrow lengths */
         param::ParamSlot lengthScaleSlot;
-		
+        
         /** Length filter for arrow lengths */
         param::ParamSlot lengthFilterSlot;
 
