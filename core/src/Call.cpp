@@ -5,16 +5,15 @@
  * Alle Rechte vorbehalten.
  */
 
-//#define RIG_RENDERCALLS_WITH_DEBUGGROUPS
-
 #include "stdafx.h"
+#include "mmcore/RigRendering.h"
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#ifdef RIG_RENDERCALLS_WITH_DEBUGGROUPS 
-#include "mmcore/view/Renderer2DModule.h"
-#include "mmcore/view/Renderer3DModule.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#ifdef RIG_RENDERCALLS_WITH_DEBUGGROUPS
+#    include "mmcore/view/Renderer2DModule.h"
+#    include "mmcore/view/Renderer3DModule.h"
+#    include "vislib/graphics/gl/IncludeAllGL.h"
 #endif
 #include "vislib/sys/Log.h"
 
@@ -60,14 +59,14 @@ bool Call::operator()(unsigned int func) {
             blah += "::";
             blah += f;
             glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1234, -1, blah.c_str());
-            //vislib::sys::Log::DefaultLog.WriteInfo("called %s::%s", p3->ClassName(), f);
+            // vislib::sys::Log::DefaultLog.WriteInfo("called %s::%s", p3->ClassName(), f);
         }
         if (p2) {
             std::string blah = p2->ClassName();
             blah += "::";
             blah += f;
             glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1234, -1, blah.c_str());
-            //vislib::sys::Log::DefaultLog.WriteInfo("called %s::%s", p2->ClassName(), f);
+            // vislib::sys::Log::DefaultLog.WriteInfo("called %s::%s", p2->ClassName(), f);
         }
 #endif
         res = this->callee->InCall(this->funcMap[func], *this);
