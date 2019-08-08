@@ -1,67 +1,53 @@
 /*
- * RaycastVolumeRenderer.h
+ * SurfaceLICRenderer.h
  *
- * Copyright (C) 2018 by Universitaet Stuttgart (VISUS).
- * All rights reserved.
+ * Copyright (C) 2019 by MegaMol team
+ * Alle Rechte vorbehalten.
  */
 
-#ifndef RAYCAST_VOLUME_RENDERER_H_INCLUDED
-#define RAYCAST_VOLUME_RENDERER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
+#ifndef ASTRO_SURFACELICRENDERER_H_INCLUDED
+#define ASTRO_SURFACELICRENDERER_H_INCLUDED
+#pragma once
 
-#include <array>
-
-#include "vislib/graphics/gl/GLSLComputeShader.h"
-#include "vislib/graphics/gl/OpenGLTexture2D.h"
-#include "vislib/graphics/gl/FramebufferObject.h"
-
+#include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/CallRender3D.h"
 #include "mmcore/view/Renderer3DModule.h"
 
+#include "vislib/graphics/gl/FramebufferObject.h"
+#include "vislib/graphics/gl/GLSLComputeShader.h"
+#include "vislib/graphics/gl/GLSLShader.h"
+
+#include <memory>
 
 namespace megamol {
-namespace stdplugin {
-namespace volume {
+namespace astro {
 
-class RaycastVolumeRenderer : public megamol::core::view::Renderer3DModule {
+class SurfaceLICRenderer : public megamol::core::view::Renderer3DModule {
 public:
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "RaycastVolumeRenderer"; }
+    static const char* ClassName(void) { return "SurfaceLICRenderer"; }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "Modern compute-based raycast renderer for volumetric datasets."; }
+    static const char* Description(void) { return "Renderer for surface LIC"; }
 
     /**
      * Answers whether this module is available on the current system.
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
-#ifdef _WIN32
-#    if defined(DEBUG) || defined(_DEBUG)
-        HDC dc = ::wglGetCurrentDC();
-        HGLRC rc = ::wglGetCurrentContext();
-        ASSERT(dc != NULL);
-        ASSERT(rc != NULL);
-#    endif // DEBUG || _DEBUG
-#endif     // _WIN32
-        return vislib::graphics::gl::GLSLShader::AreExtensionsAvailable() && ogl_IsVersionGEQ(4, 3);
-    }
+    static bool IsAvailable(void) { return true; }
 
-    RaycastVolumeRenderer();
-    ~RaycastVolumeRenderer();
+    SurfaceLICRenderer();
+    ~SurfaceLICRenderer();
 
 protected:
     /**
@@ -69,12 +55,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create();
+    virtual bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    void release();
+    virtual void release() override;
 
     /**
      * The get extents callback. The module should set the members of
@@ -85,7 +71,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool GetExtents(core::Call& call);
+    virtual bool GetExtents(core::Call& call) override;
 
     /**
      * The render callback.
@@ -94,15 +80,9 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool Render(core::Call& call);
-
-    bool updateVolumeData();
-
-    bool updateTransferFunction();
+    virtual bool Render(core::Call& call) override;
 
 private:
-    /* OpenGL TextureLayout, Texture and Texture2D classes courtesy of glOwl by Michael Becher. */
-
     struct TextureLayout {
         TextureLayout() : width(0), internal_format(0), height(0), depth(0), format(0), type(0), levels(0) {}
         /**
@@ -437,47 +417,34 @@ private:
         unsigned int m_depth;
     };
 
-    std::unique_ptr<vislib::graphics::gl::GLSLComputeShader> m_raycast_volume_compute_shdr;
-    std::unique_ptr<vislib::graphics::gl::GLSLComputeShader> m_raycast_volume_compute_iso_shdr;
+    /** caller slot */
+    core::CallerSlot m_input_renderer;
+    core::CallerSlot m_input_velocities;
+    core::CallerSlot m_input_transfer_function;
+
+    /** Parameters */
+    core::param::ParamSlot stencil_size;
+    core::param::ParamSlot arc_length;
+    core::param::ParamSlot num_advections;
+    core::param::ParamSlot epsilon;
+
+    /** Shader */
+    std::unique_ptr<vislib::graphics::gl::GLSLComputeShader> m_lic_compute_shdr;
     std::unique_ptr<vislib::graphics::gl::GLSLShader> m_render_to_framebuffer_shdr;
 
+    /** Textures */
     std::unique_ptr<Texture2D> m_render_target;
-    std::unique_ptr<Texture2D> m_normal_target;
-    std::unique_ptr<Texture2D> m_depth_target;
+    std::unique_ptr<Texture3D> m_velocity_texture;
+    std::unique_ptr<Texture2D> m_noise_texture;
 
-    std::unique_ptr<Texture3D> m_volume_texture;
-
-    std::unique_ptr<Texture2D> m_transfer_function;
-
-    GLuint tf_texture;
-
-    size_t m_volume_datahash = std::numeric_limits<size_t>::max();
-    int m_frame_id = -1;
-
-    float m_volume_origin[3];
-    float m_volume_extents[3];
-    float m_volume_resolution[3];
-
-    /** Parameters for changing the behavior */
-    core::param::ParamSlot m_mode;
-
-    core::param::ParamSlot m_ray_step_ratio_param;
-    core::param::ParamSlot m_opacity_threshold;
-    core::param::ParamSlot m_iso_value;
-
-    /** caller slot */
-    megamol::core::CallerSlot m_renderer_callerSlot;
-    megamol::core::CallerSlot m_volumetricData_callerSlot;
-    megamol::core::CallerSlot m_transferFunction_callerSlot;
-
-    std::array<float, 2> valRange;
-
-    /** FBO for chaining renderers */
+    /** FBO for input */
     vislib::graphics::gl::FramebufferObject fbo;
+
+    /** Noise texture data */
+    std::vector<float> noise;
 };
 
-} // namespace volume
-} // namespace stdplugin
-} // namespace megamol
+}
+}
 
-#endif
+#endif /* ASTRO_SURFACELICRENDERER_H_INCLUDED */

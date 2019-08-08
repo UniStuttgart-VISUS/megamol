@@ -16,7 +16,7 @@
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "PointcloudHelpers.h"
 #include <vector>
-#include "nanoflann.hpp"
+#include <nanoflann.hpp>
 #include <Eigen/Eigenvalues>
 
 namespace megamol {

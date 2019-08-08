@@ -18,6 +18,7 @@
 #include "Contest2019DataLoader.h"
 #include "DirectionToColour.h"
 #include "FilamentFilter.h"
+#include "SurfaceLICRenderer.h"
 
 
 /* anonymous namespace hides this type from any other object files */
@@ -58,6 +59,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::astro::FilamentFilter>();
             this->module_descriptions.RegisterAutoDescription<megamol::astro::AstroSchulz>();
             this->module_descriptions.RegisterAutoDescription<megamol::astro::DirectionToColour>();
+            this->module_descriptions.RegisterAutoDescription<megamol::astro::SurfaceLICRenderer>();
 
             // register calls here:
 

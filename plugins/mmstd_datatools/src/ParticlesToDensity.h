@@ -10,6 +10,7 @@
 #pragma once
 
 #include <map>
+#include <array>
 #include <vector>
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
@@ -18,7 +19,7 @@
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/param/ParamSlot.h"
 #include "vislib/math/Vector.h"
-
+#include "mmstd_datatools/table/TableDataCall.h"
 
 namespace megamol {
 namespace stdplugin {
@@ -109,6 +110,11 @@ private:
     core::param::ParamSlot sigmaSlot;
 
     std::vector<std::vector<float>> vol;
+    std::vector<float> directions, colors, densities;
+    std::vector<float> grid;
+
+    std::array<stdplugin::datatools::table::TableDataCall::ColumnInfo, 7> info;
+    std::vector<float> infoData;
 
     size_t in_datahash = std::numeric_limits<size_t>::max();
     size_t datahash = 0;
@@ -116,8 +122,12 @@ private:
     float maxDens = 0.0f;
     float minDens = std::numeric_limits<float>::max();
 
+    bool has_data;
+
     /** The slot providing access to the manipulated data */
     megamol::core::CalleeSlot outDataSlot;
+    megamol::core::CalleeSlot outParticlesSlot;
+    megamol::core::CalleeSlot outInfoSlot;
 
     /** The slot accessing the original data */
     megamol::core::CallerSlot inDataSlot;
