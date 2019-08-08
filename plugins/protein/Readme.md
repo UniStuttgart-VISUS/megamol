@@ -49,7 +49,11 @@ The most relevant modules are:
 | SombreroWarper           | This module is not located in this plugin. Instead it resides in the protein_cuda plugin. It warps a given tunnel mesh into a sombrero shape. The user is able to select several radius variants as desired. It puts out two meshes, one for crown and one for the brim |
 | SombreroMeshRenderer     | Renders a given sombrero mesh alongside with additional information such as crown and brim radius and a sweatband circle. It is also able to render normal triangular protein meshes as outputted by the MSMSMeshLoader. When connected to a FlagStorage that is connected to another SombreroMeshRenderer, the selection between these renderers can be synced, enabling a brushing and linking approach. |
 
+A working module graph will look like this:
 
+![Sombreros Module Graph](sombreros.png)
+
+The PDBLoader loads the atom coordinates from the desired protein, the BindingSiteDataSource its relevant binding site. To use the sombreros properly you also need output data from the [CAVER software](https://www.caver.cz/), that used the given protein as input. These results have to be loaded by the CaverTunnelResidueLoader. The selection of the visualized tunnel happens in the CaverTunnelResidueLoader. The MSMSMeshLoaders then generate surface meshes out of the given protein data. The upper one with a smaller probe size (~2 Angstrom) and the lower one with a higher probe size (~10 Angstrom). The MSMSCavityFinder then extracts the cavities of the protein using these two meshes as input. After that, the TunnelCutter cuts the selected tunnel out of the mesh and adds parts of the protein surface to form the brim (So the "brimWidth" parameter should be larger than 0). Finally, the mesh is warped into a sombrero shape by the SombreroWarper. This mesh is rendererd by the SombreroMeshRenderer. Please find a working example of this visualization in the examples repository of MegaMol.
 
 ## Dependencies
 
