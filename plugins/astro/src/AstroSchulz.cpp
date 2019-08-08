@@ -28,7 +28,7 @@ megamol::astro::AstroSchulz::AstroSchulz(void) : Module(),
         slotTableData("tableData", "Output slot for the resulting sphere data") {
     using megamol::stdplugin::datatools::table::TableDataCall;
 
-    // Publish the slots.
+    // Connect the slots.
     this->slotAstroData.SetCompatibleCall<AstroDataCallDescription>();
     this->MakeSlotAvailable(&this->slotAstroData);
 

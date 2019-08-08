@@ -18,6 +18,7 @@
 #include "Contest2019DataLoader.h"
 #include "DirectionToColour.h"
 #include "FilamentFilter.h"
+#include "SimpleAstroFilter.h"
 #include "SurfaceLICRenderer.h"
 
 
@@ -59,6 +60,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::astro::FilamentFilter>();
             this->module_descriptions.RegisterAutoDescription<megamol::astro::AstroSchulz>();
             this->module_descriptions.RegisterAutoDescription<megamol::astro::DirectionToColour>();
+            this->module_descriptions.RegisterAutoDescription<megamol::astro::SimpleAstroFilter>();
             this->module_descriptions.RegisterAutoDescription<megamol::astro::SurfaceLICRenderer>();
 
             // register calls here:
