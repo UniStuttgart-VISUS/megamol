@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<btf type="MegaMolGLSLShader" version="1.0" namespace="flag_storage">
+ 
+    <snippet name="vert_attributes" type="string">
+        <![CDATA[
+
+#define FLAG_STORAGE
+
+const uint FLAG_ENABLED = 1u << 0;
+const uint FLAG_FILTERED = 1u << 1;
+const uint FLAG_SELECTED = 1u << 2;
+const uint FLAG_SOFTSELECTED = 1u << 3;
+
+uniform uint flagOffset;
+
+uniform vec4 flagSelectedCol;
+uniform vec4 flagSoftSelectedCol;
+
+#ifdef FLAG_STORAGE_SSBO
+    layout(std430, binding = 4) buffer Flags
+    {
+        coherent uint flags[];
+    };
+#else
+    in uint flags[1];
+#endif // FLAG_STORAGE_SSBO 
+
+flat out int flag_discard;
+
+        ]]>
+    </snippet>
+
+    <snippet name="vert_code" type="string">
+        <![CDATA[
+
+ #ifdef FLAG_STORAGE
+
+    flag_discard = 0;
+    uint flag = uint(0);
+
+#ifdef FLAG_STORAGE_SSBO
+    flag = flags[(flagOffset + gl_VertexID)];
+#else
+    flag = flagOffset + flags[0];
+#endif // FLAG_STORAGE_SSBO
+
+    // Enabled
+    //if ((flag & FLAG_ENABLED) == FLAG_ENABLED) {
+    //} 
+    //else {
+    //}   
+
+    // Filtered
+    if ((flag & FLAG_FILTERED) == FLAG_FILTERED) {
+        flag_discard = 1;
+    } 
+    //else {
+    //}
+
+    // Selected
+    if ((flag & FLAG_SELECTED) == FLAG_SELECTED) {
+        vertColor = flagSelectedCol;
+    } 
+    //else {
+    //}
+
+    // Soft Selected
+    if ((flag & FLAG_SOFTSELECTED) == FLAG_SOFTSELECTED) {
+        vertColor = flagSoftSelectedCol;
+    } 
+    //else {
+    //}    
+
+#endif // FLAG_STORAGE
+
+        ]]>
+    </snippet>
+
+    <snippet name="frag_attributes" type="string">
+        <![CDATA[
+
+#define FLAG_STORAGE
+flat in int flag_discard;
+
+        ]]>
+    </snippet>
+
+    <snippet name="frag_code" type="string">
+        <![CDATA[
+
+ #ifdef FLAG_STORAGE
+    if (flag_discard != 0) {
+        discard;
+    }
+#endif // FLAG_STORAGE
+
+        ]]>
+    </snippet>
+
+
+
+</btf>
+
+ 
