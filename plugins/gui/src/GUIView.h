@@ -86,8 +86,6 @@ protected:
 
     virtual void DeserialiseCamera(vislib::Serialiser& serialiser) override;
 
-    virtual bool OnRenderView(megamol::core::Call& call);
-
     virtual void Render(const mmcRenderViewContext& context) override;
 
     virtual void ResetView(void) override;
