@@ -22,12 +22,30 @@
  */
 megamol::astro::AstroSchulz::AstroSchulz(void) : Module(),
         frameID(0),
-        hash(0),
+        hashInput(0),
+        hashState(0),
+        paramsInclude { {   // The ParamSlot has been defeated!!!
+            { "includePosition", "Include the position." },
+            { "includeVelocity", "Include the velocity vectors." },
+            { "includeVelocityMagnitude", "Include the magnitude of the velocity vectors." },
+            { "includeTemperature", "Include the temperature." },
+            { "includeMass", "Include the mass." },
+            { "includeInternalEnergy", "Include the internal energy." },
+            { "includeSmoothingLength", "include the smoothing length." },
+            { "includeMolecularWeight", "Include the molecular weight." },
+            { "includeDensity", "Include the density." },
+            { "includeGravitationalPotential", "Include the graviational potential." },
+            { "includeEntropy", "Include entropy." },
+            { "includeBaryon", "Include the Boolean indicating baryons." },
+            { "includeStar", "Include the Boolean indicating stars." },
+            { "includeWind", "Include the Boolean indicating wind." },
+            { "includeStarFormingGas", "Include the Boolean indicating start forming gas." },
+            { "includeActiveGalactivNucleus", "Include the Boolean indicating AGNs." },
+            { "includeID", "Include the particle ID." }
+        } },
         paramFullRange("fullRange", "Scan the whole trajecory for min/man ranges."),
         slotAstroData("astroData", "Input slot for astronomical data"),
         slotTableData("tableData", "Output slot for the resulting sphere data") {
-    using megamol::stdplugin::datatools::table::TableDataCall;
-
     // Publish the slots.
     this->slotAstroData.SetCompatibleCall<AstroDataCallDescription>();
     this->MakeSlotAvailable(&this->slotAstroData);
@@ -41,134 +59,10 @@ megamol::astro::AstroSchulz::AstroSchulz(void) : Module(),
     this->paramFullRange << new core::param::BoolParam(false);
     this->MakeSlotAvailable(&this->paramFullRange);
 
-    // Define the data format of the output.
-    this->columns.reserve(21);
-
-    this->columns.emplace_back();
-    this->columns.back().SetName("PositionX");
-    this->columns.back().SetType(TableDataCall::ColumnType::QUANTITATIVE);
-    this->columns.back().SetMinimumValue(std::numeric_limits<float>::lowest());
-    this->columns.back().SetMaximumValue((std::numeric_limits<float>::max)());
-
-    this->columns.emplace_back();
-    this->columns.back().SetName("PositionY");
-    this->columns.back().SetType(TableDataCall::ColumnType::QUANTITATIVE);
-    this->columns.back().SetMinimumValue(std::numeric_limits<float>::lowest());
-    this->columns.back().SetMaximumValue((std::numeric_limits<float>::max)());
-
-    this->columns.emplace_back();
-    this->columns.back().SetName("PositionZ");
-    this->columns.back().SetType(TableDataCall::ColumnType::QUANTITATIVE);
-    this->columns.back().SetMinimumValue(std::numeric_limits<float>::lowest());
-    this->columns.back().SetMaximumValue((std::numeric_limits<float>::max)());
-
-    this->columns.emplace_back();
-    this->columns.back().SetName("VelocityX");
-    this->columns.back().SetType(TableDataCall::ColumnType::QUANTITATIVE);
-    this->columns.back().SetMinimumValue(std::numeric_limits<float>::lowest());
-    this->columns.back().SetMaximumValue((std::numeric_limits<float>::max)());
-
-    this->columns.emplace_back();
-    this->columns.back().SetName("VelocityY");
-    this->columns.back().SetType(TableDataCall::ColumnType::QUANTITATIVE);
-    this->columns.back().SetMinimumValue(std::numeric_limits<float>::lowest());
-    this->columns.back().SetMaximumValue((std::numeric_limits<float>::max)());
-
-    this->columns.emplace_back();
-    this->columns.back().SetName("VelocityZ");
-    this->columns.back().SetType(TableDataCall::ColumnType::QUANTITATIVE);
-    this->columns.back().SetMinimumValue(std::numeric_limits<float>::lowest());
-    this->columns.back().SetMaximumValue((std::numeric_limits<float>::max)());
-
-    this->columns.emplace_back();
-    this->columns.back().SetName("Velocity");
-    this->columns.back().SetType(TableDataCall::ColumnType::QUANTITATIVE);
-    this->columns.back().SetMinimumValue(std::numeric_limits<float>::lowest());
-    this->columns.back().SetMaximumValue((std::numeric_limits<float>::max)());
-
-    this->columns.emplace_back();
-    this->columns.back().SetName("Temperature");
-    this->columns.back().SetType(TableDataCall::ColumnType::QUANTITATIVE);
-    this->columns.back().SetMinimumValue(std::numeric_limits<float>::lowest());
-    this->columns.back().SetMaximumValue((std::numeric_limits<float>::max)());
-
-    this->columns.emplace_back();
-    this->columns.back().SetName("Mass");
-    this->columns.back().SetType(TableDataCall::ColumnType::QUANTITATIVE);
-    this->columns.back().SetMinimumValue(std::numeric_limits<float>::lowest());
-    this->columns.back().SetMaximumValue((std::numeric_limits<float>::max)());
-
-    this->columns.emplace_back();
-    this->columns.back().SetName("InternalEnergy");
-    this->columns.back().SetType(TableDataCall::ColumnType::QUANTITATIVE);
-    this->columns.back().SetMinimumValue(std::numeric_limits<float>::lowest());
-    this->columns.back().SetMaximumValue((std::numeric_limits<float>::max)());
-
-    this->columns.emplace_back();
-    this->columns.back().SetName("SmoothingLength");
-    this->columns.back().SetType(TableDataCall::ColumnType::QUANTITATIVE);
-    this->columns.back().SetMinimumValue(std::numeric_limits<float>::lowest());
-    this->columns.back().SetMaximumValue((std::numeric_limits<float>::max)());
-
-    this->columns.emplace_back();
-    this->columns.back().SetName("MolecularWeight");
-    this->columns.back().SetType(TableDataCall::ColumnType::QUANTITATIVE);
-    this->columns.back().SetMinimumValue(std::numeric_limits<float>::lowest());
-    this->columns.back().SetMaximumValue((std::numeric_limits<float>::max)());
-
-    this->columns.emplace_back();
-    this->columns.back().SetName("Density");
-    this->columns.back().SetType(TableDataCall::ColumnType::QUANTITATIVE);
-    this->columns.back().SetMinimumValue(std::numeric_limits<float>::lowest());
-    this->columns.back().SetMaximumValue((std::numeric_limits<float>::max)());
-
-    this->columns.emplace_back();
-    this->columns.back().SetName("GraviationalPotential");
-    this->columns.back().SetType(TableDataCall::ColumnType::QUANTITATIVE);
-    this->columns.back().SetMinimumValue(std::numeric_limits<float>::lowest());
-    this->columns.back().SetMaximumValue((std::numeric_limits<float>::max)());
-
-    this->columns.emplace_back();
-    this->columns.back().SetName("Entropy");
-    this->columns.back().SetType(TableDataCall::ColumnType::QUANTITATIVE);
-    this->columns.back().SetMinimumValue(std::numeric_limits<float>::lowest());
-    this->columns.back().SetMaximumValue((std::numeric_limits<float>::max)());
-
-    this->columns.emplace_back();
-    this->columns.back().SetName("Baryon");
-    this->columns.back().SetType(TableDataCall::ColumnType::CATEGORICAL);
-    this->columns.back().SetMinimumValue(0.0f);
-    this->columns.back().SetMaximumValue(1.0f);
-
-    this->columns.emplace_back();
-    this->columns.back().SetName("Star");
-    this->columns.back().SetType(TableDataCall::ColumnType::CATEGORICAL);
-    this->columns.back().SetMinimumValue(0.0f);
-    this->columns.back().SetMaximumValue(1.0f);
-
-    this->columns.emplace_back();
-    this->columns.back().SetName("Wind");
-    this->columns.back().SetType(TableDataCall::ColumnType::CATEGORICAL);
-    this->columns.back().SetMinimumValue(0.0f);
-    this->columns.back().SetMaximumValue(1.0f);
-
-    this->columns.emplace_back();
-    this->columns.back().SetName("StarFormingGas");
-    this->columns.back().SetType(TableDataCall::ColumnType::CATEGORICAL);
-    this->columns.back().SetMinimumValue(0.0f);
-    this->columns.back().SetMaximumValue(1.0f);
-
-    this->columns.emplace_back();
-    this->columns.back().SetName("ActiveGalacticNucleus");
-    this->columns.back().SetType(TableDataCall::ColumnType::CATEGORICAL);
-    this->columns.back().SetMinimumValue(0.0f);
-    this->columns.back().SetMaximumValue(1.0f);
-
-    this->columns.emplace_back();
-    this->columns.back().SetName("ID");
-    this->columns.back().SetType(TableDataCall::ColumnType::CATEGORICAL);
-    this->columns.back().SetMinimumValue(0);
-    this->columns.back().SetMaximumValue((std::numeric_limits<float>::max)());
+    for (auto& p : this->paramsInclude) {
+        p << new core::param::BoolParam(true);
+        this->MakeSlotAvailable(&p);
+    }
 }
 
 
@@ -361,7 +255,7 @@ bool megamol::astro::AstroSchulz::getData(core::Call& call) {
     }
 
     tab->SetFrameCount(ast->FrameCount());
-    tab->SetDataHash(this->hash);
+    tab->SetDataHash(this->getHash());
     tab->Set(this->columns.size(), ast->GetParticleCount(),
         this->columns.data(), this->values.data());
     tab->SetUnlocker(nullptr);
@@ -370,18 +264,193 @@ bool megamol::astro::AstroSchulz::getData(core::Call& call) {
 }
 
 
-
 /*
  * megamol::astro::AstroSchulz::getData
  */
 bool megamol::astro::AstroSchulz::getData(const unsigned int frameID) {
+    using namespace core::param;
+    using megamol::stdplugin::datatools::table::TableDataCall;
     using vislib::sys::Log;
-    auto ast = this->slotAstroData.CallAs<AstroDataCall>();
 
+    auto ast = this->slotAstroData.CallAs<AstroDataCall>();
     if (ast == nullptr) {
         Log::DefaultLog.WriteWarn(L"AstroDataCall is not connected "
             L"in AstroSchulz.", nullptr);
         return false;
+    }
+
+    auto isParamChange = this->columns.empty()
+        || std::any_of(this->paramsInclude.begin(), this->paramsInclude.end(),
+        [](const ParamSlot& param) { return param.IsDirty(); });
+
+    if (isParamChange) {
+        auto col = 0;
+        this->columns.clear();
+        this->columns.reserve(21);
+
+        if (this->paramsInclude[col++].Param<BoolParam>()->Value()) {
+            this->columns.emplace_back();
+            this->columns.back().SetName("PositionX");
+            this->columns.back().SetType(TableDataCall::ColumnType::QUANTITATIVE);
+            this->columns.back().SetMinimumValue(std::numeric_limits<float>::lowest());
+            this->columns.back().SetMaximumValue((std::numeric_limits<float>::max)());
+
+            this->columns.emplace_back();
+            this->columns.back().SetName("PositionY");
+            this->columns.back().SetType(TableDataCall::ColumnType::QUANTITATIVE);
+            this->columns.back().SetMinimumValue(std::numeric_limits<float>::lowest());
+            this->columns.back().SetMaximumValue((std::numeric_limits<float>::max)());
+
+            this->columns.emplace_back();
+            this->columns.back().SetName("PositionZ");
+            this->columns.back().SetType(TableDataCall::ColumnType::QUANTITATIVE);
+            this->columns.back().SetMinimumValue(std::numeric_limits<float>::lowest());
+            this->columns.back().SetMaximumValue((std::numeric_limits<float>::max)());
+        }
+
+        if (this->paramsInclude[col++].Param<BoolParam>()->Value()) {
+            this->columns.emplace_back();
+            this->columns.back().SetName("VelocityX");
+            this->columns.back().SetType(TableDataCall::ColumnType::QUANTITATIVE);
+            this->columns.back().SetMinimumValue(std::numeric_limits<float>::lowest());
+            this->columns.back().SetMaximumValue((std::numeric_limits<float>::max)());
+
+            this->columns.emplace_back();
+            this->columns.back().SetName("VelocityY");
+            this->columns.back().SetType(TableDataCall::ColumnType::QUANTITATIVE);
+            this->columns.back().SetMinimumValue(std::numeric_limits<float>::lowest());
+            this->columns.back().SetMaximumValue((std::numeric_limits<float>::max)());
+
+            this->columns.emplace_back();
+            this->columns.back().SetName("VelocityZ");
+            this->columns.back().SetType(TableDataCall::ColumnType::QUANTITATIVE);
+            this->columns.back().SetMinimumValue(std::numeric_limits<float>::lowest());
+            this->columns.back().SetMaximumValue((std::numeric_limits<float>::max)());
+        }
+
+        if (this->paramsInclude[col++].Param<BoolParam>()->Value()) {
+            this->columns.emplace_back();
+            this->columns.back().SetName("Velocity");
+            this->columns.back().SetType(TableDataCall::ColumnType::QUANTITATIVE);
+            this->columns.back().SetMinimumValue(std::numeric_limits<float>::lowest());
+            this->columns.back().SetMaximumValue((std::numeric_limits<float>::max)());
+        }
+
+        if (this->paramsInclude[col++].Param<BoolParam>()->Value()) {
+            this->columns.emplace_back();
+            this->columns.back().SetName("Temperature");
+            this->columns.back().SetType(TableDataCall::ColumnType::QUANTITATIVE);
+            this->columns.back().SetMinimumValue(std::numeric_limits<float>::lowest());
+            this->columns.back().SetMaximumValue((std::numeric_limits<float>::max)());
+        }
+
+        if (this->paramsInclude[col++].Param<BoolParam>()->Value()) {
+            this->columns.emplace_back();
+            this->columns.back().SetName("Mass");
+            this->columns.back().SetType(TableDataCall::ColumnType::QUANTITATIVE);
+            this->columns.back().SetMinimumValue(std::numeric_limits<float>::lowest());
+            this->columns.back().SetMaximumValue((std::numeric_limits<float>::max)());
+        }
+
+        if (this->paramsInclude[col++].Param<BoolParam>()->Value()) {
+            this->columns.emplace_back();
+            this->columns.back().SetName("InternalEnergy");
+            this->columns.back().SetType(TableDataCall::ColumnType::QUANTITATIVE);
+            this->columns.back().SetMinimumValue(std::numeric_limits<float>::lowest());
+            this->columns.back().SetMaximumValue((std::numeric_limits<float>::max)());
+        }
+
+        if (this->paramsInclude[col++].Param<BoolParam>()->Value()) {
+            this->columns.emplace_back();
+            this->columns.back().SetName("SmoothingLength");
+            this->columns.back().SetType(TableDataCall::ColumnType::QUANTITATIVE);
+            this->columns.back().SetMinimumValue(std::numeric_limits<float>::lowest());
+            this->columns.back().SetMaximumValue((std::numeric_limits<float>::max)());
+        }
+
+        if (this->paramsInclude[col++].Param<BoolParam>()->Value()) {
+            this->columns.emplace_back();
+            this->columns.back().SetName("MolecularWeight");
+            this->columns.back().SetType(TableDataCall::ColumnType::QUANTITATIVE);
+            this->columns.back().SetMinimumValue(std::numeric_limits<float>::lowest());
+            this->columns.back().SetMaximumValue((std::numeric_limits<float>::max)());
+        }
+
+        if (this->paramsInclude[col++].Param<BoolParam>()->Value()) {
+            this->columns.emplace_back();
+            this->columns.back().SetName("Density");
+            this->columns.back().SetType(TableDataCall::ColumnType::QUANTITATIVE);
+            this->columns.back().SetMinimumValue(std::numeric_limits<float>::lowest());
+            this->columns.back().SetMaximumValue((std::numeric_limits<float>::max)());
+        }
+
+        if (this->paramsInclude[col++].Param<BoolParam>()->Value()) {
+            this->columns.emplace_back();
+            this->columns.back().SetName("GraviationalPotential");
+            this->columns.back().SetType(TableDataCall::ColumnType::QUANTITATIVE);
+            this->columns.back().SetMinimumValue(std::numeric_limits<float>::lowest());
+            this->columns.back().SetMaximumValue((std::numeric_limits<float>::max)());
+        }
+
+        if (this->paramsInclude[col++].Param<BoolParam>()->Value()) {
+            this->columns.emplace_back();
+            this->columns.back().SetName("Entropy");
+            this->columns.back().SetType(TableDataCall::ColumnType::QUANTITATIVE);
+            this->columns.back().SetMinimumValue(std::numeric_limits<float>::lowest());
+            this->columns.back().SetMaximumValue((std::numeric_limits<float>::max)());
+        }
+
+        if (this->paramsInclude[col++].Param<BoolParam>()->Value()) {
+            this->columns.emplace_back();
+            this->columns.back().SetName("Baryon");
+            this->columns.back().SetType(TableDataCall::ColumnType::CATEGORICAL);
+            this->columns.back().SetMinimumValue(0.0f);
+            this->columns.back().SetMaximumValue(1.0f);
+        }
+
+        if (this->paramsInclude[col++].Param<BoolParam>()->Value()) {
+            this->columns.emplace_back();
+            this->columns.back().SetName("Star");
+            this->columns.back().SetType(TableDataCall::ColumnType::CATEGORICAL);
+            this->columns.back().SetMinimumValue(0.0f);
+            this->columns.back().SetMaximumValue(1.0f);
+        }
+
+        if (this->paramsInclude[col++].Param<BoolParam>()->Value()) {
+            this->columns.emplace_back();
+            this->columns.back().SetName("Wind");
+            this->columns.back().SetType(TableDataCall::ColumnType::CATEGORICAL);
+            this->columns.back().SetMinimumValue(0.0f);
+            this->columns.back().SetMaximumValue(1.0f);
+        }
+
+        if (this->paramsInclude[col++].Param<BoolParam>()->Value()) {
+            this->columns.emplace_back();
+            this->columns.back().SetName("StarFormingGas");
+            this->columns.back().SetType(TableDataCall::ColumnType::CATEGORICAL);
+            this->columns.back().SetMinimumValue(0.0f);
+            this->columns.back().SetMaximumValue(1.0f);
+        }
+
+        if (this->paramsInclude[col++].Param<BoolParam>()->Value()) {
+            this->columns.emplace_back();
+            this->columns.back().SetName("ActiveGalacticNucleus");
+            this->columns.back().SetType(TableDataCall::ColumnType::CATEGORICAL);
+            this->columns.back().SetMinimumValue(0.0f);
+            this->columns.back().SetMaximumValue(1.0f);
+        }
+
+        if (this->paramsInclude[col++].Param<BoolParam>()->Value()) {
+            this->columns.emplace_back();
+            this->columns.back().SetName("ID");
+            this->columns.back().SetType(TableDataCall::ColumnType::CATEGORICAL);
+            this->columns.back().SetMinimumValue(0);
+            this->columns.back().SetMaximumValue((std::numeric_limits<float>::max)());
+        }
+
+        for (auto& p : this->paramsInclude) {
+            p.ResetDirty();
+        }
     }
 
     //Log::DefaultLog.WriteInfo(L"Requesting astro frame %u ...", frameID);
@@ -395,84 +464,122 @@ bool megamol::astro::AstroSchulz::getData(const unsigned int frameID) {
         }
     } while (ast->FrameID() != frameID);
 
-    if ((this->hash != ast->DataHash()) || (this->frameID != frameID)) {
+    if (isParamChange || (this->hashInput != ast->DataHash())
+            || (this->frameID != frameID)) {
         Log::DefaultLog.WriteInfo(L"Data are new, filling table ...", nullptr);
-        this->hash = ast->DataHash();
+        this->hashInput = ast->DataHash();
+        ++this->hashState;
         this->frameID = frameID;
 
         auto cnt = ast->GetParticleCount();
         this->values.resize(cnt * this->columns.size());
 
+        auto logicalCol = 0;
         auto col = 0;
         auto dst = this->values.data();
 
-        this->convert(dst, col, ast->GetPositions());
-        col += 3;
-        dst += 3;
+        if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
+            this->convert(dst, col, ast->GetPositions());
+            col += 3;
+            dst += 3;
+        }
 
-        this->convert(dst, col, ast->GetVelocities());
-        col += 3;
-        dst += 3;
+        if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
+            this->convert(dst, col, ast->GetVelocities());
+            col += 3;
+            dst += 3;
+        }
 
-        this->norm(dst, col, ast->GetVelocities());
-        ++col;
-        ++dst;
+        if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
+            this->norm(dst, col, ast->GetVelocities());
+            ++col;
+            ++dst;
+        }
 
-        this->convert(dst, col, ast->GetTemperature());
-        ++col;
-        ++dst;
+        if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
+            this->convert(dst, col, ast->GetTemperature());
+            ++col;
+            ++dst;
+        }
 
-        this->convert(dst, col, ast->GetMass());
-        ++col;
-        ++dst;
+        if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
+            this->convert(dst, col, ast->GetMass());
+            ++col;
+            ++dst;
+        }
 
-        this->convert(dst, col, ast->GetInternalEnergy());
-        ++col;
-        ++dst;
+        if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
+            this->convert(dst, col, ast->GetInternalEnergy());
+            ++col;
+            ++dst;
+        }
 
-        this->convert(dst, col, ast->GetSmoothingLength());
-        ++col;
-        ++dst;
+        if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
+            this->convert(dst, col, ast->GetSmoothingLength());
+            ++col;
+            ++dst;
+        }
 
-        this->convert(dst, col, ast->GetMolecularWeights());
-        ++col;
-        ++dst;
+        if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
+            this->convert(dst, col, ast->GetMolecularWeights());
+            ++col;
+            ++dst;
+        }
 
-        this->convert(dst, col, ast->GetDensity());
-        ++col;
-        ++dst;
+        if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
+            this->convert(dst, col, ast->GetDensity());
+            ++col;
+            ++dst;
+        }
 
-        this->convert(dst, col, ast->GetGravitationalPotential());
-        ++col;
-        ++dst;
+        if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
+            this->convert(dst, col, ast->GetGravitationalPotential());
+            ++col;
+            ++dst;
+        }
 
-        this->convert(dst, col, ast->GetEntropy());
-        ++col;
-        ++dst;
+        if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
+            this->convert(dst, col, ast->GetEntropy());
+            ++col;
+            ++dst;
+        }
 
-        this->convert(dst, col, ast->GetIsBaryonFlags());
-        ++col;
-        ++dst;
+        if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
+            this->convert(dst, col, ast->GetIsBaryonFlags());
+            ++col;
+            ++dst;
+        }
 
-        this->convert(dst, col, ast->GetIsStarFlags());
-        ++col;
-        ++dst;
+        if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
+            this->convert(dst, col, ast->GetIsStarFlags());
+            ++col;
+            ++dst;
+        }
 
-        this->convert(dst, col, ast->GetIsWindFlags());
-        ++col;
-        ++dst;
+        if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
+            this->convert(dst, col, ast->GetIsWindFlags());
+            ++col;
+            ++dst;
+        }
 
-        this->convert(dst, col, ast->GetIsStarFormingGasFlags());
-        ++col;
-        ++dst;
+        if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
+            this->convert(dst, col, ast->GetIsStarFormingGasFlags());
+            ++col;
+            ++dst;
+        }
 
-        this->convert(dst, col, ast->GetIsAGNFlags());
-        ++col;
-        ++dst;
+        if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
+            this->convert(dst, col, ast->GetIsAGNFlags());
+            ++col;
+            ++dst;
+        }
 
-        this->convert(dst, col, ast->GetParticleIDs());
-        ++col;
-        ++dst;
+        if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
+            this->convert(dst, col, ast->GetParticleIDs());
+            ++col;
+            ++dst;
+        }
+
         assert(col == this->columns.size());
     }
 
@@ -503,7 +610,7 @@ bool megamol::astro::AstroSchulz::getHash(core::Call& call) {
     auto fc = ast->FrameCount();
     tab->SetFrameCount(ast->FrameCount());
 
-    tab->SetDataHash(this->hash);
+    tab->SetDataHash(this->getHash());
     tab->SetUnlocker(nullptr);
 
     return true;
