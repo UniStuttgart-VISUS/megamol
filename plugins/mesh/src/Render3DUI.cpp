@@ -50,7 +50,13 @@ bool megamol::mesh::Render3DUI::GetExtents(core::Call& call) {
 }
 
 bool megamol::mesh::Render3DUI::Render(core::Call& call) {
-    
+
+    // check for interacton call get access to interaction collection
+    Call3DInteraction* ci = this->m_3DInteraction_callerSlot.CallAs<Call3DInteraction>();
+    if (ci == NULL) return false;
+    if ((!(*ci)(0))) return false;
+    auto interaction_collection = ci->getInteractionCollection();
+
     GLfloat viewport[4];
     glGetFloatv(GL_VIEWPORT, viewport);
 
@@ -98,6 +104,13 @@ bool megamol::mesh::Render3DUI::Render(core::Call& call) {
     // TODO add highlight interaction
 
     std::cout << "Hello: " << pixel_data << " at " << this->m_cursor_x << " " << this->m_cursor_y << std::endl;
+
+    if (interaction_collection != nullptr) {
+        if (pixel_data > 0) {
+            interaction_collection->accessPendingManipulations().push(ThreeDimensionalManipulation{
+                InteractionType::HIGHLIGHT, static_cast<uint32_t>(pixel_data), 0.0f, 0.0f, 0.0f, 0.0f});
+        }
+    }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     m_fbo->bindToRead(0);

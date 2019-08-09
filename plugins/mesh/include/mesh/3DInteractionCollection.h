@@ -10,6 +10,7 @@
 
 #include <map>
 #include <queue>
+#include <vector>
 
 namespace megamol {
 namespace mesh {
@@ -36,8 +37,25 @@ struct ThreeDimensionalManipulation {
 
 class ThreeDimensionalInteractionCollection {
 public:
-    ThreeDimensionalInteractionCollection();
-    ~ThreeDimensionalInteractionCollection();
+    ThreeDimensionalInteractionCollection() = default;
+    ~ThreeDimensionalInteractionCollection() = default;
+
+    std::vector<ThreeDimensionalInteraction> getAvailableInteractions(uint32_t obj_id){
+
+        std::vector<ThreeDimensionalInteraction> retval;
+
+        auto query = m_available_interactions.find(obj_id);
+
+        if (query != m_available_interactions.end()){
+            retval = query->second;
+        }
+
+        return retval;
+    }
+
+    std::queue<ThreeDimensionalManipulation>& accessPendingManipulations(){
+        return m_pending_manipulations;
+    }
 
 private:
 

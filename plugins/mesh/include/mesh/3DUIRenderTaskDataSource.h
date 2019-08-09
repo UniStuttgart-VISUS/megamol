@@ -8,11 +8,17 @@
 #ifndef THREE_DIMENSIONAL_UI_RENDER_TASK_DATA_SOURCE
 #define THREE_DIMENSIONAL_UI_RENDER_TASK_DATA_SOURCE
 
+#include <array>
+#include <list>
+#include <utility>
+
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 
 #include "AbstractGPURenderTaskDataSource.h"
 #include "mesh/CallGltfData.h"
+#include "mesh/GPUMeshCollection.h"
+#include "vislib/math/Matrix.h"
 
 #include "3DInteractionCollection.h"
 
@@ -54,6 +60,22 @@ namespace mesh {
         bool getInteractionCallback(core::Call& caller);
 
     private:
+
+        struct PerObjectShaderParams {
+            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> object_transform;
+
+            std::array<float, 4> color;
+
+            int id;
+
+            float padding0;
+            float padding1;
+            float padding2;
+        };
+
+        std::array<std::pair<GPUMeshCollection::SubMeshData,std::array<PerObjectShaderParams,1>>,4> m_UI_template_elements;
+
+        std::list < std::pair <uint32_t, std::array<PerObjectShaderParams,1> >> m_scene;
 
         std::shared_ptr<ThreeDimensionalInteractionCollection> m_interaction_collection;
 

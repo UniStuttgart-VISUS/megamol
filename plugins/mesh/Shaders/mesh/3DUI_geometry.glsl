@@ -36,7 +36,7 @@ void main()
     EmitVertex();
     EndPrimitive();
 
-
+/*
     vec4 e10 =  gl_in[0].gl_Position - gl_in[1].gl_Position;
     vec4 e20 =  gl_in[0].gl_Position - gl_in[2].gl_Position;
     vec4 offset0 = vec4(normalize(cross(vec3(e10),vec3(e20))),0.0f);
@@ -120,4 +120,5 @@ void main()
     colour = vec3(1.0f);
     EmitVertex();
     EndPrimitive();
+*/
 }

@@ -21,7 +21,7 @@ namespace mesh {
 
 class MESH_API Call3DInteraction : public megamol::core::AbstractGetDataCall {
 public:
-    inline Call3DInteraction() : AbstractGetDataCall() {}
+    inline Call3DInteraction() : AbstractGetDataCall(),m_interaction_collection(nullptr) {}
     ~Call3DInteraction() = default;
 
     /**
