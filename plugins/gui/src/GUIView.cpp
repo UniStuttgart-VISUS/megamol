@@ -1449,7 +1449,8 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
         if (pos != std::string::npos) {
             param_name = param_name.substr(pos + 2);
         }
-        std::string param_label = param_name + "###" + param_id;
+        std::string param_label_hidden = "###" + param_id;
+        std::string param_label = param_name + param_label_hidden;
         std::string param_desc = slot.Description().PeekBuffer();
         std::string float_format = "%.7f";
 
@@ -1579,8 +1580,7 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
                 param_label.c_str(), &it->second, 1.0f, 10.0f, float_format.c_str(), ImGuiInputTextFlags_None);
             if (ImGui::IsItemDeactivatedAfterEdit()) {
                 p->SetValue(std::max(p->MinValue(), std::min(it->second, p->MaxValue())));
-                this->widgtmap_float.erase(it);
-            } else {
+            } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
                 it->second = p->Value();
             }
         } else if (auto* p = slot.template Param<core::param::IntParam>()) {
@@ -1592,8 +1592,7 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
             ImGui::InputInt(param_label.c_str(), &it->second, 1, 10, ImGuiInputTextFlags_None);
             if (ImGui::IsItemDeactivatedAfterEdit()) {
                 p->SetValue(std::max(p->MinValue(), std::min(it->second, p->MaxValue())));
-                this->widgtmap_int.erase(it);
-            } else {
+            } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
                 it->second = p->Value();
             }
         } else if (auto* p = slot.template Param<core::param::Vector2fParam>()) {
@@ -1606,8 +1605,7 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
                 param_label.c_str(), it->second.PeekComponents(), float_format.c_str(), ImGuiInputTextFlags_None);
             if (ImGui::IsItemDeactivatedAfterEdit()) {
                 p->SetValue(it->second);
-                this->widgtmap_vec2.erase(it);
-            } else {
+            } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
                 it->second = p->Value();
             }
         } else if (auto* p = slot.template Param<core::param::Vector3fParam>()) {
@@ -1620,8 +1618,7 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
                 param_label.c_str(), it->second.PeekComponents(), float_format.c_str(), ImGuiInputTextFlags_None);
             if (ImGui::IsItemDeactivatedAfterEdit()) {
                 p->SetValue(it->second);
-                this->widgtmap_vec3.erase(it);
-            } else {
+            } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
                 it->second = p->Value();
             }
         } else if (auto* p = slot.template Param<core::param::Vector4fParam>()) {
@@ -1634,8 +1631,7 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
                 param_label.c_str(), it->second.PeekComponents(), float_format.c_str(), ImGuiInputTextFlags_None);
             if (ImGui::IsItemDeactivatedAfterEdit()) {
                 p->SetValue(it->second);
-                this->widgtmap_vec4.erase(it);
-            } else {
+            } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
                 it->second = p->Value();
             }
         } else if (auto* p = slot.Param<core::param::StringParam>()) {
@@ -1649,22 +1645,23 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
             }
             // Determine multi line count of string
             int lcnt = static_cast<int>(std::count(it->second.begin(), it->second.end(), '\n'));
-            lcnt = std::min(static_cast<int>(GUI_MAX_MULITLINE), lcnt);
+            lcnt = std::max(1, std::min(static_cast<int>(GUI_MAX_MULITLINE), lcnt));
             ImVec2 ml_dim = ImVec2(
                 ImGui::CalcItemWidth(), ImGui::GetFrameHeight() + (ImGui::GetFontSize() * static_cast<float>(lcnt)));
             ImGui::InputTextMultiline(
-                param_label.c_str(), &it->second, ml_dim, ImGuiInputTextFlags_CtrlEnterForNewLine);
+                param_label_hidden.c_str(), &it->second, ml_dim, ImGuiInputTextFlags_CtrlEnterForNewLine);
             if (ImGui::IsItemDeactivatedAfterEdit()) {
                 std::string utf8Str = it->second;
                 this->utils.utf8Decode(utf8Str);
                 p->SetValue(vislib::StringA(utf8Str.c_str()));
-            } else {
+            } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
                 std::string utf8Str = std::string(p->ValueString().PeekBuffer());
                 this->utils.utf8Encode(utf8Str);
                 it->second = utf8Str;
             }
-            /// XXX: Positioning of help marker fails for multi line text input
-            // help = "[Ctrl + Enter] for new line.\nPress [Return] to confirm changes.";
+            ImGui::SameLine();
+            ImGui::Text(param_name.c_str());
+            help = "[Ctrl + Enter] for new line.\nPress [Return] to confirm changes.";
         } else if (auto* p = slot.Param<core::param::FilePathParam>()) {
             /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
             auto it = this->widgtmap_text.find(param_id);
@@ -1678,8 +1675,7 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
             if (ImGui::IsItemDeactivatedAfterEdit()) {
                 this->utils.utf8Decode(it->second);
                 p->SetValue(vislib::StringA(it->second.c_str()));
-                this->widgtmap_text.erase(it);
-            } else {
+            } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
                 std::string utf8Str = std::string(p->ValueString().PeekBuffer());
                 this->utils.utf8Encode(utf8Str);
                 it->second = utf8Str;
