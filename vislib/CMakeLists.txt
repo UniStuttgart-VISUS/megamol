@@ -37,13 +37,13 @@ if(BUILD_VISLIB)
   target_link_libraries(vislib PRIVATE glad ${CMAKE_THREAD_LIBS_INIT} ${OPENGL_LIBRARIES})
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src"
     "${CMAKE_CURRENT_SOURCE_DIR}/glad/include")
-	
+    
   if(UNIX)
     set(CURSES_NEED_NCURSES True)
     find_package(Curses REQUIRED)
     find_package(UUID REQUIRED)
     find_package(X11 REQUIRED)
-	target_link_libraries(vislib PRIVATE ${X11_LIBRARIES} ${UUID_LIBRARIES} ${CURSES_LIBRARIES})
+    target_link_libraries(vislib PRIVATE ${X11_LIBRARIES} ${UUID_LIBRARIES} ${CURSES_LIBRARIES})
   endif()
 
   # Grouping in Visual Studio

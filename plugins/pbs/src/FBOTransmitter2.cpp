@@ -19,7 +19,6 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
-#include "mmcore/utility/gl/FramebufferObject.h"
 #include "mmcore/view/CallRender2D.h"
 #include "mmcore/view/CallRender3D.h"
 #include "mmcore/view/View3D.h"
@@ -47,7 +46,6 @@ megamol::pbs::FBOTransmitter2::FBOTransmitter2()
     , callRequestMpi("requestMpi", "Requests initialisation of MPI and the communicator for the view.")
     , toggle_aggregate_slot_{"aggregate", "Toggle whether to aggregate and composite FBOs prior to transmission"}
     , render_comp_img_slot_("renderCompImage", "Renders the complete composited image on the broadcast master")
-    , fbo(new vislib::graphics::gl::FramebufferObject())
 #endif // WITH_MPI
     , aggregate_{false}
     , frame_id_{0}
