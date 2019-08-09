@@ -306,11 +306,14 @@ vislib::math::Vector<float, 3> SombreroMeshRenderer::getPixelDirection(float x, 
     auto& camDir = this->lastCamState.camDir;
     auto& camPos = this->lastCamState.camPos;
 
-    auto oL = (tan(fovx * 0.5f) * zNear) * (-camRight) + (tan(fovy * 0.5f) * zNear) * camUp + camDir * zNear + camPos;
-    auto uL =
-        (tan(fovx * 0.5f) * zNear) * (-camRight) + (tan(fovy * 0.5f) * zNear) * (-camUp) + camDir * zNear + camPos;
-    auto oR = (tan(fovx * 0.5f) * zNear) * camRight + (tan(fovy * 0.5f) * zNear) * camUp + camDir * zNear + camPos;
-    auto uR = (tan(fovx * 0.5f) * zNear) * camRight + (tan(fovy * 0.5f) * zNear) * (-camUp) + camDir * zNear + camPos;
+    auto oL = static_cast<float>(tan(fovx * 0.5f) * zNear) * (-camRight) +
+              static_cast<float>(tan(fovy * 0.5f) * zNear) * camUp + camDir * zNear + camPos;
+    auto uL = static_cast<float>(tan(fovx * 0.5f) * zNear) * (-camRight) +
+              static_cast<float>(tan(fovy * 0.5f) * zNear) * (-camUp) + camDir * zNear + camPos;
+    auto oR = static_cast<float>(tan(fovx * 0.5f) * zNear) * camRight +
+              static_cast<float>(tan(fovy * 0.5f) * zNear) * camUp + camDir * zNear + camPos;
+    auto uR = static_cast<float>(tan(fovx * 0.5f) * zNear) * camRight +
+              static_cast<float>(tan(fovy * 0.5f) * zNear) * (-camUp) + camDir * zNear + camPos;
 
     auto targetL = v * uL + (1.0f - v) * oL;
     auto targetR = v * uR + (1.0f - v) * oR;
