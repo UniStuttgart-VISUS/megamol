@@ -19,6 +19,13 @@ if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     CACHE PATH "default install path" FORCE)
 endif()
 
+# Enable CUDA
+option(ENABLE_CUDA "Enable CUDA, which is needed for certain plugins" OFF)
+
+if(ENABLE_CUDA)
+  enable_language(CUDA)
+endif()
+
 # Directories
 set(MEGAMOL_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(MEGAMOL_VISLIB_DIR ${MEGAMOL_DIR}/vislib)
@@ -52,6 +59,7 @@ include(ClangFormat)
 
 # External
 include(External)
+include("CMakeExternals.cmake")
 
 # NuGet
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/NuGet.Config

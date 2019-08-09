@@ -104,6 +104,8 @@ private:
 
     enum SelectionMode { SELECT_PICK = 0, SELECT_STROKE };
 
+    enum InteractionState { NONE = 0, INTERACTION_DRAG, INTERACTION_FILTER, INTERACTION_SELECT };
+
     struct DimensionFilter {
         uint32_t dimension; // useless but good padding
         float lower;
@@ -117,7 +119,7 @@ private:
 
     void pickIndicator(float x, float y, int& axis, int& index);
 
-    void assertData(void);
+    void assertData(core::view::CallRender2D& call);
 
     void computeScaling(void);
 
@@ -158,13 +160,6 @@ private:
     core::FlagStorage::FlagVersionType currentFlagsVersion;
 
     ::vislib::graphics::gl::FramebufferObject densityFBO;
-
-    float mousePressedX;
-    float mousePressedY;
-    float mouseReleasedX;
-    float mouseReleasedY;
-    float mouseX;
-    float mouseY;
 
     core::param::ParamSlot drawModeSlot;
 
@@ -221,6 +216,7 @@ private:
     int windowHeight;
     float backgroundColor[4];
     vislib::math::Rectangle<float> bounds;
+    unsigned int lastTimeStep;
 
     GLuint columnCount;
     GLuint itemCount;
@@ -255,16 +251,20 @@ private:
     std::vector<GLuint> fragmentMinMax;
     std::vector<std::string> names;
 
+    float mouseX;
+    float mouseY;
+    bool ctrlDown = false, altDown = false, shiftDown = false;
+    InteractionState interactionState;
     int pickedAxis;
-    bool leftDown = false, leftUp = false, ctrlDown = false, altDown = false, shiftDown = false;
-    bool dragging;
-    bool stoppedDragging;
-    bool filtering;
-    bool stroking = false;
-    bool stoppedFiltering;
     int pickedIndicatorAxis;
-    // int lastPickedIndicatorAxis;
     int pickedIndicatorIndex;
+    float strokeStartX;
+    float strokeStartY;
+    float strokeEndX;
+    float strokeEndY;
+    bool needSelectionUpdate;
+    bool needFlagsUpdate;
+
     GLint maxAxes;
     GLint isoLinesPerInvocation;
 

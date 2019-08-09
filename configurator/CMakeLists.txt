@@ -51,5 +51,5 @@ if(BUILD_CONFIGURATOR AND CMAKE_GENERATOR MATCHES "Visual Studio")
   install(CODE " \
     file(INSTALL \"${CMAKE_CURRENT_BINARY_DIR}/bin\" \
       DESTINATION ${CMAKE_INSTALL_PREFIX} \
-	  FILES_MATCHING REGEX \"\\.(exe|dll|pdb)$\")")
+      FILES_MATCHING REGEX \"\\.(exe|dll|pdb)$\")")
 endif()

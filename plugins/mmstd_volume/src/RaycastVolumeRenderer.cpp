@@ -178,6 +178,7 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
         std::fmax(m_volume_resolution[0], std::fmax(m_volume_resolution[1], m_volume_resolution[2]));
     auto const maxExtents = std::fmax(m_volume_extents[0], std::fmax(m_volume_extents[1], m_volume_extents[2]));
     glUniform1f(m_raycast_volume_compute_shdr->ParameterLocation("voxelSize"), maxExtents / (maxResolution - 1.0f));
+    glUniform2fv(m_raycast_volume_compute_shdr->ParameterLocation("valRange"), 1, valRange.data());
     glUniform1f(m_raycast_volume_compute_shdr->ParameterLocation("rayStepRatio"),
         this->m_ray_step_ratio_param.Param<core::param::FloatParam>()->Value());
     glUniform1f(m_raycast_volume_compute_shdr->ParameterLocation("opacityThreshold"), 1.0);
@@ -188,8 +189,10 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
     glUniform1i(m_raycast_volume_compute_shdr->ParameterLocation("volume_tx3D"), 0);
     // bind the transfer function
     glActiveTexture(GL_TEXTURE1);
-    m_transfer_function->bindTexture();
-    glUniform1i(m_raycast_volume_compute_shdr->ParameterLocation("transfer_function_tx2D"), 1);
+    glBindTexture(GL_TEXTURE_1D, tf_texture);
+    glUniform1i(m_raycast_volume_compute_shdr->ParameterLocation("tf_tx1D"), 1);
+    /*m_transfer_function->bindTexture();
+    glUniform1i(m_raycast_volume_compute_shdr->ParameterLocation("transfer_function_tx2D"), 1);*/
 
     // bind image texture
     m_render_target->bindImage(0, GL_WRITE_ONLY);
@@ -273,6 +276,9 @@ bool RaycastVolumeRenderer::updateVolumeData() {
     m_volume_resolution[1] = metadata->Resolution[1];
     m_volume_resolution[2] = metadata->Resolution[2];
 
+    valRange[0] = metadata->MinValues[0];
+    valRange[1] = metadata->MaxValues[0];
+
     GLenum internal_format;
     GLenum format;
     GLenum type;
@@ -343,8 +349,10 @@ bool RaycastVolumeRenderer::updateVolumeData() {
 bool RaycastVolumeRenderer::updateTransferFunction() {
     core::view::CallGetTransferFunction* ct =
         this->m_transferFunction_callerSlot.CallAs<core::view::CallGetTransferFunction>();
+    //ct->SetRange(valRange);
     if (ct != NULL && ((*ct)())) {
-        float const* tf_tex = ct->GetTextureData();
+        tf_texture = ct->OpenGLTexture();
+        /*float const* tf_tex = ct->GetTextureData();
         unsigned int tf_size = ct->TextureSize();
         auto tf_format = ct->OpenGLTextureFormat();
 
@@ -357,7 +365,7 @@ bool RaycastVolumeRenderer::updateTransferFunction() {
                 {GL_TEXTURE_MIN_FILTER, GL_LINEAR}, {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
             {});
 
-        m_transfer_function->reload(tf_layout, tf_tex);
+        m_transfer_function->reload(tf_layout, tf_tex);*/
         // this->colorTransferGray(allColor, tf_tex, tex_size, processedColor, 3);
     } else {
         // this->colorTransferGray(allColor, NULL, 0, processedColor, 3);
