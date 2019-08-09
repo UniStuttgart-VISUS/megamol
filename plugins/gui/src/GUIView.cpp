@@ -268,10 +268,18 @@ void GUIView::release() {
 
 
 void GUIView::unpackMouseCoordinates(float& x, float& y) {
-    GLint vp[4];
-    glGetIntegerv(GL_VIEWPORT, vp);
-    x *= static_cast<float>(vp[2]);
-    y *= static_cast<float>(vp[3]);
+    GLint vpw, vph;
+    if (this->overrideCall == NULL) {
+        GLint vp[4];
+        glGetIntegerv(GL_VIEWPORT, vp);
+        vpw = vp[2];
+        vph = vp[3];
+    } else {
+        vpw = this->overrideCall->ViewportWidth();
+        vph = this->overrideCall->ViewportHeight();
+    }
+    x *= static_cast<float>(vpw);
+    y *= static_cast<float>(vph);
 }
 
 
