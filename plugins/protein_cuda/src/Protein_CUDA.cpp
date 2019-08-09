@@ -47,6 +47,7 @@
 #include "ProteinVariantMatch.h"
 #include "SecStructFlattener.h"
 #include "ParticlesToMeshConverter.h"
+#include "SombreroWarper.h"
 
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/factories/ModuleAutoDescription.h"
@@ -108,6 +109,7 @@ namespace {
 			this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::PotentialCalculator>();
 			this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::Filter>();
 			this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::SurfacePotentialRendererSlave>();
+            this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::SombreroWarper>();
 
 			// register calls here:
 			this->call_descriptions.RegisterAutoDescription<megamol::protein_cuda::VBODataCall>();
