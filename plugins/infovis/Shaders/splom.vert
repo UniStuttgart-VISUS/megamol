@@ -12,6 +12,10 @@ layout(std430, binding = 3) buffer ValueSSBO {
     float values[];
 };
 
+layout(std430, binding = 4) buffer FlagBuffer {
+    uint flags[];
+};
+
 out float vsKernelSize;
 out float vsPixelKernelSize;
 out float vsValue;
@@ -49,7 +53,7 @@ void main() {
     gl_PointSize = vsPixelKernelSize;
 
     vsValue = normalizeValue(values[rowOffset + valueColumn]);
-    vsValueColor = tflookup(vsValue);
+    vsValueColor = flagifyColor(tflookup(vsValue), flags[gl_VertexID]);
 
     vsPosition = valuesToPosition(plot, 
         vec2(values[rowOffset + plot.indexX],

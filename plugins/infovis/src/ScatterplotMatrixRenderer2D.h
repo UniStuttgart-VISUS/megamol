@@ -15,6 +15,7 @@
 
 #include <glowl/FramebufferObject.hpp>
 #include <memory>
+#include <nanoflann.hpp>
 #include "Renderer2D.h"
 
 namespace megamol {
@@ -66,14 +67,11 @@ protected:
      */
     virtual void release(void);
 
-    /**
-     * Callback for mouse events (move, press, and release)
-     *
-     * @param x The x coordinate of the mouse in world space
-     * @param y The y coordinate of the mouse in world space
-     * @param flags The mouse flags
-     */
-    virtual bool MouseEvent(float x, float y, core::view::MouseFlags flags);
+    bool OnMouseButton(
+        core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) override;
+
+    bool OnMouseMove(double x, double y) override;
+
 
 private:
     enum ValueMapping {
@@ -90,11 +88,16 @@ private:
         size_t labelIdx;
     };
 
+    enum class BrushState {
+        NOP,
+        ADD,
+        REMOVE,
+    };
+
     struct MouseState {
         float x;
         float y;
-        bool selects;
-        bool inspects;
+        BrushState selector;
     };
 
     struct PlotInfo {
@@ -110,6 +113,43 @@ private:
         GLfloat maxY;
         GLfloat smallTickX;
         GLfloat smallTickY;
+    };
+
+
+    struct SPLOMPoints {
+        SPLOMPoints(const std::vector<PlotInfo>& plots, const stdplugin::datatools::table::TableDataCall* floatTable)
+            : plots(plots), floatTable(floatTable) {}
+
+        inline size_t idx_to_row(size_t idx) const {
+            const size_t rowCount = floatTable->GetRowsCount();
+            return idx % rowCount;
+        }
+
+        inline size_t kdtree_get_point_count() const { return floatTable->GetRowsCount() * plots.size(); }
+
+        inline float kdtree_get_pt(const size_t idx, const size_t dim) const {
+            const size_t rowCount = floatTable->GetRowsCount();
+            const size_t rowIdx = idx % rowCount;
+            const size_t plotIdx = idx / rowCount;
+            const PlotInfo& plot = this->plots[plotIdx];
+            if (dim == 0) {
+                const float xValue = this->floatTable->GetData(plot.indexX, rowIdx);
+                const float xPos = (xValue - plot.minX) / (plot.maxX - plot.minX);
+                return xPos * plot.sizeX + plot.offsetX;
+            } else if (dim == 1) {
+                const float yValue = this->floatTable->GetData(plot.indexY, rowIdx);
+                const float yPos = (yValue - plot.minY) / (plot.maxY - plot.minY);
+                return yPos * plot.sizeY + plot.offsetY;
+            } else {
+                assert(false && "Invalid dimension");
+            }
+        }
+
+        template <class BBOX> bool kdtree_get_bbox(BBOX&) const { return false; }
+
+    private:
+        const std::vector<PlotInfo>& plots;
+        const stdplugin::datatools::table::TableDataCall* floatTable;
     };
 
     /**
@@ -149,6 +189,8 @@ private:
 
     void bindMappingUniforms(vislib::graphics::gl::GLSLShader& shader);
 
+    void bindFlagsAttribute();
+
     void drawPoints(void);
 
     void drawLines(void);
@@ -167,7 +209,7 @@ private:
 
     void drawText();
 
-    int itemAt(const float x, const float y);
+    void updateSelection();
 
     core::CallerSlot floatTableInSlot;
 
@@ -250,6 +292,9 @@ private:
 
     core::utility::SSBOStreamer valueSSBO;
 
+    GLuint flagsBuffer;
+    core::FlagStorage::FlagVersionType flagsBufferVersion;
+
     GLuint triangleVBO;
     GLuint triangleIBO;
     GLsizei triangleVertexCount;
@@ -257,6 +302,7 @@ private:
 
     std::unique_ptr<glowl::FramebufferObject> screenFBO;
     vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> screenLastMVP;
+    GLint screenRestoreFBO;
     bool screenValid;
 
     megamol::core::utility::SDFFont axisFont;
@@ -265,6 +311,12 @@ private:
 
     std::vector<::megamol::core::param::ParamSlot*> dataParams;
     std::vector<::megamol::core::param::ParamSlot*> screenParams;
+
+    typedef nanoflann::L2_Simple_Adaptor<float, SPLOMPoints> SPLOMDistance;
+    typedef nanoflann::KDTreeSingleIndexAdaptor<SPLOMDistance, SPLOMPoints, 2> TreeIndex;
+
+    std::unique_ptr<SPLOMPoints> indexPoints;
+    std::unique_ptr<TreeIndex> index;
 };
 
 } // end namespace infovis

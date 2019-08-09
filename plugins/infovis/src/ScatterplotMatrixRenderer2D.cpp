@@ -23,6 +23,7 @@ using vislib::sys::Log;
 
 const GLuint PlotSSBOBindingPoint = 2;
 const GLuint ValueSSBOBindingPoint = 3;
+const GLuint FlagsBindingPoint = 4;
 
 vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> getModelViewProjection() {
     // this is the apex of suck and must die
@@ -101,7 +102,7 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     , cellNameSizeParam("cellNameSize", "Sets the fontsize for cell names, i.e., column names")
     , alphaScalingParam("alphaScaling", "Scaling factor for overall alpha")
     , alphaAttenuateSubpixelParam("alphaAttenuateSubpixel", "Attenuate alpha of points that have subpixel size")
-    , mouse({0, 0, false, false})
+    , mouse({0, 0, BrushState::NOP})
     , plotSSBO("Plots")
     , valueSSBO("Values")
     , triangleVBO(0)
@@ -113,7 +114,8 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     , axisFont("Evolventa-SansSerif", core::utility::SDFFont::RenderType::RENDERTYPE_FILL)
     , textFont("Evolventa-SansSerif", core::utility::SDFFont::RenderType::RENDERTYPE_FILL)
     , textValid(false)
-    , dataTime(0) {
+    , dataTime(0)
+    , flagsBufferVersion(0) {
     this->floatTableInSlot.SetCompatibleCall<table::TableDataCallDescription>();
     this->MakeSlotAvailable(&this->floatTableInSlot);
 
@@ -227,8 +229,6 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
 ScatterplotMatrixRenderer2D::~ScatterplotMatrixRenderer2D() { this->Release(); }
 
 bool ScatterplotMatrixRenderer2D::create(void) {
-    if (!this->axisFont.Initialise(this->GetCoreInstance())) return false;
-    if (!this->textFont.Initialise(this->GetCoreInstance())) return false;
     if (!makeProgram("::splom::minimalisticAxis", this->minimalisticAxisShader)) return false;
     if (!makeProgram("::splom::scientificAxis", this->scientificAxisShader)) return false;
     if (!makeProgram("::splom::point", this->pointShader)) return false;
@@ -236,27 +236,48 @@ bool ScatterplotMatrixRenderer2D::create(void) {
     if (!makeProgram("::splom::triangle", this->triangleShader)) return false;
     if (!makeProgram("::splom::screen", this->screenShader)) return false;
 
+    glGenBuffers(1, &flagsBuffer);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, flagsBuffer);
+    makeDebugLabel(GL_BUFFER, DEBUG_NAME(flagsBuffer));
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+    if (!this->axisFont.Initialise(this->GetCoreInstance())) return false;
+    if (!this->textFont.Initialise(this->GetCoreInstance())) return false;
     this->axisFont.SetBatchDrawMode(true);
     this->textFont.SetBatchDrawMode(true);
 
     return true;
 }
 
-void ScatterplotMatrixRenderer2D::release(void) {}
+void ScatterplotMatrixRenderer2D::release(void) { glDeleteBuffers(1, &flagsBuffer); }
 
-bool ScatterplotMatrixRenderer2D::MouseEvent(float x, float y, core::view::MouseFlags flags) {
-    bool leftDown = (flags & core::view::MOUSEFLAG_BUTTON_LEFT_DOWN) != 0;
-    bool rightDown = (flags & core::view::MOUSEFLAG_BUTTON_RIGHT_DOWN) != 0;
-    bool rightChanged = (flags & core::view::MOUSEFLAG_BUTTON_RIGHT_CHANGED) != 0;
+bool ScatterplotMatrixRenderer2D::OnMouseButton(
+    core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) {
+    if (mods.test(core::view::Modifier::CTRL)) {
+        // These clicks go to the view.
+        return false;
+    }
 
+    if (button == core::view::MouseButton::BUTTON_LEFT && action == core::view::MouseButtonAction::PRESS) {
+        this->mouse.selector = BrushState::ADD;
+        return true;
+    } else if (button == core::view::MouseButton::BUTTON_RIGHT && action == core::view::MouseButtonAction::PRESS) {
+        this->mouse.selector = BrushState::REMOVE;
+        return true;
+    }
+
+    this->mouse.selector = BrushState::NOP;
+
+    return false;
+}
+
+bool ScatterplotMatrixRenderer2D::OnMouseMove(double x, double y) {
     this->mouse.x = x;
     this->mouse.y = y;
-    this->mouse.selects = leftDown;
-    this->mouse.inspects = rightDown && rightChanged;
 
-    if (this->mouse.selects || this->mouse.inspects) {
-        // TODO: Some hit testing might be nice here when clicking transparent areas.
-        // return itemAt(mouse.x, mouse.y) != -1;
+    if (this->mouse.selector != BrushState::NOP) {
+        this->updateSelection();
+        return true;
     }
 
     return false;
@@ -387,6 +408,7 @@ bool ScatterplotMatrixRenderer2D::validate(core::view::CallRender2D& call) {
 
     this->trianglesValid = false;
     this->textValid = false;
+    this->index.reset();
     this->updateColumns();
 
     this->dataHash = this->floatTable->DataHash();
@@ -616,6 +638,26 @@ void ScatterplotMatrixRenderer2D::bindMappingUniforms(vislib::graphics::gl::GLSL
     this->transferFunction->BindConvenience(shader, GL_TEXTURE0, 0);
 }
 
+void ScatterplotMatrixRenderer2D::bindFlagsAttribute() {
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->flagsBuffer);
+
+    if (this->flagsBufferVersion != this->flagStorage->GetVersion() || this->flagsBufferVersion == 0) {
+        (*this->flagStorage)(core::FlagCall::CallMapFlags);
+        this->flagStorage->validateFlagsCount(this->floatTable->GetRowsCount());
+        auto flags = this->flagStorage->GetFlags();
+
+        // Upload flags.
+        glBufferData(GL_SHADER_STORAGE_BUFFER, flags->size() * sizeof(core::FlagStorage::FlagItemType), flags->data(),
+            GL_STATIC_DRAW);
+        this->flagsBufferVersion = this->flagStorage->GetVersion();
+
+        this->flagStorage->SetFlags(flags);
+        (*this->flagStorage)(core::FlagCall::CallUnmapFlags);
+    }
+
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, FlagsBindingPoint, this->flagsBuffer);
+}
+
 void ScatterplotMatrixRenderer2D::drawPoints(void) {
     if (this->screenValid) {
         return;
@@ -647,6 +689,8 @@ void ScatterplotMatrixRenderer2D::drawPoints(void) {
         this->kernelTypeParam.Param<core::param::EnumParam>()->Value());
     glUniform1i(this->pointShader.ParameterLocation("attenuateSubpixel"),
         this->alphaAttenuateSubpixelParam.Param<core::param::BoolParam>()->Value() ? 1 : 0);
+
+    this->bindFlagsAttribute();
 
     // Setup streaming.
     const GLuint numBuffers = 3;
@@ -708,6 +752,8 @@ void ScatterplotMatrixRenderer2D::drawLines(void) {
         this->kernelTypeParam.Param<core::param::EnumParam>()->Value());
     glUniform1i(this->lineShader.ParameterLocation("attenuateSubpixel"),
         this->alphaAttenuateSubpixelParam.Param<core::param::BoolParam>()->Value() ? 1 : 0);
+
+    this->bindFlagsAttribute();
 
     // Setup streaming.
     const GLuint numBuffers = 3;
@@ -879,6 +925,7 @@ void ScatterplotMatrixRenderer2D::bindAndClearScreen() {
         this->screenFBO->createColorAttachment(GL_RGBA32F, GL_RGBA, GL_FLOAT);
     }
 
+    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &screenRestoreFBO);
     this->screenFBO->bind();
 
     // Blending and clear color.
@@ -900,11 +947,11 @@ void ScatterplotMatrixRenderer2D::bindAndClearScreen() {
     glDisable(GL_DEPTH_TEST);
 
     // Clear FBO.
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 void ScatterplotMatrixRenderer2D::unbindScreen() {
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, screenRestoreFBO);
 
     glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
@@ -986,70 +1033,39 @@ void ScatterplotMatrixRenderer2D::drawText() {
     this->textFont.BatchDrawString();
 }
 
-int ScatterplotMatrixRenderer2D::itemAt(const float x, const float y) {
-    /*
-    if (y >= 0.0f) { //< within scatterplot
-        auto trans = this->oglTrans;
-        trans.Invert();
-        auto query_p = trans*vislib::math::Vector<float, 4>(x, y, 0.0f, 1.0f);
-        float qp[2] = {query_p.X(), query_p.Y()};
-        // search with nanoflann tree
-        size_t idx[1] = {0};
-        float dis[1] = {0.0f};
-        this->tree->index->knnSearch(qp, 1, idx, dis);
+void ScatterplotMatrixRenderer2D::updateSelection() {
+    if (!this->index) {
+        // Lazy-construct index.
+        this->indexPoints = std::make_unique<SPLOMPoints>(this->plots, this->floatTable);
+        this->index = std::make_unique<TreeIndex>(2, *indexPoints);
+        this->index->buildIndex();
+    }
 
-        idx[0] = *reinterpret_cast<unsigned int *>(&this->series[0][idx[0] * 4 + 3]); //< toxic, which is the
-    correct series?
+    // Do a nearest neighbor search.
+    float queryPoint[2] = {this->mouse.x, this->mouse.y};
+    const size_t kk = 10;
+    size_t idx[kk] = {0};
+    float dis[kk] = {0.0f};
+    size_t k = this->index->knnSearch(queryPoint, kk, idx, dis);
 
-        auto ssp = this->nvgTrans*vislib::math::Vector<float, 3>(x, y, 1.0f);
-        TraceInfoCall *tic = this->getPointInfoSlot.CallAs<TraceInfoCall>();
-        if (tic == nullptr) {
-            // show tool tip
-            this->drawToolTip(ssp.X() + 10, ssp.Y() + 10, std::string("No Info Call"));
-        } else {
-            tic->SetRequest(TraceInfoCall::RequestType::GetSymbolString, idx[0]);
-            if (!(*tic)(0)) {
-                // show tool tip
-                this->drawToolTip(ssp.X() + 10, ssp.Y() + 10, std::string("No Info Found"));
-            } else {
-                auto st = tic->GetInfo();
-                this->drawToolTip(ssp.X() + 10, ssp.Y() + 10, st);
-            }
-        }
+    (*this->flagStorage)(core::FlagCall::CallMapFlags);
+    auto flags = this->flagStorage->GetFlags();
+    auto version = this->flagStorage->GetVersion();
 
-        return idx[0];
-    } else { //< within callstack
-        // calculate depth
-        // search for fitting range in chosen depth
-        float boxHeight = std::get<1>(this->viewport) / 40.0f;
-        float yCoord = std::fabsf(y);
-        unsigned int depth = std::floorf(yCoord / boxHeight);
-        auto ssp = this->nvgTrans*vislib::math::Vector<float, 3>(x, y, 1.0f);
-        float aspect = this->cellSize.Param<core::param::FloatParam>()->Value();
-        for (auto &r : this->callStack[depth]) {
-            // rb / norm*dw
-            float rb = std::get<0>(r);
-            float re = std::get<1>(r);
-            if ((rb / this->abcissa.size()*std::get<0>(this->viewport)*aspect) <= x && x <= (re /
-    this->abcissa.size()*std::get<0>(this->viewport)*aspect)) { //< abcissa missing size_t symbolIdx =
-    std::get<2>(r); TraceInfoCall *tic = this->getPointInfoSlot.CallAs<TraceInfoCall>(); if (tic == nullptr) {
-                    // show tool tip
-                    this->drawToolTip(ssp.X() + 10, ssp.Y() + 10, std::string("No Info Call"));
-                } else {
-                    tic->SetRequest(TraceInfoCall::RequestType::GetSymbolString, symbolIdx);
-                    if (!(*tic)(0)) {
-                        // show tool tip
-                        this->drawToolTip(ssp.X() + 10, ssp.Y() + 10, std::string("No Info Found"));
-                    } else {
-                        auto st = tic->GetInfo();
-                        st += std::string(" ") + std::to_string((unsigned int)rb) + std::string(" ") +
-    std::to_string((unsigned int)re); this->drawToolTip(ssp.X() + 10, ssp.Y() + 10, st);
-                    }
-                }
-                return symbolIdx;
+    // Test if distance is within limits.
+    auto kernelRadiusSq = std::pow(0.5 * this->kernelWidthParam.Param<core::param::FloatParam>()->Value(), 2.0);
+    for (int i = 0; i < k; ++i) {
+        if (dis[i] <= kernelRadiusSq) {
+            size_t row = this->indexPoints->idx_to_row(idx[i]);
+            if (this->mouse.selector == BrushState::ADD) {
+                (*flags)[row] |= core::FlagStorage::SELECTED;
+            } else if (this->mouse.selector == BrushState::REMOVE) {
+                (*flags)[row] &= ~core::FlagStorage::SELECTED;
             }
         }
     }
-    */
-    return -1;
+    this->flagStorage->SetFlags(flags, version + 1);
+    (*this->flagStorage)(core::FlagCall::CallUnmapFlags);
+
+    this->screenValid = false;
 }
