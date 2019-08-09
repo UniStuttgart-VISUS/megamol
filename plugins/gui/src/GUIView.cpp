@@ -1642,7 +1642,7 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
             }
             // Determine multi line count of string
             int lcnt = static_cast<int>(std::count(it->second.begin(), it->second.end(), '\n'));
-            lcnt = std::max(1, std::min(static_cast<int>(GUI_MAX_MULITLINE), lcnt));
+            lcnt = std::min(static_cast<int>(GUI_MAX_MULITLINE), lcnt);
             ImVec2 ml_dim = ImVec2(
                 ImGui::CalcItemWidth(), ImGui::GetFrameHeight() + (ImGui::GetFontSize() * static_cast<float>(lcnt)));
             ImGui::InputTextMultiline(
