@@ -87,7 +87,6 @@ GUIView::GUIView()
 
     this->state_param << new core::param::StringParam("");
     this->MakeSlotAvailable(&this->state_param);
-    // this->state_param.Param<core::param::StringParam>()->SetGUIReadOnly(true);
 }
 
 GUIView::~GUIView() { this->Release(); }
@@ -1509,14 +1508,14 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
             }
 
             // Print JSON string
-            // ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-            // ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+            ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
             std::string json = p->Value();
             ImVec2 ml_dim = ImVec2(ImGui::CalcItemWidth(),
                 ImGui::GetFrameHeight() + (ImGui::GetFontSize() * static_cast<float>(GUI_MAX_MULITLINE)));
             ImGui::InputTextMultiline("JSON", &json, ml_dim, ImGuiInputTextFlags_None);
-            // ImGui::PopItemFlag();
-            // ImGui::PopStyleVar();
+            ImGui::PopItemFlag();
+            ImGui::PopStyleVar();
 
             param_label = "Copy to Clipboard###clipboard" + param_id;
             if (ImGui::Button(param_label.c_str())) {
