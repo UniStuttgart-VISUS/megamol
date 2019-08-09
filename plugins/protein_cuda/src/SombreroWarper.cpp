@@ -2265,8 +2265,8 @@ bool SombreroWarper::computeXZCoordinatePerVertex(TunnelResidueDataCall& tunnelC
             if (completeSet.count(v) > 0) {
                 // special case for the brim vertices
                 float radius = zValues[vertMappingToNew[v]];
-                float xCoord = radius * std::cosf(this->rahiAngles[i][v]);
-                float zCoord = radius * std::sinf(this->rahiAngles[i][v]);
+                float xCoord = radius * std::cos(this->rahiAngles[i][v]);
+                float zCoord = radius * std::sin(this->rahiAngles[i][v]);
                 this->vertices[i][3 * v + 0] = xCoord;
                 this->vertices[i][3 * v + 2] = zCoord;
                 if (flatmode) {
@@ -2274,11 +2274,11 @@ bool SombreroWarper::computeXZCoordinatePerVertex(TunnelResidueDataCall& tunnelC
                 }
             } else {
                 float l = this->sombreroLength[i] * this->lengthScalingParam.Param<param::FloatParam>()->Value();
-                float t = std::asinf((this->vertices[i][3 * v + 1] - maxHeight) / l);
-                float cost = std::cosf(t);
-                float xCoord = minRad * cost * std::cosf(this->rahiAngles[i][v]);
+                float t = std::asin((this->vertices[i][3 * v + 1] - maxHeight) / l);
+                float cost = std::cos(t);
+                float xCoord = minRad * cost * std::cos(this->rahiAngles[i][v]);
                 float yCoord = this->vertices[i][3 * v + 1];
-                float zCoord = minRad * cost * std::sinf(this->rahiAngles[i][v]);
+                float zCoord = minRad * cost * std::sin(this->rahiAngles[i][v]);
                 if (flatmode) {
                     float alpha = (yCoord - minHeight) / (maxHeight - minHeight);
                     vislib::math::Vector<float, 2> vec(xCoord, zCoord);
