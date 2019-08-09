@@ -268,10 +268,11 @@ void GUIView::release() {
 
 
 void GUIView::unpackMouseCoordinates(float& x, float& y) {
-    GLint vpw, vph;
-    if (this->overrideCall == NULL) {
+    GLint vpw = 1;
+    GLint vph = 1;
+    if (this->overrideCall == nullptr) {
         GLint vp[4];
-        glGetIntegerv(GL_VIEWPORT, vp);
+        ::glGetIntegerv(GL_VIEWPORT, vp);
         vpw = vp[2];
         vph = vp[3];
     } else {
@@ -338,7 +339,7 @@ void GUIView::Resize(unsigned int width, unsigned int height) {
         // der ganz ganz dicke "because-i-know"-Knueppel
         AbstractView* view = const_cast<AbstractView*>(
             dynamic_cast<const AbstractView*>(static_cast<const Module*>(crv->PeekCalleeSlot()->Owner())));
-        if (view != NULL) {
+        if (view != nullptr) {
             view->Resize(width, height);
         }
     }
@@ -611,7 +612,7 @@ bool GUIView::OnMouseScroll(double dx, double dy) {
 
 bool GUIView::OnRenderView(megamol::core::Call& call) {
     megamol::core::view::CallRenderView* crv = dynamic_cast<megamol::core::view::CallRenderView*>(&call);
-    if (crv == NULL) return false;
+    if (crv == nullptr) return false;
 
     this->overrideCall = crv;
 
@@ -622,7 +623,7 @@ bool GUIView::OnRenderView(megamol::core::Call& call) {
     // TODO: Affinity
     this->Render(context);
 
-    this->overrideCall = NULL;
+    this->overrideCall = nullptr;
 
     return true;
 }
