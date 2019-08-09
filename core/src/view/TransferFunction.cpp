@@ -25,7 +25,6 @@ TransferFunction::TransferFunction(void)
     , texID(0)
     , texSize(1)
     , tex()
-    , texFormat(CallGetTransferFunction::TEXTURE_FORMAT_RGB)
     , interpolMode(param::TransferFunctionParam::InterpolationMode::LINEAR)
     , range({0.0f, 1.0f})
 {

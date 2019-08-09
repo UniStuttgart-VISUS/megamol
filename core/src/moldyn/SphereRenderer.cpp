@@ -1060,13 +1060,7 @@ bool moldyn::SphereRenderer::renderSimple(view::CallRender3D* cr3d, MultiParticl
             }
         }
 
-        // Reset states set in setPointers()
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glDisableVertexAttribArrayARB(vertAttribLoc);
-        glDisableVertexAttribArrayARB(colAttribLoc);
-        glDisableVertexAttribArrayARB(colIdxAttribLoc);
-        glDisable(GL_TEXTURE_1D);
-
+        this->unsetPointers(vertAttribLoc, colAttribLoc, colIdxAttribLoc);
         flagPartsCount += parts.GetCount();
     }
 
@@ -1131,7 +1125,7 @@ bool moldyn::SphereRenderer::renderSSBO(view::CallRender3D* cr3d, MultiParticleD
         } break;
         case MultiParticleDataCall::Particles::COLDATA_FLOAT_I:
         case MultiParticleDataCall::Particles::COLDATA_DOUBLE_I: {
-            this->enableTransferFunctionTexture(colTabSize);
+            this->setTransferFunctionTexture(*this->newShader, colTabSize);
             glUniform1i(this->newShader->ParameterLocation("colTab"), 0);
             minC = parts.GetMinColourIndexValue();
             maxC = parts.GetMaxColourIndexValue();
@@ -1263,7 +1257,7 @@ bool moldyn::SphereRenderer::renderSSBO(view::CallRender3D* cr3d, MultiParticleD
         }
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-        glDisable(GL_TEXTURE_1D);
+        this->unsetTransferFunctionTexture();
 
         this->flagStorage(false, *this->newShader);
         flagPartsCount += parts.GetCount();
@@ -1354,7 +1348,7 @@ bool moldyn::SphereRenderer::renderSplat(view::CallRender3D* cr3d, MultiParticle
         } break;
         case MultiParticleDataCall::Particles::COLDATA_FLOAT_I:
         case MultiParticleDataCall::Particles::COLDATA_DOUBLE_I: {
-            this->enableTransferFunctionTexture(colTabSize);
+            this->setTransferFunctionTexture(*this->newShader, colTabSize);
             glUniform1i(this->newShader->ParameterLocation("colTab"), 0);
             minC = parts.GetMinColourIndexValue();
             maxC = parts.GetMaxColourIndexValue();
@@ -1376,6 +1370,9 @@ bool moldyn::SphereRenderer::renderSplat(view::CallRender3D* cr3d, MultiParticle
         case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
             glUniform4f(this->newShader->ParameterLocation("inConsts1"), -1.0f, minC, maxC, float(colTabSize));
             break;
+        case MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
+            glUniform4f(this->newShader->ParameterLocation("inConsts1"), parts.GetGlobalRadius(), minC, maxC,
+                float(colTabSize));
         default:
             continue;
         }
@@ -1404,8 +1401,8 @@ bool moldyn::SphereRenderer::renderSplat(view::CallRender3D* cr3d, MultiParticle
                 // vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Memcopying %u bytes from %016"
                 // PRIxPTR " to %016" PRIxPTR "\n", vertsThisTime * vertStride, whence, mem);
                 memcpy(mem, whence, vertsThisTime * vertStride);
-                glFlushMappedNamedBufferRange(theSingleBuffer, bufSize * currBuf, vertsThisTime * vertStride);
-                // glMemoryBarrier(GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT);
+                glFlushMappedNamedBufferRange(this->theSingleBuffer, bufSize * currBuf, vertsThisTime * vertStride);
+                //glMemoryBarrier(GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT);
                 // glUniform1i(this->newShader->ParameterLocation("instanceOffset"), numVerts * currBuf);
                 glUniform1i(this->newShader->ParameterLocation("instanceOffset"), 0);
 
@@ -1431,7 +1428,7 @@ bool moldyn::SphereRenderer::renderSplat(view::CallRender3D* cr3d, MultiParticle
         }
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-        glDisable(GL_TEXTURE_1D);
+        this->unsetTransferFunctionTexture();
 
         this->flagStorage(false, *this->newShader);
         flagPartsCount += parts.GetCount();
@@ -1507,7 +1504,7 @@ bool moldyn::SphereRenderer::renderBufferArray(view::CallRender3D* cr3d, MultiPa
                 memcpy(mem, whence, vertsThisTime * vertStride);
                 glFlushMappedNamedBufferRange(
                     this->theSingleBuffer, numVerts * this->currBuf, vertsThisTime * vertStride);
-                // glMemoryBarrier(GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT);
+                //glMemoryBarrier(GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT);
                 this->setPointers<GLSLShader>(parts, this->sphereShader, this->theSingleBuffer,
                     reinterpret_cast<const void*>(currVert - whence), vertAttribLoc, this->theSingleBuffer,
                     reinterpret_cast<const void*>(currCol - whence), colAttribLoc, colIdxAttribLoc);
@@ -1526,13 +1523,7 @@ bool moldyn::SphereRenderer::renderBufferArray(view::CallRender3D* cr3d, MultiPa
                 vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] BufferArray mode does not support not interleaved data so far ...");
         }
 
-        // Reset states set in setPointers()
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glDisableVertexAttribArrayARB(vertAttribLoc);
-        glDisableVertexAttribArrayARB(colAttribLoc);
-        glDisableVertexAttribArrayARB(colIdxAttribLoc);
-        glDisable(GL_TEXTURE_1D);
-
+        this->unsetPointers(vertAttribLoc, colAttribLoc, colIdxAttribLoc);
         flagPartsCount += parts.GetCount();
     }
 
@@ -1596,13 +1587,7 @@ bool moldyn::SphereRenderer::renderGeometryShader(view::CallRender3D* cr3d, Mult
 
         glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(parts.GetCount()));
 
-        // Reset states set in setPointers()
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glDisableVertexAttribArray(vertAttribLoc);
-        glDisableVertexAttribArray(colAttribLoc);
-        glDisableVertexAttribArray(colIdxAttribLoc);
-        glDisable(GL_TEXTURE_1D);
-
+        this->unsetPointers(vertAttribLoc, colAttribLoc, colIdxAttribLoc);
         flagPartsCount += parts.GetCount();
     }
 
@@ -1660,7 +1645,7 @@ bool moldyn::SphereRenderer::renderAmbientOcclusion(view::CallRender3D* cr3d, Mu
 
 
 template <typename T>
-void moldyn::SphereRenderer::setPointers(MultiParticleDataCall::Particles& parts, T& shader, GLuint vertBuf,
+bool moldyn::SphereRenderer::setPointers(MultiParticleDataCall::Particles& parts, T& shader, GLuint vertBuf,
     const void* vertPtr, GLuint vertAttribLoc, GLuint colBuf, const void* colPtr, GLuint colAttribLoc,
     GLuint colIdxAttribLoc) {
 
@@ -1700,7 +1685,7 @@ void moldyn::SphereRenderer::setPointers(MultiParticleDataCall::Particles& parts
         else {
             glVertexAttribPointer(colIdxAttribLoc, 1, GL_DOUBLE, GL_FALSE, parts.GetColourDataStride(), colPtr);
         }
-        this->enableTransferFunctionTexture(colTabSize);
+        this->setTransferFunctionTexture(shader, colTabSize);
         glUniform1i(shader.ParameterLocation("colTab"), 0);
         minC = parts.GetMinColourIndexValue();
         maxC = parts.GetMaxColourIndexValue();
@@ -1742,20 +1727,53 @@ void moldyn::SphereRenderer::setPointers(MultiParticleDataCall::Particles& parts
     default:
         break;
     }
+
+    return true;
 }
 
 
-bool moldyn::SphereRenderer::enableTransferFunctionTexture(unsigned int& out_size) {
+bool moldyn::SphereRenderer::unsetPointers(GLuint vertAttribLoc, GLuint colAttribLoc, GLuint colIdxAttribLoc) {
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glDisableVertexAttribArrayARB(vertAttribLoc);
+    glDisableVertexAttribArrayARB(colAttribLoc);
+    glDisableVertexAttribArrayARB(colIdxAttribLoc);
+
+    return this->unsetTransferFunctionTexture();
+}
+
+
+bool moldyn::SphereRenderer::setTransferFunctionTexture(vislib::graphics::gl::GLSLShader& shader, unsigned int& out_texSize) {
+
     core::view::CallGetTransferFunction* cgtf = this->getTFSlot.CallAs<core::view::CallGetTransferFunction>();
-    glActiveTexture(GL_TEXTURE0);
-    glEnable(GL_TEXTURE_2D);
-    if ((cgtf != nullptr) && (*cgtf)()) {
+    if ((cgtf != nullptr) && (*cgtf)(0)) {
+        //cgtf->BindConvenience(shader, GL_TEXTURE0, 0);
+
+        glActiveTexture(GL_TEXTURE0);
+        glEnable(GL_TEXTURE_1D);
         glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
-        out_size = cgtf->TextureSize();
+        out_texSize = cgtf->TextureSize();
     }
     else {
+        glActiveTexture(GL_TEXTURE0);
+        glEnable(GL_TEXTURE_1D);
         glBindTexture(GL_TEXTURE_1D, this->greyTF);
-        out_size = 2;
+        glUniform1i(shader.ParameterLocation("tfTexture"), 0);
+        GLfloat tfrange[2] = { 0.0f, 1.0f };
+        glUniform2fv(shader.ParameterLocation("tfRange"), 1, tfrange);
+    }
+    return true;
+}
+
+
+bool moldyn::SphereRenderer::unsetTransferFunctionTexture(void) {
+    core::view::CallGetTransferFunction* cgtf = this->getTFSlot.CallAs<core::view::CallGetTransferFunction>();
+    if (cgtf != nullptr) {
+        cgtf->UnbindConvenience();
+    }
+    else {
+        glDisable(GL_TEXTURE_1D);
+        glBindTexture(GL_TEXTURE_1D, 0);
     }
     return true;
 }
@@ -2096,7 +2114,6 @@ bool moldyn::SphereRenderer::flagStorage(bool enable, vislib::graphics::gl::GLSL
     else {
         if (this->flagsUseSSBO) {
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, 0);
-            glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
         }
         else {
             GLuint flagAttrib = glGetAttribLocationARB(activeShader, "inFlags");
@@ -2253,7 +2270,6 @@ void moldyn::SphereRenderer::rebuildWorkingData(
         this->volGen->SetShaderSourceFactory(&instance()->ShaderSourceFactory());
         this->volGen->Init();
     }
-  
 
     // Recreate the volume if neccessary
     bool equalClipData = true;
@@ -2368,7 +2384,7 @@ void moldyn::SphereRenderer::renderParticlesGeometry(
         bool useTransferFunction = false;
         if (parts.GetColourDataType() == megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I) {
             unsigned int texSize;
-            this->enableTransferFunctionTexture(texSize);
+            this->setTransferFunctionTexture(theShader, texSize);
             useTransferFunction = true;
             theShader.SetParameter("inTransferFunction", static_cast<int>(0));
             float tfRange[2] = { parts.GetMinColourIndexValue(), parts.GetMaxColourIndexValue() };
@@ -2378,12 +2394,12 @@ void moldyn::SphereRenderer::renderParticlesGeometry(
 
         glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(mpdc->AccessParticles(i).GetCount()));
 
+        this->unsetTransferFunctionTexture();
         flagPartsCount += parts.GetCount();
     }
 
-    glBindTexture(GL_TEXTURE_1D, 0);
-    glBindVertexArray(0);
-
+    glBindVertexArray(0); 
+    
     this->flagStorage(false, theShader);
 
     theShader.Disable();

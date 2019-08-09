@@ -133,9 +133,6 @@ namespace view {
         /** The texture data */
         std::vector<float> tex;
 
-        /** The texture format */
-        CallGetTransferFunction::TextureFormat texFormat;
-
         /** The interpolation mode */
         param::TransferFunctionParam::InterpolationMode interpolMode;
 

@@ -280,7 +280,7 @@ namespace moldyn {
         // --------------------------------------------------------------------
 
         RenderMode                               renderMode;
-        unsigned int                             greyTF;
+        GLuint                                   greyTF;
 
         bool                                     flagsEnabled;
         GLuint                                   flagsBuffer;
@@ -444,10 +444,18 @@ namespace moldyn {
          * @param colIdxAttribLoc  ...
          */
         template <typename T>
-        void setPointers(MultiParticleDataCall::Particles &parts, T &shader,
+        bool setPointers(MultiParticleDataCall::Particles &parts, T &shader,
             GLuint vertBuf, const void *vertPtr, GLuint vertAttribLoc,
             GLuint colBuf,  const void *colPtr,  GLuint colAttribLoc, GLuint colIdxAttribLoc);
 
+        /**
+         * Unset pointers to vertex and color buffers.
+         *
+         * @param vertAttribLoc      ...
+         * @param colAttribLoc       ...
+         * @param colIdxAttribLoc    ...
+         */
+        bool unsetPointers(GLuint vertAttribLoc, GLuint colAttribLoc, GLuint colIdxAttribLoc);
 
         /**
          * Enables the transfer function texture.
@@ -456,7 +464,13 @@ namespace moldyn {
          *
          * @return  ...
          */
-        bool enableTransferFunctionTexture(unsigned int& out_size);
+        bool setTransferFunctionTexture(vislib::graphics::gl::GLSLShader& shader, unsigned int& out_texSize);
+
+        /**
+         * Disables the transfer function texture.
+         *
+         */
+        bool unsetTransferFunctionTexture(void);
 
         /**
          * Get bytes and stride.

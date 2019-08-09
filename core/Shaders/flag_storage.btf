@@ -157,7 +157,6 @@ flat in int geoFlagDiscard;
 
 #ifdef FLAG_STORAGE
 
-    out uint vgFlag;
     out vec4 flagColor;
 
 #endif // FLAG_STORAGE
@@ -171,15 +170,15 @@ flat in int geoFlagDiscard;
 #ifdef FLAG_STORAGE
 
     flagDiscard = 0;
-    vgFlag = uint(0);
+    uint flag = uint(0);
 
 #ifdef FLAG_STORAGE_SSBO
-    vgFlag = inFlags[(flagOffset + gl_VertexID)];
+    flag = inFlags[(flagOffset + gl_VertexID)];
 #else
-    vgFlag = flagOffset + inFlags[0];
+    flag = flagOffset + inFlags[0];
 #endif // FLAG_STORAGE_SSBO
 
-    ApplyFlags(vgFlag, flagDiscard, flagColor);
+    ApplyFlags(flag, flagDiscard, flagColor);
 
 #endif // FLAG_STORAGE
 
@@ -192,7 +191,6 @@ flat in int geoFlagDiscard;
 #define FLAG_STORAGE
 
 flat in int flagDiscard[1];
-in uint vgFlag[1];
 in vec4 flagColor[1];
 
 flat out int  geoFlagDiscard;
@@ -205,7 +203,7 @@ flat out int  geoFlagDiscard;
 
 #ifdef FLAG_STORAGE
 
-    if (vgFlag[0] != uint(0)) {
+    if (flagColor[0] != vec4(0.0)) {
         vertColor = flagColor[0];
     }
     geoFlagDiscard = flagDiscard[0];
