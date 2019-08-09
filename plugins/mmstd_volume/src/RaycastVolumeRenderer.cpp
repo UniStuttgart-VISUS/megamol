@@ -210,6 +210,7 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         }
 
+        ci->SetTime(cr->Time());
         if (!(*ci)(core::view::CallRender3D::FnRender)) return false;
 
         if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0) {
@@ -227,7 +228,7 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
     glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
     // end suck
 
-    if (!updateVolumeData()) return false;
+    if (!updateVolumeData(cr->Time())) return false;
 
     // enable raycast volume rendering program
     vislib::graphics::gl::GLSLComputeShader* compute_shdr;
@@ -390,14 +391,18 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
     return true;
 }
 
-bool RaycastVolumeRenderer::updateVolumeData() {
+bool RaycastVolumeRenderer::updateVolumeData(const unsigned int frameID) {
     auto* cd = this->m_volumetricData_callerSlot.CallAs<megamol::core::misc::VolumetricDataCall>();
 
     if (cd == nullptr) return false;
 
-    if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS)) return false;
-    if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_METADATA)) return false;
-    if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_DATA)) return false;
+    // Use the force
+    cd->SetFrameID(frameID, true);
+    do {
+        if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS)) return false;
+        if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_METADATA)) return false;
+        if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_DATA)) return false;
+    } while (cd->FrameID() != frameID);
 
     // TODO check time and frame id or whatever else
     if (this->m_volume_datahash != cd->DataHash() || this->m_frame_id != cd->FrameID()) {
@@ -476,6 +481,7 @@ bool RaycastVolumeRenderer::updateVolumeData() {
 
     // TODO if/else data already on GPU
 
+    //vislib::sys::Log::DefaultLog.WriteInfo(L"Volume frame %u is being uploaded.", cd->FrameID());
     TextureLayout volume_layout(internal_format, metadata->Resolution[0], metadata->Resolution[1],
         metadata->Resolution[2], format, type, 1,
         {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},

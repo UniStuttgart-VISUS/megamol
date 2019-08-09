@@ -96,7 +96,7 @@ protected:
      */
     bool Render(core::Call& call);
 
-    bool updateVolumeData();
+    bool updateVolumeData(const unsigned int frameID);
 
     bool updateTransferFunction();
 

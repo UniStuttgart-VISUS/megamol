@@ -100,7 +100,7 @@ void megamol::astro::AstroSchulz::release(void) { }
  * megamol::astro::AstroSchulz::getData
  */
 bool megamol::astro::AstroSchulz::getData(AstroDataCall& call,
-    const unsigned int frameID) {
+        const unsigned int frameID) {
     //Log::DefaultLog.WriteInfo(L"Requesting astro frame %u ...", frameID);
     call.SetFrameID(frameID, true);
 
