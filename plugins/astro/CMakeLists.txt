@@ -13,6 +13,8 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   # afterwards list the dependencies.
   set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE BUILD_MMSTD_DATATOOLS_PLUGIN" CACHE INTERNAL "")
 
+  require_external(nanoflann)
+
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
@@ -24,8 +26,8 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
   target_include_directories(${PROJECT_NAME} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    "include" "src" "3rd/nanoflann")
-  target_link_libraries(${PROJECT_NAME} PRIVATE core mmstd_datatools)
+    "include" "src")
+  target_link_libraries(${PROJECT_NAME} PRIVATE core mmstd_datatools nanoflann)
 
   # Installation rules for generated files
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
