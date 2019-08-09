@@ -171,21 +171,27 @@ bool TransferFunctionParam::ParseTransferFunction(const std::string& in_tfs, TFD
         }
         catch (nlohmann::json::type_error& e) {
             vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+            return false;
         }
         catch (nlohmann::json::exception& e) {
             vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+            return false;
         }
         catch (nlohmann::json::parse_error& e) {
             vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+            return false;
         }
         catch (nlohmann::json::invalid_iterator& e) {
             vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+            return false;
         }
         catch (nlohmann::json::out_of_range& e) {
             vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+            return false;
         }
         catch (nlohmann::json::other_error& e) {
             vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+            return false;
         }
         catch (...) {
             vislib::sys::Log::DefaultLog.WriteError(
@@ -249,21 +255,27 @@ bool TransferFunctionParam::DumpTransferFunction(std::string& out_tfs, const TFD
     }
     catch (nlohmann::json::type_error& e) {
         vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
     }
     catch (nlohmann::json::exception& e) {
         vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
     }
     catch (nlohmann::json::parse_error& e) {
         vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
     }
     catch (nlohmann::json::invalid_iterator& e) {
         vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
     }
     catch (nlohmann::json::out_of_range& e) {
         vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
     }
     catch (nlohmann::json::other_error& e) {
         vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
     }
     catch (...) {
         vislib::sys::Log::DefaultLog.WriteError(
@@ -439,21 +451,27 @@ bool TransferFunctionParam::CheckTransferFunctionString(const std::string& tfs) 
         }
         catch (nlohmann::json::type_error& e) {
             vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+            return false;
         }
         catch (nlohmann::json::exception& e) {
             vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+            return false;
         }
         catch (nlohmann::json::parse_error& e) {
             vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+            return false;
         }
         catch (nlohmann::json::invalid_iterator& e) {
             vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+            return false;
         }
         catch (nlohmann::json::out_of_range& e) {
             vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+            return false;
         }
         catch (nlohmann::json::other_error& e) {
             vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+            return false;
         }
         catch (...) {
             vislib::sys::Log::DefaultLog.WriteError("[CheckTransferFunctionString] Unknown Error - Unable to parse JSON string.");

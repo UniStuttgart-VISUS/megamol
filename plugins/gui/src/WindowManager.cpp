@@ -346,21 +346,27 @@ bool WindowManager::StateFromJSON(const std::string& json_string) {
     } catch (nlohmann::json::type_error& e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
     } catch (nlohmann::json::exception& e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
     } catch (nlohmann::json::parse_error& e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
     } catch (nlohmann::json::invalid_iterator& e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
     } catch (nlohmann::json::out_of_range& e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
     } catch (nlohmann::json::other_error& e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
     } catch (...) {
         vislib::sys::Log::DefaultLog.WriteError("[StateFromJSON] Unknown Error - Unable to parse JSON string.");
         return false;
@@ -410,21 +416,27 @@ bool WindowManager::StateToJSON(std::string& json_string) {
     } catch (nlohmann::json::type_error& e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
     } catch (nlohmann::json::exception& e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
     } catch (nlohmann::json::parse_error& e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
     } catch (nlohmann::json::invalid_iterator& e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
     } catch (nlohmann::json::out_of_range& e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
     } catch (nlohmann::json::other_error& e) {
         vislib::sys::Log::DefaultLog.WriteError(
             "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        return false;
     } catch (...) {
         vislib::sys::Log::DefaultLog.WriteError("[StateToJSON] Unknown Error - Unable to write JSON of state.");
         return false;
