@@ -87,7 +87,7 @@ GUIView::GUIView()
 
     this->state_param << new core::param::StringParam("");
     this->MakeSlotAvailable(&this->state_param);
-    this->state_param.Param<core::param::StringParam>()->SetGUIReadOnly(true);
+    // this->state_param.Param<core::param::StringParam>()->SetGUIReadOnly(true);
 }
 
 GUIView::~GUIView() { this->Release(); }
@@ -265,6 +265,14 @@ void GUIView::release() {
         ImGui_ImplOpenGL3_Shutdown();
         ImGui::DestroyContext(this->context);
     }
+}
+
+
+void GUIView::unpackMouseCoordinates(float& x, float& y) {
+    GLint vp[4];
+    glGetIntegerv(GL_VIEWPORT, vp);
+    x *= static_cast<float>(vp[2]);
+    y *= static_cast<float>(vp[3]);
 }
 
 
@@ -789,7 +797,8 @@ void GUIView::drawMainWindowCallback(const std::string& wn, WindowManager::Windo
     std::string color_param_help = "[Hover] Show Parameter Description Tooltip\n"
                                    "[Right-Click] Context Menu\n"
                                    "[Drag & Drop] Move Module to other Parameter Window\n"
-                                   "[Enter],[Tab],[Left-Click outside Input] Confirm input changes";
+                                   "[Ctrl + Enter] New line in multi line text input."
+                                   "[Enter],[Tab],[Left-Click outside Widget] Confirm input changes";
     this->utils.HelpMarkerToolTip(color_param_help);
 
     this->drawParametersCallback(wn, wc);
@@ -925,7 +934,8 @@ void GUIView::drawParametersCallback(const std::string& wn, WindowManager::Windo
         // Check for new module
         if (current_mod != &mod) {
             current_mod = &mod;
-            std::string label = mod.FullName().PeekBuffer();
+            std::string mod_label = mod.FullName().PeekBuffer();
+            ;
 
             // Reset parameter namespace stuff
             param_namespace = "";
@@ -936,7 +946,7 @@ void GUIView::drawParametersCallback(const std::string& wn, WindowManager::Windo
             }
 
             // Check if module should be considered.
-            if (!this->considerModule(label, wc.param_modules_list)) {
+            if (!this->considerModule(mod_label, wc.param_modules_list)) {
                 current_mod_open = false;
                 return;
             }
@@ -944,21 +954,21 @@ void GUIView::drawParametersCallback(const std::string& wn, WindowManager::Windo
             // Main parameter window always draws all module's parameters
             if (wc.win_callback != WindowManager::DrawCallbacks::MAIN) {
                 // Consider only modules contained in list
-                if (std::find(wc.param_modules_list.begin(), wc.param_modules_list.end(), label) ==
+                if (std::find(wc.param_modules_list.begin(), wc.param_modules_list.end(), mod_label) ==
                     wc.param_modules_list.end()) {
                     current_mod_open = false;
                     return;
                 }
             }
 
-            auto headerId = ImGui::GetID(label.c_str());
+            auto headerId = ImGui::GetID(mod_label.c_str());
             auto headerState = overrideState;
             if (headerState == -1) {
                 headerState = ImGui::GetStateStorage()->GetInt(headerId, 0); // 0=close 1=open
             }
 
             ImGui::GetStateStorage()->SetInt(headerId, headerState);
-            current_mod_open = ImGui::CollapsingHeader(label.c_str(), nullptr);
+            current_mod_open = ImGui::CollapsingHeader(mod_label.c_str(), nullptr);
 
             // TODO:  Add module description as hover tooltip
             // this->utils.HoverToolTip(std::string(mod.Description()), ImGui::GetID(label.c_str()), 0.5f);
@@ -976,14 +986,14 @@ void GUIView::drawParametersCallback(const std::string& wn, WindowManager::Windo
                     buf_win.win_flags = ImGuiWindowFlags_HorizontalScrollbar;
                     buf_win.win_callback = WindowManager::DrawCallbacks::PARAM;
                     buf_win.param_show_hotkeys = false;
-                    buf_win.param_modules_list.emplace_back(label);
+                    buf_win.param_modules_list.emplace_back(mod_label);
                     this->window_manager.AddWindowConfiguration(window_name, buf_win);
                 }
                 // Deleting module's parameters is not available in main parameter window.
                 if (wc.win_callback != WindowManager::DrawCallbacks::MAIN) {
                     if (ImGui::MenuItem("Delete from List")) {
                         std::vector<std::string>::iterator find_iter =
-                            std::find(wc.param_modules_list.begin(), wc.param_modules_list.end(), label);
+                            std::find(wc.param_modules_list.begin(), wc.param_modules_list.end(), mod_label);
                         // Break if module name is not contained in list
                         if (find_iter != wc.param_modules_list.end()) {
                             wc.param_modules_list.erase(find_iter);
@@ -994,10 +1004,11 @@ void GUIView::drawParametersCallback(const std::string& wn, WindowManager::Windo
             }
 
             // Drag source
-            label.resize(dnd_size);
+            mod_label.resize(dnd_size);
             if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)) {
-                ImGui::SetDragDropPayload("DND_COPY_MODULE_PARAMETERS", label.c_str(), (label.size() * sizeof(char)));
-                ImGui::Text(label.c_str());
+                ImGui::SetDragDropPayload(
+                    "DND_COPY_MODULE_PARAMETERS", mod_label.c_str(), (mod_label.size() * sizeof(char)));
+                ImGui::Text(mod_label.c_str());
                 ImGui::EndDragDropSource();
             }
         }
@@ -1329,7 +1340,8 @@ void GUIView::drawMenu(const std::string& wn, WindowManager::WindowConfiguration
     if (open_popup_about) {
         ImGui::OpenPopup("About");
     }
-    if (ImGui::BeginPopupModal("About", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+    bool open = true;
+    if (ImGui::BeginPopupModal("About", &open, ImGuiWindowFlags_AlwaysAutoResize)) {
 
         const std::string eMail = "megamol@visus.uni-stuttgart.de";
         const std::string webLink = "https://megamol.org/";
@@ -1497,14 +1509,14 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
             }
 
             // Print JSON string
-            ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+            // ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+            // ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
             std::string json = p->Value();
             ImVec2 ml_dim = ImVec2(ImGui::CalcItemWidth(),
                 ImGui::GetFrameHeight() + (ImGui::GetFontSize() * static_cast<float>(GUI_MAX_MULITLINE)));
             ImGui::InputTextMultiline("JSON", &json, ml_dim, ImGuiInputTextFlags_None);
-            ImGui::PopItemFlag();
-            ImGui::PopStyleVar();
+            // ImGui::PopItemFlag();
+            // ImGui::PopStyleVar();
 
             param_label = "Copy to Clipboard###clipboard" + param_id;
             if (ImGui::Button(param_label.c_str())) {
@@ -1569,6 +1581,8 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
             if (ImGui::IsItemDeactivatedAfterEdit()) {
                 p->SetValue(std::max(p->MinValue(), std::min(it->second, p->MaxValue())));
                 this->widgtmap_float.erase(it);
+            } else {
+                it->second = p->Value();
             }
         } else if (auto* p = slot.template Param<core::param::IntParam>()) {
             auto it = this->widgtmap_int.find(param_id);
@@ -1580,6 +1594,8 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
             if (ImGui::IsItemDeactivatedAfterEdit()) {
                 p->SetValue(std::max(p->MinValue(), std::min(it->second, p->MaxValue())));
                 this->widgtmap_int.erase(it);
+            } else {
+                it->second = p->Value();
             }
         } else if (auto* p = slot.template Param<core::param::Vector2fParam>()) {
             auto it = this->widgtmap_vec2.find(param_id);
@@ -1592,6 +1608,8 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
             if (ImGui::IsItemDeactivatedAfterEdit()) {
                 p->SetValue(it->second);
                 this->widgtmap_vec2.erase(it);
+            } else {
+                it->second = p->Value();
             }
         } else if (auto* p = slot.template Param<core::param::Vector3fParam>()) {
             auto it = this->widgtmap_vec3.find(param_id);
@@ -1604,6 +1622,8 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
             if (ImGui::IsItemDeactivatedAfterEdit()) {
                 p->SetValue(it->second);
                 this->widgtmap_vec3.erase(it);
+            } else {
+                it->second = p->Value();
             }
         } else if (auto* p = slot.template Param<core::param::Vector4fParam>()) {
             auto it = this->widgtmap_vec4.find(param_id);
@@ -1616,6 +1636,8 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
             if (ImGui::IsItemDeactivatedAfterEdit()) {
                 p->SetValue(it->second);
                 this->widgtmap_vec4.erase(it);
+            } else {
+                it->second = p->Value();
             }
         } else if (auto* p = slot.Param<core::param::StringParam>()) {
             /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
@@ -1634,11 +1656,16 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
             ImGui::InputTextMultiline(
                 param_label.c_str(), &it->second, ml_dim, ImGuiInputTextFlags_CtrlEnterForNewLine);
             if (ImGui::IsItemDeactivatedAfterEdit()) {
-                this->utils.utf8Decode(it->second);
-                p->SetValue(vislib::StringA(it->second.c_str()));
-                this->widgtmap_text.erase(it);
+                std::string utf8Str = it->second;
+                this->utils.utf8Decode(utf8Str);
+                p->SetValue(vislib::StringA(utf8Str.c_str()));
+            } else {
+                std::string utf8Str = std::string(p->ValueString().PeekBuffer());
+                this->utils.utf8Encode(utf8Str);
+                it->second = utf8Str;
             }
-            help = "[Ctrl + Enter] for new line.\nPress [Return] to confirm changes.";
+            /// XXX: Positioning of help marker fails for multi line text input
+            // help = "[Ctrl + Enter] for new line.\nPress [Return] to confirm changes.";
         } else if (auto* p = slot.Param<core::param::FilePathParam>()) {
             /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
             auto it = this->widgtmap_text.find(param_id);
@@ -1653,6 +1680,10 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
                 this->utils.utf8Decode(it->second);
                 p->SetValue(vislib::StringA(it->second.c_str()));
                 this->widgtmap_text.erase(it);
+            } else {
+                std::string utf8Str = std::string(p->ValueString().PeekBuffer());
+                this->utils.utf8Encode(utf8Str);
+                it->second = utf8Str;
             }
         } else {
             vislib::sys::Log::DefaultLog.WriteWarn("[GUIView] Unknown Parameter Type.");
