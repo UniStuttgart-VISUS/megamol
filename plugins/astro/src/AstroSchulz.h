@@ -67,6 +67,8 @@ namespace astro {
         typedef megamol::stdplugin::datatools::table::TableDataCall::ColumnInfo
             ColumnInfo;
 
+        static bool getData(AstroDataCall& call, const unsigned int frameID);
+
         static constexpr inline std::pair<float, float> initialiseRange(void) {
             return std::make_pair((std::numeric_limits<float>::max)(),
                 std::numeric_limits<float>::lowest());
@@ -86,6 +88,8 @@ namespace astro {
         bool getData(core::Call& call);
 
         bool getData(const unsigned int frameID);
+
+        void getData(float *dst, const AstroDataCall& ast);
 
         inline std::size_t getHash(void) {
             auto retval = this->hashInput;
@@ -113,7 +117,7 @@ namespace astro {
         std::size_t hashInput;
         std::size_t hashState;
         core::param::ParamSlot paramFullRange;
-        std::array<core::param::ParamSlot, 17> paramsInclude;
+        std::array<core::param::ParamSlot, 18> paramsInclude;
         std::vector<std::pair<float, float>> ranges;
         core::CallerSlot slotAstroData;
         core::CalleeSlot slotTableData;

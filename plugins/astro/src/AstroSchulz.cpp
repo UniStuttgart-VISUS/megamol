@@ -41,7 +41,8 @@ megamol::astro::AstroSchulz::AstroSchulz(void) : Module(),
             { "includeWind", "Include the Boolean indicating wind." },
             { "includeStarFormingGas", "Include the Boolean indicating start forming gas." },
             { "includeActiveGalactivNucleus", "Include the Boolean indicating AGNs." },
-            { "includeID", "Include the particle ID." }
+            { "includeID", "Include the particle ID." },
+            { "includeTime", "Load all timesteps into a single table and add the frame number as column." }
         } },
         paramFullRange("fullRange", "Scan the whole trajecory for min/man ranges."),
         slotAstroData("astroData", "Input slot for astronomical data"),
@@ -50,10 +51,14 @@ megamol::astro::AstroSchulz::AstroSchulz(void) : Module(),
     this->slotAstroData.SetCompatibleCall<AstroDataCallDescription>();
     this->MakeSlotAvailable(&this->slotAstroData);
 
-    this->slotTableData.SetCallback(megamol::stdplugin::datatools::table::TableDataCall::ClassName(),
-        megamol::stdplugin::datatools::table::TableDataCall::FunctionName(0), &AstroSchulz::getData);
-    this->slotTableData.SetCallback(megamol::stdplugin::datatools::table::TableDataCall::ClassName(),
-        megamol::stdplugin::datatools::table::TableDataCall::FunctionName(1), &AstroSchulz::getHash);
+    this->slotTableData.SetCallback(
+        megamol::stdplugin::datatools::table::TableDataCall::ClassName(),
+        megamol::stdplugin::datatools::table::TableDataCall::FunctionName(0),
+        &AstroSchulz::getData);
+    this->slotTableData.SetCallback(
+        megamol::stdplugin::datatools::table::TableDataCall::ClassName(),
+        megamol::stdplugin::datatools::table::TableDataCall::FunctionName(1),
+        &AstroSchulz::getHash);
     this->MakeSlotAvailable(&this->slotTableData);
 
     this->paramFullRange << new core::param::BoolParam(false);
@@ -63,6 +68,8 @@ megamol::astro::AstroSchulz::AstroSchulz(void) : Module(),
         p << new core::param::BoolParam(true);
         this->MakeSlotAvailable(&p);
     }
+
+    this->paramsInclude.back().Param<core::param::BoolParam>()->SetValue(false);
 }
 
 
@@ -87,6 +94,27 @@ bool megamol::astro::AstroSchulz::create(void) {
  * megamol::astro::AstroSchulz::release
  */
 void megamol::astro::AstroSchulz::release(void) { }
+
+
+/*
+ * megamol::astro::AstroSchulz::getData
+ */
+bool megamol::astro::AstroSchulz::getData(AstroDataCall& call,
+    const unsigned int frameID) {
+    //Log::DefaultLog.WriteInfo(L"Requesting astro frame %u ...", frameID);
+    call.SetFrameID(frameID, true);
+
+    do {
+        if (!call(AstroDataCall::CallForGetData)) {
+            vislib::sys::Log::DefaultLog.WriteWarn(L"%hs failed in %hs.",
+                AstroDataCall::FunctionName(AstroDataCall::CallForGetData),
+                AstroSchulz::ClassName());
+            return false;
+        }
+    } while (call.FrameID() != frameID);
+
+    return true;
+}
 
 
 /*
@@ -256,8 +284,10 @@ bool megamol::astro::AstroSchulz::getData(core::Call& call) {
 
     tab->SetFrameCount(ast->FrameCount());
     tab->SetDataHash(this->getHash());
-    tab->Set(this->columns.size(), ast->GetParticleCount(),
-        this->columns.data(), this->values.data());
+    tab->Set(this->columns.size(),
+        this->values.size() / this->columns.size(),
+        this->columns.data(),
+        this->values.data());
     tab->SetUnlocker(nullptr);
 
     return true;
@@ -283,6 +313,7 @@ bool megamol::astro::AstroSchulz::getData(const unsigned int frameID) {
         || std::any_of(this->paramsInclude.begin(), this->paramsInclude.end(),
         [](const ParamSlot& param) { return param.IsDirty(); });
 
+    // Update column metadata if selection changed.
     if (isParamChange) {
         auto col = 0;
         this->columns.clear();
@@ -444,7 +475,15 @@ bool megamol::astro::AstroSchulz::getData(const unsigned int frameID) {
             this->columns.emplace_back();
             this->columns.back().SetName("ID");
             this->columns.back().SetType(TableDataCall::ColumnType::CATEGORICAL);
-            this->columns.back().SetMinimumValue(0);
+            this->columns.back().SetMinimumValue(0.0f);
+            this->columns.back().SetMaximumValue((std::numeric_limits<float>::max)());
+        }
+
+        if (this->paramsInclude[col++].Param<BoolParam>()->Value()) {
+            this->columns.emplace_back();
+            this->columns.back().SetName("Frame");
+            this->columns.back().SetType(TableDataCall::ColumnType::QUANTITATIVE);
+            this->columns.back().SetMinimumValue(0.0f);
             this->columns.back().SetMaximumValue((std::numeric_limits<float>::max)());
         }
 
@@ -453,137 +492,190 @@ bool megamol::astro::AstroSchulz::getData(const unsigned int frameID) {
         }
     }
 
-    //Log::DefaultLog.WriteInfo(L"Requesting astro frame %u ...", frameID);
-    ast->SetFrameID(frameID, true);
+    if (this->paramsInclude.back().Param<BoolParam>()->Value()) {
+        Log::DefaultLog.WriteInfo(L"Creating union of all astro frames ...");
 
-    do {
-        if (!(*ast)(AstroDataCall::CallForGetData)) {
-            Log::DefaultLog.WriteWarn(L"AstroDataCall::CallForGetData failed "
-                L"in AstroSchulz.", nullptr);
+        if (!(*ast)(AstroDataCall::CallForGetExtent)) {
+            Log::DefaultLog.WriteInfo(L"Failed to get extents of astro data.");
             return false;
         }
-    } while (ast->FrameID() != frameID);
 
-    if (isParamChange || (this->hashInput != ast->DataHash())
-            || (this->frameID != frameID)) {
-        Log::DefaultLog.WriteInfo(L"Data are new, filling table ...", nullptr);
-        this->hashInput = ast->DataHash();
-        ++this->hashState;
-        this->frameID = frameID;
+        if (isParamChange) {
+            this->frameID = (std::numeric_limits<decltype(this->frameID)>::max)();
+            this->hashInput = (std::numeric_limits<decltype(this->hashInput)>::max)();
+            ++this->hashState;
 
-        auto cnt = ast->GetParticleCount();
-        this->values.resize(cnt * this->columns.size());
+            this->values.clear();
 
-        auto logicalCol = 0;
-        auto col = 0;
-        auto dst = this->values.data();
+            const auto cntFrames = ast->FrameCount();
+            for (auto frameID = 0; frameID < cntFrames; ++frameID) {
+                Log::DefaultLog.WriteInfo(L"Adding astro frame %u to the union.",
+                    frameID);
+                if (!AstroSchulz::getData(*ast, frameID)) {
+                    return false;
+                }
 
-        if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
-            this->convert(dst, col, ast->GetPositions());
-            col += 3;
-            dst += 3;
+                // Determine location and size of current frame.
+                const auto cnt = ast->GetParticleCount();
+                const auto offset = this->values.size();
+                const auto size = offset + cnt * this->columns.size();
+
+                // If this is the first frame, reserve memory for all.
+                if (offset == 0) {
+                    this->values.reserve(cntFrames * size);
+                }
+
+                // Actually resize the table to hold the current frame.
+                this->values.resize(size);
+
+                // Add the current frame at the end.
+                this->getData(this->values.data() + offset, *ast);
+
+                // Add the frame number.
+                for (auto r = 0; r < cnt; ++r) {
+                    this->values[offset + r * this->columns.size()
+                        + (this->columns.size() - 1)] = frameID;
+                }
+            }
         }
 
-        if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
-            this->convert(dst, col, ast->GetVelocities());
-            col += 3;
-            dst += 3;
+    } else {
+        // Receive a single frame into 'ast'.
+        if (!AstroSchulz::getData(*ast, frameID)) {
+            return false;
         }
 
-        if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
-            this->norm(dst, col, ast->GetVelocities());
-            ++col;
-            ++dst;
-        }
+        // Copy the data into the table as necessary.
+        if (isParamChange || (this->hashInput != ast->DataHash())
+                || (this->frameID != frameID)) {
+            Log::DefaultLog.WriteInfo(L"Astro data are new (frame %u), filling "
+                L"table ...", frameID);
+            this->frameID = frameID;
+            this->hashInput = ast->DataHash();
+            ++this->hashState;
 
-        if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
-            this->convert(dst, col, ast->GetTemperature());
-            ++col;
-            ++dst;
+            const auto cnt = ast->GetParticleCount();
+            this->values.resize(cnt * this->columns.size());
+            this->getData(this->values.data(), *ast);
         }
-
-        if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
-            this->convert(dst, col, ast->GetMass());
-            ++col;
-            ++dst;
-        }
-
-        if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
-            this->convert(dst, col, ast->GetInternalEnergy());
-            ++col;
-            ++dst;
-        }
-
-        if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
-            this->convert(dst, col, ast->GetSmoothingLength());
-            ++col;
-            ++dst;
-        }
-
-        if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
-            this->convert(dst, col, ast->GetMolecularWeights());
-            ++col;
-            ++dst;
-        }
-
-        if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
-            this->convert(dst, col, ast->GetDensity());
-            ++col;
-            ++dst;
-        }
-
-        if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
-            this->convert(dst, col, ast->GetGravitationalPotential());
-            ++col;
-            ++dst;
-        }
-
-        if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
-            this->convert(dst, col, ast->GetEntropy());
-            ++col;
-            ++dst;
-        }
-
-        if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
-            this->convert(dst, col, ast->GetIsBaryonFlags());
-            ++col;
-            ++dst;
-        }
-
-        if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
-            this->convert(dst, col, ast->GetIsStarFlags());
-            ++col;
-            ++dst;
-        }
-
-        if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
-            this->convert(dst, col, ast->GetIsWindFlags());
-            ++col;
-            ++dst;
-        }
-
-        if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
-            this->convert(dst, col, ast->GetIsStarFormingGasFlags());
-            ++col;
-            ++dst;
-        }
-
-        if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
-            this->convert(dst, col, ast->GetIsAGNFlags());
-            ++col;
-            ++dst;
-        }
-
-        if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
-            this->convert(dst, col, ast->GetParticleIDs());
-            ++col;
-            ++dst;
-        }
-
-        assert(col == this->columns.size());
     }
 
     return true;
+}
+
+
+/*
+ * megamol::astro::AstroSchulz::getData
+ */
+void megamol::astro::AstroSchulz::getData(float *dst,
+        const AstroDataCall& ast) {
+    using core::param::BoolParam;
+
+    auto col = 0;
+    auto cnt = ast.GetParticleCount();
+    auto logicalCol = 0;
+
+    if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
+        this->convert(dst, col, ast.GetPositions());
+        col += 3;
+        dst += 3;
+    }
+
+    if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
+        this->convert(dst, col, ast.GetVelocities());
+        col += 3;
+        dst += 3;
+    }
+
+    if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
+        this->norm(dst, col, ast.GetVelocities());
+        ++col;
+        ++dst;
+    }
+
+    if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
+        this->convert(dst, col, ast.GetTemperature());
+        ++col;
+        ++dst;
+    }
+
+    if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
+        this->convert(dst, col, ast.GetMass());
+        ++col;
+        ++dst;
+    }
+
+    if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
+        this->convert(dst, col, ast.GetInternalEnergy());
+        ++col;
+        ++dst;
+    }
+
+    if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
+        this->convert(dst, col, ast.GetSmoothingLength());
+        ++col;
+        ++dst;
+    }
+
+    if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
+        this->convert(dst, col, ast.GetMolecularWeights());
+        ++col;
+        ++dst;
+    }
+
+    if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
+        this->convert(dst, col, ast.GetDensity());
+        ++col;
+        ++dst;
+    }
+
+    if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
+        this->convert(dst, col, ast.GetGravitationalPotential());
+        ++col;
+        ++dst;
+    }
+
+    if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
+        this->convert(dst, col, ast.GetEntropy());
+        ++col;
+        ++dst;
+    }
+
+    if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
+        this->convert(dst, col, ast.GetIsBaryonFlags());
+        ++col;
+        ++dst;
+    }
+
+    if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
+        this->convert(dst, col, ast.GetIsStarFlags());
+        ++col;
+        ++dst;
+    }
+
+    if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
+        this->convert(dst, col, ast.GetIsWindFlags());
+        ++col;
+        ++dst;
+    }
+
+    if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
+        this->convert(dst, col, ast.GetIsStarFormingGasFlags());
+        ++col;
+        ++dst;
+    }
+
+    if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
+        this->convert(dst, col, ast.GetIsAGNFlags());
+        ++col;
+        ++dst;
+    }
+
+    if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
+        this->convert(dst, col, ast.GetParticleIDs());
+        ++col;
+        ++dst;
+    }
 }
 
 
@@ -615,7 +707,6 @@ bool megamol::astro::AstroSchulz::getHash(core::Call& call) {
 
     return true;
 }
-
 
 
 /*
