@@ -796,7 +796,6 @@ void GUIView::drawMainWindowCallback(const std::string& wn, WindowManager::Windo
     std::string color_param_help = "[Hover] Show Parameter Description Tooltip\n"
                                    "[Right-Click] Context Menu\n"
                                    "[Drag & Drop] Move Module to other Parameter Window\n"
-                                   "[Ctrl + Enter] New line in multi line text input."
                                    "[Enter],[Tab],[Left-Click outside Widget] Confirm input changes";
     this->utils.HelpMarkerToolTip(color_param_help);
 
@@ -933,8 +932,7 @@ void GUIView::drawParametersCallback(const std::string& wn, WindowManager::Windo
         // Check for new module
         if (current_mod != &mod) {
             current_mod = &mod;
-            std::string mod_label = mod.FullName().PeekBuffer();
-            ;
+            std::string label = mod.FullName().PeekBuffer();
 
             // Reset parameter namespace stuff
             param_namespace = "";
@@ -945,7 +943,7 @@ void GUIView::drawParametersCallback(const std::string& wn, WindowManager::Windo
             }
 
             // Check if module should be considered.
-            if (!this->considerModule(mod_label, wc.param_modules_list)) {
+            if (!this->considerModule(label, wc.param_modules_list)) {
                 current_mod_open = false;
                 return;
             }
@@ -953,21 +951,21 @@ void GUIView::drawParametersCallback(const std::string& wn, WindowManager::Windo
             // Main parameter window always draws all module's parameters
             if (wc.win_callback != WindowManager::DrawCallbacks::MAIN) {
                 // Consider only modules contained in list
-                if (std::find(wc.param_modules_list.begin(), wc.param_modules_list.end(), mod_label) ==
+                if (std::find(wc.param_modules_list.begin(), wc.param_modules_list.end(), label) ==
                     wc.param_modules_list.end()) {
                     current_mod_open = false;
                     return;
                 }
             }
 
-            auto headerId = ImGui::GetID(mod_label.c_str());
+            auto headerId = ImGui::GetID(label.c_str());
             auto headerState = overrideState;
             if (headerState == -1) {
                 headerState = ImGui::GetStateStorage()->GetInt(headerId, 0); // 0=close 1=open
             }
 
             ImGui::GetStateStorage()->SetInt(headerId, headerState);
-            current_mod_open = ImGui::CollapsingHeader(mod_label.c_str(), nullptr);
+            current_mod_open = ImGui::CollapsingHeader(label.c_str(), nullptr);
 
             // TODO:  Add module description as hover tooltip
             // this->utils.HoverToolTip(std::string(mod.Description()), ImGui::GetID(label.c_str()), 0.5f);
@@ -985,14 +983,14 @@ void GUIView::drawParametersCallback(const std::string& wn, WindowManager::Windo
                     buf_win.win_flags = ImGuiWindowFlags_HorizontalScrollbar;
                     buf_win.win_callback = WindowManager::DrawCallbacks::PARAM;
                     buf_win.param_show_hotkeys = false;
-                    buf_win.param_modules_list.emplace_back(mod_label);
+                    buf_win.param_modules_list.emplace_back(label);
                     this->window_manager.AddWindowConfiguration(window_name, buf_win);
                 }
                 // Deleting module's parameters is not available in main parameter window.
                 if (wc.win_callback != WindowManager::DrawCallbacks::MAIN) {
                     if (ImGui::MenuItem("Delete from List")) {
                         std::vector<std::string>::iterator find_iter =
-                            std::find(wc.param_modules_list.begin(), wc.param_modules_list.end(), mod_label);
+                            std::find(wc.param_modules_list.begin(), wc.param_modules_list.end(), label);
                         // Break if module name is not contained in list
                         if (find_iter != wc.param_modules_list.end()) {
                             wc.param_modules_list.erase(find_iter);
@@ -1003,11 +1001,10 @@ void GUIView::drawParametersCallback(const std::string& wn, WindowManager::Windo
             }
 
             // Drag source
-            mod_label.resize(dnd_size);
+            label.resize(dnd_size);
             if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)) {
-                ImGui::SetDragDropPayload(
-                    "DND_COPY_MODULE_PARAMETERS", mod_label.c_str(), (mod_label.size() * sizeof(char)));
-                ImGui::Text(mod_label.c_str());
+                ImGui::SetDragDropPayload("DND_COPY_MODULE_PARAMETERS", label.c_str(), (label.size() * sizeof(char)));
+                ImGui::Text(label.c_str());
                 ImGui::EndDragDropSource();
             }
         }
