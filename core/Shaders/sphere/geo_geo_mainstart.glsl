@@ -19,7 +19,7 @@ uniform vec3 camRight;
 
 in vec4 vertColor[1];
 
-out vec4 color;
+out vec4 geoColor;
 out vec4 objPos;
 out vec4 camPos;
 out vec4 lightPos;
@@ -52,7 +52,7 @@ void main(void) {
     // USE THIS LINE TO GET DIRECTIONAL LIGHTING
     lightPos = MVinv * normalize(lpos);
     
-    color = vertColor[0];    
+    geoColor = vertColor[0];    
      
 #ifdef HALO
     squarRad = (rad + HALO_RAD) * (rad + HALO_RAD);

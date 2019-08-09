@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <btf type="MegaMolGLSLShader" version="1.0" namespace="flag_storage">
  
+<!-- Requires 'vertColor' and/or 'geoColor' to be defined as color variable. -->
+
     <snippet name="vert_attributes" type="string">
         <![CDATA[
 
@@ -17,16 +19,38 @@ uniform vec4 flagSelectedCol;
 uniform vec4 flagSoftSelectedCol;
 
 #ifdef FLAG_STORAGE_SSBO
-    layout(std430, binding = 4) buffer Flags
+    layout(std430, binding = 4) buffer flags
     {
-        coherent uint flags[];
+        coherent uint inFlags[];
     };
 #else
-    in uint flags[1];
+    in uint inFlags[1];
 #endif // FLAG_STORAGE_SSBO 
 
-flat out int flag_discard;
+flat out int flagDiscard;
 
+// Applying flags
+void ApplyFlags(const in uint currentFlag, inout int discardFlag, inout vec4 colorFlag) {
+
+    // Enabled
+    //if ((currentFlag & FLAG_ENABLED) == FLAG_ENABLED) {
+    //} 
+
+    // Filtered
+    if ((currentFlag & FLAG_FILTERED) == FLAG_FILTERED) {
+        discardFlag = 1;
+    } 
+
+    // Selected
+    if ((currentFlag & FLAG_SELECTED) == FLAG_SELECTED) {
+        colorFlag = flagSelectedCol;
+    } 
+
+    // Soft Selected
+    if ((currentFlag & FLAG_SOFTSELECTED) == FLAG_SOFTSELECTED) {
+        colorFlag = flagSoftSelectedCol;
+    }
+}
         ]]>
     </snippet>
 
@@ -35,41 +59,16 @@ flat out int flag_discard;
 
  #ifdef FLAG_STORAGE
 
-    flag_discard = 0;
+    flagDiscard = 0;
     uint flag = uint(0);
 
 #ifdef FLAG_STORAGE_SSBO
-    flag = flags[(flagOffset + gl_VertexID)];
+    flag = inFlags[(flagOffset + gl_VertexID)];
 #else
-    flag = flagOffset + flags[0];
+    flag = flagOffset + inFlags[0];
 #endif // FLAG_STORAGE_SSBO
 
-    // Enabled
-    //if ((flag & FLAG_ENABLED) == FLAG_ENABLED) {
-    //} 
-    //else {
-    //}   
-
-    // Filtered
-    if ((flag & FLAG_FILTERED) == FLAG_FILTERED) {
-        flag_discard = 1;
-    } 
-    //else {
-    //}
-
-    // Selected
-    if ((flag & FLAG_SELECTED) == FLAG_SELECTED) {
-        vertColor = flagSelectedCol;
-    } 
-    //else {
-    //}
-
-    // Soft Selected
-    if ((flag & FLAG_SOFTSELECTED) == FLAG_SOFTSELECTED) {
-        vertColor = flagSoftSelectedCol;
-    } 
-    //else {
-    //}    
+    ApplyFlags(flag, flagDiscard, vertColor);
 
 #endif // FLAG_STORAGE
 
@@ -80,7 +79,8 @@ flat out int flag_discard;
         <![CDATA[
 
 #define FLAG_STORAGE
-flat in int flag_discard;
+
+flat in int flagDiscard;
 
         ]]>
     </snippet>
@@ -89,15 +89,131 @@ flat in int flag_discard;
         <![CDATA[
 
  #ifdef FLAG_STORAGE
-    if (flag_discard != 0) {
+
+    if (flagDiscard != 0) {
         discard;
     }
+
+#endif // FLAG_STORAGE
+
+        ]]>
+    </snippet>
+
+<!-- ###### Addintional code when using Geometry Shader mode ##### -->
+
+    <snippet name="geo_attributes" type="string">
+        <![CDATA[
+
+#define FLAG_STORAGE
+
+flat in  int flagDiscard[1];
+flat out int geoFlagDiscard;
+
+        ]]>
+    </snippet>
+
+    <snippet name="geo_code" type="string">
+        <![CDATA[
+
+ #ifdef FLAG_STORAGE
+
+    geoFlagDiscard = flagDiscard[0];
+
 #endif // FLAG_STORAGE
 
         ]]>
     </snippet>
 
 
+    <snippet name="geo_frag_attributes" type="string">
+        <![CDATA[
+
+#define FLAG_STORAGE
+
+flat in int geoFlagDiscard;
+
+        ]]>
+    </snippet>
+
+    <snippet name="geo_frag_code" type="string">
+        <![CDATA[
+
+ #ifdef FLAG_STORAGE
+
+    if (geoFlagDiscard != 0) {
+        discard;
+    }
+
+#endif // FLAG_STORAGE
+
+        ]]>
+    </snippet>
+
+<!-- ###### Addintional code when using Geometry Shader mode of Ambient Occlusion ##### -->
+
+    <!-- Needs 'vert_attributes' snippet to prepended in shader -->
+    <snippet name="mdao_vert_additional_attributes" type="string">
+        <![CDATA[
+
+#ifdef FLAG_STORAGE
+
+    out uint vgFlag;
+    out vec4 flagColor;
+
+#endif // FLAG_STORAGE
+
+        ]]>
+    </snippet>
+
+    <snippet name="mdao_vert_code" type="string">
+        <![CDATA[
+
+#ifdef FLAG_STORAGE
+
+    flagDiscard = 0;
+    vgFlag = uint(0);
+
+#ifdef FLAG_STORAGE_SSBO
+    vgFlag = inFlags[(flagOffset + gl_VertexID)];
+#else
+    vgFlag = flagOffset + inFlags[0];
+#endif // FLAG_STORAGE_SSBO
+
+    ApplyFlags(vgFlag, flagDiscard, flagColor);
+
+#endif // FLAG_STORAGE
+
+        ]]>
+    </snippet>
+
+    <snippet name="mdao_geo_attributes" type="string">
+        <![CDATA[
+
+#define FLAG_STORAGE
+
+flat in int flagDiscard[1];
+in uint vgFlag[1];
+in vec4 flagColor[1];
+
+flat out int  geoFlagDiscard;
+
+        ]]>
+    </snippet>
+
+    <snippet name="mdao_geo_code" type="string">
+        <![CDATA[
+
+#ifdef FLAG_STORAGE
+
+    if (vgFlag[0] != uint(0)) {
+        vertColor = flagColor[0];
+    }
+    geoFlagDiscard = flagDiscard[0];
+
+#endif // FLAG_STORAGE
+
+        ]]>
+    </snippet>
 
 </btf>
 

@@ -605,7 +605,7 @@ bool moldyn::SphereRenderer::createResources() {
             this->fragShader->Clear();
             vertShaderName = "sphere_mdao::geometry::vertex";
             geoShaderName = "sphere_mdao::geometry::geometry";
-            fragShaderName = "sphere_mdao::fragment";
+            fragShaderName = "sphere_mdao::geometry::fragment";
             if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
                 return false;
             }
@@ -696,7 +696,6 @@ bool moldyn::SphereRenderer::createResources() {
     if (this->flagsUseSSBO) {
         glGenBuffers(1, &this->flagsBuffer);
     }
-    //printf("%s \n", this->vertShader->WholeCode().PeekBuffer());
 
     return true;
 }
@@ -958,11 +957,10 @@ bool moldyn::SphereRenderer::Render(view::CallRender3D& call) {
     this->curMVPtransp.Transpose();
     // ------------------------------------------------------------------------
 
+    // Set OpenGL state
     glDisable(GL_BLEND);
-
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS); /// default - necessary for early depth test in fragment shader to work.
-
 #ifdef GL_VERSION_2_0
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 #endif
@@ -988,9 +986,11 @@ bool moldyn::SphereRenderer::Render(view::CallRender3D& call) {
         break;
     }
 
+    //Reset OpenGl state
 #ifdef GL_VERSION_2_0
     glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
 #endif
+    glDisable(GL_DEPTH_TEST);
 
     // Save some current data
     this->lastVpHeight = this->curVpHeight;
@@ -1453,11 +1453,11 @@ bool moldyn::SphereRenderer::renderBufferArray(view::CallRender3D* cr3d, MultiPa
 
     this->sphereShader.Enable();
 
+    this->flagStorage(true, this->sphereShader, mpdc);
+
     GLuint vertAttribLoc = glGetAttribLocationARB(this->sphereShader, "inPosition");
     GLuint colAttribLoc = glGetAttribLocationARB(this->sphereShader, "inColor");
     GLuint colIdxAttribLoc = glGetAttribLocationARB(this->sphereShader, "inColIdx");
-
-    this->flagStorage(true, this->sphereShader, mpdc);
 
     glUniform4fv(this->sphereShader.ParameterLocation("viewAttr"), 1, this->curViewAttrib);
     glUniform3fv(this->sphereShader.ParameterLocation("camIn"), 1, cr3d->GetCameraParameters()->Front().PeekComponents());
@@ -1559,11 +1559,11 @@ bool moldyn::SphereRenderer::renderGeometryShader(view::CallRender3D* cr3d, Mult
 
     this->sphereGeometryShader.Enable();
 
-    this->flagStorage(true, this->sphereGeometryShader, mpdc);
-
     GLuint vertAttribLoc = glGetAttribLocationARB(this->sphereGeometryShader, "inPosition");
     GLuint colAttribLoc = glGetAttribLocationARB(this->sphereGeometryShader, "inColor");
     GLuint colIdxAttribLoc = glGetAttribLocationARB(this->sphereGeometryShader, "inColIdx");
+
+    this->flagStorage(true, this->sphereGeometryShader, mpdc);
 
     // Set shader variables
     glUniform4fv(this->sphereGeometryShader.ParameterLocation("viewAttr"), 1, this->curViewAttrib);
@@ -2023,7 +2023,6 @@ std::shared_ptr<vislib::graphics::gl::GLSLShader> moldyn::SphereRenderer::genera
         /// => consider new index through first Insertion!
         v2->Insert(7, codeSnip);
         // std::string s(v2->WholeCode());
-        printf("%s \n", v2->WholeCode().PeekBuffer());
 
         vislib::SmartPtr<ShaderSource> vss(v2);
         this->theShaders.emplace(std::make_pair(std::make_tuple(c, p, interleaved), makeShader(v2, this->fragShader)));
@@ -2078,7 +2077,6 @@ bool moldyn::SphereRenderer::flagStorage(bool enable, vislib::graphics::gl::GLSL
 
         auto version = flagc->GetVersion();
         if (this->flagsUseSSBO) {
-
             if ((version != this->flagsCurrentVersion) || (version == 0)) {
                 glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->flagsBuffer);
                 glBufferData(GL_SHADER_STORAGE_BUFFER, partsCount * sizeof(core::FlagStorage::FlagItemType),
@@ -2089,7 +2087,7 @@ bool moldyn::SphereRenderer::flagStorage(bool enable, vislib::graphics::gl::GLSL
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBOflagsBindingPoint, this->flagsBuffer);
         }
         else {
-            GLuint flagAttrib = glGetAttribLocationARB(activeShader, "flags");
+            GLuint flagAttrib = glGetAttribLocationARB(activeShader, "inFlags");
             glEnableVertexAttribArrayARB(flagAttrib);
             glVertexAttribIPointer(flagAttrib, 1, GL_UNSIGNED_INT, sizeof(core::FlagStorage::FlagItemType), this->flagsData.get()->data());
         }
@@ -2101,7 +2099,7 @@ bool moldyn::SphereRenderer::flagStorage(bool enable, vislib::graphics::gl::GLSL
             glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
         }
         else {
-            GLuint flagAttrib = glGetAttribLocationARB(activeShader, "flags");
+            GLuint flagAttrib = glGetAttribLocationARB(activeShader, "inFlags");
             glDisableVertexAttribArrayARB(flagAttrib);
         }
 

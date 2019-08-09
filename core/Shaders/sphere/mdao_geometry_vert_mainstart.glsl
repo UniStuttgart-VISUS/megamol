@@ -28,4 +28,3 @@ uniform vec4 clipCol;
 void main(void) {
     colorgs = color;
     gl_Position = position;
-}
