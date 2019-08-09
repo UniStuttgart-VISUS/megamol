@@ -37,7 +37,7 @@ SimpleAstroFilter::SimpleAstroFilter(void)
     , filterTemperatureParam("temperature::filter", "")
     , minMassParam("mass::min", "")
     , maxMassParam("mass::max", "")
-    , filterMassParam("mass:filter", "")
+    , filterMassParam("mass::filter", "")
     , minInternalEnergyParam("internalEnergy::min", "")
     , maxInternalEnergyParam("internalEnergy::max", "")
     , filterInternalEnergyParam("internalEnergy::filter", "")
@@ -542,6 +542,7 @@ void SimpleAstroFilter::setDisplayedValues(const AstroDataCall& outCall) {
     float minDensity = FLT_MAX, maxDensity = -FLT_MAX;
     float minGravitationalPotential = FLT_MAX, maxGravitationalPotential = -FLT_MAX;
     float minEntropy = FLT_MAX, maxEntropy = -FLT_MAX;
+
     for (uint64_t i = 0; i < outCall.GetParticleCount(); ++i) {
         if (glm::length(outCall.GetVelocities()->at(i)) < minVelocity) {
             minVelocity = glm::length(outCall.GetVelocities()->at(i));
@@ -607,22 +608,22 @@ void SimpleAstroFilter::setDisplayedValues(const AstroDataCall& outCall) {
         }
     }
 
-    this->minVelocityMagnitudeParam.Param<param::FloatParam>()->SetValue(minVelocity);
-    this->maxVelocityMagnitudeParam.Param<param::FloatParam>()->SetValue(maxVelocity);
-    this->minTemperatureParam.Param<param::FloatParam>()->SetValue(minTemperature);
-    this->maxTemperatureParam.Param<param::FloatParam>()->SetValue(maxTemperature);
-    this->minMassParam.Param<param::FloatParam>()->SetValue(minMass);
-    this->maxMassParam.Param<param::FloatParam>()->SetValue(maxMass);
-    this->minInternalEnergyParam.Param<param::FloatParam>()->SetValue(minInternalEnergy);
-    this->maxInternalEnergyParam.Param<param::FloatParam>()->SetValue(maxInternalEnergy);
-    this->minSmoothingLengthParam.Param<param::FloatParam>()->SetValue(minSmoothingLength);
-    this->maxSmoothingLengthParam.Param<param::FloatParam>()->SetValue(maxSmoothingLength);
-    this->minMolecularWeightParam.Param<param::FloatParam>()->SetValue(minMolecularWeight);
-    this->maxMolecularWeightParam.Param<param::FloatParam>()->SetValue(maxMolecularWeight);
-    this->minDensityParam.Param<param::FloatParam>()->SetValue(minDensity);
-    this->maxDensityParam.Param<param::FloatParam>()->SetValue(maxDensity);
-    this->minGravitationalPotentialParam.Param<param::FloatParam>()->SetValue(minGravitationalPotential);
-    this->maxGravitationalPotentialParam.Param<param::FloatParam>()->SetValue(maxGravitationalPotential);
-    this->minEntropyParam.Param<param::FloatParam>()->SetValue(minEntropy);
-    this->maxEntropyParam.Param<param::FloatParam>()->SetValue(maxEntropy);
+    this->minVelocityMagnitudeParam.Param<param::FloatParam>()->SetValue(minVelocity, false);
+    this->maxVelocityMagnitudeParam.Param<param::FloatParam>()->SetValue(maxVelocity, false);
+    this->minTemperatureParam.Param<param::FloatParam>()->SetValue(minTemperature, false);
+    this->maxTemperatureParam.Param<param::FloatParam>()->SetValue(maxTemperature, false);
+    this->minMassParam.Param<param::FloatParam>()->SetValue(minMass, false);
+    this->maxMassParam.Param<param::FloatParam>()->SetValue(maxMass, false);
+    this->minInternalEnergyParam.Param<param::FloatParam>()->SetValue(minInternalEnergy, false);
+    this->maxInternalEnergyParam.Param<param::FloatParam>()->SetValue(maxInternalEnergy, false);
+    this->minSmoothingLengthParam.Param<param::FloatParam>()->SetValue(minSmoothingLength, false);
+    this->maxSmoothingLengthParam.Param<param::FloatParam>()->SetValue(maxSmoothingLength, false);
+    this->minMolecularWeightParam.Param<param::FloatParam>()->SetValue(minMolecularWeight, false);
+    this->maxMolecularWeightParam.Param<param::FloatParam>()->SetValue(maxMolecularWeight, false);
+    this->minDensityParam.Param<param::FloatParam>()->SetValue(minDensity, false);
+    this->maxDensityParam.Param<param::FloatParam>()->SetValue(maxDensity, false);
+    this->minGravitationalPotentialParam.Param<param::FloatParam>()->SetValue(minGravitationalPotential, false);
+    this->maxGravitationalPotentialParam.Param<param::FloatParam>()->SetValue(maxGravitationalPotential, false);
+    this->minEntropyParam.Param<param::FloatParam>()->SetValue(minEntropy, false);
+    this->maxEntropyParam.Param<param::FloatParam>()->SetValue(maxEntropy, false);
 }
