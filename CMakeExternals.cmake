@@ -236,6 +236,23 @@ function(require_external NAME)
     add_external_library(Delaunator INTERFACE
       DEPENDS Delaunator_ext
       INCLUDE_DIR "src/Delaunator_ext/include")
+
+  elseif(NAME STREQUAL "sim_sort")
+    if(TARGET sim_sort)
+      return()
+    endif()
+    
+    add_external_project(sim_sort_ext
+      GIT_REPOSITORY https://github.com/alexstraub1990/simultaneous-sort.git
+      CONFIGURE_COMMAND ""
+      BUILD_COMMAND ""
+      INSTALL_COMMAND ""
+      TEST_COMMAND ""
+    )
+    add_external_library(sim_sort INTERFACE
+      DEPENDS sim_sort_ext
+      INCLUDE_DIR "src/sim_sort_ext/include"
+    )
 	
   else()
     message(FATAL_ERROR "Unknown external required \"${NAME}\"")
