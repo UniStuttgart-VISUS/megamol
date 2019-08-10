@@ -90,6 +90,14 @@ private:
 	unsigned int lastFrame = 0;
     float valmin, valmax;
     float densityMin, densityMax;
+
+    std::vector<glm::vec4> pos_;
+    std::vector<glm::vec3> vel_;
+    std::vector<float> dens_;
+    std::vector<float> sl_;
+    std::vector<float> temp_;
+    std::vector<float> mass_;
+    std::vector<float> mw_;
 };
 
 } // namespace astro

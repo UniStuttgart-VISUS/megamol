@@ -9,6 +9,8 @@
 #include "AstroParticleConverter.h"
 #include <glm/gtc/type_ptr.hpp>
 
+#include "simultaneous_sort.h"
+
 using namespace megamol;
 using namespace megamol::astro;
 using namespace megamol::core;
@@ -185,13 +187,61 @@ bool AstroParticleConverter::getSpecialData(Call& call) {
             this->calcMinMaxValues(*ast);
             freshMinMax = true;
         }
+
         auto particleCount = ast->GetParticleCount();
+        auto positions = *ast->GetPositions().get();
+        vel_ = *ast->GetVelocities().get();
+        dens_ = *ast->GetDensity().get();
+        sl_ = *ast->GetSmoothingLength().get();
+        temp_ = *ast->GetTemperature().get();
+        mass_ = *ast->GetMass().get();
+        mw_ = *ast->GetMolecularWeights().get();
+
+        auto isBaryon = ast->GetIsBaryonFlags();
+        std::vector<char> ib(isBaryon->size());
+        for (size_t idx = 0; idx < isBaryon->size(); ++idx) {
+            if (isBaryon->operator[](idx)) {
+                ib[idx] = 1;
+            } else {
+                ib[idx] = 0;
+            }
+        }
+
+        /*pos_.clear();
+        pos_.reserve(particleCount / 2);
+        vel_.clear();
+        vel_.reserve(particleCount / 2);
+        dens_.clear();
+        dens_.reserve(particleCount / 2);*/
+
+        sort_with([](auto a, auto b) { return a > b; }, ib, positions, vel_, dens_, sl_, temp_, mass_, mw_);
+
+        auto it = std::find(ib.cbegin(), ib.cend(), false);
+        auto idx = std::distance(ib.cbegin(), it);
+
+        positions.erase(positions.begin() + idx, positions.end());
+        vel_.erase(vel_.begin() + idx, vel_.end());
+        dens_.erase(dens_.begin() + idx, dens_.end());
+        sl_.erase(sl_.begin() + idx, sl_.end());
+        temp_.erase(temp_.begin() + idx, temp_.end());
+        mass_.erase(mass_.begin() + idx, mass_.end());
+        mw_.erase(mw_.begin() + idx, mw_.end());
+
+        pos_.resize(positions.size());
+
+        for (size_t idx = 0; idx < positions.size(); ++idx) {
+            pos_[idx].x = positions[idx].x;
+            pos_[idx].y = positions[idx].y;
+            pos_[idx].z = positions[idx].z;
+            pos_[idx].w = sl_[idx];
+        }
+
         mpdc->SetDataHash(this->lastDataHash + this->hashOffset);
         mpdc->SetParticleListCount(1);
         MultiParticleDataCall::Particles& p = mpdc->AccessParticles(0);
-        p.SetCount(particleCount);
+        p.SetCount(pos_.size());
         if (p.GetCount() > 0) {
-            p.SetVertexData(MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ, ast->GetPositions()->data());
+            p.SetVertexData(MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR, pos_.data());
             if (freshMinMax || this->minColorSlot.IsDirty() || this->midColorSlot.IsDirty() ||
                 this->maxColorSlot.IsDirty() || this->useMidColorSlot.IsDirty()) {
                 this->calcColorTable(*ast);
@@ -200,9 +250,25 @@ bool AstroParticleConverter::getSpecialData(Call& call) {
                 this->maxColorSlot.ResetDirty();
                 this->useMidColorSlot.ResetDirty();
             }
-            p.SetColourData(MultiParticleDataCall::Particles::COLDATA_FLOAT_I, ast->GetDensity()->data());
-            p.SetColourMapIndexValues(this->densityMin, this->densityMax);
-            p.SetDirData(SimpleSphericalParticles::DirDataType::DIRDATA_FLOAT_XYZ, ast->GetVelocities()->data());
+            auto const sel = colorModeSlot.Param<core::param::EnumParam>()->Value();
+            if (sel == static_cast<int>(ColoringMode::TEMPERATURE)) {
+                p.SetColourData(MultiParticleDataCall::Particles::COLDATA_FLOAT_I, temp_.data());
+                auto minmax_val = std::minmax_element(temp_.begin(), temp_.end());
+                p.SetColourMapIndexValues(*minmax_val.first, *minmax_val.second);
+            } else if (sel == static_cast<int>(ColoringMode::MASS)) {
+                p.SetColourData(MultiParticleDataCall::Particles::COLDATA_FLOAT_I, mass_.data());
+                auto minmax_val = std::minmax_element(mass_.begin(), mass_.end());
+                p.SetColourMapIndexValues(*minmax_val.first, *minmax_val.second);
+            } else if (sel == static_cast<int>(ColoringMode::MOLECULAR_WEIGHT)) {
+                p.SetColourData(MultiParticleDataCall::Particles::COLDATA_FLOAT_I, mw_.data());
+                auto minmax_val = std::minmax_element(mw_.begin(), mw_.end());
+                p.SetColourMapIndexValues(*minmax_val.first, *minmax_val.second);
+            } else {
+                p.SetColourData(MultiParticleDataCall::Particles::COLDATA_FLOAT_I, dens_.data());
+                auto minmax_val = std::minmax_element(dens_.begin(), dens_.end());
+                p.SetColourMapIndexValues(*minmax_val.first, *minmax_val.second);
+            }
+            p.SetDirData(SimpleSphericalParticles::DirDataType::DIRDATA_FLOAT_XYZ, vel_.data());
         }
         // ast->Unlock();
         return true;
