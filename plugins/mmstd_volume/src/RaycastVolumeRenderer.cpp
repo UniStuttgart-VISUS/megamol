@@ -41,6 +41,9 @@ RaycastVolumeRenderer::RaycastVolumeRenderer()
     , m_material_color("material color", "Material color")
     , m_opacity_threshold("opacity threshold", "Opacity threshold for integrative rendering")
     , m_iso_value("isovalue", "Isovalue for isosurface rendering")
+    , paramOverride("override::enable", "Enable override of range")
+    , paramMinOverride("override::min", "Override the minimum value provided by the data set")
+    , paramMaxOverride("override::max", "Override the maximum value provided by the data set")
     , m_renderer_callerSlot("Renderer", "Renderer for chaining")
     , m_volumetricData_callerSlot("getData", "Connects the volume renderer with a voluemtric data source")
     , m_transferFunction_callerSlot("getTranfserFunction", "Connects the volume renderer with a transfer function") {
@@ -94,6 +97,15 @@ RaycastVolumeRenderer::RaycastVolumeRenderer()
 
     this->m_material_color << new core::param::ColorParam(0.95f, 0.67f, 0.47f, 1.0f);
     this->MakeSlotAvailable(&this->m_material_color);
+
+    this->paramOverride << new megamol::core::param::BoolParam(false);
+    this->MakeSlotAvailable(&this->paramOverride);
+
+    this->paramMinOverride << new megamol::core::param::FloatParam(0.0f);
+    this->MakeSlotAvailable(&this->paramMinOverride);
+
+    this->paramMaxOverride << new megamol::core::param::FloatParam(1.0f);
+    this->MakeSlotAvailable(&this->paramMaxOverride);
 }
 
 RaycastVolumeRenderer::~RaycastVolumeRenderer() { this->Release(); }
@@ -501,8 +513,13 @@ bool RaycastVolumeRenderer::updateVolumeData(const unsigned int frameID) {
     m_volume_resolution[1] = metadata->Resolution[1];
     m_volume_resolution[2] = metadata->Resolution[2];
 
+    if (this->paramOverride.Param<core::param::BoolParam>()->Value()) {
+        valRange[0] = this->paramMinOverride.Param<core::param::FloatParam>()->Value();
+        valRange[1] = this->paramMaxOverride.Param<core::param::FloatParam>()->Value();
+    } else {
     valRange[0] = metadata->MinValues[0];
     valRange[1] = metadata->MaxValues[0];
+    }
 
     GLenum internal_format;
     GLenum format;

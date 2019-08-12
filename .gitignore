@@ -31,3 +31,5 @@ utils/MMPLD/SphereTest.bat
 /astroschulz.mmprj
 examples/
 /astroschulz2.mmprj
+solution/**/*
+deploy/**/*
