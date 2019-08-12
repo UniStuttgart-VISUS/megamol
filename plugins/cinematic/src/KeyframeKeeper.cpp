@@ -1390,11 +1390,11 @@ void KeyframeKeeper::loadKeyframes() {
             this->startCtrllPos.SetZ(std::stof(line.erase(0, 15))); // "startCtrllPosZ="
             // get endCtrllPos
             std::getline(infile, line);
-            this->endCtrllPos.SetX(std::stof(line.erase(0, 14))); // "endCtrllPosX="
+            this->endCtrllPos.SetX(std::stof(line.erase(0, 13))); // "endCtrllPosX="
             std::getline(infile, line);
-            this->endCtrllPos.SetY(std::stof(line.erase(0, 14))); // "endCtrllPosY="
+            this->endCtrllPos.SetY(std::stof(line.erase(0, 13))); // "endCtrllPosY="
             std::getline(infile, line);
-            this->endCtrllPos.SetZ(std::stof(line.erase(0, 14))); // "endCtrllPosZ="
+            this->endCtrllPos.SetZ(std::stof(line.erase(0, 13))); // "endCtrllPosZ="
             // Consume empty line
             std::getline(infile, line);
         }
