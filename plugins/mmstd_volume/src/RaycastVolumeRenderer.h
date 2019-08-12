@@ -465,6 +465,10 @@ private:
     core::param::ParamSlot m_opacity_threshold;
     core::param::ParamSlot m_iso_value;
 
+    core::param::ParamSlot paramOverride;
+    core::param::ParamSlot paramMinOverride;
+    core::param::ParamSlot paramMaxOverride;
+
     /** caller slot */
     megamol::core::CallerSlot m_renderer_callerSlot;
     megamol::core::CallerSlot m_volumetricData_callerSlot;
