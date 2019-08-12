@@ -169,6 +169,8 @@ protected:
     virtual void unpackMouseCoordinates(float& x, float& y);
 
 private:
+	void validate();
+
     /**
      * Answer the renderer 1 call
      *
