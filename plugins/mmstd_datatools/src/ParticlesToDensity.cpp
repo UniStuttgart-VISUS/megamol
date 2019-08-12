@@ -205,7 +205,6 @@ bool datatools::ParticlesToDensity::getDataCallback(megamol::core::Call& c) {
 
     if (outVol != nullptr || outGrid != nullptr) {
         auto frameID = outVol != nullptr ? outVol->FrameID() : (outGrid != nullptr ? outGrid->FrameID() : 0);
-        vislib::sys::Log::DefaultLog.WriteInfo(L"ParticleToDensity requests frame %u.", frameID);
         inMpdc->SetFrameID(frameID, true);
         if (!(*inMpdc)(1)) {
             vislib::sys::Log::DefaultLog.WriteError("ParticlesToDensity: Unable to get extents.");
@@ -229,7 +228,6 @@ bool datatools::ParticlesToDensity::getDataCallback(megamol::core::Call& c) {
 
     // TODO set data
     if (outVol != nullptr) {
-        vislib::sys::Log::DefaultLog.WriteInfo(L"ParticleToDensity returns frame %u.", this->time);
         outVol->SetFrameID(this->time);
         outVol->SetData(this->vol[0].data());
         metadata.Components = is_vector ? 3 : 1;
