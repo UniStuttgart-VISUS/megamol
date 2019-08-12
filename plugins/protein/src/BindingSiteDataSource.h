@@ -103,6 +103,12 @@ namespace protein {
         core::param::ParamSlot pdbFilenameSlot;
         // the file name for the color table
         megamol::core::param::ParamSlot colorTableFileParam;
+
+        /** Parameter to activate the special enzyme mode */
+        megamol::core::param::ParamSlot enzymeModeParam;
+
+        /** Parameter to select the type of the protein */
+        megamol::core::param::ParamSlot gxTypeFlag;
         
         /** The binding site information */
         vislib::Array<vislib::Array<vislib::Pair<char, unsigned int> > > bindingSites;
