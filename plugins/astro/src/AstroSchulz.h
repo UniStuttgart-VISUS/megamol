@@ -13,6 +13,8 @@
 
 #include "astro/AstroDataCall.h"
 
+#include <array>
+
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
@@ -65,6 +67,8 @@ namespace astro {
         typedef megamol::stdplugin::datatools::table::TableDataCall::ColumnInfo
             ColumnInfo;
 
+        static bool getData(AstroDataCall& call, const unsigned int frameID);
+
         static constexpr inline std::pair<float, float> initialiseRange(void) {
             return std::make_pair((std::numeric_limits<float>::max)(),
                 std::numeric_limits<float>::lowest());
@@ -85,6 +89,15 @@ namespace astro {
 
         bool getData(const unsigned int frameID);
 
+        void getData(float *dst, const AstroDataCall& ast);
+
+        inline std::size_t getHash(void) {
+            auto retval = this->hashInput;
+            retval ^= this->hashState + 0x9e3779b9 + (retval << 6)
+                + (retval >> 2);
+            return retval;
+        }
+
         bool getHash(core::Call& call);
 
         bool getRanges(const unsigned int start, const unsigned int cnt);
@@ -101,8 +114,10 @@ namespace astro {
 
         std::vector<ColumnInfo> columns;
         unsigned int frameID;
-        std::size_t hash;
+        std::size_t hashInput;
+        std::size_t hashState;
         core::param::ParamSlot paramFullRange;
+        std::array<core::param::ParamSlot, 18> paramsInclude;
         std::vector<std::pair<float, float>> ranges;
         core::CallerSlot slotAstroData;
         core::CalleeSlot slotTableData;

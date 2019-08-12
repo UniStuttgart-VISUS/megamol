@@ -43,28 +43,12 @@ enum Operator : int {
 /*
  * megamol::stdplugin::datatools::table::TableWhere::TableWhere
  */
-megamol::stdplugin::datatools::table::TableWhere::TableWhere(void) : frameID(0),
-        inputHash((std::numeric_limits<std::size_t>::max)()),
-        localHash((std::numeric_limits<std::size_t>::max)()),
-        paramColumn("column", "The column to be filtered."),
+megamol::stdplugin::datatools::table::TableWhere::TableWhere(void) 
+        : paramColumn("column", "The column to be filtered."),
         paramEpsilon("epsilon", "The epsilon value for testing (in-) equality."),
         paramOperator("operator", "The comparison operator."),
         paramReference("reference", "The reference value to compare to."),
-        paramUpdateRange("updateRange", "Update the min/max range as the filter changes."),
-        slotInput("input", "The input slot providing the unfiltered data."),
-        slotOutput("output", "The input slot for the filtered data.") {
-    /* Export the calls. */
-    this->slotInput.SetCompatibleCall<TableDataCallDescription>();
-    this->MakeSlotAvailable(&this->slotInput);
-
-    this->slotOutput.SetCallback(TableDataCall::ClassName(),
-        TableDataCall::FunctionName(0),
-        &TableWhere::getData);
-    this->slotOutput.SetCallback(TableDataCall::ClassName(),
-        TableDataCall::FunctionName(1),
-        &TableWhere::getHash);
-    this->MakeSlotAvailable(&this->slotOutput);
-
+        paramUpdateRange("updateRange", "Update the min/max range as the filter changes.") {
     /* Configure and export the parameters. */
     this->paramColumn << new core::param::FlexEnumParam("");
     this->MakeSlotAvailable(&this->paramColumn);
@@ -122,32 +106,16 @@ void megamol::stdplugin::datatools::table::TableWhere::release(void) { }
 
 
 /*
- * megamol::stdplugin::datatools::table::TableWhere::getData
+ * megamol::stdplugin::datatools::table::TableWhere::prepareData
  */
-bool megamol::stdplugin::datatools::table::TableWhere::getData(
-        core::Call& call) {
+bool megamol::stdplugin::datatools::table::TableWhere::prepareData(
+        TableDataCall& src, const unsigned int frameID) {
     using namespace core::param;
     using vislib::sys::Log;
 
-    auto src = this->slotInput.CallAs<TableDataCall>();
-    auto dst = dynamic_cast<TableDataCall *>(&call);
-
-    /* Sanity checks. */
-    if (src == nullptr) {
-        Log::DefaultLog.WriteError(_T("The input slot of %hs is invalid"),
-            TableDataCall::ClassName());
-        return false;
-    }
-
-    if (dst == nullptr) {
-        Log::DefaultLog.WriteError(_T("The output slot of %hs is invalid"),
-            TableDataCall::ClassName());
-        return false;
-    }
-
     /* Request the source data. */
-    src->SetFrameID(dst->GetFrameID());
-    if (!(*src)(0)) {
+    src.SetFrameID(frameID);
+    if (!(src)(0)) {
         Log::DefaultLog.WriteError(_T("The call to %hs failed in %hs."),
             TableDataCall::FunctionName(0), TableDataCall::ClassName());
         return false;
@@ -159,10 +127,10 @@ bool megamol::stdplugin::datatools::table::TableWhere::getData(
         || this->paramReference.IsDirty();
 
     /* (Re-) Generate the data. */
-    if (isParamsChanged || (this->inputHash != src->DataHash())
-            || (this->frameID != src->GetFrameID())) {
+    if (isParamsChanged || (this->inputHash != src.DataHash())
+            || (this->frameID != src.GetFrameID())) {
         auto column = 0;
-        const auto data = src->GetData();
+        const auto data = src.GetData();
         auto isSort = false;
         std::function<bool(const float)> selector;
 
@@ -173,9 +141,9 @@ bool megamol::stdplugin::datatools::table::TableWhere::getData(
             auto o = this->paramOperator.Param<EnumParam>()->Value();
             auto r = this->paramReference.Param<FloatParam>()->Value();
 
-            this->columns.resize(src->GetColumnsCount());
-            std::copy(src->GetColumnsInfos(),
-                src->GetColumnsInfos() + this->columns.size(),
+            this->columns.resize(src.GetColumnsCount());
+            std::copy(src.GetColumnsInfos(),
+                src.GetColumnsInfos() + this->columns.size(),
                 this->columns.begin());
 
             {
@@ -277,11 +245,11 @@ bool megamol::stdplugin::datatools::table::TableWhere::getData(
         if (selector || isSort) {
             // Copy selection.
             std::vector<std::size_t> selection;
-            selection.reserve(src->GetRowsCount());
+            selection.reserve(src.GetRowsCount());
 
             if (selector) {
                 // Selection is based on predicate.
-                for (auto r = 0; r < src->GetRowsCount(); ++r) {
+                for (auto r = 0; r < src.GetRowsCount(); ++r) {
                     if (selector(data[r * this->columns.size() + column])) {
                         selection.push_back(r);
                     }
@@ -293,7 +261,7 @@ bool megamol::stdplugin::datatools::table::TableWhere::getData(
                     this->paramReference.Param<FloatParam>()->Value(),
                     0.0f, 1.0f);
 
-                selection.resize(src->GetRowsCount());
+                selection.resize(src.GetRowsCount());
                 std::iota(selection.begin(), selection.end(), 0);
 
                 std::stable_sort(selection.begin(), selection.end(),
@@ -305,7 +273,7 @@ bool megamol::stdplugin::datatools::table::TableWhere::getData(
 
                 // Compute the number of elements we want to retain.
                 const auto cnt = static_cast<std::size_t>(static_cast<double>(r)
-                    * src->GetRowsCount());
+                    * src.GetRowsCount());
 
                 switch (o) {
                     case Operator::LowerPercentile:
@@ -320,7 +288,7 @@ bool megamol::stdplugin::datatools::table::TableWhere::getData(
                         break;
 
                     case Operator::MiddlePercentile: {
-                        auto c = (src->GetRowsCount() - cnt) / 2;
+                        auto c = (src.GetRowsCount() - cnt) / 2;
                         selection.erase(selection.begin(), selection.begin() + c);
                         selection.resize(cnt);
                         if (!selection.empty()) {
@@ -383,13 +351,14 @@ bool megamol::stdplugin::datatools::table::TableWhere::getData(
 
         } else {
             // Copy everything.
-            this->values.resize(src->GetRowsCount() * this->columns.size());
-            std::copy(src->GetData(), src->GetData() + this->values.size(),
+            this->values.resize(src.GetRowsCount() * this->columns.size());
+            std::copy(src.GetData(), src.GetData() + this->values.size(),
                 this->values.begin());
         } /* end if (selector || isSort) */
 
-        this->frameID = dst->GetFrameID();
-        this->inputHash = src->DataHash();
+        /* Persist the state of the data. */
+        this->frameID = frameID;
+        this->inputHash = src.DataHash();
 
         if (isParamsChanged) {
             ++this->localHash;
@@ -399,60 +368,6 @@ bool megamol::stdplugin::datatools::table::TableWhere::getData(
             this->paramUpdateRange.ResetDirty();
         }
     } /* end if (selector || (this->inputHash != src->DataHash()) ... */
-
-    dst->SetFrameCount(src->GetFrameCount());
-    dst->SetFrameID(this->frameID);
-    dst->SetDataHash(this->getHash());
-    dst->Set(this->columns.size(),
-        this->values.size() / this->columns.size(),
-        this->columns.data(),
-        this->values.data());
-
-    //dst->SetUnlocker(nullptr);
-
-    return true;
-}
-
-
-/*
- * megamol::stdplugin::datatools::table::TableWhere::getHash
- */
-bool megamol::stdplugin::datatools::table::TableWhere::getHash(
-        core::Call& call) {
-    using vislib::sys::Log;
-    auto src = this->slotInput.CallAs<TableDataCall>();
-    auto dst = dynamic_cast<TableDataCall *>(&call);
-
-    /* Sanity checks. */
-    if (src == nullptr) {
-        Log::DefaultLog.WriteError(_T("The input slot of %hs is invalid"),
-            TableDataCall::ClassName());
-        return false;
-    }
-
-    if (dst == nullptr) {
-        Log::DefaultLog.WriteError(_T("The output slot of %hs is invalid"),
-            TableDataCall::ClassName());
-        return false;
-    }
-
-    /* Obtain extents and hash of the source data. */
-    src->SetFrameID(dst->GetFrameID());
-    if (!(*src)(1)) {
-        Log::DefaultLog.WriteError(_T("The call to %hs failed in %hs."),
-            TableDataCall::FunctionName(1), TableDataCall::ClassName());
-        return false;
-    }
-
-    // I don't know why the getHash call passes on the frame count, but it seems
-    // to be the expected behaviour ...
-    {
-        auto cnt = src->GetFrameCount();
-        dst->SetFrameCount(cnt);
-    }
-
-    dst->SetDataHash(this->getHash());
-    dst->SetUnlocker(nullptr);
 
     return true;
 }

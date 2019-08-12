@@ -121,8 +121,9 @@ bool FilamentFilter::getExtent(core::Call& call) {
     adc->SetUnlocker(nullptr, false);
     if ((*inCall)(AstroDataCall::CallForGetExtent)) {
         adc->operator=(*inCall);
-        if (this->lastDataHash != inCall->DataHash() || this->lastTimestep != adc->FrameID() || this->radiusSlot.IsDirty() ||
-            this->densitySeedPercentageSlot.IsDirty() || this->minClusterSizeSlot.IsDirty()) {
+        if (this->lastDataHash != inCall->DataHash() || this->lastTimestep != adc->FrameID() ||
+            this->radiusSlot.IsDirty() || this->densitySeedPercentageSlot.IsDirty() ||
+            this->minClusterSizeSlot.IsDirty()) {
             this->hashOffset++;
             this->lastTimestep = adc->FrameID();
             this->lastDataHash = inCall->DataHash();
@@ -134,7 +135,7 @@ bool FilamentFilter::getExtent(core::Call& call) {
         if (this->isActiveSlot.IsDirty() && this->positions != nullptr && !this->positions->empty()) {
             this->isActiveSlot.ResetDirty();
             this->recalculateFilaments = true;
-            this->hashOffset++;           
+            this->hashOffset++;
         }
         adc->SetDataHash(this->lastDataHash + this->hashOffset);
         return true;

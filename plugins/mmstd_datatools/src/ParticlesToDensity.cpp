@@ -158,7 +158,9 @@ bool datatools::ParticlesToDensity::getExtentCallback(megamol::core::Call& c) {
     auto* inMpdc = this->inDataSlot.CallAs<MultiParticleDataCall>();
     if (inMpdc == nullptr) return false;
 
-    inMpdc->SetFrameID(out != nullptr ? out->FrameID() : (outGrid != nullptr ? outGrid->FrameID() : 0), true);
+    auto frameID = out != nullptr ? out->FrameID() : (outGrid != nullptr ? outGrid->FrameID() : 0);
+    //vislib::sys::Log::DefaultLog.WriteInfo(L"ParticleToDensity requests frame %u.", frameID);
+    inMpdc->SetFrameID(frameID, true);
     if (!(*inMpdc)(1)) {
         vislib::sys::Log::DefaultLog.WriteError(
             "ParticlesToDensity: could not get current frame extents (%u)", time - 1);
@@ -202,7 +204,9 @@ bool datatools::ParticlesToDensity::getDataCallback(megamol::core::Call& c) {
     auto* outInfo = dynamic_cast<stdplugin::datatools::table::TableDataCall*>(&c);
 
     if (outVol != nullptr || outGrid != nullptr) {
-        inMpdc->SetFrameID(outVol != nullptr ? outVol->FrameID() : outGrid->FrameID(), true);
+        auto frameID = outVol != nullptr ? outVol->FrameID() : (outGrid != nullptr ? outGrid->FrameID() : 0);
+        vislib::sys::Log::DefaultLog.WriteInfo(L"ParticleToDensity requests frame %u.", frameID);
+        inMpdc->SetFrameID(frameID, true);
         if (!(*inMpdc)(1)) {
             vislib::sys::Log::DefaultLog.WriteError("ParticlesToDensity: Unable to get extents.");
             return false;
@@ -225,6 +229,8 @@ bool datatools::ParticlesToDensity::getDataCallback(megamol::core::Call& c) {
 
     // TODO set data
     if (outVol != nullptr) {
+        vislib::sys::Log::DefaultLog.WriteInfo(L"ParticleToDensity returns frame %u.", this->time);
+        outVol->SetFrameID(this->time);
         outVol->SetData(this->vol[0].data());
         metadata.Components = is_vector ? 3 : 1;
         metadata.GridType = core::misc::GridType_t::CARTESIAN;
@@ -277,6 +283,7 @@ bool datatools::ParticlesToDensity::getDataCallback(megamol::core::Call& c) {
     }
 
     if (outGrid != nullptr && is_vector) {
+        outGrid->SetFrameID(this->time);
         outGrid->SetDataHash(this->datahash);
         outGrid->SetParticleListCount(1);
 

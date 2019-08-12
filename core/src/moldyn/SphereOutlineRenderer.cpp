@@ -16,6 +16,7 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/view/CallRender3D.h"
+#include "mmcore/utility/ScaledBoundingBoxes.h"
 #include <GL/glu.h>
 #include "vislib/assert.h"
 #include "vislib/math/mathfunctions.h"
@@ -153,6 +154,11 @@ bool moldyn::SphereOutlineRenderer::Render(Call& call) {
         return false;
     }
 
+    ::glEnable(GL_DEPTH_TEST);  // Der Oberhass
+    ::glDisable(GL_TEXTURE_1D); // Der Turbohass!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ::glDisable(GL_TEXTURE_2D); // Der Turbohass!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ::glDisable(GL_TEXTURE_3D); // Der Turbohass!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ::glPushMatrix();       // Der HASS!
     glScalef(scaling, scaling, scaling); // ... unklar ob problematisch, aber eigentlich nicht
 
     const int rep = this->repSlot.Param<param::EnumParam>()->Value();
@@ -310,6 +316,8 @@ bool moldyn::SphereOutlineRenderer::Render(Call& call) {
         ::glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     }
+
+    ::glPopMatrix();    // Der Hass!
 
     return true;
 }

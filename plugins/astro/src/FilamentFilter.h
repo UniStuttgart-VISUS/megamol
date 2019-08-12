@@ -6,18 +6,49 @@
  */
 #pragma once
 
+#include <nanoflann.hpp>
+#include <set>
 #include "astro/AstroDataCall.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-#include "nanoflann.hpp"
-#include "utils.h"
-#include <set>
 
 
 namespace megamol {
 namespace astro {
+
+/*
+ * THIS IS THE APEX OF SHIT and a non-quality copy from nanoflann/examples/utils.h
+ * TODO: Replace it with a proper adapter instead of creating a copy to index data!
+ */
+template <typename T> struct PointCloud {
+    struct Point {
+        T x, y, z;
+    };
+
+    std::vector<Point> pts;
+
+    // Must return the number of data points
+    inline size_t kdtree_get_point_count() const { return pts.size(); }
+
+    // Returns the dim'th component of the idx'th point in the class:
+    // Since this is inlined and the "dim" argument is typically an immediate value, the
+    //  "if/else's" are actually solved at compile time.
+    inline T kdtree_get_pt(const size_t idx, const size_t dim) const {
+        if (dim == 0)
+            return pts[idx].x;
+        else if (dim == 1)
+            return pts[idx].y;
+        else
+            return pts[idx].z;
+    }
+
+    // Optional bounding-box computation: return false to default to a standard bbox computation loop.
+    //   Return true if the BBOX was already computed by the class and returned in "bb" so it can be avoided to redo it
+    //   again. Look at bb.size() to find out the expected dimensionality (e.g. 2 or 3 for point clouds)
+    template <class BBOX> bool kdtree_get_bbox(BBOX& /* bb */) const { return false; }
+};
 
 class FilamentFilter : public core::Module {
 public:
@@ -44,7 +75,7 @@ private:
     void retrieveDensityCandidateList(const AstroDataCall& call, std::vector<std::pair<float, uint64_t>>& result);
     bool filterFilaments(const AstroDataCall& call);
     bool copyContentToOutCall(AstroDataCall& outCall);
-	bool copyInCallToContent(const AstroDataCall& inCall, const std::set<uint64_t>& indexSet);
+    bool copyInCallToContent(const AstroDataCall& inCall, const std::set<uint64_t>& indexSet);
     void initSearchStructure(const AstroDataCall& call);
 
     core::CalleeSlot filamentOutSlot;
@@ -58,7 +89,7 @@ private:
     typedef nanoflann::KDTreeSingleIndexAdaptor<nanoflann::L2_Simple_Adaptor<float, PointCloud<float>>,
         PointCloud<float>, 3>
         my_kd_tree_t;
-    
+
     std::shared_ptr<my_kd_tree_t> searchIndexPtr = nullptr;
     PointCloud<float> pointCloud;
 
@@ -115,10 +146,10 @@ private:
 
     /** Hash of the last calculated dataset */
     uint64_t lastDataHash;
-    
+
     /** Offset from the hash given by the incoming call */
     uint64_t hashOffset;
-    
+
     /** ID of the last visualized timestep */
     uint32_t lastTimestep;
 };
