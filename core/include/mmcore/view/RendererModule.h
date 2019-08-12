@@ -36,7 +36,7 @@ public:
         , renderSlot("rendering", "Connects the Renderer to a calling renderer or view") {
 
         // OutputCall
-        this->chainRenderSlot.SetCompatibleCall<factories::CallAutoDescription<C>>();
+        this->chainRenderSlot.template SetCompatibleCall<factories::CallAutoDescription<C>>();
         // Do not make it available yet (features has to be turned off for legacy code).
 
         // InputCall
