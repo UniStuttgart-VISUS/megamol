@@ -30,7 +30,7 @@ view::SplitView::SplitView()
     , splitPositionSlot("split.pos", "Splitter position")
     , splitWidthSlot("split.width", "Splitter width")
     , splitColourSlot("split.colour", "Splitter colour")
-    , overrideCall(NULL)
+    , overrideCall(nullptr)
     , clientArea()
     , clientArea1()
     , clientArea2()
@@ -46,7 +46,7 @@ view::SplitView::SplitView()
     this->render2Slot.SetCompatibleCall<CallRenderViewDescription>();
     this->MakeSlotAvailable(&this->render2Slot);
 
-    param::EnumParam* orientations = new param::EnumParam(0);
+    auto* orientations = new param::EnumParam(0);
     orientations->SetTypePair(HORIZONTAL, "Horizontal (side by side)");
     orientations->SetTypePair(VERTICAL, "Vertical");
     this->splitOrientationSlot << orientations;
@@ -92,7 +92,7 @@ void view::SplitView::Render(const mmcRenderViewContext& context) {
     unsigned int vpw = 0;
     unsigned int vph = 0;
 
-    if (this->overrideCall == NULL) {
+    if (this->overrideCall == nullptr) {
         GLint vp[4];
         ::glGetIntegerv(GL_VIEWPORT, vp);
         vpw = vp[2];
@@ -109,13 +109,13 @@ void view::SplitView::Render(const mmcRenderViewContext& context) {
 
         this->updateSize(vpw, vph);
 
-        if (this->overrideCall != NULL) {
+        if (this->overrideCall != nullptr) {
             this->overrideCall->EnableOutputBuffer();
         }
     }
     auto renderAndBlit = [&](vislib::graphics::gl::FramebufferObject& fbo, CallRenderView* crv,
                              const vislib::math::Rectangle<float>& ca) {
-        if (crv == NULL) {
+        if (crv == nullptr) {
             return;
         }
         crv->SetOutputBuffer(&fbo);
@@ -143,7 +143,7 @@ void view::SplitView::Render(const mmcRenderViewContext& context) {
         vislib::Trace::GetInstance().SetLevel(otl);
 #endif /* DEBUG || _DEBUG */
 
-        if (this->overrideCall != NULL) {
+        if (this->overrideCall != nullptr) {
             this->overrideCall->EnableOutputBuffer();
         }
 
@@ -165,7 +165,7 @@ void view::SplitView::Render(const mmcRenderViewContext& context) {
 
 void view::SplitView::ResetView() {
     for (auto crv : {this->render1(), this->render2()}) {
-        if (crv != NULL) (*crv)(CallRenderView::CALL_RESETVIEW);
+        if (crv != nullptr) (*crv)(CallRenderView::CALL_RESETVIEW);
     }
 }
 
@@ -177,8 +177,8 @@ void view::SplitView::Resize(unsigned int width, unsigned int height) {
 }
 
 bool view::SplitView::OnRenderView(Call& call) {
-    view::CallRenderView* crv = dynamic_cast<view::CallRenderView*>(&call);
-    if (crv == NULL) return false;
+    auto* crv = dynamic_cast<view::CallRenderView*>(&call);
+    if (crv == nullptr) return false;
 
     this->overrideCall = crv;
 
@@ -188,7 +188,7 @@ bool view::SplitView::OnRenderView(Call& call) {
     context.InstanceTime = crv->InstanceTime();
     this->Render(context);
 
-    this->overrideCall = NULL;
+    this->overrideCall = nullptr;
 
     return true;
 }
@@ -310,7 +310,7 @@ bool view::SplitView::OnMouseMove(double x, double y) {
 
 bool view::SplitView::OnMouseScroll(double dx, double dy) {
     auto* crv = this->renderHovered();
-    if (crv == NULL) return false;
+    if (crv == nullptr) return false;
 
     InputEvent evt;
     evt.tag = InputEvent::Tag::MouseScroll;
@@ -328,7 +328,7 @@ bool view::SplitView::create() {
 }
 
 void view::SplitView::release() {
-    this->overrideCall = NULL; // do not delete
+    this->overrideCall = nullptr; // do not delete
     if (this->fbo1.IsValid()) this->fbo1.Release();
     if (this->fbo2.IsValid()) this->fbo2.Release();
 }
@@ -362,13 +362,13 @@ void view::SplitView::updateSize(size_t width, size_t height) {
 
     // Propagate viewport changes to connected views.
     auto propagateViewport = [](CallRenderView* crv, vislib::math::Rectangle<float>& clientArea) {
-        if (crv == NULL) {
+        if (crv == nullptr) {
             return;
         }
         // der ganz ganz dicke "because-i-know"-Knueppel
-        AbstractView* crvView = const_cast<AbstractView*>(
+        auto* crvView = const_cast<AbstractView*>(
             dynamic_cast<const AbstractView*>(static_cast<const Module*>(crv->PeekCalleeSlot()->Owner())));
-        if (crvView != NULL) {
+        if (crvView != nullptr) {
             crvView->Resize(
                 static_cast<unsigned int>(clientArea.Width()), static_cast<unsigned int>(clientArea.Height()));
         }

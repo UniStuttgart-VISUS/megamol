@@ -12,6 +12,7 @@
 #include "mmcore/utility/ResourceWrapper.h"
 #include "vislib/math/ShallowMatrix.h"
 
+#include <memory>
 #include <sstream>
 #include "delaunator.hpp"
 
@@ -125,7 +126,7 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     this->flagStorageInSlot.SetCompatibleCall<core::FlagCallDescription>();
     this->MakeSlotAvailable(&this->flagStorageInSlot);
 
-    core::param::EnumParam* valueMappings = new core::param::EnumParam(0);
+    auto* valueMappings = new core::param::EnumParam(0);
     valueMappings->SetTypePair(VALUE_MAPPING_KERNEL_BLEND, "Kernel Blending");
     valueMappings->SetTypePair(VALUE_MAPPING_KERNEL_DENSITY, "Kernel Density Estimation");
     valueMappings->SetTypePair(VALUE_MAPPING_WEIGHTED_KERNEL_DENSITY, "Weighted Kernel Density Estimation");
@@ -144,7 +145,7 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     this->triangulationSmoothnessParam << new core::param::IntParam(0);
     this->MakeSlotAvailable(&this->triangulationSmoothnessParam);
 
-    core::param::EnumParam* geometryTypes = new core::param::EnumParam(0);
+    auto* geometryTypes = new core::param::EnumParam(0);
     geometryTypes->SetTypePair(GEOMETRY_TYPE_POINT, "Point");
     geometryTypes->SetTypePair(GEOMETRY_TYPE_LINE, "Line");
     geometryTypes->SetTypePair(GEOMETRY_TYPE_TEXT, "Text");
@@ -155,13 +156,13 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     this->kernelWidthParam << new core::param::FloatParam(1.0f, std::numeric_limits<float>::epsilon());
     this->MakeSlotAvailable(&this->kernelWidthParam);
 
-    core::param::EnumParam* kernelTypes = new core::param::EnumParam(0);
+    auto* kernelTypes = new core::param::EnumParam(0);
     kernelTypes->SetTypePair(KERNEL_TYPE_BOX, "Box");
     kernelTypes->SetTypePair(KERNEL_TYPE_GAUSSIAN, "Gaussian");
     this->kernelTypeParam << kernelTypes;
     this->MakeSlotAvailable(&this->kernelTypeParam);
 
-    core::param::EnumParam* axisModes = new core::param::EnumParam(1);
+    auto* axisModes = new core::param::EnumParam(1);
     axisModes->SetTypePair(AXIS_MODE_NONE, "None");
     axisModes->SetTypePair(AXIS_MODE_MINIMALISTIC, "Minimalistic");
     axisModes->SetTypePair(AXIS_MODE_SCIENTIFIC, "Scientific");
@@ -228,7 +229,7 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
 
 ScatterplotMatrixRenderer2D::~ScatterplotMatrixRenderer2D() { this->Release(); }
 
-bool ScatterplotMatrixRenderer2D::create(void) {
+bool ScatterplotMatrixRenderer2D::create() {
     if (!makeProgram("::splom::minimalisticAxis", this->minimalisticAxisShader)) return false;
     if (!makeProgram("::splom::scientificAxis", this->scientificAxisShader)) return false;
     if (!makeProgram("::splom::point", this->pointShader)) return false;
@@ -249,7 +250,7 @@ bool ScatterplotMatrixRenderer2D::create(void) {
     return true;
 }
 
-void ScatterplotMatrixRenderer2D::release(void) { glDeleteBuffers(1, &flagsBuffer); }
+void ScatterplotMatrixRenderer2D::release() { glDeleteBuffers(1, &flagsBuffer); }
 
 bool ScatterplotMatrixRenderer2D::OnMouseButton(
     core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) {
@@ -331,27 +332,27 @@ bool ScatterplotMatrixRenderer2D::GetExtents(core::view::CallRender2D& call) {
     return true;
 }
 
-bool ScatterplotMatrixRenderer2D::hasDirtyData(void) const {
+bool ScatterplotMatrixRenderer2D::hasDirtyData() const {
     for (auto* param : this->dataParams) {
         if (param->IsDirty()) return true;
     }
     return false;
 }
 
-void ScatterplotMatrixRenderer2D::resetDirtyData(void) {
+void ScatterplotMatrixRenderer2D::resetDirtyData() {
     for (auto* param : this->dataParams) {
         param->ResetDirty();
     }
 }
 
-bool ScatterplotMatrixRenderer2D::hasDirtyScreen(void) const {
+bool ScatterplotMatrixRenderer2D::hasDirtyScreen() const {
     for (auto* param : this->screenParams) {
         if (param->IsDirty()) return true;
     }
     return false;
 }
 
-void ScatterplotMatrixRenderer2D::resetDirtyScreen(void) {
+void ScatterplotMatrixRenderer2D::resetDirtyScreen() {
     for (auto* param : this->screenParams) {
         param->ResetDirty();
     }
@@ -418,7 +419,7 @@ bool ScatterplotMatrixRenderer2D::validate(core::view::CallRender2D& call) {
     return true;
 }
 
-void ScatterplotMatrixRenderer2D::updateColumns(void) {
+void ScatterplotMatrixRenderer2D::updateColumns() {
     const auto columnCount = this->floatTable->GetColumnsCount();
     const auto columnInfos = this->floatTable->GetColumnsInfos();
     const float size = this->cellSizeParam.Param<core::param::FloatParam>()->Value();
@@ -447,7 +448,7 @@ void ScatterplotMatrixRenderer2D::updateColumns(void) {
     plotSSBO.SignalCompletion(sync);
 }
 
-void ScatterplotMatrixRenderer2D::drawMinimalisticAxis(void) {
+void ScatterplotMatrixRenderer2D::drawMinimalisticAxis() {
     debugPush(1, "drawMinimalisticAxis");
 
     this->minimalisticAxisShader.Enable();
@@ -526,7 +527,7 @@ void ScatterplotMatrixRenderer2D::drawMinimalisticAxis(void) {
     debugPop();
 }
 
-void ScatterplotMatrixRenderer2D::drawScientificAxis(void) {
+void ScatterplotMatrixRenderer2D::drawScientificAxis() {
     debugPush(2, "drawScientificAxis");
 
     const auto axisColor = this->axisColorParam.Param<core::param::ColorParam>()->Value();
@@ -666,7 +667,7 @@ void ScatterplotMatrixRenderer2D::bindFlagsAttribute() {
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, FlagsBindingPoint, this->flagsBuffer);
 }
 
-void ScatterplotMatrixRenderer2D::drawPoints(void) {
+void ScatterplotMatrixRenderer2D::drawPoints() {
     if (this->screenValid) {
         return;
     }
@@ -738,7 +739,7 @@ void ScatterplotMatrixRenderer2D::drawPoints(void) {
     debugPop();
 }
 
-void ScatterplotMatrixRenderer2D::drawLines(void) {
+void ScatterplotMatrixRenderer2D::drawLines() {
     if (this->screenValid) {
         return;
     }
@@ -865,7 +866,7 @@ void ScatterplotMatrixRenderer2D::validateTriangulation() {
         }
 
         // We need to offset indices, thus rember one before adding vertices.
-        const GLuint indexOffset = static_cast<GLuint>(vertices.size());
+        const auto indexOffset = static_cast<GLuint>(vertices.size());
 
         // Copy vertices to vertex buffer.
         for (int vertexIndex = 0; vertexIndex < values.size(); vertexIndex++) {
@@ -874,8 +875,8 @@ void ScatterplotMatrixRenderer2D::validateTriangulation() {
         }
 
         // Copy indices to index buffer.
-        for (int triangleIndex = 0; triangleIndex < d.triangles.size(); triangleIndex++) {
-            indices.push_back(indexOffset + d.triangles[triangleIndex]);
+        for (unsigned long triangle : d.triangles) {
+            indices.push_back(indexOffset + triangle);
         }
     }
 
@@ -928,7 +929,7 @@ void ScatterplotMatrixRenderer2D::drawTriangulation() {
         this->triangleShader.ParameterLocation("modelViewProjection"), 1, GL_FALSE, mvpMatrix.PeekComponents());
 
     // Emit draw call.
-    glDrawElements(GL_TRIANGLES, triangleVertexCount, GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, triangleVertexCount, GL_UNSIGNED_INT, nullptr);
     this->unbindScreen();
     this->triangleShader.Disable();
 
@@ -985,7 +986,7 @@ void ScatterplotMatrixRenderer2D::bindAndClearScreen() {
 
     if (!this->screenFBO || this->screenFBO->getHeight() != static_cast<int>(viewport[2]) ||
         this->screenFBO->getWidth() != static_cast<int>(viewport[3])) {
-        this->screenFBO.reset(new glowl::FramebufferObject(viewport[2], viewport[3]));
+        this->screenFBO = std::make_unique<glowl::FramebufferObject>(viewport[2], viewport[3]);
         this->screenFBO->createColorAttachment(GL_RGBA32F, GL_RGBA, GL_FLOAT);
     }
 
