@@ -398,20 +398,22 @@ namespace moldyn {
 
         /**
          * Check if specified render mode or all render mode are available.
+         *
+         * @return 'True' on success, 'false' otherwise.
          */
         static bool isRenderModeAvailable(RenderMode rm, bool silent = false);
 
         /**
          * Create shaders for given render mode.
-         * 
-         * @return True if success, false otherwise.
+         *
+         * @return 'True' on success, 'false' otherwise.
          */
         bool createResources(void);
 
         /**
          * Reset all OpenGL resources.
          *
-         * @return True if success, false otherwise.
+         * @return 'True' on success, 'false' otherwise.
          */
         bool resetResources(void);
 
@@ -433,8 +435,8 @@ namespace moldyn {
         /**
          * Set pointers to vertex and color buffers and corresponding shader variables.
          *
-         * @param parts            ...
-         * @param shader           ...
+         * @param shader           The current shader.
+         * @param parts            The current particles of a list.
          * @param vertBuf          ...
          * @param vertPtr          ...
          * @param vertAttribLoc    ...
@@ -442,35 +444,73 @@ namespace moldyn {
          * @param colPtr           ...
          * @param colAttribLoc     ...
          * @param colIdxAttribLoc  ...
+         *
+         * @return 'True' on success, 'false' otherwise.
          */
-        template <typename T>
-        bool setPointers(MultiParticleDataCall::Particles &parts, T &shader,
-            GLuint vertBuf, const void *vertPtr, GLuint vertAttribLoc,
-            GLuint colBuf,  const void *colPtr,  GLuint colAttribLoc, GLuint colIdxAttribLoc);
+        bool setBufferData(vislib::graphics::gl::GLSLShader& shader, MultiParticleDataCall::Particles &parts, 
+            GLuint vertBuf, const void *vertPtr, GLuint colBuf,  const void *colPtr);
 
         /**
          * Unset pointers to vertex and color buffers.
          *
-         * @param vertAttribLoc      ...
-         * @param colAttribLoc       ...
-         * @param colIdxAttribLoc    ...
+         * @param shader  The current shader.
+         *
+         * @return 'True' on success, 'false' otherwise.
          */
-        bool unsetPointers(GLuint vertAttribLoc, GLuint colAttribLoc, GLuint colIdxAttribLoc);
+        bool unsetBufferData(vislib::graphics::gl::GLSLShader& shader);
+
+        /**
+         * Set pointers to vertex and color buffers and corresponding shader variables.
+         *
+         * @param shader           The current shader.
+         * @param parts            The current particles of a list.
+         *
+         * @return 'True' on success, 'false' otherwise.
+         */
+        bool setShaderData(vislib::graphics::gl::GLSLShader& shader, MultiParticleDataCall::Particles &parts);
+
+        /**
+         * Unset pointers to vertex and color buffers.
+         *
+         * @return 'True' on success, 'false' otherwise.
+         */
+        bool unsetShaderData(void);
 
         /**
          * Enables the transfer function texture.
          *
+         * @param shader    The current shader.
          * @param out_size  ...
          *
-         * @return  ...
+         * @return 'True' on success, 'false' otherwise.
          */
         bool setTransferFunctionTexture(vislib::graphics::gl::GLSLShader& shader, unsigned int& out_texSize);
 
         /**
          * Disables the transfer function texture.
          *
+         * @return 'True' on success, 'false' otherwise.
          */
         bool unsetTransferFunctionTexture(void);
+
+        /**
+         * Enable flag storage.
+         *
+         * @param shader           The current shader.
+         * @param parts            The current particles of a list.
+         *
+         * @return 'True' on success, 'false' otherwise.
+         */
+        bool setFlagStorage(vislib::graphics::gl::GLSLShader& shader, MultiParticleDataCall* mpdc);
+
+        /**
+         * Enable flag storage.
+         *
+         * @param shader           The current shader.
+         *
+         * @return 'True' on success, 'false' otherwise.
+         */
+        bool unsetFlagStorage(vislib::graphics::gl::GLSLShader& shader);
 
         /**
          * Get bytes and stride.
@@ -523,15 +563,6 @@ namespace moldyn {
         std::shared_ptr<GLSLShader> generateShader(MultiParticleDataCall::Particles &parts);
 
         /**
-         * Enable or disable flag storage.
-         *
-         * @param enable     Flag indicating whether flag storage should be anbled or disabled.
-         * @param partsCount The sum of all particles in all particle lists.
-         * @param mpdc       Pointer to the current multi particle data call.
-         */
-        bool flagStorage(bool enable, vislib::graphics::gl::GLSLShader& activeShader, MultiParticleDataCall* mpdc = nullptr);
-
-        /**
          * Returns GLSL minor and major version.
          *
          * @param major The major version of the currently available GLSL version.
@@ -569,18 +600,11 @@ namespace moldyn {
         /**
          * Rebuild working data.
          *
-         * @param cr3d  ...
+         * @param cr3d    ...
          * @param mpdc    ...
+         * @param shader  ...
          */
-        void rebuildWorkingData(megamol::core::view::CallRender3D* cr3d, megamol::core::moldyn::MultiParticleDataCall* mpdc);
-
-        /**
-         * Render particles geometry.
-         *
-         * @param cr3d  ...
-         * @param mpdc    ...
-         */
-        void renderParticlesGeometry(megamol::core::view::CallRender3D* cr3d, megamol::core::moldyn::MultiParticleDataCall* mpdc);
+        void rebuildWorkingData(megamol::core::view::CallRender3D* cr3d, megamol::core::moldyn::MultiParticleDataCall* mpdc, vislib::graphics::gl::GLSLShader& shader);
 
         /**
          * Render deferred pass.

@@ -1,3 +1,23 @@
+
+in vec4 inPosition;
+in vec4 inColor;
+in float inColIdx;
+
+out vec4 objPos;
+out vec4 camPos;
+out vec4 lightPos;
+out float squarRad;
+out float rad;
+out vec4 vertColor;
+
+#ifdef DEFERRED_SHADING
+out float pointSize;
+#endif // DEFERRED_SHADING
+
+#ifdef RETICLE
+out vec2 centerFragment;
+#endif // RETICLE
+
 uniform vec4 viewAttr;
 uniform vec4 lpos;
 
@@ -19,26 +39,10 @@ uniform mat4 MVinv;
 uniform mat4 MVP;
 
 uniform vec4 inConsts1;
-uniform sampler1D colTab;
-
-in vec4 inPosition;
-in vec4 inColor;
-in float inColIdx;
-
-out vec4 objPos;
-out vec4 camPos;
-out vec4 lightPos;
-out float squarRad;
-out float rad;
-out vec4 vertColor;
-
-#ifdef DEFERRED_SHADING
-out float pointSize;
-#endif // DEFERRED_SHADING
-
-#ifdef RETICLE
-out vec2 centerFragment;
-#endif // RETICLE
+uniform sampler1D tfTexture;
+uniform vec4 globalCol;
+uniform int useGlobalCol;
+uniform int useTf;
 
 #define CONSTRAD inConsts1.x
 #define MIN_COLV inConsts1.y

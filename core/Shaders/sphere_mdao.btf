@@ -12,6 +12,7 @@
         <!-- <snippet name="core_utils::tflookup" /> -->
         <!-- <snippet name="core_utils::tfconvenience" /> -->        
         <snippet name="MainStart"                 type="file">sphere/mdao_vert_mainstart.glsl</snippet>
+        <snippet name="Color"                     type="file">sphere/simple_vert_color.glsl</snippet>        
         <snippet name="flag_storage::vert_code"/>                
         <snippet name="SphereTouchPlane"          type="file">sphere/simple_vert_spheretouchplane.glsl</snippet>
         <snippet name="MainEnd"                   type="file">sphere/mdao_vert_mainend.glsl</snippet>
@@ -48,6 +49,7 @@
             <!-- <snippet name="core_utils::tflookup" /> -->
             <!-- <snippet name="core_utils::tfconvenience" /> -->          
             <snippet name="MainStart"             type="file">sphere/mdao_geometry_geo_mainstart.glsl</snippet>
+            <snippet name="Color"                 type="file">sphere/simple_vert_color.glsl</snippet>                
             <snippet name="flag_storage::mdao_geo_code"/>
             <snippet name="SphereTouchPlane"      type="file">sphere/simple_vert_spheretouchplane.glsl</snippet>
             <snippet name="MainEnd"               type="file">sphere/mdao_geometry_geo_mainend.glsl</snippet>

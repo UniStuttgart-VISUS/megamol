@@ -320,7 +320,7 @@ $m->Close();
 
 open my $batch, ">", "SphereTest.bat" or die "cannot open batch file";
 
-my @renderer_modes = ("SimpleSphere", "GeometryShaderSphere", "SSBOSphere", "BufferArraySphere", "OSPRayGeometrySphere", "OSPRayNHGeometrySphere");
+my @renderer_modes = ("SimpleSphere", "GeometryShaderSphere", "SSBOSphere", "BufferArraySphere", "AmbientOcclusionSphere", "OSPRayGeometrySphere", "OSPRayNHGeometrySphere");
 foreach my $r (@renderer_modes) {
     foreach my $f (@outfiles) {
         my $proj = "$f-$r.lua";
@@ -358,6 +358,9 @@ foreach my $r (@renderer_modes) {
             elsif ($r =~ /^BufferArraySphere/) {
                 print $fh qq{mmSetParamValue("::rnd::renderMode", "Buffer_Array")\n};
             }
+            elsif ($r =~ /^AmbientOcclusionSphere/) {
+                print $fh qq{mmSetParamValue("::rnd::renderMode", "Ambient_Occlusion")\n};
+            }            
         }
         print $fh qq{mmCreateCall("MultiParticleDataCall", "::rnd::getdata", "::dat::getData")\n};
         print $fh qq{mmSetParamValue("::dat::filename", "}.getcwd().qq{/$f")\n};

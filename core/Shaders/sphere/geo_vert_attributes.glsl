@@ -1,15 +1,19 @@
-uniform vec4 inConsts1;
-uniform sampler1D colTab;
-
-// clipping plane attributes
-uniform vec4 clipDat;
-uniform vec4 clipCol;
 
 in vec4 inPosition;
 in vec4 inColor;
 in float inColIdx;
 
 out vec4 vertColor;
+
+uniform vec4 inConsts1;
+uniform sampler1D tfTexture;
+uniform vec4 globalCol;
+uniform int useGlobalCol;
+uniform int useTf;
+
+// clipping plane attributes
+uniform vec4 clipDat;
+uniform vec4 clipCol;
 
 #define CONSTRAD inConsts1.x
 #define MIN_COLV inConsts1.y

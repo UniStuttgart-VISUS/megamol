@@ -1,3 +1,4 @@
+
 #ifdef RETICLE
     coord = gl_FragCoord 
         * vec4(viewAttr.z, viewAttr.w, 2.0, 0.0) 
@@ -7,6 +8,6 @@
         outColor.rgb += vec3(0.3, 0.3, 0.5);
     }
 #endif // RETICLE
-//    outColor.rgb = normal;
+//outColor.rgb = normal;
 //outColor = vec4(1.0, 0.0, 0.0, 1.0);
 }

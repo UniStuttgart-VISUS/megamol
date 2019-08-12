@@ -88,23 +88,23 @@ moldyn::SphereRenderer::SphereRenderer(void) : view::Renderer3DModule()
 #endif // SPHERE_MIN_OGL_SSBO_STREAM
     , renderModeParam("renderMode", "The sphere render mode.")
     , radiusScalingParam("scaling", "Scaling factor for particle radii.")
-    , forceTimeSlot("force_time", "Flag to force the time code to the specified value. Set to true when rendering a video.")
-    , useLocalBBoxParam("use_local_bbox", "Enforce usage of local bbox for camera setup")
-    , selectColorParam("select_color", "Color for selected spheres in flag storage.")
-    , softSelectColorParam("soft_select_color", "Color for soft selected spheres in flag storage.")
-    , alphaScalingParam("splat::alpha_scaling", "Splat: Scaling factor for particle alpha.")
+    , forceTimeSlot("forceTime", "Flag to force the time code to the specified value. Set to true when rendering a video.")
+    , useLocalBBoxParam("useLocalBbox", "Enforce usage of local bbox for camera setup")
+    , selectColorParam("selectedColor", "Color for selected spheres in flag storage.")
+    , softSelectColorParam("softSelectedColor", "Color for soft selected spheres in flag storage.")
+    , alphaScalingParam("splat::alphaScaling", "Splat: Scaling factor for particle alpha.")
     , attenuateSubpixelParam(
-        "splat::attenuate_subpixel", "Splat: Attenuate alpha of points that should have subpixel size.")
-    , useStaticDataParam("ssbo::static_data", "SSBO: Upload data only once per hash change and keep data static on GPU")
-    , enableLightingSlot("ambient occlusion::enable_lighting", "Ambient Occlusion: Enable Lighting")
+        "splat::attenuateSubpixel", "Splat: Attenuate alpha of points that should have subpixel size.")
+    , useStaticDataParam("ssbo::staticData", "SSBO: Upload data only once per hash change and keep data static on GPU")
+    , enableLightingSlot("ambient occlusion::enableLighting", "Ambient Occlusion: Enable Lighting")
     , enableGeometryShader(
-        "ambient occlusion::use_gs_proxies", "Ambient Occlusion: Enables rendering using triangle strips from the geometry shader")
-    , aoVolSizeSlot("ambient occlusion::volume_size", "Ambient Occlusion: Longest volume edge")
+        "ambient occlusion::useGsProxies", "Ambient Occlusion: Enables rendering using triangle strips from the geometry shader")
+    , aoVolSizeSlot("ambient occlusion::volumeSize", "Ambient Occlusion: Longest volume edge")
     , aoConeApexSlot("ambient occlusion::apex", "Ambient Occlusion: Cone Apex Angle")
     , aoOffsetSlot("ambient occlusion::offset", "Ambient Occlusion: Offset from Surface")
     , aoStrengthSlot("ambient occlusion::strength", "Ambient Occlusion: Strength")
-    , aoConeLengthSlot("ambient occlusion::cone_length", "Ambient Occlusion: Cone length")
-    , useHPTexturesSlot("ambient occlusion::high_precision_texture", "Ambient Occlusion: Use high precision textures") {
+    , aoConeLengthSlot("ambient occlusion::coneLength", "Ambient Occlusion: Cone length")
+    , useHPTexturesSlot("ambient occlusion::highPrecisionTexture", "Ambient Occlusion: Use high precision textures") {
 
     this->getDataSlot.SetCompatibleCall<moldyn::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
@@ -1009,11 +1009,7 @@ bool moldyn::SphereRenderer::renderSimple(view::CallRender3D* cr3d, MultiParticl
 
     this->sphereShader.Enable();
 
-    this->flagStorage(true, this->sphereShader, mpdc);
-
-    GLuint vertAttribLoc = glGetAttribLocationARB(this->sphereShader, "inPosition");
-    GLuint colAttribLoc = glGetAttribLocationARB(this->sphereShader, "inColor");
-    GLuint colIdxAttribLoc = glGetAttribLocationARB(this->sphereShader, "inColIdx");
+    this->setFlagStorage(this->sphereShader, mpdc);
 
     glUniform4fv(this->sphereShader.ParameterLocation("viewAttr"), 1, this->curViewAttrib);
     glUniform3fv(this->sphereShader.ParameterLocation("camIn"), 1, cr3d->GetCameraParameters()->Front().PeekComponents());
@@ -1032,6 +1028,10 @@ bool moldyn::SphereRenderer::renderSimple(view::CallRender3D* cr3d, MultiParticl
     for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
         MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
 
+        if (!this->setShaderData(this->sphereShader, parts)) {
+            continue;
+        }
+
         if (this->flagsEnabled) {
             glUniform1ui(this->sphereShader.ParameterLocation("flagOffset"), flagPartsCount);
             glUniform4fv(this->sphereShader.ParameterLocation("flagSelectedCol"), 1, this->selectColorParam.Param<param::ColorParam>()->Value().data());
@@ -1043,13 +1043,11 @@ bool moldyn::SphereRenderer::renderSimple(view::CallRender3D* cr3d, MultiParticl
             parts.GetVAOs(vao, vb, cb);
             if (parts.IsVAO()) {
                 glBindVertexArray(vao);
-                this->setPointers<GLSLShader>(parts, this->sphereShader, vb, parts.GetVertexData(), vertAttribLoc, cb,
-                    parts.GetColourData(), colAttribLoc, colIdxAttribLoc);
+                this->setBufferData(this->sphereShader, parts, vb, parts.GetVertexData(), cb, parts.GetColourData());
             }
         }
         if ((this->renderMode == RenderMode::SIMPLE) || (!parts.IsVAO())) {
-            this->setPointers<GLSLShader>(parts, this->sphereShader, 0, parts.GetVertexData(), vertAttribLoc, 0,
-                parts.GetColourData(), colAttribLoc, colIdxAttribLoc);
+            this->setBufferData(this->sphereShader, parts, 0, parts.GetVertexData(), 0,  parts.GetColourData());
         }
 
         glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(parts.GetCount()));
@@ -1059,16 +1057,15 @@ bool moldyn::SphereRenderer::renderSimple(view::CallRender3D* cr3d, MultiParticl
                 glBindVertexArray(0); // vao
             }
         }
-
-        this->unsetPointers(vertAttribLoc, colAttribLoc, colIdxAttribLoc);
+        this->unsetBufferData(this->sphereShader);
+        this->unsetShaderData();
         flagPartsCount += parts.GetCount();
     }
 
-    mpdc->Unlock();
-
-    this->flagStorage(false, this->sphereShader);
-
+    this->unsetFlagStorage(this->sphereShader);
     this->sphereShader.Disable();
+
+    mpdc->Unlock();
 
     return true;
 }
@@ -1092,7 +1089,11 @@ bool moldyn::SphereRenderer::renderSSBO(view::CallRender3D* cr3d, MultiParticleD
 
         this->newShader->Enable();
 
-        this->flagStorage(true, *this->newShader, mpdc);
+        if (!this->setShaderData(*this->newShader, parts)) {
+            continue;
+        }
+
+        this->setFlagStorage(*this->newShader, mpdc);
         if (this->flagsEnabled) {
             glUniform1ui(this->newShader->ParameterLocation("flagOffset"), flagPartsCount);
             glUniform4fv(this->newShader->ParameterLocation("flagSelectedCol"), 1, this->selectColorParam.Param<param::ColorParam>()->Value().data());
@@ -1111,48 +1112,6 @@ bool moldyn::SphereRenderer::renderSSBO(view::CallRender3D* cr3d, MultiParticleD
         glUniformMatrix4fv(this->newShader->ParameterLocation("MVP"), 1, GL_FALSE, this->curMVP.PeekComponents());
         glUniformMatrix4fv(this->newShader->ParameterLocation("MVPinv"), 1, GL_FALSE, this->curMVPinv.PeekComponents());
         glUniformMatrix4fv(this->newShader->ParameterLocation("MVPtransp"), 1, GL_FALSE, this->curMVPtransp.PeekComponents());
-
-        float minC = 0.0f, maxC = 0.0f;
-        unsigned int colTabSize = 0;
-
-        // colour
-        switch (parts.GetColourDataType()) {
-        case MultiParticleDataCall::Particles::COLDATA_NONE: {
-            glUniform4f(this->newShader->ParameterLocation("globalCol"),
-                static_cast<float>(parts.GetGlobalColour()[0]) / 255.0f,
-                static_cast<float>(parts.GetGlobalColour()[1]) / 255.0f,
-                static_cast<float>(parts.GetGlobalColour()[2]) / 255.0f, 1.0f);
-        } break;
-        case MultiParticleDataCall::Particles::COLDATA_FLOAT_I:
-        case MultiParticleDataCall::Particles::COLDATA_DOUBLE_I: {
-            this->setTransferFunctionTexture(*this->newShader, colTabSize);
-            glUniform1i(this->newShader->ParameterLocation("colTab"), 0);
-            minC = parts.GetMinColourIndexValue();
-            maxC = parts.GetMaxColourIndexValue();
-        } break;
-        default:
-            glUniform4f(this->newShader->ParameterLocation("globalCol"), 0.5f, 0.5f, 0.5f, 1.0f);
-            break;
-        }
-
-        // radius and position
-        switch (parts.GetVertexDataType()) {
-        case MultiParticleDataCall::Particles::VERTDATA_NONE:
-            continue;
-        case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
-        case MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ:
-            glUniform4f(this->newShader->ParameterLocation("inConsts1"), parts.GetGlobalRadius(), minC, maxC,
-                float(colTabSize));
-            break;
-        case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
-            glUniform4f(this->newShader->ParameterLocation("inConsts1"), -1.0f, minC, maxC, float(colTabSize));
-            break;
-        case MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
-            glUniform4f(this->newShader->ParameterLocation("inConsts1"), parts.GetGlobalRadius(), minC, maxC,
-                float(colTabSize));
-        default:
-            continue;
-        }
 
         unsigned int colBytes, vertBytes, colStride, vertStride;
         bool interleaved;
@@ -1257,11 +1216,9 @@ bool moldyn::SphereRenderer::renderSSBO(view::CallRender3D* cr3d, MultiParticleD
         }
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-        this->unsetTransferFunctionTexture();
-
-        this->flagStorage(false, *this->newShader);
+        this->unsetShaderData();
+        this->unsetFlagStorage(*this->newShader);
         flagPartsCount += parts.GetCount();
-
         this->newShader->Disable();
 
 #ifdef CHRONOTIMING
@@ -1312,13 +1269,16 @@ bool moldyn::SphereRenderer::renderSplat(view::CallRender3D* cr3d, MultiParticle
 
         this->newShader->Enable();
 
-        this->flagStorage(true, *this->newShader, mpdc);
+        if (!this->setShaderData(*this->newShader, parts)) {
+            continue;
+        }
+
+        this->setFlagStorage(*this->newShader, mpdc);
         if (this->flagsEnabled) {
             glUniform1ui(this->newShader->ParameterLocation("flagOffset"), flagPartsCount);
             glUniform4fv(this->newShader->ParameterLocation("flagSelectedCol"), 1, this->selectColorParam.Param<param::ColorParam>()->Value().data());
             glUniform4fv(this->newShader->ParameterLocation("flagSoftSelectedCol"), 1, this->softSelectColorParam.Param<param::ColorParam>()->Value().data());
         }
-
         glUniform4fv(this->newShader->ParameterLocation("viewAttr"), 1, this->curViewAttrib);
         glUniform3fv(this->newShader->ParameterLocation("camIn"), 1, cr3d->GetCameraParameters()->Front().PeekComponents());
         glUniform3fv(this->newShader->ParameterLocation("camRight"), 1, cr3d->GetCameraParameters()->Right().PeekComponents());
@@ -1331,51 +1291,8 @@ bool moldyn::SphereRenderer::renderSplat(view::CallRender3D* cr3d, MultiParticle
         glUniformMatrix4fv(this->newShader->ParameterLocation("MVP"), 1, GL_FALSE, this->curMVP.PeekComponents());
         glUniformMatrix4fv(this->newShader->ParameterLocation("MVPinv"), 1, GL_FALSE, this->curMVPinv.PeekComponents());
         glUniformMatrix4fv(this->newShader->ParameterLocation("MVPtransp"), 1, GL_FALSE, this->curMVPtransp.PeekComponents());
-
         glUniform1f(this->newShader->ParameterLocation("alphaScaling"), this->alphaScalingParam.Param<param::FloatParam>()->Value());
         glUniform1i(this->newShader->ParameterLocation("attenuateSubpixel"), this->attenuateSubpixelParam.Param<param::BoolParam>()->Value() ? 1 : 0);
-
-        float minC = 0.0f, maxC = 0.0f;
-        unsigned int colTabSize = 0;
-
-        // colour
-        switch (parts.GetColourDataType()) {
-        case MultiParticleDataCall::Particles::COLDATA_NONE: {
-            glUniform4f(this->newShader->ParameterLocation("globalCol"),
-                static_cast<float>(parts.GetGlobalColour()[0]) / 255.0f,
-                static_cast<float>(parts.GetGlobalColour()[1]) / 255.0f,
-                static_cast<float>(parts.GetGlobalColour()[2]) / 255.0f, 1.0f);
-        } break;
-        case MultiParticleDataCall::Particles::COLDATA_FLOAT_I:
-        case MultiParticleDataCall::Particles::COLDATA_DOUBLE_I: {
-            this->setTransferFunctionTexture(*this->newShader, colTabSize);
-            glUniform1i(this->newShader->ParameterLocation("colTab"), 0);
-            minC = parts.GetMinColourIndexValue();
-            maxC = parts.GetMaxColourIndexValue();
-        } break;
-        default:
-            glUniform4f(this->newShader->ParameterLocation("globalCol"), 0.5f, 0.5f, 0.5f, 1.0f);
-            break;
-        }
-
-        // radius and position
-        switch (parts.GetVertexDataType()) {
-        case MultiParticleDataCall::Particles::VERTDATA_NONE:
-            continue;
-        case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
-        case MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ:
-            glUniform4f(this->newShader->ParameterLocation("inConsts1"), parts.GetGlobalRadius(), minC, maxC,
-                float(colTabSize));
-            break;
-        case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
-            glUniform4f(this->newShader->ParameterLocation("inConsts1"), -1.0f, minC, maxC, float(colTabSize));
-            break;
-        case MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
-            glUniform4f(this->newShader->ParameterLocation("inConsts1"), parts.GetGlobalRadius(), minC, maxC,
-                float(colTabSize));
-        default:
-            continue;
-        }
 
         unsigned int colBytes, vertBytes, colStride, vertStride;
         bool interleaved;
@@ -1406,7 +1323,6 @@ bool moldyn::SphereRenderer::renderSplat(view::CallRender3D* cr3d, MultiParticle
                 // glUniform1i(this->newShader->ParameterLocation("instanceOffset"), numVerts * currBuf);
                 glUniform1i(this->newShader->ParameterLocation("instanceOffset"), 0);
 
-                // this->setPointers(parts, this->theSingleBuffer, reinterpret_cast<const void *>(currVert - whence),
                 // this->theSingleBuffer, reinterpret_cast<const void *>(currCol - whence));
                 // glBindBuffer(GL_ARRAY_BUFFER, 0);
                 glBindBufferRange(
@@ -1427,19 +1343,17 @@ bool moldyn::SphereRenderer::renderSplat(view::CallRender3D* cr3d, MultiParticle
         }
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-        this->unsetTransferFunctionTexture();
-
-        this->flagStorage(false, *this->newShader);
+        this->unsetShaderData();
+        this->unsetFlagStorage(*this->newShader);
         flagPartsCount += parts.GetCount();
-
         newShader->Disable();
     }
-
-    mpdc->Unlock();
 
     glDisable(GL_POINT_SPRITE);
     glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
+
+    mpdc->Unlock();
 
     return true;
 }
@@ -1449,11 +1363,7 @@ bool moldyn::SphereRenderer::renderBufferArray(view::CallRender3D* cr3d, MultiPa
 
     this->sphereShader.Enable();
 
-    this->flagStorage(true, this->sphereShader, mpdc);
-
-    GLuint vertAttribLoc = glGetAttribLocationARB(this->sphereShader, "inPosition");
-    GLuint colAttribLoc = glGetAttribLocationARB(this->sphereShader, "inColor");
-    GLuint colIdxAttribLoc = glGetAttribLocationARB(this->sphereShader, "inColIdx");
+    this->setFlagStorage(this->sphereShader, mpdc);
 
     glUniform4fv(this->sphereShader.ParameterLocation("viewAttr"), 1, this->curViewAttrib);
     glUniform3fv(this->sphereShader.ParameterLocation("camIn"), 1, cr3d->GetCameraParameters()->Front().PeekComponents());
@@ -1472,6 +1382,10 @@ bool moldyn::SphereRenderer::renderBufferArray(view::CallRender3D* cr3d, MultiPa
     GLuint flagPartsCount = 0;
     for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
         MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
+
+        if (!this->setShaderData(this->sphereShader, parts)) {
+            continue;
+        }
 
         if (this->flagsEnabled) {
             glUniform4fv(this->sphereShader.ParameterLocation("flagSelectedCol"), 1, this->selectColorParam.Param<param::ColorParam>()->Value().data());
@@ -1508,9 +1422,9 @@ bool moldyn::SphereRenderer::renderBufferArray(view::CallRender3D* cr3d, MultiPa
                     // Adapting flag offset to ring buffer gl_VertexID
                     glUniform1ui(this->sphereShader.ParameterLocation("flagOffset"), flagPartsCount - static_cast<GLuint>(numVerts * this->currBuf)); 
                 }
-                this->setPointers<GLSLShader>(parts, this->sphereShader, this->theSingleBuffer,
-                    reinterpret_cast<const void*>(currVert - whence), vertAttribLoc, this->theSingleBuffer,
-                    reinterpret_cast<const void*>(currCol - whence), colAttribLoc, colIdxAttribLoc);
+                this->setBufferData(this->sphereShader, parts, this->theSingleBuffer,
+                    reinterpret_cast<const void*>(currVert - whence), this->theSingleBuffer,
+                    reinterpret_cast<const void*>(currCol - whence));
 
                 glDrawArrays(GL_POINTS, static_cast<GLint>(numVerts * this->currBuf), static_cast<GLsizei>(vertsThisTime));
                 this->lockSingle(this->fences[this->currBuf]);
@@ -1526,15 +1440,15 @@ bool moldyn::SphereRenderer::renderBufferArray(view::CallRender3D* cr3d, MultiPa
                 vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] BufferArray mode does not support not interleaved data so far ...");
         }
 
-        this->unsetPointers(vertAttribLoc, colAttribLoc, colIdxAttribLoc);
+        this->unsetBufferData(this->sphereShader);
+        this->unsetShaderData();
         flagPartsCount += parts.GetCount();
     }
 
-    mpdc->Unlock();
-
-    this->flagStorage(false, this->sphereShader);
-
+    this->unsetFlagStorage(this->sphereShader);
     this->sphereShader.Disable();
+
+    mpdc->Unlock();
 
     return true;
 }
@@ -1553,11 +1467,7 @@ bool moldyn::SphereRenderer::renderGeometryShader(view::CallRender3D* cr3d, Mult
 
     this->sphereGeometryShader.Enable();
 
-    GLuint vertAttribLoc = glGetAttribLocationARB(this->sphereGeometryShader, "inPosition");
-    GLuint colAttribLoc = glGetAttribLocationARB(this->sphereGeometryShader, "inColor");
-    GLuint colIdxAttribLoc = glGetAttribLocationARB(this->sphereGeometryShader, "inColIdx");
-
-    this->flagStorage(true, this->sphereGeometryShader, mpdc);
+    this->setFlagStorage(this->sphereGeometryShader, mpdc);
 
     // Set shader variables
     glUniform4fv(this->sphereGeometryShader.ParameterLocation("viewAttr"), 1, this->curViewAttrib);
@@ -1579,29 +1489,32 @@ bool moldyn::SphereRenderer::renderGeometryShader(view::CallRender3D* cr3d, Mult
     for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
         MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
 
+        if (!this->setShaderData(this->sphereGeometryShader, parts)) {
+            continue;
+        }
+
         if (this->flagsEnabled) {
             glUniform1ui(this->sphereGeometryShader.ParameterLocation("flagOffset"), flagPartsCount);
             glUniform4fv(this->sphereGeometryShader.ParameterLocation("flagSelectedCol"), 1, this->selectColorParam.Param<param::ColorParam>()->Value().data());
             glUniform4fv(this->sphereGeometryShader.ParameterLocation("flagSoftSelectedCol"), 1, this->softSelectColorParam.Param<param::ColorParam>()->Value().data());
         }
 
-        this->setPointers<GLSLGeometryShader>(parts, this->sphereGeometryShader, 0, parts.GetVertexData(),
-            vertAttribLoc, 0, parts.GetColourData(), colAttribLoc, colIdxAttribLoc);
+        this->setBufferData(this->sphereGeometryShader, parts, 0, parts.GetVertexData(), 0, parts.GetColourData());
 
         glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(parts.GetCount()));
 
-        this->unsetPointers(vertAttribLoc, colAttribLoc, colIdxAttribLoc);
+        this->unsetBufferData(this->sphereGeometryShader);
+        this->unsetShaderData();
         flagPartsCount += parts.GetCount();
     }
 
-    mpdc->Unlock();
-
-    this->flagStorage(false, this->sphereGeometryShader);
-
+    this->unsetFlagStorage(this->sphereGeometryShader);
     this->sphereGeometryShader.Disable();
 
     // glDisable(GL_VERTEX_PROGRAM_TWO_SIDE);
     // glDepthFunc(GL_LESS); // default
+
+    mpdc->Unlock();
 
     return true;
 }
@@ -1620,49 +1533,93 @@ bool moldyn::SphereRenderer::renderAmbientOcclusion(view::CallRender3D* cr3d, Mu
     // Rebuild the GBuffer if neccessary
     this->rebuildGBuffer();
 
+
+    // Render the particles' geometry
+    bool highPrecision = this->useHPTexturesSlot.Param<megamol::core::param::BoolParam>()->Value();
+    bool useGeo = this->enableGeometryShader.Param<core::param::BoolParam>()->Value();
+    vislib::graphics::gl::GLSLShader& theShader = useGeo ? this->sphereGeometryShader : this->sphereShader;
+
     // Rebuild and reupload working data if neccessary
-    this->rebuildWorkingData(cr3d, mpdc);
+    this->rebuildWorkingData(cr3d, mpdc, theShader);
 
     GLint prevFBO;
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prevFBO);
-
     glBindFramebuffer(GL_FRAMEBUFFER, this->gBuffer.fbo);
-
     GLenum bufs[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
     glDrawBuffers(2, bufs);
-
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glBindFragDataLocation(sphereShader.ProgramHandle(), 0, "outColor");
     glBindFragDataLocation(sphereShader.ProgramHandle(), 1, "outNormal");
 
-    // Render the particles' geometry
-    this->renderParticlesGeometry(cr3d, mpdc);
+    theShader.Enable();
+
+    this->setFlagStorage(theShader, mpdc);
+
+    glUniformMatrix4fv(theShader.ParameterLocation("MVP"), 1, GL_FALSE, this->curMVP.PeekComponents());
+    glUniformMatrix4fv(theShader.ParameterLocation("MVPinv"), 1, GL_FALSE, this->curMVPinv.PeekComponents());
+    glUniformMatrix4fv(theShader.ParameterLocation("MVinv"), 1, GL_FALSE, this->curMVinv.PeekComponents());
+    glUniformMatrix4fv(theShader.ParameterLocation("MVPtransp"), 1, GL_FALSE, this->curMVPtransp.PeekComponents());
+    glUniform1f(theShader.ParameterLocation("scaling"), this->radiusScalingParam.Param<param::FloatParam>()->Value());
+    glUniform4fv(theShader.ParameterLocation("viewAttr"), 1, this->curViewAttrib);
+    glUniform3fv(theShader.ParameterLocation("camRight"), 1, cr3d->GetCameraParameters()->Right().PeekComponents());
+    glUniform3fv(theShader.ParameterLocation("camUp"), 1, cr3d->GetCameraParameters()->Up().PeekComponents());
+    glUniform3fv(theShader.ParameterLocation("camIn"), 1, cr3d->GetCameraParameters()->Front().PeekComponents());
+    glUniform4fv(theShader.ParameterLocation("clipDat"), 1, this->curClipDat);
+    glUniform4fv(theShader.ParameterLocation("clipCol"), 1, this->curClipCol);
+    glUniform1i(theShader.ParameterLocation("inUseHighPrecision"), (int)highPrecision);
+
+    GLuint flagPartsCount = 0;
+    for (unsigned int i = 0; i < this->gpuData.size(); ++i) {
+        core::moldyn::SimpleSphericalParticles& parts = mpdc->AccessParticles(i);
+
+        if (!this->setShaderData(theShader, parts)) {
+            continue;
+        }
+
+        if (this->flagsEnabled) {
+            glUniform1ui(theShader.ParameterLocation("flagOffset"), flagPartsCount);
+            glUniform4fv(theShader.ParameterLocation("flagSelectedCol"), 1, this->selectColorParam.Param<param::ColorParam>()->Value().data());
+            glUniform4fv(theShader.ParameterLocation("flagSoftSelectedCol"), 1, this->softSelectColorParam.Param<param::ColorParam>()->Value().data());
+        }
+
+        GLuint colTabSize;
+        this->setTransferFunctionTexture(theShader, colTabSize);
+
+        glBindVertexArray(this->gpuData[i].vertexArray);
+        glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(mpdc->AccessParticles(i).GetCount()));
+
+        this->unsetTransferFunctionTexture();
+        this->unsetShaderData();
+        flagPartsCount += parts.GetCount();
+    }
+
+    glBindVertexArray(0);
+
+    this->unsetFlagStorage(theShader);
+    theShader.Disable();
 
     glBindFramebuffer(GL_FRAMEBUFFER, prevFBO);
 
+    // Deferred rendering pass
     this->renderDeferredPass(cr3d);
 
     return true;
 }
 
 
-template <typename T>
-bool moldyn::SphereRenderer::setPointers(MultiParticleDataCall::Particles& parts, T& shader, GLuint vertBuf,
-    const void* vertPtr, GLuint vertAttribLoc, GLuint colBuf, const void* colPtr, GLuint colAttribLoc,
-    GLuint colIdxAttribLoc) {
+bool moldyn::SphereRenderer::setBufferData(vislib::graphics::gl::GLSLShader& shader, MultiParticleDataCall::Particles &parts,
+    GLuint vertBuf, const void *vertPtr, GLuint colBuf, const void *colPtr) {
 
-    float minC = 0.0f, maxC = 0.0f;
-    unsigned int colTabSize = 0;
+    GLuint vertAttribLoc = glGetAttribLocation(shader, "inPosition");
+    GLuint colAttribLoc = glGetAttribLocation(shader, "inColor");
+    GLuint colIdxAttribLoc = glGetAttribLocation(shader, "inColIdx");
 
     // colour
     glBindBuffer(GL_ARRAY_BUFFER, colBuf);
     switch (parts.GetColourDataType()) {
-    case MultiParticleDataCall::Particles::COLDATA_NONE: {
-        const unsigned char* gc = parts.GetGlobalColour();
-        glVertexAttrib3d(colAttribLoc, static_cast<double>(gc[0]) / 255.0, static_cast<double>(gc[1]) / 255.0,
-            static_cast<double>(gc[2]) / 255.0);
-    } break;
+    case MultiParticleDataCall::Particles::COLDATA_NONE: 
+        break;
     case MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
         glEnableVertexAttribArray(colAttribLoc);
         glVertexAttribPointer(colAttribLoc, 3, GL_UNSIGNED_BYTE, GL_TRUE, parts.GetColourDataStride(), colPtr);
@@ -1688,17 +1645,12 @@ bool moldyn::SphereRenderer::setPointers(MultiParticleDataCall::Particles& parts
         else {
             glVertexAttribPointer(colIdxAttribLoc, 1, GL_DOUBLE, GL_FALSE, parts.GetColourDataStride(), colPtr);
         }
-        this->setTransferFunctionTexture(shader, colTabSize);
-        glUniform1i(shader.ParameterLocation("colTab"), 0);
-        minC = parts.GetMinColourIndexValue();
-        maxC = parts.GetMaxColourIndexValue();
     } break;
     case MultiParticleDataCall::Particles::COLDATA_USHORT_RGBA:
         glEnableVertexAttribArray(colAttribLoc);
         glVertexAttribPointer(colAttribLoc, 4, GL_UNSIGNED_SHORT, GL_TRUE, parts.GetColourDataStride(), colPtr);
         break;
     default:
-        glVertexAttrib3f(colAttribLoc, 0.5f, 0.5f, 0.5f);
         break;
     }
 
@@ -1710,22 +1662,18 @@ bool moldyn::SphereRenderer::setPointers(MultiParticleDataCall::Particles& parts
     case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
         glEnableVertexAttribArray(vertAttribLoc);
         glVertexAttribPointer(vertAttribLoc, 3, GL_FLOAT, GL_FALSE, parts.GetVertexDataStride(), vertPtr);
-        glUniform4f(shader.ParameterLocation("inConsts1"), parts.GetGlobalRadius(), minC, maxC, float(colTabSize));
         break;
     case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
         glEnableVertexAttribArray(vertAttribLoc);
         glVertexAttribPointer(vertAttribLoc, 4, GL_FLOAT, GL_FALSE, parts.GetVertexDataStride(), vertPtr);
-        glUniform4f(shader.ParameterLocation("inConsts1"), -1.0f, minC, maxC, float(colTabSize));
         break;
     case MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ:
         glEnableVertexAttribArray(vertAttribLoc);
         glVertexAttribPointer(vertAttribLoc, 3, GL_DOUBLE, GL_FALSE, parts.GetVertexDataStride(), vertPtr);
-        glUniform4f(shader.ParameterLocation("inConsts1"), parts.GetGlobalRadius(), minC, maxC, float(colTabSize));
         break;
     case MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
         glEnableVertexAttribArray(vertAttribLoc);
         glVertexAttribPointer(vertAttribLoc, 3, GL_SHORT, GL_FALSE, parts.GetVertexDataStride(), vertPtr);
-        glUniform4f(shader.ParameterLocation("inConsts1"), parts.GetGlobalRadius(), minC, maxC, float(colTabSize));
         break;
     default:
         break;
@@ -1735,12 +1683,83 @@ bool moldyn::SphereRenderer::setPointers(MultiParticleDataCall::Particles& parts
 }
 
 
-bool moldyn::SphereRenderer::unsetPointers(GLuint vertAttribLoc, GLuint colAttribLoc, GLuint colIdxAttribLoc) {
+bool moldyn::SphereRenderer::unsetBufferData(vislib::graphics::gl::GLSLShader& shader) {
+
+    GLuint vertAttribLoc = glGetAttribLocation(shader, "inPosition");
+    GLuint colAttribLoc = glGetAttribLocation(shader, "inColor");
+    GLuint colIdxAttribLoc = glGetAttribLocation(shader, "inColIdx");
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glDisableVertexAttribArrayARB(vertAttribLoc);
-    glDisableVertexAttribArrayARB(colAttribLoc);
-    glDisableVertexAttribArrayARB(colIdxAttribLoc);
+    glDisableVertexAttribArray(vertAttribLoc);
+    glDisableVertexAttribArray(colAttribLoc);
+    glDisableVertexAttribArray(colIdxAttribLoc);
+
+    return true;
+}
+
+
+bool moldyn::SphereRenderer::setShaderData(vislib::graphics::gl::GLSLShader& shader, MultiParticleDataCall::Particles &parts) {
+
+    float minC = 0.0f, maxC = 0.0f;
+    unsigned int colTabSize = 0;
+
+    // colour
+    bool useGlobalColor = false;
+    bool useTf = false;
+    switch (parts.GetColourDataType()) {
+    case MultiParticleDataCall::Particles::COLDATA_NONE: {
+        glUniform4f(shader.ParameterLocation("globalCol"),
+            static_cast<float>(parts.GetGlobalColour()[0]) / 255.0f,
+            static_cast<float>(parts.GetGlobalColour()[1]) / 255.0f,
+            static_cast<float>(parts.GetGlobalColour()[2]) / 255.0f, 1.0f);
+        useGlobalColor = true;
+    } break;
+    case MultiParticleDataCall::Particles::COLDATA_FLOAT_I:
+    case MultiParticleDataCall::Particles::COLDATA_DOUBLE_I: {
+        this->setTransferFunctionTexture(shader, colTabSize);
+        minC = parts.GetMinColourIndexValue();
+        maxC = parts.GetMaxColourIndexValue();
+        useTf = true;
+    } break;
+    case MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
+    case MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
+    case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
+    case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
+    case MultiParticleDataCall::Particles::COLDATA_USHORT_RGBA: {
+    } break;
+    default: {
+        glUniform4f(shader.ParameterLocation("globalCol"), 0.5f, 0.5f, 0.5f, 1.0f);
+        useGlobalColor = true;
+    }
+        break;
+    }
+    glUniform1i(shader.ParameterLocation("useGlobalCol"), static_cast<GLint>(useGlobalColor));
+    glUniform1i(shader.ParameterLocation("useTf"), static_cast<GLint>(useTf));
+
+    // radius and position
+    switch (parts.GetVertexDataType()) {
+    case MultiParticleDataCall::Particles::VERTDATA_NONE:
+        return false;
+    case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
+    case MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ: {
+            glUniform4f(shader.ParameterLocation("inConsts1"), parts.GetGlobalRadius(), minC, maxC,
+                float(colTabSize));
+        } break;
+    case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
+        glUniform4f(shader.ParameterLocation("inConsts1"), -1.0f, minC, maxC, float(colTabSize));
+        break;
+    case MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
+        glUniform4f(shader.ParameterLocation("inConsts1"), parts.GetGlobalRadius(), minC, maxC,
+            float(colTabSize));
+    default:
+        return false;
+    }
+
+    return true;
+}
+
+
+bool moldyn::SphereRenderer::unsetShaderData(void) {
 
     return this->unsetTransferFunctionTexture();
 }
@@ -1750,12 +1769,14 @@ bool moldyn::SphereRenderer::setTransferFunctionTexture(vislib::graphics::gl::GL
 
     core::view::CallGetTransferFunction* cgtf = this->getTFSlot.CallAs<core::view::CallGetTransferFunction>();
     if ((cgtf != nullptr) && (*cgtf)(0)) {
-        //cgtf->BindConvenience(shader, GL_TEXTURE0, 0);
-
         glActiveTexture(GL_TEXTURE0);
         glEnable(GL_TEXTURE_1D);
         glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
         out_texSize = cgtf->TextureSize();
+
+        glUniform1i(shader.ParameterLocation("tfTexture"), 0);
+
+        //cgtf->BindConvenience(shader, GL_TEXTURE0, 0);
     }
     else {
         glActiveTexture(GL_TEXTURE0);
@@ -1780,6 +1801,77 @@ bool moldyn::SphereRenderer::unsetTransferFunctionTexture(void) {
         glDisable(GL_TEXTURE_1D);
         glBindTexture(GL_TEXTURE_1D, 0);
     }
+    return true;
+}
+
+
+bool moldyn::SphereRenderer::setFlagStorage(vislib::graphics::gl::GLSLShader& shader, MultiParticleDataCall* mpdc) {
+
+    this->flagsEnabled = false;
+
+    auto flagc = getFlagsSlot.CallAs<core::FlagCall>();
+    if (flagc == nullptr) {
+        return false;
+    }
+
+    if (mpdc == nullptr) {
+        return false;
+    }
+    unsigned int partsCount = 0;
+    for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
+        MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
+        partsCount += parts.GetCount();
+    }
+
+    ((*flagc)(core::FlagCall::CallMapFlags));
+    flagc->validateFlagsCount(partsCount);
+
+    this->flagsData = nullptr;
+    this->flagsData = flagc->GetFlags();
+
+    if (this->flagsUseSSBO) {
+        auto version = flagc->GetVersion();
+        if ((version != this->flagsCurrentVersion) || (version == 0)) {
+            glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->flagsBuffer);
+            glBufferData(GL_SHADER_STORAGE_BUFFER, partsCount * sizeof(core::FlagStorage::FlagItemType),
+                this->flagsData.get()->data(), GL_STATIC_DRAW);
+            this->flagsCurrentVersion = flagc->GetVersion();
+            glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+        }
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBOflagsBindingPoint, this->flagsBuffer);
+    }
+    else {
+        GLuint flagAttrib = glGetAttribLocation(shader, "inFlags");
+        glEnableVertexAttribArray(flagAttrib);
+        glVertexAttribIPointer(flagAttrib, 1, GL_UNSIGNED_INT, sizeof(core::FlagStorage::FlagItemType), this->flagsData.get()->data());
+    }
+
+    this->flagsEnabled = true;
+
+    return true;
+}
+
+
+bool moldyn::SphereRenderer::unsetFlagStorage(vislib::graphics::gl::GLSLShader& shader) {
+
+    auto flagc = getFlagsSlot.CallAs<core::FlagCall>();
+    if (flagc == nullptr) {
+        return false;
+    }
+
+    if (this->flagsUseSSBO) {
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, 0);
+    }
+    else {
+        GLuint flagAttrib = glGetAttribLocation(shader, "inFlags");
+        glDisableVertexAttribArray(flagAttrib);
+    }
+
+    flagc->SetFlags(this->flagsData);
+    (*flagc)(core::FlagCall::CallUnmapFlags);
+
+    this->flagsEnabled = false;
+
     return true;
 }
 
@@ -2073,72 +2165,10 @@ void moldyn::SphereRenderer::getBytesAndStride(MultiParticleDataCall::Particles&
 }
 
 
-bool moldyn::SphereRenderer::flagStorage(bool enable, vislib::graphics::gl::GLSLShader& activeShader, MultiParticleDataCall* mpdc) {
-
-    this->flagsEnabled = false;
-
-    auto flagc = getFlagsSlot.CallAs<core::FlagCall>();
-    if (flagc == nullptr) {
-        return false;
-    }
-
-    if (enable) {
-        if (mpdc == nullptr) {
-            return false;
-        }
-        unsigned int partsCount = 0;
-        for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
-            MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
-            partsCount += parts.GetCount();
-        }
-
-        ((*flagc)(core::FlagCall::CallMapFlags));
-        flagc->validateFlagsCount(partsCount);
-
-        this->flagsData = nullptr;
-        this->flagsData = flagc->GetFlags();
-
-        auto version = flagc->GetVersion();
-        if (this->flagsUseSSBO) {
-            if ((version != this->flagsCurrentVersion) || (version == 0)) {
-                glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->flagsBuffer);
-                glBufferData(GL_SHADER_STORAGE_BUFFER, partsCount * sizeof(core::FlagStorage::FlagItemType),
-                    this->flagsData.get()->data(), GL_STATIC_DRAW);
-                this->flagsCurrentVersion = flagc->GetVersion();
-                glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-            }
-            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBOflagsBindingPoint, this->flagsBuffer);
-        }
-        else {
-            GLuint flagAttrib = glGetAttribLocationARB(activeShader, "inFlags");
-            glEnableVertexAttribArrayARB(flagAttrib);
-            glVertexAttribIPointer(flagAttrib, 1, GL_UNSIGNED_INT, sizeof(core::FlagStorage::FlagItemType), this->flagsData.get()->data());
-        }
-        this->flagsEnabled = true;
-    }
-    else {
-        if (this->flagsUseSSBO) {
-            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, 0);
-        }
-        else {
-            GLuint flagAttrib = glGetAttribLocationARB(activeShader, "inFlags");
-            glDisableVertexAttribArrayARB(flagAttrib);
-        }
-
-        flagc->SetFlags(this->flagsData);
-        (*flagc)(core::FlagCall::CallUnmapFlags);
-        this->flagsEnabled = false;
-    }
-
-    return true;
-}
-
-
 void moldyn::SphereRenderer::getGLSLVersion(int &major, int &minor) const {
     
     major = -1;
     minor = -1;
-
     std::string glslVerStr((char*)glGetString(GL_SHADING_LANGUAGE_VERSION));
     std::size_t found = glslVerStr.find(".");
     if (found != std::string::npos) {
@@ -2236,8 +2266,7 @@ bool moldyn::SphereRenderer::rebuildGBuffer() {
 }
 
 
-void moldyn::SphereRenderer::rebuildWorkingData(
-    megamol::core::view::CallRender3D* cr3d, megamol::core::moldyn::MultiParticleDataCall* mpdc) {
+void moldyn::SphereRenderer::rebuildWorkingData(megamol::core::view::CallRender3D* cr3d, megamol::core::moldyn::MultiParticleDataCall* mpdc, vislib::graphics::gl::GLSLShader& shader) {
 
     // Upload new data if neccessary
     if (stateInvalid) {
@@ -2265,7 +2294,14 @@ void moldyn::SphereRenderer::rebuildWorkingData(
 
         // Reupload buffers
         for (unsigned int i = 0; i < partsCount; ++i) {
-            uploadDataToGPU(this->gpuData[i], mpdc->AccessParticles(i));
+            core::moldyn::SimpleSphericalParticles& parts = mpdc->AccessParticles(i);
+
+            uploadDataToGPU(this->gpuData[i], parts);
+
+            //glBindVertexArray(this->gpuData[i].vertexArray);
+            //this->setBufferData(shader, parts, this->gpuData[i].vertexVBO, parts.GetVertexData(), this->gpuData[i].colorVBO, parts.GetColourData());
+            //this->unsetBufferData(shader);
+            glBindVertexArray(0);
         }
     }
 
@@ -2324,91 +2360,9 @@ void moldyn::SphereRenderer::rebuildWorkingData(
         this->volGen->RecreateMipmap();
     }
 
-    // reset shotter for legacy opengl crap
-    glBindVertexArray(0);
-    glDisableVertexAttribArray(0);
-    glDisableVertexAttribArray(1);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
     this->aoVolSizeSlot.ResetDirty();
 }
 
-
-void moldyn::SphereRenderer::renderParticlesGeometry(
-    megamol::core::view::CallRender3D* cr3d, megamol::core::moldyn::MultiParticleDataCall* mpdc) {
-
-    bool highPrecision = this->useHPTexturesSlot.Param<megamol::core::param::BoolParam>()->Value();
-
-    bool useGeo = this->enableGeometryShader.Param<core::param::BoolParam>()->Value();
-    vislib::graphics::gl::GLSLShader& theShader = useGeo ? this->sphereGeometryShader : this->sphereShader;
-
-    theShader.Enable();
-
-    this->flagStorage(true, theShader, mpdc);
-
-    glUniformMatrix4fv(theShader.ParameterLocation("MVP"), 1, GL_FALSE, this->curMVP.PeekComponents());
-    glUniformMatrix4fv(theShader.ParameterLocation("MVPinv"), 1, GL_FALSE, this->curMVPinv.PeekComponents());
-    glUniformMatrix4fv(theShader.ParameterLocation("MVinv"), 1, GL_FALSE, this->curMVinv.PeekComponents());
-    glUniformMatrix4fv(theShader.ParameterLocation("MVPtransp"), 1, GL_FALSE, this->curMVPtransp.PeekComponents());
-    glUniform1f(theShader.ParameterLocation("scaling"), this->radiusScalingParam.Param<param::FloatParam>()->Value());
-    glUniform4fv(theShader.ParameterLocation("viewAttr"), 1, this->curViewAttrib);
-    glUniform3fv(theShader.ParameterLocation("camRight"), 1, cr3d->GetCameraParameters()->Right().PeekComponents());
-    glUniform3fv(theShader.ParameterLocation("camUp"), 1, cr3d->GetCameraParameters()->Up().PeekComponents());
-    glUniform3fv(theShader.ParameterLocation("camIn"), 1, cr3d->GetCameraParameters()->Front().PeekComponents());
-    glUniform4fv(theShader.ParameterLocation("clipDat"), 1, this->curClipDat);
-    glUniform4fv(theShader.ParameterLocation("clipCol"), 1, this->curClipCol);
-    glUniform1i(theShader.ParameterLocation("inUseHighPrecision"), (int)highPrecision);
-
-    GLuint flagPartsCount = 0;
-    for (unsigned int i = 0; i < this->gpuData.size(); ++i) {
-        glBindVertexArray(this->gpuData[i].vertexArray);
-        core::moldyn::SimpleSphericalParticles& parts = mpdc->AccessParticles(i);
-
-        if (this->flagsEnabled) {
-            glUniform1ui(theShader.ParameterLocation("flagOffset"), flagPartsCount);
-            glUniform4fv(theShader.ParameterLocation("flagSelectedCol"), 1, this->selectColorParam.Param<param::ColorParam>()->Value().data());
-            glUniform4fv(theShader.ParameterLocation("flagSoftSelectedCol"), 1, this->softSelectColorParam.Param<param::ColorParam>()->Value().data());
-        }
-
-        float globalRadius = 0.0f;
-        if (parts.GetVertexDataType() != megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR)
-            globalRadius = parts.GetGlobalRadius();
-
-        theShader.SetParameter("inGlobalRadius", globalRadius);
-
-        bool useGlobalColor = false;
-        if (parts.GetColourDataType() == megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE) {
-            useGlobalColor = true;
-            const unsigned char* globalColor = parts.GetGlobalColour();
-            float globalColorFlt[4] = { static_cast<float>(globalColor[0]) / 255.0f,
-                static_cast<float>(globalColor[1]) / 255.0f, static_cast<float>(globalColor[2]) / 255.0f, 1.0f };
-            theShader.SetParameterArray4("inGlobalColor", 1, globalColorFlt);
-        }
-        theShader.SetParameter("inUseGlobalColor", useGlobalColor);
-
-        bool useTransferFunction = false;
-        if (parts.GetColourDataType() == megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I) {
-            unsigned int texSize;
-            this->setTransferFunctionTexture(theShader, texSize);
-            useTransferFunction = true;
-            theShader.SetParameter("inTransferFunction", static_cast<int>(0));
-            float tfRange[2] = { parts.GetMinColourIndexValue(), parts.GetMaxColourIndexValue() };
-            theShader.SetParameterArray2("inIndexRange", 1, tfRange);
-        }
-        theShader.SetParameter("inUseTransferFunction", useTransferFunction);
-
-        glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(mpdc->AccessParticles(i).GetCount()));
-
-        this->unsetTransferFunctionTexture();
-        flagPartsCount += parts.GetCount();
-    }
-
-    glBindVertexArray(0); 
-    
-    this->flagStorage(false, theShader);
-
-    theShader.Disable();
-}
 
 
 void moldyn::SphereRenderer::renderDeferredPass(megamol::core::view::CallRender3D* cr3d) {

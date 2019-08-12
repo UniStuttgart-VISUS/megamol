@@ -1,27 +1,25 @@
 
 void main(void) {
 
-    // remove the sphere radius from the w coordinates to the rad varyings
-    objPos = gl_in[0].gl_Position;
-    rad = (inGlobalRadius == 0.0) ? objPos.w : inGlobalRadius;
-    objPos.w = 1.0;
-
-	vertColor = colorgs[0];
-	if (inUseGlobalColor)
-		vertColor = inGlobalColor;
-	else
-	if (inUseTransferFunction) {
-		float texOffset = 0.5/float(textureSize(inTransferFunction, 0));
-		float normPos = (colorgs[0].r - inIndexRange.x)/(inIndexRange.y - inIndexRange.x);
-		vertColor = texture(inTransferFunction, normPos * (1.0 - 2.0*texOffset) + texOffset);
-	}
-
+    // Remove the sphere radius from the w coordinates to the rad varyings
+    vec4 inPos = gl_in[0].gl_Position;
+    rad = (CONSTRAD < -0.5) ? inPos.w : CONSTRAD;
+    inPos.w = 1.0;
+        
 #ifdef WITH_SCALING
     rad *= scaling;
 #endif // WITH_SCALING
-
+    
     squarRad = rad * rad;
 
+    // Position transformations
+    
+    // object pivot point in object space     
+    objPos = inPos; // no w-div needed, because w is 1.0 (Because I know) 
+ 
     // calculate cam position 
     camPos = MVinv[3]; // (C) by Christoph 
     camPos.xyz -= objPos.xyz; // cam pos to glyph space 
+
+    vec4 inColor = colorgs[0];
+    float inColIdx = colidxgs[0];

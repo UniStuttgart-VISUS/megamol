@@ -22,8 +22,10 @@ uniform mat4 MVPinv;
 uniform mat4 MVPtransp;
 
 uniform vec4 inConsts1;
-uniform sampler1D colTab;
+uniform sampler1D tfTexture;
 uniform vec4 globalCol;
+uniform int useGlobalCol;
+uniform int useTf;
 
 out vec4 objPos;
 out vec4 camPos;
