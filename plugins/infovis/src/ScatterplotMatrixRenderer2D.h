@@ -199,15 +199,15 @@ private:
 
     void drawTriangulation();
 
+    void validateText();
+
+    void drawText();
+
     void unbindScreen();
 
     void bindAndClearScreen();
 
     void drawScreen();
-
-    void validateText();
-
-    void drawText();
 
     void updateSelection();
 
