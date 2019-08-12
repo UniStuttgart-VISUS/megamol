@@ -61,7 +61,7 @@ moldyn::SphereRenderer::SphereRenderer(void) : view::Renderer3DModule()
     , theShaders()
     , theSingleBuffer()
     , currBuf(0)
-    , bufSize(32 * 1024 * 1024)
+    , bufSize(32 * 1024 * 1024) // = 32 MB
     , numBuffers(3)
     , theSingleMappedMem(nullptr)
     , gpuData()
@@ -86,7 +86,7 @@ moldyn::SphereRenderer::SphereRenderer(void) : view::Renderer3DModule()
     , bufArray()
     , colBufArray()
 #endif // SPHERE_MIN_OGL_SSBO_STREAM
-    , renderModeParam("render_mode", "The sphere render mode.")
+    , renderModeParam("renderMode", "The sphere render mode.")
     , radiusScalingParam("scaling", "Scaling factor for particle radii.")
     , forceTimeSlot("force_time", "Flag to force the time code to the specified value. Set to true when rendering a video.")
     , useLocalBBoxParam("use_local_bbox", "Enforce usage of local bbox for camera setup")
@@ -1028,7 +1028,7 @@ bool moldyn::SphereRenderer::renderSimple(view::CallRender3D* cr3d, MultiParticl
     glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVPinv"), 1, GL_FALSE, this->curMVPinv.PeekComponents());
     glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVPtransp"), 1, GL_FALSE, this->curMVPtransp.PeekComponents());
 
-    unsigned int flagPartsCount = 0;
+    GLuint flagPartsCount = 0;
     for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
         MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
 
@@ -1081,8 +1081,8 @@ bool moldyn::SphereRenderer::renderSSBO(view::CallRender3D* cr3d, MultiParticleD
     std::chrono::steady_clock::time_point before, after;
 #endif
 
-    // currBuf = 0;
-    unsigned int flagPartsCount = 0;
+    // this->currBuf = 0;
+    GLuint flagPartsCount = 0;
     for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
         MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
 
@@ -1301,8 +1301,8 @@ bool moldyn::SphereRenderer::renderSplat(view::CallRender3D* cr3d, MultiParticle
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->theSingleBuffer);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBOvertexBindingPoint, this->theSingleBuffer);
 
-    // currBuf = 0;
-    unsigned int flagPartsCount = 0;
+    // this->currBuf = 0;
+    GLuint flagPartsCount = 0;
     for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
         MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
 
@@ -1392,16 +1392,16 @@ bool moldyn::SphereRenderer::renderSplat(view::CallRender3D* cr3d, MultiParticle
             vertCounter = 0;
             while (vertCounter < parts.GetCount()) {
                 // GLuint vb = this->theBuffers[currBuf];
-                void* mem = static_cast<char*>(theSingleMappedMem) + bufSize * currBuf;
+                void* mem = static_cast<char*>(theSingleMappedMem) + bufSize * this->currBuf;
                 currCol = colStride == 0 ? currVert : currCol;
                 // currCol = currCol == 0 ? currVert : currCol;
                 const char* whence = currVert < currCol ? currVert : currCol;
                 UINT64 vertsThisTime = vislib::math::Min(parts.GetCount() - vertCounter, numVerts);
-                this->waitSingle(this->fences[currBuf]);
+                this->waitSingle(this->fences[this->currBuf]);
                 // vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Memcopying %u bytes from %016"
                 // PRIxPTR " to %016" PRIxPTR "\n", vertsThisTime * vertStride, whence, mem);
                 memcpy(mem, whence, vertsThisTime * vertStride);
-                glFlushMappedNamedBufferRange(this->theSingleBuffer, bufSize * currBuf, vertsThisTime * vertStride);
+                glFlushMappedNamedBufferRange(this->theSingleBuffer, bufSize * this->currBuf, vertsThisTime * vertStride);
                 //glMemoryBarrier(GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT);
                 // glUniform1i(this->newShader->ParameterLocation("instanceOffset"), numVerts * currBuf);
                 glUniform1i(this->newShader->ParameterLocation("instanceOffset"), 0);
@@ -1410,16 +1410,15 @@ bool moldyn::SphereRenderer::renderSplat(view::CallRender3D* cr3d, MultiParticle
                 // this->theSingleBuffer, reinterpret_cast<const void *>(currCol - whence));
                 // glBindBuffer(GL_ARRAY_BUFFER, 0);
                 glBindBufferRange(
-                    GL_SHADER_STORAGE_BUFFER, SSBOvertexBindingPoint, this->theSingleBuffer, bufSize * currBuf, bufSize);
+                    GL_SHADER_STORAGE_BUFFER, SSBOvertexBindingPoint, this->theSingleBuffer, bufSize * this->currBuf, bufSize);
                 glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(vertsThisTime));
                 // glDrawArraysInstanced(GL_POINTS, 0, 1, vertsThisTime);
-                this->lockSingle(fences[currBuf]);
+                this->lockSingle(this->fences[this->currBuf]);
 
-                currBuf = (currBuf + 1) % this->numBuffers;
+                this->currBuf = (this->currBuf + 1) % this->numBuffers;
                 vertCounter += vertsThisTime;
                 currVert += vertsThisTime * vertStride;
                 currCol += vertsThisTime * colStride;
-                // break;
             }
         }
         else {
@@ -1469,12 +1468,12 @@ bool moldyn::SphereRenderer::renderBufferArray(view::CallRender3D* cr3d, MultiPa
     glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVPinv"), 1, GL_FALSE, this->curMVPinv.PeekComponents());
     glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVPtransp"), 1, GL_FALSE, this->curMVPtransp.PeekComponents());
 
-    unsigned int flagPartsCount = 0;
+    //this->currBuf = 0;
+    GLuint flagPartsCount = 0;
     for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
         MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
 
         if (this->flagsEnabled) {
-            glUniform1ui(this->sphereShader.ParameterLocation("flagOffset"), flagPartsCount);
             glUniform4fv(this->sphereShader.ParameterLocation("flagSelectedCol"), 1, this->selectColorParam.Param<param::ColorParam>()->Value().data());
             glUniform4fv(this->sphereShader.ParameterLocation("flagSoftSelectedCol"), 1, this->softSelectColorParam.Param<param::ColorParam>()->Value().data());
         }
@@ -1502,14 +1501,18 @@ bool moldyn::SphereRenderer::renderBufferArray(view::CallRender3D* cr3d, MultiPa
                 // vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Memcopying %u bytes from %016"
                 // PRIxPTR " to %016" PRIxPTR "\n", vertsThisTime * vertStride, whence, mem);
                 memcpy(mem, whence, vertsThisTime * vertStride);
-                glFlushMappedNamedBufferRange(
-                    this->theSingleBuffer, numVerts * this->currBuf, vertsThisTime * vertStride);
+                glFlushMappedNamedBufferRange(this->theSingleBuffer, numVerts * this->currBuf, vertsThisTime * vertStride);
                 //glMemoryBarrier(GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT);
+
+                if (this->flagsEnabled) {
+                    // Adapting flag offset to ring buffer gl_VertexID
+                    glUniform1ui(this->sphereShader.ParameterLocation("flagOffset"), flagPartsCount - static_cast<GLuint>(numVerts * this->currBuf)); 
+                }
                 this->setPointers<GLSLShader>(parts, this->sphereShader, this->theSingleBuffer,
                     reinterpret_cast<const void*>(currVert - whence), vertAttribLoc, this->theSingleBuffer,
                     reinterpret_cast<const void*>(currCol - whence), colAttribLoc, colIdxAttribLoc);
-                glDrawArrays(
-                    GL_POINTS, static_cast<GLint>(numVerts * this->currBuf), static_cast<GLsizei>(vertsThisTime));
+
+                glDrawArrays(GL_POINTS, static_cast<GLint>(numVerts * this->currBuf), static_cast<GLsizei>(vertsThisTime));
                 this->lockSingle(this->fences[this->currBuf]);
 
                 this->currBuf = (this->currBuf + 1) % this->numBuffers;
@@ -1572,7 +1575,7 @@ bool moldyn::SphereRenderer::renderGeometryShader(view::CallRender3D* cr3d, Mult
     glUniformMatrix4fv(this->sphereGeometryShader.ParameterLocation("MVPinv"), 1, GL_FALSE, this->curMVPinv.PeekComponents());
     glUniformMatrix4fv(this->sphereGeometryShader.ParameterLocation("MVPtransp"), 1, GL_FALSE, this->curMVPtransp.PeekComponents());
 
-    unsigned int flagPartsCount = 0;
+    GLuint flagPartsCount = 0;
     for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
         MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
 
@@ -1758,9 +1761,11 @@ bool moldyn::SphereRenderer::setTransferFunctionTexture(vislib::graphics::gl::GL
         glActiveTexture(GL_TEXTURE0);
         glEnable(GL_TEXTURE_1D);
         glBindTexture(GL_TEXTURE_1D, this->greyTF);
-        glUniform1i(shader.ParameterLocation("tfTexture"), 0);
-        GLfloat tfrange[2] = { 0.0f, 1.0f };
-        glUniform2fv(shader.ParameterLocation("tfRange"), 1, tfrange);
+        out_texSize = 2;
+
+        //glUniform1i(shader.ParameterLocation("tfTexture"), 0);
+        //GLfloat tfrange[2] = { 0.0f, 1.0f };
+        //glUniform2fv(shader.ParameterLocation("tfRange"), 1, tfrange);
     }
     return true;
 }
@@ -2354,7 +2359,7 @@ void moldyn::SphereRenderer::renderParticlesGeometry(
     glUniform4fv(theShader.ParameterLocation("clipCol"), 1, this->curClipCol);
     glUniform1i(theShader.ParameterLocation("inUseHighPrecision"), (int)highPrecision);
 
-    unsigned int flagPartsCount = 0;
+    GLuint flagPartsCount = 0;
     for (unsigned int i = 0; i < this->gpuData.size(); ++i) {
         glBindVertexArray(this->gpuData[i].vertexArray);
         core::moldyn::SimpleSphericalParticles& parts = mpdc->AccessParticles(i);

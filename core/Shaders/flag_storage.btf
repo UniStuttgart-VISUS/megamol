@@ -151,13 +151,13 @@ flat in int geoFlagDiscard;
 
 <!-- ###### Addintional code when using Geometry Shader mode of Ambient Occlusion ##### -->
 
-    <!-- Needs 'vert_attributes' snippet to prepended in shader -->
+    <!-- Needs 'vert_attributes' snippet to be prepended -->
     <snippet name="mdao_vert_additional_attributes" type="string">
         <![CDATA[
 
 #ifdef FLAG_STORAGE
 
-    out vec4 flagColor;
+flat out vec4 flagColor;
 
 #endif // FLAG_STORAGE
 
@@ -170,6 +170,7 @@ flat in int geoFlagDiscard;
 #ifdef FLAG_STORAGE
 
     flagDiscard = 0;
+    flagColor = vec4(0.0, 0.0, 0.0, 0.0);
     uint flag = uint(0);
 
 #ifdef FLAG_STORAGE_SSBO
@@ -191,9 +192,9 @@ flat in int geoFlagDiscard;
 #define FLAG_STORAGE
 
 flat in int flagDiscard[1];
-in vec4 flagColor[1];
+flat in vec4 flagColor[1];
 
-flat out int  geoFlagDiscard;
+flat out int geoFlagDiscard;
 
         ]]>
     </snippet>
