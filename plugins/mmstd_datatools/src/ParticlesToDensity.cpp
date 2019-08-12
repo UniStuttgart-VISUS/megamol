@@ -448,8 +448,9 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
 
         totalParticles += parts.GetCount();
 
-        // https : // en.wikipedia.org/wiki/Radial_basis_function
-        auto gauss = [](float const dist, float const epsilon) -> float {
+        // Implements the Bump Function from
+        // https://en.wikipedia.org/wiki/Radial_basis_function
+        auto rbf = [](float const dist, float const epsilon) -> float {
             if (dist >= epsilon) return 0.0f;
             return std::exp(-1.0f / (1.0f - std::pow((1.0f / epsilon) * dist, 2.0f)));
         };
@@ -469,31 +470,37 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
         std::function<void(int, int, int, int, float, float)> volOp;
         switch (this->aggregatorSlot.Param<core::param::EnumParam>()->Value()) {
         case 2: {
-            volOp = [this, &gauss, &weights, dxAcc, dyAcc, dzAcc, sx, sy, sigma](int const pidx, int const x,
+            volOp = [this, &rbf, &weights, dxAcc, dyAcc, dzAcc, sx, sy, sigma](int const pidx, int const x,
                         int const y, int const z, float const dis, float const rad) -> void {
+                if (rad == 0.0f) return;
+
                 auto const val_x = dxAcc->Get_f(pidx);
                 auto const val_y = dyAcc->Get_f(pidx);
                 auto const val_z = dzAcc->Get_f(pidx);
 
-                vol[omp_get_thread_num()][(x + (y + z * sy) * sx) * 3 + 0] += gauss(dis, sigma * rad) * val_x;
-                vol[omp_get_thread_num()][(x + (y + z * sy) * sx) * 3 + 1] += gauss(dis, sigma * rad) * val_y;
-                vol[omp_get_thread_num()][(x + (y + z * sy) * sx) * 3 + 2] += gauss(dis, sigma * rad) * val_z;
+                vol[omp_get_thread_num()][(x + (y + z * sy) * sx) * 3 + 0] += rbf(dis, sigma * rad) * val_x;
+                vol[omp_get_thread_num()][(x + (y + z * sy) * sx) * 3 + 1] += rbf(dis, sigma * rad) * val_y;
+                vol[omp_get_thread_num()][(x + (y + z * sy) * sx) * 3 + 2] += rbf(dis, sigma * rad) * val_z;
 
-                weights[omp_get_thread_num()][x + (y + z * sy) * sx] += gauss(dis, sigma * rad);
+                weights[omp_get_thread_num()][x + (y + z * sy) * sx] += rbf(dis, sigma * rad);
             };
         } break;
         case 1: {
-            volOp = [this, &gauss, iAcc, sx, sy, sigma](int const pidx, int const x, int const y, int const z,
+            volOp = [this, &rbf, iAcc, sx, sy, sigma](int const pidx, int const x, int const y, int const z,
                         float const dis, float const rad) -> void {
+                if (rad == 0.0f) return;
+
                 auto const val = iAcc->Get_f(pidx);
-                vol[omp_get_thread_num()][x + (y + z * sy) * sx] += gauss(dis, sigma * rad) * val;
+                vol[omp_get_thread_num()][x + (y + z * sy) * sx] += rbf(dis, sigma * rad) * val;
             };
         } break;
         default:
         case 0: {
-            volOp = [this, &gauss, sx, sy, sigma](int const pidx, int const x, int const y, int const z,
+            volOp = [this, &rbf, sx, sy, sigma](int const pidx, int const x, int const y, int const z,
                         float const dis, float const rad) -> void {
-                vol[omp_get_thread_num()][x + (y + z * sy) * sx] += gauss(dis, sigma * rad);
+                if (rad == 0.0f) return;
+
+                vol[omp_get_thread_num()][x + (y + z * sy) * sx] += rbf(dis, sigma * rad);
             };
         }
         }

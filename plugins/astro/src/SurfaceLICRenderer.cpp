@@ -4,6 +4,7 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/misc/VolumetricDataCall.h"
 #include "mmcore/param/ColorParam.h"
+#include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/ScaledBoundingBoxes.h"
@@ -29,11 +30,13 @@ namespace astro {
 SurfaceLICRenderer::SurfaceLICRenderer()
     : m_input_renderer("input_renderer", "Renderer producing the surface and depth used for drawing the LIC upon")
     , m_input_velocities("input_velocities", "Grid with velocities")
-    , m_input_transfer_function("m_input_transfer_function", "Transfer function to color the LIC according to the velocity magnitude")
+    , m_input_transfer_function(
+          "m_input_transfer_function", "Transfer function to color the LIC according to the velocity magnitude")
     , stencil_size("stencil_size", "Stencil size for thicker LIC")
     , arc_length("arc_length", "Length of the streamlines relative to the domain size")
     , num_advections("num_advections", "Number of advections for reaching the desired arc length")
     , epsilon("epsilon", "Threshold for detecting coherent structures")
+    , coloring("coloring", "Different options on velocity coloring")
     , m_lic_compute_shdr(nullptr)
     , m_render_to_framebuffer_shdr(nullptr)
     , m_render_target(nullptr) {
@@ -58,6 +61,12 @@ SurfaceLICRenderer::SurfaceLICRenderer()
 
     this->epsilon << new core::param::FloatParam(0.03f);
     this->MakeSlotAvailable(&this->epsilon);
+
+    this->coloring << new core::param::EnumParam(0);
+    this->coloring.Param<core::param::EnumParam>()->SetTypePair(0, "Original");
+    this->coloring.Param<core::param::EnumParam>()->SetTypePair(1, "Projected");
+    this->coloring.Param<core::param::EnumParam>()->SetTypePair(2, "Difference");
+    this->MakeSlotAvailable(&this->coloring);
 }
 
 SurfaceLICRenderer::~SurfaceLICRenderer() { this->Release(); }
@@ -286,6 +295,9 @@ bool SurfaceLICRenderer::Render(core::Call& call) {
 
     glUniform1f(this->m_lic_compute_shdr->ParameterLocation("epsilon"),
         this->epsilon.Param<core::param::FloatParam>()->Value());
+
+    glUniform1i(this->m_lic_compute_shdr->ParameterLocation("coloring"),
+        this->coloring.Param<core::param::EnumParam>()->Value());
 
     glUniform1f(this->m_lic_compute_shdr->ParameterLocation("max_magnitude"),
         static_cast<float>(cd->GetMetadata()->MaxValues[0]));

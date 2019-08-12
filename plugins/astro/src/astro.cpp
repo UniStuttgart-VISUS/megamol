@@ -20,6 +20,7 @@
 #include "FilamentFilter.h"
 #include "SimpleAstroFilter.h"
 #include "SurfaceLICRenderer.h"
+#include "SpectralIntensityVolume.h"
 
 
 /* anonymous namespace hides this type from any other object files */
@@ -62,6 +63,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::astro::DirectionToColour>();
             this->module_descriptions.RegisterAutoDescription<megamol::astro::SimpleAstroFilter>();
             this->module_descriptions.RegisterAutoDescription<megamol::astro::SurfaceLICRenderer>();
+            this->module_descriptions.RegisterAutoDescription<megamol::astro::SpectralIntensityVolume>();
 
             // register calls here:
 
