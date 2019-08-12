@@ -50,13 +50,13 @@ SurfaceLICRenderer::SurfaceLICRenderer()
     this->m_input_transfer_function.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();
     this->MakeSlotAvailable(&this->m_input_transfer_function);
 
-    this->stencil_size << new core::param::IntParam(1);
+    this->stencil_size << new core::param::IntParam(1, 1);
     this->MakeSlotAvailable(&this->stencil_size);
 
     this->arc_length << new core::param::FloatParam(0.005f);
     this->MakeSlotAvailable(&this->arc_length);
 
-    this->num_advections << new core::param::IntParam(100);
+    this->num_advections << new core::param::IntParam(100, 1);
     this->MakeSlotAvailable(&this->num_advections);
 
     this->epsilon << new core::param::FloatParam(0.03f);

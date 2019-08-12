@@ -21,7 +21,7 @@
 #include <functional>
 #include <math.h>
 #include <numeric>
-#include "3rdparty/simultaneous_sort/simultaneous_sort.h"
+#include "simultaneous_sort.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmstd_datatools/table/TableDataCall.h"
 

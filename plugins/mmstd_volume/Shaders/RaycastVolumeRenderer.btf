@@ -139,10 +139,6 @@ void main() {
     float tnear, tfar;
 
     if (intersectBox(ray, boxMin, boxMax, tnear, tfar) && (tnear > 0.0f || tfar > 0.0f)) {
-        // Compute near and far clipping distance
-        const vec4 near_point = inverse(proj_mx) * vec4(0.0f, 0.0f, -1.0f, 1.0f);
-        const vec4 far_point = inverse(proj_mx) * vec4(0.0f, 0.0f, 1.0f, 1.0f);
-
         // Initialize ray start and randomly offset it to prevent ringing artifacts
         float t = tnear >= 0.0f ? tnear : 0.0f;
         t += random * rayStep;
@@ -302,10 +298,10 @@ vec3 blinnPhong(vec3 n, vec3 l, vec3 v) {
 
         while (t < tfar) {
             ]]>
-    </snippet>
-    <snippet name="::RaycastVolumeRenderer::common::ray_step" />
-    <snippet type="string">
-        <![CDATA[
+        </snippet>
+        <snippet name="::RaycastVolumeRenderer::common::ray_step" />
+        <snippet type="string">
+            <![CDATA[
             // Get volume sample
             float vol_sample = texture(volume_tx3D, texCoords).x;
 
