@@ -15,10 +15,8 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/AbstractView.h"
 #include "mmcore/view/CallRenderView.h"
-#include "mmcore/param/ColorParam.h"
-#include "vislib/graphics/ColourRGBAu8.h"
-#include "vislib/graphics/gl/FramebufferObject.h"
 
+#include "vislib/graphics/gl/FramebufferObject.h"
 
 namespace megamol {
 namespace core {
@@ -169,8 +167,6 @@ protected:
     virtual void unpackMouseCoordinates(float& x, float& y);
 
 private:
-	void validate();
-
     /**
      * Answer the renderer 1 call
      *
@@ -195,7 +191,7 @@ private:
             return this->render2();
         } else {
             return nullptr;
-		}
+        }
     }
 
     /**
@@ -203,28 +199,21 @@ private:
      */
     inline CallRenderView* renderHovered() const {
         auto mousePos = vislib::math::Point<float, 2>(this->mouseX, this->mouseY);
-        if (this->client1Area.Contains(mousePos)) {
+        if (this->clientArea1.Contains(mousePos)) {
             return this->render1();
-        } else if (this->client2Area.Contains(mousePos)) {
+        } else if (this->clientArea2.Contains(mousePos)) {
             return this->render2();
         } else {
             return nullptr;
-		}
+        }
     }
 
-    /**
-     * Callback whenever the splitter colour gets updated
-     *
-     * @param sender The sending slot
-     *
-     * @return true
-     */
-    bool splitColourUpdated(param::ParamSlot& sender);
+    void updateSize(size_t width, size_t height);
 
     /**
      * Calculates the client areas
      */
-    void calcClientAreas(void);
+    void adjustClientAreas(void);
 
     /** Connection to the renderer 1 (left, top) */
     mutable CallerSlot render1Slot;
@@ -233,10 +222,10 @@ private:
     mutable CallerSlot render2Slot;
 
     /** The split orientation slot */
-    param::ParamSlot splitOriSlot;
+    param::ParamSlot splitOrientationSlot;
 
     /** The splitter distance slot */
-    param::ParamSlot splitSlot;
+    param::ParamSlot splitPositionSlot;
 
     /** The splitter width slot */
     param::ParamSlot splitWidthSlot;
@@ -244,17 +233,14 @@ private:
     /** The splitter colour slot */
     param::ParamSlot splitColourSlot;
 
-    /** The splitter colour */
-    param::ColorParam::ColorType splitColour;
-
     /** The override call */
     CallRenderView* overrideCall;
 
     vislib::math::Rectangle<float> clientArea;
 
-    vislib::math::Rectangle<float> client1Area;
+    vislib::math::Rectangle<float> clientArea1;
 
-    vislib::math::Rectangle<float> client2Area;
+    vislib::math::Rectangle<float> clientArea2;
 
     vislib::graphics::gl::FramebufferObject fbo1;
 
@@ -266,7 +252,7 @@ private:
 
     float mouseY;
 
-    bool dragSlider;
+    bool dragSplitter;
 };
 
 
