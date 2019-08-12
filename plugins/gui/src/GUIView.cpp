@@ -16,7 +16,6 @@
 #include "stdafx.h"
 #include "GUIView.h"
 
-#include "mmcore/Call.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/BoolParam.h"
@@ -88,7 +87,6 @@ GUIView::GUIView()
 
     this->state_param << new core::param::StringParam("");
     this->MakeSlotAvailable(&this->state_param);
-    this->state_param.Param<core::param::StringParam>()->SetGUIReadOnly(true);
 }
 
 GUIView::~GUIView() { this->Release(); }
@@ -269,6 +267,23 @@ void GUIView::release() {
 }
 
 
+void GUIView::unpackMouseCoordinates(float& x, float& y) {
+    GLint vpw = 1;
+    GLint vph = 1;
+    if (this->overrideCall == nullptr) {
+        GLint vp[4];
+        ::glGetIntegerv(GL_VIEWPORT, vp);
+        vpw = vp[2];
+        vph = vp[3];
+    } else {
+        vpw = this->overrideCall->ViewportWidth();
+        vph = this->overrideCall->ViewportHeight();
+    }
+    x *= static_cast<float>(vpw);
+    y *= static_cast<float>(vph);
+}
+
+
 float GUIView::DefaultTime(double instTime) const {
     // This view does not do any time control
     return 0.0f;
@@ -299,14 +314,12 @@ void GUIView::Render(const mmcRenderViewContext& context) {
         crv->SetTime(
             -1.0f); // Should be negative to trigger animation! (see View3D.cpp line ~660 | View2D.cpp line ~350)
         (*crv)(core::view::AbstractCallRender::FnRender);
-
-        this->drawGUI(crv->GetViewport(), context.InstanceTime);
+        this->drawGUI(crv->GetViewport(), crv->InstanceTime());
     } else {
         ::glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         ::glClear(GL_COLOR_BUFFER_BIT);
-
-        if (this->overrideViewCall != nullptr) {
-            this->drawGUI(this->overrideViewCall->GetViewport(), context.InstanceTime);
+        if (this->overrideCall != nullptr) {
+            this->drawGUI(this->overrideCall->GetViewport(), context.InstanceTime);
         }
     }
 }
@@ -326,7 +339,7 @@ void GUIView::Resize(unsigned int width, unsigned int height) {
         // der ganz ganz dicke "because-i-know"-Knueppel
         AbstractView* view = const_cast<AbstractView*>(
             dynamic_cast<const AbstractView*>(static_cast<const Module*>(crv->PeekCalleeSlot()->Owner())));
-        if (view != NULL) {
+        if (view != nullptr) {
             view->Resize(width, height);
         }
     }
@@ -597,21 +610,20 @@ bool GUIView::OnMouseScroll(double dx, double dy) {
 }
 
 
-bool GUIView::OnRenderView(core::Call& call) {
-    core::view::CallRenderView* view = dynamic_cast<core::view::CallRenderView*>(&call);
-    if (view == nullptr) return false;
+bool GUIView::OnRenderView(megamol::core::Call& call) {
+    megamol::core::view::CallRenderView* crv = dynamic_cast<megamol::core::view::CallRenderView*>(&call);
+    if (crv == nullptr) return false;
 
-    this->overrideViewCall = view;
+    this->overrideCall = crv;
 
     mmcRenderViewContext context;
     ::ZeroMemory(&context, sizeof(context));
-
-    context.Time = view->Time();
-    context.InstanceTime = view->InstanceTime();
-
+    context.Time = crv->Time();
+    context.InstanceTime = crv->InstanceTime();
+    // TODO: Affinity
     this->Render(context);
 
-    this->overrideViewCall = nullptr;
+    this->overrideCall = nullptr;
 
     return true;
 }
@@ -793,7 +805,7 @@ void GUIView::drawMainWindowCallback(const std::string& wn, WindowManager::Windo
     std::string color_param_help = "[Hover] Show Parameter Description Tooltip\n"
                                    "[Right-Click] Context Menu\n"
                                    "[Drag & Drop] Move Module to other Parameter Window\n"
-                                   "[Enter],[Tab],[Left-Click outside Input] Confirm input changes";
+                                   "[Enter],[Tab],[Left-Click outside Widget] Confirm input changes";
     this->utils.HelpMarkerToolTip(color_param_help);
 
     this->drawParametersCallback(wn, wc);
@@ -1333,7 +1345,8 @@ void GUIView::drawMenu(const std::string& wn, WindowManager::WindowConfiguration
     if (open_popup_about) {
         ImGui::OpenPopup("About");
     }
-    if (ImGui::BeginPopupModal("About", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+    bool open = true;
+    if (ImGui::BeginPopupModal("About", &open, ImGuiWindowFlags_AlwaysAutoResize)) {
 
         const std::string eMail = "megamol@visus.uni-stuttgart.de";
         const std::string webLink = "https://megamol.org/";
@@ -1349,24 +1362,23 @@ void GUIView::drawMenu(const std::string& wn, WindowManager::WindowConfiguration
         ImGui::Text(about.c_str());
         ImGui::Separator();
 
-        const float offset = this->utils.TextWidgetWidth(gitstr) + style.ItemSpacing.x + style.ItemInnerSpacing.x;
-        ImGui::Text(mailstr.c_str());
-        ImGui::SameLine(offset);
         if (ImGui::Button("Copy E-Mail")) {
             ImGui::SetClipboardText(eMail.c_str());
         }
+        ImGui::SameLine();
+        ImGui::Text(mailstr.c_str());
 
-        ImGui::Text(webstr.c_str());
-        ImGui::SameLine(offset);
         if (ImGui::Button("Copy Website")) {
             ImGui::SetClipboardText(webLink.c_str());
         }
+        ImGui::SameLine();
+        ImGui::Text(webstr.c_str());
 
-        ImGui::Text(gitstr.c_str());
-        ImGui::SameLine(offset);
         if (ImGui::Button("Copy GitHub")) {
             ImGui::SetClipboardText(gitLink.c_str());
         }
+        ImGui::SameLine();
+        ImGui::Text(gitstr.c_str());
 
         ImGui::Separator();
         about = "Copyright (C) 2009-2019 by Universitaet Stuttgart "
@@ -1443,7 +1455,8 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
         if (pos != std::string::npos) {
             param_name = param_name.substr(pos + 2);
         }
-        std::string param_label = param_name + "###" + param_id;
+        std::string param_label_hidden = "###" + param_id;
+        std::string param_label = param_name + param_label_hidden;
         std::string param_desc = slot.Description().PeekBuffer();
         std::string float_format = "%.7f";
 
@@ -1573,7 +1586,8 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
                 param_label.c_str(), &it->second, 1.0f, 10.0f, float_format.c_str(), ImGuiInputTextFlags_None);
             if (ImGui::IsItemDeactivatedAfterEdit()) {
                 p->SetValue(std::max(p->MinValue(), std::min(it->second, p->MaxValue())));
-                this->widgtmap_float.erase(it);
+            } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
+                it->second = p->Value();
             }
         } else if (auto* p = slot.template Param<core::param::IntParam>()) {
             auto it = this->widgtmap_int.find(param_id);
@@ -1584,7 +1598,8 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
             ImGui::InputInt(param_label.c_str(), &it->second, 1, 10, ImGuiInputTextFlags_None);
             if (ImGui::IsItemDeactivatedAfterEdit()) {
                 p->SetValue(std::max(p->MinValue(), std::min(it->second, p->MaxValue())));
-                this->widgtmap_int.erase(it);
+            } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
+                it->second = p->Value();
             }
         } else if (auto* p = slot.template Param<core::param::Vector2fParam>()) {
             auto it = this->widgtmap_vec2.find(param_id);
@@ -1596,7 +1611,8 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
                 param_label.c_str(), it->second.PeekComponents(), float_format.c_str(), ImGuiInputTextFlags_None);
             if (ImGui::IsItemDeactivatedAfterEdit()) {
                 p->SetValue(it->second);
-                this->widgtmap_vec2.erase(it);
+            } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
+                it->second = p->Value();
             }
         } else if (auto* p = slot.template Param<core::param::Vector3fParam>()) {
             auto it = this->widgtmap_vec3.find(param_id);
@@ -1608,7 +1624,8 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
                 param_label.c_str(), it->second.PeekComponents(), float_format.c_str(), ImGuiInputTextFlags_None);
             if (ImGui::IsItemDeactivatedAfterEdit()) {
                 p->SetValue(it->second);
-                this->widgtmap_vec3.erase(it);
+            } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
+                it->second = p->Value();
             }
         } else if (auto* p = slot.template Param<core::param::Vector4fParam>()) {
             auto it = this->widgtmap_vec4.find(param_id);
@@ -1620,7 +1637,8 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
                 param_label.c_str(), it->second.PeekComponents(), float_format.c_str(), ImGuiInputTextFlags_None);
             if (ImGui::IsItemDeactivatedAfterEdit()) {
                 p->SetValue(it->second);
-                this->widgtmap_vec4.erase(it);
+            } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
+                it->second = p->Value();
             }
         } else if (auto* p = slot.Param<core::param::StringParam>()) {
             /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
@@ -1637,12 +1655,18 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
             ImVec2 ml_dim = ImVec2(
                 ImGui::CalcItemWidth(), ImGui::GetFrameHeight() + (ImGui::GetFontSize() * static_cast<float>(lcnt)));
             ImGui::InputTextMultiline(
-                param_label.c_str(), &it->second, ml_dim, ImGuiInputTextFlags_CtrlEnterForNewLine);
+                param_label_hidden.c_str(), &it->second, ml_dim, ImGuiInputTextFlags_CtrlEnterForNewLine);
             if (ImGui::IsItemDeactivatedAfterEdit()) {
-                this->utils.utf8Decode(it->second);
-                p->SetValue(vislib::StringA(it->second.c_str()));
-                this->widgtmap_text.erase(it);
+                std::string utf8Str = it->second;
+                this->utils.utf8Decode(utf8Str);
+                p->SetValue(vislib::StringA(utf8Str.c_str()));
+            } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
+                std::string utf8Str = std::string(p->ValueString().PeekBuffer());
+                this->utils.utf8Encode(utf8Str);
+                it->second = utf8Str;
             }
+            ImGui::SameLine();
+            ImGui::Text(param_name.c_str());
             help = "[Ctrl + Enter] for new line.\nPress [Return] to confirm changes.";
         } else if (auto* p = slot.Param<core::param::FilePathParam>()) {
             /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
@@ -1657,7 +1681,10 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
             if (ImGui::IsItemDeactivatedAfterEdit()) {
                 this->utils.utf8Decode(it->second);
                 p->SetValue(vislib::StringA(it->second.c_str()));
-                this->widgtmap_text.erase(it);
+            } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
+                std::string utf8Str = std::string(p->ValueString().PeekBuffer());
+                this->utils.utf8Encode(utf8Str);
+                it->second = utf8Str;
             }
         } else {
             vislib::sys::Log::DefaultLog.WriteWarn("[GUIView] Unknown Parameter Type.");

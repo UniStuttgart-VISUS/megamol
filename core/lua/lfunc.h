@@ -1,5 +1,5 @@
 /*
-** $Id: lfunc.h,v 2.17 2017/05/04 13:32:01 roberto Exp roberto $
+** $Id: lfunc.h,v 2.15.1.1 2017/04/19 17:39:34 roberto Exp $
 ** Auxiliary functions to manipulate prototypes and closures
 ** See Copyright Notice in lua.h
 */
@@ -29,17 +29,22 @@
 #define MAXUPVAL	255
 
 
-#define upisopen(up)	((up)->v != &(up)->u.value)
-
-
-#define uplevel(up)	check_exp(upisopen(up), cast(StkId, (up)->v))
-
-
 /*
-** maximum number of misses before giving up the cache of closures
-** in prototypes
+** Upvalues for Lua closures
 */
-#define MAXMISS		10
+struct UpVal {
+  TValue *v;  /* points to stack or to its own value */
+  lu_mem refcount;  /* reference counter */
+  union {
+    struct {  /* (when open) */
+      UpVal *next;  /* linked list */
+      int touched;  /* mark to avoid cycles with dead threads */
+    } open;
+    TValue value;  /* the value (when closed) */
+  } u;
+};
+
+#define upisopen(up)	((up)->v != &(up)->u.value)
 
 
 LUAI_FUNC Proto *luaF_newproto (lua_State *L);
@@ -48,7 +53,6 @@ LUAI_FUNC LClosure *luaF_newLclosure (lua_State *L, int nelems);
 LUAI_FUNC void luaF_initupvals (lua_State *L, LClosure *cl);
 LUAI_FUNC UpVal *luaF_findupval (lua_State *L, StkId level);
 LUAI_FUNC void luaF_close (lua_State *L, StkId level);
-LUAI_FUNC void luaF_unlinkupval (UpVal *uv);
 LUAI_FUNC void luaF_freeproto (lua_State *L, Proto *f);
 LUAI_FUNC const char *luaF_getlocalname (const Proto *func, int local_number,
                                          int pc);

@@ -8,7 +8,6 @@
 #ifndef MEGAMOL_GUI_GUIVIEW_H_INCLUDED
 #define MEGAMOL_GUI_GUIVIEW_H_INCLUDED
 
-#include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/AbstractView.h"
 #include "mmcore/view/CallRenderView.h"
@@ -86,6 +85,8 @@ protected:
 
     virtual void DeserialiseCamera(vislib::Serialiser& serialiser) override;
 
+    virtual bool OnRenderView(megamol::core::Call& call);
+
     virtual void Render(const mmcRenderViewContext& context) override;
 
     virtual void ResetView(void) override;
@@ -105,7 +106,14 @@ protected:
 
     virtual bool OnMouseScroll(double dx, double dy) override;
 
-    virtual bool OnRenderView(core::Call& call) override;
+    /**
+     * Unpacks the mouse coordinates, which are relative to the virtual
+     * viewport size.
+     *
+     * @param x The x coordinate of the mouse position
+     * @param y The y coordinate of the mouse position
+     */
+    virtual void unpackMouseCoordinates(float& x, float& y);
 
 private:
     /** ImGui key map assignment for text manipulation hotkeys (using last unused indices < 512) */
@@ -132,9 +140,6 @@ private:
 
     /** The input renderview slot */
     core::CallerSlot render_view_slot;
-
-    /** Temporary override */
-    core::view::CallRenderView* overrideViewCall;
 
     /** A parameter to select the style */
     core::param::ParamSlot style_param;
