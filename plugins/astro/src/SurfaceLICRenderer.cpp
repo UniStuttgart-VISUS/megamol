@@ -110,7 +110,7 @@ bool SurfaceLICRenderer::create() {
     }
 
     // create render target texture
-    TextureLayout render_tgt_layout(GL_RGBA8, 1920, 1080, 1, GL_RGBA, GL_UNSIGNED_BYTE, 1,
+    TextureLayout render_tgt_layout(GL_RGBA8, 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, 1,
         {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
             {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
             {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
@@ -228,12 +228,21 @@ bool SurfaceLICRenderer::Render(core::Call& call) {
         tf_texture = ct->OpenGLTexture();
     }
 
+    // Create render target texture
+    TextureLayout render_tgt_layout(GL_RGBA8, cr->GetViewport().Width(), cr->GetViewport().Height(), 1, GL_RGBA,
+        GL_UNSIGNED_BYTE, 1,
+        {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
+            {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
+            {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
+        {});
+    this->m_render_target->reload(render_tgt_layout, nullptr);
+
     // Create noise texture
     const auto stencil = this->stencil_size.Param<core::param::IntParam>()->Value();
-    const auto screensize = (ci->GetViewport().Width() * ci->GetViewport().Height()) / (stencil * stencil);
+    const auto screensize = (cr->GetViewport().Width() * cr->GetViewport().Height()) / (stencil * stencil);
 
     if (this->noise.size() != screensize) {
-        TextureLayout noise_layout(GL_R32F, ci->GetViewport().Width() / stencil, ci->GetViewport().Height() / stencil,
+        TextureLayout noise_layout(GL_R32F, cr->GetViewport().Width() / stencil, cr->GetViewport().Height() / stencil,
             1, GL_RED, GL_FLOAT, 1,
             {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
                 {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_NEAREST},
