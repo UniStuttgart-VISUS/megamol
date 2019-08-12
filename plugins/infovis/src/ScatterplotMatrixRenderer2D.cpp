@@ -978,6 +978,8 @@ void ScatterplotMatrixRenderer2D::drawText() {
 }
 
 void ScatterplotMatrixRenderer2D::bindAndClearScreen() {
+    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &screenRestoreFBO);
+
     GLfloat viewport[4];
     glGetFloatv(GL_VIEWPORT, viewport);
 
@@ -987,7 +989,6 @@ void ScatterplotMatrixRenderer2D::bindAndClearScreen() {
         this->screenFBO->createColorAttachment(GL_RGBA32F, GL_RGBA, GL_FLOAT);
     }
 
-    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &screenRestoreFBO);
     this->screenFBO->bind();
 
     // Blending and clear color.
