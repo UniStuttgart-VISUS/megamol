@@ -448,7 +448,7 @@ namespace moldyn {
          * @return 'True' on success, 'false' otherwise.
          */
         bool setBufferData(vislib::graphics::gl::GLSLShader& shader, MultiParticleDataCall::Particles &parts, 
-            GLuint vertBuf, const void *vertPtr, GLuint colBuf,  const void *colPtr);
+            GLuint vertBuf, const void *vertPtr, GLuint colBuf,  const void *colPtr, bool createBufferData = false);
 
         /**
          * Unset pointers to vertex and color buffers.
@@ -612,14 +612,6 @@ namespace moldyn {
          * @param cr3d  ...
          */
         void renderDeferredPass(megamol::core::view::CallRender3D* cr3d);
-
-        /**
-         * Upload data to GPU.
-         *
-         * @param gpuData    ...
-         * @param particles  ...
-         */
-        void uploadDataToGPU(const gpuParticleDataType &gpuData, megamol::core::moldyn::MultiParticleDataCall::Particles& particles);
 
         /**
          * Generate direction shader array string.

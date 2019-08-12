@@ -76,7 +76,7 @@
             <snippet name="Main"                  type="file">sphere/mdao_deferred_vert_main.glsl</snippet>
         </shader>
 
-        <shader name="fragment"> 
+        <shader name="fragment">     
             <snippet name="Main"                  type="file">sphere/mdao_deferred_frag_main.glsl</snippet>
             <!-- Folowing snippets are appended depending on need: -->
             <snippet name="Lighting"              type="file">sphere/mdao_deferred_frag_lighting.glsl</snippet>
