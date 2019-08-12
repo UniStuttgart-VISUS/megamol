@@ -448,6 +448,8 @@ void ScatterplotMatrixRenderer2D::updateColumns(void) {
 }
 
 void ScatterplotMatrixRenderer2D::drawMinimalisticAxis(void) {
+    debugPush(1, "drawMinimalisticAxis");
+
     this->minimalisticAxisShader.Enable();
 
     // Transformation uniform.
@@ -520,9 +522,13 @@ void ScatterplotMatrixRenderer2D::drawMinimalisticAxis(void) {
     }
 
     this->axisFont.BatchDrawString();
+
+    debugPop();
 }
 
 void ScatterplotMatrixRenderer2D::drawScientificAxis(void) {
+    debugPush(2, "drawScientificAxis");
+
     const auto axisColor = this->axisColorParam.Param<core::param::ColorParam>()->Value();
     const auto columnCount = this->floatTable->GetColumnsCount();
     const auto columnInfos = this->floatTable->GetColumnsInfos();
@@ -621,6 +627,8 @@ void ScatterplotMatrixRenderer2D::drawScientificAxis(void) {
     }
 
     this->axisFont.BatchDrawString();
+
+    debugPop();
 }
 
 void ScatterplotMatrixRenderer2D::bindMappingUniforms(vislib::graphics::gl::GLSLShader& shader) {
@@ -662,6 +670,8 @@ void ScatterplotMatrixRenderer2D::drawPoints(void) {
     if (this->screenValid) {
         return;
     }
+
+    debugPush(11, "drawPoints");
 
     GLfloat viewport[4];
     glGetFloatv(GL_VIEWPORT, viewport);
@@ -724,12 +734,16 @@ void ScatterplotMatrixRenderer2D::drawPoints(void) {
 
     glDisable(GL_TEXTURE_1D);
     glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
+
+    debugPop();
 }
 
 void ScatterplotMatrixRenderer2D::drawLines(void) {
     if (this->screenValid) {
         return;
     }
+
+    debugPush(12, "drawLines");
 
     GLfloat viewport[4];
     glGetFloatv(GL_VIEWPORT, viewport);
@@ -786,6 +800,8 @@ void ScatterplotMatrixRenderer2D::drawLines(void) {
     this->lineShader.Disable();
 
     glDisable(GL_TEXTURE_1D);
+
+    debugPop();
 }
 
 struct TriangulationVertex {
@@ -889,6 +905,8 @@ void ScatterplotMatrixRenderer2D::drawTriangulation() {
         return;
     }
 
+    debugPush(13, "drawTriangulation");
+
     this->validateTriangulation();
 
     this->triangleShader.Enable();
@@ -913,6 +931,50 @@ void ScatterplotMatrixRenderer2D::drawTriangulation() {
     glDrawElements(GL_TRIANGLES, triangleVertexCount, GL_UNSIGNED_INT, 0);
     this->unbindScreen();
     this->triangleShader.Disable();
+
+    debugPop();
+}
+
+void ScatterplotMatrixRenderer2D::validateText() {
+    if (this->textValid) {
+        return;
+    }
+
+    this->textFont.ClearBatchDrawCache();
+
+    const auto columnInfos = this->floatTable->GetColumnsInfos();
+    const auto rowCount = this->floatTable->GetRowsCount();
+
+    const float labelSize = this->labelSizeParam.Param<core::param::FloatParam>()->Value();
+    for (size_t i = 0; i < rowCount; ++i) {
+        for (const auto& plot : this->plots) {
+            const float xValue = this->floatTable->GetData(plot.indexX, i);
+            const float yValue = this->floatTable->GetData(plot.indexY, i);
+            const float xPos = (xValue - plot.minX) / (plot.maxX - plot.minX);
+            const float yPos = (yValue - plot.minY) / (plot.maxY - plot.minY);
+
+            const size_t colorIndex = this->floatTable->GetData(this->map.valueIdx, i);
+            float labelColor[4] = {0, 0, 0, 1}; // TODO: param please!
+
+            // XXX: this will be a lot more useful when have support for string-columns!
+            std::string label = to_string(this->floatTable->GetData(map.labelIdx, i));
+
+            this->textFont.DrawString(labelColor, plot.offsetX + xPos * plot.sizeX, plot.offsetY + yPos * plot.sizeY,
+                labelSize, false, label.c_str(), core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
+        }
+    }
+
+    this->textValid = true;
+}
+
+void ScatterplotMatrixRenderer2D::drawText() {
+    debugPush(14, "drawText");
+
+    validateText();
+
+    this->textFont.BatchDrawString();
+
+    debugPop();
 }
 
 void ScatterplotMatrixRenderer2D::bindAndClearScreen() {
@@ -960,6 +1022,8 @@ void ScatterplotMatrixRenderer2D::unbindScreen() {
 }
 
 void ScatterplotMatrixRenderer2D::drawScreen() {
+    debugPush(20, "drawScreen");
+
     // Enable shader.
     this->screenShader.Enable();
     this->bindMappingUniforms(this->screenShader);
@@ -992,45 +1056,8 @@ void ScatterplotMatrixRenderer2D::drawScreen() {
     glEnable(GL_DEPTH_TEST);
 
     this->screenShader.Disable();
-}
 
-void ScatterplotMatrixRenderer2D::validateText() {
-    if (this->textValid) {
-        return;
-    }
-
-    this->textFont.ClearBatchDrawCache();
-
-    const auto columnInfos = this->floatTable->GetColumnsInfos();
-    const auto rowCount = this->floatTable->GetRowsCount();
-
-    const float labelSize = this->labelSizeParam.Param<core::param::FloatParam>()->Value();
-    for (size_t i = 0; i < rowCount; ++i) {
-        for (const auto& plot : this->plots) {
-            const float xValue = this->floatTable->GetData(plot.indexX, i);
-            const float yValue = this->floatTable->GetData(plot.indexY, i);
-            const float xPos = (xValue - plot.minX) / (plot.maxX - plot.minX);
-            const float yPos = (yValue - plot.minY) / (plot.maxY - plot.minY);
-
-            const size_t colorIndex = this->floatTable->GetData(this->map.valueIdx, i);
-            float labelColor[4] = {0, 0, 0, 1}; // TODO: param please!
-
-            // XXX: this will be a lot more useful when have support for string-columns!
-            std::string label = to_string(this->floatTable->GetData(map.labelIdx, i));
-
-            this->textFont.DrawString(labelColor, plot.offsetX + xPos * plot.sizeX, plot.offsetY + yPos * plot.sizeY,
-                labelSize, false, label.c_str(), core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
-        }
-    }
-
-    this->textValid = true;
-}
-
-
-void ScatterplotMatrixRenderer2D::drawText() {
-    validateText();
-
-    this->textFont.BatchDrawString();
+    debugPop();
 }
 
 void ScatterplotMatrixRenderer2D::updateSelection() {
