@@ -40,7 +40,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description() { return "Split View Module"; }
+    static const char* Description() { return "A view embedding two other views separated by a splitter"; }
 
     /**
      * Answers whether this module is available on the current system.

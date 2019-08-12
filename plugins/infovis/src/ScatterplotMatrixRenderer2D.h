@@ -318,6 +318,6 @@ private:
     std::unique_ptr<TreeIndex> index;
 };
 
-} // end namespace megamol
+} // namespace megamol::infovis
 
 #endif // MEGAMOL_INFOVIS_SCATTERPLOTRENDERER2D_H_INCLUDED

@@ -12,7 +12,6 @@
 #include "mmcore/utility/ResourceWrapper.h"
 #include "vislib/math/ShallowMatrix.h"
 
-#include <memory>
 #include <sstream>
 #include "delaunator.hpp"
 
@@ -846,7 +845,7 @@ void ScatterplotMatrixRenderer2D::validateTriangulation() {
         // Smooth triangulation by adding new vertices.
         auto smoothIterations = this->triangulationSmoothnessParam.Param<core::param::IntParam>()->Value();
         for (size_t i = 0; i < smoothIterations; i++) {
-            for (int triangleIndex = 0; triangleIndex < d.triangles.size(); triangleIndex += 3) {
+            for (size_t triangleIndex = 0; triangleIndex < d.triangles.size(); triangleIndex += 3) {
                 size_t aIndex = d.triangles[triangleIndex];
                 size_t bIndex = d.triangles[triangleIndex + 1];
                 size_t cIndex = d.triangles[triangleIndex + 2];
@@ -869,13 +868,13 @@ void ScatterplotMatrixRenderer2D::validateTriangulation() {
         const auto indexOffset = static_cast<GLuint>(vertices.size());
 
         // Copy vertices to vertex buffer.
-        for (int vertexIndex = 0; vertexIndex < values.size(); vertexIndex++) {
+        for (size_t vertexIndex = 0; vertexIndex < values.size(); vertexIndex++) {
             TriangulationVertex vertex = {coords[vertexIndex * 2], coords[vertexIndex * 2 + 1], values[vertexIndex]};
             vertices.push_back(vertex);
         }
 
         // Copy indices to index buffer.
-        for (unsigned long triangle : d.triangles) {
+        for (auto triangle : d.triangles) {
             indices.push_back(indexOffset + triangle);
         }
     }
@@ -1083,7 +1082,7 @@ void ScatterplotMatrixRenderer2D::updateSelection() {
 
     // Test if distance is within limits.
     auto kernelRadiusSq = std::pow(0.5 * this->kernelWidthParam.Param<core::param::FloatParam>()->Value(), 2.0);
-    for (int i = 0; i < k; ++i) {
+    for (size_t i = 0; i < k; ++i) {
         if (dis[i] <= kernelRadiusSq) {
             size_t row = this->indexPoints->idx_to_row(idx[i]);
             if (this->mouse.selector == BrushState::ADD) {
