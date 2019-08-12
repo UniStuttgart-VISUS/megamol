@@ -465,6 +465,16 @@ private:
     core::param::ParamSlot m_opacity_threshold;
     core::param::ParamSlot m_iso_value;
 
+    core::param::ParamSlot m_use_lighting_slot;
+    core::param::ParamSlot m_ka_slot;
+    core::param::ParamSlot m_kd_slot;
+    core::param::ParamSlot m_ks_slot;
+    core::param::ParamSlot m_shininess_slot;
+    core::param::ParamSlot m_ambient_color;
+    core::param::ParamSlot m_specular_color;
+    core::param::ParamSlot m_light_color;
+    core::param::ParamSlot m_material_color;
+
     /** caller slot */
     megamol::core::CallerSlot m_renderer_callerSlot;
     megamol::core::CallerSlot m_volumetricData_callerSlot;

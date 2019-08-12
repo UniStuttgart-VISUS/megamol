@@ -13,6 +13,8 @@
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/misc/VolumetricDataCall.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/utility/ScaledBoundingBoxes.h"
@@ -20,6 +22,7 @@
 #include "mmcore/view/CallRender3D.h"
 
 #include "linmath.h"
+#include "mmcore/view/AbstractRenderingView.h"
 
 using namespace megamol::stdplugin::volume;
 
@@ -27,6 +30,15 @@ RaycastVolumeRenderer::RaycastVolumeRenderer()
     : Renderer3DModule()
     , m_mode("mode", "Mode changing the behavior for the raycaster")
     , m_ray_step_ratio_param("ray step ratio", "Adjust sampling rate")
+    , m_use_lighting_slot("use_lighting", "Enable simple volumetric illumination")
+    , m_ka_slot("ka", "Ambient part for Phong lighting")
+    , m_kd_slot("kd", "Diffuse part for Phong lighting")
+    , m_ks_slot("ks", "Specular part for Phong lighting")
+    , m_shininess_slot("shininess", "Shininess for Phong lighting")
+    , m_ambient_color("ambient color", "Ambient color")
+    , m_specular_color("specular color", "Specular color")
+    , m_light_color("light color", "Light color")
+    , m_material_color("material color", "Material color")
     , m_opacity_threshold("opacity threshold", "Opacity threshold for integrative rendering")
     , m_iso_value("isovalue", "Isovalue for isosurface rendering")
     , m_renderer_callerSlot("Renderer", "Renderer for chaining")
@@ -55,6 +67,33 @@ RaycastVolumeRenderer::RaycastVolumeRenderer()
 
     this->m_iso_value << new megamol::core::param::FloatParam(0.5);
     this->MakeSlotAvailable(&this->m_iso_value);
+
+    this->m_use_lighting_slot << new core::param::BoolParam(false);
+    this->MakeSlotAvailable(&this->m_use_lighting_slot);
+
+    this->m_ka_slot << new core::param::FloatParam(0.1f, 0.0f);
+    this->MakeSlotAvailable(&this->m_ka_slot);
+
+    this->m_kd_slot << new core::param::FloatParam(0.5f, 0.0f);
+    this->MakeSlotAvailable(&this->m_kd_slot);
+
+    this->m_ks_slot << new core::param::FloatParam(0.4f, 0.0f);
+    this->MakeSlotAvailable(&this->m_ks_slot);
+
+    this->m_shininess_slot << new core::param::FloatParam(10.0f, 0.0f);
+    this->MakeSlotAvailable(&this->m_shininess_slot);
+
+    this->m_ambient_color << new core::param::ColorParam(1.0f, 1.0f, 1.0f, 1.0f);
+    this->MakeSlotAvailable(&this->m_ambient_color);
+
+    this->m_specular_color << new core::param::ColorParam(1.0f, 1.0f, 1.0f, 1.0f);
+    this->MakeSlotAvailable(&this->m_specular_color);
+
+    this->m_light_color << new core::param::ColorParam(1.0f, 1.0f, 1.0f, 1.0f);
+    this->MakeSlotAvailable(&this->m_light_color);
+
+    this->m_material_color << new core::param::ColorParam(0.95f, 0.67f, 0.47f, 1.0f);
+    this->MakeSlotAvailable(&this->m_material_color);
 }
 
 RaycastVolumeRenderer::~RaycastVolumeRenderer() { this->Release(); }
@@ -176,7 +215,7 @@ bool RaycastVolumeRenderer::GetExtents(megamol::core::Call& call) {
 
     cr->SetTimeFramesCount(cd->FrameCount());
 
-    std::vector<core::BoundingBoxes> bbs{ cd->GetBoundingBoxes() };
+    std::vector<core::BoundingBoxes> bbs{cd->GetBoundingBoxes()};
 
     if (ci != nullptr) {
         *ci = *cr;
@@ -185,7 +224,7 @@ bool RaycastVolumeRenderer::GetExtents(megamol::core::Call& call) {
 
         bbs.push_back(ci->GetBoundingBoxes());
     }
-    
+
     cr->AccessBoundingBoxes() = core::utility::combineAndMagicScaleBoundingBoxes(bbs);
 
     return true;
@@ -226,6 +265,9 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
     glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
     GLfloat projMatrix_column[16];
     glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
+
+    std::array<float, 4> light = {0.0f, 0.0f, 1.0f, 1.0f};
+    glGetLightfv(GL_LIGHT0, GL_POSITION, light.data());
     // end suck
 
     if (!updateVolumeData(cr->Time())) return false;
@@ -276,6 +318,36 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
     glUniform2fv(compute_shdr->ParameterLocation("valRange"), 1, valRange.data());
     glUniform1f(compute_shdr->ParameterLocation("rayStepRatio"),
         this->m_ray_step_ratio_param.Param<core::param::FloatParam>()->Value());
+
+    glUniform1i(compute_shdr->ParameterLocation("use_lighting"),
+        this->m_use_lighting_slot.Param<core::param::BoolParam>()->Value());
+    glUniform1f(compute_shdr->ParameterLocation("ka"),
+        this->m_ka_slot.Param<core::param::FloatParam>()->Value());
+    glUniform1f(compute_shdr->ParameterLocation("kd"),
+        this->m_kd_slot.Param<core::param::FloatParam>()->Value());
+    glUniform1f(compute_shdr->ParameterLocation("ks"),
+        this->m_ks_slot.Param<core::param::FloatParam>()->Value());
+    glUniform1f(compute_shdr->ParameterLocation("shininess"),
+        this->m_shininess_slot.Param<core::param::FloatParam>()->Value());
+    glUniform3fv(compute_shdr->ParameterLocation("light"), 1, light.data());
+    glUniform3fv(compute_shdr->ParameterLocation("ambient_col"), 1,
+        this->m_ambient_color.Param<core::param::ColorParam>()->Value().data());
+    glUniform3fv(compute_shdr->ParameterLocation("specular_col"), 1,
+        this->m_specular_color.Param<core::param::ColorParam>()->Value().data());
+    glUniform3fv(compute_shdr->ParameterLocation("light_col"), 1,
+        this->m_light_color.Param<core::param::ColorParam>()->Value().data());
+    glUniform3fv(compute_shdr->ParameterLocation("material_col"), 1,
+        this->m_material_color.Param<core::param::ColorParam>()->Value().data());
+
+    auto const arv = std::dynamic_pointer_cast<core::view::AbstractRenderingView const>(cr->PeekCallerSlot()->Parent());
+    std::array<float, 3> bkgndCol = {1.0f, 1.0f, 1.0f};
+    if (arv != nullptr) {
+        auto const ptr = arv->BkgndColour();
+        bkgndCol[0] = ptr[0];
+        bkgndCol[1] = ptr[1];
+        bkgndCol[2] = ptr[2];
+    }
+    glUniform3fv(compute_shdr->ParameterLocation("background"), 1, bkgndCol.data());
 
     if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0) {
         glUniform1f(compute_shdr->ParameterLocation("opacityThreshold"),
@@ -481,7 +553,7 @@ bool RaycastVolumeRenderer::updateVolumeData(const unsigned int frameID) {
 
     // TODO if/else data already on GPU
 
-    //vislib::sys::Log::DefaultLog.WriteInfo(L"Volume frame %u is being uploaded.", cd->FrameID());
+    // vislib::sys::Log::DefaultLog.WriteInfo(L"Volume frame %u is being uploaded.", cd->FrameID());
     TextureLayout volume_layout(internal_format, metadata->Resolution[0], metadata->Resolution[1],
         metadata->Resolution[2], format, type, 1,
         {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
