@@ -439,7 +439,9 @@ private:
 
     std::unique_ptr<vislib::graphics::gl::GLSLComputeShader> m_raycast_volume_compute_shdr;
     std::unique_ptr<vislib::graphics::gl::GLSLComputeShader> m_raycast_volume_compute_iso_shdr;
+    std::unique_ptr<vislib::graphics::gl::GLSLComputeShader> m_raycast_volume_compute_aggr_shdr;
     std::unique_ptr<vislib::graphics::gl::GLSLShader> m_render_to_framebuffer_shdr;
+    std::unique_ptr<vislib::graphics::gl::GLSLShader> m_render_to_framebuffer_aggr_shdr;
 
     std::unique_ptr<Texture2D> m_render_target;
     std::unique_ptr<Texture2D> m_normal_target;

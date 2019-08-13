@@ -225,6 +225,65 @@ void main() {
         </snippet>
     </namespace>
 
+    <shader name="compute_aggr">
+        <snippet type="version">430</snippet>
+        <snippet name="::RaycastVolumeRenderer::common::input" />
+        <snippet type="string">
+            <![CDATA[
+/* opacity threshold for integration */
+uniform float opacityThreshold;
+
+/* texture containing transfer function */
+uniform highp sampler1D tf_tx1D;
+
+/* texture containing a depth buffer */
+uniform highp sampler2D color_tx2D;
+uniform highp sampler2D depth_tx2D;
+uniform int use_depth_tx;
+            ]]>
+        </snippet>
+        <snippet name="::RaycastVolumeRenderer::common::output" />
+        <snippet name="::RaycastVolumeRenderer::common::functionality" />
+        <snippet name="::RaycastVolumeRenderer::common::ray_generation" />
+        <snippet type="string">
+            <![CDATA[
+            float att = 0.0f;
+        while (t < tfar && result.w < opacityThreshold) {
+            ]]>
+        </snippet>
+        <snippet name="::RaycastVolumeRenderer::common::ray_step" />
+        <snippet type="string">
+            <![CDATA[
+            if (use_depth_tx != 0) {
+                // Compare depth values and decide to abort
+                vec2 pixel_tex_coords = vec2(gID.x / rt_resolution.x, gID.y / rt_resolution.y);
+                const float input_depth = texture(depth_tx2D, pixel_tex_coords).x;
+                
+                const float depth = calculate_depth(pos);
+
+                if (depth > input_depth) {
+                    const vec4 color = texture(color_tx2D, pixel_tex_coords);
+
+                    result = color;
+
+                    break;
+                }
+            }
+            
+            // Get sample
+            att += (texture(volume_tx3D, texCoords).x - valRange.x) / (valRange.y - valRange.x);
+
+            t += rayStep;
+        }
+
+        // Write results
+        imageStore(render_target_tx2D, pixel_coords, vec4(result.xyz, att));
+            ]]>
+        </snippet>
+        <snippet name="::RaycastVolumeRenderer::common::else" />
+        <snippet name="::RaycastVolumeRenderer::common::end" />
+    </shader>
+
     <shader name="compute">
         <snippet type="version">430</snippet>
         <snippet name="::RaycastVolumeRenderer::common::input" />
@@ -270,7 +329,7 @@ uniform int use_depth_tx;
             }
 
             // Get sample
-            vec4 vol_sample = texture(tf_tx1D, (texture(volume_tx3D, texCoords).x - valRange.x) / valRange.y);
+            vec4 vol_sample = texture(tf_tx1D, (texture(volume_tx3D, texCoords).x - valRange.x) / (valRange.y-valRange.x));
 
             // Calculate lighting
             if (use_lighting) {
@@ -412,6 +471,37 @@ void main()
     frag_out = texture(src_tx2D, uv_coord);
     normal_out = texture(normal_tx2D, uv_coord);
 
+    gl_FragDepth = texture(depth_tx2D, uv_coord).x;
+}
+            ]]>
+        </snippet>
+    </shader>
+
+    <shader name="frag_aggr">
+        <snippet type="version">430</snippet>
+        <snippet name="body" type="string">
+            <![CDATA[
+uniform sampler2D src_tx2D;
+uniform sampler2D normal_tx2D;
+uniform sampler2D depth_tx2D;
+/* texture containing transfer function */
+uniform highp sampler1D tf_tx1D;
+
+uniform vec2 valRange;
+
+in vec2 uv_coord;
+
+layout (location = 0) out vec4 frag_out;
+layout (location = 1) out vec4 normal_out;
+
+void main()
+{
+    frag_out = texture(src_tx2D, uv_coord);
+    vec4 vol_sample = texture(tf_tx1D, (frag_out.w - valRange.x) / (valRange.y - valRange.x));
+    frag_out = vec4(frag_out.xyz*(1.0f - vol_sample.w)+vol_sample.xyz*vol_sample.w, 1.0f);
+
+    normal_out = texture(normal_tx2D, uv_coord);
+    
     gl_FragDepth = texture(depth_tx2D, uv_coord).x;
 }
             ]]>

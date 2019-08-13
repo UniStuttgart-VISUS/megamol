@@ -60,6 +60,7 @@ RaycastVolumeRenderer::RaycastVolumeRenderer()
     this->m_mode << new megamol::core::param::EnumParam(0);
     this->m_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(0, "Integration");
     this->m_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(1, "Isosurface");
+    this->m_mode.Param<core::param::EnumParam>()->SetTypePair(2, "Aggregate");
     this->MakeSlotAvailable(&this->m_mode);
 
     this->m_ray_step_ratio_param << new megamol::core::param::FloatParam(1.0);
@@ -115,12 +116,16 @@ bool RaycastVolumeRenderer::create() {
         // create shader program
         m_raycast_volume_compute_shdr = std::make_unique<vislib::graphics::gl::GLSLComputeShader>();
         m_raycast_volume_compute_iso_shdr = std::make_unique<vislib::graphics::gl::GLSLComputeShader>();
+        m_raycast_volume_compute_aggr_shdr = std::make_unique<vislib::graphics::gl::GLSLComputeShader>();
         m_render_to_framebuffer_shdr = std::make_unique<vislib::graphics::gl::GLSLShader>();
+        m_render_to_framebuffer_aggr_shdr = std::make_unique<vislib::graphics::gl::GLSLShader>();
 
         vislib::graphics::gl::ShaderSource compute_shader_src;
         vislib::graphics::gl::ShaderSource compute_iso_shader_src;
+        vislib::graphics::gl::ShaderSource compute_aggr_shader_src;
         vislib::graphics::gl::ShaderSource vertex_shader_src;
         vislib::graphics::gl::ShaderSource fragment_shader_src;
+        vislib::graphics::gl::ShaderSource fragment_shader_aggr_src;
 
         if (!instance()->ShaderSourceFactory().MakeShaderSource("RaycastVolumeRenderer::compute", compute_shader_src))
             return false;
@@ -135,14 +140,28 @@ bool RaycastVolumeRenderer::create() {
             return false;
         if (!m_raycast_volume_compute_iso_shdr->Link()) return false;
 
+        if (!instance()->ShaderSourceFactory().MakeShaderSource(
+                "RaycastVolumeRenderer::compute_aggr", compute_aggr_shader_src))
+            return false;
+        if (!m_raycast_volume_compute_aggr_shdr->Compile(compute_aggr_shader_src.Code(), compute_aggr_shader_src.Count()))
+            return false;
+        if (!m_raycast_volume_compute_aggr_shdr->Link()) return false;
+
         if (!instance()->ShaderSourceFactory().MakeShaderSource("RaycastVolumeRenderer::vert", vertex_shader_src))
             return false;
         if (!instance()->ShaderSourceFactory().MakeShaderSource("RaycastVolumeRenderer::frag", fragment_shader_src))
+            return false;
+        if (!instance()->ShaderSourceFactory().MakeShaderSource("RaycastVolumeRenderer::frag_aggr", fragment_shader_aggr_src))
             return false;
         if (!m_render_to_framebuffer_shdr->Compile(vertex_shader_src.Code(), vertex_shader_src.Count(),
                 fragment_shader_src.Code(), fragment_shader_src.Count()))
             return false;
         if (!m_render_to_framebuffer_shdr->Link()) return false;
+
+        if (!m_render_to_framebuffer_aggr_shdr->Compile(vertex_shader_src.Code(), vertex_shader_src.Count(),
+                fragment_shader_aggr_src.Code(), fragment_shader_aggr_src.Count()))
+            return false;
+        if (!m_render_to_framebuffer_aggr_shdr->Link()) return false;
     } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Unable to compile shader (@%s): %s\n",
             vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
@@ -202,6 +221,7 @@ bool RaycastVolumeRenderer::create() {
 void RaycastVolumeRenderer::release() {
     m_raycast_volume_compute_shdr.reset(nullptr);
     m_raycast_volume_compute_iso_shdr.reset(nullptr);
+    m_raycast_volume_compute_aggr_shdr.reset(nullptr);
     m_render_target.reset(nullptr);
     m_normal_target.reset(nullptr);
     m_depth_target.reset(nullptr);
@@ -321,6 +341,9 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
         compute_shdr = this->m_raycast_volume_compute_shdr.get();
     } else if (this->m_mode.Param<core::param::EnumParam>()->Value() == 1) {
         compute_shdr = this->m_raycast_volume_compute_iso_shdr.get();
+    } else if (this->m_mode.Param<core::param::EnumParam>()->Value() == 2) {
+        if (!updateTransferFunction()) return false;
+        compute_shdr = this->m_raycast_volume_compute_aggr_shdr.get();
     } else {
         vislib::sys::Log::DefaultLog.WriteError("Unknown raycast mode.");
         return false;
@@ -435,7 +458,7 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
         static_cast<int>(std::ceil(rt_resolution[0] / 8.0f)), static_cast<int>(std::ceil(rt_resolution[1] / 8.0f)), 1);
 
     compute_shdr->Disable();
-
+   
     glActiveTexture(GL_TEXTURE3);
     glBindTexture(GL_TEXTURE_2D, 0);
     glActiveTexture(GL_TEXTURE2);
@@ -446,6 +469,34 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
     glBindTexture(GL_TEXTURE_3D, 0);
 
     glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT);
+
+    // read image back to determine min max
+    float rndr_min = std::numeric_limits<float>::max();
+    float rndr_max = std::numeric_limits<float>::lowest();
+    if (this->m_mode.Param<core::param::EnumParam>()->Value() == 2) {
+        glActiveTexture(GL_TEXTURE0);
+        m_render_target->bindTexture();
+        auto layout = m_render_target->getTextureLayout();
+        auto format = layout.format;
+        int components = 1;
+        if (format == GL_RGBA) {
+            components = 4;
+        } else if (format == GL_RGB) {
+            components = 3;
+        } else if (format == GL_RG) {
+            components = 2;
+        }
+        std::vector<float> tmp_data(layout.width * layout.width * components);
+        glGetTexImage(GL_TEXTURE_2D, 0, format, GL_FLOAT, tmp_data.data());
+
+        for (size_t idx = 0; idx < tmp_data.size() / components; ++idx) {
+            auto const val = tmp_data[idx * components + (components - 1)];
+            if (val < rndr_min) rndr_min = val;
+            if (val > rndr_max) rndr_max = val;
+        }
+
+        glBindTexture(GL_TEXTURE_2D, 0);
+    }
 
     // copy image to framebuffer
     // TODO query gl state and reset to previous state?
@@ -475,6 +526,14 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
 
         GLenum buffers[] = {GL_COLOR_ATTACHMENT0_EXT, GL_COLOR_ATTACHMENT1_EXT};
         glDrawBuffers(2, buffers);
+    }
+
+    if (this->m_mode.Param<core::param::EnumParam>()->Value() == 2) {
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_1D, tf_texture);
+        glUniform1i(compute_shdr->ParameterLocation("tf_tx1D"), 1);
+
+        glUniform2f(compute_shdr->ParameterLocation("valRange"), rndr_min, rndr_max);
     }
 
     glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -606,6 +665,8 @@ bool RaycastVolumeRenderer::updateVolumeData(const unsigned int frameID) {
         {});
 
     m_volume_texture->reload(volume_layout, volumedata);
+
+    return true;
 }
 
 bool RaycastVolumeRenderer::updateTransferFunction() {
