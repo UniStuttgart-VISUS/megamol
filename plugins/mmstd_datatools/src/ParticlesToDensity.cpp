@@ -6,24 +6,34 @@
  */
 #include "stdafx.h"
 #include "ParticlesToDensity.h"
-#include <algorithm>
-#include <cassert>
-#include <cstdint>
-#include <fstream>
+
+#define _USE_MATH_DEFINES
+
 #include "mmcore/misc/VolumetricDataCall.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/IntParam.h"
-#include "omp.h"
-#include "vislib/sys/Log.h"
-#define _USE_MATH_DEFINES
-#include <chrono>
-#include <functional>
-#include <math.h>
-#include <numeric>
-#include "simultaneous_sort.h"
 #include "mmcore/param/FloatParam.h"
+
 #include "mmstd_datatools/table/TableDataCall.h"
+
+#include "vislib/sys/Log.h"
+
+#include "simultaneous_sort.h"
+
+#include "omp.h"
+
+#include <algorithm>
+#include <chrono>
+#include <cmath>
+#include <functional>
+#include <fstream>
+#include <iostream>
+#include <iterator>
+#include <limits>
+#include <numeric>
+#include <utility>
+#include <vector>
 
 using namespace megamol;
 using namespace megamol::stdplugin;
@@ -59,7 +69,6 @@ datatools::ParticlesToDensity::ParticlesToDensity(void)
     , cyclZSlot("cyclZ", "Considers cyclic boundary conditions in Z direction")
     , normalizeSlot("normalize", "Normalize the output volume")
     , sigmaSlot("sigma", "Sigma for Gauss in multiple of rad")
-    //, datahash(std::numeric_limits<size_t>::max())
     , datahash(0)
     , time(std::numeric_limits<unsigned int>::max())
     , has_data(false)

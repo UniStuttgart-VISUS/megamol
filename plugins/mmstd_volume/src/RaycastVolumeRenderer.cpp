@@ -7,9 +7,7 @@
 
 #include "RaycastVolumeRenderer.h"
 
-#include <array>
-
-#include "vislib/graphics/gl/ShaderSource.h"
+#include "linmath.h"
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/misc/VolumetricDataCall.h"
@@ -18,11 +16,22 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/utility/ScaledBoundingBoxes.h"
+#include "mmcore/view/AbstractRenderingView.h"
 #include "mmcore/view/CallGetTransferFunction.h"
 #include "mmcore/view/CallRender3D.h"
 
-#include "linmath.h"
-#include "mmcore/view/AbstractRenderingView.h"
+#include "vislib/graphics/gl/ShaderSource.h"
+
+#include "glowl/Texture.hpp"
+#include "glowl/Texture2D.hpp"
+#include "glowl/Texture3D.hpp"
+
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <limits>
+#include <memory>
+#include <vector>
 
 using namespace megamol::stdplugin::volume;
 
@@ -178,42 +187,42 @@ bool RaycastVolumeRenderer::create() {
     }
 
     // create render target texture
-    TextureLayout render_tgt_layout(GL_RGBA8, 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, 1,
+    glowl::TextureLayout render_tgt_layout(GL_RGBA8, 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, 1,
         {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
             {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
             {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
         {});
-    m_render_target = std::make_unique<Texture2D>("raycast_volume_render_target", render_tgt_layout, nullptr);
+    m_render_target = std::make_unique<glowl::Texture2D>("raycast_volume_render_target", render_tgt_layout, nullptr);
 
     // create normal target texture
-    TextureLayout normal_tgt_layout(GL_RGBA8, 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, 1,
+    glowl::TextureLayout normal_tgt_layout(GL_RGBA8, 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, 1,
         {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
             {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
             {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
         {});
-    m_normal_target = std::make_unique<Texture2D>("raycast_volume_normal_target", normal_tgt_layout, nullptr);
+    m_normal_target = std::make_unique<glowl::Texture2D>("raycast_volume_normal_target", normal_tgt_layout, nullptr);
 
     // create depth target texture
-    TextureLayout depth_tgt_layout(GL_R8, 1, 1, 1, GL_R, GL_UNSIGNED_BYTE, 1,
+    glowl::TextureLayout depth_tgt_layout(GL_R8, 1, 1, 1, GL_R, GL_UNSIGNED_BYTE, 1,
         {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
             {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
             {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
         {});
-    m_depth_target = std::make_unique<Texture2D>("raycast_volume_depth_target", depth_tgt_layout, nullptr);
+    m_depth_target = std::make_unique<glowl::Texture2D>("raycast_volume_depth_target", depth_tgt_layout, nullptr);
 
     // create empty volume texture
-    TextureLayout volume_layout(GL_R32F, 1, 1, 1, GL_RED, GL_FLOAT, 1,
+    glowl::TextureLayout volume_layout(GL_R32F, 1, 1, 1, GL_RED, GL_FLOAT, 1,
         {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
             {GL_TEXTURE_MIN_FILTER, GL_LINEAR}, {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
         {});
-    m_volume_texture = std::make_unique<Texture3D>("raycast_volume_texture", volume_layout, nullptr);
+    m_volume_texture = std::make_unique<glowl::Texture3D>("raycast_volume_texture", volume_layout, nullptr);
 
     // create empty transfer function texture
-    TextureLayout tf(GL_RGBA8, 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, 1,
+    glowl::TextureLayout tf(GL_RGBA8, 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, 1,
         {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
             {GL_TEXTURE_MIN_FILTER, GL_LINEAR}, {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
         {});
-    m_transfer_function = std::make_unique<Texture2D>("raycast_volume_texture", tf, nullptr);
+    m_transfer_function = std::make_unique<glowl::Texture2D>("raycast_volume_texture", tf, nullptr);
 
     return true;
 }
@@ -292,7 +301,7 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
     }
 
     // create render target texture
-    TextureLayout render_tgt_layout(GL_RGBA8, cr->GetViewport().Width(), cr->GetViewport().Height(), 1, GL_RGBA,
+    glowl::TextureLayout render_tgt_layout(GL_RGBA8, cr->GetViewport().Width(), cr->GetViewport().Height(), 1, GL_RGBA,
         GL_UNSIGNED_BYTE, 1,
         {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
             {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
@@ -301,7 +310,7 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
     m_render_target->reload(render_tgt_layout, nullptr);
 
     // create normal target texture
-    TextureLayout normal_tgt_layout(GL_RGBA8, cr->GetViewport().Width(), cr->GetViewport().Height(), 1, GL_RGBA,
+    glowl::TextureLayout normal_tgt_layout(GL_RGBA8, cr->GetViewport().Width(), cr->GetViewport().Height(), 1, GL_RGBA,
         GL_UNSIGNED_BYTE, 1,
         {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
             {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
@@ -310,7 +319,7 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
     m_normal_target->reload(normal_tgt_layout, nullptr);
 
     // create depth target texture
-    TextureLayout depth_tgt_layout(GL_R8, cr->GetViewport().Width(), cr->GetViewport().Height(), 1, GL_R,
+    glowl::TextureLayout depth_tgt_layout(GL_R8, cr->GetViewport().Width(), cr->GetViewport().Height(), 1, GL_R,
         GL_UNSIGNED_BYTE, 1,
         {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
             {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
@@ -376,8 +385,8 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
     glUniform3f(compute_shdr->ParameterLocation("halfVoxelSize"), 1.0f / (2.0f * (m_volume_resolution[0] - 1)),
         1.0f / (2.0f * (m_volume_resolution[1] - 1)), 1.0f / (2.0f * (m_volume_resolution[2] - 1)));
     auto const maxResolution =
-        std::fmax(m_volume_resolution[0], std::fmax(m_volume_resolution[1], m_volume_resolution[2]));
-    auto const maxExtents = std::fmax(m_volume_extents[0], std::fmax(m_volume_extents[1], m_volume_extents[2]));
+        std::max(m_volume_resolution[0], std::max(m_volume_resolution[1], m_volume_resolution[2]));
+    auto const maxExtents = std::max(m_volume_extents[0], std::max(m_volume_extents[1], m_volume_extents[2]));
     glUniform1f(compute_shdr->ParameterLocation("voxelSize"), maxExtents / (maxResolution - 1.0f));
     glUniform2fv(compute_shdr->ParameterLocation("valRange"), 1, valRange.data());
     glUniform1f(compute_shdr->ParameterLocation("rayStepRatio"),
@@ -674,8 +683,7 @@ bool RaycastVolumeRenderer::updateVolumeData(const unsigned int frameID) {
 
     // TODO if/else data already on GPU
 
-    // vislib::sys::Log::DefaultLog.WriteInfo(L"Volume frame %u is being uploaded.", cd->FrameID());
-    TextureLayout volume_layout(internal_format, metadata->Resolution[0], metadata->Resolution[1],
+    glowl::TextureLayout volume_layout(internal_format, metadata->Resolution[0], metadata->Resolution[1],
         metadata->Resolution[2], format, type, 1,
         {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
             {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
