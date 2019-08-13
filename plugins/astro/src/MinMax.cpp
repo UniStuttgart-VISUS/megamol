@@ -27,11 +27,11 @@ megamol::astro::MinMax::MinMax(void) : Module(),
     this->slotVolumetricDataOut.SetCallback(megamol::core::misc::VolumetricDataCall::ClassName(),
             megamol::core::misc::VolumetricDataCall::FunctionName(megamol::core::misc::VolumetricDataCall::IDX_GET_METADATA), &MinMax::onGetMetadata);
     this->slotVolumetricDataOut.SetCallback(megamol::core::misc::VolumetricDataCall::ClassName(),
-            megamol::core::misc::VolumetricDataCall::FunctionName(megamol::core::misc::VolumetricDataCall::IDX_START_ASYNC), &MinMax::onStartAsync);
+            megamol::core::misc::VolumetricDataCall::FunctionName(megamol::core::misc::VolumetricDataCall::IDX_START_ASYNC), &MinMax::onUnsupportedCallback);
     this->slotVolumetricDataOut.SetCallback(megamol::core::misc::VolumetricDataCall::ClassName(),
-            megamol::core::misc::VolumetricDataCall::FunctionName(megamol::core::misc::VolumetricDataCall::IDX_STOP_ASYNC), &MinMax::onStopAsync);
+            megamol::core::misc::VolumetricDataCall::FunctionName(megamol::core::misc::VolumetricDataCall::IDX_STOP_ASYNC), &MinMax::onUnsupportedCallback);
     this->slotVolumetricDataOut.SetCallback(megamol::core::misc::VolumetricDataCall::ClassName(),
-            megamol::core::misc::VolumetricDataCall::FunctionName(megamol::core::misc::VolumetricDataCall::IDX_TRY_GET_DATA), &MinMax::onTryGetData);
+            megamol::core::misc::VolumetricDataCall::FunctionName(megamol::core::misc::VolumetricDataCall::IDX_TRY_GET_DATA), &MinMax::onUnsupportedCallback);
     this->MakeSlotAvailable(&this->slotVolumetricDataOut);
 }
 
@@ -66,16 +66,8 @@ bool megamol::astro::MinMax::onGetMetadata(megamol::core::Call &call) {
     return pipeVolumetricDataCall(call, megamol::core::misc::VolumetricDataCall::IDX_GET_METADATA);
 }
 
-bool megamol::astro::MinMax::onStartAsync(megamol::core::Call &call) {
-    return pipeVolumetricDataCall(call, megamol::core::misc::VolumetricDataCall::IDX_START_ASYNC);
-}
-
-bool megamol::astro::MinMax::onStopAsync(megamol::core::Call &call) {
-    return pipeVolumetricDataCall(call, megamol::core::misc::VolumetricDataCall::IDX_STOP_ASYNC);
-}
-
-bool megamol::astro::MinMax::onTryGetData(megamol::core::Call &call) {
-    return pipeVolumetricDataCall(call, megamol::core::misc::VolumetricDataCall::IDX_TRY_GET_DATA);
+bool megamol::astro::MinMax::onUnsupportedCallback(megamol::core::Call &call) {
+    return false;
 }
 
 bool megamol::astro::MinMax::pipeVolumetricDataCall(megamol::core::Call &call, unsigned int funcIdx) {

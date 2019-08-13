@@ -60,11 +60,7 @@ namespace astro {
 
         bool onGetMetadata(core::Call& call);
 
-        bool onStartAsync(core::Call& call);
-
-        bool onStopAsync(core::Call& call);
-
-        bool onTryGetData(core::Call& call);
+        bool onUnsupportedCallback(core::Call& call);
 
         bool pipeVolumetricDataCall(core::Call& call, unsigned int funcIdx);
 
