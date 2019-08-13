@@ -470,7 +470,7 @@ namespace moldyn {
          *
          * @return 'True' on success, 'false' otherwise.
          */
-        bool setShaderData(const vislib::graphics::gl::GLSLShader& shader, const MultiParticleDataCall::Particles &parts);
+        bool setShaderData(vislib::graphics::gl::GLSLShader& shader, const MultiParticleDataCall::Particles &parts);
 
         /**
          * Unset pointers to vertex and color buffers.
@@ -483,11 +483,10 @@ namespace moldyn {
          * Enables the transfer function texture.
          *
          * @param shader    The current shader.
-         * @param out_size  ...
          *
          * @return 'True' on success, 'false' otherwise.
          */
-        bool setTransferFunctionTexture(const vislib::graphics::gl::GLSLShader& shader, unsigned int& outTexSize);
+        bool setTransferFunctionTexture(vislib::graphics::gl::GLSLShader& shader);
 
         /**
          * Disables the transfer function texture.

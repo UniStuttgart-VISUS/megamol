@@ -5,8 +5,7 @@ in float inColIdx;
 
 out vec4 vertColor;
 
-uniform vec4 inConsts1;
-uniform sampler1D tfTexture;
+uniform float constRad;
 uniform vec4 globalCol;
 uniform int useGlobalCol;
 uniform int useTf;
@@ -14,11 +13,6 @@ uniform int useTf;
 // clipping plane attributes
 uniform vec4 clipDat;
 uniform vec4 clipCol;
-
-#define CONSTRAD inConsts1.x
-#define MIN_COLV inConsts1.y
-#define MAX_COLV inConsts1.z
-#define COLTAB_SIZE inConsts1.w
 
 //#define FOGGING_SES
 //#define FLATSHADE_SES

@@ -1,8 +1,8 @@
 
     vec4 inPos = inPosition;
     inPos.w = 1.0;
-    /// DO NOT APPLY (why?)
-    /// rad = (CONSTRAD < -0.5) ? inPos.w : CONSTRAD;
+    /// DO NOT APPLY (why?):
+    /// rad = (constRad < -0.5) ? inPos.w : constRad;
 
 
 #ifdef WITH_SCALING

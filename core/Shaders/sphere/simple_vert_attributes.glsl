@@ -38,13 +38,8 @@ uniform vec4 clipCol;
 uniform mat4 MVinv;
 uniform mat4 MVP;
 
-uniform vec4 inConsts1;
-uniform sampler1D tfTexture;
+uniform float constRad;
 uniform vec4 globalCol;
 uniform int useGlobalCol;
 uniform int useTf;
 
-#define CONSTRAD inConsts1.x
-#define MIN_COLV inConsts1.y
-#define MAX_COLV inConsts1.z
-#define COLTAB_SIZE inConsts1.w

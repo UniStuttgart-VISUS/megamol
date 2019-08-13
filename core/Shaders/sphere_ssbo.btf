@@ -9,8 +9,8 @@
         <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>       
         <snippet name="Attributes"       type="file">sphere/ssbo_vert_attributes.glsl</snippet>
         <snippet name="flag_storage::vert_attributes"/>     
-        <!-- <snippet name="core_utils::tflookup" /> -->
-        <!-- <snippet name="core_utils::tfconvenience" /> -->        
+        <snippet name="core_utils::tflookup" />
+        <snippet name="core_utils::tfconvenience" />      
         <snippet name="MainStart"        type="file">sphere/ssbo_vert_mainstart.glsl</snippet>
         <snippet name="Main"             type="file">sphere/ssbo_vert_main.glsl</snippet>
         <snippet name="Color"            type="file">sphere/simple_vert_color.glsl</snippet>

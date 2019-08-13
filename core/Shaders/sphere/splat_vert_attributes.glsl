@@ -21,8 +21,7 @@ uniform mat4 MVP;
 uniform mat4 MVPinv;
 uniform mat4 MVPtransp;
 
-uniform vec4 inConsts1;
-uniform sampler1D tfTexture;
+uniform float constRad;
 uniform vec4 globalCol;
 uniform int useGlobalCol;
 uniform int useTf;
@@ -41,11 +40,6 @@ out float pointSize;
 #ifdef RETICLE
 out vec2 centerFragment;
 #endif // RETICLE
-
-#define CONSTRAD inConsts1.x
-#define MIN_COLV inConsts1.y
-#define MAX_COLV inConsts1.z
-#define COLTAB_SIZE inConsts1.w
 
 uniform int attenuateSubpixel;
 out float effectiveDiameter;

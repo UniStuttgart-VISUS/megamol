@@ -741,24 +741,24 @@ moldyn::MultiParticleDataCall *moldyn::SphereRenderer::getData(unsigned int t, f
 }
 
 
-void moldyn::SphereRenderer::getClipData(float clipDat[4], float clipCol[4]) {
+void moldyn::SphereRenderer::getClipData(float outClipDat[4], float outClipCol[4]) {
     view::CallClipPlane *ccp = this->getClipPlaneSlot.CallAs<view::CallClipPlane>();
     if ((ccp != NULL) && (*ccp)()) {
-        clipDat[0] = ccp->GetPlane().Normal().X();
-        clipDat[1] = ccp->GetPlane().Normal().Y();
-        clipDat[2] = ccp->GetPlane().Normal().Z();
+        outClipDat[0] = ccp->GetPlane().Normal().X();
+        outClipDat[1] = ccp->GetPlane().Normal().Y();
+        outClipDat[2] = ccp->GetPlane().Normal().Z();
         vislib::math::Vector<float, 3> grr(ccp->GetPlane().Point().PeekCoordinates());
-        clipDat[3] = grr.Dot(ccp->GetPlane().Normal());
-        clipCol[0] = static_cast<float>(ccp->GetColour()[0]) / 255.0f;
-        clipCol[1] = static_cast<float>(ccp->GetColour()[1]) / 255.0f;
-        clipCol[2] = static_cast<float>(ccp->GetColour()[2]) / 255.0f;
-        clipCol[3] = static_cast<float>(ccp->GetColour()[3]) / 255.0f;
+        outClipDat[3] = grr.Dot(ccp->GetPlane().Normal());
+        outClipCol[0] = static_cast<float>(ccp->GetColour()[0]) / 255.0f;
+        outClipCol[1] = static_cast<float>(ccp->GetColour()[1]) / 255.0f;
+        outClipCol[2] = static_cast<float>(ccp->GetColour()[2]) / 255.0f;
+        outClipCol[3] = static_cast<float>(ccp->GetColour()[3]) / 255.0f;
 
     }
     else {
-        clipDat[0] = clipDat[1] = clipDat[2] = clipDat[3] = 0.0f;
-        clipCol[0] = clipCol[1] = clipCol[2] = 0.75f;
-        clipCol[3] = 1.0f;
+        outClipDat[0] = outClipDat[1] = outClipDat[2] = outClipDat[3] = 0.0f;
+        outClipCol[0] = outClipCol[1] = outClipCol[2] = 0.75f;
+        outClipCol[3] = 1.0f;
     }
 }
 
@@ -920,11 +920,26 @@ bool moldyn::SphereRenderer::Render(view::CallRender3D& call) {
     const SIZE_T hash = mpdc->DataHash();
     const unsigned int frameID = mpdc->FrameID();
 
-    //NB: Required for Ambient Occlusion
+    //NB: Required for Ambient Occlusion (why?)
     glPointSize(static_cast<GLfloat>(std::max(this->curVpWidth, this->curVpHeight)));
 
     // Check if we got a new data set
     this->stateInvalid = ((hash != this->oldHash) || (frameID != this->oldFrameID));
+
+    // Update color index range for transfer function on data change
+    core::view::CallGetTransferFunction* cgtf = this->getTFSlot.CallAs<core::view::CallGetTransferFunction>();
+    if ((cgtf != nullptr) && (hash != this->oldHash)) {
+        std::array<float, 2> range;
+        range[0] = std::numeric_limits<float>::max(); // min
+        range[1] = 0.0f; // max
+        for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
+            MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
+            range[0] = std::min(parts.GetMinColourIndexValue(), range[0]);
+            range[1] = std::max(parts.GetMaxColourIndexValue(), range[1]);
+        }
+        cgtf->SetRange(range);
+    }
+
     this->oldHash = hash;
     this->oldFrameID = frameID;
 
@@ -1583,8 +1598,7 @@ bool moldyn::SphereRenderer::renderAmbientOcclusion(view::CallRender3D* cr3d, Mu
             glUniform4fv(theShader.ParameterLocation("flagSoftSelectedCol"), 1, this->softSelectColorParam.Param<param::ColorParam>()->Value().data());
         }
 
-        GLuint colTabSize;
-        this->setTransferFunctionTexture(theShader, colTabSize);
+        this->setTransferFunctionTexture(theShader);
 
         glBindVertexArray(this->gpuData[i].vertexArray);
 
@@ -1755,10 +1769,7 @@ bool moldyn::SphereRenderer::unsetBufferData(const vislib::graphics::gl::GLSLSha
 }
 
 
-bool moldyn::SphereRenderer::setShaderData(const vislib::graphics::gl::GLSLShader& shader, const MultiParticleDataCall::Particles &parts) {
-
-    float minC = 0.0f, maxC = 0.0f;
-    unsigned int colTabSize = 0;
+bool moldyn::SphereRenderer::setShaderData(vislib::graphics::gl::GLSLShader& shader, const MultiParticleDataCall::Particles &parts) {
 
     // colour
     bool useGlobalColor = false;
@@ -1773,9 +1784,7 @@ bool moldyn::SphereRenderer::setShaderData(const vislib::graphics::gl::GLSLShade
     } break;
     case MultiParticleDataCall::Particles::COLDATA_FLOAT_I:
     case MultiParticleDataCall::Particles::COLDATA_DOUBLE_I: {
-        this->setTransferFunctionTexture(shader, colTabSize);
-        minC = parts.GetMinColourIndexValue();
-        maxC = parts.GetMaxColourIndexValue();
+        this->setTransferFunctionTexture(shader);
         useTf = true;
     } break;
     case MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
@@ -1799,15 +1808,13 @@ bool moldyn::SphereRenderer::setShaderData(const vislib::graphics::gl::GLSLShade
         return false;
     case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
     case MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ: {
-            glUniform4f(shader.ParameterLocation("inConsts1"), parts.GetGlobalRadius(), minC, maxC,
-                float(colTabSize));
+            glUniform1f(shader.ParameterLocation("constRad"), parts.GetGlobalRadius());
         } break;
     case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
-        glUniform4f(shader.ParameterLocation("inConsts1"), -1.0f, minC, maxC, float(colTabSize));
+        glUniform1f(shader.ParameterLocation("constRad"), -1.0f);
         break;
     case MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
-        glUniform4f(shader.ParameterLocation("inConsts1"), parts.GetGlobalRadius(), minC, maxC,
-            float(colTabSize));
+        glUniform1f(shader.ParameterLocation("constRad"), parts.GetGlobalRadius());
     default:
         return false;
     }
@@ -1822,28 +1829,19 @@ bool moldyn::SphereRenderer::unsetShaderData(void) {
 }
 
 
-bool moldyn::SphereRenderer::setTransferFunctionTexture(const vislib::graphics::gl::GLSLShader& shader, unsigned int& outTexSize) {
+bool moldyn::SphereRenderer::setTransferFunctionTexture(vislib::graphics::gl::GLSLShader& shader) {
 
     core::view::CallGetTransferFunction* cgtf = this->getTFSlot.CallAs<core::view::CallGetTransferFunction>();
     if ((cgtf != nullptr) && (*cgtf)(0)) {
-        glActiveTexture(GL_TEXTURE0);
-        glEnable(GL_TEXTURE_1D);
-        glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
-        outTexSize = cgtf->TextureSize();
-
-        glUniform1i(shader.ParameterLocation("tfTexture"), 0);
-
-        //cgtf->BindConvenience(shader, GL_TEXTURE0, 0);
+        cgtf->BindConvenience(shader, GL_TEXTURE0, 0);
     }
     else {
         glActiveTexture(GL_TEXTURE0);
         glEnable(GL_TEXTURE_1D);
         glBindTexture(GL_TEXTURE_1D, this->greyTF);
-        outTexSize = 2;
-
-        //glUniform1i(shader.ParameterLocation("tfTexture"), 0);
-        //GLfloat tfrange[2] = { 0.0f, 1.0f };
-        //glUniform2fv(shader.ParameterLocation("tfRange"), 1, tfrange);
+        glUniform1i(shader.ParameterLocation("tfTexture"), 0);
+        GLfloat tfrange[2] = { 0.0f, 0.0f };
+        glUniform2fv(shader.ParameterLocation("tfRange"), 1, tfrange);
     }
     return true;
 }
@@ -2040,13 +2038,13 @@ bool moldyn::SphereRenderer::makeVertexString(
             outCode = "    inPosition = vec4(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX,\n"
                 "                 theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posY,\n"
                 "                 theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posZ, 1.0); \n"
-                "    rad = CONSTRAD;";
+                "    rad = contRad;";
         }
         else {
             outCode = "    inPosition = vec4(thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX,\n"
                 "                 thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posY,\n"
                 "                 thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posZ, 1.0); \n"
-                "    rad = CONSTRAD;";
+                "    rad = contRad;";
         }
         break;
     case MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ:
@@ -2055,13 +2053,13 @@ bool moldyn::SphereRenderer::makeVertexString(
             outCode = "    inPosition = vec4(float(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX),\n"
                 "                 float(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posY),\n"
                 "                 float(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posZ), 1.0); \n"
-                "    rad = CONSTRAD;";
+                "    rad = contRad;";
         }
         else {
             outCode = "    inPosition = vec4(float(thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX),\n"
                 "                 float(thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posY),\n"
                 "                 float(thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posZ), 1.0); \n"
-                "    rad = CONSTRAD;";
+                "    rad = contRad;";
         }
         break;
     case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
@@ -2189,11 +2187,10 @@ std::shared_ptr<vislib::graphics::gl::GLSLShader> moldyn::SphereRenderer::genera
 
         /// Generated shader declaration snippet is inserted between 2nd and 3rd snippet (after
         /// ssbo_vert_attributes.glsl)
-        v2->Insert(5, declarationSnip);
+        v2->Insert(7, declarationSnip);
         /// Generated shader code snippet is inserted between 4th and 5th snippet (after ssbo_vert_mainstart.glsl)
         /// => consider new index through first Insertion!
-        v2->Insert(7, codeSnip);
-        // std::string s(v2->WholeCode());
+        v2->Insert(9, codeSnip);
 
         vislib::SmartPtr<ShaderSource> vss(v2);
         this->theShaders.emplace(std::make_pair(std::make_tuple(c, p, interleaved), makeShader(v2, this->fragShader)));
@@ -2221,15 +2218,15 @@ void moldyn::SphereRenderer::getBytesAndStride(const MultiParticleDataCall::Part
 }
 
 
-void moldyn::SphereRenderer::getGLSLVersion(int &major, int &minor) const {
+void moldyn::SphereRenderer::getGLSLVersion(int &outMajor, int &outMinor) const {
     
-    major = -1;
-    minor = -1;
+    outMajor = -1;
+    outMinor = -1;
     std::string glslVerStr((char*)glGetString(GL_SHADING_LANGUAGE_VERSION));
     std::size_t found = glslVerStr.find(".");
     if (found != std::string::npos) {
-        major = std::atoi(glslVerStr.substr(0, 1).c_str());
-        minor = std::atoi(glslVerStr.substr(found + 1, 1).c_str());
+        outMajor = std::atoi(glslVerStr.substr(0, 1).c_str());
+        outMinor = std::atoi(glslVerStr.substr(found + 1, 1).c_str());
     }
     else {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,

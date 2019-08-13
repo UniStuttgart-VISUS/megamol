@@ -2,9 +2,9 @@ void main(void) {
     
     gl_Position = inPosition;
     float rad = inPosition.w;
-    if (CONSTRAD > -0.5) {
-      gl_Position.w = CONSTRAD;
-      rad = CONSTRAD;
+    if (constRad > -0.5) {
+      gl_Position.w = constRad;
+      rad = constRad;
     }
     
     // clipping
