@@ -272,7 +272,8 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
     if (ci != nullptr) {
         ci->SetCameraParameters(cr->GetCameraParameters());
 
-        if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0) {
+        if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0 ||
+            this->m_mode.Param<core::param::EnumParam>()->Value() == 2) {
             if (this->fbo.IsValid()) this->fbo.Release();
             this->fbo.Create(ci->GetViewport().Width(), ci->GetViewport().Height(), GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE,
                 vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
@@ -284,7 +285,8 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
         ci->SetTime(cr->Time());
         if (!(*ci)(core::view::CallRender3D::FnRender)) return false;
 
-        if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0) {
+        if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0 ||
+            this->m_mode.Param<core::param::EnumParam>()->Value() == 2) {
             this->fbo.Disable();
         }
     }
@@ -445,6 +447,22 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
         }
     }
 
+    if (this->m_mode.Param<core::param::EnumParam>()->Value() == 2) {
+        if (ci != nullptr) {
+            glActiveTexture(GL_TEXTURE2);
+            this->fbo.BindColourTexture();
+            glUniform1i(compute_shdr->ParameterLocation("color_tx2D"), 2);
+
+            glActiveTexture(GL_TEXTURE3);
+            this->fbo.BindDepthTexture();
+            glUniform1i(compute_shdr->ParameterLocation("depth_tx2D"), 3);
+
+            glUniform1i(compute_shdr->ParameterLocation("use_depth_tx"), 1);
+        } else {
+            glUniform1i(compute_shdr->ParameterLocation("use_depth_tx"), 0);
+        }
+    }
+
     // bind image texture
     m_render_target->bindImage(0, GL_WRITE_ONLY);
 
@@ -476,21 +494,15 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
     if (this->m_mode.Param<core::param::EnumParam>()->Value() == 2) {
         glActiveTexture(GL_TEXTURE0);
         m_render_target->bindTexture();
-        auto layout = m_render_target->getTextureLayout();
-        auto format = layout.format;
-        int components = 1;
-        if (format == GL_RGBA) {
-            components = 4;
-        } else if (format == GL_RGB) {
-            components = 3;
-        } else if (format == GL_RG) {
-            components = 2;
-        }
-        std::vector<float> tmp_data(layout.width * layout.width * components);
-        glGetTexImage(GL_TEXTURE_2D, 0, format, GL_FLOAT, tmp_data.data());
+        int width = 0;
+        int height = 0;
+        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
+        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
+        std::vector<float> tmp_data(width*height*4);
+        glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, tmp_data.data());
 
-        for (size_t idx = 0; idx < tmp_data.size() / components; ++idx) {
-            auto const val = tmp_data[idx * components + (components - 1)];
+        for (size_t idx = 0; idx < tmp_data.size() / 4; ++idx) {
+            auto const val = tmp_data[idx * 4 + 3];
             if (val < rndr_min) rndr_min = val;
             if (val > rndr_max) rndr_max = val;
         }
@@ -500,7 +512,8 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
 
     // copy image to framebuffer
     // TODO query gl state and reset to previous state?
-    if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0) {
+    if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0 ||
+        this->m_mode.Param<core::param::EnumParam>()->Value() == 2) {
         glDisable(GL_DEPTH_TEST);
     } else if (this->m_mode.Param<core::param::EnumParam>()->Value() == 1) {
         glEnable(GL_DEPTH_TEST);
@@ -509,20 +522,25 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    m_render_to_framebuffer_shdr->Enable();
+    auto fbo_shdr = m_render_to_framebuffer_shdr.get();
+    if (this->m_mode.Param<core::param::EnumParam>()->Value() == 2) {
+        fbo_shdr = m_render_to_framebuffer_aggr_shdr.get();
+    }
+
+    fbo_shdr->Enable();
 
     glActiveTexture(GL_TEXTURE0);
     m_render_target->bindTexture();
-    glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("src_tx2D"), 0);
+    glUniform1i(fbo_shdr->ParameterLocation("src_tx2D"), 0);
 
     if (this->m_mode.Param<core::param::EnumParam>()->Value() == 1) {
         glActiveTexture(GL_TEXTURE1);
         m_normal_target->bindTexture();
-        glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("normal_tx2D"), 1);
+        glUniform1i(fbo_shdr->ParameterLocation("normal_tx2D"), 1);
 
         glActiveTexture(GL_TEXTURE2);
         m_depth_target->bindTexture();
-        glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("depth_tx2D"), 2);
+        glUniform1i(fbo_shdr->ParameterLocation("depth_tx2D"), 2);
 
         GLenum buffers[] = {GL_COLOR_ATTACHMENT0_EXT, GL_COLOR_ATTACHMENT1_EXT};
         glDrawBuffers(2, buffers);
@@ -531,9 +549,9 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
     if (this->m_mode.Param<core::param::EnumParam>()->Value() == 2) {
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_1D, tf_texture);
-        glUniform1i(compute_shdr->ParameterLocation("tf_tx1D"), 1);
+        glUniform1i(fbo_shdr->ParameterLocation("tf_tx1D"), 1);
 
-        glUniform2f(compute_shdr->ParameterLocation("valRange"), rndr_min, rndr_max);
+        glUniform2f(fbo_shdr->ParameterLocation("valRange"), rndr_min, rndr_max);
     }
 
     glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -545,7 +563,7 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    m_render_to_framebuffer_shdr->Disable();
+    fbo_shdr->Disable();
 
     // cleanup
     glUseProgram(0);

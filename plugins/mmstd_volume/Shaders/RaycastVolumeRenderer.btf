@@ -248,7 +248,7 @@ uniform int use_depth_tx;
         <snippet type="string">
             <![CDATA[
             float att = 0.0f;
-        while (t < tfar && result.w < opacityThreshold) {
+        while (t < tfar) {
             ]]>
         </snippet>
         <snippet name="::RaycastVolumeRenderer::common::ray_step" />
