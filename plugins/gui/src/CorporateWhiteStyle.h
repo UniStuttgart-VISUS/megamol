@@ -5,7 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#pragma once
+#ifndef MEGAMOL_GUI_CORPORATEWHITESTYLE_INCLUDED
+#define MEGAMOL_GUI_CORPORATEWHITESTYLE_INCLUDED
 
 #include <imgui.h>
 
@@ -122,3 +123,5 @@ inline void CorporateWhiteStyle(int is3D = 0) {
     }
 #endif
 }
+
+#endif // MEGAMOL_GUI_CORPORATEWHITESTYLE_INCLUDED

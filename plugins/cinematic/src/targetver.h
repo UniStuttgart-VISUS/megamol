@@ -10,7 +10,8 @@
  */
 #ifdef _WIN32
 
-#pragma once
+#ifndef MEGAMOL_CINEMATIC_TARGETVER_H_INCLUDED
+#define MEGAMOL_CINEMATIC_TARGETVER_H_INCLUDED
 
 // The following macros define the minimum required platform.  The minimum required platform
 // is the earliest version of Windows, Internet Explorer etc. that has the necessary features to run 
@@ -34,5 +35,7 @@
 #ifndef _WIN32_IE                       // Specifies that the minimum required platform is Internet Explorer 7.0.
 #define _WIN32_IE 0x0700        // Change this to the appropriate value to target other versions of IE.
 #endif
+
+#endif // MEGAMOL_CINEMATIC_TARGETVER_H_INCLUDED
 
 #endif /* _WIN32 */

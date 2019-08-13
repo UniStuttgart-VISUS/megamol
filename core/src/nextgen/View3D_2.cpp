@@ -41,8 +41,6 @@
 #include "vislib/sys/Log.h"
 #include "vislib/sys/sysfunctions.h"
 
-#include "mmcore/utility/gl/Texture2D.h"
-
 using namespace megamol::core;
 using namespace megamol::core::nextgen;
 
