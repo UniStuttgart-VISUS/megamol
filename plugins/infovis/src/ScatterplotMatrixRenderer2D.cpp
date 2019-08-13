@@ -285,7 +285,7 @@ bool ScatterplotMatrixRenderer2D::OnMouseMove(double x, double y) {
 
 bool ScatterplotMatrixRenderer2D::Render(core::view::CallRender2D& call) {
     try {
-        if (!this->validate(call)) return false;
+        if (!this->validate(call, false)) return false;
 
         auto axisMode = this->axisModeParam.Param<core::param::EnumParam>()->Value();
         switch (axisMode) {
@@ -326,7 +326,7 @@ bool ScatterplotMatrixRenderer2D::Render(core::view::CallRender2D& call) {
 }
 
 bool ScatterplotMatrixRenderer2D::GetExtents(core::view::CallRender2D& call) {
-    this->validate(call);
+    this->validate(call, true);
     call.SetBoundingBox(this->bounds);
     return true;
 }
@@ -357,7 +357,7 @@ void ScatterplotMatrixRenderer2D::resetDirtyScreen() {
     }
 }
 
-bool ScatterplotMatrixRenderer2D::validate(core::view::CallRender2D& call) {
+bool ScatterplotMatrixRenderer2D::validate(core::view::CallRender2D& call, bool ignoreMVP) {
     this->floatTable = this->floatTableInSlot.CallAs<table::TableDataCall>();
 
     if (this->floatTable == nullptr || !(*this->floatTable)(1)) return false;
@@ -379,7 +379,9 @@ bool ScatterplotMatrixRenderer2D::validate(core::view::CallRender2D& call) {
     if (this->transferFunction == nullptr || !(*(this->transferFunction))()) return false;
 
     auto mvp = getModelViewProjection();
-    if (hasDirtyScreen() || screenLastMVP != mvp) {
+    if (hasDirtyScreen() ||
+        // mvp is unstable across GetExtents and Render, so we just do these checks when rendering
+        (!ignoreMVP && (screenLastMVP != mvp || this->flagsBufferVersion != this->flagStorage->GetVersion()))) {
         this->screenValid = false;
         resetDirtyScreen();
         screenLastMVP = mvp;
