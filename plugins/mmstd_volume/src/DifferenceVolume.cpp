@@ -74,11 +74,35 @@ std::size_t megamol::stdplugin::volume::DifferenceVolume::getFrameSize(
 
 
 /*
+ * megamol::stdplugin::volume::DifferenceVolume::getDifferenceType
+ */
+megamol::core::misc::ScalarType_t
+megamol::stdplugin::volume::DifferenceVolume::getDifferenceType(
+        const core::misc::VolumetricMetadata_t& md) {
+    switch (md.ScalarType) {
+        case core::misc::SIGNED_INTEGER:
+        case core::misc::FLOATING_POINT:
+            // Can be used as it is.
+            return md.ScalarType;
+
+        case core::misc::UNSIGNED_INTEGER:
+            // unsigned must become signed.
+            return core::misc::SIGNED_INTEGER;
+
+        default:
+            // Anything else is unsupported.
+            return core::misc::UNKNOWN;
+    }
+}
+
+
+/*
  * megamol::stdplugin::volume::DifferenceVolume::checkCompatibility
  */
 bool megamol::stdplugin::volume::DifferenceVolume::checkCompatibility(
         const core::misc::VolumetricMetadata_t& md) const {
     using vislib::sys::Log;
+    auto reqType = getDifferenceType(md);
 
     if (getFrameSize(this->metadata) != getFrameSize(md)) {
         Log::DefaultLog.WriteError(L"The volume resolution must not change "
@@ -87,14 +111,15 @@ bool megamol::stdplugin::volume::DifferenceVolume::checkCompatibility(
         return false;
     }
 
-    if (this->metadata.ScalarLength != md.ScalarLength) {
+    if ((this->metadata.ScalarLength != md.ScalarLength)
+            && (md.ScalarType == reqType)) {
         Log::DefaultLog.WriteError(L"The scalar size must not change over time "
             "in order for %hs to work.",
             DifferenceVolume::ClassName());
         return false;
     }
 
-    if (this->metadata.ScalarType != md.ScalarType) {
+    if (this->metadata.ScalarType != reqType) {
         Log::DefaultLog.WriteError(L"The scalar type must not change over time "
             "in order for %hs to work.",
             DifferenceVolume::ClassName());
@@ -202,6 +227,9 @@ bool megamol::stdplugin::volume::DifferenceVolume::onGetData(core::Call& call) {
         cur.resize(src->GetFrameSize());
         ::memcpy(cur.data(), src->GetData(), src->GetFrameSize());
 
+        /* Select the potential previous frame. */
+        auto& prev = this->cache[increment(this->frameIdx)];
+
         /* Prepare the data storage. */
         this->data.resize(cur.size());
 
@@ -210,182 +238,156 @@ bool megamol::stdplugin::volume::DifferenceVolume::onGetData(core::Call& call) {
             Log::DefaultLog.WriteInfo(L"The data provided to %hs do not have a "
                 L"predecessor. The previous volume is considered to be zero.",
                 DifferenceVolume::ClassName());
-            std::copy(cur.begin(), cur.end(), this->data.begin());
-
-        } else {
-            /* Compute difference to previous frame. */
-            Log::DefaultLog.WriteInfo(L"Compute difference between volume time "
-                L"steps %u and %u.", src->FrameID(), src->FrameID() - 1);
             auto& prev = this->cache[increment(this->frameIdx)];
+            prev.resize(cur.size());
+            ::memset(prev.data(), 0, prev.size());
 
-            if (src->FrameID() - 1 != this->frameID) {
-                /* We do not have the previous frame cached, so get it. */
-
-                src->SetFrameID(src->FrameID() - 1);
-                if (!VolumetricDataCall::GetMetadata(*src)) {
-                    return false;
-                }
-
-                /* Check that the format is the same. */
-                if (!this->checkCompatibility(*src->GetMetadata())) {
-                    return false;
-                }
-
-                if (!(*src)(VolumetricDataCall::IDX_GET_DATA)) {
-                    Log::DefaultLog.WriteError(L"%hs failed to call %hs.",
-                        DifferenceVolume::ClassName(),
-                        VolumetricDataCall::FunctionName(VolumetricDataCall::IDX_GET_DATA));
-                    return false;
-                }
-
-                prev.resize(src->GetFrameSize());
-                ::memcpy(cur.data(), src->GetData(), src->GetFrameSize());
+        } else if (src->FrameID() - 1 != this->frameID) {
+            /* We do not have the previous frame cached, so get it. */
+            Log::DefaultLog.WriteInfo(L"Load previous frame %u to compute the "
+                L"difference to the current one.", src->FrameID() - 1);
+            src->SetFrameID(src->FrameID() - 1);
+            if (!VolumetricDataCall::GetMetadata(*src)) {
+                return false;
             }
-            /* At this point, 'prev' contains the previous frame. */
-            assert(cur.size() == this->data.size());
-            assert(prev.size() == this->data.size());
 
-            switch (this->metadata.ScalarType) {
-                case core::misc::SIGNED_INTEGER:
-                    switch (this->metadata.ScalarLength) {
-                        case 1: {
-                            auto c = reinterpret_cast<std::int8_t *>(cur.data());
-                            auto p = reinterpret_cast<std::int8_t *>(prev.data());
-                            auto d = reinterpret_cast<std::int8_t *>(this->data.data());
-#pragma omp parallel for
-                            for (std::size_t i = 0; i < cur.size() / sizeof(*c); ++i) {
-                                d[i] = c[i] - p[i];
-                            }
-                            } break;
+            /* Check that the format is the same. */
+            if (!this->checkCompatibility(*src->GetMetadata())) {
+                return false;
+            }
 
-                        case 2: {
-                            auto c = reinterpret_cast<std::int16_t *>(cur.data());
-                            auto p = reinterpret_cast<std::int16_t *>(prev.data());
-                            auto d = reinterpret_cast<std::int16_t *>(this->data.data());
-#pragma omp parallel for
-                            for (std::size_t i = 0; i < cur.size() / sizeof(*c); ++i) {
-                                d[i] = c[i] - p[i];
-                            }
-                            } break;
-
-                        case 4: {
-                            auto c = reinterpret_cast<std::int32_t *>(cur.data());
-                            auto p = reinterpret_cast<std::int32_t *>(prev.data());
-                            auto d = reinterpret_cast<std::int32_t *>(this->data.data());
-#pragma omp parallel for
-                            for (std::size_t i = 0; i < cur.size() / sizeof(*c); ++i) {
-                                d[i] = c[i] - p[i];
-                            }
-                            } break;
-
-                        case 8: {
-                            auto c = reinterpret_cast<std::int64_t *>(cur.data());
-                            auto p = reinterpret_cast<std::int64_t *>(prev.data());
-                            auto d = reinterpret_cast<std::int64_t *>(this->data.data());
-#pragma omp parallel for
-                            for (std::size_t i = 0; i < cur.size() / sizeof(*c); ++i) {
-                                d[i] = c[i] - p[i];
-                            }
-                            } break;
-
-                        default:
-                            Log::DefaultLog.WriteError(L"%hs cannot process "
-                                L"%u-byte SIGNED_INTEGER data.",
-                                DifferenceVolume::ClassName(),
-                                this->metadata.ScalarLength);
-                            return false;
-                    }
-                    break;
-
-#if 0
-                    // TOOD: THIS IS BS! We need to expand the data type
-                case core::misc::UNSIGNED_INTEGER:
-                    switch (this->scalarSize) {
-                        case 1: {
-                            auto c = (cur.data());
-                            auto p = (prev.data());
-                            auto d = (this->data.data());
-#pragma omp parallel for
-                            for (std::size_t i = 0; i < cur.size() / sizeof(*c); ++i) {
-                                d[i] = c[i] - p[i];
-                            }
-                            } break;
-
-                        case 2: {
-                            auto c = reinterpret_cast<std::uint16_t *>(cur.data());
-                            auto p = reinterpret_cast<std::uint16_t *>(prev.data());
-                            auto d = reinterpret_cast<std::uint16_t *>(this->data.data());
-#pragma omp parallel for
-                            for (std::size_t i = 0; i < cur.size() / sizeof(*c); ++i) {
-                                d[i] = c[i] - p[i];
-                            }
-                            } break;
-
-                        case 4: {
-                            auto c = reinterpret_cast<std::uint32_t *>(cur.data());
-                            auto p = reinterpret_cast<std::uint32_t *>(prev.data());
-                            auto d = reinterpret_cast<std::uint32_t *>(this->data.data());
-#pragma omp parallel for
-                            for (std::size_t i = 0; i < cur.size() / sizeof(*c); ++i) {
-                                d[i] = c[i] - p[i];
-                            }
-                            } break;
-
-                        case 8: {
-                            auto c = reinterpret_cast<std::uint64_t *>(cur.data());
-                            auto p = reinterpret_cast<std::uint64_t *>(prev.data());
-                            auto d = reinterpret_cast<std::uint64_t *>(this->data.data());
-#pragma omp parallel for
-                            for (std::size_t i = 0; i < cur.size() / sizeof(*c); ++i) {
-                                d[i] = c[i] - p[i];
-                            }
-                            } break;
-
-                        default:
-                            Log::DefaultLog.WriteError(L"%hs cannot process "
-                                L"%u-byte UNSIGNED_INTEGER data.",
-                                DifferenceVolume::ClassName(),
-                                this->scalarSize);
-                            return false;
-                    }
-                    break;
-#endif
-
-                case core::misc::FLOATING_POINT:
-                    switch (this->metadata.ScalarLength) {
-                        case 4: {
-                            auto c = reinterpret_cast<float *>(cur.data());
-                            auto p = reinterpret_cast<float *>(prev.data());
-                            auto d = reinterpret_cast<float *>(this->data.data());
-#pragma omp parallel for
-                            for (std::size_t i = 0; i < cur.size() / sizeof(*c); ++i) {
-                                d[i] = c[i] - p[i];
-                            }
-                            } break;
-
-                        case 8: {
-                            auto c = reinterpret_cast<double *>(cur.data());
-                            auto p = reinterpret_cast<double *>(prev.data());
-                            auto d = reinterpret_cast<double *>(this->data.data());
-#pragma omp parallel for
-                            for (std::size_t i = 0; i < cur.size() / sizeof(*c); ++i) {
-                                d[i] = c[i] - p[i];
-                            }
-                            } break;
-
-                        default:
-                            Log::DefaultLog.WriteError(L"%hs cannot process "
-                                L"%u-byte FLOATING_POINT data.",
-                                DifferenceVolume::ClassName(),
-                                this->metadata.ScalarLength);
-                            return false;
-                    }
-                    break;
-
-                default:
-                    assert(false);  // This should not be reachable.
+            if (!(*src)(VolumetricDataCall::IDX_GET_DATA)) {
+                Log::DefaultLog.WriteError(L"%hs failed to call %hs.",
+                    DifferenceVolume::ClassName(),
+                    VolumetricDataCall::FunctionName(VolumetricDataCall::IDX_GET_DATA));
                     return false;
             }
+
+            prev.resize(src->GetFrameSize());
+            ::memcpy(cur.data(), src->GetData(), src->GetFrameSize());
+        }
+        /* At this point, 'prev' contains the previous frame. */
+        assert(cur.size() == this->data.size());
+        assert(prev.size() == this->data.size());
+
+        /* Do the conversion depending on the type of the data.*/
+        switch (this->metadata.ScalarType) {
+            case core::misc::SIGNED_INTEGER:
+                switch (this->metadata.ScalarLength) {
+                    case 1: {
+                        auto c = reinterpret_cast<std::int8_t *>(cur.data());
+                        auto p = reinterpret_cast<std::int8_t *>(prev.data());
+                        auto d = reinterpret_cast<std::int8_t *>(this->data.data());
+                        this->calcDifference(d, c, p, cur.size() / sizeof(*c));
+                        } break;
+
+                    case 2: {
+                        auto c = reinterpret_cast<std::int16_t *>(cur.data());
+                        auto p = reinterpret_cast<std::int16_t *>(prev.data());
+                        auto d = reinterpret_cast<std::int16_t *>(this->data.data());
+                        this->calcDifference(d, c, p, cur.size() / sizeof(*c));
+                        } break;
+
+                    case 4: {
+                        auto c = reinterpret_cast<std::int32_t *>(cur.data());
+                        auto p = reinterpret_cast<std::int32_t *>(prev.data());
+                        auto d = reinterpret_cast<std::int32_t *>(this->data.data());
+                        this->calcDifference(d, c, p, cur.size() / sizeof(*c));
+                        } break;
+
+                    case 8: {
+                        auto c = reinterpret_cast<std::int64_t *>(cur.data());
+                        auto p = reinterpret_cast<std::int64_t *>(prev.data());
+                        auto d = reinterpret_cast<std::int64_t *>(this->data.data());
+                        this->calcDifference(d, c, p, cur.size() / sizeof(*c));
+                        } break;
+
+                    default:
+                        Log::DefaultLog.WriteError(L"%hs cannot process "
+                            L"%u-byte SIGNED_INTEGER data.",
+                            DifferenceVolume::ClassName(),
+                            this->metadata.ScalarLength);
+                        return false;
+                }
+                break;
+
+            case core::misc::UNSIGNED_INTEGER:
+                // HAZARD: unsigned-to-signed conversion is untested!
+                switch (this->metadata.ScalarLength) {
+                    case 1: {
+                        auto c = (cur.data());
+                        auto p = (prev.data());
+                        this->data.resize(2 * this->data.size());
+                        this->metadata.ScalarLength = 2 * src->GetMetadata()->ScalarLength;
+                        auto d = reinterpret_cast<std::int16_t *>(this->data.data());
+                        this->calcDifference(d, c, p, cur.size() / sizeof(*c));
+                        } break;
+
+                    case 2: {
+                        auto c = reinterpret_cast<std::uint16_t *>(cur.data());
+                        auto p = reinterpret_cast<std::uint16_t *>(prev.data());
+                        this->data.resize(2 * this->data.size());
+                        this->metadata.ScalarLength = 2 * src->GetMetadata()->ScalarLength;
+                        auto d = reinterpret_cast<std::int32_t *>(this->data.data());
+                        this->calcDifference(d, c, p, cur.size() / sizeof(*c));
+                        } break;
+
+                    case 4: {
+                        auto c = reinterpret_cast<std::uint32_t *>(cur.data());
+                        auto p = reinterpret_cast<std::uint32_t *>(prev.data());
+                        this->data.resize(2 * this->data.size());
+                        this->metadata.ScalarLength = 2 * src->GetMetadata()->ScalarLength;
+                        auto d = reinterpret_cast<std::int64_t *>(this->data.data());
+                        this->calcDifference(d, c, p, cur.size() / sizeof(*c));
+                        } break;
+
+                    case 8: {
+                        Log::DefaultLog.WriteWarn(L"Conversion from UINT64 "
+                            L"to INT64 in %hs might cause data truncation.",
+                            DifferenceVolume::ClassName());
+                        auto c = reinterpret_cast<std::uint64_t *>(cur.data());
+                        auto p = reinterpret_cast<std::uint64_t *>(prev.data());
+                        auto d = reinterpret_cast<std::int64_t *>(this->data.data());
+                        this->calcDifference(d, c, p, cur.size() / sizeof(*c));
+                        } break;
+
+                    default:
+                        Log::DefaultLog.WriteError(L"%hs cannot process "
+                            L"%u-byte UNSIGNED_INTEGER data.",
+                            DifferenceVolume::ClassName(),
+                            this->metadata.ScalarLength);
+                        return false;
+                }
+                break;
+
+            case core::misc::FLOATING_POINT:
+                switch (this->metadata.ScalarLength) {
+                    case 4: {
+                        auto c = reinterpret_cast<float *>(cur.data());
+                        auto p = reinterpret_cast<float *>(prev.data());
+                        auto d = reinterpret_cast<float *>(this->data.data());
+                        this->calcDifference(d, c, p, cur.size() / sizeof(*c));
+                        } break;
+
+                    case 8: {
+                        auto c = reinterpret_cast<double *>(cur.data());
+                        auto p = reinterpret_cast<double *>(prev.data());
+                        auto d = reinterpret_cast<double *>(this->data.data());
+                        this->calcDifference(d, c, p, cur.size() / sizeof(*c));
+                        } break;
+
+                    default:
+                        Log::DefaultLog.WriteError(L"%hs cannot process "
+                            L"%u-byte FLOATING_POINT data.",
+                            DifferenceVolume::ClassName(),
+                            this->metadata.ScalarLength);
+                        return false;
+                }
+                break;
+
+            default:
+                assert(false);  // This should not be reachable.
+                return false;
         }
 
         this->frameID = src->FrameID();

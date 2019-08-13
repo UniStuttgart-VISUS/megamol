@@ -79,11 +79,24 @@ namespace volume {
             const core::misc::VolumetricMetadata_t& md);
 
         /**
+         * Gets the scalar type to be used for the difference volume.
+         */
+        static core::misc::ScalarType_t getDifferenceType(
+            const core::misc::VolumetricMetadata_t& md);
+
+        /**
          * Increment the cache ring index.
          */
         static inline std::size_t increment(std::size_t frameIdx) {
             return (++frameIdx % 2);
         }
+
+        /**
+         * Compute the difference from 'prev' to 'cur' into 'dst'.
+         */
+        template<class D, class S>
+        void calcDifference(D *dst, const S *cur, const S *prev,
+            const std::size_t cnt);
 
         /**
          * Check whether the given metadata are compatible with the cache state
@@ -164,3 +177,5 @@ namespace volume {
 } /* end namespace volume */
 } /* namespace stdplugin */
 } /* namespace megamol */
+
+#include "DifferenceVolume.inl"
