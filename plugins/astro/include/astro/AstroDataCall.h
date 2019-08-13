@@ -108,6 +108,20 @@ public:
     inline const vec3ArrayPtr GetVelocities(void) const { return this->velocities; }
 
     /**
+     * Sets the velocity derivative vector
+     *
+     * @param derivatives Pointer to the new velocity derivative vector to be set
+     */
+    inline void SetVelocityDerivatives(vec3ArrayPtr& derivatives) { this->velocityDerivatives = derivatives; }
+
+    /**
+     * Retrieve the pointer to the vector storing the velocity derivatives
+     *
+     * @return Pointer to the velocity derivative array
+     */
+    inline const vec3ArrayPtr GetVelocityDerivatives(void) const { return this->velocityDerivatives; }
+
+    /**
      * Sets the temperature vector
      *
      * @param temparatureVec Pointer to the new temperature vector to be set
@@ -117,9 +131,23 @@ public:
     /**
      * Retrieve the pointer to the vector storing the temperature
      *
-     * @return Pointer to the velocity array
+     * @return Pointer to the temperature array
      */
     inline const floatArrayPtr GetTemperature(void) const { return this->temperatures; }
+
+    /**
+     * Sets the temperature derivative vector
+     *
+     * @param derivatives Pointer to the new temperature derivative vector to be set
+     */
+    inline void SetTemperatureDerivatives(floatArrayPtr& derivatives) { this->temperatureDerivatives = derivatives; }
+
+    /**
+     * Retrieve the pointer to the vector storing the temperature derivatives
+     *
+     * @return Pointer to the temperature derivative array
+     */
+    inline const floatArrayPtr GetTemperatureDerivatives(void) const { return this->temperatureDerivatives; }
 
     /**
      * Sets the mass vector
@@ -150,6 +178,22 @@ public:
     inline const floatArrayPtr GetInternalEnergy(void) const { return this->internalEnergies; }
 
     /**
+     * Sets the internal energy derivative vector
+     *
+     * @param derivative Pointer to the new internal energy derivative vector to be set
+     */
+    inline void SetInternalEnergyDerivatives(floatArrayPtr& derivative) {
+        this->internalEnergyDerivatives = derivative;
+    }
+
+    /**
+     * Retrieve the pointer to the vector storing the internal energy derivatives
+     *
+     * @return Pointer to the internal energy derivative array
+     */
+    inline const floatArrayPtr GetInternalEnergyDerivatives(void) const { return this->internalEnergyDerivatives; }
+
+    /**
      * Sets the smoothing length vector
      *
      * @param smoothingLengthVec Pointer to the new smoothing length vector to be set
@@ -162,6 +206,22 @@ public:
      * @return Pointer to the smoothing length array
      */
     inline const floatArrayPtr GetSmoothingLength(void) const { return this->smoothingLengths; }
+
+    /**
+     * Sets the smoothing length derivative vector
+     *
+     * @param derivative Pointer to the new smoothing length derivative vector to be set
+     */
+    inline void SetSmoothingLengthDerivatives(floatArrayPtr& derivative) {
+        this->smoothingLengthDerivatives = derivative;
+    }
+
+    /**
+     * Retrieve the pointer to the vector storing the smoothing length
+     *
+     * @return Pointer to the smoothing length array
+     */
+    inline const floatArrayPtr GetSmoothingLengthDerivatives(void) const { return this->smoothingLengthDerivatives; }
 
     /**
      * Sets the molecular weight vector
@@ -178,6 +238,22 @@ public:
     inline const floatArrayPtr GetMolecularWeights(void) const { return this->molecularWeights; }
 
     /**
+     * Sets the molecular weight derivative vector
+     *
+     * @param derivative Pointer to the new molecular weight derivative vector to be set
+     */
+    inline void SetMolecularWeightDerivatives(floatArrayPtr& derivative) {
+        this->molecularWeightDerivatives = derivative;
+    }
+
+    /**
+     * Retrieve the pointer to the vector storing the molecular weight derivative
+     *
+     * @return Pointer to the molecular weight derivative array
+     */
+    inline const floatArrayPtr GetMolecularWeightDerivatives(void) const { return this->molecularWeightDerivatives; }
+
+    /**
      * Sets the density vector
      *
      * @param densityVec Pointer to the new density vector to be set
@@ -190,6 +266,20 @@ public:
      * @return Pointer to the density array
      */
     inline const floatArrayPtr GetDensity(void) const { return this->densities; }
+
+    /**
+     * Sets the density derivative vector
+     *
+     * @param derivative Pointer to the new density derivative vector to be set
+     */
+    inline void SetDensityDerivative(floatArrayPtr& derivative) { this->densityDerivatives = derivative; }
+
+    /**
+     * Retrieve the pointer to the vector storing the density derivative
+     *
+     * @return Pointer to the density derivative array
+     */
+    inline const floatArrayPtr GetDensityDerivative(void) const { return this->densityDerivatives; }
 
     /**
      * Sets the gravitational potential vector
@@ -208,6 +298,24 @@ public:
     inline const floatArrayPtr GetGravitationalPotential(void) const { return this->gravitationalPotentials; }
 
     /**
+     * Sets the gravitational potential derivative vector
+     *
+     * @param derivative Pointer to the new gravitational potential derivative vector to be set
+     */
+    inline void SetGravitationalPotentialDerivatives(floatArrayPtr& derivative) {
+        this->gravitationalPotentialDerivatives = derivative;
+    }
+
+    /**
+     * Retrieve the pointer to the vector storing the gravitational potential derivatives
+     *
+     * @return Pointer to the gravitational potential derivative array
+     */
+    inline const floatArrayPtr GetGravitationalPotentialDerivatives(void) const {
+        return this->gravitationalPotentialDerivatives;
+    }
+
+    /**
      * Sets the entropy vector
      *
      * @param entropyVec Pointer to the new entropy vector to be set
@@ -220,6 +328,20 @@ public:
      * @return Pointer to the entropy array
      */
     inline const floatArrayPtr GetEntropy(void) const { return this->entropies; }
+
+    /**
+     * Sets the entropy derivative vector
+     *
+     * @param derivative Pointer to the new entropy derivative vector to be set
+     */
+    inline void SetEntropyDerivatives(floatArrayPtr& derivative) { this->entropyDerivatives = derivative; }
+
+    /**
+     * Retrieve the pointer to the vector storing the entropy derivatives
+     *
+     * @return Pointer to the entropy derivative array
+     */
+    inline const floatArrayPtr GetEntropyDerivatives(void) const { return this->entropyDerivatives; }
 
     /**
      * Sets the baryon flag vector
@@ -341,6 +463,15 @@ public:
         this->isStarFormingGasFlags.reset();
         this->isAGNFlags.reset();
         this->particleIDs.reset();
+
+        this->velocityDerivatives.reset();
+        this->temperatureDerivatives.reset();
+        this->internalEnergyDerivatives.reset();
+        this->smoothingLengthDerivatives.reset();
+        this->molecularWeightDerivatives.reset();
+        this->densityDerivatives.reset();
+        this->gravitationalPotentialDerivatives.reset();
+        this->entropyDerivatives.reset();
     }
 
 private:
@@ -350,8 +481,14 @@ private:
     /** Pointer to the velocity array */
     vec3ArrayPtr velocities;
 
+    /** Pointer to the array containing the velocity derivatives */
+    vec3ArrayPtr velocityDerivatives;
+
     /** Pointer to the temperature array */
     floatArrayPtr temperatures;
+
+    /** Pointer to the array containing the temperature derivatives */
+    floatArrayPtr temperatureDerivatives;
 
     /** Pointer to the mass array */
     floatArrayPtr masses;
@@ -359,20 +496,38 @@ private:
     /** Pointer to the interal energy array */
     floatArrayPtr internalEnergies;
 
+    /** Pointer to the array containing the internal energy derivatives */
+    floatArrayPtr internalEnergyDerivatives;
+
     /** Pointer to the smoothing length array */
     floatArrayPtr smoothingLengths;
+
+    /** Pointer to the array containing the smoothing length derivatives */
+    floatArrayPtr smoothingLengthDerivatives;
 
     /** Pointer to the molecular weight array */
     floatArrayPtr molecularWeights;
 
+    /** Pointer to the array containing the molecular weight derivatives */
+    floatArrayPtr molecularWeightDerivatives;
+
     /** Pointer to the density array */
     floatArrayPtr densities;
+
+    /** Pointer to the array containing the density derivatives */
+    floatArrayPtr densityDerivatives;
 
     /** Pointer to the gravitational potential array */
     floatArrayPtr gravitationalPotentials;
 
+    /** Pointer to the array containing the gravitational potential derivatives */
+    floatArrayPtr gravitationalPotentialDerivatives;
+
     /** Pointer to the entropy array */
     floatArrayPtr entropies;
+
+    /** Pointer to the array containing the entropy derivatives */
+    floatArrayPtr entropyDerivatives;
 
     /** Pointer to the baryon flag array */
     boolArrayPtr isBaryonFlags;
