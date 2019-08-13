@@ -364,12 +364,6 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
         return false;
     }
 
-    // Force value range to user-defined range if requested.
-    if (this->paramOverride.Param<core::param::BoolParam>()->Value()) {
-        valRange[0] = this->paramMinOverride.Param<core::param::FloatParam>()->Value();
-        valRange[1] = this->paramMaxOverride.Param<core::param::FloatParam>()->Value();
-    }
-
     // setup
     compute_shdr->Enable();
 
@@ -398,7 +392,19 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
         std::max(m_volume_resolution[0], std::max(m_volume_resolution[1], m_volume_resolution[2]));
     auto const maxExtents = std::max(m_volume_extents[0], std::max(m_volume_extents[1], m_volume_extents[2]));
     glUniform1f(compute_shdr->ParameterLocation("voxelSize"), maxExtents / (maxResolution - 1.0f));
-    glUniform2fv(compute_shdr->ParameterLocation("valRange"), 1, valRange.data());
+
+    // Force value range to user-defined range if requested.
+    if (this->paramOverride.Param<core::param::BoolParam>()->Value()) {
+        std::array<float, 2> overrideRange = {
+            this->paramMinOverride.Param<core::param::FloatParam>()->Value(),
+            this->paramMaxOverride.Param<core::param::FloatParam>()->Value()
+        };
+        glUniform2fv(compute_shdr->ParameterLocation("valRange"), 1, overrideRange.data());
+
+    } else {
+        glUniform2fv(compute_shdr->ParameterLocation("valRange"), 1, valRange.data());
+    }
+
     glUniform1f(compute_shdr->ParameterLocation("rayStepRatio"),
         this->m_ray_step_ratio_param.Param<core::param::FloatParam>()->Value());
 
@@ -654,13 +660,8 @@ bool RaycastVolumeRenderer::updateVolumeData(const unsigned int frameID) {
     m_volume_resolution[1] = metadata->Resolution[1];
     m_volume_resolution[2] = metadata->Resolution[2];
 
-    if (this->paramOverride.Param<core::param::BoolParam>()->Value()) {
-        valRange[0] = this->paramMinOverride.Param<core::param::FloatParam>()->Value();
-        valRange[1] = this->paramMaxOverride.Param<core::param::FloatParam>()->Value();
-    } else {
-        valRange[0] = metadata->MinValues[0];
-        valRange[1] = metadata->MaxValues[0];
-    }
+    valRange[0] = metadata->MinValues[0];
+    valRange[1] = metadata->MaxValues[0];
 
     GLenum internal_format;
     GLenum format;
