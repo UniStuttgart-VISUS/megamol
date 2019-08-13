@@ -16,9 +16,22 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/AnimDataModule.h"
 #include "vislib/math/Cuboid.h"
+#include <map>
 
 namespace megamol {
 namespace astro {
+
+    template <typename T> T centralDifference(T valBefore, T valAfter, float stepSize = 1.0f) { 
+        return (valAfter - valBefore) / (2.0f * stepSize);
+    }
+
+    template <typename T> T forwardDifference(T myVal, T valAfter, float stepSize = 1.0f) {
+        return (valAfter - myVal) / stepSize;
+    }
+
+    template <typename T> T backwardDifference(T myVal, T valBefore, float stepSize = 1.0f) {
+        return (myVal - valBefore) / stepSize;
+    }
 
 class Contest2019DataLoader : public core::view::AnimDataModule {
 public:
@@ -106,6 +119,15 @@ protected:
             this->isStarFormingGasFlags.reset();
             this->isAGNFlags.reset();
             this->particleIDs.reset();
+
+            this->velocityDerivatives.reset();
+            this->temperatureDerivatives.reset();
+            this->internalEnergyDerivatives.reset();
+            this->smoothingLengthDerivatives.reset();
+            this->molecularWeightDerivatives.reset();
+            this->densityDerivatives.reset();
+            this->gravitationalPotentialDerivatives.reset();
+            this->entropyDerivatives.reset();
         }
 
         /**
@@ -130,6 +152,19 @@ protected:
         void SetData(AstroDataCall& call, const vislib::math::Cuboid<float>& boundingBox,
             const vislib::math::Cuboid<float>& clipBox);
 
+        /**
+         * Calculates the derivatives of the frame using the frame before and the frame after as input
+         */
+        void CalculateDerivatives(Frame* frameBefore, Frame* frameAfter);
+
+        void CalculateDerivativesCentralDifferences(Frame* frameBefore, Frame* frameAfter);
+
+        void CalculateDerivativesBackwardDifferences(Frame* frameBefore);
+
+        void CalculateDerivativesForwardDifferences(Frame* frameAfter);
+
+        void ZeroDerivatives(void);
+
     private:
 #pragma pack(push, 1)
         /**
@@ -153,14 +188,22 @@ protected:
         };
 #pragma pack(pop)
 
+        void buildParticleIDMap(const Frame* frame, std::map<int64_t, int64_t>& outIndexMap);
+
         /** Pointer to the position array */
         vec3ArrayPtr positions = nullptr;
 
         /** Pointer to the velocity array */
         vec3ArrayPtr velocities = nullptr;
 
+        /** Pointer to the velocity derivative array */
+        vec3ArrayPtr velocityDerivatives = nullptr;
+
         /** Pointer to the temperature array */
         floatArrayPtr temperatures = nullptr;
+
+        /** Pointer to the temperature derivative array */
+        floatArrayPtr temperatureDerivatives = nullptr;
 
         /** Pointer to the mass array */
         floatArrayPtr masses = nullptr;
@@ -168,20 +211,38 @@ protected:
         /** Pointer to the interal energy array */
         floatArrayPtr internalEnergies = nullptr;
 
+        /** Pointer to the interal energy derivative array */
+        floatArrayPtr internalEnergyDerivatives = nullptr;
+
         /** Pointer to the smoothing length array */
         floatArrayPtr smoothingLengths = nullptr;
 
+        /** Pointer to the smoothing length derivative array */
+        floatArrayPtr smoothingLengthDerivatives = nullptr;
+
         /** Pointer to the molecular weight array */
         floatArrayPtr molecularWeights = nullptr;
+        
+        /** Pointer to the molecular weight derivative array */
+        floatArrayPtr molecularWeightDerivatives = nullptr;
 
         /** Pointer to the density array */
         floatArrayPtr densities = nullptr;
 
+        /** Pointer to the density derivative array */
+        floatArrayPtr densityDerivatives = nullptr;
+
         /** Pointer to the gravitational potential array */
         floatArrayPtr gravitationalPotentials = nullptr;
 
+        /** Pointer to the gravitational potential derivative array */
+        floatArrayPtr gravitationalPotentialDerivatives = nullptr;
+
         /** Pointer to the entropy array */
         floatArrayPtr entropy = nullptr;
+
+        /** Pointer to the entropy derivative array */
+        floatArrayPtr entropyDerivatives = nullptr;
 
         /** Pointer to the baryon flag array */
         boolArrayPtr isBaryonFlags = nullptr;
@@ -263,6 +324,9 @@ protected:
 
     /** Slot containing the number of files that should be loaded< */
     core::param::ParamSlot filesToLoad;
+
+    /** Slot determining whether the derivatives should be calculated */
+    core::param::ParamSlot calculateDerivatives;
 
     /** Slot to send the data over */
     core::CalleeSlot getDataSlot;
