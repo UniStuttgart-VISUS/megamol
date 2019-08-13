@@ -20,37 +20,36 @@
 /*
  * megamol::astro::AstroSchulz::AstroSchulz
  */
-megamol::astro::AstroSchulz::AstroSchulz(void)
-    : Module()
-    , frameID(0)
-    , hashInput(0)
-    , hashState(0)
-    , paramsInclude{{// The ParamSlot has been defeated!!!
-          {"includePosition", "Include the position."}, {"includeVelocity", "Include the velocity vectors."},
-          {"includeVelocityMagnitude", "Include the magnitude of the velocity vectors."},
-          {"includeTemperature", "Include the temperature."}, {"includeMass", "Include the mass."},
-          {"includeInternalEnergy", "Include the internal energy."},
-          {"includeSmoothingLength", "include the smoothing length."},
-          {"includeMolecularWeight", "Include the molecular weight."}, {"includeDensity", "Include the density."},
-          {"includeGravitationalPotential", "Include the graviational potential."},
-          {"includeEntropy", "Include entropy."}, {"includeBaryon", "Include the Boolean indicating baryons."},
-          {"includeStar", "Include the Boolean indicating stars."},
-          {"includeWind", "Include the Boolean indicating wind."},
-          {"includeStarFormingGas", "Include the Boolean indicating start forming gas."},
-          {"includeActiveGalactivNucleus", "Include the Boolean indicating AGNs."},
-          {"includeID", "Include the particle ID."},
-          {"includeVelocityDerivative", "Include the velocity vector derivatives"}, 
-          {"includeInternalEnergyDerivative", "Include the internal energy derivative"}, 
-          {"includeSmoothingLengthDerivative", "include the smoothing length derivative"}, 
-          {"includeMolecularWeightDerivative", "Include the molecular weight derivative"}, 
-          {"includeDensityDerivative", "Include the density derivative"}, 
-          {"includeGravitationalPotentialDerivative", "Include the graviational potential derivative"}, 
-          {"includeTemperatureDerivative", "Include the temperature derivative"}, 
-          {"includeEntropyDerivative", "Include entropy derivative"}, 
-          {"includeTime", "Load all timesteps into a single table and add the frame number as column."}}}
-    , paramFullRange("fullRange", "Scan the whole trajecory for min/man ranges.")
-    , slotAstroData("astroData", "Input slot for astronomical data")
-    , slotTableData("tableData", "Output slot for the resulting sphere data") {
+megamol::astro::AstroSchulz::AstroSchulz(void) : Module(), 
+        frameID(0),
+        hashInput(0),
+        hashState(0),
+        paramsInclude{{// The ParamSlot has been defeated!!!
+            {"includePosition", "Include the position."}, {"includeVelocity", "Include the velocity vectors."},
+            {"includeVelocityMagnitude", "Include the magnitude of the velocity vectors."},
+            {"includeTemperature", "Include the temperature."}, {"includeMass", "Include the mass."},
+            {"includeInternalEnergy", "Include the internal energy."},
+            {"includeSmoothingLength", "include the smoothing length."},
+            {"includeMolecularWeight", "Include the molecular weight."}, {"includeDensity", "Include the density."},
+            {"includeGravitationalPotential", "Include the graviational potential."},
+            {"includeEntropy", "Include entropy."}, {"includeBaryon", "Include the Boolean indicating baryons."},
+            {"includeStar", "Include the Boolean indicating stars."},
+            {"includeWind", "Include the Boolean indicating wind."},
+            {"includeStarFormingGas", "Include the Boolean indicating start forming gas."},
+            {"includeActiveGalactivNucleus", "Include the Boolean indicating AGNs."},
+            {"includeID", "Include the particle ID."},
+            {"includeVelocityDerivative", "Include the velocity vector derivatives"}, 
+            {"includeInternalEnergyDerivative", "Include the internal energy derivative"}, 
+            {"includeSmoothingLengthDerivative", "include the smoothing length derivative"}, 
+            {"includeMolecularWeightDerivative", "Include the molecular weight derivative"}, 
+            {"includeDensityDerivative", "Include the density derivative"}, 
+            {"includeGravitationalPotentialDerivative", "Include the graviational potential derivative"}, 
+            {"includeTemperatureDerivative", "Include the temperature derivative"}, 
+            {"includeEntropyDerivative", "Include entropy derivative"}, 
+            {"includeTime", "Load all timesteps into a single table and add the frame number as column."}}}, 
+        paramFullRange("fullRange", "Scan the whole trajecory for min/man ranges."),
+        slotAstroData("astroData", "Input slot for astronomical data"),
+        slotTableData("tableData", "Output slot for the resulting sphere data") {
     // Publish the slots.
     this->slotAstroData.SetCompatibleCall<AstroDataCallDescription>();
     this->MakeSlotAvailable(&this->slotAstroData);
