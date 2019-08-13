@@ -2038,13 +2038,13 @@ bool moldyn::SphereRenderer::makeVertexString(
             outCode = "    inPosition = vec4(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX,\n"
                 "                 theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posY,\n"
                 "                 theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posZ, 1.0); \n"
-                "    rad = contRad;";
+                "    rad = constRad;";
         }
         else {
             outCode = "    inPosition = vec4(thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX,\n"
                 "                 thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posY,\n"
                 "                 thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posZ, 1.0); \n"
-                "    rad = contRad;";
+                "    rad = constRad;";
         }
         break;
     case MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ:
@@ -2053,13 +2053,13 @@ bool moldyn::SphereRenderer::makeVertexString(
             outCode = "    inPosition = vec4(float(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX),\n"
                 "                 float(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posY),\n"
                 "                 float(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posZ), 1.0); \n"
-                "    rad = contRad;";
+                "    rad = constRad;";
         }
         else {
             outCode = "    inPosition = vec4(float(thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX),\n"
                 "                 float(thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posY),\n"
                 "                 float(thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posZ), 1.0); \n"
-                "    rad = contRad;";
+                "    rad = constRad;";
         }
         break;
     case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
@@ -2185,11 +2185,10 @@ std::shared_ptr<vislib::graphics::gl::GLSLShader> moldyn::SphereRenderer::genera
         declarationSnip = new ShaderSource::StringSnippet(decl.c_str());
         codeSnip = new ShaderSource::StringSnippet(code.c_str());
 
-        /// Generated shader declaration snippet is inserted between 2nd and 3rd snippet (after
-        /// ssbo_vert_attributes.glsl)
+        /// Generated shader declaration snippet is inserted between 2nd and 3rd snippet (after ssbo_vert_attributes.glsl)
         v2->Insert(7, declarationSnip);
         /// Generated shader code snippet is inserted between 4th and 5th snippet (after ssbo_vert_mainstart.glsl)
-        /// => consider new index through first Insertion!
+        /// => Consider new index through first Insertion!
         v2->Insert(9, codeSnip);
 
         vislib::SmartPtr<ShaderSource> vss(v2);
