@@ -18,6 +18,7 @@
 #include "Contest2019DataLoader.h"
 #include "DirectionToColour.h"
 #include "FilamentFilter.h"
+#include "MinMax.h"
 #include "SimpleAstroFilter.h"
 #include "SurfaceLICRenderer.h"
 #include "SpectralIntensityVolume.h"
@@ -64,6 +65,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::astro::SimpleAstroFilter>();
             this->module_descriptions.RegisterAutoDescription<megamol::astro::SurfaceLICRenderer>();
             this->module_descriptions.RegisterAutoDescription<megamol::astro::SpectralIntensityVolume>();
+            this->module_descriptions.RegisterAutoDescription<megamol::astro::MinMax>();
 
             // register calls here:
 

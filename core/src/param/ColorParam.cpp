@@ -15,18 +15,11 @@
 
 using namespace megamol::core::param;
 
-ColorParam::ColorParam(const ColorType& initVal) { this->val = initVal; }
+ColorParam::ColorParam(const ColorType& initVal) : val(initVal) {}
 
-ColorParam::ColorParam(const float& initR, const float& initG, const float& initB, const float& initA) {
-    this->val[0] = initR;
-    this->val[1] = initG;
-    this->val[2] = initB;
-    this->val[3] = initA;
-}
+ColorParam::ColorParam(float initR, float initG, float initB, float initA) : val({initR, initG, initB, initA}) {}
 
 ColorParam::ColorParam(const vislib::TString& initVal) { ParseValue(initVal); }
-
-ColorParam::~ColorParam(void) {}
 
 void ColorParam::Definition(vislib::RawStorage& outDef) const {
     outDef.AssertSize(6);
