@@ -308,6 +308,15 @@ bool AstroParticleConverter::getExtent(Call& call) {
  */
 void AstroParticleConverter::calcMinMaxValues(const AstroDataCall& ast) {
     auto colmode = static_cast<ColoringMode>(this->colorModeSlot.Param<param::EnumParam>()->Value());
+    this->valmin = this->densityMin = 0.0f;
+    this->valmax = this->densityMax = 1.0f;
+
+    if (ast.GetParticleCount() < 1) { // when no particles are present the pointer dereferencing later does not work
+        this->minValueSlot.Param<param::FloatParam>()->SetValue(this->valmin);
+        this->maxValueSlot.Param<param::FloatParam>()->SetValue(this->valmax);
+        return;
+    }
+
     switch (colmode) {
     case megamol::astro::AstroParticleConverter::ColoringMode::MASS:
         this->valmin = *std::min_element(ast.GetMass()->begin(), ast.GetMass()->end());
