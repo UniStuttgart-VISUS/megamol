@@ -38,6 +38,47 @@ const char *megamol::core::misc::VolumetricDataCall::FunctionName(
 
 
 /*
+ * megamol::core::misc::VolumetricDataCall::GetMetadata
+ */
+bool megamol::core::misc::VolumetricDataCall::GetMetadata(
+        core::misc::VolumetricDataCall& call) {
+    using core::misc::VolumetricDataCall;
+    using vislib::sys::Log;
+
+    if (!call(VolumetricDataCall::IDX_GET_METADATA)) {
+        Log::DefaultLog.WriteError(L"%hs::%hs failed.",
+            VolumetricDataCall::ClassName(),
+            VolumetricDataCall::FunctionName(VolumetricDataCall::IDX_GET_METADATA));
+        return false;
+    }
+
+    if (call.GetMetadata() == nullptr) {
+        /* Second chance ... */
+        if (!call(VolumetricDataCall::IDX_GET_DATA)) {
+            Log::DefaultLog.WriteError(L"%hs::%hs failed.",
+                VolumetricDataCall::ClassName(),
+                VolumetricDataCall::FunctionName(VolumetricDataCall::IDX_GET_DATA));
+            return false;
+        }
+    }
+
+    auto retval = (call.GetMetadata() != nullptr);
+
+    if (!retval) {
+        Log::DefaultLog.WriteError(L"Call to %hs::%hs or %hs::%hs succeeded, "
+            L"but none of them did provide any metadata. The call will be "
+            "considered to have failed.",
+            VolumetricDataCall::ClassName(),
+            VolumetricDataCall::FunctionName(VolumetricDataCall::IDX_GET_METADATA),
+            VolumetricDataCall::ClassName(),
+            VolumetricDataCall::FunctionName(VolumetricDataCall::IDX_GET_DATA));
+    }
+
+    return retval;
+}
+
+
+/*
  * megamol::core::misc::VolumetricDataCall::IDX_GET_DATA
  */
 const unsigned int megamol::core::misc::VolumetricDataCall::IDX_GET_DATA = 1;
