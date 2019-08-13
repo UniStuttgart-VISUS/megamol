@@ -1,5 +1,5 @@
 /*
-** $Id: llex.c,v 2.97 2017/06/09 16:48:44 roberto Exp roberto $
+** $Id: llex.c,v 2.96.1.1 2017/04/19 17:20:42 roberto Exp $
 ** Lexical Analyzer
 ** See Copyright Notice in lua.h
 */
@@ -129,15 +129,15 @@ TString *luaX_newstring (LexState *ls, const char *str, size_t l) {
   TValue *o;  /* entry for 'str' */
   TString *ts = luaS_newlstr(L, str, l);  /* create new string */
   setsvalue2s(L, L->top++, ts);  /* temporarily anchor it in stack */
-  o = luaH_set(L, ls->h, s2v(L->top - 1));
+  o = luaH_set(L, ls->h, L->top - 1);
   if (ttisnil(o)) {  /* not in use yet? */
     /* boolean value does not need GC barrier;
-       table is not a metatable, so it does not need to invalidate cache */
+       table has no metatable, so it does not need to invalidate cache */
     setbvalue(o, 1);  /* t[string] = true */
     luaC_checkGC(L);
   }
   else {  /* string already present */
-    ts = keystrval(nodefromval(o));  /* re-use value previously stored */
+    ts = tsvalue(keyfromval(o));  /* re-use value previously stored */
   }
   L->top--;  /* remove string from stack */
   return ts;
