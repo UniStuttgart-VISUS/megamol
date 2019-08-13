@@ -1,5 +1,5 @@
 /*
-** $Id: lauxlib.h,v 1.132 2017/04/24 18:06:12 roberto Exp roberto $
+** $Id: lauxlib.h,v 1.131.1.1 2017/04/19 17:20:42 roberto Exp $
 ** Auxiliary functions for building Lua libraries
 ** See Copyright Notice in lua.h
 */
@@ -13,10 +13,6 @@
 #include <stdio.h>
 
 #include "lua.h"
-
-
-/* global table */
-#define	LUA_GNAME	"_G"
 
 
 
@@ -154,10 +150,7 @@ typedef struct luaL_Buffer {
   size_t size;  /* buffer size */
   size_t n;  /* number of characters in buffer */
   lua_State *L;
-  union {
-    LUAI_MAXALIGN;  /* ensure maximum alignment for buffer */
-    char b[LUAL_BUFFERSIZE];  /* initial buffer */
-  } init;
+  char initb[LUAL_BUFFERSIZE];  /* initial buffer */
 } luaL_Buffer;
 
 

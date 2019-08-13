@@ -19,6 +19,9 @@ if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     CACHE PATH "default install path" FORCE)
 endif()
 
+# This will replace "\" by "/"
+set(CMAKE_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX} CACHE PATH "default install path" FORCE)
+
 # Enable CUDA
 option(ENABLE_CUDA "Enable CUDA, which is needed for certain plugins" OFF)
 

@@ -1,5 +1,5 @@
 /*
-** $Id: lstate.c,v 2.140 2017/05/26 19:14:29 roberto Exp roberto $
+** $Id: lstate.c,v 2.133.1.1 2017/04/19 17:39:34 roberto Exp $
 ** Global State
 ** See Copyright Notice in lua.h
 */
@@ -27,6 +27,14 @@
 #include "ltable.h"
 #include "ltm.h"
 
+
+#if !defined(LUAI_GCPAUSE)
+#define LUAI_GCPAUSE	200  /* 200% */
+#endif
+
+#if !defined(LUAI_GCMUL)
+#define LUAI_GCMUL	200 /* GC runs 'twice the speed' of memory allocation */
+#endif
 
 
 /*
@@ -143,10 +151,10 @@ void luaE_shrinkCI (lua_State *L) {
 static void stack_init (lua_State *L1, lua_State *L) {
   int i; CallInfo *ci;
   /* initialize stack array */
-  L1->stack = luaM_newvector(L, BASIC_STACK_SIZE, StackValue);
+  L1->stack = luaM_newvector(L, BASIC_STACK_SIZE, TValue);
   L1->stacksize = BASIC_STACK_SIZE;
   for (i = 0; i < BASIC_STACK_SIZE; i++)
-    setnilvalue(s2v(L1->stack + i));  /* erase new stack */
+    setnilvalue(L1->stack + i);  /* erase new stack */
   L1->top = L1->stack;
   L1->stack_last = L1->stack + L1->stacksize - EXTRA_STACK;
   /* initialize first ci */
@@ -154,7 +162,7 @@ static void stack_init (lua_State *L1, lua_State *L) {
   ci->next = ci->previous = NULL;
   ci->callstatus = 0;
   ci->func = L1->top;
-  setnilvalue(s2v(L1->top++));  /* 'function' entry for this 'ci' */
+  setnilvalue(L1->top++);  /* 'function' entry for this 'ci' */
   ci->top = L1->top + LUA_MINSTACK;
   L1->ci = ci;
 }
@@ -201,7 +209,6 @@ static void f_luaopen (lua_State *L, void *ud) {
   luaT_init(L);
   luaX_init(L);
   g->gcrunning = 1;  /* allow gc */
-  g->gcemergency = 0;
   g->version = lua_version(NULL);
   luai_userstateopen(L);
 }
@@ -258,7 +265,7 @@ LUA_API lua_State *lua_newthread (lua_State *L) {
   L1->next = g->allgc;
   g->allgc = obj2gco(L1);
   /* anchor it on L stack */
-  setthvalue2s(L, L->top, L1);
+  setthvalue(L, L->top, L1);
   api_incr_top(L);
   preinit_thread(L1, g);
   L1->hookmask = L->hookmask;
@@ -293,36 +300,34 @@ LUA_API lua_State *lua_newstate (lua_Alloc f, void *ud) {
   if (l == NULL) return NULL;
   L = &l->l.l;
   g = &l->g;
+  L->next = NULL;
   L->tt = LUA_TTHREAD;
   g->currentwhite = bitmask(WHITE0BIT);
   L->marked = luaC_white(g);
   preinit_thread(L, g);
-  g->allgc = obj2gco(L);  /* by now, only object is the main thread */
-  L->next = NULL;
   g->frealloc = f;
   g->ud = ud;
   g->mainthread = L;
   g->seed = makeseed(L);
   g->gcrunning = 0;  /* no GC while building state */
+  g->GCestimate = 0;
   g->strt.size = g->strt.nuse = 0;
   g->strt.hash = NULL;
   setnilvalue(&g->l_registry);
   g->panic = NULL;
   g->version = NULL;
   g->gcstate = GCSpause;
-  g->gckind = KGC_INC;
-  g->finobj = g->tobefnz = g->fixedgc = NULL;
-  g->survival = g->old = g->reallyold = NULL;
-  g->finobjsur = g->finobjold = g->finobjrold = NULL;
+  g->gckind = KGC_NORMAL;
+  g->allgc = g->finobj = g->tobefnz = g->fixedgc = NULL;
   g->sweepgc = NULL;
   g->gray = g->grayagain = NULL;
-  g->weak = g->ephemeron = g->allweak = g->protogray = NULL;
+  g->weak = g->ephemeron = g->allweak = NULL;
   g->twups = NULL;
   g->totalbytes = sizeof(LG);
   g->GCdebt = 0;
+  g->gcfinnum = 0;
   g->gcpause = LUAI_GCPAUSE;
   g->gcstepmul = LUAI_GCMUL;
-  g->gcstepsize = LUAI_GCSTEPSIZE;
   for (i=0; i < LUA_NUMTAGS; i++) g->mt[i] = NULL;
   if (luaD_rawrunprotected(L, f_luaopen, NULL) != LUA_OK) {
     /* memory allocation error: free partial state */

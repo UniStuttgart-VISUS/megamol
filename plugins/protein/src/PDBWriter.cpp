@@ -13,6 +13,7 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
+#include "mmcore/param/ButtonParam.h"
 #include "vislib/sys/Log.h"
 #include "vislib/sys/File.h"
 #include <cmath>
@@ -50,6 +51,8 @@ PDBWriter::PDBWriter () : AbstractJob(), Module(),
         strideSlot("stride", "Parameter to determine the stride used when writing frames"),
         filenamePrefixSlot("filenamePrefix", "Parameter for the filename prefix"),
         outDirSlot("outputFolder", "Parameter for the output folder"),
+		triggerButtonSlot("trigger", "Starts the pdb writing process"),
+		rescaleBFactorSlot("rescaleBFactor", "If set, the BFactor is rescaled to a range from 0 to 100."),
         jobDone(false), filenameDigits(0), useModelRecord(false) {
 
     // Make data caller slot available
@@ -87,6 +90,15 @@ PDBWriter::PDBWriter () : AbstractJob(), Module(),
     // Parameter for the output folder
     this->outDirSlot << new core::param::StringParam(".");
     this->MakeSlotAvailable(&this->outDirSlot);
+
+	// Parameter for the trigger button
+	this->triggerButtonSlot << new core::param::ButtonParam(core::view::Key::KEY_P);
+	this->triggerButtonSlot.SetUpdateCallback(&PDBWriter::buttonCallback);
+	this->MakeSlotAvailable(&this->triggerButtonSlot);
+
+	// Parameter for the rescaling bool
+	this->rescaleBFactorSlot << new core::param::BoolParam(false);
+	this->MakeSlotAvailable(&this->rescaleBFactorSlot);
 }
 
 
@@ -103,6 +115,13 @@ PDBWriter::~PDBWriter() {
  */
 bool PDBWriter::IsRunning(void) const {
     return (!(this->jobDone));
+}
+
+/*
+ * PDBWriter::buttonCallback
+ */
+bool PDBWriter::buttonCallback(core::param::ParamSlot& slot) {
+	return this->Start();
 }
 
 
@@ -334,6 +353,10 @@ bool PDBWriter::writePDB(MolecularDataCall *mol) {
 
     uint ch, m, res, at;
 
+	float minBfactor = mol->MinimumBFactor();
+	float maxBfactor = mol->MaximumBFactor();
+	bool changeBfactor = this->rescaleBFactorSlot.Param<core::param::BoolParam>()->Value();
+
     /* Write 'ATOM' records for all atoms */
 
     // Loop through all chains
@@ -422,7 +445,11 @@ bool PDBWriter::writePDB(MolecularDataCall *mol) {
                     // Write temperature factor
                     outfile.width(6);
                     outfile.precision(2);
-                    outfile << std::fixed << std::right << mol->AtomBFactors()[at];
+					if (changeBfactor) {
+						outfile << std::fixed << std::right << (mol->AtomBFactors()[at] - minBfactor) * 100.0f / maxBfactor;
+					} else {
+						outfile << std::fixed << std::right << mol->AtomBFactors()[at];
+					}
 
                     outfile << "            " << std::endl;
 
@@ -523,6 +550,10 @@ bool PDBWriter::writePQR(MolecularDataCall *mol) {
 
     uint ch, m, res, at;
 
+	float minBfactor = mol->MinimumBFactor();
+	float maxBfactor = mol->MaximumBFactor();
+	bool changeBfactor = this->rescaleBFactorSlot.Param<core::param::BoolParam>()->Value();
+
     /* Write 'ATOM' records for all atoms */
 
     // Loop through all chains
@@ -611,7 +642,12 @@ bool PDBWriter::writePQR(MolecularDataCall *mol) {
                     // Write atom radii (note: are stored in B factor array)
                     outfile.width(6);
                     outfile.precision(2);
-                    outfile << std::fixed << std::right << mol->AtomBFactors()[at];
+					if (changeBfactor) {
+						outfile << std::fixed << std::right << (mol->AtomBFactors()[at] - minBfactor) * 100.0f / maxBfactor;
+					}
+					else {
+						outfile << std::fixed << std::right << mol->AtomBFactors()[at];
+					}
 
                     outfile << std::endl;
 

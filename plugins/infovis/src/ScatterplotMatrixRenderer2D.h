@@ -15,10 +15,10 @@
 
 #include <glowl/FramebufferObject.hpp>
 #include <memory>
+#include <nanoflann.hpp>
 #include "Renderer2D.h"
 
-namespace megamol {
-namespace infovis {
+namespace megamol::infovis {
 
 class ScatterplotMatrixRenderer2D : public Renderer2D {
 public:
@@ -27,21 +27,21 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "ScatterplotMatrixRenderer2D"; }
+    static const char* ClassName() { return "ScatterplotMatrixRenderer2D"; }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "Scatterplot matrix renderer for generic tables."; }
+    static const char* Description() { return "Scatterplot matrix renderer for generic tables."; }
 
     /**
      * Answers whether this module is available on the current system.
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable() { return true; }
 
     /**
      * Initialises a new instance.
@@ -51,7 +51,7 @@ public:
     /**
      * Finalises an instance.
      */
-    virtual ~ScatterplotMatrixRenderer2D();
+    ~ScatterplotMatrixRenderer2D() override;
 
 protected:
     /**
@@ -59,21 +59,18 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
-    /**
-     * Callback for mouse events (move, press, and release)
-     *
-     * @param x The x coordinate of the mouse in world space
-     * @param y The y coordinate of the mouse in world space
-     * @param flags The mouse flags
-     */
-    virtual bool MouseEvent(float x, float y, core::view::MouseFlags flags);
+    bool OnMouseButton(
+        core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) override;
+
+    bool OnMouseMove(double x, double y) override;
+
 
 private:
     enum ValueMapping {
@@ -90,11 +87,16 @@ private:
         size_t labelIdx;
     };
 
+    enum class BrushState {
+        NOP,
+        ADD,
+        REMOVE,
+    };
+
     struct MouseState {
         float x;
         float y;
-        bool selects;
-        bool inspects;
+        BrushState selector;
     };
 
     struct PlotInfo {
@@ -112,13 +114,51 @@ private:
         GLfloat smallTickY;
     };
 
+
+    struct SPLOMPoints {
+        SPLOMPoints(const std::vector<PlotInfo>& plots, const stdplugin::datatools::table::TableDataCall* floatTable)
+            : plots(plots)
+            , floatTable(floatTable){}
+
+                  [[nodiscard]] inline size_t idx_to_row(size_t idx) const {
+            const size_t rowCount = floatTable->GetRowsCount();
+            return idx % rowCount;
+        }
+
+        [[nodiscard]] inline size_t kdtree_get_point_count() const { return floatTable->GetRowsCount() * plots.size(); }
+
+        [[nodiscard]] inline float kdtree_get_pt(const size_t idx, const size_t dim) const {
+            const size_t rowCount = floatTable->GetRowsCount();
+            const size_t rowIdx = idx % rowCount;
+            const size_t plotIdx = idx / rowCount;
+            const PlotInfo& plot = this->plots[plotIdx];
+            if (dim == 0) {
+                const float xValue = this->floatTable->GetData(plot.indexX, rowIdx);
+                const float xPos = (xValue - plot.minX) / (plot.maxX - plot.minX);
+                return xPos * plot.sizeX + plot.offsetX;
+            } else if (dim == 1) {
+                const float yValue = this->floatTable->GetData(plot.indexY, rowIdx);
+                const float yPos = (yValue - plot.minY) / (plot.maxY - plot.minY);
+                return yPos * plot.sizeY + plot.offsetY;
+            } else {
+                assert(false && "Invalid dimension");
+            }
+        }
+
+        template <class BBOX> bool kdtree_get_bbox(BBOX&) const { return false; }
+
+    private:
+        const std::vector<PlotInfo>& plots;
+        const stdplugin::datatools::table::TableDataCall* floatTable;
+    };
+
     /**
      * The OpenGL Render callback.
      *
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(core::view::CallRender2D& call);
+    bool Render(core::view::CallRender2D& call) override;
 
     /**
      * The get extents callback. The module should set the members of
@@ -129,33 +169,39 @@ private:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(core::view::CallRender2D& call);
+    bool GetExtents(core::view::CallRender2D& call) override;
 
-    bool hasDirtyData(void) const;
+    bool hasDirtyData() const;
 
-    void resetDirtyData(void);
+    void resetDirtyData();
 
-    bool hasDirtyScreen(void) const;
+    bool hasDirtyScreen() const;
 
-    void resetDirtyScreen(void);
+    void resetDirtyScreen();
 
-    bool validate(core::view::CallRender2D& call);
+    bool validate(core::view::CallRender2D& call, bool ignoreMVP);
 
-    void updateColumns(void);
+    void updateColumns();
 
-    void drawMinimalisticAxis(void);
+    void drawMinimalisticAxis();
 
-    void drawScientificAxis(void);
+    void drawScientificAxis();
 
     void bindMappingUniforms(vislib::graphics::gl::GLSLShader& shader);
 
-    void drawPoints(void);
+    void bindFlagsAttribute();
 
-    void drawLines(void);
+    void drawPoints();
+
+    void drawLines();
 
     void validateTriangulation();
 
     void drawTriangulation();
+
+    void validateText();
+
+    void drawText();
 
     void unbindScreen();
 
@@ -163,11 +209,7 @@ private:
 
     void drawScreen();
 
-    void validateText();
-
-    void drawText();
-
-    int itemAt(const float x, const float y);
+    void updateSelection();
 
     core::CallerSlot floatTableInSlot;
 
@@ -250,6 +292,9 @@ private:
 
     core::utility::SSBOStreamer valueSSBO;
 
+    GLuint flagsBuffer;
+    core::FlagStorage::FlagVersionType flagsBufferVersion;
+
     GLuint triangleVBO;
     GLuint triangleIBO;
     GLsizei triangleVertexCount;
@@ -257,6 +302,7 @@ private:
 
     std::unique_ptr<glowl::FramebufferObject> screenFBO;
     vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> screenLastMVP;
+    GLint screenRestoreFBO;
     bool screenValid;
 
     megamol::core::utility::SDFFont axisFont;
@@ -265,9 +311,14 @@ private:
 
     std::vector<::megamol::core::param::ParamSlot*> dataParams;
     std::vector<::megamol::core::param::ParamSlot*> screenParams;
+
+    typedef nanoflann::L2_Simple_Adaptor<float, SPLOMPoints> SPLOMDistance;
+    typedef nanoflann::KDTreeSingleIndexAdaptor<SPLOMDistance, SPLOMPoints, 2> TreeIndex;
+
+    std::unique_ptr<SPLOMPoints> indexPoints;
+    std::unique_ptr<TreeIndex> index;
 };
 
-} // end namespace infovis
-} // end namespace megamol
+} // namespace megamol::infovis
 
 #endif // MEGAMOL_INFOVIS_SCATTERPLOTRENDERER2D_H_INCLUDED
