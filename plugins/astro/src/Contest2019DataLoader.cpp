@@ -65,8 +65,14 @@ bool Contest2019DataLoader::Frame::LoadFrame(std::string filepath, unsigned int 
     if (this->velocities == nullptr) {
         this->velocities = std::make_shared<std::vector<glm::vec3>>();
     }
+    if (this->velocityDerivatives == nullptr) {
+        this->velocityDerivatives = std::make_shared<std::vector<glm::vec3>>();
+    }
     if (this->temperatures == nullptr) {
         this->temperatures = std::make_shared<std::vector<float>>();
+    }
+    if (this->temperatureDerivatives == nullptr) {
+        this->temperatureDerivatives = std::make_shared<std::vector<float>>();
     }
     if (this->masses == nullptr) {
         this->masses = std::make_shared<std::vector<float>>();
@@ -74,20 +80,38 @@ bool Contest2019DataLoader::Frame::LoadFrame(std::string filepath, unsigned int 
     if (this->internalEnergies == nullptr) {
         this->internalEnergies = std::make_shared<std::vector<float>>();
     }
+    if (this->internalEnergyDerivatives == nullptr) {
+        this->internalEnergyDerivatives = std::make_shared<std::vector<float>>();
+    }
     if (this->smoothingLengths == nullptr) {
         this->smoothingLengths = std::make_shared<std::vector<float>>();
+    }
+    if (this->smoothingLengthDerivatives == nullptr) {
+        this->smoothingLengthDerivatives = std::make_shared<std::vector<float>>();
     }
     if (this->molecularWeights == nullptr) {
         this->molecularWeights = std::make_shared<std::vector<float>>();
     }
+    if (this->molecularWeightDerivatives == nullptr) {
+        this->molecularWeightDerivatives = std::make_shared<std::vector<float>>();
+    }
     if (this->densities == nullptr) {
         this->densities = std::make_shared<std::vector<float>>();
+    }
+    if (this->densityDerivatives == nullptr) {
+        this->densityDerivatives = std::make_shared<std::vector<float>>();
     }
     if (this->gravitationalPotentials == nullptr) {
         this->gravitationalPotentials = std::make_shared<std::vector<float>>();
     }
+    if (this->gravitationalPotentialDerivatives == nullptr) {
+        this->gravitationalPotentialDerivatives = std::make_shared<std::vector<float>>();
+    }
     if (this->entropy == nullptr) {
         this->entropy = std::make_shared<std::vector<float>>();
+    }
+    if (this->entropyDerivatives == nullptr) {
+        this->entropyDerivatives = std::make_shared<std::vector<float>>();
     }
     if (this->isBaryonFlags == nullptr) {
         this->isBaryonFlags = std::make_shared<std::vector<bool>>();
@@ -124,6 +148,15 @@ bool Contest2019DataLoader::Frame::LoadFrame(std::string filepath, unsigned int 
     this->isStarFormingGasFlags->resize(partCount);
     this->isAGNFlags->resize(partCount);
     this->particleIDs->resize(partCount);
+
+    this->velocityDerivatives->resize(partCount);
+    this->temperatureDerivatives->resize(partCount);
+    this->internalEnergyDerivatives->resize(partCount);
+    this->smoothingLengthDerivatives->resize(partCount);
+    this->molecularWeightDerivatives->resize(partCount);
+    this->densityDerivatives->resize(partCount);
+    this->gravitationalPotentialDerivatives->resize(partCount);
+    this->entropyDerivatives->resize(partCount);
 
     // copy the data over
 
@@ -162,10 +195,12 @@ bool Contest2019DataLoader::Frame::LoadFrame(std::string filepath, unsigned int 
             this->entropy->operator[](i) = std::log(t / std::pow(p, 2.0f / 3.0f));
 
             // This is Juhans formula:
-            //auto mu = (*this->masses)[i];
-            //auto eps = (*this->internalEnergies)[i];
+            // auto mu = (*this->masses)[i];
+            // auto eps = (*this->internalEnergies)[i];
             //(*this->entropy)[i] = std::log((mu * eps) / std::pow(p, 2.0f / 3.0f));
         }
+
+        // the derivatives will be calculated later, when the frame before and after are known
     }
     return true;
 }
@@ -180,20 +215,221 @@ void Contest2019DataLoader::Frame::SetData(
     }
     call.SetPositions(this->positions);
     call.SetVelocities(this->velocities);
+    call.SetVelocityDerivatives(this->velocityDerivatives);
     call.SetTemperature(this->temperatures);
+    call.SetTemperatureDerivatives(this->temperatureDerivatives);
     call.SetMass(this->masses);
     call.SetInternalEnergy(this->internalEnergies);
+    call.SetInternalEnergyDerivatives(this->internalEnergyDerivatives);
     call.SetSmoothingLength(this->smoothingLengths);
+    call.SetSmoothingLengthDerivatives(this->smoothingLengthDerivatives);
     call.SetMolecularWeights(this->molecularWeights);
+    call.SetMolecularWeightDerivatives(this->molecularWeightDerivatives);
     call.SetDensity(this->densities);
+    call.SetDensityDerivative(this->densityDerivatives);
     call.SetGravitationalPotential(this->gravitationalPotentials);
+    call.SetGravitationalPotentialDerivatives(this->gravitationalPotentialDerivatives);
     call.SetEntropy(this->entropy);
+    call.SetEntropyDerivatives(this->entropyDerivatives);
     call.SetIsBaryonFlags(this->isBaryonFlags);
     call.SetIsStarFlags(this->isStarFlags);
     call.SetIsWindFlags(this->isWindFlags);
     call.SetIsStarFormingGasFlags(this->isStarFormingGasFlags);
     call.SetIsAGNFlags(this->isAGNFlags);
     call.SetParticleIDs(this->particleIDs);
+}
+
+/*
+ * Contest2019DataLoader::Frame::ZeroDerivatives
+ */
+void Contest2019DataLoader::Frame::ZeroDerivatives(void) {
+    if (this->velocityDerivatives != nullptr) {
+        std::fill(this->velocityDerivatives->begin(), this->velocityDerivatives->end(), glm::vec3(0.0f));
+    }
+    if (this->temperatureDerivatives != nullptr) {
+        std::fill(this->temperatureDerivatives->begin(), this->temperatureDerivatives->end(), 0.0f);
+    }
+    if (this->internalEnergyDerivatives != nullptr) {
+        std::fill(this->internalEnergyDerivatives->begin(), this->internalEnergyDerivatives->end(), 0.0f);
+    }
+    if (this->smoothingLengthDerivatives != nullptr) {
+        std::fill(this->smoothingLengthDerivatives->begin(), this->smoothingLengthDerivatives->end(), 0.0f);
+    }
+    if (this->molecularWeightDerivatives != nullptr) {
+        std::fill(this->molecularWeightDerivatives->begin(), this->molecularWeightDerivatives->end(), 0.0f);
+    }
+    if (this->densityDerivatives != nullptr) {
+        std::fill(this->densityDerivatives->begin(), this->densityDerivatives->end(), 0.0f);
+    }
+    if (this->gravitationalPotentialDerivatives != nullptr) {
+        std::fill(
+            this->gravitationalPotentialDerivatives->begin(), this->gravitationalPotentialDerivatives->end(), 0.0f);
+    }
+    if (this->entropyDerivatives != nullptr) {
+        std::fill(this->entropyDerivatives->begin(), this->entropyDerivatives->end(), 0.0f);
+    }
+}
+
+/*
+ * Contest2019DataLoader::Frame::CalculateDerivatives
+ */
+void Contest2019DataLoader::Frame::CalculateDerivatives(
+    Contest2019DataLoader::Frame* frameBefore, Contest2019DataLoader::Frame* frameAfter) {
+    // if there is only one frame we leave the derivatives at 0
+    if ((frameBefore->frame == frameAfter->frame) && (this->frame == frameBefore->frame)) {
+        return;
+    }
+    if (frameBefore->frame == this->frame) {
+        this->CalculateDerivativesForwardDifferences(frameAfter);
+        return;
+    }
+    if (frameAfter->frame == this->frame) {
+        this->CalculateDerivativesBackwardDifferences(frameAfter);
+        return;
+    }
+    this->CalculateDerivativesCentralDifferences(frameBefore, frameAfter);
+}
+
+/*
+ * Contest2019DataLoader::Frame::buildParticleIDMap
+ */
+void Contest2019DataLoader::Frame::buildParticleIDMap(const Frame* frame, std::map<int64_t, int64_t>& outIndexMap) {
+    outIndexMap.clear();
+    if (frame != nullptr && frame->particleIDs != nullptr) {
+        for (int64_t i = 0; i < frame->particleIDs->size(); i++) {
+            outIndexMap.insert(std::pair<int64_t, int64_t>(frame->particleIDs->at(i), i));
+        }
+    }
+}
+
+/*
+ * Contest2019DataLoader::Frame::CalculateDerivativesBackwardDifferences
+ */
+void Contest2019DataLoader::Frame::CalculateDerivativesBackwardDifferences(Contest2019DataLoader::Frame* frameBefore) {
+    if (this->particleIDs == nullptr) return;
+    std::map<int64_t, int64_t> mapBefore;
+    this->buildParticleIDMap(frameBefore, mapBefore);
+    int64_t idbefore;
+    for (int64_t i = 0; i < this->particleIDs->size(); ++i) {
+        idbefore = (mapBefore.count(this->particleIDs->at(i)) > 0) ? mapBefore[this->particleIDs->at(i)] : -1;
+        if (idbefore >= 0) {
+            this->velocityDerivatives->at(i) =
+                backwardDifference(this->velocities->at(i), frameBefore->velocities->at(idbefore));
+            this->temperatureDerivatives->at(i) =
+                backwardDifference(this->temperatures->at(i), frameBefore->temperatures->at(idbefore));
+            this->internalEnergyDerivatives->at(i) =
+                backwardDifference(this->internalEnergies->at(i), frameBefore->internalEnergies->at(idbefore));
+            this->smoothingLengthDerivatives->at(i) =
+                backwardDifference(this->smoothingLengths->at(i), frameBefore->smoothingLengths->at(idbefore));
+            this->molecularWeightDerivatives->at(i) =
+                backwardDifference(this->molecularWeights->at(i), frameBefore->molecularWeights->at(idbefore));
+            this->densityDerivatives->at(i) =
+                backwardDifference(this->densities->at(i), frameBefore->densities->at(idbefore));
+            this->gravitationalPotentialDerivatives->at(i) = backwardDifference(
+                this->gravitationalPotentials->at(i), frameBefore->gravitationalPotentials->at(idbefore));
+            this->entropyDerivatives->at(i) =
+                backwardDifference(this->entropy->at(i), frameBefore->entropy->at(idbefore));
+        }
+    }
+}
+
+/*
+ * Contest2019DataLoader::Frame::CalculateDerivativesForwardDifferences
+ */
+void Contest2019DataLoader::Frame::CalculateDerivativesForwardDifferences(Contest2019DataLoader::Frame* frameAfter) {
+    if (this->particleIDs == nullptr) return;
+    std::map<int64_t, int64_t> mapAfter;
+    this->buildParticleIDMap(frameAfter, mapAfter);
+    int64_t idafter;
+    for (int64_t i = 0; i < this->particleIDs->size(); ++i) {
+        idafter = (mapAfter.count(this->particleIDs->at(i)) > 0) ? mapAfter[this->particleIDs->at(i)] : -1;
+        if (idafter >= 0) {
+            this->velocityDerivatives->at(i) =
+                forwardDifference(this->velocities->at(i), frameAfter->velocities->at(idafter));
+            this->temperatureDerivatives->at(i) =
+                forwardDifference(this->temperatures->at(i), frameAfter->temperatures->at(idafter));
+            this->internalEnergyDerivatives->at(i) =
+                forwardDifference(this->internalEnergies->at(i), frameAfter->internalEnergies->at(idafter));
+            this->smoothingLengthDerivatives->at(i) =
+                forwardDifference(this->smoothingLengths->at(i), frameAfter->smoothingLengths->at(idafter));
+            this->molecularWeightDerivatives->at(i) =
+                forwardDifference(this->molecularWeights->at(i), frameAfter->molecularWeights->at(idafter));
+            this->densityDerivatives->at(i) =
+                forwardDifference(this->densities->at(i), frameAfter->densities->at(idafter));
+            this->gravitationalPotentialDerivatives->at(i) = forwardDifference(
+                this->gravitationalPotentials->at(i), frameAfter->gravitationalPotentials->at(idafter));
+            this->entropyDerivatives->at(i) = forwardDifference(this->entropy->at(i), frameAfter->entropy->at(idafter));
+        }
+    }
+}
+
+/*
+ * Contest2019DataLoader::Frame::CalculateDerivativesCentralDifferences
+ */
+void Contest2019DataLoader::Frame::CalculateDerivativesCentralDifferences(
+    Contest2019DataLoader::Frame* frameBefore, Contest2019DataLoader::Frame* frameAfter) {
+    if (this->particleIDs == nullptr) return;
+    std::map<int64_t, int64_t> mapBefore, mapAfter;
+    this->buildParticleIDMap(frameBefore, mapBefore);
+    this->buildParticleIDMap(frameAfter, mapAfter);
+    int64_t idbefore, idafter;
+    for (int64_t i = 0; i < this->particleIDs->size(); ++i) {
+        // retrieve indices in other frames
+        idbefore = (mapBefore.count(this->particleIDs->at(i)) > 0) ? mapBefore[this->particleIDs->at(i)] : -1;
+        idafter = (mapAfter.count(this->particleIDs->at(i)) > 0) ? mapAfter[this->particleIDs->at(i)] : -1;
+        // fallback to other difference modes if some particle ids are not available
+        if (idbefore >= 0 && idafter >= 0) {
+            this->velocityDerivatives->at(i) =
+                centralDifference(frameBefore->velocities->at(idbefore), frameAfter->velocities->at(idafter));
+            this->temperatureDerivatives->at(i) =
+                centralDifference(frameBefore->temperatures->at(idbefore), frameAfter->temperatures->at(idafter));
+            this->internalEnergyDerivatives->at(i) = centralDifference(
+                frameBefore->internalEnergies->at(idbefore), frameAfter->internalEnergies->at(idafter));
+            this->smoothingLengthDerivatives->at(i) = centralDifference(
+                frameBefore->smoothingLengths->at(idbefore), frameAfter->smoothingLengths->at(idafter));
+            this->molecularWeightDerivatives->at(i) = centralDifference(
+                frameBefore->molecularWeights->at(idbefore), frameAfter->molecularWeights->at(idafter));
+            this->densityDerivatives->at(i) =
+                centralDifference(frameBefore->densities->at(idbefore), frameAfter->densities->at(idafter));
+            this->gravitationalPotentialDerivatives->at(i) = centralDifference(
+                frameBefore->gravitationalPotentials->at(idbefore), frameAfter->gravitationalPotentials->at(idafter));
+            this->entropyDerivatives->at(i) =
+                centralDifference(frameBefore->entropy->at(idbefore), frameAfter->entropy->at(idafter));
+        } else if (idbefore < 0 && idafter >= 0) {
+            this->velocityDerivatives->at(i) =
+                forwardDifference(this->velocities->at(i), frameAfter->velocities->at(idafter));
+            this->temperatureDerivatives->at(i) =
+                forwardDifference(this->temperatures->at(i), frameAfter->temperatures->at(idafter));
+            this->internalEnergyDerivatives->at(i) =
+                forwardDifference(this->internalEnergies->at(i), frameAfter->internalEnergies->at(idafter));
+            this->smoothingLengthDerivatives->at(i) =
+                forwardDifference(this->smoothingLengths->at(i), frameAfter->smoothingLengths->at(idafter));
+            this->molecularWeightDerivatives->at(i) =
+                forwardDifference(this->molecularWeights->at(i), frameAfter->molecularWeights->at(idafter));
+            this->densityDerivatives->at(i) =
+                forwardDifference(this->densities->at(i), frameAfter->densities->at(idafter));
+            this->gravitationalPotentialDerivatives->at(i) = forwardDifference(
+                this->gravitationalPotentials->at(i), frameAfter->gravitationalPotentials->at(idafter));
+            this->entropyDerivatives->at(i) = forwardDifference(this->entropy->at(i), frameAfter->entropy->at(idafter));
+        } else if (idafter < 0 && idbefore >= 0) {
+            this->velocityDerivatives->at(i) =
+                backwardDifference(this->velocities->at(i), frameBefore->velocities->at(idbefore));
+            this->temperatureDerivatives->at(i) =
+                backwardDifference(this->temperatures->at(i), frameBefore->temperatures->at(idbefore));
+            this->internalEnergyDerivatives->at(i) =
+                backwardDifference(this->internalEnergies->at(i), frameBefore->internalEnergies->at(idbefore));
+            this->smoothingLengthDerivatives->at(i) =
+                backwardDifference(this->smoothingLengths->at(i), frameBefore->smoothingLengths->at(idbefore));
+            this->molecularWeightDerivatives->at(i) =
+                backwardDifference(this->molecularWeights->at(i), frameBefore->molecularWeights->at(idbefore));
+            this->densityDerivatives->at(i) =
+                backwardDifference(this->densities->at(i), frameBefore->densities->at(idbefore));
+            this->gravitationalPotentialDerivatives->at(i) = backwardDifference(
+                this->gravitationalPotentials->at(i), frameBefore->gravitationalPotentials->at(idbefore));
+            this->entropyDerivatives->at(i) =
+                backwardDifference(this->entropy->at(i), frameBefore->entropy->at(idbefore));
+        }
+    }
 }
 
 /*
@@ -205,7 +441,11 @@ Contest2019DataLoader::Contest2019DataLoader(void)
     , firstFilename("firstFilename", "The name of the first file to load")
     , filesToLoad("filesToLoad",
           "The total number of files that should be loaded. A value smaller than 0 means all available "
-          "ones from the first given are loaded.") {
+          "ones from the first given are loaded.")
+    , calculateDerivatives("calculateDerivatives",
+          "Enables the calculation of derivatives of all relevant values. "
+          "This option increases the frame loading time significantly. The effect of this slot might be delayed as "
+          "already existing frames are not re-evaluated.") {
 
     this->getDataSlot.SetCallback(AstroDataCall::ClassName(),
         AstroDataCall::FunctionName(AstroDataCall::CallForGetData), &Contest2019DataLoader::getDataCallback);
@@ -220,6 +460,9 @@ Contest2019DataLoader::Contest2019DataLoader(void)
     this->filesToLoad.SetParameter(new param::IntParam(-1));
     this->filesToLoad.SetUpdateCallback(&Contest2019DataLoader::filenameChangedCallback);
     this->MakeSlotAvailable(&this->filesToLoad);
+
+    this->calculateDerivatives.SetParameter(new param::BoolParam(true));
+    this->MakeSlotAvailable(&this->calculateDerivatives);
 
     // static bounding box size, because we know (TM)
     this->boundingBox = vislib::math::Cuboid<float>(0.0f, 0.0f, 0.0f, 64.0f, 64.0f, 64.0f);
@@ -255,19 +498,54 @@ bool Contest2019DataLoader::create(void) { return true; }
 void Contest2019DataLoader::loadFrame(view::AnimDataModule::Frame* frame, unsigned int idx) {
     using vislib::sys::Log;
     Frame* f = dynamic_cast<Frame*>(frame);
+    // the allocation of the dummy frames here is stupid and should be done globally to avoid too many allocations.
+    // the parallel nature of the AnimDataModule makes this impossible
+    Frame* fbefore = new Frame(*this);
+    Frame* fafter = new Frame(*this);
     if (f == nullptr) return;
     unsigned int frameID = idx % this->FrameCount();
+    unsigned int frameIDBefore = frameID > 0 ? (frameID - 1) : frameID;
+    unsigned int frameIDAfter = frameID < this->redshiftsForFilename.size() - 1 ? (frameID + 1) : frameID;
     std::string filename = "";
+    std::string filenameBefore = "";
+    std::string filenameAfter = "";
     float redshift = 0.0f;
+    float redshiftBefore = 0.0f;
+    float redshiftAfter = 0.0f;
     if (frameID < this->filenames.size() && frameID < this->redshiftsForFilename.size()) {
         filename = this->filenames.at(frameID);
         redshift = this->redshiftsForFilename.at(frameID);
+    }
+    if (frameIDBefore < this->filenames.size() && frameIDBefore < this->redshiftsForFilename.size()) {
+        filenameBefore = this->filenames.at(frameIDBefore);
+        redshiftBefore = this->redshiftsForFilename.at(frameIDBefore);
+    }
+    if (frameIDAfter < this->filenames.size() && frameIDAfter < this->redshiftsForFilename.size()) {
+        filenameAfter = this->filenames.at(frameIDAfter);
+        redshiftAfter = this->redshiftsForFilename.at(frameIDAfter);
     }
     if (!filename.empty()) {
         if (!f->LoadFrame(filename, frameID, redshift)) {
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to read frame %d from file\n", idx);
         }
     }
+    bool calcDerivatives = this->calculateDerivatives.Param<param::BoolParam>()->Value();
+    if (!filenameBefore.empty() && calcDerivatives) {
+        if (!fbefore->LoadFrame(filenameBefore, frameIDBefore, redshiftBefore)) {
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to read frame before frame %d from file\n", idx);
+        }
+    }
+    if (!filenameAfter.empty() && calcDerivatives) {
+        if (!fafter->LoadFrame(filenameAfter, frameIDAfter, redshiftAfter)) {
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to read frame after frame %d from file\n", idx);
+        }
+    }
+    f->ZeroDerivatives();
+    if (calcDerivatives) {
+        f->CalculateDerivatives(fbefore, fafter);
+    }
+    delete fbefore;
+    delete fafter;
 }
 
 /*

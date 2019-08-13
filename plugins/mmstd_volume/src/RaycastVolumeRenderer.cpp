@@ -7,20 +7,31 @@
 
 #include "RaycastVolumeRenderer.h"
 
-#include <array>
-
-#include "vislib/graphics/gl/ShaderSource.h"
+#include "linmath.h"
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/misc/VolumetricDataCall.h"
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/utility/ScaledBoundingBoxes.h"
+#include "mmcore/view/AbstractRenderingView.h"
 #include "mmcore/view/CallGetTransferFunction.h"
 #include "mmcore/view/CallRender3D.h"
 
-#include "linmath.h"
+#include "vislib/graphics/gl/ShaderSource.h"
+
+#include "glowl/Texture.hpp"
+#include "glowl/Texture2D.hpp"
+#include "glowl/Texture3D.hpp"
+
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <limits>
+#include <memory>
+#include <vector>
 
 using namespace megamol::stdplugin::volume;
 
@@ -28,8 +39,18 @@ RaycastVolumeRenderer::RaycastVolumeRenderer()
     : Renderer3DModule()
     , m_mode("mode", "Mode changing the behavior for the raycaster")
     , m_ray_step_ratio_param("ray step ratio", "Adjust sampling rate")
+    , m_use_lighting_slot("lighting::use lighting", "Enable simple volumetric illumination")
+    , m_ka_slot("lighting::ka", "Ambient part for Phong lighting")
+    , m_kd_slot("lighting::kd", "Diffuse part for Phong lighting")
+    , m_ks_slot("lighting::ks", "Specular part for Phong lighting")
+    , m_shininess_slot("lighting::shininess", "Shininess for Phong lighting")
+    , m_ambient_color("lighting::ambient color", "Ambient color")
+    , m_specular_color("lighting::specular color", "Specular color")
+    , m_light_color("lighting::light color", "Light color")
+    , m_material_color("lighting::material color", "Material color")
     , m_opacity_threshold("opacity threshold", "Opacity threshold for integrative rendering")
     , m_iso_value("isovalue", "Isovalue for isosurface rendering")
+    , m_opacity("opacity", "Surface opacity for blending")
     , paramOverride("override::enable", "Enable override of range")
     , paramMinOverride("override::min", "Override the minimum value provided by the data set")
     , paramMaxOverride("override::max", "Override the maximum value provided by the data set")
@@ -49,16 +70,47 @@ RaycastVolumeRenderer::RaycastVolumeRenderer()
     this->m_mode << new megamol::core::param::EnumParam(0);
     this->m_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(0, "Integration");
     this->m_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(1, "Isosurface");
+    this->m_mode.Param<core::param::EnumParam>()->SetTypePair(2, "Aggregate");
     this->MakeSlotAvailable(&this->m_mode);
 
-    this->m_ray_step_ratio_param << new megamol::core::param::FloatParam(1.0);
+    this->m_ray_step_ratio_param << new megamol::core::param::FloatParam(1.0f);
     this->MakeSlotAvailable(&this->m_ray_step_ratio_param);
 
-    this->m_opacity_threshold << new megamol::core::param::FloatParam(1.0);
+    this->m_opacity_threshold << new megamol::core::param::FloatParam(1.0f);
     this->MakeSlotAvailable(&this->m_opacity_threshold);
 
-    this->m_iso_value << new megamol::core::param::FloatParam(0.5);
+    this->m_iso_value << new megamol::core::param::FloatParam(0.5f);
     this->MakeSlotAvailable(&this->m_iso_value);
+
+    this->m_opacity << new megamol::core::param::FloatParam(1.0f);
+    this->MakeSlotAvailable(&this->m_opacity);
+
+    this->m_use_lighting_slot << new core::param::BoolParam(false);
+    this->MakeSlotAvailable(&this->m_use_lighting_slot);
+
+    this->m_ka_slot << new core::param::FloatParam(0.1f, 0.0f);
+    this->MakeSlotAvailable(&this->m_ka_slot);
+
+    this->m_kd_slot << new core::param::FloatParam(0.5f, 0.0f);
+    this->MakeSlotAvailable(&this->m_kd_slot);
+
+    this->m_ks_slot << new core::param::FloatParam(0.4f, 0.0f);
+    this->MakeSlotAvailable(&this->m_ks_slot);
+
+    this->m_shininess_slot << new core::param::FloatParam(10.0f, 0.0f);
+    this->MakeSlotAvailable(&this->m_shininess_slot);
+
+    this->m_ambient_color << new core::param::ColorParam(1.0f, 1.0f, 1.0f, 1.0f);
+    this->MakeSlotAvailable(&this->m_ambient_color);
+
+    this->m_specular_color << new core::param::ColorParam(1.0f, 1.0f, 1.0f, 1.0f);
+    this->MakeSlotAvailable(&this->m_specular_color);
+
+    this->m_light_color << new core::param::ColorParam(1.0f, 1.0f, 1.0f, 1.0f);
+    this->MakeSlotAvailable(&this->m_light_color);
+
+    this->m_material_color << new core::param::ColorParam(0.95f, 0.67f, 0.47f, 1.0f);
+    this->MakeSlotAvailable(&this->m_material_color);
 
     this->paramOverride << new megamol::core::param::BoolParam(false);
     this->MakeSlotAvailable(&this->paramOverride);
@@ -77,12 +129,16 @@ bool RaycastVolumeRenderer::create() {
         // create shader program
         m_raycast_volume_compute_shdr = std::make_unique<vislib::graphics::gl::GLSLComputeShader>();
         m_raycast_volume_compute_iso_shdr = std::make_unique<vislib::graphics::gl::GLSLComputeShader>();
+        m_raycast_volume_compute_aggr_shdr = std::make_unique<vislib::graphics::gl::GLSLComputeShader>();
         m_render_to_framebuffer_shdr = std::make_unique<vislib::graphics::gl::GLSLShader>();
+        m_render_to_framebuffer_aggr_shdr = std::make_unique<vislib::graphics::gl::GLSLShader>();
 
         vislib::graphics::gl::ShaderSource compute_shader_src;
         vislib::graphics::gl::ShaderSource compute_iso_shader_src;
+        vislib::graphics::gl::ShaderSource compute_aggr_shader_src;
         vislib::graphics::gl::ShaderSource vertex_shader_src;
         vislib::graphics::gl::ShaderSource fragment_shader_src;
+        vislib::graphics::gl::ShaderSource fragment_shader_aggr_src;
 
         if (!instance()->ShaderSourceFactory().MakeShaderSource("RaycastVolumeRenderer::compute", compute_shader_src))
             return false;
@@ -97,14 +153,28 @@ bool RaycastVolumeRenderer::create() {
             return false;
         if (!m_raycast_volume_compute_iso_shdr->Link()) return false;
 
+        if (!instance()->ShaderSourceFactory().MakeShaderSource(
+                "RaycastVolumeRenderer::compute_aggr", compute_aggr_shader_src))
+            return false;
+        if (!m_raycast_volume_compute_aggr_shdr->Compile(compute_aggr_shader_src.Code(), compute_aggr_shader_src.Count()))
+            return false;
+        if (!m_raycast_volume_compute_aggr_shdr->Link()) return false;
+
         if (!instance()->ShaderSourceFactory().MakeShaderSource("RaycastVolumeRenderer::vert", vertex_shader_src))
             return false;
         if (!instance()->ShaderSourceFactory().MakeShaderSource("RaycastVolumeRenderer::frag", fragment_shader_src))
+            return false;
+        if (!instance()->ShaderSourceFactory().MakeShaderSource("RaycastVolumeRenderer::frag_aggr", fragment_shader_aggr_src))
             return false;
         if (!m_render_to_framebuffer_shdr->Compile(vertex_shader_src.Code(), vertex_shader_src.Count(),
                 fragment_shader_src.Code(), fragment_shader_src.Count()))
             return false;
         if (!m_render_to_framebuffer_shdr->Link()) return false;
+
+        if (!m_render_to_framebuffer_aggr_shdr->Compile(vertex_shader_src.Code(), vertex_shader_src.Count(),
+                fragment_shader_aggr_src.Code(), fragment_shader_aggr_src.Count()))
+            return false;
+        if (!m_render_to_framebuffer_aggr_shdr->Link()) return false;
     } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Unable to compile shader (@%s): %s\n",
             vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
@@ -121,42 +191,42 @@ bool RaycastVolumeRenderer::create() {
     }
 
     // create render target texture
-    TextureLayout render_tgt_layout(GL_RGBA8, 1920, 1080, 1, GL_RGBA, GL_UNSIGNED_BYTE, 1,
+    glowl::TextureLayout render_tgt_layout(GL_RGBA8, 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, 1,
         {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
             {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
             {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
         {});
-    m_render_target = std::make_unique<Texture2D>("raycast_volume_render_target", render_tgt_layout, nullptr);
+    m_render_target = std::make_unique<glowl::Texture2D>("raycast_volume_render_target", render_tgt_layout, nullptr);
 
     // create normal target texture
-    TextureLayout normal_tgt_layout(GL_RGBA8, 1920, 1080, 1, GL_RGBA, GL_UNSIGNED_BYTE, 1,
+    glowl::TextureLayout normal_tgt_layout(GL_RGBA8, 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, 1,
         {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
             {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
             {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
         {});
-    m_normal_target = std::make_unique<Texture2D>("raycast_volume_normal_target", normal_tgt_layout, nullptr);
+    m_normal_target = std::make_unique<glowl::Texture2D>("raycast_volume_normal_target", normal_tgt_layout, nullptr);
 
     // create depth target texture
-    TextureLayout depth_tgt_layout(GL_R8, 1920, 1080, 1, GL_R, GL_UNSIGNED_BYTE, 1,
+    glowl::TextureLayout depth_tgt_layout(GL_R8, 1, 1, 1, GL_R, GL_UNSIGNED_BYTE, 1,
         {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
             {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
             {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
         {});
-    m_depth_target = std::make_unique<Texture2D>("raycast_volume_depth_target", depth_tgt_layout, nullptr);
+    m_depth_target = std::make_unique<glowl::Texture2D>("raycast_volume_depth_target", depth_tgt_layout, nullptr);
 
     // create empty volume texture
-    TextureLayout volume_layout(GL_R32F, 1, 1, 1, GL_RED, GL_FLOAT, 1,
+    glowl::TextureLayout volume_layout(GL_R32F, 1, 1, 1, GL_RED, GL_FLOAT, 1,
         {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
             {GL_TEXTURE_MIN_FILTER, GL_LINEAR}, {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
         {});
-    m_volume_texture = std::make_unique<Texture3D>("raycast_volume_texture", volume_layout, nullptr);
+    m_volume_texture = std::make_unique<glowl::Texture3D>("raycast_volume_texture", volume_layout, nullptr);
 
     // create empty transfer function texture
-    TextureLayout tf(GL_RGBA8, 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, 1,
+    glowl::TextureLayout tf(GL_RGBA8, 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, 1,
         {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
             {GL_TEXTURE_MIN_FILTER, GL_LINEAR}, {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
         {});
-    m_transfer_function = std::make_unique<Texture2D>("raycast_volume_texture", tf, nullptr);
+    m_transfer_function = std::make_unique<glowl::Texture2D>("raycast_volume_texture", tf, nullptr);
 
     return true;
 }
@@ -164,6 +234,7 @@ bool RaycastVolumeRenderer::create() {
 void RaycastVolumeRenderer::release() {
     m_raycast_volume_compute_shdr.reset(nullptr);
     m_raycast_volume_compute_iso_shdr.reset(nullptr);
+    m_raycast_volume_compute_aggr_shdr.reset(nullptr);
     m_render_target.reset(nullptr);
     m_normal_target.reset(nullptr);
     m_depth_target.reset(nullptr);
@@ -189,7 +260,7 @@ bool RaycastVolumeRenderer::GetExtents(megamol::core::Call& call) {
 
     cr->SetTimeFramesCount(cd->FrameCount());
 
-    std::vector<core::BoundingBoxes> bbs{ cd->GetBoundingBoxes() };
+    std::vector<core::BoundingBoxes> bbs{cd->GetBoundingBoxes()};
 
     if (ci != nullptr) {
         *ci = *cr;
@@ -198,7 +269,7 @@ bool RaycastVolumeRenderer::GetExtents(megamol::core::Call& call) {
 
         bbs.push_back(ci->GetBoundingBoxes());
     }
-    
+
     cr->AccessBoundingBoxes() = core::utility::combineAndMagicScaleBoundingBoxes(bbs);
 
     return true;
@@ -214,22 +285,51 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
     if (ci != nullptr) {
         ci->SetCameraParameters(cr->GetCameraParameters());
 
-        if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0) {
+        if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0 ||
+            this->m_mode.Param<core::param::EnumParam>()->Value() == 2) {
             if (this->fbo.IsValid()) this->fbo.Release();
             this->fbo.Create(ci->GetViewport().Width(), ci->GetViewport().Height(), GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE,
                 vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
             this->fbo.Enable();
-
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         }
+
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         ci->SetTime(cr->Time());
         if (!(*ci)(core::view::CallRender3D::FnRender)) return false;
 
-        if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0) {
+        if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0 ||
+            this->m_mode.Param<core::param::EnumParam>()->Value() == 2) {
             this->fbo.Disable();
         }
     }
+
+    // create render target texture
+    glowl::TextureLayout render_tgt_layout(GL_RGBA8, cr->GetViewport().Width(), cr->GetViewport().Height(), 1, GL_RGBA,
+        GL_UNSIGNED_BYTE, 1,
+        {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
+            {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
+            {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
+        {});
+    m_render_target->reload(render_tgt_layout, nullptr);
+
+    // create normal target texture
+    glowl::TextureLayout normal_tgt_layout(GL_RGBA8, cr->GetViewport().Width(), cr->GetViewport().Height(), 1, GL_RGBA,
+        GL_UNSIGNED_BYTE, 1,
+        {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
+            {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
+            {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
+        {});
+    m_normal_target->reload(normal_tgt_layout, nullptr);
+
+    // create depth target texture
+    glowl::TextureLayout depth_tgt_layout(GL_R8, cr->GetViewport().Width(), cr->GetViewport().Height(), 1, GL_R,
+        GL_UNSIGNED_BYTE, 1,
+        {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
+            {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
+            {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
+        {});
+    m_depth_target->reload(depth_tgt_layout, nullptr);
 
     // this is the apex of suck and must die
     core::utility::glMagicScale scaling;
@@ -239,6 +339,9 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
     glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
     GLfloat projMatrix_column[16];
     glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
+
+    std::array<float, 4> light = {0.0f, 0.0f, 1.0f, 1.0f};
+    glGetLightfv(GL_LIGHT0, GL_POSITION, light.data());
     // end suck
 
     if (!updateVolumeData(cr->Time())) return false;
@@ -253,6 +356,9 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
         compute_shdr = this->m_raycast_volume_compute_shdr.get();
     } else if (this->m_mode.Param<core::param::EnumParam>()->Value() == 1) {
         compute_shdr = this->m_raycast_volume_compute_iso_shdr.get();
+    } else if (this->m_mode.Param<core::param::EnumParam>()->Value() == 2) {
+        if (!updateTransferFunction()) return false;
+        compute_shdr = this->m_raycast_volume_compute_aggr_shdr.get();
     } else {
         vislib::sys::Log::DefaultLog.WriteError("Unknown raycast mode.");
         return false;
@@ -289,12 +395,42 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
     glUniform3f(compute_shdr->ParameterLocation("halfVoxelSize"), 1.0f / (2.0f * (m_volume_resolution[0] - 1)),
         1.0f / (2.0f * (m_volume_resolution[1] - 1)), 1.0f / (2.0f * (m_volume_resolution[2] - 1)));
     auto const maxResolution =
-        std::fmax(m_volume_resolution[0], std::fmax(m_volume_resolution[1], m_volume_resolution[2]));
-    auto const maxExtents = std::fmax(m_volume_extents[0], std::fmax(m_volume_extents[1], m_volume_extents[2]));
+        std::max(m_volume_resolution[0], std::max(m_volume_resolution[1], m_volume_resolution[2]));
+    auto const maxExtents = std::max(m_volume_extents[0], std::max(m_volume_extents[1], m_volume_extents[2]));
     glUniform1f(compute_shdr->ParameterLocation("voxelSize"), maxExtents / (maxResolution - 1.0f));
     glUniform2fv(compute_shdr->ParameterLocation("valRange"), 1, valRange.data());
     glUniform1f(compute_shdr->ParameterLocation("rayStepRatio"),
         this->m_ray_step_ratio_param.Param<core::param::FloatParam>()->Value());
+
+    glUniform1i(compute_shdr->ParameterLocation("use_lighting"),
+        this->m_use_lighting_slot.Param<core::param::BoolParam>()->Value());
+    glUniform1f(compute_shdr->ParameterLocation("ka"),
+        this->m_ka_slot.Param<core::param::FloatParam>()->Value());
+    glUniform1f(compute_shdr->ParameterLocation("kd"),
+        this->m_kd_slot.Param<core::param::FloatParam>()->Value());
+    glUniform1f(compute_shdr->ParameterLocation("ks"),
+        this->m_ks_slot.Param<core::param::FloatParam>()->Value());
+    glUniform1f(compute_shdr->ParameterLocation("shininess"),
+        this->m_shininess_slot.Param<core::param::FloatParam>()->Value());
+    glUniform3fv(compute_shdr->ParameterLocation("light"), 1, light.data());
+    glUniform3fv(compute_shdr->ParameterLocation("ambient_col"), 1,
+        this->m_ambient_color.Param<core::param::ColorParam>()->Value().data());
+    glUniform3fv(compute_shdr->ParameterLocation("specular_col"), 1,
+        this->m_specular_color.Param<core::param::ColorParam>()->Value().data());
+    glUniform3fv(compute_shdr->ParameterLocation("light_col"), 1,
+        this->m_light_color.Param<core::param::ColorParam>()->Value().data());
+    glUniform3fv(compute_shdr->ParameterLocation("material_col"), 1,
+        this->m_material_color.Param<core::param::ColorParam>()->Value().data());
+
+    auto const arv = std::dynamic_pointer_cast<core::view::AbstractRenderingView const>(cr->PeekCallerSlot()->Parent());
+    std::array<float, 3> bkgndCol = {1.0f, 1.0f, 1.0f};
+    if (arv != nullptr) {
+        auto const ptr = arv->BkgndColour();
+        bkgndCol[0] = ptr[0];
+        bkgndCol[1] = ptr[1];
+        bkgndCol[2] = ptr[2];
+    }
+    glUniform3fv(compute_shdr->ParameterLocation("background"), 1, bkgndCol.data());
 
     if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0) {
         glUniform1f(compute_shdr->ParameterLocation("opacityThreshold"),
@@ -302,7 +438,14 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
     } else if (this->m_mode.Param<core::param::EnumParam>()->Value() == 1) {
         glUniform1f(
             compute_shdr->ParameterLocation("isoValue"), this->m_iso_value.Param<core::param::FloatParam>()->Value());
+
+        glUniform1f(
+            compute_shdr->ParameterLocation("opacity"), this->m_opacity.Param<core::param::FloatParam>()->Value());
     }
+
+    this->m_opacity_threshold.Parameter()->SetGUIVisible(this->m_mode.Param<core::param::EnumParam>()->Value() == 0);
+    this->m_iso_value.Parameter()->SetGUIVisible(this->m_mode.Param<core::param::EnumParam>()->Value() == 1);
+    this->m_opacity.Parameter()->SetGUIVisible(this->m_mode.Param<core::param::EnumParam>()->Value() == 1);
 
     // bind volume texture
     glActiveTexture(GL_TEXTURE0);
@@ -315,6 +458,22 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
         glBindTexture(GL_TEXTURE_1D, tf_texture);
         glUniform1i(compute_shdr->ParameterLocation("tf_tx1D"), 1);
 
+        if (ci != nullptr) {
+            glActiveTexture(GL_TEXTURE2);
+            this->fbo.BindColourTexture();
+            glUniform1i(compute_shdr->ParameterLocation("color_tx2D"), 2);
+
+            glActiveTexture(GL_TEXTURE3);
+            this->fbo.BindDepthTexture();
+            glUniform1i(compute_shdr->ParameterLocation("depth_tx2D"), 3);
+
+            glUniform1i(compute_shdr->ParameterLocation("use_depth_tx"), 1);
+        } else {
+            glUniform1i(compute_shdr->ParameterLocation("use_depth_tx"), 0);
+        }
+    }
+
+    if (this->m_mode.Param<core::param::EnumParam>()->Value() == 2) {
         if (ci != nullptr) {
             glActiveTexture(GL_TEXTURE2);
             this->fbo.BindColourTexture();
@@ -344,20 +503,48 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
 
     compute_shdr->Disable();
 
-    glActiveTexture(GL_TEXTURE3);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_1D, 0);
+    if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0 ||
+        this->m_mode.Param<core::param::EnumParam>()->Value() == 2) {
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, 0);
+    }
+    if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0) {
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_1D, 0);
+    }
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_3D, 0);
 
     glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT);
 
+    // read image back to determine min max
+    float rndr_min = std::numeric_limits<float>::max();
+    float rndr_max = std::numeric_limits<float>::lowest();
+    if (this->m_mode.Param<core::param::EnumParam>()->Value() == 2) {
+        glActiveTexture(GL_TEXTURE0);
+        m_render_target->bindTexture();
+        int width = 0;
+        int height = 0;
+        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
+        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
+        std::vector<float> tmp_data(width*height*4);
+        glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, tmp_data.data());
+
+        for (size_t idx = 0; idx < tmp_data.size() / 4; ++idx) {
+            auto const val = tmp_data[idx * 4 + 3];
+            if (val < rndr_min) rndr_min = val;
+            if (val > rndr_max) rndr_max = val;
+        }
+
+        glBindTexture(GL_TEXTURE_2D, 0);
+    }
+
     // copy image to framebuffer
     // TODO query gl state and reset to previous state?
-    if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0) {
+    if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0 ||
+        this->m_mode.Param<core::param::EnumParam>()->Value() == 2) {
         glDisable(GL_DEPTH_TEST);
     } else if (this->m_mode.Param<core::param::EnumParam>()->Value() == 1) {
         glEnable(GL_DEPTH_TEST);
@@ -366,35 +553,54 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    m_render_to_framebuffer_shdr->Enable();
+    auto fbo_shdr = m_render_to_framebuffer_shdr.get();
+    if (this->m_mode.Param<core::param::EnumParam>()->Value() == 2) {
+        fbo_shdr = m_render_to_framebuffer_aggr_shdr.get();
+    }
+
+    fbo_shdr->Enable();
 
     glActiveTexture(GL_TEXTURE0);
     m_render_target->bindTexture();
-    glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("src_tx2D"), 0);
+    glUniform1i(fbo_shdr->ParameterLocation("src_tx2D"), 0);
 
     if (this->m_mode.Param<core::param::EnumParam>()->Value() == 1) {
         glActiveTexture(GL_TEXTURE1);
         m_normal_target->bindTexture();
-        glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("normal_tx2D"), 1);
+        glUniform1i(fbo_shdr->ParameterLocation("normal_tx2D"), 1);
 
         glActiveTexture(GL_TEXTURE2);
         m_depth_target->bindTexture();
-        glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("depth_tx2D"), 2);
+        glUniform1i(fbo_shdr->ParameterLocation("depth_tx2D"), 2);
 
         GLenum buffers[] = {GL_COLOR_ATTACHMENT0_EXT, GL_COLOR_ATTACHMENT1_EXT};
         glDrawBuffers(2, buffers);
     }
 
+    if (this->m_mode.Param<core::param::EnumParam>()->Value() == 2) {
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_1D, tf_texture);
+        glUniform1i(fbo_shdr->ParameterLocation("tf_tx1D"), 1);
+
+        glUniform2f(fbo_shdr->ParameterLocation("valRange"), rndr_min, rndr_max);
+    }
+
     glDrawArrays(GL_TRIANGLES, 0, 6);
 
-    glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, 0);
+    if (this->m_mode.Param<core::param::EnumParam>()->Value() == 1) {
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, 0);
+    }
+    if (this->m_mode.Param<core::param::EnumParam>()->Value() == 2) {
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_1D, 0);
+    }
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    m_render_to_framebuffer_shdr->Disable();
+    fbo_shdr->Disable();
 
     // cleanup
     glUseProgram(0);
@@ -448,8 +654,13 @@ bool RaycastVolumeRenderer::updateVolumeData(const unsigned int frameID) {
     m_volume_resolution[1] = metadata->Resolution[1];
     m_volume_resolution[2] = metadata->Resolution[2];
 
-    valRange[0] = metadata->MinValues[0];
-    valRange[1] = metadata->MaxValues[0];
+    if (this->paramOverride.Param<core::param::BoolParam>()->Value()) {
+        valRange[0] = this->paramMinOverride.Param<core::param::FloatParam>()->Value();
+        valRange[1] = this->paramMaxOverride.Param<core::param::FloatParam>()->Value();
+    } else {
+        valRange[0] = metadata->MinValues[0];
+        valRange[1] = metadata->MaxValues[0];
+    }
 
     GLenum internal_format;
     GLenum format;
@@ -500,8 +711,7 @@ bool RaycastVolumeRenderer::updateVolumeData(const unsigned int frameID) {
 
     // TODO if/else data already on GPU
 
-    //vislib::sys::Log::DefaultLog.WriteInfo(L"Volume frame %u is being uploaded.", cd->FrameID());
-    TextureLayout volume_layout(internal_format, metadata->Resolution[0], metadata->Resolution[1],
+    glowl::TextureLayout volume_layout(internal_format, metadata->Resolution[0], metadata->Resolution[1],
         metadata->Resolution[2], format, type, 1,
         {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
             {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
@@ -509,6 +719,8 @@ bool RaycastVolumeRenderer::updateVolumeData(const unsigned int frameID) {
         {});
 
     m_volume_texture->reload(volume_layout, volumedata);
+
+    return true;
 }
 
 bool RaycastVolumeRenderer::updateTransferFunction() {

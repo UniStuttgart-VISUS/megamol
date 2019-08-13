@@ -17,6 +17,10 @@
 #include "vislib/graphics/gl/ShaderSource.h"
 #include "vislib/sys/Log.h"
 
+#include "glowl/Texture.hpp"
+#include "glowl/Texture2D.hpp"
+#include "glowl/Texture3D.hpp"
+
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -110,24 +114,24 @@ bool SurfaceLICRenderer::create() {
     }
 
     // create render target texture
-    TextureLayout render_tgt_layout(GL_RGBA8, 1920, 1080, 1, GL_RGBA, GL_UNSIGNED_BYTE, 1,
+    glowl::TextureLayout render_tgt_layout(GL_RGBA8, 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, 1,
         {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
             {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
             {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
         {});
-    this->m_render_target = std::make_unique<Texture2D>("render_target", render_tgt_layout, nullptr);
+    this->m_render_target = std::make_unique<glowl::Texture2D>("render_target", render_tgt_layout, nullptr);
 
-    TextureLayout velocity_layout(GL_R32F, 1, 1, 1, GL_RED, GL_FLOAT, 1,
+    glowl::TextureLayout velocity_layout(GL_R32F, 1, 1, 1, GL_RED, GL_FLOAT, 1,
         {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
             {GL_TEXTURE_MIN_FILTER, GL_LINEAR}, {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
         {});
-    this->m_velocity_texture = std::make_unique<Texture3D>("velocity_texture", velocity_layout, nullptr);
+    this->m_velocity_texture = std::make_unique<glowl::Texture3D>("velocity_texture", velocity_layout, nullptr);
 
-    TextureLayout noise_layout(GL_R32F, 1, 1, 1, GL_RED, GL_FLOAT, 1,
+    glowl::TextureLayout noise_layout(GL_R32F, 1, 1, 1, GL_RED, GL_FLOAT, 1,
         {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
             {GL_TEXTURE_MIN_FILTER, GL_LINEAR}, {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
         {});
-    this->m_noise_texture = std::make_unique<Texture2D>("noise_texture", noise_layout, nullptr);
+    this->m_noise_texture = std::make_unique<glowl::Texture2D>("noise_texture", noise_layout, nullptr);
 }
 
 void SurfaceLICRenderer::release() {
@@ -210,7 +214,8 @@ bool SurfaceLICRenderer::Render(core::Call& call) {
         return false;
     }
 
-    TextureLayout velocity_layout(GL_RGB32F, cd->GetResolution(0), cd->GetResolution(1), cd->GetResolution(2), GL_RGB,
+    glowl::TextureLayout velocity_layout(GL_RGB32F, cd->GetResolution(0), cd->GetResolution(1), cd->GetResolution(2),
+        GL_RGB,
         GL_FLOAT, 3,
         {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
             {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
@@ -228,12 +233,22 @@ bool SurfaceLICRenderer::Render(core::Call& call) {
         tf_texture = ct->OpenGLTexture();
     }
 
+    // Create render target texture
+    glowl::TextureLayout render_tgt_layout(GL_RGBA8, cr->GetViewport().Width(), cr->GetViewport().Height(), 1, GL_RGBA,
+        GL_UNSIGNED_BYTE, 1,
+        {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
+            {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
+            {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
+        {});
+    this->m_render_target->reload(render_tgt_layout, nullptr);
+
     // Create noise texture
     const auto stencil = this->stencil_size.Param<core::param::IntParam>()->Value();
-    const auto screensize = (ci->GetViewport().Width() * ci->GetViewport().Height()) / (stencil * stencil);
+    const auto screensize = (cr->GetViewport().Width() * cr->GetViewport().Height()) / (stencil * stencil);
 
     if (this->noise.size() != screensize) {
-        TextureLayout noise_layout(GL_R32F, ci->GetViewport().Width() / stencil, ci->GetViewport().Height() / stencil,
+        glowl::TextureLayout noise_layout(GL_R32F, cr->GetViewport().Width() / stencil,
+            cr->GetViewport().Height() / stencil,
             1, GL_RED, GL_FLOAT, 1,
             {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
                 {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_NEAREST},

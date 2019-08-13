@@ -117,7 +117,7 @@ namespace astro {
         std::size_t hashInput;
         std::size_t hashState;
         core::param::ParamSlot paramFullRange;
-        std::array<core::param::ParamSlot, 18> paramsInclude;
+        std::array<core::param::ParamSlot, 26> paramsInclude;
         std::vector<std::pair<float, float>> ranges;
         core::CallerSlot slotAstroData;
         core::CalleeSlot slotTableData;
