@@ -36,11 +36,6 @@ public:
     ~TransferFunctionEditor(void) = default;
 
     /**
-     * Draws the transfer function editor.
-     */
-    bool DrawTransferFunctionEditor(void);
-
-    /**
      * Set transfer function data to use in editor.
      *
      * @param tfs The transfer function encoded as string in JSON format.
@@ -66,7 +61,20 @@ public:
      */
     core::param::TransferFunctionParam* GetActiveParameter(void) { return this->activeParameter; }
 
+    /**
+     * Draws the transfer function editor.
+     */
+    bool DrawTransferFunctionEditor(void);
+
+    /**
+     * Draws a 1D texture into a box.
+     */
+    static void DrawTextureBox(
+        const ImVec2& size, const std::vector<float>& texturePixels, const std::array<float, 2>& valueRange);
+
 private:
+    void drawFunctionPlot(const ImVec2& size);
+
     /** The global input widget state buffer. */
     struct WidgetBuffer {
         float min_range;
@@ -85,7 +93,7 @@ private:
     core::param::TransferFunctionParam* activeParameter;
 
     /** Array holding current colors and function values. */
-    megamol::core::param::TransferFunctionParam::TFDataType data;
+    megamol::core::param::TransferFunctionParam::TFDataType nodes;
 
     /** Min/Max intervall the data should be mapped. */
     std::array<float, 2> range;
