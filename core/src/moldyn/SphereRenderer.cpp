@@ -1609,7 +1609,7 @@ bool moldyn::SphereRenderer::renderAmbientOcclusion(view::CallRender3D* cr3d, Mu
 }
 
 
-bool moldyn::SphereRenderer::setBufferData(vislib::graphics::gl::GLSLShader& shader, MultiParticleDataCall::Particles &parts,
+bool moldyn::SphereRenderer::setBufferData(const vislib::graphics::gl::GLSLShader& shader, const MultiParticleDataCall::Particles &parts,
     GLuint vertBuf, const void *vertPtr, GLuint colBuf, const void *colPtr, bool createBufferData) {
 
     GLuint vertAttribLoc = glGetAttribLocation(shader, "inPosition");
@@ -1740,7 +1740,7 @@ bool moldyn::SphereRenderer::setBufferData(vislib::graphics::gl::GLSLShader& sha
 }
 
 
-bool moldyn::SphereRenderer::unsetBufferData(vislib::graphics::gl::GLSLShader& shader) {
+bool moldyn::SphereRenderer::unsetBufferData(const vislib::graphics::gl::GLSLShader& shader) {
 
     GLuint vertAttribLoc = glGetAttribLocation(shader, "inPosition");
     GLuint colAttribLoc = glGetAttribLocation(shader, "inColor");
@@ -1755,7 +1755,7 @@ bool moldyn::SphereRenderer::unsetBufferData(vislib::graphics::gl::GLSLShader& s
 }
 
 
-bool moldyn::SphereRenderer::setShaderData(vislib::graphics::gl::GLSLShader& shader, MultiParticleDataCall::Particles &parts) {
+bool moldyn::SphereRenderer::setShaderData(const vislib::graphics::gl::GLSLShader& shader, const MultiParticleDataCall::Particles &parts) {
 
     float minC = 0.0f, maxC = 0.0f;
     unsigned int colTabSize = 0;
@@ -1822,14 +1822,14 @@ bool moldyn::SphereRenderer::unsetShaderData(void) {
 }
 
 
-bool moldyn::SphereRenderer::setTransferFunctionTexture(vislib::graphics::gl::GLSLShader& shader, unsigned int& out_texSize) {
+bool moldyn::SphereRenderer::setTransferFunctionTexture(const vislib::graphics::gl::GLSLShader& shader, unsigned int& outTexSize) {
 
     core::view::CallGetTransferFunction* cgtf = this->getTFSlot.CallAs<core::view::CallGetTransferFunction>();
     if ((cgtf != nullptr) && (*cgtf)(0)) {
         glActiveTexture(GL_TEXTURE0);
         glEnable(GL_TEXTURE_1D);
         glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
-        out_texSize = cgtf->TextureSize();
+        outTexSize = cgtf->TextureSize();
 
         glUniform1i(shader.ParameterLocation("tfTexture"), 0);
 
@@ -1839,7 +1839,7 @@ bool moldyn::SphereRenderer::setTransferFunctionTexture(vislib::graphics::gl::GL
         glActiveTexture(GL_TEXTURE0);
         glEnable(GL_TEXTURE_1D);
         glBindTexture(GL_TEXTURE_1D, this->greyTF);
-        out_texSize = 2;
+        outTexSize = 2;
 
         //glUniform1i(shader.ParameterLocation("tfTexture"), 0);
         //GLfloat tfrange[2] = { 0.0f, 1.0f };
@@ -1862,7 +1862,7 @@ bool moldyn::SphereRenderer::unsetTransferFunctionTexture(void) {
 }
 
 
-bool moldyn::SphereRenderer::setFlagStorage(vislib::graphics::gl::GLSLShader& shader, MultiParticleDataCall* mpdc) {
+bool moldyn::SphereRenderer::setFlagStorage(const vislib::graphics::gl::GLSLShader& shader, MultiParticleDataCall* mpdc) {
 
     this->flagsEnabled = false;
 
@@ -1909,7 +1909,7 @@ bool moldyn::SphereRenderer::setFlagStorage(vislib::graphics::gl::GLSLShader& sh
 }
 
 
-bool moldyn::SphereRenderer::unsetFlagStorage(vislib::graphics::gl::GLSLShader& shader) {
+bool moldyn::SphereRenderer::unsetFlagStorage(const vislib::graphics::gl::GLSLShader& shader) {
 
     auto flagc = getFlagsSlot.CallAs<core::FlagCall>();
     if (flagc == nullptr) {
@@ -1934,154 +1934,154 @@ bool moldyn::SphereRenderer::unsetFlagStorage(vislib::graphics::gl::GLSLShader& 
 
 
 bool moldyn::SphereRenderer::makeColorString(
-    MultiParticleDataCall::Particles& parts, std::string& code, std::string& declaration, bool interleaved) {
+    const MultiParticleDataCall::Particles& parts, std::string& outCode, std::string& outDeclaration, bool interleaved) {
 
     bool ret = true;
 
     switch (parts.GetColourDataType()) {
     case MultiParticleDataCall::Particles::COLDATA_NONE:
-        declaration = "";
-        code = "    inColor = globalCol;\n";
+        outDeclaration = "";
+        outCode = "    inColor = globalCol;\n";
         break;
     case MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
         vislib::sys::Log::DefaultLog.WriteError("[SphereRenderer] Cannot pack an unaligned RGB color into an SSBO! Giving up.");
         ret = false;
         break;
     case MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
-        declaration = "    uint color;\n";
+        outDeclaration = "    uint color;\n";
         if (interleaved) {
-            code = "    inColor = unpackUnorm4x8(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE "+ instanceOffset].color);\n";
+            outCode = "    inColor = unpackUnorm4x8(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE "+ instanceOffset].color);\n";
         }
         else {
-            code = "    inColor = unpackUnorm4x8(theColBuffer[" SSBO_GENERATED_SHADER_INSTANCE "+ instanceOffset].color);\n";
+            outCode = "    inColor = unpackUnorm4x8(theColBuffer[" SSBO_GENERATED_SHADER_INSTANCE "+ instanceOffset].color);\n";
         }
         break;
     case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
-        declaration = "    float r; float g; float b;\n";
+        outDeclaration = "    float r; float g; float b;\n";
         if (interleaved) {
-            code = "    inColor = vec4(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].r,\n"
+            outCode = "    inColor = vec4(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].r,\n"
                 "                       theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].g,\n"
                 "                       theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].b, 1.0); \n";
         }
         else {
-            code = "    inColor = vec4(theColBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].r,\n"
+            outCode = "    inColor = vec4(theColBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].r,\n"
                 "                       theColBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].g,\n"
                 "                       theColBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].b, 1.0); \n";
         }
         break;
     case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
-        declaration = "    float r; float g; float b; float a;\n";
+        outDeclaration = "    float r; float g; float b; float a;\n";
         if (interleaved) {
-            code = "    inColor = vec4(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].r,\n"
+            outCode = "    inColor = vec4(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].r,\n"
                 "                       theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].g,\n"
                 "                       theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].b,\n"
                 "                       theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].a); \n";
         }
         else {
-            code = "    inColor = vec4(theColBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].r,\n"
+            outCode = "    inColor = vec4(theColBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].r,\n"
                 "                       theColBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].g,\n"
                 "                       theColBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].b,\n"
                 "                       theColBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].a); \n";
         }
         break;
     case MultiParticleDataCall::Particles::COLDATA_FLOAT_I: {
-        declaration = "    float colorIndex;\n";
+        outDeclaration = "    float colorIndex;\n";
         if (interleaved) {
-            code = "    inColIdx = theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].colorIndex; \n";
+            outCode = "    inColIdx = theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].colorIndex; \n";
         }
         else {
-            code = "    inColIdx = theColBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].colorIndex; \n";
+            outCode = "    inColIdx = theColBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].colorIndex; \n";
         }
     } break;
     case MultiParticleDataCall::Particles::COLDATA_DOUBLE_I: {
-        declaration = "    double colorIndex;\n";
+        outDeclaration = "    double colorIndex;\n";
         if (interleaved) {
-            code = "    inColIdx = float(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].colorIndex); \n";
+            outCode = "    inColIdx = float(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].colorIndex); \n";
         }
         else {
-            code = "    inColIdx = float(theColBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].colorIndex); \n";
+            outCode = "    inColIdx = float(theColBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].colorIndex); \n";
         }
     } break;
     case MultiParticleDataCall::Particles::COLDATA_USHORT_RGBA: {
-        declaration = "    uint col1; uint col2;\n";
+        outDeclaration = "    uint col1; uint col2;\n";
         if (interleaved) {
-            code = "    inColor.xy = unpackUnorm2x16(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE "+ instanceOffset].col1);\n"
+            outCode = "    inColor.xy = unpackUnorm2x16(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE "+ instanceOffset].col1);\n"
                 "    inColor.zw = unpackUnorm2x16(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE "+ instanceOffset].col2);\n";
         }
         else {
-            code = "    inColor.xy = unpackUnorm2x16(theColBuffer[" SSBO_GENERATED_SHADER_INSTANCE "+ instanceOffset].col1);\n"
+            outCode = "    inColor.xy = unpackUnorm2x16(theColBuffer[" SSBO_GENERATED_SHADER_INSTANCE "+ instanceOffset].col1);\n"
                 "    inColor.zw = unpackUnorm2x16(theColBuffer[" SSBO_GENERATED_SHADER_INSTANCE "+ instanceOffset].col2);\n";
         }
     } break;
     default:
-        declaration = "";
-        code = "    inColor = globalCol;\n";
+        outDeclaration = "";
+        outCode = "    inColor = globalCol;\n";
         break;
     }
-    // code = "    inColor = vec4(0.2, 0.7, 1.0, 1.0);";
+    // outCode = "    inColor = vec4(0.2, 0.7, 1.0, 1.0);";
 
     return ret;
 }
 
 
 bool moldyn::SphereRenderer::makeVertexString(
-    MultiParticleDataCall::Particles& parts, std::string& code, std::string& declaration, bool interleaved) {
+    const MultiParticleDataCall::Particles& parts, std::string& outCode, std::string& outDeclaration, bool interleaved) {
 
     bool ret = true;
 
     switch (parts.GetVertexDataType()) {
     case MultiParticleDataCall::Particles::VERTDATA_NONE:
-        declaration = "";
-        code = "";
+        outDeclaration = "";
+        outCode = "";
         break;
     case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
-        declaration = "    float posX; float posY; float posZ;\n";
+        outDeclaration = "    float posX; float posY; float posZ;\n";
         if (interleaved) {
-            code = "    inPosition = vec4(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX,\n"
+            outCode = "    inPosition = vec4(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX,\n"
                 "                 theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posY,\n"
                 "                 theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posZ, 1.0); \n"
                 "    rad = CONSTRAD;";
         }
         else {
-            code = "    inPosition = vec4(thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX,\n"
+            outCode = "    inPosition = vec4(thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX,\n"
                 "                 thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posY,\n"
                 "                 thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posZ, 1.0); \n"
                 "    rad = CONSTRAD;";
         }
         break;
     case MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ:
-        declaration = "    double posX; double posY; double posZ;\n";
+        outDeclaration = "    double posX; double posY; double posZ;\n";
         if (interleaved) {
-            code = "    inPosition = vec4(float(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX),\n"
+            outCode = "    inPosition = vec4(float(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX),\n"
                 "                 float(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posY),\n"
                 "                 float(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posZ), 1.0); \n"
                 "    rad = CONSTRAD;";
         }
         else {
-            code = "    inPosition = vec4(float(thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX),\n"
+            outCode = "    inPosition = vec4(float(thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX),\n"
                 "                 float(thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posY),\n"
                 "                 float(thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posZ), 1.0); \n"
                 "    rad = CONSTRAD;";
         }
         break;
     case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
-        declaration = "    float posX; float posY; float posZ; float posR;\n";
+        outDeclaration = "    float posX; float posY; float posZ; float posR;\n";
         if (interleaved) {
-            code = "    inPosition = vec4(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX,\n"
+            outCode = "    inPosition = vec4(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX,\n"
                 "                 theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posY,\n"
                 "                 theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posZ, 1.0); \n"
                 "    rad = theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posR;";
         }
         else {
-            code = "    inPosition = vec4(thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX,\n"
+            outCode = "    inPosition = vec4(thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX,\n"
                 "                 thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posY,\n"
                 "                 thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posZ, 1.0); \n"
                 "    rad = thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posR;";
         }
         break;
     default:
-        declaration = "";
-        code = "";
+        outDeclaration = "";
+        outCode = "";
         break;
     }
 
@@ -2122,8 +2122,7 @@ std::shared_ptr<GLSLShader> moldyn::SphereRenderer::makeShader(
 }
 
 
-std::shared_ptr<vislib::graphics::gl::GLSLShader> moldyn::SphereRenderer::generateShader(
-    MultiParticleDataCall::Particles& parts) {
+std::shared_ptr<vislib::graphics::gl::GLSLShader> moldyn::SphereRenderer::generateShader(const MultiParticleDataCall::Particles& parts) {
 
     int c = parts.GetColourDataType();
     int p = parts.GetVertexDataType();
@@ -2204,21 +2203,21 @@ std::shared_ptr<vislib::graphics::gl::GLSLShader> moldyn::SphereRenderer::genera
 }
 
 
-void moldyn::SphereRenderer::getBytesAndStride(MultiParticleDataCall::Particles& parts, unsigned int& colBytes,
-    unsigned int& vertBytes, unsigned int& colStride, unsigned int& vertStride, bool& interleaved) {
+void moldyn::SphereRenderer::getBytesAndStride(const MultiParticleDataCall::Particles &parts, unsigned int &outColBytes, unsigned int &outVertBytes,
+    unsigned int &outColStride, unsigned int &outVertStride, bool &outInterleaved) {
 
-    vertBytes = MultiParticleDataCall::Particles::VertexDataSize[parts.GetVertexDataType()];
-    colBytes = MultiParticleDataCall::Particles::ColorDataSize[parts.GetColourDataType()];
+    outVertBytes = MultiParticleDataCall::Particles::VertexDataSize[parts.GetVertexDataType()];
+    outColBytes = MultiParticleDataCall::Particles::ColorDataSize[parts.GetColourDataType()];
 
-    colStride = parts.GetColourDataStride();
-    colStride = colStride < colBytes ? colBytes : colStride;
-    vertStride = parts.GetVertexDataStride();
-    vertStride = vertStride < vertBytes ? vertBytes : vertStride;
+    outColStride = parts.GetColourDataStride();
+    outColStride = outColStride < outColBytes ? outColBytes : outColStride;
+    outVertStride = parts.GetVertexDataStride();
+    outVertStride = outVertStride < outVertBytes ? outVertBytes : outVertStride;
 
-    interleaved = (std::abs(reinterpret_cast<const ptrdiff_t>(parts.GetColourData()) -
-        reinterpret_cast<const ptrdiff_t>(parts.GetVertexData())) <= vertStride &&
-        vertStride == colStride) ||
-        colStride == 0;
+    outInterleaved = (std::abs(reinterpret_cast<const ptrdiff_t>(parts.GetColourData()) -
+        reinterpret_cast<const ptrdiff_t>(parts.GetVertexData())) <= outVertStride &&
+        outVertStride == outColStride) ||
+        outColStride == 0;
 }
 
 
@@ -2241,15 +2240,15 @@ void moldyn::SphereRenderer::getGLSLVersion(int &major, int &minor) const {
 
 #if defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
 
-void moldyn::SphereRenderer::lockSingle(GLsync& syncObj) {
-    if (syncObj) {
-        glDeleteSync(syncObj);
+void moldyn::SphereRenderer::lockSingle(GLsync& outSyncObj) {
+    if (outSyncObj) {
+        glDeleteSync(outSyncObj);
     }
-    syncObj = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+    outSyncObj = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
 }
 
 
-void moldyn::SphereRenderer::waitSingle(GLsync& syncObj) {
+void moldyn::SphereRenderer::waitSingle(const GLsync& syncObj) {
     if (syncObj) {
         while (1) {
             GLenum wait = glClientWaitSync(syncObj, GL_SYNC_FLUSH_COMMANDS_BIT, 1);
@@ -2323,7 +2322,7 @@ bool moldyn::SphereRenderer::rebuildGBuffer() {
 }
 
 
-void moldyn::SphereRenderer::rebuildWorkingData(megamol::core::view::CallRender3D* cr3d, megamol::core::moldyn::MultiParticleDataCall* mpdc, vislib::graphics::gl::GLSLShader& shader) {
+void moldyn::SphereRenderer::rebuildWorkingData(megamol::core::view::CallRender3D* cr3d, megamol::core::moldyn::MultiParticleDataCall* mpdc, const vislib::graphics::gl::GLSLShader& shader) {
 
     // Upload new data if neccessary
     if (stateInvalid) {
@@ -2480,6 +2479,7 @@ void moldyn::SphereRenderer::renderDeferredPass(megamol::core::view::CallRender3
 
 void moldyn::SphereRenderer::generate3ConeDirections(
     std::vector<vislib::math::Vector<float, 4>>& directions, float apex) {
+
     directions.clear();
 
     float edge_length = 2.0f * tan(0.5f * apex);
@@ -2498,6 +2498,7 @@ void moldyn::SphereRenderer::generate3ConeDirections(
 
 std::string moldyn::SphereRenderer::generateDirectionShaderArrayString(
     const std::vector<vislib::math::Vector<float, 4>>& directions, const std::string& directionsName) {
+
     std::stringstream result;
 
     std::string upperDirName = directionsName;

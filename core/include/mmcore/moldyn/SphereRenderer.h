@@ -389,15 +389,18 @@ namespace moldyn {
         MultiParticleDataCall *getData(unsigned int t, float& outScaling);
 
         /**
-         * TODO: Document
+         * Return clipping information.
          *
          * @param clipDat  Points to four floats ...
          * @param clipCol  Points to four floats ....
          */
-        void getClipData(float clipDat[4], float clipCol[4]);
+        void getClipData(float outClipDat[4], float outClipCol[4]);
 
         /**
          * Check if specified render mode or all render mode are available.
+         *
+         * @param rm      ...
+         * @param silent  ...
          *
          * @return 'True' on success, 'false' otherwise.
          */
@@ -447,7 +450,7 @@ namespace moldyn {
          *
          * @return 'True' on success, 'false' otherwise.
          */
-        bool setBufferData(vislib::graphics::gl::GLSLShader& shader, MultiParticleDataCall::Particles &parts, 
+        bool setBufferData(const vislib::graphics::gl::GLSLShader& shader, const MultiParticleDataCall::Particles &parts, 
             GLuint vertBuf, const void *vertPtr, GLuint colBuf,  const void *colPtr, bool createBufferData = false);
 
         /**
@@ -457,7 +460,7 @@ namespace moldyn {
          *
          * @return 'True' on success, 'false' otherwise.
          */
-        bool unsetBufferData(vislib::graphics::gl::GLSLShader& shader);
+        bool unsetBufferData(const vislib::graphics::gl::GLSLShader& shader);
 
         /**
          * Set pointers to vertex and color buffers and corresponding shader variables.
@@ -467,7 +470,7 @@ namespace moldyn {
          *
          * @return 'True' on success, 'false' otherwise.
          */
-        bool setShaderData(vislib::graphics::gl::GLSLShader& shader, MultiParticleDataCall::Particles &parts);
+        bool setShaderData(const vislib::graphics::gl::GLSLShader& shader, const MultiParticleDataCall::Particles &parts);
 
         /**
          * Unset pointers to vertex and color buffers.
@@ -484,7 +487,7 @@ namespace moldyn {
          *
          * @return 'True' on success, 'false' otherwise.
          */
-        bool setTransferFunctionTexture(vislib::graphics::gl::GLSLShader& shader, unsigned int& out_texSize);
+        bool setTransferFunctionTexture(const vislib::graphics::gl::GLSLShader& shader, unsigned int& outTexSize);
 
         /**
          * Disables the transfer function texture.
@@ -501,7 +504,7 @@ namespace moldyn {
          *
          * @return 'True' on success, 'false' otherwise.
          */
-        bool setFlagStorage(vislib::graphics::gl::GLSLShader& shader, MultiParticleDataCall* mpdc);
+        bool setFlagStorage(const vislib::graphics::gl::GLSLShader& shader, MultiParticleDataCall* mpdc);
 
         /**
          * Enable flag storage.
@@ -510,7 +513,7 @@ namespace moldyn {
          *
          * @return 'True' on success, 'false' otherwise.
          */
-        bool unsetFlagStorage(vislib::graphics::gl::GLSLShader& shader);
+        bool unsetFlagStorage(const vislib::graphics::gl::GLSLShader& shader);
 
         /**
          * Get bytes and stride.
@@ -522,8 +525,8 @@ namespace moldyn {
          * @param vertStride   ...
          * @param interleaved  ...
          */
-        void getBytesAndStride(MultiParticleDataCall::Particles &parts, unsigned int &colBytes, unsigned int &vertBytes,
-            unsigned int &colStride, unsigned int &vertStride, bool &interleaved);
+        void getBytesAndStride(const MultiParticleDataCall::Particles &parts, unsigned int &outColBytes, unsigned int &outVertBytes,
+            unsigned int &outColStride, unsigned int &outVertStride, bool &outInterleaved);
 
         /**
          * Make SSBO vertex shader color string.
@@ -534,7 +537,7 @@ namespace moldyn {
          * @param interleaved  ...
          *
          */
-        bool makeColorString(MultiParticleDataCall::Particles &parts, std::string &code, std::string &declaration, bool interleaved);
+        bool makeColorString(const MultiParticleDataCall::Particles &parts, std::string &outCode, std::string &outDeclaration, bool interleaved);
 
         /**
          * Make SSBO vertex shader position string.
@@ -544,7 +547,7 @@ namespace moldyn {
          * @param declaration  ...
          * @param interleaved  ...
          */
-        bool makeVertexString(MultiParticleDataCall::Particles &parts, std::string &code, std::string &declaration, bool interleaved);
+        bool makeVertexString(const MultiParticleDataCall::Particles &parts, std::string &outCode, std::string &outDeclaration, bool interleaved);
 
         /**
          * Make SSBO shaders.
@@ -552,7 +555,7 @@ namespace moldyn {
          * @param vert  ...
          * @param frag  ...
          */
-        std::shared_ptr<GLSLShader> makeShader(vislib::SmartPtr<ShaderSource> vert, vislib::SmartPtr<ShaderSource> frag);
+        std::shared_ptr<GLSLShader> makeShader(const vislib::SmartPtr<ShaderSource> vert, const vislib::SmartPtr<ShaderSource> frag);
 
         /**
          * Generate SSBO shaders.
@@ -560,7 +563,7 @@ namespace moldyn {
          * @param parts  ...
          *
          */
-        std::shared_ptr<GLSLShader> generateShader(MultiParticleDataCall::Particles &parts);
+        std::shared_ptr<GLSLShader> generateShader(const MultiParticleDataCall::Particles &parts);
 
         /**
          * Returns GLSL minor and major version.
@@ -568,7 +571,7 @@ namespace moldyn {
          * @param major The major version of the currently available GLSL version.
          * @param minor The minor version of the currently available GLSL version.
          */
-        void getGLSLVersion(int &major, int &minor) const;
+        void getGLSLVersion(int &outMajor, int &outMinor) const;
 
 #if defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
 
@@ -577,14 +580,14 @@ namespace moldyn {
          *
          * @param syncObj  ...
          */
-        void lockSingle(GLsync& syncObj);
+        void lockSingle(GLsync& outSyncObj);
 
         /**
          * Wait single.
          *
          * @param syncObj  ...
          */
-        void waitSingle(GLsync& syncObj);
+        void waitSingle(const GLsync& syncObj);
 
 #endif // defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
 
@@ -604,7 +607,7 @@ namespace moldyn {
          * @param mpdc    ...
          * @param shader  ...
          */
-        void rebuildWorkingData(megamol::core::view::CallRender3D* cr3d, megamol::core::moldyn::MultiParticleDataCall* mpdc, vislib::graphics::gl::GLSLShader& shader);
+        void rebuildWorkingData(megamol::core::view::CallRender3D* cr3d, megamol::core::moldyn::MultiParticleDataCall* mpdc, const vislib::graphics::gl::GLSLShader& shader);
 
         /**
          * Render deferred pass.
@@ -629,7 +632,7 @@ namespace moldyn {
          * @param directions  ...
          * @param apex        ...
          */
-        void generate3ConeDirections(std::vector< vislib::math::Vector< float, int(4) > >& directions, float apex);
+        void generate3ConeDirections(std::vector< vislib::math::Vector< float, int(4) > >& outDirections, float apex);
 
     };
 
