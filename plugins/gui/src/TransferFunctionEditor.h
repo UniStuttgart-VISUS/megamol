@@ -66,13 +66,10 @@ public:
      */
     bool DrawTransferFunctionEditor(void);
 
-    /**
-     * Draws a 1D texture into a box.
-     */
-    static void DrawTextureBox(
-        const ImVec2& size, const std::vector<float>& texturePixels, const std::array<float, 2>& valueRange);
 
 private:
+    void drawTextureBox(const ImVec2& size);
+
     void drawFunctionPlot(const ImVec2& size);
 
     /** The global input widget state buffer. */
@@ -109,6 +106,7 @@ private:
 
     /** Current texture data. */
     std::vector<float> texturePixels;
+    GLuint textureId;
 
     /** Currently active color channels in plot. */
     std::array<bool, 4> activeChannels;

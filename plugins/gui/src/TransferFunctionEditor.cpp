@@ -66,7 +66,7 @@ PresetGenerator CubeHelixAdapter(double start, double rots, double hue, double g
     return [=](auto& nodes, auto n) {
         nodes.clear();
         for (size_t i = 0; i < n; ++i) {
-            auto t = i / static_cast<double>(n);
+            auto t = i / static_cast<double>(n - 1);
             auto color = CubeHelixRGB(t, start, rots, hue, gamma);
             nodes.push_back({
                 static_cast<float>(color[0]),
@@ -80,25 +80,25 @@ PresetGenerator CubeHelixAdapter(double start, double rots, double hue, double g
     };
 }
 
-PresetGenerator ColormapAdapter(const float palette[256][3]) {
-    const double PaletteMax = static_cast<double>(256 - 1);
+template <size_t PaletteSize> PresetGenerator ColormapAdapter(const float palette[PaletteSize][3]) {
+    const double LastIndex = static_cast<double>(PaletteSize - 1);
     return [=](auto& nodes, auto n) {
         nodes.clear();
         for (size_t i = 0; i < n; ++i) {
-            auto t = i / static_cast<double>(n);
+            auto t = i / static_cast<double>(n - 1);
 
             // Linear interpolation from palette.
-            size_t i0 = std::floor(t * PaletteMax);
-            size_t i1 = std::ceil(t * PaletteMax);
+            size_t i0 = std::floor(t * LastIndex);
+            size_t i1 = std::ceil(t * LastIndex);
+            double it = std::fmod(t * LastIndex, LastIndex);
             double r[2] = {static_cast<double>(palette[i0][0]), static_cast<double>(palette[i1][0])};
             double g[2] = {static_cast<double>(palette[i0][1]), static_cast<double>(palette[i1][1])};
             double b[2] = {static_cast<double>(palette[i0][2]), static_cast<double>(palette[i1][2])};
-            double tt = std::fmod(t * PaletteMax, PaletteMax);
 
             nodes.push_back({
-                static_cast<float>((1.0 - tt) * r[0] + tt * r[1]),
-                static_cast<float>((1.0 - tt) * g[0] + tt * g[1]),
-                static_cast<float>((1.0 - tt) * b[0] + tt * b[1]),
+                static_cast<float>(std::max(0.0, std::min((1.0 - it) * r[0] + it * r[1], 1.0))),
+                static_cast<float>(std::max(0.0, std::min((1.0 - it) * g[0] + it * g[1], 1.0))),
+                static_cast<float>(std::max(0.0, std::min((1.0 - it) * b[0] + it * b[1], 1.0))),
                 1.0f,
                 static_cast<float>(t),
                 0.05f,
@@ -107,21 +107,22 @@ PresetGenerator ColormapAdapter(const float palette[256][3]) {
     };
 }
 
-std::array<std::tuple<std::string, PresetGenerator>, 11> PRESETS = {
+std::array<std::tuple<std::string, PresetGenerator>, 12> PRESETS = {
     std::make_tuple("Select...", [](auto& nodes, auto n) {}),
     std::make_tuple("Empty", [](auto& nodes, auto n) { nodes.clear(); }),
-    std::make_tuple("Inferno", ColormapAdapter(InfernoColorMap)),
-    std::make_tuple("Magma", ColormapAdapter(MagmaColorMap)),
-    std::make_tuple("Plasma", ColormapAdapter(PlasmaColorMap)),
-    std::make_tuple("Viridis", ColormapAdapter(ViridisColorMap)),
-    std::make_tuple("Parula", ColormapAdapter(ParulaColorMap)),
+    std::make_tuple("Inferno", ColormapAdapter<256>(InfernoColorMap)),
+    std::make_tuple("Magma", ColormapAdapter<256>(MagmaColorMap)),
+    std::make_tuple("Plasma", ColormapAdapter<256>(PlasmaColorMap)),
+    std::make_tuple("Viridis", ColormapAdapter<256>(ViridisColorMap)),
+    std::make_tuple("Parula", ColormapAdapter<256>(ParulaColorMap)),
     std::make_tuple("Cubehelix (default)", CubeHelixAdapter(0.5, -1.5, 1.0, 1.0)),
     std::make_tuple("Cubehelix (default, colorful)", CubeHelixAdapter(0.5, -1.5, 1.5, 1.0)),
     std::make_tuple("Cubehelix (default, de-pinked)", CubeHelixAdapter(0.5, -1.0, 1.0, 1.0)),
+    std::make_tuple("Cool-Warm (diverging)", ColormapAdapter<257>(CoolWarmColorMap)),
     std::make_tuple("Hue rotation (rainbow, harmful)", [](auto& nodes, auto n) {
         nodes.clear();
         for (size_t i = 0; i < n; ++i) {
-            auto t = i / static_cast<double>(n);
+            auto t = i / static_cast<double>(n - 1);
             auto color = HueToRGB(t);
             nodes.push_back({
                 static_cast<float>(color[0]),
@@ -140,9 +141,10 @@ TransferFunctionEditor::TransferFunctionEditor(void)
     , activeParameter(nullptr)
     , range({0.0f, 1.0f})
     , mode(param::TransferFunctionParam::InterpolationMode::LINEAR)
-    , textureSize(128)
+    , textureSize(256)
+    , textureId(0)
     , textureInvalid(false)
-    , activeChannels{false, false, false, true}
+    , activeChannels{false, false, false, false}
     , currentNode(0)
     , currentChannel(0)
     , currentDragChange()
@@ -155,9 +157,9 @@ TransferFunctionEditor::TransferFunctionEditor(void)
     this->nodes.emplace_back(zero);
     this->nodes.emplace_back(one);
 
-    this->widget_buffer.min_range = 0.0f;
-    this->widget_buffer.max_range = 1.0f;
-    this->widget_buffer.tex_size = 128;
+    this->widget_buffer.min_range = this->range[0];
+    this->widget_buffer.max_range = this->range[1];
+    this->widget_buffer.tex_size = textureSize;
     this->widget_buffer.gauss_sigma = zero[5];
     this->widget_buffer.range_value = zero[4];
 
@@ -224,7 +226,7 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
     const float canvas_width = tfw_item_width;
     ImGui::PushItemWidth(tfw_item_width); // set general proportional item width
 
-    DrawTextureBox(ImVec2(tfw_item_width, 30.0f), this->texturePixels, this->range);
+    drawTextureBox(ImVec2(tfw_item_width, 30.0f));
 
     ImGui::SameLine();
     if (ImGui::ArrowButton("Options", this->showOptions ? ImGuiDir_Down : ImGuiDir_Up)) {
@@ -362,7 +364,6 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
         this->textureInvalid = true;
     }
 
-
     // --------------------------------------------------------------------
 
     // Create current texture data
@@ -373,6 +374,10 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
         } else if (this->mode == param::TransferFunctionParam::InterpolationMode::GAUSS) {
             param::TransferFunctionParam::GaussInterpolation(this->texturePixels, this->textureSize, this->nodes);
         }
+        if (this->textureId != 0) {
+            glDeleteTextures(1, &this->textureId);
+        }
+        this->textureId = 0;
         this->textureInvalid = false;
     }
 
@@ -400,40 +405,44 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
         }
     }
 
-
     return shouldApply;
 }
 
 
-void TransferFunctionEditor::DrawTextureBox(
-    const ImVec2& size, const std::vector<float>& texturePixels, const std::array<float, 2>& valueRange) {
-    ImDrawList* drawList = ImGui::GetWindowDrawList();
+void TransferFunctionEditor::drawTextureBox(const ImVec2& size) {
     ImVec2 pos = ImGui::GetCursorScreenPos();
-    const size_t textureSize = texturePixels.size() / 4;
-
-    // Reserve layout space and draw a black background rectangle.
-    ImGui::Dummy(size);
-    drawList->AddRectFilled(pos, ImVec2(pos.x + size.x, pos.y + size.y), IM_COL32(0, 0, 0, 255), 0.0f, 10);
+    const size_t textureSize = this->texturePixels.size() / 4;
 
     if (textureSize == 0) {
-        return;
+        // Reserve layout space and draw a black background rectangle.
+        ImDrawList* drawList = ImGui::GetWindowDrawList();
+        ImGui::Dummy(size);
+        drawList->AddRectFilled(pos, ImVec2(pos.x + size.x, pos.y + size.y), IM_COL32(0, 0, 0, 255), 0.0f, 10);
     }
 
-    // Draw one rectangle per color slice.
-    ImVec2 sliceSize = ImVec2(size.x / static_cast<float>(textureSize), size.y);
-    for (size_t x = 0; x < textureSize; ++x) {
-        ImU32 color = ImGui::ColorConvertFloat4ToU32(
-            ImVec4(texturePixels[4 * x], texturePixels[4 * x + 1], texturePixels[4 * x + 2], texturePixels[4 * x + 3]));
-        ImVec2 posA = ImVec2(pos.x + static_cast<float>(x) * sliceSize.x, pos.y);
-        ImVec2 posB = ImVec2(posA.x + sliceSize.x, posA.y + sliceSize.y);
-        drawList->AddRectFilled(posA, posB, color, 0.0f, 10);
+    if (this->textureId == 0) {
+        // Upload texture.
+        glGenTextures(1, &this->textureId);
+        glBindTexture(GL_TEXTURE_2D, this->textureId);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, textureSize, 1, 0, GL_RGBA, GL_FLOAT, this->texturePixels.data());
+
+        glBindTexture(GL_TEXTURE_2D, 0);
     }
+
+    // Draw texture as image.
+    ImGui::Image(reinterpret_cast<ImTextureID>(this->textureId), size);
 
     // Draw tooltip, if requested.
     if (ImGui::IsItemHovered()) {
         float xPx = ImGui::GetMousePos().x - pos.x - ImGui::GetScrollX();
         float xU = xPx / size.x;
-        float xValue = xU * (valueRange[1] - valueRange[0]) + valueRange[0];
+        float xValue = xU * (this->range[1] - this->range[0]) + this->range[0];
         ImGui::BeginTooltip();
         ImGui::Text("%f Absolute Value\n%f Normalized Value", xValue, xU);
         ImGui::EndTooltip();
@@ -467,8 +476,8 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
     ImU32 frameBkgrd = ImGui::ColorConvertFloat4ToU32(tmp_frameBkgrd);
 
     const float line_width = 2.0f;
-    const float point_radius = 8.0f;
-    const float point_border_width = 2.0f;
+    const float point_radius = 6.0f;
+    const float point_border_width = 1.5f;
     const int circle_subdiv = 12;
     ImVec2 delta_border = style.ItemInnerSpacing;
 
@@ -488,28 +497,19 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
     int selected_node = -1;
     int selected_chan = -1;
     ImVec2 selected_delta = ImVec2(0.0f, 0.0f);
-    for (int i = 0; i < this->nodes.size(); ++i) {
-        ImU32 point_col = ImGui::ColorConvertFloat4ToU32(
-            ImVec4(this->nodes[i][0], this->nodes[i][1], this->nodes[i][2], this->nodes[i][3]));
+    // For each enabled color channel
+    for (size_t c = 0; c < channelColors.size(); ++c) {
+        if (!this->activeChannels[c]) continue;
 
-        // For each enabled color channel
-        for (int c = 0; c < 4; ++c) {
-            if (!this->activeChannels[c]) continue;
+        const float pointAndBorderRadius = point_radius + point_border_width - 2.0f;
 
-            // Define line color
-            ImU32 line_col = channelColors[c];
-
-            // Draw lines/curves ...
-            ImVec2 point_cur_pos = ImVec2(canvas_pos.x + this->nodes[i][4] * canvas_size.x,
+        // Draw lines.
+        drawList->PathClear();
+        for (size_t i = 0; i < this->nodes.size(); ++i) {
+            ImVec2 point = ImVec2(canvas_pos.x + this->nodes[i][4] * canvas_size.x,
                 canvas_pos.y + (1.0f - this->nodes[i][c]) * canvas_size.y);
-
             if (this->mode == param::TransferFunctionParam::InterpolationMode::LINEAR) {
-                if (i < (this->nodes.size() - 1)) {
-                    ImVec2 point_next_pos = ImVec2(canvas_pos.x + this->nodes[i + 1][4] * canvas_size.x,
-                        canvas_pos.y + (1.0f - this->nodes[i + 1][c]) * canvas_size.y);
-
-                    drawList->AddLine(point_cur_pos, point_next_pos, line_col, line_width);
-                }
+                drawList->PathLineTo(point);
             } else if (this->mode == param::TransferFunctionParam::InterpolationMode::GAUSS) {
                 const float ga = this->nodes[i][c];
                 const float gb = this->nodes[i][4];
@@ -539,27 +539,39 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
                         canvas_pos.x + (x1 * canvas_size.x), canvas_pos.y + canvas_size.y - (g1 * canvas_size.y));
                     last_g1 = g1;
 
-                    drawList->AddLine(pos0, pos1, line_col, line_width);
+                    drawList->PathLineToMergeDuplicate(pos0);
+                    drawList->PathLineTo(pos1);
                 }
             }
 
-            // Draw node point
-            ImU32 point_border_col = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_TextDisabled]);
-            if (i == this->currentNode) {
-                point_border_col = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ButtonActive]);
-            }
-            drawList->AddCircleFilled(point_cur_pos, point_radius, frameBkgrd, circle_subdiv);
-            float point_radius_full = point_radius + point_border_width - 2.0f;
-            drawList->AddCircle(point_cur_pos, point_radius_full, point_border_col, circle_subdiv, point_border_width);
-            drawList->AddCircleFilled(point_cur_pos, point_radius, point_col, 12);
-
-            // Check intersection of mouse with node point
-            ImVec2 d = ImVec2(point_cur_pos.x - mouse_cur_pos.x, point_cur_pos.y - mouse_cur_pos.y);
-            if (sqrtf((d.x * d.x) + (d.y * d.y)) <= point_radius_full) {
+            // Test for intersection of mouse position with node.
+            ImVec2 d = ImVec2(point.x - mouse_cur_pos.x, point.y - mouse_cur_pos.y);
+            if (sqrtf((d.x * d.x) + (d.y * d.y)) <= pointAndBorderRadius) {
                 selected_node = i;
                 selected_chan = c;
                 selected_delta = d;
             }
+        }
+        drawList->PathStroke(channelColors[c], false, line_width);
+
+        // Draw node circles.
+        for (size_t i = 0; i < this->nodes.size(); ++i) {
+            if ((i != selected_node || c != selected_chan) && i != this->currentNode) {
+                continue;
+            }
+
+            ImVec2 point = ImVec2(canvas_pos.x + this->nodes[i][4] * canvas_size.x,
+                canvas_pos.y + (1.0f - this->nodes[i][c]) * canvas_size.y);
+            ImU32 pointColor =
+                ImGui::ColorConvertFloat4ToU32(ImVec4(this->nodes[i][0], this->nodes[i][1], this->nodes[i][2], 1.0));
+            ImU32 pointBorderColor = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_TextDisabled]);
+            if (i == this->currentNode) {
+                pointBorderColor = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ButtonActive]);
+            }
+
+            // Draw node point
+            drawList->AddCircle(point, pointAndBorderRadius, pointBorderColor, circle_subdiv, point_border_width);
+            drawList->AddCircleFilled(point, point_radius, pointColor, 12);
         }
     }
     drawList->PopClipRect();
