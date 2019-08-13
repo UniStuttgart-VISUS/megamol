@@ -54,7 +54,7 @@ AstroParticleConverter::AstroParticleConverter(void)
         MultiParticleDataCall::ClassName(), MultiParticleDataCall::FunctionName(1), &AstroParticleConverter::getExtent);
     this->MakeSlotAvailable(&this->sphereSpecialSlot);
 
-    param::EnumParam* enu = new param::EnumParam(static_cast<int>(ColoringMode::MASS));
+    param::EnumParam* enu = new param::EnumParam(static_cast<int>(ColoringMode::GRAVITATIONAL_POTENTIAL));
     enu->SetTypePair(static_cast<int>(ColoringMode::MASS), "Mass");
     enu->SetTypePair(static_cast<int>(ColoringMode::INTERNAL_ENERGY), "Internal Energy");
     enu->SetTypePair(static_cast<int>(ColoringMode::SMOOTHING_LENGTH), "Smoothing Length");
@@ -69,6 +69,14 @@ AstroParticleConverter::AstroParticleConverter(void)
     enu->SetTypePair(static_cast<int>(ColoringMode::IS_DARK_MATTER), "Dark Matter");
     enu->SetTypePair(static_cast<int>(ColoringMode::TEMPERATURE), "Temperature");
     enu->SetTypePair(static_cast<int>(ColoringMode::ENTROPY), "Entropy");
+    enu->SetTypePair(static_cast<int>(ColoringMode::INTERNAL_ENERGY_DERIVATIVE), "Internal Energy Derivative");
+    enu->SetTypePair(static_cast<int>(ColoringMode::SMOOTHING_LENGTH_DERIVATIVE), "Smoothing Length Derivative");
+    enu->SetTypePair(static_cast<int>(ColoringMode::MOLECULAR_WEIGHT_DERIVATIVE), "Molecular Weight Derivative");
+    enu->SetTypePair(static_cast<int>(ColoringMode::DENSITY_DERIVATIVE), "Density Derivative");
+    enu->SetTypePair(
+        static_cast<int>(ColoringMode::GRAVITATIONAL_POTENTIAL_DERIVATIVE), "Gravitational Potential Derivative");
+    enu->SetTypePair(static_cast<int>(ColoringMode::TEMPERATURE_DERIVATIVE), "Temperature Derivative");
+    enu->SetTypePair(static_cast<int>(ColoringMode::ENTROPY_DERIVATIVE), "Entropy Derivative");
     this->colorModeSlot << enu;
     this->MakeSlotAvailable(&this->colorModeSlot);
 
@@ -352,6 +360,44 @@ void AstroParticleConverter::calcMinMaxValues(const AstroDataCall& ast) {
         this->valmin = *std::min_element(ast.GetEntropy()->begin(), ast.GetEntropy()->end());
         this->valmax = *std::max_element(ast.GetEntropy()->begin(), ast.GetEntropy()->end());
         break;
+    case megamol::astro::AstroParticleConverter::ColoringMode::INTERNAL_ENERGY_DERIVATIVE:
+        this->valmin =
+            *std::min_element(ast.GetInternalEnergyDerivatives()->begin(), ast.GetInternalEnergyDerivatives()->end());
+        this->valmax =
+            *std::max_element(ast.GetInternalEnergyDerivatives()->begin(), ast.GetInternalEnergyDerivatives()->end());
+        break;
+    case megamol::astro::AstroParticleConverter::ColoringMode::SMOOTHING_LENGTH_DERIVATIVE:
+        this->valmin =
+            *std::min_element(ast.GetSmoothingLengthDerivatives()->begin(), ast.GetSmoothingLengthDerivatives()->end());
+        this->valmax =
+            *std::max_element(ast.GetSmoothingLengthDerivatives()->begin(), ast.GetSmoothingLengthDerivatives()->end());
+        break;
+    case megamol::astro::AstroParticleConverter::ColoringMode::MOLECULAR_WEIGHT_DERIVATIVE:
+        this->valmin =
+            *std::min_element(ast.GetMolecularWeightDerivatives()->begin(), ast.GetMolecularWeightDerivatives()->end());
+        this->valmax =
+            *std::max_element(ast.GetMolecularWeightDerivatives()->begin(), ast.GetMolecularWeightDerivatives()->end());
+        break;
+    case megamol::astro::AstroParticleConverter::ColoringMode::DENSITY_DERIVATIVE:
+        this->valmin = *std::min_element(ast.GetDensityDerivative()->begin(), ast.GetDensityDerivative()->end());
+        this->valmax = *std::max_element(ast.GetDensityDerivative()->begin(), ast.GetDensityDerivative()->end());
+        break;
+    case megamol::astro::AstroParticleConverter::ColoringMode::GRAVITATIONAL_POTENTIAL_DERIVATIVE:
+        this->valmin = *std::min_element(
+            ast.GetGravitationalPotentialDerivatives()->begin(), ast.GetGravitationalPotentialDerivatives()->end());
+        this->valmax = *std::max_element(
+            ast.GetGravitationalPotentialDerivatives()->begin(), ast.GetGravitationalPotentialDerivatives()->end());
+        break;
+    case megamol::astro::AstroParticleConverter::ColoringMode::TEMPERATURE_DERIVATIVE:
+        this->valmin =
+            *std::min_element(ast.GetTemperatureDerivatives()->begin(), ast.GetTemperatureDerivatives()->end());
+        this->valmax =
+            *std::max_element(ast.GetTemperatureDerivatives()->begin(), ast.GetTemperatureDerivatives()->end());
+        break;
+    case megamol::astro::AstroParticleConverter::ColoringMode::ENTROPY_DERIVATIVE:
+        this->valmin = *std::min_element(ast.GetEntropyDerivatives()->begin(), ast.GetEntropyDerivatives()->end());
+        this->valmax = *std::max_element(ast.GetEntropyDerivatives()->begin(), ast.GetEntropyDerivatives()->end());
+        break;
     case megamol::astro::AstroParticleConverter::ColoringMode::IS_BARYON:
     case megamol::astro::AstroParticleConverter::ColoringMode::IS_STAR:
     case megamol::astro::AstroParticleConverter::ColoringMode::IS_WIND:
@@ -474,6 +520,55 @@ void AstroParticleConverter::calcColorTable(const AstroDataCall& ast) {
         auto v = ast.GetIsBaryonFlags();
         for (size_t i = 0; i < this->usedColors.size(); ++i) {
             v->at(i) ? this->usedColors[i] = minCol : this->usedColors[i] = maxCol;
+        }
+    } break;
+    case megamol::astro::AstroParticleConverter::ColoringMode::INTERNAL_ENERGY_DERIVATIVE: {
+        auto v = ast.GetInternalEnergyDerivatives();
+        for (size_t i = 0; i < this->usedColors.size(); ++i) {
+            float alpha = (v->at(i) - this->valmin) / denom;
+            this->usedColors[i] = this->interpolateColor(minCol, midCol, maxCol, alpha, useMid);
+        }
+    } break;
+    case megamol::astro::AstroParticleConverter::ColoringMode::SMOOTHING_LENGTH_DERIVATIVE: {
+        auto v = ast.GetSmoothingLengthDerivatives();
+        for (size_t i = 0; i < this->usedColors.size(); ++i) {
+            float alpha = (v->at(i) - this->valmin) / denom;
+            this->usedColors[i] = this->interpolateColor(minCol, midCol, maxCol, alpha, useMid);
+        }
+    } break;
+    case megamol::astro::AstroParticleConverter::ColoringMode::MOLECULAR_WEIGHT_DERIVATIVE: {
+        auto v = ast.GetMolecularWeightDerivatives();
+        for (size_t i = 0; i < this->usedColors.size(); ++i) {
+            float alpha = (v->at(i) - this->valmin) / denom;
+            this->usedColors[i] = this->interpolateColor(minCol, midCol, maxCol, alpha, useMid);
+        }
+    } break;
+    case megamol::astro::AstroParticleConverter::ColoringMode::DENSITY_DERIVATIVE: {
+        auto v = ast.GetDensityDerivative();
+        for (size_t i = 0; i < this->usedColors.size(); ++i) {
+            float alpha = (v->at(i) - this->valmin) / denom;
+            this->usedColors[i] = this->interpolateColor(minCol, midCol, maxCol, alpha, useMid);
+        }
+    } break;
+    case megamol::astro::AstroParticleConverter::ColoringMode::GRAVITATIONAL_POTENTIAL_DERIVATIVE: {
+        auto v = ast.GetGravitationalPotentialDerivatives();
+        for (size_t i = 0; i < this->usedColors.size(); ++i) {
+            float alpha = (v->at(i) - this->valmin) / denom;
+            this->usedColors[i] = this->interpolateColor(minCol, midCol, maxCol, alpha, useMid);
+        }
+    } break;
+    case megamol::astro::AstroParticleConverter::ColoringMode::TEMPERATURE_DERIVATIVE: {
+        auto v = ast.GetTemperatureDerivatives();
+        for (size_t i = 0; i < this->usedColors.size(); ++i) {
+            float alpha = (v->at(i) - this->valmin) / denom;
+            this->usedColors[i] = this->interpolateColor(minCol, midCol, maxCol, alpha, useMid);
+        }
+    } break;
+    case megamol::astro::AstroParticleConverter::ColoringMode::ENTROPY_DERIVATIVE: {
+        auto v = ast.GetEntropyDerivatives();
+        for (size_t i = 0; i < this->usedColors.size(); ++i) {
+            float alpha = (v->at(i) - this->valmin) / denom;
+            this->usedColors[i] = this->interpolateColor(minCol, midCol, maxCol, alpha, useMid);
         }
     } break;
     default:

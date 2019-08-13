@@ -14,10 +14,10 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
+#include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
-#include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ParamSlot.h"
 
 #include "astro/AstroDataCall.h"
@@ -59,7 +59,14 @@ private:
         IS_AGN = 10,
         IS_DARK_MATTER = 11,
         TEMPERATURE = 12,
-        ENTROPY = 13
+        ENTROPY = 13,
+        INTERNAL_ENERGY_DERIVATIVE = 14,
+        SMOOTHING_LENGTH_DERIVATIVE = 15,
+        MOLECULAR_WEIGHT_DERIVATIVE = 16,
+        DENSITY_DERIVATIVE = 17,
+        GRAVITATIONAL_POTENTIAL_DERIVATIVE = 18,
+        TEMPERATURE_DERIVATIVE = 19,
+        ENTROPY_DERIVATIVE = 20
     };
 
     bool getData(core::Call& call);
@@ -67,15 +74,16 @@ private:
     bool getExtent(core::Call& call);
 
     void calcMinMaxValues(const AstroDataCall& ast);
-	void calcColorTable(const AstroDataCall& ast);
+    void calcColorTable(const AstroDataCall& ast);
 
-	glm::vec4 interpolateColor(const glm::vec4& minCol, const glm::vec4& midCol, const glm::vec4& maxCol, const float alpha, const bool useMidValue = false);
+    glm::vec4 interpolateColor(const glm::vec4& minCol, const glm::vec4& midCol, const glm::vec4& maxCol,
+        const float alpha, const bool useMidValue = false);
 
     core::param::ParamSlot colorModeSlot;
     core::param::ParamSlot minColorSlot;
     core::param::ParamSlot midColorSlot;
     core::param::ParamSlot maxColorSlot;
-	core::param::ParamSlot useMidColorSlot;
+    core::param::ParamSlot useMidColorSlot;
 
     core::param::ParamSlot minValueSlot;
     core::param::ParamSlot maxValueSlot;
@@ -87,7 +95,7 @@ private:
     core::CallerSlot astroDataSlot;
     size_t lastDataHash;
     size_t hashOffset;
-	unsigned int lastFrame = 0;
+    unsigned int lastFrame = 0;
     float valmin, valmax;
     float densityMin, densityMax;
 
