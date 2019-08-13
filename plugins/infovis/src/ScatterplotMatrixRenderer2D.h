@@ -18,8 +18,7 @@
 #include <nanoflann.hpp>
 #include "Renderer2D.h"
 
-namespace megamol {
-namespace infovis {
+namespace megamol::infovis {
 
 class ScatterplotMatrixRenderer2D : public Renderer2D {
 public:
@@ -28,21 +27,21 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "ScatterplotMatrixRenderer2D"; }
+    static const char* ClassName() { return "ScatterplotMatrixRenderer2D"; }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "Scatterplot matrix renderer for generic tables."; }
+    static const char* Description() { return "Scatterplot matrix renderer for generic tables."; }
 
     /**
      * Answers whether this module is available on the current system.
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable() { return true; }
 
     /**
      * Initialises a new instance.
@@ -52,7 +51,7 @@ public:
     /**
      * Finalises an instance.
      */
-    virtual ~ScatterplotMatrixRenderer2D();
+    ~ScatterplotMatrixRenderer2D() override;
 
 protected:
     /**
@@ -60,12 +59,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
     bool OnMouseButton(
         core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) override;
@@ -120,14 +119,14 @@ private:
         SPLOMPoints(const std::vector<PlotInfo>& plots, const stdplugin::datatools::table::TableDataCall* floatTable)
             : plots(plots), floatTable(floatTable) {}
 
-        inline size_t idx_to_row(size_t idx) const {
+        [[nodiscard]] inline size_t idx_to_row(size_t idx) const {
             const size_t rowCount = floatTable->GetRowsCount();
             return idx % rowCount;
         }
 
-        inline size_t kdtree_get_point_count() const { return floatTable->GetRowsCount() * plots.size(); }
+        [[nodiscard]] inline size_t kdtree_get_point_count() const { return floatTable->GetRowsCount() * plots.size(); }
 
-        inline float kdtree_get_pt(const size_t idx, const size_t dim) const {
+        [[nodiscard]] inline float kdtree_get_pt(const size_t idx, const size_t dim) const {
             const size_t rowCount = floatTable->GetRowsCount();
             const size_t rowIdx = idx % rowCount;
             const size_t plotIdx = idx / rowCount;
@@ -158,7 +157,7 @@ private:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(core::view::CallRender2D& call);
+    bool Render(core::view::CallRender2D& call) override;
 
     /**
      * The get extents callback. The module should set the members of
@@ -169,31 +168,31 @@ private:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(core::view::CallRender2D& call);
+    bool GetExtents(core::view::CallRender2D& call) override;
 
-    bool hasDirtyData(void) const;
+    bool hasDirtyData() const;
 
-    void resetDirtyData(void);
+    void resetDirtyData();
 
-    bool hasDirtyScreen(void) const;
+    bool hasDirtyScreen() const;
 
-    void resetDirtyScreen(void);
+    void resetDirtyScreen();
 
     bool validate(core::view::CallRender2D& call);
 
-    void updateColumns(void);
+    void updateColumns();
 
-    void drawMinimalisticAxis(void);
+    void drawMinimalisticAxis();
 
-    void drawScientificAxis(void);
+    void drawScientificAxis();
 
     void bindMappingUniforms(vislib::graphics::gl::GLSLShader& shader);
 
     void bindFlagsAttribute();
 
-    void drawPoints(void);
+    void drawPoints();
 
-    void drawLines(void);
+    void drawLines();
 
     void validateTriangulation();
 
@@ -319,7 +318,6 @@ private:
     std::unique_ptr<TreeIndex> index;
 };
 
-} // end namespace infovis
-} // end namespace megamol
+} // namespace megamol::infovis
 
 #endif // MEGAMOL_INFOVIS_SCATTERPLOTRENDERER2D_H_INCLUDED
