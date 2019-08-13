@@ -46,35 +46,36 @@ TransferFunctionEditor::TransferFunctionEditor(void)
     this->textureInvalid = true;
 }
 
-bool TransferFunctionEditor::SetTransferFunction(const std::string& tfs) {
+void TransferFunctionEditor::SetTransferFunction(const std::string& tfs) {
     if (activeParameter == nullptr) {
         vislib::sys::Log::DefaultLog.WriteWarn(
             "[TransferFunctionEditor] Load parameter before editing transfer function");
-        return false;
+        return;
     }
 
-    bool result = megamol::core::param::TransferFunctionParam::ParseTransferFunction(
+    bool ok = megamol::core::param::TransferFunctionParam::ParseTransferFunction(
         tfs, this->data, this->mode, this->textureSize, this->range);
-    if (result) {
-        // Check for required initial node data
-        assert(this->data.size() > 1);
-
-        this->currentNode = 0;
-        this->currentChannel = 0;
-        this->currentDragChange = ImVec2(0.0f, 0.0f);
-
-        this->widget_buffer.min_range = this->range[0];
-        this->widget_buffer.max_range = this->range[1];
-        this->widget_buffer.tex_size = this->textureSize;
-
-        this->widget_buffer.range_value =
-            (this->data[this->currentNode][4] * (this->range[1] - this->range[0])) + this->range[0];
-        this->widget_buffer.gauss_sigma = this->data[this->currentNode][5];
-
-        this->textureInvalid = true;
+    if (!ok) {
+        vislib::sys::Log::DefaultLog.WriteWarn("[TransferFunctionEditor] Could parse transfer function");
+        return;
     }
 
-    return result;
+    // Check for required initial node data
+    assert(this->data.size() > 1);
+
+    this->currentNode = 0;
+    this->currentChannel = 0;
+    this->currentDragChange = ImVec2(0.0f, 0.0f);
+
+    this->widget_buffer.min_range = this->range[0];
+    this->widget_buffer.max_range = this->range[1];
+    this->widget_buffer.tex_size = this->textureSize;
+
+    this->widget_buffer.range_value =
+        (this->data[this->currentNode][4] * (this->range[1] - this->range[0])) + this->range[0];
+    this->widget_buffer.gauss_sigma = this->data[this->currentNode][5];
+
+    this->textureInvalid = true;
 }
 
 bool TransferFunctionEditor::GetTransferFunction(std::string& tfs) {

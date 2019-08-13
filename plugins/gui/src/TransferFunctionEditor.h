@@ -47,7 +47,7 @@ public:
      *
      * @return True if string was successfully converted into transfer function data, false otherwise.
      */
-    bool SetTransferFunction(const std::string& tfs);
+    void SetTransferFunction(const std::string& tfs);
 
     /**
      * Get current transfer function data.
