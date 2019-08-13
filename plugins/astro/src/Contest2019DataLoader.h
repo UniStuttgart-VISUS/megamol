@@ -325,6 +325,9 @@ protected:
     /** Slot containing the number of files that should be loaded< */
     core::param::ParamSlot filesToLoad;
 
+    /** Slot determining whether the derivatives should be calculated */
+    core::param::ParamSlot calculateDerivatives;
+
     /** Slot to send the data over */
     core::CalleeSlot getDataSlot;
 

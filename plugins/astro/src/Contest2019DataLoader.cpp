@@ -441,7 +441,11 @@ Contest2019DataLoader::Contest2019DataLoader(void)
     , firstFilename("firstFilename", "The name of the first file to load")
     , filesToLoad("filesToLoad",
           "The total number of files that should be loaded. A value smaller than 0 means all available "
-          "ones from the first given are loaded.") {
+          "ones from the first given are loaded.")
+    , calculateDerivatives("calculateDerivatives",
+          "Enables the calculation of derivatives of all relevant values. "
+          "This option increases the frame loading time significantly. The effect of this slot might be delayed as "
+          "already existing frames are not re-evaluated.") {
 
     this->getDataSlot.SetCallback(AstroDataCall::ClassName(),
         AstroDataCall::FunctionName(AstroDataCall::CallForGetData), &Contest2019DataLoader::getDataCallback);
@@ -456,6 +460,9 @@ Contest2019DataLoader::Contest2019DataLoader(void)
     this->filesToLoad.SetParameter(new param::IntParam(-1));
     this->filesToLoad.SetUpdateCallback(&Contest2019DataLoader::filenameChangedCallback);
     this->MakeSlotAvailable(&this->filesToLoad);
+
+    this->calculateDerivatives.SetParameter(new param::BoolParam(true));
+    this->MakeSlotAvailable(&this->calculateDerivatives);
 
     // static bounding box size, because we know (TM)
     this->boundingBox = vislib::math::Cuboid<float>(0.0f, 0.0f, 0.0f, 64.0f, 64.0f, 64.0f);
@@ -522,18 +529,21 @@ void Contest2019DataLoader::loadFrame(view::AnimDataModule::Frame* frame, unsign
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to read frame %d from file\n", idx);
         }
     }
-    if (!filenameBefore.empty()) {
+    bool calcDerivatives = this->calculateDerivatives.Param<param::BoolParam>()->Value();
+    if (!filenameBefore.empty() && calcDerivatives) {
         if (!fbefore->LoadFrame(filenameBefore, frameIDBefore, redshiftBefore)) {
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to read frame before frame %d from file\n", idx);
         }
     }
-    if (!filenameAfter.empty()) {
+    if (!filenameAfter.empty() && calcDerivatives) {
         if (!fafter->LoadFrame(filenameAfter, frameIDAfter, redshiftAfter)) {
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to read frame after frame %d from file\n", idx);
         }
     }
     f->ZeroDerivatives();
-    f->CalculateDerivatives(fbefore, fafter);
+    if (calcDerivatives) {
+        f->CalculateDerivatives(fbefore, fafter);
+    }
     delete fbefore;
     delete fafter;
 }
