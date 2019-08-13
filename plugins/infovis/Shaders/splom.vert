@@ -58,5 +58,9 @@ void main() {
     vsPosition = valuesToPosition(plot, 
         vec2(values[rowOffset + plot.indexX],
         values[rowOffset + plot.indexY]));
-    gl_Position = modelViewProjection * vsPosition;
+    if (bitflag_test(flags[gl_VertexID], FLAG_ENABLED | FLAG_FILTERED, FLAG_ENABLED)) {
+        gl_Position = modelViewProjection * vsPosition;
+    } else {
+        gl_Position = vec4(0.0); // clipping cheat
+    }
 }
