@@ -40,6 +40,8 @@ private:
 
     bool getLSUDataCallback(core::Call& c);
 
+    bool getAbsorptionDataCallback(core::Call& c);
+
     bool dummyCallback(megamol::core::Call& c) { return true; }
 
     bool createVolumeCPU(core::misc::VolumetricDataCall const& volumeIn, core::misc::VolumetricDataCall const& tempIn,
@@ -47,6 +49,10 @@ private:
         AstroDataCall& astroIn);
 
     bool createBremsstrahlungVolume(core::misc::VolumetricDataCall const& volumeIn,
+        core::misc::VolumetricDataCall const& tempIn, core::misc::VolumetricDataCall const& massIn,
+        core::misc::VolumetricDataCall const& mwIn, AstroDataCall& astroIn);
+
+    bool createAbsorptionVolume(core::misc::VolumetricDataCall const& volumeIn,
         core::misc::VolumetricDataCall const& tempIn, core::misc::VolumetricDataCall const& massIn,
         core::misc::VolumetricDataCall const& mwIn, AstroDataCall& astroIn);
 
@@ -80,6 +86,8 @@ private:
     core::CalleeSlot volume_out_slot_;
 
     core::CalleeSlot lsu_out_slot_;
+
+    core::CalleeSlot absorption_out_slot_;
 
     core::param::ParamSlot xResSlot;
     core::param::ParamSlot yResSlot;

@@ -439,7 +439,9 @@ private:
 
     std::unique_ptr<vislib::graphics::gl::GLSLComputeShader> m_raycast_volume_compute_shdr;
     std::unique_ptr<vislib::graphics::gl::GLSLComputeShader> m_raycast_volume_compute_iso_shdr;
+    std::unique_ptr<vislib::graphics::gl::GLSLComputeShader> m_raycast_volume_compute_aggr_shdr;
     std::unique_ptr<vislib::graphics::gl::GLSLShader> m_render_to_framebuffer_shdr;
+    std::unique_ptr<vislib::graphics::gl::GLSLShader> m_render_to_framebuffer_aggr_shdr;
 
     std::unique_ptr<Texture2D> m_render_target;
     std::unique_ptr<Texture2D> m_normal_target;
@@ -464,6 +466,20 @@ private:
     core::param::ParamSlot m_ray_step_ratio_param;
     core::param::ParamSlot m_opacity_threshold;
     core::param::ParamSlot m_iso_value;
+
+    core::param::ParamSlot m_use_lighting_slot;
+    core::param::ParamSlot m_ka_slot;
+    core::param::ParamSlot m_kd_slot;
+    core::param::ParamSlot m_ks_slot;
+    core::param::ParamSlot m_shininess_slot;
+    core::param::ParamSlot m_ambient_color;
+    core::param::ParamSlot m_specular_color;
+    core::param::ParamSlot m_light_color;
+    core::param::ParamSlot m_material_color;
+
+    core::param::ParamSlot paramOverride;
+    core::param::ParamSlot paramMinOverride;
+    core::param::ParamSlot paramMaxOverride;
 
     /** caller slot */
     megamol::core::CallerSlot m_renderer_callerSlot;
