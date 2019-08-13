@@ -23,6 +23,7 @@ megamol::astro::SpectralIntensityVolume::SpectralIntensityVolume()
     , astro_in_slot_("astroIn", "Input of astro particles")
     , volume_out_slot_("volumeOut", "Output of spectral intensity volume")
     , lsu_out_slot_("lsuOut", "Output of Bremsstrahlungs volume")
+    , absorption_out_slot_("absorptionOut", "Output of Absorption volume")
     , xResSlot("sizex", "The size of the volume in numbers of voxels")
     , yResSlot("sizey", "The size of the volume in numbers of voxels")
     , zResSlot("sizez", "The size of the volume in numbers of voxels")
@@ -85,6 +86,26 @@ megamol::astro::SpectralIntensityVolume::SpectralIntensityVolume()
         core::misc::VolumetricDataCall::FunctionName(core::misc::VolumetricDataCall::IDX_TRY_GET_DATA),
         &SpectralIntensityVolume::dummyCallback);
     this->MakeSlotAvailable(&this->lsu_out_slot_);
+
+    this->absorption_out_slot_.SetCallback(core::misc::VolumetricDataCall::ClassName(),
+        core::misc::VolumetricDataCall::FunctionName(core::misc::VolumetricDataCall::IDX_GET_DATA),
+        &SpectralIntensityVolume::getAbsorptionDataCallback);
+    this->absorption_out_slot_.SetCallback(core::misc::VolumetricDataCall::ClassName(),
+        core::misc::VolumetricDataCall::FunctionName(core::misc::VolumetricDataCall::IDX_GET_EXTENTS),
+        &SpectralIntensityVolume::getExtentCallback);
+    this->absorption_out_slot_.SetCallback(core::misc::VolumetricDataCall::ClassName(),
+        core::misc::VolumetricDataCall::FunctionName(core::misc::VolumetricDataCall::IDX_GET_METADATA),
+        &SpectralIntensityVolume::getExtentCallback);
+    this->absorption_out_slot_.SetCallback(core::misc::VolumetricDataCall::ClassName(),
+        core::misc::VolumetricDataCall::FunctionName(core::misc::VolumetricDataCall::IDX_START_ASYNC),
+        &SpectralIntensityVolume::dummyCallback);
+    this->absorption_out_slot_.SetCallback(core::misc::VolumetricDataCall::ClassName(),
+        core::misc::VolumetricDataCall::FunctionName(core::misc::VolumetricDataCall::IDX_STOP_ASYNC),
+        &SpectralIntensityVolume::dummyCallback);
+    this->absorption_out_slot_.SetCallback(core::misc::VolumetricDataCall::ClassName(),
+        core::misc::VolumetricDataCall::FunctionName(core::misc::VolumetricDataCall::IDX_TRY_GET_DATA),
+        &SpectralIntensityVolume::dummyCallback);
+    this->MakeSlotAvailable(&this->absorption_out_slot_);
 
     this->xResSlot << new core::param::IntParam(16);
     this->MakeSlotAvailable(&this->xResSlot);
@@ -365,6 +386,139 @@ bool megamol::astro::SpectralIntensityVolume::getLSUDataCallback(core::Call& c) 
         this->time != mdc->FrameID() || this->time != mwdc->FrameID() || this->in_datahash != ast->DataHash() ||
         this->anythingDirty()) {
         if (!this->createBremsstrahlungVolume(*vdc, *tdc, *mdc, *mwdc, *ast)) return false;
+        this->time = ast->FrameID();
+        this->in_datahash = ast->DataHash();
+        ++this->datahash;
+        this->resetDirty();
+    }
+
+    // TODO set data
+    outVol->SetData(this->vol_[0].data());
+    metadata.Components = 1; //< TODO Maybe we want several wavelengths simultaneously
+    metadata.GridType = core::misc::GridType_t::CARTESIAN;
+    metadata.Resolution[0] = static_cast<size_t>(this->xResSlot.Param<core::param::IntParam>()->Value());
+    metadata.Resolution[1] = static_cast<size_t>(this->yResSlot.Param<core::param::IntParam>()->Value());
+    metadata.Resolution[2] = static_cast<size_t>(this->zResSlot.Param<core::param::IntParam>()->Value());
+    metadata.ScalarType = core::misc::ScalarType_t::FLOATING_POINT;
+    metadata.ScalarLength = sizeof(float);
+    metadata.MinValues = new double[1];
+    metadata.MinValues[0] = this->min_dens_;
+    metadata.MaxValues = new double[1];
+    metadata.MaxValues[0] = this->max_dens_;
+    auto const bbox = ast->AccessBoundingBoxes().ObjectSpaceBBox();
+    metadata.Extents[0] = bbox.Width();
+    metadata.Extents[1] = bbox.Height();
+    metadata.Extents[2] = bbox.Depth();
+    metadata.NumberOfFrames = 1;
+    metadata.SliceDists[0] = new float[1];
+    metadata.SliceDists[0][0] = metadata.Extents[0] / static_cast<float>(metadata.Resolution[0] - 1);
+    metadata.SliceDists[1] = new float[1];
+    metadata.SliceDists[1][0] = metadata.Extents[1] / static_cast<float>(metadata.Resolution[1] - 1);
+    metadata.SliceDists[2] = new float[1];
+    metadata.SliceDists[2][0] = metadata.Extents[2] / static_cast<float>(metadata.Resolution[2] - 1);
+
+    metadata.Origin[0] = bbox.Left();
+    metadata.Origin[1] = bbox.Bottom();
+    metadata.Origin[2] = bbox.Back();
+
+    metadata.IsUniform[0] = true;
+    metadata.IsUniform[1] = true;
+    metadata.IsUniform[2] = true;
+    outVol->SetMetadata(&metadata);
+
+    outVol->SetDataHash(this->datahash);
+
+    return true;
+}
+
+
+bool megamol::astro::SpectralIntensityVolume::getAbsorptionDataCallback(core::Call& c) {
+    auto* ast = this->astro_in_slot_.CallAs<AstroDataCall>();
+    if (ast == nullptr) return false;
+
+    auto* vdc = this->volume_in_slot_.CallAs<core::misc::VolumetricDataCall>();
+    if (vdc == nullptr) return false;
+
+    auto* tdc = this->temp_in_slot_.CallAs<core::misc::VolumetricDataCall>();
+    if (tdc == nullptr) return false;
+
+    auto* mdc = this->mass_in_slot_.CallAs<core::misc::VolumetricDataCall>();
+    if (mdc == nullptr) return false;
+
+    auto* mwdc = this->mw_in_slot_.CallAs<core::misc::VolumetricDataCall>();
+    if (mwdc == nullptr) return false;
+
+    auto* outVol = dynamic_cast<core::misc::VolumetricDataCall*>(&c);
+    if (outVol == nullptr) return false;
+
+    ast->SetFrameID(outVol->FrameID(), true);
+    vdc->SetFrameID(outVol->FrameID(), true);
+    tdc->SetFrameID(outVol->FrameID(), true);
+    mdc->SetFrameID(outVol->FrameID(), true);
+    mwdc->SetFrameID(outVol->FrameID(), true);
+    if (!(*ast)(1)) {
+        vislib::sys::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get extents.");
+        return false;
+    }
+    if (!(*ast)(0)) {
+        vislib::sys::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get data.");
+        return false;
+    }
+    if (!(*vdc)(core::misc::VolumetricDataCall::IDX_GET_METADATA)) {
+        vislib::sys::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get volume metadata.");
+        return false;
+    }
+    if (!(*vdc)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS)) {
+        vislib::sys::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get volume extents.");
+        return false;
+    }
+    if (!(*vdc)(core::misc::VolumetricDataCall::IDX_GET_DATA)) {
+        vislib::sys::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get volume data.");
+        return false;
+    }
+    if (!(*tdc)(core::misc::VolumetricDataCall::IDX_GET_METADATA)) {
+        vislib::sys::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get temperature volume metadata.");
+        return false;
+    }
+    if (!(*tdc)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS)) {
+        vislib::sys::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get temperature volume extents.");
+        return false;
+    }
+    if (!(*tdc)(core::misc::VolumetricDataCall::IDX_GET_DATA)) {
+        vislib::sys::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get temperature volume data.");
+        return false;
+    }
+    if (!(*mdc)(core::misc::VolumetricDataCall::IDX_GET_METADATA)) {
+        vislib::sys::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get mass volume metadata.");
+        return false;
+    }
+    if (!(*mdc)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS)) {
+        vislib::sys::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get mass volume extents.");
+        return false;
+    }
+    if (!(*mdc)(core::misc::VolumetricDataCall::IDX_GET_DATA)) {
+        vislib::sys::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get mass volume data.");
+        return false;
+    }
+
+    if (!(*mwdc)(core::misc::VolumetricDataCall::IDX_GET_METADATA)) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "SpectralIntensityVolume: Unable to get molecular weight volume metadata.");
+        return false;
+    }
+    if (!(*mwdc)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS)) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "SpectralIntensityVolume: Unable to get molecular weight volume extents.");
+        return false;
+    }
+    if (!(*mwdc)(core::misc::VolumetricDataCall::IDX_GET_DATA)) {
+        vislib::sys::Log::DefaultLog.WriteError("SpectralIntensityVolume: Unable to get molecular weight volume data.");
+        return false;
+    }
+    if (this->time != ast->FrameID() || this->time != vdc->FrameID() || this->time != tdc->FrameID() ||
+        this->time != mdc->FrameID() || this->time != mwdc->FrameID() || this->in_datahash != ast->DataHash() ||
+        this->anythingDirty()) {
+        if (!this->createAbsorptionVolume(*vdc, *tdc, *mdc, *mwdc, *ast)) return false;
         this->time = ast->FrameID();
         this->in_datahash = ast->DataHash();
         ++this->datahash;
@@ -838,6 +992,104 @@ bool megamol::astro::SpectralIntensityVolume::createBremsstrahlungVolume(core::m
     vol_[0].resize(numCells);
     std::transform(density, density + numCells, temperature, vol_[0].begin(),
         [cell_vol](float d, float t) { return d * d * std::sqrt(t) * cell_vol; });
+
+    max_dens_ = *std::max_element(vol_[0].begin(), vol_[0].end());
+    min_dens_ = *std::min_element(vol_[0].begin(), vol_[0].end());
+    vislib::sys::Log::DefaultLog.WriteInfo(
+        "SpectralIntensityVolume: Captured intensity %f -> %f", min_dens_, max_dens_);
+
+    if (this->normalizeSlot.Param<core::param::BoolParam>()->Value()) {
+        auto const rcpValRange = 1.0f / (max_dens_ - min_dens_);
+        std::transform(vol_[0].begin(), vol_[0].end(), vol_[0].begin(),
+            [this, rcpValRange](float const& a) { return (a - min_dens_) * rcpValRange; });
+        min_dens_ = 0.0f;
+        max_dens_ = 1.0f;
+    }
+
+    return true;
+}
+
+
+bool megamol::astro::SpectralIntensityVolume::createAbsorptionVolume(core::misc::VolumetricDataCall const& volumeIn,
+    core::misc::VolumetricDataCall const& tempIn, core::misc::VolumetricDataCall const& massIn,
+    core::misc::VolumetricDataCall const& mwIn, AstroDataCall& astroIn) {
+    vislib::sys::Log::DefaultLog.WriteInfo("SpectralIntensityVolume: Starting volume creation.");
+
+    sx = this->xResSlot.Param<core::param::IntParam>()->Value();
+    sy = this->yResSlot.Param<core::param::IntParam>()->Value();
+    sz = this->zResSlot.Param<core::param::IntParam>()->Value();
+
+    auto numCells = sx * sy * sz;
+
+
+    // prepare input mass
+    auto metadata = massIn.GetMetadata();
+    auto mass = reinterpret_cast<float const*>(massIn.GetData());
+
+    auto vol_min = metadata->MinValues[0];
+    auto vol_max = metadata->MaxValues[0];
+
+    auto vol_sx = metadata->Resolution[0];
+    auto vol_sy = metadata->Resolution[1];
+    auto vol_sz = metadata->Resolution[2];
+
+    auto vol_disx = metadata->SliceDists[0][0];
+    auto vol_disy = metadata->SliceDists[1][0];
+    auto vol_disz = metadata->SliceDists[2][0];
+
+    // prepare input temperature
+    metadata = tempIn.GetMetadata();
+    auto temperature = reinterpret_cast<float const*>(tempIn.GetData());
+
+    auto temp_vol_min = metadata->MinValues[0];
+    auto temp_vol_max = metadata->MaxValues[0];
+
+    auto temp_vol_sx = metadata->Resolution[0];
+    auto temp_vol_sy = metadata->Resolution[1];
+    auto temp_vol_sz = metadata->Resolution[2];
+
+    // prepare input molecular weight
+    metadata = tempIn.GetMetadata();
+    auto mw = reinterpret_cast<float const*>(tempIn.GetData());
+
+    auto mw_vol_min = metadata->MinValues[0];
+    auto mw_vol_max = metadata->MaxValues[0];
+
+    auto mw_vol_sx = metadata->Resolution[0];
+    auto mw_vol_sy = metadata->Resolution[1];
+    auto mw_vol_sz = metadata->Resolution[2];
+
+
+    if (vol_sx != temp_vol_sx || vol_sy != temp_vol_sy || vol_sz != temp_vol_sz || vol_sx != mw_vol_sx ||
+        vol_sy != mw_vol_sy || vol_sz != mw_vol_sz) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "SpectralIntensityVolume: Density and temperature volume are not compatible. Aborting.");
+        return false;
+    }
+
+    if (vol_sx != sx || vol_sy != sy || vol_sz != sz) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "SpectralIntensityVolume: Selected resolution not compatible to input. Resetting to %d %d %d.", vol_sx,
+            vol_sy, vol_sz);
+        sx = vol_sx;
+        sy = vol_sy;
+        sz = vol_sz;
+    }
+
+    numCells = vol_sx * vol_sy * vol_sz;
+
+    auto const cell_vol = vol_disx * vol_disy * vol_disz;
+    vol_.resize(1);
+    vol_[0].resize(numCells);
+    std::transform(mw, mw + numCells, temperature, vol_[0].begin(), [](float mw, float t) {
+        return 0.018 * std::pow(static_cast<double>(t), -1.5) * 0.0134 * 0.0134 * static_cast<double>(mw) * 1.2;
+    });
+    std::transform(mass, mass + numCells, vol_[0].cbegin(), vol_[0].begin(), [](float m, double o) { return o / m; });
+    auto const minmax_optical = std::minmax_element(vol_[0].cbegin(), vol_[0].cend());
+    auto const min_optical = *minmax_optical.first;
+    auto const minmax_optical_rcp = 1.0 / (*minmax_optical.second - min_optical);
+    std::transform(vol_[0].cbegin(), vol_[0].cend(), vol_[0].begin(),
+        [min_optical, minmax_optical_rcp](float o) { return (o - min_optical) * minmax_optical_rcp; });
 
     max_dens_ = *std::max_element(vol_[0].begin(), vol_[0].end());
     min_dens_ = *std::min_element(vol_[0].begin(), vol_[0].end());
