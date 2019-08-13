@@ -26,6 +26,7 @@
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/param/Vector2fParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/ButtonParam.h"
@@ -346,6 +347,8 @@ namespace moldyn {
         /*********************************************************************/
 
         megamol::core::param::ParamSlot renderModeParam;
+        megamol::core::param::ParamSlot tfRangeParam;
+        megamol::core::param::ParamSlot setTfRangeParam;
         megamol::core::param::ParamSlot radiusScalingParam;
         megamol::core::param::ParamSlot forceTimeSlot;
         megamol::core::param::ParamSlot useLocalBBoxParam;
@@ -372,6 +375,15 @@ namespace moldyn {
         /*********************************************************************/
         /* FUNCTIONS                                                         */
         /*********************************************************************/
+
+        /**
+         * Callback for processing button press.
+         *
+         * @param p  The calling parameter slot.
+         *
+         * @return 'True' on success, 'false' otherwise.
+         */
+        bool onToggleButton(param::ParamSlot& p);
 
         /**
          * Return specified render mode as human readable string.
@@ -535,6 +547,7 @@ namespace moldyn {
          * @param declaration  ...
          * @param interleaved  ...
          *
+         * @return 'True' on success, 'false' otherwise.
          */
         bool makeColorString(const MultiParticleDataCall::Particles &parts, std::string &outCode, std::string &outDeclaration, bool interleaved);
 
@@ -545,6 +558,8 @@ namespace moldyn {
          * @param code         ...
          * @param declaration  ...
          * @param interleaved  ...
+         *
+         * @return 'True' on success, 'false' otherwise.
          */
         bool makeVertexString(const MultiParticleDataCall::Particles &parts, std::string &outCode, std::string &outDeclaration, bool interleaved);
 
@@ -553,6 +568,8 @@ namespace moldyn {
          *
          * @param vert  ...
          * @param frag  ...
+         *
+         * @return ...
          */
         std::shared_ptr<GLSLShader> makeShader(const vislib::SmartPtr<ShaderSource> vert, const vislib::SmartPtr<ShaderSource> frag);
 
@@ -561,6 +578,7 @@ namespace moldyn {
          *
          * @param parts  ...
          *
+         * @return ...
          */
         std::shared_ptr<GLSLShader> generateShader(const MultiParticleDataCall::Particles &parts);
 

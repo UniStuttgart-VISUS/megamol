@@ -327,9 +327,9 @@ bool TransferFunctionParam::CheckTransferFunctionData(const TFDataType& data, co
                 check = false;
             }
         }
-        if (last_value >= a[4]) {
+        if (last_value > a[4]) {
             vislib::sys::Log::DefaultLog.WriteError(
-                "[TransferFunction] 'Values' should be sorted from 0 to 1 and all 'Values' must be distinct.");
+                "[TransferFunction] 'Values' should be sorted from 0 to 1.");
             return false;
         } else {
             last_value = a[4];

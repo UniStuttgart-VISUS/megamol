@@ -203,6 +203,8 @@ public:
      *
      * @param range The range.
      */
+    ///NB: This function should only be called from within transfer function module.
+    ///    So far no consistent concept of updated data propagation from renderer to transfer function param in module could be found.
     inline void SetRange(std::array<float, 2> range) { this->range = range; }
 
     /**

@@ -71,7 +71,8 @@ GUIView::GUIView()
     , widgtmap_int()
     , widgtmap_vec2()
     , widgtmap_vec3()
-    , widgtmap_vec4() {
+    , widgtmap_vec4()
+    , wdgetmap_tf() {
 
     this->render_view_slot.SetCompatibleCall<core::view::CallRenderViewDescription>();
     this->MakeSlotAvailable(&this->render_view_slot);
@@ -1466,12 +1467,15 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
                 p->SetValue(value);
             }
         } else if (auto* p = slot.template Param<core::param::ButtonParam>()) {
-            std::string hotkey = " (";
-            hotkey.append(p->GetKeyCode().ToString());
-            hotkey.append(")");
-            // no check if hidden label tag '###' is found -> should be present (see obove)
+            std::string hotkey = "";
+            std::string buttonHotkey = p->GetKeyCode().ToString();
+            if (!buttonHotkey.empty()) {
+                hotkey = " (" + buttonHotkey + ")";
+            }
             auto insert_pos = param_label.find("###");
-            param_label.insert(insert_pos, hotkey);
+            if (insert_pos == std::string::npos) {
+                param_label.insert(insert_pos, hotkey);
+            }
             if (ImGui::Button(param_label.c_str())) {
                 p->setDirty();
             }
@@ -1485,17 +1489,22 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
                    "[CTRL+Click] on individual component to input value.\n"
                    "[Right-Click] on the individual color widget to show options.";
         } else if (auto* p = slot.template Param<core::param::TransferFunctionParam>()) {
+            auto it = this->wdgetmap_tf.find(param_id);
+            if (it == this->wdgetmap_tf.end()) {
+                this->wdgetmap_tf.emplace(param_id, p->Value());
+                it = this->wdgetmap_tf.find(param_id);
+            }
+
             ImGui::Separator();
             ImGui::Text(param_name.c_str());
-
-            bool load_tf = false;
+            bool update_param_tfeditor = false;
             param_label = "Load into Editor###editor" + param_id;
-            if (p == this->tf_editor.GetActiveParameter()) {
+            if (this->tf_editor.IsParameterActive(p)) {
                 param_label = "Open Editor###editor" + param_id;
             }
             if (ImGui::Button(param_label.c_str())) {
                 this->tf_editor.SetActiveParameter(p);
-                load_tf = true;
+                update_param_tfeditor = true;
                 // Open window calling the transfer function editor callback
                 const auto func = [&, this](const std::string& wn, WindowManager::WindowConfiguration& wc) {
                     if (wc.win_callback == WindowManager::DrawCallbacks::TF) {
@@ -1507,42 +1516,47 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
             ImGui::SameLine();
             param_label = "Reset###reset" + param_id;
             if (ImGui::Button(param_label.c_str())) {
-                p->SetValue("");
-                load_tf = true;
+                it->second = "";
+                update_param_tfeditor = true;
             }
-            if (p == this->tf_editor.GetActiveParameter()) {
+            if (this->tf_editor.IsParameterActive(p)) {
                 ImGui::TextColored(style.Colors[ImGuiCol_ButtonActive], "Currently loaded into Editor");
             }
 
             // Print JSON string
             ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
             ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
-            std::string json = p->Value();
             ImVec2 ml_dim = ImVec2(ImGui::CalcItemWidth(),
                 ImGui::GetFrameHeight() + (ImGui::GetFontSize() * static_cast<float>(GUI_MAX_MULITLINE)));
-            ImGui::InputTextMultiline("JSON", &json, ml_dim, ImGuiInputTextFlags_None);
+            ImGui::InputTextMultiline("JSON", &it->second, ml_dim, ImGuiInputTextFlags_None);
             ImGui::PopItemFlag();
             ImGui::PopStyleVar();
 
             param_label = "Copy to Clipboard###clipboard" + param_id;
             if (ImGui::Button(param_label.c_str())) {
-                ImGui::SetClipboardText(p->Value().c_str());
+                ImGui::SetClipboardText(it->second.c_str());
             }
             ImGui::SameLine();
             param_label = "Copy from Clipboard###fclipboard" + param_id;
             if (ImGui::Button(param_label.c_str())) {
-                p->SetValue(ImGui::GetClipboardText());
-                load_tf = true;
+                it->second = ImGui::GetClipboardText();
+                update_param_tfeditor = true;
+            }
+            ImGui::Separator();
+
+            // Check if parameter value has changed
+            if (p->Value() != it->second) {
+                it->second = p->Value();
+                update_param_tfeditor = true;
             }
 
             // Loading new transfer function string from parameter into editor
-            if (load_tf && (p == this->tf_editor.GetActiveParameter())) {
-                if (!this->tf_editor.SetTransferFunction(p->Value())) {
+            if (update_param_tfeditor && this->tf_editor.IsParameterActive(p)) {
+                if (!this->tf_editor.SetTransferFunction(it->second)) {
                     vislib::sys::Log::DefaultLog.WriteWarn(
                         "[GUIView] Could not load transfer function of parameter: %s.", param_id.c_str());
                 }
             }
-            ImGui::Separator();
         } else if (auto* p = slot.template Param<core::param::EnumParam>()) {
             /// XXX: no UTF8 fanciness required here?
             auto map = p->getMap();

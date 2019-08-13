@@ -169,6 +169,7 @@ private:
     std::map<std::string, vislib::math::Vector<float, 2>> widgtmap_vec2;
     std::map<std::string, vislib::math::Vector<float, 3>> widgtmap_vec3;
     std::map<std::string, vislib::math::Vector<float, 4>> widgtmap_vec4;
+    std::map<std::string, std::string> wdgetmap_tf;
 
     // FUNCTIONS --------------------------------------------------------------
 

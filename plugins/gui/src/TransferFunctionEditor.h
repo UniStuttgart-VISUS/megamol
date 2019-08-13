@@ -64,7 +64,7 @@ public:
     /**
      * Get the currently active parameter.
      */
-    core::param::TransferFunctionParam* GetActiveParameter(void) { return this->activeParameter; }
+    bool IsParameterActive(const core::param::TransferFunctionParam* param) { return (param == this->activeParameter); }
 
 private:
     /** The global input widget state buffer. */

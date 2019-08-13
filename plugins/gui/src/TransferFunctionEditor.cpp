@@ -78,7 +78,7 @@ bool TransferFunctionEditor::SetTransferFunction(const std::string& tfs) {
 }
 
 bool TransferFunctionEditor::GetTransferFunction(std::string& tfs) {
-    return megamol::core::param::TransferFunctionParam::DumpTransferFunction(
+    return param::TransferFunctionParam::DumpTransferFunction(
         tfs, this->data, this->mode, this->textureSize, this->range);
 }
 
@@ -94,6 +94,7 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
         ImGui::TextColored(ImVec4(0.9f, 0.0f, 0.0f, 1.0f), "Changes have no effect.\n"
                                                            "Please load transfer function parameter.\n");
     }
+
     // Check for required initial node data
     assert(this->data.size() > 1);
     // Check if selected node is still in range
@@ -391,6 +392,7 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
                 this->range[0] = this->range[1] - 0.000001f;
             }
             this->widget_buffer.min_range = this->range[0];
+            this->textureInvalid = true;
         }
         ImGui::SameLine();
 
@@ -402,6 +404,7 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
                 this->range[1] = this->range[0] + 0.000001f;
             }
             this->widget_buffer.max_range = this->range[1];
+            this->textureInvalid = true;
         }
         ImGui::PopItemWidth();
         ImGui::SameLine();

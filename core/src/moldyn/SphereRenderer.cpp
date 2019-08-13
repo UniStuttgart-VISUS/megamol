@@ -90,8 +90,10 @@ moldyn::SphereRenderer::SphereRenderer(void) : view::Renderer3DModule()
     , radiusScalingParam("scaling", "Scaling factor for particle radii.")
     , forceTimeSlot("forceTime", "Flag to force the time code to the specified value. Set to true when rendering a video.")
     , useLocalBBoxParam("useLocalBbox", "Enforce usage of local bbox for camera setup")
-    , selectColorParam("selectedColor", "Color for selected spheres in flag storage.")
-    , softSelectColorParam("softSelectedColor", "Color for soft selected spheres in flag storage.")
+    , tfRangeParam("transfer function::colorIndexRange", "The current color index range. To be used as range in transfer function editor. ")
+    , setTfRangeParam("transfer function::setColorIndexRange", "Propagates the current color index range to the connected transfer function.")
+    , selectColorParam("flag storage::selectedColor", "Color for selected spheres in flag storage.")
+    , softSelectColorParam("flag storage::softSelectedColor", "Color for soft selected spheres in flag storage.")
     , alphaScalingParam("splat::alphaScaling", "Splat: Scaling factor for particle alpha.")
     , attenuateSubpixelParam(
         "splat::attenuateSubpixel", "Splat: Attenuate alpha of points that should have subpixel size.")
@@ -131,7 +133,7 @@ moldyn::SphereRenderer::SphereRenderer(void) : view::Renderer3DModule()
     this->renderModeParam << rmp;
     this->MakeSlotAvailable(&this->renderModeParam);
 
-    this->radiusScalingParam << new core::param::FloatParam(1.0f);
+    this->radiusScalingParam << new param::FloatParam(1.0f);
     this->MakeSlotAvailable(&this->radiusScalingParam);
 
     this->forceTimeSlot.SetParameter(new param::BoolParam(false));
@@ -140,43 +142,51 @@ moldyn::SphereRenderer::SphereRenderer(void) : view::Renderer3DModule()
     this->useLocalBBoxParam << new param::BoolParam(false);
     this->MakeSlotAvailable(&this->useLocalBBoxParam);
 
+    this->tfRangeParam << new param::Vector2fParam(vislib::math::Vector<float, 2>(0.0f, 0.0f));
+    this->MakeSlotAvailable(&this->tfRangeParam);
+    this->tfRangeParam.Param<param::Vector2fParam>()->SetGUIReadOnly(true);
+
+    this->setTfRangeParam << new param::ButtonParam();
+    this->setTfRangeParam.SetUpdateCallback(&moldyn::SphereRenderer::onToggleButton);
+    this->MakeSlotAvailable(&this->setTfRangeParam);
+
     this->selectColorParam << new param::ColorParam(1.0f, 0.0f, 0.0f, 1.0f);
     this->MakeSlotAvailable(&this->selectColorParam);
 
     this->softSelectColorParam << new param::ColorParam(1.0f, 0.5f, 0.5f, 1.0f);
     this->MakeSlotAvailable(&this->softSelectColorParam);
 
-    this->alphaScalingParam << new core::param::FloatParam(5.0f);
+    this->alphaScalingParam << new param::FloatParam(5.0f);
     this->MakeSlotAvailable(&this->alphaScalingParam);
 
-    this->attenuateSubpixelParam << new core::param::BoolParam(false);
+    this->attenuateSubpixelParam << new param::BoolParam(false);
     this->MakeSlotAvailable(&this->attenuateSubpixelParam);
 
-    this->useStaticDataParam << new core::param::BoolParam(false);
+    this->useStaticDataParam << new param::BoolParam(false);
     this->MakeSlotAvailable(&this->useStaticDataParam);
 
-    this->enableLightingSlot << (new core::param::BoolParam(false));
+    this->enableLightingSlot << (new param::BoolParam(false));
     this->MakeSlotAvailable(&this->enableLightingSlot);
 
-    this->enableGeometryShader << (new core::param::BoolParam(false));
+    this->enableGeometryShader << (new param::BoolParam(false));
     this->MakeSlotAvailable(&this->enableGeometryShader);
 
-    this->aoVolSizeSlot << (new core::param::IntParam(128, 1, 1024));
+    this->aoVolSizeSlot << (new param::IntParam(128, 1, 1024));
     this->MakeSlotAvailable(&this->aoVolSizeSlot);
 
-    this->aoConeApexSlot << (new core::param::FloatParam(50.0f, 1.0f, 90.0f));
+    this->aoConeApexSlot << (new param::FloatParam(50.0f, 1.0f, 90.0f));
     this->MakeSlotAvailable(&this->aoConeApexSlot);
 
-    this->aoOffsetSlot << (new core::param::FloatParam(0.01f, 0.0f, 0.2f));
+    this->aoOffsetSlot << (new param::FloatParam(0.01f, 0.0f, 0.2f));
     this->MakeSlotAvailable(&this->aoOffsetSlot);
 
-    this->aoStrengthSlot << (new core::param::FloatParam(1.0f, 0.1f, 20.0f));
+    this->aoStrengthSlot << (new param::FloatParam(1.0f, 0.1f, 20.0f));
     this->MakeSlotAvailable(&this->aoStrengthSlot);
 
-    this->aoConeLengthSlot << (new core::param::FloatParam(0.8f, 0.01f, 1.0f));
+    this->aoConeLengthSlot << (new param::FloatParam(0.8f, 0.01f, 1.0f));
     this->MakeSlotAvailable(&this->aoConeLengthSlot);
 
-    this->useHPTexturesSlot << (new core::param::BoolParam(false));
+    this->useHPTexturesSlot << (new param::BoolParam(false));
     this->MakeSlotAvailable(&this->useHPTexturesSlot);
 }
 
@@ -261,7 +271,7 @@ bool moldyn::SphereRenderer::create(void) {
 
     // Check initial render mode
     if (!this->isRenderModeAvailable(this->renderMode)) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Render mode: %s is not available - falling back to SIMPLE render mode.",
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, "[SphereRenderer] Render mode: %s is not available - falling back to SIMPLE render mode.",
             (this->getRenderModeString(this->renderMode)).c_str());
         // Always available fallback render mode
         this->renderMode = RenderMode::SIMPLE;
@@ -273,7 +283,7 @@ bool moldyn::SphereRenderer::create(void) {
     }
 
     // timer.SetNumRegions(4);
-    // const char *regions[4] = {"Upload1", "Upload2", "Upload3", "Rendering"};
+    // const char *regions[4] = {"Upload1", "Upload2", "Upload3", "Rendering"};megamol::
     // timer.SetRegionNames(4, regions);
     // timer.SetStatisticsFileName("fullstats.csv");
     // timer.SetSummaryFileName("summary.csv");
@@ -291,6 +301,11 @@ void moldyn::SphereRenderer::release(void) {
 
 bool moldyn::SphereRenderer::resetResources(void) {
 
+    this->selectColorParam.Param<param::ColorParam>()->SetGUIVisible(false);
+    this->softSelectColorParam.Param<param::ColorParam>()->SetGUIVisible(false);
+    this->tfRangeParam.Param<param::Vector2fParam>()->SetGUIVisible(false);
+    this->setTfRangeParam.Param<param::ButtonParam>()->SetGUIVisible(false);
+
     // Set all render mode dependent parameter to GUI invisible
     // SPLAT 
     this->alphaScalingParam.Param<param::FloatParam>()->SetGUIVisible(false);
@@ -298,14 +313,14 @@ bool moldyn::SphereRenderer::resetResources(void) {
     // SSBO
     this->useStaticDataParam.Param<param::BoolParam>()->SetGUIVisible(false);
     // Ambient Occlusion
-    this->enableLightingSlot.Param<megamol::core::param::BoolParam>()->SetGUIVisible(false);
-    this->enableGeometryShader.Param<megamol::core::param::BoolParam>()->SetGUIVisible(false);
-    this->aoVolSizeSlot.Param<megamol::core::param::IntParam>()->SetGUIVisible(false);
-    this->aoConeApexSlot.Param<megamol::core::param::FloatParam>()->SetGUIVisible(false);
-    this->aoOffsetSlot.Param<megamol::core::param::FloatParam>()->SetGUIVisible(false);
-    this->aoStrengthSlot.Param<megamol::core::param::FloatParam>()->SetGUIVisible(false);
-    this->aoConeLengthSlot.Param<megamol::core::param::FloatParam>()->SetGUIVisible(false);
-    this->useHPTexturesSlot.Param<megamol::core::param::BoolParam>()->SetGUIVisible(false);
+    this->enableLightingSlot.Param<param::BoolParam>()->SetGUIVisible(false);
+    this->enableGeometryShader.Param<param::BoolParam>()->SetGUIVisible(false);
+    this->aoVolSizeSlot.Param<param::IntParam>()->SetGUIVisible(false);
+    this->aoConeApexSlot.Param<param::FloatParam>()->SetGUIVisible(false);
+    this->aoOffsetSlot.Param<param::FloatParam>()->SetGUIVisible(false);
+    this->aoStrengthSlot.Param<param::FloatParam>()->SetGUIVisible(false);
+    this->aoConeLengthSlot.Param<param::FloatParam>()->SetGUIVisible(false);
+    this->useHPTexturesSlot.Param<param::BoolParam>()->SetGUIVisible(false);
 
     this->flagsCurrentVersion = (0xFFFFFFFF);
     this->flagsEnabled = false;
@@ -342,8 +357,8 @@ bool moldyn::SphereRenderer::resetResources(void) {
     this->bufSize = (32 * 1024 * 1024);
     this->numBuffers = 3;
 
-    this->oldHash = 0;
-    this->oldFrameID = 0;
+    this->oldHash = -1;
+    this->oldFrameID = -1;
 
     this->colType = SimpleSphericalParticles::ColourDataType::COLDATA_NONE;
     this->vertType = SimpleSphericalParticles::VertexDataType::VERTDATA_NONE;
@@ -399,7 +414,7 @@ bool moldyn::SphereRenderer::createResources() {
     vislib::StringA geoShaderName;
 
     if (!this->isRenderModeAvailable(this->renderMode)) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Render mode: %s is not available - falling back to SIMPLE render mode.",
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, "[SphereRenderer] Render mode: %s is not available - falling back to SIMPLE render mode.",
             (this->getRenderModeString(this->renderMode)).c_str());
         this->renderMode = RenderMode::SIMPLE; // Fallback render mode ...
         return false;
@@ -409,8 +424,12 @@ bool moldyn::SphereRenderer::createResources() {
             (this->getRenderModeString(this->renderMode)).c_str());
     }
 
-
     // Flag Storage
+    auto flagc = this->getFlagsSlot.CallAs<FlagCall>();
+    if (flagc != nullptr) {
+        this->selectColorParam.Param<param::ColorParam>()->SetGUIVisible(true);
+        this->softSelectColorParam.Param<param::ColorParam>()->SetGUIVisible(true);
+    }
     int major = -1;
     int minor = -1;
     this->flagsUseSSBO = false;
@@ -422,6 +441,13 @@ bool moldyn::SphereRenderer::createResources() {
     vislib::SmartPtr<ShaderSource::Snippet> flagSnippet;
     std::string flagDefine = "\n#define FLAG_STORAGE_SSBO\n\n";
     flagSnippet = new ShaderSource::StringSnippet(flagDefine.c_str());
+
+    // Transfer Function Params
+    auto cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
+    if (cgtf != nullptr) {
+        this->tfRangeParam.Param<param::Vector2fParam>()->SetGUIVisible(true);
+        this->setTfRangeParam.Param<param::ButtonParam>()->SetGUIVisible(true);
+    }
 
     // Fallback transfer function texture
     glEnable(GL_TEXTURE_1D);
@@ -564,14 +590,14 @@ bool moldyn::SphereRenderer::createResources() {
         }  break;
 
         case (RenderMode::AMBIENT_OCCLUSION): {
-            this->enableLightingSlot.Param<megamol::core::param::BoolParam>()->SetGUIVisible(true);
-            this->enableGeometryShader.Param<megamol::core::param::BoolParam>()->SetGUIVisible(true);
-            this->aoVolSizeSlot.Param<megamol::core::param::IntParam>()->SetGUIVisible(true);
-            this->aoConeApexSlot.Param<megamol::core::param::FloatParam>()->SetGUIVisible(true);
-            this->aoOffsetSlot.Param<megamol::core::param::FloatParam>()->SetGUIVisible(true);
-            this->aoStrengthSlot.Param<megamol::core::param::FloatParam>()->SetGUIVisible(true);
-            this->aoConeLengthSlot.Param<megamol::core::param::FloatParam>()->SetGUIVisible(true);
-            this->useHPTexturesSlot.Param<megamol::core::param::BoolParam>()->SetGUIVisible(true);
+            this->enableLightingSlot.Param<param::BoolParam>()->SetGUIVisible(true);
+            this->enableGeometryShader.Param<param::BoolParam>()->SetGUIVisible(true);
+            this->aoVolSizeSlot.Param<param::IntParam>()->SetGUIVisible(true);
+            this->aoConeApexSlot.Param<param::FloatParam>()->SetGUIVisible(true);
+            this->aoOffsetSlot.Param<param::FloatParam>()->SetGUIVisible(true);
+            this->aoStrengthSlot.Param<param::FloatParam>()->SetGUIVisible(true);
+            this->aoConeLengthSlot.Param<param::FloatParam>()->SetGUIVisible(true);
+            this->useHPTexturesSlot.Param<param::BoolParam>()->SetGUIVisible(true);
 
             this->aoConeApexSlot.ResetDirty();
             this->enableLightingSlot.ResetDirty();
@@ -637,7 +663,7 @@ bool moldyn::SphereRenderer::createResources() {
             if (!instance()->ShaderSourceFactory().MakeShaderSource("sphere_mdao::deferred::vertex", *this->vertShader)) {
                 return false;
             }
-            bool enableLighting = this->enableLightingSlot.Param<megamol::core::param::BoolParam>()->Value();
+            bool enableLighting = this->enableLightingSlot.Param<param::BoolParam>()->Value();
             this->fragShader->Append(instance()->ShaderSourceFactory().MakeShaderSnippet("sphere_mdao::deferred::fragment::Main"));
             if (enableLighting) {
                 this->fragShader->Append(instance()->ShaderSourceFactory().MakeShaderSnippet("sphere_mdao::deferred::fragment::Lighting"));
@@ -645,7 +671,7 @@ bool moldyn::SphereRenderer::createResources() {
             else {
                 this->fragShader->Append(instance()->ShaderSourceFactory().MakeShaderSnippet("sphere_mdao::deferred::fragment::LightingStub"));
             }
-            float apex = this->aoConeApexSlot.Param<megamol::core::param::FloatParam>()->Value();
+            float apex = this->aoConeApexSlot.Param<param::FloatParam>()->Value();
             std::vector<vislib::math::Vector<float, 4>> directions;
             this->generate3ConeDirections(directions, apex * static_cast<float>(M_PI) / 180.0f);
             std::string directionsCode = this->generateDirectionShaderArrayString(directions, "coneDirs");
@@ -660,7 +686,7 @@ bool moldyn::SphereRenderer::createResources() {
             }
 
             // Init volume generator
-            this->volGen = new megamol::core::utility::MDAOVolumeGenerator();
+            this->volGen = new utility::MDAOVolumeGenerator();
             this->volGen->SetShaderSourceFactory(&this->GetCoreInstance()->ShaderSourceFactory());
             if (!this->volGen->Init()) {
                 vislib::sys::Log::DefaultLog.WriteMsg(
@@ -765,91 +791,91 @@ void moldyn::SphereRenderer::getClipData(float outClipDat[4], float outClipCol[4
 
 bool moldyn::SphereRenderer::isRenderModeAvailable(RenderMode rm, bool silent) {
 
-    std::string errorstr;
+    std::string warnstr;
 
     // Check additonal requirements for each render mode separatly
     switch (rm) {
     case(RenderMode::SIMPLE):
         if (ogl_IsVersionGEQ(1, 4) == 0) {
-            errorstr += "[SphereRenderer] Render Mode 'SIMPLE' is not available. OpenGL version 1.4 or greater is required.\n";
+            warnstr += "[SphereRenderer] Render Mode 'SIMPLE' is not available. OpenGL version 1.4 or greater is required.\n";
         }
         break;
     case(RenderMode::SIMPLE_CLUSTERED):
         if (ogl_IsVersionGEQ(1, 4) == 0) {
-            errorstr += "[SphereRenderer] Render Mode 'SIMPLE_CLUSTERED' is not available. OpenGL version 1.4 or greater is required.\n";
+            warnstr += "[SphereRenderer] Render Mode 'SIMPLE_CLUSTERED' is not available. OpenGL version 1.4 or greater is required.\n";
         }
         break;
     case(RenderMode::GEOMETRY_SHADER):
         if (ogl_IsVersionGEQ(3, 2) == 0) {
-            errorstr += "[SphereRenderer] Render Mode 'GEOMETRY_SHADER' is not available. OpenGL version 3.2 or greater is required.\n";
+            warnstr += "[SphereRenderer] Render Mode 'GEOMETRY_SHADER' is not available. OpenGL version 3.2 or greater is required.\n";
         }
         if (!vislib::graphics::gl::GLSLGeometryShader::AreExtensionsAvailable()) {
-            errorstr += "[SphereRenderer] Render Mode 'GEOMETRY_SHADER' is not available. Geometry shader extensions are required. \n";
+            warnstr += "[SphereRenderer] Render Mode 'GEOMETRY_SHADER' is not available. Geometry shader extensions are required. \n";
         }
         if (!isExtAvailable("GL_EXT_geometry_shader4")) {
-            errorstr += "[SphereRenderer] Render Mode 'GEOMETRY_SHADER' is not available. Extension GL_EXT_geometry_shader4 is required. \n";
+            warnstr += "[SphereRenderer] Render Mode 'GEOMETRY_SHADER' is not available. Extension GL_EXT_geometry_shader4 is required. \n";
         }
         if (!isExtAvailable("GL_EXT_gpu_shader4")) {
-            errorstr += "[SphereRenderer] Render Mode 'GEOMETRY_SHADER' is not available. Extension GL_EXT_gpu_shader4 is required. \n";
+            warnstr += "[SphereRenderer] Render Mode 'GEOMETRY_SHADER' is not available. Extension GL_EXT_gpu_shader4 is required. \n";
         }
         if (!isExtAvailable("GL_EXT_bindable_uniform")) {
-            errorstr += "[SphereRenderer] Render Mode 'GEOMETRY_SHADER' is not available. Extension GL_EXT_bindable_uniform is required. \n";
+            warnstr += "[SphereRenderer] Render Mode 'GEOMETRY_SHADER' is not available. Extension GL_EXT_bindable_uniform is required. \n";
         }
         if (!isExtAvailable("GL_ARB_shader_objects")) {
-            errorstr += "[SphereRenderer] Render Mode 'GEOMETRY_SHADER' is not available. Extension GL_ARB_shader_objects is required. \n";
+            warnstr += "[SphereRenderer] Render Mode 'GEOMETRY_SHADER' is not available. Extension GL_ARB_shader_objects is required. \n";
         }
         break;
     case(RenderMode::SSBO_STREAM):
         if (ogl_IsVersionGEQ(4, 2) == 0) {
-            errorstr += "[SphereRenderer] Render Mode 'SSBO_STREAM' is not available. OpenGL version 4.2 or greater is required. \n";
+            warnstr += "[SphereRenderer] Render Mode 'SSBO_STREAM' is not available. OpenGL version 4.2 or greater is required. \n";
         }
         if (!isExtAvailable("GL_ARB_shader_storage_buffer_object")) {
-            errorstr += "[SphereRenderer] Render Mode 'SSBO_STREAM' is not available. Extension GL_ARB_shader_storage_buffer_object is required. \n";
+            warnstr += "[SphereRenderer] Render Mode 'SSBO_STREAM' is not available. Extension GL_ARB_shader_storage_buffer_object is required. \n";
         }
         if (!isExtAvailable("GL_ARB_gpu_shader5")) {
-            errorstr += "[SphereRenderer] Render Mode 'SSBO_STREAM' is not available. Extension GL_ARB_gpu_shader5 is required. \n";
+            warnstr += "[SphereRenderer] Render Mode 'SSBO_STREAM' is not available. Extension GL_ARB_gpu_shader5 is required. \n";
         }
         if (!isExtAvailable("GL_ARB_gpu_shader_fp64")) {
-            errorstr += "[SphereRenderer] Render Mode 'SSBO_STREAM' is not available. Extension GL_ARB_gpu_shader_fp64 is required. \n";
+            warnstr += "[SphereRenderer] Render Mode 'SSBO_STREAM' is not available. Extension GL_ARB_gpu_shader_fp64 is required. \n";
         }
         break;
     case(RenderMode::SPLAT):
         if (ogl_IsVersionGEQ(4, 5) == 0) {
-            errorstr += "[SphereRenderer] Render Mode 'SPLAT' is not available. OpenGL version 4.5 or greater is required. \n";
+            warnstr += "[SphereRenderer] Render Mode 'SPLAT' is not available. OpenGL version 4.5 or greater is required. \n";
         }
         if (!isExtAvailable("GL_ARB_shader_storage_buffer_object")) {
-            errorstr += "[SphereRenderer] Render Mode 'SPLAT' is not available. Extension GL_ARB_shader_storage_buffer_object is required. \n";
+            warnstr += "[SphereRenderer] Render Mode 'SPLAT' is not available. Extension GL_ARB_shader_storage_buffer_object is required. \n";
         }
         if (!isExtAvailable("GL_EXT_gpu_shader4")) {
-            errorstr += "[SphereRenderer] Render Mode 'SPLAT' is not available. Extension GL_EXT_gpu_shader4 is required. \n";
+            warnstr += "[SphereRenderer] Render Mode 'SPLAT' is not available. Extension GL_EXT_gpu_shader4 is required. \n";
         }
         break;
     case(RenderMode::BUFFER_ARRAY):
         if (ogl_IsVersionGEQ(4, 5) == 0) {
-            errorstr += "[SphereRenderer] Render Mode 'BUFFER_ARRAY' is not available. OpenGL version 4.5 or greater is required. \n";
+            warnstr += "[SphereRenderer] Render Mode 'BUFFER_ARRAY' is not available. OpenGL version 4.5 or greater is required. \n";
         }
         break;
     case(RenderMode::AMBIENT_OCCLUSION):
         if (ogl_IsVersionGEQ(4, 5) == 0) {
-            errorstr += "[SphereRenderer] Render Mode 'AMBIENT_OCCLUSION' is not available. OpenGL version 4.5 or greater is required. \n";
+            warnstr += "[SphereRenderer] Render Mode 'AMBIENT_OCCLUSION' is not available. OpenGL version 4.5 or greater is required. \n";
         }
         if (!vislib::graphics::gl::GLSLGeometryShader::AreExtensionsAvailable()) {
-            errorstr += "[SphereRenderer] Render Mode 'AMBIENT_OCCLUSION' is not available. Geometry shader extensions are required. \n";
+            warnstr += "[SphereRenderer] Render Mode 'AMBIENT_OCCLUSION' is not available. Geometry shader extensions are required. \n";
         }
         if (!isExtAvailable("GL_ARB_gpu_shader_fp64")) {
-            errorstr += "[SphereRenderer] Render Mode 'AMBIENT_OCCLUSION' is not available. Extension GL_ARB_gpu_shader_fp64 is required. \n";
+            warnstr += "[SphereRenderer] Render Mode 'AMBIENT_OCCLUSION' is not available. Extension GL_ARB_gpu_shader_fp64 is required. \n";
         }
         break;
     default:
-        errorstr += "[SphereRenderer] BUG: Unknown render mode ... \n";
+        warnstr += "[SphereRenderer] BUG: Unknown render mode ... \n";
         break;
     }
 
-    if (!silent && !errorstr.empty()) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, errorstr.c_str());
+    if (!silent && !warnstr.empty()) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, warnstr.c_str());
     }
 
-    return (errorstr.empty());
+    return (warnstr.empty());
 }
 
 
@@ -885,6 +911,23 @@ std::string moldyn::SphereRenderer::getRenderModeString(RenderMode rm) {
     }
 
     return mode;
+}
+
+
+bool moldyn::SphereRenderer::onToggleButton(param::ParamSlot& p) {
+
+    if (&p == &this->setTfRangeParam) {
+        view::CallGetTransferFunction* cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
+        if (cgtf != nullptr) {
+            std::array<float, 2> range;
+            auto vec2 = this->tfRangeParam.Param<param::Vector2fParam>()->Value();
+            range[0] = vec2.X();
+            range[1] = vec2.Y();
+            cgtf->SetRange(range);
+            return true;
+        }
+    }
+    return false;
 }
 
 
@@ -926,18 +969,18 @@ bool moldyn::SphereRenderer::Render(view::CallRender3D& call) {
     // Check if we got a new data set
     this->stateInvalid = ((hash != this->oldHash) || (frameID != this->oldFrameID));
 
-    // Update color index range for transfer function on data change
-    core::view::CallGetTransferFunction* cgtf = this->getTFSlot.CallAs<core::view::CallGetTransferFunction>();
+    // Update read only parameter values of color index range to be set manually in  transfer function
+    view::CallGetTransferFunction* cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
     if ((cgtf != nullptr) && (hash != this->oldHash)) {
         std::array<float, 2> range;
         range[0] = std::numeric_limits<float>::max(); // min
-        range[1] = 0.0f; // max
+        range[1] = std::numeric_limits<float>::min(); // max
         for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
             MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
             range[0] = std::min(parts.GetMinColourIndexValue(), range[0]);
             range[1] = std::max(parts.GetMaxColourIndexValue(), range[1]);
         }
-        cgtf->SetRange(range);
+        this->tfRangeParam.Param<param::Vector2fParam>()->SetValue(vislib::math::Vector<float, 2>(range[0], range[1]));
     }
 
     this->oldHash = hash;
@@ -1354,7 +1397,7 @@ bool moldyn::SphereRenderer::renderSplat(view::CallRender3D* cr3d, MultiParticle
         }
         else {
             vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Splat mode does not support not interleaved data so far ...");
+                vislib::sys::Log::LEVEL_WARN, "[SphereRenderer] Splat mode does not support not interleaved data so far ...");
         }
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
@@ -1452,7 +1495,7 @@ bool moldyn::SphereRenderer::renderBufferArray(view::CallRender3D* cr3d, MultiPa
         }
         else {
             vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] BufferArray mode does not support not interleaved data so far ...");
+                vislib::sys::Log::LEVEL_WARN, "[SphereRenderer] BufferArray mode does not support not interleaved data so far ...");
         }
 
         this->unsetBufferData(this->sphereShader);
@@ -1550,8 +1593,8 @@ bool moldyn::SphereRenderer::renderAmbientOcclusion(view::CallRender3D* cr3d, Mu
 
 
     // Render the particles' geometry
-    bool highPrecision = this->useHPTexturesSlot.Param<megamol::core::param::BoolParam>()->Value();
-    bool useGeo = this->enableGeometryShader.Param<core::param::BoolParam>()->Value();
+    bool highPrecision = this->useHPTexturesSlot.Param<param::BoolParam>()->Value();
+    bool useGeo = this->enableGeometryShader.Param<param::BoolParam>()->Value();
     vislib::graphics::gl::GLSLShader& theShader = useGeo ? this->sphereGeometryShader : this->sphereShader;
 
     // Rebuild and reupload working data if neccessary
@@ -1586,7 +1629,7 @@ bool moldyn::SphereRenderer::renderAmbientOcclusion(view::CallRender3D* cr3d, Mu
 
     GLuint flagPartsCount = 0;
     for (unsigned int i = 0; i < this->gpuData.size(); ++i) {
-        core::moldyn::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
+        moldyn::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
 
         if (!this->setShaderData(theShader, parts)) {
             continue;
@@ -1831,8 +1874,8 @@ bool moldyn::SphereRenderer::unsetShaderData(void) {
 
 bool moldyn::SphereRenderer::setTransferFunctionTexture(vislib::graphics::gl::GLSLShader& shader) {
 
-    core::view::CallGetTransferFunction* cgtf = this->getTFSlot.CallAs<core::view::CallGetTransferFunction>();
-    if ((cgtf != nullptr) && (*cgtf)(0)) {
+    view::CallGetTransferFunction* cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
+    if ((cgtf != nullptr) && (*cgtf)(0)) { // 0 = call GetTexture -> requestTF
         cgtf->BindConvenience(shader, GL_TEXTURE0, 0);
     }
     else {
@@ -1848,7 +1891,7 @@ bool moldyn::SphereRenderer::setTransferFunctionTexture(vislib::graphics::gl::GL
 
 
 bool moldyn::SphereRenderer::unsetTransferFunctionTexture(void) {
-    core::view::CallGetTransferFunction* cgtf = this->getTFSlot.CallAs<core::view::CallGetTransferFunction>();
+    view::CallGetTransferFunction* cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
     if (cgtf != nullptr) {
         cgtf->UnbindConvenience();
     }
@@ -1864,7 +1907,7 @@ bool moldyn::SphereRenderer::setFlagStorage(const vislib::graphics::gl::GLSLShad
 
     this->flagsEnabled = false;
 
-    auto flagc = getFlagsSlot.CallAs<core::FlagCall>();
+    auto flagc = this->getFlagsSlot.CallAs<FlagCall>();
     if (flagc == nullptr) {
         return false;
     }
@@ -1878,7 +1921,7 @@ bool moldyn::SphereRenderer::setFlagStorage(const vislib::graphics::gl::GLSLShad
         partsCount += parts.GetCount();
     }
 
-    ((*flagc)(core::FlagCall::CallMapFlags));
+    ((*flagc)(FlagCall::CallMapFlags));
     flagc->validateFlagsCount(partsCount);
 
     this->flagsData = nullptr;
@@ -1888,7 +1931,7 @@ bool moldyn::SphereRenderer::setFlagStorage(const vislib::graphics::gl::GLSLShad
         auto version = flagc->GetVersion();
         if ((version != this->flagsCurrentVersion) || (version == 0)) {
             glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->flagsBuffer);
-            glBufferData(GL_SHADER_STORAGE_BUFFER, partsCount * sizeof(core::FlagStorage::FlagItemType),
+            glBufferData(GL_SHADER_STORAGE_BUFFER, partsCount * sizeof(FlagStorage::FlagItemType),
                 this->flagsData.get()->data(), GL_STATIC_DRAW);
             this->flagsCurrentVersion = flagc->GetVersion();
             glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
@@ -1898,7 +1941,7 @@ bool moldyn::SphereRenderer::setFlagStorage(const vislib::graphics::gl::GLSLShad
     else {
         GLuint flagAttrib = glGetAttribLocation(shader, "inFlags");
         glEnableVertexAttribArray(flagAttrib);
-        glVertexAttribIPointer(flagAttrib, 1, GL_UNSIGNED_INT, sizeof(core::FlagStorage::FlagItemType), this->flagsData.get()->data());
+        glVertexAttribIPointer(flagAttrib, 1, GL_UNSIGNED_INT, sizeof(FlagStorage::FlagItemType), this->flagsData.get()->data());
     }
 
     this->flagsEnabled = true;
@@ -1909,7 +1952,7 @@ bool moldyn::SphereRenderer::setFlagStorage(const vislib::graphics::gl::GLSLShad
 
 bool moldyn::SphereRenderer::unsetFlagStorage(const vislib::graphics::gl::GLSLShader& shader) {
 
-    auto flagc = getFlagsSlot.CallAs<core::FlagCall>();
+    auto flagc = this->getFlagsSlot.CallAs<FlagCall>();
     if (flagc == nullptr) {
         return false;
     }
@@ -1923,7 +1966,7 @@ bool moldyn::SphereRenderer::unsetFlagStorage(const vislib::graphics::gl::GLSLSh
     }
 
     flagc->SetFlags(this->flagsData);
-    (*flagc)(core::FlagCall::CallUnmapFlags);
+    (*flagc)(FlagCall::CallUnmapFlags);
 
     this->flagsEnabled = false;
 
@@ -2228,7 +2271,7 @@ void moldyn::SphereRenderer::getGLSLVersion(int &outMajor, int &outMinor) const 
         outMinor = std::atoi(glslVerStr.substr(found + 1, 1).c_str());
     }
     else {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
             "[SphereRenderer] No valid GL_SHADING_LANGUAGE_VERSION string found: %s", glslVerStr.c_str());
     }
 }
@@ -2269,7 +2312,7 @@ bool moldyn::SphereRenderer::rebuildGBuffer() {
 
     this->useHPTexturesSlot.ResetDirty();
 
-    bool highPrecision = this->useHPTexturesSlot.Param<megamol::core::param::BoolParam>()->Value();
+    bool highPrecision = this->useHPTexturesSlot.Param<param::BoolParam>()->Value();
 
     glBindTexture(GL_TEXTURE_2D, this->gBuffer.color);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -2318,7 +2361,7 @@ bool moldyn::SphereRenderer::rebuildGBuffer() {
 }
 
 
-void moldyn::SphereRenderer::rebuildWorkingData(megamol::core::view::CallRender3D* cr3d, megamol::core::moldyn::MultiParticleDataCall* mpdc, const vislib::graphics::gl::GLSLShader& shader) {
+void moldyn::SphereRenderer::rebuildWorkingData(view::CallRender3D* cr3d, moldyn::MultiParticleDataCall* mpdc, const vislib::graphics::gl::GLSLShader& shader) {
 
     // Upload new data if neccessary
     if (stateInvalid) {
@@ -2346,7 +2389,7 @@ void moldyn::SphereRenderer::rebuildWorkingData(megamol::core::view::CallRender3
 
         // Reupload buffers
         for (unsigned int i = 0; i < partsCount; ++i) {
-            core::moldyn::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
+            moldyn::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
 
             glBindVertexArray(this->gpuData[i].vertexArray);
             this->setBufferData(shader, parts, this->gpuData[i].vertexVBO, parts.GetVertexData(), this->gpuData[i].colorVBO, parts.GetColourData(), true);
@@ -2357,7 +2400,7 @@ void moldyn::SphereRenderer::rebuildWorkingData(megamol::core::view::CallRender3
 
     // Check if voxelization is even needed
     if (this->volGen == nullptr) {
-        this->volGen = new megamol::core::utility::MDAOVolumeGenerator();
+        this->volGen = new utility::MDAOVolumeGenerator();
         this->volGen->SetShaderSourceFactory(&instance()->ShaderSourceFactory());
         this->volGen->Init();
     }
@@ -2372,7 +2415,7 @@ void moldyn::SphereRenderer::rebuildWorkingData(megamol::core::view::CallRender3
     }
     if (volGen != nullptr &&
         (stateInvalid || this->aoVolSizeSlot.IsDirty() || !equalClipData)) {
-        int volSize = this->aoVolSizeSlot.Param<megamol::core::param::IntParam>()->Value();
+        int volSize = this->aoVolSizeSlot.Param<param::IntParam>()->Value();
 
         const vislib::math::Cuboid<float>& cube = cr3d->AccessBoundingBoxes().ObjectSpaceClipBox();
         vislib::math::Dimension<float, 3> dims = cube.GetSize();
@@ -2400,7 +2443,7 @@ void moldyn::SphereRenderer::rebuildWorkingData(megamol::core::view::CallRender3
         for (unsigned int i = 0; i < this->gpuData.size(); ++i) {
             float globalRadius = 0.0f;
             if (mpdc->AccessParticles(i).GetVertexDataType() !=
-                megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR)
+                moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR)
                 globalRadius = mpdc->AccessParticles(i).GetGlobalRadius();
             this->volGen->InsertParticles(static_cast<unsigned int>(mpdc->AccessParticles(i).GetCount()),
                 globalRadius, this->gpuData[i].vertexArray);
@@ -2415,9 +2458,9 @@ void moldyn::SphereRenderer::rebuildWorkingData(megamol::core::view::CallRender3
 
 
 
-void moldyn::SphereRenderer::renderDeferredPass(megamol::core::view::CallRender3D* cr3d) {
-    bool enableLighting = this->enableLightingSlot.Param<megamol::core::param::BoolParam>()->Value();
-    bool highPrecision = this->useHPTexturesSlot.Param<megamol::core::param::BoolParam>()->Value();
+void moldyn::SphereRenderer::renderDeferredPass(view::CallRender3D* cr3d) {
+    bool enableLighting = this->enableLightingSlot.Param<param::BoolParam>()->Value();
+    bool highPrecision = this->useHPTexturesSlot.Param<param::BoolParam>()->Value();
 
     glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_2D, this->gBuffer.depth);
@@ -2443,9 +2486,9 @@ void moldyn::SphereRenderer::renderDeferredPass(megamol::core::view::CallRender3
         this->lightingShader.SetParameterArray3("inObjCamPos", 1, this->curMVinv.GetColumn(3).PeekComponents());
     }
 
-    float aoOffset = this->aoOffsetSlot.Param<megamol::core::param::FloatParam>()->Value();
-    float aoStrength = this->aoStrengthSlot.Param<megamol::core::param::FloatParam>()->Value();
-    float aoConeLength = this->aoConeLengthSlot.Param<megamol::core::param::FloatParam>()->Value();
+    float aoOffset = this->aoOffsetSlot.Param<param::FloatParam>()->Value();
+    float aoStrength = this->aoStrengthSlot.Param<param::FloatParam>()->Value();
+    float aoConeLength = this->aoConeLengthSlot.Param<param::FloatParam>()->Value();
     if (volGen != nullptr) {
         glActiveTexture(GL_TEXTURE3);
         glBindTexture(GL_TEXTURE_3D, this->volGen->GetVolumeTextureHandle());
