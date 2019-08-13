@@ -134,6 +134,7 @@ private:
     core::param::ParamSlot m_ray_step_ratio_param;
     core::param::ParamSlot m_opacity_threshold;
     core::param::ParamSlot m_iso_value;
+    core::param::ParamSlot m_opacity;
 
     core::param::ParamSlot m_use_lighting_slot;
     core::param::ParamSlot m_ka_slot;

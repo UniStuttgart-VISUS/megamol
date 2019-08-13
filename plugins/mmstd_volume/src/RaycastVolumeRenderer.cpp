@@ -39,17 +39,18 @@ RaycastVolumeRenderer::RaycastVolumeRenderer()
     : Renderer3DModule()
     , m_mode("mode", "Mode changing the behavior for the raycaster")
     , m_ray_step_ratio_param("ray step ratio", "Adjust sampling rate")
-    , m_use_lighting_slot("use_lighting", "Enable simple volumetric illumination")
-    , m_ka_slot("ka", "Ambient part for Phong lighting")
-    , m_kd_slot("kd", "Diffuse part for Phong lighting")
-    , m_ks_slot("ks", "Specular part for Phong lighting")
-    , m_shininess_slot("shininess", "Shininess for Phong lighting")
-    , m_ambient_color("ambient color", "Ambient color")
-    , m_specular_color("specular color", "Specular color")
-    , m_light_color("light color", "Light color")
-    , m_material_color("material color", "Material color")
+    , m_use_lighting_slot("lighting::use lighting", "Enable simple volumetric illumination")
+    , m_ka_slot("lighting::ka", "Ambient part for Phong lighting")
+    , m_kd_slot("lighting::kd", "Diffuse part for Phong lighting")
+    , m_ks_slot("lighting::ks", "Specular part for Phong lighting")
+    , m_shininess_slot("lighting::shininess", "Shininess for Phong lighting")
+    , m_ambient_color("lighting::ambient color", "Ambient color")
+    , m_specular_color("lighting::specular color", "Specular color")
+    , m_light_color("lighting::light color", "Light color")
+    , m_material_color("lighting::material color", "Material color")
     , m_opacity_threshold("opacity threshold", "Opacity threshold for integrative rendering")
     , m_iso_value("isovalue", "Isovalue for isosurface rendering")
+    , m_opacity("opacity", "Surface opacity for blending")
     , paramOverride("override::enable", "Enable override of range")
     , paramMinOverride("override::min", "Override the minimum value provided by the data set")
     , paramMaxOverride("override::max", "Override the maximum value provided by the data set")
@@ -72,14 +73,17 @@ RaycastVolumeRenderer::RaycastVolumeRenderer()
     this->m_mode.Param<core::param::EnumParam>()->SetTypePair(2, "Aggregate");
     this->MakeSlotAvailable(&this->m_mode);
 
-    this->m_ray_step_ratio_param << new megamol::core::param::FloatParam(1.0);
+    this->m_ray_step_ratio_param << new megamol::core::param::FloatParam(1.0f);
     this->MakeSlotAvailable(&this->m_ray_step_ratio_param);
 
-    this->m_opacity_threshold << new megamol::core::param::FloatParam(1.0);
+    this->m_opacity_threshold << new megamol::core::param::FloatParam(1.0f);
     this->MakeSlotAvailable(&this->m_opacity_threshold);
 
-    this->m_iso_value << new megamol::core::param::FloatParam(0.5);
+    this->m_iso_value << new megamol::core::param::FloatParam(0.5f);
     this->MakeSlotAvailable(&this->m_iso_value);
+
+    this->m_opacity << new megamol::core::param::FloatParam(1.0f);
+    this->MakeSlotAvailable(&this->m_opacity);
 
     this->m_use_lighting_slot << new core::param::BoolParam(false);
     this->MakeSlotAvailable(&this->m_use_lighting_slot);
@@ -287,9 +291,9 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
             this->fbo.Create(ci->GetViewport().Width(), ci->GetViewport().Height(), GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE,
                 vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
             this->fbo.Enable();
-
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         }
+
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         ci->SetTime(cr->Time());
         if (!(*ci)(core::view::CallRender3D::FnRender)) return false;
@@ -428,7 +432,14 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
     } else if (this->m_mode.Param<core::param::EnumParam>()->Value() == 1) {
         glUniform1f(
             compute_shdr->ParameterLocation("isoValue"), this->m_iso_value.Param<core::param::FloatParam>()->Value());
+
+        glUniform1f(
+            compute_shdr->ParameterLocation("opacity"), this->m_opacity.Param<core::param::FloatParam>()->Value());
     }
+
+    this->m_opacity_threshold.Parameter()->SetGUIVisible(this->m_mode.Param<core::param::EnumParam>()->Value() == 0);
+    this->m_iso_value.Parameter()->SetGUIVisible(this->m_mode.Param<core::param::EnumParam>()->Value() == 1);
+    this->m_opacity.Parameter()->SetGUIVisible(this->m_mode.Param<core::param::EnumParam>()->Value() == 1);
 
     // bind volume texture
     glActiveTexture(GL_TEXTURE0);
@@ -485,13 +496,18 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
         static_cast<int>(std::ceil(rt_resolution[0] / 8.0f)), static_cast<int>(std::ceil(rt_resolution[1] / 8.0f)), 1);
 
     compute_shdr->Disable();
-   
-    glActiveTexture(GL_TEXTURE3);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_1D, 0);
+
+    if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0 ||
+        this->m_mode.Param<core::param::EnumParam>()->Value() == 2) {
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, 0);
+    }
+    if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0) {
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_1D, 0);
+    }
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_3D, 0);
 
@@ -565,10 +581,16 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
 
     glDrawArrays(GL_TRIANGLES, 0, 6);
 
-    glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, 0);
+    if (this->m_mode.Param<core::param::EnumParam>()->Value() == 1) {
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, 0);
+    }
+    if (this->m_mode.Param<core::param::EnumParam>()->Value() == 2) {
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_1D, 0);
+    }
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, 0);
 

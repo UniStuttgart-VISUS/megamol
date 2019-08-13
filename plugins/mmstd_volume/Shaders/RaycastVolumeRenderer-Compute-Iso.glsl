@@ -1,6 +1,9 @@
 /* isovalue used for isosurface reconstruction */
 uniform float isoValue;
 
+/* opacity */
+uniform float opacity;
+
 /* output normal */
 layout(rgba32f, binding = 1) writeonly uniform highp image2D normal_target_tx2D;
 
@@ -45,9 +48,9 @@ void compute(float t, const float tfar, const Ray ray, const float rayStep, cons
 
             // Compute illumination from fixed light
             if (use_lighting) {
-                result = vec4(phong(material_col, normal, normalize(-surface_pos), normalize(-surface_pos)), 1.0f);
+                result = vec4(phong(material_col, normal, normalize(-surface_pos), normalize(-surface_pos)), opacity);
             } else {
-                result = vec4(material_col, 1.0f);
+                result = vec4(material_col, opacity);
             }
 
             break;
@@ -61,8 +64,6 @@ void compute(float t, const float tfar, const Ray ray, const float rayStep, cons
     }
 
     // Write results
-    result = result.w * result + vec4(background, 1.0f) * (1.0f - result.w);
-
     imageStore(render_target_tx2D, pixel_coords, result);
     imageStore(normal_target_tx2D, pixel_coords, vec4(normal, 1.0f));
     imageStore(depth_target_tx2D, pixel_coords, vec4(depth));
