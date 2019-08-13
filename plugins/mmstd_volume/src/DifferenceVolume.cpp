@@ -214,6 +214,8 @@ bool megamol::stdplugin::volume::DifferenceVolume::onGetData(core::Call& call) {
 
         } else {
             /* Compute difference to previous frame. */
+            Log::DefaultLog.WriteInfo(L"Compute difference between volume time "
+                L"steps %u and %u.", src->FrameID(), src->FrameID() - 1);
             auto& prev = this->cache[increment(this->frameIdx)];
 
             if (src->FrameID() - 1 != this->frameID) {
