@@ -1,12 +1,12 @@
 /*
- * MinMax.h
+ * VolumetricGlobalMinMax.h
  *
  * Copyright (C) 2019 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_ASTRO_MINMAX_H_INCLUDED
-#define MEGAMOL_ASTRO_MINMAX_H_INCLUDED
+#ifndef MEGAMOL_ASTRO_VOLUMETRICGLOBALMINMAX_H_INCLUDED
+#define MEGAMOL_ASTRO_VOLUMETRICGLOBALMINMAX_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -26,12 +26,12 @@ namespace astro {
     /// <summary>
     /// Gets min/max values on a <see cref="VolumetricDataCall" />.
     /// </summary>
-    class MinMax : public core::Module {
+    class VolumetricGlobalMinMax : public core::Module {
 
     public:
 
         static inline const char *ClassName(void) {
-            return "MinMax";
+            return "VolumetricGlobalMinMax";
         }
 
         static inline const char *Description(void) {
@@ -43,10 +43,10 @@ namespace astro {
         }
 
         /** Ctor. */
-        MinMax(void);
+        VolumetricGlobalMinMax(void);
 
         /** Dtor. */
-        virtual ~MinMax(void);
+        virtual ~VolumetricGlobalMinMax(void);
 
     protected:
 
@@ -68,9 +68,12 @@ namespace astro {
 
         core::CallerSlot slotVolumetricDataIn;
         core::CalleeSlot slotVolumetricDataOut;
+        size_t hash;
+        std::vector<double> minValues;
+        std::vector<double> maxValues;
     };
 
 } /* end namespace astro */
 } /* end namespace megamol */
 
-#endif /* MEGAMOL_ASTRO_MINMAX_H_INCLUDED */
+#endif /* MEGAMOL_ASTRO_VOLUMETRICGLOBALMINMAX_H_INCLUDED */
