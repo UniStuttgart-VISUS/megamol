@@ -1614,13 +1614,10 @@ bool moldyn::SphereRenderer::renderAmbientOcclusion(view::CallRender3D* cr3d, Mu
             glUniform4fv(theShader.ParameterLocation("flagSoftSelectedCol"), 1, this->softSelectColorParam.Param<param::ColorParam>()->Value().data());
         }
 
-        this->setTransferFunctionTexture(theShader);
-
         glBindVertexArray(this->gpuData[i].vertexArray);
 
         glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(mpdc->AccessParticles(i).GetCount()));
 
-        this->unsetTransferFunctionTexture();
         this->unsetShaderData();
         flagPartsCount += parts.GetCount();
     }
