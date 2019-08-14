@@ -39,7 +39,9 @@ namespace astro {
             HelmholtzComplementary,
             IttenComplementary,
             MaxHelmholtzComplementary,
-            MaxIttenComplementary
+            MaxIttenComplementary,
+            SaturationLightness,
+            HuesLightness,
         };
 
         static inline const char *ClassName(void) {
@@ -78,6 +80,9 @@ namespace astro {
         static const std::uint8_t *getDirections(
             const core::moldyn::SimpleSphericalParticles& particles);
 
+        static void hsl2Rgb(float *dst, const float h, const float s,
+            const float l);
+
         static std::vector<float> makeComplementaryColouring(
             const std::uint8_t *directions, const std::uint64_t cntParticles,
             const std::size_t stride, const glm::vec3& x1, const glm::vec3& x2,
@@ -85,13 +90,20 @@ namespace astro {
             const glm::vec3& z2, const bool mix);
 
         static std::vector<float> makeHslColouring(const std::uint8_t *directions,
-            const std::uint64_t cntParticles, const std::size_t stride);
-
-        static void hsl2Rgb(float *dst, const float h, const float s,
-            const float l);
+            const std::uint64_t cntParticles, const std::size_t stride,
+            const Mode mode, const std::array<float, 4> & baseColour1,
+            const std::array<float, 4>& baseColour2);
 
         static inline float min3(const float x, const float y, const float z) {
             return (std::min)((std::min)(x, y), z);
+        }
+
+        static std::array<float, 3> rgb2Hsl(const float r, const float g,
+            const float b);
+
+        static inline std::array<float, 3> rgb2Hsl(
+                const std::array<float, 4>& rgb) {
+            return rgb2Hsl(rgb[0], rgb[1], rgb[2]);
         }
 
         bool getData(core::Call& call);
@@ -109,6 +121,8 @@ namespace astro {
         unsigned int frameID;
         std::size_t hashData;
         std::size_t hashState;
+        core::param::ParamSlot paramColour1;
+        core::param::ParamSlot paramColour2;
         core::param::ParamSlot paramMode;
         core::CallerSlot slotInput;
         core::CalleeSlot slotOutput;

@@ -1485,64 +1485,7 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
                    "[CTRL+Click] on individual component to input value.\n"
                    "[Right-Click] on the individual color widget to show options.";
         } else if (auto* p = slot.template Param<core::param::TransferFunctionParam>()) {
-            ImGui::Separator();
-            ImGui::Text(param_name.c_str());
-
-            bool load_tf = false;
-            param_label = "Load into Editor###editor" + param_id;
-            if (p == this->tf_editor.GetActiveParameter()) {
-                param_label = "Open Editor###editor" + param_id;
-            }
-            if (ImGui::Button(param_label.c_str())) {
-                this->tf_editor.SetActiveParameter(p);
-                load_tf = true;
-                // Open window calling the transfer function editor callback
-                const auto func = [&, this](const std::string& wn, WindowManager::WindowConfiguration& wc) {
-                    if (wc.win_callback == WindowManager::DrawCallbacks::TF) {
-                        wc.win_show = true;
-                    }
-                };
-                this->window_manager.EnumWindows(func);
-            }
-            ImGui::SameLine();
-            param_label = "Reset###reset" + param_id;
-            if (ImGui::Button(param_label.c_str())) {
-                p->SetValue("");
-                load_tf = true;
-            }
-            if (p == this->tf_editor.GetActiveParameter()) {
-                ImGui::TextColored(style.Colors[ImGuiCol_ButtonActive], "Currently loaded into Editor");
-            }
-
-            // Print JSON string
-            ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
-            std::string json = p->Value();
-            ImVec2 ml_dim = ImVec2(ImGui::CalcItemWidth(),
-                ImGui::GetFrameHeight() + (ImGui::GetFontSize() * static_cast<float>(GUI_MAX_MULITLINE)));
-            ImGui::InputTextMultiline("JSON", &json, ml_dim, ImGuiInputTextFlags_None);
-            ImGui::PopItemFlag();
-            ImGui::PopStyleVar();
-
-            param_label = "Copy to Clipboard###clipboard" + param_id;
-            if (ImGui::Button(param_label.c_str())) {
-                ImGui::SetClipboardText(p->Value().c_str());
-            }
-            ImGui::SameLine();
-            param_label = "Copy from Clipboard###fclipboard" + param_id;
-            if (ImGui::Button(param_label.c_str())) {
-                p->SetValue(ImGui::GetClipboardText());
-                load_tf = true;
-            }
-
-            // Loading new transfer function string from parameter into editor
-            if (load_tf && (p == this->tf_editor.GetActiveParameter())) {
-                if (!this->tf_editor.SetTransferFunction(p->Value())) {
-                    vislib::sys::Log::DefaultLog.WriteWarn(
-                        "[GUIView] Could not load transfer function of parameter: %s.", param_id.c_str());
-                }
-            }
-            ImGui::Separator();
+            drawTransferFunctionEdit(param_id, param_label, *p);
         } else if (auto* p = slot.template Param<core::param::EnumParam>()) {
             /// XXX: no UTF8 fanciness required here?
             auto map = p->getMap();
@@ -1700,6 +1643,69 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
         this->utils.HoverToolTip(param_desc, ImGui::GetID(param_label.c_str()), 0.5f);
         this->utils.HelpMarkerToolTip(help);
     }
+}
+
+void GUIView::drawTransferFunctionEdit(
+    const std::string& id, const std::string& label, megamol::core::param::TransferFunctionParam& p) {
+    ImGuiStyle& style = ImGui::GetStyle();
+
+    ImGui::BeginGroup();
+    ImGui::PushID(id.c_str());
+
+    // Reduced display of value and editor state.
+    if (p.Value().empty()) {
+        ImGui::TextDisabled("{    (empty)    }");
+    } else {
+        // XXX: A gradient texture would be nice here (sharing some editor code?)
+        ImGui::Text("{ ............. }");
+    }
+
+    bool isActive = (&p == this->tf_editor.GetActiveParameter());
+    bool updateEditor = false;
+
+    // Copy transfer function.
+    if (ImGui::Button("Copy")) {
+        ImGui::SetClipboardText(p.Value().c_str());
+    }
+
+    //  Paste transfer function.
+    ImGui::SameLine();
+    if (ImGui::Button("Paste")) {
+        p.SetValue(ImGui::GetClipboardText());
+        updateEditor = true;
+    }
+
+    // Edit transfer function.
+    ImGui::SameLine();
+    ImGui::PushID("Edit_");
+    ImGui::PushStyleColor(ImGuiCol_Button, style.Colors[isActive ? ImGuiCol_ButtonHovered : ImGuiCol_Button]);
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, style.Colors[isActive ? ImGuiCol_Button : ImGuiCol_ButtonHovered]);
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, style.Colors[ImGuiCol_ButtonActive]);
+    if (ImGui::Button("Edit")) {
+        updateEditor = true;
+        isActive = true;
+        this->tf_editor.SetActiveParameter(&p);
+        // Open window calling the transfer function editor callback
+        const auto func = [&, this](const std::string& wn, WindowManager::WindowConfiguration& wc) {
+            if (wc.win_callback == WindowManager::DrawCallbacks::TF) {
+                wc.win_show = true;
+            }
+        };
+        this->window_manager.EnumWindows(func);
+    }
+    ImGui::PopStyleColor(3);
+    ImGui::PopID();
+
+    // Propagate the transfer function to the editor.
+    if (isActive && updateEditor) {
+        this->tf_editor.SetTransferFunction(p.Value());
+    }
+
+    ImGui::PopID();
+
+    ImGui::SameLine();
+    ImGui::TextEx(label.c_str(), ImGui::FindRenderedTextEnd(label.c_str()));
+    ImGui::EndGroup();
 }
 
 
