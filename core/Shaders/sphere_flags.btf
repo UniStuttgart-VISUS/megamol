@@ -25,22 +25,17 @@ flat out int flagDiscard;
 // Applying flags
 void ApplyFlags(const in uint currentFlag, inout int discardFlag, inout vec4 colorFlag) {
 
-    // Enabled
-    //if ((currentFlag & FLAG_ENABLED) == FLAG_ENABLED) {
-    //} 
-
-    // Filtered
-    if ((currentFlag & FLAG_FILTERED) == FLAG_FILTERED) {
-        discardFlag = 1;
+    // Visibility: Not Enabled
+    discardFlag = int(false);
+    if (!bitflag_isVisible(currentFlag)) {
+        discardFlag = int(true);
     } 
-
     // Selected
-    if ((currentFlag & FLAG_SELECTED) == FLAG_SELECTED) {
+    if (bitflag_test(currentFlag, FLAG_SELECTED, FLAG_SELECTED)) {
         colorFlag = flagSelectedCol;
-    } 
-
+    }
     // Soft Selected
-    if ((currentFlag & FLAG_SOFTSELECTED) == FLAG_SOFTSELECTED) {
+    if (bitflag_test(currentFlag, FLAG_SOFTSELECTED, FLAG_SOFTSELECTED)) {
         colorFlag = flagSoftSelectedCol;
     }
 }
