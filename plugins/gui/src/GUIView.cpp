@@ -1660,7 +1660,7 @@ void GUIView::drawTransferFunctionEdit(
         ImGui::Text("{ ............. }");
     }
 
-    const bool isActive = (&p == this->tf_editor.GetActiveParameter());
+    bool isActive = (&p == this->tf_editor.GetActiveParameter());
     bool updateEditor = false;
 
     // Copy transfer function.
@@ -1683,6 +1683,7 @@ void GUIView::drawTransferFunctionEdit(
     ImGui::PushStyleColor(ImGuiCol_ButtonActive, style.Colors[ImGuiCol_ButtonActive]);
     if (ImGui::Button("Edit")) {
         updateEditor = true;
+        isActive = true;
         this->tf_editor.SetActiveParameter(&p);
         // Open window calling the transfer function editor callback
         const auto func = [&, this](const std::string& wn, WindowManager::WindowConfiguration& wc) {
