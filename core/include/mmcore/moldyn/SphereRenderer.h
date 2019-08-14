@@ -234,7 +234,8 @@ namespace moldyn {
             SSBO_STREAM       = 3,
             BUFFER_ARRAY      = 4,
             SPLAT             = 5,
-            AMBIENT_OCCLUSION = 6 
+            AMBIENT_OCCLUSION = 6,
+            OUTLINE = 7
         };
 
         typedef std::map <std::tuple<int, int, bool>, std::shared_ptr<GLSLShader> > shaderMap;
@@ -344,6 +345,8 @@ namespace moldyn {
         megamol::core::param::ParamSlot aoConeLengthSlot;
         // High precision textures slot
         megamol::core::param::ParamSlot useHPTexturesSlot;
+        // size of the outline
+        megamol::core::param::ParamSlot outlineSizeSlot;
 
 
         /*********************************************************************/
@@ -388,6 +391,7 @@ namespace moldyn {
         bool renderSplat(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc);
         bool renderBufferArray(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc);
         bool renderAmbientOcclusion(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc);
+        bool renderOutline(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc);
 
         /**
          * Set pointers to vertex and color buffers and corresponding shader variables.
