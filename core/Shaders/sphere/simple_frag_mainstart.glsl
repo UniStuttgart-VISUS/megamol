@@ -1,7 +1,6 @@
-#extension GL_ARB_explicit_attrib_location : require   // glsl version 130
-#extension GL_ARB_conservative_depth       : require   // glsl version 130
-layout (depth_greater) out float gl_FragDepth; 
-
+#extension GL_ARB_explicit_attrib_location : require // glsl version 130
+//#extension GL_ARB_conservative_depth       : require   // glsl version 130
+// layout (depth_greater) out float gl_FragDepth;
 
 #ifdef BACKSIDE_ENABLED
 uniform float hitsideFlag;
@@ -18,6 +17,8 @@ uniform vec4 viewAttr;
 
 uniform mat4 MVPinv;
 uniform mat4 MVPtransp;
+
+uniform float outlinesize = 2.0;
 
 FLACH in vec4 objPos;
 FLACH in vec4 camPos;
@@ -87,13 +88,13 @@ void main(void) {
     vec3 sphereintersection = lambda * ray + camPos.xyz;    // intersection point
     vec3 normal = sphereintersection / rad;
 
-
+    float d, dist1, dist2;
     if (any(notEqual(clipDat.xyz, vec3(0, 0, 0)))) {
         vec3 planeNormal = normalize(clipDat.xyz);
         vec3 clipPlaneBase = planeNormal * clipDat.w;
-        float d = -dot(planeNormal, clipPlaneBase - objPos.xyz);
-        float dist1 = dot(sphereintersection, planeNormal) + d;
-        float dist2 = d;
+        d = -dot(planeNormal, clipPlaneBase - objPos.xyz);
+        dist1 = dot(sphereintersection, planeNormal) + d;
+        dist2 = d;
         float t = -(dot(planeNormal, camPos.xyz) + d) / dot(planeNormal, ray);
         vec3 planeintersect = camPos.xyz + t * ray;
         if (dist1 > 0.0) {

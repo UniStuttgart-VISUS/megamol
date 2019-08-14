@@ -205,7 +205,7 @@ bool TransferFunctionParam::ParseTransferFunction(const std::string& in_tfs, TFD
         tmp_data.emplace_back(zero);
         tmp_data.emplace_back(one);
         tmp_interpolmode = InterpolationMode::LINEAR;
-        tmp_texsize = 128;
+        tmp_texsize = 256;
         tmp_range[0] = 0.0f;
         tmp_range[1] = 1.0f;
     }
