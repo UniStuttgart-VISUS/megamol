@@ -6,7 +6,8 @@
 #include "tiny_gltf.h"
 
 megamol::mesh::GlTFMeshesDataSource::GlTFMeshesDataSource()
-    : m_glTF_callerSlot("getGlTFFile", "Connects the data source with a loaded glTF file") {
+    : m_glTF_callerSlot("getGlTFFile", "Connects the data source with a loaded glTF file"), m_glTF_cached_hash (0) 
+{
     this->m_glTF_callerSlot.SetCompatibleCall<CallGlTFDataDescription>();
     this->MakeSlotAvailable(&this->m_glTF_callerSlot);
 }
@@ -41,7 +42,10 @@ bool megamol::mesh::GlTFMeshesDataSource::getDataCallback(core::Call& caller) {
 
     if (!(*gltf_call)(0)) return false;
 
-    if (gltf_call->getUpdateFlag()) {
+    if (gltf_call->DataHash() > m_glTF_cached_hash)
+    {
+        m_glTF_cached_hash = gltf_call->DataHash();
+
         m_gpu_meshes->clear();
 
         m_bbox[0] = std::numeric_limits<float>::max();

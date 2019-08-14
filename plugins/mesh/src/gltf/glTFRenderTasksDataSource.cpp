@@ -10,7 +10,7 @@
 #include "mesh/CallGPUMeshData.h"
 
 megamol::mesh::GlTFRenderTasksDataSource::GlTFRenderTasksDataSource()
-	: m_glTF_callerSlot("getGlTFFile", "Connects the data source with a loaded glTF file")
+	: m_glTF_callerSlot("getGlTFFile", "Connects the data source with a loaded glTF file"), m_glTF_cached_hash(0)
 {
 	this->m_glTF_callerSlot.SetCompatibleCall<CallGlTFDataDescription>();
 	this->MakeSlotAvailable(&this->m_glTF_callerSlot);
@@ -61,8 +61,10 @@ bool megamol::mesh::GlTFRenderTasksDataSource::getDataCallback(core::Call & call
 
 	//TODO nullptr check
 
-	if (gltf_call->getUpdateFlag())
-	{
+	if (gltf_call->DataHash() > m_glTF_cached_hash)
+    {
+        m_glTF_cached_hash = gltf_call->DataHash();
+
 		//rt_collection->clear();
         if (!m_rt_collection_indices.empty())
         {
@@ -162,8 +164,6 @@ bool megamol::mesh::GlTFRenderTasksDataSource::getDataCallback(core::Call & call
 		lights.push_back({-5000.0,5000.0,-5000.0,1000.0f});
 
 		rt_collection->addPerFrameDataBuffer(lights,1);
-
-		gltf_call->clearUpdateFlag();
 	}
 
 

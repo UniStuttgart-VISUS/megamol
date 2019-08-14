@@ -15,6 +15,7 @@ megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::ThreeDimensionalUIRenderT
     : m_interaction_collection(new ThreeDimensionalInteractionCollection)
     , m_3DInteraction_calleeSlot("getInteraction", "The slot publishing available interactions and receiving pending manipulations")
     , m_glTF_callerSlot("getGlTFFile", "Connects the data source with a loaded glTF file")
+    , m_glTF_cached_hash(0)
 {
     this->m_3DInteraction_calleeSlot.SetCallback(Call3DInteraction::ClassName(), "GetData", &ThreeDimensionalUIRenderTaskDataSource::getInteractionCallback);
     this->MakeSlotAvailable(&this->m_3DInteraction_calleeSlot);
@@ -56,7 +57,10 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
 
     // TODO nullptr check
 
-    if (gltf_call->getUpdateFlag()) {
+    if (gltf_call->DataHash() > m_glTF_cached_hash)
+    {
+        m_glTF_cached_hash = gltf_call->DataHash();
+
         // rt_collection->clear();
         if (!m_rt_collection_indices.empty()) {
             // TODO delete all exisiting render task from this module
@@ -244,7 +248,6 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
 
         rt_collection->addPerFrameDataBuffer(lights, 1);
 
-        gltf_call->clearUpdateFlag();
     }
 
     CallGPURenderTaskData* rhs_rtc = this->m_renderTask_callerSlot.CallAs<CallGPURenderTaskData>();

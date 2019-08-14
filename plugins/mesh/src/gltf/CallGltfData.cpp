@@ -22,18 +22,3 @@ std::shared_ptr<tinygltf::Model> megamol::mesh::CallGlTFData::getGlTFModel()
 {
 	return m_gltf_model;
 }
-
-void megamol::mesh::CallGlTFData::setUpdateFlag()
-{
-	m_update_flag = true;
-}
-
-bool megamol::mesh::CallGlTFData::getUpdateFlag()
-{
-	return m_update_flag;
-}
-
-void megamol::mesh::CallGlTFData::clearUpdateFlag()
-{
-	m_update_flag = false;
-}

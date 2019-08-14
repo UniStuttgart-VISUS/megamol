@@ -25,8 +25,7 @@ namespace megamol {
 		public:
 			inline CallGlTFData() 
 				: AbstractGetDataCall(),
-				m_gltf_model(nullptr),
-				m_update_flag(false) {}
+				m_gltf_model(nullptr){}
 			~CallGlTFData() = default;
 
 			/**
@@ -71,15 +70,8 @@ namespace megamol {
 			
 			std::shared_ptr<tinygltf::Model> getGlTFModel();
 
-			void setUpdateFlag();
-
-			bool getUpdateFlag();
-
-			void clearUpdateFlag();
-
 		private:
 			std::shared_ptr<tinygltf::Model> m_gltf_model;
-			bool                             m_update_flag;
 		};
 
 		/** Description class typedef */

@@ -59,8 +59,9 @@ namespace megamol
 			virtual bool getDataCallback(core::Call& caller);
 
 		private:
-
 			megamol::core::CallerSlot m_glTF_callerSlot;
+
+            size_t m_glTF_cached_hash;
 		};
 	}
 }

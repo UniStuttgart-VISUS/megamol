@@ -83,6 +83,7 @@ namespace mesh {
         megamol::core::CalleeSlot m_3DInteraction_calleeSlot;
         megamol::core::CallerSlot m_glTF_callerSlot;
 
+        size_t m_glTF_cached_hash;
     };
 
 }

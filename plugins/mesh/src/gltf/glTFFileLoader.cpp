@@ -8,6 +8,7 @@
 
 megamol::mesh::GlTFFileLoader::GlTFFileLoader()
     : core::Module()
+    , m_update_hash(0)
     , m_glTFFilename_slot("glTF filename", "The name of the gltf file to load")
     , m_getData_slot("getData", "The slot publishing the loaded data") {
     this->m_getData_slot.SetCallback(CallGlTFData::ClassName(), "GetData", &GlTFFileLoader::getDataCallback);
@@ -29,9 +30,6 @@ bool megamol::mesh::GlTFFileLoader::getDataCallback(core::Call& caller) {
 
     if (cd == NULL) return false;
 
-    cd->clearUpdateFlag();
-    m_update_flag = std::max(0, m_update_flag - 1);
-
     if (this->m_glTFFilename_slot.IsDirty()) {
         m_glTFFilename_slot.ResetDirty();
 
@@ -52,11 +50,11 @@ bool megamol::mesh::GlTFFileLoader::getDataCallback(core::Call& caller) {
             vislib::sys::Log::DefaultLog.WriteError("Failed to parse glTF\n");
         }
 
-        m_update_flag = std::min(2, m_update_flag + 2);
+        ++m_update_hash;
     }
 
+    cd->SetDataHash(m_update_hash);
     cd->setGlTFModel(m_gltf_model);
-    if (m_update_flag > 0) cd->setUpdateFlag();
 
     return true;
 }
