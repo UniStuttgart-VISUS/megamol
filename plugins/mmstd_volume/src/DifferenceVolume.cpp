@@ -172,6 +172,8 @@ bool megamol::stdplugin::volume::DifferenceVolume::onGetData(core::Call& call) {
 
     /* Retrieve info about incoming data and pass it on to the caller. */
     *src = *dst;
+    src->SetFrameID(dst->FrameID(), true);  // Use the force!
+    assert(src->IsFrameForced());
     if (!VolumetricDataCall::GetMetadata(*src)) {
         return false;
     }
@@ -218,6 +220,9 @@ bool megamol::stdplugin::volume::DifferenceVolume::onGetData(core::Call& call) {
 
     /* If the data we have need an update, compute it. */
     if (this->frameID != src->FrameID()) {
+        Log::DefaultLog.WriteInfo(L"%hs is rebuilding the volume.",
+            DifferenceVolume::ClassName());
+
         if (!VolumetricDataCall::GetMetadata(*src)) {
             return false;
         }
@@ -258,7 +263,7 @@ bool megamol::stdplugin::volume::DifferenceVolume::onGetData(core::Call& call) {
             /* We do not have the previous frame cached, so get it. */
             Log::DefaultLog.WriteInfo(L"Load previous frame %u to compute the "
                 L"difference to the current one.", src->FrameID() - 1);
-            src->SetFrameID(src->FrameID() - 1);
+            src->SetFrameID(src->FrameID() - 1, true);
             if (!VolumetricDataCall::GetMetadata(*src)) {
                 return false;
             }
@@ -268,6 +273,7 @@ bool megamol::stdplugin::volume::DifferenceVolume::onGetData(core::Call& call) {
                 return false;
             }
 
+            assert(src->IsFrameForced());
             if (!(*src)(VolumetricDataCall::IDX_GET_DATA)) {
                 Log::DefaultLog.WriteError(L"%hs failed to call %hs.",
                     DifferenceVolume::ClassName(),
