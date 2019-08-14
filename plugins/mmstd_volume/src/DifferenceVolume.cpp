@@ -10,7 +10,7 @@
 
 #include <limits>
 
-#include "mmcore/param/EnumParam.h"
+#include "mmcore/param/BoolParam.h"
 
 #include "vislib/sys/Log.h"
 
@@ -23,6 +23,7 @@ megamol::stdplugin::volume::DifferenceVolume::DifferenceVolume(void)
         frameIdx(0),
         hashData((std::numeric_limits<std::size_t>::max)()),
         hashState((std::numeric_limits<std::size_t>::max)()),
+        paramIgnoreInputHash("ignoreInputHash", "Instructs the module not to honour the input hash when checking for updates."),
         slotIn("in", "The input slot providing the volume data."),
         slotOut("out", "The output slot receiving the difference.") {
     using core::misc::VolumetricDataCall;
@@ -50,6 +51,9 @@ megamol::stdplugin::volume::DifferenceVolume::DifferenceVolume(void)
         VolumetricDataCall::FunctionName(VolumetricDataCall::IDX_TRY_GET_DATA),
         &DifferenceVolume::onUnsupported);
     this->MakeSlotAvailable(&this->slotOut);
+
+    this->paramIgnoreInputHash << new core::param::BoolParam(false);
+    this->MakeSlotAvailable(&this->paramIgnoreInputHash);
 }
 
 
@@ -143,10 +147,13 @@ bool megamol::stdplugin::volume::DifferenceVolume::create(void) {
  */
 bool megamol::stdplugin::volume::DifferenceVolume::onGetData(core::Call& call) {
     using core::misc::VolumetricDataCall;
+    using core::param::BoolParam;
     using vislib::sys::Log;
 
     auto dst = dynamic_cast<VolumetricDataCall *>(&call);
     auto src = this->slotIn.CallAs<VolumetricDataCall>();
+    const auto localUpdate = this->paramIgnoreInputHash.IsDirty();
+    const auto ignoreHash = this->paramIgnoreInputHash.Param<BoolParam>()->Value();
 
     /* Sanity checks. */
     if (dst == nullptr) {
@@ -171,9 +178,9 @@ bool megamol::stdplugin::volume::DifferenceVolume::onGetData(core::Call& call) {
     *dst = *src;
 
     /* Establish what acceptable data are if the source changed. */
-    if (this->hashData != src->DataHash()) {
-        Log::DefaultLog.WriteInfo(L"Volume data has changed, resetting "
-            L"reference for difference computation.");
+    if (localUpdate || (!ignoreHash && (this->hashData != src->DataHash()))) {
+        Log::DefaultLog.WriteInfo(L"Volume data or local configuration have "
+            L"changed, resetting reference for difference computation.");
 
         /* Check for compatibility of the incoming data. */
         if (src->GetMetadata()->GridType != core::misc::CARTESIAN) {
@@ -202,6 +209,11 @@ bool megamol::stdplugin::volume::DifferenceVolume::onGetData(core::Call& call) {
         this->frameID = (std::numeric_limits<unsigned int>::max)();
         this->frameIdx = 0;
         this->hashData = src->DataHash();
+
+        /* Mark local state as unchanged. */
+        if (localUpdate) {
+            this->paramIgnoreInputHash.ResetDirty();
+        }
     }
 
     /* If the data we have need an update, compute it. */
