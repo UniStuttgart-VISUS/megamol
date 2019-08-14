@@ -250,8 +250,6 @@ function(require_external NAME)
 
       add_external_project(tracking_ext
           GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/mm-tracking
-          #GIT_TAG "v0.4.0"
-          TEST_COMMAND ""
           CMAKE_ARGS 
             -DCREATE_TRACKING_TEST_PROGRAM=OFF)
 
