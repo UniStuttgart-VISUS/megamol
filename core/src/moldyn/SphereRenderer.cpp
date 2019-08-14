@@ -95,7 +95,8 @@ moldyn::SphereRenderer::SphereRenderer(void)
     , aoOffsetSlot("ao::offset", "Ambient Occlusion: Offset from Surface")
     , aoStrengthSlot("ao::strength", "Ambient Occlusion: Strength")
     , aoConeLengthSlot("ao::conelen", "Ambient Occlusion: Cone length")
-    , useHPTexturesSlot("ao::high_prec_tex", "Ambient Occlusion: Use high precision textures") {
+    , useHPTexturesSlot("ao::high_prec_tex", "Ambient Occlusion: Use high precision textures")
+    , outlineSizeSlot("outline::width", "Width of the outline") {
 
     this->radiusScalingParam << new core::param::FloatParam(1.0f);
     this->MakeSlotAvailable(&this->radiusScalingParam);
@@ -136,6 +137,9 @@ moldyn::SphereRenderer::SphereRenderer(void)
     this->useHPTexturesSlot << (new core::param::BoolParam(false));
     this->MakeSlotAvailable(&this->useHPTexturesSlot);
 
+    this->outlineSizeSlot << (new core::param::FloatParam(2.0f, 0.0f));
+    this->MakeSlotAvailable(&this->outlineSizeSlot);
+
     // Initialising enum param with all possible modes (needed for configurator) 
     // (Removing not available render modes later in create function)
     param::EnumParam* rmp = new param::EnumParam(this->renderMode);
@@ -146,6 +150,7 @@ moldyn::SphereRenderer::SphereRenderer(void)
     rmp->SetTypePair(RenderMode::BUFFER_ARRAY,      "Buffer_Array"); 
     rmp->SetTypePair(RenderMode::SPLAT,             "Splat");   
     rmp->SetTypePair(RenderMode::AMBIENT_OCCLUSION, "Ambient_Occlusion"); 
+    rmp->SetTypePair(RenderMode::OUTLINE, "Outline");
     this->renderModeParam << rmp;
     this->MakeSlotAvailable(&this->renderModeParam);
 
@@ -192,6 +197,9 @@ bool moldyn::SphereRenderer::create(void) {
     }
     if (this->isRenderModeAvailable(RenderMode::AMBIENT_OCCLUSION)) {
         this->renderModeParam.Param<param::EnumParam>()->SetTypePair(RenderMode::AMBIENT_OCCLUSION, "Ambient_Occlusion");
+    }
+    if (this->isRenderModeAvailable(RenderMode::OUTLINE)) {
+        this->renderModeParam.Param<param::EnumParam>()->SetTypePair(RenderMode::OUTLINE, "Outline");
     }
     this->MakeSlotAvailable(&this->renderModeParam);
 
@@ -465,6 +473,23 @@ bool moldyn::SphereRenderer::createResources() {
             this->triggerRebuildGBuffer = true;
         } break;
 
+        case RenderMode::OUTLINE: {
+            vertShaderName = "sphere_outline::vertex";
+            fragShaderName = "sphere_outline::fragment";
+            if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
+                return false;
+            }
+            if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
+                return false;
+            }
+            if (!this->sphereShader.Create(this->vertShader->Code(), this->vertShader->Count(),
+                    this->fragShader->Code(), this->fragShader->Count())) {
+                vislib::sys::Log::DefaultLog.WriteMsg(
+                    vislib::sys::Log::LEVEL_ERROR, "Unable to compile sphere shader: Unknown error\n");
+                return false;
+            }
+        } break;
+
         default:
             return false;
         }
@@ -568,6 +593,11 @@ bool moldyn::SphereRenderer::isRenderModeAvailable(RenderMode rm, bool silent) {
             errorstr += "[SphereRenderer] Render Mode 'AMBIENT_OCCLUSION' is not available. Extension GL_ARB_gpu_shader_fp64 is not available. \n";
         }
         break;
+    case (RenderMode::OUTLINE):
+        if (ogl_IsVersionGEQ(1, 4) == 0) { // TODO change to needed openGL version
+            errorstr += "[SphereRenderer] Render Mode 'OUTLINE' is not available. Minimum OpenGL version is 1.4 \n";
+        }
+        break;
     default:
         errorstr += "[SphereRenderer] BUG: Unknown render mode ... \n";
         break;
@@ -606,6 +636,9 @@ std::string moldyn::SphereRenderer::getRenderModeString(RenderMode rm) {
         break;
     case (RenderMode::AMBIENT_OCCLUSION):
         mode = "AMBIENT OCCLUSION";
+        break;
+    case (RenderMode::OUTLINE):
+        mode = "OUTLINE";
         break;
     default:
         mode = "unknown";
@@ -711,6 +744,8 @@ bool moldyn::SphereRenderer::Render(view::CallRender3D& call) {
     case (RenderMode::AMBIENT_OCCLUSION):
         retval = this->renderAmbientOcclusion(cr3d, mpdc); 
         break;
+    case (RenderMode::OUTLINE):
+        retval = this->renderOutline(cr3d, mpdc); break;
     default:
         break;
     }
@@ -1170,6 +1205,75 @@ bool moldyn::SphereRenderer::renderSplat(view::CallRender3D* cr3d, MultiParticle
     glDisable(GL_POINT_SPRITE);
     glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
+
+    return true;
+}
+
+bool moldyn::SphereRenderer::renderOutline(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc) {
+
+    this->sphereShader.Enable();
+
+    GLuint vertAttribLoc = glGetAttribLocationARB(this->sphereShader, "inVertex");
+    GLuint colAttribLoc = glGetAttribLocationARB(this->sphereShader, "inColor");
+    GLuint colIdxAttribLoc = glGetAttribLocationARB(this->sphereShader, "colIdx");
+
+    glUniform4fv(this->sphereShader.ParameterLocation("viewAttr"), 1, this->curViewAttrib);
+    glUniform3fv(
+        this->sphereShader.ParameterLocation("camIn"), 1, cr3d->GetCameraParameters()->Front().PeekComponents());
+    glUniform3fv(
+        this->sphereShader.ParameterLocation("camRight"), 1, cr3d->GetCameraParameters()->Right().PeekComponents());
+    glUniform3fv(this->sphereShader.ParameterLocation("camUp"), 1, cr3d->GetCameraParameters()->Up().PeekComponents());
+    glUniform1f(
+        this->sphereShader.ParameterLocation("scaling"), this->radiusScalingParam.Param<param::FloatParam>()->Value());
+    glUniform1f(
+        this->sphereShader.ParameterLocation("outlinesize"), this->outlineSizeSlot.Param<param::FloatParam>()->Value());
+    glUniform4fv(this->sphereShader.ParameterLocation("clipDat"), 1, this->curClipDat);
+    glUniform4fv(this->sphereShader.ParameterLocation("clipCol"), 1, this->curClipCol);
+    glUniform4fv(this->sphereShader.ParameterLocation("lpos"), 1, this->curLightPos);
+    glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVinv"), 1, GL_FALSE, this->curMVinv.PeekComponents());
+    glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVP"), 1, GL_FALSE, this->curMVP.PeekComponents());
+    glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVPinv"), 1, GL_FALSE, this->curMVPinv.PeekComponents());
+    glUniformMatrix4fv(
+        this->sphereShader.ParameterLocation("MVPtransp"), 1, GL_FALSE, this->curMVPtransp.PeekComponents());
+
+    for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
+        MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
+
+        GLuint vao, vb, cb;
+        if (this->renderMode == RenderMode::SIMPLE_CLUSTERED) {
+            parts.GetVAOs(vao, vb, cb);
+            if (parts.IsVAO()) {
+                glBindVertexArray(vao);
+                this->setPointers<GLSLShader>(parts, this->sphereShader, vb, parts.GetVertexData(), vertAttribLoc, cb,
+                    parts.GetColourData(), colAttribLoc, colIdxAttribLoc);
+            }
+        }
+        if ((this->renderMode == RenderMode::SIMPLE) || (!parts.IsVAO())) {
+            this->setPointers<GLSLShader>(parts, this->sphereShader, 0, parts.GetVertexData(), vertAttribLoc, 0,
+                parts.GetColourData(), colAttribLoc, colIdxAttribLoc);
+        }
+
+        glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(parts.GetCount()));
+
+        if (this->renderMode == RenderMode::SIMPLE_CLUSTERED) {
+            if (parts.IsVAO()) {
+                glBindVertexArray(0); // vao
+            }
+        }
+
+        // Reset states set in setPointers()
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glDisableVertexAttribArrayARB(vertAttribLoc);
+        glDisableVertexAttribArrayARB(colAttribLoc);
+        glDisableVertexAttribArrayARB(colIdxAttribLoc);
+        glDisable(GL_TEXTURE_1D);
+    }
+
+    mpdc->Unlock();
+
+    this->sphereShader.Disable();
+
+    return true;
 
     return true;
 }

@@ -25,7 +25,7 @@ uniform float rayStepRatio;
 uniform vec2 valRange;
 
 /* background color */
-uniform vec3 background;
+uniform vec4 background;
 
 /* lighting */
 uniform bool use_lighting;

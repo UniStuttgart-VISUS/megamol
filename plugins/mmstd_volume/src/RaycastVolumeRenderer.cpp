@@ -429,12 +429,13 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
         this->m_material_color.Param<core::param::ColorParam>()->Value().data());
 
     auto const arv = std::dynamic_pointer_cast<core::view::AbstractRenderingView const>(cr->PeekCallerSlot()->Parent());
-    std::array<float, 3> bkgndCol = {1.0f, 1.0f, 1.0f};
+    std::array<float, 4> bkgndCol = {1.0f, 1.0f, 1.0f, 1.0f};
     if (arv != nullptr) {
         auto const ptr = arv->BkgndColour();
         bkgndCol[0] = ptr[0];
         bkgndCol[1] = ptr[1];
         bkgndCol[2] = ptr[2];
+        bkgndCol[3] = 1.0f;
     }
     glUniform3fv(compute_shdr->ParameterLocation("background"), 1, bkgndCol.data());
 

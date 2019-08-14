@@ -18,9 +18,10 @@
 /*
  * megamol::stdplugin::datatools::table::TableProcessorBase::TableProcessorBase
  */
-megamol::stdplugin::datatools::table::TableProcessorBase::TableProcessorBase(void) : frameID(0),
-        inputHash((std::numeric_limits<std::size_t>::max)()),
-        localHash((std::numeric_limits<std::size_t>::max)()),
+megamol::stdplugin::datatools::table::TableProcessorBase::TableProcessorBase(void)
+        : frameID((std::numeric_limits<unsigned int>::max)()),
+        inputHash(0),
+        localHash(0),
         slotInput("input", "The input slot providing the unfiltered data."),
         slotOutput("output", "The input slot for the filtered data.") {
     /* Export the calls. */

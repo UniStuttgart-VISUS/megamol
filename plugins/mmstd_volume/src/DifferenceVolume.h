@@ -169,6 +169,7 @@ namespace volume {
         std::size_t hashData;
         std::size_t hashState;
         core::misc::VolumetricMetadataStore metadata;
+        core::param::ParamSlot paramIgnoreInputHash;
         core::CallerSlot slotIn;
         core::CalleeSlot slotOut;
 
