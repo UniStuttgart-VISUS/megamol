@@ -610,13 +610,16 @@ bool megamol::astro::AstroSchulz::getData(const unsigned int frameID) {
         }
 
         // Copy the data into the table as necessary.
-        if (isParamChange || (this->hashInput != ast->DataHash()) || (this->frameID != frameID)) {
+        bool hashChanged = this->hashInput != ast->DataHash();
+        if (isParamChange || hashChanged || (this->frameID != frameID)) {
             Log::DefaultLog.WriteInfo(L"Astro data are new (frame %u), filling "
                                       L"table ...",
                 frameID);
             this->frameID = frameID;
             this->hashInput = ast->DataHash();
-            ++this->hashState;
+            if (isParamChange || hashChanged) {
+                ++this->hashState;
+            }
 
             const auto cnt = ast->GetParticleCount();
             this->values.resize(cnt * this->columns.size());
