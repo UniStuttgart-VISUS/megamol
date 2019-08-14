@@ -56,6 +56,9 @@ SimpleAstroFilter::SimpleAstroFilter(void)
     , minEntropyParam("entropy::min", "")
     , maxEntropyParam("entropy::max", "")
     , filterEntropyParam("entropy::filter", "")
+    , minAgnDistanceParam("agndistance::min", "")
+    , maxAgnDistanceParam("agndistance::max", "")
+    , filterAgnDistanceParam("agndistance::filter", "")
     , fillFilterButtonParam("fillValues", "")
     , hashOffset(0)
     , refilter(true)
@@ -152,6 +155,13 @@ SimpleAstroFilter::SimpleAstroFilter(void)
     this->MakeSlotAvailable(&this->maxEntropyParam);
     this->filterEntropyParam.SetParameter(new param::BoolParam(false));
     this->MakeSlotAvailable(&this->filterEntropyParam);
+
+    this->minAgnDistanceParam.SetParameter(new param::FloatParam(0.0f));
+    this->MakeSlotAvailable(&this->minAgnDistanceParam);
+    this->maxAgnDistanceParam.SetParameter(new param::FloatParam(0.0f));
+    this->MakeSlotAvailable(&this->maxAgnDistanceParam);
+    this->filterAgnDistanceParam.SetParameter(new param::BoolParam(false));
+    this->MakeSlotAvailable(&this->filterAgnDistanceParam);
 
     this->fillFilterButtonParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_F));
     this->MakeSlotAvailable(&this->fillFilterButtonParam);
@@ -287,6 +297,9 @@ void SimpleAstroFilter::initFields(void) {
     if (this->particleIDs == nullptr) {
         this->particleIDs = std::make_shared<std::vector<int64_t>>();
     }
+    if (this->agnDistances == nullptr) {
+        this->agnDistances = std::make_shared<std::vector<float>>();
+    }
 }
 
 /*
@@ -376,6 +389,12 @@ bool SimpleAstroFilter::filter(const AstroDataCall& call) {
                 filterResult.erase(i);
             }
         }
+        if (this->filterAgnDistanceParam.Param<param::BoolParam>()->Value()) {
+            if (call.GetAgnDistances()->at(i) < this->minAgnDistanceParam.Param<param::FloatParam>()->Value() ||
+                call.GetAgnDistances()->at(i) > this->maxAgnDistanceParam.Param<param::FloatParam>()->Value()) {
+                filterResult.erase(i);
+            }
+        }
     }
     return this->copyInCallToContent(call, filterResult);
 }
@@ -400,6 +419,7 @@ bool SimpleAstroFilter::copyContentToOutCall(AstroDataCall& outCall) {
     outCall.SetIsStarFormingGasFlags(this->isStarFormingGasFlags);
     outCall.SetIsAGNFlags(this->isAGNFlags);
     outCall.SetParticleIDs(this->particleIDs);
+    outCall.SetAGNDistances(this->agnDistances);
     return true;
 }
 
@@ -423,6 +443,7 @@ bool SimpleAstroFilter::copyInCallToContent(const AstroDataCall& inCall, const s
     this->isStarFormingGasFlags->resize(indexSet.size());
     this->isAGNFlags->resize(indexSet.size());
     this->particleIDs->resize(indexSet.size());
+    this->agnDistances->resize(indexSet.size());
 
     std::vector<uint64_t> setVec(indexSet.begin(), indexSet.end());
     std::sort(setVec.begin(), setVec.end());
@@ -445,6 +466,7 @@ bool SimpleAstroFilter::copyInCallToContent(const AstroDataCall& inCall, const s
         this->isStarFormingGasFlags->at(i) = inCall.GetIsStarFormingGasFlags()->at(id);
         this->isAGNFlags->at(i) = inCall.GetIsAGNFlags()->at(id);
         this->particleIDs->at(i) = inCall.GetParticleIDs()->at(id);
+        this->agnDistances->at(i) = inCall.GetAgnDistances()->at(id);
         ++i;
     }
     return true;
@@ -487,6 +509,9 @@ bool SimpleAstroFilter::isParamDirty(void) {
     if (this->minEntropyParam.IsDirty()) return true;
     if (this->maxEntropyParam.IsDirty()) return true;
     if (this->filterEntropyParam.IsDirty()) return true;
+    if (this->minAgnDistanceParam.IsDirty()) return true;
+    if (this->maxAgnDistanceParam.IsDirty()) return true;
+    if (this->filterAgnDistanceParam.IsDirty()) return true;
     return false;
 }
 
@@ -527,6 +552,9 @@ void SimpleAstroFilter::resetDirtyParams(void) {
     this->minEntropyParam.ResetDirty();
     this->maxEntropyParam.ResetDirty();
     this->filterEntropyParam.ResetDirty();
+    this->minAgnDistanceParam.ResetDirty();
+    this->maxAgnDistanceParam.ResetDirty();
+    this->filterAgnDistanceParam.ResetDirty();
 }
 
 /*
@@ -542,6 +570,7 @@ void SimpleAstroFilter::setDisplayedValues(const AstroDataCall& outCall) {
     float minDensity = FLT_MAX, maxDensity = -FLT_MAX;
     float minGravitationalPotential = FLT_MAX, maxGravitationalPotential = -FLT_MAX;
     float minEntropy = FLT_MAX, maxEntropy = -FLT_MAX;
+    float minAGNDistance = FLT_MAX, maxAGNDistance = -FLT_MAX;
 
     for (uint64_t i = 0; i < outCall.GetParticleCount(); ++i) {
         if (glm::length(outCall.GetVelocities()->at(i)) < minVelocity) {
@@ -606,6 +635,13 @@ void SimpleAstroFilter::setDisplayedValues(const AstroDataCall& outCall) {
         if (outCall.GetEntropy()->at(i) > maxEntropy) {
             maxEntropy = outCall.GetEntropy()->at(i);
         }
+
+        if (outCall.GetAgnDistances()->at(i) < minAGNDistance) {
+            minAGNDistance = outCall.GetAgnDistances()->at(i);
+        }
+        if (outCall.GetAgnDistances()->at(i) > maxAGNDistance) {
+            maxAGNDistance = outCall.GetAgnDistances()->at(i);
+        }
     }
 
     this->minVelocityMagnitudeParam.Param<param::FloatParam>()->SetValue(minVelocity, false);
@@ -626,4 +662,6 @@ void SimpleAstroFilter::setDisplayedValues(const AstroDataCall& outCall) {
     this->maxGravitationalPotentialParam.Param<param::FloatParam>()->SetValue(maxGravitationalPotential, false);
     this->minEntropyParam.Param<param::FloatParam>()->SetValue(minEntropy, false);
     this->maxEntropyParam.Param<param::FloatParam>()->SetValue(maxEntropy, false);
+    this->minAgnDistanceParam.Param<param::FloatParam>()->SetValue(minAGNDistance, false);
+    this->maxAgnDistanceParam.Param<param::FloatParam>()->SetValue(maxAGNDistance, false);
 }
