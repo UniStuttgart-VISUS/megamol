@@ -862,7 +862,7 @@ bool megamol::astro::SpectralIntensityVolume::createVolumeCPU(core::misc::Volume
             float t = 0.0f;
             float t_max = std::sqrt(rangeOSx * rangeOSx + rangeOSy * rangeOSy + rangeOSz * rangeOSz);
             float t_step = min_vol_dis;
-            while (t <= t_max && att < 1.0) {
+            while (t <= t_max && e > 0.0) {
                 glm::vec3 const curr = org + t * dir;
 
                 auto ax = static_cast<int>((curr.x - vol_orgx) / vol_disx);
@@ -873,7 +873,7 @@ bool megamol::astro::SpectralIntensityVolume::createVolumeCPU(core::misc::Volume
                 ay = (ay + 2 * vol_sy) % vol_sy;
                 az = (az + 2 * vol_sz) % vol_sz;
 
-                att += optical[(az * vol_sy + ay) * vol_sx + ax];
+                double aps = optical[(az * vol_sy + ay) * vol_sx + ax];
 
                 auto vx = static_cast<int>((curr.x - minOSx) / sliceDistX);
                 auto vy = static_cast<int>((curr.y - minOSy) / sliceDistY);
@@ -883,7 +883,10 @@ bool megamol::astro::SpectralIntensityVolume::createVolumeCPU(core::misc::Volume
                 vy = (vy + 2 * sy) % sy;
                 vz = (vz + 2 * sz) % sz;
 
-                vol_[omp_get_thread_num()][(vz * sy + vy) * sx + vx] += e * bias * att;
+                e -= e * aps;
+                //att += aps * (1.0 - att);
+
+                vol_[omp_get_thread_num()][(vz * sy + vy) * sx + vx] += e;
 
                 t += t_step;
             }
