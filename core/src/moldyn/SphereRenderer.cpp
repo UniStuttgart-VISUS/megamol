@@ -1055,7 +1055,7 @@ bool moldyn::SphereRenderer::renderSimple(view::CallRender3D* cr3d, MultiParticl
             continue;
         }
 
-        glUniform1ui(this->newShader->ParameterLocation("flagsAvailable"), GLuint(this->flagsEnabled));
+        glUniform1ui(this->sphereShader.ParameterLocation("flagsAvailable"), GLuint(this->flagsEnabled));
         if (this->flagsEnabled) {
             glUniform1ui(this->sphereShader.ParameterLocation("flagOffset"), flagPartsCount);
             glUniform4fv(this->sphereShader.ParameterLocation("flagSelectedCol"), 1, this->selectColorParam.Param<param::ColorParam>()->Value().data());
@@ -1415,7 +1415,7 @@ bool moldyn::SphereRenderer::renderBufferArray(view::CallRender3D* cr3d, MultiPa
             continue;
         }
 
-        glUniform1ui(this->newShader->ParameterLocation("flagsAvailable"), GLuint(this->flagsEnabled));
+        glUniform1ui(this->sphereShader.ParameterLocation("flagsAvailable"), GLuint(this->flagsEnabled));
         if (this->flagsEnabled) {
             glUniform4fv(this->sphereShader.ParameterLocation("flagSelectedCol"), 1, this->selectColorParam.Param<param::ColorParam>()->Value().data());
             glUniform4fv(this->sphereShader.ParameterLocation("flagSoftSelectedCol"), 1, this->softSelectColorParam.Param<param::ColorParam>()->Value().data());
@@ -1523,7 +1523,7 @@ bool moldyn::SphereRenderer::renderGeometryShader(view::CallRender3D* cr3d, Mult
             continue;
         }
 
-        glUniform1ui(this->newShader->ParameterLocation("flagsAvailable"), GLuint(this->flagsEnabled));
+        glUniform1ui(this->sphereGeometryShader.ParameterLocation("flagsAvailable"), GLuint(this->flagsEnabled));
         if (this->flagsEnabled) {
             glUniform1ui(this->sphereGeometryShader.ParameterLocation("flagOffset"), flagPartsCount);
             glUniform4fv(this->sphereGeometryShader.ParameterLocation("flagSelectedCol"), 1, this->selectColorParam.Param<param::ColorParam>()->Value().data());
@@ -1607,7 +1607,7 @@ bool moldyn::SphereRenderer::renderAmbientOcclusion(view::CallRender3D* cr3d, Mu
             continue;
         }
 
-        glUniform1ui(this->newShader->ParameterLocation("flagsAvailable"), GLuint(this->flagsEnabled));
+        glUniform1ui(theShader.ParameterLocation("flagsAvailable"), GLuint(this->flagsEnabled));
         if (this->flagsEnabled) {
             glUniform1ui(theShader.ParameterLocation("flagOffset"), flagPartsCount);
             glUniform4fv(theShader.ParameterLocation("flagSelectedCol"), 1, this->selectColorParam.Param<param::ColorParam>()->Value().data());

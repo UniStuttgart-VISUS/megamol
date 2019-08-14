@@ -139,8 +139,6 @@ if (bool(flagsAvailable)) {
     <snippet name="mdao_vert_additional_attributes" type="string">
         <![CDATA[
 
-uniform uint flagsAvailable;
-
 flat out vec4 flagColor;
 
         ]]>
