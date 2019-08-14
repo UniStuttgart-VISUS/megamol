@@ -48,7 +48,7 @@ void compute(float t, const float tfar, const Ray ray, const float rayStep, cons
     }
 
     // Write results
-    result = result.w * result + vec4(background, 1.0f) * (1.0f - result.w);
+    result = result.w * result + background * (1.0f - result.w);
 
     imageStore(render_target_tx2D, pixel_coords, vec4(result.xyz, att));
 }
