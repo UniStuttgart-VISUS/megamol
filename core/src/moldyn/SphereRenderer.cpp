@@ -90,8 +90,8 @@ moldyn::SphereRenderer::SphereRenderer(void) : view::Renderer3DModule()
     , radiusScalingParam("scaling", "Scaling factor for particle radii.")
     , forceTimeSlot("forceTime", "Flag to force the time code to the specified value. Set to true when rendering a video.")
     , useLocalBBoxParam("useLocalBbox", "Enforce usage of local bbox for camera setup")
-    , colIdxRangeInfoParam("transfer function::colorIndexRange", "The current color index range. To be used as range in transfer function editor. ")
-    //, useColRangeIdxParam("transfer function::useColorIndexRange", "Propagates the current color index range to the connected transfer function.")
+    , colIdxRangeInfoParam("transfer function::colorIndexRange", "The current color index range. Use as range in transfer function.")
+    //, useColRangeIdxParam("transfer function::useColorIndexRange", "Propagates the current color index range to a connected transfer function.")
     , selectColorParam("flag storage::selectedColor", "Color for selected spheres in flag storage.")
     , softSelectColorParam("flag storage::softSelectedColor", "Color for soft selected spheres in flag storage.")
     , alphaScalingParam("splat::alphaScaling", "Splat: Scaling factor for particle alpha.")
@@ -2229,9 +2229,9 @@ std::shared_ptr<vislib::graphics::gl::GLSLShader> moldyn::SphereRenderer::genera
         codeSnip = new ShaderSource::StringSnippet(code.c_str());
 
         // Generated shader declaration snippet is inserted after ssbo_vert_attributes.glsl
-        v2->Insert(7, declarationSnip);
+        v2->Insert(8, declarationSnip);
         // Generated shader code snippet is inserted after ssbo_vert_mainstart.glsl (Consider new index through first insertion)
-        v2->Insert(9, codeSnip);
+        v2->Insert(10, codeSnip);
 
         vislib::SmartPtr<ShaderSource> vss(v2);
         this->theShaders.emplace(std::make_pair(std::make_tuple(c, p, interleaved), makeShader(v2, this->fragShader)));

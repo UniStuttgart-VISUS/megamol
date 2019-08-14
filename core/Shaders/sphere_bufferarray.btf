@@ -2,18 +2,21 @@
 <btf type="MegaMolGLSLShader" version="1.0" namespace="sphere_bufferarray">
 
     <include file="core_utils"/>
-    <include file="flag_storage"/>
+    <include file="bitflags"/>
+    <include file="sphere_flags"/>
+
 
     <shader name="vertex">
         <snippet type="version">430</snippet>
-        <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>       
-        <snippet name="Attributes"       type="file">sphere/simple_vert_attributes.glsl</snippet>
-        <snippet name="flag_storage::vert_attributes"/>     
-        <snippet name="core_utils::tflookup" />
+        <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet> 
+        <snippet name="Attributes"       type="file">sphere/simple_vert_attributes.glsl</snippet>        
+        <snippet name="bitflags::main"/>
+        <snippet name="core_utils::tflookup"/>
         <snippet name="core_utils::tfconvenience" />
+        <snippet name="sphere_flags::vert_attributes"/>             
         <snippet name="MainStart"        type="file">sphere/simple_vert_mainstart.glsl</snippet>
         <snippet name="Color"            type="file">sphere/simple_vert_color.glsl</snippet>
-        <snippet name="flag_storage::vert_code"/>          
+        <snippet name="sphere_flags::vert_code"/>          
         <snippet name="PosTrans"         type="file">sphere/simple_vert_postrans.glsl</snippet>
         <snippet name="ClippingPlane"    type="file">sphere/simple_vert_clipping.glsl</snippet>
         <snippet name="SphereTouchPlane" type="file">sphere/simple_vert_spheretouchplane.glsl</snippet>
@@ -21,14 +24,15 @@
         <snippet name="MainEnd"          type="file">sphere/simple_vert_mainend.glsl</snippet>
     </shader>
 
+
     <shader name="fragment">
         <snippet type="version">130</snippet>
         <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>
         <snippet name="Attributes"       type="file">sphere/simple_frag_attributes.glsl</snippet>
-        <snippet name="flag_storage::frag_attributes"/>             
+        <snippet name="sphere_flags::frag_attributes"/>             
         <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
         <snippet name="MainStart"        type="file">sphere/simple_frag_mainstart.glsl</snippet>
-        <snippet name="flag_storage::frag_code"/>          
+        <snippet name="sphere_flags::frag_code"/>          
         <snippet name="OutLighting"      type="file">sphere/simple_frag_out-lighting.glsl</snippet>
         <snippet name="OutDepth"         type="file">sphere/simple_frag_out-depth.glsl</snippet>
         <snippet name="MainEnd"          type="file">sphere/simple_frag_mainend.glsl</snippet>       
