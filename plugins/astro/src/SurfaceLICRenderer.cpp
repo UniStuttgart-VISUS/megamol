@@ -174,6 +174,7 @@ bool SurfaceLICRenderer::Render(core::Call& call) {
     auto ci = this->m_input_renderer.CallAs<core::view::CallRender3D>();
     if (ci == nullptr) return false;
 
+    ci->SetTime(cr->Time());
     ci->SetCameraParameters(cr->GetCameraParameters());
 
     if (this->fbo.IsValid()) this->fbo.Release();
@@ -200,6 +201,7 @@ bool SurfaceLICRenderer::Render(core::Call& call) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     if (!(*ci)(core::view::CallRender3D::FnRender)) return false;
+    cr->SetTimeFramesCount(ci->TimeFramesCount());   // Notify parent about animation length
 
     this->fbo.Disable();
 
