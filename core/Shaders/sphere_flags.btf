@@ -4,7 +4,7 @@
     <snippet name="vert_attributes" type="string">
         <![CDATA[
 
-#define FLAG_STORAGE
+uniform uint flagsAvailable;
 
 uniform uint flagOffset;
 
@@ -25,10 +25,10 @@ flat out int flagDiscard;
 // Applying flags
 void ApplyFlags(const in uint currentFlag, inout int discardFlag, inout vec4 colorFlag) {
 
-    // Visibility: Not Enabled
-    discardFlag = int(false);
+    // Visibility
+    discardFlag = 0;
     if (!bitflag_isVisible(currentFlag)) {
-        discardFlag = int(true);
+        discardFlag = 1;
     } 
     // Selected
     if (bitflag_test(currentFlag, FLAG_SELECTED, FLAG_SELECTED)) {
@@ -39,13 +39,14 @@ void ApplyFlags(const in uint currentFlag, inout int discardFlag, inout vec4 col
         colorFlag = flagSoftSelectedCol;
     }
 }
+
         ]]>
     </snippet>
 
     <snippet name="vert_code" type="string">
         <![CDATA[
 
- #ifdef FLAG_STORAGE
+if (bool(flagsAvailable)) {
 
     flagDiscard = 0;
     uint flag = uint(0);
@@ -57,8 +58,7 @@ void ApplyFlags(const in uint currentFlag, inout int discardFlag, inout vec4 col
 #endif // FLAG_STORAGE_SSBO
 
     ApplyFlags(flag, flagDiscard, vertColor);
-
-#endif // FLAG_STORAGE
+}
 
         ]]>
     </snippet>
@@ -66,7 +66,7 @@ void ApplyFlags(const in uint currentFlag, inout int discardFlag, inout vec4 col
     <snippet name="frag_attributes" type="string">
         <![CDATA[
 
-#define FLAG_STORAGE
+uniform uint flagsAvailable;
 
 flat in int flagDiscard;
 
@@ -76,13 +76,12 @@ flat in int flagDiscard;
     <snippet name="frag_code" type="string">
         <![CDATA[
 
- #ifdef FLAG_STORAGE
+if (bool(flagsAvailable)) {
 
     if (flagDiscard != 0) {
         discard;
     }
-
-#endif // FLAG_STORAGE
+}
 
         ]]>
     </snippet>
@@ -92,7 +91,7 @@ flat in int flagDiscard;
     <snippet name="geo_attributes" type="string">
         <![CDATA[
 
-#define FLAG_STORAGE
+uniform uint flagsAvailable;
 
 flat in  int flagDiscard[1];
 flat out int geoFlagDiscard;
@@ -103,11 +102,10 @@ flat out int geoFlagDiscard;
     <snippet name="geo_code" type="string">
         <![CDATA[
 
- #ifdef FLAG_STORAGE
+if (bool(flagsAvailable)) {
 
     geoFlagDiscard = flagDiscard[0];
-
-#endif // FLAG_STORAGE
+}
 
         ]]>
     </snippet>
@@ -116,7 +114,7 @@ flat out int geoFlagDiscard;
     <snippet name="geo_frag_attributes" type="string">
         <![CDATA[
 
-#define FLAG_STORAGE
+uniform uint flagsAvailable;
 
 flat in int geoFlagDiscard;
 
@@ -126,14 +124,12 @@ flat in int geoFlagDiscard;
     <snippet name="geo_frag_code" type="string">
         <![CDATA[
 
- #ifdef FLAG_STORAGE
+if (bool(flagsAvailable)) {
 
     if (geoFlagDiscard != 0) {
         discard;
     }
-
-#endif // FLAG_STORAGE
-
+}
         ]]>
     </snippet>
 
@@ -143,11 +139,9 @@ flat in int geoFlagDiscard;
     <snippet name="mdao_vert_additional_attributes" type="string">
         <![CDATA[
 
-#ifdef FLAG_STORAGE
+uniform uint flagsAvailable;
 
 flat out vec4 flagColor;
-
-#endif // FLAG_STORAGE
 
         ]]>
     </snippet>
@@ -155,7 +149,7 @@ flat out vec4 flagColor;
     <snippet name="mdao_vert_code" type="string">
         <![CDATA[
 
-#ifdef FLAG_STORAGE
+if (bool(flagsAvailable)) {
 
     flagDiscard = 0;
     flagColor = vec4(0.0, 0.0, 0.0, 0.0);
@@ -168,8 +162,7 @@ flat out vec4 flagColor;
 #endif // FLAG_STORAGE_SSBO
 
     ApplyFlags(flag, flagDiscard, flagColor);
-
-#endif // FLAG_STORAGE
+}
 
         ]]>
     </snippet>
@@ -177,7 +170,7 @@ flat out vec4 flagColor;
     <snippet name="mdao_geo_attributes" type="string">
         <![CDATA[
 
-#define FLAG_STORAGE
+uniform uint flagsAvailable;
 
 flat in int flagDiscard[1];
 flat in vec4 flagColor[1];
@@ -190,14 +183,12 @@ flat out int geoFlagDiscard;
     <snippet name="mdao_geo_code" type="string">
         <![CDATA[
 
-#ifdef FLAG_STORAGE
-
+if (bool(flagsAvailable)) {
     if (flagColor[0] != vec4(0.0)) {
         vertColor = flagColor[0];
     }
     geoFlagDiscard = flagDiscard[0];
-
-#endif // FLAG_STORAGE
+}
 
         ]]>
     </snippet>

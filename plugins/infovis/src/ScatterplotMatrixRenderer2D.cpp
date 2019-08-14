@@ -381,10 +381,12 @@ bool ScatterplotMatrixRenderer2D::validate(core::view::CallRender2D& call, bool 
     auto mvp = getModelViewProjection();
     // mvp is unstable across GetExtents and Render, so we just do these checks when rendering
     if (hasDirtyScreen() ||
-        (!ignoreMVP && (screenLastMVP != mvp || this->flagsBufferVersion != this->flagStorage->GetVersion()))) {
+        (!ignoreMVP && (screenLastMVP != mvp || this->flagsBufferVersion != this->flagStorage->GetVersion())) ||
+        this->transferFunction->IsDirty()) {
         this->screenValid = false;
         resetDirtyScreen();
         screenLastMVP = mvp;
+        this->transferFunction->ResetDirty();
     }
 
     if (this->dataHash == this->floatTable->DataHash() && ts == this->dataTime && !hasDirtyData()) return true;

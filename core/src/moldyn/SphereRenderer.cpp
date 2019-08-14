@@ -91,7 +91,6 @@ moldyn::SphereRenderer::SphereRenderer(void) : view::Renderer3DModule()
     , forceTimeSlot("forceTime", "Flag to force the time code to the specified value. Set to true when rendering a video.")
     , useLocalBBoxParam("useLocalBbox", "Enforce usage of local bbox for camera setup")
     , colIdxRangeInfoParam("transfer function::colorIndexRange", "The current color index range. Use as range in transfer function.")
-    //, useColRangeIdxParam("transfer function::useColorIndexRange", "Propagates the current color index range to a connected transfer function.")
     , selectColorParam("flag storage::selectedColor", "Color for selected spheres in flag storage.")
     , softSelectColorParam("flag storage::softSelectedColor", "Color for soft selected spheres in flag storage.")
     , alphaScalingParam("splat::alphaScaling", "Splat: Scaling factor for particle alpha.")
@@ -136,7 +135,7 @@ moldyn::SphereRenderer::SphereRenderer(void) : view::Renderer3DModule()
     this->radiusScalingParam << new param::FloatParam(1.0f);
     this->MakeSlotAvailable(&this->radiusScalingParam);
 
-    this->forceTimeSlot.SetParameter(new param::BoolParam(false));
+    this->forceTimeSlot << new param::BoolParam(false);
     this->MakeSlotAvailable(&this->forceTimeSlot);
 
     this->useLocalBBoxParam << new param::BoolParam(false);
@@ -145,10 +144,6 @@ moldyn::SphereRenderer::SphereRenderer(void) : view::Renderer3DModule()
     this->colIdxRangeInfoParam << new param::Vector2fParam(vislib::math::Vector<float, 2>(0.0f, 0.0f));
     this->MakeSlotAvailable(&this->colIdxRangeInfoParam);
     this->colIdxRangeInfoParam.Param<param::Vector2fParam>()->SetGUIReadOnly(true);
-
-    //this->useColRangeIdxParam << new param::ButtonParam();
-    //this->useColRangeIdxParam.SetUpdateCallback(&moldyn::SphereRenderer::onToggleButton);
-    //this->MakeSlotAvailable(&this->useColRangeIdxParam);
 
     this->selectColorParam << new param::ColorParam(1.0f, 0.0f, 0.0f, 1.0f);
     this->MakeSlotAvailable(&this->selectColorParam);
@@ -304,7 +299,6 @@ bool moldyn::SphereRenderer::resetResources(void) {
     this->selectColorParam.Param<param::ColorParam>()->SetGUIVisible(false);
     this->softSelectColorParam.Param<param::ColorParam>()->SetGUIVisible(false);
     this->colIdxRangeInfoParam.Param<param::Vector2fParam>()->SetGUIVisible(false);
-    //this->useColRangeIdxParam.Param<param::ButtonParam>()->SetGUIVisible(false);
 
     // Set all render mode dependent parameter to GUI invisible
     // SPLAT 
@@ -424,30 +418,17 @@ bool moldyn::SphereRenderer::createResources() {
             (this->getRenderModeString(this->renderMode)).c_str());
     }
 
-    // Flag Storage
-    auto flagc = this->getFlagsSlot.CallAs<FlagCall>();
-    if (flagc != nullptr) {
-        this->selectColorParam.Param<param::ColorParam>()->SetGUIVisible(true);
-        this->softSelectColorParam.Param<param::ColorParam>()->SetGUIVisible(true);
-    }
+    // Check availbility of ssbo flag storage
     int major = -1;
     int minor = -1;
     this->flagsUseSSBO = false;
     this->getGLSLVersion(major, minor);
-    // Check availbility of ssbo flag storage
     if ((major == 4) && (minor >= 3) || (major > 4)) {
         this->flagsUseSSBO = true;
     }
     vislib::SmartPtr<ShaderSource::Snippet> flagSnippet;
     std::string flagDefine = "\n#define FLAG_STORAGE_SSBO\n\n";
     flagSnippet = new ShaderSource::StringSnippet(flagDefine.c_str());
-
-    // Transfer Function Params
-    auto cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
-    if (cgtf != nullptr) {
-        this->colIdxRangeInfoParam.Param<param::Vector2fParam>()->SetGUIVisible(true);
-        //this->useColRangeIdxParam.Param<param::ButtonParam>()->SetGUIVisible(true);
-    }
 
     // Fallback transfer function texture
     glEnable(GL_TEXTURE_1D);
@@ -462,7 +443,6 @@ bool moldyn::SphereRenderer::createResources() {
     glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP);
     glBindTexture(GL_TEXTURE_1D, 0);
     glDisable(GL_TEXTURE_1D);
-
 
     try {
         switch (this->renderMode) {
@@ -914,27 +894,14 @@ std::string moldyn::SphereRenderer::getRenderModeString(RenderMode rm) {
 }
 
 
-bool moldyn::SphereRenderer::onToggleButton(param::ParamSlot& p) {
-
-    //if (&p == &this->useColRangeIdxParam) {
-    //    view::CallGetTransferFunction* cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
-    //    if (cgtf != nullptr) {
-    //        std::array<float, 2> range;
-    //        auto vec2 = this->colIdxRangeInfoParam.Param<param::Vector2fParam>()->Value();
-    //        range[0] = vec2.X();
-    //        range[1] = vec2.Y();
-    //        cgtf->SetRange(range);
-    //        return true;
-    //    }
-    //}
-    return false;
-}
-
 
 bool moldyn::SphereRenderer::Render(view::CallRender3D& call) {
 
     view::CallRender3D* cr3d = dynamic_cast<view::CallRender3D*>(&call);
     if (cr3d == nullptr) return false;
+
+    auto cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
+    auto flagc = this->getFlagsSlot.CallAs<FlagCall>();
 
     // timer.BeginFrame();
 
@@ -951,6 +918,11 @@ bool moldyn::SphereRenderer::Render(view::CallRender3D& call) {
     MultiParticleDataCall* mpdc = this->getData(static_cast<unsigned int>(cr3d->Time()), scaling);
     if (mpdc == nullptr) return false;
 
+    // Update parameter visibility
+    this->colIdxRangeInfoParam.Param<param::Vector2fParam>()->SetGUIVisible((bool)(cgtf != nullptr));
+    this->selectColorParam.Param<param::ColorParam>()->SetGUIVisible((bool)(flagc != nullptr));
+    this->softSelectColorParam.Param<param::ColorParam>()->SetGUIVisible((bool)(flagc != nullptr));
+
     // Update current state variables -----------------------------------------
     glGetFloatv(GL_VIEWPORT, this->curViewAttrib);
     this->curVpWidth = static_cast<int>(this->curViewAttrib[2]);
@@ -963,14 +935,10 @@ bool moldyn::SphereRenderer::Render(view::CallRender3D& call) {
     const SIZE_T hash = mpdc->DataHash();
     const unsigned int frameID = mpdc->FrameID();
 
-    //NB: Required for Ambient Occlusion (why?)
-    glPointSize(static_cast<GLfloat>(std::max(this->curVpWidth, this->curVpHeight)));
-
     // Check if we got a new data set
     this->stateInvalid = ((hash != this->oldHash) || (frameID != this->oldFrameID));
 
     // Update read only parameter values of color index range to be set manually in  transfer function
-    view::CallGetTransferFunction* cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
     if ((cgtf != nullptr) && (hash != this->oldHash)) {
         std::array<float, 2> range;
         range[0] = std::numeric_limits<float>::max(); // min
@@ -1018,10 +986,9 @@ bool moldyn::SphereRenderer::Render(view::CallRender3D& call) {
     // Set OpenGL state
     glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS); /// default - necessary for early depth test in fragment shader to work.
-#ifdef GL_VERSION_2_0
+    /// Necessary for early depth test in fragment shader to work (default):
+    glDepthFunc(GL_LESS); 
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
-#endif
 
     bool retval = false;
     switch (currentRenderMode) {
@@ -1045,9 +1012,7 @@ bool moldyn::SphereRenderer::Render(view::CallRender3D& call) {
     }
 
     //Reset OpenGl state
-#ifdef GL_VERSION_2_0
     glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
-#endif
     glDisable(GL_DEPTH_TEST);
 
     // Save some current data
@@ -1090,6 +1055,7 @@ bool moldyn::SphereRenderer::renderSimple(view::CallRender3D* cr3d, MultiParticl
             continue;
         }
 
+        glUniform1ui(this->newShader->ParameterLocation("flagsAvailable"), GLuint(this->flagsEnabled));
         if (this->flagsEnabled) {
             glUniform1ui(this->sphereShader.ParameterLocation("flagOffset"), flagPartsCount);
             glUniform4fv(this->sphereShader.ParameterLocation("flagSelectedCol"), 1, this->selectColorParam.Param<param::ColorParam>()->Value().data());
@@ -1152,6 +1118,7 @@ bool moldyn::SphereRenderer::renderSSBO(view::CallRender3D* cr3d, MultiParticleD
         }
 
         this->setFlagStorage(*this->newShader, mpdc);
+        glUniform1ui(this->newShader->ParameterLocation("flagsAvailable"), GLuint(this->flagsEnabled));
         if (this->flagsEnabled) {
             glUniform1ui(this->newShader->ParameterLocation("flagOffset"), flagPartsCount);
             glUniform4fv(this->newShader->ParameterLocation("flagSelectedCol"), 1, this->selectColorParam.Param<param::ColorParam>()->Value().data());
@@ -1334,6 +1301,7 @@ bool moldyn::SphereRenderer::renderSplat(view::CallRender3D* cr3d, MultiParticle
         }
 
         this->setFlagStorage(*this->newShader, mpdc);
+        glUniform1ui(this->newShader->ParameterLocation("flagsAvailable"), GLuint(this->flagsEnabled));
         if (this->flagsEnabled) {
             glUniform1ui(this->newShader->ParameterLocation("flagOffset"), flagPartsCount);
             glUniform4fv(this->newShader->ParameterLocation("flagSelectedCol"), 1, this->selectColorParam.Param<param::ColorParam>()->Value().data());
@@ -1447,6 +1415,7 @@ bool moldyn::SphereRenderer::renderBufferArray(view::CallRender3D* cr3d, MultiPa
             continue;
         }
 
+        glUniform1ui(this->newShader->ParameterLocation("flagsAvailable"), GLuint(this->flagsEnabled));
         if (this->flagsEnabled) {
             glUniform4fv(this->sphereShader.ParameterLocation("flagSelectedCol"), 1, this->selectColorParam.Param<param::ColorParam>()->Value().data());
             glUniform4fv(this->sphereShader.ParameterLocation("flagSoftSelectedCol"), 1, this->softSelectColorParam.Param<param::ColorParam>()->Value().data());
@@ -1554,6 +1523,7 @@ bool moldyn::SphereRenderer::renderGeometryShader(view::CallRender3D* cr3d, Mult
             continue;
         }
 
+        glUniform1ui(this->newShader->ParameterLocation("flagsAvailable"), GLuint(this->flagsEnabled));
         if (this->flagsEnabled) {
             glUniform1ui(this->sphereGeometryShader.ParameterLocation("flagOffset"), flagPartsCount);
             glUniform4fv(this->sphereGeometryShader.ParameterLocation("flagSelectedCol"), 1, this->selectColorParam.Param<param::ColorParam>()->Value().data());
@@ -1637,6 +1607,7 @@ bool moldyn::SphereRenderer::renderAmbientOcclusion(view::CallRender3D* cr3d, Mu
             continue;
         }
 
+        glUniform1ui(this->newShader->ParameterLocation("flagsAvailable"), GLuint(this->flagsEnabled));
         if (this->flagsEnabled) {
             glUniform1ui(theShader.ParameterLocation("flagOffset"), flagPartsCount);
             glUniform4fv(theShader.ParameterLocation("flagSelectedCol"), 1, this->selectColorParam.Param<param::ColorParam>()->Value().data());
@@ -1885,7 +1856,7 @@ bool moldyn::SphereRenderer::setTransferFunctionTexture(vislib::graphics::gl::GL
         glEnable(GL_TEXTURE_1D);
         glBindTexture(GL_TEXTURE_1D, this->greyTF);
         glUniform1i(shader.ParameterLocation("tfTexture"), 0);
-        GLfloat tfrange[2] = { 0.0f, 0.0f };
+        GLfloat tfrange[2] = { 0.0f, 1.0f };
         glUniform2fv(shader.ParameterLocation("tfRange"), 1, tfrange);
     }
     return true;

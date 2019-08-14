@@ -348,7 +348,6 @@ namespace moldyn {
 
         megamol::core::param::ParamSlot renderModeParam;
         megamol::core::param::ParamSlot colIdxRangeInfoParam;
-        //megamol::core::param::ParamSlot useColRangeIdxParam;
         megamol::core::param::ParamSlot radiusScalingParam;
         megamol::core::param::ParamSlot forceTimeSlot;
         megamol::core::param::ParamSlot useLocalBBoxParam;
@@ -375,15 +374,6 @@ namespace moldyn {
         /*********************************************************************/
         /* FUNCTIONS                                                         */
         /*********************************************************************/
-
-        /**
-         * Callback for processing button press.
-         *
-         * @param p  The calling parameter slot.
-         *
-         * @return 'True' on success, 'false' otherwise.
-         */
-        bool onToggleButton(param::ParamSlot& p);
 
         /**
          * Return specified render mode as human readable string.
