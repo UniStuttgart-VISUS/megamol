@@ -958,7 +958,8 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         switch (selectionModeSlot.Param<core::param::EnumParam>()->Value()) {
         case SELECT_STROKE:
             if (this->interactionState == InteractionState::INTERACTION_SELECT) {
-                this->drawStrokeIndicator(this->strokeStartX, this->strokeStartY, this->strokeEndX, this->strokeEndY, this->selectionIndicatorColor);
+                this->drawStrokeIndicator(this->strokeStartX, this->strokeStartY, this->strokeEndX, this->strokeEndY,
+                    this->selectionIndicatorColor);
             }
             break;
         case SELECT_PICK:

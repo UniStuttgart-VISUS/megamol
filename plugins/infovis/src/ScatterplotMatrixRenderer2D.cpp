@@ -23,6 +23,7 @@ using vislib::sys::Log;
 
 const GLuint PlotSSBOBindingPoint = 2;
 const GLuint ValueSSBOBindingPoint = 3;
+const GLuint FlagsBindingPoint = 4;
 
 vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> getModelViewProjection() {
     // this is the apex of suck and must die
@@ -101,7 +102,7 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     , cellNameSizeParam("cellNameSize", "Sets the fontsize for cell names, i.e., column names")
     , alphaScalingParam("alphaScaling", "Scaling factor for overall alpha")
     , alphaAttenuateSubpixelParam("alphaAttenuateSubpixel", "Attenuate alpha of points that have subpixel size")
-    , mouse({0, 0, false, false})
+    , mouse({0, 0, BrushState::NOP})
     , plotSSBO("Plots")
     , valueSSBO("Values")
     , triangleVBO(0)
@@ -113,7 +114,8 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     , axisFont("Evolventa-SansSerif", core::utility::SDFFont::RenderType::RENDERTYPE_FILL)
     , textFont("Evolventa-SansSerif", core::utility::SDFFont::RenderType::RENDERTYPE_FILL)
     , textValid(false)
-    , dataTime(0) {
+    , dataTime(0)
+    , flagsBufferVersion(0) {
     this->floatTableInSlot.SetCompatibleCall<table::TableDataCallDescription>();
     this->MakeSlotAvailable(&this->floatTableInSlot);
 
@@ -123,7 +125,7 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     this->flagStorageInSlot.SetCompatibleCall<core::FlagCallDescription>();
     this->MakeSlotAvailable(&this->flagStorageInSlot);
 
-    core::param::EnumParam* valueMappings = new core::param::EnumParam(0);
+    auto* valueMappings = new core::param::EnumParam(0);
     valueMappings->SetTypePair(VALUE_MAPPING_KERNEL_BLEND, "Kernel Blending");
     valueMappings->SetTypePair(VALUE_MAPPING_KERNEL_DENSITY, "Kernel Density Estimation");
     valueMappings->SetTypePair(VALUE_MAPPING_WEIGHTED_KERNEL_DENSITY, "Weighted Kernel Density Estimation");
@@ -142,7 +144,7 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     this->triangulationSmoothnessParam << new core::param::IntParam(0);
     this->MakeSlotAvailable(&this->triangulationSmoothnessParam);
 
-    core::param::EnumParam* geometryTypes = new core::param::EnumParam(0);
+    auto* geometryTypes = new core::param::EnumParam(0);
     geometryTypes->SetTypePair(GEOMETRY_TYPE_POINT, "Point");
     geometryTypes->SetTypePair(GEOMETRY_TYPE_LINE, "Line");
     geometryTypes->SetTypePair(GEOMETRY_TYPE_TEXT, "Text");
@@ -153,13 +155,13 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     this->kernelWidthParam << new core::param::FloatParam(1.0f, std::numeric_limits<float>::epsilon());
     this->MakeSlotAvailable(&this->kernelWidthParam);
 
-    core::param::EnumParam* kernelTypes = new core::param::EnumParam(0);
+    auto* kernelTypes = new core::param::EnumParam(0);
     kernelTypes->SetTypePair(KERNEL_TYPE_BOX, "Box");
     kernelTypes->SetTypePair(KERNEL_TYPE_GAUSSIAN, "Gaussian");
     this->kernelTypeParam << kernelTypes;
     this->MakeSlotAvailable(&this->kernelTypeParam);
 
-    core::param::EnumParam* axisModes = new core::param::EnumParam(1);
+    auto* axisModes = new core::param::EnumParam(1);
     axisModes->SetTypePair(AXIS_MODE_NONE, "None");
     axisModes->SetTypePair(AXIS_MODE_MINIMALISTIC, "Minimalistic");
     axisModes->SetTypePair(AXIS_MODE_SCIENTIFIC, "Scientific");
@@ -226,9 +228,7 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
 
 ScatterplotMatrixRenderer2D::~ScatterplotMatrixRenderer2D() { this->Release(); }
 
-bool ScatterplotMatrixRenderer2D::create(void) {
-    if (!this->axisFont.Initialise(this->GetCoreInstance())) return false;
-    if (!this->textFont.Initialise(this->GetCoreInstance())) return false;
+bool ScatterplotMatrixRenderer2D::create() {
     if (!makeProgram("::splom::minimalisticAxis", this->minimalisticAxisShader)) return false;
     if (!makeProgram("::splom::scientificAxis", this->scientificAxisShader)) return false;
     if (!makeProgram("::splom::point", this->pointShader)) return false;
@@ -236,27 +236,48 @@ bool ScatterplotMatrixRenderer2D::create(void) {
     if (!makeProgram("::splom::triangle", this->triangleShader)) return false;
     if (!makeProgram("::splom::screen", this->screenShader)) return false;
 
+    glGenBuffers(1, &flagsBuffer);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, flagsBuffer);
+    makeDebugLabel(GL_BUFFER, DEBUG_NAME(flagsBuffer));
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+    if (!this->axisFont.Initialise(this->GetCoreInstance())) return false;
+    if (!this->textFont.Initialise(this->GetCoreInstance())) return false;
     this->axisFont.SetBatchDrawMode(true);
     this->textFont.SetBatchDrawMode(true);
 
     return true;
 }
 
-void ScatterplotMatrixRenderer2D::release(void) {}
+void ScatterplotMatrixRenderer2D::release() { glDeleteBuffers(1, &flagsBuffer); }
 
-bool ScatterplotMatrixRenderer2D::MouseEvent(float x, float y, core::view::MouseFlags flags) {
-    bool leftDown = (flags & core::view::MOUSEFLAG_BUTTON_LEFT_DOWN) != 0;
-    bool rightDown = (flags & core::view::MOUSEFLAG_BUTTON_RIGHT_DOWN) != 0;
-    bool rightChanged = (flags & core::view::MOUSEFLAG_BUTTON_RIGHT_CHANGED) != 0;
+bool ScatterplotMatrixRenderer2D::OnMouseButton(
+    core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) {
+    if (mods.test(core::view::Modifier::CTRL)) {
+        // These clicks go to the view.
+        return false;
+    }
 
+    if (button == core::view::MouseButton::BUTTON_LEFT && action == core::view::MouseButtonAction::PRESS) {
+        this->mouse.selector = BrushState::ADD;
+        return true;
+    } else if (button == core::view::MouseButton::BUTTON_RIGHT && action == core::view::MouseButtonAction::PRESS) {
+        this->mouse.selector = BrushState::REMOVE;
+        return true;
+    }
+
+    this->mouse.selector = BrushState::NOP;
+
+    return false;
+}
+
+bool ScatterplotMatrixRenderer2D::OnMouseMove(double x, double y) {
     this->mouse.x = x;
     this->mouse.y = y;
-    this->mouse.selects = leftDown;
-    this->mouse.inspects = rightDown && rightChanged;
 
-    if (this->mouse.selects || this->mouse.inspects) {
-        // TODO: Some hit testing might be nice here when clicking transparent areas.
-        // return itemAt(mouse.x, mouse.y) != -1;
+    if (this->mouse.selector != BrushState::NOP) {
+        this->updateSelection();
+        return true;
     }
 
     return false;
@@ -264,7 +285,7 @@ bool ScatterplotMatrixRenderer2D::MouseEvent(float x, float y, core::view::Mouse
 
 bool ScatterplotMatrixRenderer2D::Render(core::view::CallRender2D& call) {
     try {
-        if (!this->validate(call)) return false;
+        if (!this->validate(call, false)) return false;
 
         auto axisMode = this->axisModeParam.Param<core::param::EnumParam>()->Value();
         switch (axisMode) {
@@ -305,38 +326,38 @@ bool ScatterplotMatrixRenderer2D::Render(core::view::CallRender2D& call) {
 }
 
 bool ScatterplotMatrixRenderer2D::GetExtents(core::view::CallRender2D& call) {
-    this->validate(call);
+    this->validate(call, true);
     call.SetBoundingBox(this->bounds);
     return true;
 }
 
-bool ScatterplotMatrixRenderer2D::hasDirtyData(void) const {
+bool ScatterplotMatrixRenderer2D::hasDirtyData() const {
     for (auto* param : this->dataParams) {
         if (param->IsDirty()) return true;
     }
     return false;
 }
 
-void ScatterplotMatrixRenderer2D::resetDirtyData(void) {
+void ScatterplotMatrixRenderer2D::resetDirtyData() {
     for (auto* param : this->dataParams) {
         param->ResetDirty();
     }
 }
 
-bool ScatterplotMatrixRenderer2D::hasDirtyScreen(void) const {
+bool ScatterplotMatrixRenderer2D::hasDirtyScreen() const {
     for (auto* param : this->screenParams) {
         if (param->IsDirty()) return true;
     }
     return false;
 }
 
-void ScatterplotMatrixRenderer2D::resetDirtyScreen(void) {
+void ScatterplotMatrixRenderer2D::resetDirtyScreen() {
     for (auto* param : this->screenParams) {
         param->ResetDirty();
     }
 }
 
-bool ScatterplotMatrixRenderer2D::validate(core::view::CallRender2D& call) {
+bool ScatterplotMatrixRenderer2D::validate(core::view::CallRender2D& call, bool ignoreMVP) {
     this->floatTable = this->floatTableInSlot.CallAs<table::TableDataCall>();
 
     if (this->floatTable == nullptr || !(*this->floatTable)(1)) return false;
@@ -358,7 +379,10 @@ bool ScatterplotMatrixRenderer2D::validate(core::view::CallRender2D& call) {
     if (this->transferFunction == nullptr || !(*(this->transferFunction))()) return false;
 
     auto mvp = getModelViewProjection();
-    if (hasDirtyScreen() || screenLastMVP != mvp || this->transferFunction->IsDirty()) {
+    // mvp is unstable across GetExtents and Render, so we just do these checks when rendering
+    if (hasDirtyScreen() ||
+        (!ignoreMVP && (screenLastMVP != mvp || this->flagsBufferVersion != this->flagStorage->GetVersion())) ||
+        this->transferFunction->IsDirty()) {
         this->screenValid = false;
         resetDirtyScreen();
         screenLastMVP = mvp;
@@ -388,6 +412,7 @@ bool ScatterplotMatrixRenderer2D::validate(core::view::CallRender2D& call) {
 
     this->trianglesValid = false;
     this->textValid = false;
+    this->index.reset();
     this->updateColumns();
 
     this->dataHash = this->floatTable->DataHash();
@@ -397,7 +422,7 @@ bool ScatterplotMatrixRenderer2D::validate(core::view::CallRender2D& call) {
     return true;
 }
 
-void ScatterplotMatrixRenderer2D::updateColumns(void) {
+void ScatterplotMatrixRenderer2D::updateColumns() {
     const auto columnCount = this->floatTable->GetColumnsCount();
     const auto columnInfos = this->floatTable->GetColumnsInfos();
     const float size = this->cellSizeParam.Param<core::param::FloatParam>()->Value();
@@ -426,7 +451,9 @@ void ScatterplotMatrixRenderer2D::updateColumns(void) {
     plotSSBO.SignalCompletion(sync);
 }
 
-void ScatterplotMatrixRenderer2D::drawMinimalisticAxis(void) {
+void ScatterplotMatrixRenderer2D::drawMinimalisticAxis() {
+    debugPush(1, "drawMinimalisticAxis");
+
     this->minimalisticAxisShader.Enable();
 
     // Transformation uniform.
@@ -499,9 +526,13 @@ void ScatterplotMatrixRenderer2D::drawMinimalisticAxis(void) {
     }
 
     this->axisFont.BatchDrawString();
+
+    debugPop();
 }
 
-void ScatterplotMatrixRenderer2D::drawScientificAxis(void) {
+void ScatterplotMatrixRenderer2D::drawScientificAxis() {
+    debugPush(2, "drawScientificAxis");
+
     const auto axisColor = this->axisColorParam.Param<core::param::ColorParam>()->Value();
     const auto columnCount = this->floatTable->GetColumnsCount();
     const auto columnInfos = this->floatTable->GetColumnsInfos();
@@ -600,6 +631,8 @@ void ScatterplotMatrixRenderer2D::drawScientificAxis(void) {
     }
 
     this->axisFont.BatchDrawString();
+
+    debugPop();
 }
 
 void ScatterplotMatrixRenderer2D::bindMappingUniforms(vislib::graphics::gl::GLSLShader& shader) {
@@ -617,10 +650,32 @@ void ScatterplotMatrixRenderer2D::bindMappingUniforms(vislib::graphics::gl::GLSL
     this->transferFunction->BindConvenience(shader, GL_TEXTURE0, 0);
 }
 
-void ScatterplotMatrixRenderer2D::drawPoints(void) {
+void ScatterplotMatrixRenderer2D::bindFlagsAttribute() {
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->flagsBuffer);
+
+    if (this->flagsBufferVersion != this->flagStorage->GetVersion() || this->flagsBufferVersion == 0) {
+        (*this->flagStorage)(core::FlagCall::CallMapFlags);
+        this->flagStorage->validateFlagsCount(this->floatTable->GetRowsCount());
+        auto flags = this->flagStorage->GetFlags();
+
+        // Upload flags.
+        glBufferData(GL_SHADER_STORAGE_BUFFER, flags->size() * sizeof(core::FlagStorage::FlagItemType), flags->data(),
+            GL_STATIC_DRAW);
+        this->flagsBufferVersion = this->flagStorage->GetVersion();
+
+        this->flagStorage->SetFlags(flags);
+        (*this->flagStorage)(core::FlagCall::CallUnmapFlags);
+    }
+
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, FlagsBindingPoint, this->flagsBuffer);
+}
+
+void ScatterplotMatrixRenderer2D::drawPoints() {
     if (this->screenValid) {
         return;
     }
+
+    debugPush(11, "drawPoints");
 
     GLfloat viewport[4];
     glGetFloatv(GL_VIEWPORT, viewport);
@@ -648,6 +703,8 @@ void ScatterplotMatrixRenderer2D::drawPoints(void) {
         this->kernelTypeParam.Param<core::param::EnumParam>()->Value());
     glUniform1i(this->pointShader.ParameterLocation("attenuateSubpixel"),
         this->alphaAttenuateSubpixelParam.Param<core::param::BoolParam>()->Value() ? 1 : 0);
+
+    this->bindFlagsAttribute();
 
     // Setup streaming.
     const GLuint numBuffers = 3;
@@ -681,12 +738,16 @@ void ScatterplotMatrixRenderer2D::drawPoints(void) {
 
     glDisable(GL_TEXTURE_1D);
     glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
+
+    debugPop();
 }
 
-void ScatterplotMatrixRenderer2D::drawLines(void) {
+void ScatterplotMatrixRenderer2D::drawLines() {
     if (this->screenValid) {
         return;
     }
+
+    debugPush(12, "drawLines");
 
     GLfloat viewport[4];
     glGetFloatv(GL_VIEWPORT, viewport);
@@ -709,6 +770,8 @@ void ScatterplotMatrixRenderer2D::drawLines(void) {
         this->kernelTypeParam.Param<core::param::EnumParam>()->Value());
     glUniform1i(this->lineShader.ParameterLocation("attenuateSubpixel"),
         this->alphaAttenuateSubpixelParam.Param<core::param::BoolParam>()->Value() ? 1 : 0);
+
+    this->bindFlagsAttribute();
 
     // Setup streaming.
     const GLuint numBuffers = 3;
@@ -741,6 +804,8 @@ void ScatterplotMatrixRenderer2D::drawLines(void) {
     this->lineShader.Disable();
 
     glDisable(GL_TEXTURE_1D);
+
+    debugPop();
 }
 
 struct TriangulationVertex {
@@ -784,7 +849,7 @@ void ScatterplotMatrixRenderer2D::validateTriangulation() {
         // Smooth triangulation by adding new vertices.
         auto smoothIterations = this->triangulationSmoothnessParam.Param<core::param::IntParam>()->Value();
         for (size_t i = 0; i < smoothIterations; i++) {
-            for (int triangleIndex = 0; triangleIndex < d.triangles.size(); triangleIndex += 3) {
+            for (size_t triangleIndex = 0; triangleIndex < d.triangles.size(); triangleIndex += 3) {
                 size_t aIndex = d.triangles[triangleIndex];
                 size_t bIndex = d.triangles[triangleIndex + 1];
                 size_t cIndex = d.triangles[triangleIndex + 2];
@@ -804,17 +869,17 @@ void ScatterplotMatrixRenderer2D::validateTriangulation() {
         }
 
         // We need to offset indices, thus rember one before adding vertices.
-        const GLuint indexOffset = static_cast<GLuint>(vertices.size());
+        const auto indexOffset = static_cast<GLuint>(vertices.size());
 
         // Copy vertices to vertex buffer.
-        for (int vertexIndex = 0; vertexIndex < values.size(); vertexIndex++) {
+        for (size_t vertexIndex = 0; vertexIndex < values.size(); vertexIndex++) {
             TriangulationVertex vertex = {coords[vertexIndex * 2], coords[vertexIndex * 2 + 1], values[vertexIndex]};
             vertices.push_back(vertex);
         }
 
         // Copy indices to index buffer.
-        for (int triangleIndex = 0; triangleIndex < d.triangles.size(); triangleIndex++) {
-            indices.push_back(indexOffset + d.triangles[triangleIndex]);
+        for (auto triangle : d.triangles) {
+            indices.push_back(indexOffset + triangle);
         }
     }
 
@@ -844,6 +909,8 @@ void ScatterplotMatrixRenderer2D::drawTriangulation() {
         return;
     }
 
+    debugPush(13, "drawTriangulation");
+
     this->validateTriangulation();
 
     this->triangleShader.Enable();
@@ -865,87 +932,11 @@ void ScatterplotMatrixRenderer2D::drawTriangulation() {
         this->triangleShader.ParameterLocation("modelViewProjection"), 1, GL_FALSE, mvpMatrix.PeekComponents());
 
     // Emit draw call.
-    glDrawElements(GL_TRIANGLES, triangleVertexCount, GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, triangleVertexCount, GL_UNSIGNED_INT, nullptr);
     this->unbindScreen();
     this->triangleShader.Disable();
-}
 
-void ScatterplotMatrixRenderer2D::bindAndClearScreen() {
-    GLfloat viewport[4];
-    glGetFloatv(GL_VIEWPORT, viewport);
-
-    if (!this->screenFBO || this->screenFBO->getHeight() != static_cast<int>(viewport[2]) ||
-        this->screenFBO->getWidth() != static_cast<int>(viewport[3])) {
-        this->screenFBO.reset(new glowl::FramebufferObject(viewport[2], viewport[3]));
-        this->screenFBO->createColorAttachment(GL_RGBA32F, GL_RGBA, GL_FLOAT);
-    }
-
-    this->screenFBO->bind();
-
-    // Blending and clear color.
-    glEnable(GL_BLEND);
-    glBlendEquation(GL_FUNC_ADD);
-    switch (this->valueMappingParam.Param<core::param::EnumParam>()->Value()) {
-    case VALUE_MAPPING_KERNEL_BLEND:
-        // Assuming the View's background color is still set as clear color.
-        glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-        break;
-    case VALUE_MAPPING_KERNEL_DENSITY:
-    case VALUE_MAPPING_WEIGHTED_KERNEL_DENSITY:
-        glClearColor(0.0, 0.0, 0.0, 0.0);
-        glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-        break;
-    default:
-        assert(false && "Unexpected value");
-    }
-    glDisable(GL_DEPTH_TEST);
-
-    // Clear FBO.
-    glClear(GL_COLOR_BUFFER_BIT);
-}
-
-void ScatterplotMatrixRenderer2D::unbindScreen() {
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-    glDisable(GL_BLEND);
-    glEnable(GL_DEPTH_TEST);
-
-    this->screenValid = true;
-}
-
-void ScatterplotMatrixRenderer2D::drawScreen() {
-    // Enable shader.
-    this->screenShader.Enable();
-    this->bindMappingUniforms(this->screenShader);
-
-    glEnable(GL_BLEND);
-    glBlendEquation(GL_FUNC_ADD);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glDisable(GL_DEPTH_TEST);
-
-    // Screen texture.
-    glEnable(GL_TEXTURE_2D);
-    glActiveTexture(GL_TEXTURE1);
-    glUniform1i(this->screenShader.ParameterLocation("screenTexture"), 1);
-    this->screenFBO->bindColorbuffer(0);
-
-    // Other uniforms.
-    const float contourColor[] = {0.0, 1.0, 0.0, 1.0};                                   // TODO: param
-    const float contourSize = 0.5;                                                       // TODO: param
-    const float contourIsoValues[] = {0.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; // TODO: param
-    const int contourIsoValueCount = 1;                                                  // TODO: infer
-    glUniform4fv(this->screenShader.ParameterLocation("contourColor"), 1, contourColor);
-    glUniform1f(this->screenShader.ParameterLocation("contourSize"), contourSize);
-    glUniform1fv(this->screenShader.ParameterLocation("contourIsoValues"), 10, contourIsoValues);
-    glUniform1i(this->screenShader.ParameterLocation("contourIsoValueCount"), contourIsoValueCount);
-
-    // Emit draw call.
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glDisable(GL_BLEND);
-    glEnable(GL_DEPTH_TEST);
-
-    this->screenShader.Disable();
+    debugPop();
 }
 
 void ScatterplotMatrixRenderer2D::validateText() {
@@ -980,77 +971,133 @@ void ScatterplotMatrixRenderer2D::validateText() {
     this->textValid = true;
 }
 
-
 void ScatterplotMatrixRenderer2D::drawText() {
+    debugPush(14, "drawText");
+
     validateText();
 
     this->textFont.BatchDrawString();
+
+    debugPop();
 }
 
-int ScatterplotMatrixRenderer2D::itemAt(const float x, const float y) {
-    /*
-    if (y >= 0.0f) { //< within scatterplot
-        auto trans = this->oglTrans;
-        trans.Invert();
-        auto query_p = trans*vislib::math::Vector<float, 4>(x, y, 0.0f, 1.0f);
-        float qp[2] = {query_p.X(), query_p.Y()};
-        // search with nanoflann tree
-        size_t idx[1] = {0};
-        float dis[1] = {0.0f};
-        this->tree->index->knnSearch(qp, 1, idx, dis);
+void ScatterplotMatrixRenderer2D::bindAndClearScreen() {
+    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &screenRestoreFBO);
 
-        idx[0] = *reinterpret_cast<unsigned int *>(&this->series[0][idx[0] * 4 + 3]); //< toxic, which is the
-    correct series?
+    GLfloat viewport[4];
+    glGetFloatv(GL_VIEWPORT, viewport);
 
-        auto ssp = this->nvgTrans*vislib::math::Vector<float, 3>(x, y, 1.0f);
-        TraceInfoCall *tic = this->getPointInfoSlot.CallAs<TraceInfoCall>();
-        if (tic == nullptr) {
-            // show tool tip
-            this->drawToolTip(ssp.X() + 10, ssp.Y() + 10, std::string("No Info Call"));
-        } else {
-            tic->SetRequest(TraceInfoCall::RequestType::GetSymbolString, idx[0]);
-            if (!(*tic)(0)) {
-                // show tool tip
-                this->drawToolTip(ssp.X() + 10, ssp.Y() + 10, std::string("No Info Found"));
-            } else {
-                auto st = tic->GetInfo();
-                this->drawToolTip(ssp.X() + 10, ssp.Y() + 10, st);
-            }
-        }
+    if (!this->screenFBO || this->screenFBO->getHeight() != static_cast<int>(viewport[2]) ||
+        this->screenFBO->getWidth() != static_cast<int>(viewport[3])) {
+        this->screenFBO = std::make_unique<glowl::FramebufferObject>(viewport[2], viewport[3]);
+        this->screenFBO->createColorAttachment(GL_RGBA32F, GL_RGBA, GL_FLOAT);
+    }
 
-        return idx[0];
-    } else { //< within callstack
-        // calculate depth
-        // search for fitting range in chosen depth
-        float boxHeight = std::get<1>(this->viewport) / 40.0f;
-        float yCoord = std::fabsf(y);
-        unsigned int depth = std::floorf(yCoord / boxHeight);
-        auto ssp = this->nvgTrans*vislib::math::Vector<float, 3>(x, y, 1.0f);
-        float aspect = this->cellSize.Param<core::param::FloatParam>()->Value();
-        for (auto &r : this->callStack[depth]) {
-            // rb / norm*dw
-            float rb = std::get<0>(r);
-            float re = std::get<1>(r);
-            if ((rb / this->abcissa.size()*std::get<0>(this->viewport)*aspect) <= x && x <= (re /
-    this->abcissa.size()*std::get<0>(this->viewport)*aspect)) { //< abcissa missing size_t symbolIdx =
-    std::get<2>(r); TraceInfoCall *tic = this->getPointInfoSlot.CallAs<TraceInfoCall>(); if (tic == nullptr) {
-                    // show tool tip
-                    this->drawToolTip(ssp.X() + 10, ssp.Y() + 10, std::string("No Info Call"));
-                } else {
-                    tic->SetRequest(TraceInfoCall::RequestType::GetSymbolString, symbolIdx);
-                    if (!(*tic)(0)) {
-                        // show tool tip
-                        this->drawToolTip(ssp.X() + 10, ssp.Y() + 10, std::string("No Info Found"));
-                    } else {
-                        auto st = tic->GetInfo();
-                        st += std::string(" ") + std::to_string((unsigned int)rb) + std::string(" ") +
-    std::to_string((unsigned int)re); this->drawToolTip(ssp.X() + 10, ssp.Y() + 10, st);
-                    }
-                }
-                return symbolIdx;
+    this->screenFBO->bind();
+
+    // Blending and clear color.
+    glEnable(GL_BLEND);
+    glBlendEquation(GL_FUNC_ADD);
+    switch (this->valueMappingParam.Param<core::param::EnumParam>()->Value()) {
+    case VALUE_MAPPING_KERNEL_BLEND:
+        // Assuming the View's background color is still set as clear color.
+        glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+        break;
+    case VALUE_MAPPING_KERNEL_DENSITY:
+    case VALUE_MAPPING_WEIGHTED_KERNEL_DENSITY:
+        glClearColor(0.0, 0.0, 0.0, 0.0);
+        glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+        break;
+    default:
+        assert(false && "Unexpected value");
+    }
+    glDisable(GL_DEPTH_TEST);
+
+    // Clear FBO.
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
+
+void ScatterplotMatrixRenderer2D::unbindScreen() {
+    glBindFramebuffer(GL_FRAMEBUFFER, screenRestoreFBO);
+
+    glDisable(GL_BLEND);
+    glEnable(GL_DEPTH_TEST);
+
+    this->screenValid = true;
+}
+
+void ScatterplotMatrixRenderer2D::drawScreen() {
+    debugPush(20, "drawScreen");
+
+    // Enable shader.
+    this->screenShader.Enable();
+    this->bindMappingUniforms(this->screenShader);
+
+    glEnable(GL_BLEND);
+    glBlendEquation(GL_FUNC_ADD);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDisable(GL_DEPTH_TEST);
+
+    // Screen texture.
+    glEnable(GL_TEXTURE_2D);
+    glActiveTexture(GL_TEXTURE1);
+    glUniform1i(this->screenShader.ParameterLocation("screenTexture"), 1);
+    this->screenFBO->bindColorbuffer(0);
+
+    // Other uniforms.
+    const float contourColor[] = {0.0, 1.0, 0.0, 1.0};                                   // TODO: param
+    const float contourSize = 0.5;                                                       // TODO: param
+    const float contourIsoValues[] = {0.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; // TODO: param
+    const int contourIsoValueCount = 1;                                                  // TODO: infer
+    glUniform4fv(this->screenShader.ParameterLocation("contourColor"), 1, contourColor);
+    glUniform1f(this->screenShader.ParameterLocation("contourSize"), contourSize);
+    glUniform1fv(this->screenShader.ParameterLocation("contourIsoValues"), 10, contourIsoValues);
+    glUniform1i(this->screenShader.ParameterLocation("contourIsoValueCount"), contourIsoValueCount);
+
+    // Emit draw call.
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glDisable(GL_BLEND);
+    glEnable(GL_DEPTH_TEST);
+
+    this->screenShader.Disable();
+
+    debugPop();
+}
+
+void ScatterplotMatrixRenderer2D::updateSelection() {
+    if (!this->index) {
+        // Lazy-construct index.
+        this->indexPoints = std::make_unique<SPLOMPoints>(this->plots, this->floatTable);
+        this->index = std::make_unique<TreeIndex>(2, *indexPoints);
+        this->index->buildIndex();
+    }
+
+    // Do a nearest neighbor search.
+    float queryPoint[2] = {this->mouse.x, this->mouse.y};
+    const size_t kk = 10;
+    size_t idx[kk] = {0};
+    float dis[kk] = {0.0f};
+    size_t k = this->index->knnSearch(queryPoint, kk, idx, dis);
+
+    (*this->flagStorage)(core::FlagCall::CallMapFlags);
+    auto flags = this->flagStorage->GetFlags();
+    auto version = this->flagStorage->GetVersion();
+
+    // Test if distance is within limits.
+    auto kernelRadiusSq = std::pow(0.5 * this->kernelWidthParam.Param<core::param::FloatParam>()->Value(), 2.0);
+    for (size_t i = 0; i < k; ++i) {
+        if (dis[i] <= kernelRadiusSq) {
+            size_t row = this->indexPoints->idx_to_row(idx[i]);
+            if (this->mouse.selector == BrushState::ADD) {
+                (*flags)[row] |= core::FlagStorage::SELECTED;
+            } else if (this->mouse.selector == BrushState::REMOVE) {
+                (*flags)[row] &= ~core::FlagStorage::SELECTED;
             }
         }
     }
-    */
-    return -1;
+    this->flagStorage->SetFlags(flags, version + 1);
+    (*this->flagStorage)(core::FlagCall::CallUnmapFlags);
+
+    this->screenValid = false;
 }
