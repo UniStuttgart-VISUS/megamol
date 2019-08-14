@@ -318,7 +318,9 @@ bool TableToParticles::assertData(table::TableDataCall* ft, unsigned int frameID
     }
 
 	this->lastTimeStep = frameID;
-    this->myHash++;
+    if (anythingDirty() || this->inputHash != ft->DataHash()) {
+        this->myHash++;
+    }
     this->resetAllDirty();
     this->inputHash = ft->DataHash();
     return retValue;
