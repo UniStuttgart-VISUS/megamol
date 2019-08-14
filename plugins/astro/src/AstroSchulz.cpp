@@ -20,8 +20,8 @@
 /*
  * megamol::astro::AstroSchulz::AstroSchulz
  */
-megamol::astro::AstroSchulz::AstroSchulz(void) : Module(), 
-        frameID(0),
+megamol::astro::AstroSchulz::AstroSchulz(void) : Module(),
+        frameID((std::numeric_limits<unsigned int>::max)()),
         hashInput(0),
         hashState(0),
         paramsInclude{{// The ParamSlot has been defeated!!!
