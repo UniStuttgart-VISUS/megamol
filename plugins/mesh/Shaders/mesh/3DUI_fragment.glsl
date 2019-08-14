@@ -1,3 +1,14 @@
+struct MeshShaderParams
+{
+    mat4 transform;
+    vec4 color;
+    int id;
+    int highlighted;
+
+    float padding0;
+    float padding1;
+};
+
 struct LightParams
 {
     float x,y,z,intensity;

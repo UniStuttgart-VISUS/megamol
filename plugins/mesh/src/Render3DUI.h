@@ -86,6 +86,25 @@ namespace mesh {
 
         double m_cursor_x, m_cursor_y;
 
+        /**
+         * Set to true if cursor on interactable object during current frame with respective obj id as second value
+         * Set to fale false if cursor on "background" during current frame with -1 as second value
+         */
+        std::pair<bool, int> m_cursor_on_interaction_obj;
+
+        /**
+         * Set to true if  with respective obj id as second value
+         * Set to fale false if cursor on "background" during current frame with -1 as second value
+         */
+        std::pair<bool, int> m_active_interaction_obj;
+
+        // TODO translation/rotation/scaling guide lines?
+        bool m_show_guides; // TODO move to RenderTask Storage?
+        
+        // TODO local storage of projection and view matrix (for 3D space interaction computations)
+        vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> m_view_mx_cpy;
+        vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> m_proj_mx_cpy;
+
         std::unique_ptr<glowl::FramebufferObject> m_fbo;
 
         megamol::core::CallerSlot m_3DInteraction_callerSlot;

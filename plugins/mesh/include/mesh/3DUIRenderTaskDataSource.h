@@ -68,9 +68,10 @@ namespace mesh {
 
             int id;
 
+            int highlighted;
+
             float padding0;
             float padding1;
-            float padding2;
         };
 
         std::array<std::pair<GPUMeshCollection::SubMeshData,std::array<PerObjectShaderParams,1>>,4> m_UI_template_elements;

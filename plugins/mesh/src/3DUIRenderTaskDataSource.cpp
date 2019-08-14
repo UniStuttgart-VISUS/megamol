@@ -167,6 +167,8 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
             
             m_rt_collection_indices.push_back(rt_idx);
             m_scene.back().first = rt_idx;
+
+            m_interaction_collection->addInteractionObject(1,{ThreeDimensionalInteraction{InteractionType::MOVE_ALONG_AXIS, 1, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f}});
         }
         {
             m_scene.push_back({0, {PerObjectShaderParams()}});
@@ -182,6 +184,9 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
 
             m_rt_collection_indices.push_back(rt_idx);
             m_scene.back().first = rt_idx;
+
+            m_interaction_collection->addInteractionObject(2,
+                {ThreeDimensionalInteraction{InteractionType::MOVE_ALONG_AXIS, 2, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f}});
         }
         {
             m_scene.push_back({0, {PerObjectShaderParams()}});
@@ -197,6 +202,9 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
 
             m_rt_collection_indices.push_back(rt_idx);
             m_scene.back().first = rt_idx;
+
+            m_interaction_collection->addInteractionObject(3,
+                {ThreeDimensionalInteraction{InteractionType::MOVE_ALONG_AXIS, 3, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f}});
         }
         {
             m_scene.push_back({0, {PerObjectShaderParams()}});
@@ -212,6 +220,9 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
 
             m_rt_collection_indices.push_back(rt_idx);
             m_scene.back().first = rt_idx;
+
+            m_interaction_collection->addInteractionObject(4,
+                {ThreeDimensionalInteraction{InteractionType::MOVE_ALONG_AXIS, 4, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}});
         }
 
 
@@ -255,8 +266,9 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getInteractionCallba
         ci->setInteractionCollection(this->m_interaction_collection);
     }
 
+    // clear non persistent changes, such has highlighting
     for (auto& entity : m_scene) {
-        this->m_gpu_render_tasks->updatePerDrawData(entity.first, entity.second);
+        entity.second[0].highlighted = 0;
     }
 
     // TODO consume pending manipulations
@@ -270,8 +282,16 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getInteractionCallba
 
         std::array<PerObjectShaderParams, 1> per_obj_data = it->second;
         
+        vislib::math::Vector<float, 4> translate_col;
+
         switch (manipulation.type) {
         case MOVE_ALONG_AXIS:
+            translate_col = per_obj_data[0].object_transform.GetColumn(3);
+            translate_col += vislib::math::Vector<float, 4>(manipulation.axis_x * manipulation.value,
+                manipulation.axis_y * manipulation.value, manipulation.axis_Z * manipulation.value, 0.0f);
+            per_obj_data[0].object_transform.SetAt(0, 3, translate_col.X());
+            per_obj_data[0].object_transform.SetAt(1, 3, translate_col.Y());
+            per_obj_data[0].object_transform.SetAt(2, 3, translate_col.Z());
             break;
         case MOVE_IN_PLANE:
             break;
@@ -283,14 +303,21 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getInteractionCallba
             break;
         case HIGHLIGHT:
             std::cout << "Hightlight: " << manipulation.obj_id << std::endl;
-            per_obj_data[0].color = {1.0f, 1.0f, 0.0f, 1.0f};
-            this->m_gpu_render_tasks->updatePerDrawData(it->first, per_obj_data);
+            per_obj_data[0].highlighted = 1;
+            //per_obj_data[0].color = {1.0f, 1.0f, 0.0f, 1.0f};a
             break;
         default:
             break;
         }
 
+        it->second = per_obj_data; // overwrite object data for persistent change
+
         ci->getInteractionCollection()->accessPendingManipulations().pop();
+    }
+
+    // update all per obj data buffers
+    for (auto& entity : m_scene) {
+        this->m_gpu_render_tasks->updatePerDrawData(entity.first, entity.second);
     }
 
     return true; 

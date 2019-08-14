@@ -5,10 +5,10 @@ struct MeshShaderParams
     mat4 transform;
     vec4 color;
     int id;
+    int highlighted;
 
     float padding0;
     float padding1;
-    float padding2;
 };
 
 layout(std430, binding = 0) readonly buffer MeshShaderParamsBuffer { MeshShaderParams mesh_shader_params[]; };
@@ -30,7 +30,7 @@ void main()
 {
     //gl_Position = vec4(v_position.xy, 0.5 ,1.0);
     vNormal = v_normal;
-    vColor =  mesh_shader_params[gl_DrawIDARB].color.rgb;
+    vColor =  mesh_shader_params[gl_DrawIDARB].highlighted == 0 ? mesh_shader_params[gl_DrawIDARB].color.rgb :  vec3(1.0,1.0,0.0);
     vID = mesh_shader_params[gl_DrawIDARB].id;
     mat4 object_transform = mesh_shader_params[gl_DrawIDARB].transform;
     vWorldPos = (object_transform * vec4(v_position,1.0)).xyz;

@@ -23,6 +23,9 @@ struct ThreeDimensionalInteraction {
     float           axis_x;
     float           axis_y;
     float           axis_z;
+    float           origin_x;
+    float           origin_y;
+    float           origin_z;
 };
 
 struct ThreeDimensionalManipulation {
@@ -39,6 +42,11 @@ class ThreeDimensionalInteractionCollection {
 public:
     ThreeDimensionalInteractionCollection() = default;
     ~ThreeDimensionalInteractionCollection() = default;
+
+    void addInteractionObject(uint32_t obj_id, std::vector<ThreeDimensionalInteraction> const& interactions)
+    {
+        m_available_interactions.insert({obj_id, interactions});
+    }
 
     std::vector<ThreeDimensionalInteraction> getAvailableInteractions(uint32_t obj_id){
 
