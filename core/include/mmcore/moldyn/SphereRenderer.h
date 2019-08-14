@@ -347,8 +347,8 @@ namespace moldyn {
         /*********************************************************************/
 
         megamol::core::param::ParamSlot renderModeParam;
-        megamol::core::param::ParamSlot tfRangeParam;
-        megamol::core::param::ParamSlot setTfRangeParam;
+        megamol::core::param::ParamSlot colIdxRangeInfoParam;
+        //megamol::core::param::ParamSlot useColRangeIdxParam;
         megamol::core::param::ParamSlot radiusScalingParam;
         megamol::core::param::ParamSlot forceTimeSlot;
         megamol::core::param::ParamSlot useLocalBBoxParam;

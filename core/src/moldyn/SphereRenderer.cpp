@@ -61,7 +61,7 @@ moldyn::SphereRenderer::SphereRenderer(void) : view::Renderer3DModule()
     , theShaders()
     , theSingleBuffer()
     , currBuf(0)
-    , bufSize(32 * 1024 * 1024) // = 32 MB
+    , bufSize(32 * 1024 * 1024)
     , numBuffers(3)
     , theSingleMappedMem(nullptr)
     , gpuData()
@@ -90,8 +90,8 @@ moldyn::SphereRenderer::SphereRenderer(void) : view::Renderer3DModule()
     , radiusScalingParam("scaling", "Scaling factor for particle radii.")
     , forceTimeSlot("forceTime", "Flag to force the time code to the specified value. Set to true when rendering a video.")
     , useLocalBBoxParam("useLocalBbox", "Enforce usage of local bbox for camera setup")
-    , tfRangeParam("transfer function::colorIndexRange", "The current color index range. To be used as range in transfer function editor. ")
-    , setTfRangeParam("transfer function::setColorIndexRange", "Propagates the current color index range to the connected transfer function.")
+    , colIdxRangeInfoParam("transfer function::colorIndexRange", "The current color index range. To be used as range in transfer function editor. ")
+    //, useColRangeIdxParam("transfer function::useColorIndexRange", "Propagates the current color index range to the connected transfer function.")
     , selectColorParam("flag storage::selectedColor", "Color for selected spheres in flag storage.")
     , softSelectColorParam("flag storage::softSelectedColor", "Color for soft selected spheres in flag storage.")
     , alphaScalingParam("splat::alphaScaling", "Splat: Scaling factor for particle alpha.")
@@ -142,13 +142,13 @@ moldyn::SphereRenderer::SphereRenderer(void) : view::Renderer3DModule()
     this->useLocalBBoxParam << new param::BoolParam(false);
     this->MakeSlotAvailable(&this->useLocalBBoxParam);
 
-    this->tfRangeParam << new param::Vector2fParam(vislib::math::Vector<float, 2>(0.0f, 0.0f));
-    this->MakeSlotAvailable(&this->tfRangeParam);
-    this->tfRangeParam.Param<param::Vector2fParam>()->SetGUIReadOnly(true);
+    this->colIdxRangeInfoParam << new param::Vector2fParam(vislib::math::Vector<float, 2>(0.0f, 0.0f));
+    this->MakeSlotAvailable(&this->colIdxRangeInfoParam);
+    this->colIdxRangeInfoParam.Param<param::Vector2fParam>()->SetGUIReadOnly(true);
 
-    this->setTfRangeParam << new param::ButtonParam();
-    this->setTfRangeParam.SetUpdateCallback(&moldyn::SphereRenderer::onToggleButton);
-    this->MakeSlotAvailable(&this->setTfRangeParam);
+    //this->useColRangeIdxParam << new param::ButtonParam();
+    //this->useColRangeIdxParam.SetUpdateCallback(&moldyn::SphereRenderer::onToggleButton);
+    //this->MakeSlotAvailable(&this->useColRangeIdxParam);
 
     this->selectColorParam << new param::ColorParam(1.0f, 0.0f, 0.0f, 1.0f);
     this->MakeSlotAvailable(&this->selectColorParam);
@@ -303,8 +303,8 @@ bool moldyn::SphereRenderer::resetResources(void) {
 
     this->selectColorParam.Param<param::ColorParam>()->SetGUIVisible(false);
     this->softSelectColorParam.Param<param::ColorParam>()->SetGUIVisible(false);
-    this->tfRangeParam.Param<param::Vector2fParam>()->SetGUIVisible(false);
-    this->setTfRangeParam.Param<param::ButtonParam>()->SetGUIVisible(false);
+    this->colIdxRangeInfoParam.Param<param::Vector2fParam>()->SetGUIVisible(false);
+    //this->useColRangeIdxParam.Param<param::ButtonParam>()->SetGUIVisible(false);
 
     // Set all render mode dependent parameter to GUI invisible
     // SPLAT 
@@ -445,8 +445,8 @@ bool moldyn::SphereRenderer::createResources() {
     // Transfer Function Params
     auto cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
     if (cgtf != nullptr) {
-        this->tfRangeParam.Param<param::Vector2fParam>()->SetGUIVisible(true);
-        this->setTfRangeParam.Param<param::ButtonParam>()->SetGUIVisible(true);
+        this->colIdxRangeInfoParam.Param<param::Vector2fParam>()->SetGUIVisible(true);
+        //this->useColRangeIdxParam.Param<param::ButtonParam>()->SetGUIVisible(true);
     }
 
     // Fallback transfer function texture
@@ -606,7 +606,7 @@ bool moldyn::SphereRenderer::createResources() {
             glGenTextures(3, reinterpret_cast<GLuint*>(&this->gBuffer));
             glGenFramebuffers(1, &(this->gBuffer.fbo));
 
-            // Create the sphere shader (only if necessary)
+            // Create the sphere shader 
             vertShaderName = "sphere_mdao::vertex";
             fragShaderName = "sphere_mdao::fragment";
             if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
@@ -625,7 +625,7 @@ bool moldyn::SphereRenderer::createResources() {
                 return false;
             }
 
-            // Create the geometry shader (only if necessary)
+            // Create the geometry shader
             this->geoShader = new ShaderSource();
             this->vertShader->Clear();
             this->fragShader->Clear();
@@ -916,17 +916,17 @@ std::string moldyn::SphereRenderer::getRenderModeString(RenderMode rm) {
 
 bool moldyn::SphereRenderer::onToggleButton(param::ParamSlot& p) {
 
-    if (&p == &this->setTfRangeParam) {
-        view::CallGetTransferFunction* cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
-        if (cgtf != nullptr) {
-            std::array<float, 2> range;
-            auto vec2 = this->tfRangeParam.Param<param::Vector2fParam>()->Value();
-            range[0] = vec2.X();
-            range[1] = vec2.Y();
-            cgtf->SetRange(range);
-            return true;
-        }
-    }
+    //if (&p == &this->useColRangeIdxParam) {
+    //    view::CallGetTransferFunction* cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
+    //    if (cgtf != nullptr) {
+    //        std::array<float, 2> range;
+    //        auto vec2 = this->colIdxRangeInfoParam.Param<param::Vector2fParam>()->Value();
+    //        range[0] = vec2.X();
+    //        range[1] = vec2.Y();
+    //        cgtf->SetRange(range);
+    //        return true;
+    //    }
+    //}
     return false;
 }
 
@@ -980,7 +980,7 @@ bool moldyn::SphereRenderer::Render(view::CallRender3D& call) {
             range[0] = std::min(parts.GetMinColourIndexValue(), range[0]);
             range[1] = std::max(parts.GetMaxColourIndexValue(), range[1]);
         }
-        this->tfRangeParam.Param<param::Vector2fParam>()->SetValue(vislib::math::Vector<float, 2>(range[0], range[1]));
+        this->colIdxRangeInfoParam.Param<param::Vector2fParam>()->SetValue(vislib::math::Vector<float, 2>(range[0], range[1]));
     }
 
     this->oldHash = hash;
@@ -1112,7 +1112,7 @@ bool moldyn::SphereRenderer::renderSimple(view::CallRender3D* cr3d, MultiParticl
 
         if (this->renderMode == RenderMode::SIMPLE_CLUSTERED) {
             if (parts.IsVAO()) {
-                glBindVertexArray(0); // vao
+                glBindVertexArray(0);
             }
         }
         this->unsetBufferData(this->sphereShader);
@@ -1181,7 +1181,8 @@ bool moldyn::SphereRenderer::renderSSBO(view::CallRender3D* cr3d, MultiParticleD
             if (staticData) {
                 if (this->stateInvalid || (this->bufArray.GetNumChunks() == 0)) {
                     this->bufArray.SetDataWithSize(
-                        parts.GetVertexData(), vertStride, vertStride, parts.GetCount(), (GLuint)(2 * 1024 * 1024 * 1024)); // 2 GB - khronos: Most implementations will let you allocate a size up to the limit of GPU memory.
+                        parts.GetVertexData(), vertStride, vertStride, parts.GetCount(), (GLuint)(2 * 1024 * 1024 * 1024)); 
+                    // 2 GB - khronos: Most implementations will let you allocate a size up to the limit of GPU memory.
                 }
                 const GLuint numChunks = this->bufArray.GetNumChunks();
 
@@ -1198,7 +1199,7 @@ bool moldyn::SphereRenderer::renderSSBO(view::CallRender3D* cr3d, MultiParticleD
             }
             else {
                 const GLuint numChunks = this->streamer.SetDataWithSize(
-                    parts.GetVertexData(), vertStride, vertStride, parts.GetCount(), 3, (GLuint)(32 * 1024 * 1024)); // 32 MB
+                    parts.GetVertexData(), vertStride, vertStride, parts.GetCount(), 3, (GLuint)(32 * 1024 * 1024));
                 glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->streamer.GetHandle());
                 glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBOvertexBindingPoint, this->streamer.GetHandle());
 
@@ -1222,7 +1223,8 @@ bool moldyn::SphereRenderer::renderSSBO(view::CallRender3D* cr3d, MultiParticleD
             if (staticData) {
                 if (this->stateInvalid || (this->bufArray.GetNumChunks() == 0)) {
                     this->bufArray.SetDataWithSize(
-                        parts.GetVertexData(), vertStride, vertStride, parts.GetCount(), (GLuint)(2 * 1024 * 1024 * 1024)); // 2 GB - khronos: Most implementations will let you allocate a size up to the limit of GPU memory.
+                        parts.GetVertexData(), vertStride, vertStride, parts.GetCount(), (GLuint)(2 * 1024 * 1024 * 1024)); 
+                    // 2 GB - khronos: Most implementations will let you allocate a size up to the limit of GPU memory.
                     this->colBufArray.SetDataWithItems(parts.GetColourData(), colStride, colStride, parts.GetCount(),
                         this->bufArray.GetMaxNumItemsPerChunk());
                 }
@@ -1246,7 +1248,7 @@ bool moldyn::SphereRenderer::renderSSBO(view::CallRender3D* cr3d, MultiParticleD
             }
             else {
                 const GLuint numChunks = this->streamer.SetDataWithSize(
-                    parts.GetVertexData(), vertStride, vertStride, parts.GetCount(), 3, (GLuint)(32 * 1024 * 1024)); // 32 MB
+                    parts.GetVertexData(), vertStride, vertStride, parts.GetCount(), 3, (GLuint)(32 * 1024 * 1024)); 
                 const GLuint colSize = this->colStreamer.SetDataWithItems(parts.GetColourData(), colStride, colStride,
                     parts.GetCount(), 3, this->streamer.GetMaxNumItemsPerChunk());
                 glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->streamer.GetHandle());
@@ -1516,12 +1518,13 @@ bool moldyn::SphereRenderer::renderGeometryShader(view::CallRender3D* cr3d, Mult
 
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 
-    // glDepthFunc(GL_LEQUAL); // Default GL_LESS works, too?
+    /// Default GL_LESS works, too?
+    // glDepthFunc(GL_LEQUAL); 
 
     /// If enabled and a vertex shader is active, it specifies that the GL will choose between front and
     /// back colors based on the polygon's face direction of which the vertex being shaded is a part.
-    /// It has no effect on points or lines.
-    // glEnable(GL_VERTEX_PROGRAM_TWO_SIDE); /// ! Has significant negative performance impact ....
+    /// It has no effect on points or lines and has significant negative performance impact.
+    // glEnable(GL_VERTEX_PROGRAM_TWO_SIDE); 
 
     this->sphereGeometryShader.Enable();
 
@@ -1570,7 +1573,7 @@ bool moldyn::SphereRenderer::renderGeometryShader(view::CallRender3D* cr3d, Mult
     this->sphereGeometryShader.Disable();
 
     // glDisable(GL_VERTEX_PROGRAM_TWO_SIDE);
-    // glDepthFunc(GL_LESS); // default
+    // glDepthFunc(GL_LESS); 
 
     mpdc->Unlock();
 
@@ -1590,7 +1593,6 @@ bool moldyn::SphereRenderer::renderAmbientOcclusion(view::CallRender3D* cr3d, Mu
 
     // Rebuild the GBuffer if neccessary
     this->rebuildGBuffer();
-
 
     // Render the particles' geometry
     bool highPrecision = this->useHPTexturesSlot.Param<param::BoolParam>()->Value();
@@ -1875,7 +1877,7 @@ bool moldyn::SphereRenderer::unsetShaderData(void) {
 bool moldyn::SphereRenderer::setTransferFunctionTexture(vislib::graphics::gl::GLSLShader& shader) {
 
     view::CallGetTransferFunction* cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
-    if ((cgtf != nullptr) && (*cgtf)(0)) { // 0 = call GetTexture -> requestTF
+    if ((cgtf != nullptr) && (*cgtf)(0)) { 
         cgtf->BindConvenience(shader, GL_TEXTURE0, 0);
     }
     else {
@@ -2174,8 +2176,6 @@ std::shared_ptr<vislib::graphics::gl::GLSLShader> moldyn::SphereRenderer::genera
 
     shaderMap::iterator i = this->theShaders.find(std::make_tuple(c, p, interleaved));
     if (i == this->theShaders.end()) {
-        // instance()->ShaderSourceFactory().MakeShaderSource()
-
         vislib::SmartPtr<ShaderSource> v2 = new ShaderSource(*this->vertShader);
         vislib::SmartPtr<ShaderSource::Snippet> codeSnip, declarationSnip;
         std::string vertCode, colCode, vertDecl, colDecl, decl;
@@ -2228,10 +2228,9 @@ std::shared_ptr<vislib::graphics::gl::GLSLShader> moldyn::SphereRenderer::genera
         declarationSnip = new ShaderSource::StringSnippet(decl.c_str());
         codeSnip = new ShaderSource::StringSnippet(code.c_str());
 
-        /// Generated shader declaration snippet is inserted between 2nd and 3rd snippet (after ssbo_vert_attributes.glsl)
+        // Generated shader declaration snippet is inserted after ssbo_vert_attributes.glsl
         v2->Insert(7, declarationSnip);
-        /// Generated shader code snippet is inserted between 4th and 5th snippet (after ssbo_vert_mainstart.glsl)
-        /// => Consider new index through first Insertion!
+        // Generated shader code snippet is inserted after ssbo_vert_mainstart.glsl (Consider new index through first insertion)
         v2->Insert(9, codeSnip);
 
         vislib::SmartPtr<ShaderSource> vss(v2);

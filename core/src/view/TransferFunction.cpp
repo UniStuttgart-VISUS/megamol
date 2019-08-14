@@ -75,35 +75,35 @@ bool TransferFunction::requestTF(Call& call) {
     if (cgtf == nullptr) return false;
 
     // Force apply changed range set in call
-    if (this->range != cgtf->Range()) {
-        param::TransferFunctionParam::TFDataType tfdata;
-        if (!megamol::core::param::TransferFunctionParam::ParseTransferFunction(
-            this->tfParam.Param<param::TransferFunctionParam>()->Value(), tfdata, this->interpolMode, this->texSize, this->range)) {
-            return false;
-        }
-        this->range = cgtf->Range();
-        std::string tfstr;
-        if (megamol::core::param::TransferFunctionParam::DumpTransferFunction(tfstr, tfdata, this->interpolMode, this->texSize, this->range)) {
-            this->tfParam.Param<param::TransferFunctionParam>()->SetValue(tfstr);
-        }
-    }
+    //if (this->range != cgtf->Range()) {
+    //    param::TransferFunctionParam::TFNodeType tfnodes;
+    //    if (!megamol::core::param::TransferFunctionParam::ParseTransferFunction(
+    //        this->tfParam.Param<param::TransferFunctionParam>()->Value(), tfnodes, this->interpolMode, this->texSize, this->range)) {
+    //        return false;
+    //    }
+    //    this->range = cgtf->Range();
+    //    std::string tfstr;
+    //    if (megamol::core::param::TransferFunctionParam::DumpTransferFunction(tfstr, tfnodes, this->interpolMode, this->texSize, this->range)) {
+    //        this->tfParam.Param<param::TransferFunctionParam>()->SetValue(tfstr);
+    //    }
+    //}
 
     if ((this->texID == 0) || this->tfParam.IsDirty()) {
         this->tfParam.ResetDirty();
 
         // Get current values from parameter string (Values are checked, too).
-        param::TransferFunctionParam::TFDataType tfdata;
+        param::TransferFunctionParam::TFNodeType tfnodes;
         if (!megamol::core::param::TransferFunctionParam::ParseTransferFunction(
-            this->tfParam.Param<param::TransferFunctionParam>()->Value(), tfdata, this->interpolMode, this->texSize, this->range)) {
+            this->tfParam.Param<param::TransferFunctionParam>()->Value(), tfnodes, this->interpolMode, this->texSize, this->range)) {
             return false;
         }
 
         // Apply interpolation and generate texture data.
         if (this->interpolMode == param::TransferFunctionParam::InterpolationMode::LINEAR) {
-            param::TransferFunctionParam::LinearInterpolation(this->tex, this->texSize, tfdata);
+            param::TransferFunctionParam::LinearInterpolation(this->tex, this->texSize, tfnodes);
         }
         else if (this->interpolMode == param::TransferFunctionParam::InterpolationMode::GAUSS) {
-            param::TransferFunctionParam::GaussInterpolation(this->tex, this->texSize, tfdata);
+            param::TransferFunctionParam::GaussInterpolation(this->tex, this->texSize, tfnodes);
         }
 
         if (this->texID != 0) {

@@ -64,7 +64,7 @@ public:
     /**
      * Get the currently active parameter.
      */
-    bool IsParameterActive(const core::param::TransferFunctionParam* param) { return (param == this->activeParameter); }
+    core::param::TransferFunctionParam* GetActiveParameter(void) { return this->activeParameter; }
 
 private:
     /** The global input widget state buffer. */
@@ -85,7 +85,7 @@ private:
     core::param::TransferFunctionParam* activeParameter;
 
     /** Array holding current colors and function values. */
-    megamol::core::param::TransferFunctionParam::TFDataType data;
+    megamol::core::param::TransferFunctionParam::TFNodeType data;
 
     /** Min/Max intervall the data should be mapped. */
     std::array<float, 2> range;
