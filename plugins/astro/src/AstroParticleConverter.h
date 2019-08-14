@@ -66,7 +66,8 @@ private:
         DENSITY_DERIVATIVE = 17,
         GRAVITATIONAL_POTENTIAL_DERIVATIVE = 18,
         TEMPERATURE_DERIVATIVE = 19,
-        ENTROPY_DERIVATIVE = 20
+        ENTROPY_DERIVATIVE = 20,
+        AGN_DISTANCES = 21
     };
 
     bool getData(core::Call& call);
