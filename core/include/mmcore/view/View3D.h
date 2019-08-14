@@ -36,11 +36,6 @@
 #include "vislib/math/Cuboid.h"
 #include "vislib/sys/PerformanceCounter.h"
 
-#ifdef _WIN32
-#include "TrackingUtilizer.h"
-using namespace tracking;
-#endif
-
 
 namespace megamol {
 namespace core {
