@@ -21,3 +21,4 @@
 //if (throwaway) discard;
 
 if (radicand > outlinesize) discard;
+// TODO make this independent of the sphere radius

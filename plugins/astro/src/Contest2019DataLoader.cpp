@@ -131,6 +131,9 @@ bool Contest2019DataLoader::Frame::LoadFrame(std::string filepath, unsigned int 
     if (this->particleIDs == nullptr) {
         this->particleIDs = std::make_shared<std::vector<int64_t>>();
     }
+    if (this->agnDistances == nullptr) {
+        this->agnDistances = std::make_shared<std::vector<float>>();
+    }
 
     this->positions->resize(partCount);
     this->velocities->resize(partCount);
@@ -148,6 +151,7 @@ bool Contest2019DataLoader::Frame::LoadFrame(std::string filepath, unsigned int 
     this->isStarFormingGasFlags->resize(partCount);
     this->isAGNFlags->resize(partCount);
     this->particleIDs->resize(partCount);
+    this->agnDistances->resize(partCount);
 
     this->velocityDerivatives->resize(partCount);
     this->temperatureDerivatives->resize(partCount);
@@ -237,6 +241,7 @@ void Contest2019DataLoader::Frame::SetData(
     call.SetIsStarFormingGasFlags(this->isStarFormingGasFlags);
     call.SetIsAGNFlags(this->isAGNFlags);
     call.SetParticleIDs(this->particleIDs);
+    call.SetAGNDistances(this->agnDistances);
 }
 
 /*
@@ -267,6 +272,15 @@ void Contest2019DataLoader::Frame::ZeroDerivatives(void) {
     }
     if (this->entropyDerivatives != nullptr) {
         std::fill(this->entropyDerivatives->begin(), this->entropyDerivatives->end(), 0.0f);
+    }
+}
+
+/*
+ * Contest2019DataLoader::Frame::ZeroAGNDistances
+ */
+void Contest2019DataLoader::Frame::ZeroAGNDistances(void) {
+    if (this->agnDistances != nullptr) {
+        std::fill(this->agnDistances->begin(), this->agnDistances->end(), 0.0f);
     }
 }
 
@@ -433,6 +447,33 @@ void Contest2019DataLoader::Frame::CalculateDerivativesCentralDifferences(
 }
 
 /*
+ * Contest2019DataLoader::Frame::CalculateAGNDistances
+ */
+void Contest2019DataLoader::Frame::CalculateAGNDistances(void) {
+    if (this->positions == nullptr) return;
+    if (this->isAGNFlags == nullptr) return;
+    if (this->agnDistances == nullptr) return;
+
+    // get out all AGN Positions
+    std::vector<glm::vec3> agnPositions;
+    for (size_t i = 0; i < this->positions->size(); ++i) {
+        if (this->isAGNFlags->at(i)) {
+            agnPositions.push_back(this->positions->at(i));
+        }
+    }
+    if (agnPositions.size() == 0) return;
+    for (size_t i = 0; i < this->positions->size(); ++i) {
+        float mindist = std::numeric_limits<float>::max();
+        auto& myPos = this->positions->at(i);
+        for (const auto& agnPos : agnPositions) {
+            float dist = glm::distance(myPos, agnPos);
+            if (dist < mindist) mindist = dist;
+        }
+        this->agnDistances->at(i) = mindist;
+    }
+}
+
+/*
  * Contest2019DataLoader::Contest2019DataLoader
  */
 Contest2019DataLoader::Contest2019DataLoader(void)
@@ -445,7 +486,10 @@ Contest2019DataLoader::Contest2019DataLoader(void)
     , calculateDerivatives("calculateDerivatives",
           "Enables the calculation of derivatives of all relevant values. "
           "This option increases the frame loading time significantly. The effect of this slot might be delayed as "
-          "already existing frames are not re-evaluated.") {
+          "already existing frames are not re-evaluated.")
+    , calculateAGNDistances("calculateAGNDistances",
+          "Enables the calculation of the distance to the AGNs. This option increases the frame loading time "
+          "significantly. The effect of this slot might be delayed as already existing frames are not re-evaluated.") {
 
     this->getDataSlot.SetCallback(AstroDataCall::ClassName(),
         AstroDataCall::FunctionName(AstroDataCall::CallForGetData), &Contest2019DataLoader::getDataCallback);
@@ -463,6 +507,9 @@ Contest2019DataLoader::Contest2019DataLoader(void)
 
     this->calculateDerivatives.SetParameter(new param::BoolParam(true));
     this->MakeSlotAvailable(&this->calculateDerivatives);
+
+    this->calculateAGNDistances.SetParameter(new param::BoolParam(true));
+    this->MakeSlotAvailable(&this->calculateAGNDistances);
 
     // static bounding box size, because we know (TM)
     this->boundingBox = vislib::math::Cuboid<float>(0.0f, 0.0f, 0.0f, 64.0f, 64.0f, 64.0f);
@@ -543,6 +590,10 @@ void Contest2019DataLoader::loadFrame(view::AnimDataModule::Frame* frame, unsign
     f->ZeroDerivatives();
     if (calcDerivatives) {
         f->CalculateDerivatives(fbefore, fafter);
+    }
+    f->ZeroAGNDistances();
+    if (this->calculateAGNDistances.Param<param::BoolParam>()->Value()) {
+        f->CalculateAGNDistances();
     }
     delete fbefore;
     delete fafter;

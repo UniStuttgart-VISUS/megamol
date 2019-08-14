@@ -77,6 +77,7 @@ AstroParticleConverter::AstroParticleConverter(void)
         static_cast<int>(ColoringMode::GRAVITATIONAL_POTENTIAL_DERIVATIVE), "Gravitational Potential Derivative");
     enu->SetTypePair(static_cast<int>(ColoringMode::TEMPERATURE_DERIVATIVE), "Temperature Derivative");
     enu->SetTypePair(static_cast<int>(ColoringMode::ENTROPY_DERIVATIVE), "Entropy Derivative");
+    enu->SetTypePair(static_cast<int>(ColoringMode::AGN_DISTANCES), "AGN Distances");
     this->colorModeSlot << enu;
     this->MakeSlotAvailable(&this->colorModeSlot);
 
@@ -398,6 +399,10 @@ void AstroParticleConverter::calcMinMaxValues(const AstroDataCall& ast) {
         this->valmin = *std::min_element(ast.GetEntropyDerivatives()->begin(), ast.GetEntropyDerivatives()->end());
         this->valmax = *std::max_element(ast.GetEntropyDerivatives()->begin(), ast.GetEntropyDerivatives()->end());
         break;
+    case megamol::astro::AstroParticleConverter::ColoringMode::AGN_DISTANCES:
+        this->valmin = *std::min_element(ast.GetAgnDistances()->begin(), ast.GetAgnDistances()->end());
+        this->valmax = *std::max_element(ast.GetAgnDistances()->begin(), ast.GetAgnDistances()->end());
+        break;
     case megamol::astro::AstroParticleConverter::ColoringMode::IS_BARYON:
     case megamol::astro::AstroParticleConverter::ColoringMode::IS_STAR:
     case megamol::astro::AstroParticleConverter::ColoringMode::IS_WIND:
@@ -566,6 +571,13 @@ void AstroParticleConverter::calcColorTable(const AstroDataCall& ast) {
     } break;
     case megamol::astro::AstroParticleConverter::ColoringMode::ENTROPY_DERIVATIVE: {
         auto v = ast.GetEntropyDerivatives();
+        for (size_t i = 0; i < this->usedColors.size(); ++i) {
+            float alpha = (v->at(i) - this->valmin) / denom;
+            this->usedColors[i] = this->interpolateColor(minCol, midCol, maxCol, alpha, useMid);
+        }
+    } break;
+    case megamol::astro::AstroParticleConverter::ColoringMode::AGN_DISTANCES: {
+        auto v = ast.GetAgnDistances();
         for (size_t i = 0; i < this->usedColors.size(); ++i) {
             float alpha = (v->at(i) - this->valmin) / denom;
             this->usedColors[i] = this->interpolateColor(minCol, midCol, maxCol, alpha, useMid);

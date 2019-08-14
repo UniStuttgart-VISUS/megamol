@@ -90,6 +90,10 @@ private:
     core::param::ParamSlot maxEntropyParam;
     core::param::ParamSlot filterEntropyParam;
 
+    core::param::ParamSlot minAgnDistanceParam;
+    core::param::ParamSlot maxAgnDistanceParam;
+    core::param::ParamSlot filterAgnDistanceParam;
+
     core::param::ParamSlot fillFilterButtonParam;
 
     /** Pointer to the position array */
@@ -139,6 +143,9 @@ private:
 
     /** Pointer to the particle ID array */
     idArrayPtr particleIDs = nullptr;
+    
+    /** Pointer to the agn distance array */
+    floatArrayPtr agnDistances = nullptr;
 
     /** flag determining whether the filaments have to be recalculated */
     bool refilter;

@@ -432,6 +432,20 @@ public:
     inline const idArrayPtr GetParticleIDs(void) const { return this->particleIDs; }
 
     /**
+     * Sets the AGN distance vector
+     *
+     * @param agnDistances Pointer to the new agn distance vector to be set
+     */
+    inline void SetAGNDistances(floatArrayPtr& agnDistances) { this->agnDistances = agnDistances; }
+
+    /**
+     * Retrieve the pointer to the vector storing the AGN distances
+     *
+     * @return Pointer to the agn distance array
+     */
+    inline const floatArrayPtr GetAgnDistances(void) const { return this->agnDistances; }
+
+    /**
      * Retrieve the number of particles stored in this call.
      * This will only result in a value greater 0 if the positions array is set.
      * All other arrays may be unset.
@@ -463,6 +477,7 @@ public:
         this->isStarFormingGasFlags.reset();
         this->isAGNFlags.reset();
         this->particleIDs.reset();
+        this->agnDistances.reset();
 
         this->velocityDerivatives.reset();
         this->temperatureDerivatives.reset();
@@ -546,6 +561,9 @@ private:
 
     /** Pointer to the particle ID array */
     idArrayPtr particleIDs;
+
+    /** Pointer to the array storing the distance to the AGNs */
+    floatArrayPtr agnDistances;
 };
 
 /** Description class typedef */
