@@ -84,14 +84,15 @@ bool TransferFunction::requestTF(Call& call) {
             return false;
         }
 
+		//XXX: kudos to the HUGE WTF code below, since setting this->range "eats" the range set by the TF editor!
         // Apply changes made by calling module
-        if (this->range != cgtf->Range()) {
-            this->range = cgtf->Range();
-            std::string tfstr;
-            if (megamol::core::param::TransferFunctionParam::DumpTransferFunction(tfstr, tfdata, this->interpolMode, this->texSize, this->range)) {
-                this->tfParam.Param<param::TransferFunctionParam>()->SetValue(tfstr);
-            }
-        }
+        //if (this->range != cgtf->Range()) {
+        //    this->range = cgtf->Range();
+        //    std::string tfstr;
+        //    if (megamol::core::param::TransferFunctionParam::DumpTransferFunction(tfstr, tfdata, this->interpolMode, this->texSize, this->range)) {
+        //        this->tfParam.Param<param::TransferFunctionParam>()->SetValue(tfstr);
+        //    }
+        //}
 
         // Apply interpolation and generate texture data.
         if (this->interpolMode == param::TransferFunctionParam::InterpolationMode::LINEAR) {
