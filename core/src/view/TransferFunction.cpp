@@ -112,7 +112,7 @@ bool TransferFunction::requestTF(Call& call) {
         if (!t1de) glDisable(GL_TEXTURE_1D);
         ++this->version;
     }
-    cgtf->SetTexture(this->texID, this->texSize, this->tex.data(), CallGetTransferFunction::TEXTURE_FORMAT_RGBA,
+    cgtf->SetTexture(this->texID, this->texSize, this->tex.data(), this->texFormat,
         this->range, this->version);
 
     return true;
