@@ -4,14 +4,25 @@
 
 #include "mmcore/param/FilePathParam.h"
 
+#ifndef TINYGLTF_IMPLEMENTATION
+#    define TINYGLTF_IMPLEMENTATION
+#endif // !TINYGLTF_IMPLEMENTATION
+#ifndef STB_IMAGE_IMPLEMENTATION
+#    define STB_IMAGE_IMPLEMENTATION
+#endif // !STB_IMAGE_IMPLEMENTATION
+#ifndef STB_IMAGE_WRITE_IMPLEMENTATION
+#    define STB_IMAGE_WRITE_IMPLEMENTATION
+#endif // !STB_IMAGE_WRITE_IMPLEMENTATION
+
 #include "tiny_gltf.h"
 
 megamol::mesh::GlTFFileLoader::GlTFFileLoader()
     : core::Module()
     , m_update_hash(0)
     , m_glTFFilename_slot("glTF filename", "The name of the gltf file to load")
-    , m_getData_slot("getData", "The slot publishing the loaded data") {
+    , m_getData_slot("CallGlTFData", "The slot publishing the loaded data") {
     this->m_getData_slot.SetCallback(CallGlTFData::ClassName(), "GetData", &GlTFFileLoader::getDataCallback);
+    this->m_getData_slot.SetCallback(CallGlTFData::ClassName(), "GetMetaData", &GlTFFileLoader::getDataCallback);
     this->MakeSlotAvailable(&this->m_getData_slot);
 
     this->m_glTFFilename_slot << new core::param::FilePathParam("");
@@ -53,8 +64,19 @@ bool megamol::mesh::GlTFFileLoader::getDataCallback(core::Call& caller) {
         ++m_update_hash;
     }
 
-    cd->SetDataHash(m_update_hash);
-    cd->setGlTFModel(m_gltf_model);
+    cd->setMetaData({m_update_hash});
+    cd->setData(m_gltf_model);
+
+    return true;
+}
+
+bool megamol::mesh::GlTFFileLoader::getMetaDataCallback(core::Call& caller)
+{
+    CallGlTFData* cd = dynamic_cast<CallGlTFData*>(&caller);
+
+    if (cd == NULL) return false;
+
+    cd->setMetaData({m_update_hash});
 
     return true;
 }

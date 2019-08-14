@@ -17,11 +17,7 @@
 #include "Render3DUI.h"
 //#include "meshDebugDataSource.h"
 
-#include "mesh/Call3DInteraction.h"
-#include "mesh/CallGPUMaterialData.h"
-#include "mesh/CallGPUMeshData.h"
-#include "mesh/CallGPURenderTaskData.h"
-#include "mesh/CallGltfData.h"
+#include "mesh/MeshCalls.h"
 
 #include "DebugGPUMaterialDataSource.h"
 #include "DebugGPUMeshDataSource.h"

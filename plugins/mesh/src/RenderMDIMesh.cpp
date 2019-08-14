@@ -13,9 +13,7 @@
 #include "mmcore/CoreInstance.h"
 #include "vislib/graphics/gl/ShaderSource.h"
 
-#include "mesh/CallGPUMeshData.h"
-#include "mesh/CallGPUMaterialData.h"
-#include "mesh/CallGPURenderTaskData.h"
+#include "mesh/MeshCalls.h"
 
 using namespace megamol::core;
 using namespace megamol::mesh;
@@ -141,8 +139,10 @@ bool RenderMDIMesh::GetExtents(megamol::core::Call& call)
 	if (!(*rtc)(1))
 		return false;
 
-	cr->SetTimeFramesCount(rtc->FrameCount());
-	cr->AccessBoundingBoxes() = rtc->GetBoundingBoxes();
+    auto meta_data = rtc->getMetaData();
+
+	cr->SetTimeFramesCount(meta_data.m_frame_cnt);
+    cr->AccessBoundingBoxes() = meta_data.m_bboxs;
 	cr->AccessBoundingBoxes().MakeScaledWorld(1.0f);
 
 	return true;
@@ -225,7 +225,7 @@ bool RenderMDIMesh::Render(megamol::core::Call& call)
     glDisable(GL_CULL_FACE);
 	//glCullFace(GL_BACK);
 
-	auto gpu_render_tasks = task_call->getRenderTaskData();
+	auto gpu_render_tasks = task_call->getData();
 
     // TODO yet another nullptr check for gpu render tasks
 

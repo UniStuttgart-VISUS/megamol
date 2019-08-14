@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include "Render3DUI.h"
-
-#include "mesh/Call3DInteraction.h"
+#include "mesh/MeshCalls.h"
 
 bool megamol::mesh::Render3DUI::OnMouseButton(
     core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) {
@@ -45,7 +44,7 @@ bool megamol::mesh::Render3DUI::OnMouseMove(double x, double y) {
         // TODO check interaction type of active object
         Call3DInteraction* ci = this->m_3DInteraction_callerSlot.CallAs<Call3DInteraction>();
         if (ci == NULL) return false;
-        auto interaction_collection = ci->getInteractionCollection();
+        auto interaction_collection = ci->getData();
 
         auto available_interactions =
             interaction_collection->getAvailableInteractions(static_cast<uint32_t>(m_active_interaction_obj.second));
@@ -191,7 +190,7 @@ bool megamol::mesh::Render3DUI::Render(core::Call& call) {
     Call3DInteraction* ci = this->m_3DInteraction_callerSlot.CallAs<Call3DInteraction>();
     if (ci == NULL) return false;
     if ((!(*ci)(0))) return false;
-    auto interaction_collection = ci->getInteractionCollection();
+    auto interaction_collection = ci->getData();
 
     GLfloat viewport[4];
     glGetFloatv(GL_VIEWPORT, viewport);

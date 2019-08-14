@@ -16,7 +16,7 @@
 #include "mmcore/CallerSlot.h"
 
 #include "AbstractGPURenderTaskDataSource.h"
-#include "mesh/CallGltfData.h"
+#include "mesh/MeshCalls.h"
 #include "mesh/GPUMeshCollection.h"
 #include "vislib/math/Matrix.h"
 

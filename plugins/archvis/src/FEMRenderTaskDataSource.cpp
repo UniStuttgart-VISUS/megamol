@@ -1,9 +1,7 @@
 #include "FEMRenderTaskDataSource.h"
 
-#include "mesh/CallGPUMaterialData.h"
 #include "mesh/GPUMeshCollection.h"
-#include "mesh/CallGPUMeshData.h"
-#include "mesh/CallGPURenderTaskData.h"
+#include "mesh/MeshCalls.h"
 
 #include "FEMDataCall.h"
 
@@ -29,8 +27,8 @@ bool megamol::archvis::FEMRenderTaskDataSource::getDataCallback(core::Call& call
 
     if (!(*mc)(0)) return false;
 
-    auto gpu_mtl_storage = mtlc->getMaterialStorage();
-    auto gpu_mesh_storage = mc->getGPUMeshes();
+    auto gpu_mtl_storage = mtlc->getData();
+    auto gpu_mesh_storage = mc->getData();
 
     if (gpu_mtl_storage == nullptr) return false;
     if (gpu_mesh_storage == nullptr) return false;
@@ -49,7 +47,7 @@ bool megamol::archvis::FEMRenderTaskDataSource::getDataCallback(core::Call& call
     }
     m_gpu_render_tasks->updatePerFrameDataBuffer(texture_handles, 2);
 
-    rtc->setRenderTaskData(m_gpu_render_tasks);
+    rtc->setData(m_gpu_render_tasks);
 
     if (this->m_FEM_model_hash == fem_call->DataHash()) {
         return true;
@@ -95,7 +93,7 @@ bool megamol::archvis::FEMRenderTaskDataSource::getDataCallback(core::Call& call
         m_gpu_render_tasks->addPerFrameDataBuffer(texture_handles, 2);
     }
 
-    rtc->setRenderTaskData(m_gpu_render_tasks);
+    rtc->setData(m_gpu_render_tasks);
 
     this->m_FEM_model_hash = fem_call->DataHash();
 

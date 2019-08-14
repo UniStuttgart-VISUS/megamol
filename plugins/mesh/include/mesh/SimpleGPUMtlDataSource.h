@@ -50,6 +50,8 @@ protected:
 
     virtual bool getDataCallback(core::Call& caller);
 
+    virtual bool getMetaDataCallback(core::Call& caller);
+
 private:
     /** The btf file name */
     core::param::ParamSlot m_btf_filename_slot;

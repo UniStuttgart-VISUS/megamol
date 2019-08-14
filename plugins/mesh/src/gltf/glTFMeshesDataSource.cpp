@@ -1,12 +1,12 @@
 #include "stdafx.h"
 
 #include "glTFMeshesDataSource.h"
-#include "mesh/CallGPUMeshData.h"
-#include "mesh/CallGltfData.h"
+#include "mesh/MeshCalls.h"
 #include "tiny_gltf.h"
 
 megamol::mesh::GlTFMeshesDataSource::GlTFMeshesDataSource()
-    : m_glTF_callerSlot("getGlTFFile", "Connects the data source with a loaded glTF file"), m_glTF_cached_hash (0) 
+    : m_glTF_callerSlot("CallGlTFData", "Connects the data source with a loaded glTF file")
+    , m_glTF_cached_hash (0) 
 {
     this->m_glTF_callerSlot.SetCompatibleCall<CallGlTFDataDescription>();
     this->MakeSlotAvailable(&this->m_glTF_callerSlot);
@@ -28,13 +28,13 @@ bool megamol::mesh::GlTFMeshesDataSource::getDataCallback(core::Call& caller) {
 
     std::shared_ptr<GPUMeshCollection> mesh_collection(nullptr);
 
-    if (lhs_mesh_call->getGPUMeshes() == nullptr) {
+    if (lhs_mesh_call->getData() == nullptr) {
         // no incoming material -> use your own material storage
         mesh_collection = this->m_gpu_meshes;
-        lhs_mesh_call->setGPUMeshes(mesh_collection);
+        lhs_mesh_call->setData(mesh_collection);
     } else {
         // incoming material -> use it (delete local?)
-        mesh_collection = lhs_mesh_call->getGPUMeshes();
+        mesh_collection = lhs_mesh_call->getData();
     }
 
     CallGlTFData* gltf_call = this->m_glTF_callerSlot.CallAs<CallGlTFData>();
@@ -42,9 +42,9 @@ bool megamol::mesh::GlTFMeshesDataSource::getDataCallback(core::Call& caller) {
 
     if (!(*gltf_call)(0)) return false;
 
-    if (gltf_call->DataHash() > m_glTF_cached_hash)
+    if (gltf_call->getMetaData().m_data_hash > m_glTF_cached_hash)
     {
-        m_glTF_cached_hash = gltf_call->DataHash();
+        m_glTF_cached_hash = gltf_call->getMetaData().m_data_hash;
 
         m_gpu_meshes->clear();
 
@@ -55,7 +55,7 @@ bool megamol::mesh::GlTFMeshesDataSource::getDataCallback(core::Call& caller) {
         m_bbox[4] = std::numeric_limits<float>::min();
         m_bbox[5] = std::numeric_limits<float>::min();
 
-        auto model = gltf_call->getGlTFModel();
+        auto model = gltf_call->getData();
 
         for (size_t mesh_idx = 0; mesh_idx < model->meshes.size(); mesh_idx++) {
             auto primitive_cnt = model->meshes[mesh_idx].primitives.size();
@@ -123,7 +123,7 @@ bool megamol::mesh::GlTFMeshesDataSource::getDataCallback(core::Call& caller) {
     // if there is a material connection to the right, pass on the material collection
     CallGPUMeshData* rhs_mesh_call = this->m_mesh_callerSlot.CallAs<CallGPUMeshData>();
     if (rhs_mesh_call != NULL) {
-        rhs_mesh_call->setGPUMeshes(mesh_collection);
+        rhs_mesh_call->setData(mesh_collection);
     }
 
     return true;

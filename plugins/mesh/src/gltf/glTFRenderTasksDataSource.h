@@ -14,7 +14,7 @@
 #include "mmcore/CallerSlot.h"
 
 #include "mesh/AbstractGPURenderTaskDataSource.h"
-#include "mesh/CallGltfData.h"
+#include "mesh/MeshCalls.h"
 
 namespace megamol
 {

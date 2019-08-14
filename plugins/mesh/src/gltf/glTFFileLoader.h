@@ -14,7 +14,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mesh/mesh.h"
-#include "mesh/CallGltfData.h"
+#include "mesh/MeshCalls.h"
 
 namespace megamol
 {
@@ -70,6 +70,8 @@ namespace megamol
 			* @return 'true' on success, 'false' on failure.
 			*/
 			bool getDataCallback(core::Call& caller);
+
+            bool getMetaDataCallback(core::Call& caller);
 
 			/**
 			* Implementation of 'Release'.

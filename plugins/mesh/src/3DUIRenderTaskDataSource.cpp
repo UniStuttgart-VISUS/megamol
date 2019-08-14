@@ -6,10 +6,8 @@
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/math/Matrix.h"
 
-#include "mesh/Call3DInteraction.h"
-#include "mesh/CallGPURenderTaskData.h"
-#include "mesh/CallGPUMaterialData.h"
-#include "mesh/CallGPUMeshData.h"
+#include "mesh/MeshCalls.h"
+
 
 megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::ThreeDimensionalUIRenderTaskDataSource()
     : m_interaction_collection(new ThreeDimensionalInteractionCollection)
@@ -17,7 +15,10 @@ megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::ThreeDimensionalUIRenderT
     , m_glTF_callerSlot("getGlTFFile", "Connects the data source with a loaded glTF file")
     , m_glTF_cached_hash(0)
 {
-    this->m_3DInteraction_calleeSlot.SetCallback(Call3DInteraction::ClassName(), "GetData", &ThreeDimensionalUIRenderTaskDataSource::getInteractionCallback);
+    this->m_3DInteraction_calleeSlot.SetCallback(
+        Call3DInteraction::ClassName(), "GetData", &ThreeDimensionalUIRenderTaskDataSource::getInteractionCallback);
+    this->m_3DInteraction_calleeSlot.SetCallback(
+        Call3DInteraction::ClassName(), "GetMetaData", &ThreeDimensionalUIRenderTaskDataSource::getInteractionCallback);
     this->MakeSlotAvailable(&this->m_3DInteraction_calleeSlot);
 
     this->m_glTF_callerSlot.SetCompatibleCall<CallGlTFDataDescription>();
@@ -33,11 +34,11 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
 
     std::shared_ptr<GPURenderTaskCollection> rt_collection(nullptr);
 
-    if (lhs_rtc->getRenderTaskData() == nullptr) {
+    if (lhs_rtc->getData() == nullptr) {
         rt_collection = this->m_gpu_render_tasks;
-        lhs_rtc->setRenderTaskData(rt_collection);
+        lhs_rtc->setData(rt_collection);
     } else {
-        rt_collection = lhs_rtc->getRenderTaskData();
+        rt_collection = lhs_rtc->getData();
     }
 
     CallGPUMaterialData* mtlc = this->m_material_callerSlot.CallAs<CallGPUMaterialData>();
@@ -52,14 +53,14 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
     if (gltf_call == NULL) return false;
     if (!(*gltf_call)(0)) return false;
 
-    auto gpu_mtl_storage = mtlc->getMaterialStorage();
-    auto gpu_mesh_storage = mc->getGPUMeshes();
+    auto gpu_mtl_storage = mtlc->getData();
+    auto gpu_mesh_storage = mc->getData();
 
     // TODO nullptr check
 
-    if (gltf_call->DataHash() > m_glTF_cached_hash)
+    if (gltf_call->getMetaData().m_data_hash > m_glTF_cached_hash)
     {
-        m_glTF_cached_hash = gltf_call->DataHash();
+        m_glTF_cached_hash = gltf_call->getMetaData().m_data_hash;
 
         // rt_collection->clear();
         if (!m_rt_collection_indices.empty()) {
@@ -71,7 +72,7 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
             m_rt_collection_indices.clear();
         }
 
-        auto model = gltf_call->getGlTFModel();
+        auto model = gltf_call->getData();
 
         for (size_t node_idx = 0; node_idx < model->nodes.size(); node_idx++) {
             if (node_idx < model->nodes.size() && model->nodes[node_idx].mesh != -1) {
@@ -252,7 +253,7 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
 
     CallGPURenderTaskData* rhs_rtc = this->m_renderTask_callerSlot.CallAs<CallGPURenderTaskData>();
     if (rhs_rtc != NULL) {
-        rhs_rtc->setRenderTaskData(rt_collection);
+        rhs_rtc->setData(rt_collection);
 
         (*rhs_rtc)(0);
     }
@@ -265,8 +266,8 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getInteractionCallba
     Call3DInteraction* ci = dynamic_cast<Call3DInteraction*>(&caller);
     if (ci == NULL) return false;
 
-    if (ci->getInteractionCollection() == nullptr){
-        ci->setInteractionCollection(this->m_interaction_collection);
+    if (ci->getData() == nullptr){
+        ci->setData(this->m_interaction_collection);
     }
 
     // clear non persistent changes, such has highlighting
@@ -275,10 +276,9 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getInteractionCallba
     }
 
     // TODO consume pending manipulations
-    while(!ci->getInteractionCollection()->accessPendingManipulations().empty())
+    while(!ci->getData()->accessPendingManipulations().empty())
     {
-        ThreeDimensionalManipulation manipulation =
-            ci->getInteractionCollection()->accessPendingManipulations().front();
+        ThreeDimensionalManipulation manipulation = ci->getData()->accessPendingManipulations().front();
 
         std::list<std::pair<uint32_t, std::array<PerObjectShaderParams, 1>>>::iterator it = m_scene.begin();
         std::advance(it, manipulation.obj_id-1);
@@ -315,7 +315,7 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getInteractionCallba
 
         it->second = per_obj_data; // overwrite object data for persistent change
 
-        ci->getInteractionCollection()->accessPendingManipulations().pop();
+        ci->getData()->accessPendingManipulations().pop();
     }
 
     // update all per obj data buffers

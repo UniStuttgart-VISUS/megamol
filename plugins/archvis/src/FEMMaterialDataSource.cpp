@@ -11,7 +11,7 @@
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/view/CallGetTransferFunction.h"
 
-#include "mesh/CallGPUMaterialData.h"
+#include "mesh/MeshCalls.h"
 
 namespace megamol {
 namespace archvis {
@@ -63,10 +63,15 @@ bool megamol::archvis::FEMMaterialDataSource::getDataCallback(core::Call& caller
         }
     }
 
-    mtl_call->setMaterialStorage(m_gpu_materials);
+    mtl_call->setData(m_gpu_materials);
 
     // set update?
 
+    return true;
+}
+
+bool FEMMaterialDataSource::getMetaDataCallback(core::Call& caller)
+{
     return true;
 }
 

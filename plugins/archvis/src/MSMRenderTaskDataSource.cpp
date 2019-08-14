@@ -1,9 +1,7 @@
 #include "MSMRenderTaskDataSource.h"
 
-#include "mesh/CallGPUMaterialData.h"
 #include "mesh/GPUMeshCollection.h"
-#include "mesh/CallGPUMeshData.h"
-#include "mesh/CallGPURenderTaskData.h"
+#include "mesh/MeshCalls.h"
 
 #include "MSMDataCall.h"
 
@@ -31,8 +29,8 @@ bool megamol::archvis::MSMRenderTaskDataSource::getDataCallback(core::Call& call
 
     if (!(*mc)(0)) return false;
 
-    auto gpu_mtl_storage = mtlc->getMaterialStorage();
-    auto gpu_mesh_storage = mc->getGPUMeshes();
+    auto gpu_mtl_storage = mtlc->getData();
+    auto gpu_mesh_storage = mc->getData();
 
     if (gpu_mtl_storage == nullptr) return false;
     if (gpu_mesh_storage == nullptr) return false;
@@ -72,7 +70,7 @@ bool megamol::archvis::MSMRenderTaskDataSource::getDataCallback(core::Call& call
         m_gpu_render_tasks->addRenderTasks(shader, gpu_batch_mesh, draw_commands, object_transform);
     }
 
-    rtc->setRenderTaskData(m_gpu_render_tasks);
+    rtc->setData(m_gpu_render_tasks);
 
     this->m_MSM_hash = msm_call->DataHash();
 

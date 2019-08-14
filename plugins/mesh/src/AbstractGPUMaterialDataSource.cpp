@@ -8,7 +8,7 @@
 #include "stdafx.h"
 
 #include "mesh/AbstractGPUMaterialDataSource.h"
-#include "mesh/CallGPUMaterialData.h"
+#include "mesh/MeshCalls.h"
 
 megamol::mesh::AbstractGPUMaterialDataSource::AbstractGPUMaterialDataSource()
     : core::Module()
@@ -17,6 +17,8 @@ megamol::mesh::AbstractGPUMaterialDataSource::AbstractGPUMaterialDataSource()
     , m_mtl_callerSlot("getMaterial", "The slot for chaining material data sources") {
     this->m_getData_slot.SetCallback(
         CallGPUMaterialData::ClassName(), "GetData", &AbstractGPUMaterialDataSource::getDataCallback);
+    this->m_getData_slot.SetCallback(
+        CallGPUMaterialData::ClassName(), "GetMetaData", &AbstractGPUMaterialDataSource::getMetaDataCallback);
     this->MakeSlotAvailable(&this->m_getData_slot);
 
     this->m_mtl_callerSlot.SetCompatibleCall<CallGPUMaterialDataDescription>();
