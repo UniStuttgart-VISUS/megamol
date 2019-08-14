@@ -105,6 +105,10 @@ private:
 
     core::param::ParamSlot absorptionBiasSlot;
 
+    core::param::ParamSlot coneSampleNumSlot;
+
+    core::param::ParamSlot coneAngleSlot;
+
     // core::param::ParamSlot wavelength_slot_;
 
     std::vector<std::vector<float>> vol_;

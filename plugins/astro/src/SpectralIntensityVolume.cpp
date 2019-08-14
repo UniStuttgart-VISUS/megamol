@@ -18,6 +18,8 @@
 
 #include "simultaneous_sort.h"
 
+#include "mmcore/thecam/math/quaternion.h"
+
 
 megamol::astro::SpectralIntensityVolume::SpectralIntensityVolume()
     : volume_in_slot_("volumeIn", "Input of volume containing optical depth")
@@ -37,7 +39,9 @@ megamol::astro::SpectralIntensityVolume::SpectralIntensityVolume()
     , normalizeSlot("normalize", "Normalize the output volume")
     //, wavelength_slot_("wavelength", "Set the wavelength for the spectral intensity (in nm)")
     , numSamplesSlot("numSamples", "Number of samples per particle in the darth volume case")
-    , absorptionBiasSlot("absorptionBias", "Determines influence of absorption coefficient in the darth volume case") {
+    , absorptionBiasSlot("absorptionBias", "Determines influence of absorption coefficient in the darth volume case")
+    , coneSampleNumSlot("coneNumSamples", "Number of samples for cone tracing in darth volume case")
+    , coneAngleSlot("coneAngle", "Angle of the cone in the darth volume case (degree)") {
     volume_in_slot_.SetCompatibleCall<core::misc::VolumetricDataCallDescription>();
     MakeSlotAvailable(&volume_in_slot_);
 
@@ -138,6 +142,12 @@ megamol::astro::SpectralIntensityVolume::SpectralIntensityVolume()
 
     absorptionBiasSlot << new core::param::FloatParam(1.0f, -1.0f, 1.0f);
     MakeSlotAvailable(&absorptionBiasSlot);
+
+    coneSampleNumSlot << new core::param::IntParam(4, 1);
+    MakeSlotAvailable(&coneSampleNumSlot);
+
+    coneAngleSlot << new core::param::FloatParam(2.0f, 0.001f, 90.0f);
+    MakeSlotAvailable(&coneAngleSlot);
 }
 
 
@@ -591,6 +601,9 @@ bool megamol::astro::SpectralIntensityVolume::createVolumeCPU(core::misc::Volume
     auto const numSamples = numSamplesSlot.Param<core::param::IntParam>()->Value();
     double const bias = absorptionBiasSlot.Param<core::param::FloatParam>()->Value();
 
+    auto const numConeSamples = coneSampleNumSlot.Param<core::param::IntParam>()->Value();
+    auto const coneAngleDeg = coneAngleSlot.Param<core::param::FloatParam>()->Value();
+
     auto const numCells = sx * sy * sz;
 
     vol_.resize(omp_get_max_threads());
@@ -833,8 +846,17 @@ bool megamol::astro::SpectralIntensityVolume::createVolumeCPU(core::misc::Volume
     std::uniform_real_distribution<> distr(0.0, 1.0);
     std::mt19937_64 rng(42);
 
+    // Implements the Bump Function from
+    // https://en.wikipedia.org/wiki/Radial_basis_function
+    auto rbf = [](float const dist, float const epsilon) -> float {
+        if (dist >= epsilon) return 0.0f;
+        return std::exp(-1.0f / (1.0f - std::pow((1.0f / epsilon) * dist, 2.0f)));
+    };
+
 #if 1
     cpb.Start("Volume Creation", positions.size());
+    auto const cone_factor = std::tan(coneAngleDeg * M_PI / 180.0f);
+    auto const cone_angle = coneAngleDeg * M_PI / 180.0;
 
 #    pragma omp parallel for
     for (int64_t idx = 0; idx < positions.size(); ++idx) {
@@ -847,7 +869,7 @@ bool megamol::astro::SpectralIntensityVolume::createVolumeCPU(core::misc::Volume
         auto z = voxel_idx[idx].z;*/
         auto const rad = sl[idx];
 
-        auto e = radiance[idx];
+        
 
         for (int iter = 0; iter < numSamples; ++iter) {
             // https://corysimon.github.io/articles/uniformdistn-on-sphere/
@@ -857,38 +879,78 @@ bool megamol::astro::SpectralIntensityVolume::createVolumeCPU(core::misc::Volume
                 rad * std::sin(theta) * std::cos(phi), rad * std::sin(theta) * std::sin(phi), rad * std::cos(theta));
             glm::vec3 org = pos + dir;
             dir = glm::normalize(dir);
+            auto org_dir = dir;
 
-            double att = 0.0;
-            float t = 0.0f;
-            float t_max = std::sqrt(rangeOSx * rangeOSx + rangeOSy * rangeOSy + rangeOSz * rangeOSz);
-            float t_step = min_vol_dis;
-            while (t <= t_max && e > 0.0) {
-                glm::vec3 const curr = org + t * dir;
+            for (int cone_idx = 0; cone_idx < numConeSamples; ++cone_idx) {
+                auto e = radiance[idx];
 
-                auto ax = static_cast<int>((curr.x - vol_orgx) / vol_disx);
-                auto ay = static_cast<int>((curr.y - vol_orgy) / vol_disy);
-                auto az = static_cast<int>((curr.z - vol_orgz) / vol_disz);
+                // modify dir
+                // https://stackoverflow.com/questions/38997302/create-random-unit-vector-inside-a-defined-conical-region
+                try {
+                    auto const z = distr(rng) * (1.0 - std::cos(cone_angle)) + std::cos(cone_angle);
+                    auto const phi = distr(rng) * 2.0 * M_PI;
+                    auto const y = std::sqrt(1.0 - z * z) * sin(phi);
+                    auto const x = std::sqrt(1.0 - z * z) * cos(phi);
+                    glm::vec3 rand(x, y, z);
+                    glm::vec3 base(0, 0, 1);
+                    auto const quat = core::thecam::math::quaternion<glm::quat>::from_vectors(base, org_dir);
+                    dir = core::thecam::math::rotate(rand, quat);
+                } catch (...) {
+                    vislib::sys::Log::DefaultLog.WriteError("SpectralIntensityVolume: Math gone wrong");
+                }
 
-                ax = (ax + 2 * vol_sx) % vol_sx;
-                ay = (ay + 2 * vol_sy) % vol_sy;
-                az = (az + 2 * vol_sz) % vol_sz;
+                //double att = 0.0;
+                float t = 0.0f;
+                float t_max = std::sqrt(rangeOSx * rangeOSx + rangeOSy * rangeOSy + rangeOSz * rangeOSz);
+                float t_step = min_vol_dis;
+                while (t <= t_max && e > 0.0) {
+                    glm::vec3 const curr = org + t * dir;
 
-                double aps = optical[(az * vol_sy + ay) * vol_sx + ax];
+                    auto ax = static_cast<int>((curr.x - vol_orgx) / vol_disx);
+                    auto ay = static_cast<int>((curr.y - vol_orgy) / vol_disy);
+                    auto az = static_cast<int>((curr.z - vol_orgz) / vol_disz);
 
-                auto vx = static_cast<int>((curr.x - minOSx) / sliceDistX);
-                auto vy = static_cast<int>((curr.y - minOSy) / sliceDistY);
-                auto vz = static_cast<int>((curr.z - minOSz) / sliceDistZ);
+                    ax = (ax + 2 * vol_sx) % vol_sx;
+                    ay = (ay + 2 * vol_sy) % vol_sy;
+                    az = (az + 2 * vol_sz) % vol_sz;
 
-                vx = (vx + 2 * sx) % sx;
-                vy = (vy + 2 * sy) % sy;
-                vz = (vz + 2 * sz) % sz;
+                    double aps = optical[(az * vol_sy + ay) * vol_sx + ax];
 
-                e -= e * aps;
-                //att += aps * (1.0 - att);
+                    auto vx = static_cast<int>((curr.x - minOSx) / sliceDistX);
+                    auto vy = static_cast<int>((curr.y - minOSy) / sliceDistY);
+                    auto vz = static_cast<int>((curr.z - minOSz) / sliceDistZ);
 
-                vol_[omp_get_thread_num()][(vz * sy + vy) * sx + vx] += e;
+                    vx = (vx + 2 * sx) % sx;
+                    vy = (vy + 2 * sy) % sy;
+                    vz = (vz + 2 * sz) % sz;
 
-                t += t_step;
+                    e -= e * aps;
+                    // att += aps * (1.0 - att);
+
+                    vol_[omp_get_thread_num()][(vz * sy + vy) * sx + vx] += e;
+
+                    /*auto const cone = cone_factor * t;
+                    auto const voxel_diff_x = static_cast<int>(cone / sliceDistX);
+                    auto const voxel_diff_y = static_cast<int>(cone / sliceDistY);
+                    auto const voxel_diff_z = static_cast<int>(cone / sliceDistZ);
+                    for (int vvz = vz - voxel_diff_z; vvz < vz + voxel_diff_z; ++vvz) {
+                        for (int vvy = vy - voxel_diff_y; vvy < vy + voxel_diff_y; ++vvy) {
+                            for (int vvx = vx - voxel_diff_x; vvx < vx + voxel_diff_x; ++vvx) {
+                                float const tmp_dis_x = sliceDistX * static_cast<float>(std::abs(vvx - vx));
+                                float const tmp_dis_y = sliceDistY * static_cast<float>(std::abs(vvy - vy));
+                                float const tmp_dis_z = sliceDistZ * static_cast<float>(std::abs(vvz - vz));
+                                auto const distance =
+                                    std::sqrt(tmp_dis_x * tmp_dis_x + tmp_dis_y * tmp_dis_y + tmp_dis_z * tmp_dis_z);
+                                auto const hvx = (vvx + 2 * sx) % sx;
+                                auto const hvy = (vvy + 2 * sy) % sy;
+                                auto const hvz = (vvz + 2 * sz) % sz;
+                                vol_[omp_get_thread_num()][(hvz * sy + hvy) * sx + hvx] += e * rbf(distance, cone);
+                            }
+                        }
+                    }*/
+
+                    t += t_step;
+                }
             }
         }
 
