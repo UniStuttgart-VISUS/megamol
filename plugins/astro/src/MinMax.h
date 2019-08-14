@@ -68,6 +68,9 @@ namespace astro {
 
         core::CallerSlot slotVolumetricDataIn;
         core::CalleeSlot slotVolumetricDataOut;
+        size_t hash;
+        std::vector<double> minValues;
+        std::vector<double> maxValues;
     };
 
 } /* end namespace astro */
