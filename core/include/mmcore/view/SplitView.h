@@ -17,9 +17,7 @@
 #include "mmcore/view/AbstractView.h"
 #include "mmcore/view/CallRenderView.h"
 #include "mmcore/view/TimeControl.h"
-#include "vislib/graphics/ColourRGBAu8.h"
 #include "vislib/graphics/gl/FramebufferObject.h"
-
 
 namespace megamol {
 namespace core {
@@ -36,21 +34,21 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "SplitView"; }
+    static const char* ClassName() { return "SplitView"; }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "Split View Module"; }
+    static const char* Description() { return "A view embedding two other views separated by a splitter"; }
 
     /**
      * Answers whether this module is available on the current system.
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return vislib::graphics::gl::FramebufferObject::AreExtensionsAvailable(); }
+    static bool IsAvailable() { return vislib::graphics::gl::FramebufferObject::AreExtensionsAvailable(); }
 
     /**
      * Answer whether or not this module supports being used in a
@@ -62,54 +60,54 @@ public:
      * @return Whether or not this module supports being used in a
      *         quickstart.
      */
-    static bool SupportQuickstart(void) { return false; }
+    static bool SupportQuickstart() { return false; }
 
     /** Ctor. */
-    SplitView(void);
+    SplitView();
 
     /** Dtor. */
-    virtual ~SplitView(void);
+    ~SplitView() override;
 
     /**
      * Answer the default time for this view
      *
      * @return The default time
      */
-    virtual float DefaultTime(double instTime) const;
+    float DefaultTime(double instTime) const override;
 
     /**
      * Answer the camera synchronization number.
      *
      * @return The camera synchronization number
      */
-    virtual unsigned int GetCameraSyncNumber(void) const;
+    unsigned int GetCameraSyncNumber() const override;
 
     /**
      * Serialises the camera of the view
      *
      * @param serialiser Serialises the camera of the view
      */
-    virtual void SerialiseCamera(vislib::Serialiser& serialiser) const;
+    void SerialiseCamera(vislib::Serialiser& serialiser) const override;
 
     /**
      * Deserialises the camera of the view
      *
      * @param serialiser Deserialises the camera of the view
      */
-    virtual void DeserialiseCamera(vislib::Serialiser& serialiser);
+    void DeserialiseCamera(vislib::Serialiser& serialiser) override;
 
     /**
      * Renders this AbstractView3D in the currently active OpenGL context.
      *
      * @param context
      */
-    virtual void Render(const mmcRenderViewContext& context);
+    void Render(const mmcRenderViewContext& context) override;
 
     /**
      * Resets the view. This normally sets the camera parameters to
      * default values.
      */
-    virtual void ResetView(void);
+    void ResetView() override;
 
     /**
      * Resizes the AbstractView3D.
@@ -117,7 +115,7 @@ public:
      * @param width The new width.
      * @param height The new height.
      */
-    virtual void Resize(unsigned int width, unsigned int height);
+    void Resize(unsigned int width, unsigned int height) override;
 
     /**
      * Callback requesting a rendering of this view
@@ -126,7 +124,7 @@ public:
      *
      * @return The return value
      */
-    virtual bool OnRenderView(Call& call);
+    bool OnRenderView(Call& call) override;
 
     /**
      * Freezes, updates, or unfreezes the view onto the scene (not the
@@ -135,17 +133,17 @@ public:
      * @param freeze true means freeze or update freezed settings,
      *               false means unfreeze
      */
-    virtual void UpdateFreeze(bool freeze);
+    void UpdateFreeze(bool freeze) override;
 
-    virtual bool OnKey(Key key, KeyAction action, Modifiers mods) override;
+    bool OnKey(Key key, KeyAction action, Modifiers mods) override;
 
-    virtual bool OnChar(unsigned int codePoint) override;
+    bool OnChar(unsigned int codePoint) override;
 
-    virtual bool OnMouseButton(MouseButton button, MouseButtonAction action, Modifiers mods) override;
+    bool OnMouseButton(MouseButton button, MouseButtonAction action, Modifiers mods) override;
 
-    virtual bool OnMouseMove(double x, double y) override;
+    bool OnMouseMove(double x, double y) override;
 
-    virtual bool OnMouseScroll(double dx, double dy) override;
+    bool OnMouseScroll(double dx, double dy) override;
 
 protected:
     /**
@@ -153,12 +151,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
     /**
      * Unpacks the mouse coordinates, which are relative to the virtual
@@ -167,7 +165,7 @@ protected:
      * @param x The x coordinate of the mouse position
      * @param y The y coordinate of the mouse position
      */
-    virtual void unpackMouseCoordinates(float& x, float& y);
+    void unpackMouseCoordinates(float& x, float& y) override;
 
     /** Override of GetExtents */
     virtual bool GetExtents(core::Call& call) override;
@@ -178,23 +176,22 @@ private:
      *
      * @return The renderer 1 call
      */
-    inline CallRenderView* render1(void) const { return this->render1Slot.CallAs<CallRenderView>(); }
+    inline CallRenderView* render1() const { return this->render1Slot.CallAs<CallRenderView>(); }
 
     /**
      * Answer the renderer 2 call
      *
      * @return The renderer 2 call
      */
-    inline CallRenderView* render2(void) const { return this->render2Slot.CallAs<CallRenderView>(); }
+    inline CallRenderView* render2() const { return this->render2Slot.CallAs<CallRenderView>(); }
 
     /**
-     * Returns the hovered (mouse input) renderer.
+     * Returns the focused (keyboard input) renderer.
      */
-    inline CallRenderView* renderHovered() const {
-        auto mousePos = vislib::math::Point<float, 2>(this->mouseX, this->mouseY);
-        if (this->client1Area.Contains(mousePos)) {
+    inline CallRenderView* renderFocused() const {
+        if (this->focus == 1) {
             return this->render1();
-        } else if (this->client2Area.Contains(mousePos)) {
+        } else if (this->focus == 2) {
             return this->render2();
         } else {
             return nullptr;
@@ -202,18 +199,25 @@ private:
     }
 
     /**
-     * Callback whenever the splitter colour gets updated
-     *
-     * @param sender The sending slot
-     *
-     * @return true
+     * Returns the hovered (mouse input) renderer.
      */
-    bool splitColourUpdated(param::ParamSlot& sender);
+    inline CallRenderView* renderHovered() const {
+        auto mousePos = vislib::math::Point<float, 2>(this->mouseX, this->mouseY);
+        if (this->clientArea1.Contains(mousePos)) {
+            return this->render1();
+        } else if (this->clientArea2.Contains(mousePos)) {
+            return this->render2();
+        } else {
+            return nullptr;
+        }
+    }
+
+    void updateSize(size_t width, size_t height);
 
     /**
      * Calculates the client areas
      */
-    void calcClientAreas(void);
+    void adjustClientAreas();
 
     /** Connection to the renderer 1 (left, top) */
     mutable CallerSlot render1Slot;
@@ -222,10 +226,10 @@ private:
     mutable CallerSlot render2Slot;
 
     /** The split orientation slot */
-    param::ParamSlot splitOriSlot;
+    param::ParamSlot splitOrientationSlot;
 
     /** The splitter distance slot */
-    param::ParamSlot splitSlot;
+    param::ParamSlot splitPositionSlot;
 
     /** The splitter width slot */
     param::ParamSlot splitWidthSlot;
@@ -242,27 +246,26 @@ private:
     /** The parameter storage for time control */
     TimeControl timeCtrl;
 
-    /** The splitter colour */
-    param::ColorParam::ColorType splitColour;
-
     /** The override call */
     CallRenderView* overrideCall;
 
     vislib::math::Rectangle<float> clientArea;
 
-    vislib::math::Rectangle<float> client1Area;
+    vislib::math::Rectangle<float> clientArea1;
 
-    vislib::math::Rectangle<float> client2Area;
+    vislib::math::Rectangle<float> clientArea2;
 
     vislib::graphics::gl::FramebufferObject fbo1;
 
     vislib::graphics::gl::FramebufferObject fbo2;
 
+	int focus;
+
     float mouseX;
 
     float mouseY;
 
-    bool dragSlider;
+    bool dragSplitter;
 };
 
 

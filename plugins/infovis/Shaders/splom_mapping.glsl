@@ -10,6 +10,15 @@ float normalizeValue(float value) {
     return (value - valueColumnMinMax.x) / (valueColumnMinMax.y - valueColumnMinMax.x);
 }
 
+// Adjusts the color based on flags.
+vec4 flagifyColor(vec4 color, uint flags) {
+    if (bitflag_test(flags, FLAG_SELECTED, FLAG_SELECTED)) {
+        return vec4(1.0, 0.0, 0.0, 1.0); //TODO: param?
+    } else {
+        return color;
+    }
+}
+
 // Emits a vec4 for the screen shader, assuming regular alpha-blending for RGB
 // and blending against white for A (yup, craziness).
 vec4 toScreen(float value, vec4 valueColor, float density) {

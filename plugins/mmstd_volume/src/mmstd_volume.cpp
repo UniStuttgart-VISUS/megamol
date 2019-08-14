@@ -16,6 +16,7 @@
 #include "DirectVolumeRenderer.h"
 #include "BuckyBall.h"
 #include "GridBalls.h"
+#include "DifferenceVolume.h"
 #include "DirPartVolume.h"
 #include "VolumeCache.h"
 #include "RenderVolumeSlice.h"
@@ -64,7 +65,7 @@ MMSTD_VOLUME_API const void * mmplgCoreCompatibilityValue(void) {
  * mmplgModuleCount
  */
 MMSTD_VOLUME_API int mmplgModuleCount(void) {
-    return 10;
+    return 11;
 }
 
 
@@ -82,7 +83,8 @@ MMSTD_VOLUME_API void* mmplgModuleDescription(int idx) {
     case 6: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::volume::RenderVolumeSlice>();
 	case 7: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::volume::VolumetricDataSource>();
 	case 8: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::volume::RaycastVolumeRenderer>();
-	case 9: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::volume::DatRawWriter>();
+    case 9: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::volume::DatRawWriter>();
+    case 10: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::volume::DifferenceVolume>();
     }
     return NULL;
 }

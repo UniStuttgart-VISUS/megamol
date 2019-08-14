@@ -20,30 +20,33 @@
 /*
  * megamol::astro::AstroSchulz::AstroSchulz
  */
-megamol::astro::AstroSchulz::AstroSchulz(void) : Module(),
+megamol::astro::AstroSchulz::AstroSchulz(void) : Module(), 
         frameID(0),
         hashInput(0),
         hashState(0),
-        paramsInclude { {   // The ParamSlot has been defeated!!!
-            { "includePosition", "Include the position." },
-            { "includeVelocity", "Include the velocity vectors." },
-            { "includeVelocityMagnitude", "Include the magnitude of the velocity vectors." },
-            { "includeTemperature", "Include the temperature." },
-            { "includeMass", "Include the mass." },
-            { "includeInternalEnergy", "Include the internal energy." },
-            { "includeSmoothingLength", "include the smoothing length." },
-            { "includeMolecularWeight", "Include the molecular weight." },
-            { "includeDensity", "Include the density." },
-            { "includeGravitationalPotential", "Include the graviational potential." },
-            { "includeEntropy", "Include entropy." },
-            { "includeBaryon", "Include the Boolean indicating baryons." },
-            { "includeStar", "Include the Boolean indicating stars." },
-            { "includeWind", "Include the Boolean indicating wind." },
-            { "includeStarFormingGas", "Include the Boolean indicating start forming gas." },
-            { "includeActiveGalactivNucleus", "Include the Boolean indicating AGNs." },
-            { "includeID", "Include the particle ID." },
-            { "includeTime", "Load all timesteps into a single table and add the frame number as column." }
-        } },
+        paramsInclude{{// The ParamSlot has been defeated!!!
+            {"includePosition", "Include the position."}, {"includeVelocity", "Include the velocity vectors."},
+            {"includeVelocityMagnitude", "Include the magnitude of the velocity vectors."},
+            {"includeTemperature", "Include the temperature."}, {"includeMass", "Include the mass."},
+            {"includeInternalEnergy", "Include the internal energy."},
+            {"includeSmoothingLength", "include the smoothing length."},
+            {"includeMolecularWeight", "Include the molecular weight."}, {"includeDensity", "Include the density."},
+            {"includeGravitationalPotential", "Include the graviational potential."},
+            {"includeEntropy", "Include entropy."}, {"includeBaryon", "Include the Boolean indicating baryons."},
+            {"includeStar", "Include the Boolean indicating stars."},
+            {"includeWind", "Include the Boolean indicating wind."},
+            {"includeStarFormingGas", "Include the Boolean indicating start forming gas."},
+            {"includeActiveGalactivNucleus", "Include the Boolean indicating AGNs."},
+            {"includeID", "Include the particle ID."},
+            {"includeVelocityDerivative", "Include the velocity vector derivatives"}, 
+            {"includeInternalEnergyDerivative", "Include the internal energy derivative"}, 
+            {"includeSmoothingLengthDerivative", "include the smoothing length derivative"}, 
+            {"includeMolecularWeightDerivative", "Include the molecular weight derivative"}, 
+            {"includeDensityDerivative", "Include the density derivative"}, 
+            {"includeGravitationalPotentialDerivative", "Include the graviational potential derivative"}, 
+            {"includeTemperatureDerivative", "Include the temperature derivative"}, 
+            {"includeEntropyDerivative", "Include entropy derivative"}, 
+            {"includeTime", "Load all timesteps into a single table and add the frame number as column."}}}, 
         paramFullRange("fullRange", "Scan the whole trajecory for min/man ranges."),
         slotAstroData("astroData", "Input slot for astronomical data"),
         slotTableData("tableData", "Output slot for the resulting sphere data") {
@@ -51,14 +54,10 @@ megamol::astro::AstroSchulz::AstroSchulz(void) : Module(),
     this->slotAstroData.SetCompatibleCall<AstroDataCallDescription>();
     this->MakeSlotAvailable(&this->slotAstroData);
 
-    this->slotTableData.SetCallback(
-        megamol::stdplugin::datatools::table::TableDataCall::ClassName(),
-        megamol::stdplugin::datatools::table::TableDataCall::FunctionName(0),
-        &AstroSchulz::getData);
-    this->slotTableData.SetCallback(
-        megamol::stdplugin::datatools::table::TableDataCall::ClassName(),
-        megamol::stdplugin::datatools::table::TableDataCall::FunctionName(1),
-        &AstroSchulz::getHash);
+    this->slotTableData.SetCallback(megamol::stdplugin::datatools::table::TableDataCall::ClassName(),
+        megamol::stdplugin::datatools::table::TableDataCall::FunctionName(0), &AstroSchulz::getData);
+    this->slotTableData.SetCallback(megamol::stdplugin::datatools::table::TableDataCall::ClassName(),
+        megamol::stdplugin::datatools::table::TableDataCall::FunctionName(1), &AstroSchulz::getHash);
     this->MakeSlotAvailable(&this->slotTableData);
 
     this->paramFullRange << new core::param::BoolParam(false);
@@ -85,30 +84,26 @@ megamol::astro::AstroSchulz::~AstroSchulz(void) {
 /*
  * megamol::astro::AstroSchulz::create
  */
-bool megamol::astro::AstroSchulz::create(void) {
-    return true;
-}
+bool megamol::astro::AstroSchulz::create(void) { return true; }
 
 
 /*
  * megamol::astro::AstroSchulz::release
  */
-void megamol::astro::AstroSchulz::release(void) { }
+void megamol::astro::AstroSchulz::release(void) {}
 
 
 /*
  * megamol::astro::AstroSchulz::getData
  */
-bool megamol::astro::AstroSchulz::getData(AstroDataCall& call,
-        const unsigned int frameID) {
-    //Log::DefaultLog.WriteInfo(L"Requesting astro frame %u ...", frameID);
+bool megamol::astro::AstroSchulz::getData(AstroDataCall& call, const unsigned int frameID) {
+    // Log::DefaultLog.WriteInfo(L"Requesting astro frame %u ...", frameID);
     call.SetFrameID(frameID, true);
 
     do {
         if (!call(AstroDataCall::CallForGetData)) {
             vislib::sys::Log::DefaultLog.WriteWarn(L"%hs failed in %hs.",
-                AstroDataCall::FunctionName(AstroDataCall::CallForGetData),
-                AstroSchulz::ClassName());
+                AstroDataCall::FunctionName(AstroDataCall::CallForGetData), AstroSchulz::ClassName());
             return false;
         }
     } while (call.FrameID() != frameID);
@@ -120,8 +115,7 @@ bool megamol::astro::AstroSchulz::getData(AstroDataCall& call,
 /*
  * megamol::astro::AstroSchulz::updateRange
  */
-void megamol::astro::AstroSchulz::updateRange(std::pair<float, float>& range,
-        const float value) {
+void megamol::astro::AstroSchulz::updateRange(std::pair<float, float>& range, const float value) {
     if (value < range.first) {
         range.first = value;
     }
@@ -134,16 +128,12 @@ void megamol::astro::AstroSchulz::updateRange(std::pair<float, float>& range,
 /*
  * megamol::astro::AstroSchulz::convert
  */
-void megamol::astro::AstroSchulz::convert(float* dst, const std::size_t col,
-        const vec3ArrayPtr& src) {
+void megamol::astro::AstroSchulz::convert(float* dst, const std::size_t col, const vec3ArrayPtr& src) {
     assert(dst != nullptr);
     assert(src != nullptr);
 
     std::array<std::pair<float, float>, 3> range = {
-        AstroSchulz::initialiseRange(),
-        AstroSchulz::initialiseRange(),
-        AstroSchulz::initialiseRange()
-    };
+        AstroSchulz::initialiseRange(), AstroSchulz::initialiseRange(), AstroSchulz::initialiseRange()};
 
     for (auto s : *src) {
         for (std::size_t i = 0; i < s.length(); ++i) {
@@ -167,8 +157,7 @@ void megamol::astro::AstroSchulz::convert(float* dst, const std::size_t col,
 /*
  * megamol::astro::AstroSchulz::convert
  */
-void megamol::astro::AstroSchulz::convert(float* dst, const std::size_t col,
-        const floatArrayPtr& src) {
+void megamol::astro::AstroSchulz::convert(float* dst, const std::size_t col, const floatArrayPtr& src) {
     assert(dst != nullptr);
     assert(src != nullptr);
     auto range = AstroSchulz::initialiseRange();
@@ -192,8 +181,7 @@ void megamol::astro::AstroSchulz::convert(float* dst, const std::size_t col,
 /*
  * megamol::astro::AstroSchulz::convert
  */
-void megamol::astro::AstroSchulz::convert(float* dst, const std::size_t col,
-        const boolArrayPtr& src) {
+void megamol::astro::AstroSchulz::convert(float* dst, const std::size_t col, const boolArrayPtr& src) {
     assert(dst != nullptr);
     assert(src != nullptr);
     auto range = AstroSchulz::initialiseRange();
@@ -218,8 +206,7 @@ void megamol::astro::AstroSchulz::convert(float* dst, const std::size_t col,
 /*
  * megamol::astro::AstroSchulz::convert
  */
-void megamol::astro::AstroSchulz::convert(float* dst, const std::size_t col,
-        const idArrayPtr& src) {
+void megamol::astro::AstroSchulz::convert(float* dst, const std::size_t col, const idArrayPtr& src) {
     assert(dst != nullptr);
     assert(src != nullptr);
     auto range = AstroSchulz::initialiseRange();
@@ -247,22 +234,25 @@ bool megamol::astro::AstroSchulz::getData(core::Call& call) {
     using vislib::sys::Log;
 
     auto ast = this->slotAstroData.CallAs<AstroDataCall>();
-    auto tab = static_cast<TableDataCall *>(&call);
+    auto tab = static_cast<TableDataCall*>(&call);
 
     if (ast == nullptr) {
         Log::DefaultLog.WriteWarn(L"AstroDataCall is not connected "
-            L"in AstroSchulz.", nullptr);
+                                  L"in AstroSchulz.",
+            nullptr);
         return false;
     }
     if (tab == nullptr) {
         Log::DefaultLog.WriteWarn(L"TableDataCall is not connected "
-            L"in AstroSchulz.", nullptr);
+                                  L"in AstroSchulz.",
+            nullptr);
         return false;
     }
 
     if (!(*ast)(AstroDataCall::CallForGetExtent)) {
         Log::DefaultLog.WriteWarn(L"AstroDataCall::CallForGetExtent failed "
-            L"in AstroSchulz.", nullptr);
+                                  L"in AstroSchulz.",
+            nullptr);
         return false;
     }
 
@@ -284,10 +274,8 @@ bool megamol::astro::AstroSchulz::getData(core::Call& call) {
 
     tab->SetFrameCount(ast->FrameCount());
     tab->SetDataHash(this->getHash());
-    tab->Set(this->columns.size(),
-        this->values.size() / this->columns.size(),
-        this->columns.data(),
-        this->values.data());
+    tab->Set(
+        this->columns.size(), this->values.size() / this->columns.size(), this->columns.data(), this->values.data());
     tab->SetUnlocker(nullptr);
 
     return true;
@@ -305,13 +293,13 @@ bool megamol::astro::AstroSchulz::getData(const unsigned int frameID) {
     auto ast = this->slotAstroData.CallAs<AstroDataCall>();
     if (ast == nullptr) {
         Log::DefaultLog.WriteWarn(L"AstroDataCall is not connected "
-            L"in AstroSchulz.", nullptr);
+                                  L"in AstroSchulz.",
+            nullptr);
         return false;
     }
 
-    auto isParamChange = this->columns.empty()
-        || std::any_of(this->paramsInclude.begin(), this->paramsInclude.end(),
-        [](const ParamSlot& param) { return param.IsDirty(); });
+    auto isParamChange = this->columns.empty() || std::any_of(this->paramsInclude.begin(), this->paramsInclude.end(),
+                                                      [](const ParamSlot& param) { return param.IsDirty(); });
 
     // Update column metadata if selection changed.
     if (isParamChange) {
@@ -481,6 +469,84 @@ bool megamol::astro::AstroSchulz::getData(const unsigned int frameID) {
 
         if (this->paramsInclude[col++].Param<BoolParam>()->Value()) {
             this->columns.emplace_back();
+            this->columns.back().SetName("VelocityDerivativeX");
+            this->columns.back().SetType(TableDataCall::ColumnType::QUANTITATIVE);
+            this->columns.back().SetMinimumValue(std::numeric_limits<float>::lowest());
+            this->columns.back().SetMaximumValue((std::numeric_limits<float>::max)());
+
+            this->columns.emplace_back();
+            this->columns.back().SetName("VelocityDerivativeY");
+            this->columns.back().SetType(TableDataCall::ColumnType::QUANTITATIVE);
+            this->columns.back().SetMinimumValue(std::numeric_limits<float>::lowest());
+            this->columns.back().SetMaximumValue((std::numeric_limits<float>::max)());
+
+            this->columns.emplace_back();
+            this->columns.back().SetName("VelocityDerivativeZ");
+            this->columns.back().SetType(TableDataCall::ColumnType::QUANTITATIVE);
+            this->columns.back().SetMinimumValue(std::numeric_limits<float>::lowest());
+            this->columns.back().SetMaximumValue((std::numeric_limits<float>::max)());
+        }
+
+        if (this->paramsInclude[col++].Param<BoolParam>()->Value()) {
+            this->columns.emplace_back();
+            this->columns.back().SetName("InternalEnergyDerivative");
+            this->columns.back().SetType(TableDataCall::ColumnType::QUANTITATIVE);
+            this->columns.back().SetMinimumValue(std::numeric_limits<float>::lowest());
+            this->columns.back().SetMaximumValue((std::numeric_limits<float>::max)());
+        }
+
+        if (this->paramsInclude[col++].Param<BoolParam>()->Value()) {
+            this->columns.emplace_back();
+            this->columns.back().SetName("SmoothingLengthDerivative");
+            this->columns.back().SetType(TableDataCall::ColumnType::QUANTITATIVE);
+            this->columns.back().SetMinimumValue(std::numeric_limits<float>::lowest());
+            this->columns.back().SetMaximumValue((std::numeric_limits<float>::max)());
+        }
+
+        if (this->paramsInclude[col++].Param<BoolParam>()->Value()) {
+            this->columns.emplace_back();
+            this->columns.back().SetName("MolecularWeightDerivative");
+            this->columns.back().SetType(TableDataCall::ColumnType::QUANTITATIVE);
+            this->columns.back().SetMinimumValue(std::numeric_limits<float>::lowest());
+            this->columns.back().SetMaximumValue((std::numeric_limits<float>::max)());
+        }
+
+        if (this->paramsInclude[col++].Param<BoolParam>()->Value()) {
+            this->columns.emplace_back();
+            this->columns.back().SetName("DensityDerivative");
+            this->columns.back().SetType(TableDataCall::ColumnType::QUANTITATIVE);
+            this->columns.back().SetMinimumValue(std::numeric_limits<float>::lowest());
+            this->columns.back().SetMaximumValue((std::numeric_limits<float>::max)());
+        }
+
+        if (this->paramsInclude[col++].Param<BoolParam>()->Value()) {
+            this->columns.emplace_back();
+            this->columns.back().SetName("GraviationalPotentialDerivative");
+            this->columns.back().SetType(TableDataCall::ColumnType::QUANTITATIVE);
+            this->columns.back().SetMinimumValue(std::numeric_limits<float>::lowest());
+            this->columns.back().SetMaximumValue((std::numeric_limits<float>::max)());
+        }
+
+        if (this->paramsInclude[col++].Param<BoolParam>()->Value()) {
+            this->columns.emplace_back();
+            this->columns.back().SetName("TemperatureDerivative");
+            this->columns.back().SetType(TableDataCall::ColumnType::QUANTITATIVE);
+            this->columns.back().SetMinimumValue(std::numeric_limits<float>::lowest());
+            this->columns.back().SetMaximumValue((std::numeric_limits<float>::max)());
+        }
+
+        if (this->paramsInclude[col++].Param<BoolParam>()->Value()) {
+            this->columns.emplace_back();
+            this->columns.back().SetName("EntropyDerivative");
+            this->columns.back().SetType(TableDataCall::ColumnType::QUANTITATIVE);
+            this->columns.back().SetMinimumValue(std::numeric_limits<float>::lowest());
+            this->columns.back().SetMaximumValue((std::numeric_limits<float>::max)());
+        }
+
+        // Further values have to be inserted here. This always has to happen before the frame column is set.
+
+        if (this->paramsInclude[col++].Param<BoolParam>()->Value()) {
+            this->columns.emplace_back();
             this->columns.back().SetName("Frame");
             this->columns.back().SetType(TableDataCall::ColumnType::QUANTITATIVE);
             this->columns.back().SetMinimumValue(0.0f);
@@ -509,8 +575,7 @@ bool megamol::astro::AstroSchulz::getData(const unsigned int frameID) {
 
             const auto cntFrames = ast->FrameCount();
             for (auto frameID = 0; frameID < cntFrames; ++frameID) {
-                Log::DefaultLog.WriteInfo(L"Adding astro frame %u to the union.",
-                    frameID);
+                Log::DefaultLog.WriteInfo(L"Adding astro frame %u to the union.", frameID);
                 if (!AstroSchulz::getData(*ast, frameID)) {
                     return false;
                 }
@@ -533,8 +598,7 @@ bool megamol::astro::AstroSchulz::getData(const unsigned int frameID) {
 
                 // Add the frame number.
                 for (auto r = 0; r < cnt; ++r) {
-                    this->values[offset + r * this->columns.size()
-                        + (this->columns.size() - 1)] = frameID;
+                    this->values[offset + r * this->columns.size() + (this->columns.size() - 1)] = frameID;
                 }
             }
         }
@@ -546,10 +610,10 @@ bool megamol::astro::AstroSchulz::getData(const unsigned int frameID) {
         }
 
         // Copy the data into the table as necessary.
-        if (isParamChange || (this->hashInput != ast->DataHash())
-                || (this->frameID != frameID)) {
+        if (isParamChange || (this->hashInput != ast->DataHash()) || (this->frameID != frameID)) {
             Log::DefaultLog.WriteInfo(L"Astro data are new (frame %u), filling "
-                L"table ...", frameID);
+                                      L"table ...",
+                frameID);
             this->frameID = frameID;
             this->hashInput = ast->DataHash();
             ++this->hashState;
@@ -567,8 +631,7 @@ bool megamol::astro::AstroSchulz::getData(const unsigned int frameID) {
 /*
  * megamol::astro::AstroSchulz::getData
  */
-void megamol::astro::AstroSchulz::getData(float *dst,
-        const AstroDataCall& ast) {
+void megamol::astro::AstroSchulz::getData(float* dst, const AstroDataCall& ast) {
     using core::param::BoolParam;
 
     auto col = 0;
@@ -676,6 +739,56 @@ void megamol::astro::AstroSchulz::getData(float *dst,
         ++col;
         ++dst;
     }
+
+    if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
+        this->convert(dst, col, ast.GetVelocityDerivatives());
+        col += 3;
+        dst += 3;
+    }
+
+    if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
+        this->convert(dst, col, ast.GetInternalEnergyDerivatives());
+        ++col;
+        ++dst;
+    }
+
+    if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
+        this->convert(dst, col, ast.GetSmoothingLengthDerivatives());
+        ++col;
+        ++dst;
+    }
+
+    if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
+        this->convert(dst, col, ast.GetMolecularWeightDerivatives());
+        ++col;
+        ++dst;
+    }
+
+    if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
+        this->convert(dst, col, ast.GetDensityDerivative());
+        ++col;
+        ++dst;
+    }
+
+    if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
+        this->convert(dst, col, ast.GetGravitationalPotentialDerivatives());
+        ++col;
+        ++dst;
+    }
+
+    if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
+        this->convert(dst, col, ast.GetTemperatureDerivatives());
+        ++col;
+        ++dst;
+    }
+
+    if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
+        this->convert(dst, col, ast.GetEntropyDerivatives());
+        ++col;
+        ++dst;
+    }
+
+    // new values have to be included here, using the correct order
 }
 
 
@@ -712,27 +825,23 @@ bool megamol::astro::AstroSchulz::getHash(core::Call& call) {
 /*
  * megamol::astro::AstroSchulz::getRanges
  */
-bool megamol::astro::AstroSchulz::getRanges(const unsigned int start,
-        const unsigned int cnt) {
+bool megamol::astro::AstroSchulz::getRanges(const unsigned int start, const unsigned int cnt) {
     using vislib::sys::Log;
 
     decltype(this->ranges) ranges(this->columns.size());
 
     Log::DefaultLog.WriteInfo(L"Scanning astro trajectory for global "
-        L"min/max ranges. Please wait while MegaMol is working for you ...",
+                              L"min/max ranges. Please wait while MegaMol is working for you ...",
         nullptr);
 
-    std::generate(ranges.begin(), ranges.end(),
-        AstroSchulz::initialiseRange);
+    std::generate(ranges.begin(), ranges.end(), AstroSchulz::initialiseRange);
     this->ranges.clear();
 
     for (unsigned int f = start; f < start + cnt; ++f) {
         if (this->getData(f)) {
             for (std::size_t c = 0; c < this->columns.size(); ++c) {
-                AstroSchulz::updateRange(ranges[c],
-                        this->columns[c].MinimumValue());
-                AstroSchulz::updateRange(ranges[c],
-                    this->columns[c].MaximumValue());
+                AstroSchulz::updateRange(ranges[c], this->columns[c].MinimumValue());
+                AstroSchulz::updateRange(ranges[c], this->columns[c].MaximumValue());
             }
         } else {
             return false;
@@ -744,8 +853,8 @@ bool megamol::astro::AstroSchulz::getRanges(const unsigned int start,
     for (std::size_t c = 0; c < this->columns.size(); ++c) {
         if (this->isQuantitative(c)) {
             Log::DefaultLog.WriteInfo(L"Values of column \"%hs\" are within "
-                L"[%f, %f].", this->columns[c].Name().c_str(),
-                this->ranges[c].first, this->ranges[c].second);
+                                      L"[%f, %f].",
+                this->columns[c].Name().c_str(), this->ranges[c].first, this->ranges[c].second);
         }
     }
 
@@ -756,8 +865,7 @@ bool megamol::astro::AstroSchulz::getRanges(const unsigned int start,
 /*
  * megamol::astro::AstroSchulz::norm
  */
-void megamol::astro::AstroSchulz::norm(float* dst, const std::size_t col,
-        const vec3ArrayPtr& src) {
+void megamol::astro::AstroSchulz::norm(float* dst, const std::size_t col, const vec3ArrayPtr& src) {
     auto range = AstroSchulz::initialiseRange();
 
     for (auto s : *src) {
@@ -778,8 +886,7 @@ void megamol::astro::AstroSchulz::norm(float* dst, const std::size_t col,
 /*
  * megamol::astro::AstroSchulz::setRange
  */
-void megamol::astro::AstroSchulz::setRange(const std::size_t col,
-        const std::pair<float, float>& src) {
+void megamol::astro::AstroSchulz::setRange(const std::size_t col, const std::pair<float, float>& src) {
     assert(col < this->columns.size());
     assert(src.first <= src.second);
     if (this->ranges.empty()) {

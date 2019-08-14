@@ -9,17 +9,20 @@
 #define MMSTD_DATATOOLS_PARTICLESTODENSITY_H_INCLUDED
 #pragma once
 
-#include <map>
-#include <array>
-#include <vector>
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/misc/VolumetricDataCall.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/param/ParamSlot.h"
-#include "vislib/math/Vector.h"
+
 #include "mmstd_datatools/table/TableDataCall.h"
+
+#include "vislib/math/Vector.h"
+
+#include <array>
+#include <limits>
+#include <vector>
 
 namespace megamol {
 namespace stdplugin {
