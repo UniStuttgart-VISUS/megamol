@@ -258,6 +258,7 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
             this->range[0] = this->range[1] - 0.000001f;
         }
         this->widget_buffer.min_range = this->range[0];
+        this->textureInvalid = true;
     }
     ImGui::SameLine();
 
@@ -269,6 +270,7 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
             this->range[1] = this->range[0] + 0.000001f;
         }
         this->widget_buffer.max_range = this->range[1];
+        this->textureInvalid = true;
     }
     ImGui::SameLine();
     ImGui::PopItemWidth();
