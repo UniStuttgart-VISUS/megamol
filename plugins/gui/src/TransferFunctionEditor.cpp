@@ -109,7 +109,14 @@ template <size_t PaletteSize> PresetGenerator ColormapAdapter(const float palett
 
 std::array<std::tuple<std::string, PresetGenerator>, 12> PRESETS = {
     std::make_tuple("Select...", [](auto& nodes, auto n) {}),
-    std::make_tuple("Empty", [](auto& nodes, auto n) { nodes.clear(); }),
+    std::make_tuple("Ramp",
+        [](auto& nodes, auto n) {
+            nodes.clear();
+            std::array<float, TFP_VAL_CNT> zero = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.05f};
+            std::array<float, TFP_VAL_CNT> one = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.05f};
+            nodes.emplace_back(zero);
+            nodes.emplace_back(one);
+        }),
     std::make_tuple("Inferno", ColormapAdapter<256>(InfernoColorMap)),
     std::make_tuple("Magma", ColormapAdapter<256>(MagmaColorMap)),
     std::make_tuple("Plasma", ColormapAdapter<256>(PlasmaColorMap)),
@@ -374,10 +381,26 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
         } else if (this->mode == param::TransferFunctionParam::InterpolationMode::GAUSS) {
             param::TransferFunctionParam::GaussInterpolation(this->texturePixels, this->textureSize, this->nodes);
         }
+
+        // Delete old texture.
         if (this->textureId != 0) {
             glDeleteTextures(1, &this->textureId);
         }
         this->textureId = 0;
+
+        // Upload texture.
+        glGenTextures(1, &this->textureId);
+        glBindTexture(GL_TEXTURE_2D, this->textureId);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, textureSize, 1, 0, GL_RGBA, GL_FLOAT, this->texturePixels.data());
+
+        glBindTexture(GL_TEXTURE_2D, 0);
+
         this->textureInvalid = false;
     }
 
@@ -413,30 +436,15 @@ void TransferFunctionEditor::drawTextureBox(const ImVec2& size) {
     ImVec2 pos = ImGui::GetCursorScreenPos();
     const size_t textureSize = this->texturePixels.size() / 4;
 
-    if (textureSize == 0) {
+    if (textureSize == 0 || this->textureId == 0) {
         // Reserve layout space and draw a black background rectangle.
         ImDrawList* drawList = ImGui::GetWindowDrawList();
         ImGui::Dummy(size);
         drawList->AddRectFilled(pos, ImVec2(pos.x + size.x, pos.y + size.y), IM_COL32(0, 0, 0, 255), 0.0f, 10);
+    } else {
+        // Draw texture as image.
+        ImGui::Image(reinterpret_cast<ImTextureID>(this->textureId), size);
     }
-
-    if (this->textureId == 0) {
-        // Upload texture.
-        glGenTextures(1, &this->textureId);
-        glBindTexture(GL_TEXTURE_2D, this->textureId);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, textureSize, 1, 0, GL_RGBA, GL_FLOAT, this->texturePixels.data());
-
-        glBindTexture(GL_TEXTURE_2D, 0);
-    }
-
-    // Draw texture as image.
-    ImGui::Image(reinterpret_cast<ImTextureID>(this->textureId), size);
 
     // Draw tooltip, if requested.
     if (ImGui::IsItemHovered()) {
