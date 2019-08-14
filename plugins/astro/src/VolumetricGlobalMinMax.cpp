@@ -1,19 +1,19 @@
 /*
- * MinMax.cpp
+ * VolumetricGlobalMinMax.cpp
  *
  * Copyright (C) 2019 by VISUS (Universitaet Stuttgart)
  * All rights reserved.
  */
 
 #include "stdafx.h"
-#include "MinMax.h"
+#include "VolumetricGlobalMinMax.h"
 
 #include "vislib/sys/Log.h"
 
 /*
- * megamol::astro::MinMax::MinMax
+ * megamol::astro::VolumetricGlobalMinMax::VolumetricGlobalMinMax
  */
-megamol::astro::MinMax::MinMax(void) : Module(),
+megamol::astro::VolumetricGlobalMinMax::VolumetricGlobalMinMax(void) : Module(),
         hash(0),
         slotVolumetricDataIn("volumetricDataIn", "Input slot for volumetric data"),
         slotVolumetricDataOut("volumetricDataOut", "Output slot for volumetric data") {
@@ -22,56 +22,56 @@ megamol::astro::MinMax::MinMax(void) : Module(),
     this->MakeSlotAvailable(&this->slotVolumetricDataIn);
 
     this->slotVolumetricDataOut.SetCallback(megamol::core::misc::VolumetricDataCall::ClassName(),
-            megamol::core::misc::VolumetricDataCall::FunctionName(megamol::core::misc::VolumetricDataCall::IDX_GET_DATA), &MinMax::onGetData);
+            megamol::core::misc::VolumetricDataCall::FunctionName(megamol::core::misc::VolumetricDataCall::IDX_GET_DATA), &VolumetricGlobalMinMax::onGetData);
     this->slotVolumetricDataOut.SetCallback(megamol::core::misc::VolumetricDataCall::ClassName(),
-            megamol::core::misc::VolumetricDataCall::FunctionName(megamol::core::misc::VolumetricDataCall::IDX_GET_EXTENTS), &MinMax::onGetExtents);
+            megamol::core::misc::VolumetricDataCall::FunctionName(megamol::core::misc::VolumetricDataCall::IDX_GET_EXTENTS), &VolumetricGlobalMinMax::onGetExtents);
     this->slotVolumetricDataOut.SetCallback(megamol::core::misc::VolumetricDataCall::ClassName(),
-            megamol::core::misc::VolumetricDataCall::FunctionName(megamol::core::misc::VolumetricDataCall::IDX_GET_METADATA), &MinMax::onGetMetadata);
+            megamol::core::misc::VolumetricDataCall::FunctionName(megamol::core::misc::VolumetricDataCall::IDX_GET_METADATA), &VolumetricGlobalMinMax::onGetMetadata);
     this->slotVolumetricDataOut.SetCallback(megamol::core::misc::VolumetricDataCall::ClassName(),
-            megamol::core::misc::VolumetricDataCall::FunctionName(megamol::core::misc::VolumetricDataCall::IDX_START_ASYNC), &MinMax::onUnsupportedCallback);
+            megamol::core::misc::VolumetricDataCall::FunctionName(megamol::core::misc::VolumetricDataCall::IDX_START_ASYNC), &VolumetricGlobalMinMax::onUnsupportedCallback);
     this->slotVolumetricDataOut.SetCallback(megamol::core::misc::VolumetricDataCall::ClassName(),
-            megamol::core::misc::VolumetricDataCall::FunctionName(megamol::core::misc::VolumetricDataCall::IDX_STOP_ASYNC), &MinMax::onUnsupportedCallback);
+            megamol::core::misc::VolumetricDataCall::FunctionName(megamol::core::misc::VolumetricDataCall::IDX_STOP_ASYNC), &VolumetricGlobalMinMax::onUnsupportedCallback);
     this->slotVolumetricDataOut.SetCallback(megamol::core::misc::VolumetricDataCall::ClassName(),
-            megamol::core::misc::VolumetricDataCall::FunctionName(megamol::core::misc::VolumetricDataCall::IDX_TRY_GET_DATA), &MinMax::onUnsupportedCallback);
+            megamol::core::misc::VolumetricDataCall::FunctionName(megamol::core::misc::VolumetricDataCall::IDX_TRY_GET_DATA), &VolumetricGlobalMinMax::onUnsupportedCallback);
     this->MakeSlotAvailable(&this->slotVolumetricDataOut);
 }
 
 /*
- * megamol::astro::MinMax::~MinMax
+ * megamol::astro::VolumetricGlobalMinMax::~VolumetricGlobalMinMax
  */
-megamol::astro::MinMax::~MinMax(void) {
+megamol::astro::VolumetricGlobalMinMax::~VolumetricGlobalMinMax(void) {
     this->Release();
 }
 
 /*
- * megamol::astro::MinMax::create
+ * megamol::astro::VolumetricGlobalMinMax::create
  */
-bool megamol::astro::MinMax::create(void) {
+bool megamol::astro::VolumetricGlobalMinMax::create(void) {
     return true;
 }
 
 /*
- * megamol::astro::MinMax::release
+ * megamol::astro::VolumetricGlobalMinMax::release
  */
-void megamol::astro::MinMax::release(void) { }
+void megamol::astro::VolumetricGlobalMinMax::release(void) { }
 
-bool megamol::astro::MinMax::onGetData(megamol::core::Call &call) {
+bool megamol::astro::VolumetricGlobalMinMax::onGetData(megamol::core::Call &call) {
     return pipeVolumetricDataCall(call, megamol::core::misc::VolumetricDataCall::IDX_GET_DATA);
 }
 
-bool megamol::astro::MinMax::onGetExtents(megamol::core::Call &call) {
+bool megamol::astro::VolumetricGlobalMinMax::onGetExtents(megamol::core::Call &call) {
     return pipeVolumetricDataCall(call, megamol::core::misc::VolumetricDataCall::IDX_GET_EXTENTS);
 }
 
-bool megamol::astro::MinMax::onGetMetadata(megamol::core::Call &call) {
+bool megamol::astro::VolumetricGlobalMinMax::onGetMetadata(megamol::core::Call &call) {
     return pipeVolumetricDataCall(call, megamol::core::misc::VolumetricDataCall::IDX_GET_METADATA);
 }
 
-bool megamol::astro::MinMax::onUnsupportedCallback(megamol::core::Call &call) {
+bool megamol::astro::VolumetricGlobalMinMax::onUnsupportedCallback(megamol::core::Call &call) {
     return false;
 }
 
-bool megamol::astro::MinMax::pipeVolumetricDataCall(megamol::core::Call &call, unsigned int funcIdx) {
+bool megamol::astro::VolumetricGlobalMinMax::pipeVolumetricDataCall(megamol::core::Call &call, unsigned int funcIdx) {
     using megamol::core::misc::VolumetricDataCall;
     using vislib::sys::Log;
 
@@ -81,20 +81,20 @@ bool megamol::astro::MinMax::pipeVolumetricDataCall(megamol::core::Call &call, u
     if (dst == nullptr) {
         Log::DefaultLog.WriteError(L"Call %hs of %hs received a wrong request.",
                                    VolumetricDataCall::FunctionName(funcIdx),
-                                   MinMax::ClassName());
+                                   VolumetricGlobalMinMax::ClassName());
         return false;
     }
     if (src == nullptr) {
         Log::DefaultLog.WriteError(L"Call %hs of %hs has a wrong source.",
                                    VolumetricDataCall::FunctionName(funcIdx),
-                                   MinMax::ClassName());
+                                   VolumetricGlobalMinMax::ClassName());
         return false;
     }
 
     *src = *dst;
     if (!(*src)(funcIdx)) {
         Log::DefaultLog.WriteError(L"%hs failed to call %hs.",
-                                   MinMax::ClassName(),
+                                   VolumetricGlobalMinMax::ClassName(),
                                    VolumetricDataCall::FunctionName(funcIdx));
 
         return false;
