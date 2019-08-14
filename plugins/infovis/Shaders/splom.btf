@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <btf namespace="splom" type="MegaMolGLSLShader" version="1.0">
   <include file="core_utils" />
+  <include file="bitflags" />
   <namespace name="minimalisticAxis">
     <shader name="vert">
       <snippet type="version">430</snippet>
@@ -28,6 +29,7 @@
       <snippet type="version">430</snippet>
       <snippet name="::core_utils::tflookup" />
       <snippet name="::core_utils::tfconvenience" />
+      <snippet name="::bitflags::main" />
       <snippet type="file">splom_mapping.glsl</snippet>
       <snippet type="file">splom_plots.glsl</snippet>
       <snippet type="file">splom.vert</snippet>
@@ -36,6 +38,7 @@
       <snippet type="version">430</snippet>
       <snippet name="::core_utils::tflookup" />
       <snippet name="::core_utils::tfconvenience" />
+      <snippet name="::bitflags::main" />
       <snippet type="file">splom_mapping.glsl</snippet>
       <snippet type="file">splom_point.frag</snippet>
     </shader>
@@ -45,6 +48,7 @@
       <snippet type="version">430</snippet>
       <snippet name="::core_utils::tflookup" />
       <snippet name="::core_utils::tfconvenience" />
+      <snippet name="::bitflags::main" />
       <snippet type="file">splom_mapping.glsl</snippet>
       <snippet type="file">splom_plots.glsl</snippet>
       <snippet type="file">splom.vert</snippet>
@@ -57,6 +61,7 @@
       <snippet type="version">430</snippet>
       <snippet name="::core_utils::tflookup" />
       <snippet name="::core_utils::tfconvenience" />
+      <snippet name="::bitflags::main" />
       <snippet type="file">splom_mapping.glsl</snippet>
       <snippet type="file">splom_line.frag</snippet>
     </shader>
@@ -66,6 +71,7 @@
       <snippet type="version">430</snippet>
       <snippet name="::core_utils::tflookup" />
       <snippet name="::core_utils::tfconvenience" />
+      <snippet name="::bitflags::main" />
       <snippet type="file">splom_mapping.glsl</snippet>
       <snippet type="file">splom_triangle.vert</snippet>
     </shader>
@@ -73,6 +79,7 @@
       <snippet type="version">430</snippet>
       <snippet name="::core_utils::tflookup" />
       <snippet name="::core_utils::tfconvenience" />
+      <snippet name="::bitflags::main" />
       <snippet type="file">splom_mapping.glsl</snippet>
       <snippet type="file">splom_triangle.frag</snippet>
     </shader>
@@ -86,6 +93,7 @@
       <snippet type="version">430</snippet>
       <snippet name="::core_utils::tflookup" />
       <snippet name="::core_utils::tfconvenience" />
+      <snippet name="::bitflags::main" />
       <snippet type="file">splom_mapping.glsl</snippet>
       <snippet type="file">splom_screen.frag</snippet>
     </shader>
