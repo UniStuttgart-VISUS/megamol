@@ -461,11 +461,25 @@ void Contest2019DataLoader::Frame::CalculateAGNDistances(void) {
             agnPositions.push_back(this->positions->at(i));
         }
     }
-    if (agnPositions.size() == 0) return;
+    // add all mirrored version to account for cyclic boundary conditions
+    std::vector<glm::vec3> apos;
+    for (size_t i = 0; i < agnPositions.size(); i++) {
+        const auto& pos = agnPositions.at(i);
+        for (int x = -1; x <= 1; x++) {
+            for (int y = -1; y <= 1; y++) {
+                for (int z = -1; z <= 1; z++) {
+                    apos.push_back(pos + glm::vec3(static_cast<float>(x * 64.0f), static_cast<float>(y * 64.0f),
+                                             static_cast<float>(z * 64.0f)));
+                }
+            }
+        }
+    }
+
+    if (apos.size() == 0) return;
     for (size_t i = 0; i < this->positions->size(); ++i) {
         float mindist = std::numeric_limits<float>::max();
         auto& myPos = this->positions->at(i);
-        for (const auto& agnPos : agnPositions) {
+        for (const auto& agnPos : apos) {
             float dist = glm::distance(myPos, agnPos);
             if (dist < mindist) mindist = dist;
         }
