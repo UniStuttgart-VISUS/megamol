@@ -59,7 +59,7 @@ private:
     bool anythingDirty() const {
         return this->xResSlot.IsDirty() || this->yResSlot.IsDirty() || this->zResSlot.IsDirty() ||
                this->cyclXSlot.IsDirty() || this->cyclYSlot.IsDirty() || this->cyclZSlot.IsDirty() ||
-               this->normalizeSlot.IsDirty() || wavelength_slot_.IsDirty();
+               this->normalizeSlot.IsDirty() /*|| wavelength_slot_.IsDirty()*/ || numSamplesSlot.IsDirty() || absorptionBiasSlot.IsDirty();
     }
 
     void resetDirty() {
@@ -70,7 +70,9 @@ private:
         this->cyclYSlot.ResetDirty();
         this->cyclZSlot.ResetDirty();
         this->normalizeSlot.ResetDirty();
-        wavelength_slot_.ResetDirty();
+        //wavelength_slot_.ResetDirty();
+        numSamplesSlot.ResetDirty();
+        absorptionBiasSlot.ResetDirty();
     }
 
     core::CallerSlot volume_in_slot_;
@@ -99,7 +101,11 @@ private:
 
     core::param::ParamSlot normalizeSlot;
 
-    core::param::ParamSlot wavelength_slot_;
+    core::param::ParamSlot numSamplesSlot;
+
+    core::param::ParamSlot absorptionBiasSlot;
+
+    // core::param::ParamSlot wavelength_slot_;
 
     std::vector<std::vector<float>> vol_;
 

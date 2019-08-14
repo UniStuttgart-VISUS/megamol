@@ -1,8 +1,12 @@
 #include "stdafx.h"
 #include "SpectralIntensityVolume.h"
 
+#define _USE_MATH_DEFINES
+#include <math.h>
+
 #include <atomic>
 #include <fstream>
+#include <random>
 
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
@@ -31,7 +35,9 @@ megamol::astro::SpectralIntensityVolume::SpectralIntensityVolume()
     , cyclYSlot("cyclY", "Considers cyclic boundary conditions in Y direction")
     , cyclZSlot("cyclZ", "Considers cyclic boundary conditions in Z direction")
     , normalizeSlot("normalize", "Normalize the output volume")
-    , wavelength_slot_("wavelength", "Set the wavelength for the spectral intensity (in nm)") {
+    //, wavelength_slot_("wavelength", "Set the wavelength for the spectral intensity (in nm)")
+    , numSamplesSlot("numSamples", "Number of samples per particle in the darth volume case")
+    , absorptionBiasSlot("absorptionBias", "Determines influence of absorption coefficient in the darth volume case") {
     volume_in_slot_.SetCompatibleCall<core::misc::VolumetricDataCallDescription>();
     MakeSlotAvailable(&volume_in_slot_);
 
@@ -124,8 +130,14 @@ megamol::astro::SpectralIntensityVolume::SpectralIntensityVolume()
     this->normalizeSlot << new core::param::BoolParam(true);
     this->MakeSlotAvailable(&this->normalizeSlot);
 
-    this->wavelength_slot_ << new core::param::FloatParam(1.0f, std::numeric_limits<float>::min(), 1000.f);
-    MakeSlotAvailable(&wavelength_slot_);
+    /*this->wavelength_slot_ << new core::param::FloatParam(1.0f, std::numeric_limits<float>::min(), 1000.f);
+    MakeSlotAvailable(&wavelength_slot_);*/
+
+    numSamplesSlot << new core::param::IntParam(256, 1);
+    MakeSlotAvailable(&numSamplesSlot);
+
+    absorptionBiasSlot << new core::param::FloatParam(1.0f, -1.0f, 1.0f);
+    MakeSlotAvailable(&absorptionBiasSlot);
 }
 
 
@@ -574,7 +586,10 @@ bool megamol::astro::SpectralIntensityVolume::createVolumeCPU(core::misc::Volume
     auto const sy = this->yResSlot.Param<core::param::IntParam>()->Value();
     auto const sz = this->zResSlot.Param<core::param::IntParam>()->Value();
 
-    float const wl = this->wavelength_slot_.Param<core::param::FloatParam>()->Value() / 1000000000.0f;
+    // float const wl = this->wavelength_slot_.Param<core::param::FloatParam>()->Value() / 1000000000.0f;
+
+    auto const numSamples = numSamplesSlot.Param<core::param::IntParam>()->Value();
+    double const bias = absorptionBiasSlot.Param<core::param::FloatParam>()->Value();
 
     auto const numCells = sx * sy * sz;
 
@@ -657,7 +672,7 @@ bool megamol::astro::SpectralIntensityVolume::createVolumeCPU(core::misc::Volume
     std::transform(dens.cbegin(), dens.cend(), temps.cbegin(), radiance.begin(),
         [](double d, double t) { return d * d * std::sqrt(t); });
     std::transform(sl.cbegin(), sl.cend(), radiance.cbegin(), radiance.begin(),
-        [](float r, double rad) { return 4.0 * 3.14 * rad * static_cast<double>(r * r * r); });
+        [](float r, double rad) { return 4.0 * M_PI * rad * static_cast<double>(r * r * r); });
 
 
     // prepare input volume
@@ -744,20 +759,22 @@ bool megamol::astro::SpectralIntensityVolume::createVolumeCPU(core::misc::Volume
     auto mw_vol_orgy = metadata->Origin[1];
     auto mw_vol_orgz = metadata->Origin[2];
 
-    if (sx != vol_sx || sx != temp_vol_sx || sx != mass_vol_sx || sx != mw_vol_sx || sy != vol_sy ||
-        sy != temp_vol_sy || sy != mass_vol_sy || sy != mw_vol_sy || sz != vol_sz || sz != temp_vol_sz ||
-        sz != mass_vol_sz || sz != mw_vol_sz) {
+    if (vol_sx != temp_vol_sx || vol_sx != mass_vol_sx || vol_sx != mw_vol_sx || vol_sy != temp_vol_sy ||
+        vol_sy != mass_vol_sy || vol_sy != mw_vol_sy || vol_sz != temp_vol_sz || vol_sz != mass_vol_sz ||
+        vol_sz != mw_vol_sz) {
         vislib::sys::Log::DefaultLog.WriteError(
             "SpectralIntensityVolume: Input volume size not compatible to requested output.");
         return false;
     }
 
     auto const cell_vol = vol_disx * vol_disy * vol_disz;
-    //    auto const num_cells = vol_sx * vol_sy * vol_sz;
+    auto const num_cells = vol_sx * vol_sy * vol_sz;
 
-    std::vector<double> optical(numCells);
+    std::vector<double> optical(num_cells);
     std::transform(mw, mw + numCells, temperature, optical.begin(), [](float mw, float t) {
         return 0.018 * std::pow(static_cast<double>(t), -1.5) * 0.0134 * 0.0134 * static_cast<double>(mw) * 1.2;
+        // return 1.7 * 10e-25 * std::pow(static_cast<double>(t), -3.5) * 0.0134 * 0.0134 * static_cast<double>(mw)
+        // * 1.2;
     });
     std::transform(mass, mass + numCells, optical.cbegin(), optical.begin(), [](float m, double o) { return o / m; });
     auto const minmax_optical = std::minmax_element(optical.cbegin(), optical.cend());
@@ -794,101 +811,84 @@ bool megamol::astro::SpectralIntensityVolume::createVolumeCPU(core::misc::Volume
     vislib::sys::ConsoleProgressBar cpb;
     std::atomic<int> counter(0);
 
+    std::vector<glm::i32vec3> voxel_idx(positions.size());
+    std::transform(positions.cbegin(), positions.cend(), voxel_idx.begin(),
+        [minOSx, minOSy, minOSz, sliceDistX, sliceDistY, sliceDistZ](auto const& pos) {
+            return glm::i32vec3(static_cast<int>((pos.x - minOSx) / sliceDistX),
+                static_cast<int>((pos.y - minOSy) / sliceDistY), static_cast<int>((pos.z - minOSz) / sliceDistZ));
+        });
+
+    /*std::vector<glm::vec3> voxel_pos(numCells);
+    for (int vz = 0; vz < sz; ++vz) {
+        for (int vy = 0; vy < sy; ++vy) {
+            for (int vx = 0; vx < sx; ++vx) {
+                auto const idx = (vz * sy + vy) * sx + vx;
+                voxel_pos[idx].x = static_cast<float>(vx) * sliceDistX + minOSx;
+                voxel_pos[idx].y = static_cast<float>(vy) * sliceDistY + minOSy;
+                voxel_pos[idx].z = static_cast<float>(vz) * sliceDistZ + minOSz;
+            }
+        }
+    }*/
+
+    std::uniform_real_distribution<> distr(0.0, 1.0);
+    std::mt19937_64 rng(42);
+
+#if 1
     cpb.Start("Volume Creation", positions.size());
 
-#pragma omp parallel for
+#    pragma omp parallel for
     for (int64_t idx = 0; idx < positions.size(); ++idx) {
         auto const pos = positions[idx];
-        auto const x_base = pos.x;
-        auto x = static_cast<int>((x_base - minOSx) / sliceDistX);
-        auto const y_base = pos.y;
-        auto y = static_cast<int>((y_base - minOSy) / sliceDistY);
-        auto const z_base = pos.z;
-        auto z = static_cast<int>((z_base - minOSz) / sliceDistZ);
+        /*auto x_base = pos.x;
+        auto x = voxel_idx[idx].x;
+        auto y_base = pos.y;
+        auto y = voxel_idx[idx].y;
+        auto z_base = pos.z;
+        auto z = voxel_idx[idx].z;*/
         auto const rad = sl[idx];
 
         auto e = radiance[idx];
 
-        // iterate over every voxel
-        for (int vz = 0; vz < sz; ++vz) {
-            for (int vy = 0; vy < sy; ++vy) {
-                for (int vx = 0; vx < sx; ++vx) {
-                    float vox_x = static_cast<float>(vx) * sliceDistX + minOSx;
-                    float vox_y = static_cast<float>(vy) * sliceDistY + minOSy;
-                    float vox_z = static_cast<float>(vz) * sliceDistZ + minOSz;
+        for (int iter = 0; iter < numSamples; ++iter) {
+            // https://corysimon.github.io/articles/uniformdistn-on-sphere/
+            auto phi = 2.0 * M_PI * distr(rng);
+            auto theta = std::acos(1.0 - 2.0 * distr(rng));
+            glm::vec3 dir = glm::vec3(
+                rad * std::sin(theta) * std::cos(phi), rad * std::sin(theta) * std::sin(phi), rad * std::cos(theta));
+            glm::vec3 org = pos + dir;
+            dir = glm::normalize(dir);
 
-                    float x_diff = std::fabs(vox_x - x_base);
-                    if (cycl_x && x_diff > halfRangeOSx) {
-                        x_diff -= rangeOSx;
-                        // auto tmp_hx = (vx + 2 * sx) % sx;
-                        auto tmp_hx = vx;
-                        if (x < vx) {
-                            tmp_hx -= sx;
-                        } else {
-                            tmp_hx += sx;
-                        }
-                        vox_x = static_cast<float>(tmp_hx) * sliceDistX + minOSx;
-                    }
-                    float y_diff = std::fabs(vox_y - y_base);
-                    if (cycl_y && y_diff > halfRangeOSy) {
-                        y_diff -= rangeOSy;
-                        // auto tmp_hy = (vy + 2 * sy) % sy;
-                        auto tmp_hy = vy;
-                        if (y < vy) {
-                            tmp_hy -= sy;
-                        } else {
-                            tmp_hy += sy;
-                        }
-                        vox_y = static_cast<float>(tmp_hy) * sliceDistY + minOSy;
-                    }
-                    float z_diff = std::fabs(vox_z - z_base);
-                    if (cycl_z && z_diff > halfRangeOSz) {
-                        z_diff -= rangeOSz;
-                        // auto tmp_hz = (vz + 2 * sz) % sz;
-                        auto tmp_hz = vz;
-                        if (z < vz) {
-                            tmp_hz -= sz;
-                        } else {
-                            tmp_hz += sz;
-                        }
-                        vox_z = static_cast<float>(tmp_hz) * sliceDistZ + minOSz;
-                    }
+            double att = 0.0;
+            float t = 0.0f;
+            float t_max = std::sqrt(rangeOSx * rangeOSx + rangeOSy * rangeOSy + rangeOSz * rangeOSz);
+            float t_step = min_vol_dis;
+            while (t <= t_max && e > 0.0) {
+                glm::vec3 const curr = org + t * dir;
 
-                    float const dis = std::sqrt(x_diff * x_diff + y_diff * y_diff + z_diff * z_diff);
+                auto ax = static_cast<int>((curr.x - vol_orgx) / vol_disx);
+                auto ay = static_cast<int>((curr.y - vol_orgy) / vol_disy);
+                auto az = static_cast<int>((curr.z - vol_orgz) / vol_disz);
 
-                    if (dis >= rad && dis <= cut_off) {
-                        // trace ray
-                        double att = 0.0;
+                ax = (ax + 2 * vol_sx) % vol_sx;
+                ay = (ay + 2 * vol_sy) % vol_sy;
+                az = (az + 2 * vol_sz) % vol_sz;
 
-                        float t_step = min_vol_dis;
+                double aps = optical[(az * vol_sy + ay) * vol_sx + ax];
 
-                        glm::vec3 org = {x_base, y_base, z_base};
-                        glm::vec3 dest = {vox_x, vox_y, vox_z};
-                        glm::vec3 dir = glm::normalize(dest - org);
-                        float t = rad;
-                        float t_max = dis;
-                        while (t <= t_max && att < 1.0f) {
-                            glm::vec3 curr = org + t * dir;
+                auto vx = static_cast<int>((curr.x - minOSx) / sliceDistX);
+                auto vy = static_cast<int>((curr.y - minOSy) / sliceDistY);
+                auto vz = static_cast<int>((curr.z - minOSz) / sliceDistZ);
 
-                            auto ax = static_cast<int>((curr.x - vol_orgx) / vol_disx);
-                            auto ay = static_cast<int>((curr.y - vol_orgy) / vol_disy);
-                            auto az = static_cast<int>((curr.z - vol_orgz) / vol_disz);
+                vx = (vx + 2 * sx) % sx;
+                vy = (vy + 2 * sy) % sy;
+                vz = (vz + 2 * sz) % sz;
 
-                            if (ax < 0) ax += vol_sx;
-                            if (ay < 0) ay += vol_sy;
-                            if (az < 0) az += vol_sz;
-                            if (ax >= vol_sx) ax -= vol_sx;
-                            if (ay >= vol_sy) ay -= vol_sy;
-                            if (az >= vol_sz) az -= vol_sz;
+                e -= e * aps;
+                //att += aps * (1.0 - att);
 
-                            att += optical[(az * vol_sy + ay) * vol_sx + ax];
+                vol_[omp_get_thread_num()][(vz * sy + vy) * sx + vx] += e;
 
-                            t += t_step;
-                        }
-
-                        vol_[omp_get_thread_num()][(vz * sy + vy) * sx + vx] += e * (1.0 - att);
-                    }
-                }
+                t += t_step;
             }
         }
 
@@ -898,6 +898,7 @@ bool megamol::astro::SpectralIntensityVolume::createVolumeCPU(core::misc::Volume
         }
     }
     cpb.Stop();
+#endif
 
     for (int i = 1; i < omp_get_max_threads(); ++i) {
         std::transform(vol_[i].begin(), vol_[i].end(), vol_[0].begin(), vol_[0].begin(), std::plus<>());
