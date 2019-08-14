@@ -107,16 +107,33 @@ template <size_t PaletteSize> PresetGenerator ColormapAdapter(const float palett
     };
 }
 
+void RampAdapter(param::TransferFunctionParam::TFDataType& nodes, size_t n) {
+    nodes.clear();
+    std::array<float, TFP_VAL_CNT> zero = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.05f};
+    std::array<float, TFP_VAL_CNT> one = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.05f};
+    nodes.emplace_back(zero);
+    nodes.emplace_back(one);
+}
+
+void RainbowAdapter(param::TransferFunctionParam::TFDataType& nodes, size_t n) {
+    nodes.clear();
+    for (size_t i = 0; i < n; ++i) {
+        auto t = i / static_cast<double>(n - 1);
+        auto color = HueToRGB(t);
+        nodes.push_back({
+            static_cast<float>(color[0]),
+            static_cast<float>(color[1]),
+            static_cast<float>(color[2]),
+            1.0f,
+            static_cast<float>(t),
+            0.05f,
+        });
+    }
+}
+
 std::array<std::tuple<std::string, PresetGenerator>, 12> PRESETS = {
-    std::make_tuple("Select...", [](auto& nodes, auto n) {}),
-    std::make_tuple("Ramp",
-        [](auto& nodes, auto n) {
-            nodes.clear();
-            std::array<float, TFP_VAL_CNT> zero = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.05f};
-            std::array<float, TFP_VAL_CNT> one = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.05f};
-            nodes.emplace_back(zero);
-            nodes.emplace_back(one);
-        }),
+    std::make_tuple("Select...", [](auto& nodes, auto n) {}), std::make_tuple("Ramp", RampAdapter),
+    std::make_tuple("Hue rotation (rainbow, harmful)", RainbowAdapter),
     std::make_tuple("Inferno", ColormapAdapter<256>(InfernoColorMap)),
     std::make_tuple("Magma", ColormapAdapter<256>(MagmaColorMap)),
     std::make_tuple("Plasma", ColormapAdapter<256>(PlasmaColorMap)),
@@ -125,22 +142,7 @@ std::array<std::tuple<std::string, PresetGenerator>, 12> PRESETS = {
     std::make_tuple("Cubehelix (default)", CubeHelixAdapter(0.5, -1.5, 1.0, 1.0)),
     std::make_tuple("Cubehelix (default, colorful)", CubeHelixAdapter(0.5, -1.5, 1.5, 1.0)),
     std::make_tuple("Cubehelix (default, de-pinked)", CubeHelixAdapter(0.5, -1.0, 1.0, 1.0)),
-    std::make_tuple("Cool-Warm (diverging)", ColormapAdapter<257>(CoolWarmColorMap)),
-    std::make_tuple("Hue rotation (rainbow, harmful)", [](auto& nodes, auto n) {
-        nodes.clear();
-        for (size_t i = 0; i < n; ++i) {
-            auto t = i / static_cast<double>(n - 1);
-            auto color = HueToRGB(t);
-            nodes.push_back({
-                static_cast<float>(color[0]),
-                static_cast<float>(color[1]),
-                static_cast<float>(color[2]),
-                1.0f,
-                static_cast<float>(t),
-                0.05f,
-            });
-        }
-    })};
+    std::make_tuple("Cool-Warm (diverging)", ColormapAdapter<257>(CoolWarmColorMap))};
 
 
 TransferFunctionEditor::TransferFunctionEditor(void)

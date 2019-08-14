@@ -27,13 +27,10 @@ TransferFunction::TransferFunction(void)
     , tex()
     , texFormat(CallGetTransferFunction::TEXTURE_FORMAT_RGB)
     , interpolMode(param::TransferFunctionParam::InterpolationMode::LINEAR)
-    , range({0.0f, 1.0f})
-{
+    , range({0.0f, 1.0f}) {
 
     CallGetTransferFunctionDescription cgtfd;
     this->getTFSlot.SetCallback(cgtfd.ClassName(), cgtfd.FunctionName(0), &TransferFunction::requestTF);
-    this->getTFSlot.SetCallback(cgtfd.ClassName(), cgtfd.FunctionName(1), &TransferFunction::interfaceIsDirty);
-    this->getTFSlot.SetCallback(cgtfd.ClassName(), cgtfd.FunctionName(2), &TransferFunction::interfaceResetDirty);
     this->MakeSlotAvailable(&this->getTFSlot);
 
     this->tfParam << new param::TransferFunctionParam("");
@@ -123,38 +120,10 @@ bool TransferFunction::requestTF(Call& call) {
         glBindTexture(GL_TEXTURE_1D, otid);
 
         if (!t1de) glDisable(GL_TEXTURE_1D);
+        ++this->version;
     }
+    cgtf->SetTexture(this->texID, this->texSize, this->tex.data(), CallGetTransferFunction::TEXTURE_FORMAT_RGBA,
+        this->range, this->version);
 
-    cgtf->SetTexture(this->texID, this->texSize, this->tex.data(), CallGetTransferFunction::TEXTURE_FORMAT_RGBA);
-    cgtf->SetRange(this->range);
-
-    return true;
-}
-
-
-/*
- * TransferFunction::InterfaceIsDirty
- */
-bool TransferFunction::interfaceIsDirty(Call& call) {
-
-    CallGetTransferFunction* cgtf = dynamic_cast<CallGetTransferFunction*>(&call);
-    if (cgtf == nullptr) return false;
-
-    bool retval = tfParam.IsDirty();
-
-    cgtf->setDirty(retval);
-    return true;
-}
-
-
-/*
- * TransferFunction::interfaceResetDirty
- */
-bool TransferFunction::interfaceResetDirty(Call& call) {
-
-    CallGetTransferFunction* cgtf = dynamic_cast<CallGetTransferFunction*>(&call);
-    if (cgtf == nullptr) return false;
-
-    tfParam.ResetDirty();
     return true;
 }

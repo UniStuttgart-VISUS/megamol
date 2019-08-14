@@ -358,10 +358,11 @@ bool ScatterplotMatrixRenderer2D::validate(core::view::CallRender2D& call) {
     if (this->transferFunction == nullptr || !(*(this->transferFunction))()) return false;
 
     auto mvp = getModelViewProjection();
-    if (hasDirtyScreen() || screenLastMVP != mvp) {
+    if (hasDirtyScreen() || screenLastMVP != mvp || this->transferFunction->IsDirty()) {
         this->screenValid = false;
         resetDirtyScreen();
         screenLastMVP = mvp;
+        this->transferFunction->ResetDirty();
     }
 
     if (this->dataHash == this->floatTable->DataHash() && ts == this->dataTime && !hasDirtyData()) return true;
