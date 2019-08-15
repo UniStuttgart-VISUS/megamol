@@ -14,6 +14,7 @@
 #include "vislib/RawStorageSerialiser.h"
 #include "vislib/sys/Log.h"
 #include "vislib/sys/SystemInformation.h"
+#include "mmcore/view/AbstractRenderingView.h"
 
 //#define RV_DEBUG_OUTPUT = 1
 
@@ -104,12 +105,23 @@ bool megamol::pbs::RendernodeView::process_msgs(Message_t const& msgs) {
                 msg.resize(size);
                 std::copy(ibegin + MessageHeaderSize, ibegin + MessageHeaderSize + size, msg.begin());
             }
-            vislib::RawStorageSerialiser ser(reinterpret_cast<unsigned char*>(msg.data()), msg.size());
-            auto view = this->getConnectedView();
-            if (view != nullptr) {
-                view->DeserialiseCamera(ser);
-            } else {
-                vislib::sys::Log::DefaultLog.WriteError("RendernodeView: Cannot update camera. No view connected.");
+            uint32_t namelen = *reinterpret_cast<uint32_t*>(msg.data());
+            std::string viewname(msg.data() + sizeof(uint32_t));
+
+            vislib::RawStorageSerialiser ser(reinterpret_cast<unsigned char*>(msg.data() + sizeof(uint32_t) + namelen), msg.size() - namelen - sizeof(uint32_t));
+            //vislib::sys::Log::DefaultLog.WriteInfo("got info about view %s (len: %u), ser mem len = %u",
+            //    viewname.c_str(), namelen, ser.Storage()->GetSize());
+
+            bool foundview = false;
+            const auto fun = [&ser, &foundview](core::view::AbstractRenderingView* mod) {
+                mod->DeserialiseCamera(ser);
+                foundview = true;
+            };
+
+            this->GetCoreInstance()->FindModuleNoLock<core::view::AbstractRenderingView>(viewname, fun);
+           
+            if (!foundview) {
+                vislib::sys::Log::DefaultLog.WriteError("RendernodeView: Cannot update camera. Cannot find view %s.", viewname.c_str());
             }
         } break;
         case MessageType::HEAD_DISC_MSG:

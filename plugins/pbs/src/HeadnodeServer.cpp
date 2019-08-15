@@ -15,6 +15,7 @@
 #include "mmcore/view/AbstractView.h"
 #include "mmcore/view/CallRenderView.h"
 #include "vislib/RawStorageSerialiser.h"
+#include "mmcore/view/AbstractRenderingView.h"
 
 
 megamol::pbs::HeadnodeServer::HeadnodeServer()
@@ -107,9 +108,11 @@ void megamol::pbs::HeadnodeServer::ParamUpdated(core::param::ParamSlot& slot) {
 bool megamol::pbs::HeadnodeServer::get_cam_upd(std::vector<char>& msg) {
 
     AbstractNamedObject::const_ptr_type avp;
+    std::vector<char> const null_buf(MessageHeaderSize, 0);
     const core::view::AbstractView* av = nullptr;
     core::Call* call = nullptr;
     unsigned int csn = 0;
+    bool gotUpdate = false;
 
     av = nullptr;
     call = this->view_slot_.CallAs<core::Call>();
@@ -119,24 +122,59 @@ bool megamol::pbs::HeadnodeServer::get_cam_upd(std::vector<char>& msg) {
     }
     if (av == nullptr) return false;
 
-    csn = av->GetCameraSyncNumber();
-    if ((csn != syncnumber)) {
-        syncnumber = csn;
-        vislib::RawStorage mem;
-        vislib::RawStorageSerialiser serialiser(&mem);
-        av->SerialiseCamera(serialiser);
+ 
+    const auto fun = [this, &gotUpdate, &msg](Module* mod) {
+        const auto arv = dynamic_cast<core::view::AbstractRenderingView*>(mod);
+        if (!gotUpdate && arv != nullptr) {
+            const auto csn = arv->GetCameraSyncNumber();
+            if (this->syncnumbers.find(arv->FullName().PeekBuffer()) == this->syncnumbers.end() ||
+                csn != this->syncnumbers[arv->FullName().PeekBuffer()]) {
 
-        msg.resize(MessageHeaderSize + mem.GetSize());
-        msg[0] = static_cast<char>(MessageType::CAM_UPD_MSG);
-        auto size = mem.GetSize();
-        std::copy(reinterpret_cast<char*>(&size), reinterpret_cast<char*>(&size) + MessageSizeSize,
-            msg.begin() + MessageTypeSize);
-        std::copy(mem.AsAt<char>(0), mem.AsAt<char>(0) + mem.GetSize(), msg.begin() + MessageHeaderSize);
+                vislib::RawStorage mem(100);
+                vislib::RawStorageSerialiser serialiser(&mem);
 
-        return true;
-    }
+                arv->SerialiseCamera(serialiser);
 
-    return false;
+                const uint32_t viewlen = arv->FullName().Length() + 1;
+                msg.resize(MessageHeaderSize + mem.GetSize() + sizeof(uint32_t) + viewlen);
+                msg[0] = static_cast<char>(MessageType::CAM_UPD_MSG);
+                char* lenpos = msg.data() + 1 + MessageSizeSize;
+                *reinterpret_cast<uint32_t*>(lenpos) = viewlen;
+                char* namepos = lenpos + sizeof(uint32_t);
+                memcpy(namepos, arv->FullName().PeekBuffer(), viewlen);
+                auto size = mem.GetSize() + viewlen + sizeof(uint32_t);
+                std::copy(reinterpret_cast<char*>(&size), reinterpret_cast<char*>(&size) + MessageSizeSize,
+                    msg.begin() + MessageTypeSize);
+                std::copy(mem.AsAt<char>(0), mem.AsAt<char>(0) + mem.GetSize(),
+                    msg.begin() + MessageHeaderSize + sizeof(uint32_t) + viewlen);
+
+                gotUpdate = true;
+
+                this->syncnumbers[arv->FullName().PeekBuffer()] = csn;
+            }
+        }
+    };
+
+    this->GetCoreInstance()->EnumModulesNoLock(av->FullName().PeekBuffer(), fun);
+
+    //csn = av->GetCameraSyncNumber();
+    //if ((csn != syncnumber)) {
+    //    syncnumber = csn;
+    //    vislib::RawStorage mem;
+    //    vislib::RawStorageSerialiser serialiser(&mem);
+    //    av->SerialiseCamera(serialiser);
+
+    //    msg.resize(MessageHeaderSize + mem.GetSize());
+    //    msg[0] = static_cast<char>(MessageType::CAM_UPD_MSG);
+    //    auto size = mem.GetSize();
+    //    std::copy(reinterpret_cast<char*>(&size), reinterpret_cast<char*>(&size) + MessageSizeSize,
+    //        msg.begin() + MessageTypeSize);
+    //    std::copy(mem.AsAt<char>(0), mem.AsAt<char>(0) + mem.GetSize(), msg.begin() + MessageHeaderSize);
+
+    //    return true;
+    //}
+
+    return gotUpdate;
 }
 
 
@@ -179,19 +217,19 @@ void megamol::pbs::HeadnodeServer::do_communication() {
 
     // retrieve modulgraph
     if (this->deploy_project_slot_.Param<core::param::BoolParam>()->Value()) {
-    if (this->GetCoreInstance()->IsLuaProject()) {
-        auto const lua = std::string(this->GetCoreInstance()->GetMergedLuaProject());
-        std::vector<char> msg(MessageHeaderSize + lua.size());
-        msg[0] = MessageType::PRJ_FILE_MSG;
-        auto size = lua.size();
-        std::copy(reinterpret_cast<char*>(&size), reinterpret_cast<char*>(&size) + MessageSizeSize,
-            msg.begin() + MessageTypeSize);
-        std::copy(lua.begin(), lua.end(), msg.begin() + MessageHeaderSize);
-        {
-            std::lock_guard<std::mutex> lock(send_buffer_guard_);
-            send_buffer_.insert(send_buffer_.end(), msg.begin(), msg.end());
+        if (this->GetCoreInstance()->IsLuaProject()) {
+            auto const lua = std::string(this->GetCoreInstance()->GetMergedLuaProject());
+            std::vector<char> msg(MessageHeaderSize + lua.size());
+            msg[0] = MessageType::PRJ_FILE_MSG;
+            auto size = lua.size();
+            std::copy(reinterpret_cast<char*>(&size), reinterpret_cast<char*>(&size) + MessageSizeSize,
+                msg.begin() + MessageTypeSize);
+            std::copy(lua.begin(), lua.end(), msg.begin() + MessageHeaderSize);
+            {
+                std::lock_guard<std::mutex> lock(send_buffer_guard_);
+                send_buffer_.insert(send_buffer_.end(), msg.begin(), msg.end());
+            }
         }
-    }
     }
     try {
         while (run_threads_) {
@@ -215,7 +253,7 @@ void megamol::pbs::HeadnodeServer::do_communication() {
                 }
 
                 if (!send_buffer_.empty()) {
-		    // vislib::sys::Log::DefaultLog.WriteInfo("HeadnodeServer: Sending parameter update.\n");
+                    // vislib::sys::Log::DefaultLog.WriteInfo("HeadnodeServer: Sending parameter update.\n");
                     comm_fabric_.Send(send_buffer_, send_type::SEND);
                     send_buffer_.clear();
                     buffer_has_changed_.store(false);

@@ -12,6 +12,7 @@
 
 #include "DistributedProto.h"
 #include "FBOCommFabric.h"
+#include <map>
 
 namespace megamol {
 namespace pbs {
@@ -108,7 +109,8 @@ private:
 
     std::vector<char> send_buffer_;
 
-    unsigned int syncnumber = -1;
+    // unsigned int syncnumber = -1;
+    std::map<std::string, unsigned int> syncnumbers;
 
     std::thread comm_thread_;
 
