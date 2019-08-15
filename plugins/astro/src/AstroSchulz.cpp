@@ -846,7 +846,13 @@ bool megamol::astro::AstroSchulz::getHash(core::Call& call) {
 bool megamol::astro::AstroSchulz::getRanges(const unsigned int start, const unsigned int cnt) {
     using vislib::sys::Log;
 
-    decltype(this->ranges) ranges(this->columns.size());
+    // Note: option to disable column implies that the columns are not generated
+    // before the first data are retrieved. Therefore, we need to test-retrieve
+    // the first frame here to find out the number of columns.
+    decltype(this->ranges) ranges;
+    if (this->getData(start)) {
+        ranges.resize(this->columns.size());
+    }
 
     Log::DefaultLog.WriteInfo(L"Scanning astro trajectory for global "
                               L"min/max ranges. Please wait while MegaMol is working for you ...",
