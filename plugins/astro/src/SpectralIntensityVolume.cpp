@@ -910,9 +910,9 @@ bool megamol::astro::SpectralIntensityVolume::createVolumeCPU(core::misc::Volume
                     auto ay = static_cast<int>((curr.y - vol_orgy) / vol_disy);
                     auto az = static_cast<int>((curr.z - vol_orgz) / vol_disz);
 
-                    ax = (ax + 2 * vol_sx) % vol_sx;
-                    ay = (ay + 2 * vol_sy) % vol_sy;
-                    az = (az + 2 * vol_sz) % vol_sz;
+                    ax = (ax + 4 * vol_sx) % vol_sx;
+                    ay = (ay + 4 * vol_sy) % vol_sy;
+                    az = (az + 4 * vol_sz) % vol_sz;
 
                     double aps = optical[(az * vol_sy + ay) * vol_sx + ax];
 
@@ -920,9 +920,9 @@ bool megamol::astro::SpectralIntensityVolume::createVolumeCPU(core::misc::Volume
                     auto vy = static_cast<int>((curr.y - minOSy) / sliceDistY);
                     auto vz = static_cast<int>((curr.z - minOSz) / sliceDistZ);
 
-                    vx = (vx + 2 * sx) % sx;
-                    vy = (vy + 2 * sy) % sy;
-                    vz = (vz + 2 * sz) % sz;
+                    vx = (vx + 4 * sx) % sx;
+                    vy = (vy + 4 * sy) % sy;
+                    vz = (vz + 4 * sz) % sz;
 
                     e -= e * aps;
                     // att += aps * (1.0 - att);
