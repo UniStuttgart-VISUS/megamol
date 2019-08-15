@@ -9,7 +9,7 @@ uniform mat4 MVPtransp;
 uniform vec4 clipDat;
 uniform vec4 clipCol;
 
-in vec4 geoColor;
+in vec4 vertColor;
 in vec4 objPos;
 in vec4 camPos;
 in vec4 lightPos;

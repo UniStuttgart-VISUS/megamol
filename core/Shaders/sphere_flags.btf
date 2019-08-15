@@ -1,15 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <btf type="MegaMolGLSLShader" version="1.0" namespace="sphere_flags">
  
+<!-- Vertex Shader Snippets -->
+
     <snippet name="vert_attributes" type="string">
         <![CDATA[
 
 uniform uint flagsAvailable;
-
-uniform uint flagOffset;
-
 uniform vec4 flagSelectedCol;
 uniform vec4 flagSoftSelectedCol;
+
+uniform uint flagOffset;
 
 #ifdef FLAG_STORAGE_SSBO
     layout(std430, binding = 4) buffer flags
@@ -20,176 +21,104 @@ uniform vec4 flagSoftSelectedCol;
     in uint inFlags[1];
 #endif // FLAG_STORAGE_SSBO 
 
-flat out int flagDiscard;
-
-// Applying flags
-void ApplyFlags(const in uint currentFlag, inout int discardFlag, inout vec4 colorFlag) {
-
-    // Visibility
-    discardFlag = 0;
-    if (!bitflag_isVisible(currentFlag)) {
-        discardFlag = 1;
-    } 
-    // Selected
-    if (bitflag_test(currentFlag, FLAG_SELECTED, FLAG_SELECTED)) {
-        colorFlag = flagSelectedCol;
-    }
-    // Soft Selected
-    if (bitflag_test(currentFlag, FLAG_SOFTSELECTED, FLAG_SOFTSELECTED)) {
-        colorFlag = flagSoftSelectedCol;
-    }
-}
+flat out uint discardFrag;
 
         ]]>
     </snippet>
 
-    <snippet name="vert_code" type="string">
+
+    <snippet name="vert_getflag" type="string">
         <![CDATA[
 
-if (bool(flagsAvailable)) {
+uint flag = uint(0);
 
-    flagDiscard = 0;
-    uint flag = uint(0);
-
+if (bool(flagsAvailable)) {    
 #ifdef FLAG_STORAGE_SSBO
     flag = inFlags[(flagOffset + gl_VertexID)];
 #else
     flag = flagOffset + inFlags[0];
 #endif // FLAG_STORAGE_SSBO
+}
 
-    ApplyFlags(flag, flagDiscard, vertColor);
+discardFrag = uint(0);
+if ((bool(flagsAvailable) && !bitflag_isVisible(flag))) {
+    discardFrag = uint(1);
 }
 
         ]]>
     </snippet>
 
-    <snippet name="frag_attributes" type="string">
+
+    <snippet name="vert_attributes_geo" type="string">
         <![CDATA[
 
-uniform uint flagsAvailable;
-
-flat in int flagDiscard;
+out uint currentFlag;
+out uint geoDiscardFrag;
 
         ]]>
     </snippet>
 
-    <snippet name="frag_code" type="string">
+
+    <snippet name="vert_getflag_geo" type="string">
         <![CDATA[
 
-if (bool(flagsAvailable)) {
-
-    if (flagDiscard != 0) {
-        discard;
-    }
-}
+currentFlag = flag;
+geoDiscardFrag = discardFrag;
 
         ]]>
     </snippet>
 
-<!-- ###### Addintional code when using Geometry Shader mode ##### -->
+<!-- Geometry Shader Snippets -->
 
     <snippet name="geo_attributes" type="string">
         <![CDATA[
 
-uniform uint flagsAvailable;
+in uint currentFlag[1];
+in uint geoDiscardFrag[1];
 
-flat in  int flagDiscard[1];
-flat out int geoFlagDiscard;
-
-        ]]>
-    </snippet>
-
-    <snippet name="geo_code" type="string">
-        <![CDATA[
-
-if (bool(flagsAvailable)) {
-
-    geoFlagDiscard = flagDiscard[0];
-}
-
-        ]]>
-    </snippet>
-
-
-    <snippet name="geo_frag_attributes" type="string">
-        <![CDATA[
+flat out uint discardFlag;
 
 uniform uint flagsAvailable;
-
-flat in int geoFlagDiscard;
-
-        ]]>
-    </snippet>
-
-    <snippet name="geo_frag_code" type="string">
-        <![CDATA[
-
-if (bool(flagsAvailable)) {
-
-    if (geoFlagDiscard != 0) {
-        discard;
-    }
-}
-        ]]>
-    </snippet>
-
-<!-- ###### Addintional code when using Geometry Shader mode of Ambient Occlusion ##### -->
-
-    <!-- Needs 'vert_attributes' snippet to be prepended -->
-    <snippet name="mdao_vert_additional_attributes" type="string">
-        <![CDATA[
-
-flat out vec4 flagColor;
+uniform vec4 flagSelectedCol;
+uniform vec4 flagSoftSelectedCol;
 
         ]]>
     </snippet>
 
-    <snippet name="mdao_vert_code" type="string">
+
+    <snippet name="geo_getflag" type="string">
         <![CDATA[
 
-if (bool(flagsAvailable)) {
-
-    flagDiscard = 0;
-    flagColor = vec4(0.0, 0.0, 0.0, 0.0);
-    uint flag = uint(0);
-
-#ifdef FLAG_STORAGE_SSBO
-    flag = inFlags[(flagOffset + gl_VertexID)];
-#else
-    flag = flagOffset + inFlags[0];
-#endif // FLAG_STORAGE_SSBO
-
-    ApplyFlags(flag, flagDiscard, flagColor);
-}
+uint flag = currentFlag[0];
+discardFlag = geoDiscardFrag[0];
 
         ]]>
     </snippet>
 
-    <snippet name="mdao_geo_attributes" type="string">
+
+<!-- Fragment Shader Snippets -->
+
+    <snippet name="frag_attributes" type="string">
         <![CDATA[
+
+flat in uint discardFrag;
 
 uniform uint flagsAvailable;
 
-flat in int flagDiscard[1];
-flat in vec4 flagColor[1];
-
-flat out int geoFlagDiscard;
-
         ]]>
     </snippet>
 
-    <snippet name="mdao_geo_code" type="string">
+
+    <snippet name="frag_discardtest" type="string">
         <![CDATA[
 
-if (bool(flagsAvailable)) {
-    if (flagColor[0] != vec4(0.0)) {
-        vertColor = flagColor[0];
-    }
-    geoFlagDiscard = flagDiscard[0];
+if (bool(flagsAvailable) && (discardFrag > uint(0))) {   
+    discard;
 }
 
         ]]>
-    </snippet>
+    </snippet>        
+
 
 </btf>
 

@@ -24,7 +24,7 @@
         discard;
     } else {
         // chose color for lighting
-        colOut = geoColor.rgb;
+        colOut = vertColor.rgb;
         sphereintersection = lambda * ray + camPos.xyz;    // intersection point
         // "calc" normal at intersection point
         normal = sphereintersection / rad;
@@ -55,8 +55,8 @@
     }
 
     // phong lighting with directional light
-    //outColor = vec4(LocalLighting(ray, normal, lightPos.xyz, geoColor), 1.0);
-    outColor = vec4(LocalLighting(ray, normal, lightPos.xyz, colOut), geoColor.w);
+    //outColor = vec4(LocalLighting(ray, normal, lightPos.xyz, vertColor), 1.0);
+    outColor = vec4(LocalLighting(ray, normal, lightPos.xyz, colOut), vertColor.w);
     
     // calculate depth
 #ifdef DEPTH
@@ -67,7 +67,7 @@
     
 #ifndef CLIP
     gl_FragDepth = (radicand < 0.0) ? 1.0 : ((depth / depthW) + 1.0) * 0.5;
-    outColor.rgb = (radicand < 0.0) ? geoColor.rgb : outColor.rgb;
+    outColor.rgb = (radicand < 0.0) ? vertColor.rgb : outColor.rgb;
 #endif // CLIP
 
 #endif // DEPTH
@@ -84,5 +84,5 @@
 #endif // RETICLE
 
 //outColor.rgb = normal; // DEBUG
-//outColor = geoColor; // DEBUG
+//outColor = vertColor; // DEBUG
 }

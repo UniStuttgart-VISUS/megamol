@@ -1,3 +1,4 @@
+
 in vec4 objPos;
 in vec4 camPos;
 in float squarRad;

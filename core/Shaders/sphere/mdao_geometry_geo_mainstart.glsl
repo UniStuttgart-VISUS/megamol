@@ -12,6 +12,10 @@ void main(void) {
     
     squarRad = rad * rad;
 
+#ifdef HALO
+    squarRad = (rad + HALO_RAD) * (rad + HALO_RAD);
+#endif // HALO
+
     // Position transformations
     
     // object pivot point in object space     

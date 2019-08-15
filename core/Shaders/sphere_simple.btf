@@ -15,11 +15,11 @@
         <snippet name="core_utils::tfconvenience"/>
         <snippet name="sphere_flags::vert_attributes"/>   
         <snippet name="MainStart"        type="file">sphere/simple_vert_mainstart.glsl</snippet>
-        <snippet name="Color"            type="file">sphere/simple_vert_color.glsl</snippet>
-        <snippet name="sphere_flags::vert_code"/>          
+        <snippet name="sphere_flags::vert_getflag"/>         
+        <snippet name="Color"            type="file">sphere/simple_vert_color.glsl</snippet>         
         <snippet name="PosTrans"         type="file">sphere/simple_vert_postrans.glsl</snippet>
-        <snippet name="ClippingPlane"    type="file">sphere/simple_vert_clipping.glsl</snippet>
         <snippet name="SphereTouchPlane" type="file">sphere/simple_vert_spheretouchplane.glsl</snippet>
+        <snippet name="ClippingPlane"    type="file">sphere/simple_vert_clipping.glsl</snippet>        
         <snippet name="PosOutput"        type="file">sphere/simple_vert_posout.glsl</snippet>      
         <snippet name="MainEnd"          type="file">sphere/simple_vert_mainend.glsl</snippet>
     </shader>
@@ -29,10 +29,10 @@
         <snippet type="version">130</snippet>
         <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>
         <snippet name="Attributes"       type="file">sphere/simple_frag_attributes.glsl</snippet>
-        <snippet name="sphere_flags::frag_attributes"/>           
+        <snippet name="sphere_flags::frag_attributes"/>                 
         <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>        
         <snippet name="MainStart"        type="file">sphere/simple_frag_mainstart.glsl</snippet>
-        <snippet name="sphere_flags::frag_code"/>              
+        <snippet name="sphere_flags::frag_discardtest"/>                
         <snippet name="OutLighting"      type="file">sphere/simple_frag_out-lighting.glsl</snippet>
         <snippet name="OutDepth"         type="file">sphere/simple_frag_out-depth.glsl</snippet>
         <snippet name="MainEnd"          type="file">sphere/simple_frag_mainend.glsl</snippet>

@@ -1,3 +1,4 @@
+
 in vec4 inPosition;
 in vec4 inColor;
 in float inColIdx;
@@ -8,4 +9,9 @@ out float colidxgs;
 void main(void) {
     colorgs = inColor;
     colidxgs = inColIdx;
-    gl_Position = inPosition;
+
+    if (!(bool(flagsAvailable)) || (bool(flagsAvailable) && bitflag_isVisible(flag))) {
+        // Set gl_Position depending on flags
+
+        gl_Position = inPosition;
+    }
