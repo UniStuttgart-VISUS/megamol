@@ -450,7 +450,8 @@ int megamol::core::LuaState::GetEnvValue(lua_State* L) {
         lua_pushstring(L, vislib::sys::Environment::GetVariable(name));
         return 1;
     } else {
-        lua_pushstring(L, "undef");
+        //lua_pushstring(L, "undef");
+        lua_pushnil(L);
         return 1;
     }
 }
