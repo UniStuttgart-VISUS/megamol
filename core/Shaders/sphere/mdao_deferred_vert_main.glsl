@@ -1,10 +1,7 @@
-in vec4 inPosition;
 
-uniform float inWidth;
-uniform float inHeight;
+in vec4 inPosition;
 
 void main()
 {
-	gl_PointSize = max(inWidth, inHeight);
 	gl_Position = inPosition;
 }

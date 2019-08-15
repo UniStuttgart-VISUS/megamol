@@ -2304,6 +2304,8 @@ bool moldyn::SphereRenderer::rebuildGBuffer() {
     glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, this->curVpWidth, this->curVpHeight, 0, GL_DEPTH_COMPONENT,
         GL_UNSIGNED_BYTE, nullptr);
 
+    glBindTexture(GL_TEXTURE_2D, 0);
+
     // Configure the framebuffer object
     GLint prevFBO;
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prevFBO);
@@ -2317,7 +2319,6 @@ bool moldyn::SphereRenderer::rebuildGBuffer() {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Framebuffer NOT complete!");
     }
 
-    glBindTexture(GL_TEXTURE_2D, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, prevFBO);
 
     if (this->triggerRebuildGBuffer) {
@@ -2431,6 +2432,7 @@ void moldyn::SphereRenderer::renderDeferredPass(view::CallRender3D* cr3d) {
 
     glEnable(GL_TEXTURE_2D);
     glEnable(GL_TEXTURE_3D);
+
     glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_2D, this->gBuffer.depth);
     glActiveTexture(GL_TEXTURE1);
@@ -2474,14 +2476,19 @@ void moldyn::SphereRenderer::renderDeferredPass(view::CallRender3D* cr3d) {
     this->lightingShader.SetParameterArray3(
         "inBoundsSize", 1, cr3d->AccessBoundingBoxes().ObjectSpaceClipBox().GetSize().PeekDimension());
   
-    glBegin(GL_POINTS);
-    glVertex2f(0.0f, 0.0f);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glBegin(GL_QUADS);
+    glVertex2f(-1.0f, 1.0f);
+    glVertex2f(-1.0f, -1.0f);
+    glVertex2f(1.0f, -1.0f);
+    glVertex2f(1.0f, 1.0f);
     glEnd();
 
     this->lightingShader.Disable();
 
     glDisable(GL_TEXTURE_2D);
     glDisable(GL_TEXTURE_3D);
+
     glBindTexture(GL_TEXTURE_2D, 0);
     glBindTexture(GL_TEXTURE_3D, 0);
 
