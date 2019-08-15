@@ -1579,8 +1579,8 @@ bool moldyn::SphereRenderer::renderAmbientOcclusion(view::CallRender3D* cr3d, Mu
     glDrawBuffers(2, bufs);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glBindFragDataLocation(sphereShader.ProgramHandle(), 0, "outColor");
-    glBindFragDataLocation(sphereShader.ProgramHandle(), 1, "outNormal");
+    glBindFragDataLocation(theShader.ProgramHandle(), 0, "outColor");
+    glBindFragDataLocation(theShader.ProgramHandle(), 1, "outNormal");
 
     theShader.Enable();
 
