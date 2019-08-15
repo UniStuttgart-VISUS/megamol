@@ -24,7 +24,8 @@ float magicScale(const BoundingBoxes& bb) {
     float scale = bb.ObjectSpaceBBox().LongestEdge();
 
     if (scale > 0.0000001) {
-        scale = 10.0f / scale;
+        //scale = 10.0f / scale;
+        scale = 1.0f / scale;
     } else {
         scale = 1.0f;
     }
