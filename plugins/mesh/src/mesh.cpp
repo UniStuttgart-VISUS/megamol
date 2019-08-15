@@ -28,6 +28,7 @@
 #include "gltf/glTFRenderTasksDataSource.h"
 #include "mesh/3DUIRenderTaskDataSource.h"
 #include "mesh/SimpleGPUMtlDataSource.h"
+#include "UIElement.h"
 
 
 /* anonymous namespace hides this type from any other object files */
@@ -66,6 +67,7 @@ public:
 
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::Render3DUI>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::ThreeDimensionalUIRenderTaskDataSource>();
+        this->module_descriptions.RegisterAutoDescription<megamol::mesh::UIElement>();
 
             //
             // TODO: Register your plugin's modules here

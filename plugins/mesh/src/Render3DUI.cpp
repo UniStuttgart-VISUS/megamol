@@ -83,8 +83,6 @@ bool megamol::mesh::Render3DUI::OnMouseMove(double x, double y) {
                     scale *= (mm_lenght / ta_ss_length);
                 }
 
-                //scale *= 0.1f;
-
                 std::cout << "Adding move manipulation: " << interaction.axis_x << " " << interaction.axis_y << " "
                           << interaction.axis_z << " " << scale << std::endl;
 

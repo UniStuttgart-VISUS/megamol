@@ -81,6 +81,7 @@ namespace mesh {
         std::shared_ptr<ThreeDimensionalInteractionCollection> m_interaction_collection;
 
         megamol::core::CalleeSlot m_3DInteraction_calleeSlot;
+        megamol::core::CallerSlot m_3DInteraction_callerSlot;
         megamol::core::CallerSlot m_glTF_callerSlot;
 
         size_t m_glTF_cached_hash;

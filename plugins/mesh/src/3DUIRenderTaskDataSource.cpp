@@ -12,6 +12,7 @@
 megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::ThreeDimensionalUIRenderTaskDataSource()
     : m_interaction_collection(new ThreeDimensionalInteractionCollection)
     , m_3DInteraction_calleeSlot("getInteraction", "The slot publishing available interactions and receiving pending manipulations")
+    , m_3DInteraction_callerSlot("","")
     , m_glTF_callerSlot("getGlTFFile", "Connects the data source with a loaded glTF file")
     , m_glTF_cached_hash(0)
 {
@@ -23,6 +24,9 @@ megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::ThreeDimensionalUIRenderT
 
     this->m_glTF_callerSlot.SetCompatibleCall<CallGlTFDataDescription>();
     this->MakeSlotAvailable(&this->m_glTF_callerSlot);
+
+    this->m_3DInteraction_callerSlot.SetCompatibleCall<Call3DInteractionDescription>();
+    this->MakeSlotAvailable(&this->m_3DInteraction_callerSlot);
 }
 
 megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::~ThreeDimensionalUIRenderTaskDataSource() {}
