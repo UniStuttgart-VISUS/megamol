@@ -11,27 +11,27 @@
 #    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include <map>
 #include "astro/AstroDataCall.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/AnimDataModule.h"
 #include "vislib/math/Cuboid.h"
-#include <map>
 
 namespace megamol {
 namespace astro {
 
-    template <typename T> T centralDifference(T valBefore, T valAfter, float stepSize = 1.0f) { 
-        return (valAfter - valBefore) / (2.0f * stepSize);
-    }
+template <typename T> T centralDifference(T valBefore, T valAfter, float stepSize = 1.0f) {
+    return (valAfter - valBefore) / (2.0f * stepSize);
+}
 
-    template <typename T> T forwardDifference(T myVal, T valAfter, float stepSize = 1.0f) {
-        return (valAfter - myVal) / stepSize;
-    }
+template <typename T> T forwardDifference(T myVal, T valAfter, float stepSize = 1.0f) {
+    return (valAfter - myVal) / stepSize;
+}
 
-    template <typename T> T backwardDifference(T myVal, T valBefore, float stepSize = 1.0f) {
-        return (myVal - valBefore) / stepSize;
-    }
+template <typename T> T backwardDifference(T myVal, T valBefore, float stepSize = 1.0f) {
+    return (myVal - valBefore) / stepSize;
+}
 
 class Contest2019DataLoader : public core::view::AnimDataModule {
 public:
@@ -165,6 +165,10 @@ protected:
 
         void ZeroDerivatives(void);
 
+        void CalculateAGNDistances(void);
+
+        void ZeroAGNDistances(void);
+
     private:
 #pragma pack(push, 1)
         /**
@@ -222,7 +226,7 @@ protected:
 
         /** Pointer to the molecular weight array */
         floatArrayPtr molecularWeights = nullptr;
-        
+
         /** Pointer to the molecular weight derivative array */
         floatArrayPtr molecularWeightDerivatives = nullptr;
 
@@ -261,6 +265,9 @@ protected:
 
         /** Pointer to the particle ID array */
         idArrayPtr particleIDs = nullptr;
+
+        /** Pointer to the agn distance array */
+        floatArrayPtr agnDistances = nullptr;
 
         /** The redshift value of this frame */
         float redshift;
@@ -327,6 +334,9 @@ protected:
 
     /** Slot determining whether the derivatives should be calculated */
     core::param::ParamSlot calculateDerivatives;
+
+    /** Slot determining whether the distances to the AGNs should be calculated */
+    core::param::ParamSlot calculateAGNDistances;
 
     /** Slot to send the data over */
     core::CalleeSlot getDataSlot;

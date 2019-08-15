@@ -32,6 +32,7 @@
 #include <limits>
 #include <memory>
 #include <vector>
+#include <iostream>
 
 using namespace megamol::stdplugin::volume;
 
@@ -323,8 +324,8 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
     m_normal_target->reload(normal_tgt_layout, nullptr);
 
     // create depth target texture
-    glowl::TextureLayout depth_tgt_layout(GL_R8, cr->GetViewport().Width(), cr->GetViewport().Height(), 1, GL_R,
-        GL_UNSIGNED_BYTE, 1,
+    glowl::TextureLayout depth_tgt_layout(GL_R32F, cr->GetViewport().Width(), cr->GetViewport().Height(), 1, GL_R,
+        GL_FLOAT, 1,
         {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
             {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
             {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},

@@ -28,8 +28,11 @@ FilamentFilter::FilamentFilter(void)
     , particlesInSlot("particlesIn", "Input slot for the astro particle data")
     , radiusSlot("radius", "The used radius for the FOF algorithm")
     , isActiveSlot("isActive", "When deactivated this module only passes through the incoming data")
-    , densitySeedPercentageSlot("densityPercentage", "Percentag of seed densities over all data points")
+    , densitySeedPercentageSlot(
+          "densityPercentage", "Percentage of data points that is thrown away because of too low density")
     , minClusterSizeSlot("minClusterSize", "Minimal number of particles in a detected cluster")
+    , maxParticlePercentageCuttoff(
+          "maxParticlePercentage", "Maximum percentage of particles that is considered as candidates")
     , recalculateFilaments(true)
     , hashOffset(0)
     , lastDataHash(0) {
@@ -54,6 +57,9 @@ FilamentFilter::FilamentFilter(void)
 
     this->densitySeedPercentageSlot.SetParameter(new param::FloatParam(90.0f, 0.0f, 100.0f));
     this->MakeSlotAvailable(&this->densitySeedPercentageSlot);
+
+    this->maxParticlePercentageCuttoff.SetParameter(new param::FloatParam(1.0f, 0.0f, 100.0f));
+    this->MakeSlotAvailable(&this->maxParticlePercentageCuttoff);
 
     this->initFields();
 }
@@ -123,13 +129,14 @@ bool FilamentFilter::getExtent(core::Call& call) {
         adc->operator=(*inCall);
         if (this->lastDataHash != inCall->DataHash() || this->lastTimestep != adc->FrameID() ||
             this->radiusSlot.IsDirty() || this->densitySeedPercentageSlot.IsDirty() ||
-            this->minClusterSizeSlot.IsDirty()) {
+            this->minClusterSizeSlot.IsDirty() || this->maxParticlePercentageCuttoff.IsDirty()) {
             this->hashOffset++;
             this->lastTimestep = adc->FrameID();
             this->lastDataHash = inCall->DataHash();
             this->radiusSlot.ResetDirty();
             this->densitySeedPercentageSlot.ResetDirty();
             this->minClusterSizeSlot.ResetDirty();
+            this->maxParticlePercentageCuttoff.ResetDirty();
             this->recalculateFilaments = true;
         }
         if (this->isActiveSlot.IsDirty() && this->positions != nullptr && !this->positions->empty()) {
@@ -252,6 +259,11 @@ void FilamentFilter::retrieveDensityCandidateList(
     auto foundval =
         std::find_if(result.begin(), result.end(), [&minDensity](const auto& x) { return minDensity > x.first; });
     result.erase(foundval, result.end());
+    const auto maxPartCount = static_cast<uint64_t>(
+        call.GetParticleCount() * (this->maxParticlePercentageCuttoff.Param<param::FloatParam>()->Value() / 100.0f));
+    if (result.size() > maxPartCount) {
+        result.resize(maxPartCount);
+    }
 }
 
 /*

@@ -45,7 +45,8 @@ megamol::astro::AstroSchulz::AstroSchulz(void) : Module(),
             {"includeDensityDerivative", "Include the density derivative"}, 
             {"includeGravitationalPotentialDerivative", "Include the graviational potential derivative"}, 
             {"includeTemperatureDerivative", "Include the temperature derivative"}, 
-            {"includeEntropyDerivative", "Include entropy derivative"}, 
+            {"includeEntropyDerivative", "Include entropy derivative"},
+            {"includeAGNDistances", "Include the distances to the AGNs"},
             {"includeTime", "Load all timesteps into a single table and add the frame number as column."}}}, 
         paramFullRange("fullRange", "Scan the whole trajecory for min/man ranges."),
         slotAstroData("astroData", "Input slot for astronomical data"),
@@ -543,6 +544,14 @@ bool megamol::astro::AstroSchulz::getData(const unsigned int frameID) {
             this->columns.back().SetMaximumValue((std::numeric_limits<float>::max)());
         }
 
+        if (this->paramsInclude[col++].Param<BoolParam>()->Value()) {
+            this->columns.emplace_back();
+            this->columns.back().SetName("AGNDistances");
+            this->columns.back().SetType(TableDataCall::ColumnType::QUANTITATIVE);
+            this->columns.back().SetMinimumValue(std::numeric_limits<float>::lowest());
+            this->columns.back().SetMaximumValue((std::numeric_limits<float>::max)());
+        }
+
         // Further values have to be inserted here. This always has to happen before the frame column is set.
 
         if (this->paramsInclude[col++].Param<BoolParam>()->Value()) {
@@ -791,6 +800,12 @@ void megamol::astro::AstroSchulz::getData(float* dst, const AstroDataCall& ast) 
         ++dst;
     }
 
+    if (this->paramsInclude[logicalCol++].Param<BoolParam>()->Value()) {
+        this->convert(dst, col, ast.GetAgnDistances());
+        ++col;
+        ++dst;
+    }
+
     // new values have to be included here, using the correct order
 }
 
@@ -831,7 +846,13 @@ bool megamol::astro::AstroSchulz::getHash(core::Call& call) {
 bool megamol::astro::AstroSchulz::getRanges(const unsigned int start, const unsigned int cnt) {
     using vislib::sys::Log;
 
-    decltype(this->ranges) ranges(this->columns.size());
+    // Note: option to disable column implies that the columns are not generated
+    // before the first data are retrieved. Therefore, we need to test-retrieve
+    // the first frame here to find out the number of columns.
+    decltype(this->ranges) ranges;
+    if (this->getData(start)) {
+        ranges.resize(this->columns.size());
+    }
 
     Log::DefaultLog.WriteInfo(L"Scanning astro trajectory for global "
                               L"min/max ranges. Please wait while MegaMol is working for you ...",

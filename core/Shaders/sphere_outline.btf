@@ -19,7 +19,7 @@
         <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>
         <snippet name="MainStart"        type="file">sphere/simple_frag_mainstart.glsl</snippet>
         <snippet name="OutlineCutout"    type="file">sphere/simple_frag_outline-cutout.glsl</snippet>
-        <snippet name="OutLighting"      type="file">sphere/simple_frag_out-lighting.glsl</snippet>
+        <snippet name="OutLighting"      type="file">sphere/simple_frag_out-nolighting.glsl</snippet>
         <snippet name="OutDepth"         type="file">sphere/simple_frag_out-depth.glsl</snippet>
         <snippet name="MainEnd"          type="file">sphere/simple_frag_mainend.glsl</snippet>
 
