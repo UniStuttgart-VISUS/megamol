@@ -2234,8 +2234,12 @@ void moldyn::SphereRenderer::renderDeferredPass(megamol::core::view::CallRender3
             "inBoundsSize", 1, cr3d->AccessBoundingBoxes().ObjectSpaceClipBox().GetSize().PeekDimension());
     }
 
-    glBegin(GL_POINTS);
-    glVertex2f(0.0f, 0.0f);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glBegin(GL_QUADS);
+    glVertex2f(-1.0f, 1.0f);
+    glVertex2f(-1.0f, -1.0f);
+    glVertex2f(1.0f, -1.0f);
+    glVertex2f(1.0f, 1.0f);
     glEnd();
 
     glBindTexture(GL_TEXTURE_2D, 0);
