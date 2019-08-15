@@ -1849,8 +1849,8 @@ bool moldyn::SphereRenderer::setTransferFunctionTexture(vislib::graphics::gl::GL
         cgtf->BindConvenience(shader, GL_TEXTURE0, 0);
     }
     else {
-        glActiveTexture(GL_TEXTURE0);
         glEnable(GL_TEXTURE_1D);
+        glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_1D, this->greyTF);
         glUniform1i(shader.ParameterLocation("tfTexture"), 0);
         GLfloat tfrange[2] = { 0.0f, 1.0f };
@@ -2429,6 +2429,8 @@ void moldyn::SphereRenderer::renderDeferredPass(view::CallRender3D* cr3d) {
     bool enableLighting = this->enableLightingSlot.Param<param::BoolParam>()->Value();
     bool highPrecision = this->useHPTexturesSlot.Param<param::BoolParam>()->Value();
 
+    glEnable(GL_TEXTURE_2D);
+    glEnable(GL_TEXTURE_3D);
     glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_2D, this->gBuffer.depth);
     glActiveTexture(GL_TEXTURE1);
@@ -2476,10 +2478,13 @@ void moldyn::SphereRenderer::renderDeferredPass(view::CallRender3D* cr3d) {
     glVertex2f(0.0f, 0.0f);
     glEnd();
 
+    this->lightingShader.Disable();
+
+    glDisable(GL_TEXTURE_2D);
+    glDisable(GL_TEXTURE_3D);
     glBindTexture(GL_TEXTURE_2D, 0);
     glBindTexture(GL_TEXTURE_3D, 0);
 
-    this->lightingShader.Disable();
 }
 
 
