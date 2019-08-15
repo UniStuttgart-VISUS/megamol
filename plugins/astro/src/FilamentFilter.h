@@ -85,6 +85,7 @@ private:
     core::param::ParamSlot minClusterSizeSlot;
     core::param::ParamSlot densitySeedPercentageSlot;
     core::param::ParamSlot isActiveSlot;
+    core::param::ParamSlot maxParticlePercentageCuttoff;
 
     typedef nanoflann::KDTreeSingleIndexAdaptor<nanoflann::L2_Simple_Adaptor<float, PointCloud<float>>,
         PointCloud<float>, 3>
