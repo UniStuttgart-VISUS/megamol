@@ -199,6 +199,7 @@ std::string const megamol::core::LuaInterpreter<T>::DEFAULT_ENV =
     "default_env = {"
     "  error = error,"
     "  ipairs = ipairs,"
+    "  load = load,"
     "  next = next,"
     "  pairs = pairs,"
     "  pcall = pcall,"
