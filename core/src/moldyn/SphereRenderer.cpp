@@ -2476,13 +2476,13 @@ void moldyn::SphereRenderer::renderDeferredPass(view::CallRender3D* cr3d) {
     this->lightingShader.SetParameterArray3(
         "inBoundsSize", 1, cr3d->AccessBoundingBoxes().ObjectSpaceClipBox().GetSize().PeekDimension());
   
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    glBegin(GL_QUADS);
-    glVertex2f(-1.0f, 1.0f);
-    glVertex2f(-1.0f, -1.0f);
-    glVertex2f(1.0f, -1.0f);
-    glVertex2f(1.0f, 1.0f);
-    glEnd();
+    // Draw screen filling 'quad' (= 2x trangle, front facing: CCW)
+    std::vector<GLfloat> vertices = {-1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f};
+    GLuint vertAttribLoc = glGetAttribLocation(this->lightingShader, "inPosition");
+    glEnableVertexAttribArray(vertAttribLoc);
+    glVertexAttribPointer(vertAttribLoc, 2, GL_FLOAT, GL_TRUE, 0, vertices.data());
+    glDrawArrays(GL_TRIANGLES, static_cast<GLint>(0), static_cast<GLsizei>(vertices.size()/2));
+    glDisableVertexAttribArray(vertAttribLoc);
 
     this->lightingShader.Disable();
 
