@@ -212,7 +212,10 @@ view::special::ScreenShooter::ScreenShooter(const bool reducedParameters) : job:
         animAddTime2FrameSlot("anim::addTime2Fname", "Add animation time to the output filenames"),
         makeAnimSlot("anim::makeAnim", "Flag whether or not to make an animation of screen shots"),
         animTimeParamNameSlot("anim::paramname", "Name of the time parameter"),
-        running(false), animLastFrameTime(0), outputCounter(0) {
+        disableCompressionSlot("disableCompressionSlot", "set compression level to 0"),
+        running(false),
+        animLastFrameTime(std::numeric_limits<decltype(animLastFrameTime)>::lowest()),
+        outputCounter(0) {
 
     this->viewNameSlot << new param::StringParam("");
     this->MakeSlotAvailable(&this->viewNameSlot);
@@ -245,6 +248,9 @@ view::special::ScreenShooter::ScreenShooter(const bool reducedParameters) : job:
 
     this->closeAfterShotSlot << new param::BoolParam(false);
     if (!reducedParameters) this->MakeSlotAvailable(&this->closeAfterShotSlot);
+
+    this->disableCompressionSlot << new param::BoolParam(false);
+    if (!reducedParameters) this->MakeSlotAvailable(&this->disableCompressionSlot);
 
     this->animFromSlot << new param::IntParam(0, 0);
     if (!reducedParameters) this->MakeSlotAvailable(&this->animFromSlot);
@@ -433,6 +439,10 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
         png_set_IHDR(data.pngPtr, data.pngInfoPtr, data.imgWidth, data.imgHeight, 8,
             (bkgndMode == 1) ? PNG_COLOR_TYPE_RGB_ALPHA : PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE,
             PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
+
+        if (this->disableCompressionSlot.Param<param::BoolParam>()->Value()) {
+            png_set_compression_level(data.pngPtr, 0);
+        }
 
         // todo: just put the whole project file into one string, even better would ofc be
         // to have a legal exif structure (lol)
