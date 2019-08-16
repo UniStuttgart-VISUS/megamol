@@ -131,6 +131,34 @@ void view::SplitView::Render(const mmcRenderViewContext& context) {
         }
     }
 
+    //float sp = this->splitPositionSlot.Param<param::FloatParam>()->Value();
+    //float shw = this->splitWidthSlot.Param<param::FloatParam>()->Value() * 0.5f;
+    //auto so = static_cast<Orientation>(this->splitOrientationSlot.Param<param::EnumParam>()->Value());
+    //if (so == HORIZONTAL) {
+    //    auto oc = this->overrideCall;
+    //    float splitpos = oc->VirtualWidth() * sp;
+
+    //    auto left1 = oc->TileX();
+    //    auto right1 = std::max(std::min(oc->TileX() + oc->TileWidth(), splitpos), oc->TileX());
+    //    if (left1 == right1) {
+    //        // skip client 1
+    //        // draw no handle at all
+    //    }
+    //    // or the other way round?
+    //    auto top1 = oc->TileY();
+    //    auto bottom1 = oc->TileY() + oc->TileHeight();
+
+    //    auto left2 = std::min(std::max(oc->TileX(), splitpos), oc->TileX() + oc->TileWidth());
+    //    auto right2 = oc->TileX() + oc->TileWidth();
+    //    if (left2 == right2) {
+    //        // skip client 2
+    //        // draw no handle at all
+    //    }
+    //    auto top2 = top1;
+    //    auto bottom2 = bottom1;
+    //} else {
+    //}
+
     if (this->splitPositionSlot.IsDirty() || this->splitOrientationSlot.IsDirty() || this->splitWidthSlot.IsDirty() ||
         !this->fbo1.IsValid() || !this->fbo2.IsValid() ||
         !vislib::math::IsEqual(this->clientArea.Width(), static_cast<float>(vpw)) ||
