@@ -308,6 +308,9 @@ void GUIView::DeserialiseCamera(vislib::Serialiser& serialiser) {
 
 void GUIView::Render(const mmcRenderViewContext& context) {
     auto* crv = this->render_view_slot.CallAs<core::view::CallRenderView>();
+    if (this->doHookCode()) {
+        this->doBeforeRenderHook();
+    }
     if (crv) {
         crv->SetOutputBuffer(GL_BACK);
         crv->SetInstanceTime(context.InstanceTime);
@@ -321,6 +324,9 @@ void GUIView::Render(const mmcRenderViewContext& context) {
         if (this->overrideCall != nullptr) {
             this->drawGUI(this->overrideCall->GetViewport(), context.InstanceTime);
         }
+    }
+    if (this->doHookCode()) {
+        this->doAfterRenderHook();
     }
 }
 
