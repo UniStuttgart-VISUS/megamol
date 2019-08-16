@@ -897,13 +897,12 @@ std::string moldyn::SphereRenderer::getRenderModeString(RenderMode rm) {
 
 bool moldyn::SphereRenderer::Render(view::CallRender3D& call) {
 
+    // timer.BeginFrame();
+
     view::CallRender3D* cr3d = dynamic_cast<view::CallRender3D*>(&call);
     if (cr3d == nullptr) return false;
-
     auto cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
     auto flagc = this->getFlagsSlot.CallAs<FlagCall>();
-
-    // timer.BeginFrame();
 
     // Checking for changed render mode
     auto currentRenderMode = static_cast<RenderMode>(this->renderModeParam.Param<param::EnumParam>()->Value());
@@ -913,6 +912,7 @@ bool moldyn::SphereRenderer::Render(view::CallRender3D& call) {
             return false;
         }
     }
+
     // Get data
     float scaling = 1.0f;
     MultiParticleDataCall* mpdc = this->getData(static_cast<unsigned int>(cr3d->Time()), scaling);
