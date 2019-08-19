@@ -736,7 +736,9 @@ void ScatterplotMatrixRenderer2D::drawPoints() {
     this->unbindScreen();
     this->pointShader.Disable();
 
+    glPointSize(1);
     glDisable(GL_TEXTURE_1D);
+    glDisable(GL_POINT_SPRITE);
     glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
     debugPop();
@@ -1057,8 +1059,11 @@ void ScatterplotMatrixRenderer2D::drawScreen() {
     // Emit draw call.
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     glBindTexture(GL_TEXTURE_2D, 0);
+    glBindTexture(GL_TEXTURE_1D, 0);
+    glActiveTexture(GL_TEXTURE0);
+    glDisable(GL_TEXTURE_2D);
     glDisable(GL_BLEND);
-    glEnable(GL_DEPTH_TEST);
+    // glEnable(GL_DEPTH_TEST);
 
     this->screenShader.Disable();
 

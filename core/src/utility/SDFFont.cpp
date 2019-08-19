@@ -1247,7 +1247,9 @@ void SDFFont::render(unsigned int gc, const float *col[4]) const {
 
     glUseProgram(0); // instead of usedShader->Disable() => because draw() is CONST
     glBindVertexArray(0);
+    glBindTexture(GL_TEXTURE_2D, 0);
     glDisable(GL_TEXTURE_2D);
+    glDisable(GL_DEPTH_TEST);
 
     // Reset blending
     if (!blendEnabled) {
@@ -1590,6 +1592,7 @@ bool SDFFont::loadFontTexture(vislib::StringA filename) {
         return false;
     }
 
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
     return true;
 }
 
