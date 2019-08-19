@@ -7,7 +7,7 @@ import re
 import jsondiff 
 import json
 
-apitrace = "c:\\utilities\\apitrace-8.0.20190414-win64\\bin\\apitrace.exe"
+apitrace = "T:\\Utilities\\apitrace-msvc\\x64\\bin\\apitrace.exe"
 
 def findDebugGroups(startnum, endnum, mmtracefile):
     # dump that frame
@@ -26,7 +26,7 @@ def findDebugGroups(startnum, endnum, mmtracefile):
     currgroup = ""
     for c in commands:
         if ingroup:
-            m = re.search('^(\d+)\s+glPopDebugGroup', c)
+            m = re.search(r'^(\d+)\s+glPopDebugGroup', c)
             if m:
                 groupend = m.group(1)
                 print("found debug group " + currgroup + " " + groupstart + "-" + groupend)
@@ -51,19 +51,20 @@ def findDebugGroups(startnum, endnum, mmtracefile):
                     #     print(text, file=text_file)
                     after = json.loads(text)
 
-                    diffstr = jsondiff.diff(before, after)
+                    diffstr = jsondiff.diff(before, after, marshal=True)
 
                     print("found differences:")
-                    print(diffstr)
+                    json.dump(diffstr, sys.stdout, indent=2)
+                    print("")
                 ingroup = False
 
         else:
-            m = re.search('^(\d+)\s+glPushDebugGroup', c)
+            m = re.search(r'^(\d+)\s+glPushDebugGroup', c)
             if m:
                 thestart = m.group(1)
-                m = re.search(',\s+id\s+=\s+(\d+)', c)
+                m = re.search(r',\s+id\s+=\s+(\d+)', c)
                 if m:
-                    m = re.search(',\s+message\s+=\s+"(.*?)"', c)
+                    m = re.search(r',\s+message\s+=\s+"(.*?)"', c)
                     if m:
                         thingy = m.group(1)
                         if thingy in done:
@@ -99,16 +100,16 @@ frames = res.split(os.linesep + os.linesep)
 startf = frames[0]
 endf = frames[1]
 print("using commands between frame 0 and 1: " + startf + " - " + endf)
-startnum = re.search('^(\d+)', startf).group(1)
-endnum = re.search('^(\d+)', endf).group(1)
+startnum = re.search(r'^(\d+)', startf).group(1)
+endnum = re.search(r'^(\d+)', endf).group(1)
 print("that is events " + startnum + "-" + endnum)
 findDebugGroups(startnum, endnum, mmtracefile)
 
 startf = frames[1]
 endf = frames[2]
 print("using commands between frame 1 and 2: " + startf + " - " + endf)
-startnum = re.search('^(\d+)', startf).group(1)
-endnum = re.search('^(\d+)', endf).group(1)
+startnum = re.search(r'^(\d+)', startf).group(1)
+endnum = re.search(r'^(\d+)', endf).group(1)
 print("that is events " + startnum + "-" + endnum)
 findDebugGroups(startnum, endnum, mmtracefile)
 
