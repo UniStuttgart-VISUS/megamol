@@ -324,7 +324,10 @@ bool moldyn::SphereRenderer::resetResources(void) {
         glDeleteBuffers(1, &this->flagsBuffer);
     }
 
-    glDeleteTextures(1, &this->greyTF);
+    if (this->greyTF != 0) {
+        glDeleteTextures(1, &this->greyTF);
+    }
+    this->greyTF = 0;
 
     this->sphereShader.Release();
     this->sphereGeometryShader.Release();
@@ -364,8 +367,20 @@ bool moldyn::SphereRenderer::resetResources(void) {
         }
         this->gpuData.clear();
 
-        glDeleteTextures(3, reinterpret_cast<GLuint*>(&this->gBuffer));
-        glDeleteFramebuffers(1, &(this->gBuffer.fbo));
+        if (this->gBuffer.color != 0) {
+            glDeleteTextures(1, &this->gBuffer.color);
+        }
+        this->gBuffer.color = 0;
+        if (this->gBuffer.depth != 0) {
+            glDeleteTextures(1, &this->gBuffer.depth);
+        }
+        this->gBuffer.depth = 0;
+        if (this->gBuffer.normals != 0) {
+            glDeleteTextures(1, &this->gBuffer.normals);
+        }
+        this->gBuffer.normals = 0;
+
+        glDeleteFramebuffers(1, &this->gBuffer.fbo);
     }
 
     // SPLAT or BUFFER_ARRAY
@@ -583,7 +598,9 @@ bool moldyn::SphereRenderer::createResources() {
             this->enableLightingSlot.ResetDirty();
 
             // Generate texture and frame buffer handles
-            glGenTextures(3, reinterpret_cast<GLuint*>(&this->gBuffer));
+            glGenTextures(1, &this->gBuffer.color);
+            glGenTextures(1, &this->gBuffer.normals);
+            glGenTextures(1, &this->gBuffer.depth);
             glGenFramebuffers(1, &(this->gBuffer.fbo));
 
             // Create the sphere shader 
