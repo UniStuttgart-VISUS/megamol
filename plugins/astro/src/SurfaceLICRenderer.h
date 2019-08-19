@@ -100,10 +100,12 @@ private:
     core::param::ParamSlot coloring;
 
     /** Shader */
+    std::unique_ptr<vislib::graphics::gl::GLSLComputeShader> m_pre_compute_shdr;
     std::unique_ptr<vislib::graphics::gl::GLSLComputeShader> m_lic_compute_shdr;
     std::unique_ptr<vislib::graphics::gl::GLSLShader> m_render_to_framebuffer_shdr;
 
     /** Textures */
+    std::unique_ptr<glowl::Texture2D> m_velocity_target;
     std::unique_ptr<glowl::Texture2D> m_render_target;
     std::unique_ptr<glowl::Texture3D> m_velocity_texture;
     std::unique_ptr<glowl::Texture2D> m_noise_texture;

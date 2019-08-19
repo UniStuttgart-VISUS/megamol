@@ -41,8 +41,10 @@ SurfaceLICRenderer::SurfaceLICRenderer()
     , num_advections("num_advections", "Number of advections for reaching the desired arc length")
     , epsilon("epsilon", "Threshold for detecting coherent structures")
     , coloring("coloring", "Different options on velocity coloring")
+    , m_pre_compute_shdr(nullptr)
     , m_lic_compute_shdr(nullptr)
     , m_render_to_framebuffer_shdr(nullptr)
+    , m_velocity_target(nullptr)
     , m_render_target(nullptr) {
 
     this->m_input_renderer.SetCompatibleCall<core::view::CallRender3DDescription>();
@@ -78,12 +80,20 @@ SurfaceLICRenderer::~SurfaceLICRenderer() { this->Release(); }
 bool SurfaceLICRenderer::create() {
     try {
         // create shader program
+        this->m_pre_compute_shdr = std::make_unique<vislib::graphics::gl::GLSLComputeShader>();
         this->m_lic_compute_shdr = std::make_unique<vislib::graphics::gl::GLSLComputeShader>();
         this->m_render_to_framebuffer_shdr = std::make_unique<vislib::graphics::gl::GLSLShader>();
 
+        vislib::graphics::gl::ShaderSource precompute_shader_src;
         vislib::graphics::gl::ShaderSource compute_shader_src;
         vislib::graphics::gl::ShaderSource vertex_shader_src;
         vislib::graphics::gl::ShaderSource fragment_shader_src;
+
+        if (!instance()->ShaderSourceFactory().MakeShaderSource("SurfaceLICRenderer::precompute", precompute_shader_src))
+            return false;
+        if (!this->m_pre_compute_shdr->Compile(precompute_shader_src.Code(), precompute_shader_src.Count()))
+            return false;
+        if (!this->m_pre_compute_shdr->Link()) return false;
 
         if (!instance()->ShaderSourceFactory().MakeShaderSource("SurfaceLICRenderer::compute", compute_shader_src))
             return false;
@@ -114,6 +124,13 @@ bool SurfaceLICRenderer::create() {
     }
 
     // create render target texture
+    glowl::TextureLayout velocity_tgt_layout(GL_RGBA8, 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, 1,
+        {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
+            {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
+            {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
+        {});
+    this->m_velocity_target = std::make_unique<glowl::Texture2D>("velocity_target", velocity_tgt_layout, nullptr);
+
     glowl::TextureLayout render_tgt_layout(GL_RGBA8, 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, 1,
         {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
             {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
@@ -135,9 +152,11 @@ bool SurfaceLICRenderer::create() {
 }
 
 void SurfaceLICRenderer::release() {
+    this->m_pre_compute_shdr.reset(nullptr);
     this->m_lic_compute_shdr.reset(nullptr);
     this->m_render_to_framebuffer_shdr.reset(nullptr);
 
+    this->m_velocity_target.reset(nullptr);
     this->m_render_target.reset(nullptr);
     this->m_velocity_texture.reset(nullptr);
     this->m_noise_texture.reset(nullptr);
@@ -218,7 +237,7 @@ bool SurfaceLICRenderer::Render(core::Call& call) {
 
     glowl::TextureLayout velocity_layout(GL_RGB32F, cd->GetResolution(0), cd->GetResolution(1), cd->GetResolution(2),
         GL_RGB,
-        GL_FLOAT, 3,
+        GL_FLOAT, 1,
         {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
             {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
             {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
@@ -234,6 +253,15 @@ bool SurfaceLICRenderer::Render(core::Call& call) {
     if (ct != nullptr && (*ct)()) {
         tf_texture = ct->OpenGLTexture();
     }
+
+    // Create velocity target texture
+    glowl::TextureLayout velocity_tgt_layout(GL_RGBA32F, cr->GetViewport().Width(), cr->GetViewport().Height(), 1, GL_RGBA,
+        GL_FLOAT, 1,
+        {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
+            {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
+            {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
+        {});
+    this->m_velocity_target->reload(velocity_tgt_layout, nullptr);
 
     // Create render target texture
     glowl::TextureLayout render_tgt_layout(GL_RGBA8, cr->GetViewport().Width(), cr->GetViewport().Height(), 1, GL_RGBA,
@@ -272,33 +300,75 @@ bool SurfaceLICRenderer::Render(core::Call& call) {
         this->m_noise_texture->reload(noise_layout, this->noise.data());
     }
 
-    // Compute surface LIC
-    this->m_lic_compute_shdr->Enable();
-
+    // Get camera
     core::utility::glMagicScale scaling;
     scaling.apply(cr->GetBoundingBoxes());
 
     std::array<GLfloat, 16> mv_matrix, proj_matrix;
     glGetFloatv(GL_MODELVIEW_MATRIX, mv_matrix.data());
     glGetFloatv(GL_PROJECTION_MATRIX, proj_matrix.data());
-    glUniformMatrix4fv(this->m_lic_compute_shdr->ParameterLocation("view_mx"), 1, GL_FALSE, mv_matrix.data());
-    glUniformMatrix4fv(this->m_lic_compute_shdr->ParameterLocation("proj_mx"), 1, GL_FALSE, proj_matrix.data());
 
     const auto cam_near = cr->GetCameraParameters()->NearClip();
     const auto cam_far = cr->GetCameraParameters()->FarClip();
-    glUniform1f(this->m_lic_compute_shdr->ParameterLocation("cam_near"), cam_near);
-    glUniform1f(this->m_lic_compute_shdr->ParameterLocation("cam_far"), cam_far);
 
     const std::array<float, 2> rt_resolution{
         static_cast<float>(this->m_render_target->getWidth()), static_cast<float>(this->m_render_target->getHeight())};
-    glUniform2fv(this->m_lic_compute_shdr->ParameterLocation("rt_resolution"), 1, rt_resolution.data());
 
     const std::array<float, 3> origin{cr->GetBoundingBoxes().ObjectSpaceBBox().Left(),
         cr->GetBoundingBoxes().ObjectSpaceBBox().Bottom(), cr->GetBoundingBoxes().ObjectSpaceBBox().Back()};
-    glUniform3fv(this->m_lic_compute_shdr->ParameterLocation("origin"), 1, origin.data());
-
     const std::array<float, 3> resolution{cr->GetBoundingBoxes().ObjectSpaceBBox().Width(),
         cr->GetBoundingBoxes().ObjectSpaceBBox().Height(), cr->GetBoundingBoxes().ObjectSpaceBBox().Depth()};
+
+    // Transform velocities to 2D in a pre-computation step
+    this->m_pre_compute_shdr->Enable();
+
+    glUniformMatrix4fv(this->m_pre_compute_shdr->ParameterLocation("view_mx"), 1, GL_FALSE, mv_matrix.data());
+    glUniformMatrix4fv(this->m_pre_compute_shdr->ParameterLocation("proj_mx"), 1, GL_FALSE, proj_matrix.data());
+
+    glUniform2fv(this->m_pre_compute_shdr->ParameterLocation("rt_resolution"), 1, rt_resolution.data());
+
+    glUniform3fv(this->m_pre_compute_shdr->ParameterLocation("origin"), 1, origin.data());
+    glUniform3fv(this->m_pre_compute_shdr->ParameterLocation("resolution"), 1, resolution.data());
+
+    glActiveTexture(GL_TEXTURE0);
+    this->fbo.BindDepthTexture();
+    glUniform1i(this->m_pre_compute_shdr->ParameterLocation("depth_tx2D"), 0);
+
+    glActiveTexture(GL_TEXTURE1);
+    this->fbo.BindColourTexture(1);
+    glUniform1i(this->m_pre_compute_shdr->ParameterLocation("normal_tx2D"), 1);
+
+    glActiveTexture(GL_TEXTURE2);
+    this->m_velocity_texture->bindTexture();
+    glUniform1i(this->m_pre_compute_shdr->ParameterLocation("velocity_tx3D"), 2);
+
+    this->m_velocity_target->bindImage(0, GL_WRITE_ONLY);
+
+    this->m_pre_compute_shdr->Dispatch(
+        static_cast<int>(std::ceil(rt_resolution[0] / 8.0f)), static_cast<int>(std::ceil(rt_resolution[1] / 8.0f)), 1);
+
+    this->m_pre_compute_shdr->Disable();
+
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_3D, 0);
+
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT);
+
+    // Compute surface LIC
+    this->m_lic_compute_shdr->Enable();
+
+    glUniform1f(this->m_lic_compute_shdr->ParameterLocation("cam_near"), cam_near);
+    glUniform1f(this->m_lic_compute_shdr->ParameterLocation("cam_far"), cam_far);
+
+    glUniform2fv(this->m_lic_compute_shdr->ParameterLocation("rt_resolution"), 1, rt_resolution.data());
+
+    glUniform3fv(this->m_lic_compute_shdr->ParameterLocation("origin"), 1, origin.data());
     glUniform3fv(this->m_lic_compute_shdr->ParameterLocation("resolution"), 1, resolution.data());
 
     glUniform1i(this->m_lic_compute_shdr->ParameterLocation("stencil"),
@@ -328,8 +398,8 @@ bool SurfaceLICRenderer::Render(core::Call& call) {
     glUniform1i(this->m_lic_compute_shdr->ParameterLocation("depth_tx2D"), 1);
 
     glActiveTexture(GL_TEXTURE2);
-    this->m_velocity_texture->bindTexture();
-    glUniform1i(this->m_lic_compute_shdr->ParameterLocation("velocity_tx3D"), 2);
+    this->m_velocity_target->bindTexture();
+    glUniform1i(this->m_lic_compute_shdr->ParameterLocation("velocity_tx2D"), 2);
 
     glActiveTexture(GL_TEXTURE3);
     this->m_noise_texture->bindTexture();
