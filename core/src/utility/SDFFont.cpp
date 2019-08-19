@@ -1578,8 +1578,10 @@ bool SDFFont::loadFontTexture(vislib::StringA filename) {
             return false;
         }
 
+        this->texture.Bind();
         this->texture.SetFilter(GL_LINEAR, GL_LINEAR);
         this->texture.SetWrap(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+        glBindTexture(GL_TEXTURE_2D, 0);
         ARY_SAFE_DELETE(buf);
     }
     else {
