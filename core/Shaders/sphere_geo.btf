@@ -15,7 +15,7 @@
         <snippet name="MainStart"        type="file">sphere/geometry_vertex_mainstart.glsl</snippet>
         <snippet name="sphere_flags::vertex_getflag"/>
         <snippet name="sphere_flags::vertex_getflag_geometry"/>                             
-        <snippet name="MainEnd"          type="file">sphere/geometry_vertex_mainend.glsl</snippet>
+        <snippet name="MainEnd"          type="file">sphere/simple_mainend.glsl</snippet>
     </shader>
 
 

@@ -1,4 +1,10 @@
 
+#extension GL_ARB_gpu_shader_fp64 : enable   // glsl version 150
+
+in vec4 inPosition;
+in vec4 inColor;
+in float inColIdx;
+
 void main(void) {
 
     // Remove the sphere radius from the w coordinates to the rad varyings

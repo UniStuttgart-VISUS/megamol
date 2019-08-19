@@ -17,7 +17,7 @@ using namespace vislib::graphics::gl;
 //#define CHRONOTIMING
 
 #define SSBO_GENERATED_SHADER_INSTANCE  "gl_VertexID" // or "gl_InstanceID"
-#define SSBO_GENERATED_SHADER_ALIGNMENT "packed"
+#define SSBO_GENERATED_SHADER_ALIGNMENT  "packed" // "std430"
 
 const GLuint SSBOvertexBindingPoint = 2;
 const GLuint SSBOcolorBindingPoint = 3;
