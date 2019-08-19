@@ -237,6 +237,42 @@ function(require_external NAME)
       DEPENDS Delaunator_ext
       INCLUDE_DIR "src/Delaunator_ext/include")
 
+  elseif(NAME STREQUAL "tracking")
+    if(TARGET tracking)
+      return()
+    endif()
+
+    if(WIN32)
+      set(TRACKING_LIB "bin/tracking.dll")
+      set(TRACKING_IMPORT_LIB "lib/tracking.lib")
+      set(TRACKING_NATNET_LIB "src/tracking_ext/tracking/natnet/lib/x64/NatNetLib.dll")
+      set(TRACKING_NATNET_IMPORT_LIB "src/tracking_ext/tracking/natnet/lib/x64/NatNetLib.lib")
+
+      add_external_project(tracking_ext
+          GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/mm-tracking
+          CMAKE_ARGS 
+            -DCREATE_TRACKING_TEST_PROGRAM=OFF)
+
+      add_external_library(tracking SHARED 
+          DEPENDS tracking_ext 
+          IMPORT_LIBRARY_DEBUG ${TRACKING_IMPORT_LIB}
+          IMPORT_LIBRARY_RELEASE ${TRACKING_IMPORT_LIB}
+          LIBRARY_DEBUG ${TRACKING_LIB}
+          LIBRARY_RELEASE ${TRACKING_LIB})
+
+      add_external_library(natnet SHARED 
+          DEPENDS tracking_ext 
+          IMPORT_LIBRARY_DEBUG ${TRACKING_NATNET_IMPORT_LIB}
+          IMPORT_LIBRARY_RELEASE ${TRACKING_NATNET_IMPORT_LIB}
+          LIBRARY_DEBUG ${TRACKING_NATNET_LIB}     
+          LIBRARY_RELEASE ${TRACKING_NATNET_LIB})
+
+    add_external_library(tracking_int INTERFACE
+      DEPENDS tracking_ext
+      INCLUDE_DIR "src/tracking_ext/tracking/include")
+
+    endif()
+
   elseif(NAME STREQUAL "sim_sort")
     if(TARGET sim_sort)
       return()
