@@ -8,7 +8,7 @@ in float colidxgs[1];
 out vec4 vertColor;
 out vec4 objPos;
 out vec4 camPos;
-out vec4 lightPos;
+out vec4 lightPos; // Unused in AO render mode
 out float rad;
 out float squarRad;
 

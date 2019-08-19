@@ -1,7 +1,7 @@
 
 void main(void) {
     
-    // remove the sphere radius from the w coordinates to the rad varyings
+    // Remove the sphere radius from the w coordinates to the rad varyings
     vec4 inPos = gl_in[0].gl_Position;
     rad = (constRad < -0.5) ? inPos.w : constRad;
     inPos.w = 1.0;

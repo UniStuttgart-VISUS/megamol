@@ -986,8 +986,7 @@ bool moldyn::SphereRenderer::Render(view::CallRender3D& call) {
     // Set OpenGL state
     glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
-    /// Necessary for early depth test in fragment shader to work (default):
-    glDepthFunc(GL_LESS); 
+    glDepthFunc(GL_LESS); /// Necessary for early depth test in fragment shader (default)
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
     bool retval = false;
