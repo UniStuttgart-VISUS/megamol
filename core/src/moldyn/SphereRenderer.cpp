@@ -456,8 +456,8 @@ bool moldyn::SphereRenderer::createResources() {
     glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-    glBindTexture(GL_TEXTURE_1D, 0);
     glDisable(GL_TEXTURE_1D);
+    glBindTexture(GL_TEXTURE_1D, 0);
 
     try {
         switch (this->renderMode) {
@@ -956,7 +956,7 @@ bool moldyn::SphereRenderer::Render(view::CallRender3D& call) {
     this->stateInvalid = ((hash != this->oldHash) || (frameID != this->oldFrameID));
 
     // Update read only parameter values of color index range to be set manually in  transfer function
-    if ((cgtf != nullptr) && (hash != this->oldHash)) {
+    if (hash != this->oldHash) {
         std::array<float, 2> range;
         range[0] = std::numeric_limits<float>::max(); // min
         range[1] = std::numeric_limits<float>::min(); // max
@@ -1869,8 +1869,8 @@ bool moldyn::SphereRenderer::setTransferFunctionTexture(vislib::graphics::gl::GL
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_1D, this->greyTF);
         glUniform1i(shader.ParameterLocation("tfTexture"), 0);
-        GLfloat tfrange[2] = { 0.0f, 1.0f };
-        glUniform2fv(shader.ParameterLocation("tfRange"), 1, tfrange);
+        auto range = this->colIdxRangeInfoParam.Param<param::Vector2fParam>()->Value();
+        glUniform2fv(shader.ParameterLocation("tfRange"), 1, static_cast<GLfloat*>(range.PeekComponents()));
     }
     return true;
 }
@@ -2507,7 +2507,6 @@ void moldyn::SphereRenderer::renderDeferredPass(view::CallRender3D* cr3d) {
 
     glBindTexture(GL_TEXTURE_2D, 0);
     glBindTexture(GL_TEXTURE_3D, 0);
-
 }
 
 
