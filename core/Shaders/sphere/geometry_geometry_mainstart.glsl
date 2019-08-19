@@ -1,4 +1,10 @@
 
+layout (points) in;
+layout (triangle_strip, max_vertices = 4) out;
+
+in vec4 colorgs[1];
+in float colidxgs[1];
+
 void main(void) {
     
     // Remove the sphere radius from the w coordinates to the rad varyings

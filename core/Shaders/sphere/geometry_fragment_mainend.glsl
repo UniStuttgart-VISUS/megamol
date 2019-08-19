@@ -55,8 +55,8 @@
     }
 
     // phong lighting with directional light
-    //outColor = vec4(LocalLighting(ray, normal, lightPos.xyz, vertColor), 1.0);
-    outColor = vec4(LocalLighting(ray, normal, lightPos.xyz, colOut), vertColor.w);
+    //outColor = vec4(LocalLighting(ray, normal, outLightPos.xyz, vertColor), 1.0);
+    outColor = vec4(LocalLighting(ray, normal, outLightPos.xyz, colOut), vertColor.w);
     
     // calculate depth
 #ifdef DEPTH

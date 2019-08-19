@@ -49,7 +49,7 @@
         <shader name="geometry">
             <snippet type="version">430</snippet>
             <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet> 
-            <snippet name="Attributes"       type="file">sphere/geometry_geometry_attributes.glsl</snippet>
+            <snippet name="Attributes"       type="file">sphere/vertex_attributes.glsl</snippet>
             <snippet name="bitflags::main"/>            
             <snippet name="core_utils::tflookup"/>
             <snippet name="core_utils::tfconvenience" />

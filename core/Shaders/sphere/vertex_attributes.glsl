@@ -1,11 +1,7 @@
 
-in vec4 inPosition;
-in vec4 inColor;
-in float inColIdx;
-
 out vec4 objPos;
 out vec4 camPos;
-out vec4 lightPos;
+out vec4 outLightPos;
 out float squarRad;
 out float rad;
 out vec4 vertColor;
@@ -19,7 +15,7 @@ out vec2 centerFragment;
 #endif // RETICLE
 
 uniform vec4 viewAttr;
-uniform vec4 lpos;
+uniform vec4 lightPos;
 
 #ifdef WITH_SCALING
 uniform float scaling;
@@ -31,15 +27,15 @@ uniform vec3 camUp;
 uniform vec3 camRight;
 #endif // CALC_CAM_SYS
 
-// clipping plane attributes
 uniform vec4 clipDat;
 uniform vec4 clipCol;
 
 uniform mat4 MVinv;
 uniform mat4 MVP;
+uniform mat4 MVPinv;
+uniform mat4 MVPtransp;
 
 uniform float constRad;
 uniform vec4 globalCol;
 uniform int useGlobalCol;
 uniform int useTf;
-

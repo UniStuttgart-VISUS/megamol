@@ -4,4 +4,3 @@
     } else {
         effectiveDiameter = 1.0;
     }
-}

@@ -1,4 +1,8 @@
 
+in vec4 inPosition;
+in vec4 inColor;
+in float inColIdx;
+
 void main(void) {
     
     // Remove the sphere radius from the w coordinates to the rad varyings
