@@ -3,7 +3,7 @@
  
 <!-- Vertex Shader Snippets -->
 
-    <snippet name="vert_attributes" type="string">
+    <snippet name="vertex_attributes" type="string">
         <![CDATA[
 
 uniform uint flagsAvailable;
@@ -27,7 +27,7 @@ flat out uint discardFrag;
     </snippet>
 
 
-    <snippet name="vert_getflag" type="string">
+    <snippet name="vertex_getflag" type="string">
         <![CDATA[
 
 uint flag = uint(0);
@@ -49,7 +49,7 @@ if ((bool(flagsAvailable) && !bitflag_isVisible(flag))) {
     </snippet>
 
 
-    <snippet name="vert_attributes_geo" type="string">
+    <snippet name="vertex_attributes_geo" type="string">
         <![CDATA[
 
 out uint currentFlag;
@@ -59,7 +59,7 @@ out uint geoDiscardFrag;
     </snippet>
 
 
-    <snippet name="vert_getflag_geo" type="string">
+    <snippet name="vertex_getflag_geometry" type="string">
         <![CDATA[
 
 currentFlag = flag;
@@ -70,7 +70,7 @@ geoDiscardFrag = discardFrag;
 
 <!-- Geometry Shader Snippets -->
 
-    <snippet name="geo_attributes" type="string">
+    <snippet name="geometry_attributes" type="string">
         <![CDATA[
 
 in uint currentFlag[1];
@@ -86,7 +86,7 @@ uniform vec4 flagSoftSelectedCol;
     </snippet>
 
 
-    <snippet name="geo_getflag" type="string">
+    <snippet name="geometry_getflag" type="string">
         <![CDATA[
 
 uint flag = currentFlag[0];
@@ -98,7 +98,7 @@ discardFlag = geoDiscardFrag[0];
 
 <!-- Fragment Shader Snippets -->
 
-    <snippet name="frag_attributes" type="string">
+    <snippet name="fragment_attributes" type="string">
         <![CDATA[
 
 flat in uint discardFrag;
@@ -109,7 +109,7 @@ uniform uint flagsAvailable;
     </snippet>
 
 
-    <snippet name="frag_discardtest" type="string">
+    <snippet name="fragment_discardtest" type="string">
         <![CDATA[
 
 if (bool(flagsAvailable) && (discardFrag > uint(0))) {   
