@@ -48,23 +48,11 @@ def findDebugGroups(startnum, endnum, mmtracefile):
                     args = [apitrace, 'replay', '-D', groupstart, mmtracefile]
                     proc = subprocess.run(args, capture_output=True)
                     text = safeString(proc.stdout.decode("ascii"))
-                    #text = re.sub(r'[\n\r]', '', text, 0, flags=re.DOTALL)
-                    #text = re.sub(r'[\t]', '    ', text, 0, flags=re.DOTALL)
-                    #text = re.sub(r'\"__data__\":.*?\".*?\"', '\"__data__\":\"omitted\"', text, 0, flags = re.DOTALL)
-                    #text = re.sub('\"__data__\":.*?\".*?\"', '\"__data__\":\"omitted\"', text, 0, flags = re.DOTALL)
-                    # with open(groupstart + ".glstate", "w") as text_file:
-                    #     print(text, file=text_file)
                     before = json.loads(text)
 
                     args = [apitrace, 'replay', '-D', groupend, mmtracefile]
                     proc = subprocess.run(args, capture_output=True)
                     text = safeString(proc.stdout.decode("ascii"))
-                    #text = re.sub(r'[\n\r]', '', text, 0, flags=re.DOTALL)
-                    #text = re.sub(r'[\t]', '    ', text, 0, flags=re.DOTALL)
-                    #text = re.sub(r'\"__data__\":.*?\".*?\"', '\"__data__\":\"omitted\"', text, 0, flags = re.DOTALL)
-                    #text = re.sub('\"__data__\":.*?\".*?\"', '\"__data__\":\"omitted\"', text, 0, flags = re.DOTALL)
-                    # with open(groupend + ".glstate", "w") as text_file:
-                    #     print(text, file=text_file)
                     after = json.loads(text)
 
                     diffstr = jsondiff.diff(before, after, marshal=True)
