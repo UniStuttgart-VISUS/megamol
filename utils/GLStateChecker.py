@@ -9,6 +9,14 @@ import json
 
 apitrace = "T:\\Utilities\\apitrace-msvc\\x64\\bin\\apitrace.exe"
 
+groupstack = []
+
+def safeString(text):
+    t = re.sub(r'[\n\r]', '', text, 0, flags=re.DOTALL)
+    t = re.sub(r'[\t]', '    ', t, 0, flags=re.DOTALL)
+    t = re.sub(r'\"__data__\":.*?\".*?\"', '\"__data__\":\"omitted\"', t, 0, flags = re.DOTALL)
+    return t
+
 def findDebugGroups(startnum, endnum, mmtracefile):
     # dump that frame
     #c:\utilities\apitrace-8.0.20190414-win64\bin\apitrace.exe dump mmconsole.trace --calls=23165-23562
@@ -20,16 +28,18 @@ def findDebugGroups(startnum, endnum, mmtracefile):
     # 30079 glPushDebugGroup(source = GL_DEBUG_SOURCE_APPLICATION, id = 1234, length = -1, message = "SphereRenderer::Render")
     commands = res.split(os.linesep)
     done = {}
-    ingroup = False
     groupstart = 0
     groupend = 0
     currgroup = ""
     for c in commands:
-        if ingroup:
-            m = re.search(r'^(\d+)\s+glPopDebugGroup', c)
-            if m:
-                groupend = m.group(1)
-                print("found debug group " + currgroup + " " + groupstart + "-" + groupend)
+        m = re.search(r'^(\d+)\s+glPopDebugGroup', c)
+        if m:
+            groupend = m.group(1)
+            if len(groupstack) == 0:
+                print("found pop without push: " + c)
+            else:
+                groupstart, currgroup = groupstack.pop()
+                print("found end of debug group " + currgroup + " " + groupstart + "-" + groupend)
                 if int(groupend) - int(groupstart) == 1:
                     print("no content")
                 else:
@@ -37,16 +47,22 @@ def findDebugGroups(startnum, endnum, mmtracefile):
                     # c:\utilities\apitrace-msvc\x64\bin\apitrace.exe replay -D 167273 mmconsole.1.trace > before.json
                     args = [apitrace, 'replay', '-D', groupstart, mmtracefile]
                     proc = subprocess.run(args, capture_output=True)
-                    text = proc.stdout.decode("ascii")
-                    text = re.sub('\"__data__\":.*?\".*?\"', '\"__data__\":\"omitted\"', text, 0, flags = re.DOTALL)
+                    text = safeString(proc.stdout.decode("ascii"))
+                    #text = re.sub(r'[\n\r]', '', text, 0, flags=re.DOTALL)
+                    #text = re.sub(r'[\t]', '    ', text, 0, flags=re.DOTALL)
+                    #text = re.sub(r'\"__data__\":.*?\".*?\"', '\"__data__\":\"omitted\"', text, 0, flags = re.DOTALL)
+                    #text = re.sub('\"__data__\":.*?\".*?\"', '\"__data__\":\"omitted\"', text, 0, flags = re.DOTALL)
                     # with open(groupstart + ".glstate", "w") as text_file:
                     #     print(text, file=text_file)
                     before = json.loads(text)
 
                     args = [apitrace, 'replay', '-D', groupend, mmtracefile]
                     proc = subprocess.run(args, capture_output=True)
-                    text = proc.stdout.decode("ascii")
-                    text = re.sub('\"__data__\":.*?\".*?\"', '\"__data__\":\"omitted\"', text, 0, flags = re.DOTALL)
+                    text = safeString(proc.stdout.decode("ascii"))
+                    #text = re.sub(r'[\n\r]', '', text, 0, flags=re.DOTALL)
+                    #text = re.sub(r'[\t]', '    ', text, 0, flags=re.DOTALL)
+                    #text = re.sub(r'\"__data__\":.*?\".*?\"', '\"__data__\":\"omitted\"', text, 0, flags = re.DOTALL)
+                    #text = re.sub('\"__data__\":.*?\".*?\"', '\"__data__\":\"omitted\"', text, 0, flags = re.DOTALL)
                     # with open(groupend + ".glstate", "w") as text_file:
                     #     print(text, file=text_file)
                     after = json.loads(text)
@@ -56,27 +72,25 @@ def findDebugGroups(startnum, endnum, mmtracefile):
                     print("found differences:")
                     json.dump(diffstr, sys.stdout, indent=2)
                     print("")
-                ingroup = False
-
-        else:
-            m = re.search(r'^(\d+)\s+glPushDebugGroup', c)
+        m = re.search(r'^(\d+)\s+glPushDebugGroup', c)
+        if m:
+            thestart = m.group(1)
+            m = re.search(r',\s+id\s+=\s+(\d+)', c)
             if m:
-                thestart = m.group(1)
-                m = re.search(r',\s+id\s+=\s+(\d+)', c)
+                m = re.search(r',\s+message\s+=\s+"(.*?)"', c)
                 if m:
-                    m = re.search(r',\s+message\s+=\s+"(.*?)"', c)
-                    if m:
-                        thingy = m.group(1)
-                        if thingy in done:
-                            print("already looked at " + thingy)
-                        else:
-                            print("looking at " + thingy)
-                            # do not look twice. the first frame seems to be
-                            # different though, so I deactivated this
-                            # done[thingy] = 1
-                            groupstart = thestart
-                            currgroup = thingy
-                            ingroup = True
+                    thingy = m.group(1)
+                    if thingy in done:
+                        print("already looked at " + thingy)
+                    else:
+                        print("looking at " + thingy)
+                        # do not look twice. the first frame seems to be
+                        # different though, so I deactivated this
+                        # done[thingy] = 1
+                        groupstack.append([thestart, thingy])
+                        #groupstart = thestart
+                        #currgroup = thingy
+                        #ingroup = True
 
 
 # run megamol using the parameters from cmdline
