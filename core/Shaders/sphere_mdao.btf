@@ -24,7 +24,7 @@
     <shader name="fragment">
         <snippet type="version">150</snippet>
         <snippet name="CommonDefines"             type="file">commondefines.glsl</snippet>        
-        <snippet name="Attributes"                type="file">sphere/mdao_fragment_attributes.glsl</snippet>
+        <snippet name="Attributes"                type="file">sphere/fragment_attributes.glsl</snippet>
         <snippet name="sphere_flags::fragment_attributes"/>          
         <snippet name="MainStart"                 type="file">sphere/mdao_fragment_mainstart.glsl</snippet>
         <snippet name="sphere_flags::fragment_discardtest"/>         
@@ -66,7 +66,7 @@
         <shader name="fragment">
             <snippet type="version">150</snippet>
             <snippet name="CommonDefines"         type="file">commondefines.glsl</snippet>        
-            <snippet name="Attributes"            type="file">sphere/mdao_fragment_attributes.glsl</snippet>
+            <snippet name="Attributes"            type="file">sphere/fragment_attributes.glsl</snippet>
             <snippet name="sphere_flags::fragment_attributes"/>              
             <snippet name="MainStart"             type="file">sphere/mdao_fragment_mainstart.glsl</snippet> 
             <snippet name="sphere_flags::fragment_discardtest"/> 

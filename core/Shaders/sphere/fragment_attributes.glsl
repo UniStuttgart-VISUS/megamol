@@ -14,16 +14,14 @@ FLACH in vec4 vertColor;
 FLACH in vec2 centerFragment;
 #endif // RETICLE
 
-layout(location = 0) out vec4 outColor;
-
 #ifdef BACKSIDE_ENABLED
 uniform float hitsideFlag;
 #endif // BACKSIDE_ENABLED
+
 //#define DISCARD_COLOR_MARKER
 //#undef CLIP
 //#undef DEPTH
 
-// clipping plane attributes
 uniform vec4 clipDat;
 uniform vec4 clipCol;
 
@@ -31,3 +29,13 @@ uniform vec4 viewAttr;
 
 uniform mat4 MVPinv;
 uniform mat4 MVPtransp;
+
+// Only used by SPLAT render mode:
+uniform float alphaScaling;
+FLACH in float effectiveDiameter;
+
+// Only used by AMBIENT OCLUSION render mode:
+uniform bool inUseHighPrecision;
+out vec4 outNormal;
+
+layout(location = 0) out vec4 outColor;

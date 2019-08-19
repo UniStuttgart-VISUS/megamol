@@ -446,7 +446,6 @@ bool moldyn::SphereRenderer::createResources() {
     flagSnippet = new ShaderSource::StringSnippet(flagDefine.c_str());
 
     // Fallback transfer function texture
-    glEnable(GL_TEXTURE_1D);
     glGenTextures(1, &this->greyTF);
     unsigned char tex[6] = {
         0, 0, 0,  255, 255, 255
@@ -456,7 +455,6 @@ bool moldyn::SphereRenderer::createResources() {
     glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-    glDisable(GL_TEXTURE_1D);
     glBindTexture(GL_TEXTURE_1D, 0);
 
     try {
@@ -956,7 +954,7 @@ bool moldyn::SphereRenderer::Render(view::CallRender3D& call) {
     this->stateInvalid = ((hash != this->oldHash) || (frameID != this->oldFrameID));
 
     // Update read only parameter values of color index range to be set manually in  transfer function
-    if (hash != this->oldHash) {
+    if (this->stateInvalid) {
         std::array<float, 2> range;
         range[0] = std::numeric_limits<float>::max(); // min
         range[1] = std::numeric_limits<float>::min(); // max
@@ -1882,8 +1880,8 @@ bool moldyn::SphereRenderer::unsetTransferFunctionTexture(void) {
         cgtf->UnbindConvenience();
     }
     else {
-        glDisable(GL_TEXTURE_1D);
         glBindTexture(GL_TEXTURE_1D, 0);
+        glDisable(GL_TEXTURE_1D);
     }
     return true;
 }
@@ -2502,11 +2500,11 @@ void moldyn::SphereRenderer::renderDeferredPass(view::CallRender3D* cr3d) {
 
     this->lightingShader.Disable();
 
-    glDisable(GL_TEXTURE_2D);
-    glDisable(GL_TEXTURE_3D);
-
     glBindTexture(GL_TEXTURE_2D, 0);
     glBindTexture(GL_TEXTURE_3D, 0);
+
+    glDisable(GL_TEXTURE_2D);
+    glDisable(GL_TEXTURE_3D);
 }
 
 

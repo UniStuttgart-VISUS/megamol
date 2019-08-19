@@ -40,7 +40,7 @@
     <shader name="fragment">
         <snippet type="version">130</snippet>
         <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>
-        <snippet name="Attributes"       type="file">sphere/geometry_fragment_attributes.glsl</snippet> 
+        <snippet name="Attributes"       type="file">sphere/fragment_attributes.glsl</snippet> 
         <snippet name="sphere_flags::fragment_attributes"/>                
         <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>   
         <snippet name="MainStart"        type="file">sphere/geometry_fragment_mainstart.glsl</snippet>
