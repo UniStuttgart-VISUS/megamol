@@ -1,8 +1,8 @@
 /*
  * SurfaceLICRenderer.h
  *
- * Copyright (C) 2019 by MegaMol team
- * Alle Rechte vorbehalten.
+ * Copyright (C) 2019 by Universitaet Stuttgart (VISUS).
+ * All rights reserved.
  */
 
 #ifndef ASTRO_SURFACELICRENDERER_H_INCLUDED
@@ -88,9 +88,9 @@ protected:
 
 private:
     /** caller slot */
-    core::CallerSlot m_input_renderer;
-    core::CallerSlot m_input_velocities;
-    core::CallerSlot m_input_transfer_function;
+    core::CallerSlot input_renderer;
+    core::CallerSlot input_velocities;
+    core::CallerSlot input_transfer_function;
 
     /** Parameters */
     core::param::ParamSlot stencil_size;
@@ -99,16 +99,27 @@ private:
     core::param::ParamSlot epsilon;
     core::param::ParamSlot coloring;
 
+    core::param::ParamSlot ka;
+    core::param::ParamSlot kd;
+    core::param::ParamSlot ks;
+    core::param::ParamSlot shininess;
+    core::param::ParamSlot ambient_color;
+    core::param::ParamSlot specular_color;
+    core::param::ParamSlot light_color;
+
+    /** Input data hash */
+    SIZE_T hash;
+
     /** Shader */
-    std::unique_ptr<vislib::graphics::gl::GLSLComputeShader> m_pre_compute_shdr;
-    std::unique_ptr<vislib::graphics::gl::GLSLComputeShader> m_lic_compute_shdr;
-    std::unique_ptr<vislib::graphics::gl::GLSLShader> m_render_to_framebuffer_shdr;
+    vislib::graphics::gl::GLSLComputeShader pre_compute_shdr;
+    vislib::graphics::gl::GLSLComputeShader lic_compute_shdr;
+    vislib::graphics::gl::GLSLShader render_to_framebuffer_shdr;
 
     /** Textures */
-    std::unique_ptr<glowl::Texture2D> m_velocity_target;
-    std::unique_ptr<glowl::Texture2D> m_render_target;
-    std::unique_ptr<glowl::Texture3D> m_velocity_texture;
-    std::unique_ptr<glowl::Texture2D> m_noise_texture;
+    std::unique_ptr<glowl::Texture2D> velocity_target;
+    std::unique_ptr<glowl::Texture2D> render_target;
+    std::unique_ptr<glowl::Texture3D> velocity_texture;
+    std::unique_ptr<glowl::Texture2D> noise_texture;
 
     /** FBO for input */
     vislib::graphics::gl::FramebufferObject fbo;

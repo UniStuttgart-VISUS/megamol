@@ -30,11 +30,11 @@ uniform int coloring;
 uniform float max_magnitude;
 
 /* input textures */
-uniform highp sampler2D color_tx2D;
 uniform highp sampler2D depth_tx2D;
 uniform highp sampler2D velocity_tx2D;
-uniform highp sampler2D noise_tx2D;
+uniform highp sampler2D position_tx2D;
 uniform highp sampler2D normal_tx2D;
+uniform highp sampler2D noise_tx2D;
 uniform highp sampler1D tf_tx1D;
 
 /* output image */
@@ -80,26 +80,31 @@ void main() {
     vec2 pixel_tex_coords = (pixel_coords - (pixel_coords % stencil) + offset) / rt_resolution;
 
     // Check for surface at this pixel
-    vec4 color = texture(color_tx2D, pixel_tex_coords);
+    vec4 color = vec4(0.0f);
     float depth = texture(depth_tx2D, pixel_tex_coords).x;
 
     if (depth >= 0.0f && depth < 1.0f) {
+        // Get position and normal at the current pixel
+        const vec3 normal = texture(normal_tx2D, pixel_tex_coords).xyz;
+        const vec3 coloring = texture(tf_tx1D, velocity_magnitude(pixel_tex_coords) / max_magnitude).xyz;
+        const vec4 world_pos = screen_to_world_space(pixel_tex_coords, depth);
+
         // Advect and integrate
         float value = 0.0f;
         float weight = 0.0f;
         float last_depth = depth;
 
-        //const float max_arc_length = arc_length * max(max(resolution[0], resolution[1]), resolution[2]);
-        const float max_arc_length = arc_length;
-        const float step_size = max_arc_length / num_advections;
+        const float step_size = arc_length / num_advections;
 
         for (int steps = 0; steps < num_advections; ++steps) {
             // Get screen-space velocity and perform advection
             vec2 velocity = texture(velocity_tx2D, pixel_tex_coords).xy;
 
-            if (length(velocity) != 0.0f) {
-                pixel_tex_coords += step_size * normalize(velocity);
+            if (length(velocity) == 0.0f) {
+                break;
             }
+
+            pixel_tex_coords += step_size * normalize(velocity);
 
             // Check depth
             depth = texture(depth_tx2D, pixel_tex_coords).x;
@@ -113,7 +118,7 @@ void main() {
             // Aggregate noise
             const float sigma = 1.0f;
             const float rbf_weight =
-                exp(-1.0f / (1.0f - pow((1.0f / (2.0f * sigma * max_arc_length)) * (steps * step_size), 2.0f)));
+                exp(-1.0f / (1.0f - pow((1.0f / (2.0f * sigma * arc_length)) * (steps * step_size), 2.0f)));
 
             value += texture(noise_tx2D, pixel_tex_coords).x * rbf_weight;
             weight += rbf_weight;
@@ -122,10 +127,10 @@ void main() {
         value /= weight;
 
         // Set color
-        //const vec3 normal = texture(normal_tx2D, pixel_tex_coords).xyz; // TODO
-        const vec4 intensity = vec4(vec3(0.299 * color.x + 0.587 * color.y + 0.114 * color.z), 0.0f);
+        const vec3 inv_view_dir = (inverse(view_mx) * vec4(0.0f, 0.0f, 0.0f, 1.0f) - world_pos).xyz;
+        const vec3 light_dir = light - world_pos.xyz;
 
-        color = intensity + value * texture(tf_tx1D, velocity_magnitude(pixel_tex_coords) / max_magnitude);
+        color = vec4(phong(value * coloring, normal, inv_view_dir, light_dir), 1.0f);
     }
 
     imageStore(render_target, pixel_coords, color);

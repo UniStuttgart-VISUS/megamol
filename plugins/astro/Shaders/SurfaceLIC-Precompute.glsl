@@ -1,9 +1,5 @@
 #extension GL_ARB_compute_shader : enable
 
-/* matrices */
-uniform mat4 view_mx;
-uniform mat4 proj_mx;
-
 /* render target resolution */
 uniform vec2 rt_resolution;
 
@@ -18,18 +14,6 @@ uniform highp sampler3D velocity_tx3D;
 
 /* output image */
 layout(rgba32f, binding = 0) writeonly uniform highp image2D velocity_target;
-
-/* transform screen to world space coordinates */
-vec4 screen_to_world_space(vec2 screen_pos, float depth) {
-    // Reconstruct clip space coordinates
-    const vec3 clip_space = vec3(screen_pos, depth) * 2.0f - vec3(1.0f);
-
-    // Inverse transform to world space
-    vec4 world_pos = inverse(proj_mx * view_mx) * vec4(clip_space, 1.0f);
-    world_pos /= world_pos.w;
-
-    return world_pos;
-}
 
 /* blocks for computation */
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
@@ -52,7 +36,7 @@ void main() {
 
     if (depth >= 0.0f && depth < 1.0f) {
         // Get position in world space
-        vec4 world_pos = screen_to_world_space(pixel_tex_coords, depth);
+        const vec4 world_pos = screen_to_world_space(pixel_tex_coords, depth);
 
         // Get velocity
         velocity = texture(velocity_tx3D, (world_pos.xyz - origin) / resolution).xyz;
