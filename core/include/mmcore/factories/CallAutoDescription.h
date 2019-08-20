@@ -24,6 +24,8 @@ namespace factories {
     class CallAutoDescription : public CallDescription {
     public:
 
+        typedef T CallT;
+
         /** Ctor. */
         CallAutoDescription(void) : CallDescription() {
             // intentionally empty

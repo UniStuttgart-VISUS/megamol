@@ -10033,9 +10033,9 @@ bool DeformableGPUSurfaceMT::ComputeMeshLaplacian() {
     vtxNeighbors.SetCount(this->vertexCnt);
     // Loop through all triangles
     for (size_t tri = 0; tri < this->triangleCnt; ++tri) {
-        uint idx0 = triIdx.Peek()[3*tri+0];
-        uint idx1 = triIdx.Peek()[3*tri+1];
-        uint idx2 = triIdx.Peek()[3*tri+2];
+        std::size_t idx0 = triIdx.Peek()[3*tri+0];
+        std::size_t idx1 = triIdx.Peek()[3*tri+1];
+        std::size_t idx2 = triIdx.Peek()[3*tri+2];
         if (vtxNeighbors[idx0].Find(idx1) == NULL) {
             vtxNeighbors[idx0].Append(idx1);
         }

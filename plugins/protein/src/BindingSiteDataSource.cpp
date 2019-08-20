@@ -6,6 +6,7 @@
 #include "mmcore/param/IntParam.h"
 #include "vislib/sys/ASCIIFileBuffer.h"
 #include "mmcore/param/FilePathParam.h"
+#include "mmcore/param/BoolParam.h"
 #include "vislib/sys/BufferedFile.h"
 #include "vislib/sys/sysfunctions.h"
 #include "vislib/math/mathfunctions.h"
@@ -22,7 +23,9 @@ using namespace megamol::protein_calls;
 BindingSiteDataSource::BindingSiteDataSource( void ) : megamol::core::Module(),
         dataOutSlot( "dataout", "The slot providing the binding site data"),
         pdbFilenameSlot( "pdbFilename", "The PDB file containing the binding site information"),
-        colorTableFileParam( "ColorTableFilename", "The filename of the color table.") {
+        colorTableFileParam( "ColorTableFilename", "The filename of the color table."),
+        enzymeModeParam("enzymeMode", "Activates the enzyme-mode, coloring only the relevant parts of the residues"),
+        gxTypeFlag("gxType", "Flag whether the protein used is a gx type or not") {
             
     this->pdbFilenameSlot << new param::FilePathParam("");
     this->MakeSlotAvailable( &this->pdbFilenameSlot);
@@ -35,6 +38,12 @@ BindingSiteDataSource::BindingSiteDataSource( void ) : megamol::core::Module(),
     this->colorTableFileParam.SetParameter(new param::FilePathParam( A2T( filename)));
     this->MakeSlotAvailable( &this->colorTableFileParam);
     Color::ReadColorTableFromFile( T2A(this->colorTableFileParam.Param<param::FilePathParam>()->Value()), this->colorLookupTable);
+
+    this->enzymeModeParam.SetParameter(new param::BoolParam(false));
+    this->MakeSlotAvailable(&this->enzymeModeParam);
+
+    this->gxTypeFlag.SetParameter(new param::BoolParam(true));
+    this->MakeSlotAvailable(&this->gxTypeFlag);
 }
 
 /*
@@ -68,13 +77,15 @@ bool BindingSiteDataSource::getData( Call& call) {
     if ( !site ) return false;
 
     // read and update the color table, if necessary
-    if( this->colorTableFileParam.IsDirty() ) {
+    if( this->colorTableFileParam.IsDirty()) {
         Color::ReadColorTableFromFile( T2A(this->colorTableFileParam.Param<param::FilePathParam>()->Value()), this->colorLookupTable);
         this->colorTableFileParam.ResetDirty();
+        this->enzymeModeParam.ResetDirty();
+        this->gxTypeFlag.ResetDirty();
     }
     
     // try to load file, if necessary
-    if ( this->pdbFilenameSlot.IsDirty() ) {
+    if ( this->pdbFilenameSlot.IsDirty()) {
         this->pdbFilenameSlot.ResetDirty();
         this->loadPDBFile( this->pdbFilenameSlot.Param<core::param::FilePathParam>()->Value());
     }
@@ -89,6 +100,8 @@ bool BindingSiteDataSource::getData( Call& call) {
         site->SetBindingSiteResNames( &this->bindingSiteResNames);
         site->SetBindingSite( &this->bindingSites);
         site->SetBindingSiteColors( &this->bindingSiteColors);
+        site->SetEnzymeMode(this->enzymeModeParam.Param<param::BoolParam>()->Value());
+        site->SetGXTypeFlag(this->gxTypeFlag.Param<param::BoolParam>()->Value());
         return true;
     } 
 }

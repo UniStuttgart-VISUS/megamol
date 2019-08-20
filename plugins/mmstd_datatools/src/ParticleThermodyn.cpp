@@ -109,17 +109,13 @@ datatools::ParticleThermodyn::ParticleThermodyn(void)
     this->extremeValueSlot.SetParameter(new core::param::FloatParam(50.0));
     this->MakeSlotAvailable(&this->extremeValueSlot);
 
-    this->outDataSlot.SetCallback(megamol::core::moldyn::DirectionalParticleDataCall::ClassName(), "GetData",
-        &ParticleThermodyn::getDataCallback);
-    this->outDataSlot.SetCallback(megamol::core::moldyn::DirectionalParticleDataCall::ClassName(), "GetExtent",
-        &ParticleThermodyn::getExtentCallback);
     this->outDataSlot.SetCallback(
         megamol::core::moldyn::MultiParticleDataCall::ClassName(), "GetData", &ParticleThermodyn::getDataCallback);
     this->outDataSlot.SetCallback(
         megamol::core::moldyn::MultiParticleDataCall::ClassName(), "GetExtent", &ParticleThermodyn::getExtentCallback);
     this->MakeSlotAvailable(&this->outDataSlot);
 
-    this->inDataSlot.SetCompatibleCall<megamol::core::moldyn::DirectionalParticleDataCallDescription>();
+    this->inDataSlot.SetCompatibleCall<megamol::core::moldyn::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->inDataSlot);
 }
 
@@ -135,13 +131,13 @@ datatools::ParticleThermodyn::~ParticleThermodyn(void) { this->Release(); }
 bool datatools::ParticleThermodyn::create(void) { return true; }
 
 
-bool isListOK(megamol::core::moldyn::DirectionalParticleDataCall* in, const unsigned int i) {
-    using megamol::core::moldyn::DirectionalParticleDataCall;
+bool isListOK(megamol::core::moldyn::MultiParticleDataCall* in, const unsigned int i) {
+    using megamol::core::moldyn::MultiParticleDataCall;
     auto& pl = in->AccessParticles(i);
-    return ((pl.GetVertexDataType() == DirectionalParticleDataCall::Particles::VertexDataType::VERTDATA_FLOAT_XYZ) ||
-               (pl.GetVertexDataType() ==
-                   DirectionalParticleDataCall::Particles::VertexDataType::VERTDATA_FLOAT_XYZR)) &&
-           pl.GetDirDataType() == DirectionalParticleDataCall::Particles::DirDataType::DIRDATA_FLOAT_XYZ;
+    // TODO: double
+    return ((pl.GetVertexDataType() == MultiParticleDataCall::Particles::VertexDataType::VERTDATA_FLOAT_XYZ) ||
+               (pl.GetVertexDataType() == MultiParticleDataCall::Particles::VertexDataType::VERTDATA_FLOAT_XYZR)) &&
+           pl.GetDirDataType() == MultiParticleDataCall::Particles::DirDataType::DIRDATA_FLOAT_XYZ;
 }
 
 
@@ -151,15 +147,13 @@ bool isListOK(megamol::core::moldyn::DirectionalParticleDataCall* in, const unsi
 void datatools::ParticleThermodyn::release(void) {}
 
 
-bool datatools::ParticleThermodyn::assertData(core::moldyn::DirectionalParticleDataCall* in,
-    core::moldyn::MultiParticleDataCall* outMPDC, core::moldyn::DirectionalParticleDataCall* outDPDC) {
+bool datatools::ParticleThermodyn::assertData(core::moldyn::MultiParticleDataCall* in,
+    core::moldyn::MultiParticleDataCall* outMPDC) {
 
-    using megamol::core::moldyn::DirectionalParticleDataCall;
     using megamol::core::moldyn::MultiParticleDataCall;
 
     megamol::core::AbstractGetData3DCall* out;
     if (outMPDC != nullptr) out = outMPDC;
-    if (outDPDC != nullptr) out = outDPDC;
 
     const unsigned int time = out->FrameID();
     unsigned int plc = in->GetParticleListCount();
@@ -224,7 +218,7 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::DirectionalParticleD
 
         // allocate nanoflann data structures for border
         assert(allpartcnt == totalParts);
-        this->myPts = std::make_shared<directionalPointcloud>(in, allParts);
+        this->myPts = std::make_shared<simplePointcloud>(in, allParts);
 
         vislib::sys::Log::DefaultLog.WriteInfo("ParticleThermodyn: building acceleration structure...");
         particleTree = std::make_shared<my_kd_tree_t>(
@@ -477,28 +471,9 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::DirectionalParticleD
                 pl.GetVertexDataType(), pl.GetVertexData(), pl.GetVertexDataStride());
             outMPDC->AccessParticles(i).SetColourData(core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I,
                 this->newColors.data() + allpartcnt, 0);
+            outMPDC->AccessParticles(i).SetDirData(pl.GetDirDataType(), pl.GetDirData(), pl.GetDirDataStride());
+            outMPDC->AccessParticles(i).SetIDData(pl.GetIDDataType(), pl.GetIDData(), pl.GetIDDataStride());
             outMPDC->AccessParticles(i).SetColourMapIndexValues(
-                this->minMetricSlot.Param<core::param::FloatParam>()->Value(),
-                this->maxMetricSlot.Param<core::param::FloatParam>()->Value());
-            allpartcnt += pl.GetCount();
-        }
-    } else if (outDPDC != nullptr) {
-        outDPDC->SetParticleListCount(in->GetParticleListCount());
-        for (unsigned int i = 0; i < in->GetParticleListCount(); ++i) {
-            auto& pl = in->AccessParticles(i);
-            if (!isListOK(in, i)) {
-                outDPDC->AccessParticles(i).SetCount(0);
-                continue;
-            }
-            outDPDC->AccessParticles(i).SetCount(pl.GetCount());
-            outDPDC->AccessParticles(i).SetGlobalRadius(pl.GetGlobalRadius());
-            outDPDC->AccessParticles(i).SetVertexData(
-                pl.GetVertexDataType(), pl.GetVertexData(), pl.GetVertexDataStride());
-            outDPDC->AccessParticles(i).SetColourData(
-                core::moldyn::DirectionalParticleDataCall::Particles::COLDATA_FLOAT_I,
-                this->newColors.data() + allpartcnt, 0);
-            outDPDC->AccessParticles(i).SetDirData(pl.GetDirDataType(), pl.GetDirData(), pl.GetDirDataStride());
-            outDPDC->AccessParticles(i).SetColourMapIndexValues(
                 this->minMetricSlot.Param<core::param::FloatParam>()->Value(),
                 this->maxMetricSlot.Param<core::param::FloatParam>()->Value());
             allpartcnt += pl.GetCount();
@@ -597,19 +572,16 @@ float megamol::stdplugin::datatools::ParticleThermodyn::computeDensity(std::vect
 
 
 bool datatools::ParticleThermodyn::getExtentCallback(megamol::core::Call& c) {
-    using megamol::core::moldyn::DirectionalParticleDataCall;
     using megamol::core::moldyn::MultiParticleDataCall;
 
-    DirectionalParticleDataCall* outDpdc = dynamic_cast<DirectionalParticleDataCall*>(&c);
     MultiParticleDataCall* outMpdc = dynamic_cast<MultiParticleDataCall*>(&c);
-    if (outMpdc == nullptr && outDpdc == nullptr) return false;
+    if (outMpdc == nullptr) return false;
 
-    DirectionalParticleDataCall* inDpdc = this->inDataSlot.CallAs<DirectionalParticleDataCall>();
+    MultiParticleDataCall* inDpdc = this->inDataSlot.CallAs<MultiParticleDataCall>();
     if (inDpdc == nullptr) return false;
 
     megamol::core::AbstractGetData3DCall* out;
     if (outMpdc != nullptr) out = outMpdc;
-    if (outDpdc != nullptr) out = outDpdc;
 
     inDpdc->SetFrameID(out->FrameID(), true);
     if (!(*inDpdc)(1)) {
@@ -632,17 +604,15 @@ bool datatools::ParticleThermodyn::getExtentCallback(megamol::core::Call& c) {
 }
 
 bool datatools::ParticleThermodyn::getDataCallback(megamol::core::Call& c) {
-    using megamol::core::moldyn::DirectionalParticleDataCall;
     using megamol::core::moldyn::MultiParticleDataCall;
 
-    DirectionalParticleDataCall* outDpdc = dynamic_cast<DirectionalParticleDataCall*>(&c);
     MultiParticleDataCall* outMpdc = dynamic_cast<MultiParticleDataCall*>(&c);
-    if (outMpdc == nullptr && outDpdc == nullptr) return false;
+    if (outMpdc == nullptr) return false;
 
-    DirectionalParticleDataCall* inDpdc = this->inDataSlot.CallAs<DirectionalParticleDataCall>();
+    MultiParticleDataCall* inDpdc = this->inDataSlot.CallAs<MultiParticleDataCall>();
     if (inDpdc == nullptr) return false;
 
-    if (!this->assertData(inDpdc, outMpdc, outDpdc)) return false;
+    if (!this->assertData(inDpdc, outMpdc)) return false;
 
     // inMpdc->Unlock();
 

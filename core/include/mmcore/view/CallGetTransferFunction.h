@@ -8,14 +8,16 @@
 #ifndef MEGAMOLCORE_CALLGETTRANSFERFUNCTION_H_INCLUDED
 #define MEGAMOLCORE_CALLGETTRANSFERFUNCTION_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#pragma once
+#    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/Call.h"
 #include "mmcore/api/MegaMolCore.h"
 #include "mmcore/factories/CallAutoDescription.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
 
+#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib/graphics/gl/GLSLShader.h"
+#include <array>
 
 namespace megamol {
 namespace core {
@@ -23,7 +25,14 @@ namespace view {
 
 
 /**
- * Base class of rendering graph calls
+ * Call for accessing a transfer function.
+ *
+ * To use this in a shader:
+ * - Add `<include file="core_utils" />` and the respective snippet
+ * - Add `<snippet name="::core_utils::tflookup" />`
+ * - Add `<snippet name="::core_utils::tfconvenience" />` (optional)
+ * - Use `vec color = tflookup(tfTexture, tfRange, value);`
+ * - Or, conveniently `vec color = tflookup(value);`
  */
 class MEGAMOLCORE_API CallGetTransferFunction : public Call {
 public:
@@ -49,7 +58,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) { return 3; }
+    static unsigned int FunctionCount(void) { return 1; }
 
     /**
      * Answer the name of the function used for this call.
@@ -62,10 +71,6 @@ public:
         switch (idx) {
         case 0:
             return "GetTexture";
-        case 1:
-            return "GetDirty";
-        case 2:
-            return "ResetDirty";
         default:
             return NULL;
         }
@@ -93,7 +98,7 @@ public:
     inline unsigned int TextureSize(void) const { return this->texSize; }
 
     /**
-     * Answer the OpenGL format of the texture
+     * Answer the OpenGL format of the texture.
      *
      * @return The OpenGL format of the texture
      */
@@ -110,47 +115,36 @@ public:
     inline float const* GetTextureData(void) const { return this->texData; }
 
     /**
-     * Answer if the interface of the transferfunction module is dirty
+     * Answer the value range (domain) of this transfer function. Values 
+	 * outside of min/max are to be clamped.
+	 *
+     * @return The (min, max) pair.
+     */
+    inline std::array<float, 2> Range(void) const { return this->range; }
+
+	/**
+	 * Bind convenience (to be used with tfconvenience snippet). Usually, one 
+	 * wants to set `activeTexture` to `GL_TEXTURE0` and `textureUniform` to `0`.
+	 */
+    void BindConvenience(vislib::graphics::gl::GLSLShader& shader, GLenum activeTexture, int textureUniform);
+
+	/**
+	 * Unbinds convenience.
+	 */
+    void UnbindConvenience();
+
+    /**
+     * Answer whether the connected transferfunction is dirty
      *
      * @return dirty flag
      */
-    inline bool isDirty() {
-        (*this)(1);
-        return this->dirty;
+    inline bool IsDirty() { return this->usedTFVersion != this->availableTFVersion;
     }
 
     /**
-     * Resets dirtyness of the interface of the transferfunction module is dirty
-     *
+     * Sets the transferfunction dirtiness
      */
-    inline void resetDirty() {
-        (*this)(2);
-        this->dirty = false;
-    }
-
-    /**
-     * Sets the dirty flag in the call
-     *
-     */
-    inline void setDirty(bool dty) { this->dirty = dty; }
-
-
-    /**
-     * Sets the 1D texture information
-     *
-     * @param id The OpenGL texture object id
-     * @param size The size of the texture
-     * @param format The texture format
-     */
-    inline void SetTexture(unsigned int id, unsigned int size, TextureFormat format = TEXTURE_FORMAT_RGB) {
-        this->texID = id;
-        this->texSize = size;
-        this->texFormat = format;
-        this->texData = nullptr;
-        if (this->texSize == 0) {
-            this->texSize = 1;
-        }
-    }
+    inline void ResetDirty() { this->usedTFVersion = availableTFVersion; }
 
     /**
      * Sets the 1D texture information
@@ -162,8 +156,8 @@ public:
      *            is responsible for keeping the memory alive.
      * @param format The texture format
      */
-    inline void SetTexture(
-        unsigned int id, unsigned int size, float const* tex, TextureFormat format = TEXTURE_FORMAT_RGB) {
+    inline void SetTexture(unsigned int id, unsigned int size, float const* tex,
+        TextureFormat format, std::array<float, 2> range, uint32_t version) {
         this->texID = id;
         this->texSize = size;
         this->texFormat = format;
@@ -171,10 +165,12 @@ public:
         if (this->texSize == 0) {
             this->texSize = 1;
         }
+        this->range = range;
+        this->availableTFVersion = version;
     }
 
     /**
-     * Copies a color from the transfer function..
+     * Copies a color from the transfer function
      *
      * @param index The n-th color to copy.
      * @param color A pointer to copy the color to.
@@ -199,8 +195,11 @@ private:
     /** The texture format */
     TextureFormat texFormat;
 
-    /** Dirty flag */
-    bool dirty = false;
+    /** The range the texture lies within */
+    std::array<float, 2> range;
+
+    uint32_t availableTFVersion = 1;
+    uint32_t usedTFVersion = 0;
 };
 
 

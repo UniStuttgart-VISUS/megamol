@@ -11,8 +11,8 @@
 using namespace megamol;
 using namespace megamol::console;
 
-gl::ATBToggleHotKeyUILayer::ATBToggleHotKeyUILayer(Window& wnd, ATBUILayer& atbLayer)
-    : AbstractUILayer(wnd), atbLayer(atbLayer) {
+gl::ATBToggleHotKeyUILayer::ATBToggleHotKeyUILayer(ATBUILayer& atbLayer)
+    : atbLayer(atbLayer) {
     // intentionally empty
 }
 

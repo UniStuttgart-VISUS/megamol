@@ -41,6 +41,7 @@ typedef vislib::math::ShallowPoint<float, 3> (*posFromSomethingFunc)(void*, size
 datatools::OverrideParticleBBox::OverrideParticleBBox(void)
     : AbstractParticleManipulator("outData", "indata")
     , overrideBBoxSlot("override", "Activates the overwrite of the bounding box")
+    , overrideLBBoxSlot("overrideLocalBBox", "Activates the overwrite of the local bounding box")
     , bboxMinSlot("bbox::min", "The minimum values of the bounding box")
     , bboxMaxSlot("bbox::max", "The maximum values of the bounding box")
     , resetSlot("reset", "Resets the bounding box values to the incoming data")
@@ -52,6 +53,9 @@ datatools::OverrideParticleBBox::OverrideParticleBBox(void)
 
     this->overrideBBoxSlot.SetParameter(new core::param::BoolParam(false));
     this->MakeSlotAvailable(&this->overrideBBoxSlot);
+
+    this->overrideLBBoxSlot.SetParameter(new core::param::BoolParam(false));
+    this->MakeSlotAvailable(&this->overrideLBBoxSlot);
 
     this->bboxMinSlot.SetParameter(new core::param::Vector3fParam(vislib::math::Vector<float, 3>(-1.0f, -1.0f, -1.0f)));
     this->MakeSlotAvailable(&this->bboxMinSlot);
@@ -136,7 +140,9 @@ bool datatools::OverrideParticleBBox::manipulateExtent(
           minZ = std::numeric_limits<float>::max();
     float maxX = std::numeric_limits<float>::lowest(), maxY = std::numeric_limits<float>::lowest(),
           maxZ = std::numeric_limits<float>::lowest();
-    if (this->overrideBBoxSlot.Param<core::param::BoolParam>()->Value() && (doX || doY || doZ)) {
+    auto const overrideBBox = this->overrideBBoxSlot.Param<core::param::BoolParam>()->Value();
+    auto const overrideLBBox = this->overrideLBBoxSlot.Param<core::param::BoolParam>()->Value();
+    if ((overrideBBox || overrideLBBox) && (doX || doY || doZ)) {
         size_t step;
 
         for (size_t l = 0, max = inData.GetParticleListCount(); l < max; l++) {
@@ -211,8 +217,10 @@ bool datatools::OverrideParticleBBox::manipulateExtent(
                         localMaxZ = sp.GetZ();
                     }
                 }
-                outData.AccessParticles(l).SetBBox(
-                    vislib::math::Cuboid<float>(localMinX, localMinY, localMinZ, localMaxX, localMaxY, localMaxZ));
+                if (overrideLBBox) {
+                    outData.AccessParticles(l).SetBBox(
+                        vislib::math::Cuboid<float>(localMinX, localMinY, localMinZ, localMaxX, localMaxY, localMaxZ));
+                }
             } else {
                 switch (inData.AccessParticles(static_cast<unsigned int>(l)).GetVertexDataType()) {
                 case megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:

@@ -3,12 +3,13 @@
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
+#include "mmcore/FlagStorage.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/utility/SDFFont.h"
 #include "mmcore/view/CallRender2D.h"
 #include "mmcore/view/Renderer2DModule.h"
-#include "mmstd_datatools/floattable/CallFloatTableData.h"
+#include "mmstd_datatools/table/TableDataCall.h"
 
 #include "vislib/graphics/gl/FramebufferObject.h"
 
@@ -33,7 +34,11 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static inline const char* Description(void) { return "Parallel coordinates renderer for generic float tables"; }
+    static inline const char* Description(void) {
+        return "Parallel coordinates renderer for generic tables.\n"
+               "Left-Click to pick/stroke\npress [Shift] to filter axis using the two delimiters (hats)\n"
+               "press [Alt] to re-order axes";
+    }
 
     /**
      * Answers whether this module is available on the current system.
@@ -76,7 +81,14 @@ protected:
 
     virtual bool GetExtents(core::view::CallRender2D& call);
 
-    virtual bool MouseEvent(float x, float y, core::view::MouseFlags flags);
+    // virtual bool MouseEvent(float x, float y, core::view::MouseFlags flags);
+
+    bool OnMouseButton(
+        core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) override;
+
+    bool OnMouseMove(double x, double y) override;
+
+    bool OnKey(core::view::Key key, core::view::KeyAction action, core::view::Modifiers mods) override;
 
     bool selectedItemsColorSlotCallback(core::param::ParamSlot& caller);
     bool otherItemsColorSlotCallback(core::param::ParamSlot& caller);
@@ -92,6 +104,8 @@ private:
 
     enum SelectionMode { SELECT_PICK = 0, SELECT_STROKE };
 
+    enum InteractionState { NONE = 0, INTERACTION_DRAG, INTERACTION_FILTER, INTERACTION_SELECT };
+
     struct DimensionFilter {
         uint32_t dimension; // useless but good padding
         float lower;
@@ -105,7 +119,7 @@ private:
 
     void pickIndicator(float x, float y, int& axis, int& index);
 
-    void assertData(void);
+    void assertData(core::view::CallRender2D& call);
 
     void computeScaling(void);
 
@@ -143,15 +157,9 @@ private:
 
     size_t currentHash;
 
-    ::vislib::graphics::gl::FramebufferObject densityFBO;
+    core::FlagStorage::FlagVersionType currentFlagsVersion;
 
-    float mousePressedX;
-    float mousePressedY;
-    float mouseReleasedX;
-    float mouseReleasedY;
-    float mouseX;
-    float mouseY;
-    core::view::MouseFlags mouseFlags;
+    ::vislib::graphics::gl::FramebufferObject densityFBO;
 
     core::param::ParamSlot drawModeSlot;
 
@@ -208,6 +216,7 @@ private:
     int windowHeight;
     float backgroundColor[4];
     vislib::math::Rectangle<float> bounds;
+    unsigned int lastTimeStep;
 
     GLuint columnCount;
     GLuint itemCount;
@@ -242,12 +251,20 @@ private:
     std::vector<GLuint> fragmentMinMax;
     std::vector<std::string> names;
 
+    float mouseX;
+    float mouseY;
+    bool ctrlDown = false, altDown = false, shiftDown = false;
+    InteractionState interactionState;
     int pickedAxis;
-    bool dragging;
-    bool filtering;
     int pickedIndicatorAxis;
-    // int lastPickedIndicatorAxis;
     int pickedIndicatorIndex;
+    float strokeStartX;
+    float strokeStartY;
+    float strokeEndX;
+    float strokeEndY;
+    bool needSelectionUpdate;
+    bool needFlagsUpdate;
+
     GLint maxAxes;
     GLint isoLinesPerInvocation;
 

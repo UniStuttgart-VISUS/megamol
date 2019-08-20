@@ -32,6 +32,7 @@ public:
         VERTDATA_FLOAT_XYZR = 2,
         VERTDATA_SHORT_XYZ = 3, //< quantized positions and global radius
         VERTDATA_DOUBLE_XYZ = 4
+        // TODO: what about DOUBLE_XYZR?
     };
 
     /** possible values for the colour data */
@@ -45,6 +46,9 @@ public:
         COLDATA_USHORT_RGBA = 6,
         COLDATA_DOUBLE_I = 7
     };
+
+    /** possible values for the direction data */
+    enum DirDataType { DIRDATA_NONE = 0, DIRDATA_FLOAT_XYZ = 1 };
 
     /** possible values for the id data */
     enum IDDataType { IDDATA_NONE = 0, IDDATA_UINT32 = 1, IDDATA_UINT64 = 2 };
@@ -63,6 +67,8 @@ public:
         ParticleStore& operator=(ParticleStore const& rhs) = delete;
 
         ParticleStore& operator=(ParticleStore&& rhs) = delete;*/
+
+        virtual ~ParticleStore() = default;
 
         void SetVertexData(SimpleSphericalParticles::VertexDataType const t, char const* p, unsigned int const s = 0,
             float const globRad = 0.5f) {
@@ -157,6 +163,21 @@ public:
             }
         }
 
+        void SetDirData(SimpleSphericalParticles::DirDataType const t, char const* p, unsigned int const s = 0) {
+            switch (t) {
+            case DIRDATA_FLOAT_XYZ: {
+                this->dx_acc_ = std::make_shared<Accessor_Impl<float>>(p, s);
+                this->dy_acc_ = std::make_shared<Accessor_Impl<float>>(p + sizeof(float), s);
+                this->dz_acc_ = std::make_shared<Accessor_Impl<float>>(p + 2 * sizeof(float), s);
+            } break;
+            default: {
+                this->dx_acc_ = std::make_shared<Accessor_0>();
+                this->dy_acc_ = std::make_shared<Accessor_0>();
+                this->dz_acc_ = std::make_shared<Accessor_0>();
+            }
+            }
+        }
+
         void SetIDData(SimpleSphericalParticles::IDDataType const t, char const* p, unsigned int const s = 0) {
             switch (t) {
             case SimpleSphericalParticles::IDDATA_UINT32: {
@@ -186,18 +207,27 @@ public:
 
         std::shared_ptr<Accessor> const& GetCAAcc() const { return this->ca_acc_; }
 
+        std::shared_ptr<Accessor> const& GetDXAcc() const { return this->dx_acc_; }
+
+        std::shared_ptr<Accessor> const& GetDYAcc() const { return this->dy_acc_; }
+
+        std::shared_ptr<Accessor> const& GetDZAcc() const { return this->dz_acc_; }
+
         std::shared_ptr<Accessor> const& GetIDAcc() const { return this->id_acc_; }
 
     private:
-        std::shared_ptr<Accessor> x_acc_;
-        std::shared_ptr<Accessor> y_acc_;
-        std::shared_ptr<Accessor> z_acc_;
-        std::shared_ptr<Accessor> r_acc_;
-        std::shared_ptr<Accessor> cr_acc_;
-        std::shared_ptr<Accessor> cg_acc_;
-        std::shared_ptr<Accessor> cb_acc_;
-        std::shared_ptr<Accessor> ca_acc_;
-        std::shared_ptr<Accessor> id_acc_;
+        std::shared_ptr<Accessor> x_acc_  = std::make_shared<Accessor_0>();
+        std::shared_ptr<Accessor> y_acc_  = std::make_shared<Accessor_0>();
+        std::shared_ptr<Accessor> z_acc_  = std::make_shared<Accessor_0>();
+        std::shared_ptr<Accessor> r_acc_  = std::make_shared<Accessor_0>();
+        std::shared_ptr<Accessor> cr_acc_ = std::make_shared<Accessor_0>();
+        std::shared_ptr<Accessor> cg_acc_ = std::make_shared<Accessor_0>();
+        std::shared_ptr<Accessor> cb_acc_ = std::make_shared<Accessor_0>();
+        std::shared_ptr<Accessor> ca_acc_ = std::make_shared<Accessor_0>();
+        std::shared_ptr<Accessor> dx_acc_ = std::make_shared<Accessor_0>();
+        std::shared_ptr<Accessor> dy_acc_ = std::make_shared<Accessor_0>();
+        std::shared_ptr<Accessor> dz_acc_ = std::make_shared<Accessor_0>();
+        std::shared_ptr<Accessor> id_acc_ = std::make_shared<Accessor_0>();
     };
 
     /** possible values of accumulated data sizes over all vertex coordinates */
@@ -205,6 +235,9 @@ public:
 
     /** possible values of accumulated data sizes over all color elements */
     static unsigned int ColorDataSize[8];
+
+    /** possible values of data sizes over all directional dimensions */
+    static unsigned int DirDataSize[2];
 
     /** possible values of data sizes of the id */
     static unsigned int IDDataSize[3];
@@ -248,6 +281,29 @@ public:
      */
     inline unsigned int GetColourDataStride(void) const {
         return this->colStride == ColorDataSize[this->colDataType] ? 0 : this->colStride;
+    }
+
+    /**
+     * Answer the direction data type
+     *
+     * @return The direction data type
+     */
+    inline DirDataType GetDirDataType(void) const { return this->dirDataType; }
+
+    /**
+     * Answer the direction data pointer
+     *
+     * @return The direction data pointer
+     */
+    inline const void* GetDirData(void) const { return this->dirPtr; }
+
+    /**
+     * Answer the direction data stride
+     *
+     * @return The direction data stride
+     */
+    inline unsigned int GetDirDataStride(void) const {
+        return this->dirStride == DirDataSize[this->dirDataType] ? 0 : this->dirStride;
     }
 
     /**
@@ -355,7 +411,7 @@ public:
         this->colPtr = p;
         this->colStride = s == 0 ? ColorDataSize[t] : s;
 
-        this->par_store_.SetColorData(t, reinterpret_cast<char const*>(p), this->colStride, this->col[0], this->col[1],
+        this->par_store_->SetColorData(t, reinterpret_cast<char const*>(p), this->colStride, this->col[0], this->col[1],
             this->col[2], this->col[3]);
     }
 
@@ -371,6 +427,23 @@ public:
     }
 
     /**
+     * Sets the direction data
+     *
+     * @param t The type of the direction data
+     * @param p The pointer to the direction data (must not be NULL if t
+     *          is not 'DIRDATA_NONE'
+     * @param s The stride of the direction data
+     */
+    void SetDirData(DirDataType t, const void* p, unsigned int s = 0) {
+        ASSERT((p != NULL) || (t == DIRDATA_NONE));
+        this->dirDataType = t;
+        this->dirPtr = p;
+        this->dirStride = s == 0 ? DirDataSize[t] : s;
+
+        this->par_store_->SetDirData(t, reinterpret_cast<char const*>(p), this->dirStride);
+    }
+
+    /**
      * Sets the number of objects stored and resets all data pointers!
      *
      * @param cnt The number of stored objects
@@ -380,12 +453,15 @@ public:
         this->colPtr = nullptr; // DO NOT DELETE
         this->vertDataType = VERTDATA_NONE;
         this->vertPtr = nullptr; // DO NOT DELETE
+        this->dirDataType = DIRDATA_NONE;
+        this->dirPtr = nullptr; // DO NOT DELETE
         this->idDataType = IDDATA_NONE;
         this->idPtr = nullptr; // DO NOT DELETE
 
-        this->par_store_.SetVertexData(VERTDATA_NONE, nullptr);
-        this->par_store_.SetColorData(COLDATA_NONE, nullptr);
-        this->par_store_.SetIDData(IDDATA_NONE, nullptr);
+        this->par_store_->SetVertexData(VERTDATA_NONE, nullptr);
+        this->par_store_->SetColorData(COLDATA_NONE, nullptr);
+        this->par_store_->SetDirData(DIRDATA_NONE, nullptr);
+        this->par_store_->SetIDData(IDDATA_NONE, nullptr);
 
         this->count = cnt;
     }
@@ -404,7 +480,7 @@ public:
         this->col[2] = b;
         this->col[3] = a;
 
-        this->par_store_.SetColorData(this->colDataType, reinterpret_cast<char const*>(this->colPtr), this->colStride,
+        this->par_store_->SetColorData(this->colDataType, reinterpret_cast<char const*>(this->colPtr), this->colStride,
             this->col[0], this->col[1], this->col[2], this->col[3]);
     }
 
@@ -415,7 +491,7 @@ public:
      */
     void SetGlobalRadius(float r) {
         this->radius = r;
-        this->par_store_.SetVertexData(
+        this->par_store_->SetVertexData(
             this->vertDataType, reinterpret_cast<char const*>(this->vertPtr), this->vertStride, this->radius);
     }
 
@@ -440,7 +516,7 @@ public:
         this->vertPtr = p;
         this->vertStride = s == 0 ? VertexDataSize[t] : s;
 
-        this->par_store_.SetVertexData(t, reinterpret_cast<char const*>(p), this->vertStride, this->radius);
+        this->par_store_->SetVertexData(t, reinterpret_cast<char const*>(p), this->vertStride, this->radius);
     }
 
     /**
@@ -457,11 +533,11 @@ public:
         this->idPtr = p;
         this->idStride = s == 0 ? IDDataSize[t] : s;
 
-        this->par_store_.SetIDData(t, reinterpret_cast<char const*>(p), this->idStride);
+        this->par_store_->SetIDData(t, reinterpret_cast<char const*>(p), this->idStride);
     }
 
     /**
-     * Reports existance of IDs.
+     * Reports existence of IDs.
      *
      * @return true, if the particles have IDs.
      */
@@ -490,7 +566,7 @@ public:
      *
      * @return Instance of particle store.
      */
-    ParticleStore const& GetParticleStore() const { return this->par_store_; }
+    ParticleStore const& GetParticleStore() const { return *this->par_store_; }
 
     /**
      * Disable NULL-checks in case we have an OpenGL-VAO
@@ -571,6 +647,15 @@ private:
     /** The colour data stride */
     unsigned int colStride;
 
+    /** The direction data type */
+    DirDataType dirDataType;
+
+    /** The direction data pointer */
+    const void* dirPtr;
+
+    /** The direction data stride */
+    unsigned int dirStride;
+
     /** The number of objects stored */
     UINT64 count;
 
@@ -623,8 +708,9 @@ private:
     /** The particle ID stride */
     unsigned int idStride;
 
+protected:
     /** Instance of the particle store */
-    ParticleStore par_store_;
+    std::shared_ptr<ParticleStore> par_store_ = std::make_shared<ParticleStore>();
 };
 
 } // namespace moldyn

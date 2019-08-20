@@ -19,6 +19,16 @@ if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     CACHE PATH "default install path" FORCE)
 endif()
 
+# This will replace "\" by "/"
+set(CMAKE_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX} CACHE PATH "default install path" FORCE)
+
+# Enable CUDA
+option(ENABLE_CUDA "Enable CUDA, which is needed for certain plugins" OFF)
+
+if(ENABLE_CUDA)
+  enable_language(CUDA)
+endif()
+
 # Directories
 set(MEGAMOL_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(MEGAMOL_VISLIB_DIR ${MEGAMOL_DIR}/vislib)
@@ -52,6 +62,7 @@ include(ClangFormat)
 
 # External
 include(External)
+include("CMakeExternals.cmake")
 
 # NuGet
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/NuGet.Config
@@ -95,6 +106,21 @@ add_subdirectory(plugins)
 # Utils
 ###############################
 add_subdirectory(utils)
+
+###############################
+# Examples
+###############################
+option(EXAMPLES "Get the MegaMol example repository" ON)
+if(EXAMPLES)
+  if(NOT EXISTS "${CMAKE_SOURCE_DIR}/examples")
+    message(STATUS "Downloading examples")
+    execute_process(COMMAND
+      ${GIT_EXECUTABLE} clone https://github.com/UniStuttgart-VISUS/megamol-examples.git examples
+      WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+      ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE
+      )
+  endif()
+endif()
 
 # Check dependencies and throw error
 foreach(d ${DEP_LIST})

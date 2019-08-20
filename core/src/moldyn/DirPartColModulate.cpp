@@ -11,6 +11,7 @@
 #include "mmcore/param/StringParam.h"
 #include "vislib/graphics/ColourParser.h"
 #include <climits>
+#include "vislib/sys/Log.h"
 
 using namespace megamol::core;
 
@@ -29,16 +30,16 @@ moldyn::DirPartColModulate::DirPartColModulate(void) : Module(),
         datahashOut(0), datahashParticlesIn(0), datahashVolumeIn(0),
         frameID(0), colData() {
 
-    this->inParticlesDataSlot.SetCompatibleCall<moldyn::DirectionalParticleDataCallDescription>();
+    this->inParticlesDataSlot.SetCompatibleCall<moldyn::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->inParticlesDataSlot);
 
     this->inVolumeDataSlot.SetCompatibleCall<CallVolumeDataDescription>();
     this->MakeSlotAvailable(&this->inVolumeDataSlot);
 
-    this->outDataSlot.SetCallback(moldyn::DirectionalParticleDataCall::ClassName(),
-        moldyn::DirectionalParticleDataCall::FunctionName(0), &DirPartColModulate::getData);
-    this->outDataSlot.SetCallback(moldyn::DirectionalParticleDataCall::ClassName(),
-        moldyn::DirectionalParticleDataCall::FunctionName(1), &DirPartColModulate::getExtend);
+    this->outDataSlot.SetCallback(moldyn::MultiParticleDataCall::ClassName(),
+        moldyn::MultiParticleDataCall::FunctionName(0), &DirPartColModulate::getData);
+    this->outDataSlot.SetCallback(moldyn::MultiParticleDataCall::ClassName(),
+        moldyn::MultiParticleDataCall::FunctionName(1), &DirPartColModulate::getExtend);
     this->MakeSlotAvailable(&this->outDataSlot);
 
     this->attributeSlot << new param::StringParam("0");
@@ -87,9 +88,9 @@ bool moldyn::DirPartColModulate::getData(Call& call) {
     bool rebuildColour = false;
     if (this->datahashOut == 0) rebuildColour = true;
 
-    DirectionalParticleDataCall *outDpdc = dynamic_cast<DirectionalParticleDataCall*>(&call);
+    MultiParticleDataCall* outDpdc = dynamic_cast<MultiParticleDataCall*>(&call);
     if (outDpdc == NULL) return false;
-    DirectionalParticleDataCall *inDpdc = this->inParticlesDataSlot.CallAs<DirectionalParticleDataCall>();
+    MultiParticleDataCall* inDpdc = this->inParticlesDataSlot.CallAs<MultiParticleDataCall>();
     if (inDpdc == NULL) return false;
     CallVolumeData *inCvd = this->inVolumeDataSlot.CallAs<CallVolumeData>();
     if (inCvd == NULL) return false;
@@ -123,9 +124,16 @@ bool moldyn::DirPartColModulate::getData(Call& call) {
         //        return false;
         //}
         switch (outDpdc->AccessParticles(i).GetVertexDataType()) {
-            case DirectionalParticleDataCall::Particles::VERTDATA_NONE: // falls through
-            case DirectionalParticleDataCall::Particles::VERTDATA_SHORT_XYZ: // falls through
+            case MultiParticleDataCall::Particles::VERTDATA_NONE:            // falls through
+            case MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ: // falls through
+                vislib::sys::Log::DefaultLog.WriteError(
+                    "DirPartColModulate: cannot use this module on data without postions or quantized positions!");
                 return false;
+        }
+        if (outDpdc->AccessParticles(i).GetDirDataType() == SimpleSphericalParticles::DIRDATA_NONE) {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "DirPartColModulate: cannot use this module on data without directions!");
+            return false;
         }
     }
     if (inDpdc->DataHash() != this->datahashParticlesIn) {
@@ -177,44 +185,23 @@ bool moldyn::DirPartColModulate::getData(Call& call) {
             cnt = 0;
             for (unsigned int i = 0; i < plCnt; i++) {
                 SIZE_T pCnt = static_cast<SIZE_T>(outDpdc->AccessParticles(i).GetCount());
-                const unsigned char *inColDat = static_cast<const unsigned char*>(outDpdc->AccessParticles(i).GetColourData());
-                unsigned int inColStep = outDpdc->AccessParticles(i).GetColourDataStride();
-                bool isFloat = false;
-                switch (outDpdc->AccessParticles(i).GetColourDataType()) {
-                case DirectionalParticleDataCall::Particles::COLDATA_FLOAT_RGB:
-                    inColStep = vislib::math::Max<unsigned int>(inColStep, 3 * sizeof(float));
-                    isFloat = true;
-                    break;
-                case DirectionalParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
-                    inColStep = vislib::math::Max<unsigned int>(inColStep, 4 * sizeof(float));
-                    isFloat = true;
-                    break;
-                case DirectionalParticleDataCall::Particles::COLDATA_UINT8_RGB:
-                    inColStep = vislib::math::Max<unsigned int>(inColStep, 3 * sizeof(unsigned char));
-                    break;
-                case DirectionalParticleDataCall::Particles::COLDATA_UINT8_RGBA:
-                    inColStep = vislib::math::Max<unsigned int>(inColStep, 4 * sizeof(unsigned char));
-                    break;
-                }
-                const unsigned char *inPosDat = static_cast<const unsigned char*>(outDpdc->AccessParticles(i).GetVertexData());
-                unsigned int inPosStep = outDpdc->AccessParticles(i).GetVertexDataStride();
-                switch (outDpdc->AccessParticles(i).GetVertexDataType()) {
-                case DirectionalParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
-                    inPosStep = vislib::math::Max<unsigned int>(inPosStep, 3 * sizeof(float));
-                    break;
-                case DirectionalParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
-                    inPosStep = vislib::math::Max<unsigned int>(inPosStep, 4 * sizeof(float));
-                    break;
-                }
+                auto store = outDpdc->AccessParticles(i).GetParticleStore();
+                auto racc = store.GetCRAcc();
+                auto gacc = store.GetCGAcc();
+                auto bacc = store.GetCBAcc();
+                auto xacc = store.GetXAcc();
+                auto yacc = store.GetYAcc();
+                auto zacc = store.GetZAcc();
 
-                if (outDpdc->AccessParticles(i).GetColourDataType() == DirectionalParticleDataCall::Particles::COLDATA_FLOAT_I
-                    || outDpdc->AccessParticles(i).GetColourDataType() == DirectionalParticleDataCall::Particles::COLDATA_NONE) {
-                        continue;
+                if (outDpdc->AccessParticles(i).GetColourDataType() ==
+                        MultiParticleDataCall::Particles::COLDATA_FLOAT_I ||
+                    outDpdc->AccessParticles(i).GetColourDataType() == MultiParticleDataCall::Particles::COLDATA_NONE) {
+                    continue;
                 }
-                for (SIZE_T p = 0; p < pCnt; p++, cnt += 3, inColDat += inColStep, inPosDat += inPosStep) {
-                    float x = (reinterpret_cast<const float*>(inPosDat)[0] - volBB.Left()) / volBB.Width();
-                    float y = (reinterpret_cast<const float*>(inPosDat)[1] - volBB.Bottom()) / volBB.Height();
-                    float z = (reinterpret_cast<const float*>(inPosDat)[2] - volBB.Back()) / volBB.Depth();
+                for (SIZE_T p = 0; p < pCnt; p++, cnt += 3) {
+                    float x = (xacc->Get_f(i) - volBB.Left()) / volBB.Width();
+                    float y = (yacc->Get_f(i) - volBB.Bottom()) / volBB.Height();
+                    float z = (zacc->Get_f(i) - volBB.Back()) / volBB.Depth();
                     x *= static_cast<float>(inCvd->XSize());
                     y *= static_cast<float>(inCvd->YSize());
                     z *= static_cast<float>(inCvd->ZSize());
@@ -269,15 +256,9 @@ bool moldyn::DirPartColModulate::getData(Call& call) {
 
                     v = (3.0f - 2.0f * v) * v * v;
 
-                    if (isFloat) {
-                        r = reinterpret_cast<const float*>(inColDat)[0];
-                        g = reinterpret_cast<const float*>(inColDat)[1];
-                        b = reinterpret_cast<const float*>(inColDat)[2];
-                    } else {
-                        r = inColDat[0];
-                        g = inColDat[1];
-                        b = inColDat[2];
-                    }
+                    r = racc->Get_f(i);
+                    g = gacc->Get_f(i);
+                    b = bacc->Get_f(i);
 
                     r = v * r + (1.0f - v) * bcR;
                     g = v * g + (1.0f - v) * bcG;
@@ -296,7 +277,7 @@ bool moldyn::DirPartColModulate::getData(Call& call) {
     if (this->colData.IsEmpty()) {
         // no colour for you :-/
         for (int i = outDpdc->GetParticleListCount() - 1; i >= 0; i--) {
-            outDpdc->AccessParticles(i).SetColourData(DirectionalParticleDataCall::Particles::COLDATA_NONE, NULL);
+            outDpdc->AccessParticles(i).SetColourData(MultiParticleDataCall::Particles::COLDATA_NONE, NULL);
         }
 
     } else {
@@ -305,13 +286,14 @@ bool moldyn::DirPartColModulate::getData(Call& call) {
         for (unsigned int i = 0; i < cnt; i++) {
 
             switch (outDpdc->AccessParticles(i).GetColourDataType()) {
-                case DirectionalParticleDataCall::Particles::COLDATA_FLOAT_I: // falls through
-                case DirectionalParticleDataCall::Particles::COLDATA_NONE: // falls through
+                case MultiParticleDataCall::Particles::COLDATA_FLOAT_I:    // falls through
+                case MultiParticleDataCall::Particles::COLDATA_NONE:    // falls through
                     //return false;
-                    outDpdc->AccessParticles(i).SetColourData(DirectionalParticleDataCall::Particles::COLDATA_NONE, NULL);
+                    outDpdc->AccessParticles(i).SetColourData(MultiParticleDataCall::Particles::COLDATA_NONE, NULL);
                     break;
                 default:
-                    outDpdc->AccessParticles(i).SetColourData(DirectionalParticleDataCall::Particles::COLDATA_UINT8_RGB, this->colData.At(off));
+                    outDpdc->AccessParticles(i).SetColourData(
+                        MultiParticleDataCall::Particles::COLDATA_UINT8_RGB, this->colData.At(off));
                     off += static_cast<SIZE_T>(outDpdc->AccessParticles(i).GetCount() * 3);
             }
 
@@ -326,9 +308,9 @@ bool moldyn::DirPartColModulate::getData(Call& call) {
  * moldyn::DirPartColModulate::getExtend
  */
 bool moldyn::DirPartColModulate::getExtend(Call& call) {
-    DirectionalParticleDataCall *outDpdc = dynamic_cast<DirectionalParticleDataCall*>(&call);
+    MultiParticleDataCall* outDpdc = dynamic_cast<MultiParticleDataCall*>(&call);
     if (outDpdc == NULL) return false;
-    DirectionalParticleDataCall *inDpdc = this->inParticlesDataSlot.CallAs<DirectionalParticleDataCall>();
+    MultiParticleDataCall* inDpdc = this->inParticlesDataSlot.CallAs<MultiParticleDataCall>();
     if (inDpdc == NULL) return false;
 
     *inDpdc = *outDpdc;

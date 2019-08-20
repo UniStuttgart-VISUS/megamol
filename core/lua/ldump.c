@@ -1,5 +1,5 @@
 /*
-** $Id: ldump.c,v 2.38 2017/06/27 11:35:31 roberto Exp roberto $
+** $Id: ldump.c,v 2.37.1.1 2017/04/19 17:20:42 roberto Exp $
 ** save precompiled Lua chunks
 ** See Copyright Notice in lua.h
 */
@@ -55,23 +55,8 @@ static void DumpByte (int y, DumpState *D) {
 }
 
 
-/* DumpInt Buff Size */
-#define DIBS    ((sizeof(size_t) * 8 / 7) + 1)
-
-static void DumpSize (size_t x, DumpState *D) {
-  lu_byte buff[DIBS];
-  int n = 0;
-  do {
-    buff[DIBS - (++n)] = x & 0x7f;  /* fill buffer in reverse order */
-    x >>= 7;
-  } while (x != 0);
-  buff[DIBS - 1] |= 0x80;  /* mark last byte */
-  DumpVector(buff + DIBS - n, n, D);
-}
-
-
 static void DumpInt (int x, DumpState *D) {
-  DumpSize(x, D);
+  DumpVar(x, D);
 }
 
 
@@ -87,12 +72,17 @@ static void DumpInteger (lua_Integer x, DumpState *D) {
 
 static void DumpString (const TString *s, DumpState *D) {
   if (s == NULL)
-    DumpSize(0, D);
+    DumpByte(0, D);
   else {
-    size_t size = tsslen(s);
+    size_t size = tsslen(s) + 1;  /* include trailing '\0' */
     const char *str = getstr(s);
-    DumpSize(size + 1, D);
-    DumpVector(str, size, D);
+    if (size < 0xFF)
+      DumpByte(cast_int(size), D);
+    else {
+      DumpByte(0xFF, D);
+      DumpVar(size, D);
+    }
+    DumpVector(str, size - 1, D);  /* no need to save '\0' */
   }
 }
 
@@ -159,12 +149,6 @@ static void DumpDebug (const Proto *f, DumpState *D) {
   n = (D->strip) ? 0 : f->sizelineinfo;
   DumpInt(n, D);
   DumpVector(f->lineinfo, n, D);
-  n = (D->strip) ? 0 : f->sizeabslineinfo;
-  DumpInt(n, D);
-  for (i = 0; i < n; i++) {
-    DumpInt(f->abslineinfo[i].pc, D);
-    DumpInt(f->abslineinfo[i].line, D);
-  }
   n = (D->strip) ? 0 : f->sizelocvars;
   DumpInt(n, D);
   for (i = 0; i < n; i++) {

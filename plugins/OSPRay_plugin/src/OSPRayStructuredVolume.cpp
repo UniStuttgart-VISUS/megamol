@@ -113,7 +113,7 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
     } else {
         cd->SetFrameID(os->getTime(), true); // isTimeForced flag set to true
     }
-    if (this->datahash != cd->DataHash() || this->time != os->getTime() || this->InterfaceIsDirty() || cgtf->isDirty()) {
+    if (this->datahash != cd->DataHash() || this->time != os->getTime() || this->InterfaceIsDirty() || cgtf->IsDirty()) {
         this->datahash = cd->DataHash();
         this->time = os->getTime();
         this->structureContainer.dataChanged = true;
@@ -221,7 +221,7 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
         vislib::sys::Log::DefaultLog.WriteError("OSPRayStructuredVolume: No transfer function connected to module");
         return false;
     }
-    cgtf->resetDirty();
+    cgtf->ResetDirty();
 
     // Write stuff into the structureContainer
 

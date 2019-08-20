@@ -12,7 +12,6 @@
 #include "mmcore/factories/CallDescription.h"
 
 #include "mmcore/DataWriterCtrlCall.h"
-#include "mmcore/moldyn/DirectionalParticleDataCall.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/moldyn/ParticleGridDataCall.h"
 #include "mmcore/cluster/CallRegisterAtController.h"
@@ -21,6 +20,7 @@
 #include "mmcore/view/CallGetTransferFunction.h"
 #include "mmcore/view/CallRender2D.h"
 #include "mmcore/view/CallRender3D.h"
+#include "mmcore/nextgen/CallRender3D_2.h"
 #include "mmcore/view/CallRenderDeferred3D.h"
 #include "mmcore/view/CallRenderView.h"
 #include "mmcore/view/CallTimeControl.h"
@@ -39,6 +39,12 @@
 #include "mmcore/cluster/mpi/MpiCall.h"
 #include "mmcore/moldyn/EllipsoidalDataCall.h"
 #include "mmcore/moldyn/ParticleRelistCall.h"
+#include "mmcore/view/light/CallLight.h"
+#include "mmcore/job/TickCall.h"
+#include "mmcore/DirectDataWriterCall.h"
+#include "mmcore/cluster/SyncDataSourcesCall.h"
+#include "mmcore/view/special/CallbackScreenShooter.h"
+#include "mmcore/FlagCall.h"
 
 using namespace megamol::core;
 
@@ -52,13 +58,13 @@ void factories::register_call_classes(factories::CallDescriptionManager& instanc
     //////////////////////////////////////////////////////////////////////
     instance.RegisterAutoDescription<cluster::CallRegisterAtController>();
     instance.RegisterAutoDescription<cluster::simple::ClientViewRegistration>();
-    instance.RegisterAutoDescription<moldyn::DirectionalParticleDataCall>();
     instance.RegisterAutoDescription<moldyn::MultiParticleDataCall>();
     instance.RegisterAutoDescription<moldyn::ParticleGridDataCall>();
     instance.RegisterAutoDescription<view::CallClipPlane>();
     instance.RegisterAutoDescription<view::CallGetTransferFunction>();
     instance.RegisterAutoDescription<view::CallRender2D>();
     instance.RegisterAutoDescription<view::CallRender3D>();
+    instance.RegisterAutoDescription<nextgen::CallRender3D_2>();
     instance.RegisterAutoDescription<view::CallRenderDeferred3D>();
     instance.RegisterAutoDescription<view::CallRenderView>();
     instance.RegisterAutoDescription<view::CallTimeControl>();
@@ -78,4 +84,10 @@ void factories::register_call_classes(factories::CallDescriptionManager& instanc
     instance.RegisterAutoDescription<cluster::mpi::MpiCall>();
     instance.RegisterAutoDescription<moldyn::EllipsoidalParticleDataCall>();
     instance.RegisterAutoDescription<moldyn::ParticleRelistCall>();
+    instance.RegisterAutoDescription<view::light::CallLight>();
+    instance.RegisterAutoDescription<job::TickCall>();
+    instance.RegisterAutoDescription<DirectDataWriterCall>();
+    instance.RegisterAutoDescription<cluster::SyncDataSourcesCall>();
+    instance.RegisterAutoDescription<view::special::CallbackScreenShooterCall>();
+    instance.RegisterAutoDescription<FlagCall>();
 }

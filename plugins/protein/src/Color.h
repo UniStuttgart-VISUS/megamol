@@ -41,7 +41,9 @@ namespace protein {
             MOVEMENT		= 13,
             BINDINGSITE		= 14,
 			HYDROPHOBICITY	= 15,
-            PER_ATOM_FLOAT  = 16
+            PER_ATOM_FLOAT  = 16,
+            HEIGHTMAP_COL   = 17,
+            HEIGHTMAP_VAL   = 18
         };
 
         /**
@@ -106,7 +108,7 @@ namespace protein {
          * @return The number of coloring modes.
          */
 		static unsigned int GetNumOfColoringModes(const megamol::protein_calls::MolecularDataCall *mol) {
-            return 10;
+            return 12;
         }
 
         /**
@@ -117,7 +119,7 @@ namespace protein {
         * @return The number of coloring modes.
         */
         static unsigned int GetNumOfColoringModes(const megamol::protein_calls::MolecularDataCall *mol, const protein_calls::BindingSiteCall *bs) {
-            return 11;
+            return 13;
         }
 
         /**
@@ -128,7 +130,7 @@ namespace protein {
         * @return The number of coloring modes.
         */
         static unsigned int GetNumOfColoringModes(const megamol::protein_calls::MolecularDataCall *mol, const protein_calls::BindingSiteCall *bs, const protein_calls::PerAtomFloatCall *pa) {
-            return 13;
+            return 15;
         }
 
         /**
@@ -168,7 +170,9 @@ namespace protein {
             bool forceRecompute = false,
 			const protein_calls::BindingSiteCall *bs = 0,
 			bool useNeighbors = false,
-			const protein_calls::PerAtomFloatCall *pa = 0);
+			const protein_calls::PerAtomFloatCall *pa = 0,
+            bool enzymeMode = false,
+            bool gxtype = true);
 
 
         /**
@@ -187,8 +191,9 @@ namespace protein {
          * @param maxGradColor        The maximum value for gradient coloring.
          * @param forceRecompute      Force recomputation of the color table.
          * @param bs                  The binding site data call.
-	 * @param useNeighbors        Add colors of the neighbors to the current color
+	     * @param useNeighbors        Add colors of the neighbors to the current color
          * @param pa                  The per-atom float data call.
+         * @param enzymeMode          Enyzme coloring mode, coloring only relevant parts of the active site
          */
 		static void MakeColorTable(const megamol::protein_calls::MolecularDataCall *mol,
             ColoringMode currentColoringMode,
@@ -201,7 +206,9 @@ namespace protein {
             bool forceRecompute = false,
 			const protein_calls::BindingSiteCall *bs = 0,
 			bool useNeighbors = false,
-	    const protein_calls::PerAtomFloatCall *pa = 0);
+	    const protein_calls::PerAtomFloatCall *pa = 0, 
+            bool enzymeMode = false,
+            bool gxtype = true);
 
 		/**
          * Make color table for all atoms acoording to compare two different

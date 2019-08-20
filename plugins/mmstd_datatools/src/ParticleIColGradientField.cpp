@@ -8,7 +8,7 @@
 #include "ParticleIColGradientField.h"
 #include "mmstd_datatools/MultiParticleDataAdaptor.h"
 
-#include "nanoflann.hpp"
+#include <nanoflann.hpp>
 #include "mmcore/param/FloatParam.h"
 #include <cstdint>
 #include <algorithm>
