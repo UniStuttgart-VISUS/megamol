@@ -33,7 +33,7 @@
         <snippet name="Attributes"       type="file">sphere/fragment_attributes.glsl</snippet> 
         <snippet name="sphere_flags::fragment_attributes"/>               
         <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>          
-        <snippet name="MainStart"        type="file">sphere/splat_fragment_mainstart.glsl</snippet>
+        <snippet name="MainStart"        type="file">sphere/simple_mainstart.glsl</snippet>
         <snippet name="sphere_flags::fragment_discardtest"/>          
         <snippet name="MainEnd"          type="file">sphere/splat_fragment_mainend.glsl</snippet>
     </shader>
