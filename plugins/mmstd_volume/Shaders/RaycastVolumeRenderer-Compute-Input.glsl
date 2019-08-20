@@ -29,17 +29,6 @@ uniform vec4 background;
 
 /* lighting */
 uniform bool use_lighting;
-
-uniform float ka;
-uniform float kd;
-uniform float ks;
-uniform float shininess;
-
-uniform vec3 light;
-
-uniform vec3 ambient_col;
-uniform vec3 specular_col;
-uniform vec3 light_col;
 uniform vec3 material_col;
 
 /* texture that houses the volume data */

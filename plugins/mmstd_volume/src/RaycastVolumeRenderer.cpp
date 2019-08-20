@@ -128,12 +128,6 @@ RaycastVolumeRenderer::~RaycastVolumeRenderer() { this->Release(); }
 bool RaycastVolumeRenderer::create() {
     try {
         // create shader program
-        m_raycast_volume_compute_shdr = std::make_unique<vislib::graphics::gl::GLSLComputeShader>();
-        m_raycast_volume_compute_iso_shdr = std::make_unique<vislib::graphics::gl::GLSLComputeShader>();
-        m_raycast_volume_compute_aggr_shdr = std::make_unique<vislib::graphics::gl::GLSLComputeShader>();
-        m_render_to_framebuffer_shdr = std::make_unique<vislib::graphics::gl::GLSLShader>();
-        m_render_to_framebuffer_aggr_shdr = std::make_unique<vislib::graphics::gl::GLSLShader>();
-
         vislib::graphics::gl::ShaderSource compute_shader_src;
         vislib::graphics::gl::ShaderSource compute_iso_shader_src;
         vislib::graphics::gl::ShaderSource compute_aggr_shader_src;
@@ -143,23 +137,23 @@ bool RaycastVolumeRenderer::create() {
 
         if (!instance()->ShaderSourceFactory().MakeShaderSource("RaycastVolumeRenderer::compute", compute_shader_src))
             return false;
-        if (!m_raycast_volume_compute_shdr->Compile(compute_shader_src.Code(), compute_shader_src.Count()))
+        if (!m_raycast_volume_compute_shdr.Compile(compute_shader_src.Code(), compute_shader_src.Count()))
             return false;
-        if (!m_raycast_volume_compute_shdr->Link()) return false;
+        if (!m_raycast_volume_compute_shdr.Link()) return false;
 
         if (!instance()->ShaderSourceFactory().MakeShaderSource(
                 "RaycastVolumeRenderer::compute_iso", compute_iso_shader_src))
             return false;
-        if (!m_raycast_volume_compute_iso_shdr->Compile(compute_iso_shader_src.Code(), compute_iso_shader_src.Count()))
+        if (!m_raycast_volume_compute_iso_shdr.Compile(compute_iso_shader_src.Code(), compute_iso_shader_src.Count()))
             return false;
-        if (!m_raycast_volume_compute_iso_shdr->Link()) return false;
+        if (!m_raycast_volume_compute_iso_shdr.Link()) return false;
 
         if (!instance()->ShaderSourceFactory().MakeShaderSource(
                 "RaycastVolumeRenderer::compute_aggr", compute_aggr_shader_src))
             return false;
-        if (!m_raycast_volume_compute_aggr_shdr->Compile(compute_aggr_shader_src.Code(), compute_aggr_shader_src.Count()))
+        if (!m_raycast_volume_compute_aggr_shdr.Compile(compute_aggr_shader_src.Code(), compute_aggr_shader_src.Count()))
             return false;
-        if (!m_raycast_volume_compute_aggr_shdr->Link()) return false;
+        if (!m_raycast_volume_compute_aggr_shdr.Link()) return false;
 
         if (!instance()->ShaderSourceFactory().MakeShaderSource("RaycastVolumeRenderer::vert", vertex_shader_src))
             return false;
@@ -167,15 +161,15 @@ bool RaycastVolumeRenderer::create() {
             return false;
         if (!instance()->ShaderSourceFactory().MakeShaderSource("RaycastVolumeRenderer::frag_aggr", fragment_shader_aggr_src))
             return false;
-        if (!m_render_to_framebuffer_shdr->Compile(vertex_shader_src.Code(), vertex_shader_src.Count(),
+        if (!m_render_to_framebuffer_shdr.Compile(vertex_shader_src.Code(), vertex_shader_src.Count(),
                 fragment_shader_src.Code(), fragment_shader_src.Count()))
             return false;
-        if (!m_render_to_framebuffer_shdr->Link()) return false;
+        if (!m_render_to_framebuffer_shdr.Link()) return false;
 
-        if (!m_render_to_framebuffer_aggr_shdr->Compile(vertex_shader_src.Code(), vertex_shader_src.Count(),
+        if (!m_render_to_framebuffer_aggr_shdr.Compile(vertex_shader_src.Code(), vertex_shader_src.Count(),
                 fragment_shader_aggr_src.Code(), fragment_shader_aggr_src.Count()))
             return false;
-        if (!m_render_to_framebuffer_aggr_shdr->Link()) return false;
+        if (!m_render_to_framebuffer_aggr_shdr.Link()) return false;
     } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Unable to compile shader (@%s): %s\n",
             vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
@@ -191,55 +185,10 @@ bool RaycastVolumeRenderer::create() {
         return false;
     }
 
-    // create render target texture
-    glowl::TextureLayout render_tgt_layout(GL_RGBA8, 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, 1,
-        {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
-            {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
-            {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
-        {});
-    m_render_target = std::make_unique<glowl::Texture2D>("raycast_volume_render_target", render_tgt_layout, nullptr);
-
-    // create normal target texture
-    glowl::TextureLayout normal_tgt_layout(GL_RGBA8, 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, 1,
-        {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
-            {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
-            {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
-        {});
-    m_normal_target = std::make_unique<glowl::Texture2D>("raycast_volume_normal_target", normal_tgt_layout, nullptr);
-
-    // create depth target texture
-    glowl::TextureLayout depth_tgt_layout(GL_R8, 1, 1, 1, GL_R, GL_UNSIGNED_BYTE, 1,
-        {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
-            {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
-            {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
-        {});
-    m_depth_target = std::make_unique<glowl::Texture2D>("raycast_volume_depth_target", depth_tgt_layout, nullptr);
-
-    // create empty volume texture
-    glowl::TextureLayout volume_layout(GL_R32F, 1, 1, 1, GL_RED, GL_FLOAT, 1,
-        {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
-            {GL_TEXTURE_MIN_FILTER, GL_LINEAR}, {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
-        {});
-    m_volume_texture = std::make_unique<glowl::Texture3D>("raycast_volume_texture", volume_layout, nullptr);
-
-    // create empty transfer function texture
-    glowl::TextureLayout tf(GL_RGBA8, 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, 1,
-        {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
-            {GL_TEXTURE_MIN_FILTER, GL_LINEAR}, {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
-        {});
-    m_transfer_function = std::make_unique<glowl::Texture2D>("raycast_volume_texture", tf, nullptr);
-
     return true;
 }
 
 void RaycastVolumeRenderer::release() {
-    m_raycast_volume_compute_shdr.reset(nullptr);
-    m_raycast_volume_compute_iso_shdr.reset(nullptr);
-    m_raycast_volume_compute_aggr_shdr.reset(nullptr);
-    m_render_target.reset(nullptr);
-    m_normal_target.reset(nullptr);
-    m_depth_target.reset(nullptr);
-    if (this->fbo.IsValid()) this->fbo.Release();
 }
 
 bool RaycastVolumeRenderer::GetExtents(megamol::core::Call& call) {
@@ -306,31 +255,37 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
     }
 
     // create render target texture
-    glowl::TextureLayout render_tgt_layout(GL_RGBA8, cr->GetViewport().Width(), cr->GetViewport().Height(), 1, GL_RGBA,
-        GL_UNSIGNED_BYTE, 1,
-        {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
-            {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
-            {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
-        {});
-    m_render_target->reload(render_tgt_layout, nullptr);
+    if (this->m_render_target == nullptr || this->m_render_target->getWidth() != cr->GetViewport().Width() ||
+        this->m_render_target->getHeight() != cr->GetViewport().Height()) {
 
-    // create normal target texture
-    glowl::TextureLayout normal_tgt_layout(GL_RGBA8, cr->GetViewport().Width(), cr->GetViewport().Height(), 1, GL_RGBA,
-        GL_UNSIGNED_BYTE, 1,
-        {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
-            {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
-            {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
-        {});
-    m_normal_target->reload(normal_tgt_layout, nullptr);
+        glowl::TextureLayout render_tgt_layout(GL_RGBA8, cr->GetViewport().Width(), cr->GetViewport().Height(), 1,
+            GL_RGBA, GL_UNSIGNED_BYTE, 1,
+            {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
+                {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
+                {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
+            {});
+        m_render_target =
+            std::make_unique<glowl::Texture2D>("raycast_volume_render_target", render_tgt_layout, nullptr);
 
-    // create depth target texture
-    glowl::TextureLayout depth_tgt_layout(GL_R32F, cr->GetViewport().Width(), cr->GetViewport().Height(), 1, GL_R,
-        GL_FLOAT, 1,
-        {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
-            {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
-            {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
-        {});
-    m_depth_target->reload(depth_tgt_layout, nullptr);
+        // create normal target texture
+        glowl::TextureLayout normal_tgt_layout(GL_RGBA32F, cr->GetViewport().Width(), cr->GetViewport().Height(), 1,
+            GL_RGBA, GL_FLOAT, 1,
+            {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
+                {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
+                {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
+            {});
+        m_normal_target =
+            std::make_unique<glowl::Texture2D>("raycast_volume_normal_target", normal_tgt_layout, nullptr);
+
+        // create depth target texture
+        glowl::TextureLayout depth_tgt_layout(GL_R32F, cr->GetViewport().Width(), cr->GetViewport().Height(), 1, GL_R,
+            GL_FLOAT, 1,
+            {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
+                {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
+                {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
+            {});
+        m_depth_target = std::make_unique<glowl::Texture2D>("raycast_volume_depth_target", depth_tgt_layout, nullptr);
+    }
 
     // this is the apex of suck and must die
     core::utility::glMagicScale scaling;
@@ -354,12 +309,12 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
     if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0) {
         if (!updateTransferFunction()) return false;
 
-        compute_shdr = this->m_raycast_volume_compute_shdr.get();
+        compute_shdr = &this->m_raycast_volume_compute_shdr;
     } else if (this->m_mode.Param<core::param::EnumParam>()->Value() == 1) {
-        compute_shdr = this->m_raycast_volume_compute_iso_shdr.get();
+        compute_shdr = &this->m_raycast_volume_compute_iso_shdr;
     } else if (this->m_mode.Param<core::param::EnumParam>()->Value() == 2) {
         if (!updateTransferFunction()) return false;
-        compute_shdr = this->m_raycast_volume_compute_aggr_shdr.get();
+        compute_shdr = &this->m_raycast_volume_compute_aggr_shdr;
     } else {
         vislib::sys::Log::DefaultLog.WriteError("Unknown raycast mode.");
         return false;
@@ -509,7 +464,12 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
     compute_shdr->Dispatch(
         static_cast<int>(std::ceil(rt_resolution[0] / 8.0f)), static_cast<int>(std::ceil(rt_resolution[1] / 8.0f)), 1);
 
-    compute_shdr->Disable();
+    if (this->m_mode.Param<core::param::EnumParam>()->Value() == 1) {
+        glBindImageTexture(2, 0, 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_R8);
+        glBindImageTexture(1, 0, 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_R8);
+    }
+
+    glBindImageTexture(0, 0, 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_R8);
 
     if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0 ||
         this->m_mode.Param<core::param::EnumParam>()->Value() == 2) {
@@ -524,6 +484,8 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
     }
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_3D, 0);
+
+    compute_shdr->Disable();
 
     glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT);
 
@@ -550,20 +512,28 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
     }
 
     // copy image to framebuffer
-    // TODO query gl state and reset to previous state?
+    bool state_depth_test = glIsEnabled(GL_DEPTH_TEST);
+    bool state_blend = glIsEnabled(GL_BLEND);
+
+    GLint state_blend_src_rgb, state_blend_src_alpha, state_blend_dst_rgb, state_blend_dst_alpha;
+    glGetIntegerv(GL_BLEND_SRC_RGB, &state_blend_src_rgb);
+    glGetIntegerv(GL_BLEND_SRC_ALPHA, &state_blend_src_alpha);
+    glGetIntegerv(GL_BLEND_DST_RGB, &state_blend_dst_rgb);
+    glGetIntegerv(GL_BLEND_DST_ALPHA, &state_blend_dst_alpha);
+
     if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0 ||
         this->m_mode.Param<core::param::EnumParam>()->Value() == 2) {
-        glDisable(GL_DEPTH_TEST);
+        if (state_depth_test) glDisable(GL_DEPTH_TEST);
     } else if (this->m_mode.Param<core::param::EnumParam>()->Value() == 1) {
-        glEnable(GL_DEPTH_TEST);
+        if (!state_depth_test) glEnable(GL_DEPTH_TEST);
     }
 
-    glEnable(GL_BLEND);
+    if (!state_blend) glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    auto fbo_shdr = m_render_to_framebuffer_shdr.get();
+    auto fbo_shdr = &m_render_to_framebuffer_shdr;
     if (this->m_mode.Param<core::param::EnumParam>()->Value() == 2) {
-        fbo_shdr = m_render_to_framebuffer_aggr_shdr.get();
+        fbo_shdr = &m_render_to_framebuffer_aggr_shdr;
     }
 
     fbo_shdr->Enable();
@@ -610,16 +580,9 @@ bool RaycastVolumeRenderer::Render(megamol::core::Call& call) {
 
     fbo_shdr->Disable();
 
-    // cleanup
-    glUseProgram(0);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-    glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
-
-    glEnable(GL_DEPTH_TEST);
-    glDisable(GL_BLEND);
+    glBlendFuncSeparate(state_blend_src_rgb, state_blend_dst_rgb, state_blend_src_alpha, state_blend_dst_alpha);
+    if (!state_blend) glDisable(GL_BLEND);
+    if (state_depth_test) glEnable(GL_DEPTH_TEST); else glDisable(GL_DEPTH_TEST);
 
     return true;
 }
@@ -721,7 +684,7 @@ bool RaycastVolumeRenderer::updateVolumeData(const unsigned int frameID) {
             {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
         {});
 
-    m_volume_texture->reload(volume_layout, volumedata);
+    m_volume_texture = std::make_unique<glowl::Texture3D>("raycast_volume_texture", volume_layout, volumedata);
 
     return true;
 }

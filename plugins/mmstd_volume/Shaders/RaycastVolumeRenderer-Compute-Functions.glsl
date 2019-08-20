@@ -87,11 +87,3 @@ vec3 calculate_normal(vec3 texCoords) {
         (bottom - top) / halfVoxelSize.y,
         (front - back) / halfVoxelSize.z));
 }
-
-vec3 phong(vec3 color, vec3 normal, vec3 eye, vec3 light) {
-    vec3 ambient = ka * ambient_col * color;
-    vec3 diffuse = kd * light_col * color * max(0, dot(normal, light));
-    vec3 specular = ks * light_col * specular_col * pow(max(0, dot(normal, normalize(light + eye))), shininess);
-
-    return clamp(ambient + diffuse + specular, vec3(0), vec3(1));
-}

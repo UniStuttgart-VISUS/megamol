@@ -6,6 +6,7 @@
         <snippet type="file">RaycastVolumeRenderer-Compute-Input.glsl</snippet>
         <snippet type="file">RaycastVolumeRenderer-Compute-Output.glsl</snippet>
         <snippet type="file">RaycastVolumeRenderer-Compute-Functions.glsl</snippet>
+        <snippet type="file">phong.glsl</snippet>
         <snippet type="file">RaycastVolumeRenderer-Compute-DVR.glsl</snippet>
         <snippet type="file">RaycastVolumeRenderer-Compute.glsl</snippet>
     </shader>
@@ -24,6 +25,7 @@
         <snippet type="file">RaycastVolumeRenderer-Compute-Input.glsl</snippet>
         <snippet type="file">RaycastVolumeRenderer-Compute-Output.glsl</snippet>
         <snippet type="file">RaycastVolumeRenderer-Compute-Functions.glsl</snippet>
+        <snippet type="file">phong.glsl</snippet>
         <snippet type="file">RaycastVolumeRenderer-Compute-Iso.glsl</snippet>
         <snippet type="file">RaycastVolumeRenderer-Compute.glsl</snippet>
     </shader>

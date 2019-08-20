@@ -48,7 +48,7 @@ void compute(float t, const float tfar, const Ray ray, const float rayStep, cons
 
             // Compute illumination from fixed light
             if (use_lighting) {
-                result = vec4(phong(material_col, normal, normalize(-surface_pos), normalize(-surface_pos)), opacity);
+                result = vec4(phong(material_col, normal, -ray.d, light - surface_pos), opacity);
             } else {
                 result = vec4(material_col, opacity);
             }

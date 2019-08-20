@@ -7,18 +7,16 @@
 
 #ifndef RAYCAST_VOLUME_RENDERER_H_INCLUDED
 #define RAYCAST_VOLUME_RENDERER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
+#pragma once
 
-#include "vislib/graphics/gl/GLSLComputeShader.h"
-#include "vislib/graphics/gl/OpenGLTexture2D.h"
-#include "vislib/graphics/gl/FramebufferObject.h"
-
+#include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/CallRender3D.h"
 #include "mmcore/view/Renderer3DModule.h"
+
+#include "vislib/graphics/gl/FramebufferObject.h"
+#include "vislib/graphics/gl/GLSLComputeShader.h"
+#include "vislib/graphics/gl/GLSLShader.h"
 
 #include "glowl/Texture2D.hpp"
 #include "glowl/Texture3D.hpp"
@@ -105,19 +103,17 @@ protected:
     bool updateTransferFunction();
 
 private:
-    std::unique_ptr<vislib::graphics::gl::GLSLComputeShader> m_raycast_volume_compute_shdr;
-    std::unique_ptr<vislib::graphics::gl::GLSLComputeShader> m_raycast_volume_compute_iso_shdr;
-    std::unique_ptr<vislib::graphics::gl::GLSLComputeShader> m_raycast_volume_compute_aggr_shdr;
-    std::unique_ptr<vislib::graphics::gl::GLSLShader> m_render_to_framebuffer_shdr;
-    std::unique_ptr<vislib::graphics::gl::GLSLShader> m_render_to_framebuffer_aggr_shdr;
+    vislib::graphics::gl::GLSLComputeShader m_raycast_volume_compute_shdr;
+    vislib::graphics::gl::GLSLComputeShader m_raycast_volume_compute_iso_shdr;
+    vislib::graphics::gl::GLSLComputeShader m_raycast_volume_compute_aggr_shdr;
+    vislib::graphics::gl::GLSLShader m_render_to_framebuffer_shdr;
+    vislib::graphics::gl::GLSLShader m_render_to_framebuffer_aggr_shdr;
 
     std::unique_ptr<glowl::Texture2D> m_render_target;
     std::unique_ptr<glowl::Texture2D> m_normal_target;
     std::unique_ptr<glowl::Texture2D> m_depth_target;
 
     std::unique_ptr<glowl::Texture3D> m_volume_texture;
-
-    std::unique_ptr<glowl::Texture2D> m_transfer_function;
 
     GLuint tf_texture;
 
