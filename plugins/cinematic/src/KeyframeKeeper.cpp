@@ -140,7 +140,7 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
     this->interpolTangentParam.SetParameter(new param::FloatParam(this->tl)); // , -10.0f, 10.0f));
     this->MakeSlotAvailable(&this->interpolTangentParam);
 
-    //this->setKeyframesToSameSpeed.SetParameter(new param::ButtonParam(core::view::Key::KEY_V));
+    //this->setKeyframesToSameSpeed.SetParameter(new param::ButtonParam(core::view::Key::KEY_V, core::view::Modifier::CTRL));
     //this->MakeSlotAvailable(&this->setKeyframesToSameSpeed);
 
     this->editCurrentAnimTimeParam.SetParameter(new param::FloatParam(this->selectedKeyframe.GetAnimTime(), 0.0f));
