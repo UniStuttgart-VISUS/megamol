@@ -93,10 +93,11 @@ private:
     core::CallerSlot input_transfer_function;
 
     /** Parameters */
-    core::param::ParamSlot stencil_size;
     core::param::ParamSlot arc_length;
     core::param::ParamSlot num_advections;
     core::param::ParamSlot epsilon;
+    core::param::ParamSlot noise_bands;
+    core::param::ParamSlot noise_scale;
     core::param::ParamSlot coloring;
 
     core::param::ParamSlot ka;
@@ -119,7 +120,7 @@ private:
     std::unique_ptr<glowl::Texture2D> velocity_target;
     std::unique_ptr<glowl::Texture2D> render_target;
     std::unique_ptr<glowl::Texture3D> velocity_texture;
-    std::unique_ptr<glowl::Texture2D> noise_texture;
+    std::unique_ptr<glowl::Texture3D> noise_texture;
 
     /** FBO for input */
     vislib::graphics::gl::FramebufferObject fbo;

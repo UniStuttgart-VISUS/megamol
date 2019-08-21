@@ -11,8 +11,9 @@ uniform vec2 rt_resolution;
 uniform vec3 origin;
 uniform vec3 resolution;
 
-/* LIC stencil */
-uniform int stencil;
+/* noise properties */
+uniform int noise_bands;
+uniform float noise_scale;
 
 /* streamline arc length */
 uniform float arc_length;
@@ -34,7 +35,7 @@ uniform highp sampler2D depth_tx2D;
 uniform highp sampler2D velocity_tx2D;
 uniform highp sampler2D position_tx2D;
 uniform highp sampler2D normal_tx2D;
-uniform highp sampler2D noise_tx2D;
+uniform highp sampler3D noise_tx3D;
 uniform highp sampler1D tf_tx1D;
 
 /* output image */
@@ -42,9 +43,14 @@ layout(rgba32f, binding = 0) writeonly uniform highp image2D render_target;
 
 /* linearize depth value */
 float linearize(float depth) {
-    const vec3 clip_space = vec3(0.5f, 0.5f, depth) * 2.0f - vec3(1.0f);
+    // Reconstruct clip space coordinates
+    const vec3 clip_pos = vec3(0.0f, 0.0f, depth * 2.0f - 1.0f);
 
-    return (depth - cam_near) / (cam_far - cam_near);
+    // Inverse transform to view space
+    vec4 view_pos = inverse(proj_mx) * vec4(clip_pos, 1.0f);
+    view_pos /= view_pos.w;
+
+    return (-view_pos.z - cam_near) / (cam_far - cam_near);
 }
 
 /* get velocity magnitude for selected coloring mode */
@@ -74,10 +80,8 @@ void main() {
 
     if (gID.x >= rt_resolution.x || gID.y >= rt_resolution.y) return;
 
-    const vec2 offset = vec2(0.5f * stencil - 0.5f);
-
     const ivec2 pixel_coords = ivec2(gID.xy);
-    vec2 pixel_tex_coords = (pixel_coords - (pixel_coords % stencil) + offset) / rt_resolution;
+    vec2 pixel_tex_coords = pixel_coords / rt_resolution;
 
     // Check for surface at this pixel
     vec4 color = vec4(0.0f);
@@ -115,12 +119,36 @@ void main() {
 
             last_depth = depth;
 
-            // Aggregate noise
-            const float sigma = 1.0f;
-            const float rbf_weight =
-                exp(-1.0f / (1.0f - pow((1.0f / (2.0f * sigma * arc_length)) * (steps * step_size), 2.0f)));
+            // Compute noise for the current position
+            const vec4 world_coords = screen_to_world_space(pixel_tex_coords, depth);
+            const vec3 noise_coords = (world_coords.xyz - origin) / resolution;
 
-            value += texture(noise_tx2D, pixel_tex_coords).x * rbf_weight;
+            const float center_scale_exact = log2(linearize(depth));
+            const float center_scale = ceil(center_scale_exact);
+            const float center_scale_deviation = abs(center_scale_exact - center_scale);
+
+            const int lower_scale = int(center_scale - floor(noise_bands / 2.0f));
+            const int higher_scale = int(center_scale + floor((noise_bands - 1) / 2.0f));
+
+            float noise = 0.0f;
+            float noise_weight = 0.0f;
+
+            for (int i = lower_scale; i <= higher_scale; ++i) {
+                const float alpha = exp(-1.0f / (1.0f - pow((1.0f / (2.0f * (higher_scale - lower_scale))) *
+                                                                (i - center_scale + center_scale_deviation),
+                                                            2.0f)));
+
+                noise += alpha * texture(noise_tx3D, noise_coords * noise_scale * (1.0f / exp2(float(i)))).x;
+                noise_weight += alpha;
+            }
+
+            noise /= noise_weight;
+
+            // Aggregate noise weighted by streamline length
+            const float rbf_weight =
+                exp(-1.0f / (1.0f - pow((1.0f / (2.0f * arc_length)) * (steps * step_size), 2.0f)));
+
+            value += noise * rbf_weight;
             weight += rbf_weight;
         }
 

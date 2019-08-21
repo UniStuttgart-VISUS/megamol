@@ -36,10 +36,11 @@ SurfaceLICRenderer::SurfaceLICRenderer()
     , input_velocities("input_velocities", "Grid with velocities")
     , input_transfer_function(
           "m_input_transfer_function", "Transfer function to color the LIC according to the velocity magnitude")
-    , stencil_size("stencil_size", "Stencil size for thicker LIC")
     , arc_length("arc_length", "Length of the streamlines relative to the domain size")
     , num_advections("num_advections", "Number of advections for reaching the desired arc length")
     , epsilon("epsilon", "Threshold for detecting coherent structures")
+    , noise_bands("noise_bands", "Number of noise bands for LOD noise")
+    , noise_scale("noise_scale", "Noise scalar for fine-tuning LOD noise")
     , coloring("coloring", "Different options on velocity coloring")
     , ka("lighting::ka", "Ambient part for Phong lighting")
     , kd("lighting::kd", "Diffuse part for Phong lighting")
@@ -59,14 +60,17 @@ SurfaceLICRenderer::SurfaceLICRenderer()
     this->input_transfer_function.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();
     this->MakeSlotAvailable(&this->input_transfer_function);
 
-    this->stencil_size << new core::param::IntParam(1, 1);
-    this->MakeSlotAvailable(&this->stencil_size);
-
-    this->arc_length << new core::param::FloatParam(0.005f);
+    this->arc_length << new core::param::FloatParam(0.03f);
     this->MakeSlotAvailable(&this->arc_length);
 
-    this->num_advections << new core::param::IntParam(10, 1);
+    this->num_advections << new core::param::IntParam(100, 1);
     this->MakeSlotAvailable(&this->num_advections);
+
+    this->noise_bands << new core::param::IntParam(2, 1);
+    this->MakeSlotAvailable(&this->noise_bands);
+
+    this->noise_scale << new core::param::FloatParam(5.0f);
+    this->MakeSlotAvailable(&this->noise_scale);
 
     this->epsilon << new core::param::FloatParam(0.03f);
     this->MakeSlotAvailable(&this->epsilon);
@@ -77,13 +81,13 @@ SurfaceLICRenderer::SurfaceLICRenderer()
     this->coloring.Param<core::param::EnumParam>()->SetTypePair(2, "Difference");
     this->MakeSlotAvailable(&this->coloring);
 
-    this->ka << new core::param::FloatParam(0.6f, 0.0f);
+    this->ka << new core::param::FloatParam(0.2f, 0.0f);
     this->MakeSlotAvailable(&this->ka);
 
     this->kd << new core::param::FloatParam(0.6f, 0.0f);
     this->MakeSlotAvailable(&this->kd);
 
-    this->ks << new core::param::FloatParam(0.3f, 0.0f);
+    this->ks << new core::param::FloatParam(0.2f, 0.0f);
     this->MakeSlotAvailable(&this->ks);
 
     this->shininess << new core::param::FloatParam(10.0f, 0.0f);
@@ -277,30 +281,27 @@ bool SurfaceLICRenderer::Render(core::Call& call) {
     }
 
     // Create noise texture
-    const auto stencil = this->stencil_size.Param<core::param::IntParam>()->Value();
-    const auto screensize = (cr->GetViewport().Width() * cr->GetViewport().Height()) / (stencil * stencil);
-
-    if (this->noise_texture == nullptr || this->noise.size() != screensize) {
-        glowl::TextureLayout noise_layout(GL_R32F, cr->GetViewport().Width() / stencil,
-            cr->GetViewport().Height() / stencil, 1, GL_RED, GL_FLOAT, 1,
-            {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
-                {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_NEAREST},
-                {GL_TEXTURE_MAG_FILTER, GL_NEAREST}},
+    if (this->noise_texture == nullptr) {
+        glowl::TextureLayout noise_layout(GL_R32F, 64, 64, 64, GL_RED, GL_FLOAT, 1,
+            {{GL_TEXTURE_WRAP_S, GL_REPEAT}, {GL_TEXTURE_WRAP_T, GL_REPEAT}, {GL_TEXTURE_WRAP_R, GL_REPEAT},
+                {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
+                {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
             {});
 
-        this->noise.resize(screensize);
+        this->noise.resize(64 * 64 * 64);
 
         std::random_device r;
         std::seed_seq seed{r(), r(), r(), r(), r(), r(), r(), r()};
         std::mt19937 engine(seed);
-        std::normal_distribution<float> normal_dist(0.0f, 0.5f);
+        //std::normal_distribution<float> normal_dist(0.0f, 0.5f);
+        std::uniform_real_distribution<float> normal_dist(0.0f, 1.0f);
 
         auto random = [&engine, &normal_dist](
                           float& value) { value = std::min(std::max(normal_dist(engine), 0.0f), 1.0f); };
 
         std::for_each(this->noise.begin(), this->noise.end(), random);
 
-        this->noise_texture = std::make_unique<glowl::Texture2D>("noise_texture", noise_layout, this->noise.data());
+        this->noise_texture = std::make_unique<glowl::Texture3D>("noise_texture", noise_layout, this->noise.data());
     }
 
     // Get camera
@@ -382,8 +383,10 @@ bool SurfaceLICRenderer::Render(core::Call& call) {
     glUniform3fv(this->lic_compute_shdr.ParameterLocation("origin"), 1, origin.data());
     glUniform3fv(this->lic_compute_shdr.ParameterLocation("resolution"), 1, resolution.data());
 
-    glUniform1i(this->lic_compute_shdr.ParameterLocation("stencil"),
-        this->stencil_size.Param<core::param::IntParam>()->Value());
+    glUniform1i(this->lic_compute_shdr.ParameterLocation("noise_bands"),
+        this->noise_bands.Param<core::param::IntParam>()->Value());
+    glUniform1f(this->lic_compute_shdr.ParameterLocation("noise_scale"),
+        this->noise_scale.Param<core::param::FloatParam>()->Value());
     glUniform1f(this->lic_compute_shdr.ParameterLocation("arc_length"),
         this->arc_length.Param<core::param::FloatParam>()->Value());
     glUniform1i(this->lic_compute_shdr.ParameterLocation("num_advections"),
@@ -424,7 +427,7 @@ bool SurfaceLICRenderer::Render(core::Call& call) {
 
     glActiveTexture(GL_TEXTURE3);
     this->noise_texture->bindTexture();
-    glUniform1i(this->lic_compute_shdr.ParameterLocation("noise_tx2D"), 3);
+    glUniform1i(this->lic_compute_shdr.ParameterLocation("noise_tx3D"), 3);
 
     glActiveTexture(GL_TEXTURE4);
     glBindTexture(GL_TEXTURE_1D, tf_texture);
@@ -441,7 +444,7 @@ bool SurfaceLICRenderer::Render(core::Call& call) {
     glBindTexture(GL_TEXTURE_1D, 0);
 
     glActiveTexture(GL_TEXTURE3);
-    glBindTexture(GL_TEXTURE_2D, 0);
+    glBindTexture(GL_TEXTURE_3D, 0);
 
     glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_2D, 0);
