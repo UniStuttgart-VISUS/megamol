@@ -11,7 +11,7 @@ function(require_external NAME)
       return()
     endif()
     
-    set(ZMQ_VER "4_3_2")
+    set(ZMQ_VER "4_3_3")
     string(REPLACE "_" "." ZMQ_TAG "v${ZMQ_VER}")
     if(MSVC_IDE)
       set(MSVC_TOOLSET "-${CMAKE_VS_PLATFORM_TOOLSET}")
@@ -33,7 +33,8 @@ function(require_external NAME)
 
     add_external_project(libzmq_ext
       GIT_REPOSITORY https://github.com/zeromq/libzmq.git
-      GIT_TAG ${ZMQ_TAG}
+	  GIT_TAG 56ace6d03f521b9abb5a50176ec7763c1b77afa9 # We need https://github.com/zeromq/libzmq/pull/3636
+      #GIT_TAG ${ZMQ_TAG}
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${ZMQ_IMPORT_DEBUG}" "<INSTALL_DIR>/${ZMQ_IMPORT_RELEASE}"
       CMAKE_ARGS
         -DZMQ_BUILD_TESTS=OFF
