@@ -14,16 +14,18 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE" CACHE INTERNAL "")
 
   # Add ImGui.
+  set(IMGUI_LIB "lib/${CMAKE_STATIC_LIBRARY_PREFIX}imgui${CMAKE_STATIC_LIBRARY_SUFFIX}")
   add_external_project(ImGui_ext
     GIT_REPOSITORY https://github.com/ocornut/imgui.git
     GIT_TAG "v1.70"
+    BUILD_BYPRODUCTS "<INSTALL_DIR>/${IMGUI_LIB}"
     PATCH_COMMAND ${CMAKE_COMMAND} -E copy
       "${CMAKE_CURRENT_SOURCE_DIR}/cmake/ImGui/CMakeLists.txt"
       "<SOURCE_DIR>/CMakeLists.txt")
   add_external_library(ImGui STATIC
     DEPENDS ImGui_ext
     INCLUDE_DIR "src/ImGui_ext"
-    LIBRARY "lib/${CMAKE_STATIC_LIBRARY_PREFIX}imgui${CMAKE_STATIC_LIBRARY_SUFFIX}")
+    LIBRARY ${IMGUI_LIB})
 
   ExternalProject_Get_property(ImGui_ext SOURCE_DIR)
   set(imgui_files
@@ -41,14 +43,14 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   # Target definition
   add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${source_files} ${imgui_files} ${resource_files})
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
-  if(UNIX) #Linux
+  if(UNIX)
+    # Add C++ filesystem support, except for "stampede".
     cmake_host_system_information(RESULT fqdn QUERY FQDN)
-    # C++ filesystem is not working on "stampede"
     if(NOT fqdn MATCHES ".*stampede2.*")
-      target_link_libraries(${PROJECT_NAME} PRIVATE "stdc++fs") # filesystem support
+      target_link_libraries(${PROJECT_NAME} PRIVATE "stdc++fs")
       target_compile_definitions(${PROJECT_NAME} PRIVATE GUI_USE_FILEUTILS)
     endif()
-  else () # Windows
+  elseif(WIN32)
     target_compile_definitions(${PROJECT_NAME} PRIVATE GUI_USE_FILEUTILS)
   endif()
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS IMGUI_IMPL_OPENGL_LOADER_GLAD)
