@@ -4,8 +4,6 @@
 #include <algorithm>
 #include <map>
 
-#include "mmcore/moldyn/DirectionalParticleDataCall.h"
-
 #include "mmcore/param/BoolParam.h"
 
 #include "vislib/math/Quaternion.h"
@@ -30,21 +28,15 @@ ParticleFrameInterpolator::ParticleFrameInterpolator()
     , currentTimeStamp(-1)
     , requestedTime(0) {
     this->dataInSlot.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
-    this->dataInSlot.SetCompatibleCall<core::moldyn::DirectionalParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->dataInSlot);
 
     this->supplementalSlot.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
-    this->supplementalSlot.SetCompatibleCall<core::moldyn::DirectionalParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->supplementalSlot);
 
     this->dataOutSlot.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(),
         core::moldyn::MultiParticleDataCall::FunctionName(0), &ParticleFrameInterpolator::getDataCB);
     this->dataOutSlot.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(),
         core::moldyn::MultiParticleDataCall::FunctionName(1), &ParticleFrameInterpolator::getExtentCB);
-    this->dataOutSlot.SetCallback(core::moldyn::DirectionalParticleDataCall::ClassName(),
-        core::moldyn::DirectionalParticleDataCall::FunctionName(0), &ParticleFrameInterpolator::getDataCB);
-    this->dataOutSlot.SetCallback(core::moldyn::DirectionalParticleDataCall::ClassName(),
-        core::moldyn::DirectionalParticleDataCall::FunctionName(1), &ParticleFrameInterpolator::getExtentCB);
     this->MakeSlotAvailable(&this->dataOutSlot);
 
     this->doSortParam << new core::param::BoolParam(true);
@@ -75,94 +67,18 @@ void ParticleFrameInterpolator::release(void) {}
  */
 bool ParticleFrameInterpolator::getDataCB(core::Call& c) {
     core::moldyn::MultiParticleDataCall* outMPDC = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&c);
-    core::moldyn::DirectionalParticleDataCall* outDPDC = dynamic_cast<core::moldyn::DirectionalParticleDataCall*>(&c);
-    if ((outMPDC == nullptr) && (outDPDC == nullptr)) return false;
+    if (outMPDC == nullptr) return false;
 
-    core::moldyn::DirectionalParticleDataCall* inDPDC =
-        this->dataInSlot.CallAs<core::moldyn::DirectionalParticleDataCall>();
     core::moldyn::MultiParticleDataCall* inMPDC = this->dataInSlot.CallAs<core::moldyn::MultiParticleDataCall>();
-    if ((inMPDC == nullptr) && (inDPDC == nullptr)) return false;
+    if (inMPDC == nullptr) return false;
 
     core::moldyn::MultiParticleDataCall* suppMPDC =
         this->supplementalSlot.CallAs<core::moldyn::MultiParticleDataCall>();
 
-    if (inDPDC != nullptr) {
-        this->checkForTransition(*inDPDC, c);
-    } else {
-        this->checkForTransition(*inMPDC, c);
-    }
+    this->checkForTransition(*inMPDC, c);
 
-    if (outDPDC != nullptr) {
-        if (inDPDC != nullptr) {
-            outDPDC->SetParticleListCount(this->outData.size());
-
-            for (unsigned int pl = 0; pl < this->outData.size(); pl++) {
-                auto& outPart = outDPDC->AccessParticles(pl);
-                auto& inPart = inDPDC->AccessParticles(pl);
-
-                outPart.SetCount(this->outData[pl].size() / CROWBAR_DIMS);
-                outPart.SetGlobalRadius(inPart.GetGlobalRadius());
-                // outPart.SetGlobalColour(inPart.GetGlobalColour());
-                outPart.SetVertexData(
-                    inPart.GetVertexDataType(), this->outData[pl].data(), CROWBAR_DIMS * sizeof(float));
-                outPart.SetColourData(
-                    inPart.GetColourDataType(), &((this->outData[pl].data())[4]), CROWBAR_DIMS * sizeof(float));
-                outPart.SetDirData(
-                    inPart.GetDirDataType(), &((this->outData[pl].data())[8]), CROWBAR_DIMS * sizeof(float));
-
-                outPart.SetColourMapIndexValues(inPart.GetMinColourIndexValue(), inPart.GetMaxColourIndexValue());
-            }
-
-            outDPDC->AccessBoundingBoxes().SetObjectSpaceBBox(this->bbox);
-            outDPDC->AccessBoundingBoxes().SetObjectSpaceClipBox(this->bbox);
-
-            outDPDC->SetTimeStamp(this->requestedTime);
-        } else if (inMPDC != nullptr) {
-            outDPDC->SetParticleListCount(this->outData.size());
-
-            for (unsigned int pl = 0; pl < this->outData.size(); pl++) {
-                auto& outPart = outDPDC->AccessParticles(pl);
-                auto& inPart = inMPDC->AccessParticles(pl);
-
-                outPart.SetCount(this->outData[pl].size() / CROWBAR_DIMS);
-                outPart.SetGlobalRadius(inPart.GetGlobalRadius());
-                // outPart.SetGlobalColour(inPart.GetGlobalColour());
-                outPart.SetVertexData(
-                    inPart.GetVertexDataType(), this->outData[pl].data(), CROWBAR_DIMS * sizeof(float));
-                outPart.SetColourData(
-                    inPart.GetColourDataType(), &((this->outData[pl].data())[4]), CROWBAR_DIMS * sizeof(float));
-                outPart.SetDirData(core::moldyn::DirectionalParticles::DIRDATA_NONE, NULL);
-
-                outPart.SetColourMapIndexValues(inPart.GetMinColourIndexValue(), inPart.GetMaxColourIndexValue());
-            }
-
-            outDPDC->AccessBoundingBoxes().SetObjectSpaceBBox(this->bbox);
-            outDPDC->AccessBoundingBoxes().SetObjectSpaceClipBox(this->bbox);
-
-            outDPDC->SetTimeStamp(this->requestedTime);
-        }
-    } else if (outMPDC != nullptr) {
-        if (inDPDC != nullptr) {
-            outMPDC->SetParticleListCount(this->outData.size());
-
-            for (unsigned int pl = 0; pl < this->outData.size(); pl++) {
-                auto& outPart = outMPDC->AccessParticles(pl);
-                auto& inPart = inDPDC->AccessParticles(pl);
-
-                outPart.SetCount(this->outData[pl].size() / CROWBAR_DIMS);
-                outPart.SetGlobalRadius(inPart.GetGlobalRadius());
-                // outPart.SetGlobalColour(inPart.GetGlobalColour());
-                outPart.SetVertexData(
-                    inPart.GetVertexDataType(), this->outData[pl].data(), CROWBAR_DIMS * sizeof(float));
-                outPart.SetColourData(
-                    inPart.GetColourDataType(), &((this->outData[pl].data())[4]), CROWBAR_DIMS * sizeof(float));
-
-                outPart.SetColourMapIndexValues(inPart.GetMinColourIndexValue(), inPart.GetMaxColourIndexValue());
-            }
-
-            outMPDC->AccessBoundingBoxes().SetObjectSpaceBBox(this->bbox);
-            outMPDC->AccessBoundingBoxes().SetObjectSpaceClipBox(this->bbox);
-        } else if (inMPDC != nullptr) {
+    if (outMPDC != nullptr) {
+        if (inMPDC != nullptr) {
             outMPDC->SetParticleListCount(this->outData.size());
 
             for (unsigned int pl = 0; pl < this->outData.size(); pl++) {
@@ -198,69 +114,25 @@ bool ParticleFrameInterpolator::getDataCB(core::Call& c) {
  */
 bool ParticleFrameInterpolator::getExtentCB(core::Call& c) {
     core::moldyn::MultiParticleDataCall* outMPDC = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&c);
-    core::moldyn::DirectionalParticleDataCall* outDPDC = dynamic_cast<core::moldyn::DirectionalParticleDataCall*>(&c);
-    if ((outMPDC == nullptr) && (outDPDC == nullptr)) return false;
+    if (outMPDC == nullptr) return false;
 
-    core::moldyn::DirectionalParticleDataCall* inDPDC =
-        this->dataInSlot.CallAs<core::moldyn::DirectionalParticleDataCall>();
     core::moldyn::MultiParticleDataCall* inMPDC = this->dataInSlot.CallAs<core::moldyn::MultiParticleDataCall>();
-    if ((inMPDC == nullptr) && (inDPDC == nullptr)) return false;
+    if (inMPDC == nullptr) return false;
 
-    if (outDPDC != nullptr) {
-        if (inDPDC != nullptr) {
-            if (!(*inDPDC)(1)) return false;
+    if (outMPDC != nullptr) {
+        if (!(*inMPDC)(1)) return false;
 
-            this->bbox = inDPDC->AccessBoundingBoxes().ObjectSpaceBBox();
+        this->bbox = inMPDC->AccessBoundingBoxes().ObjectSpaceBBox();
 
-            outDPDC->AccessBoundingBoxes().SetObjectSpaceBBox(this->bbox);
-            outDPDC->AccessBoundingBoxes().SetObjectSpaceClipBox(this->bbox);
+        outMPDC->AccessBoundingBoxes().SetObjectSpaceBBox(this->bbox);
+        outMPDC->AccessBoundingBoxes().SetObjectSpaceClipBox(this->bbox);
 
-            outDPDC->SetFrameCount(inDPDC->FrameCount());
-            outDPDC->SetDataHash(inDPDC->DataHash());
-
-            outDPDC->SetTimeStamp(this->requestedTime);
-        } else {
-            if (!(*inMPDC)(1)) return false;
-
-            this->bbox = inMPDC->AccessBoundingBoxes().ObjectSpaceBBox();
-
-            outDPDC->AccessBoundingBoxes().SetObjectSpaceBBox(this->bbox);
-            outDPDC->AccessBoundingBoxes().SetObjectSpaceClipBox(this->bbox);
-
-            outDPDC->SetFrameCount(inMPDC->FrameCount());
-            outDPDC->SetDataHash(inMPDC->DataHash());
-
-            outDPDC->SetTimeStamp(this->requestedTime);
-        }
-    } else if (outMPDC) {
-        if (inDPDC != nullptr) {
-            if (!(*inDPDC)(1)) return false;
-
-            this->bbox = inDPDC->AccessBoundingBoxes().ObjectSpaceBBox();
-
-            outMPDC->AccessBoundingBoxes().SetObjectSpaceBBox(this->bbox);
-            outMPDC->AccessBoundingBoxes().SetObjectSpaceClipBox(this->bbox);
-
-            outMPDC->SetFrameCount(inDPDC->FrameCount());
-            outMPDC->SetDataHash(inDPDC->DataHash());
-        } else {
-            if (!(*inMPDC)(1)) return false;
-
-            this->bbox = inMPDC->AccessBoundingBoxes().ObjectSpaceBBox();
-
-            outMPDC->AccessBoundingBoxes().SetObjectSpaceBBox(this->bbox);
-            outMPDC->AccessBoundingBoxes().SetObjectSpaceClipBox(this->bbox);
-
-            outMPDC->SetFrameCount(inMPDC->FrameCount());
-            outMPDC->SetDataHash(inMPDC->DataHash());
-        }
+        outMPDC->SetFrameCount(inMPDC->FrameCount());
+        outMPDC->SetDataHash(inMPDC->DataHash());
     }
 
-    if (inDPDC != nullptr) {
-        this->checkForTransition(*inDPDC, c);
-    } else {
-        this->checkForTransition(*inMPDC, c);
-    }
+
+    this->checkForTransition(*inMPDC, c);
 
     return true;
 }
@@ -381,153 +253,6 @@ bool ParticleFrameInterpolator::serialiseParticleList(
         }
         for (size_t i = 0; i < out.size(); i++) {
             out[i] = sortMap[i];
-        }*/
-    }
-
-    return true;
-}
-
-/*
- * ParticleFrameInterpolator::serialiseParticleList
- */
-bool ParticleFrameInterpolator::serialiseParticleList(
-    const core::moldyn::DirectionalParticles& part, std::vector<particle_t>& out) {
-    auto vertexType = part.GetVertexDataType();
-    unsigned int numVertComp = 0;
-    unsigned int vertBytes = 0;
-    unsigned int vertCompByte = 0;
-    switch (vertexType) {
-    case core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ:
-        numVertComp = 3;
-        vertBytes = 3 * sizeof(float);
-        vertCompByte = sizeof(float);
-        break;
-    case core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZR:
-        numVertComp = 4;
-        vertBytes = 4 * sizeof(float);
-        vertCompByte = sizeof(float);
-        break;
-    case core::moldyn::SimpleSphericalParticles::VERTDATA_SHORT_XYZ:
-        numVertComp = 3;
-        vertBytes = 3 * sizeof(short);
-        vertCompByte = sizeof(short);
-        break;
-    case core::moldyn::SimpleSphericalParticles::VERTDATA_NONE:
-    default:
-        // hate
-        printf("PFI: HATE!!!\n");
-        return false;
-    }
-
-    auto colorType = part.GetColourDataType();
-    unsigned int numColorComp = 0;
-    unsigned int colorBytes = 0;
-    unsigned int colorCompByte = 0;
-    bool idExists = false;
-    switch (colorType) {
-    case core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_RGB:
-        numColorComp = 3;
-        colorBytes = 3 * sizeof(float);
-        colorCompByte = sizeof(float);
-        break;
-    case core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_RGBA:
-        numColorComp = 4;
-        colorBytes = 4 * sizeof(float);
-        colorCompByte = sizeof(float);
-        break;
-    case core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I:
-        numColorComp = 1;
-        colorBytes = sizeof(float);
-        colorCompByte = sizeof(float);
-        idExists = true;
-        break;
-    case core::moldyn::SimpleSphericalParticles::COLDATA_UINT8_RGB:
-        numColorComp = 3;
-        colorBytes = 3 * sizeof(uint8_t);
-        colorCompByte = sizeof(uint8_t);
-        break;
-    case core::moldyn::SimpleSphericalParticles::COLDATA_UINT8_RGBA:
-        numColorComp = 4;
-        colorBytes = 4 * sizeof(uint8_t);
-        colorCompByte = sizeof(uint8_t);
-        break;
-    case core::moldyn::SimpleSphericalParticles::COLDATA_NONE:
-        break;
-    default:
-        break;
-        // dont care
-    }
-
-    auto dirType = part.GetDirDataType();
-    unsigned int numDirComp = 0;
-    unsigned int dirBytes = 0;
-    unsigned int dirCompBytes = 0;
-    switch (dirType) {
-    case core::moldyn::DirectionalParticles::DIRDATA_FLOAT_XYZ:
-        numDirComp = 3;
-        dirBytes = 3 * sizeof(float);
-        dirCompBytes = sizeof(float);
-        break;
-    case core::moldyn::DirectionalParticles::DIRDATA_NONE:
-        break;
-    default:
-        break;
-    }
-
-
-    auto particleCount = part.GetCount();
-    auto vertexStride = part.GetVertexDataStride();
-    auto colorStride = part.GetColourDataStride();
-    auto dirStride = part.GetDirDataStride();
-
-    if (vertexStride == 0) {
-        vertexStride = vertBytes;
-    }
-    if (colorStride == 0) {
-        colorStride = colorBytes;
-    }
-    if (dirStride == 0) {
-        dirStride = dirBytes;
-    }
-
-    out.clear();
-    out.resize(particleCount);
-    out.shrink_to_fit();
-
-    const char* vHook = reinterpret_cast<const char*>(part.GetVertexData());
-    const char* cHook = reinterpret_cast<const char*>(part.GetColourData());
-    const char* dHook = reinterpret_cast<const char*>(part.GetDirData());
-
-    for (size_t i = 0; i < particleCount; i++, vHook += vertexStride, cHook += colorStride, dHook += dirStride) {
-        for (size_t v = 0; v < numVertComp; v++) {
-            if (vertCompByte == sizeof(float)) {
-                out[i][v] = *reinterpret_cast<const float*>(vHook + v * sizeof(float));
-            } else {
-                out[i][v] = *reinterpret_cast<const short*>(vHook + v * sizeof(short));
-            }
-        }
-
-        for (size_t c = 0; c < numColorComp; c++) {
-            if (colorCompByte == sizeof(float)) {
-                out[i][c + 4] = *reinterpret_cast<const float*>(cHook + c * sizeof(float));
-            } else {
-                out[i][c + 4] = *reinterpret_cast<const uint8_t*>(cHook + c * sizeof(uint8_t));
-            }
-        }
-
-        for (size_t d = 0; d < numDirComp; d++) {
-            out[i][d + 8] = *reinterpret_cast<const float*>(dHook + d * sizeof(float));
-        }
-    }
-
-    if (idExists && this->doSortParam.Param<core::param::BoolParam>()->Value()) {
-        std::sort(out.begin(), out.end(), [](particle_t& a, particle_t& b) { return a[4] < b[4]; });
-        /*std::map<size_t, particle_t> sortMap;
-        for (size_t i = 0; i < out.size(); i++) {
-        sortMap.insert(std::make_pair(out[i][4], out[i]));
-        }
-        for (size_t i = 0; i < out.size(); i++) {
-        out[i] = sortMap[i];
         }*/
     }
 
@@ -933,7 +658,6 @@ ParticleFrameInterpolator::trajectory_t ParticleFrameInterpolator::calcTrajector
  */
 bool ParticleFrameInterpolator::checkForTransition(core::Call& inCall, core::Call& outCall) {
     core::moldyn::MultiParticleDataCall* mpdc = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&inCall);
-    core::moldyn::DirectionalParticleDataCall* dpdc = dynamic_cast<core::moldyn::DirectionalParticleDataCall*>(&inCall);
 
 
     core::moldyn::MultiParticleDataCall* suppMPDC =
@@ -946,184 +670,91 @@ bool ParticleFrameInterpolator::checkForTransition(core::Call& inCall, core::Cal
     std::vector<std::vector<particle_t>> nextFrame;
     std::vector<std::vector<particle_t>> nextSupp;
 
-    if (dpdc == nullptr) {
+    if (mpdc == nullptr) return false;
 
-        if (mpdc == nullptr) return false;
+    core::moldyn::MultiParticleDataCall& inMPDC = *mpdc;
 
-        core::moldyn::MultiParticleDataCall& inMPDC = *mpdc;
+    mpdc = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&outCall);
+    if (mpdc != nullptr) {
+        requestedTime = mpdc->GetTimeStamp();
+    } else
+        return false;
 
-        mpdc = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&outCall);
-        dpdc = dynamic_cast<core::moldyn::DirectionalParticleDataCall*>(&outCall);
-        if (dpdc != nullptr) {
-            // requestedTime = dpdc->GetTimeStamp();
-        } else if (mpdc != nullptr) {
-            requestedTime = mpdc->GetTimeStamp();
-        } else
-            return false;
+    printf("PFI: Requested Time: %f\n", requestedTime);
 
-        printf("PFI: Requested Time: %f\n", requestedTime);
+    if (requestedTime == this->currentTimeStamp) return true;
 
-        if (requestedTime == this->currentTimeStamp) return true;
-
-        if (requestedTime - static_cast<float>(this->startFrameID) < 1.0f && this->initialized) {
-            // only interpolate
-            this->interpolateOnTrajectories(requestedTime - static_cast<float>(this->startFrameID), nextFrame);
-            this->serialiseForOutput();
-            this->currentTimeStamp = requestedTime;
-            printf("PFI: Interpolating\n");
-            return true;
-        }
-
-        // do transition
-        this->lastMap = this->startMap;
-        this->lastTrajectories = this->currentTrajectories;
-        // fetch next frames
-        auto tmp = this->startFrameID;
-        this->startFrameID = std::floorf(requestedTime);
-        if (this->startFrameID - tmp > 1) this->lastTrajectories.clear();
-        inMPDC.SetFrameID(this->startFrameID, true);
-        do {
-            if (!inMPDC(1)) return false;
-            if (!inMPDC(0)) return false;
-        } while (inMPDC.FrameID() != this->startFrameID);
-        this->startPoints.resize(inMPDC.GetParticleListCount());
-        for (unsigned int pl = 0; pl < inMPDC.GetParticleListCount(); pl++) {
-            this->serialiseParticleList(inMPDC.AccessParticles(pl), this->startPoints[pl]);
-        }
-        if (suppMPDC != nullptr) {
-            suppMPDC->SetFrameID(this->startFrameID, true);
-            do {
-                if (!(*suppMPDC)(1)) return false;
-                if (!(*suppMPDC)(0)) return false;
-            } while (suppMPDC->FrameID() != this->startFrameID);
-            this->startSupp.resize(suppMPDC->GetParticleListCount());
-            for (unsigned int pl = 0; pl < suppMPDC->GetParticleListCount(); pl++) {
-                this->serialiseParticleList(suppMPDC->AccessParticles(pl), this->startSupp[pl]);
-            }
-
-            this->mergeInputs(this->startPoints, this->startSupp, this->startMap);
-        }
-
-        inMPDC.SetFrameID(this->startFrameID + 1, true);
-        do {
-            if (!inMPDC(1)) return false;
-            if (!inMPDC(0)) return false;
-        } while (inMPDC.FrameID() != (this->startFrameID + 1));
-        nextFrame.resize(inMPDC.GetParticleListCount());
-        nextFrame.shrink_to_fit();
-        for (unsigned int pl = 0; pl < inMPDC.GetParticleListCount(); pl++) {
-            this->serialiseParticleList(inMPDC.AccessParticles(pl), nextFrame[pl]);
-        }
-        if (suppMPDC != nullptr) {
-            suppMPDC->SetFrameID(this->startFrameID + 1, true);
-            do {
-                if (!(*suppMPDC)(1)) return false;
-                if (!(*suppMPDC)(0)) return false;
-            } while (suppMPDC->FrameID() != this->startFrameID + 1);
-            nextSupp.resize(suppMPDC->GetParticleListCount());
-            for (unsigned int pl = 0; pl < suppMPDC->GetParticleListCount(); pl++) {
-                this->serialiseParticleList(suppMPDC->AccessParticles(pl), nextSupp[pl]);
-            }
-
-            this->mergeInputs(nextFrame, nextSupp, this->nextMap);
-        }
-
-        /*printf("PFI: PL0 %d %d %d\n", (int)(this->startPoints[0].size()) - (int)(nextFrame[0].size()),
-        this->startPoints[0].size(), nextFrame[0].size()); printf("PFI: PL1 %d %d %d\n",
-        (int)(this->startPoints[1].size()) - (int)(nextFrame[1].size()), this->startPoints[1].size(),
-        nextFrame[1].size()); printf("PFI: PL2 %d %d %d\n", (int)(this->startPoints[2].size()) -
-        (int)(nextFrame[2].size()), this->startPoints[2].size(), nextFrame[2].size()); printf("PFI: PL3 %d %d %d\n",
-        (int)(this->startPoints[3].size()) - (int)(nextFrame[3].size()), this->startPoints[3].size(),
-        nextFrame[3].size());*/
-    } else {
-        // serialise directional data
-        core::moldyn::DirectionalParticleDataCall& inDPDC = *dpdc;
-
-        mpdc = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&outCall);
-        dpdc = dynamic_cast<core::moldyn::DirectionalParticleDataCall*>(&outCall);
-        if (dpdc != nullptr) {
-            // requestedTime = dpdc->GetTimeStamp();
-        } else if (mpdc != nullptr) {
-            requestedTime = mpdc->GetTimeStamp();
-        } else
-            return false;
-
-        printf("PFI: Requested Time: %f\n", requestedTime);
-
-        if (requestedTime == this->currentTimeStamp) return true;
-
-        if (requestedTime - static_cast<float>(this->startFrameID) < 1.0f && this->initialized) {
-            // only interpolate
-            this->interpolateOnTrajectories(requestedTime - static_cast<float>(this->startFrameID), nextFrame);
-            this->serialiseForOutput();
-            this->currentTimeStamp = requestedTime;
-            printf("PFI: Interpolating\n");
-            return true;
-        }
-
-        // do transition
-        this->lastMap = this->startMap;
-        this->lastTrajectories = this->currentTrajectories;
-        // fetch next frames
-        auto tmp = this->startFrameID;
-        this->startFrameID = std::floorf(requestedTime);
-        if (this->startFrameID - tmp > 1) this->lastTrajectories.clear();
-        inDPDC.SetFrameID(this->startFrameID, true);
-        do {
-            if (!inDPDC(1)) return false;
-            if (!inDPDC(0)) return false;
-        } while (inDPDC.FrameID() != this->startFrameID);
-        this->startPoints.resize(inDPDC.GetParticleListCount());
-        for (unsigned int pl = 0; pl < inDPDC.GetParticleListCount(); pl++) {
-            this->serialiseParticleList(inDPDC.AccessParticles(pl), this->startPoints[pl]);
-        }
-        if (suppMPDC != nullptr) {
-            suppMPDC->SetFrameID(this->startFrameID, true);
-            do {
-                if (!(*suppMPDC)(1)) return false;
-                if (!(*suppMPDC)(0)) return false;
-            } while (suppMPDC->FrameID() != this->startFrameID);
-            this->startSupp.resize(suppMPDC->GetParticleListCount());
-            for (unsigned int pl = 0; pl < suppMPDC->GetParticleListCount(); pl++) {
-                this->serialiseParticleList(suppMPDC->AccessParticles(pl), this->startSupp[pl]);
-            }
-
-            this->mergeInputs(this->startPoints, this->startSupp, this->startMap);
-        }
-
-        inDPDC.SetFrameID(this->startFrameID + 1, true);
-        do {
-            if (!inDPDC(1)) return false;
-            if (!inDPDC(0)) return false;
-        } while (inDPDC.FrameID() != (this->startFrameID + 1));
-        nextFrame.resize(inDPDC.GetParticleListCount());
-        nextFrame.shrink_to_fit();
-        for (unsigned int pl = 0; pl < inDPDC.GetParticleListCount(); pl++) {
-            this->serialiseParticleList(inDPDC.AccessParticles(pl), nextFrame[pl]);
-        }
-        if (suppMPDC != nullptr) {
-            suppMPDC->SetFrameID(this->startFrameID + 1, true);
-            do {
-                if (!(*suppMPDC)(1)) return false;
-                if (!(*suppMPDC)(0)) return false;
-            } while (suppMPDC->FrameID() != this->startFrameID + 1);
-            nextSupp.resize(suppMPDC->GetParticleListCount());
-            for (unsigned int pl = 0; pl < suppMPDC->GetParticleListCount(); pl++) {
-                this->serialiseParticleList(suppMPDC->AccessParticles(pl), nextSupp[pl]);
-            }
-
-            this->mergeInputs(nextFrame, nextSupp, this->nextMap);
-        }
-
-        /*printf("PFI: PL0 %d %d %d\n", (int)(this->startPoints[0].size()) - (int)(nextFrame[0].size()),
-            this->startPoints[0].size(), nextFrame[0].size());
-        printf("PFI: PL1 %d %d %d\n", (int)(this->startPoints[1].size()) - (int)(nextFrame[1].size()),
-            this->startPoints[1].size(), nextFrame[1].size());
-        printf("PFI: PL2 %d %d %d\n", (int)(this->startPoints[2].size()) - (int)(nextFrame[2].size()),
-            this->startPoints[2].size(), nextFrame[2].size());
-        printf("PFI: PL3 %d %d %d\n", (int)(this->startPoints[3].size()) - (int)(nextFrame[3].size()),
-            this->startPoints[3].size(), nextFrame[3].size());*/
+    if (requestedTime - static_cast<float>(this->startFrameID) < 1.0f && this->initialized) {
+        // only interpolate
+        this->interpolateOnTrajectories(requestedTime - static_cast<float>(this->startFrameID), nextFrame);
+        this->serialiseForOutput();
+        this->currentTimeStamp = requestedTime;
+        printf("PFI: Interpolating\n");
+        return true;
     }
+
+    // do transition
+    this->lastMap = this->startMap;
+    this->lastTrajectories = this->currentTrajectories;
+    // fetch next frames
+    auto tmp = this->startFrameID;
+    this->startFrameID = std::floorf(requestedTime);
+    if (this->startFrameID - tmp > 1) this->lastTrajectories.clear();
+    inMPDC.SetFrameID(this->startFrameID, true);
+    do {
+        if (!inMPDC(1)) return false;
+        if (!inMPDC(0)) return false;
+    } while (inMPDC.FrameID() != this->startFrameID);
+    this->startPoints.resize(inMPDC.GetParticleListCount());
+    for (unsigned int pl = 0; pl < inMPDC.GetParticleListCount(); pl++) {
+        this->serialiseParticleList(inMPDC.AccessParticles(pl), this->startPoints[pl]);
+    }
+    if (suppMPDC != nullptr) {
+        suppMPDC->SetFrameID(this->startFrameID, true);
+        do {
+            if (!(*suppMPDC)(1)) return false;
+            if (!(*suppMPDC)(0)) return false;
+        } while (suppMPDC->FrameID() != this->startFrameID);
+        this->startSupp.resize(suppMPDC->GetParticleListCount());
+        for (unsigned int pl = 0; pl < suppMPDC->GetParticleListCount(); pl++) {
+            this->serialiseParticleList(suppMPDC->AccessParticles(pl), this->startSupp[pl]);
+        }
+
+        this->mergeInputs(this->startPoints, this->startSupp, this->startMap);
+    }
+
+    inMPDC.SetFrameID(this->startFrameID + 1, true);
+    do {
+        if (!inMPDC(1)) return false;
+        if (!inMPDC(0)) return false;
+    } while (inMPDC.FrameID() != (this->startFrameID + 1));
+    nextFrame.resize(inMPDC.GetParticleListCount());
+    nextFrame.shrink_to_fit();
+    for (unsigned int pl = 0; pl < inMPDC.GetParticleListCount(); pl++) {
+        this->serialiseParticleList(inMPDC.AccessParticles(pl), nextFrame[pl]);
+    }
+    if (suppMPDC != nullptr) {
+        suppMPDC->SetFrameID(this->startFrameID + 1, true);
+        do {
+            if (!(*suppMPDC)(1)) return false;
+            if (!(*suppMPDC)(0)) return false;
+        } while (suppMPDC->FrameID() != this->startFrameID + 1);
+        nextSupp.resize(suppMPDC->GetParticleListCount());
+        for (unsigned int pl = 0; pl < suppMPDC->GetParticleListCount(); pl++) {
+            this->serialiseParticleList(suppMPDC->AccessParticles(pl), nextSupp[pl]);
+        }
+
+        this->mergeInputs(nextFrame, nextSupp, this->nextMap);
+    }
+
+    /*printf("PFI: PL0 %d %d %d\n", (int)(this->startPoints[0].size()) - (int)(nextFrame[0].size()),
+    this->startPoints[0].size(), nextFrame[0].size()); printf("PFI: PL1 %d %d %d\n",
+    (int)(this->startPoints[1].size()) - (int)(nextFrame[1].size()), this->startPoints[1].size(),
+    nextFrame[1].size()); printf("PFI: PL2 %d %d %d\n", (int)(this->startPoints[2].size()) -
+    (int)(nextFrame[2].size()), this->startPoints[2].size(), nextFrame[2].size()); printf("PFI: PL3 %d %d %d\n",
+    (int)(this->startPoints[3].size()) - (int)(nextFrame[3].size()), this->startPoints[3].size(),
+    nextFrame[3].size());*/
+
 
     // calculate trajectories
     if (suppMPDC == nullptr) {

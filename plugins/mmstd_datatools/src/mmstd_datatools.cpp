@@ -13,29 +13,32 @@
 #include "mmcore/versioninfo.h"
 #include "vislib/vislibversion.h"
 
+#include "CSVFileSequence.h"
 #include "DataFileSequence.h"
 #include "DataFileSequenceStepper.h"
 #include "DataSetTimeRewriteModule.h"
 #include "DumpIColorHistogramModule.h"
 #include "EnforceSymmetricParticleColorRanges.h"
 #include "ErosionField.h"
-#include "FloatTableToParticles.h"
 #include "ForceCubicCBoxModule.h"
 #include "IColAdd.h"
 #include "IColInverse.h"
 #include "IColRangeFix.h"
 #include "IColRangeOverride.h"
 #include "IColSelectClassify.h"
+#include "IColToIdentity.h"
 #include "IndexListIndexColor.h"
 #include "MPDCListsConcatenate.h"
 #include "MPIParticleCollector.h"
 #include "MPIVolumeAggregator.h"
+#include "MeshTranslateRotateScale.h"
 #include "ModColIRange.h"
 #include "MultiParticleRelister.h"
 #include "NullParticleWriter.h"
 #include "OverrideMultiParticleListGlobalColors.h"
 #include "OverrideParticleBBox.h"
 #include "OverrideParticleGlobals.h"
+#include "ParticleBoxFilter.h"
 #include "ParticleBoxGeneratorDataSource.h"
 #include "ParticleColorChannelSelect.h"
 #include "ParticleColorSignThreshold.h"
@@ -45,35 +48,43 @@
 #include "ParticleFrameInterpolator.h"
 #include "ParticleIColFilter.h"
 #include "ParticleIColGradientField.h"
+#include "ParticleIdentitySort.h"
 #include "ParticleListMergeModule.h"
 #include "ParticleListSelector.h"
 #include "ParticleNeighborhood.h"
 #include "ParticleNeighborhoodGraph.h"
 #include "ParticleRelaxationModule.h"
 #include "ParticleSortFixHack.h"
-#include "ParticleThermometer.h"
+#include "ParticleThermodyn.h"
 #include "ParticleThinner.h"
+#include "ParticleTranslateRotateScale.h"
 #include "ParticleVelocities.h"
+#include "ParticleVisibilityFromVolume.h"
 #include "ParticlesToDensity.h"
 #include "RemapIColValues.h"
 #include "SphereDataUnifier.h"
-#include "floattable/CSVDataSource.h"
-#include "floattable/FloatTableColumnFilter.h"
-#include "floattable/FloatTableColumnScaler.h"
-#include "floattable/FloatTableJoin.h"
-#include "floattable/FloatTableObserverPlane.h"
-#include "floattable/FloatTableToLines.h"
-#include "floattable/MMFTDataSource.h"
-#include "floattable/MMFTDataWriter.h"
+#include "StaticMMPLDProvider.h"
+#include "SyncedMMPLDProvider.h"
 #include "io/MMGDDDataSource.h"
 #include "io/MMGDDWriter.h"
+#include "io/PLYDataSource.h"
 #include "io/PlyWriter.h"
 #include "io/STLDataSource.h"
 #include "io/TriMeshSTLWriter.h"
 #include "mmstd_datatools/GraphDataCall.h"
 #include "mmstd_datatools/MultiIndexListDataCall.h"
 #include "mmstd_datatools/ParticleFilterMapDataCall.h"
-#include "mmstd_datatools/floattable/CallFloatTableData.h"
+#include "mmstd_datatools/table/TableDataCall.h"
+#include "table/CSVDataSource.h"
+#include "table/MMFTDataSource.h"
+#include "table/MMFTDataWriter.h"
+#include "table/TableColumnFilter.h"
+#include "table/TableColumnScaler.h"
+#include "table/TableJoin.h"
+#include "table/TableManipulator.h"
+#include "table/TableObserverPlane.h"
+#include "table/TableToLines.h"
+#include "table/TableToParticles.h"
 
 /*
  * mmplgPluginAPIVersion
@@ -178,11 +189,11 @@ public:
             .RegisterAutoDescription<megamol::stdplugin::datatools::OverrideMultiParticleListGlobalColors>();
         this->module_descriptions
             .RegisterAutoDescription<megamol::stdplugin::datatools::ParticleBoxGeneratorDataSource>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::CSVDataSource>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::FloatTableToParticles>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::FloatTableToLines>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::MMFTDataSource>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::MMFTDataWriter>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::CSVDataSource>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::TableToParticles>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::TableToLines>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::MMFTDataSource>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::MMFTDataWriter>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleColorChannelSelect>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleIColGradientField>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::RemapIColValues>();
@@ -198,16 +209,13 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ErosionField>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::io::MMGDDWriter>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::io::MMGDDDataSource>();
-        this->module_descriptions
-            .RegisterAutoDescription<megamol::stdplugin::datatools::floattable::FloatTableColumnScaler>();
-        this->module_descriptions
-            .RegisterAutoDescription<megamol::stdplugin::datatools::floattable::FloatTableObserverPlane>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::FloatTableJoin>();
-        this->module_descriptions
-            .RegisterAutoDescription<megamol::stdplugin::datatools::floattable::FloatTableColumnFilter>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableColumnScaler>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableObserverPlane>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableJoin>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableColumnFilter>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleVelocities>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleNeighborhood>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleThermometer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleThermodyn>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::io::PlyWriter>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::MPIParticleCollector>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::MPIVolumeAggregator>();
@@ -215,11 +223,23 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::MPDCListsConcatenate>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::io::STLDataSource>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::io::TriMeshSTLWriter>();
+        this->module_descriptions
+            .RegisterAutoDescription<megamol::stdplugin::datatools::ParticleTranslateRotateScale>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::io::PLYDataSource>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::MeshTranslateRotateScale>();
+        this->module_descriptions
+            .RegisterAutoDescription<megamol::stdplugin::datatools::ParticleVisibilityFromVolume>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::CSVFileSequence>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::IColToIdentity>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleIdentitySort>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleBoxFilter>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::StaticMMPLDProvider>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::SyncedMMPLDProvider>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableManipulator>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleFrameInterpolator>();
 
         // register calls here:
-        this->call_descriptions
-            .RegisterAutoDescription<megamol::stdplugin::datatools::floattable::CallFloatTableData>();
+        this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableDataCall>();
         this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleFilterMapDataCall>();
         this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::GraphDataCall>();
         this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::MultiIndexListDataCall>();

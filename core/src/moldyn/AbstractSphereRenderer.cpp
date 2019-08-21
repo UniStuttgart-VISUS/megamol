@@ -127,11 +127,11 @@ void moldyn::AbstractSphereRenderer::release(void) {
 /*
  * moldyn::AbstractSphereRenderer::getData
  */
-moldyn::MultiParticleDataCall *moldyn::AbstractSphereRenderer::getData(unsigned int t, float& outScaling) {
+moldyn::MultiParticleDataCall *moldyn::AbstractSphereRenderer::getData(float t, float& outScaling) {
     MultiParticleDataCall *c2 = this->getDataSlot.CallAs<MultiParticleDataCall>();
     outScaling = 1.0f;
     if (c2 != NULL) {
-        c2->SetFrameID(t, this->isTimeForced());
+        c2->SetFrameID(static_cast<unsigned int>(t), this->isTimeForced());
         if (!(*c2)(1)) return NULL;
 
         // calculate scaling
@@ -153,7 +153,7 @@ moldyn::MultiParticleDataCall *moldyn::AbstractSphereRenderer::getData(unsigned 
             outScaling = 1.0f;
         }
 
-        c2->SetFrameID(t, this->isTimeForced());
+        c2->SetFrameID(static_cast<unsigned int>(t), this->isTimeForced());
         if (!(*c2)(0)) return NULL;
 
         return c2;

@@ -10,7 +10,6 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 
-#include "mmcore/moldyn/DirectionalParticleDataCall.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 
 #include "mmcore/param/ParamSlot.h"
@@ -68,8 +67,6 @@ private:
     bool getExtentCB(core::Call& c);
 
     bool serialiseParticleList(const core::moldyn::SimpleSphericalParticles& part, std::vector<particle_t>& out);
-
-    bool serialiseParticleList(const core::moldyn::DirectionalParticles& part, std::vector<particle_t>& out);
 
     bool serialiseForOutput(void);
 
