@@ -8,28 +8,28 @@ environment:
       configuration: Release
       image: Visual Studio 2017
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      CMAKE_GENERATOR: "Visual Studio 15 2017 Win64"
+      CMAKE_GENERATOR: "Visual Studio 15 2017"
       CMAKE_CONFIG: Release
       VSVER: vs141
     - platform: x64
       configuration: Debug
       image: Visual Studio 2017
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      CMAKE_GENERATOR: "Visual Studio 15 2017 Win64"
+      CMAKE_GENERATOR: "Visual Studio 15 2017"
       CMAKE_CONFIG: Debug
       VSVER: vs141
     - platform: x64
       configuration: Release
-      image: Visual Studio 2015
-      CMAKE_GENERATOR: "Visual Studio 14 2015 Win64"
+      image: Visual Studio 2019
+      CMAKE_GENERATOR: "Visual Studio 16 2019"
       CMAKE_CONFIG: Release
-      VSVER: vs140
+      VSVER: vs142
     - platform: x64
       configuration: Debug
-      image: Visual Studio 2015
-      CMAKE_GENERATOR: "Visual Studio 14 2015 Win64"
+      image: Visual Studio 2019
+      CMAKE_GENERATOR: "Visual Studio 16 2019"
       CMAKE_CONFIG: Debug
-      VSVER: vs140
+      VSVER: vs142
 
 matrix:
   fast_finish: true
@@ -38,7 +38,7 @@ before_build:
   - mkdir build
   - mkdir stage
   - cd build
-  - cmake .. -G "%CMAKE_GENERATOR%" -DCMAKE_INSTALL_PREFIX=c:\projects\megamol\stage\
+  - cmake .. -G"%CMAKE_GENERATOR%" -Ax64 -DCMAKE_INSTALL_PREFIX=c:\projects\megamol\stage\
 
 build:
   parallel: true
