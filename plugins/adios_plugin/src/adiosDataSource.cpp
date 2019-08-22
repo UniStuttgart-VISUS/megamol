@@ -212,6 +212,7 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
 
             reader.EndStep();
             loadedFrameID = cad->getFrameIDtoLoad();
+            vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2: Data of frame %d completely loaded. EndStep.", cad->getFrameIDtoLoad());
             // here data is loaded
         } catch (std::invalid_argument& e) {
             vislib::sys::Log::DefaultLog.WriteError(
