@@ -1,7 +1,7 @@
 
 ![](logo.png)  
 [![Build Status Travis](https://travis-ci.org/UniStuttgart-VISUS/megamol.svg?branch=master)](https://travis-ci.org/UniStuttgart-VISUS/megamol)
-[![Build Status AppVeyor](https://ci.appveyor.com/api/projects/status/github/UniStuttgart-VISUS/megamol?branch=master&svg=true)](https://ci.appveyor.com/project/megamolservice/megamol)  
+[![Build status](https://ci.appveyor.com/api/projects/status/jrtnh313libyy3vj/branch/master?svg=true)](https://ci.appveyor.com/project/megamolservice/megamol/branch/master)
 MegaMol is a visualization middleware used to visualize point-based molecular data sets. This software is developed within the ​Collaborative Research Center 716, subproject ​D.3 at the ​[Visualization Research Center (VISUS)](https://www.visus.uni-stuttgart.de/en) of the University of Stuttgart and at the ​Computer Graphics and Visualization Group of the TU Dresden.  
 
 MegaMol succeeds ​MolCloud, which has been developed at the University of Stuttgart in order to visualize point-based data sets. MegaMol is written in C++, and uses an OpenGL as Rendering-API and GLSL-Shader. It supports the operating systems Microsoft Windows and Linux, each in 32-bit and 64-bit versions. In large parts, MegaMol is based on VISlib, a C++-class library for scientific visualization, which has also been developed at the University of Stuttgart. 
