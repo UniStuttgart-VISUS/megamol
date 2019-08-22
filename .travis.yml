@@ -18,6 +18,19 @@ matrix:
       env:
         - CC=gcc-7
         - CXX=g++-7
+        - BUILD_ASTRO=OFF
+    - os: linux
+      dist: xenial
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-9
+      env:
+        - CC=gcc-9
+        - CXX=g++-9
+        - BUILD_ASTRO=ON
 
 before_install:
   - . travis/install-cuda-xenial.sh
@@ -33,7 +46,7 @@ before_install:
   - sudo apt-get install -y libcgal-qt5-dev
   - sudo apt-get install -y libcgal-dev
   - mkdir build && cd build
-  - cmake ../ -DCMAKE_CXX_FLAGS=-Wno-deprecated-declarations -DENABLE_CUDA=ON -DSUPPRESS_CUDA_WARNINGS=TRUE -DBUILD_PROTEIN_CUDA_PLUGIN=ON
+  - cmake ../ -DCMAKE_CXX_FLAGS=-Wno-deprecated-declarations -DENABLE_CUDA=ON -DSUPPRESS_CUDA_WARNINGS=TRUE -DBUILD_PROTEIN_CUDA_PLUGIN=ON -DBUILD_ASTRO_PLUGIN=$BUILD_ASTRO
 
 install:
   - make install
