@@ -62,7 +62,7 @@ view::SplitView::SplitView()
     this->splitWidthSlot << new param::FloatParam(4.0f, 0.0f, 100.0f);
     this->MakeSlotAvailable(&this->splitWidthSlot);
 
-    this->splitColourSlot << new param::ColorParam({0.75f, 0.75f, 0.75f, 1.0f});
+    this->splitColourSlot << new param::ColorParam(0.75f, 0.75f, 0.75f, 1.0f);
     this->MakeSlotAvailable(&this->splitColourSlot);
 
     this->enableTimeSyncSlot << new param::BoolParam(false);
