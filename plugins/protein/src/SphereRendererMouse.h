@@ -38,8 +38,10 @@ public:
      *
      * @return The class name
      */
-    static const char *ClassName(void) {
-        return "SphereRendererMouse";
+    static const char *ClassName(void) 
+    {
+        /// braunms: Changed name for consistency with name of SphereRenderer
+        return "MolecularSphereRendererMouse";
     }
 
     /**

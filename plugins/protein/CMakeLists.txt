@@ -13,7 +13,9 @@ if(BUILD_PROTEIN_PLUGIN)
   # afterwards list the dependencies.
   set(DEP_LIST "${DEP_LIST};BUILD_PROTEIN_PLUGIN BUILD_CORE BUILD_MMSTD_TRISOUP_PLUGIN BUILD_PROTEIN_CALLS_PLUGIN BUILD_GEOMETRY_CALLS_PLUGIN" CACHE INTERNAL "")
   
-  set(LIBS vislib core glad mmstd_trisoup protein_calls geometry_calls)
+  require_external(nanoflann)
+
+  set(LIBS vislib core glad mmstd_trisoup protein_calls geometry_calls nanoflann)
   include_directories("include" "src")
 
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
@@ -41,7 +43,9 @@ if(BUILD_PROTEIN_PLUGIN)
   if(WIN32)
     install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
     install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION "lib")
-    install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION bin OPTIONAL)
+    if(MSVC)
+      install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION bin OPTIONAL)
+    endif()
     # special case for the MSMS-related files
     install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/msms/msms.exe DESTINATION "bin")
   else()

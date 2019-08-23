@@ -1,5 +1,5 @@
 /*
-** $Id: llimits.h,v 1.143 2017/06/01 19:16:34 roberto Exp roberto $
+** $Id: llimits.h,v 1.141.1.1 2017/04/19 17:20:42 roberto Exp $
 ** Limits, basic types, and some other 'installation-dependent' definitions
 ** See Copyright Notice in lua.h
 */
@@ -33,7 +33,6 @@ typedef long l_mem;
 
 /* chars used as small naturals (so that 'char' is reserved for characters) */
 typedef unsigned char lu_byte;
-typedef signed char ls_byte;
 
 
 /* maximum value for size_t */
@@ -53,18 +52,26 @@ typedef signed char ls_byte;
 
 
 /*
-** floor of the log2 of the maximum signed value for integral type 't'.
-** (That is, maximum 'n' such that '2^n' fits in the given signed type.)
-*/
-#define log2maxs(t)	(sizeof(t) * 8 - 2)
-
-
-/*
 ** conversion of pointer to unsigned integer:
 ** this is for hashing only; there is no problem if the integer
 ** cannot hold the whole pointer value
 */
 #define point2uint(p)	((unsigned int)((size_t)(p) & UINT_MAX))
+
+
+
+/* type to ensure maximum alignment */
+#if defined(LUAI_USER_ALIGNMENT_T)
+typedef LUAI_USER_ALIGNMENT_T L_Umaxalign;
+#else
+typedef union {
+  lua_Number n;
+  double u;
+  void *s;
+  lua_Integer i;
+  long l;
+} L_Umaxalign;
+#endif
 
 
 

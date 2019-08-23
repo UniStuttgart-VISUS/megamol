@@ -11,7 +11,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
 
   # Check option dependencies: First list item is always the current build option,
   # afterwards list the dependencies.
-  set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE BUILD_OSPRAY_PLUGIN" CACHE INTERNAL "")
+  set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE BUILD_OSPRAY_PLUGIN BUILD_IMAGE_CALLS_PLUGIN" CACHE INTERNAL "")
 
   if(WIN32)
     set(SNAPPY_IMPORT_LIB "lib/snappy.lib")
@@ -33,9 +33,11 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   add_external_project(snappy_ext
     GIT_REPOSITORY https://github.com/google/snappy.git
     GIT_TAG "1.1.7"
+    BUILD_BYPRODUCTS "<INSTALL_DIR>/${SNAPPY_IMPORT_LIB}"
     CMAKE_ARGS
       -DBUILD_SHARED_LIBS=ON
-      -DSNAPPY_BUILD_TESTS=OFF)
+      -DSNAPPY_BUILD_TESTS=OFF
+      -DCMAKE_BUILD_TYPE=Release)
   add_external_library(snappy SHARED
     DEPENDS snappy_ext
     IMPORT_LIBRARY_DEBUG ${SNAPPY_IMPORT_LIB}
@@ -46,6 +48,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   if(MPI_C_FOUND)
     add_external_project(IceT_ext
       GIT_REPOSITORY https://gitlab.kitware.com/icet/icet.git
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${ICET_CORE_IMPORT_LIB}" "<INSTALL_DIR>/${ICET_GL_IMPORT_LIB}" "<INSTALL_DIR>/${ICET_MPI_IMPORT_LIB}"
       CMAKE_ARGS
         -DBUILD_SHARED_LIBS=ON
         -DICET_BUILD_TESTING=OFF
@@ -77,7 +80,6 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
 
   # Target definition
   add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${source_files})
-  set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 17)
   
   # Set target naming conventions for different build types
   set_target_properties(${PROJECT_NAME} PROPERTIES
@@ -107,7 +109,9 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   if(WIN32)
     install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
     install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION "lib")
-    install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION bin OPTIONAL)
+    if(MSVC)
+      install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION bin OPTIONAL)
+    endif()
   else()
     install(TARGETS ${PROJECT_NAME} DESTINATION "lib" EXPORT ${PROJECT_NAME}-target)
   endif()

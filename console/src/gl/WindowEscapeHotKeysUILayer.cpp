@@ -19,7 +19,9 @@ gl::WindowEscapeHotKeysUILayer::~WindowEscapeHotKeysUILayer() {}
 
 bool gl::WindowEscapeHotKeysUILayer::OnKey(
     core::view::Key key, core::view::KeyAction action, core::view::Modifiers mods) {
-    bool isQuit = (key == core::view::Key::KEY_ESCAPE) || (key == core::view::Key::KEY_Q);
+    bool isQuit = ((mods.equals(core::view::Modifier::ALT)) && (key == core::view::Key::KEY_F4));
+//    ||   (key == core::view::Key::KEY_ESCAPE);
+//    || (key == core::view::Key::KEY_Q);
     bool isPressed = (action == core::view::KeyAction::PRESS);
     bool isNotShift = !(mods ^ core::view::Modifier::SHIFT).none();
 

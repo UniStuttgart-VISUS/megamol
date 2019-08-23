@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <btf namespace="splom" type="MegaMolGLSLShader" version="1.0">
+  <include file="core_utils" />
+  <include file="bitflags" />
   <namespace name="minimalisticAxis">
     <shader name="vert">
       <snippet type="version">430</snippet>
@@ -25,17 +27,29 @@
   <namespace name="point">
     <shader name="vert">
       <snippet type="version">430</snippet>
+      <snippet name="::core_utils::tflookup" />
+      <snippet name="::core_utils::tfconvenience" />
+      <snippet name="::bitflags::main" />
+      <snippet type="file">splom_mapping.glsl</snippet>
       <snippet type="file">splom_plots.glsl</snippet>
       <snippet type="file">splom.vert</snippet>
     </shader>
     <shader name="frag">
       <snippet type="version">430</snippet>
+      <snippet name="::core_utils::tflookup" />
+      <snippet name="::core_utils::tfconvenience" />
+      <snippet name="::bitflags::main" />
+      <snippet type="file">splom_mapping.glsl</snippet>
       <snippet type="file">splom_point.frag</snippet>
     </shader>
   </namespace>
   <namespace name="line">
     <shader name="vert">
       <snippet type="version">430</snippet>
+      <snippet name="::core_utils::tflookup" />
+      <snippet name="::core_utils::tfconvenience" />
+      <snippet name="::bitflags::main" />
+      <snippet type="file">splom_mapping.glsl</snippet>
       <snippet type="file">splom_plots.glsl</snippet>
       <snippet type="file">splom.vert</snippet>
     </shader>
@@ -45,7 +59,43 @@
     </shader>
     <shader name="frag">
       <snippet type="version">430</snippet>
+      <snippet name="::core_utils::tflookup" />
+      <snippet name="::core_utils::tfconvenience" />
+      <snippet name="::bitflags::main" />
+      <snippet type="file">splom_mapping.glsl</snippet>
       <snippet type="file">splom_line.frag</snippet>
+    </shader>
+  </namespace>
+  <namespace name="triangle">
+    <shader name="vert">
+      <snippet type="version">430</snippet>
+      <snippet name="::core_utils::tflookup" />
+      <snippet name="::core_utils::tfconvenience" />
+      <snippet name="::bitflags::main" />
+      <snippet type="file">splom_mapping.glsl</snippet>
+      <snippet type="file">splom_triangle.vert</snippet>
+    </shader>
+    <shader name="frag">
+      <snippet type="version">430</snippet>
+      <snippet name="::core_utils::tflookup" />
+      <snippet name="::core_utils::tfconvenience" />
+      <snippet name="::bitflags::main" />
+      <snippet type="file">splom_mapping.glsl</snippet>
+      <snippet type="file">splom_triangle.frag</snippet>
+    </shader>
+  </namespace>
+  <namespace name="screen">
+    <shader name="vert">
+      <snippet type="version">430</snippet>
+      <snippet type="file">splom_screen.vert</snippet>
+    </shader>
+    <shader name="frag">
+      <snippet type="version">430</snippet>
+      <snippet name="::core_utils::tflookup" />
+      <snippet name="::core_utils::tfconvenience" />
+      <snippet name="::bitflags::main" />
+      <snippet type="file">splom_mapping.glsl</snippet>
+      <snippet type="file">splom_screen.frag</snippet>
     </shader>
   </namespace>
 </btf>

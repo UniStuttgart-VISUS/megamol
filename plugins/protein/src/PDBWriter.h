@@ -113,6 +113,13 @@ protected:
 
 private:
 
+	/**
+	 * Callback function called when the trigger button is pressed
+	 *
+	 * @return 'True' on success, 'false' otherwise
+	 */
+	bool buttonCallback(core::param::ParamSlot& slot);
+
     /**
      * Creates the folders in the output path that do not yet exist.
      *
@@ -163,6 +170,12 @@ private:
 
     /// Parameter for the output folder
     core::param::ParamSlot outDirSlot;
+
+	/// Parameter for the trigger button
+	core::param::ParamSlot triggerButtonSlot;
+
+	/// Parameter for the b factor rescaling
+	core::param::ParamSlot rescaleBFactorSlot;
 
     bool jobDone;       ///> Flag whether the job is done
     int filenameDigits; ///> Number of digits used in generated filenames

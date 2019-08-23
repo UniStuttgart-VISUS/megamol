@@ -9,7 +9,6 @@
 #include "io/MMSPDDataSource.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
-#include "mmcore/moldyn/DirectionalParticleDataCall.h"
 #include "mmcore/CoreInstance.h"
 #include "vislib/ArrayAllocator.h"
 #include "vislib/sys/ASCIIFileBuffer.h"
@@ -322,11 +321,11 @@ void MMSPDDataSource::Frame::SetData(core::moldyn::MultiParticleDataCall& call,
 /*
  * MMSPDDataSource::Frame::SetDirData
  */
-void MMSPDDataSource::Frame::SetDirData(core::moldyn::DirectionalParticleDataCall& call,
+void MMSPDDataSource::Frame::SetDirData(core::moldyn::MultiParticleDataCall& call,
     const MMSPDHeader& header) {
     call.SetParticleListCount(static_cast<unsigned int>(this->Data().Count()));
     for (SIZE_T pi = 0; pi < this->Data().Count(); pi++) {
-        core::moldyn::DirectionalParticles &pts = call.AccessParticles(static_cast<unsigned int>(pi));
+        auto &pts = call.AccessParticles(static_cast<unsigned int>(pi));
         const MMSPDHeader::TypeDefinition &typeDef = header.GetTypes()[pi];
         MMSPDFrameData::Particles &parts = this->Data()[pi];
 
@@ -378,22 +377,22 @@ void MMSPDDataSource::Frame::SetDirData(core::moldyn::DirectionalParticleDataCal
             // TODO: decide whether to ignore IDs or don't! (current: don't, interleave with pos)
             if (header.HasIDs()) {
                 off += 8;
-                pts.SetIDData(core::moldyn::DirectionalParticles::IDDATA_UINT64,
+                pts.SetIDData(core::moldyn::SimpleSphericalParticles::IDDATA_UINT64,
                     parts.Data().At(0),
                     static_cast<unsigned int>(off + typeDef.GetFields().Count() * sizeof(float)));
             }
 
-            pts.SetVertexData(hasR ? core::moldyn::DirectionalParticles::VERTDATA_FLOAT_XYZR
-                : core::moldyn::DirectionalParticles::VERTDATA_FLOAT_XYZ,
+            pts.SetVertexData(hasR ? core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZR
+                                   : core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ,
                 parts.Data().At(off + pIdx * sizeof(float)),
                 static_cast<unsigned int>(off + typeDef.GetFields().Count() * sizeof(float)));
 
             if (hasDX && hasDY && hasDZ) {
-                pts.SetDirData(core::moldyn::DirectionalParticles::DIRDATA_FLOAT_XYZ,
+                pts.SetDirData(core::moldyn::SimpleSphericalParticles::DIRDATA_FLOAT_XYZ,
                     parts.Data().At(off + dIdx * sizeof(float)),
                     static_cast<unsigned int>(off + typeDef.GetFields().Count() * sizeof(float)));
             } else {
-                pts.SetDirData(core::moldyn::DirectionalParticles::DIRDATA_NONE,
+                pts.SetDirData(core::moldyn::SimpleSphericalParticles::DIRDATA_NONE,
                     nullptr);
             }
 
@@ -402,16 +401,16 @@ void MMSPDDataSource::Frame::SetDirData(core::moldyn::DirectionalParticleDataCal
 
             if (hasCR && hasCG && hasCB) {
                 if (hasCA) {
-                    pts.SetColourData(core::moldyn::DirectionalParticles::COLDATA_FLOAT_RGBA,
+                    pts.SetColourData(core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_RGBA,
                         parts.Data().At(off + cIdx * sizeof(float)),
                         static_cast<unsigned int>(off + typeDef.GetFields().Count() * sizeof(float)));
                 } else {
-                    pts.SetColourData(core::moldyn::DirectionalParticles::COLDATA_FLOAT_RGB,
+                    pts.SetColourData(core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_RGB,
                         parts.Data().At(off + cIdx * sizeof(float)),
                         static_cast<unsigned int>(off + typeDef.GetFields().Count() * sizeof(float)));
                 }
             } else {
-                pts.SetColourData(core::moldyn::DirectionalParticles::COLDATA_NONE, NULL);
+                pts.SetColourData(core::moldyn::SimpleSphericalParticles::COLDATA_NONE, NULL);
             }
 
         }
@@ -756,11 +755,11 @@ MMSPDDataSource::MMSPDDataSource(void)
     this->getData.SetCallback("MultiParticleDataCall", "GetExtent", &MMSPDDataSource::getExtentCallback);
     this->MakeSlotAvailable(&this->getData);
 
-    this->getDirData.SetCallback(core::moldyn::DirectionalParticleDataCall::ClassName(),
-        core::moldyn::DirectionalParticleDataCall::FunctionName(0),
+    this->getDirData.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(),
+        core::moldyn::MultiParticleDataCall::FunctionName(0),
         &MMSPDDataSource::getDirDataCallback);
-    this->getDirData.SetCallback(core::moldyn::DirectionalParticleDataCall::ClassName(),
-        core::moldyn::DirectionalParticleDataCall::FunctionName(1),
+    this->getDirData.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(),
+        core::moldyn::MultiParticleDataCall::FunctionName(1),
         &MMSPDDataSource::getExtentCallback);
     this->MakeSlotAvailable(&this->getDirData);
 
@@ -1830,7 +1829,7 @@ bool MMSPDDataSource::getDataCallback(core::Call& caller) {
  * MMSPDDataSource::getDirDataCallback
  */
 bool MMSPDDataSource::getDirDataCallback(core::Call& caller) {
-    core::moldyn::DirectionalParticleDataCall *c2 = dynamic_cast<core::moldyn::DirectionalParticleDataCall*>(&caller);
+    core::moldyn::MultiParticleDataCall* c2 = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&caller);
     if (c2 == nullptr) return false;
 
     Frame *f = nullptr;
@@ -1868,7 +1867,7 @@ bool MMSPDDataSource::getExtentCallback(core::Call& caller) {
         return true;
     }
 
-    core::moldyn::DirectionalParticleDataCall *dirCall = dynamic_cast<core::moldyn::DirectionalParticleDataCall*>(&caller);
+    core::moldyn::MultiParticleDataCall* dirCall = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&caller);
 
     if (dirCall != nullptr) {
         dirCall->SetFrameCount(vislib::math::Max(1u, this->dataHeader.GetTimeCount()));

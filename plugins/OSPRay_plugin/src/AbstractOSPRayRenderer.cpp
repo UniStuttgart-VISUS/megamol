@@ -62,7 +62,7 @@ AbstractOSPRayRenderer::AbstractOSPRayRenderer(void)
 
     // ospray lights
     lightsToRender = NULL;
-    this->getLightSlot.SetCompatibleCall<ospray::CallOSPRayLightDescription>();
+    this->getLightSlot.SetCompatibleCall<core::view::light::CallLightDescription>();
     this->MakeSlotAvailable(&this->getLightSlot);
     // ospray device and framebuffer
     device = NULL;
@@ -468,10 +468,10 @@ void AbstractOSPRayRenderer::fillLightArray(float* eyeDir) {
         auto const& lc = entry.second;
 
         switch (lc.lightType) {
-        case ospray::lightenum::NONE:
+        case core::view::light::lightenum::NONE:
             light = NULL;
             break;
-        case ospray::lightenum::DISTANTLIGHT:
+        case core::view::light::lightenum::DISTANTLIGHT:
             light = ospNewLight(this->renderer, "distant");
             if (lc.dl_eye_direction == true) {
                 ospSet3fv(light, "direction", eyeDir);
@@ -480,12 +480,12 @@ void AbstractOSPRayRenderer::fillLightArray(float* eyeDir) {
             }
             ospSet1f(light, "angularDiameter", lc.dl_angularDiameter);
             break;
-        case ospray::lightenum::POINTLIGHT:
+        case core::view::light::lightenum::POINTLIGHT:
             light = ospNewLight(this->renderer, "point");
             ospSet3fv(light, "position", lc.pl_position.data());
             ospSet1f(light, "radius", lc.pl_radius);
             break;
-        case ospray::lightenum::SPOTLIGHT:
+        case core::view::light::lightenum::SPOTLIGHT:
             light = ospNewLight(this->renderer, "spot");
             ospSet3fv(light, "position", lc.sl_position.data());
             ospSet3fv(light, "direction", lc.sl_direction.data());
@@ -493,13 +493,13 @@ void AbstractOSPRayRenderer::fillLightArray(float* eyeDir) {
             ospSet1f(light, "penumbraAngle", lc.sl_penumbraAngle);
             ospSet1f(light, "radius", lc.sl_radius);
             break;
-        case ospray::lightenum::QUADLIGHT:
+        case core::view::light::lightenum::QUADLIGHT:
             light = ospNewLight(this->renderer, "quad");
             ospSet3fv(light, "position", lc.ql_position.data());
             ospSet3fv(light, "edge1", lc.ql_edgeOne.data());
             ospSet3fv(light, "edge2", lc.ql_edgeTwo.data());
             break;
-        case ospray::lightenum::HDRILIGHT:
+        case core::view::light::lightenum::HDRILIGHT:
             light = ospNewLight(this->renderer, "hdri");
             ospSet3fv(light, "up", lc.hdri_up.data());
             ospSet3fv(light, "dir", lc.hdri_direction.data());
@@ -508,7 +508,7 @@ void AbstractOSPRayRenderer::fillLightArray(float* eyeDir) {
                 ospSetObject(this->renderer, "backplate", hdri_tex);
             }
             break;
-        case ospray::lightenum::AMBIENTLIGHT:
+        case core::view::light::lightenum::AMBIENTLIGHT:
             light = ospNewLight(this->renderer, "ambient");
             break;
         }
@@ -850,7 +850,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
 
         case structureTypeEnum::OSPRAY_API_STRUCTURES:
              if (element.ospStructures.first.empty()) {
-                returnValue = false;
+                // returnValue = false;
                 break;
             }
             for (auto structure : element.ospStructures.first) {
@@ -877,51 +877,9 @@ bool AbstractOSPRayRenderer::fillWorld() {
             break;
         case structureTypeEnum::GEOMETRY:
             switch (element.geometryType) {
-            case geometryTypeEnum::PKD: {
-                if (element.raw == NULL) {
-                    returnValue = false;
-                    break;
-                }
-
-                error = ospLoadModule("pkd");
-                if (error != OSPError::OSP_NO_ERROR) {
-                    vislib::sys::Log::DefaultLog.WriteError(
-                        "Unable to load OSPRay module: PKD. Error occured in %s:%d", __FILE__, __LINE__);
-                }
-
-                geo.push_back(ospNewGeometry("pkd_geometry"));
-
-                vertexData = ospNewData(element.partCount, OSP_FLOAT4, element.raw, OSP_DATA_SHARED_BUFFER);
-                ospCommit(vertexData);
-
-                // set bbox
-                bboxData = ospNewData(
-                    6, OSP_FLOAT, element.boundingBox->ObjectSpaceBBox().PeekBounds(), OSP_DATA_SHARED_BUFFER);
-                ospCommit(bboxData);
-
-                ospSet1f(geo.back(), "radius", element.globalRadius);
-                ospSet1i(geo.back(), "colorType", element.colorType);
-                ospSetData(geo.back(), "position", vertexData);
-                ospSetData(geo.back(), "bbox", bboxData);
-
-                if (this->rd_type.Param<megamol::core::param::EnumParam>()->Value() == MPI_RAYCAST) {
-                    auto const half_radius = element.globalRadius * 0.5f;
-
-                    auto const bbox =
-                        element.boundingBox->ObjectSpaceBBox().PeekBounds(); //< TODO Not all geometries expose bbox
-                    ospcommon::vec3f lower{bbox[0] - half_radius, bbox[1] - half_radius,
-                        bbox[2] - half_radius}; //< TODO The bbox needs to include complete sphere bound
-                    ospcommon::vec3f upper{bbox[3] + half_radius, bbox[4] + half_radius, bbox[5] + half_radius};
-                    // ghostRegions.emplace_back(lower, upper);
-                    worldBounds.extend({lower, upper}); //< TODO Possible hazard if bbox is not centered
-                    regions.emplace_back(lower, upper);
-                }
-            }
-
-            break;
-            case geometryTypeEnum::SPHERES:
+             case geometryTypeEnum::SPHERES:
                 if (element.vertexData == NULL) {
-                    returnValue = false;
+                    // returnValue = false;
                     break;
                 }
 
@@ -979,7 +937,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
 
             case geometryTypeEnum::NHSPHERES:
                 if (element.raw == NULL) {
-                    returnValue = false;
+                    // returnValue = false;
                     break;
                 }
 
@@ -1029,7 +987,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
                 break;
             case geometryTypeEnum::PBS:
                 if (element.xData == NULL || element.yData == NULL || element.zData == NULL) {
-                    returnValue = false;
+                    // returnValue = false;
                     break;
                 }
                 {
@@ -1060,7 +1018,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
                 break;
             case geometryTypeEnum::TRIANGLES:
                 if (element.vertexData == NULL) {
-                    returnValue = false;
+                    // returnValue = false;
                     break;
                 }
 
@@ -1110,7 +1068,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
                 break;
             case geometryTypeEnum::STREAMLINES:
                 if (element.vertexData == NULL) {
-                    returnValue = false;
+                    // returnValue = false;
                     break;
                 }
                 {
@@ -1179,7 +1137,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
         case structureTypeEnum::VOLUME:
 
                 if (element.voxels == NULL) {
-                    returnValue = false;
+                    // returnValue = false;
                     break;
                 }
 

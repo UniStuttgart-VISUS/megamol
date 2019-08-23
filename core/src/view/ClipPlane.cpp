@@ -9,9 +9,8 @@
 #include "mmcore/view/ClipPlane.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
-#include "mmcore/param/StringParam.h"
+#include "mmcore/param/ColorParam.h"
 #include "mmcore/param/Vector3fParam.h"
-#include "mmcore/utility/ColourParser.h"
 #include "mmcore/view/CallClipPlane.h"
 #include "vislib/sys/Log.h"
 #include "vislib/math/mathfunctions.h"
@@ -35,8 +34,8 @@ view::ClipPlane::ClipPlane(void) : Module(),
 
     this->plane.Set(vislib::math::Point<float, 3>(0.0, 0.0f, 0.0f),
         vislib::math::Vector<float, 3>(1.0f, 0.0f, 0.0f));
-    this->col[0] = this->col[1] = this->col[2] = 128;
-    this->col[3] = 255;
+    this->col[0] = this->col[1] = this->col[2] = 0.5f;
+    this->col[3] = 1.0f;
 
     view::CallClipPlaneDescription ccpd;
     this->getClipPlaneSlot.SetCallback(ccpd.ClassName(), ccpd.FunctionName(0),
@@ -46,12 +45,8 @@ view::ClipPlane::ClipPlane(void) : Module(),
     this->enableSlot << new param::BoolParam(false);
     this->MakeSlotAvailable(&this->enableSlot);
 
-    this->colourSlot << new param::StringParam(
-        utility::ColourParser::ToString(
-            static_cast<float>(this->col[0]) / 255.0f,
-            static_cast<float>(this->col[1]) / 255.0f,
-            static_cast<float>(this->col[2]) / 255.0f,
-            static_cast<float>(this->col[3]) / 255.0f));
+    this->colourSlot << new param::ColorParam(
+        this->col[0], this->col[1], this->col[2], this->col[3]);
     this->MakeSlotAvailable(&this->colourSlot);
 
     this->normalSlot << new param::Vector3fParam(this->plane.Normal());
@@ -105,16 +100,7 @@ bool view::ClipPlane::requestPlane(Call& call) {
 
     if (this->colourSlot.IsDirty()) {
         this->colourSlot.ResetDirty();
-        float r, g, b, a;
-        if (utility::ColourParser::FromString(this->colourSlot.Param<param::StringParam>()->Value(), r, g, b, a)) {
-            this->col[0] = static_cast<unsigned char>(vislib::math::Clamp(r, 0.0f, 1.0f) * 255.0f);
-            this->col[1] = static_cast<unsigned char>(vislib::math::Clamp(g, 0.0f, 1.0f) * 255.0f);
-            this->col[2] = static_cast<unsigned char>(vislib::math::Clamp(b, 0.0f, 1.0f) * 255.0f);
-            this->col[3] = static_cast<unsigned char>(vislib::math::Clamp(a, 0.0f, 1.0f) * 255.0f);
-        } else {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-                "Unable to parse colour");
-        }
+        this->colourSlot.Param<param::ColorParam>()->Value(this->col[0], this->col[1], this->col[2], this->col[3]);
     }
 
     if (!this->normalSlot.IsDirty() && !this->pointSlot.IsDirty() && this->distSlot.IsDirty()) {
@@ -140,7 +126,11 @@ bool view::ClipPlane::requestPlane(Call& call) {
             -this->plane.Distance(vislib::math::Point<float, 3>(0.0f, 0.0f, 0.0f)), false);
     }
 
-    ccp->SetColour(this->col[0], this->col[1], this->col[2], this->col[3]);
+    auto r = static_cast<unsigned char>(this->col[0] * 255.0f);
+    auto g = static_cast<unsigned char>(this->col[1] * 255.0f);
+    auto b = static_cast<unsigned char>(this->col[2] * 255.0f);
+    auto a = static_cast<unsigned char>(this->col[3] * 255.0f);
+    ccp->SetColour(r, g, b, a);
     ccp->SetPlane(this->plane);
 
     return true;

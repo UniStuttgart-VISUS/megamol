@@ -45,12 +45,17 @@ namespace sys {
         virtual void Lock(void);
 
         /**
-         * Aquires an exclusive lock
+         * Acquires an exclusive lock
          */
         virtual void LockExclusive(void) = 0;
 
         /**
-         * Aquires a shared lock
+         * Tries to acquire the lock
+         */
+        virtual bool TryLock(unsigned long const timeout = 0) { return false; };
+
+        /**
+         * Acquires a shared lock
          */
         virtual void LockShared(void) = 0;
 

@@ -38,7 +38,7 @@ namespace graphics {
      * modelles pitch and yaw rotations, while the alternative rotation schema
      * modelles roll rotation.
      */
-    class CameraRotate2DLookAt : public AbstractCursor2DEvent, 
+    class [[deprecated]] CameraRotate2DLookAt : public AbstractCursor2DEvent, 
         public AbstractCameraController {
 
     public:

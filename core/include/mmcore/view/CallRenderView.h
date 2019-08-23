@@ -14,7 +14,7 @@
 #include "mmcore/api/MegaMolCore.h"
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/view/AbstractCallRender.h"
-#include "mmcore/view/RenderOutput.h" 
+#include "mmcore/view/RenderOutputOpenGL.h" 
 #include "mmcore/view/Input.h"
 #include "vislib/graphics/CameraParameters.h"
 #include "vislib/graphics/graphicstypes.h"
@@ -28,11 +28,10 @@ namespace view {
 #pragma warning(disable: 4250)  // I know what I am doing ...
 #endif /* _WIN32 */
     /**
-     * Call for materializing a rendering module.
-	 *
-	 * This is used for FBO-based compositing and registering a module at the cluster display.
+     * Call for rendering visual elements (from separate sources) into a single target, i.e.,
+	 * FBO-based compositing and cluster display.
      */
-    class MEGAMOLCORE_API CallRenderView : public AbstractCallRender, public RenderOutput {
+    class MEGAMOLCORE_API CallRenderView : public AbstractCallRender, public RenderOutputOpenGL {
     public:
 
         /**
@@ -50,7 +49,7 @@ namespace view {
          * @return A human readable description of the module.
          */
         static const char *Description(void) {
-            return "Call for registering a module at the cluster display";
+            return "Call for rendering visual elements into a single target";
         }
 
 		/** Function index of 'render' */
@@ -328,6 +327,7 @@ namespace view {
          * @param btn The mouse button
          * @param down The down flag
          */
+		[[deprecated("This is utterly bad design and to be replaced by something AbstractInputScope-y")]]
         inline void SetMouseButton(unsigned int btn, bool down) {
             this->btn = btn;
             this->down = down;
@@ -339,6 +339,7 @@ namespace view {
          * @param x The x coordinate of the mouse position
          * @param y The y coordinate of the mouse position
          */
+		[[deprecated("This is utterly bad design and to be replaced by something AbstractInputScope-y")]]
         inline void SetMousePosition(float x, float y) {
             this->x = x;
             this->y = y;

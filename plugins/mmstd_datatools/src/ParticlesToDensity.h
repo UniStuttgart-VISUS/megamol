@@ -15,7 +15,6 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/misc/VolumetricDataCall.h"
-#include "mmcore/moldyn/DirectionalParticleDataCall.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/param/ParamSlot.h"
 #include "vislib/math/Vector.h"
@@ -80,7 +79,7 @@ private:
     inline bool anythingDirty() const {
         return this->aggregatorSlot.IsDirty() || this->xResSlot.IsDirty() || this->yResSlot.IsDirty() ||
                this->zResSlot.IsDirty() || this->cyclXSlot.IsDirty() || this->cyclYSlot.IsDirty() ||
-               this->cyclZSlot.IsDirty() || this->normalizeSlot.IsDirty() || this->filterSizeSlot.IsDirty() || this->sigmaSlot.IsDirty();
+               this->cyclZSlot.IsDirty() || this->normalizeSlot.IsDirty() || this->sigmaSlot.IsDirty();
     }
 
     inline void resetDirty() {
@@ -92,7 +91,6 @@ private:
         this->cyclYSlot.ResetDirty();
         this->cyclZSlot.ResetDirty();
         this->normalizeSlot.ResetDirty();
-        this->filterSizeSlot.ResetDirty();
         this->sigmaSlot.ResetDirty();
     }
 
@@ -107,7 +105,6 @@ private:
     core::param::ParamSlot cyclZSlot;
 
     core::param::ParamSlot normalizeSlot;
-    core::param::ParamSlot filterSizeSlot;
 
     core::param::ParamSlot sigmaSlot;
 

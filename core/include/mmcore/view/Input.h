@@ -209,6 +209,10 @@ public:
 
     inline bool test(Modifiers mods) const { return (bits & mods.bits).any(); }
 
+    inline bool equals(Modifier mod) const { return (bits == Modifiers(mod).bits); }
+
+    inline bool equals(Modifiers mods) const { return (bits == mods.bits); }
+
     inline Modifiers& reset(Modifier mod) {
         Modifiers mask(mod);
         bits ^= mask.bits;
@@ -293,6 +297,16 @@ public:
     KeyCode(Key key, Modifiers mods) {
         this->mods = mods;
         this->key = key;
+    }
+
+    /** Return key. */
+    core::view::Key GetKey(void) {
+        return this->key;
+    }
+
+    /** Return modifiers. */
+    core::view::Modifiers GetModifiers(void) {
+        return this->mods;
     }
 
     /**

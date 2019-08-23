@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<btf type="MegaMolGLSLShader" version="1.0" namespace="TrackingShotShader">
+    <include file="common"/>
+
+    <shader name="vertex">
+        <snippet type="version">130</snippet>
+        <snippet name="main" type="string">
+<![CDATA[
+
+//uniform mat4 MVP; // ModelViewProjection-Matrix
+    
+void main(void) {
+
+    gl_Position = gl_Vertex; // MVP is identity matrix ...
+}
+
+]]>
+        </snippet>
+    </shader>
+
+    <shader name="fragment">
+        <snippet type="version">130</snippet> 
+        <snippet name="main" type="string">
+<![CDATA[
+         
+uniform float vpH;
+uniform float vpW;
+ 
+uniform sampler2D depthtex;
+
+void main() {
+
+    vec2  UV     = vec2(gl_FragCoord.x / vpW, gl_FragCoord.y / vpH);
+    gl_FragDepth = texture2D(depthtex, UV).x; 
+    
+    gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
+}
+
+]]>
+        </snippet>
+    </shader>
+
+</btf>

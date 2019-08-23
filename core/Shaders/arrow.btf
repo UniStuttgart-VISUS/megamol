@@ -1,9 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <btf type="MegaMolGLSLShader" version="1.0" namespace="arrow">
   <include file="common"/>
+  <include file="bitflags"/>
 
   <shader name="vertex">
         <snippet type="version">110</snippet>
+        <snippet type="string">
+#extension GL_EXT_gpu_shader4 : enable
+        </snippet>
         <snippet name="common::defines"/>
     <snippet name="attributes" type="string">
       <![CDATA[
@@ -17,6 +21,7 @@ uniform vec4 inConsts1;
 uniform sampler1D colTab;
 uniform float lengthScale;
 uniform float lengthFilter;
+uniform uint flagsAvailable;
 
 #define CONSTRAD inConsts1.x
 #define MIN_COLV inConsts1.y
@@ -34,12 +39,15 @@ varying vec4 lightPos;
 varying vec3 rotMatT0;
 varying vec3 rotMatT1;
 varying vec3 rotMatT2;
+flat varying uint discardFrag;
 ]]>
         </snippet>
+        <snippet name="::bitflags::main" />
         <snippet type="string">
             <![CDATA[
 attribute float colIdx;
-attribute vec3 dir;            
+attribute vec3 dir;
+attribute uint flags;            
             
 void main(void) {
 ]]>
@@ -72,7 +80,7 @@ void main(void) {
     vec3 fromPos = gl_Vertex.xyz + (dir * 0.5) * lengthScale;
     vec3 toPos = gl_Vertex.xyz - (dir * 0.5) * lengthScale;
 
-    inPos = vec4((fromPos + toPos) * vec3(0.5), 1.0);
+    inPos = vec4(gl_Vertex.xyz, 1.0);
 
     rad.y = rad.x * rad.x;
     //rad.z = 1.0; // half cylinder length
@@ -225,13 +233,29 @@ void main(void) {
       max(max(p1.x, p2.x), max(p3.x, p4.x)),
       max(max(p1.y, p2.y), max(p3.y, p4.y)));
 
-    gl_Position = vec4(
-      (minP + maxP) * 0.5,
-      0.5, 
-      ( CYL_HALF_LEN < lengthFilter * 0.5) ? 0.0 : 1.0
-      );
-    maxP = (maxP - minP) * 0.5 * winHalf;
-    gl_PointSize = max(maxP.x, maxP.y) + 0.5;
+    if (bitflag_test(flags, FLAG_SELECTED, FLAG_SELECTED)) {
+        gl_FrontColor = vec4(1.0, 0.0, 0.0, 1.0);
+    }
+    
+    discardFrag = uint(0);
+    if ((bool(flagsAvailable) && !bitflag_isVisible(flags))) {
+        discardFrag = uint(1);
+    }
+
+    if (discardFrag == 0u) {
+      gl_Position = vec4(
+        (minP + maxP) * 0.5,
+        0.5, 
+        ( CYL_HALF_LEN < lengthFilter * 0.5) ? 0.0 : 1.0
+        );
+        maxP = (maxP - minP) * 0.5 * winHalf;
+        gl_PointSize = max(maxP.x, maxP.y) + 0.5;
+    } else {
+    //if (bitflag_test(flags, FLAG_FILTERED, FLAG_FILTERED)) {
+        gl_Position = vec4(0.0, 0.0, -1.0, 0.0);
+        gl_PointSize = 1.0;
+    }
+    
 
 }
 ]]>
@@ -240,6 +264,9 @@ void main(void) {
 
   <shader name="fragment">
     <snippet type="version">110</snippet>
+    <snippet type="string">
+#extension GL_EXT_gpu_shader4 : enable
+    </snippet>
     <snippet name="common::defines"/>
     <snippet name="vertex::attributes"/>
     <snippet name="vertex::varyings"/>
@@ -250,6 +277,10 @@ void main(void) {
     vec4 coord;
     vec3 ray, tmp;
     const float maxLambda = 50000.0;
+
+    if (discardFrag > uint(0)) {   
+        discard;
+    }
 
     // transform fragment coordinates from window coordinates to view coordinates.
     coord = gl_FragCoord 

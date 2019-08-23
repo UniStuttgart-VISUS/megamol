@@ -13,10 +13,10 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
-#include "mmcore/moldyn/DirectionalParticleDataCall.h"
+#include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "PointcloudHelpers.h"
 #include <vector>
-#include "nanoflann.hpp"
+#include <nanoflann.hpp>
 
 namespace megamol {
 namespace stdplugin {
@@ -102,16 +102,9 @@ namespace datatools {
             simplePointcloud,
             3 /* dim */
         > my_kd_tree_t;
-        typedef nanoflann::KDTreeSingleIndexAdaptor<
-            nanoflann::L2_Simple_Adaptor<float, directionalPointcloud>,
-            directionalPointcloud,
-            3 /* dim */
-        > my_dir_kd_tree_t;
 
         std::shared_ptr<my_kd_tree_t> particleTree;
-        std::shared_ptr<my_dir_kd_tree_t> dirParticleTree;
         std::shared_ptr<simplePointcloud> myPts;
-        std::shared_ptr<directionalPointcloud> myDirPts;
 
         /** The slot providing access to the manipulated data */
         megamol::core::CalleeSlot outDataSlot;

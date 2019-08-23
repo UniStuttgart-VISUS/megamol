@@ -66,7 +66,11 @@ namespace MegaMolConf.Data {
                 ptb = new ParamType.FilePath();
             } else if (typeName == "MMCOLO") {
                 ptb = new ParamType.Color();
-            } else {
+            }
+            else if (typeName == "MMTFFC") {
+                ptb = new ParamType.TransferFunction();
+            }
+            else {
                 ptb = new ParamType.String();
             }
 

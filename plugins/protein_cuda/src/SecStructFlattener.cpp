@@ -20,6 +20,8 @@
 #include "vislib/math/ShallowVector.h"
 #include "vislib/sys/Log.h"
 
+#include <limits>
+
 using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::protein_cuda;
@@ -72,7 +74,7 @@ SecStructFlattener::SecStructFlattener(void) :
 	this->timestepsPerFrameParam.SetParameter(new param::IntParam(1, 1, 100));
 	this->MakeSlotAvailable(&this->timestepsPerFrameParam);
 
-	this->maxTimestepParam.SetParameter(new param::IntParam(-1, -1, INT_MAX));
+	this->maxTimestepParam.SetParameter(new param::IntParam(-1, -1, std::numeric_limits<int>::max()));
 	this->MakeSlotAvailable(&this->maxTimestepParam);
 
 	float minConstant = 0.0f;
