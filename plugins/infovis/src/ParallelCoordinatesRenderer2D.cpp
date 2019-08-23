@@ -1006,6 +1006,7 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         drawAxes();
     }
 
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     glDepthMask(GL_TRUE);
 
     return true;
