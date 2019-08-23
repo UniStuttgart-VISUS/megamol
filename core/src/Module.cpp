@@ -57,9 +57,9 @@ bool Module::Create(void) {
         auto p3 = dynamic_cast<core::view::Renderer3DModule*>(this);
         auto p2 = dynamic_cast<core::view::Renderer2DModule*>(this);
         if (p2 || p3) {
-            std::string blah = this->ClassName();
-            blah += "::create";
-            glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1234, -1, blah.c_str());
+            std::string output = this->ClassName();
+            output += "::create";
+            glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1234, -1, output.c_str());
         }
 #endif
         this->created = this->create();
