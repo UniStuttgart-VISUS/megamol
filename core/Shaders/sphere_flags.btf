@@ -36,7 +36,7 @@ if (bool(flagsAvailable)) {
 #ifdef FLAG_STORAGE_SSBO
     flag = inFlags[(flagOffset + gl_VertexID)];
 #else
-    flag = flagOffset + inFlags[0];
+    flag = flagOffset + inFlags;
 #endif // FLAG_STORAGE_SSBO
 }
 
@@ -112,7 +112,7 @@ uniform uint flagsAvailable;
     <snippet name="fragment_discardtest" type="string">
         <![CDATA[
 
-if (bool(flagsAvailable) && (discardFrag > uint(0))) {   
+if (discardFrag > uint(0)) {   
     discard;
 }
 
