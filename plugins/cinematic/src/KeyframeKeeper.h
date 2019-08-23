@@ -95,7 +95,6 @@ namespace cinematic {
         unsigned int                 interpolSteps;
         p3f                          modelBboxCenter;
         unsigned int                 fps;
-
         v3f                          camViewUp;
         p3f                          camViewPosition;
         p3f                          camViewLookat;
@@ -104,9 +103,9 @@ namespace cinematic {
         // Variables only used in keyframe keeper
         vislib::StringA             filename;
         bool                        simTangentStatus;
-        float                       tl; // Global interpolation spline tangent length of keyframes
+        float                       splineTangentLength;
 
-        // undo queue stuff -----------------------------------------------
+        // UNDO QUEUE -----------------------------------------------
 
         enum UndoActionEnum {
             UNDO_NONE      = 0,
@@ -118,7 +117,6 @@ namespace cinematic {
 
         class UndoAction {  
             public:
-                /** functions **/
                 UndoAction() {
                     this->action        = KeyframeKeeper::UndoActionEnum::UNDO_NONE;
                     this->keyframe      = Keyframe();
@@ -151,7 +149,6 @@ namespace cinematic {
                                 (this->startcp != rhs.startcp) || (this->endcp != rhs.endcp) || (this->prev_startcp != rhs.prev_startcp) || (this->prev_endcp != rhs.prev_endcp));
                 }
 
-                /** variables **/
                 UndoActionEnum action;
                 Keyframe       keyframe;
                 Keyframe       prev_keyframe;
@@ -162,7 +159,6 @@ namespace cinematic {
         };
 
         vislib::Array<UndoAction> undoQueue;
-
         int undoQueueIndex;
 
         /**********************************************************************
@@ -266,7 +262,7 @@ namespace cinematic {
         vislib::math::Vector<float, 3> interpolate_v3f(float u, v3f v0, v3f v1, v3f v2, v3f v3);
 
         /**********************************************************************
-        * callback stuff
+        * callbacks
         **********************************************************************/
 
         megamol::core::CalleeSlot cinematicCallSlot;

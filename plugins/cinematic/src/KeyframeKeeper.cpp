@@ -77,7 +77,7 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
     camViewApertureangle(30.0f),
     filename("keyframes.kf"),
     simTangentStatus(false),
-    tl(0.5f),
+    splineTangentLength(0.5f),
     undoQueue(),
     undoQueueIndex(0)
 {
@@ -137,7 +137,7 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
     this->simTangentParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_T, core::view::Modifier::CTRL));
     this->MakeSlotAvailable(&this->simTangentParam);
 
-    this->interpolTangentParam.SetParameter(new param::FloatParam(this->tl)); // , -10.0f, 10.0f));
+    this->interpolTangentParam.SetParameter(new param::FloatParam(this->splineTangentLength)); // , -10.0f, 10.0f));
     this->MakeSlotAvailable(&this->interpolTangentParam);
 
     //this->setKeyframesToSameSpeed.SetParameter(new param::ButtonParam(core::view::Key::KEY_V, core::view::Modifier::CTRL));
@@ -366,7 +366,7 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
     if (this->interpolTangentParam.IsDirty()) {
         this->interpolTangentParam.ResetDirty();
 
-        this->tl = this->interpolTangentParam.Param<param::FloatParam>()->Value();
+        this->splineTangentLength = this->interpolTangentParam.Param<param::FloatParam>()->Value();
         this->refreshInterpolCamPos(this->interpolSteps);
     }
 
@@ -1285,9 +1285,9 @@ float KeyframeKeeper::interpolate_f(float u, float f0, float f1, float f2, float
     // Considering global tangent length 
     // SOURCE: https://www.cs.cmu.edu/~462/projects/assn2/assn2/catmullRom.pdf
     float f = (f1) +
-              (-(this->tl * f0) + (this->tl* f2)) * u + 
-              ((2.0f*this->tl * f0) + ((this->tl - 3.0f) * f1) + ((3.0f - 2.0f*this->tl) * f2) - (this->tl* f3)) * u * u + 
-              (-(this->tl * f0) + ((2.0f - this->tl) * f1) + ((this->tl - 2.0f) * f2) + (this->tl* f3)) * u * u * u;
+              (-(this->splineTangentLength * f0) + (this->splineTangentLength* f2)) * u + 
+              ((2.0f*this->splineTangentLength * f0) + ((this->splineTangentLength - 3.0f) * f1) + ((3.0f - 2.0f*this->splineTangentLength) * f2) - (this->splineTangentLength* f3)) * u * u + 
+              (-(this->splineTangentLength * f0) + ((2.0f - this->splineTangentLength) * f1) + ((this->splineTangentLength - 2.0f) * f2) + (this->splineTangentLength* f3)) * u * u * u;
 
 
     return f;
@@ -1327,7 +1327,7 @@ void KeyframeKeeper::saveKeyframes() {
     outfile.open(this->filename.PeekBuffer(), std::ios::binary);
     vislib::StringSerialiserA ser;
     outfile << "totalAnimTime=" << this->totalAnimTime << "\n";
-    outfile << "tangentLength=" << this->tl << "\n";
+    outfile << "tangentLength=" << this->splineTangentLength << "\n";
     outfile << "startCtrllPosX=" << this->startCtrllPos.X() << "\n";
     outfile << "startCtrllPosY=" << this->startCtrllPos.Y() << "\n";
     outfile << "startCtrllPosZ=" << this->startCtrllPos.Z() << "\n";
@@ -1380,7 +1380,7 @@ void KeyframeKeeper::loadKeyframes() {
         if (line.find("Length",0) < line.length()) {
             // get tangentLength
             //std::getline(infile, line);
-            this->tl = std::stof(line.erase(0, 14)); // "tangentLength="
+            this->splineTangentLength = std::stof(line.erase(0, 14)); // "tangentLength="
             // get startCtrllPos
             std::getline(infile, line);
             this->startCtrllPos.SetX(std::stof(line.erase(0, 15))); // "startCtrllPosX="

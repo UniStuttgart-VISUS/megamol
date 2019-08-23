@@ -219,7 +219,6 @@ namespace cinematic {
         * variables
         **********************************************************************/
 
-		// Pointer to array of keyframes
         vislib::SmartPtr<vislib::graphics::CameraParameters> cameraParam;
         vislib::Array<vislib::math::Point<float, 3> > *interpolCamPos;
 		vislib::Array<Keyframe>				          *keyframes;
@@ -234,7 +233,6 @@ namespace cinematic {
         unsigned int                                   fps;
         vislib::math::Vector<float, 3>                 startCtrllPos;
         vislib::math::Vector<float, 3>                 endCtrllPos;
-
 	};
 
 

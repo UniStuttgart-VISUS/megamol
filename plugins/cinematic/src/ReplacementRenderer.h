@@ -121,10 +121,9 @@ namespace cinematic {
         void drawBoundingBox(void);
 
         /**********************************************************************
-        * callback stuff
+        * callbacks
         **********************************************************************/
 
-        /** The renderer caller slot */
         core::CallerSlot rendererCallerSlot;
 
         /**********************************************************************

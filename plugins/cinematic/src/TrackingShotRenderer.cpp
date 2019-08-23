@@ -20,9 +20,9 @@ using namespace vislib;
 TrackingShotRenderer::TrackingShotRenderer(void) : Renderer3DModule(),
     rendererCallerSlot("renderer", "outgoing renderer"),
     keyframeKeeperSlot("keyframeKeeper", "Connects to the Keyframe Keeper."),
-    stepsParam(                "splineSubdivision", "Amount of interpolation steps between keyframes."),
-    toggleManipulateParam(     "toggleManipulators", "Toggle different manipulators for the selected keyframe."),
-    toggleHelpTextParam(       "helpText", "Show/hide help text for key assignments."),
+    interpolStepsParam("splineSubdivision", "Amount of interpolation steps between keyframes."),
+    toggleManipulateParam("toggleManipulators", "Toggle different manipulators for the selected keyframe."),
+    toggleHelpTextParam("helpText", "Show/hide help text for key assignments."),
     toggleManipOusideBboxParam("manipulatorsOutsideBBox", "Keep manipulators always outside of model bounding box."),
 
     theFont(megamol::core::utility::SDFFont::FontName::ROBOTO_SANS), 
@@ -30,13 +30,13 @@ TrackingShotRenderer::TrackingShotRenderer(void) : Renderer3DModule(),
     toggleManipulator(0),
     manipOutsideModel(false),
     showHelpText(false),
-    manipulator(), 
+    manipulators(), 
     manipulatorGrabbed(false),
     textureShader(),
     fbo(),
     mouseX(0.0f),
-    mouseY(0.0f)
-{
+    mouseY(0.0f), 
+    utils() {
 
     this->rendererCallerSlot.SetCompatibleCall<CallRender3DDescription>();
     this->MakeSlotAvailable(&this->rendererCallerSlot);
@@ -45,8 +45,8 @@ TrackingShotRenderer::TrackingShotRenderer(void) : Renderer3DModule(),
     this->MakeSlotAvailable(&this->keyframeKeeperSlot);
 
     // init parameters
-    this->stepsParam.SetParameter(new param::IntParam((int)this->interpolSteps, 1));
-    this->MakeSlotAvailable(&this->stepsParam);
+    this->interpolStepsParam.SetParameter(new param::IntParam((int)this->interpolSteps, 1));
+    this->MakeSlotAvailable(&this->interpolStepsParam);
 
     this->toggleManipulateParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_Q, core::view::Modifier::CTRL));
     this->MakeSlotAvailable(&this->toggleManipulateParam);
@@ -58,7 +58,7 @@ TrackingShotRenderer::TrackingShotRenderer(void) : Renderer3DModule(),
     this->MakeSlotAvailable(&this->toggleManipOusideBboxParam);
 
     // Load spline interpolation keyframes at startup
-    this->stepsParam.ForceSetDirty();
+    this->interpolStepsParam.ForceSetDirty();
 }
 
 
@@ -108,6 +108,11 @@ bool TrackingShotRenderer::create(void) {
         return false;
     }
 
+    this->utils.InitPrimitiveRendering(megamol::core::Module::instance()->ShaderSourceFactory());
+    vislib::StringA shortfilename = "arrow.png";
+    auto fullfilename = megamol::core::utility::ResourceWrapper::getFileName(this->GetCoreInstance()->Configuration(), shortfilename);
+    this->utils.LoadTextureFromFile(std::wstring(fullfilename.PeekBuffer()), this->texture);
+
 	return true;
 }
 
@@ -142,7 +147,7 @@ bool TrackingShotRenderer::GetExtents(megamol::core::view::CallRender3D& call) {
         ccc->setBboxCenter(cr3d_out->AccessBoundingBoxes().WorldSpaceBBox().CalcCenter());
 
         // Grow bounding box to manipulators and get information of bbox of model
-        this->manipulator.SetExtents(&bbox);
+        this->manipulators.SetExtents(&bbox);
 
         vislib::math::Cuboid<float> cbox = cr3d_out->AccessBoundingBoxes().WorldSpaceClipBox();
 
@@ -191,14 +196,15 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D& call) {
     if (!(*ccc)(CallKeyframeKeeper::CallForGetUpdatedKeyframeData)) return false;
 
     // Update parameter
-    if (this->stepsParam.IsDirty()) {
-        this->interpolSteps = this->stepsParam.Param<param::IntParam>()->Value();
+    if (this->interpolStepsParam.IsDirty()) {
+        this->interpolSteps = this->interpolStepsParam.Param<param::IntParam>()->Value();
         ccc->setInterpolationSteps(this->interpolSteps);
         if (!(*ccc)(CallKeyframeKeeper::CallForGetInterpolCamPositions)) return false;
-        this->stepsParam.ResetDirty();
+        this->interpolStepsParam.ResetDirty();
     }
     if (this->toggleManipulateParam.IsDirty()) {
-        this->toggleManipulator = (this->toggleManipulator + 1) % 2; // There are currently two different manipulator groups ...
+        // There are currently two different manipulator groups ...
+        this->toggleManipulator = (this->toggleManipulator + 1) % 2; 
         this->toggleManipulateParam.ResetDirty();
     }
     if (this->toggleHelpTextParam.IsDirty()) {
@@ -271,7 +277,7 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D& call) {
 
     // Draw slave renderer stuff ----------------------------------------------
 
-    // Suppress TRACE output of fbo.Enable() and fbo.Create()
+// Suppress TRACE output of fbo.Enable() and fbo.Create()
 #if defined(DEBUG) || defined(_DEBUG)
     unsigned int otl = vislib::Trace::GetInstance().GetLevel();
     vislib::Trace::GetInstance().SetLevel(0);
@@ -293,12 +299,12 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D& call) {
         return false;
     }
 
-    // Reset TRACE output level
+// Reset TRACE output level
 #if defined(DEBUG) || defined(_DEBUG)
-     vislib::Trace::GetInstance().SetLevel(otl);
+    vislib::Trace::GetInstance().SetLevel(otl);
 #endif // DEBUG || _DEBUG 
 
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClearColor(bgColor[0], bgColor[1], bgColor[2], bgColor[3]);
     glClearDepth(1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -326,9 +332,7 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D& call) {
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glDisable(GL_CULL_FACE);
     glDisable(GL_LIGHTING);
-
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDisable(GL_BLEND);
 
     // DRAW DEPTH ---------------------------------------------------------
     glEnable(GL_DEPTH_TEST);
@@ -350,6 +354,8 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D& call) {
 
     // Draw cinematic renderer stuff -------------------------------------------
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     GLfloat tmpLw;
     glGetFloatv(GL_LINE_WIDTH, &tmpLw);
@@ -366,8 +372,8 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D& call) {
             vislib::Array<KeyframeManipulator::manipType> availManip;
             availManip.Clear();
             availManip.Add(KeyframeManipulator::manipType::KEYFRAME_POS);
-
-            if (this->toggleManipulator == 0) { // Keyframe position (along XYZ) manipulators, spline control point
+            // Keyframe position (along XYZ) manipulators, spline control point
+            if (this->toggleManipulator == 0) { 
                 availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_POS_X);
                 availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_POS_Y);
                 availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_POS_Z);
@@ -375,7 +381,9 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D& call) {
                 availManip.Add(KeyframeManipulator::manipType::CTRL_POINT_POS_Y);
                 availManip.Add(KeyframeManipulator::manipType::CTRL_POINT_POS_Z);
             }
-            else { //if (this->toggleManipulator == 1) { // Keyframe position (along lookat), lookat and up manipulators
+            else { 
+                //if (this->toggleManipulator == 1) { 
+                // Keyframe position (along lookat), lookat and up manipulators
                 availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_UP);
                 availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_LOOKAT_X);
                 availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_LOOKAT_Y);
@@ -383,7 +391,8 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D& call) {
                 availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_POS_LOOKAT);
             }
 
-            this->manipulator.Update(availManip, keyframes, skf, (float)(vpHeight), (float)(vpWidth), modelViewProjMatrix,
+            // Update manipulators with current data.
+            this->manipulators.Update(availManip, keyframes, skf, (float)(vpHeight), (float)(vpWidth), modelViewProjMatrix,
                 (cr3d_in->GetCameraParameters()->Position().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>()) -
                 (cr3d_in->GetCameraParameters()->LookAt().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>()),
                 (cr3d_in->GetCameraParameters()->Position().operator vislib::math::Vector<vislib::graphics::SceneSpaceType, 3U>()) -
@@ -392,7 +401,7 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D& call) {
         }
 
         // Draw manipulators
-        this->manipulator.Draw();
+        this->manipulators.Draw();
     }
 
     // Draw spline    
@@ -405,6 +414,41 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D& call) {
         glVertex3f(tmpP.GetX(), tmpP.GetY(), tmpP.GetZ());
     }
     glEnd();
+
+
+
+
+
+
+    glm::mat4 mat_modelview;
+    glGetFloatv(GL_MODELVIEW_MATRIX, glm::value_ptr(mat_modelview));
+    glm::mat4 mat_projection;
+    glGetFloatv(GL_PROJECTION_MATRIX, glm::value_ptr(mat_projection));
+    glm::mat4 mvp = mat_projection * mat_modelview;
+
+    auto cam_param_pos = cr3d_in->GetCameraParameters()->Position();
+    glm::vec3 cam_pos = { (float)cam_param_pos.GetX(), (float)cam_param_pos.GetY(), (float)cam_param_pos.GetZ() };
+
+
+    this->utils.ClearAllQueues();
+    this->utils.Smoothing(true);
+
+    //this->utils.PushPointPrimitive(glm::vec3(2.0f, 2.0f, 10.0f), 2.0f, cam_pos, CinematicUtils::Color(CinematicUtils::Colors::KEYFRAME)); 
+    //this->utils.PushLinePrimitive(glm::vec3(0.0f, 0.0f, 20.0f), glm::vec3(0.0f, 5.0f, 20.0f), 0.05f, cam_pos, CinematicUtils::Color(CinematicUtils::Colors::FONT_HIGHLIGHT));
+    //this->utils.PushQuadPrimitive(glm::vec3(0.0f, 2.0f, 22.0f), 3.0f, 5.0f, cam_pos, cam_up, CinematicUtils::Color(CinematicUtils::Colors::FONT_HIGHLIGHT));
+    //this->utils.PushQuadPrimitive(glm::vec3(0.0f, 0.0f, 20.0f), glm::vec3(0.0f, 10.0f, 20.0f), glm::vec3(10.0f, 10.0f, 20.0f), glm::vec3(10.0f, 0.0f, 20.0f), CinematicUtils::Color(CinematicUtils::Colors::FONT_HIGHLIGHT));
+
+    this->utils.Push2DTexture(this->texture, glm::vec3(0.0f, 0.0f, 20.0f), glm::vec3(0.0f, 2.0f, 20.0f), glm::vec3(2.0f, 2.0f, 20.0f), glm::vec3(2.0f, 0.0f, 20.0f), true, CinematicUtils::Color(CinematicUtils::Colors::KEYFRAME));
+
+
+    this->utils.DrawAllPrimitives(mvp);
+
+
+
+
+
+
+
 
     // DRAW MENU --------------------------------------------------------------
     glDisable(GL_DEPTH_TEST);
@@ -556,14 +600,14 @@ bool TrackingShotRenderer::OnMouseButton(megamol::core::view::MouseButton button
     if (button == MouseButton::BUTTON_LEFT) {
         if (down) {
             // Check if manipulator is selected
-            if (this->manipulator.CheckManipulatorHit(this->mouseX, this->mouseY)) {
+            if (this->manipulators.CheckManipulatorHit(this->mouseX, this->mouseY)) {
                 this->manipulatorGrabbed = true;
                 consumed = true;
                 //vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC RENDERER] [MouseEvent] MANIPULATOR SELECTED.");
             }
             else {
                 // Check if new keyframe position is selected
-                int index = this->manipulator.CheckKeyframePositionHit(this->mouseX, this->mouseY);
+                int index = this->manipulators.CheckKeyframePositionHit(this->mouseX, this->mouseY);
                 if (index >= 0) {
                     ccc->setSelectedKeyframeTime((*keyframes)[index].GetAnimTime());
                     if (!(*ccc)(CallKeyframeKeeper::CallForGetSelectedKeyframeAtTime)) return false;
@@ -574,12 +618,12 @@ bool TrackingShotRenderer::OnMouseButton(megamol::core::view::MouseButton button
         }
         else {
             // Apply changes of selected manipulator and control points
-            if (this->manipulator.ProcessManipulatorHit(this->mouseX, this->mouseY)) {
+            if (this->manipulators.ProcessManipulatorHit(this->mouseX, this->mouseY)) {
 
-                ccc->setSelectedKeyframe(this->manipulator.GetManipulatedKeyframe());
+                ccc->setSelectedKeyframe(this->manipulators.GetManipulatedKeyframe());
                 if (!(*ccc)(CallKeyframeKeeper::CallForSetSelectedKeyframe)) return false;
 
-                ccc->setControlPointPosition(this->manipulator.GetFirstControlPointPosition(), this->manipulator.GetLastControlPointPosition());
+                ccc->setControlPointPosition(this->manipulators.GetFirstControlPointPosition(), this->manipulators.GetLastControlPointPosition());
                 if (!(*ccc)(CallKeyframeKeeper::CallForSetCtrlPoints)) return false;
 
                 consumed = true;
@@ -611,7 +655,7 @@ bool TrackingShotRenderer::OnMouseMove(double x, double y) {
     this->mouseY = (float)static_cast<int>(y);
 
     // Update position of grabbed manipulator
-    if (!(this->manipulatorGrabbed && this->manipulator.ProcessManipulatorHit(this->mouseX, this->mouseY))) {
+    if (!(this->manipulatorGrabbed && this->manipulators.ProcessManipulatorHit(this->mouseX, this->mouseY))) {
         return false;
     }
 

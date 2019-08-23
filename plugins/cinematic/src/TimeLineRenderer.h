@@ -118,7 +118,7 @@ namespace cinematic {
 
         megamol::core::utility::SDFFont theFont;
 
-        vislib::Array<vislib::SmartPtr<vislib::graphics::gl::OpenGLTexture2D> > markerTextures;
+        vislib::graphics::gl::OpenGLTexture2D markerTexture;
 
         vislib::math::Vector<float, 2> axisStartPos;       // joint start position for both axis
 
@@ -159,15 +159,10 @@ namespace cinematic {
         vislib::math::Vector<float, 2> viewport;
 
         /*** INPUT ********************************************************/
-
-        /** The current mouse coordinates */
-        float mouseX;
-        float mouseY;
-
-        /** The last mouse coordinates */
-        float lastMouseX;
-        float lastMouseY;
-
+        float                         mouseX;
+        float                         mouseY;
+        float                         lastMouseX;
+        float                         lastMouseY;
         core::view::MouseButton       mouseButton;
         core::view::MouseButtonAction mouseAction;
 
@@ -185,10 +180,9 @@ namespace cinematic {
         void axisAdaptation(void);
 
         /**********************************************************************
-        * callback stuff
+        * callbacks
         **********************************************************************/
 
-		/** The call for keyframe data */
         core::CallerSlot keyframeKeeperSlot;
 
         /**********************************************************************

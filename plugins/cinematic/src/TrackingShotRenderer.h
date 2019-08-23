@@ -55,6 +55,8 @@
 #include "CallKeyframeKeeper.h"
 #include "ReplacementRenderer.h"
 #include "KeyframeManipulator.h"
+#include "CinematicUtils.h"
+
 
 namespace megamol {
 namespace cinematic {
@@ -157,46 +159,34 @@ namespace cinematic {
         * variables
         **********************************************************************/
 
-        // font rendering
-        megamol::core::utility::SDFFont theFont;
-
+        megamol::core::utility::SDFFont  theFont;
         unsigned int                     interpolSteps;
         unsigned int                     toggleManipulator;
         bool                             manipOutsideModel;
         bool                             showHelpText;
-
-        KeyframeManipulator              manipulator;
+        KeyframeManipulator              manipulators;
         bool                             manipulatorGrabbed;
-
-        vislib::graphics::gl::FramebufferObject fbo;
-
-        /** The render to texture shader */
-        vislib::graphics::gl::GLSLShader textureShader;
-
-        bool isSelecting;
-
-        /*** INPUT ***/
-
-        /** The mouse coordinates */
+        bool                             isSelecting;
         float                            mouseX;
         float                            mouseY;
+        vislib::graphics::gl::FramebufferObject fbo;
+        vislib::graphics::gl::GLSLShader textureShader;
+        CinematicUtils                   utils;
+
+        GLuint texture;
 
         /**********************************************************************
         * callback stuff
         **********************************************************************/
 
-		/** The renderer caller slot */
 		core::CallerSlot rendererCallerSlot;
-
-		/** The keyframe keeper caller slot */
 		core::CallerSlot keyframeKeeperSlot;
 
         /**********************************************************************
         * parameters
         **********************************************************************/
 			
-        /** Amount of interpolation steps between keyframes */
-        core::param::ParamSlot stepsParam;
+        core::param::ParamSlot interpolStepsParam;
         core::param::ParamSlot toggleManipulateParam;
         core::param::ParamSlot toggleHelpTextParam;
         core::param::ParamSlot toggleManipOusideBboxParam;

@@ -39,13 +39,13 @@ using namespace vislib;
 TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule(),
 
 	keyframeKeeperSlot("getkeyframes", "Connects to the KeyframeKeeper"),
-    rulerFontParam(      "fontSize", "The font size."),
-    moveRightFrameParam( "gotoRightFrame", "Move to right animation time frame."),
-    moveLeftFrameParam(  "gotoLeftFrame", "Move to left animation time frame."),
-    resetPanScaleParam(  "resetAxes", "Reset shifted and scaled time axes."),
+    rulerFontParam("fontSize", "The font size."),
+    moveRightFrameParam("gotoRightFrame", "Move to right animation time frame."),
+    moveLeftFrameParam("gotoLeftFrame", "Move to left animation time frame."),
+    resetPanScaleParam("resetAxes", "Reset shifted and scaled time axes."),
 
     theFont(megamol::core::utility::SDFFont::FontName::ROBOTO_SANS),
-    markerTextures(),
+    markerTexture(),
     axisStartPos(),
     animAxisEndPos(0.0f, 0.0f),
     animAxisLen(0.0f),
@@ -559,12 +559,12 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     strWidth = this->theFont.LineWidth(this->fontSize, tmpStr);
     this->theFont.DrawString(fgColor, this->axisStartPos.X() + this->animAxisLen / 2.0f - strWidth / 2.0f, this->axisStartPos.Y() - this->theFont.LineHeight(this->fontSize) - this->rulerMarkSize, 
         this->fontSize, false, tmpStr, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
-    glRotatef(90.0f, 0.0f, 0.0f, 1.0f);
     tmpStr = "Simulation Time ";
     strWidth = this->theFont.LineWidth(this->fontSize, tmpStr);
+    this->theFont.SetRotation(90.0f, 0.0f, 0.0f, 1.0f);
     this->theFont.DrawString(fgColor, this->axisStartPos.Y() + this->simAxisLen / 2.0f - strWidth / 2.0f, (-1.0f)*this->axisStartPos.X() + tmpStrWidth + this->rulerMarkSize + 1.5f*strHeight, 
         this->fontSize, false, tmpStr, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
-    glRotatef(-90.0f, 0.0f, 0.0f, 1.0f);
+    this->theFont.SetRotation(0.0f, 0.0f, 0.0f, 1.0f);
 
     // DRAW MENU --------------------------------------------------------------
 
@@ -602,8 +602,8 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     }
 
     // Draw menu background
-    float woff = (vpW*0.005f);
-    float hoff = (vpH*0.005f);
+    float woff = 0.0f; // (vpW*0.005f);
+    float hoff = 0.0f; // (vpH*0.005f);
     glColor4fv(menu);
     glBegin(GL_QUADS);
         glVertex2f(-woff, vpH + hoff);
@@ -632,7 +632,7 @@ void TimeLineRenderer::drawKeyframeMarker(float posX, float posY) {
 
     glEnable(GL_TEXTURE_2D);
 
-    this->markerTextures[0]->Bind();
+    this->markerTexture.Bind();
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -653,6 +653,7 @@ void TimeLineRenderer::drawKeyframeMarker(float posX, float posY) {
         glVertex2f(posX + (this->keyfMarkSize/ 2.0f), posY);
     glEnd();
 
+    glBindTexture(GL_TEXTURE_2D, 0);
     glDisable(GL_TEXTURE_2D);
 }
 
@@ -680,14 +681,14 @@ bool TimeLineRenderer::loadTexture(vislib::StringA filename) {
                     img.PeekDataAs<BYTE>()[i * 4 + 3] = 0;
                 }
             }
-            markerTextures.Add(vislib::SmartPtr<vislib::graphics::gl::OpenGLTexture2D>());
-            markerTextures.Last() = new vislib::graphics::gl::OpenGLTexture2D();
-            if (markerTextures.Last()->Create(img.Width(), img.Height(), false, img.PeekDataAs<BYTE>(), GL_RGBA) != GL_NO_ERROR) {
+            if (this->markerTexture.Create(img.Width(), img.Height(), false, img.PeekDataAs<BYTE>(), GL_RGBA) != GL_NO_ERROR) {
                 vislib::sys::Log::DefaultLog.WriteError("[TIME LINE RENDERER] [Load Texture] Could not load \"%s\" texture.", filename.PeekBuffer());
                 ARY_SAFE_DELETE(buf);
                 return false;
             }
-            markerTextures.Last()->SetFilter(GL_LINEAR, GL_LINEAR);
+            this->markerTexture.Bind();
+            this->markerTexture.SetFilter(GL_LINEAR, GL_LINEAR);
+            glBindTexture(GL_TEXTURE_2D, 0);
             ARY_SAFE_DELETE(buf);
             return true;
         }
