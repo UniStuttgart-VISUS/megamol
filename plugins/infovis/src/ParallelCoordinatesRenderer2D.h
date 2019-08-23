@@ -203,7 +203,7 @@ private:
     core::param::ParamSlot glLineWidthSlot;
     core::param::ParamSlot sqrtDensitySlot;
 
-    core::param::ParamSlot resetFlagsSlot;
+    // core::param::ParamSlot resetFlagsSlot;
     core::param::ParamSlot resetFiltersSlot;
 
     float marginX, marginY;
