@@ -18,7 +18,7 @@ uniform uint flagOffset;
         coherent uint inFlags[];
     };
 #else
-    in uint inFlags[1];
+    in uint inFlags;
 #endif // FLAG_STORAGE_SSBO 
 
 flat out uint discardFrag;
