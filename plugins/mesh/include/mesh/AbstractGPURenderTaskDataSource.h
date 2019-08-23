@@ -56,7 +56,7 @@ protected:
     virtual void release();
 
     /**
-     * This modules storage class for Render Tasks.
+     * This module's storage class for Render Tasks.
      * If connected within a chain of rts (but not the first rt module), the storage should remain unused
      * and instead the collection provided by the left-hand-side rt is used.
      */

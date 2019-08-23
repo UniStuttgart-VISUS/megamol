@@ -5,9 +5,7 @@
 #include "tiny_gltf.h"
 
 megamol::mesh::GlTFMeshesDataSource::GlTFMeshesDataSource()
-    : m_glTF_callerSlot("CallGlTFData", "Connects the data source with a loaded glTF file")
-    , m_glTF_cached_hash (0) 
-{
+    : m_glTF_callerSlot("CallGlTFData", "Connects the data source with a loaded glTF file"), m_glTF_cached_hash(0) {
     this->m_glTF_callerSlot.SetCompatibleCall<CallGlTFDataDescription>();
     this->MakeSlotAvailable(&this->m_glTF_callerSlot);
 }
@@ -42,12 +40,19 @@ bool megamol::mesh::GlTFMeshesDataSource::getDataCallback(core::Call& caller) {
 
     if (!(*gltf_call)(0)) return false;
 
-    if (gltf_call->getMetaData().m_data_hash > m_glTF_cached_hash)
-    {
+    if (gltf_call->getMetaData().m_data_hash > m_glTF_cached_hash) {
         m_glTF_cached_hash = gltf_call->getMetaData().m_data_hash;
 
-        m_gpu_meshes->clear();
 
+        if (!m_mesh_collection_indices.empty()) {
+            // TODO delete all exisiting render task from this module
+            for (auto& submesh_idx : m_mesh_collection_indices) {
+                //mesh_collection->deleteSubMesh()
+            }
+
+            m_mesh_collection_indices.clear();
+        }
+            
         m_bbox[0] = std::numeric_limits<float>::max();
         m_bbox[1] = std::numeric_limits<float>::max();
         m_bbox[2] = std::numeric_limits<float>::max();
@@ -94,7 +99,7 @@ bool megamol::mesh::GlTFMeshesDataSource::getDataCallback(core::Call& caller) {
                 }
 
                 glowl::VertexLayout vertex_descriptor(0, attribs);
-                m_gpu_meshes->addMesh(vertex_descriptor, vb_iterators, ib_iterators, indices_accessor.componentType,
+                mesh_collection->addMesh(vertex_descriptor, vb_iterators, ib_iterators, indices_accessor.componentType,
                     GL_STATIC_DRAW, GL_TRIANGLES);
 
                 auto max_data =
@@ -124,6 +129,8 @@ bool megamol::mesh::GlTFMeshesDataSource::getDataCallback(core::Call& caller) {
     CallGPUMeshData* rhs_mesh_call = this->m_mesh_callerSlot.CallAs<CallGPUMeshData>();
     if (rhs_mesh_call != NULL) {
         rhs_mesh_call->setData(mesh_collection);
+
+        if (!(*rhs_mesh_call)(0)) return false;
     }
 
     return true;

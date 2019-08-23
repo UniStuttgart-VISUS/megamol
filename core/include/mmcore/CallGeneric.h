@@ -8,13 +8,12 @@
 #ifndef CALL_GENERIC_H_INCLUDED
 #define CALL_GENERIC_H_INCLUDED
 
-#include "mesh.h"
 #include "mmcore/AbstractGetDataCall.h"
 
 namespace megamol {
-namespace mesh {
+namespace core {
 
-template <typename DataType, typename MetaDataType> class MESH_API CallGeneric : public megamol::core::Call 
+template <typename DataType, typename MetaDataType> class CallGeneric : public Call 
 {
 public:
     CallGeneric() = default;

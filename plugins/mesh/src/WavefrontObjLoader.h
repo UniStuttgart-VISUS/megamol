@@ -1,37 +1,36 @@
 /*
- * UIElement.h
+ * WavefrontObjLoader.h
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VISUS).
  * All rights reserved.
  */
 
-#ifndef UI_ELEMENT_H_INCLUDED
-#define UI_ELEMENT_H_INCLUDED
+#ifndef WAVEFRONT_OBJ_LOADER_H_INCLUDED
+#define WAVEFRONT_OBJ_LOADER_H_INCLUDED
 
 #include "mesh/MeshCalls.h"
 #include "mesh/mesh.h"
 #include "mmcore/CalleeSlot.h"
-#include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 
 namespace megamol {
 namespace mesh {
 
-class MESH_API UIElement : public core::Module {
+class MESH_API WavefrontObjLoader : public core::Module {
 public:
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "UIElement"; }
+    static const char* ClassName(void) { return "WavefrontObjLoader"; }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "UI element for 3d in viewport manipulation."; }
+    static const char* Description(void) { return "Data source for simply loading a wavefront obj file from disk"; }
 
     /**
      * Answers whether this module is available on the current system.
@@ -40,8 +39,8 @@ public:
      */
     static bool IsAvailable(void) { return true; }
 
-    UIElement();
-    ~UIElement();
+    WavefrontObjLoader();
+    ~WavefrontObjLoader();
 
 protected:
     /**
@@ -68,21 +67,25 @@ protected:
     void release();
 
 private:
-    /** The gltf file name */
-    //core::param::ParamSlot m_interaction_axis;
+    struct InternalMeshDataStorage
+    {
+
+    };
+
+    size_t m_update_hash;
 
     /** The gltf file name */
-    //core::param::ParamSlot m_interaction_origin;
+    core::param::ParamSlot m_filename_slot;
 
     /** The slot for requesting data */
     megamol::core::CalleeSlot m_getData_slot;
 
-    /** The slot for chaining */
-    megamol::core::CallerSlot m_UIElement_callerSlot;
+    //TODO slot for chaining
 };
 
 } // namespace mesh
 } // namespace megamol
 
 
-#endif // !UI_ELEMENT_H_INCLUDED
+#endif // !#ifndef WAVEFRONT_OBJ_LOADER_H_INCLUDED
+
