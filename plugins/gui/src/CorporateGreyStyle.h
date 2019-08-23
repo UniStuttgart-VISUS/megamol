@@ -5,7 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#pragma once
+#ifndef MEGAMOL_GUI_CORPORATEGREYSTYLE_INCLUDED
+#define MEGAMOL_GUI_CORPORATEGREYSTYLE_INCLUDED
 
 #include <imgui.h>
 
@@ -100,3 +101,5 @@ inline void CorporateGreyStyle(int is3D = 0) {
     }
 #endif
 }
+
+#endif // MEGAMOL_GUI_CORPORATEGREYSTYLE_INCLUDED

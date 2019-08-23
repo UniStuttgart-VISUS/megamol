@@ -1,7 +1,6 @@
 #include "stdafx.h"
 
 #include "mmcore/utility/MDAOVolumeGenerator.h"
-#include "mmcore/utility/MDAOShaderUtilities.h"
 
 #include <iostream>
 #include <vector>
@@ -77,19 +76,19 @@ bool MDAOVolumeGenerator::Init()
 	clearAvailable = (::isExtAvailable("GL_ARB_clear_texture") == GL_TRUE);
 	
 	std::stringstream outmsg;
-	outmsg<<"Voxelization Features enabled: Compute Shader "<<computeAvailable<<", Clear Texture "<<clearAvailable<<std::endl;
+	outmsg<<"[MDAOVolumeGenerator] Voxelization Features enabled: Compute Shader "<<computeAvailable<<", Clear Texture "<<clearAvailable<<std::endl;
 	vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, outmsg.str().c_str());
 	
 	if (computeAvailable) {
 		// Try to initialize the compute shader
 		vislib::SmartPtr<vislib::graphics::gl::ShaderSource::Snippet> mipmapSrc;
-		mipmapSrc = factory->MakeShaderSnippet("sphere_mdao_mipmap::Compute");
+		mipmapSrc = this->factory->MakeShaderSnippet("sphere_mdao_mipmap::Compute");
 		try {
 			mipmapShader.Compile(mipmapSrc->PeekCode());
 			mipmapShader.Link();
 		} catch(vislib::graphics::gl::AbstractOpenGLShader::CompileException &ce) {
 			outmsg.str("");
-			outmsg<<"Could not compile volume mipmapping shader "
+			outmsg<<"[MDAOVolumeGenerator] Could not compile volume mipmapping shader "
 						<<vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction())
 						<<": "
 						<<ce.GetMsgA()<<std::endl;
@@ -98,7 +97,54 @@ bool MDAOVolumeGenerator::Init()
 		}	
 	}
 	
-	return InitializeShader(this->factory, this->volumeShader, "sphere_mdao_volume::vertex", "sphere_mdao_volume::fragment", "sphere_mdao_volume::geometry");
+    // Initialize our shader
+    vislib::graphics::gl::ShaderSource vert, frag, geom;
+    if (!vislib::graphics::gl::GLSLGeometryShader::InitialiseExtensions()) {
+        std::cerr << "[MDAOVolumeGenerator] Failed to init OpenGL extensions: GLSLGeometryShader" << std::endl;
+        return false;
+    }
+    try {
+        // Try to make the vertex shader
+        if (!this->factory->MakeShaderSource("sphere_mdao_volume::vertex", vert)) {
+            std::cerr << "[MDAOVolumeGenerator] Error loading vertex shader!" << std::endl;
+            return false;
+        }
+
+        // Try to make the geometry shader
+        if (!this->factory->MakeShaderSource("sphere_mdao_volume::geometry", geom)) {
+            std::cerr << "[MDAOVolumeGenerator] Error loading geometry shader!" << std::endl;
+            return false;
+        }
+
+        // Try to make the fragment shader
+        if (!this->factory->MakeShaderSource("sphere_mdao_volume::fragment", frag)) {
+            std::cerr << "[MDAOVolumeGenerator] Error loading fragment shader!" << std::endl;
+            return false;
+        }
+
+        // Compile and Link
+        if (!this->volumeShader.Compile(vert.Code(), vert.Count(), geom.Code(), geom.Count(), frag.Code(), frag.Count())) {
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                "[MDAOVolumeGenerator] Unable to compile shader: Unknown error\n");
+            return false;
+        }
+
+        if (!this->volumeShader.Link()) {
+            std::cerr << "[MDAOVolumeGenerator] Error linking!" << std::endl;
+            return false;
+        }
+
+    }
+    catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+        std::cerr << "[MDAOVolumeGenerator]  Could not compile shader "
+            << vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction())
+            << ": "
+            << ce.GetMsgA() << std::endl;
+
+        return false;
+    }
+
+    return true;
 }
 
 
@@ -150,7 +196,7 @@ void MDAOVolumeGenerator::StartInsertion(const vislib::math::Cuboid< float >& ob
 	volumeShader.SetParameterArray3("inBoundsSizeInverse", 1, this->boundsSizeInverse.PeekDimension());
 	volumeShader.SetParameterArray3("inVolumeSize", 1, volumeRes.PeekDimension());
 	
-	volumeShader.SetParameterArray4("inClipDat", 1, clipDat.PeekComponents());
+	volumeShader.SetParameterArray4("clipDat", 1, clipDat.PeekComponents());
 }
 
 

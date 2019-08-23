@@ -59,6 +59,8 @@ private:
 
     /** The call for Transfer function */
     core::CallerSlot m_transferFunction_slot;
+
+    uint32_t tfVersion = -1;
 };
 
 } // namespace archvis

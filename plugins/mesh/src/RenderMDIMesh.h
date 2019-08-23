@@ -20,8 +20,8 @@
 
 #include "mesh/GPUMaterialCollection.h"
 
-#include "glowl/BufferObject.h"
-#include "glowl/Mesh.h"
+#include "glowl/BufferObject.hpp"
+#include "glowl/Mesh.hpp"
 
 namespace megamol {
 namespace mesh {
@@ -117,8 +117,7 @@ namespace mesh {
 
 	private:
 
-		std::unique_ptr<BufferObject> m_per_frame_data; //< GPU buffer object that stores per frame data, i.e. camera parameters
-
+		std::unique_ptr<glowl::BufferObject> m_per_frame_data; //< GPU buffer object that stores per frame data, i.e. camera parameters
 
 		megamol::core::CallerSlot m_render_task_callerSlot;
 

@@ -61,7 +61,7 @@ bool megamol::archvis::FEMRenderTaskDataSource::getDataCallback(core::Call& call
         auto const& gpu_batch_mesh = gpu_mesh_storage->getMeshes()[sub_mesh.batch_index].mesh;
         auto const& shader = gpu_mtl_storage->getMaterials().front().shader_program;
 
-        std::vector<mesh::DrawElementsCommand> draw_commands(1, sub_mesh.sub_mesh_draw_command);
+        std::vector<glowl::DrawElementsCommand> draw_commands(1, sub_mesh.sub_mesh_draw_command);
 
         std::vector<vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>> object_transform(1000);
         typedef std::vector<vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR>> PerTaskData;

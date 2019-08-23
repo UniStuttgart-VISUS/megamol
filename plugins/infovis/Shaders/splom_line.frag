@@ -1,9 +1,9 @@
-uniform float alphaScaling;
 uniform int kernelType;
 
-in vec4 gsColor;
-in vec2 gsLineCoord;
+in float gsValue;
+in vec4 gsValueColor;
 in vec2 gsLineSize;
+in vec2 gsLineCoord;
 
 out vec4 fsColor;
 
@@ -42,23 +42,23 @@ float movingKernel(vec2 position, float width, float len) {
     }
 
     // Compute the distance between the two center points.
-    float alpha;
+    float density;
     switch (kernelType) {
     case 0:
-        alpha = abs(x1 - x2) / (2.0 * width);
+        density = abs(x1 - x2) / (2.0 * width);
         break;
     case 1:
         // Integrate gauss2(x*6) dx from 0 to half distance with normalized distance and position.
-        alpha = 2.0 * integralGauss2(3.0 * position.y / width, 3.0 * abs(x1 - x2) / (2.0 * width));
+        density = 2.0 * integralGauss2(3.0 * position.y / width, 3.0 * abs(x1 - x2) / (2.0 * width));
         break;
     default:
-        alpha = 0.0;
+        density = 0.0;
     }
-    return alpha;
+    return density;
 }
 
 void main(void) {
-    float alpha = movingKernel(gsLineCoord, gsLineSize.x, gsLineSize.y);
-    alpha *= alphaScaling;
-    fsColor = vec4(gsColor.rgb, gsColor.a * alpha);
+    float density = movingKernel(gsLineCoord, gsLineSize.x, gsLineSize.y);
+
+    fsColor = toScreen(gsValue, gsValueColor, density);
 }

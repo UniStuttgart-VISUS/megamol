@@ -172,6 +172,7 @@ namespace special {
         param::ParamSlot animAddTime2FrameSlot;
         param::ParamSlot makeAnimSlot;
         param::ParamSlot animTimeParamNameSlot;
+        param::ParamSlot disableCompressionSlot;
         float animLastFrameTime;
         int outputCounter;
 

@@ -5,7 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#pragma once
+#ifndef MEGAMOL_GUI_TRANSFERFUNCTIONEDITOR_INCLUDED
+#define MEGAMOL_GUI_TRANSFERFUNCTIONEDITOR_INCLUDED
 
 #include "mmcore/param/TransferFunctionParam.h"
 #include "mmcore/view/TransferFunction.h"
@@ -19,7 +20,7 @@
 #include <vector>
 
 #include <imgui.h>
-#include "Popup.h"
+#include "GUIUtils.h"
 
 
 namespace megamol {
@@ -28,16 +29,11 @@ namespace gui {
 /**
  * 1D Transfer Function Editor.
  */
-class TransferFunctionEditor : public Popup {
+class TransferFunctionEditor {
 public:
     TransferFunctionEditor(void);
 
     ~TransferFunctionEditor(void) = default;
-
-    /**
-     * Draws the transfer function editor.
-     */
-    bool DrawTransferFunctionEditor(void);
 
     /**
      * Set transfer function data to use in editor.
@@ -46,7 +42,7 @@ public:
      *
      * @return True if string was successfully converted into transfer function data, false otherwise.
      */
-    bool SetTransferFunction(const std::string& tfs);
+    void SetTransferFunction(const std::string& tfs);
 
     /**
      * Get current transfer function data.
@@ -65,14 +61,36 @@ public:
      */
     core::param::TransferFunctionParam* GetActiveParameter(void) { return this->activeParameter; }
 
+    /**
+     * Draws the transfer function editor.
+     */
+    bool DrawTransferFunctionEditor(void);
+
+
 private:
+    void drawTextureBox(const ImVec2& size);
+
+    void drawFunctionPlot(const ImVec2& size);
+
+    /** The global input widget state buffer. */
+    struct WidgetBuffer {
+        float min_range;
+        float max_range;
+        float gauss_sigma;
+        float range_value;
+        int tex_size;
+    };
+
     // VARIABLES -----------------------------------------------------------
+
+    /** Utils being used all over the place */
+    GUIUtils utils;
 
     /** The currently active parameter whose transfer function is currently loaded into this editor. */
     core::param::TransferFunctionParam* activeParameter;
 
     /** Array holding current colors and function values. */
-    megamol::core::param::TransferFunctionParam::TFDataType data;
+    megamol::core::param::TransferFunctionParam::TFNodeType nodes;
 
     /** Min/Max intervall the data should be mapped. */
     std::array<float, 2> range;
@@ -88,6 +106,7 @@ private:
 
     /** Current texture data. */
     std::vector<float> texturePixels;
+    GLuint textureId;
 
     /** Currently active color channels in plot. */
     std::array<bool, 4> activeChannels;
@@ -107,11 +126,11 @@ private:
     /** Flag indicating if all options should be shown*/
     bool showOptions;
 
-    // FUNCTIONS --------------------------------------------------------------
-
-    /** Returns width of text drawn as item. */
-    float guiTextWidth(std::string text);
+    /** The global input widget state buffer. */
+    WidgetBuffer widget_buffer;
 };
 
 } // namespace gui
 } // namespace megamol
+
+#endif // MEGAMOL_GUI_TRANSFERFUNCTIONEDITOR_INCLUDED

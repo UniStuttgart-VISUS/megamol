@@ -94,24 +94,6 @@ namespace view {
          */
         bool requestTF(Call& call);
 
-        /**
-         * Callback checks if any parameter is dirty.
-         *
-         * @param call The calling call
-         *
-         * @return 'true' on success, 'false' otherwise.
-         */
-        bool interfaceIsDirty(Call& call);
-
-        /**
-         * Callback resets all dirty parameters.
-         *
-         * @param call The calling call
-         *
-         * @return 'true' on success, 'false' otherwise.
-         */
-        bool interfaceResetDirty(Call& call);
-
         // VARIABLES ----------------------------------------------------------
 
 #ifdef _WIN32
@@ -141,6 +123,8 @@ namespace view {
 
         /** The value range */
         std::array<float, 2> range;
+
+        uint32_t version = 0;
 
 #ifdef _WIN32
 #pragma warning (default: 4251)

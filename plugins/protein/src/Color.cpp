@@ -16,6 +16,10 @@
 #include "mmcore/utility/ColourParser.h"
 #include "vislib/math/ShallowVector.h"
 #include "vislib/sys/ASCIIFileBuffer.h"
+#include "vislib/math/ShallowVector.h"
+#include "mmcore/CoreInstance.h"
+#include <string>
+#include <iostream>
 
 using namespace megamol;
 using namespace megamol::core;
@@ -323,7 +327,7 @@ void Color::MakeColorTable(const megamol::protein_calls::MolecularDataCall* mol,
     vislib::Array<float>& atomColorTable, vislib::Array<vislib::math::Vector<float, 3>>& colorLookupTable,
     vislib::Array<vislib::math::Vector<float, 3>>& rainbowColors, vislib::TString minGradColor,
     vislib::TString midGradColor, vislib::TString maxGradColor, bool forceRecompute,
-    const protein_calls::BindingSiteCall* bs, bool useNeighbors, const protein_calls::PerAtomFloatCall* pa) {
+    const protein_calls::BindingSiteCall* bs, bool useNeighbors, const protein_calls::PerAtomFloatCall* pa, bool enzymeMode, bool gxtype) {
 
     // temporary variables
     unsigned int cnt, idx, cntAtom, cntRes, cntChain, cntMol, cntSecS, atomIdx, atomCnt;
@@ -1012,7 +1016,7 @@ void Color::MakeColorTable(const megamol::protein_calls::MolecularDataCall* mol,
     vislib::Array<vislib::math::Vector<float, 3>>& colorLookupTable,
     vislib::Array<vislib::math::Vector<float, 3>>& rainbowColors, vislib::TString minGradColor,
     vislib::TString midGradColor, vislib::TString maxGradColor, bool forceRecompute,
-    const protein_calls::BindingSiteCall* bs, bool useNeighbors, const protein_calls::PerAtomFloatCall* pa) {
+    const protein_calls::BindingSiteCall* bs, bool useNeighbors, const protein_calls::PerAtomFloatCall* pa, bool enzymeMode, bool gxtype) {
 
     // if recomputation is forced: clear current color table
     if (forceRecompute) {
@@ -1048,6 +1052,7 @@ void Color::MakeColorTable(const megamol::protein_calls::MolecularDataCall* mol,
         for (unsigned int cnt = 0; cnt < mol->AtomCount() * 3; cnt++) {
             atomColorTable.Add(color0[cnt] * weight0 + color1[cnt] * weight1);
         }
+
     }
 
     // apply the neighborhood colors

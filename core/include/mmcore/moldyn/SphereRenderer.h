@@ -7,23 +7,26 @@
 
 #ifndef MEGAMOLCORE_SPHERERENDERER_H_INCLUDED
 #define MEGAMOLCORE_SPHERERENDERER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 
-#include "mmcore/moldyn/AbstractSphereRenderer.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
-#include "mmcore/utility/MDAOShaderUtilities.h"
 #include "mmcore/utility/MDAOVolumeGenerator.h"
 
+#include "mmcore/Call.h"
+#include "mmcore/CallerSlot.h"
+#include "mmcore/param/ParamSlot.h"
 #include "mmcore/CoreInstance.h"
+#include "mmcore/FlagStorage.h"
+#include "mmcore/FlagCall.h"
+#include "mmcore/view/Renderer3DModule.h"
 #include "mmcore/view/CallClipPlane.h"
 #include "mmcore/view/CallGetTransferFunction.h"
 #include "mmcore/view/CallRender3D.h"
 #include "mmcore/param/EnumParam.h"
+#include "mmcore/param/ColorParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/param/Vector2fParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/ButtonParam.h"
@@ -66,29 +69,29 @@
 //#include "TimeMeasure.h"
 
 
+// Minimum GLSL version for all render modes
+#define SPHERE_MIN_GLSL_MAJOR 1
+#define SPHERE_MIN_GLSL_MINOR 3
+
 // Minimum OpenGL version for different render modes
 #ifdef GL_VERSION_1_4
 #define SPHERE_MIN_OGL_SIMPLE
 #define SPHERE_MIN_OGL_SIMPLE_CLUSTERED 
 #endif // GL_VERSION_1_4
 
-#ifdef GL_VERSION_3_2
+#ifdef GL_VERSION_3_2 
 #define SPHERE_MIN_OGL_GEOMETRY_SHADER
 #endif // GL_VERSION_3_2
 
-#ifdef GL_VERSION_4_2
+#ifdef GL_VERSION_4_3
 #define SPHERE_MIN_OGL_SSBO_STREAM
-#endif // GL_VERSION_4_2
+#endif // GL_VERSION_4_3
 
 #ifdef GL_VERSION_4_5
-#define SPHERE_MIN_OGL_BUFFER_ARRAY 
-#define SPHERE_MIN_OGL_SPLAT 
+#define SPHERE_MIN_OGL_SPLAT
+#define SPHERE_MIN_OGL_BUFFER_ARRAY
 #define SPHERE_MIN_OGL_AMBIENT_OCCLUSION
 #endif // GL_VERSION_4_5
-
-// Minimum GLSL version for all render modes
-#define SPHERE_MIN_GLSL_MAJOR (int(1))
-#define SPHERE_MIN_GLSL_MINOR (int(3))
 
 
 namespace megamol {
@@ -100,7 +103,7 @@ namespace moldyn {
     /**
      * Renderer for simple sphere glyphs.
      */
-    class SphereRenderer : public AbstractSphereRenderer {
+    class MEGAMOLCORE_API SphereRenderer : public megamol::core::view::Renderer3DModule {
     public:
        
         /**
@@ -156,7 +159,7 @@ namespace moldyn {
             // (OpenGL Version and GLSL Version might not correlate, see Mesa 3D on Stampede ...)
             if (ogl_IsVersionGEQ(1, 4) == 0) {
                 vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, 
-                    "[SphereRenderer] No render mode available. Minimum OpenGL version is 1.4");
+                    "[SphereRenderer] No render mode available. OpenGL version 1.4 or greater is required.");
                 retval = false;
             }
             std::string glslVerStr((char*)glGetString(GL_SHADING_LANGUAGE_VERSION));
@@ -173,9 +176,9 @@ namespace moldyn {
             }
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
                 "[SphereRenderer] Found GLSL version %d.%d (%s).", major, minor, glslVerStr.c_str());
-            if ((major < (SPHERE_MIN_GLSL_MAJOR)) || (major == (SPHERE_MIN_GLSL_MAJOR) && minor < (SPHERE_MIN_GLSL_MINOR))) {
+            if ((major < (int)(SPHERE_MIN_GLSL_MAJOR)) || (major == (int)(SPHERE_MIN_GLSL_MAJOR) && minor < (int)(SPHERE_MIN_GLSL_MINOR))) {
                 vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, 
-                    "[SphereRenderer] No render mode available. Minimum OpenGL Shading Language version is 1.3");
+                    "[SphereRenderer] No render mode available. OpenGL Shading Language version 1.3 or greater is required.");
                 retval = false; 
             }
             if (!isExtAvailable("GL_ARB_explicit_attrib_location")) {
@@ -191,6 +194,17 @@ namespace moldyn {
 
             return retval;
         }
+
+        /**
+         * The get extents callback. The module should set the members of
+         * 'call' to tell the caller the extents of its data (bounding boxes
+         * and times).
+         *
+         * @param call The calling call.
+         *
+         * @return The return value of the function.
+         */
+        virtual bool GetExtents(megamol::core::view::CallRender3D& call);
 
         /** Ctor. */
         SphereRenderer(void);
@@ -267,7 +281,13 @@ namespace moldyn {
         // --------------------------------------------------------------------
 
         RenderMode                               renderMode;
-        bool                                     triggerRebuildGBuffer;
+        GLuint                                   greyTF;
+
+        bool                                     flagsEnabled;
+        GLuint                                   flagsBuffer;
+        bool                                     flagsUseSSBO;
+        FlagStorage::FlagVersionType             flagsCurrentVersion;
+        std::shared_ptr<FlagStorage::FlagVectorType> flagsData;
 
         GLSLShader                               sphereShader;
         GLSLGeometryShader                       sphereGeometryShader;
@@ -295,29 +315,44 @@ namespace moldyn {
         unsigned int                             oldFrameID;
         bool                                     stateInvalid;
         vislib::math::Vector<float, 2>           ambConeConstants;
-        GLuint                                   tfFallbackHandle;
-        core::utility::MDAOVolumeGenerator     *volGen;
+        core::utility::MDAOVolumeGenerator      *volGen;
+        bool                                     triggerRebuildGBuffer;
+
+        //TimeMeasure                            timer;
 
 #if defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
         GLuint                                   singleBufferCreationBits;
         GLuint                                   singleBufferMappingBits;
         std::vector<GLsync>                      fences;
-#endif
+#endif // defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
+
 #ifdef SPHERE_MIN_OGL_SSBO_STREAM
         megamol::core::utility::SSBOStreamer     streamer;
         megamol::core::utility::SSBOStreamer     colStreamer;
         megamol::core::utility::SSBOBufferArray  bufArray;
         megamol::core::utility::SSBOBufferArray  colBufArray;
-#endif
-        //TimeMeasure                            timer;
+#endif // SPHERE_MIN_OGL_SSBO_STREAM
+
+        /*********************************************************************/
+        /* SLOTS                                                             */
+        /*********************************************************************/
+
+        megamol::core::CallerSlot getDataSlot;
+        megamol::core::CallerSlot getClipPlaneSlot;
+        megamol::core::CallerSlot getTFSlot;
+        megamol::core::CallerSlot getFlagsSlot;
 
         /*********************************************************************/
         /* PARAMETERS                                                        */
         /*********************************************************************/
 
-        core::param::ParamSlot renderModeParam;
-
-        core::param::ParamSlot radiusScalingParam;
+        megamol::core::param::ParamSlot renderModeParam;
+        megamol::core::param::ParamSlot colIdxRangeInfoParam;
+        megamol::core::param::ParamSlot radiusScalingParam;
+        megamol::core::param::ParamSlot forceTimeSlot;
+        megamol::core::param::ParamSlot useLocalBBoxParam;
+        megamol::core::param::ParamSlot selectColorParam;
+        megamol::core::param::ParamSlot softSelectColorParam;
 
         // Affects only Splat rendering ---------------------------------------
 
@@ -327,24 +362,14 @@ namespace moldyn {
 
         // Affects only Ambient Occlusion rendering: --------------------------
 
-        // Enable or disable lighting
         megamol::core::param::ParamSlot enableLightingSlot;
-        // Enable Ambient Occlusion
-        megamol::core::param::ParamSlot enableAOSlot;
         megamol::core::param::ParamSlot enableGeometryShader;
-        // AO texture size 
         megamol::core::param::ParamSlot aoVolSizeSlot;
-        // Cone Apex Angle 
         megamol::core::param::ParamSlot aoConeApexSlot;
-        // AO offset from surface
         megamol::core::param::ParamSlot aoOffsetSlot;
-        // AO strength
         megamol::core::param::ParamSlot aoStrengthSlot;
-        // AO cone length
         megamol::core::param::ParamSlot aoConeLengthSlot;
-        // High precision textures slot
         megamol::core::param::ParamSlot useHPTexturesSlot;
-
 
         /*********************************************************************/
         /* FUNCTIONS                                                         */
@@ -356,21 +381,44 @@ namespace moldyn {
         static std::string getRenderModeString(RenderMode rm);
 
         /**
+         * TODO: Document
+         *
+         * @param t           ...
+         * @param outScaling  ...
+         *
+         * @return Pointer to MultiParticleDataCall ...
+         */
+        MultiParticleDataCall *getData(unsigned int t, float& outScaling);
+
+        /**
+         * Return clipping information.
+         *
+         * @param clipDat  Points to four floats ...
+         * @param clipCol  Points to four floats ....
+         */
+        void getClipData(float outClipDat[4], float outClipCol[4]);
+
+        /**
          * Check if specified render mode or all render mode are available.
+         *
+         * @param rm      ...
+         * @param silent  ...
+         *
+         * @return 'True' on success, 'false' otherwise.
          */
         static bool isRenderModeAvailable(RenderMode rm, bool silent = false);
 
         /**
          * Create shaders for given render mode.
-         * 
-         * @return True if success, false otherwise.
+         *
+         * @return 'True' on success, 'false' otherwise.
          */
         bool createResources(void);
 
         /**
          * Reset all OpenGL resources.
          *
-         * @return True if success, false otherwise.
+         * @return 'True' on success, 'false' otherwise.
          */
         bool resetResources(void);
 
@@ -392,8 +440,8 @@ namespace moldyn {
         /**
          * Set pointers to vertex and color buffers and corresponding shader variables.
          *
-         * @param parts            ...
-         * @param shader           ...
+         * @param shader           The current shader.
+         * @param parts            The current particles of a list.
          * @param vertBuf          ...
          * @param vertPtr          ...
          * @param vertAttribLoc    ...
@@ -401,11 +449,72 @@ namespace moldyn {
          * @param colPtr           ...
          * @param colAttribLoc     ...
          * @param colIdxAttribLoc  ...
+         *
+         * @return 'True' on success, 'false' otherwise.
          */
-        template <typename T>
-        void setPointers(MultiParticleDataCall::Particles &parts, T &shader,
-            GLuint vertBuf, const void *vertPtr, GLuint vertAttribLoc,
-            GLuint colBuf,  const void *colPtr,  GLuint colAttribLoc, GLuint colIdxAttribLoc);
+        bool setBufferData(const vislib::graphics::gl::GLSLShader& shader, const MultiParticleDataCall::Particles &parts, 
+            GLuint vertBuf, const void *vertPtr, GLuint colBuf,  const void *colPtr, bool createBufferData = false);
+
+        /**
+         * Unset pointers to vertex and color buffers.
+         *
+         * @param shader  The current shader.
+         *
+         * @return 'True' on success, 'false' otherwise.
+         */
+        bool unsetBufferData(const vislib::graphics::gl::GLSLShader& shader);
+
+        /**
+         * Set pointers to vertex and color buffers and corresponding shader variables.
+         *
+         * @param shader           The current shader.
+         * @param parts            The current particles of a list.
+         *
+         * @return 'True' on success, 'false' otherwise.
+         */
+        bool setShaderData(vislib::graphics::gl::GLSLShader& shader, const MultiParticleDataCall::Particles &parts);
+
+        /**
+         * Unset pointers to vertex and color buffers.
+         *
+         * @return 'True' on success, 'false' otherwise.
+         */
+        bool unsetShaderData(void);
+
+        /**
+         * Enables the transfer function texture.
+         *
+         * @param shader    The current shader.
+         *
+         * @return 'True' on success, 'false' otherwise.
+         */
+        bool setTransferFunctionTexture(vislib::graphics::gl::GLSLShader& shader);
+
+        /**
+         * Disables the transfer function texture.
+         *
+         * @return 'True' on success, 'false' otherwise.
+         */
+        bool unsetTransferFunctionTexture(void);
+
+        /**
+         * Enable flag storage.
+         *
+         * @param shader           The current shader.
+         * @param parts            The current particles of a list.
+         *
+         * @return 'True' on success, 'false' otherwise.
+         */
+        bool setFlagStorage(const vislib::graphics::gl::GLSLShader& shader, MultiParticleDataCall* mpdc);
+
+        /**
+         * Enable flag storage.
+         *
+         * @param shader           The current shader.
+         *
+         * @return 'True' on success, 'false' otherwise.
+         */
+        bool unsetFlagStorage(const vislib::graphics::gl::GLSLShader& shader);
 
         /**
          * Get bytes and stride.
@@ -417,8 +526,8 @@ namespace moldyn {
          * @param vertStride   ...
          * @param interleaved  ...
          */
-        void getBytesAndStride(MultiParticleDataCall::Particles &parts, unsigned int &colBytes, unsigned int &vertBytes,
-            unsigned int &colStride, unsigned int &vertStride, bool &interleaved);
+        void getBytesAndStride(const MultiParticleDataCall::Particles &parts, unsigned int &outColBytes, unsigned int &outVertBytes,
+            unsigned int &outColStride, unsigned int &outVertStride, bool &outInterleaved);
 
         /**
          * Make SSBO vertex shader color string.
@@ -428,8 +537,9 @@ namespace moldyn {
          * @param declaration  ...
          * @param interleaved  ...
          *
+         * @return 'True' on success, 'false' otherwise.
          */
-        bool makeColorString(MultiParticleDataCall::Particles &parts, std::string &code, std::string &declaration, bool interleaved);
+        bool makeColorString(const MultiParticleDataCall::Particles &parts, std::string &outCode, std::string &outDeclaration, bool interleaved);
 
         /**
          * Make SSBO vertex shader position string.
@@ -438,49 +548,57 @@ namespace moldyn {
          * @param code         ...
          * @param declaration  ...
          * @param interleaved  ...
+         *
+         * @return 'True' on success, 'false' otherwise.
          */
-        bool makeVertexString(MultiParticleDataCall::Particles &parts, std::string &code, std::string &declaration, bool interleaved);
+        bool makeVertexString(const MultiParticleDataCall::Particles &parts, std::string &outCode, std::string &outDeclaration, bool interleaved);
 
         /**
          * Make SSBO shaders.
          *
          * @param vert  ...
          * @param frag  ...
+         *
+         * @return ...
          */
-        std::shared_ptr<GLSLShader> makeShader(vislib::SmartPtr<ShaderSource> vert, vislib::SmartPtr<ShaderSource> frag);
+        std::shared_ptr<GLSLShader> makeShader(const vislib::SmartPtr<ShaderSource> vert, const vislib::SmartPtr<ShaderSource> frag);
 
         /**
          * Generate SSBO shaders.
          *
          * @param parts  ...
          *
+         * @return ...
          */
-        std::shared_ptr<GLSLShader> generateShader(MultiParticleDataCall::Particles &parts);
+        std::shared_ptr<GLSLShader> generateShader(const MultiParticleDataCall::Particles &parts);
+
+        /**
+         * Returns GLSL minor and major version.
+         *
+         * @param major The major version of the currently available GLSL version.
+         * @param minor The minor version of the currently available GLSL version.
+         */
+        void getGLSLVersion(int &outMajor, int &outMinor) const;
 
 #if defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
+
         /**
          * Lock single.
          *
          * @param syncObj  ...
          */
-        void lockSingle(GLsync& syncObj);
+        void lockSingle(GLsync& outSyncObj);
 
         /**
          * Wait single.
          *
          * @param syncObj  ...
          */
-        void waitSingle(GLsync& syncObj);
+        void waitSingle(const GLsync& syncObj);
+
 #endif // defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
 
         // ONLY used for Ambient Occlusion rendering: -------------------------
-
-        /**
-         * Rebuild the ambient occlusion shaders.
-         *
-         * @return ...  
-         */
-        bool rebuildShader(void);
 
         /**
          * Rebuild the ambient occlusion gBuffer.
@@ -492,18 +610,11 @@ namespace moldyn {
         /**
          * Rebuild working data.
          *
-         * @param cr3d  ...
-         * @param dataCall    ...
+         * @param cr3d    ...
+         * @param mpdc    ...
+         * @param shader  ...
          */
-        void rebuildWorkingData(megamol::core::view::CallRender3D* cr3d, megamol::core::moldyn::MultiParticleDataCall* dataCall);
-
-        /**
-         * Render particles geometry.
-         *
-         * @param cr3d  ...
-         * @param dataCall    ...
-         */
-        void renderParticlesGeometry(megamol::core::view::CallRender3D* cr3d, megamol::core::moldyn::MultiParticleDataCall* dataCall);
+        void rebuildWorkingData(megamol::core::view::CallRender3D* cr3d, megamol::core::moldyn::MultiParticleDataCall* mpdc, const vislib::graphics::gl::GLSLShader& shader);
 
         /**
          * Render deferred pass.
@@ -511,14 +622,6 @@ namespace moldyn {
          * @param cr3d  ...
          */
         void renderDeferredPass(megamol::core::view::CallRender3D* cr3d);
-
-        /**
-         * Upload data to GPU.
-         *
-         * @param gpuData    ...
-         * @param particles  ...
-         */
-        void uploadDataToGPU(const gpuParticleDataType &gpuData, megamol::core::moldyn::MultiParticleDataCall::Particles& particles);
 
         /**
          * Generate direction shader array string.
@@ -536,14 +639,7 @@ namespace moldyn {
          * @param directions  ...
          * @param apex        ...
          */
-        void generate3ConeDirections(std::vector< vislib::math::Vector< float, int(4) > >& directions, float apex);
-
-        /**
-         * Get transfer function handle.
-         *
-         * @return ...  ...
-         */
-        GLuint getTransferFunctionHandle(void);
+        void generate3ConeDirections(std::vector< vislib::math::Vector< float, int(4) > >& outDirections, float apex);
 
     };
 

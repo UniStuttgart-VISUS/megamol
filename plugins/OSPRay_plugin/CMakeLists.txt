@@ -15,7 +15,7 @@ if(BUILD_OSPRAY_PLUGIN)
   set(DEP_LIST "${DEP_LIST};BUILD_OSPRAY_PLUGIN BUILD_CORE BUILD_GEOMETRY_CALLS_PLUGIN BUILD_MMSTD_DATATOOLS_PLUGIN BUILD_PROTEIN_CALLS_PLUGIN" CACHE INTERNAL "")
 
   find_package(ospray CONFIG REQUIRED)
-
+ 
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
@@ -27,7 +27,8 @@ if(BUILD_OSPRAY_PLUGIN)
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src" ${OSPRAY_INCLUDE_DIRS})
-  target_link_libraries(${PROJECT_NAME} PRIVATE core geometry_calls mmstd_datatools protein_calls ${OSPRAY_LIBRARIES})
+  target_link_libraries(${PROJECT_NAME} PRIVATE core geometry_calls mmstd_datatools protein_calls
+  PUBLIC ${OSPRAY_LIBRARIES})
 
   # Installation rules for generated files
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
@@ -36,7 +37,9 @@ if(BUILD_OSPRAY_PLUGIN)
     install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
     install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION "lib")
     install(DIRECTORY "${OSPRAY_ROOT}/bin/" DESTINATION "bin" FILES_MATCHING PATTERN "*.dll")
-    install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION bin OPTIONAL)
+    if(MSVC)
+      install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION bin OPTIONAL)
+    endif()
   else()
     install(TARGETS ${PROJECT_NAME} DESTINATION "lib" EXPORT ${PROJECT_NAME}-target)
     if (TARGET ospray::ospray)

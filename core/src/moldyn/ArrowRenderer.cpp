@@ -294,7 +294,7 @@ bool moldyn::ArrowRenderer::Render(Call& call) {
                     glUniform1i(this->arrowShader.ParameterLocation("colTab"), 0);
                     minC = parts.GetMinColourIndexValue();
                     maxC = parts.GetMaxColourIndexValue();
-                    glColor3ub(127, 127, 127);
+                    //glColor3ub(127, 127, 127);
                 } break;
                 default:
                     glColor3ub(127, 127, 127);
@@ -334,6 +334,7 @@ bool moldyn::ArrowRenderer::Render(Call& call) {
                         "ArrowRenderer: cannot render arrows without directional data!");
                     continue;
             }
+
             std::shared_ptr<FlagStorage::FlagVectorType> flags;
             unsigned int fal = 0;
             if (useFlags) {
@@ -342,24 +343,31 @@ bool moldyn::ArrowRenderer::Render(Call& call) {
                 flags = cflags->GetFlags();
                 fal = glGetAttribLocationARB(this->arrowShader, "flags");
                 ::glEnableVertexAttribArrayARB(fal);
-                ::glVertexAttribIPointer(
-                    fal, 1, GL_UNSIGNED_INT, sizeof(FlagStorage::FlagItemType), flags.get()->data());
+                ::glVertexAttribIPointer(fal, 1, GL_UNSIGNED_INT, 0, flags->data());
             }
+            glUniform1ui(this->arrowShader.ParameterLocation("flagsAvailable"), useFlags ? 1 : 0);
 
             glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(parts.GetCount()));
 
             if (useFlags) {
+                glDisableVertexAttribArrayARB(fal);
                 cflags->SetFlags(flags);
                 (*cflags)(core::FlagCall::CallUnmapFlags);
+                glVertexAttribIPointer(fal, 4, GL_FLOAT, 0, nullptr);
                 glDisableVertexAttribArrayARB(fal);
             }
 
+            glColorPointer(4, GL_FLOAT, 0, nullptr);
+            glVertexPointer(4, GL_FLOAT, 0, nullptr);
             glDisableClientState(GL_COLOR_ARRAY);
             glDisableClientState(GL_VERTEX_ARRAY);
+
             if (parts.GetColourDataType() == MultiParticleDataCall::Particles::COLDATA_DOUBLE_I ||
                 parts.GetColourDataType() == MultiParticleDataCall::Particles::COLDATA_FLOAT_I) {
+                glVertexAttribPointerARB(cial, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
                 glDisableVertexAttribArrayARB(cial);
             }
+            glVertexAttribPointerARB(tpal, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
             glDisableVertexAttribArrayARB(tpal);
             glDisable(GL_TEXTURE_1D);
         }
@@ -370,6 +378,7 @@ bool moldyn::ArrowRenderer::Render(Call& call) {
 
     this->arrowShader.Disable();
 
+    glDisable(GL_DEPTH_TEST);
     glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
     return true;
