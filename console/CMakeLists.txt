@@ -30,31 +30,27 @@ if(BUILD_CONSOLE)
 
   # GLFW
   if(NOT USE_EGL)
+    if (MSVC)
+        set(GLFW_IMPORT_LIBRARY "lib/glfw3dll.lib")
+        set(GLFW_LIBRARY "lib/glfw3.dll")
+    else()
+        set(GLFW_IMPORT_LIBRARY "")
+        set(GLFW_LIBRARY "lib/libglfw.so")
+    endif()
     add_external_project(glfw_ext
       GIT_REPOSITORY https://github.com/glfw/glfw.git
       GIT_TAG "3.2.1"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${GLFW_IMPORT_LIBRARY}"
       CMAKE_ARGS
         -DBUILD_SHARED_LIBS=ON
         -DGLFW_BUILD_EXAMPLES=OFF
         -DGLFW_BUILD_TESTS=OFF
         -DGLFW_BUILD_DOCS=OFF)
-    if (MSVC)
-      add_external_library(glfw3 SHARED
-        DEPENDS glfw_ext
-        INCLUDE_DIR "include"
-        IMPORT_LIBRARY_DEBUG "lib/glfw3dll.lib"
-        IMPORT_LIBRARY_RELEASE "lib/glfw3dll.lib"
-        LIBRARY_DEBUG "lib/glfw3.dll"
-        LIBRARY_RELEASE "lib/glfw3.dll")
-    else()
-        add_external_library(glfw3 SHARED
-        DEPENDS glfw_ext
-        INCLUDE_DIR "include"
-        IMPORT_LIBRARY_DEBUG ""
-        IMPORT_LIBRARY_RELEASE ""
-        LIBRARY_DEBUG "lib/libglfw.so"
-        LIBRARY_RELEASE "lib/libglfw.so")
-    endif()
+    add_external_library(glfw3 SHARED
+      DEPENDS glfw_ext
+      INCLUDE_DIR "include"
+      IMPORT_LIBRARY ${GLFW_IMPORT_LIBRARY}
+      LIBRARY ${GLFW_LIBRARY})
     target_link_libraries(${PROJECT_NAME} PRIVATE glfw3)
     ExternalProject_Get_property(glfw_ext SOURCE_DIR)
     target_include_directories(${PROJECT_NAME} PRIVATE "${SOURCE_DIR}/include")
