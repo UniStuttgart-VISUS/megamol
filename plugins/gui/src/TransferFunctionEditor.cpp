@@ -60,7 +60,7 @@ std::array<double, 3> HueToRGB(double hue) {
     return std::move(color);
 }
 
-using PresetGenerator = std::function<void(param::TransferFunctionParam::TFDataType&, size_t)>;
+using PresetGenerator = std::function<void(param::TransferFunctionParam::TFNodeType&, size_t)>;
 
 PresetGenerator CubeHelixAdapter(double start, double rots, double hue, double gamma) {
     return [=](auto& nodes, auto n) {
@@ -107,7 +107,7 @@ template <size_t PaletteSize> PresetGenerator ColormapAdapter(const float palett
     };
 }
 
-void RampAdapter(param::TransferFunctionParam::TFDataType& nodes, size_t n) {
+void RampAdapter(param::TransferFunctionParam::TFNodeType& nodes, size_t n) {
     nodes.clear();
     std::array<float, TFP_VAL_CNT> zero = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.05f};
     std::array<float, TFP_VAL_CNT> one = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.05f};
@@ -115,7 +115,7 @@ void RampAdapter(param::TransferFunctionParam::TFDataType& nodes, size_t n) {
     nodes.emplace_back(one);
 }
 
-void RainbowAdapter(param::TransferFunctionParam::TFDataType& nodes, size_t n) {
+void RainbowAdapter(param::TransferFunctionParam::TFNodeType& nodes, size_t n) {
     nodes.clear();
     for (size_t i = 0; i < n; ++i) {
         auto t = i / static_cast<double>(n - 1);
@@ -207,7 +207,7 @@ void TransferFunctionEditor::SetTransferFunction(const std::string& tfs) {
 }
 
 bool TransferFunctionEditor::GetTransferFunction(std::string& tfs) {
-    return megamol::core::param::TransferFunctionParam::DumpTransferFunction(
+    return param::TransferFunctionParam::DumpTransferFunction(
         tfs, this->nodes, this->mode, this->textureSize, this->range);
 }
 
@@ -258,6 +258,7 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
             this->range[0] = this->range[1] - 0.000001f;
         }
         this->widget_buffer.min_range = this->range[0];
+        this->textureInvalid = true;
     }
     ImGui::SameLine();
 
@@ -269,6 +270,7 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
             this->range[1] = this->range[0] + 0.000001f;
         }
         this->widget_buffer.max_range = this->range[1];
+        this->textureInvalid = true;
     }
     ImGui::SameLine();
     ImGui::PopItemWidth();

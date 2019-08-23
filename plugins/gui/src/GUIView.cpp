@@ -1472,12 +1472,15 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
                 p->SetValue(value);
             }
         } else if (auto* p = slot.template Param<core::param::ButtonParam>()) {
-            std::string hotkey = " (";
-            hotkey.append(p->GetKeyCode().ToString());
-            hotkey.append(")");
-            // no check if hidden label tag '###' is found -> should be present (see obove)
+            std::string hotkey = "";
+            std::string buttonHotkey = p->GetKeyCode().ToString();
+            if (!buttonHotkey.empty()) {
+                hotkey = " (" + buttonHotkey + ")";
+            }
             auto insert_pos = param_label.find("###");
-            param_label.insert(insert_pos, hotkey);
+            if (insert_pos == std::string::npos) {
+                param_label.insert(insert_pos, hotkey);
+            }
             if (ImGui::Button(param_label.c_str())) {
                 p->setDirty();
             }
@@ -1783,6 +1786,11 @@ void GUIView::checkMultipleHotkeyAssignement(void) {
             if (!param.IsNull()) {
                 if (auto* p = slot.template Param<core::param::ButtonParam>()) {
                     auto hotkey = p->GetKeyCode();
+
+                    // Ignore not set hotekey
+                    if (hotkey.GetKey() == core::view::Key::KEY_UNKNOWN) {
+                        return;
+                    }
 
                     // check in hotkey map
                     bool found = false;

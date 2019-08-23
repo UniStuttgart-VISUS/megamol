@@ -25,7 +25,7 @@ TransferFunction::TransferFunction(void)
     , texID(0)
     , texSize(1)
     , tex()
-    , texFormat(CallGetTransferFunction::TEXTURE_FORMAT_RGB)
+    , texFormat(CallGetTransferFunction::TEXTURE_FORMAT_RGBA)
     , interpolMode(param::TransferFunctionParam::InterpolationMode::LINEAR)
     , range({0.0f, 1.0f}) {
 
@@ -59,7 +59,7 @@ bool TransferFunction::create(void) {
 void TransferFunction::release(void) {
 
     glDeleteTextures(1, &this->texID);
-    this->texID = 0;    
+    this->texID = 0;
 }
 
 
@@ -75,28 +75,18 @@ bool TransferFunction::requestTF(Call& call) {
         this->tfParam.ResetDirty();
 
         // Get current values from parameter string (Values are checked, too).
-        param::TransferFunctionParam::TFDataType tfdata;
+        param::TransferFunctionParam::TFNodeType tfnodes;
         if (!megamol::core::param::TransferFunctionParam::ParseTransferFunction(
-            this->tfParam.Param<param::TransferFunctionParam>()->Value(), tfdata, this->interpolMode, this->texSize, this->range)) {
+            this->tfParam.Param<param::TransferFunctionParam>()->Value(), tfnodes, this->interpolMode, this->texSize, this->range)) {
             return false;
         }
 
-		//XXX: kudos to the HUGE WTF code below, since setting this->range "eats" the range set by the TF editor!
-        // Apply changes made by calling module
-        //if (this->range != cgtf->Range()) {
-        //    this->range = cgtf->Range();
-        //    std::string tfstr;
-        //    if (megamol::core::param::TransferFunctionParam::DumpTransferFunction(tfstr, tfdata, this->interpolMode, this->texSize, this->range)) {
-        //        this->tfParam.Param<param::TransferFunctionParam>()->SetValue(tfstr);
-        //    }
-        //}
-
         // Apply interpolation and generate texture data.
         if (this->interpolMode == param::TransferFunctionParam::InterpolationMode::LINEAR) {
-            param::TransferFunctionParam::LinearInterpolation(this->tex, this->texSize, tfdata);
+            param::TransferFunctionParam::LinearInterpolation(this->tex, this->texSize, tfnodes);
         }
         else if (this->interpolMode == param::TransferFunctionParam::InterpolationMode::GAUSS) {
-            param::TransferFunctionParam::GaussInterpolation(this->tex, this->texSize, tfdata);
+            param::TransferFunctionParam::GaussInterpolation(this->tex, this->texSize, tfnodes);
         }
 
         if (this->texID != 0) {
@@ -122,7 +112,7 @@ bool TransferFunction::requestTF(Call& call) {
         if (!t1de) glDisable(GL_TEXTURE_1D);
         ++this->version;
     }
-    cgtf->SetTexture(this->texID, this->texSize, this->tex.data(), CallGetTransferFunction::TEXTURE_FORMAT_RGBA,
+    cgtf->SetTexture(this->texID, this->texSize, this->tex.data(), this->texFormat,
         this->range, this->version);
 
     return true;

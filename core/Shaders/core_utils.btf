@@ -6,12 +6,12 @@
     // @see CallGetTransferFunction::Range()
     vec4 tflookup(sampler1D tfTexture, vec2 tfRange, float value) {
         // Normalize value and clamp to [0.0;1.0].
-        const float normalizedValue = clamp((value - tfRange.x) / (tfRange.y - tfRange.x), 0.0, 1.0);
+        float normalizedValue = clamp((value - tfRange.x) / (tfRange.y - tfRange.x), 0.0, 1.0);
         // Do a texture lookup between the center of first texel center and 
         // the last texel to ensure proper interpolation.
-        const float dx = 1.0 / textureSize(tfTexture, 0).x;
-        const float uOffset = dx * 0.5;
-        const float uRange = 1.0 - dx;
+        float dx = 1.0 / textureSize(tfTexture, 0);
+        float uOffset = dx * 0.5;
+        float uRange = 1.0 - dx;
         return texture(tfTexture, normalizedValue * uRange + uOffset);
     }
   </snippet>

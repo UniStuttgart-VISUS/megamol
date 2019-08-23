@@ -90,7 +90,7 @@ private:
     core::param::TransferFunctionParam* activeParameter;
 
     /** Array holding current colors and function values. */
-    megamol::core::param::TransferFunctionParam::TFDataType nodes;
+    megamol::core::param::TransferFunctionParam::TFNodeType nodes;
 
     /** Min/Max intervall the data should be mapped. */
     std::array<float, 2> range;

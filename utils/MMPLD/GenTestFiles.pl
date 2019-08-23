@@ -320,8 +320,8 @@ $m->Close();
 
 open my $batch, ">", "SphereTest.bat" or die "cannot open batch file";
 
-my @renderers = ("SimpleSphereRenderer", "SimpleGeoSphereRenderer", "NGSphereRenderer", "NGSphereBufferArray", "OSPRaySphereGeometry", "OSPRayNHSphereGeometry");
-foreach my $r (@renderers) {
+my @renderer_modes = ("SimpleSphere", "GeometryShaderSphere", "SSBOSphere", "BufferArraySphere", "AmbientOcclusionSphere", "OSPRayGeometrySphere", "OSPRayNHGeometrySphere");
+foreach my $r (@renderer_modes) {
     foreach my $f (@outfiles) {
         my $proj = "$f-$r.lua";
         open my $fh, ">", $proj or die "cannot open $proj";
@@ -330,10 +330,10 @@ foreach my $r (@renderers) {
         print $fh qq{mmCreateModule("MMPLDDataSource", "::dat")\n};
         if ($r =~ /^OSPRay/) {
             print $fh qq{mmCreateModule("OSPRayRenderer", "::osp")\n};
-            if ($r =~ /^OSPRaySphereGeometry/) {
+            if ($r =~ /^OSPRayGeometrySphere/) {
                 print $fh qq{mmCreateModule("OSPRaySphereGeometry", "::rnd")\n};
             }
-            elsif ($r =~ /^OSPRayNHSphereGeometry/) {
+            elsif ($r =~ /^OSPRayNHGeometrySphere/) {
                 print $fh qq{mmCreateModule("OSPRayNHSphereGeometry", "::rnd")\n};
             }
             print $fh qq{mmCreateModule("OSPRayAmbientLight", "::amb")\n};
@@ -346,18 +346,21 @@ foreach my $r (@renderers) {
         } else {
             print $fh qq{mmCreateModule("SphereRenderer", "::rnd")\n};
             print $fh qq{mmCreateCall("CallRender3D", "::v::rendering", "::rnd::rendering")\n};
-            if ($r =~ /^SimpleSphereRenderer/) {
+            if ($r =~ /^SimpleSphere/) {
                 print $fh qq{mmSetParamValue("::rnd::renderMode", "Simple")\n};
             }
-            elsif ($r =~ /^SimpleGeoSphereRenderer/) {
+            elsif ($r =~ /^GeometryShaderSphere/) {
                 print $fh qq{mmSetParamValue("::rnd::renderMode", "Geometry_Shader")\n};
             }
-            elsif ($r =~ /^NGSphereRenderer/) {
+            elsif ($r =~ /^SSBOSphere/) {
                 print $fh qq{mmSetParamValue("::rnd::renderMode", "SSBO_Stream")\n};
             }
-            elsif ($r =~ /^NGSphereBufferArray/) {
+            elsif ($r =~ /^BufferArraySphere/) {
                 print $fh qq{mmSetParamValue("::rnd::renderMode", "Buffer_Array")\n};
             }
+            elsif ($r =~ /^AmbientOcclusionSphere/) {
+                print $fh qq{mmSetParamValue("::rnd::renderMode", "Ambient_Occlusion")\n};
+            }            
         }
         print $fh qq{mmCreateCall("MultiParticleDataCall", "::rnd::getdata", "::dat::getData")\n};
         print $fh qq{mmSetParamValue("::dat::filename", "}.getcwd().qq{/$f")\n};
