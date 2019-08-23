@@ -18,10 +18,10 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/FlagStorage.h"
 #include "mmcore/FlagCall.h"
-#include "mmcore/view/Renderer3DModule.h"
+#include "mmcore/nextgen/Renderer3DModule_2.h"
 #include "mmcore/view/CallClipPlane.h"
 #include "mmcore/view/CallGetTransferFunction.h"
-#include "mmcore/view/CallRender3D.h"
+#include "mmcore/nextgen/CallRender3D_2.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/FloatParam.h"
@@ -103,7 +103,7 @@ namespace moldyn {
     /**
      * Renderer for simple sphere glyphs.
      */
-    class MEGAMOLCORE_API SphereRenderer : public megamol::core::view::Renderer3DModule {
+    class MEGAMOLCORE_API SphereRenderer : public megamol::core::nextgen::Renderer3DModule_2 {
     public:
        
         /**
@@ -204,7 +204,7 @@ namespace moldyn {
          *
          * @return The return value of the function.
          */
-        virtual bool GetExtents(megamol::core::view::CallRender3D& call);
+        virtual bool GetExtents(megamol::core::nextgen::CallRender3D_2& call);
 
         /** Ctor. */
         SphereRenderer(void);
@@ -233,7 +233,7 @@ namespace moldyn {
          *
          * @return The return value of the function.
          */
-        virtual bool Render(megamol::core::view::CallRender3D& call);
+        virtual bool Render(megamol::core::nextgen::CallRender3D_2& call);
 
     private:
 
@@ -264,19 +264,25 @@ namespace moldyn {
 
         // Current Render State -----------------------------------------------
 
-        float curViewAttrib[4];
-        float curClipDat[4];
-        float oldClipDat[4];
-        float curClipCol[4];
-        float curLightPos[4];
-        int   curVpWidth;
-        int   curVpHeight;
-        int   lastVpWidth;
-        int   lastVpHeight;
-        vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> curMVinv;
-        vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> curMVP;
-        vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> curMVPinv;
-        vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> curMVPtransp;
+        int                         curVpWidth;
+        int                         curVpHeight;
+        int                         lastVpWidth;
+        int                         lastVpHeight;
+        glm::vec4                   curViewAttrib;
+        glm::vec4                   curClipDat;
+        glm::vec4                   oldClipDat;
+        glm::vec4                   curClipCol;
+        glm::vec4                   curLightPos;
+        glm::vec4                   curCamUp;
+        float                       curCamNearClip;
+        glm::vec4                   curCamView;
+        glm::vec4                   curCamRight;
+        glm::vec4                   curCamPos;
+        glm::mat4                   curMVinv;
+        glm::mat4                   curMVP;
+        glm::mat4                   curMVPinv;
+        glm::mat4                   curMVPtransp;
+        vislib::math::Cuboid<float> curClipBox;
 
         // --------------------------------------------------------------------
 
@@ -396,7 +402,7 @@ namespace moldyn {
          * @param clipDat  Points to four floats ...
          * @param clipCol  Points to four floats ....
          */
-        void getClipData(float outClipDat[4], float outClipCol[4]);
+        void getClipData(glm::vec4& out_clipDat, glm::vec4& out_clipCol);
 
         /**
          * Check if specified render mode or all render mode are available.
@@ -430,12 +436,12 @@ namespace moldyn {
          *
          * @return           True if success, false otherwise.
          */
-        bool renderSimple(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc);
-        bool renderGeometryShader(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc);
-        bool renderSSBO(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc);
-        bool renderSplat(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc);
-        bool renderBufferArray(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc);
-        bool renderAmbientOcclusion(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc);
+        bool renderSimple(nextgen::CallRender3D_2* cr3d, MultiParticleDataCall* mpdc);
+        bool renderGeometryShader(nextgen::CallRender3D_2* cr3d, MultiParticleDataCall* mpdc);
+        bool renderSSBO(nextgen::CallRender3D_2* cr3d, MultiParticleDataCall* mpdc);
+        bool renderSplat(nextgen::CallRender3D_2* cr3d, MultiParticleDataCall* mpdc);
+        bool renderBufferArray(nextgen::CallRender3D_2* cr3d, MultiParticleDataCall* mpdc);
+        bool renderAmbientOcclusion(nextgen::CallRender3D_2* cr3d, MultiParticleDataCall* mpdc);
 
         /**
          * Set pointers to vertex and color buffers and corresponding shader variables.
@@ -614,14 +620,14 @@ namespace moldyn {
          * @param mpdc    ...
          * @param shader  ...
          */
-        void rebuildWorkingData(megamol::core::view::CallRender3D* cr3d, megamol::core::moldyn::MultiParticleDataCall* mpdc, const vislib::graphics::gl::GLSLShader& shader);
+        void rebuildWorkingData(megamol::core::nextgen::CallRender3D_2* cr3d, megamol::core::moldyn::MultiParticleDataCall* mpdc, const vislib::graphics::gl::GLSLShader& shader);
 
         /**
          * Render deferred pass.
          *
          * @param cr3d  ...
          */
-        void renderDeferredPass(megamol::core::view::CallRender3D* cr3d);
+        void renderDeferredPass(megamol::core::nextgen::CallRender3D_2* cr3d);
 
         /**
          * Generate direction shader array string.

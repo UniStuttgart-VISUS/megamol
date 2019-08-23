@@ -103,8 +103,6 @@ discardFlag = geoDiscardFrag[0];
 
 flat in uint discardFrag;
 
-uniform uint flagsAvailable;
-
         ]]>
     </snippet>
 

@@ -23,7 +23,7 @@ const GLuint SSBOvertexBindingPoint = 2;
 const GLuint SSBOcolorBindingPoint = 3;
 const GLuint SSBOflagsBindingPoint = 4;
 
-moldyn::SphereRenderer::SphereRenderer(void) : view::Renderer3DModule()
+moldyn::SphereRenderer::SphereRenderer(void) : nextgen::Renderer3DModule_2()
     , getDataSlot("getdata", "Connects to the data source")
     , getTFSlot("gettransferfunction", "Connects to the transfer function module")
     , getClipPlaneSlot("getclipplane", "Connects to a clipping plane module")
@@ -189,8 +189,9 @@ moldyn::SphereRenderer::SphereRenderer(void) : view::Renderer3DModule()
 moldyn::SphereRenderer::~SphereRenderer(void) { this->Release(); }
 
 
-bool moldyn::SphereRenderer::GetExtents(view::CallRender3D& call) {
-    view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
+bool moldyn::SphereRenderer::GetExtents(nextgen::CallRender3D_2& call) {
+
+    nextgen::CallRender3D_2 *cr = dynamic_cast<nextgen::CallRender3D_2*>(&call);
     if (cr == NULL) return false;
 
     MultiParticleDataCall *c2 = this->getDataSlot.CallAs<MultiParticleDataCall>();
@@ -209,26 +210,19 @@ bool moldyn::SphereRenderer::GetExtents(view::CallRender3D& call) {
                 temp.Grow(c2->AccessParticles(pidx).GetGlobalRadius());
                 cbbox.Union(temp);
             }
-            cr->AccessBoundingBoxes().SetObjectSpaceBBox(bbox);
-            cr->AccessBoundingBoxes().SetObjectSpaceClipBox(cbbox);
+            cr->AccessBoundingBoxes().SetBoundingBox(bbox);
+            cr->AccessBoundingBoxes().SetClipBox(cbbox);
         }
         else {
             cr->AccessBoundingBoxes() = c2->AccessBoundingBoxes();
         }
 
-        float scaling = cr->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
-        if (scaling > 0.0000001) {
-            scaling = 10.0f / scaling;
-        }
-        else {
-            scaling = 1.0f;
-        }
-        cr->AccessBoundingBoxes().MakeScaledWorld(scaling);
     }
     else {
         cr->SetTimeFramesCount(1);
         cr->AccessBoundingBoxes().Clear();
     }
+    this->curClipBox = cr->AccessBoundingBoxes().ClipBox();
 
     return true;
 }
@@ -724,6 +718,7 @@ bool moldyn::SphereRenderer::createResources() {
 
 
 moldyn::MultiParticleDataCall *moldyn::SphereRenderer::getData(unsigned int t, float& outScaling) {
+
     MultiParticleDataCall *c2 = this->getDataSlot.CallAs<MultiParticleDataCall>();
     outScaling = 1.0f;
     if (c2 != NULL) {
@@ -762,24 +757,26 @@ moldyn::MultiParticleDataCall *moldyn::SphereRenderer::getData(unsigned int t, f
 }
 
 
-void moldyn::SphereRenderer::getClipData(float outClipDat[4], float outClipCol[4]) {
+void moldyn::SphereRenderer::getClipData(glm::vec4& out_clipDat, glm::vec4& out_clipCol) {
+
     view::CallClipPlane *ccp = this->getClipPlaneSlot.CallAs<view::CallClipPlane>();
     if ((ccp != NULL) && (*ccp)()) {
-        outClipDat[0] = ccp->GetPlane().Normal().X();
-        outClipDat[1] = ccp->GetPlane().Normal().Y();
-        outClipDat[2] = ccp->GetPlane().Normal().Z();
+        out_clipDat[0] = ccp->GetPlane().Normal().X();
+        out_clipDat[1] = ccp->GetPlane().Normal().Y();
+        out_clipDat[2] = ccp->GetPlane().Normal().Z();
         vislib::math::Vector<float, 3> grr(ccp->GetPlane().Point().PeekCoordinates());
-        outClipDat[3] = grr.Dot(ccp->GetPlane().Normal());
-        outClipCol[0] = static_cast<float>(ccp->GetColour()[0]) / 255.0f;
-        outClipCol[1] = static_cast<float>(ccp->GetColour()[1]) / 255.0f;
-        outClipCol[2] = static_cast<float>(ccp->GetColour()[2]) / 255.0f;
-        outClipCol[3] = static_cast<float>(ccp->GetColour()[3]) / 255.0f;
+        out_clipDat[3] = grr.Dot(ccp->GetPlane().Normal());
 
+        out_clipCol[0] = static_cast<float>(ccp->GetColour()[0]);
+        out_clipCol[1] = static_cast<float>(ccp->GetColour()[1]);
+        out_clipCol[2] = static_cast<float>(ccp->GetColour()[2]);
+        out_clipCol[3] = static_cast<float>(ccp->GetColour()[3]);
     }
     else {
-        outClipDat[0] = outClipDat[1] = outClipDat[2] = outClipDat[3] = 0.0f;
-        outClipCol[0] = outClipCol[1] = outClipCol[2] = 0.75f;
-        outClipCol[3] = 1.0f;
+        out_clipDat[0] = out_clipDat[1] = out_clipDat[2] = out_clipDat[3] = 0.0f;
+
+        out_clipCol[0] = out_clipCol[1] = out_clipCol[2] = 0.75f;
+        out_clipCol[3] = 1.0f;
     }
 }
 
@@ -910,11 +907,11 @@ std::string moldyn::SphereRenderer::getRenderModeString(RenderMode rm) {
 
 
 
-bool moldyn::SphereRenderer::Render(view::CallRender3D& call) {
+bool moldyn::SphereRenderer::Render(nextgen::CallRender3D_2& call) {
 
     // timer.BeginFrame();
 
-    view::CallRender3D* cr3d = dynamic_cast<view::CallRender3D*>(&call);
+    nextgen::CallRender3D_2* cr3d = dynamic_cast<nextgen::CallRender3D_2*>(&call);
     if (cr3d == nullptr) return false;
     auto cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
     auto flagc = this->getFlagsSlot.CallAs<FlagCall>();
@@ -939,7 +936,7 @@ bool moldyn::SphereRenderer::Render(view::CallRender3D& call) {
     this->softSelectColorParam.Param<param::ColorParam>()->SetGUIVisible((bool)(flagc != nullptr));
 
     // Update current state variables -----------------------------------------
-    glGetFloatv(GL_VIEWPORT, this->curViewAttrib);
+    glGetFloatv(GL_VIEWPORT, glm::value_ptr(this->curViewAttrib));
     this->curVpWidth = static_cast<int>(this->curViewAttrib[2]);
     this->curVpHeight = static_cast<int>(this->curViewAttrib[3]);
     if (this->curViewAttrib[2] < 1.0f) this->curViewAttrib[2] = 1.0f;
@@ -969,33 +966,51 @@ bool moldyn::SphereRenderer::Render(view::CallRender3D& call) {
     this->oldHash = hash;
     this->oldFrameID = frameID;
 
+    // Clipping
     this->getClipData(this->curClipDat, this->curClipCol);
 
-    glEnable(GL_LIGHTING);
-    glGetLightfv(GL_LIGHT0, GL_POSITION, this->curLightPos);
-    glDisable(GL_LIGHTING);
+    // Lights
+    this->GetLights();
+    this->curLightPos = { 0.0f, 0.0f, 0.0f, 1.0f };
+    if (this->lightMap.size() != 1) {
+        vislib::sys::Log::DefaultLog.WriteWarn("[SphereRenderer] Only one single point light source is supported by this renderer");
+    }
+    for (auto light : this->lightMap) {
+        if (light.second.lightType != core::view::light::POINTLIGHT) {
+            vislib::sys::Log::DefaultLog.WriteWarn("[SphereRenderer] Only single point light source is supported by this renderer");
+        }
+        else {
+            auto lightPos = this->lightMap.begin()->second.pl_position;
+            if (lightPos.size() == 3) {
+                this->curLightPos[0] = lightPos[0];
+                this->curLightPos[1] = lightPos[1];
+                this->curLightPos[2] = lightPos[2];
+            }
+            if (lightPos.size() == 4) {
+                this->curLightPos[3] = lightPos[3];
+            }
+        }
+    }
 
-    GLfloat modelViewMatrix_column[16];
-    glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
-    vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> MV(&modelViewMatrix_column[0]);
+    // Camera 
+    nextgen::Camera_2 cam;
+    cr3d->GetCamera(cam);
+    cam_type::snapshot_type snapshot;
+    cam_type::matrix_type viewTemp, projTemp;
+    // Generate complete snapshot and calculate matrices
+    cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
+    this->curCamPos = snapshot.position;
+    this->curCamView = snapshot.view_vector;
+    this->curCamRight = snapshot.right_vector;
+    this->curCamUp = snapshot.up_vector;
+    this->curCamNearClip = snapshot.frustum_near;
+    glm::mat4 view = viewTemp;
+    glm::mat4 proj = projTemp;
+    this->curMVinv = glm::inverse(view);
+    this->curMVP = proj * view;
+    this->curMVPinv = glm::inverse(this->curMVP);
+    this->curMVPtransp = glm::transpose(this->curMVP);
 
-    vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> scaleMat;
-    scaleMat.SetAt(0, 0, scaling);
-    scaleMat.SetAt(1, 1, scaling);
-    scaleMat.SetAt(2, 2, scaling);
-    MV = MV * scaleMat;
-
-    GLfloat projMatrix_column[16];
-    glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
-    vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> PM(&projMatrix_column[0]);
-
-    this->curMVinv = MV;
-    this->curMVinv.Invert();
-    this->curMVP = PM * MV;
-    this->curMVPinv = this->curMVP;
-    this->curMVPinv.Invert();
-    this->curMVPtransp = this->curMVP;
-    this->curMVPtransp.Transpose();
     // ------------------------------------------------------------------------
 
     // Set OpenGL state
@@ -1042,24 +1057,24 @@ bool moldyn::SphereRenderer::Render(view::CallRender3D& call) {
 }
 
 
-bool moldyn::SphereRenderer::renderSimple(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc) {
+bool moldyn::SphereRenderer::renderSimple(nextgen::CallRender3D_2* cr3d, MultiParticleDataCall* mpdc) {
 
     this->sphereShader.Enable();
 
     this->setFlagStorage(this->sphereShader, mpdc);
 
-    glUniform4fv(this->sphereShader.ParameterLocation("viewAttr"), 1, this->curViewAttrib);
-    glUniform3fv(this->sphereShader.ParameterLocation("camIn"), 1, cr3d->GetCameraParameters()->Front().PeekComponents());
-    glUniform3fv(this->sphereShader.ParameterLocation("camRight"), 1, cr3d->GetCameraParameters()->Right().PeekComponents());
-    glUniform3fv(this->sphereShader.ParameterLocation("camUp"), 1, cr3d->GetCameraParameters()->Up().PeekComponents());
+    glUniform4fv(this->sphereShader.ParameterLocation("viewAttr"), 1, glm::value_ptr(this->curViewAttrib));
+    glUniform3fv(this->sphereShader.ParameterLocation("camIn"), 1, glm::value_ptr(this->curCamView));
+    glUniform3fv(this->sphereShader.ParameterLocation("camRight"), 1, glm::value_ptr(this->curCamRight));
+    glUniform3fv(this->sphereShader.ParameterLocation("camUp"), 1, glm::value_ptr(this->curCamUp));
     glUniform1f(this->sphereShader.ParameterLocation("scaling"), this->radiusScalingParam.Param<param::FloatParam>()->Value());
-    glUniform4fv(this->sphereShader.ParameterLocation("clipDat"), 1, this->curClipDat);
-    glUniform4fv(this->sphereShader.ParameterLocation("clipCol"), 1, this->curClipCol);
-    glUniform4fv(this->sphereShader.ParameterLocation("lightPos"), 1, this->curLightPos);
-    glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVinv"), 1, GL_FALSE, this->curMVinv.PeekComponents());
-    glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVP"), 1, GL_FALSE, this->curMVP.PeekComponents());
-    glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVPinv"), 1, GL_FALSE, this->curMVPinv.PeekComponents());
-    glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVPtransp"), 1, GL_FALSE, this->curMVPtransp.PeekComponents());
+    glUniform4fv(this->sphereShader.ParameterLocation("clipDat"), 1, glm::value_ptr(this->curClipDat));
+    glUniform4fv(this->sphereShader.ParameterLocation("clipCol"), 1, glm::value_ptr(this->curClipCol));
+    glUniform4fv(this->sphereShader.ParameterLocation("lightPos"), 1, glm::value_ptr(this->curLightPos));
+    glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVinv"), 1, GL_FALSE, glm::value_ptr(this->curMVinv));
+    glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVP"), 1, GL_FALSE, glm::value_ptr(this->curMVP));
+    glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVPinv"), 1, GL_FALSE, glm::value_ptr(this->curMVPinv));
+    glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVPtransp"), 1, GL_FALSE, glm::value_ptr(this->curMVPtransp));
 
     GLuint flagPartsCount = 0;
     for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
@@ -1109,7 +1124,7 @@ bool moldyn::SphereRenderer::renderSimple(view::CallRender3D* cr3d, MultiParticl
 }
 
 
-bool moldyn::SphereRenderer::renderSSBO(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc) {
+bool moldyn::SphereRenderer::renderSSBO(nextgen::CallRender3D_2* cr3d, MultiParticleDataCall* mpdc) {
 
 #ifdef CHRONOTIMING
     std::vector<std::chrono::steady_clock::time_point> deltas;
@@ -1139,18 +1154,18 @@ bool moldyn::SphereRenderer::renderSSBO(view::CallRender3D* cr3d, MultiParticleD
             glUniform4fv(this->newShader->ParameterLocation("flagSoftSelectedCol"), 1, this->softSelectColorParam.Param<param::ColorParam>()->Value().data());
         }
 
-        glUniform4fv(this->newShader->ParameterLocation("viewAttr"), 1, this->curViewAttrib);
-        glUniform3fv(this->newShader->ParameterLocation("camIn"), 1, cr3d->GetCameraParameters()->Front().PeekComponents());
-        glUniform3fv(this->newShader->ParameterLocation("camRight"), 1, cr3d->GetCameraParameters()->Right().PeekComponents());
-        glUniform3fv(this->newShader->ParameterLocation("camUp"), 1, cr3d->GetCameraParameters()->Up().PeekComponents());
+        glUniform4fv(this->newShader->ParameterLocation("viewAttr"), 1, glm::value_ptr(this->curViewAttrib));
+        glUniform3fv(this->newShader->ParameterLocation("camIn"), 1, glm::value_ptr(this->curCamView));
+        glUniform3fv(this->newShader->ParameterLocation("camRight"), 1, glm::value_ptr(this->curCamRight));
+        glUniform3fv(this->newShader->ParameterLocation("camUp"), 1, glm::value_ptr(this->curCamUp));
         glUniform1f(this->newShader->ParameterLocation("scaling"), this->radiusScalingParam.Param<param::FloatParam>()->Value());
-        glUniform4fv(this->newShader->ParameterLocation("clipDat"), 1, this->curClipDat);
-        glUniform4fv(this->newShader->ParameterLocation("clipCol"), 1, this->curClipCol);
-        glUniform4fv(this->newShader->ParameterLocation("lightPos"), 1, this->curLightPos);
-        glUniformMatrix4fv(this->newShader->ParameterLocation("MVinv"), 1, GL_FALSE, this->curMVinv.PeekComponents());
-        glUniformMatrix4fv(this->newShader->ParameterLocation("MVP"), 1, GL_FALSE, this->curMVP.PeekComponents());
-        glUniformMatrix4fv(this->newShader->ParameterLocation("MVPinv"), 1, GL_FALSE, this->curMVPinv.PeekComponents());
-        glUniformMatrix4fv(this->newShader->ParameterLocation("MVPtransp"), 1, GL_FALSE, this->curMVPtransp.PeekComponents());
+        glUniform4fv(this->newShader->ParameterLocation("clipDat"), 1, glm::value_ptr(this->curClipDat));
+        glUniform4fv(this->newShader->ParameterLocation("clipCol"), 1, glm::value_ptr(this->curClipCol));
+        glUniform4fv(this->newShader->ParameterLocation("lightPos"), 1, glm::value_ptr(this->curLightPos));
+        glUniformMatrix4fv(this->newShader->ParameterLocation("MVinv"), 1, GL_FALSE, glm::value_ptr(this->curMVinv));
+        glUniformMatrix4fv(this->newShader->ParameterLocation("MVP"), 1, GL_FALSE, glm::value_ptr(this->curMVP));
+        glUniformMatrix4fv(this->newShader->ParameterLocation("MVPinv"), 1, GL_FALSE, glm::value_ptr(this->curMVPinv));
+        glUniformMatrix4fv(this->newShader->ParameterLocation("MVPtransp"), 1, GL_FALSE, glm::value_ptr(this->curMVPtransp));
 
         unsigned int colBytes, vertBytes, colStride, vertStride;
         bool interleaved;
@@ -1277,7 +1292,7 @@ bool moldyn::SphereRenderer::renderSSBO(view::CallRender3D* cr3d, MultiParticleD
 }
 
 
-bool moldyn::SphereRenderer::renderSplat(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc) {
+bool moldyn::SphereRenderer::renderSplat(nextgen::CallRender3D_2* cr3d, MultiParticleDataCall* mpdc) {
 
     glDisable(GL_DEPTH_TEST);
 
@@ -1321,18 +1336,18 @@ bool moldyn::SphereRenderer::renderSplat(view::CallRender3D* cr3d, MultiParticle
             glUniform4fv(this->newShader->ParameterLocation("flagSelectedCol"), 1, this->selectColorParam.Param<param::ColorParam>()->Value().data());
             glUniform4fv(this->newShader->ParameterLocation("flagSoftSelectedCol"), 1, this->softSelectColorParam.Param<param::ColorParam>()->Value().data());
         }
-        glUniform4fv(this->newShader->ParameterLocation("viewAttr"), 1, this->curViewAttrib);
-        glUniform3fv(this->newShader->ParameterLocation("camIn"), 1, cr3d->GetCameraParameters()->Front().PeekComponents());
-        glUniform3fv(this->newShader->ParameterLocation("camRight"), 1, cr3d->GetCameraParameters()->Right().PeekComponents());
-        glUniform3fv(this->newShader->ParameterLocation("camUp"), 1, cr3d->GetCameraParameters()->Up().PeekComponents());
+        glUniform4fv(this->newShader->ParameterLocation("viewAttr"), 1, glm::value_ptr(this->curViewAttrib));
+        glUniform3fv(this->newShader->ParameterLocation("camIn"), 1, glm::value_ptr(this->curCamView));
+        glUniform3fv(this->newShader->ParameterLocation("camRight"), 1, glm::value_ptr(this->curCamRight));
+        glUniform3fv(this->newShader->ParameterLocation("camUp"), 1, glm::value_ptr(this->curCamUp));
         glUniform1f(this->newShader->ParameterLocation("scaling"), this->radiusScalingParam.Param<param::FloatParam>()->Value());
-        glUniform4fv(this->newShader->ParameterLocation("clipDat"), 1, this->curClipDat);
-        glUniform4fv(this->newShader->ParameterLocation("clipCol"), 1, this->curClipCol);
-        glUniform4fv(this->newShader->ParameterLocation("lightPos"), 1, this->curLightPos);
-        glUniformMatrix4fv(this->newShader->ParameterLocation("MVinv"), 1, GL_FALSE, this->curMVinv.PeekComponents());
-        glUniformMatrix4fv(this->newShader->ParameterLocation("MVP"), 1, GL_FALSE, this->curMVP.PeekComponents());
-        glUniformMatrix4fv(this->newShader->ParameterLocation("MVPinv"), 1, GL_FALSE, this->curMVPinv.PeekComponents());
-        glUniformMatrix4fv(this->newShader->ParameterLocation("MVPtransp"), 1, GL_FALSE, this->curMVPtransp.PeekComponents());
+        glUniform4fv(this->newShader->ParameterLocation("clipDat"), 1, glm::value_ptr(this->curClipDat));
+        glUniform4fv(this->newShader->ParameterLocation("clipCol"), 1, glm::value_ptr(this->curClipCol));
+        glUniform4fv(this->newShader->ParameterLocation("lightPos"), 1, glm::value_ptr(this->curLightPos));
+        glUniformMatrix4fv(this->newShader->ParameterLocation("MVinv"), 1, GL_FALSE, glm::value_ptr(this->curMVinv));
+        glUniformMatrix4fv(this->newShader->ParameterLocation("MVP"), 1, GL_FALSE, glm::value_ptr(this->curMVP));
+        glUniformMatrix4fv(this->newShader->ParameterLocation("MVPinv"), 1, GL_FALSE, glm::value_ptr(this->curMVPinv));
+        glUniformMatrix4fv(this->newShader->ParameterLocation("MVPtransp"), 1, GL_FALSE, glm::value_ptr(this->curMVPtransp));
         glUniform1f(this->newShader->ParameterLocation("alphaScaling"), this->alphaScalingParam.Param<param::FloatParam>()->Value());
         glUniform1i(this->newShader->ParameterLocation("attenuateSubpixel"), this->attenuateSubpixelParam.Param<param::BoolParam>()->Value() ? 1 : 0);
 
@@ -1401,24 +1416,24 @@ bool moldyn::SphereRenderer::renderSplat(view::CallRender3D* cr3d, MultiParticle
 }
 
 
-bool moldyn::SphereRenderer::renderBufferArray(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc) {
+bool moldyn::SphereRenderer::renderBufferArray(nextgen::CallRender3D_2* cr3d, MultiParticleDataCall* mpdc) {
 
     this->sphereShader.Enable();
 
     this->setFlagStorage(this->sphereShader, mpdc);
 
-    glUniform4fv(this->sphereShader.ParameterLocation("viewAttr"), 1, this->curViewAttrib);
-    glUniform3fv(this->sphereShader.ParameterLocation("camIn"), 1, cr3d->GetCameraParameters()->Front().PeekComponents());
-    glUniform3fv(this->sphereShader.ParameterLocation("camRight"), 1, cr3d->GetCameraParameters()->Right().PeekComponents());
-    glUniform3fv(this->sphereShader.ParameterLocation("camUp"), 1, cr3d->GetCameraParameters()->Up().PeekComponents());
+    glUniform4fv(this->sphereShader.ParameterLocation("viewAttr"), 1, glm::value_ptr(this->curViewAttrib));
+    glUniform3fv(this->sphereShader.ParameterLocation("camIn"), 1, glm::value_ptr(this->curCamView));
+    glUniform3fv(this->sphereShader.ParameterLocation("camRight"), 1, glm::value_ptr(this->curCamRight));
+    glUniform3fv(this->sphereShader.ParameterLocation("camUp"), 1, glm::value_ptr(this->curCamUp));
     glUniform1f(this->sphereShader.ParameterLocation("scaling"), this->radiusScalingParam.Param<param::FloatParam>()->Value());
-    glUniform4fv(this->sphereShader.ParameterLocation("clipDat"), 1, this->curClipDat);
-    glUniform4fv(this->sphereShader.ParameterLocation("clipCol"), 1, this->curClipCol);
-    glUniform4fv(this->sphereShader.ParameterLocation("lightPos"), 1, this->curLightPos);
-    glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVinv"), 1, GL_FALSE, this->curMVinv.PeekComponents());
-    glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVP"), 1, GL_FALSE, this->curMVP.PeekComponents());
-    glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVPinv"), 1, GL_FALSE, this->curMVPinv.PeekComponents());
-    glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVPtransp"), 1, GL_FALSE, this->curMVPtransp.PeekComponents());
+    glUniform4fv(this->sphereShader.ParameterLocation("clipDat"), 1, glm::value_ptr(this->curClipDat));
+    glUniform4fv(this->sphereShader.ParameterLocation("clipCol"), 1, glm::value_ptr(this->curClipCol));
+    glUniform4fv(this->sphereShader.ParameterLocation("lightPos"), 1, glm::value_ptr(this->curLightPos));
+    glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVinv"), 1, GL_FALSE, glm::value_ptr(this->curMVinv));
+    glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVP"), 1, GL_FALSE, glm::value_ptr(this->curMVP));
+    glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVPinv"), 1, GL_FALSE, glm::value_ptr(this->curMVPinv));
+    glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVPtransp"), 1, GL_FALSE, glm::value_ptr(this->curMVPtransp));
 
     //this->currBuf = 0;
     GLuint flagPartsCount = 0;
@@ -1497,7 +1512,7 @@ bool moldyn::SphereRenderer::renderBufferArray(view::CallRender3D* cr3d, MultiPa
 }
 
 
-bool moldyn::SphereRenderer::renderGeometryShader(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc) {
+bool moldyn::SphereRenderer::renderGeometryShader(nextgen::CallRender3D_2* cr3d, MultiParticleDataCall* mpdc) {
 
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 
@@ -1514,20 +1529,18 @@ bool moldyn::SphereRenderer::renderGeometryShader(view::CallRender3D* cr3d, Mult
     this->setFlagStorage(this->sphereGeometryShader, mpdc);
 
     // Set shader variables
-    glUniform4fv(this->sphereGeometryShader.ParameterLocation("viewAttr"), 1, this->curViewAttrib);
-    glUniform3fv(this->sphereGeometryShader.ParameterLocation("camIn"), 1,
-        cr3d->GetCameraParameters()->Front().PeekComponents());
-    glUniform3fv(this->sphereGeometryShader.ParameterLocation("camRight"), 1,
-        cr3d->GetCameraParameters()->Right().PeekComponents());
-    glUniform3fv(this->sphereGeometryShader.ParameterLocation("camUp"), 1, cr3d->GetCameraParameters()->Up().PeekComponents());
+    glUniform4fv(this->sphereGeometryShader.ParameterLocation("viewAttr"), 1, glm::value_ptr(this->curViewAttrib));
+    glUniform3fv(this->sphereGeometryShader.ParameterLocation("camIn"), 1, glm::value_ptr(this->curCamView));
+    glUniform3fv(this->sphereGeometryShader.ParameterLocation("camRight"), 1, glm::value_ptr(this->curCamRight));
+    glUniform3fv(this->sphereGeometryShader.ParameterLocation("camUp"), 1, glm::value_ptr(this->curCamUp));
     glUniform1f(this->sphereGeometryShader.ParameterLocation("scaling"), this->radiusScalingParam.Param<param::FloatParam>()->Value());
-    glUniform4fv(this->sphereGeometryShader.ParameterLocation("clipDat"), 1, this->curClipDat);
-    glUniform4fv(this->sphereGeometryShader.ParameterLocation("clipCol"), 1, this->curClipCol);
-    glUniform4fv(this->sphereGeometryShader.ParameterLocation("lightPos"), 1, this->curLightPos);
-    glUniformMatrix4fv(this->sphereGeometryShader.ParameterLocation("MVinv"), 1, GL_FALSE, this->curMVinv.PeekComponents());
-    glUniformMatrix4fv(this->sphereGeometryShader.ParameterLocation("MVP"), 1, GL_FALSE, this->curMVP.PeekComponents());
-    glUniformMatrix4fv(this->sphereGeometryShader.ParameterLocation("MVPinv"), 1, GL_FALSE, this->curMVPinv.PeekComponents());
-    glUniformMatrix4fv(this->sphereGeometryShader.ParameterLocation("MVPtransp"), 1, GL_FALSE, this->curMVPtransp.PeekComponents());
+    glUniform4fv(this->sphereGeometryShader.ParameterLocation("clipDat"), 1, glm::value_ptr(this->curClipDat));
+    glUniform4fv(this->sphereGeometryShader.ParameterLocation("clipCol"), 1, glm::value_ptr(this->curClipCol));
+    glUniform4fv(this->sphereGeometryShader.ParameterLocation("lightPos"), 1, glm::value_ptr(this->curLightPos));
+    glUniformMatrix4fv(this->sphereGeometryShader.ParameterLocation("MVinv"), 1, GL_FALSE, glm::value_ptr(this->curMVinv));
+    glUniformMatrix4fv(this->sphereGeometryShader.ParameterLocation("MVP"), 1, GL_FALSE, glm::value_ptr(this->curMVP));
+    glUniformMatrix4fv(this->sphereGeometryShader.ParameterLocation("MVPinv"), 1, GL_FALSE, glm::value_ptr(this->curMVPinv));
+    glUniformMatrix4fv(this->sphereGeometryShader.ParameterLocation("MVPtransp"), 1, GL_FALSE, glm::value_ptr(this->curMVPtransp));
 
     GLuint flagPartsCount = 0;
     for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
@@ -1565,7 +1578,7 @@ bool moldyn::SphereRenderer::renderGeometryShader(view::CallRender3D* cr3d, Mult
 }
 
 
-bool moldyn::SphereRenderer::renderAmbientOcclusion(view::CallRender3D* cr3d, MultiParticleDataCall* mpdc) {
+bool moldyn::SphereRenderer::renderAmbientOcclusion(nextgen::CallRender3D_2* cr3d, MultiParticleDataCall* mpdc) {
 
     // We need to regenerate the shader if certain settings are changed
     if (this->enableLightingSlot.IsDirty() || this->aoConeApexSlot.IsDirty()) {
@@ -1600,17 +1613,17 @@ bool moldyn::SphereRenderer::renderAmbientOcclusion(view::CallRender3D* cr3d, Mu
 
     this->setFlagStorage(theShader, mpdc);
 
-    glUniformMatrix4fv(theShader.ParameterLocation("MVP"), 1, GL_FALSE, this->curMVP.PeekComponents());
-    glUniformMatrix4fv(theShader.ParameterLocation("MVPinv"), 1, GL_FALSE, this->curMVPinv.PeekComponents());
-    glUniformMatrix4fv(theShader.ParameterLocation("MVinv"), 1, GL_FALSE, this->curMVinv.PeekComponents());
-    glUniformMatrix4fv(theShader.ParameterLocation("MVPtransp"), 1, GL_FALSE, this->curMVPtransp.PeekComponents());
+    glUniformMatrix4fv(theShader.ParameterLocation("MVP"), 1, GL_FALSE, glm::value_ptr(this->curMVP));
+    glUniformMatrix4fv(theShader.ParameterLocation("MVPinv"), 1, GL_FALSE, glm::value_ptr(this->curMVPinv));
+    glUniformMatrix4fv(theShader.ParameterLocation("MVinv"), 1, GL_FALSE, glm::value_ptr(this->curMVinv));
+    glUniformMatrix4fv(theShader.ParameterLocation("MVPtransp"), 1, GL_FALSE, glm::value_ptr(this->curMVPtransp));
     glUniform1f(theShader.ParameterLocation("scaling"), this->radiusScalingParam.Param<param::FloatParam>()->Value());
-    glUniform4fv(theShader.ParameterLocation("viewAttr"), 1, this->curViewAttrib);
-    glUniform3fv(theShader.ParameterLocation("camRight"), 1, cr3d->GetCameraParameters()->Right().PeekComponents());
-    glUniform3fv(theShader.ParameterLocation("camUp"), 1, cr3d->GetCameraParameters()->Up().PeekComponents());
-    glUniform3fv(theShader.ParameterLocation("camIn"), 1, cr3d->GetCameraParameters()->Front().PeekComponents());
-    glUniform4fv(theShader.ParameterLocation("clipDat"), 1, this->curClipDat);
-    glUniform4fv(theShader.ParameterLocation("clipCol"), 1, this->curClipCol);
+    glUniform4fv(theShader.ParameterLocation("viewAttr"), 1, glm::value_ptr(this->curViewAttrib));
+    glUniform3fv(theShader.ParameterLocation("camRight"), 1, glm::value_ptr(this->curCamRight));
+    glUniform3fv(theShader.ParameterLocation("camUp"), 1, glm::value_ptr(this->curCamUp));
+    glUniform3fv(theShader.ParameterLocation("camIn"), 1, glm::value_ptr(this->curCamView));
+    glUniform4fv(theShader.ParameterLocation("clipDat"), 1, glm::value_ptr(this->curClipDat));
+    glUniform4fv(theShader.ParameterLocation("clipCol"), 1, glm::value_ptr(this->curClipCol));
     glUniform1i(theShader.ParameterLocation("inUseHighPrecision"), (int)highPrecision);
 
     GLuint flagPartsCount = 0;
@@ -1875,6 +1888,7 @@ bool moldyn::SphereRenderer::setTransferFunctionTexture(vislib::graphics::gl::GL
 
 
 bool moldyn::SphereRenderer::unsetTransferFunctionTexture(void) {
+
     view::CallGetTransferFunction* cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
     if (cgtf != nullptr) {
         cgtf->UnbindConvenience();
@@ -2261,6 +2275,7 @@ void moldyn::SphereRenderer::getGLSLVersion(int &outMajor, int &outMinor) const 
 #if defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
 
 void moldyn::SphereRenderer::lockSingle(GLsync& outSyncObj) {
+
     if (outSyncObj) {
         glDeleteSync(outSyncObj);
     }
@@ -2269,6 +2284,7 @@ void moldyn::SphereRenderer::lockSingle(GLsync& outSyncObj) {
 
 
 void moldyn::SphereRenderer::waitSingle(const GLsync& syncObj) {
+
     if (syncObj) {
         while (1) {
             GLenum wait = glClientWaitSync(syncObj, GL_SYNC_FLUSH_COMMANDS_BIT, 1);
@@ -2282,7 +2298,7 @@ void moldyn::SphereRenderer::waitSingle(const GLsync& syncObj) {
 #endif // defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
 
 
-// Ambient Occlusion ----------------------------------------------------------
+// ##### Ambient Occlusion ################################################# //
 
 bool moldyn::SphereRenderer::rebuildGBuffer() {
 
@@ -2343,7 +2359,7 @@ bool moldyn::SphereRenderer::rebuildGBuffer() {
 }
 
 
-void moldyn::SphereRenderer::rebuildWorkingData(view::CallRender3D* cr3d, moldyn::MultiParticleDataCall* mpdc, const vislib::graphics::gl::GLSLShader& shader) {
+void moldyn::SphereRenderer::rebuildWorkingData(nextgen::CallRender3D_2* cr3d, moldyn::MultiParticleDataCall* mpdc, const vislib::graphics::gl::GLSLShader& shader) {
 
     // Upload new data if neccessary
     if (stateInvalid) {
@@ -2399,11 +2415,10 @@ void moldyn::SphereRenderer::rebuildWorkingData(view::CallRender3D* cr3d, moldyn
         (stateInvalid || this->aoVolSizeSlot.IsDirty() || !equalClipData)) {
         int volSize = this->aoVolSizeSlot.Param<param::IntParam>()->Value();
 
-        const vislib::math::Cuboid<float>& cube = cr3d->AccessBoundingBoxes().ObjectSpaceClipBox();
-        vislib::math::Dimension<float, 3> dims = cube.GetSize();
+        vislib::math::Dimension<float, 3> dims = this->curClipBox.GetSize();
 
         // Calculate the extensions of the volume by using the specified number of voxels for the longest edge
-        float longestEdge = cube.LongestEdge();
+        float longestEdge = this->curClipBox.LongestEdge();
         dims.Scale(static_cast<float>(volSize) / longestEdge);
 
         // The X size must be a multiple of 4, so we might have to correct that a little
@@ -2420,7 +2435,7 @@ void moldyn::SphereRenderer::rebuildWorkingData(view::CallRender3D* cr3d, moldyn
         // Insert all particle lists
         this->volGen->ClearVolume();
 
-        this->volGen->StartInsertion(cube, vislib::math::Vector<float, 4>(this->curClipDat[0], this->curClipDat[1],
+        this->volGen->StartInsertion(this->curClipBox, vislib::math::Vector<float, 4>(this->curClipDat[0], this->curClipDat[1],
             this->curClipDat[2], this->curClipDat[3]));
         for (unsigned int i = 0; i < this->gpuData.size(); ++i) {
             float globalRadius = 0.0f;
@@ -2440,7 +2455,8 @@ void moldyn::SphereRenderer::rebuildWorkingData(view::CallRender3D* cr3d, moldyn
 
 
 
-void moldyn::SphereRenderer::renderDeferredPass(view::CallRender3D* cr3d) {
+void moldyn::SphereRenderer::renderDeferredPass(nextgen::CallRender3D_2* cr3d) {
+
     bool enableLighting = this->enableLightingSlot.Param<param::BoolParam>()->Value();
     bool highPrecision = this->useHPTexturesSlot.Param<param::BoolParam>()->Value();
 
@@ -2458,17 +2474,15 @@ void moldyn::SphereRenderer::renderDeferredPass(view::CallRender3D* cr3d) {
 
     this->lightingShader.SetParameter("inWidth", static_cast<float>(this->curVpWidth));
     this->lightingShader.SetParameter("inHeight", static_cast<float>(this->curVpHeight));
-    glUniformMatrix4fv(this->lightingShader.ParameterLocation("MVPinv"), 1, GL_FALSE, this->curMVPinv.PeekComponents());
+    glUniformMatrix4fv(this->lightingShader.ParameterLocation("MVPinv"), 1, GL_FALSE, glm::value_ptr(this->curMVPinv));
     this->lightingShader.SetParameter("inColorTex", static_cast<int>(0));
     this->lightingShader.SetParameter("inNormalsTex", static_cast<int>(1));
     this->lightingShader.SetParameter("inDepthTex", static_cast<int>(2));
     this->lightingShader.SetParameter("inUseHighPrecision", highPrecision);
 
     if (enableLighting) {
-        vislib::math::Vector<float, 4> lightDir = this->curMVinv * vislib::math::Vector<float, 4>(this->curLightPos);
-        lightDir.Normalise();
-        this->lightingShader.SetParameterArray3("inObjLightDir", 1, lightDir.PeekComponents());
-        this->lightingShader.SetParameterArray3("inObjCamPos", 1, this->curMVinv.GetColumn(3).PeekComponents());
+        this->lightingShader.SetParameterArray3("inObjLightPos", 1, glm::value_ptr(this->curLightPos));
+        this->lightingShader.SetParameterArray3("inObjCamPos", 1, glm::value_ptr(this->curCamPos));
     }
 
     float aoOffset = this->aoOffsetSlot.Param<param::FloatParam>()->Value();
@@ -2485,10 +2499,8 @@ void moldyn::SphereRenderer::renderDeferredPass(view::CallRender3D* cr3d) {
     this->lightingShader.SetParameter("inAOConeLength", aoConeLength);
     this->lightingShader.SetParameter("inAmbVolShortestEdge", this->ambConeConstants[0]);
     this->lightingShader.SetParameter("inAmbVolMaxLod", this->ambConeConstants[1]);
-    this->lightingShader.SetParameterArray3(
-        "inBoundsMin", 1, cr3d->AccessBoundingBoxes().ObjectSpaceClipBox().GetLeftBottomBack().PeekCoordinates());
-    this->lightingShader.SetParameterArray3(
-        "inBoundsSize", 1, cr3d->AccessBoundingBoxes().ObjectSpaceClipBox().GetSize().PeekDimension());
+    this->lightingShader.SetParameterArray3("inBoundsMin", 1, this->curClipBox.GetLeftBottomBack().PeekCoordinates());
+    this->lightingShader.SetParameterArray3("inBoundsSize", 1, this->curClipBox.GetSize().PeekDimension());
   
     // Draw screen filling 'quad' (= 2x trangle, front facing: CCW)
     std::vector<GLfloat> vertices = {-1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f};

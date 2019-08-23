@@ -1,4 +1,5 @@
-vec3 evaluateLocalLighting(const in vec3 objPos, const in vec3 objNormal, const in vec3 matColor)
+
+vec3 LocalLighting(const in vec3 ray, const in vec3 normal, const in vec3 lightPos, const in vec3 color)
 {
-	return matColor;
+	return color;
 }
