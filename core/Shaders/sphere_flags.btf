@@ -36,7 +36,7 @@ if (bool(flagsAvailable)) {
 #ifdef FLAG_STORAGE_SSBO
     flag = inFlags[(flagOffset + gl_VertexID)];
 #else
-    flag = flagOffset + inFlags[0];
+    flag = flagOffset + inFlags;
 #endif // FLAG_STORAGE_SSBO
 }
 
