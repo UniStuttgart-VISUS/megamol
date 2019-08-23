@@ -87,6 +87,7 @@ GLenum vislib::graphics::gl::OpenGLTexture2D::Create(const UINT width,
     GL_VERIFY_RETURN(::glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, 
         height, border, format, type, pixels));
 
+    ::glBindTexture(GL_TEXTURE_2D, 0);
     return GL_NO_ERROR;
 }
 

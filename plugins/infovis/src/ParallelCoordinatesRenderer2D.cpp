@@ -59,7 +59,7 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
     , glLineSmoothSlot("glEnableLineSmooth", "Toggle GLLINESMOOTH")
     , glLineWidthSlot("glLineWidth", "Value for glLineWidth")
     , sqrtDensitySlot("sqrtDensity", "map root of density to transfer function (instead of linear mapping)")
-    , resetFlagsSlot("resetFlags", "Reset item flags to initial state")
+    //, resetFlagsSlot("resetFlags", "Reset item flags to initial state")
     , resetFiltersSlot("resetFilters", "Reset dimension filters to initial state")
     , numTicks(5)
     , columnCount(0)
@@ -168,9 +168,9 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
     sqrtDensitySlot << new core::param::BoolParam(true);
     this->MakeSlotAvailable(&sqrtDensitySlot);
 
-    resetFlagsSlot << new core::param::ButtonParam();
-    resetFlagsSlot.SetUpdateCallback(this, &ParallelCoordinatesRenderer2D::resetFlagsSlotCallback);
-    this->MakeSlotAvailable(&resetFlagsSlot);
+    // resetFlagsSlot << new core::param::ButtonParam();
+    // resetFlagsSlot.SetUpdateCallback(this, &ParallelCoordinatesRenderer2D::resetFlagsSlotCallback);
+    // this->MakeSlotAvailable(&resetFlagsSlot);
 
     resetFiltersSlot << new core::param::ButtonParam();
     resetFiltersSlot.SetUpdateCallback(this, &ParallelCoordinatesRenderer2D::resetFiltersSlotCallback);
@@ -335,13 +335,14 @@ bool ParallelCoordinatesRenderer2D::scalingChangedCallback(core::param::ParamSlo
     return true;
 }
 
-bool ParallelCoordinatesRenderer2D::resetFlagsSlotCallback(core::param::ParamSlot& caller) { return true; }
+// bool ParallelCoordinatesRenderer2D::resetFlagsSlotCallback(core::param::ParamSlot& caller) { return true; }
 
 bool ParallelCoordinatesRenderer2D::resetFiltersSlotCallback(core::param::ParamSlot& caller) {
     for (GLuint i = 0; i < this->columnCount; i++) {
         this->filters[i].lower = 0.0f;
         this->filters[i].upper = 1.0f;
     }
+    this->needFlagsUpdate = true;
     return true;
 }
 
@@ -1006,6 +1007,7 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         drawAxes();
     }
 
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     glDepthMask(GL_TRUE);
 
     return true;

@@ -1143,9 +1143,9 @@ void view::View3D::renderBBoxBackside(void) {
 
     ::glCullFace(GL_BACK);
 
-    glEnable(GL_LIGHTING);
+    //glEnable(GL_LIGHTING);
     glDisable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+    glBlendFunc(GL_ONE, GL_ZERO);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_LINE_SMOOTH);
     glLineWidth(1.0f);

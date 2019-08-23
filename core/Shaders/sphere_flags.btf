@@ -112,7 +112,7 @@ uniform uint flagsAvailable;
     <snippet name="fragment_discardtest" type="string">
         <![CDATA[
 
-if (bool(flagsAvailable) && (discardFrag > uint(0))) {   
+if (discardFrag > uint(0)) {   
     discard;
 }
 
