@@ -55,17 +55,17 @@ bool Call::operator()(unsigned int func) {
         auto p3 = dynamic_cast<core::view::Renderer3DModule*>(callee->Parent().get());
         auto p2 = dynamic_cast<core::view::Renderer2DModule*>(callee->Parent().get());
         if (p3) {
-            std::string blah = p3->ClassName();
-            blah += "::";
-            blah += f;
-            glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1234, -1, blah.c_str());
+            std::string output = p3->ClassName();
+            output += "::";
+            output += f;
+            glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1234, -1, output.c_str());
             // vislib::sys::Log::DefaultLog.WriteInfo("called %s::%s", p3->ClassName(), f);
         }
         if (p2) {
-            std::string blah = p2->ClassName();
-            blah += "::";
-            blah += f;
-            glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1234, -1, blah.c_str());
+            std::string output = p2->ClassName();
+            output += "::";
+            output += f;
+            glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1234, -1, output.c_str());
             // vislib::sys::Log::DefaultLog.WriteInfo("called %s::%s", p2->ClassName(), f);
         }
 #endif
