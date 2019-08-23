@@ -10,7 +10,7 @@ function(require_external NAME)
     if(TARGET libzmq OR TARGET libcppzmq)
       return()
     endif()
-    
+
     set(ZMQ_VER "4_2_3")
     string(REPLACE "_" "." ZMQ_TAG "v${ZMQ_VER}")
     if(MSVC_IDE)
@@ -85,7 +85,7 @@ function(require_external NAME)
     if(TARGET libpng)
       return()
     endif()
-    
+
     require_external(zlib)
 
     if(MSVC)
@@ -117,7 +117,7 @@ function(require_external NAME)
     if(TARGET zfp)
       return()
     endif()
-    
+
     if(WIN32)
       set(ZFP_LIB "lib/zfp.lib")
     else()
@@ -143,7 +143,7 @@ function(require_external NAME)
     if(TARGET glm)
       return()
     endif()
-    
+
     add_external_project(glm_ext
       GIT_REPOSITORY https://github.com/g-truc/glm.git
       GIT_TAG "0.9.8"
@@ -160,7 +160,7 @@ function(require_external NAME)
     if(TARGET glowl)
       return()
     endif()
-    
+
     add_external_project(glowl_ext
       GIT_REPOSITORY https://github.com/invor/glowl.git
       GIT_TAG "v0.1"
@@ -176,7 +176,7 @@ function(require_external NAME)
     if(TARGET json)
       return()
     endif()
-    
+
     add_external_project(json_ext
       GIT_REPOSITORY https://github.com/azadkuh/nlohmann_json_release.git
       GIT_TAG "v3.5.0"
@@ -193,7 +193,7 @@ function(require_external NAME)
     if(TARGET Eigen)
       return()
     endif()
-    
+
     add_external_project(Eigen_ext
       GIT_REPOSITORY https://github.com/eigenteam/eigen-git-mirror.git
       GIT_TAG "3.3.4"
@@ -204,12 +204,12 @@ function(require_external NAME)
     add_external_library(Eigen INTERFACE
       DEPENDS Eigen_ext
       INCLUDE_DIR "src/Eigen_ext")
-	  
+
   elseif(NAME STREQUAL "nanoflann")
     if(TARGET nanoflann)
       return()
     endif()
-    
+
     add_external_project(nanoflann_ext
       GIT_REPOSITORY https://github.com/jlblancoc/nanoflann.git
       GIT_TAG "v1.3.0"
@@ -220,12 +220,12 @@ function(require_external NAME)
     add_external_library(nanoflann INTERFACE
       DEPENDS nanoflann_ext
       INCLUDE_DIR "src/nanoflann_ext/include")
-	  
+
   elseif(NAME STREQUAL "Delaunator")
     if(TARGET Delaunator)
       return()
     endif()
-	
+
     add_external_project(Delaunator_ext
       GIT_REPOSITORY https://github.com/delfrrr/delaunator-cpp.git
       GIT_TAG "v0.4.0"
@@ -274,7 +274,7 @@ function(require_external NAME)
     if(TARGET sim_sort)
       return()
     endif()
-    
+
     add_external_project(sim_sort_ext
       GIT_REPOSITORY https://github.com/alexstraub1990/simultaneous-sort.git
       CONFIGURE_COMMAND ""
@@ -286,7 +286,7 @@ function(require_external NAME)
       DEPENDS sim_sort_ext
       INCLUDE_DIR "src/sim_sort_ext/include"
     )
-	
+
   else()
     message(FATAL_ERROR "Unknown external required \"${NAME}\"")
   endif()
