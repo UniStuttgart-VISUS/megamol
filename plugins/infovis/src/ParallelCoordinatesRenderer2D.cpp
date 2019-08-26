@@ -59,7 +59,7 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
     , glLineSmoothSlot("glEnableLineSmooth", "Toggle GLLINESMOOTH")
     , glLineWidthSlot("glLineWidth", "Value for glLineWidth")
     , sqrtDensitySlot("sqrtDensity", "map root of density to transfer function (instead of linear mapping)")
-    , resetFlagsSlot("resetFlags", "Reset item flags to initial state")
+    //, resetFlagsSlot("resetFlags", "Reset item flags to initial state")
     , resetFiltersSlot("resetFilters", "Reset dimension filters to initial state")
     , numTicks(5)
     , columnCount(0)
@@ -168,9 +168,9 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
     sqrtDensitySlot << new core::param::BoolParam(true);
     this->MakeSlotAvailable(&sqrtDensitySlot);
 
-    resetFlagsSlot << new core::param::ButtonParam();
-    resetFlagsSlot.SetUpdateCallback(this, &ParallelCoordinatesRenderer2D::resetFlagsSlotCallback);
-    this->MakeSlotAvailable(&resetFlagsSlot);
+    // resetFlagsSlot << new core::param::ButtonParam();
+    // resetFlagsSlot.SetUpdateCallback(this, &ParallelCoordinatesRenderer2D::resetFlagsSlotCallback);
+    // this->MakeSlotAvailable(&resetFlagsSlot);
 
     resetFiltersSlot << new core::param::ButtonParam();
     resetFiltersSlot.SetUpdateCallback(this, &ParallelCoordinatesRenderer2D::resetFiltersSlotCallback);
@@ -335,13 +335,14 @@ bool ParallelCoordinatesRenderer2D::scalingChangedCallback(core::param::ParamSlo
     return true;
 }
 
-bool ParallelCoordinatesRenderer2D::resetFlagsSlotCallback(core::param::ParamSlot& caller) { return true; }
+// bool ParallelCoordinatesRenderer2D::resetFlagsSlotCallback(core::param::ParamSlot& caller) { return true; }
 
 bool ParallelCoordinatesRenderer2D::resetFiltersSlotCallback(core::param::ParamSlot& caller) {
     for (GLuint i = 0; i < this->columnCount; i++) {
         this->filters[i].lower = 0.0f;
         this->filters[i].upper = 1.0f;
     }
+    this->needFlagsUpdate = true;
     return true;
 }
 
@@ -675,13 +676,10 @@ void ParallelCoordinatesRenderer2D::drawItemsDiscrete(
 #endif
 
     this->enableProgramAndBind(prog);
-    glActiveTexture(GL_TEXTURE5);
-    glBindTexture(GL_TEXTURE_1D, tf->OpenGLTexture());
+    tf->BindConvenience(prog, GL_TEXTURE5, 5);
+
     glUniform4fv(prog.ParameterLocation("color"), 1, color);
     glUniform1f(prog.ParameterLocation("tfColorFactor"), tfColorFactor);
-    glUniform1i(prog.ParameterLocation("transferFunction"), 5);
-    auto tc = tf->TextureCoordinates();
-    glUniform2f(prog.ParameterLocation("transferFunctionTexCoords"), tc[0], tc[1]);
     glUniform1ui(prog.ParameterLocation("fragmentTestMask"), testMask);
     glUniform1ui(prog.ParameterLocation("fragmentPassMask"), passMask);
 
@@ -827,13 +825,8 @@ void ParallelCoordinatesRenderer2D::drawItemsContinuous(void) {
     this->enableProgramAndBind(drawItemContinuousProgram);
     // glUniform2f(drawItemContinuousProgram.ParameterLocation("bottomLeft"), 0.0f, 0.0f);
     // glUniform2f(drawItemContinuousProgram.ParameterLocation("topRight"), windowWidth, windowHeight);
-    glActiveTexture(GL_TEXTURE1);
     densityFBO.BindColourTexture();
-    glActiveTexture(GL_TEXTURE5);
-    glBindTexture(GL_TEXTURE_1D, tf->OpenGLTexture());
-    glUniform1i(this->drawItemContinuousProgram.ParameterLocation("transferFunction"), 5);
-    auto tc = tf->TextureCoordinates();
-    glUniform2f(this->drawItemContinuousProgram.ParameterLocation("transferFunctionTexCoords"), tc[0], tc[1]);
+    tf->BindConvenience(drawItemContinuousProgram, GL_TEXTURE5, 5);
     glUniform1i(this->drawItemContinuousProgram.ParameterLocation("fragmentCount"), 1);
     glUniform4fv(this->drawItemContinuousProgram.ParameterLocation("clearColor"), 1, backgroundColor);
     glUniform1i(this->drawItemContinuousProgram.ParameterLocation("sqrtDensity"),
@@ -966,7 +959,8 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         switch (selectionModeSlot.Param<core::param::EnumParam>()->Value()) {
         case SELECT_STROKE:
             if (this->interactionState == InteractionState::INTERACTION_SELECT) {
-                this->drawStrokeIndicator(this->strokeStartX, this->strokeStartY, this->strokeEndX, this->strokeEndY, this->selectionIndicatorColor);
+                this->drawStrokeIndicator(this->strokeStartX, this->strokeStartY, this->strokeEndX, this->strokeEndY,
+                    this->selectionIndicatorColor);
             }
             break;
         case SELECT_PICK:
@@ -1013,6 +1007,7 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         drawAxes();
     }
 
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     glDepthMask(GL_TRUE);
 
     return true;

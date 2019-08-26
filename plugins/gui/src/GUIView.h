@@ -106,6 +106,15 @@ protected:
 
     virtual bool OnMouseScroll(double dx, double dy) override;
 
+    /**
+     * Unpacks the mouse coordinates, which are relative to the virtual
+     * viewport size.
+     *
+     * @param x The x coordinate of the mouse position
+     * @param y The y coordinate of the mouse position
+     */
+    virtual void unpackMouseCoordinates(float& x, float& y);
+
 private:
     /** ImGui key map assignment for text manipulation hotkeys (using last unused indices < 512) */
     enum GuiTextModHotkeys { CTRL_A = 506, CTRL_C = 507, CTRL_V = 508, CTRL_X = 509, CTRL_Y = 510, CTRL_Z = 511 };
@@ -230,6 +239,12 @@ private:
      * @param slot  The current parameter slot.
      */
     void drawParameter(const core::Module& mod, core::param::ParamSlot& slot);
+
+    /**
+     * Transfer function edit widget.
+     */
+    void drawTransferFunctionEdit(
+        const std::string& id, const std::string& label, megamol::core::param::TransferFunctionParam& p);
 
     /**
      * Draws only a button parameter's hotkey.

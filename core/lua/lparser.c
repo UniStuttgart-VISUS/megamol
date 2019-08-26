@@ -1,5 +1,5 @@
 /*
-** $Id: lparser.c,v 2.161 2017/06/29 15:06:44 roberto Exp roberto $
+** $Id: lparser.c,v 2.155.1.2 2017/04/29 18:11:40 roberto Exp $
 ** Lua Parser
 ** See Copyright Notice in lua.h
 */
@@ -527,24 +527,22 @@ static void codeclosure (LexState *ls, expdesc *v) {
 
 
 static void open_func (LexState *ls, FuncState *fs, BlockCnt *bl) {
-  Proto *f = fs->f;
+  Proto *f;
   fs->prev = ls->fs;  /* linked list of funcstates */
   fs->ls = ls;
   ls->fs = fs;
   fs->pc = 0;
-  fs->previousline = f->linedefined;
-  fs->iwthabs = 0;
   fs->lasttarget = 0;
   fs->jpc = NO_JUMP;
   fs->freereg = 0;
   fs->nk = 0;
-  fs->nabslineinfo = 0;
   fs->np = 0;
   fs->nups = 0;
   fs->nlocvars = 0;
   fs->nactvar = 0;
   fs->firstlocal = ls->dyd->actvar.n;
   fs->bl = NULL;
+  f = fs->f;
   f->source = ls->source;
   f->maxstacksize = 2;  /* registers 0/1 are always valid */
   enterblock(fs, bl, 0);
@@ -559,11 +557,8 @@ static void close_func (LexState *ls) {
   leaveblock(fs);
   luaM_reallocvector(L, f->code, f->sizecode, fs->pc, Instruction);
   f->sizecode = fs->pc;
-  luaM_reallocvector(L, f->lineinfo, f->sizelineinfo, fs->pc, ls_byte);
+  luaM_reallocvector(L, f->lineinfo, f->sizelineinfo, fs->pc, int);
   f->sizelineinfo = fs->pc;
-  luaM_reallocvector(L, f->abslineinfo, f->sizeabslineinfo,
-                        fs->nabslineinfo, AbsLineInfo);
-  f->sizeabslineinfo = fs->nabslineinfo;
   luaM_reallocvector(L, f->k, f->sizek, fs->nk, TValue);
   f->sizek = fs->nk;
   luaM_reallocvector(L, f->p, f->sizep, fs->np, Proto *);
@@ -652,7 +647,8 @@ static void recfield (LexState *ls, struct ConsControl *cc) {
   /* recfield -> (NAME | '['exp1']') = exp1 */
   FuncState *fs = ls->fs;
   int reg = ls->fs->freereg;
-  expdesc tab, key, val;
+  expdesc key, val;
+  int rkkey;
   if (ls->t.token == TK_NAME) {
     checklimit(fs, cc->nh, MAX_INT, "items in a constructor");
     checkname(ls, &key);
@@ -661,10 +657,9 @@ static void recfield (LexState *ls, struct ConsControl *cc) {
     yindex(ls, &key);
   cc->nh++;
   checknext(ls, '=');
-  tab = *cc->t;
-  luaK_indexed(fs, &tab, &key);
+  rkkey = luaK_exp2RK(fs, &key);
   expr(ls, &val);
-  luaK_storevar(fs, &tab, &val);
+  luaK_codeABC(fs, OP_SETTABLE, cc->t->u.info, rkkey, luaK_exp2RK(fs, &val));
   fs->freereg = reg;  /* free registers */
 }
 
@@ -771,12 +766,7 @@ static void parlist (LexState *ls) {
         }
         case TK_DOTS: {  /* param -> '...' */
           luaX_next(ls);
-          if (testnext(ls, '='))
-            new_localvar(ls, str_checkname(ls));
-          else
-            new_localvarliteral(ls, "_ARG");
           f->is_vararg = 1;  /* declared vararg */
-          nparams++;
           break;
         }
         default: luaX_syntaxerror(ls, "<name> or '...' expected");
@@ -970,10 +960,9 @@ static void simpleexp (LexState *ls, expdesc *v) {
     }
     case TK_DOTS: {  /* vararg */
       FuncState *fs = ls->fs;
-      int lastparam = fs->f->numparams - 1;
       check_condition(ls, fs->f->is_vararg,
                       "cannot use '...' outside a vararg function");
-      init_exp(v, VVARARG, luaK_codeABC(fs, OP_VARARG, 0, 1, lastparam));
+      init_exp(v, VVARARG, luaK_codeABC(fs, OP_VARARG, 0, 1, 0));
       break;
     }
     case '{': {  /* constructor */
@@ -1132,25 +1121,17 @@ static void check_conflict (LexState *ls, struct LHS_assign *lh, expdesc *v) {
   int extra = fs->freereg;  /* eventual position to save local variable */
   int conflict = 0;
   for (; lh; lh = lh->prev) {  /* check all previous assignments */
-    if (vkisindexed(lh->v.k)) {  /* assignment to table field? */
-      if (lh->v.k == VINDEXUP) {  /* is table an upvalue? */
-        if (v->k == VUPVAL && lh->v.u.ind.t == v->u.info) {
-          conflict = 1;  /* table is the upvalue being assigned now */
-          lh->v.k = VINDEXSTR;
-          lh->v.u.ind.t = extra;  /* assignment will use safe copy */
-        }
+    if (lh->v.k == VINDEXED) {  /* assigning to a table? */
+      /* table is the upvalue/local being assigned now? */
+      if (lh->v.u.ind.vt == v->k && lh->v.u.ind.t == v->u.info) {
+        conflict = 1;
+        lh->v.u.ind.vt = VLOCAL;
+        lh->v.u.ind.t = extra;  /* previous assignment will use safe copy */
       }
-      else {  /* table is a register */
-        if (v->k == VLOCAL && lh->v.u.ind.t == v->u.info) {
-          conflict = 1;  /* table is the local being assigned now */
-          lh->v.u.ind.t = extra;  /* assignment will use safe copy */
-        }
-        /* is index the local being assigned? */
-        if (lh->v.k == VINDEXED && v->k == VLOCAL &&
-            lh->v.u.ind.idx == v->u.info) {
-          conflict = 1;
-          lh->v.u.ind.idx = extra;  /* previous assignment will use safe copy */
-        }
+      /* index is the local being assigned? (index cannot be upvalue) */
+      if (v->k == VLOCAL && lh->v.u.ind.idx == v->u.info) {
+        conflict = 1;
+        lh->v.u.ind.idx = extra;  /* previous assignment will use safe copy */
       }
     }
   }
@@ -1170,7 +1151,7 @@ static void assignment (LexState *ls, struct LHS_assign *lh, int nvars) {
     struct LHS_assign nv;
     nv.prev = lh;
     suffixedexp(ls, &nv.v);
-    if (!vkisindexed(nv.v.k))
+    if (nv.v.k != VINDEXED)
       check_conflict(ls, lh, &nv.v);
     checklimit(ls->fs, nvars + ls->L->nCcalls, LUAI_MAXCCALLS,
                     "C levels");
@@ -1348,7 +1329,7 @@ static void fornum (LexState *ls, TString *varname, int line) {
   if (testnext(ls, ','))
     exp1(ls);  /* optional step */
   else {  /* default step = 1 */
-    luaK_int(fs, fs->freereg, 1);
+    luaK_codek(fs, fs->freereg, luaK_intK(fs, 1));
     luaK_reserveregs(fs, 1);
   }
   forbody(ls, base, line, 1, 1);
@@ -1633,10 +1614,6 @@ static void mainfunc (LexState *ls, FuncState *fs) {
   expdesc v;
   open_func(ls, fs, &bl);
   fs->f->is_vararg = 1;  /* main function is always declared vararg */
-  fs->f->numparams = 1;
-  new_localvarliteral(ls, "_ARG");
-  adjustlocalvars(ls, 1);
-  luaK_reserveregs(fs, 1);  /* reserve register for vararg */
   init_exp(&v, VLOCAL, 0);  /* create and... */
   newupvalue(fs, ls->envn, &v);  /* ...set environment upvalue */
   luaX_next(ls);  /* read first token */
@@ -1651,10 +1628,10 @@ LClosure *luaY_parser (lua_State *L, ZIO *z, Mbuffer *buff,
   LexState lexstate;
   FuncState funcstate;
   LClosure *cl = luaF_newLclosure(L, 1);  /* create main closure */
-  setclLvalue2s(L, L->top, cl);  /* anchor it (to avoid being collected) */
+  setclLvalue(L, L->top, cl);  /* anchor it (to avoid being collected) */
   luaD_inctop(L);
   lexstate.h = luaH_new(L);  /* create table for scanner */
-  sethvalue2s(L, L->top, lexstate.h);  /* anchor it */
+  sethvalue(L, L->top, lexstate.h);  /* anchor it */
   luaD_inctop(L);
   funcstate.f = cl->p = luaF_newproto(L);
   funcstate.f->source = luaS_new(L, name);  /* create and anchor TString */

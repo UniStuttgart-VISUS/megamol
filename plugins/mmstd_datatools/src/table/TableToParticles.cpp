@@ -239,6 +239,8 @@ bool TableToParticles::assertData(table::TableDataCall* ft) {
     bool retValue = true;
     haveVelocities = false;
 
+    float radius = 0.0f;
+
     std::vector<size_t> indicesToCollect;
     if (!pushColumnIndex(indicesToCollect, this->slotColumnX.Param<core::param::FlexEnumParam>()->ValueString())) {
         retValue = false;
@@ -249,11 +251,17 @@ bool TableToParticles::assertData(table::TableDataCall* ft) {
     if (!pushColumnIndex(indicesToCollect, this->slotColumnZ.Param<core::param::FlexEnumParam>()->ValueString())) {
         retValue = false;
     }
-    if (this->slotRadiusMode.Param<core::param::EnumParam>()->Value() == 0) {
+    if (this->slotRadiusMode.Param<core::param::EnumParam>()->Value() == 0) { // partice
         if (!pushColumnIndex(
-                indicesToCollect, this->slotColumnRadius.Param<core::param::FlexEnumParam>()->ValueString())) {
+            indicesToCollect, this->slotColumnRadius.Param<core::param::FlexEnumParam>()->ValueString())) {
             retValue = false;
         }
+        else {
+            radius = ft->GetColumnsInfos()[indicesToCollect.back()].MaximumValue();
+        }
+    } // global
+    else {
+        radius = this->slotGlobalRadius.Param<core::param::FloatParam>()->Value();
     }
     switch (this->slotColorMode.Param<core::param::EnumParam>()->Value()) {
     case 0: // RGB
@@ -312,8 +320,8 @@ bool TableToParticles::assertData(table::TableDataCall* ft) {
     }
 
     for (size_t i = 0; i < (numIndices < 3 ? numIndices : 3); i++) {
-        this->bboxMin[i] = ft->GetColumnsInfos()[indicesToCollect[i]].MinimumValue();
-        this->bboxMax[i] = ft->GetColumnsInfos()[indicesToCollect[i]].MaximumValue();
+        this->bboxMin[i] = ft->GetColumnsInfos()[indicesToCollect[i]].MinimumValue() - radius;
+        this->bboxMax[i] = ft->GetColumnsInfos()[indicesToCollect[i]].MaximumValue() + radius;
     }
 
     this->myHash++;

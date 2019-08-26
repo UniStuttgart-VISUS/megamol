@@ -1,3 +1,4 @@
+
 #define CLIP
 #define DEPTH
 #define WITH_SCALING
@@ -5,11 +6,11 @@
 //#define CALC_CAM_SYS
 
 #ifdef DEBUG
-#undef CLIP
-#define RETICLE
-#define AXISHINTS
+    #undef CLIP
+    #define RETICLE
+    #define AXISHINTS
 #endif // DEBUG
 
 #ifndef FLACH
-#define FLACH
+    #define FLACH
 #endif // FLACH

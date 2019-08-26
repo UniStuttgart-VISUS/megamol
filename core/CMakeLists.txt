@@ -44,6 +44,12 @@ if(BUILD_CORE)
   require_external(glm)
   require_external(glowl)
   require_external(json)
+  if(WIN32)
+    option(USE_TRACKING "use tracking" OFF)
+    if(USE_TRACKING)
+      require_external(tracking)
+    endif()
+  endif()
 
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h" "include/*.inl")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
@@ -91,9 +97,12 @@ if(BUILD_CORE)
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "src" "include"
     PUBLIC ${EXPAT_INCLUDE_DIRS})
   target_link_libraries(${PROJECT_NAME} 
-    PUBLIC vislib glad glm glowl zlib libpng json ${EXPAT_LIBRARIES}
-    PRIVATE lua libzmq libcppzmq ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT})
+    PUBLIC vislib glad glm glowl zlib libpng json lua ${EXPAT_LIBRARIES}
+    PRIVATE libzmq libcppzmq ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT})
   if(WIN32)
+    if(USE_TRACKING)
+      target_link_libraries(${PROJECT_NAME} PUBLIC tracking natnet)
+    endif()
     set_target_properties(${PROJECT_NAME} PROPERTIES
       LINK_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /DYNAMICBASE:NO")
   endif()

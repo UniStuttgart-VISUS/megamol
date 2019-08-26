@@ -1,5 +1,5 @@
 /*
-** $Id: lauxlib.c,v 1.290 2017/04/24 18:06:12 roberto Exp roberto $
+** $Id: lauxlib.c,v 1.289.1.1 2017/04/19 17:20:42 roberto Exp $
 ** Auxiliary functions for building Lua libraries
 ** See Copyright Notice in lua.h
 */
@@ -76,7 +76,7 @@ static int pushglobalfuncname (lua_State *L, lua_Debug *ar) {
   lua_getfield(L, LUA_REGISTRYINDEX, LUA_LOADED_TABLE);
   if (findfield(L, top + 1, 2)) {
     const char *name = lua_tostring(L, -1);
-    if (strncmp(name, LUA_GNAME ".", 3) == 0) {  /* name start with '_G.'? */
+    if (strncmp(name, "_G.", 3) == 0) {  /* name start with '_G.'? */
       lua_pushstring(L, name + 3);  /* push name without prefix */
       lua_remove(L, -2);  /* remove original name */
     }
@@ -496,7 +496,7 @@ static void *newbox (lua_State *L, size_t newsize) {
 ** check whether buffer is using a userdata on the stack as a temporary
 ** buffer
 */
-#define buffonstack(B)	((B)->b != (B)->init.b)
+#define buffonstack(B)	((B)->b != (B)->initb)
 
 
 /*
@@ -568,7 +568,7 @@ LUALIB_API void luaL_addvalue (luaL_Buffer *B) {
 
 LUALIB_API void luaL_buffinit (lua_State *L, luaL_Buffer *B) {
   B->L = L;
-  B->b = B->init.b;
+  B->b = B->initb;
   B->n = 0;
   B->size = LUAL_BUFFERSIZE;
 }
