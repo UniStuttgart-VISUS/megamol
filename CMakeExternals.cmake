@@ -102,8 +102,9 @@ function(require_external NAME)
     endif()
     ExternalProject_Get_Property(zlib_ext INSTALL_DIR)
     add_external_project(libpng_ext
-      GIT_REPOSITORY https://git.code.sf.net/p/libpng/code
+      GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/libpng.git
       GIT_TAG "v1.6.34"
+      DEPENDS zlib_ext
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${LIBPNG_DEBUG}" "<INSTALL_DIR>/${LIBPNG_RELEASE}"
       CMAKE_ARGS
         -DPNG_SHARED=OFF
