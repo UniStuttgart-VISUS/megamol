@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "mmcore/nextgen/View3D_2.h"
+#include "mmcore/view/View3D_2.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #ifdef _WIN32
 #    include <windows.h>
@@ -15,17 +15,19 @@
 #include <fstream>
 #include "mmcore/CoreInstance.h"
 #include "mmcore/misc/PngBitmapCodec.h"
-#include "mmcore/nextgen/CallRender3D_2.h"
+#include "mmcore/view/CallRender3D_2.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/StringParam.h"
+#include "mmcore/param/Vector2fParam.h"
 #include "mmcore/param/Vector3fParam.h"
+#include "mmcore/param/Vector4fParam.h"
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore/view/AbstractCallRender.h"
-#include "mmcore/view/CallRenderView.h" // TODO new call?
+#include "mmcore/view/CallRenderView.h"
 #include "mmcore/view/CameraParamOverride.h"
 #include "vislib/Exception.h"
 #include "vislib/String.h"
@@ -42,7 +44,7 @@
 #include "vislib/sys/sysfunctions.h"
 
 using namespace megamol::core;
-using namespace megamol::core::nextgen;
+using namespace megamol::core::view;
 
 /*
  * View3D_2::View3D_2
@@ -86,7 +88,19 @@ View3D_2::View3D_2(void)
     , mouseFlags(0)
     , timeCtrl()
     , toggleMouseSelection(false)
-    , hookOnChangeOnlySlot("hookOnChange", "whether post-hooks are triggered when the frame would be identical") {
+    , hookOnChangeOnlySlot("hookOnChange", "whether post-hooks are triggered when the frame would be identical")
+    , cameraPositionParam("cam::position", "")
+    , cameraOrientationParam("cam::orientation", "")
+    , cameraProjectionTypeParam("cam::projectiontype", "")
+    , cameraNearPlaneParam("cam::nearplane", "")
+    , cameraFarPlaneParam("cam::farplane", "")
+    , cameraConvergencePlaneParam("cam::convergenceplane", "")
+    , cameraEyeParam("cam::eye", "")
+    , cameraGateScalingParam("cam::gatescaling", "")
+    , cameraFilmGateParam("cam::filmgate", "")
+    , cameraCenterOffsetParam("cam::centeroffset", "")
+    , cameraHalfApertureRadiansParam("cam::halfapertureradians", "")
+    , cameraHalfDisparityParam("cam::halfdisparity", "") {
 
     using vislib::sys::KeyCode;
 
@@ -185,6 +199,79 @@ View3D_2::View3D_2(void)
     this->hookOnChangeOnlySlot.SetParameter(new param::BoolParam(false));
     this->MakeSlotAvailable(&this->hookOnChangeOnlySlot);
 
+    const bool camparamvisibility = true;
+
+    auto camposparam = new param::Vector3fParam(vislib::math::Vector<float, 3>());
+    camposparam->SetGUIVisible(camparamvisibility);
+    this->cameraPositionParam.SetParameter(camposparam);
+    this->MakeSlotAvailable(&this->cameraPositionParam);
+
+    auto camorientparam = new param::Vector4fParam(vislib::math::Vector<float, 4>());
+    camorientparam->SetGUIVisible(camparamvisibility);
+    this->cameraOrientationParam.SetParameter(camorientparam);
+    this->MakeSlotAvailable(&this->cameraOrientationParam);
+
+    auto projectionParam = new param::EnumParam(static_cast<int>(core::thecam::Projection_type::perspective));
+    projectionParam->SetTypePair(static_cast<int>(core::thecam::Projection_type::perspective), "Perspective");
+    projectionParam->SetTypePair(static_cast<int>(core::thecam::Projection_type::orthographic), "Orthographic");
+    projectionParam->SetTypePair(static_cast<int>(core::thecam::Projection_type::parallel), "Parallel");
+    projectionParam->SetTypePair(static_cast<int>(core::thecam::Projection_type::off_axis), "Off-Axis");
+    projectionParam->SetTypePair(static_cast<int>(core::thecam::Projection_type::converged), "Converged");
+    projectionParam->SetGUIVisible(camparamvisibility);
+    this->cameraProjectionTypeParam.SetParameter(projectionParam);
+    this->MakeSlotAvailable(&this->cameraProjectionTypeParam);
+
+    auto camnearparam = new param::FloatParam(0.1f, 0.0f);
+    camnearparam->SetGUIVisible(camparamvisibility);
+    this->cameraNearPlaneParam.SetParameter(camnearparam);
+    this->MakeSlotAvailable(&this->cameraNearPlaneParam);
+
+    auto camfarparam = new param::FloatParam(0.1f, 0.0f);
+    camfarparam->SetGUIVisible(camparamvisibility);
+    this->cameraFarPlaneParam.SetParameter(camfarparam);
+    this->MakeSlotAvailable(&this->cameraFarPlaneParam);
+
+    auto camconvergenceparam = new param::FloatParam(0.1f, 0.0f);
+    camconvergenceparam->SetGUIVisible(camparamvisibility);
+    this->cameraConvergencePlaneParam.SetParameter(camconvergenceparam);
+    this->MakeSlotAvailable(&this->cameraConvergencePlaneParam);
+
+    auto eyeparam = new param::EnumParam(static_cast<int>(core::thecam::Eye::mono));
+    eyeparam->SetTypePair(static_cast<int>(core::thecam::Eye::left), "Left");
+    eyeparam->SetTypePair(static_cast<int>(core::thecam::Eye::mono), "Mono");
+    eyeparam->SetTypePair(static_cast<int>(core::thecam::Eye::right), "Right");
+    eyeparam->SetGUIVisible(camparamvisibility);
+    this->cameraEyeParam.SetParameter(eyeparam);
+    this->MakeSlotAvailable(&this->cameraEyeParam);
+
+    auto gateparam = new param::EnumParam(static_cast<int>(core::thecam::Gate_scaling::none));
+    gateparam->SetTypePair(static_cast<int>(core::thecam::Gate_scaling::none), "None");
+    gateparam->SetTypePair(static_cast<int>(core::thecam::Gate_scaling::fill), "Fill");
+    gateparam->SetTypePair(static_cast<int>(core::thecam::Gate_scaling::overscan), "Overscan");
+    gateparam->SetGUIVisible(camparamvisibility);
+    this->cameraGateScalingParam.SetParameter(gateparam);
+    this->MakeSlotAvailable(&this->cameraGateScalingParam);
+
+    auto filmparam = new param::Vector2fParam(vislib::math::Vector<float, 2>());
+    filmparam->SetGUIVisible(camparamvisibility);
+    this->cameraFilmGateParam.SetParameter(filmparam);
+    this->MakeSlotAvailable(&this->cameraFilmGateParam);
+
+    auto centeroffsetparam = new param::Vector2fParam(vislib::math::Vector<float, 2>());
+    centeroffsetparam->SetGUIVisible(camparamvisibility);
+    this->cameraCenterOffsetParam.SetParameter(centeroffsetparam);
+    this->MakeSlotAvailable(&this->cameraCenterOffsetParam);
+
+    auto apertureparam = new param::FloatParam(1.0f, 0.0f);
+    apertureparam->SetGUIVisible(camparamvisibility);
+    this->cameraHalfApertureRadiansParam.SetParameter(apertureparam);
+    this->MakeSlotAvailable(&this->cameraHalfApertureRadiansParam);
+
+    auto disparityparam = new param::FloatParam(1.0f, 0.0f);
+    disparityparam->SetGUIVisible(camparamvisibility);
+    this->cameraHalfDisparityParam.SetParameter(disparityparam);
+    this->MakeSlotAvailable(&this->cameraHalfDisparityParam);
+
     this->translateManipulator.set_target(this->cam);
     this->translateManipulator.enable();
 
@@ -214,7 +301,7 @@ View3D_2::~View3D_2(void) {
 /*
  * View3D_2::GetCameraSyncNumber
  */
-unsigned int nextgen::View3D_2::GetCameraSyncNumber(void) const {
+unsigned int view::View3D_2::GetCameraSyncNumber(void) const {
     // TODO implement
     return 0;
 }
@@ -223,7 +310,7 @@ unsigned int nextgen::View3D_2::GetCameraSyncNumber(void) const {
 /*
  * View3D_2::SerialiseCamera
  */
-void nextgen::View3D_2::SerialiseCamera(vislib::Serialiser& serialiser) const {
+void view::View3D_2::SerialiseCamera(vislib::Serialiser& serialiser) const {
     // TODO currently emtpy because the old serialization sucks
 }
 
@@ -231,7 +318,7 @@ void nextgen::View3D_2::SerialiseCamera(vislib::Serialiser& serialiser) const {
 /*
  * View3D_2::DeserialiseCamera
  */
-void nextgen::View3D_2::DeserialiseCamera(vislib::Serialiser& serialiser) {
+void view::View3D_2::DeserialiseCamera(vislib::Serialiser& serialiser) {
     // TODO currently empty because the old serialization sucks
 }
 
@@ -332,6 +419,9 @@ void View3D_2::Render(const mmcRenderViewContext& context) {
 
     if (cr3d != nullptr) {
         (*cr3d)(view::AbstractCallRender::FnGetExtents);
+        if (!this->firstImg) {
+            this->adaptCameraValues(this->cam);
+        }
         if (this->firstImg || (!(cr3d->AccessBoundingBoxes() == this->bboxs) &&
                                   !(!cr3d->AccessBoundingBoxes().IsAnyValid() && !this->bboxs.IsBoundingBoxValid() &&
                                       !this->bboxs.IsClipBoxValid()))) {
@@ -394,6 +484,7 @@ void View3D_2::Render(const mmcRenderViewContext& context) {
         (*cr3d)(view::AbstractCallRender::FnRender);
     }
 
+    this->setCameraValues(this->cam);
 
     AbstractRenderingView::endFrame();
 
@@ -511,7 +602,7 @@ void View3D_2::UpdateFreeze(bool freeze) {
 /*
  * View3D_2::OnKey
  */
-bool nextgen::View3D_2::OnKey(view::Key key, view::KeyAction action, view::Modifiers mods) {
+bool view::View3D_2::OnKey(view::Key key, view::KeyAction action, view::Modifiers mods) {
     auto* cr = this->rendererSlot.CallAs<CallRender3D_2>();
     if (cr != nullptr) {
         view::InputEvent evt;
@@ -580,15 +671,15 @@ bool nextgen::View3D_2::OnKey(view::Key key, view::KeyAction action, view::Modif
 /*
  * View3D_2::OnChar
  */
-bool nextgen::View3D_2::OnChar(unsigned int codePoint) {
-    auto* cr = this->rendererSlot.CallAs<nextgen::CallRender3D_2>();
+bool view::View3D_2::OnChar(unsigned int codePoint) {
+    auto* cr = this->rendererSlot.CallAs<view::CallRender3D_2>();
     if (cr == NULL) return false;
 
     view::InputEvent evt;
     evt.tag = view::InputEvent::Tag::Char;
     evt.charData.codePoint = codePoint;
     cr->SetInputEvent(evt);
-    if (!(*cr)(nextgen::CallRender3D_2::FnOnChar)) return false;
+    if (!(*cr)(view::CallRender3D_2::FnOnChar)) return false;
 
     return true;
 }
@@ -596,7 +687,7 @@ bool nextgen::View3D_2::OnChar(unsigned int codePoint) {
 /*
  * View3D_2::OnMouseButton
  */
-bool nextgen::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButtonAction action, view::Modifiers mods) {
+bool view::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButtonAction action, view::Modifiers mods) {
     auto* cr = this->rendererSlot.CallAs<CallRender3D_2>();
     if (cr != nullptr) {
         view::InputEvent evt;
@@ -626,10 +717,8 @@ bool nextgen::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButto
                 if (!this->arcballManipulator.manipulating()) {
                     glm::vec3 curPos = static_cast<glm::vec4>(this->cam.eye_position());
                     glm::vec3 camDir = static_cast<glm::vec4>(this->cam.view_vector());
-                    // glm::vec3 rotCenter = curPos + this->arcballCenterDistance * glm::normalize(camDir);
-                    // glm::vec3 rotCenter = static_cast<glm::vec4>(this->arcballManipulator.rotation_centre());
-                    // this->arcballManipulator.set_rotation_centre(glm::vec4(rotCenter, 1.0f));
-                    // this->arcballManipulator.set_radius(glm::distance(rotCenter, curPos));
+                    glm::vec3 rotCenter = curPos + this->arcballCenterDistance * glm::normalize(camDir);
+                    this->arcballManipulator.set_rotation_centre(glm::vec4(rotCenter, 1.0f));
                     this->arcballManipulator.set_radius(1.0f);
                     auto wndSize = this->cam.resolution_gate();
                     this->arcballManipulator.on_drag_start(
@@ -655,7 +744,7 @@ bool nextgen::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButto
 /*
  * View3D_2::OnMouseMove
  */
-bool nextgen::View3D_2::OnMouseMove(double x, double y) {
+bool view::View3D_2::OnMouseMove(double x, double y) {
     this->mouseX = (float)static_cast<int>(x);
     this->mouseY = (float)static_cast<int>(y);
 
@@ -685,8 +774,8 @@ bool nextgen::View3D_2::OnMouseMove(double x, double y) {
 /*
  * View3D_2::OnMouseScroll
  */
-bool nextgen::View3D_2::OnMouseScroll(double dx, double dy) {
-    auto* cr = this->rendererSlot.CallAs<nextgen::CallRender3D_2>();
+bool view::View3D_2::OnMouseScroll(double dx, double dy) {
+    auto* cr = this->rendererSlot.CallAs<view::CallRender3D_2>();
     if (cr == NULL) return false;
 
     view::InputEvent evt;
@@ -694,7 +783,7 @@ bool nextgen::View3D_2::OnMouseScroll(double dx, double dy) {
     evt.mouseScrollData.dx = dx;
     evt.mouseScrollData.dy = dy;
     cr->SetInputEvent(evt);
-    if (!(*cr)(nextgen::CallRender3D_2::FnOnMouseScroll)) return false;
+    if (!(*cr)(view::CallRender3D_2::FnOnMouseScroll)) return false;
 
     return true;
 }
@@ -895,10 +984,10 @@ std::string View3D_2::determineCameraFilePath(void) const {
  */
 void View3D_2::handleCameraMovement(void) {
     float step = this->viewKeyMoveStepSlot.Param<param::FloatParam>()->Value();
-	// the default case is 60 fps therefore we calculate the multiples for the step factor using that
-	auto constexpr micros = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::seconds(1)) / 60.0f;
-	float factor = this->lastFrameDuration / micros;
-	step *= factor;
+    // the default case is 60 fps therefore we calculate the multiples for the step factor using that
+    auto constexpr micros = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::seconds(1)) / 60.0f;
+    float factor = this->lastFrameDuration / micros;
+    step *= factor;
 
     const float runFactor = this->viewKeyRunFactorSlot.Param<param::FloatParam>()->Value();
     if (this->modkeys.test(view::Modifier::SHIFT)) {
@@ -907,7 +996,7 @@ void View3D_2::handleCameraMovement(void) {
 
     bool anymodpressed = !this->modkeys.none();
     float rotationStep = this->viewKeyAngleStepSlot.Param<param::FloatParam>()->Value();
-	rotationStep *= factor;
+    rotationStep *= factor;
 
     if (!(this->arcballDefault ^ this->modkeys.test(view::Modifier::ALT))) {
         auto resolution = this->cam.resolution_gate();
@@ -958,5 +1047,92 @@ void View3D_2::handleCameraMovement(void) {
             this->rotateManipulator.pitch(-mouseDirection.y * rotationStep);
             this->rotateManipulator.yaw(mouseDirection.x * rotationStep);
         }
+    }
+}
+
+/*
+ * View3D_2::setCameraValues
+ */
+void View3D_2::setCameraValues(const view::Camera_2& cam) {
+    glm::vec4 pos = cam.position();
+    this->cameraPositionParam.Param<param::Vector3fParam>()->SetValue(
+        vislib::math::Vector<float, 3>(pos.x, pos.y, pos.z), false);
+    glm::quat orient = cam.orientation();
+    this->cameraOrientationParam.Param<param::Vector4fParam>()->SetValue(
+        vislib::math::Vector<float, 4>(orient.x, orient.y, orient.z, orient.w), false);
+    this->cameraProjectionTypeParam.Param<param::EnumParam>()->SetValue(static_cast<int>(cam.projection_type()), false);
+    this->cameraNearPlaneParam.Param<param::FloatParam>()->SetValue(cam.near_clipping_plane(), false);
+    this->cameraFarPlaneParam.Param<param::FloatParam>()->SetValue(cam.far_clipping_plane(), false);
+    this->cameraConvergencePlaneParam.Param<param::FloatParam>()->SetValue(cam.convergence_plane(), false);
+    this->cameraEyeParam.Param<param::EnumParam>()->SetValue(static_cast<int>(cam.eye()), false);
+    this->cameraGateScalingParam.Param<param::EnumParam>()->SetValue(static_cast<int>(cam.gate_scaling()), false);
+    this->cameraFilmGateParam.Param<param::Vector2fParam>()->SetValue(
+        vislib::math::Vector<float, 2>(cam.film_gate().width(), cam.film_gate().height()), false);
+    this->cameraCenterOffsetParam.Param<param::Vector2fParam>()->SetValue(
+        vislib::math::Vector<float, 2>(cam.centre_offset().x(), cam.centre_offset().y()), false);
+    this->cameraHalfApertureRadiansParam.Param<param::FloatParam>()->SetValue(cam.half_aperture_angle_radians(), false);
+    this->cameraHalfDisparityParam.Param<param::FloatParam>()->SetValue(cam.half_disparity(), false);
+}
+
+/*
+ * View3D_2::adaptCameraValues
+ */
+void View3D_2::adaptCameraValues(view::Camera_2& cam) {
+    if (this->cameraPositionParam.IsDirty()) {
+        auto val = this->cameraPositionParam.Param<param::Vector3fParam>()->Value();
+        this->cam.position(glm::vec4(val.GetX(), val.GetY(), val.GetZ(), 1.0f));
+        this->cameraPositionParam.ResetDirty();
+    }
+    if (this->cameraOrientationParam.IsDirty()) {
+        auto val = this->cameraOrientationParam.Param<param::Vector4fParam>()->Value();
+        this->cam.orientation(glm::quat(val.GetX(), val.GetY(), val.GetZ(), val.GetW()));
+        this->cameraOrientationParam.ResetDirty();
+    }
+    if (this->cameraProjectionTypeParam.IsDirty()) {
+        auto val =
+            static_cast<thecam::Projection_type>(this->cameraProjectionTypeParam.Param<param::EnumParam>()->Value());
+        this->cam.projection_type(val);
+        this->cameraProjectionTypeParam.ResetDirty();
+    }
+    // setting of near plane and far plane might make no sense as we are setting them new each frame anyway
+    if (this->cameraNearPlaneParam.IsDirty()) {
+        auto val = this->cameraNearPlaneParam.Param<param::FloatParam>()->Value();
+        this->cam.near_clipping_plane(val);
+        this->cameraNearPlaneParam.ResetDirty();
+    }
+    if (this->cameraFarPlaneParam.IsDirty()) {
+        auto val = this->cameraFarPlaneParam.Param<param::FloatParam>()->Value();
+        this->cam.far_clipping_plane(val);
+        this->cameraFarPlaneParam.ResetDirty();
+    }
+    if (this->cameraConvergencePlaneParam.IsDirty()) {
+        auto val = this->cameraConvergencePlaneParam.Param<param::FloatParam>()->Value();
+        this->cam.convergence_plane(val);
+        this->cameraConvergencePlaneParam.ResetDirty();
+    }
+    if (this->cameraEyeParam.IsDirty()) {
+        auto val = static_cast<thecam::Eye>(this->cameraEyeParam.Param<param::EnumParam>()->Value());
+        this->cam.eye(val);
+        this->cameraEyeParam.ResetDirty();
+    }
+    if (this->cameraGateScalingParam.IsDirty()) {
+        auto val = static_cast<thecam::Gate_scaling>(this->cameraGateScalingParam.Param<param::EnumParam>()->Value());
+        this->cam.gate_scaling(val);
+        this->cameraGateScalingParam.ResetDirty();
+    }
+    if (this->cameraCenterOffsetParam.IsDirty()) {
+        auto val = this->cameraCenterOffsetParam.Param<param::Vector2fParam>()->Value();
+        this->cam.centre_offset(thecam::math::vector<float, 2>(val.GetX(), val.GetY()));
+        this->cameraCenterOffsetParam.ResetDirty();
+    }
+    if (this->cameraHalfApertureRadiansParam.IsDirty()) {
+        auto val = this->cameraHalfApertureRadiansParam.Param<param::FloatParam>()->Value();
+        this->cam.half_aperture_angle_radians(val);
+        this->cameraHalfApertureRadiansParam.ResetDirty();
+    }
+    if (this->cameraHalfDisparityParam.IsDirty()) {
+        auto val = this->cameraHalfDisparityParam.Param<param::FloatParam>()->Value();
+        this->cam.half_disparity(val);
+        this->cameraHalfDisparityParam.ResetDirty();
     }
 }

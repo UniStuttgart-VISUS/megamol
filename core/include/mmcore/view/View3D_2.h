@@ -18,12 +18,12 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/api/MegaMolCore.std.h"
-#include "mmcore/nextgen/CameraSerializer.h"
-#include "mmcore/nextgen/Camera_2.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/AbstractCallRender.h"
 #include "mmcore/view/AbstractCamParamSync.h"
 #include "mmcore/view/AbstractRenderingView.h"
+#include "mmcore/view/CameraSerializer.h"
+#include "mmcore/view/Camera_2.h"
 #include "mmcore/view/MouseFlags.h"
 #include "mmcore/view/TimeControl.h"
 #include "vislib/graphics/CameraLookAtDist.h"
@@ -44,7 +44,7 @@
 
 namespace megamol {
 namespace core {
-namespace nextgen {
+namespace view {
 
 class MEGAMOLCORE_API View3D_2 : public view::AbstractRenderingView /*, public view::AbstractCamParamSync*/ {
 
@@ -171,6 +171,20 @@ protected:
      * @param y The y coordinate of the mouse position
      */
     virtual void unpackMouseCoordinates(float& x, float& y);
+
+    /**
+     * Sets all parameters to the currently used camera values
+     *
+     * @param cam Camera containing the values that will be set
+     */
+    void setCameraValues(const core::view::Camera_2& cam);
+
+    /**
+     * Adapts camera values set by the user if necessary
+     *
+     * @param cam The camera the newly set parameters will be stored in
+     */
+    void adaptCameraValues(core::view::Camera_2& cam);
 
     /**
      * Implementation of 'Create'.
@@ -335,6 +349,20 @@ protected:
     /** whether to reset the view when the object bounding box changes */
     param::ParamSlot resetViewOnBBoxChangeSlot;
 
+    /** Invisible parameters for lua manipulation */
+    param::ParamSlot cameraPositionParam;
+    param::ParamSlot cameraOrientationParam;
+    param::ParamSlot cameraProjectionTypeParam;
+    param::ParamSlot cameraNearPlaneParam;
+    param::ParamSlot cameraFarPlaneParam;
+    param::ParamSlot cameraConvergencePlaneParam;
+    param::ParamSlot cameraEyeParam;
+    param::ParamSlot cameraGateScalingParam;
+    param::ParamSlot cameraFilmGateParam;
+    param::ParamSlot cameraCenterOffsetParam;
+    param::ParamSlot cameraHalfApertureRadiansParam;
+    param::ParamSlot cameraHalfDisparityParam;
+
     /** The mouse x coordinate */
     float mouseX;
 
@@ -368,10 +396,10 @@ protected:
     /**  */
     std::chrono::time_point<std::chrono::high_resolution_clock> lastFrameTime;
 
-	std::chrono::microseconds lastFrameDuration;
+    std::chrono::microseconds lastFrameDuration;
 };
 
-} // namespace nextgen
+} // namespace view
 } /* end namespace core */
 } /* end namespace megamol */
 

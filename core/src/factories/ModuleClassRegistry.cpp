@@ -54,8 +54,8 @@
 #include "mmcore/view/TileView.h"
 #include "mmcore/view/View2D.h"
 #include "mmcore/view/View3D.h"
-#include "mmcore/nextgen/View3D_2.h"
-#include "mmcore/nextgen/BoundingBoxRenderer.h"
+#include "mmcore/view/View3D_2.h"
+#include "mmcore/view/BoundingBoxRenderer.h"
 #include "mmcore/view/RendererRegistration.h"
 #ifdef MEGAMOLCORE_WITH_DIRECT3D11
 #include "mmcore/view/ViewDirect3D.h"
@@ -142,8 +142,8 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<view::TileView>();
     instance.RegisterAutoDescription<view::View2D>();
     instance.RegisterAutoDescription<view::View3D>();
-	instance.RegisterAutoDescription<nextgen::View3D_2>();
-    instance.RegisterAutoDescription<nextgen::BoundingBoxRenderer>();
+	instance.RegisterAutoDescription<view::View3D_2>();
+    instance.RegisterAutoDescription<view::BoundingBoxRenderer>();
     instance.RegisterAutoDescription<view::BlinnPhongRendererDeferred>();
     instance.RegisterAutoDescription<view::SplitView>();
     instance.RegisterAutoDescription<view::HeadView>();

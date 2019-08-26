@@ -9,12 +9,12 @@
 #define MEGAMOLCORE_CAMERASERIALIZER_H_INCLUDED
 
 #include "json.hpp"
-#include "mmcore/nextgen/Camera_2.h"
+#include "mmcore/view/Camera_2.h"
 #include "vislib/sys/Log.h"
 
 namespace megamol {
 namespace core {
-namespace nextgen {
+namespace view {
 
 /**
  * Class for the serialization and deserialization of camera parameters
@@ -154,10 +154,10 @@ private:
     bool prettyMode;
 };
 
-} // namespace nextgen
+} // namespace view
 } // namespace core
 } // namespace megamol
 
-#include "mmcore/nextgen/CameraSerializer.inl"
+#include "mmcore/view/CameraSerializer.inl"
 
 #endif /* MEGAMOLCORE_CAMERASERIALIZER_H_INCLUDED */

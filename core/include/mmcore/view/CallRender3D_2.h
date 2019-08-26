@@ -14,13 +14,13 @@
 #include <glm/glm.hpp>
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/factories/CallAutoDescription.h"
-#include "mmcore/nextgen/AbstractCallRender3D_2.h"
+#include "mmcore/view/AbstractCallRender3D_2.h"
 #include "mmcore/view/MouseFlags.h"
 #include "mmcore/view/RenderOutputOpenGL.h"
 
 namespace megamol {
 namespace core {
-namespace nextgen {
+namespace view {
 #ifdef _WIN32
 #    pragma warning(disable : 4250) // I know what I am doing ...
 #endif                              /* _WIN32 */
@@ -165,7 +165,7 @@ private:
 /** Description class typedef */
 typedef factories::CallAutoDescription<CallRender3D_2> CallRender3D_2Description;
 
-} // namespace nextgen
+} // namespace view
 } /* end namespace core */
 } /* end namespace megamol */
 

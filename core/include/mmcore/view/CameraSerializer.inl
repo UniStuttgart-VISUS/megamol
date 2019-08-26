@@ -6,11 +6,11 @@
  */
 
 /*
- * megamol::core::nextgen::CameraSerializer::serialize
+ * megamol::core::view::CameraSerializer::serialize
  */
 template <size_t N>
-std::string megamol::core::nextgen::CameraSerializer::serialize(
-    const std::array<megamol::core::nextgen::Camera_2::minimal_state_type, N>& camVec,
+std::string megamol::core::view::CameraSerializer::serialize(
+    const std::array<megamol::core::view::Camera_2::minimal_state_type, N>& camVec,
     const std::array<bool, N>& validityFlags) const {
 
     nlohmann::json out;
@@ -28,8 +28,8 @@ std::string megamol::core::nextgen::CameraSerializer::serialize(
 }
 
 template <size_t N>
-std::string megamol::core::nextgen::CameraSerializer::serialize(
-    const std::array<std::pair<megamol::core::nextgen::Camera_2::minimal_state_type, bool>, N>& camVec) const {
+std::string megamol::core::view::CameraSerializer::serialize(
+    const std::array<std::pair<megamol::core::view::Camera_2::minimal_state_type, bool>, N>& camVec) const {
 
     nlohmann::json out;
     for (const auto& obj : camVec) {
@@ -45,11 +45,11 @@ std::string megamol::core::nextgen::CameraSerializer::serialize(
 }
 
 /*
- * megamol::core::nextgen::CameraSerializer::deserialize
+ * megamol::core::view::CameraSerializer::deserialize
  */
 template <size_t N>
-bool megamol::core::nextgen::CameraSerializer::deserialize(
-    std::array<megamol::core::nextgen::Camera_2::minimal_state_type, N>& outCameras, std::array<bool, N>& outValidity,
+bool megamol::core::view::CameraSerializer::deserialize(
+    std::array<megamol::core::view::Camera_2::minimal_state_type, N>& outCameras, std::array<bool, N>& outValidity,
     const std::string text) const {
     nlohmann::json obj = nlohmann::json::parse(text);
     if (!obj.is_array()) {
@@ -63,7 +63,7 @@ bool megamol::core::nextgen::CameraSerializer::deserialize(
     for (nlohmann::json::iterator it = obj.begin(); it != obj.end(); ++it) {
         size_t index = static_cast<size_t>(it - obj.begin());
         auto cur = *it;
-        megamol::core::nextgen::Camera_2::minimal_state_type cam;
+        megamol::core::view::Camera_2::minimal_state_type cam;
         bool result = this->getCamFromJsonObject(cam, cur);
         if (!result) {
             cam = {}; // empty the cam if it is garbage
@@ -75,11 +75,11 @@ bool megamol::core::nextgen::CameraSerializer::deserialize(
 }
 
 /*
- * megamol::core::nextgen::CameraSerializer::deserialize
+ * megamol::core::view::CameraSerializer::deserialize
  */
 template <size_t N>
-bool megamol::core::nextgen::CameraSerializer::deserialize(
-    std::array<std::pair<megamol::core::nextgen::Camera_2::minimal_state_type, bool>, N>& outCameras,
+bool megamol::core::view::CameraSerializer::deserialize(
+    std::array<std::pair<megamol::core::view::Camera_2::minimal_state_type, bool>, N>& outCameras,
     const std::string text) const {
     nlohmann::json obj = nlohmann::json::parse(text);
     if (!obj.is_array()) {
@@ -93,7 +93,7 @@ bool megamol::core::nextgen::CameraSerializer::deserialize(
     for (nlohmann::json::iterator it = obj.begin(); it != obj.end(); ++it) {
         size_t index = static_cast<size_t>(it - obj.begin());
         auto cur = *it;
-        megamol::core::nextgen::Camera_2::minimal_state_type cam;
+        megamol::core::view::Camera_2::minimal_state_type cam;
         bool result = this->getCamFromJsonObject(cam, cur);
         if (!result) {
             cam = {}; // empty the cam if it is garbage

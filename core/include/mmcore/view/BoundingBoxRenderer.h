@@ -11,14 +11,14 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/api/MegaMolCore.std.h"
-#include "mmcore/nextgen/CallRender3D_2.h"
+#include "mmcore/view/CallRender3D_2.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/RendererModule.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 
 namespace megamol {
 namespace core {
-namespace nextgen {
+namespace view {
 
 /**
  * Renderer responsible for the rendering of the currently active bounding box as well as the view cube etc.
@@ -74,7 +74,7 @@ private:
      * @param call The call containing all relevant parameters
      * @return True on success, false otherwise
      */
-    virtual bool GetExtents(core::nextgen::CallRender3D_2& call) override;
+    virtual bool GetExtents(core::view::CallRender3D_2& call) override;
 
     /*
      * Renders the bounding box and the viewcube on top of the other rendered things
@@ -82,7 +82,7 @@ private:
      * @param call The call containing the camera and other parameters
      * @return True on success, false otherwise
      */
-    virtual bool Render(core::nextgen::CallRender3D_2& call) override final;
+    virtual bool Render(core::view::CallRender3D_2& call) override final;
 
     /**
      * Render function for the bounding box front
@@ -110,7 +110,7 @@ private:
      * @param call The incoming render call
      * @return True on success, false otherwise.
      */
-    bool RenderViewCube(core::nextgen::CallRender3D_2& call);
+    bool RenderViewCube(core::view::CallRender3D_2& call);
 
     /** Parameter that enables or disables the bounding box rendering */
     param::ParamSlot enableBoundingBoxSlot;
@@ -136,7 +136,7 @@ private:
     /** Shader program for lines */
     vislib::graphics::gl::GLSLShader lineShader;
 };
-} // namespace nextgen
+} // namespace view
 } // namespace core
 } // namespace megamol
 

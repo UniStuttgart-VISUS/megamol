@@ -20,7 +20,7 @@
 #include "mmcore/view/CallGetTransferFunction.h"
 #include "mmcore/view/CallRender2D.h"
 #include "mmcore/view/CallRender3D.h"
-#include "mmcore/nextgen/CallRender3D_2.h"
+#include "mmcore/view/CallRender3D_2.h"
 #include "mmcore/view/CallRenderDeferred3D.h"
 #include "mmcore/view/CallRenderView.h"
 #include "mmcore/view/CallTimeControl.h"
@@ -64,7 +64,7 @@ void factories::register_call_classes(factories::CallDescriptionManager& instanc
     instance.RegisterAutoDescription<view::CallGetTransferFunction>();
     instance.RegisterAutoDescription<view::CallRender2D>();
     instance.RegisterAutoDescription<view::CallRender3D>();
-    instance.RegisterAutoDescription<nextgen::CallRender3D_2>();
+    instance.RegisterAutoDescription<view::CallRender3D_2>();
     instance.RegisterAutoDescription<view::CallRenderDeferred3D>();
     instance.RegisterAutoDescription<view::CallRenderView>();
     instance.RegisterAutoDescription<view::CallTimeControl>();

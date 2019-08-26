@@ -14,15 +14,15 @@
 #include "mmcore/BoundingBoxes_2.h"
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/factories/CallAutoDescription.h"
-#include "mmcore/nextgen/Camera_2.h"
 #include "mmcore/view/AbstractCallRender.h"
+#include "mmcore/view/Camera_2.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/assert.h"
 #include "vislib/types.h"
 
 namespace megamol {
 namespace core {
-namespace nextgen {
+namespace view {
 
 /**
  * New and improved base class of rendering graph calls
@@ -137,7 +137,7 @@ private:
     double lastFrameTime;
 };
 
-} // namespace nextgen
+} // namespace view
 } /* end namespace core */
 } /* end namespace megamol */
 

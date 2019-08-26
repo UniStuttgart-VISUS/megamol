@@ -5,10 +5,10 @@
  * Alle Rechte vorbehalten.
  */
 #include "stdafx.h"
-#include "mmcore/nextgen/Camera_2.h"
+#include "mmcore/view/Camera_2.h"
 
 using namespace megamol::core;
-using namespace megamol::core::nextgen;
+using namespace megamol::core::view;
 
 /*
  * Camera_2::Camera_2
@@ -18,9 +18,7 @@ Camera_2::Camera_2(void) : cam_type() {}
 /*
  * Camera_2::Camera_2
  */
-Camera_2::Camera_2(const cam_type::minimal_state_type& rhs) : cam_type() {
-    *this = rhs;
-}
+Camera_2::Camera_2(const cam_type::minimal_state_type& rhs) : cam_type() { *this = rhs; }
 
 /*
  * Camera_2::~Camera_2

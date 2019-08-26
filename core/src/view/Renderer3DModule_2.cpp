@@ -6,13 +6,13 @@
  */
 
 #include "stdafx.h"
-#include "mmcore/nextgen/Renderer3DModule_2.h"
-#include "mmcore/nextgen/CallRender3D_2.h"
+#include "mmcore/view/Renderer3DModule_2.h"
 #include "mmcore/view/AbstractView.h"
+#include "mmcore/view/CallRender3D_2.h"
 #include "mmcore/view/InputCall.h"
 
 using namespace megamol::core;
-using namespace megamol::core::nextgen;
+using namespace megamol::core::view;
 using namespace megamol::core::view;
 
 /*
@@ -115,7 +115,7 @@ bool Renderer3DModule_2::RenderChain(CallRender3D_2& call) {
  * Renderer3DModule_2::GetLights
  */
 bool Renderer3DModule_2::GetLights(void) {
-    core::view::light::CallLight * cl = this->lightSlot.CallAs<core::view::light::CallLight>();
+    core::view::light::CallLight* cl = this->lightSlot.CallAs<core::view::light::CallLight>();
     if (cl == nullptr) {
         // TODO add local light
         return false;
