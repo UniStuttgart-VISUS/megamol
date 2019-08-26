@@ -11,7 +11,7 @@ function(require_external NAME)
       return()
     endif()
     
-    set(ZMQ_VER "4_2_3")
+    set(ZMQ_VER "4_3_3")
     string(REPLACE "_" "." ZMQ_TAG "v${ZMQ_VER}")
     if(MSVC_IDE)
       set(MSVC_TOOLSET "-${CMAKE_VS_PLATFORM_TOOLSET}")
@@ -33,10 +33,13 @@ function(require_external NAME)
 
     add_external_project(libzmq_ext
       GIT_REPOSITORY https://github.com/zeromq/libzmq.git
-      GIT_TAG ${ZMQ_TAG}
+	  GIT_TAG 56ace6d03f521b9abb5a50176ec7763c1b77afa9 # We need https://github.com/zeromq/libzmq/pull/3636
+      #GIT_TAG ${ZMQ_TAG}
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${ZMQ_IMPORT_DEBUG}" "<INSTALL_DIR>/${ZMQ_IMPORT_RELEASE}"
       CMAKE_ARGS
-        -DZMQ_BUILD_TESTS=OFF)
-      add_external_library(libzmq SHARED
+        -DZMQ_BUILD_TESTS=OFF
+		-DENABLE_PRECOMPILED=OFF)
+    add_external_library(libzmq SHARED
       DEPENDS libzmq_ext
       IMPORT_LIBRARY_DEBUG ${ZMQ_IMPORT_DEBUG}
       IMPORT_LIBRARY_RELEASE ${ZMQ_IMPORT_RELEASE}
@@ -46,7 +49,7 @@ function(require_external NAME)
     add_external_project(libcppzmq_ext
       DEPENDS libzmq
       GIT_REPOSITORY https://github.com/zeromq/cppzmq.git
-      GIT_TAG ${ZMQ_TAG}
+      GIT_TAG "v4.4.1"
       CONFIGURE_COMMAND ""
       BUILD_COMMAND ""
       INSTALL_COMMAND ""
@@ -73,6 +76,7 @@ function(require_external NAME)
     add_external_project(zlib_ext
       GIT_REPOSITORY https://github.com/madler/zlib.git
       GIT_TAG "v1.2.11"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${ZLIB_DEBUG}" "<INSTALL_DIR>/${ZLIB_RELEASE}"
       CMAKE_ARGS
         -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON)
     add_external_library(zlib STATIC
@@ -98,9 +102,10 @@ function(require_external NAME)
     endif()
     ExternalProject_Get_Property(zlib_ext INSTALL_DIR)
     add_external_project(libpng_ext
-      GIT_REPOSITORY https://git.code.sf.net/p/libpng/code
+      GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/libpng.git
       GIT_TAG "v1.6.34"
       DEPENDS zlib_ext
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${LIBPNG_DEBUG}" "<INSTALL_DIR>/${LIBPNG_RELEASE}"
       CMAKE_ARGS
         -DPNG_SHARED=OFF
         -DPNG_TESTS=OFF
@@ -128,6 +133,7 @@ function(require_external NAME)
     add_external_project(zfp_ext
       GIT_REPOSITORY https://github.com/LLNL/zfp.git
       GIT_TAG "0.5.2"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${ZFP_LIB}"
       CMAKE_ARGS
         -DBUILD_SHARED_LIBS=OFF
         -DBUILD_UTILITIES=OFF
@@ -204,7 +210,7 @@ function(require_external NAME)
     add_external_library(Eigen INTERFACE
       DEPENDS Eigen_ext
       INCLUDE_DIR "src/Eigen_ext")
-	  
+      
   elseif(NAME STREQUAL "nanoflann")
     if(TARGET nanoflann)
       return()
@@ -220,12 +226,12 @@ function(require_external NAME)
     add_external_library(nanoflann INTERFACE
       DEPENDS nanoflann_ext
       INCLUDE_DIR "src/nanoflann_ext/include")
-	  
+      
   elseif(NAME STREQUAL "Delaunator")
     if(TARGET Delaunator)
       return()
     endif()
-	
+    
     add_external_project(Delaunator_ext
       GIT_REPOSITORY https://github.com/delfrrr/delaunator-cpp.git
       GIT_TAG "v0.4.0"
@@ -249,8 +255,9 @@ function(require_external NAME)
 
     add_external_project(tracking_ext
       GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/mm-tracking
+         BUILD_BYPRODUCTS "<INSTALL_DIR>/${TRACKING_IMPORT_LIB}" "<INSTALL_DIR>/${TRACKING_NATNET_IMPORT_LIB}"
       CMAKE_ARGS 
-      -DCREATE_TRACKING_TEST_PROGRAM=OFF)
+        -DCREATE_TRACKING_TEST_PROGRAM=OFF)
 
     add_external_library(tracking SHARED 
       DEPENDS tracking_ext 
@@ -270,6 +277,33 @@ function(require_external NAME)
       DEPENDS tracking_ext
       INCLUDE_DIR "src/tracking_ext/tracking/include")
 
+  elseif(NAME STREQUAL "quickhull")
+    if(TARGET quickhull)
+      return()
+    endif()
+       
+    if(WIN32)
+      set(QUICKHULL_IMPORT_LIB "lib/quickhull.lib")
+      set(QUICKHULL_LIB "bin/quickhull.dll")
+      set(QUICKHULL_CMAKE_ARGS "")
+    else()
+      set(QUICKHULL_IMPORT_LIB "lib/libquickhull.so")
+      set(QUICKHULL_LIB "lib/libquickhull.so")
+      set(QUICKHULL_CMAKE_ARGS -DCMAKE_C_FLAGS="-fPIC" -DCMAKE_CXX_FLAGS="-fPIC")
+    endif()
+    add_external_project(quickhull_ext
+      GIT_REPOSITORY https://github.com/akuukka/quickhull.git
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${QUICKHULL_IMPORT_LIB}"
+      PATCH_COMMAND ${CMAKE_COMMAND} -E copy
+        "${CMAKE_CURRENT_SOURCE_DIR}/cmake/quickhull/CMakeLists.txt"
+        "<SOURCE_DIR>/CMakeLists.txt"
+      CMAKE_ARGS ${QUICKHULL_CMAKE_ARGS})
+    add_external_library(quickhull SHARED
+      DEPENDS quickhull_ext
+      INCLUDE_DIR "include"
+      IMPORT_LIBRARY ${QUICKHULL_IMPORT_LIB}
+      LIBRARY ${QUICKHULL_LIB})
+    
   else()
     message(FATAL_ERROR "Unknown external required \"${NAME}\"")
   endif()
