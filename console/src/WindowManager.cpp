@@ -194,11 +194,7 @@ bool megamol::console::WindowManager::InstantiatePendingView(void *hCore) {
     }
 
     // get an existing window to share context resources
-#ifndef USE_EGL
     GLFWwindow* share = nullptr;
-#else
-    EGLContext* share = nullptr;
-#endif
     if (!windows.empty()) share = windows[0]->WindowHandle();
     // TODO: share GL context from outside? no GL at all? responsibility of WindowManager?
 

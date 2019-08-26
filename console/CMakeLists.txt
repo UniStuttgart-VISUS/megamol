@@ -29,7 +29,7 @@ if(BUILD_CONSOLE)
   endif()
 
   # GLFW
-  if(NOT USE_EGL)
+  if(USE_GLFW)
     if (MSVC)
         set(GLFW_IMPORT_LIBRARY "lib/glfw3dll.lib")
         set(GLFW_LIBRARY "lib/glfw3.dll")
@@ -56,15 +56,6 @@ if(BUILD_CONSOLE)
     target_include_directories(${PROJECT_NAME} PRIVATE "${SOURCE_DIR}/include")
   endif()
 
-  # EGL
-  if(UNIX)
-    if(USE_EGL)
-      find_package(EGL REQUIRED)
-      target_include_directories(${PROJECT_NAME} PRIVATE ${EGL_INCLUDE_DIR})
-      target_link_libraries(${PROJECT_NAME} PRIVATE ${EGL_LIBRARIES})
-    endif()
-  endif()
-
   target_link_libraries(${PROJECT_NAME} PRIVATE ${VERSION_LIBRARY} ${CMAKE_DL_LIBS})
 
   # Grouping in Visual Studio
@@ -74,7 +65,7 @@ if(BUILD_CONSOLE)
 
   # install mmconsole executable
   install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin" ARCHIVE DESTINATION "lib")
-  if(NOT USE_EGL)
+  if(USE_GLFW)
     install_external(TARGETS glfw3)
   endif()
   if (WIN32)
