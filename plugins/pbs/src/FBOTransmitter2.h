@@ -14,7 +14,6 @@
 #include "FBOCommFabric.h"
 #include "FBOProto.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/utility/gl/FramebufferObject.h"
 #include "vislib/graphics/gl/CameraOpenGL.h"
 #include "vislib/graphics/gl/FramebufferObject.h"
 
@@ -126,7 +125,6 @@ private:
     megamol::core::param::ParamSlot toggle_aggregate_slot_;
 
     megamol::core::param::ParamSlot render_comp_img_slot_;
-    vislib::graphics::gl::FramebufferObject* fbo;
 
     bool renderCompChanged(core::param::ParamSlot& slot);
 

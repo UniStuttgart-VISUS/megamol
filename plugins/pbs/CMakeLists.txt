@@ -33,6 +33,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   add_external_project(snappy_ext
     GIT_REPOSITORY https://github.com/google/snappy.git
     GIT_TAG "1.1.7"
+    BUILD_BYPRODUCTS "<INSTALL_DIR>/${SNAPPY_IMPORT_LIB}"
     CMAKE_ARGS
       -DBUILD_SHARED_LIBS=ON
       -DSNAPPY_BUILD_TESTS=OFF
@@ -47,6 +48,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   if(MPI_C_FOUND)
     add_external_project(IceT_ext
       GIT_REPOSITORY https://gitlab.kitware.com/icet/icet.git
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${ICET_CORE_IMPORT_LIB}" "<INSTALL_DIR>/${ICET_GL_IMPORT_LIB}" "<INSTALL_DIR>/${ICET_MPI_IMPORT_LIB}"
       CMAKE_ARGS
         -DBUILD_SHARED_LIBS=ON
         -DICET_BUILD_TESTING=OFF

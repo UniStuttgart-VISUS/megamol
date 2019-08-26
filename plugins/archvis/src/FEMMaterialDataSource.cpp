@@ -55,9 +55,9 @@ bool megamol::archvis::FEMMaterialDataSource::getDataCallback(core::Call& caller
         m_gpu_materials->addMaterial(this->instance(), filename, {tf_texture_name});
     }
 
-    if (tf_call->isDirty()) {
+    if (tf_call->IsDirty()) {
         if (!m_gpu_materials->getMaterials().empty()) {
-            tf_call->resetDirty();
+            tf_call->ResetDirty();
 
             m_gpu_materials->updateMaterialTexture(0, 0, tf_texture_name);
         }

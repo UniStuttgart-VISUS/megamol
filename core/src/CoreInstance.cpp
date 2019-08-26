@@ -330,7 +330,7 @@ void megamol::core::CoreInstance::Initialise(void) {
         throw vislib::IllegalStateException("Cannot initalise Lua", __FILE__, __LINE__);
     }
     std::string result;
-    int ok = lua->RunString("mmLog(LOGINFO, 'Lua loaded OK: Running on ', "
+    const bool ok = lua->RunString("mmLog(LOGINFO, 'Lua loaded OK: Running on ', "
                             "mmGetBitWidth(), ' bit ', mmGetOS(), ' in ', mmGetConfiguration(),"
                             "' mode on ', mmGetMachineName(), '.')",
         result);
@@ -2080,7 +2080,7 @@ void megamol::core::CoreInstance::SerializeGraph(std::string& serInstances, std:
                 std::string vin = vi->Name().PeekBuffer();
                 view_instances[vi->View()->FullName().PeekBuffer()] = vin;
                 vislib::sys::Log::DefaultLog.WriteInfo(
-                    "ScreenShooter: found view instance \"%s\" with view \"%s\".",
+                    "SerializeGraph: Found view instance \"%s\" with view \"%s\".",
                     view_instances[vi->View()->FullName().PeekBuffer()].c_str(),
                     vi->View()->FullName().PeekBuffer());
             }
@@ -2088,7 +2088,7 @@ void megamol::core::CoreInstance::SerializeGraph(std::string& serInstances, std:
                 std::string jin = ji->Name().PeekBuffer();
                 // todo: find job module! WTF!
                 job_instances[jin] = std::string("job") + std::to_string(job_counter);
-                vislib::sys::Log::DefaultLog.WriteInfo("ScreenShooter: found job instance \"%s\" with job \"%s\".",
+                vislib::sys::Log::DefaultLog.WriteInfo("SerializeGraph: Found job instance \"%s\" with job \"%s\".",
                     jin.c_str(), job_instances[jin].c_str());
                 ++job_counter;
             }
@@ -2112,14 +2112,12 @@ void megamol::core::CoreInstance::SerializeGraph(std::string& serInstances, std:
                     const auto bp = slot->Param<param::ButtonParam>();
                     if (!bp) {
                         std::string val = slot->Parameter()->ValueString().PeekBuffer();
-                        // caution: value strings could contain unescaped quotes, so fix that:
-                        //std::string from = "\"";
-                        //std::string to = "\\\"";
-                        //size_t start_pos = 0;
-                        //while ((start_pos = val.find(from, start_pos)) != std::string::npos) {
-                        //    val.replace(start_pos, from.length(), to);
-                        //    start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
-                        //}
+
+                        // Encode to UTF-8 string
+                        vislib::StringA valueString;
+                        vislib::UTF8Encoder::Encode(valueString, vislib::StringA(val.c_str()));
+                        val = valueString.PeekBuffer();
+
                         confParams << "mmSetParamValue(\"" << slot->FullName() << "\",[=[" << val << "]=])\n";
                     }
                 }

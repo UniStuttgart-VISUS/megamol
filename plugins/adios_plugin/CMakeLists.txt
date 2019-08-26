@@ -13,38 +13,34 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   # afterwards list the dependencies.
   set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE BUILD_MMSTD_DATATOOLS_PLUGIN" CACHE INTERNAL "")
 
-  option(USE_EXTERNAL_ADIOS "Option to externally include ADIOS2" OFF)
+  option(USE_EXTERNAL_ADIOS "Option to use external ADIOS2" OFF)
   if (USE_EXTERNAL_ADIOS)
     find_package(ADIOS2 REQUIRED)
   else()
-    add_external_project(adios2_ext
-    GIT_REPOSITORY https://github.com/ornladios/ADIOS2.git
-    GIT_TAG "v2.3.1"
-    CMAKE_ARGS -DBUILD_TESTING=OFF -DADIOS2_USE_BZip2=OFF 
-    -DADIOS2_USE_Fortran=OFF -DADIOS2_USE_HDF5=OFF 
-    -DADIOS2_USE_Python=OFF -DADIOS2_USE_SST=OFF 
-    -DADIOS2_USE_SZ=OFF -DADIOS2_USE_SysVShMem=OFF 
-    -DADIOS2_USE_ZFP=OFF -DADIOS2_USE_ZeroMQ=OFF 
-    -DMPI_GUESS_LIBRARY_NAME=${MPI_GUESS_LIBRARY_NAME})
-
     if(WIN32)
       set(ADIOS2_IMPORT_LIB "lib/adios2.lib")
-      set(ADIOS2_IMPORT_LIB_DEBUG ${ADIOS2_IMPORT_LIB})
       set(ADIOS2_LIB "bin/adios2.dll")
-      set(ADIOS2_LIB_DEBUG ${ADIOS2_LIB})
     else()
       include(GNUInstallDirs)
-      set(ADIOS2_IMPORT_LIB_DEBUG "${CMAKE_INSTALL_LIBDIR}/libadios2.so")
       set(ADIOS2_IMPORT_LIB "${CMAKE_INSTALL_LIBDIR}/libadios2.so")
-      set(ADIOS2_LIB_DEBUG "${CMAKE_INSTALL_LIBDIR}/libadios2.so")
       set(ADIOS2_LIB "${CMAKE_INSTALL_LIBDIR}/libadios2.so")
     endif()
+
+    add_external_project(adios2_ext
+      GIT_REPOSITORY https://github.com/ornladios/ADIOS2.git
+      GIT_TAG "v2.3.1"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${ADIOS2_IMPORT_LIB}"
+      CMAKE_ARGS 
+        -DBUILD_TESTING=OFF -DADIOS2_USE_BZip2=OFF 
+        -DADIOS2_USE_Fortran=OFF -DADIOS2_USE_HDF5=OFF 
+        -DADIOS2_USE_Python=OFF -DADIOS2_USE_SST=OFF 
+        -DADIOS2_USE_SZ=OFF -DADIOS2_USE_SysVShMem=OFF 
+        -DADIOS2_USE_ZFP=OFF -DADIOS2_USE_ZeroMQ=OFF 
+        -DMPI_GUESS_LIBRARY_NAME=${MPI_GUESS_LIBRARY_NAME})
     add_external_library(adios2 SHARED
-    DEPENDS adios2_ext
-    IMPORT_LIBRARY_DEBUG ${ADIOS2_IMPORT_LIB_DEBUG}
-    IMPORT_LIBRARY_RELEASE ${ADIOS2_IMPORT_LIB}
-    LIBRARY_DEBUG ${ADIOS2_LIB_DEBUG}
-    LIBRARY_RELEASE ${ADIOS2_LIB})
+      DEPENDS adios2_ext
+      IMPORT_LIBRARY ${ADIOS2_IMPORT_LIB}
+      LIBRARY ${ADIOS2_LIB})
   endif()
 
 
@@ -60,12 +56,14 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
     # Set target naming conventions for different build types
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
-  if(USE_EXTERNAL_ADIOS)
-    target_link_libraries(${PROJECT_NAME} PRIVATE core mmstd_datatools adios2::adios2)
-  else()
-    target_link_libraries(${PROJECT_NAME} PRIVATE core mmstd_datatools adios2)
-  endif()
+  target_link_libraries(${PROJECT_NAME} PRIVATE core mmstd_datatools)
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src")
+
+  if(USE_EXTERNAL_ADIOS)
+    target_link_libraries(${PROJECT_NAME} PRIVATE adios2::adios2)
+  else()
+    target_link_libraries(${PROJECT_NAME} PRIVATE adios2)
+  endif()
 
   if(MPI_C_FOUND)
     target_include_directories(${PROJECT_NAME} PUBLIC ${MPI_C_INCLUDE_PATH})

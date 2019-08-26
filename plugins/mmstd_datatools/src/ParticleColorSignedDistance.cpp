@@ -7,7 +7,7 @@
 #include "stdafx.h"
 #include "ParticleColorSignedDistance.h"
 #include "mmcore/param/BoolParam.h"
-#include "nanoflann.hpp"
+#include <nanoflann.hpp>
 #include <cstdint>
 #include <algorithm>
 #include <cfloat>
