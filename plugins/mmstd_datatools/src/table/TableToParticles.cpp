@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "TableToParticles.h"
 
+#include "mmcore/moldyn/EllipsoidalDataCall.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/FloatParam.h"
@@ -34,9 +35,21 @@ TableToParticles::TableToParticles(void)
     , slotColumnX("xcolumnname", "The name of the column holding the x-coordinate.")
     , slotColumnY("ycolumnname", "The name of the column holding the y-coordinate.")
     , slotColumnZ("zcolumnname", "The name of the column holding the z-coordinate.")
-    , slotColumnVX("vxcolumnname", "The name of the column holding the vx-coordinate.")
-    , slotColumnVY("vycolumnname", "The name of the column holding the vy-coordinate.")
-    , slotColumnVZ("vzcolumnname", "The name of the column holding the vz-coordinate.")
+    , slotColumnVX("direction::vxcolumnname", "The name of the column holding the vx-coordinate.")
+    , slotColumnVY("direction::vycolumnname", "The name of the column holding the vy-coordinate.")
+    , slotColumnVZ("direction::vzcolumnname", "The name of the column holding the vz-coordinate.")
+    , slotTensorColumn{{{"tensor::x1columnname", "The name of the column holding the first vector (row) x component"},
+          {"tensor::y1columnname", "The name of the column holding the first vector (row) y component"},
+          {"tensor::z1columnname", "The name of the column holding the first vector (row) z component"},
+          {"tensor::x2columnname", "The name of the column holding the second vector (row) x component"},
+          {"tensor::y2columnname", "The name of the column holding the second vector (row) y component"},
+          {"tensor::z2columnname", "The name of the column holding the second vector (row) z component"},
+          {"tensor::x3columnname", "The name of the column holding the third vector (row) x component"},
+          {"tensor::y3columnname", "The name of the column holding the third vector (row) y component"},
+          {"tensor::z3columnname", "The name of the column holding the third vector (row) z component"}}}
+    , slotTensorMagnitudeColumn{{{"tensor::magnitude1", "the magnitude of the first vector (row)"},
+          {"tensor::magnitude2", "the magnitude of the second vector (row)"},
+          {"tensor::magnitude3", "the magnitude of the third vector (row)"}}}
     , inputHash(0)
     , myHash(0)
     , columnIndex() {
@@ -106,11 +119,28 @@ TableToParticles::TableToParticles(void)
     this->slotColumnVZ << vzColumnEp;
     this->MakeSlotAvailable(&this->slotColumnVZ);
 
+    for (auto x = 0; x < 9; ++x) {
+        auto* p = new core::param::FlexEnumParam("undef");
+        this->slotTensorColumn[x] << p;
+        this->MakeSlotAvailable(&this->slotTensorColumn[x]);
+    }
+    for (auto x = 0; x < 3; ++x) {
+        auto* p = new core::param::FlexEnumParam("undef");
+        this->slotTensorMagnitudeColumn[x] << p;
+        this->MakeSlotAvailable(&this->slotTensorMagnitudeColumn[x]);
+    }
+
     /* Register calls. */
     this->slotCallMultiPart.SetCallback(
         core::moldyn::MultiParticleDataCall::ClassName(), "GetData", &TableToParticles::getMultiParticleData);
     this->slotCallMultiPart.SetCallback(
         core::moldyn::MultiParticleDataCall::ClassName(), "GetExtent", &TableToParticles::getMultiparticleExtent);
+
+    this->slotCallMultiPart.SetCallback(
+        core::moldyn::EllipsoidalParticleDataCall::ClassName(), "GetData", &TableToParticles::getMultiParticleData);
+    this->slotCallMultiPart.SetCallback(
+        core::moldyn::EllipsoidalParticleDataCall::ClassName(), "GetExtent", &TableToParticles::getMultiparticleExtent);
+
     this->MakeSlotAvailable(&this->slotCallMultiPart);
 
     this->slotCallTable.SetCompatibleCall<table::TableDataCallDescription>();
@@ -133,7 +163,12 @@ bool TableToParticles::create(void) {
 }
 
 bool TableToParticles::anythingDirty() {
-    return this->slotColumnR.IsDirty() || this->slotColumnG.IsDirty() || this->slotColumnB.IsDirty() ||
+    bool tensorDirty = std::any_of(this->slotTensorColumn.begin(), this->slotTensorColumn.end(),
+        [](core::param::ParamSlot& p) { return p.IsDirty(); });
+    tensorDirty =
+        tensorDirty || std::any_of(this->slotTensorMagnitudeColumn.begin(), this->slotTensorMagnitudeColumn.end(),
+                           [](core::param::ParamSlot& p) { return p.IsDirty(); });
+    return tensorDirty || this->slotColumnR.IsDirty() || this->slotColumnG.IsDirty() || this->slotColumnB.IsDirty() ||
            this->slotColumnI.IsDirty() || this->slotGlobalColor.IsDirty() || this->slotColorMode.IsDirty() ||
            this->slotColumnRadius.IsDirty() || this->slotGlobalRadius.IsDirty() || this->slotRadiusMode.IsDirty() ||
            this->slotColumnX.IsDirty() || this->slotColumnY.IsDirty() || this->slotColumnZ.IsDirty() ||
@@ -156,6 +191,12 @@ void TableToParticles::resetAllDirty() {
     this->slotColumnVX.ResetDirty();
     this->slotColumnVY.ResetDirty();
     this->slotColumnVZ.ResetDirty();
+    for (auto& x : slotTensorColumn) {
+        x.ResetDirty();
+    }
+    for (auto& x : slotTensorMagnitudeColumn) {
+        x.ResetDirty();
+    }
 }
 
 std::string TableToParticles::cleanUpColumnHeader(const std::string& header) const {
@@ -198,6 +239,12 @@ bool TableToParticles::assertData(table::TableDataCall* ft) {
         this->slotColumnB.Param<core::param::FlexEnumParam>()->ClearValues();
         this->slotColumnI.Param<core::param::FlexEnumParam>()->ClearValues();
         this->slotColumnRadius.Param<core::param::FlexEnumParam>()->ClearValues();
+        for (auto& x : this->slotTensorColumn) {
+            x.Param<core::param::FlexEnumParam>()->ClearValues();
+        }
+        for (auto& x : this->slotTensorMagnitudeColumn) {
+            x.Param<core::param::FlexEnumParam>()->ClearValues();
+        }
 
         for (size_t i = 0; i < ft->GetColumnsCount(); i++) {
             std::string n = std::string(this->cleanUpColumnHeader(ft->GetColumnsInfos()[i].Name()));
@@ -214,6 +261,12 @@ bool TableToParticles::assertData(table::TableDataCall* ft) {
             this->slotColumnB.Param<core::param::FlexEnumParam>()->AddValue(n);
             this->slotColumnI.Param<core::param::FlexEnumParam>()->AddValue(n);
             this->slotColumnRadius.Param<core::param::FlexEnumParam>()->AddValue(n);
+            for (auto& x : this->slotTensorColumn) {
+                x.Param<core::param::FlexEnumParam>()->AddValue(n);
+            }
+            for (auto& x : this->slotTensorMagnitudeColumn) {
+                x.Param<core::param::FlexEnumParam>()->AddValue(n);
+            }
         }
     }
 
@@ -251,12 +304,11 @@ bool TableToParticles::assertData(table::TableDataCall* ft) {
     if (!pushColumnIndex(indicesToCollect, this->slotColumnZ.Param<core::param::FlexEnumParam>()->ValueString())) {
         retValue = false;
     }
-    if (this->slotRadiusMode.Param<core::param::EnumParam>()->Value() == 0) { // partice
+    if (this->slotRadiusMode.Param<core::param::EnumParam>()->Value() == 0) { // particle
         if (!pushColumnIndex(
-            indicesToCollect, this->slotColumnRadius.Param<core::param::FlexEnumParam>()->ValueString())) {
+                indicesToCollect, this->slotColumnRadius.Param<core::param::FlexEnumParam>()->ValueString())) {
             retValue = false;
-        }
-        else {
+        } else {
             radius = ft->GetColumnsInfos()[indicesToCollect.back()].MaximumValue();
         }
     } // global
@@ -305,6 +357,30 @@ bool TableToParticles::assertData(table::TableDataCall* ft) {
         stride += 3;
     }
 
+    this->haveTensor = true;
+    // this means that we have explicit magnitudes and tensor rows are normalized!
+    this->haveTensorMagnitudes = true;
+    for (auto& x : this->slotTensorColumn) {
+        c = cleanUpColumnHeader(x.Param<core::param::FlexEnumParam>()->ValueString());
+        if (this->columnIndex.find(c) == columnIndex.end()) this->haveTensor = false;
+    }
+    for (auto& x : this->slotTensorMagnitudeColumn) {
+        c = cleanUpColumnHeader(x.Param<core::param::FlexEnumParam>()->ValueString());
+        if (this->columnIndex.find(c) == columnIndex.end()) this->haveTensorMagnitudes = false;
+    }
+    if (this->haveTensor) {
+        // we are always going to pass a quaternion (4) and magnitudes per 'basis vector' (3)
+        stride += 7;
+        if (this->haveTensorMagnitudes) {
+            // we can copy the radii AKA magnitudes directly
+            for (auto& x : this->slotTensorMagnitudeColumn) {
+                pushColumnIndex(indicesToCollect,
+                    x.Param<core::param::FlexEnumParam>()->ValueString());
+            }
+        }
+    }
+
+
     everything.reserve(ft->GetRowsCount() * stride);
     size_t rows = ft->GetRowsCount();
     size_t cols = ft->GetColumnsCount();
@@ -316,6 +392,12 @@ bool TableToParticles::assertData(table::TableDataCall* ft) {
         float* currOut = &everything.data()[i * stride];
         for (size_t j = 0; j < numIndices; j++) {
             currOut[j] = ftData[cols * i + indicesToCollect[j]];
+        }
+        if (this->haveTensor) {
+            // TODO make mat3, convert to quat, save, pass pointer later.
+            if (!this->haveTensorMagnitudes) {
+                // TODO compute, save, pass pointer later.
+            }
         }
     }
 

@@ -35,6 +35,7 @@
 #include "misc/ParticleWorker.h"
 
 #include "rendering/BrickStatsRenderer.h"
+#include "rendering/EllipsoidRenderer.h"
 #include "rendering/DataGridder.h"
 #include "rendering/GrimRenderer.h"
 #include "rendering/SphereRenderer.h"
@@ -134,6 +135,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::io::TclMolSelectionLoader>();
             this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::BrickStatsDataSource>();
             this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::rendering::BrickStatsRenderer>();
+            this->module_descriptions.RegisterAutoDescription<::megamol::stdplugin::moldyn::rendering::EllipsoidRenderer>();
 			this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::rendering::DataGridder>();
 			this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::rendering::GrimRenderer>();
             this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::rendering::ArrowRenderer>();

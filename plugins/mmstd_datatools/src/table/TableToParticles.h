@@ -12,6 +12,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmstd_datatools/table/TableDataCall.h"
 #include <map>
+#include <array>
 
 namespace megamol {
 namespace stdplugin {
@@ -157,9 +158,17 @@ namespace datatools {
         /** The name of the float column holding the vz-coordinate. */
         core::param::ParamSlot slotColumnVZ;
 
+        /** given a tensor interpretable as an orthonormal coordinate system {X,Y,Z}^T, its 9 values {xx, xy, xz, ...} */
+        std::array<core::param::ParamSlot, 9> slotTensorColumn;
+
+        /** if the tensor contains normalized vectors, you can also supply a magnitude */
+        std::array<core::param::ParamSlot, 3> slotTensorMagnitudeColumn;
+
 		std::vector<float> everything;
 
         bool haveVelocities = false;
+        bool haveTensor = false;
+        bool haveTensorMagnitudes = false;
 
 		SIZE_T inputHash;
 		SIZE_T myHash;
