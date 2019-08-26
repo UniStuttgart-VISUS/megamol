@@ -58,12 +58,41 @@ For a detailed description have a look at the [manual](docs/manual.md).
 Please use one of the following methods to reference the MegaMol project.
 
 
+**MegaMol – A Comprehensive Prototyping Framework for Visualizations**
+P. Gralka, M. Becher, M. Braun, F. Frieß, C. Müller, T. Rau, K. Schatz, C. Schulz, M. Krone, G. Reina, T. Ertl
+The European Physical Journal Special Topics, vol. 227, no. 14, pp. 1817--1829, 2019
+doi: 10.1140/epjst/e2019-800167-5
+
+    @article{gralka2019megamol,
+        author={Gralka, Patrick
+        and Becher, Michael
+        and Braun, Matthias
+        and Frie{\ss}, Florian
+        and M{\"u}ller, Christoph
+        and Rau, Tobias
+        and Schatz, Karsten
+        and Schulz, Christoph
+        and Krone, Michael
+        and Reina, Guido
+        and Ertl, Thomas},
+        title={{MegaMol -- A Comprehensive Prototyping Framework for Visualizations}},
+        journal={The European Physical Journal Special Topics},
+        year={2019},
+        month={Mar},
+        volume={227},
+        number={14},
+        pages={1817--1829},
+        issn={1951-6401},
+        doi={10.1140/epjst/e2019-800167-5},
+        url={https://doi.org/10.1140/epjst/e2019-800167-5}
+    }
+#
 **MegaMol – A Prototyping Framework for Particle-based Visualization**  
 S. Grottel, M. Krone, C. Müller, G. Reina, T. Ertl  
 Visualization and Computer Graphics, IEEE Transactions on, vol.21, no.2, pp. 201--214, Feb. 2015  
 doi: 10.1109/TVCG.2014.2350479
 
-    @article{grottel2014megamol,
+    @article{grottel2015megamol,
       author={Grottel, S. and Krone, M. and Muller, C. and Reina, G. and Ertl, T.},
       journal={Visualization and Computer Graphics, IEEE Transactions on},
       title={MegaMol -- A Prototyping Framework for Particle-based Visualization},
