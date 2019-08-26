@@ -65,24 +65,6 @@ if(BUILD_CONSOLE)
     endif()
   endif()
 
-  # AntTweakBar
-  option(USE_ANTTWEAKBAR "use AntTweakBar" OFF)
-  if (USE_ANTTWEAKBAR)
-    if(NOT USE_EGL AND NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    option(USE_INTERNAL_ANTTWEAKBAR "use internal AntTweakBar" ON)
-    if(USE_INTERNAL_ANTTWEAKBAR)
-      add_subdirectory(AntTweakBar)
-    else()
-      find_package(AntTweakBar REQUIRED)
-    endif()
-    if(AntTweakBar_FOUND OR USE_INTERNAL_ANTTWEAKBAR)
-      target_compile_definitions(${PROJECT_NAME} PRIVATE "HAS_ANTTWEAKBAR=1")
-      target_include_directories(${PROJECT_NAME} PRIVATE ${AntTweakBar_INCLUDE_DIR})
-      target_link_libraries(${PROJECT_NAME} PRIVATE ${AntTweakBar_LIBRARIES})
-    endif()
-    endif()
-  endif()
-
   target_link_libraries(${PROJECT_NAME} PRIVATE ${VERSION_LIBRARY} ${CMAKE_DL_LIBS})
 
   # Grouping in Visual Studio
@@ -101,17 +83,6 @@ if(BUILD_CONSOLE)
     endif()
   endif ()
 
-  # install and configure ATB
-  if (USE_ANTTWEAKBAR)
-    if(AntTweakBar_FOUND)
-    install(FILES ${AntTweakBar_LIBRARIES} DESTINATION "lib")
-    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/linkAntTweakBar.cmake.in ${CMAKE_BINARY_DIR}/linkAntTweakBar.cmake @ONLY)
-    install(SCRIPT ${CMAKE_BINARY_DIR}/linkAntTweakBar.cmake)
-    if(WIN32)
-        install(FILES ${AntTweakBar_DLL} DESTINATION "bin")
-    endif()
-    endif()
-  endif()
 
   # Configuration of the megamol.cfg megamol.sh remoteconsole.sh files
   set(cfg_LIB_PATH "${CMAKE_INSTALL_PREFIX}/lib")
