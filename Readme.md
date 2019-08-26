@@ -58,9 +58,9 @@ For a detailed description have a look at the [manual](docs/manual.md).
 Please use one of the following methods to reference the MegaMol project.
 
 
-**MegaMol – A Comprehensive Prototyping Framework for Visualizations**
-P. Gralka, M. Becher, M. Braun, F. Frieß, C. Müller, T. Rau, K. Schatz, C. Schulz, M. Krone, G. Reina, T. Ertl
-The European Physical Journal Special Topics, vol. 227, no. 14, pp. 1817--1829, 2019
+**MegaMol – A Comprehensive Prototyping Framework for Visualizations**  
+P. Gralka, M. Becher, M. Braun, F. Frieß, C. Müller, T. Rau, K. Schatz, C. Schulz, M. Krone, G. Reina, T. Ertl  
+The European Physical Journal Special Topics, vol. 227, no. 14, pp. 1817--1829, 2019  
 doi: 10.1140/epjst/e2019-800167-5
 
     @article{gralka2019megamol,
