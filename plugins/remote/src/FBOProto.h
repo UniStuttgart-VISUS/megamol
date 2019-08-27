@@ -5,7 +5,7 @@
 
 
 namespace megamol {
-namespace pbs {
+namespace remote {
 
 template <int DIM> struct vec {
     static_assert(DIM > 0, "Zero dimensional vector not allowed");
@@ -122,5 +122,5 @@ struct fbo_msg {
 
 using fbo_msg_t = fbo_msg;
 
-} // end namespace pbs
+} // end namespace remote
 } // end namespace megamol

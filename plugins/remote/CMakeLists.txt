@@ -1,13 +1,13 @@
 #
-# MegaMol™ pbs Plugin
+# MegaMol™ remote Plugin
 # Copyright 2017, by MegaMol Team
 # Alle Rechte vorbehalten. All rights reserved.
 #
-string(TOUPPER pbs EXPORT_NAME)
-option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build pbs" OFF)
+string(TOUPPER remote EXPORT_NAME)
+option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build remote utilities" OFF)
 
 if(BUILD_${EXPORT_NAME}_PLUGIN)
-  project(pbs)
+  project(remote)
 
   # Check option dependencies: First list item is always the current build option,
   # afterwards list the dependencies.

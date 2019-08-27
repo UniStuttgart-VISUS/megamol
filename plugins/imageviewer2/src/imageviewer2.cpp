@@ -41,7 +41,7 @@ namespace {
 
             // register modules here:
 
-            this->module_descriptions.RegisterAutoDescription<megamol::imageviewer2::ImageViewer>();
+            this->module_descriptions.RegisterAutoDescription<megamol::imageviewer2::ImageRenderer>();
             //
             // TODO: Register your plugin's modules here
             // like:

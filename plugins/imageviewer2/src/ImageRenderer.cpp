@@ -1,12 +1,12 @@
 /*
- * ImageViewer.cpp
+ * ImageRenderer.cpp
  *
  * Copyright (C) 2010 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
-#include "imageviewer2/ImageViewer.h"
+#include "imageviewer2/ImageRenderer.h"
 #include "imageviewer2/JpegBitmapCodec.h"
 #include "mmcore/misc/PngBitmapCodec.h"
 #include "vislib/graphics/BitmapCodecCollection.h"
@@ -22,7 +22,7 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/view/AbstractRenderingView.h"
-#include "mmcore/view/CallRender3D.h"
+#include "mmcore/view/CallRender3D_2.h"
 #include "vislib/sys/Log.h"
 #include "vislib/sys/SystemInformation.h"
 //#include <cmath>
@@ -30,11 +30,13 @@
 using namespace megamol::core;
 using namespace megamol;
 
+const unsigned int TILE_SIZE = 2 * 1024;
+
 /*
- * misc::ImageViewer::ImageViewer
+ * misc::ImageRenderer::ImageRenderer
  */
-imageviewer2::ImageViewer::ImageViewer(void)
-    : Renderer3DModule()
+imageviewer2::ImageRenderer::ImageRenderer(void)
+    : Renderer3DModule_2()
     , leftFilenameSlot("leftImg", "The image file name")
     , rightFilenameSlot("rightImg", "The image file name")
     , pasteFilenamesSlot("pasteFiles", "Slot to paste both file names at once (semicolon-separated)")
@@ -62,29 +64,29 @@ imageviewer2::ImageViewer::ImageViewer(void)
     this->MakeSlotAvailable(&this->rightFilenameSlot);
 
     this->pasteFilenamesSlot << new param::StringParam("");
-    this->pasteFilenamesSlot.SetUpdateCallback(&ImageViewer::onFilesPasted);
+    this->pasteFilenamesSlot.SetUpdateCallback(&ImageRenderer::onFilesPasted);
     this->MakeSlotAvailable(&this->pasteFilenamesSlot);
 
     this->pasteSlideshowSlot << new param::StringParam("");
-    this->pasteSlideshowSlot.SetUpdateCallback(&ImageViewer::onSlideshowPasted);
+    this->pasteSlideshowSlot.SetUpdateCallback(&ImageRenderer::onSlideshowPasted);
     this->MakeSlotAvailable(&this->pasteSlideshowSlot);
 
     this->firstSlot << new param::ButtonParam();
-    this->firstSlot.SetUpdateCallback(&ImageViewer::onFirstPressed);
+    this->firstSlot.SetUpdateCallback(&ImageRenderer::onFirstPressed);
     this->MakeSlotAvailable(&this->firstSlot);
     this->previousSlot << new param::ButtonParam(core::view::Key::KEY_PAGE_UP);
-    this->previousSlot.SetUpdateCallback(&ImageViewer::onPreviousPressed);
+    this->previousSlot.SetUpdateCallback(&ImageRenderer::onPreviousPressed);
     this->MakeSlotAvailable(&this->previousSlot);
 
     this->currentSlot << new param::IntParam(0);
-    this->currentSlot.SetUpdateCallback(&ImageViewer::onCurrentSet);
+    this->currentSlot.SetUpdateCallback(&ImageRenderer::onCurrentSet);
     this->MakeSlotAvailable(&this->currentSlot);
 
     this->nextSlot << new param::ButtonParam(core::view::Key::KEY_PAGE_DOWN);
-    this->nextSlot.SetUpdateCallback(&ImageViewer::onNextPressed);
+    this->nextSlot.SetUpdateCallback(&ImageRenderer::onNextPressed);
     this->MakeSlotAvailable(&this->nextSlot);
     this->lastSlot << new param::ButtonParam();
-    this->lastSlot.SetUpdateCallback(&ImageViewer::onLastPressed);
+    this->lastSlot.SetUpdateCallback(&ImageRenderer::onLastPressed);
     this->MakeSlotAvailable(&this->lastSlot);
 
     param::EnumParam* ep = new param::EnumParam(0);
@@ -99,7 +101,7 @@ imageviewer2::ImageViewer::ImageViewer(void)
     this->rightFiles.SetCapacityIncrement(20);
 
     this->blankMachine << new param::StringParam("");
-    this->blankMachine.SetUpdateCallback(&ImageViewer::onBlankMachineSet);
+    this->blankMachine.SetUpdateCallback(&ImageRenderer::onBlankMachineSet);
     this->MakeSlotAvailable(&this->blankMachine);
 
     vislib::sys::SystemInformation::ComputerName(this->machineName);
@@ -110,63 +112,122 @@ imageviewer2::ImageViewer::ImageViewer(void)
 
     this->callRequestImage.SetCompatibleCall<image_calls::Image2DCallDescription>();
     this->MakeSlotAvailable(&this->callRequestImage);
-
 }
 
 
 /*
- * misc::ImageViewer::~ImageViewer
+ * misc::ImageRenderer::~ImageRenderer
  */
-imageviewer2::ImageViewer::~ImageViewer(void) { this->Release(); }
+imageviewer2::ImageRenderer::~ImageRenderer(void) { this->Release(); }
 
 
 /*
- * misc::ImageViewer::create
+ * misc::ImageRenderer::create
  */
-bool imageviewer2::ImageViewer::create(void) {
-    // intentionally empty
+bool imageviewer2::ImageRenderer::create(void) {
     vislib::graphics::BitmapCodecCollection::DefaultCollection().AddCodec(new sg::graphics::PngBitmapCodec());
     vislib::graphics::BitmapCodecCollection::DefaultCollection().AddCodec(new sg::graphics::JpegBitmapCodec());
 
-    return true;
-}
+    vislib::graphics::gl::ShaderSource vertShader;
+    vislib::graphics::gl::ShaderSource fragShader;
 
-
-/*
- * imageviewer2::ImageViewer::GetExtents
- */
-bool imageviewer2::ImageViewer::GetExtents(Call& call) {
-    view::CallRender3D* cr = dynamic_cast<view::CallRender3D*>(&call);
-    if (cr == NULL) return false;
-
-    if (cr->GetCameraParameters() != NULL) {
-        bool rightEye = (cr->GetCameraParameters()->Eye() == vislib::graphics::CameraParameters::RIGHT_EYE);
-        if (!assertImage(rightEye)) return false;
+    try {
+        if (!instance()->ShaderSourceFactory().MakeShaderSource("imageviewer::vertex", vertShader)) {
+            return false;
+        }
+        if (!instance()->ShaderSourceFactory().MakeShaderSource("imageviewer::fragment", fragShader)) {
+            return false;
+        }
+    } catch (vislib::Exception e) {
+        vislib::sys::Log::DefaultLog.WriteMsg(
+            vislib::sys::Log::LEVEL_ERROR, "[ImageRenderer] Unable to make shader source: %s\n", e.GetMsgA());
     }
 
-    cr->SetTimeFramesCount(1);
-    cr->AccessBoundingBoxes().Clear();
-    cr->AccessBoundingBoxes().SetObjectSpaceBBox(
-        0.0f, 0.0f, -0.5f, static_cast<float>(this->width), static_cast<float>(this->height), 0.5f);
-    cr->AccessBoundingBoxes().SetObjectSpaceClipBox(cr->AccessBoundingBoxes().ObjectSpaceBBox());
-    cr->AccessBoundingBoxes().MakeScaledWorld(1.0f);
+    try {
+        if (!this->theShader.Create(vertShader.Code(), vertShader.Count(), fragShader.Code(), fragShader.Count())) {
+            vislib::sys::Log::DefaultLog.WriteMsg(
+                vislib::sys::Log::LEVEL_ERROR, "[ImageRenderer] Unable to compile sphere shader\n");
+            return false;
+        }
+    } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "[SphereRenderer] Unable to compile sphere shader (@%s): %s\n",
+            vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
+            ce.GetMsgA());
+        return nullptr;
+    } catch (vislib::Exception e) {
+        vislib::sys::Log::DefaultLog.WriteMsg(
+            vislib::sys::Log::LEVEL_ERROR, "[ImageRenderer] Unable to compile shader: %s\n", e.GetMsgA());
+        return nullptr;
+    } catch (...) {
+        vislib::sys::Log::DefaultLog.WriteMsg(
+            vislib::sys::Log::LEVEL_ERROR, "[ImageRenderer] Unable to compile shader: Unknown exception\n");
+        return nullptr;
+    }
+
+    glGenBuffers(1, &theVertBuffer);
+    glGenBuffers(1, &theTexCoordBuffer);
+    glGenVertexArrays(1, &theVAO);
 
     return true;
 }
 
 
 /*
- * imageviewer2::ImageViewer::release
+ * imageviewer2::ImageRenderer::GetExtents
  */
-void imageviewer2::ImageViewer::release(void) {
-    //    this->image.Release();
+bool imageviewer2::ImageRenderer::GetExtents(view::CallRender3D_2& call) {
+
+    view::Camera_2 cam;
+    call.GetCamera(cam);
+    cam_type::snapshot_type snapshot;
+    cam_type::matrix_type viewTemp, projTemp;
+
+    // Generate complete snapshot and calculate matrices
+    cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
+
+    auto CamPos = snapshot.position;
+    auto CamView = snapshot.view_vector;
+    auto CamRight = snapshot.right_vector;
+    auto CamUp = snapshot.up_vector;
+    auto CamNearClip = snapshot.frustum_near;
+    auto Eye = cam.eye();
+    bool rightEye = (Eye == core::thecam::Eye::right);
+
+    glm::mat4 view = viewTemp;
+    glm::mat4 proj = projTemp;
+    auto MVinv = glm::inverse(view);
+    auto MVP = proj * view;
+    auto MVPinv = glm::inverse(MVP);
+    auto MVPtransp = glm::transpose(MVP);
+
+    if (!assertImage(rightEye)) return false;
+
+    call.SetTimeFramesCount(1);
+    call.AccessBoundingBoxes().Clear();
+    call.AccessBoundingBoxes().SetBoundingBox(
+        0.0f, 0.0f, -0.5f, static_cast<float>(this->width), static_cast<float>(this->height), 0.5f);
+    call.AccessBoundingBoxes().SetClipBox(call.AccessBoundingBoxes().BoundingBox());
+
+    return true;
 }
 
 
 /*
- * imageviewer2::ImageViewer::assertImage
+ * imageviewer2::ImageRenderer::release
  */
-bool imageviewer2::ImageViewer::assertImage(bool rightEye) {
+void imageviewer2::ImageRenderer::release(void) {
+    //    this->image.Release();
+    glDeleteBuffers(1, &theVertBuffer);
+    glDeleteBuffers(1, &theTexCoordBuffer);
+    glDeleteVertexArrays(1, &theVAO);
+}
+
+
+/*
+ * imageviewer2::ImageRenderer::assertImage
+ */
+bool imageviewer2::ImageRenderer::assertImage(bool rightEye) {
     static bool registered = false;
 
     bool beBlank = this->blankMachines.Contains(this->machineName);
@@ -179,7 +240,7 @@ bool imageviewer2::ImageViewer::assertImage(bool rightEye) {
         MPI_Comm_split(this->comm, myRole, 0, &roleComm);
         MPI_Comm_rank(roleComm, &roleRank);
         MPI_Comm_size(roleComm, &roleSize);
-        vislib::sys::Log::DefaultLog.WriteInfo("ImageViewer2: role %s (rank %i of %i)",
+        vislib::sys::Log::DefaultLog.WriteInfo("ImageRenderer: role %s (rank %i of %i)",
             myRole == IMG_BLANK ? "blank" : (myRole == IMG_RIGHT ? "right" : "left"), roleRank, roleSize);
         registered = true;
     }
@@ -195,7 +256,8 @@ bool imageviewer2::ImageViewer::assertImage(bool rightEye) {
     }
 
     param::ParamSlot* filenameSlot = rightEye ? (&this->rightFilenameSlot) : (&this->leftFilenameSlot);
-    if (filenameSlot->IsDirty() || (imgcConnected /* && imgc->DataHash() != datahash*/) || useMpi) { //< imgc has precedence
+    if (filenameSlot->IsDirty() || (imgcConnected /* && imgc->DataHash() != datahash*/) ||
+        useMpi) { //< imgc has precedence
         if (!imgcConnected) {
             filenameSlot->ResetDirty();
         }
@@ -203,14 +265,13 @@ bool imageviewer2::ImageViewer::assertImage(bool rightEye) {
         static vislib::graphics::BitmapImage img;
         // static ::sg::graphics::PngBitmapCodec codec;
         // codec.Image() = &img;
-        static const unsigned int TILE_SIZE = 2 * 1024;
         ::glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
         try {
             static bool handIsShaken = false;
 #ifdef WITH_MPI
             if (useMpi && !handIsShaken) {
                 handIsShaken = true;
-                vislib::sys::Log::DefaultLog.WriteInfo("ImageViewer: IMGC Handshake\n");
+                vislib::sys::Log::DefaultLog.WriteInfo("ImageRenderer: IMGC Handshake\n");
                 // handshake who has imgc
                 int* imgcRes = nullptr;
                 if (roleRank == 0) {
@@ -237,7 +298,7 @@ bool imageviewer2::ImageViewer::assertImage(bool rightEye) {
                     roleImgcRank = 0;
                 }
                 vislib::sys::Log::DefaultLog.WriteInfo(
-                    "ImageViewer: IMGC Handshake result remoteness = %d imgcRank = %d\n", remoteness, roleImgcRank);
+                    "ImageRenderer: IMGC Handshake result remoteness = %d imgcRank = %d\n", remoteness, roleImgcRank);
             }
 #endif /* WITH_MPI */
 
@@ -248,24 +309,25 @@ bool imageviewer2::ImageViewer::assertImage(bool rightEye) {
 #ifdef WITH_MPI
                 // single node or role boss loads the image
                 if (!useMpi || roleRank == roleImgcRank) {
-                    vislib::sys::Log::DefaultLog.WriteInfo("ImageViewer2: role %s (rank %i of %i) loads an image",
+                    vislib::sys::Log::DefaultLog.WriteInfo("ImageRenderer: role %s (rank %i of %i) loads an image",
                         myRole == IMG_BLANK ? "blank" : (myRole == IMG_RIGHT ? "right" : "left"), roleRank, roleSize);
 #endif /* WITH_MPI */
                     if (!remoteness) {
-                        vislib::sys::Log::DefaultLog.WriteInfo("ImageViewer: Loading file '%s' from disk\n", filename.PeekBuffer());
+                        vislib::sys::Log::DefaultLog.WriteInfo(
+                            "ImageRenderer: Loading file '%s' from disk\n", filename.PeekBuffer());
                         vislib::sys::FastFile in;
                         if (in.Open(filename, vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ,
-                            vislib::sys::File::OPEN_ONLY)) {
+                                vislib::sys::File::OPEN_ONLY)) {
                             fileSize = in.GetSize();
                             allFile = new BYTE[fileSize];
                             in.Read(allFile, fileSize);
                             in.Close();
                         } else {
-                            printf("ImageViewer2: failed opening file\n");
+                            printf("ImageRenderer: failed opening file\n");
                             fileSize = 0;
                         }
                     } else if (roleRank == roleImgcRank) {
-                        vislib::sys::Log::DefaultLog.WriteInfo("ImageViewer: Retrieving image from call\n");
+                        vislib::sys::Log::DefaultLog.WriteInfo("ImageRenderer: Retrieving image from call\n");
                         // retrieve data from call
                         if (!(*imgc)(0)) return false;
                         this->width = imgc->GetWidth();
@@ -278,15 +340,15 @@ bool imageviewer2::ImageViewer::assertImage(bool rightEye) {
                 // cluster nodes broadcast file size
                 if (useMpi) {
                     int bcastRoot = roleImgcRank;
-                    vislib::sys::Log::DefaultLog.WriteInfo("ImageViewer: Broadcast root = %d\n", bcastRoot);
+                    vislib::sys::Log::DefaultLog.WriteInfo("ImageRenderer: Broadcast root = %d\n", bcastRoot);
                     MPI_Bcast(&fileSize, 1, MPI_INT, bcastRoot, roleComm);
-                    vislib::sys::Log::DefaultLog.WriteInfo("ImageViewer2: rank %i of %i (role %s) knows fileSize = %i",
+                    vislib::sys::Log::DefaultLog.WriteInfo("ImageRenderer: rank %i of %i (role %s) knows fileSize = %i",
                         roleRank, roleSize, myRole == IMG_BLANK ? "blank" : (myRole == IMG_LEFT ? "left" : "right"),
                         fileSize);
                     if (roleRank != 0) {
                         allFile = new BYTE[fileSize];
                         vislib::sys::Log::DefaultLog.WriteInfo(
-                            "ImageViewer2: rank %i of %i (role %s) late allocated file storage", roleRank, roleSize,
+                            "ImageRenderer: rank %i of %i (role %s) late allocated file storage", roleRank, roleSize,
                             myRole == IMG_BLANK ? "blank" : (myRole == IMG_LEFT ? "left" : "right"));
                     }
                     // everyone gets the compressed file now
@@ -300,7 +362,7 @@ bool imageviewer2::ImageViewer::assertImage(bool rightEye) {
 #endif /* WITH_MPI */
                 BYTE* image_ptr = nullptr;
                 if (!remoteness) {
-                    vislib::sys::Log::DefaultLog.WriteInfo("ImageViewer: Decoding Image\n");
+                    vislib::sys::Log::DefaultLog.WriteInfo("ImageRenderer: Decoding Image\n");
                     if (vislib::graphics::BitmapCodecCollection::DefaultCollection().LoadBitmapImage(
                             img, allFile, fileSize)) {
                         img.Convert(vislib::graphics::BitmapImage::TemplateByteRGB);
@@ -308,35 +370,32 @@ bool imageviewer2::ImageViewer::assertImage(bool rightEye) {
                         this->height = img.Height();
                         image_ptr = img.PeekDataAs<BYTE>();
                     } else {
-                        printf("ImageViewer2 failed decoding file\n");
+                        printf("ImageRenderer: failed decoding file\n");
                         fileSize = 0;
                         this->width = this->height = 0;
                     }
                 } else {
-                    vislib::sys::Log::DefaultLog.WriteInfo("ImageViewer: Decoding IMGC at rank %d\n", roleRank);
+                    vislib::sys::Log::DefaultLog.WriteInfo("ImageRenderer: Decoding IMGC at rank %d\n", roleRank);
                     switch (imgc_enc) {
-                        case image_calls::Image2DCall::BMP:
-                        {
-                            if (vislib::graphics::BitmapCodecCollection::DefaultCollection().LoadBitmapImage(
+                    case image_calls::Image2DCall::BMP: {
+                        if (vislib::graphics::BitmapCodecCollection::DefaultCollection().LoadBitmapImage(
                                 img, allFile, fileSize)) {
-                                img.Convert(vislib::graphics::BitmapImage::TemplateByteRGB);
-                                this->width = img.Width();
-                                this->height = img.Height();
-                                image_ptr = img.PeekDataAs<BYTE>();
-                            } else {
-                                printf("ImageViewer2 failed decoding file\n");
-                                fileSize = 0;
-                                this->width = this->height = 0;
-                            }
-                        } break;
-                        case image_calls::Image2DCall::SNAPPY:
-                        {
-                        } break;
-                        case image_calls::Image2DCall::RAW:
-                        default:
-                        {
-                            image_ptr = allFile;
+                            img.Convert(vislib::graphics::BitmapImage::TemplateByteRGB);
+                            this->width = img.Width();
+                            this->height = img.Height();
+                            image_ptr = img.PeekDataAs<BYTE>();
+                        } else {
+                            printf("ImageRenderer: failed decoding file\n");
+                            fileSize = 0;
+                            this->width = this->height = 0;
                         }
+                    } break;
+                    case image_calls::Image2DCall::SNAPPY: {
+                    } break;
+                    case image_calls::Image2DCall::RAW:
+                    default: {
+                        image_ptr = allFile;
+                    }
                     }
                 }
 
@@ -360,8 +419,11 @@ bool imageviewer2::ImageViewer::assertImage(bool rightEye) {
                             if (this->tiles.Last().Second()->Create(w, h, false, buf, GL_RGB) != GL_NO_ERROR) {
                                 this->tiles.RemoveLast();
                             } else {
-                                this->tiles.Last().Second()->SetFilter(GL_LINEAR, GL_LINEAR);
+                                this->tiles.Last().Second()->Bind();
+                                glGenerateMipmap(GL_TEXTURE_2D);
+                                this->tiles.Last().Second()->SetFilter(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
                                 this->tiles.Last().Second()->SetWrap(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+                                glBindTexture(GL_TEXTURE_2D, 0);
                             }
                         }
                     }
@@ -376,12 +438,11 @@ bool imageviewer2::ImageViewer::assertImage(bool rightEye) {
                 // we finish this together
                 if (useMpi) {
                     vislib::sys::Log::DefaultLog.WriteInfo(
-                        "ImageViewer2: rank %i of %i (role %s) entering sync barrier", roleRank, roleSize,
+                        "ImageRenderer: rank %i of %i (role %s) entering sync barrier", roleRank, roleSize,
                         myRole == IMG_BLANK ? "blank" : (myRole == IMG_LEFT ? "left" : "right"));
                     MPI_Barrier(roleComm);
-                    vislib::sys::Log::DefaultLog.WriteInfo(
-                        "ImageViewer2: rank %i of %i (role %s) leaving sync barrier", roleRank, roleSize,
-                        myRole == IMG_BLANK ? "blank" : (myRole == IMG_LEFT ? "left" : "right"));
+                    vislib::sys::Log::DefaultLog.WriteInfo("ImageRenderer: rank %i of %i (role %s) leaving sync barrier",
+                        roleRank, roleSize, myRole == IMG_BLANK ? "blank" : (myRole == IMG_LEFT ? "left" : "right"));
                 }
 #endif
             }
@@ -398,7 +459,7 @@ bool imageviewer2::ImageViewer::assertImage(bool rightEye) {
 }
 
 
-bool imageviewer2::ImageViewer::initMPI() {
+bool imageviewer2::ImageRenderer::initMPI() {
     bool retval = false;
 #ifdef WITH_MPI
     if (this->comm == MPI_COMM_NULL) {
@@ -434,12 +495,73 @@ bool imageviewer2::ImageViewer::initMPI() {
 
 
 /*
- * imageviewer2::ImageViewer::Render
+ * imageviewer2::ImageRenderer::Render
  */
-bool imageviewer2::ImageViewer::Render(Call& call) {
-    view::CallRender3D* cr3d = dynamic_cast<view::CallRender3D*>(&call);
-    if (cr3d == NULL) return false;
-    bool rightEye = (cr3d->GetCameraParameters()->Eye() == vislib::graphics::CameraParameters::RIGHT_EYE);
+bool imageviewer2::ImageRenderer::Render(view::CallRender3D_2& call) {
+
+    view::Camera_2 cam;
+    call.GetCamera(cam);
+    cam_type::snapshot_type snapshot;
+    cam_type::matrix_type viewTemp, projTemp;
+
+    // Generate complete snapshot and calculate matrices
+    cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
+
+    auto CamPos = snapshot.position;
+    auto CamView = snapshot.view_vector;
+    auto CamRight = snapshot.right_vector;
+    auto CamUp = snapshot.up_vector;
+    auto CamNearClip = snapshot.frustum_near;
+    auto Eye = cam.eye();
+    bool rightEye = (Eye == core::thecam::Eye::right);
+
+    glm::mat4 view = viewTemp;
+    glm::mat4 proj = projTemp;
+    auto MVinv = glm::inverse(view);
+    auto MVP = proj * view;
+    auto MVPinv = glm::inverse(MVP);
+    auto MVPtransp = glm::transpose(MVP);
+
+    static bool buffers_initialized = false;
+    if (!buffers_initialized && this->tiles.Count() > 0) {
+        std::vector<GLfloat> theTexCoords;
+        std::vector<GLfloat> theVertCoords;
+        const float halfTexel = (1.0f / TILE_SIZE) * 0.5f;
+        const float endTexel = 1.0f - halfTexel;
+        const int32_t count = this->tiles.Count() * 4 * 2;
+        theTexCoords.reserve(count);
+        theVertCoords.reserve(count);
+        for (SIZE_T i = 0; i < this->tiles.Count(); i++) {
+            theTexCoords.push_back(halfTexel);
+            theTexCoords.push_back(remoteness ? halfTexel : endTexel);
+            theVertCoords.push_back(this->tiles[i].First().Left());
+            theVertCoords.push_back(this->tiles[i].First().Top());
+            theTexCoords.push_back(endTexel);
+            theTexCoords.push_back(remoteness ? halfTexel : endTexel);
+            theVertCoords.push_back(this->tiles[i].First().Right());
+            theVertCoords.push_back(this->tiles[i].First().Top());
+            theTexCoords.push_back(halfTexel);
+            theTexCoords.push_back(remoteness ? endTexel : halfTexel);
+            theVertCoords.push_back(this->tiles[i].First().Left());
+            theVertCoords.push_back(this->tiles[i].First().Bottom());
+            theTexCoords.push_back(endTexel);
+            theTexCoords.push_back(remoteness ? endTexel : halfTexel);
+            theVertCoords.push_back(this->tiles[i].First().Right());
+            theVertCoords.push_back(this->tiles[i].First().Bottom());
+        }
+        ::glBindVertexArray(this->theVAO);
+        ::glBindBuffer(GL_ARRAY_BUFFER, this->theVertBuffer);
+        ::glBufferData(GL_ARRAY_BUFFER, theVertCoords.size() * sizeof(GLfloat), theVertCoords.data(), GL_STATIC_DRAW);
+        ::glEnableVertexAttribArray(0);
+        ::glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
+        ::glBindBuffer(GL_ARRAY_BUFFER, this->theTexCoordBuffer);
+        ::glBufferData(GL_ARRAY_BUFFER, theTexCoords.size() * sizeof(GLfloat), theTexCoords.data(), GL_STATIC_DRAW);
+        ::glEnableVertexAttribArray(1);
+        ::glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
+        ::glBindVertexArray(0);
+        buffers_initialized = true;
+    }
+
     // param::ParamSlot *filenameSlot = rightEye ? (&this->rightFilenameSlot) : (&this->leftFilenameSlot);
     ::glEnable(GL_TEXTURE_2D);
     if (!assertImage(rightEye)) return false;
@@ -449,34 +571,32 @@ bool imageviewer2::ImageViewer::Render(Call& call) {
     ::glDisable(GL_LIGHTING);
     ::glEnable(GL_DEPTH_TEST);
     ::glLineWidth(1.0f);
-    ::glDisable(GL_LINE_SMOOTH);
+    ::glBindVertexArray(this->theVAO);
 
-    ::glColor3ub(255, 255, 255);
+    this->theShader.Enable();
+    glUniformMatrix4fv(theShader.ParameterLocation("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
+    glActiveTexture(GL_TEXTURE0);
+    glUniform1i(theShader.ParameterLocation("texSampler"), 0);
+
     for (SIZE_T i = 0; i < this->tiles.Count(); i++) {
         this->tiles[i].Second()->Bind();
-        ::glBegin(GL_QUADS);
-        ::glTexCoord2i(0, remoteness ? 1 : 0);
-        ::glVertex2f(this->tiles[i].First().Left(), this->tiles[i].First().Bottom());
-        ::glTexCoord2i(0, remoteness ? 0 : 1);
-        ::glVertex2f(this->tiles[i].First().Left(), this->tiles[i].First().Top());
-        ::glTexCoord2i(1, remoteness ? 0 : 1);
-        ::glVertex2f(this->tiles[i].First().Right(), this->tiles[i].First().Top());
-        ::glTexCoord2i(1, remoteness ? 1 : 0);
-        ::glVertex2f(this->tiles[i].First().Right(), this->tiles[i].First().Bottom());
-        ::glEnd();
+        ::glDrawArrays(GL_TRIANGLE_STRIP, i * 4, 4);
     }
-    ::glBindTexture(GL_TEXTURE_2D, 0);
+    this->theShader.Disable();
 
+    ::glBindVertexArray(0);
+    ::glBindTexture(GL_TEXTURE_2D, 0);
     ::glDisable(GL_TEXTURE_2D);
+    ::glDisable(GL_DEPTH_TEST);
 
     return true;
 }
 
 
 /*
- * imageviewer2::ImageViewer::onFilesPasted
+ * imageviewer2::ImageRenderer::onFilesPasted
  */
-bool imageviewer2::ImageViewer::onFilesPasted(param::ParamSlot& slot) {
+bool imageviewer2::ImageRenderer::onFilesPasted(param::ParamSlot& slot) {
     vislib::TString str(this->pasteFilenamesSlot.Param<param::StringParam>()->Value());
     vislib::TString left, right;
     str.Replace(_T("\r"), _T(""));
@@ -488,9 +608,9 @@ bool imageviewer2::ImageViewer::onFilesPasted(param::ParamSlot& slot) {
 
 
 /*
- * imageviewer2::ImageViewer::interpretLine
+ * imageviewer2::ImageRenderer::interpretLine
  */
-void imageviewer2::ImageViewer::interpretLine(
+void imageviewer2::ImageRenderer::interpretLine(
     const vislib::TString source, vislib::TString& left, vislib::TString& right) {
     vislib::TString line(source);
     line.Replace(_T("\n"), _T(""));
@@ -510,9 +630,9 @@ void imageviewer2::ImageViewer::interpretLine(
 }
 
 /*
- * imageviewer2::ImageViewer::onSlideshowPasted
+ * imageviewer2::ImageRenderer::onSlideshowPasted
  */
-bool imageviewer2::ImageViewer::onSlideshowPasted(param::ParamSlot& slot) {
+bool imageviewer2::ImageRenderer::onSlideshowPasted(param::ParamSlot& slot) {
     vislib::TString left, right;
     this->leftFiles.Clear();
     this->rightFiles.Clear();
@@ -538,45 +658,45 @@ bool imageviewer2::ImageViewer::onSlideshowPasted(param::ParamSlot& slot) {
 }
 
 /*
- * imageviewer2::ImageViewer::onFirstPressed
+ * imageviewer2::ImageRenderer::onFirstPressed
  */
-bool imageviewer2::ImageViewer::onFirstPressed(param::ParamSlot& slot) {
+bool imageviewer2::ImageRenderer::onFirstPressed(param::ParamSlot& slot) {
     this->currentSlot.Param<param::IntParam>()->SetValue(0);
     return true;
 }
 
 
 /*
- * imageviewer2::ImageViewer::onPreviousPressed
+ * imageviewer2::ImageRenderer::onPreviousPressed
  */
-bool imageviewer2::ImageViewer::onPreviousPressed(param::ParamSlot& slot) {
+bool imageviewer2::ImageRenderer::onPreviousPressed(param::ParamSlot& slot) {
     this->currentSlot.Param<param::IntParam>()->SetValue(this->currentSlot.Param<param::IntParam>()->Value() - 1);
     return true;
 }
 
 
 /*
- * imageviewer2::ImageViewer::onNextPressed
+ * imageviewer2::ImageRenderer::onNextPressed
  */
-bool imageviewer2::ImageViewer::onNextPressed(param::ParamSlot& slot) {
+bool imageviewer2::ImageRenderer::onNextPressed(param::ParamSlot& slot) {
     this->currentSlot.Param<param::IntParam>()->SetValue(this->currentSlot.Param<param::IntParam>()->Value() + 1);
     return true;
 }
 
 
 /*
- * imageviewer2::ImageViewer::onLastPressed
+ * imageviewer2::ImageRenderer::onLastPressed
  */
-bool imageviewer2::ImageViewer::onLastPressed(param::ParamSlot& slot) {
+bool imageviewer2::ImageRenderer::onLastPressed(param::ParamSlot& slot) {
     this->currentSlot.Param<param::IntParam>()->SetValue(this->leftFiles.Count() - 1);
     return true;
 }
 
 
 /*
- * imageviewer2::ImageViewer::onCurrentSet
+ * imageviewer2::ImageRenderer::onCurrentSet
  */
-bool imageviewer2::ImageViewer::onCurrentSet(param::ParamSlot& slot) {
+bool imageviewer2::ImageRenderer::onCurrentSet(param::ParamSlot& slot) {
     int s = slot.Param<param::IntParam>()->Value();
     if (s > -1 && s < this->leftFiles.Count()) {
         this->leftFilenameSlot.Param<param::FilePathParam>()->SetValue(leftFiles[s]);
@@ -589,9 +709,9 @@ bool imageviewer2::ImageViewer::onCurrentSet(param::ParamSlot& slot) {
 
 
 /*
- * imageviewer2::ImageViewer::onBlankMachineSet
+ * imageviewer2::ImageRenderer::onBlankMachineSet
  */
-bool imageviewer2::ImageViewer::onBlankMachineSet(param::ParamSlot& slot) {
+bool imageviewer2::ImageRenderer::onBlankMachineSet(param::ParamSlot& slot) {
     vislib::TString str(this->blankMachine.Param<param::StringParam>()->Value());
     vislib::TString::Size startPos = 0;
     vislib::TString::Size pos = str.Find(_T(";"), startPos);

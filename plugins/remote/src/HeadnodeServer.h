@@ -14,7 +14,7 @@
 #include "FBOCommFabric.h"
 
 namespace megamol {
-namespace pbs {
+namespace remote {
 
 class HeadnodeServer : public core::Module, public core::job::AbstractJob, public core::param::ParamUpdateListener {
 public:
@@ -120,5 +120,5 @@ private:
 
 }; // end class HeadnodeServer
 
-} // end namespace pbs
+} // end namespace remote
 } // end namespace megamol
