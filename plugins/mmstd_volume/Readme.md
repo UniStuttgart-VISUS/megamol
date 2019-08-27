@@ -1,4 +1,4 @@
-## Volume
+# Volume
 This plugin provides basic volume rendering functionality.
 
 ## Build
@@ -18,6 +18,12 @@ The renderer provides the following input slots:
 | lights              | `CallLight`               | Light sources for the illumination of the scene            | ignored  |
 | getData             | `VolumetricDataCall`      | Data source, providing a 3D volume                         |          |
 | getTransferFunction | `CallGetTransferFunction` | Transfer function to map volume to color and transparency  |          |
+
+The renderer provides the following output slots:
+
+| Slot                | Type                      | Description                                                | Remark   |
+|---------------------|---------------------------|------------------------------------------------------------|----------|
+| rendering           | `CallRender3D`            | Connection to another renderer or a view                   |          |
 
 The renderer provides the following parameters:
 
