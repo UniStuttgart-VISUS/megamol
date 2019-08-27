@@ -11,7 +11,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
 
   # Check option dependencies: First list item is always the current build option,
   # afterwards list the dependencies.
-  set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE BUILD_OSPRAY_PLUGIN BUILD_IMAGE_CALLS_PLUGIN" CACHE INTERNAL "")
+  set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE BUILD_IMAGE_CALLS_PLUGIN" CACHE INTERNAL "")
 
   if(WIN32)
     set(SNAPPY_IMPORT_LIB "lib/snappy.lib")
@@ -91,7 +91,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   target_include_directories(${PROJECT_NAME}
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     PUBLIC "include" "src")
-  target_link_libraries(${PROJECT_NAME} PRIVATE core OSPRay_plugin image_calls glm zfp libzmq libcppzmq snappy)
+  target_link_libraries(${PROJECT_NAME} PRIVATE core image_calls glm libzmq libcppzmq snappy)
   if(MPI_C_FOUND)
     target_link_libraries(${PROJECT_NAME} PRIVATE IceTCore IceTGL IceTMPI)
   endif()
