@@ -16,13 +16,13 @@ This plugin is switched on by default.
 
 ### BuckyBall
 
-Small generator for an example dataset of an icosahedron nested inside a sphere.
+Small generator for an example volume dataset of an icosahedron nested inside a sphere.
 
 The module provides the following output slots:
 
 | Slot                | Type                      | Description                                                | Remark   |
 |---------------------|---------------------------|------------------------------------------------------------|----------|
-| getData             | `CallVolumeData`          | Provides the generated example data                        |          |
+| getData             | `VolumetricDataCall`      | Provides the generated example data                        |          |
 
 ### DatRawWriter
 
