@@ -14,6 +14,8 @@ if(BUILD_MMSTD_VOLUME_PLUGIN)
   # afterwards list the dependencies.
   set(DEP_LIST "${DEP_LIST};BUILD_MMSTD_VOLUME_PLUGIN BUILD_CORE" CACHE INTERNAL "")
 
+  require_external(glowl)
+
   add_subdirectory(datraw)
 
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
@@ -27,7 +29,7 @@ if(BUILD_MMSTD_VOLUME_PLUGIN)
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src")
-  target_link_libraries(${PROJECT_NAME} PRIVATE core datraw)
+  target_link_libraries(${PROJECT_NAME} PRIVATE core datraw glowl)
 
   # Installation rules for generated files
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
