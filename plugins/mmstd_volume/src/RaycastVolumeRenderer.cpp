@@ -143,7 +143,9 @@ bool RaycastVolumeRenderer::GetExtents(megamol::core::view::CallRender3D_2& cr) 
 
 bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3D_2& cr) {
     if (!updateVolumeData()) return false;
-    if (!updateTransferFunction()) return false;
+
+	auto ct = this->m_transferFunction_callerSlot.CallAs<core::view::CallGetTransferFunction>();
+	if (ct == nullptr || !(*ct)()) return false;
 
 	// get camera
 	core::view::Camera_2 cam;
@@ -183,7 +185,7 @@ bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3D_2& cr) {
         std::max(m_volume_resolution[0], std::max(m_volume_resolution[1], m_volume_resolution[2]));
     auto const maxExtents = std::max(m_volume_extents[0], std::max(m_volume_extents[1], m_volume_extents[2]));
     glUniform1f(m_raycast_volume_compute_shdr->ParameterLocation("voxelSize"), maxExtents / (maxResolution - 1.0f));
-    glUniform2fv(m_raycast_volume_compute_shdr->ParameterLocation("valRange"), 1, valRange.data());
+    glUniform2fv(m_raycast_volume_compute_shdr->ParameterLocation("valRange"), 1, this->valRange.data());
     glUniform1f(m_raycast_volume_compute_shdr->ParameterLocation("rayStepRatio"),
         this->m_ray_step_ratio_param.Param<core::param::FloatParam>()->Value());
     glUniform1f(m_raycast_volume_compute_shdr->ParameterLocation("opacityThreshold"), 1.0);
@@ -193,9 +195,7 @@ bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3D_2& cr) {
     m_volume_texture->bindTexture();
     glUniform1i(m_raycast_volume_compute_shdr->ParameterLocation("volume_tx3D"), 0);
     // bind the transfer function
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_1D, this->tf_texture);
-    glUniform1i(m_raycast_volume_compute_shdr->ParameterLocation("tf_tx1D"), 1);
+	ct->BindConvenience(*m_raycast_volume_compute_shdr, GL_TEXTURE1, 1);
 
     // bind image texture
     m_render_target->bindImage(0, GL_WRITE_ONLY);
@@ -360,14 +360,4 @@ bool RaycastVolumeRenderer::updateVolumeData() {
     m_volume_texture->reload(volume_layout, volumedata);
 
 	return true;
-}
-
-bool RaycastVolumeRenderer::updateTransferFunction() {
-    auto ct = this->m_transferFunction_callerSlot.CallAs<core::view::CallGetTransferFunction>();
-    
-    if (ct != NULL && ((*ct)())) {
-        this->tf_texture = ct->OpenGLTexture();
-    }
-
-    return true;
 }
