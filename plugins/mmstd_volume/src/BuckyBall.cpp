@@ -19,7 +19,7 @@
 megamol::stdplugin::volume::BuckyBall::BuckyBall(void)
 	: getDataSlot("getData", "Gets the data")
 	, resolution({ 64, 64, 64 })
-	, sliceDists({ 4.0f / resolution[0], 4.0f / resolution[1], 4.0f / resolution[2] })
+	, sliceDists({ 4.0f / (resolution[0] - 1), 4.0f / (resolution[1] - 1), 4.0f / (resolution[2] - 1) })
 	, minValue(0.0f)
 	, maxValue(1.0f) {
 
@@ -170,7 +170,9 @@ bool megamol::stdplugin::volume::BuckyBall::getDataCallback(core::Call& caller) 
 	this->metaData.ScalarType = core::misc::ScalarType_t::FLOATING_POINT;
 	this->metaData.ScalarLength = sizeof(float);
 	this->metaData.Components = 1;
-	this->metaData.SliceDists[0] = const_cast<float*>(this->sliceDists.data());
+	this->metaData.SliceDists[0] = const_cast<float*>(&this->sliceDists[0]);
+	this->metaData.SliceDists[1] = const_cast<float*>(&this->sliceDists[1]);
+	this->metaData.SliceDists[2] = const_cast<float*>(&this->sliceDists[2]);
 	this->metaData.Origin[0] = -2.0f;
 	this->metaData.Origin[1] = -2.0f;
 	this->metaData.Origin[2] = -2.0f;
