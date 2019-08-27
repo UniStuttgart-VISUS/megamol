@@ -9,21 +9,23 @@
 
 #include "Keyframe.h"
 
+
 using namespace megamol::cinematic;
+
 
 Keyframe::Keyframe() :
     animTime(0.0f),
     simTime(0.0f),
-    camera()
-{
-    this->camera.position      = vislib::math::Point<float, 3>(1.0f, 0.0f, 0.0f);
-    this->camera.lookat        = vislib::math::Point<float, 3>(0.0f, 0.0f, 0.0f);
-    this->camera.up            = vislib::math::Vector<float, 3>(0.0f, 1.0f, 0.0f);
+    camera() {
+
+    this->camera.position      = glm::vec3(1.0f, 0.0f, 0.0f);
+    this->camera.lookat        = glm::vec3(0.0f, 0.0f, 0.0f);
+    this->camera.up            = glm::vec3(0.0f, 1.0f, 0.0f);
     this->camera.apertureangle = 30.0f;
 }
 
 
-Keyframe::Keyframe(float at, float st, vislib::math::Point<float, 3> pos, vislib::math::Vector<float, 3> up, vislib::math::Point<float, 3> lookat, float aperture) : 
+Keyframe::Keyframe(float at, float st, glm::vec3 pos, glm::vec3 up, glm::vec3 lookat, float aperture) : 
     animTime(at),
     simTime(st),
     camera() 
@@ -46,15 +48,15 @@ void Keyframe::Serialise(vislib::Serialiser& serialiser) {
     serialiser.Serialise((float)this->animTime, "AnimationTime");
     serialiser.Serialise((float)this->simTime, "SimulationTime");
     serialiser.Serialise((float)this->camera.apertureangle, "ApertureAngle");
-    serialiser.Serialise((float)this->camera.position.X(), "PositionX");
-    serialiser.Serialise((float)this->camera.position.Y(), "PositionY");
-    serialiser.Serialise((float)this->camera.position.Z(), "PositionZ");
-    serialiser.Serialise((float)this->camera.lookat.X(), "LookAtX");
-    serialiser.Serialise((float)this->camera.lookat.Y(), "LookAtY");
-    serialiser.Serialise((float)this->camera.lookat.Z(), "LookAtZ");
-    serialiser.Serialise((float)this->camera.up.X(), "UpX");
-    serialiser.Serialise((float)this->camera.up.Y(), "UpY");
-    serialiser.Serialise((float)this->camera.up.Z(), "UpZ");
+    serialiser.Serialise((float)this->camera.position.x, "PositionX");
+    serialiser.Serialise((float)this->camera.position.y, "PositionY");
+    serialiser.Serialise((float)this->camera.position.z, "PositionZ");
+    serialiser.Serialise((float)this->camera.lookat.x, "LookAtX");
+    serialiser.Serialise((float)this->camera.lookat.y, "LookAtY");
+    serialiser.Serialise((float)this->camera.lookat.z, "LookAtZ");
+    serialiser.Serialise((float)this->camera.up.x, "UpX");
+    serialiser.Serialise((float)this->camera.up.y, "UpY");
+    serialiser.Serialise((float)this->camera.up.z, "UpZ");
 }
 
 
@@ -76,7 +78,7 @@ void Keyframe::Deserialise(vislib::Serialiser& serialiser) {
     this->animTime = f0;
     this->simTime = f1;
     this->camera.apertureangle = f2;
-    this->camera.position = vislib::math::Point<float, 3>(f3, f4, f5);
-    this->camera.lookat = vislib::math::Point<float, 3>(f6, f7, f8);
-    this->camera.up = vislib::math::Vector<float, 3>(f9, f10, f11);
+    this->camera.position = glm::vec3(f3, f4, f5);
+    this->camera.lookat = glm::vec3(f6, f7, f8);
+    this->camera.up = glm::vec3(f9, f10, f11);
 }
