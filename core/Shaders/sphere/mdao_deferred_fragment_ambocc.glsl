@@ -1,13 +1,3 @@
-uniform sampler3D inDensityTex;
-uniform float inAmbVolShortestEdge;
-uniform float inAmbVolMaxLod;
-uniform float inAOOffset;
-uniform float inAOStrength;
-uniform float inAOConeLength;
-
-uniform vec3 inBoundsMin;
-uniform vec3 inBoundsSize;
-
 
 // Find a perpendicular vector to v
 vec3 perp(vec3 v)
