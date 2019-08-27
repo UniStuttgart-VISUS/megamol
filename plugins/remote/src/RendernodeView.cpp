@@ -23,7 +23,7 @@ megamol::remote::RendernodeView::RendernodeView()
     , sync_data_slot_("syncData", "Requests synchronization of data sources in the MPI world.")
     , BCastRankSlot_("BCastRank", "Set which MPI rank is the broadcast master")
     , address_slot_("address", "Address of headnode in ZMQ syntax (e.g. \"tcp://127.0.0.1:33333\")")
-    , recv_comm_(std::make_unique<ZMQCommFabric>(zmq::socket_type::req))
+    , recv_comm_(std::make_unique<ZMQCommFabric>(zmq::socket_type::pull))
     , run_threads(false)
 #ifdef WITH_MPI
     , comm_(MPI_COMM_NULL)
@@ -96,7 +96,7 @@ bool megamol::remote::RendernodeView::process_msgs(Message_t const& msgs) {
         } break;
         case MessageType::CAM_UPD_MSG: {
 
-            if (std::distance(ibegin, iend) > MessageHeaderSize) {
+            /*if (std::distance(ibegin, iend) > MessageHeaderSize) {
                 std::copy(ibegin + MessageTypeSize, ibegin + MessageHeaderSize, reinterpret_cast<char*>(&size));
             }
             Message_t msg;
@@ -110,7 +110,7 @@ bool megamol::remote::RendernodeView::process_msgs(Message_t const& msgs) {
                 view->DeserialiseCamera(ser);
             } else {
                 vislib::sys::Log::DefaultLog.WriteError("RendernodeView: Cannot update camera. No view connected.");
-            }
+            }*/
         } break;
         case MessageType::HEAD_DISC_MSG:
         case MessageType::NULL_MSG:
