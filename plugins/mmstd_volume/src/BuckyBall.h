@@ -1,8 +1,8 @@
 /*
  * BuckyBall.h
  *
- * Copyright (C) 2011 by Universitaet Stuttgart (VISUS). 
- * Alle Rechte vorbehalten.
+ * Copyright (C) 2011-2019 by Universitaet Stuttgart (VISUS).
+ * All rights reserved.
  */
 
 #ifndef MMSTD_VOLUME_BUCKYBALL_H_INCLUDED
@@ -13,19 +13,20 @@
 
 #include "mmcore/Module.h"
 #include "mmcore/CalleeSlot.h"
+#include "mmcore/misc/VolumetricDataCall.h"
 
+#include <array>
+#include <vector>
 
 namespace megamol {
 namespace stdplugin {
 namespace volume {
-
 
     /**
      * Class generation buck ball informations
      */
     class BuckyBall : public core::Module {
     public:
-
         /**
          * Answer the name of this module.
          *
@@ -41,7 +42,7 @@ namespace volume {
          * @return A human readable description of this module.
          */
         static const char *Description(void) {
-            return "Generated Bucky Ball data.";
+            return "Generates a dataset of an icosahedron inside a sphere.";
         }
 
         /**
@@ -60,7 +61,6 @@ namespace volume {
         virtual ~BuckyBall(void);
 
     protected:
-
         /**
          * Implementation of 'Create'.
          *
@@ -74,34 +74,30 @@ namespace volume {
         virtual void release(void);
 
     private:
-
         /**
-         * Gets the data from the source.
+         * Gets the data or extent from the source.
          *
          * @param caller The calling call.
          *
          * @return 'true' on success, 'false' on failure.
          */
         bool getDataCallback(core::Call& caller);
-
-        /**
-         * Gets the data from the source.
-         *
-         * @param caller The calling call.
-         *
-         * @return 'true' on success, 'false' on failure.
-         */
         bool getExtentCallback(core::Call& caller);
+		bool getDummyCallback(core::Call& caller);
 
         /** The slot for requesting data */
         core::CalleeSlot getDataSlot;
 
-        /** The distance volume resolution */
-        unsigned int volRes;
-
         /** The distance volume */
-        float *vol;
+        std::vector<float> volume;
 
+		/** Metadata */
+		const std::array<float, 3> resolution;
+		const std::array<float, 3> sliceDists;
+		const double minValue;
+		const double maxValue;
+
+		core::misc::VolumetricMetadata_t metaData;
     };
 
 } /* end namespace volume */
