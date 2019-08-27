@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "imageviewer2/ImageViewer.h"
+#include "imageviewer2/ImageRenderer.h"
 #include "imageviewer2/JpegBitmapCodec.h"
 #include "mmcore/misc/PngBitmapCodec.h"
 #include "vislib/graphics/BitmapCodecCollection.h"
