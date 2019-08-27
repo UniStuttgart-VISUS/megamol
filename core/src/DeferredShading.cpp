@@ -1,4 +1,4 @@
-#include "..\include\mmcore\DeferredShading.h"
+#include "../include/mmcore/DeferredShading.h"
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/FilePathParam.h"
