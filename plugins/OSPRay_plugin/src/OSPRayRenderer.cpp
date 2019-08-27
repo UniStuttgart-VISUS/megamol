@@ -423,11 +423,8 @@ void OSPRayRenderer::getOpenGLDepthFromOSPPerspective(float* db) {
     const float zNear = cam.near_clipping_plane();
     const float zFar = cam.far_clipping_plane();
 
-	const auto up = cam.up_vector();
-    const auto dir = cam.view_vector();
-
-    const ospcommon::vec3f cameraUp(up.x(), up.y(), up.z());
-    const ospcommon::vec3f cameraDir(dir[0], dir[1], dir[2]);
+    const ospcommon::vec3f cameraUp(cam.up_vector().x(), cam.up_vector().y(), cam.up_vector().z());
+    const ospcommon::vec3f cameraDir(cam.view_vector().x(), cam.view_vector().y(), cam.view_vector().z());
 
     // map OSPRay depth buffer from provided frame buffer
     const float* ospDepthBuffer = (const float*)ospMapFrameBuffer(this->framebuffer, OSP_FB_DEPTH);
