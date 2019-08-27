@@ -32,7 +32,7 @@
 
 //#define _DEBUG 1
 
-megamol::pbs::FBOTransmitter2::FBOTransmitter2()
+megamol::remote::FBOTransmitter2::FBOTransmitter2()
     : address_slot_{"port", "The port the transmitter should connect to"}
     , commSelectSlot_{"communicator", "Select the communicator to use"}
     , view_name_slot_{"view", "The name of the view instance to be used (required)"}
@@ -97,10 +97,10 @@ megamol::pbs::FBOTransmitter2::FBOTransmitter2()
 }
 
 
-megamol::pbs::FBOTransmitter2::~FBOTransmitter2() { this->Release(); }
+megamol::remote::FBOTransmitter2::~FBOTransmitter2() { this->Release(); }
 
 
-bool megamol::pbs::FBOTransmitter2::create() {
+bool megamol::remote::FBOTransmitter2::create() {
 #if _DEBUG
     vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Creating ...\n");
 #endif
@@ -108,10 +108,10 @@ bool megamol::pbs::FBOTransmitter2::create() {
 }
 
 
-void megamol::pbs::FBOTransmitter2::release() { shutdownThreads(); }
+void megamol::remote::FBOTransmitter2::release() { shutdownThreads(); }
 
 
-void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractView* view) {
+void megamol::remote::FBOTransmitter2::AfterRender(megamol::core::view::AbstractView* view) {
     if (!this->render_comp_img_slot_.Param<core::param::BoolParam>()->Value()) {
         initThreads();
 #if _DEBUG
@@ -279,7 +279,7 @@ void megamol::pbs::FBOTransmitter2::AfterRender(megamol::core::view::AbstractVie
 }
 
 
-void megamol::pbs::FBOTransmitter2::transmitterJob() {
+void megamol::remote::FBOTransmitter2::transmitterJob() {
     try {
         while (!this->thread_stop_) {
             // transmit only upon request
@@ -395,7 +395,7 @@ void megamol::pbs::FBOTransmitter2::transmitterJob() {
 }
 
 
-bool megamol::pbs::FBOTransmitter2::triggerButtonClicked(megamol::core::param::ParamSlot& slot) {
+bool megamol::remote::FBOTransmitter2::triggerButtonClicked(megamol::core::param::ParamSlot& slot) {
     // happy trigger finger hit button action happened
     using vislib::sys::Log;
 
@@ -420,7 +420,7 @@ bool megamol::pbs::FBOTransmitter2::triggerButtonClicked(megamol::core::param::P
 }
 
 
-bool megamol::pbs::FBOTransmitter2::extractMetaData(float bbox[6], float frame_times[2], float cam_params[9]) {
+bool megamol::remote::FBOTransmitter2::extractMetaData(float bbox[6], float frame_times[2], float cam_params[9]) {
     using vislib::sys::Log;
 
     bool success = true;
@@ -480,7 +480,7 @@ bool megamol::pbs::FBOTransmitter2::extractMetaData(float bbox[6], float frame_t
 }
 
 
-bool megamol::pbs::FBOTransmitter2::extractViewport(int vvpt[6]) {
+bool megamol::remote::FBOTransmitter2::extractViewport(int vvpt[6]) {
     using vislib::sys::Log;
 
     bool success = true;
@@ -518,7 +518,7 @@ bool megamol::pbs::FBOTransmitter2::extractViewport(int vvpt[6]) {
 }
 
 
-bool megamol::pbs::FBOTransmitter2::extractBkgndColor(std::array<float, 4>& bkgnd_color) {
+bool megamol::remote::FBOTransmitter2::extractBkgndColor(std::array<float, 4>& bkgnd_color) {
     using vislib::sys::Log;
 
     bool success = true;
@@ -551,7 +551,7 @@ bool megamol::pbs::FBOTransmitter2::extractBkgndColor(std::array<float, 4>& bkgn
 }
 
 
-bool megamol::pbs::FBOTransmitter2::initMPI() {
+bool megamol::remote::FBOTransmitter2::initMPI() {
     bool retval = false;
 #ifdef WITH_MPI
     if (this->mpi_comm_ == MPI_COMM_NULL) {
@@ -589,7 +589,7 @@ bool megamol::pbs::FBOTransmitter2::initMPI() {
 }
 
 
-bool megamol::pbs::FBOTransmitter2::reconnectCallback(megamol::core::param::ParamSlot& p) {
+bool megamol::remote::FBOTransmitter2::reconnectCallback(megamol::core::param::ParamSlot& p) {
     shutdownThreads();
     initThreads();
 
@@ -597,7 +597,7 @@ bool megamol::pbs::FBOTransmitter2::reconnectCallback(megamol::core::param::Para
 }
 
 
-bool megamol::pbs::FBOTransmitter2::initThreads() {
+bool megamol::remote::FBOTransmitter2::initThreads() {
     if (!connected_) {
 #ifdef _DEBUG
         vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Connecting ...\n");
@@ -708,7 +708,7 @@ bool megamol::pbs::FBOTransmitter2::initThreads() {
 }
 
 
-bool megamol::pbs::FBOTransmitter2::shutdownThreads() {
+bool megamol::remote::FBOTransmitter2::shutdownThreads() {
     this->thread_stop_ = true;
     // shutdown_ = true;
 
@@ -725,7 +725,7 @@ bool megamol::pbs::FBOTransmitter2::shutdownThreads() {
     return true;
 }
 
-bool megamol::pbs::FBOTransmitter2::renderCompChanged(core::param::ParamSlot& slot) {
+bool megamol::remote::FBOTransmitter2::renderCompChanged(core::param::ParamSlot& slot) {
     using vislib::sys::Log;
 
     initIceT();
@@ -747,7 +747,7 @@ bool megamol::pbs::FBOTransmitter2::renderCompChanged(core::param::ParamSlot& sl
     return true;
 }
 
-void megamol::pbs::FBOTransmitter2::initIceT() {
+void megamol::remote::FBOTransmitter2::initIceT() {
     useMpi = initMPI();
     aggregate_ = this->toggle_aggregate_slot_.Param<megamol::core::param::BoolParam>()->Value();
     if (aggregate_ && !useMpi) {

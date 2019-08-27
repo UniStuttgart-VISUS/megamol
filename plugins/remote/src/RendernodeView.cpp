@@ -18,7 +18,7 @@
 //#define RV_DEBUG_OUTPUT = 1
 
 
-megamol::pbs::RendernodeView::RendernodeView()
+megamol::remote::RendernodeView::RendernodeView()
     : request_mpi_slot_("requestMPI", "Requests initialization of MPI and the communicator for the view.")
     , sync_data_slot_("syncData", "Requests synchronization of data sources in the MPI world.")
     , BCastRankSlot_("BCastRank", "Set which MPI rank is the broadcast master")
@@ -51,16 +51,16 @@ megamol::pbs::RendernodeView::RendernodeView()
 }
 
 
-megamol::pbs::RendernodeView::~RendernodeView() { this->Release(); }
+megamol::remote::RendernodeView::~RendernodeView() { this->Release(); }
 
 
-void megamol::pbs::RendernodeView::release(void) { shutdown_threads(); }
+void megamol::remote::RendernodeView::release(void) { shutdown_threads(); }
 
 
-bool megamol::pbs::RendernodeView::create(void) { return true; }
+bool megamol::remote::RendernodeView::create(void) { return true; }
 
 
-bool megamol::pbs::RendernodeView::process_msgs(Message_t const& msgs) {
+bool megamol::remote::RendernodeView::process_msgs(Message_t const& msgs) {
     auto ibegin = msgs.cbegin();
     auto const iend = msgs.cend();
 
@@ -125,7 +125,7 @@ bool megamol::pbs::RendernodeView::process_msgs(Message_t const& msgs) {
 }
 
 
-void megamol::pbs::RendernodeView::Render(const mmcRenderViewContext& context) {
+void megamol::remote::RendernodeView::Render(const mmcRenderViewContext& context) {
 #ifdef WITH_MPI
     this->initMPI();
     // 0 time, 1 instanceTime
@@ -236,7 +236,25 @@ void megamol::pbs::RendernodeView::Render(const mmcRenderViewContext& context) {
 }
 
 
-void megamol::pbs::RendernodeView::recv_loop() {
+bool megamol::remote::RendernodeView::OnRenderView(core::Call& call) {
+    auto crv = dynamic_cast<core::view::CallRenderView*>(&call);
+    if (crv == nullptr) return false;
+    auto overrideCall = dynamic_cast<core::view::AbstractCallRender*>(&call);
+
+    float time = crv->Time();
+    if (time < 0.0f) time = this->DefaultTime(crv->InstanceTime());
+    mmcRenderViewContext context;
+    ::ZeroMemory(&context, sizeof(context));
+    context.Time = time;
+    context.InstanceTime = crv->InstanceTime();
+
+    this->Render(context);
+
+	return true;
+}
+
+
+void megamol::remote::RendernodeView::recv_loop() {
     using namespace std::chrono_literals;
     vislib::sys::Log::DefaultLog.WriteInfo("RendernodeView: Starting recv_loop.");
     try {
@@ -288,7 +306,7 @@ void megamol::pbs::RendernodeView::recv_loop() {
 }
 
 
-bool megamol::pbs::RendernodeView::shutdown_threads() {
+bool megamol::remote::RendernodeView::shutdown_threads() {
     run_threads = false;
     if (receiver_thread_.joinable()) {
         receiver_thread_.join();
@@ -298,7 +316,7 @@ bool megamol::pbs::RendernodeView::shutdown_threads() {
 }
 
 
-bool megamol::pbs::RendernodeView::init_threads() {
+bool megamol::remote::RendernodeView::init_threads() {
     shutdown_threads();
     this->recv_comm_ = FBOCommFabric(std::make_unique<ZMQCommFabric>(zmq::socket_type::req));
     auto const address = std::string(this->address_slot_.Param<core::param::StringParam>()->Value());
@@ -310,7 +328,7 @@ bool megamol::pbs::RendernodeView::init_threads() {
 }
 
 
-bool megamol::pbs::RendernodeView::initMPI() {
+bool megamol::remote::RendernodeView::initMPI() {
     bool retval = false;
 
 #ifdef WITH_MPI

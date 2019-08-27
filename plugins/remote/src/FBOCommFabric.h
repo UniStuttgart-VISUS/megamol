@@ -8,7 +8,7 @@
 #include "zmq.hpp"
 
 namespace megamol {
-namespace pbs {
+namespace remote {
 
 enum send_type : unsigned int { ST_UNDEF = 0, BCAST, SCATTER, SEND, ISEND };
 
@@ -111,5 +111,5 @@ private:
     std::unique_ptr<AbstractCommFabric> pimpl_;
 };
 
-} // end namespace pbs
+} // end namespace remote
 } // end namespace megamol

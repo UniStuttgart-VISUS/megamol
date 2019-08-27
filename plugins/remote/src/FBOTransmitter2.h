@@ -23,7 +23,7 @@
 #endif // WITH_MPI
 
 namespace megamol {
-namespace pbs {
+namespace remote {
 
 class FBOTransmitter2 : public megamol::core::Module, public megamol::core::view::AbstractView::Hooks {
 public:
@@ -178,5 +178,5 @@ private:
     //bool shutdown_ = false;
 };
 
-} // end namespace pbs
+} // end namespace remote
 } // end namespace megamol

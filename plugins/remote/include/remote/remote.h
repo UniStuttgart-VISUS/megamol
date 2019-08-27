@@ -1,10 +1,10 @@
 /*
- * pbs.h
+ * remote.h
  * Copyright (C) 2009-2015 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
-#ifndef PBS_H_INCLUDED
-#define PBS_H_INCLUDED
+#ifndef REMOTE_H_INCLUDED
+#define REMOTE_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -17,18 +17,18 @@
 // that uses this DLL. This way any other project whose source files include this file see 
 // TRISOUPPLUGIN_API functions as being imported from a DLL, whereas this DLL sees symbols
 // defined with this macro as being exported.
-#ifdef PBS_EXPORTS
-#define PBS_API __declspec(dllexport)
+#ifdef REMOTE_EXPORTS
+#define REMOTE_API __declspec(dllexport)
 #else
-#define PBS_API __declspec(dllimport)
+#define REMOTE_API __declspec(dllimport)
 #endif
 #else /* _WIN32 */
-#define PBS_API
+#define REMOTE_API
 #endif /* _WIN32 */
 
 #include "mmcore/utility/plugins/Plugin200Instance.h"
 
-#ifdef PBS_EXPORTS
+#ifdef REMOTE_EXPORTS
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -38,7 +38,7 @@ extern "C" {
  *
  * @return 200 -- (ver.: 2.00)
  */
-PBS_API int mmplgPluginAPIVersion(void);
+REMOTE_API int mmplgPluginAPIVersion(void);
 
 /**
  * Provides compatibility information
@@ -51,7 +51,7 @@ PBS_API int mmplgPluginAPIVersion(void);
  * @remarks Always use 'mmplgReleasePluginCompatibilityInfo' to release the
  *          memory of the returned struct.
  */
-PBS_API
+REMOTE_API
 ::megamol::core::utility::plugins::PluginCompatibilityInfo *
 mmplgGetPluginCompatibilityInfo(
     ::megamol::core::utility::plugins::ErrorCallback onError);
@@ -62,7 +62,7 @@ mmplgGetPluginCompatibilityInfo(
  *
  * @param ci The compatibility information struct to be released
  */
-PBS_API void mmplgReleasePluginCompatibilityInfo(
+REMOTE_API void mmplgReleasePluginCompatibilityInfo(
     ::megamol::core::utility::plugins::PluginCompatibilityInfo* ci);
 
 /**
@@ -75,7 +75,7 @@ PBS_API void mmplgReleasePluginCompatibilityInfo(
  * @remarks Always use 'mmplgReleasePluginInstance' to release the memory of
  *          the returned object.
  */
-PBS_API
+REMOTE_API
 ::megamol::core::utility::plugins::AbstractPluginInstance*
 mmplgGetPluginInstance
     (::megamol::core::utility::plugins::ErrorCallback onError);
@@ -86,7 +86,7 @@ mmplgGetPluginInstance
  *
  * @param pi The plugin instance to be released
  */
-PBS_API void mmplgReleasePluginInstance(
+REMOTE_API void mmplgReleasePluginInstance(
     ::megamol::core::utility::plugins::AbstractPluginInstance* pi);
 
 #ifdef __cplusplus
@@ -94,4 +94,4 @@ PBS_API void mmplgReleasePluginInstance(
 #endif
 #endif
 
-#endif /* PBS_H_INCLUDED */
+#endif /* REMOTE_H_INCLUDED */

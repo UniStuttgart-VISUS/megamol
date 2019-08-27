@@ -22,7 +22,7 @@
 
 
 using namespace megamol;
-using namespace megamol::pbs;
+using namespace megamol::remote;
 
 
 CPERAWDataSource::CPERAWDataSource(void) : core::Module(),
