@@ -16,7 +16,7 @@ This plugin is switched on by default.
 
 ### BuckyBall
 
-Small example data generator for nested spheres, which can be used, e.g., in conjunction with the `RenderVolumeSlice` renderer.
+Small generator for an example dataset of an icosahedron nested inside a sphere.
 
 The module provides the following output slots:
 
