@@ -13,7 +13,7 @@
 #include "vislib/vislibversion.h"
 #include "vislib/sys/Log.h"
 #include "BuckyBall.h"
-#include "RenderVolumeSlice.h"
+#include "VolumeSliceRenderer.h"
 #include "VolumetricDataSource.h"
 #include "RaycastVolumeRenderer.h"
 #include "DatRawWriter.h"
@@ -69,7 +69,7 @@ MMSTD_VOLUME_API int mmplgModuleCount(void) {
 MMSTD_VOLUME_API void* mmplgModuleDescription(int idx) {
     switch (idx) {
     case 0: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::volume::BuckyBall>();
-    case 1: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::volume::RenderVolumeSlice>();
+    case 1: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::volume::VolumeSliceRenderer>();
 	case 2: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::volume::VolumetricDataSource>();
 	case 3: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::volume::RaycastVolumeRenderer>();
 	case 4: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::volume::DatRawWriter>();
