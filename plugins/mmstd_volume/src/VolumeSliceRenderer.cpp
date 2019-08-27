@@ -1,42 +1,44 @@
 /*
- * RenderVolumeSlice.cpp
+ * VolumeSliceRenderer.cpp
  *
- * Copyright (C) 2012 by Universitaet Stuttgart (VISUS). 
- * Alle Rechte vorbehalten.
+ * Copyright (C) 2012-2019 by Universitaet Stuttgart (VISUS).
+ * All rights reserved.
  */
 
 #include "stdafx.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
-#include "RenderVolumeSlice.h"
-#include "mmcore/CallVolumeData.h"
-#include "mmcore/param/StringParam.h"
-#include "mmcore/param/FloatParam.h"
-#include <climits>
-#include <cfloat>
-#include <cmath>
+#include "VolumeSliceRenderer.h"
+
+#include "mmcore/Call.h"
 #include "mmcore/CoreInstance.h"
+#include "mmcore/misc/VolumetricDataCall.h"
 #include "mmcore/view/CallClipPlane.h"
 #include "mmcore/view/CallGetTransferFunction.h"
-#include "mmcore/view/CallRender3D.h"
-#include "vislib/assert.h"
+#include "mmcore/view/CallRender3D_2.h"
+#include "mmcore/view/Renderer3DModule_2.h"
 
-using namespace megamol;
-using namespace megamol::stdplugin;
-using namespace megamol::stdplugin::volume;
+#include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib/graphics/gl/ShaderSource.h"
+#include "vislib/math/Plane.h"
+#include "vislib/math/Point.h"
+#include "vislib/sys/Log.h"
 
+#include "glowl/Texture.hpp"
+#include "glowl/Texture2D.hpp"
+#include "glowl/Texture3D.hpp"
+
+#include <array>
+#include <cmath>
 
 /*
- * RenderVolumeSlice::RenderVolumeSlice
+ * VolumeSliceRenderer::VolumeSliceRenderer
  */
-RenderVolumeSlice::RenderVolumeSlice(void) : Renderer3DModule(),
-        getVolSlot("getVol", "The call for data"),
-        getTFSlot("gettransferfunction", "The call for Transfer function"),
-        getClipPlaneSlot("getclipplane", "The call for clipping plane"),
-        attributeSlot("attr", "The attribute to show"),
-        lowValSlot("low", "The low value"),
-        highValSlot("high", "The high value") {
+megamol::stdplugin::volume::VolumeSliceRenderer::VolumeSliceRenderer(void)
+	: Renderer3DModule_2()
+	, getVolSlot("getVol", "The call for data")
+	, getTFSlot("gettransferfunction", "The call for Transfer function")
+	, getClipPlaneSlot("getclipplane", "The call for clipping plane") {
 
-    this->getVolSlot.SetCompatibleCall<core::CallVolumeDataDescription>();
+    this->getVolSlot.SetCompatibleCall<core::misc::VolumetricDataCallDescription>();
     this->MakeSlotAvailable(&this->getVolSlot);
 
     this->getTFSlot.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();
@@ -44,276 +46,270 @@ RenderVolumeSlice::RenderVolumeSlice(void) : Renderer3DModule(),
 
     this->getClipPlaneSlot.SetCompatibleCall<core::view::CallClipPlaneDescription>();
     this->MakeSlotAvailable(&this->getClipPlaneSlot);
-
-    this->attributeSlot << new core::param::StringParam("0");
-    this->MakeSlotAvailable(&this->attributeSlot);
-
-    this->lowValSlot << new core::param::FloatParam(0.0f);
-    this->MakeSlotAvailable(&this->lowValSlot);
-
-    this->highValSlot << new core::param::FloatParam(1.0f);
-    this->MakeSlotAvailable(&this->highValSlot);
-
 }
 
 
 /*
- * RenderVolumeSlice::RenderVolumeSlice
+ * VolumeSliceRenderer::VolumeSliceRenderer
  */
-RenderVolumeSlice::~RenderVolumeSlice(void) {
+megamol::stdplugin::volume::VolumeSliceRenderer::~VolumeSliceRenderer(void) {
     this->Release();
 }
 
 
 /*
- * RenderVolumeSlice::RenderVolumeSlice
+ * VolumeSliceRenderer::VolumeSliceRenderer
  */
-bool RenderVolumeSlice::create(void) {
-    // intentionally empty
+bool megamol::stdplugin::volume::VolumeSliceRenderer::create(void) {
+	try {
+		// create shader program
+		vislib::graphics::gl::ShaderSource compute_shader_src;
+		vislib::graphics::gl::ShaderSource vertex_shader_src;
+		vislib::graphics::gl::ShaderSource fragment_shader_src;
+
+		if (!instance()->ShaderSourceFactory().MakeShaderSource("VolumeSliceRenderer::compute", compute_shader_src))
+			return false;
+		if (!this->compute_shader.Compile(compute_shader_src.Code(), compute_shader_src.Count()))
+			return false;
+		if (!this->compute_shader.Link()) return false;
+
+		if (!instance()->ShaderSourceFactory().MakeShaderSource("VolumeSliceRenderer::vert", vertex_shader_src))
+			return false;
+		if (!instance()->ShaderSourceFactory().MakeShaderSource("VolumeSliceRenderer::frag", fragment_shader_src))
+			return false;
+		if (!this->render_shader.Compile(vertex_shader_src.Code(), vertex_shader_src.Count(),
+			fragment_shader_src.Code(), fragment_shader_src.Count()))
+			return false;
+		if (!this->render_shader.Link()) return false;
+	}
+	catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Unable to compile shader (@%s): %s\n",
+			vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
+			ce.GetMsgA());
+		return false;
+	}
+	catch (vislib::Exception e) {
+		vislib::sys::Log::DefaultLog.WriteMsg(
+			vislib::sys::Log::LEVEL_ERROR, "Unable to compile shader: %s\n", e.GetMsgA());
+		return false;
+	}
+	catch (...) {
+		vislib::sys::Log::DefaultLog.WriteMsg(
+			vislib::sys::Log::LEVEL_ERROR, "Unable to compile shader: Unknown exception\n");
+		return false;
+	}
+
     return true;
 }
 
 
 /*
- * RenderVolumeSlice::RenderVolumeSlice
+ * VolumeSliceRenderer::VolumeSliceRenderer
  */
-bool RenderVolumeSlice::GetExtents(core::Call& call) {
-    core::view::CallRender3D *cr = dynamic_cast<core::view::CallRender3D*>(&call);
-    if (cr == NULL) return false;
+bool megamol::stdplugin::volume::VolumeSliceRenderer::GetExtents(core::view::CallRender3D_2& cr) {
+    auto *vdc = this->getVolSlot.CallAs<core::misc::VolumetricDataCall>();
 
-    core::CallVolumeData *c2 = this->getVolSlot.CallAs<core::CallVolumeData>();
-    if ((c2 != NULL) && ((*c2)(1))) {
-        cr->SetTimeFramesCount(c2->FrameCount());
-        cr->AccessBoundingBoxes() = c2->AccessBoundingBoxes();
-        cr->AccessBoundingBoxes().MakeScaledWorld(1.0f);
+	vdc->SetFrameID(static_cast<unsigned int>(cr.Time()));
 
-    } else {
-        cr->SetTimeFramesCount(1);
-        cr->AccessBoundingBoxes().Clear();
-    }
+	if (vdc == nullptr || !(*vdc)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS)) return false;
+	if (vdc == nullptr || !(*vdc)(core::misc::VolumetricDataCall::IDX_GET_METADATA)) return false;
+
+    cr.SetTimeFramesCount(vdc->FrameCount());
+    cr.AccessBoundingBoxes() = vdc->AccessBoundingBoxes();
 
     return true;
 }
 
 
 /*
- * RenderVolumeSlice::RenderVolumeSlice
+ * VolumeSliceRenderer::VolumeSliceRenderer
  */
-void RenderVolumeSlice::release(void) {
-    // intentionally empty
+void megamol::stdplugin::volume::VolumeSliceRenderer::release(void) {
 }
 
 
 /*
- * RenderVolumeSlice::RenderVolumeSlice
+ * VolumeSliceRenderer::VolumeSliceRenderer
  */
-bool RenderVolumeSlice::Render(core::Call& call) {
-    core::view::CallRender3D *cr = dynamic_cast<core::view::CallRender3D*>(&call);
-    if (cr == NULL) return false;
-
+bool megamol::stdplugin::volume::VolumeSliceRenderer::Render(core::view::CallRender3D_2& cr) {
     // get volume data
-    core::CallVolumeData *cvd = this->getVolSlot.CallAs<core::CallVolumeData>();
-    if (cvd == NULL) return false;
-    cvd->SetFrameID(static_cast<unsigned int>(cr->Time()));
-    if (!(*cvd)(1)) return false;
-    vislib::math::Cuboid<float> bbox = cvd->GetBoundingBoxes().ObjectSpaceBBox();
-    cvd->SetFrameID(static_cast<unsigned int>(cr->Time()));
-    if (!(*cvd)(0)) return false;
+    auto *vdc = this->getVolSlot.CallAs<core::misc::VolumetricDataCall>();
+	if (vdc == nullptr || !(*vdc)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS)) return false;
+	if (vdc == nullptr || !(*vdc)(core::misc::VolumetricDataCall::IDX_GET_METADATA)) return false;
+    if (vdc == nullptr || !(*vdc)(core::misc::VolumetricDataCall::IDX_GET_DATA)) return false;
 
-    float stepSize, ssy, ssz;
-    stepSize = bbox.Width() / static_cast<float>(cvd->XSize());
-    ssy = bbox.Height() / static_cast<float>(cvd->YSize());
-    ssz = bbox.Depth() / static_cast<float>(cvd->ZSize());
-    stepSize = fabs(stepSize + ssy + ssz) / 3.0f;
+	auto const metadata = vdc->GetMetadata();
 
-    // find the volumed attribute
-    vislib::StringA attrName(this->attributeSlot.Param<core::param::StringParam>()->Value());
-    unsigned int attrIdx = cvd->FindAttribute(attrName);
-    if (attrIdx == UINT_MAX) {
-        try {
-            attrIdx = static_cast<unsigned int>(vislib::CharTraitsA::ParseInt(attrName));
-        } catch(...) {
-            return false;
-        }
-    }
-    ASSERT(attrIdx != UINT_MAX);
+	GLenum internal_format;
+	GLenum format;
+	GLenum type;
 
-    // get clip plane
-    core::view::CallClipPlane *ccp = this->getClipPlaneSlot.CallAs<core::view::CallClipPlane>();
-    if ((ccp == NULL) || (!(*ccp)())) return false;
+	switch (metadata->ScalarType) {
+	case core::misc::FLOATING_POINT:
+		if (metadata->ScalarLength == 4) {
+			internal_format = GL_R32F;
+			format = GL_RED;
+			type = GL_FLOAT;
+		}
+		else {
+			vislib::sys::Log::DefaultLog.WriteError("Floating point values with a length != 4 byte are invalid.");
+			return false;
+		}
+		break;
+	case core::misc::UNSIGNED_INTEGER:
+		if (metadata->ScalarLength == 1) {
+			internal_format = GL_R8;
+			format = GL_RED;
+			type = GL_UNSIGNED_BYTE;
+		}
+		else if (metadata->ScalarLength == 2) {
+			internal_format = GL_R16UI;
+			format = GL_RED;
+			type = GL_UNSIGNED_SHORT;
+		}
+		else {
+			vislib::sys::Log::DefaultLog.WriteError("Unsigned integers with a length greater than 2 are invalid.");
+			return false;
+		}
+		break;
+	case core::misc::SIGNED_INTEGER:
+		if (metadata->ScalarLength == 2) {
+			internal_format = GL_R16I;
+			format = GL_RED;
+			type = GL_SHORT;
+		}
+		else {
+			vislib::sys::Log::DefaultLog.WriteError("Integers with a length != 2 are invalid.");
+			return false;
+		}
+		break;
+	case core::misc::BITS:
+		vislib::sys::Log::DefaultLog.WriteError("Invalid datatype.");
+		return false;
+		break;
+	}
 
-    // get transfer function
-    core::view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<core::view::CallGetTransferFunction>();
-    if ((cgtf == NULL) || (!(*cgtf)())) cgtf = NULL;
+	glowl::TextureLayout volume_layout(internal_format, metadata->Resolution[0], metadata->Resolution[1],
+        metadata->Resolution[2], format, type, 1,
+        {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
+            {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
+            {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
+        {});
+    glowl::Texture3D vol_tex("volume_texture", volume_layout, vdc->GetData());
 
-    unsigned int colTabSize;
-    if (cgtf != NULL) {
-        ::glDisable(GL_TEXTURE_2D);
-        ::glEnable(GL_TEXTURE_1D);
-        ::glEnable(GL_COLOR_MATERIAL);
-        ::glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-        ::glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
-        colTabSize = cgtf->TextureSize();
-    } else {
-        ::glDisable(GL_TEXTURE_1D);
-        ::glBindTexture(GL_TEXTURE_1D, 0);
-        colTabSize = 2;
-    }
+	// get clip plane
+	core::view::CallClipPlane *ccp = this->getClipPlaneSlot.CallAs<core::view::CallClipPlane>();
+	if (ccp == nullptr || !(*ccp)()) return false;
 
-    float minVal = this->lowValSlot.Param<core::param::FloatParam>()->Value();
-    float maxVal = this->highValSlot.Param<core::param::FloatParam>()->Value();
+	const auto slice = ccp->GetPlane();
 
-    vislib::math::Point<float, 3> ps[12];
-    bool psv[12];
+	// get transfer function
+	core::view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<core::view::CallGetTransferFunction>();
+	if (cgtf == nullptr || !(*cgtf)()) return false;
 
-    {
-        vislib::math::Plane<float> minX(bbox.GetLeftBottomBack(), vislib::math::Vector<float, 3>(-1.0f, 0.0f, 0.0f));
-        vislib::math::Plane<float> minY(bbox.GetLeftBottomBack(), vislib::math::Vector<float, 3>(0.0f, -1.0f, 0.0f));
-        vislib::math::Plane<float> minZ(bbox.GetLeftBottomBack(), vislib::math::Vector<float, 3>(0.0f, 0.0f, -1.0f));
-        vislib::math::Plane<float> maxX(bbox.GetRightTopFront(), vislib::math::Vector<float, 3>(1.0f, 0.0f, 0.0f));
-        vislib::math::Plane<float> maxY(bbox.GetRightTopFront(), vislib::math::Vector<float, 3>(0.0f, 1.0f, 0.0f));
-        vislib::math::Plane<float> maxZ(bbox.GetRightTopFront(), vislib::math::Vector<float, 3>(0.0f, 0.0f, 1.0f));
+	// get camera
+	core::view::Camera_2 cam;
+	cr.GetCamera(cam);
 
-        psv[0] = ccp->GetPlane().CalcIntersectionPoint(minX, minY, ps[0]);
-        psv[1] = ccp->GetPlane().CalcIntersectionPoint(minX, minZ, ps[1]);
-        psv[2] = ccp->GetPlane().CalcIntersectionPoint(minX, maxY, ps[2]);
-        psv[3] = ccp->GetPlane().CalcIntersectionPoint(minX, maxZ, ps[3]);
-        psv[4] = ccp->GetPlane().CalcIntersectionPoint(maxX, minY, ps[4]);
-        psv[5] = ccp->GetPlane().CalcIntersectionPoint(maxX, minZ, ps[5]);
-        psv[6] = ccp->GetPlane().CalcIntersectionPoint(maxX, maxY, ps[6]);
-        psv[7] = ccp->GetPlane().CalcIntersectionPoint(maxX, maxZ, ps[7]);
-        psv[8] = ccp->GetPlane().CalcIntersectionPoint(minY, minZ, ps[8]);
-        psv[9] = ccp->GetPlane().CalcIntersectionPoint(minY, maxZ, ps[9]);
-        psv[10] = ccp->GetPlane().CalcIntersectionPoint(maxY, minZ, ps[10]);
-        psv[11] = ccp->GetPlane().CalcIntersectionPoint(maxY, maxZ, ps[11]);
-    }
+	cam_type::matrix_type view, proj;
+	cam.calc_matrices(view, proj);
 
-    unsigned int cnt = 0;
-    vislib::math::Vector<float, 3> v;
-    for (int i = 0; i < 12; i++) {
-        if (!psv[i]) continue;
-        v += vislib::math::Vector<float, 3>(ps[i]);
-        cnt++;
-    }
-    if (cnt < 3) return false;
-    v /= static_cast<float>(cnt);
+	// create render target
+	glowl::TextureLayout render_tgt_layout(GL_RGBA8, cr.GetViewport().Width(), cr.GetViewport().Height(),
+		1, GL_RGBA, GL_UNSIGNED_BYTE, 1,
+        {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
+            {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
+            {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
+        {});
+	glowl::Texture2D render_target("render_target", render_tgt_layout, nullptr);
 
-    vislib::math::Point<float, 3> orig(v.PeekComponents());
+	// compute slice
+	this->compute_shader.Enable();
 
-    vislib::math::Vector<float, 3> x, y, z;
-    ccp->CalcPlaneSystem(x, y, z);
+	glUniformMatrix4fv(
+		this->compute_shader.ParameterLocation("view_mx"), 1, GL_FALSE, glm::value_ptr(static_cast<glm::mat4>(view)));
+	glUniformMatrix4fv(this->compute_shader.ParameterLocation("proj_mx"), 1, GL_FALSE, glm::value_ptr(static_cast<glm::mat4>(proj)));
 
-    float minX, maxX, minY, maxY;
-    minX = minY = 0.0f;
-    maxX = maxY = 0.0f;
-    for (int i = 0; i < 12; i++) {
-        if (!psv[i]) continue;
-        v = ps[i] - orig;
-        float xc = v.Dot(x);
-        float yc = v.Dot(y);
-        if (minX > xc) minX = xc;
-        if (maxX < xc) maxX = xc;
-        if (minY > yc) minY = yc;
-        if (maxY < yc) maxY = yc;
-    }
-    // loop ranges
-    int minXi = static_cast<int>(minX / stepSize);
-    int minYi = static_cast<int>(minY / stepSize);
-    int maxXi = static_cast<int>(maxX / stepSize);
-    int maxYi = static_cast<int>(maxY / stepSize);
-    int w = (maxXi - minXi) + 1;
-    int h = (maxYi - minYi) + 1;
+	std::array<float, 2> rt_resolution;
+	rt_resolution[0] = static_cast<float>(render_target.getWidth());
+	rt_resolution[1] = static_cast<float>(render_target.getHeight());
+	glUniform2fv(this->compute_shader.ParameterLocation("rt_resolution"), 1, rt_resolution.data());
+	
+	glm::vec3 box_min;
+	box_min[0] = vdc->GetBoundingBoxes().ObjectSpaceBBox().Left();
+	box_min[1] = vdc->GetBoundingBoxes().ObjectSpaceBBox().Bottom();
+	box_min[2] = vdc->GetBoundingBoxes().ObjectSpaceBBox().Back();
+	glm::vec3 box_max;
+	box_max[0] = vdc->GetBoundingBoxes().ObjectSpaceBBox().Right();
+	box_max[1] = vdc->GetBoundingBoxes().ObjectSpaceBBox().Top();
+	box_max[2] = vdc->GetBoundingBoxes().ObjectSpaceBBox().Front();
+	glUniform3fv(this->compute_shader.ParameterLocation("boxMin"), 1, glm::value_ptr(box_min));
+	glUniform3fv(this->compute_shader.ParameterLocation("boxMax"), 1, glm::value_ptr(box_max));
 
-    vislib::math::Vector<float, 3> *pos = new vislib::math::Vector<float, 3>[w * h];
-    float *val = new float[w * h];
+	std::array<float, 2> valueRange;
+	valueRange[0] = static_cast<float>(vdc->GetMetadata()->MinValues[0]);
+	valueRange[1] = static_cast<float>(vdc->GetMetadata()->MaxValues[0]);
+	glUniform2fv(this->compute_shader.ParameterLocation("valRange"), 1, valueRange.data());
 
-    for (int ix = minXi; ix <= maxXi; ix++) {
-        int io = ix - minXi;
-        for (int iy = minYi; iy <= maxYi; iy++) {
-            int idx = (iy - minYi) * w + io;
-            pos[idx] = orig;
-            v = x;
-            v *= static_cast<float>(ix) * stepSize;
-            pos[idx] += v;
-            v = y;
-            v *= static_cast<float>(iy) * stepSize;
-            pos[idx] += v;
+	std::array<float, 4> plane;
+	plane[0] = slice.GetA();
+	plane[1] = slice.GetB();
+	plane[2] = slice.GetC();
+	plane[3] = std::abs(slice.GetD());
+	glUniform4fv(this->compute_shader.ParameterLocation("slice"), 1, plane.data());
 
-            int vix = static_cast<int>(0.5f + (pos[idx].X() - bbox.Left()) * static_cast<float>(cvd->XSize()) / bbox.Width());
-            int viy = static_cast<int>(0.5f + (pos[idx].Y() - bbox.Bottom()) * static_cast<float>(cvd->YSize()) / bbox.Height());
-            int viz = static_cast<int>(0.5f + (pos[idx].Z() - bbox.Back()) * static_cast<float>(cvd->ZSize()) / bbox.Depth());
-            if (vix < 0) vix = 0;
-            if (vix >= static_cast<int>(cvd->XSize())) vix = cvd->XSize() - 1;
-            if (viy < 0) viy = 0;
-            if (viy >= static_cast<int>(cvd->YSize())) viy = cvd->YSize() - 1;
-            if (viz < 0) viz = 0;
-            if (viz >= static_cast<int>(cvd->ZSize())) viz = cvd->ZSize() - 1;
+	glActiveTexture(GL_TEXTURE0);
+	vol_tex.bindTexture();
+	glUniform1i(this->compute_shader.ParameterLocation("volume_tx3D"), 0);
 
-            val[idx] = cvd->Attribute(attrIdx).Floats()[vix + cvd->XSize() * (viy + cvd->YSize() * viz)];
-            val[idx] = (val[idx] - minVal) / (maxVal - minVal);
-            if (val[idx] < 0.0f) val[idx] = 0.0f;
-            if (val[idx] > 1.0f) val[idx] = 1.0f;
-        }
-    }
+	cgtf->BindConvenience(this->compute_shader, GL_TEXTURE1, 1);
 
-    ::glNormal3fv(z.PeekComponents());
+	render_target.bindImage(0, GL_WRITE_ONLY);
 
-    ::glDisable(GL_CULL_FACE);
-    GLint lmts = 1;
-    ::glLightModeliv(GL_LIGHT_MODEL_TWO_SIDE, &lmts);
-    ::glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    ::glColor3ub(255, 255, 255);
-    ::glTexCoord1f(0.0f);
+	this->compute_shader.Dispatch(
+		static_cast<int>(std::ceil(rt_resolution[0] / 8.0f)), static_cast<int>(std::ceil(rt_resolution[1] / 8.0f)), 1);
 
-    int idx[4];
-    for (int ix = minXi; ix < maxXi; ix++) {
-        //::glBegin(GL_QUAD_STRIP);
-        for (int iy = minYi; iy < maxYi; iy++) {
-            idx[0] = (ix - minXi) + w * (iy - minYi);
-            idx[1] = idx[0] + 1;
-            idx[2] = idx[1] + w;
-            idx[3] = idx[0] + w;
+	glBindImageTexture(0, 0, 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_R);
 
-            float vf = (val[idx[0]] + val[idx[1]] + val[idx[2]] + val[idx[3]]) * 0.25f;
-            v = pos[idx[0]];
-            v += pos[idx[1]];
-            v += pos[idx[2]];
-            v += pos[idx[3]];
-            v *= 0.25f;
+	cgtf->UnbindConvenience();
 
-            ::glBegin(GL_TRIANGLE_FAN);
-            if (cgtf == NULL) ::glColor3f(vf, vf, vf); else ::glTexCoord1f(vf);
-            ::glVertex3fv(v.PeekComponents());
-            for (int ii = 0; ii <= 4; ii++) {
-                vf = val[idx[ii % 4]];
-                if (cgtf == NULL) ::glColor3f(vf, vf, vf); else ::glTexCoord1f(vf);
-                ::glVertex3fv(pos[idx[ii % 4]].PeekComponents());
-            }
-            ::glEnd();
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_3D, 0);
 
-/*            for (int ii = 0; ii < 4; ii++) {
-                if (cgtf == NULL) {
-                    ::glColor3f(val[idx], val[idx], val[idx]);
-                } else {
-                    ::glTexCoord1f(val[idx]);
-                }
-                ::glVertex3fv(pos[idx].PeekComponents());
-                if (ii % 2) {
-                    idx += w - 1;
-                } else {
-                    idx++;
-                }
-            }*/
-        }
-        //::glEnd();
-    }
+	this->compute_shader.Disable();
 
-    delete[] pos;
-    delete[] val;
+	glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT);
+	
+	// render
+	bool state_depth_test = glIsEnabled(GL_DEPTH_TEST);
+	bool state_blend = glIsEnabled(GL_BLEND);
 
-    glDisable(GL_TEXTURE_1D);
-    lmts = 0;
-    glLightModeliv(GL_LIGHT_MODEL_TWO_SIDE, &lmts);
+	GLint state_blend_src_rgb, state_blend_src_alpha, state_blend_dst_rgb, state_blend_dst_alpha;
+	glGetIntegerv(GL_BLEND_SRC_RGB, &state_blend_src_rgb);
+	glGetIntegerv(GL_BLEND_SRC_ALPHA, &state_blend_src_alpha);
+	glGetIntegerv(GL_BLEND_DST_RGB, &state_blend_dst_rgb);
+	glGetIntegerv(GL_BLEND_DST_ALPHA, &state_blend_dst_alpha);
+
+	if (state_depth_test) glDisable(GL_DEPTH_TEST);
+	if (!state_blend) glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	this->render_shader.Enable();
+
+	glActiveTexture(GL_TEXTURE0);
+	render_target.bindTexture();
+	glUniform1i(this->render_shader.ParameterLocation("src_tx2D"), 0);
+
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	this->render_shader.Disable();
+
+	glBlendFuncSeparate(state_blend_src_rgb, state_blend_dst_rgb, state_blend_src_alpha, state_blend_dst_alpha);
+	if (!state_blend) glDisable(GL_BLEND);
+	if (state_depth_test) glEnable(GL_DEPTH_TEST); else glDisable(GL_DEPTH_TEST);
 
     return true;
 }
