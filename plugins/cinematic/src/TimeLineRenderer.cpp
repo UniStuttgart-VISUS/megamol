@@ -39,10 +39,10 @@ using namespace vislib;
 TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule(),
 
 	keyframeKeeperSlot("getkeyframes", "Connects to the KeyframeKeeper"),
-    rulerFontParam(      "fontSize", "The font size."),
-    moveRightFrameParam( "gotoRightFrame", "Move to right animation time frame."),
-    moveLeftFrameParam(  "gotoLeftFrame", "Move to left animation time frame."),
-    resetPanScaleParam(  "resetAxes", "Reset shifted and scaled time axes."),
+    rulerFontParam("fontSize", "The font size."),
+    moveRightFrameParam("gotoRightFrame", "Move to right animation time frame."),
+    moveLeftFrameParam("gotoLeftFrame", "Move to left animation time frame."),
+    resetPanScaleParam("resetAxes", "Reset shifted and scaled time axes."),
 
     theFont(megamol::core::utility::SDFFont::FontName::ROBOTO_SANS),
     markerTextures(),
@@ -315,7 +315,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     // Updated data from cinematic camera call
     if (!(*ccc)(CallKeyframeKeeper::CallForGetUpdatedKeyframeData)) return false;
 
-    vislib::Array<Keyframe> *keyframes = ccc->getKeyframes();
+     auto keyframes = ccc->getKeyframes();
     if (keyframes == nullptr) {
         vislib::sys::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] [Render] Pointer to keyframe array is nullptr.");
         return false;
@@ -714,7 +714,7 @@ bool TimeLineRenderer::OnMouseButton(megamol::core::view::MouseButton button, me
     if (!(*ccc)(CallKeyframeKeeper::CallForGetUpdatedKeyframeData)) return false;
 
     //Get keyframes
-    vislib::Array<Keyframe> *keyframes = ccc->getKeyframes();
+    auto keyframes = ccc->getKeyframes();
     if (keyframes == nullptr) {
         vislib::sys::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] [Mouse Event] Pointer to keyframe array is nullptr.");
         return false;

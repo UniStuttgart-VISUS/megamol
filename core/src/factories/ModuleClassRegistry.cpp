@@ -42,7 +42,6 @@
 #include "mmcore/special/StubModule.h"
 #include "mmcore/view/ClipPlane.h"
 #include "mmcore/view/TransferFunction.h"
-#include "mmcore/view/TransferFunctionRenderer.h"
 #include "mmcore/view/MuxRenderer3D.h"
 #include "mmcore/view/special/AnaglyphStereoView.h"
 #include "mmcore/view/special/ChronoGraph.h"
@@ -82,6 +81,7 @@
 #include "mmcore/FileStreamProvider.h"
 #include "mmcore/view/special/CallbackScreenShooter.h"
 #include "mmcore/FlagStorage.h"
+#include "mmcore/DeferredShading.h"
 
 using namespace megamol::core;
 
@@ -125,7 +125,6 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<special::StubModule>();
     instance.RegisterAutoDescription<view::ClipPlane>();
     instance.RegisterAutoDescription<view::TransferFunction>();
-    instance.RegisterAutoDescription<view::TransferFunctionRenderer>();
     instance.RegisterAutoDescription<view::MuxRenderer3D<2> >();
     instance.RegisterAutoDescription<view::MuxRenderer3D<3> >();
     instance.RegisterAutoDescription<view::MuxRenderer3D<4> >();
@@ -168,4 +167,5 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<view::light::QuadLight>();
     instance.RegisterAutoDescription<view::light::SpotLight>();
     instance.RegisterAutoDescription<FlagStorage>();
+    instance.RegisterAutoDescription<DeferredShading>();
 }

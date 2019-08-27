@@ -23,7 +23,7 @@ megamol::remote::HeadnodeServer::HeadnodeServer()
     , start_server_slot_("start", "Start listening to port.")
     , lua_command_slot_("LUACommand", "Sends custom lua command to the RendernodeView")
     , deploy_project_slot_("deployProject", "Sends project file on connect")
-    , comm_fabric_(std::make_unique<ZMQCommFabric>(zmq::socket_type::rep))
+    , comm_fabric_(std::make_unique<ZMQCommFabric>(zmq::socket_type::push))
     , run_threads_(false)
     , is_job_running_(true) {
 
@@ -201,18 +201,18 @@ void megamol::remote::HeadnodeServer::do_communication() {
             if (!run_threads_) break;
 
             // check whether camera has been updated
-            auto cam_updated = false;
+            /*auto cam_updated = false;
 
             while (!(cam_updated || buffer_has_changed_.load()) && run_threads_) {
                 std::this_thread::sleep_for(1000ms / 120);
                 cam_updated = get_cam_upd(cam_msg);
-            }
+            }*/
 
             {
                 std::lock_guard<std::mutex> lock(send_buffer_guard_);
-                if (cam_updated) {
+                /*if (cam_updated) {
                     send_buffer_.insert(send_buffer_.end(), cam_msg.begin(), cam_msg.end());
-                }
+                }*/
 
                 if (!send_buffer_.empty()) {
 		    // vislib::sys::Log::DefaultLog.WriteInfo("HeadnodeServer: Sending parameter update.\n");
