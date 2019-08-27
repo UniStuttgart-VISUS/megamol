@@ -1,3 +1,4 @@
+
 out vec4 fsResultColor;
 flat in vec4 gsCenterAndSqrRadius;
 flat in float gsCellZ;
@@ -70,5 +71,5 @@ void main() {
 			}
 
 	fsResultColor = vec4(float(numHit)/float(samplesCount));
-//	fsResultColor = vec4(1.0);
+	//fsResultColor = vec4(1.0);
 }

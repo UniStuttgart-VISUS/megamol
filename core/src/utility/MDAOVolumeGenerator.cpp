@@ -225,10 +225,16 @@ void MDAOVolumeGenerator::EndInsertion()
 	volumeShader.Disable(); checkGLError;
 
 	glBindFramebuffer(GL_FRAMEBUFFER, prevFBO);
+
+	// glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glDisable(GL_BLEND);
+
+	//glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
 	glViewport( viewport[0], viewport[1], viewport[2], viewport[3]);
 	
+	//glBindVertexArray(0);
+
 	++dataVersion;
 
 /*	glBindTexture(GL_TEXTURE_3D, this->volumeHandle);

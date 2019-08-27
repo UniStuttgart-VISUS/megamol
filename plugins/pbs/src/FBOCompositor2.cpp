@@ -5,13 +5,14 @@
 #include <sstream>
 
 #include "mmcore/CoreInstance.h"
+#include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
-#include "mmcore/param/BoolParam.h"
 #include "mmcore/utility/ResourceWrapper.h"
-#include "mmcore/view/CallRender3D.h"
+#include "mmcore/view/CallRender3D_2.h"
+#include "mmcore/view/Camera_2.h"
 #include "vislib/sys/Log.h"
 
 #include "snappy.h"
@@ -31,7 +32,9 @@ megamol::pbs::FBOCompositor2::FBOCompositor2()
     , handshakePortSlot_{"handshakePort", "Port for ZMQ handshake"}
     , startSlot_{"start", "Start listening for connections"}
     , restartSlot_{"restart", "Restart compositor to wait for incoming connections"}
-    , renderOnlyRequestedFramesSlot_{"only_requested_frames", "Required to be set for cinematic rendering. If true, rendering is skipped until frame for requested camera and time is received."}
+    , renderOnlyRequestedFramesSlot_{"only_requested_frames",
+          "Required to be set for cinematic rendering. If true, rendering is skipped until frame for requested camera "
+          "and time is received."}
     , close_future_{close_promise_.get_future()}
     , fbo_msg_write_{new std::vector<fbo_msg_t>}
     , fbo_msg_recv_{new std::vector<fbo_msg_t>}
@@ -138,11 +141,8 @@ bool megamol::pbs::FBOCompositor2::create() {
 void megamol::pbs::FBOCompositor2::release() { shutdownThreads(); }
 
 
-bool megamol::pbs::FBOCompositor2::GetExtents(megamol::core::Call& call) {
-    auto cr = dynamic_cast<megamol::core::view::CallRender3D*>(&call);
-    if (cr == nullptr) return false;
-
-    auto& out_bbox = cr->AccessBoundingBoxes();
+bool megamol::pbs::FBOCompositor2::GetExtents(megamol::core::view::CallRender3D_2& call) {
+    auto& out_bbox = call.AccessBoundingBoxes();
 
 #if _DEBUG && VERBOSE
     vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Entering mutex GetExtent\n");
@@ -179,43 +179,36 @@ bool megamol::pbs::FBOCompositor2::GetExtents(megamol::core::Call& call) {
         //        bbox[i] = fmax(bbox[i], el.fbo_msg_header.os_bbox[i]);
         //    }
         //}
-        out_bbox.SetObjectSpaceBBox(bbox[0], bbox[1], bbox[2], bbox[3], bbox[4], bbox[5]);
-        out_bbox.SetObjectSpaceClipBox(out_bbox.ObjectSpaceBBox());
-
-        float scaling = out_bbox.ObjectSpaceBBox().LongestEdge();
-        if (scaling > 0.0000001) {
-            scaling = 10.0f / scaling;
-        } else {
-            scaling = 1.0f;
-        }
-        out_bbox.MakeScaledWorld(scaling);
+        out_bbox.SetBoundingBox(bbox[0], bbox[1], bbox[2], bbox[3], bbox[4], bbox[5]);
+        out_bbox.SetClipBox(out_bbox.BoundingBox());
 
         float timeFramesCount = vec[0].fbo_msg_header.frame_times[1];
         for (size_t bidx = 1; bidx < this->fbo_msg_write_->size(); ++bidx) {
             timeFramesCount = fmin(timeFramesCount, vec[bidx].fbo_msg_header.frame_times[1]);
         }
-        cr->SetTimeFramesCount(static_cast<unsigned int>((timeFramesCount > 0.0f) ? (timeFramesCount) : (1.0f)));
-    } 
-    else {
-        cr->SetTimeFramesCount(1);
+        call.SetTimeFramesCount(static_cast<unsigned int>((timeFramesCount > 0.0f) ? (timeFramesCount) : (1.0f)));
+    } else {
+        call.SetTimeFramesCount(1);
 
-        out_bbox.SetObjectSpaceBBox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
-        out_bbox.SetObjectSpaceClipBox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
+        out_bbox.SetBoundingBox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
+        out_bbox.SetClipBox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
     }
 
     return true;
 }
 
 
-bool megamol::pbs::FBOCompositor2::Render(megamol::core::Call& call) {
+bool megamol::pbs::FBOCompositor2::Render(megamol::core::view::CallRender3D_2& call) {
     // initThreads();
 
-    auto cr3d = dynamic_cast<megamol::core::view::CallRender3D*>(&call);
-    if (cr3d == nullptr) return false;
-    auto req_time       = cr3d->Time();
-    auto req_cam_pos    = cr3d->GetCameraParameters()->Position();
-    auto req_cam_up     = cr3d->GetCameraParameters()->Up();
-    auto req_cam_lookat = cr3d->GetCameraParameters()->LookAt();
+    auto req_time = call.Time();
+    core::view::Camera_2 cam;
+    call.GetCamera(cam);
+    core::view::Camera_2::snapshot_type cam_snap;
+    core::view::Camera_2::matrix_type view, proj;
+    cam.calc_matrices(cam_snap, view, proj, core::thecam::snapshot_content::all);
+    auto req_cam_pos = cam_snap.position;
+    auto req_cam_up = cam_snap.up_vector;
     auto only_req_frame = this->renderOnlyRequestedFramesSlot_.Param<megamol::core::param::BoolParam>()->Value();
 
     // if data changed check if size has changed
@@ -240,9 +233,9 @@ bool megamol::pbs::FBOCompositor2::Render(megamol::core::Call& call) {
         }
 
         auto const width = (*this->fbo_msg_write_)[0].fbo_msg_header.screen_area[2] -
-            (*this->fbo_msg_write_)[0].fbo_msg_header.screen_area[0];
+                           (*this->fbo_msg_write_)[0].fbo_msg_header.screen_area[0];
         auto const height = (*this->fbo_msg_write_)[0].fbo_msg_header.screen_area[3] -
-            (*this->fbo_msg_write_)[0].fbo_msg_header.screen_area[1];
+                            (*this->fbo_msg_write_)[0].fbo_msg_header.screen_area[1];
 
         if (this->width_ != width || this->height_ != height) {
             this->width_ = width;
@@ -264,39 +257,27 @@ bool megamol::pbs::FBOCompositor2::Render(megamol::core::Call& call) {
     if (only_req_frame) {
         float min = 0.00001f; // == 0 does not work (?)
         // Aborting rendering if requested frame has not been received yet
-        if ((std::fabs(req_time           - this->frame_times_[0])   >= min) ||
-            (std::fabs(req_cam_pos.X()    - this->camera_params_[0]) >= min) ||
-            (std::fabs(req_cam_pos.Y()    - this->camera_params_[1]) >= min) ||
-            (std::fabs(req_cam_pos.Z()    - this->camera_params_[2]) >= min) ||
-            (std::fabs(req_cam_up.X()     - this->camera_params_[3]) >= min) ||
-            (std::fabs(req_cam_up.Y()     - this->camera_params_[4]) >= min) ||
-            (std::fabs(req_cam_up.Z()     - this->camera_params_[5]) >= min) ||
-            (std::fabs(req_cam_lookat.X() - this->camera_params_[6]) >= min) ||
-            (std::fabs(req_cam_lookat.Y() - this->camera_params_[7]) >= min) ||
-            (std::fabs(req_cam_lookat.Z() - this->camera_params_[8]) >= min))
-        {
-            //Resetting FBO in cr3d (to nullptr). This is detected by CinemativView to skip not requested frames while rendering.
-            cr3d->ResetOutputBuffer();
+        if ((std::fabs(req_time - this->frame_times_[0]) >= min) ||
+            (std::fabs(req_cam_pos.x() - this->camera_params_[0]) >= min) ||
+            (std::fabs(req_cam_pos.y() - this->camera_params_[1]) >= min) ||
+            (std::fabs(req_cam_pos.z() - this->camera_params_[2]) >= min) ||
+            (std::fabs(req_cam_up.x() - this->camera_params_[3]) >= min) ||
+            (std::fabs(req_cam_up.y() - this->camera_params_[4]) >= min) ||
+            (std::fabs(req_cam_up.z() - this->camera_params_[5]) >= min)) {
+            // Resetting FBO in cr3d (to nullptr). This is detected by CinemativView to skip not requested frames while
+            // rendering.
+            call.ResetOutputBuffer();
             return false;
         }
     }
 
     // constantly render current texture set
-    // this is the apex of suck and must die
-    GLfloat modelViewMatrix_column[16];
-    glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
-    GLfloat projMatrix_column[16];
-    glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
-    GLfloat light_pos[4];
-    glGetLightfv(GL_LIGHT0, GL_POSITION, light_pos);
-    // end suck
-
     glEnable(GL_DEPTH_TEST);
 
     glUseProgram(this->shader);
 
-    glUniformMatrix4fv(glGetUniformLocation(this->shader, "modelview"), 1, GL_FALSE, modelViewMatrix_column);
-    glUniformMatrix4fv(glGetUniformLocation(this->shader, "project"), 1, GL_FALSE, projMatrix_column);
+    glUniformMatrix4fv(glGetUniformLocation(this->shader, "modelview"), 1, GL_FALSE, glm::value_ptr(glm::mat4(view)));
+    glUniformMatrix4fv(glGetUniformLocation(this->shader, "project"), 1, GL_FALSE, glm::value_ptr(glm::mat4(proj)));
 
     for (size_t i = 0; i < this->color_textures_.size(); ++i) {
         glActiveTexture(GL_TEXTURE0);
@@ -449,11 +430,11 @@ void megamol::pbs::FBOCompositor2::receiverJob(
 #endif
                 }
                 if (shutdown_) break;
-/*#if _DEBUG
-                else {
-                    vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Answer received\n");
-                }
-#endif*/
+                /*#if _DEBUG
+                                else {
+                                    vislib::sys::Log::DefaultLog.WriteInfo("FBOCompositor2: Answer received\n");
+                                }
+                #endif*/
             } catch (...) {
                 vislib::sys::Log::DefaultLog.WriteError("FBOCompositor2: Exception during recv in 'receiverJob'\n");
             }
@@ -472,7 +453,8 @@ void megamol::pbs::FBOCompositor2::receiverJob(
             if (header.depth_buf_size <= 1 || header.color_buf_size <= 1) {
 #if _DEBUG
                 vislib::sys::Log::DefaultLog.WriteWarn(
-                    "FBOCompositor2: Bad size for alloc color/depth; col_buf size: %d; col_comp_buf size: %d; depth_buf size: %d; depth_comp_buf size: %d;\n",
+                    "FBOCompositor2: Bad size for alloc color/depth; col_buf size: %d; col_comp_buf size: %d; "
+                    "depth_buf size: %d; depth_comp_buf size: %d;\n",
                     fbo_col_size, header.color_buf_size, fbo_depth_size, header.depth_buf_size);
 #endif
                 continue;
@@ -571,7 +553,7 @@ void megamol::pbs::FBOCompositor2::collectorJob(std::vector<FBOCommFabric>&& com
             this->fbo_msg_write_->resize(jobs.size());
             this->fbo_msg_recv_.reset(new std::vector<fbo_msg_t>);
             this->fbo_msg_recv_->resize(jobs.size());
-            this->width_  = 1;
+            this->width_ = 1;
             this->height_ = 1;
             this->initTextures(jobs.size(), this->width_, this->height_);
         }

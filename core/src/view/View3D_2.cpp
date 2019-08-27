@@ -114,6 +114,7 @@ View3D_2::View3D_2(void)
     // this->camParams->SetTileRect(vislib::math::Rectangle<float>(0.0f, 0.0f, defWidth, defHeight));
 
     this->cam.resolution_gate(cam_type::screen_size_type(100, 100));
+	this->cam.image_tile(cam_type::screen_rectangle_type(std::array<int, 4>{0, 100, 100, 0}));
 
     this->rendererSlot.SetCompatibleCall<CallRender3D_2Description>();
     this->MakeSlotAvailable(&this->rendererSlot);
@@ -543,7 +544,8 @@ void View3D_2::ResetView(void) {
  */
 void View3D_2::Resize(unsigned int width, unsigned int height) {
     this->cam.resolution_gate(cam_type::screen_size_type(
-        static_cast<LONG>(width), static_cast<LONG>(height))); // TODO this is ugly and has to die...
+        static_cast<LONG>(width), static_cast<LONG>(height)));
+	this->cam.image_tile(cam_type::screen_rectangle_type(std::array<int, 4>({0, static_cast<int>(height), static_cast<int>(width), 0})));
 }
 
 /*
@@ -922,7 +924,7 @@ bool View3D_2::onRestoreCamera(param::ParamSlot& p) {
     auto path = this->determineCameraFilePath();
     if (path.empty()) {
         vislib::sys::Log::DefaultLog.WriteWarn(
-            "The camera camera file path could not be determined. This is probably due to the usage of .mmprj project "
+            "The camera file path could not be determined. This is probably due to the usage of .mmprj project "
             "files. Please use a .lua project file instead");
         return false;
     }

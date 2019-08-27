@@ -16,14 +16,10 @@
 #include "CPERAWDataSource.h"
 #include "FBOCompositor2.h"
 #include "FBOTransmitter2.h"
-#include "OSPRayPBSGeometry.h"
-#include "PBSDataSource.h"
-#include "PBSRenderer.h"
 #include "HeadnodeServer.h"
 #include "RendernodeView.h"
 
 // Calls
-#include "pbs/PBSDataCall.h"
 
 
 /* anonymous namespace hides this type from any other object files */
@@ -51,9 +47,6 @@ public:
     virtual void registerClasses(void) {
 
         // register modules here:
-        this->module_descriptions.RegisterAutoDescription<megamol::pbs::PBSDataSource>();
-        this->module_descriptions.RegisterAutoDescription<megamol::pbs::PBSRenderer>();
-        this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayPBSGeometry>();
         this->module_descriptions.RegisterAutoDescription<megamol::pbs::FBOTransmitter2>();
         this->module_descriptions.RegisterAutoDescription<megamol::pbs::FBOCompositor2>();
         this->module_descriptions.RegisterAutoDescription<megamol::pbs::CPERAWDataSource>();
@@ -69,7 +62,6 @@ public:
         //
 
         // register calls here:
-        this->call_descriptions.RegisterAutoDescription<megamol::pbs::PBSDataCall>();
         //
         // TODO: Register your plugin's calls here
         // like:
