@@ -15,8 +15,8 @@
 #include "vislib/math/Matrix.h"
 
 #include "mmcore/CallerSlot.h"
-#include "mmcore/view/Renderer3DModule.h"
-#include "mmcore/view/CallRender3D.h"
+#include "mmcore/view/Renderer3DModule_2.h"
+#include "mmcore/view/CallRender3D_2.h"
 
 #include "mesh/GPUMaterialCollection.h"
 
@@ -35,7 +35,7 @@ namespace mesh {
 	 * Per render batch, a single call of glMultiDrawElementsIndirect is made. The data
 	 * for the indirect draw call is stored and accessed via SSBOs.
 	 */
-	class RenderMDIMesh : public megamol::core::view::Renderer3DModule
+	class RenderMDIMesh : public megamol::core::view::Renderer3DModule_2
 	{
 	public:
 		/**
@@ -104,7 +104,7 @@ namespace mesh {
 		*
 		* @return The return value of the function.
 		*/
-		bool GetExtents(core::Call& call);
+        bool GetExtents(core::view::CallRender3D_2& call);
 	
 		/**
 		* The render callback.
@@ -113,7 +113,7 @@ namespace mesh {
 		*
 		* @return The return value of the function.
 		*/
-		bool Render(core::Call& call);
+        bool Render(core::view::CallRender3D_2& call);
 
 	private:
 

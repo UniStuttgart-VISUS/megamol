@@ -1,31 +1,36 @@
-## mmstdvolume
-The mmstdvolume plugin provides provides basic volume rendering functionality.
-
-Jump to [Modules](#modules).
+# Volume
+This plugin provides basic volume rendering functionality.
 
 ## Build
 This plugin is switched on by default.
-
----
 
 ## Modules
 
 ### RaycastVolumeRenderer
 
-A `Renderer3DModule` that implements a basic, but modern renderer for volume data. Rendering is split into two passes: A Compute Shader performs volume raycasting and writes the output to a 2D texture. The result is then rendered to the currently bound framebuffer (assuming the default output framebuffer to bound) using a screen-filling quad.
+A renderer module that implements a basic, but modern renderer for volume data. Rendering is split into two passes: A compute shader performs volume raycasting and writes the output into a 2D texture. The result is then rendered to the currently bound framebuffer using a screen-filling quad.
 
-The renderer connects to datasources using the `VolumetricDataCall` and to a transfer function using the `CallGetTransferFunction`.
+The renderer provides the following input slots:
 
-**NOTE:** This renderer **requires** the connection a transfer function to work properly.
+| Slot                | Type                      | Description                                                | Remark   |
+|---------------------|---------------------------|------------------------------------------------------------|----------|
+| chainRendering      | `CallRender3D`            | Connection to another renderer for chaining                | optional |
+| lights              | `CallLight`               | Light sources for the illumination of the scene            | ignored  |
+| getData             | `VolumetricDataCall`      | Data source, providing a 3D volume                         |          |
+| getTransferFunction | `CallGetTransferFunction` | Transfer function to map volume to color and transparency  |          |
+
+The renderer provides the following output slots:
+
+| Slot                | Type                      | Description                                                | Remark   |
+|---------------------|---------------------------|------------------------------------------------------------|----------|
+| rendering           | `CallRender3D`            | Connection to another renderer or a view                   |          |
 
 The renderer provides the following parameters:
 
-| Parameter    | Default Value | Description                                                            |
-|--------------|---------------|------------------------------------------------------------------------|
-| rayStepRatio | `1.0`          | Modifies the raycasting step size. Use values below 1.0 to oversample and values greater 1.0 to undersample the volume. |
+| Parameter      | Default Value | Description                                                            |
+|----------------|---------------|------------------------------------------------------------------------|
+| ray step ratio | `1.0`         | Modifies the raycasting step size. Use values below 1.0 to oversample and values greater 1.0 to undersample the volume. |
 
-Example screenshot using the bunny dat-raw volume dataset.
-<img src="RaycastVolumeRenderer_BunnyExample.png"  width="360">
+Example screenshots for the bonsai dat-raw volume dataset using two different transfer functions:
 
-### VolumetricDatasource
-
+<img src="images/RaycastVolumeRenderer.png" width="49%"> <img src="images/RaycastVolumeRenderer_Fancy.png" width="49%">
