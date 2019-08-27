@@ -14,7 +14,6 @@
 
 #include "ASCIISphereLoader.h"
 #include "SimplestSphereRenderer.h"
-#include "SimplestSphereRenderer_2.h"
 #include "SphereColoringModule.h"
 #include "CallSpheres.h"
 
@@ -54,7 +53,6 @@ public:
         //
         this->module_descriptions.RegisterAutoDescription<megamol::megamol101::ASCIISphereLoader>();
         this->module_descriptions.RegisterAutoDescription<megamol::megamol101::SimplestSphereRenderer>();
-        this->module_descriptions.RegisterAutoDescription<megamol::megamol101::SimplestSphereRenderer_2>();
         this->module_descriptions.RegisterAutoDescription<megamol::megamol101::SphereColoringModule>();
 
         // register calls here:
