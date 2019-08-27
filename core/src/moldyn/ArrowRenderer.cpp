@@ -13,7 +13,7 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/view/CallClipPlane.h"
 #include "mmcore/view/CallGetTransferFunction.h"
-#include "mmcore/view/CallRender3D.h"
+#include "mmcore/view/CallRender3D_2.h"
 #include "mmcore/FlagCall.h"
 #include "vislib/assert.h"
 
@@ -23,7 +23,7 @@ using namespace megamol::core;
 /*
  * moldyn::ArrowRenderer::ArrowRenderer
  */
-moldyn::ArrowRenderer::ArrowRenderer(void) : Renderer3DModule(),
+moldyn::ArrowRenderer::ArrowRenderer(void) : Renderer3DModule_2(),
         arrowShader(), getDataSlot("getdata", "Connects to the data source"),
         getTFSlot("gettransferfunction", "Connects to the transfer function module"),
         getFlagsSlot("getflags", "connects to a FlagStorage"),
@@ -120,21 +120,13 @@ bool moldyn::ArrowRenderer::create(void) {
  * moldyn::ArrowRenderer::GetExtents
  */
 bool moldyn::ArrowRenderer::GetExtents(Call& call) {
-    view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
-    if (cr == NULL) return false;
+    view::CallRender3D_2 *cr = dynamic_cast<view::CallRender3D_2*>(&call);
+    if (cr == nullptr) return false;
 
     MultiParticleDataCall* c2 = this->getDataSlot.CallAs<MultiParticleDataCall>();
-    if ((c2 != NULL) && ((*c2)(1))) {
+    if ((c2 != nullptr) && ((*c2)(1))) {
         cr->SetTimeFramesCount(c2->FrameCount());
         cr->AccessBoundingBoxes() = c2->AccessBoundingBoxes();
-
-        float scaling = cr->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
-        if (scaling > 0.0000001) {
-            scaling = 10.0f / scaling;
-        } else {
-            scaling = 1.0f;
-        }
-        cr->AccessBoundingBoxes().MakeScaledWorld(scaling);
 
     } else {
         cr->SetTimeFramesCount(1);
@@ -158,12 +150,12 @@ void moldyn::ArrowRenderer::release(void) {
  * moldyn::ArrowRenderer::Render
  */
 bool moldyn::ArrowRenderer::Render(Call& call) {
-    view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
-    if (cr == NULL) return false;
+    view::CallRender3D_2 *cr = dynamic_cast<view::CallRender3D_2*>(&call);
+    if (cr == nullptr) return false;
 
     MultiParticleDataCall *c2 = this->getDataSlot.CallAs<MultiParticleDataCall>();
     float scaling = 1.0f;
-    if (c2 != NULL) {
+    if (c2 != nullptr) {
         c2->SetFrameID(static_cast<unsigned int>(cr->Time()));
         if (!(*c2)(1)) return false;
 
@@ -189,7 +181,7 @@ bool moldyn::ArrowRenderer::Render(Call& call) {
     //view::CallClipPlane *ccp = this->getClipPlaneSlot.CallAs<view::CallClipPlane>();
     //float clipDat[4];
     //float clipCol[3];
-    //if ((ccp != NULL) && (*ccp)()) {
+    //if ((ccp != nullptr) && (*ccp)()) {
     //    clipDat[0] = ccp->GetPlane().Normal().X();
     //    clipDat[1] = ccp->GetPlane().Normal().Y();
     //    clipDat[2] = ccp->GetPlane().Normal().Z();
@@ -216,12 +208,21 @@ bool moldyn::ArrowRenderer::Render(Call& call) {
     viewportStuff[2] = 2.0f / viewportStuff[2];
     viewportStuff[3] = 2.0f / viewportStuff[3];
 
+	view::Camera_2 cam;
+	cr->GetCamera(cam);
+	cam_type::snapshot_type snapshot;
+	cam_type::matrix_type viewTemp, projTemp;	
+	cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
+	glm::vec4 CamView = snapshot.view_vector;
+	glm::vec4 CamRight = snapshot.right_vector;
+	glm::vec4 CamUp = snapshot.up_vector;
+
     this->arrowShader.Enable();
 
     glUniform4fv(this->arrowShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-    glUniform3fv(this->arrowShader.ParameterLocation("camIn"), 1, cr->GetCameraParameters()->Front().PeekComponents());
-    glUniform3fv(this->arrowShader.ParameterLocation("camRight"), 1, cr->GetCameraParameters()->Right().PeekComponents());
-    glUniform3fv(this->arrowShader.ParameterLocation("camUp"), 1, cr->GetCameraParameters()->Up().PeekComponents());
+    glUniform3fv(this->arrowShader.ParameterLocation("camIn"), 1, glm::value_ptr(CamView));
+    glUniform3fv(this->arrowShader.ParameterLocation("camRight"), 1, glm::value_ptr(CamRight));
+    glUniform3fv(this->arrowShader.ParameterLocation("camUp"), 1, glm::value_ptr(CamUp));
     this->arrowShader.SetParameter("lengthScale", lengthScale);
     this->arrowShader.SetParameter("lengthFilter", lengthFilter);
 
@@ -230,7 +231,7 @@ bool moldyn::ArrowRenderer::Render(Call& call) {
 
     glScalef(scaling, scaling, scaling);
 
-    if (c2 != NULL) {
+    if (c2 != nullptr) {
         unsigned int cial = glGetAttribLocationARB(this->arrowShader, "colIdx");
         unsigned int tpal = glGetAttribLocationARB(this->arrowShader, "dir");
         bool useFlags = false;
@@ -283,7 +284,7 @@ bool moldyn::ArrowRenderer::Render(Call& call) {
 
                     glEnable(GL_TEXTURE_1D);
                     view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
-                    if ((cgtf != NULL) && ((*cgtf)())) {
+                    if ((cgtf != nullptr) && ((*cgtf)())) {
                         glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
                         colTabSize = cgtf->TextureSize();
                     } else {

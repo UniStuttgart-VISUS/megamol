@@ -11,7 +11,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/view/Renderer3DModule.h"
+#include "mmcore/view/Renderer3DModule_2.h"
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
@@ -25,7 +25,7 @@ namespace moldyn {
     /**
      * Renderer for simple sphere glyphs
      */
-    class ArrowRenderer : public view::Renderer3DModule {
+    class ArrowRenderer : public view::Renderer3DModule_2 {
     public:
 
         /**
