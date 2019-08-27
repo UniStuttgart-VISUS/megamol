@@ -83,6 +83,7 @@
 #include "mmcore/FileStreamProvider.h"
 #include "mmcore/view/special/CallbackScreenShooter.h"
 #include "mmcore/FlagStorage.h"
+#include "mmcore/DeferredShading.h"
 
 using namespace megamol::core;
 
@@ -170,4 +171,5 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<view::light::QuadLight>();
     instance.RegisterAutoDescription<view::light::SpotLight>();
     instance.RegisterAutoDescription<FlagStorage>();
+    instance.RegisterAutoDescription<DeferredShading>();
 }
