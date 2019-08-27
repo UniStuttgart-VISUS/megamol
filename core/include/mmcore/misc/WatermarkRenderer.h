@@ -16,8 +16,8 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/utility/ResourceWrapper.h"
 #include "mmcore/misc/PngBitmapCodec.h"
-#include "mmcore/view/Renderer3DModule.h"
-#include "mmcore/view/CallRender3D.h"
+#include "mmcore/view/Renderer3DModule_2.h"
+#include "mmcore/view/CallRender3D_2.h"
 
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/param/FilePathParam.h"
@@ -42,7 +42,7 @@ namespace megamol {
             /**
             * Render watermarks (e.g. logos) in all four corners of the viewport.
             */
-            class MEGAMOLCORE_API WatermarkRenderer : public view::Renderer3DModule {
+            class MEGAMOLCORE_API WatermarkRenderer : public view::Renderer3DModule_2 {
             public:
 
                 /**
@@ -96,7 +96,7 @@ namespace megamol {
                 *
                 * @return The return value of the function.
                 */
-                virtual bool GetExtents(megamol::core::view::CallRender3D& call);
+                virtual bool GetExtents(megamol::core::view::CallRender3D_2& call);
 
                 /**
                 * Implementation of 'Release'.
@@ -110,7 +110,7 @@ namespace megamol {
                 *
                 * @return The return value of the function.
                 */
-                virtual bool Render(megamol::core::view::CallRender3D& call);
+                virtual bool Render(megamol::core::view::CallRender3D_2& call);
 
             private:
 
