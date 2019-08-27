@@ -6,17 +6,18 @@
  */
 
 #include "stdafx.h"
-#include "mmcore/moldyn/MMPGDDataSource.h"
+#include "MMPGDDataSource.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
-#include "mmcore/moldyn/ParticleGridDataCall.h"
+#include "rendering/ParticleGridDataCall.h"
 #include "mmcore/CoreInstance.h"
 #include "vislib/sys/Log.h"
 #include "vislib/sys/FastFile.h"
 #include "vislib/String.h"
 #include "vislib/sys/SystemInformation.h"
 
-using namespace megamol::core;
+using namespace megamol::stdplugin::moldyn::io;
+using namespace megamol::stdplugin::moldyn;
 
 
 /* defines for the frame cache size */
@@ -30,18 +31,18 @@ using namespace megamol::core;
 /*****************************************************************************/
 
 /*
- * moldyn::MMPGDDataSource::Frame::Frame
+ * MMPGDDataSource::Frame::Frame
  */
-moldyn::MMPGDDataSource::Frame::Frame(view::AnimDataModule& owner)
+MMPGDDataSource::Frame::Frame(view::AnimDataModule& owner)
         : view::AnimDataModule::Frame(owner), dat(), types(NULL), cells(NULL) {
     // intentionally empty
 }
 
 
 /*
- * moldyn::MMPGDDataSource::Frame::~Frame
+ * MMPGDDataSource::Frame::~Frame
  */
-moldyn::MMPGDDataSource::Frame::~Frame() {
+MMPGDDataSource::Frame::~Frame() {
     ARY_SAFE_DELETE(this->cells);
     ARY_SAFE_DELETE(this->types);
     this->dat.EnforceSize(0);
@@ -49,9 +50,9 @@ moldyn::MMPGDDataSource::Frame::~Frame() {
 
 
 /*
- * moldyn::MMPGDDataSource::Frame::LoadFrame
+ * MMPGDDataSource::Frame::LoadFrame
  */
-bool moldyn::MMPGDDataSource::Frame::LoadFrame(vislib::sys::File *file, unsigned int idx, UINT64 size) {
+bool MMPGDDataSource::Frame::LoadFrame(vislib::sys::File *file, unsigned int idx, UINT64 size) {
     this->frame = idx;
     ARY_SAFE_DELETE(this->cells);
     ARY_SAFE_DELETE(this->types);
@@ -61,9 +62,9 @@ bool moldyn::MMPGDDataSource::Frame::LoadFrame(vislib::sys::File *file, unsigned
 
 
 /*
- * moldyn::MMPGDDataSource::Frame::SetData
+ * MMPGDDataSource::Frame::SetData
  */
-void moldyn::MMPGDDataSource::Frame::SetData(ParticleGridDataCall& call) {
+void MMPGDDataSource::Frame::SetData(rendering::ParticleGridDataCall& call) {
     if (this->dat.IsEmpty()) {
         call.SetFrameID(0);
         call.SetTypeDataRef(0, NULL);
@@ -81,30 +82,30 @@ void moldyn::MMPGDDataSource::Frame::SetData(ParticleGridDataCall& call) {
     if ((this->types == NULL) || (this->cells == NULL)) {
         // also do this if 'cells' is NULL to get the right 'pos'
         if (this->types == NULL) {
-            this->types = new ParticleGridDataCall::ParticleType[typeCnt];
+            this->types = new rendering::ParticleGridDataCall::ParticleType[typeCnt];
         }
         for (UINT32 i = 0; i < typeCnt; i++) {
             UINT8 vt = *this->dat.AsAt<UINT8>(pos); pos++;
             UINT8 ct = *this->dat.AsAt<UINT8>(pos); pos++;
 
             switch(vt) {
-                case 0: this->types[i].SetVertexDataType(MultiParticleDataCall::Particles::VERTDATA_NONE); break;
-                case 1: this->types[i].SetVertexDataType(MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ); break;
-                case 2: this->types[i].SetVertexDataType(MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR); break;
-                case 3: this->types[i].SetVertexDataType(MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ); break;
-                default: this->types[i].SetVertexDataType(MultiParticleDataCall::Particles::VERTDATA_NONE); break;
+                case 0: this->types[i].SetVertexDataType(core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE); break;
+                case 1: this->types[i].SetVertexDataType(core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ); break;
+                case 2: this->types[i].SetVertexDataType(core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR); break;
+                case 3: this->types[i].SetVertexDataType(core::moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ); break;
+                default: this->types[i].SetVertexDataType(core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE); break;
             }
             if (vt == 0) {
                 ct = 0;
             }
             switch(ct) {
-                case 0: this->types[i].SetColourDataType(MultiParticleDataCall::Particles::COLDATA_NONE); break;
-                case 1: this->types[i].SetColourDataType(MultiParticleDataCall::Particles::COLDATA_UINT8_RGB); break;
-                case 2: this->types[i].SetColourDataType(MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA); break;
-                case 3: this->types[i].SetColourDataType(MultiParticleDataCall::Particles::COLDATA_FLOAT_I); break;
-                case 4: this->types[i].SetColourDataType(MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB); break;
-                case 5: this->types[i].SetColourDataType(MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA); break;
-                default: this->types[i].SetColourDataType(MultiParticleDataCall::Particles::COLDATA_NONE); break;
+                case 0: this->types[i].SetColourDataType(core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE); break;
+                case 1: this->types[i].SetColourDataType(core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB); break;
+                case 2: this->types[i].SetColourDataType(core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA); break;
+                case 3: this->types[i].SetColourDataType(core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I); break;
+                case 4: this->types[i].SetColourDataType(core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB); break;
+                case 5: this->types[i].SetColourDataType(core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA); break;
+                default: this->types[i].SetColourDataType(core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE); break;
             }
 
             if ((vt == 1) || (vt == 3)) {
@@ -130,33 +131,33 @@ void moldyn::MMPGDDataSource::Frame::SetData(ParticleGridDataCall& call) {
     call.SetTypeDataRef(typeCnt, this->types);
 
     if (this->cells == NULL) {
-        this->cells = new ParticleGridDataCall::GridCell[cellX * cellY * cellZ];
+        this->cells = new rendering::ParticleGridDataCall::GridCell[cellX * cellY * cellZ];
         for (UINT32 i = 0; i < cellX * cellY * cellZ; i++) {
-            ParticleGridDataCall::GridCell& cell = this->cells[i];
+            rendering::ParticleGridDataCall::GridCell& cell = this->cells[i];
             const float *bbox = this->dat.AsAt<float>(pos);
             pos += 6 * 4;
             cell.AllocateParticleLists(typeCnt);
             cell.SetBoundingBox(vislib::math::Cuboid<float>(bbox[0], bbox[1], bbox[2], bbox[3], bbox[4], bbox[5]));
             for (UINT32 t = 0; t < typeCnt; t++) {
-                ParticleGridDataCall::ParticleType& type = this->types[t];
-                ParticleGridDataCall::Particles& points = cell.AccessParticleLists()[t];
+				rendering::ParticleGridDataCall::ParticleType& type = this->types[t];
+				rendering::ParticleGridDataCall::Particles& points = cell.AccessParticleLists()[t];
 
                 unsigned int vs = 0, cs = 0;
                 switch(type.GetVertexDataType()) {
-                    case MultiParticleDataCall::Particles::VERTDATA_NONE: vs = 0; break;
-                    case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ: vs = 12; break;
-                    case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR: vs = 16; break;
-                    case MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ: vs = 6; break;
+                    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE: vs = 0; break;
+                    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ: vs = 12; break;
+                    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR: vs = 16; break;
+                    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ: vs = 6; break;
                     default: vs = 0; break;
                 }
                 if (vs != 0) {
                     switch(type.GetColourDataType()) {
-                        case MultiParticleDataCall::Particles::COLDATA_NONE: cs = 0; break;
-                        case MultiParticleDataCall::Particles::COLDATA_UINT8_RGB: cs = 3; break;
-                        case MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA: cs = 4; break;
-                        case MultiParticleDataCall::Particles::COLDATA_FLOAT_I: cs = 4; break;
-                        case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB: cs = 12; break;
-                        case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA: cs = 16; break;
+                        case core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE: cs = 0; break;
+                        case core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB: cs = 3; break;
+                        case core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA: cs = 4; break;
+                        case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I: cs = 4; break;
+                        case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB: cs = 12; break;
+                        case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA: cs = 16; break;
                         default: cs = 0; break;
                     }
                 } else {
@@ -182,9 +183,9 @@ void moldyn::MMPGDDataSource::Frame::SetData(ParticleGridDataCall& call) {
 
 
 /*
- * moldyn::MMPGDDataSource::MMPGDDataSource
+ * MMPGDDataSource::MMPGDDataSource
  */
-moldyn::MMPGDDataSource::MMPGDDataSource(void) : view::AnimDataModule(),
+MMPGDDataSource::MMPGDDataSource(void) : view::AnimDataModule(),
         filename("filename", "The path to the MMPGD file to load."),
         getData("getdata", "Slot to request data from this data source."),
         file(NULL), frameIdx(NULL), bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f),
@@ -204,34 +205,34 @@ moldyn::MMPGDDataSource::MMPGDDataSource(void) : view::AnimDataModule(),
 
 
 /*
- * moldyn::MMPGDDataSource::~MMPGDDataSource
+ * MMPGDDataSource::~MMPGDDataSource
  */
-moldyn::MMPGDDataSource::~MMPGDDataSource(void) {
+MMPGDDataSource::~MMPGDDataSource(void) {
     this->Release();
 }
 
 
 /*
- * moldyn::MMPGDDataSource::constructFrame
+ * MMPGDDataSource::constructFrame
  */
-view::AnimDataModule::Frame* moldyn::MMPGDDataSource::constructFrame(void) const {
-    Frame *f = new Frame(*const_cast<moldyn::MMPGDDataSource*>(this));
+view::AnimDataModule::Frame* MMPGDDataSource::constructFrame(void) const {
+    Frame *f = new Frame(*const_cast<MMPGDDataSource*>(this));
     return f;
 }
 
 
 /*
- * moldyn::MMPGDDataSource::create
+ * MMPGDDataSource::create
  */
-bool moldyn::MMPGDDataSource::create(void) {
+bool MMPGDDataSource::create(void) {
     return true;
 }
 
 
 /*
- * moldyn::MMPGDDataSource::loadFrame
+ * MMPGDDataSource::loadFrame
  */
-void moldyn::MMPGDDataSource::loadFrame(view::AnimDataModule::Frame *frame,
+void MMPGDDataSource::loadFrame(view::AnimDataModule::Frame *frame,
         unsigned int idx) {
     using vislib::sys::Log;
     Frame *f = dynamic_cast<Frame*>(frame);
@@ -250,9 +251,9 @@ void moldyn::MMPGDDataSource::loadFrame(view::AnimDataModule::Frame *frame,
 
 
 /*
- * moldyn::MMPGDDataSource::release
+ * MMPGDDataSource::release
  */
-void moldyn::MMPGDDataSource::release(void) {
+void MMPGDDataSource::release(void) {
     this->resetFrameCache();
     if (this->file != NULL) {
         vislib::sys::File *f = this->file;
@@ -266,9 +267,9 @@ void moldyn::MMPGDDataSource::release(void) {
 
 
 /*
- * moldyn::MMPGDDataSource::filenameChanged
+ * MMPGDDataSource::filenameChanged
  */
-bool moldyn::MMPGDDataSource::filenameChanged(param::ParamSlot& slot) {
+bool MMPGDDataSource::filenameChanged(param::ParamSlot& slot) {
     using vislib::sys::Log;
     using vislib::sys::File;
     this->resetFrameCache();
@@ -366,10 +367,10 @@ bool moldyn::MMPGDDataSource::filenameChanged(param::ParamSlot& slot) {
 
 
 /*
- * moldyn::MMPGDDataSource::getDataCallback
+ * MMPGDDataSource::getDataCallback
  */
-bool moldyn::MMPGDDataSource::getDataCallback(Call& caller) {
-    ParticleGridDataCall *c2 = dynamic_cast<ParticleGridDataCall*>(&caller);
+bool MMPGDDataSource::getDataCallback(Call& caller) {
+	rendering::ParticleGridDataCall *c2 = dynamic_cast<rendering::ParticleGridDataCall*>(&caller);
     if (c2 == NULL) return false;
 
     Frame *f = NULL;
@@ -387,10 +388,10 @@ bool moldyn::MMPGDDataSource::getDataCallback(Call& caller) {
 
 
 /*
- * moldyn::MMPGDDataSource::getExtentCallback
+ * MMPGDDataSource::getExtentCallback
  */
-bool moldyn::MMPGDDataSource::getExtentCallback(Call& caller) {
-    ParticleGridDataCall *c2 = dynamic_cast<ParticleGridDataCall*>(&caller);
+bool MMPGDDataSource::getExtentCallback(Call& caller) {
+	rendering::ParticleGridDataCall *c2 = dynamic_cast<rendering::ParticleGridDataCall*>(&caller);
 
     if (c2 != NULL) {
         c2->SetFrameCount(this->FrameCount());

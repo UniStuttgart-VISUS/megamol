@@ -6,10 +6,10 @@
  */
 
 #include "stdafx.h"
-#include "mmcore/moldyn/DataGridder.h"
+#include "DataGridder.h"
 #include <climits>
 #include "mmcore/moldyn/MultiParticleDataCall.h"
-#include "mmcore/moldyn/ParticleGridDataCall.h"
+#include "rendering/ParticleGridDataCall.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/IntParam.h"
 #include "vislib/Array.h"
@@ -19,13 +19,13 @@
 #include "vislib/PtrArray.h"
 #include "vislib/RawStorageWriter.h"
 
-using namespace megamol::core;
+using namespace megamol::stdplugin::moldyn::rendering;
 
 
 /*
- * moldyn::DataGridder::DataGridder
+ * DataGridder::DataGridder
  */
-moldyn::DataGridder::DataGridder(void) : Module(),
+DataGridder::DataGridder(void) : Module(),
         inDataSlot("indata", "Slot to fetch flat data"),
         outDataSlot("outdata", "Slot to publicate gridded data"),
         gridSizeXSlot("gridsizex", "The grid size in x direction"),
@@ -35,42 +35,42 @@ moldyn::DataGridder::DataGridder(void) : Module(),
         datahash(0), frameID(UINT_MAX), gridSizeX(0), gridSizeY(0),
         gridSizeZ(0), types(), grid(), vertData(), colData(), outhash(0) {
 
-    this->inDataSlot.SetCompatibleCall<moldyn::MultiParticleDataCallDescription>();
+    this->inDataSlot.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->inDataSlot);
 
-    this->outDataSlot.SetCallback(moldyn::ParticleGridDataCall::ClassName(),
-        moldyn::ParticleGridDataCall::FunctionName(0), &DataGridder::getData);
-    this->outDataSlot.SetCallback(moldyn::ParticleGridDataCall::ClassName(),
-        moldyn::ParticleGridDataCall::FunctionName(1), &DataGridder::getExtend);
+    this->outDataSlot.SetCallback(ParticleGridDataCall::ClassName(),
+        ParticleGridDataCall::FunctionName(0), &DataGridder::getData);
+    this->outDataSlot.SetCallback(ParticleGridDataCall::ClassName(),
+        ParticleGridDataCall::FunctionName(1), &DataGridder::getExtent);
     this->MakeSlotAvailable(&this->outDataSlot);
 
-    this->gridSizeXSlot << new param::IntParam(5, 1);
+    this->gridSizeXSlot << new core::param::IntParam(5, 1);
     this->MakeSlotAvailable(&this->gridSizeXSlot);
 
-    this->gridSizeYSlot << new param::IntParam(5, 1);
+    this->gridSizeYSlot << new core::param::IntParam(5, 1);
     this->MakeSlotAvailable(&this->gridSizeYSlot);
 
-    this->gridSizeZSlot << new param::IntParam(5, 1);
+    this->gridSizeZSlot << new core::param::IntParam(5, 1);
     this->MakeSlotAvailable(&this->gridSizeZSlot);
 
-    this->quantizeSlot << new param::BoolParam(false);
+    this->quantizeSlot << new core::param::BoolParam(false);
     this->MakeSlotAvailable(&this->quantizeSlot);
 
 }
 
 
 /*
- * moldyn::DataGridder::~DataGridder
+ * DataGridder::~DataGridder
  */
-moldyn::DataGridder::~DataGridder(void) {
+DataGridder::~DataGridder(void) {
     this->Release(); // implicitly calls 'release'
 }
 
 
 /*
- * moldyn::DataGridder::create
+ * DataGridder::create
  */
-bool moldyn::DataGridder::create(void) {
+bool DataGridder::create(void) {
     this->types.Clear();
     this->grid.Clear();
     this->vertData.Clear();
@@ -81,9 +81,9 @@ bool moldyn::DataGridder::create(void) {
 
 
 /*
- * moldyn::DataGridder::release
+ * DataGridder::release
  */
-void moldyn::DataGridder::release(void) {
+void DataGridder::release(void) {
     this->types.Clear();
     this->grid.Clear();
     this->vertData.Clear();
@@ -93,29 +93,29 @@ void moldyn::DataGridder::release(void) {
 
 
 /*
- * moldyn::DataGridder::doSort
+ * DataGridder::doSort
  */
-int moldyn::DataGridder::doSort(const vislib::Pair<SIZE_T, unsigned int>& lhs,
+int DataGridder::doSort(const vislib::Pair<SIZE_T, unsigned int>& lhs,
         const vislib::Pair<SIZE_T, unsigned int>& rhs) {
     return lhs.Second() - rhs.Second();
 }
 
 
 /*
- * moldyn::DataGridder::getData
+ * DataGridder::getData
  */
-bool moldyn::DataGridder::getData(Call& call) {
+bool DataGridder::getData(megamol::core::Call& call) {
     ParticleGridDataCall *pgdc = dynamic_cast<ParticleGridDataCall *>(&call);
-    MultiParticleDataCall *mpdc = this->inDataSlot.CallAs<MultiParticleDataCall>();
+    auto *mpdc = this->inDataSlot.CallAs<core::moldyn::MultiParticleDataCall>();
     if ((pgdc == NULL) || (mpdc == NULL)) return false;
     vislib::math::Cuboid<float> bbox(0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f);
 
-    *static_cast<AbstractGetData3DCall*>(mpdc) = *pgdc;
+    *static_cast<core::AbstractGetData3DCall*>(mpdc) = *pgdc;
     if ((*mpdc)(1)) {
         bbox = mpdc->AccessBoundingBoxes().ClipBox();
     }
 
-    *static_cast<AbstractGetData3DCall*>(mpdc) = *pgdc;
+    *static_cast<core::AbstractGetData3DCall*>(mpdc) = *pgdc;
     if (!(*mpdc)(0)) return false; // unable to get data
 
     // test if update of grid is required
@@ -137,9 +137,9 @@ bool moldyn::DataGridder::getData(Call& call) {
         this->quantizeSlot.ResetDirty();
 
         // allocate new grid
-        this->gridSizeX = this->gridSizeXSlot.Param<param::IntParam>()->Value();
-        this->gridSizeY = this->gridSizeYSlot.Param<param::IntParam>()->Value();
-        this->gridSizeZ = this->gridSizeZSlot.Param<param::IntParam>()->Value();
+        this->gridSizeX = this->gridSizeXSlot.Param<core::param::IntParam>()->Value();
+        this->gridSizeY = this->gridSizeYSlot.Param<core::param::IntParam>()->Value();
+        this->gridSizeZ = this->gridSizeZSlot.Param<core::param::IntParam>()->Value();
         SIZE_T gridSize = this->gridSizeX * this->gridSizeY * this->gridSizeZ;
         if (gridSize == 0) {
             this->grid.Clear();
@@ -152,9 +152,9 @@ bool moldyn::DataGridder::getData(Call& call) {
         this->types.SetCount(typeCnt);
         for (unsigned int i = 0; i < typeCnt; i++) {
             ParticleGridDataCall::ParticleType &t = this->types[i];
-            MultiParticleDataCall::Particles &p = mpdc->AccessParticles(i);
+            auto &p = mpdc->AccessParticles(i);
 
-            if (p.GetVertexDataType() == moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ) {
+            if (p.GetVertexDataType() == core::moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ) {
                 vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
                     "[Critical] Unable to grid already quantized data!\n");
                 throw vislib::Exception("Critical Error: Unable to grid already quantized data!\n", __FILE__, __LINE__);
@@ -177,23 +177,23 @@ bool moldyn::DataGridder::getData(Call& call) {
         indexBuffer.SetCount(oaCnt);
         oaCnt = 0;
         for (unsigned int i = 0; i < typeCnt; i++) {
-            MultiParticleDataCall::Particles &p = mpdc->AccessParticles(i);
+            auto &p = mpdc->AccessParticles(i);
             const unsigned char *vertPtr = static_cast<const unsigned char*>(p.GetVertexData());
             unsigned int vertStep = p.GetVertexDataStride();
             SIZE_T c = static_cast<SIZE_T>(p.GetCount());
 
             switch (p.GetVertexDataType()) {
-                case MultiParticleDataCall::Particles::VERTDATA_NONE:
+                case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE:
                     continue; // done with that type already!
 
-                case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
+                case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
                     vertStep = vislib::math::Max(vertStep, 12U);
                     break;
-                case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
+                case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
                     vertStep = vislib::math::Max(vertStep, 16U);
                     break;
 
-                case MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
+                case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
                 default:
                     vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
                         "Internal Error at %s[%d]\n", __FILE__, __LINE__);
@@ -229,7 +229,7 @@ bool moldyn::DataGridder::getData(Call& call) {
         SIZE_T start = 0, pos = 0, cnt = indexBuffer.Count();
         for (unsigned int j = 0; j < gridSize; j++) {
             for (unsigned int i = 0; i < typeCnt; i++) {
-                MultiParticleDataCall::Particles &p = mpdc->AccessParticles(i);
+                core::moldyn::MultiParticleDataCall::Particles &p = mpdc->AccessParticles(i);
                 const unsigned char *colPtr = static_cast<const unsigned char*>(p.GetColourData());
                 const unsigned char *vertPtr = static_cast<const unsigned char*>(p.GetVertexData());
                 unsigned int colSize = 0;
@@ -239,22 +239,22 @@ bool moldyn::DataGridder::getData(Call& call) {
                 unsigned int ij = j * typeCnt + i;
 
                 switch (p.GetColourDataType()) {
-                    case MultiParticleDataCall::Particles::COLDATA_NONE:
+                    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE:
                         colSize = 0;
                         break;
-                    case MultiParticleDataCall::Particles::COLDATA_FLOAT_I:
+                    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I:
                         colSize = 4;
                         break;
-                    case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
+                    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
                         colSize = 12;
                         break;
-                    case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
+                    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
                         colSize = 16;
                         break;
-                    case MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
+                    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
                         colSize = 3;
                         break;
-                    case MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
+                    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
                         colSize = 4;
                         break;
                     default:
@@ -266,17 +266,17 @@ bool moldyn::DataGridder::getData(Call& call) {
                 }
 
                 switch (p.GetVertexDataType()) {
-                    case MultiParticleDataCall::Particles::VERTDATA_NONE:
+                    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE:
                         continue; // done with that type already!
 
-                    case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
+                    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
                         vertSize = 12;
                         break;
-                    case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
+                    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
                         vertSize = 16;
                         break;
 
-                    case MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
+                    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
                     default:
                         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
                             "Internal Error at %s[%d]\n", __FILE__, __LINE__);
@@ -331,12 +331,12 @@ bool moldyn::DataGridder::getData(Call& call) {
             for (unsigned int j = 0; j < typeCnt; j++) {
                 unsigned int vertSize;
                 switch (this->types[j].GetVertexDataType()) {
-                    case MultiParticleDataCall::Particles::VERTDATA_NONE:
+                    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE:
                         continue;
-                    case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
+                    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
                         vertSize = 3;
                         break;
-                    case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
+                    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
                         vertSize = 4;
                         break;
                     default:
@@ -372,16 +372,16 @@ bool moldyn::DataGridder::getData(Call& call) {
             this->grid[i].SetBoundingBox(vislib::math::Cuboid<float>(minX, minY, minZ, maxX, maxY, maxZ));
         }
 
-        if (this->quantizeSlot.Param<param::BoolParam>()->Value()) {
+        if (this->quantizeSlot.Param<core::param::BoolParam>()->Value()) {
             // quantize data!
 
             for (unsigned int j = 0; j < typeCnt; j++) {
                 unsigned int vertSize;
                 switch (this->types[j].GetVertexDataType()) {
-                    case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
+                    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
                         vertSize = 3;
                         break;
-                    case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
+                    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
                         vertSize = 4;
                         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN,
                             "Unable to quantize radius for type %u; using %f\n",
@@ -419,7 +419,7 @@ bool moldyn::DataGridder::getData(Call& call) {
                     }
                 }
 
-                this->types[j].SetVertexDataType(MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ);
+                this->types[j].SetVertexDataType(core::moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ);
             }
 
         }
@@ -444,17 +444,17 @@ bool moldyn::DataGridder::getData(Call& call) {
 
 
 /*
- * moldyn::DataGridder::getExtend
+ * DataGridder::getExtend
  */
-bool moldyn::DataGridder::getExtend(Call& call) {
+bool DataGridder::getExtent(megamol::core::Call& call) {
     ParticleGridDataCall *pgdc = dynamic_cast<ParticleGridDataCall *>(&call);
     if (pgdc == NULL) return false;
 
-    MultiParticleDataCall *mpdc = this->inDataSlot.CallAs<MultiParticleDataCall>();
+    core::moldyn::MultiParticleDataCall *mpdc = this->inDataSlot.CallAs<core::moldyn::MultiParticleDataCall>();
     if (mpdc != NULL) {
-        *static_cast<AbstractGetData3DCall*>(mpdc) = *pgdc;
+        *static_cast<core::AbstractGetData3DCall*>(mpdc) = *pgdc;
         if ((*mpdc)(1)) {
-            *static_cast<AbstractGetData3DCall*>(pgdc) = *mpdc;
+            *static_cast<core::AbstractGetData3DCall*>(pgdc) = *mpdc;
             return true;
         }
     }
