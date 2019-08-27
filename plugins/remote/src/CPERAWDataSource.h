@@ -22,10 +22,8 @@
 
 #include "zfp.h"
 
-#include "PBSStorage.h"
-
 namespace megamol {
-namespace pbs {
+namespace remote {
 
 /** Module to read cpe point dumps as introduced with cpelib 4513dfd9fd8efa9282848bbe2ab4f53053d753b8. */
 class CPERAWDataSource : public core::Module {
@@ -144,7 +142,7 @@ private:
     std::array<float, 6> localBBox, globalBBox, globalCBox;
 };
 
-} /* end namespace pbs */
+} /* end namespace remote */
 } /* end namespace megamol */
 
 #endif // end ifndef PBS_CPERAWDATASOURCE_H_INCLUDED

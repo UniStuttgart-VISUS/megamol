@@ -1,11 +1,11 @@
 /*
- * pbs.cpp
+ * remote.cpp
  * Copyright (C) 2009-2015 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
-#include "pbs/pbs.h"
+#include "remote/remote.h"
 
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/utility/plugins/Plugin200Instance.h"
@@ -16,14 +16,10 @@
 #include "CPERAWDataSource.h"
 #include "FBOCompositor2.h"
 #include "FBOTransmitter2.h"
-#include "OSPRayPBSGeometry.h"
-#include "PBSDataSource.h"
-#include "PBSRenderer.h"
 #include "HeadnodeServer.h"
 #include "RendernodeView.h"
 
 // Calls
-#include "pbs/PBSDataCall.h"
 
 
 /* anonymous namespace hides this type from any other object files */
@@ -36,10 +32,10 @@ public:
         : ::megamol::core::utility::plugins::Plugin200Instance(
 
               /* machine-readable plugin assembly name */
-              "pbs", // TODO: Change this!
+              "remote", // TODO: Change this!
 
               /* human-readable plugin description */
-              "Describing pbs (TODO: Change this!)"){
+              "Plugin containing remote utilities for MegaMol"){
 
               // here we could perform addition initialization
           };
@@ -51,30 +47,26 @@ public:
     virtual void registerClasses(void) {
 
         // register modules here:
-        this->module_descriptions.RegisterAutoDescription<megamol::pbs::PBSDataSource>();
-        this->module_descriptions.RegisterAutoDescription<megamol::pbs::PBSRenderer>();
-        this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayPBSGeometry>();
-        this->module_descriptions.RegisterAutoDescription<megamol::pbs::FBOTransmitter2>();
-        this->module_descriptions.RegisterAutoDescription<megamol::pbs::FBOCompositor2>();
-        this->module_descriptions.RegisterAutoDescription<megamol::pbs::CPERAWDataSource>();
-        this->module_descriptions.RegisterAutoDescription<megamol::pbs::HeadnodeServer>();
-        this->module_descriptions.RegisterAutoDescription<megamol::pbs::RendernodeView>();
+        this->module_descriptions.RegisterAutoDescription<megamol::remote::FBOTransmitter2>();
+        this->module_descriptions.RegisterAutoDescription<megamol::remote::FBOCompositor2>();
+        this->module_descriptions.RegisterAutoDescription<megamol::remote::CPERAWDataSource>();
+        this->module_descriptions.RegisterAutoDescription<megamol::remote::HeadnodeServer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::remote::RendernodeView>();
 
 		//
         // TODO: Register your plugin's modules here
         // like:
-        //   this->module_descriptions.RegisterAutoDescription<megamol::pbs::MyModule1>();
-        //   this->module_descriptions.RegisterAutoDescription<megamol::pbs::MyModule2>();
+        //   this->module_descriptions.RegisterAutoDescription<megamol::remote::MyModule1>();
+        //   this->module_descriptions.RegisterAutoDescription<megamol::remote::MyModule2>();
         //   ...
         //
 
         // register calls here:
-        this->call_descriptions.RegisterAutoDescription<megamol::pbs::PBSDataCall>();
         //
         // TODO: Register your plugin's calls here
         // like:
-        //   this->call_descriptions.RegisterAutoDescription<megamol::pbs::MyCall1>();
-        //   this->call_descriptions.RegisterAutoDescription<megamol::pbs::MyCall2>();
+        //   this->call_descriptions.RegisterAutoDescription<megamol::remote::MyCall1>();
+        //   this->call_descriptions.RegisterAutoDescription<megamol::remote::MyCall2>();
         //   ...
         //
     }
@@ -86,13 +78,13 @@ public:
 /*
  * mmplgPluginAPIVersion
  */
-PBS_API int mmplgPluginAPIVersion(void){MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_mmplgPluginAPIVersion}
+REMOTE_API int mmplgPluginAPIVersion(void){MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_mmplgPluginAPIVersion}
 
 
 /*
  * mmplgGetPluginCompatibilityInfo
  */
-PBS_API ::megamol::core::utility::plugins::PluginCompatibilityInfo* mmplgGetPluginCompatibilityInfo(
+REMOTE_API ::megamol::core::utility::plugins::PluginCompatibilityInfo* mmplgGetPluginCompatibilityInfo(
     ::megamol::core::utility::plugins::ErrorCallback onError) {
     // compatibility information with core and vislib
     using ::megamol::core::utility::plugins::LibraryVersionInfo;
@@ -134,7 +126,7 @@ PBS_API ::megamol::core::utility::plugins::PluginCompatibilityInfo* mmplgGetPlug
 /*
  * mmplgReleasePluginCompatibilityInfo
  */
-PBS_API
+REMOTE_API
 void mmplgReleasePluginCompatibilityInfo(::megamol::core::utility::plugins::PluginCompatibilityInfo* ci){
     // release compatiblity data on the correct heap
     MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_mmplgReleasePluginCompatibilityInfo(ci)}
@@ -143,7 +135,7 @@ void mmplgReleasePluginCompatibilityInfo(::megamol::core::utility::plugins::Plug
 /*
  * mmplgGetPluginInstance
  */
-PBS_API ::megamol::core::utility::plugins::AbstractPluginInstance* mmplgGetPluginInstance(
+REMOTE_API ::megamol::core::utility::plugins::AbstractPluginInstance* mmplgGetPluginInstance(
     ::megamol::core::utility::plugins::ErrorCallback onError){
     MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_mmplgGetPluginInstance(plugin_instance, onError)}
 
@@ -151,6 +143,6 @@ PBS_API ::megamol::core::utility::plugins::AbstractPluginInstance* mmplgGetPlugi
 /*
  * mmplgReleasePluginInstance
  */
-PBS_API void mmplgReleasePluginInstance(::megamol::core::utility::plugins::AbstractPluginInstance* pi) {
+REMOTE_API void mmplgReleasePluginInstance(::megamol::core::utility::plugins::AbstractPluginInstance* pi) {
     MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_mmplgReleasePluginInstance(pi)
 }

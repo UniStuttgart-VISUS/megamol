@@ -4,8 +4,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef PBS_STDAFX_H_INCLUDED
-#define PBS_STDAFX_H_INCLUDED
+#ifndef REMOTE_STDAFX_H_INCLUDED
+#define REMOTE_STDAFX_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -33,4 +33,4 @@
 
 #include "vislib/types.h"
 
-#endif /* PBS_STDAFX_H_INCLUDED */
+#endif /* REMOTE_STDAFX_H_INCLUDED */

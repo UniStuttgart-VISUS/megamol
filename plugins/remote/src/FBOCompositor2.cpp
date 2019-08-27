@@ -23,7 +23,7 @@
 //#define _DEBUG 1
 //#define VERBOSE 1
 
-megamol::pbs::FBOCompositor2::FBOCompositor2()
+megamol::remote::FBOCompositor2::FBOCompositor2()
     : provide_img_slot_{"getImg", "Provides received images"}
     , commSelectSlot_{"communicator", "Select the communicator to use"}
     // addressesSlot_{"addresses", "Put all addresses of FBOTransmitter2s separated by a ';'"}
@@ -73,10 +73,10 @@ megamol::pbs::FBOCompositor2::FBOCompositor2()
 }
 
 
-megamol::pbs::FBOCompositor2::~FBOCompositor2() { this->Release(); }
+megamol::remote::FBOCompositor2::~FBOCompositor2() { this->Release(); }
 
 
-bool megamol::pbs::FBOCompositor2::create() {
+bool megamol::remote::FBOCompositor2::create() {
     glGenVertexArrays(1, &this->vao);
     glBindVertexArray(this->vao);
     glGenBuffers(1, &this->vbo);
@@ -138,10 +138,10 @@ bool megamol::pbs::FBOCompositor2::create() {
 }
 
 
-void megamol::pbs::FBOCompositor2::release() { shutdownThreads(); }
+void megamol::remote::FBOCompositor2::release() { shutdownThreads(); }
 
 
-bool megamol::pbs::FBOCompositor2::GetExtents(megamol::core::view::CallRender3D_2& call) {
+bool megamol::remote::FBOCompositor2::GetExtents(megamol::core::view::CallRender3D_2& call) {
     auto& out_bbox = call.AccessBoundingBoxes();
 
 #if _DEBUG && VERBOSE
@@ -198,7 +198,7 @@ bool megamol::pbs::FBOCompositor2::GetExtents(megamol::core::view::CallRender3D_
 }
 
 
-bool megamol::pbs::FBOCompositor2::Render(megamol::core::view::CallRender3D_2& call) {
+bool megamol::remote::FBOCompositor2::Render(megamol::core::view::CallRender3D_2& call) {
     // initThreads();
 
     auto req_time = call.Time();
@@ -303,7 +303,7 @@ bool megamol::pbs::FBOCompositor2::Render(megamol::core::view::CallRender3D_2& c
 }
 
 
-bool megamol::pbs::FBOCompositor2::getImageCallback(megamol::core::Call& c) {
+bool megamol::remote::FBOCompositor2::getImageCallback(megamol::core::Call& c) {
     // initThreads();
 
     auto imgc = dynamic_cast<megamol::image_calls::Image2DCall*>(&c);
@@ -337,14 +337,14 @@ bool megamol::pbs::FBOCompositor2::getImageCallback(megamol::core::Call& c) {
     return true;
 }
 
-bool megamol::pbs::FBOCompositor2::startCallback(megamol::core::param::ParamSlot& p) {
+bool megamol::remote::FBOCompositor2::startCallback(megamol::core::param::ParamSlot& p) {
     shutdownThreads();
     this->initThreadsThread_ = std::thread{&FBOCompositor2::initThreads, this};
     return true;
 }
 
 
-void megamol::pbs::FBOCompositor2::RGBAtoRGB(std::vector<char> const& rgba, std::vector<unsigned char>& rgb) {
+void megamol::remote::FBOCompositor2::RGBAtoRGB(std::vector<char> const& rgba, std::vector<unsigned char>& rgb) {
     auto const num_pixels = rgba.size() / 4;
     rgb.resize(num_pixels * 3);
 
@@ -356,7 +356,7 @@ void megamol::pbs::FBOCompositor2::RGBAtoRGB(std::vector<char> const& rgba, std:
 }
 
 
-bool megamol::pbs::FBOCompositor2::initThreads() {
+bool megamol::remote::FBOCompositor2::initThreads() {
     if (!register_done_) {
         auto const bind_str = std::string("tcp://*:") +
                               std::to_string(this->handshakePortSlot_.Param<megamol::core::param::IntParam>()->Value());
@@ -387,7 +387,7 @@ bool megamol::pbs::FBOCompositor2::initThreads() {
 }
 
 
-void megamol::pbs::FBOCompositor2::receiverJob(
+void megamol::remote::FBOCompositor2::receiverJob(
     FBOCommFabric& comm, core::utility::sys::FutureReset<fbo_msg_t>* fbo_msg_future, std::future<bool>&& close) {
     try {
         while (!shutdown_) {
@@ -520,7 +520,7 @@ void megamol::pbs::FBOCompositor2::receiverJob(
 }
 
 
-void megamol::pbs::FBOCompositor2::collectorJob(std::vector<FBOCommFabric>&& comms) {
+void megamol::remote::FBOCompositor2::collectorJob(std::vector<FBOCommFabric>&& comms) {
     try {
         auto const num_jobs = comms.size();
         // initialize threads
@@ -653,7 +653,7 @@ void megamol::pbs::FBOCompositor2::collectorJob(std::vector<FBOCommFabric>&& com
 }
 
 
-void megamol::pbs::FBOCompositor2::registerJob(std::vector<std::string>& addresses) {
+void megamol::remote::FBOCompositor2::registerJob(std::vector<std::string>& addresses) {
     try {
         int const numNodes = this->numRendernodesSlot_.Param<megamol::core::param::IntParam>()->Value();
 
@@ -716,7 +716,7 @@ void megamol::pbs::FBOCompositor2::registerJob(std::vector<std::string>& address
 }
 
 
-void megamol::pbs::FBOCompositor2::initTextures(size_t n, GLsizei width, GLsizei heigth) {
+void megamol::remote::FBOCompositor2::initTextures(size_t n, GLsizei width, GLsizei heigth) {
     glActiveTexture(GL_TEXTURE0);
 
     GLint oldBind = 0;
@@ -743,7 +743,7 @@ void megamol::pbs::FBOCompositor2::initTextures(size_t n, GLsizei width, GLsizei
 }
 
 
-void megamol::pbs::FBOCompositor2::resize(size_t n, GLsizei width, GLsizei height) {
+void megamol::remote::FBOCompositor2::resize(size_t n, GLsizei width, GLsizei height) {
     // this->fbo_ = megamol::core::utility::gl::FramebufferObject{width, height};
 
     glDeleteTextures(this->color_textures_.size(), this->color_textures_.data());
@@ -753,7 +753,7 @@ void megamol::pbs::FBOCompositor2::resize(size_t n, GLsizei width, GLsizei heigh
 }
 
 
-std::vector<std::string> megamol::pbs::FBOCompositor2::getAddresses(std::string const& str) const noexcept {
+std::vector<std::string> megamol::remote::FBOCompositor2::getAddresses(std::string const& str) const noexcept {
     std::vector<std::string> ret;
 
     std::string token;
@@ -769,7 +769,7 @@ std::vector<std::string> megamol::pbs::FBOCompositor2::getAddresses(std::string 
 }
 
 
-std::vector<megamol::pbs::FBOCommFabric> megamol::pbs::FBOCompositor2::connectComms(
+std::vector<megamol::remote::FBOCommFabric> megamol::remote::FBOCompositor2::connectComms(
     std::vector<std::string> const& addr) const {
     std::vector<FBOCommFabric> ret;
 
@@ -802,13 +802,13 @@ std::vector<megamol::pbs::FBOCommFabric> megamol::pbs::FBOCompositor2::connectCo
 }
 
 
-std::vector<megamol::pbs::FBOCommFabric> megamol::pbs::FBOCompositor2::connectComms(
+std::vector<megamol::remote::FBOCommFabric> megamol::remote::FBOCompositor2::connectComms(
     std::vector<std::string>&& addr) const {
     return this->connectComms(addr);
 }
 
 
-bool megamol::pbs::FBOCompositor2::printShaderInfoLog(GLuint shader) const {
+bool megamol::remote::FBOCompositor2::printShaderInfoLog(GLuint shader) const {
     int infoLogLen = 0;
     int charsWritten = 0;
     GLchar* infoLog;
@@ -828,7 +828,7 @@ bool megamol::pbs::FBOCompositor2::printShaderInfoLog(GLuint shader) const {
 }
 
 
-bool megamol::pbs::FBOCompositor2::printProgramInfoLog(GLuint shaderProg) const {
+bool megamol::remote::FBOCompositor2::printProgramInfoLog(GLuint shaderProg) const {
     int infoLogLen = 0;
     int charsWritten = 0;
     GLchar* infoLog;
@@ -848,7 +848,7 @@ bool megamol::pbs::FBOCompositor2::printProgramInfoLog(GLuint shaderProg) const 
 }
 
 
-bool megamol::pbs::FBOCompositor2::shutdownThreads() {
+bool megamol::remote::FBOCompositor2::shutdownThreads() {
     // close_promise_.set_value(true);
     shutdown_ = true;
     if (collector_thread_.joinable()) collector_thread_.join();

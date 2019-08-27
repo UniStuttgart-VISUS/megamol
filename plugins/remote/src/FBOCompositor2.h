@@ -22,7 +22,7 @@
 
 
 namespace megamol {
-namespace pbs {
+namespace remote {
 
 class FBOCompositor2 : public megamol::core::view::Renderer3DModule_2 {
 public:
@@ -208,5 +208,5 @@ private:
 
 }; // end class FBOCompositor2
 
-} // end namespace pbs
+} // end namespace remote
 } // end namespace megamol
