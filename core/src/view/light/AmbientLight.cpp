@@ -7,7 +7,7 @@
 #include "stdafx.h"
 #include "mmcore/view/light/AmbientLight.h"
 #include "mmcore/param/FloatParam.h"
-#include "mmcore/param/Vector3fParam.h"
+#include "mmcore/param/ColorParam.h"
 
 using namespace megamol::core::view::light;
 
@@ -26,8 +26,7 @@ AmbientLight::~AmbientLight(void) { this->Release(); }
  */
 void AmbientLight::readParams() {
     lightContainer.lightType = lightenum::AMBIENTLIGHT;
-    auto lcolor = this->lightColor.Param<core::param::Vector3fParam>()->Value().PeekComponents();
-    lightContainer.lightColor.assign(lcolor, lcolor + 3);
+    lightContainer.lightColor = this->lightColor.Param<core::param::ColorParam>()->Value();
     lightContainer.lightIntensity = this->lightIntensity.Param<core::param::FloatParam>()->Value();
 }
 

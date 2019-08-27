@@ -11,47 +11,6 @@
 
 using namespace megamol::core::view::light;
 
-/*
- * LightContainer::LightContainer
- */
-LightContainer::LightContainer()
-    : // General light parameters
-    lightType(lightenum::NONE)
-    , lightColor(NULL)
-    , lightIntensity(0.0f)
-    ,
-    // Distant light parameters
-    dl_direction(NULL)
-    , dl_angularDiameter(0.0f)
-    , dl_eye_direction(false)
-    ,
-    // point light paramenters
-    pl_position(NULL)
-    , pl_radius(0.0f)
-    ,
-    // spot light parameters
-    sl_position(NULL)
-    , sl_direction(NULL)
-    , sl_openingAngle(0.0f)
-    , sl_penumbraAngle(0.0f)
-    , sl_radius(0.0f)
-    ,
-    // quad light parameters
-    ql_position(NULL)
-    , ql_edgeOne(NULL)
-    , ql_edgeTwo(NULL)
-    ,
-    // hdri light parameters
-    hdri_up(NULL)
-    , hdri_direction(NULL)
-    , hdri_evnfile("")
-    ,
-    // tracks the existence of the light module
-    isValid(false)
-    , dataChanged(false) {}
-
-LightContainer::~LightContainer() { this->isValid = false; }
-
 
 // #############################
 // ###### CallLight ######
