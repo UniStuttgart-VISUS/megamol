@@ -17,13 +17,13 @@
 #include "vislib/RawStorageSerialiser.h"
 
 
-megamol::pbs::HeadnodeServer::HeadnodeServer()
+megamol::remote::HeadnodeServer::HeadnodeServer()
     : view_slot_("viewSlot", "Connects to the view.")
     , renderhead_port_slot_("port", "Sets to port to listen to.")
     , start_server_slot_("start", "Start listening to port.")
     , lua_command_slot_("LUACommand", "Sends custom lua command to the RendernodeView")
     , deploy_project_slot_("deployProject", "Sends project file on connect")
-    , comm_fabric_(std::make_unique<ZMQCommFabric>(zmq::socket_type::rep))
+    , comm_fabric_(std::make_unique<ZMQCommFabric>(zmq::socket_type::push))
     , run_threads_(false)
     , is_job_running_(true) {
 
@@ -50,28 +50,28 @@ megamol::pbs::HeadnodeServer::HeadnodeServer()
 }
 
 
-megamol::pbs::HeadnodeServer::~HeadnodeServer() { this->Release(); }
+megamol::remote::HeadnodeServer::~HeadnodeServer() { this->Release(); }
 
 
-bool megamol::pbs::HeadnodeServer::IsRunning(void) const { return is_job_running_; }
+bool megamol::remote::HeadnodeServer::IsRunning(void) const { return is_job_running_; }
 
 
-bool megamol::pbs::HeadnodeServer::Start() { return true; }
+bool megamol::remote::HeadnodeServer::Start() { return true; }
 
 
-bool megamol::pbs::HeadnodeServer::Terminate() {
+bool megamol::remote::HeadnodeServer::Terminate() {
     shutdown_threads();
     return true;
 }
 
 
-bool megamol::pbs::HeadnodeServer::create() {
+bool megamol::remote::HeadnodeServer::create() {
     this->GetCoreInstance()->RegisterParamUpdateListener(this);
     return true;
 }
 
 
-void megamol::pbs::HeadnodeServer::release() {
+void megamol::remote::HeadnodeServer::release() {
     this->is_job_running_ = false;
     shutdown_threads();
     if (this->GetCoreInstance() != nullptr) {
@@ -80,7 +80,7 @@ void megamol::pbs::HeadnodeServer::release() {
 }
 
 
-void megamol::pbs::HeadnodeServer::ParamUpdated(core::param::ParamSlot& slot) {
+void megamol::remote::HeadnodeServer::ParamUpdated(core::param::ParamSlot& slot) {
     // if (!running_) return;
     if (!run_threads_) return;
 
@@ -104,7 +104,7 @@ void megamol::pbs::HeadnodeServer::ParamUpdated(core::param::ParamSlot& slot) {
 }
 
 
-bool megamol::pbs::HeadnodeServer::get_cam_upd(std::vector<char>& msg) {
+bool megamol::remote::HeadnodeServer::get_cam_upd(std::vector<char>& msg) {
 
     AbstractNamedObject::const_ptr_type avp;
     const core::view::AbstractView* av = nullptr;
@@ -140,7 +140,7 @@ bool megamol::pbs::HeadnodeServer::get_cam_upd(std::vector<char>& msg) {
 }
 
 
-bool megamol::pbs::HeadnodeServer::init_threads() {
+bool megamol::remote::HeadnodeServer::init_threads() {
     try {
         shutdown_threads();
         this->comm_fabric_ = FBOCommFabric(std::make_unique<ZMQCommFabric>(zmq::socket_type::rep));
@@ -160,7 +160,7 @@ bool megamol::pbs::HeadnodeServer::init_threads() {
 }
 
 
-bool megamol::pbs::HeadnodeServer::shutdown_threads() {
+bool megamol::remote::HeadnodeServer::shutdown_threads() {
     run_threads_ = false;
     if (comm_thread_.joinable()) {
         vislib::sys::Log::DefaultLog.WriteInfo("HeadnodeServer: Joining thread.");
@@ -170,7 +170,7 @@ bool megamol::pbs::HeadnodeServer::shutdown_threads() {
 }
 
 
-void megamol::pbs::HeadnodeServer::do_communication() {
+void megamol::remote::HeadnodeServer::do_communication() {
     using namespace std::chrono_literals;
 
     std::vector<char> const null_buf(MessageHeaderSize, 0);
@@ -201,18 +201,18 @@ void megamol::pbs::HeadnodeServer::do_communication() {
             if (!run_threads_) break;
 
             // check whether camera has been updated
-            auto cam_updated = false;
+            /*auto cam_updated = false;
 
             while (!(cam_updated || buffer_has_changed_.load()) && run_threads_) {
                 std::this_thread::sleep_for(1000ms / 120);
                 cam_updated = get_cam_upd(cam_msg);
-            }
+            }*/
 
             {
                 std::lock_guard<std::mutex> lock(send_buffer_guard_);
-                if (cam_updated) {
+                /*if (cam_updated) {
                     send_buffer_.insert(send_buffer_.end(), cam_msg.begin(), cam_msg.end());
-                }
+                }*/
 
                 if (!send_buffer_.empty()) {
 		    // vislib::sys::Log::DefaultLog.WriteInfo("HeadnodeServer: Sending parameter update.\n");
@@ -239,14 +239,14 @@ void megamol::pbs::HeadnodeServer::do_communication() {
 }
 
 
-bool megamol::pbs::HeadnodeServer::onStartServer(core::param::ParamSlot& param) {
+bool megamol::remote::HeadnodeServer::onStartServer(core::param::ParamSlot& param) {
     init_threads();
 
     return true;
 }
 
 
-bool megamol::pbs::HeadnodeServer::onLuaCommand(core::param::ParamSlot& param) {
+bool megamol::remote::HeadnodeServer::onLuaCommand(core::param::ParamSlot& param) {
     if (!run_threads_) return true;
 
     std::vector<char> msg;

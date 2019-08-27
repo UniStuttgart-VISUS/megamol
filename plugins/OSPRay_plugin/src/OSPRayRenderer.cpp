@@ -32,10 +32,9 @@ ospray::OSPRayRenderer::OSPRaySphereRenderer
 */
 OSPRayRenderer::OSPRayRenderer(void)
     : AbstractOSPRayRenderer()
+	, cam()
     , osprayShader()
-    ,
-
-    getStructureSlot("getStructure", "Connects to an OSPRay structure")
+    , getStructureSlot("getStructure", "Connects to an OSPRay structure")
 
 {
     this->getStructureSlot.SetCompatibleCall<CallOSPRayStructureDescription>();
@@ -121,7 +120,7 @@ void OSPRayRenderer::release() {
 /*
 ospray::OSPRayRenderer::Render
 */
-bool OSPRayRenderer::Render(megamol::core::Call& call) {
+bool OSPRayRenderer::Render(megamol::core::view::CallRender3D_2& cr) {
     this->initOSPRay(device);
 
     if (device != ospGetCurrentDevice()) {
@@ -150,15 +149,14 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
         this->rd_type.ResetDirty();
     }
 
-    core::view::CallRender3D* cr = dynamic_cast<core::view::CallRender3D*>(&call);
-    if (cr == NULL) return false;
+    if (&cr == nullptr) return false;
 
 
     CallOSPRayStructure* os = this->getStructureSlot.CallAs<CallOSPRayStructure>();
-    if (os == NULL) return false;
+    if (os == nullptr) return false;
     // read data
     os->setStructureMap(&structureMap);
-    os->setTime(cr->Time());
+    os->setTime(cr.Time());
     if (!os->fillStructureMap()) return false;
     // check if data has changed
     data_has_changed = false;
@@ -174,49 +172,41 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
     }
 
     // Light setup
-    core::view::light::CallLight *gl = this->getLightSlot.CallAs<core::view::light::CallLight>();
-    light_has_changed = false;
-    if (gl != NULL) {
-        gl->setLightMap(&lightMap);
-        gl->fillLightMap();
-        for (auto element : this->lightMap) {
-            auto light = element.second;
-            if (light.dataChanged) {
-                light_has_changed = true;
-            }
-        }
-    }
+	this->light_has_changed = this->GetLights();
 
+	core::view::Camera_2 tmp_newcam;
+	cr.GetCamera(tmp_newcam);
+	cam_type::snapshot_type snapshot;
+	cam_type::matrix_type viewTemp, projTemp;
+
+	// Generate complete snapshot and calculate matrices
+	tmp_newcam.calc_matrices(snapshot, viewTemp, projTemp, core::thecam::snapshot_content::all);
 
     // check data and camera hash
-    if (camParams == NULL) camParams = new vislib::graphics::CameraParamsStore();
+	if (cam.eye_position().x() != tmp_newcam.eye_position().x() ||
+		cam.eye_position().y() != tmp_newcam.eye_position().y() ||
+		cam.eye_position().z() != tmp_newcam.eye_position().z() ||
+		cam.view_vector() != tmp_newcam.view_vector()
+		) {
+		cam_has_changed = true;
+	} else {
+		cam_has_changed = false;
+	}
 
-    if ((camParams->EyeDirection().PeekComponents()[0] !=
-            cr->GetCameraParameters()->EyeDirection().PeekComponents()[0]) ||
-        (camParams->EyeDirection().PeekComponents()[1] !=
-            cr->GetCameraParameters()->EyeDirection().PeekComponents()[1]) ||
-        (camParams->EyeDirection().PeekComponents()[2] !=
-            cr->GetCameraParameters()->EyeDirection().PeekComponents()[2])) {
-        cam_has_changed = true;
-    } else {
-        cam_has_changed = false;
-    }
-    camParams->CopyFrom(cr->GetCameraParameters());
-
+	// Generate complete snapshot and calculate matrices
+	cam = tmp_newcam;
 
     // glDisable(GL_CULL_FACE);
 
     // new framebuffer at resize action
     // bool triggered = false;
-    if (imgSize.x != cr->GetCameraParameters()->TileRect().Width() ||
-        imgSize.y != cr->GetCameraParameters()->TileRect().Height() || accumulateSlot.IsDirty()) {
+    if (imgSize.x != cam.resolution_gate().width() ||
+        imgSize.y != cam.resolution_gate().height() || accumulateSlot.IsDirty()) {
         // triggered = true;
         // Breakpoint for Screenshooter debugging
         if (framebuffer != NULL) ospFreeFrameBuffer(framebuffer);
-        // imgSize.x = cr->GetCameraParameters()->VirtualViewSize().GetWidth();
-        // imgSize.y = cr->GetCameraParameters()->VirtualViewSize().GetHeight();
-        imgSize.x = cr->GetCameraParameters()->TileRect().Width();
-        imgSize.y = cr->GetCameraParameters()->TileRect().Height();
+        imgSize.x = cam.resolution_gate().width();
+        imgSize.y = cam.resolution_gate().height();
         framebuffer = newFrameBuffer(imgSize, OSP_FB_RGBA8, OSP_FB_COLOR | OSP_FB_DEPTH | OSP_FB_ACCUM);
         db.resize(imgSize.x * imgSize.y);
         ospCommit(framebuffer);
@@ -239,16 +229,16 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
     //    }
     //    renderer_has_changed = true;
     //}
-    setupOSPRayCamera(camera, cr, this->scale);
+    setupOSPRayCamera(camera, cam);
     ospCommit(camera);
 
     osprayShader.Enable();
     // if nothing changes, the image is rendered multiple times
     if (data_has_changed || material_has_changed || light_has_changed || cam_has_changed || renderer_has_changed ||
         !(this->accumulateSlot.Param<core::param::BoolParam>()->Value()) ||
-        frameID != static_cast<size_t>(cr->Time()) || this->InterfaceIsDirty()) {
+        frameID != static_cast<size_t>(cr.Time()) || this->InterfaceIsDirty()) {
 
-        if (data_has_changed || frameID != static_cast<size_t>(cr->Time()) || renderer_has_changed) {
+        if (data_has_changed || frameID != static_cast<size_t>(cr.Time()) || renderer_has_changed) {
             // || this->InterfaceIsDirty()) {
             if (!this->fillWorld()) return false;
 
@@ -263,8 +253,8 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
             this->changeMaterial();
         }
         this->InterfaceResetDirty();
-        time = cr->Time();
-        frameID = static_cast<size_t>(cr->Time());
+        time = cr.Time();
+        frameID = static_cast<size_t>(cr.Time());
         renderer_has_changed = false;
 
         /*
@@ -277,14 +267,12 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
 
 
         // Enable Lights
-        if (gl != NULL) {
-            auto eyeDir = cr->GetCameraParameters()->EyeDirection().PeekComponents();
-            this->fillLightArray(eyeDir);
-            lightsToRender = ospNewData(this->lightArray.size(), OSP_OBJECT, lightArray.data(), 0);
-            ospCommit(lightsToRender);
-            ospSetData(renderer, "lights", lightsToRender);
-        }
-
+        auto eyeDir = cam.view_vector();
+        this->fillLightArray(eyeDir);
+        lightsToRender = ospNewData(this->lightArray.size(), OSP_OBJECT, lightArray.data(), 0);
+        ospCommit(lightsToRender);
+        ospSetData(renderer, "lights", lightsToRender);
+        
         ospSetObject(renderer, "model", world);
         ospCommit(renderer);
 
@@ -308,7 +296,7 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
         }
 
         if (this->useDB.Param<core::param::BoolParam>()->Value()) {
-            getOpenGLDepthFromOSPPerspective(*cr, db.data());
+            getOpenGLDepthFromOSPPerspective(db.data());
         }
 
         // write a sequence of single pictures while the screenshooter is running
@@ -325,7 +313,7 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
         //    this->number++;
         //}
 
-        this->renderTexture2D(osprayShader, fb, db.data(), imgSize.x, imgSize.y, *cr);
+        this->renderTexture2D(osprayShader, fb, db.data(), imgSize.x, imgSize.y, cr);
 
         // clear stuff
         ospUnmapFrameBuffer(fb, framebuffer);
@@ -338,7 +326,7 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
         ospRenderFrame(framebuffer, renderer, OSP_FB_COLOR | OSP_FB_DEPTH | OSP_FB_ACCUM);
         fb = (uint32_t*)ospMapFrameBuffer(framebuffer, OSP_FB_COLOR);
 
-        this->renderTexture2D(osprayShader, fb, db.data(), imgSize.x, imgSize.y, *cr);
+        this->renderTexture2D(osprayShader, fb, db.data(), imgSize.x, imgSize.y, cr);
         ospUnmapFrameBuffer(fb, framebuffer);
     }
 
@@ -367,97 +355,79 @@ void OSPRayRenderer::InterfaceResetDirty() { this->AbstractResetDirty(); }
 /*
  * ospray::OSPRayRenderer::GetExtents
  */
-bool OSPRayRenderer::GetExtents(megamol::core::Call& call) {
+bool OSPRayRenderer::GetExtents(megamol::core::view::CallRender3D_2& cr) {
 
-    megamol::core::view::CallRender3D* cr = dynamic_cast<megamol::core::view::CallRender3D*>(&call);
-    if (cr == NULL) return false;
+    if (&cr == NULL) return false;
     CallOSPRayStructure* os = this->getStructureSlot.CallAs<CallOSPRayStructure>();
     if (os == NULL) return false;
-    os->setTime(static_cast<int>(cr->Time()));
+    os->setTime(static_cast<int>(cr.Time()));
     os->setExtendMap(&(this->extendMap));
     if (!os->fillExtendMap()) return false;
 
-    megamol::core::BoundingBoxes finalBox;
+    megamol::core::BoundingBoxes_2 finalBox;
     unsigned int frameCnt = 0;
     for (auto pair : this->extendMap) {
         auto element = pair.second;
 
         if (frameCnt == 0) {
             if (element.boundingBox->IsObjectSpaceBBoxValid()) {
-                finalBox.SetObjectSpaceBBox(element.boundingBox->ObjectSpaceBBox());
+                finalBox.SetBoundingBox(element.boundingBox->ObjectSpaceBBox());
             } else if (element.boundingBox->IsObjectSpaceClipBoxValid()) {
-                finalBox.SetObjectSpaceBBox(element.boundingBox->ObjectSpaceClipBox());
+                finalBox.SetBoundingBox(element.boundingBox->ObjectSpaceClipBox());
             } else {
-                finalBox.SetObjectSpaceBBox(vislib::math::Cuboid<float>(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f));
+                finalBox.SetBoundingBox(vislib::math::Cuboid<float>(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f));
             }
             if (element.boundingBox->IsObjectSpaceClipBoxValid()) {
-                finalBox.SetObjectSpaceClipBox(element.boundingBox->ObjectSpaceClipBox());
+                finalBox.SetClipBox(element.boundingBox->ObjectSpaceClipBox());
             } else if (element.boundingBox->IsObjectSpaceBBoxValid()) {
-                finalBox.SetObjectSpaceClipBox(element.boundingBox->ObjectSpaceBBox());
+                finalBox.SetClipBox(element.boundingBox->ObjectSpaceBBox());
             } else {
-                finalBox.SetObjectSpaceClipBox(vislib::math::Cuboid<float>(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f));
+                finalBox.SetClipBox(vislib::math::Cuboid<float>(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f));
             }
 
         } else {
             if (element.boundingBox->IsObjectSpaceBBoxValid()) {
-                vislib::math::Cuboid<float> box(finalBox.ObjectSpaceBBox());
+                vislib::math::Cuboid<float> box(finalBox.BoundingBox());
                 box.Union(element.boundingBox->ObjectSpaceBBox());
-                finalBox.SetObjectSpaceBBox(box);
+                finalBox.SetBoundingBox(box);
             } else if (element.boundingBox->IsObjectSpaceClipBoxValid()) {
-                vislib::math::Cuboid<float> box(finalBox.ObjectSpaceBBox());
+                vislib::math::Cuboid<float> box(finalBox.BoundingBox());
                 box.Union(element.boundingBox->ObjectSpaceClipBox());
-                finalBox.SetObjectSpaceBBox(box);
+                finalBox.SetBoundingBox(box);
             }
             if (element.boundingBox->IsObjectSpaceClipBoxValid()) {
-                vislib::math::Cuboid<float> box(finalBox.ObjectSpaceClipBox());
+                vislib::math::Cuboid<float> box(finalBox.ClipBox());
                 box.Union(element.boundingBox->ObjectSpaceClipBox());
-                finalBox.SetObjectSpaceClipBox(box);
+                finalBox.SetClipBox(box);
             } else if (element.boundingBox->IsObjectSpaceBBoxValid()) {
-                vislib::math::Cuboid<float> box(finalBox.ObjectSpaceClipBox());
+                vislib::math::Cuboid<float> box(finalBox.ClipBox());
                 box.Union(element.boundingBox->ObjectSpaceBBox());
-                finalBox.SetObjectSpaceClipBox(box);
+                finalBox.SetClipBox(box);
             }
         }
         frameCnt = vislib::math::Max(frameCnt, element.timeFramesCount);
     }
-    scale = 1.0f;
-    if (frameCnt == 0) {
-        frameCnt = 1;
-        scale = 10.0f / finalBox.ObjectSpaceBBox().LongestEdge();
-    } else {
-        scale = 10.0f / finalBox.ObjectSpaceBBox().LongestEdge();
-    }
 
-    cr->SetTimeFramesCount(frameCnt);
-    cr->AccessBoundingBoxes() = finalBox;
-    cr->AccessBoundingBoxes().MakeScaledWorld(scale);
+	cr.AccessBoundingBoxes().SetBoundingBox(finalBox.BoundingBox());
+	cr.AccessBoundingBoxes().SetBoundingBox(finalBox.ClipBox());
 
     return true;
 }
 
-void OSPRayRenderer::getOpenGLDepthFromOSPPerspective(megamol::core::Call& call, float* db) {
+void OSPRayRenderer::getOpenGLDepthFromOSPPerspective(float* db) {
 
-    megamol::core::view::CallRender3D* cr = dynamic_cast<megamol::core::view::CallRender3D*>(&call);
-    if (cr == NULL) return;
+	//cr->GetCameraState().se
 
-    const double fovy = cr->GetCameraParameters()->ApertureAngle();
-    const double aspect = static_cast<float>(cr->GetCameraParameters()->VirtualViewSize().GetWidth()) /
-                          static_cast<float>(cr->GetCameraParameters()->VirtualViewSize().GetHeight());
-    const double zNear = cr->GetCameraParameters()->NearClip() / this->scale;
-    const double zFar = cr->GetCameraParameters()->FarClip() / this->scale;
+    const float fovy = cam.aperture_angle();
+    const float aspect = cam.resolution_gate_aspect();
+    const float zNear = cam.near_clipping_plane();
+    const float zFar = cam.far_clipping_plane();
 
-    float up_x = cr->GetCameraParameters()->Up().GetX();
-    float up_y = cr->GetCameraParameters()->Up().GetY();
-    float up_z = cr->GetCameraParameters()->Up().GetZ();
-
-    float* dir = cr->GetCameraParameters()->EyeDirection().PeekComponents();
-
-    const ospcommon::vec3f cameraUp(up_x, up_y, up_z);
-    const ospcommon::vec3f cameraDir(dir[0], dir[1], dir[2]);
+    const ospcommon::vec3f cameraUp(cam.up_vector().x(), cam.up_vector().y(), cam.up_vector().z());
+    const ospcommon::vec3f cameraDir(cam.view_vector().x(), cam.view_vector().y(), cam.view_vector().z());
 
     // map OSPRay depth buffer from provided frame buffer
     const float* ospDepthBuffer = (const float*)ospMapFrameBuffer(this->framebuffer, OSP_FB_DEPTH);
-
 
     const size_t ospDepthBufferWidth = (size_t)this->imgSize.x;
     const size_t ospDepthBufferHeight = (size_t)this->imgSize.y;
@@ -474,8 +444,8 @@ void OSPRayRenderer::getOpenGLDepthFromOSPPerspective(megamol::core::Call& call,
 
     const ospcommon::vec3f dir_00 = cameraDir - .5f * dir_du - .5f * dir_dv;
 
-    const double A = -(zFar + zNear) / (zFar - zNear);
-    const double B = -2. * zFar * zNear / (zFar - zNear);
+    const float A = -(zFar + zNear) / (zFar - zNear);
+    const float B = -2. * zFar * zNear / (zFar - zNear);
 
     int j, i;
 #pragma omp parallel for private(i)

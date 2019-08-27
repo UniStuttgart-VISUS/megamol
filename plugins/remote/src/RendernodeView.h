@@ -21,7 +21,7 @@
 #include "mmcore/param/IntParam.h"
 
 namespace megamol {
-namespace pbs {
+namespace remote {
 
 class RendernodeView : public core::view::AbstractTileView {
 public:
@@ -70,6 +70,8 @@ public:
     virtual ~RendernodeView(void);
 
     void Render(const mmcRenderViewContext& context) override;
+
+	bool OnRenderView(core::Call& call) override;
 
 protected:
     bool create(void) override;
@@ -187,5 +189,5 @@ private:
     int comm_size_;
 }; // end class RendernodeView
 
-} // end namespace pbs
+} // end namespace remote
 } // end namespace megamol

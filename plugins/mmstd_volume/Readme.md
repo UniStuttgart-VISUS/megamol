@@ -7,41 +7,20 @@ This plugin is switched on by default.
 ## Modules
 
 - [BuckyBall](#BuckyBall)
-- [DatRawDataSource](#DatRawDataSource)
 - [DatRawWriter](#DatRawWriter)
-- [DirectVolumeRenderer](#DirectVolumeRenderer)
-- [DirPartVolume](#DirPartVolume)
-- [GridBalls](#GridBalls)
 - [RaycastVolumeRenderer](#RaycastVolumeRenderer)
-- [RenderVolumeSlice](#RenderVolumeSlice)
-- [VolumeCache](#VolumeCache)
+- [VolumeSliceRenderer](#VolumeSliceRenderer)
 - [VolumetricDataSource](#VolumetricDataSource)
 
 ### BuckyBall
 
-Small example data generator for nested spheres, which can be used, e.g., in conjunction with the `RenderVolumeSlice` renderer.
+Small generator for an example volume dataset of an icosahedron nested inside a sphere.
 
 The module provides the following output slots:
 
 | Slot                | Type                      | Description                                                | Remark   |
 |---------------------|---------------------------|------------------------------------------------------------|----------|
-| getData             | `CallVolumeData`          | Provides the generated example data                        |          |
-
-### DatRawDataSource
-
-Reader for dat-raw files, where the `.dat` file contains meta information and `.raw` contains the raw data.
-
-The module provides the following output slots:
-
-| Slot                | Type                      | Description                                                | Remark   |
-|---------------------|---------------------------|------------------------------------------------------------|----------|
-| getdata             | `VolumeDataCall`          | Provides the data read from file                           |          |
-
-The module provides the following parameters:
-
-| Parameter      | Default Value | Description                                                            |
-|----------------|---------------|------------------------------------------------------------------------|
-| datFilename    |               | Path to the input `.dat` file which should be read                     |
+| getData             | `VolumetricDataCall`      | Provides the generated example data                        |          |
 
 ### DatRawWriter
 
@@ -65,12 +44,6 @@ The module provides the following parameters:
 |----------------|---------------|------------------------------------------------------------------------|
 | filepathPrefix |               | Path to where the `.dat` and `.raw` file which should be stored, providing a filename without extension |
 | frameID        | 0             | Set the frame ID for which the data should be requested and stored     |
-
-### DirectVolumeRenderer
-
-### DirPartVolume
-
-### GridBalls
 
 ### RaycastVolumeRenderer
 
@@ -101,9 +74,26 @@ Example screenshots for the bonsai dat-raw volume dataset using two different tr
 
 <img src="images/RaycastVolumeRenderer.png" width="49%"> <img src="images/RaycastVolumeRenderer_Fancy.png" width="49%"></center></p>
 
-### RenderVolumeSlice
-
-### VolumeCache
+### VolumeSliceRenderer
 
 ### VolumetricDataSource
 
+Reader for dat-raw files, where the `.dat` file contains meta information and `.raw` contains the raw data.
+
+The module provides the following output slots:
+
+| Slot                | Type                      | Description                                                | Remark   |
+|---------------------|---------------------------|------------------------------------------------------------|----------|
+| GetData             | `VolumetricDataCall`      | Provides the data read from file                           |          |
+
+The module provides the following parameters:
+
+| Parameter      | Default Value | Description                                                            |
+|----------------|---------------|------------------------------------------------------------------------|
+| AsyncSleep     | 0             | The time in milliseconds that the loader sleeps between two frames     |
+| AsyncWait      | 0             | The time in milliseconds after that the loader wakes itself            |
+| Buffers        | 2             | The number of buffers for loading frames asynchronously                |
+| FileName       |               | Path to the input `.dat` file which should be read                     |
+| LoadAsync      | False         | Start asynchronous loading of frames                                   |
+| OutputDataSize | -1: Auto      | Forces the scalar type to the specified size                           |
+| OutputDataType | -1: Auto      | Enforces the type of a scalar during loading                           |
