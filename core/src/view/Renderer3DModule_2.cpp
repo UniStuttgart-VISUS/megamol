@@ -131,3 +131,10 @@ bool Renderer3DModule_2::GetLights(void) {
     }
     return lightDirty;
 }
+
+/*
+ * Renderer3DModule_2::PreRender
+ */
+void Renderer3DModule_2::PreRender(CallRender3D_2& call) {
+	//intentionally empty
+}
