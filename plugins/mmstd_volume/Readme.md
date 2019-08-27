@@ -96,11 +96,10 @@ The module provides the following parameters:
 
 | Parameter      | Default Value | Description                                                            |
 |----------------|---------------|------------------------------------------------------------------------|
-| AsyncSleep     | 0             |                                                                        |
-| AsyncWait      | 0             |                                                                        |
-| Buffers        | 2             |                                                                        |
+| AsyncSleep     | 0             | The time in milliseconds that the loader sleeps between two frames     |
+| AsyncWait      | 0             | The time in milliseconds after that the loader wakes itself            |
+| Buffers        | 2             | The number of buffers for loading frames asynchronously                |
 | FileName       |               | Path to the input `.dat` file which should be read                     |
-| LoadAsync      | False         |                                                                        |
-| OutputDataSize | -1: Auto      |                                                                        |
-| OutputDataType | -1: Auto      |                                                                        |
-
+| LoadAsync      | False         | Start asynchronous loading of frames                                   |
+| OutputDataSize | -1: Auto      | Forces the scalar type to the specified size                           |
+| OutputDataType | -1: Auto      | Enforces the type of a scalar during loading                           |
