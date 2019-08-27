@@ -1060,22 +1060,22 @@ void View3D_2::handleCameraMovement(void) {
 void View3D_2::setCameraValues(const view::Camera_2& cam) {
     glm::vec4 pos = cam.position();
     this->cameraPositionParam.Param<param::Vector3fParam>()->SetValue(
-        vislib::math::Vector<float, 3>(pos.x, pos.y, pos.z), false);
+        vislib::math::Vector<float, 3>(pos.x, pos.y, pos.z), true);
     glm::quat orient = cam.orientation();
     this->cameraOrientationParam.Param<param::Vector4fParam>()->SetValue(
-        vislib::math::Vector<float, 4>(orient.x, orient.y, orient.z, orient.w), false);
-    this->cameraProjectionTypeParam.Param<param::EnumParam>()->SetValue(static_cast<int>(cam.projection_type()), false);
-    this->cameraNearPlaneParam.Param<param::FloatParam>()->SetValue(cam.near_clipping_plane(), false);
-    this->cameraFarPlaneParam.Param<param::FloatParam>()->SetValue(cam.far_clipping_plane(), false);
-    this->cameraConvergencePlaneParam.Param<param::FloatParam>()->SetValue(cam.convergence_plane(), false);
-    this->cameraEyeParam.Param<param::EnumParam>()->SetValue(static_cast<int>(cam.eye()), false);
-    this->cameraGateScalingParam.Param<param::EnumParam>()->SetValue(static_cast<int>(cam.gate_scaling()), false);
+        vislib::math::Vector<float, 4>(orient.x, orient.y, orient.z, orient.w), true);
+    this->cameraProjectionTypeParam.Param<param::EnumParam>()->SetValue(static_cast<int>(cam.projection_type()), true);
+    this->cameraNearPlaneParam.Param<param::FloatParam>()->SetValue(cam.near_clipping_plane(), true);
+    this->cameraFarPlaneParam.Param<param::FloatParam>()->SetValue(cam.far_clipping_plane(), true);
+    this->cameraConvergencePlaneParam.Param<param::FloatParam>()->SetValue(cam.convergence_plane(), true);
+    this->cameraEyeParam.Param<param::EnumParam>()->SetValue(static_cast<int>(cam.eye()), true);
+    this->cameraGateScalingParam.Param<param::EnumParam>()->SetValue(static_cast<int>(cam.gate_scaling()), true);
     this->cameraFilmGateParam.Param<param::Vector2fParam>()->SetValue(
-        vislib::math::Vector<float, 2>(cam.film_gate().width(), cam.film_gate().height()), false);
+        vislib::math::Vector<float, 2>(cam.film_gate().width(), cam.film_gate().height()), true);
     this->cameraCenterOffsetParam.Param<param::Vector2fParam>()->SetValue(
-        vislib::math::Vector<float, 2>(cam.centre_offset().x(), cam.centre_offset().y()), false);
-    this->cameraHalfApertureRadiansParam.Param<param::FloatParam>()->SetValue(cam.half_aperture_angle_radians(), false);
-    this->cameraHalfDisparityParam.Param<param::FloatParam>()->SetValue(cam.half_disparity(), false);
+        vislib::math::Vector<float, 2>(cam.centre_offset().x(), cam.centre_offset().y()), true);
+    this->cameraHalfApertureRadiansParam.Param<param::FloatParam>()->SetValue(cam.half_aperture_angle_radians(), true);
+    this->cameraHalfDisparityParam.Param<param::FloatParam>()->SetValue(cam.half_disparity(), true);
 }
 
 /*

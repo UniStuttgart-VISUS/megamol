@@ -9,6 +9,7 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/Vector3fParam.h"
+#include "mmcore/param/ColorParam.h"
 
 using namespace megamol::core::view::light;
 
@@ -42,16 +43,15 @@ QuadLight::~QuadLight(void) { this->Release(); }
  */
 void QuadLight::readParams() {
     lightContainer.lightType = lightenum::QUADLIGHT;
-    auto lcolor = this->lightColor.Param<core::param::Vector3fParam>()->Value().PeekComponents();
-    lightContainer.lightColor.assign(lcolor, lcolor + 3);
+	lightContainer.lightColor = this->lightColor.Param<core::param::ColorParam>()->Value();
     lightContainer.lightIntensity = this->lightIntensity.Param<core::param::FloatParam>()->Value();
 
     auto ql_pos = this->ql_position.Param<core::param::Vector3fParam>()->Value().PeekComponents();
-    lightContainer.ql_position.assign(ql_pos, ql_pos + 3);
+	std::copy(ql_pos, ql_pos + 3, lightContainer.ql_position.begin());
     auto ql_e1 = this->ql_edgeOne.Param<core::param::Vector3fParam>()->Value().PeekComponents();
-    lightContainer.ql_edgeOne.assign(ql_e1, ql_e1 + 3);
+	std::copy(ql_e1, ql_e1 + 3, lightContainer.ql_edgeOne.begin());
     auto ql_e2 = this->ql_edgeTwo.Param<core::param::Vector3fParam>()->Value().PeekComponents();
-    lightContainer.ql_edgeTwo.assign(ql_e2, ql_e2 + 3);
+	std::copy(ql_e2, ql_e2 + 3, lightContainer.ql_edgeTwo.begin());
 }
 
 /*

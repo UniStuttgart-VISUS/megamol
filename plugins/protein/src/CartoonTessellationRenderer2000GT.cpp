@@ -716,7 +716,7 @@ bool CartoonTessellationRenderer2000GT::Render(view::CallRender3D_2& call) {
 
         this->GetLights();
         auto ls = this->lightMap.size();
-        std::vector<float> lightPos = {0.0f, 0.0f, 0.0f};
+        std::array<float,3> lightPos = {0.0f, 0.0f, 0.0f};
         if (this->lightMap.size() != 1) {
             vislib::sys::Log::DefaultLog.WriteWarn("Only single point light sources are supported by this renderer");
         } else if (this->lightMap.begin()->second.lightType != core::view::light::POINTLIGHT) {
