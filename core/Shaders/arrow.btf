@@ -4,7 +4,7 @@
   <include file="bitflags"/>
 
   <shader name="vertex">
-        <snippet type="version">110</snippet>
+        <snippet type="version">130</snippet>
         <snippet type="string">
 #extension GL_EXT_gpu_shader4 : enable
         </snippet>
@@ -263,7 +263,7 @@ void main(void) {
     </shader>
 
   <shader name="fragment">
-    <snippet type="version">110</snippet>
+    <snippet type="version">130</snippet>
     <snippet type="string">
 #extension GL_EXT_gpu_shader4 : enable
     </snippet>

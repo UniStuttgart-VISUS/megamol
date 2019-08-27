@@ -1,3 +1,4 @@
+
 #extension GL_EXT_geometry_shader4: enable
 
 layout (points) in;
@@ -15,6 +16,7 @@ flat out float gsCellZ;
 
 vec3 normalizedPosition;
 
+
 // Emit a disk by setting a position and a layer (to be rendered into the volume texture)
 // Also set the point size to serve as a canvas and pass the fragment shader a vector
 // that contains the disk center (in moved object coordinates) and the squared radius
@@ -29,6 +31,7 @@ void emitDisk(int layer, float diskSize, float radius) {
 	EmitVertex();
 	EndPrimitive();
 }
+
 
 // Create information for a whole hemisphere (excluding the center cross section) by
 // calculating radii of cross sections and emitting a disk of appropriate size
@@ -50,7 +53,6 @@ void emitHemisphere(int layer, int numSlices, float radius, float offset, int sl
 		// Emit a new disk
 		emitDisk(layer + sliceStep * i, sqrt(newSqrRadius), radius);
 	} 
-
 }
 
 

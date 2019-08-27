@@ -38,4 +38,7 @@ FLACH in float effectiveDiameter;
 uniform bool inUseHighPrecision;
 out vec4 outNormal;
 
+// Only used by OUTLINE render mode:
+uniform float outlineSize;
+
 layout(location = 0) out vec4 outColor;

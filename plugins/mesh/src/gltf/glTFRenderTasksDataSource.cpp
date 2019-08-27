@@ -10,7 +10,8 @@
 #include "mesh/CallGPUMeshData.h"
 
 megamol::mesh::GlTFRenderTasksDataSource::GlTFRenderTasksDataSource()
-	: m_glTF_callerSlot("getGlTFFile", "Connects the data source with a loaded glTF file")
+	: m_glTF_callerSlot(
+        "getGlTFFile", "Connects the data source with a loaded glTF file")
 {
 	this->m_glTF_callerSlot.SetCompatibleCall<CallGlTFDataDescription>();
 	this->MakeSlotAvailable(&this->m_glTF_callerSlot);

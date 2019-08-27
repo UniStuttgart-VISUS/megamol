@@ -86,8 +86,9 @@
 
         <shader name="fragment">     
             <snippet name="Main"                  type="file">sphere/mdao_deferred_fragment_main.glsl</snippet>
+
             <!-- Folowing snippets are appended depending on need: -->
-            <snippet name="Lighting"              type="file">sphere/mdao_deferred_fragment_lighting.glsl</snippet>
+            <snippet name="Lighting"              type="file">lightdirectional.glsl</snippet>
             <snippet name="LightingStub"          type="file">sphere/mdao_deferred_fragment_lighting_stub.glsl</snippet>
             <snippet name="AmbientOcclusion"      type="file">sphere/mdao_deferred_fragment_ambocc.glsl</snippet>
         </shader>

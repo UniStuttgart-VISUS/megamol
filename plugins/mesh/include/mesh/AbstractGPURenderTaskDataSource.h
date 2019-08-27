@@ -16,6 +16,8 @@
 #include "mmcore/CallerSlot.h"
 #include "mesh.h"
 
+#include "mmcore/view/light/CallLight.h"
+
 namespace megamol {
 namespace mesh {
 
@@ -56,6 +58,13 @@ protected:
     virtual void release();
 
     /**
+     * Receives the current lights from the light call and writes them to the lightMap
+     *
+     * @return True if any light has changed, false otherwise.
+     */
+    bool GetLights(void);
+
+    /**
      * This modules storage class for Render Tasks.
      * If connected within a chain of rts (but not the first rt module), the storage should remain unused
      * and instead the collection provided by the left-hand-side rt is used.
@@ -68,6 +77,9 @@ protected:
      */
     std::vector<size_t> m_rt_collection_indices;
 
+    /** map to store the called lights */
+    core::view::light::LightMap lightMap;
+
     /** The slot for requesting data from this module, i.e. lhs connection */
     megamol::core::CalleeSlot m_getData_slot;
 
@@ -79,6 +91,9 @@ protected:
 
     /** The slot for querying mesh data, i.e. a rhs connection */
     megamol::core::CallerSlot m_mesh_callerSlot;
+
+    /** Slot to retrieve the light information */
+    megamol::core::CallerSlot m_light_slot;
 };
 
 } // namespace mesh

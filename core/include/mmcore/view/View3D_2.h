@@ -183,8 +183,9 @@ protected:
      * Adapts camera values set by the user if necessary
      *
      * @param cam The camera the newly set parameters will be stored in
+	 * @return True if a camera value had to be adapted, false otherwise
      */
-    void adaptCameraValues(core::view::Camera_2& cam);
+    bool adaptCameraValues(core::view::Camera_2& cam);
 
     /**
      * Implementation of 'Create'.
@@ -392,6 +393,9 @@ protected:
 
     /** Distance from the camera to the arcball center */
     float arcballCenterDistance;
+
+	/** Value storing whether there have been read parameter values that came from outside */
+	bool valuesFromOutside;
 
     /**  */
     std::chrono::time_point<std::chrono::high_resolution_clock> lastFrameTime;

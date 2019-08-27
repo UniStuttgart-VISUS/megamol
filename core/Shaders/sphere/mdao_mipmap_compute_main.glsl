@@ -1,9 +1,10 @@
+
 #version 430
 
-layout (local_size_x = 64, local_size_y=1, local_size_z=1) in;
+layout (local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
 
-uniform readonly layout(binding=0, R8) image3D inputImage;
-uniform writeonly layout(binding=1, R8) image3D outputImage;
+uniform readonly layout(binding = 0, r8) image3D inputImage;
+uniform writeonly layout(binding = 1, r8) image3D outputImage;
 
 void main()
 {
