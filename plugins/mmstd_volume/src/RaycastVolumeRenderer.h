@@ -108,7 +108,6 @@ protected:
 	 * Get and update data by calling input modules
 	 */
     bool updateVolumeData();
-    bool updateTransferFunction();
 
 private:
     std::unique_ptr<vislib::graphics::gl::GLSLComputeShader> m_raycast_volume_compute_shdr;
@@ -120,9 +119,7 @@ private:
 
     std::unique_ptr<glowl::Texture2D> m_transfer_function;
 
-    GLuint tf_texture;
-
-    size_t m_volume_datahash = std::numeric_limits<size_t>::max();
+    std::size_t m_volume_datahash = std::numeric_limits<std::size_t>::max();
     int m_frame_id = -1;
 
 	glm::vec3 m_volume_origin;
