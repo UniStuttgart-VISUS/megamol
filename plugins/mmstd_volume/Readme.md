@@ -6,6 +6,17 @@ This plugin is switched on by default.
 
 ## Modules
 
+- [BuckyBall](#BuckyBall)
+- [DatRawDataSource](#DatRawDataSource)
+- [DatRawWriter](#DatRawWriter)
+- [DirectVolumeRenderer](#DirectVolumeRenderer)
+- [DirPartVolume](#DirPartVolume)
+- [GridBalls](#GridBalls)
+- [RaycastVolumeRenderer](#RaycastVolumeRenderer)
+- [RenderVolumeSlice](#RenderVolumeSlice)
+- [VolumeCache](#VolumeCache)
+- [VolumetricDataSource](#VolumetricDataSource)
+
 ### BuckyBall
 
 Small example data generator for nested spheres, which can be used, e.g., in conjunction with the `RenderVolumeSlice` renderer.
