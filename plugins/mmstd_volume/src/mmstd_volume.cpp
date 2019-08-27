@@ -13,8 +13,6 @@
 #include "vislib/vislibversion.h"
 #include "vislib/sys/Log.h"
 #include "BuckyBall.h"
-#include "DirPartVolume.h"
-#include "VolumeCache.h"
 #include "RenderVolumeSlice.h"
 #include "VolumetricDataSource.h"
 #include "RaycastVolumeRenderer.h"
@@ -61,7 +59,7 @@ MMSTD_VOLUME_API const void * mmplgCoreCompatibilityValue(void) {
  * mmplgModuleCount
  */
 MMSTD_VOLUME_API int mmplgModuleCount(void) {
-    return 7;
+    return 5;
 }
 
 
@@ -71,12 +69,10 @@ MMSTD_VOLUME_API int mmplgModuleCount(void) {
 MMSTD_VOLUME_API void* mmplgModuleDescription(int idx) {
     switch (idx) {
     case 0: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::volume::BuckyBall>();
-    case 1: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::volume::DirPartVolume>();
-    case 2: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::volume::VolumeCache>();
-    case 3: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::volume::RenderVolumeSlice>();
-	case 4: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::volume::VolumetricDataSource>();
-	case 5: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::volume::RaycastVolumeRenderer>();
-	case 6: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::volume::DatRawWriter>();
+    case 1: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::volume::RenderVolumeSlice>();
+	case 2: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::volume::VolumetricDataSource>();
+	case 3: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::volume::RaycastVolumeRenderer>();
+	case 4: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::volume::DatRawWriter>();
     }
     return NULL;
 }
