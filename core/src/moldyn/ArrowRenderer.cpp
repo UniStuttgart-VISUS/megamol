@@ -13,7 +13,6 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/view/CallClipPlane.h"
 #include "mmcore/view/CallGetTransferFunction.h"
-#include "mmcore/view/CallRender3D_2.h"
 #include "mmcore/FlagCall.h"
 #include "vislib/assert.h"
 
@@ -23,7 +22,7 @@ using namespace megamol::core;
 /*
  * moldyn::ArrowRenderer::ArrowRenderer
  */
-moldyn::ArrowRenderer::ArrowRenderer(void) : Renderer3DModule_2(),
+moldyn::ArrowRenderer::ArrowRenderer(void) : view::Renderer3DModule_2(),
         arrowShader(), getDataSlot("getdata", "Connects to the data source"),
         getTFSlot("gettransferfunction", "Connects to the transfer function module"),
         getFlagsSlot("getflags", "connects to a FlagStorage"),
@@ -119,8 +118,8 @@ bool moldyn::ArrowRenderer::create(void) {
 /*
  * moldyn::ArrowRenderer::GetExtents
  */
-bool moldyn::ArrowRenderer::GetExtents(Call& call) {
-    view::CallRender3D_2 *cr = dynamic_cast<view::CallRender3D_2*>(&call);
+bool moldyn::ArrowRenderer::GetExtents(view::CallRender3D_2& call) {
+    auto cr = &call;
     if (cr == nullptr) return false;
 
     MultiParticleDataCall* c2 = this->getDataSlot.CallAs<MultiParticleDataCall>();
@@ -149,8 +148,8 @@ void moldyn::ArrowRenderer::release(void) {
 /*
  * moldyn::ArrowRenderer::Render
  */
-bool moldyn::ArrowRenderer::Render(Call& call) {
-    view::CallRender3D_2 *cr = dynamic_cast<view::CallRender3D_2*>(&call);
+bool moldyn::ArrowRenderer::Render(view::CallRender3D_2& call) {
+    auto cr = &call;
     if (cr == nullptr) return false;
 
     MultiParticleDataCall *c2 = this->getDataSlot.CallAs<MultiParticleDataCall>();

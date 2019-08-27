@@ -42,7 +42,6 @@
 #include "mmcore/special/StubModule.h"
 #include "mmcore/view/ClipPlane.h"
 #include "mmcore/view/TransferFunction.h"
-#include "mmcore/view/TransferFunctionRenderer.h"
 #include "mmcore/view/MuxRenderer3D.h"
 #include "mmcore/view/special/AnaglyphStereoView.h"
 #include "mmcore/view/special/ChronoGraph.h"
@@ -125,7 +124,6 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<special::StubModule>();
     instance.RegisterAutoDescription<view::ClipPlane>();
     instance.RegisterAutoDescription<view::TransferFunction>();
-    instance.RegisterAutoDescription<view::TransferFunctionRenderer>();
     instance.RegisterAutoDescription<view::MuxRenderer3D<2> >();
     instance.RegisterAutoDescription<view::MuxRenderer3D<3> >();
     instance.RegisterAutoDescription<view::MuxRenderer3D<4> >();
