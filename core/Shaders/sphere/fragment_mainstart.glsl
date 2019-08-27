@@ -10,13 +10,11 @@ void main(void) {
         * vec4(viewAttr.z, viewAttr.w, 2.0, 0.0) 
         + vec4(-1.0, -1.0, -1.0, 1.0);
     
-
     // transform fragment coordinates from view coordinates to object coordinates.
     //coord = MVPinv * coord;
     coord = MVPinv * coord;
     coord /= coord.w;
     coord -= objPos; // ... and to glyph space
-    
 
     // calc the viewing ray
     ray = normalize(coord.xyz - camPos.xyz);
@@ -49,7 +47,6 @@ void main(void) {
     vec3 sphereintersection = lambda * ray + camPos.xyz;    // intersection point
     vec3 normal = sphereintersection / rad;
 
-
     if (any(notEqual(clipDat.xyz, vec3(0, 0, 0)))) {
         vec3 planeNormal = normalize(clipDat.xyz);
         vec3 clipPlaneBase = planeNormal * clipDat.w;
@@ -72,7 +69,6 @@ void main(void) {
             }
         }
     }
-
 
     // "calc" normal at intersection point
 #ifdef SMALL_SPRITE_LIGHTING

@@ -12,6 +12,7 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/Vector3fParam.h"
+#include "mmcore/param/ColorParam.h"
 #include "vislib/sys/Log.h"
 
 using namespace megamol::core::view::light;
@@ -24,9 +25,8 @@ AbstractLight::AbstractLight(void)
     , lightContainer()
     , getLightSlot("getLightSlot", "Connects to the OSPRayRenderer or another OSPRayLight")
     , deployLightSlot("deployLightSlot", "Connects to the OSPRayRenderer or another OSPRayLight")
-    ,
     // General light parameters
-    lightColor("Color", "Sets the color of the Light")
+	, lightColor("Color", "Sets the color of the Light")
     , lightIntensity("Intensity", "Intensity of the Light") {
 
     this->lightContainer.isValid = true;
@@ -39,7 +39,7 @@ AbstractLight::AbstractLight(void)
     this->MakeSlotAvailable(&this->deployLightSlot);
 
     // general light
-    this->lightColor << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(1.0f, 1.0f, 1.0f));
+    this->lightColor << new core::param::ColorParam(0.8f, 0.8f, 0.8f, 1.0f);
     this->lightIntensity << new core::param::FloatParam(1.0f);
     this->MakeSlotAvailable(&this->lightIntensity);
     this->MakeSlotAvailable(&this->lightColor);

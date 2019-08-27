@@ -11,9 +11,9 @@
 #include "Cinematic/Cinematic.h"
 
 #include "mmcore/CallerSlot.h"
-#include "mmcore/view/View3D.h"
+#include "mmcore/view/View3D_2.h"
 
-#include "mmcore/view/CallRender3D.h"
+#include "mmcore/view/CallRender3D_2.h"
 #include "mmcore/view/CallRenderView.h"
 
 #include "mmcore/utility/SDFFont.h"
@@ -24,7 +24,6 @@
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
-#include "mmcore/view/CallRender3D.h"
 #include "mmcore/view/Input.h"
 
 #include "vislib/Serialisable.h"
@@ -47,10 +46,10 @@ namespace cinematic {
     /**
     * Cinemtic View.
     */
-    class CinematicView : public core::view::View3D {
+    class CinematicView : public core::view::View3D_2 {
     public:
 
-        typedef core::view::View3D Base;
+        typedef core::view::View3D_2 Base;
 
         /**
          * Answer the name of this module.
@@ -92,7 +91,7 @@ namespace cinematic {
     protected:
 
         /**
-         * Renders this AbstractView3D in the currently active OpenGL context.
+         * Renders this View3D_2 in the currently active OpenGL context.
          */
         virtual void Render(const mmcRenderViewContext& context);
 

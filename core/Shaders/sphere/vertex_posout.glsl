@@ -7,4 +7,7 @@
         maxs = (maxs - mins) * 0.5 * winHalf;
         gl_PointSize = max(maxs.x, maxs.y) + 0.5;
 
+    } else {
+        gl_Position = vec4(0.0);
+        gl_PointSize = 1.0;
     }

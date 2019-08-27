@@ -35,7 +35,6 @@
 #include "mmcore/moldyn/MMPLDWriter.h"
 #include "mmcore/moldyn/OracleSphereRenderer.h"
 #include "mmcore/moldyn/SphereRenderer.h"
-#include "mmcore/moldyn/SphereOutlineRenderer.h"
 #include "mmcore/moldyn/DirPartColModulate.h"
 #include "mmcore/moldyn/DirPartFilter.h"
 #include "mmcore/moldyn/ParticleListFilter.h"
@@ -43,7 +42,6 @@
 #include "mmcore/special/StubModule.h"
 #include "mmcore/view/ClipPlane.h"
 #include "mmcore/view/TransferFunction.h"
-#include "mmcore/view/TransferFunctionRenderer.h"
 #include "mmcore/view/MuxRenderer3D.h"
 #include "mmcore/view/special/AnaglyphStereoView.h"
 #include "mmcore/view/special/ChronoGraph.h"
@@ -119,7 +117,6 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<moldyn::MMPLDDataSource>();
     instance.RegisterAutoDescription<moldyn::MMPLDWriter>();
     instance.RegisterAutoDescription<moldyn::SphereRenderer>();
-    instance.RegisterAutoDescription<moldyn::SphereOutlineRenderer>();
     instance.RegisterAutoDescription<moldyn::OracleSphereRenderer>();
     instance.RegisterAutoDescription<moldyn::DirPartColModulate>();
     instance.RegisterAutoDescription<moldyn::ParticleListFilter>();
@@ -128,7 +125,6 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<special::StubModule>();
     instance.RegisterAutoDescription<view::ClipPlane>();
     instance.RegisterAutoDescription<view::TransferFunction>();
-    instance.RegisterAutoDescription<view::TransferFunctionRenderer>();
     instance.RegisterAutoDescription<view::MuxRenderer3D<2> >();
     instance.RegisterAutoDescription<view::MuxRenderer3D<3> >();
     instance.RegisterAutoDescription<view::MuxRenderer3D<4> >();
