@@ -1,6 +1,8 @@
 # Volume
 This plugin provides basic volume rendering functionality.
 
+<img src="images/RaycastVolumeRenderer.png" width="49%"> <img src="images/VolumeSliceRenderer.png" width="49%">
+
 ## Build
 This plugin is switched on by default.
 
@@ -53,7 +55,7 @@ The renderer provides the following input slots:
 
 | Slot                | Type                      | Description                                                | Remark   |
 |---------------------|---------------------------|------------------------------------------------------------|----------|
-| chainRendering      | `CallRender3D`            | Connection to another renderer for chaining                | optional |
+| chainRendering      | `CallRender3D_2`          | Connection to another renderer for chaining                | optional |
 | lights              | `CallLight`               | Light sources for the illumination of the scene            | ignored  |
 | getData             | `VolumetricDataCall`      | Data source, providing a 3D volume                         |          |
 | getTransferFunction | `CallGetTransferFunction` | Transfer function to map volume to color and transparency  |          |
@@ -62,7 +64,7 @@ The renderer provides the following output slots:
 
 | Slot                | Type                      | Description                                                | Remark   |
 |---------------------|---------------------------|------------------------------------------------------------|----------|
-| rendering           | `CallRender3D`            | Connection to another renderer or a view                   |          |
+| rendering           | `CallRender3D_2`          | Connection to another renderer or a view                   |          |
 
 The renderer provides the following parameters:
 
@@ -72,9 +74,31 @@ The renderer provides the following parameters:
 
 Example screenshots for the bonsai dat-raw volume dataset using two different transfer functions:
 
-<img src="images/RaycastVolumeRenderer.png" width="49%"> <img src="images/RaycastVolumeRenderer_Fancy.png" width="49%"></center></p>
+<img src="images/RaycastVolumeRenderer.png" width="49%"> <img src="images/RaycastVolumeRenderer_Fancy.png" width="49%">
 
 ### VolumeSliceRenderer
+
+Renderer for visualizing a single slice from within the volume data.
+
+The renderer provides the following input slots:
+
+| Slot                | Type                      | Description                                                | Remark   |
+|---------------------|---------------------------|------------------------------------------------------------|----------|
+| chainRendering      | `CallRender3D_2`          | Connection to another renderer for chaining                | optional |
+| lights              | `CallLight`               | Light sources for the illumination of the scene            | ignored  |
+| getVol              | `VolumetricDataCall`      | Data source, providing a 3D volume                         |          |
+| gettransferfunction | `CallGetTransferFunction` | Transfer function to map volume to color and transparency  |          |
+| getclipplane        | `CallClipPlane`           | Clip plane for defining the slice                          |          |
+
+The renderer provides the following output slots:
+
+| Slot                | Type                      | Description                                                | Remark   |
+|---------------------|---------------------------|------------------------------------------------------------|----------|
+| rendering           | `CallRender3D_2`          | Connection to another renderer or a view                   |          |
+
+Example screenshots for the bonsai dat-raw volume dataset:
+
+<img src="images/VolumeSliceRenderer.png" width="50%">
 
 ### VolumetricDataSource
 
