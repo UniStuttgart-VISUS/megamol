@@ -55,6 +55,12 @@ The module provides the following parameters:
 | filepathPrefix |               | Path to where the `.dat` and `.raw` file which should be stored, providing a filename without extension |
 | frameID        | 0             | Set the frame ID for which the data should be requested and stored     |
 
+### DirectVolumeRenderer
+
+### DirPartVolume
+
+### GridBalls
+
 ### RaycastVolumeRenderer
 
 A renderer module that implements a basic, but modern renderer for volume data. Rendering is split into two passes: A compute shader performs volume raycasting and writes the output into a 2D texture. The result is then rendered to the currently bound framebuffer using a screen-filling quad.
@@ -83,3 +89,10 @@ The renderer provides the following parameters:
 Example screenshots for the bonsai dat-raw volume dataset using two different transfer functions:
 
 <img src="images/RaycastVolumeRenderer.png" width="49%"> <img src="images/RaycastVolumeRenderer_Fancy.png" width="49%"></center></p>
+
+### RenderVolumeSlice
+
+### VolumeCache
+
+### VolumetricDataSource
+
