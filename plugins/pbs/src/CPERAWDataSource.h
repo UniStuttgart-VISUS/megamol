@@ -22,8 +22,6 @@
 
 #include "zfp.h"
 
-#include "PBSStorage.h"
-
 namespace megamol {
 namespace pbs {
 
