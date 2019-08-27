@@ -92,9 +92,9 @@ bool megamol::remote::FBOCompositor2::create() {
     auto frag_shader = glCreateShader(GL_FRAGMENT_SHADER);
 
     auto path_to_vert = core::utility::ResourceWrapper::getFileName(
-        this->GetCoreInstance()->Configuration(), "pbscompositor.vert.glsl");
+        this->GetCoreInstance()->Configuration(), "compositor.vert.glsl");
     auto path_to_frag = core::utility::ResourceWrapper::getFileName(
-        this->GetCoreInstance()->Configuration(), "pbscompositor.frag.glsl");
+        this->GetCoreInstance()->Configuration(), "compositor.frag.glsl");
 
     std::ifstream shader_file(W2A(path_to_vert.PeekBuffer()));
     std::string shader_string =

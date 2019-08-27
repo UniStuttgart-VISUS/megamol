@@ -18,8 +18,7 @@ using namespace megamol::core::misc;
 /*
 * WatermarkRenderer::WatermarkRenderer
 */
-WatermarkRenderer::WatermarkRenderer(void) : Renderer3DModule(),
-    rendererCallerSlot("renderer", "outgoing renderer"),
+WatermarkRenderer::WatermarkRenderer(void) : view::Renderer3DModule_2(),
     paramAlpha(           "01_alpha", "The alpha value for the watermarks."),
     paramScaleAll(        "02_relativeScaleAll", "The relative scale factor for all images."),
     paramImgTopLeft(      "03_imageTopLeft", "The image file name for the top left watermark."),
@@ -47,11 +46,7 @@ WatermarkRenderer::WatermarkRenderer(void) : Renderer3DModule(),
     firstParamChange(false),
     shader(),
     vaoHandle(),
-    vbos()
-{
-
-    this->rendererCallerSlot.SetCompatibleCall<view::CallRender3DDescription>();
-    this->MakeSlotAvailable(&this->rendererCallerSlot);
+    vbos() {
 
     // Init image file name params
     this->paramImgTopLeft.SetParameter(new param::FilePathParam(""));
@@ -145,13 +140,13 @@ bool WatermarkRenderer::create(void) {
 /*
 * WatermarkRenderer::GetExtents
 */
-bool WatermarkRenderer::GetExtents(megamol::core::view::CallRender3D& call) {
+bool WatermarkRenderer::GetExtents(megamol::core::view::CallRender3D_2& call) {
 
-    view::CallRender3D *cr3d_in = dynamic_cast<view::CallRender3D*>(&call);
+    auto cr3d_in = &call;
     if (cr3d_in == nullptr) return false;
 
-    // Propagate changes made in GetExtents() from outgoing CallRender3D (cr3d_out) to incoming  CallRender3D (cr3d_in).
-    view::CallRender3D *cr3d_out = this->rendererCallerSlot.CallAs<view::CallRender3D>();
+    // Propagate changes made in GetExtents() from outgoing CallRender3D_2 (cr3d_out) to incoming  CallRender3D_2 (cr3d_in).
+    view::CallRender3D_2 *cr3d_out = this->chainRenderSlot.CallAs<view::CallRender3D_2>();
     if ((cr3d_out != nullptr) && (*cr3d_out)(core::view::AbstractCallRender::FnGetExtents)) {
         unsigned int timeFramesCount = cr3d_out->TimeFramesCount();
         cr3d_in->SetTimeFramesCount((timeFramesCount > 0) ? (timeFramesCount) : (1));
@@ -166,10 +161,10 @@ bool WatermarkRenderer::GetExtents(megamol::core::view::CallRender3D& call) {
 /*
 * WatermarkRenderer::Render
 */
-bool WatermarkRenderer::Render(megamol::core::view::CallRender3D& call) {
+bool WatermarkRenderer::Render(megamol::core::view::CallRender3D_2& call) {
 
-    view::CallRender3D *cr3d_in = dynamic_cast<view::CallRender3D*>(&call);
-    if (cr3d_in == nullptr)  return false;
+    auto cr3d_in = &call;
+    if (cr3d_in == nullptr) return false;
 
     // Update parameters ------------------------------------------------------
     if (this->paramImgTopLeft.IsDirty()) {
@@ -211,7 +206,7 @@ bool WatermarkRenderer::Render(megamol::core::view::CallRender3D& call) {
 
     // First call render function of outgoing renderer ------------------------
 
-    view::CallRender3D *cr3d_out = this->rendererCallerSlot.CallAs<view::CallRender3D>();
+    auto cr3d_out = this->chainRenderSlot.CallAs<view::CallRender3D_2>();
     if (cr3d_out != nullptr) {
         *cr3d_out = *cr3d_in;
         (*cr3d_out)(core::view::AbstractCallRender::FnRender);
@@ -229,9 +224,6 @@ bool WatermarkRenderer::Render(megamol::core::view::CallRender3D& call) {
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glDisable(GL_LIGHTING);
     glDisable(GL_CULL_FACE);
-
-    glDepthFunc(GL_LEQUAL);
-    glDepthMask(GL_FALSE);
     glDisable(GL_DEPTH_TEST);
 
     GLint blendSrc;
@@ -254,8 +246,6 @@ bool WatermarkRenderer::Render(megamol::core::view::CallRender3D& call) {
     glBindVertexArray(0);
 
     // Reset opengl states
-    glDepthMask(GL_TRUE);
-    glEnable(GL_DEPTH_TEST);
     if (!blendEnabled) {
         glDisable(GL_BLEND);
     }
@@ -270,19 +260,20 @@ bool WatermarkRenderer::Render(megamol::core::view::CallRender3D& call) {
 bool WatermarkRenderer::renderWatermark(WatermarkRenderer::corner cor, float vpH, float vpW) {
 
     // Set watermark dimensions
-    float imageWidth, imageHeight;
+	float imageWidth = vpW * 1.0f;
+	float alpha = this->paramAlpha.Param<param::FloatParam>()->Value();
+
+    float imageHeight;
     float left, top, bottom, right;
     float scale;
-    vislib::graphics::gl::OpenGLTexture2D *tex = nullptr;
-    float alpha = this->paramAlpha.Param<param::FloatParam>()->Value();
-    float fixImgWidth = vpW * 1.0f;
-
+	vislib::graphics::gl::OpenGLTexture2D *tex = nullptr;
+    
     switch (cor) {
     case(WatermarkRenderer::TOP_LEFT):
         tex         = &this->textureTopLeft;
         scale       = this->paramScaleTopLeft.Param<param::FloatParam>()->Value();
-        imageWidth  = fixImgWidth * scale;
-        imageHeight = fixImgWidth * (this->sizeTopLeft.Y() / this->sizeTopLeft.X()) * scale;
+		imageWidth *= scale;
+        imageHeight = imageWidth * (this->sizeTopLeft.Y() / this->sizeTopLeft.X());
         left        = 0.0f;
         right       = imageWidth;
         top         = vpH;
@@ -291,8 +282,8 @@ bool WatermarkRenderer::renderWatermark(WatermarkRenderer::corner cor, float vpH
     case(WatermarkRenderer::TOP_RIGHT):
         tex         = &this->textureTopRight;
         scale       = this->paramScaleTopRight.Param<param::FloatParam>()->Value();
-        imageWidth  = fixImgWidth * scale;
-        imageHeight = fixImgWidth * (this->sizeTopRight.Y() / this->sizeTopRight.X()) * scale;
+		imageWidth *= scale;
+        imageHeight = imageWidth * (this->sizeTopRight.Y() / this->sizeTopRight.X());
         left        = vpW - imageWidth;
         right       = vpW;
         top         = vpH;
@@ -301,8 +292,8 @@ bool WatermarkRenderer::renderWatermark(WatermarkRenderer::corner cor, float vpH
     case(WatermarkRenderer::BOTTOM_LEFT):
         tex         = &this->textureBottomLeft;
         scale       = this->paramScaleBottomLeft.Param<param::FloatParam>()->Value();
-        imageWidth  = fixImgWidth * scale;
-        imageHeight = fixImgWidth * (this->sizeBottomLeft.Y() / this->sizeBottomLeft.X()) * scale;
+		imageWidth *= scale;
+        imageHeight = imageWidth * (this->sizeBottomLeft.Y() / this->sizeBottomLeft.X());
         left        = 0.0f;
         right       = imageWidth;
         top         = imageHeight;
@@ -311,8 +302,8 @@ bool WatermarkRenderer::renderWatermark(WatermarkRenderer::corner cor, float vpH
     case(WatermarkRenderer::BOTTOM_RIGHT):
         tex         = &this->textureBottomRight;
         scale       = this->paramScaleBottomRight.Param<param::FloatParam>()->Value();
-        imageWidth  = fixImgWidth * scale;
-        imageHeight = fixImgWidth * (this->sizeBottomRight.Y() / this->sizeBottomRight.X()) * scale;
+		imageWidth *= scale;
+        imageHeight = imageWidth * (this->sizeBottomRight.Y() / this->sizeBottomRight.X());
         left        = vpW - imageWidth;
         right       = vpW;
         top         = imageHeight;
@@ -321,8 +312,8 @@ bool WatermarkRenderer::renderWatermark(WatermarkRenderer::corner cor, float vpH
     case(WatermarkRenderer::CENTER):
         tex         = &this->textureCenter;
         scale       = this->paramScaleCenter.Param<param::FloatParam>()->Value();
-        imageWidth  = fixImgWidth * scale;
-        imageHeight = fixImgWidth * (this->sizeCenter.Y() / this->sizeCenter.X()) * scale;
+		imageWidth *= scale;
+		imageWidth = imageWidth * (this->sizeCenter.Y() / this->sizeCenter.X());
         left        = vpW / 2.0f - imageWidth / 2.0f;
         right       = vpW / 2.0f + imageWidth / 2.0f;
         top         = vpH / 2.0f + imageHeight / 2.0f;
@@ -400,10 +391,15 @@ bool WatermarkRenderer::renderWatermark(WatermarkRenderer::corner cor, float vpH
     glEnable(GL_TEXTURE_2D);
     glActiveTexture(GL_TEXTURE0);
     tex->Bind();
+
     this->shader.Enable();
+
     glUniform1f(this->shader.ParameterLocation("alpha"), alpha);
     glDrawArrays(GL_TRIANGLES, 0, (GLsizei)vertCnt);
+
     this->shader.Disable();
+
+	glBindTexture(GL_TEXTURE_2D, 0);
     glDisable(GL_TEXTURE_2D);
 
     return true;
@@ -476,7 +472,7 @@ bool WatermarkRenderer::loadBuffers(void) {
 bool WatermarkRenderer::loadTexture(WatermarkRenderer::corner cor, vislib::StringA filename) {
 
     vislib::graphics::gl::OpenGLTexture2D *tex = nullptr;
-    vislib::math::Vector<float, 2>        *texSize = nullptr;
+    vislib::math::Vector<float, 2> *texSize = nullptr;
 
     switch (cor) {
     case(WatermarkRenderer::TOP_LEFT):
@@ -526,9 +522,9 @@ bool WatermarkRenderer::loadTexture(WatermarkRenderer::corner cor, vislib::Strin
             }
             tex->Bind();
             glGenerateMipmap(GL_TEXTURE_2D);
-            glBindTexture(GL_TEXTURE_2D, 0);
             tex->SetFilter(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
             tex->SetWrap(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+			glBindTexture(GL_TEXTURE_2D, 0);
             ARY_SAFE_DELETE(buf);
             return true;
         }

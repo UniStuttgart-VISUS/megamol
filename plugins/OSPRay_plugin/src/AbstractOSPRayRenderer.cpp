@@ -118,37 +118,37 @@ void AbstractOSPRayRenderer::renderTexture2D(vislib::graphics::gl::GLSLShader& s
     const float* db, int& width, int& height, megamol::core::view::CallRender3D_2& cr) {
 
     auto fbo = cr.FrameBufferObject();
-    if (fbo != NULL) {
+    //if (fbo != NULL) {
 
-        if (fbo->IsValid()) {
-            if ((fbo->GetWidth() != width) || (fbo->GetHeight() != height)) {
-                fbo->Release();
-            }
-        }
-        if (!fbo->IsValid()) {
-            fbo->Create(width, height, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE,
-                vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE, GL_DEPTH_COMPONENT);
-        }
-        if (fbo->IsValid() && !fbo->IsEnabled()) {
-            fbo->Enable();
-        }
+    //    if (fbo->IsValid()) {
+    //        if ((fbo->GetWidth() != width) || (fbo->GetHeight() != height)) {
+    //            fbo->Release();
+    //        }
+    //    }
+    //    if (!fbo->IsValid()) {
+    //        fbo->Create(width, height, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE,
+    //            vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE, GL_DEPTH_COMPONENT);
+    //    }
+    //    if (fbo->IsValid() && !fbo->IsEnabled()) {
+    //        fbo->Enable();
+    //    }
 
-        fbo->BindColourTexture();
-        glClear(GL_COLOR_BUFFER_BIT);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, fb);
-        glBindTexture(GL_TEXTURE_2D, 0);
+    //    fbo->BindColourTexture();
+    //    glClear(GL_COLOR_BUFFER_BIT);
+    //    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, fb);
+    //    glBindTexture(GL_TEXTURE_2D, 0);
 
-        fbo->BindDepthTexture();
-        glClear(GL_DEPTH_BUFFER_BIT);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, db);
-        glBindTexture(GL_TEXTURE_2D, 0);
+    //    fbo->BindDepthTexture();
+    //    glClear(GL_DEPTH_BUFFER_BIT);
+    //    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, db);
+    //    glBindTexture(GL_TEXTURE_2D, 0);
 
-        if (fbo->IsValid()) {
-            fbo->Disable();
-            // fbo->DrawColourTexture();
-            // fbo->DrawDepthTexture();
-        }
-    } else {
+    //    if (fbo->IsValid()) {
+    //        fbo->Disable();
+    //        // fbo->DrawColourTexture();
+    //        // fbo->DrawDepthTexture();
+    //    }
+    //} else {
         /*
         if (this->new_fbo.IsValid()) {
             if ((this->new_fbo.GetWidth() != width) || (this->new_fbo.GetHeight() != height)) {
@@ -208,7 +208,7 @@ void AbstractOSPRayRenderer::renderTexture2D(vislib::graphics::gl::GLSLShader& s
         glBlendFunc(GL_SRC_ALPHA, GL_ONE);
         glDisable(GL_BLEND);
         glDisable(GL_DEPTH_TEST);
-    }
+  //  }
 }
 
 
