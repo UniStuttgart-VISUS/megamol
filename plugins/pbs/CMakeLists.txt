@@ -73,6 +73,8 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
       LIBRARY_RELEASE ${ICET_MPI_LIB})
   endif()
 
+  require_external(glm)
+
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
@@ -89,7 +91,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   target_include_directories(${PROJECT_NAME}
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     PUBLIC "include" "src")
-  target_link_libraries(${PROJECT_NAME} PRIVATE core OSPRay_plugin image_calls zfp libzmq libcppzmq snappy)
+  target_link_libraries(${PROJECT_NAME} PRIVATE core OSPRay_plugin image_calls glm zfp libzmq libcppzmq snappy)
   if(MPI_C_FOUND)
     target_link_libraries(${PROJECT_NAME} PRIVATE IceTCore IceTGL IceTMPI)
   endif()

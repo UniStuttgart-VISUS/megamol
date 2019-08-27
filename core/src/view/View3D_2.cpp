@@ -922,7 +922,7 @@ bool View3D_2::onRestoreCamera(param::ParamSlot& p) {
     auto path = this->determineCameraFilePath();
     if (path.empty()) {
         vislib::sys::Log::DefaultLog.WriteWarn(
-            "The camera camera file path could not be determined. This is probably due to the usage of .mmprj project "
+            "The camera file path could not be determined. This is probably due to the usage of .mmprj project "
             "files. Please use a .lua project file instead");
         return false;
     }
