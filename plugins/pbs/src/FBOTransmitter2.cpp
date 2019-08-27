@@ -20,7 +20,7 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/view/CallRender2D.h"
-#include "mmcore/view/CallRender3D.h"
+#include "mmcore/view/CallRender3D_2.h"
 #include "mmcore/view/View3D.h"
 #include "vislib/Trace.h"
 #include "vislib/sys/SystemInformation.h"
@@ -429,37 +429,40 @@ bool megamol::pbs::FBOTransmitter2::extractMetaData(float bbox[6], float frame_t
     // this->ModuleGraphLock().LockExclusive();
     const auto retBbox =
         this->GetCoreInstance()
-            ->EnumerateCallerSlotsNoLock<megamol::core::view::AbstractView, megamol::core::view::CallRender3D>(
-                mvn, [bbox](megamol::core::view::CallRender3D& cr3d) {
-                    bbox[0] = cr3d.AccessBoundingBoxes().ObjectSpaceBBox().GetLeft();
-                    bbox[1] = cr3d.AccessBoundingBoxes().ObjectSpaceBBox().GetBottom();
-                    bbox[2] = cr3d.AccessBoundingBoxes().ObjectSpaceBBox().GetBack();
-                    bbox[3] = cr3d.AccessBoundingBoxes().ObjectSpaceBBox().GetRight();
-                    bbox[4] = cr3d.AccessBoundingBoxes().ObjectSpaceBBox().GetTop();
-                    bbox[5] = cr3d.AccessBoundingBoxes().ObjectSpaceBBox().GetFront();
+            ->EnumerateCallerSlotsNoLock<megamol::core::view::AbstractView, megamol::core::view::CallRender3D_2>(
+                mvn, [bbox](megamol::core::view::CallRender3D_2& cr3d) {
+                    bbox[0] = cr3d.AccessBoundingBoxes().BoundingBox().GetLeft();
+                    bbox[1] = cr3d.AccessBoundingBoxes().BoundingBox().GetBottom();
+                    bbox[2] = cr3d.AccessBoundingBoxes().BoundingBox().GetBack();
+                    bbox[3] = cr3d.AccessBoundingBoxes().BoundingBox().GetRight();
+                    bbox[4] = cr3d.AccessBoundingBoxes().BoundingBox().GetTop();
+                    bbox[5] = cr3d.AccessBoundingBoxes().BoundingBox().GetFront();
                 });
 
     const auto retTimes =
         this->GetCoreInstance()
-            ->EnumerateCallerSlotsNoLock<megamol::core::view::AbstractView, megamol::core::view::CallRender3D>(
-                mvn, [frame_times](megamol::core::view::CallRender3D& cr3d) {
+            ->EnumerateCallerSlotsNoLock<megamol::core::view::AbstractView, megamol::core::view::CallRender3D_2>(
+                mvn, [frame_times](megamol::core::view::CallRender3D_2& cr3d) {
                     frame_times[0] = cr3d.Time();
                     frame_times[1] = static_cast<float>(cr3d.TimeFramesCount());
                 });
 
     const auto retCam =
         this->GetCoreInstance()
-            ->EnumerateCallerSlotsNoLock<megamol::core::view::AbstractView, megamol::core::view::CallRender3D>(
-                mvn, [cam_params](megamol::core::view::CallRender3D& cr3d) {
-                    cam_params[0] = cr3d.GetCameraParameters()->Position()[0];
-                    cam_params[1] = cr3d.GetCameraParameters()->Position()[1];
-                    cam_params[2] = cr3d.GetCameraParameters()->Position()[2];
-                    cam_params[3] = cr3d.GetCameraParameters()->Up()[0];
-                    cam_params[4] = cr3d.GetCameraParameters()->Up()[1];
-                    cam_params[5] = cr3d.GetCameraParameters()->Up()[2];
-                    cam_params[6] = cr3d.GetCameraParameters()->LookAt()[0];
-                    cam_params[7] = cr3d.GetCameraParameters()->LookAt()[1];
-                    cam_params[8] = cr3d.GetCameraParameters()->LookAt()[2];
+            ->EnumerateCallerSlotsNoLock<megamol::core::view::AbstractView, megamol::core::view::CallRender3D_2>(
+                mvn, [cam_params](megamol::core::view::CallRender3D_2& cr3d) {
+                    core::view::Camera_2 cam;
+                    cr3d.GetCamera(cam);
+                    core::view::Camera_2::snapshot_type cam_snap;
+                    cam_snap = cam.take_snapshot(cam_snap, core::thecam::snapshot_content::all);
+                    auto pos = cam_snap.position;
+                    auto up = cam_snap.up_vector;
+                    cam_params[0] = pos.x();
+                    cam_params[1] = pos.y();
+                    cam_params[2] = pos.z();
+                    cam_params[3] = up.x();
+                    cam_params[4] = up.y();
+                    cam_params[5] = up.z();
                 });
 
     if (!(retBbox && retTimes && retCam)) {
@@ -486,14 +489,18 @@ bool megamol::pbs::FBOTransmitter2::extractViewport(int vvpt[6]) {
     // this->ModuleGraphLock().LockExclusive();
     auto const ret =
         this->GetCoreInstance()
-            ->EnumerateCallerSlotsNoLock<megamol::core::view::AbstractView, megamol::core::view::CallRender3D>(
-                mvn, [vvpt](megamol::core::view::CallRender3D& cr3d) {
-                    vvpt[0] = static_cast<int>(cr3d.GetCameraParameters()->TileRect().GetLeft());
-                    vvpt[1] = static_cast<int>(cr3d.GetCameraParameters()->TileRect().GetBottom());
-                    vvpt[2] = static_cast<int>(cr3d.GetCameraParameters()->TileRect().Width());
-                    vvpt[3] = static_cast<int>(cr3d.GetCameraParameters()->TileRect().Height());
-                    vvpt[4] = static_cast<int>(cr3d.GetCameraParameters()->VirtualViewSize().Width());
-                    vvpt[5] = static_cast<int>(cr3d.GetCameraParameters()->VirtualViewSize().Height());
+            ->EnumerateCallerSlotsNoLock<megamol::core::view::AbstractView, megamol::core::view::CallRender3D_2>(
+                mvn, [vvpt](megamol::core::view::CallRender3D_2& cr3d) {
+                    core::view::Camera_2 cam;
+                    cr3d.GetCamera(cam);
+                    auto tile_rect = cam.image_tile();
+                    auto res_gate = cam.resolution_gate();
+                    vvpt[0] = static_cast<int>(tile_rect.left());
+                    vvpt[1] = static_cast<int>(tile_rect.bottom());
+                    vvpt[2] = static_cast<int>(tile_rect.width());
+                    vvpt[3] = static_cast<int>(tile_rect.height());
+                    vvpt[4] = static_cast<int>(res_gate.width());
+                    vvpt[5] = static_cast<int>(res_gate.height());
                 });
 
     if (!ret) {
