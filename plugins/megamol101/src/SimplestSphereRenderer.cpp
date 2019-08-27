@@ -1,5 +1,5 @@
 /*
- * SimplestSphereRenderer_2.cpp
+ * SimplestSphereRenderer.cpp
  *
  * Copyright (C) 2018 by Karsten Schatz
  * Copyright (C) 2018 by VISUS (Universitaet Stuttgart)
@@ -21,9 +21,9 @@ using namespace megamol;
 using namespace megamol::megamol101;
 
 /*
- * SimplestSphereRenderer_2::SimplestSphereRenderer_2
+ * SimplestSphereRenderer::SimplestSphereRenderer
  */
-SimplestSphereRenderer_2::SimplestSphereRenderer_2(void)
+SimplestSphereRenderer::SimplestSphereRenderer(void)
     : core::view::Renderer3DModule_2()
     , sphereDataSlot("inData", "The input data slot for sphere data.")
     , sphereModeSlot("sphere rendering", "Switch for the pretty sphere rendering mode")
@@ -50,17 +50,17 @@ SimplestSphereRenderer_2::SimplestSphereRenderer_2(void)
 }
 
 /*
- * SimplestSphereRenderer_2::~SimplestSphereRenderer_2
+ * SimplestSphereRenderer::~SimplestSphereRenderer
  */
-SimplestSphereRenderer_2::~SimplestSphereRenderer_2(void) {
+SimplestSphereRenderer::~SimplestSphereRenderer(void) {
     this->Release();
     // TUTORIAL: this->Release() should be called in each modules' destructor.
 }
 
 /*
- * SimplestSphereRenderer_2::create
+ * SimplestSphereRenderer::create
  */
-bool SimplestSphereRenderer_2::create(void) {
+bool SimplestSphereRenderer::create(void) {
 
     // TUTORIAL Shader creation should always happen in the create method of a renderer.
 
@@ -124,9 +124,9 @@ bool SimplestSphereRenderer_2::create(void) {
 }
 
 /*
- * SimplestSphereRenderer_2::GetExtents
+ * SimplestSphereRenderer::GetExtents
  */
-bool SimplestSphereRenderer_2::GetExtents(core::view::CallRender3D_2& call) {
+bool SimplestSphereRenderer::GetExtents(core::view::CallRender3D_2& call) {
     core::view::CallRender3D_2* cr3d = dynamic_cast<core::view::CallRender3D_2*>(&call);
     if (cr3d == nullptr) return false;
 
@@ -141,9 +141,9 @@ bool SimplestSphereRenderer_2::GetExtents(core::view::CallRender3D_2& call) {
 }
 
 /*
- * SimplestSphereRenderer_2::release
+ * SimplestSphereRenderer::release
  */
-void SimplestSphereRenderer_2::release(void) {
+void SimplestSphereRenderer::release(void) {
     if (va != 0) {
         glDeleteVertexArrays(1, &va);
     }
@@ -153,9 +153,9 @@ void SimplestSphereRenderer_2::release(void) {
 }
 
 /*
- * SimplestSphereRenderer_2::Render
+ * SimplestSphereRenderer::Render
  */
-bool SimplestSphereRenderer_2::Render(core::view::CallRender3D_2& call) {
+bool SimplestSphereRenderer::Render(core::view::CallRender3D_2& call) {
     core::view::CallRender3D_2* cr3d = dynamic_cast<core::view::CallRender3D_2*>(&call);
     if (cr3d == nullptr) return false;
 

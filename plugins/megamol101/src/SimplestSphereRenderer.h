@@ -1,13 +1,13 @@
 /*
- * SimplestSphereRenderer_2.h
+ * SimplestSphereRenderer.h
  *
  * Copyright (C) 2018 by Karsten Schatz
  * Copyright (C) 2018 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MM101PLG_SIMPLESTSPHERERENDERER_2_H_INCLUDED
-#define MM101PLG_SIMPLESTSPHERERENDERER_2_H_INCLUDED
+#ifndef MM101PLG_SIMPLESTSPHERERENDERER_H_INCLUDED
+#define MM101PLG_SIMPLESTSPHERERENDERER_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -27,7 +27,7 @@ namespace megamol101 {
  * Renders incoming spheres to the screen, either using GL_POINTS or more
  * sophisticated shaders.
  */
-class SimplestSphereRenderer_2 : public core::view::Renderer3DModule_2 {
+class SimplestSphereRenderer : public core::view::Renderer3DModule_2 {
 public:
     /**
      * Answer the name of this module.
@@ -37,7 +37,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "SimplestSphereRenderer_2"; }
+    static const char* ClassName(void) { return "SimplestSphereRenderer"; }
 
     /**
      * Answer a human readable description of this module.
@@ -58,10 +58,10 @@ public:
     static bool IsAvailable(void) { return true; }
 
     /** Constructor. */
-    SimplestSphereRenderer_2(void);
+    SimplestSphereRenderer(void);
 
     /** Destructor. */
-    virtual ~SimplestSphereRenderer_2(void);
+    virtual ~SimplestSphereRenderer(void);
 
 protected:
     /**
