@@ -1,5 +1,5 @@
 /*
- * ImageViewer.h
+ * ImageRenderer.h
  *
  * Copyright (C) 2010 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
@@ -39,21 +39,21 @@ namespace imageviewer2 {
 /**
  * Mesh-based renderer for bézier curve tubes
  */
-class ImageViewer : public view::Renderer3DModule_2 {
+class ImageRenderer : public view::Renderer3DModule_2 {
 public:
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "ImageViewer"; }
+    static const char* ClassName(void) { return "ImageRenderer"; }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "A litte less simple Image Viewer"; }
+    static const char* Description(void) { return "A litte less simple Image Renderer"; }
 
     /**
      * Answers whether this module is available on the current system.
@@ -63,10 +63,10 @@ public:
     static bool IsAvailable(void) { return true; }
 
     /** Ctor. */
-    ImageViewer(void);
+    ImageRenderer(void);
 
     /** Dtor. */
-    virtual ~ImageViewer(void);
+    virtual ~ImageRenderer(void);
 
 protected:
     /**
