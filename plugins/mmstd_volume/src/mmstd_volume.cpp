@@ -1,8 +1,8 @@
 /*
  * mmstd.volume.cpp
  *
- * Copyright (C) 2009 by VISUS (Universitaet Stuttgart)
- * Alle Rechte vorbehalten.
+ * Copyright (C) 2009 by Universitaet Stuttgart (VISUS).
+ * All rights reserved.
  */
 
 #include "stdafx.h"
@@ -12,10 +12,7 @@
 #include "mmcore/versioninfo.h"
 #include "vislib/vislibversion.h"
 #include "vislib/sys/Log.h"
-#include "DatRawDataSource.h"
-#include "DirectVolumeRenderer.h"
 #include "BuckyBall.h"
-#include "GridBalls.h"
 #include "DirPartVolume.h"
 #include "VolumeCache.h"
 #include "RenderVolumeSlice.h"
@@ -64,7 +61,7 @@ MMSTD_VOLUME_API const void * mmplgCoreCompatibilityValue(void) {
  * mmplgModuleCount
  */
 MMSTD_VOLUME_API int mmplgModuleCount(void) {
-    return 10;
+    return 7;
 }
 
 
@@ -73,16 +70,13 @@ MMSTD_VOLUME_API int mmplgModuleCount(void) {
  */
 MMSTD_VOLUME_API void* mmplgModuleDescription(int idx) {
     switch (idx) {
-    case 0: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::volume::DatRawDataSource>();
-    case 1: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::volume::DirectVolumeRenderer>();
-    case 2: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::volume::BuckyBall>();
-    case 3: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::volume::GridBalls>();
-    case 4: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::volume::DirPartVolume>();
-    case 5: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::volume::VolumeCache>();
-    case 6: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::volume::RenderVolumeSlice>();
-	case 7: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::volume::VolumetricDataSource>();
-	case 8: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::volume::RaycastVolumeRenderer>();
-	case 9: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::volume::DatRawWriter>();
+    case 0: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::volume::BuckyBall>();
+    case 1: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::volume::DirPartVolume>();
+    case 2: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::volume::VolumeCache>();
+    case 3: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::volume::RenderVolumeSlice>();
+	case 4: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::volume::VolumetricDataSource>();
+	case 5: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::volume::RaycastVolumeRenderer>();
+	case 6: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::volume::DatRawWriter>();
     }
     return NULL;
 }
