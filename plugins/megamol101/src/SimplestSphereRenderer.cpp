@@ -6,7 +6,7 @@
  * Alle Rechte vorbehalten.
  */
 #include "stdafx.h"
-#include "SimplestSphereRenderer_2.h"
+#include "SimplestSphereRenderer.h"
 #include "CallSpheres.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/view/CallRender3D_2.h"

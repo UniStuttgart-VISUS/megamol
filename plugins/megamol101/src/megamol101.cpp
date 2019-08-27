@@ -13,7 +13,7 @@
 #include "vislib/vislibversion.h"
 
 #include "ASCIISphereLoader.h"
-#include "SimplestSphereRenderer_2.h"
+#include "SimplestSphereRenderer.h"
 #include "SphereColoringModule.h"
 #include "CallSpheres.h"
 
