@@ -76,7 +76,7 @@ geoDiscardFrag = discardFrag;
 in uint currentFlag[1];
 in uint geoDiscardFrag[1];
 
-flat out uint discardFlag;
+flat out uint discardFrag;
 
 uniform uint flagsAvailable;
 uniform vec4 flagSelectedCol;
@@ -90,7 +90,7 @@ uniform vec4 flagSoftSelectedCol;
         <![CDATA[
 
 uint flag = currentFlag[0];
-discardFlag = geoDiscardFrag[0];
+discardFrag = geoDiscardFrag[0];
 
         ]]>
     </snippet>
@@ -102,8 +102,6 @@ discardFlag = geoDiscardFrag[0];
         <![CDATA[
 
 flat in uint discardFrag;
-
-uniform uint flagsAvailable;
 
         ]]>
     </snippet>

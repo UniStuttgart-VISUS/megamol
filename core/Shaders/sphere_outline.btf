@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<btf type="MegaMolGLSLShader" version="1.0" namespace="sphere_outline">
+
+    <include file="core_utils"/>
+    <include file="bitflags"/>
+    <include file="sphere_flags"/>
+
+
+    <shader name="vertex">
+        <snippet type="version">130</snippet>
+        <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>
+        <snippet name="Attributes"       type="file">sphere/vertex_attributes.glsl</snippet>        
+        <snippet name="bitflags::main"/>
+        <snippet name="core_utils::tflookup"/>
+        <snippet name="core_utils::tfconvenience"/>
+        <snippet name="sphere_flags::vertex_attributes"/>   
+        <snippet name="MainStart"        type="file">sphere/vertex_mainstart.glsl</snippet>
+        <snippet name="sphere_flags::vertex_getflag"/>         
+        <snippet name="Color"            type="file">sphere/vertex_color.glsl</snippet>         
+        <snippet name="PosTrans"         type="file">sphere/vertex_postrans.glsl</snippet>
+        <snippet name="SphereTouchPlane" type="file">sphere/vertex_spheretouchplane.glsl</snippet>
+        <snippet name="ClippingPlane"    type="file">sphere/vertex_clipping.glsl</snippet>        
+        <snippet name="PosOutput"        type="file">sphere/vertex_posout.glsl</snippet>      
+        <snippet name="MainEnd"          type="file">sphere/vertex_mainend.glsl</snippet>
+    </shader>
+
+
+    <shader name="fragment">
+        <snippet type="version">130</snippet>
+        <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>
+        <snippet name="Attributes"       type="file">sphere/fragment_attributes.glsl</snippet>
+        <snippet name="sphere_flags::fragment_attributes"/>                 
+        <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>        
+        <snippet name="MainStart"        type="file">sphere/fragment_mainstart.glsl</snippet>
+        <snippet name="sphere_flags::fragment_discardtest"/>                
+        <snippet name="CutOut"           type="file">sphere/outline_fragment_cutout.glsl</snippet>
+        <snippet name="NoLighting"       type="file">sphere/outline_fragment_nolighting.glsl</snippet>
+        <snippet name="OutDepth"         type="file">sphere/fragment_out-depth.glsl</snippet>
+        <snippet name="MainEnd"          type="file">sphere/fragment_mainend.glsl</snippet>
+    </shader>
+
+</btf>

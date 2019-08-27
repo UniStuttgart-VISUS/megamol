@@ -5,7 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 #include "stdafx.h"
-#include "mmcore/view/BoundingBoxRenderer.h"
+#include "mmcore/nextgen/BoundingBoxRenderer.h"
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
@@ -14,7 +14,7 @@
 #include "vislib/sys/Log.h"
 
 using namespace megamol::core;
-using namespace megamol::core::view;
+using namespace megamol::core::nextgen;
 using namespace megamol::core::view;
 
 /*
@@ -251,6 +251,7 @@ bool BoundingBoxRenderer::RenderBoundingBoxBack(const glm::mat4& mvp, const Boun
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_FRONT);
     if (smoothLines) glEnable(GL_LINE_SMOOTH);
@@ -272,6 +273,7 @@ bool BoundingBoxRenderer::RenderBoundingBoxBack(const glm::mat4& mvp, const Boun
     glDisable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE);
     glDisable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
     if (smoothLines) glDisable(GL_LINE_SMOOTH);
     glLineWidth(1.0f);
     glDisable(GL_CULL_FACE);
