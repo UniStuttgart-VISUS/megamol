@@ -61,7 +61,7 @@ protected:
      *
      * @return True if any light has changed, false otherwise.
      */
-    virtual bool GetLights(void);
+    bool GetLights(void);
 
     /** map to store the called lights */
     core::view::light::LightMap lightMap;
