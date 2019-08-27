@@ -8,18 +8,20 @@
 #ifndef MEGAMOLCORE_IMAGEVIEWER_H_INCLUDED
 #define MEGAMOLCORE_IMAGEVIEWER_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#pragma once
+#    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include <memory>
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/Renderer3DModule.h"
+#include "mmcore/view/Renderer3DModule_2.h"
 #include "vislib/Pair.h"
 #include "vislib/SmartPtr.h"
+#include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/OpenGLTexture2D.h"
 #include "vislib/math/Rectangle.h"
 
 #ifdef WITH_MPI
-#include "mpi.h"
+#    include "mpi.h"
 #endif /* WITH_MPI */
 
 /*
@@ -37,7 +39,7 @@ namespace imageviewer2 {
 /**
  * Mesh-based renderer for bézier curve tubes
  */
-class ImageViewer : public view::Renderer3DModule {
+class ImageViewer : public view::Renderer3DModule_2 {
 public:
     /**
      * Answer the name of this module.
@@ -83,7 +85,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(Call& call);
+    virtual bool GetExtents(view::CallRender3D_2& call);
 
     /**
      * Implementation of 'Release'.
@@ -97,7 +99,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(Call& call);
+    virtual bool Render(view::CallRender3D_2& call);
 
 private:
     /**
@@ -201,7 +203,7 @@ private:
 
     int mpiSize = 0;
 
-    enum mpiRole { IMG_BLANK = 10, IMG_LEFT = 11, IMG_RIGHT = 12};
+    enum mpiRole { IMG_BLANK = 10, IMG_LEFT = 11, IMG_RIGHT = 12 };
 
     int roleRank = -1, roleSize = -1;
     int rank = -1;
@@ -216,6 +218,11 @@ private:
 
     /** The height of the image */
     unsigned int height;
+
+    vislib::graphics::gl::GLSLShader theShader;
+    GLuint theVertBuffer;
+    GLuint theTexCoordBuffer;
+    GLuint theVAO;
 
     /** The image tiles */
     vislib::Array<vislib::Pair<vislib::math::Rectangle<float>, vislib::SmartPtr<vislib::graphics::gl::OpenGLTexture2D>>>

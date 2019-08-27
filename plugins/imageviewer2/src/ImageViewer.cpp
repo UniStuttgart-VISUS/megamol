@@ -22,7 +22,7 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/view/AbstractRenderingView.h"
-#include "mmcore/view/CallRender3D.h"
+#include "mmcore/view/CallRender3D_2.h"
 #include "vislib/sys/Log.h"
 #include "vislib/sys/SystemInformation.h"
 //#include <cmath>
@@ -30,11 +30,13 @@
 using namespace megamol::core;
 using namespace megamol;
 
+const unsigned int TILE_SIZE = 2 * 1024;
+
 /*
  * misc::ImageViewer::ImageViewer
  */
 imageviewer2::ImageViewer::ImageViewer(void)
-    : Renderer3DModule()
+    : Renderer3DModule_2()
     , leftFilenameSlot("leftImg", "The image file name")
     , rightFilenameSlot("rightImg", "The image file name")
     , pasteFilenamesSlot("pasteFiles", "Slot to paste both file names at once (semicolon-separated)")
@@ -110,7 +112,6 @@ imageviewer2::ImageViewer::ImageViewer(void)
 
     this->callRequestImage.SetCompatibleCall<image_calls::Image2DCallDescription>();
     this->MakeSlotAvailable(&this->callRequestImage);
-
 }
 
 
@@ -124,9 +125,49 @@ imageviewer2::ImageViewer::~ImageViewer(void) { this->Release(); }
  * misc::ImageViewer::create
  */
 bool imageviewer2::ImageViewer::create(void) {
-    // intentionally empty
     vislib::graphics::BitmapCodecCollection::DefaultCollection().AddCodec(new sg::graphics::PngBitmapCodec());
     vislib::graphics::BitmapCodecCollection::DefaultCollection().AddCodec(new sg::graphics::JpegBitmapCodec());
+
+    vislib::graphics::gl::ShaderSource vertShader;
+    vislib::graphics::gl::ShaderSource fragShader;
+
+    try {
+        if (!instance()->ShaderSourceFactory().MakeShaderSource("imageviewer::vertex", vertShader)) {
+            return false;
+        }
+        if (!instance()->ShaderSourceFactory().MakeShaderSource("imageviewer::fragment", fragShader)) {
+            return false;
+        }
+    } catch (vislib::Exception e) {
+        vislib::sys::Log::DefaultLog.WriteMsg(
+            vislib::sys::Log::LEVEL_ERROR, "[ImageViewer] Unable to make shader source: %s\n", e.GetMsgA());
+    }
+
+    try {
+        if (!this->theShader.Create(vertShader.Code(), vertShader.Count(), fragShader.Code(), fragShader.Count())) {
+            vislib::sys::Log::DefaultLog.WriteMsg(
+                vislib::sys::Log::LEVEL_ERROR, "[ImageViewer] Unable to compile sphere shader\n");
+            return false;
+        }
+    } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "[SphereRenderer] Unable to compile sphere shader (@%s): %s\n",
+            vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
+            ce.GetMsgA());
+        return nullptr;
+    } catch (vislib::Exception e) {
+        vislib::sys::Log::DefaultLog.WriteMsg(
+            vislib::sys::Log::LEVEL_ERROR, "[ImageViewer] Unable to compile shader: %s\n", e.GetMsgA());
+        return nullptr;
+    } catch (...) {
+        vislib::sys::Log::DefaultLog.WriteMsg(
+            vislib::sys::Log::LEVEL_ERROR, "[ImageViewer] Unable to compile shader: Unknown exception\n");
+        return nullptr;
+    }
+
+    glGenBuffers(1, &theVertBuffer);
+    glGenBuffers(1, &theTexCoordBuffer);
+    glGenVertexArrays(1, &theVAO);
 
     return true;
 }
@@ -135,21 +176,38 @@ bool imageviewer2::ImageViewer::create(void) {
 /*
  * imageviewer2::ImageViewer::GetExtents
  */
-bool imageviewer2::ImageViewer::GetExtents(Call& call) {
-    view::CallRender3D* cr = dynamic_cast<view::CallRender3D*>(&call);
-    if (cr == NULL) return false;
+bool imageviewer2::ImageViewer::GetExtents(view::CallRender3D_2& call) {
 
-    if (cr->GetCameraParameters() != NULL) {
-        bool rightEye = (cr->GetCameraParameters()->Eye() == vislib::graphics::CameraParameters::RIGHT_EYE);
-        if (!assertImage(rightEye)) return false;
-    }
+    view::Camera_2 cam;
+    call.GetCamera(cam);
+    cam_type::snapshot_type snapshot;
+    cam_type::matrix_type viewTemp, projTemp;
 
-    cr->SetTimeFramesCount(1);
-    cr->AccessBoundingBoxes().Clear();
-    cr->AccessBoundingBoxes().SetObjectSpaceBBox(
+    // Generate complete snapshot and calculate matrices
+    cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
+
+    auto CamPos = snapshot.position;
+    auto CamView = snapshot.view_vector;
+    auto CamRight = snapshot.right_vector;
+    auto CamUp = snapshot.up_vector;
+    auto CamNearClip = snapshot.frustum_near;
+    auto Eye = cam.eye();
+    bool rightEye = (Eye == core::thecam::Eye::right);
+
+    glm::mat4 view = viewTemp;
+    glm::mat4 proj = projTemp;
+    auto MVinv = glm::inverse(view);
+    auto MVP = proj * view;
+    auto MVPinv = glm::inverse(MVP);
+    auto MVPtransp = glm::transpose(MVP);
+
+    if (!assertImage(rightEye)) return false;
+
+    call.SetTimeFramesCount(1);
+    call.AccessBoundingBoxes().Clear();
+    call.AccessBoundingBoxes().SetBoundingBox(
         0.0f, 0.0f, -0.5f, static_cast<float>(this->width), static_cast<float>(this->height), 0.5f);
-    cr->AccessBoundingBoxes().SetObjectSpaceClipBox(cr->AccessBoundingBoxes().ObjectSpaceBBox());
-    cr->AccessBoundingBoxes().MakeScaledWorld(1.0f);
+    call.AccessBoundingBoxes().SetClipBox(call.AccessBoundingBoxes().BoundingBox());
 
     return true;
 }
@@ -160,6 +218,9 @@ bool imageviewer2::ImageViewer::GetExtents(Call& call) {
  */
 void imageviewer2::ImageViewer::release(void) {
     //    this->image.Release();
+    glDeleteBuffers(1, &theVertBuffer);
+    glDeleteBuffers(1, &theTexCoordBuffer);
+    glDeleteVertexArrays(1, &theVAO);
 }
 
 
@@ -195,7 +256,8 @@ bool imageviewer2::ImageViewer::assertImage(bool rightEye) {
     }
 
     param::ParamSlot* filenameSlot = rightEye ? (&this->rightFilenameSlot) : (&this->leftFilenameSlot);
-    if (filenameSlot->IsDirty() || (imgcConnected /* && imgc->DataHash() != datahash*/) || useMpi) { //< imgc has precedence
+    if (filenameSlot->IsDirty() || (imgcConnected /* && imgc->DataHash() != datahash*/) ||
+        useMpi) { //< imgc has precedence
         if (!imgcConnected) {
             filenameSlot->ResetDirty();
         }
@@ -203,7 +265,6 @@ bool imageviewer2::ImageViewer::assertImage(bool rightEye) {
         static vislib::graphics::BitmapImage img;
         // static ::sg::graphics::PngBitmapCodec codec;
         // codec.Image() = &img;
-        static const unsigned int TILE_SIZE = 2 * 1024;
         ::glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
         try {
             static bool handIsShaken = false;
@@ -252,10 +313,11 @@ bool imageviewer2::ImageViewer::assertImage(bool rightEye) {
                         myRole == IMG_BLANK ? "blank" : (myRole == IMG_RIGHT ? "right" : "left"), roleRank, roleSize);
 #endif /* WITH_MPI */
                     if (!remoteness) {
-                        vislib::sys::Log::DefaultLog.WriteInfo("ImageViewer: Loading file '%s' from disk\n", filename.PeekBuffer());
+                        vislib::sys::Log::DefaultLog.WriteInfo(
+                            "ImageViewer: Loading file '%s' from disk\n", filename.PeekBuffer());
                         vislib::sys::FastFile in;
                         if (in.Open(filename, vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ,
-                            vislib::sys::File::OPEN_ONLY)) {
+                                vislib::sys::File::OPEN_ONLY)) {
                             fileSize = in.GetSize();
                             allFile = new BYTE[fileSize];
                             in.Read(allFile, fileSize);
@@ -315,28 +377,25 @@ bool imageviewer2::ImageViewer::assertImage(bool rightEye) {
                 } else {
                     vislib::sys::Log::DefaultLog.WriteInfo("ImageViewer: Decoding IMGC at rank %d\n", roleRank);
                     switch (imgc_enc) {
-                        case image_calls::Image2DCall::BMP:
-                        {
-                            if (vislib::graphics::BitmapCodecCollection::DefaultCollection().LoadBitmapImage(
+                    case image_calls::Image2DCall::BMP: {
+                        if (vislib::graphics::BitmapCodecCollection::DefaultCollection().LoadBitmapImage(
                                 img, allFile, fileSize)) {
-                                img.Convert(vislib::graphics::BitmapImage::TemplateByteRGB);
-                                this->width = img.Width();
-                                this->height = img.Height();
-                                image_ptr = img.PeekDataAs<BYTE>();
-                            } else {
-                                printf("ImageViewer2 failed decoding file\n");
-                                fileSize = 0;
-                                this->width = this->height = 0;
-                            }
-                        } break;
-                        case image_calls::Image2DCall::SNAPPY:
-                        {
-                        } break;
-                        case image_calls::Image2DCall::RAW:
-                        default:
-                        {
-                            image_ptr = allFile;
+                            img.Convert(vislib::graphics::BitmapImage::TemplateByteRGB);
+                            this->width = img.Width();
+                            this->height = img.Height();
+                            image_ptr = img.PeekDataAs<BYTE>();
+                        } else {
+                            printf("ImageViewer2 failed decoding file\n");
+                            fileSize = 0;
+                            this->width = this->height = 0;
                         }
+                    } break;
+                    case image_calls::Image2DCall::SNAPPY: {
+                    } break;
+                    case image_calls::Image2DCall::RAW:
+                    default: {
+                        image_ptr = allFile;
+                    }
                     }
                 }
 
@@ -360,8 +419,11 @@ bool imageviewer2::ImageViewer::assertImage(bool rightEye) {
                             if (this->tiles.Last().Second()->Create(w, h, false, buf, GL_RGB) != GL_NO_ERROR) {
                                 this->tiles.RemoveLast();
                             } else {
-                                this->tiles.Last().Second()->SetFilter(GL_LINEAR, GL_LINEAR);
+                                this->tiles.Last().Second()->Bind();
+                                glGenerateMipmap(GL_TEXTURE_2D);
+                                this->tiles.Last().Second()->SetFilter(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
                                 this->tiles.Last().Second()->SetWrap(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+                                glBindTexture(GL_TEXTURE_2D, 0);
                             }
                         }
                     }
@@ -379,9 +441,8 @@ bool imageviewer2::ImageViewer::assertImage(bool rightEye) {
                         "ImageViewer2: rank %i of %i (role %s) entering sync barrier", roleRank, roleSize,
                         myRole == IMG_BLANK ? "blank" : (myRole == IMG_LEFT ? "left" : "right"));
                     MPI_Barrier(roleComm);
-                    vislib::sys::Log::DefaultLog.WriteInfo(
-                        "ImageViewer2: rank %i of %i (role %s) leaving sync barrier", roleRank, roleSize,
-                        myRole == IMG_BLANK ? "blank" : (myRole == IMG_LEFT ? "left" : "right"));
+                    vislib::sys::Log::DefaultLog.WriteInfo("ImageViewer2: rank %i of %i (role %s) leaving sync barrier",
+                        roleRank, roleSize, myRole == IMG_BLANK ? "blank" : (myRole == IMG_LEFT ? "left" : "right"));
                 }
 #endif
             }
@@ -436,10 +497,71 @@ bool imageviewer2::ImageViewer::initMPI() {
 /*
  * imageviewer2::ImageViewer::Render
  */
-bool imageviewer2::ImageViewer::Render(Call& call) {
-    view::CallRender3D* cr3d = dynamic_cast<view::CallRender3D*>(&call);
-    if (cr3d == NULL) return false;
-    bool rightEye = (cr3d->GetCameraParameters()->Eye() == vislib::graphics::CameraParameters::RIGHT_EYE);
+bool imageviewer2::ImageViewer::Render(view::CallRender3D_2& call) {
+
+    view::Camera_2 cam;
+    call.GetCamera(cam);
+    cam_type::snapshot_type snapshot;
+    cam_type::matrix_type viewTemp, projTemp;
+
+    // Generate complete snapshot and calculate matrices
+    cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
+
+    auto CamPos = snapshot.position;
+    auto CamView = snapshot.view_vector;
+    auto CamRight = snapshot.right_vector;
+    auto CamUp = snapshot.up_vector;
+    auto CamNearClip = snapshot.frustum_near;
+    auto Eye = cam.eye();
+    bool rightEye = (Eye == core::thecam::Eye::right);
+
+    glm::mat4 view = viewTemp;
+    glm::mat4 proj = projTemp;
+    auto MVinv = glm::inverse(view);
+    auto MVP = proj * view;
+    auto MVPinv = glm::inverse(MVP);
+    auto MVPtransp = glm::transpose(MVP);
+
+    static bool buffers_initialized = false;
+    if (!buffers_initialized && this->tiles.Count() > 0) {
+        std::vector<GLfloat> theTexCoords;
+        std::vector<GLfloat> theVertCoords;
+        const float halfTexel = (1.0f / TILE_SIZE) * 0.5f;
+        const float endTexel = 1.0f - halfTexel;
+        const int32_t count = this->tiles.Count() * 4 * 2;
+        theTexCoords.reserve(count);
+        theVertCoords.reserve(count);
+        for (SIZE_T i = 0; i < this->tiles.Count(); i++) {
+            theTexCoords.push_back(halfTexel);
+            theTexCoords.push_back(remoteness ? halfTexel : endTexel);
+            theVertCoords.push_back(this->tiles[i].First().Left());
+            theVertCoords.push_back(this->tiles[i].First().Top());
+            theTexCoords.push_back(endTexel);
+            theTexCoords.push_back(remoteness ? halfTexel : endTexel);
+            theVertCoords.push_back(this->tiles[i].First().Right());
+            theVertCoords.push_back(this->tiles[i].First().Top());
+            theTexCoords.push_back(halfTexel);
+            theTexCoords.push_back(remoteness ? endTexel : halfTexel);
+            theVertCoords.push_back(this->tiles[i].First().Left());
+            theVertCoords.push_back(this->tiles[i].First().Bottom());
+            theTexCoords.push_back(endTexel);
+            theTexCoords.push_back(remoteness ? endTexel : halfTexel);
+            theVertCoords.push_back(this->tiles[i].First().Right());
+            theVertCoords.push_back(this->tiles[i].First().Bottom());
+        }
+        ::glBindVertexArray(this->theVAO);
+        ::glBindBuffer(GL_ARRAY_BUFFER, this->theVertBuffer);
+        ::glBufferData(GL_ARRAY_BUFFER, theVertCoords.size() * sizeof(GLfloat), theVertCoords.data(), GL_STATIC_DRAW);
+        ::glEnableVertexAttribArray(0);
+        ::glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
+        ::glBindBuffer(GL_ARRAY_BUFFER, this->theTexCoordBuffer);
+        ::glBufferData(GL_ARRAY_BUFFER, theTexCoords.size() * sizeof(GLfloat), theTexCoords.data(), GL_STATIC_DRAW);
+        ::glEnableVertexAttribArray(1);
+        ::glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
+        ::glBindVertexArray(0);
+        buffers_initialized = true;
+    }
+
     // param::ParamSlot *filenameSlot = rightEye ? (&this->rightFilenameSlot) : (&this->leftFilenameSlot);
     ::glEnable(GL_TEXTURE_2D);
     if (!assertImage(rightEye)) return false;
@@ -449,25 +571,23 @@ bool imageviewer2::ImageViewer::Render(Call& call) {
     ::glDisable(GL_LIGHTING);
     ::glEnable(GL_DEPTH_TEST);
     ::glLineWidth(1.0f);
-    ::glDisable(GL_LINE_SMOOTH);
+    ::glBindVertexArray(this->theVAO);
 
-    ::glColor3ub(255, 255, 255);
+    this->theShader.Enable();
+    glUniformMatrix4fv(theShader.ParameterLocation("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
+    glActiveTexture(GL_TEXTURE0);
+    glUniform1i(theShader.ParameterLocation("texSampler"), 0);
+
     for (SIZE_T i = 0; i < this->tiles.Count(); i++) {
         this->tiles[i].Second()->Bind();
-        ::glBegin(GL_QUADS);
-        ::glTexCoord2i(0, remoteness ? 1 : 0);
-        ::glVertex2f(this->tiles[i].First().Left(), this->tiles[i].First().Bottom());
-        ::glTexCoord2i(0, remoteness ? 0 : 1);
-        ::glVertex2f(this->tiles[i].First().Left(), this->tiles[i].First().Top());
-        ::glTexCoord2i(1, remoteness ? 0 : 1);
-        ::glVertex2f(this->tiles[i].First().Right(), this->tiles[i].First().Top());
-        ::glTexCoord2i(1, remoteness ? 1 : 0);
-        ::glVertex2f(this->tiles[i].First().Right(), this->tiles[i].First().Bottom());
-        ::glEnd();
+        ::glDrawArrays(GL_TRIANGLE_STRIP, i * 4, 4);
     }
-    ::glBindTexture(GL_TEXTURE_2D, 0);
+    this->theShader.Disable();
 
+    ::glBindVertexArray(0);
+    ::glBindTexture(GL_TEXTURE_2D, 0);
     ::glDisable(GL_TEXTURE_2D);
+    ::glDisable(GL_DEPTH_TEST);
 
     return true;
 }
