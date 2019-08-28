@@ -274,10 +274,12 @@ bool GrimRenderer::GetExtents(megamol::core::view::CallRender3D& call) {
     cr->SetTimeFramesCount(pgdc->FrameCount());
     cr->AccessBoundingBoxes() = pgdc->AccessBoundingBoxes();
 
+    ///XXX REMOVE for new camera usage
     float scaling = cr->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
     if (scaling > 0.0000001) {
         scaling = 10.0f / scaling;
-    } else {
+    }
+    else {
         scaling = 1.0f;
     }
     cr->AccessBoundingBoxes().MakeScaledWorld(scaling);
@@ -368,6 +370,27 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
 
     unsigned int cellcnt = pgdc->CellsCount();
     unsigned int typecnt = pgdc->TypesCount();
+
+    ///XXX Use this for new camera usage
+    //// Camera 
+    //view::Camera_2 cam;
+    //cr->GetCamera(cam);
+    //cam_type::snapshot_type snapshot;
+    //cam_type::matrix_type viewTemp, projTemp;
+    //cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
+    //glm::vec4 camPos = snapshot.position;
+    //glm::vec4 camView = snapshot.view_vector;
+    //glm::vec4 camRight = snapshot.right_vector;
+    //glm::vec4 camUp = snapshot.up_vector;
+    //float half_aperture_angle = cam.half_aperture_angle_radians();
+    //// Viewport
+    //glm::vec4 viewport;
+    //if (!cam.image_tile().empty()) {
+    //    viewport = glm::vec4(cam.image_tile().left(), cam.image_tile().bottom(), cam.image_tile().width(), cam.image_tile().height());
+    //}
+    //else {
+    //    viewport = glm::vec4(0.0f, 0.0f, cam.resolution_gate().width(), cam.resolution_gate().height());
+    //}
 
     // update fbo size, if required
     GLint viewport[4];
