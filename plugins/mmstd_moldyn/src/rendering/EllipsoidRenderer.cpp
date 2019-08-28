@@ -104,14 +104,15 @@ bool EllipsoidRenderer::GetExtents(Call& call) {
 		cr->SetTimeFramesCount(epdc->FrameCount());
 		cr->AccessBoundingBoxes() = epdc->AccessBoundingBoxes();
 
-		float scaling = cr->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
-		if (scaling > 0.0000001) {
-			scaling = 10.0f / scaling;
-		}
-		else {
-			scaling = 1.0f;
-		}
-		cr->AccessBoundingBoxes().MakeScaledWorld(scaling);
+		//float scaling = cr->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
+		//if (scaling > 0.0000001) {
+		//	scaling = 10.0f / scaling;
+		//}
+		//else {
+		//	scaling = 1.0f;
+		//}
+		//cr->AccessBoundingBoxes().MakeScaledWorld(scaling);
+        cr->AccessBoundingBoxes().MakeScaledWorld(1.0f);
 
 	}
 	else {
@@ -140,15 +141,15 @@ bool EllipsoidRenderer::Render(Call& call){
 
 	//glPushMatrix();
 
-	float scale;
-	if (!vislib::math::IsEqual(epdc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f)) {
-		scale = 2.0f / epdc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
-	}
-	else {
-		scale = 1.0f;
-	}
+	//float scale;
+	//if (!vislib::math::IsEqual(epdc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f)) {
+	//	scale = 2.0f / epdc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
+	//}
+	//else {
+	//	scale = 1.0f;
+	//}
 
-	glScalef(scale, scale, scale);
+	//glScalef(scale, scale, scale);
 
 	epdc->SetFrameID(static_cast<int>(cr->Time()));
 	if (!(*epdc)(0)) return false;
