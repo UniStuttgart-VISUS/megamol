@@ -18,8 +18,8 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/view/CallClipPlane.h"
 #include "mmcore/view/CallGetTransferFunction.h"
-#include "mmcore/view/CallRender3D_2.h"
-#include "mmcore/view/Renderer3DModule_2.h"
+#include "mmcore/view/CallRender3D.h"
+#include "mmcore/view/Renderer3DModule.h"
 
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/graphics/CameraParameters.h"
@@ -52,40 +52,40 @@ namespace rendering {
 
 
     /**
-     * Renderer for gridded imposters
-     */
-    class GrimRenderer : public core::view::Renderer3DModule_2 {
+        * Renderer for gridded imposters
+        */
+    class GrimRenderer : public core::view::Renderer3DModule {
     public:
 
         /**
-         * Answer the name of this module.
-         *
-         * @return The name of this module.
-         */
+            * Answer the name of this module.
+            *
+            * @return The name of this module.
+            */
         static const char *ClassName(void) {
             return "GrimRenderer";
         }
 
         /**
-         * Answer a human readable description of this module.
-         *
-         * @return A human readable description of this module.
-         */
+            * Answer a human readable description of this module.
+            *
+            * @return A human readable description of this module.
+            */
         static const char *Description(void) {
             return "Renderer of gridded imposters.";
         }
 
         /**
-         * Answers whether this module is available on the current system.
-         *
-         * @return 'true' if the module is available, 'false' otherwise.
-         */
+            * Answers whether this module is available on the current system.
+            *
+            * @return 'true' if the module is available, 'false' otherwise.
+            */
         static bool IsAvailable(void) {
             return vislib::graphics::gl::GLSLShader::AreExtensionsAvailable()
-                   && vislib::graphics::gl::FramebufferObject::AreExtensionsAvailable()
-                   && (isExtAvailable("GL_NV_occlusion_query") != GL_FALSE)
-                   && (isExtAvailable("GL_ARB_multitexture") != GL_FALSE)
-                   && (isExtAvailable("GL_ARB_vertex_buffer_object") != GL_FALSE);
+                && vislib::graphics::gl::FramebufferObject::AreExtensionsAvailable()
+                && (isExtAvailable("GL_NV_occlusion_query") != GL_FALSE)
+                && (isExtAvailable("GL_ARB_multitexture") != GL_FALSE)
+                && (isExtAvailable("GL_ARB_vertex_buffer_object") != GL_FALSE);
         }
 
         /** Ctor. */
@@ -97,43 +97,43 @@ namespace rendering {
     protected:
 
         /**
-         * Implementation of 'Create'.
-         *
-         * @return 'true' on success, 'false' otherwise.
-         */
+            * Implementation of 'Create'.
+            *
+            * @return 'true' on success, 'false' otherwise.
+            */
         virtual bool create(void);
 
         /**
-         * The get extents callback. The module should set the members of
-         * 'call' to tell the caller the extents of its data (bounding boxes
-         * and times).
-         *
-         * @param call The calling call.
-         *
-         * @return The return value of the function.
-         */
-        virtual bool GetExtents(core::view::CallRender3D_2 &call);
+            * The get extents callback. The module should set the members of
+            * 'call' to tell the caller the extents of its data (bounding boxes
+            * and times).
+            *
+            * @param call The calling call.
+            *
+            * @return The return value of the function.
+            */
+        virtual bool GetExtents(core::view::CallRender3D &call);
 
         /**
-         * Implementation of 'Release'.
-         */
+            * Implementation of 'Release'.
+            */
         virtual void release(void);
 
         /**
-         * The render callback.
-         *
-         * @param call The calling call.
-         *
-         * @return The return value of the function.
-         */
-        virtual bool Render(core::view::CallRender3D_2 &call);
+            * The render callback.
+            *
+            * @param call The calling call.
+            *
+            * @return The return value of the function.
+            */
+        virtual bool Render(core::view::CallRender3D &call);
 
     private:
 
         /**
-         * Utility class storing additional rendering information about a
-         * given cell
-         */
+            * Utility class storing additional rendering information about a
+            * given cell
+            */
         class CellInfo {
         public:
 
@@ -156,7 +156,7 @@ namespace rendering {
 
                 inline bool operator==(const CacheItem &rhs) {
                     return (this->data[0] == rhs.data[0])
-                           && (this->data[1] == rhs.data[1]);
+                        && (this->data[1] == rhs.data[1]);
                 }
             };
 
@@ -179,39 +179,39 @@ namespace rendering {
             vislib::Array<CacheItem> cache;
 
             /**
-             * Ctor
-             */
+                * Ctor
+                */
             CellInfo(void);
 
             /**
-             * Dtor
-             */
+                * Dtor
+                */
             ~CellInfo(void);
 
             /**
-             * Test for equality
-             *
-             * @param rhs The right hand side operand
-             *
-             * @return 'true' if 'this' and 'rhs' are equal.
-             */
+                * Test for equality
+                *
+                * @param rhs The right hand side operand
+                *
+                * @return 'true' if 'this' and 'rhs' are equal.
+                */
             inline bool operator==(const CellInfo &rhs) const {
                 return (this->isvisible == rhs.isvisible)
-                       && (this->wasvisible == rhs.wasvisible)
-                       && (this->dots == rhs.dots)
-                       && (vislib::math::IsEqual(this->maxrad, rhs.maxrad));
+                    && (this->wasvisible == rhs.wasvisible)
+                    && (this->dots == rhs.dots)
+                    && (vislib::math::IsEqual(this->maxrad, rhs.maxrad));
             }
 
         };
 
         /**
-         * Sorts the grid cells by their distance to the viewer
-         *
-         * @param lhs The left hand side operand
-         * @param rhs The right hand side operand
-         *
-         * @return The distance sort info
-         */
+            * Sorts the grid cells by their distance to the viewer
+            *
+            * @param lhs The left hand side operand
+            * @param rhs The right hand side operand
+            *
+            * @return The distance sort info
+            */
         static int depthSort(const vislib::Pair<unsigned int, float> &lhs,
             const vislib::Pair<unsigned int, float> &rhs);
 
