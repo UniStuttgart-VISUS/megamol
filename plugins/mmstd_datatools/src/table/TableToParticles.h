@@ -91,7 +91,7 @@ namespace datatools {
 		std::string cleanUpColumnHeader(const std::string& header) const;
 		std::string cleanUpColumnHeader(const vislib::TString& header) const;
 
-		bool pushColumnIndex(std::vector<size_t>& cols, const vislib::TString& colName);
+		bool pushColumnIndex(std::vector<uint32_t>& cols, const vislib::TString& colName);
 
         /** Minimum coordinates of the bounding box. */
         float bboxMin[3];
@@ -172,8 +172,9 @@ namespace datatools {
 
 		SIZE_T inputHash;
 		SIZE_T myHash;
-		std::map<std::string, size_t> columnIndex;
-		size_t stride;
+        SIZE_T myTime = -1;
+		std::map<std::string, uint32_t> columnIndex;
+		uint32_t stride;
 
     };
 
