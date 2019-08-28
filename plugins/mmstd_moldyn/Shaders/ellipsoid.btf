@@ -66,7 +66,8 @@ void main() {
     vec3 tmp2;
     
     vec4 inPos = gl_Vertex;
-    dRadz = 1.0 / radii;
+    vec3 absradii = abs(radii);
+    dRadz = 1.0 / absradii;
     
     inPos.w = 1.0;
     objPos = inPos;
@@ -127,7 +128,7 @@ void main() {
     projPos.w = 0.0;
 
     pos = vec4(-1.0, -1.0, -1.0, 1.0);
-    pos.xyz *= radii; // scale
+    pos.xyz *= absradii; // scale
     projPos.x = dot(rotMatT0, pos.xyz); // rotate
     projPos.y = dot(rotMatT1, pos.xyz);
     projPos.z = dot(rotMatT2, pos.xyz);
@@ -138,7 +139,7 @@ void main() {
     mins = maxs = pp;
 
     pos = vec4(1.0, -1.0, -1.0, 1.0);
-    pos.xyz *= radii; // scale
+    pos.xyz *= absradii; // scale
     projPos.x = dot(rotMatT0, pos.xyz); // rotate
     projPos.y = dot(rotMatT1, pos.xyz);
     projPos.z = dot(rotMatT2, pos.xyz);
@@ -151,7 +152,7 @@ void main() {
     maxs = max(maxs, pp);
 
     pos = vec4(-1.0, 1.0, -1.0, 1.0);
-    pos.xyz *= radii; // scale
+    pos.xyz *= absradii; // scale
     projPos.x = dot(rotMatT0, pos.xyz); // rotate
     projPos.y = dot(rotMatT1, pos.xyz);
     projPos.z = dot(rotMatT2, pos.xyz);
@@ -169,7 +170,7 @@ void main() {
     maxs = max(maxs, pp);
 
     pos = vec4(-1.0, -1.0, 1.0, 1.0);
-    pos.xyz *= radii; // scale
+    pos.xyz *= absradii; // scale
     projPos.x = dot(rotMatT0, pos.xyz); // rotate
     projPos.y = dot(rotMatT1, pos.xyz);
     projPos.z = dot(rotMatT2, pos.xyz);
@@ -259,7 +260,7 @@ void main() {
     ray = normalize(ray - camPos.xyz);
 
 
-    // calculate the geometry-ray-intersection (sphere with radiius = 1)
+    // calculate the geometry-ray-intersection (sphere with radius = 1)
     float d1 = -dot(camPos.xyz, ray);                       // projected length of the cam-sphere-vector onto the ray
     float d2s = dot(camPos.xyz, camPos.xyz) - d1 * d1;      // off axis of cam-sphere-vector and ray
     float radicand = 1.0 - d2s;                             // square of difference of projected length and lambda

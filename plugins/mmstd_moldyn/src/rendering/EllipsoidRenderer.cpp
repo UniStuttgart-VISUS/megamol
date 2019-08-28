@@ -153,7 +153,6 @@ bool EllipsoidRenderer::Render(Call& call){
 	epdc->SetFrameID(static_cast<int>(cr->Time()));
 	if (!(*epdc)(0)) return false;
 
-
 	glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
 	glDisable(GL_POINT_SPRITE_ARB);
 
@@ -187,6 +186,8 @@ bool EllipsoidRenderer::Render(Call& call){
 	for (unsigned int i = 0; i < epdc->GetParticleListCount(); i++){
 
 		auto &elParts = epdc->AccessParticles(i);
+
+        if (elParts.GetCount() == 0 || elParts.GetQuatData() == nullptr || elParts.GetRadiiData() == nullptr) continue;
 
 		glVertexAttribPointerARB(radiiAttrib, 3, GL_FLOAT, false, elParts.GetRadiiDataStride(), elParts.GetRadiiData());
 		glVertexAttribPointerARB(quatAttrib, 4, GL_FLOAT, false, elParts.GetQuatDataStride(), elParts.GetQuatData());
@@ -239,12 +240,12 @@ bool EllipsoidRenderer::Render(Call& call){
 		glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(elParts.GetCount()));
 		glDisableClientState(GL_COLOR_ARRAY);
 		glDisableClientState(GL_VERTEX_ARRAY);
-		glDisableVertexAttribArrayARB(radiiAttrib);
-		glDisableVertexAttribArrayARB(quatAttrib);
 		glDisable(GL_TEXTURE_1D);
 
 	}
-	epdc->Unlock();
+    glDisableVertexAttribArrayARB(radiiAttrib);
+    glDisableVertexAttribArrayARB(quatAttrib);
+    epdc->Unlock();
 	this->ellipsoidShader.Disable();
 	glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
 	// Check for opengl error
