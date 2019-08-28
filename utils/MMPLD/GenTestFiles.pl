@@ -325,48 +325,53 @@ foreach my $r (@renderer_modes) {
     foreach my $f (@outfiles) {
         my $proj = "$f-$r.lua";
         open my $fh, ">", $proj or die "cannot open $proj";
-        print $fh qq{mmCreateView("test", "View3D", "::v")\n};
         print $fh qq{mmCreateJob("imagemaker", "ScreenShooter", "::imgmaker")\n};
         print $fh qq{mmCreateModule("MMPLDDataSource", "::dat")\n};
         if ($r =~ /^OSPRay/) {
+            print $fh qq{mmCreateView("test", "View3D", "::view")\n};
             print $fh qq{mmCreateModule("OSPRayRenderer", "::osp")\n};
             if ($r =~ /^OSPRayGeometrySphere/) {
-                print $fh qq{mmCreateModule("OSPRaySphereGeometry", "::rnd")\n};
+                print $fh qq{mmCreateModule("OSPRaySphereGeometry", "::renderer")\n};
             }
             elsif ($r =~ /^OSPRayNHGeometrySphere/) {
-                print $fh qq{mmCreateModule("OSPRayNHSphereGeometry", "::rnd")\n};
+                print $fh qq{mmCreateModule("OSPRayNHSphereGeometry", "::renderer")\n};
             }
             print $fh qq{mmCreateModule("OSPRayAmbientLight", "::amb")\n};
             print $fh qq{mmCreateModule("OSPRayOBJMaterial", "::mat")\n};
-            print $fh qq{mmCreateCall("CallRender3D", "::v::rendering", "::osp::rendering")\n};
-            print $fh qq{mmCreateCall("CallOSPRayStructure", "::osp::getStructure", "::rnd::deployStructureSlot")\n};
+            print $fh qq{mmCreateCall("CallRender3D", "::view::rendering", "::osp::rendering")\n};
+            print $fh qq{mmCreateCall("CallOSPRayStructure", "::osp::getStructure", "::renderer::deployStructureSlot")\n};
             print $fh qq{mmCreateCall("CallOSPRayLight", "::osp::getLight", "::amb::deployLightSlot")\n};
-            print $fh qq{mmCreateCall("CallOSPRayMaterial", "::rnd::getMaterialSlot", "::mat::deployMaterialSlot")\n};
+            print $fh qq{mmCreateCall("CallOSPRayMaterial", "::renderer::getMaterialSlot", "::mat::deployMaterialSlot")\n};
             print $fh qq{mmSetParamValue("::osp::useDBcomponent", "false")\n};
         } else {
-            print $fh qq{mmCreateModule("SphereRenderer", "::rnd")\n};
-            print $fh qq{mmCreateCall("CallRender3D", "::v::rendering", "::rnd::rendering")\n};
+            print $fh qq{mmCreateView("test", "View3D_2", "::view")\n};
+            print $fh qq{mmCreateModule("BoundingBoxRenderer","::bbox")\n};
+            print $fh qq{mmCreateModule("PointLight","::pointlight")\n};
+            print $fh qq{mmCreateModule("SphereRenderer", "::renderer")\n};
+            print $fh qq{mmCreateCall("CallRender3D_2", "::view::rendering", "::bbox::rendering")\n};
+            print $fh qq{mmCreateCall("CallRender3D_2","::bbox::chainRendering","::renderer::rendering")\n};
+            print $fh qq{mmCreateCall("CallLight","::renderer::lights","::pointlight::deployLightSlot")\n};
             if ($r =~ /^SimpleSphere/) {
-                print $fh qq{mmSetParamValue("::rnd::renderMode", "Simple")\n};
+                print $fh qq{mmSetParamValue("::renderer::renderMode", "Simple")\n};
             }
             elsif ($r =~ /^GeometryShaderSphere/) {
-                print $fh qq{mmSetParamValue("::rnd::renderMode", "Geometry_Shader")\n};
+                print $fh qq{mmSetParamValue("::renderer::renderMode", "Geometry_Shader")\n};
             }
             elsif ($r =~ /^SSBOSphere/) {
-                print $fh qq{mmSetParamValue("::rnd::renderMode", "SSBO_Stream")\n};
+                print $fh qq{mmSetParamValue("::renderer::renderMode", "SSBO_Stream")\n};
             }
             elsif ($r =~ /^BufferArraySphere/) {
-                print $fh qq{mmSetParamValue("::rnd::renderMode", "Buffer_Array")\n};
+                print $fh qq{mmSetParamValue("::renderer::renderMode", "Buffer_Array")\n};
             }
             elsif ($r =~ /^AmbientOcclusionSphere/) {
-                print $fh qq{mmSetParamValue("::rnd::renderMode", "Ambient_Occlusion")\n};
+                print $fh qq{mmSetParamValue("::renderer::renderMode", "Ambient_Occlusion")\n};
             }            
         }
-        print $fh qq{mmCreateCall("MultiParticleDataCall", "::rnd::getdata", "::dat::getData")\n};
+        print $fh qq{mmCreateCall("MultiParticleDataCall", "::renderer::getdata", "::dat::getData")\n};
         print $fh qq{mmSetParamValue("::dat::filename", "}.getcwd().qq{/$f")\n};
         print $fh qq{mmSetParamValue("::imgmaker::filename", "}.getcwd().qq{/$f-$r.png")\n};
         print $fh qq{mmSetParamValue("::imgmaker::view", "test")\n};
-        print $fh qq|mmSetParamValue("::v::camsettings", "{ApertureAngle=30\\nCoordSystemType=2\\nNearClip=14.746623992919921875\\nFarClip=32.5738677978515625\\nProjection=0\\nStereoDisparity=0.300000011920928955078125\\nStereoEye=0\\nFocalDistance=23.6602458953857421875\\nPositionX=14.33369541168212890625\\nPositionY=8.6866302490234375\\nPositionZ=16.7001476287841796875\\nLookAtX=0\\nLookAtY=0\\nLookAtZ=0\\nUpX=-0.1268725097179412841796875\\nUpY=0.920388698577880859375\\nUpZ=-0.3698485195636749267578125\\nTileLeft=0\\nTileBottom=0\\nTileRight=1280\\nTileTop=720\\nVirtualViewWidth=1280\\nVirtualViewHeight=720\\nAutoFocusOffset=0\\n}")\n|;
+        print $fh qq|mmSetParamValue("::view::camsettings", "{ApertureAngle=30\\nCoordSystemType=2\\nNearClip=14.746623992919921875\\nFarClip=32.5738677978515625\\nProjection=0\\nStereoDisparity=0.300000011920928955078125\\nStereoEye=0\\nFocalDistance=23.6602458953857421875\\nPositionX=14.33369541168212890625\\nPositionY=8.6866302490234375\\nPositionZ=16.7001476287841796875\\nLookAtX=0\\nLookAtY=0\\nLookAtZ=0\\nUpX=-0.1268725097179412841796875\\nUpY=0.920388698577880859375\\nUpZ=-0.3698485195636749267578125\\nTileLeft=0\\nTileBottom=0\\nTileRight=1280\\nTileTop=720\\nVirtualViewWidth=1280\\nVirtualViewHeight=720\\nAutoFocusOffset=0\\n}")\n|;
         print $fh qq{mmSetParamValue("::imgmaker::closeAfter", "true")\n};
         print $fh qq{mmSetParamValue("::imgmaker::trigger", " ")\n};
         close $fh;

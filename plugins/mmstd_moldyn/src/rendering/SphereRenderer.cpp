@@ -19,7 +19,7 @@ using namespace vislib::graphics::gl;
 //#define CHRONOTIMING
 
 #define SSBO_GENERATED_SHADER_INSTANCE  "gl_VertexID" // or "gl_InstanceID"
-#define SSBO_GENERATED_SHADER_ALIGNMENT  "packed" // "std430"
+#define SSBO_GENERATED_SHADER_ALIGNMENT "packed" // "std430"
 
 const GLuint SSBOvertexBindingPoint = 2;
 const GLuint SSBOcolorBindingPoint = 3;
@@ -901,7 +901,7 @@ bool SphereRenderer::isRenderModeAvailable(RenderMode rm, bool silent) {
 		}
 		break;
     default:
-        warnstr += "[SphereRenderer] BUG: Unknown render mode ... \n";
+        warnstr += "[SphereRenderer] Unknown render mode.\n";
         break;
     }
 
@@ -1010,7 +1010,7 @@ bool SphereRenderer::Render(view::CallRender3D_2& call) {
     // Lights
     this->GetLights();
     this->curLightPos = { 0.0f, 0.0f, 0.0f, 1.0f };
-    if (this->lightMap.size() != 1) {
+    if (this->lightMap.size() > 1) {
         vislib::sys::Log::DefaultLog.WriteWarn("[SphereRenderer] Only one single point light source is supported by this renderer");
     }
     for (auto light : this->lightMap) {
@@ -1050,12 +1050,14 @@ bool SphereRenderer::Render(view::CallRender3D_2& call) {
     this->curMVPtransp = glm::transpose(this->curMVP);
 
 	// Viewport
-    if (!cam.image_tile().empty()) {
-        this->curViewAttrib = glm::vec4(cam.image_tile().left(), cam.image_tile().bottom(), cam.image_tile().width(), cam.image_tile().height());
-    }
-    else {
-        this->curViewAttrib = glm::vec4(0.0f , 0.0f, cam.resolution_gate().width(), cam.resolution_gate().height());
-    }
+    //if (!cam.image_tile().empty()) {
+    //    this->curViewAttrib = glm::vec4(cam.image_tile().left(), cam.image_tile().bottom(), cam.image_tile().width(), cam.image_tile().height());
+    //}
+    //else {
+    //    this->curViewAttrib = glm::vec4(0.0f , 0.0f, cam.resolution_gate().width(), cam.resolution_gate().height());
+    //}
+    glGetFloatv(GL_VIEWPORT, glm::value_ptr(this->curViewAttrib));
+
 	this->curVpWidth = static_cast<int>(this->curViewAttrib[2]);
 	this->curVpHeight = static_cast<int>(this->curViewAttrib[3]);
 	if (this->curViewAttrib[2] < 1.0f) this->curViewAttrib[2] = 1.0f;

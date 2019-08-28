@@ -121,7 +121,7 @@ bool ArrowRenderer::GetExtents(view::CallRender3D_2& call) {
 
 void ArrowRenderer::release(void) {
     this->arrowShader.Release();
-    ::glDeleteTextures(1, &this->greyTF);
+    glDeleteTextures(1, &this->greyTF);
 }
 
 
@@ -187,13 +187,17 @@ bool ArrowRenderer::Render(view::CallRender3D_2& call) {
     glm::vec4 CamUp = snapshot.up_vector;
 
     // Viewport
-    glm::vec4 viewportStuff;
-    if (!cam.image_tile().empty()) {
-        viewportStuff = glm::vec4(cam.image_tile().left(), cam.image_tile().bottom(), cam.image_tile().width(), cam.image_tile().height());
-    }
-    else {
-        viewportStuff = glm::vec4(0.0f, 0.0f, cam.resolution_gate().width(), cam.resolution_gate().height());
-    }
+    //glm::vec4 viewportStuff;
+    //if (!cam.image_tile().empty()) {
+    //    viewportStuff = glm::vec4(cam.image_tile().left(), cam.image_tile().bottom(), cam.image_tile().width(), cam.image_tile().height());
+    //}
+    //else {
+    //    viewportStuff = glm::vec4(0.0f, 0.0f, cam.resolution_gate().width(), cam.resolution_gate().height());
+    //}
+    float viewportStuff[4];
+    glGetFloatv(GL_VIEWPORT, viewportStuff);
+    glPointSize(vislib::math::Max(viewportStuff[2], viewportStuff[3]));
+
     if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
     if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
     viewportStuff[2] = 2.0f / viewportStuff[2];
@@ -203,7 +207,7 @@ bool ArrowRenderer::Render(view::CallRender3D_2& call) {
 
     this->arrowShader.Enable();
 
-    glUniform4fv(this->arrowShader.ParameterLocation("viewAttr"), 1, glm::value_ptr(viewportStuff));
+    glUniform4fv(this->arrowShader.ParameterLocation("viewAttr"), 1, viewportStuff);
     glUniform3fv(this->arrowShader.ParameterLocation("camIn"), 1, glm::value_ptr(CamView));
     glUniform3fv(this->arrowShader.ParameterLocation("camRight"), 1, glm::value_ptr(CamRight));
     glUniform3fv(this->arrowShader.ParameterLocation("camUp"), 1, glm::value_ptr(CamUp));
@@ -311,8 +315,8 @@ bool ArrowRenderer::Render(view::CallRender3D_2& call) {
             // direction
             switch (parts.GetDirDataType()) {
                 case MultiParticleDataCall::Particles::DIRDATA_FLOAT_XYZ:
-                    ::glEnableVertexAttribArrayARB(tpal);
-                    ::glVertexAttribPointerARB(tpal, 3, GL_FLOAT, GL_FALSE, parts.GetDirDataStride(), parts.GetDirData());
+                    glEnableVertexAttribArrayARB(tpal);
+                    glVertexAttribPointerARB(tpal, 3, GL_FLOAT, GL_FALSE, parts.GetDirDataStride(), parts.GetDirData());
                     break;
                 default:
                     vislib::sys::Log::DefaultLog.WriteWarn(
@@ -327,8 +331,8 @@ bool ArrowRenderer::Render(view::CallRender3D_2& call) {
                 cflags->validateFlagsCount(parts.GetCount());
                 flags = cflags->GetFlags();
                 fal = glGetAttribLocationARB(this->arrowShader, "flags");
-                ::glEnableVertexAttribArrayARB(fal);
-                ::glVertexAttribIPointer(fal, 1, GL_UNSIGNED_INT, 0, flags->data());
+                glEnableVertexAttribArrayARB(fal);
+                glVertexAttribIPointer(fal, 1, GL_UNSIGNED_INT, 0, flags->data());
             }
             glUniform1ui(this->arrowShader.ParameterLocation("flagsAvailable"), useFlags ? 1 : 0);
 

@@ -202,23 +202,27 @@ bool WatermarkRenderer::Render(megamol::core::view::CallRender3D_2& call) {
 
     // ...then draw watermarks ------------------------------------------------
 
-    // Camera
-    view::Camera_2 cam;
-    cr3d_out->GetCamera(cam);
-    cam_type::snapshot_type snapshot;
-    cam_type::matrix_type viewTemp, projTemp;
-    cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
+    //// Camera
+    // view::Camera_2 cam;
+    // cr3d_out->GetCamera(cam);
+    // cam_type::snapshot_type snapshot;
+    // cam_type::matrix_type viewTemp, projTemp;
+    // cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
 
-    // Viewport
-    glm::vec4 viewport;
-    if (!cam.image_tile().empty()) {
-        viewport = glm::vec4(
-            cam.image_tile().left(), cam.image_tile().bottom(), cam.image_tile().width(), cam.image_tile().height());
-    } else {
-        viewport = glm::vec4(0.0f, 0.0f, cam.resolution_gate().width(), cam.resolution_gate().height());
-    }
-    float vpWidth = viewport[2];
-    float vpHeight = viewport[3];
+    //// Viewport
+    // glm::vec4 viewport;
+    // if (!cam.image_tile().empty()) {
+    //    viewport = glm::vec4(
+    //        cam.image_tile().left(), cam.image_tile().bottom(), cam.image_tile().width(), cam.image_tile().height());
+    //} else {
+    //    viewport = glm::vec4(0.0f, 0.0f, cam.resolution_gate().width(), cam.resolution_gate().height());
+    //}
+    // float vpWidth = viewport[2];
+    // float vpHeight = viewport[3];
+    int vp[4];
+    glGetIntegerv(GL_VIEWPORT, vp);
+    float vpWidth = static_cast<float>(vp[2]);
+    float vpHeight = static_cast<float>(vp[3]);
 
     // Store/Set opengl states
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
