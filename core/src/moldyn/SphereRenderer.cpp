@@ -2585,11 +2585,6 @@ void moldyn::SphereRenderer::renderDeferredPass(view::CallRender3D_2* cr3d) {
     if (enableLighting) {
         this->lightingShader.SetParameterArray3("inObjLightPos", 1, glm::value_ptr(this->curLightPos));
         this->lightingShader.SetParameterArray3("inObjCamPos", 1, glm::value_ptr(this->curCamPos));
-		//auto lightDir = this->curMVinv * this->curLightPos;
-		//lightDir = glm::normalize(lightDir);
-		//this->lightingShader.SetParameterArray3("inObjLightDir", 1, glm::value_ptr(lightDir));
-		//glm::vec3 camPos = this->curMVinv[3];
-		//this->lightingShader.SetParameterArray3("inObjCamPos", 1, glm::value_ptr(camPos));
     }
 
     float aoOffset = this->aoOffsetSlot.Param<param::FloatParam>()->Value();

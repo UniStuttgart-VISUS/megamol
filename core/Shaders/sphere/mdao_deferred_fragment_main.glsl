@@ -57,7 +57,7 @@ void main()
 		normal = normal * 2.0 - 1.0;
 
 	vec3 ray = normalize(objPos.xyz - inObjCamPos.xyz);
-	vec3 lightCol = LocalLighting(ray, normal.xyz, inObjCamPos, color);
+	vec3 lightCol = LocalLighting(ray, normal.xyz, inObjLightPos, color);
 
 	if (normal.w < 1.0)
 		lightCol *= evaluateAmbientOcclusion(objPos.xyz, normal.xyz);

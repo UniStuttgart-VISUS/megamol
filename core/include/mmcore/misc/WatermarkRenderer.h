@@ -40,7 +40,7 @@ namespace core {
 namespace misc {
 
     /**
-    * Render watermarks (e.g. logos) in all four corners of the viewport.
+    * Render watermarks (e.g. logos) in all four corners and the center of the viewport.
     */
     class MEGAMOLCORE_API WatermarkRenderer : public view::Renderer3DModule_2 {
     public:

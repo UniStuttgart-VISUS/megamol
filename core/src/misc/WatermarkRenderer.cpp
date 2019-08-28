@@ -19,19 +19,18 @@ using namespace megamol::core::misc;
 * WatermarkRenderer::WatermarkRenderer
 */
 WatermarkRenderer::WatermarkRenderer(void) : view::Renderer3DModule_2(),
-    paramAlpha(           "01_alpha", "The alpha value for the watermarks."),
-    paramScaleAll(        "02_relativeScaleAll", "The relative scale factor for all images."),
-    paramImgTopLeft(      "03_imageTopLeft", "The image file name for the top left watermark."),
-    paramScaleTopLeft(    "04_scaleTopLeft", "The scale factor for the top left watermark."),
-    paramImgTopRight(     "05_imageTopRight", "The image file name for the top right watermark."),
-    paramScaleTopRight(   "06_scaleTopRight", "The scale factor for the top right watermark."),
-    paramImgBottomLeft(   "07_imageBottomLeft", "The image file name for the bottom left watermark."),
-    paramScaleBottomLeft( "08_scaleBottomLeft", "The scale factor for the botttom left watermark."),
-    paramImgBottomRight(  "09_imageBottomRight", "The image file name for the bottom right watermark."),
-    paramScaleBottomRight("10_scaleBottomRight", "The scale factor for the bottom right watermark."),
-    paramImgCenter(       "11_imageCenter", "The image file name for the center watermark."),
-    paramScaleCenter(     "12_scaleCenter", "The scale factor for the center watermark."),
-
+    paramAlpha("alpha", "The alpha value for the watermarks."),
+    paramScaleAll("relativeScaleAll", "The relative scale factor for all images."),
+    paramImgTopLeft("imageTopLeft", "The image file name for the top left watermark."),
+    paramScaleTopLeft("scaleTopLeft", "The scale factor for the top left watermark."),
+    paramImgTopRight("imageTopRight", "The image file name for the top right watermark."),
+    paramScaleTopRight("scaleTopRight", "The scale factor for the top right watermark."),
+    paramImgBottomLeft("imageBottomLeft", "The image file name for the bottom left watermark."),
+    paramScaleBottomLeft("scaleBottomLeft", "The scale factor for the botttom left watermark."),
+    paramImgBottomRight("imageBottomRight", "The image file name for the bottom right watermark."),
+    paramScaleBottomRight("scaleBottomRight", "The scale factor for the bottom right watermark."),
+    paramImgCenter("imageCenter", "The image file name for the center watermark."),
+    paramScaleCenter("scaleCenter", "The scale factor for the center watermark."),
     textureTopLeft(),
     textureTopRight(),
     textureBottomLeft(), 
@@ -145,7 +144,7 @@ bool WatermarkRenderer::GetExtents(megamol::core::view::CallRender3D_2& call) {
     auto cr3d_in = &call;
     if (cr3d_in == nullptr) return false;
 
-    // Propagate changes made in GetExtents() from outgoing CallRender3D_2 (cr3d_out) to incoming  CallRender3D_2 (cr3d_in).
+    // Propagate changes from outgoing CallRender3D (cr3d_out) to incoming CallRender3D (cr3d_in).
     view::CallRender3D_2 *cr3d_out = this->chainRenderSlot.CallAs<view::CallRender3D_2>();
     if ((cr3d_out != nullptr) && (*cr3d_out)(core::view::AbstractCallRender::FnGetExtents)) {
         unsigned int timeFramesCount = cr3d_out->TimeFramesCount();
@@ -260,11 +259,12 @@ bool WatermarkRenderer::Render(megamol::core::view::CallRender3D_2& call) {
 bool WatermarkRenderer::renderWatermark(WatermarkRenderer::corner cor, float vpH, float vpW) {
 
     // Set watermark dimensions
-	float imageWidth = vpW * 1.0f;
-	float alpha = this->paramAlpha.Param<param::FloatParam>()->Value();
-
+    float imageWidth;
     float imageHeight;
-    float left, top, bottom, right;
+    float left;
+    float top;
+    float bottom;
+    float right;
     float scale;
 	vislib::graphics::gl::OpenGLTexture2D *tex = nullptr;
     
@@ -272,7 +272,7 @@ bool WatermarkRenderer::renderWatermark(WatermarkRenderer::corner cor, float vpH
     case(WatermarkRenderer::TOP_LEFT):
         tex         = &this->textureTopLeft;
         scale       = this->paramScaleTopLeft.Param<param::FloatParam>()->Value();
-		imageWidth *= scale;
+		imageWidth  = vpW * scale;
         imageHeight = imageWidth * (this->sizeTopLeft.Y() / this->sizeTopLeft.X());
         left        = 0.0f;
         right       = imageWidth;
@@ -282,7 +282,7 @@ bool WatermarkRenderer::renderWatermark(WatermarkRenderer::corner cor, float vpH
     case(WatermarkRenderer::TOP_RIGHT):
         tex         = &this->textureTopRight;
         scale       = this->paramScaleTopRight.Param<param::FloatParam>()->Value();
-		imageWidth *= scale;
+        imageWidth  = vpW * scale;
         imageHeight = imageWidth * (this->sizeTopRight.Y() / this->sizeTopRight.X());
         left        = vpW - imageWidth;
         right       = vpW;
@@ -292,7 +292,7 @@ bool WatermarkRenderer::renderWatermark(WatermarkRenderer::corner cor, float vpH
     case(WatermarkRenderer::BOTTOM_LEFT):
         tex         = &this->textureBottomLeft;
         scale       = this->paramScaleBottomLeft.Param<param::FloatParam>()->Value();
-		imageWidth *= scale;
+        imageWidth  = vpW * scale;
         imageHeight = imageWidth * (this->sizeBottomLeft.Y() / this->sizeBottomLeft.X());
         left        = 0.0f;
         right       = imageWidth;
@@ -302,7 +302,7 @@ bool WatermarkRenderer::renderWatermark(WatermarkRenderer::corner cor, float vpH
     case(WatermarkRenderer::BOTTOM_RIGHT):
         tex         = &this->textureBottomRight;
         scale       = this->paramScaleBottomRight.Param<param::FloatParam>()->Value();
-		imageWidth *= scale;
+        imageWidth  = vpW * scale;
         imageHeight = imageWidth * (this->sizeBottomRight.Y() / this->sizeBottomRight.X());
         left        = vpW - imageWidth;
         right       = vpW;
@@ -312,20 +312,19 @@ bool WatermarkRenderer::renderWatermark(WatermarkRenderer::corner cor, float vpH
     case(WatermarkRenderer::CENTER):
         tex         = &this->textureCenter;
         scale       = this->paramScaleCenter.Param<param::FloatParam>()->Value();
-		imageWidth *= scale;
-		imageWidth = imageWidth * (this->sizeCenter.Y() / this->sizeCenter.X());
+        imageWidth  = vpW * scale;
+		imageWidth  = imageWidth * (this->sizeCenter.Y() / this->sizeCenter.X());
         left        = vpW / 2.0f - imageWidth / 2.0f;
         right       = vpW / 2.0f + imageWidth / 2.0f;
         top         = vpH / 2.0f + imageHeight / 2.0f;
         bottom      = vpH / 2.0f - imageHeight / 2.0f;
         break;
-    default: vislib::sys::Log::DefaultLog.WriteError("[WatermarkRenderer] [renderWatermark] Unknown corner -> BUG.");
+    default: 
         return false;
     }
 
+    // Return if no valid texture is loaded (e.g. no filename is given)
     if (!tex->IsValid()) {
-        // e.g. no filename is given ..
-        //vislib::sys::Log::DefaultLog.WriteWarn("[WatermarkRenderer] [renderWatermark] Texture is not valid.");
         return false;
     }
 
@@ -336,8 +335,10 @@ bool WatermarkRenderer::renderWatermark(WatermarkRenderer::corner cor, float vpH
     bottom = (bottom / vpH) * 2.0f - 1.0f;
 
     const size_t vertCnt = 6;
-    GLfloat vertData[vertCnt * 3];
-    GLfloat texData[vertCnt * 2];
+    std::vector<GLfloat> vertData;
+    vertData.resize(vertCnt * this->vbos[VBOAttribs::POSITION].dim);
+    std::vector<GLfloat> texData;
+    texData.resize(vertCnt * this->vbos[VBOAttribs::TEXTURE].dim);
 
     // Triangle One (Front face => CCW)
     vertData[0] = left;    // pos X
@@ -380,10 +381,10 @@ bool WatermarkRenderer::renderWatermark(WatermarkRenderer::corner cor, float vpH
     for (unsigned int i = 0; i < (unsigned int)this->vbos.size(); i++) {
         glBindBuffer(GL_ARRAY_BUFFER, this->vbos[i].handle);
         if (this->vbos[i].index == (GLuint)VBOAttribs::POSITION) {
-            glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)vertCnt * 3 * sizeof(GLfloat), vertData, GL_STATIC_DRAW);
+            glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)vertCnt * this->vbos[i].dim * sizeof(GLfloat), vertData.data(), GL_STATIC_DRAW);
         }
         else if (this->vbos[i].index == (GLuint)VBOAttribs::TEXTURE) {
-            glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)vertCnt * 2 * sizeof(GLfloat), texData, GL_STATIC_DRAW);
+            glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)vertCnt * this->vbos[i].dim * sizeof(GLfloat), texData.data(), GL_STATIC_DRAW);
         }
         glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
@@ -394,7 +395,9 @@ bool WatermarkRenderer::renderWatermark(WatermarkRenderer::corner cor, float vpH
 
     this->shader.Enable();
 
-    glUniform1f(this->shader.ParameterLocation("alpha"), alpha);
+    glUniform1i(this->shader.ParameterLocation("tex"), 0);
+    glUniform1f(this->shader.ParameterLocation("alpha"), static_cast<GLfloat>(this->paramAlpha.Param<param::FloatParam>()->Value()));
+
     glDrawArrays(GL_TRIANGLES, 0, (GLsizei)vertCnt);
 
     this->shader.Disable();
@@ -495,7 +498,7 @@ bool WatermarkRenderer::loadTexture(WatermarkRenderer::corner cor, vislib::Strin
         tex = &this->textureCenter;
         texSize = &this->sizeCenter;
         break;
-    default: vislib::sys::Log::DefaultLog.WriteError("[WatermarkRenderer] [renderWatermark] Unknown corner -> BUG.");
+    default: 
         return false;
     }
 
@@ -506,7 +509,7 @@ bool WatermarkRenderer::loadTexture(WatermarkRenderer::corner cor, vislib::Strin
     static vislib::graphics::BitmapImage img;
     static sg::graphics::PngBitmapCodec  pbc;
     pbc.Image() = &img;
-    ::glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     void *buf = nullptr;
     SIZE_T size = 0;
 
@@ -516,7 +519,7 @@ bool WatermarkRenderer::loadTexture(WatermarkRenderer::corner cor, vislib::Strin
             texSize->SetX(static_cast<float>(img.Width()));
             texSize->SetY(static_cast<float>(img.Height()));
             if (tex->Create(img.Width(), img.Height(), false, img.PeekDataAs<BYTE>(), GL_RGBA) != GL_NO_ERROR) {
-                vislib::sys::Log::DefaultLog.WriteError("[WatermarkRenderer] [loadTexture] Could not load \"%s\" texture.", filename.PeekBuffer());
+                vislib::sys::Log::DefaultLog.WriteError("[WatermarkRenderer] Could not load \"%s\" texture.", filename.PeekBuffer());
                 ARY_SAFE_DELETE(buf);
                 return false;
             }
@@ -525,16 +528,17 @@ bool WatermarkRenderer::loadTexture(WatermarkRenderer::corner cor, vislib::Strin
             tex->SetFilter(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
             tex->SetWrap(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
 			glBindTexture(GL_TEXTURE_2D, 0);
+
             ARY_SAFE_DELETE(buf);
-            return true;
         }
         else {
-            vislib::sys::Log::DefaultLog.WriteError("[WatermarkRenderer] [loadTexture] Could not read \"%s\" texture.", filename.PeekBuffer());
+            vislib::sys::Log::DefaultLog.WriteError("[WatermarkRenderer] Could not read \"%s\" texture.", filename.PeekBuffer());
+            ARY_SAFE_DELETE(buf);
             return false;
         }
     }
     else {
-        vislib::sys::Log::DefaultLog.WriteError("[WatermarkRenderer] [renderWatermark] Unknown corner -> BUG.");
+        ARY_SAFE_DELETE(buf);
         return false;
     }
 
@@ -550,38 +554,30 @@ bool WatermarkRenderer::loadShaders(void) {
     // Reset shader
     this->shader.Release();
 
-    const char *shaderName = "watermark";
-
-    vislib::StringA vertName;
-    vertName.Format("%s::vertex", shaderName);
-    vislib::StringA fragName;
-    fragName.Format("%s::fragment", shaderName);
-
     vislib::graphics::gl::ShaderSource vert, frag;
-
     try {
-        if (!megamol::core::Module::instance()->ShaderSourceFactory().MakeShaderSource(vertName, vert)) {
+        if (!megamol::core::Module::instance()->ShaderSourceFactory().MakeShaderSource("watermark::vertex", vert)) {
             return false;
         }
-        if (!megamol::core::Module::instance()->ShaderSourceFactory().MakeShaderSource(fragName, frag)) {
+        if (!megamol::core::Module::instance()->ShaderSourceFactory().MakeShaderSource("watermark::fragment", frag)) {
             return false;
         }
         if (!this->shader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            vislib::sys::Log::DefaultLog.WriteError("[WatermarkRenderer] [loadShaders] Unable to compile \"%s\": Unknown error\n", shaderName);
+            vislib::sys::Log::DefaultLog.WriteError("[WatermarkRenderer] Unable to compile shader: Unknown error\n");
             return false;
         }
     }
     catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        vislib::sys::Log::DefaultLog.WriteError("[WatermarkRenderer] [loadShaders] Unable to compile \"%s\" shader (@%s): %s\n", shaderName,
+        vislib::sys::Log::DefaultLog.WriteError("[WatermarkRenderer] Unable to compile shader (@%s): %s\n", 
             vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()), ce.GetMsgA());
         return false;
     }
     catch (vislib::Exception e) {
-        vislib::sys::Log::DefaultLog.WriteError("[WatermarkRenderer] [loadShaders] Unable to compile \"%s\" shader: %s\n", shaderName, e.GetMsgA());
+        vislib::sys::Log::DefaultLog.WriteError("[WatermarkRenderer] Unable to compile shader: %s\n", e.GetMsgA());
         return false;
     }
     catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("[WatermarkRenderer] [loadShaders] Unable to compile \"%s\" shader: Unknown exception\n", shaderName);
+        vislib::sys::Log::DefaultLog.WriteError("[WatermarkRenderer] Unable to compile shader: Unknown exception\n");
         return false;
     }
 
@@ -598,31 +594,31 @@ SIZE_T WatermarkRenderer::loadFile(vislib::StringA name, void **outData) {
 
     vislib::StringW filename = static_cast<vislib::StringW>(name);
     if (filename.IsEmpty()) {
-        vislib::sys::Log::DefaultLog.WriteError("[WatermarkRenderer] [loadFile] Unable to load file: No filename given\n");
+        vislib::sys::Log::DefaultLog.WriteError("[WatermarkRenderer] Unable to load file: No filename given\n");
         return 0;
     }
 
     if (!vislib::sys::File::Exists(filename)) {
-        vislib::sys::Log::DefaultLog.WriteError("[WatermarkRenderer] [loadFile] Unable to load file \"%s\": Not existing\n", name.PeekBuffer());
+        vislib::sys::Log::DefaultLog.WriteError("[WatermarkRenderer] Unable to load file \"%s\": Not existing\n", name.PeekBuffer());
         return 0;
     }
 
     SIZE_T size = static_cast<SIZE_T>(vislib::sys::File::GetSize(filename));
     if (size < 1) {
-        vislib::sys::Log::DefaultLog.WriteError("[WatermarkRenderer] [loadFile] Unable to load file \"%s\": File is empty\n", name.PeekBuffer());
+        vislib::sys::Log::DefaultLog.WriteError("[WatermarkRenderer] Unable to load file \"%s\": File is empty\n", name.PeekBuffer());
         return 0;
     }
 
     vislib::sys::FastFile f;
     if (!f.Open(filename, vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
-        vislib::sys::Log::DefaultLog.WriteError("[WatermarkRenderer] [loadFile] Unable to load file \"%s\": Cannot open file\n", name.PeekBuffer());
+        vislib::sys::Log::DefaultLog.WriteError("[WatermarkRenderer] Unable to load file \"%s\": Cannot open file\n", name.PeekBuffer());
         return 0;
     }
 
     *outData = new BYTE[size];
     SIZE_T num = static_cast<SIZE_T>(f.Read(*outData, size));
     if (num != size) {
-        vislib::sys::Log::DefaultLog.WriteError("[WatermarkRenderer] [loadFile] Unable to load file \"%s\": Cannot read whole file\n", name.PeekBuffer());
+        vislib::sys::Log::DefaultLog.WriteError("[WatermarkRenderer] Unable to load file \"%s\": Cannot read whole file\n", name.PeekBuffer());
         ARY_SAFE_DELETE(*outData);
         return 0;
     }
