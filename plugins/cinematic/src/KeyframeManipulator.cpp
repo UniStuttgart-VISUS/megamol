@@ -477,7 +477,7 @@ bool KeyframeManipulator::ProcessManipulatorHit(float x, float y) {
 
         // rotate up vector aroung lookat vector with the "Rodrigues' rotation formula"
         glm::vec3 k = (skfPosV - skfLaV); // => rotation axis = camera lookat
-        skfUpV = skfUpV * cos(lineDiff) + glm::cross(k, skfUpV) * sin(lineDiff) + k * glm::dot(k, skfUpV) * (1.0f - cos(lineDiff));
+        skfUpV = skfUpV * glm::cos(lineDiff) + glm::cross(k, skfUpV) * glm::sin(lineDiff) + k * glm::dot(k, skfUpV) * (1.0f - glm::cos(lineDiff));
     }
 
     // Apply changes to selected keyframe
@@ -556,7 +556,7 @@ void KeyframeManipulator::calculateCircleVertices(void) {
     // First vertex is center of triangle fan
     this->circleVertices.Add(glm::vec3(0.0f, 0.0f, 0.0f));
     for (unsigned int i = 0; i <= this->circleSubDiv; i++) {
-        rot = rot * cos(t) + glm::cross(normal, rot) * sin(t) + normal * glm::dot(normal, rot) * (1.0f - cos(t));
+        rot = rot * glm::cos(t) + glm::cross(normal, rot) * glm::sin(t) + normal * glm::dot(normal, rot) * (1.0f - glm::cos(t));
 		rot = glm::normalize(rot) * (radius);
         this->circleVertices.Add(rot);
     }
