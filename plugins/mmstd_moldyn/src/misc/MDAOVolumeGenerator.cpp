@@ -1,6 +1,9 @@
 #include "stdafx.h"
 
-#include "mmcore/utility/MDAOVolumeGenerator.h"
+#include "misc/MDAOVolumeGenerator.h"
+
+#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib/graphics/gl/ShaderSource.h"
 
 #include <iostream>
 #include <vector>
@@ -9,14 +12,14 @@
 #include <algorithm>
 #include <sstream>
 
-#include "vislib/graphics/gl/IncludeAllGL.h"
-#include "vislib/graphics/gl/ShaderSource.h"
 #include <GL/glu.h>
 
 
-using namespace megamol::core::utility;
+using namespace megamol::stdplugin::moldyn::misc;
+
 
 #define checkGLError { GLenum errCode = glGetError(); if (errCode != GL_NO_ERROR) std::cout<<"Error in line "<<__LINE__<<": "<<gluErrorString(errCode)<<std::endl;}
+
 
 MDAOVolumeGenerator::MDAOVolumeGenerator(): fboHandle(0), volumeHandle(0), factory(nullptr), dataVersion(0)
 {
@@ -45,8 +48,6 @@ GLuint MDAOVolumeGenerator::GetVolumeTextureHandle()
 {
 	return volumeHandle;
 }
-
-
 
 
 bool MDAOVolumeGenerator::Init()
@@ -218,40 +219,32 @@ void MDAOVolumeGenerator::ClearVolume()
 }
 
 
-
-
 void MDAOVolumeGenerator::EndInsertion()
 {
 	volumeShader.Disable(); checkGLError;
 
 	glBindFramebuffer(GL_FRAMEBUFFER, prevFBO);
-
-	// glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glDisable(GL_BLEND);
-
-	//glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
-
+	glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
 	glViewport( viewport[0], viewport[1], viewport[2], viewport[3]);
-	
-	//glBindVertexArray(0);
+	glBindVertexArray(0);
 
 	++dataVersion;
 
-/*	glBindTexture(GL_TEXTURE_3D, this->volumeHandle);
-	std::vector<char> rawdata(volumeRes.Width() * volumeRes.Height() * volumeRes.Depth());
+    //glBindTexture(GL_TEXTURE_3D, this->volumeHandle);
+	//std::vector<char> rawdata(volumeRes.Width() * volumeRes.Height() * volumeRes.Depth());
 
-	glGetTexImage(GL_TEXTURE_3D, 0, GL_RED, GL_UNSIGNED_BYTE, rawdata.data());
-	
-	std::ofstream outfile("volume.raw", std::ios::binary);
-	outfile.write(rawdata.data(), rawdata.size());
-	outfile.close();
+	//glGetTexImage(GL_TEXTURE_3D, 0, GL_RED, GL_UNSIGNED_BYTE, rawdata.data());
+	//
+	//std::ofstream outfile("volume.raw", std::ios::binary);
+	//outfile.write(rawdata.data(), rawdata.size());
+	//outfile.close();
 
-	std::cout<<"Wrote volume: "<<volumeRes.Width()<<" x "<<volumeRes.Height()<<" x "<<volumeRes.Depth()<<std::endl;
-	
-	exit(123);    */
+	//std::cout<<"Wrote volume: "<<volumeRes.Width()<<" x "<<volumeRes.Height()<<" x "<<volumeRes.Depth()<<std::endl;
+	//
+	//exit(123); 
 }
-
-
 
 
 void MDAOVolumeGenerator::InsertParticles(unsigned int count, float globalRadius, GLuint vertexArray)
@@ -295,13 +288,10 @@ void MDAOVolumeGenerator::RecreateMipmap() {
 }
 
 
-
-
 const vislib::math::Dimension< float, 3 >& MDAOVolumeGenerator::GetExtents()
 {
 	return volumeRes;
 }
-
 
 
 unsigned int MDAOVolumeGenerator::GetDataVersion()

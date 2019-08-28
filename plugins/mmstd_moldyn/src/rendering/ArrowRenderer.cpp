@@ -6,23 +6,15 @@
  */
 
 #include "stdafx.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
-#include "mmcore/moldyn/ArrowRenderer.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
-#include "mmcore/CoreInstance.h"
-#include "mmcore/param/FloatParam.h"
-#include "mmcore/view/CallClipPlane.h"
-#include "mmcore/view/CallGetTransferFunction.h"
-#include "mmcore/FlagCall.h"
-#include "vislib/assert.h"
+#include "ArrowRenderer.h"
+
 
 using namespace megamol::core;
+using namespace megamol::core::moldyn;
+using namespace megamol::stdplugin::moldyn::rendering;
 
 
-/*
- * moldyn::ArrowRenderer::ArrowRenderer
- */
-moldyn::ArrowRenderer::ArrowRenderer(void) : view::Renderer3DModule_2(),
+ArrowRenderer::ArrowRenderer(void) : view::Renderer3DModule_2(),
         arrowShader(), getDataSlot("getdata", "Connects to the data source"),
         getTFSlot("gettransferfunction", "Connects to the transfer function module"),
         getFlagsSlot("getflags", "connects to a FlagStorage"),
@@ -30,7 +22,7 @@ moldyn::ArrowRenderer::ArrowRenderer(void) : view::Renderer3DModule_2(),
         greyTF(0),
         lengthScaleSlot("lengthScale", ""), lengthFilterSlot("lengthFilter", "Filters the arrows by length") {
 
-    this->getDataSlot.SetCompatibleCall<moldyn::MultiParticleDataCallDescription>();
+    this->getDataSlot.SetCompatibleCall<MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
 
     this->getTFSlot.SetCompatibleCall<view::CallGetTransferFunctionDescription>();
@@ -50,18 +42,12 @@ moldyn::ArrowRenderer::ArrowRenderer(void) : view::Renderer3DModule_2(),
 }
 
 
-/*
- * moldyn::ArrowRenderer::~ArrowRenderer
- */
-moldyn::ArrowRenderer::~ArrowRenderer(void) {
+ArrowRenderer::~ArrowRenderer(void) {
     this->Release();
 }
 
 
-/*
- * moldyn::ArrowRenderer::create
- */
-bool moldyn::ArrowRenderer::create(void) {
+bool ArrowRenderer::create(void) {
     if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) {
         return false;
     }
@@ -115,10 +101,7 @@ bool moldyn::ArrowRenderer::create(void) {
 }
 
 
-/*
- * moldyn::ArrowRenderer::GetExtents
- */
-bool moldyn::ArrowRenderer::GetExtents(view::CallRender3D_2& call) {
+bool ArrowRenderer::GetExtents(view::CallRender3D_2& call) {
     auto cr = &call;
     if (cr == nullptr) return false;
 
@@ -136,19 +119,13 @@ bool moldyn::ArrowRenderer::GetExtents(view::CallRender3D_2& call) {
 }
 
 
-/*
- * moldyn::ArrowRenderer::release
- */
-void moldyn::ArrowRenderer::release(void) {
+void ArrowRenderer::release(void) {
     this->arrowShader.Release();
     ::glDeleteTextures(1, &this->greyTF);
 }
 
 
-/*
- * moldyn::ArrowRenderer::Render
- */
-bool moldyn::ArrowRenderer::Render(view::CallRender3D_2& call) {
+bool ArrowRenderer::Render(view::CallRender3D_2& call) {
     auto cr = &call;
     if (cr == nullptr) return false;
 

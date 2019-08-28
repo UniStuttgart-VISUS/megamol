@@ -5,12 +5,10 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_SPHERERENDERER_H_INCLUDED
-#define MEGAMOLCORE_SPHERERENDERER_H_INCLUDED
+#ifndef MEGAMOL_MOLDYN_SPHERERENDERER_H_INCLUDED
+#define MEGAMOL_MOLDYN_SPHERERENDERER_H_INCLUDED
 
-
-#include "mmcore/moldyn/MultiParticleDataCall.h"
-#include "mmcore/utility/MDAOVolumeGenerator.h"
+#include "misc/MDAOVolumeGenerator.h"
 
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
@@ -18,10 +16,8 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/FlagStorage.h"
 #include "mmcore/FlagCall.h"
-#include "mmcore/view/Renderer3DModule_2.h"
 #include "mmcore/view/CallClipPlane.h"
 #include "mmcore/view/CallGetTransferFunction.h"
-#include "mmcore/view/CallRender3D_2.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/FloatParam.h"
@@ -32,6 +28,9 @@
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/utility/SSBOStreamer.h"
 #include "mmcore/utility/SSBOBufferArray.h"
+#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "mmcore/view/CallRender3D_2.h"
+#include "mmcore/view/Renderer3DModule_2.h"
 
 #include "vislib/types.h"
 #include "vislib/assert.h"
@@ -95,15 +94,19 @@
 
 
 namespace megamol {
-namespace core {
+namespace stdplugin {
 namespace moldyn {
+namespace rendering {
 
+    using namespace megamol::core;
+    using namespace megamol::core::moldyn;
     using namespace vislib::graphics::gl;
+
 
     /**
      * Renderer for simple sphere glyphs.
      */
-    class MEGAMOLCORE_API SphereRenderer : public megamol::core::view::Renderer3DModule_2 {
+    class SphereRenderer : public megamol::core::view::Renderer3DModule_2 {
     public:
        
         /**
@@ -322,7 +325,7 @@ namespace moldyn {
         unsigned int                             oldFrameID;
         bool                                     stateInvalid;
         vislib::math::Vector<float, 2>           ambConeConstants;
-        core::utility::MDAOVolumeGenerator      *volGen;
+        misc::MDAOVolumeGenerator               *volGen;
         bool                                     triggerRebuildGBuffer;
 
         //TimeMeasure                            timer;
@@ -655,8 +658,9 @@ namespace moldyn {
 
     };
 
+} /* end namespace rendering */
 } /* end namespace moldyn */
 } /* end namespace core */
 } /* end namespace megamol */
 
-#endif /* MEGAMOLCORE_SPHERERENDERER_H_INCLUDED */
+#endif /* MEGAMOL_MOLDYN_SPHERERENDERER_H_INCLUDED */

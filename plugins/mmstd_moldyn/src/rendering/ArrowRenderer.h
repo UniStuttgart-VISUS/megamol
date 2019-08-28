@@ -7,20 +7,31 @@
 
 #ifndef MEGAMOLCORE_ARROWRENDERER_H_INCLUDED
 #define MEGAMOLCORE_ARROWRENDERER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/view/Renderer3DModule_2.h"
-#include "mmcore/view/CallRender3D_2.h"
+
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
+#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "mmcore/CoreInstance.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/view/CallClipPlane.h"
+#include "mmcore/view/CallGetTransferFunction.h"
+#include "mmcore/FlagCall.h"
+#include "mmcore/view/CallRender3D_2.h"
+#include "mmcore/view/Renderer3DModule_2.h"
+
+#include "vislib/assert.h"
 #include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 
 
 namespace megamol {
-namespace core {
+namespace stdplugin {
 namespace moldyn {
+namespace rendering {
+
+    using namespace megamol::core;
+
 
     /**
      * Renderer for simple sphere glyphs
@@ -123,6 +134,7 @@ namespace moldyn {
 
     };
 
+} /* end namespace rendering */
 } /* end namespace moldyn */
 } /* end namespace core */
 } /* end namespace megamol */

@@ -7,10 +7,12 @@
  */
 
 #include "stdafx.h"
-#include "mmcore/moldyn/SphereRenderer.h"
+#include "SphereRenderer.h"
 
 
 using namespace megamol::core;
+using namespace megamol::core::moldyn;
+using namespace megamol::stdplugin::moldyn::rendering;
 using namespace vislib::graphics::gl;
 
 
@@ -23,7 +25,7 @@ const GLuint SSBOvertexBindingPoint = 2;
 const GLuint SSBOcolorBindingPoint = 3;
 const GLuint SSBOflagsBindingPoint = 4;
 
-moldyn::SphereRenderer::SphereRenderer(void) : view::Renderer3DModule_2()
+SphereRenderer::SphereRenderer(void) : view::Renderer3DModule_2()
     , getDataSlot("getdata", "Connects to the data source")
     , getTFSlot("gettransferfunction", "Connects to the transfer function module")
     , getClipPlaneSlot("getclipplane", "Connects to a clipping plane module")
@@ -108,7 +110,7 @@ moldyn::SphereRenderer::SphereRenderer(void) : view::Renderer3DModule_2()
     , useHPTexturesSlot("ambient occlusion::highPrecisionTexture", "Ambient Occlusion: Use high precision textures")
 	, outlineSizeSlot("outline::width", "Width of the outline") {
 
-    this->getDataSlot.SetCompatibleCall<moldyn::MultiParticleDataCallDescription>();
+    this->getDataSlot.SetCompatibleCall<MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
 
     this->getTFSlot.SetCompatibleCall<view::CallGetTransferFunctionDescription>();
@@ -191,10 +193,10 @@ moldyn::SphereRenderer::SphereRenderer(void) : view::Renderer3DModule_2()
 }
 
 
-moldyn::SphereRenderer::~SphereRenderer(void) { this->Release(); }
+SphereRenderer::~SphereRenderer(void) { this->Release(); }
 
 
-bool moldyn::SphereRenderer::GetExtents(view::CallRender3D_2& call) {
+bool SphereRenderer::GetExtents(view::CallRender3D_2& call) {
 
     auto cr = &call;
     if (cr == nullptr) return false;
@@ -233,7 +235,7 @@ bool moldyn::SphereRenderer::GetExtents(view::CallRender3D_2& call) {
 }
 
 
-bool moldyn::SphereRenderer::create(void) {
+bool SphereRenderer::create(void) {
 
     ASSERT(IsAvailable());
     // At least the simple render mode must be available
@@ -290,13 +292,13 @@ bool moldyn::SphereRenderer::create(void) {
 }
 
 
-void moldyn::SphereRenderer::release(void) {
+void SphereRenderer::release(void) {
 
     this->resetResources();
 }
 
 
-bool moldyn::SphereRenderer::resetResources(void) {
+bool SphereRenderer::resetResources(void) {
 
     this->selectColorParam.Param<param::ColorParam>()->SetGUIVisible(false);
     this->softSelectColorParam.Param<param::ColorParam>()->SetGUIVisible(false);
@@ -415,7 +417,7 @@ bool moldyn::SphereRenderer::resetResources(void) {
 }
 
 
-bool moldyn::SphereRenderer::createResources() {
+bool SphereRenderer::createResources() {
 
     this->resetResources();
 
@@ -685,7 +687,7 @@ bool moldyn::SphereRenderer::createResources() {
             }
 
             // Init volume generator
-            this->volGen = new utility::MDAOVolumeGenerator();
+            this->volGen = new misc::MDAOVolumeGenerator();
             this->volGen->SetShaderSourceFactory(&this->GetCoreInstance()->ShaderSourceFactory());
             if (!this->volGen->Init()) {
                 vislib::sys::Log::DefaultLog.WriteMsg(
@@ -746,7 +748,7 @@ bool moldyn::SphereRenderer::createResources() {
 
 
 
-moldyn::MultiParticleDataCall *moldyn::SphereRenderer::getData(unsigned int t, float& outScaling) {
+MultiParticleDataCall *SphereRenderer::getData(unsigned int t, float& outScaling) {
 
     MultiParticleDataCall *c2 = this->getDataSlot.CallAs<MultiParticleDataCall>();
     outScaling = 1.0f;
@@ -786,7 +788,7 @@ moldyn::MultiParticleDataCall *moldyn::SphereRenderer::getData(unsigned int t, f
 }
 
 
-void moldyn::SphereRenderer::getClipData(glm::vec4& out_clipDat, glm::vec4& out_clipCol) {
+void SphereRenderer::getClipData(glm::vec4& out_clipDat, glm::vec4& out_clipCol) {
 
     view::CallClipPlane *ccp = this->getClipPlaneSlot.CallAs<view::CallClipPlane>();
     if ((ccp != nullptr) && (*ccp)()) {
@@ -810,7 +812,7 @@ void moldyn::SphereRenderer::getClipData(glm::vec4& out_clipDat, glm::vec4& out_
 }
 
 
-bool moldyn::SphereRenderer::isRenderModeAvailable(RenderMode rm, bool silent) {
+bool SphereRenderer::isRenderModeAvailable(RenderMode rm, bool silent) {
 
     std::string warnstr;
 
@@ -911,7 +913,7 @@ bool moldyn::SphereRenderer::isRenderModeAvailable(RenderMode rm, bool silent) {
 }
 
 
-std::string moldyn::SphereRenderer::getRenderModeString(RenderMode rm) {
+std::string SphereRenderer::getRenderModeString(RenderMode rm) {
 
     std::string mode;
 
@@ -950,7 +952,7 @@ std::string moldyn::SphereRenderer::getRenderModeString(RenderMode rm) {
 
 
 
-bool moldyn::SphereRenderer::Render(view::CallRender3D_2& call) {
+bool SphereRenderer::Render(view::CallRender3D_2& call) {
 
     // timer.BeginFrame();
 
@@ -1103,7 +1105,7 @@ bool moldyn::SphereRenderer::Render(view::CallRender3D_2& call) {
 }
 
 
-bool moldyn::SphereRenderer::renderSimple(view::CallRender3D_2* cr3d, MultiParticleDataCall* mpdc) {
+bool SphereRenderer::renderSimple(view::CallRender3D_2* cr3d, MultiParticleDataCall* mpdc) {
 
     this->sphereShader.Enable();
 
@@ -1170,7 +1172,7 @@ bool moldyn::SphereRenderer::renderSimple(view::CallRender3D_2* cr3d, MultiParti
 }
 
 
-bool moldyn::SphereRenderer::renderSSBO(view::CallRender3D_2* cr3d, MultiParticleDataCall* mpdc) {
+bool SphereRenderer::renderSSBO(view::CallRender3D_2* cr3d, MultiParticleDataCall* mpdc) {
 
 #ifdef CHRONOTIMING
     std::vector<std::chrono::steady_clock::time_point> deltas;
@@ -1338,7 +1340,7 @@ bool moldyn::SphereRenderer::renderSSBO(view::CallRender3D_2* cr3d, MultiParticl
 }
 
 
-bool moldyn::SphereRenderer::renderSplat(view::CallRender3D_2* cr3d, MultiParticleDataCall* mpdc) {
+bool SphereRenderer::renderSplat(view::CallRender3D_2* cr3d, MultiParticleDataCall* mpdc) {
 
     glDisable(GL_DEPTH_TEST);
 
@@ -1462,7 +1464,7 @@ bool moldyn::SphereRenderer::renderSplat(view::CallRender3D_2* cr3d, MultiPartic
 }
 
 
-bool moldyn::SphereRenderer::renderBufferArray(view::CallRender3D_2* cr3d, MultiParticleDataCall* mpdc) {
+bool SphereRenderer::renderBufferArray(view::CallRender3D_2* cr3d, MultiParticleDataCall* mpdc) {
 
     this->sphereShader.Enable();
 
@@ -1558,7 +1560,7 @@ bool moldyn::SphereRenderer::renderBufferArray(view::CallRender3D_2* cr3d, Multi
 }
 
 
-bool moldyn::SphereRenderer::renderGeometryShader(view::CallRender3D_2* cr3d, MultiParticleDataCall* mpdc) {
+bool SphereRenderer::renderGeometryShader(view::CallRender3D_2* cr3d, MultiParticleDataCall* mpdc) {
 
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 
@@ -1624,7 +1626,7 @@ bool moldyn::SphereRenderer::renderGeometryShader(view::CallRender3D_2* cr3d, Mu
 }
 
 
-bool moldyn::SphereRenderer::renderAmbientOcclusion(view::CallRender3D_2* cr3d, MultiParticleDataCall* mpdc) {
+bool SphereRenderer::renderAmbientOcclusion(view::CallRender3D_2* cr3d, MultiParticleDataCall* mpdc) {
 
     // We need to regenerate the shader if certain settings are changed
     if (this->enableLightingSlot.IsDirty() || this->aoConeApexSlot.IsDirty()) {
@@ -1676,7 +1678,7 @@ bool moldyn::SphereRenderer::renderAmbientOcclusion(view::CallRender3D_2* cr3d, 
 
     GLuint flagPartsCount = 0;
     for (unsigned int i = 0; i < this->gpuData.size(); ++i) {
-        moldyn::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
+        MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
 
         if (!this->setShaderData(theShader, parts)) {
             continue;
@@ -1711,7 +1713,7 @@ bool moldyn::SphereRenderer::renderAmbientOcclusion(view::CallRender3D_2* cr3d, 
 }
 
 
-bool moldyn::SphereRenderer::renderOutline(view::CallRender3D_2* cr3d, MultiParticleDataCall* mpdc) {
+bool SphereRenderer::renderOutline(view::CallRender3D_2* cr3d, MultiParticleDataCall* mpdc) {
 
 	this->sphereShader.Enable();
 
@@ -1765,7 +1767,7 @@ bool moldyn::SphereRenderer::renderOutline(view::CallRender3D_2* cr3d, MultiPart
 }
 
 
-bool moldyn::SphereRenderer::setBufferData(const vislib::graphics::gl::GLSLShader& shader, const MultiParticleDataCall::Particles &parts,
+bool SphereRenderer::setBufferData(const vislib::graphics::gl::GLSLShader& shader, const MultiParticleDataCall::Particles &parts,
     GLuint vertBuf, const void *vertPtr, GLuint colBuf, const void *colPtr, bool createBufferData) {
 
     GLuint vertAttribLoc = glGetAttribLocation(shader, "inPosition");
@@ -1896,7 +1898,7 @@ bool moldyn::SphereRenderer::setBufferData(const vislib::graphics::gl::GLSLShade
 }
 
 
-bool moldyn::SphereRenderer::unsetBufferData(const vislib::graphics::gl::GLSLShader& shader) {
+bool SphereRenderer::unsetBufferData(const vislib::graphics::gl::GLSLShader& shader) {
 
     GLuint vertAttribLoc = glGetAttribLocation(shader, "inPosition");
     GLuint colAttribLoc = glGetAttribLocation(shader, "inColor");
@@ -1911,7 +1913,7 @@ bool moldyn::SphereRenderer::unsetBufferData(const vislib::graphics::gl::GLSLSha
 }
 
 
-bool moldyn::SphereRenderer::setShaderData(vislib::graphics::gl::GLSLShader& shader, const MultiParticleDataCall::Particles &parts) {
+bool SphereRenderer::setShaderData(vislib::graphics::gl::GLSLShader& shader, const MultiParticleDataCall::Particles &parts) {
 
     // colour
     bool useGlobalColor = false;
@@ -1965,13 +1967,13 @@ bool moldyn::SphereRenderer::setShaderData(vislib::graphics::gl::GLSLShader& sha
 }
 
 
-bool moldyn::SphereRenderer::unsetShaderData(void) {
+bool SphereRenderer::unsetShaderData(void) {
 
     return this->unsetTransferFunctionTexture();
 }
 
 
-bool moldyn::SphereRenderer::setTransferFunctionTexture(vislib::graphics::gl::GLSLShader& shader) {
+bool SphereRenderer::setTransferFunctionTexture(vislib::graphics::gl::GLSLShader& shader) {
 
     view::CallGetTransferFunction* cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
     if ((cgtf != nullptr) && (*cgtf)(0)) { 
@@ -1989,7 +1991,7 @@ bool moldyn::SphereRenderer::setTransferFunctionTexture(vislib::graphics::gl::GL
 }
 
 
-bool moldyn::SphereRenderer::unsetTransferFunctionTexture(void) {
+bool SphereRenderer::unsetTransferFunctionTexture(void) {
 
     view::CallGetTransferFunction* cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
     if (cgtf != nullptr) {
@@ -2003,7 +2005,7 @@ bool moldyn::SphereRenderer::unsetTransferFunctionTexture(void) {
 }
 
 
-bool moldyn::SphereRenderer::setFlagStorage(const vislib::graphics::gl::GLSLShader& shader, MultiParticleDataCall* mpdc) {
+bool SphereRenderer::setFlagStorage(const vislib::graphics::gl::GLSLShader& shader, MultiParticleDataCall* mpdc) {
 
     this->flagsEnabled = false;
 
@@ -2050,7 +2052,7 @@ bool moldyn::SphereRenderer::setFlagStorage(const vislib::graphics::gl::GLSLShad
 }
 
 
-bool moldyn::SphereRenderer::unsetFlagStorage(const vislib::graphics::gl::GLSLShader& shader) {
+bool SphereRenderer::unsetFlagStorage(const vislib::graphics::gl::GLSLShader& shader) {
 
     auto flagc = this->getFlagsSlot.CallAs<FlagCall>();
     if (flagc == nullptr) {
@@ -2074,7 +2076,7 @@ bool moldyn::SphereRenderer::unsetFlagStorage(const vislib::graphics::gl::GLSLSh
 }
 
 
-bool moldyn::SphereRenderer::makeColorString(
+bool SphereRenderer::makeColorString(
     const MultiParticleDataCall::Particles& parts, std::string& outCode, std::string& outDeclaration, bool interleaved) {
 
     bool ret = true;
@@ -2165,7 +2167,7 @@ bool moldyn::SphereRenderer::makeColorString(
 }
 
 
-bool moldyn::SphereRenderer::makeVertexString(
+bool SphereRenderer::makeVertexString(
     const MultiParticleDataCall::Particles& parts, std::string& outCode, std::string& outDeclaration, bool interleaved) {
 
     bool ret = true;
@@ -2230,7 +2232,7 @@ bool moldyn::SphereRenderer::makeVertexString(
 }
 
 
-std::shared_ptr<GLSLShader> moldyn::SphereRenderer::makeShader(
+std::shared_ptr<GLSLShader> SphereRenderer::makeShader(
     vislib::SmartPtr<ShaderSource> vert, vislib::SmartPtr<ShaderSource> frag) {
 
     std::shared_ptr<GLSLShader> sh = std::make_shared<GLSLShader>(GLSLShader());
@@ -2263,7 +2265,7 @@ std::shared_ptr<GLSLShader> moldyn::SphereRenderer::makeShader(
 }
 
 
-std::shared_ptr<vislib::graphics::gl::GLSLShader> moldyn::SphereRenderer::generateShader(const MultiParticleDataCall::Particles& parts) {
+std::shared_ptr<vislib::graphics::gl::GLSLShader> SphereRenderer::generateShader(const MultiParticleDataCall::Particles& parts) {
 
     int c = parts.GetColourDataType();
     int p = parts.GetVertexDataType();
@@ -2339,7 +2341,7 @@ std::shared_ptr<vislib::graphics::gl::GLSLShader> moldyn::SphereRenderer::genera
 }
 
 
-void moldyn::SphereRenderer::getBytesAndStride(const MultiParticleDataCall::Particles &parts, unsigned int &outColBytes, unsigned int &outVertBytes,
+void SphereRenderer::getBytesAndStride(const MultiParticleDataCall::Particles &parts, unsigned int &outColBytes, unsigned int &outVertBytes,
     unsigned int &outColStride, unsigned int &outVertStride, bool &outInterleaved) {
 
     outVertBytes = MultiParticleDataCall::Particles::VertexDataSize[parts.GetVertexDataType()];
@@ -2357,7 +2359,7 @@ void moldyn::SphereRenderer::getBytesAndStride(const MultiParticleDataCall::Part
 }
 
 
-void moldyn::SphereRenderer::getGLSLVersion(int &outMajor, int &outMinor) const {
+void SphereRenderer::getGLSLVersion(int &outMajor, int &outMinor) const {
     
     outMajor = -1;
     outMinor = -1;
@@ -2376,7 +2378,7 @@ void moldyn::SphereRenderer::getGLSLVersion(int &outMajor, int &outMinor) const 
 
 #if defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
 
-void moldyn::SphereRenderer::lockSingle(GLsync& outSyncObj) {
+void SphereRenderer::lockSingle(GLsync& outSyncObj) {
 
     if (outSyncObj) {
         glDeleteSync(outSyncObj);
@@ -2385,7 +2387,7 @@ void moldyn::SphereRenderer::lockSingle(GLsync& outSyncObj) {
 }
 
 
-void moldyn::SphereRenderer::waitSingle(const GLsync& syncObj) {
+void SphereRenderer::waitSingle(const GLsync& syncObj) {
 
     if (syncObj) {
         while (1) {
@@ -2402,7 +2404,7 @@ void moldyn::SphereRenderer::waitSingle(const GLsync& syncObj) {
 
 // ##### Ambient Occlusion ################################################# //
 
-bool moldyn::SphereRenderer::rebuildGBuffer() {
+bool SphereRenderer::rebuildGBuffer() {
 
     if (!this->triggerRebuildGBuffer && (this->curVpWidth == this->lastVpWidth) && (this->curVpHeight == this->lastVpHeight) &&
         !this->useHPTexturesSlot.IsDirty()) {
@@ -2461,7 +2463,7 @@ bool moldyn::SphereRenderer::rebuildGBuffer() {
 }
 
 
-void moldyn::SphereRenderer::rebuildWorkingData(view::CallRender3D_2* cr3d, moldyn::MultiParticleDataCall* mpdc, const vislib::graphics::gl::GLSLShader& shader) {
+void SphereRenderer::rebuildWorkingData(view::CallRender3D_2* cr3d, MultiParticleDataCall* mpdc, const vislib::graphics::gl::GLSLShader& shader) {
 
     // Upload new data if neccessary
     if (stateInvalid) {
@@ -2489,7 +2491,7 @@ void moldyn::SphereRenderer::rebuildWorkingData(view::CallRender3D_2* cr3d, mold
 
         // Reupload buffers
         for (unsigned int i = 0; i < partsCount; ++i) {
-            moldyn::MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
+            MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
 
             glBindVertexArray(this->gpuData[i].vertexArray);
             this->setBufferData(shader, parts, this->gpuData[i].vertexVBO, parts.GetVertexData(), this->gpuData[i].colorVBO, parts.GetColourData(), true);
@@ -2500,7 +2502,7 @@ void moldyn::SphereRenderer::rebuildWorkingData(view::CallRender3D_2* cr3d, mold
 
     // Check if voxelization is even needed
     if (this->volGen == nullptr) {
-        this->volGen = new utility::MDAOVolumeGenerator();
+        this->volGen = new misc::MDAOVolumeGenerator();
         this->volGen->SetShaderSourceFactory(&instance()->ShaderSourceFactory());
         this->volGen->Init();
     }
@@ -2542,7 +2544,7 @@ void moldyn::SphereRenderer::rebuildWorkingData(view::CallRender3D_2* cr3d, mold
         for (unsigned int i = 0; i < this->gpuData.size(); ++i) {
             float globalRadius = 0.0f;
             if (mpdc->AccessParticles(i).GetVertexDataType() !=
-                moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR)
+                MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR)
                 globalRadius = mpdc->AccessParticles(i).GetGlobalRadius();
             this->volGen->InsertParticles(static_cast<unsigned int>(mpdc->AccessParticles(i).GetCount()),
                 globalRadius, this->gpuData[i].vertexArray);
@@ -2557,7 +2559,7 @@ void moldyn::SphereRenderer::rebuildWorkingData(view::CallRender3D_2* cr3d, mold
 
 
 
-void moldyn::SphereRenderer::renderDeferredPass(view::CallRender3D_2* cr3d) {
+void SphereRenderer::renderDeferredPass(view::CallRender3D_2* cr3d) {
 
     bool enableLighting = this->enableLightingSlot.Param<param::BoolParam>()->Value();
     bool highPrecision = this->useHPTexturesSlot.Param<param::BoolParam>()->Value();
@@ -2622,7 +2624,7 @@ void moldyn::SphereRenderer::renderDeferredPass(view::CallRender3D_2* cr3d) {
 }
 
 
-void moldyn::SphereRenderer::generate3ConeDirections(
+void SphereRenderer::generate3ConeDirections(
     std::vector<vislib::math::Vector<float, 4>>& directions, float apex) {
 
     directions.clear();
@@ -2641,7 +2643,7 @@ void moldyn::SphereRenderer::generate3ConeDirections(
 }
 
 
-std::string moldyn::SphereRenderer::generateDirectionShaderArrayString(
+std::string SphereRenderer::generateDirectionShaderArrayString(
     const std::vector<vislib::math::Vector<float, 4>>& directions, const std::string& directionsName) {
 
     std::stringstream result;
