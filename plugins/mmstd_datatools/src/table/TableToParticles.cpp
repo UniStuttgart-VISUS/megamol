@@ -8,12 +8,12 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
 
-#include "vislib/Trace.h"
-#include "vislib/sys/Log.h"
-#include "vislib/sys/PerformanceCounter.h"
 #include "glm/glm.hpp"
 #include "glm/gtc/quaternion.hpp"
 #include "glm/gtc/type_ptr.hpp"
+#include "vislib/Trace.h"
+#include "vislib/sys/Log.h"
+#include "vislib/sys/PerformanceCounter.h"
 
 using namespace megamol::stdplugin::datatools;
 using namespace megamol;
@@ -421,36 +421,50 @@ bool TableToParticles::assertData(table::TableDataCall* ft) {
             for (int offset = 0; offset < 9; ++offset) {
                 tensor[offset % 3][offset / 3] = ftData[cols * i + tensorIndices[offset]];
             }
+            // if (!this->haveTensorMagnitudes) {
+            //    // TODO compute, save, pass pointer later.
+            //    for (int offset = 0; offset < 3; ++offset) {
+            //        xvec[offset] = ftData[cols * i + tensorIndices[offset]];
+            //    }
+            //    for (int offset = 3; offset < 6; ++offset) {
+            //        yvec[offset - 3] = ftData[cols * i + tensorIndices[offset]];
+            //    }
+            //    for (int offset = 6; offset < 9; ++offset) {
+            //        zvec[offset - 6] = ftData[cols * i + tensorIndices[offset]];
+            //    }
+            //    currOut[numIndices + 0] = glm::length(xvec);
+            //    currOut[numIndices + 1] = glm::length(yvec);
+            //    currOut[numIndices + 2] = glm::length(zvec);
+            //}
+            // make sure we are right-handed
+            auto tt = glm::transpose(tensor);
+            auto zz = glm::cross(tt[0], tt[1]);
+            tt[2] = zz;
             if (!this->haveTensorMagnitudes) {
-                // TODO compute, save, pass pointer later.
-                for (int offset = 0; offset < 3; ++offset) {
-                    xvec[offset] = ftData[cols * i + tensorIndices[offset]];
-                }
-                for (int offset = 3; offset < 6; ++offset) {
-                    yvec[offset - 3] = ftData[cols * i + tensorIndices[offset]];
-                }
-                for (int offset = 6; offset < 9; ++offset) {
-                    zvec[offset - 6] = ftData[cols * i + tensorIndices[offset]];
-                }
-                currOut[numIndices + 0] = glm::length(xvec);
-                currOut[numIndices + 1] = glm::length(yvec);
-                currOut[numIndices + 2] = glm::length(zvec);
-
+                currOut[numIndices + 0] = glm::length(tt[0]);
+                currOut[numIndices + 1] = glm::length(tt[1]);
+                currOut[numIndices + 2] = glm::length(tt[2]);
+                tt[0] = glm::normalize(tt[0]);
+                tt[1] = glm::normalize(tt[1]);
+                tt[2] = glm::normalize(tt[2]);
             }
-            auto quat = glm::quat_cast(tensor);
-            //memcpy(&currOut[numIndices + 3], glm::value_ptr(quat), sizeof(float) * 4);
+            // turn around again to feed into quat
+            tt = glm::transpose(tt);
+
+            auto quat = glm::normalize(glm::quat_cast(tt));
+            // memcpy(&currOut[numIndices + 3], glm::value_ptr(quat), sizeof(float) * 4);
             currOut[tensorOffset + 0] = quat.x;
             currOut[tensorOffset + 1] = quat.y;
             currOut[tensorOffset + 2] = quat.z;
             currOut[tensorOffset + 3] = quat.w;
-            //currOut[tensorOffset - 3] = 3.0f;
-            //currOut[tensorOffset - 2] = 2.0f;
-            //currOut[tensorOffset - 1] = 1.0f;
+            // currOut[tensorOffset - 3] = 3.0f;
+            // currOut[tensorOffset - 2] = 2.0f;
+            // currOut[tensorOffset - 1] = 1.0f;
 
-            //currOut[tensorOffset + 0] = 0.0f;
-            //currOut[tensorOffset + 1] = 0.0f;
-            //currOut[tensorOffset + 2] = 0.0f;
-            //currOut[tensorOffset + 3] = 1.0f;
+            // currOut[tensorOffset + 0] = 0.0f;
+            // currOut[tensorOffset + 1] = 0.0f;
+            // currOut[tensorOffset + 2] = 0.0f;
+            // currOut[tensorOffset + 3] = 1.0f;
             // TODO make mat3, convert to quat, save, pass pointer later.
         }
     }
@@ -590,7 +604,7 @@ bool TableToParticles::getMultiParticleData(core::Call& call) {
                         megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE, nullptr);
                     break;
                 }
-                //if (haveVelocities) {
+                // if (haveVelocities) {
                 //    e->AccessParticles(0).SetDirData(core::moldyn::MultiParticleDataCall::Particles::DIRDATA_FLOAT_XYZ,
                 //        this->everything.data() + (stride - 3), static_cast<unsigned int>(stride * sizeof(float)));
                 //}
