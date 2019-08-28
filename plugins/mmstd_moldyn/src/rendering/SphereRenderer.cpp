@@ -1050,7 +1050,12 @@ bool SphereRenderer::Render(view::CallRender3D_2& call) {
     this->curMVPtransp = glm::transpose(this->curMVP);
 
 	// Viewport
-	glGetFloatv(GL_VIEWPORT, glm::value_ptr(this->curViewAttrib));
+    if (!cam.image_tile().empty()) {
+        this->curViewAttrib = glm::vec4(cam.image_tile().left(), cam.image_tile().bottom(), cam.image_tile().width(), cam.image_tile().height());
+    }
+    else {
+        this->curViewAttrib = glm::vec4(0.0f , 0.0f, cam.resolution_gate().width(), cam.resolution_gate().height());
+    }
 	this->curVpWidth = static_cast<int>(this->curViewAttrib[2]);
 	this->curVpHeight = static_cast<int>(this->curViewAttrib[3]);
 	if (this->curViewAttrib[2] < 1.0f) this->curViewAttrib[2] = 1.0f;

@@ -176,26 +176,34 @@ bool ArrowRenderer::Render(view::CallRender3D_2& call) {
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
-    float viewportStuff[4];
-    ::glGetFloatv(GL_VIEWPORT, viewportStuff);
-    glPointSize(vislib::math::Max(viewportStuff[2], viewportStuff[3]));
+    // Camera
+    view::Camera_2 cam;
+    cr->GetCamera(cam);
+    cam_type::snapshot_type snapshot;
+    cam_type::matrix_type viewTemp, projTemp;
+    cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
+    glm::vec4 CamView = snapshot.view_vector;
+    glm::vec4 CamRight = snapshot.right_vector;
+    glm::vec4 CamUp = snapshot.up_vector;
+
+    // Viewport
+    glm::vec4 viewportStuff;
+    if (!cam.image_tile().empty()) {
+        viewportStuff = glm::vec4(cam.image_tile().left(), cam.image_tile().bottom(), cam.image_tile().width(), cam.image_tile().height());
+    }
+    else {
+        viewportStuff = glm::vec4(0.0f, 0.0f, cam.resolution_gate().width(), cam.resolution_gate().height());
+    }
     if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
     if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
     viewportStuff[2] = 2.0f / viewportStuff[2];
     viewportStuff[3] = 2.0f / viewportStuff[3];
 
-	view::Camera_2 cam;
-	cr->GetCamera(cam);
-	cam_type::snapshot_type snapshot;
-	cam_type::matrix_type viewTemp, projTemp;	
-	cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
-	glm::vec4 CamView = snapshot.view_vector;
-	glm::vec4 CamRight = snapshot.right_vector;
-	glm::vec4 CamUp = snapshot.up_vector;
+    glPointSize(vislib::math::Max(viewportStuff[2], viewportStuff[3]));
 
     this->arrowShader.Enable();
 
-    glUniform4fv(this->arrowShader.ParameterLocation("viewAttr"), 1, viewportStuff);
+    glUniform4fv(this->arrowShader.ParameterLocation("viewAttr"), 1, glm::value_ptr(viewportStuff));
     glUniform3fv(this->arrowShader.ParameterLocation("camIn"), 1, glm::value_ptr(CamView));
     glUniform3fv(this->arrowShader.ParameterLocation("camRight"), 1, glm::value_ptr(CamRight));
     glUniform3fv(this->arrowShader.ParameterLocation("camUp"), 1, glm::value_ptr(CamUp));
