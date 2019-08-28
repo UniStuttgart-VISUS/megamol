@@ -23,10 +23,10 @@ using namespace megamol::core::view::light;
 AbstractLight::AbstractLight(void)
     : core::Module()
     , lightContainer()
-    , getLightSlot("getLightSlot", "Connects to the OSPRayRenderer or another OSPRayLight")
-    , deployLightSlot("deployLightSlot", "Connects to the OSPRayRenderer or another OSPRayLight")
+    , getLightSlot("getLightSlot", "Connects to another light")
+    , deployLightSlot("deployLightSlot", "Connects to a renderer module or another light")
     // General light parameters
-	, lightColor("Color", "Sets the color of the Light")
+    , lightColor("Color", "Sets the color of the Light")
     , lightIntensity("Intensity", "Intensity of the Light") {
 
     this->lightContainer.isValid = true;
