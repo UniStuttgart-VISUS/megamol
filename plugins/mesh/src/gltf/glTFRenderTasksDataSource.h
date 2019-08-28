@@ -60,6 +60,7 @@ namespace megamol
 
 		private:
 
+            /** Slot to retrieve the gltf model */
 			megamol::core::CallerSlot m_glTF_callerSlot;
 		};
 	}

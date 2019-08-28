@@ -117,8 +117,6 @@ private:
 
     std::unique_ptr<glowl::Texture3D> m_volume_texture;
 
-    std::unique_ptr<glowl::Texture2D> m_transfer_function;
-
     std::size_t m_volume_datahash = std::numeric_limits<std::size_t>::max();
     int m_frame_id = -1;
 

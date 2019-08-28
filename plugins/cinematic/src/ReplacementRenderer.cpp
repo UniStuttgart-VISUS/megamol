@@ -9,14 +9,6 @@
 
 #include "ReplacementRenderer.h"
 
-#include "mmcore/param/BoolParam.h"
-#include "mmcore/param/FloatParam.h"
-#include "mmcore/param/EnumParam.h"
-#include "mmcore/param/IntParam.h"
-#include "mmcore/param/ButtonParam.h"
-
-#include "vislib/graphics/gl/IncludeAllGL.h"
-#include "vislib/sys/Log.h"
 
 using namespace megamol;
 using namespace megamol::core;
@@ -24,16 +16,17 @@ using namespace megamol::cinematic;
 
 using namespace vislib;
 
-ReplacementRenderer::ReplacementRenderer(void) : Renderer3DModule(),
+
+ReplacementRenderer::ReplacementRenderer(void) : Renderer3DModule_2(),
     rendererCallerSlot("renderer", "outgoing renderer"),
-    alphaParam(                     "alpha", "The alpha value of the replacement rendering."),
-    replacementRenderingParam(      "replacementRendering", "Show/hide replacement rendering for the model."),
-    replacementKeyParam(            "replacmentKeyAssign", "Assign a key to replacement rendering button."),
+    alphaParam("alpha", "The alpha value of the replacement rendering."),
+    replacementRenderingParam("replacementRendering", "Show/hide replacement rendering for the model."),
+    replacementKeyParam("replacmentKeyAssign", "Assign a key to replacement rendering button."),
     toggleReplacementRenderingParam("toggleReplacement", "Toggle replacement rendering."),
     bbox(),
     toggleReplacementRendering(false)
 {
-    this->rendererCallerSlot.SetCompatibleCall<view::CallRender3DDescription>();
+    this->rendererCallerSlot.SetCompatibleCall<view::CallRender3D_2Description>();
     this->MakeSlotAvailable(&this->rendererCallerSlot);
 
     // init parameters
@@ -72,13 +65,13 @@ bool ReplacementRenderer::create(void) {
 }
 
 
-bool ReplacementRenderer::GetExtents(megamol::core::view::CallRender3D& call) {
+bool ReplacementRenderer::GetExtents(megamol::core::view::CallRender3D_2& call) {
 
-    view::CallRender3D *cr3d_in = dynamic_cast<view::CallRender3D*>(&call);
+    auto cr3d_in = &call;
     if (cr3d_in == nullptr) return false;
 
-    // Propagate changes made in GetExtents() from outgoing CallRender3D (cr3d_out) to incoming  CallRender3D (cr3d_in).
-    view::CallRender3D *cr3d_out = this->rendererCallerSlot.CallAs<view::CallRender3D>();
+    // Propagate changes made in GetExtents() from outgoing CallRender3D_2 (cr3d_out) to incoming CallRender3D_2 (cr3d_in).
+    auto cr3d_out = this->rendererCallerSlot.CallAs<view::CallRender3D_2>();
 
     if ((cr3d_out != nullptr) && (*cr3d_out)(core::view::AbstractCallRender::FnGetExtents)) {
         unsigned int timeFramesCount = cr3d_out->TimeFramesCount();
@@ -86,7 +79,7 @@ bool ReplacementRenderer::GetExtents(megamol::core::view::CallRender3D& call) {
         cr3d_in->SetTime(cr3d_out->Time());
         cr3d_in->AccessBoundingBoxes() = cr3d_out->AccessBoundingBoxes();
 
-        this->bbox = cr3d_out->AccessBoundingBoxes().WorldSpaceBBox();
+        this->bbox = cr3d_out->AccessBoundingBoxes().BoundingBox();
     }
     else {
         cr3d_in->SetTimeFramesCount(1);
@@ -94,16 +87,16 @@ bool ReplacementRenderer::GetExtents(megamol::core::view::CallRender3D& call) {
 
         this->bbox = vislib::math::Cuboid<float>(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
         cr3d_in->AccessBoundingBoxes().Clear();
-        cr3d_in->AccessBoundingBoxes().SetWorldSpaceBBox(this->bbox);
+        cr3d_in->AccessBoundingBoxes().SetBoundingBox(this->bbox);
     }
 
     return true;
 }
 
 
-bool ReplacementRenderer::Render(megamol::core::view::CallRender3D& call) {
+bool ReplacementRenderer::Render(megamol::core::view::CallRender3D_2& call) {
 
-    view::CallRender3D *cr3d_in = dynamic_cast<view::CallRender3D*>(&call);
+    auto cr3d_in = &call;
     if (cr3d_in == nullptr)  return false;
 
     // Update parameters
@@ -164,7 +157,7 @@ bool ReplacementRenderer::Render(megamol::core::view::CallRender3D& call) {
     else {
 
         // Call render function of slave renderer
-        view::CallRender3D *cr3d_out = this->rendererCallerSlot.CallAs<view::CallRender3D>();
+        auto cr3d_out = this->rendererCallerSlot.CallAs<view::CallRender3D_2>();
         if (cr3d_out != nullptr) {
             *cr3d_out = *cr3d_in;
             (*cr3d_out)(core::view::AbstractCallRender::FnRender);

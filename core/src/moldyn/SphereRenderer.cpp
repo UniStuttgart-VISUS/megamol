@@ -196,11 +196,11 @@ moldyn::SphereRenderer::~SphereRenderer(void) { this->Release(); }
 
 bool moldyn::SphereRenderer::GetExtents(view::CallRender3D_2& call) {
 
-    view::CallRender3D_2 *cr = dynamic_cast<view::CallRender3D_2*>(&call);
-    if (cr == NULL) return false;
+    auto cr = &call;
+    if (cr == nullptr) return false;
 
     MultiParticleDataCall *c2 = this->getDataSlot.CallAs<MultiParticleDataCall>();
-    if ((c2 != NULL)) {
+    if ((c2 != nullptr)) {
         c2->SetFrameID(static_cast<unsigned int>(cr->Time()), this->forceTimeSlot.Param<param::BoolParam>()->Value());
         if (!(*c2)(1)) return false;
         cr->SetTimeFramesCount(c2->FrameCount());
@@ -750,9 +750,9 @@ moldyn::MultiParticleDataCall *moldyn::SphereRenderer::getData(unsigned int t, f
 
     MultiParticleDataCall *c2 = this->getDataSlot.CallAs<MultiParticleDataCall>();
     outScaling = 1.0f;
-    if (c2 != NULL) {
+    if (c2 != nullptr) {
         c2->SetFrameID(t, this->forceTimeSlot.Param<param::BoolParam>()->Value());
-        if (!(*c2)(1)) return NULL;
+        if (!(*c2)(1)) return nullptr;
 
         // calculate scaling
         auto const plcount = c2->GetParticleListCount();
@@ -776,12 +776,12 @@ moldyn::MultiParticleDataCall *moldyn::SphereRenderer::getData(unsigned int t, f
         }
 
         c2->SetFrameID(t, this->forceTimeSlot.Param<param::BoolParam>()->Value());
-        if (!(*c2)(0)) return NULL;
+        if (!(*c2)(0)) return nullptr;
 
         return c2;
     }
     else {
-        return NULL;
+        return nullptr;
     }
 }
 
@@ -789,7 +789,7 @@ moldyn::MultiParticleDataCall *moldyn::SphereRenderer::getData(unsigned int t, f
 void moldyn::SphereRenderer::getClipData(glm::vec4& out_clipDat, glm::vec4& out_clipCol) {
 
     view::CallClipPlane *ccp = this->getClipPlaneSlot.CallAs<view::CallClipPlane>();
-    if ((ccp != NULL) && (*ccp)()) {
+    if ((ccp != nullptr) && (*ccp)()) {
         out_clipDat[0] = ccp->GetPlane().Normal().X();
         out_clipDat[1] = ccp->GetPlane().Normal().Y();
         out_clipDat[2] = ccp->GetPlane().Normal().Z();
@@ -954,8 +954,9 @@ bool moldyn::SphereRenderer::Render(view::CallRender3D_2& call) {
 
     // timer.BeginFrame();
 
-    view::CallRender3D_2* cr3d = dynamic_cast<view::CallRender3D_2*>(&call);
+    auto cr3d = &call;
     if (cr3d == nullptr) return false;
+
     auto cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
     auto flagc = this->getFlagsSlot.CallAs<FlagCall>();
 

@@ -7,8 +7,8 @@
 
 #include "stdafx.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
-#include "mmcore/moldyn/GrimRenderer.h"
-#include "mmcore/moldyn/ParticleGridDataCall.h"
+#include "GrimRenderer.h"
+#include "ParticleGridDataCall.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/IntParam.h"
@@ -41,23 +41,24 @@
 //#define SUPSAMP_LOOPCNT 64
 
 using namespace megamol::core;
+using namespace megamol::stdplugin::moldyn::rendering;
 
 
 /****************************************************************************/
 
 
 /*
- * moldyn::GrimRenderer::CellInfo::CellInfo
+ * GrimRenderer::CellInfo::CellInfo
  */
-moldyn::GrimRenderer::CellInfo::CellInfo(void) {
+GrimRenderer::CellInfo::CellInfo(void) {
     ::glGenOcclusionQueriesNV(1, &this->oQuery);
 }
 
 
 /*
- * moldyn::GrimRenderer::CellInfo::~CellInfo
+ * GrimRenderer::CellInfo::~CellInfo
  */
-moldyn::GrimRenderer::CellInfo::~CellInfo(void) {
+GrimRenderer::CellInfo::~CellInfo(void) {
     ::glDeleteOcclusionQueriesNV(1, &this->oQuery);
     this->cache.Clear();
 }
@@ -66,9 +67,9 @@ moldyn::GrimRenderer::CellInfo::~CellInfo(void) {
 
 
 /*
- * moldyn::GrimRenderer::GrimRenderer
+ * GrimRenderer::GrimRenderer
  */
-moldyn::GrimRenderer::GrimRenderer(void) : Renderer3DModule(),
+GrimRenderer::GrimRenderer(void) : Renderer3DModule(),
         sphereShader(), vanillaSphereShader(), initDepthShader(),
         initDepthMapShader(), depthMipShader(), pointShader(),
         initDepthPointShader(), vertCntShader(), vertCntShade2r(), fbo(),
@@ -83,7 +84,7 @@ moldyn::GrimRenderer::GrimRenderer(void) : Renderer3DModule(),
         deferredSphereShader(), deferredVanillaSphereShader(), deferredPointShader(), deferredShader(),
         inhash(0) {
 
-    this->getDataSlot.SetCompatibleCall<moldyn::ParticleGridDataCallDescription>();
+    this->getDataSlot.SetCompatibleCall<stdplugin::moldyn::rendering::ParticleGridDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
 
     this->getTFSlot.SetCompatibleCall<view::CallGetTransferFunctionDescription>();
@@ -113,17 +114,17 @@ moldyn::GrimRenderer::GrimRenderer(void) : Renderer3DModule(),
 
 
 /*
- * moldyn::GrimRenderer::~GrimRenderer
+ * GrimRenderer::~GrimRenderer
  */
-moldyn::GrimRenderer::~GrimRenderer(void) {
+GrimRenderer::~GrimRenderer(void) {
     this->Release();
 }
 
 
 /*
- * moldyn::GrimRenderer::create
+ * GrimRenderer::create
  */
-bool moldyn::GrimRenderer::create(void) {
+bool GrimRenderer::create(void) {
     ASSERT(IsAvailable());
 
     vislib::graphics::gl::ShaderSource vert, geom, frag;
@@ -292,9 +293,9 @@ bool moldyn::GrimRenderer::create(void) {
 
 
 /*
- * moldyn::GrimRenderer::GetExtents
+ * GrimRenderer::GetExtents
  */
-bool moldyn::GrimRenderer::GetExtents(Call& call) {
+bool GrimRenderer::GetExtents(Call& call) {
     view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
     if (cr == NULL) return false;
 
@@ -318,9 +319,9 @@ bool moldyn::GrimRenderer::GetExtents(Call& call) {
 
 
 /*
- * moldyn::GrimRenderer::release
+ * GrimRenderer::release
  */
-void moldyn::GrimRenderer::release(void) {
+void GrimRenderer::release(void) {
     this->sphereShader.Release();
     this->initDepthMapShader.Release();
     this->initDepthShader.Release();
@@ -340,9 +341,9 @@ void moldyn::GrimRenderer::release(void) {
 
 
 /*
- * moldyn::GrimRenderer::Render
+ * GrimRenderer::Render
  */
-bool moldyn::GrimRenderer::Render(Call& call) {
+bool GrimRenderer::Render(Call& call) {
     view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
     if (cr == NULL) return false;
 
@@ -562,32 +563,32 @@ bool moldyn::GrimRenderer::Render(Call& call) {
             CellInfo::CacheItem &ci = info.cache[j];
             unsigned int vbpp = 1, cbpp = 1;
             switch (ptype.GetVertexDataType()) {
-                case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
+                case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
                     vbpp = 3 * sizeof(float);
                     break;
-                case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
+                case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
                     vbpp = 4 * sizeof(float);
                     break;
-                case MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
+                case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
                     vbpp = 3 * sizeof(short);
                     break;
                 default:
                     continue;
             }
             switch (ptype.GetColourDataType()) {
-                case MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
+                case core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
                     cbpp = 3;
                     break;
-                case MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
+                case core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
                     cbpp = 4;
                     break;
-                case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
+                case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
                     cbpp = 3 * sizeof(float);
                     break;
-                case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
+                case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
                     cbpp = 4 * sizeof(float);
                     break;
-                case MultiParticleDataCall::Particles::COLDATA_FLOAT_I:
+                case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I:
                     cbpp = sizeof(float);
                     break;
                 default:
@@ -640,9 +641,9 @@ bool moldyn::GrimRenderer::Render(Call& call) {
             // radius and position
             bool matrixpooper = false;
             switch (ptype.GetVertexDataType()) {
-                case MultiParticleDataCall::Particles::VERTDATA_NONE:
+                case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE:
                     continue;
-                case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
+                case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
                     glEnableClientState(GL_VERTEX_ARRAY);
                     if (ci.data[0] != 0) {
                         ::glBindBufferARB(GL_ARRAY_BUFFER, ci.data[0]);
@@ -651,7 +652,7 @@ bool moldyn::GrimRenderer::Render(Call& call) {
                         ::glVertexPointer(3, GL_FLOAT, parts.GetVertexDataStride(), parts.GetVertexData());
                     }
                     break;
-                case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
+                case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
                     glEnableClientState(GL_VERTEX_ARRAY);
                     if (ci.data[0] != 0) {
                         ::glBindBufferARB(GL_ARRAY_BUFFER, ci.data[0]);
@@ -662,7 +663,7 @@ bool moldyn::GrimRenderer::Render(Call& call) {
                             parts.GetVertexData());
                     }
                     break;
-                case MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ: {
+                case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ: {
                     float skale = cell->GetBoundingBox().LongestEdge() / static_cast<float>(SHRT_MAX);
                     glEnableClientState(GL_VERTEX_ARRAY);
                     if (ci.data[0] != 0) {
@@ -751,32 +752,32 @@ bool moldyn::GrimRenderer::Render(Call& call) {
             CellInfo::CacheItem &ci = info.cache[j];
             unsigned int vbpp = 1, cbpp = 1;
             switch (ptype.GetVertexDataType()) {
-                case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
+                case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
                     vbpp = 3 * sizeof(float);
                     break;
-                case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
+                case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
                     vbpp = 4 * sizeof(float);
                     break;
-                case MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
+                case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
                     vbpp = 3 * sizeof(short);
                     break;
                 default:
                     continue;
             }
             switch (ptype.GetColourDataType()) {
-                case MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
+                case core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
                     cbpp = 3;
                     break;
-                case MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
+                case core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
                     cbpp = 4;
                     break;
-                case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
+                case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
                     cbpp = 3 * sizeof(float);
                     break;
-                case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
+                case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
                     cbpp = 4 * sizeof(float);
                     break;
-                case MultiParticleDataCall::Particles::COLDATA_FLOAT_I:
+                case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I:
                     cbpp = sizeof(float);
                     break;
                 default:
@@ -829,9 +830,9 @@ bool moldyn::GrimRenderer::Render(Call& call) {
             // radius and position
             bool matrixpooper = false;
             switch (ptype.GetVertexDataType()) {
-                case MultiParticleDataCall::Particles::VERTDATA_NONE:
+                case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE:
                     continue;
-                case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
+                case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
                     glEnableClientState(GL_VERTEX_ARRAY);
                     glUniform4f(this->initDepthShader.ParameterLocation("inConsts1"), ptype.GetGlobalRadius(), 0.0f, 0.0f, 0.0f);
                     if (ci.data[0] != 0) {
@@ -841,7 +842,7 @@ bool moldyn::GrimRenderer::Render(Call& call) {
                         ::glVertexPointer(3, GL_FLOAT, parts.GetVertexDataStride(), parts.GetVertexData());
                     }
                     break;
-                case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
+                case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
                     glEnableClientState(GL_VERTEX_ARRAY);
                     glUniform4f(this->initDepthShader.ParameterLocation("inConsts1"), -1.0f, 0.0f, 0.0f, 0.0f);
                     if (ci.data[0] != 0) {
@@ -851,7 +852,7 @@ bool moldyn::GrimRenderer::Render(Call& call) {
                         glVertexPointer(4, GL_FLOAT, parts.GetVertexDataStride(), parts.GetVertexData());
                     }
                     break;
-                case MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ: {
+                case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ: {
                     float skale = cell->GetBoundingBox().LongestEdge() / static_cast<float>(SHRT_MAX);
                     glEnableClientState(GL_VERTEX_ARRAY);
                     glUniform4f(this->initDepthShader.ParameterLocation("inConsts1"),
@@ -1204,9 +1205,9 @@ bool moldyn::GrimRenderer::Render(Call& call) {
                 // radius and position
                 bool matrixpooper = false;
                 switch (ptype.GetVertexDataType()) {
-                    case MultiParticleDataCall::Particles::VERTDATA_NONE:
+                    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE:
                         continue;
-                    case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
+                    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
                         glEnableClientState(GL_VERTEX_ARRAY);
                         if (useVertCull) {
                             glUniform4f(this->vertCntShade2r.ParameterLocation("inConsts1"),
@@ -1219,7 +1220,7 @@ bool moldyn::GrimRenderer::Render(Call& call) {
                             ::glVertexPointer(3, GL_FLOAT, parts.GetVertexDataStride(), parts.GetVertexData());
                         }
                         break;
-                    case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
+                    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
                         glEnableClientState(GL_VERTEX_ARRAY);
                         if (useVertCull) {
                             glUniform4f(this->vertCntShade2r.ParameterLocation("inConsts1"),
@@ -1232,7 +1233,7 @@ bool moldyn::GrimRenderer::Render(Call& call) {
                             glVertexPointer(4, GL_FLOAT, parts.GetVertexDataStride(), parts.GetVertexData());
                         }
                         break;
-                    case MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ: {
+                    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ: {
                         float skale = cell.GetBoundingBox().LongestEdge() / static_cast<float>(SHRT_MAX);
                         glEnableClientState(GL_VERTEX_ARRAY);
                         if (useVertCull) {
@@ -1352,10 +1353,10 @@ bool moldyn::GrimRenderer::Render(Call& call) {
 
                 // colour
                 switch (ptype.GetColourDataType()) {
-                    case MultiParticleDataCall::Particles::COLDATA_NONE:
+                    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE:
                         glColor3ubv(ptype.GetGlobalColour());
                         break;
-                    case MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
+                    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
                         glEnableClientState(GL_COLOR_ARRAY);
                         if (ci.data[0] != 0) {
                             ::glBindBufferARB(GL_ARRAY_BUFFER, ci.data[1]);
@@ -1365,7 +1366,7 @@ bool moldyn::GrimRenderer::Render(Call& call) {
                                 parts.GetColourDataStride(), parts.GetColourData());
                         }
                         break;
-                    case MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
+                    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
                         glEnableClientState(GL_COLOR_ARRAY);
                         if (ci.data[0] != 0) {
                             ::glBindBufferARB(GL_ARRAY_BUFFER, ci.data[1]);
@@ -1375,7 +1376,7 @@ bool moldyn::GrimRenderer::Render(Call& call) {
                                 parts.GetColourDataStride(), parts.GetColourData());
                         }
                         break;
-                    case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
+                    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
                         glEnableClientState(GL_COLOR_ARRAY);
                         if (ci.data[0] != 0) {
                             ::glBindBufferARB(GL_ARRAY_BUFFER, ci.data[1]);
@@ -1385,7 +1386,7 @@ bool moldyn::GrimRenderer::Render(Call& call) {
                                 parts.GetColourDataStride(), parts.GetColourData());
                         }
                         break;
-                    case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
+                    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
                         glEnableClientState(GL_COLOR_ARRAY);
                         if (ci.data[0] != 0) {
                             ::glBindBufferARB(GL_ARRAY_BUFFER, ci.data[1]);
@@ -1395,7 +1396,7 @@ bool moldyn::GrimRenderer::Render(Call& call) {
                                 parts.GetColourDataStride(), parts.GetColourData());
                         }
                         break;
-                    case MultiParticleDataCall::Particles::COLDATA_FLOAT_I: {
+                    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I: {
                         glEnableVertexAttribArrayARB(cial2);
                         if (ci.data[0] != 0) {
                             ::glBindBufferARB(GL_ARRAY_BUFFER, ci.data[1]);
@@ -1429,9 +1430,9 @@ bool moldyn::GrimRenderer::Render(Call& call) {
                 // radius and position
                 bool matrixpooper = false;
                 switch (ptype.GetVertexDataType()) {
-                    case MultiParticleDataCall::Particles::VERTDATA_NONE:
+                    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE:
                         continue;
-                    case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
+                    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
                         glEnableClientState(GL_VERTEX_ARRAY);
                         glUniform4f(daPointShader->ParameterLocation("inConsts1"),
                             ptype.GetGlobalRadius(), minC, maxC, float(colTabSize));
@@ -1442,7 +1443,7 @@ bool moldyn::GrimRenderer::Render(Call& call) {
                             ::glVertexPointer(3, GL_FLOAT, parts.GetVertexDataStride(), parts.GetVertexData());
                         }
                         break;
-                    case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
+                    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
                         glEnableClientState(GL_VERTEX_ARRAY);
                         glUniform4f(daPointShader->ParameterLocation("inConsts1"),
                             -1.0f, minC, maxC, float(colTabSize));
@@ -1455,7 +1456,7 @@ bool moldyn::GrimRenderer::Render(Call& call) {
                                 parts.GetVertexData());
                         }
                         break;
-                    case MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ: {
+                    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ: {
                         float skale = cell.GetBoundingBox().LongestEdge() / static_cast<float>(SHRT_MAX);
                         glEnableClientState(GL_VERTEX_ARRAY);
                         glUniform4f(daPointShader->ParameterLocation("inConsts1"),
@@ -1557,10 +1558,10 @@ bool moldyn::GrimRenderer::Render(Call& call) {
 
                 // colour
                 switch (ptype.GetColourDataType()) {
-                    case MultiParticleDataCall::Particles::COLDATA_NONE:
+                    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE:
                         glColor3ubv(ptype.GetGlobalColour());
                         break;
-                    case MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
+                    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
                         glEnableClientState(GL_COLOR_ARRAY);
                         if (ci.data[0] != 0) {
                             ::glBindBufferARB(GL_ARRAY_BUFFER, ci.data[1]);
@@ -1570,7 +1571,7 @@ bool moldyn::GrimRenderer::Render(Call& call) {
                                 parts.GetColourDataStride(), parts.GetColourData());
                         }
                         break;
-                    case MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
+                    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
                         glEnableClientState(GL_COLOR_ARRAY);
                         if (ci.data[0] != 0) {
                             ::glBindBufferARB(GL_ARRAY_BUFFER, ci.data[1]);
@@ -1580,7 +1581,7 @@ bool moldyn::GrimRenderer::Render(Call& call) {
                                 parts.GetColourDataStride(), parts.GetColourData());
                         }
                         break;
-                    case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
+                    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
                         glEnableClientState(GL_COLOR_ARRAY);
                         if (ci.data[0] != 0) {
                             ::glBindBufferARB(GL_ARRAY_BUFFER, ci.data[1]);
@@ -1590,7 +1591,7 @@ bool moldyn::GrimRenderer::Render(Call& call) {
                                 parts.GetColourDataStride(), parts.GetColourData());
                         }
                         break;
-                    case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
+                    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
                         glEnableClientState(GL_COLOR_ARRAY);
                         if (ci.data[0] != 0) {
                             ::glBindBufferARB(GL_ARRAY_BUFFER, ci.data[1]);
@@ -1600,7 +1601,7 @@ bool moldyn::GrimRenderer::Render(Call& call) {
                                 parts.GetColourDataStride(), parts.GetColourData());
                         }
                         break;
-                    case MultiParticleDataCall::Particles::COLDATA_FLOAT_I: {
+                    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I: {
                         glEnableVertexAttribArrayARB(cial);
                         if (ci.data[0] != 0) {
                             ::glBindBufferARB(GL_ARRAY_BUFFER, ci.data[1]);
@@ -1634,9 +1635,9 @@ bool moldyn::GrimRenderer::Render(Call& call) {
                 // radius and position
                 bool matrixpooper = false;
                 switch (ptype.GetVertexDataType()) {
-                    case MultiParticleDataCall::Particles::VERTDATA_NONE:
+                    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE:
                         continue;
-                    case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
+                    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
                         glEnableClientState(GL_VERTEX_ARRAY);
                         glUniform4f(daSphereShader->ParameterLocation("inConsts1"),
                             ptype.GetGlobalRadius(), minC, maxC, float(colTabSize));
@@ -1647,7 +1648,7 @@ bool moldyn::GrimRenderer::Render(Call& call) {
                             ::glVertexPointer(3, GL_FLOAT, parts.GetVertexDataStride(), parts.GetVertexData());
                         }
                         break;
-                    case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
+                    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
                         glEnableClientState(GL_VERTEX_ARRAY);
                         glUniform4f(daSphereShader->ParameterLocation("inConsts1"),
                             -1.0f, minC, maxC, float(colTabSize));
@@ -1658,7 +1659,7 @@ bool moldyn::GrimRenderer::Render(Call& call) {
                             glVertexPointer(4, GL_FLOAT, parts.GetVertexDataStride(), parts.GetVertexData());
                         }
                         break;
-                    case MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ: {
+                    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ: {
                         float skale = cell.GetBoundingBox().LongestEdge() / static_cast<float>(SHRT_MAX);
                         glEnableClientState(GL_VERTEX_ARRAY);
                         glUniform4f(daSphereShader->ParameterLocation("inConsts1"),
@@ -1735,32 +1736,32 @@ bool moldyn::GrimRenderer::Render(Call& call) {
 
                 unsigned int vbpp = 1, cbpp = 1;
                 switch (ptype.GetVertexDataType()) {
-                    case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
+                    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
                         vbpp = 3 * sizeof(float);
                         break;
-                    case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
+                    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
                         vbpp = 4 * sizeof(float);
                         break;
-                    case MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
+                    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
                         vbpp = 3 * sizeof(short);
                         break;
                     default:
                         continue;
                 }
                 switch (ptype.GetColourDataType()) {
-                    case MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
+                    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
                         cbpp = 3;
                         break;
-                    case MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
+                    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
                         cbpp = 4;
                         break;
-                    case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
+                    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
                         cbpp = 3 * sizeof(float);
                         break;
-                    case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
+                    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
                         cbpp = 4 * sizeof(float);
                         break;
-                    case MultiParticleDataCall::Particles::COLDATA_FLOAT_I:
+                    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I:
                         cbpp = sizeof(float);
                         break;
                     default:
@@ -1908,9 +1909,9 @@ bool moldyn::GrimRenderer::Render(Call& call) {
 
 
 /*
- * moldyn::GrimRenderer::depthSort
+ * GrimRenderer::depthSort
  */
-int moldyn::GrimRenderer::depthSort(const vislib::Pair<unsigned int, float>& lhs,
+int GrimRenderer::depthSort(const vislib::Pair<unsigned int, float>& lhs,
            const vislib::Pair<unsigned int, float>& rhs) {
     float d = rhs.Second() - lhs.Second();
     if (d > vislib::math::FLOAT_EPSILON) return 1;

@@ -13,7 +13,6 @@
 
 #include "mmcore/DataWriterCtrlCall.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
-#include "mmcore/moldyn/ParticleGridDataCall.h"
 #include "mmcore/cluster/CallRegisterAtController.h"
 #include "mmcore/cluster/simple/ClientViewRegistration.h"
 #include "mmcore/view/CallClipPlane.h"
@@ -59,7 +58,6 @@ void factories::register_call_classes(factories::CallDescriptionManager& instanc
     instance.RegisterAutoDescription<cluster::CallRegisterAtController>();
     instance.RegisterAutoDescription<cluster::simple::ClientViewRegistration>();
     instance.RegisterAutoDescription<moldyn::MultiParticleDataCall>();
-    instance.RegisterAutoDescription<moldyn::ParticleGridDataCall>();
     instance.RegisterAutoDescription<view::CallClipPlane>();
     instance.RegisterAutoDescription<view::CallGetTransferFunction>();
     instance.RegisterAutoDescription<view::CallRender2D>();
