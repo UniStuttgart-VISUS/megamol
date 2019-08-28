@@ -26,13 +26,6 @@ matrix:
             - libxi-dev
             - libcgal-qt5-dev
             - libcgal-dev
-            - cuda-drivers
-            - cuda-cudart-dev-10-1
-            - cuda-compiler-10-1
-            - cuda-cufft-dev-10-1
-            - cuda-cusparse-dev-10-1
-            - cuda-cusolver-dev-10-1
-            - libcublas-dev
       env:
         - CC=gcc-7
         - CXX=g++-7
@@ -55,13 +48,6 @@ matrix:
             - libxi-dev
             - libcgal-qt5-dev
             - libcgal-dev
-            - cuda-drivers
-            - cuda-cudart-dev-10-1
-            - cuda-compiler-10-1
-            - cuda-cufft-dev-10-1
-            - cuda-cusparse-dev-10-1
-            - cuda-cusolver-dev-10-1
-            - libcublas-dev
       env:
         - CC=gcc-9
         - CXX=g++-9
