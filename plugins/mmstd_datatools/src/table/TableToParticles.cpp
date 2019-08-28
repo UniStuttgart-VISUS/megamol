@@ -410,7 +410,6 @@ bool TableToParticles::assertData(table::TableDataCall* ft) {
     } else {
         tensorOffset = numIndices + 3;
     }
-    if (this->haveTensorMagnitudes)
     for (uint32_t i = 0; i < ft->GetRowsCount(); i++) {
         float* currOut = &everything[i * stride];
         for (uint32_t j = 0; j < numIndices; j++) {
@@ -444,6 +443,14 @@ bool TableToParticles::assertData(table::TableDataCall* ft) {
             currOut[tensorOffset + 1] = quat.y;
             currOut[tensorOffset + 2] = quat.z;
             currOut[tensorOffset + 3] = quat.w;
+            //currOut[tensorOffset - 3] = 3.0f;
+            //currOut[tensorOffset - 2] = 2.0f;
+            //currOut[tensorOffset - 1] = 1.0f;
+
+            //currOut[tensorOffset + 0] = 0.0f;
+            //currOut[tensorOffset + 1] = 0.0f;
+            //currOut[tensorOffset + 2] = 0.0f;
+            //currOut[tensorOffset + 3] = 1.0f;
             // TODO make mat3, convert to quat, save, pass pointer later.
         }
     }
