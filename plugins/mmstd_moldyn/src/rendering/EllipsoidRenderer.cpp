@@ -156,8 +156,8 @@ bool EllipsoidRenderer::Render(Call& call){
 	glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
 	glDisable(GL_POINT_SPRITE_ARB);
 
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_COLOR_ARRAY);
+	//glEnableClientState(GL_VERTEX_ARRAY);
+	//glEnableClientState(GL_COLOR_ARRAY);
 
 	glEnable(GL_DEPTH_TEST);
 
