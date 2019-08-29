@@ -5,29 +5,20 @@
 #
 string(TOUPPER molecularmaps EXPORT_NAME)
 
-include(CheckLanguage)
-check_language(CUDA)
-if(MSVC AND CMAKE_CUDA_COMPILER)
-  option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build molecularmaps" OFF)
-else()
-  set(BUILD_${EXPORT_NAME}_PLUGIN OFF)
-endif()
+option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build molecularmaps" OFF)
 
 cmake_minimum_required(VERSION 3.8 FATAL_ERROR)
 
 if(BUILD_${EXPORT_NAME}_PLUGIN)
-  project(molecularmaps LANGUAGES CXX CUDA)
-
-  string(REPLACE "." ";" CUDA_VERSION_LIST ${CMAKE_CUDA_COMPILER_VERSION})
-  list(GET CUDA_VERSION_LIST 0 CUDA_VERSION_MAJOR)
-  if(NOT CUDA_VERSION_MAJOR GREATER 7)
-    message(FATAL_ERROR "Molecularmaps currently only supports CUDA Version 8 or above. The version found was CUDA ${CUDA_VERSION_MAJOR} (${CMAKE_CUDA_COMPILER_VERSION}). Please turn off the Molecularmaps plugin or install a correct version of CUDA." )
+  if(NOT ENABLE_CUDA)
+    message(FATAL_ERROR "The MolecularMaps plugin requires CUDA. Please enable it setting the option ENABLE_CUDA.")
   endif()
 
-  #NVCC options
-  set(CMAKE_CUDA_STANDARD 11)
-  set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -gencode arch=compute_30,code=sm_30")
-  set(CMAKE_CUDA_FLAGS_RELEASE "${CMAKE_CUDA_FLAGS} -O3")
+  project(molecularmaps LANGUAGES CXX CUDA)
+
+  if(NOT CMAKE_CUDA_COMPILER_VERSION VERSION_GREATER_EQUAL 8)
+    message(FATAL_ERROR "Molecularmaps currently only supports CUDA Version 8 or above. The version found was CUDA ${CMAKE_CUDA_COMPILER_VERSION}. Please turn off the Molecularmaps plugin or install a correct version of CUDA." )
+  endif()
   
   get_filename_component(cuda_compiler_directory "${CMAKE_CUDA_COMPILER}" DIRECTORY)
   
@@ -35,14 +26,14 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   # afterwards list the dependencies.
   set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE BUILD_PROTEIN_CALLS_PLUGIN BUILD_GEOMETRY_CALLS_PLUGIN" CACHE INTERNAL "")
 
-  set(LIBS vislib core glad protein_calls geometry_calls)
-  
-  if(MSVC)
-    include_directories("include" "src" "src/helper_includes" "src/Eigen")
-  else()
-    get_filename_component(CUDA_BIN_DIR ${CMAKE_CUDA_COMPILER} DIRECTORY)
-    include_directories("include" "src" "src/helper_includes" "src/Eigen" ${CUDA_BIN_DIR}/../include)
-    add_definitions(-D__CUDACC__)
+  get_filename_component(CUDA_COMPILER_DIRECTORY  "${CMAKE_CUDA_COMPILER}" DIRECTORY)
+
+  get_filename_component(CUDA_BIN_DIR ${CMAKE_CUDA_COMPILER} DIRECTORY)
+  include_directories("include" "src" "src/helper_includes" "src/Eigen" ${CUDA_BIN_DIR}/../include)
+
+  # Suppress warnings
+  if(SUPPRESS_CUDA_WARNINGS)
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcompiler \"-w\"")
   endif()
 
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
@@ -56,8 +47,6 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   file(GLOB_RECURSE cuda_helpers RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/helper_includes/*.h")
   
   set_source_files_properties(cuda_source_files PROPERTIES LANGUAGE CUDA)
-  set_source_files_properties(cuda_header_files PROPERTIES LANGUAGE CUDA)
-  set_source_files_properties(cuda_helpers PROPERTIES LANGUAGE CUDA)
   
   if(UNIX)
     list(REMOVE_ITEM source_files "src/dllmain.cpp")
@@ -65,12 +54,10 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   
   # Target definition
   add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files} ${cuda_header_files} ${cuda_source_files} ${cuda_helpers})
-  #add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${source_files})
-  add_dependencies(${PROJECT_NAME} vislib core protein_calls geometry_calls)
   # Set target naming conventions for different build types
-  set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
+  set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg" CUDA_STANDARD 11)
   # Dependent projects only need to link against the core.so itself.
-  target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS})
+  target_link_libraries(${PROJECT_NAME} PRIVATE core geometry_calls protein_calls)
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
