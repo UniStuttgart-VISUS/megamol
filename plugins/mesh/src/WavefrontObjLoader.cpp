@@ -6,7 +6,7 @@
 
 megamol::mesh::WavefrontObjLoader::WavefrontObjLoader()
     : core::Module()
-    , m_update_hash(0)
+    , m_meta_data()
     , m_filename_slot("Wavefront OBJ filename", "The name of the obj file to load")
     , m_getData_slot("CallMesh", "The slot publishing the loaded data") {
     this->m_getData_slot.SetCallback(CallMesh::ClassName(), "GetData", &WavefrontObjLoader::getDataCallback);
@@ -19,9 +19,91 @@ megamol::mesh::WavefrontObjLoader::WavefrontObjLoader()
 
 megamol::mesh::WavefrontObjLoader::~WavefrontObjLoader() {}
 
-bool megamol::mesh::WavefrontObjLoader::create(void) { return false; }
+bool megamol::mesh::WavefrontObjLoader::create(void) { return true; }
 
-bool megamol::mesh::WavefrontObjLoader::getDataCallback(core::Call& caller) { return false; }
+bool megamol::mesh::WavefrontObjLoader::getDataCallback(core::Call& caller) {
+
+    CallMesh* cm = dynamic_cast<CallMesh*>(&caller);
+
+    // TODO detect whether a mesh data collection is given by lhs caller (chaining)
+
+    if (cm == NULL) return false;
+
+    if (this->m_filename_slot.IsDirty()) {
+        m_filename_slot.ResetDirty();
+
+        auto vislib_filename = m_filename_slot.Param<core::param::FilePathParam>()->Value();
+        std::string filename(vislib_filename.PeekBuffer());
+
+        m_obj_model = std::make_shared<TinyObjModel>();
+
+        std::string warn;
+        std::string err;
+
+        bool ret = tinyobj::LoadObj(
+            &m_obj_model->attrib, &m_obj_model->shapes, &m_obj_model->materials, &warn, &err, filename.c_str());
+
+        if (!warn.empty()) {
+            std::cout << warn << std::endl;
+        }
+
+        if (!err.empty()) {
+            std::cerr << err << std::endl;
+        }
+
+        if (!ret) {
+            return false;
+        }
+
+        size_t vertex_cnt = m_obj_model->shapes.size() * 3;
+        this->m_positions.clear();
+        this->m_normals.clear();
+        this->m_texcoords.clear();
+        this->m_positions.reserve(vertex_cnt);
+        this->m_normals.reserve(vertex_cnt);
+        this->m_texcoords.reserve(vertex_cnt);
+
+        // Loop over shapes
+        for (size_t s = 0; s < m_obj_model->shapes.size(); s++) {
+            // Loop over faces(polygon)
+            size_t index_offset = 0;
+            for (size_t f = 0; f < m_obj_model->shapes[s].mesh.num_face_vertices.size(); f++) {
+                int fv = m_obj_model->shapes[s].mesh.num_face_vertices[f];
+
+                assert(fv == 3); // assume that triangulation was forced
+
+                // Loop over vertices in the face.
+                for (size_t v = 0; v < fv; v++) {
+                    // access to vertex
+                    tinyobj::index_t idx = m_obj_model->shapes[s].mesh.indices[index_offset + v];
+                    tinyobj::real_t vx = m_obj_model->attrib.vertices[3 * idx.vertex_index + 0];
+                    tinyobj::real_t vy = m_obj_model->attrib.vertices[3 * idx.vertex_index + 1];
+                    tinyobj::real_t vz = m_obj_model->attrib.vertices[3 * idx.vertex_index + 2];
+                    tinyobj::real_t nx = m_obj_model->attrib.normals[3 * idx.normal_index + 0];
+                    tinyobj::real_t ny = m_obj_model->attrib.normals[3 * idx.normal_index + 1];
+                    tinyobj::real_t nz = m_obj_model->attrib.normals[3 * idx.normal_index + 2];
+                    tinyobj::real_t tx = m_obj_model->attrib.texcoords[2 * idx.texcoord_index + 0];
+                    tinyobj::real_t ty = m_obj_model->attrib.texcoords[2 * idx.texcoord_index + 1];
+
+                    this->m_positions.insert(m_positions.end(), {vx,vy,vz} );
+                    this->m_normals.insert(m_positions.end(), {nx, ny, nz});
+                    this->m_texcoords.insert(m_positions.end(), {tx, ty});
+                }
+                index_offset += fv;
+
+                // per-face material
+                // m_obj_model->shapes[s].mesh.material_ids[f];
+            }
+        }
+
+        //this->m_mesh_data_access->addMesh(/*TODO*/);
+
+        ++(m_meta_data.m_data_hash);
+    }
+
+    cm->setMetaData(m_meta_data);
+    cm->setData(m_mesh_data_access);
+}
 
 bool megamol::mesh::WavefrontObjLoader::getMetaDataCallback(core::Call& caller) { return false; }
 

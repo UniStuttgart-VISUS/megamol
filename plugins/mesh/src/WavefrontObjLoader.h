@@ -10,8 +10,11 @@
 
 #include "mesh/MeshCalls.h"
 #include "mesh/mesh.h"
+#include "mesh/MeshDataAccessCollection.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
+
+#include "tiny_obj_loader.h"
 
 namespace megamol {
 namespace mesh {
@@ -67,12 +70,43 @@ protected:
     void release();
 
 private:
-    struct InternalMeshDataStorage
-    {
 
+    struct TinyObjModel 
+    {
+        tinyobj::attrib_t                attrib;
+        std::vector<tinyobj::shape_t>    shapes;
+        std::vector<tinyobj::material_t> materials;
     };
 
-    size_t m_update_hash;
+    /**
+     * Representation of obj model as loaded by tinyobjloader
+     */
+    std::shared_ptr<TinyObjModel> m_obj_model;
+
+    /**
+     * Internal storage for unpacked positions, i.e one position per vertex, three vertices per triangle
+     */
+    std::vector<float> m_positions;
+
+    /**
+     * Internal storage for unpacked normals, i.e one normal per vertex, three vertices per triangle
+     */
+    std::vector<float> m_normals;
+
+    /**
+     * Internal storage for unpacked texcoords, i.e one texcoord per vertex, three vertices per triangle
+     */
+    std::vector<float> m_texcoords;
+
+    /**
+     * Shareable access to the internally stored mesh data from loaded obj file.
+     */
+    std::shared_ptr<MeshDataAccessCollection> m_mesh_data_access;
+
+    /**
+     * Meta data for communicating data updates, as well as data size
+     */
+    Spatial3DMetaData m_meta_data;
 
     /** The gltf file name */
     core::param::ParamSlot m_filename_slot;
@@ -80,7 +114,7 @@ private:
     /** The slot for requesting data */
     megamol::core::CalleeSlot m_getData_slot;
 
-    //TODO slot for chaining
+    // TODO slot for chaining
 };
 
 } // namespace mesh
@@ -88,4 +122,3 @@ private:
 
 
 #endif // !#ifndef WAVEFRONT_OBJ_LOADER_H_INCLUDED
-
