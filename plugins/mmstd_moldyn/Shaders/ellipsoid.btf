@@ -8,7 +8,7 @@
 // electrostatics is used as it contains the same lighting method as the original GLSLEllipsoidRenderer used
 #define CLIP
 #define DEPTH
-#define SMALL_SPRITE_LIGHTING
+//#define SMALL_SPRITE_LIGHTING
 //#define CALC_CAM_SYS
 
 #ifdef DEBUG
@@ -29,7 +29,7 @@
   </snippet>
 
   <shader name="vertex">
-    <snippet type="version">110</snippet>
+    <snippet type="version">120</snippet>
     <snippet name="commondefines"/>
     <snippet type="string">
       <!--
@@ -54,6 +54,7 @@ varying vec3 dRadz; // ?
 varying vec3 rotMatT0;
 varying vec3 rotMatT1; // rotation matrix from the quaternion
 varying vec3 rotMatT2;
+varying mat3 rotMatIT;
 
 #ifdef RETICLE
 varying vec2 centerFragment;
@@ -88,6 +89,8 @@ void main() {
     rotMatT2 = rotMatT2 + rotMatT2;                           	// matrix2 <- (2(xz+yw), 2(yz-xw), 2(ww+zz)-1, %)    
     // End: Holy code!
 
+    rotMatIT = mat3(rotMatT0, rotMatT1, rotMatT2);
+    rotMatIT = transpose(rotMatIT);
 
     // calculate cam position
     tmp = gl_ModelViewMatrixInverse[3]; // (C) by Christoph
@@ -102,15 +105,16 @@ void main() {
 
 
     // calculate light position in glyph space
-    lightPos = gl_ModelViewMatrixInverse * gl_LightSource[0].position - objPos; // note: w is bs now!
+    //lightPos = gl_ModelViewMatrixInverse * gl_LightSource[0].position - objPos; // note: w is bs now!
     // TODO: light rotation mit rotMat transposed
     //lightPos.x = dot(rotMatT0, lightPos.xyz);
     //lightPos.y = dot(rotMatT1, lightPos.xyz);
     //lightPos.z = dot(rotMatT2, lightPos.xyz);
-    lightPos.xyz = rotMatT0 * lightPos.x + rotMatT1 * lightPos.y + rotMatT2 * lightPos.z;
+    //lightPos.xyz = rotMatT0 * lightPos.x + rotMatT1 * lightPos.y + rotMatT2 * lightPos.z;
     // Do not scale light position, so we can use the "faked" parameter space normals
+    lightPos = gl_ModelViewMatrixTranspose * gl_LightSource[0].position; // transpose of inverse inverse -> directional light
     
-//    lightPos.xyz *= dRadz;
+    //lightPos.xyz *= dRadz;
 
 
     // send color to fragment shader
@@ -236,6 +240,8 @@ varying vec2 centerFragment;
 varying vec3 rotMatT0;
 varying vec3 rotMatT1; // rotation matrix from the quaternion
 varying vec3 rotMatT2;
+varying mat3 rotMatIT;
+
 void main() {
     vec4 coord;
     vec3 ray, tmp;
@@ -277,7 +283,8 @@ void main() {
     normal = mix(-ray, normal, lightPos.w);
     #endif // SMALL_SPRITE_LIGHTING
 
-
+    normal = rotMatIT * normal;
+    ray = rotMatIT * ray;
     // chose color for lighting
     // Because of some reason color is either not set or not accessible
     vec3 color = gl_Color.rgb;
@@ -285,12 +292,6 @@ void main() {
     // Set the default global color from case 1 in the renderer manually 
     color = vec3(0.698, 0.698, 0.698);
     
-
-  
-    // phong lighting with directional light, colors are hardcoded as they're inaccessible for some reason
-    gl_FragColor = vec4(LocalLighting(ray, normal, lightPos.xyz, color), 1.0);
-    
-
     // calculate depth
     // TODO: rewrite with rotation with untransposed
     #ifdef DEPTH
@@ -303,6 +304,11 @@ void main() {
     sphereintersection.x = dot(rotMatT0, tmp.xyz);
     sphereintersection.y = dot(rotMatT1, tmp.xyz);
     sphereintersection.z = dot(rotMatT2, tmp.xyz);
+
+    // phong lighting with directional light, colors are hardcoded as they're inaccessible for some reason
+    gl_FragColor = vec4(LocalLighting(ray, normal, lightPos.xyz, color), 1.0);
+    //gl_FragColor = vec4(LocalLighting(ray, normalize(sphereintersection), lightPos.xyz, color), 1.0);
+
 
     sphereintersection += objPos.xyz;
 
