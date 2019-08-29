@@ -15,11 +15,11 @@
 
 #include "mesh/MeshCalls.h"
 
-using namespace megamol::core;
+using namespace megamol;
 using namespace megamol::mesh;
 
 RenderMDIMesh::RenderMDIMesh()
-	: Renderer3DModule(),
+	: Renderer3DModule_2(),
 	m_render_task_callerSlot("getRenderTaskData", "Connects the renderer with a render task data source")
 {
 	this->m_render_task_callerSlot.SetCompatibleCall<GPURenderTasksDataCallDescription>();
@@ -125,9 +125,9 @@ void RenderMDIMesh::release()
 	m_per_frame_data.reset();
 }
 
-bool RenderMDIMesh::GetExtents(megamol::core::Call& call)
-{
-	view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
+bool RenderMDIMesh::GetExtents(core::view::CallRender3D_2& call) {
+
+    megamol::core::view::CallRender3D_2* cr = &call; // dynamic_cast<core::view::CallRender3D_2*>(&call);
 	if (cr == NULL)
 		return false;
 
@@ -143,70 +143,22 @@ bool RenderMDIMesh::GetExtents(megamol::core::Call& call)
 
 	cr->SetTimeFramesCount(meta_data.m_frame_cnt);
     cr->AccessBoundingBoxes() = meta_data.m_bboxs;
-	cr->AccessBoundingBoxes().MakeScaledWorld(1.0f);
 
 	return true;
 }
 
-bool RenderMDIMesh::Render(megamol::core::Call& call)
-{
+bool RenderMDIMesh::Render(core::view::CallRender3D_2& call) {
 	
-	megamol::core::view::CallRender3D *cr = dynamic_cast<core::view::CallRender3D*>(&call);
+	megamol::core::view::CallRender3D_2* cr = &call; //dynamic_cast<core::view::CallRender3D_2*>(&call);
 	if (cr == NULL) return false;
 	
-	// manual creation of projection and view matrix
-	GLfloat fovy = (cr->GetCameraParameters()->ApertureAngle() / 180.0f) * 3.14f;
-	GLfloat near_clip = cr->GetCameraParameters()->NearClip();
-	GLfloat far_clip = cr->GetCameraParameters()->FarClip();
-	GLfloat f = 1.0f / std::tan(fovy / 2.0f);
-	GLfloat nf = 1.0f / (near_clip - far_clip);
-	GLfloat aspect_ratio = static_cast<GLfloat>(cr->GetViewport().AspectRatio());
-	std::array<GLfloat, 16> projection_matrix;
-	projection_matrix[0] = f / aspect_ratio;
-	projection_matrix[1] = 0.0f;
-	projection_matrix[2] = 0.0f;
-	projection_matrix[3] = 0.0f;
-	projection_matrix[4] = 0.0f;
-	projection_matrix[5] = f;
-	projection_matrix[6] = 0.0f;
-	projection_matrix[7] = 0.0f;
-	projection_matrix[8] = 0.0f;
-	projection_matrix[9] = 0.0f;
-	projection_matrix[10] = (far_clip + near_clip) * nf;
-	projection_matrix[11] = -1.0f;
-	projection_matrix[12] = 0.0f;
-	projection_matrix[13] = 0.0f;
-	projection_matrix[14] = (2.0f * far_clip * near_clip) * nf;
-	projection_matrix[15] = 0.0f;
-	
-	auto cam_right = cr->GetCameraParameters()->Right();
-	auto cam_up = cr->GetCameraParameters()->Up();
-	auto cam_front = -cr->GetCameraParameters()->Front();
-	auto cam_position = cr->GetCameraParameters()->Position();
-	std::array<GLfloat, 16> view_matrix;
-	view_matrix[0] = cam_right.X();
-	view_matrix[1] = cam_up.X();
-	view_matrix[2] = cam_front.X();
-	view_matrix[3] = 0.0f;
-	
-	view_matrix[4] = cam_right.Y();
-	view_matrix[5] = cam_up.Y();
-	view_matrix[6] = cam_front.Y();
-	view_matrix[7] = 0.0f;
-	
-	view_matrix[8] = cam_right.Z();
-	view_matrix[9] = cam_up.Z();
-	view_matrix[10] = cam_front.Z();
-	view_matrix[11] = 0.0f;
-	
-	view_matrix[12] = - (cam_position.X()*cam_right.X() + cam_position.Y()*cam_right.Y() + cam_position.Z()*cam_right.Z());
-	view_matrix[13] = - (cam_position.X()*cam_up.X() + cam_position.Y()*cam_up.Y() + cam_position.Z()*cam_up.Z());
-	view_matrix[14] = - (cam_position.X()*cam_front.X() + cam_position.Y()*cam_front.Y() + cam_position.Z()*cam_front.Z());
-	view_matrix[15] = 1.0f;
-	
-	// this is the apex of suck and must die
-    glGetFloatv(GL_MODELVIEW_MATRIX, view_matrix.data());
-    glGetFloatv(GL_PROJECTION_MATRIX, projection_matrix.data());
+    // obtain camera information
+    core::view::Camera_2 cam(cr->GetCamera());
+    cam_type::snapshot_type snapshot;
+    cam_type::matrix_type view_tmp, proj_tmp;
+    cam.calc_matrices(snapshot, view_tmp, proj_tmp, core::thecam::snapshot_content::all);
+    glm::mat4 view_mx = view_tmp;
+    glm::mat4 proj_mx = proj_tmp;
 	
 	CallGPURenderTaskData* task_call = this->m_render_task_callerSlot.CallAs<CallGPURenderTaskData>();
 	
@@ -242,8 +194,8 @@ bool RenderMDIMesh::Render(megamol::core::Call& call)
 		render_task.shader_program->Enable();
 		
 		// TODO introduce per frame "global" data buffer to store information like camera matrices?
-		glUniformMatrix4fv(render_task.shader_program->ParameterLocation("view_mx"), 1, GL_FALSE, view_matrix.data());
-		glUniformMatrix4fv(render_task.shader_program->ParameterLocation("proj_mx"), 1, GL_FALSE, projection_matrix.data());
+		glUniformMatrix4fv(render_task.shader_program->ParameterLocation("view_mx"), 1, GL_FALSE, glm::value_ptr(view_mx));
+		glUniformMatrix4fv(render_task.shader_program->ParameterLocation("proj_mx"), 1, GL_FALSE, glm::value_ptr(proj_mx));
 		
 		render_task.per_draw_data->bind(0);
 		

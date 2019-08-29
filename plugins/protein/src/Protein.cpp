@@ -11,7 +11,6 @@
 #include "protein/Protein.h"
 
 // views
-#include "View3DMouse.h"
 #include "View3DSpaceMouse.h"
 
 // jobs
@@ -20,12 +19,9 @@
 
 // 3D renderers
 #include "CartoonRenderer.h"
-#include "CartoonTessellationRenderer.h"
 #include "CartoonTessellationRenderer2000GT.h"
 #include "DofRendererDeferred.h"
-#include "ElectrostaticsRenderer.h"
 #include "GLSLVolumeRenderer.h"
-#include "HapticsMoleculeRenderer.h"
 #include "LayeredIsosurfaceRenderer.h"
 #include "MoleculeCartoonRenderer.h"
 #include "MoleculeSESRenderer.h"
@@ -35,8 +31,6 @@
 #include "SimpleMoleculeRenderer.h"
 #include "SolPathRenderer.h"
 #include "SolventVolumeRenderer.h"
-#include "SphereRenderer.h"
-#include "SphereRendererMouse.h"
 #include "ToonRendererDeferred.h"
 #include "UnstructuredGridRenderer.h"
 #include "VariantMatchRenderer.h"
@@ -146,14 +140,12 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::protein::PDBLoader>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::SimpleMoleculeRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::CoarseGrainDataLoader>();
-        this->module_descriptions.RegisterAutoDescription<megamol::protein::SphereRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::MoleculeSESRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::MoleculeCartoonRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::FrodockLoader>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::VolumeSliceRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::Diagram2DRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::XYZLoader>();
-        this->module_descriptions.RegisterAutoDescription<megamol::protein::ElectrostaticsRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::SolventVolumeRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::SolventHydroBondGenerator>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::View3DSpaceMouse>();
@@ -161,8 +153,6 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::protein::SSAORendererDeferred>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::ToonRendererDeferred>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::DofRendererDeferred>();
-        this->module_descriptions.RegisterAutoDescription<megamol::protein::SphereRendererMouse>();
-        this->module_descriptions.RegisterAutoDescription<megamol::protein::View3DMouse>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::GLSLVolumeRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::DiagramRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::SplitMergeRenderer>();
@@ -188,7 +178,6 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::protein::ColorModule>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::PDBInterpolator>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::CartoonRenderer>();
-        this->module_descriptions.RegisterAutoDescription<megamol::protein::CartoonTessellationRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::CartoonTessellationRenderer2000GT>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::ProteinExploder>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::MolecularNeighborhood>();

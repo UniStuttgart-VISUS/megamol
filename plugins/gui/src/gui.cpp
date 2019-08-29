@@ -13,6 +13,7 @@
 #include "vislib/vislibversion.h"
 
 #include "GUIView.h"
+#include "WatermarkRenderer.h"
 
 
 /* anonymous namespace hides this type from any other object files */
@@ -37,7 +38,11 @@ public:
         // here we could perform addition de-initialization
     }
     /** Registers modules and calls */
-    virtual void registerClasses(void) { this->module_descriptions.RegisterAutoDescription<megamol::gui::GUIView>(); }
+    virtual void registerClasses(void) {
+        this->module_descriptions.RegisterAutoDescription<megamol::gui::GUIView>();
+        this->module_descriptions.RegisterAutoDescription<megamol::gui::WatermarkRenderer>();
+    }
+
     MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics
 };
 } // namespace

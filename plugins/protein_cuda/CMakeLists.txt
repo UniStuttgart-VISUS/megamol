@@ -22,12 +22,8 @@ if(BUILD_PROTEIN_CUDA_PLUGIN)
 
   get_filename_component(CUDA_COMPILER_DIRECTORY  "${CMAKE_CUDA_COMPILER}" DIRECTORY)
 
-  if(MSVC)
-    include_directories("include" "src" "src/helper_includes")
-  else()
-    get_filename_component(CUDA_BIN_DIR ${CMAKE_CUDA_COMPILER} DIRECTORY)
-    include_directories("include" "src" "src/helper_includes" ${CUDA_BIN_DIR}/../include)
-  endif()
+  get_filename_component(CUDA_BIN_DIR ${CMAKE_CUDA_COMPILER} DIRECTORY)
+  include_directories("include" "src" "src/helper_includes" ${CUDA_BIN_DIR}/../include)
 
   # Suppress warnings
   if(SUPPRESS_CUDA_WARNINGS)
