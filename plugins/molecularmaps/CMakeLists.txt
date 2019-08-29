@@ -29,18 +29,19 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   get_filename_component(CUDA_COMPILER_DIRECTORY  "${CMAKE_CUDA_COMPILER}" DIRECTORY)
 
   get_filename_component(CUDA_BIN_DIR ${CMAKE_CUDA_COMPILER} DIRECTORY)
-  include_directories("include" "src" "src/helper_includes" "src/Eigen" ${CUDA_BIN_DIR}/../include)
+  include_directories("src/helper_includes" ${CUDA_BIN_DIR}/../include)
 
   # Suppress warnings
   if(SUPPRESS_CUDA_WARNINGS)
     set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcompiler \"-w\"")
   endif()
+  
+  require_external(Eigen)
 
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
-  file(GLOB header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h") # The GLOB here is necessary since it seems not possible to remove the Eigen headers otherwise
+  file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
   file(GLOB_RECURSE shader_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Shaders/*")
-  file(GLOB_RECURSE eigen_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/Eigen/*.h")
   # CUDA related files
   file(GLOB_RECURSE cuda_source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cu")
   file(GLOB_RECURSE cuda_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cuh")
@@ -57,15 +58,15 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   # Set target naming conventions for different build types
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg" CUDA_STANDARD 11)
   # Dependent projects only need to link against the core.so itself.
-  target_link_libraries(${PROJECT_NAME} PRIVATE core geometry_calls protein_calls)
-  target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
+  target_link_libraries(${PROJECT_NAME} PRIVATE core geometry_calls protein_calls Eigen)
+  target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+	PUBLIC "include" "src")
 
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
 
   # Installation rules for generated files
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders/ DESTINATION "share/shaders")
-  install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/Eigen/ DESTINATION "include/Eigen")
   if(WIN32)
     install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
     install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION "lib")
