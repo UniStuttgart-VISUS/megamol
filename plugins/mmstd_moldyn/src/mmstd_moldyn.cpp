@@ -30,6 +30,7 @@
 #include "mmstd_moldyn/BrickStatsCall.h"
 #include "io/BrickStatsDataSource.h"
 #include "rendering/BrickStatsRenderer.h"
+#include "rendering/EllipsoidRenderer.h"
 
 
 /*
@@ -124,6 +125,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::io::TclMolSelectionLoader>();
             this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::BrickStatsDataSource>();
             this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::rendering::BrickStatsRenderer>();
+            this->module_descriptions.RegisterAutoDescription<::megamol::stdplugin::moldyn::rendering::EllipsoidRenderer>();
             // register calls here:
             this->call_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::BrickStatsCall>();
         }
