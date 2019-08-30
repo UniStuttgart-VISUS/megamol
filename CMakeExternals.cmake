@@ -1,3 +1,4 @@
+include(FetchContent)
 #
 # Centralized function to require externals to add them once by invoking
 # require_external(<EXTERNAL_TARGET>).
@@ -33,7 +34,8 @@ function(require_external NAME)
 
     add_external_project(libzmq_ext
       GIT_REPOSITORY https://github.com/zeromq/libzmq.git
-	  GIT_TAG 56ace6d03f521b9abb5a50176ec7763c1b77afa9 # We need https://github.com/zeromq/libzmq/pull/3636
+      GIT_TAG 56ace6d03f521b9abb5a50176ec7763c1b77afa9 # We need https://github.com/zeromq/libzmq/pull/3636
+      UPDATE_COMMAND ""
       #GIT_TAG ${ZMQ_TAG}
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${ZMQ_IMPORT_DEBUG}" "<INSTALL_DIR>/${ZMQ_IMPORT_RELEASE}"
       CMAKE_ARGS
@@ -53,7 +55,8 @@ function(require_external NAME)
       CONFIGURE_COMMAND ""
       BUILD_COMMAND ""
       INSTALL_COMMAND ""
-      TEST_COMMAND "")
+      TEST_COMMAND ""
+      UPDATE_COMMAND "")
     add_external_library(libcppzmq INTERFACE
       DEPENDS libcppzmq_ext
       INCLUDE_DIR "src/libcppzmq_ext/")
@@ -76,6 +79,7 @@ function(require_external NAME)
     add_external_project(zlib_ext
       GIT_REPOSITORY https://github.com/madler/zlib.git
       GIT_TAG "v1.2.11"
+      UPDATE_COMMAND ""
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${ZLIB_DEBUG}" "<INSTALL_DIR>/${ZLIB_RELEASE}"
       CMAKE_ARGS
         -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON)
@@ -104,6 +108,7 @@ function(require_external NAME)
     add_external_project(libpng_ext
       GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/libpng.git
       GIT_TAG "v1.6.34"
+      UPDATE_COMMAND ""
       DEPENDS zlib_ext
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${LIBPNG_DEBUG}" "<INSTALL_DIR>/${LIBPNG_RELEASE}"
       CMAKE_ARGS
@@ -133,6 +138,7 @@ function(require_external NAME)
     add_external_project(zfp_ext
       GIT_REPOSITORY https://github.com/LLNL/zfp.git
       GIT_TAG "0.5.2"
+      UPDATE_COMMAND ""
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${ZFP_LIB}"
       CMAKE_ARGS
         -DBUILD_SHARED_LIBS=OFF
@@ -157,6 +163,7 @@ function(require_external NAME)
       BUILD_COMMAND ""
       INSTALL_COMMAND ""
       TEST_COMMAND ""
+      UPDATE_COMMAND ""
       CMAKE_ARGS -DGLM_TEST_ENABLE=OFF)
     add_external_library(glm INTERFACE
       DEPENDS glm_ext
@@ -173,7 +180,8 @@ function(require_external NAME)
       CONFIGURE_COMMAND ""
       BUILD_COMMAND ""
       INSTALL_COMMAND ""
-      TEST_COMMAND "")
+      TEST_COMMAND ""
+      UPDATE_COMMAND "")
     add_external_library(glowl INTERFACE
       DEPENDS glowl_ext
       INCLUDE_DIR "src/glowl_ext/include")
@@ -190,6 +198,7 @@ function(require_external NAME)
       BUILD_COMMAND ""
       INSTALL_COMMAND ""
       TEST_COMMAND ""
+      UPDATE_COMMAND ""
       CMAKE_ARGS -DBUILD_TESTING=OFF)
     add_external_library(json INTERFACE
       DEPENDS json_ext
@@ -206,7 +215,8 @@ function(require_external NAME)
       CONFIGURE_COMMAND ""
       BUILD_COMMAND ""
       INSTALL_COMMAND ""
-      TEST_COMMAND "")
+      TEST_COMMAND ""
+      UPDATE_COMMAND "")
     add_external_library(Eigen INTERFACE
       DEPENDS Eigen_ext
       INCLUDE_DIR "src/Eigen_ext")
@@ -222,7 +232,8 @@ function(require_external NAME)
       CONFIGURE_COMMAND ""
       BUILD_COMMAND ""
       INSTALL_COMMAND ""
-      TEST_COMMAND "")
+      TEST_COMMAND ""
+      UPDATE_COMMAND "")
     add_external_library(nanoflann INTERFACE
       DEPENDS nanoflann_ext
       INCLUDE_DIR "src/nanoflann_ext/include")
@@ -238,7 +249,8 @@ function(require_external NAME)
       CONFIGURE_COMMAND ""
       BUILD_COMMAND ""
       INSTALL_COMMAND ""
-      TEST_COMMAND "")
+      TEST_COMMAND ""
+      UPDATE_COMMAND "")
     add_external_library(Delaunator INTERFACE
       DEPENDS Delaunator_ext
       INCLUDE_DIR "src/Delaunator_ext/include")
@@ -293,6 +305,7 @@ function(require_external NAME)
     endif()
     add_external_project(quickhull_ext
       GIT_REPOSITORY https://github.com/akuukka/quickhull.git
+      UPDATE_COMMAND ""
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${QUICKHULL_IMPORT_LIB}"
       PATCH_COMMAND ${CMAKE_COMMAND} -E copy
         "${CMAKE_CURRENT_SOURCE_DIR}/cmake/quickhull/CMakeLists.txt"

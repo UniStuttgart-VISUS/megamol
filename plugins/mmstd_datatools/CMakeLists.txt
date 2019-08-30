@@ -34,6 +34,7 @@ if(BUILD_MMSTD_DATATOOLS_PLUGIN)
   add_external_project(tinyply_ext
     GIT_REPOSITORY https://github.com/ddiakopoulos/tinyply.git
     GIT_TAG "2.1"
+    UPDATE_COMMAND ""
     BUILD_BYPRODUCTS "<INSTALL_DIR>/${TNY_IMPORT_LIB_DEBUG}" "<INSTALL_DIR>/${TNY_IMPORT_LIB}"
     CMAKE_ARGS -DSHARED_LIB=true)
   add_external_library(tinyply SHARED
@@ -48,7 +49,8 @@ if(BUILD_MMSTD_DATATOOLS_PLUGIN)
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
     INSTALL_COMMAND ""
-    TEST_COMMAND "")
+    TEST_COMMAND ""
+    UPDATE_COMMAND "")
   add_external_library(mmpld_io INTERFACE
     DEPENDS mmpld_io_ext
     INCLUDE_DIR "src/mmpld_io_ext/include")

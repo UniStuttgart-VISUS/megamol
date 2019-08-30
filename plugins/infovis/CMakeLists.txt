@@ -19,6 +19,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   add_external_project(bhtsne_ext
     GIT_REPOSITORY  https://github.com/lvdmaaten/bhtsne.git
     GIT_TAG "36b169c88250d0afe51828448dfdeeaa508f13bc"
+    UPDATE_COMMAND ""
     BUILD_BYPRODUCTS "<INSTALL_DIR>/${BHTSNE_LIB_DEBUG}" "<INSTALL_DIR>/${BHTSNE_LIB_RELEASE}"
     PATCH_COMMAND ${CMAKE_COMMAND} -E copy
       "${CMAKE_CURRENT_SOURCE_DIR}/cmake/bhtsne/CMakeLists.txt"

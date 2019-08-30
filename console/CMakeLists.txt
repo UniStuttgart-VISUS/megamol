@@ -40,6 +40,7 @@ if(BUILD_CONSOLE)
     add_external_project(glfw_ext
       GIT_REPOSITORY https://github.com/glfw/glfw.git
       GIT_TAG "3.2.1"
+      UPDATE_COMMAND ""
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${GLFW_IMPORT_LIBRARY}"
       CMAKE_ARGS
         -DBUILD_SHARED_LIBS=ON

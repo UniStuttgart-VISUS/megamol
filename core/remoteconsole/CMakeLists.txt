@@ -18,7 +18,8 @@ if(BUILD_REMOTECONSOLE)
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
     INSTALL_COMMAND ""
-    TEST_COMMAND "")
+    TEST_COMMAND ""
+    UPDATE_COMMAND "")
   add_external_library(libcxxopts INTERFACE
     DEPENDS libcxxopts_ext
     INCLUDE_DIR "src/libcxxopts_ext/include/")

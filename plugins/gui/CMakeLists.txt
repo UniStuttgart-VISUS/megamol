@@ -18,6 +18,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   add_external_project(ImGui_ext
     GIT_REPOSITORY https://github.com/ocornut/imgui.git
     GIT_TAG "v1.70"
+    UPDATE_COMMAND ""
     BUILD_BYPRODUCTS "<INSTALL_DIR>/${IMGUI_LIB}"
     PATCH_COMMAND ${CMAKE_COMMAND} -E copy
       "${CMAKE_CURRENT_SOURCE_DIR}/cmake/ImGui/CMakeLists.txt"
