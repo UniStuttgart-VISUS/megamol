@@ -71,7 +71,7 @@ namespace mesh {
          *
          * @return The return value of the function.
          */
-        bool GetExtents(core::Call& call);
+        bool GetExtents(core::view::CallRender3D_2& call);
 
         /**
          * The render callback.
@@ -80,7 +80,7 @@ namespace mesh {
          *
          * @return The return value of the function.
          */
-        bool Render(core::Call& call);
+        bool Render(core::view::CallRender3D_2& call);
     
     private:
 
@@ -102,8 +102,8 @@ namespace mesh {
         bool m_show_guides; // TODO move to RenderTask Storage?
         
         // TODO local storage of projection and view matrix (for 3D space interaction computations)
-        vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> m_view_mx_cpy;
-        vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> m_proj_mx_cpy;
+        glm::mat4 m_view_mx_cpy;
+        glm::mat4 m_proj_mx_cpy;
 
         std::unique_ptr<glowl::FramebufferObject> m_fbo;
 

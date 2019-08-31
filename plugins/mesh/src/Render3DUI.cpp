@@ -54,32 +54,35 @@ bool megamol::mesh::Render3DUI::OnMouseMove(double x, double y) {
             if (interaction.type == InteractionType::MOVE_ALONG_AXIS)
             {
 
-                vislib::math::Vector<float,4> tgt_pos(interaction.origin_x,interaction.origin_y,interaction.origin_z,1.0f);
+                glm::vec4 tgt_pos(interaction.origin_x,interaction.origin_y,interaction.origin_z,1.0f);
                 //vislib::math::Vector<float, 3> cam_pos = GCoreComponents::transformManager().getWorldPosition(active_camera);
 
                 // Compute tgt pos and tgt + transform axisvector in screenspace
-                vislib::math::Vector<float, 4> obj_ss = m_proj_mx_cpy * m_view_mx_cpy * tgt_pos;
-                obj_ss /= obj_ss.W();
+                glm::vec4 obj_ss = m_proj_mx_cpy * m_view_mx_cpy * tgt_pos;
+                obj_ss /= obj_ss.w;
 
-                vislib::math::Vector<float, 4> transform_tgt = tgt_pos + vislib::math::Vector<float, 4>(interaction.axis_x, interaction.axis_y, interaction.axis_z, 0.0f);
-                vislib::math::Vector<float, 4> transform_tgt_ss = m_proj_mx_cpy * m_view_mx_cpy * transform_tgt;
-                transform_tgt_ss /= transform_tgt_ss.W();
+                glm::vec4 transform_tgt = tgt_pos + glm::vec4(interaction.axis_x, interaction.axis_y, interaction.axis_z, 0.0f);
+                glm::vec4 transform_tgt_ss = m_proj_mx_cpy * m_view_mx_cpy * transform_tgt;
+                transform_tgt_ss /= transform_tgt_ss.w;
 
-                vislib::math::Vector<float, 2> transform_axis_ss =
-                    vislib::math::Vector<float, 2>(transform_tgt_ss.X(), transform_tgt_ss.Y()) -
-                    vislib::math::Vector<float, 2>(obj_ss.X(), obj_ss.Y());
+                glm::vec2 transform_axis_ss =
+                    glm::vec2(transform_tgt_ss.x, transform_tgt_ss.y) -
+                    glm::vec2(obj_ss.x, obj_ss.y);
 
-                vislib::math::Vector<float, 2> mouse_move =
-                    vislib::math::Vector<float, 2>(static_cast<float>(dx), static_cast<float>(dy)) * 2.0f;
+                glm::vec2 mouse_move =
+                    glm::vec2(static_cast<float>(dx), static_cast<float>(dy)) * 2.0f;
 
                 float scale = 0.0f;
 
-                if (transform_axis_ss.Length() > 0.0)
+                if (transform_axis_ss.length() > 0.0)
                 {
-                    auto mm_lenght = mouse_move.Normalise();
-                    auto ta_ss_length = transform_axis_ss.Normalise();
+                    auto mm_lenght = mouse_move.length();
+                    auto ta_ss_length = transform_axis_ss.length();
 
-                    scale = mouse_move.Dot(transform_axis_ss);
+                    auto mm_norm = glm::normalize(mouse_move);
+                    auto ta_ss_norm = glm::normalize(transform_axis_ss);
+
+                    scale = glm::dot(mm_norm, ta_ss_norm);
                     scale *= (mm_lenght / ta_ss_length);
                 }
 
@@ -118,71 +121,24 @@ bool megamol::mesh::Render3DUI::create() { return true; }
 
 void megamol::mesh::Render3DUI::release() { m_fbo.reset(); }
 
-bool megamol::mesh::Render3DUI::GetExtents(core::Call& call) {
+bool megamol::mesh::Render3DUI::GetExtents(core::view::CallRender3D_2& call) {
     RenderMDIMesh::GetExtents(call);
 
     return true;
 }
 
-bool megamol::mesh::Render3DUI::Render(core::Call& call) {
+bool megamol::mesh::Render3DUI::Render(core::view::CallRender3D_2& call) {
 
-    megamol::core::view::CallRender3D* cr = dynamic_cast<core::view::CallRender3D*>(&call);
+    core::view::CallRender3D_2* cr = dynamic_cast<core::view::CallRender3D_2*>(&call);
     if (cr == NULL) return false;
 
-
-    // manual creation of projection and view matrix
-    GLfloat fovy = (cr->GetCameraParameters()->ApertureAngle() / 180.0f) * 3.14f;
-    GLfloat near_clip = cr->GetCameraParameters()->NearClip();
-    GLfloat far_clip = cr->GetCameraParameters()->FarClip();
-    GLfloat f = 1.0f / std::tan(fovy / 2.0f);
-    GLfloat nf = 1.0f / (near_clip - far_clip);
-    GLfloat aspect_ratio = static_cast<GLfloat>(cr->GetViewport().AspectRatio());
-    
-    m_proj_mx_cpy.PeekComponents()[0] = f / aspect_ratio;
-    m_proj_mx_cpy.PeekComponents()[1] = 0.0f;
-    m_proj_mx_cpy.PeekComponents()[2] = 0.0f;
-    m_proj_mx_cpy.PeekComponents()[3] = 0.0f;
-    m_proj_mx_cpy.PeekComponents()[4] = 0.0f;
-    m_proj_mx_cpy.PeekComponents()[5] = f;
-    m_proj_mx_cpy.PeekComponents()[6] = 0.0f;
-    m_proj_mx_cpy.PeekComponents()[7] = 0.0f;
-    m_proj_mx_cpy.PeekComponents()[8] = 0.0f;
-    m_proj_mx_cpy.PeekComponents()[9] = 0.0f;
-    m_proj_mx_cpy.PeekComponents()[10] = (far_clip + near_clip) * nf;
-    m_proj_mx_cpy.PeekComponents()[11] = -1.0f;
-    m_proj_mx_cpy.PeekComponents()[12] = 0.0f;
-    m_proj_mx_cpy.PeekComponents()[13] = 0.0f;
-    m_proj_mx_cpy.PeekComponents()[14] = (2.0f * far_clip * near_clip) * nf;
-    m_proj_mx_cpy.PeekComponents()[15] = 0.0f;
-
-    auto cam_right = cr->GetCameraParameters()->Right();
-    auto cam_up = cr->GetCameraParameters()->Up();
-    auto cam_front = -cr->GetCameraParameters()->Front();
-    auto cam_position = cr->GetCameraParameters()->Position();
-    
-    m_view_mx_cpy.PeekComponents()[0] = cam_right.X();
-    m_view_mx_cpy.PeekComponents()[1] = cam_up.X();
-    m_view_mx_cpy.PeekComponents()[2] = cam_front.X();
-    m_view_mx_cpy.PeekComponents()[3] = 0.0f;
-
-    m_view_mx_cpy.PeekComponents()[4] = cam_right.Y();
-    m_view_mx_cpy.PeekComponents()[5] = cam_up.Y();
-    m_view_mx_cpy.PeekComponents()[6] = cam_front.Y();
-    m_view_mx_cpy.PeekComponents()[7] = 0.0f;
-
-    m_view_mx_cpy.PeekComponents()[8] = cam_right.Z();
-    m_view_mx_cpy.PeekComponents()[9] = cam_up.Z();
-    m_view_mx_cpy.PeekComponents()[10] = cam_front.Z();
-    m_view_mx_cpy.PeekComponents()[11] = 0.0f;
-
-    m_view_mx_cpy.PeekComponents()[12] =
-        -(cam_position.X() * cam_right.X() + cam_position.Y() * cam_right.Y() + cam_position.Z() * cam_right.Z());
-    m_view_mx_cpy.PeekComponents()[13] =
-        -(cam_position.X() * cam_up.X() + cam_position.Y() * cam_up.Y() + cam_position.Z() * cam_up.Z());
-    m_view_mx_cpy.PeekComponents()[14] =
-        -(cam_position.X() * cam_front.X() + cam_position.Y() * cam_front.Y() + cam_position.Z() * cam_front.Z());
-    m_view_mx_cpy.PeekComponents()[15] = 1.0f;
-
+    // obtain camera information
+    core::view::Camera_2 cam(cr->GetCamera());
+    cam_type::snapshot_type snapshot;
+    cam_type::matrix_type view_tmp, proj_tmp;
+    cam.calc_matrices(snapshot, view_tmp, proj_tmp, core::thecam::snapshot_content::all);
+    m_view_mx_cpy = view_tmp;
+    m_proj_mx_cpy = proj_tmp;
 
     // check for interacton call get access to interaction collection
     Call3DInteraction* ci = this->m_3DInteraction_callerSlot.CallAs<Call3DInteraction>();
