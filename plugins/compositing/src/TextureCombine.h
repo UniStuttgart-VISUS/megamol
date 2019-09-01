@@ -19,7 +19,7 @@
 namespace megamol {
 namespace compositing {
 
-class TextureCombine : public core::Module {
+class COMPOSITING_API TextureCombine : public core::Module {
 public:
     /**
      * Answer the name of this module.
