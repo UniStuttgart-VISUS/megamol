@@ -106,7 +106,7 @@ private:
     /**
      * Meta data for communicating data updates, as well as data size
      */
-    Spatial3DMetaData m_meta_data;
+    core::Spatial3DMetaData m_meta_data;
 
     /** The gltf file name */
     core::param::ParamSlot m_filename_slot;

@@ -13,6 +13,25 @@
 namespace megamol {
 namespace core {
 
+/**
+ * The most basic meta data only features a hash value to indicate when "something has changed".
+ */
+struct BasicMetaData {
+    size_t m_data_hash = 0;
+};
+
+/**
+ * Meta data for spatial 3D data communicates the data bounding box as well as frame count
+ * and current frame ID for time dependent data.
+ * A hash value provides the possibility to communicate when "something has changed".
+ */
+struct Spatial3DMetaData {
+    size_t m_data_hash = 0;
+    unsigned int m_frame_cnt = 0;
+    unsigned int m_frame_ID = 0;
+    megamol::core::BoundingBoxes m_bboxs;
+};
+
 template <typename DataType, typename MetaDataType> class CallGeneric : public Call 
 {
 public:

@@ -18,12 +18,12 @@
 // TRISOUPPLUGIN_API functions as being imported from a DLL, whereas this DLL sees symbols
 // defined with this macro as being exported.
 #ifdef compositing_EXPORTS
-#define compositing_API __declspec(dllexport)
+#define COMPOSITING_API __declspec(dllexport)
 #else
-#define compositing_API __declspec(dllimport)
+#define COMPOSITING_API __declspec(dllimport)
 #endif
 #else /* _WIN32 */
-#define compositing_API
+#define COMPOSITING_API
 #endif /* _WIN32 */
 
 #include "mmcore/utility/plugins/Plugin200Instance.h"
@@ -38,7 +38,7 @@ extern "C" {
  *
  * @return 200 -- (ver.: 2.00)
  */
-compositing_API int mmplgPluginAPIVersion(void);
+COMPOSITING_API int mmplgPluginAPIVersion(void);
 
 /**
  * Provides compatibility information
@@ -51,7 +51,7 @@ compositing_API int mmplgPluginAPIVersion(void);
  * @remarks Always use 'mmplgReleasePluginCompatibilityInfo' to release the
  *          memory of the returned struct.
  */
-compositing_API
+COMPOSITING_API
 ::megamol::core::utility::plugins::PluginCompatibilityInfo *
 mmplgGetPluginCompatibilityInfo(
     ::megamol::core::utility::plugins::ErrorCallback onError);
@@ -62,7 +62,7 @@ mmplgGetPluginCompatibilityInfo(
  *
  * @param ci The compatibility information struct to be released
  */
-compositing_API void mmplgReleasePluginCompatibilityInfo(
+COMPOSITING_API void mmplgReleasePluginCompatibilityInfo(
     ::megamol::core::utility::plugins::PluginCompatibilityInfo* ci);
 
 /**
@@ -75,7 +75,7 @@ compositing_API void mmplgReleasePluginCompatibilityInfo(
  * @remarks Always use 'mmplgReleasePluginInstance' to release the memory of
  *          the returned object.
  */
-compositing_API
+COMPOSITING_API
 ::megamol::core::utility::plugins::AbstractPluginInstance*
 mmplgGetPluginInstance
     (::megamol::core::utility::plugins::ErrorCallback onError);
@@ -86,7 +86,7 @@ mmplgGetPluginInstance
  *
  * @param pi The plugin instance to be released
  */
-compositing_API void mmplgReleasePluginInstance(
+COMPOSITING_API void mmplgReleasePluginInstance(
     ::megamol::core::utility::plugins::AbstractPluginInstance* pi);
 
 #ifdef __cplusplus

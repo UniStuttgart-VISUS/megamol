@@ -169,7 +169,7 @@ function(require_external NAME)
     
     add_external_project(glowl_ext
       GIT_REPOSITORY https://github.com/invor/glowl.git
-      GIT_TAG "v0.1"
+      GIT_TAG "v0.3"
       CONFIGURE_COMMAND ""
       BUILD_COMMAND ""
       INSTALL_COMMAND ""

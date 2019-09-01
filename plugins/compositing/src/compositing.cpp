@@ -12,6 +12,10 @@
 #include "mmcore/versioninfo.h"
 #include "vislib/vislibversion.h"
 
+#include "compositing/CompositingCalls.h"
+#include "DrawToScreen.h"
+#include "ScreenSpaceEffect.h"
+#include "SimpleRenderTarget.h"
 
 /* anonymous namespace hides this type from any other object files */
 namespace {
@@ -46,6 +50,8 @@ namespace {
             //   this->module_descriptions.RegisterAutoDescription<megamol::compositing::MyModule2>();
             //   ...
             //
+            this->module_descriptions.RegisterAutoDescription<megamol::compositing::DrawToScreen>();
+            this->module_descriptions.RegisterAutoDescription<megamol::compositing::SimpleRenderTarget>();
 
             // register calls here:
 
@@ -56,6 +62,7 @@ namespace {
             //   this->call_descriptions.RegisterAutoDescription<megamol::compositing::MyCall2>();
             //   ...
             //
+            this->call_descriptions.RegisterAutoDescription<megamol::compositing::CallTexture2D>();
 
         }
         MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics
@@ -66,7 +73,7 @@ namespace {
 /*
  * mmplgPluginAPIVersion
  */
-compositing_API int mmplgPluginAPIVersion(void) {
+COMPOSITING_API int mmplgPluginAPIVersion(void) {
     MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_mmplgPluginAPIVersion
 }
 
@@ -74,7 +81,7 @@ compositing_API int mmplgPluginAPIVersion(void) {
 /*
  * mmplgGetPluginCompatibilityInfo
  */
-compositing_API
+COMPOSITING_API
 ::megamol::core::utility::plugins::PluginCompatibilityInfo *
 mmplgGetPluginCompatibilityInfo(
         ::megamol::core::utility::plugins::ErrorCallback onError) {
@@ -116,7 +123,7 @@ mmplgGetPluginCompatibilityInfo(
 /*
  * mmplgReleasePluginCompatibilityInfo
  */
-compositing_API
+COMPOSITING_API
 void mmplgReleasePluginCompatibilityInfo(
         ::megamol::core::utility::plugins::PluginCompatibilityInfo* ci) {
     // release compatiblity data on the correct heap
@@ -127,7 +134,7 @@ void mmplgReleasePluginCompatibilityInfo(
 /*
  * mmplgGetPluginInstance
  */
-compositing_API
+COMPOSITING_API
 ::megamol::core::utility::plugins::AbstractPluginInstance*
 mmplgGetPluginInstance(
         ::megamol::core::utility::plugins::ErrorCallback onError) {
@@ -138,7 +145,7 @@ mmplgGetPluginInstance(
 /*
  * mmplgReleasePluginInstance
  */
-compositing_API
+COMPOSITING_API
 void mmplgReleasePluginInstance(
         ::megamol::core::utility::plugins::AbstractPluginInstance* pi) {
     MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_mmplgReleasePluginInstance(pi)
