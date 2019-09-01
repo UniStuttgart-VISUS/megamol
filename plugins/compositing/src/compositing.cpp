@@ -16,6 +16,7 @@
 #include "DrawToScreen.h"
 #include "ScreenSpaceEffect.h"
 #include "SimpleRenderTarget.h"
+#include "TextureCombine.h"
 
 /* anonymous namespace hides this type from any other object files */
 namespace {
@@ -52,6 +53,7 @@ namespace {
             //
             this->module_descriptions.RegisterAutoDescription<megamol::compositing::DrawToScreen>();
             this->module_descriptions.RegisterAutoDescription<megamol::compositing::SimpleRenderTarget>();
+            this->module_descriptions.RegisterAutoDescription<megamol::compositing::TextureCombine>();
 
             // register calls here:
 

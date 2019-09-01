@@ -1,3 +1,5 @@
+#include "stdafx.h"
+
 #include "SimpleRenderTarget.h"
 
 #include "compositing/CompositingCalls.h"

@@ -1,3 +1,5 @@
+#include "stdafx.h"
+
 #include "DrawToScreen.h"
 
 #include "mmcore/CoreInstance.h"
