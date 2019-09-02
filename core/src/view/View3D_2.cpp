@@ -427,7 +427,8 @@ void View3D_2::Render(const mmcRenderViewContext& context) {
                                       !this->bboxs.IsClipBoxValid()))) {
             this->bboxs = cr3d->AccessBoundingBoxes();
             glm::vec3 bbcenter = glm::make_vec3(this->bboxs.BoundingBox().CalcCenter().PeekCoordinates());
-            this->arcballManipulator.set_rotation_centre(glm::vec4(bbcenter, 1.0f));
+            if(!this->arcballManipulator.manipulating())
+				this->arcballManipulator.set_rotation_centre(glm::vec4(bbcenter, 1.0f));
 
             if (this->firstImg) {
                 this->ResetView();
