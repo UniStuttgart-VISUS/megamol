@@ -56,7 +56,6 @@ include(check_mmdep)
 include(ClangFormat)
 
 # External
-include(External)
 include("CMakeExternals.cmake")
 
 # NuGet
