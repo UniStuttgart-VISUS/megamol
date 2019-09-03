@@ -1,0 +1,138 @@
+/*
+ * LocalLighting.h
+ *
+ * Copyright (C) 2019 by Universitaet Stuttgart (VISUS).
+ * All rights reserved.
+ */
+
+#ifndef LOCAL_LIGHTING_H_INCLUDED
+#define LOCAL_LIGHTING_H_INCLUDED
+
+#include "compositing/compositing.h"
+#include "mmcore/CalleeSlot.h"
+#include "mmcore/CallerSlot.h"
+#include "mmcore/view/CallRender3D_2.h"
+#include "mmcore/view/Renderer3DModule_2.h"
+
+#include "vislib/graphics/gl/GLSLComputeShader.h"
+
+#include "glowl/BufferObject.hpp"
+#include "glowl/Texture2D.hpp"
+
+namespace megamol {
+namespace compositing {
+
+class COMPOSITING_API LocalLighting : public megamol::core::view::Renderer3DModule_2 {
+public:
+    /**
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
+     */
+    static const char* ClassName() { return "LocalLighting"; }
+
+    /**
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
+     */
+    static const char* Description() {
+        return "Compositing module that computes local lighting";
+    }
+
+    /**
+     * Answers whether this module is available on the current system.
+     *
+     * @return 'true' if the module is available, 'false' otherwise.
+     */
+    static bool IsAvailable() { return true; }
+
+    LocalLighting();
+    ~LocalLighting();
+
+protected:
+    /**
+     * Implementation of 'Create'.
+     *
+     * @return 'true' on success, 'false' otherwise.
+     */
+    bool create();
+
+    /**
+     * Implementation of 'Release'.
+     */
+    void release();
+
+    /**
+     * The get extents callback. The module should set the members of
+     * 'call' to tell the caller the extents of its data (bounding boxes
+     * and times).
+     *
+     * @param call The calling call.
+     *
+     * @return The return value of the function.
+     */
+    bool GetExtents(core::view::CallRender3D_2& call);
+
+    /**
+     * The render callback.
+     *
+     * @param call The calling call.
+     *
+     * @return The return value of the function.
+     */
+    bool Render(core::view::CallRender3D_2& call);
+
+    /**
+     * Method that gets called before the rendering is started for all changed modules
+     *
+     * @param call The rendering call that contains the camera
+     */
+    void PreRender(core::view::CallRender3D_2& call);
+
+    /**
+     * TODO
+     */
+    bool getDataCallback(core::Call& caller);
+
+    /**
+     * TODO
+     */
+    bool getMetaDataCallback(core::Call& caller);
+
+private:
+    typedef vislib::graphics::gl::GLSLComputeShader GLSLComputeShader;
+
+    /** Shader program for texture add */
+    std::unique_ptr<GLSLComputeShader> m_lighting_prgm;
+
+    /** Texture that the lighting result will be written to */
+    std::shared_ptr<glowl::Texture2D> m_output_texture;
+
+    /** GPU buffer object for making active (point)lights available in during shading pass */
+    std::unique_ptr<glowl::BufferObject> m_lights_buffer;
+
+    //TODO mode slot for LAMBERT, PHONG, etc.
+
+    /** Slot for requesting the output textures from this module, i.e. lhs connection */
+    megamol::core::CalleeSlot m_output_tex_slot;
+
+    /** Slot for querying albedo color buffer texture, i.e. a rhs connection */
+    megamol::core::CallerSlot m_albedo_tex_slot;
+
+    /** Slot for querying normal buffer texture, i.e. a rhs connection */
+    megamol::core::CallerSlot m_normal_tex_slot;
+
+    /** Slot for querying normal buffer texture, i.e. a rhs connection */
+    megamol::core::CallerSlot m_depth_tex_slot;
+
+    /** Slot for querying texture that contain roughness and metalness channel, i.e. a rhs connection */
+    megamol::core::CallerSlot m_roughness_metalness_tex_slot;
+
+};
+
+} // namespace compositing
+} // namespace megamol
+
+
+#endif // !LOCAL_LIGHTING_H_INCLUDED

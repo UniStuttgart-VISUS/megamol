@@ -17,7 +17,6 @@ megamol::compositing::DrawToScreen::DrawToScreen()
 }
 
 megamol::compositing::DrawToScreen::~DrawToScreen() { 
-    m_drawToScreen_prgm.reset();
 }
 
 bool megamol::compositing::DrawToScreen::create() {
@@ -58,7 +57,10 @@ bool megamol::compositing::DrawToScreen::create() {
     return true; 
 }
 
-void megamol::compositing::DrawToScreen::release() {}
+void megamol::compositing::DrawToScreen::release() {
+    m_drawToScreen_prgm.reset(); 
+    this->Release();
+}
 
 bool megamol::compositing::DrawToScreen::GetExtents(core::view::CallRender3D_2& call) { 
     return true; 
