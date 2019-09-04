@@ -118,10 +118,13 @@ function(require_external NAME)
   elseif(NAME STREQUAL "libpng")
     require_external(zlib)
 
+    get_target_property(ZLIB_INCLUDE_DIR zlib INCLUDE_DIRECTORIES)
+    set(ZLIB_LIBRARY zlibstatic)
+
     fetch_external(libpng png_static
-      "CMAKE_POSITION_INDEPENDENT_CODE"
+      "CMAKE_POSITION_INDEPENDENT_CODE;PNG_BUILD_ZLIB;SKIP_INSTALL_ALL"
       "PNG_SHARED;PNG_TESTS"
-      "AWK;DFA_XTRA;PNGARG;PNG_BUILD_ZLIB;PNG_DEBUG;PNG_FRAMEWORK;PNG_HARDWARE_OPTIMIZATIONS;PNG_PREFIX;PNG_SHARED;PNG_STATIC;PNG_TESTS;ld-version-script"
+      "AWK;DFA_XTRA;PNGARG;PNG_DEBUG;PNG_FRAMEWORK;PNG_HARDWARE_OPTIMIZATIONS;PNG_PREFIX;PNG_SHARED;PNG_STATIC;PNG_TESTS;ld-version-script"
       GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/libpng.git
       GIT_TAG "v1.6.34")
 
