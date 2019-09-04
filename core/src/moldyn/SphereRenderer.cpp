@@ -1175,7 +1175,7 @@ bool moldyn::SphereRenderer::renderSSBO(view::CallRender3D* cr3d, MultiParticleD
                     glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBOvertexBindingPoint, this->bufArray.GetHandle(x), 0,
                         this->bufArray.GetMaxNumItemsPerChunk() * vertStride);
                     glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(actualItems));
-                    this->bufArray.SignalCompletion();
+                    //bufA.SignalCompletion();
                 }
             }
             else {
@@ -1223,8 +1223,8 @@ bool moldyn::SphereRenderer::renderSSBO(view::CallRender3D* cr3d, MultiParticleD
                     glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBOcolorBindingPoint, this->colBufArray.GetHandle(x), 0,
                         this->colBufArray.GetMaxNumItemsPerChunk() * colStride);
                     glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(actualItems));
-                    this->bufArray.SignalCompletion();
-                    this->colBufArray.SignalCompletion();
+                    //bufA.SignalCompletion();
+                    //colA.SignalCompletion();
                 }
             }
             else {
