@@ -784,12 +784,20 @@ bool megamol::astro::SpectralIntensityVolume::createVolumeCPU(core::misc::Volume
     auto const num_cells = vol_sx * vol_sy * vol_sz;
 
     std::vector<double> optical(num_cells);
-    std::transform(mw, mw + numCells, temperature, optical.begin(), [](float mw, float t) {
-        return 0.018 * std::pow(static_cast<double>(t), -1.5) * 0.0134 * 0.0134 * static_cast<double>(mw) * 1.2;
+    std::transform(volume, volume + numCells, temperature, optical.begin(), [](float d, float t) {
+        // offensive formula
+        //return 0.018 * std::pow(static_cast<double>(t), -1.5) * 0.0134 * 0.0134 * static_cast<double>(mw) * 1.2;
+        // correct formula?
+        return 0.018 * std::pow(static_cast<double>(t), -1.5) * 1.4 * static_cast<double>(d) * static_cast<double>(d) * 1.2;
         // return 1.7 * 10e-25 * std::pow(static_cast<double>(t), -3.5) * 0.0134 * 0.0134 * static_cast<double>(mw)
         // * 1.2;
     });
-    std::transform(mass, mass + numCells, optical.cbegin(), optical.begin(), [](float m, double o) { return o / m; });
+    std::transform(mass, mass + numCells, optical.cbegin(), optical.begin(), [](float m, double o) {
+        // offensive formula
+        //return o / m;
+        // correct formula
+        return o / (static_cast<double>(m) * static_cast<double>(m));
+    });
     auto const minmax_optical = std::minmax_element(optical.cbegin(), optical.cend());
     auto const min_optical = *minmax_optical.first;
     auto const minmax_optical_rcp = 1.0 / (*minmax_optical.second - min_optical);
