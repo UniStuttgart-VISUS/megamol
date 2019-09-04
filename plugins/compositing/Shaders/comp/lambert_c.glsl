@@ -25,9 +25,7 @@ vec3 depthToWorldPos(float depth, vec2 uv) {
 
     // Perspective division
     vs_pos /= vs_pos.w;
-
-    return vs_pos.xyz;
-
+    
     vec4 ws_pos = inv_view_mx * vs_pos;
 
     return ws_pos.xyz;
@@ -50,29 +48,29 @@ void main() {
         return;
     }
 
-    vec2 pixel_coords_norm = vec2(pixel_coords) / vec2(tgt_resolution);
+    vec2 pixel_coords_norm = (vec2(pixel_coords) + vec2(0.5)) / vec2(tgt_resolution);
 
     vec4 albedo = texture(albedo_tx2D,pixel_coords_norm);
     vec3 normal = texture(normal_tx2D,pixel_coords_norm).rgb;
     float depth = texture(depth_tx2D,pixel_coords_norm).r;
 
-    //if(depth < 0.01f){
-    //    imageStore(tgt_tx2D, pixel_coords , vec4(0.0) );
-    //    return;
-    //}
-    
-    vec3 world_pos = depthToWorldPos(depth,pixel_coords_norm);
+    vec4 retval = albedo;
 
-    float reflected_light = 0.0;
-    for(int i=0; i<light_cnt; ++i)
+    if(depth > 0.0f)
     {
-        vec3 light_dir = vec3(light_params[i].x,light_params[i].y,light_params[i].z) - world_pos;
-        float d = length(light_dir); // centimeters to meters
-        light_dir = normalize(light_dir);
-        reflected_light += lambert(light_dir,normal) * light_params[i].intensity * (1.0/(d*d));
-    }
+        vec3 world_pos = depthToWorldPos(depth,pixel_coords_norm);
 
-    vec4 retval = vec4(albedo.rgb, albedo.a);
+        float reflected_light = 0.0;
+        for(int i=0; i<light_cnt; ++i)
+        {
+            vec3 light_dir = vec3(light_params[i].x,light_params[i].y,light_params[i].z) - world_pos;
+            float d = length(light_dir);
+            light_dir = normalize(light_dir);
+            reflected_light += lambert(light_dir,normal) * light_params[i].intensity * (1.0/(d*d));
+        }
+
+        retval.rgb = vec3(reflected_light);
+    }
 
     imageStore(tgt_tx2D, pixel_coords , retval );
 }

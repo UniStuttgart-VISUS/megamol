@@ -54,6 +54,7 @@ namespace {
             //
             this->module_descriptions.RegisterAutoDescription<megamol::compositing::DrawToScreen>();
             this->module_descriptions.RegisterAutoDescription<megamol::compositing::LocalLighting>();
+            this->module_descriptions.RegisterAutoDescription<megamol::compositing::ScreenSpaceEffect>();
             this->module_descriptions.RegisterAutoDescription<megamol::compositing::SimpleRenderTarget>();
             this->module_descriptions.RegisterAutoDescription<megamol::compositing::TextureCombine>();
 
@@ -67,6 +68,8 @@ namespace {
             //   ...
             //
             this->call_descriptions.RegisterAutoDescription<megamol::compositing::CallTexture2D>();
+            this->call_descriptions.RegisterAutoDescription<megamol::compositing::CallCamera>();
+            this->call_descriptions.RegisterAutoDescription<megamol::compositing::CallFramebufferGL>();
 
         }
         MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics

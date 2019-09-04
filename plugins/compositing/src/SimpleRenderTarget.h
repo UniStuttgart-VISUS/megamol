@@ -6,14 +6,14 @@
  */
 
 #ifndef SIMPLE_RENDER_TARGET_H_INCLUDED
-#define SIMPLE_RENDER_TARGET_H_INCLUDED
+#    define SIMPLE_RENDER_TARGET_H_INCLUDED
 
 
-#include "mmcore/CalleeSlot.h"
-#include "mmcore/view/CallRender3D_2.h"
-#include "mmcore/view/Renderer3DModule_2.h"
+#    include "mmcore/CalleeSlot.h"
+#    include "mmcore/view/CallRender3D_2.h"
+#    include "mmcore/view/Renderer3DModule_2.h"
 
-#include "glowl/FramebufferObject.hpp"
+#    include "glowl/FramebufferObject.hpp"
 
 namespace megamol {
 namespace compositing {
@@ -111,10 +111,14 @@ protected:
     /**
      *
      */
+    bool getCameraSnapshot(core::Call& caller);
+
+    /**
+     *
+     */
     bool getMetaDataCallback(core::Call& caller);
 
 private:
-
     /**
      * G-Buffer for deferred rendering. By default if uses three color attachments (and a depth renderbuffer):
      * surface albedo - RGB 16bit per channel
@@ -123,9 +127,15 @@ private:
      */
     std::unique_ptr<glowl::FramebufferObject> m_GBuffer;
 
+    /** Local copy of last used camera*/
+    core::view::Camera_2 m_last_used_camera;
+
     core::CalleeSlot m_color_render_target;
     core::CalleeSlot m_normal_render_target;
     core::CalleeSlot m_depth_render_target;
+
+    /** Slot for requesting the camera that is propagated to the render chain from this module */
+    core::CalleeSlot m_camera;
 };
 
 } // namespace compositing

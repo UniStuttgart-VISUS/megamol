@@ -34,7 +34,7 @@ megamol::compositing::LocalLighting::LocalLighting()
     this->MakeSlotAvailable(&this->m_roughness_metalness_tex_slot);
 }
 
-megamol::compositing::LocalLighting::~LocalLighting() {}
+megamol::compositing::LocalLighting::~LocalLighting() { this->Release(); }
 
 bool megamol::compositing::LocalLighting::create() {
 
@@ -81,7 +81,7 @@ bool megamol::compositing::LocalLighting::Render(core::view::CallRender3D_2& cal
     megamol::core::view::CallRender3D_2* cr = &call;
     auto call_albedo = m_albedo_tex_slot.CallAs<CallTexture2D>();
     auto call_normal = m_normal_tex_slot.CallAs<CallTexture2D>();
-    auto call_depth = m_normal_tex_slot.CallAs<CallTexture2D>();
+    auto call_depth = m_depth_tex_slot.CallAs<CallTexture2D>();
 
     if (cr == NULL) return false;
     if (call_albedo == NULL) return false;
@@ -95,7 +95,7 @@ bool megamol::compositing::LocalLighting::Render(core::view::CallRender3D_2& cal
     // set output texture size to primary input texture
     auto albedo_tx2D = call_albedo->getData();
     auto normal_tx2D = call_normal->getData();
-    auto depth_tx2D = call_normal->getData();
+    auto depth_tx2D = call_depth->getData();
     std::array<float, 2> texture_res = {
         static_cast<float>(albedo_tx2D->getWidth()), static_cast<float>(albedo_tx2D->getHeight())};
 

@@ -16,8 +16,7 @@ megamol::compositing::DrawToScreen::DrawToScreen()
     this->MakeSlotAvailable(&this->m_input_texture_call);
 }
 
-megamol::compositing::DrawToScreen::~DrawToScreen() { 
-}
+megamol::compositing::DrawToScreen::~DrawToScreen() { this->Release(); }
 
 bool megamol::compositing::DrawToScreen::create() {
 
@@ -59,7 +58,6 @@ bool megamol::compositing::DrawToScreen::create() {
 
 void megamol::compositing::DrawToScreen::release() {
     m_drawToScreen_prgm.reset(); 
-    this->Release();
 }
 
 bool megamol::compositing::DrawToScreen::GetExtents(core::view::CallRender3D_2& call) { 

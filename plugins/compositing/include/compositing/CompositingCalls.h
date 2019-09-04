@@ -11,16 +11,17 @@
 #include <memory>
 
 #include "mmcore/CallGeneric.h"
+#include "mmcore/view/Camera_2.h"
 
 #include "compositing.h"
 
+#include "glowl/FramebufferObject.hpp"
 #include "glowl/Texture2D.hpp"
 
 namespace megamol {
 namespace compositing {
 
-class COMPOSITING_API CallTexture2D
-    : public core::CallGeneric<std::shared_ptr<glowl::Texture2D>, core::BasicMetaData> {
+class COMPOSITING_API CallTexture2D : public core::CallGeneric<std::shared_ptr<glowl::Texture2D>, core::BasicMetaData> {
 public:
     inline CallTexture2D() : CallGeneric<std::shared_ptr<glowl::Texture2D>, core::BasicMetaData>() {}
     ~CallTexture2D() = default;
@@ -29,10 +30,30 @@ public:
     static const char* Description(void) { return "Transports a shared pointer to an OpenGL texture object"; }
 };
 
-/** Description class typedef */
-typedef megamol::core::factories::CallAutoDescription<CallTexture2D> CallTexture2DDescription;
+class COMPOSITING_API CallCamera : public core::CallGeneric<core::view::Camera_2, core::BasicMetaData> {
+public:
+    inline CallCamera() : CallGeneric<core::view::Camera_2, core::BasicMetaData>() {}
+    ~CallCamera() = default;
 
-} // namespace mesh
+    static const char* ClassName(void) { return "CallCamera"; }
+    static const char* Description(void) { return "Transports a camera (copy)"; }
+};
+
+class COMPOSITING_API CallFramebufferGL : public core::CallGeneric<std::shared_ptr<glowl::FramebufferObject>, core::BasicMetaData> {
+public:
+    inline CallFramebufferGL() : CallGeneric<std::shared_ptr<glowl::FramebufferObject>, core::BasicMetaData>() {}
+    ~CallFramebufferGL() = default;
+
+    static const char* ClassName(void) { return "CallFramebufferGL"; }
+    static const char* Description(void) { return "Transports a framebuffer object"; }
+};
+
+/** Description class typedef */
+typedef megamol::core::factories::CallAutoDescription<CallTexture2D>     CallTexture2DDescription;
+typedef megamol::core::factories::CallAutoDescription<CallCamera>        CallCameraDescription;
+typedef megamol::core::factories::CallAutoDescription<CallFramebufferGL> CallFramebufferGLDescription;
+
+} // namespace compositing
 } // namespace megamol
 
 
