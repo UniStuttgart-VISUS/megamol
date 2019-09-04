@@ -31,6 +31,7 @@
 #include "io/BrickStatsDataSource.h"
 #include "rendering/BrickStatsRenderer.h"
 #include "rendering/EllipsoidRenderer.h"
+#include "rendering/GlyphRenderer.h"
 
 
 /*
@@ -126,6 +127,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::BrickStatsDataSource>();
             this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::rendering::BrickStatsRenderer>();
             this->module_descriptions.RegisterAutoDescription<::megamol::stdplugin::moldyn::rendering::EllipsoidRenderer>();
+            this->module_descriptions.RegisterAutoDescription<::megamol::stdplugin::moldyn::rendering::GlyphRenderer>();
             // register calls here:
             this->call_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::BrickStatsCall>();
         }
