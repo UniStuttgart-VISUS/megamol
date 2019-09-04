@@ -18,7 +18,7 @@ message(STATUS "HF: ${header_files}")
 message(STATUS "STRF: ${struct_files}")
 
 
-add_library(${PROJECT_NAME} SHARED ${struct_files} ${header_files} ${source_files})
+add_library(${PROJECT_NAME} STATIC ${struct_files} ${header_files} ${source_files})
 
 target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}> $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Structs>)
                                                 

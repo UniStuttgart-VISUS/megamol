@@ -29,32 +29,36 @@ if(BUILD_CONSOLE)
   endif()
 
   # GLFW
-  if(USE_GLFW)
-    if (MSVC)
-        set(GLFW_IMPORT_LIBRARY "lib/glfw3dll.lib")
-        set(GLFW_LIBRARY "lib/glfw3.dll")
-    else()
-        set(GLFW_IMPORT_LIBRARY "")
-        set(GLFW_LIBRARY "lib/libglfw.so")
+  if(NOT USE_EGL)
+    require_external(glfw)
+    target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
+  endif()
+
+  # EGL
+  if(UNIX)
+    if(USE_EGL)
+      find_package(EGL REQUIRED)
+      target_include_directories(${PROJECT_NAME} PRIVATE ${EGL_INCLUDE_DIR})
+      target_link_libraries(${PROJECT_NAME} PRIVATE ${EGL_LIBRARIES})
     endif()
-    add_external_project(glfw_ext
-      GIT_REPOSITORY https://github.com/glfw/glfw.git
-      GIT_TAG "3.2.1"
-      UPDATE_COMMAND ""
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${GLFW_IMPORT_LIBRARY}"
-      CMAKE_ARGS
-        -DBUILD_SHARED_LIBS=ON
-        -DGLFW_BUILD_EXAMPLES=OFF
-        -DGLFW_BUILD_TESTS=OFF
-        -DGLFW_BUILD_DOCS=OFF)
-    add_external_library(glfw3 SHARED
-      DEPENDS glfw_ext
-      INCLUDE_DIR "include"
-      IMPORT_LIBRARY ${GLFW_IMPORT_LIBRARY}
-      LIBRARY ${GLFW_LIBRARY})
-    target_link_libraries(${PROJECT_NAME} PRIVATE glfw3)
-    ExternalProject_Get_property(glfw_ext SOURCE_DIR)
-    target_include_directories(${PROJECT_NAME} PRIVATE "${SOURCE_DIR}/include")
+  endif()
+
+  # AntTweakBar
+  option(USE_ANTTWEAKBAR "use AntTweakBar" OFF)
+  if (USE_ANTTWEAKBAR)
+    if(NOT USE_EGL AND NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    option(USE_INTERNAL_ANTTWEAKBAR "use internal AntTweakBar" ON)
+    if(USE_INTERNAL_ANTTWEAKBAR)
+      add_subdirectory(AntTweakBar)
+    else()
+      find_package(AntTweakBar REQUIRED)
+    endif()
+    if(AntTweakBar_FOUND OR USE_INTERNAL_ANTTWEAKBAR)
+      target_compile_definitions(${PROJECT_NAME} PRIVATE "HAS_ANTTWEAKBAR=1")
+      target_include_directories(${PROJECT_NAME} PRIVATE ${AntTweakBar_INCLUDE_DIR})
+      target_link_libraries(${PROJECT_NAME} PRIVATE ${AntTweakBar_LIBRARIES})
+    endif()
+    endif()
   endif()
 
   target_link_libraries(${PROJECT_NAME} PRIVATE ${VERSION_LIBRARY} ${CMAKE_DL_LIBS})
@@ -66,15 +70,23 @@ if(BUILD_CONSOLE)
 
   # install mmconsole executable
   install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin" ARCHIVE DESTINATION "lib")
-  if(USE_GLFW)
-    install_external(TARGETS glfw3)
-  endif()
   if (WIN32)
     if(MSVC)
       install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION bin OPTIONAL)
     endif()
   endif ()
 
+  # install and configure ATB
+  if (USE_ANTTWEAKBAR)
+    if(AntTweakBar_FOUND)
+    install(FILES ${AntTweakBar_LIBRARIES} DESTINATION "lib")
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/linkAntTweakBar.cmake.in ${CMAKE_BINARY_DIR}/linkAntTweakBar.cmake @ONLY)
+    install(SCRIPT ${CMAKE_BINARY_DIR}/linkAntTweakBar.cmake)
+    if(WIN32)
+        install(FILES ${AntTweakBar_DLL} DESTINATION "bin")
+    endif()
+    endif()
+  endif()
 
   # Configuration of the megamol.cfg megamol.sh remoteconsole.sh files
   set(cfg_LIB_PATH "${CMAKE_INSTALL_PREFIX}/lib")

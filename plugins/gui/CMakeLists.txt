@@ -13,28 +13,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   # afterwards list the dependencies.
   set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE" CACHE INTERNAL "")
 
-  # Add ImGui.
-  set(IMGUI_LIB "lib/${CMAKE_STATIC_LIBRARY_PREFIX}imgui${CMAKE_STATIC_LIBRARY_SUFFIX}")
-  add_external_project(ImGui_ext
-    GIT_REPOSITORY https://github.com/ocornut/imgui.git
-    GIT_TAG "v1.70"
-    UPDATE_COMMAND ""
-    BUILD_BYPRODUCTS "<INSTALL_DIR>/${IMGUI_LIB}"
-    PATCH_COMMAND ${CMAKE_COMMAND} -E copy
-      "${CMAKE_CURRENT_SOURCE_DIR}/cmake/ImGui/CMakeLists.txt"
-      "<SOURCE_DIR>/CMakeLists.txt")
-  add_external_library(ImGui STATIC
-    DEPENDS ImGui_ext
-    INCLUDE_DIR "src/ImGui_ext"
-    LIBRARY ${IMGUI_LIB})
-
-  ExternalProject_Get_property(ImGui_ext SOURCE_DIR)
-  set(imgui_files
-    "${SOURCE_DIR}/examples/imgui_impl_opengl3.cpp"
-    "${SOURCE_DIR}/examples/imgui_impl_opengl3.h"
-    "${SOURCE_DIR}/misc/cpp/imgui_stdlib.cpp"
-    "${SOURCE_DIR}/misc/cpp/imgui_stdlib.h")    
-  set_source_files_properties(${imgui_files} PROPERTIES GENERATED TRUE)
+  require_external(imgui)
 
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
@@ -42,16 +21,16 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   file(GLOB_RECURSE resource_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "resources/*")
 
   # Target definition
-  add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${source_files} ${imgui_files} ${resource_files})
+  add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${source_files} ${resource_files})
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
-  if(UNIX)
-    # Add C++ filesystem support, except for "stampede".
+  if(UNIX) #Linux
     cmake_host_system_information(RESULT fqdn QUERY FQDN)
+    # C++ filesystem is not working on "stampede"
     if(NOT fqdn MATCHES ".*stampede2.*")
-      target_link_libraries(${PROJECT_NAME} PRIVATE "stdc++fs")
+      target_link_libraries(${PROJECT_NAME} PRIVATE "stdc++fs") # filesystem support
       target_compile_definitions(${PROJECT_NAME} PRIVATE GUI_USE_FILEUTILS)
     endif()
-  elseif(WIN32)
+  else () # Windows
     target_compile_definitions(${PROJECT_NAME} PRIVATE GUI_USE_FILEUTILS)
   endif()
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS IMGUI_IMPL_OPENGL_LOADER_GLAD)
@@ -59,7 +38,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     "include" "src"
     "${SOURCE_DIR}/examples/" "${SOURCE_DIR}/misc/cpp/")
-  target_link_libraries(${PROJECT_NAME} PRIVATE vislib core glad PUBLIC ImGui)
+  target_link_libraries(${PROJECT_NAME} PRIVATE vislib core glad PUBLIC imgui)
 
   # Installation rules for generated files
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")

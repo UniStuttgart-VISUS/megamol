@@ -13,7 +13,6 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   # afterwards list the dependencies.
   set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE" CACHE INTERNAL "")
 
-  # Add externals.
   require_external(quickhull)
 
   # Build MegaMol Plugin
@@ -32,7 +31,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   # Set target naming conventions for different build types
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg" CXX_STANDARD 17)
   # Dependent projects only need to link against the core.so itself.
-  target_link_libraries(${PROJECT_NAME} PRIVATE core PUBLIC quickhull)
+  target_link_libraries(${PROJECT_NAME} PRIVATE core quickhull)
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
                                                     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/external>
                                                     "src")
@@ -41,12 +40,11 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
 
   # Additional definitions for compiling with VS
   if(MSVC)
-      target_compile_definitions(${PROJECT_NAME} PRIVATE NOMINMAX)
+      add_definitions(-DNOMINMAX)
   endif()
 
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders/ DESTINATION "share/shaders")
-  install_external(TARGETS quickhull)
   if(WIN32)
     install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
     install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION "lib")
@@ -59,5 +57,6 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   source_group("Header Files" FILES ${header_files})
   source_group("Source Files" FILES ${source_files})
   source_group("Shaders" FILES ${shader_files})
+
 
 endif(BUILD_${EXPORT_NAME}_PLUGIN)

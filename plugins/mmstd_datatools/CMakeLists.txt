@@ -18,46 +18,12 @@ if(BUILD_MMSTD_DATATOOLS_PLUGIN)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
   endif()
 
-  if(WIN32)
-    set(TNY_IMPORT_LIB "lib/tinyply.lib")
-    set(TNY_IMPORT_LIB_DEBUG "lib/tinyplyd.lib")
-    set(TNY_LIB "bin/tinyply.dll")
-    set(TNY_LIB_DEBUG "bin/tinyplyd.dll")
-  else()
-    include(GNUInstallDirs)
-    set(TNY_IMPORT_LIB_DEBUG "lib/libtinyply.so")
-    set(TNY_IMPORT_LIB "lib/libtinyply.so")
-    set(TNY_LIB_DEBUG "lib/libtinyply.so")
-    set(TNY_LIB "lib/libtinyply.so")
-  endif()
-
-  add_external_project(tinyply_ext
-    GIT_REPOSITORY https://github.com/ddiakopoulos/tinyply.git
-    GIT_TAG "2.1"
-    UPDATE_COMMAND ""
-    BUILD_BYPRODUCTS "<INSTALL_DIR>/${TNY_IMPORT_LIB_DEBUG}" "<INSTALL_DIR>/${TNY_IMPORT_LIB}"
-    CMAKE_ARGS -DSHARED_LIB=true)
-  add_external_library(tinyply SHARED
-    DEPENDS tinyply_ext
-    IMPORT_LIBRARY_DEBUG ${TNY_IMPORT_LIB_DEBUG}
-    IMPORT_LIBRARY_RELEASE ${TNY_IMPORT_LIB}
-    LIBRARY_DEBUG ${TNY_LIB_DEBUG}
-    LIBRARY_RELEASE ${TNY_LIB})
-
-  add_external_project(mmpld_io_ext
-    GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/mmpld_io.git
-    CONFIGURE_COMMAND ""
-    BUILD_COMMAND ""
-    INSTALL_COMMAND ""
-    TEST_COMMAND ""
-    UPDATE_COMMAND "")
-  add_external_library(mmpld_io INTERFACE
-    DEPENDS mmpld_io_ext
-    INCLUDE_DIR "src/mmpld_io_ext/include")
-
   # Add externals.
+  require_external(tinyply)
+  require_external(mmpld_io)
   require_external(Eigen)
   require_external(nanoflann)
+  require_external(sim_sort)
 
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp" "3rd/min_sphere_of_spheres/*.cpp")
@@ -86,11 +52,11 @@ if(BUILD_MMSTD_DATATOOLS_PLUGIN)
   # Target definition
   add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${source_files})
   # Set target naming conventions for different build types
-  set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
+  set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg" CXX_STANDARD 17 CXX_STANDARD_REQUIRED ON)
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src"
     "3rd/min_sphere_of_spheres")
-  target_link_libraries(${PROJECT_NAME} PRIVATE core geometry_calls tinyply Eigen nanoflann mmpld_io)
+  target_link_libraries(${PROJECT_NAME} PRIVATE core geometry_calls tinyply Eigen nanoflann sim_sort mmpld_io)
 
   if(MPI_C_FOUND)
     target_include_directories(${PROJECT_NAME} PUBLIC ${MPI_C_INCLUDE_PATH})
@@ -104,7 +70,6 @@ if(BUILD_MMSTD_DATATOOLS_PLUGIN)
 
   # Installation rules for generated files
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
-  install_external(TARGETS tinyply)
   if(WIN32)
     install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
     install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION "lib")
