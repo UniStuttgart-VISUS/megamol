@@ -128,7 +128,7 @@ function(require_external NAME)
       GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/libpng.git
       GIT_TAG "v1.6.34")
 
-    add_dependencies(png_static zlib)
+    add_dependencies(png_static zlib libpng_ext_genfiles)
 
   # libzmq
   elseif(NAME STREQUAL "libzmq")
@@ -136,7 +136,8 @@ function(require_external NAME)
       "BUILD_STATIC"
       "BUILD_SHARED;BUILD_TESTS;ENABLE_PRECOMPILED;WITH_PERF_TOOL;ZMQ_BUILD_TESTS"
       "API_POLLER;ENABLE_ANALYSIS;ENABLE_ASAN;ENABLE_CPACK;ENABLE_CURVE;ENABLE_DRAFTS;ENABLE_EVENTFD;ENABLE_INTRINSICS;ENABLE_RADIX_TREE;LIBZMQ_PEDANTIC;LIBZMQ_WERROR;POLLER;RT_LIBRARY;WITH_DOCS;WITH_LIBSODIUM;WITH_MILITANT;WITH_OPENPGM;WITH_VMCI;ZEROMQ_CMAKECONFIG_INSTALL_DIR;ZEROMQ_LIBRARY;ZMQ_CV_IMPL;ZMQ_WIN32_WINNT"
-      GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/libzmq.git)
+      GIT_REPOSITORY https://github.com/zeromq/libzmq.git
+      GIT_TAG 3413e05bd062cc36188f5970b55f657688cddc72)
 
   # quickhull
   elseif(NAME STREQUAL "quickhull")
