@@ -14,10 +14,6 @@ if(BUILD_MMSTD_DATATOOLS_PLUGIN)
   # afterwards list the dependencies.
   set(DEP_LIST "${DEP_LIST};BUILD_MMSTD_DATATOOLS_PLUGIN BUILD_GEOMETRY_CALLS_PLUGIN BUILD_CORE" CACHE INTERNAL "")
 
-  if (OPENMP_FOUND OR WIN32)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-  endif()
-
   if(WIN32)
     set(TNY_IMPORT_LIB "lib/tinyply.lib")
     set(TNY_IMPORT_LIB_DEBUG "lib/tinyplyd.lib")
@@ -91,13 +87,7 @@ if(BUILD_MMSTD_DATATOOLS_PLUGIN)
   target_link_libraries(${PROJECT_NAME} PRIVATE core geometry_calls tinyply Eigen nanoflann mmpld_io)
 
   if(MPI_C_FOUND)
-    target_include_directories(${PROJECT_NAME} PUBLIC ${MPI_C_INCLUDE_PATH})
-    target_link_libraries(${PROJECT_NAME} PRIVATE ${MPI_C_LIBRARIES})
-  endif()
-
-  if (OPENMP_FOUND OR WIN32)
-    set_target_properties(${PROJECT_NAME}
-      PROPERTIES COMPILE_FLAGS "${OpenMP_CXX_FLAGS}")
+    target_link_libraries(${PROJECT_NAME} PRIVATE MPI::MPI_C)
   endif()
 
   # Installation rules for generated files

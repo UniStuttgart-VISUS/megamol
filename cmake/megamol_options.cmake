@@ -1,16 +1,14 @@
-# Word size detection
+# C++ standard
+set(CMAKE_CXX_STANDARD 17)
+
+# Word size
 if(CMAKE_SIZEOF_VOID_P EQUAL 8)
   set(BITS 64)
 else()
   set(BITS 32)
 endif()
 
-set(CMAKE_CXX_STANDARD 14)
-
-if(UNIX)
-  find_package(OpenMP)
-endif()
-
+# Build types
 set(CMAKE_CONFIGURATION_TYPES "Debug;Release;RelWithDebInfo")
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the build type." FORCE)
@@ -35,29 +33,45 @@ else()
     "Unsupported compiler specified: '${CMAKE_CXX_COMPILER_ID}'")
 endif()
 
-option(USE_MPI "enable MPI in build" OFF)
+# Install
+option(MEGAMOL_INSTALL_DEPENDENCIES "MegaMol dependencies in install" ON)
+mark_as_advanced(MEGAMOL_INSTALL_DEPENDENCIES)
 
-set(MPI_GUESS_LIBRARY_NAME "undef" CACHE STRING "override MPI library, if necessary. ex: MSMPI, MPICH2")
-if(USE_MPI)
+# CUDA
+option(ENABLE_CUDA "Enable CUDA, which is needed for certain plugins" OFF)
+if(ENABLE_CUDA)
+  enable_language(CUDA)
+endif()
+
+# GLFW
+option(USE_GLFW "Use GLFW" ON)
+
+# MPI
+option(MPI_ENABLE "Enable MPI support" OFF)
+set(MPI_GUESS_LIBRARY_NAME "undef" CACHE STRING "Override MPI library name, e.g., MSMPI, MPICH2")
+if(MPI_ENABLE)
   if(MPI_GUESS_LIBRARY_NAME STREQUAL "undef")
     message(FATAL_ERROR "you must set MPI_GUESS_LIBRARY_NAME to ovveride automatic finding of unwanted MPI libraries (or empty for default)")
   endif()
   find_package(MPI REQUIRED)
 endif()
 
-if(MPI_C_FOUND)
-  # THIS IS THE APEX OF SHIT AND MUST DIE
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MPI_C_COMPILE_FLAGS}")
-  include_directories(${MPI_C_INCLUDE_PATH})
-  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${MPI_C_LINK_FLAGS}")
-  set(LIBS ${LIBS} ${MPI_C_LIBRARIES})
-  add_definitions(-DWITH_MPI -DOMPI_SKIP_MPICXX -DMPICH_SKIP_MPICXX)
+# Threading (XXX: this is a bit wonky due to Ubuntu/clang)
+include(CheckFunctionExists)
+check_function_exists(pthread_create HAVE_PTHREAD)
+if(HAVE_PTHREAD)
+  set(CMAKE_THREAD_PREFER_PTHREAD ON)
+  find_package(Threads REQUIRED)
 endif()
 
-option(MEGAMOL_INSTALL_DEPENDENCIES "MegaMol dependencies in install" ON)
-mark_as_advanced(MEGAMOL_INSTALL_DEPENDENCIES)
+# OpenMP
+if(UNIX)
+  find_package(OpenMP)
+endif()
+if(OPENMP_FOUND OR WIN32)
+  list(APPEND CMAKE_C_FLAGS ${OpenMP_C_FLAGS})
+  list(APPEND CMAKE_CXX_FLAGS ${OpenMP_CXX_FLAGS})
+endif()
 
-# Global Packages
-set(CMAKE_THREAD_PREFER_PTHREAD)
-find_package(Threads REQUIRED)
+# OpenGL
 find_package(OpenGL REQUIRED)

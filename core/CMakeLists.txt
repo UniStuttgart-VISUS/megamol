@@ -14,10 +14,6 @@ if(BUILD_CORE)
   set(DEP_LIST "${DEP_LIST};BUILD_CORE BUILD_VISLIB" CACHE INTERNAL "")
   set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
-  # Add threading.
-  set(CMAKE_THREAD_PREFER_PTHREAD)
-  find_package(Threads REQUIRED)
-
   # Add expat.
   if(WIN32)
     option(USE_INTERNAL_EXPAT "Compiles the expat provided by MegaMol" ON)
@@ -107,8 +103,7 @@ if(BUILD_CORE)
       LINK_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /DYNAMICBASE:NO")
   endif()
   if(MPI_C_FOUND)
-    target_include_directories(${PROJECT_NAME} PRIVATE ${MPI_C_INCLUDE_PATH})
-    target_link_libraries(${PROJECT_NAME} PRIVATE ${MPI_C_LIBRARIES})
+    target_link_libraries(${PROJECT_NAME} PRIVATE MPI::MPI_C)
   endif()
 
   # Source groups in Visual Studio

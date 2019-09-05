@@ -29,14 +29,11 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
 
   if(UNIX)
     find_package(JPEG REQUIRED)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE XMD_H) # prevents typedef conflict
-    target_include_directories(${PROJECT_NAME} PUBLIC ${JPEG_INCLUDE_DIR})
-    target_link_libraries(${PROJECT_NAME} PRIVATE ${JPEG_LIBRARIES})
+    target_link_libraries(${PROJECT_NAME} PRIVATE JPEG::JPEG)
   endif()
 
   if(MPI_C_FOUND)
-    target_include_directories(${PROJECT_NAME} PUBLIC ${MPI_C_INCLUDE_PATH})
-    target_link_libraries(${PROJECT_NAME} PRIVATE ${MPI_C_LIBRARIES})
+    target_link_libraries(${PROJECT_NAME} PRIVATE MPI::MPI_C)
   endif()
 
   # Installation rules for generated files

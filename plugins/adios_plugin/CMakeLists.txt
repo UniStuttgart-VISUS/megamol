@@ -66,8 +66,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   endif()
 
   if(MPI_C_FOUND)
-    target_include_directories(${PROJECT_NAME} PUBLIC ${MPI_C_INCLUDE_PATH})
-    target_link_libraries(${PROJECT_NAME} PRIVATE ${MPI_C_LIBRARIES})
+    target_link_libraries(${PROJECT_NAME} PRIVATE MPI::MPI_C)
   endif()
 
   # Installation rules for generated files

@@ -91,12 +91,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
     PUBLIC "include" "src")
   target_link_libraries(${PROJECT_NAME} PRIVATE core OSPRay_plugin image_calls zfp libzmq libcppzmq snappy)
   if(MPI_C_FOUND)
-    target_link_libraries(${PROJECT_NAME} PRIVATE IceTCore IceTGL IceTMPI)
-  endif()
-
-  if(MPI_C_FOUND)
-    target_include_directories(${PROJECT_NAME} PRIVATE ${MPI_C_INCLUDE_PATH})
-    target_link_libraries(${PROJECT_NAME} PRIVATE ${MPI_C_LIBRARIES})
+    target_link_libraries(${PROJECT_NAME} PRIVATE IceTCore IceTGL IceTMPI MPI::MPI_C)
   endif()
 
   # Installation rules for generated files
