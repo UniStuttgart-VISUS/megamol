@@ -31,7 +31,7 @@ using namespace megamol::stdplugin::moldyn::rendering;
 
 const uint32_t max_ssbo_size = 2 * 1024 * 1024 * 1024;
 
-GlyphRenderer::GlyphRenderer(void) : Renderer3DModule(), getDataSlot("getData", "The slot to fetch the data"), glyphParam("glyph", "which glyph to render") {
+GlyphRenderer::GlyphRenderer(void) : Renderer3DModule_2(), getDataSlot("getData", "The slot to fetch the data"), glyphParam("glyph", "which glyph to render") {
 
     this->getDataSlot.SetCompatibleCall<core::moldyn::EllipsoidalParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
@@ -71,7 +71,7 @@ bool GlyphRenderer::makeShader(std::string vertexName, std::string fragmentName,
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "GlyphRenderer: unable to load vertex shader source: %s", vertexName.c_str());
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("glyph::ellipsoid_fragment", fragSrc)) {
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(fragmentName.c_str(), fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "GlyphRenderer: unable to load fragment shader source: %s", fragmentName.c_str());
         return false;
     }
@@ -99,19 +99,15 @@ bool GlyphRenderer::makeShader(std::string vertexName, std::string fragmentName,
     return true;
 }
 
-bool GlyphRenderer::GetExtents(Call& call) {
-    view::CallRender3D* cr = dynamic_cast<view::CallRender3D*>(&call);
-    if (cr == NULL) return false;
+bool GlyphRenderer::GetExtents(core::view::CallRender3D_2& call) {
 
     auto* epdc = this->getDataSlot.CallAs<core::moldyn::EllipsoidalParticleDataCall>();
     if ((epdc != NULL) && ((*epdc)(1))) {
-        cr->SetTimeFramesCount(epdc->FrameCount());
-        cr->AccessBoundingBoxes() = epdc->AccessBoundingBoxes();
-        cr->AccessBoundingBoxes().MakeScaledWorld(1.0f);
-
+        call.SetTimeFramesCount(epdc->FrameCount());
+        call.AccessBoundingBoxes() = epdc->AccessBoundingBoxes();
     } else {
-        cr->SetTimeFramesCount(1);
-        cr->AccessBoundingBoxes().Clear();
+        call.SetTimeFramesCount(1);
+        call.AccessBoundingBoxes().Clear();
     }
 
     return true;
@@ -232,20 +228,33 @@ bool megamol::stdplugin::moldyn::rendering::GlyphRenderer::validateData(
     return true;
 }
 
-bool GlyphRenderer::Render(Call& call) {
-    view::CallRender3D* cr = dynamic_cast<view::CallRender3D*>(&call);
-    if (cr == NULL) return false;
-
+bool GlyphRenderer::Render(core::view::CallRender3D_2& call) {
     auto* epdc = this->getDataSlot.CallAs<core::moldyn::EllipsoidalParticleDataCall>();
-    if (epdc == NULL) return false;
+    if (epdc == nullptr) return false;
 
-    epdc->SetFrameID(static_cast<int>(cr->Time()));
+    epdc->SetFrameID(static_cast<int>(call.Time()));
     if (!(*epdc)(1)) return false;
 
-    epdc->SetFrameID(static_cast<int>(cr->Time()));
+    epdc->SetFrameID(static_cast<int>(call.Time()));
     if (!(*epdc)(0)) return false;
 
     if (!this->validateData(epdc)) return false;
+
+    view::Camera_2 cam;
+    call.GetCamera(cam);
+    cam_type::snapshot_type snapshot;
+    cam_type::matrix_type viewTemp, projTemp;
+
+    // Generate complete snapshot and calculate matrices
+    cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
+
+    glm::vec4 CamPos = snapshot.position;
+    auto CamView = snapshot.view_vector;
+    auto CamRight = snapshot.right_vector;
+    auto CamUp = snapshot.up_vector;
+    auto CamNearClip = snapshot.frustum_near;
+    auto Eye = cam.eye();
+    bool rightEye = (Eye == core::thecam::Eye::right);
 
     // todo...
      glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
@@ -260,23 +269,32 @@ bool GlyphRenderer::Render(Call& call) {
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
 
-    auto cameraInfo = cr->GetCameraParameters();
-    float viewportStuff[4] = {cameraInfo->TileRect().Left(), cameraInfo->TileRect().Bottom(),
-        cameraInfo->TileRect().Width(), cameraInfo->TileRect().Height()};
+    //float viewportStuff[4] = {cameraInfo->TileRect().Left(), cameraInfo->TileRect().Bottom(),
+    //    cameraInfo->TileRect().Width(), cameraInfo->TileRect().Height()};
+    float viewportStuff[4] = {
+        cam.image_tile().left(), cam.image_tile().bottom(), cam.image_tile().width(), cam.image_tile().height()};
     if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
     if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
     viewportStuff[2] = 2.0f / viewportStuff[2];
     viewportStuff[3] = 2.0f / viewportStuff[3];
 
-    // todo this is the apex of suck and must die
-    glm::mat4 mv_matrix, p_matrix;
-    glGetFloatv(GL_MODELVIEW_MATRIX, glm::value_ptr(mv_matrix));
-    glGetFloatv(GL_PROJECTION_MATRIX, glm::value_ptr(p_matrix));
+    glm::mat4 mv_matrix = viewTemp, p_matrix = projTemp;
     glm::mat4 mvp_matrix = p_matrix * mv_matrix;
     glm::mat4 mvp_matrix_i = glm::inverse(mvp_matrix);
     glm::mat4 mv_matrix_i = glm::inverse(mv_matrix);
-    glm::vec4 light;
-    glGetLightfv(GL_LIGHT0, GL_POSITION, glm::value_ptr(light));
+
+    this->GetLights();
+    glm::vec4 light = {0.0f, 0.0f, 0.0f, 0.0f};
+    if (this->lightMap.size() != 1) {
+        vislib::sys::Log::DefaultLog.WriteWarn("GlyphRenderer: Only one single directional light source is supported by this renderer");
+    } else {
+        const auto lightPos = this->lightMap.begin()->second.dl_direction;
+        if (lightPos.size() == 3) {
+            light[0] = lightPos[0];
+            light[1] = lightPos[1];
+            light[2] = lightPos[2];
+        }
+    }
 
     vislib::graphics::gl::GLSLShader* shader;
     switch (this->glyphParam.Param<core::param::EnumParam>()->Value()) {
@@ -304,11 +322,12 @@ bool GlyphRenderer::Render(Call& call) {
     glUniformMatrix4fv(shader->ParameterLocation("MVP_T"), 1, GL_TRUE, glm::value_ptr(mvp_matrix));
     glUniformMatrix4fv(shader->ParameterLocation("MVP_I"), 1, GL_FALSE, glm::value_ptr(mvp_matrix_i));
     glUniform4fv(shader->ParameterLocation("light"), 1, glm::value_ptr(light));
+    glUniform4fv(shader->ParameterLocation("cam"), 1, glm::value_ptr(CamPos));
 
-    glUniform3fvARB(shader->ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
-    glUniform3fvARB(shader->ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
-    glUniform3fvARB(shader->ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
-
+    //glUniform3fvARB(shader->ParameterLocation("camIn"), 1, glm::value_ptr(CamView));
+    //glUniform3fvARB(shader->ParameterLocation("camRight"), 1, glm::value_ptr(CamRight));
+    //glUniform3fvARB(shader->ParameterLocation("camUp"), 1, glm::value_ptr(CamUp));
+    
     for (unsigned int i = 0; i < epdc->GetParticleListCount(); i++) {
 
         auto& elParts = epdc->AccessParticles(i);

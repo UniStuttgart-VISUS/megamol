@@ -15,7 +15,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/AbstractCallRender3D.h"
-#include "mmcore/view/Renderer3DModule.h"
+#include "mmcore/view/Renderer3DModule_2.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "mmcore/utility/SSBOBufferArray.h"
@@ -30,7 +30,7 @@ namespace rendering {
 /**
  * Renderer for ellipsoidal data
  */
-class GlyphRenderer : public megamol::core::view::Renderer3DModule {
+class GlyphRenderer : public megamol::core::view::Renderer3DModule_2 {
 public:
     /**
      * Answer the name of this module.
@@ -78,7 +78,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool GetExtents(core::Call& call) override;
+    bool GetExtents(core::view::CallRender3D_2& call) override;
 
     /**
      * Implementation of 'Release'.
@@ -93,7 +93,7 @@ protected:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    bool Render(megamol::core::Call& call) override;
+    bool Render(core::view::CallRender3D_2& call) override;
 
 private:
 

@@ -1,15 +1,27 @@
-    
-layout(packed, binding = 0) buffer pos_data {
-    vec3 pos[];
+struct pos {
+    float x;
+    float y;
+    float z;
 };
-layout(packed, binding = 1) buffer quat_data {
-    vec4 quat[];
+
+struct quat {
+    float x;
+    float y;
+    float z;
+    float w;
 };
-layout(packed, binding = 2) buffer rad_data {
-    vec3 rad[];
+
+layout(std430, binding = 0) buffer pos_data {
+    pos posArray[];
 };
-layout(packed, binding = 3) buffer col_data {
-    vec4 col[];
+layout(std430, binding = 1) buffer quat_data {
+    quat quatArray[];
+};
+layout(std430, binding = 2) buffer rad_data {
+    pos radArray[];
+};
+layout(std430, binding = 3) buffer col_data {
+    quat colArray[];
 };
 // binding 4 is going to be the flags
 
@@ -27,6 +39,7 @@ out vec3 rotMatT2;
 out mat3 rotMatIT;
 
 out flat vec3 normal;
+out flat vec3 transformedNormal;
 
 // https://stackoverflow.com/questions/28375338/cube-using-single-gl-triangle-strip
 const vec3 cube_strip[14] = vec3[14](
@@ -69,13 +82,13 @@ void main() {
     vec4 tmp, tmp1;
     vec3 tmp2;
     
-    uint vid = gl_InstanceID; //gl_VertexID / 14;
-    uint corner = gl_VertexID; // % 14;
+    uint inst = gl_InstanceID; //gl_VertexID / 14;
+    uint corner = gl_VertexID;// % 14;
 
-    vec4 inPos = vec4(pos[vid], 1.0);
-    vec3 radii = rad[vid];
+    vec4 inPos = vec4(posArray[inst].x, posArray[inst].y, posArray[inst].z, 1.0);
+    vec3 radii = vec3(radArray[inst].x, radArray[inst].y, radArray[inst].z); //rad[inst];
     vec3 absradii = abs(radii);
-    vec4 quatC = quat[vid];
+    vec4 quatC = vec4(quatArray[inst].x, quatArray[inst].y, quatArray[inst].z, quatArray[inst].w); //quat[inst];
     invRad = 1.0 / absradii;
     
     objPos = inPos;
@@ -99,7 +112,8 @@ void main() {
     rotMatIT = mat3(rotMatT0, rotMatT1, rotMatT2);
     rotMatIT = transpose(rotMatIT);
 
-    normal = (MV_T * vec4(cube_normals[vid], 0.0f)).xyz;
+    normal = cube_normals[corner]; //(MV_T * vec4(cube_normals[corner], 0.0f)).xyz;
+    transformedNormal = (MV_T * vec4(normal, 0.0f)).xyz;
     lightPos = MV_T * light; // transpose of inverse inverse -> directional light
     
 
@@ -111,7 +125,7 @@ void main() {
         if (bool(intensityOnly)) {
             
         } else {
-            vertColor = col[vid];
+            vertColor = vec4(colArray[inst].x, colArray[inst].y, colArray[inst].z, colArray[inst].w);;
         }
     }
 
@@ -122,11 +136,13 @@ void main() {
     // projPos.x = dot(rotMatT0, pos.xyz); // rotate
     // projPos.y = dot(rotMatT1, pos.xyz);
     // projPos.z = dot(rotMatT2, pos.xyz);
-    //projPos.xyz = rotMatIT * pos.xyz;
-    projPos.xyz = pos.xyz;
+    projPos.xyz = rotMatIT * pos.xyz;
+    //projPos.xyz = pos.xyz;
     projPos.w = 0.0;
     pos = objPos + projPos; // move
     //pos.w = 1.0; // now we're in object space
+
+    objPos = pos;
 
     gl_Position =  MVP * pos;
 }
