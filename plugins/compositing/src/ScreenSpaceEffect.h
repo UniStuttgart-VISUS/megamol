@@ -100,6 +100,12 @@ private:
     /** Parameter for selecting the screen space effect that is computed, e.g. ssao, fxaa,... */
     megamol::core::param::ParamSlot m_mode;
 
+    /** Parameter for selecting the ssao radius */
+    megamol::core::param::ParamSlot m_ssao_radius;
+
+    /** Parameter for selecting the ssao sample count */
+    megamol::core::param::ParamSlot m_ssao_sample_cnt;
+
     /** Slot for requesting the output textures from this module, i.e. lhs connection */
     megamol::core::CalleeSlot m_output_tex_slot;
 

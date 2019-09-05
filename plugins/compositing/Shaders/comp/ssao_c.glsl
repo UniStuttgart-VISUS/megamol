@@ -5,7 +5,8 @@ struct Samples
 };
 
 layout(std430, binding = 1) readonly buffer SamplesBuffer { Samples samples[]; };
-uniform int samples_cnt;
+uniform int sample_cnt;
+uniform float radius;
 
 uniform sampler2D normal_tx2D;
 uniform sampler2D depth_tx2D;
@@ -60,8 +61,7 @@ void main()
     vec3 tangent    = normalize(rand_vec - normal * dot(rand_vec, normal));
     vec3 bitangent  = cross(normal, tangent);
     mat3 tangent_mx = mat3(tangent, bitangent, normal);
-
-    float radius = 0.01; //TODO uniform
+    
     float bias = 0.0001;
 
     float occlusion = 0.0;
@@ -71,7 +71,7 @@ void main()
 
     if(depth > 0.0)
     {
-        for(int i = 0; i < samples_cnt; ++i)
+        for(int i = 0; i < sample_cnt; ++i)
         {
             // get sample position
             sample_vs_pos = tangent_mx * vec3(samples[i].x,samples[i].y,samples[i].z); // From tangent to view-space
@@ -82,7 +82,14 @@ void main()
             offset.xyz /= offset.w;               // perspective divide
             offset.xyz  = offset.xyz * 0.5 + 0.5; // transform to range 0.0 - 1.0
 
+            if(offset.x > 1.0 || offset.x < 0.0 || offset.y > 1.0 || offset.y < 0.0f)
+                continue;
+
             float sample_depth = texture(depth_tx2D, offset.xy).r;
+
+            if(sample_depth < 0.0001)
+                continue;
+
             frag_vs_pos = depthToViewPos(sample_depth,offset.xy);
 
             float range_check = smoothstep(0.0, 1.0, radius / abs(length(view_pos) - length(frag_vs_pos))); 
@@ -90,7 +97,7 @@ void main()
         }
     }
     
-    occlusion = 1.0 - (occlusion / samples_cnt);
+    occlusion = 1.0 - (occlusion / sample_cnt);
 
     imageStore(tgt_tx2D, pixel_coords , vec4(occlusion) );
 }

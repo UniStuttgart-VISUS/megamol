@@ -8,6 +8,8 @@
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/EnumParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/IntParam.h"
 
 #include "vislib/graphics/gl/ShaderSource.h"
 
@@ -18,6 +20,8 @@ megamol::compositing::ScreenSpaceEffect::ScreenSpaceEffect()
     , m_output_texture(nullptr)
     , m_output_texture_hash(0)
     , m_mode("Mode", "Sets screen space effect mode, e.g. ssao, fxaa...")
+    , m_ssao_radius("SSAO Radius", "Sets radius for SSAO")
+    , m_ssao_sample_cnt("SSAO Samples", "Sets the number of samples used SSAO")
     , m_output_tex_slot("OutputTexture", "Gives access to resulting output texture")
     , m_input_tex_slot("InputTexture", "Connects an optional input texture")
     , m_normals_tex_slot("NormalTexture", "Connects the normals render target texture")
@@ -25,8 +29,14 @@ megamol::compositing::ScreenSpaceEffect::ScreenSpaceEffect()
     , m_camera_slot("Camera", "Connects a (copy of) camera state") {
     this->m_mode << new megamol::core::param::EnumParam(0);
     this->m_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(0, "SSAO");
-    this->m_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(1, "FXAA TODO");
+    this->m_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(1, "FXAA");
     this->MakeSlotAvailable(&this->m_mode);
+
+    this->m_ssao_sample_cnt << new megamol::core::param::IntParam(16, 0, 64);
+    this->MakeSlotAvailable(&this->m_ssao_sample_cnt);
+
+    this->m_ssao_radius << new megamol::core::param::FloatParam(0.5f, 0.0f);
+    this->MakeSlotAvailable(&this->m_ssao_radius);
 
     this->m_output_tex_slot.SetCallback(CallTexture2D::ClassName(), "GetData", &ScreenSpaceEffect::getDataCallback);
     this->m_output_tex_slot.SetCallback(
@@ -63,7 +73,8 @@ bool megamol::compositing::ScreenSpaceEffect::create() {
         if (!m_ssao_prgm->Compile(compute_ssao_src.Code(), compute_ssao_src.Count())) return false;
         if (!m_ssao_prgm->Link()) return false;
 
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::blur", compute_ssao_blur_src)) return false;
+        if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::blur", compute_ssao_blur_src))
+            return false;
         if (!m_ssao_blur_prgm->Compile(compute_ssao_blur_src.Code(), compute_ssao_blur_src.Count())) return false;
         if (!m_ssao_blur_prgm->Link()) return false;
 
@@ -139,7 +150,6 @@ bool megamol::compositing::ScreenSpaceEffect::getDataCallback(core::Call& caller
 
     std::function<void(std::shared_ptr<glowl::Texture2D> src, std::shared_ptr<glowl::Texture2D> tgt)>
         setupOutputTexture = [](std::shared_ptr<glowl::Texture2D> src, std::shared_ptr<glowl::Texture2D> tgt) {
-
             // set output texture size to primary input texture
             std::array<float, 2> texture_res = {
                 static_cast<float>(src->getWidth()), static_cast<float>(src->getHeight())};
@@ -149,10 +159,13 @@ bool megamol::compositing::ScreenSpaceEffect::getDataCallback(core::Call& caller
                     GL_RGBA16F, std::get<0>(texture_res), std::get<1>(texture_res), 1, GL_RGBA, GL_HALF_FLOAT, 1);
                 tgt->reload(tx_layout, nullptr);
             }
-    };
- 
+        };
+
 
     if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0) {
+        m_ssao_radius.Param<core::param::FloatParam>()->SetGUIVisible(true);
+        m_ssao_sample_cnt.Param<core::param::IntParam>()->SetGUIVisible(true);
+
         if (call_normal == NULL) return false;
         if (call_depth == NULL) return false;
         if (call_camera == NULL) return false;
@@ -178,7 +191,9 @@ bool megamol::compositing::ScreenSpaceEffect::getDataCallback(core::Call& caller
         m_ssao_prgm->Enable();
 
         m_ssao_samples->bind(1);
-        glUniform1i(m_ssao_prgm->ParameterLocation("samples_cnt"), 64);
+
+        glUniform1f(m_ssao_prgm->ParameterLocation("radius"), m_ssao_radius.Param<core::param::FloatParam>()->Value());
+        glUniform1i(m_ssao_prgm->ParameterLocation("sample_cnt"), m_ssao_sample_cnt.Param<core::param::IntParam>()->Value());
 
         glActiveTexture(GL_TEXTURE0);
         normal_tx2D->bindTexture();
@@ -221,6 +236,9 @@ bool megamol::compositing::ScreenSpaceEffect::getDataCallback(core::Call& caller
         m_ssao_blur_prgm->Disable();
 
     } else if (this->m_mode.Param<core::param::EnumParam>()->Value() == 1) {
+        m_ssao_radius.Param<core::param::FloatParam>()->SetGUIVisible(false);
+        m_ssao_sample_cnt.Param<core::param::IntParam>()->SetGUIVisible(false);
+
         if (call_input == NULL) return false;
         if (!(*call_input)(0)) return false;
 

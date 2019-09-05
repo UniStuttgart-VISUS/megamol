@@ -69,7 +69,7 @@ void main() {
             reflected_light += lambert(light_dir,normal) * light_params[i].intensity * (1.0/(d*d));
         }
 
-        retval.rgb = vec3(reflected_light);
+        retval.rgb = vec3(reflected_light) * albedo.rgb;
     }
 
     imageStore(tgt_tx2D, pixel_coords , retval );
