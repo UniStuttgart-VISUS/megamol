@@ -22,6 +22,7 @@
 #include "vislib/math/Quaternion.h"
 #include "vislib/sys/Log.h"
 #include "mmcore/param/EnumParam.h"
+#include "mmcore/param/FloatParam.h"
 
 using namespace megamol;
 using namespace megamol::core;
@@ -31,7 +32,11 @@ using namespace megamol::stdplugin::moldyn::rendering;
 
 const uint32_t max_ssbo_size = 2 * 1024 * 1024 * 1024;
 
-GlyphRenderer::GlyphRenderer(void) : Renderer3DModule_2(), getDataSlot("getData", "The slot to fetch the data"), glyphParam("glyph", "which glyph to render") {
+GlyphRenderer::GlyphRenderer(void)
+    : Renderer3DModule_2()
+    , getDataSlot("getData", "The slot to fetch the data")
+    , glyphParam("glyph", "which glyph to render")
+    , colorInterpolationParam("colorInterpolation", "interpolate between directional coloring (0) and glyph color (1)") {
 
     this->getDataSlot.SetCompatibleCall<core::moldyn::EllipsoidalParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
@@ -43,6 +48,9 @@ GlyphRenderer::GlyphRenderer(void) : Renderer3DModule_2(), getDataSlot("getData"
     gp->SetTypePair(Glyph::SUPERQUADRIC, "Superquadric");
     this->glyphParam  << gp;
     this->MakeSlotAvailable(&this->glyphParam);
+
+    colorInterpolationParam << new param::FloatParam(1.0f, 0.0, 1.0f);
+    this->MakeSlotAvailable(&this->colorInterpolationParam);
 }
 
 
@@ -323,6 +331,9 @@ bool GlyphRenderer::Render(core::view::CallRender3D_2& call) {
     glUniformMatrix4fv(shader->ParameterLocation("MVP_I"), 1, GL_FALSE, glm::value_ptr(mvp_matrix_i));
     glUniform4fv(shader->ParameterLocation("light"), 1, glm::value_ptr(light));
     glUniform4fv(shader->ParameterLocation("cam"), 1, glm::value_ptr(CamPos));
+
+    glUniform1f(shader->ParameterLocation("colorInterpolation"),
+        this->colorInterpolationParam.Param<param::FloatParam>()->Value());
 
     //glUniform3fvARB(shader->ParameterLocation("camIn"), 1, glm::value_ptr(CamView));
     //glUniform3fvARB(shader->ParameterLocation("camRight"), 1, glm::value_ptr(CamRight));

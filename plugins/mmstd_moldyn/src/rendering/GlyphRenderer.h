@@ -117,6 +117,7 @@ private:
     megamol::core::CallerSlot getDataSlot;
 
     megamol::core::param::ParamSlot glyphParam;
+    megamol::core::param::ParamSlot colorInterpolationParam;
 
     SIZE_T lastHash = -1;
     uint32_t lastFrameID = -1;

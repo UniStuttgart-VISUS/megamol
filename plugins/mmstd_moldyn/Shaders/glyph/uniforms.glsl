@@ -7,5 +7,6 @@ uniform mat4 MVP_T;
 uniform vec4 light;
 uniform vec4 cam;
 uniform vec4 globalColor;
+uniform float colorInterpolation;
 uniform int intensityOnly;
 uniform int useGlobalColor;

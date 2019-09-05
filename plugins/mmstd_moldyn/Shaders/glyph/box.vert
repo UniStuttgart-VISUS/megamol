@@ -30,7 +30,9 @@ out vec4 camPos;
 out vec4 lightPos;
 out vec4 vertColor;
 
-out vec3 invRad; // ?
+out vec3 invRad;
+
+out flat vec3 dirColor;
 
 out mat3 rotMat;
 out vec3 rotMatT0;
@@ -110,9 +112,15 @@ void main() {
     // End: Holy code!
 
     rotMatIT = mat3(rotMatT0, rotMatT1, rotMatT2);
-    rotMatIT = transpose(rotMatIT);
+    rotMat = transpose(rotMatIT);
 
     normal = cube_normals[corner]; //(MV_T * vec4(cube_normals[corner], 0.0f)).xyz;
+
+    vec3 dirColor1 = max(vec3(0), normal * sign(radii));
+    vec3 dirColor2 = vec3(1) + normal * sign(radii);
+
+    dirColor = any(lessThan(dirColor2, vec3(0.5)))? dirColor2 * vec3(0.5) : dirColor1;
+
     transformedNormal = (MV_T * vec4(normal, 0.0f)).xyz;
     lightPos = MV_T * light; // transpose of inverse inverse -> directional light
     
@@ -131,12 +139,14 @@ void main() {
 
     vec4 pos, projPos;
 
+    camPos.xyz = rotMat * cam.xyz;
+
     pos.xyz = cube_strip[corner];
     pos.xyz *= absradii; // scale
     // projPos.x = dot(rotMatT0, pos.xyz); // rotate
     // projPos.y = dot(rotMatT1, pos.xyz);
     // projPos.z = dot(rotMatT2, pos.xyz);
-    projPos.xyz = rotMatIT * pos.xyz;
+    projPos.xyz = rotMat * pos.xyz;
     //projPos.xyz = pos.xyz;
     projPos.w = 0.0;
     pos = objPos + projPos; // move
