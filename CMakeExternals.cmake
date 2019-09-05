@@ -123,6 +123,13 @@ function(require_external NAME)
     get_target_property(ZLIB_INCLUDE_DIR zlib_ext INCLUDE_DIRECTORIES)
     set(ZLIB_LIBRARY zlib_ext)
 
+    foreach(DIR IN LISTS ZLIB_INCLUDE_DIR)
+      if(EXISTS "${DIR}/zlib.h")
+        file(STRINGS "${DIR}/zlib.h" ZLIB_VERNUM REGEX "^#define ZLIB_VERNUM 0x[a-f0-9]+$")
+        string(REGEX MATCH "0x[a-f0-9]+" ZLIB_VERNUM ${ZLIB_VERNUM})
+      endif()
+    endforeach()
+
     fetch_external(${NAME} png_static
       "CMAKE_POSITION_INDEPENDENT_CODE;PNG_BUILD_ZLIB;PNG_STATIC;SKIP_INSTALL_ALL"
       "PNG_SHARED;PNG_TESTS"
