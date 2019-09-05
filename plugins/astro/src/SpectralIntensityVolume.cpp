@@ -676,16 +676,21 @@ bool megamol::astro::SpectralIntensityVolume::createVolumeCPU(core::misc::Volume
     auto const minmax_temp_rcp = 1.0 / ((*minmax_temp.second) - min_temp);
 
     // normalize attributes
-    std::transform(dens.cbegin(), dens.cend(), dens.begin(),
+    /*std::transform(dens.cbegin(), dens.cend(), dens.begin(),
         [min_dens, minmax_dens_rcp](auto& val) { return (val - min_dens) * minmax_dens_rcp; });
     std::transform(temps.cbegin(), temps.cend(), temps.begin(),
-        [min_temp, minmax_temp_rcp](auto& val) { return (val - min_temp) * minmax_temp_rcp; });
+        [min_temp, minmax_temp_rcp](auto& val) { return (val - min_temp) * minmax_temp_rcp; });*/
 
     std::vector<double> radiance(dens.size());
     std::transform(dens.cbegin(), dens.cend(), temps.cbegin(), radiance.begin(),
         [](double d, double t) { return d * d * std::sqrt(t); });
     std::transform(sl.cbegin(), sl.cend(), radiance.cbegin(), radiance.begin(),
-        [](float r, double rad) { return 4.0 * M_PI * rad * static_cast<double>(r * r * r); });
+        [](float r, double rad) { return 4.0 * 0.333333333 * M_PI * rad * static_cast<double>(r * r * r); });
+    auto const minmax_rad = std::minmax_element(radiance.cbegin(), radiance.cend());
+    auto const min_rad = *minmax_rad.first;
+    auto const minmax_rad_rcp = 1.0 / ((*minmax_rad.second) - min_rad);
+    std::transform(radiance.cbegin(), radiance.cend(), radiance.begin(),
+        [min_rad, minmax_rad_rcp](auto& val) { return (val - min_rad) * minmax_rad_rcp; });
 
 
     // prepare input volume
