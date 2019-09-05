@@ -1,5 +1,6 @@
 include(CMakeParseArguments)
 include(ExternalProject)
+include(FetchContent)
 
 set(CURRENT_LIST_DIR "${CMAKE_CURRENT_LIST_DIR}")
 
@@ -95,8 +96,11 @@ endfunction(bootstrap_external_package)
 # See ExternalProject_Add(...) for usage.
 #
 function(add_external_project TARGET)
-  set(ARGS_ONE_VALUE GIT_TAG)
+  set(ARGS_ONE_VALUE GIT_TAG GIT_REPOSITORY)
   cmake_parse_arguments(args "" "${ARGS_ONE_VALUE}" "" ${ARGN})
+
+  string(TOLOWER "${TARGET}" lcName)
+  string(TOUPPER "${TARGET}" ucName)
 
   if(args_GIT_TAG)
     message(STATUS "${TARGET} tag: ${args_GIT_TAG}")
@@ -105,14 +109,99 @@ function(add_external_project TARGET)
   # Compose arguments for ExternalProject_Add.
   _cmake_args_propagate(BASE_ARGS)
   set(ARGN_EXT "${ARGN}")
-  list(APPEND ARGN_EXT ${BASE_ARGS} CMAKE_ARGS
-    "-DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>"
-    "-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}"
-    "-DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}")
+  list(APPEND ARGN_EXT ${BASE_ARGS}
+    DOWNLOAD_COMMAND ""
+    CMAKE_ARGS
+      "-DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>"
+      "-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}"
+      "-DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}")
+
+  # Download immediately
+  if(NOT args_GIT_REPOSITORY)
+    message(FATAL_ERROR "No Git repository declared as source")
+  endif()
+  set(DOWNLOAD_ARGS "GIT_REPOSITORY;${args_GIT_REPOSITORY}")
+  if(args_GIT_TAG)
+    list(APPEND DOWNLOAD_ARGS "GIT_TAG;${args_GIT_TAG}")
+  endif()
+
+  FetchContent_Declare(${TARGET} ${DOWNLOAD_ARGS})
+  FetchContent_GetProperties(${TARGET})
+
+  if(NOT ${lcName}_POPULATED)
+    FetchContent_Populate(${TARGET})
+  endif()
+
+  list(APPEND ARGN_EXT SOURCE_DIR "${${lcName}_SOURCE_DIR}")
 
   # Add external project.
   ExternalProject_Add(${TARGET} "${ARGN_EXT}")
+
+  mark_as_advanced(FORCE FETCHCONTENT_SOURCE_DIR_${ucName})
+  mark_as_advanced(FORCE FETCHCONTENT_UPDATES_DISCONNECTED_${ucName})
 endfunction(add_external_project)
+
+#
+# Adds an external header-only project.
+#
+# add_external_headeronly_project(<target>
+#     DEPENDS <external_projects>
+#     GIT_REPOSITORY <git-url>
+#     GIT_TAG <tag or commit>
+#     INCLUDE_DIR <include directories relative to the source directory
+#                  - leave blank for the source directory itself>)
+#
+function(add_external_headeronly_project TARGET)
+  # Parse arguments
+  set(ARGS_ONE_VALUE GIT_TAG GIT_REPOSITORY)
+  set(ARGS_MULT_VALUES INCLUDE_DIR DEPENDS)
+  cmake_parse_arguments(args "" "${ARGS_ONE_VALUE}" "${ARGS_MULT_VALUES}" ${ARGN})
+
+  string(TOLOWER "${TARGET}" lcName)
+  string(TOUPPER "${TARGET}" ucName)
+
+  # Download immediately
+  if(NOT args_GIT_REPOSITORY)
+    message(FATAL_ERROR "No Git repository declared as source")
+  endif()
+  set(DOWNLOAD_ARGS "GIT_REPOSITORY;${args_GIT_REPOSITORY}")
+  if(args_GIT_TAG)
+    list(APPEND DOWNLOAD_ARGS "GIT_TAG;${args_GIT_TAG}")
+  endif()
+
+  FetchContent_Declare(${TARGET} ${DOWNLOAD_ARGS})
+  FetchContent_GetProperties(${TARGET})
+  FetchContent_Populate(${TARGET})
+
+  # Create interface library
+  add_library(${TARGET} INTERFACE)
+
+  # Add include directories
+  if(args_INCLUDE_DIR)
+    set(INCLUDE_DIRS)
+    foreach(INCLUDE_DIR IN LISTS args_INCLUDE_DIR)
+      if(EXISTS "${${lcName}_SOURCE_DIR}/${INCLUDE_DIR}")
+        list(APPEND INCLUDE_DIRS "${${lcName}_SOURCE_DIR}/${INCLUDE_DIR}")
+      else()
+        message(WARNING "Include directory '${${lcName}_SOURCE_DIR}/${INCLUDE_DIR}' not found. Adding path '${INCLUDE_DIR}' instead.")
+        list(APPEND INCLUDE_DIRS "${INCLUDE_DIR}")
+      endif()
+    endforeach()
+  else()
+    set(INCLUDE_DIRS "${${lcName}_SOURCE_DIR}")
+  endif()
+
+  target_include_directories(${TARGET} INTERFACE ${INCLUDE_DIRS})
+
+  # Add dependencies
+  if(args_DEPENDS)
+    add_dependencies(${TARGET} DEPENDS ${args_DEPENDS})
+  endif()
+
+  # Hide variables
+  mark_as_advanced(FORCE FETCHCONTENT_SOURCE_DIR_${ucName})
+  mark_as_advanced(FORCE FETCHCONTENT_UPDATES_DISCONNECTED_${ucName})
+endfunction(add_external_headeronly_project)
 
 #
 # Adds an external library, depending on an external project.
@@ -165,18 +254,16 @@ function(add_external_library TARGET LINKAGE)
     INTERFACE_LINK_LIBRARIES "${INTERFACE_LIBRARIES}")
   if(LINKAGE STREQUAL "STATIC" OR LINKAGE STREQUAL "SHARED")
     set_target_properties(${TARGET} PROPERTIES
-      IMPORTED_CONFIGURATIONS "Debug;Release;MinSizeRel;ReleaseWithDebInfo"
+      IMPORTED_CONFIGURATIONS "Debug;Release;ReleaseWithDebInfo"
       IMPORTED_LOCATION_DEBUG "${INSTALL_DIR}/${LIBRARY_DEBUG}"
       IMPORTED_LOCATION_RELEASE "${INSTALL_DIR}/${LIBRARY_RELEASE}"
-      IMPORTED_LOCATION_RELWITHDEBINFO "${INSTALL_DIR}/${LIBRARY_RELWITHDEBINFO}"
-      IMPORTED_LOCATION_MINSIZEREL "${INSTALL_DIR}/${LIBRARY_MINSIZEREL}")
+      IMPORTED_LOCATION_RELWITHDEBINFO "${INSTALL_DIR}/${LIBRARY_RELWITHDEBINFO}")
   endif()
   if(LINKAGE STREQUAL "SHARED")
     set_target_properties(${TARGET} PROPERTIES
       IMPORTED_IMPLIB_DEBUG "${INSTALL_DIR}/${IMPORT_LIBRARY_DEBUG}"
       IMPORTED_IMPLIB_RELEASE "${INSTALL_DIR}/${IMPORT_LIBRARY_RELEASE}"
-      IMPORTED_IMPLIB_RELWITHDEBINFO "${INSTALL_DIR}/${IMPORT_LIBRARY_RELWITHDEBINFO}"
-      IMPORTED_IMPLIB_MINSIZEREL "${INSTALL_DIR}/${IMPORT_LIBRARY_MINSIZEREL}")
+      IMPORTED_IMPLIB_RELWITHDEBINFO "${INSTALL_DIR}/${IMPORT_LIBRARY_RELWITHDEBINFO}")
   endif()
 
   #message(STATUS

@@ -13,27 +13,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   # afterwards list the dependencies.
   set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE" CACHE INTERNAL "")
 
-  # Add ImGui.
-  set(IMGUI_LIB "lib/${CMAKE_STATIC_LIBRARY_PREFIX}imgui${CMAKE_STATIC_LIBRARY_SUFFIX}")
-  add_external_project(ImGui_ext
-    GIT_REPOSITORY https://github.com/ocornut/imgui.git
-    GIT_TAG "v1.70"
-    BUILD_BYPRODUCTS "<INSTALL_DIR>/${IMGUI_LIB}"
-    PATCH_COMMAND ${CMAKE_COMMAND} -E copy
-      "${CMAKE_CURRENT_SOURCE_DIR}/cmake/ImGui/CMakeLists.txt"
-      "<SOURCE_DIR>/CMakeLists.txt")
-  add_external_library(ImGui STATIC
-    DEPENDS ImGui_ext
-    INCLUDE_DIR "src/ImGui_ext"
-    LIBRARY ${IMGUI_LIB})
-
-  ExternalProject_Get_property(ImGui_ext SOURCE_DIR)
-  set(imgui_files
-    "${SOURCE_DIR}/examples/imgui_impl_opengl3.cpp"
-    "${SOURCE_DIR}/examples/imgui_impl_opengl3.h"
-    "${SOURCE_DIR}/misc/cpp/imgui_stdlib.cpp"
-    "${SOURCE_DIR}/misc/cpp/imgui_stdlib.h")    
-  set_source_files_properties(${imgui_files} PROPERTIES GENERATED TRUE)
+  require_external(imgui)
 
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
@@ -58,7 +38,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     "include" "src"
     "${SOURCE_DIR}/examples/" "${SOURCE_DIR}/misc/cpp/")
-  target_link_libraries(${PROJECT_NAME} PRIVATE vislib core glad PUBLIC ImGui)
+  target_link_libraries(${PROJECT_NAME} PRIVATE vislib core glad PUBLIC imgui)
 
   # Installation rules for generated files
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")

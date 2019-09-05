@@ -18,42 +18,9 @@ if(BUILD_MMSTD_DATATOOLS_PLUGIN)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
   endif()
 
-  if(WIN32)
-    set(TNY_IMPORT_LIB "lib/tinyply.lib")
-    set(TNY_IMPORT_LIB_DEBUG "lib/tinyplyd.lib")
-    set(TNY_LIB "bin/tinyply.dll")
-    set(TNY_LIB_DEBUG "bin/tinyplyd.dll")
-  else()
-    include(GNUInstallDirs)
-    set(TNY_IMPORT_LIB_DEBUG "lib/libtinyply.so")
-    set(TNY_IMPORT_LIB "lib/libtinyply.so")
-    set(TNY_LIB_DEBUG "lib/libtinyply.so")
-    set(TNY_LIB "lib/libtinyply.so")
-  endif()
-
-  add_external_project(tinyply_ext
-    GIT_REPOSITORY https://github.com/ddiakopoulos/tinyply.git
-    GIT_TAG "2.1"
-    BUILD_BYPRODUCTS "<INSTALL_DIR>/${TNY_IMPORT_LIB_DEBUG}" "<INSTALL_DIR>/${TNY_IMPORT_LIB}"
-    CMAKE_ARGS -DSHARED_LIB=true)
-  add_external_library(tinyply SHARED
-    DEPENDS tinyply_ext
-    IMPORT_LIBRARY_DEBUG ${TNY_IMPORT_LIB_DEBUG}
-    IMPORT_LIBRARY_RELEASE ${TNY_IMPORT_LIB}
-    LIBRARY_DEBUG ${TNY_LIB_DEBUG}
-    LIBRARY_RELEASE ${TNY_LIB})
-
-  add_external_project(mmpld_io_ext
-    GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/mmpld_io.git
-    CONFIGURE_COMMAND ""
-    BUILD_COMMAND ""
-    INSTALL_COMMAND ""
-    TEST_COMMAND "")
-  add_external_library(mmpld_io INTERFACE
-    DEPENDS mmpld_io_ext
-    INCLUDE_DIR "src/mmpld_io_ext/include")
-
   # Add externals.
+  require_external(tinyply)
+  require_external(mmpld_io)
   require_external(Eigen)
   require_external(nanoflann)
 

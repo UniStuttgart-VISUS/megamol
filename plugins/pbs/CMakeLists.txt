@@ -13,64 +13,13 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   # afterwards list the dependencies.
   set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE BUILD_OSPRAY_PLUGIN BUILD_IMAGE_CALLS_PLUGIN" CACHE INTERNAL "")
 
-  if(WIN32)
-    set(SNAPPY_IMPORT_LIB "lib/snappy.lib")
-    set(SNAPPY_LIB "bin/snappy.dll")
-    set(ICET_CORE_IMPORT_LIB "lib/IceTCore.lib")
-    set(ICET_CORE_LIB "bin/IceTCore.dll")
-    set(ICET_GL_IMPORT_LIB "lib/IceTGL.lib")
-    set(ICET_GL_LIB "bin/IceTGL.dll")
-    set(ICET_MPI_IMPORT_LIB "lib/IceTMPI.lib")
-    set(ICET_MPI_LIB "bin/IceTMPI.dll")
-  else()
-    include(GNUInstallDirs)
-    set(SNAPPY_LIB "${CMAKE_INSTALL_LIBDIR}/libsnappy.so")
-    set(ICET_CORE_LIB "lib/libIceTCore.so")
-    set(ICET_GL_LIB "lib/libIceTGL.so")
-    set(ICET_MPI_LIB "lib/libIceTMPI.so")
-  endif()
-
-  add_external_project(snappy_ext
-    GIT_REPOSITORY https://github.com/google/snappy.git
-    GIT_TAG "1.1.7"
-    BUILD_BYPRODUCTS "<INSTALL_DIR>/${SNAPPY_IMPORT_LIB}"
-    CMAKE_ARGS
-      -DBUILD_SHARED_LIBS=ON
-      -DSNAPPY_BUILD_TESTS=OFF
-      -DCMAKE_BUILD_TYPE=Release)
-  add_external_library(snappy SHARED
-    DEPENDS snappy_ext
-    IMPORT_LIBRARY_DEBUG ${SNAPPY_IMPORT_LIB}
-    IMPORT_LIBRARY_RELEASE ${SNAPPY_IMPORT_LIB}
-    LIBRARY_DEBUG ${SNAPPY_LIB}
-    LIBRARY_RELEASE ${SNAPPY_LIB})
+  require_external(zfp)
+  require_external(libzmq)
+  require_external(libcppzmq)
+  require_external(snappy)
 
   if(MPI_C_FOUND)
-    add_external_project(IceT_ext
-      GIT_REPOSITORY https://gitlab.kitware.com/icet/icet.git
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${ICET_CORE_IMPORT_LIB}" "<INSTALL_DIR>/${ICET_GL_IMPORT_LIB}" "<INSTALL_DIR>/${ICET_MPI_IMPORT_LIB}"
-      CMAKE_ARGS
-        -DBUILD_SHARED_LIBS=ON
-        -DICET_BUILD_TESTING=OFF
-        -DMPI_GUESS_LIBRARY_NAME=${MPI_GUESS_LIBRARY_NAME})
-    add_external_library(IceTCore SHARED
-      DEPENDS IceT_ext
-      IMPORT_LIBRARY_DEBUG ${ICET_CORE_IMPORT_LIB}
-      IMPORT_LIBRARY_RELEASE ${ICET_CORE_IMPORT_LIB}
-      LIBRARY_DEBUG ${ICET_CORE_LIB}
-      LIBRARY_RELEASE ${ICET_CORE_LIB})
-    add_external_library(IceTGL SHARED
-      DEPENDS IceT_ext
-      IMPORT_LIBRARY_DEBUG ${ICET_GL_IMPORT_LIB}
-      IMPORT_LIBRARY_RELEASE ${ICET_GL_IMPORT_LIB}
-      LIBRARY_DEBUG ${ICET_GL_LIB}
-      LIBRARY_RELEASE ${ICET_GL_LIB})
-    add_external_library(IceTMPI SHARED
-      DEPENDS IceT_ext
-      IMPORT_LIBRARY_DEBUG ${ICET_MPI_IMPORT_LIB}
-      IMPORT_LIBRARY_RELEASE ${ICET_MPI_IMPORT_LIB}
-      LIBRARY_DEBUG ${ICET_MPI_LIB}
-      LIBRARY_RELEASE ${ICET_MPI_LIB})
+    require_external(IceT)
   endif()
 
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
