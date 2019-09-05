@@ -5,8 +5,8 @@
  * All rights reserved.
  */
 
-#ifndef MESH_CALLS_H_INCLUDED
-#define MESH_CALLS_H_INCLUDED
+#ifndef COMPOSITING_CALLS_H_INCLUDED
+#define COMPOSITING_CALLS_H_INCLUDED
 
 #include <memory>
 
@@ -57,4 +57,4 @@ typedef megamol::core::factories::CallAutoDescription<CallFramebufferGL> CallFra
 } // namespace megamol
 
 
-#endif // !MESH_CALLS_H_INCLUDED
+#endif // !COMPOSITING_CALLS_H_INCLUDED

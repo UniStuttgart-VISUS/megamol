@@ -125,7 +125,7 @@ private:
      * normals - RGB 16bit per channel
      * depth - single channel 32bit
      */
-    std::unique_ptr<glowl::FramebufferObject> m_GBuffer;
+    std::shared_ptr<glowl::FramebufferObject> m_GBuffer;
 
     /** Local copy of last used camera*/
     core::view::Camera_2 m_last_used_camera;
@@ -136,6 +136,9 @@ private:
 
     /** Slot for requesting the camera that is propagated to the render chain from this module */
     core::CalleeSlot m_camera;
+
+    /** Slot for publishing the framebuffer object used by this render target module */
+    core::CallerSlot m_framebuffer_slot;
 };
 
 } // namespace compositing

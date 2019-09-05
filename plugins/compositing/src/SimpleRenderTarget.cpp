@@ -6,11 +6,12 @@
 
 megamol::compositing::SimpleRenderTarget::SimpleRenderTarget() 
     : Renderer3DModule_2()
-    , m_GBuffer(nullptr) 
+    , m_GBuffer(nullptr)
     , m_color_render_target("Color", "Acces the color render target texture")
     , m_normal_render_target("Normals", "Acces the normals render target texture")
     , m_depth_render_target("Depth", "Access the depth render target texture")
-    , m_camera("Camera", "Access the latest camera snapshot") 
+    , m_camera("Camera", "Access the latest camera snapshot")
+    , m_framebuffer_slot("Framebuffer", "Publish the framebuffer used by this render target")
 {
     this->m_color_render_target.SetCallback(
         CallTexture2D::ClassName(), "GetData", &SimpleRenderTarget::getColorRenderTarget);
@@ -35,6 +36,9 @@ megamol::compositing::SimpleRenderTarget::SimpleRenderTarget()
     this->m_camera.SetCallback(
         CallCamera::ClassName(), "GetMetaData", &SimpleRenderTarget::getMetaDataCallback);
     this->MakeSlotAvailable(&this->m_camera);
+
+    this->m_framebuffer_slot.SetCompatibleCall<CallFramebufferGLDescription>();
+    this->MakeSlotAvailable(&this->m_framebuffer_slot);
 }
 
 megamol::compositing::SimpleRenderTarget::~SimpleRenderTarget() { 
@@ -44,7 +48,7 @@ megamol::compositing::SimpleRenderTarget::~SimpleRenderTarget() {
 
 bool megamol::compositing::SimpleRenderTarget::create() { 
 
-    m_GBuffer = std::make_unique<glowl::FramebufferObject>(1, 1, true);
+    m_GBuffer = std::make_shared<glowl::FramebufferObject>(1, 1, true);
     m_GBuffer->createColorAttachment(GL_RGB16F, GL_RGB, GL_HALF_FLOAT); // surface albedo
     m_GBuffer->createColorAttachment(GL_RGB16F, GL_RGB, GL_HALF_FLOAT); // normals
     m_GBuffer->createColorAttachment(GL_R32F, GL_RED, GL_FLOAT);        // clip space depth
@@ -66,6 +70,13 @@ bool megamol::compositing::SimpleRenderTarget::Render(core::view::CallRender3D_2
 void megamol::compositing::SimpleRenderTarget::PreRender(core::view::CallRender3D_2& call)
 {
     m_last_used_camera = call.GetCamera();
+
+    auto rhs_fc = m_framebuffer_slot.CallAs<CallFramebufferGL>();
+    if (rhs_fc != NULL)
+    {
+        rhs_fc->setData(m_GBuffer);
+        (*rhs_fc)(0);
+    }
 
     GLfloat viewport[4];
     glGetFloatv(GL_VIEWPORT, viewport);

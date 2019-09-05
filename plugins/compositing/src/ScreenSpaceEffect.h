@@ -73,8 +73,14 @@ protected:
 private:
     typedef vislib::graphics::gl::GLSLComputeShader GLSLComputeShader;
 
-    /** Shader program for texture add */
+    /** Shader program for texture ssao */
     std::unique_ptr<GLSLComputeShader> m_ssao_prgm;
+
+    /** Shader program for texture ssao */
+    std::unique_ptr<GLSLComputeShader> m_ssao_blur_prgm;
+
+    /** Shader program for texture ssao */
+    std::unique_ptr<GLSLComputeShader> m_fxaa_prgm;
 
     /** GPU buffer object for making active (point)lights available in during shading pass */
     std::unique_ptr<glowl::BufferObject> m_ssao_samples;
@@ -84,6 +90,9 @@ private:
 
     /** Texture that the combination result will be written to */
     std::shared_ptr<glowl::Texture2D> m_output_texture;
+
+    /** Texture that can store intermediate results for multi-pass effect, e.g. ssao with blur */
+    std::shared_ptr<glowl::Texture2D> m_intermediate_texture;
 
     /** Hash value to keep track of update to the output texture */
     size_t m_output_texture_hash;

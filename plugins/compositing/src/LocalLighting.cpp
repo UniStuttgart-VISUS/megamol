@@ -8,7 +8,7 @@
 #include "compositing/CompositingCalls.h"
 
 megamol::compositing::LocalLighting::LocalLighting() 
-    : Renderer3DModule_2()
+    : core::Module()
     , m_output_texture(nullptr)
     , m_lights_buffer(nullptr)
     , m_output_tex_slot("OutputTexture", "Gives access to resulting output texture")
@@ -16,6 +16,8 @@ megamol::compositing::LocalLighting::LocalLighting()
     , m_normal_tex_slot("NormalTexture", "Connects to the normals render target texture")
     , m_depth_tex_slot("DepthTexture", "Connects to the depth render target texture")
     , m_roughness_metalness_tex_slot("RoughMetalTexture","Connects to the roughness/metalness render target texture")
+    , m_lightSlot("lights", "Lights are retrieved over this slot. If no light is connected, a default camera light is used") 
+    , m_camera_slot("Camera", "Connects a (copy of) camera state")
 {
     this->m_output_tex_slot.SetCallback(CallTexture2D::ClassName(), "GetData", &LocalLighting::getDataCallback);
     this->m_output_tex_slot.SetCallback(CallTexture2D::ClassName(), "GetMetaData", &LocalLighting::getMetaDataCallback);
@@ -32,6 +34,12 @@ megamol::compositing::LocalLighting::LocalLighting()
 
     this->m_roughness_metalness_tex_slot.SetCompatibleCall<CallTexture2DDescription>();
     this->MakeSlotAvailable(&this->m_roughness_metalness_tex_slot);
+
+    this->m_lightSlot.SetCompatibleCall<core::view::light::CallLightDescription>();
+    this->MakeSlotAvailable(&this->m_lightSlot);
+
+    this->m_camera_slot.SetCompatibleCall<CallCameraDescription>();
+    this->MakeSlotAvailable(&this->m_camera_slot);
 }
 
 megamol::compositing::LocalLighting::~LocalLighting() { this->Release(); }
@@ -74,23 +82,27 @@ bool megamol::compositing::LocalLighting::create() {
 
 void megamol::compositing::LocalLighting::release() {}
 
-bool megamol::compositing::LocalLighting::GetExtents(core::view::CallRender3D_2& call) { return true; }
-
-bool megamol::compositing::LocalLighting::Render(core::view::CallRender3D_2& call) {
-
-    megamol::core::view::CallRender3D_2* cr = &call;
+bool megamol::compositing::LocalLighting::getDataCallback(core::Call& caller) {
+    auto lhs_tc = dynamic_cast<CallTexture2D*>(&caller);
     auto call_albedo = m_albedo_tex_slot.CallAs<CallTexture2D>();
     auto call_normal = m_normal_tex_slot.CallAs<CallTexture2D>();
     auto call_depth = m_depth_tex_slot.CallAs<CallTexture2D>();
+    auto call_camera = m_camera_slot.CallAs<CallCamera>();
 
-    if (cr == NULL) return false;
+    if (lhs_tc == NULL) return false;
     if (call_albedo == NULL) return false;
     if (call_normal == NULL) return false;
     if (call_depth == NULL) return false;
+    if (call_camera == NULL) return false;
 
     if (!(*call_albedo)(0)) return false;
     if (!(*call_normal)(0)) return false;
     if (!(*call_depth)(0)) return false;
+    if (!(*call_camera)(0)) return false;
+
+    if (lhs_tc->getData() == nullptr) {
+        lhs_tc->setData(m_output_texture);
+    }
 
     // set output texture size to primary input texture
     auto albedo_tx2D = call_albedo->getData();
@@ -107,7 +119,7 @@ bool megamol::compositing::LocalLighting::Render(core::view::CallRender3D_2& cal
     }
 
     // obtain camera information
-    core::view::Camera_2 cam(cr->GetCamera());
+    core::view::Camera_2 cam = call_camera->getData();
     cam_type::snapshot_type snapshot;
     cam_type::matrix_type view_tmp, proj_tmp;
     cam.calc_matrices(snapshot, view_tmp, proj_tmp, core::thecam::snapshot_content::all);
@@ -137,7 +149,7 @@ bool megamol::compositing::LocalLighting::Render(core::view::CallRender3D_2& cal
         m_lighting_prgm->Enable();
 
         m_lights_buffer->bind(1);
-        glUniform1i(m_lighting_prgm->ParameterLocation("light_cnt"), 1);
+        glUniform1i(m_lighting_prgm->ParameterLocation("light_cnt"), this->lightMap.size());
 
         glActiveTexture(GL_TEXTURE0);
         albedo_tx2D->bindTexture();
@@ -158,25 +170,31 @@ bool megamol::compositing::LocalLighting::Render(core::view::CallRender3D_2& cal
 
         m_output_texture->bindImage(0, GL_WRITE_ONLY);
 
-         m_lighting_prgm->Dispatch(static_cast<int>(std::ceil(std::get<0>(texture_res) / 8.0f)),
+        m_lighting_prgm->Dispatch(static_cast<int>(std::ceil(std::get<0>(texture_res) / 8.0f)),
             static_cast<int>(std::ceil(std::get<1>(texture_res) / 8.0f)), 1);
 
         m_lighting_prgm->Disable();
-    }
-
-    return true;
-}
-
-void megamol::compositing::LocalLighting::PreRender(core::view::CallRender3D_2& call) {}
-
-bool megamol::compositing::LocalLighting::getDataCallback(core::Call& caller) {
-    auto lhs_tc = dynamic_cast<CallTexture2D*>(&caller);
-
-    if (lhs_tc->getData() == nullptr) {
-        lhs_tc->setData(m_output_texture);
     }
 
     return true; 
 }
 
 bool megamol::compositing::LocalLighting::getMetaDataCallback(core::Call& caller) { return true; }
+
+bool megamol::compositing::LocalLighting::GetLights() {
+    core::view::light::CallLight* cl = this->m_lightSlot.CallAs<core::view::light::CallLight>();
+    if (cl == nullptr) {
+        // TODO add local light
+        return false;
+    }
+    cl->setLightMap(&this->lightMap);
+    cl->fillLightMap();
+    bool lightDirty = false;
+    for (const auto element : this->lightMap) {
+        auto light = element.second;
+        if (light.dataChanged) {
+            lightDirty = true;
+        }
+    }
+    return lightDirty;
+}

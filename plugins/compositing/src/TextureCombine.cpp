@@ -120,8 +120,8 @@ bool megamol::compositing::TextureCombine::getDataCallback(core::Call& caller) {
         src0_tx2D->bindTexture();
         glUniform1i(m_add_prgm->ParameterLocation("src0_tx2D"), 0);
         glActiveTexture(GL_TEXTURE1);
-        src0_tx2D->bindTexture();
-        glUniform1i(m_add_prgm->ParameterLocation("src0_tx2D"), 1);
+        src1_tx2D->bindTexture();
+        glUniform1i(m_add_prgm->ParameterLocation("src1_tx2D"), 1);
 
         m_output_texture->bindImage(0, GL_WRITE_ONLY);
 
@@ -136,8 +136,8 @@ bool megamol::compositing::TextureCombine::getDataCallback(core::Call& caller) {
         src0_tx2D->bindTexture();
         glUniform1i(m_add_prgm->ParameterLocation("src0_tx2D"), 0);
         glActiveTexture(GL_TEXTURE1);
-        src0_tx2D->bindTexture();
-        glUniform1i(m_add_prgm->ParameterLocation("src0_tx2D"), 1);
+        src1_tx2D->bindTexture();
+        glUniform1i(m_add_prgm->ParameterLocation("src1_tx2D"), 1);
 
         m_output_texture->bindImage(0, GL_WRITE_ONLY);
 

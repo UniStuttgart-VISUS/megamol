@@ -22,7 +22,7 @@
 namespace megamol {
 namespace compositing {
 
-class COMPOSITING_API LocalLighting : public megamol::core::view::Renderer3DModule_2 {
+class COMPOSITING_API LocalLighting : public core::Module {
 public:
     /**
      * Answer the name of this module.
@@ -64,33 +64,6 @@ protected:
     void release();
 
     /**
-     * The get extents callback. The module should set the members of
-     * 'call' to tell the caller the extents of its data (bounding boxes
-     * and times).
-     *
-     * @param call The calling call.
-     *
-     * @return The return value of the function.
-     */
-    bool GetExtents(core::view::CallRender3D_2& call);
-
-    /**
-     * The render callback.
-     *
-     * @param call The calling call.
-     *
-     * @return The return value of the function.
-     */
-    bool Render(core::view::CallRender3D_2& call);
-
-    /**
-     * Method that gets called before the rendering is started for all changed modules
-     *
-     * @param call The rendering call that contains the camera
-     */
-    void PreRender(core::view::CallRender3D_2& call);
-
-    /**
      * TODO
      */
     bool getDataCallback(core::Call& caller);
@@ -99,6 +72,13 @@ protected:
      * TODO
      */
     bool getMetaDataCallback(core::Call& caller);
+
+    /**
+     * Receives the current lights from the light call and writes them to the lightMap
+     *
+     * @return True if any light has changed, false otherwise.
+     */
+    bool GetLights(void);
 
 private:
     typedef vislib::graphics::gl::GLSLComputeShader GLSLComputeShader;
@@ -111,6 +91,9 @@ private:
 
     /** GPU buffer object for making active (point)lights available in during shading pass */
     std::unique_ptr<glowl::BufferObject> m_lights_buffer;
+
+    /** map to store the called lights */
+    core::view::light::LightMap lightMap;
 
     //TODO mode slot for LAMBERT, PHONG, etc.
 
@@ -128,6 +111,12 @@ private:
 
     /** Slot for querying texture that contain roughness and metalness channel, i.e. a rhs connection */
     megamol::core::CallerSlot m_roughness_metalness_tex_slot;
+
+    /** Slot to retrieve the light information */
+    megamol::core::CallerSlot m_lightSlot;
+
+    /** Slot for querying camera, i.e. a rhs connection */
+    megamol::core::CallerSlot m_camera_slot;
 
 };
 

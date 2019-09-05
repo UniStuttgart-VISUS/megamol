@@ -19,11 +19,18 @@ using namespace megamol;
 using namespace megamol::mesh;
 
 RenderMDIMesh::RenderMDIMesh()
-	: Renderer3DModule_2(),
-	m_render_task_callerSlot("getRenderTaskData", "Connects the renderer with a render task data source")
+	: Renderer3DModule_2()
+    , m_render_task_callerSlot("getRenderTaskData", "Connects the renderer with a render task data source")
+    , m_framebuffer_slot("Framebuffer", "Connects the renderer to an (optional) framebuffer render target from the calling module") 
 {
 	this->m_render_task_callerSlot.SetCompatibleCall<GPURenderTasksDataCallDescription>();
 	this->MakeSlotAvailable(&this->m_render_task_callerSlot);
+
+    this->m_framebuffer_slot.SetCallback(
+        compositing::CallFramebufferGL::ClassName(), "GetData", &RenderMDIMesh::setFramebufferDataCallback);
+    this->m_framebuffer_slot.SetCallback(
+        compositing::CallFramebufferGL::ClassName(), "GetMetaData", &RenderMDIMesh::setFramebufferMetaDataCallback);
+    this->MakeSlotAvailable(&this->m_framebuffer_slot);
 }
 
 RenderMDIMesh::~RenderMDIMesh()
@@ -240,3 +247,15 @@ bool RenderMDIMesh::Render(core::view::CallRender3D_2& call) {
 	
 	return true;
 }
+
+bool megamol::mesh::RenderMDIMesh::setFramebufferDataCallback(core::Call& caller) { 
+
+    auto fc = dynamic_cast<compositing::CallFramebufferGL*>(&caller);
+    if (fc == NULL) return false;
+
+    m_render_target = fc->getData();
+
+    return true; 
+}
+
+bool megamol::mesh::RenderMDIMesh::setFramebufferMetaDataCallback(core::Call& caller) { return true; }
