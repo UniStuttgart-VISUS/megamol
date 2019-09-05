@@ -329,8 +329,8 @@ namespace moldyn {
 #ifdef SPHERE_MIN_OGL_SSBO_STREAM
         megamol::core::utility::SSBOStreamer     streamer;
         megamol::core::utility::SSBOStreamer     colStreamer;
-        megamol::core::utility::SSBOBufferArray  bufArray;
-        megamol::core::utility::SSBOBufferArray  colBufArray;
+        std::vector<megamol::core::utility::SSBOBufferArray>  bufArray;
+        std::vector<megamol::core::utility::SSBOBufferArray>  colBufArray;
 #endif // SPHERE_MIN_OGL_SSBO_STREAM
 
         /*********************************************************************/
