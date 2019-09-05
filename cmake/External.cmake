@@ -144,7 +144,7 @@ endfunction()
 function(message TYPE)
   string(TOUPPER ${TYPE} ucType)
 
-  if(NOT ADDING_EXTERNAL OR ucType STREQUAL "FATAL_ERROR" OR ucType STREQUAL "AUTHOR_WARNING")
+  if(NOT FETCHCONTENT_QUIET OR NOT ADDING_EXTERNAL OR ucType STREQUAL "FATAL_ERROR" OR ucType STREQUAL "AUTHOR_WARNING")
     _message(${TYPE} ${ARGN})
   endif()
 endfunction()

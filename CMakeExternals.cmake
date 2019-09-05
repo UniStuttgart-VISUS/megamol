@@ -10,8 +10,8 @@ include(External)
 # of the external target to guard against duplicated targets.
 #
 function(require_external NAME)
-  set(FETCHCONTENT_QUIET ON CACHE BOOL "" FORCE)
-  set(FETCHCONTENT_UPDATES_DISCONNECTED ON CACHE BOOL "" FORCE)
+  set(FETCHCONTENT_QUIET ON CACHE BOOL "")
+  set(FETCHCONTENT_UPDATES_DISCONNECTED ON CACHE BOOL "")
 
   ### Header-only libraries #############################################################
 
@@ -130,7 +130,8 @@ function(require_external NAME)
       GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/libpng.git
       GIT_TAG "v1.6.34")
 
-    add_dependencies(png_static zlib_ext ${NAME}_ext_genfiles)
+    add_dependencies(${NAME}_ext_genfiles zlib_ext)
+    add_dependencies(png_static ${NAME}_ext_genfiles zlib_ext)
 
   # libzmq
   elseif(NAME STREQUAL "libzmq")

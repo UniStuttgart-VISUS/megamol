@@ -11,29 +11,51 @@ matrix:
       dist: xenial
       addons:
         apt:
+          update: true
           sources:
             - ubuntu-toolchain-r-test
           packages:
             - g++-7
+            - libgl1-mesa-dev
+            - libglu1-mesa-dev
+            - uuid-dev
+            - libunwind8-dev
+            - libxrandr-dev
+            - libxinerama-dev
+            - libxcursor-dev
+            - libxi-dev
+            - libcgal-qt5-dev
+            - libcgal-dev
       env:
         - CC=gcc-7
         - CXX=g++-7
+    - os: linux
+      dist: xenial
+      addons:
+        apt:
+          update: true
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-9
+            - libgl1-mesa-dev
+            - libglu1-mesa-dev
+            - uuid-dev
+            - libunwind8-dev
+            - libxrandr-dev
+            - libxinerama-dev
+            - libxcursor-dev
+            - libxi-dev
+            - libcgal-qt5-dev
+            - libcgal-dev
+      env:
+        - CC=gcc-9
+        - CXX=g++-9
 
 before_install:
   - . travis/install-cuda-xenial.sh
-  - sudo apt-get -qq update
-  - sudo apt-get install -y libgl1-mesa-dev
-  - sudo apt-get install -y libglu1-mesa-dev
-  - sudo apt-get install -y uuid-dev
-  - sudo apt-get install -y libunwind8-dev
-  - sudo apt-get install -y libxrandr-dev
-  - sudo apt-get install -y libxinerama-dev
-  - sudo apt-get install -y libxcursor-dev
-  - sudo apt-get install -y libxi-dev
-  - sudo apt-get install -y libcgal-qt5-dev
-  - sudo apt-get install -y libcgal-dev
   - mkdir build && cd build
-  - cmake ../ -DCMAKE_CXX_FLAGS=-Wno-deprecated-declarations -DENABLE_CUDA=ON -DSUPPRESS_CUDA_WARNINGS=TRUE -DBUILD_PROTEIN_CUDA_PLUGIN=ON
+  - cmake ../ -DCMAKE_CXX_FLAGS=-w -DFETCHCONTENT_QUIET=OFF -DENABLE_CUDA=ON -DSUPPRESS_CUDA_WARNINGS=TRUE -DBUILD_PROTEIN_CUDA_PLUGIN=ON
 
 install:
   - make install
