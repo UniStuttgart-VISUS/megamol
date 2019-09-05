@@ -31,7 +31,7 @@ if(BUILD_CONSOLE)
   # GLFW
   if(NOT USE_EGL)
     require_external(glfw)
-    target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
+    target_link_libraries(${PROJECT_NAME} PRIVATE glfw_ext)
   endif()
 
   # EGL

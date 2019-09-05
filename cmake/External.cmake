@@ -69,7 +69,7 @@ function(fetch_external NAME TARGET ACTIVATED_OPTIONS DEACTIVATED_OPTIONS HIDDEN
   endif()
 
   if(TARGET ${TARGET})
-    add_library(${NAME} ALIAS ${TARGET})
+    add_library(${NAME}_ext ALIAS ${TARGET})
   else()
     message(FATAL_ERROR "Failed to download and configure '${NAME}'! Target '${TARGET}' not found.")
   endif()
@@ -125,8 +125,8 @@ function(fetch_external_headeronly NAME)
   # Add project
   FetchContent_Populate(${lcName}_ext)
 
-  add_library(${NAME} INTERFACE)
-  target_include_directories(${NAME} INTERFACE
+  add_library(${NAME}_ext INTERFACE)
+  target_include_directories(${NAME}_ext INTERFACE
     "${${lcName}_ext_SOURCE_DIR}"
     "${${lcName}_ext_SOURCE_DIR}/include")
 

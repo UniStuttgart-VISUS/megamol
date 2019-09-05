@@ -21,7 +21,7 @@ if(BUILD_MMSTD_DATATOOLS_PLUGIN)
   # Add externals.
   require_external(tinyply)
   require_external(mmpld_io)
-  require_external(Eigen)
+  require_external(eigen)
   require_external(nanoflann)
   require_external(sim_sort)
 
@@ -56,7 +56,7 @@ if(BUILD_MMSTD_DATATOOLS_PLUGIN)
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src"
     "3rd/min_sphere_of_spheres")
-  target_link_libraries(${PROJECT_NAME} PRIVATE core geometry_calls tinyply Eigen nanoflann sim_sort mmpld_io)
+  target_link_libraries(${PROJECT_NAME} PRIVATE core geometry_calls tinyply_ext eigen_ext nanoflann_ext sim_sort_ext mmpld_io_ext)
 
   if(MPI_C_FOUND)
     target_include_directories(${PROJECT_NAME} PUBLIC ${MPI_C_INCLUDE_PATH})

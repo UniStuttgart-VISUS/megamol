@@ -15,7 +15,7 @@ if(BUILD_PROTEIN_PLUGIN)
   
   require_external(nanoflann)
 
-  set(LIBS vislib core glad mmstd_trisoup protein_calls geometry_calls nanoflann)
+  set(LIBS vislib core glad mmstd_trisoup protein_calls geometry_calls nanoflann_ext)
   include_directories("include" "src")
 
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")

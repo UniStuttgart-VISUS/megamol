@@ -15,9 +15,9 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
 
   # Add externals.
   require_external(bhtsne)
-  require_external(Eigen)
+  require_external(eigen)
   require_external(nanoflann)
-  require_external(Delaunator)
+  require_external(delaunator)
   
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
@@ -32,7 +32,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   target_include_directories(${PROJECT_NAME}
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     PUBLIC "include" "src")
-  target_link_libraries(${PROJECT_NAME} PRIVATE core mmstd_datatools Eigen nanoflann Delaunator bhtsne)
+  target_link_libraries(${PROJECT_NAME} PRIVATE core mmstd_datatools eigen_ext nanoflann_ext delaunator_ext bhtsne_ext)
 
   # Installation rules for generated files
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")

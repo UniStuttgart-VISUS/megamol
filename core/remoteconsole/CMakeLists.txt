@@ -10,6 +10,7 @@ if(BUILD_REMOTECONSOLE)
   project(remoteconsole)
 
   require_external(libzmq)
+  require_external(libcppzmq)
   require_external(libcxxopts)
 
   # Glob remote console files.
@@ -21,7 +22,7 @@ if(BUILD_REMOTECONSOLE)
   target_include_directories(${PROJECT_NAME} 
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     PUBLIC "include" "src")
-  target_link_libraries(${PROJECT_NAME} PRIVATE lua libzmq libcppzmq libcxxopts)
+  target_link_libraries(${PROJECT_NAME} PRIVATE lua libzmq_ext libcppzmq_ext libcxxopts_ext)
 
   set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER base)
   source_group("Header Files" FILES ${header_files})

@@ -40,7 +40,6 @@ if(BUILD_CORE)
   require_external(libcppzmq)
   require_external(zlib)
   require_external(libpng)
-  require_external(zfp)
   require_external(glm)
   require_external(glowl)
   require_external(json)
@@ -97,8 +96,8 @@ if(BUILD_CORE)
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "src" "include"
     PUBLIC ${EXPAT_INCLUDE_DIRS})
   target_link_libraries(${PROJECT_NAME} 
-    PUBLIC vislib glad glm glowl zlib libpng json lua ${EXPAT_LIBRARIES}
-    PRIVATE libzmq libcppzmq ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT})
+    PUBLIC vislib glad glm_ext glowl_ext zlib_ext libpng_ext json_ext lua ${EXPAT_LIBRARIES}
+    PRIVATE libzmq_ext libcppzmq_ext ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT})
   if(WIN32)
     if(USE_TRACKING)
       target_link_libraries(${PROJECT_NAME} PUBLIC tracking natnet)

@@ -32,7 +32,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg" CXX_STANDARD 17)
   # Dependent projects only need to link against the core.so itself.
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src" "external")
-  target_link_libraries(${PROJECT_NAME} PRIVATE core mesh mmstd_datatools quickhull)
+  target_link_libraries(${PROJECT_NAME} PRIVATE core mesh mmstd_datatools quickhull_ext)
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
 
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
