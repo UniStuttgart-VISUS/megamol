@@ -412,6 +412,9 @@ namespace MegaMolConf {
                 case (Keys.Control | Keys.C):
                     btnCopy.PerformClick();
                     break;
+                case (Keys.Control | Keys.Shift | Keys.C):
+                    btnLua.PerformClick();
+                    break;
                 case (Keys.Control | Keys.V):
                     btnPaste.PerformClick();
                     break;
@@ -2434,5 +2437,36 @@ in PowerShell:
             }
         }
 
+        private void ToolStripButton1_Click_1(object sender, EventArgs e) {
+            if (selectedModule != null) {
+                if (SelectedTab != null) {
+                    string modFullName = "::" + safeName(SelectedTab.Text) + "::" + selectedModule.Name;
+                    string s = "";
+                    if (tabMainViews[SelectedTab] != null && tabMainViews[SelectedTab].Name == selectedModule.Name) {
+                        s = "mmCreateView(\"" + safeName(SelectedTab.Text) + "\", \"" + selectedModule.Module.Name + "\", \"" + modFullName + "\")\n";
+                    } else {
+                        s = "mmCreateModule(\"" + selectedModule.Module.Name + "\", \"" + modFullName + "\")\n";
+                    }
+                    foreach (var p in selectedModule.Module.ParamSlots) {
+                        if (selectedModule.ParameterValues.ContainsKey(p)) {
+                            s += "mmSetParamValue(\"" + modFullName + "::" + p.Name + "\", \"" +
+                                 Io.ProjectFileLua.SafeString(selectedModule.ParameterValues[p]) + "\")\n";
+                        }
+                    }
+                    Clipboard.SetText(s);
+                }
+            } else if (selectedConnection != null) {
+                if (SelectedTab != null) {
+                    string src = "::" + safeName(SelectedTab.Text) + "::" + selectedConnection.src.Name + "::" +
+                                 selectedConnection.srcSlot.Name;
+                    string dst = "::" + safeName(SelectedTab.Text) + "::" + selectedConnection.dest.Name + "::" +
+                                 selectedConnection.destSlot.Name;
+                    string s = "mmCreateCall(\"" + selectedConnection.Call.Name + "\", \"" +
+                                   src + "\", \"" + dst +
+                                   "\")";
+                    Clipboard.SetText(s);
+                }
+            }
+        }
     }
 }

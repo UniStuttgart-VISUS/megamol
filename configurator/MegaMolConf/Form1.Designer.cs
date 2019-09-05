@@ -59,6 +59,7 @@
             this.btnDelete = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator6 = new System.Windows.Forms.ToolStripSeparator();
             this.btnEyeDrop = new System.Windows.Forms.ToolStripButton();
+            this.btnLua = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripDropDownButton1 = new System.Windows.Forms.ToolStripDropDownButton();
             this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -156,6 +157,7 @@
             this.btnDelete,
             this.toolStripSeparator6,
             this.btnEyeDrop,
+            this.btnLua,
             this.toolStripSeparator3,
             this.toolStripDropDownButton1,
             this.btnCloseProject,
@@ -279,12 +281,14 @@
             // 
             // hostToolStripTextBox
             // 
+            this.hostToolStripTextBox.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.hostToolStripTextBox.Name = "hostToolStripTextBox";
             this.hostToolStripTextBox.Size = new System.Drawing.Size(200, 23);
             this.hostToolStripTextBox.Text = "localhost";
             // 
             // portToolStripTextBox
             // 
+            this.portToolStripTextBox.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.portToolStripTextBox.Name = "portToolStripTextBox";
             this.portToolStripTextBox.Size = new System.Drawing.Size(100, 23);
             this.portToolStripTextBox.Text = "33333";
@@ -376,6 +380,15 @@
             this.btnEyeDrop.Size = new System.Drawing.Size(71, 22);
             this.btnEyeDrop.Text = "EyeDrop";
             this.btnEyeDrop.Click += new System.EventHandler(this.btnEyeDrop_Click);
+            // 
+            // btnLua
+            // 
+            this.btnLua.Image = global::MegaMolConf.Properties.Resources.lines_Text_code_16xMD;
+            this.btnLua.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnLua.Name = "btnLua";
+            this.btnLua.Size = new System.Drawing.Size(46, 22);
+            this.btnLua.Text = "Lua";
+            this.btnLua.Click += new System.EventHandler(this.ToolStripButton1_Click_1);
             // 
             // toolStripSeparator3
             // 
@@ -891,6 +904,7 @@
         private System.Windows.Forms.ToolStripMenuItem attachToMegaMolToolStripMenuItem;
         private System.Windows.Forms.ToolStripTextBox hostToolStripTextBox;
         private System.Windows.Forms.ToolStripTextBox portToolStripTextBox;
+        private System.Windows.Forms.ToolStripButton btnLua;
     }
 }
 
