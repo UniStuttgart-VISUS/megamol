@@ -40,7 +40,6 @@ function(require_external NAME)
       GIT_REPOSITORY https://github.com/zeromq/libzmq.git
       GIT_TAG 56ace6d03f521b9abb5a50176ec7763c1b77afa9
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${ZMQ_IMPORT_DEBUG}" "<INSTALL_DIR>/${ZMQ_IMPORT_RELEASE}"
-      INSTALL
       CMAKE_ARGS
         -DZMQ_BUILD_TESTS=OFF
         -DENABLE_PRECOMPILED=OFF)
@@ -75,7 +74,6 @@ function(require_external NAME)
       GIT_REPOSITORY https://github.com/madler/zlib.git
       GIT_TAG "v1.2.11"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${ZLIB_DEBUG}" "<INSTALL_DIR>/${ZLIB_RELEASE}"
-      INSTALL
       CMAKE_ARGS
         -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON)
 
@@ -107,7 +105,6 @@ function(require_external NAME)
       GIT_TAG "v1.6.34"
       DEPENDS zlib_ext
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${LIBPNG_DEBUG}" "<INSTALL_DIR>/${LIBPNG_RELEASE}"
-      INSTALL
       CMAKE_ARGS
         -DPNG_SHARED=OFF
         -DPNG_TESTS=OFF
@@ -452,7 +449,6 @@ function(require_external NAME)
       GIT_REPOSITORY https://github.com/glfw/glfw.git
       GIT_TAG "3.2.1"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${GLFW_IMPORT_LIBRARY}"
-      INSTALL
       CMAKE_ARGS
         -DBUILD_SHARED_LIBS=ON
         -DGLFW_BUILD_EXAMPLES=OFF
