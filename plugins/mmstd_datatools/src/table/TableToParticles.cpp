@@ -447,10 +447,11 @@ bool TableToParticles::assertData(table::TableDataCall* ft) {
             // this quat still represents the rotation from world into tensor coordinate system?
             glm::dmat3 rwit(rotate_world_into_tensor);
             //auto quat = glm::normalize(glm::quat_cast(rwit));
-            auto dquat = glm::quat_cast(rwit);
+            //auto dquat = glm::normalize(glm::quat_cast(rwit));
+            auto dquat = (glm::quat_cast(rwit));
             glm::quat quat = dquat;
 #ifdef _DEBUG
-            // as in shader
+            // as in shader, kind of
             const glm::vec4 quatConst = glm::vec4(1.0, -1.0, 0.5, 0.0);
             glm::vec3 rotMatT0, rotMatT1, rotMatT2;
             glm::mat3 rotMatRec;
