@@ -1,9 +1,9 @@
 
 #ifdef SMALL_SPRITE_LIGHTING
     // for normal crowbaring on very small sprites
-    outLightPos.w = (clamp(gl_PointSize, 1.0, 5.0) - 1.0) / 4.0;
+    outlightDir.w = (clamp(gl_PointSize, 1.0, 5.0) - 1.0) / 4.0;
 #else
-    outLightPos.w = 1.0;
+    outlightDir.w = 1.0;
 #endif // SMALL_SPRITE_LIGHTING
     
 #ifdef RETICLE

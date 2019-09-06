@@ -235,16 +235,14 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     // Set (mono/stereo) projection for camera
     if (this->projectionParam.IsDirty()) {
         this->projectionParam.ResetDirty();
-		vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC VIEW] Stereo Projection is currently not supported.");
-        ///XXX cam.SetProjection(static_cast<vislib::graphics::CameraParameters::ProjectionType>(
-        ///XXX     this->projectionParam.Param<param::EnumParam>()->Value()));
+		vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC VIEW] Selecting Stereo Projection is currently not supported.");
+        ///XXX this->cam.SetProjection(static_cast<vislib::graphics::CameraParameters::ProjectionType>(this->projectionParam.Param<param::EnumParam>()->Value()));
     }
     // Set eye position for camera
     if (this->eyeParam.IsDirty()) {
         this->eyeParam.ResetDirty();
-		vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC VIEW] Stereo Eye Selection is currently not supported.");
-        ///XXX this->cam.Parameters()->SetEye(static_cast<vislib::graphics::CameraParameters::StereoEye>(
-        ///XXX    this->eyeParam.Param<param::EnumParam>()->Value()));
+		vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC VIEW] Selecting Stereo Eye is currently not supported.");
+        ///XXX this->cam.Parameters()->SetEye(static_cast<vislib::graphics::CameraParameters::StereoEye>(this->eyeParam.Param<param::EnumParam>()->Value()));
     }
 
     // Time settings ----------------------------------------------------------
@@ -318,27 +316,33 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     // Camera settings --------------------------------------------------------
 
     // Set new viewport settings for camera
-    ///XXX this->cam.Parameters()->SetVirtualViewSize(static_cast<vislib::graphics::ImageSpaceType>(fboWidth),
-    ///XXX    static_cast<vislib::graphics::ImageSpaceType>(fboHeight));
-	//XXX this->cam.resolution_gate = screen_size_type(fboWidth, fboHeight);
-	//XXX this->cam.image_tile = megamol::core::thecam::math::rectangle<int, 2>(fboWidth, fboHeight);
-
+    ///OLD this->cam.Parameters()->SetVirtualViewSize(static_cast<vislib::graphics::ImageSpaceType>(fboWidth), static_cast<vislib::graphics::ImageSpaceType>(fboHeight));
+    auto res = cam_type::screen_size_type(glm::ivec2(fboWidth, fboHeight));
+    this->cam.resolution_gate(res);
+    auto tile = cam_type::screen_rectangle_type(std::array<int, 4>{0, 0, fboWidth, fboHeight});
+    this->cam.image_tile(tile);
+ 
     // Set camera parameters of selected keyframe for this view.
     // But only if selected keyframe differs to last locally stored and shown keyframe.
     // Load new camera setting from selected keyframe when skybox side changes or rendering
     // or animation loaded new slected keyframe.
     Keyframe skf = ccc->getSelectedKeyframe();
     if (loadNewCamParams || (this->shownKeyframe != skf)) {
-
         this->shownKeyframe = skf;
 
         // Apply selected keyframe parameters only, if at least one valid keyframe exists.
-        if (!ccc->getKeyframes()->IsEmpty()) {
-            //XXX this->cam.Parameters()->SetView(skf.GetCamPosition(), skf.GetCamLookAt(), skf.GetCamUp());
-            //XXX this->cam.aperture_angle = skf.GetCamApertureAngle();
+        if (!ccc->getKeyframes()->empty()) {
+            ///OLD this->cam.Parameters()->SetView(skf.GetCamPosition(), skf.GetCamLookAt(), skf.GetCamUp());
+            ///OLD this->cam.aperture_angle = skf.GetCamApertureAngle();
+            ///---
+            ///NEW this->cam.position() = skf.GetCamPosition();
+            ///NEW this->cam.view_vector() = skf.GetCamLookAt();
+            ///NEW this->cam.up_vector() = skf.GetCamUp();
+            ///NEW this->cam.aperture_angle() = skf.GetCamApertureAngle();
         } else {
             this->ResetView();
         }
+
         // Apply showing skybox side ONLY if new camera parameters are set
         //if (this->sbSide != CinematicView::SkyboxSides::SKYBOX_NONE) {
         //    // Get camera parameters
@@ -394,7 +398,10 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     }
 
     // Propagate camera parameters to keyframe keeper (sky box camera params are propageted too!)
-    //XXX ccc->setCameraParameters(cam);
+    ///OLD ccc->setCameraParameters(this->cam);
+    ///---
+    ///NEW ccc->setCameraParameters(std::make_shared<megamol::core::view::Camera_2>(&this->cam));
+
     if (!(*ccc)(CallKeyframeKeeper::CallForSetCameraForKeyframe)) return;
 
         // Render to texture ------------------------------------------------------------

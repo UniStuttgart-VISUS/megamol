@@ -349,30 +349,30 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     glGetFloatv(GL_POINT_SIZE, &tmpPs);
 
     // MANIPULATORS
-    if (keyframes->Count() > 0) {
+    if (keyframes->size() > 0) {
 
         // Update manipulator data only if currently no manipulator is grabbed
 		if (!this->manipulatorGrabbed) {
 
 			// Available manipulators
-			vislib::Array<KeyframeManipulator::manipType> availManip;
-			availManip.Clear();
-			availManip.Add(KeyframeManipulator::manipType::KEYFRAME_POS);
+			std::vector<KeyframeManipulator::manipType> availManip;
+			availManip.clear();
+			availManip.emplace_back(KeyframeManipulator::manipType::KEYFRAME_POS);
 
 			if (this->toggleManipulator == 0) { // Keyframe position (along XYZ) manipulators, spline control point
-				availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_POS_X);
-				availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_POS_Y);
-				availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_POS_Z);
-				availManip.Add(KeyframeManipulator::manipType::CTRL_POINT_POS_X);
-				availManip.Add(KeyframeManipulator::manipType::CTRL_POINT_POS_Y);
-				availManip.Add(KeyframeManipulator::manipType::CTRL_POINT_POS_Z);
+				availManip.emplace_back(KeyframeManipulator::manipType::SELECTED_KF_POS_X);
+				availManip.emplace_back(KeyframeManipulator::manipType::SELECTED_KF_POS_Y);
+				availManip.emplace_back(KeyframeManipulator::manipType::SELECTED_KF_POS_Z);
+				availManip.emplace_back(KeyframeManipulator::manipType::CTRL_POINT_POS_X);
+				availManip.emplace_back(KeyframeManipulator::manipType::CTRL_POINT_POS_Y);
+				availManip.emplace_back(KeyframeManipulator::manipType::CTRL_POINT_POS_Z);
 			}
 			else { //if (this->toggleManipulator == 1) { // Keyframe position (along lookat), lookat and up manipulators
-				availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_UP);
-				availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_LOOKAT_X);
-				availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_LOOKAT_Y);
-				availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_LOOKAT_Z);
-				availManip.Add(KeyframeManipulator::manipType::SELECTED_KF_POS_LOOKAT);
+				availManip.emplace_back(KeyframeManipulator::manipType::SELECTED_KF_UP);
+				availManip.emplace_back(KeyframeManipulator::manipType::SELECTED_KF_LOOKAT_X);
+				availManip.emplace_back(KeyframeManipulator::manipType::SELECTED_KF_LOOKAT_Y);
+				availManip.emplace_back(KeyframeManipulator::manipType::SELECTED_KF_LOOKAT_Z);
+				availManip.emplace_back(KeyframeManipulator::manipType::SELECTED_KF_POS_LOOKAT);
 			}
 
 			// Get current Model-View-Projection matrix for world space to screen space projection of keyframe camera position for mouse selection
@@ -399,7 +399,7 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     glColor4fv(sColor);
     glLineWidth(2.0f);
     glBegin(GL_LINE_STRIP);
-    for (unsigned int i = 0; i < interpolKeyframes->Count(); i++) {
+    for (unsigned int i = 0; i < interpolKeyframes->size(); i++) {
         glVertex3fv(glm::value_ptr(interpolKeyframes->operator[](i)));
     }
     glEnd();

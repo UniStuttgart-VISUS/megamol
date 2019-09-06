@@ -26,7 +26,7 @@ KeyframeManipulator::KeyframeManipulator(void) :
     manipArray(),
     sKfSsPos(),
     sKfSsLookAt(),
-    sKfInArray(false),
+    sKfInArray(-1),
     activeType(manipType::NONE),
     lastMousePos(),
     modelViewProjMatrix(),
@@ -53,7 +53,7 @@ KeyframeManipulator::~KeyframeManipulator(void) {
 }
 
 
-bool KeyframeManipulator::Update(vislib::Array<KeyframeManipulator::manipType> am, std::shared_ptr<vislib::Array<Keyframe>> kfa, Keyframe skf,
+bool KeyframeManipulator::Update(std::vector<KeyframeManipulator::manipType> am, std::shared_ptr<std::vector<Keyframe>> kfa, Keyframe skf,
 	float vph, float vpw, glm::mat4 mvpm, glm::vec3 wclad, glm::vec3 wcmd, bool mob, glm::vec3 fcp, glm::vec3 lcp) {
 
     if (kfa == nullptr) {
@@ -76,8 +76,8 @@ bool KeyframeManipulator::Update(vislib::Array<KeyframeManipulator::manipType> a
     this->worldCamModDir      = wcmd;
 
     // Update viewport --------------------------------------------------------
-    this->viewportSize.SetHeight(static_cast<int>(vph));
-    this->viewportSize.SetWidth(static_cast<int>(vpw));
+    this->viewportSize.x = vph;
+    this->viewportSize.y = vpw;
     
     // Update slected keyframe ------------------------------------------------
     // Update manipulator only if selected keyframe changed
@@ -85,10 +85,15 @@ bool KeyframeManipulator::Update(vislib::Array<KeyframeManipulator::manipType> a
         this->selectedKf = skf;
 
         // Check if selected keyframe exists in keyframe array
-        this->sKfInArray = static_cast<int>(kfa->IndexOf(this->selectedKf));
+        this->sKfInArray = -1;
+        for (int i = 0; i < kfa->size(); ++i) {
+            if (kfa->at(i) == this->selectedKf) {
+                this->sKfInArray = i;
+            }
+        }
 
-        this->selectedIsFirst = (this->selectedKf == kfa->First())?(true):(false);
-        this->selectedIsLast  = (this->selectedKf == kfa->Last())?(true):(false);
+        this->selectedIsFirst = (this->selectedKf == kfa->front())?(true):(false);
+        this->selectedIsLast  = (this->selectedKf == kfa->back())?(true):(false);
         this->startCtrllPos   = fcp;
         this->endCtrllPos     = lcp;
 
@@ -96,19 +101,26 @@ bool KeyframeManipulator::Update(vislib::Array<KeyframeManipulator::manipType> a
     }
 
     // Update local keyframe positions ------------------------------------
-    unsigned int kfACnt     = static_cast<unsigned int>(kfa->Count());
-    unsigned int kfArrayCnt = static_cast<unsigned int>(this->kfArray.Count());
-    bool kfAvail            = am.Contains(manipType::KEYFRAME_POS);
+    unsigned int kfACnt     = static_cast<unsigned int>(kfa->size());
+    unsigned int kfArrayCnt = static_cast<unsigned int>(this->kfArray.size());
+
+    bool kfAvail = false;
+    for (auto m : am) {
+        if (m == manipType::KEYFRAME_POS) {
+            kfAvail = true;
+        }
+    }
+
     if ((kfACnt != kfArrayCnt) || worldChanged) {
-        this->kfArray.Clear();
-        this->kfArray.AssertCapacity(kfACnt);
+        this->kfArray.clear();
+        this->kfArray.reserve(kfACnt);
         for (unsigned int i = 0; i < kfACnt; i++) {
             manipPosData tmpkfA;
             tmpkfA.wsPos     = (*kfa)[i].GetCamPosition();
             tmpkfA.ssPos     = this->getScreenSpace(tmpkfA.wsPos);
             tmpkfA.offset    = glm::length(this->getScreenSpace(tmpkfA.wsPos + this->circleVertices[1]) - tmpkfA.ssPos);
             tmpkfA.available = kfAvail;
-            this->kfArray.Add(tmpkfA);
+            this->kfArray.emplace_back(tmpkfA);
         }
     }
     else { // Update positions (which might have changed)
@@ -123,11 +135,11 @@ bool KeyframeManipulator::Update(vislib::Array<KeyframeManipulator::manipType> a
     }
 
     // Update availability of manipulators
-    for (unsigned int i = 0; i < static_cast<unsigned int>(this->manipArray.Count()); i++) {
+    for (unsigned int i = 0; i < static_cast<unsigned int>(this->manipArray.size()); i++) {
         this->manipArray[i].available = false;
     }
     if (this->sKfInArray >= 0) { // Manipulators are only available if selected keyframe exists in keyframe array
-        for (unsigned int i = 0; i < static_cast<unsigned int>(am.Count()); i++) {
+        for (unsigned int i = 0; i < static_cast<unsigned int>(am.size()); i++) {
             unsigned int index = static_cast<unsigned int>(am[i]);
             if (index < static_cast<unsigned int>(NUM_OF_SELECTED_MANIP)) {
                 this->manipArray[index].available = true;
@@ -149,11 +161,11 @@ bool KeyframeManipulator::updateManipulatorPositions() {
     this->sKfSsLookAt = this->getScreenSpace(skfLaV);
 
     // Fill empty manipulator array
-    if (this->manipArray.IsEmpty()) {
-        this->manipArray.Clear();
-        this->manipArray.AssertCapacity(static_cast<unsigned int>(manipType::NUM_OF_SELECTED_MANIP));
+    if (this->manipArray.empty()) {
+        this->manipArray.clear();
+        this->manipArray.reserve(static_cast<unsigned int>(manipType::NUM_OF_SELECTED_MANIP));
         for (unsigned int i = 0; i < static_cast<unsigned int>(manipType::NUM_OF_SELECTED_MANIP); i++) {
-            this->manipArray.Add(manipPosData());
+            this->manipArray.emplace_back(manipPosData());
         }
     }
 
@@ -299,7 +311,7 @@ void KeyframeManipulator::SetExtents(vislib::math::Cuboid<float>& bb) {
 
     // Grow bounding box of model to manipulators
     if (this->isDataSet) {
-        for (unsigned int i = 0; i < this->manipArray.Count(); i++) {
+        for (unsigned int i = 0; i < this->manipArray.size(); i++) {
             bb.GrowToPoint(G2P(this->manipArray[i].wsPos));
         }
     }
@@ -314,9 +326,9 @@ int KeyframeManipulator::CheckKeyframePositionHit(float x, float y) {
     }
 
     int index = -1;
-    if (static_cast<int>(this->kfArray.Count()) > 0) {
+    if (static_cast<int>(this->kfArray.size()) > 0) {
         if (this->kfArray[0].available) {
-            for (int i = 0; i < static_cast<int>(this->kfArray.Count()); i++) {
+            for (int i = 0; i < static_cast<int>(this->kfArray.size()); i++) {
                 float offset = this->kfArray[i].offset;
                 glm::vec2 pos = this->kfArray[i].ssPos;
                 // Check if mouse position lies within offset quad around keyframe position
@@ -341,7 +353,7 @@ bool KeyframeManipulator::CheckManipulatorHit(float x, float y) {
 
     this->activeType = manipType::NONE;
 
-    for (int i = 0; i < static_cast<int>(this->manipArray.Count()); i++) {
+    for (int i = 0; i < static_cast<int>(this->manipArray.size()); i++) {
         if (this->manipArray[i].available) {
             float offset = this->manipArray[i].offset;
             glm::vec2 pos = this->manipArray[i].ssPos;
@@ -526,8 +538,8 @@ glm::vec2 KeyframeManipulator::getScreenSpace(glm::vec3 wp) {
     ssTmpPos = ssTmpPos / ssTmpPos.w;
     // Transform to viewport coordinates (x,y in [-1,1] -> viewport size)
     glm::vec2 ssPos;
-    ssPos.x = (ssTmpPos.x + 1.0f) / 2.0f * this->viewportSize.GetWidth();
-    ssPos.y = vislib::math::Abs(ssTmpPos.y - 1.0f) / 2.0f * this->viewportSize.GetHeight(); // flip y-axis
+    ssPos.x = (ssTmpPos.x + 1.0f) / 2.0f * this->viewportSize.x;
+    ssPos.y = vislib::math::Abs(ssTmpPos.y - 1.0f) / 2.0f * this->viewportSize.y; // flip y-axis
 
     return ssPos;
 }
@@ -535,8 +547,8 @@ glm::vec2 KeyframeManipulator::getScreenSpace(glm::vec3 wp) {
 
 void KeyframeManipulator::calculateCircleVertices(void) {
 
-    this->circleVertices.Clear();
-    this->circleVertices.AssertCapacity(this->circleSubDiv);
+    this->circleVertices.clear();
+    this->circleVertices.reserve(this->circleSubDiv);
 
     // Get normal for plane the cirlce lies on
     glm::vec3 normal = this->worldCamLaDir;
@@ -554,11 +566,11 @@ void KeyframeManipulator::calculateCircleVertices(void) {
     // rotate up vector aroung lookat vector with the "Rodrigues' rotation formula" 
     float t = 2.0f*(float)(CINEMATIC_PI) / (float)(this->circleSubDiv); // theta angle for rotation   
     // First vertex is center of triangle fan
-    this->circleVertices.Add(glm::vec3(0.0f, 0.0f, 0.0f));
+    this->circleVertices.emplace_back(glm::vec3(0.0f, 0.0f, 0.0f));
     for (unsigned int i = 0; i <= this->circleSubDiv; i++) {
         rot = rot * glm::cos(t) + glm::cross(normal, rot) * glm::sin(t) + normal * glm::dot(normal, rot) * (1.0f - glm::cos(t));
 		rot = glm::normalize(rot) * (radius);
-        this->circleVertices.Add(rot);
+        this->circleVertices.emplace_back(rot);
     }
 }
 
@@ -607,9 +619,9 @@ bool KeyframeManipulator::Draw(void) {
     }
 
     // Draw keyframe positions
-    if (static_cast<int>(this->kfArray.Count()) > 0) {
+    if (static_cast<int>(this->kfArray.size()) > 0) {
         if (this->kfArray[0].available) {
-            for (unsigned int k = 0; k < static_cast<unsigned int>(this->kfArray.Count()); k++) {
+            for (unsigned int k = 0; k < static_cast<unsigned int>(this->kfArray.size()); k++) {
                 if (this->kfArray[k].wsPos == skfPosV) {
                     glColor4fv(skColor);
                 }
@@ -642,7 +654,7 @@ bool KeyframeManipulator::Draw(void) {
             glEnd();
         }
 
-        for (unsigned int i = 0; i < static_cast<unsigned int>(this->manipArray.Count()); i++) {
+        for (unsigned int i = 0; i < static_cast<unsigned int>(this->manipArray.size()); i++) {
             if (this->manipArray[i].available) {
                 switch (static_cast<manipType>(i)) {
                 case (manipType::CTRL_POINT_POS_X):  
@@ -708,7 +720,7 @@ bool KeyframeManipulator::Draw(void) {
 void KeyframeManipulator::drawCircle(glm::vec3 pos, float factor) {
 
     glBegin(GL_TRIANGLE_FAN);
-    for (unsigned int i = 0; i < static_cast<unsigned int>(circleVertices.Count()); i++) {
+    for (unsigned int i = 0; i < static_cast<unsigned int>(circleVertices.size()); i++) {
         glVertex3fv(glm::value_ptr(pos + (this->circleVertices[i] * factor)));
     }
     glEnd();

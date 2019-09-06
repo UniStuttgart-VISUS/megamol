@@ -1,7 +1,7 @@
 
 out vec4 objPos;
 out vec4 camPos;
-out vec4 outLightPos;
+out vec4 outlightDir;
 out float squarRad;
 out float rad;
 out vec4 vertColor;
@@ -15,7 +15,7 @@ out vec2 centerFragment;
 #endif // RETICLE
 
 uniform vec4 viewAttr;
-uniform vec4 lightPos;
+uniform vec4 lightDir;
 
 #ifdef WITH_SCALING
 uniform float scaling;
@@ -31,6 +31,7 @@ uniform vec4 clipDat;
 uniform vec4 clipCol;
 
 uniform mat4 MVinv;
+uniform mat4 MVtransp;
 uniform mat4 MVP;
 uniform mat4 MVPinv;
 uniform mat4 MVPtransp;

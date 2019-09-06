@@ -1,4 +1,4 @@
-/*
+/*/*
  * SphereRenderer.cpp
  *
  * Copyright (C) 2009 by VISUS (Universitaet Stuttgart)
@@ -34,12 +34,13 @@ SphereRenderer::SphereRenderer(void) : view::Renderer3DModule_2()
     , curClipDat()
     , oldClipDat()
     , curClipCol()
-    , curLightPos()
+    , curlightDir()
     , curVpWidth(-1)
     , curVpHeight(-1)
     , lastVpWidth(0)
     , lastVpHeight(0)
     , curMVinv()
+    , curMVtransp()
     , curMVP()
     , curMVPinv()
     , curMVPtransp()
@@ -108,7 +109,7 @@ SphereRenderer::SphereRenderer(void) : view::Renderer3DModule_2()
     , aoStrengthSlot("ambient occlusion::strength", "Ambient Occlusion: Strength")
     , aoConeLengthSlot("ambient occlusion::coneLength", "Ambient Occlusion: Cone length")
     , useHPTexturesSlot("ambient occlusion::highPrecisionTexture", "Ambient Occlusion: Use high precision textures")
-	, outlineSizeSlot("outline::width", "Width of the outline") {
+    , outlineSizeSlot("outline::width", "Width of the outline") {
 
     this->getDataSlot.SetCompatibleCall<MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
@@ -132,7 +133,7 @@ SphereRenderer::SphereRenderer(void) : view::Renderer3DModule_2()
     rmp->SetTypePair(RenderMode::BUFFER_ARRAY, "Buffer_Array");
     rmp->SetTypePair(RenderMode::SPLAT, "Splat");
     rmp->SetTypePair(RenderMode::AMBIENT_OCCLUSION, "Ambient_Occlusion");
-	rmp->SetTypePair(RenderMode::OUTLINE, "Outline");
+    rmp->SetTypePair(RenderMode::OUTLINE, "Outline");
     this->renderModeParam << rmp;
     this->MakeSlotAvailable(&this->renderModeParam);
 
@@ -188,8 +189,8 @@ SphereRenderer::SphereRenderer(void) : view::Renderer3DModule_2()
     this->useHPTexturesSlot << (new param::BoolParam(false));
     this->MakeSlotAvailable(&this->useHPTexturesSlot);
 
-	this->outlineSizeSlot << (new core::param::FloatParam(2.0f, 0.0f));
-	this->MakeSlotAvailable(&this->outlineSizeSlot);
+    this->outlineSizeSlot << (new core::param::FloatParam(2.0f, 0.0f));
+    this->MakeSlotAvailable(&this->outlineSizeSlot);
 }
 
 
@@ -263,9 +264,9 @@ bool SphereRenderer::create(void) {
     if (this->isRenderModeAvailable(RenderMode::AMBIENT_OCCLUSION)) {
         this->renderModeParam.Param<param::EnumParam>()->SetTypePair(RenderMode::AMBIENT_OCCLUSION, "Ambient_Occlusion");
     }
-	if (this->isRenderModeAvailable(RenderMode::OUTLINE)) {
-		this->renderModeParam.Param<param::EnumParam>()->SetTypePair(RenderMode::OUTLINE, "Outline");
-	}
+    if (this->isRenderModeAvailable(RenderMode::OUTLINE)) {
+        this->renderModeParam.Param<param::EnumParam>()->SetTypePair(RenderMode::OUTLINE, "Outline");
+    }
     this->MakeSlotAvailable(&this->renderModeParam);
 
     // Check initial render mode
@@ -319,8 +320,8 @@ bool SphereRenderer::resetResources(void) {
     this->aoStrengthSlot.Param<param::FloatParam>()->SetGUIVisible(false);
     this->aoConeLengthSlot.Param<param::FloatParam>()->SetGUIVisible(false);
     this->useHPTexturesSlot.Param<param::BoolParam>()->SetGUIVisible(false);
-	// Outlining
-	this->outlineSizeSlot.Param<param::FloatParam>()->SetGUIVisible(false);
+    // Outlining
+    this->outlineSizeSlot.Param<param::FloatParam>()->SetGUIVisible(false);
 
     this->flagsCurrentVersion = (0xFFFFFFFF);
     this->flagsEnabled = false;
@@ -339,9 +340,9 @@ bool SphereRenderer::resetResources(void) {
     this->sphereGeometryShader.Release();
     this->lightingShader.Release();
 
-    this->vertShader = nullptr;
-    this->fragShader = nullptr;
-    this->geoShader = nullptr;
+    this->vertShader.reset();
+    this->fragShader.reset();
+    this->geoShader.reset();
 
     this->theSingleMappedMem = nullptr;
 
@@ -421,8 +422,8 @@ bool SphereRenderer::createResources() {
 
     this->resetResources();
 
-    this->vertShader = new ShaderSource();
-    this->fragShader = new ShaderSource();
+    this->vertShader = std::make_shared<ShaderSource>();
+    this->fragShader = std::make_shared<ShaderSource>();
 
     vislib::StringA vertShaderName;
     vislib::StringA fragShaderName;
@@ -470,7 +471,7 @@ bool SphereRenderer::createResources() {
         case (RenderMode::SIMPLE_CLUSTERED): {
             vertShaderName = "sphere_simple::vertex";
             fragShaderName = "sphere_simple::fragment";
-            if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
+            if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), (*this->vertShader))) {
                 return false;
             }
             if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
@@ -486,7 +487,7 @@ bool SphereRenderer::createResources() {
         } break;
 
         case (RenderMode::GEOMETRY_SHADER): {
-            this->geoShader = new ShaderSource();
+            this->geoShader = std::make_shared<ShaderSource>();
             vertShaderName = "sphere_geo::vertex";
             fragShaderName = "sphere_geo::fragment";
             geoShaderName = "sphere_geo::geometry";
@@ -627,7 +628,7 @@ bool SphereRenderer::createResources() {
             }
 
             // Create the geometry shader
-            this->geoShader = new ShaderSource();
+            this->geoShader = std::make_shared<ShaderSource>();
             this->vertShader->Clear();
             this->fragShader->Clear();
             vertShaderName = "sphere_mdao::geometry::vertex";
@@ -673,7 +674,7 @@ bool SphereRenderer::createResources() {
                 this->fragShader->Append(instance()->ShaderSourceFactory().MakeShaderSnippet("sphere_mdao::deferred::fragment::LightingStub"));
             }
             float apex = this->aoConeApexSlot.Param<param::FloatParam>()->Value();
-            std::vector<vislib::math::Vector<float, 4>> directions;
+            std::vector<glm::vec4> directions;
             this->generate3ConeDirections(directions, apex * static_cast<float>(M_PI) / 180.0f);
             std::string directionsCode = this->generateDirectionShaderArrayString(directions, "coneDirs");
             vislib::graphics::gl::ShaderSource::StringSnippet* dirSnippet =
@@ -699,23 +700,23 @@ bool SphereRenderer::createResources() {
         } break;
 
         case RenderMode::OUTLINE: {
-			this->outlineSizeSlot.Param<param::FloatParam>()->SetGUIVisible(true);
-			vertShaderName = "sphere_outline::vertex";
-			fragShaderName = "sphere_outline::fragment";
-			if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
-				return false;
-			}
-			if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
-				return false;
-			}
-			if (!this->sphereShader.Create(this->vertShader->Code(), this->vertShader->Count(),
-				this->fragShader->Code(), this->fragShader->Count())) {
-				vislib::sys::Log::DefaultLog.WriteMsg(
-					vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Unable to compile sphere shader: Unknown error\n");
-				return false;
-			}
-			this->flagsUseSSBO = false;
-		} break;
+            this->outlineSizeSlot.Param<param::FloatParam>()->SetGUIVisible(true);
+            vertShaderName = "sphere_outline::vertex";
+            fragShaderName = "sphere_outline::fragment";
+            if (!instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), *this->vertShader)) {
+                return false;
+            }
+            if (!instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), *this->fragShader)) {
+                return false;
+            }
+            if (!this->sphereShader.Create(this->vertShader->Code(), this->vertShader->Count(),
+                this->fragShader->Code(), this->fragShader->Count())) {
+                vislib::sys::Log::DefaultLog.WriteMsg(
+                    vislib::sys::Log::LEVEL_ERROR, "[SphereRenderer] Unable to compile sphere shader: Unknown error\n");
+                return false;
+            }
+            this->flagsUseSSBO = false;
+        } break;
 
         default:
             return false;
@@ -795,6 +796,7 @@ void SphereRenderer::getClipData(glm::vec4& out_clipDat, glm::vec4& out_clipCol)
         out_clipDat[0] = ccp->GetPlane().Normal().X();
         out_clipDat[1] = ccp->GetPlane().Normal().Y();
         out_clipDat[2] = ccp->GetPlane().Normal().Z();
+
         vislib::math::Vector<float, 3> grr(ccp->GetPlane().Point().PeekCoordinates());
         out_clipDat[3] = grr.Dot(ccp->GetPlane().Normal());
 
@@ -885,21 +887,21 @@ bool SphereRenderer::isRenderModeAvailable(RenderMode rm, bool silent) {
         if (!vislib::graphics::gl::GLSLGeometryShader::AreExtensionsAvailable()) {
             warnstr += "[SphereRenderer] Render Mode 'AMBIENT_OCCLUSION' is not available. Geometry shader extensions are required. \n";
         }
-		if (!isExtAvailable("GL_EXT_geometry_shader4")) {
-			warnstr += "[SphereRenderer] Render Mode 'AMBIENT_OCCLUSION' is not available. Extension GL_EXT_geometry_shader4 is required. \n";
-		}
+        if (!isExtAvailable("GL_EXT_geometry_shader4")) {
+            warnstr += "[SphereRenderer] Render Mode 'AMBIENT_OCCLUSION' is not available. Extension GL_EXT_geometry_shader4 is required. \n";
+        }
         if (!isExtAvailable("GL_ARB_gpu_shader_fp64")) {
             warnstr += "[SphereRenderer] Render Mode 'AMBIENT_OCCLUSION' is not available. Extension GL_ARB_gpu_shader_fp64 is required. \n";
         }
-		if (!isExtAvailable("GL_ARB_compute_shader")) {
-			warnstr += "[SphereRenderer] Render Mode 'AMBIENT_OCCLUSION' is not available. Extension GL_ARB_compute_shader is required. \n";
-		}
+        if (!isExtAvailable("GL_ARB_compute_shader")) {
+            warnstr += "[SphereRenderer] Render Mode 'AMBIENT_OCCLUSION' is not available. Extension GL_ARB_compute_shader is required. \n";
+        }
         break;
-	case (RenderMode::OUTLINE):
-		if (ogl_IsVersionGEQ(1, 4) == 0) { 
-			warnstr += "[SphereRenderer] Render Mode 'OUTLINE' is not available. Minimum OpenGL version is 1.4 \n";
-		}
-		break;
+    case (RenderMode::OUTLINE):
+        if (ogl_IsVersionGEQ(1, 4) == 0) { 
+            warnstr += "[SphereRenderer] Render Mode 'OUTLINE' is not available. Minimum OpenGL version is 1.4 \n";
+        }
+        break;
     default:
         warnstr += "[SphereRenderer] Unknown render mode.\n";
         break;
@@ -939,9 +941,9 @@ std::string SphereRenderer::getRenderModeString(RenderMode rm) {
     case (RenderMode::AMBIENT_OCCLUSION):
         mode = "AMBIENT OCCLUSION";
         break;
-	case (RenderMode::OUTLINE):
-		mode = "OUTLINE";
-		break;
+    case (RenderMode::OUTLINE):
+        mode = "OUTLINE";
+        break;
     default:
         mode = "unknown";
         break;
@@ -983,7 +985,7 @@ bool SphereRenderer::Render(view::CallRender3D_2& call) {
 
     // Update current state variables -----------------------------------------
 
-	// Check if we got a new data set
+    // Check if we got a new data set
     const SIZE_T hash = mpdc->DataHash();
     const unsigned int frameID = mpdc->FrameID();
     this->stateInvalid = ((hash != this->oldHash) || (frameID != this->oldFrameID));
@@ -1007,63 +1009,65 @@ bool SphereRenderer::Render(view::CallRender3D_2& call) {
     // Clipping
     this->getClipData(this->curClipDat, this->curClipCol);
 
-    // Lights
-    this->GetLights();
-    this->curLightPos = { 0.0f, 0.0f, 0.0f, 1.0f };
-    if (this->lightMap.size() > 1) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[SphereRenderer] Only one single point light source is supported by this renderer");
-    }
-    for (auto light : this->lightMap) {
-        if (light.second.lightType != core::view::light::POINTLIGHT) {
-            vislib::sys::Log::DefaultLog.WriteWarn("[SphereRenderer] Only single point light source is supported by this renderer");
-        }
-        else {
-            auto lightPos = this->lightMap.begin()->second.pl_position;
-            if (lightPos.size() == 3) {
-                this->curLightPos[0] = lightPos[0];
-                this->curLightPos[1] = lightPos[1];
-                this->curLightPos[2] = lightPos[2];
-            }
-            if (lightPos.size() == 4) {
-                this->curLightPos[3] = lightPos[3];
-            }
-        }
-    }
-
     // Camera 
     view::Camera_2 cam;
     cr3d->GetCamera(cam);
     cam_type::snapshot_type snapshot;
     cam_type::matrix_type viewTemp, projTemp;
     // Generate complete snapshot and calculate matrices
+    //auto snap_content = thecam::snapshot_content::camera_coordinate_system; /// Will be overwritten in camera.inl calc_matrices() line 216ff ...
     cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
     this->curCamPos = snapshot.position;
     this->curCamView = snapshot.view_vector;
     this->curCamRight = snapshot.right_vector;
     this->curCamUp = snapshot.up_vector;
     this->curCamNearClip = snapshot.frustum_near;
+
     glm::mat4 view = viewTemp;
     glm::mat4 proj = projTemp;
     this->curMVinv = glm::inverse(view);
+    this->curMVtransp = glm::transpose(view);
     this->curMVP = proj * view;
     this->curMVPinv = glm::inverse(this->curMVP);
     this->curMVPtransp = glm::transpose(this->curMVP);
 
-	// Viewport
-    //if (!cam.image_tile().empty()) {
-    //    this->curViewAttrib = glm::vec4(cam.image_tile().left(), cam.image_tile().bottom(), cam.image_tile().width(), cam.image_tile().height());
-    //}
-    //else {
-    //    this->curViewAttrib = glm::vec4(0.0f , 0.0f, cam.resolution_gate().width(), cam.resolution_gate().height());
-    //}
-    glGetFloatv(GL_VIEWPORT, glm::value_ptr(this->curViewAttrib));
+    // Lights
+    this->GetLights();
+    this->curlightDir = { 0.0f, 0.0f, 10.0f, 1.0f };
+    if (this->lightMap.size() > 1) {
+        vislib::sys::Log::DefaultLog.WriteWarn("[SphereRenderer] Only one single distant (directional) light source is supported by this renderer");
+    }
+    for (auto light : this->lightMap) {
+        if (light.second.lightType != core::view::light::DISTANTLIGHT) {
+            vislib::sys::Log::DefaultLog.WriteWarn("[SphereRenderer] Only single distant (directional) light source is supported by this renderer");
+        }
+        else {
+            auto lightDir = this->lightMap.begin()->second.dl_direction;
+            if (lightDir.size() == 3) {
+                this->curlightDir[0] = lightDir[0];
+                this->curlightDir[1] = lightDir[1];
+                this->curlightDir[2] = lightDir[2];
+            }
+            if (lightDir.size() == 4) {
+                this->curlightDir[3] = lightDir[3];
+            }
+        }
+    }
+    this->curlightDir = this->curMVtransp * this->curlightDir;
 
-	this->curVpWidth = static_cast<int>(this->curViewAttrib[2]);
-	this->curVpHeight = static_cast<int>(this->curViewAttrib[3]);
-	if (this->curViewAttrib[2] < 1.0f) this->curViewAttrib[2] = 1.0f;
-	if (this->curViewAttrib[3] < 1.0f) this->curViewAttrib[3] = 1.0f;
-	this->curViewAttrib[2] = 2.0f / this->curViewAttrib[2];
-	this->curViewAttrib[3] = 2.0f / this->curViewAttrib[3];
+    // Viewport
+    if (!cam.image_tile().empty()) {
+        this->curViewAttrib = glm::vec4(cam.image_tile().left(), cam.image_tile().bottom(), cam.image_tile().width(), cam.image_tile().height());
+    }
+    else {
+        this->curViewAttrib = glm::vec4(0.0f , 0.0f, cam.resolution_gate().width(), cam.resolution_gate().height());
+    }
+    this->curVpWidth = static_cast<int>(this->curViewAttrib[2]);
+    this->curVpHeight = static_cast<int>(this->curViewAttrib[3]);
+    if (this->curViewAttrib[2] < 1.0f) this->curViewAttrib[2] = 1.0f;
+    if (this->curViewAttrib[3] < 1.0f) this->curViewAttrib[3] = 1.0f;
+    this->curViewAttrib[2] = 2.0f / this->curViewAttrib[2];
+    this->curViewAttrib[3] = 2.0f / this->curViewAttrib[3];
 
     // ------------------------------------------------------------------------
 
@@ -1089,8 +1093,8 @@ bool SphereRenderer::Render(view::CallRender3D_2& call) {
         retval = this->renderBufferArray(cr3d, mpdc); break;
     case (RenderMode::AMBIENT_OCCLUSION):
         retval = this->renderAmbientOcclusion(cr3d, mpdc); break;
-	case (RenderMode::OUTLINE):
-		retval = this->renderOutline(cr3d, mpdc); break;
+    case (RenderMode::OUTLINE):
+        retval = this->renderOutline(cr3d, mpdc); break;
     default:
         break;
     }
@@ -1125,8 +1129,9 @@ bool SphereRenderer::renderSimple(view::CallRender3D_2* cr3d, MultiParticleDataC
     glUniform1f(this->sphereShader.ParameterLocation("scaling"), this->radiusScalingParam.Param<param::FloatParam>()->Value());
     glUniform4fv(this->sphereShader.ParameterLocation("clipDat"), 1, glm::value_ptr(this->curClipDat));
     glUniform4fv(this->sphereShader.ParameterLocation("clipCol"), 1, glm::value_ptr(this->curClipCol));
-    glUniform4fv(this->sphereShader.ParameterLocation("lightPos"), 1, glm::value_ptr(this->curLightPos));
+    glUniform4fv(this->sphereShader.ParameterLocation("lightDir"), 1, glm::value_ptr(this->curlightDir));
     glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVinv"), 1, GL_FALSE, glm::value_ptr(this->curMVinv));
+    glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVtransp"), 1, GL_FALSE, glm::value_ptr(this->curMVtransp));
     glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVP"), 1, GL_FALSE, glm::value_ptr(this->curMVP));
     glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVPinv"), 1, GL_FALSE, glm::value_ptr(this->curMVPinv));
     glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVPtransp"), 1, GL_FALSE, glm::value_ptr(this->curMVPtransp));
@@ -1188,6 +1193,10 @@ bool SphereRenderer::renderSSBO(view::CallRender3D_2* cr3d, MultiParticleDataCal
 
     // this->currBuf = 0;
     GLuint flagPartsCount = 0;
+    if (this->stateInvalid) {
+        this->bufArray.resize(mpdc->GetParticleListCount());
+        this->colBufArray.resize(mpdc->GetParticleListCount());
+    }
     for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
         MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
 
@@ -1216,8 +1225,9 @@ bool SphereRenderer::renderSSBO(view::CallRender3D_2* cr3d, MultiParticleDataCal
         glUniform1f(this->newShader->ParameterLocation("scaling"), this->radiusScalingParam.Param<param::FloatParam>()->Value());
         glUniform4fv(this->newShader->ParameterLocation("clipDat"), 1, glm::value_ptr(this->curClipDat));
         glUniform4fv(this->newShader->ParameterLocation("clipCol"), 1, glm::value_ptr(this->curClipCol));
-        glUniform4fv(this->newShader->ParameterLocation("lightPos"), 1, glm::value_ptr(this->curLightPos));
+        glUniform4fv(this->newShader->ParameterLocation("lightDir"), 1, glm::value_ptr(this->curlightDir));
         glUniformMatrix4fv(this->newShader->ParameterLocation("MVinv"), 1, GL_FALSE, glm::value_ptr(this->curMVinv));
+        glUniformMatrix4fv(this->newShader->ParameterLocation("MVtransp"), 1, GL_FALSE, glm::value_ptr(this->curMVtransp));
         glUniformMatrix4fv(this->newShader->ParameterLocation("MVP"), 1, GL_FALSE, glm::value_ptr(this->curMVP));
         glUniformMatrix4fv(this->newShader->ParameterLocation("MVPinv"), 1, GL_FALSE, glm::value_ptr(this->curMVPinv));
         glUniformMatrix4fv(this->newShader->ParameterLocation("MVPtransp"), 1, GL_FALSE, glm::value_ptr(this->curMVPtransp));
@@ -1230,22 +1240,23 @@ bool SphereRenderer::renderSSBO(view::CallRender3D_2* cr3d, MultiParticleDataCal
         // does all data reside interleaved in the same memory?
         if (interleaved) {
             if (staticData) {
-                if (this->stateInvalid || (this->bufArray.GetNumChunks() == 0)) {
-                    this->bufArray.SetDataWithSize(
-                        parts.GetVertexData(), vertStride, vertStride, parts.GetCount(), (GLuint)(2 * 1024 * 1024 * 1024)); 
+                auto& bufA = this->bufArray[i];
+                if (this->stateInvalid || (bufA.GetNumChunks() == 0)) {
+                    bufA.SetDataWithSize(parts.GetVertexData(), vertStride, vertStride, parts.GetCount(),
+                        (GLuint)(2 * 1024 * 1024 * 1024));
                     // 2 GB - khronos: Most implementations will let you allocate a size up to the limit of GPU memory.
                 }
-                const GLuint numChunks = this->bufArray.GetNumChunks();
+                const GLuint numChunks = bufA.GetNumChunks();
 
                 for (GLuint x = 0; x < numChunks; ++x) {
                     glUniform1i(this->newShader->ParameterLocation("instanceOffset"), 0);
-                    auto actualItems = this->bufArray.GetNumItems(x);
-                    glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->bufArray.GetHandle(x));
-                    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBOvertexBindingPoint, this->bufArray.GetHandle(x));
-                    glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBOvertexBindingPoint, this->bufArray.GetHandle(x), 0,
-                        this->bufArray.GetMaxNumItemsPerChunk() * vertStride);
+                    auto actualItems = bufA.GetNumItems(x);
+                    glBindBuffer(GL_SHADER_STORAGE_BUFFER, bufA.GetHandle(x));
+                    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBOvertexBindingPoint, bufA.GetHandle(x));
+                    glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBOvertexBindingPoint, bufA.GetHandle(x), 0,
+                        bufA.GetMaxNumItemsPerChunk() * vertStride);
                     glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(actualItems));
-                    this->bufArray.SignalCompletion();
+                    bufA.SignalCompletion();
                 }
             }
             else {
@@ -1260,7 +1271,8 @@ bool SphereRenderer::renderSSBO(view::CallRender3D_2* cr3d, MultiParticleDataCal
                     this->streamer.UploadChunk(x, numItems, sync, dstOff, dstLen);
                     // streamer.UploadChunk<float, float>(x, [](float f) -> float { return f + 100.0; },
                     //    numItems, sync, dstOff, dstLen);
-                    // vislib::sys::Log::DefaultLog.WriteInfo("[SphereRenderer] Uploading chunk %u at %lu len %lu", x, dstOff, dstLen);
+                    // vislib::sys::Log::DefaultLog.WriteInfo("[SphereRenderer] Uploading chunk %u at %lu len %lu", x,
+                    // dstOff, dstLen);
                     glUniform1i(this->newShader->ParameterLocation("instanceOffset"), 0);
                     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
                     glBindBufferRange(
@@ -1272,34 +1284,36 @@ bool SphereRenderer::renderSSBO(view::CallRender3D_2* cr3d, MultiParticleDataCal
         }
         else {
             if (staticData) {
-                if (this->stateInvalid || (this->bufArray.GetNumChunks() == 0)) {
-                    this->bufArray.SetDataWithSize(
-                        parts.GetVertexData(), vertStride, vertStride, parts.GetCount(), (GLuint)(2 * 1024 * 1024 * 1024)); 
+                auto& bufA = this->bufArray[i];
+                auto& colA = this->colBufArray[i];
+                if (this->stateInvalid || (bufA.GetNumChunks() == 0)) {
+                    bufA.SetDataWithSize(parts.GetVertexData(), vertStride, vertStride, parts.GetCount(),
+                        (GLuint)(2 * 1024 * 1024 * 1024));
                     // 2 GB - khronos: Most implementations will let you allocate a size up to the limit of GPU memory.
-                    this->colBufArray.SetDataWithItems(parts.GetColourData(), colStride, colStride, parts.GetCount(),
-                        this->bufArray.GetMaxNumItemsPerChunk());
+                    colA.SetDataWithItems(parts.GetColourData(), colStride, colStride, parts.GetCount(),
+                        bufA.GetMaxNumItemsPerChunk());
                 }
-                const GLuint numChunks = this->bufArray.GetNumChunks();
+                const GLuint numChunks = bufA.GetNumChunks();
 
                 for (GLuint x = 0; x < numChunks; ++x) {
                     glUniform1i(this->newShader->ParameterLocation("instanceOffset"), 0);
-                    auto actualItems = this->bufArray.GetNumItems(x);
-                    glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->bufArray.GetHandle(x));
-                    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBOvertexBindingPoint, this->bufArray.GetHandle(x));
-                    glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBOvertexBindingPoint, this->bufArray.GetHandle(x), 0,
-                        this->bufArray.GetMaxNumItemsPerChunk() * vertStride);
-                    glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->colBufArray.GetHandle(x));
-                    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBOcolorBindingPoint, this->colBufArray.GetHandle(x));
-                    glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBOcolorBindingPoint, this->colBufArray.GetHandle(x), 0,
-                        this->colBufArray.GetMaxNumItemsPerChunk() * colStride);
+                    auto actualItems = bufA.GetNumItems(x);
+                    glBindBuffer(GL_SHADER_STORAGE_BUFFER, bufA.GetHandle(x));
+                    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBOvertexBindingPoint, bufA.GetHandle(x));
+                    glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBOvertexBindingPoint, bufA.GetHandle(x), 0,
+                        bufA.GetMaxNumItemsPerChunk() * vertStride);
+                    glBindBuffer(GL_SHADER_STORAGE_BUFFER, colA.GetHandle(x));
+                    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBOcolorBindingPoint, colA.GetHandle(x));
+                    glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBOcolorBindingPoint, colA.GetHandle(x),
+                        0, colA.GetMaxNumItemsPerChunk() * colStride);
                     glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(actualItems));
-                    this->bufArray.SignalCompletion();
-                    this->colBufArray.SignalCompletion();
+                    bufA.SignalCompletion();
+                    colA.SignalCompletion();
                 }
             }
             else {
                 const GLuint numChunks = this->streamer.SetDataWithSize(
-                    parts.GetVertexData(), vertStride, vertStride, parts.GetCount(), 3, (GLuint)(32 * 1024 * 1024)); 
+                    parts.GetVertexData(), vertStride, vertStride, parts.GetCount(), 3, (GLuint)(32 * 1024 * 1024));
                 const GLuint colSize = this->colStreamer.SetDataWithItems(parts.GetColourData(), colStride, colStride,
                     parts.GetCount(), 3, this->streamer.GetMaxNumItemsPerChunk());
                 glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->streamer.GetHandle());
@@ -1398,8 +1412,9 @@ bool SphereRenderer::renderSplat(view::CallRender3D_2* cr3d, MultiParticleDataCa
         glUniform1f(this->newShader->ParameterLocation("scaling"), this->radiusScalingParam.Param<param::FloatParam>()->Value());
         glUniform4fv(this->newShader->ParameterLocation("clipDat"), 1, glm::value_ptr(this->curClipDat));
         glUniform4fv(this->newShader->ParameterLocation("clipCol"), 1, glm::value_ptr(this->curClipCol));
-        glUniform4fv(this->newShader->ParameterLocation("lightPos"), 1, glm::value_ptr(this->curLightPos));
+        glUniform4fv(this->newShader->ParameterLocation("lightDir"), 1, glm::value_ptr(this->curlightDir));
         glUniformMatrix4fv(this->newShader->ParameterLocation("MVinv"), 1, GL_FALSE, glm::value_ptr(this->curMVinv));
+        glUniformMatrix4fv(this->newShader->ParameterLocation("MVtransp"), 1, GL_FALSE, glm::value_ptr(this->curMVtransp));
         glUniformMatrix4fv(this->newShader->ParameterLocation("MVP"), 1, GL_FALSE, glm::value_ptr(this->curMVP));
         glUniformMatrix4fv(this->newShader->ParameterLocation("MVPinv"), 1, GL_FALSE, glm::value_ptr(this->curMVPinv));
         glUniformMatrix4fv(this->newShader->ParameterLocation("MVPtransp"), 1, GL_FALSE, glm::value_ptr(this->curMVPtransp));
@@ -1484,8 +1499,9 @@ bool SphereRenderer::renderBufferArray(view::CallRender3D_2* cr3d, MultiParticle
     glUniform1f(this->sphereShader.ParameterLocation("scaling"), this->radiusScalingParam.Param<param::FloatParam>()->Value());
     glUniform4fv(this->sphereShader.ParameterLocation("clipDat"), 1, glm::value_ptr(this->curClipDat));
     glUniform4fv(this->sphereShader.ParameterLocation("clipCol"), 1, glm::value_ptr(this->curClipCol));
-    glUniform4fv(this->sphereShader.ParameterLocation("lightPos"), 1, glm::value_ptr(this->curLightPos));
+    glUniform4fv(this->sphereShader.ParameterLocation("lightDir"), 1, glm::value_ptr(this->curlightDir));
     glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVinv"), 1, GL_FALSE, glm::value_ptr(this->curMVinv));
+    glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVtransp"), 1, GL_FALSE, glm::value_ptr(this->curMVtransp));
     glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVP"), 1, GL_FALSE, glm::value_ptr(this->curMVP));
     glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVPinv"), 1, GL_FALSE, glm::value_ptr(this->curMVPinv));
     glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVPtransp"), 1, GL_FALSE, glm::value_ptr(this->curMVPtransp));
@@ -1591,8 +1607,9 @@ bool SphereRenderer::renderGeometryShader(view::CallRender3D_2* cr3d, MultiParti
     glUniform1f(this->sphereGeometryShader.ParameterLocation("scaling"), this->radiusScalingParam.Param<param::FloatParam>()->Value());
     glUniform4fv(this->sphereGeometryShader.ParameterLocation("clipDat"), 1, glm::value_ptr(this->curClipDat));
     glUniform4fv(this->sphereGeometryShader.ParameterLocation("clipCol"), 1, glm::value_ptr(this->curClipCol));
-    glUniform4fv(this->sphereGeometryShader.ParameterLocation("lightPos"), 1, glm::value_ptr(this->curLightPos));
+    glUniform4fv(this->sphereGeometryShader.ParameterLocation("lightDir"), 1, glm::value_ptr(this->curlightDir));
     glUniformMatrix4fv(this->sphereGeometryShader.ParameterLocation("MVinv"), 1, GL_FALSE, glm::value_ptr(this->curMVinv));
+    glUniformMatrix4fv(this->sphereGeometryShader.ParameterLocation("MVtransp"), 1, GL_FALSE, glm::value_ptr(this->curMVtransp));
     glUniformMatrix4fv(this->sphereGeometryShader.ParameterLocation("MVP"), 1, GL_FALSE, glm::value_ptr(this->curMVP));
     glUniformMatrix4fv(this->sphereGeometryShader.ParameterLocation("MVPinv"), 1, GL_FALSE, glm::value_ptr(this->curMVPinv));
     glUniformMatrix4fv(this->sphereGeometryShader.ParameterLocation("MVPtransp"), 1, GL_FALSE, glm::value_ptr(this->curMVPtransp));
@@ -1649,12 +1666,12 @@ bool SphereRenderer::renderAmbientOcclusion(view::CallRender3D_2* cr3d, MultiPar
     // Render the particles' geometry
     bool highPrecision = this->useHPTexturesSlot.Param<param::BoolParam>()->Value();
 
-	// Choose shader
-	bool useGeo = this->enableGeometryShader.Param<param::BoolParam>()->Value();
-	vislib::graphics::gl::GLSLShader& theShader = useGeo ? this->sphereGeometryShader : this->sphereShader;
+    // Choose shader
+    bool useGeo = this->enableGeometryShader.Param<param::BoolParam>()->Value();
+    vislib::graphics::gl::GLSLShader& theShader = useGeo ? this->sphereGeometryShader : this->sphereShader;
 
-	// Rebuild and reupload working data if neccessary
-	this->rebuildWorkingData(cr3d, mpdc, theShader);
+    // Rebuild and reupload working data if neccessary
+    this->rebuildWorkingData(cr3d, mpdc, theShader);
 
     GLint prevFBO;
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prevFBO);
@@ -1673,6 +1690,7 @@ bool SphereRenderer::renderAmbientOcclusion(view::CallRender3D_2* cr3d, MultiPar
     glUniformMatrix4fv(theShader.ParameterLocation("MVP"), 1, GL_FALSE, glm::value_ptr(this->curMVP));
     glUniformMatrix4fv(theShader.ParameterLocation("MVPinv"), 1, GL_FALSE, glm::value_ptr(this->curMVPinv));
     glUniformMatrix4fv(theShader.ParameterLocation("MVinv"), 1, GL_FALSE, glm::value_ptr(this->curMVinv));
+    glUniformMatrix4fv(theShader.ParameterLocation("MVtransp"), 1, GL_FALSE, glm::value_ptr(this->curMVtransp));
     glUniformMatrix4fv(theShader.ParameterLocation("MVPtransp"), 1, GL_FALSE, glm::value_ptr(this->curMVPtransp));
     glUniform1f(theShader.ParameterLocation("scaling"), this->radiusScalingParam.Param<param::FloatParam>()->Value());
     glUniform4fv(theShader.ParameterLocation("viewAttr"), 1, glm::value_ptr(this->curViewAttrib));
@@ -1722,55 +1740,56 @@ bool SphereRenderer::renderAmbientOcclusion(view::CallRender3D_2* cr3d, MultiPar
 
 bool SphereRenderer::renderOutline(view::CallRender3D_2* cr3d, MultiParticleDataCall* mpdc) {
 
-	this->sphereShader.Enable();
+    this->sphereShader.Enable();
 
-	this->setFlagStorage(this->sphereShader, mpdc);
+    this->setFlagStorage(this->sphereShader, mpdc);
 
-	glUniform4fv(this->sphereShader.ParameterLocation("viewAttr"), 1, glm::value_ptr(this->curViewAttrib));
-	glUniform3fv(this->sphereShader.ParameterLocation("camIn"), 1, glm::value_ptr(this->curCamView));
-	glUniform3fv(this->sphereShader.ParameterLocation("camRight"), 1, glm::value_ptr(this->curCamRight));
-	glUniform3fv(this->sphereShader.ParameterLocation("camUp"), 1, glm::value_ptr(this->curCamUp));
-	glUniform1f(this->sphereShader.ParameterLocation("scaling"), this->radiusScalingParam.Param<param::FloatParam>()->Value());
-	glUniform4fv(this->sphereShader.ParameterLocation("clipDat"), 1, glm::value_ptr(this->curClipDat));
-	glUniform4fv(this->sphereShader.ParameterLocation("clipCol"), 1, glm::value_ptr(this->curClipCol));
-	glUniform4fv(this->sphereShader.ParameterLocation("lightPos"), 1, glm::value_ptr(this->curLightPos));
-	glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVinv"), 1, GL_FALSE, glm::value_ptr(this->curMVinv));
-	glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVP"), 1, GL_FALSE, glm::value_ptr(this->curMVP));
-	glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVPinv"), 1, GL_FALSE, glm::value_ptr(this->curMVPinv));
-	glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVPtransp"), 1, GL_FALSE, glm::value_ptr(this->curMVPtransp));
+    glUniform4fv(this->sphereShader.ParameterLocation("viewAttr"), 1, glm::value_ptr(this->curViewAttrib));
+    glUniform3fv(this->sphereShader.ParameterLocation("camIn"), 1, glm::value_ptr(this->curCamView));
+    glUniform3fv(this->sphereShader.ParameterLocation("camRight"), 1, glm::value_ptr(this->curCamRight));
+    glUniform3fv(this->sphereShader.ParameterLocation("camUp"), 1, glm::value_ptr(this->curCamUp));
+    glUniform1f(this->sphereShader.ParameterLocation("scaling"), this->radiusScalingParam.Param<param::FloatParam>()->Value());
+    glUniform4fv(this->sphereShader.ParameterLocation("clipDat"), 1, glm::value_ptr(this->curClipDat));
+    glUniform4fv(this->sphereShader.ParameterLocation("clipCol"), 1, glm::value_ptr(this->curClipCol));
+    glUniform4fv(this->sphereShader.ParameterLocation("lightDir"), 1, glm::value_ptr(this->curlightDir));
+    glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVinv"), 1, GL_FALSE, glm::value_ptr(this->curMVinv));
+    glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVtransp"), 1, GL_FALSE, glm::value_ptr(this->curMVtransp));
+    glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVP"), 1, GL_FALSE, glm::value_ptr(this->curMVP));
+    glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVPinv"), 1, GL_FALSE, glm::value_ptr(this->curMVPinv));
+    glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVPtransp"), 1, GL_FALSE, glm::value_ptr(this->curMVPtransp));
 
-	glUniform1f(this->sphereShader.ParameterLocation("outlineSize"), this->outlineSizeSlot.Param<param::FloatParam>()->Value());
+    glUniform1f(this->sphereShader.ParameterLocation("outlineSize"), this->outlineSizeSlot.Param<param::FloatParam>()->Value());
 
-	GLuint flagPartsCount = 0;
-	for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
-		MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
+    GLuint flagPartsCount = 0;
+    for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
+        MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
 
-		if (!this->setShaderData(this->sphereShader, parts)) {
-			continue;
-		}
+        if (!this->setShaderData(this->sphereShader, parts)) {
+            continue;
+        }
 
-		glUniform1ui(this->sphereShader.ParameterLocation("flagsAvailable"), GLuint(this->flagsEnabled));
-		if (this->flagsEnabled) {
-			glUniform1ui(this->sphereShader.ParameterLocation("flagOffset"), flagPartsCount);
-			glUniform4fv(this->sphereShader.ParameterLocation("flagSelectedCol"), 1, this->selectColorParam.Param<param::ColorParam>()->Value().data());
-			glUniform4fv(this->sphereShader.ParameterLocation("flagSoftSelectedCol"), 1, this->softSelectColorParam.Param<param::ColorParam>()->Value().data());
-		}
+        glUniform1ui(this->sphereShader.ParameterLocation("flagsAvailable"), GLuint(this->flagsEnabled));
+        if (this->flagsEnabled) {
+            glUniform1ui(this->sphereShader.ParameterLocation("flagOffset"), flagPartsCount);
+            glUniform4fv(this->sphereShader.ParameterLocation("flagSelectedCol"), 1, this->selectColorParam.Param<param::ColorParam>()->Value().data());
+            glUniform4fv(this->sphereShader.ParameterLocation("flagSoftSelectedCol"), 1, this->softSelectColorParam.Param<param::ColorParam>()->Value().data());
+        }
 
-		this->setBufferData(this->sphereShader, parts, 0, parts.GetVertexData(), 0, parts.GetColourData());
-	
-		glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(parts.GetCount()));
+        this->setBufferData(this->sphereShader, parts, 0, parts.GetVertexData(), 0, parts.GetColourData());
+    
+        glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(parts.GetCount()));
 
-		this->unsetBufferData(this->sphereShader);
-		this->unsetShaderData();
-		flagPartsCount += parts.GetCount();
-	}
+        this->unsetBufferData(this->sphereShader);
+        this->unsetShaderData();
+        flagPartsCount += parts.GetCount();
+    }
 
-	this->unsetFlagStorage(this->sphereShader);
-	this->sphereShader.Disable();
+    this->unsetFlagStorage(this->sphereShader);
+    this->sphereShader.Disable();
 
-	mpdc->Unlock();
+    mpdc->Unlock();
 
-	return true;
+    return true;
 }
 
 
@@ -2239,8 +2258,7 @@ bool SphereRenderer::makeVertexString(
 }
 
 
-std::shared_ptr<GLSLShader> SphereRenderer::makeShader(
-    vislib::SmartPtr<ShaderSource> vert, vislib::SmartPtr<ShaderSource> frag) {
+std::shared_ptr<GLSLShader> SphereRenderer::makeShader(std::shared_ptr<ShaderSource> vert, std::shared_ptr<ShaderSource> frag) {
 
     std::shared_ptr<GLSLShader> sh = std::make_shared<GLSLShader>(GLSLShader());
     try {
@@ -2283,7 +2301,7 @@ std::shared_ptr<vislib::graphics::gl::GLSLShader> SphereRenderer::generateShader
 
     shaderMap::iterator i = this->theShaders.find(std::make_tuple(c, p, interleaved));
     if (i == this->theShaders.end()) {
-        vislib::SmartPtr<ShaderSource> v2 = new ShaderSource(*this->vertShader);
+        std::shared_ptr<ShaderSource> v2 = std::make_shared<ShaderSource>(*this->vertShader);
         vislib::SmartPtr<ShaderSource::Snippet> codeSnip, declarationSnip;
         std::string vertCode, colCode, vertDecl, colDecl, decl;
         makeVertexString(parts, vertCode, vertDecl, interleaved);
@@ -2340,7 +2358,7 @@ std::shared_ptr<vislib::graphics::gl::GLSLShader> SphereRenderer::generateShader
         // Generated shader code snippet is inserted after ssbo_vert_mainstart.glsl (Consider new index through first insertion)
         v2->Insert(10, codeSnip);
 
-        vislib::SmartPtr<ShaderSource> vss(v2);
+        std::shared_ptr<ShaderSource> vss(v2);
         this->theShaders.emplace(std::make_pair(std::make_tuple(c, p, interleaved), makeShader(v2, this->fragShader)));
         i = this->theShaders.find(std::make_tuple(c, p, interleaved));
     }
@@ -2546,7 +2564,7 @@ void SphereRenderer::rebuildWorkingData(view::CallRender3D_2* cr3d, MultiParticl
         // Insert all particle lists
         this->volGen->ClearVolume();
 
-        this->volGen->StartInsertion(this->curClipBox, vislib::math::Vector<float, 4>(this->curClipDat[0], this->curClipDat[1],
+        this->volGen->StartInsertion(this->curClipBox, glm::vec4(this->curClipDat[0], this->curClipDat[1],
             this->curClipDat[2], this->curClipDat[3]));
         for (unsigned int i = 0; i < this->gpuData.size(); ++i) {
             float globalRadius = 0.0f;
@@ -2580,34 +2598,30 @@ void SphereRenderer::renderDeferredPass(view::CallRender3D_2* cr3d) {
     glBindTexture(GL_TEXTURE_2D, this->gBuffer.normals);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, this->gBuffer.color);
-
-    this->lightingShader.Enable();
-
-    this->lightingShader.SetParameter("inWidth", static_cast<float>(this->curVpWidth));
-    this->lightingShader.SetParameter("inHeight", static_cast<float>(this->curVpHeight));
-    glUniformMatrix4fv(this->lightingShader.ParameterLocation("MVPinv"), 1, GL_FALSE, glm::value_ptr(this->curMVPinv));
-    this->lightingShader.SetParameter("inColorTex", static_cast<int>(0));
-    this->lightingShader.SetParameter("inNormalsTex", static_cast<int>(1));
-    this->lightingShader.SetParameter("inDepthTex", static_cast<int>(2));
-    this->lightingShader.SetParameter("inUseHighPrecision", highPrecision);
-
-    if (enableLighting) {
-        this->lightingShader.SetParameterArray3("inObjLightPos", 1, glm::value_ptr(this->curLightPos));
-        this->lightingShader.SetParameterArray3("inObjCamPos", 1, glm::value_ptr(this->curCamPos));
-    }
-
-    float aoOffset = this->aoOffsetSlot.Param<param::FloatParam>()->Value();
-    float aoStrength = this->aoStrengthSlot.Param<param::FloatParam>()->Value();
-    float aoConeLength = this->aoConeLengthSlot.Param<param::FloatParam>()->Value();
     if (volGen != nullptr) {
         glActiveTexture(GL_TEXTURE3);
         glBindTexture(GL_TEXTURE_3D, this->volGen->GetVolumeTextureHandle());
         glActiveTexture(GL_TEXTURE0);
     }
-    this->lightingShader.SetParameter("inAOOffset", aoOffset);
+
+    this->lightingShader.Enable();
+
+    this->lightingShader.SetParameter("inColorTex", static_cast<int>(0));
+    this->lightingShader.SetParameter("inNormalsTex", static_cast<int>(1));
+    this->lightingShader.SetParameter("inDepthTex", static_cast<int>(2));
     this->lightingShader.SetParameter("inDensityTex", static_cast<int>(3));
-    this->lightingShader.SetParameter("inAOStrength", aoStrength);
-    this->lightingShader.SetParameter("inAOConeLength", aoConeLength);
+
+    this->lightingShader.SetParameter("inWidth", static_cast<float>(this->curVpWidth));
+    this->lightingShader.SetParameter("inHeight", static_cast<float>(this->curVpHeight));
+    glUniformMatrix4fv(this->lightingShader.ParameterLocation("MVPinv"), 1, GL_FALSE, glm::value_ptr(this->curMVPinv));
+    this->lightingShader.SetParameter("inUseHighPrecision", highPrecision);
+    if (enableLighting) {
+        this->lightingShader.SetParameterArray3("inObjLightDir", 1, glm::value_ptr(this->curlightDir));
+        this->lightingShader.SetParameterArray3("inObjCamPos", 1, glm::value_ptr(this->curCamPos));
+    }
+    this->lightingShader.SetParameter("inAOOffset", this->aoOffsetSlot.Param<param::FloatParam>()->Value());
+    this->lightingShader.SetParameter("inAOStrength", this->aoStrengthSlot.Param<param::FloatParam>()->Value());
+    this->lightingShader.SetParameter("inAOConeLength", this->aoConeLengthSlot.Param<param::FloatParam>()->Value());
     this->lightingShader.SetParameter("inAmbVolShortestEdge", this->ambConeConstants[0]);
     this->lightingShader.SetParameter("inAmbVolMaxLod", this->ambConeConstants[1]);
     this->lightingShader.SetParameterArray3("inBoundsMin", 1, this->curClipBox.GetLeftBottomBack().PeekCoordinates());
@@ -2631,8 +2645,7 @@ void SphereRenderer::renderDeferredPass(view::CallRender3D_2* cr3d) {
 }
 
 
-void SphereRenderer::generate3ConeDirections(
-    std::vector<vislib::math::Vector<float, 4>>& directions, float apex) {
+void SphereRenderer::generate3ConeDirections(std::vector<glm::vec4>& directions, float apex) {
 
     directions.clear();
 
@@ -2643,15 +2656,14 @@ void SphereRenderer::generate3ConeDirections(
     for (int i = 0; i < 3; ++i) {
         float angle = static_cast<float>(i) / 3.0f * 2.0f * static_cast<float>(M_PI);
 
-        vislib::math::Vector<float, 3> center(cos(angle) * radius, height, sin(angle) * radius);
-        center.Normalise();
-        directions.push_back(vislib::math::Vector<float, 4>(center.X(), center.Y(), center.Z(), edge_length));
+        glm::vec3 center(cos(angle) * radius, height, sin(angle) * radius);
+        center = glm::normalize(center);
+        directions.push_back(glm::vec4(center.x, center.y, center.z, edge_length));
     }
 }
 
 
-std::string SphereRenderer::generateDirectionShaderArrayString(
-    const std::vector<vislib::math::Vector<float, 4>>& directions, const std::string& directionsName) {
+std::string SphereRenderer::generateDirectionShaderArrayString(const std::vector<glm::vec4>& directions, const std::string& directionsName) {
 
     std::stringstream result;
 

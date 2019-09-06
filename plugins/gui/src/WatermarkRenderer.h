@@ -11,22 +11,16 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/misc/PngBitmapCodec.h"
+#include "mmcore/param/FilePathParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/ParamSlot.h"
 #include "mmcore/utility/ResourceWrapper.h"
 #include "mmcore/view/CallRender3D_2.h"
 #include "mmcore/view/Renderer3DModule_2.h"
 
-#include "mmcore/param/FilePathParam.h"
-#include "mmcore/param/FloatParam.h"
-#include "mmcore/param/ParamSlot.h"
-
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/graphics/gl/OpenGLTexture2D.h"
-
-#include "vislib/math/Matrix.h"
-#include "vislib/math/ShallowMatrix.h"
-#include "vislib/math/Vector.h"
-
 #include "vislib/sys/File.h"
 #include "vislib/sys/Log.h"
 
@@ -122,14 +116,11 @@ private:
     vislib::graphics::gl::OpenGLTexture2D textureBottomRight;
     vislib::graphics::gl::OpenGLTexture2D textureCenter;
 
-    vislib::math::Vector<float, 2> sizeTopLeft;
-    vislib::math::Vector<float, 2> sizeTopRight;
-    vislib::math::Vector<float, 2> sizeBottomLeft;
-    vislib::math::Vector<float, 2> sizeBottomRight;
-    vislib::math::Vector<float, 2> sizeCenter;
-
-    float lastScaleAll;
-    bool firstParamChange;
+    glm::vec2 sizeTopLeft;
+    glm::vec2 sizeTopRight;
+    glm::vec2 sizeBottomLeft;
+    glm::vec2 sizeBottomRight;
+    glm::vec2 sizeCenter;
 
     ///////////////////////////////////////////////////////////////
 
@@ -141,10 +132,10 @@ private:
 
     /** Vertex buffer object info. */
     struct VBOData {
-        GLuint handle;        // buffer handle
-        vislib::StringA name; // varaible name of attribute in shader
-        GLuint index;         // index of attribute location
-        unsigned int dim;     // dimension of data
+        GLuint handle;    // buffer handle
+        std::string name; // varaible name of attribute in shader
+        GLuint index;     // index of attribute location
+        unsigned int dim; // dimension of data
     };
 
     /** Vertex array object. */
@@ -165,10 +156,10 @@ private:
      * Separate function for loading files from arbitrary paths needed.
      * (not not only from within the resource folder like utility::ResourceWrapper::LoadResource() does)
      */
-    SIZE_T loadFile(vislib::StringA name, void** outData);
+    SIZE_T loadFile(std::string name, void** outData);
 
     /** PNG image file must be in RGBA foramt. */
-    bool loadTexture(WatermarkRenderer::corner cor, vislib::StringA filename);
+    bool loadTexture(WatermarkRenderer::corner cor, std::string filename);
 
     /** Draw specified watermark. */
     bool renderWatermark(WatermarkRenderer::corner cor, float vpH, float vpW);

@@ -44,6 +44,8 @@
 
 #include <climits>
 
+#include <glm/glm.hpp>
+
 
 namespace megamol {
 namespace stdplugin {
@@ -176,7 +178,7 @@ namespace rendering {
             unsigned int oQuery;
 
             /** gpu-ram caching variables */
-            vislib::Array<CacheItem> cache;
+            std::vector<CacheItem> cache;
 
             /**
                 * Ctor
@@ -212,7 +214,7 @@ namespace rendering {
             *
             * @return The distance sort info
             */
-        static int depthSort(const vislib::Pair<unsigned int, float> &lhs,
+        static bool depthSort(const vislib::Pair<unsigned int, float> &lhs,
             const vislib::Pair<unsigned int, float> &rhs);
 
         /** The sphere shader */
@@ -273,10 +275,10 @@ namespace rendering {
         unsigned int greyTF;
 
         /** Cell distances */
-        vislib::Array<vislib::Pair<unsigned int, float>> cellDists;
+        std::vector<vislib::Pair<unsigned int, float>> cellDists;
 
         /** Cell rendering informations */
-        vislib::Array<CellInfo> cellInfos;
+        std::vector<CellInfo> cellInfos;
 
         /** Bytes of the GPU-Memory available for caching */
         SIZE_T cacheSize;
