@@ -11,7 +11,7 @@ layout(rgba32f, binding = 1) writeonly uniform highp image2D normal_target_tx2D;
 layout(r32f, binding = 2) writeonly uniform highp image2D depth_target_tx2D;
 
 /* main function for computation */
-void compute(float t, const float tfar, const Ray ray, float rayStep, const ivec2 pixel_coords) {
+void compute(float t, const float tfar, const Ray ray, const float rayStep, const ivec2 pixel_coords) {
     // Initialize results
     vec4 result = vec4(0.0f);
 
