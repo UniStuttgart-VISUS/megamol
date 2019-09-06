@@ -58,6 +58,9 @@ function(add_external_project TARGET)
   set(GEN_ARGS)
   set(CONF_ARGS)
 
+  if(CMAKE_GENERATOR_PLATFORM)
+    set(GEN_ARGS "${GEN_ARGS} -A${CMAKE_GENERATOR_PLATFORM}")
+  endif()
   if(CMAKE_TOOLCHAIN_FILE)
     set(GEN_ARGS "${GEN_ARGS} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}")
   endif()
@@ -87,7 +90,7 @@ function(add_external_project TARGET)
       file(MAKE_DIRECTORY "${${lcName}_BINARY_DIR}/${BUILD_CONFIG}")
 
       execute_process(
-        COMMAND ${CMAKE_COMMAND} "-G${CMAKE_GENERATOR}" "-Ax64" ${GEN_ARGS} ${CONF_ARGS}
+        COMMAND ${CMAKE_COMMAND} "-G${CMAKE_GENERATOR}" ${GEN_ARGS} ${CONF_ARGS}
           -DCMAKE_INSTALL_PREFIX:PATH=${${lcName}_INSTALL_DIR}/${BUILD_CONFIG}
           -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
           -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
@@ -98,7 +101,7 @@ function(add_external_project TARGET)
     endforeach()
   else()
     execute_process(
-      COMMAND ${CMAKE_COMMAND} "-G${CMAKE_GENERATOR}" "-Ax64" ${GEN_ARGS} ${CONF_ARGS}
+      COMMAND ${CMAKE_COMMAND} "-G${CMAKE_GENERATOR}" ${GEN_ARGS} ${CONF_ARGS}
         -DCMAKE_INSTALL_PREFIX:PATH=${${lcName}_INSTALL_DIR}
         -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
         -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
