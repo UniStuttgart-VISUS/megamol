@@ -11,7 +11,7 @@ layout(rgba32f, binding = 1) writeonly uniform highp image2D normal_target_tx2D;
 layout(r32f, binding = 2) writeonly uniform highp image2D depth_target_tx2D;
 
 /* main function for computation */
-void compute(float t, const float tfar, const Ray ray, const float rayStep, const ivec2 pixel_coords) {
+void compute(float t, const float tfar, const Ray ray, float rayStep, const ivec2 pixel_coords) {
     // Initialize results
     vec4 result = vec4(0.0f);
 
@@ -60,7 +60,12 @@ void compute(float t, const float tfar, const Ray ray, const float rayStep, cons
         old_pos = pos;
         old_value = vol_sample;
 
-        t += rayStep;
+        // Adaptive step size
+        if (vol_sample / isoValue < 0.5f) {
+            t += rayStep;
+        } else {
+            t += rayStep * (1.0f + (rayStep / 10.0f) - vol_sample / isoValue);
+        }
     }
 
     // Write results
