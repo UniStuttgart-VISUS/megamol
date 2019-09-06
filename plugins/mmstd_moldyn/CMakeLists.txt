@@ -3,17 +3,17 @@
 # Copyright 2017, by MegaMol Team
 # Alle Rechte vorbehalten. All rights reserved.
 #
-option(BUILD_MMSTD_MOLDYN_PLUGIN "Option to build mmstd_moldyn" ON)
+string(TOUPPER mmstd_moldyn EXPORT_NAME)
+option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build mmstd_moldyn" ON)
 
-if(BUILD_MMSTD_MOLDYN_PLUGIN)
+if(BUILD_${EXPORT_NAME}_PLUGIN)
   project(mmstd_moldyn)
-
-  string(TOUPPER ${PROJECT_NAME} EXPORT_NAME)
 
   # Check option dependencies: First list item is always the current build option,
   # afterwards list the dependencies.
   set(DEP_LIST "${DEP_LIST};BUILD_MMSTD_MOLDYN_PLUGIN BUILD_CORE" CACHE INTERNAL "")
 
+  # Collect source files
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
@@ -21,7 +21,6 @@ if(BUILD_MMSTD_MOLDYN_PLUGIN)
 
   # Target definition
   add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files})
-  # Set target naming conventions for different build types
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src")
