@@ -14,6 +14,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE" CACHE INTERNAL "")
 
   require_external(imgui)
+  set_source_files_properties(${imgui_files} PROPERTIES GENERATED TRUE)
 
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
