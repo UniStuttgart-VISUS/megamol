@@ -55,21 +55,12 @@ function(add_external_project TARGET)
   mark_as_advanced(FORCE FETCHCONTENT_UPDATES_DISCONNECTED_${ucName})
 
   # Compose arguments for external project
-  set(GEN_ARGS "-G${CMAKE_GENERATOR}")
-  string(FIND "${CMAKE_GENERATOR}" "Visual Studio" IS_VS)
-
-  if("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 16 2019")
-    set(GEN_ARGS "${GEN_ARGS} -Ax64")
-  elseif(${IS_VS} GREATER -1)
-    set(GEN_ARGS "${GEN_ARGS} Win64")
-  endif()
+  set(GEN_ARGS)
+  set(CONF_ARGS)
 
   if(CMAKE_TOOLCHAIN_FILE)
     set(GEN_ARGS "${GEN_ARGS} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}")
   endif()
-
-  # Compose configuration arguments
-  set(CONF_ARGS)
 
   if(args_CMAKE_ARGS)
     set(CONF_ARGS "${args_CMAKE_ARGS}")
@@ -96,7 +87,7 @@ function(add_external_project TARGET)
       file(MAKE_DIRECTORY "${${lcName}_BINARY_DIR}/${BUILD_CONFIG}")
 
       execute_process(
-        COMMAND ${CMAKE_COMMAND} ${GEN_ARGS} ${CONF_ARGS}
+        COMMAND ${CMAKE_COMMAND} "-G${CMAKE_GENERATOR}" "-Ax64" ${GEN_ARGS} ${CONF_ARGS}
           -DCMAKE_INSTALL_PREFIX:PATH=${${lcName}_INSTALL_DIR}/${BUILD_CONFIG}
           -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
           -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
@@ -107,7 +98,7 @@ function(add_external_project TARGET)
     endforeach()
   else()
     execute_process(
-      COMMAND ${CMAKE_COMMAND} ${GEN_ARGS} ${CONF_ARGS}
+      COMMAND ${CMAKE_COMMAND} "-G${CMAKE_GENERATOR}" "-Ax64" ${GEN_ARGS} ${CONF_ARGS}
         -DCMAKE_INSTALL_PREFIX:PATH=${${lcName}_INSTALL_DIR}
         -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
         -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
@@ -154,7 +145,11 @@ function(add_external_project TARGET)
   set_target_properties(${TARGET}_ext PROPERTIES FOLDER external)
 
   external_set_property(${TARGET} SOURCE_DIR "${${lcName}_SOURCE_DIR}")
-  external_set_property(${TARGET} INSTALL_DIR "${${lcName}_INSTALL_DIR}")
+  if(MULTICONFIG)
+    external_set_property(${TARGET} INSTALL_DIR "${${lcName}_INSTALL_DIR}/Release")
+  else()
+    external_set_property(${TARGET} INSTALL_DIR "${${lcName}_INSTALL_DIR}")
+  endif()
   external_set_property(${TARGET} CONFIG_DIR "${${lcName}_INSTALL_DIR}")
 endfunction(add_external_project)
 
