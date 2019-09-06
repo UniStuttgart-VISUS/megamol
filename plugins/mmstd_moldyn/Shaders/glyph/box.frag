@@ -16,8 +16,6 @@ void main() {
 
     vec3 color = mix(dirColor, vertColor.rgb, colorInterpolation);
 
-    vec3 ray = wsPos.xyz - cam.xyz;
-    //color = transformedNormal;
-    out_frag_color = vec4(color, 1.0);
-    //out_frag_color = vec4(LocalLighting(ray, transformedNormal, lightPos.xyz, color), 1.0);
+    vec3 ray = normalize(wsPos.xyz - cam.xyz);
+    out_frag_color = vec4(LocalLighting(ray, transformedNormal, light.xyz, color), 1.0);
 }

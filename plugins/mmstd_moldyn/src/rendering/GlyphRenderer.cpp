@@ -62,7 +62,7 @@ bool GlyphRenderer::create(void) {
     if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) return false;
 
     bool retVal = true;
-    retVal = retVal && this->makeShader("glyph::ellipsoid_vertex", "glyph::ellipsoid_fragment", this->ellipsoidShader);
+    //retVal = retVal && this->makeShader("glyph::ellipsoid_vertex", "glyph::ellipsoid_fragment", this->ellipsoidShader);
     retVal = retVal && this->makeShader("glyph::box_vertex", "glyph::box_fragment", this->boxShader);
 
     return retVal;
@@ -335,25 +335,22 @@ bool GlyphRenderer::Render(core::view::CallRender3D_2& call) {
     glUniform1f(shader->ParameterLocation("colorInterpolation"),
         this->colorInterpolationParam.Param<param::FloatParam>()->Value());
 
-    //glUniform3fvARB(shader->ParameterLocation("camIn"), 1, glm::value_ptr(CamView));
-    //glUniform3fvARB(shader->ParameterLocation("camRight"), 1, glm::value_ptr(CamRight));
-    //glUniform3fvARB(shader->ParameterLocation("camUp"), 1, glm::value_ptr(CamUp));
-    
     for (unsigned int i = 0; i < epdc->GetParticleListCount(); i++) {
 
         auto& elParts = epdc->AccessParticles(i);
 
         if (elParts.GetCount() == 0 || elParts.GetQuatData() == nullptr || elParts.GetRadiiData() == nullptr) continue;
 
+        uint32_t color_options;
+
         bool bindColor = true;
         switch (elParts.GetColourDataType()) {
         case core::moldyn::EllipsoidalParticleDataCall::Particles::COLDATA_NONE: {
-            glUniform1i(shader->ParameterLocation("useGlobalColor"), 1);
-            glUniform1i(shader->ParameterLocation("intensityOnly"), 0);
+            color_options = color_options::USE_GLOBAL;
             const auto gc = elParts.GetGlobalColour();
             const std::array<float, 4> gcf = {static_cast<float>(gc[0]) / 255.0f, static_cast<float>(gc[1]) / 255.0f,
                 static_cast<float>(gc[2]) / 255.0f, static_cast<float>(gc[3]) / 255.0f};
-            glUniform4fv(shader->ParameterLocation("globalColor"), 1, gcf.data());
+            glUniform4fv(shader->ParameterLocation("global_color"), 1, gcf.data());
             bindColor = false;
         } break;
         case core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
@@ -363,14 +360,12 @@ bool GlyphRenderer::Render(core::view::CallRender3D_2& call) {
         case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
         case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
             // these should have been converted to vec4 colors
-            glUniform1i(shader->ParameterLocation("useGlobalColor"), 0);
-            glUniform1i(shader->ParameterLocation("intensityOnly"), 0);
+            color_options = 0;
             break;
         case core::moldyn::SimpleSphericalParticles::COLDATA_DOUBLE_I:
         case core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I:
             // these should have been converted to vec4 colors with only a red channel for I
-            glUniform1i(shader->ParameterLocation("useGlobalColor"), 0);
-            glUniform1i(shader->ParameterLocation("intensityOnly"), 1);
+            color_options = color_options::USE_TRANSFER_FUNCTION;
             break;
         case core::moldyn::SimpleSphericalParticles::COLDATA_USHORT_RGBA:
             // we should never get this far
@@ -380,6 +375,7 @@ bool GlyphRenderer::Render(core::view::CallRender3D_2& call) {
             continue;
             break;
         }
+        glUniform1ui(shader->ParameterLocation("color_options"), color_options);
 
         switch (elParts.GetVertexDataType()) {
         case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE:
@@ -418,6 +414,7 @@ bool GlyphRenderer::Render(core::view::CallRender3D_2& call) {
                 glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 3, the_col.GetHandle(x), 0, actualItems * sizeof(float) * 4);
             }
 
+            // TODO transfer function
             // TODO flags
             // TODO flags offset
             switch (this->glyphParam.Param<core::param::EnumParam>()->Value()) {

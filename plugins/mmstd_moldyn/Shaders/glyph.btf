@@ -21,6 +21,13 @@
     <shader name="box_vertex">
         <snippet type="version">430</snippet>
         <snippet type="file">glyph/uniforms.glsl</snippet>
+        <snippet type="file">glyph/ssbo_data.glsl</snippet>
+        <snippet type="file">glyph/tf_lookup.glsl</snippet>
+        <snippet type="file">glyph/flags.glsl</snippet>
+        <snippet name="bitflags::main"/>
+        <snippet type="file">glyph/quaternion_to_matrix.glsl</snippet>
+        <snippet type="file">glyph/cube_geometry.glsl</snippet>
+        <snippet type="file">glyph/compute_color.glsl</snippet>
         <snippet type="file">glyph/box.vert</snippet>
     </shader>
 

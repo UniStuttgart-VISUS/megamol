@@ -104,6 +104,8 @@ private:
         SUPERQUADRIC = 3,
     };
 
+    enum color_options { USE_GLOBAL = 1 << 0, USE_TRANSFER_FUNCTION = 1 << 1, USE_FLAGS = 1 << 2 };
+
     /**The ellipsoid shader*/
     vislib::graphics::gl::GLSLShader ellipsoidShader;
     vislib::graphics::gl::GLSLShader boxShader;
