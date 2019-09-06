@@ -56,9 +56,12 @@ function(add_external_project TARGET)
 
   # Compose arguments for external project
   set(GEN_ARGS "-G${CMAKE_GENERATOR}")
+  string(FIND "${CMAKE_GENERATOR}" "Visual Studio" IS_VS)
 
-  if(CMAKE_GENERATOR_PLATFORM AND CMAKE_VERSION VERSION_GREATER_EQUAL "3.14.0")
-    set(GEN_ARGS "${GEN_ARGS} -A${CMAKE_GENERATOR_PLATFORM}")
+  if("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 16 2019")
+    set(GEN_ARGS "${GEN_ARGS} -Ax64")
+  elseif(${IS_VS} GREATER -1)
+    set(GEN_ARGS "${GEN_ARGS} Win64")
   endif()
 
   if(CMAKE_TOOLCHAIN_FILE)
@@ -97,7 +100,7 @@ function(add_external_project TARGET)
           -DCMAKE_INSTALL_PREFIX:PATH=${${lcName}_INSTALL_DIR}/${BUILD_CONFIG}
           -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
           -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-          -S${${lcName}_SOURCE_DIR}
+          ${${lcName}_SOURCE_DIR}
         WORKING_DIRECTORY "${${lcName}_BINARY_DIR}/${BUILD_CONFIG}"
         OUTPUT_QUIET
         RESULT_VARIABLE CONFIG_RESULT)
@@ -109,7 +112,7 @@ function(add_external_project TARGET)
         -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
         -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
         -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-        -S${${lcName}_SOURCE_DIR}
+        ${${lcName}_SOURCE_DIR}
       WORKING_DIRECTORY "${${lcName}_BINARY_DIR}"
       OUTPUT_QUIET
       RESULT_VARIABLE CONFIG_RESULT)
