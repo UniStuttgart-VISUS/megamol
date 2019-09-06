@@ -25,21 +25,12 @@ layout(std430, binding = 3) buffer col_data {
 };
 // binding 4 is going to be the flags
 
-out vec4 objPos;
-out vec4 camPos;
-out vec4 lightPos;
+out vec4 wsPos;
 out vec4 vertColor;
 
 out vec3 invRad;
 
 out flat vec3 dirColor;
-
-out mat3 rotMat;
-out vec3 rotMatT0;
-out vec3 rotMatT1; // rotation matrix from the quaternion
-out vec3 rotMatT2;
-out mat3 rotMatIT;
-
 out flat vec3 normal;
 out flat vec3 transformedNormal;
 
@@ -87,32 +78,34 @@ void main() {
     uint inst = gl_InstanceID; //gl_VertexID / 14;
     uint corner = gl_VertexID;// % 14;
 
+    vec3 rotMatC0;
+    vec3 rotMatC1; // rotation matrix columns from the quaternion
+    vec3 rotMatC2;
     vec4 inPos = vec4(posArray[inst].x, posArray[inst].y, posArray[inst].z, 1.0);
     vec3 radii = vec3(radArray[inst].x, radArray[inst].y, radArray[inst].z); //rad[inst];
     vec3 absradii = abs(radii);
     vec4 quatC = vec4(quatArray[inst].x, quatArray[inst].y, quatArray[inst].z, quatArray[inst].w); //quat[inst];
     invRad = 1.0 / absradii;
     
-    objPos = inPos;
-    
     tmp = quatC.xzyw * quatC.yxzw;
     tmp1 = quatC * quatC.w;
     tmp1.w = -quatConst.z;
-    rotMatT0.xyz = tmp1.wzy * quatConst.xxy + tmp.wxy;	// matrix0 <- (ww-0.5, xy+zw, xz-yw, %)
-    rotMatT0.x = quatC.x * quatC.x + rotMatT0.x;			// matrix0 <- (ww+x*x-0.5, xy+zw, xz-yw, %)
-    rotMatT0 = rotMatT0 + rotMatT0;                           	// matrix0 <- (2(ww+x*x)-1, 2(xy+zw), 2(xz-yw), %)
+    rotMatC0.xyz = tmp1.wzy * quatConst.xxy + tmp.wxy;	// matrix0 <- (ww-0.5, xy+zw, xz-yw, %)
+    rotMatC0.x = quatC.x * quatC.x + rotMatC0.x;			// matrix0 <- (ww+x*x-0.5, xy+zw, xz-yw, %)
+    rotMatC0 = rotMatC0 + rotMatC0;                           	// matrix0 <- (2(ww+x*x)-1, 2(xy+zw), 2(xz-yw), %)
 
-    rotMatT1.xyz = tmp1.zwx * quatConst.yxx + tmp.xwz; 	// matrix1 <- (xy-zw, ww-0.5, yz+xw, %)
-    rotMatT1.y = quatC.y * quatC.y + rotMatT1.y;     			// matrix1 <- (xy-zw, ww+y*y-0.5, yz+xw, %)
-    rotMatT1 = rotMatT1 + rotMatT1;                           	// matrix1 <- (2(xy-zw), 2(ww+y*y)-1, 2(yz+xw), %)
+    rotMatC1.xyz = tmp1.zwx * quatConst.yxx + tmp.xwz; 	// matrix1 <- (xy-zw, ww-0.5, yz+xw, %)
+    rotMatC1.y = quatC.y * quatC.y + rotMatC1.y;     			// matrix1 <- (xy-zw, ww+y*y-0.5, yz+xw, %)
+    rotMatC1 = rotMatC1 + rotMatC1;                           	// matrix1 <- (2(xy-zw), 2(ww+y*y)-1, 2(yz+xw), %)
 
-    rotMatT2.xyz = tmp1.yxw * quatConst.xyx + tmp.yzw; 	// matrix2 <- (xz+yw, yz-xw, ww-0.5, %)
-    rotMatT2.z = quatC.z * quatC.z + rotMatT2.z;     			// matrix2 <- (xz+yw, yz-xw, ww+zz-0.5, %)
-    rotMatT2 = rotMatT2 + rotMatT2;                           	// matrix2 <- (2(xz+yw), 2(yz-xw), 2(ww+zz)-1, %)    
+    rotMatC2.xyz = tmp1.yxw * quatConst.xyx + tmp.yzw; 	// matrix2 <- (xz+yw, yz-xw, ww-0.5, %)
+    rotMatC2.z = quatC.z * quatC.z + rotMatC2.z;     			// matrix2 <- (xz+yw, yz-xw, ww+zz-0.5, %)
+    rotMatC2 = rotMatC2 + rotMatC2;                           	// matrix2 <- (2(xz+yw), 2(yz-xw), 2(ww+zz)-1, %)    
     // End: Holy code!
 
-    rotMatIT = mat3(rotMatT0, rotMatT1, rotMatT2);
-    rotMat = transpose(rotMatIT);
+    mat3 rotate_world_into_tensor = mat3(rotMatC0, rotMatC1, rotMatC2);
+    mat3 rotate_points = transpose(rotate_world_into_tensor);
+    mat3 rotate_vectors = transpose(inverse(rotate_points));
 
     normal = cube_normals[corner]; //(MV_T * vec4(cube_normals[corner], 0.0f)).xyz;
 
@@ -121,8 +114,8 @@ void main() {
 
     dirColor = any(lessThan(dirColor2, vec3(0.5)))? dirColor2 * vec3(0.5) : dirColor1;
 
-    transformedNormal = (MV_T * vec4(normal, 0.0f)).xyz;
-    lightPos = MV_T * light; // transpose of inverse inverse -> directional light
+    transformedNormal = (rotate_vectors * normal).xyz;
+    //lightDir = vec4(//vec4(rotate_wit_IT * light.xyz, 0.0);
     
 
     // send color to fragment shader
@@ -137,22 +130,13 @@ void main() {
         }
     }
 
-    vec4 pos, projPos;
+    vec4 cornerPos;
 
-    camPos.xyz = rotMat * cam.xyz;
+    cornerPos.xyz = cube_strip[corner];
+    cornerPos.xyz *= absradii; // scale
+    cornerPos.xyz = rotate_points * cornerPos.xyz;
+    cornerPos.w = 0.0;
+    wsPos = inPos + cornerPos; // move
 
-    pos.xyz = cube_strip[corner];
-    pos.xyz *= absradii; // scale
-    // projPos.x = dot(rotMatT0, pos.xyz); // rotate
-    // projPos.y = dot(rotMatT1, pos.xyz);
-    // projPos.z = dot(rotMatT2, pos.xyz);
-    projPos.xyz = rotMat * pos.xyz;
-    //projPos.xyz = pos.xyz;
-    projPos.w = 0.0;
-    pos = objPos + projPos; // move
-    //pos.w = 1.0; // now we're in object space
-
-    objPos = pos;
-
-    gl_Position =  MVP * pos;
+    gl_Position =  MVP * wsPos;
 }
