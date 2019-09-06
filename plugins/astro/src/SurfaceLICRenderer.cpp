@@ -162,7 +162,10 @@ bool SurfaceLICRenderer::GetExtents(core::Call& call) {
 
     int const req_frame = static_cast<int>(cr->Time());
 
-    cd->SetFrameID(req_frame);
+    ci->SetTime(req_frame);
+    cd->SetFrameID(req_frame, true);
+
+    *ci = *cr;
 
     if (!(*ci)(core::view::CallRender3D::FnGetExtents)) return false;
     if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS)) return false;
@@ -171,6 +174,8 @@ bool SurfaceLICRenderer::GetExtents(core::Call& call) {
     cr->AccessBoundingBoxes() =
         core::utility::combineAndMagicScaleBoundingBoxes({cd->GetBoundingBoxes(), ci->GetBoundingBoxes()});
 
+    *cr = *ci;
+
     return true;
 }
 
@@ -178,11 +183,13 @@ bool SurfaceLICRenderer::Render(core::Call& call) {
     auto cr = dynamic_cast<core::view::CallRender3D*>(&call);
     if (cr == nullptr) return false;
 
+    const auto req_frame = cr->Time();
+
     // Get input rendering
     auto ci = this->input_renderer.CallAs<core::view::CallRender3D>();
     if (ci == nullptr) return false;
 
-    ci->SetTime(cr->Time());
+    ci->SetTime(req_frame);
     ci->SetCameraParameters(cr->GetCameraParameters());
 
     if (this->fbo.GetWidth() != ci->GetViewport().Width() || this->fbo.GetHeight() != ci->GetViewport().Height()) {
@@ -221,6 +228,8 @@ bool SurfaceLICRenderer::Render(core::Call& call) {
     if (cd == nullptr) return false;
 
     if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_DATA)) return false;
+
+    cd->SetFrameID(req_frame, true);
 
     if (cd->GetComponents() != 3) {
         vislib::sys::Log::DefaultLog.WriteError("Input velocities must be vectors with 3 components");
