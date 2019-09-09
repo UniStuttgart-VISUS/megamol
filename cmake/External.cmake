@@ -29,7 +29,7 @@ endfunction()
 #
 function(add_external_project TARGET)
   set(ARGS_ONE_VALUE GIT_TAG GIT_REPOSITORY DEBUG_SUFFIX BUILD_BYPRODUCTS)
-  set(ARGS_MULT_VALUES CMAKE_ARGS PATCH_COMMAND)
+  set(ARGS_MULT_VALUES CMAKE_ARGS PATCH_COMMAND DEPENDS)
   cmake_parse_arguments(args "" "${ARGS_ONE_VALUE}" "${ARGS_MULT_VALUES}" ${ARGN})
 
   string(TOLOWER "${TARGET}" lcName)
@@ -140,7 +140,7 @@ function(add_external_project TARGET)
     set(BUILD_AND_INSTALL)
     set(BYPRODUCTS)
     if(args_BUILD_BYPRODUCTS)
-      set(BYPRODUCTS "BYPRODUCTS ")
+      set(BYPRODUCTS BYPRODUCTS )
     endif()
     foreach(BUILD_CONFIG Release;Debug;RelWithDebInfo)
       set(BUILD_AND_INSTALL ${BUILD_AND_INSTALL} COMMAND ${CMAKE_COMMAND} --build ${BUILD_CONFIG} --parallel --config ${BUILD_CONFIG})
@@ -155,7 +155,7 @@ function(add_external_project TARGET)
         string(REPLACE "<SUFFIX>" "${SUFFIX}" BYPRODUCT ${args_BUILD_BYPRODUCTS})
         string(REPLACE "<INSTALL_DIR>" "${${lcName}_INSTALL_DIR}/${BUILD_CONFIG}" BYPRODUCT ${BYPRODUCT})
 
-        set(BYPRODUCTS "${BYPRODUCTS} ${BYPRODUCT}")
+        set(BYPRODUCTS ${BYPRODUCTS} ${BYPRODUCT})
       endif()
     endforeach()
 
@@ -175,7 +175,7 @@ function(add_external_project TARGET)
       string(REPLACE "<SUFFIX>" "${SUFFIX}" BYPRODUCT ${args_BUILD_BYPRODUCTS})
       string(REPLACE "<INSTALL_DIR>" "${${lcName}_INSTALL_DIR}/${BUILD_CONFIG}" BYPRODUCT ${BYPRODUCT})
 
-      set(BYPRODUCTS "BYPRODUCTS ${BYPRODUCT}")
+      set(BYPRODUCTS BYPRODUCTS ${BYPRODUCT})
     endif()
 
     add_custom_command(OUTPUT "${${lcName}_BINARY_DIR}/EXTERNAL_BUILT"
@@ -198,6 +198,18 @@ function(add_external_project TARGET)
     external_set_property(${TARGET} INSTALL_DIR "${${lcName}_INSTALL_DIR}")
   endif()
   external_set_property(${TARGET} CONFIG_DIR "${${lcName}_INSTALL_DIR}")
+
+  if(args_DEPENDS)
+    add_dependencies(${TARGET}_ext  ${args_DEPENDS})
+  endif()
+
+  # Create ALL target for building all external libraries at once
+  if(NOT TARGET ALL_EXTERNALS)
+    add_custom_target(ALL_EXTERNALS)
+    set_target_properties(ALL_EXTERNALS PROPERTIES FOLDER external)
+  endif()
+
+  add_dependencies(ALL_EXTERNALS ${TARGET}_ext)
 endfunction(add_external_project)
 
 #
@@ -260,7 +272,7 @@ function(add_external_headeronly_project TARGET)
 
   # Add dependencies
   if(args_DEPENDS)
-    add_dependencies(${TARGET} DEPENDS ${args_DEPENDS})
+    add_dependencies(${TARGET} ${args_DEPENDS})
   endif()
 endfunction(add_external_headeronly_project)
 
@@ -268,7 +280,7 @@ endfunction(add_external_headeronly_project)
 # Adds an external library, depending on an external project.
 #
 # add_external_library(<target> (STATIC|SHARED|INTERFACE)
-#     DEPENDS <external_project>
+#     PROJECT <external_project>
 #     LIBRARY_DEBUG "Debug.dll"
 #     LIBRARY_RELEASE "Release.dll"
 #     LIBRARY_RELWITHDEBINFO "ReleaseWithDebInfo.dll"
@@ -280,17 +292,17 @@ endfunction(add_external_headeronly_project)
 #     INTERFACE_LIBRARIES <external_library>*")
 #
 function(add_external_library TARGET LINKAGE)
-  set(ARGS_ONE_VALUE DEPENDS COMPILE_DEFINITIONS INCLUDE_DIR CONFIG_INCLUDE_DIR LIBRARY LIBRARY_DEBUG LIBRARY_RELEASE LIBRARY_RELWITHDEBINFO LIBRARY_MINSIZEREL IMPORT_LIBRARY IMPORT_LIBRARY_DEBUG IMPORT_LIBRARY_RELEASE IMPORT_LIBRARY_RELWITHDEBINFO IMPORT_LIBRARY_MINSIZEREL INTERFACE_LIBRARIES)
-  cmake_parse_arguments(args "" "${ARGS_ONE_VALUE}" "" ${ARGN})
+  set(ARGS_ONE_VALUE PROJECT COMPILE_DEFINITIONS INCLUDE_DIR CONFIG_INCLUDE_DIR LIBRARY LIBRARY_DEBUG LIBRARY_RELEASE LIBRARY_RELWITHDEBINFO LIBRARY_MINSIZEREL IMPORT_LIBRARY IMPORT_LIBRARY_DEBUG IMPORT_LIBRARY_RELEASE IMPORT_LIBRARY_RELWITHDEBINFO IMPORT_LIBRARY_MINSIZEREL INTERFACE_LIBRARIES)
+  cmake_parse_arguments(args "" "${ARGS_ONE_VALUE}" "${ARGS_MULT_VALUES}" ${ARGN})
 
-  if(NOT args_DEPENDS)
-    set(args_DEPENDS ${TARGET})
+  if(NOT args_PROJECT)
+    set(args_PROJECT ${TARGET})
   endif()
-  _argument_default(DEPENDS "")
+  _argument_default(PROJECT "")
 
   # Guess library properties, unless set.
-  external_get_property(${DEPENDS} INSTALL_MAIN_DIR)
-  external_get_property(${DEPENDS} CONFIG_DIR)
+  external_get_property(${PROJECT} INSTALL_MAIN_DIR)
+  external_get_property(${PROJECT} CONFIG_DIR)
   _argument_default(COMPILE_DEFINITIONS "")
   _argument_default(INCLUDE_DIR "")
   _argument_default(CONFIG_INCLUDE_DIR "")
@@ -320,7 +332,7 @@ function(add_external_library TARGET LINKAGE)
 
   # Add an imported library.
   add_library(${TARGET} ${LINKAGE} IMPORTED GLOBAL)
-  add_dependencies(${TARGET} ${DEPENDS}_ext)
+  add_dependencies(${TARGET} ${PROJECT}_ext)
   set_target_properties(${TARGET} PROPERTIES
     INTERFACE_COMPILE_DEFINITIONS "${COMPILE_DEFINITIONS}"
     INTERFACE_INCLUDE_DIRECTORIES "${INSTALL_DIR_RELEASE}/${INCLUDE_DIR};${CONFIG_DIR}/${CONFIG_INCLUDE_DIR}"

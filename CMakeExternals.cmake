@@ -130,6 +130,7 @@ function(require_external NAME)
       GIT_TAG "v1.6.34"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${LIBPNG_PRODUCT}"
       DEBUG_SUFFIX d
+      DEPENDS zlib_ext
       CMAKE_ARGS
         -DPNG_BUILD_ZLIB=ON
         -DPNG_SHARED=OFF
@@ -260,14 +261,14 @@ function(require_external NAME)
       LIBRARY_RELEASE ${TRACKING_LIB})
 
     add_external_library(natnet SHARED 
-      DEPENDS tracking
+      PROJECT tracking
       IMPORT_LIBRARY_DEBUG ${TRACKING_NATNET_IMPORT_LIB}
       IMPORT_LIBRARY_RELEASE ${TRACKING_NATNET_IMPORT_LIB}
       LIBRARY_DEBUG ${TRACKING_NATNET_LIB}     
       LIBRARY_RELEASE ${TRACKING_NATNET_LIB})
 
     add_external_library(tracking_int INTERFACE
-      DEPENDS tracking
+      PROJECT tracking
       INCLUDE_DIR "src/tracking_ext/tracking/include")
 
   elseif(NAME STREQUAL "quickhull")
@@ -460,21 +461,21 @@ function(require_external NAME)
         -DMPI_GUESS_LIBRARY_NAME=${MPI_GUESS_LIBRARY_NAME})
 
     add_external_library(IceTCore SHARED
-      DEPENDS IceT
+      PROJECT IceT
       IMPORT_LIBRARY_DEBUG ${ICET_CORE_IMPORT_LIB}
       IMPORT_LIBRARY_RELEASE ${ICET_CORE_IMPORT_LIB}
       LIBRARY_DEBUG ${ICET_CORE_LIB}
       LIBRARY_RELEASE ${ICET_CORE_LIB})
 
     add_external_library(IceTGL SHARED
-      DEPENDS IceT
+      PROJECT IceT
       IMPORT_LIBRARY_DEBUG ${ICET_GL_IMPORT_LIB}
       IMPORT_LIBRARY_RELEASE ${ICET_GL_IMPORT_LIB}
       LIBRARY_DEBUG ${ICET_GL_LIB}
       LIBRARY_RELEASE ${ICET_GL_LIB})
 
     add_external_library(IceTMPI SHARED
-      DEPENDS IceT
+      PROJECT IceT
       IMPORT_LIBRARY_DEBUG ${ICET_MPI_IMPORT_LIB}
       IMPORT_LIBRARY_RELEASE ${ICET_MPI_IMPORT_LIB}
       LIBRARY_DEBUG ${ICET_MPI_LIB}
@@ -500,7 +501,7 @@ function(require_external NAME)
         -DGLFW_BUILD_DOCS=OFF)
 
     add_external_library(glfw3 SHARED
-      DEPENDS glfw
+      PROJECT glfw
       INCLUDE_DIR "include"
       IMPORT_LIBRARY ${GLFW_IMPORT_LIBRARY}
       LIBRARY ${GLFW_LIBRARY})
