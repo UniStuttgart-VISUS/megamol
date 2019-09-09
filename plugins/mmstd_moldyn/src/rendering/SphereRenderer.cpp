@@ -790,6 +790,9 @@ MultiParticleDataCall *SphereRenderer::getData(unsigned int t, float& outScaling
     else {
         return nullptr;
     }
+}
+
+
 void SphereRenderer::getClipData(glm::vec4& out_clipDat, glm::vec4& out_clipCol) {
     
     view::CallClipPlane *ccp = this->getClipPlaneSlot.CallAs<view::CallClipPlane>();
