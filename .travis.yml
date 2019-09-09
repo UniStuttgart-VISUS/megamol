@@ -51,6 +51,29 @@ matrix:
       env:
         - CC=gcc-9
         - CXX=g++-9
+    - os: linux
+      dist: xenial
+      addons:
+        apt:
+          update: true
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - clang
+            - libgl1-mesa-dev
+            - libglu1-mesa-dev
+            - uuid-dev
+            - libunwind8-dev
+            - libxrandr-dev
+            - libxinerama-dev
+            - libxcursor-dev
+            - libxi-dev
+            - libcgal-qt5-dev
+            - libcgal-dev
+      env:
+        - CC=clang
+        - CXX=clang++
+
 
 before_install:
   - . travis/install-cuda-xenial.sh
