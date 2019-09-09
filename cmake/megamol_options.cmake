@@ -55,7 +55,7 @@ if(ENABLE_MPI)
   endif()
   find_package(MPI REQUIRED)
   if(MPI_C_FOUND)
-    add_definitions("-DWITH_MPI")
+    target_compile_definitions(MPI::MPI_C INTERFACE "-DWITH_MPI")
   endif()
 endif()
 
