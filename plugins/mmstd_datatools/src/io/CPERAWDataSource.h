@@ -5,8 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef PBS_CPERAWDATASOURCE_H_INCLUDED
-#define PBS_CPERAWDATASOURCE_H_INCLUDED
+#pragma once
 
 #include <array>
 #include <vector>
@@ -20,10 +19,11 @@
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 
-#include "zfp.h"
 
 namespace megamol {
-namespace remote {
+namespace stdplugin {
+namespace datatools {
+namespace io {
 
 /** Module to read cpe point dumps as introduced with cpelib 4513dfd9fd8efa9282848bbe2ab4f53053d753b8. */
 class CPERAWDataSource : public core::Module {
@@ -142,7 +142,7 @@ private:
     std::array<float, 6> localBBox, globalBBox, globalCBox;
 };
 
-} /* end namespace remote */
-} /* end namespace megamol */
-
-#endif // end ifndef PBS_CPERAWDATASOURCE_H_INCLUDED
+} // namespace io
+} // namespace datatools
+} // namespace stdplugin
+} // namespace megamol
