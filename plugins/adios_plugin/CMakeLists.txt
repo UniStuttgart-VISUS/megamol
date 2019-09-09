@@ -28,7 +28,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
 
     add_external_project(adios2_ext
       GIT_REPOSITORY https://github.com/ornladios/ADIOS2.git
-      GIT_TAG "v2.3.1"
+      GIT_TAG "v2.4.0"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${ADIOS2_IMPORT_LIB}"
       CMAKE_ARGS 
         -DBUILD_TESTING=OFF -DADIOS2_USE_BZip2=OFF 
