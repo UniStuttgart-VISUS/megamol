@@ -28,7 +28,7 @@ endfunction()
 # See ExternalProject_Add(...) for usage.
 #
 function(add_external_project TARGET)
-  set(ARGS_ONE_VALUE GIT_TAG GIT_REPOSITORY)
+  set(ARGS_ONE_VALUE GIT_TAG GIT_REPOSITORY DEBUG_SUFFIX BUILD_BYPRODUCTS)
   set(ARGS_MULT_VALUES CMAKE_ARGS BUILD_BYPRODUCTS PATCH_COMMAND)
   cmake_parse_arguments(args "" "${ARGS_ONE_VALUE}" "${ARGS_MULT_VALUES}" ${ARGN})
 
@@ -90,8 +90,8 @@ function(add_external_project TARGET)
       file(MAKE_DIRECTORY "${${lcName}_BINARY_DIR}/${BUILD_CONFIG}")
 
       set(SUFFIX)
-      if(${BUILD_CONFIG} STREQUAL "Debug")
-        set(SUFFIX "d")
+      if(args_DEBUG_SUFFIX AND "${BUILD_CONFIG}" STREQUAL "Debug")
+        set(SUFFIX ${args_DEBUG_SUFFIX})
       endif()
 
       string(REPLACE "Release" "${BUILD_CONFIG}" CONF_ARGS "${CONF_ARGS}")
@@ -109,8 +109,8 @@ function(add_external_project TARGET)
     endforeach()
   else()
     set(SUFFIX)
-    if(${BUILD_CONFIG} STREQUAL "Debug")
-      set(SUFFIX "d")
+    if(args_DEBUG_SUFFIX AND "${BUILD_CONFIG}" STREQUAL "Debug")
+      set(SUFFIX ${args_DEBUG_SUFFIX})
     endif()
 
     string(REPLACE "<SUFFIX>" "${SUFFIX}" CONF_ARGS "${CONF_ARGS}")
@@ -138,25 +138,53 @@ function(add_external_project TARGET)
 
   if(MULTICONFIG)
     set(BUILD_AND_INSTALL)
+    set(BYPRODUCTS)
+    if(args_BUILD_BYPRODUCTS)
+      set(BYPRODUCTS "BYPRODUCTS ")
+    endif()
     foreach(BUILD_CONFIG Release;Debug;RelWithDebInfo)
       set(BUILD_AND_INSTALL ${BUILD_AND_INSTALL} COMMAND ${CMAKE_COMMAND} --build ${BUILD_CONFIG} --parallel --config ${BUILD_CONFIG})
       set(BUILD_AND_INSTALL ${BUILD_AND_INSTALL} COMMAND ${CMAKE_COMMAND} --install ${BUILD_CONFIG} --config ${BUILD_CONFIG})
+
+      if(args_BUILD_BYPRODUCTS)
+        set(SUFFIX)
+        if(args_DEBUG_SUFFIX AND "${BUILD_CONFIG}" STREQUAL "Debug")
+          set(SUFFIX ${args_DEBUG_SUFFIX})
+        endif()
+
+        string(REPLACE "<SUFFIX>" "${SUFFIX}" BYPRODUCT ${args_BUILD_BYPRODUCTS})
+        string(REPLACE "<INSTALL_DIR>" "${${lcName}_INSTALL_DIR}/${BUILD_CONFIG}" BYPRODUCT ${BYPRODUCT})
+
+        set(BYPRODUCTS "${BYPRODUCTS} ${BYPRODUCT}")
+      endif()
     endforeach()
 
     add_custom_command(OUTPUT "${${lcName}_BINARY_DIR}/EXTERNAL_BUILT"
       ${BUILD_AND_INSTALL}
       COMMAND ${CMAKE_COMMAND} -E touch \"${${lcName}_BINARY_DIR}/EXTERNAL_BUILT\"
-      WORKING_DIRECTORY "${${lcName}_BINARY_DIR}")
+      WORKING_DIRECTORY "${${lcName}_BINARY_DIR}"
+      ${BYPRODUCTS})
   else()
+    set(BYPRODUCTS)
+    if(args_BUILD_BYPRODUCTS)
+      set(SUFFIX)
+      if(args_DEBUG_SUFFIX AND "${BUILD_CONFIG}" STREQUAL "Debug")
+        set(SUFFIX ${args_DEBUG_SUFFIX})
+      endif()
+
+      string(REPLACE "<SUFFIX>" "${SUFFIX}" BYPRODUCT ${args_BUILD_BYPRODUCTS})
+      string(REPLACE "<INSTALL_DIR>" "${${lcName}_INSTALL_DIR}/${BUILD_CONFIG}" BYPRODUCT ${BYPRODUCT})
+
+      set(BYPRODUCTS "BYPRODUCTS ${BYPRODUCT}")
+    endif()
+
     add_custom_command(OUTPUT "${${lcName}_BINARY_DIR}/EXTERNAL_BUILT"
       COMMAND ${CMAKE_COMMAND} --build . --parallel --config ${CMAKE_BUILD_TYPE}
       COMMAND ${CMAKE_COMMAND} --install . --config ${CMAKE_BUILD_TYPE}
       COMMAND ${CMAKE_COMMAND} -E touch \"${${lcName}_BINARY_DIR}/EXTERNAL_BUILT\"
-      WORKING_DIRECTORY "${${lcName}_BINARY_DIR}")
+      WORKING_DIRECTORY "${${lcName}_BINARY_DIR}"
+      ${BYPRODUCTS})
   endif()
-
-  # If there are byproducts, create them
-  # TODO
 
   # Add external target
   add_custom_target(${TARGET}_ext DEPENDS "${${lcName}_BINARY_DIR}/EXTERNAL_BUILT")

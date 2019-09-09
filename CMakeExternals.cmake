@@ -39,7 +39,8 @@ function(require_external NAME)
     add_external_project(libzmq
       GIT_REPOSITORY https://github.com/zeromq/libzmq.git
       GIT_TAG 56ace6d03f521b9abb5a50176ec7763c1b77afa9
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${ZMQ_IMPORT_DEBUG}" "<INSTALL_DIR>/${ZMQ_IMPORT_RELEASE}"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/lib/libzmq${MSVC_TOOLSET}-mt<SUFFIX>-${ZMQ_VER}.lib"
+      DEBUG_SUFFIX -gd
       CMAKE_ARGS
         -DZMQ_BUILD_TESTS=OFF
         -DENABLE_PRECOMPILED=OFF)
@@ -62,10 +63,12 @@ function(require_external NAME)
     endif()
 
     if(MSVC)
+      set(ZLIB_PRODUCT "lib/zlibstatic<SUFFIX>${CMAKE_STATIC_LIBRARY_SUFFIX}")
       set(ZLIB_DEBUG "lib/zlibstaticd${CMAKE_STATIC_LIBRARY_SUFFIX}")
       set(ZLIB_RELEASE "lib/zlibstatic${CMAKE_STATIC_LIBRARY_SUFFIX}")
     else()
       include(GNUInstallDirs)
+      set(ZLIB_PRODUCT "lib/${CMAKE_STATIC_LIBRARY_PREFIX}z${CMAKE_STATIC_LIBRARY_SUFFIX}")
       set(ZLIB_DEBUG "lib/${CMAKE_STATIC_LIBRARY_PREFIX}z${CMAKE_STATIC_LIBRARY_SUFFIX}")
       set(ZLIB_RELEASE "lib/${CMAKE_STATIC_LIBRARY_PREFIX}z${CMAKE_STATIC_LIBRARY_SUFFIX}")
     endif()
@@ -73,7 +76,8 @@ function(require_external NAME)
     add_external_project(zlib
       GIT_REPOSITORY https://github.com/madler/zlib.git
       GIT_TAG "v1.2.11"
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${ZLIB_DEBUG}" "<INSTALL_DIR>/${ZLIB_RELEASE}"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${ZLIB_PRODUCT}"
+      DEBUG_SUFFIX d
       CMAKE_ARGS
         -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON)
 
@@ -102,10 +106,12 @@ function(require_external NAME)
     require_external(zlib)
 
     if(MSVC)
+      set(LIBPNG_PRODUCT "lib/libpng16_static<SUFFIX>${CMAKE_STATIC_LIBRARY_SUFFIX}")
       set(LIBPNG_DEBUG "lib/libpng16_staticd${CMAKE_STATIC_LIBRARY_SUFFIX}")
       set(LIBPNG_RELEASE "lib/libpng16_static${CMAKE_STATIC_LIBRARY_SUFFIX}")
     else()
       include(GNUInstallDirs)
+      set(LIBPNG_PRODUCT "${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}png16${CMAKE_STATIC_LIBRARY_SUFFIX}")
       set(LIBPNG_DEBUG "${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}png16${CMAKE_STATIC_LIBRARY_SUFFIX}")
       set(LIBPNG_RELEASE "${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}png16${CMAKE_STATIC_LIBRARY_SUFFIX}")
     endif()
@@ -122,8 +128,8 @@ function(require_external NAME)
     add_external_project(libpng
       GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/libpng.git
       GIT_TAG "v1.6.34"
-      DEPENDS zlib
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${LIBPNG_DEBUG}" "<INSTALL_DIR>/${LIBPNG_RELEASE}"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${LIBPNG_PRODUCT}"
+      DEBUG_SUFFIX d
       CMAKE_ARGS
         -DPNG_BUILD_ZLIB=ON
         -DPNG_SHARED=OFF
@@ -359,7 +365,8 @@ function(require_external NAME)
     add_external_project(bhtsne
       GIT_REPOSITORY https://github.com/lvdmaaten/bhtsne.git
       GIT_TAG "36b169c88250d0afe51828448dfdeeaa508f13bc"
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${BHTSNE_LIB_DEBUG}" "<INSTALL_DIR>/${BHTSNE_LIB_RELEASE}"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/lib/${CMAKE_STATIC_LIBRARY_PREFIX}bhtsne<SUFFIX>${CMAKE_STATIC_LIBRARY_SUFFIX}"
+      DEBUG_SUFFIX d
       PATCH_COMMAND ${CMAKE_COMMAND} -E copy
         "${CMAKE_SOURCE_DIR}/cmake/bhtsne/CMakeLists.txt"
         "<SOURCE_DIR>/CMakeLists.txt")
@@ -371,12 +378,14 @@ function(require_external NAME)
 
   elseif(NAME STREQUAL "tinyply")
     if(WIN32)
+      set(TNY_PRODUCT "lib/tinyply<SUFFIX>.lib")
       set(TNY_IMPORT_LIB "lib/tinyply.lib")
       set(TNY_IMPORT_LIB_DEBUG "lib/tinyplyd.lib")
       set(TNY_LIB "bin/tinyply.dll")
       set(TNY_LIB_DEBUG "bin/tinyplyd.dll")
     else()
       include(GNUInstallDirs)
+      set(TNY_PRODUCT "lib/libtinyply.so")
       set(TNY_IMPORT_LIB_DEBUG "lib/libtinyply.so")
       set(TNY_IMPORT_LIB "lib/libtinyply.so")
       set(TNY_LIB_DEBUG "lib/libtinyply.so")
@@ -386,7 +395,8 @@ function(require_external NAME)
     add_external_project(tinyply
       GIT_REPOSITORY https://github.com/ddiakopoulos/tinyply.git
       GIT_TAG "2.1"
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${TNY_IMPORT_LIB_DEBUG}" "<INSTALL_DIR>/${TNY_IMPORT_LIB}"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${TNY_PRODUCT}"
+      DEBUG_SUFFIX d
       CMAKE_ARGS
         -DSHARED_LIB=true)
 
@@ -406,18 +416,9 @@ function(require_external NAME)
     if(WIN32)
       set(SNAPPY_IMPORT_LIB "lib/snappy.lib")
       set(SNAPPY_LIB "bin/snappy.dll")
-      set(ICET_CORE_IMPORT_LIB "lib/IceTCore.lib")
-      set(ICET_CORE_LIB "bin/IceTCore.dll")
-      set(ICET_GL_IMPORT_LIB "lib/IceTGL.lib")
-      set(ICET_GL_LIB "bin/IceTGL.dll")
-      set(ICET_MPI_IMPORT_LIB "lib/IceTMPI.lib")
-      set(ICET_MPI_LIB "bin/IceTMPI.dll")
     else()
       include(GNUInstallDirs)
       set(SNAPPY_LIB "${CMAKE_INSTALL_LIBDIR}/libsnappy.so")
-      set(ICET_CORE_LIB "lib/libIceTCore.so")
-      set(ICET_GL_LIB "lib/libIceTGL.so")
-      set(ICET_MPI_LIB "lib/libIceTMPI.so")
     endif()
 
     add_external_project(snappy
@@ -436,6 +437,20 @@ function(require_external NAME)
       LIBRARY_RELEASE ${SNAPPY_LIB})
 
   elseif(NAME STREQUAL "IceT")
+    if(WIN32)
+      set(ICET_CORE_IMPORT_LIB "lib/IceTCore.lib")
+      set(ICET_CORE_LIB "bin/IceTCore.dll")
+      set(ICET_GL_IMPORT_LIB "lib/IceTGL.lib")
+      set(ICET_GL_LIB "bin/IceTGL.dll")
+      set(ICET_MPI_IMPORT_LIB "lib/IceTMPI.lib")
+      set(ICET_MPI_LIB "bin/IceTMPI.dll")
+    else()
+      include(GNUInstallDirs)
+      set(ICET_CORE_LIB "lib/libIceTCore.so")
+      set(ICET_GL_LIB "lib/libIceTGL.so")
+      set(ICET_MPI_LIB "lib/libIceTMPI.so")
+    endif()
+    
     add_external_project(IceT
       GIT_REPOSITORY https://gitlab.kitware.com/icet/icet.git
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${ICET_CORE_IMPORT_LIB}" "<INSTALL_DIR>/${ICET_GL_IMPORT_LIB}" "<INSTALL_DIR>/${ICET_MPI_IMPORT_LIB}"
