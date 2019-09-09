@@ -89,6 +89,14 @@ function(add_external_project TARGET)
     foreach(BUILD_CONFIG Release;Debug;RelWithDebInfo)
       file(MAKE_DIRECTORY "${${lcName}_BINARY_DIR}/${BUILD_CONFIG}")
 
+      set(SUFFIX)
+      if(${BUILD_CONFIG} STREQUAL "Debug")
+        set(SUFFIX "d")
+      endif()
+
+      string(REPLACE "Release" "${BUILD_CONFIG}" CONF_ARGS "${CONF_ARGS}")
+      string(REPLACE "<SUFFIX>" "${SUFFIX}" CONF_ARGS "${CONF_ARGS}")
+
       execute_process(
         COMMAND ${CMAKE_COMMAND} "-G${CMAKE_GENERATOR}" ${GEN_ARGS} ${CONF_ARGS}
           -DCMAKE_INSTALL_PREFIX:PATH=${${lcName}_INSTALL_DIR}/${BUILD_CONFIG}
@@ -96,10 +104,17 @@ function(add_external_project TARGET)
           -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
           ${${lcName}_SOURCE_DIR}
         WORKING_DIRECTORY "${${lcName}_BINARY_DIR}/${BUILD_CONFIG}"
-        OUTPUT_QUIET
+        #OUTPUT_QUIET
         RESULT_VARIABLE CONFIG_RESULT)
     endforeach()
   else()
+    set(SUFFIX)
+    if(${BUILD_CONFIG} STREQUAL "Debug")
+      set(SUFFIX "d")
+    endif()
+
+    string(REPLACE "<SUFFIX>" "${SUFFIX}" CONF_ARGS "${CONF_ARGS}")
+
     execute_process(
       COMMAND ${CMAKE_COMMAND} "-G${CMAKE_GENERATOR}" ${GEN_ARGS} ${CONF_ARGS}
         -DCMAKE_INSTALL_PREFIX:PATH=${${lcName}_INSTALL_DIR}
@@ -108,7 +123,7 @@ function(add_external_project TARGET)
         -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
         ${${lcName}_SOURCE_DIR}
       WORKING_DIRECTORY "${${lcName}_BINARY_DIR}"
-      OUTPUT_QUIET
+      #OUTPUT_QUIET
       RESULT_VARIABLE CONFIG_RESULT)
   endif()
 
