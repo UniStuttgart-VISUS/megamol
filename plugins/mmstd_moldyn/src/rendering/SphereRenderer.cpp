@@ -791,17 +791,13 @@ MultiParticleDataCall *SphereRenderer::getData(unsigned int t, float& outScaling
         return nullptr;
     }
 void SphereRenderer::getClipData(glm::vec4& out_clipDat, glm::vec4& out_clipCol) {
+    
+    view::CallClipPlane *ccp = this->getClipPlaneSlot.CallAs<view::CallClipPlane>();
+    if ((ccp != nullptr) && (*ccp)()) {
+        out_clipDat[0] = ccp->GetPlane().Normal().X();
         out_clipDat[1] = ccp->GetPlane().Normal().Y();
         out_clipDat[2] = ccp->GetPlane().Normal().Z();
 
-=======
-void moldyn::SphereRenderer::getClipData(float outClipDat[4], float outClipCol[4]) {
-    view::CallClipPlane* ccp = this->getClipPlaneSlot.CallAs<view::CallClipPlane>();
-    if ((ccp != NULL) && (*ccp)()) {
-        outClipDat[0] = ccp->GetPlane().Normal().X();
-        outClipDat[1] = ccp->GetPlane().Normal().Y();
-        outClipDat[2] = ccp->GetPlane().Normal().Z();
->>>>>>> master:core/src/moldyn/SphereRenderer.cpp
         vislib::math::Vector<float, 3> grr(ccp->GetPlane().Point().PeekCoordinates());
         out_clipDat[3] = grr.Dot(ccp->GetPlane().Normal());
 
