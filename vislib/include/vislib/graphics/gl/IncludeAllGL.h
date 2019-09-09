@@ -15,9 +15,7 @@
 #undef max
 #include "glad/glad_wgl.h"
 #else
-#ifndef USE_EGL
 #include "glad/glad_glx.h"
-#endif // USE_EGL
 #endif
 
 //#include <atomic>
@@ -36,11 +34,9 @@ inline void LoadAllGL() {
 #ifdef _WIN32
 		gladLoadWGL(wglGetCurrentDC());
 #else
-#ifndef USE_EGL
         Display *display = XOpenDisplay(NULL);
 		gladLoadGLX(display, DefaultScreen(display));
         XCloseDisplay(display);
-#endif // !USE_EGL
 #endif
     }
 }

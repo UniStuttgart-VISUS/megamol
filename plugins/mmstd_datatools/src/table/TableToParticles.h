@@ -12,6 +12,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmstd_datatools/table/TableDataCall.h"
 #include <map>
+#include <array>
 
 namespace megamol {
 namespace stdplugin {
@@ -90,7 +91,7 @@ namespace datatools {
 		std::string cleanUpColumnHeader(const std::string& header) const;
 		std::string cleanUpColumnHeader(const vislib::TString& header) const;
 
-		bool pushColumnIndex(std::vector<size_t>& cols, const vislib::TString& colName);
+		bool pushColumnIndex(std::vector<uint32_t>& cols, const vislib::TString& colName);
 
         /** Minimum coordinates of the bounding box. */
         float bboxMin[3];
@@ -157,14 +158,23 @@ namespace datatools {
         /** The name of the float column holding the vz-coordinate. */
         core::param::ParamSlot slotColumnVZ;
 
+        /** given a tensor interpretable as an orthonormal coordinate system {X,Y,Z}^T, its 9 values {xx, xy, xz, ...} */
+        std::array<core::param::ParamSlot, 9> slotTensorColumn;
+
+        /** if the tensor contains normalized vectors, you can also supply a magnitude */
+        std::array<core::param::ParamSlot, 3> slotTensorMagnitudeColumn;
+
 		std::vector<float> everything;
 
         bool haveVelocities = false;
+        bool haveTensor = false;
+        bool haveTensorMagnitudes = false;
 
 		SIZE_T inputHash;
 		SIZE_T myHash;
-		std::map<std::string, size_t> columnIndex;
-		size_t stride;
+        SIZE_T myTime = -1;
+		std::map<std::string, uint32_t> columnIndex;
+		uint32_t stride;
 
     };
 
