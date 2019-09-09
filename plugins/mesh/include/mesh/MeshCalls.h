@@ -88,6 +88,7 @@ typedef megamol::core::factories::CallAutoDescription<CallGPUMeshData> CallGPUMe
 typedef megamol::core::factories::CallAutoDescription<CallGPUMaterialData> CallGPUMaterialDataDescription;
 typedef megamol::core::factories::CallAutoDescription<Call3DInteraction> Call3DInteractionDescription;
 typedef megamol::core::factories::CallAutoDescription<CallGlTFData> CallGlTFDataDescription;
+typedef megamol::core::factories::CallAutoDescription<CallMesh> CallMeshDescription;
 
 } // namespace mesh
 } // namespace megamol

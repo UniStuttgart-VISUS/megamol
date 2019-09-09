@@ -13,22 +13,22 @@
 #include "vislib/vislibversion.h"
 
 //#include "mesh/CallmeshRenderBatches.h"
-#include "RenderMDIMesh.h"
-#include "Render3DUI.h"
 //#include "meshDebugDataSource.h"
-
-#include "mesh/MeshCalls.h"
-
 #include "DebugGPUMaterialDataSource.h"
 #include "DebugGPUMeshDataSource.h"
 #include "DebugGPURenderTaskDataSource.h"
+#include "GPUMeshes.h"
+#include "Render3DUI.h"
+#include "RenderMDIMesh.h"
+#include "UIElement.h"
+#include "WavefrontObjLoader.h"
 #include "gltf/glTFFileLoader.h"
 #include "gltf/glTFMaterialDataSource.h"
 #include "gltf/glTFMeshesDataSource.h"
 #include "gltf/glTFRenderTasksDataSource.h"
 #include "mesh/3DUIRenderTaskDataSource.h"
+#include "mesh/MeshCalls.h"
 #include "mesh/SimpleGPUMtlDataSource.h"
-#include "UIElement.h"
 
 
 /* anonymous namespace hides this type from any other object files */
@@ -63,26 +63,29 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::GlTFFileLoader>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::GlTFMeshesDataSource>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::GlTFRenderTasksDataSource>();
+        this->module_descriptions.RegisterAutoDescription<megamol::mesh::GPUMeshes>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::SimpleGPUMtlDataSource>();
+        this->module_descriptions.RegisterAutoDescription<megamol::mesh::WavefrontObjLoader>();
 
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::Render3DUI>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::ThreeDimensionalUIRenderTaskDataSource>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::UIElement>();
 
-            //
-            // TODO: Register your plugin's modules here
-            // like:
-            //   this->module_descriptions.RegisterAutoDescription<megamol::ng_mesh::MyModule1>();
-            //   this->module_descriptions.RegisterAutoDescription<megamol::ng_mesh::MyModule2>();
-            //   ...
-            //
+        //
+        // TODO: Register your plugin's modules here
+        // like:
+        //   this->module_descriptions.RegisterAutoDescription<megamol::ng_mesh::MyModule1>();
+        //   this->module_descriptions.RegisterAutoDescription<megamol::ng_mesh::MyModule2>();
+        //   ...
+        //
 
-            // register calls here:
+        // register calls here:
+        this->call_descriptions.RegisterAutoDescription<megamol::mesh::Call3DInteraction>();
+        this->call_descriptions.RegisterAutoDescription<megamol::mesh::CallGlTFData>();
         this->call_descriptions.RegisterAutoDescription<megamol::mesh::CallGPUMeshData>();
         this->call_descriptions.RegisterAutoDescription<megamol::mesh::CallGPUMaterialData>();
         this->call_descriptions.RegisterAutoDescription<megamol::mesh::CallGPURenderTaskData>();
-        this->call_descriptions.RegisterAutoDescription<megamol::mesh::CallGlTFData>();
-        this->call_descriptions.RegisterAutoDescription<megamol::mesh::Call3DInteraction>();
+        this->call_descriptions.RegisterAutoDescription<megamol::mesh::CallMesh>();
 
         //
         // TODO: Register your plugin's calls here

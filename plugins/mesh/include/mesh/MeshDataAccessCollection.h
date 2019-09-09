@@ -77,7 +77,7 @@ public:
         std::vector<VertexAttribute> attributes;
         IndexData                    indices;
 
-        //TODO interleaved flag?
+        // TODO interleaved flag?
     };
 
     MeshDataAccessCollection() = default;
@@ -85,6 +85,8 @@ public:
 
     void addMesh(std::vector<VertexAttribute> const& attribs, IndexData const& indices);
     void addMesh(std::vector<VertexAttribute> && attribs, IndexData const& indices);
+
+    // TODO delete functionality
 
     std::vector<Mesh>& accessMesh(size_t mesh_idx);
 
