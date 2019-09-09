@@ -9,7 +9,7 @@ else()
 endif()
 
 # Build types
-set(CMAKE_CONFIGURATION_TYPES "Debug;Release;RelWithDebInfo")
+set(CMAKE_CONFIGURATION_TYPES CACHE STRING "Debug;Release;RelWithDebInfo" FORCE)
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the build type." FORCE)
 endif()
