@@ -2216,8 +2216,7 @@ bool MapGenerator::findPoles(const vislib::math::Vector<float, 3>& p_eye_dir,
  * MapGenerator::getNameOfPDB
  */
 std::string MapGenerator::getNameOfPDB(MolecularDataCall & mdc) {
-    auto str = mdc.GetPDBFilename();
-    std::string name = T2A(str);
+    std::string name(vislib::StringA(T2A(mdc.GetPDBFilename())).PeekBuffer());
     if (name.length() > 4) {
         name = name.substr(0, name.length() - 4);
     }

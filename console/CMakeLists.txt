@@ -3,7 +3,7 @@
 # Copyright 2017, by MegaMol TEAM
 # Alle Rechte vorbehalten. All rights reserved.
 #
-option(BUILD_CONSOLE "build console" ON)
+option(BUILD_CONSOLE "Build console" ON)
 
 if(BUILD_CONSOLE)
   project(${CONSOLE_NAME})
@@ -13,6 +13,7 @@ if(BUILD_CONSOLE)
   # afterwards list the dependencies.
   set(DEP_LIST "${DEP_LIST};BUILD_MMSTD_DATATOOLS_PLUGIN BUILD_CORE" CACHE INTERNAL "")
 
+  # Collect source files
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
 
@@ -58,12 +59,7 @@ if(BUILD_CONSOLE)
 
   target_link_libraries(${PROJECT_NAME} PRIVATE ${VERSION_LIBRARY} ${CMAKE_DL_LIBS})
 
-  # Grouping in Visual Studio
-  set_target_properties(${CONSOLE_NAME} PROPERTIES FOLDER base)
-  source_group("Header Files" FILES ${header_files})
-  source_group("Source Files" FILES ${source_files})
-
-  # install mmconsole executable
+   # Installation rules for generated files
   install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin" ARCHIVE DESTINATION "lib")
   if(USE_GLFW)
     install_external(TARGETS glfw3)
@@ -74,10 +70,8 @@ if(BUILD_CONSOLE)
     endif()
   endif ()
 
-
   # Configuration of the megamol.cfg megamol.sh remoteconsole.sh files
   set(cfg_LIB_PATH "${CMAKE_INSTALL_PREFIX}/lib")
-
   set(cfg_MEGAMOLCON "${CMAKE_INSTALL_PREFIX}/bin/${PROJECT_NAME}")
 
   if(UNIX)
@@ -97,4 +91,10 @@ if(BUILD_CONSOLE)
   configure_file(extra/install_megamolconfig_lua.cmake.in ${CMAKE_BINARY_DIR}/install_megamolconfig_lua.cmake @ONLY)
 
   install(SCRIPT ${CMAKE_BINARY_DIR}/install_megamolconfig_lua.cmake)
+  
+  # Grouping in Visual Studio
+  set_target_properties(${CONSOLE_NAME} PROPERTIES FOLDER base)
+  source_group("Header Files" FILES ${header_files})
+  source_group("Source Files" FILES ${source_files})
+
 endif()
