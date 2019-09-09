@@ -2017,15 +2017,15 @@ bool SphereRenderer::setShaderData(vislib::graphics::gl::GLSLShader& shader, con
 }
 
 
-<<<<<<< HEAD:plugins/mmstd_moldyn/src/rendering/SphereRenderer.cpp
 bool SphereRenderer::unsetShaderData(void) {
 
     return this->unsetTransferFunctionTexture();
 }
-bool moldyn::SphereRenderer::unsetShaderData(void) { return this->unsetTransferFunctionTexture(); }
->>>>>>> master:core/src/moldyn/SphereRenderer.cpp
 
 
+bool SphereRenderer::setTransferFunctionTexture(vislib::graphics::gl::GLSLShader& shader) {
+
+    view::CallGetTransferFunction* cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
     if ((cgtf != nullptr) && (*cgtf)(0)) {
         cgtf->BindConvenience(shader, GL_TEXTURE0, 0);
     } else {
