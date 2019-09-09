@@ -144,7 +144,7 @@ function(add_external_project TARGET)
     endif()
     foreach(BUILD_CONFIG Release;Debug;RelWithDebInfo)
       set(BUILD_AND_INSTALL ${BUILD_AND_INSTALL} COMMAND ${CMAKE_COMMAND} --build ${BUILD_CONFIG} --parallel --config ${BUILD_CONFIG})
-      set(BUILD_AND_INSTALL ${BUILD_AND_INSTALL} COMMAND ${CMAKE_COMMAND} --install ${BUILD_CONFIG} --config ${BUILD_CONFIG})
+      set(BUILD_AND_INSTALL ${BUILD_AND_INSTALL} COMMAND ${CMAKE_COMMAND} --build ${BUILD_CONFIG} --target install --config ${BUILD_CONFIG})
 
       if(args_BUILD_BYPRODUCTS)
         set(SUFFIX)
@@ -180,7 +180,7 @@ function(add_external_project TARGET)
 
     add_custom_command(OUTPUT "${${lcName}_BINARY_DIR}/EXTERNAL_BUILT"
       COMMAND ${CMAKE_COMMAND} --build . --parallel
-      COMMAND ${CMAKE_COMMAND} --install .
+      COMMAND ${CMAKE_COMMAND} --build . --target install
       COMMAND ${CMAKE_COMMAND} -E touch \"${${lcName}_BINARY_DIR}/EXTERNAL_BUILT\"
       WORKING_DIRECTORY "${${lcName}_BINARY_DIR}"
       ${BYPRODUCTS})
