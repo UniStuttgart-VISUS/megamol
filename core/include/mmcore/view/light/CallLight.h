@@ -9,6 +9,7 @@
 
 #include <map>
 #include <vector>
+#include <array>
 #include "mmcore/Call.h"
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/factories/CallAutoDescription.h"
@@ -21,39 +22,34 @@ namespace light {
 
 enum MEGAMOLCORE_API lightenum { NONE, DISTANTLIGHT, POINTLIGHT, SPOTLIGHT, QUADLIGHT, AMBIENTLIGHT, HDRILIGHT };
 
-class MEGAMOLCORE_API LightContainer {
-private:
-public:
+struct MEGAMOLCORE_API LightContainer {
     // General light parameters
-    std::vector<float> lightColor;
+    std::array<float,4> lightColor;
     float lightIntensity;
-    lightenum lightType;
+    lightenum lightType = lightenum::NONE;
     // Distant light parameters
-    std::vector<float> dl_direction;
+    std::array<float,3> dl_direction;
     float dl_angularDiameter;
     bool dl_eye_direction;
     // point light paramenters
-    std::vector<float> pl_position;
+    std::array<float,3> pl_position;
     float pl_radius;
     // spot light parameters
-    std::vector<float> sl_position;
-    std::vector<float> sl_direction;
+    std::array<float,3> sl_position;
+    std::array<float,3> sl_direction;
     float sl_openingAngle;
     float sl_penumbraAngle;
     float sl_radius;
     // quad light parameters
-    std::vector<float> ql_position;
-    std::vector<float> ql_edgeOne;
-    std::vector<float> ql_edgeTwo;
+    std::array<float,3> ql_position;
+    std::array<float,3> ql_edgeOne;
+    std::array<float,3> ql_edgeTwo;
     // hdri light parameters
-    std::vector<float> hdri_up;
-    std::vector<float> hdri_direction;
+    std::array<float,3> hdri_up;
+    std::array<float,3> hdri_direction;
     vislib::TString hdri_evnfile;
-    bool isValid;
-    bool dataChanged;
-
-    LightContainer();
-    ~LightContainer();
+    bool isValid = false;
+    bool dataChanged = true;
 };
 
 class CallLight;

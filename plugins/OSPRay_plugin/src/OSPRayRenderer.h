@@ -74,7 +74,7 @@ protected:
     *
     * @return The return value of the function.
     */
-    virtual bool Render(megamol::core::Call& call);
+    virtual bool Render(megamol::core::view::CallRender3D_2& call);
 
 private:
 
@@ -87,7 +87,7 @@ private:
     *
     * @return The return value of the function.
     */
-    virtual bool GetExtents(megamol::core::Call& call);
+    virtual bool GetExtents(megamol::core::view::CallRender3D_2& call);
 
     /** The call for data */
     core::CallerSlot getStructureSlot;
@@ -95,7 +95,6 @@ private:
 
     /** The texture shader */
     vislib::graphics::gl::GLSLShader osprayShader;
-    float scale;
 
    // Interface dirty flag
     bool InterfaceIsDirty();
@@ -107,7 +106,7 @@ private:
     bool light_has_changed;
     bool cam_has_changed;
 
-    vislib::SmartPtr<vislib::graphics::CameraParameters> camParams;
+	core::view::Camera_2 cam;
     float time;
     size_t frameID;
 
@@ -116,7 +115,7 @@ private:
     // OSPRay textures
     const uint32_t* fb;
     std::vector<float> db;
-    void getOpenGLDepthFromOSPPerspective(megamol::core::Call& call, float* db);
+    void getOpenGLDepthFromOSPPerspective(float* db);
 
     bool renderer_has_changed;
 

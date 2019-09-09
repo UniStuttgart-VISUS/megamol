@@ -1,18 +1,19 @@
 /*
  * SimplestSphereRenderer.cpp
  *
- * Copyright (C) 2016 by Karsten Schatz
- * Copyright (C) 2016 by VISUS (Universitaet Stuttgart)
+ * Copyright (C) 2018 by Karsten Schatz
+ * Copyright (C) 2018 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 #include "stdafx.h"
 #include "SimplestSphereRenderer.h"
 #include "CallSpheres.h"
 #include "mmcore/CoreInstance.h"
+#include "mmcore/view/CallRender3D_2.h"
+#include "mmcore/view/Camera_2.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
-#include "mmcore/view/CallRender3D.h"
 #include "vislib/math/Matrix.h"
 #include "vislib/math/ShallowMatrix.h"
 
@@ -23,7 +24,7 @@ using namespace megamol::megamol101;
  * SimplestSphereRenderer::SimplestSphereRenderer
  */
 SimplestSphereRenderer::SimplestSphereRenderer(void)
-    : core::view::Renderer3DModule()
+    : core::view::Renderer3DModule_2()
     , sphereDataSlot("inData", "The input data slot for sphere data.")
     , sphereModeSlot("sphere rendering", "Switch for the pretty sphere rendering mode")
     , sizeScalingSlot("scaling factor", "Scaling factor for the size of the rendered GL_POINTS") {
@@ -122,28 +123,18 @@ bool SimplestSphereRenderer::create(void) {
     return true;
 }
 
-
 /*
  * SimplestSphereRenderer::GetExtents
  */
-bool SimplestSphereRenderer::GetExtents(core::Call& call) {
-    core::view::CallRender3D* cr3d = dynamic_cast<core::view::CallRender3D*>(&call);
+bool SimplestSphereRenderer::GetExtents(core::view::CallRender3D_2& call) {
+    core::view::CallRender3D_2* cr3d = dynamic_cast<core::view::CallRender3D_2*>(&call);
     if (cr3d == nullptr) return false;
 
     CallSpheres* cs = this->sphereDataSlot.CallAs<CallSpheres>();
     if (cs == nullptr) return false;
     if (!(*cs)(CallSpheres::CallForGetExtent)) return false;
 
-    // TUTORIAL: This scaling here might be crucial
-    float scale;
-    if (!vislib::math::IsEqual(cs->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f)) {
-        scale = 2.0f / cs->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
-    } else {
-        scale = 1.0f;
-    }
-
     cr3d->AccessBoundingBoxes() = cs->AccessBoundingBoxes();
-    cr3d->AccessBoundingBoxes().MakeScaledWorld(scale);
     cr3d->SetTimeFramesCount(cs->FrameCount());
 
     return true;
@@ -164,8 +155,8 @@ void SimplestSphereRenderer::release(void) {
 /*
  * SimplestSphereRenderer::Render
  */
-bool SimplestSphereRenderer::Render(core::Call& call) {
-    core::view::CallRender3D* cr3d = dynamic_cast<core::view::CallRender3D*>(&call);
+bool SimplestSphereRenderer::Render(core::view::CallRender3D_2& call) {
+    core::view::CallRender3D_2* cr3d = dynamic_cast<core::view::CallRender3D_2*>(&call);
     if (cr3d == nullptr) return false;
 
     // before rendering, call all necessary data
@@ -219,34 +210,18 @@ bool SimplestSphereRenderer::Render(core::Call& call) {
 
     cr3d->AccessBoundingBoxes() = cs->AccessBoundingBoxes();
 
-    // TUTORIAL: This scaling is necessary most times.
+    core::view::Camera_2 localCam;
+    cr3d->GetCamera(localCam);
 
-    // scale everything correctly
-    float scale = 1.0f;
-    if (!vislib::math::IsEqual(cs->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f)) {
-        scale = 2.0f / cs->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
-    } else {
-        scale = 1.0f;
-    }
-    cr3d->AccessBoundingBoxes().MakeScaledWorld(scale);
+    cam_type::snapshot_type camsnap;
+    cam_type::matrix_type viewCam, projCam;
+    localCam.calc_matrices(camsnap, viewCam, projCam);
 
-    vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> scaleMatrix;
-    scaleMatrix.GetAt(0, 0) = scale;
-    scaleMatrix.GetAt(1, 1) = scale;
-    scaleMatrix.GetAt(2, 2) = scale;
-    vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> invScaleMatrix;
-    invScaleMatrix.GetAt(0, 0) = 1.0f / scale;
-    invScaleMatrix.GetAt(1, 1) = 1.0f / scale;
-    invScaleMatrix.GetAt(2, 2) = 1.0f / scale;
+    glm::mat4 view = viewCam;
+    glm::mat4 proj = projCam;
+    glm::mat4 mvp = projCam * viewCam;
 
-    // get the current modelview-projection matrix
-    GLfloat mv_column[16];
-    glGetFloatv(GL_MODELVIEW_MATRIX, mv_column);
-    vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelView(&mv_column[0]);
-    GLfloat proj_column[16];
-    glGetFloatv(GL_PROJECTION_MATRIX, proj_column);
-    vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> projection(&proj_column[0]);
-    vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> mvp = projection * modelView * scaleMatrix;
+    this->GetLights();
 
     // start the rendering
 
@@ -266,33 +241,25 @@ bool SimplestSphereRenderer::Render(core::Call& call) {
 
     if (this->sphereModeSlot.Param<core::param::BoolParam>()->Value()) {
         // compute the necessary camera parameters from the modelview matrix
-        auto invModelView = modelView;
-        invModelView.Invert();
-
-        vislib::math::Vector<float, 3> camRight = vislib::math::Vector<float, 3>(invModelView.GetColumn(0));
-        camRight.Normalise();
-        vislib::math::Vector<float, 3> camUp = vislib::math::Vector<float, 3>(invModelView.GetColumn(1));
-        camUp.Normalise();
-        vislib::math::Vector<float, 3> camDir = -vislib::math::Vector<float, 3>(invModelView.GetColumn(2));
-        camDir.Normalise();
-        vislib::math::Point<float, 3> camPos = vislib::math::Point<float, 3>(
-            invModelView.GetColumn(3).X(), invModelView.GetColumn(3).Y(), invModelView.GetColumn(3).Z());
+        auto invView = glm::inverse(view);
 
         // set all uniforms for the shaders
-        glUniformMatrix4fv(this->sphereShader.ParameterLocation("mvp"), 1, GL_FALSE, mvp.PeekComponents());
-        glUniformMatrix4fv(this->sphereShader.ParameterLocation("view"), 1, GL_FALSE,
-            modelView.PeekComponents()); // no model matrix has been applied, so this should work
-        glUniformMatrix4fv(this->sphereShader.ParameterLocation("model"), 1, GL_FALSE, scaleMatrix.PeekComponents());
-        glUniformMatrix4fv(this->sphereShader.ParameterLocation("proj"), 1, GL_FALSE, projection.PeekComponents());
-        glUniformMatrix4fv(
-            this->sphereShader.ParameterLocation("invModel"), 1, GL_FALSE, invScaleMatrix.PeekComponents());
-        glUniform3fv(this->sphereShader.ParameterLocation("camRight"), 1, camRight.PeekComponents());
-        glUniform3fv(this->sphereShader.ParameterLocation("camUp"), 1, camUp.PeekComponents());
-        glUniform3fv(this->sphereShader.ParameterLocation("camPos"), 1, camPos.PeekCoordinates());
-        glUniform3fv(this->sphereShader.ParameterLocation("camDir"), 1, camDir.PeekComponents());
-        glUniform1f(this->sphereShader.ParameterLocation("scalingFactor"), this->sizeScalingSlot.Param<core::param::FloatParam>()->Value());
+        glUniformMatrix4fv(this->sphereShader.ParameterLocation("mvp"), 1, GL_FALSE, glm::value_ptr(mvp));
+        glUniformMatrix4fv(this->sphereShader.ParameterLocation("view"), 1, GL_FALSE, glm::value_ptr(view));
+        glUniformMatrix4fv(this->sphereShader.ParameterLocation("proj"), 1, GL_FALSE, glm::value_ptr(proj));
+        glUniform3f(this->sphereShader.ParameterLocation("camRight"), camsnap.right_vector.x(), camsnap.right_vector.y(), camsnap.right_vector.z());
+        glUniform3f(this->sphereShader.ParameterLocation("camUp"), camsnap.up_vector.x(), camsnap.up_vector.y(), camsnap.up_vector.z());
+        glUniform3f(this->sphereShader.ParameterLocation("camPos"), camsnap.position.x(), camsnap.position.y(), camsnap.position.z());
+        glUniform3f(this->sphereShader.ParameterLocation("camDir"), camsnap.view_vector.x(), camsnap.view_vector.y(), camsnap.view_vector.z());
+        glUniform1f(this->sphereShader.ParameterLocation("scalingFactor"),
+            this->sizeScalingSlot.Param<core::param::FloatParam>()->Value());
+
+        if (this->lightMap.size() >= 1 && this->lightMap.begin()->second.lightType == core::view::light::POINTLIGHT) {
+            auto lightPos = this->lightMap.begin()->second.pl_position;
+            glUniform3f(this->sphereShader.ParameterLocation("lightPos"), lightPos[0], lightPos[1], lightPos[2]);
+        }
     } else {
-        glUniformMatrix4fv(this->simpleShader.ParameterLocation("mvp"), 1, GL_FALSE, mvp.PeekComponents());
+        glUniformMatrix4fv(this->simpleShader.ParameterLocation("mvp"), 1, GL_FALSE, glm::value_ptr(mvp));
     }
 
     glEnable(GL_DEPTH_TEST);

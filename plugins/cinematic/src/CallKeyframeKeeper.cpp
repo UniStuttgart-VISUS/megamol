@@ -6,13 +6,12 @@
 */
 
 #include "stdafx.h"
-
 #include "CallKeyframeKeeper.h"
 
-#include "vislib/graphics/gl/IncludeAllGL.h"
 
 using namespace megamol;
 using namespace megamol::cinematic;
+
 
 CallKeyframeKeeper::CallKeyframeKeeper(void) : core::AbstractGetDataCall(),
     cameraParam(nullptr),
