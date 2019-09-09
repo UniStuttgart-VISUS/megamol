@@ -104,7 +104,7 @@ function(add_external_project TARGET)
           -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
           ${${lcName}_SOURCE_DIR}
         WORKING_DIRECTORY "${${lcName}_BINARY_DIR}/${BUILD_CONFIG}"
-        #OUTPUT_QUIET
+        OUTPUT_QUIET
         RESULT_VARIABLE CONFIG_RESULT)
     endforeach()
   else()
@@ -123,7 +123,7 @@ function(add_external_project TARGET)
         -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
         ${${lcName}_SOURCE_DIR}
       WORKING_DIRECTORY "${${lcName}_BINARY_DIR}"
-      #OUTPUT_QUIET
+      OUTPUT_QUIET
       RESULT_VARIABLE CONFIG_RESULT)
   endif()
 
@@ -179,8 +179,8 @@ function(add_external_project TARGET)
     endif()
 
     add_custom_command(OUTPUT "${${lcName}_BINARY_DIR}/EXTERNAL_BUILT"
-      COMMAND ${CMAKE_COMMAND} --build . --parallel --config ${CMAKE_BUILD_TYPE}
-      COMMAND ${CMAKE_COMMAND} --install . --config ${CMAKE_BUILD_TYPE}
+      COMMAND ${CMAKE_COMMAND} --build . --parallel
+      COMMAND ${CMAKE_COMMAND} --install .
       COMMAND ${CMAKE_COMMAND} -E touch \"${${lcName}_BINARY_DIR}/EXTERNAL_BUILT\"
       WORKING_DIRECTORY "${${lcName}_BINARY_DIR}"
       ${BYPRODUCTS})
