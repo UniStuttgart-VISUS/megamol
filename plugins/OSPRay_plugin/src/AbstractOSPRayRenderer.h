@@ -10,8 +10,8 @@
 #include "OSPRay_plugin/CallOSPRayStructure.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/CallRender3D.h"
-#include "mmcore/view/Renderer3DModule.h"
+#include "mmcore/view/CallRender3D_2.h"
+#include "mmcore/view/Renderer3DModule_2.h"
 #include "mmcore/view/light/CallLight.h"
 #include "ospray/ospray.h"
 #include "vislib/graphics/gl/FramebufferObject.h"
@@ -21,7 +21,7 @@
 namespace megamol {
 namespace ospray {
 
-class AbstractOSPRayRenderer : public core::view::Renderer3DModule {
+class AbstractOSPRayRenderer : public core::view::Renderer3DModule_2 {
 protected:
     // Ctor
     AbstractOSPRayRenderer(void);
@@ -45,7 +45,7 @@ protected:
      * @param image/window heigth
      */
     void renderTexture2D(vislib::graphics::gl::GLSLShader& shader, const uint32_t* fb, const float* db, int& width,
-        int& height, core::view::CallRender3D& cr);
+        int& height, core::view::CallRender3D_2& cr);
 
     /**
      * helper function for setting up the OSPRay screen
@@ -75,7 +75,7 @@ protected:
      * @param OSPRay camera object
      * @param CallRenderer3D object
      */
-    void setupOSPRayCamera(OSPCamera& cam, core::view::CallRender3D* cr, float scaling);
+    void setupOSPRayCamera(OSPCamera& ospcam, megamol::core::view::Camera_2& mmcam);
 
 
     /**
@@ -143,8 +143,6 @@ protected:
     // light
     std::vector<OSPLight> lightArray;
     OSPData lightsToRender;
-    /** The call for ligtht */
-    core::CallerSlot getLightSlot;
 
     // framebuffer dirtyness
     bool framebufferIsDirty;
@@ -163,14 +161,12 @@ protected:
     std::vector<OSPGeometry> geo;
     std::vector<OSPVolume> vol;
 
-    // Light map
-    core::view::light::LightMap lightMap;
     // Structure map
     OSPRayStrcutrureMap structureMap;
     // extend map
     OSPRayExtendMap extendMap;
 
-    void fillLightArray(float* eyeDir);
+    void fillLightArray(glm::vec4& eyeDir);
 
     long long int ispcLimit = 1ULL << 30;
     long long int numCreateGeo;

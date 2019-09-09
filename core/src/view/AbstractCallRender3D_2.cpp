@@ -21,6 +21,7 @@ view::AbstractCallRender3D_2::~AbstractCallRender3D_2(void) {
  * view::AbstractCallRender3D::operator=
  */
 view::AbstractCallRender3D_2& view::AbstractCallRender3D_2::operator=(const view::AbstractCallRender3D_2& rhs) {
+	view::AbstractCallRender::operator=(rhs);
     this->minCamState = rhs.minCamState;
     this->bboxs = rhs.bboxs;
     this->lastFrameTime = rhs.lastFrameTime;

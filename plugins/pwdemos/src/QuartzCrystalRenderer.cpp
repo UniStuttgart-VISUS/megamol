@@ -8,9 +8,10 @@
 #include "QuartzCrystalRenderer.h"
 #include "QuartzCrystalDataCall.h"
 #include "mmcore/param/IntParam.h"
-#include "mmcore/view/CallRender3D.h"
+#include "mmcore/view/CallRender3D_2.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "mmcore/factories/CallAutoDescription.h"
+#include "vislib/sys/Log.h"
 
 namespace megamol {
 namespace demos {
@@ -18,7 +19,7 @@ namespace demos {
 /*
  * CrystalRenderer::CrystalRenderer
  */
-CrystalRenderer::CrystalRenderer(void) : core::view::Renderer3DModule(),
+CrystalRenderer::CrystalRenderer(void) : core::view::Renderer3DModule_2(),
 dataInSlot("datain", "slot to get the data"),
 crystalIdx("idx", "The index of the selected crystal") {
 
@@ -42,12 +43,10 @@ CrystalRenderer::~CrystalRenderer(void) {
 /*
  * CrystalRenderer::GetExtents
  */
-bool CrystalRenderer::GetExtents(core::Call& call) {
-    core::view::CallRender3D *cr = dynamic_cast<core::view::CallRender3D*>(&call);
-    if (cr == NULL) return false;
+bool CrystalRenderer::GetExtents(core::view::CallRender3D_2& call) {
 
-    cr->AccessBoundingBoxes().Clear();
-    cr->SetTimeFramesCount(1);
+    call.AccessBoundingBoxes().Clear();
+    call.SetTimeFramesCount(1);
 
     return true;
 }
@@ -56,9 +55,7 @@ bool CrystalRenderer::GetExtents(core::Call& call) {
 /*
  * CrystalRenderer::Render
  */
-bool CrystalRenderer::Render(core::Call& call) {
-    core::view::CallRender3D *cr = dynamic_cast<core::view::CallRender3D*>(&call);
-    if (cr == NULL) return false;
+bool CrystalRenderer::Render(core::view::CallRender3D_2& call) {
 
     unsigned int idx = static_cast<unsigned int>(this->crystalIdx.Param<core::param::IntParam>()->Value());
 
@@ -72,9 +69,21 @@ bool CrystalRenderer::Render(core::Call& call) {
 
     c.AssertMesh();
 
-    float scaling = 1.0f / c.GetBoundingRadius();
-    ::glScalef(scaling, scaling, scaling);
-    scaling = 1.0f; //c.GetBaseRadius();
+	core::view::Camera_2 cam;
+    call.GetCamera(cam);
+    cam_type::snapshot_type snapshot;
+    cam_type::matrix_type viewTemp, projTemp;
+    cam.calc_matrices(snapshot, viewTemp, projTemp, core::thecam::snapshot_content::all);
+    glm::mat4 proj = projTemp;
+    glm::mat4 view = viewTemp;
+
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+    glLoadMatrixf(glm::value_ptr(proj));
+
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+    glLoadMatrixf(glm::value_ptr(view));
 
     ::glEnable(GL_NORMALIZE);
     ::glDisable(GL_BLEND);
@@ -91,7 +100,6 @@ bool CrystalRenderer::Render(core::Call& call) {
     ::glBegin(GL_LINES);
     for (unsigned int i = 0; i < c.GetFaceCount(); i++) {
         vislib::math::Vector<float, 3> v = c.GetFace(i);
-        v *= scaling;
         ::glVertex3fv(v.PeekComponents());
         v *= 1.1f;
         ::glVertex3fv(v.PeekComponents());
@@ -100,7 +108,6 @@ bool CrystalRenderer::Render(core::Call& call) {
     ::glBegin(GL_POINTS);
     for (unsigned int i = 0; i < c.GetFaceCount(); i++) {
         vislib::math::Vector<float, 3> v = c.GetFace(i);
-        v *= scaling;
         ::glVertex3fv(v.PeekComponents());
     }
     ::glEnd();
@@ -127,7 +134,39 @@ bool CrystalRenderer::Render(core::Call& call) {
     }
 
 
-    ::glEnable(GL_LIGHTING);
+	// determine position of point light
+	this->GetLights();
+    glm::vec4 lightPos = {0.0f, 0.0f, 0.0f, 1.0f};
+    if (this->lightMap.size() != 1) {
+		vislib::sys::Log::DefaultLog.WriteWarn("[BezierCPUMeshRenderer] Only one single point light source is supported by this renderer");
+    }
+    for (auto light : this->lightMap) {
+        if (light.second.lightType != core::view::light::POINTLIGHT) {
+        vislib::sys::Log::DefaultLog.WriteWarn("[BezierCPUMeshRenderer] Only single point light source is supported by this renderer");
+        } else {
+            auto lPos = light.second.pl_position;
+            //light.second.lightColor;
+            //light.second.lightIntensity;
+            if (lPos.size() == 3) {
+                lightPos[0] = lPos[0];
+                lightPos[1] = lPos[1];
+                lightPos[2] = lPos[2];
+            }
+            if (lPos.size() == 4) {
+                lightPos[4] = lPos[4];
+            }
+            break;
+        }
+    }
+    const float lp[4] = {-lightPos[0], -lightPos[1], -lightPos[1], 0.0f};
+    const float zeros[4] = {0.0f, 0.0f, 0.0f, 1.0f};
+    const float ones[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+    glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHT0);
+    glLightfv(GL_LIGHT0, GL_AMBIENT, zeros);
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, ones);
+    glLightfv(GL_LIGHT0, GL_SPECULAR, ones);
+    glLightModelfv(GL_LIGHT_MODEL_AMBIENT, zeros);
 
     ::glColor3ub(192, 192, 192);
     //verts = c.GetMeshVertexData();
@@ -141,6 +180,10 @@ bool CrystalRenderer::Render(core::Call& call) {
         ::glEnd();
     }
 
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
+	glMatrixMode(GL_MODELVIEW);
+	glPopMatrix();
 
     return true;
 }

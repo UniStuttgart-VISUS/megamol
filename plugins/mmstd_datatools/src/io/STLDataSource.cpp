@@ -71,8 +71,10 @@ namespace megamol
 #endif
 				}
 
-				STLDataSource::~STLDataSource()
-				{ }
+				STLDataSource::~STLDataSource() 
+				{ 
+					this->Release();
+				}
 
 				bool STLDataSource::create()
 				{
@@ -128,7 +130,7 @@ namespace megamol
 							this->min_x, this->min_y, this->min_z, this->max_x, this->max_y, this->max_z);
 					}
 
-					call.SetExtent(static_cast<unsigned int>(0), this->min_x, this->min_y, this->min_z, this->max_x, this->max_y, this->max_z);
+					call.SetExtent(static_cast<unsigned int>(1), this->min_x, this->min_y, this->min_z, this->max_x, this->max_y, this->max_z);
 
 					return true;
 				}

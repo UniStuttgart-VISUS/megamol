@@ -9,17 +9,33 @@
 #define MEGAMOL_CINEMATIC_KEYFRAMEKEEPER_H_INCLUDED
 
 #include "Cinematic/Cinematic.h"
+#include "Keyframe.h"
+#include "CallKeyframeKeeper.h"
 
 #include "mmcore/AbstractGetDataCall.h"
 #include "mmcore/Module.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
+#include "mmcore/param/ButtonParam.h"
+#include "mmcore/param/StringParam.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/FilePathParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/Vector3fParam.h"
+#include "mmcore/AbstractSlot.h"
+#include "mmcore/utility/xml/XmlParser.h"
+#include "mmcore/utility/xml/XmlReader.h"
 
-#include "vislib/Array.h"
 #include "vislib/math/Cuboid.h"
+#include "vislib/StringSerialiser.h"
+#include "vislib/assert.h"
 
-#include "Keyframe.h"
+#include <iostream>
+#include <fstream>
+#include <ctime>
+
 
 namespace megamol {
 namespace cinematic {
@@ -72,33 +88,26 @@ namespace cinematic {
 	private:
 
         /**********************************************************************
-        * typedefs
-        **********************************************************************/
-
-        typedef vislib::math::Vector<float, 3> v3f;
-        typedef vislib::math::Point<float, 3>  p3f;
-
-        /**********************************************************************
         * variables
         **********************************************************************/
 
         // Variables shared/updated with call
-        vislib::Array<p3f >          interpolCamPos;
-        vislib::Array<Keyframe>      keyframes;
-        vislib::math::Cuboid<float>  boundingBox;
+		std::shared_ptr<std::vector<glm::vec3 >>      interpolCamPos;
+		std::shared_ptr<std::vector<Keyframe>>        keyframes;
+		std::shared_ptr<vislib::math::Cuboid<float>>  boundingBox;
         Keyframe                     selectedKeyframe;
         Keyframe                     dragDropKeyframe;
-        v3f                          startCtrllPos;
-        v3f                          endCtrllPos;
+        glm::vec3                    startCtrllPos;
+        glm::vec3                    endCtrllPos;
         float                        totalAnimTime;
         float                        totalSimTime;
         unsigned int                 interpolSteps;
-        p3f                          modelBboxCenter;
+        glm::vec3                    modelBboxCenter;
         unsigned int                 fps;
 
-        v3f                          camViewUp;
-        p3f                          camViewPosition;
-        p3f                          camViewLookat;
+        glm::vec3                    camViewUp;
+        glm::vec3                    camViewPosition;
+        glm::vec3                    camViewLookat;
         float                        camViewApertureangle;
             
         // Variables only used in keyframe keeper
@@ -123,13 +132,13 @@ namespace cinematic {
                     this->action        = KeyframeKeeper::UndoActionEnum::UNDO_NONE;
                     this->keyframe      = Keyframe();
                     this->prev_keyframe = Keyframe();
-                    this->startcp       = v3f();
-                    this->endcp         = v3f();
-                    this->prev_startcp  = v3f();
-                    this->prev_endcp    = v3f();
+                    this->startcp       = glm::vec3();
+                    this->endcp         = glm::vec3();
+                    this->prev_startcp  = glm::vec3();
+                    this->prev_endcp    = glm::vec3();
                 }
 
-                UndoAction(KeyframeKeeper::UndoActionEnum act, Keyframe kf, Keyframe prev_kf, v3f scp, v3f ecp, v3f prev_scp, v3f prev_ecp) {
+                UndoAction(KeyframeKeeper::UndoActionEnum act, Keyframe kf, Keyframe prev_kf, glm::vec3 scp, glm::vec3 ecp, glm::vec3 prev_scp, glm::vec3 prev_ecp) {
                     this->action        = act;
                     this->keyframe      = kf;
                     this->prev_keyframe = prev_kf;
@@ -155,13 +164,13 @@ namespace cinematic {
                 UndoActionEnum action;
                 Keyframe       keyframe;
                 Keyframe       prev_keyframe;
-                v3f            startcp;
-                v3f            endcp;
-                v3f            prev_startcp;
-                v3f            prev_endcp;
+                glm::vec3            startcp;
+                glm::vec3            endcp;
+                glm::vec3            prev_startcp;
+                glm::vec3            prev_endcp;
         };
 
-        vislib::Array<UndoAction> undoQueue;
+        std::vector<UndoAction> undoQueue;
 
         int undoQueueIndex;
 
@@ -243,7 +252,7 @@ namespace cinematic {
         /**
         *
         */
-        bool addUndoAction(KeyframeKeeper::UndoActionEnum act, Keyframe kf, Keyframe prev_kf, v3f startcp, v3f endcp, v3f prev_startcp, v3f prev_endcp);
+        bool addUndoAction(KeyframeKeeper::UndoActionEnum act, Keyframe kf, Keyframe prev_kf, glm::vec3 startcp, glm::vec3 endcp, glm::vec3 prev_startcp, glm::vec3 prev_endcp);
 
         /**
         *
@@ -253,7 +262,7 @@ namespace cinematic {
         /**
         *
         */
-        bool addCpUndoAction(KeyframeKeeper::UndoActionEnum act, v3f startcp, v3f endcp, v3f prev_startcp, v3f prev_endcp);
+        bool addCpUndoAction(KeyframeKeeper::UndoActionEnum act, glm::vec3 startcp, glm::vec3 endcp, glm::vec3 prev_startcp, glm::vec3 prev_endcp);
 
         /**
         *
@@ -263,7 +272,12 @@ namespace cinematic {
         /**
         *
         */
-        vislib::math::Vector<float, 3> interpolate_v3f(float u, v3f v0, v3f v1, v3f v2, v3f v3);
+        glm::vec3 interpolate_vec3(float u, glm::vec3 v0, glm::vec3 v1, glm::vec3 v2, glm::vec3 v3);
+
+        /**
+        *
+        */
+        int getKeyframeIndex(std::shared_ptr<std::vector<Keyframe>> keyframes, Keyframe keyframe);
 
         /**********************************************************************
         * callback stuff
@@ -290,10 +304,10 @@ namespace cinematic {
         core::param::ParamSlot redoChangesParam;
         core::param::ParamSlot deleteSelectedKeyframeParam;
         core::param::ParamSlot setTotalAnimTimeParam;
-        core::param::ParamSlot  snapAnimFramesParam;
-        core::param::ParamSlot  snapSimFramesParam;
-        core::param::ParamSlot  simTangentParam;
-        core::param::ParamSlot  interpolTangentParam;
+        core::param::ParamSlot snapAnimFramesParam;
+        core::param::ParamSlot snapSimFramesParam;
+        core::param::ParamSlot simTangentParam;
+        core::param::ParamSlot interpolTangentParam;
         core::param::ParamSlot setKeyframesToSameSpeed;
 		/**param for current keyframe aniamtion time */
 		core::param::ParamSlot editCurrentAnimTimeParam;
@@ -303,10 +317,10 @@ namespace cinematic {
 		core::param::ParamSlot editCurrentPosParam;
 		/**param for current keyframe LookAt */
 		core::param::ParamSlot editCurrentLookAtParam;
-        core::param::ParamSlot  resetLookAtParam;
+        core::param::ParamSlot resetLookAtParam;
 		/**param for current keyframe Up */
 		core::param::ParamSlot editCurrentUpParam;
-        core::param::ParamSlot  editCurrentApertureParam;
+        core::param::ParamSlot editCurrentApertureParam;
         core::param::ParamSlot fileNameParam;
         core::param::ParamSlot saveKeyframesParam;
         core::param::ParamSlot loadKeyframesParam;
