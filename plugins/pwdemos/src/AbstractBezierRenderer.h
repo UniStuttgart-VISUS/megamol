@@ -8,9 +8,9 @@
 #pragma once
 
 
-#include "mmcore/view/Renderer3DModule.h"
+#include "mmcore/view/Renderer3DModule_2.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/view/CallRender3D.h"
+#include "mmcore/view/CallRender3D_2.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 
 
@@ -20,7 +20,7 @@ namespace demos {
     /**
      * Raycasting-based renderer for bézier curve tubes
      */
-    class AbstractBezierRenderer : public core::view::Renderer3DModule {
+    class AbstractBezierRenderer : public core::view::Renderer3DModule_2 {
     public:
 
     protected:
@@ -47,7 +47,7 @@ namespace demos {
          *
          * @return The return value of the function.
          */
-        virtual bool GetExtents(core::Call& call);
+        virtual bool GetExtents(core::view::CallRender3D_2& call);
 
         /**
          * Implementation of 'Release'.
@@ -61,7 +61,7 @@ namespace demos {
          *
          * @return The return value of the function.
          */
-        virtual bool Render(core::Call& call);
+        virtual bool Render(core::view::CallRender3D_2& call);
 
         /**
          * The implementation of the render callback
@@ -70,7 +70,7 @@ namespace demos {
          *
          * @return The return value of the function
          */
-        virtual bool render(core::view::CallRender3D& call) = 0;
+        virtual bool render(core::view::CallRender3D_2& call) = 0;
 
         /**
          * Informs the class if the shader is required
@@ -90,9 +90,6 @@ namespace demos {
 
         /** The selected shader */
         vislib::graphics::gl::GLSLShader *shader;
-
-        /** The scale used when rendering */
-        float scaling;
 
     private:
 

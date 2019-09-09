@@ -61,7 +61,14 @@ protected:
      *
      * @return True if any light has changed, false otherwise.
      */
-    virtual bool GetLights(void);
+    bool GetLights(void);
+
+	/**
+	 * Method that gets called before the rendering is started for all changed modules
+	 *
+	 * @param call The rendering call that contains the camera
+	 */
+	virtual void PreRender(CallRender3D_2& call);
 
     /** map to store the called lights */
     core::view::light::LightMap lightMap;

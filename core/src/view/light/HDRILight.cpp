@@ -9,6 +9,7 @@
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/Vector3fParam.h"
+#include "mmcore/param/ColorParam.h"
 
 using namespace megamol::core::view::light;
 
@@ -42,14 +43,13 @@ HDRILight::~HDRILight(void) { this->Release(); }
  */
 void HDRILight::readParams() {
     lightContainer.lightType = lightenum::HDRILIGHT;
-    auto lcolor = this->lightColor.Param<core::param::Vector3fParam>()->Value().PeekComponents();
-    lightContainer.lightColor.assign(lcolor, lcolor + 3);
+	lightContainer.lightColor = this->lightColor.Param<core::param::ColorParam>()->Value();
     lightContainer.lightIntensity = this->lightIntensity.Param<core::param::FloatParam>()->Value();
 
     auto hdriup = this->hdri_up.Param<core::param::Vector3fParam>()->Value().PeekComponents();
-    lightContainer.hdri_up.assign(hdriup, hdriup + 3);
+	std::copy(hdriup, hdriup + 3, lightContainer.hdri_up.begin());
     auto hdri_dir = this->hdri_direction.Param<core::param::Vector3fParam>()->Value().PeekComponents();
-    lightContainer.hdri_direction.assign(hdri_dir, hdri_dir + 3);
+	std::copy(hdri_dir, hdri_dir + 3, lightContainer.hdri_direction.begin());
     lightContainer.hdri_evnfile = this->hdri_evnfile.Param<core::param::FilePathParam>()->Value();
 }
 

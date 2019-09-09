@@ -16,9 +16,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/view/AnimDataModule.h"
 #include "vislib/memutils.h"
-#ifdef MMCORE_TEST_DYN_PARAM_SLOTS
 #include "mmcore/param/ParamSlot.h"
-#endif
 
 namespace megamol {
 namespace core {
@@ -117,12 +115,6 @@ namespace misc {
 
     private:
 
-        /** Number of frames to be generated */
-        static const unsigned int frameCount;
-
-        /** Number of spheres to be generated */
-        static const unsigned int sphereCount;
-
         /**
          * Class storing data of a single frame
          */
@@ -161,6 +153,12 @@ namespace misc {
 
         /** The slot for requesting data */
         CalleeSlot getDataSlot;
+
+		/** Number of frames to be generated */
+		param::ParamSlot numFramesSlot;
+
+		/** Number of spheres to be generated */
+		param::ParamSlot numSpheresSlot;
 
 #ifdef MMCORE_TEST_DYN_PARAM_SLOTS
         param::ParamSlot p1;

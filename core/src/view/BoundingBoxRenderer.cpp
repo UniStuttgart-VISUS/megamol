@@ -15,7 +15,6 @@
 
 using namespace megamol::core;
 using namespace megamol::core::view;
-using namespace megamol::core::view;
 
 /*
  * BoundingBoxRenderer::BoundingBoxRenderer
@@ -95,6 +94,8 @@ bool BoundingBoxRenderer::create(void) {
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
 
     glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, this->vbo);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->ibo);
 
     return true;
 }
@@ -251,6 +252,7 @@ bool BoundingBoxRenderer::RenderBoundingBoxBack(const glm::mat4& mvp, const Boun
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_FRONT);
     if (smoothLines) glEnable(GL_LINE_SMOOTH);
@@ -272,6 +274,7 @@ bool BoundingBoxRenderer::RenderBoundingBoxBack(const glm::mat4& mvp, const Boun
     glDisable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE);
     glDisable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
     if (smoothLines) glDisable(GL_LINE_SMOOTH);
     glLineWidth(1.0f);
     glDisable(GL_CULL_FACE);

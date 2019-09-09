@@ -130,8 +130,8 @@ bool datatools::OverrideParticleBBox::manipulateExtent(
     outData = inData; // also transfers the unlocker to 'outData'
 
     bool doX = this->autocomputeXSlot.Param<core::param::BoolParam>()->Value();
-    bool doY = this->autocomputeXSlot.Param<core::param::BoolParam>()->Value();
-    bool doZ = this->autocomputeXSlot.Param<core::param::BoolParam>()->Value();
+    bool doY = this->autocomputeYSlot.Param<core::param::BoolParam>()->Value();
+    bool doZ = this->autocomputeZSlot.Param<core::param::BoolParam>()->Value();
     int samples = this->autocomputeSamplesSlot.Param<core::param::IntParam>()->Value();
 
     float rad = 0.0f;
@@ -247,6 +247,11 @@ bool datatools::OverrideParticleBBox::manipulateExtent(
         outData.AccessBoundingBoxes().SetObjectSpaceClipBox(doX ? minX - rad : l.X(), doY ? minY - rad : l.Y(),
             doZ ? minZ - rad : l.Z(), doX ? maxX - rad : u.X(), doY ? maxY - rad : u.Y(), doZ ? maxZ - rad : u.Z());
         outData.AccessBoundingBoxes().MakeScaledWorld(1.0f);
+        if (this->autocomputeSlot.IsDirty()) {
+            vislib::sys::Log::DefaultLog.WriteInfo("[OverrideParticleBBox] BBox: %f %f %f %f %f %f", doX ? minX : l.X(),
+                doY ? minY : l.Y(), doZ ? minZ : l.Z(), doX ? maxX : u.X(), doY ? maxY : u.Y(), doZ ? maxZ : u.Z());
+            this->autocomputeSlot.ResetDirty();
+        }
     }
 
     return true;

@@ -9,6 +9,7 @@
 
 #include "CinematicView.h"
 
+
 using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::core::view;
@@ -17,27 +18,23 @@ using namespace megamol::cinematic;
 
 using namespace vislib;
 
+
 CinematicView::CinematicView(void)
-    : View3D()
+    : View3D_2()
     , keyframeKeeperSlot("keyframeKeeper", "Connects to the Keyframe Keeper.")
-    , renderParam(               "renderAnim", "Toggle rendering of complete animation to PNG files.")
-    , toggleAnimPlayParam(       "playPreview", "Toggle playing animation as preview")
-    , selectedSkyboxSideParam(   "skyboxSide", "Select the skybox side.")
-    , cubeModeRenderParam(       "cubeMode", "Render cube around dataset with skyboxSide as side selector.")
-    , resWidthParam(             "cinematicWidth", "The width resolution of the cineamtic view to render.")
-    , resHeightParam(            "cinematicHeight", "The height resolution of the cineamtic view to render.")
-    , fpsParam(                  "fps", "Frames per second the animation should be rendered.")
-    , startRenderFrameParam(     "firstRenderFrame", "Set first frame number to start rendering with " 
-                                                     "(allows continuing aborted rendering without starting "
-                                                     "from the beginning).")
-    , delayFirstRenderFrameParam("delayFirstRenderFrame", "Delay (in seconds) to wait until first frame "
-                                                          "for rendering is written (needed to get right "
-                                                          "first frame especially for high resolutions and "
-                                                          "for distributed rendering).")
-    , frameFolderParam(          "frameFolder", "Specify folder where the frame files should be stored.")
-    , addSBSideToNameParam(      "addSBSideToName", "Toggle whether skybox side should be added to output filename")
-    , eyeParam(                  "stereo::eye", "Select eye position (for stereo view).")
-    , projectionParam(           "stereo::projection", "Select camera projection.")
+    , renderParam("renderAnim", "Toggle rendering of complete animation to PNG files.")
+    , toggleAnimPlayParam("playPreview", "Toggle playing animation as preview")
+    , selectedSkyboxSideParam("skyboxSide", "Select the skybox side.")
+    , cubeModeRenderParam("cubeMode", "Render cube around dataset with skyboxSide as side selector.")
+    , resWidthParam("cinematicWidth", "The width resolution of the cineamtic view to render.")
+    , resHeightParam("cinematicHeight", "The height resolution of the cineamtic view to render.")
+    , fpsParam("fps", "Frames per second the animation should be rendered.")
+    , startRenderFrameParam("firstRenderFrame", "Set first frame number to start rendering with (allows continuing aborted rendering without starting from the beginning).")
+    , delayFirstRenderFrameParam("delayFirstRenderFrame", "Delay (in seconds) to wait until first frame for rendering is written (needed to get right first frame especially for high resolutions and for distributed rendering).")
+    , frameFolderParam( "frameFolder", "Specify folder where the frame files should be stored.")
+    , addSBSideToNameParam( "addSBSideToName", "Toggle whether skybox side should be added to output filename")
+    , eyeParam("stereo::eye", "Select eye position (for stereo view).")
+    , projectionParam("stereo::projection", "Select camera projection.")
     , theFont(megamol::core::utility::SDFFont::FontName::ROBOTO_SANS)
     , deltaAnimTime(clock())
     , shownKeyframe()
@@ -152,7 +149,7 @@ CinematicView::~CinematicView(void) {
 
 void CinematicView::Render(const mmcRenderViewContext& context) {
 
-    view::CallRender3D* cr3d = this->rendererSlot.CallAs<core::view::CallRender3D>();
+    view::CallRender3D_2* cr3d = this->rendererSlot.CallAs<core::view::CallRender3D_2>();
     if (cr3d == nullptr) return;
     if (!(*cr3d)(view::AbstractCallRender::FnGetExtents)) return;
 
@@ -162,7 +159,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     if (!(*ccc)(CallKeyframeKeeper::CallForGetUpdatedKeyframeData)) return;
 
     // Set bounding box center of model
-    ccc->setBboxCenter(cr3d->AccessBoundingBoxes().WorldSpaceBBox().CalcCenter());
+    ccc->setBboxCenter(P2G(cr3d->AccessBoundingBoxes().BoundingBox().CalcCenter()));
     // Set total simulation time of call
     ccc->setTotalSimTime(static_cast<float>(cr3d->TimeFramesCount()));
     // Set FPS to call
@@ -171,7 +168,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
 
     bool loadNewCamParams = false;
 
-    // Disabling toggleAnimPlaySlot in the parent view3d
+    // Disabling toggleAnimPlaySlot in the parent View3D_2
     // -> 'SPACE'-key is needed to be available here for own control of animation time
     this->SetSlotUnavailable(static_cast<AbstractSlot*>(this->timeCtrl.GetSlot(3)));
 
@@ -238,14 +235,14 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     // Set (mono/stereo) projection for camera
     if (this->projectionParam.IsDirty()) {
         this->projectionParam.ResetDirty();
-        this->cam.Parameters()->SetProjection(static_cast<vislib::graphics::CameraParameters::ProjectionType>(
-            this->projectionParam.Param<param::EnumParam>()->Value()));
+		vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC VIEW] Selecting Stereo Projection is currently not supported.");
+        ///XXX this->cam.SetProjection(static_cast<vislib::graphics::CameraParameters::ProjectionType>(this->projectionParam.Param<param::EnumParam>()->Value()));
     }
     // Set eye position for camera
     if (this->eyeParam.IsDirty()) {
         this->eyeParam.ResetDirty();
-        this->cam.Parameters()->SetEye(static_cast<vislib::graphics::CameraParameters::StereoEye>(
-            this->eyeParam.Param<param::EnumParam>()->Value()));
+		vislib::sys::Log::DefaultLog.WriteWarn("[CINEMATIC VIEW] Selecting Stereo Eye is currently not supported.");
+        ///XXX this->cam.Parameters()->SetEye(static_cast<vislib::graphics::CameraParameters::StereoEye>(this->eyeParam.Param<param::EnumParam>()->Value()));
     }
 
     // Time settings ----------------------------------------------------------
@@ -319,81 +316,92 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     // Camera settings --------------------------------------------------------
 
     // Set new viewport settings for camera
-    this->cam.Parameters()->SetVirtualViewSize(static_cast<vislib::graphics::ImageSpaceType>(fboWidth),
-        static_cast<vislib::graphics::ImageSpaceType>(fboHeight));
-
+    ///OLD this->cam.Parameters()->SetVirtualViewSize(static_cast<vislib::graphics::ImageSpaceType>(fboWidth), static_cast<vislib::graphics::ImageSpaceType>(fboHeight));
+    auto res = cam_type::screen_size_type(glm::ivec2(fboWidth, fboHeight));
+    this->cam.resolution_gate(res);
+    auto tile = cam_type::screen_rectangle_type(std::array<int, 4>{0, 0, fboWidth, fboHeight});
+    this->cam.image_tile(tile);
+ 
     // Set camera parameters of selected keyframe for this view.
     // But only if selected keyframe differs to last locally stored and shown keyframe.
     // Load new camera setting from selected keyframe when skybox side changes or rendering
     // or animation loaded new slected keyframe.
     Keyframe skf = ccc->getSelectedKeyframe();
     if (loadNewCamParams || (this->shownKeyframe != skf)) {
-
         this->shownKeyframe = skf;
 
         // Apply selected keyframe parameters only, if at least one valid keyframe exists.
-        if (!ccc->getKeyframes()->IsEmpty()) {
-            this->cam.Parameters()->SetView(skf.GetCamPosition(), skf.GetCamLookAt(), skf.GetCamUp());
-            this->cam.Parameters()->SetApertureAngle(skf.GetCamApertureAngle());
+        if (!ccc->getKeyframes()->empty()) {
+            ///OLD this->cam.Parameters()->SetView(skf.GetCamPosition(), skf.GetCamLookAt(), skf.GetCamUp());
+            ///OLD this->cam.aperture_angle = skf.GetCamApertureAngle();
+            ///---
+            ///NEW this->cam.position() = skf.GetCamPosition();
+            ///NEW this->cam.view_vector() = skf.GetCamLookAt();
+            ///NEW this->cam.up_vector() = skf.GetCamUp();
+            ///NEW this->cam.aperture_angle() = skf.GetCamApertureAngle();
         } else {
             this->ResetView();
         }
-        // Apply showing skybox side ONLY if new camera parameters are set
-        if (this->sbSide != CinematicView::SkyboxSides::SKYBOX_NONE) {
-            // Get camera parameters
-            vislib::SmartPtr<vislib::graphics::CameraParameters> cp = this->cam.Parameters();
-            vislib::math::Point<float, 3> camPos = cp->Position();
-            vislib::math::Vector<float, 3> camRight = cp->Right();
-            vislib::math::Vector<float, 3> camUp = cp->Up();
-            vislib::math::Vector<float, 3> camFront = cp->Front();
-            vislib::math::Point<float, 3> camLookAt = cp->LookAt();
-            float tmpDist = cp->FocalDistance();
 
-            // Adjust cam to selected skybox side
-            // set aperture angle to 90 deg
-            cp->SetApertureAngle(90.0f);
-            if (!this->cubeModeRenderParam.Param<param::BoolParam>()->Value()) {
-                if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_BACK) {
-                    cp->SetView(camPos, camPos - camFront * tmpDist, camUp);
-                } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_RIGHT) {
-                    cp->SetView(camPos, camPos + camRight * tmpDist, camUp);
-                } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_LEFT) {
-                    cp->SetView(camPos, camPos - camRight * tmpDist, camUp);
-                } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_UP) {
-                    cp->SetView(camPos, camPos + camUp * tmpDist, -camFront);
-                } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_DOWN) {
-                    cp->SetView(camPos, camPos - camUp * tmpDist, camFront);
-                }
-            } else {
-                auto const center = cr3d->AccessBoundingBoxes().WorldSpaceBBox().CalcCenter();
-                auto const width = cr3d->AccessBoundingBoxes().WorldSpaceBBox().Width();
-                auto const height = cr3d->AccessBoundingBoxes().WorldSpaceBBox().Height();
-                auto const depth = cr3d->AccessBoundingBoxes().WorldSpaceBBox().Depth();
-                if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_FRONT) {
-                    auto const tmpCamPos = center - 0.5f * (depth + width) * camFront;
-                    cp->SetView(tmpCamPos, tmpCamPos + camFront * 0.5f * (depth + width), camUp);
-                } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_BACK) {
-                    auto const tmpCamPos = center + 0.5f * (depth + width) * camFront;
-                    cp->SetView(tmpCamPos, tmpCamPos - camFront * 0.5f * (depth + width), camUp);
-                } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_RIGHT) {
-                    auto const tmpCamPos = center + 0.5f * (depth + width) * camRight;
-                    cp->SetView(tmpCamPos, tmpCamPos - camRight * 0.5f * (depth + width), camUp);
-                } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_LEFT) {
-                    auto const tmpCamPos = center - 0.5f * (depth + width) * camRight;
-                    cp->SetView(tmpCamPos, tmpCamPos + camRight * 0.5f * (depth + width), camUp);
-                } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_UP) {
-                    auto const tmpCamPos = center + 0.5f * (height + width) * camUp;
-                    cp->SetView(tmpCamPos, tmpCamPos - camUp * 0.5f * (height + width), -camFront);
-                } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_DOWN) {
-                    auto const tmpCamPos = center - 0.5f * (height + width) * camUp;
-                    cp->SetView(tmpCamPos, tmpCamPos + camUp * 0.5f * (height + width), camFront);
-                }
-            }
-        }
+        // Apply showing skybox side ONLY if new camera parameters are set
+        //if (this->sbSide != CinematicView::SkyboxSides::SKYBOX_NONE) {
+        //    // Get camera parameters
+        //    vislib::SmartPtr<vislib::graphics::CameraParameters> cp = this->cam.Parameters();
+        //    vislib::math::Point<float, 3> camPos = cp->Position();
+        //    vislib::math::Vector<float, 3> camRight = cp->Right();
+        //    vislib::math::Vector<float, 3> camUp = cp->Up();
+        //    vislib::math::Vector<float, 3> camFront = cp->Front();
+        //    vislib::math::Point<float, 3> camLookAt = cp->LookAt();
+        //    float tmpDist = cp->FocalDistance();
+
+        //    // Adjust cam to selected skybox side
+        //    // set aperture angle to 90 deg
+        //    cp->SetApertureAngle(90.0f);
+        //    if (!this->cubeModeRenderParam.Param<param::BoolParam>()->Value()) {
+        //        if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_BACK) {
+        //            cp->SetView(camPos, camPos - camFront * tmpDist, camUp);
+        //        } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_RIGHT) {
+        //            cp->SetView(camPos, camPos + camRight * tmpDist, camUp);
+        //        } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_LEFT) {
+        //            cp->SetView(camPos, camPos - camRight * tmpDist, camUp);
+        //        } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_UP) {
+        //            cp->SetView(camPos, camPos + camUp * tmpDist, -camFront);
+        //        } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_DOWN) {
+        //            cp->SetView(camPos, camPos - camUp * tmpDist, camFront);
+        //        }
+        //    } else {
+        //        auto const center = cr3d->AccessBoundingBoxes().BoundingBox().CalcCenter();
+        //        auto const width = cr3d->AccessBoundingBoxes().BoundingBox().Width();
+        //        auto const height = cr3d->AccessBoundingBoxes().BoundingBox().Height();
+        //        auto const depth = cr3d->AccessBoundingBoxes().BoundingBox().Depth();
+        //        if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_FRONT) {
+        //            auto const tmpCamPos = center - 0.5f * (depth + width) * camFront;
+        //            cp->SetView(tmpCamPos, tmpCamPos + camFront * 0.5f * (depth + width), camUp);
+        //        } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_BACK) {
+        //            auto const tmpCamPos = center + 0.5f * (depth + width) * camFront;
+        //            cp->SetView(tmpCamPos, tmpCamPos - camFront * 0.5f * (depth + width), camUp);
+        //        } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_RIGHT) {
+        //            auto const tmpCamPos = center + 0.5f * (depth + width) * camRight;
+        //            cp->SetView(tmpCamPos, tmpCamPos - camRight * 0.5f * (depth + width), camUp);
+        //        } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_LEFT) {
+        //            auto const tmpCamPos = center - 0.5f * (depth + width) * camRight;
+        //            cp->SetView(tmpCamPos, tmpCamPos + camRight * 0.5f * (depth + width), camUp);
+        //        } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_UP) {
+        //            auto const tmpCamPos = center + 0.5f * (height + width) * camUp;
+        //            cp->SetView(tmpCamPos, tmpCamPos - camUp * 0.5f * (height + width), -camFront);
+        //        } else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_DOWN) {
+        //            auto const tmpCamPos = center - 0.5f * (height + width) * camUp;
+        //            cp->SetView(tmpCamPos, tmpCamPos + camUp * 0.5f * (height + width), camFront);
+        //        }
+        //    }
+        //}
     }
 
     // Propagate camera parameters to keyframe keeper (sky box camera params are propageted too!)
-    ccc->setCameraParameters(this->cam.Parameters());
+    ///OLD ccc->setCameraParameters(this->cam);
+    ///---
+    ///NEW ccc->setCameraParameters(std::make_shared<megamol::core::view::Camera_2>(&this->cam));
+
     if (!(*ccc)(CallKeyframeKeeper::CallForSetCameraForKeyframe)) return;
 
         // Render to texture ------------------------------------------------------------
@@ -435,7 +443,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     int fboVp[4] = {0, 0, fboWidth, fboHeight};
     Base::overrideViewport = fboVp;
 
-    // Call Render-Function of parent View3D
+    // Call Render-Function of parent View3D_2
     Base::Render(context);
 
     // Reset override render call
@@ -697,9 +705,9 @@ bool CinematicView::render2file_setup() {
     }
 
     // Disable showing BBOX and CUBE (Uniform backCol is needed for being able to detect changes written to fbo.)
-    Base::showViewCubeSlot.Param<param::BoolParam>()->SetValue(false);
-    Base::showBBox.Param<param::BoolParam>()->SetValue(false);
-    vislib::sys::Log::DefaultLog.WriteInfo("[CINEMATIC VIEW] Hiding Bbox and Cube rendering of complete animation.");
+    ///XXX Base::showViewCubeSlot.Param<param::BoolParam>()->SetValue(false);
+    ///XXX Base::showBBox.Param<param::BoolParam>()->SetValue(false);
+    ///XXX vislib::sys::Log::DefaultLog.WriteInfo("[CINEMATIC VIEW] Hiding Bbox and Cube rendering of complete animation.");
 
     vislib::sys::Log::DefaultLog.WriteInfo("[CINEMATIC VIEW] STARTED rendering of complete animation.");
 
@@ -817,8 +825,8 @@ bool CinematicView::render2file_write_png() {
         }
 
         if (this->pngdata.animTime == ccc->getTotalAnimTime()) {
-            /// Handling this case is actually only necessary when rendering is done via FBOCompositor => Rndering
-            /// crashes > WHY ? Rendering last frame with animation time = total animation time is otherwise no problem.
+            ///XXX Handling this case is actually only necessary when rendering is done via FBOCompositor 
+            ///XXX => Rendering crashes (WHY?) Rendering last frame with animation time = total animation time is otherwise no problem.
             this->pngdata.animTime -= 0.000005f;
         } else if (this->pngdata.animTime >= ccc->getTotalAnimTime()) {
             // Stop rendering if max anim time is reached
@@ -863,7 +871,7 @@ bool CinematicView::render2file_finish() {
 
 bool CinematicView::setSimTime(float st) {
 
-    view::CallRender3D* cr3d = this->rendererSlot.CallAs<core::view::CallRender3D>();
+    view::CallRender3D_2* cr3d = this->rendererSlot.CallAs<core::view::CallRender3D_2>();
     if (cr3d == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError("[CINEMATIC VIEW] [setSimTime] cr3d is nullptr.");
         return false;

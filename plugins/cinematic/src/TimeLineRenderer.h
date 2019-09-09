@@ -15,13 +15,27 @@
 #include "mmcore/view/CallRender2D.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/utility/SDFFont.h"
+#include "mmcore/utility/ResourceWrapper.h"
+#include "mmcore/misc/PngBitmapCodec.h"
+#include "mmcore/view/Renderer2DModule.h"
+#include "mmcore/CoreInstance.h"
+#include "mmcore/param/StringParam.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/param/ButtonParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/EnumParam.h"
 
-#include "vislib/graphics/InputModifiers.h"
 #include "vislib/graphics/Cursor2D.h"
+#include "vislib/graphics/InputModifiers.h"
 #include "vislib/graphics/gl/OpenGLTexture2D.h"
+#include "vislib/graphics/gl/OpenGLTexture2D.h"
+#include "vislib/sys/Log.h"
+#include "vislib/graphics/gl/SimpleFont.h"
+#include "vislib/graphics/BitmapImage.h"
+#include "vislib/math/ShallowMatrix.h"
+#include "vislib/math/Matrix.h"
 
-#include "vislib/Array.h"
-
+#include "CallKeyframeKeeper.h"
 #include "Keyframe.h"
 
 namespace megamol {
@@ -118,11 +132,11 @@ namespace cinematic {
 
         megamol::core::utility::SDFFont theFont;
 
-        vislib::Array<vislib::SmartPtr<vislib::graphics::gl::OpenGLTexture2D> > markerTextures;
+        vislib::graphics::gl::OpenGLTexture2D markerTexture;
 
-        vislib::math::Vector<float, 2> axisStartPos;       // joint start position for both axis
+        glm::vec2                      axisStartPos;       // joint start position for both axis
 
-        vislib::math::Vector<float, 2> animAxisEndPos;     // end position of animation axis
+        glm::vec2                      animAxisEndPos;     // end position of animation axis
         float                          animAxisLen;        // length of the animation axis
         float                          animTotalTime;      // the total animation time
         float                          animSegmSize;       // the world space size of one segment of the animation time ruler
@@ -134,7 +148,7 @@ namespace cinematic {
         float                          animScaleDelta;     // animScaleOffset for new animScalePos to get new animScaleOffset for new scaling factor
         vislib::StringA                animFormatStr;      // string with adapted floating point formatting
 
-        vislib::math::Vector<float, 2> simAxisEndPos;
+        glm::vec2                      simAxisEndPos;
         float                          simAxisLen;
         float                          simTotalTime;
         float                          simSegmSize;
@@ -156,7 +170,7 @@ namespace cinematic {
         float                          keyfMarkSize;
         float                          rulerMarkSize;
         unsigned int                   fps;
-        vislib::math::Vector<float, 2> viewport;
+        glm::vec2                     viewport;
 
         /*** INPUT ********************************************************/
 
@@ -176,7 +190,7 @@ namespace cinematic {
         **********************************************************************/
 
         /** Loading texture for keyframe marker. */
-        bool loadTexture(vislib::StringA filename);
+        bool loadTexture(std::string filename);
 
         /** Draw the keyframe marker. */
         void drawKeyframeMarker(float posX, float posY);

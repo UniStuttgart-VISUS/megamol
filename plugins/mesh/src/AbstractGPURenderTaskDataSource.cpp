@@ -17,7 +17,9 @@ megamol::mesh::AbstractGPURenderTaskDataSource::AbstractGPURenderTaskDataSource(
     , m_getData_slot("getData", "The slot publishing the loaded data")
     , m_renderTask_callerSlot("getRenderTasks", "The slot for chaining render task data sources.")
     , m_material_callerSlot("getMaterialData", "Connects to a material data source")
-    , m_mesh_callerSlot("getMeshData", "Connects to a mesh data source") {
+    , m_mesh_callerSlot("getMeshData", "Connects to a mesh data source")
+    , m_light_slot("lights", "Lights are retrieved over this slot. If no light is connected, a default camera light is used")
+{
     this->m_getData_slot.SetCallback(
         CallGPURenderTaskData::ClassName(), "GetData", &AbstractGPURenderTaskDataSource::getDataCallback);
     this->m_getData_slot.SetCallback(
@@ -32,6 +34,9 @@ megamol::mesh::AbstractGPURenderTaskDataSource::AbstractGPURenderTaskDataSource(
 
     this->m_mesh_callerSlot.SetCompatibleCall<CallGPUMeshDataDescription>();
     this->MakeSlotAvailable(&this->m_mesh_callerSlot);
+
+    this->m_light_slot.SetCompatibleCall<core::view::light::CallLightDescription>();
+    this->MakeSlotAvailable(&this->m_light_slot);
 }
 
 megamol::mesh::AbstractGPURenderTaskDataSource::~AbstractGPURenderTaskDataSource() { this->Release(); }
@@ -73,6 +78,24 @@ bool megamol::mesh::AbstractGPURenderTaskDataSource::getExtentCallback(core::Cal
     lhs_rtc->AccessBoundingBoxes() = bbox;
 
     return true;
+}
+
+bool megamol::mesh::AbstractGPURenderTaskDataSource::GetLights(void) {
+    core::view::light::CallLight* cl = this->m_light_slot.CallAs<core::view::light::CallLight>();
+    if (cl == nullptr) {
+        // TODO add local light
+        return false;
+    }
+    cl->setLightMap(&this->lightMap);
+    cl->fillLightMap();
+    bool lightDirty = false;
+    for (const auto element : this->lightMap) {
+        auto light = element.second;
+        if (light.dataChanged) {
+            lightDirty = true;
+        }
+    }
+    return lightDirty;
 }
 
 void megamol::mesh::AbstractGPURenderTaskDataSource::release() {

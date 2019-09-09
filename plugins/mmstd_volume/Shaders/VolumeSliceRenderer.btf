@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<btf type="MegaMolGLSLShader" version="1.0" namespace="VolumeSliceRenderer">
+    <include file="common"/>
+    <include file="core_utils"/>
+
+    <shader name="compute">
+        <snippet type="version">430</snippet>
+        <snippet name="core_utils::tflookup"/>
+        <snippet name="core_utils::tfconvenience"/>
+        <snippet name="body" type="file">raycast_volume/slice_volume_c.glsl</snippet>
+    </shader>
+
+    <shader name="vert">
+        <snippet type="version">430</snippet>
+        <snippet name="body" type="file">raycast_volume/render_to_framebuffer_v.glsl</snippet>
+    </shader>
+
+    <shader name="frag">
+        <snippet type="version">430</snippet>
+        <snippet name="body" type="file">raycast_volume/render_to_framebuffer_f.glsl</snippet>
+    </shader>
+
+</btf>

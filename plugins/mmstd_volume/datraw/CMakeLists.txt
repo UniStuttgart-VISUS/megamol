@@ -1,14 +1,7 @@
-#
-# MegaMol™ datraw dependency
-# Copyright 2015, by MegaMol Team
-# Alle Rechte vorbehalten. All rights reserved.
-#
-
 project(datraw)
 
-# public header files for installation
+# Collect source files
 file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
-# source files for compilation
 file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.c")
 
 # Target definition
