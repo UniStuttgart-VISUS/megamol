@@ -87,7 +87,7 @@ view::View3D::View3D(void)
     , viewKeyRunFactorSlot("viewKey::RunFactor", "The factor for step size multiplication when running (shift)")
     , viewKeyAngleStepSlot("viewKey::AngleStep", "The angle rotate step in degrees")
     , mouseSensitivitySlot("viewKey::MouseSensitivity", "used for WASD mode")
-    , viewKeyRotPointSlot("viewKey::RotPoint", "The point around which the view will be roateted")
+    , viewKeyRotPointSlot("viewKey::RotPoint", "The point around which the view will be rotated")
     ,
 #endif /* ENABLE_KEYBOARD_VIEW_CONTROL */
     toggleBBoxSlot("toggleBBox", "Button to toggle the bounding box")

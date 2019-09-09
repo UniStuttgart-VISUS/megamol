@@ -136,7 +136,7 @@ namespace cinematic {
         *
         */
         inline void SetSimTime(float t) {
-            this->simTime = vislib::math::Clamp(t, 0.0f, 1.0f);
+            this->simTime = glm::clamp(t, 0.0f, 1.0f);
         }
 
         /**
@@ -164,7 +164,7 @@ namespace cinematic {
         *
         */
         inline void SetCameraApertureAngele(float apertureangle){
-            this->camera.apertureangle = vislib::math::Clamp(apertureangle, 0.0f, 180.0f);
+            this->camera.apertureangle = glm::clamp(apertureangle, 0.0f, 180.0f);
 		}
 
         ///// SERIALISATION /////

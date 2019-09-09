@@ -28,11 +28,9 @@
 #include "mmcore/utility/xml/XmlParser.h"
 #include "mmcore/utility/xml/XmlReader.h"
 
+#include "vislib/math/Cuboid.h"
 #include "vislib/StringSerialiser.h"
 #include "vislib/assert.h"
-#include "vislib/Array.h"
-#include "vislib/math/Cuboid.h"
-#include "vislib/math/Vector.h"
 
 #include <iostream>
 #include <fstream>
@@ -94,8 +92,8 @@ namespace cinematic {
         **********************************************************************/
 
         // Variables shared/updated with call
-		std::shared_ptr<vislib::Array<glm::vec3 >>    interpolCamPos;
-		std::shared_ptr<vislib::Array<Keyframe>>      keyframes;
+		std::shared_ptr<std::vector<glm::vec3 >>      interpolCamPos;
+		std::shared_ptr<std::vector<Keyframe>>        keyframes;
 		std::shared_ptr<vislib::math::Cuboid<float>>  boundingBox;
         Keyframe                     selectedKeyframe;
         Keyframe                     dragDropKeyframe;
@@ -172,7 +170,7 @@ namespace cinematic {
                 glm::vec3            prev_endcp;
         };
 
-        vislib::Array<UndoAction> undoQueue;
+        std::vector<UndoAction> undoQueue;
 
         int undoQueueIndex;
 
@@ -275,6 +273,11 @@ namespace cinematic {
         *
         */
         glm::vec3 interpolate_vec3(float u, glm::vec3 v0, glm::vec3 v1, glm::vec3 v2, glm::vec3 v3);
+
+        /**
+        *
+        */
+        int getKeyframeIndex(std::shared_ptr<std::vector<Keyframe>> keyframes, Keyframe keyframe);
 
         /**********************************************************************
         * callback stuff

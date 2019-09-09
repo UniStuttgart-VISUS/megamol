@@ -79,7 +79,7 @@ View3D_2::View3D_2(void)
     , viewKeyRunFactorSlot("viewKey::RunFactor", "The factor for step size multiplication when running (shift)")
     , viewKeyAngleStepSlot("viewKey::AngleStep", "The angle rotate step in degrees")
     , mouseSensitivitySlot("viewKey::MouseSensitivity", "used for WASD mode")
-    , viewKeyRotPointSlot("viewKey::RotPoint", "The point around which the view will be roateted")
+    , viewKeyRotPointSlot("viewKey::RotPoint", "The point around which the view will be rotated")
     , enableMouseSelectionSlot("enableMouseSelection", "Enable selecting and picking with the mouse")
     , showViewCubeSlot("viewcube::show", "Shows the view cube helper")
     , resetViewOnBBoxChangeSlot("resetViewOnBBoxChange", "whether to reset the view when the bounding boxes change")
@@ -427,7 +427,8 @@ void View3D_2::Render(const mmcRenderViewContext& context) {
                                       !this->bboxs.IsClipBoxValid()))) {
             this->bboxs = cr3d->AccessBoundingBoxes();
             glm::vec3 bbcenter = glm::make_vec3(this->bboxs.BoundingBox().CalcCenter().PeekCoordinates());
-            this->arcballManipulator.set_rotation_centre(glm::vec4(bbcenter, 1.0f));
+            if(!this->arcballManipulator.manipulating())
+				this->arcballManipulator.set_rotation_centre(glm::vec4(bbcenter, 1.0f));
 
             if (this->firstImg) {
                 this->ResetView();

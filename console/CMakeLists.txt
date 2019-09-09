@@ -29,7 +29,7 @@ if(BUILD_CONSOLE)
   endif()
 
   # GLFW
-  if(NOT USE_EGL)
+  if(USE_GLFW)
     if (MSVC)
         set(GLFW_IMPORT_LIBRARY "lib/glfw3dll.lib")
         set(GLFW_LIBRARY "lib/glfw3.dll")
@@ -56,33 +56,6 @@ if(BUILD_CONSOLE)
     target_include_directories(${PROJECT_NAME} PRIVATE "${SOURCE_DIR}/include")
   endif()
 
-  # EGL
-  if(UNIX)
-    if(USE_EGL)
-      find_package(EGL REQUIRED)
-      target_include_directories(${PROJECT_NAME} PRIVATE ${EGL_INCLUDE_DIR})
-      target_link_libraries(${PROJECT_NAME} PRIVATE ${EGL_LIBRARIES})
-    endif()
-  endif()
-
-  # AntTweakBar
-  option(USE_ANTTWEAKBAR "use AntTweakBar" OFF)
-  if (USE_ANTTWEAKBAR)
-    if(NOT USE_EGL AND NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    option(USE_INTERNAL_ANTTWEAKBAR "use internal AntTweakBar" ON)
-    if(USE_INTERNAL_ANTTWEAKBAR)
-      add_subdirectory(AntTweakBar)
-    else()
-      find_package(AntTweakBar REQUIRED)
-    endif()
-    if(AntTweakBar_FOUND OR USE_INTERNAL_ANTTWEAKBAR)
-      target_compile_definitions(${PROJECT_NAME} PRIVATE "HAS_ANTTWEAKBAR=1")
-      target_include_directories(${PROJECT_NAME} PRIVATE ${AntTweakBar_INCLUDE_DIR})
-      target_link_libraries(${PROJECT_NAME} PRIVATE ${AntTweakBar_LIBRARIES})
-    endif()
-    endif()
-  endif()
-
   target_link_libraries(${PROJECT_NAME} PRIVATE ${VERSION_LIBRARY} ${CMAKE_DL_LIBS})
 
   # Grouping in Visual Studio
@@ -92,7 +65,7 @@ if(BUILD_CONSOLE)
 
   # install mmconsole executable
   install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin" ARCHIVE DESTINATION "lib")
-  if(NOT USE_EGL)
+  if(USE_GLFW)
     install_external(TARGETS glfw3)
   endif()
   if (WIN32)
@@ -101,17 +74,6 @@ if(BUILD_CONSOLE)
     endif()
   endif ()
 
-  # install and configure ATB
-  if (USE_ANTTWEAKBAR)
-    if(AntTweakBar_FOUND)
-    install(FILES ${AntTweakBar_LIBRARIES} DESTINATION "lib")
-    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/linkAntTweakBar.cmake.in ${CMAKE_BINARY_DIR}/linkAntTweakBar.cmake @ONLY)
-    install(SCRIPT ${CMAKE_BINARY_DIR}/linkAntTweakBar.cmake)
-    if(WIN32)
-        install(FILES ${AntTweakBar_DLL} DESTINATION "bin")
-    endif()
-    endif()
-  endif()
 
   # Configuration of the megamol.cfg megamol.sh remoteconsole.sh files
   set(cfg_LIB_PATH "${CMAKE_INSTALL_PREFIX}/lib")
