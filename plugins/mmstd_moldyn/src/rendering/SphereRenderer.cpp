@@ -1540,11 +1540,27 @@ bool SphereRenderer::renderBufferArray(view::CallRender3D_2* cr3d, MultiParticle
     glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVPinv"), 1, GL_FALSE, glm::value_ptr(this->curMVPinv));
     glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVPtransp"), 1, GL_FALSE, glm::value_ptr(this->curMVPtransp));
 
-    // this->currBuf = 0;
+    //this->currBuf = 0;
     GLuint flagPartsCount = 0;
     for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
         MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
 
+        if (!this->setShaderData(this->sphereShader, parts)) {
+            continue;
+        }
+
+        glUniform1ui(this->sphereShader.ParameterLocation("flagsAvailable"), GLuint(this->flagsEnabled));
+        if (this->flagsEnabled) {
+            glUniform4fv(this->sphereShader.ParameterLocation("flagSelectedCol"), 1, this->selectColorParam.Param<param::ColorParam>()->Value().data());
+            glUniform4fv(this->sphereShader.ParameterLocation("flagSoftSelectedCol"), 1, this->softSelectColorParam.Param<param::ColorParam>()->Value().data());
+        }
+
+        unsigned int colBytes, vertBytes, colStride, vertStride;
+        bool interleaved;
+        this->getBytesAndStride(parts, colBytes, vertBytes, colStride, vertStride, interleaved);
+
+        UINT64 numVerts, vertCounter;
+        // does all data reside interleaved in the same memory?
         if (interleaved) {
 
             numVerts = this->bufSize / vertStride;
