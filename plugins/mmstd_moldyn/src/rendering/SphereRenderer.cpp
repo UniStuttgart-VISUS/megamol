@@ -790,18 +790,17 @@ MultiParticleDataCall *SphereRenderer::getData(unsigned int t, float& outScaling
     else {
         return nullptr;
     }
+}
+
+
 void SphereRenderer::getClipData(glm::vec4& out_clipDat, glm::vec4& out_clipCol) {
+    
+    view::CallClipPlane *ccp = this->getClipPlaneSlot.CallAs<view::CallClipPlane>();
+    if ((ccp != nullptr) && (*ccp)()) {
+        out_clipDat[0] = ccp->GetPlane().Normal().X();
         out_clipDat[1] = ccp->GetPlane().Normal().Y();
         out_clipDat[2] = ccp->GetPlane().Normal().Z();
 
-=======
-void moldyn::SphereRenderer::getClipData(float outClipDat[4], float outClipCol[4]) {
-    view::CallClipPlane* ccp = this->getClipPlaneSlot.CallAs<view::CallClipPlane>();
-    if ((ccp != NULL) && (*ccp)()) {
-        outClipDat[0] = ccp->GetPlane().Normal().X();
-        outClipDat[1] = ccp->GetPlane().Normal().Y();
-        outClipDat[2] = ccp->GetPlane().Normal().Z();
->>>>>>> master:core/src/moldyn/SphereRenderer.cpp
         vislib::math::Vector<float, 3> grr(ccp->GetPlane().Point().PeekCoordinates());
         out_clipDat[3] = grr.Dot(ccp->GetPlane().Normal());
 
@@ -1541,11 +1540,27 @@ bool SphereRenderer::renderBufferArray(view::CallRender3D_2* cr3d, MultiParticle
     glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVPinv"), 1, GL_FALSE, glm::value_ptr(this->curMVPinv));
     glUniformMatrix4fv(this->sphereShader.ParameterLocation("MVPtransp"), 1, GL_FALSE, glm::value_ptr(this->curMVPtransp));
 
-    // this->currBuf = 0;
+    //this->currBuf = 0;
     GLuint flagPartsCount = 0;
     for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
         MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
 
+        if (!this->setShaderData(this->sphereShader, parts)) {
+            continue;
+        }
+
+        glUniform1ui(this->sphereShader.ParameterLocation("flagsAvailable"), GLuint(this->flagsEnabled));
+        if (this->flagsEnabled) {
+            glUniform4fv(this->sphereShader.ParameterLocation("flagSelectedCol"), 1, this->selectColorParam.Param<param::ColorParam>()->Value().data());
+            glUniform4fv(this->sphereShader.ParameterLocation("flagSoftSelectedCol"), 1, this->softSelectColorParam.Param<param::ColorParam>()->Value().data());
+        }
+
+        unsigned int colBytes, vertBytes, colStride, vertStride;
+        bool interleaved;
+        this->getBytesAndStride(parts, colBytes, vertBytes, colStride, vertStride, interleaved);
+
+        UINT64 numVerts, vertCounter;
+        // does all data reside interleaved in the same memory?
         if (interleaved) {
 
             numVerts = this->bufSize / vertStride;
@@ -2017,15 +2032,15 @@ bool SphereRenderer::setShaderData(vislib::graphics::gl::GLSLShader& shader, con
 }
 
 
-<<<<<<< HEAD:plugins/mmstd_moldyn/src/rendering/SphereRenderer.cpp
 bool SphereRenderer::unsetShaderData(void) {
 
     return this->unsetTransferFunctionTexture();
 }
-bool moldyn::SphereRenderer::unsetShaderData(void) { return this->unsetTransferFunctionTexture(); }
->>>>>>> master:core/src/moldyn/SphereRenderer.cpp
 
 
+bool SphereRenderer::setTransferFunctionTexture(vislib::graphics::gl::GLSLShader& shader) {
+
+    view::CallGetTransferFunction* cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
     if ((cgtf != nullptr) && (*cgtf)(0)) {
         cgtf->BindConvenience(shader, GL_TEXTURE0, 0);
     } else {
