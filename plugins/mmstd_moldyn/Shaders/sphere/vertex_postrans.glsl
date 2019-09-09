@@ -8,6 +8,6 @@
     camPos = MVinv[3]; // (C) by Christoph 
     camPos.xyz -= objPos.xyz; // cam pos to glyph space 
  
-    // calculate light position in glyph space 
-    outLightPos = MVinv * normalize(lightPos);
-    //outLightPos = MVinv * gl_LightSource[0].position;
+    // calculate light direction in glyph space 
+    outlightDir = MVtransp * lightDir;
+

@@ -72,7 +72,7 @@ void main(void) {
 
     // "calc" normal at intersection point
 #ifdef SMALL_SPRITE_LIGHTING
-    normal = mix(-ray, normal, outLightPos.w);
+    normal = mix(-ray, normal, outlightDir.w);
 #endif // SMALL_SPRITE_LIGHTING
 
 #ifdef AXISHINTS

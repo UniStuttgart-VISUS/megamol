@@ -40,6 +40,7 @@
 #include "rendering/SphereRenderer.h"
 #include "rendering/ArrowRenderer.h"
 #include "rendering/ParticleGridDataCall.h"
+#include "rendering/EllipsoidRenderer.h"
 
 
 /*
@@ -140,6 +141,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::rendering::SphereRenderer>();
 			this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::io::MMPGDDataSource>();
 			this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::io::MMPGDWriter>();
+            this->module_descriptions.RegisterAutoDescription<::megamol::stdplugin::moldyn::rendering::EllipsoidRenderer>();
             // register calls here:
             this->call_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::BrickStatsCall>();
 			this->call_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::rendering::ParticleGridDataCall>();

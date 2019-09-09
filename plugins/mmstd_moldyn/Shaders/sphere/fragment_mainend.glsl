@@ -8,6 +8,7 @@
         outColor.rgb += vec3(0.3, 0.3, 0.5);
     }
 #endif // RETICLE
-//outColor.rgb = normal;
-//outColor = vec4(1.0, 0.0, 0.0, 1.0);
+
+    //outColor.rgb = normal;
+    //outColor = vec4(1.0, 0.0, 0.0, 1.0);
 }

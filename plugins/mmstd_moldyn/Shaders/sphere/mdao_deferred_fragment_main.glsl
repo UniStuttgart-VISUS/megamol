@@ -12,14 +12,14 @@ uniform sampler2D inDepthTex;
 
 uniform bool inUseHighPrecision;
 
-uniform vec3 inObjLightPos;
+uniform vec3 inObjLightDir;
 uniform vec3 inObjCamPos;
 
 out vec4 outColor;
 
 
 // Declaration for local lighting
-vec3 LocalLighting(const in vec3 ray, const in vec3 normal, const in vec3 lightPos, const in vec3 color);
+vec3 LocalLighting(const in vec3 ray, const in vec3 normal, const in vec3 light_dir, const in vec3 color);
 
 
 // Declaration for ambient occlusion
@@ -57,7 +57,7 @@ void main()
 		normal = normal * 2.0 - 1.0;
 
 	vec3 ray = normalize(objPos.xyz - inObjCamPos.xyz);
-	vec3 lightCol = LocalLighting(ray, normal.xyz, inObjLightPos, color);
+	vec3 lightCol = LocalLighting(ray, normal.xyz, inObjLightDir, color);
 
 	if (normal.w < 1.0)
 		lightCol *= evaluateAmbientOcclusion(objPos.xyz, normal.xyz);

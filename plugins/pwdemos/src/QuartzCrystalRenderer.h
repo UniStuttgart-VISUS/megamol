@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "mmcore/view/Renderer3DModule.h"
+#include "mmcore/view/Renderer3DModule_2.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 
@@ -18,7 +18,7 @@ namespace demos {
     /**
      * Module rendering quarts crystals frames
      */
-    class CrystalRenderer : public core::view::Renderer3DModule {
+    class CrystalRenderer : public core::view::Renderer3DModule_2 {
     public:
 
         /**
@@ -63,7 +63,7 @@ namespace demos {
          *
          * @return The return value of the function.
          */
-        virtual bool GetExtents(core::Call& call);
+        virtual bool GetExtents(core::view::CallRender3D_2& call);
 
         /**
          * The render callback.
@@ -72,7 +72,7 @@ namespace demos {
          *
          * @return The return value of the function.
          */
-        virtual bool Render(core::Call& call);
+        virtual bool Render(core::view::CallRender3D_2& call);
 
     protected:
 

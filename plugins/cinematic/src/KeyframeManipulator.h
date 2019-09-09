@@ -72,7 +72,7 @@ namespace cinematic {
         * @return True if data was updated successfully.
         *
         */
-        bool Update(vislib::Array<KeyframeManipulator::manipType> am, std::shared_ptr<vislib::Array<Keyframe>> kfa, Keyframe skf, 
+        bool Update(std::vector<KeyframeManipulator::manipType> am, std::shared_ptr<std::vector<Keyframe>> kfa, Keyframe skf,
                     float vph, float vpw, glm::mat4 mvpm, glm::vec3 wclad, glm::vec3 wcmd, bool mob, glm::vec3 fcp, glm::vec3 lcp);
 
         /** 
@@ -146,10 +146,10 @@ namespace cinematic {
         const unsigned int				 circleSubDiv;		// Amount of subdivisions of an circle primitive
         const float						 lineWidth;
         const float						 sensitivity;		// Relationship between mouse movement and length changes of coordinates
-        vislib::Array<manipPosData>      kfArray;			// Array of keyframe positions
+        std::vector<manipPosData>        kfArray;			// Array of keyframe positions
 
         Keyframe                         selectedKf;		// Copy of currently selected Keyframe
-        vislib::Array<manipPosData>      manipArray;		// Array of manipulators for selected keyframe
+        std::vector<manipPosData>        manipArray;		// Array of manipulators for selected keyframe
         glm::vec2                        sKfSsPos;			// Screen space position of selected keyframe
         glm::vec2                        sKfSsLookAt;		// Screen space lookat of selected keyframe
         int                              sKfInArray;		// Inidcates if selected keyframe exists in keyframe array if >= 0
@@ -157,7 +157,7 @@ namespace cinematic {
         glm::vec2                        lastMousePos;
 
         glm::mat4                        modelViewProjMatrix;
-        vislib::math::Dimension<int, 2>  viewportSize;
+        glm::vec2                        viewportSize;
         glm::vec3						 worldCamLaDir;
         glm::vec3						 worldCamModDir;
         bool                             isDataSet;
@@ -170,7 +170,7 @@ namespace cinematic {
         bool                             selectedIsFirst;
         bool                             selectedIsLast;
 
-        vislib::Array<glm::vec3 >		 circleVertices;
+        std::vector<glm::vec3 >		    circleVertices;
 
         /**********************************************************************
         * functions

@@ -7,8 +7,6 @@
 
 #include "stdafx.h"
 
-#ifndef USE_EGL
-
 #include "gl/glfwInst.h"
 #include "GLFW/glfw3.h"
 #include "vislib/sys/Log.h"
@@ -48,4 +46,3 @@ gl::glfwInst::~glfwInst() {
     }
 }
 
-#endif // USE_EGL

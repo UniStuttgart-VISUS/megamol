@@ -7,6 +7,7 @@
 #include "stdafx.h"
 #include "AbstractTexQuartzRenderer.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
+#include <vector>
 
 namespace megamol {
 namespace demos {
@@ -49,7 +50,8 @@ void AbstractTexQuartzRenderer::assertTypeTexture(CrystalDataCall& types) {
         }
     }
 
-    float *dat = new float[types.GetCount() * mfc * 4];
+    std::vector<float> dat;
+    dat.resize(types.GetCount() * mfc * 4);
 
     for (unsigned int y = 0; y < types.GetCount(); y++) {
         const CrystalDataCall::Crystal& c = types.GetCrystals()[y];
@@ -74,11 +76,16 @@ void AbstractTexQuartzRenderer::assertTypeTexture(CrystalDataCall& types) {
     ::glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     ::glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     ::glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+    GLint initial_pack_alignment = 0;
+    ::glGetIntegerv(GL_PACK_ALIGNMENT, &initial_pack_alignment);
     ::glPixelStorei(GL_PACK_ALIGNMENT, 1);
-    ::glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, mfc, types.GetCount(), 0, GL_RGBA, GL_FLOAT, dat);
+    
+    ::glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, mfc, types.GetCount(), 0, GL_RGBA, GL_FLOAT, dat.data());
     ::glBindTexture(GL_TEXTURE_2D, 0);
 
-    delete[] dat;
+    ::glPixelStorei(GL_PACK_ALIGNMENT, initial_pack_alignment);
+
 }
 
 

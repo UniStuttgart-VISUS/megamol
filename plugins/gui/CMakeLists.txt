@@ -27,6 +27,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
     INCLUDE_DIR "src/ImGui_ext"
     LIBRARY ${IMGUI_LIB})
 
+  # Collect source files
   ExternalProject_Get_property(ImGui_ext SOURCE_DIR)
   set(imgui_files
     "${SOURCE_DIR}/examples/imgui_impl_opengl3.cpp"
@@ -34,7 +35,6 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
     "${SOURCE_DIR}/misc/cpp/imgui_stdlib.cpp"
     "${SOURCE_DIR}/misc/cpp/imgui_stdlib.h")    
   set_source_files_properties(${imgui_files} PROPERTIES GENERATED TRUE)
-
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")

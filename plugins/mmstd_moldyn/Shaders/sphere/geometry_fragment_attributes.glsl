@@ -12,7 +12,7 @@ uniform vec4 clipCol;
 in vec4 vertColor;
 in vec4 objPos;
 in vec4 camPos;
-in vec4 outLightPos;
+in vec4 outlightDir;
 in float rad;
 in float squarRad;
 
