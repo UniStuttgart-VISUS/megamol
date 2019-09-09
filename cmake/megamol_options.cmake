@@ -47,13 +47,16 @@ endif()
 option(USE_GLFW "Use GLFW" ON)
 
 # MPI
-option(MPI_ENABLE "Enable MPI support" OFF)
+option(ENABLE_MPI "Enable MPI support" OFF)
 set(MPI_GUESS_LIBRARY_NAME "undef" CACHE STRING "Override MPI library name, e.g., MSMPI, MPICH2")
-if(MPI_ENABLE)
+if(ENABLE_MPI)
   if(MPI_GUESS_LIBRARY_NAME STREQUAL "undef")
     message(FATAL_ERROR "you must set MPI_GUESS_LIBRARY_NAME to ovveride automatic finding of unwanted MPI libraries (or empty for default)")
   endif()
   find_package(MPI REQUIRED)
+  if(MPI_C_FOUND)
+    target_compile_definitions(MPI::MPI_C INTERFACE "-DWITH_MPI")
+  endif()
 endif()
 
 # Threading (XXX: this is a bit wonky due to Ubuntu/clang)

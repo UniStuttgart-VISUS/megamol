@@ -55,6 +55,7 @@ adiosWriter::~adiosWriter(void) {
  * adiosWriter::create
  */
 bool adiosWriter::create(void) {
+#ifdef WITH_MPI
     MpiInitialized = this->initMPI();
     try {
         vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Initializing");
@@ -63,6 +64,10 @@ bool adiosWriter::create(void) {
         } else {
             adiosInst = adios2::ADIOS(adios2::DebugON);
         }
+#else
+    try {
+        adiosInst = adios2::ADIOS();
+#endif
 
         vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Declaring IO");
         io = std::make_shared<adios2::IO>(adiosInst.DeclareIO("Output"));
@@ -71,16 +76,28 @@ bool adiosWriter::create(void) {
 
         io->SetEngine("BPFile");
 
-    } catch (std::invalid_argument& e) {
+        } catch (std::invalid_argument& e) {
+#ifdef WITH_MPI
         vislib::sys::Log::DefaultLog.WriteError(
             "Invalid argument exception, STOPPING PROGRAM from rank %d", this->mpiRank);
+#else
+        vislib::sys::Log::DefaultLog.WriteError("Invalid argument exception, STOPPING PROGRAM");
+#endif
         vislib::sys::Log::DefaultLog.WriteError(e.what());
     } catch (std::ios_base::failure& e) {
+#ifdef WITH_MPI
         vislib::sys::Log::DefaultLog.WriteError(
             "IO System base failure exception, STOPPING PROGRAM from rank %d", this->mpiRank);
+#else
+        vislib::sys::Log::DefaultLog.WriteError("IO System base failure exception, STOPPING PROGRAM");
+#endif
         vislib::sys::Log::DefaultLog.WriteError(e.what());
     } catch (std::exception& e) {
+#ifdef WITH_MPI
         vislib::sys::Log::DefaultLog.WriteError("Exception, STOPPING PROGRAM from rank %d", this->mpiRank);
+#else
+        vislib::sys::Log::DefaultLog.WriteError("Exception, STOPPING PROGRAM");
+#endif
         vislib::sys::Log::DefaultLog.WriteError(e.what());
     }
 
@@ -303,15 +320,27 @@ bool adiosWriter::run() {
             vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2writer: Time spent for writing frame: %d us", duration);
 
         } catch (std::invalid_argument& e) {
+#ifdef WITH_MPI
             vislib::sys::Log::DefaultLog.WriteError(
                 "Invalid argument exception, STOPPING PROGRAM from rank %d", this->mpiRank);
+#else
+            vislib::sys::Log::DefaultLog.WriteError("Invalid argument exception, STOPPING PROGRAM");
+#endif
             vislib::sys::Log::DefaultLog.WriteError(e.what());
         } catch (std::ios_base::failure& e) {
+#ifdef WITH_MPI
             vislib::sys::Log::DefaultLog.WriteError(
                 "IO System base failure exception, STOPPING PROGRAM from rank %d", this->mpiRank);
+#else
+            vislib::sys::Log::DefaultLog.WriteError("IO System base failure exception, STOPPING PROGRAM");
+#endif
             vislib::sys::Log::DefaultLog.WriteError(e.what());
         } catch (std::exception& e) {
+#ifdef WITH_MPI
             vislib::sys::Log::DefaultLog.WriteError("Exception, STOPPING PROGRAM from rank %d", this->mpiRank);
+#else
+            vislib::sys::Log::DefaultLog.WriteError("Exception, STOPPING PROGRAM");
+#endif
             vislib::sys::Log::DefaultLog.WriteError(e.what());
         }
 
