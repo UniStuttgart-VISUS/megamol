@@ -9,7 +9,7 @@ else()
 endif()
 
 # Build types
-set(CMAKE_CONFIGURATION_TYPES "Debug;Release;RelWithDebInfo")
+set(CMAKE_CONFIGURATION_TYPES "Debug;Release;RelWithDebInfo" CACHE STRING "" FORCE)
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the build type." FORCE)
 endif()
@@ -72,8 +72,8 @@ if(UNIX)
   find_package(OpenMP)
 endif()
 if(OPENMP_FOUND OR WIN32)
-  list(APPEND CMAKE_C_FLAGS ${OpenMP_C_FLAGS})
-  list(APPEND CMAKE_CXX_FLAGS ${OpenMP_CXX_FLAGS})
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 endif()
 
 # OpenGL
