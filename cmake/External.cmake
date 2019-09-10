@@ -109,7 +109,7 @@ function(add_external_project TARGET)
     endforeach()
   else()
     set(SUFFIX)
-    if(args_DEBUG_SUFFIX AND "${BUILD_CONFIG}" STREQUAL "Debug")
+    if(args_DEBUG_SUFFIX AND "${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
       set(SUFFIX ${args_DEBUG_SUFFIX})
     endif()
 
@@ -168,19 +168,19 @@ function(add_external_project TARGET)
     set(BYPRODUCTS)
     if(args_BUILD_BYPRODUCTS)
       set(SUFFIX)
-      if(args_DEBUG_SUFFIX AND "${BUILD_CONFIG}" STREQUAL "Debug")
+      if(args_DEBUG_SUFFIX AND "${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
         set(SUFFIX ${args_DEBUG_SUFFIX})
       endif()
 
       string(REPLACE "<SUFFIX>" "${SUFFIX}" BYPRODUCT ${args_BUILD_BYPRODUCTS})
-      string(REPLACE "<INSTALL_DIR>" "${${lcName}_INSTALL_DIR}/${BUILD_CONFIG}" BYPRODUCT ${BYPRODUCT})
+      string(REPLACE "<INSTALL_DIR>" "${${lcName}_INSTALL_DIR}" BYPRODUCT ${BYPRODUCT})
 
       set(BYPRODUCTS BYPRODUCTS ${BYPRODUCT})
     endif()
 
     add_custom_command(OUTPUT "${${lcName}_BINARY_DIR}/EXTERNAL_BUILT"
-      COMMAND ${CMAKE_COMMAND} --build . --parallel
-      COMMAND ${CMAKE_COMMAND} --build . --target install
+      COMMAND ${CMAKE_COMMAND} --build . --parallel --config ${CMAKE_BUILD_TYPE}
+      COMMAND ${CMAKE_COMMAND} --build . --target install --config ${CMAKE_BUILD_TYPE}
       COMMAND ${CMAKE_COMMAND} -E touch \"${${lcName}_BINARY_DIR}/EXTERNAL_BUILT\"
       WORKING_DIRECTORY "${${lcName}_BINARY_DIR}"
       ${BYPRODUCTS})
