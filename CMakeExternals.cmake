@@ -476,7 +476,7 @@ function(require_external NAME)
     add_external_project(tracking
       GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/mm-tracking
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${TRACKING_IMPORT_LIB}" "<INSTALL_DIR>/${TRACKING_NATNET_IMPORT_LIB}"
-      CMAKE_ARGS 
+      CMAKE_ARGS
         -DCREATE_TRACKING_TEST_PROGRAM=OFF)
 
     add_external_library(tracking SHARED 
@@ -489,7 +489,7 @@ function(require_external NAME)
       PROJECT tracking
       IMPORT_LIBRARY_DEBUG ${TRACKING_NATNET_IMPORT_LIB}
       IMPORT_LIBRARY_RELEASE ${TRACKING_NATNET_IMPORT_LIB}
-      LIBRARY_DEBUG ${TRACKING_NATNET_LIB}     
+      LIBRARY_DEBUG ${TRACKING_NATNET_LIB}
       LIBRARY_RELEASE ${TRACKING_NATNET_LIB})
 
     add_external_library(tracking_int INTERFACE
