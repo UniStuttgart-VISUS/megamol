@@ -112,12 +112,17 @@ void megamol::remote::FBOTransmitter2::release() { shutdownThreads(); }
 
 
 void megamol::remote::FBOTransmitter2::AfterRender(megamol::core::view::AbstractView* view) {
+
+#ifdef WITH_MPI
     if (!this->render_comp_img_slot_.Param<core::param::BoolParam>()->Value()) {
         initThreads();
-#if _DEBUG
+#    if _DEBUG
         vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: initThreads ... Done");
-#endif
+#    endif
     }
+#else
+    initThreads();
+#endif
 
     if (!this->validViewport) {
         if (!this->tiled_slot_.Param<core::param::BoolParam>()->Value() || !this->extractViewport(this->viewport)) {
@@ -399,7 +404,9 @@ bool megamol::remote::FBOTransmitter2::triggerButtonClicked(megamol::core::param
     // happy trigger finger hit button action happened
     using vislib::sys::Log;
 
+#ifdef WITH_MPI
     initIceT();
+#endif
 
     bool success = true;
     std::string mvn(view_name_slot_.Param<megamol::core::param::StringParam>()->Value());
@@ -743,11 +750,12 @@ bool megamol::remote::FBOTransmitter2::renderCompChanged(core::param::ParamSlot&
         success = false;
     }
 
-
     return true;
 }
 
 void megamol::remote::FBOTransmitter2::initIceT() {
+#ifdef WITH_MPI
+
     useMpi = initMPI();
     aggregate_ = this->toggle_aggregate_slot_.Param<megamol::core::param::BoolParam>()->Value();
     if (aggregate_ && !useMpi) {
@@ -755,7 +763,6 @@ void megamol::remote::FBOTransmitter2::initIceT() {
         this->toggle_aggregate_slot_.Param<megamol::core::param::BoolParam>()->SetValue(false);
     }
 
-#ifdef WITH_MPI
     if (aggregate_) {
 #    if _DEBUG
         vislib::sys::Log::DefaultLog.WriteInfo("FBOTransmitter2: Initializing IceT at rank %d\n", mpiRank);
