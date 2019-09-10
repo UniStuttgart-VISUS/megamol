@@ -58,7 +58,7 @@ matrix:
           update: true
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-9
+            - llvm-toolchain-xenial-9
           packages:
             - clang-9
             - libgl1-mesa-dev
