@@ -7,7 +7,8 @@ dist: xenial
 
 matrix:
   include:
-    - os: linux
+    - name: "gcc 7"
+      os: linux
       dist: xenial
       addons:
         apt:
@@ -30,8 +31,9 @@ matrix:
         - CC=gcc-7
         - CXX=g++-7
         - BUILD_TYPE=Release
-        - GENERATOR=Unix Makefiles
-    - os: linux
+        - GENERATOR="Unix Makefiles"
+    - name: "gcc 9 (Release)"
+      os: linux
       dist: xenial
       addons:
         apt:
@@ -54,8 +56,9 @@ matrix:
         - CC=gcc-9
         - CXX=g++-9
         - BUILD_TYPE=Release
-        - GENERATOR=Unix Makefiles
-    - os: linux
+        - GENERATOR="Unix Makefiles"
+    - name: "gcc 9 (Debug)"
+      os: linux
       dist: xenial
       addons:
         apt:
@@ -78,8 +81,9 @@ matrix:
         - CC=gcc-9
         - CXX=g++-9
         - BUILD_TYPE=Debug
-        - GENERATOR=Unix Makefiles
-    - os: linux
+        - GENERATOR="Unix Makefiles"
+    - name: "gcc 9 (RelWithDebInfo)"
+      os: linux
       dist: xenial
       addons:
         apt:
@@ -102,8 +106,9 @@ matrix:
         - CC=gcc-9
         - CXX=g++-9
         - BUILD_TYPE=RelWithDebInfo
-        - GENERATOR=Unix Makefiles
-    - os: linux
+        - GENERATOR="Unix Makefiles"
+    - name: "gcc 9 (Ninja)"
+      os: linux
       dist: xenial
       addons:
         apt:
@@ -127,7 +132,8 @@ matrix:
         - CXX=g++-9
         - BUILD_TYPE=Release
         - GENERATOR=Ninja
-    - os: linux
+    - name: "clang 8"
+      os: linux
       dist: xenial
       addons:
         apt:
@@ -153,12 +159,12 @@ matrix:
         - CC=clang-8
         - CXX=clang++-8
         - BUILD_TYPE=Release
-        - GENERATOR=Unix Makefiles
+        - GENERATOR="Unix Makefiles"
 
 install:
   - . travis/install-cuda-xenial.sh
 
 script:
   - mkdir build && cd build
-  - cmake .. --config $BUILD_TYPE -G"$GENERATOR" -DCMAKE_CXX_FLAGS=-w -DENABLE_CUDA=ON -DSUPPRESS_CUDA_WARNINGS=TRUE -DBUILD_PROTEIN_CUDA_PLUGIN=ON
-  - cmake .. --build --target install --config $BUILD_TYPE
+  - cmake .. -G"$GENERATOR" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_CXX_FLAGS=-w -DENABLE_CUDA=ON -DSUPPRESS_CUDA_WARNINGS=TRUE -DBUILD_ADIOS_PLUGIN_PLUGIN=ON -DBUILD_PROTEIN_CUDA_PLUGIN=ON -DBUILD_IMAGEVIEWER2_PLUGIN=ON -DBUILD_MEGAMOL101_PLUGIN=ON -DBUILD_MOLECULARMAPS_PLUGIN=ON -DBUILD_REMOTE_PLUGIN=ON
+  - cmake --build .. --target install --config $BUILD_TYPE
