@@ -273,8 +273,8 @@ function(require_external NAME)
       set(LIBPNG_RELEASE "lib/libpng16_static${CMAKE_STATIC_LIBRARY_SUFFIX}")
     else()
       include(GNUInstallDirs)
-      set(LIBPNG_PRODUCT "${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}png16${CMAKE_STATIC_LIBRARY_SUFFIX}")
-      set(LIBPNG_DEBUG "${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}png16${CMAKE_STATIC_LIBRARY_SUFFIX}")
+      set(LIBPNG_PRODUCT "${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}png16<SUFFIX>${CMAKE_STATIC_LIBRARY_SUFFIX}")
+      set(LIBPNG_DEBUG "${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}png16d${CMAKE_STATIC_LIBRARY_SUFFIX}")
       set(LIBPNG_RELEASE "${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}png16${CMAKE_STATIC_LIBRARY_SUFFIX}")
     endif()
 
@@ -330,12 +330,14 @@ function(require_external NAME)
     endif()
 
     if(WIN32)
+      set(ZMQ_PRODUCT "lib/libzmq${MSVC_TOOLSET}-mt<SUFFIX>-${ZMQ_VER}.lib")
       set(ZMQ_IMPORT_DEBUG "lib/libzmq${MSVC_TOOLSET}-mt-gd-${ZMQ_VER}.lib")
       set(ZMQ_IMPORT_RELEASE "lib/libzmq${MSVC_TOOLSET}-mt-${ZMQ_VER}.lib")
       set(ZMQ_DEBUG "bin/libzmq${MSVC_TOOLSET}-mt-gd-${ZMQ_VER}.dll")
       set(ZMQ_RELEASE "bin/libzmq${MSVC_TOOLSET}-mt-${ZMQ_VER}.dll")
     else()
       include(GNUInstallDirs)
+      set(ZMQ_PRODUCT "${CMAKE_INSTALL_LIBDIR}/libzmq.so")
       set(ZMQ_IMPORT_DEBUG "")
       set(ZMQ_IMPORT_RELEASE "")
       set(ZMQ_DEBUG "${CMAKE_INSTALL_LIBDIR}/libzmq.so")
@@ -345,7 +347,7 @@ function(require_external NAME)
     add_external_project(libzmq
       GIT_REPOSITORY https://github.com/zeromq/libzmq.git
       GIT_TAG 56ace6d03f521b9abb5a50176ec7763c1b77afa9
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/lib/libzmq${MSVC_TOOLSET}-mt<SUFFIX>-${ZMQ_VER}.lib"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${ZMQ_PRODUCT}"
       DEBUG_SUFFIX -gd
       CMAKE_ARGS
         -DZMQ_BUILD_TESTS=OFF
