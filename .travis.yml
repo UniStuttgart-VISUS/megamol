@@ -117,6 +117,7 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - g++-9
+            - ninja-build
             - libgl1-mesa-dev
             - libglu1-mesa-dev
             - uuid-dev
