@@ -33,6 +33,7 @@ if(NOT ALREADY_CONFIGURED)
 
   set(ALREADY_CONFIGURED TRUE CACHE BOOL "" FORCE)
   mark_as_advanced(ALREADY_CONFIGURED)
+  mark_as_advanced(IS_MULTICONFIG)
 endif()
 
 # Compiler flags (inspired by OSPRay build)

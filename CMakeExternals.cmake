@@ -189,22 +189,28 @@ function(require_external NAME)
     endif()
 
     if(WIN32)
+      set(ICET_CORE_PRODUCT "lib/IceTCore.lib")
       set(ICET_CORE_IMPORT_LIB "lib/IceTCore.lib")
       set(ICET_CORE_LIB "bin/IceTCore.dll")
+      set(ICET_GL_PRODUCT "lib/IceTGL.lib")
       set(ICET_GL_IMPORT_LIB "lib/IceTGL.lib")
       set(ICET_GL_LIB "bin/IceTGL.dll")
+      set(ICET_MPI_PRODUCT "lib/IceTMPI.lib")
       set(ICET_MPI_IMPORT_LIB "lib/IceTMPI.lib")
       set(ICET_MPI_LIB "bin/IceTMPI.dll")
     else()
       include(GNUInstallDirs)
+      set(ICET_CORE_PRODUCT "lib/libIceTCore.so")
       set(ICET_CORE_LIB "lib/libIceTCore.so")
+      set(ICET_GL_PRODUCT "lib/libIceTGL.so")
       set(ICET_GL_LIB "lib/libIceTGL.so")
+      set(ICET_MPI_PRODUCT "lib/libIceTMPI.so")
       set(ICET_MPI_LIB "lib/libIceTMPI.so")
     endif()
     
     add_external_project(IceT
       GIT_REPOSITORY https://gitlab.kitware.com/icet/icet.git
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${ICET_CORE_IMPORT_LIB}" "<INSTALL_DIR>/${ICET_GL_IMPORT_LIB}" "<INSTALL_DIR>/${ICET_MPI_IMPORT_LIB}"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${ICET_CORE_PRODUCT}" "<INSTALL_DIR>/${ICET_GL_PRODUCT}" "<INSTALL_DIR>/${ICET_MPI_PRODUCT}"
       CMAKE_ARGS
         -DBUILD_SHARED_LIBS=ON
         -DICET_BUILD_TESTING=OFF
@@ -402,17 +408,19 @@ function(require_external NAME)
     endif()
 
     if(WIN32)
+      set(SNAPPY_PRODUCT "lib/snappy.lib")
       set(SNAPPY_IMPORT_LIB "lib/snappy.lib")
       set(SNAPPY_LIB "bin/snappy.dll")
     else()
       include(GNUInstallDirs)
+      set(SNAPPY_PRODUCT "lib/libsnappy.so")
       set(SNAPPY_LIB "${CMAKE_INSTALL_LIBDIR}/libsnappy.so")
     endif()
 
     add_external_project(snappy
       GIT_REPOSITORY https://github.com/google/snappy.git
       GIT_TAG "1.1.7"
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${SNAPPY_IMPORT_LIB}"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${SNAPPY_PRODUCT}"
       CMAKE_ARGS
         -DBUILD_SHARED_LIBS=ON
         -DSNAPPY_BUILD_TESTS=OFF
