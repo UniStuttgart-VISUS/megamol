@@ -82,31 +82,6 @@ matrix:
         - CXX=g++-9
         - BUILD_TYPE=Debug
         - GENERATOR="Unix Makefiles"
-    - name: "gcc 9 (RelWithDebInfo)"
-      os: linux
-      dist: xenial
-      addons:
-        apt:
-          update: true
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - g++-9
-            - libgl1-mesa-dev
-            - libglu1-mesa-dev
-            - uuid-dev
-            - libunwind8-dev
-            - libxrandr-dev
-            - libxinerama-dev
-            - libxcursor-dev
-            - libxi-dev
-            - libcgal-qt5-dev
-            - libcgal-dev
-      env:
-        - CC=gcc-9
-        - CXX=g++-9
-        - BUILD_TYPE=RelWithDebInfo
-        - GENERATOR="Unix Makefiles"
     - name: "gcc 9 (Ninja)"
       os: linux
       dist: xenial
@@ -167,5 +142,5 @@ install:
 
 script:
   - mkdir build && cd build
-  - cmake .. -G"$GENERATOR" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_CXX_FLAGS=-w -DENABLE_CUDA=ON -DSUPPRESS_CUDA_WARNINGS=TRUE -DBUILD_PROTEIN_CUDA_PLUGIN=ON -DBUILD_MEGAMOL101_PLUGIN=ON -DBUILD_REMOTE_PLUGIN=ON
+  - cmake .. -G"$GENERATOR" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_CXX_FLAGS=-w -DENABLE_CUDA=ON -DSUPPRESS_CUDA_WARNINGS=TRUE -DBUILD_ADIOS_PLUGIN_PLUGIN -DBUILD_PROTEIN_CUDA_PLUGIN=ON -DBUILD_MEGAMOL101_PLUGIN=ON -DBUILD_REMOTE_PLUGIN=ON
   - cmake --build . --target install

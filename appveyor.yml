@@ -43,7 +43,7 @@ before_build:
   - mkdir build
   - mkdir stage
   - cd build
-  - cmake .. -G"%CMAKE_GENERATOR%" -A"x64" -DCMAKE_BUILD_TYPE=%CMAKE_CONFIG% -DCMAKE_INSTALL_PREFIX=c:\projects\megamol\stage\ -DCMAKE_CXX_FLAGS=/w -DBUILD_ADIOS_PLUGIN_PLUGIN=ON -DBUILD_IMAGEVIEWER2_PLUGIN=ON -DBUILD_MEGAMOL101_PLUGIN=ON -DBUILD_REMOTE_PLUGIN=ON
+  - cmake .. -G"%CMAKE_GENERATOR%" -A"x64" -DCMAKE_BUILD_TYPE=%CMAKE_CONFIG% -DCMAKE_INSTALL_PREFIX=c:\projects\megamol\stage\ -DCMAKE_CXX_FLAGS=/w
 
 build:
   parallel: true
