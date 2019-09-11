@@ -158,17 +158,19 @@ function(require_external NAME)
     endif()
 
     if (MSVC)
-        set(GLFW_IMPORT_LIBRARY "lib/glfw3dll.lib")
-        set(GLFW_LIBRARY "lib/glfw3.dll")
+      set(GLFW_PRODUCT "lib/glfw3dll.lib")
+      set(GLFW_IMPORT_LIBRARY "lib/glfw3dll.lib")
+      set(GLFW_LIBRARY "lib/glfw3.dll")
     else()
-        set(GLFW_IMPORT_LIBRARY "")
-        set(GLFW_LIBRARY "lib/libglfw.so")
+      set(GLFW_PRODUCT "lib/libglfw.so")
+      set(GLFW_IMPORT_LIBRARY "")
+      set(GLFW_LIBRARY "lib/libglfw.so")
     endif()
 
     add_external_project(glfw
       GIT_REPOSITORY https://github.com/glfw/glfw.git
       GIT_TAG "3.2.1"
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${GLFW_IMPORT_LIBRARY}"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${GLFW_PRODUCT}"
       CMAKE_ARGS
         -DBUILD_SHARED_LIBS=ON
         -DGLFW_BUILD_EXAMPLES=OFF
@@ -436,10 +438,10 @@ function(require_external NAME)
       set(TNY_LIB_DEBUG "bin/tinyplyd.dll")
     else()
       include(GNUInstallDirs)
-      set(TNY_PRODUCT "lib/libtinyply.so")
-      set(TNY_IMPORT_LIB_DEBUG "lib/libtinyply.so")
+      set(TNY_PRODUCT "lib/libtinyply<SUFFIX>.so")
+      set(TNY_IMPORT_LIB_DEBUG "lib/libtinyplyd.so")
       set(TNY_IMPORT_LIB "lib/libtinyply.so")
-      set(TNY_LIB_DEBUG "lib/libtinyply.so")
+      set(TNY_LIB_DEBUG "lib/libtinyplyd.so")
       set(TNY_LIB "lib/libtinyply.so")
     endif()
 
