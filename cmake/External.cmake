@@ -83,9 +83,7 @@ function(add_external_project TARGET)
   # Configure package
   string(REPLACE "-src" "-install" ${lcName}_INSTALL_DIR "${${lcName}_SOURCE_DIR}")
 
-  get_property(MULTICONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
-
-  if(MULTICONFIG AND NOT CMAKE_BUILD_TYPE)
+  if(IS_MULTICONFIG)
     foreach(BUILD_CONFIG Release;Debug;RelWithDebInfo)
       file(MAKE_DIRECTORY "${${lcName}_BINARY_DIR}/${BUILD_CONFIG}")
 
@@ -136,7 +134,7 @@ function(add_external_project TARGET)
     file(REMOVE "${${lcName}_BINARY_DIR}/EXTERNAL_BUILT")
   endif()
 
-  if(MULTICONFIG AND NOT CMAKE_BUILD_TYPE)
+  if(IS_MULTICONFIG)
     set(BUILD_AND_INSTALL)
     set(BYPRODUCTS)
     if(args_BUILD_BYPRODUCTS)
@@ -192,7 +190,7 @@ function(add_external_project TARGET)
 
   external_set_property(${TARGET} SOURCE_DIR "${${lcName}_SOURCE_DIR}")
   external_set_property(${TARGET} INSTALL_MAIN_DIR "${${lcName}_INSTALL_DIR}")
-  if(MULTICONFIG AND NOT CMAKE_BUILD_TYPE)
+  if(IS_MULTICONFIG)
     external_set_property(${TARGET} INSTALL_DIR "${${lcName}_INSTALL_DIR}/Release")
   else()
     external_set_property(${TARGET} INSTALL_DIR "${${lcName}_INSTALL_DIR}")
@@ -315,9 +313,7 @@ function(add_external_library TARGET LINKAGE)
   _argument_default(IMPORT_LIBRARY_RELEASE "${IMPORT_LIBRARY}")
   _argument_default(IMPORT_LIBRARY_RELWITHDEBINFO "${IMPORT_LIBRARY_RELEASE}")
 
-  get_property(MULTICONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
-
-  if(MULTICONFIG AND NOT CMAKE_BUILD_TYPE)
+  if(IS_MULTICONFIG)
     set(INSTALL_DIR_DEBUG ${INSTALL_MAIN_DIR}/Debug)
     set(INSTALL_DIR_RELEASE ${INSTALL_MAIN_DIR}/Release)
     set(INSTALL_DIR_RELWITHDEBINFO ${INSTALL_MAIN_DIR}/RelWithDebInfo)
