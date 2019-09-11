@@ -17,13 +17,11 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   require_external(libzmq)
   require_external(libcppzmq)
   require_external(snappy)
+  require_external(glm)
 
   if(MPI_C_FOUND)
     require_external(IceT)
   endif()
-  
-  # Add externals.
-  require_external(glm)
 
   # Collect source files
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")

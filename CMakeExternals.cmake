@@ -148,7 +148,6 @@ function(require_external NAME)
         "<SOURCE_DIR>/CMakeLists.txt")
 
     add_external_library(bhtsne STATIC
-      INCLUDE_DIR "include"
       LIBRARY_DEBUG ${BHTSNE_LIB_DEBUG}
       LIBRARY_RELEASE ${BHTSNE_LIB_RELEASE})
 
@@ -178,7 +177,6 @@ function(require_external NAME)
 
     add_external_library(glfw3 SHARED
       PROJECT glfw
-      INCLUDE_DIR "include"
       IMPORT_LIBRARY ${GLFW_IMPORT_LIBRARY}
       LIBRARY ${GLFW_LIBRARY})
 
@@ -250,7 +248,6 @@ function(require_external NAME)
     external_get_property(imgui SOURCE_DIR)
 
     add_external_library(imgui STATIC
-      INCLUDE_DIR "include"
       LIBRARY ${IMGUI_LIB})
 
     target_include_directories(imgui INTERFACE "${SOURCE_DIR}/examples" "${SOURCE_DIR}/misc/cpp")
@@ -313,7 +310,6 @@ function(require_external NAME)
         -DZLIB_PATCH_VERSION:STRING=${ZLIB_VERSION_PATCH})
 
     add_external_library(libpng STATIC
-      INCLUDE_DIR "include"
       LIBRARY_DEBUG ${LIBPNG_DEBUG}
       LIBRARY_RELEASE ${LIBPNG_RELEASE}
       INTERFACE_LIBRARIES zlib)
@@ -356,7 +352,6 @@ function(require_external NAME)
         -DENABLE_PRECOMPILED=OFF)
 
     add_external_library(libzmq SHARED
-      INCLUDE_DIR "include"
       IMPORT_LIBRARY_DEBUG ${ZMQ_IMPORT_DEBUG}
       IMPORT_LIBRARY_RELEASE ${ZMQ_IMPORT_RELEASE}
       LIBRARY_DEBUG ${ZMQ_DEBUG}
@@ -393,7 +388,6 @@ function(require_external NAME)
         ${QUICKHULL_CMAKE_ARGS})
 
     add_external_library(quickhull SHARED
-      INCLUDE_DIR "include"
       IMPORT_LIBRARY ${QUICKHULL_IMPORT_LIB}
       LIBRARY ${QUICKHULL_LIB})
 
@@ -456,7 +450,6 @@ function(require_external NAME)
         -DSHARED_LIB=true)
 
     add_external_library(tinyply SHARED
-      INCLUDE_DIR "include"
       IMPORT_LIBRARY_DEBUG ${TNY_IMPORT_LIB_DEBUG}
       IMPORT_LIBRARY_RELEASE ${TNY_IMPORT_LIB}
       LIBRARY_DEBUG ${TNY_LIB_DEBUG}
@@ -522,7 +515,6 @@ function(require_external NAME)
         -DCMAKE_BUILD_TYPE=Release)
 
     add_external_library(zfp STATIC
-      INCLUDE_DIR "include"
       LIBRARY ${ZFP_LIB})
 
   # zlib
@@ -551,7 +543,6 @@ function(require_external NAME)
         -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON)
 
     add_external_library(zlib STATIC
-      INCLUDE_DIR "include"
       LIBRARY_DEBUG ${ZLIB_DEBUG}
       LIBRARY_RELEASE ${ZLIB_RELEASE})
 
