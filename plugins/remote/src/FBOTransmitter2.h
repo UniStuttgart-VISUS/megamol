@@ -126,9 +126,7 @@ private:
 
     megamol::core::param::ParamSlot render_comp_img_slot_;
 
-    bool renderCompChanged(core::param::ParamSlot& slot);
 
-    void initIceT();
 
     bool useMpi = false;
     int mpiRank = -1, mpiSize = -1;
@@ -139,6 +137,10 @@ private:
 
     MPI_Comm mpi_comm_ = MPI_COMM_NULL;
 #endif // WITH_MPI
+    
+    bool renderCompChanged(core::param::ParamSlot& slot);
+
+    void initIceT();
 
     std::mutex buffer_read_guard_;
 

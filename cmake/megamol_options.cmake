@@ -9,7 +9,7 @@ else()
 endif()
 
 # Build types
-set(CMAKE_CONFIGURATION_TYPES "Debug;Release;RelWithDebInfo")
+set(CMAKE_CONFIGURATION_TYPES "Debug;Release;RelWithDebInfo" CACHE STRING "" FORCE)
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the build type." FORCE)
 endif()
@@ -47,13 +47,16 @@ endif()
 option(USE_GLFW "Use GLFW" ON)
 
 # MPI
-option(MPI_ENABLE "Enable MPI support" OFF)
+option(ENABLE_MPI "Enable MPI support" OFF)
 set(MPI_GUESS_LIBRARY_NAME "undef" CACHE STRING "Override MPI library name, e.g., MSMPI, MPICH2")
-if(MPI_ENABLE)
+if(ENABLE_MPI)
   if(MPI_GUESS_LIBRARY_NAME STREQUAL "undef")
     message(FATAL_ERROR "you must set MPI_GUESS_LIBRARY_NAME to ovveride automatic finding of unwanted MPI libraries (or empty for default)")
   endif()
   find_package(MPI REQUIRED)
+  if(MPI_C_FOUND)
+    target_compile_definitions(MPI::MPI_C INTERFACE "-DWITH_MPI")
+  endif()
 endif()
 
 # Threading (XXX: this is a bit wonky due to Ubuntu/clang)
@@ -69,8 +72,8 @@ if(UNIX)
   find_package(OpenMP)
 endif()
 if(OPENMP_FOUND OR WIN32)
-  list(APPEND CMAKE_C_FLAGS ${OpenMP_C_FLAGS})
-  list(APPEND CMAKE_CXX_FLAGS ${OpenMP_CXX_FLAGS})
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 endif()
 
 # OpenGL
