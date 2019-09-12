@@ -84,6 +84,15 @@ public:
     void on_drag(const screen_type x, const screen_type y);
 
     /**
+     * Report that the mouse pointer has been dragged (moved while the
+     * designated button was down) to the specified screen coordinates.
+     *
+     * @param x
+     * @param y
+     */
+    void on_drag_change_radius(const screen_type x, const screen_type y);
+
+    /**
      * Report that dragging begun (mouse for dragging button is down)
      * at the specified screen coordinates.
      *

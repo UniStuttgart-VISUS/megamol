@@ -13,19 +13,24 @@
 #include "mmcore/CoreInstance.h"
 #include "vislib/graphics/gl/ShaderSource.h"
 
-#include "mesh/CallGPUMeshData.h"
-#include "mesh/CallGPUMaterialData.h"
-#include "mesh/CallGPURenderTaskData.h"
+#include "mesh/MeshCalls.h"
 
 using namespace megamol;
 using namespace megamol::mesh;
 
 RenderMDIMesh::RenderMDIMesh()
-	: Renderer3DModule_2(),
-	m_render_task_callerSlot("getRenderTaskData", "Connects the renderer with a render task data source")
+	: Renderer3DModule_2()
+    , m_render_task_callerSlot("getRenderTaskData", "Connects the renderer with a render task data source")
+    , m_framebuffer_slot("Framebuffer", "Connects the renderer to an (optional) framebuffer render target from the calling module") 
 {
 	this->m_render_task_callerSlot.SetCompatibleCall<GPURenderTasksDataCallDescription>();
 	this->MakeSlotAvailable(&this->m_render_task_callerSlot);
+
+    this->m_framebuffer_slot.SetCallback(
+        compositing::CallFramebufferGL::ClassName(), "GetData", &RenderMDIMesh::setFramebufferDataCallback);
+    this->m_framebuffer_slot.SetCallback(
+        compositing::CallFramebufferGL::ClassName(), "GetMetaData", &RenderMDIMesh::setFramebufferMetaDataCallback);
+    this->MakeSlotAvailable(&this->m_framebuffer_slot);
 }
 
 RenderMDIMesh::~RenderMDIMesh()
@@ -141,8 +146,10 @@ bool RenderMDIMesh::GetExtents(core::view::CallRender3D_2& call) {
 	if (!(*rtc)(1))
 		return false;
 
-	cr->SetTimeFramesCount(rtc->FrameCount());
-	cr->AccessBoundingBoxes() = rtc->GetBoundingBoxes();
+    auto meta_data = rtc->getMetaData();
+
+	cr->SetTimeFramesCount(meta_data.m_frame_cnt);
+    cr->AccessBoundingBoxes() = meta_data.m_bboxs;
 
 	return true;
 }
@@ -177,7 +184,9 @@ bool RenderMDIMesh::Render(core::view::CallRender3D_2& call) {
     glDisable(GL_CULL_FACE);
 	//glCullFace(GL_BACK);
 
-	auto gpu_render_tasks = task_call->getRenderTaskData();
+	auto gpu_render_tasks = task_call->getData();
+
+    // TODO yet another nullptr check for gpu render tasks
 
 	auto const& per_frame_buffers = gpu_render_tasks->getPerFrameBuffers();
 
@@ -238,3 +247,15 @@ bool RenderMDIMesh::Render(core::view::CallRender3D_2& call) {
 	
 	return true;
 }
+
+bool megamol::mesh::RenderMDIMesh::setFramebufferDataCallback(core::Call& caller) { 
+
+    auto fc = dynamic_cast<compositing::CallFramebufferGL*>(&caller);
+    if (fc == NULL) return false;
+
+    m_render_target = fc->getData();
+
+    return true; 
+}
+
+bool megamol::mesh::RenderMDIMesh::setFramebufferMetaDataCallback(core::Call& caller) { return true; }

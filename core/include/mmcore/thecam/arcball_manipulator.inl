@@ -1,3 +1,4 @@
+#include "arcball_manipulator.h"
 /*
  * thecam/arcball_manipulator.h
  *
@@ -52,22 +53,86 @@ void megamol::core::thecam::arcball_manipulator<T>::on_drag(const screen_type x,
         THE_ASSERT(cam != nullptr);
 
         if (this->lastSx != x || this->lastSy != y) {
-            this->currentVector = this->mapToSphere(x, y);
+            //  this->currentVector = this->mapToSphere(x, y);
+            //  
+            //  // Compute angle and rotation quaternion.
+            //  quaternion_type quat;
+            //  thecam::math::set_from_vectors(quat, startVector, currentVector);
+            //  
+            //  auto const qstar = this->startRot * quat;
+            //  auto pos =
+            //      thecam::math::rotate(this->startPos - this->rotCentre, qstar * this->invStartRot) + this->rotCentre;
+            //  cam->position(pos);
+            //  cam->orientation(qstar);
 
-            // Compute angle and rotation quaternion.
-            quaternion_type quat;
-            thecam::math::set_from_vectors(quat, startVector, currentVector);
+            screen_type dx = x - lastSx;
+            screen_type dy = y - lastSy;
 
-            auto const qstar = this->startRot * quat;
-            auto pos =
-                thecam::math::rotate(this->startPos - this->rotCentre, qstar * this->invStartRot) + this->rotCentre;
-            cam->position(pos);
-            cam->orientation(qstar);
-
+            // split movement into horizontal and vertical (in camera space)
+            quaternion_type rot_pitch;
+            quaternion_type rot_yaw;
+            
+            // rotate horizontally
+            thecam::math::set_from_angle_axis(rot_pitch, dx * (3.14159265f / 180.0f), cam->up_vector());
+            cam->orientation(rot_pitch * this->startRot);
+            auto updated_orientation = cam->orientation();
+            
+            // get cam right vector after horizontal rotation to rotate vertically
+            auto cam_right = cam->right_vector();
+            thecam::math::set_from_angle_axis(rot_yaw, dy * (3.14159265f / 180.0f), -cam_right);
+            cam->orientation(rot_yaw * updated_orientation);
+            
+            // transform s.t. rotation center is origin
+            auto shifted_pos = this->startPos - this->rotCentre;
+            quaternion_type pos_quat(shifted_pos.x(), shifted_pos.y(), shifted_pos.z(), 0.0f);
+            // move camera based on applied rotation
+            auto rot_pitch_conj = thecam::math::conjugate(rot_pitch);
+            auto rot_yaw_conj = thecam::math::conjugate(rot_yaw);
+            pos_quat = rot_pitch * pos_quat * rot_pitch_conj;
+            pos_quat = rot_yaw * pos_quat * rot_yaw_conj;
+            
+            // transform back 
+            cam->position(point_type(
+                pos_quat.x() +  this->rotCentre.x(),
+                pos_quat.y() +  this->rotCentre.y(),
+                pos_quat.z() +  this->rotCentre.z(),
+                1.0f)
+            );
+            
+            // update reference values for next call to on_drag (that happens without drag start event)
+            this->startPos = this->camera()->eye_position();
+            this->startRot = this->camera()->orientation();
             this->lastSx = x;
             this->lastSy = y;
         }
     }
+}
+
+template <class T>
+inline void megamol::core::thecam::arcball_manipulator<T>::on_drag_change_radius(
+    const screen_type x, const screen_type y) {
+
+     if (this->manipulating() && this->enabled()) {
+        auto cam = this->camera();
+        THE_ASSERT(cam != nullptr);
+
+        if (this->lastSy != y) {
+
+            screen_type dy = y - lastSy;
+
+            auto cam_pos = cam->eye_position();
+
+            auto v = thecam::math::normalise(this->rotCentre - cam_pos);
+
+            cam->position(cam_pos - (v * dy * (this->ballRadius / 500.0f)));
+
+            this->ballRadius = std::abs(thecam::math::length(this->rotCentre - cam->eye_position()));
+        }
+
+        this->lastSx = x;
+        this->lastSy = y;
+    }
+
 }
 
 

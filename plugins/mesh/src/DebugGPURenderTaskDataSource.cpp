@@ -13,9 +13,7 @@
 
 #include "DebugGPURenderTaskDataSource.h"
 
-#include "mesh/CallGPURenderTaskData.h"
-#include "mesh/CallGPUMaterialData.h"
-#include "mesh/CallGPUMeshData.h"
+#include "mesh/MeshCalls.h"
 
 megamol::mesh::DebugGPURenderTaskDataSource::DebugGPURenderTaskDataSource()
 {
@@ -45,8 +43,8 @@ bool megamol::mesh::DebugGPURenderTaskDataSource::getDataCallback(core::Call & c
 	if (!(*mc)(0))
 		return false;
 
-	auto gpu_mtl_storage = mtlc->getMaterialStorage();
-	auto gpu_mesh_storage = mc->getGPUMeshes();
+	auto gpu_mtl_storage = mtlc->getData();
+	auto gpu_mesh_storage = mc->getData();
 
 	//TODO nullptr check
 
@@ -89,7 +87,7 @@ bool megamol::mesh::DebugGPURenderTaskDataSource::getDataCallback(core::Call & c
 		//);
 	}
 
-	rtc->setRenderTaskData(m_gpu_render_tasks);
+	rtc->setData(m_gpu_render_tasks);
 
 	return true;
 }
