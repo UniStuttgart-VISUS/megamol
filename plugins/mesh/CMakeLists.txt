@@ -1,4 +1,4 @@
-#
+﻿#
 # MegaMol™ mesh Plugin
 # Copyright 2017, by MegaMol Team
 # Alle Rechte vorbehalten. All rights reserved.
@@ -32,7 +32,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
                                                     "src")
   target_link_libraries(${PROJECT_NAME} 
     PRIVATE core 
-    PUBLIC quickhull tinyobjloader compositing)
+    PUBLIC quickhull tinyobjloader compositing_gl)
 
   if(MSVC)
       target_compile_definitions(${PROJECT_NAME} PRIVATE NOMINMAX)

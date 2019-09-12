@@ -1,10 +1,10 @@
 /*
- * compositing.h
+ * compositing_gl.h
  * Copyright (C) 2009-2015 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
-#ifndef compositing_H_INCLUDED
-#define compositing_H_INCLUDED
+#ifndef COMPOSITING_GL_H_INCLUDED
+#define COMPOSITING_GL_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -17,13 +17,13 @@
 // that uses this DLL. This way any other project whose source files include this file see 
 // TRISOUPPLUGIN_API functions as being imported from a DLL, whereas this DLL sees symbols
 // defined with this macro as being exported.
-#ifdef compositing_EXPORTS
-#define COMPOSITING_API __declspec(dllexport)
+#ifdef compositing_gl_EXPORTS
+#define COMPOSITING_GL_API __declspec(dllexport)
 #else
-#define COMPOSITING_API __declspec(dllimport)
+#define COMPOSITING_GL_API __declspec(dllimport)
 #endif
 #else /* _WIN32 */
-#define COMPOSITING_API
+#define COMPOSITING_GL_API
 #endif /* _WIN32 */
 
 #include "mmcore/utility/plugins/Plugin200Instance.h"
@@ -38,7 +38,7 @@ extern "C" {
  *
  * @return 200 -- (ver.: 2.00)
  */
-COMPOSITING_API int mmplgPluginAPIVersion(void);
+COMPOSITING_GL_API int mmplgPluginAPIVersion(void);
 
 /**
  * Provides compatibility information
@@ -51,7 +51,7 @@ COMPOSITING_API int mmplgPluginAPIVersion(void);
  * @remarks Always use 'mmplgReleasePluginCompatibilityInfo' to release the
  *          memory of the returned struct.
  */
-COMPOSITING_API
+COMPOSITING_GL_API
 ::megamol::core::utility::plugins::PluginCompatibilityInfo *
 mmplgGetPluginCompatibilityInfo(
     ::megamol::core::utility::plugins::ErrorCallback onError);
@@ -62,7 +62,7 @@ mmplgGetPluginCompatibilityInfo(
  *
  * @param ci The compatibility information struct to be released
  */
-COMPOSITING_API void mmplgReleasePluginCompatibilityInfo(
+COMPOSITING_GL_API void mmplgReleasePluginCompatibilityInfo(
     ::megamol::core::utility::plugins::PluginCompatibilityInfo* ci);
 
 /**
@@ -75,7 +75,7 @@ COMPOSITING_API void mmplgReleasePluginCompatibilityInfo(
  * @remarks Always use 'mmplgReleasePluginInstance' to release the memory of
  *          the returned object.
  */
-COMPOSITING_API
+COMPOSITING_GL_API
 ::megamol::core::utility::plugins::AbstractPluginInstance*
 mmplgGetPluginInstance
     (::megamol::core::utility::plugins::ErrorCallback onError);
@@ -86,7 +86,7 @@ mmplgGetPluginInstance
  *
  * @param pi The plugin instance to be released
  */
-COMPOSITING_API void mmplgReleasePluginInstance(
+COMPOSITING_GL_API void mmplgReleasePluginInstance(
     ::megamol::core::utility::plugins::AbstractPluginInstance* pi);
 
 #ifdef __cplusplus
@@ -94,4 +94,4 @@ COMPOSITING_API void mmplgReleasePluginInstance(
 #endif
 #endif
 
-#endif /* compositing_H_INCLUDED */
+#endif /* COMPOSITING_GL_H_INCLUDED */

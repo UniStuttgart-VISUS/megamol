@@ -8,7 +8,7 @@
 #ifndef SCREEN_SPACE_EFFECT_H_INCLUDED
 #define SCREEN_SPACE_EFFECT_H_INCLUDED
 
-#include "compositing/compositing.h"
+#include "compositing/compositing_gl.h"
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"

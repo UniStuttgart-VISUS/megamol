@@ -10,7 +10,7 @@
 
 #include <memory>
 
-#include "compositing/compositing.h"
+#include "compositing/compositing_gl.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
@@ -21,7 +21,7 @@
 namespace megamol {
 namespace compositing {
 
-class COMPOSITING_API TextureCombine : public core::Module {
+class COMPOSITING_GL_API TextureCombine : public core::Module {
 public:
     /**
      * Answer the name of this module.

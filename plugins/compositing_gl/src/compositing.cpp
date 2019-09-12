@@ -5,7 +5,7 @@
  */
 
 #include "stdafx.h"
-#include "compositing/compositing.h"
+#include "compositing/compositing_gl.h"
 
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/utility/plugins/Plugin200Instance.h"
@@ -80,7 +80,7 @@ namespace {
 /*
  * mmplgPluginAPIVersion
  */
-COMPOSITING_API int mmplgPluginAPIVersion(void) {
+COMPOSITING_GL_API int mmplgPluginAPIVersion(void) {
     MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_mmplgPluginAPIVersion
 }
 
@@ -88,7 +88,7 @@ COMPOSITING_API int mmplgPluginAPIVersion(void) {
 /*
  * mmplgGetPluginCompatibilityInfo
  */
-COMPOSITING_API
+COMPOSITING_GL_API
 ::megamol::core::utility::plugins::PluginCompatibilityInfo *
 mmplgGetPluginCompatibilityInfo(
         ::megamol::core::utility::plugins::ErrorCallback onError) {
@@ -130,7 +130,7 @@ mmplgGetPluginCompatibilityInfo(
 /*
  * mmplgReleasePluginCompatibilityInfo
  */
-COMPOSITING_API
+COMPOSITING_GL_API
 void mmplgReleasePluginCompatibilityInfo(
         ::megamol::core::utility::plugins::PluginCompatibilityInfo* ci) {
     // release compatiblity data on the correct heap
@@ -141,7 +141,7 @@ void mmplgReleasePluginCompatibilityInfo(
 /*
  * mmplgGetPluginInstance
  */
-COMPOSITING_API
+COMPOSITING_GL_API
 ::megamol::core::utility::plugins::AbstractPluginInstance*
 mmplgGetPluginInstance(
         ::megamol::core::utility::plugins::ErrorCallback onError) {
@@ -152,7 +152,7 @@ mmplgGetPluginInstance(
 /*
  * mmplgReleasePluginInstance
  */
-COMPOSITING_API
+COMPOSITING_GL_API
 void mmplgReleasePluginInstance(
         ::megamol::core::utility::plugins::AbstractPluginInstance* pi) {
     MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_mmplgReleasePluginInstance(pi)
