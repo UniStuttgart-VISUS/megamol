@@ -37,16 +37,11 @@
   *
   */
 
-#ifndef PCL_SURFACE_IMPL_CONCAVE_HULL_H_
-#define PCL_SURFACE_IMPL_CONCAVE_HULL_H_
 
 #include <map>
 #include "concave_hull.h"
 #include <cstdio>
 #include <cstdlib>
-#include "libqhull/libqhull.h"
-#include "libqhullcpp/Qhull.h"
-#include <Eigen/src/Core/util/Macros.h>
 #include <Eigen/Eigenvalues>
 #include <Eigen/StdVector>
 
@@ -183,7 +178,7 @@ pcl::ConcaveHull<PointInT>::reconstruct(PointCloud &output, std::vector<pcl::Ver
 #pragma GCC diagnostic ignored "-Wold-style-cast"
 #endif
 //////////////////////////////////////////////////////////////////////////
-template <typename PointInT> void
+template <typename PointInT> void 
 pcl::ConcaveHull<PointInT>::performReconstruction(PointCloud &alpha_shape, std::vector<pcl::Vertices> &polygons)
 {
   Eigen::Vector4d xyz_centroid;
@@ -655,33 +650,5 @@ pcl::ConcaveHull<PointInT>::performReconstruction(PointCloud &alpha_shape, std::
 #pragma GCC diagnostic warning "-Wold-style-cast"
 #endif
 
-//////////////////////////////////////////////////////////////////////////////////////////
-template <typename PointInT> void
-pcl::ConcaveHull<PointInT>::performReconstruction(PolygonMesh &output)
-{
-  // Perform reconstruction
-  pcl::PointCloud<PointInT> hull_points;
-  performReconstruction(hull_points, output.polygons);
-
-  // Convert the PointCloud into a PCLPointCloud2
-  pcl::toPCLPointCloud2(hull_points, output.cloud);
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////
-template <typename PointInT> void
-pcl::ConcaveHull<PointInT>::performReconstruction(std::vector<pcl::Vertices> &polygons)
-{
-  pcl::PointCloud<PointInT> hull_points;
-  performReconstruction(hull_points, polygons);
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////
-template <typename PointInT> void
-pcl::ConcaveHull<PointInT>::getHullPointIndices(pcl::PointIndices &hull_point_indices) const
-{
-  hull_point_indices = hull_indices_;
-}
-
 #define PCL_INSTANTIATE_ConcaveHull(T) template class PCL_EXPORTS pcl::ConcaveHull<T>;
 
-#endif    // PCL_SURFACE_IMPL_CONCAVE_HULL_H_

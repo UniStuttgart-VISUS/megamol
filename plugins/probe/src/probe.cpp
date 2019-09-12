@@ -11,6 +11,7 @@
 #include "mmcore/utility/plugins/Plugin200Instance.h"
 #include "mmcore/versioninfo.h"
 #include "vislib/vislibversion.h"
+#include "ExtractMesh.h"
 
 
 /* anonymous namespace hides this type from any other object files */
@@ -23,10 +24,10 @@ namespace {
             : ::megamol::core::utility::plugins::Plugin200Instance(
 
                 /* machine-readable plugin assembly name */
-                "probe", // TODO: Change this!
+                "probe",
 
                 /* human-readable plugin description */
-                "Describing probe (TODO: Change this!)") {
+                "Putting probes into data and render glyphs at the end of the probe.") {
 
             // here we could perform addition initialization
         };
@@ -39,13 +40,7 @@ namespace {
 
             // register modules here:
 
-            //
-            // TODO: Register your plugin's modules here
-            // like:
-            //   this->module_descriptions.RegisterAutoDescription<megamol::probe::MyModule1>();
-            //   this->module_descriptions.RegisterAutoDescription<megamol::probe::MyModule2>();
-            //   ...
-            //
+            this->module_descriptions.RegisterAutoDescription<megamol::probe::ExtractMesh>();
 
             // register calls here:
 

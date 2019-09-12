@@ -11,6 +11,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
 
   find_package(Qhull REQUIRED)
   require_external(Eigen)
+  require_external(nanoflann)
 
   # Check option dependencies: First list item is always the current build option,
   # afterwards list the dependencies.
@@ -29,7 +30,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   target_include_directories(${PROJECT_NAME} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     "include" "src")
-  target_link_libraries(${PROJECT_NAME} PRIVATE core adios_plugin Qhull::qhullcpp Eigen)
+  target_link_libraries(${PROJECT_NAME} PRIVATE core adios_plugin Qhull::qhullcpp Eigen nanoflann)
 
   # Installation rules for generated files
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")

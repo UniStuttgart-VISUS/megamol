@@ -43,8 +43,14 @@ public:
     virtual ~ExtractMesh(void);
 
 protected:
+
+
+    virtual bool create();
+    virtual void release();
+
+
     core::CallerSlot _getDataCall;
-    core::CalleeSlot _getMeshCall;
+    core::CalleeSlot _deployMeshCall;
     core::param::ParamSlot _algorithmSlot;
     core::param::ParamSlot _xSlot;
     core::param::ParamSlot _ySlot;
@@ -57,9 +63,14 @@ protected:
 
 private:
 
-    virtual bool InterfaceIsDirty();
-    virtual void readParams();
+    bool InterfaceIsDirty();
+    //virtual void readParams();
     void calculateAlphaShape();
+
+    bool getData(core::Call& call);
+
+    bool getMetaData(core::Call& call); 
+
 };
 
 } // namespace probe
