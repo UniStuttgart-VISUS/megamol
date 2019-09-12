@@ -286,6 +286,11 @@ View3D_2::View3D_2(void)
     this->arcballManipulator.enable();
     this->arcballCenterDistance = 0.0f;
 
+    this->orbitalManipulator.set_rotation_centre(glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+    this->orbitalManipulator.set_target(this->cam);
+    this->orbitalManipulator.enable();
+
+
     // none of the saved camera states are valid right now
     for (auto& e : this->savedCameras) {
         e.second = false;
@@ -430,6 +435,12 @@ void View3D_2::Render(const mmcRenderViewContext& context) {
             if(!this->arcballManipulator.manipulating())
 				this->arcballManipulator.set_rotation_centre(glm::vec4(bbcenter, 1.0f));
 
+            if (!this->orbitalManipulator.manipulating()) {
+                this->orbitalManipulator.set_rotation_centre(glm::vec4(bbcenter, 1.0f));
+                this->orbitalManipulator.set_orbit(std::abs(glm::length(
+                    glm::vec3(this->cam.eye_position().x(), this->cam.eye_position().y(), this->cam.eye_position().z()) - bbcenter)));
+            }
+                
             if (this->firstImg) {
                 this->ResetView();
                 this->firstImg = false;
@@ -533,6 +544,8 @@ void View3D_2::ResetView(void) {
         this->cam.orientation(cam_type::quaternion_type::create_identity());
     }
     this->arcballCenterDistance = dist;
+
+    this->orbitalManipulator.set_orbit(dist);
 
     glm::mat4 vm = this->cam.view_matrix();
     glm::mat4 pm = this->cam.projection_matrix();
@@ -713,6 +726,7 @@ bool view::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButtonAc
     // This mouse handling/mapping is so utterly weird and should die!
     auto down = action == view::MouseButtonAction::PRESS;
     bool altPressed = this->modkeys.test(view::Modifier::ALT);
+    bool ctrlPressed = this->modkeys.test(view::Modifier::CTRL);
 
     if (!this->toggleMouseSelection) {
         switch (button) {
@@ -731,6 +745,18 @@ bool view::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButtonAc
                 }
             } else if (action == view::MouseButtonAction::RELEASE && (altPressed ^ this->arcballDefault)) {
                 this->arcballManipulator.on_drag_stop();
+            } else if (action == view::MouseButtonAction::PRESS && ctrlPressed) {
+                if (!this->orbitalManipulator.manipulating()) {
+                    glm::vec3 curPos = static_cast<glm::vec4>(this->cam.eye_position());
+                    glm::vec3 camDir = static_cast<glm::vec4>(this->cam.view_vector());
+                    glm::vec3 rotCenter = curPos + this->orbitalManipulator.get_orbit() * glm::normalize(camDir);
+                    this->orbitalManipulator.set_rotation_centre(glm::vec4(rotCenter, 1.0f));
+                    auto wndSize = this->cam.resolution_gate();
+                    this->orbitalManipulator.on_drag_start(
+                        wndSize.width() - static_cast<int>(this->mouseX), static_cast<int>(this->mouseY));
+                }
+            } else if (action == view::MouseButtonAction::RELEASE && ctrlPressed) {
+                this->orbitalManipulator.on_drag_stop();
             }
             break;
         case megamol::core::view::MouseButton::BUTTON_RIGHT:
@@ -766,6 +792,13 @@ bool view::View3D_2::OnMouseMove(double x, double y) {
     // This mouse handling/mapping is so utterly weird and should die!
     if (!this->toggleMouseSelection) {
         this->cursor2d.SetPosition(x, y, true);
+
+        if (this->orbitalManipulator.manipulating()) {
+            auto wndSize = this->cam.resolution_gate();
+            this->orbitalManipulator.on_drag_rotate(
+                wndSize.width() - static_cast<int>(this->mouseX), static_cast<int>(this->mouseY));
+        }
+
         if (this->arcballManipulator.manipulating()) {
             auto wndSize = this->cam.resolution_gate();
             this->arcballManipulator.on_drag(
@@ -1003,7 +1036,8 @@ void View3D_2::handleCameraMovement(void) {
     float rotationStep = this->viewKeyAngleStepSlot.Param<param::FloatParam>()->Value();
     rotationStep *= factor;
 
-    if (!(this->arcballDefault ^ this->modkeys.test(view::Modifier::ALT))) {
+    if (!(this->arcballDefault ^ this->modkeys.test(view::Modifier::ALT)) &&
+        !(this->modkeys.test(view::Modifier::CTRL))) {
         auto resolution = this->cam.resolution_gate();
         glm::vec2 midpoint(resolution.width() / 2.0f, resolution.height() / 2.0f);
         glm::vec2 mouseDirection = glm::vec2(this->mouseX, this->mouseY) - midpoint;

@@ -274,6 +274,9 @@ protected:
     /** The rotation manipulator for the camera */
     rotate_type rotateManipulator;
 
+    /** The orbital manipulator for the camera */
+    orbital_type orbitalManipulator;
+
     /** the 2d cursor of this view */
     vislib::graphics::Cursor2D cursor2d;
 
