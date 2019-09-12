@@ -545,6 +545,7 @@ void View3D_2::ResetView(void) {
     }
     this->arcballCenterDistance = dist;
 
+    this->arcballManipulator.set_radius(dist);
     this->orbitalManipulator.set_orbit(dist);
 
     glm::mat4 vm = this->cam.view_matrix();
@@ -736,9 +737,9 @@ bool view::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButtonAc
                 if (!this->arcballManipulator.manipulating()) {
                     glm::vec3 curPos = static_cast<glm::vec4>(this->cam.eye_position());
                     glm::vec3 camDir = static_cast<glm::vec4>(this->cam.view_vector());
-                    glm::vec3 rotCenter = curPos + this->arcballCenterDistance * glm::normalize(camDir);
+                    glm::vec3 rotCenter = curPos + this->arcballManipulator.radius() * glm::normalize(camDir);
                     this->arcballManipulator.set_rotation_centre(glm::vec4(rotCenter, 1.0f));
-                    this->arcballManipulator.set_radius(1.0f);
+                    //this->arcballManipulator.set_radius(1.0f);
                     auto wndSize = this->cam.resolution_gate();
                     this->arcballManipulator.on_drag_start(
                         wndSize.width() - static_cast<int>(this->mouseX), static_cast<int>(this->mouseY));
@@ -761,9 +762,34 @@ bool view::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButtonAc
             break;
         case megamol::core::view::MouseButton::BUTTON_RIGHT:
             this->cursor2d.SetButtonState(1, down);
+
+            if (action == view::MouseButtonAction::PRESS && (altPressed ^ this->arcballDefault)) {
+                if (!this->arcballManipulator.manipulating()) {
+                    auto wndSize = this->cam.resolution_gate();
+                    this->arcballManipulator.on_drag_start(
+                        wndSize.width() - static_cast<int>(this->mouseX), static_cast<int>(this->mouseY));
+                }
+            } 
+            else if (action == view::MouseButtonAction::RELEASE && (altPressed ^ this->arcballDefault)) {
+                this->arcballManipulator.on_drag_stop();
+            }
+            else if (action == view::MouseButtonAction::PRESS && ctrlPressed) {
+                if (!this->orbitalManipulator.manipulating()) {
+
+                    auto wndSize = this->cam.resolution_gate();
+                    this->orbitalManipulator.on_drag_start(
+                        wndSize.width() - static_cast<int>(this->mouseX), static_cast<int>(this->mouseY));
+                }
+            } else if (action == view::MouseButtonAction::RELEASE && ctrlPressed) {
+                this->orbitalManipulator.on_drag_stop();
+            }
+
             break;
         case megamol::core::view::MouseButton::BUTTON_MIDDLE:
             this->cursor2d.SetButtonState(2, down);
+
+            
+
             break;
         default:
             break;
@@ -794,15 +820,33 @@ bool view::View3D_2::OnMouseMove(double x, double y) {
         this->cursor2d.SetPosition(x, y, true);
 
         if (this->orbitalManipulator.manipulating()) {
-            auto wndSize = this->cam.resolution_gate();
-            this->orbitalManipulator.on_drag_rotate(
-                wndSize.width() - static_cast<int>(this->mouseX), static_cast<int>(this->mouseY));
+
+            if (this->cursor2d.GetButtonState(0))
+            {
+                auto wndSize = this->cam.resolution_gate();
+                this->orbitalManipulator.on_drag_rotate(
+                    wndSize.width() - static_cast<int>(this->mouseX), static_cast<int>(this->mouseY));
+            } 
+            else if (this->cursor2d.GetButtonState(1))
+            {
+                auto wndSize = this->cam.resolution_gate();
+                this->orbitalManipulator.on_drag_change_orbit(
+                    wndSize.width() - static_cast<int>(this->mouseX), static_cast<int>(this->mouseY));
+            }
         }
 
         if (this->arcballManipulator.manipulating()) {
-            auto wndSize = this->cam.resolution_gate();
-            this->arcballManipulator.on_drag(
-                wndSize.width() - static_cast<int>(this->mouseX), static_cast<int>(this->mouseY));
+
+            if (this->cursor2d.GetButtonState(0)) {
+                auto wndSize = this->cam.resolution_gate();
+                this->arcballManipulator.on_drag(
+                    wndSize.width() - static_cast<int>(this->mouseX), static_cast<int>(this->mouseY));
+            } else if (this->cursor2d.GetButtonState(1)) 
+            {
+                auto wndSize = this->cam.resolution_gate();
+                this->arcballManipulator.on_drag_change_radius(
+                    wndSize.width() - static_cast<int>(this->mouseX), static_cast<int>(this->mouseY));
+            }
         }
     }
 

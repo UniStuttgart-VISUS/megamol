@@ -1,3 +1,4 @@
+#include "arcball_manipulator.h"
 /*
  * thecam/arcball_manipulator.h
  *
@@ -105,6 +106,33 @@ void megamol::core::thecam::arcball_manipulator<T>::on_drag(const screen_type x,
             this->lastSy = y;
         }
     }
+}
+
+template <class T>
+inline void megamol::core::thecam::arcball_manipulator<T>::on_drag_change_radius(
+    const screen_type x, const screen_type y) {
+
+     if (this->manipulating() && this->enabled()) {
+        auto cam = this->camera();
+        THE_ASSERT(cam != nullptr);
+
+        if (this->lastSy != y) {
+
+            screen_type dy = y - lastSy;
+
+            auto cam_pos = cam->eye_position();
+
+            auto v = thecam::math::normalise(this->rotCentre - cam_pos);
+
+            cam->position(cam_pos - (v * dy * (this->ballRadius / 500.0f)));
+
+            this->ballRadius = std::abs(thecam::math::length(this->rotCentre - cam->eye_position()));
+        }
+
+        this->lastSx = x;
+        this->lastSy = y;
+    }
+
 }
 
 

@@ -109,6 +109,29 @@ public:
         }
     }
 
+    void on_drag_change_orbit(const screen_type x, const screen_type y)
+    {
+        if (this->manipulating() && this->enabled()) {
+            auto cam = this->camera();
+            THE_ASSERT(cam != nullptr);
+
+            if (this->m_last_sy != y) {
+
+                screen_type dy = y - m_last_sy;
+
+                auto cam_pos = cam->eye_position();
+
+                auto v = thecam::math::normalise(m_rot_cntr - cam_pos);
+
+                 cam->position(cam_pos - (v * dy * (this->m_orbit/500.0f)));
+
+                this->m_orbit = std::abs(thecam::math::length(m_rot_cntr - cam->eye_position()));
+            }
+
+            this->m_last_sx = x;
+            this->m_last_sy = y;
+        }
+    }
 
     /**
      * Report that dragging begun (mouse for dragging button is down)
