@@ -5,28 +5,30 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include <functional>
+#include <list>
 #include <mutex>
 #include <shared_mutex>
 #include <string>
 #include <vector>
 #include "mmcore/Call.h"
 #include "mmcore/Module.h"
-#include "mmcore/ModuleNamespace.h"
 #include "mmcore/api/MegaMolCore.h"
 #include "mmcore/param/AbstractParam.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/param/ParamUpdateListener.h"
-#include "vislib/SmartPtr.h"
 #include "vislib/sys/Log.h"
 
+#include "mmcore/CalleeSlot.h"
+#include "mmcore/CallerSlot.h"
 #include "mmcore/deferrable_construction.h"
 #include "mmcore/lockable.h"
 #include "mmcore/serializable.h"
-#include "mmcore/CalleeSlot.h"
-#include "mmcore/CallerSlot.h"
 
-#include "AbstractUpdateQueue.h"
-#include "RootModuleNamespace.h"
+#include "AbstractUpdateQueue.h" // TODO: why can't we use std::list? why is this class called abstract when, in fact, its implementation is very concrete?
+
+//#include "AbstractRenderAPI.hpp"
+#include "../../console/src/RenderAPI/AbstractRenderAPI.hpp" // temporary hack
+#include "mmcore/view/AbstractView.h"
 
 namespace megamol {
 namespace core {
@@ -74,14 +76,11 @@ public:
 
     using CallInstantiationQueue_t = AbstractUpdateQueue<CallInstantiationRequest_t>;
 
-    using ModuleDescr_t = std::pair<Module::ptr_type, std::string>;
-
-    using ModuleConstDescr_t = std::pair<Module::const_ptr_type, std::string>;
+    using ModuleDescr_t = std::pair<Module::ptr_type, ModuleInstantiationRequest>;
 
     using ModuleList_t = std::vector<ModuleDescr_t>;
 
-    // Full qualified name of a call is: <full qualified name of from>;<call class>;<full qualified name of to>
-    using CallDescr_t = std::pair<Call::ptr_type, std::string>;
+    using CallDescr_t = std::pair<Call::ptr_type, CallInstantiationRequest>;
 
     using CallList_t = std::vector<CallDescr_t>;
 
@@ -137,43 +136,32 @@ public:
     //////////////////////////// END serialization ////////////////////////////////
 
     //////////////////////////// queue methods ////////////////////////////////////
-    bool QueueModuleDeletion(std::string const& id);
 
-    bool QueueModuleDeletion(std::string&& id);
+	// TODO: squash NoLock variants into non-NoLock variant if possible?
+    bool QueueModuleDeletion(std::string const& id);
 
     bool QueueModuleDeletionNoLock(std::string const& id);
 
-    bool QueueModuleDeletionNoLock(std::string&& id);
-
     bool QueueModuleInstantiation(std::string const& className, std::string const& id);
-
-    bool QueueModuleInstantiation(std::string&& className, std::string&& id);
 
     bool QueueModuleInstantiationNoLock(std::string const& className, std::string const& id);
 
-    bool QueueModuleInstantiationNoLock(std::string&& className, std::string&& id);
-
     bool QueueCallDeletion(std::string const& from, std::string const& to);
-
-    bool QueueCallDeletion(std::string&& from, std::string&& to);
 
     bool QueueCallDeletionNoLock(std::string const& from, std::string const& to);
 
-    bool QueueCallDeletionNoLock(std::string&& from, std::string&& to);
-
     bool QueueCallInstantiation(std::string const& className, std::string const& from, std::string const& to);
 
-    bool QueueCallInstantiation(std::string&& className, std::string&& from, std::string&& to);
-
     bool QueueCallInstantiationNoLock(std::string const& className, std::string const& from, std::string const& to);
-
-    bool QueueCallInstantiationNoLock(std::string&& className, std::string&& from, std::string&& to);
 
     bool HasPendingRequests() {
         auto lock = AcquireQueueLocks();
         return !module_deletion_queue_.Empty() || !module_instantiation_queue_.Empty() ||
                !call_deletion_queue_.Empty() || !call_instantiation_queue_.Empty();
     }
+
+	// distributes instantiation/deletion requests as commands to subgraph nodes
+    void PrepareGraphUpdates();
 
     //////////////////////////// locking //////////////////////////////////////////
     std::scoped_lock<std::unique_lock<std::mutex>, std::unique_lock<std::mutex>, std::unique_lock<std::mutex>,
@@ -192,15 +180,11 @@ public:
 
     template <class A>
     typename std::enable_if<std::is_convertible<A*, Module*>::value, bool>::type FindModule(
-        std::string const& module_name, std::function<void(A const&)>&& cb) const;
-
-    template <class A>
-    typename std::enable_if<std::is_convertible<A*, Module*>::value, bool>::type FindModule(
         std::string const& module_name, std::function<void(A const&)> const& cb) const;
 
     //////////////////////////// enumerators /////////////////////////////////////
     /*
-     * ModulGraph braucht einen ReadWriterLock. Enumerate const Operatoren können endlich sinnvoll implementiert werden.
+     * ModulGraph braucht einen ReadWriterLock. Enumerate const Operatoren kï¿½nnen endlich sinnvoll implementiert werden.
      *
      */
 
@@ -224,7 +208,7 @@ private:
         return it;
     }
 
-    [[nodiscard]] ModuleList_t::const_iterator find_module(std::string const& name) const {
+        [[nodiscard]] ModuleList_t::const_iterator find_module(std::string const& name) const {
         std::shared_lock<std::shared_mutex> lock(graph_lock_);
 
         auto it = std::find(this->module_list_.cbegin(), this->module_list_.cend(),
@@ -257,7 +241,7 @@ private:
         return it;
     }
 
-    [[nodiscard]] CallList_t::const_iterator find_call(std::string const& name) const {
+        [[nodiscard]] CallList_t::const_iterator find_call(std::string const& name) const {
         std::shared_lock<std::shared_mutex> lock(graph_lock_);
 
         auto it = std::find(
@@ -284,8 +268,8 @@ private:
         return true;
     }
 
-    /** The MegaMolGraph is the owner of the root module namespace*/
-    // std::unique_ptr<RootModuleNamespace> root_module_namespace_;
+
+	// we will forward instantiation/deletion requests from the queues to their targeted GraphRoot nodes
 
     /** Queue for module deletions */
     ModuleDeletionQueue_t module_deletion_queue_;
@@ -308,9 +292,31 @@ private:
     /** Reader/Writer mutex for the graph */
     mutable std::shared_mutex graph_lock_;
 
+    struct GraphRoot {
+		// an OpenGL context must exist during construction of modules and calls - because calls may use GL objects in their constructors
+		// for this reason, we put the GL context next to the modules, calls and the View3D module that initiates the rendering of the next frame
+        std::unique_ptr<console::AbstractRenderAPI> rapi;
+        view::AbstractView* view_;
+
+        ModuleList_t modules_;
+        CallList_t calls_;
+
+		// contains commands to instantiate modules and calls for this GraphRoot.
+		// construction of modules and calls will happen within the OpenGL context of this GraphRoot.
+        std::list<std::function<void(GraphRoot&)>> graphCommands_;
+
+        void executeGraphCommands();
+        void renderNextFrame(); // pokes View3D to render the next frame
+    };
+
+    std::list<GraphRoot> subgraphs_;
+
 
     ////////////////////////// old interface stuff //////////////////////////////////////////////
 public:
+
+	// TODO: pull necessary 'old' functions to active section above
+/*
     bool QueueChainCallInstantiation(const std::string className, const std::string chainStart, const std::string to);
     bool QueueParamValueChange(const std::string id, const std::string value);
     // a JSON serialization of all the requests as above (see updateListener)
@@ -320,7 +326,6 @@ public:
     bool QueueParamGroupValue(const std::string groupName, const std::string id, const std::string value);
     bool QueueParamGroupValue(uint32_t groupId, const std::string id, const std::string value);
     bool QueueUpdateFlush();
-    void PerformGraphUpdates();
     bool AnythingQueued();
 
     // todo: for everything below, RO version AND RW version? or would we just omit the const and imply the user needs
@@ -332,15 +337,11 @@ public:
     // todo: optionally ask for the parameters of a specific module (name OR module pointer?)
     inline void EnumerateParameters(std::function<void(const Module&, param::ParamSlot&)> cb) const;
 
-    // todo: can we get rid of this? where would we do the data unpacking?
-    inline void EnumerateParameters(mmcEnumStringAFunction func, void* data) const;
-
     // todo: optionally pass Module instead of name
     template <class A, class C>
     typename std::enable_if<std::is_convertible<A*, Module*>::value && std::is_convertible<C*, Call*>::value,
         bool>::type
     EnumerateCallerSlots(std::string module_name, std::function<void(C&)> cb) const;
-
 
     // WHY??? this is just EnumerateParameters(FindModule()...) GET RID OF IT!
     template <class A>
@@ -348,9 +349,6 @@ public:
         std::string module_name, std::function<void(param::ParamSlot&)> cb) const;
 
     size_t GetGlobalParameterHash(void) const;
-
-    // todo: why do we even need this? Like, honestly?
-    std::string FindParameterName(const vislib::SmartPtr<param::AbstractParam>& param) const;
 
     // probably just throws everything away?
     void Cleanup(void);
@@ -360,9 +358,6 @@ public:
 
     // replace the whole graph with whatever is in serialization
     void Deserialize(std::string othergraph);
-
-    // construct from serialization
-    MegaMolGraph(std::string othergraph);
 
     // nope, see below!
     // void NotifyParameterValueChange(param::ParamSlot& slot) const;
@@ -384,14 +379,8 @@ private:
     void updateFlushIdxList(size_t const processedCount, std::vector<size_t>& list);
     bool checkForFlushEvent(size_t const eventIdx, std::vector<size_t>& list) const;
     void shortenFlushIdxList(size_t const eventCount, std::vector<size_t>& list);
+*/
 };
-
-
-template <class A>
-typename std::enable_if<std::is_convertible<A*, megamol::core::Module*>::value, bool>::type
-megamol::core::MegaMolGraph::FindModule(std::string const& module_name, std::function<void(A const&)>&& cb) const {
-    return FindModule(module_name, cb);
-}
 
 
 template <class A>

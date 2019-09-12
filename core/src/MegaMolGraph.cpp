@@ -8,18 +8,7 @@ bool megamol::core::MegaMolGraph::QueueModuleDeletion(std::string const& id) {
 }
 
 
-bool megamol::core::MegaMolGraph::QueueModuleDeletion(std::string&& id) {
-    auto lock = module_deletion_queue_.AcquireLock();
-    return QueueModuleDeletionNoLock(std::move(id));
-}
-
-
 bool megamol::core::MegaMolGraph::QueueModuleDeletionNoLock(std::string const& id) {
-    return push_queue_element(module_deletion_queue_, id);
-}
-
-
-bool megamol::core::MegaMolGraph::QueueModuleDeletionNoLock(std::string&& id) {
     return push_queue_element(module_deletion_queue_, id);
 }
 
@@ -30,19 +19,8 @@ bool megamol::core::MegaMolGraph::QueueModuleInstantiation(std::string const& cl
 }
 
 
-bool megamol::core::MegaMolGraph::QueueModuleInstantiation(std::string&& className, std::string&& id) {
-    auto lock = module_instantiation_queue_.AcquireLock();
-    return QueueModuleInstantiationNoLock(std::move(className), std::move(id));
-}
-
-
 bool megamol::core::MegaMolGraph::QueueModuleInstantiationNoLock(std::string const& className, std::string const& id) {
     return emplace_queue_element(module_instantiation_queue_, className, id);
-}
-
-
-bool megamol::core::MegaMolGraph::QueueModuleInstantiationNoLock(std::string&& className, std::string&& id) {
-    return emplace_queue_element(module_instantiation_queue_, std::move(className), std::move(id));
 }
 
 
@@ -52,19 +30,8 @@ bool megamol::core::MegaMolGraph::QueueCallDeletion(std::string const& from, std
 }
 
 
-bool megamol::core::MegaMolGraph::QueueCallDeletion(std::string&& from, std::string&& to) {
-    auto lock = call_deletion_queue_.AcquireLock();
-    return QueueCallDeletionNoLock(std::move(from), std::move(to));
-}
-
-
 bool megamol::core::MegaMolGraph::QueueCallDeletionNoLock(std::string const& from, std::string const& to) {
     return emplace_queue_element(call_deletion_queue_, from, to);
-}
-
-
-bool megamol::core::MegaMolGraph::QueueCallDeletionNoLock(std::string&& from, std::string&& to) {
-    return emplace_queue_element(call_deletion_queue_, std::move(from), std::move(to));
 }
 
 
@@ -75,72 +42,69 @@ bool megamol::core::MegaMolGraph::QueueCallInstantiation(
 }
 
 
-bool megamol::core::MegaMolGraph::QueueCallInstantiation(
-    std::string&& className, std::string&& from, std::string&& to) {
-    auto lock = call_instantiation_queue_.AcquireLock();
-    return QueueCallInstantiationNoLock(std::move(className), std::move(from), std::move(to));
-}
-
-
 bool megamol::core::MegaMolGraph::QueueCallInstantiationNoLock(
     std::string const& className, std::string const& from, std::string const& to) {
     return emplace_queue_element(call_instantiation_queue_, className, from, to);
 }
 
+static
+const std::tuple<const std::string, const std::string> splitParameterName(std::string const& name){
+    const std::string delimiter = "::";
 
-bool megamol::core::MegaMolGraph::QueueCallInstantiationNoLock(
-    std::string&& className, std::string&& from, std::string&& to) {
-    return emplace_queue_element(call_instantiation_queue_, std::move(className), std::move(from), std::move(to));
-}
+    const auto lastDeliPos = name.rfind(delimiter);
+    if (lastDeliPos == std::string::npos)
+		return {"", ""};
 
+    auto secondLastDeliPos = name.rfind(delimiter, lastDeliPos-1);
+    if (secondLastDeliPos == std::string::npos)
+        secondLastDeliPos = 0;
+    else
+        secondLastDeliPos = secondLastDeliPos + 2;
+
+    const std::string parameterName = name.substr(lastDeliPos + 2);
+    const auto moduleNameStartPos = secondLastDeliPos;
+    const std::string moduleName = name.substr(moduleNameStartPos, /*cont*/ lastDeliPos - moduleNameStartPos);
+
+	return {moduleName, parameterName};
+};
 
 std::shared_ptr<megamol::core::param::AbstractParam> megamol::core::MegaMolGraph::FindParameter(
     std::string const& name, bool quiet) const {
     using vislib::sys::Log;
 
-    // TODO do we really need to lock the graph for this operation
-    AbstractNamedObject::GraphLocker locker(this->root_module_namespace_, false);
-    vislib::sys::AutoLock lock(locker);
+	// what exactly is the format of name? assumption: [::]moduleName::parameterName
+	// split name into moduleName and parameterName:
+	auto [moduleName, parameterName] = splitParameterName(name);
 
-    vislib::Array<vislib::StringA> path = vislib::StringTokeniserA::Split(name, "::", true);
-    vislib::StringA slotName("");
-    if (path.Count() > 0) {
-        slotName = path.Last();
-        path.RemoveLast();
-    }
-    vislib::StringA modName("");
-    if (path.Count() > 0) {
-        modName = path.Last();
-        path.RemoveLast();
-    }
+	// parameter or module does not exist
+    if (moduleName.compare("") == 0 || parameterName.compare("") == 0) {
+		 if (!quiet)
+			Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Cannot find parameter \"%s\": could not extract module and parameter name", name.c_str());
+		return nullptr;
+	}
 
-    ModuleNamespace::ptr_type mn;
-    // parameter slots may have namespace operators in their names!
-    while (!mn) {
-        mn = this->root_module_namespace_->FindNamespace(path, false, true);
-        if (!mn) {
-            if (path.Count() > 0) {
-                slotName = modName + "::" + slotName;
-                modName = path.Last();
-                path.RemoveLast();
-            } else {
-                if (!quiet)
-                    Log::DefaultLog.WriteMsg(
-                        Log::LEVEL_ERROR, "Cannot find parameter \"%s\": namespace not found", name.c_str());
-                return nullptr;
+    param::ParamSlot* slot = nullptr;
+    Module::ptr_type modPtr = nullptr;
+
+	for (auto& graphRoot : this->subgraphs_) {
+        for (auto& mod : graphRoot.modules_)
+            if (mod.first->Name().Compare(moduleName.c_str())) {
+                modPtr = mod.first;
+
+                const auto result = mod.first->FindChild((moduleName + "::" + parameterName).c_str());
+				slot = dynamic_cast<param::ParamSlot*>(result.get());
+
+				break;
             }
-        }
-    }
+	}
 
-    Module::ptr_type mod = Module::dynamic_pointer_cast(mn->FindChild(modName));
-    if (!mod) {
+    if (!modPtr) {
         if (!quiet)
             Log::DefaultLog.WriteMsg(
                 Log::LEVEL_ERROR, "Cannot find parameter \"%s\": module not found", name.c_str());
         return nullptr;
     }
 
-    param::ParamSlot* slot = dynamic_cast<param::ParamSlot*>(mod->FindChild(slotName).get());
     if (slot == nullptr) {
         if (!quiet)
             Log::DefaultLog.WriteMsg(
@@ -163,3 +127,33 @@ std::shared_ptr<megamol::core::param::AbstractParam> megamol::core::MegaMolGraph
 
     return slot->Parameter();
 }
+
+
+void megamol::core::MegaMolGraph::GraphRoot::executeGraphCommands() {
+	// commands may create/destruct modules and calls into the modules_ and calls_ lists of the GraphRoot
+	// construction/destruction of modules/calls, as well as creation/release need to happen inside the Render API context
+	// because for OpenGL the GL context needs to be 'active' when creating GL resources - this may happen during module creation or call constructors
+
+    for (auto& command: this->graphCommands_)
+		command(*this);
+
+    this->graphCommands_.clear();
+}
+
+void megamol::core::MegaMolGraph::GraphRoot::renderNextFrame() {
+    if (!this->rapi)
+		return;
+
+	this->rapi->preViewRender();
+
+	if (this->graphCommands_.size())
+		this->executeGraphCommands();
+
+	_mmcRenderViewContext dummyRenderViewContext; // doesn't do anything, really
+	//void* apiContextDataPtr = this->rapi->getContextDataPtr();
+    if (this->view_)
+		this->view_->Render(/* want: 'apiContextDataPtr' instead of: */ dummyRenderViewContext );
+
+	this->rapi->postViewRender();
+}
+
