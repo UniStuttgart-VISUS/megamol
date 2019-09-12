@@ -7,7 +7,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/AnimDataModule.h"
 #include "vislib/math/Cuboid.h"
-#include "CallADIOSData.h"
+#include "adios_plugin/CallADIOSData.h"
 #include "vislib/String.h"
 #ifdef WITH_MPI
 #    include <mpi.h>

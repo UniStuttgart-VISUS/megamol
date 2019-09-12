@@ -1,7 +1,7 @@
 #include "ExtractMesh.h"
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/EnumParam.h"
-#include "CallADIOSData.h"
+#include "adios_plugin/CallADIOSData.h"
 
 namespace megamol {
 namespace probe {

@@ -6,7 +6,7 @@
 */
 
 #include "stdafx.h"
-#include "CallADIOSData.h"
+#include "adios_plugin/CallADIOSData.h"
 #include "vislib/sys/Log.h"
 #include <algorithm>
 

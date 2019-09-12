@@ -13,7 +13,7 @@
 #include "vislib/vislibversion.h"
 
 #include "adiosDataSource.h"
-#include "CallADIOSData.h"
+#include "adios_plugin/CallADIOSData.h"
 #include "ADIOStoMultiParticle.h"
 #include "MultiParticletoADIOS.h"
 #include "adiosWriter.h"
