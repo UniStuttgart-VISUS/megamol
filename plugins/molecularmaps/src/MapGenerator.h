@@ -15,7 +15,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore/utility/ShaderSourceFactory.h"
-#include "mmcore/view/Renderer3DModule.h"
+#include "mmcore/view/Renderer3DModule_2.h"
 
 #include "geometry_calls/CallTriMeshData.h"
 
@@ -32,7 +32,7 @@
 namespace megamol {
 namespace molecularmaps {
 
-class MapGenerator : public core::view::Renderer3DModule {
+class MapGenerator : public core::view::Renderer3DModule_2 {
 public:
     /**
      *	Answer the name of this module.
@@ -95,7 +95,7 @@ private:
      *
      * @return false if an error occured, true otherwise.
      */
-    bool capColouring(megamol::geocalls::CallTriMeshData* p_cap_data_call, megamol::core::view::CallRender3D* p_cr3d,
+    bool capColouring(megamol::geocalls::CallTriMeshData* p_cap_data_call, megamol::core::view::CallRender3D_2* p_cr3d,
         protein_calls::BindingSiteCall* p_bs);
 
     /**
@@ -245,7 +245,7 @@ private:
      *	@param call The calling call.
      *	@return The return value of the function.
      */
-    virtual bool GetExtents(core::Call& call);
+    virtual bool GetExtents(core::view::CallRender3D_2& call);
 
     /**
      * The get data callback for the resulting mesh. The module should set the members of
@@ -532,7 +532,7 @@ private:
      *	@param call The calling call.
      *	@return The return value of the function.
      */
-    virtual bool Render(core::Call& call);
+    virtual bool Render(core::view::CallRender3D_2& call);
 
     /**
      * Render the geodesic lines in 3D.

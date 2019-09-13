@@ -39,7 +39,7 @@ public:
     /**
      * Invokes the rendering calls.
      */
-    virtual bool Render(core::view::CallRender3D& call);
+    virtual bool Render(core::view::CallRender3D_2& call);
 
     /**
      * Update function for the local data to render.

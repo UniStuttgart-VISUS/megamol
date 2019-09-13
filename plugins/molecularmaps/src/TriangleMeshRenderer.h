@@ -10,6 +10,8 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "AbstractLocalRenderer.h"
+#include "glowl/GLSLProgram.hpp"
+#include "glowl/BufferObject.hpp"
 
 namespace megamol {
 namespace molecularmaps {
@@ -30,12 +32,12 @@ public:
     /**
      * Invokes the rendering calls
      */
-    virtual bool Render(core::view::CallRender3D& call);
+    virtual bool Render(core::view::CallRender3D_2& call);
 
     /**
      * Invokes the rendering calls using wireframe rendering
      */
-    virtual bool RenderWireFrame(core::view::CallRender3D& call);
+    virtual bool RenderWireFrame(core::view::CallRender3D_2& call);
 
     /**
      * Update function for the local data to render
@@ -59,6 +61,12 @@ protected:
     virtual void release(void);
 
 private:
+    /** Pointer to the object containing the shader program */
+    std::shared_ptr<glowl::GLSLProgram> shaderProgram;
+
+    /** Pointer to the buffer containing the relevant data */
+    std::shared_ptr<glowl::BufferObject> bufferObject;
+
     /** Pointer to the vector containing the face vertex indices */
     const std::vector<uint>* faces;
 

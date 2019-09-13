@@ -29,7 +29,7 @@ using namespace megamol::protein_calls;
  * MapGenerator::MapGenerator
  */
 MapGenerator::MapGenerator(void)
-    : Renderer3DModule()
+    : Renderer3DModule_2()
     , aoActive("ambientOcclusion::useAO", "Flag whether or not use Ambient Occlusion for the tunnel detection.")
     , aoAngleFactorParam("ambientOcclusion::angleFactor", "Factor for the angle between two sample directions")
     , aoEvalParam("ambientOcclusion::eval", "Scaling factor for the final brightness value")
@@ -340,7 +340,7 @@ bool MapGenerator::allElementsTrue(const std::vector<bool>& p_vec) {
  * MapGenerator::capColouring
  */
 bool MapGenerator::capColouring(
-    CallTriMeshData* p_cap_data_call, view::CallRender3D* p_cr3d, protein_calls::BindingSiteCall* p_bs) {
+    CallTriMeshData* p_cap_data_call, view::CallRender3D_2* p_cr3d, protein_calls::BindingSiteCall* p_bs) {
     // Check the calls.
     if (p_bs == nullptr || p_cr3d == nullptr) {
         return false;
@@ -1324,29 +1324,19 @@ void MapGenerator::drawMap() {
 /*
  * MapGenerator::GetExtents
  */
-bool MapGenerator::GetExtents(Call& call) {
-    view::CallRender3D* cr3d = dynamic_cast<view::CallRender3D*>(&call);
-    if (cr3d == nullptr) return false;
-
+bool MapGenerator::GetExtents(view::CallRender3D_2& call) {
     CallTriMeshData* ctmd = this->meshDataSlot.CallAs<CallTriMeshData>();
     if (ctmd == nullptr) return false;
 
-    ctmd->SetFrameID(static_cast<uint>(cr3d->Time()));
+    ctmd->SetFrameID(static_cast<uint>(call.Time()));
     if (!(*ctmd)(1)) return false; // GetExtent of CallTriMeshData
 
-    cr3d->SetTimeFramesCount(ctmd->FrameCount());
-    cr3d->AccessBoundingBoxes().Clear();
+    call.SetTimeFramesCount(ctmd->FrameCount());
+    call.AccessBoundingBoxes().Clear();
     auto tmpBBox = ctmd->AccessBoundingBoxes().ObjectSpaceBBox();
-    cr3d->AccessBoundingBoxes().SetObjectSpaceBBox(tmpBBox);
+    call.AccessBoundingBoxes().SetBoundingBox(tmpBBox);
     tmpBBox = ctmd->AccessBoundingBoxes().ObjectSpaceClipBox();
-    cr3d->AccessBoundingBoxes().SetObjectSpaceClipBox(tmpBBox);
-    float scale = ctmd->AccessBoundingBoxes().ClipBox().LongestEdge();
-    if (scale > 0.0f) {
-        scale = 2.0f / scale;
-    } else {
-        scale = 1.0f;
-    }
-    cr3d->AccessBoundingBoxes().MakeScaledWorld(scale);
+    call.AccessBoundingBoxes().SetClipBox(tmpBBox);
 
     return true;
 }
@@ -3570,7 +3560,7 @@ void MapGenerator::rebuildSurface(
 /*
  * MapGenerator::Render
  */
-bool MapGenerator::Render(Call& call) {
+bool MapGenerator::Render(view::CallRender3D_2& call) {
     // Check if we need to reload the shaders.
     bool shaderReloaded = false;
     if (this->shaderReloadButtonParam.IsDirty()) {
@@ -3587,8 +3577,6 @@ bool MapGenerator::Render(Call& call) {
     }
 
     // Set up the calls for the CallTriMeshData call and the MolecularDataCall call.
-    view::CallRender3D* cr3d = dynamic_cast<view::CallRender3D*>(&call);
-    if (cr3d == nullptr) return false;
     CallTriMeshData* ctmd = this->meshDataSlot.CallAs<CallTriMeshData>();
     if (ctmd == nullptr) return false;
     CallTriMeshData* cctmd = this->meshDataSlotWithCap.CallAs<CallTriMeshData>();
@@ -3596,26 +3584,19 @@ bool MapGenerator::Render(Call& call) {
     if (mdc == nullptr) return false;
 
     // Set the frame for the MolecularDataCall .
-    mdc->SetFrameID(static_cast<uint>(cr3d->Time()));
+    mdc->SetFrameID(static_cast<uint>(call.Time()));
     if (!(*mdc)(1)) return false;
 
     // Set the frame for the CallTriMeshData and get the bounding box.
-    ctmd->SetFrameID(static_cast<uint>(cr3d->Time()));
+    ctmd->SetFrameID(static_cast<uint>(call.Time()));
     if (!(*ctmd)(1)) return false;
-    float scale = ctmd->AccessBoundingBoxes().ClipBox().LongestEdge();
-    if (scale > 0.0f) {
-        scale = 2.0f / scale;
-    } else {
-        scale = 1.0f;
-    }
-    ::glScalef(scale, scale, scale);
 
     // Get the data from the MolecularDataCall.
-    mdc->SetFrameID(static_cast<uint>(cr3d->Time()));
+    mdc->SetFrameID(static_cast<uint>(call.Time()));
     if (!(*mdc)(0)) return false;
 
     // Get the data from the CallTriMeshData.
-    ctmd->SetFrameID(static_cast<uint>(cr3d->Time()));
+    ctmd->SetFrameID(static_cast<uint>(call.Time()));
     if (!(*ctmd)(0)) return false;
 
     // Set up OpenGL.
@@ -3690,9 +3671,14 @@ bool MapGenerator::Render(Call& call) {
         Color::ReadColorTableFromFile(group_colour_param.Param<param::FilePathParam>()->Value(), group_colour_table);
 
         // Get the bounding box, the view direction and the up direction of the camera.
-        auto bbox = cr3d->AccessBoundingBoxes().ObjectSpaceBBox();
-        auto eye_dir = cr3d->GetCameraParameters()->EyeDirection();
-        auto up_dir = cr3d->GetCameraParameters()->EyeUpVector();
+        auto bbox = call.AccessBoundingBoxes().BoundingBox();
+        view::Camera_2 cam;
+        call.GetCamera(cam);
+        cam_type::snapshot_type snapshot;
+        cam_type::matrix_type viewTemp, projTemp;
+        cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
+        glm::vec3 eye_dir = static_cast<glm::vec4>(snapshot.view_vector);
+        glm::vec3 up_dir = static_cast<glm::vec4>(snapshot.up_vector);
 
         if (ctmd->Count() > 0 && ctmd->Objects()[0].GetVertexCount() > 0) {
             // Create local copy of the mesh.
@@ -3896,7 +3882,7 @@ bool MapGenerator::Render(Call& call) {
                 protein_calls::BindingSiteCall* bs = this->zeBindingSiteSlot.CallAs<protein_calls::BindingSiteCall>();
                 if (bs != nullptr) {
                     (*bs)(protein_calls::BindingSiteCall::CallForGetData);
-                    if (!this->capColouring(cctmd, cr3d, bs)) {
+                    if (!this->capColouring(cctmd, &call, bs)) {
                         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
                             "Unable to show the shadow of the cap!"
                             "\nPlease contact the developer to fix this.\n");
@@ -3907,8 +3893,9 @@ bool MapGenerator::Render(Call& call) {
 
             // Create sphere.
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Creating the sphere...");
-            if (!createSphere(
-                    cr3d->GetCameraParameters()->EyeDirection(), cr3d->GetCameraParameters()->EyeUpVector())) {
+            vec3f eyevislib(glm::value_ptr(eye_dir));
+            vec3f upvislib(glm::value_ptr(up_dir));
+            if (!createSphere(eyevislib, upvislib)) {
                 return false;
             }
             this->computed_sphere = true;
@@ -4163,9 +4150,9 @@ bool MapGenerator::Render(Call& call) {
 
     // Render the protein.
     if (this->draw_wireframe_param.Param<param::BoolParam>()->Value()) {
-        this->triMeshRenderer.RenderWireFrame(*cr3d);
+        this->triMeshRenderer.RenderWireFrame(call);
     } else {
-        this->triMeshRenderer.Render(*cr3d);
+        this->triMeshRenderer.Render(call);
     }
 
     // Render the geodesic lines.
