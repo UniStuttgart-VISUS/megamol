@@ -199,6 +199,7 @@ private:
         return true;
     }
 
+	// FIXME: ModuleList_t::iterator not valid after re-allocation of unterlying std::vector memory => old iterators get invalidated and the user is helpless
     [[nodiscard]] ModuleList_t::iterator find_module(std::string const& name) {
         std::shared_lock<std::shared_mutex> lock(graph_lock_);
 
@@ -208,6 +209,7 @@ private:
         return it;
     }
 
+	// FIXME: same as above
         [[nodiscard]] ModuleList_t::const_iterator find_module(std::string const& name) const {
         std::shared_lock<std::shared_mutex> lock(graph_lock_);
 
@@ -232,6 +234,7 @@ private:
         return true;
     }
 
+	// FIXME: same invalidation problem as with find_module above
     [[nodiscard]] CallList_t::iterator find_call(std::string const& name) {
         std::shared_lock<std::shared_mutex> lock(graph_lock_);
 
@@ -241,6 +244,7 @@ private:
         return it;
     }
 
+	// FIXME: same as above
         [[nodiscard]] CallList_t::const_iterator find_call(std::string const& name) const {
         std::shared_lock<std::shared_mutex> lock(graph_lock_);
 
