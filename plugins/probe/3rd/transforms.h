@@ -636,14 +636,15 @@ void pcl::transformPointCloud(const pcl::PointCloud<PointT>& cloud_in, pcl::Poin
             cloud_out.points.assign(cloud_in.points.begin(), cloud_in.points.end());
         else
             cloud_out.points.resize(cloud_in.points.size());
-        cloud_out.sensor_orientation_ = cloud_in.sensor_orientation_;
-        cloud_out.sensor_origin_ = cloud_in.sensor_origin_;
+        //cloud_out.sensor_orientation_ = cloud_in.sensor_orientation_;
+        //cloud_out.sensor_origin_ = cloud_in.sensor_origin_;
     }
 
     pcl::detail::Transformer<Scalar> tf(transform.matrix());
     if (cloud_in.is_dense) {
         // If the dataset is dense, simply transform it!
-        for (size_t i = 0; i < cloud_out.points.size(); ++i) tf.se3(cloud_in[i].data, cloud_out[i].data);
+        for (size_t i = 0; i < cloud_out.points.size(); ++i)
+            tf.se3(cloud_in.points[i].data, cloud_out.points[i].data);
     } else {
         // Dataset might contain NaNs and Infs, so check for them first,
         // otherwise we get errors during the multiplication (?)
@@ -651,7 +652,7 @@ void pcl::transformPointCloud(const pcl::PointCloud<PointT>& cloud_in, pcl::Poin
             if (!std::isfinite(cloud_in.points[i].x) || !std::isfinite(cloud_in.points[i].y) ||
                 !std::isfinite(cloud_in.points[i].z))
                 continue;
-            tf.se3(cloud_in[i].data, cloud_out[i].data);
+            tf.se3(cloud_in.points[i].data, cloud_out.points[i].data);
         }
     }
 }

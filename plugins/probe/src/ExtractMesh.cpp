@@ -3,7 +3,8 @@
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "adios_plugin/CallADIOSData.h"
-#include "concave_hull.h"
+#include "mesh/MeshCalls.h"
+
 
 namespace megamol {
 namespace probe {
@@ -19,7 +20,7 @@ ExtractMesh::ExtractMesh()
     , _zSlot("", "")
     , _xyzSlot("", "")
     , _formatSlot("", "")
-    , _alphaSlot("",""){
+    , _alphaSlot("","") {
     
     
     this->_alphaSlot << new core::param::FloatParam(1.0f);
@@ -42,9 +43,10 @@ ExtractMesh::ExtractMesh()
     this->_zSlot << zEp;
     this->MakeSlotAvailable(&this->_zSlot);
 
-    //this->_deployMeshCall.SetCallback(geocalls::LinesDataCall::ClassName(), "GetData", &ExtractMesh::getData);
-    //this->_deployMeshCall.SetCallback(
-    //    geocalls::LinesDataCall::ClassName(), "GetExtent", &ExtractMesh::getMetaData);
+    this->_deployMeshCall.SetCallback(
+        mesh::CallMesh::ClassName(), mesh::CallMesh::FunctionName(0), &ExtractMesh::getData);
+    this->_deployMeshCall.SetCallback(
+        mesh::CallMesh::ClassName(), mesh::CallMesh::FunctionName(1), &ExtractMesh::getMetaData);
     this->MakeSlotAvailable(&this->_deployMeshCall);
 
     this->_getDataCall.SetCompatibleCall<adios::CallADIOSDataDescription>();
@@ -70,11 +72,11 @@ bool ExtractMesh::InterfaceIsDirty() {
 
 void ExtractMesh::calculateAlphaShape() {
 
-    ::pcl::ConcaveHull<float> hull;
-    ::pcl::PointCloud<float> cloud;
-    std::vector<::pcl::Vertices> polygons;
+    ::pcl::ConcaveHull<pcl::PointXYZ> hull;
 
     
+
+
     hull.setAlpha(this->_alphaSlot.Param<core::param::FloatParam>()->Value());
     hull.setDimension(3);
     hull.reconstruct(cloud, polygons);
@@ -86,10 +88,33 @@ void ExtractMesh::calculateAlphaShape() {
 
 bool ExtractMesh::getData(core::Call& call) {
 
+    auto cm = dynamic_cast<mesh::CallMesh*>(&call);
+
+    // get data from adios
+
+
+    // put data in mesh 
+
+
     return true;
 }
 
 bool ExtractMesh::getMetaData(core::Call& call) {
+
+    auto cm = dynamic_cast<mesh::CallMesh*>(&call);
+    if (cm == nullptr) return false;
+
+    auto cd = this->_getDataCall.CallAs<adios::CallADIOSData>();
+    if (cd == nullptr) return false;
+
+    // get metadata from adios
+    
+    
+    
+    // put metadata in mesh call
+    auto meta_data = cm->getMetaData();
+    //meta_data.
+
 
     return true;
 }

@@ -314,6 +314,7 @@ protected:
 // And this is the "dataset to kd-tree" adaptor class:
 template <typename Derived> struct PointCloudAdaptor {
     typedef typename Derived::coord_t coord_t;
+    typedef typename coord_t::value_t value_t;
 
     const Derived& obj; //!< A const ref to the data set origin
 
@@ -329,13 +330,13 @@ template <typename Derived> struct PointCloudAdaptor {
     // Returns the dim'th component of the idx'th point in the class:
     // Since this is inlined and the "dim" argument is typically an immediate value, the
     //  "if/else's" are actually solved at compile time.
-    inline coord_t kdtree_get_pt(const size_t idx, const size_t dim) const {
+    inline value_t kdtree_get_pt(const size_t idx, const size_t dim) const {
         if (dim == 0)
-            return derived().points[dim * idx + 0];
+            return derived().points[idx].x;
         else if (dim == 1)
-            return derived().points[dim * idx + 1];
+            return derived().points[idx].y;
         else
-            return derived().points[dim * idx + 2];
+            return derived().points[idx].z;
     }
 
     // Optional bounding-box computation: return false to default to a standard bbox computation loop.
@@ -372,7 +373,8 @@ template <typename Derived> struct PointCloudAdaptor {
       using IndicesConstPtr = std::shared_ptr<const std::vector<int> >;
      
       typedef PointCloudAdaptor<pcl::PointCloud<PointT>> PC2KD;
-      using FLANNIndex = ::nanoflann::KDTreeSingleIndexAdaptor<::nanoflann::L2_Simple_Adaptor<PointT, PC2KD>, PC2KD, 3 /* dim */>;
+      using FLANNIndex =
+          ::nanoflann::KDTreeSingleIndexAdaptor<::nanoflann::L2_Simple_Adaptor<PointT, PC2KD>, PC2KD, 3 /* dim */>;
           
 
       // Boost shared pointers
@@ -502,7 +504,7 @@ template <typename Derived> struct PointCloudAdaptor {
       std::shared_ptr<FLANNIndex> flann_index_;
 
       /** \brief Internal pointer to data. */
-      std::shared_ptr<float> cloud_;
+      std::shared_ptr<PointT> cloud_;
       
       /** \brief mapping between internal and external indices. */
       std::vector<int> index_mapping_;
@@ -595,9 +597,11 @@ void pcl::KdTreeFLANN<PointT>::setInputCloud(const PointCloudConstPtr& cloud, co
 
     //flann_index_.reset(new FLANNIndex(::flann::Matrix<float>(cloud_.get(), index_mapping_.size(), dim_),
     //    ::flann::KDTreeSingleIndexParams(15))); // max 15 points/leaf
-    flann_index_.reset(
-        new FLANNIndex(::nanoflann::KDTreeEigenMatrixAdaptor<float>(dim_, cloud_.get(), index_mapping_.size()),
-        ::nanoflann::KDTreeSingleIndexAdaptor(15))); // max 15 points/leaf
+    //flann_index_ =
+    //    std::make_shared<FLANNIndex>(3 /*dim*/, pc2kd, ::nanoflann::KDTreeSingleIndexAdaptorParams(10 /* max leaf */));
+
+    flann_index_ = std::make_shared<FLANNIndex>(
+        3 /*dim*/, cloud_.get(), ::nanoflann::KDTreeSingleIndexAdaptorParams(15 /* max leaf */));
     flann_index_->buildIndex();
 
 
@@ -621,12 +625,12 @@ int pcl::KdTreeFLANN<PointT>::nearestKSearch(
     //::flann::Matrix<float> k_distances_mat(&k_distances[0], 1, k);
     // Wrap the k_indices and k_distances vectors (no data copy)
     const PC2KD pc2kd(cloud_);
-    flann_index_(3 /*dim*/, pc2kd, ::nanoflann::KDTreeSingleIndexAdaptorParams(10 /* max leaf */));
+    flann_index_ = std::make_shared<FLANNIndex>(3 /*dim*/, pc2kd, ::nanoflann::KDTreeSingleIndexAdaptorParams(10 /* max leaf */));
     flann_index_->buildIndex();
     //flann_index_->knnSearch(::flann::Matrix<float>(&query[0], 1, dim_), k_indices_mat, k_distances_mat, k, param_k_);
 
-    nanoflann::KNNResultSet<PointT> resultSet(k);
-    resultSet.init(k_indices, k_distances);
+    nanoflann::KNNResultSet<float,int,int> resultSet(k);
+    resultSet.init(k_indices.data(), k_distances.data());
     flann_index_->findNeighbors(resultSet, point, nanoflann::SearchParams(10));
 
     // Do mapping to original point cloud
@@ -656,10 +660,11 @@ int pcl::KdTreeFLANN<PointT>::radiusSearch(const PointT& point, double radius, s
     std::vector<std::vector<float>> dists(1);
 
     const PC2KD pc2kd(cloud_);
-    flann_index_(3 /*dim*/, pc2kd, ::nanoflann::KDTreeSingleIndexAdaptorParams(10 /* max leaf */));
+    flann_index_ =
+        std::make_shared<FLANNIndex>(3 /*dim*/, pc2kd, ::nanoflann::KDTreeSingleIndexAdaptorParams(10 /* max leaf */));
     flann_index_->buildIndex();
 
-    std::vector<std::pair<size_t, PointT>> ret_matches;
+    std::vector<std::pair<int, float>> ret_matches;
 
     ::nanoflann::SearchParams params;
     //if (max_nn == static_cast<unsigned int>(total_nr_points_))
@@ -674,9 +679,15 @@ int pcl::KdTreeFLANN<PointT>::radiusSearch(const PointT& point, double radius, s
     int neighbors_in_radius = flann_index_->radiusSearch(point, radius, ret_matches, params);
 
     // XXX
-    k_indices = ret_matches[0].first;
-    k_sqr_dists = ret_matches[0].second;
-
+    k_indices.clear();
+    k_sqr_dists.clear();
+    k_indices.reserve(ret_matches.size());
+    k_sqr_dists.reserve(ret_matches.size());
+    for (auto& element : ret_matches) {
+        k_indices.push_back(element.first);
+        k_sqr_dists.push_back(element.second);
+    }
+    
     // Do mapping to original point cloud
     if (!identity_mapping_) {
         for (int i = 0; i < neighbors_in_radius; ++i) {

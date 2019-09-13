@@ -9,6 +9,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
+#include "concave_hull.h"
 
 namespace megamol {
 namespace probe {
@@ -69,7 +70,10 @@ private:
 
     bool getData(core::Call& call);
 
-    bool getMetaData(core::Call& call); 
+    bool getMetaData(core::Call& call);
+
+    pcl::PointCloud<pcl::PointXYZ> cloud;
+    std::vector<pcl::Vertices> polygons;
 
 };
 

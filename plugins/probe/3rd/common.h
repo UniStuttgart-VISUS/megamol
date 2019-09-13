@@ -69,6 +69,57 @@ public:
 }; // struct Vertices
 
 
+  struct _PointXYZ {
+    union EIGEN_ALIGN16 {
+        float data[4];
+        struct {
+            float x;
+            float y;
+            float z;
+        };
+    };
+
+    //inline pcl::Vector3fMap getVector3fMap() { return (pcl::Vector3fMap(data)); }
+    //inline pcl::Vector3fMapConst getVector3fMap() const { return (pcl::Vector3fMapConst(data)); }
+    //inline pcl::Vector4fMap getVector4fMap() { return (pcl::Vector4fMap(data)); }
+    //inline pcl::Vector4fMapConst getVector4fMap() const { return (pcl::Vector4fMapConst(data)); }
+    //inline pcl::Array3fMap getArray3fMap() { return (pcl::Array3fMap(data)); }
+    //inline pcl::Array3fMapConst getArray3fMap() const { return (pcl::Array3fMapConst(data)); }
+    //inline pcl::Array4fMap getArray4fMap() { return (pcl::Array4fMap(data)); }
+    //inline pcl::Array4fMapConst getArray4fMap() const { return (pcl::Array4fMapConst(data)); }
+
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  };
+
+    /** \brief A point structure representing Euclidean xyz coordinates. (SSE friendly)
+ * \ingroup common
+ */
+struct EIGEN_ALIGN16 PointXYZ : public _PointXYZ {
+    inline PointXYZ(const _PointXYZ& p) {
+        x = p.x;
+        y = p.y;
+        z = p.z;
+        data[3] = 1.0f;
+    }
+
+    inline PointXYZ() {
+        x = y = z = 0.0f;
+        data[3] = 1.0f;
+    }
+
+    inline PointXYZ(float _x, float _y, float _z) {
+        x = _x;
+        y = _y;
+        z = _z;
+        data[3] = 1.0f;
+    }
+
+    typedef float value_t;
+
+    friend std::ostream& operator<<(std::ostream& os, const PointXYZ& p);
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+};
+
 struct PCLHeader {
     PCLHeader() : seq(0), stamp() {}
 
@@ -149,7 +200,34 @@ protected:
         indices_.reset();
     }
 
-public:
+    /** \brief The input point cloud dataset. */
+    PointCloudConstPtr input_;
+
+    /** \brief A pointer to the vector of point indices to use. */
+    IndicesPtr indices_;
+
+    /** \brief Set to true if point indices are used. */
+    bool use_indices_;
+
+    /** \brief If no set of indices are given, we construct a set of fake indices that mimic the input PointCloud. */
+    bool fake_indices_;
+
+    /** \brief This method should get called before starting the actual computation.
+     *
+     * Internally, initCompute() does the following:
+     *   - checks if an input dataset is given, and returns false otherwise
+     *   - checks whether a set of input indices has been given. Returns true if yes.
+     *   - if no input indices have been given, a fake set is created, which will be used until:
+     *     - either a new set is given via setIndices(), or
+     *     - a new cloud is given that has a different set of points. This will trigger an update on the set of fake
+     * indices
+     */
+    bool initCompute();
+
+    /** \brief This method should get called after finishing the actual computation.
+     */
+    bool deinitCompute();
+
     /** \brief Provide a pointer to the input dataset
      * \param[in] cloud the const boost shared pointer to a PointCloud message
      */
@@ -195,35 +273,6 @@ public:
      * \param[in] pos position in indices_ vector
      */
     inline const PointT& operator[](size_t pos) const { return ((*input_)[(*indices_)[pos]]); }
-
-protected:
-    /** \brief The input point cloud dataset. */
-    PointCloudConstPtr input_;
-
-    /** \brief A pointer to the vector of point indices to use. */
-    IndicesPtr indices_;
-
-    /** \brief Set to true if point indices are used. */
-    bool use_indices_;
-
-    /** \brief If no set of indices are given, we construct a set of fake indices that mimic the input PointCloud. */
-    bool fake_indices_;
-
-    /** \brief This method should get called before starting the actual computation.
-     *
-     * Internally, initCompute() does the following:
-     *   - checks if an input dataset is given, and returns false otherwise
-     *   - checks whether a set of input indices has been given. Returns true if yes.
-     *   - if no input indices have been given, a fake set is created, which will be used until:
-     *     - either a new set is given via setIndices(), or
-     *     - a new cloud is given that has a different set of points. This will trigger an update on the set of fake
-     * indices
-     */
-    bool initCompute();
-
-    /** \brief This method should get called after finishing the actual computation.
-     */
-    bool deinitCompute();
 
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -283,8 +332,8 @@ void copyPointCloud(
     cloud_out.width = static_cast<uint32_t>(indices.size());
     cloud_out.height = 1;
     cloud_out.is_dense = cloud_in.is_dense;
-    cloud_out.sensor_orientation_ = cloud_in.sensor_orientation_;
-    cloud_out.sensor_origin_ = cloud_in.sensor_origin_;
+    //cloud_out.sensor_orientation_ = cloud_in.sensor_orientation_;
+    //cloud_out.sensor_origin_ = cloud_in.sensor_origin_;
 
     // Iterate over each point
     for (size_t i = 0; i < indices.size(); ++i) cloud_out.points[i] = cloud_in.points[indices[i]];

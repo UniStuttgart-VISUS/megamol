@@ -1327,9 +1327,9 @@ void pcl::demeanPointCloud(const pcl::PointCloud<PointT>& cloud_in, const Eigen:
 
     // Subtract the centroid from cloud_in
     for (size_t i = 0; i < cloud_in.points.size(); ++i) {
-        cloud_out[i].x -= static_cast<float>(centroid[0]);
-        cloud_out[i].y -= static_cast<float>(centroid[1]);
-        cloud_out[i].z -= static_cast<float>(centroid[2]);
+        cloud_out.points[i].x -= static_cast<float>(centroid[0]);
+        cloud_out.points[i].y -= static_cast<float>(centroid[1]);
+        cloud_out.points[i].z -= static_cast<float>(centroid[2]);
     }
 }
 
