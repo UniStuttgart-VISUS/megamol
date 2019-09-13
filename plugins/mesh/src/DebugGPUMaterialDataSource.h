@@ -58,6 +58,8 @@ namespace megamol
 
 			virtual bool getDataCallback(core::Call& caller);
 
+            virtual bool getMetaDataCallback(core::Call& caller);
+
 			/**
 			* Generate material data for debugging, i.e. load a fixed btf shader
 			*

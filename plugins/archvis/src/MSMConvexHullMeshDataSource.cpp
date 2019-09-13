@@ -1,7 +1,7 @@
 #include "MSMConvexHullMeshDataSource.h"
 
 #include "MSMDataCall.h"
-#include "mesh/CallGPUMeshData.h"
+#include "mesh/MeshCalls.h"
 
 #include <QuickHull.hpp>
 
@@ -56,7 +56,7 @@ bool megamol::archvis::MSMConvexHullDataSource::getDataCallback(core::Call& call
     auto indexBuffer = hull.getIndexBuffer();
     auto vertexBuffer = hull.getVertexBuffer();
 
-    mc->setGPUMeshes(m_gpu_meshes);
+    mc->setData(m_gpu_meshes);
 
     this->m_MSM_hash = msm_call->DataHash();
 

@@ -1,4 +1,4 @@
-#
+﻿#
 # MegaMol™ mesh Plugin
 # Copyright 2017, by MegaMol Team
 # Alle Rechte vorbehalten. All rights reserved.
@@ -15,6 +15,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
 
   # Add externals.
   require_external(quickhull)
+  require_external(tinyobjloader)
 
   # Collect source files
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
@@ -29,7 +30,9 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
                                                     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/external>
                                                     "src")
-  target_link_libraries(${PROJECT_NAME} PRIVATE core PUBLIC quickhull)
+  target_link_libraries(${PROJECT_NAME} 
+    PRIVATE core 
+    PUBLIC quickhull tinyobjloader compositing_gl)
 
   if(MSVC)
       target_compile_definitions(${PROJECT_NAME} PRIVATE NOMINMAX)

@@ -62,8 +62,18 @@ protected:
      */
     std::array<float, 6> m_bbox;
 
-
+    /**
+     * This module's storage class for GPU meshes.
+     * If connected within a chain of mesh datasource (but not the first module in the chain),
+     * this storage should remain unused and instead the collection provided by the left-hand-side module is used.
+     */
     std::shared_ptr<GPUMeshCollection> m_gpu_meshes;
+
+    /**
+     * List of indices of all GPU submeshes that this module added to the used mesh collection.
+     * Needed to delete/update submeshes if the collection is shared across a chain of data sources modules.
+     */
+    std::vector<size_t> m_mesh_collection_indices;
 
     /** The slot for querying additional mesh data, i.e. a rhs chaining connection */
     megamol::core::CallerSlot m_mesh_callerSlot;

@@ -7,7 +7,7 @@
 #include "stdafx.h"
 
 #include "mesh/AbstractGPUMeshDataSource.h"
-#include "mesh/CallGPUMeshData.h"
+#include "mesh/MeshCalls.h"
 
 
 megamol::mesh::AbstractGPUMeshDataSource::AbstractGPUMeshDataSource()
@@ -17,7 +17,7 @@ megamol::mesh::AbstractGPUMeshDataSource::AbstractGPUMeshDataSource()
     this->m_getData_slot.SetCallback(
         CallGPUMeshData::ClassName(), "GetData", &AbstractGPUMeshDataSource::getDataCallback);
     this->m_getData_slot.SetCallback(
-        CallGPUMeshData::ClassName(), "GetExtent", &AbstractGPUMeshDataSource::getExtentCallback);
+        CallGPUMeshData::ClassName(), "GetMetaData", &AbstractGPUMeshDataSource::getExtentCallback);
     this->MakeSlotAvailable(&this->m_getData_slot);
 
     this->m_mesh_callerSlot.SetCompatibleCall<CallGPUMeshDataDescription>();
@@ -36,8 +36,13 @@ bool megamol::mesh::AbstractGPUMeshDataSource::getExtentCallback(core::Call& cal
     CallGPUMeshData* mc = dynamic_cast<CallGPUMeshData*>(&caller);
     if (mc == NULL) return false;
 
-    mc->SetExtent(
-        1, this->m_bbox[0], this->m_bbox[1], this->m_bbox[2], this->m_bbox[3], this->m_bbox[4], this->m_bbox[5]);
+    megamol::core::BoundingBoxes bboxs;
+    bboxs.SetObjectSpaceBBox(
+        this->m_bbox[0], this->m_bbox[1], this->m_bbox[2], this->m_bbox[3], this->m_bbox[4], this->m_bbox[5]);
+    bboxs.SetObjectSpaceClipBox(
+        this->m_bbox[0], this->m_bbox[1], this->m_bbox[2], this->m_bbox[3], this->m_bbox[4], this->m_bbox[5]);
+
+    mc->setMetaData({0, 1, 0, bboxs});
 
     return true;
 }
