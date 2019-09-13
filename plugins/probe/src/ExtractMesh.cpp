@@ -1,7 +1,9 @@
 #include "ExtractMesh.h"
+#include "mmcore/param/FloatParam.h"
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "adios_plugin/CallADIOSData.h"
+#include "concave_hull.h"
 
 namespace megamol {
 namespace probe {
@@ -16,9 +18,12 @@ ExtractMesh::ExtractMesh()
     , _ySlot("", "")
     , _zSlot("", "")
     , _xyzSlot("", "")
-    , _formatSlot("", "") {
+    , _formatSlot("", "")
+    , _alphaSlot("",""){
     
-
+    
+    this->_alphaSlot << new core::param::FloatParam(1.0f);
+    this->MakeSlotAvailable(&this->_alphaSlot);
 
     core::param::EnumParam* ep = new core::param::EnumParam(0);
     ep->SetTypePair(0, "alpha_shape");
@@ -65,6 +70,14 @@ bool ExtractMesh::InterfaceIsDirty() {
 
 void ExtractMesh::calculateAlphaShape() {
 
+    ::pcl::ConcaveHull<float> hull;
+    ::pcl::PointCloud<float> cloud;
+    std::vector<::pcl::Vertices> polygons;
+
+    
+    hull.setAlpha(this->_alphaSlot.Param<core::param::FloatParam>()->Value());
+    hull.setDimension(3);
+    hull.reconstruct(cloud, polygons);
 
 
 

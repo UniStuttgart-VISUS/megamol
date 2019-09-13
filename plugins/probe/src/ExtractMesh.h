@@ -57,7 +57,7 @@ protected:
     core::param::ParamSlot _zSlot;
     core::param::ParamSlot _xyzSlot;
     core::param::ParamSlot _formatSlot;
-
+    core::param::ParamSlot _alphaSlot;
 
 
 

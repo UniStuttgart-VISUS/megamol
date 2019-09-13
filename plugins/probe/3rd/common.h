@@ -44,6 +44,7 @@
 #include <Eigen/Dense>
 #include <memory>
 #include <vector>
+#include "vislib/sys/Log.h"
 
 #ifdef _DEBUG
 #    define PCL_DEBUG vislib::sys::Log::DefaultLog.WriteWarn
@@ -165,12 +166,12 @@ public:
     /** \brief Provide a pointer to the vector of indices that represents the input data.
      * \param[in] indices a pointer to the indices that represent the input data.
      */
-    void setIndices(const IndicesConstPtr& indices);
+    virtual void setIndices(const IndicesConstPtr& indices);
 
     /** \brief Provide a pointer to the vector of indices that represents the input data.
      * \param[in] indices a pointer to the indices that represent the input data.
      */
-    void setIndices(const PointIndicesConstPtr& indices);
+    virtual void setIndices(const PointIndicesConstPtr& indices);
 
     /** \brief Set the indices for the points laying within an interest region of
      * the point cloud.
@@ -180,7 +181,7 @@ public:
      * \param[in] nb_rows the number of rows to be considered row_start included
      * \param[in] nb_cols the number of columns to be considered col_start included
      */
-    void setIndices(size_t row_start, size_t col_start, size_t nb_rows, size_t nb_cols);
+    virtual void setIndices(size_t row_start, size_t col_start, size_t nb_rows, size_t nb_cols);
 
     /** \brief Get a pointer to the vector of indices used. */
     inline IndicesPtr const getIndices() { return (indices_); }
@@ -427,6 +428,105 @@ public:
         for (int i = 0; i < nr_dimensions_; ++i) out[i] = ptr[i];
     }
 };
+
+
+template <typename PointT> pcl::PCLBase<PointT>::PCLBase() : input_(), use_indices_(false), fake_indices_(false) {}
+
+template <typename PointT>
+pcl::PCLBase<PointT>::PCLBase(const PCLBase& base)
+    : input_(base.input_)
+    , indices_(base.indices_)
+    , use_indices_(base.use_indices_)
+    , fake_indices_(base.fake_indices_) {}
+
+template <typename PointT> void pcl::PCLBase<PointT>::setInputCloud(const PointCloudConstPtr& cloud) { input_ = cloud; }
+
+
+template <typename PointT> void pcl::PCLBase<PointT>::setIndices(const IndicesPtr& indices) {
+    indices_ = indices;
+    fake_indices_ = false;
+    use_indices_ = true;
+}
+
+template <typename PointT> void pcl::PCLBase<PointT>::setIndices(const IndicesConstPtr& indices) {
+    indices_.reset(new std::vector<int>(*indices));
+    fake_indices_ = false;
+    use_indices_ = true;
+}
+
+
+template <typename PointT> void pcl::PCLBase<PointT>::setIndices(const PointIndicesConstPtr& indices) {
+    indices_.reset(new std::vector<int>(indices->indices));
+    fake_indices_ = false;
+    use_indices_ = true;
+}
+
+
+template <typename PointT>
+void pcl::PCLBase<PointT>::setIndices(size_t row_start, size_t col_start, size_t nb_rows, size_t nb_cols) {
+    if ((nb_rows > input_->height) || (row_start > input_->height)) {
+        vislib::sys::Log::DefaultLog.WriteError("[PCLBase::setIndices] cloud is only %d height", input_->height);
+        return;
+    }
+
+    if ((nb_cols > input_->width) || (col_start > input_->width)) {
+        vislib::sys::Log::DefaultLog.WriteError("[PCLBase::setIndices] cloud is only %d width", input_->width);
+        return;
+    }
+
+    size_t row_end = row_start + nb_rows;
+    if (row_end > input_->height) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "[PCLBase::setIndices] %d is out of rows range %d", row_end, input_->height);
+        return;
+    }
+
+    size_t col_end = col_start + nb_cols;
+    if (col_end > input_->width) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "[PCLBase::setIndices] %d is out of columns range %d", col_end, input_->width);
+        return;
+    }
+
+    indices_.reset(new std::vector<int>);
+    indices_->reserve(nb_cols * nb_rows);
+    for (size_t i = row_start; i < row_end; i++)
+        for (size_t j = col_start; j < col_end; j++) indices_->push_back(static_cast<int>((i * input_->width) + j));
+    fake_indices_ = false;
+    use_indices_ = true;
+}
+
+template <typename PointT> bool pcl::PCLBase<PointT>::initCompute() {
+    // Check if input was set
+    if (!input_) return (false);
+
+    // If no point indices have been given, construct a set of indices for the entire input point cloud
+    if (!indices_) {
+        fake_indices_ = true;
+        indices_.reset(new std::vector<int>);
+    }
+
+    // If we have a set of fake indices, but they do not match the number of points in the cloud, update them
+    if (fake_indices_ && indices_->size() != input_->points.size()) {
+        size_t indices_size = indices_->size();
+        try {
+            indices_->resize(input_->points.size());
+        } catch (const std::bad_alloc&) {
+            vislib::sys::Log::DefaultLog.WriteError(
+                "[initCompute] Failed to allocate %lu indices.\n", input_->points.size());
+        }
+        for (size_t i = indices_size; i < indices_->size(); ++i) {
+            (*indices_)[i] = static_cast<int>(i);
+        }
+    }
+
+    return (true);
+}
+
+template <typename PointT> bool pcl::PCLBase<PointT>::deinitCompute() { return (true); }
+
+#define PCL_INSTANTIATE_PCLBase(T) template class PCL_EXPORTS pcl::PCLBase<T>;
+
 
 
 } // namespace pcl
