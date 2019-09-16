@@ -442,7 +442,7 @@ function(require_external NAME)
       set(TINYOBJLOADER_LIB "lib/tinyobjloader.lib")
     else()
       include(GNUInstallDirs)
-      set(TINYOBJLOADER_LIB "${CMAKE_INSTALL_LIBDIR}/tinyobjloader.a")
+      set(TINYOBJLOADER_LIB "${CMAKE_INSTALL_LIBDIR}/libtinyobjloader.a")
     endif()
 
     add_external_project(tinyobjloader
