@@ -28,9 +28,13 @@ void main() {
     vec3 dirColor2 = vec3(1) + normal * sign(radii);
     dirColor = any(lessThan(dirColor2, vec3(0.5)))? dirColor2 * vec3(0.5) : dirColor1;
 
-    uint flag = flagsArray[(flag_offset + gl_InstanceID)];
+    uint flag = FLAG_ENABLED;
+    bool flags_available = (options & OPTIONS_USE_FLAGS) > 0;
+    if (flags_available) {
+        flag = flagsArray[(flag_offset + inst)];
+    }
     vec4 col = vec4(colArray[inst].x, colArray[inst].y, colArray[inst].z, colArray[inst].w);
-    vertColor = compute_color(col, flag, tf_texture, tf_range, global_color, flag_selected_col, flag_softselected_col, color_options);
+    vertColor = compute_color(col, flag, tf_texture, tf_range, global_color, flag_selected_col, flag_softselected_col, options);
     
     vec4 cornerPos;
     cornerPos.xyz = cube_strip[corner];
@@ -40,4 +44,17 @@ void main() {
     wsPos = inPos + cornerPos; // corners relative to world space glyph positions
 
     gl_Position =  MVP * wsPos;
+
+    bool clip_available = (options & OPTIONS_USE_CLIP) > 0;
+    if (clip_available) {
+        vec3 planeNormal = clip_data.xyz;
+        float dist = dot(planeNormal, wsPos.xyz) + clip_data.w;
+        if (dist < 0.0) {
+            gl_Position.w = 0.0;
+        }
+    }
+
+    if (flags_available && !bitflag_isVisible(flag)) {
+        gl_Position.w = 0.0;
+    }
 }

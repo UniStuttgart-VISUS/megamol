@@ -104,7 +104,7 @@ private:
         SUPERQUADRIC = 3,
     };
 
-    enum color_options { USE_GLOBAL = 1 << 0, USE_TRANSFER_FUNCTION = 1 << 1, USE_FLAGS = 1 << 2 };
+    enum glyph_options { USE_GLOBAL = 1 << 0, USE_TRANSFER_FUNCTION = 1 << 1, USE_FLAGS = 1 << 2, USE_CLIP = 1 << 3 };
 
     /**The ellipsoid shader*/
     vislib::graphics::gl::GLSLShader ellipsoidShader;
@@ -114,16 +114,20 @@ private:
     std::vector<core::utility::SSBOBufferArray> radius_buffers;
     std::vector<core::utility::SSBOBufferArray> direction_buffers;
     std::vector<core::utility::SSBOBufferArray> color_buffers;
-
+    core::utility::SSBOBufferArray flags_buffer;
+    
     /** The slot to fetch the data */
     megamol::core::CallerSlot getDataSlot;
+    megamol::core::CallerSlot getTFSlot;
+    megamol::core::CallerSlot getClipPlaneSlot;
+    megamol::core::CallerSlot getFlagsSlot;
 
     megamol::core::param::ParamSlot glyphParam;
     megamol::core::param::ParamSlot colorInterpolationParam;
 
     SIZE_T lastHash = -1;
     uint32_t lastFrameID = -1;
-
+    GLuint greyTF;
 };
 
 } // namespace rendering

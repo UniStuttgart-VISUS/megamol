@@ -21,8 +21,9 @@
     <shader name="box_vertex">
         <snippet type="version">430</snippet>
         <snippet type="file">glyph/uniforms.glsl</snippet>
+        <snippet type="file">glyph/options.glsl</snippet>
         <snippet type="file">glyph/ssbo_data.glsl</snippet>
-        <snippet type="file">glyph/tf_lookup.glsl</snippet>
+        <snippet name="core_utils::tflookup"/>
         <snippet type="file">glyph/flags.glsl</snippet>
         <snippet name="bitflags::main"/>
         <snippet type="file">glyph/quaternion_to_matrix.glsl</snippet>
