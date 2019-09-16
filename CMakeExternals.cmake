@@ -451,7 +451,7 @@ function(require_external NAME)
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${TINYOBJLOADER_LIB}"
       CMAKE_ARGS
         -DCMAKE_C_FLAGS=-fPIC
-        -DCMAKE_CXX_FLAGS=-FPIC)
+        -DCMAKE_CXX_FLAGS=-fPIC)
 
     add_external_library(tinyobjloader STATIC
       LIBRARY ${TINYOBJLOADER_LIB})
