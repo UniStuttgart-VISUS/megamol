@@ -30,9 +30,8 @@ matrix:
       env:
         - CC=gcc-7
         - CXX=g++-7
-        - BUILD_TYPE=Release
         - GENERATOR="Unix Makefiles"
-    - name: "gcc 9 (Release)"
+    - name: "gcc 9"
       os: linux
       dist: xenial
       addons:
@@ -55,32 +54,6 @@ matrix:
       env:
         - CC=gcc-9
         - CXX=g++-9
-        - BUILD_TYPE=Release
-        - GENERATOR="Unix Makefiles"
-    - name: "gcc 9 (Debug)"
-      os: linux
-      dist: xenial
-      addons:
-        apt:
-          update: true
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - g++-9
-            - libgl1-mesa-dev
-            - libglu1-mesa-dev
-            - uuid-dev
-            - libunwind8-dev
-            - libxrandr-dev
-            - libxinerama-dev
-            - libxcursor-dev
-            - libxi-dev
-            - libcgal-qt5-dev
-            - libcgal-dev
-      env:
-        - CC=gcc-9
-        - CXX=g++-9
-        - BUILD_TYPE=Debug
         - GENERATOR="Unix Makefiles"
     - name: "gcc 9 (Ninja)"
       os: linux
@@ -106,7 +79,6 @@ matrix:
       env:
         - CC=gcc-9
         - CXX=g++-9
-        - BUILD_TYPE=Release
         - GENERATOR=Ninja
     - name: "clang 8"
       os: linux
@@ -134,7 +106,6 @@ matrix:
       env:
         - CC=clang-8
         - CXX=clang++-8
-        - BUILD_TYPE=Release
         - GENERATOR="Unix Makefiles"
 
 install:
@@ -142,5 +113,5 @@ install:
 
 script:
   - mkdir build && cd build
-  - cmake .. -G"$GENERATOR" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_CXX_FLAGS=-w -DENABLE_CUDA=ON -DSUPPRESS_CUDA_WARNINGS=TRUE -DBUILD_ADIOS_PLUGIN_PLUGIN -DBUILD_PROTEIN_CUDA_PLUGIN=ON -DBUILD_MEGAMOL101_PLUGIN=ON -DBUILD_REMOTE_PLUGIN=ON
+  - cmake .. -G"$GENERATOR" -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS=-w -DENABLE_CUDA=ON -DSUPPRESS_CUDA_WARNINGS=TRUE -DBUILD_ADIOS_PLUGIN_PLUGIN=ON -DBUILD_PROTEIN_CUDA_PLUGIN=ON -DBUILD_MEGAMOL101_PLUGIN=ON -DBUILD_REMOTE_PLUGIN=ON
   - cmake --build . --target install
