@@ -7,7 +7,7 @@
 
 #include "stdafx.h"
 #include "mmcore/view/SwitchRenderer3D.h"
-#include "mmcore/view/CallRender3D.h"
+//#include "mmcore/view/CallRender3D.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "vislib/sys/Log.h"
@@ -19,17 +19,17 @@ using namespace megamol::core;
 /*
  * view::SwitchRenderer3D::SwitchRenderer3D
  */
-view::SwitchRenderer3D::SwitchRenderer3D(void) : view::Renderer3DModule(),
+view::SwitchRenderer3D::SwitchRenderer3D(void) : view::Renderer3DModule_2(),
         renderer1Slot("renderer1", "Call to the first renderer"),
         renderer2Slot("renderer2", "Call to the second renderer"),
         selectedRendererSlot("selection", "Enum which renderer is active"),
         switchRendererBtnSlot("switch", "Switches to the other renderer"),
         selection(0) {
 
-    this->renderer1Slot.SetCompatibleCall<CallRender3DDescription>();
+    this->renderer1Slot.SetCompatibleCall<CallRender3D_2Description>();
     this->MakeSlotAvailable(&this->renderer1Slot);
 
-    this->renderer2Slot.SetCompatibleCall<CallRender3DDescription>();
+    this->renderer2Slot.SetCompatibleCall<CallRender3D_2Description>();
     this->MakeSlotAvailable(&this->renderer2Slot);
 
     param::EnumParam *renSelEnum = new param::EnumParam(1);
@@ -74,11 +74,10 @@ void view::SwitchRenderer3D::release(void) {
 /*
  * view::SwitchRenderer3D::GetExtents
  */
-bool view::SwitchRenderer3D::GetExtents(Call& call) {
-    CallRender3D *src = dynamic_cast<CallRender3D*>(&call);
-    CallRender3D *cr3d = this->callToRenderer(src);
+bool view::SwitchRenderer3D::GetExtents(CallRender3D_2& call) {
+    CallRender3D_2 *cr3d = this->callToRenderer(&call);
     if ((cr3d != NULL) && (*cr3d)(core::view::AbstractCallRender::FnGetExtents)) {
-        *src = *cr3d;
+        call = *cr3d;
         return true;
     }
     return false;
@@ -88,11 +87,10 @@ bool view::SwitchRenderer3D::GetExtents(Call& call) {
 /*
  * view::SwitchRenderer3D::Render
  */
-bool view::SwitchRenderer3D::Render(Call& call) {
-    CallRender3D *src = dynamic_cast<CallRender3D*>(&call);
-    CallRender3D *cr3d = this->callToRenderer(src);
+bool view::SwitchRenderer3D::Render(CallRender3D_2& call) {
+    CallRender3D_2 *cr3d = this->callToRenderer(&call);
     if ((cr3d != NULL) && (*cr3d)(core::view::AbstractCallRender::FnRender)) {
-        *src = *cr3d;
+        call = *cr3d;
         return true;
     }
     return false;
@@ -120,16 +118,16 @@ int view::SwitchRenderer3D::whichRenderer(void) {
         this->selectedRendererSlot.ResetDirty();
 
         if (this->selection == 1) {
-            if (this->renderer1Slot.CallAs<CallRender3D>() == NULL) {
-                if (this->renderer2Slot.CallAs<CallRender3D>() == NULL) {
+            if (this->renderer1Slot.CallAs<CallRender3D_2>() == NULL) {
+                if (this->renderer2Slot.CallAs<CallRender3D_2>() == NULL) {
                     this->selection = 0;
                 } else {
                     this->selection = 2;
                 }
             }
         } else if (this->selection == 2) {
-            if (this->renderer2Slot.CallAs<CallRender3D>() == NULL) {
-                if (this->renderer1Slot.CallAs<CallRender3D>() == NULL) {
+            if (this->renderer2Slot.CallAs<CallRender3D_2>() == NULL) {
+                if (this->renderer1Slot.CallAs<CallRender3D_2>() == NULL) {
                     this->selection = 0;
                 } else {
                     this->selection = 1;
@@ -146,15 +144,15 @@ int view::SwitchRenderer3D::whichRenderer(void) {
 /*
  * view::SwitchRenderer3D::callToRenderer
  */
-view::CallRender3D *view::SwitchRenderer3D::callToRenderer(view::CallRender3D *src) {
+view::CallRender3D_2 *view::SwitchRenderer3D::callToRenderer(view::CallRender3D_2 *src) {
     ASSERT(src != NULL);
-    view::CallRender3D *c = NULL;
+    view::CallRender3D_2 *c = NULL;
     switch (this->whichRenderer()) {
         case 1:
-            c = this->renderer1Slot.CallAs<CallRender3D>();
+            c = this->renderer1Slot.CallAs<CallRender3D_2>();
             break;
         case 2:
-            c = this->renderer2Slot.CallAs<CallRender3D>();
+            c = this->renderer2Slot.CallAs<CallRender3D_2>();
             break;
     }
     if (c != NULL) {
