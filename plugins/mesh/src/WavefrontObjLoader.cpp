@@ -85,9 +85,11 @@ bool megamol::mesh::WavefrontObjLoader::getDataCallback(core::Call& caller) {
                     tinyobj::real_t tx = m_obj_model->attrib.texcoords[2 * idx.texcoord_index + 0];
                     tinyobj::real_t ty = m_obj_model->attrib.texcoords[2 * idx.texcoord_index + 1];
 
-                    this->m_positions.insert(m_positions.end(), {vx,vy,vz} );
+                    this->m_positions.insert(m_positions.end(), {vx, vy, vz});
                     this->m_normals.insert(m_positions.end(), {nx, ny, nz});
                     this->m_texcoords.insert(m_positions.end(), {tx, ty});
+
+                    this->m_indices.emplace_back(index_offset + v);
                 }
                 index_offset += fv;
 
@@ -96,7 +98,29 @@ bool megamol::mesh::WavefrontObjLoader::getDataCallback(core::Call& caller) {
             }
         }
 
-        //this->m_mesh_data_access->addMesh(/*TODO*/);
+        std::vector<MeshDataAccessCollection::VertexAttribute> mesh_attributes;
+
+        mesh_attributes.emplace_back(
+            MeshDataAccessCollection::VertexAttribute{reinterpret_cast<uint8_t*>(this->m_positions.data()),
+                m_positions.size() * MeshDataAccessCollection::getByteSize(MeshDataAccessCollection::FLOAT), 3,
+                MeshDataAccessCollection::FLOAT, 0, 0});
+
+        mesh_attributes.emplace_back(
+            MeshDataAccessCollection::VertexAttribute{reinterpret_cast<uint8_t*>(this->m_normals.data()),
+                m_normals.size() * MeshDataAccessCollection::getByteSize(MeshDataAccessCollection::FLOAT), 3,
+                MeshDataAccessCollection::FLOAT, 0, 0});
+
+        mesh_attributes.emplace_back(
+            MeshDataAccessCollection::VertexAttribute{reinterpret_cast<uint8_t*>(this->m_texcoords.data()),
+                m_texcoords.size() * MeshDataAccessCollection::getByteSize(MeshDataAccessCollection::FLOAT), 2,
+                MeshDataAccessCollection::FLOAT, 0, 0});
+
+        MeshDataAccessCollection::IndexData mesh_indices;
+        mesh_indices.data = reinterpret_cast<uint8_t*>(m_indices.data());
+        mesh_indices.byte_size = m_indices.size() * MeshDataAccessCollection::getByteSize(MeshDataAccessCollection::UNSIGNED_INT);
+        mesh_indices.type = MeshDataAccessCollection::UNSIGNED_INT;
+
+        this->m_mesh_data_access->addMesh(mesh_attributes, mesh_indices);
 
         ++(m_meta_data.m_data_hash);
     }
