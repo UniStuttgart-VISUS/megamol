@@ -434,10 +434,16 @@ namespace MegaMolConf {
                 case (Keys.Control | Keys.W):
                     CloseProjectTab(tabViews.SelectedTab);
                     break;
-                case (Keys.Control | Keys.Down):    // skip next 4 items
+                case (Keys.Control | Keys.Down):    // skip next 4 items downwards
                     try {
                         lbModules.SelectedIndex += 4;
                     } catch {}
+                    break;
+                case (Keys.Control | Keys.Up):    // skip next 4 items upwards
+                    try {
+                        lbModules.SelectedIndex -= 4;
+                    }
+                    catch { }
                     break;
             } 
             return base.ProcessCmdKey(ref msg, keyData);
