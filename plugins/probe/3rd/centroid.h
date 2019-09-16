@@ -899,9 +899,9 @@ inline unsigned int pcl::compute3DCentroid(
     // If the data is dense, we don't need to check for NaN
     if (cloud.is_dense) {
         for (const int& index : indices) {
-            centroid[0] += cloud[index].x;
-            centroid[1] += cloud[index].y;
-            centroid[2] += cloud[index].z;
+            centroid[0] += cloud.points[index].x;
+            centroid[1] += cloud.points[index].y;
+            centroid[2] += cloud.points[index].z;
         }
         centroid /= static_cast<Scalar>(indices.size());
         centroid[3] = 1;
@@ -911,11 +911,14 @@ inline unsigned int pcl::compute3DCentroid(
     unsigned cp = 0;
     for (const int& index : indices) {
         // Check if the point is invalid
-        if (!isFinite(cloud[index])) continue;
+        if (!std::isfinite(cloud.points[index].x) || 
+			!std::isfinite(cloud.points[index].y) || 
+			!std::isfinite(cloud.points[index].z))
+            continue;
 
-        centroid[0] += cloud[index].x;
-        centroid[1] += cloud[index].y;
-        centroid[2] += cloud[index].z;
+        centroid[0] += cloud.points[index].x;
+        centroid[1] += cloud.points[index].y;
+        centroid[2] += cloud.points[index].z;
         ++cp;
     }
     centroid /= static_cast<Scalar>(cp);
@@ -1018,9 +1021,9 @@ inline unsigned int pcl::computeCovarianceMatrix(const pcl::PointCloud<PointT>& 
         // For each point in the cloud
         for (size_t i = 0; i < point_count; ++i) {
             Eigen::Matrix<Scalar, 4, 1> pt;
-            pt[0] = cloud[indices[i]].x - centroid[0];
-            pt[1] = cloud[indices[i]].y - centroid[1];
-            pt[2] = cloud[indices[i]].z - centroid[2];
+            pt[0] = cloud.points[indices[i]].x - centroid[0];
+            pt[1] = cloud.points[indices[i]].y - centroid[1];
+            pt[2] = cloud.points[indices[i]].z - centroid[2];
 
             covariance_matrix(1, 1) += pt.y() * pt.y();
             covariance_matrix(1, 2) += pt.y() * pt.z();
@@ -1039,12 +1042,14 @@ inline unsigned int pcl::computeCovarianceMatrix(const pcl::PointCloud<PointT>& 
         // For each point in the cloud
         for (const int& index : indices) {
             // Check if the point is invalid
-            if (!isFinite(cloud[index])) continue;
+            if (!std::isfinite(cloud.points[index].x) || !std::isfinite(cloud.points[index].y) ||
+                !std::isfinite(cloud.points[index].z))
+                continue;
 
             Eigen::Matrix<Scalar, 4, 1> pt;
-            pt[0] = cloud[index].x - centroid[0];
-            pt[1] = cloud[index].y - centroid[1];
-            pt[2] = cloud[index].z - centroid[2];
+            pt[0] = cloud.points[index].x - centroid[0];
+            pt[1] = cloud.points[index].y - centroid[1];
+            pt[2] = cloud.points[index].z - centroid[2];
 
             covariance_matrix(1, 1) += pt.y() * pt.y();
             covariance_matrix(1, 2) += pt.y() * pt.z();
@@ -1346,13 +1351,13 @@ void pcl::demeanPointCloud(const pcl::PointCloud<PointT>& cloud_in, const std::v
         cloud_out.width = static_cast<uint32_t>(indices.size());
         cloud_out.height = 1;
     }
-    cloud_out.resize(indices.size());
+    cloud_out.points.resize(indices.size());
 
     // Subtract the centroid from cloud_in
     for (size_t i = 0; i < indices.size(); ++i) {
-        cloud_out[i].x = static_cast<float>(cloud_in[indices[i]].x - centroid[0]);
-        cloud_out[i].y = static_cast<float>(cloud_in[indices[i]].y - centroid[1]);
-        cloud_out[i].z = static_cast<float>(cloud_in[indices[i]].z - centroid[2]);
+        cloud_out.points[i].x = static_cast<float>(cloud_in.points[indices[i]].x - centroid[0]);
+        cloud_out.points[i].y = static_cast<float>(cloud_in.points[indices[i]].y - centroid[1]);
+        cloud_out.points[i].z = static_cast<float>(cloud_in.points[indices[i]].z - centroid[2]);
     }
 }
 

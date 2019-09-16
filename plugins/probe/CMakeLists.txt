@@ -30,7 +30,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   target_include_directories(${PROJECT_NAME} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     "include" "src" "3rd")
-  target_link_libraries(${PROJECT_NAME} PRIVATE core adios_plugin Qhull::qhullcpp Eigen nanoflann mesh)
+  target_link_libraries(${PROJECT_NAME} PRIVATE core adios_plugin Qhull::libqhull Eigen nanoflann mesh)
 
   # Installation rules for generated files
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
