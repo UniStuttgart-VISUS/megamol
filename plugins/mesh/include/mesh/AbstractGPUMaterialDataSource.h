@@ -40,6 +40,8 @@ protected:
      */
     virtual bool getDataCallback(core::Call& caller) = 0;
 
+    virtual bool getMetaDataCallback(core::Call& caller) = 0;
+
     /**
      * Implementation of 'Release'.
      */

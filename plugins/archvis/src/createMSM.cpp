@@ -93,7 +93,7 @@ bool megamol::archvis::CreateMSM::getDataCallback(core::Call& caller) {
     auto const node_accessor = node_ft->GetData();
     for (int node_idx = 0; node_idx < node_ft->GetRowsCount(); ++node_idx) {
         auto curr_idx = node_idx * 3;
-        nodes.push_back({node_accessor[curr_idx + 0], node_accessor[curr_idx + 1], node_accessor[curr_idx + 2]});
+        nodes.push_back({node_accessor[curr_idx + 0], node_accessor[curr_idx + 2], node_accessor[curr_idx + 1]});
     }
 
 
@@ -129,9 +129,9 @@ bool megamol::archvis::CreateMSM::getDataCallback(core::Call& caller) {
 
             int type = (elem_idx % 13) == 0 ? 2 : (elem_idx % 13) < 5 ? 0 : 1;
 
-            elements.push_back({
-                type, static_cast<int>(elem_accesssor[curr_idx + 0]), static_cast<int>(elem_accesssor[curr_idx + 1]),
-                    static_cast<int>(elem_accesssor[curr_idx + 2]), static_cast<int>(elem_accesssor[curr_idx + 3])
+            elements.push_back({type, static_cast<int>(elem_accesssor[curr_idx + 0]) - 1,
+                static_cast<int>(elem_accesssor[curr_idx + 1]) - 1, static_cast<int>(elem_accesssor[curr_idx + 2]) - 1,
+                static_cast<int>(elem_accesssor[curr_idx + 3]) - 1
                 });
         }
 
@@ -142,11 +142,11 @@ bool megamol::archvis::CreateMSM::getDataCallback(core::Call& caller) {
     std::vector<int> inputElements;
     inputElements.reserve(inputElement_ft->GetRowsCount());
     auto const inputElem_accesssor = inputElement_ft->GetData();
-    if (inputElement_ft->GetColumnsCount() == 1) {
+    if (inputElement_ft->GetColumnsCount() == 2 /*TODO fix this!*/) {
     
         for (int iE_idx = 0; iE_idx < inputElement_ft->GetRowsCount(); ++iE_idx)
         {
-            inputElements.push_back(inputElem_accesssor[iE_idx]);
+            inputElements.push_back(inputElem_accesssor[iE_idx*2]);
         }
 
     } else {

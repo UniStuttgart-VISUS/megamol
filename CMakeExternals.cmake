@@ -50,7 +50,7 @@ function(require_external NAME)
 
     add_external_headeronly_project(glowl
       GIT_REPOSITORY https://github.com/invor/glowl.git
-      GIT_TAG "v0.1"
+      GIT_TAG "v0.3"
       INCLUDE_DIR "include")
 
   # json
@@ -431,6 +431,27 @@ function(require_external NAME)
       IMPORT_LIBRARY_RELEASE ${SNAPPY_IMPORT_LIB}
       LIBRARY_DEBUG ${SNAPPY_LIB}
       LIBRARY_RELEASE ${SNAPPY_LIB})
+
+  # tinyobjloader
+  elseif(NAME STREQUAL "tinyobjloader")
+    if(TARGET tinyobjloader)
+      return()
+    endif()
+
+    if(WIN32)
+      set(TINYOBJLOADER_LIB "lib/tinyobjloader.lib")
+    else()
+      include(GNUInstallDirs)
+      set(TINYOBJLOADER_LIB "${CMAKE_INSTALL_LIBDIR}/tinyobjloader.a")
+    endif()
+
+    add_external_project(tinyobjloader
+      GIT_REPOSITORY https://github.com/syoyo/tinyobjloader.git
+      GIT_TAG "v2.0.0-rc1"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${TINYOBJLOADER_LIB}")
+
+    add_external_library(tinyobjloader STATIC
+      LIBRARY ${TINYOBJLOADER_LIB})
 
   # tinyply
   elseif(NAME STREQUAL "tinyply")
