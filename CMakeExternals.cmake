@@ -448,7 +448,10 @@ function(require_external NAME)
     add_external_project(tinyobjloader
       GIT_REPOSITORY https://github.com/syoyo/tinyobjloader.git
       GIT_TAG "v2.0.0-rc1"
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${TINYOBJLOADER_LIB}")
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${TINYOBJLOADER_LIB}"
+      CMAKE_ARGS
+        -DCMAKE_C_FLAGS=-fPIC
+        -DCMAKE_CXX_FLAGS=-FPIC)
 
     add_external_library(tinyobjloader STATIC
       LIBRARY ${TINYOBJLOADER_LIB})
