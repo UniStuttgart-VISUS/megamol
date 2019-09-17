@@ -101,6 +101,10 @@ namespace MegaMolConf.Io {
                     Module m = new Module();
                     string mModuleClass = elements[3]; m.Class = mModuleClass;
                     string mModuleName = elements[5]; m.Name = mModuleName;
+                    if(mModuleName.StartsWith("::"))
+                    {
+                        mModuleName = mModuleName.Substring(2);
+                    }
                     modules.Add(m);
 
                     continue;
@@ -111,10 +115,10 @@ namespace MegaMolConf.Io {
                     Module m = new Module();
                     string[] elements = line.Split('"');
                     string mModuleClass = elements[1];                  m.Class = mModuleClass;
-                    string[] mModuleFullName = elements[3].Split(':');  m.Name = mModuleFullName[4];
+                    string[] mModuleFullName = elements[3].Split(':');
+                    m.Name = mModuleFullName.Length == 3 ? mModuleFullName[2] : mModuleFullName[4];
 
-
-                    List<Param> prms = new List<Param>();
+                    List <Param> prms = new List<Param>();
                     int skip = 0;
                     // + skip for current #lines with paramValues
                     // + 1 for a base skip after module creation
@@ -124,10 +128,52 @@ namespace MegaMolConf.Io {
                         line = lines[i + skip + 1];
                         string[] paramElements = line.Split('"');
                         string[] paramFullName = paramElements[1].Split(':');
-                        string pName = paramFullName[6];    p.Name = pName;
+
+                        // we need to put together the full parameter name that was previously split up
+                        // paramName will always start at the 7th position and each consecutive name element 
+                        // has an offset of 2, so the paramName is [6]::[8]:: ... ::[6 + 2i]
+                        string pName = paramFullName[6];
+                        for (int j = 8; j < paramFullName.Length; j+=2)
+                        {
+                            pName += "::" + paramFullName[j];
+                        }
+                        
+                        p.Name = pName;
                         string pValue = paramElements[3];   p.Value = pValue;
 
-                        prms.Add(p);
+                        // in case a mmSetParamValue for a different module appears inbetween params for the current module
+                        // we need to search the other module, get all its params, add the current param and update its paramlist
+                        //
+                        // if a mmSetParamValue is called BEFORE the corresponding mmCreateModule for the required module is called
+                        // you're currently screwed
+                        
+                        // TODO: instead of [4] do [x] to account for different paramFullNameLengths
+                        if (!paramFullName[4].StartsWith(m.Name))
+                        {
+                            foreach (Module mTemp in modules)
+                            {
+                                if (paramFullName[4].StartsWith(mTemp.Name))
+                                {
+                                    List<Param> prmsTemp = new List<Param>();
+                                    if(mTemp.Params != null)
+                                    {
+                                        foreach (Param pTemp in mTemp.Params)
+                                        {
+                                            prmsTemp.Add(pTemp);
+                                        }
+                                        prmsTemp.Add(p);
+                                        mTemp.Params = (prmsTemp.Count == 0) ? null : prmsTemp.ToArray();
+                                    } else
+                                    {
+                                        prmsTemp.Add(p);
+                                        mTemp.Params = (prmsTemp.Count == 0) ? null : prmsTemp.ToArray();
+                                    }
+                                }
+                            }
+                        } else
+                        {
+                            prms.Add(p);
+                        }
 
                         ++skip;
                     }
@@ -147,11 +193,11 @@ namespace MegaMolConf.Io {
                     string[] elements = line.Split('"');
                     string cClass = elements[1];
                     string[] cFrom = elements[3].Split(':');
-                    string cFromModuleName = cFrom[4];
-                    string cFromSlot = cFrom[6];
+                    string cFromModuleName = cFrom.Length == 5 ? cFrom[2] : cFrom[4];
+                    string cFromSlot = cFrom.Length == 5 ? cFrom[4] : cFrom[6];
                     string[] cTo = elements[5].Split(':');
-                    string cToModuleName = cTo[4];
-                    string cToSlot = cTo[6];
+                    string cToModuleName = cTo.Length == 5 ? cTo[2] : cTo[4];
+                    string cToSlot = cTo.Length == 5 ? cTo[4] : cTo[6];
 
                     c.Class = cClass;
 
