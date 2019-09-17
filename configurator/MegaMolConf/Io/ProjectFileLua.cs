@@ -65,101 +65,196 @@ namespace MegaMolConf.Io {
             }
         }
 
-        internal void LoadFromXml(System.Xml.XmlDocument doc) {
-            //List<View> vs = new List<View>();
-            //foreach (System.Xml.XmlNode n in doc.DocumentElement.ChildNodes) {
-            //    if (n.NodeType != System.Xml.XmlNodeType.Element) continue;
-            //    if (n.Name == "view") {
-            //        View v = new View();
-            //        loadViewFromXml(ref v, (System.Xml.XmlElement)n);
-            //        vs.Add(v);
-            //    }
-            //}
-            //Views = vs.ToArray();
-            //GeneratorComment = null;
-            //StartComment = null;
+        internal void LoadFromLua(string filename) {
+            string[] lines = System.IO.File.ReadAllLines(filename);
+            List<View> vs = new List<View>();
 
+            foreach(string line in lines)
+            {
+                if(line.Contains("mmCreateView"))
+                {
+                    View v = new View();
+                    loadViewFromLua(ref v, lines);
+                    vs.Add(v);
+                }
+            }
+
+            Views = vs.ToArray();
+            GeneratorComment = null;
+            StartComment = null;
         }
 
-        private void loadViewFromXml(ref View view, System.Xml.XmlElement n) {
-        //    if (!n.HasAttribute("name")) throw new Exception("View without name encountered");
+        private void loadViewFromLua(ref View view, string[] lines) {
+            // TODO: exception checks needed, currently no checks such as "throw new Exception("Module without class encountered")" are made
+            List<Module> modules = new List<Module>();
+            List<Call> calls = new List<Call>();
 
-        //    view.Name = n.Attributes["name"].Value;
-        //    string viewmodinstname = n.HasAttribute("viewmod") ? n.Attributes["viewmod"].Value : null;
+            for (int i = 0; i < lines.Length; ++i)
+            {
+                string line = lines[i];
 
-        //    List<Module> modules = new List<Module>();
-        //    List<Call> calls = new List<Call>();
+                if (line.Contains("mmCreateView"))
+                {
+                    string[] elements = line.Split('"');
+                    string vName = elements[1];             view.Name = vName;
 
-        //    foreach (System.Xml.XmlNode c in n.ChildNodes) {
-        //        if (c.NodeType != System.Xml.XmlNodeType.Element) continue;
-        //        System.Xml.XmlElement oe = (System.Xml.XmlElement)c;
-        //        if (oe.Name == "module") {
-        //            Module m = new Module();
-        //            if (!oe.HasAttribute("class")) throw new Exception("Module without class encountered");
-        //            if (!oe.HasAttribute("name")) throw new Exception("Module without name encountered");
-        //            m.Class = oe.Attributes["class"].Value;
-        //            m.Name = oe.Attributes["name"].Value;
-        //            if (oe.HasAttribute("confpos")) {
-        //                try {
-        //                    Match pt = Regex.Match(oe.Attributes["confpos"].Value, @"\{\s*X\s*=\s*([-.0-9]+)\s*,\s*Y\s*=\s*([-.0-9]+)\s*\}");
-        //                    if (!pt.Success) throw new Exception();
-        //                    m.ConfPos = new Point(
-        //                        int.Parse(pt.Groups[1].Value),
-        //                        int.Parse(pt.Groups[2].Value));
-        //                } catch { }
-        //            }
+                    Module m = new Module();
+                    string mModuleClass = elements[3]; m.Class = mModuleClass;
+                    string mModuleName = elements[5]; m.Name = mModuleName;
+                    modules.Add(m);
 
-        //            List<Param> prms = new List<Param>();
+                    continue;
+                }
 
-        //            foreach (System.Xml.XmlNode oc in oe.ChildNodes) {
-        //                if (oc.NodeType != System.Xml.XmlNodeType.Element) continue;
-        //                System.Xml.XmlElement oce = (System.Xml.XmlElement)oc;
-        //                if (oce.Name != "param") continue;
-        //                if (!oce.HasAttribute("name")) throw new Exception("Param without name encountered");
+                if(line.Contains("mmCreateModule"))
+                {
+                    Module m = new Module();
+                    string[] elements = line.Split('"');
+                    string mModuleClass = elements[1];                  m.Class = mModuleClass;
+                    string[] mModuleFullName = elements[3].Split(':');  m.Name = mModuleFullName[4];
 
-        //                Param p = new Param();
-        //                p.Name = oce.Attributes["name"].Value;
-        //                p.Value = (oce.HasAttribute("value")) ? oce.Attributes["value"].Value : string.Empty;
-        //                prms.Add(p);
-        //            }
 
-        //            m.Params = (prms.Count == 0) ? null : prms.ToArray();
+                    List<Param> prms = new List<Param>();
+                    int skip = 0;
+                    // + skip for current #lines with paramValues
+                    // + 1 for a base skip after module creation
+                    while (lines[i + skip + 1].Contains("mmSetParamValue"))
+                    {
+                        Param p = new Param();
+                        line = lines[i + skip + 1];
+                        string[] paramElements = line.Split('"');
+                        string[] paramFullName = paramElements[1].Split(':');
+                        string pName = paramFullName[6];    p.Name = pName;
+                        string pValue = paramElements[3];   p.Value = pValue;
 
-        //            modules.Add(m);
-        //            if (m.Name == viewmodinstname) {
-        //                view.ViewModule = m;
-        //            }
-        //        }
-        //        if (oe.Name == "call") {
-        //            Call cl = new Call();
-        //            if (!oe.HasAttribute("class")) throw new Exception("Call without class encountered");
-        //            cl.Class = oe.Attributes["class"].Value;
-        //            if (!oe.HasAttribute("from")) throw new Exception("Call without source encountered");
-        //            string callfromname = oe.Attributes["from"].Value;
-        //            if (!oe.HasAttribute("to")) throw new Exception("Call without destination encountered");
-        //            string calltoname = oe.Attributes["to"].Value;
+                        prms.Add(p);
 
-        //            foreach (Module m in modules) {
-        //                if (callfromname.StartsWith(m.Name)) {
-        //                    cl.FromModule = m;
-        //                    Debug.Assert(callfromname[m.Name.Length] == ':');
-        //                    Debug.Assert(callfromname[m.Name.Length + 1] == ':');
-        //                    cl.FromSlot = callfromname.Substring(m.Name.Length + 2);
-        //                }
-        //                if (calltoname.StartsWith(m.Name)) {
-        //                    cl.ToModule = m;
-        //                    Debug.Assert(calltoname[m.Name.Length] == ':');
-        //                    Debug.Assert(calltoname[m.Name.Length + 1] == ':');
-        //                    cl.ToSlot = calltoname.Substring(m.Name.Length + 2);
-        //                }
-        //            }
-        //            calls.Add(cl);
-        //        }
-        //    }
+                        ++skip;
+                    }
 
-        //    view.Modules = (modules.Count == 0) ? null : modules.ToArray();
-        //    view.Calls = (calls.Count == 0) ? null : calls.ToArray();
-        //    view.Params = null; // HAZARD: currently not supported
+                    m.Params = (prms.Count == 0) ? null : prms.ToArray();
+
+                    // add #lines skipped due to parameters to i in order to get to next module or call
+                    i += skip;
+
+                    modules.Add(m);
+                    continue;
+                }
+
+                if (line.Contains("mmCreateCall"))
+                {
+                    Call c = new Call();
+                    string[] elements = line.Split('"');
+                    string cClass = elements[1];
+                    string[] cFrom = elements[3].Split(':');
+                    string cFromModuleName = cFrom[4];
+                    string cFromSlot = cFrom[6];
+                    string[] cTo = elements[5].Split(':');
+                    string cToModuleName = cTo[4];
+                    string cToSlot = cTo[6];
+
+                    c.Class = cClass;
+
+                    foreach (Module m in modules)
+                    {
+                        if (cFromModuleName.StartsWith(m.Name)) {
+                            c.FromModule = m;
+                            c.FromSlot = cFromSlot;
+                        }
+                        if (cToModuleName.StartsWith(m.Name)) {
+                            c.ToModule = m;
+                            c.ToSlot = cToSlot;
+                        }
+                    }
+                    calls.Add(c);
+
+                    continue;
+                }
+            }
+
+            view.Modules = (modules.Count == 0) ? null : modules.ToArray();
+            view.Calls = (calls.Count == 0) ? null : calls.ToArray();
+            //    view.Params = null; // HAZARD: currently not supported
+
+
+            //    if (!n.HasAttribute("name")) throw new Exception("View without name encountered");
+
+            //    view.Name = n.Attributes["name"].Value;
+            //    string viewmodinstname = n.HasAttribute("viewmod") ? n.Attributes["viewmod"].Value : null;
+
+            //    List<Module> modules = new List<Module>();
+            //    List<Call> calls = new List<Call>();
+
+            //    foreach (System.Xml.XmlNode c in n.ChildNodes) {
+            //        if (c.NodeType != System.Xml.XmlNodeType.Element) continue;
+            //        System.Xml.XmlElement oe = (System.Xml.XmlElement)c;
+            //        if (oe.Name == "module") {
+            //            Module m = new Module();
+            //            if (!oe.HasAttribute("class")) throw new Exception("Module without class encountered");
+            //            if (!oe.HasAttribute("name")) throw new Exception("Module without name encountered");
+            //            m.Class = oe.Attributes["class"].Value;
+            //            m.Name = oe.Attributes["name"].Value;
+            //            if (oe.HasAttribute("confpos")) {
+            //                try {
+            //                    Match pt = Regex.Match(oe.Attributes["confpos"].Value, @"\{\s*X\s*=\s*([-.0-9]+)\s*,\s*Y\s*=\s*([-.0-9]+)\s*\}");
+            //                    if (!pt.Success) throw new Exception();
+            //                    m.ConfPos = new Point(
+            //                        int.Parse(pt.Groups[1].Value),
+            //                        int.Parse(pt.Groups[2].Value));
+            //                } catch { }
+            //            }
+
+            //            List<Param> prms = new List<Param>();
+
+            //            foreach (System.Xml.XmlNode oc in oe.ChildNodes) {
+            //                if (oc.NodeType != System.Xml.XmlNodeType.Element) continue;
+            //                System.Xml.XmlElement oce = (System.Xml.XmlElement)oc;
+            //                if (oce.Name != "param") continue;
+            //                if (!oce.HasAttribute("name")) throw new Exception("Param without name encountered");
+
+            //                Param p = new Param();
+            //                p.Name = oce.Attributes["name"].Value;
+            //                p.Value = (oce.HasAttribute("value")) ? oce.Attributes["value"].Value : string.Empty;
+            //                prms.Add(p);
+            //            }
+
+            //            m.Params = (prms.Count == 0) ? null : prms.ToArray();
+
+            //            modules.Add(m);
+            //            if (m.Name == viewmodinstname) {
+            //                view.ViewModule = m;
+            //            }
+            //        }
+            //        if (oe.Name == "call") {
+            //            Call cl = new Call();
+            //            if (!oe.HasAttribute("class")) throw new Exception("Call without class encountered");
+            //            cl.Class = oe.Attributes["class"].Value;
+            //            if (!oe.HasAttribute("from")) throw new Exception("Call without source encountered");
+            //            string callfromname = oe.Attributes["from"].Value;
+            //            if (!oe.HasAttribute("to")) throw new Exception("Call without destination encountered");
+            //            string calltoname = oe.Attributes["to"].Value;
+
+            //            foreach (Module m in modules) {
+            //                if (callfromname.StartsWith(m.Name)) {
+            //                    cl.FromModule = m;
+            //                    Debug.Assert(callfromname[m.Name.Length] == ':');
+            //                    Debug.Assert(callfromname[m.Name.Length + 1] == ':');
+            //                    cl.FromSlot = callfromname.Substring(m.Name.Length + 2);
+            //                }
+            //                if (calltoname.StartsWith(m.Name)) {
+            //                    cl.ToModule = m;
+            //                    Debug.Assert(calltoname[m.Name.Length] == ':');
+            //                    Debug.Assert(calltoname[m.Name.Length + 1] == ':');
+            //                    cl.ToSlot = calltoname.Substring(m.Name.Length + 2);
+            //                }
+            //            }
+            //            calls.Add(cl);
+            //        }
+            //    }
+
+            //    view.Modules = (modules.Count == 0) ? null : modules.ToArray();
+            //    view.Calls = (calls.Count == 0) ? null : calls.ToArray();
+            //    view.Params = null; // HAZARD: currently not supported
         }
 
     }
