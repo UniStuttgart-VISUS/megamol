@@ -17,7 +17,7 @@
 // that uses this DLL. This way any other project whose source files include this file see 
 // TRISOUPPLUGIN_API functions as being imported from a DLL, whereas this DLL sees symbols
 // defined with this macro as being exported.
-#ifdef compositing_gl_EXPORTS
+#ifdef COMPOSITING_GL_EXPORTS
 #define COMPOSITING_GL_API __declspec(dllexport)
 #else
 #define COMPOSITING_GL_API __declspec(dllimport)
@@ -28,7 +28,7 @@
 
 #include "mmcore/utility/plugins/Plugin200Instance.h"
 
-#ifdef compositing_gl_EXPORTS
+#ifdef COMPOSITING_GL_EXPORTS
 #ifdef __cplusplus
 extern "C" {
 #endif

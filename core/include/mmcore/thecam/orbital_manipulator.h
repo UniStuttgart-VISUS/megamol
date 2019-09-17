@@ -96,13 +96,6 @@ public:
                 cam->position(point_type(
                     pos_rot.x() + m_rot_cntr.x(), pos_rot.y() + m_rot_cntr.y(), pos_rot.z() + m_rot_cntr.z(), 1.0f));
 
-
-                std::cout << "Cam. right: " << cam_right.x() << " " << cam_right.y() << " " << cam_right.z()
-                          << std::endl;
-
-                std::cout << "Rot. center: " << m_rot_cntr.x() << " " << m_rot_cntr.y() << " " << m_rot_cntr.z()
-                          << std::endl;
-
                 this->m_last_sx = x;
                 this->m_last_sy = y;
             }
