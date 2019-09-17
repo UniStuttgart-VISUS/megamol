@@ -174,7 +174,7 @@ namespace MegaMolConf.Io {
 
             view.Modules = (modules.Count == 0) ? null : modules.ToArray();
             view.Calls = (calls.Count == 0) ? null : calls.ToArray();
-            //    view.Params = null; // HAZARD: currently not supported
+            view.Params = null; // HAZARD: currently not supported
 
 
             //    if (!n.HasAttribute("name")) throw new Exception("View without name encountered");
