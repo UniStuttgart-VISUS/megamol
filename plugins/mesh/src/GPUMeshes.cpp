@@ -11,7 +11,7 @@ megamol::mesh::GPUMeshes::GPUMeshes()
     this->MakeSlotAvailable(&this->m_mesh_slot);
 }
 
-megamol::mesh::GPUMeshes::~GPUMeshes() {}
+megamol::mesh::GPUMeshes::~GPUMeshes() { this->Release(); }
 
 bool megamol::mesh::GPUMeshes::create() {
     m_gpu_meshes = std::make_shared<GPUMeshCollection>();
@@ -29,11 +29,11 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
     std::shared_ptr<GPUMeshCollection> mesh_collection(nullptr);
 
     if (lhs_mesh_call->getData() == nullptr) {
-        // no incoming material -> use your own material storage
+        // no incoming mesh -> use your own mesh storage
         mesh_collection = this->m_gpu_meshes;
         lhs_mesh_call->setData(mesh_collection);
     } else {
-        // incoming material -> use it (delete local?)
+        // incoming mesh -> use it (delete local?)
         mesh_collection = lhs_mesh_call->getData();
     }
 
@@ -53,12 +53,14 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
             m_mesh_collection_indices.clear();
         }
 
-        m_bbox[0] = std::numeric_limits<float>::max();
-        m_bbox[1] = std::numeric_limits<float>::max();
-        m_bbox[2] = std::numeric_limits<float>::max();
-        m_bbox[3] = std::numeric_limits<float>::min();
-        m_bbox[4] = std::numeric_limits<float>::min();
-        m_bbox[5] = std::numeric_limits<float>::min();
+        auto& meta_data = mc->getMetaData();
+
+        m_bbox[0] = meta_data.m_bboxs.ObjectSpaceBBox().Left();
+        m_bbox[1] = meta_data.m_bboxs.ObjectSpaceBBox().Bottom();
+        m_bbox[2] = meta_data.m_bboxs.ObjectSpaceBBox().Back();
+        m_bbox[3] = meta_data.m_bboxs.ObjectSpaceBBox().Right();
+        m_bbox[4] = meta_data.m_bboxs.ObjectSpaceBBox().Top();
+        m_bbox[5] = meta_data.m_bboxs.ObjectSpaceBBox().Front();
 
         auto meshes = mc->getData()->accessMesh();
 
@@ -74,7 +76,8 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
             for (auto attrib : mesh.attributes) {
 
                 attribs.push_back(
-                    glowl::VertexLayout::Attribute(attrib.component_cnt , attrib.component_type,
+                    glowl::VertexLayout::Attribute(attrib.component_cnt , 
+                        MeshDataAccessCollection::convertToGLType(attrib.component_type),
                         GL_FALSE /*ToDO*/, attrib.offset));
 
                 // TODO vb_iterators
