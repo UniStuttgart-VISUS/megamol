@@ -198,7 +198,7 @@ bool megamol::stdplugin::moldyn::rendering::GlyphRenderer::validateData(
             default:
                 vislib::sys::Log::DefaultLog.WriteError(
                     "GlyphRenderer: no support for vertex data types SHORT_XYZ or NONE");
-                continue;
+                return false;
             }
 
             switch (l.GetColourDataType()) {
@@ -208,8 +208,7 @@ bool megamol::stdplugin::moldyn::rendering::GlyphRenderer::validateData(
                 // we could just pad this, but such datasets need to disappear...
                 vislib::sys::Log::DefaultLog.WriteError(
                     "GlyphRenderer: COLDATA_UINT8_RGB is deprecated and unsupported");
-                continue;
-                break;
+                return false;
             case core::moldyn::SimpleSphericalParticles::COLDATA_UINT8_RGBA:
                 // extend to floats
                 this->color_buffers[x].SetDataWithItems(l.GetColourData(), l.GetColourDataStride(), 4 * sizeof(float),
@@ -246,8 +245,7 @@ bool megamol::stdplugin::moldyn::rendering::GlyphRenderer::validateData(
                 break;
             case core::moldyn::SimpleSphericalParticles::COLDATA_USHORT_RGBA:
                 vislib::sys::Log::DefaultLog.WriteError("GlyphRenderer: COLDATA_USHORT_RGBA is unsupported");
-                continue;
-                break;
+                return false;
             case core::moldyn::SimpleSphericalParticles::COLDATA_DOUBLE_I:
                 this->color_buffers[x].SetDataWithItems(l.GetColourData(), l.GetColourDataStride(), 4 * sizeof(float),
                     l.GetCount(), num_items_per_chunk, [](void* dst, const void* src) {
