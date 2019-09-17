@@ -125,7 +125,7 @@ bool megamol::mesh::GlTFMeshesDataSource::getDataCallback(core::Call& caller) {
         // set update_all_flag?
     }
 
-    // if there is a material connection to the right, pass on the material collection
+    // if there is a mesh connection to the right, pass on the mesh collection
     CallGPUMeshData* rhs_mesh_call = this->m_mesh_callerSlot.CallAs<CallGPUMeshData>();
     if (rhs_mesh_call != NULL) {
         rhs_mesh_call->setData(mesh_collection);

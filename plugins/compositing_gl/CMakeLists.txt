@@ -1,5 +1,5 @@
 #
-# MegaMol™ compositing Plugin
+# MegaMol™ compositing_gl Plugin
 # Copyright 2017, by MegaMol Team
 # Alle Rechte vorbehalten. All rights reserved.
 #
