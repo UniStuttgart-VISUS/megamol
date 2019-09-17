@@ -5,11 +5,12 @@
  */
 #pragma once
 
-#include "mmcore/Module.h"
+#include "concave_hull.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
+#include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-#include "concave_hull.h"
+#include "mesh/MeshCalls.h"
 
 namespace megamol {
 namespace probe {
@@ -44,8 +45,6 @@ public:
     virtual ~ExtractMesh(void);
 
 protected:
-
-
     virtual bool create();
     virtual void release();
 
@@ -61,19 +60,30 @@ protected:
     core::param::ParamSlot _alphaSlot;
 
 
-
 private:
-
     bool InterfaceIsDirty();
-    //virtual void readParams();
+    // virtual void readParams();
     void calculateAlphaShape();
 
+    void createPointCloud(std::vector<std::string>& vars);
+    void convertToMesh();
     bool getData(core::Call& call);
 
     bool getMetaData(core::Call& call);
 
-    pcl::PointCloud<pcl::PointXYZ> cloud;
-    std::vector<pcl::Vertices> polygons;
+    bool toggleFormat(core::param::ParamSlot& p);
+
+  // PCL stuff
+    pcl::PointCloud<pcl::PointXYZ> _cloud;
+    std::vector<pcl::Vertices> _polygons;
+    std::vector<pcl::PointIndices> _indices;
+
+    // CallMesh stuff
+    std::vector<mesh::MeshDataAccessCollection::VertexAttribute> _mesh_attribs;
+    mesh::MeshDataAccessCollection::IndexData _mesh_indices;
+    core::BoundingBoxes _bbox;
+
+    size_t _old_datahash;
 
 };
 

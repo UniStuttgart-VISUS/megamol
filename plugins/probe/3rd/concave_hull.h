@@ -43,14 +43,12 @@
 #include "common.h"
 #include "eigen.h"
 #include "kdtree.h"
-#include "libqhull/geom.h"
-#include "libqhull/io.h"
+extern "C" {
+#define qh_dllimport
 #include "libqhull/libqhull.h"
-#include "libqhull/mem.h"
+#include "libqhull/geom.h"
 #include "libqhull/merge.h"
-#include "libqhull/poly.h"
-#include "libqhull/qset.h"
-#include "libqhull/stat.h"
+    }
 #include "transforms.h"
 #include "vislib/sys/Log.h"
 
@@ -115,9 +113,11 @@ public:
      * \param[in] dimension The dimension of the input data.  If not set, this will be determined automatically.
      */
     void setDimension(int dimension) {
-        if ((dimension == 2) || (dimension == 3)) dim_ = dimension;
-         else
-        vislib::sys::Log::DefaultLog.WriteError("[pcl::%s::setDimension] Invalid input dimension specified!\n", getClassName().c_str());
+        if ((dimension == 2) || (dimension == 3))
+            dim_ = dimension;
+        else
+            vislib::sys::Log::DefaultLog.WriteError(
+                "[pcl::%s::setDimension] Invalid input dimension specified!\n", getClassName().c_str());
     }
 
     /** \brief Retrieve the indices of the input point cloud that for the convex hull.
@@ -163,16 +163,14 @@ protected:
     PointIndices hull_indices_;
 
     ///** \brief The input point cloud dataset. */
-    //PointCloudConstPtr this->input_;
+    // PointCloudConstPtr this->input_;
 
     ///** \brief A pointer to the vector of point indices to use. */
-    //IndicesPtr this->indices_;
+    // IndicesPtr this->indices_;
 };
 
 
-
 //#include "concave_hull.hpp"
-
 
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -636,7 +634,6 @@ void pcl::ConcaveHull<PointInT>::performReconstruction(PointCloud& alpha_shape, 
 #endif
 
 #define PCL_INSTANTIATE_ConcaveHull(T) template class PCL_EXPORTS pcl::ConcaveHull<T>;
-
 
 
 } // namespace pcl
