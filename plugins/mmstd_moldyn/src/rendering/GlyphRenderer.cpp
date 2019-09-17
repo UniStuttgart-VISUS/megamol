@@ -288,8 +288,8 @@ bool GlyphRenderer::Render(core::view::CallRender3D_2& call) {
     if (clipc != nullptr && (*clipc)(0)) {
         use_clip = true;
     }
-	
-	view::Camera_2 cam;
+
+    view::Camera_2 cam;
     call.GetCamera(cam);
     cam_type::snapshot_type snapshot;
     cam_type::matrix_type viewTemp, projTemp;
@@ -331,11 +331,18 @@ bool GlyphRenderer::Render(core::view::CallRender3D_2& call) {
         vislib::sys::Log::DefaultLog.WriteWarn(
             "GlyphRenderer: Only one single directional light source is supported by this renderer");
     } else {
-        const auto lightPos = this->lightMap.begin()->second.dl_direction;
-        if (lightPos.size() == 3) {
-            light[0] = lightPos[0];
-            light[1] = lightPos[1];
-            light[2] = lightPos[2];
+        if (this->lightMap.begin()->second.lightType == view::light::DISTANTLIGHT) {
+            const auto dir_light = this->lightMap.begin()->second;
+            if (dir_light.dl_eye_direction) {
+                light = glm::normalize(CamPos);
+            } else if (dir_light.dl_direction.size() == 3) {
+                light[0] = dir_light.dl_direction[0];
+                light[1] = dir_light.dl_direction[1];
+                light[2] = dir_light.dl_direction[2];
+            }
+        } else {
+            vislib::sys::Log::DefaultLog.WriteWarn(
+                "GlyphRenderer: Only one single directional light source is supported by this renderer");
         }
     }
 
@@ -399,8 +406,8 @@ bool GlyphRenderer::Render(core::view::CallRender3D_2& call) {
     glm::vec3 pt(clip_point_coords.X(), clip_point_coords.Y(), clip_point_coords.Z());
     glm::vec3 nr(clip_normal_coords.X(), clip_normal_coords.Y(), clip_normal_coords.Z());
 
-    std::array<float, 4> clip_data = {
-        clipc->GetPlane().Normal().X(), clipc->GetPlane().Normal().Y(), clipc->GetPlane().Normal().Z(), -glm::dot(pt, nr)};
+    std::array<float, 4> clip_data = {clipc->GetPlane().Normal().X(), clipc->GetPlane().Normal().Y(),
+        clipc->GetPlane().Normal().Z(), -glm::dot(pt, nr)};
 
     glUniform4fv(shader->ParameterLocation("clip_data"), 1, clip_data.data());
 
