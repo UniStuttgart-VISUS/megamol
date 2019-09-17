@@ -169,13 +169,15 @@ void MDAOVolumeGenerator::SetResolution(float resX, float resY, float resZ)
 }
 
 
-void MDAOVolumeGenerator::StartInsertion(const vislib::math::Cuboid< float >& obb, const vislib::math::Vector<float, 4> &clipDat)
+void MDAOVolumeGenerator::StartInsertion(const vislib::math::Cuboid< float >& obb, const glm::vec4 &clipDat)
 {
 	this->clipDat = clipDat;
 	
 	this->boundsSizeInverse = obb.GetSize();
 	for (int i=0; i<3; ++i) {this->boundsSizeInverse[i] = 1.0f / this->boundsSizeInverse[i];}
-	this->boundsMin = obb.GetLeftBottomBack();
+
+    auto bmin = obb.GetLeftBottomBack();
+    this->boundsMin = glm::vec3(bmin.GetX(), bmin.GetY(), bmin.GetZ());
 
 	glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);checkGLError;
 	glEnable(GL_BLEND);checkGLError;
@@ -193,11 +195,10 @@ void MDAOVolumeGenerator::StartInsertion(const vislib::math::Cuboid< float >& ob
 	
 	volumeShader.Enable();checkGLError;
 	
-	volumeShader.SetParameterArray3("inBoundsMin", 1, this->boundsMin.PeekCoordinates());
+	volumeShader.SetParameterArray3("inBoundsMin", 1, glm::value_ptr(this->boundsMin));
 	volumeShader.SetParameterArray3("inBoundsSizeInverse", 1, this->boundsSizeInverse.PeekDimension());
 	volumeShader.SetParameterArray3("inVolumeSize", 1, volumeRes.PeekDimension());
-	
-	volumeShader.SetParameterArray4("clipDat", 1, clipDat.PeekComponents());
+	volumeShader.SetParameterArray4("clipDat", 1, glm::value_ptr(clipDat));
 }
 
 
@@ -288,7 +289,7 @@ void MDAOVolumeGenerator::RecreateMipmap() {
 }
 
 
-const vislib::math::Dimension< float, 3 >& MDAOVolumeGenerator::GetExtents()
+const vislib::math::Dimension< float, 3>& MDAOVolumeGenerator::GetExtents()
 {
 	return volumeRes;
 }

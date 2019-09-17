@@ -5,7 +5,7 @@ layout (depth_greater) out float gl_FragDepth;
 
 FLACH in vec4 objPos;
 FLACH in vec4 camPos;
-FLACH in vec4 outLightPos;
+FLACH in vec4 outlightDir;
 FLACH in float squarRad;
 FLACH in float rad;
 FLACH in vec4 vertColor;

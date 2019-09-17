@@ -38,7 +38,7 @@ GrimRenderer::CellInfo::CellInfo(void) {
 GrimRenderer::CellInfo::~CellInfo(void) {
 
     glDeleteOcclusionQueriesNV(1, &this->oQuery);
-    this->cache.Clear();
+    this->cache.clear();
 }
 
 /****************************************************************************/
@@ -299,8 +299,8 @@ void GrimRenderer::release(void) {
     this->depthmap[0].Release();
     this->depthmap[1].Release();
     glDeleteTextures(1, &this->greyTF);
-    this->cellDists.Clear();
-    this->cellInfos.Clear();
+    this->cellDists.clear();
+    this->cellInfos.clear();
     this->deferredSphereShader.Release();
     this->deferredVanillaSphereShader.Release();
     this->deferredPointShader.Release();
@@ -356,9 +356,9 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
     if (this->inhash != pgdc->DataHash()) {
         this->inhash = pgdc->DataHash();
         // invalidate ALL VBOs
-        SIZE_T cnt = this->cellInfos.Count();
+        SIZE_T cnt = this->cellInfos.size();
         for (SIZE_T i = 0; i < cnt; i++) {
-            SIZE_T cnt2 = this->cellInfos[i].cache.Count();
+            SIZE_T cnt2 = this->cellInfos[i].cache.size();
             for (SIZE_T j = 0; j < cnt2; j++) {
                 glDeleteBuffersARB(2, this->cellInfos[i].cache[j].data);
                 this->cellInfos[i].cache[j].data[0] = 0;
@@ -452,17 +452,17 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
         }
     }
 
-    if (this->cellDists.Count() != cellcnt) {
-        this->cellDists.SetCount(cellcnt);
-        this->cellInfos.SetCount(cellcnt);
+    if (this->cellDists.size() != cellcnt) {
+        this->cellDists.resize(cellcnt);
+        this->cellInfos.resize(cellcnt);
         for (unsigned int i = 0; i < cellcnt; i++) {
             this->cellDists[i].First() = i;
             this->cellInfos[i].wasvisible = true; // TODO: refine with Reina-Approach (wtf?)
             this->cellInfos[i].maxrad = 0.0f;
-            this->cellInfos[i].cache.Clear();
-            this->cellInfos[i].cache.SetCount(typecnt);
+            this->cellInfos[i].cache.clear();
+            this->cellInfos[i].cache.resize(typecnt);
             for (unsigned int j = 0; j < typecnt; j++) {
-                this->cellInfos[i].maxrad = vislib::math::Max(this->cellInfos[i].maxrad,
+                this->cellInfos[i].maxrad = glm::max(this->cellInfos[i].maxrad,
                     pgdc->Cells()[i].AccessParticleLists()[j].GetMaxRadius() * scaling);
             }
         }
@@ -478,8 +478,8 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
         tanf(cr->GetCameraParameters()->HalfApertureAngle());
 
     // depth-sort of cells
-    vislib::Array<vislib::Pair<unsigned int, float> > &dists = this->cellDists;
-    vislib::Array<CellInfo> &infos = this->cellInfos;
+    std::vector<vislib::Pair<unsigned int, float> > &dists = this->cellDists;
+    std::vector<CellInfo> &infos = this->cellInfos;
     // The usage of these references is required in order to get performance !!! WTF !!!
 
     for (unsigned int i = 0; i < cellcnt; i++) {
@@ -506,7 +506,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
         // Testing against the viewing frustum would be nice, but I don't care
 
     }
-    dists.Sort(&GrimRenderer::depthSort);
+    std::sort(dists.begin(), dists.end(), GrimRenderer::depthSort);
 
     glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
@@ -647,7 +647,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
                         glVertexPointer(3, GL_FLOAT, 16, NULL);
                     } else {
                         glVertexPointer(3, GL_FLOAT,
-                            vislib::math::Max(16U, parts.GetVertexDataStride()),
+                            glm::max(16U, parts.GetVertexDataStride()),
                             parts.GetVertexData());
                     }
                     break;
@@ -694,7 +694,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
         //cr->GetCameraParameters()->TileRect().Bottom(),
         cr->GetCameraParameters()->TileRect().Width(),
         cr->GetCameraParameters()->TileRect().Height()};
-    float defaultPointSize = vislib::math::Max(viewportStuff[2], viewportStuff[3]);
+    float defaultPointSize = glm::max(viewportStuff[2], viewportStuff[3]);
     glPointSize(defaultPointSize);
     if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
     if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
@@ -1896,10 +1896,12 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
 }
 
 
-int GrimRenderer::depthSort(const vislib::Pair<unsigned int, float>& lhs, const vislib::Pair<unsigned int, float>& rhs) {
+bool GrimRenderer::depthSort(const vislib::Pair<unsigned int, float>& lhs, const vislib::Pair<unsigned int, float>& rhs) {
 
-    float d = rhs.Second() - lhs.Second();
-    if (d > vislib::math::FLOAT_EPSILON) return 1;
-    if (d < -vislib::math::FLOAT_EPSILON) return -1;
-    return 0;
+    return (rhs.Second() < lhs.Second());
+
+    //float d = rhs.Second() - lhs.Second();
+    //if (d > vislib::math::FLOAT_EPSILON) return ;
+    //if (d < -vislib::math::FLOAT_EPSILON) return -1;
+    //return 0;
 }

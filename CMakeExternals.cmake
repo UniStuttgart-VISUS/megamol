@@ -169,7 +169,7 @@ function(require_external NAME)
     
     add_external_project(glowl_ext
       GIT_REPOSITORY https://github.com/invor/glowl.git
-      GIT_TAG "v0.1"
+      GIT_TAG "v0.3"
       CONFIGURE_COMMAND ""
       BUILD_COMMAND ""
       INSTALL_COMMAND ""
@@ -303,6 +303,26 @@ function(require_external NAME)
       INCLUDE_DIR "include"
       IMPORT_LIBRARY ${QUICKHULL_IMPORT_LIB}
       LIBRARY ${QUICKHULL_LIB})
+
+  elseif(NAME STREQUAL "tinyobjloader")
+    if(TARGET tinyobjloader)
+      return()
+    endif()
+
+    if(WIN32)
+      set(TINYOBJLOADER_LIB "lib/tinyobjloader.lib")
+    else()
+      include(GNUInstallDirs)
+      set(TINYOBJLOADER_LIB "${CMAKE_INSTALL_LIBDIR}/tinyobjloader.a")
+    endif()
+
+    add_external_project(tinyobjloader_ext
+      GIT_REPOSITORY https://github.com/syoyo/tinyobjloader.git
+      GIT_TAG "v2.0.0-rc1"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${TINYOBJLOADER_LIB}")
+    add_external_library(tinyobjloader STATIC
+      DEPENDS tinyobjloader_ext
+      LIBRARY ${TINYOBJLOADER_LIB})
     
   else()
     message(FATAL_ERROR "Unknown external required \"${NAME}\"")

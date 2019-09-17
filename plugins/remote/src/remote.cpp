@@ -13,7 +13,6 @@
 #include "vislib/vislibversion.h"
 
 // Modules
-#include "CPERAWDataSource.h"
 #include "FBOCompositor2.h"
 #include "FBOTransmitter2.h"
 #include "HeadnodeServer.h"
@@ -49,7 +48,6 @@ public:
         // register modules here:
         this->module_descriptions.RegisterAutoDescription<megamol::remote::FBOTransmitter2>();
         this->module_descriptions.RegisterAutoDescription<megamol::remote::FBOCompositor2>();
-        this->module_descriptions.RegisterAutoDescription<megamol::remote::CPERAWDataSource>();
         this->module_descriptions.RegisterAutoDescription<megamol::remote::HeadnodeServer>();
         this->module_descriptions.RegisterAutoDescription<megamol::remote::RendernodeView>();
 

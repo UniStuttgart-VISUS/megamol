@@ -2,11 +2,14 @@
 
 #include "stdafx.h"
 
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #include "mmcore/utility/ShaderSourceFactory.h"
 
+#include "vislib/math/Cuboid.h"
 #include "vislib/graphics/gl/GLSLGeometryShader.h"
 #include "vislib/graphics/gl/GLSLComputeShader.h"
-#include "vislib/math/Cuboid.h"
 
 
 namespace megamol {
@@ -25,7 +28,7 @@ namespace misc {
         void SetResolution(float resX, float resY, float resZ);
 
         void ClearVolume();
-        void StartInsertion(const vislib::math::Cuboid<float> &obb, const vislib::math::Vector<float, 4> &clipDat);
+        void StartInsertion(const vislib::math::Cuboid<float> &obb, const glm::vec4 &clipDat);
         void InsertParticles(unsigned int count, float globalRadius, GLuint vertexArray);
         void EndInsertion();
 
@@ -34,7 +37,7 @@ namespace misc {
         GLuint GetVolumeTextureHandle();
         unsigned int GetDataVersion();
 
-        const vislib::math::Dimension<float, 3>& GetExtents();
+        const vislib::math::Dimension< float, 3>& GetExtents();
 
         void RecreateMipmap();
 
@@ -50,11 +53,10 @@ namespace misc {
 
         unsigned char* clearBuffer;
 
-        vislib::math::Point< float, 3 > boundsMin;
+        glm::vec4 clipDat;
+        glm::vec3 boundsMin;
         vislib::math::Dimension<float, 3> boundsSizeInverse;
         vislib::math::Dimension<float, 3> volumeRes;
-        vislib::math::Vector<float, 4> clipDat;
-
     };
 
 } /* end namespace misc */

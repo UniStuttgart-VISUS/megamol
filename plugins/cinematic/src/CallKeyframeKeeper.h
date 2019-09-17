@@ -14,9 +14,6 @@
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/view/Camera_2.h"
 
-#include "vislib/Array.h"
-#include "vislib/sys/Log.h"
-
 #include "Keyframe.h"
 
 
@@ -107,10 +104,10 @@ namespace cinematic {
         **********************************************************************/
 
         // KEYFRAME ARRAY
-		inline std::shared_ptr<vislib::Array<Keyframe>> getKeyframes(){
+		inline std::shared_ptr<std::vector<Keyframe>> getKeyframes(){
 			return this->keyframes;
 		}
-        inline void setKeyframes(std::shared_ptr<vislib::Array<Keyframe>> kfs) {
+        inline void setKeyframes(std::shared_ptr<std::vector<Keyframe>> kfs) {
             this->keyframes = kfs;
         }
 
@@ -142,10 +139,10 @@ namespace cinematic {
             return this->interpolSteps;
         }
 
-		inline std::shared_ptr<vislib::Array<glm::vec3 >> getInterpolCamPositions(){
+		inline std::shared_ptr<std::vector<glm::vec3 >> getInterpolCamPositions(){
 			return this->interpolCamPos;
 		}
-        inline void setInterpolCamPositions(std::shared_ptr<vislib::Array<glm::vec3 >> k){
+        inline void setInterpolCamPositions(std::shared_ptr<std::vector<glm::vec3 >> k){
             this->interpolCamPos = k;
         }
 
@@ -221,8 +218,8 @@ namespace cinematic {
 
 		// Pointer to array of keyframes
 		std::shared_ptr<megamol::core::view::Camera_2> cameraParam;
-		std::shared_ptr<vislib::Array<glm::vec3 >>     interpolCamPos;
-		std::shared_ptr<vislib::Array<Keyframe>>	   keyframes;
+		std::shared_ptr<std::vector<glm::vec3 >>       interpolCamPos;
+		std::shared_ptr<std::vector<Keyframe>>	       keyframes;
         std::shared_ptr<vislib::math::Cuboid<float>>   boundingbox;
         unsigned int                                   interpolSteps;
         Keyframe						               selectedKeyframe;

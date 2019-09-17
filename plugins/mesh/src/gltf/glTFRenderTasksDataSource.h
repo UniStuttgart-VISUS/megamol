@@ -14,7 +14,7 @@
 #include "mmcore/CallerSlot.h"
 
 #include "mesh/AbstractGPURenderTaskDataSource.h"
-#include "mesh/CallGltfData.h"
+#include "mesh/MeshCalls.h"
 
 namespace megamol
 {
@@ -62,6 +62,8 @@ namespace megamol
 
             /** Slot to retrieve the gltf model */
 			megamol::core::CallerSlot m_glTF_callerSlot;
+
+            size_t m_glTF_cached_hash;
 		};
 	}
 }

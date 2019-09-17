@@ -41,11 +41,10 @@
 #include "vislib/graphics/gl/CameraOpenGL.h"
 #include "vislib/graphics/CameraParameters.h"
 #include "vislib/math/mathfunctions.h"
-#include "vislib/math/ShallowMatrix.h"
-#include "vislib/math/Vector.h"
-#include "vislib/math/Matrix.h"
 #include "vislib/math/Cuboid.h"
-#include "vislib/Map.h"
+
+#define _USE_MATH_DEFINES
+#include <math.h>
 
 #include <map>
 #include <tuple>
@@ -276,13 +275,14 @@ namespace rendering {
         glm::vec4                   curClipDat;
         glm::vec4                   oldClipDat;
         glm::vec4                   curClipCol;
-        glm::vec4                   curLightPos;
+        glm::vec4                   curlightDir;
         glm::vec4                   curCamUp;
         float                       curCamNearClip;
         glm::vec4                   curCamView;
         glm::vec4                   curCamRight;
         glm::vec4                   curCamPos;
         glm::mat4                   curMVinv;
+        glm::mat4                   curMVtransp;
         glm::mat4                   curMVP;
         glm::mat4                   curMVPinv;
         glm::mat4                   curMVPtransp;
@@ -303,9 +303,9 @@ namespace rendering {
         GLSLGeometryShader                       sphereGeometryShader;
         GLSLShader                               lightingShader;
 
-        vislib::SmartPtr<ShaderSource>           vertShader;
-        vislib::SmartPtr<ShaderSource>           fragShader;
-        vislib::SmartPtr<ShaderSource>           geoShader;
+        std::shared_ptr<ShaderSource>            vertShader;
+        std::shared_ptr<ShaderSource>            fragShader;
+        std::shared_ptr<ShaderSource>            geoShader;
 
         GLuint                                   vertArray;
         SimpleSphericalParticles::ColourDataType colType;
@@ -324,7 +324,7 @@ namespace rendering {
         SIZE_T                                   oldHash;
         unsigned int                             oldFrameID;
         bool                                     stateInvalid;
-        vislib::math::Vector<float, 2>           ambConeConstants;
+        glm::vec2                                ambConeConstants;
         misc::MDAOVolumeGenerator               *volGen;
         bool                                     triggerRebuildGBuffer;
 
@@ -337,10 +337,10 @@ namespace rendering {
 #endif // defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
 
 #ifdef SPHERE_MIN_OGL_SSBO_STREAM
-        megamol::core::utility::SSBOStreamer     streamer;
-        megamol::core::utility::SSBOStreamer     colStreamer;
-        megamol::core::utility::SSBOBufferArray  bufArray;
-        megamol::core::utility::SSBOBufferArray  colBufArray;
+        megamol::core::utility::SSBOStreamer                  streamer;
+        megamol::core::utility::SSBOStreamer                  colStreamer;
+        std::vector<megamol::core::utility::SSBOBufferArray>  bufArray;
+        std::vector<megamol::core::utility::SSBOBufferArray>  colBufArray;
 #endif // SPHERE_MIN_OGL_SSBO_STREAM
 
         /*********************************************************************/
@@ -467,7 +467,7 @@ namespace rendering {
          *
          * @return 'True' on success, 'false' otherwise.
          */
-        bool setBufferData(const vislib::graphics::gl::GLSLShader& shader, const MultiParticleDataCall::Particles &parts, 
+        bool setBufferData(const GLSLShader& shader, const MultiParticleDataCall::Particles &parts, 
             GLuint vertBuf, const void *vertPtr, GLuint colBuf,  const void *colPtr, bool createBufferData = false);
 
         /**
@@ -477,7 +477,7 @@ namespace rendering {
          *
          * @return 'True' on success, 'false' otherwise.
          */
-        bool unsetBufferData(const vislib::graphics::gl::GLSLShader& shader);
+        bool unsetBufferData(const GLSLShader& shader);
 
         /**
          * Set pointers to vertex and color buffers and corresponding shader variables.
@@ -487,7 +487,7 @@ namespace rendering {
          *
          * @return 'True' on success, 'false' otherwise.
          */
-        bool setShaderData(vislib::graphics::gl::GLSLShader& shader, const MultiParticleDataCall::Particles &parts);
+        bool setShaderData(GLSLShader& shader, const MultiParticleDataCall::Particles &parts);
 
         /**
          * Unset pointers to vertex and color buffers.
@@ -503,7 +503,7 @@ namespace rendering {
          *
          * @return 'True' on success, 'false' otherwise.
          */
-        bool setTransferFunctionTexture(vislib::graphics::gl::GLSLShader& shader);
+        bool setTransferFunctionTexture(GLSLShader& shader);
 
         /**
          * Disables the transfer function texture.
@@ -520,7 +520,7 @@ namespace rendering {
          *
          * @return 'True' on success, 'false' otherwise.
          */
-        bool setFlagStorage(const vislib::graphics::gl::GLSLShader& shader, MultiParticleDataCall* mpdc);
+        bool setFlagStorage(const GLSLShader& shader, MultiParticleDataCall* mpdc);
 
         /**
          * Enable flag storage.
@@ -529,7 +529,7 @@ namespace rendering {
          *
          * @return 'True' on success, 'false' otherwise.
          */
-        bool unsetFlagStorage(const vislib::graphics::gl::GLSLShader& shader);
+        bool unsetFlagStorage(const GLSLShader& shader);
 
         /**
          * Get bytes and stride.
@@ -576,7 +576,7 @@ namespace rendering {
          *
          * @return ...
          */
-        std::shared_ptr<GLSLShader> makeShader(const vislib::SmartPtr<ShaderSource> vert, const vislib::SmartPtr<ShaderSource> frag);
+        std::shared_ptr<GLSLShader> makeShader(const std::shared_ptr<ShaderSource> vert, const std::shared_ptr<ShaderSource> frag);
 
         /**
          * Generate SSBO shaders.
@@ -629,7 +629,7 @@ namespace rendering {
          * @param mpdc    ...
          * @param shader  ...
          */
-        void rebuildWorkingData(megamol::core::view::CallRender3D_2* cr3d, megamol::core::moldyn::MultiParticleDataCall* mpdc, const vislib::graphics::gl::GLSLShader& shader);
+        void rebuildWorkingData(megamol::core::view::CallRender3D_2* cr3d, megamol::core::moldyn::MultiParticleDataCall* mpdc, const GLSLShader& shader);
 
         /**
          * Render deferred pass.
@@ -646,7 +646,7 @@ namespace rendering {
          *
          * @return ...  
          */
-        std::string generateDirectionShaderArrayString(const std::vector< vislib::math::Vector< float, int(4) > >& directions, const std::string& directionsName);
+        std::string generateDirectionShaderArrayString(const std::vector<glm::vec4>& directions, const std::string& directionsName);
 
         /**
          * Generate 3 cone directions.
@@ -654,7 +654,7 @@ namespace rendering {
          * @param directions  ...
          * @param apex        ...
          */
-        void generate3ConeDirections(std::vector< vislib::math::Vector< float, int(4) > >& outDirections, float apex);
+        void generate3ConeDirections(std::vector<glm::vec4>& outDirections, float apex);
 
     };
 

@@ -74,6 +74,7 @@ private:
     MPI_Comm mpi_comm_ = MPI_COMM_NULL;
     bool useMpi = false;
     int mpiRank = -1, mpiSize = -1;
+    bool MpiInitialized = false;
 #endif
 
     /** Param Slots */
@@ -83,8 +84,6 @@ private:
 
     /** The slot asking for data */
     core::CallerSlot getData;
-
-    bool MpiInitialized = false;
 
     // ADIOS Stuff
     adios2::ADIOS adiosInst;
