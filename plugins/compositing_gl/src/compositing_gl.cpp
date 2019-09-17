@@ -29,7 +29,7 @@ namespace {
             : ::megamol::core::utility::plugins::Plugin200Instance(
 
                 /* machine-readable plugin assembly name */
-                "compositing", // TODO: Change this!
+                "compositing_gl", // TODO: Change this!
 
                 /* human-readable plugin description */
                 "Describing compositing (TODO: Change this!)") {

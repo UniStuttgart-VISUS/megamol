@@ -28,7 +28,7 @@
 
 #include "mmcore/utility/plugins/Plugin200Instance.h"
 
-#ifdef compositing_EXPORTS
+#ifdef compositing_gl_EXPORTS
 #ifdef __cplusplus
 extern "C" {
 #endif

@@ -325,26 +325,26 @@ bool GlyphRenderer::Render(core::view::CallRender3D_2& call) {
     glm::mat4 mvp_matrix_i = glm::inverse(mvp_matrix);
     glm::mat4 mv_matrix_i = glm::inverse(mv_matrix);
 
-    this->GetLights();
-    glm::vec4 light = {0.0f, 0.0f, 0.0f, 0.0f};
-    if (this->lightMap.size() != 1) {
-        vislib::sys::Log::DefaultLog.WriteWarn(
-            "GlyphRenderer: Only one single directional light source is supported by this renderer");
-    } else {
-        if (this->lightMap.begin()->second.lightType == view::light::DISTANTLIGHT) {
-            const auto dir_light = this->lightMap.begin()->second;
-            if (dir_light.dl_eye_direction) {
-                light = glm::normalize(CamPos);
-            } else if (dir_light.dl_direction.size() == 3) {
-                light[0] = dir_light.dl_direction[0];
-                light[1] = dir_light.dl_direction[1];
-                light[2] = dir_light.dl_direction[2];
-            }
-        } else {
-            vislib::sys::Log::DefaultLog.WriteWarn(
-                "GlyphRenderer: Only one single directional light source is supported by this renderer");
-        }
-    }
+    //this->GetLights();
+    //glm::vec4 light = {0.0f, 0.0f, 0.0f, 0.0f};
+    //if (this->lightMap.size() != 1) {
+    //    vislib::sys::Log::DefaultLog.WriteWarn(
+    //        "GlyphRenderer: Only one single directional light source is supported by this renderer");
+    //} else {
+    //    if (this->lightMap.begin()->second.lightType == view::light::DISTANTLIGHT) {
+    //        const auto dir_light = this->lightMap.begin()->second;
+    //        if (dir_light.dl_eye_direction) {
+    //            light = glm::normalize(CamPos);
+    //        } else if (dir_light.dl_direction.size() == 3) {
+    //            light[0] = dir_light.dl_direction[0];
+    //            light[1] = dir_light.dl_direction[1];
+    //            light[2] = dir_light.dl_direction[2];
+    //        }
+    //    } else {
+    //        vislib::sys::Log::DefaultLog.WriteWarn(
+    //            "GlyphRenderer: Only one single directional light source is supported by this renderer");
+    //    }
+    //}
 
     vislib::graphics::gl::GLSLShader* shader;
     switch (this->glyphParam.Param<core::param::EnumParam>()->Value()) {
@@ -371,7 +371,7 @@ bool GlyphRenderer::Render(core::view::CallRender3D_2& call) {
     glUniformMatrix4fv(shader->ParameterLocation("MVP"), 1, GL_FALSE, glm::value_ptr(mvp_matrix));
     glUniformMatrix4fv(shader->ParameterLocation("MVP_T"), 1, GL_TRUE, glm::value_ptr(mvp_matrix));
     glUniformMatrix4fv(shader->ParameterLocation("MVP_I"), 1, GL_FALSE, glm::value_ptr(mvp_matrix_i));
-    glUniform4fv(shader->ParameterLocation("light"), 1, glm::value_ptr(light));
+    //glUniform4fv(shader->ParameterLocation("light"), 1, glm::value_ptr(light));
     glUniform4fv(shader->ParameterLocation("cam"), 1, glm::value_ptr(CamPos));
 
     glUniform1f(shader->ParameterLocation("colorInterpolation"),
@@ -454,6 +454,8 @@ bool GlyphRenderer::Render(core::view::CallRender3D_2& call) {
             } else if ((*tfc)(0)) {
                 glBindTexture(GL_TEXTURE_1D, tfc->OpenGLTexture());
                 glUniform2fv(shader->ParameterLocation("tf_range"), 1, tfc->Range().data());
+                //glUniform2f(shader->ParameterLocation("tf_range"), elParts.GetMinColourIndexValue(),
+                //    elParts.GetMaxColourIndexValue());
             } else {
                 vislib::sys::Log::DefaultLog.WriteError("GlyphRenderer: could not retrieve transfer function!");
                 return false;

@@ -119,6 +119,7 @@ bool MMFTDataSource::getDataCallback(core::Call& caller) {
     this->assertData();
 
     tfd->SetDataHash(this->dataHash);
+    tfd->SetFrameCount(1);
     if (values.size() == 0) {
         tfd->Set(0, 0, nullptr, nullptr);
     } else {
