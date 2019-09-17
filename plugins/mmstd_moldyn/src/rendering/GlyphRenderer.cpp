@@ -150,6 +150,7 @@ bool GlyphRenderer::GetExtents(core::view::CallRender3D_2& call) {
     return true;
 }
 void GlyphRenderer::release(void) {
+    this->boxShader.Release();
     this->ellipsoidShader.Release();
     glDeleteTextures(1, &this->greyTF);
 }
@@ -306,13 +307,6 @@ bool GlyphRenderer::Render(core::view::CallRender3D_2& call) {
 
     // todo...
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
-    // glDisable(GL_POINT_SPRITE_ARB);
-    // glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-    // glEnable(GL_VERTEX_PROGRAM_TWO_SIDE);
-    // glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
-
-    // glEnableClientState(GL_VERTEX_ARRAY);
-    // glEnableClientState(GL_COLOR_ARRAY);
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
