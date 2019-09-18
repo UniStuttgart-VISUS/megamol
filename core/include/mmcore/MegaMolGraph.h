@@ -137,7 +137,7 @@ public:
 
     //////////////////////////// queue methods ////////////////////////////////////
 
-	// TODO: squash NoLock variants into non-NoLock variant if possible?
+    // TODO: squash NoLock variants into non-NoLock variant if possible?
     bool QueueModuleDeletion(std::string const& id);
 
     bool QueueModuleDeletionNoLock(std::string const& id);
@@ -154,126 +154,47 @@ public:
 
     bool QueueCallInstantiationNoLock(std::string const& className, std::string const& from, std::string const& to);
 
-    bool HasPendingRequests() {
-        auto lock = AcquireQueueLocks();
-        return !module_deletion_queue_.Empty() || !module_instantiation_queue_.Empty() ||
-               !call_deletion_queue_.Empty() || !call_instantiation_queue_.Empty();
-    }
+    bool HasPendingRequests();
 
-	// distributes instantiation/deletion requests as commands to subgraph nodes
-    void PrepareGraphUpdates();
+    void ExecuteGraphUpdates();
 
-    //////////////////////////// locking //////////////////////////////////////////
-    std::scoped_lock<std::unique_lock<std::mutex>, std::unique_lock<std::mutex>, std::unique_lock<std::mutex>,
-        std::unique_lock<std::mutex>>
-    AcquireQueueLocks() {
-        auto lock1 = module_deletion_queue_.AcquireDeferredLock();
-        auto lock2 = module_instantiation_queue_.AcquireDeferredLock();
-        auto lock3 = call_deletion_queue_.AcquireDeferredLock();
-        auto lock4 = call_instantiation_queue_.AcquireDeferredLock();
-        return std::scoped_lock(lock1, lock2, lock3, lock4);
-    }
+    void RenderNextFrame();
 
     //////////////////////////// find methods ////////////////////////////////////
-    [[nodiscard]] std::shared_ptr<param::AbstractParam> FindParameter(
-        std::string const& name, bool quiet = false) const;
-
     template <class A>
     typename std::enable_if<std::is_convertible<A*, Module*>::value, bool>::type FindModule(
         std::string const& module_name, std::function<void(A const&)> const& cb) const;
 
     //////////////////////////// enumerators /////////////////////////////////////
     /*
-     * ModulGraph braucht einen ReadWriterLock. Enumerate const Operatoren k�nnen endlich sinnvoll implementiert werden.
+     * ModulGraph braucht einen ReadWriterLock. Enumerate const Operatoren k�nnen endlich sinnvoll implementiert
+     * werden.
      *
      */
 
 private:
-    template <typename Q, typename Arg> bool push_queue_element(Q& q, Arg&& arg) {
-        q.Push(std::forward<Arg>(arg));
-        return true;
-    }
+    //////////////////////////// locking //////////////////////////////////////////
+    std::scoped_lock<std::unique_lock<std::mutex>, std::unique_lock<std::mutex>, std::unique_lock<std::mutex>,
+        std::unique_lock<std::mutex>>
+    AcquireQueueLocks();
 
-    template <typename Q, typename... Args> bool emplace_queue_element(Q& q, Args&&... args) {
-        q.Emplace(std::forward<Args>(args)...);
-        return true;
-    }
+    // FIXME: ModuleList_t::iterator not valid after re-allocation of unterlying std::vector memory => old iterators
+    // get invalidated and the user is helpless
+    [[nodiscard]] ModuleList_t::iterator find_module(std::string const& name);
 
-	// FIXME: ModuleList_t::iterator not valid after re-allocation of unterlying std::vector memory => old iterators get invalidated and the user is helpless
-    [[nodiscard]] ModuleList_t::iterator find_module(std::string const& name) {
-        std::shared_lock<std::shared_mutex> lock(graph_lock_);
+    // FIXME: same as above
+    [[nodiscard]] ModuleList_t::const_iterator find_module(std::string const& name) const;
 
-        auto it = std::find(this->module_list_.begin(), this->module_list_.end(),
-            [&name](auto const& el) { return el.second == name; });
+    bool delete_module(std::string const& name);
 
-        return it;
-    }
+    // FIXME: same invalidation problem as with find_module above
+    [[nodiscard]] CallList_t::iterator find_call(std::string const& name);
 
-	// FIXME: same as above
-        [[nodiscard]] ModuleList_t::const_iterator find_module(std::string const& name) const {
-        std::shared_lock<std::shared_mutex> lock(graph_lock_);
+    // FIXME: same as above
+    [[nodiscard]] CallList_t::const_iterator find_call(std::string const& name) const;
 
-        auto it = std::find(this->module_list_.cbegin(), this->module_list_.cend(),
-            [&name](auto const& el) { return el.second == name; });
+    bool delete_call(std::string const& name);
 
-        return it;
-    }
-
-    bool delete_module(std::string const& name) {
-        auto const it = find_module(name);
-
-        std::unique_lock<std::shared_mutex> lock(graph_lock_);
-
-        if (it == this->module_list_.end()) {
-            return false;
-        }
-
-        // TODO remove connections and corresponding calls
-
-        this->module_list_.erase(it);
-        return true;
-    }
-
-	// FIXME: same invalidation problem as with find_module above
-    [[nodiscard]] CallList_t::iterator find_call(std::string const& name) {
-        std::shared_lock<std::shared_mutex> lock(graph_lock_);
-
-        auto it = std::find(
-            this->call_list_.begin(), this->call_list_.end(), [&name](auto const& el) { return el.second == name; });
-
-        return it;
-    }
-
-	// FIXME: same as above
-        [[nodiscard]] CallList_t::const_iterator find_call(std::string const& name) const {
-        std::shared_lock<std::shared_mutex> lock(graph_lock_);
-
-        auto it = std::find(
-            this->call_list_.cbegin(), this->call_list_.cend(), [&name](auto const& el) { return el.second == name; });
-
-        return it;
-    }
-
-    bool delete_call(std::string const& name) {
-        auto const it = find_call(name);
-
-        std::unique_lock<std::shared_mutex> lock(graph_lock_);
-
-        if (it == this->call_list_.end()) {
-            return false;
-        }
-
-        // TODO remove connections
-        auto source = it->first->PeekCallerSlotNoConst();
-        source->SetCleanupMark(true);
-        source->DisconnectCalls();
-
-        this->call_list_.erase(it);
-        return true;
-    }
-
-
-	// we will forward instantiation/deletion requests from the queues to their targeted GraphRoot nodes
 
     /** Queue for module deletions */
     ModuleDeletionQueue_t module_deletion_queue_;
@@ -296,94 +217,84 @@ private:
     /** Reader/Writer mutex for the graph */
     mutable std::shared_mutex graph_lock_;
 
-    struct GraphRoot {
-		// an OpenGL context must exist during construction of modules and calls - because calls may use GL objects in their constructors
-		// for this reason, we put the GL context next to the modules, calls and the View3D module that initiates the rendering of the next frame
-        std::unique_ptr<console::AbstractRenderAPI> rapi;
-        view::AbstractView* view_;
+    std::unique_ptr<console::AbstractRenderAPI> rapi_;
+    std::string rapi_root_name;
+    std::list<std::function<void(console::AbstractRenderAPI&)>> rapi_commands;
 
-        ModuleList_t modules_;
-        CallList_t calls_;
-
-		// contains commands to instantiate modules and calls for this GraphRoot.
-		// construction of modules and calls will happen within the OpenGL context of this GraphRoot.
-        std::list<std::function<void(GraphRoot&)>> graphCommands_;
-
-        void executeGraphCommands();
-        void renderNextFrame(); // pokes View3D to render the next frame
-    };
-
-    std::list<GraphRoot> subgraphs_;
+    std::list<view::AbstractView*> views_;
 
 
     ////////////////////////// old interface stuff //////////////////////////////////////////////
 public:
+    // TODO: pull necessary 'old' functions to active section above
+    /*
+        bool QueueChainCallInstantiation(const std::string className, const std::string chainStart, const
+    std::string to); bool QueueParamValueChange(const std::string id, const std::string value);
+        // a JSON serialization of all the requests as above (see updateListener)
+        bool QueueGraphChange(const std::string changes);
+        /// @return group id 0 is invalid and means failure
+        uint32_t CreateParamGroup(const std::string name, int size);
+        bool QueueParamGroupValue(const std::string groupName, const std::string id, const std::string value);
+        bool QueueParamGroupValue(uint32_t groupId, const std::string id, const std::string value);
+        bool QueueUpdateFlush();
+        bool AnythingQueued();
 
-	// TODO: pull necessary 'old' functions to active section above
-/*
-    bool QueueChainCallInstantiation(const std::string className, const std::string chainStart, const std::string to);
-    bool QueueParamValueChange(const std::string id, const std::string value);
-    // a JSON serialization of all the requests as above (see updateListener)
-    bool QueueGraphChange(const std::string changes);
-    /// @return group id 0 is invalid and means failure
-    uint32_t CreateParamGroup(const std::string name, int size);
-    bool QueueParamGroupValue(const std::string groupName, const std::string id, const std::string value);
-    bool QueueParamGroupValue(uint32_t groupId, const std::string id, const std::string value);
-    bool QueueUpdateFlush();
-    bool AnythingQueued();
+        // todo: for everything below, RO version AND RW version? or would we just omit the const and imply the user
+    needs
+        // to lock?
+        ////////////////////////////
 
-    // todo: for everything below, RO version AND RW version? or would we just omit the const and imply the user needs
-    // to lock?
-    ////////////////////////////
+        // vislib::SmartPtr<param::AbstractParam> FindParameter(const std::string name, bool quiet = false) const;
 
-    // vislib::SmartPtr<param::AbstractParam> FindParameter(const std::string name, bool quiet = false) const;
+        // todo: optionally ask for the parameters of a specific module (name OR module pointer?)
+        inline void EnumerateParameters(std::function<void(const Module&, param::ParamSlot&)> cb) const;
 
-    // todo: optionally ask for the parameters of a specific module (name OR module pointer?)
-    inline void EnumerateParameters(std::function<void(const Module&, param::ParamSlot&)> cb) const;
+        // todo: optionally pass Module instead of name
+        template <class A, class C>
+        typename std::enable_if<std::is_convertible<A*, Module*>::value && std::is_convertible<C*, Call*>::value,
+            bool>::type
+        EnumerateCallerSlots(std::string module_name, std::function<void(C&)> cb) const;
 
-    // todo: optionally pass Module instead of name
-    template <class A, class C>
-    typename std::enable_if<std::is_convertible<A*, Module*>::value && std::is_convertible<C*, Call*>::value,
-        bool>::type
-    EnumerateCallerSlots(std::string module_name, std::function<void(C&)> cb) const;
+        // WHY??? this is just EnumerateParameters(FindModule()...) GET RID OF IT!
+        template <class A>
+        typename std::enable_if<std::is_convertible<A*, Module*>::value, bool>::type EnumerateParameterSlots(
+            std::string module_name, std::function<void(param::ParamSlot&)> cb) const;
 
-    // WHY??? this is just EnumerateParameters(FindModule()...) GET RID OF IT!
-    template <class A>
-    typename std::enable_if<std::is_convertible<A*, Module*>::value, bool>::type EnumerateParameterSlots(
-        std::string module_name, std::function<void(param::ParamSlot&)> cb) const;
+        size_t GetGlobalParameterHash(void) const;
 
-    size_t GetGlobalParameterHash(void) const;
+        // probably just throws everything away?
+        void Cleanup(void);
 
-    // probably just throws everything away?
-    void Cleanup(void);
+        // serialize into... JSON? WHY THE FUCK IS THIS IN THE ROOTMODULENAMESPACE!
+        std::string SerializeGraph(void) const;
 
-    // serialize into... JSON? WHY THE FUCK IS THIS IN THE ROOTMODULENAMESPACE!
-    std::string SerializeGraph(void) const;
+        // replace the whole graph with whatever is in serialization
+        void Deserialize(std::string othergraph);
 
-    // replace the whole graph with whatever is in serialization
-    void Deserialize(std::string othergraph);
+        // nope, see below!
+        // void NotifyParameterValueChange(param::ParamSlot& slot) const;
+        // void RegisterParamUpdateListener(param::ParamUpdateListener* pul);
+        // void UnregisterParamUpdateListener(param::ParamUpdateListener* pul);
 
-    // nope, see below!
-    // void NotifyParameterValueChange(param::ParamSlot& slot) const;
-    // void RegisterParamUpdateListener(param::ParamUpdateListener* pul);
-    // void UnregisterParamUpdateListener(param::ParamUpdateListener* pul);
+        // accumulate the stuff the queues ask from the graph and give out a JSON diff right afterwards
+        // bitfield says what (params, modules, whatnot) - and also reports whether something did not happen
+        /// @return some ID to allow for removal of the listener later
+        uint32_t RegisterGraphUpdateListener(
+            std::function<void(std::string, uint32_t field)> func, int32_t serviceBitfield);
+        void UnregisterGraphUpdateListener(uint32_t id);
 
-    // accumulate the stuff the queues ask from the graph and give out a JSON diff right afterwards
-    // bitfield says what (params, modules, whatnot) - and also reports whether something did not happen
-    /// @return some ID to allow for removal of the listener later
-    uint32_t RegisterGraphUpdateListener(
-        std::function<void(std::string, uint32_t field)> func, int32_t serviceBitfield);
-    void UnregisterGraphUpdateListener(uint32_t id);
+    private:
+        // todo: signature is weird, data structure might be as well
+        void computeGlobalParameterHash(ModuleNamespace::const_ptr_type path, ParamHashMap_t& map) const;
+        static void compareParameterHash(ParamHashMap_t& one, ParamHashMap_t& other) const;
 
-private:
-    // todo: signature is weird, data structure might be as well
-    void computeGlobalParameterHash(ModuleNamespace::const_ptr_type path, ParamHashMap_t& map) const;
-    static void compareParameterHash(ParamHashMap_t& one, ParamHashMap_t& other) const;
+        void updateFlushIdxList(size_t const processedCount, std::vector<size_t>& list);
+        bool checkForFlushEvent(size_t const eventIdx, std::vector<size_t>& list) const;
+        void shortenFlushIdxList(size_t const eventCount, std::vector<size_t>& list);
+    */
 
-    void updateFlushIdxList(size_t const processedCount, std::vector<size_t>& list);
-    bool checkForFlushEvent(size_t const eventIdx, std::vector<size_t>& list) const;
-    void shortenFlushIdxList(size_t const eventCount, std::vector<size_t>& list);
-*/
+    //    [[nodiscard]] std::shared_ptr<param::AbstractParam> FindParameter(
+    //        std::string const& name, bool quiet = false) const;
 };
 
 
@@ -403,7 +314,8 @@ megamol::core::MegaMolGraph::FindModule(std::string const& module_name, std::fun
 }
 
 
+
 } /* namespace core */
-} /* namespace megamol */
+} // namespace megamol
 
 #endif /* MEGAMOLCORE_MEGAMOLGRAPH_H_INCLUDED */
