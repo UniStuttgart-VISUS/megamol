@@ -58,6 +58,7 @@
 
 #define GOES_INTO_GRAPH
 #define GOES_INTO_TRASH
+#define REMOVE_GRAPH
 
 namespace megamol {
 namespace core {
