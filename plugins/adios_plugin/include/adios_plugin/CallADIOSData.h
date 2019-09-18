@@ -268,7 +268,7 @@ public:
     void setTime(float time);
     float getTime() const;
 
-    void inquire(const std::string& varname);
+    bool inquire(const std::string& varname);
 
     std::vector<std::string> getVarsToInquire() const;
 
