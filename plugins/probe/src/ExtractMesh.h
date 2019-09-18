@@ -65,7 +65,7 @@ private:
     // virtual void readParams();
     void calculateAlphaShape();
 
-    void createPointCloud(std::vector<std::string>& vars);
+    bool createPointCloud(std::vector<std::string>& vars);
     void convertToMesh();
     bool getData(core::Call& call);
 

@@ -32,7 +32,7 @@ ExtractMesh::ExtractMesh()
 
     core::param::EnumParam* fp = new core::param::EnumParam(0);
     fp->SetTypePair(0, "separated");
-    fp->SetTypePair(0, "interleaved");
+    fp->SetTypePair(1, "interleaved");
     this->_formatSlot << fp;
     this->_formatSlot.SetUpdateCallback(&ExtractMesh::toggleFormat);
     this->MakeSlotAvailable(&this->_formatSlot);
@@ -92,10 +92,12 @@ void ExtractMesh::calculateAlphaShape() {
 
 }
 
-void ExtractMesh::createPointCloud(std::vector<std::string>& vars) {
+bool ExtractMesh::createPointCloud(std::vector<std::string>& vars) {
 
     auto cd = this->_getDataCall.CallAs<adios::CallADIOSData>();
-    if (cd == nullptr) return;
+    if (cd == nullptr) return false;
+
+    if (vars.empty()) return false;
 
     auto count = cd->getData(vars[0])->size();
 
@@ -145,6 +147,7 @@ void ExtractMesh::createPointCloud(std::vector<std::string>& vars) {
             _bbox.SetObjectSpaceBBox(xmin, ymin, zmax, xmax, ymax, zmin);
         }
     }
+    return true;
 }
 
 void ExtractMesh::convertToMesh() {
@@ -184,10 +187,10 @@ bool ExtractMesh::getData(core::Call& call) {
 
     // get data from adios
     for (auto var : toInq) {
-        cd->inquire(var);
+        if (!cd->inquire(var)) return false;
     }
 
-    this->createPointCloud(toInq);
+    if (!this->createPointCloud(toInq)) return false;
 
     auto meta_data = cm->getMetaData();
     meta_data.m_bboxs = _bbox;
