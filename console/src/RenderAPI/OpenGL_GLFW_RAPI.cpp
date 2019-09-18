@@ -25,7 +25,8 @@
 #include "stdafx.h"
 #include "UILayersCollection.hpp"
 #include "vislib/graphics/FpsCounter.h"
-#include "utility/KHR.h"
+//#include "utility/KHR.h"
+#include "../../core/include/mmcore/utility/KHR.h" // temporary hack
 
 #include "utility/HotFixFileName.h"
 #include "utility/HotFixes.h"
@@ -264,7 +265,7 @@ bool OpenGL_GLFW_RAPI::initAPI(const Config& config) {
     ::glfwSetCharCallback(m_glfwWindowPtr, &outer_glfw_onChar_func);
 
     if (config.enableKHRDebug)
-		megamol::console::utility::KHR::startDebug();
+		megamol::core::utility::KHR::startDebug();
 
 	if (config.enableVsync)
 		::glfwSwapInterval(0);
