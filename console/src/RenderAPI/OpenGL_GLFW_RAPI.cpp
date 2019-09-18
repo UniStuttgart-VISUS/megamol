@@ -59,7 +59,7 @@ struct AutoDeleter {
         ad.destructor = []() {};
         return *this;
 	}
-    AutoDeleter(std::function<void()>& d) : destructor{d} {}
+    AutoDeleter(std::function<void()> const& d) : destructor{d} {}
     ~AutoDeleter() { destructor(); }
     std::function<void()> destructor;
 };
