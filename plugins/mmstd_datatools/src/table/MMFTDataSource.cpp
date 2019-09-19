@@ -137,6 +137,7 @@ bool MMFTDataSource::getHashCallback(core::Call& caller) {
 
     this->assertData();
 
+    tfd->SetFrameCount(1);
     tfd->SetDataHash(this->dataHash);
     tfd->SetUnlocker(nullptr);
 
