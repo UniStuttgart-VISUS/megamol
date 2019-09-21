@@ -14,6 +14,7 @@
 #include "mmcore/Call.h"
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "mesh/MeshCalls.h"
 
 namespace megamol {
 namespace ospray {
@@ -26,8 +27,7 @@ enum geometryTypeEnum {
     TRIANGLES,
     STREAMLINES,
     CYLINDERS,
-    PBS,
-    PKD
+    PBS
 };
 
 enum volumeTypeEnum { STRUCTUREDVOLUME, BLOCKBRICKEDVOLUME, GHOSTBLOCKBRICKEDVOLUME };
@@ -59,8 +59,6 @@ public:
 
     std::shared_ptr<std::vector<float>> vertexData;
     std::shared_ptr<std::vector<float>> colorData;
-    std::shared_ptr<std::vector<float>> normalData;
-    std::shared_ptr<std::vector<float>> texData;
     std::shared_ptr<std::vector<unsigned int>> indexData;
     void* voxels;
     std::shared_ptr<std::vector<float>> gridOrigin;
@@ -85,9 +83,10 @@ public:
 
     std::pair<std::vector<void*>,structureTypeEnum> ospStructures;
 
+    std::shared_ptr<mesh::MeshDataAccessCollection> mesh;
+
     unsigned int voxelCount;
     unsigned int maxDim;
-    unsigned int triangleCount;
     unsigned int vertexCount;
     unsigned int vertexLength;
     unsigned int vertexStride;

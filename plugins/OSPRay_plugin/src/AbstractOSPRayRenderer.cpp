@@ -1002,54 +1002,71 @@ bool AbstractOSPRayRenderer::fillWorld() {
                 }
                 break;
             case geometryTypeEnum::TRIANGLES:
-                if (element.vertexData == NULL) {
+                if (element.mesh == NULL) {
                     // returnValue = false;
                     break;
                 }
+                this->numCreateGeo = element.mesh->accessMesh().size();
+                for (auto& mesh : element.mesh->accessMesh()) {
 
-                geo.push_back(ospNewGeometry("triangles"));
+                    geo.push_back(ospNewGeometry("triangles"));
 
-                // check vertex data type
-                if (element.vertexData->size() != 0) {
-                    vertexData = ospNewData(element.vertexCount, OSP_FLOAT3, element.vertexData->data());
-                    ospCommit(vertexData);
-                    ospSetData(geo.back(), "vertex", vertexData);
-                } else {
-                    vislib::sys::Log::DefaultLog.WriteError("OSPRay cannot render meshes without vertex array");
-                    returnValue = false;
+                    for (auto& attrib : mesh.attributes) {
+
+                        if (attrib.semantic == mesh::MeshDataAccessCollection::POSITION) {
+                            auto count = attrib.byte_size /
+                                         (mesh::MeshDataAccessCollection::getByteSize(attrib.component_type) *
+                                             attrib.component_cnt);
+                            vertexData = ospNewData(count, OSP_FLOAT3, attrib.data);
+                            ospCommit(vertexData);
+                            ospSetData(geo.back(), "vertex", vertexData);
+                        }
+
+                        // check normal pointer
+                        if (attrib.semantic == mesh::MeshDataAccessCollection::NORMAL) {
+                            auto count =
+                                attrib.byte_size / (mesh::MeshDataAccessCollection::getByteSize(attrib.component_type) *
+                                                       attrib.component_cnt);
+                            normalData = ospNewData(count, OSP_FLOAT3, attrib.data);
+                            ospCommit(normalData);
+                            ospSetData(geo.back(), "vertex.normal", normalData);
+                        }
+
+                        // check colorpointer and convert to rgba
+                        if (attrib.semantic == mesh::MeshDataAccessCollection::COLOR) {
+                            if (attrib.component_type == mesh::MeshDataAccessCollection::ValueType::FLOAT)
+                                colorData = ospNewData(attrib.byte_size / (mesh::MeshDataAccessCollection::getByteSize(
+                                                                               attrib.component_type) *
+                                                                              attrib.component_cnt),
+                                    OSP_FLOAT4, attrib.data);
+                            else
+                                colorData = ospNewData(attrib.byte_size, OSP_UCHAR, attrib.data);
+                            ospCommit(colorData);
+                            ospSetData(geo.back(), "vertex.color", colorData);
+                        }
+
+                        // check texture array
+                        if (attrib.semantic == mesh::MeshDataAccessCollection::TEXCOORD) {
+                            texData = ospNewData(
+                                attrib.byte_size / (mesh::MeshDataAccessCollection::getByteSize(attrib.component_type) *
+                                                       attrib.component_cnt),
+                                OSP_FLOAT2, attrib.data);
+                            ospCommit(texData);
+                            ospSetData(geo.back(), "vertex.texcoord", texData);
+                        }
+                    }
+                    // check index pointer
+                    if (mesh.indices.data != nullptr) {
+                        auto count = mesh.indices.byte_size /
+                                     mesh::MeshDataAccessCollection::getByteSize(mesh.indices.type);
+                        indexData = ospNewData(count, OSP_UINT, mesh.indices.data);
+                        ospCommit(indexData);
+                        ospSetData(geo.back(), "index", indexData);
+                    } else {
+                        vislib::sys::Log::DefaultLog.WriteError("OSPRay cannot render meshes without index array");
+                        returnValue = false;
+                    }
                 }
-
-                // check normal pointer
-                if (element.normalData->size() != 0) {
-                    normalData = ospNewData(element.vertexCount, OSP_FLOAT3, element.normalData->data());
-                    ospCommit(normalData);
-                    ospSetData(geo.back(), "vertex.normal", normalData);
-                }
-
-                // check colorpointer and convert to rgba
-                if (element.colorData->size() != 0) {
-                    colorData = ospNewData(element.vertexCount, OSP_FLOAT4, element.colorData->data());
-                    ospCommit(colorData);
-                    ospSetData(geo.back(), "vertex.color", colorData);
-                }
-
-                // check texture array
-                if (element.texData->size() != 0) {
-                    texData = ospNewData(element.triangleCount, OSP_FLOAT2, element.texData->data());
-                    ospCommit(texData);
-                    ospSetData(geo.back(), "vertex.texcoord", texData);
-                }
-
-                // check index pointer
-                if (element.indexData->size() != 0) {
-                    indexData = ospNewData(element.triangleCount, OSP_INT3, element.indexData->data());
-                    ospCommit(indexData);
-                    ospSetData(geo.back(), "index", indexData);
-                } else {
-                    vislib::sys::Log::DefaultLog.WriteError("OSPRay cannot render meshes without index array");
-                    returnValue = false;
-                }
-
                 break;
             case geometryTypeEnum::STREAMLINES:
                 if (element.vertexData == NULL) {
@@ -1074,7 +1091,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
                     ospSetData(geo.back(), "vertex", vertexData);
 
                     indexData = ospNewData(
-                        element.indexData->size(), OSP_INT, element.indexData->data(), OSP_DATA_SHARED_BUFFER);
+                        element.indexData->size(), OSP_UINT, element.indexData->data(), OSP_DATA_SHARED_BUFFER);
                     ospCommit(indexData);
                     ospSetData(geo.back(), "index", indexData);
 
