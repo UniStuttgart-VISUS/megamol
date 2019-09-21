@@ -3,6 +3,7 @@
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "adios_plugin/CallADIOSData.h"
+#include <limits>
 
 
 
@@ -126,12 +127,12 @@ bool ExtractMesh::createPointCloud(std::vector<std::string>& vars) {
         } else {
             auto xyz = cd->getData(std::string(this->_xyzSlot.Param<core::param::FlexEnumParam>()->ValueString()))
                            ->GetAsFloat();
-            float xmin = 0;
-            float xmax = 0;
-            float ymin = 0;
-            float ymax = 0;
-            float zmin = 0;
-            float zmax = 0;
+            float xmin = std::numeric_limits<float>::max();
+            float xmax = std::numeric_limits<float>::min();
+            float ymin = std::numeric_limits<float>::max();
+            float ymax = std::numeric_limits<float>::min();
+            float zmin = std::numeric_limits<float>::max();
+            float zmax = std::numeric_limits<float>::min();
             for (unsigned long long i = 0; i < count; i++) {
                 _cloud.points[i].x = xyz[3 * i + 0];
                 _cloud.points[i].y = xyz[3 * i + 1];
@@ -174,6 +175,7 @@ bool ExtractMesh::getData(core::Call& call) {
 
 
     if (cd->getDataHash() == _old_datahash) return true;
+    if (!(*cd)(0)) return false;
 
     std::vector<std::string> toInq;
     toInq.clear();
@@ -218,6 +220,7 @@ bool ExtractMesh::getMetaData(core::Call& call) {
     if (cd == nullptr) return false;
 
     // get metadata from adios
+    if (!(*cd)(1)) return false;
     auto vars = cd->getAvailableVars();
     for (auto var : vars) {
         this->_xSlot.Param<core::param::FlexEnumParam>()->AddValue(var);

@@ -5,20 +5,24 @@
  * All rights reserved.
  */
 
-#include <vector>
-
-#include "mesh.h"
 
 #ifndef MESH_DATA_ACCESS_COLLECTION_H_INCLUDED
 #define MESH_DATA_ACCESS_COLLECTION_H_INCLUDED
+
+#include <vector>
+#include "mesh.h"
 
 namespace megamol {
 namespace mesh {
 
 class MESH_API MeshDataAccessCollection {
 public:
-
     enum ValueType { BYTE, UNSIGNED_BYTE, SHORT, UNSIGNED_SHORT, INT, UNSIGNED_INT, HALF_FLOAT, FLOAT, DOUBLE };
+    enum AttributeSemanticType { POSITION, NORMAL, COLOR, TEXCOORD, TANGENT};
+
+    static constexpr unsigned int convertToGLType(ValueType value_type) {
+        unsigned int retval = 0;
+
 
     static constexpr size_t getByteSize(ValueType value_type) {
         size_t retval = 0;
@@ -62,9 +66,10 @@ public:
         uint8_t*     data;
         size_t       byte_size;
         unsigned int component_cnt;
-        ValueType    component_type;
-        size_t       stride;
-        size_t       offset;
+        ValueType component_type;
+        size_t stride;
+        size_t offset;
+        AttributeSemanticType semantic;
     };
 
     struct IndexData {
