@@ -280,15 +280,15 @@ View3D_2::View3D_2(void)
     this->rotateManipulator.set_target(this->cam);
     this->rotateManipulator.enable();
 
-    this->arcballManipulator.set_rotation_centre(glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
     this->arcballManipulator.set_target(this->cam);
-    this->arcballManipulator.set_radius(1.0f);
     this->arcballManipulator.enable();
-    this->arcballCenterDistance = 0.0f;
+    this->orbitalAltitude = 0.0f;
 
-    this->orbitalManipulator.set_rotation_centre(glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
-    this->orbitalManipulator.set_target(this->cam);
-    this->orbitalManipulator.enable();
+    this->turntableManipulator.set_target(this->cam);
+    this->turntableManipulator.enable();
+
+    this->orbitAltitudeManipulator.set_target(this->cam);
+    this->orbitAltitudeManipulator.enable();
 
 
     // none of the saved camera states are valid right now
@@ -432,14 +432,6 @@ void View3D_2::Render(const mmcRenderViewContext& context) {
                                       !this->bboxs.IsClipBoxValid()))) {
             this->bboxs = cr3d->AccessBoundingBoxes();
             glm::vec3 bbcenter = glm::make_vec3(this->bboxs.BoundingBox().CalcCenter().PeekCoordinates());
-            if(!this->arcballManipulator.manipulating())
-				this->arcballManipulator.set_rotation_centre(glm::vec4(bbcenter, 1.0f));
-
-            if (!this->orbitalManipulator.manipulating()) {
-                this->orbitalManipulator.set_rotation_centre(glm::vec4(bbcenter, 1.0f));
-                this->orbitalManipulator.set_orbit(std::abs(glm::length(
-                    glm::vec3(this->cam.eye_position().x(), this->cam.eye_position().y(), this->cam.eye_position().z()) - bbcenter)));
-            }
                 
             if (this->firstImg) {
                 this->ResetView();
@@ -543,10 +535,7 @@ void View3D_2::ResetView(void) {
         this->cam.position(bbcglm + glm::vec4(0.0f, 0.0f, dist, 0.0f));
         this->cam.orientation(cam_type::quaternion_type::create_identity());
     }
-    this->arcballCenterDistance = dist;
-
-    this->arcballManipulator.set_radius(dist);
-    this->orbitalManipulator.set_orbit(dist);
+    this->orbitalAltitude = dist;
 
     glm::mat4 vm = this->cam.view_matrix();
     glm::mat4 pm = this->cam.projection_matrix();
@@ -729,71 +718,72 @@ bool view::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButtonAc
     bool altPressed = this->modkeys.test(view::Modifier::ALT);
     bool ctrlPressed = this->modkeys.test(view::Modifier::CTRL);
 
+    bool anyManipulatorActive = arcballManipulator.manipulating() 
+        || translateManipulator.manipulating() 
+        || rotateManipulator.manipulating() 
+        || turntableManipulator.manipulating()
+        || orbitAltitudeManipulator.manipulating();
+
     if (!this->toggleMouseSelection) {
         switch (button) {
         case megamol::core::view::MouseButton::BUTTON_LEFT:
             this->cursor2d.SetButtonState(0, down);
-            if (action == view::MouseButtonAction::PRESS && (altPressed ^ this->arcballDefault)) {
-                if (!this->arcballManipulator.manipulating()) {
-                    glm::vec3 curPos = static_cast<glm::vec4>(this->cam.eye_position());
-                    glm::vec3 camDir = static_cast<glm::vec4>(this->cam.view_vector());
-                    glm::vec3 rotCenter = curPos + this->arcballManipulator.radius() * glm::normalize(camDir);
-                    this->arcballManipulator.set_rotation_centre(glm::vec4(rotCenter, 1.0f));
-                    //this->arcballManipulator.set_radius(1.0f);
-                    auto wndSize = this->cam.resolution_gate();
-                    this->arcballManipulator.on_drag_start(
+
+            if (!anyManipulatorActive)
+            {
+                auto wndSize = this->cam.resolution_gate();
+
+                if (altPressed ^
+                    this->arcballDefault) // Left mouse press + alt/arcDefault -> activate arcball manipluator
+                {
+                    this->arcballManipulator.setActive(
+                        wndSize.width() - static_cast<int>(this->mouseX), static_cast<int>(this->mouseY));
+                } else if (ctrlPressed) // Left mouse press + Ctrl -> activate orbital manipluator
+                {
+                    this->turntableManipulator.setActive(
                         wndSize.width() - static_cast<int>(this->mouseX), static_cast<int>(this->mouseY));
                 }
-            } else if (action == view::MouseButtonAction::RELEASE && (altPressed ^ this->arcballDefault)) {
-                this->arcballManipulator.on_drag_stop();
-            } else if (action == view::MouseButtonAction::PRESS && ctrlPressed) {
-                if (!this->orbitalManipulator.manipulating()) {
-                    glm::vec3 curPos = static_cast<glm::vec4>(this->cam.eye_position());
-                    glm::vec3 camDir = static_cast<glm::vec4>(this->cam.view_vector());
-                    glm::vec3 rotCenter = curPos + this->orbitalManipulator.get_orbit() * glm::normalize(camDir);
-                    this->orbitalManipulator.set_rotation_centre(glm::vec4(rotCenter, 1.0f));
-                    auto wndSize = this->cam.resolution_gate();
-                    this->orbitalManipulator.on_drag_start(
-                        wndSize.width() - static_cast<int>(this->mouseX), static_cast<int>(this->mouseY));
+                else
+                {
+                    this->rotateManipulator.setActive();
                 }
-            } else if (action == view::MouseButtonAction::RELEASE && ctrlPressed) {
-                this->orbitalManipulator.on_drag_stop();
             }
+
             break;
         case megamol::core::view::MouseButton::BUTTON_RIGHT:
             this->cursor2d.SetButtonState(1, down);
 
-            if (action == view::MouseButtonAction::PRESS && (altPressed ^ this->arcballDefault)) {
-                if (!this->arcballManipulator.manipulating()) {
+            if (!anyManipulatorActive) {
+                if ( (altPressed ^ this->arcballDefault) || ctrlPressed )
+                {
                     auto wndSize = this->cam.resolution_gate();
-                    this->arcballManipulator.on_drag_start(
+                    this->orbitAltitudeManipulator.setActive(
                         wndSize.width() - static_cast<int>(this->mouseX), static_cast<int>(this->mouseY));
                 }
-            } 
-            else if (action == view::MouseButtonAction::RELEASE && (altPressed ^ this->arcballDefault)) {
-                this->arcballManipulator.on_drag_stop();
-            }
-            else if (action == view::MouseButtonAction::PRESS && ctrlPressed) {
-                if (!this->orbitalManipulator.manipulating()) {
-
-                    auto wndSize = this->cam.resolution_gate();
-                    this->orbitalManipulator.on_drag_start(
-                        wndSize.width() - static_cast<int>(this->mouseX), static_cast<int>(this->mouseY));
-                }
-            } else if (action == view::MouseButtonAction::RELEASE && ctrlPressed) {
-                this->orbitalManipulator.on_drag_stop();
             }
 
             break;
         case megamol::core::view::MouseButton::BUTTON_MIDDLE:
             this->cursor2d.SetButtonState(2, down);
-
-            
-
             break;
         default:
             break;
         }
+
+        
+        if (action == view::MouseButtonAction::RELEASE) // Mouse release + no other mouse button pressed ->
+                                                             // deactivate all mouse manipulators
+        {
+            if (!(this->cursor2d.GetButtonState(0) || this->cursor2d.GetButtonState(1))) 
+            {
+                this->arcballManipulator.setInactive();
+                this->orbitAltitudeManipulator.setInactive();
+                this->rotateManipulator.setInactive();
+                this->turntableManipulator.setInactive();
+            }
+        }
+
+
     }
     return true;
 }
@@ -819,35 +809,38 @@ bool view::View3D_2::OnMouseMove(double x, double y) {
     if (!this->toggleMouseSelection) {
         this->cursor2d.SetPosition(x, y, true);
 
-        if (this->orbitalManipulator.manipulating()) {
+        glm::vec3 curPos(static_cast<glm::vec4>(this->cam.eye_position()));
+        glm::vec3 camDir(static_cast<glm::vec4>(this->cam.view_vector()));
+        glm::vec3 rotCenter = curPos + orbitalAltitude * glm::normalize(camDir);
 
-            if (this->cursor2d.GetButtonState(0))
-            {
-                auto wndSize = this->cam.resolution_gate();
-                this->orbitalManipulator.on_drag_rotate(
-                    wndSize.width() - static_cast<int>(this->mouseX), static_cast<int>(this->mouseY));
-            } 
-            else if (this->cursor2d.GetButtonState(1))
-            {
-                auto wndSize = this->cam.resolution_gate();
-                this->orbitalManipulator.on_drag_change_orbit(
-                    wndSize.width() - static_cast<int>(this->mouseX), static_cast<int>(this->mouseY));
-            }
+        glm::vec3 newPos;
+
+        auto wndSize = this->cam.resolution_gate();
+
+        if (this->turntableManipulator.manipulating()) {
+            this->turntableManipulator.on_drag(
+                wndSize.width() - static_cast<int>(this->mouseX),
+                static_cast<int>(this->mouseY),
+                glm::vec4(rotCenter,1.0));
         }
 
         if (this->arcballManipulator.manipulating()) {
-
-            if (this->cursor2d.GetButtonState(0)) {
-                auto wndSize = this->cam.resolution_gate();
-                this->arcballManipulator.on_drag(
-                    wndSize.width() - static_cast<int>(this->mouseX), static_cast<int>(this->mouseY));
-            } else if (this->cursor2d.GetButtonState(1)) 
-            {
-                auto wndSize = this->cam.resolution_gate();
-                this->arcballManipulator.on_drag_change_radius(
-                    wndSize.width() - static_cast<int>(this->mouseX), static_cast<int>(this->mouseY));
-            }
+            this->arcballManipulator.on_drag(
+                wndSize.width() - static_cast<int>(this->mouseX), 
+                static_cast<int>(this->mouseY),
+                glm::vec4(rotCenter, 1.0));
         }
+
+        if (this->orbitAltitudeManipulator.manipulating()) {
+            this->orbitAltitudeManipulator.on_drag(
+                wndSize.width() - static_cast<int>(this->mouseX), 
+                static_cast<int>(this->mouseY),
+                glm::vec4(rotCenter, 1.0));
+
+            newPos = glm::vec3(static_cast<glm::vec4>(this->cam.eye_position()));
+            this->orbitalAltitude = thecam::math::length(newPos - rotCenter);
+        }
+
     }
 
     return true;
@@ -1082,12 +1075,7 @@ void View3D_2::handleCameraMovement(void) {
 
     if (!(this->arcballDefault ^ this->modkeys.test(view::Modifier::ALT)) &&
         !(this->modkeys.test(view::Modifier::CTRL))) {
-        auto resolution = this->cam.resolution_gate();
-        glm::vec2 midpoint(resolution.width() / 2.0f, resolution.height() / 2.0f);
-        glm::vec2 mouseDirection = glm::vec2(this->mouseX, this->mouseY) - midpoint;
-        mouseDirection.x = -mouseDirection.x;
-        mouseDirection /= midpoint;
-
+        
         if (this->pressedKeyMap.count(view::Key::KEY_W) > 0 && this->pressedKeyMap[view::Key::KEY_W]) {
             this->translateManipulator.move_forward(step);
         }
@@ -1124,12 +1112,17 @@ void View3D_2::handleCameraMovement(void) {
         if (this->pressedKeyMap.count(view::Key::KEY_RIGHT) > 0 && this->pressedKeyMap[view::Key::KEY_RIGHT]) {
             this->rotateManipulator.yaw(-rotationStep);
         }
+    }
 
-        if (this->pressedMouseMap.count(view::MouseButton::BUTTON_LEFT) > 0 &&
-            this->pressedMouseMap[view::MouseButton::BUTTON_LEFT]) {
-            this->rotateManipulator.pitch(-mouseDirection.y * rotationStep);
-            this->rotateManipulator.yaw(mouseDirection.x * rotationStep);
-        }
+    if (this->rotateManipulator.manipulating()) {
+        auto resolution = this->cam.resolution_gate();
+        glm::vec2 midpoint(resolution.width() / 2.0f, resolution.height() / 2.0f);
+        glm::vec2 mouseDirection = glm::vec2(this->mouseX, this->mouseY) - midpoint;
+        mouseDirection.x = -mouseDirection.x;
+        mouseDirection /= midpoint;
+
+        this->rotateManipulator.pitch(-mouseDirection.y * rotationStep);
+        this->rotateManipulator.yaw(mouseDirection.x * rotationStep);
     }
 }
 

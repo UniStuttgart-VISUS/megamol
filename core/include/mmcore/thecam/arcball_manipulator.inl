@@ -29,13 +29,6 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * megamol::core::thecam::arcball_manipulator<T>::arcball_manipulator
- */
-template <class T>
-megamol::core::thecam::arcball_manipulator<T>::arcball_manipulator(const point_type& rotCentre, const world_type radius)
-    : ballRadius(radius), rotCentre(rotCentre) {}
-
 
 /*
  * megamol::core::thecam::arcball_manipulator<T>::~arcball_manipulator
@@ -47,7 +40,8 @@ template <class T> megamol::core::thecam::arcball_manipulator<T>::~arcball_manip
  * megamol::core::thecam::arcball_manipulator<T>::on_drag
  */
 template <class T>
-void megamol::core::thecam::arcball_manipulator<T>::on_drag(const screen_type x, const screen_type y) {
+void megamol::core::thecam::arcball_manipulator<T>::on_drag(
+    const screen_type x, const screen_type y, const point_type& rotCentre) {
     if (this->manipulating() && this->enabled()) {
         auto cam = this->camera();
         THE_ASSERT(cam != nullptr);
@@ -74,7 +68,7 @@ void megamol::core::thecam::arcball_manipulator<T>::on_drag(const screen_type x,
             
             // rotate horizontally
             thecam::math::set_from_angle_axis(rot_pitch, dx * (3.14159265f / 180.0f), cam->up_vector());
-            cam->orientation(rot_pitch * this->startRot);
+            cam->orientation(rot_pitch * this->camera()->orientation());
             auto updated_orientation = cam->orientation();
             
             // get cam right vector after horizontal rotation to rotate vertically
@@ -83,7 +77,7 @@ void megamol::core::thecam::arcball_manipulator<T>::on_drag(const screen_type x,
             cam->orientation(rot_yaw * updated_orientation);
             
             // transform s.t. rotation center is origin
-            auto shifted_pos = this->startPos - this->rotCentre;
+            auto shifted_pos = this->camera()->eye_position() - rotCentre;
             quaternion_type pos_quat(shifted_pos.x(), shifted_pos.y(), shifted_pos.z(), 0.0f);
             // move camera based on applied rotation
             auto rot_pitch_conj = thecam::math::conjugate(rot_pitch);
@@ -93,46 +87,17 @@ void megamol::core::thecam::arcball_manipulator<T>::on_drag(const screen_type x,
             
             // transform back 
             cam->position(point_type(
-                pos_quat.x() +  this->rotCentre.x(),
-                pos_quat.y() +  this->rotCentre.y(),
-                pos_quat.z() +  this->rotCentre.z(),
+                pos_quat.x() +  rotCentre.x(),
+                pos_quat.y() +  rotCentre.y(),
+                pos_quat.z() +  rotCentre.z(),
                 1.0f)
             );
             
             // update reference values for next call to on_drag (that happens without drag start event)
-            this->startPos = this->camera()->eye_position();
-            this->startRot = this->camera()->orientation();
             this->lastSx = x;
             this->lastSy = y;
         }
     }
-}
-
-template <class T>
-inline void megamol::core::thecam::arcball_manipulator<T>::on_drag_change_radius(
-    const screen_type x, const screen_type y) {
-
-     if (this->manipulating() && this->enabled()) {
-        auto cam = this->camera();
-        THE_ASSERT(cam != nullptr);
-
-        if (this->lastSy != y) {
-
-            screen_type dy = y - lastSy;
-
-            auto cam_pos = cam->eye_position();
-
-            auto v = thecam::math::normalise(this->rotCentre - cam_pos);
-
-            cam->position(cam_pos - (v * dy * (this->ballRadius / 500.0f)));
-
-            this->ballRadius = std::abs(thecam::math::length(this->rotCentre - cam->eye_position()));
-        }
-
-        this->lastSx = x;
-        this->lastSy = y;
-    }
-
 }
 
 
@@ -140,13 +105,13 @@ inline void megamol::core::thecam::arcball_manipulator<T>::on_drag_change_radius
  * megamol::core::thecam::arcball_manipulator<T>::on_drag_start
  */
 template <class T>
-void megamol::core::thecam::arcball_manipulator<T>::on_drag_start(const screen_type x, const screen_type y) {
+void megamol::core::thecam::arcball_manipulator<T>::setActive(const screen_type x, const screen_type y) {
     if (!this->manipulating() && this->enabled()) {
         this->begin_manipulation();
-        this->startPos = this->camera()->eye_position();
-        this->invStartRot = math::invert(this->camera()->orientation());
-        this->startRot = this->camera()->orientation();
-        this->startVector = this->mapToSphere(x, y);
+        //this->startPos = this->camera()->eye_position();
+        //this->invStartRot = math::invert(this->camera()->orientation());
+        //this->startRot = this->camera()->orientation();
+        //this->startVector = this->mapToSphere(x, y);
         this->lastSx = x;
         this->lastSy = y;
     }
@@ -156,29 +121,29 @@ void megamol::core::thecam::arcball_manipulator<T>::on_drag_start(const screen_t
 /*
  * megamol::core::thecam::arcball_manipulator<T>::mapToSphere
  */
-template <class T>
-typename megamol::core::thecam::arcball_manipulator<T>::vector_type
-megamol::core::thecam::arcball_manipulator<T>::mapToSphere(const screen_type sx, const screen_type sy) const {
-    THE_ASSERT(this->camera() != nullptr);
-    auto wndSize = this->camera()->resolution_gate();
-    auto halfHeight = wndSize.height() / static_cast<world_type>(2);
-    auto halfWidth = wndSize.width() / static_cast<world_type>(2);
-
-    // Scale to screen
-    auto bx = (sx - halfWidth) / (this->ballRadius * halfWidth);
-    auto by = (sy - halfHeight) / (this->ballRadius * halfHeight);
-    auto bz = static_cast<world_type>(0);
-
-    auto mag = bx * bx + by * by;
-
-    if (mag > 1) {
-        // Point is mapped outside of the sphere: project on sphere.
-        auto scale = 1.0f / std::sqrt(mag);
-        bx *= scale;
-        by *= scale;
-    } else {
-        // Point is mapped inside the sphere.
-        bz = std::sqrt(1.0f - mag);
-    }
-    return typename maths_type::vector_type(bx, by, bz, static_cast<world_type>(0));
-}
+//template <class T>
+//typename megamol::core::thecam::arcball_manipulator<T>::vector_type
+//megamol::core::thecam::arcball_manipulator<T>::mapToSphere(const screen_type sx, const screen_type sy) const {
+//    THE_ASSERT(this->camera() != nullptr);
+//    auto wndSize = this->camera()->resolution_gate();
+//    auto halfHeight = wndSize.height() / static_cast<world_type>(2);
+//    auto halfWidth = wndSize.width() / static_cast<world_type>(2);
+//
+//    // Scale to screen
+//    auto bx = (sx - halfWidth) / (this->ballRadius * halfWidth);
+//    auto by = (sy - halfHeight) / (this->ballRadius * halfHeight);
+//    auto bz = static_cast<world_type>(0);
+//
+//    auto mag = bx * bx + by * by;
+//
+//    if (mag > 1) {
+//        // Point is mapped outside of the sphere: project on sphere.
+//        auto scale = 1.0f / std::sqrt(mag);
+//        bx *= scale;
+//        by *= scale;
+//    } else {
+//        // Point is mapped inside the sphere.
+//        bz = std::sqrt(1.0f - mag);
+//    }
+//    return typename maths_type::vector_type(bx, by, bz, static_cast<world_type>(0));
+//}
