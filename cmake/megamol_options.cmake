@@ -16,6 +16,7 @@ endif()
 set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS ${CMAKE_CONFIGURATION_TYPES})
 
 # Compiler flags (inspired by OSPRay build)
+option(DISABLE_WARNINGS "Disables all compiler warnings" ON)
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
   set(MEGAMOL_COMPILER_ICC TRUE)
   include(icc)
