@@ -75,7 +75,6 @@ private:
 
 #ifdef WITH_MPI
     MPI_Comm mpi_comm_ = MPI_COMM_NULL;
-    bool useMpi = false;
     int mpiRank = -1, mpiSize = -1;
     bool MpiInitialized = false;
 #endif
@@ -90,22 +89,19 @@ private:
     //std::vector<UINT64> frameIdx;
 
     /** Data file load id counter */
-    size_t data_hash;
+    size_t data_hash = 0;
 	bool dataHashChanged = false;
 
     /** The file name */
-    core::param::ParamSlot filename;
+    core::param::ParamSlot filenameSlot;
 
-    int step = 0;
-    int particleCount = 0;
-    size_t frameCount;
-    size_t loadedFrameID;
-
+    size_t frameCount = 0;
+    long long int loadedFrameID = -1;
 
     // ADIOS Stuff
-    adios2::ADIOS adiosInst;
+    std::shared_ptr<adios2::ADIOS> adiosInst;
     std::shared_ptr<adios2::IO> io;
-    adios2::Engine reader;
+    std::shared_ptr<adios2::Engine> reader;
     std::map<std::string, adios2::Params> variables;
     adiosDataMap dataMap;
 };
