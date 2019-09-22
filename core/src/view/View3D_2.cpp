@@ -543,7 +543,7 @@ void View3D_2::ResetView(void) {
     glm::mat4 pm = this->cam.projection_matrix();
 
     // TODO Further manipulators? better value?
-    this->translateManipulator.set_step_size(dist);
+    //this->translateManipulator.set_step_size(dist);
     this->valuesFromOutside = false;
 }
 
@@ -726,6 +726,9 @@ bool view::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButtonAc
         || turntableManipulator.manipulating()
         || orbitAltitudeManipulator.manipulating();
 
+    // get window resolution to help computing mouse coordinates
+    auto wndSize = this->cam.resolution_gate();
+
     if (!this->toggleMouseSelection) {
         switch (button) {
         case megamol::core::view::MouseButton::BUTTON_LEFT:
@@ -733,8 +736,6 @@ bool view::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButtonAc
 
             if (!anyManipulatorActive)
             {
-                auto wndSize = this->cam.resolution_gate();
-
                 if (altPressed ^
                     this->arcballDefault) // Left mouse press + alt/arcDefault -> activate arcball manipluator
                 {
@@ -758,7 +759,6 @@ bool view::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButtonAc
             if (!anyManipulatorActive) {
                 if ( (altPressed ^ this->arcballDefault) || ctrlPressed )
                 {
-                    auto wndSize = this->cam.resolution_gate();
                     this->orbitAltitudeManipulator.setActive(
                         wndSize.width() - static_cast<int>(this->mouseX), static_cast<int>(this->mouseY));
                 }
@@ -767,6 +767,15 @@ bool view::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButtonAc
             break;
         case megamol::core::view::MouseButton::BUTTON_MIDDLE:
             this->cursor2d.SetButtonState(2, down);
+
+             if (!anyManipulatorActive) {
+                if ((altPressed ^ this->arcballDefault) || ctrlPressed) 
+                {
+                    this->translateManipulator.setActive(
+                        wndSize.width() - static_cast<int>(this->mouseX), static_cast<int>(this->mouseY));
+                }
+            }
+
             break;
         default:
             break;
@@ -776,12 +785,14 @@ bool view::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButtonAc
         if (action == view::MouseButtonAction::RELEASE) // Mouse release + no other mouse button pressed ->
                                                              // deactivate all mouse manipulators
         {
-            if (!(this->cursor2d.GetButtonState(0) || this->cursor2d.GetButtonState(1))) 
+            if (!(this->cursor2d.GetButtonState(0) || this->cursor2d.GetButtonState(1) ||
+                    this->cursor2d.GetButtonState(2))) 
             {
                 this->arcballManipulator.setInactive();
                 this->orbitAltitudeManipulator.setInactive();
                 this->rotateManipulator.setInactive();
                 this->turntableManipulator.setInactive();
+                this->translateManipulator.setInactive();
             }
         }
 
@@ -811,8 +822,8 @@ bool view::View3D_2::OnMouseMove(double x, double y) {
     if (!this->toggleMouseSelection) {
         this->cursor2d.SetPosition(x, y, true);
 
-        glm::vec3 curPos(static_cast<glm::vec4>(this->cam.eye_position()));
-        glm::vec3 camDir(static_cast<glm::vec4>(this->cam.view_vector()));
+        //glm::vec3 curPos(static_cast<glm::vec4>(this->cam.eye_position()));
+        //glm::vec3 camDir(static_cast<glm::vec4>(this->cam.view_vector()));
         //glm::vec3 rotCenter = curPos + orbitalAltitude * glm::normalize(camDir);
 
         glm::vec3 newPos;
@@ -838,9 +849,21 @@ bool view::View3D_2::OnMouseMove(double x, double y) {
                 wndSize.width() - static_cast<int>(this->mouseX), 
                 static_cast<int>(this->mouseY),
                 glm::vec4(rotCenter, 1.0));
+        }
 
-            //newPos = glm::vec3(static_cast<glm::vec4>(this->cam.eye_position()));
-            //this->orbitalAltitude = thecam::math::length(newPos - rotCenter);
+        if (this->translateManipulator.manipulating()) {
+
+            // compute proper step size by computing pixel world size at distance to rotCenter
+            glm::vec3 currCamPos(static_cast<glm::vec4>(this->cam.position()));
+            float orbitalAltitude = glm::length(currCamPos - rotCenter);
+            auto fovy = cam.half_aperture_angle_radians();
+            auto vertical_height = 2.0f * std::tan(fovy) * orbitalAltitude;
+            auto pixel_world_size = vertical_height / wndSize.height();
+
+            this->translateManipulator.set_step_size(pixel_world_size);
+
+            this->translateManipulator.move_horizontally(wndSize.width() - static_cast<int>(this->mouseX));
+            this->translateManipulator.move_vertically(static_cast<int>(this->mouseY));
         }
 
     }

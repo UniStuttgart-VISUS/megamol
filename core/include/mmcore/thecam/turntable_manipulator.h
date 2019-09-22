@@ -65,6 +65,10 @@ public:
 
                 quaternion_type rot_lat;
                 quaternion_type rot_lon;
+                
+                auto wndSize = cam->resolution_gate();
+                float factor_x = 720.0f / wndSize.width();
+                float factor_y = 720.0f / wndSize.height();
 
                 auto intial_pos = cam->eye_position();
                 auto initial_orientation = cam->orientation();
@@ -72,16 +76,15 @@ public:
                 auto shifted_pos = intial_pos - rotCentre;
                 quaternion_type pos_rot(shifted_pos.x(), shifted_pos.y(), shifted_pos.z(), 0.0f);
 
-
                 thecam::math::set_from_angle_axis(
-                    rot_lon, dx * (3.14159265f / 180.0f), vector_type(0.0, 1.0, 0.0, 0.0));
+                    rot_lon, factor_x * dx * (3.14159265f / 180.0f), vector_type(0.0, 1.0, 0.0, 0.0));
                 auto rot_lon_conj = thecam::math::conjugate(rot_lon);
 
                 cam->orientation(rot_lon * initial_orientation);
                 initial_orientation = cam->orientation();
 
                 auto cam_right = cam->right_vector();
-                thecam::math::set_from_angle_axis(rot_lat, dy * (3.14159265f / 180.0f), -cam_right);
+                thecam::math::set_from_angle_axis(rot_lat, factor_y * dy * (3.14159265f / 180.0f), -cam_right);
                 auto rot_lat_conj = thecam::math::conjugate(rot_lat);
 
                 cam->orientation(rot_lat * initial_orientation);
