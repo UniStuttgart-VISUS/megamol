@@ -398,7 +398,8 @@ protected:
     bool arcballDefault;
 
     /** Distance from the camera to the arcball center */
-    float orbitalAltitude;
+    //float orbitalAltitude;
+    glm::vec3 rotCenter;
 
     /** Value storing whether there have been read parameter values that came from outside */
     bool valuesFromOutside;

@@ -282,7 +282,8 @@ View3D_2::View3D_2(void)
 
     this->arcballManipulator.set_target(this->cam);
     this->arcballManipulator.enable();
-    this->orbitalAltitude = 0.0f;
+    //this->orbitalAltitude = 0.0f;
+    this->rotCenter = glm::vec3(0.0f, 0.0f, 0.0f);
 
     this->turntableManipulator.set_target(this->cam);
     this->turntableManipulator.enable();
@@ -535,7 +536,8 @@ void View3D_2::ResetView(void) {
         this->cam.position(bbcglm + glm::vec4(0.0f, 0.0f, dist, 0.0f));
         this->cam.orientation(cam_type::quaternion_type::create_identity());
     }
-    this->orbitalAltitude = dist;
+    //this->orbitalAltitude = dist;
+    this->rotCenter = glm::vec3(bbc.GetX(), bbc.GetY(), bbc.GetZ());
 
     glm::mat4 vm = this->cam.view_matrix();
     glm::mat4 pm = this->cam.projection_matrix();
@@ -811,7 +813,7 @@ bool view::View3D_2::OnMouseMove(double x, double y) {
 
         glm::vec3 curPos(static_cast<glm::vec4>(this->cam.eye_position()));
         glm::vec3 camDir(static_cast<glm::vec4>(this->cam.view_vector()));
-        glm::vec3 rotCenter = curPos + orbitalAltitude * glm::normalize(camDir);
+        //glm::vec3 rotCenter = curPos + orbitalAltitude * glm::normalize(camDir);
 
         glm::vec3 newPos;
 
@@ -837,8 +839,8 @@ bool view::View3D_2::OnMouseMove(double x, double y) {
                 static_cast<int>(this->mouseY),
                 glm::vec4(rotCenter, 1.0));
 
-            newPos = glm::vec3(static_cast<glm::vec4>(this->cam.eye_position()));
-            this->orbitalAltitude = thecam::math::length(newPos - rotCenter);
+            //newPos = glm::vec3(static_cast<glm::vec4>(this->cam.eye_position()));
+            //this->orbitalAltitude = thecam::math::length(newPos - rotCenter);
         }
 
     }
@@ -1060,9 +1062,11 @@ std::string View3D_2::determineCameraFilePath(void) const {
 void View3D_2::handleCameraMovement(void) {
     float step = this->viewKeyMoveStepSlot.Param<param::FloatParam>()->Value();
     // the default case is 60 fps therefore we calculate the multiples for the step factor using that
-    auto constexpr micros = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::seconds(1)) / 60.0f;
-    float factor = this->lastFrameDuration / micros;
-    step *= factor;
+    //auto constexpr micros = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::seconds(1)) / 60.0f;
+    //float factor = this->lastFrameDuration / micros;
+    //step *= factor;
+    float dt = std::chrono::duration<float>(this->lastFrameDuration).count();
+    step *= dt;
 
     const float runFactor = this->viewKeyRunFactorSlot.Param<param::FloatParam>()->Value();
     if (this->modkeys.test(view::Modifier::SHIFT)) {
@@ -1071,7 +1075,10 @@ void View3D_2::handleCameraMovement(void) {
 
     bool anymodpressed = !this->modkeys.none();
     float rotationStep = this->viewKeyAngleStepSlot.Param<param::FloatParam>()->Value();
-    rotationStep *= factor;
+    rotationStep *= dt;
+
+    glm::vec3 currCamPos(static_cast<glm::vec4>(this->cam.eye_position()));
+    float orbitalAltitude = glm::length(currCamPos - rotCenter);
 
     if (!(this->arcballDefault ^ this->modkeys.test(view::Modifier::ALT)) &&
         !(this->modkeys.test(view::Modifier::CTRL))) {
@@ -1124,6 +1131,10 @@ void View3D_2::handleCameraMovement(void) {
         this->rotateManipulator.pitch(-mouseDirection.y * rotationStep);
         this->rotateManipulator.yaw(mouseDirection.x * rotationStep);
     }
+    
+    glm::vec3 newCamPos(static_cast<glm::vec4>(this->cam.eye_position()));
+    glm::vec3 camDir(static_cast<glm::vec4>(this->cam.view_vector()));
+    rotCenter = newCamPos + orbitalAltitude * glm::normalize(camDir);
 }
 
 /*
