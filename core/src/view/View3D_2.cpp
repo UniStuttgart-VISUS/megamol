@@ -167,7 +167,7 @@ View3D_2::View3D_2(void)
     this->viewKeyRunFactorSlot.SetParameter(new param::FloatParam(2.0f, 0.1f));
     this->MakeSlotAvailable(&this->viewKeyRunFactorSlot);
 
-    this->viewKeyAngleStepSlot.SetParameter(new param::FloatParam(1.0f, 0.001f, 360.0f));
+    this->viewKeyAngleStepSlot.SetParameter(new param::FloatParam(90.0f, 0.1f, 360.0f));
     this->MakeSlotAvailable(&this->viewKeyAngleStepSlot);
 
     this->mouseSensitivitySlot.SetParameter(new param::FloatParam(3.0f, 0.001f, 10.0f));
