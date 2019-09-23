@@ -10,6 +10,10 @@
 #include <shared_mutex>
 #include <string>
 #include <vector>
+#include "mmcore/factories/ModuleDescriptionManager.h"
+#include "mmcore/factories/CallDescriptionManager.h"
+#include "mmcore/factories/ModuleDescription.h"
+#include "mmcore/factories/CallDescription.h"
 #include "mmcore/Call.h"
 #include "mmcore/Module.h"
 #include "mmcore/api/MegaMolCore.h"
@@ -76,13 +80,13 @@ public:
 
     using CallInstantiationQueue_t = AbstractUpdateQueue<CallInstantiationRequest_t>;
 
-    using ModuleDescr_t = std::pair<Module::ptr_type, ModuleInstantiationRequest>;
+    using ModuleInstance_t = std::pair<Module::ptr_type, ModuleInstantiationRequest>;
 
-    using ModuleList_t = std::vector<ModuleDescr_t>;
+    using ModuleList_t = std::list<ModuleInstance_t>;
 
-    using CallDescr_t = std::pair<Call::ptr_type, CallInstantiationRequest>;
+    using CallInstance_t = std::pair<Call::ptr_type, CallInstantiationRequest>;
 
-    using CallList_t = std::vector<CallDescr_t>;
+    using CallList_t = std::list<CallInstance_t>;
 
 
     //////////////////////////// ctor / dtor ///////////////////////////////
@@ -90,7 +94,7 @@ public:
     /**
      * Bare construction as stub for deserialization
      */
-    MegaMolGraph();
+    MegaMolGraph(factories::ModuleDescriptionManager const& moduleProvider, factories::CallDescriptionManager const& callProvider);
 
     /**
      * No copy-construction. This can only be a legal operation, if we allow deep-copy of Modules in graph.
@@ -115,12 +119,21 @@ public:
     /**
      * Construction from serialized string.
      */
-    MegaMolGraph(std::string const& descr);
+    //MegaMolGraph(std::string const& descr);
 
     /** dtor */
     virtual ~MegaMolGraph();
 
     //////////////////////////// END ctor / dtor ///////////////////////////////
+
+    //////////////////////////// Modules and Calls loaded from DLLs ///////////////////////////////
+
+private:
+	const factories::ModuleDescriptionManager& ModuleProvider();
+	const factories::CallDescriptionManager&   CallProvider();
+	const factories::ModuleDescriptionManager* moduleProvider_ptr;
+	const factories::CallDescriptionManager*   callProvider_ptr;
+public:
 
     //////////////////////////// serialization ////////////////////////////////
 
@@ -178,22 +191,22 @@ private:
         std::unique_lock<std::mutex>>
     AcquireQueueLocks();
 
-    // FIXME: ModuleList_t::iterator not valid after re-allocation of unterlying std::vector memory => old iterators
     // get invalidated and the user is helpless
     [[nodiscard]] ModuleList_t::iterator find_module(std::string const& name);
 
-    // FIXME: same as above
     [[nodiscard]] ModuleList_t::const_iterator find_module(std::string const& name) const;
 
-    bool delete_module(std::string const& name);
+    [[nodiscard]] CallList_t::iterator find_call(std::string const& from, std::string const& to);
 
-    // FIXME: same invalidation problem as with find_module above
-    [[nodiscard]] CallList_t::iterator find_call(std::string const& name);
+    [[nodiscard]] CallList_t::const_iterator find_call(std::string const& from, std::string const& to) const;
 
-    // FIXME: same as above
-    [[nodiscard]] CallList_t::const_iterator find_call(std::string const& name) const;
+    [[nodiscard]] bool add_module(ModuleInstantiationRequest_t const& request);
 
-    bool delete_call(std::string const& name);
+    [[nodiscard]] bool add_call(CallInstantiationRequest_t const& request);
+
+    bool delete_module(ModuleDeletionRequest_t const& request);
+
+    bool delete_call(CallDeletionRequest_t const& request);
 
 
     /** Queue for module deletions */
@@ -219,10 +232,8 @@ private:
 
     std::unique_ptr<console::AbstractRenderAPI> rapi_;
     std::string rapi_root_name;
-    std::list<std::function<void(console::AbstractRenderAPI&)>> rapi_commands;
-
+    std::list<std::function<bool()>> rapi_commands;
     std::list<view::AbstractView*> views_;
-
 
     ////////////////////////// old interface stuff //////////////////////////////////////////////
 public:
@@ -312,7 +323,6 @@ megamol::core::MegaMolGraph::FindModule(std::string const& module_name, std::fun
     cb(*(mod->first));
     return true;
 }
-
 
 
 } /* namespace core */
