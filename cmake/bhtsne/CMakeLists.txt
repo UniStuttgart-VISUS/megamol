@@ -11,9 +11,7 @@ set(BHTSNE_SRCS
   tsne.cpp
   sptree.cpp)
 
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-add_library(bhtsne STATIC ${BHTSNE_SRCS} ${BHTSNE_PUBLIC_HDRS} ${BHTSNE_PRIVATE_HDRS})
-set_target_properties(bhtsne PROPERTIES DEBUG_POSTFIX "d")
+add_library(bhtsne SHARED ${BHTSNE_SRCS} ${BHTSNE_PUBLIC_HDRS} ${BHTSNE_PRIVATE_HDRS})
 
-install(TARGETS bhtsne DESTINATION "lib")
+install(TARGETS bhtsne)
 install(FILES ${BHTSNE_PUBLIC_HDRS} DESTINATION "include")
