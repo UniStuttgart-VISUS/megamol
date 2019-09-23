@@ -15,7 +15,6 @@ set(IMGUI_SRCS
   imgui_draw.cpp
   imgui_widgets.cpp)
 
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 add_library(imgui SHARED ${IMGUI_SRCS} ${IMGUI_PUBLIC_HDRS} ${IMGUI_PRIVATE_HDRS})
 
 install(FILES ${IMGUI_PUBLIC_HDRS} ${IMGUI_PRIVATE_HDRS} DESTINATION "include")
