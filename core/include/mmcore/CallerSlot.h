@@ -84,9 +84,9 @@ namespace core {
             if (call == NULL) {
                 if (this->call != NULL) {
                     this->SetStatusDisconnected();
-                    megamol::core::Call *c = this->call;
+                    //megamol::core::Call *c = this->call;
                     this->call = NULL;
-                    delete c;
+                    //delete c;
                 }
                 if (lock != NULL) lock->UnlockExclusive();
                 return true;
@@ -95,7 +95,7 @@ namespace core {
             for (unsigned int i = 0; i < this->compDesc.size(); i++) {
                 if (this->compDesc[i]->IsDescribing(call)) {
                     if (this->call != NULL) this->call->caller = NULL;
-                    delete this->call;
+                    //delete this->call;
                     this->call = call;
                     this->call->caller = this;
                     this->SetStatusConnected();
