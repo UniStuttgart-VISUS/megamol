@@ -13,7 +13,7 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/StringParam.h"
-#include "mmcore/view/CallRender3D.h"
+#include "mmcore/view/CallRender3D_2.h"
 #include "mmcore/utility/ColourParser.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 
@@ -36,7 +36,7 @@ using namespace megamol::core;
 /*
  * TriSoupRenderer::TriSoupRenderer
  */
-TriSoupRenderer::TriSoupRenderer(void) : Renderer3DModule(),
+TriSoupRenderer::TriSoupRenderer(void) : Renderer3DModule_2(),
         getDataSlot("getData", "The slot to fetch the tri-mesh data"),
         getVolDataSlot("getVolData", "The slot to fetch the volume data (experimental)"),
         showVertices("showVertices", "Flag whether to show the verices of the object"),
@@ -44,8 +44,7 @@ TriSoupRenderer::TriSoupRenderer(void) : Renderer3DModule(),
         surFrontStyle("frontstyle", "The rendering style for the front surface"),
         surBackStyle("backstyle", "The rendering style for the back surface"),
         windRule("windingrule", "The triangle edge winding rule"),
-        colorSlot("color", "The triangle color (if not colors are read from file)"),
-        doScaleSlot("doScale", "Do Scaling of model data") {
+        colorSlot("color", "The triangle color (if no colors are read from file)") {
 
     this->getDataSlot.SetCompatibleCall<megamol::geocalls::CallTriMeshDataDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
@@ -84,9 +83,6 @@ TriSoupRenderer::TriSoupRenderer(void) : Renderer3DModule(),
     this->colorSlot.SetParameter(new param::StringParam("white"));
     this->MakeSlotAvailable(&this->colorSlot);
 
-    this->doScaleSlot.SetParameter(new param::BoolParam(false));
-    this->MakeSlotAvailable(&this->doScaleSlot);
-
 }
 
 
@@ -110,24 +106,16 @@ bool TriSoupRenderer::create(void) {
 /*
  * TriSoupRenderer::GetExtents
  */
-bool TriSoupRenderer::GetExtents(Call& call) {
-    view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
-    if (cr == NULL) return false;
+bool TriSoupRenderer::GetExtents(view::CallRender3D_2& call) {
+
     megamol::geocalls::CallTriMeshData *ctmd = this->getDataSlot.CallAs<megamol::geocalls::CallTriMeshData>();
     if (ctmd == NULL) return false;
-    ctmd->SetFrameID(static_cast<int>(cr->Time()));
+    ctmd->SetFrameID(static_cast<int>(call.Time()));
     if (!(*ctmd)(1)) return false;
 
-    cr->SetTimeFramesCount(ctmd->FrameCount());
-    cr->AccessBoundingBoxes().Clear();
-    cr->AccessBoundingBoxes() = ctmd->AccessBoundingBoxes();
-    if (this->doScaleSlot.Param<param::BoolParam>()->Value()) {
-        float scale = ctmd->AccessBoundingBoxes().ClipBox().LongestEdge();
-        if (scale > 0.0f) scale = 2.0f / scale;
-        cr->AccessBoundingBoxes().MakeScaledWorld(scale);
-    } else {
-        cr->AccessBoundingBoxes().MakeScaledWorld(1.0f);
-    }
+    call.SetTimeFramesCount(ctmd->FrameCount());
+    call.AccessBoundingBoxes().Clear();
+    call.AccessBoundingBoxes() = ctmd->AccessBoundingBoxes();
 
     return true;
 }
@@ -144,29 +132,65 @@ void TriSoupRenderer::release(void) {
 /*
  * TriSoupRenderer::Render
  */
-bool TriSoupRenderer::Render(Call& call) {
-    view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
-    if (cr == NULL) return false;
+bool TriSoupRenderer::Render(view::CallRender3D_2& call) {
     megamol::geocalls::CallTriMeshData *ctmd = this->getDataSlot.CallAs<megamol::geocalls::CallTriMeshData>();
     if (ctmd == NULL) return false;
 
-    ctmd->SetFrameID(static_cast<int>(cr->Time()));
+    ctmd->SetFrameID(static_cast<int>(call.Time()));
     if (!(*ctmd)(1)) return false;
-    if (this->doScaleSlot.Param<param::BoolParam>()->Value()) {
-        float scale = ctmd->AccessBoundingBoxes().ClipBox().LongestEdge();
-        if (scale > 0.0f) scale = 2.0f / scale;
-        //float mat[16] = {
-        //    scale, 0.0f, 0.0f, 0.0f,
-        //    0.0f, scale, 0.0f, 0.0f,
-        //    0.0f, 0.0f, scale, 0.0f,
-        //    0.0f, 0.0f, 0.0f, 1.0f
-        //};
-        //::glMultMatrixf(mat);
-        ::glScalef(scale, scale, scale);
-    }
 
-    ctmd->SetFrameID(static_cast<int>(cr->Time()));
+    ctmd->SetFrameID(static_cast<int>(call.Time())); // necessary?
     if (!(*ctmd)(0)) return false;
+
+	core::view::Camera_2 cam;
+    call.GetCamera(cam);
+    cam_type::snapshot_type snapshot;
+    cam_type::matrix_type viewTemp, projTemp;
+    cam.calc_matrices(snapshot, viewTemp, projTemp, core::thecam::snapshot_content::all);
+    glm::mat4 proj = projTemp;
+    glm::mat4 view = viewTemp;
+
+	// lighting setup
+    this->GetLights();
+    glm::vec4 lightPos = {0.0f, 0.0f, 0.0f, 1.0f};
+    if (this->lightMap.size() != 1) {
+        //vislib::sys::Log::DefaultLog.WriteWarn(
+        //    "[TriSoupRenderer] Only one single point light source is supported by this renderer");
+    }
+    for (auto light : this->lightMap) {
+        if (light.second.lightType != core::view::light::POINTLIGHT) {
+            //vislib::sys::Log::DefaultLog.WriteWarn(
+            //    "[TriSoupRenderer] Only single point light source is supported by this renderer");
+        } else {
+            auto lPos = light.second.pl_position;
+            // light.second.lightColor;
+            // light.second.lightIntensity;
+            if (lPos.size() == 3) {
+                lightPos[0] = lPos[0];
+                lightPos[1] = lPos[1];
+                lightPos[2] = lPos[2];
+            }
+            if (lPos.size() == 4) {
+                lightPos[0] = lPos[0];
+                lightPos[1] = lPos[1];
+                lightPos[2] = lPos[2];
+                lightPos[3] = lPos[3];
+            }
+            break;
+        }
+    }
+    glm::vec4 zeros(0.f);
+    glm::vec4 ambient(0.2f, 0.2f, 0.2f, 1.f);
+    glm::vec4 diffuse(1.f, 1.f, 1.f, 0.f);
+    glm::vec4 specular(0.f, 0.f, 0.f, 0.f);
+
+    ::glMatrixMode(GL_PROJECTION);
+    ::glPushMatrix();
+    ::glLoadMatrixf(glm::value_ptr(proj));
+
+    ::glMatrixMode(GL_MODELVIEW);
+    ::glPushMatrix();
+    ::glLoadMatrixf(glm::value_ptr(view));
 
     bool normals = false;
     bool colors = false;
@@ -175,7 +199,17 @@ bool TriSoupRenderer::Render(Call& call) {
     bool doLighting = this->lighting.Param<param::BoolParam>()->Value();
     if (doLighting) {
         ::glEnable(GL_LIGHTING);
+        ::glEnable(GL_LIGHT0);
+        ::glLightfv(GL_LIGHT0, GL_POSITION, glm::value_ptr(lightPos));
+        ::glLightfv(GL_LIGHT0, GL_AMBIENT, glm::value_ptr(ambient));
+        ::glLightfv(GL_LIGHT0, GL_DIFFUSE, glm::value_ptr(diffuse));
+        ::glLightfv(GL_LIGHT0, GL_SPECULAR, glm::value_ptr(specular));
     } else {
+        ::glLightfv(GL_LIGHT0, GL_POSITION, glm::value_ptr(zeros));
+        ::glLightfv(GL_LIGHT0, GL_AMBIENT, glm::value_ptr(zeros));
+        ::glLightfv(GL_LIGHT0, GL_DIFFUSE, glm::value_ptr(zeros));
+        ::glLightfv(GL_LIGHT0, GL_SPECULAR, glm::value_ptr(zeros));
+        ::glDisable(GL_LIGHT0);
         ::glDisable(GL_LIGHTING);
     }
     ::glDisable(GL_BLEND);
@@ -488,6 +522,11 @@ bool TriSoupRenderer::Render(Call& call) {
     ::glCullFace(cfm);
     ::glFrontFace(twr);
     ::glDisableClientState(GL_VERTEX_ARRAY);
+
+	::glMatrixMode(GL_PROJECTION);
+    ::glPopMatrix();
+    ::glMatrixMode(GL_MODELVIEW);
+    ::glPopMatrix();
 
     return true;
 }

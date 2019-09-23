@@ -11,12 +11,14 @@
 #include "Cinematic/Cinematic.h"
 #include "Keyframe.h"
 
-#include "vislib/math/Point.h"
-#include "vislib/math/Vector.h"
-#include "vislib/math/Matrix.h"
-#include "vislib/graphics/CameraParameters.h"
 #include "vislib/math/Cuboid.h"
+#include "vislib/sys/Log.h"
+#include "vislib/graphics/CameraParameters.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
+
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 
 namespace megamol {
 namespace cinematic {
@@ -70,10 +72,8 @@ namespace cinematic {
         * @return True if data was updated successfully.
         *
         */
-        bool Update(vislib::Array<KeyframeManipulator::manipType> am, vislib::Array<Keyframe>* kfa, Keyframe skf, 
-                    float vph, float vpw, vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> mvpm,
-                    vislib::math::Vector<float, 3> wclad, vislib::math::Vector<float, 3> wcmd, bool mob, 
-                    vislib::math::Vector<float, 3> fcp, vislib::math::Vector<float, 3> lcp);
+        bool Update(std::vector<KeyframeManipulator::manipType> am, std::shared_ptr<std::vector<Keyframe>> kfa, Keyframe skf,
+                    float vph, float vpw, glm::mat4 mvpm, glm::vec3 wclad, glm::vec3 wcmd, bool mob, glm::vec3 fcp, glm::vec3 lcp);
 
         /** 
         * Update extents.
@@ -81,7 +81,7 @@ namespace cinematic {
         * If manipulator lies inside of bounding box:
         * Get bounding box of model to determine minimum length of manipulator axes.
         */
-        void SetExtents(vislib::math::Cuboid<float> *bb);
+        void SetExtents(vislib::math::Cuboid<float>& bb);
 
         /** 
         *
@@ -111,12 +111,12 @@ namespace cinematic {
         /**
         *
         */
-        vislib::math::Vector<float, 3> GetFirstControlPointPosition();
+        glm::vec3 GetFirstControlPointPosition(void);
 
         /**
         *
         */
-        vislib::math::Vector<float, 3> GetLastControlPointPosition();
+        glm::vec3 GetLastControlPointPosition(void);
 
     private:
 
@@ -134,47 +134,43 @@ namespace cinematic {
                     (this->offset == rhs.offset));
             }
 
-            vislib::math::Vector<float, 3> wsPos;   // position in world space
-            vislib::math::Vector<float, 2> ssPos;   // position in screeen space
-            float                          offset;  // screen space offset for ssPos to count as hit
-            bool                           available;
+            glm::vec3 wsPos;	 // position in world space
+            glm::vec2 ssPos;	 // position in screeen space
+            float     offset;	 // screen space offset for ssPos to count as hit
+            bool      available;
         };
 
         // Some fixed values
-        const float                      circleRadiusFac;  // Factor for world cam lookat direction which is used as adaptive circle radius
-        const float                      axisLengthFac;    // Factor for world cam lookat direction which is used as adaptive axis length
-        const unsigned int               circleSubDiv;     // Amount of subdivisions of an circle primitive
-        const float                      lineWidth;
-        const float                      sensitivity;      // Relationship between mouse movement and length changes of coordinates
+        const float						 circleRadiusFac;	// Factor for world cam lookat direction which is used as adaptive circle radius
+        const float						 axisLengthFac;		// Factor for world cam lookat direction which is used as adaptive axis length
+        const unsigned int				 circleSubDiv;		// Amount of subdivisions of an circle primitive
+        const float						 lineWidth;
+        const float						 sensitivity;		// Relationship between mouse movement and length changes of coordinates
+        std::vector<manipPosData>        kfArray;			// Array of keyframe positions
 
-        // Positions of keyframes
-        vislib::Array<manipPosData>      kfArray;     // Array of keyframe positions
+        Keyframe                         selectedKf;		// Copy of currently selected Keyframe
+        std::vector<manipPosData>        manipArray;		// Array of manipulators for selected keyframe
+        glm::vec2                        sKfSsPos;			// Screen space position of selected keyframe
+        glm::vec2                        sKfSsLookAt;		// Screen space lookat of selected keyframe
+        int                              sKfInArray;		// Inidcates if selected keyframe exists in keyframe array if >= 0
+        manipType                        activeType;		// Indicates the type of the active selected manipulator
+        glm::vec2                        lastMousePos;
 
-        // Selected keyframe
-        Keyframe                         selectedKf;   // Copy of currently selected Keyframe
-        vislib::Array<manipPosData>      manipArray;   // Array of manipulators for selected keyframe
-        vislib::math::Vector<float, 2>   sKfSsPos;     // Screen space position of selected keyframe
-        vislib::math::Vector<float, 2>   sKfSsLookAt;  // Screen space lookat of selected keyframe
-        int                              sKfInArray;   // Inidcates if selected keyframe exists in keyframe array if >= 0
-        manipType                        activeType;   // Indicates the type of the active selected manipulator
-        vislib::math::Vector<float, 2>   lastMousePos;
-
-
-        vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> modelViewProjMatrix;
-        vislib::math::Dimension<int, 2>  viewportSize;
-        vislib::math::Vector<float, 3>   worldCamLaDir;
-        vislib::math::Vector<float, 3>   worldCamModDir;
+        glm::mat4                        modelViewProjMatrix;
+        glm::vec2                        viewportSize;
+        glm::vec3						 worldCamLaDir;
+        glm::vec3						 worldCamModDir;
         bool                             isDataSet;
         bool                             isDataDirty;
         vislib::math::Cuboid<float>      modelBbox;
         bool                             manipOusideBbox;
 
-        vislib::math::Vector<float, 3>   startCtrllPos;
-        vislib::math::Vector<float, 3>   endCtrllPos;
+        glm::vec3						 startCtrllPos;
+        glm::vec3						 endCtrllPos;
         bool                             selectedIsFirst;
         bool                             selectedIsLast;
 
-        vislib::Array<vislib::math::Vector<float, 3> > circleVertices;
+        std::vector<glm::vec3 >		    circleVertices;
 
         /**********************************************************************
         * functions
@@ -188,30 +184,22 @@ namespace cinematic {
         /**
         *
         */
-        void drawCircle(vislib::math::Vector<float, 3> pos, float factor);
+        void drawCircle(glm::vec3 pos, float factor);
 
         /**
         *
         */
-        void drawManipulator(vislib::math::Vector<float, 3> kp, vislib::math::Vector<float, 3> mp);
+        void drawManipulator(glm::vec3 kp, glm::vec3 mp);
 
         /**
         *
         */
-        vislib::math::Vector<float, 2> getScreenSpace(vislib::math::Vector<float, 3> wp);
+        glm::vec2 getScreenSpace(glm::vec3 wp);
 
         /**
         *
         */
         bool updateManipulatorPositions(void);
-
-        /** 
-        * Convert Vector to Point
-        */
-        inline vislib::math::Point<float, 3> V2P(vislib::math::Vector<float, 3> v) {
-            return vislib::math::Point<float, 3>(v.X(), v.Y(), v.Z());
-        }
-
     };
 
 } /* end namespace cinematic */

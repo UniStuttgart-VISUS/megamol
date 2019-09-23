@@ -10,12 +10,9 @@
 
 #include "Cinematic/Cinematic.h"
 
-#include "mmcore/BoundingBoxes.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/CoreInstance.h"
-
 #include "mmcore/utility/SDFFont.h"
-
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ParamSlot.h"
@@ -23,9 +20,8 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/FilePathParam.h"
-
-#include "mmcore/view/Renderer3DModule.h"
-#include "mmcore/view/CallRender3D.h"
+#include "mmcore/view/Renderer3DModule_2.h"
+#include "mmcore/view/CallRender3D_2.h"
 #include "mmcore/view/CallRenderView.h"
 #include "mmcore/view/View3D.h"
 #include "mmcore/view/Input.h"
@@ -35,18 +31,10 @@
 #include "vislib/Array.h"
 #include "vislib/memutils.h"
 #include "vislib/StringSerialiser.h"
-
-#include "vislib/math/Point.h"
-#include "vislib/math/Cuboid.h"
-#include "vislib/math/mathfunctions.h"
-#include "vislib/math/ShallowMatrix.h"
-#include "vislib/math/Matrix.h"
-
 #include "vislib/sys/Log.h"
 #include "vislib/sys/FastFile.h"
 #include "vislib/sys/CriticalSection.h"
 #include "vislib/sys/Thread.h"
-
 #include "vislib/graphics/gl/CameraOpenGL.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/CameraParameters.h"
@@ -58,13 +46,14 @@
 #include "CinematicUtils.h"
 
 
+
 namespace megamol {
 namespace cinematic {
 		
 	/**
 	* Tracking shot rendering.
 	*/
-	class TrackingShotRenderer : public core::view::Renderer3DModule {
+	class TrackingShotRenderer : public core::view::Renderer3DModule_2 {
 	public:
 
 		/**
@@ -132,7 +121,7 @@ namespace cinematic {
 		*
 		* @return The return value of the function.
 		*/
-		virtual bool GetExtents(megamol::core::view::CallRender3D& call);
+		virtual bool GetExtents(megamol::core::view::CallRender3D_2& call);
 
 		/**
 		* The render callback.
@@ -141,7 +130,7 @@ namespace cinematic {
 		*
 		* @return The return value of the function.
 		*/
-		virtual bool Render(megamol::core::view::CallRender3D& call);
+		virtual bool Render(megamol::core::view::CallRender3D_2& call);
 
         /** 
         * The mouse button pressed/released callback. 

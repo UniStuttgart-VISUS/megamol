@@ -9,7 +9,7 @@
 #include "mmcore/CoreInstance.h"
 #include "vislib/graphics/gl/ShaderSource.h"
 
-#include "mesh/CallGPUMaterialData.h"
+#include "mesh/MeshCalls.h"
 
 megamol::mesh::DebugGPUMaterialDataSource::DebugGPUMaterialDataSource()
 {
@@ -32,9 +32,14 @@ bool megamol::mesh::DebugGPUMaterialDataSource::getDataCallback(core::Call & cal
 	if (matl_call == NULL)
 		return false;
 
-	matl_call->setMaterialStorage(m_gpu_materials);
+	matl_call->setData(m_gpu_materials);
 
 	return true;
+}
+
+bool megamol::mesh::DebugGPUMaterialDataSource::getMetaDataCallback(core::Call& caller)
+{
+    return true;
 }
 
 bool megamol::mesh::DebugGPUMaterialDataSource::load()

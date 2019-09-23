@@ -77,6 +77,7 @@ private:
     MPI_Comm mpi_comm_ = MPI_COMM_NULL;
     bool useMpi = false;
     int mpiRank = -1, mpiSize = -1;
+    bool MpiInitialized = false;
 #endif
 
     vislib::StringA getCommandLine(void);
@@ -100,7 +101,6 @@ private:
     size_t frameCount;
     size_t loadedFrameID;
 
-    bool MpiInitialized = false;
 
     // ADIOS Stuff
     adios2::ADIOS adiosInst;

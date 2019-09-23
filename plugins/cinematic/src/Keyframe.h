@@ -11,12 +11,44 @@
 #include "Cinematic/Cinematic.h"
 
 #include "vislib/graphics/Camera.h"
-#include "vislib/math/Point.h"
 #include "vislib/Serialisable.h"
-#include "vislib/math/Vector.h"
+
+#include <glm/glm.hpp>
+
 
 namespace megamol {
 namespace cinematic {
+
+
+	/*
+	* Convert glm::vec3 to vislib::math::Vector<float, 3>.
+	*/
+	static inline vislib::math::Vector<float, 3> G2V(glm::vec3 v) {
+		return vislib::math::Vector<float, 3>(v.x, v.y, v.z);
+	}
+
+	/*
+	* Convert vislib::math::Vector<float, 3> to glm::vec3.
+	*/
+	static inline glm::vec3 V2G(vislib::math::Vector<float, 3> v) {
+		return glm::vec3(v.X(), v.Y(), v.Z());
+	}
+
+	/*
+	* Convert glm::vec3 to vislib::math::Point<float, 3>.
+	*/
+	static inline vislib::math::Point<float, 3> G2P(glm::vec3 v) {
+		return vislib::math::Point<float, 3>(v.x, v.y, v.z);
+	}
+
+	/*
+	* Convert vislib::math::Point<float, 3> to glm::vec3.
+	*/
+	static inline glm::vec3 P2G(vislib::math::Point<float, 3> v) {
+		return glm::vec3(v.X(), v.Y(), v.Z());
+	}
+
+
 
     /**
     * Keyframe Keeper.
@@ -27,8 +59,8 @@ namespace cinematic {
 		/** CTOR */
         Keyframe();
 
-        Keyframe(float at, float st, vislib::math::Point<float, 3> pos, vislib::math::Vector<float, 3> up,
-                    vislib::math::Point<float, 3> lookat, float aperture);
+        Keyframe(float at, float st, glm::vec3 pos, glm::vec3 up,
+                    glm::vec3 lookat, float aperture);
 
 		/** DTOR */
 		~Keyframe();
@@ -56,6 +88,7 @@ namespace cinematic {
             return (this->simTime == 1.0f)?(1.0f-0.0000001f):(this->simTime);
         }
 
+<<<<<<< HEAD
         inline vislib::math::Point<float, 3> GetCamPosition(){
             return this->camera.position;
 		}
@@ -65,6 +98,26 @@ namespace cinematic {
 		}
 
         inline vislib::math::Vector<float, 3> GetCamUp(){
+=======
+        /**
+        *
+        */
+        inline glm::vec3 GetCamPosition(){
+            return this->camera.position;
+		}
+
+        /**
+        *
+        */
+        inline glm::vec3 GetCamLookAt(){
+            return this->camera.lookat;
+		}
+
+        /**
+        *
+        */
+        inline glm::vec3 GetCamUp(){
+>>>>>>> 858bc042e1c54af29b2f4defd2b89d65e5c72dfd
             return this->camera.up;
 		}
 
@@ -78,9 +131,10 @@ namespace cinematic {
         }
 
         inline void SetSimTime(float t) {
-            this->simTime = vislib::math::Clamp(t, 0.0f, 1.0f);
+            this->simTime = glm::clamp(t, 0.0f, 1.0f);
         }
 
+<<<<<<< HEAD
         inline void SetCameraPosition(vislib::math::Point <float, 3> pos){
             this->camera.position = pos;
 		}
@@ -90,11 +144,31 @@ namespace cinematic {
 		}
 
         inline void SetCameraUp(vislib::math::Vector<float, 3> up){
+=======
+        /**
+        *
+        */
+        inline void SetCameraPosition(glm::vec3 pos){
+            this->camera.position = pos;
+		}
+
+        /**
+        *
+        */
+        inline void SetCameraLookAt(glm::vec3 look){
+            this->camera.lookat = look;
+		}
+
+        /**
+        *
+        */
+        inline void SetCameraUp(glm::vec3 up){
+>>>>>>> 858bc042e1c54af29b2f4defd2b89d65e5c72dfd
             this->camera.up = up;
 		}
 
         inline void SetCameraApertureAngele(float apertureangle){
-            this->camera.apertureangle = vislib::math::Clamp(apertureangle, 0.0f, 180.0f);
+            this->camera.apertureangle = glm::clamp(apertureangle, 0.0f, 180.0f);
 		}
 
         ///// SERIALISATION /////
@@ -115,10 +189,10 @@ namespace cinematic {
                 return ((this->lookat == rhs.lookat) && (this->position == rhs.position) && 
                         (this->apertureangle == rhs.apertureangle) && (this->up == rhs.up));
             }
-            vislib::math::Vector<float, 3> up;
-            vislib::math::Point<float, 3>  position;
-            vislib::math::Point<float, 3>  lookat;
-            float                          apertureangle;
+            glm::vec3 up;
+            glm::vec3 position;
+            glm::vec3 lookat;
+            float apertureangle;
         };
 
         /**********************************************************************
@@ -126,10 +200,10 @@ namespace cinematic {
         **********************************************************************/
 
         // Simulation time is always in [0,1] and is relative to absolute total simulation time.
-        float                    simTime;
+        float simTime;
         // Animation time [in seconds]
-		float                    animTime;
-        Keyframe::Camera         camera;
+		float animTime;
+        Keyframe::Camera camera;
 
 	};
 

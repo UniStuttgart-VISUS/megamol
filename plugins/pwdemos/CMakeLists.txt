@@ -7,10 +7,6 @@ string(TOUPPER pwdemos EXPORT_NAME)
 option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build pwdemos" ON)
 
 if(BUILD_${EXPORT_NAME}_PLUGIN)
-  # project(pwdemos LANGUAGES CXX CUDA)
-  # set(CMAKE_CUDA_STANDARD 11)
-  # set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -gencode arch=compute_30,code=sm_30")
-  # set(CMAKE_CUDA_FLAGS_RELEASE "${CMAKE_CUDA_FLAGS} -O3")
   project(pwdemos)
 
   # Check option dependencies: First list item is always the current build option,
@@ -24,7 +20,6 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
 
   # Target definition
   add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files})
-  # Set target naming conventions for different build types
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src")

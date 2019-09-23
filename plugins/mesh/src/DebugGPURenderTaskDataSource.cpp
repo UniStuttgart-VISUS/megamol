@@ -13,9 +13,7 @@
 
 #include "DebugGPURenderTaskDataSource.h"
 
-#include "mesh/CallGPURenderTaskData.h"
-#include "mesh/CallGPUMaterialData.h"
-#include "mesh/CallGPUMeshData.h"
+#include "mesh/MeshCalls.h"
 
 megamol::mesh::DebugGPURenderTaskDataSource::DebugGPURenderTaskDataSource()
 {
@@ -45,8 +43,8 @@ bool megamol::mesh::DebugGPURenderTaskDataSource::getDataCallback(core::Call & c
 	if (!(*mc)(0))
 		return false;
 
-	auto gpu_mtl_storage = mtlc->getMaterialStorage();
-	auto gpu_mesh_storage = mc->getGPUMeshes();
+	auto gpu_mtl_storage = mtlc->getData();
+	auto gpu_mesh_storage = mc->getData();
 
 	//TODO nullptr check
 
@@ -59,12 +57,12 @@ bool megamol::mesh::DebugGPURenderTaskDataSource::getDataCallback(core::Call & c
 		auto const& gpu_batch_mesh = gpu_mesh_storage->getMeshes()[sub_mesh.batch_index].mesh;
 		auto const& shader = gpu_mtl_storage->getMaterials().front().shader_program;
 
-		std::vector<glowl::DrawElementsCommand> draw_commands(1000, sub_mesh.sub_mesh_draw_command);
+		std::vector<glowl::DrawElementsCommand> draw_commands(1, sub_mesh.sub_mesh_draw_command);
 
-		std::vector<vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR >> object_transform(1000);
+		std::vector<vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR >> object_transform(1);
 		typedef std::vector<vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR >> PerTaskData;
 
-		for (int i = 0; i < 1000; ++i)
+		for (int i = 0; i < 1; ++i)
 		{
 			GLfloat scale = distr(generator);
 			scale = 0.1f;
@@ -89,7 +87,7 @@ bool megamol::mesh::DebugGPURenderTaskDataSource::getDataCallback(core::Call & c
 		//);
 	}
 
-	rtc->setRenderTaskData(m_gpu_render_tasks);
+	rtc->setData(m_gpu_render_tasks);
 
 	return true;
 }

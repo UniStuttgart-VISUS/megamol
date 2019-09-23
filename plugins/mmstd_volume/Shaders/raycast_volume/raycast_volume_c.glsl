@@ -30,9 +30,6 @@ uniform vec2 valRange;
 uniform highp sampler3D volume_tx3D;
 /* texture containing scene depth */
 uniform highp sampler2D depth_tx2D;
-/* texture containing transfer function */
-//uniform highp sampler2D transfer_function_tx2D;
-uniform highp sampler1D tf_tx1D;
 
 layout(rgba32f, binding = 0) writeonly uniform highp image2D render_target_tx2D;
 
@@ -135,8 +132,7 @@ void main() {
             texCoords *= 1.0 - 2.0 * halfVoxelSize;
             texCoords += halfVoxelSize;
 
-            //vec4 vol_sample = texture(transfer_function_tx2D, vec2(texture(volume_tx3D, texCoords).x, 1));
-            vec4 vol_sample = texture(tf_tx1D, (texture(volume_tx3D, texCoords).x - valRange.x)/valRange.y);
+            vec4 vol_sample = tflookup((texture(volume_tx3D, texCoords).x - valRange.x) / (valRange.y - valRange.x));
             
             // vec4 vol_sample = texture(volume_tx3D,texCoords);
             // vol_sample.w = vol_sample.x;

@@ -1,13 +1,13 @@
 #include "stdafx.h"
 #include "adiosDataSource.h"
+#include <algorithm>
+#include <numeric>
 #include "mmcore/cluster/mpi/MpiCall.h"
 #include "mmcore/param/FilePathParam.h"
 #include "vislib/Trace.h"
 #include "vislib/sys/CmdLineProvider.h"
 #include "vislib/sys/Log.h"
 #include "vislib/sys/SystemInformation.h"
-#include <algorithm>
-#include <numeric>
 
 namespace megamol {
 namespace adios {
@@ -46,6 +46,7 @@ adiosDataSource::~adiosDataSource() { this->Release(); }
  * adiosDataSource::create
  */
 bool adiosDataSource::create() {
+#ifdef WITH_MPI
     MpiInitialized = this->initMPI();
     vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2: Initializing");
     if (MpiInitialized) {
@@ -53,6 +54,10 @@ bool adiosDataSource::create() {
     } else {
         adiosInst = adios2::ADIOS(adios2::DebugON);
     }
+#else 
+    vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2: Initializing");
+    adiosInst = adios2::ADIOS();
+#endif
 
     vislib::sys::Log::DefaultLog.WriteInfo("ADIOS2: Declaring IO");
     io = std::make_shared<adios2::IO>(adiosInst.DeclareIO("ReadBP"));
@@ -210,15 +215,27 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
             loadedFrameID = cad->getFrameIDtoLoad();
             // here data is loaded
         } catch (std::invalid_argument& e) {
+#ifdef WITH_MPI
             vislib::sys::Log::DefaultLog.WriteError(
                 "Invalid argument exception, STOPPING PROGRAM from rank %d", this->mpiRank);
+#else
+            vislib::sys::Log::DefaultLog.WriteError("Invalid argument exception, STOPPING PROGRAM");
+#endif
             vislib::sys::Log::DefaultLog.WriteError(e.what());
         } catch (std::ios_base::failure& e) {
+#ifdef WITH_MPI
             vislib::sys::Log::DefaultLog.WriteError(
                 "IO System base failure exception, STOPPING PROGRAM from rank %d", this->mpiRank);
+#else
+            vislib::sys::Log::DefaultLog.WriteError("IO System base failure exception, STOPPING PROGRAM");
+#endif
             vislib::sys::Log::DefaultLog.WriteError(e.what());
         } catch (std::exception& e) {
+#ifdef WITH_MPI
             vislib::sys::Log::DefaultLog.WriteError("Exception, STOPPING PROGRAM from rank %d", this->mpiRank);
+#else
+            vislib::sys::Log::DefaultLog.WriteError("Exception, STOPPING PROGRAM");
+#endif
             vislib::sys::Log::DefaultLog.WriteError(e.what());
         }
 
@@ -297,15 +314,29 @@ bool adiosDataSource::getHeaderCallback(core::Call& caller) {
             }
 			cad->setDataHash(this->data_hash);
         } catch (std::invalid_argument& e) {
+#ifdef WITH_MPI
             vislib::sys::Log::DefaultLog.WriteError(
                 "Invalid argument exception, STOPPING PROGRAM from rank %d", this->mpiRank);
+#else
+            vislib::sys::Log::DefaultLog.WriteError(
+                "Invalid argument exception, STOPPING PROGRAM");
+#endif
             vislib::sys::Log::DefaultLog.WriteError(e.what());
         } catch (std::ios_base::failure& e) {
+#ifdef WITH_MPI
             vislib::sys::Log::DefaultLog.WriteError(
                 "IO System base failure exception, STOPPING PROGRAM from rank %d", this->mpiRank);
+#else
+            vislib::sys::Log::DefaultLog.WriteError(
+                "IO System base failure exception, STOPPING PROGRAM");
+#endif
             vislib::sys::Log::DefaultLog.WriteError(e.what());
         } catch (std::exception& e) {
+#ifdef WITH_MPI
             vislib::sys::Log::DefaultLog.WriteError("Exception, STOPPING PROGRAM from rank %d", this->mpiRank);
+#else
+            vislib::sys::Log::DefaultLog.WriteError("Exception, STOPPING PROGRAM");
+#endif
             vislib::sys::Log::DefaultLog.WriteError(e.what());
         }
     }
@@ -313,7 +344,7 @@ bool adiosDataSource::getHeaderCallback(core::Call& caller) {
 }
 
 bool adiosDataSource::initMPI() {
-#ifdef WITH_MPI
+#    ifdef WITH_MPI
     if (this->mpi_comm_ == MPI_COMM_NULL) {
         VLTRACE(vislib::Trace::LEVEL_INFO, "adiosDataSource: Need to initialize MPI\n");
         auto c = this->callRequestMpi.CallAs<core::cluster::mpi::MpiCall>();
@@ -354,16 +385,18 @@ bool adiosDataSource::initMPI() {
 
     /* Determine success of the whole operation. */
     const bool retval = (this->mpi_comm_ != MPI_COMM_NULL);
-#endif /* WITH_MPI */
     return retval;
+# else
+    return false;
+#endif /* WITH_MPI */
 }
 
 vislib::StringA adiosDataSource::getCommandLine(void) {
     vislib::StringA retval;
 
-#ifdef WIN32
+#    ifdef WIN32
     retval = ::GetCommandLineA();
-#else /* _WIN32 */
+#    else  /* _WIN32 */
     char *arg = nullptr;
     size_t size = 0;
 
@@ -376,7 +409,7 @@ vislib::StringA adiosDataSource::getCommandLine(void) {
         ::free(arg);
         ::fclose(fp);
     }
-#endif /* _WIN32 */
+#    endif /* _WIN32 */
 
     vislib::sys::Log::DefaultLog.WriteInfo("Command line used for MPI "
         "initialisation is \"%s\".", retval.PeekBuffer());

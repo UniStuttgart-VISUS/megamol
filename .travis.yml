@@ -1,4 +1,4 @@
-language: generic
+language: cpp
 
 git:
   depth: 1
@@ -7,33 +7,111 @@ dist: xenial
 
 matrix:
   include:
-    - os: linux
+    - name: "gcc 7"
+      os: linux
       dist: xenial
       addons:
         apt:
+          update: true
           sources:
             - ubuntu-toolchain-r-test
           packages:
             - g++-7
+            - libgl1-mesa-dev
+            - libglu1-mesa-dev
+            - uuid-dev
+            - libunwind8-dev
+            - libxrandr-dev
+            - libxinerama-dev
+            - libxcursor-dev
+            - libxi-dev
+            - libcgal-qt5-dev
+            - libcgal-dev
       env:
         - CC=gcc-7
         - CXX=g++-7
-
-before_install:
-  - . travis/install-cuda-xenial.sh
-  - sudo apt-get -qq update
-  - sudo apt-get install -y libgl1-mesa-dev
-  - sudo apt-get install -y libglu1-mesa-dev
-  - sudo apt-get install -y uuid-dev
-  - sudo apt-get install -y libunwind8-dev
-  - sudo apt-get install -y libxrandr-dev
-  - sudo apt-get install -y libxinerama-dev
-  - sudo apt-get install -y libxcursor-dev
-  - sudo apt-get install -y libxi-dev
-  - sudo apt-get install -y libcgal-qt5-dev
-  - sudo apt-get install -y libcgal-dev
-  - mkdir build && cd build
-  - cmake ../ -DCMAKE_CXX_FLAGS=-Wno-deprecated-declarations -DENABLE_CUDA=ON -DSUPPRESS_CUDA_WARNINGS=TRUE -DBUILD_PROTEIN_CUDA_PLUGIN=ON
+        - GENERATOR="Unix Makefiles"
+    - name: "gcc 9"
+      os: linux
+      dist: xenial
+      addons:
+        apt:
+          update: true
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-9
+            - libgl1-mesa-dev
+            - libglu1-mesa-dev
+            - uuid-dev
+            - libunwind8-dev
+            - libxrandr-dev
+            - libxinerama-dev
+            - libxcursor-dev
+            - libxi-dev
+            - libcgal-qt5-dev
+            - libcgal-dev
+      env:
+        - CC=gcc-9
+        - CXX=g++-9
+        - GENERATOR="Unix Makefiles"
+    - name: "gcc 9 (Ninja)"
+      os: linux
+      dist: xenial
+      addons:
+        apt:
+          update: true
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-9
+            - ninja-build
+            - libgl1-mesa-dev
+            - libglu1-mesa-dev
+            - uuid-dev
+            - libunwind8-dev
+            - libxrandr-dev
+            - libxinerama-dev
+            - libxcursor-dev
+            - libxi-dev
+            - libcgal-qt5-dev
+            - libcgal-dev
+      env:
+        - CC=gcc-9
+        - CXX=g++-9
+        - GENERATOR=Ninja
+    - name: "clang 8"
+      os: linux
+      dist: xenial
+      addons:
+        apt:
+          update: true
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-xenial-8
+          packages:
+            - clang-8
+            - g++-9
+            - libiomp-dev
+            - libgl1-mesa-dev
+            - libglu1-mesa-dev
+            - uuid-dev
+            - libunwind8-dev
+            - libxrandr-dev
+            - libxinerama-dev
+            - libxcursor-dev
+            - libxi-dev
+            - libcgal-qt5-dev
+            - libcgal-dev
+      env:
+        - CC=clang-8
+        - CXX=clang++-8
+        - GENERATOR="Unix Makefiles"
 
 install:
-  - make install
+  - . travis/install-cuda-xenial.sh
+
+script:
+  - mkdir build && cd build
+  - cmake .. -G"$GENERATOR" -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS=-w -DENABLE_CUDA=ON -DSUPPRESS_CUDA_WARNINGS=TRUE -DBUILD_ADIOS_PLUGIN_PLUGIN=ON -DBUILD_PROTEIN_CUDA_PLUGIN=ON -DBUILD_MEGAMOL101_PLUGIN=ON -DBUILD_REMOTE_PLUGIN=ON
+  - cmake --build . --target install

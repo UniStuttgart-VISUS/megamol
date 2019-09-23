@@ -10,7 +10,7 @@
 #include <inttypes.h>
 #include <stdint.h>
 #include "mmcore/CoreInstance.h"
-#include "mmcore/nextgen/CallRender3D_2.h"
+#include "mmcore/view/CallRender3D_2.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/FloatParam.h"
@@ -24,7 +24,7 @@
 #include "vislib/math/mathfunctions.h"
 
 using namespace megamol::core;
-using namespace megamol::core::nextgen;
+using namespace megamol::core::view;
 using namespace megamol::protein;
 using namespace megamol::protein_calls;
 
@@ -41,7 +41,7 @@ const GLuint SSBObindingPoint = 2;
  * moldyn::CartoonTessellationRenderer2000GT::CartoonTessellationRenderer2000GT
  */
 CartoonTessellationRenderer2000GT::CartoonTessellationRenderer2000GT(void)
-    : nextgen::Renderer3DModule_2()
+    : view::Renderer3DModule_2()
     , getDataSlot("getdata", "Connects to the data source")
     , fences()
     , currBuf(0)
@@ -310,8 +310,8 @@ void CartoonTessellationRenderer2000GT::getBytesAndStrideLines(MolecularDataCall
 /*
  * GetExtents
  */
-bool CartoonTessellationRenderer2000GT::GetExtents(nextgen::CallRender3D_2& call) {
-    nextgen::CallRender3D_2* cr = dynamic_cast<nextgen::CallRender3D_2*>(&call);
+bool CartoonTessellationRenderer2000GT::GetExtents(view::CallRender3D_2& call) {
+    view::CallRender3D_2* cr = dynamic_cast<view::CallRender3D_2*>(&call);
     if (cr == NULL) return false;
 
     MolecularDataCall* mol = this->getDataSlot.CallAs<MolecularDataCall>();
@@ -356,12 +356,12 @@ MolecularDataCall* CartoonTessellationRenderer2000GT::getData(unsigned int t, fl
 /*
  * moldyn::SimpleSphereRenderer::Render
  */
-bool CartoonTessellationRenderer2000GT::Render(nextgen::CallRender3D_2& call) {
+bool CartoonTessellationRenderer2000GT::Render(view::CallRender3D_2& call) {
 #ifdef DEBUG_BLAHBLAH
     glEnable(GL_DEBUG_OUTPUT);
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 #endif
-    nextgen::CallRender3D_2* cr = dynamic_cast<nextgen::CallRender3D_2*>(&call);
+    view::CallRender3D_2* cr = dynamic_cast<view::CallRender3D_2*>(&call);
     if (cr == NULL) return false;
 
     float scaling = 1.0f;
@@ -716,8 +716,7 @@ bool CartoonTessellationRenderer2000GT::Render(nextgen::CallRender3D_2& call) {
 
         this->GetLights();
         auto ls = this->lightMap.size();
-        std::vector<float> lightPos = {0.0f, 0.0f, 0.0f};
-        auto bla = this->lightMap.begin()->second;
+        std::array<float,3> lightPos = {0.0f, 0.0f, 0.0f};
         if (this->lightMap.size() != 1) {
             vislib::sys::Log::DefaultLog.WriteWarn("Only single point light sources are supported by this renderer");
         } else if (this->lightMap.begin()->second.lightType != core::view::light::POINTLIGHT) {

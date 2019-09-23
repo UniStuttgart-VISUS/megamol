@@ -9,11 +9,20 @@
 #define MEGAMOL_CINEMATIC_REPLACEMENTRENDERER_H_INCLUDED
 
 #include "mmcore/CallerSlot.h"
-#include "mmcore/view/CallRender3D.h"
-#include "mmcore/view/Renderer3DModule.h"
-#include "mmcore/view/AbstractCallRender3D.h"
+#include "mmcore/view/CallRender3D_2.h"
+#include "mmcore/view/Renderer3DModule_2.h"
+#include "mmcore/view/AbstractCallRender3D_2.h"
 #include "mmcore/view/Input.h"
 #include "mmcore/param/ParamSlot.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/param/ButtonParam.h"
+
+#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib/sys/Log.h"
+
 
 namespace megamol {
 namespace cinematic {
@@ -21,7 +30,7 @@ namespace cinematic {
     /*
      * Replacement rendering.
      */
-    class ReplacementRenderer : public megamol::core::view::Renderer3DModule
+    class ReplacementRenderer : public megamol::core::view::Renderer3DModule_2
     {
     public:
 
@@ -85,7 +94,7 @@ namespace cinematic {
          *
          * @return The return value of the function.
          */
-        virtual bool GetExtents(megamol::core::view::CallRender3D& call);
+        virtual bool GetExtents(megamol::core::view::CallRender3D_2& call);
 
         /**
          * The Open GL Render callback.
@@ -93,7 +102,7 @@ namespace cinematic {
          * @param call The calling call.
          * @return The return value of the function.
          */
-        virtual bool Render(megamol::core::view::CallRender3D& call);
+        virtual bool Render(megamol::core::view::CallRender3D_2& call);
 
     private:
 

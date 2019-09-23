@@ -1,8 +1,8 @@
 /*
- * mmstd.volume.h
+ * mmstd_volume.h
  *
- * Copyright (C) 2009 by VISUS (Universitaet Stuttgart)
- * Alle Rechte vorbehalten.
+ * Copyright (C) 2009-2019 by Universitaet Stuttgart (VISUS).
+ * All rights reserved.
  */
 #ifndef MMSTD_VOLUME_H_INCLUDED
 #define MMSTD_VOLUME_H_INCLUDED
@@ -13,10 +13,10 @@
 
 #ifdef _WIN32
 // The following ifdef block is the standard way of creating macros which make exporting 
-// from a DLL simpler. All files within this DLL are compiled with the TRISOUPPLUGIN_EXPORTS
+// from a DLL simpler. All files within this DLL are compiled with the MMSTD_VOLUME_EXPORTS
 // symbol defined on the command line. this symbol should not be defined on any project
 // that uses this DLL. This way any other project whose source files include this file see 
-// TRISOUPPLUGIN_API functions as being imported from a DLL, whereas this DLL sees symbols
+// MMSTD_VOLUME_API functions as being imported from a DLL, whereas this DLL sees symbols
 // defined with this macro as being exported.
 #ifdef MMSTD_VOLUME_EXPORTS
 #define MMSTD_VOLUME_API __declspec(dllexport)
@@ -27,84 +27,68 @@
 #define MMSTD_VOLUME_API
 #endif /* _WIN32 */
 
+#include "mmcore/utility/plugins/Plugin200Instance.h"
 
-#ifdef __cplusplus
+#ifdef MMSTD_VOLUME_EXPORTS
+#    ifdef __cplusplus
 extern "C" {
-#endif
+#    endif
 
 /**
- * Returns the version of the MegaMol™ plugin api used by this plugin.
+ * Returns the version of the MegaMol plugin api used by this plugin.
  *
- * @return The used MegaMol™ plugin api
+ * @return 200 -- (ver.: 2.00)
  */
 MMSTD_VOLUME_API int mmplgPluginAPIVersion(void);
 
 /**
- * Answer the name of the plugin in UTF8/ASCII7
+ * Provides compatibility information
  *
- * @return The name of the plugin in UTF8/ASCII7
+ * @param onError Callback function pointer used when an error occures
+ *
+ * @return The compatibility information struct, or nullptr in case of an
+ *         error.
+ *
+ * @remarks Always use 'mmplgReleasePluginCompatibilityInfo' to release the
+ *          memory of the returned struct.
  */
-MMSTD_VOLUME_API const char * mmplgPluginName(void);
+MMSTD_VOLUME_API
+::megamol::core::utility::plugins::PluginCompatibilityInfo* mmplgGetPluginCompatibilityInfo(
+    ::megamol::core::utility::plugins::ErrorCallback onError);
 
 /**
- * Answer the description of the plugin in UTF8/ASCII7
+ * Releases the memory of a compatibility information struct previously
+ * returned by 'mmplgGetPluginCompatibilityInfo'
  *
- * @return The description of the plugin in UTF8/ASCII7
+ * @param ci The compatibility information struct to be released
  */
-MMSTD_VOLUME_API const char * mmplgPluginDescription(void);
+MMSTD_VOLUME_API void mmplgReleasePluginCompatibilityInfo(::megamol::core::utility::plugins::PluginCompatibilityInfo* ci);
 
 /**
- * Answer the core compatibility information
+ * Creates a new instance of this plugin
  *
- * @return The core compatibility information
+ * @param onError Callback function pointer used when an error occures
+ *
+ * @return A new instance of this plugin, or nullptr in case of an error
+ *
+ * @remarks Always use 'mmplgReleasePluginInstance' to release the memory of
+ *          the returned object.
  */
-MMSTD_VOLUME_API const void * mmplgCoreCompatibilityValue(void);
+MMSTD_VOLUME_API
+::megamol::core::utility::plugins::AbstractPluginInstance* mmplgGetPluginInstance(
+    ::megamol::core::utility::plugins::ErrorCallback onError);
 
 /**
- * Answer the number of exported modules
+ * Releases the memory of the plugin instance previously returned by
+ * 'mmplgGetPluginInstance'
  *
- * @return The number of exported modules
+ * @param pi The plugin instance to be released
  */
-MMSTD_VOLUME_API int mmplgModuleCount(void);
+MMSTD_VOLUME_API void mmplgReleasePluginInstance(::megamol::core::utility::plugins::AbstractPluginInstance* pi);
 
-/**
- * Answer the module definition object of the idx-th module
- *
- * @param idx The zero-based index
- *
- * @return The module definition
- */
-MMSTD_VOLUME_API void* mmplgModuleDescription(int idx);
-
-/**
- * Answer the number of exported calls
- *
- * @return The number of exported calls
- */
-MMSTD_VOLUME_API int mmplgCallCount(void);
-
-/**
- * Answer the call definition object of the idx-th call
- *
- * @param idx The zero-based index
- *
- * @return The call definition
- */
-MMSTD_VOLUME_API void* mmplgCallDescription(int idx);
-
-/**
- * Connects static objects to the core. (See docu for more information)
- *
- * @param which A numberic value identifying the static object
- * @param value The value to connect the static object to
- *
- * @return True if this static object has been connected, false if the object
- *         either does not exist or if there was an error.
- */
-MMSTD_VOLUME_API bool mmplgConnectStatics(int which, void* value);
-
-#ifdef __cplusplus
+#    ifdef __cplusplus
 } /* extern "C" */
+#    endif
 #endif
 
 #endif /* MMSTD_VOLUME_H_INCLUDED */
