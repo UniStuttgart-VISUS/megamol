@@ -78,7 +78,7 @@ namespace core {
          *
          * @return 'true' if the call is compatible, 'false' otherwise.
          */
-        inline bool IsCallCompatible(factories::CallDescription::ptr desc) const {
+        bool IsCallCompatible(factories::CallDescription::ptr desc) const override {
             if (desc == NULL) return false;
             vislib::StringA cn(desc->ClassName());
 
