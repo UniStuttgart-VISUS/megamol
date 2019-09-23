@@ -35,8 +35,10 @@
 #include "vislib/math/ShallowMatrix.h"
 #include "vislib/math/Matrix.h"
 
-#include "CallKeyframeKeeper.h"
 #include "Keyframe.h"
+#include "CallKeyframeKeeper.h"
+#include "CinematicUtils.h"
+
 
 namespace megamol {
 namespace cinematic {
@@ -130,9 +132,9 @@ namespace cinematic {
         * variables
         **********************************************************************/
 
+        CinematicUtils utils;
         megamol::core::utility::SDFFont theFont;
-
-        vislib::graphics::gl::OpenGLTexture2D markerTexture;
+        GLuint texture;
 
         glm::vec2                      axisStartPos;       // joint start position for both axis
 
@@ -170,31 +172,27 @@ namespace cinematic {
         float                          keyfMarkSize;
         float                          rulerMarkSize;
         unsigned int                   fps;
-        glm::vec2                     viewport;
+        glm::vec2                      viewport;
 
-        /*** INPUT ********************************************************/
-        float                         mouseX;
-        float                         mouseY;
-        float                         lastMouseX;
-        float                         lastMouseY;
-        core::view::MouseButton       mouseButton;
+        // INPUT --------------------------------------------------------------
+
+        float mouseX;
+        float mouseY;
+        float  lastMouseX;
+        float lastMouseY;
+        core::view::MouseButton mouseButton;
         core::view::MouseButtonAction mouseAction;
 
         /**********************************************************************
         * functions
         **********************************************************************/
 
-        /** Loading texture for keyframe marker. */
-        bool loadTexture(std::string filename);
+        void pushMarkerTexture(float pos_x, float pos_y, glm::vec4 color);
 
-        /** Draw the keyframe marker. */
-        void drawKeyframeMarker(float posX, float posY);
-
-        /** Adapt axis scaling. */
-        void axisAdaptation(void);
+        void adaptAxis(void);
 
         /**********************************************************************
-        * callbacks
+        * callback stuff
         **********************************************************************/
 
         core::CallerSlot keyframeKeeperSlot;

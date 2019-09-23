@@ -127,7 +127,7 @@ namespace cinematic {
         // Class for manipulator values
         class manipPosData {
         public:
-            /// Comparison needed for use in vislib::Array
+            // Comparison needed for use in vislib::Array
             bool operator==(manipPosData const& rhs) {
                 return ((this->wsPos == rhs.wsPos) &&
                     (this->ssPos == rhs.ssPos) &&

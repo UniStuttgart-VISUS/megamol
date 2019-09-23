@@ -406,11 +406,11 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
 
         // Render to texture ------------------------------------------------------------
 
-// Suppress TRACE output of fbo.Enable() and fbo.Create()
+        // Suppress TRACE output of fbo.Enable() and fbo.Create()
 #if defined(DEBUG) || defined(_DEBUG)
     unsigned int otl = vislib::Trace::GetInstance().GetLevel();
     vislib::Trace::GetInstance().SetLevel(0);
-#endif // DEBUG || _DEBUG 
+#endif // DEBUG || _DEBUG
 
     if (this->fbo.IsValid()) {
         if ((this->fbo.GetWidth() != fboWidth) || (this->fbo.GetHeight() != fboHeight)) {
@@ -430,10 +430,10 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
         return;
     }
 
-// Reset TRACE output level
+    // Reset TRACE output level
 #if defined(DEBUG) || defined(_DEBUG)
     vislib::Trace::GetInstance().SetLevel(otl);
-#endif // DEBUG || _DEBUG 
+#endif // DEBUG || _DEBUG
 
     // Set output buffer for override call (otherwise render call is overwritten in Base::Render(context))
     cr3d->SetOutputBuffer(&this->fbo);

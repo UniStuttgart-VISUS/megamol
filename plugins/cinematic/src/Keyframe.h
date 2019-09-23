@@ -79,26 +79,22 @@ namespace cinematic {
             return (!(this->camera == rhs.camera) || (this->animTime != rhs.animTime) || (this->simTime != rhs.simTime));
         }
 
-        ///// GET ///// 
+        ///// GET /////
+
+        /**
+        *
+        */     
         inline float GetAnimTime() {
             return this->animTime;
         }
 
+        /**
+        *
+        */
         inline float GetSimTime() {
             return (this->simTime == 1.0f)?(1.0f-0.0000001f):(this->simTime);
         }
 
-<<<<<<< HEAD
-        inline vislib::math::Point<float, 3> GetCamPosition(){
-            return this->camera.position;
-		}
-
-        inline vislib::math::Point<float, 3> GetCamLookAt(){
-            return this->camera.lookat;
-		}
-
-        inline vislib::math::Vector<float, 3> GetCamUp(){
-=======
         /**
         *
         */
@@ -117,34 +113,32 @@ namespace cinematic {
         *
         */
         inline glm::vec3 GetCamUp(){
->>>>>>> 858bc042e1c54af29b2f4defd2b89d65e5c72dfd
             return this->camera.up;
 		}
 
+        /**
+        *
+        */
         inline float GetCamApertureAngle(){
             return this->camera.apertureangle;
 		}
 
         ///// SET /////
+
+        /**
+        *
+        */
         inline void SetAnimTime(float t) {
             this->animTime = (t < 0.0f)?(0.0f):(t);
         }
 
+        /**
+        *
+        */
         inline void SetSimTime(float t) {
             this->simTime = glm::clamp(t, 0.0f, 1.0f);
         }
 
-<<<<<<< HEAD
-        inline void SetCameraPosition(vislib::math::Point <float, 3> pos){
-            this->camera.position = pos;
-		}
-
-        inline void SetCameraLookAt(vislib::math::Point <float, 3> look){
-            this->camera.lookat = look;
-		}
-
-        inline void SetCameraUp(vislib::math::Vector<float, 3> up){
-=======
         /**
         *
         */
@@ -163,18 +157,26 @@ namespace cinematic {
         *
         */
         inline void SetCameraUp(glm::vec3 up){
->>>>>>> 858bc042e1c54af29b2f4defd2b89d65e5c72dfd
             this->camera.up = up;
 		}
 
+        /**
+        *
+        */
         inline void SetCameraApertureAngele(float apertureangle){
             this->camera.apertureangle = glm::clamp(apertureangle, 0.0f, 180.0f);
 		}
 
         ///// SERIALISATION /////
 
+        /**
+        *
+        */
         void Serialise(vislib::Serialiser& serialiser);
 
+        /**
+        *
+        */
         void Deserialise(vislib::Serialiser& serialiser);
 
 	private:
@@ -183,6 +185,7 @@ namespace cinematic {
         * classes
         **********************************************************************/
 
+        // Hard copy of camera parameters
         class Camera {
         public:
             bool operator==(Keyframe::Camera const& rhs) {

@@ -334,7 +334,7 @@ bool KeyframeKeeper::CallForSetCtrlPoints(core::Call& c) {
 
     // ADD UNDO //
     if ((prev_StartCP != this->startCtrllPos) || (prev_EndCP != this->endCtrllPos)) {
-        this->addCpUndoAction(KeyframeKeeper::UndoActionEnum::UNDO_CP_MODIFY, this->startCtrllPos, this->endCtrllPos, prev_StartCP, prev_EndCP);
+        this->addControlPointUndoAction(KeyframeKeeper::UndoActionEnum::UNDO_CP_MODIFY, this->startCtrllPos, this->endCtrllPos, prev_StartCP, prev_EndCP);
         vislib::sys::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] [CallForSetCtrlPoints] ADDED undo for CTRL POINT ......");
     }
 
@@ -627,14 +627,14 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
 }
 
 
-bool KeyframeKeeper::addKfUndoAction(KeyframeKeeper::UndoActionEnum act, Keyframe kf, Keyframe prev_kf) {
+bool KeyframeKeeper::addKeyframeUndoAction(KeyframeKeeper::UndoActionEnum act, Keyframe kf, Keyframe prev_kf) {
 
     return (this->addUndoAction(act, kf, prev_kf, glm::vec3(), glm::vec3(), glm::vec3(), glm::vec3()));
 }
 
 
 
-bool KeyframeKeeper::addCpUndoAction(KeyframeKeeper::UndoActionEnum act, glm::vec3 startcp, glm::vec3 endcp, glm::vec3 prev_startcp, glm::vec3 prev_endcp) {
+bool KeyframeKeeper::addControlPointUndoAction(KeyframeKeeper::UndoActionEnum act, glm::vec3 startcp, glm::vec3 endcp, glm::vec3 prev_startcp, glm::vec3 prev_endcp) {
 
     return (this->addUndoAction(act, Keyframe(), Keyframe(), startcp, endcp, prev_startcp, prev_endcp));
 }
@@ -656,7 +656,7 @@ bool KeyframeKeeper::addUndoAction(KeyframeKeeper::UndoActionEnum act, Keyframe 
     retVal = true;
 
     if (!retVal) {
-        vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [addKfUndoAction] Failed to add new undo action.");
+        vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [addKeyframeUndoAction] Failed to add new undo action.");
     }
 
     return retVal;
@@ -807,7 +807,7 @@ void KeyframeKeeper::linearizeSimTangent(Keyframe stkf) {
                 // Apply changes to keyframe
                 this->keyframes->operator[](i).SetSimTime(newSimTime);
                 // Add modification to undo queue
-                this->addKfUndoAction(KeyframeKeeper::UndoActionEnum::UNDO_KF_MODIFY, this->keyframes->operator[](i), tmpKf);
+                this->addKeyframeUndoAction(KeyframeKeeper::UndoActionEnum::UNDO_KF_MODIFY, this->keyframes->operator[](i), tmpKf);
             }
     
             this->simTangentStatus = false;
@@ -840,7 +840,7 @@ void KeyframeKeeper::snapKeyframe2AnimFrame(Keyframe *kf) {
     // Apply changes to keyframe
     kf->SetAnimTime(t);
     // Add modification to undo queue
-    this->addKfUndoAction(KeyframeKeeper::UndoActionEnum::UNDO_KF_MODIFY, *kf, tmpKf);
+    this->addKeyframeUndoAction(KeyframeKeeper::UndoActionEnum::UNDO_KF_MODIFY, *kf, tmpKf);
 }
 
 
@@ -854,7 +854,7 @@ void KeyframeKeeper::snapKeyframe2SimFrame(Keyframe *kf) {
     // Apply changes to keyframe
     kf->SetSimTime(s);
     // Add modification to undo queue
-    this->addKfUndoAction(KeyframeKeeper::UndoActionEnum::UNDO_KF_MODIFY, *kf, tmpKf);
+    this->addKeyframeUndoAction(KeyframeKeeper::UndoActionEnum::UNDO_KF_MODIFY, *kf, tmpKf);
 }
 
 
@@ -897,7 +897,7 @@ void KeyframeKeeper::setSameSpeed() {
                 // Apply changes to keyframe
                 this->keyframes->operator[](index).SetAnimTime(t);
                 // Add modification to undo queue
-                this->addKfUndoAction(KeyframeKeeper::UndoActionEnum::UNDO_KF_MODIFY, this->keyframes->operator[](index), tmpKf);
+                this->addKeyframeUndoAction(KeyframeKeeper::UndoActionEnum::UNDO_KF_MODIFY, this->keyframes->operator[](index), tmpKf);
 
                 kfDist = 0.0f;
             }
@@ -972,7 +972,7 @@ bool KeyframeKeeper::replaceKeyframe(Keyframe oldkf, Keyframe newkf, bool undo) 
             }
             if (undo) {
                 // ADD UNDO //
-                this->addKfUndoAction(KeyframeKeeper::UndoActionEnum::UNDO_KF_MODIFY, newkf, oldkf);
+                this->addKeyframeUndoAction(KeyframeKeeper::UndoActionEnum::UNDO_KF_MODIFY, newkf, oldkf);
             }
         }
         else {
@@ -1000,7 +1000,7 @@ bool KeyframeKeeper::deleteKeyframe(Keyframe kf, bool undo) {
             this->keyframes->erase(this->keyframes->begin() + selIndex);
             if (undo) {
                 // ADD UNDO //
-                this->addKfUndoAction(KeyframeKeeper::UndoActionEnum::UNDO_KF_DELETE, kf, kf);
+                this->addKeyframeUndoAction(KeyframeKeeper::UndoActionEnum::UNDO_KF_DELETE, kf, kf);
 
                 // Adjust first/last control point position - ONLY if it is a "real" delete and no replace
                 glm::vec3 tmpV;
@@ -1087,7 +1087,7 @@ bool KeyframeKeeper::addKeyframe(Keyframe kf, bool undo) {
 
     // ADD - UNDO //
     if (undo) {
-        this->addKfUndoAction(KeyframeKeeper::UndoActionEnum::UNDO_KF_ADD, kf, kf);
+        this->addKeyframeUndoAction(KeyframeKeeper::UndoActionEnum::UNDO_KF_ADD, kf, kf);
     }
 
     // Update bounding box
@@ -1279,10 +1279,11 @@ float KeyframeKeeper::interpolate_f(float u, float f0, float f1, float f2, float
 
     // Considering global tangent length 
     // SOURCE: https://www.cs.cmu.edu/~462/projects/assn2/assn2/catmullRom.pdf
+    float tl = this->splineTangentLength;
     float f = (f1) +
-              (-(this->splineTangentLength * f0) + (this->splineTangentLength* f2)) * u + 
-              ((2.0f*this->splineTangentLength * f0) + ((this->splineTangentLength - 3.0f) * f1) + ((3.0f - 2.0f*this->splineTangentLength) * f2) - (this->splineTangentLength* f3)) * u * u + 
-              (-(this->splineTangentLength * f0) + ((2.0f - this->splineTangentLength) * f1) + ((this->splineTangentLength - 2.0f) * f2) + (this->splineTangentLength* f3)) * u * u * u;
+              (-(tl * f0) + (tl* f2)) * u + 
+              ((2.0f*tl * f0) + ((tl - 3.0f) * f1) + ((3.0f - 2.0f*tl) * f2) - (tl* f3)) * u * u + 
+              (-(tl * f0) + ((2.0f - tl) * f1) + ((tl - 2.0f) * f2) + (tl* f3)) * u * u * u;
 
 
     return f;
@@ -1322,18 +1323,7 @@ void KeyframeKeeper::saveKeyframes() {
     outfile.open(this->filename.PeekBuffer(), std::ios::binary);
     vislib::StringSerialiserA ser;
     outfile << "totalAnimTime=" << this->totalAnimTime << "\n";
-<<<<<<< HEAD
     outfile << "tangentLength=" << this->splineTangentLength << "\n";
-    outfile << "startCtrllPosX=" << this->startCtrllPos.X() << "\n";
-    outfile << "startCtrllPosY=" << this->startCtrllPos.Y() << "\n";
-    outfile << "startCtrllPosZ=" << this->startCtrllPos.Z() << "\n";
-    outfile << "endCtrllPosX=" << this->endCtrllPos.X() << "\n";
-    outfile << "endCtrllPosY=" << this->endCtrllPos.Y() << "\n";
-    outfile << "endCtrllPosZ=" << this->endCtrllPos.Z() << "\n\n";
-    for (unsigned int i = 0; i < this->keyframes.Count(); i++) {
-        this->keyframes[i].Serialise(ser);
-=======
-    outfile << "tangentLength=" << this->tl << "\n";
     outfile << "startCtrllPosX=" << this->startCtrllPos.x << "\n";
     outfile << "startCtrllPosY=" << this->startCtrllPos.y << "\n";
     outfile << "startCtrllPosZ=" << this->startCtrllPos.z << "\n";
@@ -1342,7 +1332,6 @@ void KeyframeKeeper::saveKeyframes() {
     outfile << "endCtrllPosZ=" << this->endCtrllPos.z << "\n\n";
     for (unsigned int i = 0; i < this->keyframes->size(); i++) {
         this->keyframes->operator[](i).Serialise(ser);
->>>>>>> 858bc042e1c54af29b2f4defd2b89d65e5c72dfd
         outfile << ser.GetString().PeekBuffer() << "\n";
     }
     outfile.close();

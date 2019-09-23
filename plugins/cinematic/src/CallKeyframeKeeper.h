@@ -17,12 +17,6 @@
 #include "Keyframe.h"
 
 
-// GLOBAL CINEMATIC DEFINES
-#ifndef CC_MENU_HEIGHT
-    #define CC_MENU_HEIGHT (25.0f)
-#endif
-
-
 namespace megamol {
 namespace cinematic {
 
@@ -216,18 +210,11 @@ namespace cinematic {
         * variables
         **********************************************************************/
 
-<<<<<<< HEAD
-        vislib::SmartPtr<vislib::graphics::CameraParameters> cameraParam;
-        vislib::Array<vislib::math::Point<float, 3> > *interpolCamPos;
-		vislib::Array<Keyframe>				          *keyframes;
-        vislib::math::Cuboid<float>		              *boundingbox;
-=======
 		// Pointer to array of keyframes
 		std::shared_ptr<megamol::core::view::Camera_2> cameraParam;
 		std::shared_ptr<std::vector<glm::vec3 >>       interpolCamPos;
 		std::shared_ptr<std::vector<Keyframe>>	       keyframes;
         std::shared_ptr<vislib::math::Cuboid<float>>   boundingbox;
->>>>>>> 858bc042e1c54af29b2f4defd2b89d65e5c72dfd
         unsigned int                                   interpolSteps;
         Keyframe						               selectedKeyframe;
         float                                          dropAnimTime;
@@ -236,14 +223,9 @@ namespace cinematic {
         float                                          totalSimTime;
         glm::vec3                                      bboxCenter;
         unsigned int                                   fps;
-<<<<<<< HEAD
-        vislib::math::Vector<float, 3>                 startCtrllPos;
-        vislib::math::Vector<float, 3>                 endCtrllPos;
-=======
         glm::vec3                                      startCtrllPos;
         glm::vec3                                      endCtrllPos;
 
->>>>>>> 858bc042e1c54af29b2f4defd2b89d65e5c72dfd
 	};
 
 

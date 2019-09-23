@@ -35,7 +35,8 @@ CallKeyframeKeeper::CallKeyframeKeeper(void) : core::AbstractGetDataCall(),
 
 CallKeyframeKeeper::~CallKeyframeKeeper(void) {
 
-	this->keyframes      = nullptr;
-    this->interpolCamPos = nullptr;
-    this->boundingbox    = nullptr;
+    this->cameraParam.reset();
+	this->keyframes.reset();
+    this->interpolCamPos.reset();
+    this->boundingbox.reset();
 }

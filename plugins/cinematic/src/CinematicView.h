@@ -36,9 +36,11 @@
 #include "vislib/sys/FastFile.h"
 #include "vislib/sys/Path.h"
 
-#include "CallKeyframeKeeper.h"
-#include "Keyframe.h"
 #include "png.h"
+#include "Keyframe.h"
+#include "CinematicUtils.h"
+#include "CallKeyframeKeeper.h"
+
 
 namespace megamol {
 namespace cinematic {
@@ -215,9 +217,10 @@ namespace cinematic {
         }
 
         /**********************************************************************
-         * callbacks
+         * callback
          **********************************************************************/
 
+        /** The keyframe keeper caller slot */
         core::CallerSlot keyframeKeeperSlot;
 
         /**********************************************************************
