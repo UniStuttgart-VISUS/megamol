@@ -38,13 +38,19 @@ namespace MegaMolConf.Io {
                             MessageBox.Show("Cannot save project without view module");
                             return;
                         }
-                        w.WriteLine("mmCreateView(\"" + v.Name + "\", \"" + v.ViewModule.Class + "\", \"" + v.ViewModule.Name + "\")");
+                        w.WriteLine("mmCreateView(\"" + v.Name + "\", \"" + v.ViewModule.Class + "\", \"" + v.ViewModule.Name + "\")" + " --confPos=" + v.ViewModule.ConfPos.ToString());
 
                         if (v.Modules != null) {
                             foreach (Module m in v.Modules) {
                                 string modFullName = "::" + v.Name + "::" + m.Name;
                                 if (m.Name != v.ViewModule.Name) {
-                                    w.WriteLine("mmCreateModule(\"" + m.Class + "\", \"" + modFullName + "\")");
+                                    if (!m.ConfPos.IsEmpty)
+                                    {
+                                        w.WriteLine("mmCreateModule(\"" + m.Class + "\", \"" + modFullName + "\")" + " --confPos=" + m.ConfPos.ToString());
+                                    } else
+                                    {
+                                        w.WriteLine("mmCreateModule(\"" + m.Class + "\", \"" + modFullName + "\")");
+                                    }
                                 }
                                 //if (!m.ConfPos.IsEmpty) w.Write(" confpos=\"" + m.ConfPos.ToString() + "\"");
                                 if (m.Params != null) {
@@ -95,16 +101,27 @@ namespace MegaMolConf.Io {
 
                 if (line.Contains("mmCreateView"))
                 {
-                    string[] elements = line.Split('"');
-                    string vName = elements[1];             view.Name = vName;
-
                     Module m = new Module();
+                    string[] elements = line.Split('"');
+                    string vName = elements[1]; view.Name = vName;
                     string mModuleClass = elements[3]; m.Class = mModuleClass;
-                    string mModuleName = elements[5]; m.Name = mModuleName;
-                    if(mModuleName.StartsWith("::"))
+                    string[] mModuleFullName = elements[5].Split(':');
+                    m.Name = mModuleFullName.Length == 3 ? mModuleFullName[2] : mModuleFullName[0];
+
+                    if (line.Contains("--confPos"))
                     {
-                        mModuleName = mModuleName.Substring(2);
+                        string[] posLine = line.Split(new string[] { "--" }, StringSplitOptions.None);
+                        try
+                        {
+                            Match pt = Regex.Match(posLine[1], @"\{\s*X\s*=\s*([-.0-9]+)\s*,\s*Y\s*=\s*([-.0-9]+)\s*\}");
+                            if (!pt.Success) throw new Exception();
+                            m.ConfPos = new Point(
+                                int.Parse(pt.Groups[1].Value),
+                                int.Parse(pt.Groups[2].Value));
+                        }
+                        catch { }
                     }
+
                     modules.Add(m);
 
                     continue;
@@ -117,6 +134,20 @@ namespace MegaMolConf.Io {
                     string mModuleClass = elements[1];                  m.Class = mModuleClass;
                     string[] mModuleFullName = elements[3].Split(':');
                     m.Name = mModuleFullName.Length == 3 ? mModuleFullName[2] : mModuleFullName[4];
+
+                    if (line.Contains("--confPos"))
+                    {
+                        string[] posLine = line.Split(new string[] { "--" }, StringSplitOptions.None);
+                        try
+                        {
+                            Match pt = Regex.Match(posLine[1], @"\{\s*X\s*=\s*([-.0-9]+)\s*,\s*Y\s*=\s*([-.0-9]+)\s*\}");
+                            if (!pt.Success) throw new Exception();
+                            m.ConfPos = new Point(
+                                int.Parse(pt.Groups[1].Value),
+                                int.Parse(pt.Groups[2].Value));
+                        }
+                        catch { }
+                    }
 
                     List <Param> prms = new List<Param>();
                     int skip = 0;
