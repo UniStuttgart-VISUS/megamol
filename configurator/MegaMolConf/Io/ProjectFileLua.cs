@@ -17,7 +17,7 @@ namespace MegaMolConf.Io {
         /// <summary>
         /// Escapes paths for Lua
         /// </summary>
-        private string safeString(string p) {
+        internal static string SafeString(string p) {
             return p.Replace(@"\", @"\\").Replace("\"", "\\\"");
         }
 
@@ -55,7 +55,7 @@ namespace MegaMolConf.Io {
                                 //if (!m.ConfPos.IsEmpty) w.Write(" confpos=\"" + m.ConfPos.ToString() + "\"");
                                 if (m.Params != null) {
                                     foreach (Param p in m.Params) {
-                                        w.WriteLine("mmSetParamValue(\"" + modFullName + "::" + p.Name + "\", \"" + safeString(p.Value) + "\")");
+                                        w.WriteLine("mmSetParamValue(\"" + modFullName + "::" + p.Name + "\", \"" + SafeString(p.Value) + "\")");
                                     }
                                 }
                             }

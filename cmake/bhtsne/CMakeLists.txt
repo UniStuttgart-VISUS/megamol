@@ -16,3 +16,4 @@ add_library(bhtsne STATIC ${BHTSNE_SRCS} ${BHTSNE_PUBLIC_HDRS} ${BHTSNE_PRIVATE_
 set_target_properties(bhtsne PROPERTIES DEBUG_POSTFIX "d")
 
 install(TARGETS bhtsne DESTINATION "lib")
+install(FILES ${BHTSNE_PUBLIC_HDRS} DESTINATION "include")

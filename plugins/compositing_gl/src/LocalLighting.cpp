@@ -10,7 +10,8 @@
 megamol::compositing::LocalLighting::LocalLighting() 
     : core::Module()
     , m_output_texture(nullptr)
-    , m_lights_buffer(nullptr)
+    , m_point_lights_buffer(nullptr)
+    , m_distant_lights_buffer(nullptr)
     , m_output_tex_slot("OutputTexture", "Gives access to resulting output texture")
     , m_albedo_tex_slot("AlbedoTexture", "Connect to the albedo render target texture")
     , m_normal_tex_slot("NormalTexture", "Connects to the normals render target texture")
@@ -75,7 +76,8 @@ bool megamol::compositing::LocalLighting::create() {
     glowl::TextureLayout tx_layout(GL_RGBA16F, 1, 1, 1, GL_RGBA, GL_HALF_FLOAT, 1);
     m_output_texture = std::make_shared<glowl::Texture2D>("lighting_output", tx_layout, nullptr);
 
-    m_lights_buffer = std::make_unique<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
+    m_point_lights_buffer = std::make_unique<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
+    m_distant_lights_buffer = std::make_unique<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
 
     return true;
 }
@@ -127,29 +129,38 @@ bool megamol::compositing::LocalLighting::getDataCallback(core::Call& caller) {
     glm::mat4 proj_mx = proj_tmp;
 
     auto light_update = this->GetLights();
-    if (light_update) {
-        struct LightParams {
-            float x, y, z, intensity;
-        };
 
-        auto light_cnt = lightMap.size();
-
-        std::vector<LightParams> lights;
-        lights.reserve(light_cnt);
-
-        for (const auto element : this->lightMap) {
-            auto light = element.second;
-            lights.push_back({light.pl_position[0], light.pl_position[1], light.pl_position[2], light.lightIntensity});
+    this->m_point_lights.clear();
+    this->m_distant_lights.clear();
+    for (const auto element : this->m_light_map) {
+        auto light = element.second;
+        if (light.lightType == core::view::light::POINTLIGHT) {
+            m_point_lights.push_back(
+                {light.pl_position[0], light.pl_position[1], light.pl_position[2], light.lightIntensity});
+        } else if (light.lightType == core::view::light::DISTANTLIGHT) {
+            if (light.dl_eye_direction) {
+                glm::vec3 camPos(snapshot.position.x(), snapshot.position.y(), snapshot.position.z());
+                camPos = glm::normalize(camPos);
+                m_distant_lights.push_back(
+                    {camPos.x, camPos.y, camPos.z, light.lightIntensity});
+            } else {
+                m_distant_lights.push_back(
+                    {light.dl_direction[0], light.dl_direction[1], light.dl_direction[2], light.lightIntensity});
+            }
         }
-
-        m_lights_buffer->rebuffer(lights);
     }
 
-    if (m_lighting_prgm != nullptr && m_lights_buffer != nullptr) {
+    m_point_lights_buffer->rebuffer(m_point_lights);
+    m_distant_lights_buffer->rebuffer(m_distant_lights);
+
+    if (m_lighting_prgm != nullptr && m_point_lights_buffer != nullptr && m_distant_lights_buffer != nullptr) {
         m_lighting_prgm->Enable();
 
-        m_lights_buffer->bind(1);
-        glUniform1i(m_lighting_prgm->ParameterLocation("light_cnt"), this->lightMap.size());
+        m_point_lights_buffer->bind(1);
+        glUniform1i(m_lighting_prgm->ParameterLocation("point_light_cnt"), static_cast<GLint>(m_point_lights.size()));
+        m_distant_lights_buffer->bind(2);
+        glUniform1i(
+            m_lighting_prgm->ParameterLocation("distant_light_cnt"), static_cast<GLint>(m_distant_lights.size()));
 
         glActiveTexture(GL_TEXTURE0);
         albedo_tx2D->bindTexture();
@@ -187,10 +198,10 @@ bool megamol::compositing::LocalLighting::GetLights() {
         // TODO add local light
         return false;
     }
-    cl->setLightMap(&this->lightMap);
+    cl->setLightMap(&this->m_light_map);
     cl->fillLightMap();
     bool lightDirty = false;
-    for (const auto element : this->lightMap) {
+    for (const auto element : this->m_light_map) {
         auto light = element.second;
         if (light.dataChanged) {
             lightDirty = true;
