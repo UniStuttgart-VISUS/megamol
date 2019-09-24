@@ -252,7 +252,9 @@ function(require_external NAME)
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${IMGUI_LIB}"
       PATCH_COMMAND ${CMAKE_COMMAND} -E copy
         "${CMAKE_SOURCE_DIR}/cmake/imgui/CMakeLists.txt"
-        "<SOURCE_DIR>/CMakeLists.txt")
+        "<SOURCE_DIR>/CMakeLists.txt"
+      CMAKE_ARGS
+        -DCMAKE_WINDOWS_EXPORT_ALL_SYMBOLS=TRUE)
 
     external_get_property(imgui SOURCE_DIR)
 
