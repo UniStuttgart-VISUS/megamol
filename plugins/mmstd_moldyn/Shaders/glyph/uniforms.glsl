@@ -12,3 +12,4 @@ uniform uint options;
 uniform sampler1D tf_texture;
 uniform vec2 tf_range;
 uniform vec4 clip_data;
+uniform float scaling;

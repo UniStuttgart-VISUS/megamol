@@ -123,6 +123,7 @@ private:
     megamol::core::CallerSlot getFlagsSlot;
 
     megamol::core::param::ParamSlot glyphParam;
+    megamol::core::param::ParamSlot scaleParam;
     megamol::core::param::ParamSlot colorInterpolationParam;
 
     SIZE_T lastHash = -1;
