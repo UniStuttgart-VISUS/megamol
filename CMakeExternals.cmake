@@ -617,30 +617,32 @@ function(require_external NAME)
       set(VTKM_LIB_DEBUG_WORKLET "lib/vtkm_worklet-1.4.a")
     endif()
 
-    add_external_project(vtkm_ext
+    option(vtkm_ENABLE_CUDA "Option to build vtkm with cuda enabled" OFF)
+    message(${vtkm_ENABLE_CUDA})
+    add_external_project(vtkm
       GIT_REPOSITORY https://gitlab.kitware.com/vtk/vtk-m.git
       GIT_TAG "v1.4.0"
       CMAKE_ARGS
         -DBUILD_SHARED_LIBS:BOOL=OFF
         -DVTKm_ENABLE_TESTING:BOOL=OFF
-        -DVTKm_ENABLE_CUDA:BOOL=ON
+        -DVTKm_ENABLE_CUDA:BOOL=${vtkm_ENABLE_CUDA}
         -DBUILD_TESTING:BOOL=OFF
         -VTKm_ENABLE_DEVELOPER_FLAGS:BOOL=OFF
         -DCMAKE_BUILD_TYPE=Release
         )
 
     add_external_library(vtkm_cont STATIC
-      DEPENDS vtkm_ext
+      PROJECT vtkm
       LIBRARY_RELEASE "${VTKM_LIB_CONT}"
       LIBRARY_DEBUG "${VTKM_LIB_DEBUG_CONT}")
 
     add_external_library(vtkm_renderer STATIC
-      DEPENDS vtkm_ext
+      PROJECT vtkm
       LIBRARY_RELEASE "${VTKM_LIB_RENDERER}"
       LIBRARY_DEBUG "${VTKM_LIB_DEBUG_RENDERER}")
 
     add_external_library(vtkm_worklet STATIC
-      DEPENDS vtkm_ext
+      PROJECT vtkm
       LIBRARY_RELEASE "${VTKM_LIB_WORKLET}"
       LIBRARY_DEBUG "${VTKM_LIB_DEBUG_WORKLET}")
 

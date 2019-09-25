@@ -8,7 +8,7 @@ option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build mmvtkm" OFF)
 
 if(BUILD_${EXPORT_NAME}_PLUGIN)
   project(mmvtkm)
-
+  
   # Check option dependencies: First list item is always the current build option,
   # afterwards list the dependencies.
   set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE" CACHE INTERNAL "") #TODO add ENABLE_CUDA if intended to run vtkm with cuda and cuda needs to be enabled?
@@ -22,6 +22,11 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   #file(GLOB_RECURSE library_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "lib/*") # comment this line if implemented as external library
   #file(GLOB_RECURSE shader_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Shaders/*")
 
+  # external_get_property(vtkm INSTALL_MAIN_DIR)
+  external_get_property(vtkm SOURCE_DIR)
+  # message(${SOURCE_DIR})
+  string(REPLACE "-src" "-build" BUILD_DIR "${SOURCE_DIR}")
+
   # Target definition
   #add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files})
   add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${source_files})
@@ -31,10 +36,11 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     "include" "src" "lib"
     # TODO set include dirs with targets in cmakeexternals and not here
-    "${CMAKE_CURRENT_BINARY_DIR}/vtkm_ext-prefix/src/vtkm_ext"
-    "${CMAKE_CURRENT_BINARY_DIR}/vtkm_ext-prefix/src/vtkm_ext-build/include"
-    "${CMAKE_CURRENT_BINARY_DIR}/vtkm_ext-prefix/src/vtkm_ext/vtkm/thirdparty/taotuple"
-    "${CMAKE_CURRENT_BINARY_DIR}/vtkm_ext-prefix/src/vtkm_ext/vtkm/thirdparty/diy")
+    "${SOURCE_DIR}"
+    "${BUILD_DIR}/Release/include"
+    "${SOURCE_DIR}/vtkm/thirdparty/taotuple"
+    "${SOURCE_DIR}/vtkm/thirdparty/diy"
+    )
   target_link_libraries(${PROJECT_NAME} PRIVATE core vtkm_cont vtkm_renderer vtkm_worklet)
 
   # Installation rules for generated files

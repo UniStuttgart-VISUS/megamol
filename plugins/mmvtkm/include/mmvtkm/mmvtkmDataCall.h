@@ -35,7 +35,7 @@ public:
      * @return The name of the objects of this description.
      */
     static const char* ClassName(void) { 
-		return "mmvtkmDataCall"; 
+		return "vtkmDataCall"; 
 	}
 
 	 /**
@@ -44,7 +44,7 @@ public:
      * @return A human readable description of this module.
      */
     static inline const char* Description(void) { 
-		return "Transports mmvtkm data."; 
+		return "Transports vtkm data."; 
 	}
 
 	/**

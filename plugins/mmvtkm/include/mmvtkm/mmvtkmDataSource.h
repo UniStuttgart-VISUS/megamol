@@ -38,7 +38,7 @@ namespace mmvtkm {
          * @return The name of this module.
          */
         static const char *ClassName(void) {
-            return "mmvtkmDataSource";
+            return "vtkmDataSource";
         }
 
         /**
