@@ -6,7 +6,6 @@
 */
 
 #include "stdafx.h"
-
 #include "TrackingShotRenderer.h"
 
 
@@ -20,29 +19,23 @@ using namespace vislib;
 
 
 TrackingShotRenderer::TrackingShotRenderer(void) : Renderer3DModule_2(),
-    rendererCallerSlot("renderer", "outgoing renderer"),
-    keyframeKeeperSlot("keyframeKeeper", "Connects to the Keyframe Keeper."),
-    stepsParam("splineSubdivision", "Amount of interpolation steps between keyframes."),
-    toggleManipulateParam("toggleManipulators", "Toggle different manipulators for the selected keyframe."),
-    toggleHelpTextParam("helpText", "Show/hide help text for key assignments."),
-    toggleManipOusideBboxParam("manipulatorsOutsideBBox", "Keep manipulators always outside of model bounding box."),
-    theFont(megamol::core::utility::SDFFont::FontName::ROBOTO_SANS), 
-    interpolSteps(20),
-    toggleManipulator(0),
-    manipOutsideModel(false),
-    showHelpText(false),
-    manipulator(), 
-    manipulatorGrabbed(false),
-    textureShader(),
-    utils(),
-    fbo(),
-    mouseX(0.0f),
-    mouseY(0.0f),
-    texture(0)
-{
-
-    this->rendererCallerSlot.SetCompatibleCall<CallRender3D_2Description>();
-    this->MakeSlotAvailable(&this->rendererCallerSlot);
+        keyframeKeeperSlot("keyframeKeeper", "Connects to the Keyframe Keeper."),
+        stepsParam("splineSubdivision", "Amount of interpolation steps between keyframes."),
+        toggleManipulateParam("toggleManipulators", "Toggle different manipulators for the selected keyframe."),
+        toggleHelpTextParam("helpText", "Show/hide help text for key assignments."),
+        toggleManipOusideBboxParam("manipulatorsOutsideBBox", "Keep manipulators always outside of model bounding box."),
+        interpolSteps(20),
+        toggleManipulator(0),
+        manipOutsideModel(false),
+        showHelpText(false),
+        manipulator(), 
+        manipulatorGrabbed(false),
+        textureShader(),
+        utils(),
+        fbo(),
+        mouseX(0.0f),
+        mouseY(0.0f),
+        texture(0) {
 
     this->keyframeKeeperSlot.SetCompatibleCall<CallKeyframeKeeperDescription>();
     this->MakeSlotAvailable(&this->keyframeKeeperSlot);
@@ -66,16 +59,15 @@ TrackingShotRenderer::TrackingShotRenderer(void) : Renderer3DModule_2(),
 
 
 TrackingShotRenderer::~TrackingShotRenderer(void) {
+
 	this->Release();
 }
 
 
 bool TrackingShotRenderer::create(void) {
 
+    // Create shader
     vislib::graphics::gl::ShaderSource vert, frag;
-
-    const char *shaderName = "TrackingShotShader_Render2Texturer";
-
     try {
         if (!megamol::core::Module::instance()->ShaderSourceFactory().MakeShaderSource("TrackingShotShader::vertex", vert)) {
             return false;
@@ -84,30 +76,27 @@ bool TrackingShotRenderer::create(void) {
             return false;
         }
         if (!this->textureShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s: Unknown error\n", shaderName);
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "[TRACKINGSHOT RENDERER] [create] Unable to compile shader: Unknown error\n");
             return false;
         }
     }
     catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-            "Unable to compile %s shader (@%s): %s\n", shaderName,
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "[TRACKINGSHOT RENDERER] [create] Unable to compile shader (@%s): %s\n", 
             vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()), ce.GetMsgA());
         return false;
     }
     catch (vislib::Exception e) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-            "Unable to compile %s shader: %s\n", shaderName, e.GetMsgA());
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "[TRACKINGSHOT RENDERER] [create] Unable to compile shader: %s\n", e.GetMsgA());
         return false;
     }
     catch (...) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-            "Unable to compile %s shader: Unknown exception\n", shaderName);
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "[TRACKINGSHOT RENDERER] [create] Unable to compile shader: Unknown exception\n");
         return false;
     }
 
-    // initialise font
-    if (!this->theFont.Initialise(this->GetCoreInstance())) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] [Render] Couldn't initialize the font.");
+    // Initialise render utils
+    if (!this->utils.Initialise(this->GetCoreInstance())) {
+        vislib::sys::Log::DefaultLog.WriteError("[TRACKINGSHOT RENDERER] [create] Couldn't initialize render utils.");
         return false;
     }
 
@@ -131,8 +120,8 @@ bool TrackingShotRenderer::GetExtents(megamol::core::view::CallRender3D_2& call)
     auto cr3d_in = &call;
     if (cr3d_in == nullptr) return false;
 
-    // Propagate changes made in GetExtents() from outgoing CallRender3D_2 (cr3d_out) to incoming  CallRender3D_2 (cr3d_in).
-    auto cr3d_out = this->rendererCallerSlot.CallAs<view::CallRender3D_2>();
+    // Propagate changes made in GetExtents() from outgoing CallRender3D_2 (cr3d_out) to incoming CallRender3D_2 (cr3d_in).
+    auto cr3d_out = this->chainRenderSlot.CallAs<view::CallRender3D_2>();
 
     if ((cr3d_out != nullptr) && (*cr3d_out)(core::view::AbstractCallRender::FnGetExtents)) {
         CallKeyframeKeeper *ccc = this->keyframeKeeperSlot.CallAs<CallKeyframeKeeper>();
@@ -152,7 +141,7 @@ bool TrackingShotRenderer::GetExtents(megamol::core::view::CallRender3D_2& call)
         // Get bounding box of spline.
         auto bboxCCC = ccc->getBoundingBox();
         if (bboxCCC == nullptr) {
-            vislib::sys::Log::DefaultLog.WriteWarn("[TRACKINGSHOT RENDERER] [Get Extents] Pointer to boundingbox array is nullptr.");
+            vislib::sys::Log::DefaultLog.WriteWarn("[TRACKINGSHOT RENDERER] [GetExtents] Pointer to boundingbox array is nullptr.");
             return false;
         }
 
@@ -180,17 +169,86 @@ bool TrackingShotRenderer::GetExtents(megamol::core::view::CallRender3D_2& call)
 }
 
 
+void TrackingShotRenderer::PreRender(core::view::CallRender3D_2& call) {
+
+    auto cr3d_in = &call;
+    if (cr3d_in == nullptr) return;
+
+    auto cr3d_out = this->chainRenderSlot.CallAs<CallRender3D_2>();
+    if (cr3d_out == nullptr) return;
+
+    // Get current camera
+    view::Camera_2 cam;
+    cr3d_in->GetCamera(cam);
+
+    // Get current viewport
+    glm::vec4 viewport;
+    if (!cam.image_tile().empty()) {
+        viewport = glm::vec4(
+            cam.image_tile().left(), cam.image_tile().bottom(), cam.image_tile().width(), cam.image_tile().height());
+    }
+    else {
+        viewport = glm::vec4(0.0f, 0.0f, cam.resolution_gate().width(), cam.resolution_gate().height());
+    }
+    int vpW_int = static_cast<UINT>(viewport.z);
+    int vpH_int = static_cast<UINT>(viewport.w);
+
+    // Prepare rendering chained output to FBO --------------------------------
+
+/// Suppress TRACE output of fbo.Enable() and fbo.Create()
+#if defined(DEBUG) || defined(_DEBUG)
+    unsigned int otl = vislib::Trace::GetInstance().GetLevel();
+    vislib::Trace::GetInstance().SetLevel(0);
+#endif // DEBUG || _DEBUG 
+
+    if (this->fbo.IsValid()) {
+        if ((this->fbo.GetWidth() != vpW_int) || (this->fbo.GetHeight() != vpH_int)) {
+            this->fbo.Release();
+        }
+    }
+    if (!this->fbo.IsValid()) {
+        if (!this->fbo.Create(vpW_int, vpH_int, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE, GL_DEPTH_COMPONENT24)) {
+            throw vislib::Exception("[TRACKINGSHOT RENDERER] [render] Unable to create image framebuffer object.", __FILE__, __LINE__);
+            return;
+        }
+    }
+    if (this->fbo.Enable() != GL_NO_ERROR) {
+        throw vislib::Exception("[TRACKINGSHOT RENDERER] [render] Cannot enable Framebuffer object.", __FILE__, __LINE__);
+        return;
+    }
+
+/// Reset TRACE output level
+#if defined(DEBUG) || defined(_DEBUG)
+    vislib::Trace::GetInstance().SetLevel(otl);
+#endif // DEBUG || _DEBUG 
+
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClearDepth(1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    // Set data of outgoing cr3d to data of incoming cr3d
+    *cr3d_out = *cr3d_in;
+    // Set output buffer for override call (otherwise render call is overwritten in Base::Render(context))
+    cr3d_out->SetOutputBuffer(&this->fbo);
+}
+
+
 bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D_2& call) {
 
     auto cr3d_in = &call;
     if (cr3d_in == nullptr) return false;
 
-    auto cr3d_out = this->rendererCallerSlot.CallAs<CallRender3D_2>();
+    auto cr3d_out = this->chainRenderSlot.CallAs<CallRender3D_2>();
     if (cr3d_out == nullptr) return false;
 
-    CallKeyframeKeeper *ccc = this->keyframeKeeperSlot.CallAs<CallKeyframeKeeper>();
+    // Disable fbo from pre render step
+    if (this->fbo.IsEnabled()) {
+        this->fbo.Disable();
+    }
+
+    // Get update data from keyframe keeper
+    auto ccc = this->keyframeKeeperSlot.CallAs<CallKeyframeKeeper>();
     if (ccc == nullptr) return false;
-    // Updated data from cinematic camera call
     if (!(*ccc)(CallKeyframeKeeper::CallForGetUpdatedKeyframeData)) return false;
 
     // Update parameters
@@ -200,20 +258,23 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D_2& call) {
         if (!(*ccc)(CallKeyframeKeeper::CallForGetInterpolCamPositions)) return false;
         this->stepsParam.ResetDirty();
     }
+
     if (this->toggleManipulateParam.IsDirty()) {
         this->toggleManipulator = (this->toggleManipulator + 1) % 2; // There are currently two different manipulator groups ...
         this->toggleManipulateParam.ResetDirty();
     }
+
     if (this->toggleHelpTextParam.IsDirty()) {
         this->showHelpText = !this->showHelpText;
         this->toggleHelpTextParam.ResetDirty();
     }
+
     if (this->toggleManipOusideBboxParam.IsDirty()) {
         this->manipOutsideModel = !this->manipOutsideModel;
         this->toggleManipOusideBboxParam.ResetDirty();
     }
 
-    // Set total simulation time of call
+    // Set total simulation time 
     float totalSimTime = static_cast<float>(cr3d_out->TimeFramesCount());
     ccc->setTotalSimTime(totalSimTime);
     if (!(*ccc)(CallKeyframeKeeper::CallForSetSimulationData)) return false;
@@ -221,81 +282,9 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     // Get selected keyframe
     Keyframe skf = ccc->getSelectedKeyframe();
 
-    // Set simulation time based on selected keyframe ('disables'/ignores animation via view3d)
+    // Set current simulation time based on selected keyframe ('disables'/ignores animation via view3d)
     float simTime = skf.GetSimTime();
     cr3d_in->SetTime(simTime * totalSimTime);
-
-    // Get the foreground color (inverse background color)
-    float bgColor[4];
-    float fgColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-    float white[4]   = { 1.0f, 1.0f, 1.0f, 1.0f };
-    float yellow[4]  = { 1.0f, 1.0f, 0.0f, 1.0f };
-    float menu[4]    = { 0.0f, 0.0f, 0.3f, 1.0f };
-    glGetFloatv(GL_COLOR_CLEAR_VALUE, bgColor);
-    for (unsigned int i = 0; i < 3; i++) {
-        fgColor[i] -= bgColor[i];
-    }
-    // COLORS
-    float sColor[4] = { 0.4f, 0.4f, 1.0f, 1.0f }; // Color for SPLINE
-    // Adapt colors depending on  Lightness
-    float L = (vislib::math::Max(bgColor[0], vislib::math::Max(bgColor[1], bgColor[2])) + vislib::math::Min(bgColor[0], vislib::math::Min(bgColor[1], bgColor[2]))) / 2.0f;
-    if (L < 0.5f) {
-        // not used so far
-    }
-
-
-
-
-
-    //// camera
-    //view::Camera_2 cam;
-    //cr3d_in->GetCamera(cam);
-    //cam_type::snapshot_type snapshot;
-    //cam_type::matrix_type viewTemp, projTemp;
-    //cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
-    //glm::vec4 camView = snapshot.view_vector;
-    //glm::vec4 camRight = snapshot.right_vector;
-    //glm::vec4 camUp = snapshot.up_vector;
-    //glm::mat4 mvp = projTemp * viewTemp;
-
-    //this->utils.ClearAllQueues();
-    //this->utils.Smoothing(true);
-
-    ////this->utils.PushPointPrimitive(glm::vec3(2.0f, 2.0f, 10.0f), 2.0f, cam_pos, this->utils.Color(CinematicUtils::Colors::KEYFRAME)); 
-    ////this->utils.PushLinePrimitive(glm::vec3(0.0f, 0.0f, 20.0f), glm::vec3(0.0f, 5.0f, 20.0f), 0.05f, cam_pos, this->utils.Color(CinematicUtils::Colors::FONT_HIGHLIGHT));
-    ////this->utils.PushQuadPrimitive(glm::vec3(0.0f, 2.0f, 22.0f), 3.0f, 5.0f, cam_pos, cam_up, this->utils.Color(CinematicUtils::Colors::FONT_HIGHLIGHT));
-    ////this->utils.PushQuadPrimitive(glm::vec3(0.0f, 0.0f, 20.0f), glm::vec3(0.0f, 10.0f, 20.0f), glm::vec3(10.0f, 10.0f, 20.0f), glm::vec3(10.0f, 0.0f, 20.0f), this->utils.Color(CinematicUtils::Colors::FONT_HIGHLIGHT));
-
-    //this->utils.Push2DTexture(this->texture, glm::vec3(0.0f, 0.0f, 20.0f), glm::vec3(0.0f, 2.0f, 20.0f), glm::vec3(2.0f, 2.0f, 20.0f), glm::vec3(2.0f, 0.0f, 20.0f), true, this->utils.Color(CinematicUtils::Colors::KEYFRAME));
-
-
-    //this->utils.DrawAllPrimitives(mvp);
-
-
-
-
-
-    // Get current viewport
-    //glm::vec4 viewport;
-    //if (!cam.image_tile().empty()) {
-    //    viewport = glm::vec4(
-    //        cam.image_tile().left(), cam.image_tile().bottom(), cam.image_tile().width(), cam.image_tile().height());
-    //} else {
-    //    viewport = glm::vec4(0.0f, 0.0f, cam.resolution_gate().width(), cam.resolution_gate().height());
-    //}
-
-
-
-
-
-
-
-
-
-    int viewport[4];
-    glGetIntegerv(GL_VIEWPORT, viewport);
-    unsigned int vpWidth  = viewport[2];
-    unsigned int vpHeight = viewport[3];
 
     // Get pointer to keyframes array
     auto keyframes = ccc->getKeyframes();
@@ -304,274 +293,191 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D_2& call) {
         return false;
     }
 
-    // Get pointer to interpolated keyframes array
-    auto interpolKeyframes = ccc->getInterpolCamPositions();
-    if (interpolKeyframes == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[TRACKINGSHOT RENDERER] [Render] Pointer to interpolated camera positions array is nullptr.");
-        return false;
+    // Get current camera
+    view::Camera_2 cam;
+    cr3d_in->GetCamera(cam);
+    cam_type::snapshot_type snapshot;
+    cam_type::matrix_type viewTemp, projTemp;
+    cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
+    glm::vec4 cam_pos = snapshot.position;
+    glm::vec4 cam_view = snapshot.view_vector;
+    glm::vec4 cam_right = snapshot.right_vector;
+    glm::vec4 cam_up = snapshot.up_vector;
+    glm::mat4 view = viewTemp;
+    glm::mat4 proj = projTemp;
+    glm::mat4 mvp = proj * view;
+
+    // Get current viewport
+    glm::vec4 viewport;
+    if (!cam.image_tile().empty()) {
+        viewport = glm::vec4(
+            cam.image_tile().left(), cam.image_tile().bottom(), cam.image_tile().width(), cam.image_tile().height());
     }
-
-    // Draw slave renderer stuff ----------------------------------------------
-
-    // Suppress TRACE output of fbo.Enable() and fbo.Create()
-#if defined(DEBUG) || defined(_DEBUG)
-    unsigned int otl = vislib::Trace::GetInstance().GetLevel();
-    vislib::Trace::GetInstance().SetLevel(0);
-#endif // DEBUG || _DEBUG 
-
-    if (this->fbo.IsValid()) {
-        if ((this->fbo.GetWidth() != vpWidth) || (this->fbo.GetHeight() != vpHeight)) {
-            this->fbo.Release();
-        }
+    else {
+        viewport = glm::vec4(0.0f, 0.0f, cam.resolution_gate().width(), cam.resolution_gate().height());
     }
-    if (!this->fbo.IsValid()) {
-        if (!this->fbo.Create(vpWidth, vpHeight, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE, GL_DEPTH_COMPONENT24)) {
-            throw vislib::Exception("[TRACKINGSHOT RENDERER] [render] Unable to create image framebuffer object.", __FILE__, __LINE__);
-            return false;
-        }
-    }
-    if (this->fbo.Enable() != GL_NO_ERROR) {
-        throw vislib::Exception("[TRACKINGSHOT RENDERER] [render] Cannot enable Framebuffer object.", __FILE__, __LINE__);
-        return false;
-    }
+    float vpW_flt = viewport.z;
+    float vpH_flt = viewport.w;
 
-    // Reset TRACE output level
-#if defined(DEBUG) || defined(_DEBUG)
-     vislib::Trace::GetInstance().SetLevel(otl);
-#endif // DEBUG || _DEBUG 
+    // Init rendering
+    //glm::vec4 back_color;
+    //glGetFloatv(GL_COLOR_CLEAR_VALUE, static_cast<GLfloat*>(glm::value_ptr(back_color)));
+    //this->utils.SetBackgroundColor(back_color);
 
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-    glClearDepth(1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
 
-    // Set data of outgoing cr3d to data of incoming cr3d
-    *cr3d_out = *cr3d_in;
 
-    // Set output buffer for override call (otherwise render call is overwritten in Base::Render(context))
-    cr3d_out->SetOutputBuffer(&this->fbo);
+    // Push manipulators ------------------------------------------------------
+  //  if (keyframes->size() > 0) {
 
-    // Call render function of slave renderer
-    (*cr3d_out)(core::view::AbstractCallRender::FnRender);
+  //      // Update manipulator data only if currently no manipulator is grabbed
+		//if (!this->manipulatorGrabbed) {
 
-    glMatrixMode(GL_MODELVIEW);
-    glPopMatrix();
+		//	// Available manipulators
+		//	std::vector<KeyframeManipulator::manipType> availManip;
+		//	availManip.clear();
+		//	availManip.emplace_back(KeyframeManipulator::manipType::KEYFRAME_POS);
 
-    // Disable fbo
-    if (this->fbo.IsEnabled()) {
-        this->fbo.Disable();
-    }
+		//	if (this->toggleManipulator == 0) { // Keyframe position (along XYZ) manipulators, spline control point
+		//		availManip.emplace_back(KeyframeManipulator::manipType::SELECTED_KF_POS_X);
+		//		availManip.emplace_back(KeyframeManipulator::manipType::SELECTED_KF_POS_Y);
+		//		availManip.emplace_back(KeyframeManipulator::manipType::SELECTED_KF_POS_Z);
+		//		availManip.emplace_back(KeyframeManipulator::manipType::CTRL_POINT_POS_X);
+		//		availManip.emplace_back(KeyframeManipulator::manipType::CTRL_POINT_POS_Y);
+		//		availManip.emplace_back(KeyframeManipulator::manipType::CTRL_POINT_POS_Z);
+		//	}
+		//	else { //if (this->toggleManipulator == 1) { // Keyframe position (along lookat), lookat and up manipulators
+		//		availManip.emplace_back(KeyframeManipulator::manipType::SELECTED_KF_UP);
+		//		availManip.emplace_back(KeyframeManipulator::manipType::SELECTED_KF_LOOKAT_X);
+		//		availManip.emplace_back(KeyframeManipulator::manipType::SELECTED_KF_LOOKAT_Y);
+		//		availManip.emplace_back(KeyframeManipulator::manipType::SELECTED_KF_LOOKAT_Z);
+		//		availManip.emplace_back(KeyframeManipulator::manipType::SELECTED_KF_POS_LOOKAT);
+		//	}
 
-    // Draw textures ------------------------------------------------------
+		//	// Get current Model-View-Projection matrix for world space to screen space projection of keyframe camera position for mouse selection
+		//	view::Camera_2 cam;
+		//	cr3d_in->GetCamera(cam);
+		//	cam_type::snapshot_type snapshot;
+		//	cam_type::matrix_type viewTemp, projTemp;
+		//	// Generate complete snapshot and calculate matrices
+		//	cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
+		//	glm::vec4 CamPos = snapshot.position;
+		//	glm::vec4 CamView = snapshot.view_vector;
+		//	glm::mat4 MVP = projTemp * viewTemp;
+		//	glm::vec4 BboxCenter = { ccc->getBboxCenter().x, ccc->getBboxCenter().y, ccc->getBboxCenter().z, 1.0f};
+		//
+        //  this->manipulator.Update(availManip, keyframes, skf, vpW_flt, vpH_flt, MVP, (CamPos - CamView),(CamPos - BboxCenter),
+		//  this->manipOutsideModel, ccc->getStartControlPointPosition(), ccc->getEndControlPointPosition());
+ //      }
+
+  //      // Draw manipulators
+  //      this->manipulator.Draw();
+  //  }
+
+    // Draw spline of interpolated camera positions
+    //auto interpolKeyframes = ccc->getInterpolCamPositions();
+    //if (interpolKeyframes == nullptr) {
+    //    vislib::sys::Log::DefaultLog.WriteWarn("[TRACKINGSHOT RENDERER] [Render] Pointer to interpolated camera positions array is nullptr.");
+    //    return false;
+    //}
+    //float line_width = 0.1f;
+    //auto color = this->utils.Color(CinematicUtils::Colors::KEYFRAME_SPLINE);
+    //auto keyframeCount = interpolKeyframes->size();
+    //if (keyframeCount > 1) {
+    //    for (int i = 0; i < (keyframeCount - 1); i++) {
+    //        glm::vec3 start = interpolKeyframes->operator[](i);
+    //        glm::vec3 end = interpolKeyframes->operator[](i + 1);
+    //        this->utils.PushLinePrimitive(start, end, line_width, cam_pos, color);
+    //    }
+    //}
+
+    // Draw textures ----------------------------------------------------------
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glDisable(GL_CULL_FACE);
     glDisable(GL_LIGHTING);
-
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    // DRAW DEPTH ---------------------------------------------------------
+    // Depth
     glEnable(GL_DEPTH_TEST);
-
     this->textureShader.Enable();
-
-    glUniform1f(this->textureShader.ParameterLocation("vpW"), (float)(vpWidth));
-    glUniform1f(this->textureShader.ParameterLocation("vpH"), (float)(vpHeight));
+    glUniform1f(this->textureShader.ParameterLocation("vpW"), vpW_flt);
+    glUniform1f(this->textureShader.ParameterLocation("vpH"), vpH_flt);
     glUniform1i(this->textureShader.ParameterLocation("depthtex"), 0);
-
     this->fbo.DrawDepthTexture();
-
     this->textureShader.Disable();
-
-    // DRAW COLORS --------------------------------------------------------
+    // Color
     glDisable(GL_DEPTH_TEST);
-
     this->fbo.DrawColourTexture();
-
-    // Draw TRACKINGSHOT RENDERER stuff -------------------------------------------
+    glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
 
-    GLfloat tmpLw;
-    glGetFloatv(GL_LINE_WIDTH, &tmpLw);
-    GLfloat tmpPs;
-    glGetFloatv(GL_POINT_SIZE, &tmpPs);
-
-    // MANIPULATORS
-    if (keyframes->size() > 0) {
-
-        // Update manipulator data only if currently no manipulator is grabbed
-		if (!this->manipulatorGrabbed) {
-
-			// Available manipulators
-			std::vector<KeyframeManipulator::manipType> availManip;
-			availManip.clear();
-			availManip.emplace_back(KeyframeManipulator::manipType::KEYFRAME_POS);
-
-			if (this->toggleManipulator == 0) { // Keyframe position (along XYZ) manipulators, spline control point
-				availManip.emplace_back(KeyframeManipulator::manipType::SELECTED_KF_POS_X);
-				availManip.emplace_back(KeyframeManipulator::manipType::SELECTED_KF_POS_Y);
-				availManip.emplace_back(KeyframeManipulator::manipType::SELECTED_KF_POS_Z);
-				availManip.emplace_back(KeyframeManipulator::manipType::CTRL_POINT_POS_X);
-				availManip.emplace_back(KeyframeManipulator::manipType::CTRL_POINT_POS_Y);
-				availManip.emplace_back(KeyframeManipulator::manipType::CTRL_POINT_POS_Z);
-			}
-			else { //if (this->toggleManipulator == 1) { // Keyframe position (along lookat), lookat and up manipulators
-				availManip.emplace_back(KeyframeManipulator::manipType::SELECTED_KF_UP);
-				availManip.emplace_back(KeyframeManipulator::manipType::SELECTED_KF_LOOKAT_X);
-				availManip.emplace_back(KeyframeManipulator::manipType::SELECTED_KF_LOOKAT_Y);
-				availManip.emplace_back(KeyframeManipulator::manipType::SELECTED_KF_LOOKAT_Z);
-				availManip.emplace_back(KeyframeManipulator::manipType::SELECTED_KF_POS_LOOKAT);
-			}
-
-			// Get current Model-View-Projection matrix for world space to screen space projection of keyframe camera position for mouse selection
-			view::Camera_2 cam;
-			cr3d_in->GetCamera(cam);
-			cam_type::snapshot_type snapshot;
-			cam_type::matrix_type viewTemp, projTemp;
-			// Generate complete snapshot and calculate matrices
-			cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
-			glm::vec4 CamPos = snapshot.position;
-			glm::vec4 CamView = snapshot.view_vector;
-			glm::mat4 MVP = projTemp * viewTemp;
-			glm::vec4 BboxCenter = { ccc->getBboxCenter().x, ccc->getBboxCenter().y, ccc->getBboxCenter().z, 1.0f};
-		
-            this->manipulator.Update(availManip, keyframes, skf, (float)(vpHeight), (float)(vpWidth), MVP, (CamPos - CamView),(CamPos - BboxCenter), 
-				this->manipOutsideModel, ccc->getStartControlPointPosition(), ccc->getEndControlPointPosition());
-        }
-
-        // Draw manipulators
-        this->manipulator.Draw();
-    }
-
-    // Draw spline    
-    glColor4fv(sColor);
-    glLineWidth(2.0f);
-    glBegin(GL_LINE_STRIP);
-    for (unsigned int i = 0; i < interpolKeyframes->size(); i++) {
-        glVertex3fv(glm::value_ptr(interpolKeyframes->operator[](i)));
-    }
-    glEnd();
-
-    // DRAW MENU --------------------------------------------------------------
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_BLEND);
-
-    glMatrixMode(GL_PROJECTION);
-    glPushMatrix();
-    glLoadIdentity();
-    glOrtho(0.0f, (float)(vpWidth), 0.0f, (float)(vpHeight), 0.0f, 1.0f);
-
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-    glLoadIdentity();
-
-    float vpH = (float)(vpHeight);
-    float vpW = (float)(vpWidth);
-
-    vislib::StringA leftLabel  = " TRACKING SHOT ";
-    vislib::StringA midLabel   = "";
-    vislib::StringA rightLabel = " [Ctrl+h] Show Help Text ";
+    // Push menu --------------------------------------------------------------
+    std::string leftLabel  = " TRACKING SHOT ";
+    std::string midLabel   = "";
+    std::string rightLabel = " [Ctrl+h] Show Help Text ";
     if (this->showHelpText) {
         rightLabel = " [Ctrl+h] Hide Help Text ";
     }
-
-    float lbFontSize        = (CC_MENU_HEIGHT); 
-    float leftLabelWidth    = this->theFont.LineWidth(lbFontSize, leftLabel);
-    float midleftLabelWidth = this->theFont.LineWidth(lbFontSize, midLabel);
-    float rightLabelWidth   = this->theFont.LineWidth(lbFontSize, rightLabel);
-
-    // Adapt font size if height of menu text is greater than menu height
-    float vpWhalf = vpW / 2.0f;
-    while (((leftLabelWidth + midleftLabelWidth/2.0f) > vpWhalf) || ((rightLabelWidth + midleftLabelWidth / 2.0f) > vpWhalf)) {
-        lbFontSize -= 0.5f;
-        leftLabelWidth    = this->theFont.LineWidth(lbFontSize, leftLabel);
-        midleftLabelWidth = this->theFont.LineWidth(lbFontSize, midLabel);
-        rightLabelWidth   = this->theFont.LineWidth(lbFontSize, rightLabel);
-    }
-
-    // Draw menu background
-    glColor4fv(menu);
-    glBegin(GL_QUADS);
-        glVertex2f(0.0f, vpH);
-        glVertex2f(0.0f, vpH - (CC_MENU_HEIGHT));
-        glVertex2f(vpW,  vpH - (CC_MENU_HEIGHT));
-        glVertex2f(vpW,  vpH);
-    glEnd();
-
-    // Draw menu labels
-    float labelPosY = vpH - (CC_MENU_HEIGHT) / 2.0f + lbFontSize / 2.0f;
-    this->theFont.DrawString(white, 0.0f, labelPosY, lbFontSize, false, leftLabel, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
-    this->theFont.DrawString(yellow, (vpW - midleftLabelWidth) / 2.0f, labelPosY, lbFontSize, false, midLabel, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
-    this->theFont.DrawString(white, (vpW - rightLabelWidth), labelPosY, lbFontSize, false, rightLabel, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
+    //this->utils.PushMenu(leftLabel, midLabel, rightLabel, vpW_flt, vpH_flt);
 
     // Draw help text 
-    if (this->showHelpText) {
-        vislib::StringA helpText = "";
-        helpText += "-----[ GLOBAL ]-----\n";
-        helpText += "[Ctrl+a] Apply current settings to selected/new keyframe. \n";
-        helpText += "[Ctrl+d] Delete selected keyframe. \n";
-        helpText += "[Ctrl+s] Save keyframes to file. \n";
-        helpText += "[Ctrl+l] Load keyframes from file. \n";
-        helpText += "[Ctrl+z] Undo keyframe changes. \n";
-        helpText += "[Ctrl+y] Redo keyframe changes. \n";
-        helpText += "-----[ TRACKING SHOT ]----- \n";
-        helpText += "[Ctrl+q] Toggle different manipulators for the selected keyframe. \n";
-        helpText += "[Ctrl+w] Show manipulators inside/outside of model bounding box. \n";
-        helpText += "[Ctrl+u] Reset look-at vector of selected keyframe. \n";
-        helpText += "-----[ CINEMATIC ]----- \n";
-        helpText += "[Ctrl+r] Start/Stop rendering complete animation. \n";
-        helpText += "[Ctrl+Space] Start/Stop animation preview. \n";
-        helpText += "-----[ TIMELINE ]----- \n";
-        helpText += "[Ctrl+Right/Left Arrow] Move selected keyframe on animation time axis. \n";
-        helpText += "[Ctrl+f] Snap all keyframes to animation frames. \n";
-        helpText += "[Ctrl+g] Snap all keyframes to simulation frames. \n";
-        helpText += "[Ctrl+t] Linearize simulation time between two keyframes. \n";
-        //helpText += "[Ctrl+v] Set same velocity between all keyframes (Experimental).\n"; // Calcualation is not correct yet ...
-        helpText += "[Ctrl+p] Reset shifted and scaled time axes. \n";
-        helpText += "[Left Mouse Button] Select keyframe. \n";
-        helpText += "[Middle Mouse Button] Axes scaling in mouse direction. \n";
-        helpText += "[Right Mouse Button] Drag & drop keyframe / pan axes. \n";
+    //if (this->showHelpText) {
+    //    vislib::StringA helpText = "";
+    //    helpText += "-----[ GLOBAL ]-----\n";
+    //    helpText += "[Ctrl+a] Apply current settings to selected/new keyframe. \n";
+    //    helpText += "[Ctrl+d] Delete selected keyframe. \n";
+    //    helpText += "[Ctrl+s] Save keyframes to file. \n";
+    //    helpText += "[Ctrl+l] Load keyframes from file. \n";
+    //    helpText += "[Ctrl+z] Undo keyframe changes. \n";
+    //    helpText += "[Ctrl+y] Redo keyframe changes. \n";
+    //    helpText += "-----[ TRACKING SHOT ]----- \n";
+    //    helpText += "[Ctrl+q] Toggle different manipulators for the selected keyframe. \n";
+    //    helpText += "[Ctrl+w] Show manipulators inside/outside of model bounding box. \n";
+    //    helpText += "[Ctrl+u] Reset look-at vector of selected keyframe. \n";
+    //    helpText += "-----[ CINEMATIC ]----- \n";
+    //    helpText += "[Ctrl+r] Start/Stop rendering complete animation. \n";
+    //    helpText += "[Ctrl+Space] Start/Stop animation preview. \n";
+    //    helpText += "-----[ TIMELINE ]----- \n";
+    //    helpText += "[Ctrl+Right/Left Arrow] Move selected keyframe on animation time axis. \n";
+    //    helpText += "[Ctrl+f] Snap all keyframes to animation frames. \n";
+    //    helpText += "[Ctrl+g] Snap all keyframes to simulation frames. \n";
+    //    helpText += "[Ctrl+t] Linearize simulation time between two keyframes. \n";
+    //    //helpText += "[Ctrl+v] Set same velocity between all keyframes (Experimental).\n"; // Calcualation is not correct yet ...
+    //    helpText += "[Ctrl+p] Reset shifted and scaled time axes. \n";
+    //    helpText += "[Left Mouse Button] Select keyframe. \n";
+    //    helpText += "[Middle Mouse Button] Axes scaling in mouse direction. \n";
+    //    helpText += "[Right Mouse Button] Drag & drop keyframe / pan axes. \n";
 
-        float htNumOfRows = 24.0f; // Number of rows the help text has
+    //    float htNumOfRows = 24.0f; // Number of rows the help text has
 
-        float htFontSize  = vpW*0.027f; // max % of viewport width
-        float htStrHeight = this->theFont.LineHeight(htFontSize);
-        float htX         = 5.0f;
-        float htY         = htX + htStrHeight;
-        // Adapt font size if height of help text is greater than viewport height
-        while ((htStrHeight*htNumOfRows + htX + this->theFont.LineHeight(lbFontSize)) >vpH) {
-            htFontSize -= 0.5f;
-            htStrHeight = this->theFont.LineHeight(htFontSize);
-        }
+    //    float htFontSize  = vpW*0.027f; // max % of viewport width
+    //    float htStrHeight = this->theFont.LineHeight(htFontSize);
+    //    float htX         = 5.0f;
+    //    float htY         = htX + htStrHeight;
+    //    // Adapt font size if height of help text is greater than viewport height
+    //    while ((htStrHeight*htNumOfRows + htX + this->theFont.LineHeight(lbFontSize)) >vpH) {
+    //        htFontSize -= 0.5f;
+    //        htStrHeight = this->theFont.LineHeight(htFontSize);
+    //    }
 
-        float htStrWidth = this->theFont.LineWidth(htFontSize, helpText);
-        htStrHeight      = this->theFont.LineHeight(htFontSize);
-        htY              = htX + htStrHeight*htNumOfRows;
-        // Draw background colored quad
-        glColor4fv(bgColor);
-        glBegin(GL_QUADS);
-            glVertex2f(htX,              htY);
-            glVertex2f(htX,              htY - (htStrHeight*htNumOfRows));
-            glVertex2f(htX + htStrWidth, htY - (htStrHeight*htNumOfRows));
-            glVertex2f(htX + htStrWidth, htY);
-        glEnd();
-        // Draw help text
-        this->theFont.DrawString(fgColor, htX, htY, htFontSize, false, helpText, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
-    }
+    //    float htStrWidth = this->theFont.LineWidth(htFontSize, helpText);
+    //    htStrHeight      = this->theFont.LineHeight(htFontSize);
+    //    htY              = htX + htStrHeight*htNumOfRows;
+    //    // Draw background colored quad
+    //    glColor4fv(bgColor);
+    //    glBegin(GL_QUADS);
+    //        glVertex2f(htX,              htY);
+    //        glVertex2f(htX,              htY - (htStrHeight*htNumOfRows));
+    //        glVertex2f(htX + htStrWidth, htY - (htStrHeight*htNumOfRows));
+    //        glVertex2f(htX + htStrWidth, htY);
+    //    glEnd();
+    //    // Draw help text
+    //    this->theFont.DrawString(fgColor, htX, htY, htFontSize, false, helpText, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
+    //}
 
-    // ------------------------------------------------------------------------
-    glPopMatrix();
-    glMatrixMode(GL_PROJECTION);
-    glPopMatrix();
-    glMatrixMode(GL_MODELVIEW);
 
-    // Reset opengl
-    glDisable(GL_BLEND);
-    glEnable(GL_DEPTH_TEST);
-    glLineWidth(tmpLw);
-    glPointSize(tmpPs);
+    // Draw all ---------------------------------------------------------------
+    //this->utils.DrawAll(mvp);
 
     return true;
 }
@@ -579,8 +485,8 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D_2& call) {
 
 bool TrackingShotRenderer::OnMouseButton(megamol::core::view::MouseButton button, megamol::core::view::MouseButtonAction action, megamol::core::view::Modifiers mods) {
 
-    auto* cr = this->rendererCallerSlot.CallAs<view::CallRender3D_2>();
-    if (cr) {
+    auto cr = this->chainRenderSlot.CallAs<view::CallRender3D_2>();
+    if (cr != nullptr) {
         InputEvent evt;
         evt.tag = InputEvent::Tag::MouseButton;
         evt.mouseButtonData.button = button;
@@ -590,53 +496,53 @@ bool TrackingShotRenderer::OnMouseButton(megamol::core::view::MouseButton button
         if ((*cr)(view::CallRender3D_2::FnOnMouseButton)) return true;
     }
 
-    CallKeyframeKeeper *ccc = this->keyframeKeeperSlot.CallAs<CallKeyframeKeeper>();
+    auto ccc = this->keyframeKeeperSlot.CallAs<CallKeyframeKeeper>();
     if (ccc == nullptr) return false;
     auto keyframes = ccc->getKeyframes();
     if (keyframes == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[TRACKINGSHOT RENDERER] [MouseEvent] Pointer to keyframe array is nullptr.");
+        vislib::sys::Log::DefaultLog.WriteWarn("[TRACKINGSHOT RENDERER] [OnMouseButton] Pointer to keyframe array is nullptr.");
         return false;
     }
 
     bool consumed = false;
 
-    bool down = (action == core::view::MouseButtonAction::PRESS);
-    if (button == MouseButton::BUTTON_LEFT) {
-        if (down) {
-            // Check if manipulator is selected
-            if (this->manipulator.CheckManipulatorHit(this->mouseX, this->mouseY)) {
-                this->manipulatorGrabbed = true;
-                consumed = true;
-                //vislib::sys::Log::DefaultLog.WriteWarn("[TRACKINGSHOT RENDERER] [MouseEvent] MANIPULATOR SELECTED.");
-            }
-            else {
-                // Check if new keyframe position is selected
-                int index = this->manipulator.CheckKeyframePositionHit(this->mouseX, this->mouseY);
-                if (index >= 0) {
-                    ccc->setSelectedKeyframeTime((*keyframes)[index].GetAnimTime());
-                    if (!(*ccc)(CallKeyframeKeeper::CallForGetSelectedKeyframeAtTime)) return false;
-                    consumed = true;
-                    //vislib::sys::Log::DefaultLog.WriteWarn("[TRACKINGSHOT RENDERER] [MouseEvent] KEYFRAME SELECT.");
-                }
-            }
-        }
-        else {
-            // Apply changes of selected manipulator and control points
-            if (this->manipulator.ProcessManipulatorHit(this->mouseX, this->mouseY)) {
+    //bool down = (action == core::view::MouseButtonAction::PRESS);
+    //if (button == MouseButton::BUTTON_LEFT) {
+    //    if (down) {
+    //        // Check if manipulator is selected
+    //        if (this->manipulator.CheckManipulatorHit(this->mouseX, this->mouseY)) {
+    //            this->manipulatorGrabbed = true;
+    //            consumed = true;
+    //            //vislib::sys::Log::DefaultLog.WriteInfo("[TRACKINGSHOT RENDERER] [OnMouseButton] MANIPULATOR SELECTED.");
+    //        }
+    //        else {
+    //            // Check if new keyframe position is selected
+    //            int index = this->manipulator.CheckKeyframePositionHit(this->mouseX, this->mouseY);
+    //            if (index >= 0) {
+    //                ccc->setSelectedKeyframeTime((*keyframes)[index].GetAnimTime());
+    //                if (!(*ccc)(CallKeyframeKeeper::CallForGetSelectedKeyframeAtTime)) return false;
+    //                consumed = true;
+    //                //vislib::sys::Log::DefaultLog.WriteInfo("[TRACKINGSHOT RENDERER] [OnMouseButton] KEYFRAME SELECT.");
+    //            }
+    //        }
+    //    }
+    //    else {
+    //        // Apply changes of selected manipulator and control points
+    //        if (this->manipulator.ProcessManipulatorHit(this->mouseX, this->mouseY)) {
 
-                ccc->setSelectedKeyframe(this->manipulator.GetManipulatedKeyframe());
-                if (!(*ccc)(CallKeyframeKeeper::CallForSetSelectedKeyframe)) return false;
+    //            ccc->setSelectedKeyframe(this->manipulator.GetManipulatedKeyframe());
+    //            if (!(*ccc)(CallKeyframeKeeper::CallForSetSelectedKeyframe)) return false;
 
-                ccc->setControlPointPosition(this->manipulator.GetFirstControlPointPosition(), this->manipulator.GetLastControlPointPosition());
-                if (!(*ccc)(CallKeyframeKeeper::CallForSetCtrlPoints)) return false;
+    //            ccc->setControlPointPosition(this->manipulator.GetFirstControlPointPosition(), this->manipulator.GetLastControlPointPosition());
+    //            if (!(*ccc)(CallKeyframeKeeper::CallForSetCtrlPoints)) return false;
 
-                consumed = true;
-                //vislib::sys::Log::DefaultLog.WriteWarn("[TRACKINGSHOT RENDERER] [MouseEvent] MANIPULATOR CHANGED.");
-            }
-            // ! Mode MUST alwasy be reset on left button 'up', if MOUSE moves out of viewport during manipulator is grabbed !
-            this->manipulatorGrabbed = false;
-        }
-    }
+    //            consumed = true;
+    //            //vislib::sys::Log::DefaultLog.WriteInfo("[TRACKINGSHOT RENDERER] [OnMouseButton] MANIPULATOR CHANGED.");
+    //        }
+    //        // ! Mode MUST alwasy be reset on left button 'up', if MOUSE moves out of viewport during manipulator is grabbed !
+    //        this->manipulatorGrabbed = false;
+    //    }
+    //}
 
     return consumed;
 }
@@ -644,8 +550,8 @@ bool TrackingShotRenderer::OnMouseButton(megamol::core::view::MouseButton button
 
 bool TrackingShotRenderer::OnMouseMove(double x, double y) {
 
-    auto* cr = this->rendererCallerSlot.CallAs<view::CallRender3D_2>();
-    if (cr) {
+    auto cr = this->chainRenderSlot.CallAs<view::CallRender3D_2>();
+    if (cr != nullptr) {
         InputEvent evt;
         evt.tag = InputEvent::Tag::MouseMove;
         evt.mouseMoveData.x = x;
@@ -658,10 +564,10 @@ bool TrackingShotRenderer::OnMouseMove(double x, double y) {
     this->mouseX = (float)static_cast<int>(x);
     this->mouseY = (float)static_cast<int>(y);
 
-    // Update position of grabbed manipulator
-    if (!(this->manipulatorGrabbed && this->manipulator.ProcessManipulatorHit(this->mouseX, this->mouseY))) {
-        return false;
+    // Check for grabbed or hit manipulator
+    if (this->manipulatorGrabbed && this->manipulator.ProcessManipulatorHit(this->mouseX, this->mouseY)) {
+        return true;
     }
 
-    return true;
+    return false;
 }

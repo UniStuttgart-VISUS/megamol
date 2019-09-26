@@ -634,6 +634,8 @@ float SDFFont::LineWidth(float size, const wchar_t *txt) const {
  */
 void SDFFont::BatchDrawString(const float col[4]) const {
 
+    if (this->posBatchCache.empty()) return;
+
     // Bind glyph data in batch cache
     for (unsigned int i = 0; i < (unsigned int)this->vbos.size(); i++) {
         glBindBuffer(GL_ARRAY_BUFFER, this->vbos[i].handle);
@@ -656,6 +658,8 @@ void SDFFont::BatchDrawString(const float col[4]) const {
  * SDFFont::BatchDrawString
  */
 void SDFFont::BatchDrawString() const {
+
+    if (this->posBatchCache.empty()) return;
 
     // Bind glyph data in batch cache
     for (unsigned int i = 0; i < (unsigned int)this->vbos.size(); i++) {

@@ -464,7 +464,7 @@ glm::vec3 RenderUtils::arbitraryPerpendicular(glm::vec3 in) {
 CinematicUtils::CinematicUtils(void) : megamol::cinematic::RenderUtils()
     ,background_color(0.0f, 0.0f, 0.0f, 1.0f)
     ,font(megamol::core::utility::SDFFont::FontName::ROBOTO_SANS)
-    ,font_size(21.0f)
+    ,font_size(20.0f)
 {
 
 }
@@ -562,6 +562,7 @@ void CinematicUtils::PushMenu(const std::string& left_label, const std::string& 
         glm::vec3(viewport_width, viewport_height - menu_height, 0.0f), glm::vec3(viewport_width, viewport_height, 0.0f), this->Color(CinematicUtils::Colors::MENU));
 
     // Push menu labels
+    float textPosZ = -0.1f;
     float vpWhalf = viewport_width / 2.0f;
     float new_font_size = this->font_size;
     float leftLabelWidth = this->font.LineWidth(this->font_size, left_label.c_str());
@@ -573,13 +574,13 @@ void CinematicUtils::PushMenu(const std::string& left_label, const std::string& 
         midleftLabelWidth = this->font.LineWidth(new_font_size, middle_label.c_str());
         rightLabelWidth = this->font.LineWidth(new_font_size, right_label.c_str());
     }
-    float labelPosY = viewport_height - (menu_height / 2.0f) + (new_font_size / 2.0f);
+    float textPosY = viewport_height - (menu_height / 2.0f) + (new_font_size / 2.0f);
     auto current_back_color = this->Color(CinematicUtils::Colors::BACKGROUND);
     this->SetBackgroundColor(this->Color(CinematicUtils::Colors::MENU));
     auto color = this->Color(CinematicUtils::Colors::FONT);
-    this->font.DrawString(glm::value_ptr(color), 0.0f, labelPosY, new_font_size, false, left_label.c_str(), megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
-    this->font.DrawString(glm::value_ptr(color), (viewport_width - midleftLabelWidth) / 2.0f, labelPosY, new_font_size, false, middle_label.c_str(), megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
-    this->font.DrawString(glm::value_ptr(color), (viewport_width - rightLabelWidth), labelPosY, new_font_size, false, right_label.c_str(), megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
+    this->font.DrawString(glm::value_ptr(color), 0.0f, textPosY, textPosZ, new_font_size, false, left_label.c_str(), megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
+    this->font.DrawString(glm::value_ptr(color), (viewport_width - midleftLabelWidth) / 2.0f, textPosY, textPosZ, new_font_size, false, middle_label.c_str(), megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
+    this->font.DrawString(glm::value_ptr(color), (viewport_width - rightLabelWidth), textPosY, textPosZ, new_font_size, false, right_label.c_str(), megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
     this->SetBackgroundColor(current_back_color);
 }
 
@@ -590,11 +591,11 @@ void CinematicUtils::PushHelpText(const std::string& text, glm::vec3 position, f
 }
 
 
-void CinematicUtils::PushText(const std::string& text, float x, float y) {
+void CinematicUtils::PushText(const std::string& text, float x, float y, float z) {
 
     float text_width = this->font.LineWidth(this->font_size, text.c_str());
     auto color = this->Color(CinematicUtils::Colors::FONT);
-    this->font.DrawString(glm::value_ptr(color), x, y,  this->font_size, false, text.c_str(), megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
+    this->font.DrawString(glm::value_ptr(color), x, y, z, this->font_size, false, text.c_str(), megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
 }
 
 

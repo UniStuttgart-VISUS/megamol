@@ -279,8 +279,8 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     glGetIntegerv(GL_VIEWPORT, vp);
     int vpW_int = (vp[2] - vp[0]);
     int vpH_int = (vp[3] - vp[1]) - static_cast<int>(CC_MENU_HEIGHT); // Reduced by menue height
-    float vpH_flt = static_cast<float>(vpH_int);
     float vpW_flt = static_cast<float>(vpW_int);
+    float vpH_flt = static_cast<float>(vpH_int);
     int fboWidth = vpW_int;
     int fboHeight = vpH_int;
     float cineRatio = static_cast<float>(this->cineWidth) / static_cast<float>(this->cineHeight);

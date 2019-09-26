@@ -211,7 +211,7 @@ namespace cinematic {
 
         void PushHelpText(const std::string& text, glm::vec3 position, float width, float height);
 
-        void PushText(const std::string& text, float x, float y);
+        void PushText(const std::string& text, float x, float y, float z);
 
         void DrawAll(glm::mat4& mat_mvp);
 
