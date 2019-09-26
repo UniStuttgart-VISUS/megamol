@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
+using System.Windows.Forms;
+using MegaMolConf.Data;
 
 namespace MegaMolConf {
     public class GraphicalModule : INotifyPropertyChanged {
@@ -188,20 +190,16 @@ namespace MegaMolConf {
                         new Point(bounds.Width + Position.X - slotWidth,
                             Position.Y + moduleBorder + x * slotSpacing + slotBorder + slotHeight)
                     };
-                    //Point[] psScaled = new Point[3] {
-                    //    new Point(bounds.Width + Position.X - (int)(slotWidth * slotScale),
-                    //        Position.Y + moduleBorder + x * slotSpacing + slotBorder - (int)(slotScale * slotHeight / 2)),
-                    //    new Point(bounds.Width + Position.X + (int)(slotWidth * slotScale),
-                    //        Position.Y + moduleBorder + x * slotSpacing + slotBorder),
-                    //    new Point(bounds.Width + Position.X - (int)(slotWidth * slotScale),
-                    //        Position.Y + moduleBorder + x * slotSpacing + slotBorder + (int)(slotScale * slotHeight / 2))
-                    //};
+
                     if (Form1.selectedCaller == cr && Form1.selectedModule != null  && Name == Form1.selectedModule.Name) {
                         g.FillPolygon(selectedSlotBrush, ps);
+                        DrawSlotName(g, x, true, cr.Name);
                     } else if (Form1.selectedCallee != null && Form1.selectedCallee.CompatibleCalls.Intersect(cr.CompatibleCalls).Count() > 0) {
                         g.FillPolygon(callerBrush, ps);
                         g.DrawPolygon(compatibleSlotBorder, ps);
-                    } else {
+                        DrawSlotName(g, x, true, cr.Name);
+                    }
+                    else {
                         g.FillPolygon(callerBrush, ps);
                     }
                 }
@@ -217,13 +215,29 @@ namespace MegaMolConf {
                     };
                     if (Form1.selectedCallee == ce && Form1.selectedModule != null && Name == Form1.selectedModule.Name) {
                         g.FillPolygon(selectedSlotBrush, ps);
-                    } else if (Form1.selectedCaller != null && Form1.selectedCaller.CompatibleCalls.Intersect(ce.CompatibleCalls).Count() > 0) {
+                        DrawSlotName(g, x, false, ce.Name);
+                    }
+                    else if (Form1.selectedCaller != null && Form1.selectedCaller.CompatibleCalls.Intersect(ce.CompatibleCalls).Count() > 0) {
                         g.FillPolygon(calleeBrush, ps);
                         g.DrawPolygon(compatibleSlotBorder, ps);
+                        DrawSlotName(g, x, false, ce.Name);
                     } else {
                         g.FillPolygon(calleeBrush, ps);
                     }
                 }
+            }
+        }
+
+        private void DrawSlotName(Graphics g, int x, bool addBounds, string displayName) {
+            if (Form1.drawConnection && Form1.showSlotTips) {
+            //if (Form1.drawConnection) {
+                int xbase = Position.X + slotWidth;
+                if (addBounds) xbase += bounds.Width;
+                int ybase = Position.Y + moduleBorder + x * slotSpacing + slotBorder;
+                SizeF slotbounds = g.MeasureString(displayName, moduleNameFont);
+                ybase -= (int) slotbounds.Height / 4;
+                g.FillRectangle(selectedSlotBrush, xbase, ybase, slotbounds.Width, slotbounds.Height);
+                g.DrawString(displayName, moduleNameFont, moduleNameBrush, xbase, ybase);
             }
         }
 
