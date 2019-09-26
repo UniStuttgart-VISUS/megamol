@@ -40,7 +40,6 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
     fileNameParam("storage::filename", "The name of the file to load or save keyframes."),
     saveKeyframesParam("storage::save", "Save keyframes to file."),
     loadKeyframesParam("storage::load", "Load keyframes from file."),
-
     interpolCamPos(nullptr),
     keyframes(nullptr),
     boundingBox(nullptr),

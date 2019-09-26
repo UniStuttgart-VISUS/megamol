@@ -154,14 +154,11 @@ void RenderUtils::PushPointPrimitive(const glm::vec3& pos_center, float size, co
 }
 
 
-void RenderUtils::PushLinePrimitive(const glm::vec3& pos_start, const glm::vec3& pos_end, float line_width, const glm::vec3& cam_pos, const glm::vec4& color) {
+void RenderUtils::PushLinePrimitive(const glm::vec3& pos_start, const glm::vec3& pos_end, float line_width, const glm::vec3& normal, const glm::vec4& color) {
 
-    glm::vec3 linedir = (pos_start - pos_end) / 2.0f;
-    glm::vec3 middle = pos_start + linedir;
-    glm::vec3 distance = (cam_pos - middle);
-    //float d = glm::length(distance);
-    glm::vec3 normal = glm::normalize(glm::cross(distance, linedir));
-    glm::vec3 p1 = normal * (line_width / 2.0f);
+    glm::vec3 linedir = (pos_start - pos_end);
+    glm::vec3 w = glm::normalize(glm::cross(normal, linedir));
+    glm::vec3 p1 = w * (line_width / 2.0f);
     glm::vec3 pos_bottom_left = pos_start - p1;
     glm::vec3 pos_upper_left = pos_start + p1;
     glm::vec3 pos_upper_right = pos_end + p1;
@@ -171,12 +168,9 @@ void RenderUtils::PushLinePrimitive(const glm::vec3& pos_start, const glm::vec3&
 }
 
 
-void RenderUtils::PushQuadPrimitive(const glm::vec3& pos_center, float width, float height, const glm::vec3& cam_pos, const glm::vec3& cam_up, const glm::vec4& color) {
+void RenderUtils::PushQuadPrimitive(const glm::vec3& pos_center, float width, float height, const glm::vec3& normal, const glm::vec3& up, const glm::vec4& color) {
 
-    glm::vec3 distance = (cam_pos - pos_center);
-    //float d = glm::length(distance);
-    glm::vec3 normal = glm::normalize(distance);
-    glm::vec3 p1 = glm::normalize(cam_up);
+    glm::vec3 p1 = glm::normalize(up);
     glm::vec3 p2 = glm::cross(normal, p1);
     p1 = glm::normalize(p1) * (height / 2.0f);
     p2 = glm::normalize(p2) * (width / 2.0f);
@@ -469,7 +463,8 @@ glm::vec3 RenderUtils::arbitraryPerpendicular(glm::vec3 in) {
 
 CinematicUtils::CinematicUtils(void) : megamol::cinematic::RenderUtils()
     ,background_color(0.0f, 0.0f, 0.0f, 1.0f)
-    //,font(megamol::core::utility::SDFFont::FontName::ROBOTO_SANS) 
+    ,font(megamol::core::utility::SDFFont::FontName::ROBOTO_SANS)
+    ,font_size(21.0f)
 {
 
 }
@@ -483,10 +478,11 @@ CinematicUtils::~CinematicUtils(void) {
 bool CinematicUtils::Initialise(megamol::core::CoreInstance* core_instance) {
 
     // Initialise font
-    //if (!this->font.Initialise(core_instance)) {
-    //    vislib::sys::Log::DefaultLog.WriteError("Couldn't initialize the font. [%s, %s, line %d)]\n", __FILE__, __FUNCTION__, __LINE__);
-    //    return false;
-    //}
+    if (!this->font.Initialise(core_instance)) {
+        vislib::sys::Log::DefaultLog.WriteError("Couldn't initialize the font. [%s, %s, line %d)]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+    this->font.SetBatchDrawMode(true);
 
     // Initialise rendering
     if (!this->InitPrimitiveRendering(core_instance->ShaderSourceFactory())) {
@@ -532,14 +528,12 @@ const glm::vec4 CinematicUtils::Color(CinematicUtils::Colors c) const {
     case (CinematicUtils::Colors::MENU):
         color = { 0.0f, 0.0f, 0.3f, 1.0f };
         break;
-    case (CinematicUtils::Colors::FONT): {
-        glm::vec4 foreground = { 1.0f, 1.0f, 1.0f, 1.0f };
-        color = background_color;
-        for (unsigned int i = 0; i < 3; i++) {
-            foreground[i] -= color[i];
+    case (CinematicUtils::Colors::FONT):
+        color = { 1.0f, 1.0f, 1.0f, 1.0f };
+        if (CinematicUtils::lightness(background_color) > 0.5f) {
+            color = { 0.0f, 0.0f, 0.0f, 1.0f };
         }
-        color = foreground;
-    } break;
+        break;
     case (CinematicUtils::Colors::FONT_HIGHLIGHT):
         color = { 1.0f, 1.0f, 0.0f, 1.0f };
         break;
@@ -559,51 +553,76 @@ const glm::vec4 CinematicUtils::Color(CinematicUtils::Colors c) const {
 }
 
 
-//void CinematicUtils::PushMenu(std::string left, std::string middle, std::string right, float viewport_width) {
-//
-//    if (!this->font.IsInitialised()) {
-//        vislib::sys::Log::DefaultLog.WriteError("Font is not initialized. [%s, %s, line %d)]\n", __FILE__, __FUNCTION__, __LINE__);
-//        return;
-//    }
-//
-//    const float menu_height = 25.0f;
-//
-//
-//
-//
-//
-//
-//}
-//
-//
-//void CinematicUtils::PushHelpText(std::string text, glm::vec3 position, float width, float height) {
-//
-//
-//
-//
-//
-//}
-//
-//
-//void CinematicUtils::PushText(std::string text, float font_size, glm::vec3 position) {
-//
-//
-//
-//
-//}
-//
-//
-//void CinematicUtils::DrawAll(void) {
-//
-//    // Draw text
-//
-//    // Draw primitives
-//
-//
-//
-//    //Clear text and primitives
-//
-//}
+void CinematicUtils::PushMenu(const std::string& left_label, const std::string& middle_label, const std::string& right_label, float viewport_width, float viewport_height) {
+
+    const float menu_height = this->font_size;
+
+    // Push menu background quad
+    this->PushQuadPrimitive(glm::vec3(0.0f, viewport_height, 0.0f), glm::vec3(0.0f, viewport_height - menu_height, 0.0f), 
+        glm::vec3(viewport_width, viewport_height - menu_height, 0.0f), glm::vec3(viewport_width, viewport_height, 0.0f), this->Color(CinematicUtils::Colors::MENU));
+
+    // Push menu labels
+    float vpWhalf = viewport_width / 2.0f;
+    float new_font_size = this->font_size;
+    float leftLabelWidth = this->font.LineWidth(this->font_size, left_label.c_str());
+    float midleftLabelWidth = this->font.LineWidth(this->font_size, middle_label.c_str());
+    float rightLabelWidth = this->font.LineWidth(this->font_size, right_label.c_str());
+    while (((leftLabelWidth + midleftLabelWidth / 2.0f) > vpWhalf) || ((rightLabelWidth + midleftLabelWidth / 2.0f) > vpWhalf)) {
+        new_font_size -= 0.5f;
+        leftLabelWidth = this->font.LineWidth(new_font_size, left_label.c_str());
+        midleftLabelWidth = this->font.LineWidth(new_font_size, middle_label.c_str());
+        rightLabelWidth = this->font.LineWidth(new_font_size, right_label.c_str());
+    }
+    float labelPosY = viewport_height - (menu_height / 2.0f) + (new_font_size / 2.0f);
+    auto current_back_color = this->Color(CinematicUtils::Colors::BACKGROUND);
+    this->SetBackgroundColor(this->Color(CinematicUtils::Colors::MENU));
+    auto color = this->Color(CinematicUtils::Colors::FONT);
+    this->font.DrawString(glm::value_ptr(color), 0.0f, labelPosY, new_font_size, false, left_label.c_str(), megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
+    this->font.DrawString(glm::value_ptr(color), (viewport_width - midleftLabelWidth) / 2.0f, labelPosY, new_font_size, false, middle_label.c_str(), megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
+    this->font.DrawString(glm::value_ptr(color), (viewport_width - rightLabelWidth), labelPosY, new_font_size, false, right_label.c_str(), megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
+    this->SetBackgroundColor(current_back_color);
+}
+
+
+void CinematicUtils::PushHelpText(const std::string& text, glm::vec3 position, float width, float height) {
+
+
+}
+
+
+void CinematicUtils::PushText(const std::string& text, float x, float y) {
+
+    float text_width = this->font.LineWidth(this->font_size, text.c_str());
+    auto color = this->Color(CinematicUtils::Colors::FONT);
+    this->font.DrawString(glm::value_ptr(color), x, y,  this->font_size, false, text.c_str(), megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
+}
+
+
+void CinematicUtils::DrawAll(glm::mat4& mat_mvp) {
+
+    this->DrawAllPrimitives(mat_mvp);
+
+    this->font.BatchDrawString();
+    this->font.ClearBatchDrawCache();
+}
+
+
+float CinematicUtils::GetTextLineHeight(void) {
+
+    return this->font.LineHeight(this->font_size);
+}
+
+
+float CinematicUtils::GetTextLineWidth(const std::string& text_line) {
+
+    return this->font.LineWidth(this->font_size, text_line.c_str());
+}
+
+
+void CinematicUtils::SetTextRotation(float a, float x, float y, float z) {
+
+    this->font.SetRotation(a, x, y, z);
+}
 
 
 const float CinematicUtils::lightness(glm::vec4 background) const {

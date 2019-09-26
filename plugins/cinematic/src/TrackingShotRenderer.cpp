@@ -26,7 +26,6 @@ TrackingShotRenderer::TrackingShotRenderer(void) : Renderer3DModule_2(),
     toggleManipulateParam("toggleManipulators", "Toggle different manipulators for the selected keyframe."),
     toggleHelpTextParam("helpText", "Show/hide help text for key assignments."),
     toggleManipOusideBboxParam("manipulatorsOutsideBBox", "Keep manipulators always outside of model bounding box."),
-
     theFont(megamol::core::utility::SDFFont::FontName::ROBOTO_SANS), 
     interpolSteps(20),
     toggleManipulator(0),
@@ -194,7 +193,7 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     // Updated data from cinematic camera call
     if (!(*ccc)(CallKeyframeKeeper::CallForGetUpdatedKeyframeData)) return false;
 
-    // Update parameter
+    // Update parameters
     if (this->stepsParam.IsDirty()) {
         this->interpolSteps = this->stepsParam.Param<param::IntParam>()->Value();
         ccc->setInterpolationSteps(this->interpolSteps);
@@ -219,6 +218,7 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     ccc->setTotalSimTime(totalSimTime);
     if (!(*ccc)(CallKeyframeKeeper::CallForSetSimulationData)) return false;
 
+    // Get selected keyframe
     Keyframe skf = ccc->getSelectedKeyframe();
 
     // Set simulation time based on selected keyframe ('disables'/ignores animation via view3d)
@@ -283,6 +283,15 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     //} else {
     //    viewport = glm::vec4(0.0f, 0.0f, cam.resolution_gate().width(), cam.resolution_gate().height());
     //}
+
+
+
+
+
+
+
+
+
     int viewport[4];
     glGetIntegerv(GL_VIEWPORT, viewport);
     unsigned int vpWidth  = viewport[2];

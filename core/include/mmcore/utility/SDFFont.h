@@ -39,6 +39,7 @@
 #include "vislib/Trace.h"
 
 #include <float.h>
+#include <glm/glm.hpp>
 
 
 namespace megamol {

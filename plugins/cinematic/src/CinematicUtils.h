@@ -30,7 +30,7 @@
 
 // GLOBAL CINEMATIC DEFINES
 #ifndef CC_MENU_HEIGHT
-    #define CC_MENU_HEIGHT (25.0f)
+#define CC_MENU_HEIGHT (25.0f)
 #endif
 
 
@@ -51,9 +51,9 @@ namespace cinematic {
 
         void PushPointPrimitive(const glm::vec3& pos_center, float size, const glm::vec3& cam_pos, const glm::vec4& color);
 
-        void PushLinePrimitive(const glm::vec3& pos_start, const glm::vec3& pos_end, float line_width, const glm::vec3& cam_pos, const glm::vec4& color);
+        void PushLinePrimitive(const glm::vec3& pos_start, const glm::vec3& pos_end, float line_width, const glm::vec3& normal, const glm::vec4& color);
 
-        void PushQuadPrimitive(const glm::vec3& pos_center, float width, float height, const glm::vec3& cam_pos, const glm::vec3& cam_up, const glm::vec4& color);
+        void PushQuadPrimitive(const glm::vec3& pos_center, float width, float height, const glm::vec3& normal, const glm::vec3& up, const glm::vec4& color);
 
         void PushQuadPrimitive(const glm::vec3& pos_bottom_left, const glm::vec3& pos_upper_left, const glm::vec3& pos_upper_right, const glm::vec3& pos_bottom_right, const glm::vec4& color);
 
@@ -61,20 +61,22 @@ namespace cinematic {
 
         inline void DrawPointPrimitives(glm::mat4& mat_mvp) {
             this->drawPrimitives(RenderUtils::Primitives::POINTS, mat_mvp);
+            this->clearQueue(Primitives::POINTS);
         }
 
         inline void DrawLinePrimitives(glm::mat4& mat_mvp) {
             this->drawPrimitives(RenderUtils::Primitives::LINES, mat_mvp);
+            this->clearQueue(Primitives::LINES);
         }
 
         inline void DrawQuadPrimitives(glm::mat4& mat_mvp) {
-
             this->drawPrimitives(RenderUtils::Primitives::QUADS, mat_mvp);
+            this->clearQueue(Primitives::QUADS);
         }
 
         inline void Draw2DTextures(glm::mat4& mat_mvp) {
-
             this->drawPrimitives(RenderUtils::Primitives::TEXTURE, mat_mvp);
+            this->clearQueue(Primitives::TEXTURE);
         }
 
         inline void DrawAllPrimitives(glm::mat4& mat_mvp) {
@@ -82,29 +84,6 @@ namespace cinematic {
             this->DrawLinePrimitives(mat_mvp);
             this->DrawQuadPrimitives(mat_mvp);
             this->Draw2DTextures(mat_mvp);
-        }
-
-        inline void ClearPointPrimitiveQueue(void) {
-            this->clearQueue(Primitives::POINTS);
-        }
-
-        inline void ClearLinePrimitiveQueue(void) {
-            this->clearQueue(Primitives::LINES);
-        }
-
-        inline void ClearQuadPrimitiveQueue(void) {
-            this->clearQueue(Primitives::QUADS);
-        }
-
-        inline void Clear2DTextureQueue(void) {
-            this->clearQueue(Primitives::TEXTURE);
-        }
-
-        inline void ClearAllQueues(void) {
-            this->ClearPointPrimitiveQueue();
-            this->ClearLinePrimitiveQueue();
-            this->ClearQuadPrimitiveQueue();
-            this->Clear2DTextureQueue();
         }
 
         inline void Smoothing(bool s) {
@@ -228,20 +207,27 @@ namespace cinematic {
             this->background_color = bc;
         };
 
-        //void PushMenu(std::string left, std::string middle, std::string right, float viewport_width);
+        void PushMenu(const std::string& left, const std::string& middle, const std::string& right, float viewport_width, float viewport_height);
 
-        //void PushHelpText(std::string text, glm::vec3 position, float width, float height);
+        void PushHelpText(const std::string& text, glm::vec3 position, float width, float height);
 
-        //void PushText(std::string text, float font_size, glm::vec3 position);
+        void PushText(const std::string& text, float x, float y);
 
-        //void DrawAll(void);
+        void DrawAll(glm::mat4& mat_mvp);
+
+         float GetTextLineHeight(void);
+
+         float GetTextLineWidth(const std::string& text_line);
+
+         void SetTextRotation(float a, float x, float y, float z);
 
     private:
 
         // VARIABLES ------------------------------------------------------- //
 
         glm::vec4 background_color;
-        //megamol::core::utility::SDFFont font;
+        megamol::core::utility::SDFFont font;
+        const float font_size;
 
         // FUNCTIONS ------------------------------------------------------- //
 

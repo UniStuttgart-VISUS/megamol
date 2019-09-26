@@ -345,7 +345,7 @@
 
             void main() {
 
-                float alpha = 1.0;
+                //float alpha = 1.0;
                 //float distance = length(center - gl_FragCoord.xy);
                 //if (bool(apply_smooth)) {
                 //    distance = 1.0 - (distance/(radius*2.0));
@@ -357,9 +357,14 @@
                 //    }
                 //}
                 //outColor = vec4(color.rgb, color.a * alpha);
+                
                 vec4 texcolor =  texture(tex, texcoord);
-                alpha = texcolor.r;
-                outColor = vec4(color.xyz, alpha);
+                float alpha = texcolor.a;                
+                outColor = vec4(color.rgb, alpha);
+                if (alpha < 1.0) {
+                    discard;
+                }
+                
             }
 
             ]]>

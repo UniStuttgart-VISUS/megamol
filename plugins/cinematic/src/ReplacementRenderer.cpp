@@ -191,7 +191,6 @@ bool ReplacementRenderer::Render(megamol::core::view::CallRender3D_2& call) {
         glm::vec3 right_top_front = { this->bbox.Right(), this->bbox.Top(), this->bbox.Front() };
         glm::vec3 right_bottom_front = { this->bbox.Right(), this->bbox.Bottom(), this->bbox.Front() };
 
-        this->utils.ClearQuadPrimitiveQueue();
         this->utils.PushQuadPrimitive(left_bottom_back, left_top_back, right_top_back, right_bottom_back, dark_blue);
         this->utils.PushQuadPrimitive(left_bottom_front, right_bottom_front, right_top_front, left_top_front, light_blue);
         this->utils.PushQuadPrimitive(left_top_back, left_top_front, right_top_front, right_top_back, dark_green);

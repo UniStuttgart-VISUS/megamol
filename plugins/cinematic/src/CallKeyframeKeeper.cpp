@@ -27,8 +27,7 @@ CallKeyframeKeeper::CallKeyframeKeeper(void) : core::AbstractGetDataCall(),
     bboxCenter(0.0f, 0.0f, 0.0f),
     fps(24),
     startCtrllPos(0.0f, 0.0f, 0.0f),
-    endCtrllPos(0.0f, 0.0f, 0.0f)
-{
+    endCtrllPos(0.0f, 0.0f, 0.0f) {
 
 }
 

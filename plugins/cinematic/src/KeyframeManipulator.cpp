@@ -41,8 +41,7 @@ KeyframeManipulator::KeyframeManipulator(void) :
     endCtrllPos(),
     selectedIsFirst(false),
     selectedIsLast(false),
-    circleVertices()
-{
+    circleVertices() {
 
 }
 
