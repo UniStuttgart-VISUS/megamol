@@ -6,25 +6,7 @@
 */
 
 #include "stdafx.h"
-
-#include "mmcore/utility/ResourceWrapper.h"
-#include "mmcore/misc/PngBitmapCodec.h"
-#include "mmcore/view/Renderer2DModule.h"
-#include "mmcore/CoreInstance.h"
-#include "mmcore/param/StringParam.h"
-#include "mmcore/param/IntParam.h"
-#include "mmcore/param/ButtonParam.h"
-#include "mmcore/param/FloatParam.h"
-#include "mmcore/param/EnumParam.h"
-
-#include "vislib/String.h"
-#include "vislib/graphics/gl/OpenGLTexture2D.h"
-#include "vislib/sys/Log.h"
-#include "vislib/graphics/gl/SimpleFont.h"
-#include "vislib/graphics/BitmapImage.h"
-
 #include "TimeLineRenderer.h"
-#include "CallKeyframeKeeper.h"
 
 
 using namespace megamol;
@@ -48,7 +30,7 @@ TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule(),
     dragDropKeyframe(),
     dragDropActive(false),
     axisDragDropMode(0),
-    axisZoomMode(0),
+    axisScaleMode(0),
     keyframeMarkHeight(1.0f),
     rulerMarkHeight(1.0f),
     viewport(1.0f, 1.0f),
@@ -136,7 +118,7 @@ bool TimeLineRenderer::GetExtents(view::CallRender2D& call) {
     // if viewport changes ....
     if (currentViewport != this->viewport) {
     
-        // Set time line position depending on font size
+        // Set axes position depending on font size
         vislib::StringA tmpStr;
         if (this->axes[Axis::Y].maxValue > this->axes[Axis::X].maxValue) {
             tmpStr.Format("%.6f ", this->axes[Axis::Y].maxValue);
@@ -172,11 +154,10 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     core::view::CallRender2D *cr = dynamic_cast<core::view::CallRender2D*>(&call);
     if (cr == nullptr) return false;
 
-    // Update data in cinematic camera call
+    // Get update data from keyframe keeper
     CallKeyframeKeeper *ccc = this->keyframeKeeperSlot.CallAs<CallKeyframeKeeper>();
     if (!ccc) return false;
     if (!(*ccc)(CallKeyframeKeeper::CallForGetUpdatedKeyframeData)) return false;
-
      auto keyframes = ccc->getKeyframes();
     if (keyframes == nullptr) {
         vislib::sys::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] [Render] Pointer to keyframe array is nullptr.");
@@ -188,6 +169,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
         this->axes[Axis::X].maxValue = ccc->getTotalAnimTime();
         this->recalcAxesData();
     }
+
     // Get max value for y axis depending on chosen parameter
     float yAxisMaxValue = 0.0f;
     switch (this->yAxisParam) {
@@ -198,6 +180,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
         this->axes[Axis::Y].maxValue = yAxisMaxValue;
         this->recalcAxesData();
     }
+
     // Get fps
     this->fps = ccc->getFps();
 
@@ -216,6 +199,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
         ccc->setSelectedKeyframeTime(t);
         if (!(*ccc)(CallKeyframeKeeper::CallForGetSelectedKeyframeAtTime)) return false;
     }
+
     if (this->moveLeftFrameParam.IsDirty()) {
         this->moveLeftFrameParam.ResetDirty();
         // Set selected animation time to left animation time frame
@@ -230,6 +214,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
         ccc->setSelectedKeyframeTime(t);
         if (!(*ccc)(CallKeyframeKeeper::CallForGetSelectedKeyframeAtTime)) return false;
     }
+
     if (this->resetPanScaleParam.IsDirty()) {
         this->resetPanScaleParam.ResetDirty();
         for (size_t i = 0; i < Axis::COUNT; ++i) {
@@ -245,7 +230,6 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     glm::vec4 color;
     glm::vec3 normal = { 0.0f, 0.0f, 1.0f };
     glm::vec3 origin = { this->axes[Axis::X].startPos.x, this->axes[Axis::X].startPos.y, 0.0f };
-    auto skf = ccc->getSelectedKeyframe();
     glm::vec4 back_color;
     glGetFloatv(GL_COLOR_CLEAR_VALUE, static_cast<GLfloat*>(glm::value_ptr(back_color)));
     this->utils.SetBackgroundColor(back_color);
@@ -339,6 +323,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     }
 
     // Push marker and lines for interpolated selected keyframe ---------------
+    auto skf = ccc->getSelectedKeyframe();
     x = this->axes[Axis::X].scaleOffset + skf.GetAnimTime() * this->axes[Axis::X].valueFractionLength;
     yAxisValue = 0.0f;
     switch (this->yAxisParam) {
@@ -531,21 +516,19 @@ void TimeLineRenderer::recalcAxesData(void) {
 
 bool TimeLineRenderer::OnMouseButton(megamol::core::view::MouseButton button, megamol::core::view::MouseButtonAction action, megamol::core::view::Modifiers mods) {
 
-    auto down = (action == MouseButtonAction::PRESS);
-    this->mouseAction = action;
-    this->mouseButton = button;
-
-    float yAxisValue;
-
     CallKeyframeKeeper *ccc = this->keyframeKeeperSlot.CallAs<CallKeyframeKeeper>();
     if (ccc == nullptr) return false;
     if (!(*ccc)(CallKeyframeKeeper::CallForGetUpdatedKeyframeData)) return false;
-
     auto keyframes = ccc->getKeyframes();
     if (keyframes == nullptr) {
         vislib::sys::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] [Mouse Event] Pointer to keyframe array is null.");
         return false;
     }
+
+    auto down = (action == MouseButtonAction::PRESS);
+    this->mouseAction = action;
+    this->mouseButton = button;
+    float yAxisValue;
 
     // LEFT-CLICK --- keyframe selection
     if (button == MouseButton::BUTTON_LEFT) {
@@ -690,7 +673,7 @@ bool TimeLineRenderer::OnMouseButton(megamol::core::view::MouseButton button, me
     else if (button == MouseButton::BUTTON_MIDDLE) {
         if (down) {
             // Just save current mouse position
-            this->axisZoomMode  = 0;
+            this->axisScaleMode  = 0;
             this->lastMouseX = this->mouseX;
             this->lastMouseY = this->mouseY;
 
@@ -710,11 +693,9 @@ bool TimeLineRenderer::OnMouseMove(double x, double y) {
 
     CallKeyframeKeeper *ccc = this->keyframeKeeperSlot.CallAs<CallKeyframeKeeper>();
     if (ccc == nullptr) return false;
-    // Updated data from cinematic camera call
     if (!(*ccc)(CallKeyframeKeeper::CallForGetUpdatedKeyframeData)) return false;
 
     bool down = (this->mouseAction == MouseButtonAction::PRESS);
-
     float yAxisValue;
 
     // Store current mouse position
@@ -807,16 +788,16 @@ bool TimeLineRenderer::OnMouseMove(double x, double y) {
             float diffX = (this->mouseX - this->lastMouseX);
             float diffY = (this->mouseY - this->lastMouseY);
 
-            if (this->axisZoomMode == 0) { // first time after activation of dragging a keyframe
+            if (this->axisScaleMode == 0) { // first time after activation of dragging a keyframe
                 if (glm::abs(diffX) > glm::abs(diffY)) {
-                    this->axisZoomMode = 1;
+                    this->axisScaleMode = 1;
                 }
                 else {
-                    this->axisZoomMode = 2;
+                    this->axisScaleMode = 2;
                 }
             }
 
-            if (this->axisZoomMode == 1) { // x axis
+            if (this->axisScaleMode == 1) { // x axis
 
                 this->axes[Axis::X].scaleFactor += diffX * sensitivityX;
                 //vislib::sys::Log::DefaultLog.WriteWarn("[axes[Axis::X].scaleFactor] %f", this->axes[Axis::X].scaleFactor);
@@ -824,7 +805,7 @@ bool TimeLineRenderer::OnMouseMove(double x, double y) {
                 this->axes[Axis::X].scaleFactor = (this->axes[Axis::X].scaleFactor < 1.0f) ? (1.0f) : (this->axes[Axis::X].scaleFactor);
                 this->recalcAxesData();
             }
-            else if (this->axisZoomMode == 2) { // y axis
+            else if (this->axisScaleMode == 2) { // y axis
 
                 this->axes[Axis::Y].scaleFactor += diffY * sensitivityY;
                 //vislib::sys::Log::DefaultLog.WriteWarn("[axes[Axis::Y].scaleFactor] %f", this->axes[Axis::Y].scaleFactor);

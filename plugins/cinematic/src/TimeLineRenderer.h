@@ -25,15 +25,17 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/EnumParam.h"
 
-#include "vislib/graphics/Cursor2D.h"
-#include "vislib/graphics/InputModifiers.h"
-#include "vislib/graphics/gl/OpenGLTexture2D.h"
+#include "vislib/String.h"
 #include "vislib/graphics/gl/OpenGLTexture2D.h"
 #include "vislib/sys/Log.h"
 #include "vislib/graphics/gl/SimpleFont.h"
 #include "vislib/graphics/BitmapImage.h"
+#include "vislib/graphics/Cursor2D.h"
+#include "vislib/graphics/InputModifiers.h"
+#include "vislib/graphics/gl/OpenGLTexture2D.h"
 #include "vislib/math/ShallowMatrix.h"
 #include "vislib/math/Matrix.h"
+#include "vislib/sys/Log.h"
 
 #include "Keyframe.h"
 #include "CallKeyframeKeeper.h"
@@ -140,7 +142,7 @@ namespace cinematic {
             float       segmSize; // the world space size of one segment
             float       segmValue; // value of on segment on the ruler 
             float       scaleFactor; 
-            float       scaleOffset; // (negative)offset to keep position on the ruler during scaling in focus
+            float       scaleOffset; // negative offset to keep position on the ruler during scaling in focus
             float       scaleDelta; // scaleOffset for new scalePos to get new scaleOffset for new scaling factor
             float       valueFractionLength; // the scaled fraction of the axis length and the max value
             float       rulerPos; 
@@ -158,31 +160,31 @@ namespace cinematic {
         };
 
         std::array<AxisData, Axis::COUNT> axes;
-        CinematicUtils utils;
-        GLuint texture;
-        Param yAxisParam;
-        Keyframe dragDropKeyframe;
-        bool dragDropActive;
-        unsigned int axisDragDropMode;
-        unsigned int axisZoomMode;
-        float keyframeMarkHeight;
-        float rulerMarkHeight;
-        glm::vec2 viewport;
-        unsigned int fps;
-        float mouseX;
-        float mouseY;
-        float lastMouseX;
-        float lastMouseY;
-        core::view::MouseButton mouseButton;
-        core::view::MouseButtonAction mouseAction;
+        CinematicUtils                    utils;
+        GLuint                            texture;
+        Param                             yAxisParam;
+        Keyframe                          dragDropKeyframe;
+        bool                              dragDropActive;
+        unsigned int                      axisDragDropMode;
+        unsigned int                      axisScaleMode;
+        float                             keyframeMarkHeight;
+        float                             rulerMarkHeight;
+        glm::vec2                         viewport;
+        unsigned int                      fps;
+        float                             mouseX;
+        float                             mouseY;
+        float                             lastMouseX;
+        float                             lastMouseY;
+        core::view::MouseButton           mouseButton;
+        core::view::MouseButtonAction     mouseAction;
 
         /**********************************************************************
         * functions
         **********************************************************************/
 
-        void pushMarkerTexture(float pos_x, float pos_y, float size, glm::vec4 color);
-
         void recalcAxesData(void);
+
+        void pushMarkerTexture(float pos_x, float pos_y, float size, glm::vec4 color);
 
         /**********************************************************************
         * callback stuff
