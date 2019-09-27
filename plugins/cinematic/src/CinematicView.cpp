@@ -525,6 +525,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     glActiveTexture(GL_TEXTURE0);
     glEnable(GL_TEXTURE_2D);
     this->fbo.BindColourTexture();
+    //this->fbo.GetColourTextureID();
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -628,7 +629,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
 
 bool CinematicView::render2file_setup() {
 
-    CallKeyframeKeeper* ccc = this->keyframeKeeperSlot.CallAs<CallKeyframeKeeper>();
+    auto ccc = this->keyframeKeeperSlot.CallAs<CallKeyframeKeeper>();
     if (ccc == nullptr) return false;
 
     // init png data struct
@@ -647,7 +648,7 @@ bool CinematicView::render2file_setup() {
     if (startFrameCnt > maxFrameCnt) {
         startFrameCnt = maxFrameCnt;
         vislib::sys::Log::DefaultLog.WriteWarn(
-            "[CINEMATIC VIEW] Max frame count %d exceeded: %d", maxFrameCnt, startFrameCnt);
+            "[CINEMATIC VIEW] [render2file_setup] Max frame count %d exceeded: %d", maxFrameCnt, startFrameCnt);
     }
     this->png_data.cnt = startFrameCnt;
     this->png_data.animTime = (float)this->png_data.cnt / (float)this->fps;
@@ -687,7 +688,7 @@ bool CinematicView::render2file_setup() {
     this->png_data.buffer = new BYTE[this->png_data.width * this->png_data.height * this->png_data.bpp];
     if (this->png_data.buffer == nullptr) {
         throw vislib::Exception(
-            "[CINEMATIC VIEW] [startAnimRendering] Cannot allocate image buffer.", __FILE__, __LINE__);
+            "[CINEMATIC VIEW] [render2file_setup] Cannot allocate image buffer.", __FILE__, __LINE__);
     }
 
     // Disable showing BBOX and CUBE (Uniform backCol is needed for being able to detect changes written to fbo.)
@@ -704,8 +705,7 @@ bool CinematicView::render2file_setup() {
 bool CinematicView::render2file_write() {
 
     if (this->png_data.write_lock == 0) {
-
-        CallKeyframeKeeper* ccc = this->keyframeKeeperSlot.CallAs<CallKeyframeKeeper>();
+        auto ccc = this->keyframeKeeperSlot.CallAs<CallKeyframeKeeper>();
         if (ccc == nullptr) return false;
 
         vislib::StringA tmpFilename, tmpStr;
@@ -777,7 +777,6 @@ bool CinematicView::render2file_write() {
             }
             throw;
         }
-
         if (this->png_data.ptr != nullptr) {
             if (this->png_data.infoptr != nullptr) {
                 png_destroy_write_struct(&this->png_data.ptr, &this->png_data.infoptr);
@@ -785,7 +784,6 @@ bool CinematicView::render2file_write() {
                 png_destroy_write_struct(&this->png_data.ptr, (png_infopp) nullptr);
             }
         }
-
         try {
             this->png_data.file.Flush();
         } catch (...) {
@@ -794,14 +792,13 @@ bool CinematicView::render2file_write() {
             this->png_data.file.Close();
         } catch (...) {
         }
-
         vislib::sys::Log::DefaultLog.WriteWarn(
             "[CINEMATIC VIEW] [render2file_write] Wrote png file %d for animation time %f ...\n", this->png_data.cnt,
             this->png_data.animTime);
 
         // --------------------------------------------------------------------
 
-        // Increase to next time step
+        // Next time step
         float fpsFrac = (1.0f / static_cast<float>(this->fps));
         this->png_data.animTime += fpsFrac;
 
@@ -815,7 +812,6 @@ bool CinematicView::render2file_write() {
             ///XXX => Rendering crashes (WHY?) Rendering last frame with animation time = total animation time is otherwise no problem.
             this->png_data.animTime -= 0.000005f;
         } else if (this->png_data.animTime >= ccc->getTotalAnimTime()) {
-            // Stop rendering if max anim time is reached
             this->render2file_cleanup();
             return false;
         }
@@ -836,7 +832,6 @@ bool CinematicView::render2file_cleanup() {
             png_destroy_write_struct(&this->png_data.ptr, (png_infopp) nullptr);
         }
     }
-
     try {
         this->png_data.file.Flush();
     } catch (...) {
@@ -845,12 +840,10 @@ bool CinematicView::render2file_cleanup() {
         this->png_data.file.Close();
     } catch (...) {
     }
-
     ARY_SAFE_DELETE(this->png_data.buffer);
-
     this->rendering = false;
-
     vislib::sys::Log::DefaultLog.WriteInfo("[CINEMATIC VIEW] STOPPED rendering.");
+
     return true;
 }
 

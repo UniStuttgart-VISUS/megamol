@@ -113,7 +113,7 @@ bool KeyframeManipulator::Update(std::vector<KeyframeManipulator::manipType> am,
         this->kfArray.clear();
         this->kfArray.reserve(kfACnt);
         for (unsigned int i = 0; i < kfACnt; i++) {
-            manipPosData tmpkfA;
+            ManipPosData tmpkfA;
             tmpkfA.wsPos     = (*kfa)[i].GetCamPosition();
             tmpkfA.ssPos     = this->getScreenSpace(tmpkfA.wsPos);
             tmpkfA.offset    = glm::length(this->getScreenSpace(tmpkfA.wsPos + this->circleVertices[1]) - tmpkfA.ssPos);
@@ -163,7 +163,7 @@ bool KeyframeManipulator::updateManipulatorPositions() {
         this->manipArray.clear();
         this->manipArray.reserve(static_cast<unsigned int>(manipType::NUM_OF_SELECTED_MANIP));
         for (unsigned int i = 0; i < static_cast<unsigned int>(manipType::NUM_OF_SELECTED_MANIP); i++) {
-            this->manipArray.emplace_back(manipPosData());
+            this->manipArray.emplace_back(ManipPosData());
         }
     }
 
@@ -173,7 +173,7 @@ bool KeyframeManipulator::updateManipulatorPositions() {
     glm::vec3 tmpV;
     float len;
 
-    manipPosData tmpManipData;
+    ManipPosData tmpManipData;
     for (unsigned int i = 0; i < static_cast<unsigned int>(manipType::NUM_OF_SELECTED_MANIP); i++) { // skip SELECTED_KF_POS
         tmpV = glm::vec3();
         switch (static_cast<manipType>(i)) {

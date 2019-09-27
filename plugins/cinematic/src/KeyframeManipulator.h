@@ -107,14 +107,14 @@ namespace cinematic {
         **********************************************************************/
 
         // Class for manipulator values
-        class manipPosData {
+        class ManipPosData {
         public:
             // Comparison needed for use in vislib::Array
-            bool operator==(manipPosData const& rhs) {
-                return ((this->wsPos == rhs.wsPos) &&
-                    (this->ssPos == rhs.ssPos) &&
-                    (this->offset == rhs.offset));
-            }
+            //bool operator==(ManipPosData const& rhs) {
+            //    return ((this->wsPos == rhs.wsPos) &&
+            //        (this->ssPos == rhs.ssPos) &&
+            //        (this->offset == rhs.offset));
+            //}
 
             glm::vec3 wsPos;	 // position in world space
             glm::vec2 ssPos;	 // position in screeen space
@@ -130,10 +130,10 @@ namespace cinematic {
         const float						 sensitivity;		// Relationship between mouse movement and length changes of coordinates
 
         std::shared_ptr<CinematicUtils>  utils;
-        std::vector<manipPosData>        kfArray;			// Array of keyframe positions
+        std::vector<ManipPosData>        kfArray;			// Array of keyframe positions
 
         Keyframe                         selectedKf;		// Copy of currently selected Keyframe
-        std::vector<manipPosData>        manipArray;		// Array of manipulators for selected keyframe
+        std::vector<ManipPosData>        manipArray;		// Array of manipulators for selected keyframe
         glm::vec2                        sKfSsPos;			// Screen space position of selected keyframe
         glm::vec2                        sKfSsLookAt;		// Screen space lookat of selected keyframe
         int                              sKfInArray;		// Inidcates if selected keyframe exists in keyframe array if >= 0
