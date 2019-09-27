@@ -40,6 +40,7 @@ GlyphRenderer::GlyphRenderer(void)
     , getClipPlaneSlot("getClipPlane", "the slot for the clip plane")
     , getFlagsSlot("getFlags", "the slots for the selection flags")
     , glyphParam("glyph", "which glyph to render")
+    , scaleParam("scaling", "scales the glyph radii")
     , colorInterpolationParam(
           "colorInterpolation", "interpolate between directional coloring (0) and glyph color (1)") {
 
@@ -62,6 +63,9 @@ GlyphRenderer::GlyphRenderer(void)
     gp->SetTypePair(Glyph::SUPERQUADRIC, "Superquadric");
     this->glyphParam << gp;
     this->MakeSlotAvailable(&this->glyphParam);
+
+    scaleParam << new param::FloatParam(1.0f, 0.0, 100.0f);
+    this->MakeSlotAvailable(&this->scaleParam);
 
     colorInterpolationParam << new param::FloatParam(1.0f, 0.0, 1.0f);
     this->MakeSlotAvailable(&this->colorInterpolationParam);
@@ -263,6 +267,8 @@ bool megamol::stdplugin::moldyn::rendering::GlyphRenderer::validateData(
                 l.GetCount(), num_items_per_chunk,
                 [](void* dst, const void* src) { memcpy(dst, src, sizeof(float) * 3); });
         }
+        this->lastHash = edc->DataHash();
+        this->lastFrameID = edc->FrameID();
     }
     return true;
 }
@@ -373,6 +379,7 @@ bool GlyphRenderer::Render(core::view::CallRender3D_2& call) {
     glUniformMatrix4fv(shader->ParameterLocation("MVP_I"), 1, GL_FALSE, glm::value_ptr(mvp_matrix_i));
     //glUniform4fv(shader->ParameterLocation("light"), 1, glm::value_ptr(light));
     glUniform4fv(shader->ParameterLocation("cam"), 1, glm::value_ptr(CamPos));
+    glUniform1f(shader->ParameterLocation("scaling"), this->scaleParam.Param<param::FloatParam>()->Value());
 
     glUniform1f(shader->ParameterLocation("colorInterpolation"),
         this->colorInterpolationParam.Param<param::FloatParam>()->Value());
@@ -401,15 +408,17 @@ bool GlyphRenderer::Render(core::view::CallRender3D_2& call) {
     glUniform4f(shader->ParameterLocation("flag_selected_col"), 1.f, 0.f, 0.f, 1.f);
     glUniform4f(shader->ParameterLocation("flag_softselected_col"), 1.f, 1.f, 0.f, 1.f);
 
-    auto clip_point_coords = clipc->GetPlane().Point();
-    auto clip_normal_coords = clipc->GetPlane().Normal();
-    glm::vec3 pt(clip_point_coords.X(), clip_point_coords.Y(), clip_point_coords.Z());
-    glm::vec3 nr(clip_normal_coords.X(), clip_normal_coords.Y(), clip_normal_coords.Z());
+    if (use_clip) {
+        auto clip_point_coords = clipc->GetPlane().Point();
+        auto clip_normal_coords = clipc->GetPlane().Normal();
+        glm::vec3 pt(clip_point_coords.X(), clip_point_coords.Y(), clip_point_coords.Z());
+        glm::vec3 nr(clip_normal_coords.X(), clip_normal_coords.Y(), clip_normal_coords.Z());
 
-    std::array<float, 4> clip_data = {clipc->GetPlane().Normal().X(), clipc->GetPlane().Normal().Y(),
-        clipc->GetPlane().Normal().Z(), -glm::dot(pt, nr)};
+        std::array<float, 4> clip_data = {clipc->GetPlane().Normal().X(), clipc->GetPlane().Normal().Y(),
+            clipc->GetPlane().Normal().Z(), -glm::dot(pt, nr)};
 
-    glUniform4fv(shader->ParameterLocation("clip_data"), 1, clip_data.data());
+        glUniform4fv(shader->ParameterLocation("clip_data"), 1, clip_data.data());
+    }
 
     for (unsigned int i = 0; i < epdc->GetParticleListCount(); i++) {
 
