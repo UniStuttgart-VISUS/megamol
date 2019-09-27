@@ -133,7 +133,7 @@ public:
 
     std::vector<unsigned long long int>& getVec() { return dataVec; }
     size_t size() override { return dataVec.size(); }
-    const std::string getType() override { return "unsigned long long int"; }
+    const std::string getType() override { return "uint64_t"; }
     const size_t getTypeSize() override { return sizeof(unsigned long long int); }
 
 private:

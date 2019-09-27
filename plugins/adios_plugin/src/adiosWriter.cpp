@@ -275,7 +275,7 @@ bool adiosWriter::run() {
 
                     vislib::sys::Log::DefaultLog.WriteInfo("[adiosWriter] Putting Variables");
                     if (adiosVar) writer.Put<int>(adiosVar, values.data());
-                } else if (cad->getData(var)->getType() == "unsigned long long int") {
+                } else if (cad->getData(var)->getType() == "uint64_t") {
 
                     std::vector<unsigned long long int>& values =
                         dynamic_cast<UInt64Container*>(cad->getData(var).get())->getVec();

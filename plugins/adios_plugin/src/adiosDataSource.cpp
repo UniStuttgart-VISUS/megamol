@@ -190,7 +190,7 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
 
                             reader->Get<int>(advar, tmp_vec);
                             dataMap[var.first] = std::move(fc);
-                        } else if (var.second["Type"] == "unsigned long long int") {
+                        } else if (var.second["Type"] == "uint64_t") {
                             auto fc = std::make_shared<UInt64Container>(UInt64Container());
                             fc->singleValue = singleValue;
                             std::vector<unsigned long long int>& tmp_vec = fc->getVec();
