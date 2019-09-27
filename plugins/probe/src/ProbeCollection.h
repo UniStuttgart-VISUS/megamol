@@ -20,28 +20,42 @@ namespace probe {
 
 struct BaseProbe {
     /** time at which this probes samples the data */
-    size_t               m_timestamp;
+    size_t m_timestamp;
     /** semantic name of the values/field that this probe samples */
-    std::string          m_value_name;
+    std::string m_value_name;
     /** position of probe head on surface */
     std::array<float, 3> m_position;
     /** probe insertion/sampling direction */
     std::array<float, 3> m_direction;
     /** "sample from" offset from position */
-    float                m_begin;
+    float m_begin;
     /** "sample to" offset from position */
-    float                m_end;
+    float m_end;
     // std::vector<size_t>m_sample_idxs; ///< indices of samples relevant to this
 
-    virtual void probe() = 0;
+    // virtual void probe() = 0;
 };
 
 struct FloatProbe : public BaseProbe {
-    void probe() {/* ToDo*/}
+public:
+    struct SamplingResult {
+        std::vector<float> samples;
+        float min_value;
+        float max_value;
+        float average_value;
+    };
+
+    template <typename DatafieldType> void probe(DatafieldType const& datafield) { /* ToDo*/ }
+
+    std::shared_ptr<SamplingResult> getSamplingResult() { return m_result; }
+
+private:
+    std::shared_ptr<SamplingResult> m_result;
 };
 
 struct IntProbe : public BaseProbe {
-    void probe() { /*ToDo*/}
+    void probe() { /*ToDo*/
+    }
 };
 
 using GenericProbe = std::variant<FloatProbe, IntProbe>;
@@ -57,7 +71,6 @@ public:
     template <typename ProbeType> ProbeType getProbe(size_t idx) { return std::get<ProbeType>(m_probes[idx]); }
 
 private:
-
     std::vector<GenericProbe> m_probes;
 };
 

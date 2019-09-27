@@ -12,6 +12,8 @@
 #include "mmcore/versioninfo.h"
 #include "vislib/vislibversion.h"
 #include "ExtractMesh.h"
+#include "PlaceProbes.h"
+#include "SampleAlongProbes.h"
 
 
 /* anonymous namespace hides this type from any other object files */
@@ -41,6 +43,8 @@ namespace {
             // register modules here:
 
             this->module_descriptions.RegisterAutoDescription<megamol::probe::ExtractMesh>();
+            this->module_descriptions.RegisterAutoDescription<megamol::probe::PlaceProbes>();
+            this->module_descriptions.RegisterAutoDescription<megamol::probe::SampleAlongPobes>();
 
             // register calls here:
 

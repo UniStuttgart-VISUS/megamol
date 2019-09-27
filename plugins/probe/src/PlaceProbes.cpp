@@ -23,7 +23,10 @@ megamol::probe::PlaceProbes::PlaceProbes()
 
     auto retrieved_probe = m_probes->getProbe<FloatProbe>(0);
 
-    retrieved_probe.probe();
+    float data;
+    retrieved_probe.probe(&data);
+
+    auto result = retrieved_probe.getSamplingResult();
 }
 
 megamol::probe::PlaceProbes::~PlaceProbes() {}

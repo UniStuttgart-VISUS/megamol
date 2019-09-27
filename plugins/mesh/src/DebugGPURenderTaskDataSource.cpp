@@ -29,14 +29,14 @@ bool megamol::mesh::DebugGPURenderTaskDataSource::getDataCallback(core::Call & c
 	if(rtc == NULL)
 		return false;
 
-	CallGPUMaterialData* mtlc = this->m_material_callerSlot.CallAs<CallGPUMaterialData>();
+	CallGPUMaterialData* mtlc = this->m_material_slot.CallAs<CallGPUMaterialData>();
 	if (mtlc == NULL)
 		return false;
 
 	if (!(*mtlc)(0))
 		return false;
 
-	CallGPUMeshData* mc = this->m_mesh_callerSlot.CallAs<CallGPUMeshData>();
+	CallGPUMeshData* mc = this->m_mesh_slot.CallAs<CallGPUMeshData>();
 	if (mc == NULL)
 		return false;
 

@@ -59,6 +59,44 @@ public:
         return retval;
     }
 
+    static constexpr ValueType covertToValueType(unsigned int gl_type) {
+        ValueType retval = BYTE; //TODO default to something more reasonable
+
+        switch (gl_type) {
+        case 0x1400:
+            retval = BYTE;
+            break;
+        case 0x1401:
+            retval = UNSIGNED_BYTE;
+            break;
+        case 0x1402:
+            retval = SHORT;
+            break;
+        case 0x1403:
+            retval = UNSIGNED_SHORT;
+            break;
+        case 0x1404:
+            retval = INT;
+            break;
+        case 0x1405:
+            retval = UNSIGNED_INT;
+            break;
+        case 0x140B:
+            retval = HALF_FLOAT;
+            break;
+        case 0x1406:
+            retval = FLOAT;
+            break;
+        case 0x140A:
+            retval = DOUBLE;
+            break;
+        default:
+            break;
+        }
+
+        return retval;
+    }
+
     static constexpr size_t getByteSize(ValueType value_type) {
         size_t retval = 0;
 

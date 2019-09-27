@@ -81,19 +81,24 @@ protected:
     core::view::light::LightMap lightMap;
 
     /** The slot for requesting data from this module, i.e. lhs connection */
-    megamol::core::CalleeSlot m_getData_slot;
+    megamol::core::CalleeSlot m_renderTask_lhs_slot;
+    size_t m_renderTask_lhs_cached_hash;
 
     /** The slot for querying chained render tasks, i.e. a rhs connection */
-    megamol::core::CallerSlot m_renderTask_callerSlot;
+    megamol::core::CallerSlot m_renderTask_rhs_slot;
+    size_t m_renderTask_rhs_cached_hash;
 
     /** The slot for querying material data, i.e. a rhs connection */
-    megamol::core::CallerSlot m_material_callerSlot;
+    megamol::core::CallerSlot m_material_slot;
+    size_t m_material_cached_hash;
 
     /** The slot for querying mesh data, i.e. a rhs connection */
-    megamol::core::CallerSlot m_mesh_callerSlot;
+    megamol::core::CallerSlot m_mesh_slot;
+    size_t m_mesh_cached_hash;
 
     /** Slot to retrieve the light information */
     megamol::core::CallerSlot m_light_slot;
+    size_t m_light_cached_hash;
 };
 
 } // namespace mesh
