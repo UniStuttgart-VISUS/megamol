@@ -617,6 +617,10 @@ function(require_external NAME)
       set(VTKM_LIB_DEBUG_WORKLET "lib/vtkm_worklet-1.4.a")
     endif()
 
+    #set(CXX_FLAGS "/__CUDACC__ /DWIN32 /D_WINDOWS /W3 /GR /EHsc")
+    #set(CUDA_FLAGS "-D__CUDACC__ -D_WINDOWS -Xcompiler=\"/W3 /GR /EHsc\"")
+    #set(CUDA_FLAGS_RELEASE "-D__CUDACC__ -Xcompiler=\"-MD -O2 -Ob2\" -DNDEBUG")
+
     option(vtkm_ENABLE_CUDA "Option to build vtkm with cuda enabled" OFF)
     message(${vtkm_ENABLE_CUDA})
     add_external_project(vtkm
@@ -626,6 +630,9 @@ function(require_external NAME)
         -DBUILD_SHARED_LIBS:BOOL=OFF
         -DVTKm_ENABLE_TESTING:BOOL=OFF
         -DVTKm_ENABLE_CUDA:BOOL=${vtkm_ENABLE_CUDA}
+        #-DCMAKE_CXX_FLAGS:STRING=${CXX_FLAGS}
+        #-DCMAKE_CUDA_FLAGS:STRING=${CUDA_FLAGS}
+        #-DCMAKE_CUDA_FLAGS_RELEASE:STRING=${CUDA_FLAGS_RELEASE}
         -DBUILD_TESTING:BOOL=OFF
         -VTKm_ENABLE_DEVELOPER_FLAGS:BOOL=OFF
         -DCMAKE_BUILD_TYPE=Release
