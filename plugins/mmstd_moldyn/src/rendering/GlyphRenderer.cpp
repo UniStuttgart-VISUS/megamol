@@ -331,27 +331,6 @@ bool GlyphRenderer::Render(core::view::CallRender3D_2& call) {
     glm::mat4 mvp_matrix_i = glm::inverse(mvp_matrix);
     glm::mat4 mv_matrix_i = glm::inverse(mv_matrix);
 
-    //this->GetLights();
-    //glm::vec4 light = {0.0f, 0.0f, 0.0f, 0.0f};
-    //if (this->lightMap.size() != 1) {
-    //    vislib::sys::Log::DefaultLog.WriteWarn(
-    //        "GlyphRenderer: Only one single directional light source is supported by this renderer");
-    //} else {
-    //    if (this->lightMap.begin()->second.lightType == view::light::DISTANTLIGHT) {
-    //        const auto dir_light = this->lightMap.begin()->second;
-    //        if (dir_light.dl_eye_direction) {
-    //            light = glm::normalize(CamPos);
-    //        } else if (dir_light.dl_direction.size() == 3) {
-    //            light[0] = dir_light.dl_direction[0];
-    //            light[1] = dir_light.dl_direction[1];
-    //            light[2] = dir_light.dl_direction[2];
-    //        }
-    //    } else {
-    //        vislib::sys::Log::DefaultLog.WriteWarn(
-    //            "GlyphRenderer: Only one single directional light source is supported by this renderer");
-    //    }
-    //}
-
     vislib::graphics::gl::GLSLShader* shader;
     switch (this->glyphParam.Param<core::param::EnumParam>()->Value()) {
     case Glyph::BOX:
@@ -529,11 +508,12 @@ bool GlyphRenderer::Render(core::view::CallRender3D_2& call) {
                 glUniform1ui(shader->ParameterLocation("flag_offset"), curr_glyph_offset);
             }
 
-
             switch (this->glyphParam.Param<core::param::EnumParam>()->Value()) {
             case Glyph::BOX:
                 // https://stackoverflow.com/questions/28375338/cube-using-single-gl-triangle-strip
-                glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 14, static_cast<GLsizei>(actualItems));
+                //glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 14, static_cast<GLsizei>(actualItems));
+                // but just drawing the front-facing triangles, that's better
+                glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, static_cast<GLsizei>(actualItems) * 3);
                 break;
             case Glyph::ELLIPSOID:
                 glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(actualItems));
