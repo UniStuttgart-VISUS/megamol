@@ -5,6 +5,7 @@
 * Alle Rechte vorbehalten.
 */
 
+#include "stdafx.h"
 #include "CinematicUtils.h"
 
 
@@ -462,10 +463,10 @@ glm::vec3 RenderUtils::arbitraryPerpendicular(glm::vec3 in) {
 
 
 CinematicUtils::CinematicUtils(void) : megamol::cinematic::RenderUtils()
+    , init_once(false)
     ,background_color(0.0f, 0.0f, 0.0f, 1.0f)
     ,font(megamol::core::utility::SDFFont::FontName::ROBOTO_SANS)
-    ,font_size(20.0f)
-{
+    ,font_size(20.0f) {
 
 }
 
@@ -476,6 +477,10 @@ CinematicUtils::~CinematicUtils(void) {
 
 
 bool CinematicUtils::Initialise(megamol::core::CoreInstance* core_instance) {
+
+    if (this->init_once) {
+        vislib::sys::Log::DefaultLog.WriteWarn("Primitive rendering has already been initialized. [%s, %s, line %d)]\n", __FILE__, __FUNCTION__, __LINE__);
+    }
 
     // Initialise font
     if (!this->font.Initialise(core_instance)) {
@@ -489,6 +494,8 @@ bool CinematicUtils::Initialise(megamol::core::CoreInstance* core_instance) {
         vislib::sys::Log::DefaultLog.WriteError("Couldn't initialize primitive rendering. [%s, %s, line %d)]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
+
+    this->init_once = true;
 
     return true;
 }
@@ -600,6 +607,11 @@ void CinematicUtils::PushText(const std::string& text, float x, float y, float z
 
 
 void CinematicUtils::DrawAll(glm::mat4& mat_mvp) {
+
+    if (!this->init_once) {
+        vislib::sys::Log::DefaultLog.WriteError("Cinematic utilities must be initialized before drawing. [%s, %s, line %d)]\n", __FILE__, __FUNCTION__, __LINE__);
+        return;
+    }
 
     this->DrawAllPrimitives(mat_mvp);
 

@@ -105,8 +105,6 @@ namespace cinematic {
          * variables
          **********************************************************************/
 
-        megamol::core::utility::SDFFont theFont;
-
         enum SkyboxSides {
             SKYBOX_NONE = 0,
             SKYBOX_FRONT = 1,
@@ -117,23 +115,7 @@ namespace cinematic {
             SKYBOX_DOWN = 32
         };
 
-        clock_t deltaAnimTime;
-
-        Keyframe shownKeyframe;
-        bool playAnim;
-
-        int cineWidth;
-        int cineHeight;
-        int vpHLast;
-        int vpWLast;
-
-        CinematicView::SkyboxSides sbSide;
-
-        vislib::graphics::gl::FramebufferObject fbo;
-        bool rendering;
-        unsigned int fps;
-
-        struct pngData {
+        struct PngData {
             BYTE* buffer = nullptr;
             vislib::sys::FastFile file;
             unsigned int width;
@@ -148,34 +130,38 @@ namespace cinematic {
             unsigned int write_lock;
             time_point start_time;
             unsigned int exp_frame_cnt;
-        } pngdata;
+        };
+
+        vislib::graphics::gl::FramebufferObject fbo;
+        PngData                                 png_data;
+        CinematicUtils                          utils;
+        clock_t                                 deltaAnimTime;
+        Keyframe                                shownKeyframe;
+        bool                                    playAnim;
+        int                                     cineWidth;
+        int                                     cineHeight;
+        int                                     vpHLast;
+        int                                     vpWLast;
+        SkyboxSides                             sbSide;
+        bool                                    rendering;
+        unsigned int                            fps;
 
         /**********************************************************************
          * functions
          **********************************************************************/
 
-        /** 
-        * Render to file functions 
-        */
+        bool setSimulationTimeParameter(float st);
+
+        // PNG ----------------------------------------------------------------
+
         bool render2file_setup();
 
-        /**
-        *
-        */
-        bool render2file_write_png();
+        bool render2file_write();
+
+        bool render2file_cleanup();
 
         /**
-        *
-        */
-        bool render2file_finish();
-
-        /**
-        *
-        */
-        bool setSimTime(float st);
-
-        /**
-         * My error handling function for png export
+         * Error handling function for png export
          *
          * @param pngPtr The png structure pointer
          * @param msg The error message
@@ -185,7 +171,7 @@ namespace cinematic {
         }
 
         /**
-         * My error handling function for png export
+         * Warning handling function for png export
          *
          * @param pngPtr The png structure pointer
          * @param msg The error message
@@ -195,7 +181,7 @@ namespace cinematic {
         }
 
         /**
-         * My write function for png export
+         * Write function for png export
          *
          * @param pngPtr The png structure pointer
          * @param buf The pointer to the buffer to be written
@@ -207,7 +193,7 @@ namespace cinematic {
         }
 
         /**
-         * My flush function for png export
+         * Flush function for png export
          *
          * @param pngPtr The png structure pointer
          */
@@ -217,10 +203,9 @@ namespace cinematic {
         }
 
         /**********************************************************************
-         * callback
+         * callbacks
          **********************************************************************/
 
-        /** The keyframe keeper caller slot */
         core::CallerSlot keyframeKeeperSlot;
 
         /**********************************************************************

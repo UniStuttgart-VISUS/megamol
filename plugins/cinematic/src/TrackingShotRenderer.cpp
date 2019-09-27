@@ -18,24 +18,24 @@ using namespace megamol::cinematic;
 using namespace vislib;
 
 
-TrackingShotRenderer::TrackingShotRenderer(void) : Renderer3DModule_2(),
-        keyframeKeeperSlot("keyframeKeeper", "Connects to the Keyframe Keeper."),
-        stepsParam("splineSubdivision", "Amount of interpolation steps between keyframes."),
-        toggleManipulateParam("toggleManipulators", "Toggle different manipulators for the selected keyframe."),
-        toggleHelpTextParam("helpText", "Show/hide help text for key assignments."),
-        toggleManipOusideBboxParam("manipulatorsOutsideBBox", "Keep manipulators always outside of model bounding box."),
-        interpolSteps(20),
-        toggleManipulator(0),
-        manipOutsideModel(false),
-        showHelpText(false),
-        manipulator(), 
-        manipulatorGrabbed(false),
-        textureShader(),
-        utils(),
-        fbo(),
-        mouseX(0.0f),
-        mouseY(0.0f),
-        texture(0) {
+TrackingShotRenderer::TrackingShotRenderer(void) : Renderer3DModule_2()
+    , keyframeKeeperSlot("keyframeKeeper", "Connects to the Keyframe Keeper.")
+    , stepsParam("splineSubdivision", "Amount of interpolation steps between keyframes.")
+    , toggleManipulateParam("toggleManipulators", "Toggle different manipulators for the selected keyframe.")
+    , toggleHelpTextParam("helpText", "Show/hide help text for key assignments.")
+    , toggleManipOusideBboxParam("manipulatorsOutsideBBox", "Keep manipulators always outside of model bounding box.")
+    , interpolSteps(20)
+    , toggleManipulator(0)
+    , manipOutsideModel(false)
+    , showHelpText(false)
+    , manipulator()
+    , manipulatorGrabbed(false)
+    , textureShader()
+    , utils()
+    , fbo()
+    , mouseX(0.0f)
+    , mouseY(0.0f)
+    , texture(0) {
 
     this->keyframeKeeperSlot.SetCompatibleCall<CallKeyframeKeeperDescription>();
     this->MakeSlotAvailable(&this->keyframeKeeperSlot);
@@ -258,17 +258,14 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D_2& call) {
         if (!(*ccc)(CallKeyframeKeeper::CallForGetInterpolCamPositions)) return false;
         this->stepsParam.ResetDirty();
     }
-
     if (this->toggleManipulateParam.IsDirty()) {
         this->toggleManipulator = (this->toggleManipulator + 1) % 2; // There are currently two different manipulator groups ...
         this->toggleManipulateParam.ResetDirty();
     }
-
     if (this->toggleHelpTextParam.IsDirty()) {
         this->showHelpText = !this->showHelpText;
         this->toggleHelpTextParam.ResetDirty();
     }
-
     if (this->toggleManipOusideBboxParam.IsDirty()) {
         this->manipOutsideModel = !this->manipOutsideModel;
         this->toggleManipOusideBboxParam.ResetDirty();
@@ -320,9 +317,9 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     float vpH_flt = viewport.w;
 
     // Init rendering
-    //glm::vec4 back_color;
-    //glGetFloatv(GL_COLOR_CLEAR_VALUE, static_cast<GLfloat*>(glm::value_ptr(back_color)));
-    //this->utils.SetBackgroundColor(back_color);
+    glm::vec4 back_color;
+    glGetFloatv(GL_COLOR_CLEAR_VALUE, static_cast<GLfloat*>(glm::value_ptr(back_color)));
+    this->utils.SetBackgroundColor(back_color);
 
 
 
@@ -375,41 +372,41 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D_2& call) {
   //  }
 
     // Draw spline of interpolated camera positions
-    //auto interpolKeyframes = ccc->getInterpolCamPositions();
-    //if (interpolKeyframes == nullptr) {
-    //    vislib::sys::Log::DefaultLog.WriteWarn("[TRACKINGSHOT RENDERER] [Render] Pointer to interpolated camera positions array is nullptr.");
-    //    return false;
-    //}
-    //float line_width = 0.1f;
-    //auto color = this->utils.Color(CinematicUtils::Colors::KEYFRAME_SPLINE);
-    //auto keyframeCount = interpolKeyframes->size();
-    //if (keyframeCount > 1) {
-    //    for (int i = 0; i < (keyframeCount - 1); i++) {
-    //        glm::vec3 start = interpolKeyframes->operator[](i);
-    //        glm::vec3 end = interpolKeyframes->operator[](i + 1);
-    //        this->utils.PushLinePrimitive(start, end, line_width, cam_pos, color);
-    //    }
-    //}
+    auto interpolKeyframes = ccc->getInterpolCamPositions();
+    if (interpolKeyframes == nullptr) {
+        vislib::sys::Log::DefaultLog.WriteWarn("[TRACKINGSHOT RENDERER] [Render] Pointer to interpolated camera positions array is nullptr.");
+        return false;
+    }
+    float line_width = 0.1f;
+    auto color = this->utils.Color(CinematicUtils::Colors::KEYFRAME_SPLINE);
+    auto keyframeCount = interpolKeyframes->size();
+    if (keyframeCount > 1) {
+        for (int i = 0; i < (keyframeCount - 1); i++) {
+            glm::vec3 start = interpolKeyframes->operator[](i);
+            glm::vec3 end = interpolKeyframes->operator[](i + 1);
+            this->utils.PushLinePrimitive(start, end, line_width, cam_pos, color);
+        }
+    }
 
     // Draw textures ----------------------------------------------------------
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    glDisable(GL_CULL_FACE);
-    glDisable(GL_LIGHTING);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    // Depth
-    glEnable(GL_DEPTH_TEST);
-    this->textureShader.Enable();
-    glUniform1f(this->textureShader.ParameterLocation("vpW"), vpW_flt);
-    glUniform1f(this->textureShader.ParameterLocation("vpH"), vpH_flt);
-    glUniform1i(this->textureShader.ParameterLocation("depthtex"), 0);
-    this->fbo.DrawDepthTexture();
-    this->textureShader.Disable();
-    // Color
-    glDisable(GL_DEPTH_TEST);
-    this->fbo.DrawColourTexture();
-    glDisable(GL_BLEND);
-    glEnable(GL_DEPTH_TEST);
+    //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    //glDisable(GL_CULL_FACE);
+    //glDisable(GL_LIGHTING);
+    //glEnable(GL_BLEND);
+    //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    //// Depth
+    //glEnable(GL_DEPTH_TEST);
+    //this->textureShader.Enable();
+    //glUniform1f(this->textureShader.ParameterLocation("vpW"), vpW_flt);
+    //glUniform1f(this->textureShader.ParameterLocation("vpH"), vpH_flt);
+    //glUniform1i(this->textureShader.ParameterLocation("depthtex"), 0);
+    //this->fbo.DrawDepthTexture();
+    //this->textureShader.Disable();
+    //// Color
+    //glDisable(GL_DEPTH_TEST);
+    //this->fbo.DrawColourTexture();
+    //glDisable(GL_BLEND);
+    //glEnable(GL_DEPTH_TEST);
 
     // Push menu --------------------------------------------------------------
     std::string leftLabel  = " TRACKING SHOT ";
@@ -477,7 +474,7 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D_2& call) {
 
 
     // Draw all ---------------------------------------------------------------
-    //this->utils.DrawAll(mvp);
+    this->utils.DrawAll(mvp);
 
     return true;
 }

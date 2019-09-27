@@ -37,6 +37,36 @@
 namespace megamol {
 namespace cinematic {
 
+
+    /*
+    * Convert glm::vec3 to vislib::math::Vector<float, 3>.
+    */
+    static inline vislib::math::Vector<float, 3> G2V(glm::vec3 v) {
+        return vislib::math::Vector<float, 3>(v.x, v.y, v.z);
+    }
+
+    /*
+    * Convert vislib::math::Vector<float, 3> to glm::vec3.
+    */
+    static inline glm::vec3 V2G(vislib::math::Vector<float, 3> v) {
+        return glm::vec3(v.X(), v.Y(), v.Z());
+    }
+
+    /*
+    * Convert glm::vec3 to vislib::math::Point<float, 3>.
+    */
+    static inline vislib::math::Point<float, 3> G2P(glm::vec3 v) {
+        return vislib::math::Point<float, 3>(v.x, v.y, v.z);
+    }
+
+    /*
+    * Convert vislib::math::Point<float, 3> to glm::vec3.
+    */
+    static inline glm::vec3 P2G(vislib::math::Point<float, 3> v) {
+        return glm::vec3(v.X(), v.Y(), v.Z());
+    }
+
+
     /*
     * Utility class providing simple primitive rendering for the cinematic plugin (using non legacy opengl).
     */
@@ -132,16 +162,13 @@ namespace cinematic {
 
         // VARIABLES ------------------------------------------------------- //
 
-        bool smooth;
-        bool init_once;
-
-        TexturesType textures;
-
-        GLuint vertex_array;
-
-        QueuesType queues;
-        ShadersType shaders;
-        BuffersType buffers;
+        bool            smooth;
+        bool            init_once;
+        TexturesType    textures;
+        GLuint          vertex_array;
+        QueuesType      queues;
+        ShadersType     shaders;
+        BuffersType     buffers;
 
         // FUNCTIONS ------------------------------------------------------- //
 
@@ -221,13 +248,18 @@ namespace cinematic {
 
          void SetTextRotation(float a, float x, float y, float z);
 
+         bool Initialized(void) {
+             return this->init_once;
+         }
+
     private:
 
         // VARIABLES ------------------------------------------------------- //
 
-        glm::vec4 background_color;
+        bool                            init_once;
+        glm::vec4                       background_color;
         megamol::core::utility::SDFFont font;
-        const float font_size;
+        const float                     font_size;
 
         // FUNCTIONS ------------------------------------------------------- //
 

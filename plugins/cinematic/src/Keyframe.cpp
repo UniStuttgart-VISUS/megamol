@@ -6,40 +6,38 @@
 */
 
 #include "stdafx.h"
-
 #include "Keyframe.h"
 
 
 using namespace megamol::cinematic;
 
 
-Keyframe::Keyframe() :
-    animTime(0.0f),
-    simTime(0.0f),
-    camera() {
+Keyframe::Keyframe()
+    : animTime(0.0f)
+    , simTime(0.0f)
+    , camera() {
 
-    this->camera.position      = glm::vec3(1.0f, 0.0f, 0.0f);
-    this->camera.lookat        = glm::vec3(0.0f, 0.0f, 0.0f);
-    this->camera.up            = glm::vec3(0.0f, 1.0f, 0.0f);
+    this->camera.position = glm::vec3(1.0f, 0.0f, 0.0f);
+    this->camera.lookat = glm::vec3(0.0f, 0.0f, 0.0f);
+    this->camera.up = glm::vec3(0.0f, 1.0f, 0.0f);
     this->camera.apertureangle = 30.0f;
 }
 
 
-Keyframe::Keyframe(float at, float st, glm::vec3 pos, glm::vec3 up, glm::vec3 lookat, float aperture) : 
-    animTime(at),
-    simTime(st),
-    camera() 
-{
-    this->camera.position       = pos;
-    this->camera.lookat         = lookat;
-    this->camera.up             = up;
-    this->camera.apertureangle  = aperture;
+Keyframe::Keyframe(float at, float st, glm::vec3 pos, glm::vec3 up, glm::vec3 lookat, float aperture) 
+    : animTime(at)
+    , simTime(st)
+    , camera() {
+
+    this->camera.position = pos;
+    this->camera.lookat = lookat;
+    this->camera.up = up;
+    this->camera.apertureangle = aperture;
 }
 
 
 Keyframe::~Keyframe() {
 
-    // nothing to do here ...
 }
 
 

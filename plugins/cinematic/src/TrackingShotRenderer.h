@@ -169,7 +169,7 @@ namespace cinematic {
         GLuint                                  texture;
 
         /**********************************************************************
-        * callback stuff
+        * callbacks
         **********************************************************************/
 
 		core::CallerSlot keyframeKeeperSlot;

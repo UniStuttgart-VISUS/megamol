@@ -210,7 +210,6 @@ namespace cinematic {
         * variables
         **********************************************************************/
 
-		// Pointer to array of keyframes
 		std::shared_ptr<megamol::core::view::Camera_2> cameraParam;
 		std::shared_ptr<std::vector<glm::vec3 >>       interpolCamPos;
 		std::shared_ptr<std::vector<Keyframe>>	       keyframes;
@@ -222,9 +221,9 @@ namespace cinematic {
 		float								           totalAnimTime;
         float                                          totalSimTime;
         glm::vec3                                      bboxCenter;
-        unsigned int                                   fps;
         glm::vec3                                      startCtrllPos;
         glm::vec3                                      endCtrllPos;
+        unsigned int                                   fps;
 
 	};
 

@@ -9,7 +9,6 @@
 #define MEGAMOL_CINEMATIC_KEYFRAMEMANIPULATOR_H_INCLUDED
 
 #include "Cinematic/Cinematic.h"
-#include "Keyframe.h"
 
 #include "vislib/math/Cuboid.h"
 #include "vislib/sys/Log.h"
@@ -18,6 +17,9 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
+
+#include "Keyframe.h"
+#include "CinematicUtils.h"
 
 
 namespace megamol {
@@ -77,45 +79,25 @@ namespace cinematic {
 
         /** 
         * Update extents.
+        *
         * Grows bounding box to manipulators.
         * If manipulator lies inside of bounding box:
         * Get bounding box of model to determine minimum length of manipulator axes.
         */
         void SetExtents(vislib::math::Cuboid<float>& bb);
 
-        /** 
-        *
-        */
         bool Draw(void);
 
-        /**
-        *
-        */
         int CheckKeyframePositionHit(float x, float y);
 
-        /**
-        *
-        */
         bool CheckManipulatorHit(float x, float y);
 
-        /**
-        *
-        */
         bool ProcessManipulatorHit(float x, float y);
 
-        /**
-        *
-        */
         Keyframe GetManipulatedKeyframe(void);
 
-        /**
-        *
-        */
         glm::vec3 GetFirstControlPointPosition(void);
 
-        /**
-        *
-        */
         glm::vec3 GetLastControlPointPosition(void);
 
     private:
@@ -140,12 +122,14 @@ namespace cinematic {
             bool      available;
         };
 
-        // Some fixed values
+        // Some fixed constant values
         const float						 circleRadiusFac;	// Factor for world cam lookat direction which is used as adaptive circle radius
         const float						 axisLengthFac;		// Factor for world cam lookat direction which is used as adaptive axis length
         const unsigned int				 circleSubDiv;		// Amount of subdivisions of an circle primitive
         const float						 lineWidth;
         const float						 sensitivity;		// Relationship between mouse movement and length changes of coordinates
+
+        std::shared_ptr<CinematicUtils>  utils;
         std::vector<manipPosData>        kfArray;			// Array of keyframe positions
 
         Keyframe                         selectedKf;		// Copy of currently selected Keyframe
@@ -176,29 +160,14 @@ namespace cinematic {
         * functions
         **********************************************************************/
 
-        /**
-        *
-        */
         void calculateCircleVertices(void);
 
-        /**
-        *
-        */
         void drawCircle(glm::vec3 pos, float factor);
 
-        /**
-        *
-        */
         void drawManipulator(glm::vec3 kp, glm::vec3 mp);
 
-        /**
-        *
-        */
         glm::vec2 getScreenSpace(glm::vec3 wp);
 
-        /**
-        *
-        */
         bool updateManipulatorPositions(void);
     };
 

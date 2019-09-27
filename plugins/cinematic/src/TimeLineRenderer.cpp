@@ -18,29 +18,29 @@ using namespace megamol::cinematic;
 using namespace vislib;
 
 
-TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule(),
-	keyframeKeeperSlot("getkeyframes", "Connects to the KeyframeKeeper"),
-    moveRightFrameParam("gotoRightFrame", "Move to right animation time frame."),
-    moveLeftFrameParam("gotoLeftFrame", "Move to left animation time frame."),
-    resetPanScaleParam("resetAxes", "Reset shifted and scaled time axes."),
-    axes(),
-    utils(),
-    texture(0), 
-    yAxisParam(Param::SIMULATION_TIME),
-    dragDropKeyframe(),
-    dragDropActive(false),
-    axisDragDropMode(0),
-    axisScaleMode(0),
-    keyframeMarkHeight(1.0f),
-    rulerMarkHeight(1.0f),
-    viewport(1.0f, 1.0f),
-    fps(24),
-    mouseX(0.0f),
-    mouseY(0.0f),
-    lastMouseX(0.0f),
-    lastMouseY(0.0f),
-    mouseButton(MouseButton::BUTTON_LEFT),
-    mouseAction(MouseButtonAction::RELEASE) {
+TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule()
+	, keyframeKeeperSlot("getkeyframes", "Connects to the KeyframeKeeper")
+    , moveRightFrameParam("gotoRightFrame", "Move to right animation time frame.")
+    , moveLeftFrameParam("gotoLeftFrame", "Move to left animation time frame.")
+    , resetPanScaleParam("resetAxes", "Reset shifted and scaled time axes.")
+    , axes()
+    , utils()
+    , texture(0)
+    , yAxisParam(Param::SIMULATION_TIME)
+    , dragDropKeyframe()
+    , dragDropActive(false)
+    , axisDragDropMode(0)
+    , axisScaleMode(0)
+    , keyframeMarkHeight(1.0f)
+    , rulerMarkHeight(1.0f)
+    , viewport(1.0f, 1.0f)
+    , fps(24)
+    , mouseX(0.0f)
+    , mouseY(0.0f)
+    , lastMouseX(0.0f)
+    , lastMouseY(0.0f)
+    , mouseButton(MouseButton::BUTTON_LEFT)
+    , mouseAction(MouseButtonAction::RELEASE) {
 
     this->keyframeKeeperSlot.SetCompatibleCall<CallKeyframeKeeperDescription>();
     this->MakeSlotAvailable(&this->keyframeKeeperSlot);
@@ -199,7 +199,6 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
         ccc->setSelectedKeyframeTime(t);
         if (!(*ccc)(CallKeyframeKeeper::CallForGetSelectedKeyframeAtTime)) return false;
     }
-
     if (this->moveLeftFrameParam.IsDirty()) {
         this->moveLeftFrameParam.ResetDirty();
         // Set selected animation time to left animation time frame
@@ -365,7 +364,6 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     // Push text --------------------------------------------------------------
     vislib::StringA tmpStr;
     float strHeight = this->utils.GetTextLineHeight();
-    color = this->utils.Color(CinematicUtils::Colors::FONT);
     // X axis time steps
     float timeStep = 0.0f;
     tmpStr.Format(this->axes[Axis::X].formatStr.c_str(), this->axes[Axis::X].maxValue);
@@ -401,7 +399,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     strWidth = this->utils.GetTextLineWidth(caption);
     this->utils.SetTextRotation(90.0f, 0.0f, 0.0f, 1.0f);
     this->utils.PushText(caption, this->axes[Axis::X].startPos.y + this->axes[Axis::Y].length / 2.0f - strWidth / 2.0f, (-1.0f)*this->axes[Axis::X].startPos.x + tmpStrWidth + this->rulerMarkHeight + 1.5f*strHeight, textPosZ);
-    this->utils.SetTextRotation(0.0f, 0.0f, 0.0f, 1.0f);
+    this->utils.SetTextRotation(0.0f, 0.0f, 0.0f, 0.0f);
 
     // Push menu --------------------------------------------------------------
     auto activeKeyframe = (this->dragDropActive) ? (this->dragDropKeyframe) : (skf);

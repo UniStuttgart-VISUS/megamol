@@ -187,13 +187,13 @@ namespace cinematic {
         void pushMarkerTexture(float pos_x, float pos_y, float size, glm::vec4 color);
 
         /**********************************************************************
-        * callback stuff
+        * callbacks
         **********************************************************************/
 
         core::CallerSlot keyframeKeeperSlot;
 
         /**********************************************************************
-        * parameter
+        * parameters
         **********************************************************************/
 
         megamol::core::param::ParamSlot moveRightFrameParam;

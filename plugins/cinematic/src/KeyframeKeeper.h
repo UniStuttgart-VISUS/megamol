@@ -9,8 +9,6 @@
 #define MEGAMOL_CINEMATIC_KEYFRAMEKEEPER_H_INCLUDED
 
 #include "Cinematic/Cinematic.h"
-#include "Keyframe.h"
-#include "CallKeyframeKeeper.h"
 
 #include "mmcore/AbstractGetDataCall.h"
 #include "mmcore/Module.h"
@@ -35,6 +33,10 @@
 #include <iostream>
 #include <fstream>
 #include <ctime>
+
+#include "Keyframe.h"
+#include "CallKeyframeKeeper.h"
+#include "CinematicUtils.h"
 
 
 namespace megamol {
@@ -92,7 +94,6 @@ namespace cinematic {
         **********************************************************************/
 
         // Variables shared/updated with call ---------------------------------
-
 		std::shared_ptr<std::vector<glm::vec3 >>      interpolCamPos;
 		std::shared_ptr<std::vector<Keyframe>>        keyframes;
 		std::shared_ptr<vislib::math::Cuboid<float>>  boundingBox;
@@ -105,74 +106,74 @@ namespace cinematic {
         unsigned int                                  interpolSteps;
         glm::vec3                                     modelBboxCenter;
         unsigned int                                  fps;
-         
+
         glm::vec3                                     camViewUp;
         glm::vec3                                     camViewPosition;
         glm::vec3                                     camViewLookat;
         float                                         camViewApertureangle;
             
         // Variables only used in keyframe keeper -----------------------------
-
         vislib::StringA filename;
         bool            simTangentStatus;
         float           splineTangentLength;
 
         // Undo queue stuff -----------------------------------------------
-
         enum UndoActionEnum {
-            UNDO_NONE      = 0,
-            UNDO_KF_ADD    = 1,
-            UNDO_KF_DELETE = 2,
-            UNDO_KF_MODIFY = 3,
-            UNDO_CP_MODIFY = 4
+            UNDO_NONE                = 0,
+            UNDO_KEYFRAME_ADD        = 1,
+            UNDO_KEYFRAME_DELETE     = 2,
+            UNDO_KEYFRAME_MODIFY     = 3,
+            UNDO_CONTROLPOINT_MODIFY = 4
         };
 
         class UndoAction {  
             public:
 
             UndoAction() {
-                this->action        = KeyframeKeeper::UndoActionEnum::UNDO_NONE;
-                this->keyframe      = Keyframe();
-                this->prev_keyframe = Keyframe();
-                this->startcp       = glm::vec3();
-                this->endcp         = glm::vec3();
-                this->prev_startcp  = glm::vec3();
-                this->prev_endcp    = glm::vec3();
+                this->action = KeyframeKeeper::UndoActionEnum::UNDO_NONE;
+                this->keyframe = Keyframe();
+                this->previous_keyframe = Keyframe();
+                this->first_controlpoint = glm::vec3();
+                this->last_controlpoint = glm::vec3();
+                this->previous_first_controlpoint = glm::vec3();
+                this->previous_last_controlpoint = glm::vec3();
             }
 
             UndoAction(KeyframeKeeper::UndoActionEnum act, Keyframe kf, Keyframe prev_kf, glm::vec3 scp, glm::vec3 ecp, glm::vec3 prev_scp, glm::vec3 prev_ecp) {
-                this->action        = act;
-                this->keyframe      = kf;
-                this->prev_keyframe = prev_kf;
-                this->startcp       = scp;
-                this->endcp         = ecp;
-                this->prev_startcp  = prev_scp;
-                this->prev_endcp    = prev_ecp;
+                this->action = act;
+                this->keyframe = kf;
+                this->previous_keyframe = prev_kf;
+                this->first_controlpoint = scp;
+                this->last_controlpoint = ecp;
+                this->previous_first_controlpoint = prev_scp;
+                this->previous_last_controlpoint = prev_ecp;
             }
 
             ~UndoAction() { }
 
             inline bool operator==(UndoAction const& rhs) {
-                return ((this->action == rhs.action) && (this->keyframe == rhs.keyframe) && (this->prev_keyframe == rhs.prev_keyframe) && 
-                        (this->startcp == rhs.startcp) && (this->endcp == rhs.endcp) && (this->prev_startcp == rhs.prev_startcp) && (this->prev_endcp == rhs.prev_endcp));
+                return ((this->action == rhs.action) && (this->keyframe == rhs.keyframe) && (this->previous_keyframe == rhs.previous_keyframe) && 
+                        (this->first_controlpoint == rhs.first_controlpoint) && (this->last_controlpoint == rhs.last_controlpoint) && 
+                        (this->previous_first_controlpoint == rhs.previous_first_controlpoint) && (this->previous_last_controlpoint == rhs.previous_last_controlpoint));
             }
 
             inline bool operator!=(UndoAction const& rhs) {
-                return (!(this->action == rhs.action) || (this->keyframe != rhs.keyframe) || (this->prev_keyframe != rhs.prev_keyframe) || 
-                            (this->startcp != rhs.startcp) || (this->endcp != rhs.endcp) || (this->prev_startcp != rhs.prev_startcp) || (this->prev_endcp != rhs.prev_endcp));
+                return (!(this->action == rhs.action) || (this->keyframe != rhs.keyframe) || (this->previous_keyframe != rhs.previous_keyframe) || 
+                         (this->first_controlpoint != rhs.first_controlpoint) || (this->last_controlpoint != rhs.last_controlpoint) || 
+                         (this->previous_first_controlpoint != rhs.previous_first_controlpoint) || (this->previous_last_controlpoint != rhs.previous_last_controlpoint));
             }
 
             UndoActionEnum action;
             Keyframe       keyframe;
-            Keyframe       prev_keyframe;
-            glm::vec3            startcp;
-            glm::vec3            endcp;
-            glm::vec3            prev_startcp;
-            glm::vec3            prev_endcp;
+            Keyframe       previous_keyframe;
+            glm::vec3      first_controlpoint;
+            glm::vec3      previous_first_controlpoint;
+            glm::vec3      last_controlpoint;
+            glm::vec3      previous_last_controlpoint;
         };
 
-        std::vector<UndoAction> undoQueue;
         int undoQueueIndex;
+        std::vector<UndoAction> undoQueue;
 
         /**********************************************************************
         * functions
@@ -206,11 +207,11 @@ namespace cinematic {
 
         bool redoAction(void);
 
-        bool addUndoAction(KeyframeKeeper::UndoActionEnum act, Keyframe kf, Keyframe prev_kf, glm::vec3 startcp, glm::vec3 endcp, glm::vec3 prev_startcp, glm::vec3 prev_endcp);
+        bool addUndoAction(KeyframeKeeper::UndoActionEnum act, Keyframe kf, Keyframe prev_kf, glm::vec3 first_controlpoint, glm::vec3 last_controlpoint, glm::vec3 previous_first_controlpoint, glm::vec3 previous_last_controlpoint);
 
         bool addKeyframeUndoAction(KeyframeKeeper::UndoActionEnum act, Keyframe kf, Keyframe pre_vkf);
 
-        bool addControlPointUndoAction(KeyframeKeeper::UndoActionEnum act, glm::vec3 startcp, glm::vec3 endcp, glm::vec3 prev_startcp, glm::vec3 prev_endcp);
+        bool addControlPointUndoAction(KeyframeKeeper::UndoActionEnum act, glm::vec3 first_controlpoint, glm::vec3 last_controlpoint, glm::vec3 previous_first_controlpoint, glm::vec3 previous_last_controlpoint);
 
         float interpolate_f(float u, float f0, float f1, float f2, float f3);
 
@@ -219,7 +220,7 @@ namespace cinematic {
         int getKeyframeIndex(std::shared_ptr<std::vector<Keyframe>> keyframes, Keyframe keyframe);
 
         /**********************************************************************
-        * callback stuff
+        * callbacks
         **********************************************************************/
 
         megamol::core::CalleeSlot cinematicCallSlot;
