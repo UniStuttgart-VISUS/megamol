@@ -131,7 +131,7 @@ bool ADIOStoMultiParticle::getDataCallback(core::Call& call) {
             return false;
         }
         auto box = cad->getData("global_box")->GetAsFloat();
-        std::vector<unsigned long long int> p_count = cad->getData("count")->GetAsUInt64();
+        auto p_count = cad->getData("count")->GetAsUInt64();
         std::vector<char> radius;
         std::vector<char> r;
         std::vector<char> g;

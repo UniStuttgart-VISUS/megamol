@@ -1017,7 +1017,9 @@ bool AbstractOSPRayRenderer::fillWorld() {
                             auto count = attrib.byte_size /
                                          (mesh::MeshDataAccessCollection::getByteSize(attrib.component_type) *
                                              attrib.component_cnt);
-                            vertexData = ospNewData(count, OSP_FLOAT3, attrib.data);
+                            auto ospType = OSP_FLOAT3;
+                            if (attrib.stride == 4*sizeof(float)) ospType = OSP_FLOAT3A;
+                            vertexData = ospNewData(count, ospType, attrib.data);
                             ospCommit(vertexData);
                             ospSetData(geo.back(), "vertex", vertexData);
                         }

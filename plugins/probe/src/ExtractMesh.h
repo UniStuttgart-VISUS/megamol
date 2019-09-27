@@ -6,6 +6,7 @@
 #pragma once
 
 #include "concave_hull.h"
+#include "poisson.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
@@ -51,6 +52,7 @@ protected:
 
     core::CallerSlot _getDataCall;
     core::CalleeSlot _deployMeshCall;
+    core::CalleeSlot _deploySpheresCall;
     core::param::ParamSlot _algorithmSlot;
     core::param::ParamSlot _xSlot;
     core::param::ParamSlot _ySlot;
@@ -70,13 +72,27 @@ private:
     bool getData(core::Call& call);
 
     bool getMetaData(core::Call& call);
+    bool getParticleData(core::Call& call);
+    bool getParticleMetaData(core::Call& call);
+     
+    
 
     bool toggleFormat(core::param::ParamSlot& p);
 
-  // PCL stuff
+    bool alphaChanged(core::param::ParamSlot& p);
+
+    bool filterResult();
+    bool filterByIndex();
+
+    bool usePoisson = true;
+    std::vector<float> vertex_data;
+
+    // PCL stuff
     pcl::PointCloud<pcl::PointXYZ> _cloud;
     std::vector<pcl::Vertices> _polygons;
     std::vector<pcl::PointIndices> _indices;
+    pcl::PointCloud<pcl::PointXYZ> _resultCloud;
+    pcl::PointCloud<pcl::PointNormal> _resultSurface;
 
     // CallMesh stuff
     std::vector<mesh::MeshDataAccessCollection::VertexAttribute> _mesh_attribs;
@@ -84,6 +100,7 @@ private:
     core::BoundingBoxes _bbox;
 
     size_t _old_datahash;
+    size_t _recalc_hash;
 
 };
 
