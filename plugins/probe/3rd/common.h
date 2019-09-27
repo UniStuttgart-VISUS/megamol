@@ -39,9 +39,10 @@
 
 #pragma once
 
+#include <Eigen/Dense>
 #include <Eigen/Eigen>
 #include <Eigen/StdVector>
-#include <Eigen/Dense>
+#include <array>
 #include <memory>
 #include <vector>
 #include "vislib/sys/Log.h"
@@ -54,14 +55,14 @@
 
 namespace pcl {
 
-using Indices = std::vector<int>;
+using Indices = std::vector<uint32_t>;
 using IndicesPtr = std::shared_ptr<Indices>;
 using IndicesConstPtr = std::shared_ptr<const Indices>;
 
 struct Vertices {
     Vertices() {}
 
-    std::vector<uint32_t> vertices;
+    std::array<uint32_t, 3> vertices;
 
 public:
     using Ptr = std::shared_ptr<Vertices>;
@@ -69,7 +70,7 @@ public:
 }; // struct Vertices
 
 
-  struct _PointXYZ {
+struct _PointXYZ {
     union EIGEN_ALIGN16 {
         float data[4];
         struct {
@@ -79,19 +80,19 @@ public:
         };
     };
 
-    //inline pcl::Vector3fMap getVector3fMap() { return (pcl::Vector3fMap(data)); }
-    //inline pcl::Vector3fMapConst getVector3fMap() const { return (pcl::Vector3fMapConst(data)); }
-    //inline pcl::Vector4fMap getVector4fMap() { return (pcl::Vector4fMap(data)); }
-    //inline pcl::Vector4fMapConst getVector4fMap() const { return (pcl::Vector4fMapConst(data)); }
-    //inline pcl::Array3fMap getArray3fMap() { return (pcl::Array3fMap(data)); }
-    //inline pcl::Array3fMapConst getArray3fMap() const { return (pcl::Array3fMapConst(data)); }
-    //inline pcl::Array4fMap getArray4fMap() { return (pcl::Array4fMap(data)); }
-    //inline pcl::Array4fMapConst getArray4fMap() const { return (pcl::Array4fMapConst(data)); }
+    // inline pcl::Vector3fMap getVector3fMap() { return (pcl::Vector3fMap(data)); }
+    // inline pcl::Vector3fMapConst getVector3fMap() const { return (pcl::Vector3fMapConst(data)); }
+    // inline pcl::Vector4fMap getVector4fMap() { return (pcl::Vector4fMap(data)); }
+    // inline pcl::Vector4fMapConst getVector4fMap() const { return (pcl::Vector4fMapConst(data)); }
+    // inline pcl::Array3fMap getArray3fMap() { return (pcl::Array3fMap(data)); }
+    // inline pcl::Array3fMapConst getArray3fMap() const { return (pcl::Array3fMapConst(data)); }
+    // inline pcl::Array4fMap getArray4fMap() { return (pcl::Array4fMap(data)); }
+    // inline pcl::Array4fMapConst getArray4fMap() const { return (pcl::Array4fMapConst(data)); }
 
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  };
+};
 
-    /** \brief A point structure representing Euclidean xyz coordinates. (SSE friendly)
+/** \brief A point structure representing Euclidean xyz coordinates. (SSE friendly)
  * \ingroup common
  */
 struct EIGEN_ALIGN16 PointXYZ : public _PointXYZ {
@@ -114,11 +115,80 @@ struct EIGEN_ALIGN16 PointXYZ : public _PointXYZ {
         data[3] = 1.0f;
     }
 
+    inline PointXYZ operator-(const PointXYZ& rhs) const {
+        return PointXYZ(this->x - rhs.x, this->y - rhs.y, this->z - rhs.z);
+    }
+
     typedef float value_t;
+
+   inline bool isfinite() const {
+        return (std::isfinite(x) && std::isfinite(y) && std::isfinite(z));
+    }
 
     friend std::ostream& operator<<(std::ostream& os, const PointXYZ& p);
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
+
+
+struct EIGEN_ALIGN16 _PointNormal {
+    // This adds the members x,y,z which can also be accessed using the point (which is float[4])
+    union EIGEN_ALIGN16 {
+        float data[4];
+        struct {
+            float x;
+            float y;
+            float z;
+        };
+    };
+    // This adds the member normal[3] which can also be accessed using the point (which is float[4])
+    union EIGEN_ALIGN16 {
+        float data_n[4];
+        float normal[3];
+        struct {
+            float normal_x;
+            float normal_y;
+            float normal_z;
+        };
+    };
+    union {
+        struct {
+            float curvature;
+        };
+        float data_c[4];
+    };
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+};
+
+/** \brief A point structure representing Euclidean xyz coordinates, together with normal coordinates and the surface
+ * curvature estimate. (SSE friendly) \ingroup common
+ */
+struct PointNormal : public _PointNormal {
+    inline PointNormal(const _PointNormal& p) {
+        x = p.x;
+        y = p.y;
+        z = p.z;
+        data[3] = 1.0f;
+        normal_x = p.normal_x;
+        normal_y = p.normal_y;
+        normal_z = p.normal_z;
+        data_n[3] = 0.0f;
+        curvature = p.curvature;
+    }
+
+    inline PointNormal() {
+        x = y = z = 0.0f;
+        data[3] = 1.0f;
+        normal_x = normal_y = normal_z = data_n[3] = 0.0f;
+        curvature = 0.f;
+    }
+
+    inline bool isfinite() const {
+        return (std::isfinite(x) && std::isfinite(y) && std::isfinite(z) && std::isfinite(normal_x) &&
+                std::isfinite(normal_y) && std::isfinite(normal_z));
+    }
+    typedef float value_t;
+};
+
 
 struct PCLHeader {
     PCLHeader() : seq(0), stamp() {}
@@ -143,7 +213,7 @@ struct PointIndices {
 
     PCLHeader header;
 
-    std::vector<int> indices;
+    std::vector<uint32_t> indices;
 
 public:
     using Ptr = std::shared_ptr<PointIndices>;
@@ -172,7 +242,6 @@ public:
     /** \brief True if no points are invalid (e.g., have NaN or Inf values in any of their floating point fields). */
     bool is_dense;
 };
-
 
 /////////////////////////////////////////////////////////////////////////////////////////
 /** \brief PCL base class. Implements methods that are used by most PCL algorithms.
@@ -229,9 +298,9 @@ protected:
     bool deinitCompute();
 
     /** \brief Provide a pointer to the input dataset
-     * \param[in] cloud the const boost shared pointer to a PointCloud message
+     * \param[in] cloud the const shared pointer to a PointCloud message
      */
-    void setInputCloud(const PointCloudConstPtr& cloud);
+    virtual void setInputCloud(const PointCloudConstPtr& cloud);
 
     /** \brief Get a pointer to the input point cloud dataset. */
     inline PointCloudConstPtr const getInputCloud() const { return (input_); }
@@ -279,7 +348,7 @@ public:
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////////
- /** \brief Compute the radius of a circumscribed circle for a triangle formed of three points pa, pb, and pc
+/** \brief Compute the radius of a circumscribed circle for a triangle formed of three points pa, pb, and pc
  * \param pa the first point
  * \param pb the second point
  * \param pc the third point
@@ -289,8 +358,7 @@ public:
 template <typename PointT> inline double getCircumcircleRadius(const PointT& pa, const PointT& pb, const PointT& pc);
 
 
-template <typename PointT>
-inline double getCircumcircleRadius(const PointT& pa, const PointT& pb, const PointT& pc) {
+template <typename PointT> inline double getCircumcircleRadius(const PointT& pa, const PointT& pb, const PointT& pc) {
     Eigen::Vector4f p1(pa.x, pa.y, pa.z, 0);
     Eigen::Vector4f p2(pb.x, pb.y, pb.z, 0);
     Eigen::Vector4f p3(pc.x, pc.y, pc.z, 0);
@@ -315,11 +383,11 @@ inline double getCircumcircleRadius(const PointT& pa, const PointT& pb, const Po
  */
 template <typename PointT>
 inline void copyPointCloud(
-    const pcl::PointCloud<PointT>& cloud_in, const std::vector<int>& indices, pcl::PointCloud<PointT>& cloud_out);
+    const pcl::PointCloud<PointT>& cloud_in, const std::vector<uint32_t>& indices, pcl::PointCloud<PointT>& cloud_out);
 
 template <typename PointT>
 void copyPointCloud(
-    const pcl::PointCloud<PointT>& cloud_in, const std::vector<int>& indices, pcl::PointCloud<PointT>& cloud_out) {
+    const pcl::PointCloud<PointT>& cloud_in, const std::vector<uint32_t>& indices, pcl::PointCloud<PointT>& cloud_out) {
     // Do we want to copy everything?
     if (indices.size() == cloud_in.points.size()) {
         cloud_out = cloud_in;
@@ -332,8 +400,8 @@ void copyPointCloud(
     cloud_out.width = static_cast<uint32_t>(indices.size());
     cloud_out.height = 1;
     cloud_out.is_dense = cloud_in.is_dense;
-    //cloud_out.sensor_orientation_ = cloud_in.sensor_orientation_;
-    //cloud_out.sensor_origin_ = cloud_in.sensor_origin_;
+    // cloud_out.sensor_orientation_ = cloud_in.sensor_orientation_;
+    // cloud_out.sensor_origin_ = cloud_in.sensor_origin_;
 
     // Iterate over each point
     for (size_t i = 0; i < indices.size(); ++i) cloud_out.points[i] = cloud_in.points[indices[i]];
@@ -341,7 +409,7 @@ void copyPointCloud(
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
- /** \brief @b PointRepresentation provides a set of methods for converting a point structs/object into an
+/** \brief @b PointRepresentation provides a set of methods for converting a point structs/object into an
  * n-dimensional vector.
  * \note This is an abstract class.  Subclasses must set nr_dimensions_ to the appropriate value in the constructor
  * and provide an implementation of the pure virtual copyToFloatArray method.
@@ -498,14 +566,14 @@ template <typename PointT> void pcl::PCLBase<PointT>::setIndices(const IndicesPt
 }
 
 template <typename PointT> void pcl::PCLBase<PointT>::setIndices(const IndicesConstPtr& indices) {
-    indices_.reset(new std::vector<int>(*indices));
+    indices_.reset(new std::vector<uint32_t>(*indices));
     fake_indices_ = false;
     use_indices_ = true;
 }
 
 
 template <typename PointT> void pcl::PCLBase<PointT>::setIndices(const PointIndicesConstPtr& indices) {
-    indices_.reset(new std::vector<int>(indices->indices));
+    indices_.reset(new std::vector<uint32_t>(indices->indices));
     fake_indices_ = false;
     use_indices_ = true;
 }
@@ -537,10 +605,11 @@ void pcl::PCLBase<PointT>::setIndices(size_t row_start, size_t col_start, size_t
         return;
     }
 
-    indices_.reset(new std::vector<int>);
+    indices_.reset(new std::vector<uint32_t>);
     indices_->reserve(nb_cols * nb_rows);
     for (size_t i = row_start; i < row_end; i++)
-        for (size_t j = col_start; j < col_end; j++) indices_->push_back(static_cast<int>((i * input_->width) + j));
+        for (size_t j = col_start; j < col_end; j++)
+            indices_->push_back(static_cast<uint32_t>((i * input_->width) + j));
     fake_indices_ = false;
     use_indices_ = true;
 }
@@ -552,7 +621,7 @@ template <typename PointT> bool pcl::PCLBase<PointT>::initCompute() {
     // If no point indices have been given, construct a set of indices for the entire input point cloud
     if (!indices_) {
         fake_indices_ = true;
-        indices_.reset(new std::vector<int>);
+        indices_.reset(new std::vector<uint32_t>);
     }
 
     // If we have a set of fake indices, but they do not match the number of points in the cloud, update them
@@ -575,7 +644,6 @@ template <typename PointT> bool pcl::PCLBase<PointT>::initCompute() {
 template <typename PointT> bool pcl::PCLBase<PointT>::deinitCompute() { return (true); }
 
 #define PCL_INSTANTIATE_PCLBase(T) template class PCL_EXPORTS pcl::PCLBase<T>;
-
 
 
 } // namespace pcl

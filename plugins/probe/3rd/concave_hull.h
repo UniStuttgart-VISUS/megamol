@@ -45,10 +45,10 @@
 #include "kdtree.h"
 extern "C" {
 #define qh_dllimport
-#include "libqhull/libqhull.h"
 #include "libqhull/geom.h"
+#include "libqhull/libqhull.h"
 #include "libqhull/merge.h"
-    }
+}
 #include "transforms.h"
 #include "vislib/sys/Log.h"
 
@@ -84,6 +84,13 @@ public:
      */
     void reconstruct(PointCloud& points, std::vector<pcl::Vertices>& polygons);
 
+
+    /** \brief Sets data input
+     *
+     * \param the input cloud
+     */
+    void setInputCloud(const PointCloudConstPtr& input) override;
+
     /** \brief Set the alpha value, which limits the size of the resultant
      * hull segments(the smaller the more detailed the hull).
      *
@@ -105,6 +112,10 @@ public:
      * \param value where to keep the information or not, default is false
      */
     void setKeepInformation(bool value) { keep_information_ = value; }
+
+    /** \brief Additional filtering for less errors in the surface
+     */
+    void setDoFiltering(bool value) { do_filtering_ = value; }
 
     /** \brief Returns the dimensionality(2 or 3) of the calculated hull. */
     inline int getDimension() const { return (dim_); }
@@ -153,6 +164,10 @@ protected:
      */
     bool keep_information_;
 
+    /** \brief If set to true, the reconstructed point cloud is filtered using the kd tree
+     */
+    bool do_filtering_ = false;
+
     /** \brief the centers of the voronoi cells */
     PointCloudPtr voronoi_centers_;
 
@@ -183,6 +198,10 @@ void pcl::ConcaveHull<PointInT>::getHullPointIndices(pcl::PointIndices& hull_poi
 
 
 //////////////////////////////////////////////////////////////////////////
+template <typename PointInT> void pcl::ConcaveHull<PointInT>::setInputCloud(const PointCloudConstPtr& input) {
+    this->input_ = input;
+}
+
 template <typename PointInT>
 void pcl::ConcaveHull<PointInT>::reconstruct(PointCloud& output, std::vector<pcl::Vertices>& polygons) {
     // output.header = this->input_->header;
@@ -374,7 +393,8 @@ void pcl::ConcaveHull<PointInT>::performReconstruction(PointCloud& alpha_shape, 
                         neighb = otherfacet_(ridge, facet);
                         if ((neighb->visitid != qh visit_id)) qh_setappend(&triangles_set, ridge);
                     }
-                } else {
+                } 
+                else {
                     // consider individual triangles from the tetrahedron...
                     facet->good = false;
                     facet->visitid = qh visit_id;
@@ -399,6 +419,7 @@ void pcl::ConcaveHull<PointInT>::performReconstruction(PointCloud& alpha_shape, 
 
                             double r = pcl::getCircumcircleRadius(a, b, c);
                             if (r <= alpha_) qh_setappend(&triangles_set, ridge);
+                            //if (facet->tricoplanar) qh_setappend(&triangles_set, ridge);
                         }
                     }
                 }
@@ -425,7 +446,7 @@ void pcl::ConcaveHull<PointInT>::performReconstruction(PointCloud& alpha_shape, 
         FOREACHridge_(triangles_set) {
             if (ridge->bottom->upperdelaunay || ridge->top->upperdelaunay || !ridge->top->good ||
                 !ridge->bottom->good) {
-                polygons[triangles].vertices.resize(3);
+                // polygons[triangles].vertices.resize(3);
                 int vertex_n, vertex_i;
                 FOREACHvertex_i_((*ridge).vertices) // 3 vertices per ridge!
                 {
@@ -575,13 +596,14 @@ void pcl::ConcaveHull<PointInT>::performReconstruction(PointCloud& alpha_shape, 
         for (size_t poly_id = 0; poly_id < pcd_idx_start_polygons.size() - 1; poly_id++) {
             // Check if we actually have a polygon, and not some degenerated output from QHull
             if (pcd_idx_start_polygons[poly_id + 1] - pcd_idx_start_polygons[poly_id] >= 3) {
-                pcl::Vertices vertices;
-                vertices.vertices.resize(pcd_idx_start_polygons[poly_id + 1] - pcd_idx_start_polygons[poly_id]);
+                pcl::Vertices vert;
+                // vertices.vertices.resize(pcd_idx_start_polygons[poly_id + 1] - pcd_idx_start_polygons[poly_id]);
+                assert(3 == pcd_idx_start_polygons[poly_id + 1] - pcd_idx_start_polygons[poly_id]);
                 // populate points in the corresponding polygon
                 for (int j = pcd_idx_start_polygons[poly_id]; j < pcd_idx_start_polygons[poly_id + 1]; ++j)
-                    vertices.vertices[j - pcd_idx_start_polygons[poly_id]] = static_cast<uint32_t>(j);
+                    vert.vertices[j - pcd_idx_start_polygons[poly_id]] = static_cast<uint32_t>(j);
 
-                polygons.push_back(vertices);
+                polygons.push_back(vert);
             }
         }
 
@@ -605,12 +627,45 @@ void pcl::ConcaveHull<PointInT>::performReconstruction(PointCloud& alpha_shape, 
         pcl::demeanPointCloud(*voronoi_centers_, xyz_centroid, *voronoi_centers_);
     }
 
+    if (do_filtering_) {
+        // build a tree with the alpha shape points
+        pcl::KdTreeFLANN<PointInT> tree(true);
+        PointCloudConstPtr alpha_shape_ptr = std::make_shared<const PointCloud>(alpha_shape);
+        IndicesPtr index_ptr = std::make_shared<Indices>(3 * polygons.size());
+        auto poly_data_ptr = reinterpret_cast<uint32_t*>(polygons.data());
+        std::copy(&poly_data_ptr[0], &poly_data_ptr[3 * polygons.size() - 1], index_ptr->begin());
+
+
+        tree.setInputCloud(alpha_shape_ptr, index_ptr);
+
+        int num_neighbors = 10;
+
+        std::vector<uint32_t> neighbor(num_neighbors);
+        std::vector<float> distances(num_neighbors);
+
+        std::vector<Vertices> new_polygons;
+        new_polygons.reserve(polygons.size());
+
+        for (auto& polygon : polygons) {
+            auto start = polygon.vertices[0];
+            tree.nearestKSearch(alpha_shape.points[start], num_neighbors, neighbor, distances);
+
+            if (std::find(std::begin(neighbor), std::end(neighbor), polygon.vertices[1]) != std::end(neighbor)) {
+                // point not found in neighbors
+                if (std::find(std::begin(neighbor), std::end(neighbor), polygon.vertices[2]) != std::end(neighbor)) {
+                    new_polygons.emplace_back(polygon);
+                }
+            } 
+        }
+        polygons = std::move(new_polygons);
+    }
+
     if (keep_information_) {
         // build a tree with the original points
         pcl::KdTreeFLANN<PointInT> tree(true);
         tree.setInputCloud(this->input_, this->indices_);
 
-        std::vector<int> neighbor;
+        std::vector<uint32_t> neighbor;
         std::vector<float> distances;
         neighbor.resize(1);
         distances.resize(1);
