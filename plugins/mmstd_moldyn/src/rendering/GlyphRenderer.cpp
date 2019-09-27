@@ -267,6 +267,8 @@ bool megamol::stdplugin::moldyn::rendering::GlyphRenderer::validateData(
                 l.GetCount(), num_items_per_chunk,
                 [](void* dst, const void* src) { memcpy(dst, src, sizeof(float) * 3); });
         }
+        this->lastHash = edc->DataHash();
+        this->lastFrameID = edc->FrameID();
     }
     return true;
 }
