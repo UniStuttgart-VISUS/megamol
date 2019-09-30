@@ -151,9 +151,9 @@ bool ArrowRenderer::Render(view::CallRender3D_2& call) {
     float lengthFilter = this->lengthFilterSlot.Param<param::FloatParam>()->Value();
 
     // Clipping
-    view::CallClipPlane *ccp = this->getClipPlaneSlot.CallAs<view::CallClipPlane>();
+    auto ccp = this->getClipPlaneSlot.CallAs<view::CallClipPlane>();
     float clipDat[4];
-    float clipCol[3];
+    float clipCol[4];
     if ((ccp != nullptr) && (*ccp)()) {
         clipDat[0] = ccp->GetPlane().Normal().X();
         clipDat[1] = ccp->GetPlane().Normal().Y();
@@ -163,10 +163,11 @@ bool ArrowRenderer::Render(view::CallRender3D_2& call) {
         clipCol[0] = static_cast<float>(ccp->GetColour()[0]) / 255.0f;
         clipCol[1] = static_cast<float>(ccp->GetColour()[1]) / 255.0f;
         clipCol[2] = static_cast<float>(ccp->GetColour()[2]) / 255.0f;
-
+        clipCol[3] = static_cast<float>(ccp->GetColour()[3]) / 255.0f;
     } else {
         clipDat[0] = clipDat[1] = clipDat[2] = clipDat[3] = 0.0f;
         clipCol[0] = clipCol[1] = clipCol[2] = 0.75f;
+        clipCol[3] = 1.0f;
     }
 
     // Camera
@@ -205,11 +206,11 @@ bool ArrowRenderer::Render(view::CallRender3D_2& call) {
     this->GetLights();
     glm::vec4 light_dir = { 0.0f, 0.0f, 10.0f, 1.0f };
     if (this->lightMap.size() > 1) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[SphereRenderer] Only one single distant (directional) light source is supported by this renderer");
+        vislib::sys::Log::DefaultLog.WriteWarn("ArrowRenderer: Only one single distant (directional) light source is supported by this renderer");
     }
     for (auto light : this->lightMap) {
         if (light.second.lightType != core::view::light::DISTANTLIGHT) {
-            vislib::sys::Log::DefaultLog.WriteWarn("[SphereRenderer] Only single distant (directional) light source is supported by this renderer");
+            vislib::sys::Log::DefaultLog.WriteWarn("ArrowRenderer: Only single distant (directional) light source is supported by this renderer");
         }
         else {
             auto lightDir = this->lightMap.begin()->second.dl_direction;
@@ -244,8 +245,8 @@ bool ArrowRenderer::Render(view::CallRender3D_2& call) {
     glUniform4fv(this->arrowShader.ParameterLocation("lightDir"), 1, glm::value_ptr(light_dir));
     this->arrowShader.SetParameter("lengthScale", lengthScale);
     this->arrowShader.SetParameter("lengthFilter", lengthFilter);
-    glUniform4fvARB(this->arrowShader.ParameterLocation("clipDat"), 1, clipDat);
-    glUniform3fvARB(this->arrowShader.ParameterLocation("clipCol"), 1, clipCol);
+    glUniform4fv(this->arrowShader.ParameterLocation("clipDat"), 1, clipDat);
+    glUniform3fv(this->arrowShader.ParameterLocation("clipCol"), 1, clipCol);
 
     if (c2 != nullptr) {
         unsigned int cial = glGetAttribLocationARB(this->arrowShader, "colIdx");
@@ -255,7 +256,7 @@ bool ArrowRenderer::Render(view::CallRender3D_2& call) {
         if (cflags != nullptr) {
             if (c2->GetParticleListCount() > 1) {
                 vislib::sys::Log::DefaultLog.WriteWarn(
-                    "ArrowRenderer: cannot use FlagStorage together with multiple particle lists!");
+                    "ArrowRenderer: Cannot use FlagStorage together with multiple particle lists!");
             } else {
                 useFlags = true;
             }
