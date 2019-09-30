@@ -73,7 +73,7 @@ void main() {
     bool clip_available = (options & OPTIONS_USE_CLIP) > 0;
     if (clip_available) {
         vec3 planeNormal = clip_data.xyz;
-        float dist = dot(planeNormal, inPos.xyz) + clip_data.w;
+        float dist = dot(planeNormal, wsPos.xyz) + clip_data.w;
         gl_ClipDistance[0] = dist;
     }
 
