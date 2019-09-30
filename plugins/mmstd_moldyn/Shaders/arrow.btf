@@ -32,6 +32,9 @@ uniform float lengthScale;
 uniform float lengthFilter;
 uniform uint flagsAvailable;
 
+uniform vec4 clipDat;
+uniform vec4 clipCol;
+
 #define CONSTRAD inConsts1.x
 #define MIN_COLV inConsts1.y
 #define MAX_COLV inConsts1.z
@@ -181,7 +184,13 @@ void main(void) {
     pos.w = 1.0; // now we're in object space
     projPos = MVP * pos;
     pZ = (projPos - pOP) * CYL_RAD;
-
+    
+    // Clipping
+    float od = clipDat.w - 1.0;
+    if (any(notEqual(clipDat.xyz, vec3(0, 0, 0)))) {
+        od = dot(objPos.xyz, clipDat.xyz) - rad.x;
+    }
+    
     float l = camPos.y * camPos.y + camPos.z * camPos.z;
     vec4 p1, p2, p3, p4;
     if (l < rad.y) { // radius-square
@@ -256,11 +265,9 @@ void main(void) {
     }
 
     if (discardFrag == 0u) {
-      gl_Position = vec4(
-        (minP + maxP) * 0.5,
-        0.5, 
-        ( CYL_HALF_LEN < lengthFilter * 0.5) ? 0.0 : 1.0
-        );
+        float w = (od > clipDat.w) ? 0.0 : 1.0;
+        w = ( CYL_HALF_LEN < lengthFilter * 0.5) ? 0.0 : w;
+        gl_Position = vec4((minP + maxP) * 0.5, 0.5, w);
         maxP = (maxP - minP) * 0.5 * winHalf;
         gl_PointSize = max(maxP.x, maxP.y) + 0.5;
     } else {
