@@ -35,6 +35,7 @@
     <shader name="box_fragment">
         <snippet type="version">430</snippet>
         <snippet type="file">glyph/uniforms.glsl</snippet>
+        <snippet type="file">glyph/options.glsl</snippet>
         <snippet name="::common::lighting::simple"/>
         <snippet type="file">glyph/box.frag</snippet>
     </shader>

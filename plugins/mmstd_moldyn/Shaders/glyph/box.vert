@@ -6,6 +6,7 @@ out vec3 invRad;
 out flat vec3 dirColor;
 out flat vec3 normal;
 out flat vec3 transformedNormal;
+out vec3 viewRay;
 
 // this re-activates the old code that draws the whole box and costs ~50% performance for box glyphs
 // note that you need the single-strip-per-box instancing call in the Renderer for this (14 * #glyphs)
@@ -66,15 +67,14 @@ void main() {
     cornerPos.xyz = rotate_points * cornerPos.xyz;
     wsPos = inPos + cornerPos; // corners relative to world space glyph positions
 
+    viewRay = cam.xyz - wsPos.xyz;
     gl_Position =  MVP * wsPos;
 
     bool clip_available = (options & OPTIONS_USE_CLIP) > 0;
     if (clip_available) {
         vec3 planeNormal = clip_data.xyz;
         float dist = dot(planeNormal, inPos.xyz) + clip_data.w;
-        if (dist < 0.0) {
-            gl_Position.w = 0.0;
-        }
+        gl_ClipDistance[0] = dist;
     }
 
     if (flags_available && !bitflag_isVisible(flag)) {
