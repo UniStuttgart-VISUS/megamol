@@ -1,7 +1,7 @@
 /*
- * EllipsoidRenderer.h
+ * GlyphRenderer.h
  *
- * Copyright (C) 2008-2015 by VISUS (Universitaet Stuttgart)
+ * Copyright (C) 2019 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 

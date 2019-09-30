@@ -78,6 +78,6 @@ void main() {
     }
 
     if (flags_available && !bitflag_isVisible(flag)) {
-        gl_Position.w = 0.0;
+        gl_ClipDistance[0] = -1.0;
     }
 }

@@ -1,7 +1,7 @@
 /*
- * EllipsoidRenderer.cpp
+ * GlyphRenderer.cpp
  *
- * Copyright (C) 2008-2015 by VISUS (Universitaet Stuttgart)
+ * Copyright (C) 2019 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 
@@ -83,6 +83,7 @@ bool GlyphRenderer::create(void) {
     // retVal = retVal && this->makeShader("glyph::ellipsoid_vertex", "glyph::ellipsoid_fragment",
     // this->ellipsoidShader);
     retVal = retVal && this->makeShader("glyph::box_vertex", "glyph::box_fragment", this->boxShader);
+    retVal = retVal && this->makeShader("glyph::ellipsoid_vertex", "glyph::ellipsoid_fragment", this->ellipsoidShader);
 
     glEnable(GL_TEXTURE_1D);
     glGenTextures(1, &this->greyTF);
@@ -372,6 +373,9 @@ bool GlyphRenderer::Render(core::view::CallRender3D_2& call) {
 
     std::shared_ptr<FlagStorage::FlagVectorType> flags;
     unsigned int fal = 0;
+    if (use_flags || use_clip) {
+        glEnable(GL_CLIP_DISTANCE0);
+    }
     if (use_flags) {
         (*flagsc)(core::FlagCall::CallMapFlags);
         flagsc->validateFlagsCount(num_total_glyphs);
@@ -389,7 +393,6 @@ bool GlyphRenderer::Render(core::view::CallRender3D_2& call) {
     glUniform4f(shader->ParameterLocation("flag_softselected_col"), 1.f, 1.f, 0.f, 1.f);
 
     if (use_clip) {
-        glEnable(GL_CLIP_PLANE0);
         auto clip_point_coords = clipc->GetPlane().Point();
         auto clip_normal_coords = clipc->GetPlane().Normal();
         glm::vec3 pt(clip_point_coords.X(), clip_point_coords.Y(), clip_point_coords.Z());
@@ -520,7 +523,7 @@ bool GlyphRenderer::Render(core::view::CallRender3D_2& call) {
                 glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, static_cast<GLsizei>(actualItems) * 3);
                 break;
             case Glyph::ELLIPSOID:
-                glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(actualItems));
+                glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, static_cast<GLsizei>(actualItems) * 3);
                 break;
             case Glyph::ARROW:
                 glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(actualItems));
@@ -542,8 +545,8 @@ bool GlyphRenderer::Render(core::view::CallRender3D_2& call) {
     }
 
     // todo clean up state
-    if (use_clip) {
-        glDisable(GL_CLIP_PLANE0);
+    if (use_clip || use_flags) {
+        glDisable(GL_CLIP_DISTANCE0);
     }
     glDisable(GL_DEPTH_TEST);
 
