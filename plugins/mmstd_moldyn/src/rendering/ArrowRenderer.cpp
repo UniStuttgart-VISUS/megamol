@@ -14,13 +14,14 @@ using namespace megamol::core::moldyn;
 using namespace megamol::stdplugin::moldyn::rendering;
 
 
-ArrowRenderer::ArrowRenderer(void) : view::Renderer3DModule_2(),
-        arrowShader(), getDataSlot("getdata", "Connects to the data source"),
-        getTFSlot("gettransferfunction", "Connects to the transfer function module"),
-        getFlagsSlot("getflags", "connects to a FlagStorage"),
-        //getClipPlaneSlot("getclipplane", "Connects to a clipping plane module"),
-        greyTF(0),
-        lengthScaleSlot("lengthScale", ""), lengthFilterSlot("lengthFilter", "Filters the arrows by length") {
+ArrowRenderer::ArrowRenderer(void) : view::Renderer3DModule_2()
+    , getDataSlot("getdata", "Connects to the data source")
+    , getTFSlot("gettransferfunction", "Connects to the transfer function module")
+    , getFlagsSlot("getflags", "connects to a FlagStorage")
+    , getClipPlaneSlot("getclipplane", "Connects to a clipping plane module")
+    , lengthScaleSlot("lengthScale", ""), lengthFilterSlot("lengthFilter", "Filters the arrows by length")
+    , arrowShader()
+    , greyTF(0) {
 
     this->getDataSlot.SetCompatibleCall<MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
@@ -31,8 +32,8 @@ ArrowRenderer::ArrowRenderer(void) : view::Renderer3DModule_2(),
     this->getFlagsSlot.SetCompatibleCall<FlagCallDescription>();
     this->MakeSlotAvailable(&this->getFlagsSlot);
 
-    //this->getClipPlaneSlot.SetCompatibleCall<view::CallClipPlaneDescription>();
-    //this->MakeSlotAvailable(&this->getClipPlaneSlot);
+    this->getClipPlaneSlot.SetCompatibleCall<view::CallClipPlaneDescription>();
+    this->MakeSlotAvailable(&this->getClipPlaneSlot);
     
     this->lengthScaleSlot << new param::FloatParam(1.0f);
     this->MakeSlotAvailable(&this->lengthScaleSlot);
@@ -43,11 +44,13 @@ ArrowRenderer::ArrowRenderer(void) : view::Renderer3DModule_2(),
 
 
 ArrowRenderer::~ArrowRenderer(void) {
+
     this->Release();
 }
 
 
 bool ArrowRenderer::create(void) {
+
     if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) {
         return false;
     }
@@ -102,6 +105,7 @@ bool ArrowRenderer::create(void) {
 
 
 bool ArrowRenderer::GetExtents(view::CallRender3D_2& call) {
+
     auto cr = &call;
     if (cr == nullptr) return false;
 
@@ -120,29 +124,21 @@ bool ArrowRenderer::GetExtents(view::CallRender3D_2& call) {
 
 
 void ArrowRenderer::release(void) {
+
     this->arrowShader.Release();
     glDeleteTextures(1, &this->greyTF);
 }
 
 
 bool ArrowRenderer::Render(view::CallRender3D_2& call) {
+
     auto cr = &call;
     if (cr == nullptr) return false;
 
     MultiParticleDataCall *c2 = this->getDataSlot.CallAs<MultiParticleDataCall>();
-    float scaling = 1.0f;
     if (c2 != nullptr) {
         c2->SetFrameID(static_cast<unsigned int>(cr->Time()));
         if (!(*c2)(1)) return false;
-
-        // calculate scaling
-        scaling = c2->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
-        if (scaling > 0.0000001) {
-            scaling = 10.0f / scaling;
-        } else {
-            scaling = 1.0f;
-        }
-
         c2->SetFrameID(static_cast<unsigned int>(cr->Time()));
         if (!(*c2)(0)) return false;
     } else {
@@ -154,27 +150,24 @@ bool ArrowRenderer::Render(view::CallRender3D_2& call) {
     float lengthScale = this->lengthScaleSlot.Param<param::FloatParam>()->Value();
     float lengthFilter = this->lengthFilterSlot.Param<param::FloatParam>()->Value();
 
-    //view::CallClipPlane *ccp = this->getClipPlaneSlot.CallAs<view::CallClipPlane>();
-    //float clipDat[4];
-    //float clipCol[3];
-    //if ((ccp != nullptr) && (*ccp)()) {
-    //    clipDat[0] = ccp->GetPlane().Normal().X();
-    //    clipDat[1] = ccp->GetPlane().Normal().Y();
-    //    clipDat[2] = ccp->GetPlane().Normal().Z();
-    //    vislib::math::Vector<float, 3> grr(ccp->GetPlane().Point().PeekCoordinates());
-    //    clipDat[3] = grr.Dot(ccp->GetPlane().Normal());
-    //    clipCol[0] = static_cast<float>(ccp->GetColour()[0]) / 255.0f;
-    //    clipCol[1] = static_cast<float>(ccp->GetColour()[1]) / 255.0f;
-    //    clipCol[2] = static_cast<float>(ccp->GetColour()[2]) / 255.0f;
+    // Clipping
+    view::CallClipPlane *ccp = this->getClipPlaneSlot.CallAs<view::CallClipPlane>();
+    float clipDat[4];
+    float clipCol[3];
+    if ((ccp != nullptr) && (*ccp)()) {
+        clipDat[0] = ccp->GetPlane().Normal().X();
+        clipDat[1] = ccp->GetPlane().Normal().Y();
+        clipDat[2] = ccp->GetPlane().Normal().Z();
+        vislib::math::Vector<float, 3> grr(ccp->GetPlane().Point().PeekCoordinates());
+        clipDat[3] = grr.Dot(ccp->GetPlane().Normal());
+        clipCol[0] = static_cast<float>(ccp->GetColour()[0]) / 255.0f;
+        clipCol[1] = static_cast<float>(ccp->GetColour()[1]) / 255.0f;
+        clipCol[2] = static_cast<float>(ccp->GetColour()[2]) / 255.0f;
 
-    //} else {
-    //    clipDat[0] = clipDat[1] = clipDat[2] = clipDat[3] = 0.0f;
-    //    clipCol[0] = clipCol[1] = clipCol[2] = 0.75f;
-    //}
-
-    glDisable(GL_BLEND);
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
+    } else {
+        clipDat[0] = clipDat[1] = clipDat[2] = clipDat[3] = 0.0f;
+        clipCol[0] = clipCol[1] = clipCol[2] = 0.75f;
+    }
 
     // Camera
     view::Camera_2 cam;
@@ -182,9 +175,18 @@ bool ArrowRenderer::Render(view::CallRender3D_2& call) {
     cam_type::snapshot_type snapshot;
     cam_type::matrix_type viewTemp, projTemp;
     cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
-    glm::vec4 CamView = snapshot.view_vector;
-    glm::vec4 CamRight = snapshot.right_vector;
-    glm::vec4 CamUp = snapshot.up_vector;
+    glm::vec4 cam_view = snapshot.view_vector;
+    glm::vec4 cam_right = snapshot.right_vector;
+    glm::vec4 cam_up = snapshot.up_vector;
+
+    // Matrices
+    glm::mat4 view = viewTemp;
+    glm::mat4 proj = projTemp;
+    glm::mat4 MVinv = glm::inverse(view);
+    glm::mat4 MVtransp = glm::transpose(view);
+    glm::mat4 MVP = proj * view;
+    glm::mat4 MVPinv = glm::inverse(MVP);
+    glm::mat4 MVPtransp = glm::transpose(MVP);
 
     // Viewport
     glm::vec4 viewportStuff;
@@ -199,21 +201,51 @@ bool ArrowRenderer::Render(view::CallRender3D_2& call) {
     viewportStuff[2] = 2.0f / viewportStuff[2];
     viewportStuff[3] = 2.0f / viewportStuff[3];
 
+    // Lights
+    this->GetLights();
+    glm::vec4 light_dir = { 0.0f, 0.0f, 10.0f, 1.0f };
+    if (this->lightMap.size() > 1) {
+        vislib::sys::Log::DefaultLog.WriteWarn("[SphereRenderer] Only one single distant (directional) light source is supported by this renderer");
+    }
+    for (auto light : this->lightMap) {
+        if (light.second.lightType != core::view::light::DISTANTLIGHT) {
+            vislib::sys::Log::DefaultLog.WriteWarn("[SphereRenderer] Only single distant (directional) light source is supported by this renderer");
+        }
+        else {
+            auto lightDir = this->lightMap.begin()->second.dl_direction;
+            if (lightDir.size() == 3) {
+                light_dir[0] = lightDir[0];
+                light_dir[1] = lightDir[1];
+                light_dir[2] = lightDir[2];
+            }
+            if (lightDir.size() == 4) {
+                light_dir[3] = lightDir[3];
+            }
+        }
+    }
+    light_dir = MVtransp * light_dir;
+
+    glDisable(GL_BLEND);
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
     glPointSize(vislib::math::Max(viewportStuff[2], viewportStuff[3]));
 
     this->arrowShader.Enable();
 
+    glUniformMatrix4fv(this->arrowShader.ParameterLocation("MVinv"), 1, GL_FALSE, glm::value_ptr(MVinv));
+    glUniformMatrix4fv(this->arrowShader.ParameterLocation("MVtransp"), 1, GL_FALSE, glm::value_ptr(MVtransp));
+    glUniformMatrix4fv(this->arrowShader.ParameterLocation("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
+    glUniformMatrix4fv(this->arrowShader.ParameterLocation("MVPinv"), 1, GL_FALSE, glm::value_ptr(MVPinv));
+    glUniformMatrix4fv(this->arrowShader.ParameterLocation("MVPtransp"), 1, GL_FALSE, glm::value_ptr(MVPtransp));
     glUniform4fv(this->arrowShader.ParameterLocation("viewAttr"), 1, glm::value_ptr(viewportStuff));
-    glUniform3fv(this->arrowShader.ParameterLocation("camIn"), 1, glm::value_ptr(CamView));
-    glUniform3fv(this->arrowShader.ParameterLocation("camRight"), 1, glm::value_ptr(CamRight));
-    glUniform3fv(this->arrowShader.ParameterLocation("camUp"), 1, glm::value_ptr(CamUp));
+    glUniform3fv(this->arrowShader.ParameterLocation("camIn"), 1, glm::value_ptr(cam_view));
+    glUniform3fv(this->arrowShader.ParameterLocation("camRight"), 1, glm::value_ptr(cam_right));
+    glUniform3fv(this->arrowShader.ParameterLocation("camUp"), 1, glm::value_ptr(cam_up));
+    glUniform4fv(this->arrowShader.ParameterLocation("lightDir"), 1, glm::value_ptr(light_dir));
     this->arrowShader.SetParameter("lengthScale", lengthScale);
     this->arrowShader.SetParameter("lengthFilter", lengthFilter);
-
-    //glUniform4fvARB(this->arrowShader.ParameterLocation("clipDat"), 1, clipDat);
-    //glUniform3fvARB(this->arrowShader.ParameterLocation("clipCol"), 1, clipCol);
-
-    glScalef(scaling, scaling, scaling);
+    glUniform4fvARB(this->arrowShader.ParameterLocation("clipDat"), 1, clipDat);
+    glUniform3fvARB(this->arrowShader.ParameterLocation("clipCol"), 1, clipCol);
 
     if (c2 != nullptr) {
         unsigned int cial = glGetAttribLocationARB(this->arrowShader, "colIdx");

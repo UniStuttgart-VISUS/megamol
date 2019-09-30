@@ -1077,7 +1077,7 @@ bool SphereRenderer::Render(view::CallRender3D_2& call) {
             }
         }
     }
-    this->curlightDir = this->curMVtransp * this->curlightDir;
+    this->curlightDir = glm::normalize(this->curMVtransp * this->curlightDir);
 
     // Viewport
     if (!cam.image_tile().empty()) {
