@@ -39,12 +39,11 @@ void main() {
 
     // calc the viewing ray
     ray = normalize(ray - camPos.xyz);
-
     // calculate the geometry-ray-intersection (sphere with radius = 1)
     float d1 = -dot(camPos.xyz, ray);                       // projected length of the cam-sphere-vector onto the ray
     float d2s = dot(camPos.xyz, camPos.xyz) - d1 * d1;      // off axis of cam-sphere-vector and ray
     float radicand = 1.0 - d2s;                             // square of difference of projected length and lambda
-    //if (radicand < 0.0) { discard; }
+    if (radicand < 0.0) { discard; }
     lambda = d1 - sqrt(radicand);                           // lambda
     vec3 sphereintersection = lambda * ray + camPos.xyz;    // intersection point
 
@@ -79,7 +78,7 @@ void main() {
     float depthW = dot(MVP_T[3], Ding);
     depth_out = ((depth / depthW) + 1.0) * 0.5;
 
-    depth_out = gl_FragCoord.z;
-    albedo_out = mix(dirColor, vertColor.rgb, colorInterpolation);
-    normal_out = transformedNormal;
+    //depth_out = gl_FragCoord.z;
+    //albedo_out = mix(dirColor, vertColor.rgb, colorInterpolation);
+    //normal_out = transformedNormal;
 }
