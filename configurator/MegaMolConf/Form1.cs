@@ -1038,6 +1038,11 @@ namespace MegaMolConf {
                         }
                         if (gm.IsHit(e.Location)) {
                             SelectItem(gm);
+                            if(e.Button == MouseButtons.Middle)
+                            {
+                                btnDelete.PerformClick();
+                                break;
+                            }
                             movedModule = gm;
                             toolStripStatusLabel1.Text = gm.Module.Name + ": " + gm.Module.Description;
                             lastMousePos = e.Location;

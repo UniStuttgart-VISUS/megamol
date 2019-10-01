@@ -153,7 +153,7 @@ namespace MegaMolConf.Io {
                     int skip = 0;
                     // + skip for current #lines with paramValues
                     // + 1 for a base skip after module creation
-                    while (lines[i + skip + 1].Contains("mmSetParamValue"))
+                    while (i + skip + 1 < lines.Length && lines[i + skip + 1].Contains("mmSetParamValue"))
                     {
                         Param p = new Param();
                         line = lines[i + skip + 1];
