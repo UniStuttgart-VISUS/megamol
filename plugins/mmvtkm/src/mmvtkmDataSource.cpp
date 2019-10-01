@@ -83,7 +83,6 @@ mmvtkmDataSource::mmvtkmDataSource(void)
         &mmvtkmDataSource::getDataCallback); // GetData is FunctionName(0) moldyn::mmvtkmDataCall::FunctionName(0)
     this->getData.SetCallback(mmvtkmDataCall::ClassName(), mmvtkmDataCall::FunctionName(1),
         &mmvtkmDataSource::getMetaDataCallback); // GetExtent is FunctionName(1) moldyn::mmvtkmDataCall::FunctionName(1);
-                                               // GetMetaData doesn't work
     this->MakeSlotAvailable(&this->getData);
 
     this->setFrameCount(1);
@@ -145,8 +144,6 @@ void mmvtkmDataSource::loadFrame(core::view::AnimDataModule::Frame* frame,
  * moldyn::mmvtkmDataSource::release
  */
 void mmvtkmDataSource::release(void) {
-    std::cout << "Das ist ein Checksatz: DataSource::Release" << '\n';
-
     this->resetFrameCache();
     if (this->file != NULL) {
         vislib::sys::File *f = this->file;
@@ -163,7 +160,6 @@ void mmvtkmDataSource::release(void) {
 bool mmvtkmDataSource::filenameChanged(core::param::ParamSlot& slot) {
     this->data_hash++;
 
-    std::cout << "Das ist ein Checksatz: DataSource::filenameChanged" << '\n';
     vtkmDataFile = this->filename.Param<core::param::FilePathParam>()->ValueString();
 	if (vtkmDataFile.empty()) {
         std::cout << "Empty vtkm file!" << '\n';
@@ -184,13 +180,11 @@ bool mmvtkmDataSource::filenameChanged(core::param::ParamSlot& slot) {
  * moldyn::mmvtkmDataSource::getDataCallback
  */
 bool mmvtkmDataSource::getDataCallback(core::Call& caller) {
-    std::cout << "Das ist ein Checksatz: DataSource::getDataCallback" << '\n';
     mmvtkmDataCall *c2 = dynamic_cast<mmvtkmDataCall*>(&caller);
     if (c2 == NULL) return false;
 
 	// update data only when we have a new file
 	if (/*this->filename.IsDirty()*/ dirtyFlag) {
-        std::cout << "Das ist ein Checksatz: DataSource::getDataCallback2" << '\n';
         // maybe reset frameid if file has changed
 		c2->SetDataHash(this->data_hash);
 		c2->SetDataSet(&vtkmData);
@@ -222,23 +216,9 @@ bool mmvtkmDataSource::getDataCallback(core::Call& caller) {
  * moldyn::mmvtkmDataSource::getMetaDataCallback
  */
 bool mmvtkmDataSource::getMetaDataCallback(core::Call& caller) {
-    std::cout << "Das ist ein Checksatz: DataSource::getMetaDataCallback" << '\n';
     mmvtkmDataCall *c2 = dynamic_cast<mmvtkmDataCall*>(&caller);
     if (c2 != NULL && dirtyFlag) {
-        std::cout << "Das ist ein Checksatz: DataSource::getMetaDataCallback2" << '\n';
-
-		// set this e.g. in filenameChanged
-        /*float xMin = vtkmData.GetCoordinateSystem().GetBounds().X.Min;
-        float xMax = vtkmData.GetCoordinateSystem().GetBounds().X.Max;
-        float yMin = vtkmData.GetCoordinateSystem().GetBounds().Y.Min;
-        float yMax = vtkmData.GetCoordinateSystem().GetBounds().Y.Max;
-        float zMin = vtkmData.GetCoordinateSystem().GetBounds().Z.Min;
-        float zMax = vtkmData.GetCoordinateSystem().GetBounds().Z.Max;*/
-
-        c2->SetFrameCount(this->FrameCount());
-        c2->AccessBoundingBoxes().Clear();
-        c2->AccessBoundingBoxes().SetObjectSpaceBBox(this->bbox);
-        c2->AccessBoundingBoxes().SetObjectSpaceClipBox(this->clipbox);
+		c2->SetFrameCount(this->FrameCount());
         c2->SetDataHash(this->data_hash);
         return true;
     }

@@ -17,13 +17,15 @@ TODO to run MegaMol with VTKm (incl. Cuda):
 * comment out the line "this->DataFile->Stream >> std::ws;" (should be around line 788) in VTKDataSetReaderBase.h
 
 ## TODO
-* adapt plugin to new camera
+* replace glDrawPixels and fix BoundingBox issue
 * proper includes of vtkm header in cmake w.r.t. to external project targets
 * solve issue with the line in VTKDataSetReaderBase.h
 * duel CUDA
-* clean up code
 
 ## Changelog
+#### 01.10.2019
+* adapted plugin to new camera
+
 #### 31.08.2019
 * fixed issues with inconsistent naming
 

@@ -21,7 +21,7 @@
 #include "vtkm/rendering/MapperVolume.h"
 #include "vtkm/rendering/View3D.h"
 
-#include "mmcore/view/Renderer3DModule.h"
+#include "mmcore/view/Renderer3DModule_2.h"
 #include "mmcore/CallerSlot.h"
 
 
@@ -31,7 +31,7 @@ namespace mmvtkm {
 	/**
 	* Renderer for vtkm data
 	*/
-	class mmvtkmDataRenderer : public core::view::Renderer3DModule {
+	class mmvtkmDataRenderer : public core::view::Renderer3DModule_2 {
 	public:
 
 		/**
@@ -90,7 +90,7 @@ namespace mmvtkm {
 		*
 		* @return The return value of the function.
 		*/
-		virtual bool GetCapabilities(core::Call& call);
+        virtual bool GetCapabilities(core::view::CallRender3D_2& call);
 
 		/**
 		* The get extents callback. The module should set the members of
@@ -101,7 +101,7 @@ namespace mmvtkm {
 		*
 		* @return The return value of the function.
 		*/
-		virtual bool GetMetaData(core::Call& call);
+        virtual bool GetExtents(core::view::CallRender3D_2& call);
 
 		/**
 		* The render callback.
@@ -110,7 +110,7 @@ namespace mmvtkm {
 		*
 		* @return The return value of the function.
 		*/
-		virtual bool Render(core::Call& call);
+        virtual bool Render(core::view::CallRender3D_2& call);
 
 		/**
          * The render callback.
@@ -119,7 +119,7 @@ namespace mmvtkm {
          *
          * @return The return value of the function.
          */
-        virtual bool GetData(core::Call& call);
+        virtual bool GetData(core::view::CallRender3D_2& call);
 
 
 	private:
@@ -136,6 +136,7 @@ namespace mmvtkm {
     vtkm::rendering::Camera camera;
     //vtkm::rendering::View3D view;
     void* colorArray;
+    bool dataHasChanged;
 	float canvasWidth, canvasHeight, canvasDepth;
     SIZE_T oldHash;
 	};

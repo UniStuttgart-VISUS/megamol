@@ -8,7 +8,6 @@
 #include "stdafx.h"
 #include "mmvtkm/mmvtkmRenderer.h"
 #include "mmvtkm/mmvtkmDataCall.h"
-#include "vtkm/cont/Timer.h"
 #include "vtkm/io/reader/VTKDataSetReader.h"
 
 //#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_CUDA
@@ -19,26 +18,25 @@ using namespace megamol;
 using namespace megamol::mmvtkm;
 
 mmvtkmDataRenderer::mmvtkmDataRenderer(void)
-    : Renderer3DModule()
+    : Renderer3DModule_2()
     , vtkmDataCallerSlot("getData", "Connects the vtkm renderer with a vtkm data source")
     , oldHash(0)
-    ,
-    // actor(vtkm::cont::DynamicCellSet(), vtkm::cont::CoordinateSystem(), vtkm::cont::Field()),
-    scene()
+    , scene()
     , mapper()
     , canvas()
     , camera()
     , colorArray(nullptr)
-//, view(scene, mapper, canvas, camera)
+	, dataHasChanged(true)
 {
     this->vtkmDataCallerSlot.SetCompatibleCall<megamol::mmvtkm::mmvtkmDataCallDescription>();
     this->MakeSlotAvailable(&this->vtkmDataCallerSlot);
 }
 
-mmvtkmDataRenderer::~mmvtkmDataRenderer(void) { this->Release(); }
+mmvtkmDataRenderer::~mmvtkmDataRenderer(void) { 
+	this->Release(); 
+}
 
 bool mmvtkmDataRenderer::create() {
-
     return true;
 }
 
@@ -46,57 +44,40 @@ void mmvtkmDataRenderer::release() {
     // Renderer3DModule::release();
 }
 
-bool mmvtkmDataRenderer::GetCapabilities(core::Call& call) { return true; }
+bool mmvtkmDataRenderer::GetCapabilities(core::view::CallRender3D_2& call) { return true; }
 
-bool mmvtkmDataRenderer::GetMetaData(core::Call& call) {
+bool mmvtkmDataRenderer::GetExtents(core::view::CallRender3D_2& call) {
     mmvtkmDataCall* cd = this->vtkmDataCallerSlot.CallAs<mmvtkmDataCall>();
     if (cd == NULL) return false;
 
     if (!(*cd)(1)) {
         return false;
     } else {
-        // cd->FrameID();
+		//cd->FrameID();
     }
-
-    std::cout << "Das ist ein Checksatz: Renderer::GetMetaData0" << '\n';
-    core::view::CallRender3D* cr = dynamic_cast<core::view::CallRender3D*>(&call);
-    if (cr == NULL) return false;
-    std::cout << "Das ist ein Checksatz: Renderer::GetMetaData1" << '\n';
-    canvasWidth = cr->GetViewport().Width();
-    canvasHeight = cr->GetViewport().Height();
 
     return true;
 }
 
-bool mmvtkmDataRenderer::GetData(core::Call& call) {
-    std::cout << "Das ist ein Checksatz: Renderer::GetData0" << '\n';
+bool mmvtkmDataRenderer::GetData(core::view::CallRender3D_2& call) {
     mmvtkmDataCall* cd = this->vtkmDataCallerSlot.CallAs<mmvtkmDataCall>();
 
-
     if (cd == NULL) {
-        std::cout << "Das ist ein Checksatz: Renderer::GetDataNULL" << '\n';
         return false;
     }
 
-    // temp
-    this->GetMetaData(call);
+    this->GetExtents(call);
 
-    std::cout << "Das ist ein Checksatz: Renderer::GetData1" << '\n';
     if (!(*cd)(0)) {
-        std::cout << "Das ist ein Checksatz: Renderer::GetData2" << '\n';
         return false;
     } else {
         if (cd->DataHash() == this->oldHash) {
-            std::cout << "Das ist ein Checksatz: Renderer::GetData3" << '\n';
             return false;
         } else {
-            // call metadata here to update metadata if new data is available
-
-            std::cout << "Das ist ein Checksatz: Renderer::GetData4" << '\n';
             this->oldHash = cd->DataHash();
             vtkmDataSet = cd->GetDataSet();
+            dataHasChanged = true;
 
-            // TODO place all static setups in create
             // compute the bounds and extends of the input data
             vtkm::cont::ColorTable colorTable("inferno");
             vtkm::rendering::Actor actor(vtkmDataSet->GetCellSet(), vtkmDataSet->GetCoordinateSystem(),
@@ -104,36 +85,43 @@ bool mmvtkmDataRenderer::GetData(core::Call& call) {
                 colorTable); // depending on dataset change to getCellField with according FrameID
             scene = vtkm::rendering::Scene();
             scene.AddActor(actor); // makeScene(...)
-            canvas = vtkm::rendering::CanvasRayTracer(canvasWidth, canvasHeight);
         }
     }
 
     return true;
 }
 
-bool mmvtkmDataRenderer::Render(core::Call& call) {
-    // connect camera to plugin to get camera movement
-    std::cout << "Das ist ein Checksatz: Renderer::Render" << '\n';
-
-    core::view::CallRender3D* cr = dynamic_cast<core::view::CallRender3D*>(&call);
-    if (cr == NULL) return false;
-
+bool mmvtkmDataRenderer::Render(core::view::CallRender3D_2& call) {
     this->GetData(call);
 
-    vtkm::cont::Timer time;
+	// camera setup
+    core::view::Camera_2 cam;
+    call.GetCamera(cam);
+    cam_type::snapshot_type snapshot;
+    cam_type::matrix_type viewTemp, projTemp;
 
-    // get all necessary camera parameters from render call
-    vislib::graphics::SceneSpacePoint3D lookatCr = cr->GetCameraParameters()->LookAt();
-    vislib::graphics::SceneSpaceVector3D upCr = cr->GetCameraParameters()->Up();
-    vislib::graphics::SceneSpacePoint3D positionCr = cr->GetCameraParameters()->Position();
+    // Generate complete snapshot
+    cam.calc_matrices(snapshot, viewTemp, projTemp, core::thecam::snapshot_content::all);
+    glm::vec4 viewport = glm::vec4(0, 0, cam.resolution_gate().width(), cam.resolution_gate().height());
+    if (viewport.z < 1.0f) viewport.z = 1.0f;
+    if (viewport.w < 1.0f) viewport.w = 1.0f;
+    float shaderPointSize = vislib::math::Max(viewport.z, viewport.w);
+    viewport = glm::vec4(0, 0, 2.f / viewport.z, 2.f / viewport.w);
 
-    // transform parameters to vtkm compatibel structures
-    vtkm::Vec<vtkm::Float64, 3> lookat(lookatCr.GetX(), lookatCr.GetY(), lookatCr.GetZ());
-    vtkm::Vec<vtkm::Float32, 3> up(upCr.GetX(), upCr.GetY(), upCr.GetZ());
-    vtkm::Vec<vtkm::Float32, 3> position(positionCr.GetX(), positionCr.GetY(), positionCr.GetZ());
-    vtkm::Float32 nearPlane = cr->GetCameraParameters()->NearClip();
-    vtkm::Float32 farPlane = cr->GetCameraParameters()->FarClip();
-    vtkm::Float32 fovY = cr->GetCameraParameters()->ApertureAngle();
+    glm::vec4 camView = snapshot.view_vector;
+    glm::vec4 camRight = snapshot.right_vector;
+    glm::vec4 camUp = snapshot.up_vector;
+    glm::vec4 camPos = snapshot.position;
+
+	canvasWidth = cam.resolution_gate().width();
+    canvasHeight = cam.resolution_gate().height();
+    canvas = vtkm::rendering::CanvasRayTracer(canvasWidth, canvasHeight);
+    vtkm::Vec<vtkm::Float64, 3> lookat(camView.x + 1.f, camView.y + 1.f, camView.z + 1.f);
+    vtkm::Vec<vtkm::Float32, 3> up(camUp.x, camUp.y, camUp.z);
+    vtkm::Vec<vtkm::Float32, 3> position(camPos.x + 1.f, camPos.y + 1.f, camPos.z + 1.f);
+    vtkm::Float32 nearPlane = snapshot.frustum_near;
+    vtkm::Float32 farPlane = snapshot.frustum_far;
+    vtkm::Float32 fovY = cam.aperture_angle();
     vtkm::Bounds coordsBounds = vtkmDataSet->GetCoordinateSystem().GetBounds();
     vtkm::Vec<vtkm::Float64, 3> totalExtent(coordsBounds.X.Length(), coordsBounds.Y.Length(), coordsBounds.Z.Length());
     vtkm::Float64 mag = vtkm::Magnitude(totalExtent);
@@ -147,31 +135,32 @@ bool mmvtkmDataRenderer::Render(core::Call& call) {
     camera.SetFieldOfView(fovY);
     camera.SetPosition(position);
 
-    // set up all vtkm rendering components needed in order to render with vtkm
+	//vislib::math::Cuboid<float> bbox(coordsBounds.X.Min, coordsBounds.Y.Min, coordsBounds.Z.Min, 
+		//coordsBounds.X.Max, coordsBounds.Y.Max, coordsBounds.Z.Max);
+    vislib::math::Cuboid<float> bbox(-1.f, -1.f, -1.f, 1.f, 1.f, 1.f);
+	call.AccessBoundingBoxes().SetBoundingBox(bbox);
+    call.AccessBoundingBoxes().SetClipBox(bbox);
+
     // default coordinatesystem name = "coordinates"
     // default fieldname = "pointvar"
     // default cellname = "cells"
 
-    // THIS SECTION SHOULD POSSIBLY BE IN ::Render BUT ONLY .Initialize and .Paint when data has been changed!
-    // POSSIBLY DECLARE LOCAL DIRTY FLAG
     // update actor, acutally just the field, each frame
-    // store dynamiccellset and coordinatesystem after reading them in GetMetaData
-    vtkm::rendering::View3D view(scene, mapper, canvas, camera);
-    view.Initialize(); // required
+    // store dynamiccellset and coordinatesystem after reading them in GetExtents
+    if (true) {
+		vtkm::rendering::View3D view(scene, mapper, canvas, camera);
+		view.Initialize(); // required
 
-    time.Start();
-    view.Paint();
-    // view.SaveAs("demo_output.ppm");
-    time.Stop();
-    std::cout << "Elapsed time 3: " << time.GetElapsedTime() << '\n';
-    int numActors = scene.GetNumberOfActors();
-    std::cout << "Num Actors: " << numActors << '\n';
-    // the canvas holds the buffer of the offscreen rendered image
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>> colorBuffer = view.GetCanvas().GetColorBuffer();
+		view.Paint();
+		// the canvas holds the buffer of the offscreen rendered image
+		vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>> colorBuffer = view.GetCanvas().GetColorBuffer();
 
-    // pulling out the c array from the buffer
-    // which can just be rendered
-    colorArray = colorBuffer.GetStorage().GetBasePointer();
+		// pulling out the c array from the buffer
+		// which can just be rendered
+		colorArray = colorBuffer.GetStorage().GetBasePointer();
+
+		dataHasChanged = false;
+	}
 
     // Write the C array to an OpenGL buffer
     glDrawPixels((GLint)canvasWidth, (GLint)canvasHeight, GL_RGBA, GL_FLOAT, colorArray);
