@@ -316,6 +316,9 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     float vpW_flt = viewport.z;
     float vpH_flt = viewport.w;
 
+    // Get matrix for orthogonal projection of 2D rendering
+    glm::mat4 ortho = glm::ortho(0.0f, vpW_flt, 0.0f, vpH_flt, -1.0f, 1.0f);
+
     // Init rendering
     glm::vec4 back_color;
     glGetFloatv(GL_COLOR_CLEAR_VALUE, static_cast<GLfloat*>(glm::value_ptr(back_color)));
@@ -408,15 +411,6 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     //glDisable(GL_BLEND);
     //glEnable(GL_DEPTH_TEST);
 
-    // Push menu --------------------------------------------------------------
-    std::string leftLabel  = " TRACKING SHOT ";
-    std::string midLabel   = "";
-    std::string rightLabel = " [Ctrl+h] Show Help Text ";
-    if (this->showHelpText) {
-        rightLabel = " [Ctrl+h] Hide Help Text ";
-    }
-    //this->utils.PushMenu(leftLabel, midLabel, rightLabel, vpW_flt, vpH_flt);
-
     // Draw help text 
     //if (this->showHelpText) {
     //    vislib::StringA helpText = "";
@@ -473,8 +467,20 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     //}
 
 
-    // Draw all ---------------------------------------------------------------
+    // Draw 3D ---------------------------------------------------------------
     this->utils.DrawAll(mvp);
+
+    // Push menu --------------------------------------------------------------
+    std::string leftLabel = " TRACKING SHOT ";
+    std::string midLabel = "";
+    std::string rightLabel = " [Ctrl+h] Show Help Text ";
+    if (this->showHelpText) {
+        rightLabel = " [Ctrl+h] Hide Help Text ";
+    }
+    this->utils.PushMenu(leftLabel, midLabel, rightLabel, vpW_flt, vpH_flt);
+
+    // Draw 2D ---------------------------------------------------------------
+    this->utils.DrawAll(ortho);
 
     return true;
 }

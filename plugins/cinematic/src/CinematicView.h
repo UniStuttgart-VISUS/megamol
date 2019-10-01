@@ -106,30 +106,30 @@ namespace cinematic {
          **********************************************************************/
 
         enum SkyboxSides {
-            SKYBOX_NONE = 0,
+            SKYBOX_NONE  = 0,
             SKYBOX_FRONT = 1,
-            SKYBOX_BACK = 2,
-            SKYBOX_LEFT = 4,
+            SKYBOX_BACK  = 2,
+            SKYBOX_LEFT  = 4,
             SKYBOX_RIGHT = 8,
-            SKYBOX_UP = 16,
-            SKYBOX_DOWN = 32
+            SKYBOX_UP    = 16,
+            SKYBOX_DOWN  = 32
         };
 
         struct PngData {
-            BYTE* buffer = nullptr;
+            BYTE*                 buffer = nullptr;
             vislib::sys::FastFile file;
-            unsigned int width;
-            unsigned int height;
-            unsigned int bpp;
-            vislib::TString path;
-            vislib::TString filename;
-            unsigned int cnt;
-            png_structp ptr = nullptr;
-            png_infop infoptr = nullptr;
-            float animTime;
-            unsigned int write_lock;
-            time_point start_time;
-            unsigned int exp_frame_cnt;
+            unsigned int          width;
+            unsigned int          height;
+            unsigned int          bpp;
+            vislib::TString       path;
+            vislib::TString       filename;
+            unsigned int          cnt;
+            png_structp           structptr = nullptr;
+            png_infop             infoptr = nullptr;
+            float                 animTime;
+            unsigned int          write_lock;
+            time_point            start_time;
+            unsigned int          exp_frame_cnt;
         };
 
         vislib::graphics::gl::FramebufferObject fbo;
@@ -140,8 +140,7 @@ namespace cinematic {
         bool                                    playAnim;
         int                                     cineWidth;
         int                                     cineHeight;
-        int                                     vpHLast;
-        int                                     vpWLast;
+        glm::ivec2                              lastVp;
         SkyboxSides                             sbSide;
         bool                                    rendering;
         unsigned int                            fps;

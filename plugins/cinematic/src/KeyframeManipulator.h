@@ -55,7 +55,7 @@ namespace cinematic {
             KEYFRAME_POS           = 12,
             NONE                   = 13
         }; // DON'T CHANGE ORDER OR NUMBERING
-            // Add new manipulator type before NUM_OF_SELECTED_MANIP ...
+           // Add new manipulator type before NUM_OF_SELECTED_MANIP ...
 
         /** 
         * Update rednering data of manipulators.
@@ -130,7 +130,7 @@ namespace cinematic {
         const float						 sensitivity;		// Relationship between mouse movement and length changes of coordinates
 
         std::shared_ptr<CinematicUtils>  utils;
-        std::vector<ManipPosData>        kfArray;			// Array of keyframe positions
+        std::vector<ManipPosData>        keyframes;			// Array of keyframe positions
 
         Keyframe                         selectedKf;		// Copy of currently selected Keyframe
         std::vector<ManipPosData>        manipArray;		// Array of manipulators for selected keyframe

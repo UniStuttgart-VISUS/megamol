@@ -507,11 +507,11 @@ const glm::vec4 CinematicUtils::Color(CinematicUtils::Colors c) const {
 
     switch (c) {
     case (CinematicUtils::Colors::BACKGROUND):
-        color = background_color;
+        color = this->background_color;
         break;
     case (CinematicUtils::Colors::FOREGROUND): {
         glm::vec4 foreground = { 1.0f, 1.0f, 1.0f, 1.0f };
-        color = background_color;
+        color = this->background_color;
         for (unsigned int i = 0; i < 3; i++) {
             foreground[i] -= color[i];
         }
@@ -533,20 +533,20 @@ const glm::vec4 CinematicUtils::Color(CinematicUtils::Colors c) const {
         color = { 1.0f, 0.6f, 0.6f, 1.0f };
         break;
     case (CinematicUtils::Colors::MENU):
-        color = { 0.0f, 0.0f, 0.3f, 1.0f };
+        color = { 0.0f, 0.0f, 0.5f, 1.0f };
         break;
     case (CinematicUtils::Colors::FONT):
         color = { 1.0f, 1.0f, 1.0f, 1.0f };
-        if (CinematicUtils::lightness(background_color) > 0.5f) {
+        if (CinematicUtils::lightness(this->background_color) > 0.5f) {
             color = { 0.0f, 0.0f, 0.0f, 1.0f };
         }
         break;
     case (CinematicUtils::Colors::FONT_HIGHLIGHT):
-        color = { 1.0f, 1.0f, 0.0f, 1.0f };
+        color = { 0.75f, 0.75f, 0.0f, 1.0f };
         break;
     case (CinematicUtils::Colors::LETTER_BOX):
         color = { 1.0f, 1.0f, 1.0f, 1.0f };
-        if (CinematicUtils::lightness(background_color) > 0.5f) {
+        if (CinematicUtils::lightness(this->background_color) > 0.5f) {
             color = { 0.0f, 0.0f, 0.0f, 1.0f };
         }
         break;
@@ -615,7 +615,20 @@ void CinematicUtils::DrawAll(glm::mat4& mat_mvp) {
 
     this->DrawAllPrimitives(mat_mvp);
 
+    // Font rendering draws matrices from OpenGL stack
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    glLoadMatrixf(glm::value_ptr(mat_mvp));
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
     this->font.BatchDrawString();
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
+
     this->font.ClearBatchDrawCache();
 }
 

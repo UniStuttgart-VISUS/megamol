@@ -12,8 +12,11 @@
 #include <array>
 #include <vector>
 #include <memory>
+
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
 #include <glowl/BufferObject.hpp>
 
 #include "mmcore/misc/PngBitmapCodec.h"
@@ -234,7 +237,7 @@ namespace cinematic {
             this->background_color = bc;
         };
 
-        void PushMenu(const std::string& left, const std::string& middle, const std::string& right, float viewport_width, float viewport_height);
+        void PushMenu(const std::string& left_label, const std::string& middle_label, const std::string& right_label, float viewport_width, float viewport_height);
 
         void PushHelpText(const std::string& text, glm::vec3 position, float width, float height);
 

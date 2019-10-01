@@ -20,7 +20,7 @@ KeyframeManipulator::KeyframeManipulator(void) :
     circleSubDiv(20),         // const
     lineWidth(2.5),           // const
     sensitivity(0.01f),       // const
-    kfArray(),
+    keyframes(),
     selectedKf(),
     manipArray(),
     sKfSsPos(),
@@ -100,7 +100,7 @@ bool KeyframeManipulator::Update(std::vector<KeyframeManipulator::manipType> am,
 
     // Update local keyframe positions ------------------------------------
     unsigned int kfACnt     = static_cast<unsigned int>(kfa->size());
-    unsigned int kfArrayCnt = static_cast<unsigned int>(this->kfArray.size());
+    unsigned int keyframesCnt = static_cast<unsigned int>(this->keyframes.size());
 
     bool kfAvail = false;
     for (auto m : am) {
@@ -109,25 +109,25 @@ bool KeyframeManipulator::Update(std::vector<KeyframeManipulator::manipType> am,
         }
     }
 
-    if ((kfACnt != kfArrayCnt) || worldChanged) {
-        this->kfArray.clear();
-        this->kfArray.reserve(kfACnt);
+    if ((kfACnt != keyframesCnt) || worldChanged) {
+        this->keyframes.clear();
+        this->keyframes.reserve(kfACnt);
         for (unsigned int i = 0; i < kfACnt; i++) {
             ManipPosData tmpkfA;
             tmpkfA.wsPos     = (*kfa)[i].GetCamPosition();
             tmpkfA.ssPos     = this->getScreenSpace(tmpkfA.wsPos);
             tmpkfA.offset    = glm::length(this->getScreenSpace(tmpkfA.wsPos + this->circleVertices[1]) - tmpkfA.ssPos);
             tmpkfA.available = kfAvail;
-            this->kfArray.emplace_back(tmpkfA);
+            this->keyframes.emplace_back(tmpkfA);
         }
     }
     else { // Update positions (which might have changed)
         for (unsigned int i = 0; i < kfACnt; i++) {
-            if (this->kfArray[i].wsPos    != (*kfa)[i].GetCamPosition()) { 
-                this->kfArray[i].wsPos     = (*kfa)[i].GetCamPosition();
-                this->kfArray[i].ssPos     = this->getScreenSpace(this->kfArray[i].wsPos);
-                this->kfArray[i].offset    = glm::length(this->getScreenSpace(this->kfArray[i].wsPos + this->circleVertices[1]) - this->kfArray[i].ssPos); 
-                this->kfArray[i].available = kfAvail;
+            if (this->keyframes[i].wsPos    != (*kfa)[i].GetCamPosition()) { 
+                this->keyframes[i].wsPos     = (*kfa)[i].GetCamPosition();
+                this->keyframes[i].ssPos     = this->getScreenSpace(this->keyframes[i].wsPos);
+                this->keyframes[i].offset    = glm::length(this->getScreenSpace(this->keyframes[i].wsPos + this->circleVertices[1]) - this->keyframes[i].ssPos); 
+                this->keyframes[i].available = kfAvail;
             }
         }
     }
@@ -324,11 +324,11 @@ int KeyframeManipulator::CheckKeyframePositionHit(float x, float y) {
     }
 
     int index = -1;
-    if (static_cast<int>(this->kfArray.size()) > 0) {
-        if (this->kfArray[0].available) {
-            for (int i = 0; i < static_cast<int>(this->kfArray.size()); i++) {
-                float offset = this->kfArray[i].offset;
-                glm::vec2 pos = this->kfArray[i].ssPos;
+    if (static_cast<int>(this->keyframes.size()) > 0) {
+        if (this->keyframes[0].available) {
+            for (int i = 0; i < static_cast<int>(this->keyframes.size()); i++) {
+                float offset = this->keyframes[i].offset;
+                glm::vec2 pos = this->keyframes[i].ssPos;
                 // Check if mouse position lies within offset quad around keyframe position
                 if (((pos.x < (x + offset)) && (pos.x > (x - offset))) &&
                     ((pos.y < (y + offset)) && (pos.y > (y - offset)))) {
@@ -617,16 +617,16 @@ bool KeyframeManipulator::Draw(void) {
     }
 
     // Draw keyframe positions
-    if (static_cast<int>(this->kfArray.size()) > 0) {
-        if (this->kfArray[0].available) {
-            for (unsigned int k = 0; k < static_cast<unsigned int>(this->kfArray.size()); k++) {
-                if (this->kfArray[k].wsPos == skfPosV) {
+    if (static_cast<int>(this->keyframes.size()) > 0) {
+        if (this->keyframes[0].available) {
+            for (unsigned int k = 0; k < static_cast<unsigned int>(this->keyframes.size()); k++) {
+                if (this->keyframes[k].wsPos == skfPosV) {
                     glColor4fv(skColor);
                 }
                 else {
                     glColor4fv(kColor);
                 }
-                this->drawCircle(this->kfArray[k].wsPos, 1.0f);
+                this->drawCircle(this->keyframes[k].wsPos, 1.0f);
             }
         }
     }
@@ -644,11 +644,11 @@ bool KeyframeManipulator::Draw(void) {
     if (this->sKfInArray >= 0) {
 
         // Draw line between current keyframe position and dragged keyframe position
-        if (this->kfArray[this->sKfInArray].wsPos != skfPosV) {
+        if (this->keyframes[this->sKfInArray].wsPos != skfPosV) {
             glBegin(GL_LINES);
             glColor4fv(skColor);
                 glVertex3fv(glm::value_ptr(skfPosV));
-                glVertex3fv(glm::value_ptr(this->kfArray[this->sKfInArray].wsPos));
+                glVertex3fv(glm::value_ptr(this->keyframes[this->sKfInArray].wsPos));
             glEnd();
         }
 
