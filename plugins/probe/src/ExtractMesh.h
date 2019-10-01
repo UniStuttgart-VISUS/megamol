@@ -12,6 +12,7 @@
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mesh/MeshCalls.h"
+#include <cstdlib>
 
 namespace megamol {
 namespace probe {
@@ -53,6 +54,7 @@ protected:
     core::CallerSlot _getDataCall;
     core::CalleeSlot _deployMeshCall;
     core::CalleeSlot _deploySpheresCall;
+    core::CalleeSlot _deployLineCall;
     core::param::ParamSlot _algorithmSlot;
     core::param::ParamSlot _xSlot;
     core::param::ParamSlot _ySlot;
@@ -64,6 +66,8 @@ protected:
 
 private:
     bool InterfaceIsDirty();
+    bool flipNormalsWithCenterLine(pcl::PointCloud<pcl::PointNormal>& point_cloud);
+    bool extractCenterLine(pcl::PointCloud<pcl::PointNormal>& point_cloud);
     // virtual void readParams();
     void calculateAlphaShape();
 
@@ -74,6 +78,7 @@ private:
     bool getMetaData(core::Call& call);
     bool getParticleData(core::Call& call);
     bool getParticleMetaData(core::Call& call);
+    bool getCenterlineData(core::Call& call);
      
     
 
@@ -93,14 +98,22 @@ private:
     std::vector<pcl::PointIndices> _indices;
     pcl::PointCloud<pcl::PointXYZ> _resultCloud;
     pcl::PointCloud<pcl::PointNormal> _resultSurface;
+    std::shared_ptr<pcl::PointCloud<pcl::PointNormal>> _resultNormalCloud;
 
     // CallMesh stuff
     std::vector<mesh::MeshDataAccessCollection::VertexAttribute> _mesh_attribs;
     mesh::MeshDataAccessCollection::IndexData _mesh_indices;
     core::BoundingBoxes _bbox;
 
-    size_t _old_datahash;
-    size_t _recalc_hash;
+    // CallCenterline stuff
+    std::vector<mesh::MeshDataAccessCollection::VertexAttribute> _line_attribs;
+    mesh::MeshDataAccessCollection::IndexData _line_indices;
+    std::vector<std::array<float, 4>> _centerline;
+    std::vector<std::vector<uint32_t>> _cl_indices_per_slice;
+    std::vector<uint32_t> _cl_indices;
+
+    size_t _old_datahash = 0;
+    size_t _recalc_hash = 0;
 
 };
 

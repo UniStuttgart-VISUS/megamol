@@ -74,7 +74,7 @@ void pcl::NormalEstimationOMP<PointInT, PointOutT>::computeFeature(PointCloudOut
         for (int idx = 0; idx < static_cast<int>(indices_->size()); ++idx) {
             Eigen::Vector4f n;
             if (this->searchForNeighbors((*indices_)[idx], search_parameter_, nn_indices, nn_dists) == 0 ||
-                !pcl::computePointNormal(*surface_, nn_indices, n, output.points[idx].curvature)) {
+                !pcl::computePointNormal(*surface_, nn_indices, n, output.points[idx].curvature, this->center_)) {
                 output.points[idx].normal[0] = output.points[idx].normal[1] = output.points[idx].normal[2] =
                     output.points[idx].curvature = std::numeric_limits<float>::quiet_NaN();
 
@@ -101,7 +101,7 @@ void pcl::NormalEstimationOMP<PointInT, PointOutT>::computeFeature(PointCloudOut
             Eigen::Vector4f n;
             if (!(input_->points[(*indices_)[idx]].isfinite()) ||
                 this->searchForNeighbors((*indices_)[idx], search_parameter_, nn_indices, nn_dists) == 0 ||
-                !pcl::computePointNormal(*surface_, nn_indices, n, output.points[idx].curvature)) {
+                !pcl::computePointNormal(*surface_, nn_indices, n, output.points[idx].curvature, this->center_)) {
                 output.points[idx].normal[0] = output.points[idx].normal[1] = output.points[idx].normal[2] =
                     output.points[idx].curvature = std::numeric_limits<float>::quiet_NaN();
 

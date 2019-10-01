@@ -118,7 +118,7 @@ pcl::Feature<PointInT, PointOutT>::initCompute ()
     //if (surface_->isOrganized () && input_->isOrganized ())
     //  tree_.reset (new pcl::search::OrganizedNeighbor<PointInT> ());
     //else
-      tree_.reset (new pcl::KdTreeFLANN<PointInT> (false));
+      tree_ = std::make_unique<pcl::KdTreeFLANN<PointInT>>(false);
   }
   
   if (tree_->getInputCloud () != surface_) // Make sure the tree searches the surface
@@ -307,7 +307,7 @@ pcl::FeatureWithLocalReferenceFrames<PointInT, PointRFT>::initLocalReferenceFram
     } else
     {
       //PCL_WARN ("[initLocalReferenceFrames] No input dataset containing reference frames was given! Proceed using default\n");
-      PointCloudLRFPtr default_frames (new PointCloudLRF());
+      PointCloudLRFPtr default_frames = std::make_shared<PointCloudLRF>();
       lrf_estimation->compute (*default_frames);
       frames_ = default_frames;
     }
@@ -323,7 +323,7 @@ pcl::FeatureWithLocalReferenceFrames<PointInT, PointRFT>::initLocalReferenceFram
     } else
     {
       //PCL_WARN ("[initLocalReferenceFrames] The number of points in the input dataset differs from the number of points in the dataset containing the reference frames! Proceed using default\n");
-      PointCloudLRFPtr default_frames (new PointCloudLRF());
+      PointCloudLRFPtr default_frames = std::make_shared<PointCloudLRF>();
       lrf_estimation->compute (*default_frames);
       frames_ = default_frames;
     }
