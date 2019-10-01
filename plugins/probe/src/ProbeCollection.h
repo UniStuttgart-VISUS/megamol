@@ -70,6 +70,8 @@ public:
 
     template <typename ProbeType> ProbeType getProbe(size_t idx) { return std::get<ProbeType>(m_probes[idx]); }
 
+    uint32_t getNumProbes() const { return m_probes.size(); }
+
 private:
     std::vector<GenericProbe> m_probes;
 };

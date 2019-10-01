@@ -14,6 +14,8 @@
 #include "ExtractMesh.h"
 #include "PlaceProbes.h"
 #include "SampleAlongProbes.h"
+#include "ProbeCalls.h"
+#include "ExtractProbeGeometry.h"
 
 
 /* anonymous namespace hides this type from any other object files */
@@ -45,16 +47,11 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::probe::ExtractMesh>();
             this->module_descriptions.RegisterAutoDescription<megamol::probe::PlaceProbes>();
             this->module_descriptions.RegisterAutoDescription<megamol::probe::SampleAlongPobes>();
+            this->module_descriptions.RegisterAutoDescription<megamol::probe::ExtractProbeGeometry>();
 
             // register calls here:
 
-            //
-            // TODO: Register your plugin's calls here
-            // like:
-            //   this->call_descriptions.RegisterAutoDescription<megamol::probe::MyCall1>();
-            //   this->call_descriptions.RegisterAutoDescription<megamol::probe::MyCall2>();
-            //   ...
-            //
+            this->call_descriptions.RegisterAutoDescription<megamol::probe::CallProbes>();
 
         }
         MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics

@@ -90,7 +90,8 @@ private:
     bool filterByIndex();
 
     bool usePoisson = true;
-    std::vector<float> vertex_data;
+    std::vector<float> _vertex_data;
+    std::vector<float> _normal_data;
 
     // PCL stuff
     pcl::PointCloud<pcl::PointXYZ> _cloud;

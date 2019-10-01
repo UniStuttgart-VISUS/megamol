@@ -1075,15 +1075,13 @@ bool AbstractOSPRayRenderer::fillWorld() {
                 if (element.mesh != nullptr) {
                     this->numCreateGeo = element.mesh->accessMesh().size();
                     for (auto& mesh : element.mesh->accessMesh()) {
-
+                        
                         geo.push_back(ospNewGeometry("streamlines"));
 
                         for (auto& attrib : mesh.attributes) {
 
                             if (attrib.semantic == mesh::MeshDataAccessCollection::POSITION) {
-                                auto count = attrib.byte_size /
-                                             (mesh::MeshDataAccessCollection::getByteSize(attrib.component_type) *
-                                                 attrib.component_cnt);
+                                const auto count = attrib.byte_size / attrib.stride;
                                 assert(attrib.stride == 4 * sizeof(float));
                                 vertexData = ospNewData(count, OSP_FLOAT3A, attrib.data);
                                 ospCommit(vertexData);
@@ -1094,9 +1092,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
                             if (attrib.semantic == mesh::MeshDataAccessCollection::COLOR) {
                                 if (attrib.component_type == mesh::MeshDataAccessCollection::ValueType::FLOAT)
                                     colorData = ospNewData(
-                                        attrib.byte_size /
-                                            (mesh::MeshDataAccessCollection::getByteSize(attrib.component_type) *
-                                                attrib.component_cnt),
+                                        attrib.byte_size / attrib.stride,
                                         OSP_FLOAT4, attrib.data);
                                 else
                                     colorData = ospNewData(attrib.byte_size, OSP_UCHAR, attrib.data);
@@ -1106,7 +1102,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
                         }
                         // check index pointer
                         if (mesh.indices.data != nullptr) {
-                            auto count =
+                            const auto count =
                                 mesh.indices.byte_size / mesh::MeshDataAccessCollection::getByteSize(mesh.indices.type);
                             indexData = ospNewData(count, OSP_INT, mesh.indices.data);
                             ospCommit(indexData);

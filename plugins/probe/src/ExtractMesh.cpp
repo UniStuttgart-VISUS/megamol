@@ -296,20 +296,36 @@ void ExtractMesh::convertToMesh() {
         _mesh_attribs[0].stride = sizeof(pcl::PointXYZ);
         _mesh_attribs[0].data = reinterpret_cast<uint8_t*>(_resultCloud.points.data());
     } else {
-        _mesh_attribs.resize(1);
-        _mesh_attribs[0].component_type = mesh::MeshDataAccessCollection::ValueType::FLOAT;
-        vertex_data.resize(3*_resultSurface.points.size());
+        _mesh_attribs.resize(2);
+        _vertex_data.resize(3*_resultSurface.points.size());
+        _normal_data.resize(3 * _resultSurface.points.size());
+#pragma omp parallel for
         for (auto i = 0; i < _resultSurface.points.size(); i++) {
-            vertex_data[3 * i + 0] = _resultSurface.points[i].x;
-            vertex_data[3 * i + 1] = _resultSurface.points[i].y;
-            vertex_data[3 * i + 2] = _resultSurface.points[i].z;
+            //
+            _vertex_data[3 * i + 0] = _resultSurface.points[i].x;
+            _vertex_data[3 * i + 1] = _resultSurface.points[i].y;
+            _vertex_data[3 * i + 2] = _resultSurface.points[i].z;
+            //
+            _normal_data[3 * i + 0] = _resultSurface.points[i].normal_x;
+            _normal_data[3 * i + 1] = _resultSurface.points[i].normal_y;
+            _normal_data[3 * i + 2] = _resultSurface.points[i].normal_z;
         }
 
-
-        _mesh_attribs[0].byte_size = sizeof(float) * vertex_data.size();
+        //
+        _mesh_attribs[0].semantic = mesh::MeshDataAccessCollection::AttributeSemanticType::POSITION;
+        _mesh_attribs[0].component_type = mesh::MeshDataAccessCollection::ValueType::FLOAT;
+        _mesh_attribs[0].byte_size = sizeof(float) * _vertex_data.size();
         _mesh_attribs[0].component_cnt = 3;
         _mesh_attribs[0].stride = 3 * sizeof(float);
-        _mesh_attribs[0].data = reinterpret_cast<uint8_t*>(vertex_data.data());
+        _mesh_attribs[0].data = reinterpret_cast<uint8_t*>(_vertex_data.data());
+
+        //
+        _mesh_attribs[1].semantic = mesh::MeshDataAccessCollection::AttributeSemanticType::NORMAL;
+        _mesh_attribs[1].component_type = mesh::MeshDataAccessCollection::ValueType::FLOAT;
+        _mesh_attribs[1].byte_size = sizeof(float) * _normal_data.size();
+        _mesh_attribs[1].component_cnt = 3;
+        _mesh_attribs[1].stride = 3 * sizeof(float);
+        _mesh_attribs[1].data = reinterpret_cast<uint8_t*>(_normal_data.data());
     }
 
     _mesh_indices.type = mesh::MeshDataAccessCollection::ValueType::UNSIGNED_INT;

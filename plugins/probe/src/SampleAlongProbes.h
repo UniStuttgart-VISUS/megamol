@@ -15,7 +15,7 @@
 #include "ProbeCollection.h"
 
 namespace megamol {
-namespace probe{
+namespace probe {
 
 class SampleAlongPobes : public core::Module {
 public:
@@ -47,11 +47,14 @@ protected:
     virtual bool create();
     virtual void release();
 
-    core::CalleeSlot m_probe_lhs_call;
-    size_t m_probe_lhs_call_cached_hash;
+    core::CalleeSlot m_probe_lhs_slot;
+    size_t m_probe_lhs_cached_hash;
 
-    core::CallerSlot m_probe_rhs_call;
-    size_t m_probe_rhs_call_cached_hash;
+    core::CallerSlot m_probe_rhs_slot;
+    size_t m_probe_rhs_cached_hash;
+
+    core::CallerSlot m_adios_rhs_slot;
+    size_t m_adios_rhs_cached_hash;
 
 private:
     bool getData(core::Call& call);
@@ -61,8 +64,8 @@ private:
     std::shared_ptr<ProbeCollection> m_probes;
 };
 
-}
-}
+} // namespace probe
+} // namespace megamol
 
 
 #endif // !SAMPLE_ALONG_PROBES_H_INCLUDED
