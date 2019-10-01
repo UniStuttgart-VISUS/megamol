@@ -50,7 +50,7 @@ protected:
      *
      * @return 'true' on success, 'false' on failure.
      */
-    virtual bool getExtentCallback(core::Call& caller);
+    virtual bool getMetaDataCallback(core::Call& caller);
 
     /**
      * Implementation of 'Release'.
@@ -76,11 +76,12 @@ protected:
     std::vector<size_t> m_mesh_collection_indices;
 
     /** The slot for querying additional mesh data, i.e. a rhs chaining connection */
-    megamol::core::CallerSlot m_mesh_callerSlot;
+    megamol::core::CallerSlot m_mesh_rhs_slot;
+    size_t m_mesh_rhs_cached_hash;
 
-private:
     /** The slot for requesting data */
-    megamol::core::CalleeSlot m_getData_slot;
+    megamol::core::CalleeSlot m_mesh_lhs_slot;
+    size_t m_mesh_lhs_cached_hash;
 };
 
 } // namespace mesh

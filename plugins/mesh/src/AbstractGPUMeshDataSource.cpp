@@ -12,16 +12,16 @@
 
 megamol::mesh::AbstractGPUMeshDataSource::AbstractGPUMeshDataSource()
     : core::Module()
-    , m_getData_slot("getData", "The slot publishing the loaded data")
-    , m_mesh_callerSlot("getMesh", "The slot for chaining material data sources") {
-    this->m_getData_slot.SetCallback(
+    , m_mesh_lhs_slot("getData", "The slot publishing the loaded data")
+    , m_mesh_rhs_slot("getMesh", "The slot for chaining material data sources") {
+    this->m_mesh_lhs_slot.SetCallback(
         CallGPUMeshData::ClassName(), "GetData", &AbstractGPUMeshDataSource::getDataCallback);
-    this->m_getData_slot.SetCallback(
-        CallGPUMeshData::ClassName(), "GetMetaData", &AbstractGPUMeshDataSource::getExtentCallback);
-    this->MakeSlotAvailable(&this->m_getData_slot);
+    this->m_mesh_lhs_slot.SetCallback(
+        CallGPUMeshData::ClassName(), "GetMetaData", &AbstractGPUMeshDataSource::getMetaDataCallback);
+    this->MakeSlotAvailable(&this->m_mesh_lhs_slot);
 
-    this->m_mesh_callerSlot.SetCompatibleCall<CallGPUMeshDataDescription>();
-    this->MakeSlotAvailable(&this->m_mesh_callerSlot);
+    this->m_mesh_rhs_slot.SetCompatibleCall<CallGPUMeshDataDescription>();
+    this->MakeSlotAvailable(&this->m_mesh_rhs_slot);
 }
 
 megamol::mesh::AbstractGPUMeshDataSource::~AbstractGPUMeshDataSource() { this->Release(); }
@@ -32,7 +32,7 @@ bool megamol::mesh::AbstractGPUMeshDataSource::create(void) {
     return true;
 }
 
-bool megamol::mesh::AbstractGPUMeshDataSource::getExtentCallback(core::Call& caller) {
+bool megamol::mesh::AbstractGPUMeshDataSource::getMetaDataCallback(core::Call& caller) {
     CallGPUMeshData* mc = dynamic_cast<CallGPUMeshData*>(&caller);
     if (mc == NULL) return false;
 

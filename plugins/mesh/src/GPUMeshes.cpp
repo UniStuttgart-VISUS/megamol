@@ -87,7 +87,7 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
     }
 
     // if there is a mesh connection to the right, pass on the mesh collection
-    CallGPUMeshData* rhs_mesh_call = this->m_mesh_callerSlot.CallAs<CallGPUMeshData>();
+    CallGPUMeshData* rhs_mesh_call = this->m_mesh_rhs_slot.CallAs<CallGPUMeshData>();
     if (rhs_mesh_call != NULL) {
         rhs_mesh_call->setData(mesh_collection);
 

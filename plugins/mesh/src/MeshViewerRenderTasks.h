@@ -13,7 +13,7 @@
 namespace megamol {
 namespace mesh {
 
-class MeshViewerRenderTasks : AbstractGPURenderTaskDataSource
+class MeshViewerRenderTasks : public AbstractGPURenderTaskDataSource
 {
 public:
     /**
@@ -21,7 +21,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "SimpleMeshViewerRenderTasks"; }
+    static const char* ClassName(void) { return "MeshViewerRenderTasks"; }
 
     /**
      * Answer a human readable description of this module.

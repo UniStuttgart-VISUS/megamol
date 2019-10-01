@@ -45,7 +45,6 @@ megamol::mesh::AbstractGPURenderTaskDataSource::AbstractGPURenderTaskDataSource(
 megamol::mesh::AbstractGPURenderTaskDataSource::~AbstractGPURenderTaskDataSource() { this->Release(); }
 
 bool megamol::mesh::AbstractGPURenderTaskDataSource::create(void) {
-    // intentionally empty ?
 
     m_gpu_render_tasks = std::make_shared<GPURenderTaskCollection>();
 
