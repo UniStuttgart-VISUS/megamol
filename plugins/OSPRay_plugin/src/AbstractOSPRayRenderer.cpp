@@ -118,7 +118,7 @@ void AbstractOSPRayRenderer::renderTexture2D(vislib::graphics::gl::GLSLShader& s
     const float* db, int& width, int& height, megamol::core::view::CallRender3D_2& cr) {
 
     auto fbo = cr.FrameBufferObject();
-    //if (fbo != NULL) {
+    // if (fbo != NULL) {
 
     //    if (fbo->IsValid()) {
     //        if ((fbo->GetWidth() != width) || (fbo->GetHeight() != height)) {
@@ -149,66 +149,66 @@ void AbstractOSPRayRenderer::renderTexture2D(vislib::graphics::gl::GLSLShader& s
     //        // fbo->DrawDepthTexture();
     //    }
     //} else {
-        /*
-        if (this->new_fbo.IsValid()) {
-            if ((this->new_fbo.GetWidth() != width) || (this->new_fbo.GetHeight() != height)) {
-                this->new_fbo.Release();
-            }
+    /*
+    if (this->new_fbo.IsValid()) {
+        if ((this->new_fbo.GetWidth() != width) || (this->new_fbo.GetHeight() != height)) {
+            this->new_fbo.Release();
         }
-        if (!this->new_fbo.IsValid()) {
-            this->new_fbo.Create(width, height, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE,
-        vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE, GL_DEPTH_COMPONENT);
-        }
-        if (this->new_fbo.IsValid() && !this->new_fbo.IsEnabled()) {
-            this->new_fbo.Enable();
-        }
+    }
+    if (!this->new_fbo.IsValid()) {
+        this->new_fbo.Create(width, height, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE,
+    vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE, GL_DEPTH_COMPONENT);
+    }
+    if (this->new_fbo.IsValid() && !this->new_fbo.IsEnabled()) {
+        this->new_fbo.Enable();
+    }
 
-        this->new_fbo.BindColourTexture();
-        glClear(GL_COLOR_BUFFER_BIT);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, fb);
-        glBindTexture(GL_TEXTURE_2D, 0);
+    this->new_fbo.BindColourTexture();
+    glClear(GL_COLOR_BUFFER_BIT);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, fb);
+    glBindTexture(GL_TEXTURE_2D, 0);
 
-        this->new_fbo.BindDepthTexture();
-        glClear(GL_DEPTH_BUFFER_BIT);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, db);
-        glBindTexture(GL_TEXTURE_2D, 0);
-
-
-        glBlitNamedFramebuffer(this->new_fbo.GetID(), 0, 0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT |
-        GL_DEPTH_BUFFER_BIT, GL_NEAREST);
-
-        this->new_fbo.Disable();
-        */
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, this->tex);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, fb);
-
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, this->depth);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, db);
-        glBindTexture(GL_TEXTURE_2D, 0);
-
-        glEnable(GL_DEPTH_TEST);
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, this->tex);
-        glUniform1i(shader.ParameterLocation("tex"), 0);
+    this->new_fbo.BindDepthTexture();
+    glClear(GL_DEPTH_BUFFER_BIT);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, db);
+    glBindTexture(GL_TEXTURE_2D, 0);
 
 
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, this->depth);
-        glUniform1i(shader.ParameterLocation("depth"), 1);
+    glBlitNamedFramebuffer(this->new_fbo.GetID(), 0, 0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT |
+    GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+
+    this->new_fbo.Disable();
+    */
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, this->tex);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, fb);
+
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, this->depth);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, db);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, this->tex);
+    glUniform1i(shader.ParameterLocation("tex"), 0);
 
 
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-        glBindTexture(GL_TEXTURE_2D, 0);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, this->depth);
+    glUniform1i(shader.ParameterLocation("depth"), 1);
 
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-        glDisable(GL_BLEND);
-        glDisable(GL_DEPTH_TEST);
-  //  }
+
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+    glDisable(GL_BLEND);
+    glDisable(GL_DEPTH_TEST);
+    //  }
 }
 
 
@@ -256,8 +256,7 @@ void AbstractOSPRayRenderer::initOSPRay(OSPDevice& dvce) {
             dvce = ospNewDevice("default");
             if (this->numThreads.Param<megamol::core::param::IntParam>()->Value() > 0) {
                 ospDeviceSet1i(dvce, "numThreads", this->numThreads.Param<megamol::core::param::IntParam>()->Value());
-            }
-            else {
+            } else {
                 ospDeviceSet1i(dvce, "numThreads", vislib::sys::SystemInformation::ProcessorCount() - 1);
             }
         }
@@ -532,13 +531,13 @@ void AbstractOSPRayRenderer::RendererSettings(OSPRenderer& renderer) {
         ospSet1i(renderer, "aoSamples", this->AOsamples.Param<core::param::IntParam>()->Value());
         ospSet1i(renderer, "shadowsEnabled", this->shadows.Param<core::param::BoolParam>()->Value());
         ospSet1f(renderer, "aoDistance", this->AOdistance.Param<core::param::FloatParam>()->Value());
-        //ospSet1i(renderer, "backgroundEnabled", 0);
-        
+        // ospSet1i(renderer, "backgroundEnabled", 0);
+
         GLfloat bgcolor[4];
         glGetFloatv(GL_COLOR_CLEAR_VALUE, bgcolor);
         ospSet3fv(renderer, "bgColor", bgcolor);
         ospSet1i(renderer, "oneSidedLighting", true);
-        
+
         break;
     case PATHTRACER:
         if (this->rd_ptBackground.Param<core::param::FilePathParam>()->Value() != vislib::TString("")) {
@@ -553,20 +552,17 @@ void AbstractOSPRayRenderer::RendererSettings(OSPRenderer& renderer) {
 }
 
 
-void AbstractOSPRayRenderer::setupOSPRayCamera(
-    OSPCamera& ospcam, megamol::core::view::Camera_2& mmcam) {
+void AbstractOSPRayRenderer::setupOSPRayCamera(OSPCamera& ospcam, megamol::core::view::Camera_2& mmcam) {
 
 
     // calculate image parts for e.g. screenshooter
     std::vector<float> imgStart(2, 0);
     std::vector<float> imgEnd(2, 0);
-    imgStart[0] = mmcam.image_tile().left() /
-                  static_cast<float>(mmcam.resolution_gate().width());
-    imgStart[1] = mmcam.image_tile().bottom() /
-                  static_cast<float>(mmcam.resolution_gate().height());
+    imgStart[0] = mmcam.image_tile().left() / static_cast<float>(mmcam.resolution_gate().width());
+    imgStart[1] = mmcam.image_tile().bottom() / static_cast<float>(mmcam.resolution_gate().height());
 
-    imgEnd[0] = (mmcam.image_tile().left() + mmcam.image_tile().width()) /
-                static_cast<float>(mmcam.resolution_gate().width());
+    imgEnd[0] =
+        (mmcam.image_tile().left() + mmcam.image_tile().width()) / static_cast<float>(mmcam.resolution_gate().width());
     imgEnd[1] = (mmcam.image_tile().bottom() + mmcam.image_tile().height()) /
                 static_cast<float>(mmcam.resolution_gate().height());
 
@@ -834,7 +830,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
             break;
 
         case structureTypeEnum::OSPRAY_API_STRUCTURES:
-             if (element.ospStructures.first.empty()) {
+            if (element.ospStructures.first.empty()) {
                 // returnValue = false;
                 break;
             }
@@ -862,7 +858,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
             break;
         case structureTypeEnum::GEOMETRY:
             switch (element.geometryType) {
-             case geometryTypeEnum::SPHERES:
+            case geometryTypeEnum::SPHERES:
                 if (element.vertexData == NULL) {
                     // returnValue = false;
                     break;
@@ -1014,11 +1010,11 @@ bool AbstractOSPRayRenderer::fillWorld() {
                     for (auto& attrib : mesh.attributes) {
 
                         if (attrib.semantic == mesh::MeshDataAccessCollection::POSITION) {
-                            auto count = attrib.byte_size /
-                                         (mesh::MeshDataAccessCollection::getByteSize(attrib.component_type) *
-                                             attrib.component_cnt);
+                            auto count =
+                                attrib.byte_size / (mesh::MeshDataAccessCollection::getByteSize(attrib.component_type) *
+                                                       attrib.component_cnt);
                             auto ospType = OSP_FLOAT3;
-                            if (attrib.stride == 4*sizeof(float)) ospType = OSP_FLOAT3A;
+                            if (attrib.stride == 4 * sizeof(float)) ospType = OSP_FLOAT3A;
                             vertexData = ospNewData(count, ospType, attrib.data);
                             ospCommit(vertexData);
                             ospSetData(geo.back(), "vertex", vertexData);
@@ -1059,8 +1055,8 @@ bool AbstractOSPRayRenderer::fillWorld() {
                     }
                     // check index pointer
                     if (mesh.indices.data != nullptr) {
-                        auto count = mesh.indices.byte_size /
-                                     mesh::MeshDataAccessCollection::getByteSize(mesh.indices.type);
+                        auto count =
+                            mesh.indices.byte_size / mesh::MeshDataAccessCollection::getByteSize(mesh.indices.type);
                         indexData = ospNewData(count, OSP_UINT, mesh.indices.data);
                         ospCommit(indexData);
                         ospSetData(geo.back(), "index", indexData);
@@ -1071,13 +1067,61 @@ bool AbstractOSPRayRenderer::fillWorld() {
                 }
                 break;
             case geometryTypeEnum::STREAMLINES:
-                if (element.vertexData == NULL) {
+                if (element.vertexData == nullptr && element.mesh == nullptr) {
                     // returnValue = false;
+                    vislib::sys::Log::DefaultLog.WriteError("[AbstractOSPRayRenderer]Streamline geometry detected but no data found.");
                     break;
                 }
-                {
-                    geo.push_back(ospNewGeometry("streamlines"));
+                if (element.mesh != nullptr) {
+                    this->numCreateGeo = element.mesh->accessMesh().size();
+                    for (auto& mesh : element.mesh->accessMesh()) {
 
+                        geo.push_back(ospNewGeometry("streamlines"));
+
+                        for (auto& attrib : mesh.attributes) {
+
+                            if (attrib.semantic == mesh::MeshDataAccessCollection::POSITION) {
+                                auto count = attrib.byte_size /
+                                             (mesh::MeshDataAccessCollection::getByteSize(attrib.component_type) *
+                                                 attrib.component_cnt);
+                                assert(attrib.stride == 4 * sizeof(float));
+                                vertexData = ospNewData(count, OSP_FLOAT3A, attrib.data);
+                                ospCommit(vertexData);
+                                ospSetData(geo.back(), "vertex", vertexData);
+                            }
+
+                            // check colorpointer and convert to rgba
+                            if (attrib.semantic == mesh::MeshDataAccessCollection::COLOR) {
+                                if (attrib.component_type == mesh::MeshDataAccessCollection::ValueType::FLOAT)
+                                    colorData = ospNewData(
+                                        attrib.byte_size /
+                                            (mesh::MeshDataAccessCollection::getByteSize(attrib.component_type) *
+                                                attrib.component_cnt),
+                                        OSP_FLOAT4, attrib.data);
+                                else
+                                    colorData = ospNewData(attrib.byte_size, OSP_UCHAR, attrib.data);
+                                ospCommit(colorData);
+                                ospSetData(geo.back(), "vertex.color", colorData);
+                            }
+                        }
+                        // check index pointer
+                        if (mesh.indices.data != nullptr) {
+                            auto count =
+                                mesh.indices.byte_size / mesh::MeshDataAccessCollection::getByteSize(mesh.indices.type);
+                            indexData = ospNewData(count, OSP_INT, mesh.indices.data);
+                            ospCommit(indexData);
+                            ospSetData(geo.back(), "index", indexData);
+                        } else {
+                            vislib::sys::Log::DefaultLog.WriteError("OSPRay cannot render meshes without index array");
+                            returnValue = false;
+                        }
+
+                        ospSet1f(geo.back(), "radius", element.globalRadius);
+                        ospSet1i(geo.back(), "smooth", element.smooth);
+                    } // end for geometry
+                } else {
+                    geo.push_back(ospNewGeometry("streamlines"));
+                    this->numCreateGeo = 1;
                     osp::vec3fa* data = new osp::vec3fa[element.vertexData->size() / 3];
 
                     // fill aligned array with vertex data
@@ -1140,64 +1184,65 @@ bool AbstractOSPRayRenderer::fillWorld() {
 
         case structureTypeEnum::VOLUME:
 
-                if (element.voxels == NULL) {
-                    // returnValue = false;
-                    break;
-                }
+            if (element.voxels == NULL) {
+                // returnValue = false;
+                break;
+            }
 
-                vol.push_back(ospNewVolume("shared_structured_volume"));
+            vol.push_back(ospNewVolume("shared_structured_volume"));
 
-                auto type = static_cast<uint8_t>(element.voxelDType);
+            auto type = static_cast<uint8_t>(element.voxelDType);
 
-                ospSetString(vol.back(), "voxelType", voxelDataTypeS[type].c_str());
-                //float fixedSpacing[3];
-                //for (auto x = 0; x < 3; ++x) {
-                //    fixedSpacing[x] = element.gridSpacing->at(x) / (element.dimensions->at(x) - 1) + element.gridSpacing->at(x);
-                //}
-                // scaling properties of the volume
-                ospSet3iv(vol.back(), "dimensions", element.dimensions->data());
-                ospSet3fv(vol.back(), "gridOrigin", element.gridOrigin->data());
-                ospSet3fv(vol.back(), "gridSpacing", element.gridSpacing->data());
-                ospSet2f(vol.back(), "voxelRange", element.valueRange->first, element.valueRange->second);
+            ospSetString(vol.back(), "voxelType", voxelDataTypeS[type].c_str());
+            // float fixedSpacing[3];
+            // for (auto x = 0; x < 3; ++x) {
+            //    fixedSpacing[x] = element.gridSpacing->at(x) / (element.dimensions->at(x) - 1) +
+            //    element.gridSpacing->at(x);
+            //}
+            // scaling properties of the volume
+            ospSet3iv(vol.back(), "dimensions", element.dimensions->data());
+            ospSet3fv(vol.back(), "gridOrigin", element.gridOrigin->data());
+            ospSet3fv(vol.back(), "gridSpacing", element.gridSpacing->data());
+            ospSet2f(vol.back(), "voxelRange", element.valueRange->first, element.valueRange->second);
 
-                ospSet1b(vol.back(), "singleShade", element.useMIP);
-                ospSet1b(vol.back(), "gradientShadingEnables", element.useGradient);
-                ospSet1b(vol.back(), "preIntegration", element.usePreIntegration);
-                ospSet1b(vol.back(), "adaptiveSampling", element.useAdaptiveSampling);
-                ospSet1f(vol.back(), "adaptiveScalar", element.adaptiveFactor);
-                ospSet1f(vol.back(), "adaptiveMaxSamplingRate", element.adaptiveMaxRate);
-                ospSet1f(vol.back(), "samplingRate", element.samplingRate);
+            ospSet1b(vol.back(), "singleShade", element.useMIP);
+            ospSet1b(vol.back(), "gradientShadingEnables", element.useGradient);
+            ospSet1b(vol.back(), "preIntegration", element.usePreIntegration);
+            ospSet1b(vol.back(), "adaptiveSampling", element.useAdaptiveSampling);
+            ospSet1f(vol.back(), "adaptiveScalar", element.adaptiveFactor);
+            ospSet1f(vol.back(), "adaptiveMaxSamplingRate", element.adaptiveMaxRate);
+            ospSet1f(vol.back(), "samplingRate", element.samplingRate);
 
-                // add data
-                voxels = ospNewData(element.voxelCount, static_cast<OSPDataType>(voxelDataTypeOSP[type]),
-                    element.voxels, OSP_DATA_SHARED_BUFFER);
-                ospCommit(voxels);
-                ospSetData(vol.back(), "voxelData", voxels);
+            // add data
+            voxels = ospNewData(element.voxelCount, static_cast<OSPDataType>(voxelDataTypeOSP[type]), element.voxels,
+                OSP_DATA_SHARED_BUFFER);
+            ospCommit(voxels);
+            ospSetData(vol.back(), "voxelData", voxels);
 
-                // ClippingBox
+            // ClippingBox
 
-                if (element.clippingBoxActive) {
-                    ospSet3fv(vol.back(), "volumeClippingBoxLower", element.clippingBoxLower->data());
-                    ospSet3fv(vol.back(), "volumeClippingBoxUpper", element.clippingBoxUpper->data());
-                } else {
-                    ospSetVec3f(vol.back(), "volumeClippingBoxLower", {0.0f, 0.0f, 0.0f});
-                    ospSetVec3f(vol.back(), "volumeClippingBoxUpper", {0.0f, 0.0f, 0.0f});
-                }
+            if (element.clippingBoxActive) {
+                ospSet3fv(vol.back(), "volumeClippingBoxLower", element.clippingBoxLower->data());
+                ospSet3fv(vol.back(), "volumeClippingBoxUpper", element.clippingBoxUpper->data());
+            } else {
+                ospSetVec3f(vol.back(), "volumeClippingBoxLower", {0.0f, 0.0f, 0.0f});
+                ospSetVec3f(vol.back(), "volumeClippingBoxUpper", {0.0f, 0.0f, 0.0f});
+            }
 
-                OSPTransferFunction tf = ospNewTransferFunction("piecewise_linear");
+            OSPTransferFunction tf = ospNewTransferFunction("piecewise_linear");
 
-                OSPData tf_rgb = ospNewData(element.tfRGB->size() / 3, OSP_FLOAT3, element.tfRGB->data());
-                OSPData tf_opa = ospNewData(element.tfA->size(), OSP_FLOAT, element.tfA->data());
-                ospSetData(tf, "colors", tf_rgb);
-                ospSetData(tf, "opacities", tf_opa);
-                ospSet2f(tf, "valueRange", element.valueRange->first, element.valueRange->second);
+            OSPData tf_rgb = ospNewData(element.tfRGB->size() / 3, OSP_FLOAT3, element.tfRGB->data());
+            OSPData tf_opa = ospNewData(element.tfA->size(), OSP_FLOAT, element.tfA->data());
+            ospSetData(tf, "colors", tf_rgb);
+            ospSetData(tf, "opacities", tf_opa);
+            ospSet2f(tf, "valueRange", element.valueRange->first, element.valueRange->second);
 
-                ospCommit(tf);
+            ospCommit(tf);
 
-                ospSetObject(vol.back(), "transferFunction", tf);
-                ospCommit(vol.back());
-                ospRelease(tf);
-            
+            ospSetObject(vol.back(), "transferFunction", tf);
+            ospCommit(vol.back());
+            ospRelease(tf);
+
             switch (element.volRepType) {
             case volumeRepresentationType::VOLUMEREP:
                 ospAddVolume(world, vol.back());
