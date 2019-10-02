@@ -246,10 +246,21 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     animTimeParam->Param<param::FloatParam>()->SetValue(simTime * static_cast<float>(cr3d->TimeFramesCount()), true);
 
     // Viewport ---------------------------------------------------------------
+    ///auto viewport = cr3d->GetViewport().GetSize();
+    ///glm::vec4 viewport;
+    ///if (!cam.image_tile().empty()) {
+    ///    viewport = glm::vec4(
+    ///        cam.image_tile().left(), cam.image_tile().bottom(), cam.image_tile().width(), cam.image_tile().height());
+    ///}
+    ///else {
+    ///    viewport = glm::vec4(0.0f, 0.0f, cam.resolution_gate().width(), cam.resolution_gate().height());
+    ///}
+    ///const int vp_iw = viewport.Width();
+    ///const int vp_ih = viewport.Height()
     glm::ivec4 viewport;
     glGetIntegerv(GL_VIEWPORT, glm::value_ptr(viewport));
     const int vp_iw = viewport[2];
-    const int vp_ih = viewport[3];
+    const int vp_ih = viewport[3]; ;
     const int vp_ih_reduced = vp_ih - static_cast<int>(this->utils.GetTextLineHeight());
     const float vp_fw = static_cast<float>(vp_iw);
     const float vp_fh = static_cast<float>(vp_ih);
@@ -443,14 +454,15 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     this->utils.SetBackgroundColor(glm::vec4(bc[0], bc[1], bc[2], 1.0f));
     glm::mat4 ortho = glm::ortho(0.0f, vp_fw, 0.0f, vp_fh, -1.0f, 1.0f);
     glClearColor(bc[0], bc[1], bc[2], 0.0f);
+    glClearDepth(1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glViewport(0, 0, vp_iw, vp_ih);
+    ///glViewport(0, 0, vp_iw, vp_ih);
 
     // Push texture -----------------------------------------------------------
     float right = (vp_fw + static_cast<float>(texWidth)) / 2.0f;
     float left = (vp_fw - static_cast<float>(texWidth)) / 2.0f;
-    float bottom = (vp_fh_reduced - static_cast<float>(texHeight)) / 2.0f;
-    float up = (vp_fh_reduced + static_cast<float>(texHeight)) / 2.0f;
+    float bottom = (vp_fh_reduced + static_cast<float>(texHeight)) / 2.0f;
+    float up = (vp_fh_reduced - static_cast<float>(texHeight)) / 2.0f;
     glm::vec3 pos_bottom_left = { left, bottom, 0.0f };
     glm::vec3 pos_upper_left = { left, up, 0.0f };
     glm::vec3 pos_upper_right = { right, up, 0.0f };
@@ -490,7 +502,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     this->utils.PushMenu(leftLabel, midLabel, rightLabel, vp_fw, vp_fh);
 
     // Draw 2D ----------------------------------------------------------------
-    this->utils.DrawAll(ortho);
+    this->utils.DrawAll(ortho, glm::vec2(vp_fw, vp_fh));
 }
 
 
@@ -618,7 +630,7 @@ bool CinematicView::render2file_write() {
         png_set_IHDR(this->png_data.structptr, this->png_data.infoptr, this->png_data.width, this->png_data.height, 8,
             PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
 
-        if (fbo.GetColourTexture(this->png_data.buffer, 0, GL_RGB, GL_UNSIGNED_BYTE) != GL_NO_ERROR) {
+        if (this->fbo.GetColourTexture(this->png_data.buffer, 0, GL_RGB, GL_UNSIGNED_BYTE) != GL_NO_ERROR) {
             throw vislib::Exception(
                 "[CINEMATIC VIEW] [render2file_write] Failed to create Screenshot: Cannot read image data", __FILE__,
                 __LINE__);

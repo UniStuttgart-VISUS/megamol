@@ -12,12 +12,9 @@
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/View3D_2.h"
-
 #include "mmcore/view/CallRender3D_2.h"
 #include "mmcore/view/CallRenderView.h"
-
 #include "mmcore/utility/SDFFont.h"
-
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -28,9 +25,7 @@
 
 #include "vislib/Serialisable.h"
 #include "vislib/Trace.h"
-#include "vislib/graphics/Camera.h"
 #include "vislib/graphics/gl/FramebufferObject.h"
-#include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/math/Point.h"
 #include "vislib/math/Rectangle.h"
 #include "vislib/sys/FastFile.h"

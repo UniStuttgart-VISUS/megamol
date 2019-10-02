@@ -94,33 +94,33 @@ namespace cinematic {
 
         void Push2DDepthTexture(GLuint texture_id, const glm::vec3& pos_bottom_left, const glm::vec3& pos_upper_left, const glm::vec3& pos_upper_right, const glm::vec3& pos_bottom_right, bool flip_y = false, const glm::vec4& color = glm::vec4(0.0f, 0.0f, 0.0f, 0.0));
 
-        inline void DrawPointPrimitives(glm::mat4& mat_mvp) {
-            this->drawPrimitives(RenderUtils::Primitives::POINTS, mat_mvp);
+        inline void DrawPointPrimitives(glm::mat4& mat_mvp, glm::vec2 dim_vp) {
+            this->drawPrimitives(RenderUtils::Primitives::POINTS, mat_mvp, dim_vp);
             this->clearQueue(Primitives::POINTS);
         }
 
-        inline void DrawLinePrimitives(glm::mat4& mat_mvp) {
-            this->drawPrimitives(RenderUtils::Primitives::LINES, mat_mvp);
+        inline void DrawLinePrimitives(glm::mat4& mat_mvp, glm::vec2 dim_vp) {
+            this->drawPrimitives(RenderUtils::Primitives::LINES, mat_mvp, dim_vp);
             this->clearQueue(Primitives::LINES);
         }
 
-        inline void DrawQuadPrimitives(glm::mat4& mat_mvp) {
-            this->drawPrimitives(RenderUtils::Primitives::QUADS, mat_mvp);
+        inline void DrawQuadPrimitives(glm::mat4& mat_mvp, glm::vec2 dim_vp) {
+            this->drawPrimitives(RenderUtils::Primitives::QUADS, mat_mvp, dim_vp);
             this->clearQueue(Primitives::QUADS);
         }
 
-        inline void DrawTextures(glm::mat4& mat_mvp) {
-            this->drawPrimitives(RenderUtils::Primitives::COLOR_TEXTURE, mat_mvp);
-            this->drawPrimitives(RenderUtils::Primitives::DEPTH_TEXTURE, mat_mvp);
+        inline void DrawTextures(glm::mat4& mat_mvp, glm::vec2 dim_vp) {
+            this->drawPrimitives(RenderUtils::Primitives::COLOR_TEXTURE, mat_mvp, dim_vp);
+            this->drawPrimitives(RenderUtils::Primitives::DEPTH_TEXTURE, mat_mvp, dim_vp);
             this->clearQueue(Primitives::COLOR_TEXTURE);
             this->clearQueue(Primitives::DEPTH_TEXTURE);
         }
 
-        inline void DrawAllPrimitives(glm::mat4& mat_mvp) {
-            this->DrawPointPrimitives(mat_mvp);
-            this->DrawLinePrimitives(mat_mvp);
-            this->DrawQuadPrimitives(mat_mvp);
-            this->DrawTextures(mat_mvp);
+        inline void DrawAllPrimitives(glm::mat4& mat_mvp, glm::vec2 dim_vp) {
+            this->DrawPointPrimitives(mat_mvp, dim_vp);
+            this->DrawLinePrimitives(mat_mvp, dim_vp);
+            this->DrawQuadPrimitives(mat_mvp, dim_vp);
+            this->DrawTextures(mat_mvp, dim_vp);
         }
 
         inline void Smoothing(bool s) {
@@ -183,7 +183,7 @@ namespace cinematic {
         void pushQuad(Primitives primitive, GLuint texture_id, const glm::vec3& pos_bottom_left, const glm::vec3& pos_upper_left, const glm::vec3& pos_upper_right,
             const glm::vec3& pos_bottom_right, const glm::vec4& color, const glm::vec4& attributes);
 
-        void drawPrimitives(Primitives primitive, glm::mat4& mat_mvp);
+        void drawPrimitives(Primitives primitive, glm::mat4& mat_mvp, glm::vec2 dim_vp);
 
         bool createShader(vislib::graphics::gl::GLSLShader& shader, const std::string * const vertex_code, const std::string * const fragment_code);
 
@@ -247,7 +247,7 @@ namespace cinematic {
 
         void PushText(const std::string& text, float x, float y, float z);
 
-        void DrawAll(glm::mat4& mat_mvp);
+        void DrawAll(glm::mat4& mat_mvp, glm::vec2 dim_vp);
 
          float GetTextLineHeight(void);
 
@@ -263,10 +263,10 @@ namespace cinematic {
 
         // VARIABLES ------------------------------------------------------- //
 
-        bool                            init_once;
-        glm::vec4                       background_color;
         megamol::core::utility::SDFFont font;
         const float                     font_size;
+        bool                            init_once;
+        glm::vec4                       background_color;
 
         // FUNCTIONS ------------------------------------------------------- //
 

@@ -172,6 +172,18 @@ bool ReplacementRenderer::Render(megamol::core::view::CallRender3D_2& call) {
         cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
         glm::mat4 mvp = projTemp * viewTemp;
 
+        ///auto viewport = cr3d_in->GetViewport().GetSize();
+        glm::vec4 viewport;
+        if (!cam.image_tile().empty()) {
+            viewport = glm::vec4(
+                cam.image_tile().left(), cam.image_tile().bottom(), cam.image_tile().width(), cam.image_tile().height());
+        }
+        else {
+            viewport = glm::vec4(0.0f, 0.0f, cam.resolution_gate().width(), cam.resolution_gate().height());
+        }
+        float vp_fw = viewport.z;
+        float vp_fh = viewport.w;
+
         float alpha = alphaParam.Param<param::FloatParam>()->Value();
 
         glm::vec4 dark_blue = { 0.0f, 0.0f, 0.25f, alpha };
@@ -198,7 +210,7 @@ bool ReplacementRenderer::Render(megamol::core::view::CallRender3D_2& call) {
         this->utils.PushQuadPrimitive(right_bottom_back, right_top_back, right_top_front, right_bottom_front, light_red);
 
         // Render bounding box as replacement
-        this->utils.DrawQuadPrimitives(mvp);
+        this->utils.DrawQuadPrimitives(mvp, glm::vec2(vp_fw, vp_fh));
     }
     else {
 

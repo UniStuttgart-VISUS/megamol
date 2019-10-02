@@ -151,6 +151,7 @@ void TrackingShotRenderer::PreRender(core::view::CallRender3D_2& call) {
     cr3d_in->GetCamera(cam);
 
     // Get current viewport
+    ///auto viewport = cr3d_in->GetViewport().GetSize();
     glm::vec4 viewport;
     if (!cam.image_tile().empty()) {
         viewport = glm::vec4(
@@ -159,8 +160,8 @@ void TrackingShotRenderer::PreRender(core::view::CallRender3D_2& call) {
     else {
         viewport = glm::vec4(0.0f, 0.0f, cam.resolution_gate().width(), cam.resolution_gate().height());
     }
-    int vpW_int = static_cast<UINT>(viewport.z);
-    int vpH_int = static_cast<UINT>(viewport.w);
+    UINT vpW_int = static_cast<UINT>(viewport.z);
+    UINT vpH_int = static_cast<UINT>(viewport.w);
 
     // Prepare rendering to FBO of chained output -----------------------------
 
@@ -279,6 +280,7 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     glm::mat4 mvp = proj * view;
 
     // Get current viewport
+    ///auto viewport = cr3d_in->GetViewport().GetSize();
     glm::vec4 viewport;
     if (!cam.image_tile().empty()) {
         viewport = glm::vec4(
@@ -287,8 +289,8 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     else {
         viewport = glm::vec4(0.0f, 0.0f, cam.resolution_gate().width(), cam.resolution_gate().height());
     }
-    float vp_fw = viewport.z;
-    float vp_fh = viewport.w;
+    const float vp_fw = viewport.z;
+    const float vp_fh = viewport.w;
 
     // Get matrix for orthogonal projection of 2D rendering
     glm::mat4 ortho = glm::ortho(0.0f, vp_fw, 0.0f, vp_fh, -1.0f, 1.0f);
@@ -358,7 +360,7 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     }
 
     // Draw 3D ---------------------------------------------------------------
-    this->utils.DrawAll(mvp);
+    this->utils.DrawAll(mvp, glm::vec2(vp_fw, vp_fh));
 
     // Push textures ----------------------------------------------------------
     glm::vec3 pos_bottom_left = { 0.0f, 0.0f, 0.0f };
@@ -369,7 +371,10 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     this->utils.Push2DDepthTexture(this->fbo.GetColourTextureID(), pos_bottom_left, pos_upper_left, pos_upper_right, pos_bottom_right);
 
     // Push hotkey list ------------------------------------------------------
-    //this->utils.PushHotkeyList(const std::string& text, glm::vec3 position, float viewport_width, float viewport_height);
+    // Draw help text 
+    if (this->showHelpText) {
+        //this->utils.PushHotkeyList(vp_fw, vp_fh);
+    }
 
     // Push menu --------------------------------------------------------------
     std::string leftLabel = " TRACKING SHOT ";
@@ -381,7 +386,7 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     this->utils.PushMenu(leftLabel, midLabel, rightLabel, vp_fw, vp_fh);
 
     // Draw 2D ---------------------------------------------------------------
-    this->utils.DrawAll(ortho);
+    this->utils.DrawAll(ortho, glm::vec2(vp_fw, vp_fh));
 
     return true;
 }

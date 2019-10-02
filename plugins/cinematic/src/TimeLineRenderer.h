@@ -10,14 +10,13 @@
 
 #include "Cinematic/Cinematic.h"
 
-#include "mmcore/view/Renderer2DModule.h"
 #include "mmcore/CallerSlot.h"
+#include "mmcore/view/Renderer2DModule.h"
 #include "mmcore/view/CallRender2D.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/utility/SDFFont.h"
 #include "mmcore/utility/ResourceWrapper.h"
 #include "mmcore/misc/PngBitmapCodec.h"
-#include "mmcore/view/Renderer2DModule.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/IntParam.h"
@@ -27,12 +26,9 @@
 
 #include "vislib/String.h"
 #include "vislib/graphics/gl/OpenGLTexture2D.h"
-#include "vislib/sys/Log.h"
-#include "vislib/graphics/gl/SimpleFont.h"
 #include "vislib/graphics/BitmapImage.h"
 #include "vislib/graphics/Cursor2D.h"
 #include "vislib/graphics/InputModifiers.h"
-#include "vislib/graphics/gl/OpenGLTexture2D.h"
 #include "vislib/math/ShallowMatrix.h"
 #include "vislib/math/Matrix.h"
 #include "vislib/sys/Log.h"

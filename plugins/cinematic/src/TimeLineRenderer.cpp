@@ -109,15 +109,14 @@ bool TimeLineRenderer::GetExtents(view::CallRender2D& call) {
 	 auto cr = &call;
 	if (cr == nullptr) return false;
 
-    cr->SetBoundingBox(cr->GetViewport());
-
     glm::vec2 currentViewport;
     currentViewport.x = static_cast<float>(cr->GetViewport().GetSize().GetWidth());
     currentViewport.y = static_cast<float>(cr->GetViewport().GetSize().GetHeight());
+    cr->SetBoundingBox(cr->GetViewport());
 
-    // Viewport changes
     if (currentViewport != this->viewport) {
-    
+        this->viewport = currentViewport;
+
         // Set axes position depending on font size
         vislib::StringA tmpStr;
         if (this->axes[Axis::Y].maxValue > this->axes[Axis::X].maxValue) {
@@ -132,15 +131,15 @@ bool TimeLineRenderer::GetExtents(view::CallRender2D& call) {
         this->keyframeMarkHeight = strHeight*1.5f;
 
         this->axes[Axis::X].startPos = this->axes[Axis::Y].startPos = glm::vec2(strWidth + strHeight * 1.5f, strHeight*2.5f);
-        this->axes[Axis::X].endPos = glm::vec2(currentViewport.x - strWidth, strHeight * 2.5f);
-        this->axes[Axis::Y].endPos = glm::vec2(strWidth + strHeight * 1.5f, currentViewport.y - (this->keyframeMarkHeight * 1.1f) - strHeight);
+        this->axes[Axis::X].endPos = glm::vec2(this->viewport.x - strWidth, strHeight * 2.5f);
+        this->axes[Axis::Y].endPos = glm::vec2(strWidth + strHeight * 1.5f, this->viewport.y - (this->keyframeMarkHeight * 1.1f) - strHeight);
         for (size_t i = 0; i < Axis::COUNT; ++i) {
             this->axes[i].length = glm::length(this->axes[i].endPos - this->axes[i].startPos);
             this->axes[i].scaleFactor = 1.0f;
         }
-        this->recalcAxesData();
+        this->recalcAxesData(); 
 
-        this->viewport = currentViewport;
+        ///TODO  Check for too low viewport .....
     }
 
     return true;
@@ -149,7 +148,7 @@ bool TimeLineRenderer::GetExtents(view::CallRender2D& call) {
 
 bool TimeLineRenderer::Render(view::CallRender2D& call) {
 
-    const float eps = 0.00001f;
+    const float eps = 0.0001f;
 
      auto cr = &call;
     if (cr == nullptr) return false;
@@ -229,12 +228,14 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     glm::vec4 color;
     glm::vec3 normal = { 0.0f, 0.0f, 1.0f };
     glm::vec3 origin = { this->axes[Axis::X].startPos.x, this->axes[Axis::X].startPos.y, 0.0f };
-    glm::vec4 back_color;
-    glGetFloatv(GL_COLOR_CLEAR_VALUE, static_cast<GLfloat*>(glm::value_ptr(back_color)));
-    this->utils.SetBackgroundColor(back_color);
     float yAxisValue = 0.0f;
-    // Draw text in front of everthing else (z < 0)
-    float textPosZ = -0.1f;
+    float textPosZ = -0.1f; // Draw text in front of everthing else (z < 0)
+    // Get background color
+    auto cbc = cr->GetBackgroundColour();
+    glm::vec4 back_color = glm::vec4(static_cast<float>(cbc[0]) / 255.0f, static_cast<float>(cbc[1]) / 255.0f, static_cast<float>(cbc[2]) / 255.0f, 1.0f);
+    this->utils.SetBackgroundColor(back_color);
+    // Get matrix for orthogonal projection of 2D rendering
+    glm::mat4 ortho = glm::ortho(0.0f, this->viewport.x, 0.0f, this->viewport.y, -1.0f, 1.0f);
 
     // Push rulers ------------------------------------------------------------
     color = this->utils.Color(CinematicUtils::Colors::FOREGROUND);
@@ -417,12 +418,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     this->utils.PushMenu(leftLabel, midLabel, rightLabel, this->viewport.x, this->viewport.y);
 
     // Draw all ---------------------------------------------------------------
-    glm::mat4 mv;
-    glGetFloatv(GL_MODELVIEW_MATRIX, glm::value_ptr(mv));
-    glm::mat4 mp;
-    glGetFloatv(GL_PROJECTION_MATRIX, glm::value_ptr(mp));
-    glm::mat4 mvp = mp * mv;
-    this->utils.DrawAll(mvp);
+    this->utils.DrawAll(ortho, this->viewport);
 
 	return true;
 }

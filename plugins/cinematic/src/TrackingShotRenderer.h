@@ -35,10 +35,6 @@
 #include "vislib/sys/FastFile.h"
 #include "vislib/sys/CriticalSection.h"
 #include "vislib/sys/Thread.h"
-#include "vislib/graphics/gl/CameraOpenGL.h"
-#include "vislib/graphics/gl/GLSLShader.h"
-#include "vislib/graphics/CameraParameters.h"
-#include "vislib/graphics/CameraParamsStore.h"
 
 #include "CallKeyframeKeeper.h"
 #include "ReplacementRenderer.h"

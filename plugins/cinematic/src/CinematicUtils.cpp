@@ -228,7 +228,7 @@ void RenderUtils::Push2DDepthTexture(GLuint texture_id, const glm::vec3& pos_bot
 }
 
 
-void RenderUtils::drawPrimitives(RenderUtils::Primitives primitive, glm::mat4& mat_mvp) {
+void RenderUtils::drawPrimitives(RenderUtils::Primitives primitive, glm::mat4& mat_mvp, glm::vec2 dim_vp) {
 
     if (!this->init_once) {
         vislib::sys::Log::DefaultLog.WriteError("Primitive rendering must be initialized before drawing. [%s, %s, line %d)]\n", __FILE__, __FUNCTION__, __LINE__);
@@ -242,11 +242,6 @@ void RenderUtils::drawPrimitives(RenderUtils::Primitives primitive, glm::mat4& m
     this->buffers[Buffers::COLOR]->rebuffer<std::vector<float>>(this->queues[primitive].color);
     this->buffers[Buffers::TEXTURE_COORD]->rebuffer<std::vector<float>>(this->queues[primitive].texture_coord);
     this->buffers[Buffers::ATTRIBUTES]->rebuffer<std::vector<float>>(this->queues[primitive].attributes);
-
-    // Get viewport 
-    glm::vec4 viewport;
-    glGetFloatv(GL_VIEWPORT, glm::value_ptr(viewport));
-    glm::vec2 viewport_wh = { viewport[2], viewport[3] };
 
     // Set OpenGL state ----------------------------------------------------
     GLboolean blendEnabled = glIsEnabled(GL_BLEND);
@@ -288,7 +283,7 @@ void RenderUtils::drawPrimitives(RenderUtils::Primitives primitive, glm::mat4& m
     }
 
     glUniform1i(this->shaders[primitive].ParameterLocation("apply_smooth"), static_cast<GLint>(this->smooth));
-    glUniform2fv(this->shaders[primitive].ParameterLocation("viewport"), 1, glm::value_ptr(viewport_wh));
+    glUniform2fv(this->shaders[primitive].ParameterLocation("viewport"), 1, glm::value_ptr(dim_vp));
     glUniformMatrix4fv(this->shaders[primitive].ParameterLocation("mvp"), 1, GL_FALSE, glm::value_ptr(mat_mvp));
 
     glDrawArrays(mode, 0, count);
@@ -483,10 +478,10 @@ glm::vec3 RenderUtils::arbitraryPerpendicular(glm::vec3 in) {
 
 
 CinematicUtils::CinematicUtils(void) : megamol::cinematic::RenderUtils()
+    , font(megamol::core::utility::SDFFont::FontName::ROBOTO_SANS)
+    , font_size(20.0f)
     , init_once(false)
-    ,background_color(0.0f, 0.0f, 0.0f, 1.0f)
-    ,font(megamol::core::utility::SDFFont::FontName::ROBOTO_SANS)
-    ,font_size(20.0f) {
+    , background_color(0.0f, 0.0f, 0.0f, 1.0f) {
 
 }
 
@@ -680,16 +675,16 @@ void CinematicUtils::PushText(const std::string& text, float x, float y, float z
 }
 
 
-void CinematicUtils::DrawAll(glm::mat4& mat_mvp) {
+void CinematicUtils::DrawAll(glm::mat4& mat_mvp, glm::vec2 dim_vp) {
 
     if (!this->init_once) {
         vislib::sys::Log::DefaultLog.WriteError("Cinematic utilities must be initialized before drawing. [%s, %s, line %d)]\n", __FILE__, __FUNCTION__, __LINE__);
         return;
     }
 
-    this->DrawAllPrimitives(mat_mvp);
+    this->DrawAllPrimitives(mat_mvp, dim_vp);
 
-    // Font rendering draws matrices from OpenGL stack
+    // Font rendering takes matrices from OpenGL stack
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
@@ -697,7 +692,9 @@ void CinematicUtils::DrawAll(glm::mat4& mat_mvp) {
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     glLoadIdentity();
+
     this->font.BatchDrawString();
+
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
     glMatrixMode(GL_MODELVIEW);

@@ -10,7 +10,6 @@
 
 #include "Cinematic/Cinematic.h"
 
-#include "mmcore/AbstractGetDataCall.h"
 #include "mmcore/Module.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
@@ -27,7 +26,6 @@
 #include "mmcore/utility/xml/XmlReader.h"
 
 #include "vislib/math/Cuboid.h"
-#include "vislib/StringSerialiser.h"
 #include "vislib/assert.h"
 
 #include <iostream>
