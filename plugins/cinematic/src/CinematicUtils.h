@@ -90,7 +90,9 @@ namespace cinematic {
 
         void PushQuadPrimitive(const glm::vec3& pos_bottom_left, const glm::vec3& pos_upper_left, const glm::vec3& pos_upper_right, const glm::vec3& pos_bottom_right, const glm::vec4& color);
 
-        void Push2DTexture(GLuint texture_id, const glm::vec3& pos_bottom_left, const glm::vec3& pos_upper_left, const glm::vec3& pos_upper_right, const glm::vec3& pos_bottom_right, bool flip_y = false, const glm::vec4& color = glm::vec4(1.0f, 1.0f, 1.0f, 0.0));
+        void Push2DColorTexture(GLuint texture_id, const glm::vec3& pos_bottom_left, const glm::vec3& pos_upper_left, const glm::vec3& pos_upper_right, const glm::vec3& pos_bottom_right, bool flip_y = false, const glm::vec4& color = glm::vec4(0.0f, 0.0f, 0.0f, 0.0));
+
+        void Push2DDepthTexture(GLuint texture_id, const glm::vec3& pos_bottom_left, const glm::vec3& pos_upper_left, const glm::vec3& pos_upper_right, const glm::vec3& pos_bottom_right, bool flip_y = false, const glm::vec4& color = glm::vec4(0.0f, 0.0f, 0.0f, 0.0));
 
         inline void DrawPointPrimitives(glm::mat4& mat_mvp) {
             this->drawPrimitives(RenderUtils::Primitives::POINTS, mat_mvp);
@@ -107,16 +109,18 @@ namespace cinematic {
             this->clearQueue(Primitives::QUADS);
         }
 
-        inline void Draw2DTextures(glm::mat4& mat_mvp) {
-            this->drawPrimitives(RenderUtils::Primitives::TEXTURE, mat_mvp);
-            this->clearQueue(Primitives::TEXTURE);
+        inline void DrawTextures(glm::mat4& mat_mvp) {
+            this->drawPrimitives(RenderUtils::Primitives::COLOR_TEXTURE, mat_mvp);
+            this->drawPrimitives(RenderUtils::Primitives::DEPTH_TEXTURE, mat_mvp);
+            this->clearQueue(Primitives::COLOR_TEXTURE);
+            this->clearQueue(Primitives::DEPTH_TEXTURE);
         }
 
         inline void DrawAllPrimitives(glm::mat4& mat_mvp) {
             this->DrawPointPrimitives(mat_mvp);
             this->DrawLinePrimitives(mat_mvp);
             this->DrawQuadPrimitives(mat_mvp);
-            this->Draw2DTextures(mat_mvp);
+            this->DrawTextures(mat_mvp);
         }
 
         inline void Smoothing(bool s) {
@@ -137,8 +141,9 @@ namespace cinematic {
             LINES = 0,
             POINTS = 1,
             QUADS = 2,
-            TEXTURE = 3,
-            PRIM_COUNT = 4
+            COLOR_TEXTURE = 3,
+            DEPTH_TEXTURE = 4,
+            PRIM_COUNT = 5
         };
 
         enum Buffers : GLuint {
@@ -150,7 +155,7 @@ namespace cinematic {
         };
 
         typedef struct _shader_data_ {
-            GLuint texture_id;
+            GLuint   texture_id;
             DataType position;
             DataType color;
             DataType texture_coord;
@@ -221,7 +226,6 @@ namespace cinematic {
             KEYFRAME_DRAGGED,
             KEYFRAME_SELECTED,
             KEYFRAME_SPLINE,
-            KEYFRAME_MARKER,
             MENU,
             FONT,
             FONT_HIGHLIGHT,
@@ -239,7 +243,7 @@ namespace cinematic {
 
         void PushMenu(const std::string& left_label, const std::string& middle_label, const std::string& right_label, float viewport_width, float viewport_height);
 
-        void PushHelpText(const std::string& text, glm::vec3 position, float width, float height);
+        void PushHotkeyList(const std::string& text, glm::vec3 position, float viewport_width, float viewport_height);
 
         void PushText(const std::string& text, float x, float y, float z);
 

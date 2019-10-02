@@ -26,7 +26,7 @@ namespace cinematic {
 	class CallKeyframeKeeper : public core::AbstractGetDataCall {
 	public:
 
-		/** function name for getting all Keyframes */
+		/** function name for Getting all Keyframes */
 		static const unsigned int CallForGetUpdatedKeyframeData     = 0;
         static const unsigned int CallForGetSelectedKeyframeAtTime  = 1;
 		static const unsigned int CallForGetInterpolCamPositions    = 2;
@@ -98,109 +98,109 @@ namespace cinematic {
         **********************************************************************/
 
         // KEYFRAME ARRAY
-		inline std::shared_ptr<std::vector<Keyframe>> getKeyframes(){
+		inline std::shared_ptr<std::vector<Keyframe>> GetKeyframes(){
 			return this->keyframes;
 		}
-        inline void setKeyframes(std::shared_ptr<std::vector<Keyframe>> kfs) {
+        inline void SetKeyframes(std::shared_ptr<std::vector<Keyframe>> kfs) {
             this->keyframes = kfs;
         }
 
         // SELECTED KEYFRAME 
-        inline void setSelectedKeyframeTime(float t) { 
+        inline void SetSelectedKeyframeTime(float t) { 
             this->selectedKeyframe.SetAnimTime(t);
         }
-        inline void setSelectedKeyframe(Keyframe k) {
+        inline void SetSelectedKeyframe(Keyframe k) {
             this->selectedKeyframe = k;
         }
 
-        inline Keyframe getSelectedKeyframe() {
+        inline Keyframe GetSelectedKeyframe() {
             return this->selectedKeyframe;
         }
 
         // BOUNDINGBOX
-        inline void setBoundingBox(std::shared_ptr<vislib::math::Cuboid<float>> bbx) {
+        inline void SetBoundingBox(std::shared_ptr<vislib::math::Cuboid<float>> bbx) {
             this->boundingbox = bbx;
         }
-        inline std::shared_ptr<vislib::math::Cuboid<float>> getBoundingBox() {
+        inline std::shared_ptr<vislib::math::Cuboid<float>> GetBoundingBox() {
             return this->boundingbox;
         }
 
         // INTERPOLATED KEYFRAME
-        inline void setInterpolationSteps(unsigned int s) {
+        inline void SetInterpolationSteps(unsigned int s) {
             this->interpolSteps = s;
         }
-        inline unsigned int getInterpolationSteps() {
+        inline unsigned int GetInterpolationSteps() {
             return this->interpolSteps;
         }
 
-		inline std::shared_ptr<std::vector<glm::vec3 >> getInterpolCamPositions(){
+		inline std::shared_ptr<std::vector<glm::vec3 >> GetInterpolCamPositions(){
 			return this->interpolCamPos;
 		}
-        inline void setInterpolCamPositions(std::shared_ptr<std::vector<glm::vec3 >> k){
+        inline void SetInterpolCamPositions(std::shared_ptr<std::vector<glm::vec3 >> k){
             this->interpolCamPos = k;
         }
 
         // TOTAL ANIMATION TIME
-        inline void setTotalAnimTime(float f) {
+        inline void SetTotalAnimTime(float f) {
             this->totalAnimTime = f;
         }
-		inline float getTotalAnimTime(){
+		inline float GetTotalAnimTime(){
 			return this->totalAnimTime;
 		}
 
         // TOTAL SIMULATION TIME
-        inline void setTotalSimTime(float f) {
+        inline void SetTotalSimTime(float f) {
             this->totalSimTime = f;
         }
-        inline float getTotalSimTime() {
+        inline float GetTotalSimTime() {
             return this->totalSimTime;
         }
 
-        // CAMERA PARAMETERS
-        inline void setCameraParameters(std::shared_ptr<megamol::core::view::Camera_2> c) {
-            this->cameraParam = c;
+        // CAMERA STATE
+        inline void SetCameraState(std::shared_ptr<Keyframe::cam_state_type> cs) {
+            this->cameraState = cs;
         }
-        inline std::shared_ptr<megamol::core::view::Camera_2> getCameraParameters() {
-            return this->cameraParam;
+        inline std::shared_ptr<Keyframe::cam_state_type> GetCameraState() {
+            return this->cameraState;
         }
 
         // DROP OF DRAGGED KEYFRAME
-        inline void setDropTimes(float at, float st) {
+        inline void SetDropTimes(float at, float st) {
             this->dropAnimTime = at;
             this->dropSimTime  = st;
         }
-        inline float getDropAnimTime() {
+        inline float GetDropAnimTime() {
             return this->dropAnimTime;
         }
-        inline float getDropSimTime() {
+        inline float GetDropSimTime() {
             return this->dropSimTime;
         }
 
         // BOUNDING-BOX CENTER
-        inline void setBboxCenter(glm::vec3  c) {
+        inline void SetBboxCenter(glm::vec3  c) {
             this->bboxCenter = c;
         }
-        inline glm::vec3 getBboxCenter() {
+        inline glm::vec3 GetBboxCenter() {
             return this->bboxCenter;
         }
 
         // FRAMES PER SECOND
-        inline void setFps(unsigned int f) {
+        inline void SetFps(unsigned int f) {
             this->fps = f;
         }
-        inline unsigned int getFps() {
+        inline unsigned int GetFps() {
             return this->fps;
         }
 
         // CONTROL POINT POSITIONS
-        inline void setControlPointPosition(glm::vec3 firstcp, glm::vec3 lastcp) {
+        inline void SetControlPointPosition(glm::vec3 firstcp, glm::vec3 lastcp) {
             this->startCtrllPos = firstcp;
             this->endCtrllPos  = lastcp;
         }
-        inline glm::vec3 getStartControlPointPosition() {
+        inline glm::vec3 GetStartControlPointPosition() {
             return this->startCtrllPos;
         }
-        inline glm::vec3 getEndControlPointPosition() {
+        inline glm::vec3 GetEndControlPointPosition() {
             return this->endCtrllPos;
         }
 
@@ -210,21 +210,23 @@ namespace cinematic {
         * variables
         **********************************************************************/
 
-		std::shared_ptr<megamol::core::view::Camera_2> cameraParam;
+        // Out Data (set by called KeyframeKeeper ) ---------------------------
+		std::shared_ptr<Keyframe::cam_state_type>      cameraState;
 		std::shared_ptr<std::vector<glm::vec3 >>       interpolCamPos;
 		std::shared_ptr<std::vector<Keyframe>>	       keyframes;
         std::shared_ptr<vislib::math::Cuboid<float>>   boundingbox;
-        unsigned int                                   interpolSteps;
         Keyframe						               selectedKeyframe;
-        float                                          dropAnimTime;
-        float                                          dropSimTime;
-		float								           totalAnimTime;
-        float                                          totalSimTime;
-        glm::vec3                                      bboxCenter;
         glm::vec3                                      startCtrllPos;
         glm::vec3                                      endCtrllPos;
+        float								           totalAnimTime;
+        float                                          totalSimTime;
         unsigned int                                   fps;
 
+        // In Data (set by calling modules) -----------------------------------
+        unsigned int                                   interpolSteps;
+        float                                          dropAnimTime;
+        float                                          dropSimTime;
+        glm::vec3                                      bboxCenter;
 	};
 
 

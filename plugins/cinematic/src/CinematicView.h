@@ -140,7 +140,8 @@ namespace cinematic {
         bool                                    playAnim;
         int                                     cineWidth;
         int                                     cineHeight;
-        glm::ivec2                              lastVp;
+        float                                   vp_lastw;
+        float                                   vp_lasth;
         SkyboxSides                             sbSide;
         bool                                    rendering;
         unsigned int                            fps;
@@ -148,8 +149,6 @@ namespace cinematic {
         /**********************************************************************
          * functions
          **********************************************************************/
-
-        bool setSimulationTimeParameter(float st);
 
         // PNG ----------------------------------------------------------------
 

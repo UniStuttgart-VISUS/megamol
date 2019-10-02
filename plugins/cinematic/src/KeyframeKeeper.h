@@ -94,6 +94,7 @@ namespace cinematic {
         **********************************************************************/
 
         // Variables shared/updated with call ---------------------------------
+        std::shared_ptr<Keyframe::cam_state_type>     cameraState;
 		std::shared_ptr<std::vector<glm::vec3 >>      interpolCamPos;
 		std::shared_ptr<std::vector<Keyframe>>        keyframes;
 		std::shared_ptr<vislib::math::Cuboid<float>>  boundingBox;
@@ -106,31 +107,26 @@ namespace cinematic {
         unsigned int                                  interpolSteps;
         glm::vec3                                     modelBboxCenter;
         unsigned int                                  fps;
-
-        glm::vec3                                     camViewUp;
-        glm::vec3                                     camViewPosition;
-        glm::vec3                                     camViewLookat;
-        float                                         camViewApertureangle;
             
         // Variables only used in keyframe keeper -----------------------------
         vislib::StringA filename;
         bool            simTangentStatus;
         float           splineTangentLength;
 
-        // Undo queue stuff -----------------------------------------------
-        enum UndoActionEnum {
-            UNDO_NONE                = 0,
-            UNDO_KEYFRAME_ADD        = 1,
-            UNDO_KEYFRAME_DELETE     = 2,
-            UNDO_KEYFRAME_MODIFY     = 3,
-            UNDO_CONTROLPOINT_MODIFY = 4
-        };
-
-        class UndoAction {  
+        // Undo queue  --------------------------------------------------------
+        class Undo {  
             public:
 
-            UndoAction() {
-                this->action = KeyframeKeeper::UndoActionEnum::UNDO_NONE;
+            enum Action {
+                UNDO_NONE = 0,
+                UNDO_KEYFRAME_ADD = 1,
+                UNDO_KEYFRAME_DELETE = 2,
+                UNDO_KEYFRAME_MODIFY = 3,
+                UNDO_CONTROLPOINT_MODIFY = 4
+            };
+
+            Undo() {
+                this->action = Action::UNDO_NONE;
                 this->keyframe = Keyframe();
                 this->previous_keyframe = Keyframe();
                 this->first_controlpoint = glm::vec3();
@@ -139,31 +135,31 @@ namespace cinematic {
                 this->previous_last_controlpoint = glm::vec3();
             }
 
-            UndoAction(KeyframeKeeper::UndoActionEnum act, Keyframe kf, Keyframe prev_kf, glm::vec3 scp, glm::vec3 ecp, glm::vec3 prev_scp, glm::vec3 prev_ecp) {
+            Undo(Action act, Keyframe kf, Keyframe prev_kf, glm::vec3 fcp, glm::vec3 lcp, glm::vec3 prev_fcp, glm::vec3 prev_lcp) {
                 this->action = act;
                 this->keyframe = kf;
                 this->previous_keyframe = prev_kf;
-                this->first_controlpoint = scp;
-                this->last_controlpoint = ecp;
-                this->previous_first_controlpoint = prev_scp;
-                this->previous_last_controlpoint = prev_ecp;
+                this->first_controlpoint = fcp;
+                this->last_controlpoint = lcp;
+                this->previous_first_controlpoint = prev_fcp;
+                this->previous_last_controlpoint = prev_lcp;
             }
 
-            ~UndoAction() { }
+            ~Undo() { }
 
-            inline bool operator==(UndoAction const& rhs) {
+            inline bool operator==(Undo const& rhs) {
                 return ((this->action == rhs.action) && (this->keyframe == rhs.keyframe) && (this->previous_keyframe == rhs.previous_keyframe) && 
                         (this->first_controlpoint == rhs.first_controlpoint) && (this->last_controlpoint == rhs.last_controlpoint) && 
                         (this->previous_first_controlpoint == rhs.previous_first_controlpoint) && (this->previous_last_controlpoint == rhs.previous_last_controlpoint));
             }
 
-            inline bool operator!=(UndoAction const& rhs) {
+            inline bool operator!=(Undo const& rhs) {
                 return (!(this->action == rhs.action) || (this->keyframe != rhs.keyframe) || (this->previous_keyframe != rhs.previous_keyframe) || 
                          (this->first_controlpoint != rhs.first_controlpoint) || (this->last_controlpoint != rhs.last_controlpoint) || 
                          (this->previous_first_controlpoint != rhs.previous_first_controlpoint) || (this->previous_last_controlpoint != rhs.previous_last_controlpoint));
             }
 
-            UndoActionEnum action;
+            Action action;
             Keyframe       keyframe;
             Keyframe       previous_keyframe;
             glm::vec3      first_controlpoint;
@@ -173,7 +169,7 @@ namespace cinematic {
         };
 
         int undoQueueIndex;
-        std::vector<UndoAction> undoQueue;
+        std::vector<Undo> undoQueue;
 
         /**********************************************************************
         * functions
@@ -207,11 +203,11 @@ namespace cinematic {
 
         bool redoAction(void);
 
-        bool addUndoAction(KeyframeKeeper::UndoActionEnum act, Keyframe kf, Keyframe prev_kf, glm::vec3 first_controlpoint, glm::vec3 last_controlpoint, glm::vec3 previous_first_controlpoint, glm::vec3 previous_last_controlpoint);
+        bool addUndoAction(KeyframeKeeper::Undo::Action act, Keyframe kf, Keyframe prev_kf, glm::vec3 first_controlpoint, glm::vec3 last_controlpoint, glm::vec3 previous_first_controlpoint, glm::vec3 previous_last_controlpoint);
 
-        bool addKeyframeUndoAction(KeyframeKeeper::UndoActionEnum act, Keyframe kf, Keyframe pre_vkf);
+        bool addKeyframeUndoAction(KeyframeKeeper::Undo::Action act, Keyframe kf, Keyframe pre_kf);
 
-        bool addControlPointUndoAction(KeyframeKeeper::UndoActionEnum act, glm::vec3 first_controlpoint, glm::vec3 last_controlpoint, glm::vec3 previous_first_controlpoint, glm::vec3 previous_last_controlpoint);
+        bool addControlPointUndoAction(KeyframeKeeper::Undo::Action act, glm::vec3 first_controlpoint, glm::vec3 last_controlpoint, glm::vec3 previous_first_controlpoint, glm::vec3 previous_last_controlpoint);
 
         float interpolate_f(float u, float f0, float f1, float f2, float f3);
 

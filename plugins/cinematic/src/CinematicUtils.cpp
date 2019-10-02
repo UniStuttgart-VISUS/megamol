@@ -43,15 +43,19 @@ bool RenderUtils::InitPrimitiveRendering(megamol::core::utility::ShaderSourceFac
         return false;
     }
     if (!this->createShader(this->shaders[Primitives::LINES], &this->getShaderCode(factory, "primitives::lines::vertex"), &this->getShaderCode(factory, "primitives::lines::fragment"))) {
-        vislib::sys::Log::DefaultLog.WriteError("Failed to line point shader. [%s, %s, line %d)]\n", __FILE__, __FUNCTION__, __LINE__);
+        vislib::sys::Log::DefaultLog.WriteError("Failed to create line shader. [%s, %s, line %d)]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     if (!this->createShader(this->shaders[Primitives::QUADS], &this->getShaderCode(factory, "primitives::quads::vertex"), &this->getShaderCode(factory, "primitives::quads::fragment"))) {
         vislib::sys::Log::DefaultLog.WriteError("Failed to create quad shader. [%s, %s, line %d)]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
-    if (!this->createShader(this->shaders[Primitives::TEXTURE], &this->getShaderCode(factory, "primitives::texture::vertex"), &this->getShaderCode(factory, "primitives::texture::fragment"))) {
-        vislib::sys::Log::DefaultLog.WriteError("Failed to create quad shader. [%s, %s, line %d)]\n", __FILE__, __FUNCTION__, __LINE__);
+    if (!this->createShader(this->shaders[Primitives::COLOR_TEXTURE], &this->getShaderCode(factory, "primitives::color_texture::vertex"), &this->getShaderCode(factory, "primitives::color_texture::fragment"))) {
+        vislib::sys::Log::DefaultLog.WriteError("Failed to create color texture shader. [%s, %s, line %d)]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+    if (!this->createShader(this->shaders[Primitives::DEPTH_TEXTURE], &this->getShaderCode(factory, "primitives::depth_texture::vertex"), &this->getShaderCode(factory, "primitives::depth_texture::fragment"))) {
+        vislib::sys::Log::DefaultLog.WriteError("Failed to create depth texture shader. [%s, %s, line %d)]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -190,7 +194,7 @@ void RenderUtils::PushQuadPrimitive(const glm::vec3& pos_bottom_left, const glm:
 }
 
 
-void RenderUtils::Push2DTexture(GLuint texture_id, const glm::vec3& pos_bottom_left, const glm::vec3& pos_upper_left, const glm::vec3& pos_upper_right, const glm::vec3& pos_bottom_right, bool flip_y, const glm::vec4& color) {
+void RenderUtils::Push2DColorTexture(GLuint texture_id, const glm::vec3& pos_bottom_left, const glm::vec3& pos_upper_left, const glm::vec3& pos_upper_right, const glm::vec3& pos_bottom_right, bool flip_y, const glm::vec4& color) {
 
     glm::vec3 pbl = pos_bottom_left;
     glm::vec3 pul = pos_upper_left;
@@ -203,7 +207,24 @@ void RenderUtils::Push2DTexture(GLuint texture_id, const glm::vec3& pos_bottom_l
         pbr.y = pos_upper_right.y;
     }
     glm::vec4 attributes = { 0.0f, 0.0f, 0.0f, 0.0f };
-    this->pushQuad(RenderUtils::Primitives::TEXTURE, texture_id, pbl, pul, pur, pbr, color, attributes);
+    this->pushQuad(RenderUtils::Primitives::COLOR_TEXTURE, texture_id, pbl, pul, pur, pbr, color, attributes);
+}
+
+
+void RenderUtils::Push2DDepthTexture(GLuint texture_id, const glm::vec3& pos_bottom_left, const glm::vec3& pos_upper_left, const glm::vec3& pos_upper_right, const glm::vec3& pos_bottom_right, bool flip_y, const glm::vec4& color) {
+
+    glm::vec3 pbl = pos_bottom_left;
+    glm::vec3 pul = pos_upper_left;
+    glm::vec3 pur = pos_upper_right;
+    glm::vec3 pbr = pos_bottom_right;
+    if (flip_y) {
+        pbl.y = pos_upper_left.y;
+        pul.y = pos_bottom_left.y;
+        pur.y = pos_bottom_right.y;
+        pbr.y = pos_upper_right.y;
+    }
+    glm::vec4 attributes = { 0.0f, 0.0f, 0.0f, 0.0f };
+    this->pushQuad(RenderUtils::Primitives::DEPTH_TEXTURE, texture_id, pbl, pul, pur, pbr, color, attributes);
 }
 
 
@@ -213,14 +234,8 @@ void RenderUtils::drawPrimitives(RenderUtils::Primitives primitive, glm::mat4& m
         vislib::sys::Log::DefaultLog.WriteError("Primitive rendering must be initialized before drawing. [%s, %s, line %d)]\n", __FILE__, __FUNCTION__, __LINE__);
         return;
     }
-
     GLsizei count = static_cast<GLsizei>(this->queues[primitive].position.size() / 3);
     if (count == 0) return;
-
-    GLenum mode = GL_TRIANGLES;
-    if (primitive == Primitives::POINTS) {
-        mode = GL_POINTS;
-    }
 
     auto texture_id = this->queues[primitive].texture_id;
     this->buffers[Buffers::POSITION]->rebuffer<std::vector<float>>(this->queues[primitive].position);
@@ -233,7 +248,7 @@ void RenderUtils::drawPrimitives(RenderUtils::Primitives primitive, glm::mat4& m
     glGetFloatv(GL_VIEWPORT, glm::value_ptr(viewport));
     glm::vec2 viewport_wh = { viewport[2], viewport[3] };
 
-    // Set OpenGL state ---------------------------------------------------- //
+    // Set OpenGL state ----------------------------------------------------
     GLboolean blendEnabled = glIsEnabled(GL_BLEND);
     if (!blendEnabled) {
         glEnable(GL_BLEND);
@@ -256,7 +271,12 @@ void RenderUtils::drawPrimitives(RenderUtils::Primitives primitive, glm::mat4& m
     }
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
-    // Draw ---------------------------------------------------------------- //
+    // Draw ----------------------------------------------------------------
+    GLenum mode = GL_TRIANGLES;
+    if (primitive == Primitives::POINTS) {
+        mode = GL_POINTS;
+    }
+
     glBindVertexArray(this->vertex_array);
     this->shaders[primitive].Enable();
 
@@ -281,7 +301,7 @@ void RenderUtils::drawPrimitives(RenderUtils::Primitives primitive, glm::mat4& m
     this->shaders[primitive].Disable();
     glBindVertexArray(0);
 
-    // Reset OpenGL state -------------------------------------------------- //
+    // Reset OpenGL state --------------------------------------------------
     glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
     if (cullEnabled) {
         glEnable(GL_CULL_FACE);
@@ -301,7 +321,7 @@ bool RenderUtils::createShader(vislib::graphics::gl::GLSLShader& shader, const s
     shader.Release();
     if (!shader.Compile(vertex_code->c_str(), fragment_code->c_str())) {
         vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "Unable to compile sphere shader. [%s, %s, line %d)]\n", __FILE__, __FUNCTION__, __LINE__);
+            vislib::sys::Log::LEVEL_ERROR, "Unable to compile shader. [%s, %s, line %d)]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     shader.BindAttribute(Buffers::POSITION, "inPosition");
@@ -310,7 +330,7 @@ bool RenderUtils::createShader(vislib::graphics::gl::GLSLShader& shader, const s
     shader.BindAttribute(Buffers::ATTRIBUTES, "inAttributes");
     if (!shader.Link()) {
         vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "Unable to link sphere shader. [%s, %s, line %d)]\n", __FILE__, __FUNCTION__, __LINE__);
+            vislib::sys::Log::LEVEL_ERROR, "Unable to link shader. [%s, %s, line %d)]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -529,9 +549,6 @@ const glm::vec4 CinematicUtils::Color(CinematicUtils::Colors c) const {
     case (CinematicUtils::Colors::KEYFRAME_SPLINE):
         color = { 0.4f, 0.4f, 1.0f, 1.0f };
         break;
-    case (CinematicUtils::Colors::KEYFRAME_MARKER):
-        color = { 1.0f, 0.6f, 0.6f, 1.0f };
-        break;
     case (CinematicUtils::Colors::MENU):
         color = { 0.0f, 0.0f, 0.5f, 1.0f };
         break;
@@ -592,7 +609,64 @@ void CinematicUtils::PushMenu(const std::string& left_label, const std::string& 
 }
 
 
-void CinematicUtils::PushHelpText(const std::string& text, glm::vec3 position, float width, float height) {
+void CinematicUtils::PushHotkeyList(const std::string& text, glm::vec3 position, float width, float height) {
+
+
+    // Draw help text 
+//if (this->showHelpText) {
+//    vislib::StringA helpText = "";
+//    helpText += "-----[ GLOBAL ]-----\n";
+//    helpText += "[Ctrl+a] Apply current settings to selected/new keyframe. \n";
+//    helpText += "[Ctrl+d] Delete selected keyframe. \n";
+//    helpText += "[Ctrl+s] Save keyframes to file. \n";
+//    helpText += "[Ctrl+l] Load keyframes from file. \n";
+//    helpText += "[Ctrl+z] Undo keyframe changes. \n";
+//    helpText += "[Ctrl+y] Redo keyframe changes. \n";
+//    helpText += "-----[ TRACKING SHOT ]----- \n";
+//    helpText += "[Ctrl+q] Toggle different manipulators for the selected keyframe. \n";
+//    helpText += "[Ctrl+w] Show manipulators inside/outside of model bounding box. \n";
+//    helpText += "[Ctrl+u] Reset look-at vector of selected keyframe. \n";
+//    helpText += "-----[ CINEMATIC ]----- \n";
+//    helpText += "[Ctrl+r] Start/Stop rendering complete animation. \n";
+//    helpText += "[Ctrl+Space] Start/Stop animation preview. \n";
+//    helpText += "-----[ TIMELINE ]----- \n";
+//    helpText += "[Ctrl+Right/Left Arrow] Move selected keyframe on animation time axis. \n";
+//    helpText += "[Ctrl+f] Snap all keyframes to animation frames. \n";
+//    helpText += "[Ctrl+g] Snap all keyframes to simulation frames. \n";
+//    helpText += "[Ctrl+t] Linearize simulation time between two keyframes. \n";
+//    //helpText += "[Ctrl+v] Set same velocity between all keyframes (Experimental).\n"; // Calcualation is not correct yet ...
+//    helpText += "[Ctrl+p] Reset shifted and scaled time axes. \n";
+//    helpText += "[Left Mouse Button] Select keyframe. \n";
+//    helpText += "[Middle Mouse Button] Axes scaling in mouse direction. \n";
+//    helpText += "[Right Mouse Button] Drag & drop keyframe / pan axes. \n";
+
+//    float htNumOfRows = 24.0f; // Number of rows the help text has
+
+//    float htFontSize  = vpW*0.027f; // max % of viewport width
+//    float htStrHeight = this->theFont.LineHeight(htFontSize);
+//    float htX         = 5.0f;
+//    float htY         = htX + htStrHeight;
+//    // Adapt font size if height of help text is greater than viewport height
+//    while ((htStrHeight*htNumOfRows + htX + this->theFont.LineHeight(lbFontSize)) >vpH) {
+//        htFontSize -= 0.5f;
+//        htStrHeight = this->theFont.LineHeight(htFontSize);
+//    }
+
+//    float htStrWidth = this->theFont.LineWidth(htFontSize, helpText);
+//    htStrHeight      = this->theFont.LineHeight(htFontSize);
+//    htY              = htX + htStrHeight*htNumOfRows;
+//    // Draw background colored quad
+//    glColor4fv(bgColor);
+//    glBegin(GL_QUADS);
+//        glVertex2f(htX,              htY);
+//        glVertex2f(htX,              htY - (htStrHeight*htNumOfRows));
+//        glVertex2f(htX + htStrWidth, htY - (htStrHeight*htNumOfRows));
+//        glVertex2f(htX + htStrWidth, htY);
+//    glEnd();
+//    // Draw help text
+//    this->theFont.DrawString(fgColor, htX, htY, htFontSize, false, helpText, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
+//}
+
 
 
 }

@@ -42,7 +42,7 @@
 
 #include "CallKeyframeKeeper.h"
 #include "ReplacementRenderer.h"
-#include "KeyframeManipulator.h"
+//#include "KeyframeManipulator.h"
 #include "CinematicUtils.h"
 
 
@@ -158,12 +158,11 @@ namespace cinematic {
         unsigned int                            toggleManipulator;
         bool                                    manipOutsideModel;
         bool                                    showHelpText;
-        KeyframeManipulator                     manipulator;
+        //KeyframeManipulator                     manipulator;
         bool                                    manipulatorGrabbed;
         bool                                    isSelecting;
         CinematicUtils                          utils;
         vislib::graphics::gl::FramebufferObject fbo;
-        vislib::graphics::gl::GLSLShader        textureShader; 
         float                                   mouseX;
         float                                   mouseY;
         GLuint                                  texture;

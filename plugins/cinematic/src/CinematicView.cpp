@@ -41,7 +41,8 @@ CinematicView::CinematicView(void) : View3D_2()
     , playAnim(false)
     , cineWidth(1920)
     , cineHeight(1080)
-    , lastVp(0, 0)
+    , vp_lastw(0)
+    , vp_lasth(0)
     , sbSide(CinematicView::SkyboxSides::SKYBOX_NONE)
     , rendering(false)
     , fps(24) {
@@ -122,13 +123,13 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     if (cr3d == nullptr) return;
     if (!(*cr3d)(view::AbstractCallRender::FnGetExtents)) return;
 
-    // Get update data from keyframe keeper
+    // Get update data from keyframe keeper -----------------------------------
     auto ccc = this->keyframeKeeperSlot.CallAs<CallKeyframeKeeper>();
     if (ccc == nullptr) return;
     if (!(*ccc)(CallKeyframeKeeper::CallForGetUpdatedKeyframeData)) return;
-    ccc->setBboxCenter(P2G(cr3d->AccessBoundingBoxes().BoundingBox().CalcCenter()));
-    ccc->setTotalSimTime(static_cast<float>(cr3d->TimeFramesCount()));
-    ccc->setFps(this->fps);
+    ccc->SetBboxCenter(P2G(cr3d->AccessBoundingBoxes().BoundingBox().CalcCenter()));
+    ccc->SetTotalSimTime(static_cast<float>(cr3d->TimeFramesCount()));
+    ccc->SetFps(this->fps);
     if (!(*ccc)(CallKeyframeKeeper::CallForSetSimulationData)) return;
 
     // Initialise render utils once
@@ -139,7 +140,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
         }
     }
 
-    // Update parameters 
+    // Update parameters ------------------------------------------------------
     bool loadNewCamParams = false;
     if (this->toggleAnimPlayParam.IsDirty()) {
         this->toggleAnimPlayParam.ResetDirty();
@@ -217,10 +218,10 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     // Time settings ----------------------------------------------------------
     // Load animation time
     if (this->rendering) {
-        if ((this->png_data.animTime < 0.0f) || (this->png_data.animTime > ccc->getTotalAnimTime())) {
+        if ((this->png_data.animTime < 0.0f) || (this->png_data.animTime > ccc->GetTotalAnimTime())) {
             throw vislib::Exception("[CINEMATIC VIEW] Invalid animation time.", __FILE__, __LINE__);
         }
-        ccc->setSelectedKeyframeTime(this->png_data.animTime);
+        ccc->SetSelectedKeyframeTime(this->png_data.animTime);
         if (!(*ccc)(CallKeyframeKeeper::CallForGetSelectedKeyframeAtTime)) return;
         loadNewCamParams = true;
     } else {
@@ -229,88 +230,92 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
             clock_t tmpTime = clock();
             clock_t cTime = tmpTime - this->deltaAnimTime;
             this->deltaAnimTime = tmpTime;
-
-            float animTime = ccc->getSelectedKeyframe().GetAnimTime() + ((float)cTime) / (float)(CLOCKS_PER_SEC);
+            float animTime = ccc->GetSelectedKeyframe().GetAnimTime() + ((float)cTime) / (float)(CLOCKS_PER_SEC);
             if ((animTime < 0.0f) ||
-                (animTime > ccc->getTotalAnimTime())) { // Reset time if max animation time is reached
+                (animTime > ccc->GetTotalAnimTime())) { // Reset time if max animation time is reached
                 animTime = 0.0f;
             }
-            ccc->setSelectedKeyframeTime(animTime);
+            ccc->SetSelectedKeyframeTime(animTime);
             if (!(*ccc)(CallKeyframeKeeper::CallForGetSelectedKeyframeAtTime)) return;
             loadNewCamParams = true;
         }
     }
     // Load current simulation time to parameter
-    float simTime = ccc->getSelectedKeyframe().GetSimTime();
+    float simTime = ccc->GetSelectedKeyframe().GetSimTime();
     param::ParamSlot* animTimeParam = static_cast<param::ParamSlot*>(this->timeCtrl.GetSlot(2));
     animTimeParam->Param<param::FloatParam>()->SetValue(simTime * static_cast<float>(cr3d->TimeFramesCount()), true);
 
     // Viewport ---------------------------------------------------------------
-    glm::ivec4 vpi4full;
-    glGetIntegerv(GL_VIEWPORT, glm::value_ptr(vpi4full));
-    const glm::ivec2 vpi2 = { vpi4full[2], vpi4full[3] - static_cast<int>(this->utils.GetTextLineHeight()) };
-    const glm::vec2 vpf2 = { static_cast<float>(vpi2[0]), static_cast<float>(vpi2[1])};
-    int fboWidth = vpi2[0];
-    int fboHeight = vpi2[1];
-    float cineRatio = static_cast<float>(this->cineWidth) / static_cast<float>(this->cineHeight);
+    glm::ivec4 viewport;
+    glGetIntegerv(GL_VIEWPORT, glm::value_ptr(viewport));
+    const int vp_iw = viewport[2];
+    const int vp_ih = viewport[3];
+    const int vp_ih_reduced = vp_ih - static_cast<int>(this->utils.GetTextLineHeight());
+    const float vp_fw = static_cast<float>(vp_iw);
+    const float vp_fh = static_cast<float>(vp_ih);
+    const float vp_fh_reduced = static_cast<float>(vp_ih_reduced);
+    const float cineRatio = static_cast<float>(this->cineWidth) / static_cast<float>(this->cineHeight);
 
+    int fboWidth = vp_iw;
+    int fboHeight = vp_ih_reduced;
     if (this->rendering) {
         fboWidth = this->cineWidth;
         fboHeight = this->cineHeight;
     } else {
-        float vpRatio = vpf2[0] / vpf2[1];
+        float vpRatio = vp_fw / vp_fh_reduced;
         // Check for viewport changes
-        if ((this->lastVp[0] != vpi2[0]) || (this->lastVp[1] != vpi2[1])) {
-            this->lastVp[0] = vpi2[0];
-            this->lastVp[1] = vpi2[1];
+        if ((this->vp_lastw != vp_iw) || (this->vp_lasth != vp_ih_reduced)) {
+            this->vp_lastw = vp_iw;
+            this->vp_lasth = vp_ih_reduced;
         }
         // Calculate reduced fbo width and height
-        if ((this->cineWidth < vpi2[0]) && (this->cineHeight < vpi2[1])) {
+        if ((this->cineWidth < vp_iw) && (this->cineHeight < vp_ih_reduced)) {
             fboWidth = this->cineWidth;
             fboHeight = this->cineHeight;
         } else {
-            fboWidth = vpi2[0];
-            fboHeight = vpi2[1];
+            fboWidth = vp_iw;
+            fboHeight = vp_ih_reduced;
 
             if (cineRatio > vpRatio) {
-                fboHeight = (static_cast<int>(vpf2[1] / cineRatio));
+                fboHeight = (static_cast<int>(vp_fw / cineRatio));
             } else if (cineRatio < vpRatio) {
-                fboWidth = (static_cast<int>(vpf2[0] * cineRatio));
+                fboWidth = (static_cast<int>(vp_fh_reduced * cineRatio));
             }
         }
     }
 
-    // Camera settings --------------------------------------------------------
+    int texWidth = fboWidth;
+    int texHeight = fboHeight;
+    if ((texWidth > vp_iw) || ((texWidth < vp_iw) && (texHeight < vp_ih_reduced))) {
+        texWidth = vp_iw;
+        texHeight = static_cast<int>(vp_fw / cineRatio);
+    }
+    if ((texHeight > vp_ih_reduced) || ((texWidth < vp_iw) && (texHeight < vp_ih_reduced))) {
+        texHeight = vp_ih_reduced;
+        texWidth = static_cast<int>(vp_fh_reduced * cineRatio);
+    }
 
-    // Set new viewport for camera
+    // Camera settings --------------------------------------------------------
+    // Set fbo viewport of camera
     auto res = cam_type::screen_size_type(glm::ivec2(fboWidth, fboHeight));
     this->cam.resolution_gate(res);
     auto tile = cam_type::screen_rectangle_type(std::array<int, 4>{0, 0, fboWidth, fboHeight});
     this->cam.image_tile(tile);
- 
     // Set camera parameters of selected keyframe for this view.
     /// But only if selected keyframe differs to last locally stored and shown keyframe.
     /// Load new camera setting from selected keyframe when skybox side changes or rendering
-    /// or animation loaded new slected keyframe.
-    Keyframe skf = ccc->getSelectedKeyframe();
+    /// of animation loaded new slected keyframe.
+    Keyframe skf = ccc->GetSelectedKeyframe();
     if (loadNewCamParams || (this->shownKeyframe != skf)) {
         this->shownKeyframe = skf;
-
         // Apply selected keyframe parameters only, if at least one valid keyframe exists.
-        if (!ccc->getKeyframes()->empty()) {
-            ///OLD this->cam.Parameters()->SetView(skf.GetCamPosition(), skf.GetCamLookAt(), skf.GetCamUp());
-            ///OLD this->cam.aperture_angle = skf.GetCamApertureAngle();
-            ///---
-            ///NEW this->cam.position() = skf.GetCamPosition();
-            ///NEW this->cam.view_vector() = skf.GetCamLookAt();
-            ///NEW this->cam.up_vector() = skf.GetCamUp();
-            ///NEW this->cam.aperture_angle() = skf.GetCamApertureAngle();
+        if (!ccc->GetKeyframes()->empty()) {
+            this->cam = skf.GetCameraState();
         } else {
             this->ResetView();
         }
-
         // Apply showing skybox side ONLY if new camera parameters are set
-        //if (this->sbSide != CinematicView::SkyboxSides::SKYBOX_NONE) {
+        if (this->sbSide != CinematicView::SkyboxSides::SKYBOX_NONE) {
         //    // Get camera parameters
         //    vislib::SmartPtr<vislib::graphics::CameraParameters> cp = this->cam.Parameters();
         //    vislib::math::Point<float, 3> camPos = cp->Position();
@@ -360,16 +365,15 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
         //            cp->SetView(tmpCamPos, tmpCamPos + camUp * 0.5f * (height + width), camFront);
         //        }
         //    }
-        //}
+        }
     }
-
     // Propagate camera parameters to keyframe keeper (sky box camera params are propageted too!)
-    auto cam_ptr = std::make_shared<megamol::core::view::Camera_2>(this->cam);
-    ccc->setCameraParameters(cam_ptr);
+    cam_type::minimal_state_type camera_state;
+    this->cam.get_minimal_state(camera_state);
+    ccc->SetCameraState(std::make_shared<Keyframe::cam_state_type>(camera_state));
     if (!(*ccc)(CallKeyframeKeeper::CallForSetCameraForKeyframe)) return;
 
     // Render to texture ------------------------------------------------------------
-
 /// Suppress TRACE output of fbo.Enable() and fbo.Create()
 #if defined(DEBUG) || defined(_DEBUG)
     unsigned int otl = vislib::Trace::GetInstance().GetLevel();
@@ -434,139 +438,45 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
         this->render2file_write();
     }
 
-    // Draw final image -------------------------------------------------------
-
-
-
-
-    //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    //glDisable(GL_LIGHTING);
-    //glDisable(GL_CULL_FACE);
-
-    //glDisable(GL_BLEND);
-
-    //glEnable(GL_DEPTH_TEST);
-    //glDisable(GL_DEPTH_TEST);
-
-    //glMatrixMode(GL_PROJECTION);
-    //glPushMatrix();
-    //glLoadIdentity();
-    //// Reset viewport
-    //glViewport(vp[0], vp[1], vp[2], vp[3]);
-    //glOrtho(0.0, (double)vp[2], 0.0, (double)vp[3], -1.0, 1.0);
-
-    //glMatrixMode(GL_MODELVIEW);
-    //glPushMatrix();
-    //glLoadIdentity();
-
-    //// Background color
-    //const float* bgColor = Base::BkgndColour();
-    //// COLORS
-    //float lbColor[4] = {1.0f, 1.0f, 1.0f, 1.0f};
-    //float white[4]   = {1.0f, 1.0f, 1.0f, 1.0f};
-    //float yellow[4]  = {1.0f, 1.0f, 0.0f, 1.0f};
-    //float menu[4]    = {0.0f, 0.0f, 0.3f, 1.0f};
-    //// Adapt colors depending on lightness
-    //float L = (vislib::math::Max(bgColor[0], vislib::math::Max(bgColor[1], bgColor[2])) +
-    //              vislib::math::Min(bgColor[0], vislib::math::Min(bgColor[1], bgColor[2]))) /
-    //          2.0f;
-    //if (L > 0.5f) {
-    //    for (unsigned int i = 0; i < 3; i++) {
-    //        lbColor[i] = 0.0f;
-    //    }
-    //}
-    //float fgColor[4] = {1.0f, 1.0f, 1.0f, 1.0f};
-    //for (unsigned int i = 0; i < 3; i++) {
-    //    fgColor[i] -= lbColor[i];
-    //}
-
-    //// Adjust fbo viewport size if it is greater than viewport
-    //int fbovpW_int = fboWidth;
-    //int fbovpH_int = fboHeight;
-    //if ((fbovpW_int > vpW_int) || ((fbovpW_int < vpW_int) && (fbovpH_int < vpH_int))) {
-    //    fbovpW_int = vpW_int;
-    //    fbovpH_int = static_cast<int>(vpW_flt / cineRatio);
-    //}
-    //if ((fbovpH_int > vpH_int) || ((fbovpW_int < vpW_int) && (fbovpH_int < vpH_int))) {
-    //    fbovpH_int = vpH_int;
-    //    fbovpW_int = static_cast<int>(vpH_flt * cineRatio);
-    //}
-    //float right = (vpW_int + static_cast<float>(fbovpW_int)) / 2.0f;
-    //float left = (vpW_int - static_cast<float>(fbovpW_int)) / 2.0f;
-    //float bottom = (vpH_int - static_cast<float>(fbovpH_int)) / 2.0f;
-    //float up = (vpH_int + static_cast<float>(fbovpH_int)) / 2.0f;
-
-    //// Draw texture
-    //glActiveTexture(GL_TEXTURE0);
-    //glEnable(GL_TEXTURE_2D);
-    //this->fbo.BindColourTexture();
-    ////this->fbo.GetColourTextureID();
-    //glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-    //glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    //glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    //glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    //glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    //glBegin(GL_QUADS);
-    //    glTexCoord2f(0.0f, 0.0f);
-    //    glVertex3f(left, bottom, 0.0f);
-    //    glTexCoord2f(1.0f, 0.0f);
-    //    glVertex3f(right, bottom, 0.0f);
-    //    glTexCoord2f(1.0f, 1.0f);
-    //    glVertex3f(right, up, 0.0f);
-    //    glTexCoord2f(0.0f, 1.0f);
-    //    glVertex3f(left, up, 0.0f);
-    //glEnd();
-    //glBindTexture(GL_TEXTURE_2D, 0);
-    //glDisable(GL_TEXTURE_2D);
-
-    //// Draw letter box  -------------------------------------------------------
-    ////glDisable(GL_DEPTH_TEST);
-
-    ////// Calculate position of texture
-    ////int x = 0;
-    ////int y = 0;
-    ////if (fbovpW_int < vpW_int) {
-    ////    x = (static_cast<int>((vpW_int - static_cast<float>(fbovpW_int)) / 2.0f));
-    ////    y = vpH_int;
-    ////} else if (fbovpH_int < vpH_int) {
-    ////    x = vpW_int;
-    ////    y = (static_cast<int>((vpH_int - static_cast<float>(fbovpH_int)) / 2.0f));
-    ////}
-    ////// Draw letter box quads in letter box Color
-    ////glColor4fv(lbColor);
-    ////glBegin(GL_QUADS);
-    ////    glVertex2i(0, 0);
-    ////    glVertex2i(x, 0);
-    ////    glVertex2i(x, y);
-    ////    glVertex2i(0, y);
-    ////    glVertex2i(vpW_int, vpH_int);
-    ////    glVertex2i(vpW_int - x, vpH_int);
-    ////    glVertex2i(vpW_int - x, vpH_int - y);
-    ////    glVertex2i(vpW_int, vpH_int - y);
-    ////glEnd();
-
-
-
-    //glMatrixMode(GL_PROJECTION);
-    //glPopMatrix();
-    //glMatrixMode(GL_MODELVIEW);
-    //glPopMatrix();
-
-
-    //// Reset opengl
-    //glDisable(GL_BLEND);
-    //glEnable(GL_DEPTH_TEST);
-
-
-
-    // Init rendering
+    // Init rendering ---------------------------------------------------------
     auto bc = Base::BkgndColour();
-    auto vpfw = static_cast<float>(vpi4full[2]);
-    auto vpfh = static_cast<float>(vpi4full[3]);
-    glm::mat4 ortho = glm::ortho(0.0f, vpfw, 0.0f, vpfh, -1.0f, 1.0f);
+    this->utils.SetBackgroundColor(glm::vec4(bc[0], bc[1], bc[2], 1.0f));
+    glm::mat4 ortho = glm::ortho(0.0f, vp_fw, 0.0f, vp_fh, -1.0f, 1.0f);
     glClearColor(bc[0], bc[1], bc[2], 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glViewport(vpi4full[0], vpi4full[1], vpi4full[2], vpi4full[3]);
+    glViewport(0, 0, vp_iw, vp_ih);
+
+    // Push texture -----------------------------------------------------------
+    float right = (vp_fw + static_cast<float>(texWidth)) / 2.0f;
+    float left = (vp_fw - static_cast<float>(texWidth)) / 2.0f;
+    float bottom = (vp_fh_reduced - static_cast<float>(texHeight)) / 2.0f;
+    float up = (vp_fh_reduced + static_cast<float>(texHeight)) / 2.0f;
+    glm::vec3 pos_bottom_left = { left, bottom, 0.0f };
+    glm::vec3 pos_upper_left = { left, up, 0.0f };
+    glm::vec3 pos_upper_right = { right, up, 0.0f };
+    glm::vec3 pos_bottom_right = { right, bottom, 0.0f };
+    this->utils.Push2DColorTexture(this->fbo.GetColourTextureID(), pos_bottom_left, pos_upper_left, pos_upper_right, pos_bottom_right);
+
+    // Push letter box --------------------------------------------------------
+    float letter_x = 0;
+    float letter_y = 0;
+    if (texWidth < vp_iw) {
+        letter_x = (vp_fw - static_cast<float>(texWidth)) / 2.0f;
+        letter_y = vp_fh_reduced;
+    } else if (texHeight < vp_ih_reduced) {
+        letter_x = vp_fw;
+        letter_y = (vp_fh_reduced - static_cast<float>(texHeight)) / 2.0f;
+    }
+    pos_bottom_left = { vp_fw - letter_x, vp_fh_reduced - letter_y, 0.0f};
+    pos_upper_left = { vp_fw - letter_x, vp_fh_reduced, 0.0f };
+    pos_upper_right = { vp_fw, vp_fh_reduced, 0.0f };
+    pos_bottom_right = { vp_fw, vp_fh_reduced - letter_y, 0.0f };
+    this->utils.PushQuadPrimitive(pos_bottom_left, pos_upper_left, pos_upper_right, pos_bottom_right, this->utils.Color(CinematicUtils::Colors::LETTER_BOX));
+    pos_bottom_left = { 0.0f, 0.0f, 0.0f };
+    pos_upper_left = { 0.0f, letter_y, 0.0f };
+    pos_upper_right = { letter_x, letter_y, 0.0f };
+    pos_bottom_right = { letter_x, 0.0f, 0.0f };
+    this->utils.PushQuadPrimitive(pos_bottom_left, pos_upper_left, pos_upper_right, pos_bottom_right, this->utils.Color(CinematicUtils::Colors::LETTER_BOX));
 
     // Push menu --------------------------------------------------------------
     std::string leftLabel = " CINEMATIC ";
@@ -577,7 +487,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
         midLabel = " Playing Animation ";
     }
     std::string rightLabel = "";
-    this->utils.PushMenu(leftLabel, midLabel, rightLabel, vpfw, vpfh);
+    this->utils.PushMenu(leftLabel, midLabel, rightLabel, vp_fw, vp_fh);
 
     // Draw 2D ----------------------------------------------------------------
     this->utils.DrawAll(ortho);
@@ -612,7 +522,7 @@ bool CinematicView::render2file_setup() {
 
     // Calculate pre-decimal point positions for frame counter in filename
     this->png_data.exp_frame_cnt = 1;
-    float frameCnt = (float)(this->fps) * ccc->getTotalAnimTime();
+    float frameCnt = (float)(this->fps) * ccc->GetTotalAnimTime();
     while (frameCnt > 1.0f) {
         frameCnt /= 10.0f;
         this->png_data.exp_frame_cnt++;
@@ -762,11 +672,11 @@ bool CinematicView::render2file_write() {
             this->png_data.animTime = std::round(this->png_data.animTime);
         }
 
-        if (this->png_data.animTime == ccc->getTotalAnimTime()) {
+        if (this->png_data.animTime == ccc->GetTotalAnimTime()) {
             ///XXX Handling this case is actually only necessary when rendering is done via FBOCompositor 
             ///XXX => Rendering crashes (WHY? - Rendering last frame with animation time = total animation time is otherwise no problem)
             this->png_data.animTime -= 0.000005f;
-        } else if (this->png_data.animTime >= ccc->getTotalAnimTime()) {
+        } else if (this->png_data.animTime >= ccc->GetTotalAnimTime()) {
             this->render2file_cleanup();
             return false;
         }

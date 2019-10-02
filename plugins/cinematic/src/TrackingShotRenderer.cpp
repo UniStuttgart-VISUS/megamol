@@ -28,9 +28,8 @@ TrackingShotRenderer::TrackingShotRenderer(void) : Renderer3DModule_2()
     , toggleManipulator(0)
     , manipOutsideModel(false)
     , showHelpText(false)
-    , manipulator()
+    //, manipulator()
     , manipulatorGrabbed(false)
-    , textureShader()
     , utils()
     , fbo()
     , mouseX(0.0f)
@@ -66,34 +65,6 @@ TrackingShotRenderer::~TrackingShotRenderer(void) {
 
 bool TrackingShotRenderer::create(void) {
 
-    // Create shader
-    vislib::graphics::gl::ShaderSource vert, frag;
-    try {
-        if (!megamol::core::Module::instance()->ShaderSourceFactory().MakeShaderSource("TrackingShotShader::vertex", vert)) {
-            return false;
-        }
-        if (!megamol::core::Module::instance()->ShaderSourceFactory().MakeShaderSource("TrackingShotShader::fragment", frag)) {
-            return false;
-        }
-        if (!this->textureShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "[TRACKINGSHOT RENDERER] [create] Unable to compile shader: Unknown error\n");
-            return false;
-        }
-    }
-    catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "[TRACKINGSHOT RENDERER] [create] Unable to compile shader (@%s): %s\n", 
-            vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()), ce.GetMsgA());
-        return false;
-    }
-    catch (vislib::Exception e) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "[TRACKINGSHOT RENDERER] [create] Unable to compile shader: %s\n", e.GetMsgA());
-        return false;
-    }
-    catch (...) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "[TRACKINGSHOT RENDERER] [create] Unable to compile shader: Unknown exception\n");
-        return false;
-    }
-
     // Initialise render utils
     if (!this->utils.Initialise(this->GetCoreInstance())) {
         vislib::sys::Log::DefaultLog.WriteError("[TRACKINGSHOT RENDERER] [create] Couldn't initialize render utils.");
@@ -105,8 +76,6 @@ bool TrackingShotRenderer::create(void) {
 
 
 void TrackingShotRenderer::release(void) {
-
-    this->textureShader.Release();
 
     if (this->fbo.IsEnabled()) {
         this->fbo.Disable();
@@ -131,15 +100,15 @@ bool TrackingShotRenderer::GetExtents(megamol::core::view::CallRender3D_2& call)
         // Compute bounding box including spline (in world space) and object (in world space).
         vislib::math::Cuboid<float> bbox = cr3d_out->AccessBoundingBoxes().BoundingBox();
         // Set bounding box center of model
-        ccc->setBboxCenter(P2G(cr3d_out->AccessBoundingBoxes().BoundingBox().CalcCenter()));
+        ccc->SetBboxCenter(P2G(cr3d_out->AccessBoundingBoxes().BoundingBox().CalcCenter()));
 
         // Grow bounding box to manipulators and get information of bbox of model
-        this->manipulator.SetExtents(bbox);
+        //this->manipulator.SetExtents(bbox);
 
         vislib::math::Cuboid<float> cbox = cr3d_out->AccessBoundingBoxes().ClipBox();
 
         // Get bounding box of spline.
-        auto bboxCCC = ccc->getBoundingBox();
+        auto bboxCCC = ccc->GetBoundingBox();
         if (bboxCCC == nullptr) {
             vislib::sys::Log::DefaultLog.WriteWarn("[TRACKINGSHOT RENDERER] [GetExtents] Pointer to boundingbox array is nullptr.");
             return false;
@@ -149,7 +118,7 @@ bool TrackingShotRenderer::GetExtents(megamol::core::view::CallRender3D_2& call)
         cbox.Union(*bboxCCC); // use boundingbox to get new clipbox
 
         // Set new bounding box center of slave renderer model (before applying keyframe bounding box)
-        ccc->setBboxCenter(P2G(cr3d_out->AccessBoundingBoxes().BoundingBox().CalcCenter()));
+        ccc->SetBboxCenter(P2G(cr3d_out->AccessBoundingBoxes().BoundingBox().CalcCenter()));
         if (!(*ccc)(CallKeyframeKeeper::CallForSetSimulationData)) return false;
 
         // Propagate changes made in GetExtents() from outgoing CallRender3D_2 (cr3d_out) to incoming  CallRender3D_2 (cr3d_in).
@@ -193,7 +162,7 @@ void TrackingShotRenderer::PreRender(core::view::CallRender3D_2& call) {
     int vpW_int = static_cast<UINT>(viewport.z);
     int vpH_int = static_cast<UINT>(viewport.w);
 
-    // Prepare rendering chained output to FBO --------------------------------
+    // Prepare rendering to FBO of chained output -----------------------------
 
 /// Suppress TRACE output of fbo.Enable() and fbo.Create()
 #if defined(DEBUG) || defined(_DEBUG)
@@ -246,15 +215,34 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D_2& call) {
         this->fbo.Disable();
     }
 
-    // Get update data from keyframe keeper
+    // Get update data from keyframe keeper -----------------------------------
     auto ccc = this->keyframeKeeperSlot.CallAs<CallKeyframeKeeper>();
     if (ccc == nullptr) return false;
     if (!(*ccc)(CallKeyframeKeeper::CallForGetUpdatedKeyframeData)) return false;
 
-    // Update parameters
+    // Set total simulation time 
+    float totalSimTime = static_cast<float>(cr3d_out->TimeFramesCount());
+    ccc->SetTotalSimTime(totalSimTime);
+    if (!(*ccc)(CallKeyframeKeeper::CallForSetSimulationData)) return false;
+
+    // Get selected keyframe
+    Keyframe skf = ccc->GetSelectedKeyframe();
+
+    // Set current simulation time based on selected keyframe ('disables'/ignores animation via view3d)
+    float simTime = skf.GetSimTime();
+    cr3d_in->SetTime(simTime * totalSimTime);
+
+    // Get pointer to keyframes array
+    auto keyframes = ccc->GetKeyframes();
+    if (keyframes == nullptr) {
+        vislib::sys::Log::DefaultLog.WriteWarn("[TRACKINGSHOT RENDERER] [Render] Pointer to keyframe array is nullptr.");
+        return false;
+    }
+
+    // Update parameters ------------------------------------------------------
     if (this->stepsParam.IsDirty()) {
         this->interpolSteps = this->stepsParam.Param<param::IntParam>()->Value();
-        ccc->setInterpolationSteps(this->interpolSteps);
+        ccc->SetInterpolationSteps(this->interpolSteps);
         if (!(*ccc)(CallKeyframeKeeper::CallForGetInterpolCamPositions)) return false;
         this->stepsParam.ResetDirty();
     }
@@ -271,24 +259,10 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D_2& call) {
         this->toggleManipOusideBboxParam.ResetDirty();
     }
 
-    // Set total simulation time 
-    float totalSimTime = static_cast<float>(cr3d_out->TimeFramesCount());
-    ccc->setTotalSimTime(totalSimTime);
-    if (!(*ccc)(CallKeyframeKeeper::CallForSetSimulationData)) return false;
-
-    // Get selected keyframe
-    Keyframe skf = ccc->getSelectedKeyframe();
-
-    // Set current simulation time based on selected keyframe ('disables'/ignores animation via view3d)
-    float simTime = skf.GetSimTime();
-    cr3d_in->SetTime(simTime * totalSimTime);
-
-    // Get pointer to keyframes array
-    auto keyframes = ccc->getKeyframes();
-    if (keyframes == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[TRACKINGSHOT RENDERER] [Render] Pointer to keyframe array is nullptr.");
-        return false;
-    }
+    // Init rendering ---------------------------------------------------------
+    glm::vec4 back_color;
+    glGetFloatv(GL_COLOR_CLEAR_VALUE, static_cast<GLfloat*>(glm::value_ptr(back_color)));
+    this->utils.SetBackgroundColor(back_color);
 
     // Get current camera
     view::Camera_2 cam;
@@ -313,69 +287,61 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     else {
         viewport = glm::vec4(0.0f, 0.0f, cam.resolution_gate().width(), cam.resolution_gate().height());
     }
-    float vpW_flt = viewport.z;
-    float vpH_flt = viewport.w;
+    float vp_fw = viewport.z;
+    float vp_fh = viewport.w;
 
     // Get matrix for orthogonal projection of 2D rendering
-    glm::mat4 ortho = glm::ortho(0.0f, vpW_flt, 0.0f, vpH_flt, -1.0f, 1.0f);
-
-    // Init rendering
-    glm::vec4 back_color;
-    glGetFloatv(GL_COLOR_CLEAR_VALUE, static_cast<GLfloat*>(glm::value_ptr(back_color)));
-    this->utils.SetBackgroundColor(back_color);
-
+    glm::mat4 ortho = glm::ortho(0.0f, vp_fw, 0.0f, vp_fh, -1.0f, 1.0f);
 
 
 
     // Push manipulators ------------------------------------------------------
-  //  if (keyframes->size() > 0) {
+    //  if (keyframes->size() > 0) {
+    // Update manipulator data only if currently no manipulator is grabbed
+	//if (!this->manipulatorGrabbed) {
+	//	// Available manipulators
+	//	std::vector<KeyframeManipulator::manipType> availManip;
+	//	availManip.clear();
+	//	availManip.emplace_back(KeyframeManipulator::manipType::KEYFRAME_POS);
+	//	if (this->toggleManipulator == 0) { // Keyframe position (along XYZ) manipulators, spline control point
+	//		availManip.emplace_back(KeyframeManipulator::manipType::SELECTED_KF_POS_X);
+	//		availManip.emplace_back(KeyframeManipulator::manipType::SELECTED_KF_POS_Y);
+	//		availManip.emplace_back(KeyframeManipulator::manipType::SELECTED_KF_POS_Z);
+	//		availManip.emplace_back(KeyframeManipulator::manipType::CTRL_POINT_POS_X);
+	//		availManip.emplace_back(KeyframeManipulator::manipType::CTRL_POINT_POS_Y);
+	//		availManip.emplace_back(KeyframeManipulator::manipType::CTRL_POINT_POS_Z);
+	//	}
+	//	else { //if (this->toggleManipulator == 1) { // Keyframe position (along lookat), lookat and up manipulators
+	//		availManip.emplace_back(KeyframeManipulator::manipType::SELECTED_KF_UP);
+	//		availManip.emplace_back(KeyframeManipulator::manipType::SELECTED_KF_LOOKAT_X);
+	//		availManip.emplace_back(KeyframeManipulator::manipType::SELECTED_KF_LOOKAT_Y);
+	//		availManip.emplace_back(KeyframeManipulator::manipType::SELECTED_KF_LOOKAT_Z);
+	//		availManip.emplace_back(KeyframeManipulator::manipType::SELECTED_KF_POS_LOOKAT);
+	//	}
+	//	// Get current Model-View-Projection matrix for world space to screen space projection of keyframe camera position for mouse selection
+	//	view::Camera_2 cam;
+	//	cr3d_in->GetCamera(cam);
+	//	cam_type::snapshot_type snapshot;
+	//	cam_type::matrix_type viewTemp, projTemp;
+	//	// Generate complete snapshot and calculate matrices
+	//	cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
+	//	glm::vec4 CamPos = snapshot.position;
+	//	glm::vec4 CamView = snapshot.view_vector;
+	//	glm::mat4 MVP = projTemp * viewTemp;
+	//	glm::vec4 BboxCenter = { ccc->GetBboxCenter().x, ccc->GetBboxCenter().y, ccc->GetBboxCenter().z, 1.0f};
+	//
+    //  this->manipulator.Update(availManip, keyframes, skf, vpW_flt, vpH_flt, MVP, (CamPos - CamView),(CamPos - BboxCenter),
+	//  this->manipOutsideModel, ccc->GetStartControlPointPosition(), ccc->GetEndControlPointPosition());
+    //  }
 
-  //      // Update manipulator data only if currently no manipulator is grabbed
-		//if (!this->manipulatorGrabbed) {
+    //  // Draw manipulators
+    //  this->manipulator.Draw();
+    //}
 
-		//	// Available manipulators
-		//	std::vector<KeyframeManipulator::manipType> availManip;
-		//	availManip.clear();
-		//	availManip.emplace_back(KeyframeManipulator::manipType::KEYFRAME_POS);
 
-		//	if (this->toggleManipulator == 0) { // Keyframe position (along XYZ) manipulators, spline control point
-		//		availManip.emplace_back(KeyframeManipulator::manipType::SELECTED_KF_POS_X);
-		//		availManip.emplace_back(KeyframeManipulator::manipType::SELECTED_KF_POS_Y);
-		//		availManip.emplace_back(KeyframeManipulator::manipType::SELECTED_KF_POS_Z);
-		//		availManip.emplace_back(KeyframeManipulator::manipType::CTRL_POINT_POS_X);
-		//		availManip.emplace_back(KeyframeManipulator::manipType::CTRL_POINT_POS_Y);
-		//		availManip.emplace_back(KeyframeManipulator::manipType::CTRL_POINT_POS_Z);
-		//	}
-		//	else { //if (this->toggleManipulator == 1) { // Keyframe position (along lookat), lookat and up manipulators
-		//		availManip.emplace_back(KeyframeManipulator::manipType::SELECTED_KF_UP);
-		//		availManip.emplace_back(KeyframeManipulator::manipType::SELECTED_KF_LOOKAT_X);
-		//		availManip.emplace_back(KeyframeManipulator::manipType::SELECTED_KF_LOOKAT_Y);
-		//		availManip.emplace_back(KeyframeManipulator::manipType::SELECTED_KF_LOOKAT_Z);
-		//		availManip.emplace_back(KeyframeManipulator::manipType::SELECTED_KF_POS_LOOKAT);
-		//	}
 
-		//	// Get current Model-View-Projection matrix for world space to screen space projection of keyframe camera position for mouse selection
-		//	view::Camera_2 cam;
-		//	cr3d_in->GetCamera(cam);
-		//	cam_type::snapshot_type snapshot;
-		//	cam_type::matrix_type viewTemp, projTemp;
-		//	// Generate complete snapshot and calculate matrices
-		//	cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
-		//	glm::vec4 CamPos = snapshot.position;
-		//	glm::vec4 CamView = snapshot.view_vector;
-		//	glm::mat4 MVP = projTemp * viewTemp;
-		//	glm::vec4 BboxCenter = { ccc->getBboxCenter().x, ccc->getBboxCenter().y, ccc->getBboxCenter().z, 1.0f};
-		//
-        //  this->manipulator.Update(availManip, keyframes, skf, vpW_flt, vpH_flt, MVP, (CamPos - CamView),(CamPos - BboxCenter),
-		//  this->manipOutsideModel, ccc->getStartControlPointPosition(), ccc->getEndControlPointPosition());
- //      }
-
-  //      // Draw manipulators
-  //      this->manipulator.Draw();
-  //  }
-
-    // Draw spline of interpolated camera positions
-    auto interpolKeyframes = ccc->getInterpolCamPositions();
+    // Draw spline ------------------------------------------------------------
+    auto interpolKeyframes = ccc->GetInterpolCamPositions();
     if (interpolKeyframes == nullptr) {
         vislib::sys::Log::DefaultLog.WriteWarn("[TRACKINGSHOT RENDERER] [Render] Pointer to interpolated camera positions array is nullptr.");
         return false;
@@ -391,84 +357,19 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D_2& call) {
         }
     }
 
-    // Draw textures ----------------------------------------------------------
-    //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    //glDisable(GL_CULL_FACE);
-    //glDisable(GL_LIGHTING);
-    //glEnable(GL_BLEND);
-    //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    //// Depth
-    //glEnable(GL_DEPTH_TEST);
-    //this->textureShader.Enable();
-    //glUniform1f(this->textureShader.ParameterLocation("vpW"), vpW_flt);
-    //glUniform1f(this->textureShader.ParameterLocation("vpH"), vpH_flt);
-    //glUniform1i(this->textureShader.ParameterLocation("depthtex"), 0);
-    //this->fbo.DrawDepthTexture();
-    //this->textureShader.Disable();
-    //// Color
-    //glDisable(GL_DEPTH_TEST);
-    //this->fbo.DrawColourTexture();
-    //glDisable(GL_BLEND);
-    //glEnable(GL_DEPTH_TEST);
-
-    // Draw help text 
-    //if (this->showHelpText) {
-    //    vislib::StringA helpText = "";
-    //    helpText += "-----[ GLOBAL ]-----\n";
-    //    helpText += "[Ctrl+a] Apply current settings to selected/new keyframe. \n";
-    //    helpText += "[Ctrl+d] Delete selected keyframe. \n";
-    //    helpText += "[Ctrl+s] Save keyframes to file. \n";
-    //    helpText += "[Ctrl+l] Load keyframes from file. \n";
-    //    helpText += "[Ctrl+z] Undo keyframe changes. \n";
-    //    helpText += "[Ctrl+y] Redo keyframe changes. \n";
-    //    helpText += "-----[ TRACKING SHOT ]----- \n";
-    //    helpText += "[Ctrl+q] Toggle different manipulators for the selected keyframe. \n";
-    //    helpText += "[Ctrl+w] Show manipulators inside/outside of model bounding box. \n";
-    //    helpText += "[Ctrl+u] Reset look-at vector of selected keyframe. \n";
-    //    helpText += "-----[ CINEMATIC ]----- \n";
-    //    helpText += "[Ctrl+r] Start/Stop rendering complete animation. \n";
-    //    helpText += "[Ctrl+Space] Start/Stop animation preview. \n";
-    //    helpText += "-----[ TIMELINE ]----- \n";
-    //    helpText += "[Ctrl+Right/Left Arrow] Move selected keyframe on animation time axis. \n";
-    //    helpText += "[Ctrl+f] Snap all keyframes to animation frames. \n";
-    //    helpText += "[Ctrl+g] Snap all keyframes to simulation frames. \n";
-    //    helpText += "[Ctrl+t] Linearize simulation time between two keyframes. \n";
-    //    //helpText += "[Ctrl+v] Set same velocity between all keyframes (Experimental).\n"; // Calcualation is not correct yet ...
-    //    helpText += "[Ctrl+p] Reset shifted and scaled time axes. \n";
-    //    helpText += "[Left Mouse Button] Select keyframe. \n";
-    //    helpText += "[Middle Mouse Button] Axes scaling in mouse direction. \n";
-    //    helpText += "[Right Mouse Button] Drag & drop keyframe / pan axes. \n";
-
-    //    float htNumOfRows = 24.0f; // Number of rows the help text has
-
-    //    float htFontSize  = vpW*0.027f; // max % of viewport width
-    //    float htStrHeight = this->theFont.LineHeight(htFontSize);
-    //    float htX         = 5.0f;
-    //    float htY         = htX + htStrHeight;
-    //    // Adapt font size if height of help text is greater than viewport height
-    //    while ((htStrHeight*htNumOfRows + htX + this->theFont.LineHeight(lbFontSize)) >vpH) {
-    //        htFontSize -= 0.5f;
-    //        htStrHeight = this->theFont.LineHeight(htFontSize);
-    //    }
-
-    //    float htStrWidth = this->theFont.LineWidth(htFontSize, helpText);
-    //    htStrHeight      = this->theFont.LineHeight(htFontSize);
-    //    htY              = htX + htStrHeight*htNumOfRows;
-    //    // Draw background colored quad
-    //    glColor4fv(bgColor);
-    //    glBegin(GL_QUADS);
-    //        glVertex2f(htX,              htY);
-    //        glVertex2f(htX,              htY - (htStrHeight*htNumOfRows));
-    //        glVertex2f(htX + htStrWidth, htY - (htStrHeight*htNumOfRows));
-    //        glVertex2f(htX + htStrWidth, htY);
-    //    glEnd();
-    //    // Draw help text
-    //    this->theFont.DrawString(fgColor, htX, htY, htFontSize, false, helpText, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
-    //}
-
-
     // Draw 3D ---------------------------------------------------------------
     this->utils.DrawAll(mvp);
+
+    // Push textures ----------------------------------------------------------
+    glm::vec3 pos_bottom_left = { 0.0f, 0.0f, 0.0f };
+    glm::vec3 pos_upper_left = { 0.0f, vp_fh, 0.0f };
+    glm::vec3 pos_upper_right = { vp_fw, vp_fh, 0.0f };
+    glm::vec3 pos_bottom_right = { vp_fw, 0.0f, 0.0f };
+    this->utils.Push2DColorTexture(this->fbo.GetColourTextureID(), pos_bottom_left, pos_upper_left, pos_upper_right, pos_bottom_right);
+    this->utils.Push2DDepthTexture(this->fbo.GetColourTextureID(), pos_bottom_left, pos_upper_left, pos_upper_right, pos_bottom_right);
+
+    // Push hotkey list ------------------------------------------------------
+    //this->utils.PushHotkeyList(const std::string& text, glm::vec3 position, float viewport_width, float viewport_height);
 
     // Push menu --------------------------------------------------------------
     std::string leftLabel = " TRACKING SHOT ";
@@ -477,7 +378,7 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     if (this->showHelpText) {
         rightLabel = " [Ctrl+h] Hide Help Text ";
     }
-    this->utils.PushMenu(leftLabel, midLabel, rightLabel, vpW_flt, vpH_flt);
+    this->utils.PushMenu(leftLabel, midLabel, rightLabel, vp_fw, vp_fh);
 
     // Draw 2D ---------------------------------------------------------------
     this->utils.DrawAll(ortho);
@@ -501,7 +402,7 @@ bool TrackingShotRenderer::OnMouseButton(megamol::core::view::MouseButton button
 
     auto ccc = this->keyframeKeeperSlot.CallAs<CallKeyframeKeeper>();
     if (ccc == nullptr) return false;
-    auto keyframes = ccc->getKeyframes();
+    auto keyframes = ccc->GetKeyframes();
     if (keyframes == nullptr) {
         vislib::sys::Log::DefaultLog.WriteWarn("[TRACKINGSHOT RENDERER] [OnMouseButton] Pointer to keyframe array is nullptr.");
         return false;
@@ -522,7 +423,7 @@ bool TrackingShotRenderer::OnMouseButton(megamol::core::view::MouseButton button
     //            // Check if new keyframe position is selected
     //            int index = this->manipulator.CheckKeyframePositionHit(this->mouseX, this->mouseY);
     //            if (index >= 0) {
-    //                ccc->setSelectedKeyframeTime((*keyframes)[index].GetAnimTime());
+    //                ccc->SetSelectedKeyframeTime((*keyframes)[index].GetAnimTime());
     //                if (!(*ccc)(CallKeyframeKeeper::CallForGetSelectedKeyframeAtTime)) return false;
     //                consumed = true;
     //                //vislib::sys::Log::DefaultLog.WriteInfo("[TRACKINGSHOT RENDERER] [OnMouseButton] KEYFRAME SELECT.");
@@ -533,10 +434,10 @@ bool TrackingShotRenderer::OnMouseButton(megamol::core::view::MouseButton button
     //        // Apply changes of selected manipulator and control points
     //        if (this->manipulator.ProcessManipulatorHit(this->mouseX, this->mouseY)) {
 
-    //            ccc->setSelectedKeyframe(this->manipulator.GetManipulatedKeyframe());
+    //            ccc->SetSelectedKeyframe(this->manipulator.GetManipulatedKeyframe());
     //            if (!(*ccc)(CallKeyframeKeeper::CallForSetSelectedKeyframe)) return false;
 
-    //            ccc->setControlPointPosition(this->manipulator.GetFirstControlPointPosition(), this->manipulator.GetLastControlPointPosition());
+    //            ccc->SetControlPointPosition(this->manipulator.GetFirstControlPointPosition(), this->manipulator.GetLastControlPointPosition());
     //            if (!(*ccc)(CallKeyframeKeeper::CallForSetCtrlPoints)) return false;
 
     //            consumed = true;
@@ -568,9 +469,9 @@ bool TrackingShotRenderer::OnMouseMove(double x, double y) {
     this->mouseY = (float)static_cast<int>(y);
 
     // Check for grabbed or hit manipulator
-    if (this->manipulatorGrabbed && this->manipulator.ProcessManipulatorHit(this->mouseX, this->mouseY)) {
-        return true;
-    }
+    //if (this->manipulatorGrabbed && this->manipulator.ProcessManipulatorHit(this->mouseX, this->mouseY)) {
+    //    return true;
+    //}
 
     return false;
 }

@@ -158,22 +158,22 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     auto ccc = this->keyframeKeeperSlot.CallAs<CallKeyframeKeeper>();
     if (!ccc) return false;
     if (!(*ccc)(CallKeyframeKeeper::CallForGetUpdatedKeyframeData)) return false;
-     auto keyframes = ccc->getKeyframes();
+     auto keyframes = ccc->GetKeyframes();
     if (keyframes == nullptr) {
         vislib::sys::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] [Render] Pointer to keyframe array is nullptr.");
         return false;
     }
 
     // Get maximum value for x axis (always animation time)
-    if (this->axes[Axis::X].maxValue != ccc->getTotalAnimTime()) {
-        this->axes[Axis::X].maxValue = ccc->getTotalAnimTime();
+    if (this->axes[Axis::X].maxValue != ccc->GetTotalAnimTime()) {
+        this->axes[Axis::X].maxValue = ccc->GetTotalAnimTime();
         this->recalcAxesData();
     }
 
     // Get max value for y axis depending on chosen parameter
     float yAxisMaxValue = 0.0f;
     switch (this->yAxisParam) {
-        case (Param::SIMULATION_TIME): yAxisMaxValue = ccc->getTotalSimTime(); break;
+        case (Param::SIMULATION_TIME): yAxisMaxValue = ccc->GetTotalSimTime(); break;
         default: break;
     }
     if (this->axes[Axis::Y].maxValue != yAxisMaxValue) {
@@ -182,13 +182,13 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     }
 
     // Get fps
-    this->fps = ccc->getFps();
+    this->fps = ccc->GetFps();
 
     // Update parameters
     if (this->moveRightFrameParam.IsDirty()) {
         this->moveRightFrameParam.ResetDirty();
         // Set selected animation time to right animation time frame
-        float at = ccc->getSelectedKeyframe().GetAnimTime();
+        float at = ccc->GetSelectedKeyframe().GetAnimTime();
         float fpsFrac = 1.0f / (float)(this->fps);
         float t = std::round(at / fpsFrac) * fpsFrac;
         t += fpsFrac;
@@ -196,13 +196,13 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
             t = std::round(t);
         }
         t = (t > this->axes[Axis::X].maxValue) ? (this->axes[Axis::X].maxValue) : (t);
-        ccc->setSelectedKeyframeTime(t);
+        ccc->SetSelectedKeyframeTime(t);
         if (!(*ccc)(CallKeyframeKeeper::CallForGetSelectedKeyframeAtTime)) return false;
     }
     if (this->moveLeftFrameParam.IsDirty()) {
         this->moveLeftFrameParam.ResetDirty();
         // Set selected animation time to left animation time frame
-        float at = ccc->getSelectedKeyframe().GetAnimTime();
+        float at = ccc->GetSelectedKeyframe().GetAnimTime();
         float fpsFrac = 1.0f / (float)(this->fps);
         float t = std::round(at / fpsFrac) * fpsFrac;
         t -= fpsFrac;
@@ -210,7 +210,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
             t = std::round(t);
         }
         t = (t < 0.0f) ? (0.0f) : (t);
-        ccc->setSelectedKeyframeTime(t);
+        ccc->SetSelectedKeyframeTime(t);
         if (!(*ccc)(CallKeyframeKeeper::CallForGetSelectedKeyframeAtTime)) return false;
     }
 
@@ -324,7 +324,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     }
 
     // Push marker and lines for interpolated selected keyframe ---------------
-    auto skf = ccc->getSelectedKeyframe();
+    auto skf = ccc->GetSelectedKeyframe();
     x = this->axes[Axis::X].scaleOffset + skf.GetAnimTime() * this->axes[Axis::X].valueFractionLength;
     yAxisValue = 0.0f;
     switch (this->yAxisParam) {
@@ -436,7 +436,7 @@ void TimeLineRenderer::pushMarkerTexture(float pos_x, float pos_y, float size, g
     glm::vec3 pos_upper_left   = { pos_x - (size / 2.0f), pos_y + size, z };
     glm::vec3 pos_upper_right  = { pos_x + (size / 2.0f), pos_y + size, z };
     glm::vec3 pos_bottom_right = { pos_x + (size / 2.0f), pos_y, z};
-    this->utils.Push2DTexture(this->texture, pos_bottom_left, pos_upper_left, pos_upper_right, pos_bottom_right, true, color);
+    this->utils.Push2DColorTexture(this->texture, pos_bottom_left, pos_upper_left, pos_upper_right, pos_bottom_right, true, color);
 }
 
 
@@ -521,7 +521,7 @@ bool TimeLineRenderer::OnMouseButton(megamol::core::view::MouseButton button, me
     auto ccc = this->keyframeKeeperSlot.CallAs<CallKeyframeKeeper>();
     if (ccc == nullptr) return false;
     if (!(*ccc)(CallKeyframeKeeper::CallForGetUpdatedKeyframeData)) return false;
-    auto keyframes = ccc->getKeyframes();
+    auto keyframes = ccc->GetKeyframes();
     if (keyframes == nullptr) {
         vislib::sys::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] [OnMouseButton] Pointer to keyframe array is nullptr.");
         return false;
@@ -555,16 +555,16 @@ bool TimeLineRenderer::OnMouseButton(megamol::core::view::MouseButton button, me
                     // If another keyframe is already hit, check which keyframe is closer to mouse position
                     if (hit) {
                         float deltaX = glm::abs(posX - this->mouseX);
-                        xAxisX = this->axes[Axis::X].scaleOffset + ccc->getSelectedKeyframe().GetAnimTime() * this->axes[Axis::X].valueFractionLength;
+                        xAxisX = this->axes[Axis::X].scaleOffset + ccc->GetSelectedKeyframe().GetAnimTime() * this->axes[Axis::X].valueFractionLength;
                         if ((xAxisX >= 0.0f) && (xAxisX <= this->axes[Axis::X].length)) {
                             posX = this->axes[Axis::X].startPos.x + xAxisX;
                             if (deltaX < glm::abs(posX - this->mouseX)) {
-                                ccc->setSelectedKeyframeTime((*keyframes)[i].GetAnimTime());
+                                ccc->SetSelectedKeyframeTime((*keyframes)[i].GetAnimTime());
                             }
                         }
                     }
                     else {
-                        ccc->setSelectedKeyframeTime((*keyframes)[i].GetAnimTime());
+                        ccc->SetSelectedKeyframeTime((*keyframes)[i].GetAnimTime());
                     }
                     hit = true;
                 }
@@ -579,7 +579,7 @@ bool TimeLineRenderer::OnMouseButton(megamol::core::view::MouseButton button, me
             if ((this->mouseX >= this->axes[Axis::X].startPos.x) && (this->mouseX <= this->axes[Axis::X].endPos.x)) {
                 // Set an interpolated keyframe as selected
                 float xt = (((-1.0f)*this->axes[Axis::X].scaleOffset + (this->mouseX - this->axes[Axis::X].startPos.x)) / this->axes[Axis::X].scaleFactor) / this->axes[Axis::X].length * this->axes[Axis::X].maxValue;
-                ccc->setSelectedKeyframeTime(xt);
+                ccc->SetSelectedKeyframeTime(xt);
                 if (!(*ccc)(CallKeyframeKeeper::CallForGetSelectedKeyframeAtTime)) return false;
             }
         }
@@ -607,18 +607,18 @@ bool TimeLineRenderer::OnMouseButton(megamol::core::view::MouseButton button, me
                         // If another keyframe is already hit, check which keyframe is closer to mouse position
                         if (hit) {
                             float deltaX = glm::abs(posX - this->mouseX);
-                            xAxisX = this->axes[Axis::X].scaleOffset + ccc->getSelectedKeyframe().GetAnimTime() * this->axes[Axis::X].valueFractionLength;
+                            xAxisX = this->axes[Axis::X].scaleOffset + ccc->GetSelectedKeyframe().GetAnimTime() * this->axes[Axis::X].valueFractionLength;
                             if ((xAxisX >= 0.0f) && (xAxisX <= this->axes[Axis::X].length)) {
                                 posX = this->axes[Axis::X].startPos.x + xAxisX;
                                 if (deltaX < glm::abs(posX - this->mouseX)) {
                                     this->dragDropKeyframe = (*keyframes)[i];
-                                    ccc->setSelectedKeyframeTime((*keyframes)[i].GetAnimTime());
+                                    ccc->SetSelectedKeyframeTime((*keyframes)[i].GetAnimTime());
                                 }
                             }
                         }
                         else {
                             this->dragDropKeyframe = (*keyframes)[i];
-                            ccc->setSelectedKeyframeTime((*keyframes)[i].GetAnimTime());
+                            ccc->SetSelectedKeyframeTime((*keyframes)[i].GetAnimTime());
                         }
                         hit = true;
                     }
@@ -664,7 +664,7 @@ bool TimeLineRenderer::OnMouseButton(megamol::core::view::MouseButton button, me
                     }
                     xt = this->dragDropKeyframe.GetAnimTime();
                 }
-                ccc->setDropTimes(xt, yt);
+                ccc->SetDropTimes(xt, yt);
                 if (!(*ccc)(CallKeyframeKeeper::CallForSetDropKeyframe)) return false;
 
                 this->dragDropActive = false;
@@ -711,7 +711,7 @@ bool TimeLineRenderer::OnMouseMove(double x, double y) {
             if ((this->mouseX >= this->axes[Axis::X].startPos.x) && (this->mouseX <= this->axes[Axis::X].endPos.x)) {
                 // Set an interpolated keyframe as selected
                 float xt = (((-1.0f)*this->axes[Axis::X].scaleOffset + (this->mouseX - this->axes[Axis::X].startPos.x)) / this->axes[Axis::X].scaleFactor) / this->axes[Axis::X].length * this->axes[Axis::X].maxValue;
-                ccc->setSelectedKeyframeTime(xt);
+                ccc->SetSelectedKeyframeTime(xt);
                 if (!(*ccc)(CallKeyframeKeeper::CallForGetSelectedKeyframeAtTime)) return false;
             }
         }

@@ -10,9 +10,10 @@
 
 #include "Cinematic/Cinematic.h"
 
-#include "vislib/graphics/Camera.h"
-#include "vislib/Serialisable.h"
+#include "mmcore/view/Camera_2.h"
+#include "vislib/sys/Log.h"
 
+#include "json.hpp"
 #include <glm/glm.hpp>
 
 
@@ -26,107 +27,76 @@ namespace cinematic {
 	class Keyframe{
 	public:
 
+        // Camera State Type
+        typedef megamol::core::thecam::camera<cam_maths_type>::minimal_state_type cam_state_type;
+
 		/** CTOR */
         Keyframe();
 
-        Keyframe(float at, float st, glm::vec3 pos, glm::vec3 up, glm::vec3 lookat, float aperture);
+        Keyframe(float at, float st, cam_state_type cam);
 
 		/** DTOR */
 		~Keyframe();
 
         inline bool operator==(Keyframe const& rhs){
-			return ((this->camera == rhs.camera) && (this->animTime == rhs.animTime) && (this->simTime == rhs.simTime));
+			return ((this->camStatesEqual(this->camera_state, rhs.camera_state)) && (this->anim_time == rhs.anim_time) && (this->sim_time == rhs.sim_time));
 		}
 
         inline bool operator!=(Keyframe const& rhs) {
-            return (!(this->camera == rhs.camera) || (this->animTime != rhs.animTime) || (this->simTime != rhs.simTime));
+            return (!((*this) == rhs));
         }
 
-        ///// GET /////
+        // GET ----------------------------------------------------------------
  
         inline float GetAnimTime() {
-            return this->animTime;
+            return this->anim_time;
         }
 
         inline float GetSimTime() {
-            return (this->simTime == 1.0f)?(1.0f-0.0000001f):(this->simTime);
+            return (this->sim_time == 1.0f)?(1.0f-0.0000001f):(this->sim_time);
         }
 
-        inline glm::vec3 GetCamPosition(){
-            return this->camera.position;
+        inline cam_state_type GetCameraState(){
+            return this->camera_state;
 		}
 
-        inline glm::vec3 GetCamLookAt(){
-            return this->camera.lookat;
-		}
-
-        inline glm::vec3 GetCamUp(){
-            return this->camera.up;
-		}
-
-        inline float GetCamApertureAngle(){
-            return this->camera.apertureangle;
-		}
-
-        ///// SET /////
+        // SET ----------------------------------------------------------------
 
         inline void SetAnimTime(float t) {
-            this->animTime = (t < 0.0f)?(0.0f):(t);
+            this->anim_time = (t < 0.0f)?(0.0f):(t);
         }
 
         inline void SetSimTime(float t) {
-            this->simTime = glm::clamp(t, 0.0f, 1.0f);
+            this->sim_time = glm::clamp(t, 0.0f, 1.0f);
         }
 
-        inline void SetCameraPosition(glm::vec3 pos){
-            this->camera.position = pos;
+        inline void SetCameraState(const cam_state_type& cam){
+            this->camera_state = cam;
 		}
+    
+        // SERIALISATION ------------------------------------------------------
 
-        inline void SetCameraLookAt(glm::vec3 look){
-            this->camera.lookat = look;
-		}
+        bool Serialise(std::string& json_string);
 
-        inline void SetCameraUp(glm::vec3 up){
-            this->camera.up = up;
-		}
-
-        inline void SetCameraApertureAngele(float apertureangle){
-            this->camera.apertureangle = glm::clamp(apertureangle, 0.0f, 180.0f);
-		}
-
-        ///// SERIALISATION /////
-
-        void Serialise(vislib::Serialiser& serialiser);
-
-        void Deserialise(vislib::Serialiser& serialiser);
+        bool Deserialise(const std::string& json_string);
 
 	private:
-
-        /**********************************************************************
-        * classes
-        **********************************************************************/
-
-        class Camera {
-        public:
-            bool operator==(Keyframe::Camera const& rhs) {
-                return ((this->lookat == rhs.lookat) && (this->position == rhs.position) && 
-                        (this->apertureangle == rhs.apertureangle) && (this->up == rhs.up));
-            }
-            glm::vec3 up;
-            glm::vec3 position;
-            glm::vec3 lookat;
-            float apertureangle;
-        };
 
         /**********************************************************************
         * variables
         **********************************************************************/
 
-        /// Simulation time is always in [0,1] and is relative to absolute total simulation time.
-        float simTime;
-		float animTime;
-        Keyframe::Camera camera;
+        cam_state_type camera_state;
+        float sim_time; // Simulation time value is relative (always in [0,1])
+		float anim_time;
 
+        /**********************************************************************
+        * functions
+        **********************************************************************/
+
+        /** Returns true if both states are euqal, false otherwise. */
+        bool camStatesEqual(cam_state_type ls, cam_state_type rs);
+    
 	};
 
 } /* end namespace cinematic */
