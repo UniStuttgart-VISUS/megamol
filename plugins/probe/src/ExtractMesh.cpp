@@ -128,8 +128,8 @@ bool ExtractMesh::extractCenterLine(pcl::PointCloud<pcl::PointNormal>& point_clo
         this->_bbox.ObjectSpaceBBox().Depth()};
     const auto longest_edge_index = std::distance(whd.begin(), std::max_element(whd.begin(), whd.end()));
 
-    const uint32_t num_steps = 100;
-    const auto step_size = whd[longest_edge_index]/num_steps;
+    const uint32_t num_steps = 50;
+    const auto step_size = whd[longest_edge_index]/(num_steps+2); // without begin and end
     const auto step_epsilon = step_size/2;
     float offset = 0.0f;
     if (longest_edge_index == 0) {
@@ -139,12 +139,14 @@ bool ExtractMesh::extractCenterLine(pcl::PointCloud<pcl::PointNormal>& point_clo
     } else if (longest_edge_index == 2) {
         offset = std::min(this->_bbox.ObjectSpaceBBox().GetFront(), this->_bbox.ObjectSpaceBBox().GetBack());
     }
+    _cl_indices_per_slice.clear();
+    _centerline.clear();
     _centerline.resize(num_steps);
     _cl_indices_per_slice.resize(num_steps);
 
 
     for (uint32_t i = 0; i < _centerline.size(); i++) {
-        const auto slice = offset + step_size * i;
+        const auto slice = offset +  (i + 1) * step_size;
         const auto slice_min = slice - step_epsilon;
         const auto slice_max = slice + step_epsilon;
         float slice_dim1_mean = 0.0f;
@@ -360,7 +362,9 @@ bool ExtractMesh::getData(core::Call& call) {
     for (auto var : toInq) {
         if (!cd->inquire(var)) return false;
     }
-    if (!(*cd)(0)) return false;
+
+    if (cd->getDataHash() != _old_datahash)
+        if (!(*cd)(0)) return false;
 
 
     if (!this->createPointCloud(toInq)) return false;
@@ -369,7 +373,8 @@ bool ExtractMesh::getData(core::Call& call) {
     meta_data.m_bboxs = _bbox;
     cm->setMetaData(meta_data);
 
-    this->calculateAlphaShape();
+    if (cd->getDataHash() != _old_datahash)
+        this->calculateAlphaShape();
 
     // this->filterResult();
     // this->filterByIndex();
@@ -427,9 +432,8 @@ bool ExtractMesh::getParticleData(core::Call& call) {
     auto cd = this->_getDataCall.CallAs<adios::CallADIOSData>();
     if (cd == nullptr) return false;
 
-    if (cd->getDataHash() == _old_datahash && cm->FrameID() == cd->getFrameIDtoLoad() &&
-        cm->DataHash() == _recalc_hash)
-        return true;
+    //if (cd->getDataHash() == _old_datahash && cm->FrameID() == cd->getFrameIDtoLoad() && cm->DataHash() == _recalc_hash)
+    //    return true;
 
     std::vector<std::string> toInq;
     toInq.clear();
@@ -445,7 +449,8 @@ bool ExtractMesh::getParticleData(core::Call& call) {
     for (auto var : toInq) {
         if (!cd->inquire(var)) return false;
     }
-    if (!(*cd)(0)) return false;
+    if (cd->getDataHash() != _old_datahash)
+        if (!(*cd)(0)) return false;
 
 
     if (!this->createPointCloud(toInq)) return false;
@@ -453,7 +458,8 @@ bool ExtractMesh::getParticleData(core::Call& call) {
 
     cm->AccessBoundingBoxes().SetObjectSpaceBBox(_bbox.ObjectSpaceBBox());
 
-    this->calculateAlphaShape();
+    if (cd->getDataHash() != _old_datahash)
+        this->calculateAlphaShape();
 
     // this->filterResult();
     // this->filterByIndex();
@@ -524,7 +530,9 @@ bool ExtractMesh::getCenterlineData(core::Call& call) {
     for (auto var : toInq) {
         if (!cd->inquire(var)) return false;
     }
-    if (!(*cd)(0)) return false;
+
+    if (cd->getDataHash() != _old_datahash)
+        if (!(*cd)(0)) return false;
 
 
     if (!this->createPointCloud(toInq)) return false;
@@ -533,7 +541,8 @@ bool ExtractMesh::getCenterlineData(core::Call& call) {
     meta_data.m_bboxs = _bbox;
     cm->setMetaData(meta_data);
 
-    this->calculateAlphaShape();
+    if (cd->getDataHash() != _old_datahash)
+        this->calculateAlphaShape();
 
     _line_attribs.resize(1);
     _line_attribs[0].component_type = mesh::MeshDataAccessCollection::ValueType::FLOAT;

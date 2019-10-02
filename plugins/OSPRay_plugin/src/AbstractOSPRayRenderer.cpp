@@ -1022,12 +1022,13 @@ bool AbstractOSPRayRenderer::fillWorld() {
 
                         // check normal pointer
                         if (attrib.semantic == mesh::MeshDataAccessCollection::NORMAL) {
-                            auto count =
-                                attrib.byte_size / (mesh::MeshDataAccessCollection::getByteSize(attrib.component_type) *
-                                                       attrib.component_cnt);
-                            normalData = ospNewData(count, OSP_FLOAT3, attrib.data);
-                            ospCommit(normalData);
-                            ospSetData(geo.back(), "vertex.normal", normalData);
+                            //auto count =
+                            //    attrib.byte_size / attrib.stride;
+                            //auto ospType = OSP_FLOAT3;
+                            //if (attrib.stride == 4 * sizeof(float)) ospType = OSP_FLOAT3A;
+                            //normalData = ospNewData(count, ospType, attrib.data);
+                            //ospCommit(normalData);
+                            //ospSetData(geo.back(), "vertex.normal", normalData);
                         }
 
                         // check colorpointer and convert to rgba
@@ -1083,7 +1084,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
                             if (attrib.semantic == mesh::MeshDataAccessCollection::POSITION) {
                                 const auto count = attrib.byte_size / attrib.stride;
                                 assert(attrib.stride == 4 * sizeof(float));
-                                vertexData = ospNewData(count, OSP_FLOAT3A, attrib.data);
+                                vertexData = ospNewData(count, OSP_FLOAT3A, attrib.data, OSP_DATA_SHARED_BUFFER);
                                 ospCommit(vertexData);
                                 ospSetData(geo.back(), "vertex", vertexData);
                             }
@@ -1095,7 +1096,8 @@ bool AbstractOSPRayRenderer::fillWorld() {
                                         attrib.byte_size / attrib.stride,
                                         OSP_FLOAT4, attrib.data);
                                 else
-                                    colorData = ospNewData(attrib.byte_size, OSP_UCHAR, attrib.data);
+                                    colorData =
+                                        ospNewData(attrib.byte_size, OSP_UCHAR, attrib.data, OSP_DATA_SHARED_BUFFER);
                                 ospCommit(colorData);
                                 ospSetData(geo.back(), "vertex.color", colorData);
                             }
@@ -1104,7 +1106,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
                         if (mesh.indices.data != nullptr) {
                             const auto count =
                                 mesh.indices.byte_size / mesh::MeshDataAccessCollection::getByteSize(mesh.indices.type);
-                            indexData = ospNewData(count, OSP_INT, mesh.indices.data);
+                            indexData = ospNewData(count, OSP_INT, mesh.indices.data, OSP_DATA_SHARED_BUFFER);
                             ospCommit(indexData);
                             ospSetData(geo.back(), "index", indexData);
                         } else {

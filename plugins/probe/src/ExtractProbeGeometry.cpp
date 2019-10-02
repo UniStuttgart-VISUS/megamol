@@ -35,14 +35,17 @@ void megamol::probe::ExtractProbeGeometry::release() {}
 bool megamol::probe::ExtractProbeGeometry::convertToLine(core::Call& call) {
 
     auto* cm = dynamic_cast<mesh::CallMesh*>(&call);
-    mesh::MeshDataAccessCollection line;
+    std::shared_ptr<mesh::MeshDataAccessCollection> line = std::make_shared<mesh::MeshDataAccessCollection>();
 
     auto probe_count = this->m_probes->getNumProbes();
 
-    _index_data = {0,1};
+    _index_data = {0};
     _line_indices.type = mesh::MeshDataAccessCollection::ValueType::UNSIGNED_INT;
     _line_indices.byte_size = _index_data.size() * sizeof(uint32_t);
     _line_indices.data = reinterpret_cast<uint8_t*>(_index_data.data());
+
+    _line_attribs.clear();
+    _vertex_data.clear();
 
     _line_attribs.resize(probe_count);
     _vertex_data.resize(2*probe_count);
@@ -63,8 +66,8 @@ bool megamol::probe::ExtractProbeGeometry::convertToLine(core::Call& call) {
         vert2[2] = probe.m_position[2] + probe.m_direction[2] * probe.m_end;
         vert2[3] = 1.0f;
 
-        _vertex_data[2 * i + 0] = std::move(vert1);
-        _vertex_data[2 * i + 1] = std::move(vert2);
+        _vertex_data[2 * i + 0] = vert1;
+        _vertex_data[2 * i + 1] = vert2;
 
         _line_attribs[i].resize(1);
         _line_attribs[i][0].semantic = mesh::MeshDataAccessCollection::AttributeSemanticType::POSITION;
@@ -72,12 +75,12 @@ bool megamol::probe::ExtractProbeGeometry::convertToLine(core::Call& call) {
         _line_attribs[i][0].byte_size = 2 * sizeof(std::array<float, 4>);
         _line_attribs[i][0].component_cnt = 3;
         _line_attribs[i][0].stride = 4 * sizeof(float);
-        _line_attribs[i][0].data = reinterpret_cast<uint8_t*>(&_vertex_data[2 * i + 0]);
+        _line_attribs[i][0].data = reinterpret_cast<uint8_t*>(_vertex_data[2 * i + 0].data());
 
         // put data in line
-        line.addMesh(_line_attribs[i], _line_indices);
+        line->addMesh(_line_attribs[i], _line_indices);
     }
-    cm->setData(std::make_shared<mesh::MeshDataAccessCollection>(std::move(line)));
+    cm->setData(line);
 
     return true;
 }

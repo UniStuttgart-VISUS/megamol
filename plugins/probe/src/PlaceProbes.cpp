@@ -127,8 +127,8 @@ bool megamol::probe::PlaceProbes::placeProbes() {
         }
     }
 
-    //uint32_t probe_count = vertices->byte_size / vertices->stride;
-    uint32_t probe_count = 100; 
+    uint32_t probe_count = vertices->byte_size / vertices->stride;
+    //uint32_t probe_count = 1; 
     uint32_t centerline_vert_count =
         centerline->byte_size / centerline->stride;
 
@@ -143,10 +143,12 @@ bool megamol::probe::PlaceProbes::placeProbes() {
 
         std::vector<float> distances(centerline_vert_count);
         for (uint32_t j = 0; j < centerline_vert_count; j++) {
-            distances[j] =
-                std::sqrt(vertex_accessor[vertex_step * i + 0] * centerline_accessor[centerline_step * j + 0] +
-                          vertex_accessor[vertex_step * i + 1] * centerline_accessor[centerline_step * j + 1] +
-                          vertex_accessor[vertex_step * i + 2] * centerline_accessor[centerline_step * j + 2]);
+            std::array<float, 3> diffvec = {
+                vertex_accessor[vertex_step * i + 0] - centerline_accessor[centerline_step * j + 0],
+                vertex_accessor[vertex_step * i + 1] - centerline_accessor[centerline_step * j + 1],
+                vertex_accessor[vertex_step * i + 2] - centerline_accessor[centerline_step * j + 2]};
+            distances[j] = std::sqrt(diffvec[0] * diffvec[0] + diffvec[1] * diffvec[1] +
+                          diffvec[2] * diffvec[2]);
         }
 
         auto min_iter = std::min_element(distances.begin(), distances.end());
@@ -158,14 +160,17 @@ bool megamol::probe::PlaceProbes::placeProbes() {
 
         // calc normal in plane between vert, min and second_min
         std::array<float, 3> along_centerline;
-        along_centerline[0] = centerline_accessor[3 * min_index + 0] - centerline_accessor[3 * second_min_index + 0];
-        along_centerline[1] = centerline_accessor[3 * min_index + 1] - centerline_accessor[3 * second_min_index + 1];
-        along_centerline[2] = centerline_accessor[3 * min_index + 2] - centerline_accessor[3 * second_min_index + 2];
+        along_centerline[0] = centerline_accessor[centerline_step * min_index + 0] -
+                              centerline_accessor[centerline_step * second_min_index + 0];
+        along_centerline[1] = centerline_accessor[centerline_step * min_index + 1] -
+                              centerline_accessor[centerline_step * second_min_index + 1];
+        along_centerline[2] = centerline_accessor[centerline_step * min_index + 2] -
+                              centerline_accessor[centerline_step * second_min_index + 2];
 
         std::array<float, 3> min_to_vert;
-        min_to_vert[0] = vertex_accessor[3 * i + 0] - centerline_accessor[3 * min_index + 0];
-        min_to_vert[1] = vertex_accessor[3 * i + 1] - centerline_accessor[3 * min_index + 1];
-        min_to_vert[2] = vertex_accessor[3 * i + 2] - centerline_accessor[3 * min_index + 2];
+        min_to_vert[0] = vertex_accessor[vertex_step * i + 0] - centerline_accessor[centerline_step * min_index + 0];
+        min_to_vert[1] = vertex_accessor[vertex_step * i + 1] - centerline_accessor[centerline_step * min_index + 1];
+        min_to_vert[2] = vertex_accessor[vertex_step * i + 2] - centerline_accessor[centerline_step * min_index + 2];
 
         std::array<float, 3> bitangente;
         bitangente[0] = along_centerline[1] * min_to_vert[2] - along_centerline[2] * min_to_vert[1];
@@ -195,9 +200,10 @@ bool megamol::probe::PlaceProbes::placeProbes() {
             final_dist *= -1;
         }
 
-        probe.m_position = {vertex_accessor[3 * i + 0], vertex_accessor[3 * i + 1], vertex_accessor[3 * i + 2]};
+        probe.m_position = {vertex_accessor[vertex_step * i + 0], vertex_accessor[vertex_step * i + 1],
+            vertex_accessor[vertex_step * i + 2]};
         probe.m_direction = normal;
-        probe.m_begin = -0.2;
+        probe.m_begin = -0.1*final_dist;
         probe.m_end = final_dist;
 
         this->m_probes->addProbe(std::move(probe));
