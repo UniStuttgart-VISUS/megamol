@@ -26,7 +26,7 @@ megamol::mesh::AbstractGPURenderTaskDataSource::AbstractGPURenderTaskDataSource(
     this->m_renderTask_lhs_slot.SetCallback(
         CallGPURenderTaskData::ClassName(), "GetData", &AbstractGPURenderTaskDataSource::getDataCallback);
     this->m_renderTask_lhs_slot.SetCallback(
-        CallGPURenderTaskData::ClassName(), "GetMetaData", &AbstractGPURenderTaskDataSource::getExtentCallback);
+        CallGPURenderTaskData::ClassName(), "GetMetaData", &AbstractGPURenderTaskDataSource::getMetaDataCallback);
     this->MakeSlotAvailable(&this->m_renderTask_lhs_slot);
 
     this->m_renderTask_rhs_slot.SetCompatibleCall<GPURenderTasksDataCallDescription>();
@@ -51,36 +51,61 @@ bool megamol::mesh::AbstractGPURenderTaskDataSource::create(void) {
     return true;
 }
 
-bool megamol::mesh::AbstractGPURenderTaskDataSource::getExtentCallback(core::Call& caller) {
-    // get lhs call and meta data
-    CallGPURenderTaskData* lhs_rtc = dynamic_cast<CallGPURenderTaskData*>(&caller);
-    if (lhs_rtc == NULL) return false;
-    auto lhs_meta_data = lhs_rtc->getMetaData();
-    //TODO do I need to use the cached hash for lhs here?
-
-    // get mesh call, set frame id, do meta data callback
-    CallGPUMeshData* mc = this->m_mesh_slot.CallAs<CallGPUMeshData>();
-    if (mc == NULL) return false;
-    auto mesh_meta_data = mc->getMetaData();
-    mesh_meta_data.m_frame_ID = lhs_meta_data.m_frame_ID;
-    if (!(*mc)(1)) return false;
-    mesh_meta_data = mc->getMetaData();
+bool megamol::mesh::AbstractGPURenderTaskDataSource::getMetaDataCallback(core::Call& caller) {
     
-    CallGPURenderTaskData* rhs_rtc = m_renderTask_rhs_slot.CallAs<CallGPURenderTaskData>();
-    if (rhs_rtc != NULL) {
-        auto rhs_meta_data = rhs_rtc->getMetaData();
-        rhs_meta_data.m_frame_ID = lhs_meta_data.m_frame_ID;
-        if (!(*rhs_rtc)(1)) return false;
-        rhs_meta_data = rhs_rtc->getMetaData();
 
-        mesh_meta_data.m_frame_cnt = std::min(mesh_meta_data.m_frame_cnt, rhs_meta_data.m_frame_cnt);
-        auto osbbox = mesh_meta_data.m_bboxs.ObjectSpaceBBox();
-        osbbox.Union(rhs_meta_data.m_bboxs.ObjectSpaceBBox());
-        mesh_meta_data.m_bboxs.SetObjectSpaceBBox(osbbox);
+    CallGPURenderTaskData* lhs_rt_call = dynamic_cast<CallGPURenderTaskData*>(&caller);
+    CallGPURenderTaskData* rhs_rt_call = m_renderTask_rhs_slot.CallAs<CallGPURenderTaskData>();
+    CallGPUMaterialData* material_call = m_material_slot.CallAs<CallGPUMaterialData>();
+    CallGPUMeshData* mesh_call = this->m_mesh_slot.CallAs<CallGPUMeshData>();
+
+    if (lhs_rt_call == NULL) return false;
+    if (material_call == NULL) return false;
+    if (mesh_call == NULL) return false;
+
+    auto lhs_meta_data = lhs_rt_call->getMetaData();
+    auto mtl_meta_data = material_call->getMetaData();
+    auto mesh_meta_data = mesh_call->getMetaData();
+    core::Spatial3DMetaData rhs_meta_data;
+    
+    mesh_meta_data.m_frame_ID = lhs_meta_data.m_frame_ID;
+    mesh_call->setMetaData(mesh_meta_data);
+    if (!(*mesh_call)(1)) return false;
+    mesh_meta_data = mesh_call->getMetaData();
+
+    if (rhs_rt_call != NULL) {
+        rhs_meta_data = rhs_rt_call->getMetaData();
+        rhs_meta_data.m_frame_ID = lhs_meta_data.m_frame_ID;
+        rhs_rt_call->setMetaData(rhs_meta_data);
+        if (!(*rhs_rt_call)(1)) return false;
+        rhs_meta_data = rhs_rt_call->getMetaData();
+
+        if (rhs_meta_data.m_data_hash > m_renderTask_rhs_cached_hash) {
+            m_renderTask_lhs_cached_hash++;
+        }
+    } else {
+        rhs_meta_data.m_frame_cnt = 1;
     }
 
-    // finish by updating lhs meta data with union of mesh and rhs meta data
-    lhs_rtc->setMetaData(mesh_meta_data);
+    if (mtl_meta_data.m_data_hash > m_material_cached_hash) {
+        m_renderTask_lhs_cached_hash++;
+    }
+    if (mesh_meta_data.m_data_hash > m_mesh_cached_hash) {
+        m_renderTask_lhs_cached_hash++;
+    }
+
+    lhs_meta_data.m_data_hash = m_renderTask_lhs_cached_hash;
+    lhs_meta_data.m_frame_cnt = std::min(mesh_meta_data.m_frame_cnt, rhs_meta_data.m_frame_cnt);
+
+    auto bbox = mesh_meta_data.m_bboxs.BoundingBox();
+    bbox.Union(rhs_meta_data.m_bboxs.BoundingBox());
+    lhs_meta_data.m_bboxs.SetBoundingBox(bbox);
+
+    auto cbbox = mesh_meta_data.m_bboxs.ClipBox();
+    cbbox.Union(rhs_meta_data.m_bboxs.ClipBox());
+    lhs_meta_data.m_bboxs.SetClipBox(cbbox);
+
+    lhs_rt_call->setMetaData(lhs_meta_data);
 
     return true;
 }

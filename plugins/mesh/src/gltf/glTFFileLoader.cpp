@@ -20,15 +20,16 @@ megamol::mesh::GlTFFileLoader::GlTFFileLoader()
     : core::Module()
     , m_glTFFilename_slot("glTF filename", "The name of the gltf file to load")
     , m_gltf_slot("CallGlTFData", "The slot publishing the loaded data")
-    , m_gltf_hash(0)
+    //, m_gltf_cached_hash(0)
     , m_mesh_slot("CallMeshData", "The slot providing access to internal mesh data")
-    , m_mesh_hash(0) {
+    //, m_mesh_cached_hash(0) 
+{
     this->m_gltf_slot.SetCallback(CallGlTFData::ClassName(), "GetData", &GlTFFileLoader::getGltfDataCallback);
     this->m_gltf_slot.SetCallback(CallGlTFData::ClassName(), "GetMetaData", &GlTFFileLoader::getGltfDataCallback);
     this->MakeSlotAvailable(&this->m_gltf_slot);
 
     this->m_mesh_slot.SetCallback(CallMesh::ClassName(), "GetData", &GlTFFileLoader::getMeshDataCallback);
-    this->m_mesh_slot.SetCallback(CallMesh::ClassName(), "GetMetaData", &GlTFFileLoader::getMeshDataCallback);
+    this->m_mesh_slot.SetCallback(CallMesh::ClassName(), "GetMetaData", &GlTFFileLoader::getMeshMetaDataCallback);
     this->MakeSlotAvailable(&this->m_mesh_slot);
 
     this->m_glTFFilename_slot << new core::param::FilePathParam("");
@@ -50,25 +51,15 @@ bool megamol::mesh::GlTFFileLoader::getGltfDataCallback(core::Call& caller) {
     if (cd == NULL) return false;
 
     checkAndLoadGltfModel();
-    cd->setMetaData({m_gltf_hash});
+    //cd->setMetaData({m_gltf_cached_hash});
     cd->setData(m_gltf_model);
 
     return true;
 }
 
-//bool megamol::mesh::GlTFFileLoader::getGltfMetaDataCallback(core::Call& caller) {
-//    CallGlTFData* cd = dynamic_cast<CallGlTFData*>(&caller);
-//    
-//    if (cd == NULL) return false;
-//    
-//    cd->setMetaData({m_gltf_hash});
-//
-//    return true;
-//}
-
 bool megamol::mesh::GlTFFileLoader::getMeshDataCallback(core::Call& caller) {
-    CallMesh* cm = dynamic_cast<CallMesh*>(&caller);
 
+    CallMesh* cm = dynamic_cast<CallMesh*>(&caller);
     if (cm == NULL) return false;
 
     std::shared_ptr<MeshDataAccessCollection> mesh_collection(nullptr);
@@ -82,12 +73,14 @@ bool megamol::mesh::GlTFFileLoader::getMeshDataCallback(core::Call& caller) {
         mesh_collection = cm->getData();
     }
 
-    //m_bbox[0] = std::numeric_limits<float>::max();
-    //m_bbox[1] = std::numeric_limits<float>::max();
-    //m_bbox[2] = std::numeric_limits<float>::max();
-    //m_bbox[3] = std::numeric_limits<float>::min();
-    //m_bbox[4] = std::numeric_limits<float>::min();
-    //m_bbox[5] = std::numeric_limits<float>::min();
+    std::array<float, 6> bbox;
+
+    bbox[0] = std::numeric_limits<float>::max();
+    bbox[1] = std::numeric_limits<float>::max();
+    bbox[2] = std::numeric_limits<float>::max();
+    bbox[3] = std::numeric_limits<float>::min();
+    bbox[4] = std::numeric_limits<float>::min();
+    bbox[5] = std::numeric_limits<float>::min();
 
     checkAndLoadGltfModel();
     auto model = m_gltf_model;
@@ -156,26 +149,39 @@ bool megamol::mesh::GlTFFileLoader::getMeshDataCallback(core::Call& caller) {
                 model->accessors[model->meshes[mesh_idx].primitives[primitive_idx].attributes.find("POSITION")->second]
                     .minValues;
 
-            //m_bbox[0] = std::min(m_bbox[0], static_cast<float>(min_data[0]));
-            //m_bbox[1] = std::min(m_bbox[1], static_cast<float>(min_data[1]));
-            //m_bbox[2] = std::min(m_bbox[2], static_cast<float>(min_data[2]));
-            //m_bbox[3] = std::max(m_bbox[3], static_cast<float>(max_data[0]));
-            //m_bbox[4] = std::max(m_bbox[4], static_cast<float>(max_data[1]));
-            //m_bbox[5] = std::max(m_bbox[5], static_cast<float>(max_data[2]));
+            bbox[0] = std::min(bbox[0], static_cast<float>(min_data[0]));
+            bbox[1] = std::min(bbox[1], static_cast<float>(min_data[1]));
+            bbox[2] = std::min(bbox[2], static_cast<float>(min_data[2]));
+            bbox[3] = std::max(bbox[3], static_cast<float>(max_data[0]));
+            bbox[4] = std::max(bbox[4], static_cast<float>(max_data[1]));
+            bbox[5] = std::max(bbox[5], static_cast<float>(max_data[2]));
         }
     }
 
-
-    cm->setMetaData({m_mesh_hash});
+    auto meta_data = cm->getMetaData();
+    meta_data.m_bboxs.SetBoundingBox(bbox[0], bbox[1], bbox[2], bbox[3], bbox[4], bbox[5]);
+    cm->setMetaData(meta_data);
     cm->setData(m_mesh_collection);
 
     return true;
 }
 
-//bool megamol::mesh::GlTFFileLoader::getMeshDataMetaCallback(core::Call& caller) { 
-//    
-//    return false;
-//}
+bool megamol::mesh::GlTFFileLoader::getMeshMetaDataCallback(core::Call& caller) {
+
+    CallMesh* cm = dynamic_cast<CallMesh*>(&caller);
+    if (cm == NULL) return false;
+
+    auto meta_data = cm->getMetaData();
+    meta_data.m_frame_cnt = 1;
+
+    if (this->m_glTFFilename_slot.IsDirty()) {
+        meta_data.m_data_hash++;
+    }
+
+    cm->setMetaData(meta_data);
+
+    return true;
+}
 
 void megamol::mesh::GlTFFileLoader::checkAndLoadGltfModel() {
 
@@ -199,8 +205,8 @@ void megamol::mesh::GlTFFileLoader::checkAndLoadGltfModel() {
             vislib::sys::Log::DefaultLog.WriteError("Failed to parse glTF\n");
         }
 
-        ++m_gltf_hash;
-        ++m_mesh_hash;
+        //++m_gltf_cached_hash;
+        //++m_mesh_cached_hash;
     }
 }
 
