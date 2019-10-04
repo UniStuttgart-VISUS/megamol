@@ -27,7 +27,7 @@ namespace cinematic {
 	public:
 
 		/** function name for Getting all Keyframes */
-		static const unsigned int CallForGetUpdatedKeyframeData     = 0;
+		static const unsigned int CallForGetUpdatedKeyframeData     = 0; // Updates out_data, call GetData() afterwards.
         static const unsigned int CallForGetSelectedKeyframeAtTime  = 1;
 		static const unsigned int CallForGetInterpolCamPositions    = 2;
         static const unsigned int CallForSetSelectedKeyframe        = 3;
@@ -210,9 +210,22 @@ namespace cinematic {
         * variables
         **********************************************************************/
 
-        // Out Data (set by called KeyframeKeeper ) ---------------------------
+        typedef struct _OutData_ {
+
+
+        } OutData;
+
+        typedef struct _InData_ {
+
+
+        } InData;
+
+        std::shared_ptr<OutData> out_data;
+        std::shared_ptr<InData> in_data;
+
+        // Out Data (set by called KeyframeKeeper) ---------------------------
 		std::shared_ptr<Keyframe::cam_state_type>      cameraState;
-		std::shared_ptr<std::vector<glm::vec3 >>       interpolCamPos;
+		std::shared_ptr<std::vector<glm::vec3>>        interpolCamPos;
 		std::shared_ptr<std::vector<Keyframe>>	       keyframes;
         std::shared_ptr<vislib::math::Cuboid<float>>   boundingbox;
         Keyframe						               selectedKeyframe;

@@ -456,7 +456,6 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     glClearColor(bc[0], bc[1], bc[2], 0.0f);
     glClearDepth(1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    ///glViewport(0, 0, vp_iw, vp_ih);
 
     // Push texture -----------------------------------------------------------
     float right = (vp_fw + static_cast<float>(texWidth)) / 2.0f;

@@ -151,14 +151,14 @@ namespace cinematic {
             COUNT = 2
         };
 
-        enum Param : size_t {
+        enum ActiveParam : size_t {
             SIMULATION_TIME
         };
 
         std::array<AxisData, Axis::COUNT> axes;
         CinematicUtils                    utils;
         GLuint                            texture;
-        Param                             yAxisParam;
+        ActiveParam                       yAxisParam;
         Keyframe                          dragDropKeyframe;
         bool                              dragDropActive;
         unsigned int                      axisDragDropMode;
@@ -178,7 +178,7 @@ namespace cinematic {
         * functions
         **********************************************************************/
 
-        void recalcAxesData(void);
+        bool recalcAxesData(void);
 
         void pushMarkerTexture(float pos_x, float pos_y, float size, glm::vec4 color);
 

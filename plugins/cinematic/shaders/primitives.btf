@@ -38,7 +38,7 @@
     <![CDATA[  
 
     // *******************************************************
-    // Transforms 2D position to screen space coordinates.
+    // Transforms 2D ??? position to screen space coordinates.
     //
     // ******************************************************* 
     vec2 toScreenSpace(in vec2 position, in vec2 viewport) {

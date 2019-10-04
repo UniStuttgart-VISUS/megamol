@@ -92,19 +92,19 @@ namespace cinematic {
         **********************************************************************/
 
         // Variables shared/updated with call ---------------------------------
-        std::shared_ptr<Keyframe::cam_state_type>     cameraState;
-		std::shared_ptr<std::vector<glm::vec3 >>      interpolCamPos;
-		std::shared_ptr<std::vector<Keyframe>>        keyframes;
-		std::shared_ptr<vislib::math::Cuboid<float>>  boundingBox;
-        Keyframe                                      selectedKeyframe;
-        Keyframe                                      dragDropKeyframe;
-        glm::vec3                                     startCtrllPos;
-        glm::vec3                                     endCtrllPos;
-        float                                         totalAnimTime;
-        float                                         totalSimTime;
-        unsigned int                                  interpolSteps;
-        glm::vec3                                     modelBboxCenter;
-        unsigned int                                  fps;
+        Keyframe::cam_state_type     cameraState;
+		std::vector<glm::vec3 >      interpolCamPos;
+		std::vector<Keyframe>        keyframes;
+		vislib::math::Cuboid<float>  boundingBox;
+        Keyframe                     selectedKeyframe;
+        Keyframe                     dragDropKeyframe;
+        glm::vec3                    startCtrllPos;
+        glm::vec3                    endCtrllPos;
+        float                        totalAnimTime;
+        float                        totalSimTime;
+        unsigned int                 interpolSteps;
+        glm::vec3                    modelBboxCenter;
+        unsigned int                 fps;
             
         // Variables only used in keyframe keeper -----------------------------
         vislib::StringA filename;
@@ -191,11 +191,11 @@ namespace cinematic {
 
         void setSameSpeed(void);
 
-        void linearizeSimTangent(Keyframe stkf);
+        void linearizeSimTangent(Keyframe kf);
 
-        void snapKeyframe2AnimFrame(Keyframe *kf);
+        void snapKeyframe2AnimFrame(Keyframe& out_kf);
 
-        void snapKeyframe2SimFrame(Keyframe *kf);
+        void snapKeyframe2SimFrame(Keyframe& out_kf);
 
         bool undoAction(void);
 
@@ -211,7 +211,7 @@ namespace cinematic {
 
         glm::vec3 interpolate_vec3(float u, glm::vec3 v0, glm::vec3 v1, glm::vec3 v2, glm::vec3 v3);
 
-        int getKeyframeIndex(std::shared_ptr<std::vector<Keyframe>> keyframes, Keyframe keyframe);
+        int getKeyframeIndex(std::vector<Keyframe>& keyframes, Keyframe keyframe);
 
         /**********************************************************************
         * callbacks

@@ -26,7 +26,7 @@ TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule()
     , axes()
     , utils()
     , texture(0)
-    , yAxisParam(Param::SIMULATION_TIME)
+    , yAxisParam(ActiveParam::SIMULATION_TIME)
     , dragDropKeyframe()
     , dragDropActive(false)
     , axisDragDropMode(0)
@@ -106,7 +106,7 @@ void TimeLineRenderer::release(void) {
 
 bool TimeLineRenderer::GetExtents(view::CallRender2D& call) {
 
-	 auto cr = &call;
+	auto cr = &call;
 	if (cr == nullptr) return false;
 
     glm::vec2 currentViewport;
@@ -137,9 +137,8 @@ bool TimeLineRenderer::GetExtents(view::CallRender2D& call) {
             this->axes[i].length = glm::length(this->axes[i].endPos - this->axes[i].startPos);
             this->axes[i].scaleFactor = 1.0f;
         }
-        this->recalcAxesData(); 
 
-        ///TODO  Check for too low viewport .....
+        return this->recalcAxesData();
     }
 
     return true;
@@ -148,9 +147,7 @@ bool TimeLineRenderer::GetExtents(view::CallRender2D& call) {
 
 bool TimeLineRenderer::Render(view::CallRender2D& call) {
 
-    const float eps = 0.0001f;
-
-     auto cr = &call;
+    auto cr = &call;
     if (cr == nullptr) return false;
 
     // Get update data from keyframe keeper
@@ -172,7 +169,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     // Get max value for y axis depending on chosen parameter
     float yAxisMaxValue = 0.0f;
     switch (this->yAxisParam) {
-        case (Param::SIMULATION_TIME): yAxisMaxValue = ccc->GetTotalSimTime(); break;
+        case (ActiveParam::SIMULATION_TIME): yAxisMaxValue = ccc->GetTotalSimTime(); break;
         default: break;
     }
     if (this->axes[Axis::Y].maxValue != yAxisMaxValue) {
@@ -243,7 +240,8 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     start = glm::vec3(this->axes[Axis::X].startPos.x - this->rulerMarkHeight, this->axes[Axis::X].startPos.y, 0.0f);
     end = glm::vec3(this->axes[Axis::X].endPos.x + this->rulerMarkHeight, this->axes[Axis::X].endPos.y, 0.0f);
     this->utils.PushLinePrimitive(start, end, 2.5f, normal, color);
-    for (float f = this->axes[Axis::X].scaleOffset; f <= this->axes[Axis::X].length + eps; f = f + this->axes[Axis::X].segmSize) {
+    float loop_max = this->axes[Axis::X].length + (this->axes[Axis::X].segmSize / 2.0f);
+    for (float f = this->axes[Axis::X].scaleOffset; f <= loop_max; f = f + this->axes[Axis::X].segmSize) {
         if (f >= 0.0f) {
             start = origin + glm::vec3(f, 0.0f, 0.0f);
             end = origin + glm::vec3(f, -this->rulerMarkHeight, 0.0f);
@@ -254,7 +252,8 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     start = glm::vec3(this->axes[Axis::X].startPos.x, this->axes[Axis::X].startPos.y - this->rulerMarkHeight, 0.0f);
     end = glm::vec3(this->axes[Axis::Y].endPos.x, this->axes[Axis::Y].endPos.y + this->rulerMarkHeight, 0.0f);
     this->utils.PushLinePrimitive(start, end, 2.5f, normal, color);
-    for (float f = this->axes[Axis::Y].scaleOffset; f <= this->axes[Axis::Y].length + eps; f = f + this->axes[Axis::Y].segmSize) {
+    loop_max = this->axes[Axis::Y].length + (this->axes[Axis::Y].segmSize / 2.0f);
+    for (float f = this->axes[Axis::Y].scaleOffset; f <= loop_max; f = f + this->axes[Axis::Y].segmSize) {
         if (f >= 0.0f) {
             start = origin + glm::vec3(-this->rulerMarkHeight, f, 0.0f);
             end = origin + glm::vec3(0.0f, f, 0.0f);
@@ -269,7 +268,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
         start_x = this->axes[Axis::X].scaleOffset;
         float yAxisValue = 0.0f;
         switch (this->yAxisParam) {
-            case (Param::SIMULATION_TIME): yAxisValue = (*keyframes).front().GetSimTime(); break;
+            case (ActiveParam::SIMULATION_TIME): yAxisValue = (*keyframes).front().GetSimTime(); break;
             default: break;
         }
         start_y = this->axes[Axis::Y].scaleOffset + yAxisValue * this->axes[Axis::Y].maxValue * this->axes[Axis::Y].valueFractionLength;
@@ -277,7 +276,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
             end_x = this->axes[Axis::X].scaleOffset + (*keyframes)[i].GetAnimTime() * this->axes[Axis::X].valueFractionLength;
             yAxisValue = 0.0f;
             switch (this->yAxisParam) {
-                case (Param::SIMULATION_TIME): yAxisValue = (*keyframes)[i].GetSimTime(); break;
+                case (ActiveParam::SIMULATION_TIME): yAxisValue = (*keyframes)[i].GetSimTime(); break;
                 default: break;
             }
             end_y = this->axes[Axis::Y].scaleOffset  + yAxisValue * this->axes[Axis::Y].maxValue  * this->axes[Axis::Y].valueFractionLength;
@@ -291,7 +290,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
         end_x = this->axes[Axis::X].scaleOffset + this->axes[Axis::X].maxValue * this->axes[Axis::X].valueFractionLength;
         yAxisValue = 0.0f;
         switch (this->yAxisParam) {
-            case (Param::SIMULATION_TIME): yAxisValue = (*keyframes).back().GetSimTime(); break;
+            case (ActiveParam::SIMULATION_TIME): yAxisValue = (*keyframes).back().GetSimTime(); break;
             default: break;
         }
         end_y = this->axes[Axis::Y].scaleOffset + yAxisValue * this->axes[Axis::Y].maxValue * this->axes[Axis::Y].valueFractionLength;
@@ -302,7 +301,8 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
 
     // Push frame marker lines ------------------------------------------------
     float frameFrac = this->axes[Axis::X].length / ((float)(this->fps) * (this->axes[Axis::X].maxValue)) * this->axes[Axis::X].scaleFactor;
-    for (float f = this->axes[Axis::X].scaleOffset; f <= this->axes[Axis::X].length + eps; f = (f + frameFrac)) {
+    loop_max = this->axes[Axis::X].length + (frameFrac / 2.0f);
+    for (float f = this->axes[Axis::X].scaleOffset; f <= loop_max; f = (f + frameFrac)) {
         if (f >= 0.0f) {
             start = origin + glm::vec3(f, 0.0f, 0.0f);
             end = origin + glm::vec3(f, this->rulerMarkHeight, 0.0f);
@@ -315,7 +315,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
         x = this->axes[Axis::X].scaleOffset + this->dragDropKeyframe.GetAnimTime() * this->axes[Axis::X].valueFractionLength;
         yAxisValue = 0.0f;
         switch (this->yAxisParam) {
-            case (Param::SIMULATION_TIME): yAxisValue = this->dragDropKeyframe.GetSimTime(); break;
+            case (ActiveParam::SIMULATION_TIME): yAxisValue = this->dragDropKeyframe.GetSimTime(); break;
             default: break;
         }
         y = this->axes[Axis::Y].scaleOffset + yAxisValue * this->axes[Axis::Y].maxValue  * this->axes[Axis::Y].valueFractionLength;
@@ -329,7 +329,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     x = this->axes[Axis::X].scaleOffset + skf.GetAnimTime() * this->axes[Axis::X].valueFractionLength;
     yAxisValue = 0.0f;
     switch (this->yAxisParam) {
-        case (Param::SIMULATION_TIME): yAxisValue = skf.GetSimTime(); break;
+        case (ActiveParam::SIMULATION_TIME): yAxisValue = skf.GetSimTime(); break;
         default: break;
     }
     y = this->axes[Axis::Y].scaleOffset + yAxisValue * this->axes[Axis::Y].maxValue  * this->axes[Axis::Y].valueFractionLength;
@@ -349,7 +349,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
         x = this->axes[Axis::X].scaleOffset + (*keyframes)[i].GetAnimTime() * this->axes[Axis::X].valueFractionLength;
         yAxisValue = 0.0f;
         switch (this->yAxisParam) {
-            case (Param::SIMULATION_TIME): yAxisValue = (*keyframes)[i].GetSimTime(); break;
+            case (ActiveParam::SIMULATION_TIME): yAxisValue = (*keyframes)[i].GetSimTime(); break;
             default: break;
         }
         y = this->axes[Axis::Y].scaleOffset + yAxisValue * this->axes[Axis::Y].maxValue * this->axes[Axis::Y].valueFractionLength;
@@ -394,7 +394,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     this->utils.PushText(caption, this->axes[Axis::X].startPos.x + this->axes[Axis::X].length / 2.0f - strWidth / 2.0f, this->axes[Axis::X].startPos.y - this->utils.GetTextLineHeight() - this->rulerMarkHeight, textPosZ);
     caption = " ";
     switch (this->yAxisParam) {
-        case (Param::SIMULATION_TIME): caption = "Simulation Time "; break;
+        case (ActiveParam::SIMULATION_TIME): caption = "Simulation Time "; break;
         default: break;
     }
     strWidth = this->utils.GetTextLineWidth(caption);
@@ -409,7 +409,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
         " Animation Time: " << activeKeyframe.GetAnimTime() <<
         " | Animation Frame: " << std::floor(activeKeyframe.GetAnimTime() * static_cast<float>(this->fps));
     switch (this->yAxisParam) {
-        case (Param::SIMULATION_TIME): stream << " | Simulation Time: " << (activeKeyframe.GetSimTime() * this->axes[Axis::Y].maxValue) << " "; break;
+        case (ActiveParam::SIMULATION_TIME): stream << " | Simulation Time: " << (activeKeyframe.GetSimTime() * this->axes[Axis::Y].maxValue) << " "; break;
         default: break;
     }
     std::string leftLabel = " TIMELINE ";
@@ -436,15 +436,22 @@ void TimeLineRenderer::pushMarkerTexture(float pos_x, float pos_y, float size, g
 }
 
 
-void TimeLineRenderer::recalcAxesData(void) {
+bool TimeLineRenderer::recalcAxesData(void) {
 
     vislib::StringA tmpStr;
+
+    // Check for too small viewport
+    if ((this->axes[Axis::X].startPos.x >= this->axes[Axis::X].endPos.x) ||
+        (this->axes[Axis::Y].startPos.y >= this->axes[Axis::Y].endPos.y)) {
+        vislib::sys::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] [GetExtents] Viewport is too small to calculate proper dimensions of time line diagram.");
+        return false;
+    }
 
     for (size_t i = 0; i < Axis::COUNT; ++i) {
 
         if (this->axes[i].maxValue <= 0.0f) {
             vislib::sys::Log::DefaultLog.WriteError("[TIMELINE RENDERER] [recalcAxesData] Invalid max value %f of axis %d", this->axes[i].maxValue, i);
-            return;
+            return false;
         }
 
         float powersOfTen = 1.0f;
@@ -509,6 +516,8 @@ void TimeLineRenderer::recalcAxesData(void) {
             this->axes[i].scaleOffset = 0.0f;
         }
     }
+
+    return true;
 }
 
 
@@ -539,7 +548,7 @@ bool TimeLineRenderer::OnMouseButton(megamol::core::view::MouseButton button, me
             xAxisX = this->axes[Axis::X].scaleOffset + (*keyframes)[i].GetAnimTime() * this->axes[Axis::X].valueFractionLength;
             yAxisValue = 0.0f;
             switch (this->yAxisParam) {
-                case (Param::SIMULATION_TIME): yAxisValue = (*keyframes)[i].GetSimTime(); break;
+                case (ActiveParam::SIMULATION_TIME): yAxisValue = (*keyframes)[i].GetSimTime(); break;
                 default: break;
             }
             yAxisY  = this->axes[Axis::Y].scaleOffset  + yAxisValue * this->axes[Axis::Y].maxValue  * this->axes[Axis::Y].valueFractionLength;
@@ -591,7 +600,7 @@ bool TimeLineRenderer::OnMouseButton(megamol::core::view::MouseButton button, me
                 xAxisX = this->axes[Axis::X].scaleOffset + (*keyframes)[i].GetAnimTime() * this->axes[Axis::X].valueFractionLength;
                 yAxisValue = 0.0f;
                 switch (this->yAxisParam) {
-                    case (Param::SIMULATION_TIME): yAxisValue = (*keyframes)[i].GetSimTime(); break;
+                    case (ActiveParam::SIMULATION_TIME): yAxisValue = (*keyframes)[i].GetSimTime(); break;
                     default: break;
                 }
                 yAxisY = this->axes[Axis::Y].scaleOffset + yAxisValue * this->axes[Axis::Y].maxValue  * this->axes[Axis::Y].valueFractionLength;
@@ -636,7 +645,7 @@ bool TimeLineRenderer::OnMouseButton(megamol::core::view::MouseButton button, me
                 float xt = this->dragDropKeyframe.GetAnimTime();
                 yAxisValue = 0.0f;
                 switch (this->yAxisParam) {
-                    case (Param::SIMULATION_TIME): yAxisValue = this->dragDropKeyframe.GetSimTime(); break;
+                    case (ActiveParam::SIMULATION_TIME): yAxisValue = this->dragDropKeyframe.GetSimTime(); break;
                     default: break;
                 }
                 float yt = yAxisValue;
@@ -738,7 +747,7 @@ bool TimeLineRenderer::OnMouseMove(double x, double y) {
                 else if (this->axisDragDropMode == 2) { // y axis
                     float yAxisValue = 0.0f;
                     switch (this->yAxisParam) {
-                        case (Param::SIMULATION_TIME): yAxisValue = this->dragDropKeyframe.GetSimTime(); break;
+                        case (ActiveParam::SIMULATION_TIME): yAxisValue = this->dragDropKeyframe.GetSimTime(); break;
                         default: break;
                     }
                     float yt = yAxisValue + ((this->mouseY - this->lastMouseY) / this->axes[Axis::Y].scaleFactor) / this->axes[Axis::Y].length;
@@ -749,7 +758,7 @@ bool TimeLineRenderer::OnMouseMove(double x, double y) {
                         yt = 1.0f;
                     }
                     switch (this->yAxisParam) {
-                        case (Param::SIMULATION_TIME): this->dragDropKeyframe.SetSimTime(yt); break;
+                        case (ActiveParam::SIMULATION_TIME): this->dragDropKeyframe.SetSimTime(yt); break;
                         default: break;
                     }
                 }

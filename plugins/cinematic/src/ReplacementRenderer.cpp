@@ -122,13 +122,11 @@ bool ReplacementRenderer::Render(megamol::core::view::CallRender3D_2& call) {
 
     if (this->replacementRenderingParam.IsDirty()) {
         this->replacementRenderingParam.ResetDirty();
-
         this->toggle = this->replacementRenderingParam.Param<param::BoolParam>()->Value();
     }
 
     if (this->toggleReplacementParam.IsDirty()) {
         this->toggleReplacementParam.ResetDirty();
-
         this->toggle = !this->toggle;
         this->replacementRenderingParam.Param<param::BoolParam>()->SetValue(this->toggle, false);
     }
@@ -151,7 +149,6 @@ bool ReplacementRenderer::Render(megamol::core::view::CallRender3D_2& call) {
             case(KeyAssignment::KEY_ASSIGN_0): key = core::view::Key::KEY_0; break;
             default: break;
         }
-
         // Set hotkey for button param 
         if (key != core::view::Key::KEY_UNKNOWN) {
             this->toggleReplacementParam.Param<param::ButtonParam>()->SetKey(key);
@@ -170,7 +167,9 @@ bool ReplacementRenderer::Render(megamol::core::view::CallRender3D_2& call) {
         cam_type::snapshot_type snapshot;
         cam_type::matrix_type viewTemp, projTemp;
         cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
-        glm::mat4 mvp = projTemp * viewTemp;
+        glm::mat4 proj = projTemp;
+        glm::mat4 view = viewTemp;
+        glm::mat4 mvp = proj * view;
 
         ///auto viewport = cr3d_in->GetViewport().GetSize();
         glm::vec4 viewport;

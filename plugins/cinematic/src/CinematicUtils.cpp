@@ -59,6 +59,7 @@ bool RenderUtils::InitPrimitiveRendering(megamol::core::utility::ShaderSourceFac
         return false;
     }
 
+
     // Create buffers
     this->buffers[Buffers::POSITION] = std::make_unique<glowl::BufferObject >(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
     this->buffers[Buffers::COLOR] = std::make_unique<glowl::BufferObject >(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
@@ -313,21 +314,28 @@ void RenderUtils::drawPrimitives(RenderUtils::Primitives primitive, glm::mat4& m
 
 bool RenderUtils::createShader(vislib::graphics::gl::GLSLShader& shader, const std::string * const vertex_code, const std::string * const fragment_code) {
 
-    shader.Release();
-    if (!shader.Compile(vertex_code->c_str(), fragment_code->c_str())) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "Unable to compile shader. [%s, %s, line %d)]\n", __FILE__, __FUNCTION__, __LINE__);
+    try {
+        shader.Release();
+        if (!shader.Compile(vertex_code->c_str(), fragment_code->c_str())) {
+            vislib::sys::Log::DefaultLog.WriteMsg(
+                vislib::sys::Log::LEVEL_ERROR, "Unable to compile shader. [%s, %s, line %d)]\n", __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        }
+        shader.BindAttribute(Buffers::POSITION, "inPosition");
+        shader.BindAttribute(Buffers::COLOR, "inColor");
+        shader.BindAttribute(Buffers::TEXTURE_COORD, "inTexture");
+        shader.BindAttribute(Buffers::ATTRIBUTES, "inAttributes");
+        if (!shader.Link()) {
+            vislib::sys::Log::DefaultLog.WriteMsg(
+                vislib::sys::Log::LEVEL_ERROR, "Unable to link shader. [%s, %s, line %d)]\n", __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        }
+    }
+    catch (...) {
+        vislib::sys::Log::DefaultLog.WriteError("Unable to create shader. Unknown error. [%s, %s, line %d)]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
-    shader.BindAttribute(Buffers::POSITION, "inPosition");
-    shader.BindAttribute(Buffers::COLOR, "inColor");
-    shader.BindAttribute(Buffers::TEXTURE_COORD, "inTexture");
-    shader.BindAttribute(Buffers::ATTRIBUTES, "inAttributes");
-    if (!shader.Link()) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "Unable to link shader. [%s, %s, line %d)]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
+
 
     return true;
 }
@@ -604,66 +612,50 @@ void CinematicUtils::PushMenu(const std::string& left_label, const std::string& 
 }
 
 
-void CinematicUtils::PushHotkeyList(const std::string& text, glm::vec3 position, float width, float height) {
+void CinematicUtils::PushHotkeyList(float viewport_width, float viewport_height) {
 
+    std::string hotkey_str = "";
+    hotkey_str += "-----[ GLOBAL ]-----\n";
+    hotkey_str += "[Ctrl+a] Apply current settings to selected/new keyframe. \n";
+    hotkey_str += "[Ctrl+d] Delete selected keyframe. \n";
+    hotkey_str += "[Ctrl+s] Save keyframes to file. \n";
+    hotkey_str += "[Ctrl+l] Load keyframes from file. \n";
+    hotkey_str += "[Ctrl+z] Undo keyframe changes. \n";
+    hotkey_str += "[Ctrl+y] Redo keyframe changes. \n";
+    hotkey_str += "-----[ TRACKING SHOT ]----- \n";
+    hotkey_str += "[Ctrl+q] Toggle different manipulators for the selected keyframe. \n";
+    hotkey_str += "[Ctrl+w] Show manipulators inside/outside of model bounding box. \n";
+    hotkey_str += "[Ctrl+u] Reset look-at vector of selected keyframe. \n";
+    hotkey_str += "-----[ CINEMATIC ]----- \n";
+    hotkey_str += "[Ctrl+r] Start/Stop rendering complete animation. \n";
+    hotkey_str += "[Ctrl+Space] Start/Stop animation preview. \n";
+    hotkey_str += "-----[ TIMELINE ]----- \n";
+    hotkey_str += "[Ctrl+Right/Left Arrow] Move selected keyframe on animation time axis. \n";
+    hotkey_str += "[Ctrl+f] Snap all keyframes to animation frames. \n";
+    hotkey_str += "[Ctrl+g] Snap all keyframes to simulation frames. \n";
+    hotkey_str += "[Ctrl+t] Linearize simulation time between two keyframes. \n";
+    //hotkey_str += "[Ctrl+v] Set same velocity between all keyframes (Experimental).\n"; ///XXX Calcualation is not correct yet ...
+    hotkey_str += "[Ctrl+p] Reset shifted and scaled time axes. \n";
+    hotkey_str += "[Left Mouse Button] Select keyframe. \n";
+    hotkey_str += "[Middle Mouse Button] Axes scaling in mouse direction. \n";
+    hotkey_str += "[Right Mouse Button] Drag & drop keyframe / pan axes. \n";
 
-    // Draw help text 
-//if (this->showHelpText) {
-//    vislib::StringA helpText = "";
-//    helpText += "-----[ GLOBAL ]-----\n";
-//    helpText += "[Ctrl+a] Apply current settings to selected/new keyframe. \n";
-//    helpText += "[Ctrl+d] Delete selected keyframe. \n";
-//    helpText += "[Ctrl+s] Save keyframes to file. \n";
-//    helpText += "[Ctrl+l] Load keyframes from file. \n";
-//    helpText += "[Ctrl+z] Undo keyframe changes. \n";
-//    helpText += "[Ctrl+y] Redo keyframe changes. \n";
-//    helpText += "-----[ TRACKING SHOT ]----- \n";
-//    helpText += "[Ctrl+q] Toggle different manipulators for the selected keyframe. \n";
-//    helpText += "[Ctrl+w] Show manipulators inside/outside of model bounding box. \n";
-//    helpText += "[Ctrl+u] Reset look-at vector of selected keyframe. \n";
-//    helpText += "-----[ CINEMATIC ]----- \n";
-//    helpText += "[Ctrl+r] Start/Stop rendering complete animation. \n";
-//    helpText += "[Ctrl+Space] Start/Stop animation preview. \n";
-//    helpText += "-----[ TIMELINE ]----- \n";
-//    helpText += "[Ctrl+Right/Left Arrow] Move selected keyframe on animation time axis. \n";
-//    helpText += "[Ctrl+f] Snap all keyframes to animation frames. \n";
-//    helpText += "[Ctrl+g] Snap all keyframes to simulation frames. \n";
-//    helpText += "[Ctrl+t] Linearize simulation time between two keyframes. \n";
-//    //helpText += "[Ctrl+v] Set same velocity between all keyframes (Experimental).\n"; // Calcualation is not correct yet ...
-//    helpText += "[Ctrl+p] Reset shifted and scaled time axes. \n";
-//    helpText += "[Left Mouse Button] Select keyframe. \n";
-//    helpText += "[Middle Mouse Button] Axes scaling in mouse direction. \n";
-//    helpText += "[Right Mouse Button] Drag & drop keyframe / pan axes. \n";
+    const float border = 10.0f;
+    size_t line_count = std::count(hotkey_str.begin(), hotkey_str.end(), '\n');
+    float hotkey_font_size = (viewport_height - 2.0f * this->font_size - 2.0f*border) / static_cast<float>(line_count);
+    hotkey_font_size = (hotkey_font_size > this->font_size) ? (this->font_size) : (hotkey_font_size);
+    float line_height = this->font.LineHeight(hotkey_font_size);
+    float line_width = this->font.LineWidth(hotkey_font_size, hotkey_str.c_str());
+    float quad_width = line_width + 2.0f * border;
+    float quad_height = line_height * line_count + 2.0f * border;
 
-//    float htNumOfRows = 24.0f; // Number of rows the help text has
+    // Push background quad
+    this->PushQuadPrimitive(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, quad_height, 0.0f),
+        glm::vec3(quad_width, quad_height, 0.0f), glm::vec3(quad_width, 0.0f, 0.0f), this->Color(CinematicUtils::Colors::MENU));
 
-//    float htFontSize  = vpW*0.027f; // max % of viewport width
-//    float htStrHeight = this->theFont.LineHeight(htFontSize);
-//    float htX         = 5.0f;
-//    float htY         = htX + htStrHeight;
-//    // Adapt font size if height of help text is greater than viewport height
-//    while ((htStrHeight*htNumOfRows + htX + this->theFont.LineHeight(lbFontSize)) >vpH) {
-//        htFontSize -= 0.5f;
-//        htStrHeight = this->theFont.LineHeight(htFontSize);
-//    }
-
-//    float htStrWidth = this->theFont.LineWidth(htFontSize, helpText);
-//    htStrHeight      = this->theFont.LineHeight(htFontSize);
-//    htY              = htX + htStrHeight*htNumOfRows;
-//    // Draw background colored quad
-//    glColor4fv(bgColor);
-//    glBegin(GL_QUADS);
-//        glVertex2f(htX,              htY);
-//        glVertex2f(htX,              htY - (htStrHeight*htNumOfRows));
-//        glVertex2f(htX + htStrWidth, htY - (htStrHeight*htNumOfRows));
-//        glVertex2f(htX + htStrWidth, htY);
-//    glEnd();
-//    // Draw help text
-//    this->theFont.DrawString(fgColor, htX, htY, htFontSize, false, helpText, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
-//}
-
-
-
+    // Push hotkey text
+    auto color = this->Color(CinematicUtils::Colors::FONT);
+    this->font.DrawString(glm::value_ptr(color), border, quad_height - border, hotkey_font_size, false, hotkey_str.c_str(), megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
 }
 
 

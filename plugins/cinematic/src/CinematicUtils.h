@@ -243,7 +243,7 @@ namespace cinematic {
 
         void PushMenu(const std::string& left_label, const std::string& middle_label, const std::string& right_label, float viewport_width, float viewport_height);
 
-        void PushHotkeyList(const std::string& text, glm::vec3 position, float viewport_width, float viewport_height);
+        void PushHotkeyList(float viewport_width, float viewport_height);
 
         void PushText(const std::string& text, float x, float y, float z);
 
