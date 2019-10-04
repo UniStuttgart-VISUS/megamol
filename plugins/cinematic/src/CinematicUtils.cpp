@@ -489,7 +489,7 @@ CinematicUtils::CinematicUtils(void) : megamol::cinematic::RenderUtils()
     , font(megamol::core::utility::SDFFont::FontName::ROBOTO_SANS)
     , font_size(20.0f)
     , init_once(false)
-    , background_color(0.0f, 0.0f, 0.0f, 1.0f) {
+    , background_color(0.0f, 0.0f, 0.0f, 0.0f) {
 
 }
 

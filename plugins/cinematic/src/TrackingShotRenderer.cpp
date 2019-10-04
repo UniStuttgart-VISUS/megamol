@@ -192,8 +192,8 @@ void TrackingShotRenderer::PreRender(core::view::CallRender3D_2& call) {
     vislib::Trace::GetInstance().SetLevel(otl);
 #endif // DEBUG || _DEBUG 
 
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-    glClearDepth(1.0f);
+    auto backCol = call.BackgroundColor();
+    glClearColor(backCol.x, backCol.y, backCol.z, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // Set data of outgoing cr3d to data of incoming cr3d
@@ -342,25 +342,25 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D_2& call) {
 
 
 
-    //// Draw spline ------------------------------------------------------------
-    //auto interpolKeyframes = ccc->GetInterpolCamPositions();
-    //if (interpolKeyframes == nullptr) {
-    //    vislib::sys::Log::DefaultLog.WriteWarn("[TRACKINGSHOT RENDERER] [Render] Pointer to interpolated camera positions array is nullptr.");
-    //    return false;
-    //}
-    //float line_width = 0.1f;
-    //auto color = this->utils.Color(CinematicUtils::Colors::KEYFRAME_SPLINE);
-    //auto keyframeCount = interpolKeyframes->size();
-    //if (keyframeCount > 1) {
-    //    for (int i = 0; i < (keyframeCount - 1); i++) {
-    //        glm::vec3 start = interpolKeyframes->operator[](i);
-    //        glm::vec3 end = interpolKeyframes->operator[](i + 1);
-    //        this->utils.PushLinePrimitive(start, end, line_width, cam_pos, color);
-    //    }
-    //}
+    // Push spline ------------------------------------------------------------
+    auto interpolKeyframes = ccc->GetInterpolCamPositions();
+    if (interpolKeyframes == nullptr) {
+        vislib::sys::Log::DefaultLog.WriteWarn("[TRACKINGSHOT RENDERER] [Render] Pointer to interpolated camera positions array is nullptr.");
+        return false;
+    }
+    float line_width = 0.1f;
+    auto color = this->utils.Color(CinematicUtils::Colors::KEYFRAME_SPLINE);
+    auto keyframeCount = interpolKeyframes->size();
+    if (keyframeCount > 1) {
+        for (int i = 0; i < (keyframeCount - 1); i++) {
+            glm::vec3 start = interpolKeyframes->operator[](i);
+            glm::vec3 end = interpolKeyframes->operator[](i + 1);
+            this->utils.PushLinePrimitive(start, end, line_width, cam_pos, color);
+        }
+    }
 
-    //// Draw 3D ---------------------------------------------------------------
-    //this->utils.DrawAll(mvp, glm::vec2(vp_fw, vp_fh));
+    // Draw 3D ---------------------------------------------------------------
+    this->utils.DrawAll(mvp, glm::vec2(vp_fw, vp_fh));
 
     // Push textures ----------------------------------------------------------
     glm::vec3 pos_bottom_left = { 0.0f, 0.0f, 0.0f };

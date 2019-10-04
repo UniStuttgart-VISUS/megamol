@@ -180,8 +180,7 @@
 
             void main() {
 
-                float alpha = 1.0;
-                outColor = vec4(color.rgb, color.a * alpha);
+                outColor = color;
             }
 
             ]]>
@@ -224,8 +223,7 @@
 
             void main() {
 
-                float alpha = 1.0;
-                outColor = vec4(color.rgb, color.a * alpha);
+                outColor = color;
             }
 
             ]]>
@@ -252,12 +250,6 @@
                 gl_Position = inPos; 
                 color = inColor;
                 texcoord = inTexture;
-                //center = toScreenSpace(inPos.xy, viewport);
-                //vec4 radPos = mvp * vec4(inAttributes.xyz, 1.0);
-                //radPos /= radPos.w;
-                //vec2 radPixel = toScreenSpace(radPos.xy, viewport);
-                //radius = length(radPixel - center);
-                //gl_PointSize = radius*2.0;
             }
 
             ]]>
@@ -273,23 +265,11 @@
             <![CDATA[
 
             void main() {
-
-                //float alpha = 1.0;
-                //float distance = length(center - gl_FragCoord.xy);
-                //if (bool(apply_smooth)) {
-                //    distance = 1.0 - (distance/(radius*2.0));
-                //    alpha = smoothing(distance);
-                //}
-                //else {
-                //    if (distance > radius) {
-                //        discard;
-                //    }
-                //}
-                //outColor = vec4(color.rgb, color.a * alpha);
-                
+               
                 vec4 texcolor =  texture(tex, texcoord);
+                
                 float alpha = texcolor.a;
-                if (alpha < 1.0) {
+                if (alpha <= 0.0) {
                     discard;
                 }
                 
@@ -297,7 +277,7 @@
                     outColor = vec4(color.rgb, alpha);
                 }
                 else {
-                    outColor = texcolor;
+                    outColor = vec4(texcolor.rgb, alpha);
                 }
             }
 
@@ -325,12 +305,6 @@
                 gl_Position = inPos; 
                 color = inColor;
                 texcoord = inTexture;
-                //center = toScreenSpace(inPos.xy, viewport);
-                //vec4 radPos = mvp * vec4(inAttributes.xyz, 1.0);
-                //radPos /= radPos.w;
-                //vec2 radPixel = toScreenSpace(radPos.xy, viewport);
-                //radius = length(radPixel - center);
-                //gl_PointSize = radius*2.0;
             }
 
             ]]>
@@ -346,19 +320,6 @@
             <![CDATA[
 
             void main() {
-
-                //float alpha = 1.0;
-                //float distance = length(center - gl_FragCoord.xy);
-                //if (bool(apply_smooth)) {
-                //    distance = 1.0 - (distance/(radius*2.0));
-                //    alpha = smoothing(distance);
-                //}
-                //else {
-                //    if (distance > radius) {
-                //        discard;
-                //    }
-                //}
-                //outColor = vec4(color.rgb, color.a * alpha);
                 
                 vec2 uvcoord = vec2(gl_FragCoord.x / viewport.x, gl_FragCoord.y / viewport.y);
                 gl_FragDepth = texture2D(tex, uvcoord).x; 

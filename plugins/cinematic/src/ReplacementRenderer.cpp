@@ -166,7 +166,7 @@ bool ReplacementRenderer::Render(megamol::core::view::CallRender3D_2& call) {
         cr3d_in->GetCamera(cam);
         cam_type::snapshot_type snapshot;
         cam_type::matrix_type viewTemp, projTemp;
-        cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
+        cam.calc_matrices(snapshot, viewTemp, projTemp);
         glm::mat4 proj = projTemp;
         glm::mat4 view = viewTemp;
         glm::mat4 mvp = proj * view;

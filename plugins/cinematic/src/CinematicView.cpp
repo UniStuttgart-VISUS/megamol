@@ -414,6 +414,10 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     vislib::Trace::GetInstance().SetLevel(otl);
 #endif // DEBUG || _DEBUG
 
+    auto bc = Base::BkgndColour();
+    glClearColor(bc[0], bc[1], bc[2], 0.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     // Set output buffer for override call (otherwise render call is overwritten in Base::Render(context))
     cr3d->SetOutputBuffer(&this->fbo);
     Base::overrideCall = cr3d;
@@ -450,11 +454,9 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     }
 
     // Init rendering ---------------------------------------------------------
-    auto bc = Base::BkgndColour();
     this->utils.SetBackgroundColor(glm::vec4(bc[0], bc[1], bc[2], 1.0f));
     glm::mat4 ortho = glm::ortho(0.0f, vp_fw, 0.0f, vp_fh, -1.0f, 1.0f);
     glClearColor(bc[0], bc[1], bc[2], 0.0f);
-    glClearDepth(1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // Push texture -----------------------------------------------------------
