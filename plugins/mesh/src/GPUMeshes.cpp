@@ -29,9 +29,11 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
 
     CallMesh* mc = this->m_mesh_slot.CallAs<CallMesh>();
     if (mc == NULL) return false;
-    if (!(*mc)(0)) return false;
 
     if (mc->getMetaData().m_data_hash > m_mesh_cached_hash) {
+
+        if (!(*mc)(0)) return false;
+
         m_mesh_cached_hash = mc->getMetaData().m_data_hash;
 
         if (!m_mesh_collection_indices.empty()) {
@@ -69,6 +71,11 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
         }
     }
 
+    // update meta data to lhs
+    auto lhs_meta_data = lhs_mesh_call->getMetaData();
+    core::Spatial3DMetaData rhs_meta_data;
+    auto src_meta_data = mc->getMetaData();
+
     // if there is a mesh connection to the right, pass on the mesh collection
     CallGPUMeshData* rhs_mesh_call = this->m_mesh_rhs_slot.CallAs<CallGPUMeshData>();
     if (rhs_mesh_call != NULL) {
@@ -77,7 +84,24 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
         if (!(*rhs_mesh_call)(0)) return false;
 
         m_mesh_rhs_cached_hash = rhs_mesh_call->getMetaData().m_data_hash;
+    } else {
+        rhs_meta_data.m_frame_cnt = src_meta_data.m_frame_cnt;
     }
+
+    
+    lhs_meta_data.m_frame_cnt = std::min(src_meta_data.m_frame_cnt, rhs_meta_data.m_frame_cnt);
+
+    auto bbox = src_meta_data.m_bboxs.BoundingBox();
+    bbox.Union(rhs_meta_data.m_bboxs.BoundingBox());
+    lhs_meta_data.m_bboxs.SetBoundingBox(bbox);
+
+    auto cbbox = src_meta_data.m_bboxs.ClipBox();
+    cbbox.Union(rhs_meta_data.m_bboxs.ClipBox());
+    lhs_meta_data.m_bboxs.SetClipBox(cbbox);
+
+    lhs_mesh_call->setMetaData(lhs_meta_data);
+
+
     return true;
 }
 

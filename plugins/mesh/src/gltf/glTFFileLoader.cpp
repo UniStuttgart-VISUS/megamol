@@ -25,7 +25,7 @@ megamol::mesh::GlTFFileLoader::GlTFFileLoader()
     //, m_mesh_cached_hash(0) 
 {
     this->m_gltf_slot.SetCallback(CallGlTFData::ClassName(), "GetData", &GlTFFileLoader::getGltfDataCallback);
-    this->m_gltf_slot.SetCallback(CallGlTFData::ClassName(), "GetMetaData", &GlTFFileLoader::getGltfDataCallback);
+    this->m_gltf_slot.SetCallback(CallGlTFData::ClassName(), "GetMetaData", &GlTFFileLoader::getGltfMetaDataCallback);
     this->MakeSlotAvailable(&this->m_gltf_slot);
 
     this->m_mesh_slot.SetCallback(CallMesh::ClassName(), "GetData", &GlTFFileLoader::getMeshDataCallback);
@@ -46,15 +46,29 @@ bool megamol::mesh::GlTFFileLoader::create(void) {
 }
 
 bool megamol::mesh::GlTFFileLoader::getGltfDataCallback(core::Call& caller) {
-    CallGlTFData* cd = dynamic_cast<CallGlTFData*>(&caller);
-
-    if (cd == NULL) return false;
+    CallGlTFData* gltf_call = dynamic_cast<CallGlTFData*>(&caller);
+    if (gltf_call == NULL) return false;
 
     checkAndLoadGltfModel();
-    //cd->setMetaData({m_gltf_cached_hash});
-    cd->setData(m_gltf_model);
+
+    gltf_call->setData(m_gltf_model);
 
     return true;
+}
+
+bool megamol::mesh::GlTFFileLoader::getGltfMetaDataCallback(core::Call& caller) { 
+    CallGlTFData* gltf_call = dynamic_cast<CallGlTFData*>(&caller);
+    if (gltf_call == NULL) return false;
+
+    auto meta_data = gltf_call->getMetaData();
+
+    if (this->m_glTFFilename_slot.IsDirty()) {
+        meta_data.m_data_hash++;
+    }
+
+    gltf_call->setMetaData(meta_data);
+
+    return true; 
 }
 
 bool megamol::mesh::GlTFFileLoader::getMeshDataCallback(core::Call& caller) {
@@ -160,6 +174,7 @@ bool megamol::mesh::GlTFFileLoader::getMeshDataCallback(core::Call& caller) {
 
     auto meta_data = cm->getMetaData();
     meta_data.m_bboxs.SetBoundingBox(bbox[0], bbox[1], bbox[2], bbox[3], bbox[4], bbox[5]);
+    meta_data.m_bboxs.SetClipBox(bbox[0], bbox[1], bbox[2], bbox[3], bbox[4], bbox[5]);
     cm->setMetaData(meta_data);
     cm->setData(m_mesh_collection);
 
@@ -204,9 +219,6 @@ void megamol::mesh::GlTFFileLoader::checkAndLoadGltfModel() {
         if (!ret) {
             vislib::sys::Log::DefaultLog.WriteError("Failed to parse glTF\n");
         }
-
-        //++m_gltf_cached_hash;
-        //++m_mesh_cached_hash;
     }
 }
 

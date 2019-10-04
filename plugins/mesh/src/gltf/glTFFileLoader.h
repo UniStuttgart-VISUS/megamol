@@ -66,6 +66,8 @@ protected:
      */
     bool getGltfDataCallback(core::Call& caller);
 
+    bool getGltfMetaDataCallback(core::Call& caller);
+
     bool getMeshDataCallback(core::Call& caller);
 
     bool getMeshMetaDataCallback(core::Call& caller);

@@ -53,7 +53,6 @@ bool megamol::mesh::AbstractGPURenderTaskDataSource::create(void) {
 
 bool megamol::mesh::AbstractGPURenderTaskDataSource::getMetaDataCallback(core::Call& caller) {
     
-
     CallGPURenderTaskData* lhs_rt_call = dynamic_cast<CallGPURenderTaskData*>(&caller);
     CallGPURenderTaskData* rhs_rt_call = m_renderTask_rhs_slot.CallAs<CallGPURenderTaskData>();
     CallGPUMaterialData* material_call = m_material_slot.CallAs<CallGPUMaterialData>();
