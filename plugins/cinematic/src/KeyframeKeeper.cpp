@@ -203,7 +203,6 @@ bool KeyframeKeeper::CallForSetSelectedKeyframe(core::Call& c) {
     auto ccc = dynamic_cast<CallKeyframeKeeper*>(&c);
     if (ccc == nullptr) return false;
 
-    // Apply changes of camera parameters only to existing keyframe
     bool appliedChanges = false;
     float selAnimTime = ccc->GetSelectedKeyframe().GetAnimTime();
     for (unsigned int i = 0; i < this->keyframes.size(); i++) {
@@ -214,10 +213,10 @@ bool KeyframeKeeper::CallForSetSelectedKeyframe(core::Call& c) {
     }
     if (!appliedChanges) {
         this->selectedKeyframe = this->interpolateKeyframe(ccc->GetSelectedKeyframe().GetAnimTime());
-        this->updateEditParameters(this->selectedKeyframe);
         ccc->SetSelectedKeyframe(this->selectedKeyframe);
         //vislib::sys::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] [CallForSetSelectedKeyframe] Selected keyframe doesn't exist. Changes are omitted.");
     }
+    this->updateEditParameters(this->selectedKeyframe);
 
     return true;
 }
@@ -233,7 +232,6 @@ bool KeyframeKeeper::CallForGetSelectedKeyframeAtTime(core::Call& c) {
     this->selectedKeyframe = this->interpolateKeyframe(ccc->GetSelectedKeyframe().GetAnimTime());
     this->updateEditParameters(this->selectedKeyframe);
     ccc->SetSelectedKeyframe(this->selectedKeyframe);
-    // Linearize tangent
     this->linearizeSimTangent(prevSelKf);
 
     return true;
@@ -414,89 +412,98 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
     if (this->editCurrentPosParam.IsDirty()) {
         this->editCurrentPosParam.ResetDirty();
 
-        //glm::vec3 posV = V2G(this->editCurrentPosParam.Param<param::Vector3fParam>()->Value()) + this->modelBboxCenter;
-        //glm::vec3 pos = glm::vec3(posV.x, posV.y, posV.z);
-
-        //// Get index of existing keyframe
-        //int selIndex = this->getKeyframeIndex(this->keyframes, this->selectedKeyframe);
-        //if (selIndex >= 0) {
-        //    Keyframe tmpKf = this->selectedKeyframe;
-        //    this->selectedKeyframe.SetCameraPosition(pos);
-        //    this->replaceKeyframe(tmpKf, this->selectedKeyframe, true);
-        //    // Refresh interoplated camera positions
-        //    this->refreshInterpolCamPos(this->interpolSteps);
-        //}
-        //else {
-        //    //vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [CallForGetUpdatedKeyframeData] No existing keyframe selected.");
-        //}
+        // Get index of existing keyframe
+        int selIndex = this->getKeyframeIndex(this->keyframes, this->selectedKeyframe);
+        if (selIndex >= 0) {
+            Keyframe tmpKf = this->selectedKeyframe;
+            glm::vec3 posv = V2G(this->editCurrentPosParam.Param<param::Vector3fParam>()->Value()) + this->modelBboxCenter;
+            std::array<float, 3> posa = { posv.x, posv.y, posv.z };
+            auto cam_state = this->selectedKeyframe.GetCameraState();
+            cam_state.position = posa;
+            this->selectedKeyframe.SetCameraState(cam_state);
+            this->replaceKeyframe(tmpKf, this->selectedKeyframe, true);
+            // Refresh interoplated camera positions
+            this->refreshInterpolCamPos(this->interpolSteps);
+        }
+        else {
+            //vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [CallForGetUpdatedKeyframeData] No existing keyframe selected.");
+        }
     }
     // editCurrentLookAtParam -------------------------------------------------
     if (this->editCurrentLookAtParam.IsDirty()) {
         this->editCurrentLookAtParam.ResetDirty();
 
-        //glm::vec3 lookatV = V2G(this->editCurrentLookAtParam.Param<param::Vector3fParam>()->Value());
-        //glm::vec3 lookat = glm::vec3(lookatV.x, lookatV.y, lookatV.z);
+        // Get index of existing keyframe
+        int selIndex = this->getKeyframeIndex(this->keyframes, this->selectedKeyframe);
+        if (selIndex >= 0) {
+            Keyframe tmpKf = this->selectedKeyframe;
+            glm::vec3 lookatv = V2G(this->editCurrentLookAtParam.Param<param::Vector3fParam>()->Value());
+            auto cam_state = this->selectedKeyframe.GetCameraState();
+            /// TODO calculate look at
 
-        //// Get index of existing keyframe
-        //int selIndex = this->getKeyframeIndex(this->keyframes, this->selectedKeyframe);
-        //if (selIndex >= 0) {
-        //    Keyframe tmpKf = this->selectedKeyframe;
-        //    this->selectedKeyframe.SetCameraLookAt(lookat);
-        //    this->replaceKeyframe(tmpKf, this->selectedKeyframe, true);
-        //}
-        //else {
-        //    //vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [CallForGetUpdatedKeyframeData] No existing keyframe selected.");
-        //}
+            this->selectedKeyframe.SetCameraState(cam_state);
+            this->replaceKeyframe(tmpKf, this->selectedKeyframe, true);
+        }
+        else {
+            //vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [CallForGetUpdatedKeyframeData] No existing keyframe selected.");
+        }
     }
     // resetLookAtParam -------------------------------------------------------
     if (this->resetLookAtParam.IsDirty()) {
         this->resetLookAtParam.ResetDirty();
 
-        //this->editCurrentLookAtParam.Param<param::Vector3fParam>()->SetValue(G2V(this->modelBboxCenter));
-        //// Get index of existing keyframe
-        //int selIndex = this->getKeyframeIndex(this->keyframes, this->selectedKeyframe);
-        //if (selIndex >= 0) {
-        //    Keyframe tmpKf = this->selectedKeyframe;
-        //    this->selectedKeyframe.SetCameraLookAt(this->modelBboxCenter);
-        //    this->replaceKeyframe(tmpKf, this->selectedKeyframe, true);
-        //}
-        //else {
-        //    //vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [CallForGetUpdatedKeyframeData] No existing keyframe selected.");
-        //}
+        this->editCurrentLookAtParam.Param<param::Vector3fParam>()->SetValue(G2V(this->modelBboxCenter));
+        // Get index of existing keyframe
+        int selIndex = this->getKeyframeIndex(this->keyframes, this->selectedKeyframe);
+        if (selIndex >= 0) {
+            Keyframe tmpKf = this->selectedKeyframe;
+            glm::vec3 lookatv = this->modelBboxCenter;
+            auto cam_state = this->selectedKeyframe.GetCameraState();
+            /// TODO calculate look at
+
+            this->selectedKeyframe.SetCameraState(cam_state);
+            this->replaceKeyframe(tmpKf, this->selectedKeyframe, true);
+        }
+        else {
+            //vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [CallForGetUpdatedKeyframeData] No existing keyframe selected.");
+        }
     }
     // editCurrentUpParam -----------------------------------------------------
     if (this->editCurrentUpParam.IsDirty()) {
         this->editCurrentUpParam.ResetDirty();
 
-        //glm::vec3 up = V2G(this->editCurrentUpParam.Param<param::Vector3fParam>()->Value());
+        // Get index of existing keyframe
+        int selIndex = this->getKeyframeIndex(this->keyframes, this->selectedKeyframe);
+        if (selIndex >= 0) {
+            Keyframe tmpKf = this->selectedKeyframe;
+            glm::vec3 up = V2G(this->editCurrentUpParam.Param<param::Vector3fParam>()->Value());
+            auto cam_state = this->selectedKeyframe.GetCameraState();
+            /// TODO calculate up
 
-        //// Get index of existing keyframe
-        //int selIndex = this->getKeyframeIndex(this->keyframes, this->selectedKeyframe);
-        //if (selIndex >= 0) {
-        //    Keyframe tmpKf = this->selectedKeyframe;
-        //    this->selectedKeyframe.SetCameraUp(up);
-        //    this->replaceKeyframe(tmpKf, this->selectedKeyframe, true);
-        //}
-        //else {
-        //    //vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [CallForGetUpdatedKeyframeData] No existing keyframe selected.");
-        //}
+            this->selectedKeyframe.SetCameraState(cam_state);
+            this->replaceKeyframe(tmpKf, this->selectedKeyframe, true);
+        }
+        else {
+            //vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [CallForGetUpdatedKeyframeData] No existing keyframe selected.");
+        }
     }
     // editCurrentUpParam -----------------------------------------------------
     if (this->editCurrentApertureParam.IsDirty()) {
         this->editCurrentApertureParam.ResetDirty();
 
-        //float aperture = this->editCurrentApertureParam.Param<param::FloatParam>()->Value();
-
-        //// Get index of existing keyframe
-        //int selIndex = this->getKeyframeIndex(this->keyframes, this->selectedKeyframe);
-        //if (selIndex >= 0) {
-        //    Keyframe tmpKf = this->selectedKeyframe;
-        //    this->selectedKeyframe.SetCameraApertureAngele(aperture);
-        //    this->replaceKeyframe(tmpKf, this->selectedKeyframe, true);
-        //}
-        //else {
-        //    //vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [CallForGetUpdatedKeyframeData] No existing keyframe selected.");
-        //}
+        // Get index of existing keyframe
+        int selIndex = this->getKeyframeIndex(this->keyframes, this->selectedKeyframe);
+        if (selIndex >= 0) {
+            Keyframe tmpKf = this->selectedKeyframe;
+            float aperture = this->editCurrentApertureParam.Param<param::FloatParam>()->Value();
+            auto cam_state = this->selectedKeyframe.GetCameraState();
+            cam_state.half_aperture_angle_radians = aperture * M_PI / 180.0f; // degree to radians
+            this->selectedKeyframe.SetCameraState(cam_state);
+            this->replaceKeyframe(tmpKf, this->selectedKeyframe, true);
+        }
+        else {
+            //vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [CallForGetUpdatedKeyframeData] No existing keyframe selected.");
+        }
     }
     // fileNameParam ----------------------------------------------------------
     if (this->fileNameParam.IsDirty()) {
@@ -791,7 +798,7 @@ void KeyframeKeeper::setSameSpeed() {
         }
         float totDist = 0.0f;
         for (unsigned int i = 0; i < this->interpolCamPos.size() - 1; i++) {
-            totDist += glm::length(this->interpolCamPos.operator[](i + 1) - this->interpolCamPos.operator[](i));
+            totDist += glm::length(this->interpolCamPos[i + 1] - this->interpolCamPos[i]);
         }
         float totalVelocity = totDist / totTime; // unit doesn't matter ... it is only relative
 
@@ -803,23 +810,23 @@ void KeyframeKeeper::setSameSpeed() {
                 kfTime = kfDist / totalVelocity;
 
                 unsigned int index = static_cast<unsigned int>(floorf(((float)i / (float)this->interpolSteps)));
-                float t = this->keyframes.operator[](index - 1).GetAnimTime() + kfTime;
+                float t = this->keyframes[index - 1].GetAnimTime() + kfTime;
                 t = (t < 0.0f) ? (0.0f) : (t);
                 t = (t > this->totalAnimTime) ? (this->totalAnimTime) : (t);
                 kfDist = 0.0f;
 
                 // ADD UNDO
-                Keyframe tmpKf = this->keyframes.operator[](index);
-                this->keyframes.operator[](index).SetAnimTime(t);
-                this->addKeyframeUndoAction(KeyframeKeeper::Undo::Action::UNDO_KEYFRAME_MODIFY, this->keyframes.operator[](index), tmpKf);
+                Keyframe tmpKf = this->keyframes[index];
+                this->keyframes[index].SetAnimTime(t);
+                this->addKeyframeUndoAction(KeyframeKeeper::Undo::Action::UNDO_KEYFRAME_MODIFY, this->keyframes[index], tmpKf);
             }
             // Add distance up to existing keyframe
-            kfDist += glm::length(this->interpolCamPos.operator[](i + 1) - this->interpolCamPos.operator[](i));
+            kfDist += glm::length(this->interpolCamPos[i + 1] - this->interpolCamPos[i]);
         }
 
         // Restore previous selected keyframe
         if (selIndex >= 0) {
-            this->selectedKeyframe = this->keyframes.operator[](selIndex);
+            this->selectedKeyframe = this->keyframes[selIndex];
         }
     }
 }
@@ -840,7 +847,7 @@ void KeyframeKeeper::refreshInterpolCamPos(unsigned int s) {
     if (this->keyframes.size() > 1) {
         for (unsigned int i = 0; i < this->keyframes.size() - 1; i++) {
             startTime = this->keyframes[i].GetAnimTime();
-            deltaTimeStep = (this->keyframes.operator[](i + 1).GetAnimTime() - startTime) / (float)s;
+            deltaTimeStep = (this->keyframes[i + 1].GetAnimTime() - startTime) / (float)s;
 
             for (unsigned int j = 0; j < s; j++) {
                 kf = this->interpolateKeyframe(startTime + deltaTimeStep*(float)j);
@@ -911,14 +918,14 @@ bool KeyframeKeeper::deleteKeyframe(Keyframe kf, bool undo) {
                 // Adjust first/last control point position - ONLY if it is a "real" delete and no replace
                 if (this->keyframes.size() > 1) {
                     if (selIndex == 0) {
-                        auto p0 = this->keyframes.operator[](0).GetCameraState().position;
-                        auto p1 = this->keyframes.operator[](1).GetCameraState().position;
+                        auto p0 = this->keyframes[0].GetCameraState().position;
+                        auto p1 = this->keyframes[1].GetCameraState().position;
                         glm::vec3 tmpV = glm::normalize(glm::vec3(p0[0], p0[1], p0[2]) - glm::vec3(p1[0], p1[1], p1[2]));
                         this->startCtrllPos = glm::vec3(p0[0], p0[1], p0[2]) + tmpV;
                     }
                     if (selIndex == this->keyframes.size()) { // Element is already removed so the index is now: (this->keyframes.size() - 1) + 1
                         auto p0 = this->keyframes.back().GetCameraState().position;
-                        auto p1 = this->keyframes.operator[]((int)this->keyframes.size() - 2).GetCameraState().position;
+                        auto p1 = this->keyframes[(int)this->keyframes.size() - 2].GetCameraState().position;
                         glm::vec3 tmpV = glm::normalize(glm::vec3(p0[0], p0[1], p0[2]) - glm::vec3(p1[0], p1[1], p1[2]));
                         this->endCtrllPos = glm::vec3(p0[0], p0[1], p0[2]) + tmpV;
                     }
@@ -927,10 +934,10 @@ bool KeyframeKeeper::deleteKeyframe(Keyframe kf, bool undo) {
             this->boundingBox.SetNull();
             this->refreshInterpolCamPos(this->interpolSteps);
             if (selIndex > 0) {
-                this->selectedKeyframe = this->keyframes.operator[](selIndex - 1);
+                this->selectedKeyframe = this->keyframes[selIndex - 1];
             }
             else if (selIndex < this->keyframes.size()) {
-                this->selectedKeyframe = this->keyframes.operator[](selIndex);
+                this->selectedKeyframe = this->keyframes[selIndex];
             }
             this->updateEditParameters(this->selectedKeyframe);
         }
@@ -962,7 +969,7 @@ bool KeyframeKeeper::addKeyframe(Keyframe kf, bool undo) {
         // Adjust first/last control point position - ONLY if it is a "real" add and no replace
         if (undo && this->keyframes.size() > 1) {
             auto p0 = this->keyframes.back().GetCameraState().position;
-            auto p1 = this->keyframes.operator[]((int)this->keyframes.size() - 2).GetCameraState().position;
+            auto p1 = this->keyframes[(int)this->keyframes.size() - 2].GetCameraState().position;
             glm::vec3 tmpV = glm::normalize(glm::vec3(p0[0], p0[1], p0[2]) - glm::vec3(p1[0], p1[1], p1[2]));
             this->endCtrllPos = glm::vec3(p0[0], p0[1], p0[2]) + tmpV;
         }
@@ -972,7 +979,7 @@ bool KeyframeKeeper::addKeyframe(Keyframe kf, bool undo) {
         // Adjust first/last control point position - ONLY if it is a "real" add and no replace
         if (undo && this->keyframes.size() > 1) {
             auto p0 = this->keyframes.back().GetCameraState().position;
-            auto p1 = this->keyframes.operator[]((int)this->keyframes.size() - 2).GetCameraState().position;
+            auto p1 = this->keyframes[(int)this->keyframes.size() - 2].GetCameraState().position;
             glm::vec3 tmpV = glm::normalize(glm::vec3(p0[0], p0[1], p0[2]) - glm::vec3(p1[0], p1[1], p1[2]));
             this->endCtrllPos = glm::vec3(p0[0], p0[1], p0[2]) + tmpV;
         }
@@ -1078,7 +1085,7 @@ Keyframe KeyframeKeeper::interpolateKeyframe(float time) {
         float iT = 0.0f;
         for (int i = 0; i < kfIdxCnt; i++) {
             float tMin = this->keyframes[i].GetAnimTime();
-            float tMax = this->keyframes.operator[](i + 1).GetAnimTime();
+            float tMax = this->keyframes[i + 1].GetAnimTime();
             if ((tMin < t) && (t < tMax)) {
                 iT = (t - tMin) / (tMax - tMin); // Map current time to [0,1] between two keyframes
                 i1 = i;
@@ -1089,36 +1096,25 @@ Keyframe KeyframeKeeper::interpolateKeyframe(float time) {
         i0 = (i1 > 0) ? (i1 - 1) : (0);
         i3 = (i2 < kfIdxCnt) ? (i2 + 1) : (kfIdxCnt);
 
+        megamol::core::view::Camera_2 c0(this->keyframes[i0].GetCameraState());
+        megamol::core::view::Camera_2 c1 = this->keyframes[i1].GetCameraState();
+        megamol::core::view::Camera_2 c2 = this->keyframes[i2].GetCameraState();
+        megamol::core::view::Camera_2 c3 = this->keyframes[i3].GetCameraState();
+
         // Interpolate simulation time linear between i1 and i2
-        float simT1 = this->keyframes.operator[](i1).GetSimTime();
-        float simT2 = this->keyframes.operator[](i2).GetSimTime();
+        float simT1 = this->keyframes[i1].GetSimTime();
+        float simT2 = this->keyframes[i2].GetSimTime();
         float simT = simT1 + (simT2 - simT1)*iT;
         kf.SetSimTime(simT);
 
         // ! Skip interpolation of camera parameters if they are equal for ?1 and ?2.
         // => Prevent interpolation loops if time of keyframes is different, but cam params are the same.
 
-        cam_type::snapshot_type s0;
-        megamol::core::view::Camera_2 c0(this->keyframes.operator[](i0).GetCameraState());
-        c0.take_snapshot(s0, thecam::snapshot_content::all);
-
-        cam_type::snapshot_type s1;
-        megamol::core::view::Camera_2 c1 = this->keyframes.operator[](i1).GetCameraState();
-        c1.take_snapshot(s1, thecam::snapshot_content::all);
-
-        cam_type::snapshot_type s2;
-        megamol::core::view::Camera_2 c2 = this->keyframes.operator[](i2).GetCameraState();
-        c2.take_snapshot(s2, thecam::snapshot_content::all);
-
-        cam_type::snapshot_type s3;
-        megamol::core::view::Camera_2 c3 = this->keyframes.operator[](i3).GetCameraState();
-        c3.take_snapshot(s3, thecam::snapshot_content::all);
-
         //interpolate position ------------------------------------------------
-        glm::vec4 ps0 = s0.position;
-        glm::vec4 ps1 = s1.position;
-        glm::vec4 ps2 = s2.position;
-        glm::vec4 ps3 = s3.position;
+        glm::vec4 ps0 = c0.position();
+        glm::vec4 ps1 = c1.position();
+        glm::vec4 ps2 = c2.position();
+        glm::vec4 ps3 = c3.position();
         glm::vec3 p0 = glm::vec3(ps0.x, ps0.y, ps0.z);
         glm::vec3 p1 = glm::vec3(ps1.x, ps1.y, ps1.z);
         glm::vec3 p2 = glm::vec3(ps2.x, ps2.y, ps2.z);
@@ -1131,46 +1127,12 @@ Keyframe KeyframeKeeper::interpolateKeyframe(float time) {
             p3 = this->endCtrllPos;
         }
         if (p1 == p2) {
-            cam_kf.position(s1.position);
+            cam_kf.position(c1.position());
         }
         else {
-            glm::vec3 pk = this->interpolate_vec3(iT, p0, p1, p2, p3);
+            glm::vec3 pk = this->vec3_interpolation(iT, p0, p1, p2, p3);
             cam_kf.position(glm::vec4(pk.x, pk.y, pk.z, 1.0f));
         }
-
-        //interpolate look at -------------------------------------------------
-        glm::vec4 ls0 = s0.view_vector;
-        glm::vec4 ls1 = s1.view_vector;
-        glm::vec4 ls2 = s2.view_vector;
-        glm::vec4 ls3 = s3.view_vector;
-        glm::vec3 l0 = glm::vec3(ls0.x, ls0.y, ls0.z);
-        glm::vec3 l1 = glm::vec3(ls1.x, ls1.y, ls1.z);
-        glm::vec3 l2 = glm::vec3(ls2.x, ls2.y, ls2.z);
-        glm::vec3 l3 = glm::vec3(ls3.x, ls3.y, ls3.z);
-        if (l1 == l2) {
-            cam_kf.look_at(s1.view_vector);
-        }
-        else {
-            glm::vec3 lk = this->interpolate_vec3(iT, l0, l1, l2, l3);
-            cam_kf.look_at(glm::vec4(lk.x, lk.y, lk.z, 1.0f));
-        }
-
-        //interpolate up ------------------------------------------------------
-        glm::vec4 us0 = s0.up_vector;
-        glm::vec4 us1 = s1.up_vector;
-        glm::vec4 us2 = s2.up_vector;
-        glm::vec4 us3 = s3.up_vector;
-        glm::vec3 u0 = glm::vec3(us0.x, us0.y, us0.z);
-        glm::vec3 u1 = glm::vec3(us1.x, us1.y, us1.z);
-        glm::vec3 u2 = glm::vec3(us2.x, us2.y, us2.z);
-        glm::vec3 u3 = glm::vec3(us3.x, us3.y, us3.z);
-        //if (u1 == u2) {
-        //    kf.SetCameraUp(this->keyframes.operator[](i1).GetCamUp());
-        //}
-        //else {
-        //    glm::vec3 uk = this->interpolate_vec3(iT, u0, u1, u2, u3);
-        //    kf.SetCameraUp(uk - pk);
-        //}
 
         //interpolate aperture angle ------------------------------------------
         float a0 = c0.aperture_angle();
@@ -1181,11 +1143,16 @@ Keyframe KeyframeKeeper::interpolateKeyframe(float time) {
             cam_kf.aperture_angle(a1);
         }
         else {
-            float ak = this->interpolate_f(iT, a0, a1, a2, a3);
+            float ak = this->float_interpolation(iT, a0, a1, a2, a3);
             cam_kf.aperture_angle(ak);
         }
 
-        // Finally set new interpoated camera of keyframe
+        //interpolate orientation ---------------------------------------------
+        glm::quat c1_orient = c1.orientation();
+        glm::quat c2_orient = c2.orientation();
+        cam_kf.orientation(this->quaternion_interpolation(iT, c1_orient, c2_orient));
+
+        // Finally set new interpoated camera for keyframe
         cam_type::minimal_state_type camera_state;
         cam_kf.get_minimal_state(camera_state);
         kf.SetCameraState(camera_state);
@@ -1194,33 +1161,70 @@ Keyframe KeyframeKeeper::interpolateKeyframe(float time) {
     }
 }
 
+glm::quat KeyframeKeeper::quaternion_interpolation(float u, glm::quat q0, glm::quat q1) {
 
-float KeyframeKeeper::interpolate_f(float u, float f0, float f1, float f2, float f3) {
+    /// Slerp - spherical linear interpolation
+    // SOURCE: https://en.wikipedia.org/wiki/Slerp and https://web.mit.edu/2.998/www/QuaternionReport1.pdf
 
-    /// Catmull-Rom
+    glm::quat q0_ = glm::normalize(q0);
+    glm::quat q1_ = glm::normalize(q1);
+    auto dot = glm::dot(q0_, q1_);
+
+    // If the dot product is negative, slerp won't take
+    // the shorter path. Note that v1 and -v1 are equivalent when
+    // the negation is applied to all four components. Fix by 
+    // reversing one quaternion.
+    if (dot < 0.0f) {
+        q0_ = -q0_;
+        dot = -dot;
+    }
+
+    // If the inputs are too close for comfort, linearly interpolate
+    // and normalize the result.
+    const float DOT_THRESHOLD = 0.9995f;
+    if (dot > DOT_THRESHOLD) {
+        glm::quat q = ((1.0f - u) * q0_) + (u * q1_);
+        return glm::normalize(q);
+    }
+
+    float theta = std::acos(dot);
+    float sin_theta = sin(theta);
+    float c0 = sin((1.0f - u) * theta) / sin_theta;
+    float c1 = sin(u * theta) / sin_theta;
+    glm::quat q = (c0 * q0_) + (c1 * q1_);
+
+    return glm::normalize(q);
+}
+
+
+
+float KeyframeKeeper::float_interpolation(float u, float f0, float f1, float f2, float f3) {
+
+    /// Catmull-Rom Interpolation
+    // Considering global tangent length
+    // SOURCE: https://www.cs.cmu.edu/~462/projects/assn2/assn2/catmullRom.pdf
+    float tl = this->splineTangentLength;
+    float f = (f1)+
+              (-(tl * f0) + (tl* f2)) * u +
+              ((2.0f*tl * f0) + ((tl - 3.0f) * f1) + ((3.0f - 2.0f*tl) * f2) - (tl* f3)) * u * u +
+              (-(tl * f0) + ((2.0f - tl) * f1) + ((tl - 2.0f) * f2) + (tl* f3)) * u * u * u;
+
     // Original version:
     /* float f = ((f1 * 2.0f) +
                (f2 - f0) * u +
               ((f0 * 2.0f) - (f1 * 5.0f) + (f2 * 4.0f) - f3) * u * u +
               (-f0 + (f1 * 3.0f) - (f2 * 3.0f) + f3) * u * u * u) * 0.5f;*/
-    // Considering global tangent length:
-    // SOURCE: https://www.cs.cmu.edu/~462/projects/assn2/assn2/catmullRom.pdf
-    float tl = this->splineTangentLength;
-    float f = (f1) +
-              (-(tl * f0) + (tl* f2)) * u + 
-              ((2.0f*tl * f0) + ((tl - 3.0f) * f1) + ((3.0f - 2.0f*tl) * f2) - (tl* f3)) * u * u + 
-              (-(tl * f0) + ((2.0f - tl) * f1) + ((tl - 2.0f) * f2) + (tl* f3)) * u * u * u;
 
     return f;
 }
 
 
-glm::vec3 KeyframeKeeper::interpolate_vec3(float u, glm::vec3 v0, glm::vec3 v1, glm::vec3 v2, glm::vec3 v3) {
+glm::vec3 KeyframeKeeper::vec3_interpolation(float u, glm::vec3 v0, glm::vec3 v1, glm::vec3 v2, glm::vec3 v3) {
 
     glm::vec3 v;
-    v.x = this->interpolate_f(u, v0.x, v1.x, v2.x, v3.x);
-    v.y = this->interpolate_f(u, v0.y, v1.y, v2.y, v3.y);
-    v.z = this->interpolate_f(u, v0.z, v1.z, v2.z, v3.z);
+    v.x = this->float_interpolation(u, v0.x, v1.x, v2.x, v3.x);
+    v.y = this->float_interpolation(u, v0.y, v1.y, v2.y, v3.y);
+    v.z = this->float_interpolation(u, v0.z, v1.z, v2.z, v3.z);
 
     return v;
 }

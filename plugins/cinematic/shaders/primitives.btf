@@ -267,17 +267,13 @@
             void main() {
                
                 vec4 texcolor =  texture(tex, texcoord);
-                
                 float alpha = texcolor.a;
                 if (alpha <= 0.0) {
                     discard;
-                }
-                
-                if (color.a > 0.0) {
+                }                    
+                outColor = vec4(texcolor.rgb, alpha);
+                if (color.a > 0.0) {            
                     outColor = vec4(color.rgb, alpha);
-                }
-                else {
-                    outColor = vec4(texcolor.rgb, alpha);
                 }
             }
 
@@ -322,7 +318,8 @@
             void main() {
                 
                 vec2 uvcoord = vec2(gl_FragCoord.x / viewport.x, gl_FragCoord.y / viewport.y);
-                gl_FragDepth = texture2D(tex, uvcoord).x; 
+                float depth = texture2D(tex, uvcoord).x;
+                gl_FragDepth = depth; 
                 outColor = vec4(0.0, 0.0, 0.0, 0.0);
             }
 

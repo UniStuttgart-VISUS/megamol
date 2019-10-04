@@ -27,15 +27,15 @@ namespace cinematic {
 	public:
 
 		/** function name for Getting all Keyframes */
-		static const unsigned int CallForGetUpdatedKeyframeData     = 0; // Updates out_data, call GetData() afterwards.
-        static const unsigned int CallForGetSelectedKeyframeAtTime  = 1;
-		static const unsigned int CallForGetInterpolCamPositions    = 2;
-        static const unsigned int CallForSetSelectedKeyframe        = 3;
-        static const unsigned int CallForSetSimulationData          = 4;
-		static const unsigned int CallForSetCameraForKeyframe       = 5;
-        static const unsigned int CallForSetDragKeyframe            = 6;
-        static const unsigned int CallForSetDropKeyframe            = 7;
-        static const unsigned int CallForSetCtrlPoints              = 8;
+		static const unsigned int CallForGetUpdatedKeyframeData     = 0; // Loads updated data from KeyframeKeeper into call
+        static const unsigned int CallForGetSelectedKeyframeAtTime  = 1; // Set animation time of selected keyframe with SetSelectedKeyframeTime() -> Keyframekeeper returns modified selected keyframe immediately to call
+		static const unsigned int CallForGetInterpolCamPositions    = 2; // SetInterpolationSteps()
+        static const unsigned int CallForSetSelectedKeyframe        = 3; // SetSelectedKeyframe() replaces current selected keyframe
+        static const unsigned int CallForSetSimulationData          = 4; // SetBboxCenter(), SetTotalSimTime(), SetFps();
+		static const unsigned int CallForSetCameraForKeyframe       = 5; // SetCameraState() replaces camera of currently selected keyframe
+        static const unsigned int CallForSetDragKeyframe            = 6; // Set animation time of selected keyframe: SetSelectedKeyframeTime() -> KeyframeKeeper takes selected keyframe as dragged keyframe
+        static const unsigned int CallForSetDropKeyframe            = 7; // Set animation and simulation time of selected keyframe: SetDropTimes() -> KeyframeKeeper moves keyframe with to drop times 
+        static const unsigned int CallForSetCtrlPoints              = 8; // SetControlPointPosition()
 
 		/**
 		* Answer the name of the objects of this description.
@@ -210,18 +210,14 @@ namespace cinematic {
         * variables
         **********************************************************************/
 
-        typedef struct _OutData_ {
+        //typedef struct _OutData_ {
+        //} OutData;
 
+        //typedef struct _InData_ {
+        //} InData;
 
-        } OutData;
-
-        typedef struct _InData_ {
-
-
-        } InData;
-
-        std::shared_ptr<OutData> out_data;
-        std::shared_ptr<InData> in_data;
+        //std::shared_ptr<OutData> out_data;
+        //std::shared_ptr<InData> in_data;
 
         // Out Data (set by called KeyframeKeeper) ---------------------------
 		std::shared_ptr<Keyframe::cam_state_type>      cameraState;
@@ -236,6 +232,7 @@ namespace cinematic {
         unsigned int                                   fps;
 
         // In Data (set by calling modules) -----------------------------------
+        ///Keyframe						               selectedKeyframe;
         unsigned int                                   interpolSteps;
         float                                          dropAnimTime;
         float                                          dropSimTime;

@@ -226,13 +226,11 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     glm::vec3 normal = { 0.0f, 0.0f, 1.0f };
     glm::vec3 origin = { this->axes[Axis::X].startPos.x, this->axes[Axis::X].startPos.y, 0.0f };
     float yAxisValue = 0.0f;
-    float textPosZ = -0.1f; // Draw text in front of everthing else (z < 0)
-    // Get background color
     auto cbc = cr->GetBackgroundColour();
     glm::vec4 back_color = glm::vec4(static_cast<float>(cbc[0]) / 255.0f, static_cast<float>(cbc[1]) / 255.0f, static_cast<float>(cbc[2]) / 255.0f, 1.0f);
     this->utils.SetBackgroundColor(back_color);
-    // Get matrix for orthogonal projection of 2D rendering
     glm::mat4 ortho = glm::ortho(0.0f, this->viewport.x, 0.0f, this->viewport.y, -1.0f, 1.0f);
+    auto skf = ccc->GetSelectedKeyframe();
 
     // Push rulers ------------------------------------------------------------
     color = this->utils.Color(CinematicUtils::Colors::FOREGROUND);
@@ -310,22 +308,25 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
         }
     }
 
-    // Push marker for dragged keyframe ---------------------------------------
-    if (this->dragDropActive) {
-        x = this->axes[Axis::X].scaleOffset + this->dragDropKeyframe.GetAnimTime() * this->axes[Axis::X].valueFractionLength;
+    // Push markers for all existing keyframes --------------------------------
+    for (unsigned int i = 0; i < keyframes->size(); i++) {
+        x = this->axes[Axis::X].scaleOffset + (*keyframes)[i].GetAnimTime() * this->axes[Axis::X].valueFractionLength;
         yAxisValue = 0.0f;
         switch (this->yAxisParam) {
-            case (ActiveParam::SIMULATION_TIME): yAxisValue = this->dragDropKeyframe.GetSimTime(); break;
-            default: break;
+        case (ActiveParam::SIMULATION_TIME): yAxisValue = (*keyframes)[i].GetSimTime(); break;
+        default: break;
         }
-        y = this->axes[Axis::Y].scaleOffset + yAxisValue * this->axes[Axis::Y].maxValue  * this->axes[Axis::Y].valueFractionLength;
+        y = this->axes[Axis::Y].scaleOffset + yAxisValue * this->axes[Axis::Y].maxValue * this->axes[Axis::Y].valueFractionLength;
         if (((x >= 0.0f) && (x <= this->axes[Axis::X].length)) && ((y >= 0.0f) && (y <= this->axes[Axis::Y].length))) {
-            this->pushMarkerTexture(this->axes[Axis::X].startPos.x + x, this->axes[Axis::X].startPos.y + y, this->keyframeMarkHeight, this->utils.Color(CinematicUtils::Colors::KEYFRAME_DRAGGED));
+            color = this->utils.Color(CinematicUtils::Colors::KEYFRAME);
+            if ((*keyframes)[i] == skf) {
+                color = this->utils.Color(CinematicUtils::Colors::KEYFRAME_SELECTED);
+            }
+            this->pushMarkerTexture(this->axes[Axis::X].startPos.x + x, this->axes[Axis::X].startPos.y + y, this->keyframeMarkHeight, color);
         }
     }
 
     // Push marker and lines for interpolated selected keyframe ---------------
-    auto skf = ccc->GetSelectedKeyframe();
     x = this->axes[Axis::X].scaleOffset + skf.GetAnimTime() * this->axes[Axis::X].valueFractionLength;
     yAxisValue = 0.0f;
     switch (this->yAxisParam) {
@@ -344,21 +345,17 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
         this->utils.PushLinePrimitive(start, end, 1.0f, normal, color);
     }
 
-    // Push markers for all existing keyframes --------------------------------
-    for (unsigned int i = 0; i < keyframes->size(); i++) {
-        x = this->axes[Axis::X].scaleOffset + (*keyframes)[i].GetAnimTime() * this->axes[Axis::X].valueFractionLength;
+    // Push marker for dragged keyframe ---------------------------------------
+    if (this->dragDropActive) {
+        x = this->axes[Axis::X].scaleOffset + this->dragDropKeyframe.GetAnimTime() * this->axes[Axis::X].valueFractionLength;
         yAxisValue = 0.0f;
         switch (this->yAxisParam) {
-            case (ActiveParam::SIMULATION_TIME): yAxisValue = (*keyframes)[i].GetSimTime(); break;
-            default: break;
+        case (ActiveParam::SIMULATION_TIME): yAxisValue = this->dragDropKeyframe.GetSimTime(); break;
+        default: break;
         }
-        y = this->axes[Axis::Y].scaleOffset + yAxisValue * this->axes[Axis::Y].maxValue * this->axes[Axis::Y].valueFractionLength;
+        y = this->axes[Axis::Y].scaleOffset + yAxisValue * this->axes[Axis::Y].maxValue  * this->axes[Axis::Y].valueFractionLength;
         if (((x >= 0.0f) && (x <= this->axes[Axis::X].length)) && ((y >= 0.0f) && (y <= this->axes[Axis::Y].length))) {
-            color = this->utils.Color(CinematicUtils::Colors::KEYFRAME);
-            if ((*keyframes)[i] == skf) {
-                color = this->utils.Color(CinematicUtils::Colors::KEYFRAME_SELECTED);
-            }
-            this->pushMarkerTexture(this->axes[Axis::X].startPos.x + x, this->axes[Axis::X].startPos.y + y, this->keyframeMarkHeight, color);
+            this->pushMarkerTexture(this->axes[Axis::X].startPos.x + x, this->axes[Axis::X].startPos.y + y, this->keyframeMarkHeight, this->utils.Color(CinematicUtils::Colors::KEYFRAME_DRAGGED));
         }
     }
 
@@ -372,7 +369,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     for (float f = this->axes[Axis::X].scaleOffset; f < this->axes[Axis::X].length + (this->axes[Axis::X].segmSize / 10.0f); f = f + this->axes[Axis::X].segmSize) {
         if (f >= 0.0f) {
             tmpStr.Format(this->axes[Axis::X].formatStr.c_str(), timeStep);
-            this->utils.PushText(std::string(tmpStr.PeekBuffer()), this->axes[Axis::X].startPos.x + f - strWidth / 2.0f, this->axes[Axis::X].startPos.y - this->rulerMarkHeight, textPosZ);
+            this->utils.PushText(std::string(tmpStr.PeekBuffer()), this->axes[Axis::X].startPos.x + f - strWidth / 2.0f, this->axes[Axis::X].startPos.y - this->rulerMarkHeight, 0.0f);
         }
         timeStep += this->axes[Axis::X].segmValue;
     }
@@ -384,14 +381,14 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     for (float f = this->axes[Axis::Y].scaleOffset; f < this->axes[Axis::Y].length + (this->axes[Axis::Y].segmSize / 10.0f); f = f + this->axes[Axis::Y].segmSize) {
         if (f >= 0.0f) {
             tmpStr.Format(this->axes[Axis::Y].formatStr.c_str(), timeStep);
-            this->utils.PushText(std::string(tmpStr.PeekBuffer()), this->axes[Axis::X].startPos.x - this->rulerMarkHeight - strWidth, this->axes[Axis::X].startPos.y + strHeight / 2.0f + f, textPosZ);
+            this->utils.PushText(std::string(tmpStr.PeekBuffer()), this->axes[Axis::X].startPos.x - this->rulerMarkHeight - strWidth, this->axes[Axis::X].startPos.y + strHeight / 2.0f + f, 0.0f);
         }
         timeStep += this->axes[Axis::Y].segmValue;
     }
     // Axis captions
     std::string caption = "Animation Time and Frames ";
     strWidth = this->utils.GetTextLineWidth(caption);
-    this->utils.PushText(caption, this->axes[Axis::X].startPos.x + this->axes[Axis::X].length / 2.0f - strWidth / 2.0f, this->axes[Axis::X].startPos.y - this->utils.GetTextLineHeight() - this->rulerMarkHeight, textPosZ);
+    this->utils.PushText(caption, this->axes[Axis::X].startPos.x + this->axes[Axis::X].length / 2.0f - strWidth / 2.0f, this->axes[Axis::X].startPos.y - this->utils.GetTextLineHeight() - this->rulerMarkHeight, 0.0f);
     caption = " ";
     switch (this->yAxisParam) {
         case (ActiveParam::SIMULATION_TIME): caption = "Simulation Time "; break;
@@ -399,7 +396,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     }
     strWidth = this->utils.GetTextLineWidth(caption);
     this->utils.SetTextRotation(90.0f, 0.0f, 0.0f, 1.0f);
-    this->utils.PushText(caption, this->axes[Axis::X].startPos.y + this->axes[Axis::Y].length / 2.0f - strWidth / 2.0f, (-1.0f)*this->axes[Axis::X].startPos.x + tmpStrWidth + this->rulerMarkHeight + 1.5f*strHeight, textPosZ);
+    this->utils.PushText(caption, this->axes[Axis::X].startPos.y + this->axes[Axis::Y].length / 2.0f - strWidth / 2.0f, (-1.0f)*this->axes[Axis::X].startPos.x + tmpStrWidth + this->rulerMarkHeight + 1.5f*strHeight, 0.0f);
     this->utils.SetTextRotation(0.0f, 0.0f, 0.0f, 0.0f);
 
     // Push menu --------------------------------------------------------------
@@ -426,12 +423,11 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
 
 void TimeLineRenderer::pushMarkerTexture(float pos_x, float pos_y, float size, glm::vec4 color) {
 
-    // Draw markers in front of everthing else (z < 0)
-    float z = -0.1f;
-    glm::vec3 pos_bottom_left  = { pos_x - (size / 2.0f), pos_y, z };
-    glm::vec3 pos_upper_left   = { pos_x - (size / 2.0f), pos_y + size, z };
-    glm::vec3 pos_upper_right  = { pos_x + (size / 2.0f), pos_y + size, z };
-    glm::vec3 pos_bottom_right = { pos_x + (size / 2.0f), pos_y, z};
+    // Push texture markers
+    glm::vec3 pos_bottom_left  = { pos_x - (size / 2.0f), pos_y, 0.0f };
+    glm::vec3 pos_upper_left   = { pos_x - (size / 2.0f), pos_y + size, 0.0f };
+    glm::vec3 pos_upper_right  = { pos_x + (size / 2.0f), pos_y + size, 0.0f };
+    glm::vec3 pos_bottom_right = { pos_x + (size / 2.0f), pos_y, 0.0f };
     this->utils.Push2DColorTexture(this->texture, pos_bottom_left, pos_upper_left, pos_upper_right, pos_bottom_right, true, color);
 }
 

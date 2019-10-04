@@ -111,8 +111,8 @@ namespace cinematic {
         }
 
         inline void DrawTextures(glm::mat4& mat_mvp, glm::vec2 dim_vp) {
-            this->drawPrimitives(RenderUtils::Primitives::COLOR_TEXTURE, mat_mvp, dim_vp);
             this->drawPrimitives(RenderUtils::Primitives::DEPTH_TEXTURE, mat_mvp, dim_vp);
+            this->drawPrimitives(RenderUtils::Primitives::COLOR_TEXTURE, mat_mvp, dim_vp); 
             this->clearQueue(Primitives::COLOR_TEXTURE);
             this->clearQueue(Primitives::DEPTH_TEXTURE);
         }

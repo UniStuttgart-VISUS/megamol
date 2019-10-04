@@ -207,9 +207,11 @@ namespace cinematic {
 
         bool addControlPointUndoAction(KeyframeKeeper::Undo::Action act, glm::vec3 first_controlpoint, glm::vec3 last_controlpoint, glm::vec3 previous_first_controlpoint, glm::vec3 previous_last_controlpoint);
 
-        float interpolate_f(float u, float f0, float f1, float f2, float f3);
+        float float_interpolation(float u, float f0, float f1, float f2, float f3);
 
-        glm::vec3 interpolate_vec3(float u, glm::vec3 v0, glm::vec3 v1, glm::vec3 v2, glm::vec3 v3);
+        glm::vec3 vec3_interpolation(float u, glm::vec3 v0, glm::vec3 v1, glm::vec3 v2, glm::vec3 v3);
+
+        glm::quat quaternion_interpolation(float u, glm::quat q0, glm::quat q1);
 
         int getKeyframeIndex(std::vector<Keyframe>& keyframes, Keyframe keyframe);
 

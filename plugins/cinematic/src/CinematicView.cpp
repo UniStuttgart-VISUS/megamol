@@ -246,17 +246,6 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     animTimeParam->Param<param::FloatParam>()->SetValue(simTime * static_cast<float>(cr3d->TimeFramesCount()), true);
 
     // Viewport ---------------------------------------------------------------
-    ///auto viewport = cr3d->GetViewport().GetSize();
-    ///glm::vec4 viewport;
-    ///if (!cam.image_tile().empty()) {
-    ///    viewport = glm::vec4(
-    ///        cam.image_tile().left(), cam.image_tile().bottom(), cam.image_tile().width(), cam.image_tile().height());
-    ///}
-    ///else {
-    ///    viewport = glm::vec4(0.0f, 0.0f, cam.resolution_gate().width(), cam.resolution_gate().height());
-    ///}
-    ///const int vp_iw = viewport.Width();
-    ///const int vp_ih = viewport.Height()
     glm::ivec4 viewport;
     glGetIntegerv(GL_VIEWPORT, glm::value_ptr(viewport));
     const int vp_iw = viewport[2];

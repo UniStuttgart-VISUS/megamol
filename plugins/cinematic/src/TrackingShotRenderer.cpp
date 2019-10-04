@@ -151,7 +151,7 @@ void TrackingShotRenderer::PreRender(core::view::CallRender3D_2& call) {
     cr3d_in->GetCamera(cam);
 
     // Get current viewport
-    ///auto viewport = cr3d_in->GetViewport().GetSize();
+    ///? auto viewport = cr3d_in->GetViewport().GetSize();
     glm::vec4 viewport;
     if (!cam.image_tile().empty()) {
         viewport = glm::vec4(
@@ -193,7 +193,7 @@ void TrackingShotRenderer::PreRender(core::view::CallRender3D_2& call) {
 #endif // DEBUG || _DEBUG 
 
     auto backCol = call.BackgroundColor();
-    glClearColor(backCol.x, backCol.y, backCol.z, 1.0f);
+    glClearColor(backCol.x, backCol.y, backCol.z, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // Set data of outgoing cr3d to data of incoming cr3d
@@ -280,7 +280,7 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     glm::mat4 mvp = proj * view;
 
     // Get current viewport
-    ///auto viewport = cr3d_in->GetViewport().GetSize();
+    ///? auto viewport = cr3d_in->GetViewport().GetSize();
     glm::vec4 viewport;
     if (!cam.image_tile().empty()) {
         viewport = glm::vec4(
@@ -340,15 +340,13 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     //  this->manipulator.Draw();
     //}
 
-
-
     // Push spline ------------------------------------------------------------
     auto interpolKeyframes = ccc->GetInterpolCamPositions();
     if (interpolKeyframes == nullptr) {
         vislib::sys::Log::DefaultLog.WriteWarn("[TRACKINGSHOT RENDERER] [Render] Pointer to interpolated camera positions array is nullptr.");
         return false;
     }
-    float line_width = 0.1f;
+    float line_width = 2.0f;
     auto color = this->utils.Color(CinematicUtils::Colors::KEYFRAME_SPLINE);
     auto keyframeCount = interpolKeyframes->size();
     if (keyframeCount > 1) {
@@ -362,13 +360,15 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     // Draw 3D ---------------------------------------------------------------
     this->utils.DrawAll(mvp, glm::vec2(vp_fw, vp_fh));
 
-    // Push textures ----------------------------------------------------------
+    // Draw textures ----------------------------------------------------------
+    /// Draw color texture after 3D stuff and before other 2D stuff (because depth is disabled for color texture drawing).
     glm::vec3 pos_bottom_left = { 0.0f, 0.0f, 0.0f };
     glm::vec3 pos_upper_left = { 0.0f, vp_fh, 0.0f };
     glm::vec3 pos_upper_right = { vp_fw, vp_fh, 0.0f };
     glm::vec3 pos_bottom_right = { vp_fw, 0.0f, 0.0f };
     this->utils.Push2DColorTexture(this->fbo.GetColourTextureID(), pos_bottom_left, pos_upper_left, pos_upper_right, pos_bottom_right);
-    this->utils.Push2DDepthTexture(this->fbo.GetColourTextureID(), pos_bottom_left, pos_upper_left, pos_upper_right, pos_bottom_right);
+    this->utils.Push2DDepthTexture(this->fbo.GetDepthTextureID(), pos_bottom_left, pos_upper_left, pos_upper_right, pos_bottom_right);
+    this->utils.DrawTextures(ortho, glm::vec2(vp_fw, vp_fh));
 
     // Push hotkey list ------------------------------------------------------
     // Draw help text 

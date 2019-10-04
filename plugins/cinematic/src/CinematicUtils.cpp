@@ -272,6 +272,12 @@ void RenderUtils::drawPrimitives(RenderUtils::Primitives primitive, glm::mat4& m
     if (primitive == Primitives::POINTS) {
         mode = GL_POINTS;
     }
+    if (primitive == Primitives::COLOR_TEXTURE) {
+        glDisable(GL_DEPTH_TEST);
+    }
+    if (primitive == Primitives::DEPTH_TEXTURE) {
+        glEnable(GL_DEPTH_TEST);
+    }
 
     glBindVertexArray(this->vertex_array);
     this->shaders[primitive].Enable();
@@ -589,7 +595,6 @@ void CinematicUtils::PushMenu(const std::string& left_label, const std::string& 
         glm::vec3(viewport_width, viewport_height - menu_height, 0.0f), glm::vec3(viewport_width, viewport_height, 0.0f), this->Color(CinematicUtils::Colors::MENU));
 
     // Push menu labels
-    float textPosZ = -0.1f;
     float vpWhalf = viewport_width / 2.0f;
     float new_font_size = this->font_size;
     float leftLabelWidth = this->font.LineWidth(this->font_size, left_label.c_str());
@@ -605,9 +610,9 @@ void CinematicUtils::PushMenu(const std::string& left_label, const std::string& 
     auto current_back_color = this->Color(CinematicUtils::Colors::BACKGROUND);
     this->SetBackgroundColor(this->Color(CinematicUtils::Colors::MENU));
     auto color = this->Color(CinematicUtils::Colors::FONT);
-    this->font.DrawString(glm::value_ptr(color), 0.0f, textPosY, textPosZ, new_font_size, false, left_label.c_str(), megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
-    this->font.DrawString(glm::value_ptr(color), (viewport_width - midleftLabelWidth) / 2.0f, textPosY, textPosZ, new_font_size, false, middle_label.c_str(), megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
-    this->font.DrawString(glm::value_ptr(color), (viewport_width - rightLabelWidth), textPosY, textPosZ, new_font_size, false, right_label.c_str(), megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
+    this->font.DrawString(glm::value_ptr(color), 0.0f, textPosY, new_font_size, false, left_label.c_str(), megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
+    this->font.DrawString(glm::value_ptr(color), (viewport_width - midleftLabelWidth) / 2.0f, textPosY, new_font_size, false, middle_label.c_str(), megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
+    this->font.DrawString(glm::value_ptr(color), (viewport_width - rightLabelWidth), textPosY, new_font_size, false, right_label.c_str(), megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
     this->SetBackgroundColor(current_back_color);
 }
 
