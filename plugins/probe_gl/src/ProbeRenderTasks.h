@@ -1,34 +1,35 @@
 /*
- * SimpleMeshViewerRenderTasks.h
+ * ProbeRenderTasks.h
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VISUS).
  * All rights reserved.
  */
 
-#ifndef MESH_VIEWER_RENDER_TASK_H_INCLUDED
-#define MESH_VIEWER_RENDER_TASK_H_INCLUDED
+#ifndef PROBE_RENDER_TASK_H_INCLUDED
+#define PROBE_RENDER_TASK_H_INCLUDED
 
 #include "mesh/AbstractGPURenderTaskDataSource.h"
 
 namespace megamol {
 namespace mesh {
 
-class MeshViewerRenderTasks : public AbstractGPURenderTaskDataSource
-{
+class ProbeRenderTasks : public AbstractGPURenderTaskDataSource {
 public:
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "MeshViewerRenderTasks"; }
+    static const char* ClassName(void) { return "ProbeRenderTasks"; }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "Simple mesh viewer: Creates a single render task for each available GPU mesh."; }
+    static const char* Description(void) {
+        return "...";
+    }
 
     /**
      * Answers whether this module is available on the current system.
@@ -37,16 +38,21 @@ public:
      */
     static bool IsAvailable(void) { return true; }
 
-    MeshViewerRenderTasks();
-    ~MeshViewerRenderTasks();
+    ProbeRenderTasks();
+    ~ProbeRenderTasks();
 
 protected:
-
     virtual bool getDataCallback(core::Call& caller);
+
+    virtual bool getMetaDataCallback(core::Call& caller);
+
+private:
+    core::CallerSlot m_probes_slot;
+    size_t m_probes_cached_hash;
 };
 
-}
-}
+} // namespace mesh
+} // namespace megamol
 
 
-#endif // !SIMPLE_MESH_VIEWER_RENDER_TASK_H_INCLUDED
+#endif // !PROBE_RENDER_TASK_H_INCLUDED
