@@ -21,14 +21,10 @@ using namespace vislib;
 TrackingShotRenderer::TrackingShotRenderer(void) : Renderer3DModule_2()
     , keyframeKeeperSlot("keyframeKeeper", "Connects to the Keyframe Keeper.")
     , stepsParam("splineSubdivision", "Amount of interpolation steps between keyframes.")
-    , toggleManipulateParam("toggleManipulators", "Toggle different manipulators for the selected keyframe.")
     , toggleHelpTextParam("helpText", "Show/hide help text for key assignments.")
-    , toggleManipOusideBboxParam("manipulatorsOutsideBBox", "Keep manipulators always outside of model bounding box.")
     , interpolSteps(20)
-    , toggleManipulator(0)
-    , manipOutsideModel(false)
     , showHelpText(false)
-    //, manipulator()
+    , manipulators()
     , manipulatorGrabbed(false)
     , utils()
     , fbo()
@@ -43,14 +39,12 @@ TrackingShotRenderer::TrackingShotRenderer(void) : Renderer3DModule_2()
     this->stepsParam.SetParameter(new param::IntParam((int)this->interpolSteps, 1));
     this->MakeSlotAvailable(&this->stepsParam);
 
-    this->toggleManipulateParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_Q, core::view::Modifier::CTRL));
-    this->MakeSlotAvailable(&this->toggleManipulateParam);
-
     this->toggleHelpTextParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_H, core::view::Modifier::CTRL));
     this->MakeSlotAvailable(&this->toggleHelpTextParam);
 
-    this->toggleManipOusideBboxParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_W, core::view::Modifier::CTRL));
-    this->MakeSlotAvailable(&this->toggleManipOusideBboxParam);
+    for (auto slot : this->manipulators.GetParams()) {
+        this->MakeSlotAvailable(&(*slot));
+    }
 
     // Load spline interpolation keyframes at startup
     this->stepsParam.ForceSetDirty();
@@ -103,7 +97,7 @@ bool TrackingShotRenderer::GetExtents(megamol::core::view::CallRender3D_2& call)
         ccc->SetBboxCenter(P2G(cr3d_out->AccessBoundingBoxes().BoundingBox().CalcCenter()));
 
         // Grow bounding box to manipulators and get information of bbox of model
-        //this->manipulator.SetExtents(bbox);
+        this->manipulators.UpdateExtents(bbox);
 
         vislib::math::Cuboid<float> cbox = cr3d_out->AccessBoundingBoxes().ClipBox();
 
@@ -247,17 +241,10 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D_2& call) {
         if (!(*ccc)(CallKeyframeKeeper::CallForGetInterpolCamPositions)) return false;
         this->stepsParam.ResetDirty();
     }
-    if (this->toggleManipulateParam.IsDirty()) {
-        this->toggleManipulator = (this->toggleManipulator + 1) % 2; // There are currently two different manipulator groups ...
-        this->toggleManipulateParam.ResetDirty();
-    }
+
     if (this->toggleHelpTextParam.IsDirty()) {
         this->showHelpText = !this->showHelpText;
         this->toggleHelpTextParam.ResetDirty();
-    }
-    if (this->toggleManipOusideBboxParam.IsDirty()) {
-        this->manipOutsideModel = !this->manipOutsideModel;
-        this->toggleManipOusideBboxParam.ResetDirty();
     }
 
     // Init rendering ---------------------------------------------------------

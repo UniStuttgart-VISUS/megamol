@@ -20,7 +20,7 @@ Keyframe::Keyframe()
 }
 
 
-Keyframe::Keyframe(float anim_time, float sim_time, cam_state_type cam_state)
+Keyframe::Keyframe(float anim_time, float sim_time, camera_state_type cam_state)
     : anim_time(anim_time)
     , sim_time(sim_time)
     , camera_state(cam_state) {
@@ -148,23 +148,4 @@ bool Keyframe::Deserialise(const std::string& json_string) {
     }
 
     return true;
-}
-
-
-bool Keyframe::camStatesEqual(cam_state_type ls, cam_state_type rs) {
-
-    return ((ls.centre_offset               == rs.centre_offset) &&
-            (ls.convergence_plane           == rs.convergence_plane) &&
-            (ls.eye                         == rs.eye) &&
-            (ls.far_clipping_plane          == rs.far_clipping_plane) &&
-            (ls.film_gate                   == rs.film_gate) &&
-            (ls.gate_scaling                == rs.gate_scaling) &&
-            (ls.half_aperture_angle_radians == rs.half_aperture_angle_radians) &&
-            (ls.half_disparity              == rs.half_disparity) &&
-            (ls.image_tile                  == ls.image_tile) &&
-            (ls.near_clipping_plane         == rs.near_clipping_plane) &&
-            (ls.orientation                 == rs.orientation) &&
-            (ls.position                    == rs.position) &&
-            (ls.projection_type             == rs.projection_type) &&
-            (ls.resolution_gate             == rs.resolution_gate));
 }

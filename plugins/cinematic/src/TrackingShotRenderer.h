@@ -38,7 +38,7 @@
 
 #include "CallKeyframeKeeper.h"
 #include "ReplacementRenderer.h"
-//#include "KeyframeManipulator.h"
+#include "KeyframeManipulators.h"
 #include "CinematicUtils.h"
 
 
@@ -150,18 +150,15 @@ namespace cinematic {
         * variables
         **********************************************************************/
 
-        unsigned int                            interpolSteps;
-        unsigned int                            toggleManipulator;
-        bool                                    manipOutsideModel;
-        bool                                    showHelpText;
-        //KeyframeManipulator                     manipulator;
-        bool                                    manipulatorGrabbed;
-        bool                                    isSelecting;
+        KeyframeManipulators                    manipulators;
         CinematicUtils                          utils;
         vislib::graphics::gl::FramebufferObject fbo;
         float                                   mouseX;
         float                                   mouseY;
         GLuint                                  texture;
+        bool                                    manipulatorGrabbed;
+        unsigned int                            interpolSteps;
+        bool                                    showHelpText;
 
         /**********************************************************************
         * callbacks
@@ -174,9 +171,7 @@ namespace cinematic {
         **********************************************************************/
 			
         core::param::ParamSlot stepsParam; // Amount of interpolation steps between keyframes
-        core::param::ParamSlot toggleManipulateParam;
         core::param::ParamSlot toggleHelpTextParam;
-        core::param::ParamSlot toggleManipOusideBboxParam;
 
 	};
 

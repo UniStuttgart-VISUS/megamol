@@ -551,7 +551,7 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
     }
 
     // PROPAGATE UPDATED DATA TO CALL -----------------------------------------
-    ccc->SetCameraState(std::make_shared<Keyframe::cam_state_type>(this->cameraState));
+    ccc->SetCameraState(std::make_shared<camera_state_type>(this->cameraState));
     ccc->SetKeyframes(std::make_shared<std::vector<Keyframe>>(this->keyframes));
     ccc->SetBoundingBox(std::make_shared<vislib::math::Cuboid<float>>(this->boundingBox));
     ccc->SetSelectedKeyframe(this->selectedKeyframe);
@@ -1181,11 +1181,11 @@ glm::quat KeyframeKeeper::quaternion_interpolation(float u, glm::quat q0, glm::q
 
     // If the inputs are too close for comfort, linearly interpolate
     // and normalize the result.
-    const float DOT_THRESHOLD = 0.9995f;
-    if (dot > DOT_THRESHOLD) {
-        glm::quat q = ((1.0f - u) * q0_) + (u * q1_);
-        return glm::normalize(q);
-    }
+    //const float DOT_THRESHOLD = 0.9995f;
+    //if (dot > DOT_THRESHOLD) {
+    //    glm::quat q = ((1.0f - u) * q0_) + (u * q1_);
+    //    return glm::normalize(q);
+    //}
 
     float theta = std::acos(dot);
     float sin_theta = sin(theta);

@@ -92,7 +92,7 @@ namespace cinematic {
         **********************************************************************/
 
         // Variables shared/updated with call ---------------------------------
-        Keyframe::cam_state_type     cameraState;
+        camera_state_type            cameraState;
 		std::vector<glm::vec3 >      interpolCamPos;
 		std::vector<Keyframe>        keyframes;
 		vislib::math::Cuboid<float>  boundingBox;

@@ -370,7 +370,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     // Propagate camera parameters to keyframe keeper (sky box camera params are propageted too!)
     cam_type::minimal_state_type camera_state;
     this->cam.get_minimal_state(camera_state);
-    ccc->SetCameraState(std::make_shared<Keyframe::cam_state_type>(camera_state));
+    ccc->SetCameraState(std::make_shared<camera_state_type>(camera_state));
     if (!(*ccc)(CallKeyframeKeeper::CallForSetCameraForKeyframe)) return;
 
     // Render to texture ------------------------------------------------------------

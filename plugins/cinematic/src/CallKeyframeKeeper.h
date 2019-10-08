@@ -157,10 +157,10 @@ namespace cinematic {
         }
 
         // CAMERA STATE
-        inline void SetCameraState(std::shared_ptr<Keyframe::cam_state_type> cs) {
+        inline void SetCameraState(std::shared_ptr<camera_state_type> cs) {
             this->cameraState = cs;
         }
-        inline std::shared_ptr<Keyframe::cam_state_type> GetCameraState() {
+        inline std::shared_ptr<camera_state_type> GetCameraState() {
             return this->cameraState;
         }
 
@@ -220,7 +220,7 @@ namespace cinematic {
         //std::shared_ptr<InData> in_data;
 
         // Out Data (set by called KeyframeKeeper) ---------------------------
-		std::shared_ptr<Keyframe::cam_state_type>      cameraState;
+		std::shared_ptr<camera_state_type>             cameraState;
 		std::shared_ptr<std::vector<glm::vec3>>        interpolCamPos;
 		std::shared_ptr<std::vector<Keyframe>>	       keyframes;
         std::shared_ptr<vislib::math::Cuboid<float>>   boundingbox;
