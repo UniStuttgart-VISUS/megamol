@@ -203,7 +203,7 @@ bool KeyframeKeeper::CallForSetSelectedKeyframe(core::Call& c) {
     auto ccc = dynamic_cast<CallKeyframeKeeper*>(&c);
     if (ccc == nullptr) return false;
 
-    bool appliedChanges = false;
+    bool appliedChanges = false; 
     float selAnimTime = ccc->GetSelectedKeyframe().GetAnimTime();
     for (unsigned int i = 0; i < this->keyframes.size(); i++) {
         if (this->keyframes[i].GetAnimTime() == selAnimTime) {
@@ -442,6 +442,8 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
             auto cam_state = this->selectedKeyframe.GetCameraState();
             /// TODO calculate look at
 
+
+
             this->selectedKeyframe.SetCameraState(cam_state);
             this->replaceKeyframe(tmpKf, this->selectedKeyframe, true);
         }
@@ -460,6 +462,8 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
             glm::vec3 lookatv = V2G(this->editCurrentLookAtParam.Param<param::Vector3fParam>()->Value());
             auto cam_state = this->selectedKeyframe.GetCameraState();
             /// TODO calculate look at
+
+
 
             this->selectedKeyframe.SetCameraState(cam_state);
             this->replaceKeyframe(tmpKf, this->selectedKeyframe, true);
@@ -480,6 +484,8 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
             auto cam_state = this->selectedKeyframe.GetCameraState();
             /// TODO calculate up
 
+
+
             this->selectedKeyframe.SetCameraState(cam_state);
             this->replaceKeyframe(tmpKf, this->selectedKeyframe, true);
         }
@@ -497,7 +503,7 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
             Keyframe tmpKf = this->selectedKeyframe;
             float aperture = this->editCurrentApertureParam.Param<param::FloatParam>()->Value();
             auto cam_state = this->selectedKeyframe.GetCameraState();
-            cam_state.half_aperture_angle_radians = aperture * M_PI / 180.0f; // degree to radians
+            cam_state.half_aperture_angle_radians = aperture * M_PI / (180.0f * 2.0f); // degree to radians
             this->selectedKeyframe.SetCameraState(cam_state);
             this->replaceKeyframe(tmpKf, this->selectedKeyframe, true);
         }

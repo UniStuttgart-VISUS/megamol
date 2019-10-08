@@ -21,10 +21,8 @@ namespace megamol {
 namespace cinematic {
 
 
-    /** Camera State Type */
     typedef megamol::core::thecam::camera<cam_maths_type>::minimal_state_type camera_state_type;
 
-    /** Returns true if both states are euqal, false otherwise. */
     static bool operator ==(const camera_state_type &ls, const camera_state_type &rs) {
         return ((ls.centre_offset == rs.centre_offset) &&
             (ls.convergence_plane == rs.convergence_plane) &&

@@ -41,6 +41,7 @@ namespace megamol {
 namespace cinematic {
 
 
+    // Utility conversion functions
     /*
     * Convert glm::vec3 to vislib::math::Vector<float, 3>.
     */

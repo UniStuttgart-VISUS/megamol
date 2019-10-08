@@ -240,8 +240,10 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
             loadNewCamParams = true;
         }
     }
+    Keyframe skf = ccc->GetSelectedKeyframe();
+
     // Load current simulation time to parameter
-    float simTime = ccc->GetSelectedKeyframe().GetSimTime();
+    float simTime = skf.GetSimTime();
     param::ParamSlot* animTimeParam = static_cast<param::ParamSlot*>(this->timeCtrl.GetSlot(2));
     animTimeParam->Param<param::FloatParam>()->SetValue(simTime * static_cast<float>(cr3d->TimeFramesCount()), true);
 
@@ -296,7 +298,6 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     }
 
     // Camera settings --------------------------------------------------------
-    // Set fbo viewport of camera
     auto res = cam_type::screen_size_type(glm::ivec2(fboWidth, fboHeight));
     this->cam.resolution_gate(res);
     auto tile = cam_type::screen_rectangle_type(std::array<int, 4>{0, 0, fboWidth, fboHeight});
@@ -305,12 +306,18 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     /// But only if selected keyframe differs to last locally stored and shown keyframe.
     /// Load new camera setting from selected keyframe when skybox side changes or rendering
     /// of animation loaded new slected keyframe.
-    Keyframe skf = ccc->GetSelectedKeyframe();
+
     if (loadNewCamParams || (this->shownKeyframe != skf)) {
         this->shownKeyframe = skf;
         // Apply selected keyframe parameters only, if at least one valid keyframe exists.
         if (!ccc->GetKeyframes()->empty()) {
-            this->cam = skf.GetCameraState();
+            // Apply only a subset of the camera state
+            auto pos = skf.GetCameraState().position;
+            this->cam.position(glm::vec4(pos[0], pos[1], pos[2], 1.0f));
+            auto ori = skf.GetCameraState().orientation;
+            this->cam.orientation(glm::quat(ori[3], ori[0], ori[1], ori[2]));
+            auto aper = skf.GetCameraState().half_aperture_angle_radians;
+            this->cam.aperture_angle(aper*2.0f*180.0f/M_PI);
         } else {
             this->ResetView();
         }

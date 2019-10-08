@@ -18,9 +18,9 @@ using namespace megamol::cinematic;
 
 
 KeyframeManipulators::KeyframeManipulators(void)
-    : toggleVisibleGroupParam("toggleVisibleGroup", "Toggle visibility of different manipulator groups.")
-    , visibleGroupParam("visibleGroup", "Select visible manipulator group.")
-    , toggleOusideBboxParam("showOutsideBBox", "Show manipulators always outside of model bounding box.")
+    : toggleVisibleGroupParam("manipulators::toggleVisibleGroup", "Toggle visibility of different manipulator groups.")
+    , visibleGroupParam("manipulators::visibleGroup", "Select visible manipulator group.")
+    , toggleOusideBboxParam("manipulators::showOutsideBBox", "Show manipulators always outside of model bounding box.")
     , paramSlots()
     , visibleGroup(VisibleGroup::SELECTED_KEYFRAME_AND_CTRLPOINT_POSITION)
     , toggleOusideBbox(false)
@@ -152,16 +152,16 @@ bool KeyframeManipulators::UpdateRendering(const std::shared_ptr<std::vector<Key
         }
     }
 
-
     // Update selected keyframe manipulators
     count = this->manipulators.size();
     for (size_t i = 0; i < count; ++i) {
 
 
 
+
+
+
     }
-
-
 
     return true;
 }
