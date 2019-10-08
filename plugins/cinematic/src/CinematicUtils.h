@@ -47,21 +47,18 @@ namespace cinematic {
     static inline vislib::math::Vector<float, 3> G2V(glm::vec3 v) {
         return vislib::math::Vector<float, 3>(v.x, v.y, v.z);
     }
-
     /*
     * Convert vislib::math::Vector<float, 3> to glm::vec3.
     */
     static inline glm::vec3 V2G(vislib::math::Vector<float, 3> v) {
         return glm::vec3(v.X(), v.Y(), v.Z());
     }
-
     /*
     * Convert glm::vec3 to vislib::math::Point<float, 3>.
     */
     static inline vislib::math::Point<float, 3> G2P(glm::vec3 v) {
         return vislib::math::Point<float, 3>(v.x, v.y, v.z);
     }
-
     /*
     * Convert vislib::math::Point<float, 3> to glm::vec3.
     */
@@ -80,7 +77,6 @@ namespace cinematic {
         bool InitPrimitiveRendering(megamol::core::utility::ShaderSourceFactory& factory);
 
         bool LoadTextureFromFile(std::wstring filename, GLuint& out_texture_id);
-
 
         void PushPointPrimitive(const glm::vec3& pos_center, float size, const glm::vec3& cam_pos, const glm::vec4& color);
 

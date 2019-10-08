@@ -181,9 +181,9 @@ namespace cinematic {
 
         bool deleteKeyframe(Keyframe kf, bool undo);
 
-        void loadKeyframes(void);
+        bool loadKeyframes(void);
 
-        void saveKeyframes(void);
+        bool saveKeyframes(void);
 
         void refreshInterpolCamPos(unsigned int s);
 
@@ -248,8 +248,8 @@ namespace cinematic {
 		core::param::ParamSlot editCurrentAnimTimeParam;
         core::param::ParamSlot editCurrentSimTimeParam;
 		core::param::ParamSlot editCurrentPosParam;
-		core::param::ParamSlot editCurrentLookAtParam;
         core::param::ParamSlot resetLookAtParam;
+        core::param::ParamSlot editCurrentLookAtParam;
 		core::param::ParamSlot editCurrentUpParam;
         core::param::ParamSlot editCurrentApertureParam;
         core::param::ParamSlot fileNameParam;

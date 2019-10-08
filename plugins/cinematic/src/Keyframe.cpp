@@ -33,117 +33,168 @@ Keyframe::~Keyframe() {
 }
 
 
-bool Keyframe::Serialise(std::string& json_string) {
+bool Keyframe::Serialise(nlohmann::json& inout_json, size_t index) {
 
-    json_string = "";
-    try {
-        nlohmann::json json;
-
-        /// TODO
-
-
-
-
-
-
-        json_string = json.dump(2); // Dump with indent of 2 spaces and new lines.
-    }
-    catch (nlohmann::json::type_error& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    }
-    catch (nlohmann::json::exception& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    }
-    catch (nlohmann::json::parse_error& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    }
-    catch (nlohmann::json::invalid_iterator& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    }
-    catch (nlohmann::json::out_of_range& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    }
-    catch (nlohmann::json::other_error& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    }
-    catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: Unknown Error (%s:%d)", __FUNCTION__,  __FILE__, __LINE__);
-        return false;
-    }
+    inout_json["keyframes"][index]["animation_time"]                              = this->anim_time;
+    inout_json["keyframes"][index]["simulation_time"]                             = this->sim_time;
+    inout_json["keyframes"][index]["camera_state"]["centre_offset"]               = this->camera_state.centre_offset;
+    inout_json["keyframes"][index]["camera_state"]["convergence_plane"]           = this->camera_state.convergence_plane;
+    inout_json["keyframes"][index]["camera_state"]["eye"]                         = static_cast<int>(this->camera_state.eye);
+    inout_json["keyframes"][index]["camera_state"]["far_clipping_plane"]          = this->camera_state.far_clipping_plane;
+    inout_json["keyframes"][index]["camera_state"]["film_gate"]                   = this->camera_state.film_gate;
+    inout_json["keyframes"][index]["camera_state"]["gate_scaling"]                = static_cast<int>(this->camera_state.gate_scaling);
+    inout_json["keyframes"][index]["camera_state"]["half_aperture_angle_radians"] = this->camera_state.half_aperture_angle_radians;
+    inout_json["keyframes"][index]["camera_state"]["half_disparity"]              = this->camera_state.half_disparity;
+    inout_json["keyframes"][index]["camera_state"]["image_tile"]                  = this->camera_state.image_tile;
+    inout_json["keyframes"][index]["camera_state"]["near_clipping_plane"]         = this->camera_state.near_clipping_plane;
+    inout_json["keyframes"][index]["camera_state"]["orientation"]                 = this->camera_state.orientation;
+    inout_json["keyframes"][index]["camera_state"]["position"]                    = this->camera_state.position;
+    inout_json["keyframes"][index]["camera_state"]["projection_type"]             = static_cast<int>(this->camera_state.projection_type);
+    inout_json["keyframes"][index]["camera_state"]["resolution_gate"]             = this->camera_state.resolution_gate;
 
     return true;
 }
 
 
-bool Keyframe::Deserialise(const std::string& json_string) {
+bool Keyframe::Deserialise(const nlohmann::json& in_json) {
 
-    try {
-        bool valid = true;
-        nlohmann::json json;
-        json = nlohmann::json::parse(json_string);
-
-        if (!json.is_object()) {
-            vislib::sys::Log::DefaultLog.WriteError("[Keyframe::Deserialise] String is no valid JSON object.");
-            return false;
-        }
-
-        /// TODO
-
-
-
-
-
-
-        
-        if (!valid) {
-            vislib::sys::Log::DefaultLog.WriteWarn("[Keyframe::Deserialise] Could not deserialise keyframe.");
-            return false;
-        }
+    if (in_json.at("animation_time").is_number()) {
+        in_json.at("animation_time").get_to(this->anim_time);
     }
-    catch (nlohmann::json::type_error& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+    else {
+        vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'animation_time': %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
         return false;
     }
-    catch (nlohmann::json::exception& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+
+    if (in_json.at("simulation_time").is_number()) {
+        in_json.at("simulation_time").get_to(this->sim_time);
+    }
+    else {
+        vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'simulation_time': %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
         return false;
     }
-    catch (nlohmann::json::parse_error& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+
+    if (in_json.at("camera_state").at("centre_offset").is_array()) {
+        /// Should check if exactly 2 element are contained and if the elements are float numbers.
+        in_json.at("camera_state").at("centre_offset").get_to(this->camera_state.centre_offset);
+    }
+    else {
+        vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'camera_state' - 'centre_offset': %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
         return false;
     }
-    catch (nlohmann::json::invalid_iterator& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+
+    if (in_json.at("camera_state").at("convergence_plane").is_number()) {
+        in_json.at("camera_state").at("convergence_plane").get_to(this->camera_state.convergence_plane);
+    }
+    else {
+        vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'camera_state' - 'convergence_plane': %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
         return false;
     }
-    catch (nlohmann::json::out_of_range& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+
+    if (in_json.at("camera_state").at("eye").is_number()) {
+        int eye;
+        in_json.at("camera_state").at("eye").get_to(eye);
+        this->camera_state.eye = static_cast<megamol::core::thecam::Eye>(eye);
+    }
+    else {
+        vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'camera_state' - 'eye': %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
         return false;
     }
-    catch (nlohmann::json::other_error& e) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+
+    if (in_json.at("camera_state").at("far_clipping_plane").is_number()) {
+        in_json.at("camera_state").at("far_clipping_plane").get_to(this->camera_state.far_clipping_plane);
+    }
+    else {
+        vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'camera_state' - 'far_clipping_plane': %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
         return false;
     }
-    catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: Unknown Error (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+
+    if (in_json.at("camera_state").at("film_gate").is_array()) {
+        /// Should check if exactly 2 element are contained and if the elements are float numbers.
+        in_json.at("camera_state").at("film_gate").get_to(this->camera_state.film_gate);
+    }
+    else {
+        vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'camera_state' - 'film_gate': %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+        return false;
+    }
+
+    if (in_json.at("camera_state").at("gate_scaling").is_number()) {
+        int gate_scaling;
+        in_json.at("camera_state").at("gate_scaling").get_to(gate_scaling);
+        this->camera_state.gate_scaling = static_cast<megamol::core::thecam::Gate_scaling>(gate_scaling);
+    }
+    else {
+        vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'camera_state' - 'gate_scaling': %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+        return false;
+    }
+
+    if (in_json.at("camera_state").at("half_aperture_angle_radians").is_number()) {
+        in_json.at("camera_state").at("half_aperture_angle_radians").get_to(this->camera_state.half_aperture_angle_radians);
+    }
+    else {
+        vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'camera_state' - 'half_aperture_angle_radians': %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+        return false;
+    }
+
+    if (in_json.at("camera_state").at("half_disparity").is_number()) {
+        in_json.at("camera_state").at("half_disparity").get_to(this->camera_state.half_disparity);
+    }
+    else {
+        vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'camera_state' - 'half_disparity': %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+        return false;
+    }
+
+    if (in_json.at("camera_state").at("image_tile").is_array()) {
+        /// Should check if exactly 4 element are contained and if the elements are float numbers.
+        in_json.at("camera_state").at("image_tile").get_to(this->camera_state.image_tile);
+    }
+    else {
+        vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'camera_state' - 'image_tile': %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+        return false;
+    }
+
+    if (in_json.at("camera_state").at("near_clipping_plane").is_number()) {
+        in_json.at("camera_state").at("near_clipping_plane").get_to(this->camera_state.near_clipping_plane);
+    }
+    else {
+        vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'camera_state' - 'near_clipping_plane': %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+        return false;
+    }
+
+    if (in_json.at("camera_state").at("orientation").is_array()) {
+        /// Should check if exactly 4 element are contained and if the elements are float numbers.
+        in_json.at("camera_state").at("orientation").get_to(this->camera_state.orientation);
+    }
+    else {
+        vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'camera_state' - 'orientation': %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+        return false;
+    }
+
+    if (in_json.at("camera_state").at("position").is_array()) {
+        /// Should check if exactly 4 element are contained and if the elements are float numbers.
+        in_json.at("camera_state").at("position").get_to(this->camera_state.position);
+    }
+    else {
+        vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'camera_state' - 'position': %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+        return false;
+    }
+
+    if (in_json.at("camera_state").at("projection_type").is_number()) {
+        int projection_type;
+        in_json.at("camera_state").at("projection_type").get_to(projection_type);
+        this->camera_state.projection_type = static_cast<megamol::core::thecam::Projection_type>(projection_type);
+    }
+    else {
+        vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'camera_state' - 'projection_type': %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+        return false;
+    }
+
+    if (in_json.at("camera_state").at("resolution_gate").is_array()) {
+        /// Should check if exactly 2 element are contained and if the elements are float numbers.
+        in_json.at("camera_state").at("resolution_gate").get_to(this->camera_state.resolution_gate);
+    }
+    else {
+        vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'camera_state' - 'resolution_gate': %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
         return false;
     }
 

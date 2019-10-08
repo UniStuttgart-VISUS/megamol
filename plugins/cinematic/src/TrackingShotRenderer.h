@@ -137,12 +137,12 @@ namespace cinematic {
         /** 
         * The mouse button pressed/released callback. 
         */
-        virtual bool OnMouseButton(megamol::core::view::MouseButton button, megamol::core::view::MouseButtonAction action, megamol::core::view::Modifiers mods) override;
+        virtual bool OnMouseButton(megamol::core::view::MouseButton button, megamol::core::view::MouseButtonAction action, megamol::core::view::Modifiers mods) final override;
 
         /** 
         * The mouse movement callback. 
         */
-        virtual bool OnMouseMove(double x, double y) override;
+        virtual bool OnMouseMove(double x, double y) final override;
 
 	private:
 

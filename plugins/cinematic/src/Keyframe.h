@@ -25,7 +25,7 @@ namespace cinematic {
     typedef megamol::core::thecam::camera<cam_maths_type>::minimal_state_type camera_state_type;
 
     /** Returns true if both states are euqal, false otherwise. */
-    bool operator ==(const camera_state_type &ls, const camera_state_type &rs) {
+    static bool operator ==(const camera_state_type &ls, const camera_state_type &rs) {
         return ((ls.centre_offset == rs.centre_offset) &&
             (ls.convergence_plane == rs.convergence_plane) &&
             (ls.eye == rs.eye) &&
@@ -42,7 +42,7 @@ namespace cinematic {
             (ls.resolution_gate == rs.resolution_gate));
     }
 
-    bool operator !=(const camera_state_type &ls, const camera_state_type &rs) {
+    static bool operator !=(const camera_state_type &ls, const camera_state_type &rs) {
         return !(ls == rs);
     }
 
@@ -52,8 +52,6 @@ namespace cinematic {
     */
 	class Keyframe{
 	public:
-
-
 
 		/** CTOR */
         Keyframe();
@@ -73,15 +71,15 @@ namespace cinematic {
 
         // GET ----------------------------------------------------------------
  
-        inline float GetAnimTime() {
+        inline float GetAnimTime() const {
             return this->anim_time;
         }
 
-        inline float GetSimTime() {
+        inline float GetSimTime() const {
             return (this->sim_time == 1.0f)?(1.0f-0.0000001f):(this->sim_time);
         }
 
-        inline camera_state_type GetCameraState(){
+        inline camera_state_type GetCameraState() const {
             return this->camera_state;
 		}
 
@@ -101,9 +99,9 @@ namespace cinematic {
     
         // SERIALISATION ------------------------------------------------------
 
-        bool Serialise(std::string& json_string);
+        bool Serialise(nlohmann::json& inout_json, size_t index);
 
-        bool Deserialise(const std::string& json_string);
+        bool Deserialise(const nlohmann::json& in_json);
 
 	private:
 

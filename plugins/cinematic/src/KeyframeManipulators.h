@@ -29,37 +29,6 @@ namespace cinematic {
 
 
     /*
-     * Manipulator
-     */
-    class Manipulator {
-    public:
-        enum Rigging {
-            X_DIRECTION,
-            Y_DIRECTION,
-            Z_DIRECTION,
-            ROTATION
-        };
-
-        enum Group {
-            SELECTION_KEYFRAME_POSITIONS,
-            MANIPULATOR_CTRLPOINTS_POSITION,
-            MANIPULATOR_SELECTED_KEYFRAME_POSITION,
-            MANIPULATOR_SELECTED_KEYFRAME_POSITION_LOOKAT,
-            MANIPULATOR_SELECTED_KEYFRAME_LOOKAT_POSITION,
-            MANIPULATOR_SELECTED_KEYFRAMEF_UP_ROTATION,
-        };
-        
-        bool show;
-        Group group;
-        Rigging rig; 
-        glm::vec3 position;
-        int keyframe_index;
-
-        const float point_radius = 5.0f;
-    };
-
-
-    /*
      * Keyframe Manipulators.
      */
     class KeyframeManipulators {
@@ -72,42 +41,12 @@ namespace cinematic {
         /** DTOR */
         ~KeyframeManipulators(void);
 
-        enum VisibleGroup : int {
-            KEYFRAME_AND_CTRPOINT = 0,
-            LOOKAT_AND_UP         = 1,
-            GROUP_COUNT           = 2
-        };
-
-        /** 
-        * Update rendering data.
-        *
-        * @param utils              ...
-        * @param keyframes          ...
-        * @param selected_keyframe  ...
-        * @param dim_vp             ...
-        * @param mvp                ...
-        * @param snapshot           ...
-        * @param first_ctrl_pos     ...
-        * @param last_ctrl_pos      ...
-        *
-        * @return True if data was updated successfully.
-        *
-        */
-        bool UpdateRendering(std::shared_ptr<CinematicUtils> utils, std::vector<Keyframe> const& keyframes, Keyframe selected_keyframe, glm::vec2 viewport_dim, glm::mat4 mvp,
-            camera_state_type snapshot, glm::vec3 first_ctrl_pos, glm::vec3 last_ctrl_pos);
-
-        /** 
-        * Update extents.
-        *
-        * Grows bounding box to manipulators.
-        * If manipulator lies inside of bounding box:
-        * Get bounding box of model to determine minimum length of manipulator axes.
-        * 
-        * @param inout_bbox   ...
-        */
         void UpdateExtents(vislib::math::Cuboid<float>& inout_bbox);
 
-        bool Draw(void);
+        bool UpdateRendering(const std::shared_ptr<std::vector<Keyframe>> keyframes, Keyframe selected_keyframe, glm::vec3 first_ctrl_pos, glm::vec3 last_ctrl_pos,
+            const camera_state_type& snapshot, glm::vec2 viewport_dim, glm::mat4 mvp);
+
+        bool PushRendering(CinematicUtils &utils);
 
         int GetSelectedKeyframePositionIndex(float mouse_x, float mouse_y);
 
@@ -116,60 +55,93 @@ namespace cinematic {
         bool ProcessHitManipulator(float mouse_x, float mouse_y);
 
         inline Keyframe GetManipulatedSelectedKeyframe(void) const  {
-            return this->current_selected_keyframe;
+            return this->state.selected_keyframe;
         }
 
         inline glm::vec3 GetFirstControlPointPosition(void) const {
-            return this->current_first_ctrl_point;
+            return this->state.first_ctrl_point;
         }
 
         inline glm::vec3 GetLastControlPointPosition(void) const {
-            return this->current_last_ctrl_point;
+            return this->state.last_ctrl_point;
         }
 
-        /**
-        * GetParams
-        *
-        * @return List with pointers to the parameter slots.
-        */
-        inline std::vector<std::shared_ptr<megamol::core::param::ParamSlot>>& GetParams(void) {
+        inline std::vector<megamol::core::param::ParamSlot*>& GetParams(void) {
             return this->paramSlots;
         }
 
     private:
 
         /**********************************************************************
+        * types and classes
+        **********************************************************************/
+
+        enum VisibleGroup : int {
+            SELECTED_KEYFRAME_AND_CTRLPOINT_POSITION = 0,
+            SELECTED_KEYFRAME_LOOKAT_AND_UP_VECTOR   = 1,
+            VISIBLEGROUP_COUNT                       = 2
+        };
+
+        class Manipulator {
+        public:
+            enum Rigging {
+                NONE,
+                X_DIRECTION,
+                Y_DIRECTION,
+                Z_DIRECTION,
+                VECTOR_DIRECTION,
+                ROTATION
+            };
+
+            enum Variety {
+                SELECTOR_KEYFRAME_POSITION,
+                MANIPULATOR_FIRST_CTRLPOINT_POSITION,
+                MANIPULATOR_LAST_CTRLPOINT_POSITION,
+                MANIPULATOR_SELECTED_KEYFRAME_POSITION,
+                MANIPULATOR_SELECTED_KEYFRAME_POSITION_USING_LOOKAT,
+                MANIPULATOR_SELECTED_KEYFRAME_LOOKAT_VECTOR,
+                MANIPULATOR_SELECTED_KEYFRAME_UP_VECTOR,
+            };
+
+            bool show;
+            Variety variety;
+            Rigging rigging;
+            glm::vec3 position;
+            glm::vec3 rotation_axis;
+        };
+
+        struct CurrentState {
+            Keyframe selected_keyframe;
+            glm::vec2 viewport;
+            glm::mat4 mvp;
+            glm::vec3 first_ctrl_point;
+            glm::vec3 last_ctrl_point;
+            camera_state_type cam_snapshot;
+            vislib::math::Cuboid<float> bbox;
+            std::shared_ptr<Manipulator> hit;
+            glm::vec2 mouse;
+            int selected_index;
+        };
+
+        /**********************************************************************
         * variables
         **********************************************************************/
 
-        std::vector<std::shared_ptr<megamol::core::param::ParamSlot>> paramSlots;
         core::param::ParamSlot visibleGroupParam;
-        core::param::ParamSlot togglevisibleGroupParam;
+        core::param::ParamSlot toggleVisibleGroupParam;
         core::param::ParamSlot toggleOusideBboxParam;
+
+        std::vector<megamol::core::param::ParamSlot*> paramSlots;
         VisibleGroup visibleGroup;
         bool toggleOusideBbox;
 
         std::vector<Manipulator> manipulators;
-
-        // Current state variables
-        std::shared_ptr<CinematicUtils> current_utils;
-        Keyframe current_selected_keyframe;
-        glm::vec2 current_viewport;
-        glm::mat4 current_mvp;
-        glm::vec3 current_first_ctrl_point;
-        glm::vec3 current_last_ctrl_point;
-        camera_state_type current_cam_snapshot;
-
-        vislib::math::Cuboid<float> current_bbox;
-
-        glm::vec2 current_mouse;
-        std::shared_ptr<std::vector<Manipulator>> current_hit;
+        std::vector<Manipulator> selectors;
+        CurrentState state;
 
         /**********************************************************************
         * functions
         **********************************************************************/
-
-        bool updateManipulators(void);
 
         glm::vec2 world2ScreenSpace(glm::vec3 vec);
 
