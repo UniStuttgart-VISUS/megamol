@@ -311,7 +311,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
         this->shownKeyframe = skf;
         // Apply selected keyframe parameters only, if at least one valid keyframe exists.
         if (!ccc->GetKeyframes()->empty()) {
-            // Apply only a subset of the camera state
+            // ! Using only a subset of the keyframe camera state !
             auto pos = skf.GetCameraState().position;
             this->cam.position(glm::vec4(pos[0], pos[1], pos[2], 1.0f));
             auto ori = skf.GetCameraState().orientation;
@@ -323,6 +323,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
         }
         // Apply showing skybox side ONLY if new camera parameters are set
         if (this->sbSide != CinematicView::SkyboxSides::SKYBOX_NONE) {
+        /// TODO
         //    // Get camera parameters
         //    vislib::SmartPtr<vislib::graphics::CameraParameters> cp = this->cam.Parameters();
         //    vislib::math::Point<float, 3> camPos = cp->Position();
@@ -455,7 +456,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     glClearColor(bc[0], bc[1], bc[2], 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // Push texture -----------------------------------------------------------
+    // Push fbo texture -------------------------------------------------------
     float right = (vp_fw + static_cast<float>(texWidth)) / 2.0f;
     float left = (vp_fw - static_cast<float>(texWidth)) / 2.0f;
     float bottom = (vp_fh_reduced + static_cast<float>(texHeight)) / 2.0f;

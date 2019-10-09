@@ -140,7 +140,7 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module()
     this->editCurrentApertureParam.SetParameter(new param::FloatParam(60.0f, 0.0f, 180.0f));
     this->MakeSlotAvailable(&this->editCurrentApertureParam);
 
-    this->fileNameParam.SetParameter(new param::FilePathParam(this->filename));
+    this->fileNameParam.SetParameter(new param::FilePathParam(vislib::StringA(this->filename.c_str())));
     this->MakeSlotAvailable(&this->fileNameParam);
 
     this->saveKeyframesParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_S, core::view::Modifier::CTRL));
@@ -254,7 +254,7 @@ bool KeyframeKeeper::CallForSetDragKeyframe(core::Call& c) {
     auto ccc = dynamic_cast<CallKeyframeKeeper*>(&c);
     if (ccc == nullptr) return false;
 
-    /// (Checking if selected keyframe exists in keyframe array is done by caller)
+    // Checking if selected keyframe exists in keyframe array is done by caller.
     Keyframe skf = ccc->GetSelectedKeyframe();
     this->selectedKeyframe = this->interpolateKeyframe(skf.GetAnimTime());
     this->updateEditParameters(this->selectedKeyframe);
@@ -440,7 +440,7 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
             Keyframe tmpKf = this->selectedKeyframe;
             glm::vec3 lookatv = this->modelBboxCenter;
             auto cam_state = this->selectedKeyframe.GetCameraState();
-            /// TODO calculate look at
+            /// TODO reset look at
 
 
 
@@ -515,7 +515,7 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
     if (this->fileNameParam.IsDirty()) {
         this->fileNameParam.ResetDirty();
 
-        this->filename = vislib::StringA(this->fileNameParam.Param<param::FilePathParam>()->Value().PeekBuffer());
+        this->filename = std::string(this->fileNameParam.Param<param::FilePathParam>()->Value().PeekBuffer());
         // Auto loading keyframe file when new filename is given
         this->loadKeyframesParam.ForceSetDirty();
     }
@@ -1219,7 +1219,7 @@ glm::vec3 KeyframeKeeper::vec3_interpolation(float u, glm::vec3 v0, glm::vec3 v1
 
 bool KeyframeKeeper::saveKeyframes() {
 
-    if (this->filename.IsEmpty()) {
+    if (this->filename.empty()) {
         vislib::sys::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] [saveKeyframes] No filename given. Using default filename.");
         time_t t = std::time(0);  // get time now
         struct tm *now = nullptr;
@@ -1230,13 +1230,21 @@ bool KeyframeKeeper::saveKeyframes() {
 #else /* defined(_WIN32) && (_MSC_VER >= 1400) */
         now = localtime(&t);
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
-        this->filename.Format("keyframes_%i%02i%02i-%02i%02i%02i.kf", (now->tm_year + 1900), (now->tm_mon + 1), now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec);
-        this->fileNameParam.Param<param::FilePathParam>()->SetValue(this->filename, false);
+
+        std::stringstream stream;
+        stream << "keyframes_" << (now->tm_year + 1900) << 
+            std::setfill('0') << std::setw(2) << (now->tm_mon + 1) << 
+            std::setfill('0') << std::setw(2) << now->tm_mday << "-" << 
+            std::setfill('0') << std::setw(2) << now->tm_hour << 
+            std::setfill('0') << std::setw(2) << now->tm_min << 
+            std::setfill('0') << std::setw(2) << now->tm_sec << ".kf";
+        this->filename = stream.str();
+        this->fileNameParam.Param<param::FilePathParam>()->SetValue(vislib::StringA(this->filename.c_str()), false);
     } 
 
     try {
         std::ofstream outfile;
-        outfile.open(this->filename.PeekBuffer(), std::ios::binary);
+        outfile.open(this->filename.c_str(), std::ios::binary);
         if (!outfile.good()) {
             vislib::sys::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] Failed to create keyframe file.");
             return false;
@@ -1298,7 +1306,7 @@ bool KeyframeKeeper::saveKeyframes() {
         }
 
         outfile.close();
-        vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] Successfully stored keyframes to file: %s", this->filename.PeekBuffer());
+        vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] Successfully stored keyframes to file: %s", this->filename.c_str());
         return true;
     } 
     catch (...) {
@@ -1309,13 +1317,13 @@ bool KeyframeKeeper::saveKeyframes() {
 
 bool KeyframeKeeper::loadKeyframes() {
 
-    if (this->filename.IsEmpty()) {
+    if (this->filename.empty()) {
         vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] No filename given.");
         return false;
     }
     else {
         std::ifstream infile;
-        infile.open(this->filename.PeekBuffer());
+        infile.open(this->filename.c_str());
         if (!infile.good()) {
             vislib::sys::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] Failed to open keyframe file.");
             return false;
@@ -1446,7 +1454,7 @@ bool KeyframeKeeper::loadKeyframes() {
         }
 
         infile.close();
-        vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] Successfully loaded keyframes from file: %s", this->filename.PeekBuffer());
+        vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] Successfully loaded keyframes from file: %s", this->filename.c_str());
     }
     return true;
 }

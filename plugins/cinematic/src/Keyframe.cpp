@@ -75,7 +75,16 @@ bool Keyframe::Deserialise(const nlohmann::json& in_json) {
     }
 
     if (in_json.at("camera_state").at("centre_offset").is_array()) {
-        /// Should check if exactly 2 element are contained and if the elements are float numbers.
+        if (in_json.at("camera_state").at("centre_offset").size() != 2) {
+            vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Array of 'camera_state' - 'centre_offset' should have size 2: %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+            return false;
+        }
+        for (size_t i = 0; i < in_json.at("camera_state").at("centre_offset").size(); i++) {
+            if (!in_json.at("camera_state").at("centre_offset")[i].is_number()) {
+                vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Elements of array 'camera_state' - 'centre_offset' should be numbers: %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+                return false;
+            }
+        }
         in_json.at("camera_state").at("centre_offset").get_to(this->camera_state.centre_offset);
     }
     else {
@@ -110,7 +119,16 @@ bool Keyframe::Deserialise(const nlohmann::json& in_json) {
     }
 
     if (in_json.at("camera_state").at("film_gate").is_array()) {
-        /// Should check if exactly 2 element are contained and if the elements are float numbers.
+        if (in_json.at("camera_state").at("film_gate").size() != 2) {
+            vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Array of 'camera_state' - 'film_gate' should have size 2: %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+            return false;
+        }
+        for (size_t i = 0; i < in_json.at("camera_state").at("film_gate").size(); i++) {
+            if (!in_json.at("camera_state").at("film_gate")[i].is_number()) {
+                vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Elements of array 'camera_state' - 'film_gate' should be numbers: %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+                return false;
+            }
+        }
         in_json.at("camera_state").at("film_gate").get_to(this->camera_state.film_gate);
     }
     else {
@@ -145,7 +163,16 @@ bool Keyframe::Deserialise(const nlohmann::json& in_json) {
     }
 
     if (in_json.at("camera_state").at("image_tile").is_array()) {
-        /// Should check if exactly 4 element are contained and if the elements are float numbers.
+        if (in_json.at("camera_state").at("image_tile").size() != 4) {
+            vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Array of 'camera_state' - 'image_tile' should have size 2: %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+            return false;
+        }
+        for (size_t i = 0; i < in_json.at("camera_state").at("image_tile").size(); i++) {
+            if (!in_json.at("camera_state").at("image_tile")[i].is_number()) {
+                vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Elements of array 'camera_state' - 'image_tile' should be numbers: %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+                return false;
+            }
+        }
         in_json.at("camera_state").at("image_tile").get_to(this->camera_state.image_tile);
     }
     else {
@@ -162,7 +189,16 @@ bool Keyframe::Deserialise(const nlohmann::json& in_json) {
     }
 
     if (in_json.at("camera_state").at("orientation").is_array()) {
-        /// Should check if exactly 4 element are contained and if the elements are float numbers.
+        if (in_json.at("camera_state").at("orientation").size() != 4) {
+            vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Array of 'camera_state' - 'orientation' should have size 2: %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+            return false;
+        }
+        for (size_t i = 0; i < in_json.at("camera_state").at("orientation").size(); i++) {
+            if (!in_json.at("camera_state").at("orientation")[i].is_number()) {
+                vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Elements of array 'camera_state' - 'orientation' should be numbers: %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+                return false;
+            }
+        }
         in_json.at("camera_state").at("orientation").get_to(this->camera_state.orientation);
     }
     else {
@@ -171,7 +207,16 @@ bool Keyframe::Deserialise(const nlohmann::json& in_json) {
     }
 
     if (in_json.at("camera_state").at("position").is_array()) {
-        /// Should check if exactly 4 element are contained and if the elements are float numbers.
+        if (in_json.at("camera_state").at("position").size() != 3) {
+            vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Array of 'camera_state' - 'position' should have size 2: %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+            return false;
+        }
+        for (size_t i = 0; i < in_json.at("camera_state").at("position").size(); i++) {
+            if (!in_json.at("camera_state").at("position")[i].is_number()) {
+                vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Elements of array 'camera_state' - 'position' should be numbers: %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+                return false;
+            }
+        }
         in_json.at("camera_state").at("position").get_to(this->camera_state.position);
     }
     else {
@@ -190,7 +235,16 @@ bool Keyframe::Deserialise(const nlohmann::json& in_json) {
     }
 
     if (in_json.at("camera_state").at("resolution_gate").is_array()) {
-        /// Should check if exactly 2 element are contained and if the elements are float numbers.
+        if (in_json.at("camera_state").at("resolution_gate").size() != 2) {
+            vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Array of 'camera_state' - 'resolution_gate' should have size 2: %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+            return false;
+        }
+        for (size_t i = 0; i < in_json.at("camera_state").at("resolution_gate").size(); i++) {
+            if (!in_json.at("camera_state").at("resolution_gate")[i].is_number()) {
+                vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - Elements of array 'camera_state' - 'resolution_gate' should be numbers: %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+                return false;
+            }
+        }
         in_json.at("camera_state").at("resolution_gate").get_to(this->camera_state.resolution_gate);
     }
     else {

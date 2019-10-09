@@ -29,6 +29,7 @@
 #include "vislib/assert.h"
 
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <ctime>
 
@@ -39,6 +40,7 @@
 
 namespace megamol {
 namespace cinematic {
+
 
 	/**
 	* Keyframe Keeper.
@@ -106,11 +108,6 @@ namespace cinematic {
         glm::vec3                    modelBboxCenter;
         unsigned int                 fps;
             
-        // Variables only used in keyframe keeper -----------------------------
-        vislib::StringA filename;
-        bool            simTangentStatus;
-        float           splineTangentLength;
-
         // Undo queue  --------------------------------------------------------
         class Undo {  
             public:
@@ -166,9 +163,13 @@ namespace cinematic {
             glm::vec3      previous_last_controlpoint;
         };
 
-        int undoQueueIndex;
+        // Variables only used in keyframe keeper -----------------------------
+        std::string       filename;
+        bool              simTangentStatus;
+        float             splineTangentLength;
+        int               undoQueueIndex;
         std::vector<Undo> undoQueue;
-
+          
         /**********************************************************************
         * functions
         ***********************************************************************/

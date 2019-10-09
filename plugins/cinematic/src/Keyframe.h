@@ -10,39 +10,14 @@
 
 #include "Cinematic/Cinematic.h"
 
-#include "mmcore/view/Camera_2.h"
-#include "vislib/sys/Log.h"
-
 #include "json.hpp"
 #include <glm/glm.hpp>
+
+#include "CinematicUtils.h"
 
 
 namespace megamol {
 namespace cinematic {
-
-
-    typedef megamol::core::thecam::camera<cam_maths_type>::minimal_state_type camera_state_type;
-
-    static bool operator ==(const camera_state_type &ls, const camera_state_type &rs) {
-        return ((ls.centre_offset == rs.centre_offset) &&
-            (ls.convergence_plane == rs.convergence_plane) &&
-            (ls.eye == rs.eye) &&
-            (ls.far_clipping_plane == rs.far_clipping_plane) &&
-            (ls.film_gate == rs.film_gate) &&
-            (ls.gate_scaling == rs.gate_scaling) &&
-            (ls.half_aperture_angle_radians == rs.half_aperture_angle_radians) &&
-            (ls.half_disparity == rs.half_disparity) &&
-            (ls.image_tile == ls.image_tile) &&
-            (ls.near_clipping_plane == rs.near_clipping_plane) &&
-            (ls.orientation == rs.orientation) &&
-            (ls.position == rs.position) &&
-            (ls.projection_type == rs.projection_type) &&
-            (ls.resolution_gate == rs.resolution_gate));
-    }
-
-    static bool operator !=(const camera_state_type &ls, const camera_state_type &rs) {
-        return !(ls == rs);
-    }
 
 
     /**

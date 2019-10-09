@@ -579,6 +579,24 @@ const glm::vec4 CinematicUtils::Color(CinematicUtils::Colors c) const {
     case (CinematicUtils::Colors::FRAME_MARKER):
         color = { 1.0f, 0.6f, 0.6f, 1.0f };
         break;
+    case (CinematicUtils::Colors::MANIPULATOR_X):
+        color = { 1.0f, 0.0f, 0.0f, 1.0f };
+        break;
+    case (CinematicUtils::Colors::MANIPULATOR_Y):
+        color = { 0.0f, 1.0f, 0.0f, 1.0f };
+        break;
+    case (CinematicUtils::Colors::MANIPULATOR_Z):
+        color = { 0.0f, 0.0f, 1.0f, 1.0f };
+        break;
+    case (CinematicUtils::Colors::MANIPULATOR_VECTOR):
+        color = { 0.0f, 1.0f, 1.0f, 1.0f };
+        break;
+    case (CinematicUtils::Colors::MANIPULATOR_ROTATION):
+        color = { 1.0f, 1.0f, 0.0f, 1.0f };
+        break;
+    case (CinematicUtils::Colors::MANIPULATOR_CTRLPOINT):
+        color = { 1.0f, 0.0f, 1.0f, 1.0f };
+        break;
     default: break;
     }
 

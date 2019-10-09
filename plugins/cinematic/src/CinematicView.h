@@ -116,8 +116,8 @@ namespace cinematic {
             unsigned int          width;
             unsigned int          height;
             unsigned int          bpp;
-            vislib::TString       path;
-            vislib::TString       filename;
+            vislib::StringA       path;
+            vislib::StringA       filename;
             unsigned int          cnt;
             png_structp           structptr = nullptr;
             png_infop             infoptr = nullptr;

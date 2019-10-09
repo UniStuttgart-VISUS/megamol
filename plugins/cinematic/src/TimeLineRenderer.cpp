@@ -100,7 +100,6 @@ bool TimeLineRenderer::create(void) {
 
 void TimeLineRenderer::release(void) {
 
-    // nothing to do here ...
 }
 
 

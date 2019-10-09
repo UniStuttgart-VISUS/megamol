@@ -19,6 +19,7 @@
 
 #include <glowl/BufferObject.hpp>
 
+#include "mmcore/view/Camera_2.h"
 #include "mmcore/misc/PngBitmapCodec.h"
 #include "mmcore/utility/ShaderSourceFactory.h"
 #include "mmcore/utility/SDFFont.h"
@@ -31,17 +32,12 @@
 #include "vislib/sys/Log.h"
 
 
-// GLOBAL CINEMATIC DEFINES
-#ifndef CC_MENU_HEIGHT
-#define CC_MENU_HEIGHT (25.0f)
-#endif
-
-
 namespace megamol {
 namespace cinematic {
 
 
-    // Utility conversion functions
+    // Utility vector conversion functions ------------------------------------
+
     /*
     * Convert glm::vec3 to vislib::math::Vector<float, 3>.
     */
@@ -66,6 +62,32 @@ namespace cinematic {
     static inline glm::vec3 P2G(vislib::math::Point<float, 3> v) {
         return glm::vec3(v.X(), v.Y(), v.Z());
     }
+
+    // Utility minimal camera state -------------------------------------------
+
+    typedef megamol::core::thecam::camera<cam_maths_type>::minimal_state_type camera_state_type;
+
+    static bool operator ==(const camera_state_type &ls, const camera_state_type &rs) {
+        return ((ls.centre_offset == rs.centre_offset) &&
+            (ls.convergence_plane == rs.convergence_plane) &&
+            (ls.eye == rs.eye) &&
+            (ls.far_clipping_plane == rs.far_clipping_plane) &&
+            (ls.film_gate == rs.film_gate) &&
+            (ls.gate_scaling == rs.gate_scaling) &&
+            (ls.half_aperture_angle_radians == rs.half_aperture_angle_radians) &&
+            (ls.half_disparity == rs.half_disparity) &&
+            (ls.image_tile == ls.image_tile) &&
+            (ls.near_clipping_plane == rs.near_clipping_plane) &&
+            (ls.orientation == rs.orientation) &&
+            (ls.position == rs.position) &&
+            (ls.projection_type == rs.projection_type) &&
+            (ls.resolution_gate == rs.resolution_gate));
+    }
+
+    static bool operator !=(const camera_state_type &ls, const camera_state_type &rs) {
+        return !(ls == rs);
+    }
+
 
 
     /*
@@ -228,7 +250,13 @@ namespace cinematic {
             FONT,
             FONT_HIGHLIGHT,
             LETTER_BOX,
-            FRAME_MARKER
+            FRAME_MARKER,
+            MANIPULATOR_X,
+            MANIPULATOR_Y,
+            MANIPULATOR_Z,
+            MANIPULATOR_VECTOR,
+            MANIPULATOR_ROTATION,
+            MANIPULATOR_CTRLPOINT
         };
 
         bool Initialise(megamol::core::CoreInstance* core_instance);
