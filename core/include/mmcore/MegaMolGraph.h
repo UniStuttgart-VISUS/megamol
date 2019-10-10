@@ -10,13 +10,13 @@
 #include <shared_mutex>
 #include <string>
 #include <vector>
-#include "mmcore/factories/ModuleDescriptionManager.h"
-#include "mmcore/factories/CallDescriptionManager.h"
-#include "mmcore/factories/ModuleDescription.h"
-#include "mmcore/factories/CallDescription.h"
 #include "mmcore/Call.h"
 #include "mmcore/Module.h"
 #include "mmcore/api/MegaMolCore.h"
+#include "mmcore/factories/CallDescription.h"
+#include "mmcore/factories/CallDescriptionManager.h"
+#include "mmcore/factories/ModuleDescription.h"
+#include "mmcore/factories/ModuleDescriptionManager.h"
 #include "mmcore/param/AbstractParam.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/param/ParamUpdateListener.h"
@@ -94,7 +94,8 @@ public:
     /**
      * Bare construction as stub for deserialization
      */
-    MegaMolGraph(factories::ModuleDescriptionManager const& moduleProvider, factories::CallDescriptionManager const& callProvider);
+    MegaMolGraph(factories::ModuleDescriptionManager const& moduleProvider,
+        factories::CallDescriptionManager const& callProvider);
 
     /**
      * No copy-construction. This can only be a legal operation, if we allow deep-copy of Modules in graph.
@@ -119,22 +120,35 @@ public:
     /**
      * Construction from serialized string.
      */
-    //MegaMolGraph(std::string const& descr);
+    // MegaMolGraph(std::string const& descr);
 
     /** dtor */
     virtual ~MegaMolGraph();
 
     //////////////////////////// END ctor / dtor ///////////////////////////////
 
+
+    //////////////////////////// Satisfy some abstract requirements ///////////////////////////////
+
+
+	// TODO: the 'serializable' and 'deferrable construction' concepts result in basically the same implementation?
+	// serializable
+    std::string Serialize() const override { return ""; };
+    void Deserialize(std::string const& descr) override{};
+
+	// deferrable_construction 
+    bool create() override { return false; };
+    void release() override{};
+
     //////////////////////////// Modules and Calls loaded from DLLs ///////////////////////////////
 
-private:
+private :
 	const factories::ModuleDescriptionManager& ModuleProvider();
-	const factories::CallDescriptionManager&   CallProvider();
-	const factories::ModuleDescriptionManager* moduleProvider_ptr;
-	const factories::CallDescriptionManager*   callProvider_ptr;
-public:
+    const factories::CallDescriptionManager& CallProvider();
+    const factories::ModuleDescriptionManager* moduleProvider_ptr;
+    const factories::CallDescriptionManager* callProvider_ptr;
 
+public:
     //////////////////////////// serialization ////////////////////////////////
 
     /*
