@@ -79,6 +79,11 @@ add_subdirectory(${MEGAMOL_CORE_DIR})
 set(CONSOLE_NAME mmconsole)
 add_subdirectory(${MEGAMOL_CONSOLE_DIR})
 
+###############################
+# Main3000
+###############################
+add_subdirectory(main3000)
+
 # Add directory structure for visual studio
 if(WIN32)
   set_property(GLOBAL PROPERTY USE_FOLDERS ON)
