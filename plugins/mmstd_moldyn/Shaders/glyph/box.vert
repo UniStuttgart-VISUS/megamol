@@ -77,7 +77,11 @@ void main() {
         gl_ClipDistance[0] = dist;
     }
 
-    if (flags_available && !bitflag_isVisible(flag)) {
-        gl_ClipDistance[0] = -1.0;
+    if (flags_available) {
+        if (!bitflag_isVisible(flag)) {
+            gl_ClipDistance[0] = -1.0;
+        } else {
+            gl_ClipDistance[0] = 1.0;
+        }
     }
 }
