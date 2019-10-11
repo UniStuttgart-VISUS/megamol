@@ -120,7 +120,7 @@ namespace cinematic {
             camera_state_type cam_min_snapshot;
             vislib::math::Cuboid<float> bbox;
             std::shared_ptr<Manipulator> hit;
-            glm::vec2 mouse;
+            glm::vec2 last_mouse;
             int selected_index;
         };
 

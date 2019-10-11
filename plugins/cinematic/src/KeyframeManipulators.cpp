@@ -344,7 +344,7 @@ bool KeyframeManipulators::CheckForHitManipulator(float mouse_x, float mouse_y) 
     for (auto &m : this->manipulators) {
         if (m.show) {
             if (this->checkMousePointIntersection(m, mouse, cam_up)) {
-                this->state.mouse = mouse;
+                this->state.last_mouse = mouse;
                 this->state.hit = std::make_shared<Manipulator>(m);
                 return true;
             }
@@ -358,8 +358,6 @@ bool KeyframeManipulators::ProcessHitManipulator(float mouse_x, float mouse_y) {
 
     if (this->state.hit == nullptr) return false;
 
-    const float sensitivity = 0.001f;
-
     glm::vec3 keyframe_position = this->getManipulatorPosition((*this->state.hit));
     glm::vec3 manipualtor_position = keyframe_position + this->state.hit->vector * this->line_length;
     float world_length = this->line_length;
@@ -369,8 +367,8 @@ bool KeyframeManipulators::ProcessHitManipulator(float mouse_x, float mouse_y) {
     glm::vec2 screenspace_vector = screenspace_manipulator_position - screenspace_keyframe_position;
     float screenspace_length = glm::length(screenspace_vector);
 
-    glm::vec2 mouse = glm::vec2(mouse_x, mouse_y);
-    glm::vec2 mouse_vector = mouse - this->state.mouse;
+    glm::vec2 current_mouse = glm::vec2(mouse_x, mouse_y);
+    glm::vec2 mouse_vector = current_mouse - this->state.last_mouse;
     screenspace_vector = glm::normalize(screenspace_vector);
     float diff_screenspace_length = glm::dot(screenspace_vector, mouse_vector);
 
@@ -403,11 +401,13 @@ bool KeyframeManipulators::ProcessHitManipulator(float mouse_x, float mouse_y) {
     default: break;
     }
 
+    // Apply changed camera state to selected keyframe
     cam_type::minimal_state_type new_camera_state;
     camera.get_minimal_state(new_camera_state);
     this->state.selected_keyframe.SetCameraState(new_camera_state);
 
-    this->state.mouse = mouse;
+    // Save processed mouse position as last one
+    this->state.last_mouse = current_mouse;
 
     return true;
 }
