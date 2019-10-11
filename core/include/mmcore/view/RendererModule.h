@@ -128,7 +128,7 @@ protected:
     virtual bool GetExtentsChain(C& call) { return this->GetExtents(call); }
 
     virtual bool OnKeyChain(Key key, KeyAction action, Modifiers mods) { 
-        auto* cr = this->chainRenderSlot.CallAs<CallRender3D_2>();
+        auto* cr = this->chainRenderSlot.CallAs<C>();
         if (cr != nullptr) {
             view::InputEvent evt;
             evt.tag = view::InputEvent::Tag::Key;
@@ -136,25 +136,25 @@ protected:
             evt.keyData.action = action;
             evt.keyData.mods = mods;
             cr->SetInputEvent(evt);
-            if ((*cr)(CallRender3D_2::FnOnKey)) return true;
+            if ((*cr)(C::FnOnKey)) return true;
         }
         return this->OnKey(key, action, mods); 
     }
 
     virtual bool OnCharChain(unsigned int codePoint) { 
-        auto* cr = this->chainRenderSlot.CallAs<CallRender3D_2>();
+        auto* cr = this->chainRenderSlot.CallAs<C>();
         if (cr != nullptr) {
             view::InputEvent evt;
             evt.tag = view::InputEvent::Tag::Char;
             evt.charData.codePoint = codePoint;
             cr->SetInputEvent(evt);
-            if ((*cr)(view::CallRender3D_2::FnOnChar)) return true;
+            if ((*cr)(C::FnOnChar)) return true;
         }
         return this->OnChar(codePoint); 
     }
 
     virtual bool OnMouseButtonChain(MouseButton button, MouseButtonAction action, Modifiers mods) {
-        auto* cr = this->chainRenderSlot.CallAs<CallRender3D_2>();
+        auto* cr = this->chainRenderSlot.CallAs<C>();
         if (cr != nullptr) {
             view::InputEvent evt;
             evt.tag = view::InputEvent::Tag::MouseButton;
@@ -162,33 +162,33 @@ protected:
             evt.mouseButtonData.action = action;
             evt.mouseButtonData.mods = mods;
             cr->SetInputEvent(evt);
-            if ((*cr)(CallRender3D_2::FnOnMouseButton)) return true;
+            if ((*cr)(C::FnOnMouseButton)) return true;
         }
         return this->OnMouseButton(button, action, mods);
     }
 
     virtual bool OnMouseMoveChain(double x, double y) { 
-        auto* cr = this->chainRenderSlot.CallAs<CallRender3D_2>();
+        auto* cr = this->chainRenderSlot.CallAs<C>();
         if (cr != nullptr) {
             view::InputEvent evt;
             evt.tag = view::InputEvent::Tag::MouseMove;
             evt.mouseMoveData.x = x;
             evt.mouseMoveData.y = y;
             cr->SetInputEvent(evt);
-            if ((*cr)(CallRender3D_2::FnOnMouseMove)) return true;
+            if ((*cr)(C::FnOnMouseMove)) return true;
         }
         return this->OnMouseMove(x, y); 
     }
 
     virtual bool OnMouseScrollChain(double dx, double dy) { 
-        auto* cr = this->chainRenderSlot.CallAs<CallRender3D_2>();
+        auto* cr = this->chainRenderSlot.CallAs<C>();
         if (cr != nullptr) {
             view::InputEvent evt;
             evt.tag = view::InputEvent::Tag::MouseScroll;
             evt.mouseScrollData.dx = dx;
             evt.mouseScrollData.dy = dy;
             cr->SetInputEvent(evt);
-            if ((*cr)(view::CallRender3D_2::FnOnMouseScroll)) return true;
+            if ((*cr)(C::FnOnMouseScroll)) return true;
         }
         return this->OnMouseScroll(dx, dy); 
     }

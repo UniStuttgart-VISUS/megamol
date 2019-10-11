@@ -148,9 +148,11 @@ namespace cinematic {
         * functions
         **********************************************************************/
         
-        glm::vec3 getManipulatorPosition(Manipulator &m);
+        glm::vec3 getManipulatorPosition(Manipulator &manipulator);
 
-        glm::vec4 getManipulatorColor(Manipulator &m, CinematicUtils &utils);
+        glm::vec4 getManipulatorColor(Manipulator &manipulator, CinematicUtils &utils);
+
+        bool checkMousePointIntersection(Manipulator &manipulator, glm::vec2 mouse, glm::vec3 cam_up);
 
         glm::vec2 world2ScreenSpace(glm::vec3 vec);
 
