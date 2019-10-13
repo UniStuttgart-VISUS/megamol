@@ -46,10 +46,21 @@ bool megamol::mesh::ProbeRenderTasks::getDataCallback(core::Call& caller) {
         if (!(*pc)(0)) return false;
         auto probes = pc->getData();
 
-        //for (auto& probe : )
-        //{
-        //
-        //}
+        auto probe_cnt = probes->getProbeCount();
+
+        for (int probe_idx = 0; probe_idx < probe_cnt; ++probe_idx)
+        {
+            try {
+                auto probe = probes->getProbe<probe::FloatProbe>(probe_idx);
+
+                // TODO create and add new render task for probe
+            } 
+            catch (std::bad_variant_access&) {
+                // TODO log error, dont add new render task
+            }
+            
+        }
+
     }
 
     return true; 

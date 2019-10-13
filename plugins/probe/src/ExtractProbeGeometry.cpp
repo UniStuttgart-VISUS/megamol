@@ -37,7 +37,7 @@ bool megamol::probe::ExtractProbeGeometry::convertToLine(core::Call& call) {
     auto* cm = dynamic_cast<mesh::CallMesh*>(&call);
     std::shared_ptr<mesh::MeshDataAccessCollection> line = std::make_shared<mesh::MeshDataAccessCollection>();
 
-    auto probe_count = this->m_probes->getNumProbes();
+    auto probe_count = this->m_probes->getProbeCount();
 
     _index_data = {0};
     _line_indices.type = mesh::MeshDataAccessCollection::ValueType::UNSIGNED_INT;
