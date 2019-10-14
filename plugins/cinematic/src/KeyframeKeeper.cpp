@@ -416,7 +416,7 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
         int selIndex = this->getKeyframeIndex(this->keyframes, this->selectedKeyframe);
         if (selIndex >= 0) {
             Keyframe tmpKf = this->selectedKeyframe;
-            glm::vec3 posv = V2G(this->editCurrentPosParam.Param<param::Vector3fParam>()->Value()) + this->modelBboxCenter;
+            glm::vec3 posv = vislib_vector_to_glm(this->editCurrentPosParam.Param<param::Vector3fParam>()->Value()) + this->modelBboxCenter;
             std::array<float, 3> posa = { posv.x, posv.y, posv.z };
             auto cam_state = this->selectedKeyframe.GetCameraState();
             cam_state.position = posa;
@@ -433,7 +433,7 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
     if (this->resetLookAtParam.IsDirty()) {
         this->resetLookAtParam.ResetDirty();
 
-        this->editCurrentLookAtParam.Param<param::Vector3fParam>()->SetValue(G2V(this->modelBboxCenter));
+        this->editCurrentLookAtParam.Param<param::Vector3fParam>()->SetValue(glm_to_vislib_vector(this->modelBboxCenter));
         // Get index of existing keyframe
         int selIndex = this->getKeyframeIndex(this->keyframes, this->selectedKeyframe);
         if (selIndex >= 0) {
@@ -459,7 +459,7 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
         int selIndex = this->getKeyframeIndex(this->keyframes, this->selectedKeyframe);
         if (selIndex >= 0) {
             Keyframe tmpKf = this->selectedKeyframe;
-            glm::vec3 lookatv = V2G(this->editCurrentLookAtParam.Param<param::Vector3fParam>()->Value());
+            glm::vec3 lookatv = vislib_vector_to_glm(this->editCurrentLookAtParam.Param<param::Vector3fParam>()->Value());
             auto cam_state = this->selectedKeyframe.GetCameraState();
             /// TODO calculate look at
 
@@ -480,7 +480,7 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
         int selIndex = this->getKeyframeIndex(this->keyframes, this->selectedKeyframe);
         if (selIndex >= 0) {
             Keyframe tmpKf = this->selectedKeyframe;
-            glm::vec3 up = V2G(this->editCurrentUpParam.Param<param::Vector3fParam>()->Value());
+            glm::vec3 up = vislib_vector_to_glm(this->editCurrentUpParam.Param<param::Vector3fParam>()->Value());
             auto cam_state = this->selectedKeyframe.GetCameraState();
             /// TODO calculate up
 
@@ -1150,37 +1150,39 @@ Keyframe KeyframeKeeper::interpolateKeyframe(float time) {
 
 glm::quat KeyframeKeeper::quaternion_interpolation(float u, glm::quat q0, glm::quat q1) {
 
+    return glm::normalize(glm::slerp(q0, q1, u));
+
     /// Slerp - spherical linear interpolation
     // SOURCE: https://en.wikipedia.org/wiki/Slerp and https://web.mit.edu/2.998/www/QuaternionReport1.pdf
 
-    glm::quat q0_ = glm::normalize(q0);
-    glm::quat q1_ = glm::normalize(q1);
-    auto dot = glm::dot(q0_, q1_);
+    //glm::quat q0_ = glm::normalize(q0);
+    //glm::quat q1_ = glm::normalize(q1);
+    //auto dot = glm::dot(q0_, q1_);
 
-    // If the dot product is negative, slerp won't take
-    // the shorter path. Note that v1 and -v1 are equivalent when
-    // the negation is applied to all four components. Fix by 
-    // reversing one quaternion.
-    if (dot < 0.0f) {
-        q0_ = -q0_;
-        dot = -dot;
-    }
+    //// If the dot product is negative, slerp won't take
+    //// the shorter path. Note that v1 and -v1 are equivalent when
+    //// the negation is applied to all four components. Fix by 
+    //// reversing one quaternion.
+    //if (dot < 0.0f) {
+    //    q0_ = -q0_;
+    //    dot = -dot;
+    //}
 
-    // If the inputs are too close for comfort, linearly interpolate
-    // and normalize the result.
-    const float DOT_THRESHOLD = 0.9995f;
-    if (dot > DOT_THRESHOLD) {
-        glm::quat q = ((1.0f - u) * q0_) + (u * q1_);
-        return glm::normalize(q);
-    }
+    //// If the inputs are too close for comfort, linearly interpolate
+    //// and normalize the result.
+    //const float DOT_THRESHOLD = 0.9995f;
+    //if (dot > DOT_THRESHOLD) {
+    //    glm::quat q = ((1.0f - u) * q0_) + (u * q1_);
+    //    return glm::normalize(q);
+    //}
 
-    float theta = std::acos(dot);
-    float sin_theta = sin(theta);
-    float c0 = sin((1.0f - u) * theta) / sin_theta;
-    float c1 = sin(u * theta) / sin_theta;
-    glm::quat q = (c0 * q0_) + (c1 * q1_);
+    //float theta = std::acos(dot);
+    //float sin_theta = sin(theta);
+    //float c0 = sin((1.0f - u) * theta) / sin_theta;
+    //float c1 = sin(u * theta) / sin_theta;
+    //glm::quat q = (c0 * q0_) + (c1 * q1_);
 
-    return glm::normalize(q);
+    //return glm::normalize(q);
 }
 
 
@@ -1472,9 +1474,9 @@ void KeyframeKeeper::updateEditParameters(Keyframe kf) {
 
     this->editCurrentAnimTimeParam.Param<param::FloatParam>()->SetValue(kf.GetAnimTime(), false);
     this->editCurrentSimTimeParam.Param<param::FloatParam>()->SetValue(kf.GetSimTime() * this->totalSimTime, false);
-    this->editCurrentPosParam.Param<param::Vector3fParam>()->SetValue(G2V(glm::vec3(pos.x, pos.y, pos.z)), false);
-    this->editCurrentLookAtParam.Param<param::Vector3fParam>()->SetValue(G2V(glm::vec3(cam_view.x, cam_view.y, cam_view.z)), false);
-    this->editCurrentUpParam.Param<param::Vector3fParam>()->SetValue(G2V(glm::vec3(cam_up.x, cam_up.y, cam_up.z)), false);
+    this->editCurrentPosParam.Param<param::Vector3fParam>()->SetValue(glm_to_vislib_vector(glm::vec3(pos.x, pos.y, pos.z)), false);
+    this->editCurrentLookAtParam.Param<param::Vector3fParam>()->SetValue(glm_to_vislib_vector(glm::vec3(cam_view.x, cam_view.y, cam_view.z)), false);
+    this->editCurrentUpParam.Param<param::Vector3fParam>()->SetValue(glm_to_vislib_vector(glm::vec3(cam_up.x, cam_up.y, cam_up.z)), false);
     this->editCurrentApertureParam.Param<param::FloatParam>()->SetValue(cam.aperture_angle(), false);
 }
 

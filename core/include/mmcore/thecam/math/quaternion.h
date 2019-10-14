@@ -299,7 +299,7 @@ public:
      * @return 'quat'.
      */
     template <class D> static inline quaternion from_vectors(const D& u, const D& v) {
-        quaternion retval(thecam::utility::do_not_initialise);
+        quaternion retval(megamol::core::thecam::utility::do_not_initialise);
         set_from_vectors(retval, u, v);
         return retval;
     }

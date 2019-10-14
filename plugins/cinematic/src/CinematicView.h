@@ -36,6 +36,8 @@
 #include "CinematicUtils.h"
 #include "CallKeyframeKeeper.h"
 
+#include <glm/gtx/quaternion.hpp>
+
 
 namespace megamol {
 namespace cinematic {
@@ -140,6 +142,7 @@ namespace cinematic {
         SkyboxSides                             sbSide;
         bool                                    rendering;
         unsigned int                            fps;
+        bool                                    skyboxCubeMode;
 
         /**********************************************************************
          * functions
@@ -210,7 +213,7 @@ namespace cinematic {
         core::param::ParamSlot startRenderFrameParam;
         core::param::ParamSlot toggleAnimPlayParam;
         core::param::ParamSlot selectedSkyboxSideParam;
-        core::param::ParamSlot cubeModeRenderParam;
+        core::param::ParamSlot skyboxCubeModeParam;
         core::param::ParamSlot resWidthParam;
         core::param::ParamSlot resHeightParam;
         core::param::ParamSlot fpsParam;

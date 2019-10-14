@@ -105,7 +105,7 @@ void KeyframeManipulators::UpdateExtents(vislib::math::Cuboid<float>& inout_bbox
     for (unsigned int i = 0; i < this->manipulators.size(); i++) {
         pos = this->getManipulatorPosition(this->manipulators[i]);
         pos = pos + this->manipulators[i].vector * this->line_length;
-        inout_bbox.GrowToPoint(G2P(pos));
+        inout_bbox.GrowToPoint(glm_to_vislib_point(pos));
     }
 }
 

@@ -93,38 +93,30 @@ bool TrackingShotRenderer::GetExtents(megamol::core::view::CallRender3D_2& call)
         if (ccc == nullptr) return false;
         if (!(*ccc)(CallKeyframeKeeper::CallForGetUpdatedKeyframeData)) return false;
 
-        // Compute bounding box including spline (in world space) and object (in world space).
         vislib::math::Cuboid<float> bbox = cr3d_out->AccessBoundingBoxes().BoundingBox();
-        // Set bounding box center of model
-        ccc->SetBboxCenter(P2G(cr3d_out->AccessBoundingBoxes().BoundingBox().CalcCenter()));
+        vislib::math::Cuboid<float> cbox = cr3d_out->AccessBoundingBoxes().ClipBox();
 
         // Grow bounding box to manipulators and get information of bbox of model
         this->manipulators.UpdateExtents(bbox);
 
-        vislib::math::Cuboid<float> cbox = cr3d_out->AccessBoundingBoxes().ClipBox();
-
-        // Get bounding box of spline.
+        // Grow bounding box to spline.
         auto bboxCCC = ccc->GetBoundingBox();
         if (bboxCCC == nullptr) {
             vislib::sys::Log::DefaultLog.WriteWarn("[TRACKINGSHOT RENDERER] [GetExtents] Pointer to boundingbox array is nullptr.");
             return false;
         }
-
         bbox.Union(*bboxCCC);
-        cbox.Union(*bboxCCC); // use boundingbox to get new clipbox
+        cbox.Union(bbox); // use boundingbox to get new clipbox
 
         // Set new bounding box center of slave renderer model (before applying keyframe bounding box)
-        ccc->SetBboxCenter(P2G(cr3d_out->AccessBoundingBoxes().BoundingBox().CalcCenter()));
+        ccc->SetBboxCenter(vislib_point_to_glm(cr3d_out->AccessBoundingBoxes().BoundingBox().CalcCenter()));
         if (!(*ccc)(CallKeyframeKeeper::CallForSetSimulationData)) return false;
 
-        // Propagate changes made in GetExtents() from outgoing CallRender3D_2 (cr3d_out) to incoming  CallRender3D_2 (cr3d_in).
-        // => Bboxes and times.
-
+        // Propagate changes made in GetExtents() from outgoing CallRender3D_2 (cr3d_out) to incoming  CallRender3D_2 (cr3d_in) => Bboxes and times.
         unsigned int timeFramesCount = cr3d_out->TimeFramesCount();
         cr3d_in->SetTimeFramesCount((timeFramesCount > 0) ? (timeFramesCount) : (1));
         cr3d_in->SetTime(cr3d_out->Time());
         cr3d_in->AccessBoundingBoxes() = cr3d_out->AccessBoundingBoxes();
-
         // Apply modified boundingbox 
         cr3d_in->AccessBoundingBoxes().SetBoundingBox(bbox);
         cr3d_in->AccessBoundingBoxes().SetClipBox(cbox);

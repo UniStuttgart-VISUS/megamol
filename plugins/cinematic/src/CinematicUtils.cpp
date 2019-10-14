@@ -59,7 +59,6 @@ bool RenderUtils::InitPrimitiveRendering(megamol::core::utility::ShaderSourceFac
         return false;
     }
 
-
     // Create buffers
     this->buffers[Buffers::POSITION] = std::make_unique<glowl::BufferObject >(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
     this->buffers[Buffers::COLOR] = std::make_unique<glowl::BufferObject >(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
@@ -112,8 +111,7 @@ bool RenderUtils::LoadTextureFromFile(std::wstring filename, GLuint& out_texture
     BYTE *buf = nullptr;
     size_t size = 0;
 
-    //megamol::core::utility::ResourceWrapper::LoadResource(this->GetCoreInstance()->Configuration(), filename, (void**)(&buf)))
-
+    ///megamol::core::utility::ResourceWrapper::LoadResource(this->GetCoreInstance()->Configuration(), filename, (void**)(&buf)))
     if ((size = this->loadRawFile(filename, &buf)) <= 0) {
         vislib::sys::Log::DefaultLog.WriteError("Could not find texture \"%s\". [%s, %s, line %d)]\n", filename.c_str(), __FILE__, __FUNCTION__, __LINE__);
         ARY_SAFE_DELETE(buf);
@@ -187,6 +185,7 @@ void RenderUtils::PushQuadPrimitive(const glm::vec3& pos_center, float width, fl
     glm::vec4 attributes = { 0.0f, 0.0f, 0.0f, 0.0f };
     this->pushQuad(RenderUtils::Primitives::QUADS, 0, pos_bottom_left, pos_upper_left, pos_upper_right, pos_bottom_right, color, attributes);
 }
+
 
 void RenderUtils::PushQuadPrimitive(const glm::vec3& pos_bottom_left, const glm::vec3& pos_upper_left, const glm::vec3& pos_upper_right, const glm::vec3& pos_bottom_right, const glm::vec4& color) {
 

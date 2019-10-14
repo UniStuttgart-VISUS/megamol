@@ -36,34 +36,50 @@ namespace megamol {
 namespace cinematic {
 
 
-    // Utility vector conversion functions ------------------------------------
+    // #### Utility vector conversion functions ############################ //
 
     /*
     * Convert glm::vec3 to vislib::math::Vector<float, 3>.
     */
-    static inline vislib::math::Vector<float, 3> G2V(glm::vec3 v) {
+    static inline vislib::math::Vector<float, 3> glm_to_vislib_vector(glm::vec3 v) {
         return vislib::math::Vector<float, 3>(v.x, v.y, v.z);
     }
     /*
     * Convert vislib::math::Vector<float, 3> to glm::vec3.
     */
-    static inline glm::vec3 V2G(vislib::math::Vector<float, 3> v) {
+    static inline glm::vec3 vislib_vector_to_glm(vislib::math::Vector<float, 3> v) {
         return glm::vec3(v.X(), v.Y(), v.Z());
     }
     /*
     * Convert glm::vec3 to vislib::math::Point<float, 3>.
     */
-    static inline vislib::math::Point<float, 3> G2P(glm::vec3 v) {
+    static inline vislib::math::Point<float, 3> glm_to_vislib_point(glm::vec3 v) {
         return vislib::math::Point<float, 3>(v.x, v.y, v.z);
     }
     /*
     * Convert vislib::math::Point<float, 3> to glm::vec3.
     */
-    static inline glm::vec3 P2G(vislib::math::Point<float, 3> v) {
+    static inline glm::vec3 vislib_point_to_glm(vislib::math::Point<float, 3> v) {
         return glm::vec3(v.X(), v.Y(), v.Z());
     }
 
-    // Utility minimal camera state -------------------------------------------
+
+    // #### Utility quaternion functions ################################### //
+
+    static inline glm::quat quaternion_from_vectors(glm::vec4 original, glm::vec4 target) {
+        glm::vec3 o = glm::vec3(original.x, original.y, original.z);
+        o = glm::normalize(o);
+        glm::vec3 t = glm::vec3(target.x, target.y, target.z);
+        t = glm::normalize(t);
+        float m = std::sqrt(2.0f + 2.0f * glm::dot(o, t));
+        glm::vec3 w = (1.0f / m) * glm::cross(o, t);
+        glm::quat retquat = glm::quat(m / 2.0f, w.x, w.y, w.z);
+        //return glm::normalize(retquat);
+        return retquat;
+    }
+
+
+    // #### Utility minimal camera state ################################### //
 
     typedef megamol::core::thecam::camera<cam_maths_type>::minimal_state_type camera_state_type;
 
@@ -89,7 +105,7 @@ namespace cinematic {
     }
 
 
-
+    // ##################################################################### //
     /*
     * Utility class providing simple primitive rendering for the cinematic plugin (using non legacy opengl).
     */
@@ -228,6 +244,7 @@ namespace cinematic {
     };
 
 
+    // ##################################################################### //
     /*
     * Cinematic utility functionality (colors, menu drawing, ...).
     */
