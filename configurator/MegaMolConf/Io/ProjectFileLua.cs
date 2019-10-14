@@ -182,12 +182,15 @@ namespace MegaMolConf.Io {
                         pName += "::" + paramFullName[j];
                     }
                     p.Name = pName;
-
                     string pValue = paramElements[3];
-                    p.Value = pValue;
 
-                    // in case a mmSetParamValue for a different module appears inbetween params for the current module
-                    // we need to search the other module, get all its params, add the current param and update its paramlist
+                    // replace every sequence of "\\\\...\\\\" with "\\" so the correct filepathes get saved
+                    if (pName.Equals("filename"))
+                    {
+                        pValue = Regex.Replace(pValue, @"\\+", @"\");
+                    }
+                    
+                    p.Value = pValue;
 
                     // TODO?: instead of [4] do [x] to account for different paramFullNameLengths
                     foreach (Module mTemp in modules)
