@@ -95,6 +95,8 @@ namespace MegaMolConf.Io {
             List<Module> modules = new List<Module>();
             List<Call> calls = new List<Call>();
 
+            // first, search and find all modules in the .lua
+            // now SetParamValue and CreateCall can be called before CreateModule without causing problems
             for (int i = 0; i < lines.Length; ++i)
             {
                 string line = lines[i];
@@ -127,11 +129,11 @@ namespace MegaMolConf.Io {
                     continue;
                 }
 
-                if(line.Contains("mmCreateModule"))
+                if (line.Contains("mmCreateModule"))
                 {
                     Module m = new Module();
                     string[] elements = line.Split('"');
-                    string mModuleClass = elements[1];                  m.Class = mModuleClass;
+                    string mModuleClass = elements[1]; m.Class = mModuleClass;
                     string[] mModuleFullName = elements[3].Split(':');
                     m.Name = mModuleFullName.Length == 3 ? mModuleFullName[2] : mModuleFullName[4];
 
@@ -149,72 +151,67 @@ namespace MegaMolConf.Io {
                         catch { }
                     }
 
-                    List <Param> prms = new List<Param>();
-                    int skip = 0;
-                    // + skip for current #lines with paramValues
-                    // + 1 for a base skip after module creation
-                    while (i + skip + 1 < lines.Length && lines[i + skip + 1].Contains("mmSetParamValue"))
+                    modules.Add(m);
+
+                    continue;
+                }
+            }
+
+            // second, search for all SetParamValue and CreateCall
+            // add the found params to the according module and create the correct calls
+            for (int i = 0; i < lines.Length; ++i)
+            {
+                string line = lines[i];
+
+                if (line.Contains("mmSetParamValue"))
+                {
+
+                    List<Param> prms = new List<Param>();
+                        
+                    Param p = new Param();
+
+                    string[] paramElements = line.Split('"');
+                    string[] paramFullName = paramElements[1].Split(':');
+
+                    // we need to put together the full parameter name that was previously split up
+                    // paramName will always start at the 7th position and each consecutive name element 
+                    // has an offset of 2, so the paramName is [6]::[8]:: ... ::[6 + 2i]
+                    string pName = paramFullName[6];
+                    for (int j = 8; j < paramFullName.Length; j += 2)
                     {
-                        Param p = new Param();
-                        line = lines[i + skip + 1];
-                        string[] paramElements = line.Split('"');
-                        string[] paramFullName = paramElements[1].Split(':');
+                        pName += "::" + paramFullName[j];
+                    }
+                    p.Name = pName;
 
-                        // we need to put together the full parameter name that was previously split up
-                        // paramName will always start at the 7th position and each consecutive name element 
-                        // has an offset of 2, so the paramName is [6]::[8]:: ... ::[6 + 2i]
-                        string pName = paramFullName[6];
-                        for (int j = 8; j < paramFullName.Length; j+=2)
-                        {
-                            pName += "::" + paramFullName[j];
-                        }
-                        
-                        p.Name = pName;
-                        string pValue = paramElements[3];   p.Value = pValue;
+                    string pValue = paramElements[3];
+                    p.Value = pValue;
 
-                        // in case a mmSetParamValue for a different module appears inbetween params for the current module
-                        // we need to search the other module, get all its params, add the current param and update its paramlist
-                        //
-                        // if a mmSetParamValue is called BEFORE the corresponding mmCreateModule for the required module is called
-                        // you're currently screwed
-                        
-                        // TODO: instead of [4] do [x] to account for different paramFullNameLengths
-                        if (!paramFullName[4].StartsWith(m.Name))
+                    // in case a mmSetParamValue for a different module appears inbetween params for the current module
+                    // we need to search the other module, get all its params, add the current param and update its paramlist
+
+                    // TODO?: instead of [4] do [x] to account for different paramFullNameLengths
+                    foreach (Module mTemp in modules)
+                    {
+                        if (paramFullName[4].StartsWith(mTemp.Name))
                         {
-                            foreach (Module mTemp in modules)
+                            List<Param> prmsTemp = new List<Param>();
+                            if (mTemp.Params != null)
                             {
-                                if (paramFullName[4].StartsWith(mTemp.Name))
+                                foreach (Param pTemp in mTemp.Params)
                                 {
-                                    List<Param> prmsTemp = new List<Param>();
-                                    if(mTemp.Params != null)
-                                    {
-                                        foreach (Param pTemp in mTemp.Params)
-                                        {
-                                            prmsTemp.Add(pTemp);
-                                        }
-                                        prmsTemp.Add(p);
-                                        mTemp.Params = (prmsTemp.Count == 0) ? null : prmsTemp.ToArray();
-                                    } else
-                                    {
-                                        prmsTemp.Add(p);
-                                        mTemp.Params = (prmsTemp.Count == 0) ? null : prmsTemp.ToArray();
-                                    }
+                                    prmsTemp.Add(pTemp);
                                 }
+                                prmsTemp.Add(p);
+                                mTemp.Params = (prmsTemp.Count == 0) ? null : prmsTemp.ToArray();
                             }
-                        } else
-                        {
-                            prms.Add(p);
+                            else
+                            {
+                                prmsTemp.Add(p);
+                                mTemp.Params = (prmsTemp.Count == 0) ? null : prmsTemp.ToArray();
+                            }
                         }
-
-                        ++skip;
                     }
 
-                    m.Params = (prms.Count == 0) ? null : prms.ToArray();
-
-                    // add #lines skipped due to parameters to i in order to get to next module or call
-                    i += skip;
-
-                    modules.Add(m);
                     continue;
                 }
 
