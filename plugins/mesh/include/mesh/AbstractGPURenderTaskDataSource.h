@@ -50,7 +50,7 @@ protected:
      *
      * @return 'true' on success, 'false' on failure.
      */
-    virtual bool getExtentCallback(core::Call& caller);
+    virtual bool getMetaDataCallback(core::Call& caller);
 
     /**
      * Implementation of 'Release'.

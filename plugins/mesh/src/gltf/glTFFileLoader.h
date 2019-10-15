@@ -66,11 +66,11 @@ protected:
      */
     bool getGltfDataCallback(core::Call& caller);
 
-    // bool getGltfMetaDataCallback(core::Call& caller);
+    bool getGltfMetaDataCallback(core::Call& caller);
 
     bool getMeshDataCallback(core::Call& caller);
 
-    // bool getMeshDataMetaCallback(core::Call& caller);
+    bool getMeshMetaDataCallback(core::Call& caller);
 
     void checkAndLoadGltfModel();
 
@@ -84,11 +84,11 @@ private:
 
     /** The slot for providing the complete gltf model */
     megamol::core::CalleeSlot m_gltf_slot;
-    size_t m_gltf_hash;
+    //size_t m_gltf_cached_hash;
 
     /** The slot for providing access to internal mesh data */
     megamol::core::CalleeSlot m_mesh_slot;
-    size_t m_mesh_hash;
+    //size_t m_mesh_cached_hash;
 };
 
 } // namespace mesh

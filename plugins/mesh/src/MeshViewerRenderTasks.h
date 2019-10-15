@@ -1,5 +1,5 @@
 /*
- * SimpleMeshViewerRenderTask.h
+ * SimpleMeshViewerRenderTasks.h
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VISUS).
  * All rights reserved.

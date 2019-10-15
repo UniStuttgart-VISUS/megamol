@@ -137,7 +137,7 @@ bool megamol::archvis::MSMRenderTaskDataSource::getDataCallback(core::Call& call
     return true;
 }
 
-bool megamol::archvis::MSMRenderTaskDataSource::getExtentCallback(core::Call& caller) 
+bool megamol::archvis::MSMRenderTaskDataSource::getMetaDataCallback(core::Call& caller) 
 { 
     megamol::mesh::CallGPURenderTaskData* lhs_rtc = dynamic_cast<megamol::mesh::CallGPURenderTaskData*>(&caller);
     if (lhs_rtc == NULL) return false;

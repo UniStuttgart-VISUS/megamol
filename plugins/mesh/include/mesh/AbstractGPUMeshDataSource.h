@@ -50,17 +50,12 @@ protected:
      *
      * @return 'true' on success, 'false' on failure.
      */
-    virtual bool getMetaDataCallback(core::Call& caller);
+    virtual bool getMetaDataCallback(core::Call& caller) = 0;
 
     /**
      * Implementation of 'Release'.
      */
     virtual void release();
-
-    /**
-     * The bounding box stored as left,bottom,back,right,top,front
-     */
-    std::array<float, 6> m_bbox;
 
     /**
      * This module's storage class for GPU meshes.

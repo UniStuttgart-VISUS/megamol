@@ -419,7 +419,7 @@ bool ExtractMesh::getMetaData(core::Call& call) {
 
     meta_data.m_frame_cnt = cd->getFrameCount();
     cd->setFrameIDtoLoad(meta_data.m_frame_ID);
-    meta_data.m_data_hash = _recalc_hash;
+    meta_data.m_data_hash = ++_recalc_hash;
     cm->setMetaData(meta_data);
 
     return true;

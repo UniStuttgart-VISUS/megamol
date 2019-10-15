@@ -1,38 +1,35 @@
 /*
- * glTFMeshesDataSource.h
+ * ProbeRenderTasks.h
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VISUS).
  * All rights reserved.
  */
 
-#ifndef GLTF_MESHES_DATA_SOURCE_H_INCLUDED
-#define GLTF_MESHES_DATA_SOURCE_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
+#ifndef PROBE_RENDER_TASK_H_INCLUDED
+#define PROBE_RENDER_TASK_H_INCLUDED
 
-#include "mmcore/CallerSlot.h"
-
-#include "mesh/AbstractGPUMeshDataSource.h"
+#include "mesh/AbstractGPURenderTaskDataSource.h"
 
 namespace megamol {
 namespace mesh {
 
-class GlTFMeshesDataSource : public AbstractGPUMeshDataSource {
+class ProbeRenderTasks : public AbstractGPURenderTaskDataSource {
 public:
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "GlTFMeshesDataSource"; }
+    static const char* ClassName(void) { return "ProbeRenderTasks"; }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "Data source for uploading mesh data from a glTF file"; }
+    static const char* Description(void) {
+        return "...";
+    }
 
     /**
      * Answers whether this module is available on the current system.
@@ -41,9 +38,8 @@ public:
      */
     static bool IsAvailable(void) { return true; }
 
-
-    GlTFMeshesDataSource();
-    ~GlTFMeshesDataSource();
+    ProbeRenderTasks();
+    ~ProbeRenderTasks();
 
 protected:
     virtual bool getDataCallback(core::Call& caller);
@@ -51,12 +47,12 @@ protected:
     virtual bool getMetaDataCallback(core::Call& caller);
 
 private:
-    megamol::core::CallerSlot m_glTF_callerSlot;
-
-    size_t m_glTF_cached_hash;
+    core::CallerSlot m_probes_slot;
+    size_t m_probes_cached_hash;
 };
 
 } // namespace mesh
 } // namespace megamol
 
-#endif // !GLTF_MESHES_DATA_SOURCE_H_INCLUDED
+
+#endif // !PROBE_RENDER_TASK_H_INCLUDED

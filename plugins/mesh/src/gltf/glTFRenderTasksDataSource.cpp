@@ -175,3 +175,14 @@ bool megamol::mesh::GlTFRenderTasksDataSource::getDataCallback(core::Call & call
 
 	return true;
 }
+
+bool megamol::mesh::GlTFRenderTasksDataSource::getMetaDataCallback(core::Call& caller) {
+
+    AbstractGPURenderTaskDataSource::getMetaDataCallback(caller);
+
+    auto gltf_call = m_glTF_callerSlot.CallAs<CallGlTFData>();
+    if (!(*gltf_call)(1)) return false;
+    //auto gltf_meta_data = gltf_call->getMetaData();
+
+    return true;
+}

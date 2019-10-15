@@ -46,6 +46,7 @@ bool megamol::mesh::MeshViewerRenderTasks::getDataCallback(core::Call& caller) {
 
     if (mesh_meta_data.m_data_hash > m_mesh_cached_hash)
     {
+        m_mesh_cached_hash = mesh_meta_data.m_data_hash;
 
         for (auto& sub_mesh : gpu_mesh_storage->getSubMeshData()) {
             auto const& gpu_batch_mesh = gpu_mesh_storage->getMeshes()[sub_mesh.batch_index].mesh;
