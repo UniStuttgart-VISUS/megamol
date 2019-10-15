@@ -113,6 +113,7 @@ bool mmvtkmDataRenderer::Render(core::view::CallRender3D_2& call) {
     glm::vec4 camUp = snapshot.up_vector;
     glm::vec4 camPos = snapshot.position;
 
+	// set camera setting for vtkm
 	canvasWidth = cam.resolution_gate().width();
     canvasHeight = cam.resolution_gate().height();
     canvas = vtkm::rendering::CanvasRayTracer(canvasWidth, canvasHeight);
@@ -147,20 +148,18 @@ bool mmvtkmDataRenderer::Render(core::view::CallRender3D_2& call) {
 
     // update actor, acutally just the field, each frame
     // store dynamiccellset and coordinatesystem after reading them in GetExtents
-    if (true) {
-		vtkm::rendering::View3D view(scene, mapper, canvas, camera);
-		view.Initialize(); // required
+	vtkm::rendering::View3D view(scene, mapper, canvas, camera);
+	view.Initialize(); // required
 
-		view.Paint();
-		// the canvas holds the buffer of the offscreen rendered image
-		vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>> colorBuffer = view.GetCanvas().GetColorBuffer();
+	view.Paint();
+	// the canvas holds the buffer of the offscreen rendered image
+	vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>> colorBuffer = view.GetCanvas().GetColorBuffer();
 
-		// pulling out the c array from the buffer
-		// which can just be rendered
-		colorArray = colorBuffer.GetStorage().GetBasePointer();
+	// pulling out the c array from the buffer
+	// which can just be rendered
+	colorArray = colorBuffer.GetStorage().GetBasePointer();
 
-		dataHasChanged = false;
-	}
+	dataHasChanged = false;
 
     // Write the C array to an OpenGL buffer
     glDrawPixels((GLint)canvasWidth, (GLint)canvasHeight, GL_RGBA, GL_FLOAT, colorArray);
