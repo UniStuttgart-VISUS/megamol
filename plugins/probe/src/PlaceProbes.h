@@ -58,17 +58,29 @@ protected:
 
     core::CalleeSlot m_probe_slot;
     size_t           m_probe_cached_hash;
+
+    core::param::ParamSlot m_method_slot;
     
 private:
     bool getData(core::Call& call);
 
     bool getMetaData(core::Call& call);
 
-    bool placeProbes();
+    void dartSampling(mesh::MeshDataAccessCollection::VertexAttribute& vertices,
+        std::vector<std::array<float, 4>>& output, mesh::MeshDataAccessCollection::IndexData indexData,
+        float distanceIndicator);
+    void forceDirectedSampling(mesh::MeshDataAccessCollection::VertexAttribute& vertices,
+        std::vector<std::array<float, 4>>& output);
+    void vertexSampling(mesh::MeshDataAccessCollection::VertexAttribute& vertices,
+        std::vector<std::array<float, 4>>& output);
+    bool placeProbes(uint32_t lei);
+    bool placeByCenterline(uint32_t lei, std::vector<std::array<float, 4>>& probePositions,
+                           mesh::MeshDataAccessCollection::VertexAttribute& centerline);
 
     std::shared_ptr<ProbeCollection> m_probes;
     std::shared_ptr<mesh::MeshDataAccessCollection> m_mesh;
     std::shared_ptr<mesh::MeshDataAccessCollection> m_centerline;
+    std::array<float, 3> m_whd;
 
 };
 
