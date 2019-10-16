@@ -125,7 +125,7 @@ public:
 
 class OSPRayExtendContainer {
 public:
-    std::shared_ptr<megamol::core::BoundingBoxes> boundingBox;
+    std::shared_ptr<megamol::core::BoundingBoxes_2> boundingBox;
     unsigned int timeFramesCount;
     bool isValid;
 

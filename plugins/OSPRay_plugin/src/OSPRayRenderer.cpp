@@ -370,46 +370,47 @@ bool OSPRayRenderer::GetExtents(megamol::core::view::CallRender3D_2& cr) {
         auto element = pair.second;
 
         if (frameCnt == 0) {
-            if (element.boundingBox->IsObjectSpaceBBoxValid()) {
-                finalBox.SetBoundingBox(element.boundingBox->ObjectSpaceBBox());
-            } else if (element.boundingBox->IsObjectSpaceClipBoxValid()) {
-                finalBox.SetBoundingBox(element.boundingBox->ObjectSpaceClipBox());
+            if (element.boundingBox->IsBoundingBoxValid()) {
+                finalBox.SetBoundingBox(element.boundingBox->BoundingBox());
+            } else if (element.boundingBox->IsClipBoxValid()) {
+                finalBox.SetBoundingBox(element.boundingBox->ClipBox());
             } else {
                 finalBox.SetBoundingBox(vislib::math::Cuboid<float>(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f));
             }
-            if (element.boundingBox->IsObjectSpaceClipBoxValid()) {
-                finalBox.SetClipBox(element.boundingBox->ObjectSpaceClipBox());
-            } else if (element.boundingBox->IsObjectSpaceBBoxValid()) {
-                finalBox.SetClipBox(element.boundingBox->ObjectSpaceBBox());
+            if (element.boundingBox->IsClipBoxValid()) {
+                finalBox.SetClipBox(element.boundingBox->ClipBox());
+            } else if (element.boundingBox->IsBoundingBoxValid()) {
+                finalBox.SetClipBox(element.boundingBox->BoundingBox());
             } else {
                 finalBox.SetClipBox(vislib::math::Cuboid<float>(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f));
             }
 
         } else {
-            if (element.boundingBox->IsObjectSpaceBBoxValid()) {
+            if (element.boundingBox->IsBoundingBoxValid()) {
                 vislib::math::Cuboid<float> box(finalBox.BoundingBox());
-                box.Union(element.boundingBox->ObjectSpaceBBox());
+                box.Union(element.boundingBox->BoundingBox());
                 finalBox.SetBoundingBox(box);
-            } else if (element.boundingBox->IsObjectSpaceClipBoxValid()) {
+            } else if (element.boundingBox->IsClipBoxValid()) {
                 vislib::math::Cuboid<float> box(finalBox.BoundingBox());
-                box.Union(element.boundingBox->ObjectSpaceClipBox());
+                box.Union(element.boundingBox->BoundingBox());
                 finalBox.SetBoundingBox(box);
             }
-            if (element.boundingBox->IsObjectSpaceClipBoxValid()) {
+            if (element.boundingBox->IsClipBoxValid()) {
                 vislib::math::Cuboid<float> box(finalBox.ClipBox());
-                box.Union(element.boundingBox->ObjectSpaceClipBox());
+                box.Union(element.boundingBox->ClipBox());
                 finalBox.SetClipBox(box);
-            } else if (element.boundingBox->IsObjectSpaceBBoxValid()) {
+            } else if (element.boundingBox->IsBoundingBoxValid()) {
                 vislib::math::Cuboid<float> box(finalBox.ClipBox());
-                box.Union(element.boundingBox->ObjectSpaceBBox());
+                box.Union(element.boundingBox->BoundingBox());
                 finalBox.SetClipBox(box);
             }
         }
         frameCnt = vislib::math::Max(frameCnt, element.timeFramesCount);
     }
+    cr.SetTimeFramesCount(frameCnt);
 
-	cr.AccessBoundingBoxes().SetBoundingBox(finalBox.BoundingBox());
-	cr.AccessBoundingBoxes().SetBoundingBox(finalBox.ClipBox());
+    cr.AccessBoundingBoxes().SetBoundingBox(finalBox.BoundingBox());
+    cr.AccessBoundingBoxes().SetBoundingBox(finalBox.ClipBox());
 
     return true;
 }

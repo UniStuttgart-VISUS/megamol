@@ -114,7 +114,7 @@ private:
     std::vector<uint32_t> _cl_indices;
 
     size_t _old_datahash = 0;
-    size_t _recalc_hash = 0;
+    bool _recalc = true;
 
 };
 

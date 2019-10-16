@@ -1,10 +1,11 @@
 #include "PlaceProbes.h"
+#include <random>
 #include "ProbeCalls.h"
 #include "mmcore/param/EnumParam.h"
-#include <random>
 
 megamol::probe::PlaceProbes::PlaceProbes()
-    : Module(), m_mesh_slot("getMesh", "")
+    : Module()
+    , m_mesh_slot("getMesh", "")
     , m_probe_slot("deployProbes", "")
     , m_centerline_slot("getCenterLine", "")
     , m_method_slot("method", "") {
@@ -22,7 +23,8 @@ megamol::probe::PlaceProbes::PlaceProbes()
     core::param::EnumParam* ep = new core::param::EnumParam(0);
     ep->SetTypePair(0, "vertices");
     ep->SetTypePair(1, "dart_throwing");
-    ep->SetTypePair(0, "force_directed");
+    ep->SetTypePair(2, "force_directed");
+    ep->SetTypePair(3, "simple_wruschd_sampling");
     this->m_method_slot << ep;
     this->MakeSlotAvailable(&this->m_method_slot);
 
@@ -56,12 +58,11 @@ bool megamol::probe::PlaceProbes::getData(core::Call& call) {
     auto probe_meta_data = pc->getMetaData();
     auto centerline_meta_data = pc->getMetaData();
 
-    if (mesh_meta_data.m_data_hash == m_mesh_cached_hash && probe_meta_data.m_data_hash == m_probe_cached_hash &&
-        centerline_meta_data.m_data_hash == m_centerline_cached_hash)
-        return true;
 
-    if (!(*cm)(0)) return false;
-    if (!(*ccl)(0)) return false;
+    if (mesh_meta_data.m_data_hash != m_mesh_cached_hash)
+        if (!(*cm)(0)) return false;
+    if (centerline_meta_data.m_data_hash != m_centerline_cached_hash)
+        if (!(*ccl)(0)) return false;
 
     mesh_meta_data = cm->getMetaData();
     probe_meta_data = pc->getMetaData();
@@ -71,8 +72,8 @@ bool megamol::probe::PlaceProbes::getData(core::Call& call) {
     m_mesh = cm->getData();
     m_centerline = ccl->getData();
 
-    m_whd = {mesh_meta_data.m_bboxs.ObjectSpaceBBox().Width(),
-        mesh_meta_data.m_bboxs.ObjectSpaceBBox().Height(), mesh_meta_data.m_bboxs.ObjectSpaceBBox().Depth()};
+    m_whd = {mesh_meta_data.m_bboxs.BoundingBox().Width(), mesh_meta_data.m_bboxs.BoundingBox().Height(),
+        mesh_meta_data.m_bboxs.BoundingBox().Depth()};
     const auto longest_edge_index = std::distance(m_whd.begin(), std::max_element(m_whd.begin(), m_whd.end()));
 
 
@@ -83,8 +84,6 @@ bool megamol::probe::PlaceProbes::getData(core::Call& call) {
 
     m_mesh_cached_hash = mesh_meta_data.m_data_hash;
     m_centerline_cached_hash = centerline_meta_data.m_data_hash;
-    m_probe_cached_hash++;
-    probe_meta_data.m_data_hash = m_probe_cached_hash;
     pc->setMetaData(probe_meta_data);
     return true;
 }
@@ -104,15 +103,21 @@ bool megamol::probe::PlaceProbes::getMetaData(core::Call& call) {
 
     mesh_meta_data.m_frame_ID = probe_meta_data.m_frame_ID;
     centerline_meta_data.m_frame_ID = probe_meta_data.m_frame_ID;
+
     cm->setMetaData(mesh_meta_data);
     ccl->setMetaData(centerline_meta_data);
 
     if (!(*cm)(1)) return false;
     if (!(*ccl)(1)) return false;
 
+    if (mesh_meta_data.m_data_hash == m_mesh_cached_hash &&
+        centerline_meta_data.m_data_hash == m_centerline_cached_hash)
+        return true;
+
     mesh_meta_data = cm->getMetaData();
     probe_meta_data.m_frame_cnt = mesh_meta_data.m_frame_cnt;
     probe_meta_data.m_bboxs = mesh_meta_data.m_bboxs; // normally not available here
+    probe_meta_data.m_data_hash++;
 
     pc->setMetaData(probe_meta_data);
 
@@ -120,61 +125,87 @@ bool megamol::probe::PlaceProbes::getMetaData(core::Call& call) {
 }
 
 void megamol::probe::PlaceProbes::dartSampling(mesh::MeshDataAccessCollection::VertexAttribute& vertices,
-    std::vector<std::array<float, 4>>& output, mesh::MeshDataAccessCollection::IndexData indexData, float distanceIndicator) {
+    std::vector<std::array<float, 4>>& output, mesh::MeshDataAccessCollection::IndexData indexData,
+    float distanceIndicator) {
 
-    uint32_t upper = indexData.byte_size / (mesh::MeshDataAccessCollection::getByteSize(indexData.type) * 3);
+    uint32_t num_triangles = indexData.byte_size / (mesh::MeshDataAccessCollection::getByteSize(indexData.type) * 3);
     auto indexDataAccessor = reinterpret_cast<uint32_t*>(indexData.data);
     auto vertexAccessor = reinterpret_cast<float*>(vertices.data);
+    auto num_verts = vertices.byte_size / vertices.stride;
 
     std::mt19937 rnd;
-    //rnd.seed(std::random_device()());
-    rnd.seed(666);
-    std::uniform_real_distribution<uint32_t> dist(0, upper);
+    rnd.seed(std::random_device()());
+    //rnd.seed(666);
+    std::uniform_real_distribution<float> fltdist(0, 1);
+    std::uniform_int_distribution<uint32_t> dist(0, num_triangles - 1);
 
-    uint32_t num_probes = 1000;
-    output.resize(num_probes);
+    uint32_t num_probes = 10000;
+    output.reserve(num_probes);
 
     uint32_t indx = 0;
-    while (indx != (num_probes - 1)) {
-        
+    uint32_t error_index = 0;
+    while (indx != (num_probes - 1) && error_index < (num_triangles - indx)) {
+
         uint32_t triangle = dist(rnd);
-        std::array<float,3> vert0;
-        vert0[0] = vertexAccessor[indexDataAccessor[3 * triangle + 0]];
-        vert0[1] = vertexAccessor[indexDataAccessor[3 * triangle + 1]];
-        vert0[2] = vertexAccessor[indexDataAccessor[3 * triangle + 2]];
-        
+        std::array<float, 3> vert0;
+        vert0[0] = vertexAccessor[3 * indexDataAccessor[3 * triangle + 0] + 0];
+        vert0[1] = vertexAccessor[3 * indexDataAccessor[3 * triangle + 0] + 1];
+        vert0[2] = vertexAccessor[3 * indexDataAccessor[3 * triangle + 0] + 2];
+
         std::array<float, 3> vert1;
-        vert1[0] = vertexAccessor[indexDataAccessor[3 * triangle + 0]];
-        vert1[1] = vertexAccessor[indexDataAccessor[3 * triangle + 1]];
-        vert1[2] = vertexAccessor[indexDataAccessor[3 * triangle + 2]];
+        vert1[0] = vertexAccessor[3 * indexDataAccessor[3 * triangle + 1] + 0];
+        vert1[1] = vertexAccessor[3 * indexDataAccessor[3 * triangle + 1] + 1];
+        vert1[2] = vertexAccessor[3 * indexDataAccessor[3 * triangle + 1] + 2];
 
         std::array<float, 3> vert2;
-        vert2[0] = vertexAccessor[indexDataAccessor[3 * triangle + 0]];
-        vert2[1] = vertexAccessor[indexDataAccessor[3 * triangle + 1]];
-        vert2[2] = vertexAccessor[indexDataAccessor[3 * triangle + 2]];
+        vert2[0] = vertexAccessor[3 * indexDataAccessor[3 * triangle + 2] + 0];
+        vert2[1] = vertexAccessor[3 * indexDataAccessor[3 * triangle + 2] + 1];
+        vert2[2] = vertexAccessor[3 * indexDataAccessor[3 * triangle + 2] + 2];
 
-        
 
-        
+        auto rnd1 = fltdist(rnd);
+        auto rnd2 = fltdist(rnd);
+        rnd2 *= (1 - rnd1);
+        float rnd3 = 1 - (rnd1 + rnd2);
+
+        std::array<float, 3> triangle_middle;
+        triangle_middle[0] = (rnd1*vert0[0] + rnd2*vert1[0] + rnd3*vert2[0]) ;
+        triangle_middle[1] = (rnd1*vert0[1] + rnd2*vert1[1] + rnd3*vert2[1]) ;
+        triangle_middle[2] = (rnd1*vert0[2] + rnd2*vert1[2] + rnd3*vert2[2]) ;
+
+        bool do_placement = true;
+        for (uint32_t j = 0; j < indx; j++) {
+            std::array<float, 3> dist_vec;
+            dist_vec[0] = triangle_middle[0] - output[j][0];
+            dist_vec[1] = triangle_middle[1] - output[j][1];
+            dist_vec[2] = triangle_middle[2] - output[j][2];
+
+            const float distance =
+                std::sqrt(dist_vec[0] * dist_vec[0] + dist_vec[1] * dist_vec[1] + dist_vec[2] * dist_vec[2]);
+
+            if (distance <= distanceIndicator) {
+                do_placement = false;
+                break;
+            }
+        }
+
+        if (do_placement) {
+            output.emplace_back(std::array<float,4>({triangle_middle[0], triangle_middle[1], triangle_middle[2], 1.0f}));
+            indx++;
+            error_index = 0;
+        } else {
+            error_index++;
+        }
     }
-
-
-
+    output.shrink_to_fit();
 }
 
-void megamol::probe::PlaceProbes::forceDirectedSampling(mesh::MeshDataAccessCollection::VertexAttribute& vertices,
-    std::vector<std::array<float, 4>>& output) {
-
-
-
-
-
-}
+void megamol::probe::PlaceProbes::forceDirectedSampling(
+    mesh::MeshDataAccessCollection::VertexAttribute& vertices, std::vector<std::array<float, 4>>& output) {}
 
 
 void megamol::probe::PlaceProbes::vertexSampling(
-    mesh::MeshDataAccessCollection::VertexAttribute& vertices,
-    std::vector<std::array<float, 4>>& output) {
+    mesh::MeshDataAccessCollection::VertexAttribute& vertices, std::vector<std::array<float, 4>>& output) {
 
 
     uint32_t probe_count = vertices.byte_size / vertices.stride;
@@ -218,10 +249,10 @@ bool megamol::probe::PlaceProbes::placeProbes(uint32_t lei) {
     }
 
 
-    std::vector<std::array<float,4>> probePositions;
+    std::vector<std::array<float, 4>> probePositions;
 
     const auto smallest_edge_index = std::distance(m_whd.begin(), std::min_element(m_whd.begin(), m_whd.end()));
-    const float distanceIndicator = m_whd[smallest_edge_index] / 50;
+    const float distanceIndicator = m_whd[smallest_edge_index] / 20;
 
     if (this->m_method_slot.Param<core::param::EnumParam>()->Value() == 0) {
         this->vertexSampling(vertices, probePositions);
@@ -235,7 +266,6 @@ bool megamol::probe::PlaceProbes::placeProbes(uint32_t lei) {
     this->placeByCenterline(lei, probePositions, centerline);
 
     return true;
-
 }
 
 bool megamol::probe::PlaceProbes::placeByCenterline(uint32_t lei, std::vector<std::array<float, 4>>& probePositions,
@@ -251,7 +281,7 @@ bool megamol::probe::PlaceProbes::placeByCenterline(uint32_t lei, std::vector<st
 
     auto vertex_step = 4;
     auto centerline_step = centerline.stride / sizeof(centerline.component_type);
-
+    
     for (uint32_t i = 0; i < probe_count; i++) {
         FloatProbe probe;
 

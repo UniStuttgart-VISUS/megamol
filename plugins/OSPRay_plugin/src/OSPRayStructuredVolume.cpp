@@ -313,7 +313,8 @@ bool OSPRayStructuredVolume::getExtends(megamol::core::Call& call) {
     if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS)) return false;
     if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_METADATA)) return false;
 
-    this->extendContainer.boundingBox = std::make_shared<megamol::core::BoundingBoxes>(cd->AccessBoundingBoxes());
+    this->extendContainer.boundingBox = std::make_shared<megamol::core::BoundingBoxes_2>();
+    this->extendContainer.boundingBox->SetBoundingBox(cd->AccessBoundingBoxes().ObjectSpaceBBox());
     this->extendContainer.timeFramesCount = cd->FrameCount();
     this->extendContainer.isValid = true;
 

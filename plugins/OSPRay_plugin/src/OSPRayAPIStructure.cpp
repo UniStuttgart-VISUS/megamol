@@ -106,7 +106,7 @@ bool OSPRayAPIStructure::getExtends(megamol::core::Call &call) {
 
     if (!(*cd)(1)) return false;
 
-    this->extendContainer.boundingBox = std::make_shared<megamol::core::BoundingBoxes>(cd->AccessBoundingBoxes());
+    this->extendContainer.boundingBox = std::make_shared<core::BoundingBoxes_2>(cd->AccessBoundingBoxes());
     this->extendContainer.timeFramesCount = cd->FrameCount();
     this->extendContainer.isValid = true;
 

@@ -344,6 +344,7 @@ bool adiosDataSource::getHeaderCallback(core::Call& caller) {
             } else {
                 cad->setFrameCount(timesteps[0]);
             }
+            this->data_hash++;
             cad->setDataHash(this->data_hash);
         } catch (std::invalid_argument& e) {
 #ifdef WITH_MPI

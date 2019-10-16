@@ -387,7 +387,7 @@ bool ExtractMesh::getData(core::Call& call) {
     mesh.addMesh(_mesh_attribs, _mesh_indices);
     cm->setData(std::make_shared<mesh::MeshDataAccessCollection>(std::move(mesh)));
     _old_datahash = cd->getDataHash();
-
+    _recalc = false;
 
     return true;
 }
@@ -401,11 +401,12 @@ bool ExtractMesh::getMetaData(core::Call& call) {
     if (cd == nullptr) return false;
 
     auto meta_data = cm->getMetaData();
-    if (cd->getDataHash() == _old_datahash && meta_data.m_frame_ID == cd->getFrameIDtoLoad() &&
-        meta_data.m_data_hash == _recalc_hash)
+    if (cd->getDataHash() == _old_datahash && meta_data.m_frame_ID == cd->getFrameIDtoLoad() && !_recalc)
         return true;
 
     // get metadata from adios
+
+    cd->setFrameIDtoLoad(meta_data.m_frame_ID);
     if (!(*cd)(1)) return false;
     auto vars = cd->getAvailableVars();
     for (auto var : vars) {
@@ -416,10 +417,8 @@ bool ExtractMesh::getMetaData(core::Call& call) {
     }
 
     // put metadata in mesh call
-
     meta_data.m_frame_cnt = cd->getFrameCount();
-    cd->setFrameIDtoLoad(meta_data.m_frame_ID);
-    meta_data.m_data_hash = ++_recalc_hash;
+    meta_data.m_data_hash++;
     cm->setMetaData(meta_data);
 
     return true;
@@ -472,6 +471,7 @@ bool ExtractMesh::getParticleData(core::Call& call) {
     cm->AccessParticles(0).SetDirData(core::moldyn::MultiParticleDataCall::Particles::DIRDATA_FLOAT_XYZ, &_resultNormalCloud->points[0].normal_x, sizeof(pcl::PointNormal));
 
     _old_datahash = cd->getDataHash();
+    _recalc = false;
 
     return true;
 }
@@ -483,7 +483,7 @@ bool ExtractMesh::getParticleMetaData(core::Call& call) {
     auto cd = this->_getDataCall.CallAs<adios::CallADIOSData>();
     if (cd == nullptr) return false;
 
-    if (cd->getDataHash() == _old_datahash && cm->FrameID() == cd->getFrameIDtoLoad() && cm->DataHash() == _recalc_hash)
+    if (cd->getDataHash() == _old_datahash && cm->FrameID() == cd->getFrameIDtoLoad())
         return true;
 
     // get metadata from adios
@@ -499,7 +499,7 @@ bool ExtractMesh::getParticleMetaData(core::Call& call) {
 
     cm->SetFrameCount(cd->getFrameCount());
     cd->setFrameIDtoLoad(cm->FrameID());
-    cm->SetDataHash(_recalc_hash);
+    cm->SetDataHash(_old_datahash);
 
     return true;
 }
@@ -563,7 +563,7 @@ bool ExtractMesh::getCenterlineData(core::Call& call) {
     line.addMesh(_line_attribs, _line_indices);
     cm->setData(std::make_shared<mesh::MeshDataAccessCollection>(std::move(line)));
     _old_datahash = cd->getDataHash();
-
+    _recalc = false;
 
     return true;
 }
@@ -587,7 +587,7 @@ bool ExtractMesh::toggleFormat(core::param::ParamSlot& p) {
 
 bool ExtractMesh::alphaChanged(core::param::ParamSlot& p) {
 
-    _recalc_hash++;
+    _recalc = true;
 
     return true;
 }
