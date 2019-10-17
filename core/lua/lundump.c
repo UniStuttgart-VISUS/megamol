@@ -1,5 +1,5 @@
 /*
-** $Id: lundump.c,v 2.46 2017/06/27 14:21:12 roberto Exp roberto $
+** $Id: lundump.c,v 2.44.1.1 2017/04/19 17:20:42 roberto Exp $
 ** load precompiled Lua chunks
 ** See Copyright Notice in lua.h
 */
@@ -58,26 +58,16 @@ static void LoadBlock (LoadState *S, void *b, size_t size) {
 
 
 static lu_byte LoadByte (LoadState *S) {
-  int b = zgetc(S->Z);
-  if (b == EOZ)
-    error(S, "truncated");
-  return cast_byte(b);
-}
-
-
-static size_t LoadSize (LoadState *S) {
-  size_t x = 0;
-  int b;
-  do {
-    b = LoadByte(S);
-    x = (x << 7) | (b & 0x7f);
-  } while ((b & 0x80) == 0);
+  lu_byte x;
+  LoadVar(S, x);
   return x;
 }
 
 
 static int LoadInt (LoadState *S) {
-  return cast_int(LoadSize(S));
+  int x;
+  LoadVar(S, x);
+  return x;
 }
 
 
@@ -96,7 +86,9 @@ static lua_Integer LoadInteger (LoadState *S) {
 
 
 static TString *LoadString (LoadState *S) {
-  size_t size = LoadSize(S);
+  size_t size = LoadByte(S);
+  if (size == 0xFF)
+    LoadVar(S, size);
   if (size == 0)
     return NULL;
   else if (--size <= LUAI_MAXSHORTLEN) {  /* short string? */
@@ -188,16 +180,9 @@ static void LoadUpvalues (LoadState *S, Proto *f) {
 static void LoadDebug (LoadState *S, Proto *f) {
   int i, n;
   n = LoadInt(S);
-  f->lineinfo = luaM_newvector(S->L, n, ls_byte);
+  f->lineinfo = luaM_newvector(S->L, n, int);
   f->sizelineinfo = n;
   LoadVector(S, f->lineinfo, n);
-  n = LoadInt(S);
-  f->abslineinfo = luaM_newvector(S->L, n, AbsLineInfo);
-  f->sizeabslineinfo = n;
-  for (i = 0; i < n; i++) {
-    f->abslineinfo[i].pc = LoadInt(S);
-    f->abslineinfo[i].line = LoadInt(S);
-  }
   n = LoadInt(S);
   f->locvars = luaM_newvector(S->L, n, LocVar);
   f->sizelocvars = n;
@@ -283,7 +268,7 @@ LClosure *luaU_undump(lua_State *L, ZIO *Z, const char *name) {
   S.Z = Z;
   checkHeader(&S);
   cl = luaF_newLclosure(L, LoadByte(&S));
-  setclLvalue2s(L, L->top, cl);
+  setclLvalue(L, L->top, cl);
   luaD_inctop(L);
   cl->p = luaF_newproto(L);
   LoadFunction(&S, cl->p, NULL);

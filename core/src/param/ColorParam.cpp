@@ -15,18 +15,11 @@
 
 using namespace megamol::core::param;
 
-ColorParam::ColorParam(const ColorType& initVal) { this->val = initVal; }
+ColorParam::ColorParam(const ColorType& initVal) : val(initVal) {}
 
-ColorParam::ColorParam(const float& initR, const float& initG, const float& initB, const float& initA) {
-    this->val[0] = initR;
-    this->val[1] = initG;
-    this->val[2] = initB;
-    this->val[3] = initA;
-}
+ColorParam::ColorParam(float initR, float initG, float initB, float initA) : val({initR, initG, initB, initA}) {}
 
 ColorParam::ColorParam(const vislib::TString& initVal) { ParseValue(initVal); }
-
-ColorParam::~ColorParam(void) {}
 
 void ColorParam::Definition(vislib::RawStorage& outDef) const {
     outDef.AssertSize(6);
@@ -34,6 +27,11 @@ void ColorParam::Definition(vislib::RawStorage& outDef) const {
 }
 
 bool ColorParam::ParseValue(vislib::TString const& v) {
+
+    // Checked color syntax:
+    // 1] #123 #1234 #123456 #12345678
+    // 2] Colour(1.0;0.5;1.0;1.0) Colour(1.0;0.5;1.0)
+    // 3] 'Named Colour', e.g. Red
     try {
         float vParsed[4];
         if (core::utility::ColourParser::FromString(v, 4, vParsed)) {
@@ -43,6 +41,7 @@ bool ColorParam::ParseValue(vislib::TString const& v) {
         }
     } catch (...) {
     }
+
     return false;
 }
 

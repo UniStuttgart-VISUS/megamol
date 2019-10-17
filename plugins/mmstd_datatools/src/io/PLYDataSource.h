@@ -85,6 +85,13 @@ protected:
     bool assertData(void);
 
     /**
+     * Checks whether one the input parameters is dirty and resets the dirtyness state
+     *
+     * @return True if one of the parameters was dirty, false otherwise.
+     */
+    bool checkParameterDirtyness(void);
+
+    /**
      * Clears all allocated fields.
      */
     void clearAllFields(void);
@@ -98,12 +105,12 @@ protected:
     bool filenameChanged(core::param::ParamSlot& slot);
 
     /**
-     * Callback that is called when an enum is changed by the user.
-     *
-     * @param slot The slot containing the changed enum.
+     * Updates the currently read values according to the new selections.
+     * 
+     * @param slot The slot containing the file path.
      * @return True on success, false otherwise.
      */
-    bool anyEnumChanged(core::param::ParamSlot& slot);
+    bool fileUpdate(core::param::ParamSlot& slot);
 
     /**
      * Callback setting the data of the read spheres.
@@ -136,6 +143,11 @@ protected:
      * @return True on success, false otherwise.
      */
     bool getMeshExtentCallback(core::Call& caller);
+
+    /**
+     * Resets the dirtyness of all parameters
+     */
+    void resetParameterDirtyness(void);
 
     /** Slot for the filepath of the .ply file */
     core::param::ParamSlot filename;
@@ -182,23 +194,23 @@ protected:
     /** Slot for the uniform sphere radius */
     core::param::ParamSlot radiusSlot;
 
-    /** Guessed name of the position properties */
-    std::vector<std::string> guessedPos;
+    /** Guessed and real names of the position properties */
+    std::vector<std::string> guessedPos, selectedPos;
 
-    /** Guessed name of the normal properties */
-    std::vector<std::string> guessedNormal;
+    /** Guessed and real names of the normal properties */
+    std::vector<std::string> guessedNormal, selectedNormal;
 
-    /** Guessed name of the color properties */
-    std::vector<std::string> guessedColor;
+    /** Guessed and real names of the color properties */
+    std::vector<std::string> guessedColor, selectedColor;
 
-    /** Guessed name of the index property */
-    std::string guessedIndices;
+    /** Guessed and real names of the index property */
+    std::string guessedIndices, selectedIndices;
 
-    /** Guessed name of the vertex property */
-    std::string guessedVertices;
+    /** Guessed and real names of the vertex property */
+    std::string guessedVertices, selectedVertices;
 
-    /** Guessed name of the face property */
-    std::string guessedFaces;
+    /** Guessed and real names of the face property */
+    std::string guessedFaces, selectedFaces;
 
     /** Sizes in byte for each element of the read ply file */
     std::vector<uint64_t> elementSizes;
@@ -236,9 +248,6 @@ protected:
 
     /** The input file stream. */
     std::ifstream instream;
-
-    /** The tinyply file handle. */
-    tinyply::PlyFile plf;
 
     /** Struct for the different possible position types */
     struct pos_type {

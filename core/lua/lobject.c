@@ -1,5 +1,5 @@
 /*
-** $Id: lobject.c,v 2.116 2017/06/29 15:06:44 roberto Exp roberto $
+** $Id: lobject.c,v 2.113.1.1 2017/04/19 17:29:57 roberto Exp $
 ** Some generic functions over Lua objects
 ** See Copyright Notice in lua.h
 */
@@ -120,8 +120,8 @@ static lua_Number numarith (lua_State *L, int op, lua_Number v1,
 }
 
 
-int luaO_rawarith (lua_State *L, int op, const TValue *p1, const TValue *p2,
-                   TValue *res) {
+void luaO_arith (lua_State *L, int op, const TValue *p1, const TValue *p2,
+                 TValue *res) {
   switch (op) {
     case LUA_OPBAND: case LUA_OPBOR: case LUA_OPBXOR:
     case LUA_OPSHL: case LUA_OPSHR:
@@ -129,40 +129,34 @@ int luaO_rawarith (lua_State *L, int op, const TValue *p1, const TValue *p2,
       lua_Integer i1; lua_Integer i2;
       if (tointeger(p1, &i1) && tointeger(p2, &i2)) {
         setivalue(res, intarith(L, op, i1, i2));
-        return 1;
+        return;
       }
-      else return 0;  /* fail */
+      else break;  /* go to the end */
     }
     case LUA_OPDIV: case LUA_OPPOW: {  /* operate only on floats */
       lua_Number n1; lua_Number n2;
       if (tonumber(p1, &n1) && tonumber(p2, &n2)) {
         setfltvalue(res, numarith(L, op, n1, n2));
-        return 1;
+        return;
       }
-      else return 0;  /* fail */
+      else break;  /* go to the end */
     }
     default: {  /* other operations */
       lua_Number n1; lua_Number n2;
       if (ttisinteger(p1) && ttisinteger(p2)) {
         setivalue(res, intarith(L, op, ivalue(p1), ivalue(p2)));
-        return 1;
+        return;
       }
-      else if (tonumberns(p1, n1) && tonumberns(p2, n2)) {
+      else if (tonumber(p1, &n1) && tonumber(p2, &n2)) {
         setfltvalue(res, numarith(L, op, n1, n2));
-        return 1;
+        return;
       }
-      else return 0;  /* fail */
+      else break;  /* go to the end */
     }
   }
-}
-
-
-void luaO_arith (lua_State *L, int op, const TValue *p1, const TValue *p2,
-                 StkId res) {
-  if (!luaO_rawarith(L, op, p1, p2, s2v(res))) {
-    /* could not perform raw operation; try metamethod */
-    luaT_trybinTM(L, p1, p2, res, cast(TMS, (op - LUA_OPADD) + TM_ADD));
-  }
+  /* could not perform raw operation; try metamethod */
+  lua_assert(L != NULL);  /* should not fail when folding (compile time) */
+  luaT_trybinTM(L, p1, p2, res, cast(TMS, (op - LUA_OPADD) + TM_ADD));
 }
 
 
@@ -374,7 +368,7 @@ int luaO_utf8esc (char *buff, unsigned long x) {
 /*
 ** Convert a number object to a string
 */
-void luaO_tostring (lua_State *L, TValue *obj) {
+void luaO_tostring (lua_State *L, StkId obj) {
   char buff[MAXNUMBER2STR];
   size_t len;
   lua_assert(ttisnumber(obj));
@@ -389,7 +383,7 @@ void luaO_tostring (lua_State *L, TValue *obj) {
     }
 #endif
   }
-  setsvalue(L, obj, luaS_newlstr(L, buff, len));
+  setsvalue2s(L, obj, luaS_newlstr(L, buff, len));
 }
 
 
@@ -425,18 +419,18 @@ const char *luaO_pushvfstring (lua_State *L, const char *fmt, va_list argp) {
         break;
       }
       case 'd': {  /* an 'int' */
-        setivalue(s2v(L->top), va_arg(argp, int));
+        setivalue(L->top, va_arg(argp, int));
         goto top2str;
       }
       case 'I': {  /* a 'lua_Integer' */
-        setivalue(s2v(L->top), cast(lua_Integer, va_arg(argp, l_uacInt)));
+        setivalue(L->top, cast(lua_Integer, va_arg(argp, l_uacInt)));
         goto top2str;
       }
       case 'f': {  /* a 'lua_Number' */
-        setfltvalue(s2v(L->top), cast_num(va_arg(argp, l_uacNumber)));
+        setfltvalue(L->top, cast_num(va_arg(argp, l_uacNumber)));
       top2str:  /* convert the top element to a string */
         luaD_inctop(L);
-        luaO_tostring(L, s2v(L->top - 1));
+        luaO_tostring(L, L->top - 1);
         break;
       }
       case 'p': {  /* a pointer */
@@ -467,7 +461,7 @@ const char *luaO_pushvfstring (lua_State *L, const char *fmt, va_list argp) {
   luaD_checkstack(L, 1);
   pushstr(L, fmt, strlen(fmt));
   if (n > 0) luaV_concat(L, n + 1);
-  return svalue(s2v(L->top - 1));
+  return svalue(L->top - 1);
 }
 
 

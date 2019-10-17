@@ -15,7 +15,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/moldyn/DirectionalParticleDataCall.h"
+#include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/CallVolumeData.h"
 #include "vislib/RawStorage.h"
 #include "vislib/types.h"
@@ -26,8 +26,10 @@ namespace core {
 namespace moldyn {
 
 
+    // TODO: this goes into the trash as soon as ParticleVisibilityFromVolume is fixed
+
     /**
-     * Module to modulate the colour (saturation) of directional particles based on a scalar volume.
+     * Module to modulate the colour (saturation) of particles based on a scalar volume.
      */
     class DirPartFilter : public Module {
     public:
@@ -47,7 +49,7 @@ namespace moldyn {
          * @return A human readable description of this module.
          */
         static const char *Description(void) {
-            return "Module to filter partices based on the scalar value at their position";
+            return "Module to filter particles based on the scalar value at their position";
         }
 
         /**

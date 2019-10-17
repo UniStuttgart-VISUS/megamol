@@ -14,7 +14,6 @@
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
-#include "mmcore/view/CallRender3D.h"
 #include "ospcommon/box.h"
 #include "ospray/ospray.h"
 #include "vislib/graphics/gl/FramebufferObject.h"
@@ -26,14 +25,15 @@
 #include <stdio.h>
 
 
-using namespace megamol::ospray;
+namespace megamol {
+namespace ospray {
 
 void ospErrorCallback(OSPError err, const char* details) {
     vislib::sys::Log::DefaultLog.WriteError("OSPRay Error %u: %s", err, details);
 }
 
 AbstractOSPRayRenderer::AbstractOSPRayRenderer(void)
-    : core::view::Renderer3DModule()
+    : core::view::Renderer3DModule_2()
     , accumulateSlot("accumulate", "Activates the accumulation buffer")
     ,
     // general renderer parameters
@@ -52,9 +52,6 @@ AbstractOSPRayRenderer::AbstractOSPRayRenderer(void)
     rd_ptBackground(
         "PathTracer::BackgroundTexture", "Texture image used as background, replacing visible lights in infinity")
     ,
-    // Call lights
-    getLightSlot("getLight", "Connects to a light source")
-    ,
     // Use depth buffer component
     useDB("useDBcomponent", "activates depth composition with OpenGL content")
     , deviceTypeSlot("device", "Set the type of the OSPRay device")
@@ -62,8 +59,6 @@ AbstractOSPRayRenderer::AbstractOSPRayRenderer(void)
 
     // ospray lights
     lightsToRender = NULL;
-    this->getLightSlot.SetCompatibleCall<ospray::CallOSPRayLightDescription>();
-    this->MakeSlotAvailable(&this->getLightSlot);
     // ospray device and framebuffer
     device = NULL;
     framebufferIsDirty = true;
@@ -120,40 +115,40 @@ AbstractOSPRayRenderer::AbstractOSPRayRenderer(void)
 }
 
 void AbstractOSPRayRenderer::renderTexture2D(vislib::graphics::gl::GLSLShader& shader, const uint32_t* fb,
-    const float* db, int& width, int& height, megamol::core::view::CallRender3D& cr) {
+    const float* db, int& width, int& height, megamol::core::view::CallRender3D_2& cr) {
 
     auto fbo = cr.FrameBufferObject();
-    if (fbo != NULL) {
+    //if (fbo != NULL) {
 
-        if (fbo->IsValid()) {
-            if ((fbo->GetWidth() != width) || (fbo->GetHeight() != height)) {
-                fbo->Release();
-            }
-        }
-        if (!fbo->IsValid()) {
-            fbo->Create(width, height, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE,
-                vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE, GL_DEPTH_COMPONENT);
-        }
-        if (fbo->IsValid() && !fbo->IsEnabled()) {
-            fbo->Enable();
-        }
+    //    if (fbo->IsValid()) {
+    //        if ((fbo->GetWidth() != width) || (fbo->GetHeight() != height)) {
+    //            fbo->Release();
+    //        }
+    //    }
+    //    if (!fbo->IsValid()) {
+    //        fbo->Create(width, height, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE,
+    //            vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE, GL_DEPTH_COMPONENT);
+    //    }
+    //    if (fbo->IsValid() && !fbo->IsEnabled()) {
+    //        fbo->Enable();
+    //    }
 
-        fbo->BindColourTexture();
-        glClear(GL_COLOR_BUFFER_BIT);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, fb);
-        glBindTexture(GL_TEXTURE_2D, 0);
+    //    fbo->BindColourTexture();
+    //    glClear(GL_COLOR_BUFFER_BIT);
+    //    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, fb);
+    //    glBindTexture(GL_TEXTURE_2D, 0);
 
-        fbo->BindDepthTexture();
-        glClear(GL_DEPTH_BUFFER_BIT);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, db);
-        glBindTexture(GL_TEXTURE_2D, 0);
+    //    fbo->BindDepthTexture();
+    //    glClear(GL_DEPTH_BUFFER_BIT);
+    //    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, db);
+    //    glBindTexture(GL_TEXTURE_2D, 0);
 
-        if (fbo->IsValid()) {
-            fbo->Disable();
-            // fbo->DrawColourTexture();
-            // fbo->DrawDepthTexture();
-        }
-    } else {
+    //    if (fbo->IsValid()) {
+    //        fbo->Disable();
+    //        // fbo->DrawColourTexture();
+    //        // fbo->DrawDepthTexture();
+    //    }
+    //} else {
         /*
         if (this->new_fbo.IsValid()) {
             if ((this->new_fbo.GetWidth() != width) || (this->new_fbo.GetHeight() != height)) {
@@ -213,7 +208,7 @@ void AbstractOSPRayRenderer::renderTexture2D(vislib::graphics::gl::GLSLShader& s
         glBlendFunc(GL_SRC_ALPHA, GL_ONE);
         glDisable(GL_BLEND);
         glDisable(GL_DEPTH_TEST);
-    }
+  //  }
 }
 
 
@@ -457,7 +452,7 @@ void AbstractOSPRayRenderer::AbstractResetDirty() {
 }
 
 
-void AbstractOSPRayRenderer::fillLightArray(float* eyeDir) {
+void AbstractOSPRayRenderer::fillLightArray(glm::vec4& eyeDir) {
 
     // create custom ospray light
     OSPLight light;
@@ -468,24 +463,24 @@ void AbstractOSPRayRenderer::fillLightArray(float* eyeDir) {
         auto const& lc = entry.second;
 
         switch (lc.lightType) {
-        case ospray::lightenum::NONE:
+        case core::view::light::lightenum::NONE:
             light = NULL;
             break;
-        case ospray::lightenum::DISTANTLIGHT:
+        case core::view::light::lightenum::DISTANTLIGHT:
             light = ospNewLight(this->renderer, "distant");
             if (lc.dl_eye_direction == true) {
-                ospSet3fv(light, "direction", eyeDir);
+                ospSet3f(light, "direction", eyeDir.x, eyeDir.y, eyeDir.z);
             } else {
                 ospSet3fv(light, "direction", lc.dl_direction.data());
             }
             ospSet1f(light, "angularDiameter", lc.dl_angularDiameter);
             break;
-        case ospray::lightenum::POINTLIGHT:
+        case core::view::light::lightenum::POINTLIGHT:
             light = ospNewLight(this->renderer, "point");
             ospSet3fv(light, "position", lc.pl_position.data());
             ospSet1f(light, "radius", lc.pl_radius);
             break;
-        case ospray::lightenum::SPOTLIGHT:
+        case core::view::light::lightenum::SPOTLIGHT:
             light = ospNewLight(this->renderer, "spot");
             ospSet3fv(light, "position", lc.sl_position.data());
             ospSet3fv(light, "direction", lc.sl_direction.data());
@@ -493,13 +488,13 @@ void AbstractOSPRayRenderer::fillLightArray(float* eyeDir) {
             ospSet1f(light, "penumbraAngle", lc.sl_penumbraAngle);
             ospSet1f(light, "radius", lc.sl_radius);
             break;
-        case ospray::lightenum::QUADLIGHT:
+        case core::view::light::lightenum::QUADLIGHT:
             light = ospNewLight(this->renderer, "quad");
             ospSet3fv(light, "position", lc.ql_position.data());
             ospSet3fv(light, "edge1", lc.ql_edgeOne.data());
             ospSet3fv(light, "edge2", lc.ql_edgeTwo.data());
             break;
-        case ospray::lightenum::HDRILIGHT:
+        case core::view::light::lightenum::HDRILIGHT:
             light = ospNewLight(this->renderer, "hdri");
             ospSet3fv(light, "up", lc.hdri_up.data());
             ospSet3fv(light, "dir", lc.hdri_direction.data());
@@ -508,7 +503,7 @@ void AbstractOSPRayRenderer::fillLightArray(float* eyeDir) {
                 ospSetObject(this->renderer, "backplate", hdri_tex);
             }
             break;
-        case ospray::lightenum::AMBIENTLIGHT:
+        case core::view::light::lightenum::AMBIENTLIGHT:
             light = ospNewLight(this->renderer, "ambient");
             break;
         }
@@ -559,50 +554,40 @@ void AbstractOSPRayRenderer::RendererSettings(OSPRenderer& renderer) {
 
 
 void AbstractOSPRayRenderer::setupOSPRayCamera(
-    OSPCamera& camera, megamol::core::view::CallRender3D* cr, float scaling) {
+    OSPCamera& ospcam, megamol::core::view::Camera_2& mmcam) {
 
 
     // calculate image parts for e.g. screenshooter
     std::vector<float> imgStart(2, 0);
     std::vector<float> imgEnd(2, 0);
-    imgStart[0] = cr->GetCameraParameters()->TileRect().GetLeft() /
-                  static_cast<float>(cr->GetCameraParameters()->VirtualViewSize().GetWidth());
-    imgStart[1] = cr->GetCameraParameters()->TileRect().GetBottom() /
-                  static_cast<float>(cr->GetCameraParameters()->VirtualViewSize().GetHeight());
+    imgStart[0] = mmcam.image_tile().left() /
+                  static_cast<float>(mmcam.resolution_gate().width());
+    imgStart[1] = mmcam.image_tile().bottom() /
+                  static_cast<float>(mmcam.resolution_gate().height());
 
-    imgEnd[0] = (cr->GetCameraParameters()->TileRect().GetLeft() + cr->GetCameraParameters()->TileRect().Width()) /
-                static_cast<float>(cr->GetCameraParameters()->VirtualViewSize().GetWidth());
-    imgEnd[1] = (cr->GetCameraParameters()->TileRect().GetBottom() + cr->GetCameraParameters()->TileRect().Height()) /
-                static_cast<float>(cr->GetCameraParameters()->VirtualViewSize().GetHeight());
+    imgEnd[0] = (mmcam.image_tile().left() + mmcam.image_tile().width()) /
+                static_cast<float>(mmcam.resolution_gate().width());
+    imgEnd[1] = (mmcam.image_tile().bottom() + mmcam.image_tile().height()) /
+                static_cast<float>(mmcam.resolution_gate().height());
 
-    // setup camera
-    ospSet2fv(camera, "imageStart", imgStart.data());
-    ospSet2fv(camera, "imageEnd", imgEnd.data());
-    ospSetf(camera, "aspect",
-        static_cast<float>(cr->GetCameraParameters()->VirtualViewSize().GetWidth()) /
-            static_cast<float>(cr->GetCameraParameters()->VirtualViewSize().GetHeight()));
-    // ospSetf(camera, "aspect", cr->GetCameraParameters()->TileRect().AspectRatio());
-
-    // undo scaling
-    auto bc = cr->AccessBoundingBoxes().ObjectSpaceBBox().CalcCenter();
-    auto mmpos = cr->GetCameraParameters()->EyePosition().PeekCoordinates();
-    std::vector<float> ospPos = {mmpos[0] / scaling, //+bc.GetX() / scaling,
-        mmpos[1] / scaling,                          //+bc.GetY() / scaling,
-        mmpos[2] / scaling};                         //+bc.GetZ() / scaling
+    // setup ospcam
+    ospSet2fv(ospcam, "imageStart", imgStart.data());
+    ospSet2fv(ospcam, "imageEnd", imgEnd.data());
+    ospSetf(ospcam, "aspect", mmcam.resolution_gate_aspect());
 
 
-    ospSet3fv(camera, "pos", ospPos.data());
+    ospSet3f(ospcam, "pos", mmcam.eye_position().x(), mmcam.eye_position().y(), mmcam.eye_position().z());
 
-    // ospSet3fv(camera, "pos", cr->GetCameraParameters()->EyePosition().PeekCoordinates());
-    ospSet3fv(camera, "dir", cr->GetCameraParameters()->EyeDirection().PeekComponents());
-    ospSet3fv(camera, "up", cr->GetCameraParameters()->EyeUpVector().PeekComponents());
-    ospSet1f(camera, "fovy", cr->GetCameraParameters()->ApertureAngle());
+    // ospSet3fv(ospcam, "pos", cr->GetCameraParameters()->EyePosition().PeekCoordinates());
+    ospSet3f(ospcam, "dir", mmcam.view_vector().x(), mmcam.view_vector().y(), mmcam.view_vector().z());
+    ospSet3f(ospcam, "up", mmcam.up_vector().x(), mmcam.up_vector().y(), mmcam.up_vector().z());
+    ospSet1f(ospcam, "fovy", mmcam.aperture_angle());
 
-    // ospSet1i(camera, "architectural", 1);
-    // ospSet1f(camera, "nearClip", cr->GetCameraParameters()->NearClip());
-    // ospSet1f(camera, "farClip", cr->GetCameraParameters()->FarClip());
-    // ospSet1f(camera, "apertureRadius", cr->GetCameraParameters()->ApertureAngle);
-    // ospSet1f(camera, "focalDistance", cr->GetCameraParameters()->FocalDistance());
+    ospSet1i(ospcam, "architectural", 1);
+    ospSet1f(ospcam, "nearClip", mmcam.near_clipping_plane());
+    ospSet1f(ospcam, "farClip", mmcam.far_clipping_plane());
+    // ospSet1f(ospcam, "apertureRadius", );
+    // ospSet1f(ospcam, "focalDistance", cr->GetCameraParameters()->FocalDistance());
 }
 
 OSPFrameBuffer AbstractOSPRayRenderer::newFrameBuffer(
@@ -850,7 +835,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
 
         case structureTypeEnum::OSPRAY_API_STRUCTURES:
              if (element.ospStructures.first.empty()) {
-                returnValue = false;
+                // returnValue = false;
                 break;
             }
             for (auto structure : element.ospStructures.first) {
@@ -877,51 +862,9 @@ bool AbstractOSPRayRenderer::fillWorld() {
             break;
         case structureTypeEnum::GEOMETRY:
             switch (element.geometryType) {
-            case geometryTypeEnum::PKD: {
-                if (element.raw == NULL) {
-                    returnValue = false;
-                    break;
-                }
-
-                error = ospLoadModule("pkd");
-                if (error != OSPError::OSP_NO_ERROR) {
-                    vislib::sys::Log::DefaultLog.WriteError(
-                        "Unable to load OSPRay module: PKD. Error occured in %s:%d", __FILE__, __LINE__);
-                }
-
-                geo.push_back(ospNewGeometry("pkd_geometry"));
-
-                vertexData = ospNewData(element.partCount, OSP_FLOAT4, element.raw, OSP_DATA_SHARED_BUFFER);
-                ospCommit(vertexData);
-
-                // set bbox
-                bboxData = ospNewData(
-                    6, OSP_FLOAT, element.boundingBox->ObjectSpaceBBox().PeekBounds(), OSP_DATA_SHARED_BUFFER);
-                ospCommit(bboxData);
-
-                ospSet1f(geo.back(), "radius", element.globalRadius);
-                ospSet1i(geo.back(), "colorType", element.colorType);
-                ospSetData(geo.back(), "position", vertexData);
-                ospSetData(geo.back(), "bbox", bboxData);
-
-                if (this->rd_type.Param<megamol::core::param::EnumParam>()->Value() == MPI_RAYCAST) {
-                    auto const half_radius = element.globalRadius * 0.5f;
-
-                    auto const bbox =
-                        element.boundingBox->ObjectSpaceBBox().PeekBounds(); //< TODO Not all geometries expose bbox
-                    ospcommon::vec3f lower{bbox[0] - half_radius, bbox[1] - half_radius,
-                        bbox[2] - half_radius}; //< TODO The bbox needs to include complete sphere bound
-                    ospcommon::vec3f upper{bbox[3] + half_radius, bbox[4] + half_radius, bbox[5] + half_radius};
-                    // ghostRegions.emplace_back(lower, upper);
-                    worldBounds.extend({lower, upper}); //< TODO Possible hazard if bbox is not centered
-                    regions.emplace_back(lower, upper);
-                }
-            }
-
-            break;
-            case geometryTypeEnum::SPHERES:
+             case geometryTypeEnum::SPHERES:
                 if (element.vertexData == NULL) {
-                    returnValue = false;
+                    // returnValue = false;
                     break;
                 }
 
@@ -979,7 +922,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
 
             case geometryTypeEnum::NHSPHERES:
                 if (element.raw == NULL) {
-                    returnValue = false;
+                    // returnValue = false;
                     break;
                 }
 
@@ -1029,7 +972,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
                 break;
             case geometryTypeEnum::PBS:
                 if (element.xData == NULL || element.yData == NULL || element.zData == NULL) {
-                    returnValue = false;
+                    // returnValue = false;
                     break;
                 }
                 {
@@ -1060,7 +1003,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
                 break;
             case geometryTypeEnum::TRIANGLES:
                 if (element.vertexData == NULL) {
-                    returnValue = false;
+                    // returnValue = false;
                     break;
                 }
 
@@ -1110,7 +1053,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
                 break;
             case geometryTypeEnum::STREAMLINES:
                 if (element.vertexData == NULL) {
-                    returnValue = false;
+                    // returnValue = false;
                     break;
                 }
                 {
@@ -1179,7 +1122,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
         case structureTypeEnum::VOLUME:
 
                 if (element.voxels == NULL) {
-                    returnValue = false;
+                    // returnValue = false;
                     break;
                 }
 
@@ -1303,3 +1246,6 @@ bool AbstractOSPRayRenderer::fillWorld() {
 }
 
 void AbstractOSPRayRenderer::releaseOSPRayStuff() {}
+
+} // end namespace ospray
+} // end namespace megamol

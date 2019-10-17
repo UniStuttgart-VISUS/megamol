@@ -16,6 +16,7 @@
 #include "vislib/math/BezierCurve.h"
 #include "vislib/math/Point.h"
 #include "vislib/math/ShallowPoint.h"
+#include "vislib/sys/Log.h"
 
 namespace megamol {
 namespace demos {
@@ -55,14 +56,12 @@ BezierCPUMeshRenderer::~BezierCPUMeshRenderer(void) {
 /*
  * BezierCPUMeshRenderer::render
  */
-bool BezierCPUMeshRenderer::render(megamol::core::view::CallRender3D& call) {
+bool BezierCPUMeshRenderer::render(megamol::core::view::CallRender3D_2& call) {
     using core::misc::BezierCurvesListDataCall;
     BezierCurvesListDataCall *data = this->getDataSlot.CallAs<BezierCurvesListDataCall>();
     if (data == nullptr) return false;
     data->SetFrameID(static_cast<unsigned int>(call.Time()));
     if (!(*data)(1)) return false;
-
-    ::glScalef(scaling, scaling, scaling);
 
     ::glDisable(GL_TEXTURE);
     ::glEnable(GL_DEPTH_TEST);
@@ -92,7 +91,7 @@ bool BezierCPUMeshRenderer::render(megamol::core::view::CallRender3D& call) {
         int proSeg = this->profileSectionsSlot.Param<core::param::IntParam>()->Value();
         int capSeg = this->capSectionsSlot.Param<core::param::IntParam>()->Value();
 
-        ::glNewList(this->geo, GL_COMPILE_AND_EXECUTE);
+        ::glNewList(this->geo, GL_COMPILE);
 
         size_t cnt = data->Count();
         for (size_t i = 0; i < cnt; i++) {
@@ -160,9 +159,66 @@ bool BezierCPUMeshRenderer::render(megamol::core::view::CallRender3D& call) {
 
         data->Unlock();
 
-    } else {
-        ::glCallList(this->geo);
     }
+
+	core::view::Camera_2 cam;
+    call.GetCamera(cam);
+    cam_type::snapshot_type snapshot;
+    cam_type::matrix_type viewTemp, projTemp;
+    cam.calc_matrices(snapshot, viewTemp, projTemp, core::thecam::snapshot_content::all);
+    glm::mat4 proj = projTemp;
+    glm::mat4 view = viewTemp;
+
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+    glLoadMatrixf(glm::value_ptr(proj));
+
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+    glLoadMatrixf(glm::value_ptr(view));
+
+	// determine position of point light
+	this->GetLights();
+    glm::vec4 lightPos = {0.0f, 0.0f, 0.0f, 1.0f};
+    if (this->lightMap.size() != 1) {
+		vislib::sys::Log::DefaultLog.WriteWarn("[BezierCPUMeshRenderer] Only one single point light source is supported by this renderer");
+    }
+    for (auto light : this->lightMap) {
+        if (light.second.lightType != core::view::light::POINTLIGHT) {
+        vislib::sys::Log::DefaultLog.WriteWarn("[BezierCPUMeshRenderer] Only single point light source is supported by this renderer");
+        } else {
+            auto lPos = light.second.pl_position;
+            //light.second.lightColor;
+            //light.second.lightIntensity;
+            if (lPos.size() == 3) {
+                lightPos[0] = lPos[0];
+                lightPos[1] = lPos[1];
+                lightPos[2] = lPos[2];
+            }
+            if (lPos.size() == 4) {
+                lightPos[4] = lPos[4];
+            }
+            break;
+        }
+    }
+    const float lp[4] = {-lightPos[0], -lightPos[1], -lightPos[1], 0.0f};
+    const float zeros[4] = {0.0f, 0.0f, 0.0f, 1.0f};
+    const float ones[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+    glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHT0);
+    glLightfv(GL_LIGHT0, GL_AMBIENT, zeros);
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, ones);
+    glLightfv(GL_LIGHT0, GL_SPECULAR, ones);
+    glLightModelfv(GL_LIGHT_MODEL_AMBIENT, zeros);
+
+    glCallList(this->geo);
+
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
+	glMatrixMode(GL_MODELVIEW);
+	glPopMatrix();
+    glDisable(GL_LIGHTING);
+    glDisable(GL_LIGHT0);
 
     ::glDisable(GL_LINE_SMOOTH);
     ::glDisable(GL_BLEND);

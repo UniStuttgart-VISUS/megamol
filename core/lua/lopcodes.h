@@ -1,5 +1,5 @@
 /*
-** $Id: lopcodes.h,v 1.154 2017/05/08 16:08:01 roberto Exp roberto $
+** $Id: lopcodes.h,v 1.149.1.1 2017/04/19 17:20:42 roberto Exp $
 ** Opcodes for Lua virtual machine
 ** See Copyright Notice in lua.h
 */
@@ -90,7 +90,7 @@ enum OpMode {iABC, iABx, iAsBx, iAx};  /* basic instruction format */
 #define SET_OPCODE(i,o)	((i) = (((i)&MASK0(SIZE_OP,POS_OP)) | \
 		((cast(Instruction, o)<<POS_OP)&MASK1(SIZE_OP,POS_OP))))
 
-#define getarg(i,pos,size)	(cast(int, ((i)>>(pos)) & MASK1(size,0)))
+#define getarg(i,pos,size)	(cast(int, ((i)>>pos) & MASK1(size,0)))
 #define setarg(i,v,pos,size)	((i) = (((i)&MASK0(size,pos)) | \
                 ((cast(Instruction, v)<<pos)&MASK1(size,pos))))
 
@@ -100,14 +100,8 @@ enum OpMode {iABC, iABx, iAsBx, iAx};  /* basic instruction format */
 #define GETARG_B(i)	getarg(i, POS_B, SIZE_B)
 #define SETARG_B(i,v)	setarg(i, v, POS_B, SIZE_B)
 
-#define GETARG_Br(i)	getarg(i, POS_B, SIZE_B - 1)
-#define GETARG_Bk(i)	getarg(i, (POS_B + SIZE_B - 1), 1)
-
 #define GETARG_C(i)	getarg(i, POS_C, SIZE_C)
 #define SETARG_C(i,v)	setarg(i, v, POS_C, SIZE_C)
-
-#define GETARG_Cr(i)	getarg(i, POS_C, SIZE_C - 1)
-#define GETARG_Ck(i)	getarg(i, (POS_C + SIZE_C - 1), 1)
 
 #define GETARG_Bx(i)	getarg(i, POS_Bx, SIZE_Bx)
 #define SETARG_Bx(i,v)	setarg(i, v, POS_Bx, SIZE_Bx)
@@ -176,28 +170,22 @@ name		args	description
 ------------------------------------------------------------------------*/
 OP_MOVE,/*	A B	R(A) := R(B)					*/
 OP_LOADK,/*	A Bx	R(A) := Kst(Bx)					*/
-OP_LOADI,/*	A sBx	R(A) := sBx					*/
 OP_LOADKX,/*	A 	R(A) := Kst(extra arg)				*/
 OP_LOADBOOL,/*	A B C	R(A) := (Bool)B; if (C) pc++			*/
 OP_LOADNIL,/*	A B	R(A), R(A+1), ..., R(A+B) := nil		*/
 OP_GETUPVAL,/*	A B	R(A) := UpValue[B]				*/
+
+OP_GETTABUP,/*	A B C	R(A) := UpValue[B][RK(C)]			*/
+OP_GETTABLE,/*	A B C	R(A) := R(B)[RK(C)]				*/
+
+OP_SETTABUP,/*	A B C	UpValue[A][RK(B)] := RK(C)			*/
 OP_SETUPVAL,/*	A B	UpValue[B] := R(A)				*/
-
-OP_GETTABUP,/*	A B C	R(A) := UpValue[B][K(C):string]			*/
-OP_GETTABLE,/*	A B C	R(A) := R(B)[R(C)]				*/
-OP_GETI,/*	A B C	R(A) := R(B)[C]					*/
-OP_GETFIELD,/*	A B C	R(A) := R(B)[Kst(C):string]			*/
-
-OP_SETTABUP,/*	A B C	UpValue[A][K(B):string] := RK(C)		*/
-OP_SETTABLE,/*	A B C	R(A)[R(B)] := RK(C)				*/
-OP_SETI,/*	A B C	R(A)[B] := RK(C)				*/
-OP_SETFIELD,/*	A B C	R(A)[K(B):string] := RK(C)			*/
+OP_SETTABLE,/*	A B C	R(A)[RK(B)] := RK(C)				*/
 
 OP_NEWTABLE,/*	A B C	R(A) := {} (size = B,C)				*/
 
-OP_SELF,/*	A B C	R(A+1) := R(B); R(A) := R(B)[RK(C):string]	*/
+OP_SELF,/*	A B C	R(A+1) := R(B); R(A) := R(B)[RK(C)]		*/
 
-OP_ADDI,/*	A B C	R(A) := R(B) + C				*/
 OP_ADD,/*	A B C	R(A) := RK(B) + RK(C)				*/
 OP_SUB,/*	A B C	R(A) := RK(B) - RK(C)				*/
 OP_MUL,/*	A B C	R(A) := RK(B) * RK(C)				*/
@@ -240,7 +228,7 @@ OP_SETLIST,/*	A B C	R(A)[(C-1)*FPF+i] := R(A+i), 1 <= i <= B	*/
 
 OP_CLOSURE,/*	A Bx	R(A) := closure(KPROTO[Bx])			*/
 
-OP_VARARG,/*	A B C	R(A), R(A+1), ..., R(A+B-2) = vararg(C)		*/
+OP_VARARG,/*	A B	R(A), R(A+1), ..., R(A+B-2) = vararg		*/
 
 OP_EXTRAARG/*	Ax	extra (larger) argument for previous opcode	*/
 } OpCode;
@@ -257,7 +245,7 @@ OP_EXTRAARG/*	Ax	extra (larger) argument for previous opcode	*/
   OP_SETLIST) may use 'top'.
 
   (*) In OP_VARARG, if (B == 0) then use actual number of varargs and
-  set top (like in OP_CALL with C == 0). C is the vararg parameter.
+  set top (like in OP_CALL with C == 0).
 
   (*) In OP_RETURN, if (B == 0) then return up to 'top'.
 

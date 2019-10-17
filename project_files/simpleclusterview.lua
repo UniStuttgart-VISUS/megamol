@@ -1,5 +1,0 @@
-mmCreateView("scv", "SimpleClusterView", "scview")
-mmCreateModule("SimpleClusterClient", "::scc")
-mmCreateModule("View3D", "::logo")
-mmCreateCall("SimpleClusterClientViewRegistration", "::scv::scview::register", "::scc::registerView")
-mmCreateCall("CallRenderView", "::scv::scview::renderView", "::logo::render")

@@ -50,15 +50,20 @@ view::CameraParamOverride::~CameraParamOverride(void) {
  */
 void view::CameraParamOverride::SetOverrides(
         const view::CallRenderView& call) {
-    this->projOverridden = call.IsProjectionSet();
-    this->eye = call.GetEye();
-    this->pj = call.GetProjectionType();
+    assign_and_sync(this->projOverridden, call.IsProjectionSet());
+    assign_and_sync(this->eye, call.GetEye());
+    assign_and_sync(this->pj, call.GetProjectionType());
 
-    this->tileOverridden = call.IsTileSet();
-    this->plane.Set(call.VirtualWidth(), call.VirtualHeight());
-    this->tile.Set(call.TileX(), call.TileY(), call.TileX() + call.TileWidth(), call.TileY() + call.TileHeight());
-
-    this->indicateValueChange();
+    assign_and_sync(this->tileOverridden, call.IsTileSet());
+    if (this->plane.Width() != call.VirtualWidth() || this->plane.Height() != call.VirtualHeight()) {
+        this->plane.Set(call.VirtualWidth(), call.VirtualHeight());
+        this->indicateValueChange();
+    }
+    if (this->tile.Left() != call.TileX() || this->tile.Bottom() != call.TileY() ||
+        this->tile.Right() != call.TileX() + call.TileWidth() || this->tile.Top() != call.TileY() + call.TileHeight()) {
+        this->tile.Set(call.TileX(), call.TileY(), call.TileX() + call.TileWidth(), call.TileY() + call.TileHeight());
+        this->indicateValueChange();
+    }
 }
 
 
@@ -112,13 +117,11 @@ void view::CameraParamOverride::preBaseSet(
 void view::CameraParamOverride::resetOverride(void) {
     ASSERT(!this->paramsBase().IsNull());
 
-    this->projOverridden = false;
-    this->eye = this->paramsBase()->Eye();
-    this->pj = this->paramsBase()->Projection();
+    assign_and_sync(this->projOverridden, false);
+    assign_and_sync(this->eye, this->paramsBase()->Eye());
+    assign_and_sync(this->pj, this->paramsBase()->Projection());
 
-    this->tileOverridden = false;
-    this->plane = this->paramsBase()->VirtualViewSize();
-    this->tile = this->paramsBase()->TileRect();
-
-    this->indicateValueChange();
+    assign_and_sync(this->tileOverridden, false);
+    assign_and_sync(this->plane, this->paramsBase()->VirtualViewSize());
+    assign_and_sync(this->tile, this->paramsBase()->TileRect());
 }

@@ -31,7 +31,7 @@ if role == "boss" then
 else
     mmCreateModule("View3D", "::mini-lua::v")
 end
-mmCreateModule("SimpleSphereRenderer", "::mini-lua::ssr")
+mmCreateModule("SphererRenderer", "::mini-lua::ssr")
 mmCreateModule("MMPLDDataSource", "::mini-lua::ds")
 mmCreateModule("LinearTransferFunction", "::mini-lua::ltf")
 mmCreateCall("CallRender3D", "::mini-lua::v::rendering", "::mini-lua::ssr::rendering")

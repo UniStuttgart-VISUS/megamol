@@ -39,7 +39,7 @@ public:
      *
      * @param initVal The initial value
      */
-    ColorParam(const float& initR, const float& initG, const float& initB, const float& initA);
+    ColorParam(float initR, float initG, float initB, float initA);
 
     /**
      * Ctor.
@@ -51,7 +51,7 @@ public:
     /**
      * Dtor.
      */
-    virtual ~ColorParam(void);
+    virtual ~ColorParam(void) = default;
 
     /**
      * Returns a machine-readable definition of the parameter.

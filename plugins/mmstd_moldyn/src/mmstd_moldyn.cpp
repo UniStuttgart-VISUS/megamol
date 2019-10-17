@@ -16,23 +16,31 @@
 #include "mmcore/factories/ModuleAutoDescription.h"
 #include "mmcore/factories/LoaderADModuleAutoDescription.h"
 
+#include "mmstd_moldyn/BrickStatsCall.h"
+
 #include "io/IMDAtomDataSource.h"
 #include "io/MMSPDDataSource.h"
 #include "io/SIFFDataSource.h"
 #include "io/SIFFWriter.h"
 #include "io/VIMDataSource.h"
 #include "io/VisIttDataSource.h"
-#include "rendering/NGSphereRenderer.h"
-#include "rendering/NGSplatRenderer.h"
-#include "rendering/NGSphereBufferArrayRenderer.h"
 #include "io/VTFDataSource.h"
 #include "io/VTFResDataSource.h"
-#include "misc/ParticleWorker.h"
 #include "io/XYZLoader.h"
 #include "io/TclMolSelectionLoader.h"
-#include "mmstd_moldyn/BrickStatsCall.h"
 #include "io/BrickStatsDataSource.h"
+#include "io/MMPGDDataSource.h"
+#include "io/MMPGDWriter.h"
+
+#include "misc/ParticleWorker.h"
+
 #include "rendering/BrickStatsRenderer.h"
+#include "rendering/DataGridder.h"
+#include "rendering/GrimRenderer.h"
+#include "rendering/SphereRenderer.h"
+#include "rendering/ArrowRenderer.h"
+#include "rendering/ParticleGridDataCall.h"
+#include "rendering/EllipsoidRenderer.h"
 
 
 /*
@@ -120,9 +128,6 @@ namespace {
             this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::io::SIFFWriter>();
             this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::io::VIMDataSource>();
             this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::io::VisIttDataSource>();
-            this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::rendering::NGSphereRenderer>();
-            this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::rendering::NGSplatRenderer>();
-            this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::rendering::NGSphereBufferArrayRenderer>();
             this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::io::VTFDataSource>();
             this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::io::VTFResDataSource>();
             this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::misc::ParticleWorker>();
@@ -130,8 +135,16 @@ namespace {
             this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::io::TclMolSelectionLoader>();
             this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::BrickStatsDataSource>();
             this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::rendering::BrickStatsRenderer>();
+			this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::rendering::DataGridder>();
+			this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::rendering::GrimRenderer>();
+            this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::rendering::ArrowRenderer>();
+            this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::rendering::SphereRenderer>();
+			this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::io::MMPGDDataSource>();
+			this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::io::MMPGDWriter>();
+            this->module_descriptions.RegisterAutoDescription<::megamol::stdplugin::moldyn::rendering::EllipsoidRenderer>();
             // register calls here:
             this->call_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::BrickStatsCall>();
+			this->call_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::rendering::ParticleGridDataCall>();
         }
         MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics
     };

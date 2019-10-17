@@ -12,7 +12,8 @@
 #include "mmcore/versioninfo.h"
 #include "vislib/vislibversion.h"
 
-#include "GUIRenderer.h"
+#include "GUIView.h"
+#include "WatermarkRenderer.h"
 
 
 /* anonymous namespace hides this type from any other object files */
@@ -38,9 +39,10 @@ public:
     }
     /** Registers modules and calls */
     virtual void registerClasses(void) {
-        this->module_descriptions.RegisterAutoDescription<megamol::gui::GUIRenderer2D>();
-        this->module_descriptions.RegisterAutoDescription<megamol::gui::GUIRenderer3D>();
+        this->module_descriptions.RegisterAutoDescription<megamol::gui::GUIView>();
+        this->module_descriptions.RegisterAutoDescription<megamol::gui::WatermarkRenderer>();
     }
+
     MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics
 };
 } // namespace

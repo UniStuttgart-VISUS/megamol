@@ -17,7 +17,7 @@
 #include "vislib/types.h"
 #include "mmcore/view/AbstractCallRender.h"
 #include "mmcore/view/MouseFlags.h"
-#include "mmcore/view/RenderOutput.h"
+#include "mmcore/view/RenderOutputOpenGL.h"
 
 
 namespace megamol {
@@ -40,7 +40,7 @@ namespace view {
      * call (bounding boxes).
      * The renderer should not draw anything outside the bounding box
      */
-    class MEGAMOLCORE_API CallRender2D : public AbstractCallRender, public RenderOutput {
+    class MEGAMOLCORE_API CallRender2D : public AbstractCallRender, public RenderOutputOpenGL {
     public:
 
         /**
@@ -164,7 +164,7 @@ namespace view {
          */
         CallRender2D& operator=(const CallRender2D& rhs) {
             AbstractCallRender::operator=(rhs);
-            RenderOutput::operator=(rhs);
+            RenderOutputOpenGL::operator=(rhs);
             this->bbox = rhs.bbox;
             this->bkgndCol[0] = rhs.bkgndCol[0];
             return *this;

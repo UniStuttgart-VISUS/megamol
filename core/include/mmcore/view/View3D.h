@@ -45,7 +45,7 @@ namespace view {
     /**
      * Base class of rendering graph calls
      */
-    class MEGAMOLCORE_API View3D : public AbstractRenderingView,
+    class MEGAMOLCORE_API [[deprecated]] View3D : public AbstractRenderingView,
             public AbstractCamParamSync {
 
     public:
@@ -154,7 +154,7 @@ namespace view {
          */
         virtual void UpdateFreeze(bool freeze);
 
-		virtual bool OnKey(Key key, KeyAction action, Modifiers mods) override;
+        virtual bool OnKey(Key key, KeyAction action, Modifiers mods) override;
 
         virtual bool OnChar(unsigned int codePoint) override;
 
@@ -299,19 +299,6 @@ namespace view {
          * @return true
          */
         bool onResetView(param::ParamSlot& p);
-
-#ifdef ENABLE_KEYBOARD_VIEW_CONTROL
-
-        /**
-         * Event handler for view keys
-         *
-         * @param p The parameter slot of the view key hit
-         *
-         * @return true
-         */
-        bool viewKeyPressed(param::ParamSlot& p);
-
-#endif /* ENABLE_KEYBOARD_VIEW_CONTROL */
 
         bool onToggleButton(param::ParamSlot& p);
 
@@ -460,40 +447,52 @@ namespace view {
         param::ParamSlot viewKeyRotPointSlot;
 
         /** Rotates the view to the left (around the up-axis) */
-        param::ParamSlot viewKeyRotLeftSlot;
+        bool viewKeyRotLeft = false;
 
         /** Rotates the view to the right (around the up-axis) */
-        param::ParamSlot viewKeyRotRightSlot;
+        bool viewKeyRotRight = false;
 
         /** Rotates the view to the top (around the right-axis) */
-        param::ParamSlot viewKeyRotUpSlot;
+        bool viewKeyRotUp = false;
 
         /** Rotates the view to the bottom (around the right-axis) */
-        param::ParamSlot viewKeyRotDownSlot;
+        bool viewKeyRotDown = false;
 
         /** Rotates the view counter-clockwise (around the view-axis) */
-        param::ParamSlot viewKeyRollLeftSlot;
+        bool viewKeyRollLeft = false;
 
         /** Rotates the view clockwise (around the view-axis) */
-        param::ParamSlot viewKeyRollRightSlot;
+        bool viewKeyRollRight = false;
 
         /** Zooms in */
-        param::ParamSlot viewKeyZoomInSlot;
+        bool viewKeyZoomIn = false;
 
         /** Zooms out */
-        param::ParamSlot viewKeyZoomOutSlot;
+        bool viewKeyZoomOut = false;
 
         /** Moves to the left */
-        param::ParamSlot viewKeyMoveLeftSlot;
+        bool viewKeyMoveLeft = false;
 
         /** Moves to the right */
-        param::ParamSlot viewKeyMoveRightSlot;
+        bool viewKeyMoveRight = false;
 
         /** Moves to the top */
-        param::ParamSlot viewKeyMoveUpSlot;
+        bool viewKeyMoveUp = false;
 
         /** Moves to the bottom */
-        param::ParamSlot viewKeyMoveDownSlot;
+        bool viewKeyMoveDown = false;
+
+        /** changes between shooter mode and generic hotkeys */
+        bool wasd = false;
+
+        /** invert x rotation */
+        bool invertX = true;
+
+        /** invert y rotation */
+        bool invertY = true;
+
+        /** whether keyboard movement has shift pressed */
+        bool running = false;
 
 #endif /* ENABLE_KEYBOARD_VIEW_CONTROL */
 

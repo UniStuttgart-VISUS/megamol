@@ -1,45 +1,45 @@
+//#define DEBUG_MINMAX 1
+
 uniform vec4 viewport;
 uniform mat4 modelViewProjection;
-
-uniform sampler1D colorTable;
-uniform int colorCount;
-uniform int colorColumn;
 
 uniform int rowStride;
 
 uniform float kernelWidth;
-uniform float alphaScaling;
 uniform bool attenuateSubpixel;
 
 layout(std430, binding = 3) buffer ValueSSBO {
     float values[];
 };
 
-out vec4 vsColor;
-out vec4 vsPosition;
+layout(std430, binding = 4) buffer FlagBuffer {
+    uint flags[];
+};
+
 out float vsKernelSize;
 out float vsPixelKernelSize;
+out float vsValue;
+out vec4 vsValueColor;
+out vec4 vsPosition;
 
-void main(void) {
+// Maps a pair of values to the position.
+vec4 valuesToPosition(Plot plot, vec2 values) {
+    vec2 unitValues = vec2((values.x - plot.minX) / (plot.maxX - plot.minX),
+        (values.y - plot.minY) / (plot.maxY - plot.minY));
+#if DEBUG_MINMAX
+    // To debug column min/max and thus normalization, we clamp the result.
+    unitValues = clamp(unitValues, vec2(0.0), vec2(1.0));
+#endif
+    return vec4(unitValues.x * plot.sizeX + plot.offsetX,
+        unitValues.y * plot.sizeY + plot.offsetY,
+        0.0, 1.0);
+}
+
+void main() {
     const Plot plot = plots[gl_InstanceID];
     const int rowOffset = gl_VertexID * rowStride;
 
-    // Fetch color from table.
-    const float colorIndex = values[rowOffset + colorColumn];
-    const float colorOffset = clamp(colorIndex / float(colorCount - 1), 0.0, 1.0) + 0.5 / float(colorCount);
-    vsColor = texture(colorTable, colorOffset);
-
-    // Map value pair to position.
-    const vec2 point = vec2(values[rowOffset + plot.indexX],
-                            values[rowOffset + plot.indexY]);
-    const vec2 unitPoint = vec2((point.x - plot.minX) / (plot.maxX - plot.minX),
-                                (point.y - plot.minY) / (plot.maxY - plot.minY));
-    vsPosition = vec4(unitPoint.x * plot.sizeX + plot.offsetX,
-                      unitPoint.y * plot.sizeY + plot.offsetY,
-                      0.0, 1.0);
-    gl_Position = modelViewProjection * vsPosition;
-
-     // Transform kernel size to screen space.
+    // Transform kernel size to screen space.
     const vec4 ndcKernelSize = modelViewProjection * vec4(kernelWidth, kernelWidth, 0.0, 0.0);
     const vec2 screenKernelSize = ndcKernelSize.xy * viewport.zw;
     vsKernelSize = max(screenKernelSize.x, screenKernelSize.y);
@@ -51,4 +51,16 @@ void main(void) {
         vsPixelKernelSize = vsKernelSize;
     }
     gl_PointSize = vsPixelKernelSize;
+
+    vsValue = normalizeValue(values[rowOffset + valueColumn]);
+    vsValueColor = flagifyColor(tflookup(vsValue), flags[gl_VertexID]);
+
+    vsPosition = valuesToPosition(plot, 
+        vec2(values[rowOffset + plot.indexX],
+        values[rowOffset + plot.indexY]));
+    if (bitflag_test(flags[gl_VertexID], FLAG_ENABLED | FLAG_FILTERED, FLAG_ENABLED)) {
+        gl_Position = modelViewProjection * vsPosition;
+    } else {
+        gl_Position = vec4(0.0); // clipping cheat
+    }
 }

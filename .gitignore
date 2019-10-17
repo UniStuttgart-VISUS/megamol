@@ -1,6 +1,7 @@
 build/**/*
 build-*/**/*
 build_*/**/*
+cmake-build-*/**/*
 bin/**/*
 include/**/*
 external/**/*
@@ -9,6 +10,7 @@ stage/**/*
 lib/**/*
 issues/**/*
 mmprjs/**/*
+.vscode/ipch/**/*
 configurator/.vs/
 configurator/bin/
 configurator/MegaMolConf/obj/
@@ -16,6 +18,7 @@ configurator/packages/
 configurator/MegaMolConf/Properties/AssemblyInfo\.cs
 configurator/MegaMolConf/Resources/mmconfig\.res
 .vscode/**/*.bat
+.idea/**/*
 .gitmodules
 *.orig
 utils/MMPLD/mmpld.bat
@@ -24,3 +27,4 @@ utils/MMPLD/test*.mmpld
 utils/MMPLD/test*.lua
 utils/MMPLD/test*.png
 utils/MMPLD/SphereTest.bat
+examples/

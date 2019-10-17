@@ -509,5 +509,5 @@ This plugin is switched off by default. If you want to use the plugin, please tu
 
 ## Example Data
 
-This plugin comes with example data. It can be found in the ``exampledata/`` folder. ``dataexample.csv`` is mainly there to test some of the warnings the ``ASCIISphereLoader`` is able to throw. ``1m40.csv`` is the csv-version of ``1M40.pdb`` which can be found in the global samples folder of MegaMol.
+This plugin comes with example data. It can be found in the [example data repository](https://github.com/UniStuttgart-VISUS/megamol-examples). ``dataexample.csv`` is mainly there to test some of the warnings the ``ASCIISphereLoader`` is able to throw. ``1m40.csv`` is the csv-version of ``1M40`` which can be found in the ``sampledata`` folder in the repository.
 

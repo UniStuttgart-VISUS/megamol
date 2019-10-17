@@ -3,120 +3,19 @@
 # Copyright 2017, by MegaMol Team
 # Alle Rechte vorbehalten. All rights reserved.
 #
-
 option(BUILD_CORE "Build core" ON)
 
 if(BUILD_CORE)
   project(core)
+  set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
   # Check option dependencies: First list item is always the current build option,
   # afterwards list the dependencies.
   set(DEP_LIST "${DEP_LIST};BUILD_CORE BUILD_VISLIB" CACHE INTERNAL "")
 
-  # search for 3rd party libs
-  set(CMAKE_THREAD_PREFER_PTHREAD)
-
-  find_package(Threads REQUIRED)
-
-  # include lua sources
-  add_subdirectory(lua)
-
-  # include ZMQ and its C++ bindings
-  set(ZMQ_VER "4_2_3")
-  string(REPLACE "_" "." ZMQ_TAG "v${ZMQ_VER}")
-  if(MSVC_IDE)
-    set(MSVC_TOOLSET "-${CMAKE_VS_PLATFORM_TOOLSET}")
-  else()
-    set(MSVC_TOOLSET "")
-  endif()
+  # Add expat.
   if(WIN32)
-    set(ZMQ_IMPORT_DEBUG "lib/libzmq${MSVC_TOOLSET}-mt-gd-${ZMQ_VER}.lib")
-    set(ZMQ_IMPORT_RELEASE "lib/libzmq${MSVC_TOOLSET}-mt-${ZMQ_VER}.lib")
-    set(ZMQ_DEBUG "bin/libzmq${MSVC_TOOLSET}-mt-gd-${ZMQ_VER}.dll")
-    set(ZMQ_RELEASE "bin/libzmq${MSVC_TOOLSET}-mt-${ZMQ_VER}.dll")
-  else()
-    include(GNUInstallDirs)
-    set(ZMQ_IMPORT_DEBUG "")
-    set(ZMQ_IMPORT_RELEASE "")
-    set(ZMQ_DEBUG "${CMAKE_INSTALL_LIBDIR}/libzmq.so")
-    set(ZMQ_RELEASE ${ZMQ_DEBUG})
-  endif()
-
-  add_external_project(libzmq_ext
-    GIT_REPOSITORY https://github.com/zeromq/libzmq.git
-    GIT_TAG ${ZMQ_TAG}
-    CMAKE_ARGS
-      -DZMQ_BUILD_TESTS=OFF)
-  add_external_library(libzmq SHARED
-    DEPENDS libzmq_ext
-    IMPORT_LIBRARY_DEBUG ${ZMQ_IMPORT_DEBUG}
-    IMPORT_LIBRARY_RELEASE ${ZMQ_IMPORT_RELEASE}
-    LIBRARY_DEBUG ${ZMQ_DEBUG}
-    LIBRARY_RELEASE ${ZMQ_RELEASE})
-
-  add_external_project(libcppzmq_ext
-    DEPENDS libzmq
-    GIT_REPOSITORY https://github.com/zeromq/cppzmq.git
-    GIT_TAG ${ZMQ_TAG}
-    CONFIGURE_COMMAND ""
-    BUILD_COMMAND ""
-    INSTALL_COMMAND ""
-    TEST_COMMAND "")
-  add_external_library(libcppzmq INTERFACE
-    DEPENDS libcppzmq_ext
-    INCLUDE_DIR "src/libcppzmq_ext/")
-
-  # Add zlib.
-  if(MSVC)
-    set(ZLIB_DEBUG "lib/zlibstaticd${CMAKE_STATIC_LIBRARY_SUFFIX}")
-    set(ZLIB_RELEASE "lib/zlibstatic${CMAKE_STATIC_LIBRARY_SUFFIX}")
-  else()
-    include(GNUInstallDirs)
-    #set(ZLIB_DEBUG "${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}z${CMAKE_STATIC_LIBRARY_SUFFIX}")
-    #set(ZLIB_RELEASE "${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}z${CMAKE_STATIC_LIBRARY_SUFFIX}")
-    set(ZLIB_DEBUG "lib/${CMAKE_STATIC_LIBRARY_PREFIX}z${CMAKE_STATIC_LIBRARY_SUFFIX}")
-    set(ZLIB_RELEASE "lib/${CMAKE_STATIC_LIBRARY_PREFIX}z${CMAKE_STATIC_LIBRARY_SUFFIX}")
-
-  endif()
-  add_external_project(zlib_ext
-    GIT_REPOSITORY https://github.com/madler/zlib.git
-    GIT_TAG "v1.2.11"
-    CMAKE_ARGS
-      -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON)
-  add_external_library(zlib STATIC
-    DEPENDS zlib_ext
-    INCLUDE_DIR "include"
-    LIBRARY_DEBUG ${ZLIB_DEBUG}
-    LIBRARY_RELEASE ${ZLIB_RELEASE})
-    
-  # Add libpng.
-  if(MSVC)
-    set(LIBPNG_DEBUG "lib/libpng16_staticd${CMAKE_STATIC_LIBRARY_SUFFIX}")
-    set(LIBPNG_RELEASE "lib/libpng16_static${CMAKE_STATIC_LIBRARY_SUFFIX}")
-  else()
-    include(GNUInstallDirs)
-    set(LIBPNG_DEBUG "${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}png16${CMAKE_STATIC_LIBRARY_SUFFIX}")
-    set(LIBPNG_RELEASE "${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}png16${CMAKE_STATIC_LIBRARY_SUFFIX}")
-  endif()
-  ExternalProject_Get_Property(zlib_ext INSTALL_DIR)
-  add_external_project(libpng_ext
-    GIT_REPOSITORY https://git.code.sf.net/p/libpng/code
-    GIT_TAG "v1.6.34"
-    DEPENDS zlib_ext
-    CMAKE_ARGS
-      -DPNG_SHARED=OFF
-      -DPNG_TESTS=OFF
-      -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON
-      -DCMAKE_PREFIX_PATH:PATH=${INSTALL_DIR})
-  add_external_library(libpng STATIC
-    DEPENDS libpng_ext
-    INCLUDE_DIR "include"
-    LIBRARY_DEBUG ${LIBPNG_DEBUG}
-    LIBRARY_RELEASE ${LIBPNG_RELEASE}
-    INTERFACE_LIBRARIES zlib)
-
-  if(WIN32)
-    option(USE_INTERNAL_EXPAT "Compiles the expat provided by megamol" ON)
+    option(USE_INTERNAL_EXPAT "Compiles the expat provided by MegaMol" ON)
     if(USE_INTERNAL_EXPAT)
       add_subdirectory(expat)
       set(EXPAT_LIBRARIES expat)
@@ -128,40 +27,26 @@ if(BUILD_CORE)
     find_package(EXPAT REQUIRED)
   endif()
 
-  # include zfp
+  # Add Lua.
+  add_subdirectory(lua)
+
+  # Add externals.
+  require_external(libzmq)
+  require_external(libcppzmq)
+  require_external(zlib)
+  require_external(libpng)
+  require_external(glm)
+  require_external(glowl)
+  require_external(json)
   if(WIN32)
-    set(ZFP_LIB "lib/zfp.lib")
-  else()
-    include(GNUInstallDirs)
-    set(ZFP_LIB "${CMAKE_INSTALL_LIBDIR}/libzfp.a")
+    option(USE_TRACKING "use tracking" OFF)
+    if(USE_TRACKING)
+      require_external(tracking)
+    endif()
   endif()
-  add_external_project(zfp_ext
-    GIT_REPOSITORY https://github.com/LLNL/zfp.git
-    GIT_TAG "0.5.2"
-    CMAKE_ARGS
-      -DBUILD_SHARED_LIBS=OFF
-      -DBUILD_UTILITIES=OFF
-      -DBUILD_TESTING=OFF
-      -DZFP_WITH_ALIGNED_ALLOC=ON
-      -DZFP_WITH_CACHE_FAST_HASH=ON
-      -DCMAKE_BUILD_TYPE=Release)
-  add_external_library(zfp STATIC
-    DEPENDS zfp_ext
-    LIBRARY ${ZFP_LIB})
 
-  # include glm
-  add_external_project(glm_ext
-      GIT_REPOSITORY https://github.com/g-truc/glm.git
-      GIT_TAG "0.9.8"
-      CONFIGURE_COMMAND ""
-      BUILD_COMMAND ""
-      INSTALL_COMMAND ""
-      TEST_COMMAND "")
-  add_external_library(glm INTERFACE
-    DEPENDS glm_ext
-    INCLUDE_DIR "src/glm_ext/")
-
-  file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
+  # Collect source files
+  file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h" "include/*.inl")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
   file(GLOB_RECURSE shader_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Shaders/*")
@@ -189,15 +74,36 @@ if(BUILD_CORE)
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "src" "include"
     PUBLIC ${EXPAT_INCLUDE_DIRS})
   target_link_libraries(${PROJECT_NAME} 
-    PUBLIC vislib glad zlib libpng ${EXPAT_LIBRARIES}
-    PRIVATE lua libzmq libcppzmq ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT})
+    PUBLIC vislib glad glm glowl zlib libpng json lua ${EXPAT_LIBRARIES}
+    PRIVATE libzmq libcppzmq ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT})
+
+  # Add libunwind.
+  if(UNIX)
+    option(USE_LIBUNWIND "use libunwind" OFF)
+    if(USE_LIBUNWIND)
+      find_package(LIBUNWIND REQUIRED)
+      message(STATUS ${LIBUNWIND_LIBRARIES})
+      message(STATUS ${LIBUNWIND_INCLUDE_DIR})
+      if(LIBUNWIND_FOUND)
+        target_compile_definitions(${PROJECT_NAME} PUBLIC "HAS_LIBUNWIND")
+        target_include_directories(${PROJECT_NAME} PUBLIC ${LIBUNWIND_INCLUDE_DIR})
+        target_link_libraries(${PROJECT_NAME} PUBLIC ${LIBUNWIND_LIBRARIES} )
+      else()
+        message(FATAL_ERROR "Can not find libunwind.")
+      endif()
+    endif()
+  endif()
+  
   if(WIN32)
+    if(USE_TRACKING)
+      target_link_libraries(${PROJECT_NAME} PUBLIC tracking natnet)
+    endif()
     set_target_properties(${PROJECT_NAME} PROPERTIES
       LINK_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /DYNAMICBASE:NO")
   endif()
+
   if(MPI_C_FOUND)
-    target_include_directories(${PROJECT_NAME} PRIVATE ${MPI_C_INCLUDE_PATH})
-    target_link_libraries(${PROJECT_NAME} PRIVATE ${MPI_C_LIBRARIES})
+    target_link_libraries(${PROJECT_NAME} PRIVATE MPI::MPI_C)
   endif()
 
   # Source groups in Visual Studio
@@ -229,10 +135,14 @@ if(BUILD_CORE)
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders/ DESTINATION "share/shaders")
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Resources/ DESTINATION "share/resources")
   install_external(TARGETS libzmq)
+  get_target_property(zmqcpp_include libcppzmq INTERFACE_INCLUDE_DIRECTORIES)
+  install(DIRECTORY ${zmqcpp_include} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/libzmq FILES_MATCHING PATTERN "*.hpp")
   if(WIN32)
     install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
     install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION "lib")
-    install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION bin OPTIONAL)
+    if (MSVC)
+      install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION bin OPTIONAL)
+    endif()
   else()
     install(TARGETS ${PROJECT_NAME} DESTINATION "lib" EXPORT ${PROJECT_NAME}-target)
   endif()

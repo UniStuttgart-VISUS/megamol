@@ -23,7 +23,7 @@ function(add_clang_format TARGET)
     string(REGEX MATCH "[0-9]+\\.[0-9]+\\.[0-9]+" CLANG_FORMAT_VERSION ${CLANG_FORMAT_VERSION})
   endif()
 
-  set(CLANG_FORMAT_VERSION_PATTERN "[67].[0-9]+.[0-9]+")
+  set(CLANG_FORMAT_VERSION_PATTERN "[6789].[0-9]+.[0-9]+")
 
   if(CLANG_FORMAT AND CLANG_FORMAT_VERSION MATCHES ${CLANG_FORMAT_VERSION_PATTERN})
     add_custom_target("${TARGET}_clangformat"

@@ -358,6 +358,15 @@ public:
         const vislib::StringA& name, bool quiet = false, bool create = false);
 
     /**
+     * Returns the project lua contained in the exif data of a PNG file.
+     * 
+     * @param filename the png file name
+     * 
+     * @return the lua project
+     */
+    static std::string GetProjectFromPNG(std::string filename);
+
+    /**
      * Returns a pointer to the parameter with the given name.
      * If the parameter value is the name of a valid parameter, it follows the path..
      *
@@ -402,6 +411,16 @@ public:
     void LoadProject(const vislib::StringW& filename);
 
     /**
+     * Serializes the current graph into lua commands.
+     *
+     * @param serInstances The serialized instances.
+     * @param serModules   The serialized modules.
+     * @param serCalls     The serialized calls.
+     * @param serParams    The serialized parameters.
+     */
+    void SerializeGraph(std::string& serInstances, std::string& serModules, std::string& serCalls, std::string& serParams);
+
+    /**
      * Enumerates all parameters. The callback function is called for each
      * parameter slot.
      *
@@ -410,6 +429,46 @@ public:
     inline void EnumParameters(std::function<void(const Module&, param::ParamSlot&)> cb) const {
         this->enumParameters(this->namespaceRoot, cb);
     }
+
+    /**
+     * Enumerates all modules of the graph, calling cb for each encountered module.
+     * If entry_point is specified, the graph is traversed starting from that module or namespace,
+     * otherwise, it is traversed from the root.
+     * 
+     * @param entry_point the name of the module/namespace for traversal start
+     * @param cb the lambda
+     * 
+     */
+    inline void EnumModulesNoLock(const std::string& entry_point, std::function<void(Module*)> cb) {
+        auto thingy = this->namespaceRoot->FindNamedObject(entry_point.c_str());
+        bool success = false;
+        if (thingy) {
+            auto mod = dynamic_cast<Module*>(thingy.get());
+            auto ns = dynamic_cast<ModuleNamespace*>(thingy.get());
+            if (mod) {
+                success = true;
+                this->EnumModulesNoLock(mod, cb);
+            } else if (ns) {
+                success = true;
+                this->EnumModulesNoLock(ns, cb);
+            }
+        }
+        if (!success) {
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                "EnumModulesNoLock: Unable to find module nor namespace \"%s\" as entry point", entry_point.c_str());
+        }
+    }
+
+    /**
+     * Enumerates all modules of the graph, calling cb for each encountered module.
+     * If entry_point is specified, the graph is traversed starting from that module or namespace,
+     * otherwise, it is traversed from the root.
+     * 
+     * @param entry_point traversal start or nullptr
+     * @param cb the lambda
+     * 
+     */
+    void EnumModulesNoLock(core::AbstractNamedObject* entry_point, std::function<void(Module*)> cb);
 
     /**
      * Searches for a specific module called module_name of type A and
@@ -422,12 +481,12 @@ public:
      */
     template <class A>
     typename std::enable_if<std::is_convertible<A*, Module*>::value, bool>::type FindModuleNoLock(
-        std::string module_name, std::function<void(A&)> cb) {
+        std::string module_name, std::function<void(A*)> cb) {
         auto ano_container = AbstractNamedObjectContainer::dynamic_pointer_cast(this->namespaceRoot);
         auto ano = ano_container->FindNamedObject(module_name.c_str());
         auto vi = dynamic_cast<A*>(ano.get());
         if (vi != nullptr) {
-            cb(*vi);
+            cb(vi);
             return true;
         } else {
             vislib::sys::Log::DefaultLog.WriteMsg(
@@ -1192,7 +1251,7 @@ private:
      * are designed to be manipulated from the Lua interface which CAN be
      * invoked from another thread (the LuaRemoteHost, for example).
      */
-    vislib::sys::CriticalSection graphUpdateLock;
+    mutable vislib::sys::CriticalSection graphUpdateLock;
 
     /** The module namespace root */
     RootModuleNamespace::ptr_type namespaceRoot;

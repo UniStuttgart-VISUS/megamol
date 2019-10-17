@@ -38,7 +38,7 @@ namespace view {
      * Function "GetExtents" asks the callee to fill the extents member of the
      * call (bounding boxes, temporal extents).
      */
-    class MEGAMOLCORE_API AbstractCallRender3D : public AbstractCallRender {
+    class MEGAMOLCORE_API [[deprecated]] AbstractCallRender3D : public AbstractCallRender {
     public:
         /** Dtor. */
         virtual ~AbstractCallRender3D(void);

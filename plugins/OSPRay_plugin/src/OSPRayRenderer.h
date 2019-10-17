@@ -11,6 +11,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
+#include <chrono>
 
 
 namespace megamol {
@@ -73,7 +74,7 @@ protected:
     *
     * @return The return value of the function.
     */
-    virtual bool Render(megamol::core::Call& call);
+    virtual bool Render(megamol::core::view::CallRender3D_2& call);
 
 private:
 
@@ -86,7 +87,7 @@ private:
     *
     * @return The return value of the function.
     */
-    virtual bool GetExtents(megamol::core::Call& call);
+    virtual bool GetExtents(megamol::core::view::CallRender3D_2& call);
 
     /** The call for data */
     core::CallerSlot getStructureSlot;
@@ -94,7 +95,6 @@ private:
 
     /** The texture shader */
     vislib::graphics::gl::GLSLShader osprayShader;
-    float scale;
 
    // Interface dirty flag
     bool InterfaceIsDirty();
@@ -106,7 +106,7 @@ private:
     bool light_has_changed;
     bool cam_has_changed;
 
-    vislib::SmartPtr<vislib::graphics::CameraParameters> camParams;
+	core::view::Camera_2 cam;
     float time;
     size_t frameID;
 
@@ -115,10 +115,14 @@ private:
     // OSPRay textures
     const uint32_t* fb;
     std::vector<float> db;
-    OSPTexture2D getOSPDepthTextureFromOpenGLPerspective(megamol::core::Call& call);
-    void getOpenGLDepthFromOSPPerspective(megamol::core::Call& call, float* db);
+    void getOpenGLDepthFromOSPPerspective(float* db);
 
     bool renderer_has_changed;
+
+    struct {
+        unsigned long long int count;
+        unsigned long long int amount;
+    } accum_time;
 };
 
 } /*end namespace ospray*/

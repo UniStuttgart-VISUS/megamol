@@ -209,6 +209,10 @@ public:
 
     inline bool test(Modifiers mods) const { return (bits & mods.bits).any(); }
 
+    inline bool equals(Modifier mod) const { return (bits == Modifiers(mod).bits); }
+
+    inline bool equals(Modifiers mods) const { return (bits == mods.bits); }
+
     inline Modifiers& reset(Modifier mod) {
         Modifiers mask(mod);
         bits ^= mask.bits;
@@ -295,6 +299,16 @@ public:
         this->key = key;
     }
 
+    /** Return key. */
+    core::view::Key GetKey(void) {
+        return this->key;
+    }
+
+    /** Return modifiers. */
+    core::view::Modifiers GetModifiers(void) {
+        return this->mods;
+    }
+
     /**
      * Generates a human-readable ASCII String representing the key code.
      *
@@ -309,7 +323,7 @@ public:
         if (this->mods.test(core::view::Modifier::ALT)) msg += "ALT + ";
 
         switch (this->key) {
-            case (core::view::Key::KEY_UNKNOWN) : msg += "'Unknown Key'"; break;
+            case (core::view::Key::KEY_UNKNOWN) : msg += ""; break; // 'Unknown Key'
             case (core::view::Key::KEY_SPACE) : msg += "'Space'"; break;
             case (core::view::Key::KEY_APOSTROPHE) : msg += "'''"; break;
             case (core::view::Key::KEY_COMMA) : msg += "','"; break;    

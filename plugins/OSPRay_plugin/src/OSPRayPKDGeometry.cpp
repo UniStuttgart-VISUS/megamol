@@ -15,40 +15,22 @@
 #include "vislib/forceinline.h"
 #include "vislib/sys/Log.h"
 
+#include <ospray.h>
+#include "OSPRay_plugin/CallOSPRayAPIObject.h"
 #include "mmcore/view/CallClipPlane.h"
 #include "mmcore/view/CallGetTransferFunction.h"
 
-using namespace megamol::ospray;
-
-
-VISLIB_FORCEINLINE float floatFromVoidArray(
-    const megamol::core::moldyn::MultiParticleDataCall::Particles& p, size_t index) {
-    // const float* parts = static_cast<const float*>(p.GetVertexData());
-    // return parts[index * stride + offset];
-    return static_cast<const float*>(p.GetVertexData())[index];
-}
-
-VISLIB_FORCEINLINE unsigned char byteFromVoidArray(
-    const megamol::core::moldyn::MultiParticleDataCall::Particles& p, size_t index) {
-    return static_cast<const unsigned char*>(p.GetVertexData())[index];
-}
-
-typedef float (*floatFromArrayFunc)(const megamol::core::moldyn::MultiParticleDataCall::Particles& p, size_t index);
-typedef unsigned char (*byteFromArrayFunc)(
-    const megamol::core::moldyn::MultiParticleDataCall::Particles& p, size_t index);
+namespace megamol {
+namespace ospray {
 
 
 OSPRayPKDGeometry::OSPRayPKDGeometry(void)
-    : AbstractOSPRayStructure()
-    , getDataSlot("getdata", "Connects to the data source")
-    , particleList("ParticleList", "Switches between particle lists")
+    : getDataSlot("getdata", "Connects to the data source")
+    , deployStructureSlot("deployStructureSlot", "Connects to an OSPRayAPIStructure")
     , colorTypeSlot("colorType", "Set the type of encoded color") {
 
     this->getDataSlot.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
-
-    this->particleList << new core::param::IntParam(0);
-    this->MakeSlotAvailable(&this->particleList);
 
     auto ep = new megamol::core::param::EnumParam(0);
     ep->SetTypePair(0, "none");
@@ -59,65 +41,94 @@ OSPRayPKDGeometry::OSPRayPKDGeometry(void)
     ep->SetTypePair(5, "I");
     this->colorTypeSlot << ep;
     this->MakeSlotAvailable(&this->colorTypeSlot);
+
+    this->deployStructureSlot.SetCallback(
+        CallOSPRayAPIObject::ClassName(), CallOSPRayAPIObject::FunctionName(0), &OSPRayPKDGeometry::getDataCallback);
+    this->deployStructureSlot.SetCallback(
+        CallOSPRayAPIObject::ClassName(), CallOSPRayAPIObject::FunctionName(1), &OSPRayPKDGeometry::getExtendsCallback);
+    this->deployStructureSlot.SetCallback(
+        CallOSPRayAPIObject::ClassName(), CallOSPRayAPIObject::FunctionName(2), &OSPRayPKDGeometry::getDirtyCallback);
+    this->MakeSlotAvailable(&this->deployStructureSlot);
 }
 
 
-bool OSPRayPKDGeometry::readData(megamol::core::Call& call) {
-
-    // fill material container
-    this->processMaterial();
+bool OSPRayPKDGeometry::getDataCallback(megamol::core::Call& call) {
 
     // read Data, calculate  shape parameters, fill data vectors
-    CallOSPRayStructure* os = dynamic_cast<CallOSPRayStructure*>(&call);
+    auto os = dynamic_cast<CallOSPRayAPIObject*>(&call);
     megamol::core::moldyn::MultiParticleDataCall* cd =
         this->getDataSlot.CallAs<megamol::core::moldyn::MultiParticleDataCall>();
 
-    this->structureContainer.dataChanged = false;
-    if (cd == NULL) return false;
-    cd->SetTimeStamp(os->getTime());
-    cd->SetFrameID(os->getTime(), true); // isTimeForced flag set to true
-    if (this->datahash != cd->DataHash() || this->time != os->getTime() || this->InterfaceIsDirty()) {
+    if (!(*cd)(1)) return false;
+
+    auto const minFrameCount = cd->FrameCount();
+
+    if (minFrameCount == 0) return false;
+
+    auto frameTime = 0;
+
+    if (os->FrameID() >= minFrameCount) {
+        cd->SetFrameID(minFrameCount - 1, true); // isTimeForced flag set to true
+        frameTime = minFrameCount - 1;
+    } else {
+        cd->SetFrameID(os->FrameID(), true); // isTimeForced flag set to true
+        frameTime = os->FrameID();
+    }
+
+    if (this->datahash != cd->DataHash() || this->time != frameTime || this->InterfaceIsDirty()) {
         this->datahash = cd->DataHash();
-        this->time = os->getTime();
-        this->structureContainer.dataChanged = true;
+        this->time = frameTime;
     } else {
         return true;
     }
 
-    if (this->particleList.Param<core::param::IntParam>()->Value() > (cd->GetParticleListCount() - 1)) {
-        this->particleList.Param<core::param::IntParam>()->SetValue(0);
-    }
-
-    if (!(*cd)(1)) return false;
     if (!(*cd)(0)) return false;
 
-    const auto listIdx = this->particleList.Param<core::param::IntParam>()->Value();
-    if (listIdx >= cd->GetParticleListCount()) {
-        return false;
+    size_t listCount = cd->GetParticleListCount();
+    std::vector<OSPGeometry> geo;
+    for (size_t i = 0; i < listCount; i++) {
+
+        core::moldyn::MultiParticleDataCall::Particles& parts = cd->AccessParticles(i);
+
+        auto colorType = this->colorTypeSlot.Param<megamol::core::param::EnumParam>()->Value();
+
+        geo.push_back(ospNewGeometry("pkd_geometry"));
+
+        auto vertexData = ospNewData(parts.GetCount(), OSP_FLOAT4, parts.GetVertexData(), OSP_DATA_SHARED_BUFFER);
+        ospCommit(vertexData);
+
+        // set bbox
+        auto bboxData = ospNewData(6, OSP_FLOAT, parts.GetBBox().PeekBounds());
+        ospCommit(bboxData);
+
+        ospSet1f(geo.back(), "radius", parts.GetGlobalRadius());
+        ospSet1i(geo.back(), "colorType", colorType);
+        ospSetData(geo.back(), "position", vertexData);
+        // ospSetData(geo.back(), "bbox", bboxData);
+        ospSetData(geo.back(), "bbox", nullptr);
+        ospCommit(geo.back());
+
+        // TODO: implement distributed stuff
+        // if (this->rd_type.Param<megamol::core::param::EnumParam>()->Value() == MPI_RAYCAST) {
+        //    auto const half_radius = element.globalRadius * 0.5f;
+
+        //    auto const bbox = element.boundingBox->ObjectSpaceBBox().PeekBounds(); //< TODO Not all geometries expose
+        //    bbox ospcommon::vec3f lower{bbox[0] - half_radius, bbox[1] - half_radius,
+        //        bbox[2] - half_radius}; //< TODO The bbox needs to include complete sphere bound
+        //    ospcommon::vec3f upper{bbox[3] + half_radius, bbox[4] + half_radius, bbox[5] + half_radius};
+        //    // ghostRegions.emplace_back(lower, upper);
+        //    worldBounds.extend({lower, upper}); //< TODO Possible hazard if bbox is not centered
+        //    regions.emplace_back(lower, upper);
+        //}
     }
-    core::moldyn::MultiParticleDataCall::Particles& parts =
-        cd->AccessParticles(listIdx);
 
-    unsigned int partCount = parts.GetCount();
-    float globalRadius = parts.GetGlobalRadius();
 
-    size_t vertexLength = 3;
-    size_t colorLength = 0;
-
-    this->structureContainer.colorType = this->colorTypeSlot.Param<megamol::core::param::EnumParam>()->Value();
-    if (this->structureContainer.colorType != 0) {
-        colorLength = 1;
+    std::vector<void*> geo_transfer(geo.size());
+    for (auto i = 0; i < geo.size(); i++) {
+        geo_transfer[i] = reinterpret_cast<void*>(geo[i]);
     }
-
-    // Write stuff into the structureContainer
-    this->structureContainer.type = structureTypeEnum::GEOMETRY;
-    this->structureContainer.geometryType = geometryTypeEnum::PKD;
-    this->structureContainer.raw = std::move(parts.GetVertexData());
-    this->structureContainer.vertexLength = vertexLength;
-    this->structureContainer.colorLength = colorLength;
-    this->structureContainer.partCount = partCount;
-    this->structureContainer.globalRadius = globalRadius;
-    this->structureContainer.boundingBox = std::make_shared<megamol::core::BoundingBoxes>(cd->AccessBoundingBoxes());
+    os->setStructureType(GEOMETRY);
+    os->setAPIObjects(std::move(geo_transfer));
 
     return true;
 }
@@ -125,7 +136,14 @@ bool OSPRayPKDGeometry::readData(megamol::core::Call& call) {
 
 OSPRayPKDGeometry::~OSPRayPKDGeometry() { this->Release(); }
 
-bool OSPRayPKDGeometry::create() { return true; }
+bool OSPRayPKDGeometry::create() {
+    auto error = ospLoadModule("pkd");
+    if (error != OSPError::OSP_NO_ERROR) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "Unable to load OSPRay module: PKD. Error occured in %s:%d", __FILE__, __LINE__);
+    }
+    return true;
+}
 
 void OSPRayPKDGeometry::release() {}
 
@@ -133,27 +151,45 @@ void OSPRayPKDGeometry::release() {}
 ospray::OSPRayPKDGeometry::InterfaceIsDirty()
 */
 bool OSPRayPKDGeometry::InterfaceIsDirty() {
-    if (this->particleList.IsDirty()) {
-        this->particleList.ResetDirty();
+    if (this->colorTypeSlot.IsDirty()) {
+        this->colorTypeSlot.ResetDirty();
         return true;
     } else {
         return false;
     }
 }
 
+bool OSPRayPKDGeometry::InterfaceIsDirtyNoReset() const { return this->colorTypeSlot.IsDirty(); }
 
-bool OSPRayPKDGeometry::getExtends(megamol::core::Call& call) {
-    CallOSPRayStructure* os = dynamic_cast<CallOSPRayStructure*>(&call);
-    megamol::core::moldyn::MultiParticleDataCall* cd =
-        this->getDataSlot.CallAs<megamol::core::moldyn::MultiParticleDataCall>();
+
+bool OSPRayPKDGeometry::getExtendsCallback(core::Call& call) {
+    auto os = dynamic_cast<CallOSPRayAPIObject*>(&call);
+    core::moldyn::MultiParticleDataCall* cd = this->getDataSlot.CallAs<core::moldyn::MultiParticleDataCall>();
 
     if (cd == NULL) return false;
-    cd->SetFrameID(os->getTime(), true); // isTimeForced flag set to true
-    // if (!(*cd)(1)) return false; // floattable returns flase at first attempt and breaks everything
+    cd->SetFrameID(os->FrameID(), true); // isTimeForced flag set to true
+    // if (!(*cd)(1)) return false; // table returns flase at first attempt and breaks everything
     (*cd)(1);
-    this->extendContainer.boundingBox = std::make_shared<megamol::core::BoundingBoxes>(cd->AccessBoundingBoxes());
-    this->extendContainer.timeFramesCount = cd->FrameCount();
-    this->extendContainer.isValid = true;
+
+    os->SetExtent(cd->FrameCount(), cd->AccessBoundingBoxes());
 
     return true;
 }
+
+bool OSPRayPKDGeometry::getDirtyCallback(core::Call& call) {
+    auto os = dynamic_cast<CallOSPRayAPIObject*>(&call);
+    auto cd = this->getDataSlot.CallAs<megamol::core::moldyn::MultiParticleDataCall>();
+
+    if (cd == nullptr) return false;
+    if (this->InterfaceIsDirtyNoReset()) {
+        os->setDirty();
+    }
+    if (this->datahash != cd->DataHash()) {
+        os->SetDataHash(cd->DataHash());
+    }
+    return true;
+}
+
+
+} // namespace ospray
+} // namespace megamol

@@ -7,10 +7,7 @@
 
 #include "stdafx.h"
 
-#ifndef USE_EGL
-
 #include "gl/glfwInst.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
 #include "GLFW/glfw3.h"
 #include "vislib/sys/Log.h"
 //#include <mutex>
@@ -33,7 +30,7 @@ std::shared_ptr<gl::glfwInst> gl::glfwInst::Instance() {
 
 gl::glfwInst::glfwInst() : error(false) {
     try {
-        if (::glfwInit() != GL_TRUE) {
+        if (::glfwInit() != GLFW_TRUE) {
             vislib::sys::Log::DefaultLog.WriteError("glfwInit failed");
             error = true;
         }
@@ -49,4 +46,3 @@ gl::glfwInst::~glfwInst() {
     }
 }
 
-#endif // USE_EGL

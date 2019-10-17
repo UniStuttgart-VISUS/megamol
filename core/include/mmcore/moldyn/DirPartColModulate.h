@@ -15,7 +15,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/moldyn/DirectionalParticleDataCall.h"
+#include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/CallVolumeData.h"
 #include "vislib/RawStorage.h"
 #include "vislib/types.h"

@@ -15,26 +15,17 @@
 #include "cmath"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/StringParam.h"
+#include "mmcore/param/IntParam.h"
 
 using namespace megamol::core;
-
-
-/*
- * misc::TestSpheresDataSource::frameCount
- */
-const unsigned int misc::TestSpheresDataSource::frameCount = 100;
-
-
-/*
- * misc::TestSpheresDataSource::sphereCount
- */
-const unsigned int misc::TestSpheresDataSource::sphereCount = 15;
 
 
 /*
  * misc::TestSpheresDataSource::TestSpheresDataSource
  */
 misc::TestSpheresDataSource::TestSpheresDataSource(void) : view::AnimDataModule(), getDataSlot("getData", "Gets the data from the data source")
+	, numSpheresSlot("numSpheres", "number of spheres to generate")
+	, numFramesSlot("numFrames", "number of frames to generate")
 #ifdef MMCORE_TEST_DYN_PARAM_SLOTS
     , p1("p1", "Test slot for dynamic parameter slots")
     , p2("p2", "Test slot for dynamic parameter slots")
@@ -44,6 +35,12 @@ misc::TestSpheresDataSource::TestSpheresDataSource(void) : view::AnimDataModule(
     this->getDataSlot.SetCallback(moldyn::MultiParticleDataCall::ClassName(), moldyn::MultiParticleDataCall::FunctionName(0), &TestSpheresDataSource::getDataCallback);
     this->getDataSlot.SetCallback(moldyn::MultiParticleDataCall::ClassName(), moldyn::MultiParticleDataCall::FunctionName(1), &TestSpheresDataSource::getExtentCallback);
     this->MakeSlotAvailable(&this->getDataSlot);
+
+	numSpheresSlot << new param::IntParam(15);
+	this->MakeSlotAvailable(&numSpheresSlot);
+
+	numFramesSlot << new param::IntParam(100);
+	this->MakeSlotAvailable(&numFramesSlot);
 
 #ifdef MMCORE_TEST_DYN_PARAM_SLOTS
     p1.SetParameter(new param::BoolParam(false));
@@ -76,8 +73,9 @@ view::AnimDataModule::Frame* misc::TestSpheresDataSource::constructFrame(void) c
  * misc::BezierDataSource::create
  */
 bool misc::TestSpheresDataSource::create(void) {
-    view::AnimDataModule::setFrameCount(TestSpheresDataSource::frameCount);
-    view::AnimDataModule::initFrameCache(TestSpheresDataSource::frameCount);
+	auto f = this->numFramesSlot.Param<param::IntParam>()->Value();
+    view::AnimDataModule::setFrameCount(f);
+    view::AnimDataModule::initFrameCache(f);
     return true;
 }
 
@@ -89,8 +87,10 @@ void misc::TestSpheresDataSource::loadFrame(view::AnimDataModule::Frame *frame, 
     Frame *frm = dynamic_cast<Frame *>(frame);
     if (frm == NULL) return;
     frm->SetFrameNumber(idx);
-    frm->data = new float[7 * TestSpheresDataSource::sphereCount];
-    for (unsigned int i = 0; i < TestSpheresDataSource::sphereCount; i++) {
+	auto frameCount = this->numFramesSlot.Param<param::IntParam>()->Value();
+	auto sphereCount = this->numSpheresSlot.Param<param::IntParam>()->Value();
+    frm->data = new float[7 * sphereCount];
+    for (unsigned int i = 0; i < sphereCount; i++) {
         vislib::math::ShallowVector<float, 3> pos(&frm->data[i * 7]);
         ::srand(i); // stablize values for particles
         float &r = frm->data[i * 7 + 3];
@@ -115,7 +115,7 @@ void misc::TestSpheresDataSource::loadFrame(view::AnimDataModule::Frame *frame, 
         vislib::math::Quaternion<float> rot(static_cast<float>((::rand() % 2) * 2 - 1) * static_cast<float>(M_PI) * static_cast<float>(::rand() % 2000) * 0.001f, Z);
         float dist = static_cast<float>(::rand() % 1001) * 0.001f;
         dist = ::pow(dist, 0.333f) * 0.9f;
-        float a = (static_cast<float>(2 * idx) / static_cast<float>(TestSpheresDataSource::frameCount)) * static_cast<float>(M_PI);
+        float a = (static_cast<float>(2 * idx) / static_cast<float>(frameCount)) * static_cast<float>(M_PI);
         X = rot * X;
         Y = rot * Y;
 
@@ -164,7 +164,18 @@ bool misc::TestSpheresDataSource::getDataCallback(Call& caller) {
     moldyn::MultiParticleDataCall *mpdc = dynamic_cast<moldyn::MultiParticleDataCall *>(&caller);
     if (mpdc == NULL) return false;
 
-    view::AnimDataModule::Frame *f = this->requestLockedFrame(mpdc->FrameID());
+	auto frameCount = this->numFramesSlot.Param<param::IntParam>()->Value();
+	auto sphereCount = this->numSpheresSlot.Param<param::IntParam>()->Value();
+
+	if (this->numFramesSlot.IsDirty() || this->numSpheresSlot.IsDirty()) {
+		this->resetFrameCache();
+		view::AnimDataModule::setFrameCount(frameCount);
+		view::AnimDataModule::initFrameCache(frameCount);
+		this->numFramesSlot.ResetDirty();
+		this->numSpheresSlot.ResetDirty();
+	}
+
+	view::AnimDataModule::Frame *f = this->requestLockedFrame(mpdc->FrameID());
     if (f == NULL) return false;
     f->Unlock(); // because I know that this data source is simple enough that no locking is required
     Frame *frm = dynamic_cast<Frame*>(f);
@@ -187,11 +198,11 @@ bool misc::TestSpheresDataSource::getDataCallback(Call& caller) {
 
     mpdc->SetFrameID(f->FrameNumber());
     mpdc->SetDataHash(1);
-    mpdc->SetExtent(TestSpheresDataSource::frameCount,
+    mpdc->SetExtent(frameCount,
         -1.0f, -1.0f, -1.0f,
         1.0f, 1.0f, 1.0f);
     mpdc->SetParticleListCount(1);
-    mpdc->AccessParticles(0).SetCount(TestSpheresDataSource::sphereCount);
+    mpdc->AccessParticles(0).SetCount(sphereCount);
     mpdc->AccessParticles(0).SetVertexData(moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZR, frm->data, sizeof(float) * 7);
     mpdc->AccessParticles(0).SetColourData(moldyn::SimpleSphericalParticles::COLDATA_FLOAT_RGB, frm->data + 4, sizeof(float) * 7);
     mpdc->SetUnlocker(NULL);
@@ -207,8 +218,10 @@ bool misc::TestSpheresDataSource::getExtentCallback(Call& caller) {
     moldyn::MultiParticleDataCall *mpdc = dynamic_cast<moldyn::MultiParticleDataCall *>(&caller);
     if (mpdc == NULL) return false;
 
+	auto frameCount = this->numFramesSlot.Param<param::IntParam>()->Value();
+
     mpdc->SetDataHash(1);
-    mpdc->SetExtent(TestSpheresDataSource::frameCount,
+    mpdc->SetExtent(frameCount,
         -1.0f, -1.0f, -1.0f,
         1.0f, 1.0f, 1.0f);
 
