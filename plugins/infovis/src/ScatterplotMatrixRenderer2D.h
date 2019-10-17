@@ -117,9 +117,10 @@ private:
 
     struct SPLOMPoints {
         SPLOMPoints(const std::vector<PlotInfo>& plots, const stdplugin::datatools::table::TableDataCall* floatTable)
-            : plots(plots), floatTable(floatTable) {}
+            : plots(plots)
+            , floatTable(floatTable){}
 
-        [[nodiscard]] inline size_t idx_to_row(size_t idx) const {
+                  [[nodiscard]] inline size_t idx_to_row(size_t idx) const {
             const size_t rowCount = floatTable->GetRowsCount();
             return idx % rowCount;
         }
