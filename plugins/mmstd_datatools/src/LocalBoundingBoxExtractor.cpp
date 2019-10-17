@@ -1,9 +1,7 @@
 #include "LocalBoundingBoxExtractor.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "vislib/math/Cuboid.h"
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore/param/ColorParam.h"
-#include "mmcore/utility/ColourParser.h"
 
 namespace megamol {
 namespace stdplugin {
@@ -59,6 +57,14 @@ bool LocalBoundingBoxExtractor::getDataCallback(megamol::core::Call& c) {
     core::moldyn::MultiParticleDataCall::Particles& parts =  mpdc->AccessParticles(0);
 
     vislib::math::Cuboid<float> a = parts.GetBBox();
+        
+    if (a.IsEmpty()) {
+        this->calcLocalBox(parts, a);
+        if (!(parts.GetCount() > 0)) {
+            a = mpdc->GetBoundingBoxes().ObjectSpaceBBox();
+        }
+    }
+
     typedef vislib::math::AbstractCuboid<float, float[6]> Super;
 
     std::vector<float> lbf = { a.Left(), a.Bottom() ,a.Front()};
@@ -208,6 +214,21 @@ bool LocalBoundingBoxExtractor::getExtentCallback(megamol::core::Call& c) {
      }
 
     return true;
+}
+
+void LocalBoundingBoxExtractor::calcLocalBox(
+    core::moldyn::MultiParticleDataCall::Particles& parts, vislib::math::Cuboid<float>& box) {
+    
+    if (!(parts.GetCount() > 0)) return;
+
+    for (int i = 0; i < parts.GetCount(); i++) {
+        box.SetLeft(std::min(box.GetLeft(),parts.GetParticleStore().GetXAcc()->Get_f(i)));
+        box.SetRight(std::max(box.GetRight(), parts.GetParticleStore().GetXAcc()->Get_f(i)));
+        box.SetBottom(std::min(box.GetBottom(), parts.GetParticleStore().GetYAcc()->Get_f(i)));
+        box.SetTop(std::max(box.GetTop(), parts.GetParticleStore().GetYAcc()->Get_f(i)));
+        box.SetFront(std::min(box.GetFront(), parts.GetParticleStore().GetZAcc()->Get_f(i)));
+        box.SetBack(std::max(box.GetBack(), parts.GetParticleStore().GetZAcc()->Get_f(i)));
+    }
 }
 
 } // namespace datatools

@@ -7,6 +7,7 @@
 #include "geometry_calls/LinesDataCall.h"
 #include "mmcore/param/ParamSlot.h"
 #include "geometry_calls/CallTriMeshData.h"
+#include "mmcore/moldyn/MultiParticleDataCall.h"
 #include <map>
 
 namespace megamol {
@@ -56,6 +57,7 @@ private:
      * @return True on success
      */
     bool getExtentCallback(megamol::core::Call& c);
+    void calcLocalBox(core::moldyn::MultiParticleDataCall::Particles& parts, vislib::math::Cuboid<float>& box);
 
     /** The slot providing access to the data */
     megamol::core::CalleeSlot outLinesSlot;
