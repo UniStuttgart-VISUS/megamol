@@ -876,8 +876,8 @@ void GUIView::drawParametersCallback(const std::string& wn, WindowManager::Windo
         ImGui::SameLine();
         ImGui::Text("Search Parameters");
         this->utils.HelpMarkerToolTip("[CTRL + 'p'] Set keyboard focus to search input field.\n"
-                                      "Searching for case insensitive substring in parameter name.\n"
-                                      "");
+                                      "Searching for case insensitive substring in\n"
+                                      "parameter names globally in all parameter views.\n");
 
         /// Alternative (TEMP):
         // Show parameter search field in separate window
