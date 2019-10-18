@@ -1057,7 +1057,7 @@ bool SphereRenderer::Render(view::CallRender3D_2& call) {
 
     // Lights
     this->GetLights();
-    this->curlightDir = { 0.0f, 0.0f, 10.0f, 1.0f };
+    this->curlightDir = { 0.0f, 0.0f, 1.0f, 1.0f };
     if (this->lightMap.size() > 1) {
         vislib::sys::Log::DefaultLog.WriteWarn("[SphereRenderer] Only one single distant (directional) light source is supported by this renderer");
     }
@@ -1066,18 +1066,24 @@ bool SphereRenderer::Render(view::CallRender3D_2& call) {
             vislib::sys::Log::DefaultLog.WriteWarn("[SphereRenderer] Only single distant (directional) light source is supported by this renderer");
         }
         else {
-            auto lightDir = this->lightMap.begin()->second.dl_direction;
-            if (lightDir.size() == 3) {
-                this->curlightDir[0] = lightDir[0];
-                this->curlightDir[1] = lightDir[1];
-                this->curlightDir[2] = lightDir[2];
+            auto use_eyedir = this->lightMap.begin()->second.dl_eye_direction;
+            if (use_eyedir) {
+                this->curlightDir = this->curCamView;
             }
-            if (lightDir.size() == 4) {
-                this->curlightDir[3] = lightDir[3];
+            else {
+                auto lightDir = this->lightMap.begin()->second.dl_direction;
+                if (lightDir.size() == 3) {
+                    this->curlightDir[0] = lightDir[0];
+                    this->curlightDir[1] = lightDir[1];
+                    this->curlightDir[2] = lightDir[2];
+                }
+                if (lightDir.size() == 4) {
+                    this->curlightDir[3] = lightDir[3];
+                }
             }
         }
     }
-    this->curlightDir = glm::normalize(this->curMVtransp * this->curlightDir);
+    this->curlightDir = this->curMVtransp * this->curlightDir;
 
     // Viewport
     if (!cam.image_tile().empty()) {

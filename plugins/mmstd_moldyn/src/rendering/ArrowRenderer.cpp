@@ -204,7 +204,7 @@ bool ArrowRenderer::Render(view::CallRender3D_2& call) {
 
     // Lights
     this->GetLights();
-    glm::vec4 light_dir = { 0.0f, 0.0f, 10.0f, 1.0f };
+    glm::vec4 light_dir = { 0.0f, 0.0f, 1.0f, 1.0f };
     if (this->lightMap.size() > 1) {
         vislib::sys::Log::DefaultLog.WriteWarn("ArrowRenderer: Only one single distant (directional) light source is supported by this renderer");
     }
@@ -226,7 +226,11 @@ bool ArrowRenderer::Render(view::CallRender3D_2& call) {
     }
     light_dir = MVtransp * light_dir;
 
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     glDisable(GL_BLEND);
+
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
     glPointSize(vislib::math::Max(viewportStuff[2], viewportStuff[3]));
