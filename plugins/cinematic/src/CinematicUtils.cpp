@@ -657,7 +657,7 @@ void CinematicUtils::PushHotkeyList(float viewport_width, float viewport_height)
     hotkey_str += "[Ctrl+g] Snap all keyframes to simulation frames. \n";
     hotkey_str += "[Ctrl+t] Linearize simulation time between two keyframes. \n";
     //hotkey_str += "[Ctrl+v] Set same velocity between all keyframes (Experimental).\n"; ///XXX Calcualation is not correct yet ...
-    hotkey_str += "[Ctrl+p] Reset shifted and scaled time axes. \n";
+    hotkey_str += "[Ctrl+x] Reset shifted and scaled time axes. \n";
     hotkey_str += "[Left Mouse Button] Select keyframe. \n";
     hotkey_str += "[Middle Mouse Button] Axes scaling in mouse direction. \n";
     hotkey_str += "[Right Mouse Button] Drag & drop keyframe / pan axes. \n";

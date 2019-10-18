@@ -64,20 +64,6 @@ namespace cinematic {
     }
 
 
-    // #### Utility quaternion functions ################################### //
-
-    static inline glm::quat quaternion_from_vectors(glm::vec4 original, glm::vec4 target) {
-        glm::vec3 o = glm::vec3(original.x, original.y, original.z);
-        o = glm::normalize(o);
-        glm::vec3 t = glm::vec3(target.x, target.y, target.z);
-        t = glm::normalize(t);
-        float m = std::sqrt(2.0f + 2.0f * glm::dot(o, t));
-        glm::vec3 w = (1.0f / m) * glm::cross(o, t);
-        glm::quat retquat = glm::quat(m / 2.0f, w.x, w.y, w.z);
-        //return glm::normalize(retquat);
-        return retquat;
-    }
-
 
     // #### Utility minimal camera state ################################### //
 

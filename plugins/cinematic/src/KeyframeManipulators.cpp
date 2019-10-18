@@ -259,7 +259,9 @@ bool KeyframeManipulators::PushRendering(CinematicUtils &utils) {
                 manipulator_color = this->getManipulatorColor(m, utils);
                 keyframe_position = this->getManipulatorPosition(m);
                 if (this->toggleOusideBbox) {
-                    /// TODO manipulator_position = keyframe_position + m.vector * this->line_length;
+/// TODO manipulator_position = keyframe_position + m.vector * this->line_length;
+
+
                 }
                 else {
                     manipulator_position = keyframe_position + m.vector * this->line_length;
@@ -380,7 +382,8 @@ bool KeyframeManipulators::ProcessHitManipulator(float mouse_x, float mouse_y) {
     glm::vec4 camera_position = camera.position();
     glm::vec4 new_camera_position = camera_position + glm::vec4(diff_world_vector.x, diff_world_vector.y, diff_world_vector.z, 1.0f);
 
-    /// TODO positio nof LookAt
+ /// TODO position of LookAt
+
 
     switch (this->state.hit->rigging) {
     case(Manipulator::Rigging::X_DIRECTION): {
@@ -396,10 +399,30 @@ bool KeyframeManipulators::ProcessHitManipulator(float mouse_x, float mouse_y) {
         camera.position(new_camera_position);
     } break;
     case(Manipulator::Rigging::ROTATION): {
-        /// TODO 
+/// TODO 
+
+
     } break;
     default: break;
     }
+
+
+    //new_up = glm::normalize(new_up);
+    //megamol::core::view::Camera_2 cam(this->selectedKeyframe.GetCameraState());
+    //cam_type::snapshot_type snapshot;
+    //cam.take_snapshot(snapshot, thecam::snapshot_content::all);
+    //glm::vec4 cam_up4 = snapshot.up_vector;
+    //glm::vec3 cam_up3 = static_cast<glm::vec3>(cam_up4);
+    //glm::vec3 diff_up = new_up - cam_up3;
+    //float diff_up_len = glm::length(diff_up);
+    //float up_angle = std::asinf(diff_up_len/2.0f) * 2.0f;
+    //glm::vec3 rot_vec = glm::cross(cam_up3, diff_up);
+    //glm::quat current_orientation = cam.orientation();
+    //cam.orientation(glm::normalize(glm::rotate(current_orientation, up_angle, rot_vec)));
+    //cam_type::minimal_state_type camera_state;
+    //cam.get_minimal_state(camera_state);
+    //this->selectedKeyframe.SetCameraState(camera_state);
+    //this->replaceKeyframe(tmp_kf, this->selectedKeyframe, true);
 
     // Apply changed camera state to selected keyframe
     cam_type::minimal_state_type new_camera_state;

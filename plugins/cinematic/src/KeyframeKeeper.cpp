@@ -130,12 +130,18 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module()
 
     this->resetLookAtParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_U, core::view::Modifier::CTRL));
     this->MakeSlotAvailable(&this->resetLookAtParam);
+    ///XXX Set to read only until implementation is done
+    this->resetLookAtParam.Param<param::ButtonParam>()->SetGUIReadOnly(true);
     
     this->editCurrentLookAtParam.SetParameter(new param::Vector3fParam(vislib::math::Vector<float, 3>(0.0f, 0.0f, 0.0f)));
     this->MakeSlotAvailable(&this->editCurrentLookAtParam);
+    ///XXX Set to read only until implementation is done
+    this->editCurrentLookAtParam.Param<param::Vector3fParam>()->SetGUIReadOnly(true);
 
     this->editCurrentUpParam.SetParameter(new param::Vector3fParam(vislib::math::Vector<float, 3>(0.0f, 1.0f, 0.0f)));
     this->MakeSlotAvailable(&this->editCurrentUpParam);
+    ///XXX Set to read only until implementation is done
+    this->editCurrentUpParam.Param<param::Vector3fParam>()->SetGUIReadOnly(true);
 
     this->editCurrentApertureParam.SetParameter(new param::FloatParam(60.0f, 0.0f, 180.0f));
     this->MakeSlotAvailable(&this->editCurrentApertureParam);
@@ -319,12 +325,12 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
         this->applyKeyframeParam.ResetDirty();
 
         // Get current camera for selected keyframe
-        Keyframe tmpKf = this->selectedKeyframe;
-        tmpKf.SetCameraState(this->cameraState);
+        Keyframe tmp_kf = this->selectedKeyframe;
+        tmp_kf.SetCameraState(this->cameraState);
 
         // Try adding keyframe to array
-        if (!this->addKeyframe(tmpKf, true)) {
-            if (!this->replaceKeyframe(this->selectedKeyframe, tmpKf, true)) {
+        if (!this->addKeyframe(tmp_kf, true)) {
+            if (!this->replaceKeyframe(this->selectedKeyframe, tmp_kf, true)) {
                 vislib::sys::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] [CallForGetUpdatedKeyframeData] Unable to apply settings to new/selested keyframe.");
             }
         }
@@ -379,9 +385,9 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
         // Get index of existing keyframe
         int selIndex = this->getKeyframeIndex(this->keyframes, this->selectedKeyframe);
         if (selIndex >= 0) { // If existing keyframe is selected, delete keyframe an add at the right position
-            Keyframe tmpKf = this->selectedKeyframe;
+            Keyframe tmp_kf = this->selectedKeyframe;
             this->selectedKeyframe.SetAnimTime(t);
-            this->replaceKeyframe(tmpKf, this->selectedKeyframe, true);
+            this->replaceKeyframe(tmp_kf, this->selectedKeyframe, true);
         }
         else { // Else just change time of interpolated selected keyframe
             this->selectedKeyframe = this->interpolateKeyframe(t);
@@ -401,9 +407,9 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
         // Get index of existing keyframe
         int selIndex = this->getKeyframeIndex(this->keyframes, this->selectedKeyframe);
         if (selIndex >= 0) { // If existing keyframe is selected, delete keyframe an add at the right position
-            Keyframe tmpKf = this->selectedKeyframe;
+            Keyframe tmp_kf = this->selectedKeyframe;
             this->selectedKeyframe.SetSimTime(s / this->totalSimTime);
-            this->replaceKeyframe(tmpKf, this->selectedKeyframe, true);
+            this->replaceKeyframe(tmp_kf, this->selectedKeyframe, true);
         }
         // Write back clamped total time to parameter
         this->editCurrentSimTimeParam.Param<param::FloatParam>()->SetValue(s, false);
@@ -412,64 +418,51 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
     if (this->editCurrentPosParam.IsDirty()) {
         this->editCurrentPosParam.ResetDirty();
 
-        // Get index of existing keyframe
         int selIndex = this->getKeyframeIndex(this->keyframes, this->selectedKeyframe);
         if (selIndex >= 0) {
-            Keyframe tmpKf = this->selectedKeyframe;
-            glm::vec3 posv = vislib_vector_to_glm(this->editCurrentPosParam.Param<param::Vector3fParam>()->Value()) + this->modelBboxCenter;
-            std::array<float, 3> posa = { posv.x, posv.y, posv.z };
+            Keyframe tmp_kf = this->selectedKeyframe;
+            glm::vec3 pos_v = vislib_vector_to_glm(this->editCurrentPosParam.Param<param::Vector3fParam>()->Value());
+            std::array<float, 3> pos = { pos_v.x, pos_v.y, pos_v.z };
             auto cam_state = this->selectedKeyframe.GetCameraState();
-            cam_state.position = posa;
+            cam_state.position = pos;
             this->selectedKeyframe.SetCameraState(cam_state);
-            this->replaceKeyframe(tmpKf, this->selectedKeyframe, true);
-            // Refresh interoplated camera positions
+            this->replaceKeyframe(tmp_kf, this->selectedKeyframe, true);
             this->refreshInterpolCamPos(this->interpolSteps);
         }
         else {
-            //vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [CallForGetUpdatedKeyframeData] No existing keyframe selected.");
+            vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [EditCurrentPosParam] No existing keyframe selected.");
         }
     }
     // resetLookAtParam -------------------------------------------------------
     if (this->resetLookAtParam.IsDirty()) {
         this->resetLookAtParam.ResetDirty();
 
-        this->editCurrentLookAtParam.Param<param::Vector3fParam>()->SetValue(glm_to_vislib_vector(this->modelBboxCenter));
-        // Get index of existing keyframe
         int selIndex = this->getKeyframeIndex(this->keyframes, this->selectedKeyframe);
         if (selIndex >= 0) {
-            Keyframe tmpKf = this->selectedKeyframe;
+            Keyframe tmp_kf = this->selectedKeyframe;
             glm::vec3 lookatv = this->modelBboxCenter;
-            auto cam_state = this->selectedKeyframe.GetCameraState();
-            /// TODO reset look at
+/// TODO reset look at vector
 
 
-
-            this->selectedKeyframe.SetCameraState(cam_state);
-            this->replaceKeyframe(tmpKf, this->selectedKeyframe, true);
         }
         else {
-            //vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [CallForGetUpdatedKeyframeData] No existing keyframe selected.");
+            vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [ResetLookAtParam] No existing keyframe selected.");
         }
     }
     // editCurrentLookAtParam -------------------------------------------------
     if (this->editCurrentLookAtParam.IsDirty()) {
         this->editCurrentLookAtParam.ResetDirty();
 
-        // Get index of existing keyframe
         int selIndex = this->getKeyframeIndex(this->keyframes, this->selectedKeyframe);
         if (selIndex >= 0) {
-            Keyframe tmpKf = this->selectedKeyframe;
+            Keyframe tmp_kf = this->selectedKeyframe;
             glm::vec3 lookatv = vislib_vector_to_glm(this->editCurrentLookAtParam.Param<param::Vector3fParam>()->Value());
-            auto cam_state = this->selectedKeyframe.GetCameraState();
-            /// TODO calculate look at
+/// TODO calculate new look at vector
 
 
-
-            this->selectedKeyframe.SetCameraState(cam_state);
-            this->replaceKeyframe(tmpKf, this->selectedKeyframe, true);
         }
         else {
-            //vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [CallForGetUpdatedKeyframeData] No existing keyframe selected.");
+            vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [EditCurrentLookAtParam] No existing keyframe selected.");
         }
     }
     // editCurrentUpParam -----------------------------------------------------
@@ -479,18 +472,30 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
         // Get index of existing keyframe
         int selIndex = this->getKeyframeIndex(this->keyframes, this->selectedKeyframe);
         if (selIndex >= 0) {
-            Keyframe tmpKf = this->selectedKeyframe;
-            glm::vec3 up = vislib_vector_to_glm(this->editCurrentUpParam.Param<param::Vector3fParam>()->Value());
-            auto cam_state = this->selectedKeyframe.GetCameraState();
-            /// TODO calculate up
+            Keyframe tmp_kf = this->selectedKeyframe;
+            glm::vec3 new_up = vislib_vector_to_glm(this->editCurrentUpParam.Param<param::Vector3fParam>()->Value());
+/// TODO calculate new up vector
 
 
-
-            this->selectedKeyframe.SetCameraState(cam_state);
-            this->replaceKeyframe(tmpKf, this->selectedKeyframe, true);
+            //new_up = glm::normalize(new_up);
+            //megamol::core::view::Camera_2 cam(this->selectedKeyframe.GetCameraState());
+            //cam_type::snapshot_type snapshot;
+            //cam.take_snapshot(snapshot, thecam::snapshot_content::all);
+            //glm::vec4 cam_up4 = snapshot.up_vector;
+            //glm::vec3 cam_up3 = static_cast<glm::vec3>(cam_up4);
+            //glm::vec3 diff_up = new_up - cam_up3;
+            //float diff_up_len = glm::length(diff_up);
+            //float up_angle = std::asinf(diff_up_len/2.0f) * 2.0f;
+            //glm::vec3 rot_vec = glm::cross(cam_up3, diff_up);
+            //glm::quat current_orientation = cam.orientation();
+            //cam.orientation(glm::normalize(glm::rotate(current_orientation, up_angle, rot_vec)));
+            //cam_type::minimal_state_type camera_state;
+            //cam.get_minimal_state(camera_state);
+            //this->selectedKeyframe.SetCameraState(camera_state);
+            //this->replaceKeyframe(tmp_kf, this->selectedKeyframe, true);
         }
         else {
-            //vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [CallForGetUpdatedKeyframeData] No existing keyframe selected.");
+            vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [EditCurrentUpParam] No existing keyframe selected.");
         }
     }
     // editCurrentApertureParam -----------------------------------------------------
@@ -500,15 +505,15 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
         // Get index of existing keyframe
         int selIndex = this->getKeyframeIndex(this->keyframes, this->selectedKeyframe);
         if (selIndex >= 0) {
-            Keyframe tmpKf = this->selectedKeyframe;
+            Keyframe tmp_kf = this->selectedKeyframe;
             float aperture = this->editCurrentApertureParam.Param<param::FloatParam>()->Value();
             auto cam_state = this->selectedKeyframe.GetCameraState();
-            cam_state.half_aperture_angle_radians = aperture * M_PI / (180.0f * 2.0f); // degree to radians
+            cam_state.half_aperture_angle_radians = aperture * static_cast<float>(M_PI) / (180.0f * 2.0f); // degree to radians
             this->selectedKeyframe.SetCameraState(cam_state);
-            this->replaceKeyframe(tmpKf, this->selectedKeyframe, true);
+            this->replaceKeyframe(tmp_kf, this->selectedKeyframe, true);
         }
         else {
-            //vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [CallForGetUpdatedKeyframeData] No existing keyframe selected.");
+            vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [EditCurrentApertureParam] No existing keyframe selected.");
         }
     }
     // fileNameParam ----------------------------------------------------------
@@ -516,8 +521,6 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
         this->fileNameParam.ResetDirty();
 
         this->filename = std::string(this->fileNameParam.Param<param::FilePathParam>()->Value().PeekBuffer());
-        // Auto loading keyframe file when new filename is given
-        this->loadKeyframesParam.ForceSetDirty();
     }
     // saveKeyframesParam -----------------------------------------------------
     if (this->saveKeyframesParam.IsDirty()) {
@@ -711,10 +714,10 @@ bool KeyframeKeeper::redoAction(void) {
 
 void KeyframeKeeper::linearizeSimTangent(Keyframe stkf) {
 
-    // Linearize tangent between simTangentKf and currently selected keyframe by shifting all inbetween keyframes simulation time
+    // Linearize tangent between simTangentKf and currently selected keyframe by shifting all inbetween keyframe simulation times
     if (this->simTangentStatus) {
         // Linearize tangent only between existing keyframes
-        if (this->getKeyframeIndex(this->keyframes, stkf) >= 0) {
+        if (this->getKeyframeIndex(this->keyframes, stkf) < 0) {
             vislib::sys::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] [linearizeSimTangent] Select existing keyframe before trying to linearize the tangent.");
             this->simTangentStatus = false;
         }
@@ -741,11 +744,11 @@ void KeyframeKeeper::linearizeSimTangent(Keyframe stkf) {
 
                 // ADD UNDO
                 // Store old keyframe
-                Keyframe tmpKf = this->keyframes[i];
+                Keyframe tmp_kf = this->keyframes[i];
                 // Apply changes to keyframe
                 this->keyframes[i].SetSimTime(newSimTime);
                 // Add modification to undo queue
-                this->addKeyframeUndoAction(KeyframeKeeper::Undo::Action::UNDO_KEYFRAME_MODIFY, this->keyframes[i], tmpKf);
+                this->addKeyframeUndoAction(KeyframeKeeper::Undo::Action::UNDO_KEYFRAME_MODIFY, this->keyframes[i], tmp_kf);
             }
     
             this->simTangentStatus = false;
@@ -773,9 +776,9 @@ void KeyframeKeeper::snapKeyframe2AnimFrame(Keyframe& out_kf) {
     t = (t > this->totalAnimTime) ? (this->totalAnimTime) : (t);
 
     // ADD UNDO
-    Keyframe tmpKf = out_kf;
+    Keyframe tmp_kf = out_kf;
     out_kf.SetAnimTime(t);
-    this->addKeyframeUndoAction(KeyframeKeeper::Undo::Action::UNDO_KEYFRAME_MODIFY, out_kf, tmpKf);
+    this->addKeyframeUndoAction(KeyframeKeeper::Undo::Action::UNDO_KEYFRAME_MODIFY, out_kf, tmp_kf);
 }
 
 
@@ -784,9 +787,9 @@ void KeyframeKeeper::snapKeyframe2SimFrame(Keyframe& out_kf) {
     float s = std::round(out_kf.GetSimTime() * this->totalSimTime) / this->totalSimTime;
 
     // ADD UNDO
-    Keyframe tmpKf = out_kf;
+    Keyframe tmp_kf = out_kf;
     out_kf.SetSimTime(s);
-    this->addKeyframeUndoAction(KeyframeKeeper::Undo::Action::UNDO_KEYFRAME_MODIFY, out_kf, tmpKf);
+    this->addKeyframeUndoAction(KeyframeKeeper::Undo::Action::UNDO_KEYFRAME_MODIFY, out_kf, tmp_kf);
 }
 
 
@@ -822,9 +825,9 @@ void KeyframeKeeper::setSameSpeed() {
                 kfDist = 0.0f;
 
                 // ADD UNDO
-                Keyframe tmpKf = this->keyframes[index];
+                Keyframe tmp_kf = this->keyframes[index];
                 this->keyframes[index].SetAnimTime(t);
-                this->addKeyframeUndoAction(KeyframeKeeper::Undo::Action::UNDO_KEYFRAME_MODIFY, this->keyframes[index], tmpKf);
+                this->addKeyframeUndoAction(KeyframeKeeper::Undo::Action::UNDO_KEYFRAME_MODIFY, this->keyframes[index], tmp_kf);
             }
             // Add distance up to existing keyframe
             kfDist += glm::length(this->interpolCamPos[i + 1] - this->interpolCamPos[i]);
@@ -1469,9 +1472,8 @@ void KeyframeKeeper::updateEditParameters(Keyframe kf) {
     cam_type::snapshot_type snapshot;
     cam.take_snapshot(snapshot, thecam::snapshot_content::all);
     glm::vec4 pos = snapshot.position;
-    glm::vec4 cam_up = snapshot.view_vector;
-    glm::vec4 cam_view = snapshot.up_vector;
-
+    glm::vec4 cam_up = snapshot.up_vector;
+    glm::vec4 cam_view = snapshot.view_vector;
     this->editCurrentAnimTimeParam.Param<param::FloatParam>()->SetValue(kf.GetAnimTime(), false);
     this->editCurrentSimTimeParam.Param<param::FloatParam>()->SetValue(kf.GetSimTime() * this->totalSimTime, false);
     this->editCurrentPosParam.Param<param::Vector3fParam>()->SetValue(glm_to_vislib_vector(glm::vec3(pos.x, pos.y, pos.z)), false);

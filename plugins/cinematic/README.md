@@ -100,7 +100,7 @@ The module `TimeLineRenderer` exposes the following parameters:
 * `fontSize` (`22.0`): The font size.
 * `gotoRightFrame` (Assigned key: `right arrow`): Move to right animation time frame.
 * `gotoLeftFrame` (Assigned key: `left arrow`): Move to left animation time frame.
-* `resetAxes` (Assigned key: `CTRL+p`): Reset all shifted and scaled time axes.
+* `resetAxes` (Assigned key: `CTRL+x`): Reset all shifted and scaled time axes.
 
 The module `ReplacementRenderer` exposes the following parameters:
 (The values in brackets indicate the default values.)

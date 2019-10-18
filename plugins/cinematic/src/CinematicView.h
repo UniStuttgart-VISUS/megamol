@@ -150,11 +150,11 @@ namespace cinematic {
 
         // PNG ----------------------------------------------------------------
 
-        bool render2file_setup();
+        bool render_to_file_setup();
 
-        bool render2file_write();
+        bool render_to_file_write();
 
-        bool render2file_cleanup();
+        bool render_to_file_cleanup();
 
         /**
          * Error handling function for png export
