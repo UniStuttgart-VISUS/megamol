@@ -50,10 +50,16 @@ public:
     ~GPUMeshCollection() = default;
 
     template <typename VertexBufferIterator, typename IndexBufferIterator>
-    void addMesh(glowl::VertexLayout vertex_descriptor,
+    size_t addMesh(
+        glowl::VertexLayout vertex_descriptor,
         std::vector<IteratorPair<VertexBufferIterator>> const& vertex_buffers,
-        IteratorPair<IndexBufferIterator> index_buffer, GLenum index_type, GLenum usage, GLenum primitive_type,
+        IteratorPair<IndexBufferIterator> index_buffer,
+        GLenum index_type,
+        GLenum usage,
+        GLenum primitive_type,
         bool store_seperate = false);
+
+    void deleteSubMesh(size_t submesh_idx);
 
     void clear() {
         m_batched_meshes.clear();
@@ -70,9 +76,13 @@ private:
 };
 
 template <typename VertexBufferIterator, typename IndexBufferIterator>
-inline void GPUMeshCollection::addMesh(glowl::VertexLayout vertex_descriptor,
+inline size_t GPUMeshCollection::addMesh(
+    glowl::VertexLayout vertex_descriptor,
     std::vector<IteratorPair<VertexBufferIterator>> const& vertex_buffers,
-    IteratorPair<IndexBufferIterator> index_buffer, GLenum index_type, GLenum usage, GLenum primitive_type,
+    IteratorPair<IndexBufferIterator> index_buffer,
+    GLenum index_type,
+    GLenum usage,
+    GLenum primitive_type,
     bool store_seperate) {
     typedef typename std::iterator_traits<IndexBufferIterator>::value_type IndexBufferType;
     typedef typename std::iterator_traits<VertexBufferIterator>::value_type VertexBufferType;
@@ -151,6 +161,8 @@ inline void GPUMeshCollection::addMesh(glowl::VertexLayout vertex_descriptor,
         --it;
     }
 
+    auto sub_mesh_idx = m_sub_mesh_data.size();
+
     m_sub_mesh_data.emplace_back(SubMeshData());
     m_sub_mesh_data.back().batch_index = std::distance(m_batched_meshes.begin(), it);
     m_sub_mesh_data.back().sub_mesh_draw_command.first_idx = it->indices_used;
@@ -172,6 +184,13 @@ inline void GPUMeshCollection::addMesh(glowl::VertexLayout vertex_descriptor,
     // updated vertices and indices used
     it->vertices_used += req_vertex_cnt;
     it->indices_used += req_index_cnt;
+
+    return sub_mesh_idx;
+}
+
+inline void GPUMeshCollection::deleteSubMesh(size_t submesh_idx) 
+{
+
 }
 
 inline std::vector<GPUMeshCollection::BatchedMeshes> const& GPUMeshCollection::getMeshes() { return m_batched_meshes; }

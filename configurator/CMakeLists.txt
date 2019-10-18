@@ -6,9 +6,10 @@
 
 option(BUILD_CONFIGURATOR "Build configurator" OFF)
 
-if(BUILD_CONFIGURATOR AND CMAKE_GENERATOR MATCHES "Visual Studio")
-
-  project(configurator)
+include(CheckLanguage)
+check_language(CSharp)
+if(BUILD_CONFIGURATOR AND CMAKE_CSharp_COMPILER)
+  project(configurator CSharp)
 
   set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
@@ -51,5 +52,7 @@ if(BUILD_CONFIGURATOR AND CMAKE_GENERATOR MATCHES "Visual Studio")
   install(CODE " \
     file(INSTALL \"${CMAKE_CURRENT_BINARY_DIR}/bin\" \
       DESTINATION ${CMAKE_INSTALL_PREFIX} \
-      FILES_MATCHING REGEX \"\\.(exe|dll|pdb)$\")")
+      FILES_MATCHING REGEX \"\\\\.(exe|dll|pdb)$\")")
+elseif(BUILD_CONFIGURATOR)
+  MESSAGE(WARNING "Cannot build configurator with current generator / OS combination")
 endif()

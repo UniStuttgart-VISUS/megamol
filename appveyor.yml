@@ -7,33 +7,33 @@ branches:
 
 environment:
   matrix:
-    - platform: x64
+    - image: Visual Studio 2017
       configuration: Release
-      image: Visual Studio 2017
+      platform: x64
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
       CMAKE_GENERATOR: "Visual Studio 15 2017"
       CMAKE_CONFIG: Release
       VSVER: vs141
-    - platform: x64
-      configuration: Debug
-      image: Visual Studio 2017
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      CMAKE_GENERATOR: "Visual Studio 15 2017"
-      CMAKE_CONFIG: Debug
-      VSVER: vs141
-    - platform: x64
+    - image: Visual Studio 2019
       configuration: Release
-      image: Visual Studio 2019
+      platform: x64
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
       CMAKE_GENERATOR: "Visual Studio 16 2019"
       CMAKE_CONFIG: Release
       VSVER: vs142
-    - platform: x64
+    - image: Visual Studio 2019
       configuration: Debug
-      image: Visual Studio 2019
+      platform: x64
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
       CMAKE_GENERATOR: "Visual Studio 16 2019"
       CMAKE_CONFIG: Debug
+      VSVER: vs142
+    - image: Visual Studio 2019
+      configuration: RelWithDebInfo
+      platform: x64
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+      CMAKE_GENERATOR: "Visual Studio 16 2019"
+      CMAKE_CONFIG: RelWithDebInfo
       VSVER: vs142
 
 matrix:
@@ -43,7 +43,7 @@ before_build:
   - mkdir build
   - mkdir stage
   - cd build
-  - cmake .. -G"%CMAKE_GENERATOR%" -A"x64" -DCMAKE_INSTALL_PREFIX=c:\projects\megamol\stage\
+  - cmake .. -G"%CMAKE_GENERATOR%" -A"x64" -DCMAKE_BUILD_TYPE=%CMAKE_CONFIG% -DCMAKE_INSTALL_PREFIX=c:\projects\megamol\stage\ -DCMAKE_CXX_FLAGS=/w
 
 build:
   parallel: true

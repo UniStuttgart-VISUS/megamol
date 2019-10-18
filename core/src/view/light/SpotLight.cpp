@@ -9,6 +9,7 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/Vector3fParam.h"
+#include "mmcore/param/ColorParam.h"
 
 using namespace megamol::core::view::light;
 
@@ -49,14 +50,13 @@ SpotLight::~SpotLight(void) { this->Release(); }
  */
 void SpotLight::readParams() {
     lightContainer.lightType = lightenum::SPOTLIGHT;
-    auto lcolor = this->lightColor.Param<core::param::Vector3fParam>()->Value().PeekComponents();
-    lightContainer.lightColor.assign(lcolor, lcolor + 3);
+	lightContainer.lightColor = this->lightColor.Param<core::param::ColorParam>()->Value();
     lightContainer.lightIntensity = this->lightIntensity.Param<core::param::FloatParam>()->Value();
 
     auto sl_pos = this->sl_position.Param<core::param::Vector3fParam>()->Value().PeekComponents();
-    lightContainer.sl_position.assign(sl_pos, sl_pos + 3);
+	std::copy(sl_pos, sl_pos + 3, lightContainer.sl_position.begin());
     auto sl_dir = this->sl_direction.Param<core::param::Vector3fParam>()->Value().PeekComponents();
-    lightContainer.sl_direction.assign(sl_dir, sl_dir + 3);
+	std::copy(sl_dir, sl_dir + 3, lightContainer.sl_direction.begin());
     lightContainer.sl_openingAngle = this->sl_openingAngle.Param<core::param::FloatParam>()->Value();
     lightContainer.sl_penumbraAngle = this->sl_penumbraAngle.Param<core::param::FloatParam>()->Value();
     lightContainer.sl_radius = this->sl_radius.Param<core::param::FloatParam>()->Value();

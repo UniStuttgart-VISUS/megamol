@@ -74,7 +74,7 @@ template <class M> struct minimal_camera_state {
     /** The distance of the far clipping plane. */
     world_type far_clipping_plane;
 
-    /** With and height of the film gate. */
+    /** Width and height of the film gate. */
     std::array<world_type, 2> film_gate;
 
     /** The gate scaling method. */
