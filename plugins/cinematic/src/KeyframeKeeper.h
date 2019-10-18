@@ -249,8 +249,8 @@ namespace cinematic {
 		core::param::ParamSlot editCurrentAnimTimeParam;
         core::param::ParamSlot editCurrentSimTimeParam;
 		core::param::ParamSlot editCurrentPosParam;
-        core::param::ParamSlot resetLookAtParam;
-        core::param::ParamSlot editCurrentLookAtParam;
+        core::param::ParamSlot resetViewParam;
+        core::param::ParamSlot editCurrentViewParam;
 		core::param::ParamSlot editCurrentUpParam;
         core::param::ParamSlot editCurrentApertureParam;
         core::param::ParamSlot fileNameParam;

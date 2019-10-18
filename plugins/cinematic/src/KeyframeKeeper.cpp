@@ -32,9 +32,9 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module()
     , editCurrentAnimTimeParam("editSelected::animTime", "Edit animation time of the selected keyframe.")
     , editCurrentSimTimeParam("editSelected::simTime", "Edit simulation time of the selected keyframe.")
     , editCurrentPosParam("editSelected::positionVector", "Edit  position vector of the selected keyframe.")
-    , resetLookAtParam("editSelected::resetLookat", "Reset the LookAt vector of the selected keyframe.")
-    , editCurrentLookAtParam("editSelected::lookatVector", "Edit LookAt vector of the selected keyframe.")
-    , editCurrentUpParam("editSelected::upVector", "Edit Up vector of the selected keyframe.")
+    , resetViewParam("editSelected::resetView", "Reset the view vector of the selected keyframe.")
+    , editCurrentViewParam("editSelected::viewVector", "Edit view vector of the selected keyframe.")
+    , editCurrentUpParam("editSelected::upVector", "Edit up vector of the selected keyframe.")
     , editCurrentApertureParam("editSelected::apertureAngle", "Edit apperture angle of the selected keyframe.")
     , fileNameParam("storage::filename", "The name of the file to load or save keyframes.")
     , saveKeyframesParam("storage::save", "Save keyframes to file.")
@@ -128,20 +128,14 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module()
     this->editCurrentPosParam.SetParameter(new param::Vector3fParam(vislib::math::Vector<float, 3>(0.0f, 0.0f, -1.0f)));
     this->MakeSlotAvailable(&this->editCurrentPosParam);
 
-    this->resetLookAtParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_U, core::view::Modifier::CTRL));
-    this->MakeSlotAvailable(&this->resetLookAtParam);
-    ///XXX Set to read only until implementation is done
-    this->resetLookAtParam.Param<param::ButtonParam>()->SetGUIReadOnly(true);
+    this->resetViewParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_U, core::view::Modifier::CTRL));
+    this->MakeSlotAvailable(&this->resetViewParam);
     
-    this->editCurrentLookAtParam.SetParameter(new param::Vector3fParam(vislib::math::Vector<float, 3>(0.0f, 0.0f, 0.0f)));
-    this->MakeSlotAvailable(&this->editCurrentLookAtParam);
-    ///XXX Set to read only until implementation is done
-    this->editCurrentLookAtParam.Param<param::Vector3fParam>()->SetGUIReadOnly(true);
+    this->editCurrentViewParam.SetParameter(new param::Vector3fParam(vislib::math::Vector<float, 3>(0.0f, 0.0f, 0.0f)));
+    this->MakeSlotAvailable(&this->editCurrentViewParam);
 
     this->editCurrentUpParam.SetParameter(new param::Vector3fParam(vislib::math::Vector<float, 3>(0.0f, 1.0f, 0.0f)));
     this->MakeSlotAvailable(&this->editCurrentUpParam);
-    ///XXX Set to read only until implementation is done
-    this->editCurrentUpParam.Param<param::Vector3fParam>()->SetGUIReadOnly(true);
 
     this->editCurrentApertureParam.SetParameter(new param::FloatParam(60.0f, 0.0f, 180.0f));
     this->MakeSlotAvailable(&this->editCurrentApertureParam);
@@ -433,36 +427,59 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
             vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [EditCurrentPosParam] No existing keyframe selected.");
         }
     }
-    // resetLookAtParam -------------------------------------------------------
-    if (this->resetLookAtParam.IsDirty()) {
-        this->resetLookAtParam.ResetDirty();
+    // resetViewParam -------------------------------------------------------
+    if (this->resetViewParam.IsDirty()) {
+        this->resetViewParam.ResetDirty();
 
         int selIndex = this->getKeyframeIndex(this->keyframes, this->selectedKeyframe);
         if (selIndex >= 0) {
             Keyframe tmp_kf = this->selectedKeyframe;
-            glm::vec3 lookatv = this->modelBboxCenter;
-/// TODO reset look at vector
+            
+            megamol::core::view::Camera_2 cam(this->selectedKeyframe.GetCameraState());
+            cam_type::snapshot_type snapshot;
+            cam.take_snapshot(snapshot, thecam::snapshot_content::up_vector | thecam::snapshot_content::camera_coordinate_system);
+            glm::vec4 cam_pos = snapshot.position;
+            glm::vec4 cam_up = snapshot.up_vector;
 
+            glm::vec3 new_view = this->modelBboxCenter - static_cast<glm::vec3>(cam_pos);
 
+            cam.orientation(rotate_quaternion_with_vector_diff(new_view, static_cast<glm::vec3>(cam_up)));
+
+            cam_type::minimal_state_type camera_state;
+            cam.get_minimal_state(camera_state);
+            this->selectedKeyframe.SetCameraState(camera_state);
+
+            this->replaceKeyframe(tmp_kf, this->selectedKeyframe, true);
         }
         else {
-            vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [ResetLookAtParam] No existing keyframe selected.");
+            vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [ResetViewParam] No existing keyframe selected.");
         }
     }
-    // editCurrentLookAtParam -------------------------------------------------
-    if (this->editCurrentLookAtParam.IsDirty()) {
-        this->editCurrentLookAtParam.ResetDirty();
+    // editCurrentViewParam -------------------------------------------------
+    if (this->editCurrentViewParam.IsDirty()) {
+        this->editCurrentViewParam.ResetDirty();
 
         int selIndex = this->getKeyframeIndex(this->keyframes, this->selectedKeyframe);
         if (selIndex >= 0) {
             Keyframe tmp_kf = this->selectedKeyframe;
-            glm::vec3 lookatv = vislib_vector_to_glm(this->editCurrentLookAtParam.Param<param::Vector3fParam>()->Value());
-/// TODO calculate new look at vector
 
+            megamol::core::view::Camera_2 cam(this->selectedKeyframe.GetCameraState());
+            cam_type::snapshot_type snapshot;
+            cam.take_snapshot(snapshot, thecam::snapshot_content::up_vector);
+            glm::vec4 cam_up = snapshot.up_vector;
 
+            glm::vec3 new_view = vislib_vector_to_glm(this->editCurrentViewParam.Param<param::Vector3fParam>()->Value());
+
+            cam.orientation(rotate_quaternion_with_vector_diff(new_view, static_cast<glm::vec3>(cam_up)));
+
+            cam_type::minimal_state_type camera_state;
+            cam.get_minimal_state(camera_state);
+            this->selectedKeyframe.SetCameraState(camera_state);
+
+            this->replaceKeyframe(tmp_kf, this->selectedKeyframe, true);
         }
         else {
-            vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [EditCurrentLookAtParam] No existing keyframe selected.");
+            vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [EditCurrentViewParam] No existing keyframe selected.");
         }
     }
     // editCurrentUpParam -----------------------------------------------------
@@ -473,26 +490,21 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
         int selIndex = this->getKeyframeIndex(this->keyframes, this->selectedKeyframe);
         if (selIndex >= 0) {
             Keyframe tmp_kf = this->selectedKeyframe;
+            
+            megamol::core::view::Camera_2 cam(this->selectedKeyframe.GetCameraState());
+            cam_type::snapshot_type snapshot;
+            cam.take_snapshot(snapshot, thecam::snapshot_content::view_vector);
+            glm::vec4 cam_view = snapshot.view_vector;
+
             glm::vec3 new_up = vislib_vector_to_glm(this->editCurrentUpParam.Param<param::Vector3fParam>()->Value());
-/// TODO calculate new up vector
 
+            cam.orientation(rotate_quaternion_with_vector_diff(static_cast<glm::vec3>(cam_view), new_up));
 
-            //new_up = glm::normalize(new_up);
-            //megamol::core::view::Camera_2 cam(this->selectedKeyframe.GetCameraState());
-            //cam_type::snapshot_type snapshot;
-            //cam.take_snapshot(snapshot, thecam::snapshot_content::all);
-            //glm::vec4 cam_up4 = snapshot.up_vector;
-            //glm::vec3 cam_up3 = static_cast<glm::vec3>(cam_up4);
-            //glm::vec3 diff_up = new_up - cam_up3;
-            //float diff_up_len = glm::length(diff_up);
-            //float up_angle = std::asinf(diff_up_len/2.0f) * 2.0f;
-            //glm::vec3 rot_vec = glm::cross(cam_up3, diff_up);
-            //glm::quat current_orientation = cam.orientation();
-            //cam.orientation(glm::normalize(glm::rotate(current_orientation, up_angle, rot_vec)));
-            //cam_type::minimal_state_type camera_state;
-            //cam.get_minimal_state(camera_state);
-            //this->selectedKeyframe.SetCameraState(camera_state);
-            //this->replaceKeyframe(tmp_kf, this->selectedKeyframe, true);
+            cam_type::minimal_state_type camera_state;
+            cam.get_minimal_state(camera_state);
+            this->selectedKeyframe.SetCameraState(camera_state);
+
+            this->replaceKeyframe(tmp_kf, this->selectedKeyframe, true);
         }
         else {
             vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [EditCurrentUpParam] No existing keyframe selected.");
@@ -1471,13 +1483,13 @@ void KeyframeKeeper::updateEditParameters(Keyframe kf) {
     megamol::core::view::Camera_2 cam(kf.GetCameraState());
     cam_type::snapshot_type snapshot;
     cam.take_snapshot(snapshot, thecam::snapshot_content::all);
-    glm::vec4 pos = snapshot.position;
+    glm::vec4 cam_pos = snapshot.position;
     glm::vec4 cam_up = snapshot.up_vector;
     glm::vec4 cam_view = snapshot.view_vector;
     this->editCurrentAnimTimeParam.Param<param::FloatParam>()->SetValue(kf.GetAnimTime(), false);
     this->editCurrentSimTimeParam.Param<param::FloatParam>()->SetValue(kf.GetSimTime() * this->totalSimTime, false);
-    this->editCurrentPosParam.Param<param::Vector3fParam>()->SetValue(glm_to_vislib_vector(glm::vec3(pos.x, pos.y, pos.z)), false);
-    this->editCurrentLookAtParam.Param<param::Vector3fParam>()->SetValue(glm_to_vislib_vector(glm::vec3(cam_view.x, cam_view.y, cam_view.z)), false);
+    this->editCurrentPosParam.Param<param::Vector3fParam>()->SetValue(glm_to_vislib_vector(glm::vec3(cam_pos.x, cam_pos.y, cam_pos.z)), false);
+    this->editCurrentViewParam.Param<param::Vector3fParam>()->SetValue(glm_to_vislib_vector(glm::vec3(cam_view.x, cam_view.y, cam_view.z)), false);
     this->editCurrentUpParam.Param<param::Vector3fParam>()->SetValue(glm_to_vislib_vector(glm::vec3(cam_up.x, cam_up.y, cam_up.z)), false);
     this->editCurrentApertureParam.Param<param::FloatParam>()->SetValue(cam.aperture_angle(), false);
 }

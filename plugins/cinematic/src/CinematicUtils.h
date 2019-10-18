@@ -64,6 +64,54 @@ namespace cinematic {
     }
 
 
+    // #### Utility quternion functions #################################### //
+
+    static inline glm::quat rotate_quaternion_with_vector_diff(glm::vec3 new_view, glm::vec3 new_up) {
+
+        glm::vec3 rot;
+        glm::vec4 original;
+        glm::vec3 target;
+        glm::vec3 diff;
+        float diff_len;
+        float angle;
+
+        glm::quat return_quat = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
+        for (unsigned int i = 0; i < 2; ++i) {
+            switch (i) {
+            case(0): {
+                original = megamol::core::view::Camera_2::maths_type::view_vector;
+                target = glm::normalize(new_view);
+            } break;
+            case(1) : {
+                original = megamol::core::view::Camera_2::maths_type::up_vector;
+                target = glm::normalize(new_up);
+            } break;
+            }
+            diff = target - static_cast<glm::vec3>(original);
+            diff_len = glm::length(diff);
+            angle = std::asinf(diff_len / 2.0f) * 2.0f;
+            if (angle >= (static_cast<float>(M_PI))) {
+                if ((original.x == 0.0f) && (original.y == 0.0f)) {
+                    if (original.z == 0.0f) {
+                        return return_quat; // Bug
+                    }
+                    rot = glm::vec3(0.0f, 1.0f, 0.0f);
+                }
+                else {
+                    rot = glm::vec3(-original.y, original.x, 0.0f);
+                }
+                return_quat = glm::rotate(return_quat, angle, rot);
+            }
+            else if (angle > 0.0f) {
+                rot = glm::cross(target, diff);
+                rot = glm::normalize(rot);
+                return_quat = glm::rotate(return_quat, angle, rot);
+            }
+        }
+        return return_quat; // glm::normalize(return_quat);
+    }
+
+
 
     // #### Utility minimal camera state ################################### //
 

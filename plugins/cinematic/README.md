@@ -60,8 +60,8 @@ The module `KeyframeKeeper` exposes the following parameters:
 * `editSelected - animTime` (`1.0`): Edit animation time of the selected keyframe.
 * `editSelected - simTime` (`1.0`): Edit simulation time of the selected keyframe.
 * `editSelected - positionVector`: Edit the position vector of the selected keyframe.
-* `editSelected - lookatVector`: Edit the look-at vector of the selected keyframe.
-* `editSelected - resetLookat` (Assigned key: `CTRL+l`): Reset the LookAt vector of the selected keyframe.
+* `editSelected - viewVector`: Edit the view vector of the selected keyframe.
+* `editSelected - resetView` (Assigned key: `CTRL+l`): Reset the view vector of the selected keyframe to the center of the model bounding box.
 * `editSelected - upVector`:  Edit the up vector of the selected keyframe.
 * `editSelected - apertureAngle`: Edit aperture angle of the selected keyframe.
 * `storage - filename`:  The name of the file to load or save keyframes. 
