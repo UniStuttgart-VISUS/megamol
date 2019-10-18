@@ -9,7 +9,62 @@ option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build probe" ON)
 if(BUILD_${EXPORT_NAME}_PLUGIN)
   project(probe)
 
-  find_package(Qhull REQUIRED)
+  #find_package(Qhull REQUIRED)
+
+
+  if(WIN32)
+    set(QHULL_IMPORT_LIB "lib/qhull.lib")
+    set(QHULL_LIB "bin/qhull.dll")
+  else()
+    include(GNUInstallDirs)
+    set(QUHULL_IMPORT_LIB "lib/libqhull.so")
+    set(QUHULL_LIB "lib/libqhull.so")
+  endif()
+
+  add_external_project(qhull_ext
+    GIT_REPOSITORY https://github.com/qhull/qhull.git
+    GIT_TAG "v7.3.2"
+    BUILD_BYPRODUCTS "<INSTALL_DIR>/${QHULL_IMPORT_LIB}"
+    #CMAKE_ARGS -DCMAKE_BUILD_TYPE=Release
+    PATCH_COMMAND ${CMAKE_COMMAND} -E copy
+      "${CMAKE_CURRENT_SOURCE_DIR}/cmake/qhull/CMakeLists.txt"
+      "<SOURCE_DIR>/CMakeLists.txt")
+  add_external_library(qhull SHARED
+    DEPENDS qhull_ext
+    INCLUDE_DIR "include"
+    IMPORT_LIBRARY ${QHULL_IMPORT_LIB}
+    LIBRARY ${QHULL_LIB})
+
+  add_external_project(asmjit_ext
+    GIT_REPOSITORY https://github.com/asmjit/asmjit.git
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ""
+    INSTALL_COMMAND ""
+    TEST_COMMAND "")
+  add_external_library(asmjit INTERFACE
+    DEPENDS asmjit_ext
+    INCLUDE_DIR "src/asmjit_ext/")
+    
+  if(WIN32)
+    set(BLEND2D_IMPORT_LIB "lib/blend2d.lib")
+    set(BLEND2D_LIB "bin/blend2d.dll")
+  else()
+    include(GNUInstallDirs)
+    set(BLEND2D_IMPORT_LIB "lib/libblend2d.so")
+    set(BLEND2D_LIB "lib/libblend2d.so")
+  endif()
+
+  add_external_project(blend2d_ext
+    GIT_REPOSITORY https://github.com/blend2d/blend2d.git
+    BUILD_BYPRODUCTS "<INSTALL_DIR>/${BLEND2D_IMPORT_LIB}"
+    CMAKE_ARGS -DASMJIT_DIR=${CMAKE_CURRENT_BINARY_DIR}/asmjit_ext-prefix/src/asmjit_ext)
+  add_external_library(blend2d SHARED
+    DEPENDS blend2d_ext asmjit_ext 
+    INCLUDE_DIR "include"
+    IMPORT_LIBRARY ${BLEND2D_IMPORT_LIB}
+    LIBRARY ${BLEND2D_LIB})
+
+
   require_external(Eigen)
   require_external(nanoflann)
 
@@ -30,10 +85,12 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   target_include_directories(${PROJECT_NAME} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     "include" "src" "3rd")
-  target_link_libraries(${PROJECT_NAME} PRIVATE core adios_plugin Qhull::libqhull Eigen nanoflann mesh)
+  target_link_libraries(${PROJECT_NAME} PRIVATE core adios_plugin Eigen nanoflann mesh blend2d qhull)# Qhull::libqhull )
 
   # Installation rules for generated files
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
+  install_external(TARGETS qhull)
+  install_external(TARGETS blend2d)
   #install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders/ DESTINATION "share/shaders")
   if(WIN32)
     install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
