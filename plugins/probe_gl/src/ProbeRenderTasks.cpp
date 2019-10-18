@@ -3,18 +3,18 @@
 #include "mesh/MeshCalls.h"
 #include "ProbeCalls.h"
 
-megamol::mesh::ProbeRenderTasks::ProbeRenderTasks() 
-: m_probes_slot("GetProbes", "Slot for accessing a probe collection"), m_probes_cached_hash(0) {
+megamol::probe_gl::ProbeRenderTasks::ProbeRenderTasks()
+    : m_probes_slot("GetProbes", "Slot for accessing a probe collection"), m_probes_cached_hash(0) {
 
     this->m_probes_slot.SetCompatibleCall<probe::CallProbesDescription>();
     this->MakeSlotAvailable(&this->m_probes_slot);
 }
 
-megamol::mesh::ProbeRenderTasks::~ProbeRenderTasks() {}
+megamol::probe_gl::ProbeRenderTasks::~ProbeRenderTasks() {}
 
-bool megamol::mesh::ProbeRenderTasks::getDataCallback(core::Call& caller) { 
+bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) { 
 
-    CallGPURenderTaskData* lhs_rtc = dynamic_cast<CallGPURenderTaskData*>(&caller);
+    mesh::CallGPURenderTaskData* lhs_rtc = dynamic_cast<mesh::CallGPURenderTaskData*>(&caller);
     if (lhs_rtc == NULL) return false;
 
     mesh::CallGPUMaterialData* mtlc = this->m_material_slot.CallAs<mesh::CallGPUMaterialData>();
@@ -27,10 +27,10 @@ bool megamol::mesh::ProbeRenderTasks::getDataCallback(core::Call& caller) {
 
     if (!(*mc)(0)) return false; //TODO only call callback when hash is outdated?
 
-    probe::CallProbes* pc = dynamic_cast<probe::CallProbes*>(&caller);
+    probe::CallProbes* pc = this->m_probes_slot.CallAs<probe::CallProbes>();
     if (pc == NULL) return false;
     
-    std::shared_ptr<GPURenderTaskCollection> rt_collection(nullptr);
+    std::shared_ptr<mesh::GPURenderTaskCollection> rt_collection(nullptr);
 
     if (lhs_rtc->getData() == nullptr) {
         rt_collection = this->m_gpu_render_tasks;
@@ -43,6 +43,8 @@ bool megamol::mesh::ProbeRenderTasks::getDataCallback(core::Call& caller) {
 
     if (probe_meta_data.m_data_hash > m_probes_cached_hash)
     {
+        m_probes_cached_hash = probe_meta_data.m_data_hash;
+
         if (!(*pc)(0)) return false;
         auto probes = pc->getData();
 
@@ -66,9 +68,12 @@ bool megamol::mesh::ProbeRenderTasks::getDataCallback(core::Call& caller) {
     return true; 
 }
 
-bool megamol::mesh::ProbeRenderTasks::getMetaDataCallback(core::Call& caller) {
+bool megamol::probe_gl::ProbeRenderTasks::getMetaDataCallback(core::Call& caller) {
 
     if (!AbstractGPURenderTaskDataSource::getMetaDataCallback(caller)) return false;
+
+    auto probe_call = m_probes_slot.CallAs<probe::CallProbes>();
+    if (!(*probe_call)(1)) return false;
 
     return true;
 }

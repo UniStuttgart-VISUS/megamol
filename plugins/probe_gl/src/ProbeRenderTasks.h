@@ -11,9 +11,9 @@
 #include "mesh/AbstractGPURenderTaskDataSource.h"
 
 namespace megamol {
-namespace mesh {
+namespace probe_gl {
 
-class ProbeRenderTasks : public AbstractGPURenderTaskDataSource {
+class ProbeRenderTasks : public mesh::AbstractGPURenderTaskDataSource {
 public:
     /**
      * Answer the name of this module.

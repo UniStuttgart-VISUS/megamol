@@ -12,6 +12,8 @@
 #include "mmcore/versioninfo.h"
 #include "vislib/vislibversion.h"
 
+#include "ProbeRenderTasks.h"
+
 
 /* anonymous namespace hides this type from any other object files */
 namespace {
@@ -46,6 +48,7 @@ namespace {
             //   this->module_descriptions.RegisterAutoDescription<megamol::probe_gl::MyModule2>();
             //   ...
             //
+            this->module_descriptions.RegisterAutoDescription<megamol::probe_gl::ProbeRenderTasks>();
 
             // register calls here:
 
