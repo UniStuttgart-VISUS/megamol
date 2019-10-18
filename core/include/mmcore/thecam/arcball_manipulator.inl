@@ -47,18 +47,6 @@ void megamol::core::thecam::arcball_manipulator<T>::on_drag(
         THE_ASSERT(cam != nullptr);
 
         if (this->lastSx != x || this->lastSy != y) {
-            //  this->currentVector = this->mapToSphere(x, y);
-            //  
-            //  // Compute angle and rotation quaternion.
-            //  quaternion_type quat;
-            //  thecam::math::set_from_vectors(quat, startVector, currentVector);
-            //  
-            //  auto const qstar = this->startRot * quat;
-            //  auto pos =
-            //      thecam::math::rotate(this->startPos - this->rotCentre, qstar * this->invStartRot) + this->rotCentre;
-            //  cam->position(pos);
-            //  cam->orientation(qstar);
-
             screen_type dx = x - lastSx;
             screen_type dy = y - lastSy;
 
@@ -108,42 +96,7 @@ template <class T>
 void megamol::core::thecam::arcball_manipulator<T>::setActive(const screen_type x, const screen_type y) {
     if (!this->manipulating() && this->enabled()) {
         this->begin_manipulation();
-        //this->startPos = this->camera()->eye_position();
-        //this->invStartRot = math::invert(this->camera()->orientation());
-        //this->startRot = this->camera()->orientation();
-        //this->startVector = this->mapToSphere(x, y);
         this->lastSx = x;
         this->lastSy = y;
     }
 }
-
-
-/*
- * megamol::core::thecam::arcball_manipulator<T>::mapToSphere
- */
-//template <class T>
-//typename megamol::core::thecam::arcball_manipulator<T>::vector_type
-//megamol::core::thecam::arcball_manipulator<T>::mapToSphere(const screen_type sx, const screen_type sy) const {
-//    THE_ASSERT(this->camera() != nullptr);
-//    auto wndSize = this->camera()->resolution_gate();
-//    auto halfHeight = wndSize.height() / static_cast<world_type>(2);
-//    auto halfWidth = wndSize.width() / static_cast<world_type>(2);
-//
-//    // Scale to screen
-//    auto bx = (sx - halfWidth) / (this->ballRadius * halfWidth);
-//    auto by = (sy - halfHeight) / (this->ballRadius * halfHeight);
-//    auto bz = static_cast<world_type>(0);
-//
-//    auto mag = bx * bx + by * by;
-//
-//    if (mag > 1) {
-//        // Point is mapped outside of the sphere: project on sphere.
-//        auto scale = 1.0f / std::sqrt(mag);
-//        bx *= scale;
-//        by *= scale;
-//    } else {
-//        // Point is mapped inside the sphere.
-//        bz = std::sqrt(1.0f - mag);
-//    }
-//    return typename maths_type::vector_type(bx, by, bz, static_cast<world_type>(0));
-//}

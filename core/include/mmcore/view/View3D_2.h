@@ -397,8 +397,7 @@ protected:
     /** Flag determining whether the arcball is the default steering method of the camera */
     bool arcballDefault;
 
-    /** Distance from the camera to the arcball center */
-    //float orbitalAltitude;
+    /** Center of rotation for orbital manipulators */
     glm::vec3 rotCenter;
 
     /** Value storing whether there have been read parameter values that came from outside */

@@ -282,7 +282,6 @@ View3D_2::View3D_2(void)
 
     this->arcballManipulator.set_target(this->cam);
     this->arcballManipulator.enable();
-    //this->orbitalAltitude = 0.0f;
     this->rotCenter = glm::vec3(0.0f, 0.0f, 0.0f);
 
     this->turntableManipulator.set_target(this->cam);
@@ -536,14 +535,13 @@ void View3D_2::ResetView(void) {
         this->cam.position(bbcglm + glm::vec4(0.0f, 0.0f, dist, 0.0f));
         this->cam.orientation(cam_type::quaternion_type::create_identity());
     }
-    //this->orbitalAltitude = dist;
+
     this->rotCenter = glm::vec3(bbc.GetX(), bbc.GetY(), bbc.GetZ());
 
     glm::mat4 vm = this->cam.view_matrix();
     glm::mat4 pm = this->cam.projection_matrix();
 
     // TODO Further manipulators? better value?
-    //this->translateManipulator.set_step_size(dist);
     this->valuesFromOutside = false;
 }
 
@@ -822,10 +820,6 @@ bool view::View3D_2::OnMouseMove(double x, double y) {
     if (!this->toggleMouseSelection) {
         this->cursor2d.SetPosition(x, y, true);
 
-        //glm::vec3 curPos(static_cast<glm::vec4>(this->cam.eye_position()));
-        //glm::vec3 camDir(static_cast<glm::vec4>(this->cam.view_vector()));
-        //glm::vec3 rotCenter = curPos + orbitalAltitude * glm::normalize(camDir);
-
         glm::vec3 newPos;
 
         auto wndSize = this->cam.resolution_gate();
@@ -1084,10 +1078,6 @@ std::string View3D_2::determineCameraFilePath(void) const {
  */
 void View3D_2::handleCameraMovement(void) {
     float step = this->viewKeyMoveStepSlot.Param<param::FloatParam>()->Value();
-    // the default case is 60 fps therefore we calculate the multiples for the step factor using that
-    //auto constexpr micros = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::seconds(1)) / 60.0f;
-    //float factor = this->lastFrameDuration / micros;
-    //step *= factor;
     float dt = std::chrono::duration<float>(this->lastFrameDuration).count();
     step *= dt;
 

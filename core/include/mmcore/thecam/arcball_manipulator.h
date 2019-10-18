@@ -98,37 +98,7 @@ public:
     inline void setInactive(void) { this->end_manipulation(); }
 
 private:
-    /**
-     * Convert screen point to a point on the arcball.
-     *
-     * @param sx The absicssa of the current mouse position.
-     * @param sy The ordinate of the current mouse position.
-     *
-     * @return The normalised vector from the centre of the arcball to the
-     *         point on the arcball represented by the given screen
-     *         coordinates.
-     */
-    //vector_type mapToSphere(const screen_type sx, const screen_type sy) const;
-
-    /** The radius of the arcball .*/
-    //world_type ballRadius;
-
-    /** The latest point on the arcball. */
-    //vector_type currentVector;
-
-    /** The centre of rotation (target point of the camera). */
-    //point_type rotCentre;
-
-    //vector_type startPos;
-
-    /** The camera rotation quaterion when the drag interaction started. */
-    //quaternion_type invStartRot;
-
-    //quaternion_type startRot;
-
-    /** The point on the arcball when the drag interaction started. */
-    //vector_type startVector;
-
+    
     /** The x-coordinate of the last clicked screen position */
     screen_type lastSx;
 
