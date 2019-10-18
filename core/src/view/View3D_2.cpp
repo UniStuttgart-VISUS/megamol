@@ -15,7 +15,6 @@
 #include <fstream>
 #include "mmcore/CoreInstance.h"
 #include "mmcore/misc/PngBitmapCodec.h"
-#include "mmcore/view/CallRender3D_2.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -27,6 +26,7 @@
 #include "mmcore/param/Vector4fParam.h"
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore/view/AbstractCallRender.h"
+#include "mmcore/view/CallRender3D_2.h"
 #include "mmcore/view/CallRenderView.h"
 #include "mmcore/view/CameraParamOverride.h"
 #include "vislib/Exception.h"
@@ -432,7 +432,7 @@ void View3D_2::Render(const mmcRenderViewContext& context) {
                                       !this->bboxs.IsClipBoxValid()))) {
             this->bboxs = cr3d->AccessBoundingBoxes();
             glm::vec3 bbcenter = glm::make_vec3(this->bboxs.BoundingBox().CalcCenter().PeekCoordinates());
-                
+
             if (this->firstImg) {
                 this->ResetView();
                 this->firstImg = false;
@@ -549,9 +549,9 @@ void View3D_2::ResetView(void) {
  * View3D_2::Resize
  */
 void View3D_2::Resize(unsigned int width, unsigned int height) {
-    this->cam.resolution_gate(cam_type::screen_size_type(
-        static_cast<LONG>(width), static_cast<LONG>(height)));
-    this->cam.image_tile(cam_type::screen_rectangle_type(std::array<int, 4>({0, static_cast<int>(height), static_cast<int>(width), 0})));
+    this->cam.resolution_gate(cam_type::screen_size_type(static_cast<LONG>(width), static_cast<LONG>(height)));
+    this->cam.image_tile(
+        cam_type::screen_rectangle_type(std::array<int, 4>({0, static_cast<int>(height), static_cast<int>(width), 0})));
 }
 
 /*
@@ -718,11 +718,9 @@ bool view::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButtonAc
     bool altPressed = this->modkeys.test(view::Modifier::ALT);
     bool ctrlPressed = this->modkeys.test(view::Modifier::CTRL);
 
-    bool anyManipulatorActive = arcballManipulator.manipulating() 
-        || translateManipulator.manipulating() 
-        || rotateManipulator.manipulating() 
-        || turntableManipulator.manipulating()
-        || orbitAltitudeManipulator.manipulating();
+    bool anyManipulatorActive = arcballManipulator.manipulating() || translateManipulator.manipulating() ||
+                                rotateManipulator.manipulating() || turntableManipulator.manipulating() ||
+                                orbitAltitudeManipulator.manipulating();
 
     // get window resolution to help computing mouse coordinates
     auto wndSize = this->cam.resolution_gate();
@@ -732,10 +730,9 @@ bool view::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButtonAc
         case megamol::core::view::MouseButton::BUTTON_LEFT:
             this->cursor2d.SetButtonState(0, down);
 
-            if (!anyManipulatorActive)
-            {
+            if (!anyManipulatorActive) {
                 if (altPressed ^
-                    this->arcballDefault) // Left mouse press + alt/arcDefault -> activate arcball manipluator
+                    (this->arcballDefault && !ctrlPressed)) // Left mouse press + alt/arcDefault+noCtrl -> activate arcball manipluator
                 {
                     this->arcballManipulator.setActive(
                         wndSize.width() - static_cast<int>(this->mouseX), static_cast<int>(this->mouseY));
@@ -755,8 +752,7 @@ bool view::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButtonAc
             this->cursor2d.SetButtonState(1, down);
 
             if (!anyManipulatorActive) {
-                if ( (altPressed ^ this->arcballDefault) || ctrlPressed )
-                {
+                if ((altPressed ^ this->arcballDefault) || ctrlPressed) {
                     this->orbitAltitudeManipulator.setActive(
                         wndSize.width() - static_cast<int>(this->mouseX), static_cast<int>(this->mouseY));
                 }
@@ -766,9 +762,8 @@ bool view::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButtonAc
         case megamol::core::view::MouseButton::BUTTON_MIDDLE:
             this->cursor2d.SetButtonState(2, down);
 
-             if (!anyManipulatorActive) {
-                if ((altPressed ^ this->arcballDefault) || ctrlPressed) 
-                {
+            if (!anyManipulatorActive) {
+                if ((altPressed ^ this->arcballDefault) || ctrlPressed) {
                     this->translateManipulator.setActive(
                         wndSize.width() - static_cast<int>(this->mouseX), static_cast<int>(this->mouseY));
                 }
@@ -779,13 +774,12 @@ bool view::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButtonAc
             break;
         }
 
-        
+
         if (action == view::MouseButtonAction::RELEASE) // Mouse release + no other mouse button pressed ->
-                                                             // deactivate all mouse manipulators
+                                                        // deactivate all mouse manipulators
         {
             if (!(this->cursor2d.GetButtonState(0) || this->cursor2d.GetButtonState(1) ||
-                    this->cursor2d.GetButtonState(2))) 
-            {
+                    this->cursor2d.GetButtonState(2))) {
                 this->arcballManipulator.setInactive();
                 this->orbitAltitudeManipulator.setInactive();
                 this->rotateManipulator.setInactive();
@@ -793,8 +787,6 @@ bool view::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButtonAc
                 this->translateManipulator.setInactive();
             }
         }
-
-
     }
     return true;
 }
@@ -825,24 +817,18 @@ bool view::View3D_2::OnMouseMove(double x, double y) {
         auto wndSize = this->cam.resolution_gate();
 
         if (this->turntableManipulator.manipulating()) {
-            this->turntableManipulator.on_drag(
-                wndSize.width() - static_cast<int>(this->mouseX),
-                static_cast<int>(this->mouseY),
-                glm::vec4(rotCenter,1.0));
+            this->turntableManipulator.on_drag(wndSize.width() - static_cast<int>(this->mouseX),
+                static_cast<int>(this->mouseY), glm::vec4(rotCenter, 1.0));
         }
 
         if (this->arcballManipulator.manipulating()) {
-            this->arcballManipulator.on_drag(
-                wndSize.width() - static_cast<int>(this->mouseX), 
-                static_cast<int>(this->mouseY),
-                glm::vec4(rotCenter, 1.0));
+            this->arcballManipulator.on_drag(wndSize.width() - static_cast<int>(this->mouseX),
+                static_cast<int>(this->mouseY), glm::vec4(rotCenter, 1.0));
         }
 
         if (this->orbitAltitudeManipulator.manipulating()) {
-            this->orbitAltitudeManipulator.on_drag(
-                wndSize.width() - static_cast<int>(this->mouseX), 
-                static_cast<int>(this->mouseY),
-                glm::vec4(rotCenter, 1.0));
+            this->orbitAltitudeManipulator.on_drag(wndSize.width() - static_cast<int>(this->mouseX),
+                static_cast<int>(this->mouseY), glm::vec4(rotCenter, 1.0));
         }
 
         if (this->translateManipulator.manipulating()) {
@@ -859,7 +845,6 @@ bool view::View3D_2::OnMouseMove(double x, double y) {
             this->translateManipulator.move_horizontally(wndSize.width() - static_cast<int>(this->mouseX));
             this->translateManipulator.move_vertically(static_cast<int>(this->mouseY));
         }
-
     }
 
     return true;
@@ -870,14 +855,29 @@ bool view::View3D_2::OnMouseMove(double x, double y) {
  */
 bool view::View3D_2::OnMouseScroll(double dx, double dy) {
     auto* cr = this->rendererSlot.CallAs<view::CallRender3D_2>();
-    if (cr == NULL) return false;
+    if (cr != NULL) {
+        view::InputEvent evt;
+        evt.tag = view::InputEvent::Tag::MouseScroll;
+        evt.mouseScrollData.dx = dx;
+        evt.mouseScrollData.dy = dy;
+        cr->SetInputEvent(evt);
+        if ((*cr)(view::CallRender3D_2::FnOnMouseScroll)) return true;
+    }
 
-    view::InputEvent evt;
-    evt.tag = view::InputEvent::Tag::MouseScroll;
-    evt.mouseScrollData.dx = dx;
-    evt.mouseScrollData.dy = dy;
-    cr->SetInputEvent(evt);
-    if (!(*cr)(view::CallRender3D_2::FnOnMouseScroll)) return false;
+    // ToDo scrollwheel zooming..
+    if (abs(dy) > 0.0) {
+
+        auto cam_pos = this->cam.eye_position();
+        auto rot_cntr = thecam::math::point<glm::vec4>(glm::vec4(this->rotCenter,0.0f));
+
+        cam_pos.w() = 0.0f;
+
+        auto v = thecam::math::normalise(rot_cntr - cam_pos);
+
+        auto altitude = thecam::math::length(rot_cntr - cam_pos);
+
+        this->cam.position(cam_pos - (v * dy * (altitude / 100.0f)));
+    }
 
     return true;
 }
@@ -1095,7 +1095,7 @@ void View3D_2::handleCameraMovement(void) {
 
     if (!(this->arcballDefault ^ this->modkeys.test(view::Modifier::ALT)) &&
         !(this->modkeys.test(view::Modifier::CTRL))) {
-        
+
         if (this->pressedKeyMap.count(view::Key::KEY_W) > 0 && this->pressedKeyMap[view::Key::KEY_W]) {
             this->translateManipulator.move_forward(step);
         }
@@ -1144,7 +1144,7 @@ void View3D_2::handleCameraMovement(void) {
         this->rotateManipulator.pitch(-mouseDirection.y * rotationStep);
         this->rotateManipulator.yaw(mouseDirection.x * rotationStep);
     }
-    
+
     glm::vec3 newCamPos(static_cast<glm::vec4>(this->cam.eye_position()));
     glm::vec3 camDir(static_cast<glm::vec4>(this->cam.view_vector()));
     rotCenter = newCamPos + orbitalAltitude * glm::normalize(camDir);
