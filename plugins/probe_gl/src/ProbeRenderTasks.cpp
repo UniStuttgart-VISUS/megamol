@@ -76,11 +76,15 @@ bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) {
                 const glm::vec3 from(0.0f, 1.0f, 0.0f);
                 const glm::vec3 to(probe.m_direction[0], probe.m_direction[1], probe.m_direction[2]);
                 glm::vec3 v = glm::cross(to, from);
-                float angle = acos(glm::dot(to, from) / (glm::length(to) * glm::length(from)));
+                float angle = -acos(glm::dot(to, from) / (glm::length(to) * glm::length(from)));
                 std::get<0>(object_transform) = glm::rotate(angle, v);
 
+                auto scaling = glm::scale(glm::vec3(0.5f, probe.m_end - probe.m_begin, 0.5f));
+
                 auto translation = glm::translate(glm::mat4(), glm::vec3(probe.m_position[0], probe.m_position[1], probe.m_position[2]));
-                std::get<0>(object_transform) = translation * std::get<0>(object_transform);
+                std::get<0>(object_transform) = translation * std::get<0>(object_transform) * scaling;
+
+                
 
                 m_gpu_render_tasks->addRenderTasks(shader, gpu_batch_mesh, draw_commands, object_transform );
 
