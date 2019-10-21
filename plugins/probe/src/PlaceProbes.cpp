@@ -1,3 +1,9 @@
+/*
+ * PlaceProbes.cpp
+ * Copyright (C) 2019 by MegaMol Team
+ * Alle Rechte vorbehalten.
+ */
+
 #include "PlaceProbes.h"
 #include <random>
 #include "ProbeCalls.h"
