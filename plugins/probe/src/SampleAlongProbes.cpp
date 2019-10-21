@@ -1,3 +1,9 @@
+/*
+ * SampleAlongProbes.cpp
+ * Copyright (C) 2019 by MegaMol Team
+ * Alle Rechte vorbehalten.
+ */
+
 #include "adios_plugin/CallADIOSData.h" 
 #include "SampleAlongProbes.h"
 #include "ProbeCalls.h"

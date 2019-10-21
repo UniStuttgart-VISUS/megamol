@@ -1,3 +1,9 @@
+/*
+ * ExtractMesh.cpp
+ * Copyright (C) 2019 by MegaMol Team
+ * Alle Rechte vorbehalten.
+ */
+
 #include "ExtractMesh.h"
 #include <limits>
 #include "adios_plugin/CallADIOSData.h"
