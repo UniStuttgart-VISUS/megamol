@@ -49,7 +49,7 @@ namespace cinematic {
         }
 
         inline float GetSimTime() const {
-            return (this->sim_time == 1.0f)?(1.0f-0.0000001f):(this->sim_time);
+            return this->sim_time; // (this->sim_time == 1.0f) ? (1.0f - 0.0000001f) : (this->sim_time);
         }
 
         inline camera_state_type GetCameraState() const {

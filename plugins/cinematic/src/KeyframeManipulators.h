@@ -122,6 +122,10 @@ namespace cinematic {
             std::shared_ptr<Manipulator> hit;
             glm::vec2 last_mouse;
             int selected_index;
+            float point_radius;
+            float line_width;
+            float line_length;
+            float lookat_length;
         };
 
         /**********************************************************************
@@ -140,15 +144,13 @@ namespace cinematic {
         std::vector<Manipulator> selectors;
         CurrentState state;
 
-        float point_radius;
-        float line_width;
-        float line_length;
-
         /**********************************************************************
         * functions
         **********************************************************************/
         
-        glm::vec3 getManipulatorPosition(Manipulator &manipulator);
+        glm::vec3 getManipulatorOrigin(Manipulator &manipulator);
+
+        glm::vec3 getActualManipulatorPosition(Manipulator &manipulator);
 
         glm::vec4 getManipulatorColor(Manipulator &manipulator, CinematicUtils &utils);
 

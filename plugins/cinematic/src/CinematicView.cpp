@@ -316,7 +316,6 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
 
     // Set camera parameters of selected keyframe for this view.
     // But only if selected keyframe differs to last locally stored and shown keyframe.
-
     if (this->shownKeyframe != skf) {
         this->shownKeyframe = skf;
 
@@ -328,7 +327,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
             auto ori = skf.GetCameraState().orientation;
             this->cam.orientation(glm::quat(ori[3], ori[0], ori[1], ori[2]));
             auto aper = skf.GetCameraState().half_aperture_angle_radians;
-            this->cam.aperture_angle(aper*2.0f*180.0f / M_PI);
+            this->cam.aperture_angle(glm::degrees(aper));
         }
         else {
             this->ResetView();
@@ -358,8 +357,8 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
 
         glm::vec4 new_pos = cam_pos4;
         glm::quat new_orientation;
-        const float Rad180Degrees = static_cast<float>(M_PI);
-        const float Rad90Degrees = static_cast<float>(M_PI/2.0);
+        const float Rad180Degrees = glm::radians(180.0f);
+        const float Rad90Degrees = glm::radians(90.0f);
 
         if (!this->skyboxCubeMode) {
             if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_BACK) {
@@ -414,19 +413,6 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
         this->cam.position(new_pos);
         this->cam.orientation(new_orientation);
         this->cam.aperture_angle(90.0f);
-
-        ///  DEBUG --------------------------------------------------------
-        //this->cam.take_snapshot(snapshot, thecam::snapshot_content::all);
-        //cam_pos4 = snapshot.position;
-        //cam_up4 = snapshot.up_vector;
-        //cam_view4 = snapshot.view_vector;
-        //glm::vec3 cam_pos3 = static_cast<glm::vec3>(cam_pos4);
-        //cam_up3 = static_cast<glm::vec3>(cam_up4);
-        //cam_view3 = static_cast<glm::vec3>(cam_view4);;
-        //vislib::sys::Log::DefaultLog.WriteWarn("[SKYBOX SIDE] camera position vector: (%f, %f, %f)\n", cam_pos3.x, cam_pos3.y, cam_pos3.z);
-        //vislib::sys::Log::DefaultLog.WriteWarn("[SKYBOX SIDE] camera view vector:     (%f, %f, %f)\n", cam_view3.x, cam_view3.y, cam_view3.z);
-        //vislib::sys::Log::DefaultLog.WriteWarn("[SKYBOX SIDE] camera up vector:       (%f, %f, %f)\n", cam_up3.x, cam_up3.y, cam_up3.z);
-        //vislib::sys::Log::DefaultLog.WriteWarn("[SKYBOX SIDE] ---------------------------------------------------------\n");
     }
 
     // Render to texture ------------------------------------------------------------
