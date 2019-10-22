@@ -65,7 +65,7 @@ bool megamol::mesh::MeshViewerRenderTasks::getDataCallback(core::Call& caller) {
                 object_transform[i][15] = 1.0f;
             }
 
-            m_gpu_render_tasks->addRenderTasks(shader, gpu_batch_mesh, draw_commands, object_transform);
+            rt_collection->addRenderTasks(shader, gpu_batch_mesh, draw_commands, object_transform);
         }
 
         mesh_meta_data.m_data_hash++;

@@ -34,13 +34,16 @@ bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) {
     probe::CallProbes* pc = this->m_probes_slot.CallAs<probe::CallProbes>();
     if (pc == NULL) return false;
 
-    std::shared_ptr<mesh::GPURenderTaskCollection> rt_collection(nullptr);
 
-    if (lhs_rtc->getData() == nullptr) {
-        rt_collection = this->m_gpu_render_tasks;
-        lhs_rtc->setData(rt_collection);
-    } else {
-        rt_collection = lhs_rtc->getData();
+    // no incoming render task collection -> use your own collection
+    if (lhs_rtc->getData() == nullptr) lhs_rtc->setData(this->m_gpu_render_tasks);
+    std::shared_ptr<mesh::GPURenderTaskCollection> rt_collection = lhs_rtc->getData();
+
+    // if there is a render task connection to the right, pass on the render task collection
+    mesh::CallGPURenderTaskData* rhs_rtc = this->m_renderTask_rhs_slot.CallAs<mesh::CallGPURenderTaskData>();
+    if (rhs_rtc != NULL) {
+        rhs_rtc->setData(rt_collection);
+        if (!(*rhs_rtc)(0)) return false;
     }
 
     auto gpu_mtl_storage = mtlc->getData();
@@ -81,12 +84,16 @@ bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) {
 
                 auto scaling = glm::scale(glm::vec3(0.5f, probe.m_end - probe.m_begin, 0.5f));
 
-                auto translation = glm::translate(glm::mat4(), glm::vec3(probe.m_position[0], probe.m_position[1], probe.m_position[2]));
+                auto probe_start_point = glm::vec3(
+                    probe.m_position[0] + probe.m_direction[0] * probe.m_begin,
+                    probe.m_position[1] + probe.m_direction[1] * probe.m_begin,
+                    probe.m_position[2] + probe.m_direction[2] * probe.m_begin);
+                auto translation = glm::translate(glm::mat4(), probe_start_point);
                 std::get<0>(object_transform) = translation * std::get<0>(object_transform) * scaling;
 
                 
 
-                m_gpu_render_tasks->addRenderTasks(shader, gpu_batch_mesh, draw_commands, object_transform );
+                rt_collection->addRenderTasks(shader, gpu_batch_mesh, draw_commands, object_transform);
 
             } catch (std::bad_variant_access&) {
                 // TODO log error, dont add new render task
@@ -103,6 +110,7 @@ bool megamol::probe_gl::ProbeRenderTasks::getMetaDataCallback(core::Call& caller
 
     mesh::CallGPURenderTaskData* lhs_rt_call = dynamic_cast<mesh::CallGPURenderTaskData*>(&caller);
     auto probe_call = m_probes_slot.CallAs<probe::CallProbes>();
+    if (probe_call == NULL) return false;
 
     auto lhs_meta_data = lhs_rt_call->getMetaData();
 
@@ -112,12 +120,7 @@ bool megamol::probe_gl::ProbeRenderTasks::getMetaDataCallback(core::Call& caller
     if (!(*probe_call)(1)) return false;
     probe_meta_data = probe_call->getMetaData();
 
-
-    if (probe_meta_data.m_data_hash > m_probes_cached_hash) {
-        m_renderTask_lhs_cached_hash++;
-    }
-
-    lhs_meta_data.m_data_hash = m_renderTask_lhs_cached_hash;
+    if (probe_meta_data.m_data_hash > m_probes_cached_hash) lhs_meta_data.m_data_hash++;
     lhs_meta_data.m_frame_cnt = std::min(lhs_meta_data.m_frame_cnt, probe_meta_data.m_frame_cnt);
 
     auto bbox = lhs_meta_data.m_bboxs.BoundingBox();
@@ -129,7 +132,6 @@ bool megamol::probe_gl::ProbeRenderTasks::getMetaDataCallback(core::Call& caller
     lhs_meta_data.m_bboxs.SetClipBox(cbbox);
 
     lhs_rt_call->setMetaData(lhs_meta_data);
-
 
     return true;
 }
