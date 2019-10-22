@@ -17,6 +17,7 @@ Keyframe::Keyframe()
     , sim_time(0.0f)
     , camera_state() {
 
+    camera_state.half_aperture_angle_radians = glm::radians(30.0f);
 }
 
 

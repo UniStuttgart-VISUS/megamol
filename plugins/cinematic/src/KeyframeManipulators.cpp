@@ -378,8 +378,15 @@ bool KeyframeManipulators::ProcessHitManipulator(float mouse_x, float mouse_y) {
     if (this->state.hit->variety == Manipulator::Variety::MANIPULATOR_SELECTED_KEYFRAME_LOOKAT_VECTOR) {
         // Handle differnt position of manipulator (look at)
         glm::vec3 new_view = (manipulator_origin - static_cast<glm::vec3>(camera_position)) + diff_world_vector;
-        camera.orientation(quaternion_from_vector(new_view));
-        this->state.lookat_length = glm::length(new_view);
+        //this->state.lookat_length = glm::length(new_view);
+/// TODO
+        //camera.orientation(quaternion_from_vector(new_view));
+
+
+
+
+
+
     }
     else if (this->state.hit->variety == Manipulator::Variety::MANIPULATOR_FIRST_CTRLPOINT_POSITION) {
         // Handle differnt position of manipulator (first control point)
@@ -463,30 +470,11 @@ glm::vec3 KeyframeManipulators::getActualManipulatorPosition(Manipulator &manipu
     glm::vec3 manipulator_position = manipulator_origin + manipulator.vector * this->state.line_length;
 
     if (this->toggleOusideBbox && this->state.bbox.Contains(glm_to_vislib_point(manipulator_position))) {
-        auto bboxCenter = vislib_point_to_glm(this->state.bbox.CalcCenter());
-        glm::vec3 bboxOffset = glm::vec3(0.0f, 0.0f, 0.0f);
-        float offset = this->state.point_radius + 2.0f * this->state.line_length;
-        
-        switch (manipulator.rigging) {
-        case(Manipulator::Rigging::X_DIRECTION): {
-            bboxOffset = glm::vec3(this->state.bbox.Right() + offset, 0.0f, 0.0f);
-        } break;
-        case(Manipulator::Rigging::Y_DIRECTION): {
-            bboxOffset = glm::vec3(0.0f, this->state.bbox.Top() + offset, 0.0f);
-        } break;
-        case(Manipulator::Rigging::Z_DIRECTION): {
-            bboxOffset = glm::vec3(0.0f, 0.0f, this->state.bbox.Front() + offset);
-        } break;
-        case(Manipulator::Rigging::VECTOR_DIRECTION):
-        case(Manipulator::Rigging::ROTATION): {
-            float diagonal = glm::length(vislib_point_to_glm(this->state.bbox.GetLeftBottomBack()) - vislib_point_to_glm(this->state.bbox.GetRightTopFront()));
-            bboxOffset = manipulator.vector * (this->state.bbox.LongestEdge() + offset);
-        } break;
-        default: break;
+        float offset = 0.0f;
+        while (this->state.bbox.Contains(glm_to_vislib_point(manipulator_position))) {
+            offset += this->state.line_length/4.0f;
+            manipulator_position += manipulator.vector * offset;
         }
-
-
-        manipulator_position = manipulator_position + manipulator.vector * bboxOffset;
     }
 
     return manipulator_position;

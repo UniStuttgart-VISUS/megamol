@@ -325,7 +325,7 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
         // Try adding keyframe to array
         if (!this->addKeyframe(tmp_kf, true)) {
             if (!this->replaceKeyframe(this->selectedKeyframe, tmp_kf, true)) {
-                vislib::sys::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] [CallForGetUpdatedKeyframeData] Unable to apply settings to new/selested keyframe.");
+                vislib::sys::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] [CallForGetUpdatedKeyframeData] Unable to apply settings to new/selected keyframe.");
             }
         }
     }
@@ -377,8 +377,8 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
         t = (t > this->totalAnimTime) ? (this->totalAnimTime) : (t);
 
         // Get index of existing keyframe
-        int selIndex = this->getKeyframeIndex(this->keyframes, this->selectedKeyframe);
-        if (selIndex >= 0) { // If existing keyframe is selected, delete keyframe an add at the right position
+        if (this->getKeyframeIndex(this->keyframes, this->selectedKeyframe) >= 0) { 
+            // If existing keyframe is selected, delete keyframe an add at the right position
             Keyframe tmp_kf = this->selectedKeyframe;
             this->selectedKeyframe.SetAnimTime(t);
             this->replaceKeyframe(tmp_kf, this->selectedKeyframe, true);
@@ -399,8 +399,9 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
         s = vislib::math::Clamp(s, 0.0f, this->totalSimTime);
 
         // Get index of existing keyframe
-        int selIndex = this->getKeyframeIndex(this->keyframes, this->selectedKeyframe);
-        if (selIndex >= 0) { // If existing keyframe is selected, delete keyframe an add at the right position
+
+        if (this->getKeyframeIndex(this->keyframes, this->selectedKeyframe) >= 0) { 
+            // If existing keyframe is selected, delete keyframe an add at the right position
             Keyframe tmp_kf = this->selectedKeyframe;
             this->selectedKeyframe.SetSimTime(s / this->totalSimTime);
             this->replaceKeyframe(tmp_kf, this->selectedKeyframe, true);
@@ -412,8 +413,7 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
     if (this->editCurrentPosParam.IsDirty()) {
         this->editCurrentPosParam.ResetDirty();
 
-        int selIndex = this->getKeyframeIndex(this->keyframes, this->selectedKeyframe);
-        if (selIndex >= 0) {
+        if (this->getKeyframeIndex(this->keyframes, this->selectedKeyframe) >= 0) {
             Keyframe tmp_kf = this->selectedKeyframe;
             glm::vec3 pos_v = vislib_vector_to_glm(this->editCurrentPosParam.Param<param::Vector3fParam>()->Value());
             std::array<float, 3> pos = { pos_v.x, pos_v.y, pos_v.z };
@@ -431,16 +431,13 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
     if (this->resetViewParam.IsDirty()) {
         this->resetViewParam.ResetDirty();
 
-        int selIndex = this->getKeyframeIndex(this->keyframes, this->selectedKeyframe);
-        if (selIndex >= 0) {
+        if (this->getKeyframeIndex(this->keyframes, this->selectedKeyframe) >= 0) {
             Keyframe tmp_kf = this->selectedKeyframe;
             
             megamol::core::view::Camera_2 cam(this->selectedKeyframe.GetCameraState());
-            cam_type::snapshot_type snapshot;
-            cam.take_snapshot(snapshot, thecam::snapshot_content::camera_coordinate_system);
-            glm::vec4 cam_pos = snapshot.position;
-            glm::vec3 new_view = this->modelBboxCenter - static_cast<glm::vec3>(cam_pos);
-            cam.orientation(quaternion_from_vector(new_view));
+            glm::vec4 new_lookat = glm::vec4(this->modelBboxCenter.x, this->modelBboxCenter.y, this->modelBboxCenter.z, 1.0f);
+            auto lookat_point = static_cast<megamol::core::view::Camera_2::point_type>(new_lookat);
+            cam.look_at(lookat_point);
 
             cam_type::minimal_state_type camera_state;
             cam.get_minimal_state(camera_state);
@@ -456,13 +453,14 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
     if (this->editCurrentViewParam.IsDirty()) {
         this->editCurrentViewParam.ResetDirty();
 
-        int selIndex = this->getKeyframeIndex(this->keyframes, this->selectedKeyframe);
-        if (selIndex >= 0) {
+        if (this->getKeyframeIndex(this->keyframes, this->selectedKeyframe) >= 0) {
             Keyframe tmp_kf = this->selectedKeyframe;
 
             megamol::core::view::Camera_2 cam(this->selectedKeyframe.GetCameraState());
-            glm::vec3 new_view = vislib_vector_to_glm(this->editCurrentViewParam.Param<param::Vector3fParam>()->Value());
-            cam.orientation(quaternion_from_vector(new_view));
+            glm::vec3 lookat= vislib_vector_to_glm(this->editCurrentViewParam.Param<param::Vector3fParam>()->Value());
+            glm::vec4 new_lookat = glm::vec4(lookat.x, lookat.y, lookat.z, 1.0f);
+            auto lookat_point = static_cast<megamol::core::view::Camera_2::point_type>(new_lookat);
+            cam.look_at(lookat_point);
 
             cam_type::minimal_state_type camera_state;
             cam.get_minimal_state(camera_state);
@@ -478,9 +476,8 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
     if (this->editCurrentUpParam.IsDirty()) {
         this->editCurrentUpParam.ResetDirty();
 
-        // Get index of existing keyframe
-        int selIndex = this->getKeyframeIndex(this->keyframes, this->selectedKeyframe);
-        if (selIndex >= 0) {
+        if (this->getKeyframeIndex(this->keyframes, this->selectedKeyframe) >= 0) {
+///TODO
             //Keyframe tmp_kf = this->selectedKeyframe;
             //
             //megamol::core::view::Camera_2 cam(this->selectedKeyframe.GetCameraState());
@@ -507,9 +504,7 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
     if (this->editCurrentApertureParam.IsDirty()) {
         this->editCurrentApertureParam.ResetDirty();
 
-        // Get index of existing keyframe
-        int selIndex = this->getKeyframeIndex(this->keyframes, this->selectedKeyframe);
-        if (selIndex >= 0) {
+        if (this->getKeyframeIndex(this->keyframes, this->selectedKeyframe) >= 0) {
             Keyframe tmp_kf = this->selectedKeyframe;
             float aperture = this->editCurrentApertureParam.Param<param::FloatParam>()->Value();
             auto cam_state = this->selectedKeyframe.GetCameraState();
@@ -885,8 +880,7 @@ bool KeyframeKeeper::replaceKeyframe(Keyframe oldkf, Keyframe newkf, bool undo) 
             return true;
         }
         // Check if old keyframe exists
-        int selIndex = this->getKeyframeIndex(this->keyframes, oldkf);
-        if (selIndex >= 0) {
+        if (this->getKeyframeIndex(this->keyframes, oldkf) >= 0) {
             // Delete old keyframe
             this->deleteKeyframe(oldkf, false);
             // Try to add new keyframe
@@ -920,7 +914,7 @@ bool KeyframeKeeper::deleteKeyframe(Keyframe kf, bool undo) {
 
     if (!this->keyframes.empty()) {
         // Get index of keyframe to delete
-        unsigned int selIndex = this->getKeyframeIndex(this->keyframes, kf);
+        int selIndex = this->getKeyframeIndex(this->keyframes, kf);
         // Choose new selected keyframe
         if (selIndex >= 0) {
             // DELETE UNDO
@@ -1038,7 +1032,9 @@ Keyframe KeyframeKeeper::interpolateKeyframe(float time) {
         Keyframe kf = Keyframe();
         kf.SetAnimTime(t);
         kf.SetSimTime(0.0f);
-        kf.SetCameraState(this->cameraState);
+        auto state = this->cameraState;
+        state.half_aperture_angle_radians = glm::radians(30.0f); // = 60° aperture angle
+        kf.SetCameraState(state);
         return kf;
     }
     else if (t < this->keyframes.front().GetAnimTime()) {
@@ -1476,9 +1472,10 @@ void KeyframeKeeper::updateEditParameters(Keyframe kf) {
     this->editCurrentSimTimeParam.Param<param::FloatParam>()->SetValue(kf.GetSimTime() * this->totalSimTime, false);
     this->editCurrentPosParam.Param<param::Vector3fParam>()->SetValue(glm_to_vislib_vector(pos), false);
     this->editCurrentViewParam.Param<param::Vector3fParam>()->SetValue(glm_to_vislib_vector(view), false);
-    float up_angle = angle_between_vectors(default_up_vector(view), up);
-    this->editCurrentUpParam.Param<param::FloatParam>()->SetValue(glm::degrees(up_angle), false);
     this->editCurrentApertureParam.Param<param::FloatParam>()->SetValue(cam.aperture_angle(), false);
+
+///TODO
+    //this->editCurrentUpParam.Param<param::FloatParam>()->SetValue(glm::degrees(up_angle), false);
 }
 
 

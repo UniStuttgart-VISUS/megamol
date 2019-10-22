@@ -327,7 +327,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
             auto ori = skf.GetCameraState().orientation;
             this->cam.orientation(glm::quat(ori[3], ori[0], ori[1], ori[2]));
             auto aper = skf.GetCameraState().half_aperture_angle_radians;
-            this->cam.aperture_angle(glm::degrees(aper));
+            this->cam.half_aperture_angle_radians(aper);
         }
         else {
             this->ResetView();

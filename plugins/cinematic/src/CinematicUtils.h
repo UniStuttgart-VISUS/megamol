@@ -57,76 +57,76 @@ namespace cinematic {
 
     // #### Utility quaternion functions ################################### //
 
-    static inline glm::vec3 default_up_vector(glm::vec3 current_view) {
+    //static inline glm::vec3 default_up_vector(glm::vec3 current_view) {
 
-        const float EPS = 0.1e-6f;
-        glm::vec4 original = megamol::core::view::Camera_2::maths_type::up_vector;
-        glm::vec3 view = glm::normalize(current_view);
-        glm::vec3 right = glm::cross(view, static_cast<glm::vec3>(original));
-        if (right.length() < EPS) {
-            right = glm::vec3(1.0f, 0.0f, 0.0f);
-        }
-        glm::vec3 up = glm::cross(right, view);
-        up = glm::normalize(up);
+    //    const float EPS = 0.1e-6f;
+    //    glm::vec4 original = megamol::core::view::Camera_2::maths_type::up_vector;
+    //    glm::vec3 view = glm::normalize(current_view);
+    //    glm::vec3 right = glm::cross(view, static_cast<glm::vec3>(original));
+    //    if (right.length() < EPS) {
+    //        right = glm::vec3(1.0f, 0.0f, 0.0f);
+    //    }
+    //    glm::vec3 up = glm::cross(right, view);
+    //    up = glm::normalize(up);
 
-        return up;
-    }
+    //    return up;
+    //}
 
-    static inline float angle_between_vectors(glm::vec3 vec1, glm::vec3 vec2) {
+    //static inline float angle_between_vectors(glm::vec3 vec1, glm::vec3 vec2) {
 
-        glm::vec3 diff = vec1 - vec2; // glm::normalize(vec1) - glm::normalize(vec2);
-        float diff_len = glm::length(diff);
-        float angle = std::asinf(diff_len / 2.0f) * 2.0f;
-        return angle;
-    }
+    //    glm::vec3 diff = vec1 - vec2; // glm::normalize(vec1) - glm::normalize(vec2);
+    //    float diff_len = glm::length(diff);
+    //    float angle = std::asinf(diff_len / 2.0f) * 2.0f;
+    //    return angle;
+    //}
 
-    static inline glm::quat quaternion_from_vector(glm::vec3 new_vector, UINT mode = 0) {
+    //static inline glm::quat quaternion_from_vector(glm::vec3 new_vector, UINT mode = 0) {
 
-        const float EPS = 0.1e-6f;
-        glm::quat return_quat = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
+    //    const float EPS = 0.1e-6f;
+    //    glm::quat return_quat = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
 
-        glm::vec4 original = megamol::core::view::Camera_2::maths_type::view_vector;
-        if (mode == 1) {
-            original = megamol::core::view::Camera_2::maths_type::up_vector;
-        }
-        glm::vec3 vector = glm::normalize(new_vector);
-        float angle = angle_between_vectors(vector, static_cast<glm::vec3>(original));
-        glm::vec3 rot;
-        if (angle >= (glm::radians(90.0f) - EPS)) {
-            if ((original.x == 0.0f) && (original.y == 0.0f)) {
-                if (original.z == 0.0f) {
-                    return return_quat; // Bug
-                }
-                rot = glm::vec3(0.0f, 1.0f, 0.0f);
-            }
-            else {
-                rot = glm::vec3(-original.y, original.x, 0.0f);
-            }
-            rot = glm::normalize(rot);
-            return_quat = glm::rotate(return_quat, angle, rot);
-        }
-        else if (angle > EPS) {
-            rot = glm::cross(vector, (vector - static_cast<glm::vec3>(original)));
-            rot = glm::normalize(rot);
-            return_quat = glm::rotate(return_quat, angle, rot);
-        }
+    //    glm::vec4 original = megamol::core::view::Camera_2::maths_type::view_vector;
+    //    if (mode == 1) {
+    //        original = megamol::core::view::Camera_2::maths_type::up_vector;
+    //    }
+    //    glm::vec3 vector = glm::normalize(new_vector);
+    //    float angle = angle_between_vectors(vector, static_cast<glm::vec3>(original));
+    //    glm::vec3 rot;
+    //    if (angle >= (glm::radians(90.0f) - EPS)) {
+    //        if ((original.x == 0.0f) && (original.y == 0.0f)) {
+    //            if (original.z == 0.0f) {
+    //                return return_quat; // Bug
+    //            }
+    //            rot = glm::vec3(0.0f, 1.0f, 0.0f);
+    //        }
+    //        else {
+    //            rot = glm::vec3(-original.y, original.x, 0.0f);
+    //        }
+    //        rot = glm::normalize(rot);
+    //        return_quat = glm::rotate(return_quat, angle, rot);
+    //    }
+    //    else if (angle > EPS) {
+    //        rot = glm::cross(vector, (vector - static_cast<glm::vec3>(original)));
+    //        rot = glm::normalize(rot);
+    //        return_quat = glm::rotate(return_quat, angle, rot);
+    //    }
 
-        return glm::normalize(return_quat);
-    }
+    //    return glm::normalize(return_quat);
+    //}
 
-    static inline glm::quat quaternion_from_up_angle(glm::vec3 current_view, float new_up_angle) {
+    //static inline glm::quat quaternion_from_up_angle(glm::vec3 current_view, float new_up_angle) {
 
-        glm::vec3 up = glm::vec3(1.0f, 0.0f, 0.0f);
-        glm::vec3 view = glm::vec3(0.0f, 0.0f, 1.0f);
-        glm::vec3 right = glm::cross(view, up);
+    //    glm::vec3 up = glm::vec3(1.0f, 0.0f, 0.0f);
+    //    glm::vec3 view = glm::vec3(0.0f, 0.0f, 1.0f);
+    //    glm::vec3 right = glm::cross(view, up);
 
-        glm::mat3 mat_basis;
-        mat_basis[0] = glm::normalize(right);
-        mat_basis[1] = glm::normalize(up);
-        mat_basis[2] = glm::normalize(view);
+    //    glm::mat3 mat_basis;
+    //    mat_basis[0] = glm::normalize(right);
+    //    mat_basis[1] = glm::normalize(up);
+    //    mat_basis[2] = glm::normalize(view);
 
-        return glm::normalize(glm::quat_cast(mat_basis));
-    }
+    //    return glm::normalize(glm::quat_cast(mat_basis));
+    //}
 
 
 
