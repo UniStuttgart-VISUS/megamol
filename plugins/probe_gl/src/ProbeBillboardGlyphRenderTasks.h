@@ -48,6 +48,7 @@ private:
     core::CallerSlot m_probes_slot;
     size_t m_probes_cached_hash;
 
+    std::shared_ptr<glowl::Mesh> m_billboard_dummy_mesh;
 };
 
 } // namespace probe_gl

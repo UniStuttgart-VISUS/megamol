@@ -21,7 +21,7 @@ out vec3 world_pos;
 
 void main()
 {
-    normal = v_normal;
+    normal = inverse(transpose(mat3(mesh_shader_params[gl_DrawIDARB].transform))) * v_normal;
     world_pos = v_position;
     
     mat4 object_transform = mesh_shader_params[gl_DrawIDARB].transform;

@@ -13,7 +13,6 @@
 megamol::mesh::AbstractGPURenderTaskDataSource::AbstractGPURenderTaskDataSource()
     : core::Module()
     , m_renderTask_lhs_slot("getData", "The slot publishing the loaded data")
-    , m_renderTask_lhs_cached_hash(0)
     , m_renderTask_rhs_slot("getRenderTasks", "The slot for chaining render task data sources.")
     , m_renderTask_rhs_cached_hash(0)
     , m_material_slot("getMaterialData", "Connects to a material data source")
@@ -59,49 +58,62 @@ bool megamol::mesh::AbstractGPURenderTaskDataSource::getMetaDataCallback(core::C
     CallGPUMeshData* mesh_call = this->m_mesh_slot.CallAs<CallGPUMeshData>();
 
     if (lhs_rt_call == NULL) return false;
-    if (material_call == NULL) return false;
-    if (mesh_call == NULL) return false;
-
     auto lhs_meta_data = lhs_rt_call->getMetaData();
-    auto mtl_meta_data = material_call->getMetaData();
-    auto mesh_meta_data = mesh_call->getMetaData();
-    core::Spatial3DMetaData rhs_meta_data;
-    
-    mesh_meta_data.m_frame_ID = lhs_meta_data.m_frame_ID;
-    mesh_call->setMetaData(mesh_meta_data);
-    if (!(*mesh_call)(1)) return false;
-    mesh_meta_data = mesh_call->getMetaData();
+
+    bool something_has_changed = false; // something has changed in the neath...
+    unsigned int frame_cnt = std::numeric_limits<unsigned int>::max();
+    auto bbox = lhs_meta_data.m_bboxs.BoundingBox();
+    auto cbbox = lhs_meta_data.m_bboxs.ClipBox();
+
 
     if (rhs_rt_call != NULL) {
-        rhs_meta_data = rhs_rt_call->getMetaData();
+        auto rhs_meta_data = rhs_rt_call->getMetaData();
         rhs_meta_data.m_frame_ID = lhs_meta_data.m_frame_ID;
         rhs_rt_call->setMetaData(rhs_meta_data);
         if (!(*rhs_rt_call)(1)) return false;
         rhs_meta_data = rhs_rt_call->getMetaData();
 
         if (rhs_meta_data.m_data_hash > m_renderTask_rhs_cached_hash) {
-            m_renderTask_lhs_cached_hash++;
+            something_has_changed = true;
         }
-    } else {
-        rhs_meta_data.m_frame_cnt = 1;
+
+        frame_cnt = std::min(rhs_meta_data.m_frame_cnt, frame_cnt);
+
+        bbox.Union(rhs_meta_data.m_bboxs.BoundingBox());
+        cbbox.Union(rhs_meta_data.m_bboxs.ClipBox());
     }
 
-    if (mtl_meta_data.m_data_hash > m_material_cached_hash) {
-        m_renderTask_lhs_cached_hash++;
+    if (material_call != NULL) {
+        auto mtl_meta_data = material_call->getMetaData();
+
+        //TODO....
+
+        if (mtl_meta_data.m_data_hash > m_material_cached_hash) {
+            something_has_changed = true;
+        }
     }
-    if (mesh_meta_data.m_data_hash > m_mesh_cached_hash) {
-        m_renderTask_lhs_cached_hash++;
+    
+    if (mesh_call != NULL){
+        auto mesh_meta_data = mesh_call->getMetaData();
+        mesh_meta_data.m_frame_ID = lhs_meta_data.m_frame_ID;
+        mesh_call->setMetaData(mesh_meta_data);
+        if (!(*mesh_call)(1)) return false;
+        mesh_meta_data = mesh_call->getMetaData();
+
+        if (mesh_meta_data.m_data_hash > m_mesh_cached_hash) {
+            something_has_changed = true;
+        }
+
+        frame_cnt = std::min(mesh_meta_data.m_frame_cnt, frame_cnt);
+
+        bbox.Union(mesh_meta_data.m_bboxs.BoundingBox());
+        cbbox.Union(mesh_meta_data.m_bboxs.ClipBox());
     }
 
-    lhs_meta_data.m_data_hash = m_renderTask_lhs_cached_hash;
-    lhs_meta_data.m_frame_cnt = std::min(mesh_meta_data.m_frame_cnt, rhs_meta_data.m_frame_cnt);
 
-    auto bbox = mesh_meta_data.m_bboxs.BoundingBox();
-    bbox.Union(rhs_meta_data.m_bboxs.BoundingBox());
+    lhs_meta_data.m_data_hash = something_has_changed ? lhs_meta_data.m_data_hash + 1 : lhs_meta_data.m_data_hash;
+    lhs_meta_data.m_frame_cnt = frame_cnt;
     lhs_meta_data.m_bboxs.SetBoundingBox(bbox);
-
-    auto cbbox = mesh_meta_data.m_bboxs.ClipBox();
-    cbbox.Union(rhs_meta_data.m_bboxs.ClipBox());
     lhs_meta_data.m_bboxs.SetClipBox(cbbox);
 
     lhs_rt_call->setMetaData(lhs_meta_data);

@@ -82,7 +82,6 @@ protected:
 
     /** The slot for requesting data from this module, i.e. lhs connection */
     megamol::core::CalleeSlot m_renderTask_lhs_slot;
-    size_t m_renderTask_lhs_cached_hash;
 
     /** The slot for querying chained render tasks, i.e. a rhs connection */
     megamol::core::CallerSlot m_renderTask_rhs_slot;

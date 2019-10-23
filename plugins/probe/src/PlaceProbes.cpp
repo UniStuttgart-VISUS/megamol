@@ -131,7 +131,6 @@ bool megamol::probe::PlaceProbes::getMetaData(core::Call& call) {
         centerline_meta_data.m_data_hash == m_centerline_cached_hash)
         return true;
 
-    mesh_meta_data = cm->getMetaData();
     probe_meta_data.m_frame_cnt = mesh_meta_data.m_frame_cnt;
     probe_meta_data.m_bboxs = mesh_meta_data.m_bboxs; // normally not available here
     probe_meta_data.m_data_hash++;
