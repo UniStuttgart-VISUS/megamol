@@ -54,6 +54,8 @@ void megamol::probe::PlaceProbes::release() {}
 
 bool megamol::probe::PlaceProbes::getData(core::Call& call) {
 
+    bool something_changed = false;
+
     auto* pc = dynamic_cast<CallProbes*>(&call);
     mesh::CallMesh* cm = this->m_mesh_slot.CallAs<mesh::CallMesh>();
     mesh::CallMesh* ccl = this->m_centerline_slot.CallAs<mesh::CallMesh>();
@@ -65,10 +67,14 @@ bool megamol::probe::PlaceProbes::getData(core::Call& call) {
     auto centerline_meta_data = pc->getMetaData();
 
 
-    if (mesh_meta_data.m_data_hash != m_mesh_cached_hash)
+    if (mesh_meta_data.m_data_hash != m_mesh_cached_hash) {
         if (!(*cm)(0)) return false;
-    if (centerline_meta_data.m_data_hash != m_centerline_cached_hash)
+        something_changed = true;
+    }
+    if (centerline_meta_data.m_data_hash != m_centerline_cached_hash) {
         if (!(*ccl)(0)) return false;
+        something_changed = true;
+    }
 
     mesh_meta_data = cm->getMetaData();
     probe_meta_data = pc->getMetaData();
@@ -84,7 +90,8 @@ bool megamol::probe::PlaceProbes::getData(core::Call& call) {
 
 
     // here something really happens
-    this->placeProbes(longest_edge_index);
+    if (something_changed)
+        this->placeProbes(longest_edge_index);
 
     pc->setData(this->m_probes);
 
@@ -115,7 +122,11 @@ bool megamol::probe::PlaceProbes::getMetaData(core::Call& call) {
 
     if (!(*cm)(1)) return false;
     if (!(*ccl)(1)) return false;
+    
+    mesh_meta_data = cm->getMetaData();
+    centerline_meta_data = pc->getMetaData();
 
+    // Guard
     if (mesh_meta_data.m_data_hash == m_mesh_cached_hash &&
         centerline_meta_data.m_data_hash == m_centerline_cached_hash)
         return true;
@@ -124,7 +135,7 @@ bool megamol::probe::PlaceProbes::getMetaData(core::Call& call) {
     probe_meta_data.m_frame_cnt = mesh_meta_data.m_frame_cnt;
     probe_meta_data.m_bboxs = mesh_meta_data.m_bboxs; // normally not available here
     probe_meta_data.m_data_hash++;
-
+    
     pc->setMetaData(probe_meta_data);
 
     return true;
