@@ -163,9 +163,10 @@ bool KeyframeManipulators::UpdateRendering(const std::shared_ptr<std::vector<Key
     }
 
     // Update selected keyframe manipulators
-    view::Camera_2 cam(this->state.selected_keyframe.GetCameraState());
+    view::Camera_2 selected_camera(this->state.selected_keyframe.GetCameraState());
     cam_type::snapshot_type snapshot;
-    cam.take_snapshot(snapshot, thecam::snapshot_content::view_vector | thecam::snapshot_content::up_vector);
+    selected_camera.take_snapshot(snapshot, thecam::snapshot_content::view_vector | thecam::snapshot_content::up_vector);
+
     for (auto &m : this->manipulators) {
 
         // Set visibility of manipulators
@@ -384,11 +385,12 @@ bool KeyframeManipulators::ProcessHitManipulator(float mouse_x, float mouse_y) {
 
     if (this->state.hit->variety == Manipulator::Variety::MANIPULATOR_SELECTED_KEYFRAME_LOOKAT_VECTOR) {
         // Handle position of look at manipulator
-        glm::vec3 new_view = (manipulator_origin - static_cast<glm::vec3>(camera_position)) + diff_world_vector;
         cam_type::snapshot_type snapshot;
         selected_camera.take_snapshot(snapshot, megamol::core::thecam::snapshot_content::up_vector);
         glm::vec4 snap_up = snapshot.up_vector;
         glm::vec3 up = static_cast<glm::vec3>(snap_up);
+
+        glm::vec3 new_view = (manipulator_origin - static_cast<glm::vec3>(camera_position)) + diff_world_vector;
         glm::quat new_orientation = quaternion_from_vectors(new_view, up);
         selected_camera.orientation(new_orientation);
         this->state.lookat_length = glm::length(new_view);
