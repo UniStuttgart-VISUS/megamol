@@ -114,19 +114,25 @@ namespace cinematic {
     //    return glm::normalize(return_quat);
     //}
 
-    //static inline glm::quat quaternion_from_up_angle(glm::vec3 current_view, float new_up_angle) {
+    static inline glm::quat quaternion_from_vectors(glm::vec3 view_vector, glm::vec3 up_vector) {
 
-    //    glm::vec3 up = glm::vec3(1.0f, 0.0f, 0.0f);
-    //    glm::vec3 view = glm::vec3(0.0f, 0.0f, 1.0f);
-    //    glm::vec3 right = glm::cross(view, up);
+        glm::vec3 view = view_vector * glm::vec3(-1.0f, -1.0f, -1.0f); /// why?
+        glm::vec3 right = glm::cross(up_vector, view);
+        glm::vec3 up = glm::cross(view, right);
 
-    //    glm::mat3 mat_basis;
-    //    mat_basis[0] = glm::normalize(right);
-    //    mat_basis[1] = glm::normalize(up);
-    //    mat_basis[2] = glm::normalize(view);
+        glm::vec3 norm_right = glm::normalize(right);
+        glm::vec3 norm_up = glm::normalize(up);
+        glm::vec3 norm_view = glm::normalize(view);
 
-    //    return glm::normalize(glm::quat_cast(mat_basis));
-    //}
+        glm::mat3 matrix_basis;
+        matrix_basis[0] = norm_right;
+        matrix_basis[1] = norm_up;
+        matrix_basis[2] = norm_view;
+
+        glm::quat orientation_quat = glm::quat_cast(matrix_basis);
+
+        return orientation_quat; // glm::normalize(orientation_quat);
+    }
 
 
 

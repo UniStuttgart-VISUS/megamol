@@ -291,7 +291,7 @@ bool KeyframeKeeper::CallForSetCtrlPoints(core::Call& c) {
     this->endCtrllPos = ccc->GetEndControlPointPosition();
     if ((prev_StartCP != this->startCtrllPos) || (prev_EndCP != this->endCtrllPos)) {
         this->addControlPointUndoAction(KeyframeKeeper::Undo::Action::UNDO_CONTROLPOINT_MODIFY, this->startCtrllPos, this->endCtrllPos, prev_StartCP, prev_EndCP);
-        vislib::sys::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] [CallForSetCtrlPoints] ADDED undo for CTRL POINT ......");
+        //vislib::sys::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] [CallForSetCtrlPoints] ADDED undo for CTRL POINT ......");
     }
     this->refreshInterpolCamPos(this->interpolSteps);
     ccc->SetControlPointPosition(this->startCtrllPos, this->endCtrllPos);
@@ -433,16 +433,21 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
 
         if (this->getKeyframeIndex(this->keyframes, this->selectedKeyframe) >= 0) {
             Keyframe tmp_kf = this->selectedKeyframe;
-            
-            megamol::core::view::Camera_2 cam(this->selectedKeyframe.GetCameraState());
-            glm::vec4 new_lookat = glm::vec4(this->modelBboxCenter.x, this->modelBboxCenter.y, this->modelBboxCenter.z, 1.0f);
-            auto lookat_point = static_cast<megamol::core::view::Camera_2::point_type>(new_lookat);
-            cam.look_at(lookat_point);
+  
+            megamol::core::view::Camera_2 camera(this->selectedKeyframe.GetCameraState());
+            cam_type::snapshot_type snapshot;
+            camera.take_snapshot(snapshot, thecam::snapshot_content::all);
+            glm::vec4 cam_pos = snapshot.position;
+            glm::vec4 cam_up = snapshot.up_vector;
+
+            glm::vec3 up = static_cast<glm::vec3>(cam_up);
+            glm::vec3 new_view = this->modelBboxCenter - static_cast<glm::vec3>(cam_pos);
+            glm::quat new_orientation = quaternion_from_vectors(new_view, up);
+            camera.orientation(new_orientation);
 
             cam_type::minimal_state_type camera_state;
-            cam.get_minimal_state(camera_state);
+            camera.get_minimal_state(camera_state);
             this->selectedKeyframe.SetCameraState(camera_state);
-
             this->replaceKeyframe(tmp_kf, this->selectedKeyframe, true);
         }
         else {
@@ -456,16 +461,19 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
         if (this->getKeyframeIndex(this->keyframes, this->selectedKeyframe) >= 0) {
             Keyframe tmp_kf = this->selectedKeyframe;
 
-            megamol::core::view::Camera_2 cam(this->selectedKeyframe.GetCameraState());
-            glm::vec3 lookat= vislib_vector_to_glm(this->editCurrentViewParam.Param<param::Vector3fParam>()->Value());
-            glm::vec4 new_lookat = glm::vec4(lookat.x, lookat.y, lookat.z, 1.0f);
-            auto lookat_point = static_cast<megamol::core::view::Camera_2::point_type>(new_lookat);
-            cam.look_at(lookat_point);
+            megamol::core::view::Camera_2 camera(this->selectedKeyframe.GetCameraState());
+            cam_type::snapshot_type snapshot;
+            camera.take_snapshot(snapshot, thecam::snapshot_content::all);
+            glm::vec4 cam_up = snapshot.up_vector;
+
+            glm::vec3 up = static_cast<glm::vec3>(cam_up);
+            glm::vec3 new_view = vislib_vector_to_glm(this->editCurrentViewParam.Param<param::Vector3fParam>()->Value());
+            glm::quat new_orientation = quaternion_from_vectors(new_view, up);
+            camera.orientation(new_orientation);
 
             cam_type::minimal_state_type camera_state;
-            cam.get_minimal_state(camera_state);
+            camera.get_minimal_state(camera_state);
             this->selectedKeyframe.SetCameraState(camera_state);
-
             this->replaceKeyframe(tmp_kf, this->selectedKeyframe, true);
         }
         else {
@@ -479,21 +487,16 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
         if (this->getKeyframeIndex(this->keyframes, this->selectedKeyframe) >= 0) {
 ///TODO
             //Keyframe tmp_kf = this->selectedKeyframe;
-            //
-            //megamol::core::view::Camera_2 cam(this->selectedKeyframe.GetCameraState());
+            //megamol::core::view::Camera_2 camera(this->selectedKeyframe.GetCameraState());
             //cam_type::snapshot_type snapshot;
-            //cam.take_snapshot(snapshot, thecam::snapshot_content::view_vector);
+            //camera.take_snapshot(snapshot, thecam::snapshot_content::view_vector);
             //glm::vec4 cam_view = snapshot.view_vector;
-
             //float new_angle = this->editCurrentUpParam.Param<param::FloatParam>()->Value();
-
-            //glm::quat current_orientation = cam.orientation()
-            //cam.orientation(quaternion_from_up_angle(cam.orientation(), glm::radians(new_angle)));
-
+            //glm::quat current_orientation = camera.orientation()
+            //camera.orientation(quaternion_from_up_angle(camera.orientation(), glm::radians(new_angle)));
             //cam_type::minimal_state_type camera_state;
-            //cam.get_minimal_state(camera_state);
+            //camera.get_minimal_state(camera_state);
             //this->selectedKeyframe.SetCameraState(camera_state);
-
             //this->replaceKeyframe(tmp_kf, this->selectedKeyframe, true);
         }
         else {
@@ -1459,9 +1462,9 @@ bool KeyframeKeeper::loadKeyframes() {
 void KeyframeKeeper::updateEditParameters(Keyframe kf) {
 
     // Set new parameter values of changed selected keyframe
-    megamol::core::view::Camera_2 cam(kf.GetCameraState());
+    megamol::core::view::Camera_2 camera(kf.GetCameraState());
     cam_type::snapshot_type snapshot;
-    cam.take_snapshot(snapshot, thecam::snapshot_content::up_vector | thecam::snapshot_content::view_vector | thecam::snapshot_content::camera_coordinate_system);
+    camera.take_snapshot(snapshot, thecam::snapshot_content::up_vector | thecam::snapshot_content::view_vector | thecam::snapshot_content::camera_coordinate_system);
     glm::vec4 cam_pos = snapshot.position;
     glm::vec4 cam_up = snapshot.up_vector;
     glm::vec4 cam_view = snapshot.view_vector;
@@ -1472,7 +1475,7 @@ void KeyframeKeeper::updateEditParameters(Keyframe kf) {
     this->editCurrentSimTimeParam.Param<param::FloatParam>()->SetValue(kf.GetSimTime() * this->totalSimTime, false);
     this->editCurrentPosParam.Param<param::Vector3fParam>()->SetValue(glm_to_vislib_vector(pos), false);
     this->editCurrentViewParam.Param<param::Vector3fParam>()->SetValue(glm_to_vislib_vector(view), false);
-    this->editCurrentApertureParam.Param<param::FloatParam>()->SetValue(cam.aperture_angle(), false);
+    this->editCurrentApertureParam.Param<param::FloatParam>()->SetValue(camera.aperture_angle(), false);
 
 ///TODO
     //this->editCurrentUpParam.Param<param::FloatParam>()->SetValue(glm::degrees(up_angle), false);

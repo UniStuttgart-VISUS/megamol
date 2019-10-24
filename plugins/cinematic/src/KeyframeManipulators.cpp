@@ -100,8 +100,7 @@ void KeyframeManipulators::UpdateExtents(vislib::math::Cuboid<float>& inout_bbox
     // Grow bounding box of model to manipulator positions
     glm::vec3 pos; 
     for (unsigned int i = 0; i < this->manipulators.size(); i++) {
-        pos = this->getManipulatorOrigin(this->manipulators[i]);
-        pos = pos + this->manipulators[i].vector * this->state.line_length;
+        pos = this->getActualManipulatorPosition(this->manipulators[i]);
         inout_bbox.GrowToPoint(glm_to_vislib_point(pos));
     }
 }
@@ -209,17 +208,19 @@ bool KeyframeManipulators::UpdateRendering(const std::shared_ptr<std::vector<Key
             case(Manipulator::Rigging::Z_DIRECTION): {
                 m.vector = glm::vec3(0.0f, 0.0f, 1.0f);
             } break;
+            case(Manipulator::Rigging::VECTOR_DIRECTION): {
+                if (m.variety == Manipulator::Variety::MANIPULATOR_SELECTED_KEYFRAME_POSITION_USING_LOOKAT) {
+                    glm::vec4 view = snapshot.view_vector;
+                    m.vector = glm::vec3(view.x, view.y, view.z) * (-1.0f);
+                }
+            } break;
+            case(Manipulator::Rigging::ROTATION): {
+                if (m.variety == Manipulator::Variety::MANIPULATOR_SELECTED_KEYFRAME_UP_VECTOR) {
+                    glm::vec4 up = snapshot.up_vector;
+                    m.vector = glm::vec3(up.x, up.y, up.z);
+                }
+            } break;
             default: break;
-        }
-        if ((m.variety == Manipulator::Variety::MANIPULATOR_SELECTED_KEYFRAME_POSITION_USING_LOOKAT) &&
-            (Manipulator::Rigging::VECTOR_DIRECTION)) {
-            glm::vec4 view = snapshot.view_vector;
-            m.vector = glm::vec3(view.x, view.y, view.z) * (-1.0f);
-        }
-        if ((m.variety == Manipulator::Variety::MANIPULATOR_SELECTED_KEYFRAME_UP_VECTOR) &&
-             (Manipulator::Rigging::ROTATION)){
-            glm::vec4 up = snapshot.up_vector;
-            m.vector = glm::vec3(up.x, up.y, up.z);
         }
         m.vector = glm::normalize(m.vector);
     }
@@ -356,7 +357,8 @@ bool KeyframeManipulators::ProcessHitManipulator(float mouse_x, float mouse_y) {
 
     glm::vec3 manipulator_origin = this->getManipulatorOrigin((*this->state.hit));
     glm::vec3 manipulator_position = this->getActualManipulatorPosition((*this->state.hit));
-    float world_length = glm::length(manipulator_position - manipulator_origin);
+    glm::vec3 world_vector = manipulator_position - manipulator_origin;
+    float world_length = glm::length(world_vector);
 
     glm::vec2 screenspace_manipulator_origin = this->world2ScreenSpace(manipulator_origin);
     glm::vec2 screenspace_manipulator_position = this->world2ScreenSpace(manipulator_position);
@@ -372,48 +374,62 @@ bool KeyframeManipulators::ProcessHitManipulator(float mouse_x, float mouse_y) {
     glm::vec3 diff_world_vector = this->state.hit->vector * diff_world_length;
 
     auto camera_state = this->state.selected_keyframe.GetCameraState();
-    megamol::core::view::Camera_2 camera(camera_state);
-    glm::vec4 camera_position = camera.position();
+    megamol::core::view::Camera_2 selected_camera(camera_state);
+    glm::vec4 camera_position = selected_camera.position();
 
     if (this->state.hit->variety == Manipulator::Variety::MANIPULATOR_SELECTED_KEYFRAME_LOOKAT_VECTOR) {
-        // Handle differnt position of manipulator (look at)
+        // Handle position of look at manipulator
         glm::vec3 new_view = (manipulator_origin - static_cast<glm::vec3>(camera_position)) + diff_world_vector;
-        //this->state.lookat_length = glm::length(new_view);
-/// TODO
-        //camera.orientation(quaternion_from_vector(new_view));
-
-
-
-
-
-
+        cam_type::snapshot_type snapshot;
+        selected_camera.take_snapshot(snapshot, megamol::core::thecam::snapshot_content::up_vector);
+        glm::vec4 snap_up = snapshot.up_vector;
+        glm::vec3 up = static_cast<glm::vec3>(snap_up);
+        glm::quat new_orientation = quaternion_from_vectors(new_view, up);
+        selected_camera.orientation(new_orientation);
+        this->state.lookat_length = glm::length(new_view);
     }
     else if (this->state.hit->variety == Manipulator::Variety::MANIPULATOR_FIRST_CTRLPOINT_POSITION) {
-        // Handle differnt position of manipulator (first control point)
+        // Handle position of first control point manipulator
         this->state.first_ctrl_point = manipulator_origin + diff_world_vector;
     }
     else if (this->state.hit->variety == Manipulator::Variety::MANIPULATOR_LAST_CTRLPOINT_POSITION) {
-        // Handle differnt position of manipulator (last control point)
+        // Handle position of last control point manipulator
         this->state.last_ctrl_point = manipulator_origin + diff_world_vector;
     }
-    else if (this->state.hit->rigging == Manipulator::Rigging::ROTATION) {
-        // Handle rotation
-/// TODO
+    else if ((this->state.hit->variety == Manipulator::Variety::MANIPULATOR_SELECTED_KEYFRAME_UP_VECTOR) &&
+            (this->state.hit->rigging == Manipulator::Rigging::ROTATION)) {
+        // Handle rotation of up vector
+        cam_type::snapshot_type snapshot;
+        selected_camera.take_snapshot(snapshot, megamol::core::thecam::snapshot_content::all);
+        glm::vec4 snap_view = snapshot.view_vector;
+        glm::vec4 snap_right = snapshot.right_vector;
+        glm::vec3 view = static_cast<glm::vec3>(snap_view);
+        glm::vec3 right = static_cast<glm::vec3>(snap_right);
 
+        glm::vec3 right_position = manipulator_origin + glm::normalize(right) * world_length;
+        glm::vec2 screenspace_right_position = this->world2ScreenSpace(right_position);
+        screenspace_vector = screenspace_right_position - screenspace_manipulator_origin;
+        screenspace_length = glm::length(screenspace_vector);
+        screenspace_vector = glm::normalize(screenspace_vector);
+        diff_screenspace_length = glm::dot(screenspace_vector, mouse_vector);
+        diff_world_length = world_length / screenspace_length * diff_screenspace_length;
+        diff_world_vector = right * diff_world_length;
 
+        glm::vec3 new_up = world_vector + diff_world_vector;
+        glm::quat new_orientation = quaternion_from_vectors(view, new_up);
+        selected_camera.orientation(new_orientation);
 
-
-
-
+        // Necessary for updated manipulator rendering
+        this->state.hit->vector = glm::normalize(new_up);
     }
     else {
         glm::vec4 new_camera_position = camera_position + glm::vec4(diff_world_vector.x, diff_world_vector.y, diff_world_vector.z, 1.0f);
-        camera.position(new_camera_position);
+        selected_camera.position(new_camera_position);
     }
 
     // Apply changed camera state to selected keyframe
     cam_type::minimal_state_type new_camera_state;
-    camera.get_minimal_state(new_camera_state);
+    selected_camera.get_minimal_state(new_camera_state);
     this->state.selected_keyframe.SetCameraState(new_camera_state);
 
     // Save processed mouse position as last one

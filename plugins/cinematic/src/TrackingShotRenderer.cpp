@@ -384,7 +384,7 @@ bool TrackingShotRenderer::OnMouseButton(MouseButton button, MouseButtonAction a
         }
         else {
             // Apply changes of selected manipulator and control points
-            if (this->manipulators.ProcessHitManipulator(this->mouseX, this->mouseY)) {
+            if (this->manipulatorGrabbed) {
 
                 ccc->SetSelectedKeyframe(this->manipulators.GetManipulatedSelectedKeyframe());
                 if (!(*ccc)(CallKeyframeKeeper::CallForSetSelectedKeyframe)) return false;
