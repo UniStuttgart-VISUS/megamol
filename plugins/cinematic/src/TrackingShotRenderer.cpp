@@ -99,14 +99,8 @@ bool TrackingShotRenderer::GetExtents(megamol::core::view::CallRender3D_2& call)
         // Grow bounding box to manipulators and get information of bbox of model
         this->manipulators.UpdateExtents(bbox);
 
-        // Grow bounding box to spline.
-        auto bboxCCC = ccc->GetBoundingBox();
-        if (bboxCCC == nullptr) {
-            vislib::sys::Log::DefaultLog.WriteWarn("[TRACKINGSHOT RENDERER] [GetExtents] Pointer to boundingbox array is nullptr.");
-            return false;
-        }
-        bbox.Union(*bboxCCC);
-        cbox.Union(bbox); // use boundingbox to get new clipbox
+        // Use bounding box as clipbox
+        cbox.Union(bbox); 
 
         // Set new bounding box center of slave renderer model (before applying keyframe bounding box)
         ccc->SetBboxCenter(vislib_point_to_glm(cr3d_out->AccessBoundingBoxes().BoundingBox().CalcCenter()));
@@ -252,10 +246,10 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     cam_type::snapshot_type snapshot;
     cam_type::matrix_type viewTemp, projTemp;
     cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
-    glm::vec4 cam_pos = snapshot.position;
-    glm::vec4 cam_view = snapshot.view_vector;
-    glm::vec4 cam_right = snapshot.right_vector;
-    glm::vec4 cam_up = snapshot.up_vector;
+    glm::vec4 snap_pos = snapshot.position;
+    glm::vec4 snap_view = snapshot.view_vector;
+    glm::vec3 cam_pos = static_cast<glm::vec3>(snap_pos);
+    glm::vec3 cam_view = static_cast<glm::vec3>(snap_view);
     glm::mat4 view = viewTemp;
     glm::mat4 proj = projTemp;
     glm::mat4 mvp = proj * view;
@@ -307,7 +301,7 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D_2& call) {
         for (int i = 0; i < (keyframeCount - 1); i++) {
             glm::vec3 start = interpolKeyframes->operator[](i);
             glm::vec3 end = interpolKeyframes->operator[](i + 1);
-            this->utils.PushLinePrimitive(start, end, line_width, cam_pos, color);
+            this->utils.PushLinePrimitive(start, end, line_width, cam_view, cam_pos, color);
         }
     }
 

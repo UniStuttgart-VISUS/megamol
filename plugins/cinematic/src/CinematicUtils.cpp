@@ -38,23 +38,37 @@ bool RenderUtils::InitPrimitiveRendering(megamol::core::utility::ShaderSourceFac
     }
 
     // Create shaders
-    if (!this->createShader(this->shaders[Primitives::POINTS], &this->getShaderCode(factory, "primitives::points::vertex"), &this->getShaderCode(factory, "primitives::points::fragment"))) {
+    std::string vertShaderCode = this->getShaderCode(factory, "primitives::points::vertex");
+    std::string fragShaderCode = this->getShaderCode(factory, "primitives::points::fragment");
+    if (!this->createShader(this->shaders[Primitives::POINTS], &vertShaderCode, &fragShaderCode)) {
         vislib::sys::Log::DefaultLog.WriteError("Failed to create point shader. [%s, %s, line %d)]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
-    if (!this->createShader(this->shaders[Primitives::LINES], &this->getShaderCode(factory, "primitives::lines::vertex"), &this->getShaderCode(factory, "primitives::lines::fragment"))) {
+
+    vertShaderCode = this->getShaderCode(factory, "primitives::lines::vertex");
+    fragShaderCode = this->getShaderCode(factory, "primitives::lines::fragment");
+    if (!this->createShader(this->shaders[Primitives::LINES], &vertShaderCode, &fragShaderCode)) {
         vislib::sys::Log::DefaultLog.WriteError("Failed to create line shader. [%s, %s, line %d)]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
-    if (!this->createShader(this->shaders[Primitives::QUADS], &this->getShaderCode(factory, "primitives::quads::vertex"), &this->getShaderCode(factory, "primitives::quads::fragment"))) {
+
+    vertShaderCode = this->getShaderCode(factory, "primitives::quads::vertex");
+    fragShaderCode = this->getShaderCode(factory, "primitives::quads::fragment");
+    if (!this->createShader(this->shaders[Primitives::QUADS], &vertShaderCode, &fragShaderCode)) {
         vislib::sys::Log::DefaultLog.WriteError("Failed to create quad shader. [%s, %s, line %d)]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
-    if (!this->createShader(this->shaders[Primitives::COLOR_TEXTURE], &this->getShaderCode(factory, "primitives::color_texture::vertex"), &this->getShaderCode(factory, "primitives::color_texture::fragment"))) {
+
+    vertShaderCode = this->getShaderCode(factory, "primitives::color_texture::vertex");
+    fragShaderCode = this->getShaderCode(factory, "primitives::color_texture::fragment");
+    if (!this->createShader(this->shaders[Primitives::COLOR_TEXTURE], &vertShaderCode, &fragShaderCode)) {
         vislib::sys::Log::DefaultLog.WriteError("Failed to create color texture shader. [%s, %s, line %d)]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
-    if (!this->createShader(this->shaders[Primitives::DEPTH_TEXTURE], &this->getShaderCode(factory, "primitives::depth_texture::vertex"), &this->getShaderCode(factory, "primitives::depth_texture::fragment"))) {
+
+    vertShaderCode = this->getShaderCode(factory, "primitives::depth_texture::vertex");
+    fragShaderCode = this->getShaderCode(factory, "primitives::depth_texture::fragment");
+    if (!this->createShader(this->shaders[Primitives::DEPTH_TEXTURE], &vertShaderCode, &fragShaderCode)) {
         vislib::sys::Log::DefaultLog.WriteError("Failed to create depth texture shader. [%s, %s, line %d)]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
@@ -130,6 +144,8 @@ bool RenderUtils::LoadTextureFromFile(std::wstring filename, GLuint& out_texture
 
         // Additional texture options
         texture->Bind();
+        ///glGenerateMipmap(GL_TEXTURE_2D);
+        ///texture->SetFilter(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
         texture->SetFilter(GL_LINEAR, GL_LINEAR);
         texture->SetWrap(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
         glBindTexture(GL_TEXTURE_2D, 0);
@@ -147,19 +163,22 @@ bool RenderUtils::LoadTextureFromFile(std::wstring filename, GLuint& out_texture
 }
 
 
-void RenderUtils::PushPointPrimitive(const glm::vec3& pos_center, float size, const glm::vec3& cam_pos, const glm::vec4& color) {
+void RenderUtils::PushPointPrimitive(const glm::vec3& pos_center, float size, const glm::vec3& cam_view, const glm::vec3& cam_pos, const glm::vec4& color) {
 
-    glm::vec3 distance = (cam_pos - pos_center);
-    //float d = glm::length(distance);
+    glm::vec3 distance = (pos_center - cam_pos);
+    if (glm::dot(cam_view, distance) < 0.0f) return;
+
+    float d = glm::length(distance);
     float radius = size / 2.0f;
     glm::vec3 rad = pos_center + glm::normalize(this->arbitraryPerpendicular(distance)) * radius;
-    glm::vec4 attributes = { rad.x, rad.y, rad.z, 0.0f };
+    glm::vec4 attributes = { rad.x, rad.y, rad.z, d };
     this->pushShaderData(Primitives::POINTS, 0, pos_center, color, glm::vec2(0.0f, 0.0f), attributes);
 }
 
 
-void RenderUtils::PushLinePrimitive(const glm::vec3& pos_start, const glm::vec3& pos_end, float line_width, const glm::vec3& normal, const glm::vec4& color) {
+void RenderUtils::PushLinePrimitive(const glm::vec3& pos_start, const glm::vec3& pos_end, float line_width, const glm::vec3& cam_view, const glm::vec3& cam_pos, const glm::vec4& color) {
 
+    glm::vec3 normal = cam_view * (-1.0f);
     glm::vec3 linedir = (pos_start - pos_end);
     glm::vec3 w = glm::normalize(glm::cross(normal, linedir));
     glm::vec3 p1 = w * (line_width / 2.0f);
@@ -172,9 +191,10 @@ void RenderUtils::PushLinePrimitive(const glm::vec3& pos_start, const glm::vec3&
 }
 
 
-void RenderUtils::PushQuadPrimitive(const glm::vec3& pos_center, float width, float height, const glm::vec3& normal, const glm::vec3& up, const glm::vec4& color) {
+void RenderUtils::PushQuadPrimitive(const glm::vec3& pos_center, float width, float height, const glm::vec3& cam_view, const glm::vec3& cam_up, const glm::vec4& color) {
 
-    glm::vec3 p1 = glm::normalize(up);
+    glm::vec3 normal = cam_view * (-1.0f);
+    glm::vec3 p1 = glm::normalize(cam_up);
     glm::vec3 p2 = glm::cross(normal, p1);
     p1 = glm::normalize(p1) * (height / 2.0f);
     p2 = glm::normalize(p2) * (width / 2.0f);
@@ -194,7 +214,8 @@ void RenderUtils::PushQuadPrimitive(const glm::vec3& pos_bottom_left, const glm:
 }
 
 
-void RenderUtils::Push2DColorTexture(GLuint texture_id, const glm::vec3& pos_bottom_left, const glm::vec3& pos_upper_left, const glm::vec3& pos_upper_right, const glm::vec3& pos_bottom_right, bool flip_y, const glm::vec4& color) {
+void RenderUtils::Push2DColorTexture(GLuint texture_id, const glm::vec3& pos_bottom_left, const glm::vec3& pos_upper_left, const glm::vec3& pos_upper_right, const glm::vec3& pos_bottom_right,
+    bool flip_y, const glm::vec4& color) {
 
     glm::vec3 pbl = pos_bottom_left;
     glm::vec3 pul = pos_upper_left;
@@ -211,7 +232,8 @@ void RenderUtils::Push2DColorTexture(GLuint texture_id, const glm::vec3& pos_bot
 }
 
 
-void RenderUtils::Push2DDepthTexture(GLuint texture_id, const glm::vec3& pos_bottom_left, const glm::vec3& pos_upper_left, const glm::vec3& pos_upper_right, const glm::vec3& pos_bottom_right, bool flip_y, const glm::vec4& color) {
+void RenderUtils::Push2DDepthTexture(GLuint texture_id, const glm::vec3& pos_bottom_left, const glm::vec3& pos_upper_left, const glm::vec3& pos_upper_right, const glm::vec3& pos_bottom_right,
+    bool flip_y, const glm::vec4& color) {
 
     glm::vec3 pbl = pos_bottom_left;
     glm::vec3 pul = pos_upper_left;
@@ -236,6 +258,8 @@ void RenderUtils::drawPrimitives(RenderUtils::Primitives primitive, glm::mat4& m
     }
     GLsizei count = static_cast<GLsizei>(this->queues[primitive].position.size() / 3);
     if (count == 0) return;
+
+    this->sortPrimitiveQueue(primitive);
 
     auto texture_id = this->queues[primitive].texture_id;
     this->buffers[Buffers::POSITION]->rebuffer<std::vector<float>>(this->queues[primitive].position);
@@ -314,6 +338,54 @@ void RenderUtils::drawPrimitives(RenderUtils::Primitives primitive, glm::mat4& m
     if (!blendEnabled) {
         glDisable(GL_BLEND);
     }
+}
+
+
+void RenderUtils::sortPrimitiveQueue(Primitives primitive) {
+
+    // Sort primitives by distance (stored in attribute.w) for correct blending.
+
+    const size_t dim_pos = 3;
+    const size_t dim_col = 4;
+    const size_t dim_txc = 2;
+    const size_t dim_atr = 4;
+
+    float d;
+
+    switch (primitive) {
+    case (Primitives::POINTS): {
+
+        auto size_pos = this->queues[primitive].position.size() / dim_pos;
+        auto size_col = this->queues[primitive].color.size() / dim_col;
+        auto size_txc = this->queues[primitive].texture_coord.size() / dim_txc;
+        auto size_atr = this->queues[primitive].attributes.size() / dim_atr;
+
+        if (!((size_pos == size_col) && (size_col == size_txc) && (size_txc == size_atr))) {
+            vislib::sys::Log::DefaultLog.WriteError("Primitive sorting fails due to inconsitent data list count - BUG. [%s, %s, line %d)]\n", __FILE__, __FUNCTION__, __LINE__);
+            return; 
+        }
+
+        //for (size_t i = 0; i < size_atr; ++i) {
+        //    d = this->queues[primitive].attributes[i*dim_atr + 3];
+
+
+
+        //}
+
+
+
+
+
+
+
+
+
+
+
+    } break;
+    default: break;
+    }
+
 }
 
 
@@ -672,8 +744,7 @@ void CinematicUtils::PushHotkeyList(float viewport_width, float viewport_height)
     float quad_height = line_height * line_count + 2.0f * border;
 
     // Push background quad
-    this->PushQuadPrimitive(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, quad_height, 0.0f),
-        glm::vec3(quad_width, quad_height, 0.0f), glm::vec3(quad_width, 0.0f, 0.0f), this->Color(CinematicUtils::Colors::MENU));
+    this->PushQuadPrimitive(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, quad_height, 0.0f), glm::vec3(quad_width, quad_height, 0.0f), glm::vec3(quad_width, 0.0f, 0.0f), this->Color(CinematicUtils::Colors::MENU));
 
     // Push hotkey text
     auto color = this->Color(CinematicUtils::Colors::FONT);

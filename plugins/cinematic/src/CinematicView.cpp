@@ -346,36 +346,36 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
         cam_type::snapshot_type snapshot;
         this->cam.take_snapshot(snapshot, thecam::snapshot_content::all);
 
-        glm::vec4 cam_pos4 = snapshot.position;
-        glm::vec4 cam_right4 = snapshot.right_vector;
-        glm::vec4 cam_up4 = snapshot.up_vector;
-        glm::vec4 cam_view4 = snapshot.view_vector;
+        glm::vec4 snap_pos = snapshot.position;
+        glm::vec4 snap_right = snapshot.right_vector;
+        glm::vec4 snap_up = snapshot.up_vector;
+        glm::vec4 snap_view = snapshot.view_vector;
 
-        glm::vec3 cam_right3 = static_cast<glm::vec3>(cam_right4);
-        glm::vec3 cam_up3 = static_cast<glm::vec3>(cam_up4);
-        glm::vec3 cam_view3 = static_cast<glm::vec3>(cam_view4);
+        glm::vec3 cam_right = static_cast<glm::vec3>(snap_right);
+        glm::vec3 cam_up = static_cast<glm::vec3>(snap_up);
+        glm::vec3 cam_view = static_cast<glm::vec3>(snap_view);
 
-        glm::vec4 new_pos = cam_pos4;
+        glm::vec4 new_pos = snap_pos;
         glm::quat new_orientation;
         const float Rad180Degrees = glm::radians(180.0f);
         const float Rad90Degrees = glm::radians(90.0f);
 
         if (!this->skyboxCubeMode) {
             if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_BACK) {
-                new_orientation = glm::rotate(new_orientation, Rad180Degrees, cam_right3);
-                new_orientation = glm::rotate(new_orientation, Rad180Degrees, cam_view3);
+                new_orientation = glm::rotate(new_orientation, Rad180Degrees, cam_right);
+                new_orientation = glm::rotate(new_orientation, Rad180Degrees, cam_view);
             }
             else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_RIGHT) {
-                new_orientation = glm::rotate(new_orientation, Rad90Degrees, cam_up3);
+                new_orientation = glm::rotate(new_orientation, Rad90Degrees, cam_up);
             }
             else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_LEFT) {
-                new_orientation = glm::rotate(new_orientation, -Rad90Degrees, cam_up3);
+                new_orientation = glm::rotate(new_orientation, -Rad90Degrees, cam_up);
             }
             else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_UP) {
-                new_orientation = glm::rotate(new_orientation, -Rad90Degrees, cam_right3);
+                new_orientation = glm::rotate(new_orientation, -Rad90Degrees, cam_right);
             }
             else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_DOWN) {
-                new_orientation = glm::rotate(new_orientation, Rad90Degrees, cam_right3);
+                new_orientation = glm::rotate(new_orientation, Rad90Degrees, cam_right);
             }
         }
         else {
@@ -385,28 +385,28 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
             const float height = cr3d->AccessBoundingBoxes().BoundingBox().Height();
             const float depth = cr3d->AccessBoundingBoxes().BoundingBox().Depth();  
             if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_FRONT) {
-                new_pos = center - depth * cam_view4;
+                new_pos = center - depth * snap_view;
             }
             else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_BACK) {
-                new_pos = center + depth * cam_view4;
-                new_orientation = glm::rotate(new_orientation, Rad180Degrees, cam_right3);
-                new_orientation = glm::rotate(new_orientation, Rad180Degrees, cam_view3);
+                new_pos = center + depth * snap_view;
+                new_orientation = glm::rotate(new_orientation, Rad180Degrees, cam_right);
+                new_orientation = glm::rotate(new_orientation, Rad180Degrees, cam_view);
             }
             else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_RIGHT) {
-                new_pos = center + width * cam_right4;
-                new_orientation = glm::rotate(new_orientation, Rad90Degrees, cam_up3);
+                new_pos = center + width * snap_right;
+                new_orientation = glm::rotate(new_orientation, Rad90Degrees, cam_up);
             }
             else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_LEFT) {
-                new_pos = center - width * cam_right4;
-                new_orientation = glm::rotate(new_orientation, -Rad90Degrees, cam_up3);
+                new_pos = center - width * snap_right;
+                new_orientation = glm::rotate(new_orientation, -Rad90Degrees, cam_up);
             }
             else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_UP) {
-                new_pos = center + height * cam_up4;
-                new_orientation = glm::rotate(new_orientation, -Rad90Degrees, cam_right3);
+                new_pos = center + height * snap_up;
+                new_orientation = glm::rotate(new_orientation, -Rad90Degrees, cam_right);
             }
             else if (this->sbSide == CinematicView::SkyboxSides::SKYBOX_DOWN) {
-                new_pos = center - height * cam_up4;
-                new_orientation = glm::rotate(new_orientation, Rad90Degrees, cam_right3);
+                new_pos = center - height * snap_up;
+                new_orientation = glm::rotate(new_orientation, Rad90Degrees, cam_right);
             }
         }
         // Apply new position, orientation and aperture angle to current camera.

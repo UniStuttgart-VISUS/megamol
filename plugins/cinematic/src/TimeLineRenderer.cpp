@@ -222,7 +222,8 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     float start_x, start_y, end_x, end_y, x, y;
     glm::vec3 start, end;
     glm::vec4 color;
-    glm::vec3 normal = { 0.0f, 0.0f, 1.0f };
+    glm::vec3 cam_view = { 0.0f, 0.0f, -1.0f };
+    glm::vec3 cam_pos = { 0.0f, 0.0f, 1.0f };
     glm::vec3 origin = { this->axes[Axis::X].startPos.x, this->axes[Axis::X].startPos.y, 0.0f };
     float yAxisValue = 0.0f;
     auto cbc = cr->GetBackgroundColour();
@@ -236,25 +237,25 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     // Draw x axis ruler lines
     start = glm::vec3(this->axes[Axis::X].startPos.x - this->rulerMarkHeight, this->axes[Axis::X].startPos.y, 0.0f);
     end = glm::vec3(this->axes[Axis::X].endPos.x + this->rulerMarkHeight, this->axes[Axis::X].endPos.y, 0.0f);
-    this->utils.PushLinePrimitive(start, end, 2.5f, normal, color);
+    this->utils.PushLinePrimitive(start, end, 2.5f, cam_view, cam_pos, color);
     float loop_max = this->axes[Axis::X].length + (this->axes[Axis::X].segmSize / 2.0f);
     for (float f = this->axes[Axis::X].scaleOffset; f <= loop_max; f = f + this->axes[Axis::X].segmSize) {
         if (f >= 0.0f) {
             start = origin + glm::vec3(f, 0.0f, 0.0f);
             end = origin + glm::vec3(f, -this->rulerMarkHeight, 0.0f);
-            this->utils.PushLinePrimitive(start, end, 2.5f, normal, color);
+            this->utils.PushLinePrimitive(start, end, 2.5f, cam_view, cam_pos, color);
         }
     }
     // Push y axis ruler lines
     start = glm::vec3(this->axes[Axis::X].startPos.x, this->axes[Axis::X].startPos.y - this->rulerMarkHeight, 0.0f);
     end = glm::vec3(this->axes[Axis::Y].endPos.x, this->axes[Axis::Y].endPos.y + this->rulerMarkHeight, 0.0f);
-    this->utils.PushLinePrimitive(start, end, 2.5f, normal, color);
+    this->utils.PushLinePrimitive(start, end, 2.5f, cam_view, cam_pos, color);
     loop_max = this->axes[Axis::Y].length + (this->axes[Axis::Y].segmSize / 2.0f);
     for (float f = this->axes[Axis::Y].scaleOffset; f <= loop_max; f = f + this->axes[Axis::Y].segmSize) {
         if (f >= 0.0f) {
             start = origin + glm::vec3(-this->rulerMarkHeight, f, 0.0f);
             end = origin + glm::vec3(0.0f, f, 0.0f);
-            this->utils.PushLinePrimitive(start, end, 2.5f, normal, color);
+            this->utils.PushLinePrimitive(start, end, 2.5f, cam_view, cam_pos, color);
         }
     }
 
@@ -279,7 +280,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
             end_y = this->axes[Axis::Y].scaleOffset  + yAxisValue * this->axes[Axis::Y].maxValue  * this->axes[Axis::Y].valueFractionLength;
             start = origin + glm::vec3(start_x, start_y, 0.0f);
             end = origin + glm::vec3(end_x, end_y, 0.0f);
-            this->utils.PushLinePrimitive(start, end, 2.0f, normal, color);
+            this->utils.PushLinePrimitive(start, end, 2.0f, cam_view, cam_pos, color);
             start_x = end_x;
             start_y = end_y;
         }
@@ -293,7 +294,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
         end_y = this->axes[Axis::Y].scaleOffset + yAxisValue * this->axes[Axis::Y].maxValue * this->axes[Axis::Y].valueFractionLength;
         start = origin + glm::vec3(start_x, start_y, 0.0f);
         end = origin + glm::vec3(end_x, end_y, 0.0f);
-        this->utils.PushLinePrimitive(start, end, 2.0f, normal, color);
+        this->utils.PushLinePrimitive(start, end, 2.0f, cam_view, cam_pos, color);
     }
 
     // Push frame marker lines ------------------------------------------------
@@ -303,7 +304,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
         if (f >= 0.0f) {
             start = origin + glm::vec3(f, 0.0f, 0.0f);
             end = origin + glm::vec3(f, this->rulerMarkHeight, 0.0f);
-            this->utils.PushLinePrimitive(start, end, 1.0f, normal, this->utils.Color(CinematicUtils::Colors::FRAME_MARKER));
+            this->utils.PushLinePrimitive(start, end, 1.0f, cam_view, cam_pos, this->utils.Color(CinematicUtils::Colors::FRAME_MARKER));
         }
     }
 
@@ -338,10 +339,10 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
         this->pushMarkerTexture(this->axes[Axis::X].startPos.x + x, this->axes[Axis::X].startPos.y + y, (this->keyframeMarkHeight*0.75f), color);
         start = origin + glm::vec3(x, 0.0f, 0.0f);
         end = origin + glm::vec3(x, y, 0.0f);
-        this->utils.PushLinePrimitive(start, end, 1.0f, normal, color);
+        this->utils.PushLinePrimitive(start, end, 1.0f, cam_view, cam_pos, color);
         start = origin + glm::vec3(0.0f, y, 0.0f);
         end = origin + glm::vec3(x, y, 0.0f);
-        this->utils.PushLinePrimitive(start, end, 1.0f, normal, color);
+        this->utils.PushLinePrimitive(start, end, 1.0f, cam_view, cam_pos, color);
     }
 
     // Push marker for dragged keyframe ---------------------------------------

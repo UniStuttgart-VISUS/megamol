@@ -42,7 +42,6 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module()
     , cameraState()
     , interpolCamPos()
     , keyframes()
-    , boundingBox()
     , selectedKeyframe()
     , dragDropKeyframe()
     , startCtrllPos()
@@ -568,7 +567,6 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
     // PROPAGATE UPDATED DATA TO CALL -----------------------------------------
     ccc->SetCameraState(std::make_shared<camera_state_type>(this->cameraState));
     ccc->SetKeyframes(std::make_shared<std::vector<Keyframe>>(this->keyframes));
-    ccc->SetBoundingBox(std::make_shared<vislib::math::Cuboid<float>>(this->boundingBox));
     ccc->SetSelectedKeyframe(this->selectedKeyframe);
     ccc->SetTotalAnimTime(this->totalAnimTime);
     ccc->SetInterpolCamPositions(std::make_shared<std::vector<glm::vec3>>(this->interpolCamPos));
@@ -766,7 +764,7 @@ void KeyframeKeeper::linearizeSimTangent(Keyframe stkf) {
 }
 
 
-void KeyframeKeeper::snapKeyframe2AnimFrame(Keyframe& out_kf) {
+void KeyframeKeeper::snapKeyframe2AnimFrame(Keyframe& inout_kf) {
 
     if (this->fps == 0) {
         vislib::sys::Log::DefaultLog.WriteError("[KEYFRAME KEEPER] [snapKeyframe2AnimFrame] FPS is ZERO.");
@@ -774,7 +772,7 @@ void KeyframeKeeper::snapKeyframe2AnimFrame(Keyframe& out_kf) {
     }
 
     float fpsFrac = 1.0f / (float)(this->fps);
-    float t = std::round(out_kf.GetAnimTime() / fpsFrac) * fpsFrac;
+    float t = std::round(inout_kf.GetAnimTime() / fpsFrac) * fpsFrac;
     if (std::abs(t - std::round(t)) < (fpsFrac / 2.0)) {
         t = std::round(t);
     }
@@ -782,20 +780,20 @@ void KeyframeKeeper::snapKeyframe2AnimFrame(Keyframe& out_kf) {
     t = (t > this->totalAnimTime) ? (this->totalAnimTime) : (t);
 
     // ADD UNDO
-    Keyframe tmp_kf = out_kf;
-    out_kf.SetAnimTime(t);
-    this->addKeyframeUndoAction(KeyframeKeeper::Undo::Action::UNDO_KEYFRAME_MODIFY, out_kf, tmp_kf);
+    Keyframe tmp_kf = inout_kf;
+    inout_kf.SetAnimTime(t);
+    this->addKeyframeUndoAction(KeyframeKeeper::Undo::Action::UNDO_KEYFRAME_MODIFY, inout_kf, tmp_kf);
 }
 
 
-void KeyframeKeeper::snapKeyframe2SimFrame(Keyframe& out_kf) {
+void KeyframeKeeper::snapKeyframe2SimFrame(Keyframe& inout_kf) {
 
-    float s = std::round(out_kf.GetSimTime() * this->totalSimTime) / this->totalSimTime;
+    float s = std::round(inout_kf.GetSimTime() * this->totalSimTime) / this->totalSimTime;
 
     // ADD UNDO
-    Keyframe tmp_kf = out_kf;
-    out_kf.SetSimTime(s);
-    this->addKeyframeUndoAction(KeyframeKeeper::Undo::Action::UNDO_KEYFRAME_MODIFY, out_kf, tmp_kf);
+    Keyframe tmp_kf = inout_kf;
+    inout_kf.SetSimTime(s);
+    this->addKeyframeUndoAction(KeyframeKeeper::Undo::Action::UNDO_KEYFRAME_MODIFY, inout_kf, tmp_kf);
 }
 
 
@@ -867,8 +865,6 @@ void KeyframeKeeper::refreshInterpolCamPos(unsigned int s) {
                 kf = this->interpolateKeyframe(startTime + deltaTimeStep*(float)j);
                 auto p = kf.GetCameraState().position;
                 this->interpolCamPos.emplace_back(glm::vec3(p[0], p[1], p[2]));
-				glm::vec3 grow = this->interpolCamPos.back();
-                this->boundingBox.GrowToPoint(grow.x, grow.y, grow.z);
             }
         }
         // Add last existing camera position
@@ -944,7 +940,6 @@ bool KeyframeKeeper::deleteKeyframe(Keyframe kf, bool undo) {
                     }
                 }
             }
-            this->boundingBox.SetNull();
             this->refreshInterpolCamPos(this->interpolSteps);
             if (selIndex > 0) {
                 this->selectedKeyframe = this->keyframes[selIndex - 1];
@@ -1413,7 +1408,6 @@ bool KeyframeKeeper::loadKeyframes() {
             return false;
         }
 
-        this->boundingBox.SetNull();
         if (!this->keyframes.empty()) {
             this->selectedKeyframe = this->interpolateKeyframe(0.0f);
             this->updateEditParameters(this->selectedKeyframe);

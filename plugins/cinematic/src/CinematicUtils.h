@@ -116,18 +116,20 @@ namespace cinematic {
 
         bool LoadTextureFromFile(std::wstring filename, GLuint& out_texture_id);
 
-        void PushPointPrimitive(const glm::vec3& pos_center, float size, const glm::vec3& cam_pos, const glm::vec4& color);
+        void PushPointPrimitive(const glm::vec3& pos_center, float size, const glm::vec3& cam_view, const glm::vec3& cam_pos, const glm::vec4& color);
 
-        void PushLinePrimitive(const glm::vec3& pos_start, const glm::vec3& pos_end, float line_width, const glm::vec3& normal, const glm::vec4& color);
+        void PushLinePrimitive(const glm::vec3& pos_start, const glm::vec3& pos_end, float line_width, const glm::vec3& cam_view, const glm::vec3& cam_pos, const glm::vec4& color);
 
-        void PushQuadPrimitive(const glm::vec3& pos_center, float width, float height, const glm::vec3& normal, const glm::vec3& up, const glm::vec4& color);
+        void PushQuadPrimitive(const glm::vec3& pos_center, float width, float height, const glm::vec3& cam_view, const glm::vec3& cam_up, const glm::vec4& color);
 
         void PushQuadPrimitive(const glm::vec3& pos_bottom_left, const glm::vec3& pos_upper_left, const glm::vec3& pos_upper_right, const glm::vec3& pos_bottom_right, const glm::vec4& color);
 
-        /// Default color requires alpha = zero to recognise in shader if global color for texture is set.
-        void Push2DColorTexture(GLuint texture_id, const glm::vec3& pos_bottom_left, const glm::vec3& pos_upper_left, const glm::vec3& pos_upper_right, const glm::vec3& pos_bottom_right, bool flip_y = false, const glm::vec4& color = glm::vec4(0.0f, 0.0f, 0.0f, 0.0));
+        /// Default color requires alpha = zero to recognise in shader whether global color for texture is set or not.
+        void Push2DColorTexture(GLuint texture_id, const glm::vec3& pos_bottom_left, const glm::vec3& pos_upper_left, const glm::vec3& pos_upper_right, const glm::vec3& pos_bottom_right, 
+            bool flip_y = false, const glm::vec4& color = glm::vec4(0.0f));
 
-        void Push2DDepthTexture(GLuint texture_id, const glm::vec3& pos_bottom_left, const glm::vec3& pos_upper_left, const glm::vec3& pos_upper_right, const glm::vec3& pos_bottom_right, bool flip_y = false, const glm::vec4& color = glm::vec4(0.0f, 0.0f, 0.0f, 0.0));
+        void Push2DDepthTexture(GLuint texture_id, const glm::vec3& pos_bottom_left, const glm::vec3& pos_upper_left, const glm::vec3& pos_upper_right, const glm::vec3& pos_bottom_right,
+            bool flip_y = false, const glm::vec4& color = glm::vec4(0.0f));
 
         inline void DrawPointPrimitives(glm::mat4& mat_mvp, glm::vec2 dim_vp) {
             this->drawPrimitives(RenderUtils::Primitives::POINTS, mat_mvp, dim_vp);
@@ -219,6 +221,8 @@ namespace cinematic {
             const glm::vec3& pos_bottom_right, const glm::vec4& color, const glm::vec4& attributes);
 
         void drawPrimitives(Primitives primitive, glm::mat4& mat_mvp, glm::vec2 dim_vp);
+
+        void sortPrimitiveQueue(Primitives primitive);
 
         bool createShader(vislib::graphics::gl::GLSLShader& shader, const std::string * const vertex_code, const std::string * const fragment_code);
 

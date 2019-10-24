@@ -117,14 +117,6 @@ namespace cinematic {
             return this->selectedKeyframe;
         }
 
-        // BOUNDINGBOX
-        inline void SetBoundingBox(std::shared_ptr<vislib::math::Cuboid<float>> bbx) {
-            this->boundingbox = bbx;
-        }
-        inline std::shared_ptr<vislib::math::Cuboid<float>> GetBoundingBox() {
-            return this->boundingbox;
-        }
-
         // INTERPOLATED KEYFRAME
         inline void SetInterpolationSteps(unsigned int s) {
             this->interpolSteps = s;
@@ -214,7 +206,6 @@ namespace cinematic {
 		std::shared_ptr<camera_state_type>             cameraState;
 		std::shared_ptr<std::vector<glm::vec3>>        interpolCamPos;
 		std::shared_ptr<std::vector<Keyframe>>	       keyframes;
-        std::shared_ptr<vislib::math::Cuboid<float>>   boundingbox;
         Keyframe						               selectedKeyframe;
         glm::vec3                                      startCtrllPos;
         glm::vec3                                      endCtrllPos;

@@ -97,7 +97,6 @@ namespace cinematic {
         camera_state_type            cameraState;
 		std::vector<glm::vec3 >      interpolCamPos;
 		std::vector<Keyframe>        keyframes;
-		vislib::math::Cuboid<float>  boundingBox;
         Keyframe                     selectedKeyframe;
         Keyframe                     dragDropKeyframe;
         glm::vec3                    startCtrllPos;
@@ -194,9 +193,9 @@ namespace cinematic {
 
         void linearizeSimTangent(Keyframe kf);
 
-        void snapKeyframe2AnimFrame(Keyframe& out_kf);
+        void snapKeyframe2AnimFrame(Keyframe& inout_kf);
 
-        void snapKeyframe2SimFrame(Keyframe& out_kf);
+        void snapKeyframe2SimFrame(Keyframe& inout_kf);
 
         bool undoAction(void);
 

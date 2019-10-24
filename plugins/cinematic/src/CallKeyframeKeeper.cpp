@@ -17,7 +17,6 @@ CallKeyframeKeeper::CallKeyframeKeeper(void) : core::AbstractGetDataCall()
     , cameraState(nullptr)
     , interpolCamPos(nullptr)
     , keyframes(nullptr)
-    , boundingbox(nullptr)
     , interpolSteps(10)
     , selectedKeyframe()
     , dropAnimTime(0.0f)
@@ -37,5 +36,4 @@ CallKeyframeKeeper::~CallKeyframeKeeper(void) {
     this->cameraState.reset();
 	this->keyframes.reset();
     this->interpolCamPos.reset();
-    this->boundingbox.reset();
 }
