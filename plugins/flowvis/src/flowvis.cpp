@@ -19,6 +19,7 @@
 #include "implicit_topology_reader.h"
 #include "implicit_topology_writer.h"
 #include "periodic_orbits.h"
+#include "periodic_orbits_theisel.h"
 #include "vector_field_reader.h"
 
 #include "glyph_renderer_2d.h"
@@ -62,6 +63,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::flowvis::implicit_topology_reader>();
             this->module_descriptions.RegisterAutoDescription<megamol::flowvis::implicit_topology_writer>();
             this->module_descriptions.RegisterAutoDescription<megamol::flowvis::periodic_orbits>();
+            this->module_descriptions.RegisterAutoDescription<megamol::flowvis::periodic_orbits_theisel>();
             this->module_descriptions.RegisterAutoDescription<megamol::flowvis::vector_field_reader>();
 
             // register renderer here:

@@ -1,0 +1,145 @@
+/*
+ * periodic_orbits_theisel.h
+ *
+ * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
+ * Alle Rechte vorbehalten.
+ */
+#pragma once
+
+#include "mmcore/Call.h"
+#include "mmcore/CalleeSlot.h"
+#include "mmcore/CallerSlot.h"
+#include "mmcore/Module.h"
+#include "mmcore/param/ParamSlot.h"
+
+#include "glad/glad.h"
+
+#include "Eigen/Dense"
+
+#include <array>
+#include <type_traits>
+#include <utility>
+#include <vector>
+
+namespace megamol
+{
+    namespace flowvis
+    {
+        /**
+        * Module for computing and visualizing the the periodic orbits of a vector field.
+        *
+        * @author Alexander Straub
+        */
+        class periodic_orbits_theisel : public core::Module
+        {
+            static_assert(std::is_same<GLfloat, float>::value, "'GLfloat' and 'float' must be the same type!");
+            static_assert(std::is_same<GLuint, unsigned int>::value, "'GLuint' and 'unsigned int' must be the same type!");
+
+        public:
+            /**
+             * Answer the name of this module.
+             *
+             * @return The name of this module.
+             */
+            static inline const char* ClassName() { return "periodic_orbits_theisel"; }
+
+            /**
+             * Answer a human readable description of this module.
+             *
+             * @return A human readable description of this module.
+             */
+            static inline const char* Description() { return "Compute and visualize periodic orbits of a 2D vector field using the method by Theisel et al."; }
+
+            /**
+             * Answers whether this module is available on the current system.
+             *
+             * @return 'true' if the module is available, 'false' otherwise.
+             */
+            static inline bool IsAvailable() { return true; }
+
+            /**
+             * Initialises a new instance.
+             */
+            periodic_orbits_theisel();
+
+            /**
+             * Finalises an instance.
+             */
+            virtual ~periodic_orbits_theisel();
+
+        protected:
+            /**
+             * Implementation of 'Create'.
+             *
+             * @return 'true' on success, 'false' otherwise.
+             */
+            virtual bool create() override;
+
+            /**
+             * Implementation of 'Release'.
+             */
+            virtual void release() override;
+
+        private:
+            /** Callbacks for the computed periodic orbits */
+            bool get_periodic_orbits_data(core::Call& call);
+            bool get_periodic_orbits_extent(core::Call& call);
+
+            /** Callbacks for the computed stream surfaces */
+            bool get_stream_surfaces_data(core::Call& call);
+            bool get_stream_surfaces_extent(core::Call& call);
+
+            /** Callbacks for the computed seed lines */
+            bool get_seed_lines_data(core::Call& call);
+            bool get_seed_lines_extent(core::Call& call);
+
+            /** Callbacks for writing results to file */
+            bool get_writer_callback(core::Call& call);
+            std::function<std::ostream&()> get_writer;
+
+            /** Output slot for found periodic orbits */
+            core::CalleeSlot periodic_orbits_slot;
+
+            /** Output slot for computed stream surfaces */
+            core::CalleeSlot stream_surface_slot;
+
+            /** Output slot for computed seed lines */
+            core::CalleeSlot seed_line_slot;
+
+            /** Output slot for writing results to file */
+            core::CalleeSlot result_writer_slot;
+
+            /** Input slot for getting the vector field */
+            core::CallerSlot vector_field_slot;
+
+            /** Input slot for getting the critical points */
+            core::CallerSlot critical_points_slot;
+
+            /** Transfer function for coloring stream surfaces */
+            core::param::ParamSlot transfer_function;
+
+            /** Parameters for stream surface computation */
+            core::param::ParamSlot integration_method;
+            core::param::ParamSlot num_integration_steps;
+            core::param::ParamSlot integration_timestep;
+            core::param::ParamSlot max_integration_error;
+
+            /** Input information */
+            std::array<unsigned int, 2> resolution;
+
+            /** Output vertices and indices of the triangle mesh */
+            std::vector<GLfloat> vertices;
+            std::vector<GLuint> indices;
+
+            /** Output slot for the periodic orbit glyphs */
+            SIZE_T periodic_orbits_hash;
+
+            std::vector<std::pair<float, std::vector<Eigen::Vector2f>>> periodic_orbits_output;
+
+            /** Output slot for the periodic orbit glyphs */
+            SIZE_T seed_line_hash;
+
+            std::vector<std::pair<float, std::vector<Eigen::Vector2f>>> seed_line_output;
+        };
+    }
+}
