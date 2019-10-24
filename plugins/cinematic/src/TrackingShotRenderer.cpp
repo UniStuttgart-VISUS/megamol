@@ -390,6 +390,7 @@ bool TrackingShotRenderer::OnMouseButton(MouseButton button, MouseButtonAction a
                 if (!(*ccc)(CallKeyframeKeeper::CallForSetCtrlPoints)) return false;
 
                 consumed = true;
+                this->manipulators.ResetHitManipulator();
                 //vislib::sys::Log::DefaultLog.WriteInfo("[TRACKINGSHOT RENDERER] [OnMouseButton] MANIPULATOR CHANGED.");
             }
             // ! Mode MUST alwasy be reset on left button 'up', if MOUSE moves out of viewport during manipulator is grabbed !

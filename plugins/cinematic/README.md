@@ -62,7 +62,7 @@ The module `KeyframeKeeper` exposes the following parameters:
 * `editSelected - positionVector`: Edit the position vector of the selected keyframe.
 * `editSelected - viewVector`: Edit the view vector of the selected keyframe.
 * `editSelected - resetView` (Assigned key: `CTRL+l`): Reset the view vector of the selected keyframe to the center of the model bounding box.
-* `editSelected - upVectorAngle`:  Edit up vector angle of the selected keyframe (in degrees).
+* `editSelected - upVectorAngle`:  Edit up vector relative to view vector of the selected keyframe.
 * `editSelected - apertureAngle`: Edit aperture angle of the selected keyframe.
 * `storage - filename`:  The name of the file to load or save keyframes. 
 * `storage - save` (Assigned key: `CTRL+s`): Save keyframes to file.

@@ -70,6 +70,10 @@ namespace cinematic {
             return this->paramSlots;
         }
 
+        inline void ResetHitManipulator(void) {
+            this->state.hit = nullptr;
+        }
+
     private:
 
         /**********************************************************************

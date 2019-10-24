@@ -34,7 +34,7 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module()
     , editCurrentPosParam("editSelected::positionVector", "Edit  position vector of the selected keyframe.")
     , resetViewParam("editSelected::resetView", "Reset the view vector of the selected keyframe.")
     , editCurrentViewParam("editSelected::viewVector", "Edit view vector of the selected keyframe.")
-    , editCurrentUpParam("editSelected::upVectorAngle", "Edit up vector angle of the selected keyframe (in degrees).")
+    , editCurrentUpParam("editSelected::upVectorAngle", "Edit up vector relative to view vector of the selected keyframe.")
     , editCurrentApertureParam("editSelected::apertureAngle", "Edit apperture angle of the selected keyframe.")
     , fileNameParam("storage::filename", "The name of the file to load or save keyframes.")
     , saveKeyframesParam("storage::save", "Save keyframes to file.")
@@ -134,7 +134,7 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module()
     this->editCurrentViewParam.SetParameter(new param::Vector3fParam(vislib::math::Vector<float, 3>(0.0f, 0.0f, 0.0f)));
     this->MakeSlotAvailable(&this->editCurrentViewParam);
 
-    this->editCurrentUpParam.SetParameter(new param::FloatParam(0.0f, 0.0f, 360.0f));
+    this->editCurrentUpParam.SetParameter(new param::Vector3fParam(vislib::math::Vector<float, 3>(0.0f, 0.0f, 0.0f)));
     this->MakeSlotAvailable(&this->editCurrentUpParam);
 
     this->editCurrentApertureParam.SetParameter(new param::FloatParam(60.0f, 0.0f, 180.0f));
@@ -465,8 +465,8 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
             cam_type::snapshot_type snapshot;
             camera.take_snapshot(snapshot, thecam::snapshot_content::all);
             glm::vec4 cam_up = snapshot.up_vector;
-
             glm::vec3 up = static_cast<glm::vec3>(cam_up);
+
             glm::vec3 new_view = vislib_vector_to_glm(this->editCurrentViewParam.Param<param::Vector3fParam>()->Value());
             glm::quat new_orientation = quaternion_from_vectors(new_view, up);
             camera.orientation(new_orientation);
@@ -485,19 +485,22 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
         this->editCurrentUpParam.ResetDirty();
 
         if (this->getKeyframeIndex(this->keyframes, this->selectedKeyframe) >= 0) {
-///TODO
-            //Keyframe tmp_kf = this->selectedKeyframe;
-            //megamol::core::view::Camera_2 camera(this->selectedKeyframe.GetCameraState());
-            //cam_type::snapshot_type snapshot;
-            //camera.take_snapshot(snapshot, thecam::snapshot_content::view_vector);
-            //glm::vec4 cam_view = snapshot.view_vector;
-            //float new_angle = this->editCurrentUpParam.Param<param::FloatParam>()->Value();
-            //glm::quat current_orientation = camera.orientation()
-            //camera.orientation(quaternion_from_up_angle(camera.orientation(), glm::radians(new_angle)));
-            //cam_type::minimal_state_type camera_state;
-            //camera.get_minimal_state(camera_state);
-            //this->selectedKeyframe.SetCameraState(camera_state);
-            //this->replaceKeyframe(tmp_kf, this->selectedKeyframe, true);
+            Keyframe tmp_kf = this->selectedKeyframe;
+
+            megamol::core::view::Camera_2 camera(this->selectedKeyframe.GetCameraState());
+            cam_type::snapshot_type snapshot;
+            camera.take_snapshot(snapshot, thecam::snapshot_content::view_vector);
+            glm::vec4 cam_view = snapshot.view_vector;
+            glm::vec3 view = static_cast<glm::vec3>(cam_view);
+
+            glm::vec3 new_up= vislib_vector_to_glm(this->editCurrentUpParam.Param<param::Vector3fParam>()->Value());
+            glm::quat new_orientation = quaternion_from_vectors(view, new_up);
+            camera.orientation(new_orientation);
+
+            cam_type::minimal_state_type camera_state;
+            camera.get_minimal_state(camera_state);
+            this->selectedKeyframe.SetCameraState(camera_state);
+            this->replaceKeyframe(tmp_kf, this->selectedKeyframe, true);
         }
         else {
             vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [EditCurrentUpParam] No existing keyframe selected.");
@@ -1145,43 +1148,14 @@ Keyframe KeyframeKeeper::interpolateKeyframe(float time) {
     }
 }
 
-glm::quat KeyframeKeeper::quaternion_interpolation(float u, glm::quat q0, glm::quat q1) {
 
-    return glm::normalize(glm::slerp(q0, q1, u));
+glm::quat KeyframeKeeper::quaternion_interpolation(float u, glm::quat q0, glm::quat q1) {
 
     /// Slerp - spherical linear interpolation
     // SOURCE: https://en.wikipedia.org/wiki/Slerp and https://web.mit.edu/2.998/www/QuaternionReport1.pdf
 
-    //glm::quat q0_ = glm::normalize(q0);
-    //glm::quat q1_ = glm::normalize(q1);
-    //auto dot = glm::dot(q0_, q1_);
-
-    //// If the dot product is negative, slerp won't take
-    //// the shorter path. Note that v1 and -v1 are equivalent when
-    //// the negation is applied to all four components. Fix by 
-    //// reversing one quaternion.
-    //if (dot < 0.0f) {
-    //    q0_ = -q0_;
-    //    dot = -dot;
-    //}
-
-    //// If the inputs are too close for comfort, linearly interpolate
-    //// and normalize the result.
-    //const float DOT_THRESHOLD = 0.9995f;
-    //if (dot > DOT_THRESHOLD) {
-    //    glm::quat q = ((1.0f - u) * q0_) + (u * q1_);
-    //    return glm::normalize(q);
-    //}
-
-    //float theta = std::acos(dot);
-    //float sin_theta = sin(theta);
-    //float c0 = sin((1.0f - u) * theta) / sin_theta;
-    //float c1 = sin(u * theta) / sin_theta;
-    //glm::quat q = (c0 * q0_) + (c1 * q1_);
-
-    //return glm::normalize(q);
+    return glm::normalize(glm::slerp(q0, q1, u));
 }
-
 
 
 float KeyframeKeeper::float_interpolation(float u, float f0, float f1, float f2, float f3) {
@@ -1194,12 +1168,6 @@ float KeyframeKeeper::float_interpolation(float u, float f0, float f1, float f2,
               (-(tl * f0) + (tl* f2)) * u +
               ((2.0f*tl * f0) + ((tl - 3.0f) * f1) + ((3.0f - 2.0f*tl) * f2) - (tl* f3)) * u * u +
               (-(tl * f0) + ((2.0f - tl) * f1) + ((tl - 2.0f) * f2) + (tl* f3)) * u * u * u;
-
-    // Original version:
-    /* float f = ((f1 * 2.0f) +
-               (f2 - f0) * u +
-              ((f0 * 2.0f) - (f1 * 5.0f) + (f2 * 4.0f) - f3) * u * u +
-              (-f0 + (f1 * 3.0f) - (f2 * 3.0f) + f3) * u * u * u) * 0.5f;*/
 
     return f;
 }
@@ -1475,10 +1443,9 @@ void KeyframeKeeper::updateEditParameters(Keyframe kf) {
     this->editCurrentSimTimeParam.Param<param::FloatParam>()->SetValue(kf.GetSimTime() * this->totalSimTime, false);
     this->editCurrentPosParam.Param<param::Vector3fParam>()->SetValue(glm_to_vislib_vector(pos), false);
     this->editCurrentViewParam.Param<param::Vector3fParam>()->SetValue(glm_to_vislib_vector(view), false);
+    this->editCurrentUpParam.Param<param::Vector3fParam>()->SetValue(glm_to_vislib_vector(up), false);
     this->editCurrentApertureParam.Param<param::FloatParam>()->SetValue(camera.aperture_angle(), false);
-
-///TODO
-    //this->editCurrentUpParam.Param<param::FloatParam>()->SetValue(glm::degrees(up_angle), false);
+    
 }
 
 
