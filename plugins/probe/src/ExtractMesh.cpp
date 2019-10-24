@@ -232,6 +232,14 @@ void ExtractMesh::calculateAlphaShape() {
 
         surface.reconstruct(_resultSurface, _polygons);
 
+        pcl::NormalEstimationOMP<pcl::PointNormal, pcl::PointNormal> new_normal_est;
+        new_normal_est.setKSearch(40);
+        std::shared_ptr<const pcl::PointCloud<pcl::PointNormal>> surface_shared =
+            std::make_shared<const pcl::PointCloud<pcl::PointNormal>>(_resultSurface);
+        new_normal_est.setInputCloud(surface_shared);
+        new_normal_est.compute(_resultSurface);
+
+        //this->flipNormalsWithCenterLine(_resultSurface);
     }
 }
 

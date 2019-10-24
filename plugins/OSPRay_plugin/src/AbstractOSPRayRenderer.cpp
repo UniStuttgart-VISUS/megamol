@@ -1022,13 +1022,13 @@ bool AbstractOSPRayRenderer::fillWorld() {
 
                         // check normal pointer
                         if (attrib.semantic == mesh::MeshDataAccessCollection::NORMAL) {
-                            //auto count =
-                            //    attrib.byte_size / attrib.stride;
-                            //auto ospType = OSP_FLOAT3;
-                            //if (attrib.stride == 4 * sizeof(float)) ospType = OSP_FLOAT3A;
-                            //normalData = ospNewData(count, ospType, attrib.data);
-                            //ospCommit(normalData);
-                            //ospSetData(geo.back(), "vertex.normal", normalData);
+                            auto count =
+                                attrib.byte_size / attrib.stride;
+                            auto ospType = OSP_FLOAT3;
+                            if (attrib.stride == 4 * sizeof(float)) ospType = OSP_FLOAT3A;
+                            normalData = ospNewData(count, ospType, attrib.data);
+                            ospCommit(normalData);
+                            ospSetData(geo.back(), "vertex.normal", normalData);
                         }
 
                         // check colorpointer and convert to rgba
