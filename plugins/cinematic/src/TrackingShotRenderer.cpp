@@ -288,12 +288,9 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D_2& call) {
 
     // Push manipulators ------------------------------------------------------
     if (keyframes->size() > 0) {
-        // Update manipulator data only if currently no manipulator is grabbed
-	    if (!this->manipulatorGrabbed) {
-            cam_type::minimal_state_type camera_state;
-            cam.get_minimal_state(camera_state);
-            this->manipulators.UpdateRendering(keyframes, skf, ccc->GetStartControlPointPosition(), ccc->GetEndControlPointPosition(), camera_state, glm::vec2(vp_fw, vp_fh), mvp);
-        }
+        cam_type::minimal_state_type camera_state;
+        cam.get_minimal_state(camera_state);
+        this->manipulators.UpdateRendering(keyframes, skf, ccc->GetStartControlPointPosition(), ccc->GetEndControlPointPosition(), camera_state, glm::vec2(vp_fw, vp_fh), mvp);
         this->manipulators.PushRendering(this->utils);
     }
 

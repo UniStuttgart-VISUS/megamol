@@ -125,35 +125,40 @@ bool KeyframeManipulators::UpdateRendering(const std::shared_ptr<std::vector<Key
         this->toggleOusideBboxParam.ResetDirty();
     }
 
-    // Update current state
-    this->state.viewport = viewport_dim;
-    this->state.mvp = mvp;
-    this->state.cam_min_snapshot = minimal_snapshot;
-    this->state.selected_keyframe = selected_keyframe;
-    this->state.first_ctrl_point = first_ctrl_pos;
-    this->state.last_ctrl_point = last_ctrl_pos;
-    this->state.selected_index = -1;
-    // Set primitive dimensions (empirical)
-    float length = this->state.bbox.LongestEdge();
-    this->state.line_length = length * 0.3f;
-    this->state.line_width = this->state.line_length / 30.0f;
-    this->state.point_radius = this->state.line_length / 6.0f;
-    if (this->state.lookat_length <= 0.0f) {
-        this->state.lookat_length = 2.0f * this->state.line_length;
-    }
-
-    // Update keyframe position selectors
     auto keyframe_count = keyframes->size();
-    this->selectors.resize(keyframe_count);
-    std::array<float, 3> pos;
-    for (size_t i = 0; i < keyframe_count; ++i) {
-        this->selectors[i].show = true;
-        this->selectors[i].variety = Manipulator::Variety::SELECTOR_KEYFRAME_POSITION;
-        this->selectors[i].rigging = Manipulator::Rigging::NONE;
-        pos = keyframes->operator[](i).GetCameraState().position;
-        this->selectors[i].vector = glm::vec3(pos[0], pos[1], pos[2]);
-        if (keyframes->operator[](i) == this->state.selected_keyframe) {
-            this->state.selected_index = i;
+
+    // Following stuff should not be updated during active manipulator dragging:
+    if (this->state.hit == nullptr) {
+
+        // Update current state
+        this->state.viewport = viewport_dim;
+        this->state.mvp = mvp;
+        this->state.cam_min_snapshot = minimal_snapshot;
+        this->state.selected_keyframe = selected_keyframe;
+        this->state.first_ctrl_point = first_ctrl_pos;
+        this->state.last_ctrl_point = last_ctrl_pos;
+        this->state.selected_index = -1;
+        // Set primitive dimensions (empirical)
+        float length = this->state.bbox.LongestEdge();
+        this->state.line_length = length * 0.3f;
+        this->state.line_width = this->state.line_length / 30.0f;
+        this->state.point_radius = this->state.line_length / 6.0f;
+        if (this->state.lookat_length <= 0.0f) {
+            this->state.lookat_length = 2.0f * this->state.line_length;
+        }
+
+        // Update keyframe position selectors
+        this->selectors.resize(keyframe_count);
+        std::array<float, 3> pos;
+        for (size_t i = 0; i < keyframe_count; ++i) {
+            this->selectors[i].show = true;
+            this->selectors[i].variety = Manipulator::Variety::SELECTOR_KEYFRAME_POSITION;
+            this->selectors[i].rigging = Manipulator::Rigging::NONE;
+            pos = keyframes->operator[](i).GetCameraState().position;
+            this->selectors[i].vector = glm::vec3(pos[0], pos[1], pos[2]);
+            if (keyframes->operator[](i) == this->state.selected_keyframe) {
+                this->state.selected_index = i;
+            }
         }
     }
 
@@ -419,7 +424,6 @@ bool KeyframeManipulators::ProcessHitManipulator(float mouse_x, float mouse_y) {
         glm::quat new_orientation = quaternion_from_vectors(view, new_up);
         selected_camera.orientation(new_orientation);
 
-        // Necessary for updated manipulator rendering
         this->state.hit->vector = glm::normalize(new_up);
     }
     else {
