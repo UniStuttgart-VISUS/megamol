@@ -14,7 +14,7 @@
 
     <shader name="textureAlphaCompositing">
         <snippet type="version">430</snippet>
-        <snippet name="Main"             type="file">comp/textureAlphaBlend_c.glsl</snippet>
+        <snippet name="Main"             type="file">comp/textureAlphaCompositing_c.glsl</snippet>
     </shader>
 
     <shader name="ssao">
