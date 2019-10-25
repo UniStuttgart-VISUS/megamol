@@ -142,11 +142,15 @@ bool RenderMDIMesh::GetExtents(core::view::CallRender3D_2& call) {
 	
 	if (rtc == NULL)
 		return false;
-	
+
+    auto meta_data = rtc->getMetaData();
+    //meta_data.m_frame_ID = static_cast<int>(cr->LastFrameTime());
+    //rtc->setMetaData(meta_data);
+
 	if (!(*rtc)(1))
 		return false;
 
-    auto meta_data = rtc->getMetaData();
+    meta_data = rtc->getMetaData();
 
 	cr->SetTimeFramesCount(meta_data.m_frame_cnt);
     cr->AccessBoundingBoxes() = meta_data.m_bboxs;

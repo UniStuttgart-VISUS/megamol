@@ -29,6 +29,7 @@
 #include "mesh/3DUIRenderTaskDataSource.h"
 #include "mesh/MeshCalls.h"
 #include "mesh/SimpleGPUMtlDataSource.h"
+#include "MeshViewerRenderTasks.h"
 
 
 /* anonymous namespace hides this type from any other object files */
@@ -66,6 +67,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::GPUMeshes>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::SimpleGPUMtlDataSource>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::WavefrontObjLoader>();
+        this->module_descriptions.RegisterAutoDescription<megamol::mesh::MeshViewerRenderTasks>();
 
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::Render3DUI>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::ThreeDimensionalUIRenderTaskDataSource>();

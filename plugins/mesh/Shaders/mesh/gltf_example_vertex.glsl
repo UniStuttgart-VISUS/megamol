@@ -22,7 +22,7 @@ layout(location = 2) out vec3 vColour;
 void main()
 {
     //gl_Position = vec4(v_position.xy, 0.5 ,1.0);
-    vNormal = v_normal;
+    vNormal = inverse(transpose(mat3(mesh_shader_params[gl_DrawIDARB].transform))) * v_normal;
     vColour = vec3(0.8,0.8,0.8);
     mat4 object_transform = mesh_shader_params[gl_DrawIDARB].transform;
     vWorldPos = (object_transform * vec4(v_position,1.0)).xyz;

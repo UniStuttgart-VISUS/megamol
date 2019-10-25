@@ -29,14 +29,14 @@ bool megamol::mesh::DebugGPURenderTaskDataSource::getDataCallback(core::Call & c
 	if(rtc == NULL)
 		return false;
 
-	CallGPUMaterialData* mtlc = this->m_material_callerSlot.CallAs<CallGPUMaterialData>();
+	CallGPUMaterialData* mtlc = this->m_material_slot.CallAs<CallGPUMaterialData>();
 	if (mtlc == NULL)
 		return false;
 
 	if (!(*mtlc)(0))
 		return false;
 
-	CallGPUMeshData* mc = this->m_mesh_callerSlot.CallAs<CallGPUMeshData>();
+	CallGPUMeshData* mc = this->m_mesh_slot.CallAs<CallGPUMeshData>();
 	if (mc == NULL)
 		return false;
 
@@ -57,12 +57,12 @@ bool megamol::mesh::DebugGPURenderTaskDataSource::getDataCallback(core::Call & c
 		auto const& gpu_batch_mesh = gpu_mesh_storage->getMeshes()[sub_mesh.batch_index].mesh;
 		auto const& shader = gpu_mtl_storage->getMaterials().front().shader_program;
 
-		std::vector<glowl::DrawElementsCommand> draw_commands(1, sub_mesh.sub_mesh_draw_command);
+		std::vector<glowl::DrawElementsCommand> draw_commands(1000, sub_mesh.sub_mesh_draw_command);
 
-		std::vector<vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR >> object_transform(1);
+		std::vector<vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR >> object_transform(1000);
 		typedef std::vector<vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR >> PerTaskData;
 
-		for (int i = 0; i < 1; ++i)
+		for (int i = 0; i < 1000; ++i)
 		{
 			GLfloat scale = distr(generator);
 			scale = 0.1f;
