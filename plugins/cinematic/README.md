@@ -71,33 +71,33 @@ The module `KeyframeKeeper` exposes the following parameters:
 The module `TrackingShotRenderer` exposes the following parameters:
 (The values in brackets indicate the default values.)
 
-* `splineSubdivision` (`20`): Amount of interpolation steps between keyframes.
-* `toggleManipulators` (Assigned key: `CTRL+q`): Toggle different manipulators for the selected keyframe.            
+* `splineSubdivision` (`20`): Amount of interpolation steps between keyframes.          
 * `helpText` (Assigned key: `CTRL+h`): Show/hide help text for key assignments.
-* `manipulatorsOutsideBBox` (Assigned key: `CTRL+w`): Keep manipulators always outside of model bounding box.
+* `manipulators - toggleVisibleGroup` (Assigned key: `CTRL+q`): Toggle visibility of different manipulator groups.  
+* `manipulators - visibleGroup`: Select visible manipulator group.  
+* `manipulators - showOutsideBBox` (Assigned key: `CTRL+w`): Show manipulators always outside of model bounding box.
 
 The module `CinematicView` exposes the following parameters:
 (The values in brackets indicate the default values.)
 
-* `renderAnim` (Assigned key: `CTRL+r`): Toggle rendering of complete animation to png files.   
+* `cinematic - renderAnim` (Assigned key: `CTRL+r`): Toggle rendering of complete animation to png files.   
    Whenever rendering is begun a new folder holding the frame image files (png) is generated.
-* `playPreview` (Assigned key: `CTRL+space`): Toggle playing animation as preview.
-* `skyboxSide` (`NONE`): Select the skybox side.
-* `cubeMode` (`false`): Activate mode that renders the bounding box side selected with `skyboxSide`.
-* `cinematicWidth` (`1920`): The width resolution of the cinematic view to render.
-* `cinematicHeight`(`1080`): The height resolution of the cinematic view to render.
-* `fps` (`24`): The frames per second the animation should be rendered.
-* `firstRenderFrame` (`0`): Set first frame number to start rendering with.
-* `delayFirstRenderFrame` (`10.0`): Delay (in seconds) to wait until first frame is ready and rendering to file is started.
-* `frameFolder` Specify folder where the frame files should be stored.
-* `addSBSideToName` (`false`): If true, adds the value of `skyboxSide` to the filename of the written image.
-* `stereo - eye` (`Left`) Eye position (for stereo view).
-* `stereo - projection` (`Mono Perspective`) Camera projection.
+* `cinematic - playPreview` (Assigned key: `CTRL+space`): Toggle playing animation as preview.
+* `cinematic - skyboxSide` (`NONE`): Select the skybox side.
+* `cinematic - cubeMode` (`false`): Activate mode that renders the bounding box side selected with `skyboxSide`.
+* `cinematic - cinematicWidth` (`1920`): The width resolution of the cinematic view to render.
+* `cinematic - cinematicHeight`(`1080`): The height resolution of the cinematic view to render.
+* `cinematic - fps` (`24`): The frames per second the animation should be rendered.
+* `cinematic - firstRenderFrame` (`0`): Set first frame number to start rendering with.
+* `cinematic - delayFirstRenderFrame` (`10.0`): Delay (in seconds) to wait until first frame is ready and rendering to file is started.
+* `cinematic - frameFolder` Specify folder where the frame files should be stored.
+* `cinematic - addSBSideToName` (`false`): If true, adds the value of `skyboxSide` to the filename of the written image.
+* `cinematic - stereo - eye` (`Left`) Eye position (for stereo view).
+* `cinematic - stereo - projection` (`Mono Perspective`) Camera projection.
 
 The module `TimeLineRenderer` exposes the following parameters:
 (The values in brackets indicate the default values.)
 
-* `fontSize` (`22.0`): The font size.
 * `gotoRightFrame` (Assigned key: `right arrow`): Move to right animation time frame.
 * `gotoLeftFrame` (Assigned key: `left arrow`): Move to left animation time frame.
 * `resetAxes` (Assigned key: `CTRL+x`): Reset all shifted and scaled time axes.
@@ -106,10 +106,10 @@ The module `ReplacementRenderer` exposes the following parameters:
 (The values in brackets indicate the default values.)
 
 * `alpha` (`0.75`): The alpha value of the replacement rendering.
-* `replacementRendering` (`false`): Show/hide replacement rendering for the model (coloured bounding box).
-* `replacmentKeyAssign` (` `): Assign a key for the replacement rendering button `toggleReplacement`.
-* `toggleReplacement` (Assigned key: ` `): Toggle replacement rendering. Key can be assigned via `replacmentKeyAssign` parameter. 
-    
+* `hotkeyAssignment` (` `): Choose hotkey for replacement rendering button `toggleReplacement`.
+* `toggleReplacement` (Assigned key: ` `): Toggle replacement rendering. Hotkey can be chosen from list offered by `hotkeyAssignment` parameter. 
+* `replacement` (`false`): Show/hide replacement rendering for chained renderer (coloured bounding box).
+
 ---
 
 ## How to use the modules

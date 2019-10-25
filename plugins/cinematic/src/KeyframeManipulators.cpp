@@ -145,9 +145,9 @@ bool KeyframeManipulators::UpdateRendering(const std::shared_ptr<std::vector<Key
         this->state.selected_index = -1;
         // Set primitive dimensions (empirical)
         float length = this->state.bbox.LongestEdge();
-        this->state.line_length = length * 0.3f;
-        this->state.line_width = this->state.line_length / 30.0f;
-        this->state.point_radius = this->state.line_length / 6.0f;
+        this->state.line_length  = length * 0.3f;
+        this->state.line_width   = length * 0.01f;
+        this->state.point_radius = length * 0.05;
         if (this->state.lookat_length <= 0.0f) {
             this->state.lookat_length = 2.0f * this->state.line_length;
         }

@@ -159,6 +159,7 @@ namespace cinematic {
         bool                                    manipulatorGrabbed;
         unsigned int                            interpolSteps;
         bool                                    showHelpText;
+        float                                   lineWidth;
 
         /**********************************************************************
         * callbacks

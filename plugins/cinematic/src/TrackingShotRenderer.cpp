@@ -22,15 +22,16 @@ TrackingShotRenderer::TrackingShotRenderer(void) : Renderer3DModule_2()
     , keyframeKeeperSlot("keyframeKeeper", "Connects to the Keyframe Keeper.")
     , stepsParam("splineSubdivision", "Amount of interpolation steps between keyframes.")
     , toggleHelpTextParam("helpText", "Show/hide help text for key assignments.")
-    , interpolSteps(20)
-    , showHelpText(false)
     , manipulators()
-    , manipulatorGrabbed(false)
     , utils()
     , fbo()
     , mouseX(0.0f)
     , mouseY(0.0f)
-    , texture(0) {
+    , texture(0)
+    , manipulatorGrabbed(false)
+    , interpolSteps(20)
+    , showHelpText(false)
+    , lineWidth(1.0f) {
 
     this->keyframeKeeperSlot.SetCompatibleCall<CallKeyframeKeeperDescription>();
     this->MakeSlotAvailable(&this->keyframeKeeperSlot);
@@ -95,6 +96,9 @@ bool TrackingShotRenderer::GetExtents(megamol::core::view::CallRender3D_2& call)
 
         vislib::math::Cuboid<float> bbox = cr3d_out->AccessBoundingBoxes().BoundingBox();
         vislib::math::Cuboid<float> cbox = cr3d_out->AccessBoundingBoxes().ClipBox();
+
+        // Empirical line width
+        this->lineWidth = bbox.LongestEdge() * 0.01f;
 
         // Grow bounding box to manipulators and get information of bbox of model
         this->manipulators.UpdateExtents(bbox);
@@ -289,7 +293,6 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     }
 
     // Push spline ------------------------------------------------------------
-    const float line_width = 5.0f;
     auto interpolKeyframes = ccc->GetInterpolCamPositions();
     if (interpolKeyframes == nullptr) {
         vislib::sys::Log::DefaultLog.WriteWarn("[TRACKINGSHOT RENDERER] [Render] Pointer to interpolated camera positions array is nullptr.");
@@ -301,7 +304,7 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D_2& call) {
         for (int i = 0; i < (keyframeCount - 1); i++) {
             glm::vec3 start = interpolKeyframes->operator[](i);
             glm::vec3 end = interpolKeyframes->operator[](i + 1);
-            this->utils.PushLinePrimitive(start, end, line_width, cam_view, cam_pos, color);
+            this->utils.PushLinePrimitive(start, end, this->lineWidth, cam_view, cam_pos, color);
         }
     }
 

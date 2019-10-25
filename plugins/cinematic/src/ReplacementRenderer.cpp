@@ -19,8 +19,8 @@ using namespace vislib;
 ReplacementRenderer::ReplacementRenderer(void) : megamol::core::view::RendererModule<megamol::core::view::CallRender3D_2>(),
     alphaParam("alpha", "The alpha value of the replacement rendering."),
     replacementRenderingParam("replacement", "Show/hide replacement rendering for chained renderer."),
-    replacementKeyParam("hotkey_assignment", "Choose hotkey for replacement rendering button."),
-    toggleReplacementParam("toggle_replacement", "Toggle replacement rendering."),
+    replacementKeyParam("hotkeyAssignment", "Choose hotkey for replacement rendering button."),
+    toggleReplacementParam("toggleReplacement", "Toggle replacement rendering."),
     toggle(false),
     utils(),
     bbox()
