@@ -691,11 +691,11 @@ namespace megamol
             }
             catch (const std::exception& e)
             {
-                vislib::sys::Log::DefaultLog.WriteInfo("Error while extracting periodic orbits: %s", e.what());
+                vislib::sys::Log::DefaultLog.WriteError("Error while extracting periodic orbits: %s", e.what());
             }
             catch (...)
             {
-                vislib::sys::Log::DefaultLog.WriteInfo("Unknown error while extracting periodic orbits");
+                vislib::sys::Log::DefaultLog.WriteError("Unknown error while extracting periodic orbits");
             }
         }
 

@@ -12,12 +12,17 @@
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 
+#include "vislib/math/Cuboid.h"
+#include "vislib/math/Rectangle.h"
+
 #include "glad/glad.h"
 
 #include "Eigen/Dense"
 
+#include "tpf/data/tpf_grid.h"
+
 #include <array>
-#include <type_traits>
+#include <memory>
 #include <utility>
 #include <vector>
 
@@ -30,8 +35,8 @@ namespace megamol
         *
         * @author Alexander Straub
         */
-        class periodic_orbits_theisel : public core::Module
-        {
+        class periodic_orbits_theisel : public core::Module {
+
             static_assert(std::is_same<GLfloat, float>::value, "'GLfloat' and 'float' must be the same type!");
             static_assert(std::is_same<GLuint, unsigned int>::value, "'GLuint' and 'unsigned int' must be the same type!");
 
@@ -81,6 +86,29 @@ namespace megamol
             virtual void release() override;
 
         private:
+            /** Get input data and extent from called modules */
+            bool get_input_data();
+            bool get_input_extent();
+
+            /**
+             * Computer periodic orbits as proposed by Theisel et al.
+             * in their paper "Grid-Independent Detection of Closed
+             * Stream Lines in 2D Vector Fields" from 2004.
+             */
+            bool compute_periodic_orbits();
+
+            /**
+             * Advect given point with the selected integration method
+             *
+             * @param grid Vector field
+             * @param point Point, which will be advected
+             * @param delta Time step size, which can be adjusted by the integration method
+             * @param forward True: forward integration, false: reverse integration
+             */
+            void advect_point(const tpf::data::grid<float, float, 2, 2>& grid, Eigen::Vector3f& point, float& delta, bool forward) const;
+            void advect_point_rk4(const tpf::data::grid<float, float, 2, 2>& grid, Eigen::Vector3f& point, float& delta, bool forward) const;
+            void advect_point_rk45(const tpf::data::grid<float, float, 2, 2>& grid, Eigen::Vector3f& point, float& delta, bool forward) const;
+
             /** Callbacks for the computed periodic orbits */
             bool get_periodic_orbits_data(core::Call& call);
             bool get_periodic_orbits_extent(core::Call& call);
@@ -123,23 +151,45 @@ namespace megamol
             core::param::ParamSlot num_integration_steps;
             core::param::ParamSlot integration_timestep;
             core::param::ParamSlot max_integration_error;
+            core::param::ParamSlot num_subdivisions;
 
-            /** Input information */
+            /** Bounding rectangle and box */
+            vislib::math::Rectangle<float> bounding_rectangle;
+            vislib::math::Cuboid<float> bounding_box;
+
+            /** Input vector field */
+            SIZE_T vector_field_hash;
+            bool vector_field_changed;
+
             std::array<unsigned int, 2> resolution;
+            std::shared_ptr<std::vector<float>> grid_positions;
+            std::shared_ptr<std::vector<float>> vectors;
 
-            /** Output vertices and indices of the triangle mesh */
-            std::vector<GLfloat> vertices;
-            std::vector<GLuint> indices;
+            /** Input critical points */
+            SIZE_T critical_points_hash;
+            bool critical_points_changed;
 
-            /** Output slot for the periodic orbit glyphs */
+            std::shared_ptr<std::vector<float>> vertices;
+            std::shared_ptr<std::vector<unsigned int>> lines;
+
+            /** Output stream surfaces */
+            SIZE_T stream_surface_hash;
+
+            std::shared_ptr<std::vector<float>> forward_vertices;
+            std::shared_ptr<std::vector<float>> backward_vertices;
+            std::shared_ptr<std::vector<unsigned int>> triangles;
+
+            /** Output periodic orbit glyphs */
             SIZE_T periodic_orbits_hash;
 
-            std::vector<std::pair<float, std::vector<Eigen::Vector2f>>> periodic_orbits_output;
+            std::vector<std::pair<float, std::vector<Eigen::Vector2f>>> periodic_orbits;
 
-            /** Output slot for the periodic orbit glyphs */
+            /** Output seed line glyphs */
             SIZE_T seed_line_hash;
 
-            std::vector<std::pair<float, std::vector<Eigen::Vector2f>>> seed_line_output;
+            std::vector<std::pair<float, std::vector<Eigen::Vector2f>>> seed_lines;
+
+            /**  */
         };
     }
 }
