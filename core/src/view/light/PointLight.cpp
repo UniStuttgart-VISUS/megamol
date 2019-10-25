@@ -8,6 +8,7 @@
 #include "mmcore/view/light/PointLight.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/Vector3fParam.h"
+#include "mmcore/param/ColorParam.h"
 
 using namespace megamol::core::view::light;
 
@@ -37,12 +38,11 @@ PointLight::~PointLight(void) { this->Release(); }
  */
 void PointLight::readParams() {
     lightContainer.lightType = lightenum::POINTLIGHT;
-    auto lcolor = this->lightColor.Param<core::param::Vector3fParam>()->Value().PeekComponents();
-    lightContainer.lightColor.assign(lcolor, lcolor + 3);
+	lightContainer.lightColor = this->lightColor.Param<core::param::ColorParam>()->Value();
     lightContainer.lightIntensity = this->lightIntensity.Param<core::param::FloatParam>()->Value();
 
     auto pl_pos = this->pl_position.Param<core::param::Vector3fParam>()->Value().PeekComponents();
-    lightContainer.pl_position.assign(pl_pos, pl_pos + 3);
+    std::copy(pl_pos, pl_pos+3, lightContainer.pl_position.begin());
     lightContainer.pl_radius = this->pl_radius.Param<core::param::FloatParam>()->Value();
 }
 

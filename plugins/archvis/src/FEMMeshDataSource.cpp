@@ -3,7 +3,7 @@
 #include "glowl/VertexLayout.hpp"
 
 #include "FEMDataCall.h"
-#include "mesh/CallGPUMeshData.h"
+#include "mesh/MeshCalls.h"
 
 megamol::archvis::FEMMeshDataSource::FEMMeshDataSource()
     : m_fem_callerSlot("getFEMFile", "Connects the data source with loaded FEM data"), m_FEM_model_hash(0) {
@@ -118,7 +118,7 @@ bool megamol::archvis::FEMMeshDataSource::getDataCallback(core::Call& caller) {
     m_gpu_meshes->addMesh(
         vertex_descriptor, vb_iterators, ib_iterators, GL_UNSIGNED_INT, GL_STATIC_DRAW, GL_TRIANGLES);
 
-    mc->setGPUMeshes(m_gpu_meshes);
+    mc->setData(m_gpu_meshes);
     
     this->m_FEM_model_hash = fem_call->DataHash();
 

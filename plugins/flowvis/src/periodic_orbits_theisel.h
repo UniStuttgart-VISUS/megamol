@@ -19,7 +19,7 @@
 
 #include "Eigen/Dense"
 
-#include "tpf/data/tpf_grid.h"
+#include "data/tpf_grid.h"
 
 #include <array>
 #include <memory>

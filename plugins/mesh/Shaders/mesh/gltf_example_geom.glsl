@@ -1,12 +1,12 @@
 layout (triangles) in;
 layout (triangle_strip, max_vertices = 15) out; // 3 original + 4 per line
 
-in vec3 vWorldPos[3];
-in vec3 vNormal[3];
+layout(location = 0) in vec3 vWorldPos[3];
+layout(location = 1) in vec3 vNormal[3];
 
-out vec3 worldPos;
-out vec3 normal;
-out vec3 colour;
+layout(location = 0) out vec3 worldPos;
+layout(location = 1) out vec3 normal;
+layout(location = 2) out vec3 colour;
 
 void main() 
 {    

@@ -11,14 +11,14 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/TransferFunctionParam.h"
 
-#include "mesh/CallGPUMeshData.h"
+#include "mesh/MeshCalls.h"
 
 #include "vislib/sys/Log.h"
 
 #include "Eigen/Dense"
 
-#include "tpf/data/tpf_grid.h"
-#include "tpf/data/tpf_grid_information.h"
+#include "data/tpf_grid.h"
+#include "data/tpf_grid_information.h"
 
 #include <algorithm>
 #include <array>
@@ -84,16 +84,7 @@ periodic_orbits_theisel::periodic_orbits_theisel()
     this->MakeSlotAvailable(&this->critical_points_slot);
 
     // Create transfer function parameters
-    this->transfer_function << new core::param::TransferFunctionParam(
-        "{\"Interpolation\":\"LINEAR\",\"Nodes\":[[0.0,0.0,0.423499,1.0,0.0],[0.0,0.119346,0.529237,1.0,0.125],"
-        "[0.0,0.238691,0.634976,1.0,0.1875],[0.0,0.346852,0.68788,1.0,0.25],[0.0,0.45022,0.718141,1.0,0.3125],"
-        "[0.0,0.553554,0.664839,1.0,0.375],[0.0,0.651082,0.519303,1.0,0.4375],[0.115841,0.72479,0.352857,1.0,0."
-        "5],"
-        "[0.326771,0.781195,0.140187,1.0,0.5625],[0.522765,0.798524,0.0284624,1.0,0.625],[0.703162,0.788685,0."
-        "00885756,1.0,0.6875],"
-        "[0.845118,0.751133,0.0,1.0,0.75],[0.955734,0.690825,0.0,1.0,0.8125],[0.995402,0.567916,0.0618524,1.0,"
-        "0.875],"
-        "[0.987712,0.403398,0.164851,1.0,0.9375],[0.980407,0.247105,0.262699,1.0,1.0]],\"TextureSize\":128}");
+    this->transfer_function << new core::param::TransferFunctionParam("");
     this->MakeSlotAvailable(&this->transfer_function);
 
     // Create computation parameters

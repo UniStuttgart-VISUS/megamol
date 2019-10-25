@@ -27,29 +27,7 @@ if(BUILD_FLOWVIS_PLUGIN)
   endif()
 
   # Get TPF
-  add_external_project(tpf_ext
-    GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/tpf.git)
-
-  add_external_library(tpf INTERFACE DEPENDS tpf_ext INCLUDE_DIR "include")
-
-  set(tpf_compile_definitions __tpf_use_openmp)
-
-   if(USE_MPI)
-    set(tpf_compile_definitions ${tpf_compile_definitions} __tpf_use_mpi)
-  endif()
-
-  # Find CGAL
-  find_package(CGAL REQUIRED)
-
-  get_target_property(CGAL_minsizerel CGAL::CGAL IMPORTED_LOCATION_MINSIZEREL)
-  get_target_property(CGAL_relwithdebinfo CGAL::CGAL IMPORTED_LOCATION_RELWITHDEBINFO)
-
-  if(NOT CGAL_minsizerel)
-    set_target_properties(CGAL::CGAL PROPERTIES MAP_IMPORTED_CONFIG_MINSIZEREL Release)
-  endif()
-  if(NOT CGAL_relwithdebinfo)
-    set_target_properties(CGAL::CGAL PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO Release)
-  endif()
+  require_external(tpf)
 
   # Create CUDA library
   add_subdirectory(cuda)
@@ -60,7 +38,7 @@ if(BUILD_FLOWVIS_PLUGIN)
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS _ENABLE_EXTENDED_ALIGNED_STORAGE ${tpf_compile_definitions})
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src" PRIVATE ${CGAL_INCLUDE_DIRS} ${CGAL_3RD_PARTY_INCLUDE_DIRS})
-  target_link_libraries(${PROJECT_NAME} PRIVATE core mmstd_datatools mesh tpf Eigen CGAL::CGAL flowvis_streamlines_cuda)
+  target_link_libraries(${PROJECT_NAME} PRIVATE core mmstd_datatools mesh tpf flowvis_streamlines_cuda)
 
   # Installation rules for generated files
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")

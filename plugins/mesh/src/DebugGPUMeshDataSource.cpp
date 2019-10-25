@@ -1,5 +1,5 @@
 #include "DebugGPUMeshDataSource.h"
-#include "mesh/CallGPUMeshData.h"
+#include "mesh/MeshCalls.h"
 
 megamol::mesh::DebugGPUMeshDataSource::DebugGPUMeshDataSource() {}
 
@@ -17,7 +17,7 @@ bool megamol::mesh::DebugGPUMeshDataSource::getDataCallback(core::Call& caller) 
     CallGPUMeshData* mc = dynamic_cast<CallGPUMeshData*>(&caller);
     if (mc == NULL) return false;
 
-    mc->setGPUMeshes(m_gpu_meshes);
+    mc->setData(m_gpu_meshes);
 
     return true;
 }

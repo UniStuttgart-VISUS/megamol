@@ -7,13 +7,13 @@
 
 #pragma once
 
-#include "mmcore/view/Renderer3DModule.h"
+#include "mmcore/view/Renderer3DModule_2.h"
 #include "AbstractMultiShaderQuartzRenderer.h"
 #include "mmcore/CallerSlot.h"
 #include "QuartzCrystalDataCall.h"
 #include "mmcore/param/ParamSlot.h"
 #include "QuartzParticleGridDataCall.h"
-#include "mmcore/view/CallRender3D.h"
+#include "mmcore/view/CallRender3D_2.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 
 
@@ -23,7 +23,7 @@ namespace demos {
     /**
      * Module rendering gridded quarts particle data
      */
-    class QuartzRenderer : public core::view::Renderer3DModule, public AbstractMultiShaderQuartzRenderer {
+    class QuartzRenderer : public core::view::Renderer3DModule_2, public AbstractMultiShaderQuartzRenderer {
     public:
 
         /**
@@ -70,7 +70,7 @@ namespace demos {
          *
          * @return The return value of the function.
          */
-        virtual bool GetExtents(core::Call& call);
+        virtual bool GetExtents(core::view::CallRender3D_2& call);
 
         /**
          * The render callback.
@@ -79,7 +79,7 @@ namespace demos {
          *
          * @return The return value of the function.
          */
-        virtual bool Render(core::Call& call);
+        virtual bool Render(core::view::CallRender3D_2& call);
 
         /**
          * Implementation of 'Create'.
@@ -103,9 +103,6 @@ namespace demos {
          * @return The shader
          */
         virtual vislib::graphics::gl::GLSLShader* makeShader(const CrystalDataCall::Crystal& c);
-
-        /** The rendering scale */
-        float scale;
 
         /** Shows/Hides the axes (x and y) of the clipping plane */
         core::param::ParamSlot showClipAxesSlot;

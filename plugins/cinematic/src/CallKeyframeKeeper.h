@@ -12,15 +12,12 @@
 
 #include "mmcore/AbstractGetDataCall.h"
 #include "mmcore/factories/CallAutoDescription.h"
-
-#include "vislib/Array.h"
-#include "vislib/sys/Log.h"
-#include "vislib/math/Point.h"
+#include "mmcore/view/Camera_2.h"
 
 #include "Keyframe.h"
 
 
-// GLOBAL CC DEFINES
+// GLOBAL CINEMATIC DEFINES
 #ifndef CC_MENU_HEIGHT
     #define CC_MENU_HEIGHT (25.0f)
 #endif
@@ -107,10 +104,10 @@ namespace cinematic {
         **********************************************************************/
 
         // KEYFRAME ARRAY
-		inline vislib::Array<Keyframe>* getKeyframes(){
+		inline std::shared_ptr<std::vector<Keyframe>> getKeyframes(){
 			return this->keyframes;
 		}
-        inline void setKeyframes(vislib::Array<Keyframe>* kfs) {
+        inline void setKeyframes(std::shared_ptr<std::vector<Keyframe>> kfs) {
             this->keyframes = kfs;
         }
 
@@ -127,10 +124,10 @@ namespace cinematic {
         }
 
         // BOUNDINGBOX
-        inline void setBoundingBox(vislib::math::Cuboid<float>* bbx) {
+        inline void setBoundingBox(std::shared_ptr<vislib::math::Cuboid<float>> bbx) {
             this->boundingbox = bbx;
         }
-        inline vislib::math::Cuboid<float> *getBoundingBox() {
+        inline std::shared_ptr<vislib::math::Cuboid<float>> getBoundingBox() {
             return this->boundingbox;
         }
 
@@ -142,10 +139,10 @@ namespace cinematic {
             return this->interpolSteps;
         }
 
-		inline vislib::Array<vislib::math::Point<float, 3> >* getInterpolCamPositions(){
+		inline std::shared_ptr<std::vector<glm::vec3 >> getInterpolCamPositions(){
 			return this->interpolCamPos;
 		}
-        inline void setInterpolCamPositions(vislib::Array<vislib::math::Point<float, 3> >* k){
+        inline void setInterpolCamPositions(std::shared_ptr<std::vector<glm::vec3 >> k){
             this->interpolCamPos = k;
         }
 
@@ -166,10 +163,10 @@ namespace cinematic {
         }
 
         // CAMERA PARAMETERS
-        inline void setCameraParameters(vislib::SmartPtr<vislib::graphics::CameraParameters> c) {
+        inline void setCameraParameters(std::shared_ptr<megamol::core::view::Camera_2> c) {
             this->cameraParam = c;
         }
-        inline vislib::SmartPtr<vislib::graphics::CameraParameters> getCameraParameters() {
+        inline std::shared_ptr<megamol::core::view::Camera_2> getCameraParameters() {
             return this->cameraParam;
         }
 
@@ -186,10 +183,10 @@ namespace cinematic {
         }
 
         // BOUNDING-BOX CENTER
-        inline void setBboxCenter(vislib::math::Point<float, 3>  c) {
+        inline void setBboxCenter(glm::vec3  c) {
             this->bboxCenter = c;
         }
-        inline vislib::math::Point<float, 3> getBboxCenter() {
+        inline glm::vec3 getBboxCenter() {
             return this->bboxCenter;
         }
 
@@ -202,14 +199,14 @@ namespace cinematic {
         }
 
         // CONTROL POINT POSITIONS
-        inline void setControlPointPosition(vislib::math::Vector<float, 3> firstcp, vislib::math::Vector<float, 3> lastcp) {
+        inline void setControlPointPosition(glm::vec3 firstcp, glm::vec3 lastcp) {
             this->startCtrllPos = firstcp;
             this->endCtrllPos  = lastcp;
         }
-        inline vislib::math::Vector<float, 3> getStartControlPointPosition() {
+        inline glm::vec3 getStartControlPointPosition() {
             return this->startCtrllPos;
         }
-        inline vislib::math::Vector<float, 3> getEndControlPointPosition() {
+        inline glm::vec3 getEndControlPointPosition() {
             return this->endCtrllPos;
         }
 
@@ -220,20 +217,20 @@ namespace cinematic {
         **********************************************************************/
 
 		// Pointer to array of keyframes
-        vislib::SmartPtr<vislib::graphics::CameraParameters> cameraParam;
-        vislib::Array<vislib::math::Point<float, 3> > *interpolCamPos;
-		vislib::Array<Keyframe>				          *keyframes;
-        vislib::math::Cuboid<float>		              *boundingbox;
+		std::shared_ptr<megamol::core::view::Camera_2> cameraParam;
+		std::shared_ptr<std::vector<glm::vec3 >>       interpolCamPos;
+		std::shared_ptr<std::vector<Keyframe>>	       keyframes;
+        std::shared_ptr<vislib::math::Cuboid<float>>   boundingbox;
         unsigned int                                   interpolSteps;
         Keyframe						               selectedKeyframe;
         float                                          dropAnimTime;
         float                                          dropSimTime;
 		float								           totalAnimTime;
         float                                          totalSimTime;
-        vislib::math::Point<float, 3>                  bboxCenter;
+        glm::vec3                                      bboxCenter;
         unsigned int                                   fps;
-        vislib::math::Vector<float, 3>                 startCtrllPos;
-        vislib::math::Vector<float, 3>                 endCtrllPos;
+        glm::vec3                                      startCtrllPos;
+        glm::vec3                                      endCtrllPos;
 
 	};
 

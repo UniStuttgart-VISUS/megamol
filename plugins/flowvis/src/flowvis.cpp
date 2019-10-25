@@ -1,6 +1,6 @@
 /*
  * flowvis.cpp
- * Copyright (C) 2009-2019 by MegaMol Team
+ * Copyright (C) 2018-2019 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
 

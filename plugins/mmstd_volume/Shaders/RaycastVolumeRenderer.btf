@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <btf type="MegaMolGLSLShader" version="1.0" namespace="RaycastVolumeRenderer">
     <include file="common"/>
+    <include file="core_utils"/>
 
     <shader name="compute">
         <snippet type="version">430</snippet>
+        <snippet name="core_utils::tflookup"/>
+        <snippet name="core_utils::tfconvenience"/>
         <snippet name="body" type="file">raycast_volume/raycast_volume_c.glsl</snippet>
     </shader>
 

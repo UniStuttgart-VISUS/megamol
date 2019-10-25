@@ -12,7 +12,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/view/Renderer3DModule.h"
+#include "mmcore/view/Renderer3DModule_2.h"
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
@@ -27,7 +27,7 @@ namespace trisoup {
     /**
      * Renderer for tri-mesh data
      */
-    class TriSoupRenderer : public core::view::Renderer3DModule {
+    class TriSoupRenderer : public core::view::Renderer3DModule_2 {
     public:
 
         /**
@@ -81,7 +81,7 @@ namespace trisoup {
          *
          * @return The return value of the function.
          */
-        virtual bool GetExtents(core::Call& call);
+        virtual bool GetExtents(core::view::CallRender3D_2& call);
 
         /**
          * Implementation of 'Release'.
@@ -95,7 +95,7 @@ namespace trisoup {
          *
          * @return The return value of the function.
          */
-        virtual bool Render(core::Call& call);
+        virtual bool Render(core::view::CallRender3D_2& call);
 
     private:
 
@@ -122,9 +122,6 @@ namespace trisoup {
         
         /** The Triangle color */
         core::param::ParamSlot colorSlot;
-
-        /** Slot to activate scaling */
-        core::param::ParamSlot doScaleSlot;
 
     };
 

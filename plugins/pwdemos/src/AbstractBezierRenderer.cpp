@@ -19,9 +19,9 @@ namespace demos {
 /*
  * AbstractBezierRenderer::AbstractBezierRenderer
  */
-AbstractBezierRenderer::AbstractBezierRenderer(void) : Renderer3DModule(),
+AbstractBezierRenderer::AbstractBezierRenderer(void) : Renderer3DModule_2(),
         getDataSlot("getdata", "Connects to the data source"),
-        objsHash(0), shader(NULL), scaling(1.0f) {
+        objsHash(0), shader(NULL) {
     // intentionally empty
 }
 
@@ -46,28 +46,15 @@ bool AbstractBezierRenderer::create(void) {
 /*
  * AbstractBezierRenderer::GetExtents
  */
-bool AbstractBezierRenderer::GetExtents(core::Call& call) {
-    core::view::CallRender3D *cr = dynamic_cast<core::view::CallRender3D*>(&call);
-    if (cr == NULL) return false;
+bool AbstractBezierRenderer::GetExtents(core::view::CallRender3D_2& call) {
 
     core::AbstractGetData3DCall *gd = this->getDataSlot.CallAs<core::AbstractGetData3DCall>();
     if ((gd != NULL) && ((*gd)(1))) {
-        cr->SetTimeFramesCount(gd->FrameCount());
-        cr->AccessBoundingBoxes() = gd->AccessBoundingBoxes();
-        if (cr->AccessBoundingBoxes().IsObjectSpaceBBoxValid()) {
-            this->scaling = cr->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
-            if (this->scaling > 0.0001f) {
-                this->scaling = 2.0f / this->scaling;
-            } else {
-                this->scaling = 2.0f;
-            }
-            cr->AccessBoundingBoxes().MakeScaledWorld(this->scaling);
-        }
-
+        call.SetTimeFramesCount(gd->FrameCount());
+        call.AccessBoundingBoxes() = gd->AccessBoundingBoxes();
     } else {
-        cr->SetTimeFramesCount(1);
-        cr->AccessBoundingBoxes().Clear();
-        this->scaling = 1.0f;
+        call.SetTimeFramesCount(1);
+        call.AccessBoundingBoxes().Clear();
     }
 
     return true;
@@ -85,13 +72,10 @@ void AbstractBezierRenderer::release(void) {
 /*
  * AbstractBezierRenderer::Render
  */
-bool AbstractBezierRenderer::Render(core::Call& call) {
-    core::view::CallRender3D *cr = dynamic_cast<core::view::CallRender3D*>(&call);
-    if (cr == NULL) return false;
-    // As sfx 'this->scaling' has already been set! :-)
+bool AbstractBezierRenderer::Render(core::view::CallRender3D_2& call) {
 
     if (this->shader_required() && (this->shader == NULL)) return false;
-    return this->render(*cr);
+    return this->render(call);
 }
 
 } /* end namespace demos */

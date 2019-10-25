@@ -197,9 +197,9 @@ bool AtomGrid::checkForIntersections(const vec4d& p_end_vertex, const uint p_ato
  * AtomGrid::ClearSearchGrid
  */
 void AtomGrid::ClearSearchGrid() {
-	this->atoms.swap(std::vector<vec4d>());
-	this->cells.swap(std::vector<Cell>());
-	this->cell_rings.swap(std::vector<std::vector<std::vector<uint16_t>>>());
+    this->atoms.clear();
+    this->cells.clear();
+	this->cell_rings.clear();
 }
 
 /*

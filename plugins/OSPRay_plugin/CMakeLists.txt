@@ -3,12 +3,11 @@
 # Copyright 2017, by MegaMol Team
 # Alle Rechte vorbehalten. All rights reserved.
 #
-option(BUILD_OSPRAY_PLUGIN "Option to build OSPRay_plugin" OFF)
+string(TOUPPER OSPRay_plugin EXPORT_NAME)
+option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build OSPRay_plugin" OFF)
 
-if(BUILD_OSPRAY_PLUGIN)
+if(BUILD_${EXPORT_NAME}_PLUGIN)
   project(OSPRay_plugin)
-
-  string(TOUPPER ${PROJECT_NAME} EXPORT_NAME)
 
   # Check option dependencies: First list item is always the current build option,
   # afterwards list the dependencies.
@@ -23,12 +22,12 @@ if(BUILD_OSPRAY_PLUGIN)
 
   # Target definition
   add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files})
-  # Set target naming conventions for different build types
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src" ${OSPRAY_INCLUDE_DIRS})
-  target_link_libraries(${PROJECT_NAME} PRIVATE core geometry_calls mmstd_datatools protein_calls
-  PUBLIC ${OSPRAY_LIBRARIES})
+  target_link_libraries(${PROJECT_NAME} 
+    PRIVATE core geometry_calls mmstd_datatools protein_calls
+    PUBLIC ${OSPRAY_LIBRARIES})
 
   # Installation rules for generated files
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
@@ -43,14 +42,14 @@ if(BUILD_OSPRAY_PLUGIN)
   else()
     install(TARGETS ${PROJECT_NAME} DESTINATION "lib" EXPORT ${PROJECT_NAME}-target)
     if (TARGET ospray::ospray)
-        get_target_property(OSPRAY_LIB_PATH ospray::ospray IMPORTED_LOCATION_RELEASE)
-        get_filename_component(dir ${OSPRAY_LIB_PATH} DIRECTORY)
-        install(DIRECTORY "${dir}" DESTINATION "${CMAKE_INSTALL_PREFIX}" FILES_MATCHING PATTERN "lib*")
+      get_target_property(OSPRAY_LIB_PATH ospray::ospray IMPORTED_LOCATION_RELEASE)
+      get_filename_component(dir ${OSPRAY_LIB_PATH} DIRECTORY)
+      install(DIRECTORY "${dir}" DESTINATION "${CMAKE_INSTALL_PREFIX}" FILES_MATCHING PATTERN "lib*")
     else(TARGET ospray::ospray)
-        foreach(lib ${OSPRAY_LIBRARIES})
-            get_filename_component(dir ${lib} DIRECTORY)
-            install(DIRECTORY "${dir}" DESTINATION "${CMAKE_INSTALL_PREFIX}" FILES_MATCHING PATTERN "lib*")
-        endforeach()
+      foreach(lib ${OSPRAY_LIBRARIES})
+        get_filename_component(dir ${lib} DIRECTORY)
+        install(DIRECTORY "${dir}" DESTINATION "${CMAKE_INSTALL_PREFIX}" FILES_MATCHING PATTERN "lib*")
+      endforeach()
     endif(TARGET ospray::ospray)
   endif()
 

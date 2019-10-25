@@ -8,9 +8,10 @@
 /**
  * USED HOTKEYS:
  *
- * - Show/hide Windows: Ctrl + F9-F12
- * - Reset windows:     Shift + (Window show/hide hotkeys)
- * - Quit program:      Alt + F4
+ * - Show/hide Windows: Ctrl  + F9-F12
+ * - Reset windows:     Shift + Ctrl   + F9-F12
+ * - Search Paramter:   Ctrl  + p
+ * - Quit program:      Alt   + F4
  */
 
 #include "stdafx.h"
@@ -66,6 +67,9 @@ GUIView::GUIView()
     , tf_editor()
     , utils()
     , state()
+    , setParameterSearchFocus(false)
+    , parameterSearchString()
+    //, showParameterSearchWindow(false)
     , widgtmap_text()
     , widgtmap_float()
     , widgtmap_int()
@@ -384,7 +388,6 @@ bool GUIView::OnKey(core::view::Key key, core::view::KeyAction action, core::vie
     io.KeyShift = mods.test(core::view::Modifier::SHIFT);
     io.KeyAlt = mods.test(core::view::Modifier::ALT);
 
-
     // Pass NUM 'Enter' as alternative for 'Return' to ImGui
     bool cur_return_key = ImGui::IsKeyDown(static_cast<int>(core::view::Key::KEY_ENTER));
     bool cur_num_enter_key = ImGui::IsKeyDown(static_cast<int>(core::view::Key::KEY_KP_ENTER));
@@ -423,7 +426,7 @@ bool GUIView::OnKey(core::view::Key key, core::view::KeyAction action, core::vie
 
     // ------------------------------------------------------------------------
     // NB: Hotkey processing is stopped after first occurence. Order of hotkey processing is crucial.
-    // Hotkeys always trigger just oneevent.
+    // Hotkeys always trigger just one event.
 
     // Exit megamol
     hotkeyPressed = ((io.KeyAlt) && (ImGui::IsKeyDown(static_cast<int>(core::view::Key::KEY_F4)))); // Alt + F4
@@ -432,7 +435,7 @@ bool GUIView::OnKey(core::view::Key key, core::view::KeyAction action, core::vie
         return true;
     }
 
-    // Hotkeys of window(s)
+    // Hotkeys for showing/hiding window(s)
     const auto func = [&, this](const std::string& wn, WindowManager::WindowConfiguration& wc) {
         hotkeyPressed = (ImGui::IsKeyDown(static_cast<int>(wc.win_hotkey.key))) &&
                         (wc.win_hotkey.mods.test(core::view::Modifier::CTRL) == io.KeyCtrl);
@@ -445,6 +448,13 @@ bool GUIView::OnKey(core::view::Key key, core::view::KeyAction action, core::vie
         }
     };
     this->window_manager.EnumWindows(func);
+
+    // Hotkey for parameter search
+    hotkeyPressed = ((io.KeyCtrl) && (ImGui::IsKeyDown(static_cast<int>(core::view::Key::KEY_P)))); // Ctrl + p
+    if (hotkeyPressed) {
+        this->setParameterSearchFocus = true;
+        // this->showParameterSearchWindow = true;
+    }
 
     // Always consume keyboard input if requested by any imgui widget (e.g. text input).
     // User expects hotkey priority of text input thus needs to be processed before parameter hotkeys.
@@ -824,6 +834,7 @@ void GUIView::drawTFWindowCallback(const std::string& wn, WindowManager::WindowC
 
 
 void GUIView::drawParametersCallback(const std::string& wn, WindowManager::WindowConfiguration& wc) {
+    ImGuiIO& io = ImGui::GetIO();
     ImGuiStyle& style = ImGui::GetStyle();
     ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.5f); // set general proportional item width
 
@@ -836,19 +847,84 @@ void GUIView::drawParametersCallback(const std::string& wn, WindowManager::Windo
     if (ImGui::Button("Collapse All")) {
         overrideState = 0; /// close
     }
-
+    ImGui::SameLine();
     bool show_only_hotkeys = wc.param_show_hotkeys;
     ImGui::Checkbox("Show Hotkeys", &show_only_hotkeys);
     wc.param_show_hotkeys = show_only_hotkeys;
 
-    // Offering module filtering only for main parameter view
+    // Paramter substring name filtering (only for main parameter view)
+    if (wc.win_callback == WindowManager::DrawCallbacks::MAIN) {
+
+        if (ImGui::Button("Clear")) {
+            this->parameterSearchString = "";
+        }
+        ImGui::SameLine();
+
+        auto width = ImGui::CalcItemWidth() - ImGui::GetCursorPosX() + 2.0f * style.ItemInnerSpacing.x;
+        ImGui::PushItemWidth(width);
+        // Set keyboard focus when hotkey is pressed
+        if (this->setParameterSearchFocus) {
+            ImGui::SetKeyboardFocusHere();
+            this->setParameterSearchFocus = false;
+        }
+        /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
+        this->utils.utf8Encode(this->parameterSearchString);
+        ImGui::InputText("###Search Parameters", &this->parameterSearchString, ImGuiInputTextFlags_AutoSelectAll);
+        this->utils.utf8Decode(this->parameterSearchString);
+        ImGui::PopItemWidth();
+
+        ImGui::SameLine();
+        ImGui::Text("Search Parameters");
+        this->utils.HelpMarkerToolTip("[CTRL + 'p'] Set keyboard focus to search input field.\n"
+                                      "Searching for case insensitive substring in\n"
+                                      "parameter names globally in all parameter views.\n");
+
+        /// Alternative (TEMP):
+        // Show parameter search field in separate window
+        // if (this->showParameterSearchWindow) {
+
+        //    std::string popup_name = "Search Parameter";
+
+        //    ImGuiWindowFlags flags =
+        //        ImGuiWindowFlags_AlwaysAutoResize; // ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ;
+        //    ImVec2 popup_pos = ImVec2(io.DisplaySize.x / 2.0f - ImGui::GetWindowWidth() / 2.0f, 0.0f);
+        //    ImGui::SetWindowPos(popup_name.c_str(), popup_pos, ImGuiCond_Always);
+
+        //    ImGui::Begin(popup_name.c_str(), &this->showParameterSearchWindow, flags);
+
+        //    if (this->setParameterSearchFocus) {
+        //        ImGui::SetKeyboardFocusHere();
+        //        this->setParameterSearchFocus = false;
+        //    }
+
+        //    /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
+        //    this->utils.utf8Encode(this->parameterSearchString);
+        //    ImGui::InputText("###Search Parameter", &this->parameterSearchString, ImGuiInputTextFlags_AutoSelectAll);
+        //    this->utils.utf8Decode(this->parameterSearchString);
+
+        //    ImGui::SameLine();
+
+        //    if (ImGui::Button("Clear")) {
+        //        this->parameterSearchString = "";
+        //    }
+        //    ImGui::SameLine();
+
+        //    ImGui::Text("Search Parameter");
+        //    this->utils.HelpMarkerToolTip("Searching for case insensitive substring in parameter name.\n"
+        //                                  "[CTRL + 'p'] Set keyboard focus to search input field.");
+
+        //    ImGui::End();
+        //}
+    }
+
+    // Module filtering (only for main parameter view)
     if (wc.win_callback == WindowManager::DrawCallbacks::MAIN) {
         std::map<int, std::string> opts;
         opts[static_cast<int>(WindowManager::FilterModes::ALL)] = "All";
         opts[static_cast<int>(WindowManager::FilterModes::INSTANCE)] = "Instance";
         opts[static_cast<int>(WindowManager::FilterModes::VIEW)] = "View";
         unsigned int opts_cnt = (unsigned int)opts.size();
-        if (ImGui::BeginCombo("Module Filter", opts[(int)wc.param_module_filter].c_str())) {
+        if (ImGui::BeginCombo("Filter Modules", opts[(int)wc.param_module_filter].c_str())) {
             for (unsigned int i = 0; i < opts_cnt; ++i) {
 
                 if (ImGui::Selectable(opts[i].c_str(), (static_cast<int>(wc.param_module_filter) == i))) {
@@ -929,11 +1005,13 @@ void GUIView::drawParametersCallback(const std::string& wn, WindowManager::Windo
             }
             ImGui::EndCombo();
         }
-        this->utils.HelpMarkerToolTip("Filter applies globally to all parameter windows.\n"
-                                      "Selected filter is not refreshed on graph changes.\n"
+        this->utils.HelpMarkerToolTip("Selected filter is not refreshed on graph changes.\n"
                                       "Select filter again to trigger refresh.");
         ImGui::Separator();
     }
+
+    // Create child window for sepearte scroll bar and keeping header always visible on top of parameter list
+    ImGui::BeginChild("###ParameterList");
 
     // Listing parameters
     const core::Module* current_mod = nullptr;
@@ -963,28 +1041,26 @@ void GUIView::drawParametersCallback(const std::string& wn, WindowManager::Windo
                 return;
             }
 
-            // Main parameter window always draws all module's parameters
-            if (wc.win_callback != WindowManager::DrawCallbacks::MAIN) {
-                // Consider only modules contained in list
-                if (std::find(wc.param_modules_list.begin(), wc.param_modules_list.end(), label) ==
-                    wc.param_modules_list.end()) {
-                    current_mod_open = false;
-                    return;
-                }
-            }
-
+            // Determine header state and change color depending on active parameter search
             auto headerId = ImGui::GetID(label.c_str());
             auto headerState = overrideState;
             if (headerState == -1) {
                 headerState = ImGui::GetStateStorage()->GetInt(headerId, 0); // 0=close 1=open
             }
-
+            if (!this->parameterSearchString.empty()) {
+                headerState = 1;
+                ImGui::PushStyleColor(ImGuiCol_Header, ImGui::GetStyleColorVec4(ImGuiCol_PopupBg));
+            }
             ImGui::GetStateStorage()->SetInt(headerId, headerState);
             current_mod_open = ImGui::CollapsingHeader(label.c_str(), nullptr);
+            if (!this->parameterSearchString.empty()) {
+                ImGui::PopStyleColor();
+            }
 
-            // TODO:  Add module description as hover tooltip
-            // this->utils.HoverToolTip(std::string(mod.Description()), ImGui::GetID(label.c_str()), 0.5f);
-            // this->utils.HoverToolTip(std::string(mod.FullName().PeekBuffer()), ImGui::GetID(label.c_str()), 0.5f);
+            /// TODO:  Add module description as hover tooltip
+            /// this->utils.HoverToolTip(std::string(mod.Description()), ImGui::GetID(label.c_str()), 0.5f);
+            /// Test:
+            /// this->utils.HoverToolTip(std::string(mod.FullName().PeekBuffer()), ImGui::GetID(label.c_str()), 0.5f);
 
             // Context menu
             if (ImGui::BeginPopupContextItem()) {
@@ -1001,6 +1077,7 @@ void GUIView::drawParametersCallback(const std::string& wn, WindowManager::Windo
                     buf_win.param_modules_list.emplace_back(label);
                     this->window_manager.AddWindowConfiguration(window_name, buf_win);
                 }
+
                 // Deleting module's parameters is not available in main parameter window.
                 if (wc.win_callback != WindowManager::DrawCallbacks::MAIN) {
                     if (ImGui::MenuItem("Delete from List")) {
@@ -1026,28 +1103,33 @@ void GUIView::drawParametersCallback(const std::string& wn, WindowManager::Windo
 
         if (current_mod_open) {
             auto param = slot.Parameter();
-            if (!param.IsNull() && param->IsGUIVisible()) {
-
-                // Check for new parameter namespace
-                std::string param_name = slot.Name().PeekBuffer();
+            std::string param_name = slot.Name().PeekBuffer();
+            bool showSearchedParameter = true;
+            if (!this->parameterSearchString.empty()) {
+                showSearchedParameter = this->findCaseInsensitiveSubstring(param_name, this->parameterSearchString);
+            }
+            if (!param.IsNull() && param->IsGUIVisible() && showSearchedParameter) {
+                // Check for changed parameter namespace
                 auto pos = param_name.find("::");
                 std::string current_param_namespace = "";
                 if (pos != std::string::npos) {
                     current_param_namespace = param_name.substr(0, pos);
                 }
                 if (current_param_namespace != param_namespace) {
-
                     param_namespace = current_param_namespace;
-
                     while (param_indent_stack > 0) {
                         param_indent_stack--;
                         ImGui::Unindent();
                     }
-
                     ImGui::Separator();
                     if (!param_namespace.empty()) {
                         ImGui::Indent();
                         std::string label = param_namespace + "###" + param_namespace + "__" + param_name;
+                        // Open all namespace headers when parameter search is active
+                        if (!this->parameterSearchString.empty()) {
+                            auto headerId = ImGui::GetID(label.c_str());
+                            ImGui::GetStateStorage()->SetInt(headerId, 1);
+                        }
                         param_namespace_open = ImGui::CollapsingHeader(label.c_str(), ImGuiTreeNodeFlags_DefaultOpen);
                         param_indent_stack++;
                     } else {
@@ -1066,11 +1148,13 @@ void GUIView::drawParametersCallback(const std::string& wn, WindowManager::Windo
             }
         }
     });
+
     // Reset parameter namespace stuff
     while (param_indent_stack > 0) {
         param_indent_stack--;
         ImGui::Unindent();
     }
+
     // Drop target
     ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetFontSize()));
     if (ImGui::BeginDragDropTarget()) {
@@ -1079,17 +1163,16 @@ void GUIView::drawParametersCallback(const std::string& wn, WindowManager::Windo
             IM_ASSERT(payload->DataSize == (dnd_size * sizeof(char)));
             std::string payload_id = (const char*)payload->Data;
 
-            // Nothing to add to main parameter window (draws always all module's parameters)
-            if ((wc.win_callback != WindowManager::DrawCallbacks::MAIN)) {
-                // Insert dragged module name only if not contained in list
-                if (std::find(wc.param_modules_list.begin(), wc.param_modules_list.end(), payload_id) ==
-                    wc.param_modules_list.end()) {
-                    wc.param_modules_list.emplace_back(payload_id);
-                }
+            // Insert dragged module name only if not contained in list
+            if (!this->considerModule(payload_id, wc.param_modules_list)) {
+                wc.param_modules_list.emplace_back(payload_id);
             }
         }
         ImGui::EndDragDropTarget();
     }
+
+
+    ImGui::EndChild();
 
     ImGui::PopItemWidth();
 }
@@ -1478,9 +1561,7 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
                 hotkey = " (" + buttonHotkey + ")";
             }
             auto insert_pos = param_label.find("###");
-            if (insert_pos == std::string::npos) {
-                param_label.insert(insert_pos, hotkey);
-            }
+            param_label.insert(insert_pos, hotkey);
             if (ImGui::Button(param_label.c_str())) {
                 p->setDirty();
             }
@@ -1745,17 +1826,21 @@ void GUIView::drawParameterHotkey(const core::Module& mod, core::param::ParamSlo
 }
 
 
+bool GUIView::findCaseInsensitiveSubstring(const std::string& source, const std::string& search) {
+
+    auto it = std::search(source.begin(), source.end(), search.begin(), search.end(),
+        [](char ch1, char ch2) { return std::toupper(ch1) == std::toupper(ch2); });
+    return (it != source.end());
+}
+
+
 bool GUIView::considerModule(const std::string& modname, std::vector<std::string>& modules_list) {
     bool retval = false;
+    // Empty module list means that all modules should be considered.
     if (modules_list.empty()) {
         retval = true;
     } else {
-        for (auto mod : modules_list) {
-            if (modname == mod) {
-                retval = true;
-                break;
-            }
-        }
+        retval = (std::find(modules_list.begin(), modules_list.end(), modname) != modules_list.end());
     }
     return retval;
 }

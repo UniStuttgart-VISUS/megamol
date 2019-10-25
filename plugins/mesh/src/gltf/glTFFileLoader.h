@@ -14,7 +14,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mesh/mesh.h"
-#include "mesh/CallGltfData.h"
+#include "mesh/MeshCalls.h"
 
 namespace megamol
 {
@@ -71,6 +71,8 @@ namespace megamol
 			*/
 			bool getDataCallback(core::Call& caller);
 
+            bool getMetaDataCallback(core::Call& caller);
+
 			/**
 			* Implementation of 'Release'.
 			*/
@@ -79,7 +81,7 @@ namespace megamol
 		private:
 			std::shared_ptr<tinygltf::Model> m_gltf_model;
 
-			int                              m_update_flag;
+			size_t m_update_hash;
 
 			/** The gltf file name */
 			core::param::ParamSlot           m_glTFFilename_slot;
