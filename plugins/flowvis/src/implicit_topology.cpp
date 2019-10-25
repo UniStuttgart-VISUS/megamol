@@ -484,6 +484,7 @@ namespace megamol
             {
                 this->resolution = vf_call->get_resolution();
 
+                triangle_call->set_dimension(triangle_mesh_call::dimension_t::TWO);
                 triangle_call->set_bounding_rectangle(vf_call->get_bounding_rectangle());
             }
             else

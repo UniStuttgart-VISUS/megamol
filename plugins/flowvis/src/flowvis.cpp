@@ -24,6 +24,7 @@
 
 #include "glyph_renderer_2d.h"
 #include "triangle_mesh_renderer_2d.h"
+#include "triangle_mesh_renderer_3d.h"
 
 #include "glyph_data_call.h"
 #include "implicit_topology_call.h"
@@ -69,6 +70,7 @@ namespace {
             // register renderer here:
             this->module_descriptions.RegisterAutoDescription<megamol::flowvis::glyph_renderer_2d>();
             this->module_descriptions.RegisterAutoDescription<megamol::flowvis::triangle_mesh_renderer_2d>();
+            this->module_descriptions.RegisterAutoDescription<megamol::flowvis::triangle_mesh_renderer_3d>();
 
             // register calls here:
             this->call_descriptions.RegisterAutoDescription<megamol::flowvis::glyph_data_call>();

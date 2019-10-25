@@ -2,6 +2,7 @@
 #include "periodic_orbits_theisel.h"
 
 #include "glyph_data_call.h"
+#include "triangle_mesh_call.h"
 #include "vector_field_call.h"
 
 #include "mmcore/Call.h"
@@ -10,8 +11,6 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/TransferFunctionParam.h"
-
-#include "mesh/MeshCalls.h"
 
 #include "vislib/sys/Log.h"
 
@@ -56,9 +55,9 @@ periodic_orbits_theisel::periodic_orbits_theisel()
         &periodic_orbits_theisel::get_periodic_orbits_extent);
     this->MakeSlotAvailable(&this->periodic_orbits_slot);
 
-    this->stream_surface_slot.SetCallback(mesh::CallGPUMeshData::ClassName(), mesh::CallGPUMeshData::FunctionName(0),
+    this->stream_surface_slot.SetCallback(triangle_mesh_call::ClassName(), triangle_mesh_call::FunctionName(0),
         &periodic_orbits_theisel::get_stream_surfaces_data);
-    this->stream_surface_slot.SetCallback(mesh::CallGPUMeshData::ClassName(), mesh::CallGPUMeshData::FunctionName(1),
+    this->stream_surface_slot.SetCallback(triangle_mesh_call::ClassName(), triangle_mesh_call::FunctionName(1),
         &periodic_orbits_theisel::get_stream_surfaces_extent);
     this->MakeSlotAvailable(&this->stream_surface_slot);
 
@@ -238,13 +237,10 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
             static_cast<size_t>(this->num_integration_steps.Param<core::param::IntParam>()->Value());
 
         this->triangles = std::make_shared<std::vector<unsigned int>>();
-        this->triangles->reserve(seed_lines.size() * num_subdivisions * 2 * 3 * num_integration_steps);
+        this->triangles->reserve(2 * seed_lines.size() * num_subdivisions * 2 * 3 * num_integration_steps);
 
-        this->forward_vertices = std::make_shared<std::vector<float>>();
-        this->forward_vertices->reserve(seed_lines.size() * 3 * num_subdivisions * (num_integration_steps + 1));
-
-        this->backward_vertices = std::make_shared<std::vector<float>>();
-        this->backward_vertices->reserve(seed_lines.size() * 3 * num_subdivisions * (num_integration_steps + 1));
+        this->mesh_vertices = std::make_shared<std::vector<float>>();
+        this->mesh_vertices->reserve(2 * seed_lines.size() * 3 * num_subdivisions * (num_integration_steps + 1));
 
         this->seed_lines.clear();
         this->seed_lines.reserve(seed_lines.size());
@@ -333,21 +329,26 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
                 std::swap(previous_backward_points, advected_backward_points);
             }
 
-            // Store vertices in a GL-friendly manner
+            // Store vertices and indices in a GL-friendly manner
             for (const auto& forward_point : forward_points) {
-                this->forward_vertices->push_back(forward_point.x());
-                this->forward_vertices->push_back(forward_point.y());
-                this->forward_vertices->push_back(forward_point.z());
+                this->mesh_vertices->push_back(forward_point.x());
+                this->mesh_vertices->push_back(forward_point.y());
+                this->mesh_vertices->push_back(forward_point.z());
             }
 
             for (const auto& backward_point : backward_points) {
-                this->backward_vertices->push_back(backward_point.x());
-                this->backward_vertices->push_back(backward_point.y());
-                this->backward_vertices->push_back(backward_point.z());
+                this->mesh_vertices->push_back(backward_point.x());
+                this->mesh_vertices->push_back(backward_point.y());
+                this->mesh_vertices->push_back(backward_point.z());
             }
+
+            const auto offset = static_cast<unsigned int>(this->triangles->size());
+
+            std::transform(this->triangles->begin(), this->triangles->end(), std::back_inserter(*this->triangles),
+                [offset](unsigned int index) { return offset + index; });
         }
 
-        ++stream_surface_hash;
+        ++this->stream_surface_hash;
 
         this->periodic_orbits_hash = -1;
         this->seed_line_hash = -1;
@@ -516,25 +517,31 @@ bool periodic_orbits_theisel::get_periodic_orbits_extent(core::Call& call) {
 }
 
 bool periodic_orbits_theisel::get_stream_surfaces_data(core::Call& call) {
-    // TODO: cast call
+    auto& tmc = static_cast<triangle_mesh_call&>(call);
 
     if (!(get_input_data() && compute_periodic_orbits())) {
         return false;
     }
 
-    // TODO: set output
+    if (tmc.DataHash() != this->stream_surface_hash) {
+        tmc.set_vertices(this->mesh_vertices);
+        tmc.set_indices(this->triangles);
+
+        tmc.SetDataHash(this->stream_surface_hash);
+    }
 
     return true;
 }
 
 bool periodic_orbits_theisel::get_stream_surfaces_extent(core::Call& call) {
-    // TODO: cast call
+    auto& tmc = static_cast<triangle_mesh_call&>(call);
 
     if (!get_input_extent()) {
         return false;
     }
 
-    // TODO: set extents
+    tmc.set_dimension(triangle_mesh_call::dimension_t::THREE);
+    tmc.set_bounding_box(this->bounding_box);
 
     return true;
 }

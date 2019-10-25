@@ -9,6 +9,7 @@
 #include "mmcore/AbstractGetDataCall.h"
 #include "mmcore/factories/CallAutoDescription.h"
 
+#include "vislib/math/Cuboid.h"
 #include "vislib/math/Rectangle.h"
 
 #include <memory>
@@ -57,15 +58,38 @@ namespace megamol
                 return nullptr;
             }
 
+            /** Dimension */
+            enum class dimension_t { TWO, THREE };
+
             /**
-             * Getter for the bounding rectangle
+             * Getter for the dimension
+             */
+            dimension_t get_dimension() const;
+
+            /**
+             * Setter for the dimension
+             */
+            void set_dimension(dimension_t dimension);
+
+            /**
+             * Getter for the bounding rectangle for 2D data
              */
             const vislib::math::Rectangle<float>& get_bounding_rectangle() const;
 
             /**
-             * Setter for the bounding rectangle
+             * Setter for the bounding rectangle for 2D data
              */
             void set_bounding_rectangle(const vislib::math::Rectangle<float>& bounding_rectangle);
+
+            /**
+             * Getter for the bounding box for 3D data
+             */
+            const vislib::math::Cuboid<float>& get_bounding_box() const;
+
+            /**
+             * Setter for the bounding box for 3D data
+             */
+            void set_bounding_box(const vislib::math::Cuboid<float>& bounding_box);
 
             /**
             * Getter for the vertices defining the triangle mesh
@@ -88,8 +112,14 @@ namespace megamol
             void set_indices(std::shared_ptr<std::vector<unsigned int>> indices);
 
         protected:
+            /** Dimension */
+            dimension_t dimension;
+
             /** Bounding rectangle */
             vislib::math::Rectangle<float> bounding_rectangle;
+
+            /** Bounding box */
+            vislib::math::Cuboid<float> bounding_box;
 
             /** Vertices and indices defining the triangle mesh */
             std::shared_ptr<std::vector<float>> vertices;

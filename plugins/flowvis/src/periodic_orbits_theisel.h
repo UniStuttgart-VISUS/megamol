@@ -175,8 +175,7 @@ namespace megamol
             /** Output stream surfaces */
             SIZE_T stream_surface_hash;
 
-            std::shared_ptr<std::vector<float>> forward_vertices;
-            std::shared_ptr<std::vector<float>> backward_vertices;
+            std::shared_ptr<std::vector<float>> mesh_vertices;
             std::shared_ptr<std::vector<unsigned int>> triangles;
 
             /** Output periodic orbit glyphs */

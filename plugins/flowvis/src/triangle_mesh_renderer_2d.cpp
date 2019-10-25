@@ -348,6 +348,11 @@ namespace megamol
 
             if (get_triangles == nullptr || !(*get_triangles)(1)) return false;
 
+            if (get_triangles->get_dimension() != triangle_mesh_call::dimension_t::TWO) {
+                vislib::sys::Log::DefaultLog.WriteError("The dimension of the data does not fit the renderer");
+                return false;
+            }
+
             this->bounds = get_triangles->get_bounding_rectangle();
 
             // Get bounding rectangle of input renderer, if available
