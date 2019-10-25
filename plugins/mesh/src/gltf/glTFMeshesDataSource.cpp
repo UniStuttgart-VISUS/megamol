@@ -12,14 +12,6 @@ megamol::mesh::GlTFMeshesDataSource::GlTFMeshesDataSource()
 
 megamol::mesh::GlTFMeshesDataSource::~GlTFMeshesDataSource() {}
 
-bool megamol::mesh::GlTFMeshesDataSource::create() {
-    m_gpu_meshes = std::make_shared<GPUMeshCollection>();
-
-    m_bbox = {-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f};
-
-    return true;
-}
-
 bool megamol::mesh::GlTFMeshesDataSource::getDataCallback(core::Call& caller) {
     CallGPUMeshData* lhs_mesh_call = dynamic_cast<CallGPUMeshData*>(&caller);
     if (lhs_mesh_call == NULL) return false;
@@ -52,13 +44,6 @@ bool megamol::mesh::GlTFMeshesDataSource::getDataCallback(core::Call& caller) {
 
             m_mesh_collection_indices.clear();
         }
-            
-        m_bbox[0] = std::numeric_limits<float>::max();
-        m_bbox[1] = std::numeric_limits<float>::max();
-        m_bbox[2] = std::numeric_limits<float>::max();
-        m_bbox[3] = std::numeric_limits<float>::min();
-        m_bbox[4] = std::numeric_limits<float>::min();
-        m_bbox[5] = std::numeric_limits<float>::min();
 
         auto model = gltf_call->getData();
 
@@ -112,13 +97,6 @@ bool megamol::mesh::GlTFMeshesDataSource::getDataCallback(core::Call& caller) {
                         ->accessors
                             [model->meshes[mesh_idx].primitives[primitive_idx].attributes.find("POSITION")->second]
                         .minValues;
-
-                m_bbox[0] = std::min(m_bbox[0], static_cast<float>(min_data[0]));
-                m_bbox[1] = std::min(m_bbox[1], static_cast<float>(min_data[1]));
-                m_bbox[2] = std::min(m_bbox[2], static_cast<float>(min_data[2]));
-                m_bbox[3] = std::max(m_bbox[3], static_cast<float>(max_data[0]));
-                m_bbox[4] = std::max(m_bbox[4], static_cast<float>(max_data[1]));
-                m_bbox[5] = std::max(m_bbox[5], static_cast<float>(max_data[2]));
             }
         }
 
@@ -126,7 +104,7 @@ bool megamol::mesh::GlTFMeshesDataSource::getDataCallback(core::Call& caller) {
     }
 
     // if there is a mesh connection to the right, pass on the mesh collection
-    CallGPUMeshData* rhs_mesh_call = this->m_mesh_callerSlot.CallAs<CallGPUMeshData>();
+    CallGPUMeshData* rhs_mesh_call = this->m_mesh_rhs_slot.CallAs<CallGPUMeshData>();
     if (rhs_mesh_call != NULL) {
         rhs_mesh_call->setData(mesh_collection);
 
@@ -135,3 +113,5 @@ bool megamol::mesh::GlTFMeshesDataSource::getDataCallback(core::Call& caller) {
 
     return true;
 }
+
+bool megamol::mesh::GlTFMeshesDataSource::getMetaDataCallback(core::Call& caller) { return false; }

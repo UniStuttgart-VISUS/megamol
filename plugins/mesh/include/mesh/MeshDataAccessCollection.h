@@ -5,12 +5,12 @@
  * All rights reserved.
  */
 
-#include <vector>
-
-#include "mesh.h"
 
 #ifndef MESH_DATA_ACCESS_COLLECTION_H_INCLUDED
-#    define MESH_DATA_ACCESS_COLLECTION_H_INCLUDED
+#define MESH_DATA_ACCESS_COLLECTION_H_INCLUDED
+
+#include <vector>
+#include "mesh.h"
 
 namespace megamol {
 namespace mesh {
@@ -18,6 +18,7 @@ namespace mesh {
 class MESH_API MeshDataAccessCollection {
 public:
     enum ValueType { BYTE, UNSIGNED_BYTE, SHORT, UNSIGNED_SHORT, INT, UNSIGNED_INT, HALF_FLOAT, FLOAT, DOUBLE };
+    enum AttributeSemanticType { POSITION, NORMAL, COLOR, TEXCOORD, TANGENT};
 
     static constexpr unsigned int convertToGLType(ValueType value_type) {
         unsigned int retval = 0;
@@ -50,6 +51,44 @@ public:
             break;
         case DOUBLE:
             retval = 0x140A;
+            break;
+        default:
+            break;
+        }
+
+        return retval;
+    }
+
+    static constexpr ValueType covertToValueType(unsigned int gl_type) {
+        ValueType retval = BYTE; //TODO default to something more reasonable
+
+        switch (gl_type) {
+        case 0x1400:
+            retval = BYTE;
+            break;
+        case 0x1401:
+            retval = UNSIGNED_BYTE;
+            break;
+        case 0x1402:
+            retval = SHORT;
+            break;
+        case 0x1403:
+            retval = UNSIGNED_SHORT;
+            break;
+        case 0x1404:
+            retval = INT;
+            break;
+        case 0x1405:
+            retval = UNSIGNED_INT;
+            break;
+        case 0x140B:
+            retval = HALF_FLOAT;
+            break;
+        case 0x1406:
+            retval = FLOAT;
+            break;
+        case 0x140A:
+            retval = DOUBLE;
             break;
         default:
             break;
@@ -97,27 +136,24 @@ public:
     }
 
     struct VertexAttribute {
-        uint8_t* data;
-        size_t byte_size;
+        uint8_t*     data;
+        size_t       byte_size;
         unsigned int component_cnt;
         ValueType component_type;
         size_t stride;
         size_t offset;
+        AttributeSemanticType semantic;
     };
 
     struct IndexData {
-        uint8_t* data;
-        size_t byte_size;
+        uint8_t*  data;
+        size_t    byte_size;
         ValueType type;
     };
 
     struct Mesh {
-
-        Mesh(std::vector<VertexAttribute> const& attribs, IndexData indices)
-        : attributes(attribs), indices(indices) {}
-
         std::vector<VertexAttribute> attributes;
-        IndexData indices;
+        IndexData                    indices;
 
         // TODO interleaved flag?
     };
@@ -126,27 +162,30 @@ public:
     ~MeshDataAccessCollection() = default;
 
     void addMesh(std::vector<VertexAttribute> const& attribs, IndexData const& indices);
-    void addMesh(std::vector<VertexAttribute>&& attribs, IndexData const& indices);
+    void addMesh(std::vector<VertexAttribute> && attribs, IndexData const& indices);
 
     // TODO delete functionality
 
-    std::vector<Mesh> const& accessMesh();
+    std::vector<Mesh>& accessMesh();
 
 private:
+
     std::vector<Mesh> meshes;
 };
 
 inline void MeshDataAccessCollection::addMesh(std::vector<VertexAttribute> const& attribs, IndexData const& indices) {
-    meshes.emplace_back(Mesh(attribs, indices));
+    meshes.push_back({attribs, indices});
 }
 
 inline void MeshDataAccessCollection::addMesh(std::vector<VertexAttribute>&& attribs, IndexData const& indices) {
-    meshes.emplace_back(Mesh(attribs, indices));
+    meshes.push_back({attribs, indices});
 }
 
-inline std::vector<MeshDataAccessCollection::Mesh> const& MeshDataAccessCollection::accessMesh() { return meshes; }
+inline std::vector<MeshDataAccessCollection::Mesh>& MeshDataAccessCollection::accessMesh() {
+    return meshes;
+}
 
-} // namespace mesh
-} // namespace megamol
+}
+}
 
 #endif // !MESH_DATA_ACCESS_COLLECTION_H_INCLUDED
