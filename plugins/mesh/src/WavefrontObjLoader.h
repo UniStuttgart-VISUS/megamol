@@ -9,8 +9,8 @@
 #define WAVEFRONT_OBJ_LOADER_H_INCLUDED
 
 #include "mesh/MeshCalls.h"
-#include "mesh/MeshDataAccessCollection.h"
 #include "mesh/mesh.h"
+#include "mesh/MeshDataAccessCollection.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
 
@@ -70,9 +70,11 @@ protected:
     void release();
 
 private:
-    struct TinyObjModel {
-        tinyobj::attrib_t attrib;
-        std::vector<tinyobj::shape_t> shapes;
+
+    struct TinyObjModel 
+    {
+        tinyobj::attrib_t                attrib;
+        std::vector<tinyobj::shape_t>    shapes;
         std::vector<tinyobj::material_t> materials;
     };
 
@@ -82,24 +84,24 @@ private:
     std::shared_ptr<TinyObjModel> m_obj_model;
 
     /**
-     * Internal storage for unpacked positions, i.e one position per vertex, three vertices per triangle
-     */
-    std::vector<float> m_positions;
+    // * Internal storage for unpacked positions, i.e one position per vertex, three vertices per triangle
+    // */
+    //std::vector<float> m_positions;
 
-    /**
-     * Internal storage for unpacked normals, i.e one normal per vertex, three vertices per triangle
-     */
-    std::vector<float> m_normals;
+    ///**
+    // * Internal storage for unpacked normals, i.e one normal per vertex, three vertices per triangle
+    // */
+    //std::vector<float> m_normals;
 
-    /**
-     * Internal storage for unpacked texcoords, i.e one texcoord per vertex, three vertices per triangle
-     */
-    std::vector<float> m_texcoords;
+    ///**
+    // * Internal storage for unpacked texcoords, i.e one texcoord per vertex, three vertices per triangle
+    // */
+    //std::vector<float> m_texcoords;
 
     /**
      * 
      */
-    std::vector<unsigned int> m_indices;
+    std::vector<std::vector<unsigned int>> m_indices;
 
     /**
      * Shareable access to the internally stored mesh data from loaded obj file.

@@ -57,6 +57,8 @@ namespace megamol
 
 			virtual bool getDataCallback(core::Call& caller);
 
+            virtual bool getMetaDataCallback(core::Call& caller);
+
 			/**
 			* Generat mesh data for debugging BatchedMeshesDataCall and rendering
 			*
