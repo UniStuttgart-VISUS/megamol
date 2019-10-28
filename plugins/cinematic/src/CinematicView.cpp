@@ -22,7 +22,7 @@ using namespace vislib;
 
 
 CinematicView::CinematicView(void) : View3D_2()
-    , keyframeKeeperSlot("keyframeKeeper", "Connects to the Keyframe Keeper.")
+    , keyframeKeeperSlot("keyframeData", "Connects to the Keyframe Keeper.")
     , renderParam("cinematic::renderAnim", "Toggle rendering of complete animation to PNG files.")
     , toggleAnimPlayParam("cinematic::playPreview", "Toggle playing animation as preview")
     , selectedSkyboxSideParam("cinematic::skyboxSide", "Select the skybox side.")

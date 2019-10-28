@@ -203,6 +203,7 @@ std::string const megamol::core::LuaInterpreter<T>::DEFAULT_ENV =
     "  next = next,"
     "  pairs = pairs,"
     "  pcall = pcall,"
+    "  require = require,"
     "  tonumber = tonumber,"
     "  tostring = tostring,"
     "  type = type,"

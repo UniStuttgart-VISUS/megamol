@@ -18,7 +18,7 @@ using namespace vislib::math;
 
 
 KeyframeKeeper::KeyframeKeeper(void) : core::Module()
-    , cinematicCallSlot("scene3D", "holds keyframe data")
+    , keyframeCallSlot("keyframeData", "holds keyframe data")
     , applyKeyframeParam("applyKeyframe", "Apply current settings to selected/new keyframe.")
     , undoChangesParam("undoChanges", "Undo changes.")
     , redoChangesParam("redoChanges", "Redo changes.")
@@ -58,34 +58,34 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module()
     , undoQueueIndex(0) {
 
     // init callbacks
-    this->cinematicCallSlot.SetCallback(CallKeyframeKeeper::ClassName(),
+    this->keyframeCallSlot.SetCallback(CallKeyframeKeeper::ClassName(),
         CallKeyframeKeeper::FunctionName(CallKeyframeKeeper::CallForGetUpdatedKeyframeData), &KeyframeKeeper::CallForGetUpdatedKeyframeData);
 
-    this->cinematicCallSlot.SetCallback(CallKeyframeKeeper::ClassName(),
+    this->keyframeCallSlot.SetCallback(CallKeyframeKeeper::ClassName(),
         CallKeyframeKeeper::FunctionName(CallKeyframeKeeper::CallForSetSimulationData), &KeyframeKeeper::CallForSetSimulationData);
 
-    this->cinematicCallSlot.SetCallback(CallKeyframeKeeper::ClassName(),
+    this->keyframeCallSlot.SetCallback(CallKeyframeKeeper::ClassName(),
         CallKeyframeKeeper::FunctionName(CallKeyframeKeeper::CallForGetInterpolCamPositions), &KeyframeKeeper::CallForGetInterpolCamPositions);
 
-    this->cinematicCallSlot.SetCallback(CallKeyframeKeeper::ClassName(),
+    this->keyframeCallSlot.SetCallback(CallKeyframeKeeper::ClassName(),
         CallKeyframeKeeper::FunctionName(CallKeyframeKeeper::CallForSetSelectedKeyframe), &KeyframeKeeper::CallForSetSelectedKeyframe);
 
-    this->cinematicCallSlot.SetCallback(CallKeyframeKeeper::ClassName(),
+    this->keyframeCallSlot.SetCallback(CallKeyframeKeeper::ClassName(),
         CallKeyframeKeeper::FunctionName(CallKeyframeKeeper::CallForGetSelectedKeyframeAtTime), &KeyframeKeeper::CallForGetSelectedKeyframeAtTime);
 
-    this->cinematicCallSlot.SetCallback(CallKeyframeKeeper::ClassName(),
+    this->keyframeCallSlot.SetCallback(CallKeyframeKeeper::ClassName(),
         CallKeyframeKeeper::FunctionName(CallKeyframeKeeper::CallForSetCameraForKeyframe), &KeyframeKeeper::CallForSetCameraForKeyframe);
 
-    this->cinematicCallSlot.SetCallback(CallKeyframeKeeper::ClassName(),
+    this->keyframeCallSlot.SetCallback(CallKeyframeKeeper::ClassName(),
         CallKeyframeKeeper::FunctionName(CallKeyframeKeeper::CallForSetDragKeyframe), &KeyframeKeeper::CallForSetDragKeyframe);
 
-    this->cinematicCallSlot.SetCallback(CallKeyframeKeeper::ClassName(),
+    this->keyframeCallSlot.SetCallback(CallKeyframeKeeper::ClassName(),
         CallKeyframeKeeper::FunctionName(CallKeyframeKeeper::CallForSetDropKeyframe), &KeyframeKeeper::CallForSetDropKeyframe);
 
-    this->cinematicCallSlot.SetCallback(CallKeyframeKeeper::ClassName(),
+    this->keyframeCallSlot.SetCallback(CallKeyframeKeeper::ClassName(),
         CallKeyframeKeeper::FunctionName(CallKeyframeKeeper::CallForSetCtrlPoints), &KeyframeKeeper::CallForSetCtrlPoints);
 
-    this->MakeSlotAvailable(&this->cinematicCallSlot);
+    this->MakeSlotAvailable(&this->keyframeCallSlot);
 
     // init parameters
     this->applyKeyframeParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_A, core::view::Modifier::CTRL));

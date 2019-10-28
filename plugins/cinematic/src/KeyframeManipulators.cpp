@@ -428,6 +428,7 @@ bool KeyframeManipulators::ProcessHitManipulator(float mouse_x, float mouse_y) {
         glm::vec3 view = static_cast<glm::vec3>(snap_view);
         glm::vec3 right = static_cast<glm::vec3>(snap_right);
 
+        // Using right vector as delta vector for manipulating up vector rotating around view vector
         glm::vec3 right_position = manipulator_origin + glm::normalize(right) * world_length;
         glm::vec2 screenspace_right_position = this->world2ScreenSpace(right_position);
         screenspace_vector = screenspace_right_position - screenspace_manipulator_origin;
@@ -453,7 +454,6 @@ bool KeyframeManipulators::ProcessHitManipulator(float mouse_x, float mouse_y) {
     selected_camera.get_minimal_state(new_camera_state);
     this->state.selected_keyframe.SetCameraState(new_camera_state);
 
-    // Save processed mouse position as last one
     this->state.last_mouse = current_mouse;
 
     return true;

@@ -219,7 +219,7 @@ namespace cinematic {
         * callbacks
         **********************************************************************/
 
-        megamol::core::CalleeSlot cinematicCallSlot;
+        megamol::core::CalleeSlot keyframeCallSlot;
 
 		bool CallForGetUpdatedKeyframeData(core::Call& c);
 		bool CallForSetSimulationData(core::Call& c);
