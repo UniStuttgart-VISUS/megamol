@@ -299,7 +299,7 @@ bool megamol::probe::PlaceProbes::placeByCenterline(uint32_t lei, std::vector<st
     auto centerline_step = centerline.stride / sizeof(centerline.component_type);
     
     for (uint32_t i = 0; i < probe_count; i++) {
-        FloatProbe probe;
+        BaseProbe probe;
 
         std::vector<float> distances(centerline_vert_count);
         for (uint32_t j = 0; j < centerline_vert_count; j++) {

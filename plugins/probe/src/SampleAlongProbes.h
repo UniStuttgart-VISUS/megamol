@@ -13,6 +13,9 @@
 #include "mmcore/Module.h"
 
 #include "ProbeCollection.h"
+#include "mmcore/param/ParamSlot.h"
+#include "kdtree.h"
+#include "adios_plugin/CallADIOSData.h"
 
 namespace megamol {
 namespace probe {
@@ -48,20 +51,30 @@ protected:
     virtual void release();
 
     core::CalleeSlot m_probe_lhs_slot;
-    size_t m_probe_lhs_cached_hash;
 
     core::CallerSlot m_probe_rhs_slot;
-    size_t m_probe_rhs_cached_hash;
+    size_t m_probe_cached_hash;
 
     core::CallerSlot m_adios_rhs_slot;
-    size_t m_adios_rhs_cached_hash;
+    size_t m_adios_cached_hash;
+
+    core::CallerSlot m_full_tree_rhs_slot;
+    size_t m_full_tree_cached_hash;
+
+    core::param::ParamSlot m_parameter_to_sample_slot;
+    bool m_recalc;
 
 private:
+
+    void doSampling(const std::shared_ptr<ProbeCollection>& probes, const std::shared_ptr<pcl::KdTreeFLANN<pcl::PointXYZ>>& tree, std::vector<float>& data);
     bool getData(core::Call& call);
 
     bool getMetaData(core::Call& call);
 
     std::shared_ptr<ProbeCollection> m_probes;
+
+    size_t _old_datahash;
+    bool paramChanged(core::param::ParamSlot& p);
 };
 
 } // namespace probe

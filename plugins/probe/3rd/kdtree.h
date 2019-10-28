@@ -512,7 +512,7 @@ template <typename shvecPointT> struct PointCloudAdaptor {
       getName () const override { return ("KdTreeFLANN"); }
 
       /** \brief A FLANN index object. */
-      std::unique_ptr<FLANNIndex> flann_index_;
+      std::shared_ptr<FLANNIndex> flann_index_;
 
       PC2KD pc2kd;
 

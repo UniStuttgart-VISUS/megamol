@@ -58,7 +58,7 @@ struct IntProbe : public BaseProbe {
     }
 };
 
-using GenericProbe = std::variant<FloatProbe, IntProbe>;
+using GenericProbe = std::variant<FloatProbe, IntProbe, BaseProbe>;
 
 
 class ProbeCollection {

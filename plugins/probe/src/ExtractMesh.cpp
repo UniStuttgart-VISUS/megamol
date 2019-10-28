@@ -6,6 +6,7 @@
 
 #include "ExtractMesh.h"
 #include <limits>
+#include "CallKDTree.h"
 #include "adios_plugin/CallADIOSData.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/param/EnumParam.h"
@@ -24,6 +25,7 @@ ExtractMesh::ExtractMesh()
     , _deployMeshCall("deployMesh", "")
     , _deployLineCall("deployCenterline", "")
     , _deploySpheresCall("deploySpheres", "")
+    , _deployFullDataTree("deployFullDataTree", "")
     , _algorithmSlot("algorithm", "")
     , _xSlot("x", "")
     , _ySlot("y", "")
@@ -71,12 +73,16 @@ ExtractMesh::ExtractMesh()
         mesh::CallMesh::ClassName(), mesh::CallMesh::FunctionName(1), &ExtractMesh::getMetaData);
     this->MakeSlotAvailable(&this->_deployMeshCall);
 
-    
     this->_deployLineCall.SetCallback(
         mesh::CallMesh::ClassName(), mesh::CallMesh::FunctionName(0), &ExtractMesh::getCenterlineData);
     this->_deployLineCall.SetCallback(
         mesh::CallMesh::ClassName(), mesh::CallMesh::FunctionName(1), &ExtractMesh::getMetaData);
     this->MakeSlotAvailable(&this->_deployLineCall);
+
+    this->_deployFullDataTree.SetCallback(CallKDTree::ClassName(), CallKDTree::FunctionName(0), &ExtractMesh::getKDData);
+    this->_deployFullDataTree.SetCallback(
+        CallKDTree::ClassName(), CallKDTree::FunctionName(1), &ExtractMesh::getKDMetaData);
+    this->MakeSlotAvailable(&this->_deployFullDataTree);
 
     this->_getDataCall.SetCompatibleCall<adios::CallADIOSDataDescription>();
     this->MakeSlotAvailable(&this->_getDataCall);
@@ -94,13 +100,11 @@ bool ExtractMesh::create() { return true; }
 
 void ExtractMesh::release() {}
 
-bool ExtractMesh::InterfaceIsDirty() {
-    return (this->_alphaSlot.IsDirty() || this->_formatSlot.IsDirty());
-}
+bool ExtractMesh::InterfaceIsDirty() { return (this->_alphaSlot.IsDirty() || this->_formatSlot.IsDirty()); }
 
 bool ExtractMesh::flipNormalsWithCenterLine(pcl::PointCloud<pcl::PointNormal>& point_cloud) {
 
-    for (uint32_t i = 0; i < _cl_indices_per_slice.size(); i ++) {
+    for (uint32_t i = 0; i < _cl_indices_per_slice.size(); i++) {
         for (auto& center_idx : _cl_indices_per_slice[i]) {
 
             auto cl_x = _centerline[i][0];
@@ -129,19 +133,19 @@ bool ExtractMesh::flipNormalsWithCenterLine(pcl::PointCloud<pcl::PointNormal>& p
 }
 
 bool ExtractMesh::extractCenterLine(pcl::PointCloud<pcl::PointNormal>& point_cloud) {
-    
+
     std::array<float, 3> whd = {this->_bbox.ObjectSpaceBBox().Width(), this->_bbox.ObjectSpaceBBox().Height(),
         this->_bbox.ObjectSpaceBBox().Depth()};
     const auto longest_edge_index = std::distance(whd.begin(), std::max_element(whd.begin(), whd.end()));
 
     const uint32_t num_steps = 50;
-    const auto step_size = whd[longest_edge_index]/(num_steps+2); // without begin and end
-    const auto step_epsilon = step_size/2;
+    const auto step_size = whd[longest_edge_index] / (num_steps + 2); // without begin and end
+    const auto step_epsilon = step_size / 2;
     float offset = 0.0f;
     if (longest_edge_index == 0) {
         offset = std::min(this->_bbox.ObjectSpaceBBox().GetLeft(), this->_bbox.ObjectSpaceBBox().GetRight());
     } else if (longest_edge_index == 1) {
-        offset = std::min(this->_bbox.ObjectSpaceBBox().GetBottom(),this->_bbox.ObjectSpaceBBox().GetTop());
+        offset = std::min(this->_bbox.ObjectSpaceBBox().GetBottom(), this->_bbox.ObjectSpaceBBox().GetTop());
     } else if (longest_edge_index == 2) {
         offset = std::min(this->_bbox.ObjectSpaceBBox().GetFront(), this->_bbox.ObjectSpaceBBox().GetBack());
     }
@@ -152,7 +156,7 @@ bool ExtractMesh::extractCenterLine(pcl::PointCloud<pcl::PointNormal>& point_clo
 
 
     for (uint32_t i = 0; i < _centerline.size(); i++) {
-        const auto slice = offset +  (i + 1) * step_size;
+        const auto slice = offset + (i + 1) * step_size;
         const auto slice_min = slice - step_epsilon;
         const auto slice_max = slice + step_epsilon;
         float slice_dim1_mean = 0.0f;
@@ -163,8 +167,8 @@ bool ExtractMesh::extractCenterLine(pcl::PointCloud<pcl::PointNormal>& point_clo
                     _cl_indices_per_slice[i].emplace_back(n);
                     slice_dim1_mean += point_cloud.points[n].y;
                     slice_dim2_mean += point_cloud.points[n].z;
-                    //std::array<float, 2> tmp_slice_point = {point_cloud.points[n].y, point_cloud.points[n].z};
-                    //slice_vertices.emplace_back(tmp_slice_point);
+                    // std::array<float, 2> tmp_slice_point = {point_cloud.points[n].y, point_cloud.points[n].z};
+                    // slice_vertices.emplace_back(tmp_slice_point);
                 }
             } else if (longest_edge_index == 1) {
                 if (point_cloud.points[n].y >= slice_min && point_cloud.points[n].y < slice_max) {
@@ -196,6 +200,7 @@ bool ExtractMesh::extractCenterLine(pcl::PointCloud<pcl::PointNormal>& point_clo
 
 void ExtractMesh::calculateAlphaShape() {
 
+    // Calculate the alpha hull of the initial point cloud
     pcl::ConcaveHull<pcl::PointXYZ> hull;
 
     hull.setAlpha(this->_alphaSlot.Param<core::param::FloatParam>()->Value());
@@ -204,6 +209,10 @@ void ExtractMesh::calculateAlphaShape() {
     hull.setInputCloud(inputCloud);
     // hull.setDoFiltering(true);
     hull.reconstruct(_resultCloud, _polygons);
+
+    // Extract the kd tree for easy sampling of the data
+    this->_full_data_tree = hull.getKDTree();
+
     if (usePoisson) {
 
         pcl::Poisson<pcl::PointNormal> surface;
@@ -211,27 +220,33 @@ void ExtractMesh::calculateAlphaShape() {
         pcl::NormalEstimationOMP<pcl::PointXYZ, pcl::PointNormal> normal_est;
 
         std::shared_ptr<const pcl::PointCloud<pcl::PointXYZ>> result_shared =
-             std::make_shared<const pcl::PointCloud<pcl::PointXYZ>>(_resultCloud);
+            std::make_shared<const pcl::PointCloud<pcl::PointXYZ>>(_resultCloud);
 
+        // Estimate normals of the alpha shape vertices.
+        // Correct normals are needed for the Poisson surface reconstruction
         normal_est.setInputCloud(result_shared);
         pcl::PointCloud<pcl::PointNormal> normal_cloud;
-        //normal_est.setRadiusSearch(0.5f);
+        // normal_est.setRadiusSearch(0.5f);
         normal_est.setKSearch(40);
         normal_est.compute(normal_cloud);
 
+        // The estimated normals are not oriented correctly
+        // Calculate center line and use it to flip normals
         this->extractCenterLine(normal_cloud);
         this->flipNormalsWithCenterLine(normal_cloud);
 
         _resultNormalCloud = std::make_shared<pcl::PointCloud<pcl::PointNormal>>(normal_cloud);
 
+        // Perform a Poisson surface reconstruction
         _polygons.clear();
         surface.setInputCloud(_resultNormalCloud);
         surface.setDepth(7);
         surface.setSamplesPerNode(2.0f);
-        //surface.setConfidence(true);
+        // surface.setConfidence(true);
 
         surface.reconstruct(_resultSurface, _polygons);
 
+        // Estimate normals of the reconstructed surface
         pcl::NormalEstimationOMP<pcl::PointNormal, pcl::PointNormal> new_normal_est;
         new_normal_est.setKSearch(40);
         std::shared_ptr<const pcl::PointCloud<pcl::PointNormal>> surface_shared =
@@ -239,7 +254,8 @@ void ExtractMesh::calculateAlphaShape() {
         new_normal_est.setInputCloud(surface_shared);
         new_normal_est.compute(_resultSurface);
 
-        //this->flipNormalsWithCenterLine(_resultSurface);
+        // this->flipNormalsWithCenterLine(_resultSurface); // method is not general enough
+
     }
 }
 
@@ -313,7 +329,7 @@ void ExtractMesh::convertToMesh() {
         _mesh_attribs[0].data = reinterpret_cast<uint8_t*>(_resultCloud.points.data());
     } else {
         _mesh_attribs.resize(2);
-        _vertex_data.resize(3*_resultSurface.points.size());
+        _vertex_data.resize(3 * _resultSurface.points.size());
         _normal_data.resize(3 * _resultSurface.points.size());
 #pragma omp parallel for
         for (auto i = 0; i < _resultSurface.points.size(); i++) {
@@ -387,8 +403,7 @@ bool ExtractMesh::getData(core::Call& call) {
     meta_data.m_bboxs = _bbox;
     cm->setMetaData(meta_data);
 
-    if (cd->getDataHash() != _old_datahash)
-        this->calculateAlphaShape();
+    if (cd->getDataHash() != _old_datahash) this->calculateAlphaShape();
 
     // this->filterResult();
     // this->filterByIndex();
@@ -415,8 +430,7 @@ bool ExtractMesh::getMetaData(core::Call& call) {
     if (cd == nullptr) return false;
 
     auto meta_data = cm->getMetaData();
-    if (cd->getDataHash() == _old_datahash && meta_data.m_frame_ID == cd->getFrameIDtoLoad() && !_recalc)
-        return true;
+    if (cd->getDataHash() == _old_datahash && meta_data.m_frame_ID == cd->getFrameIDtoLoad() && !_recalc) return true;
 
     // get metadata from adios
 
@@ -445,7 +459,8 @@ bool ExtractMesh::getParticleData(core::Call& call) {
     auto cd = this->_getDataCall.CallAs<adios::CallADIOSData>();
     if (cd == nullptr) return false;
 
-    //if (cd->getDataHash() == _old_datahash && cm->FrameID() == cd->getFrameIDtoLoad() && cm->DataHash() == _recalc_hash)
+    // if (cd->getDataHash() == _old_datahash && cm->FrameID() == cd->getFrameIDtoLoad() && cm->DataHash() ==
+    // _recalc_hash)
     //    return true;
 
     std::vector<std::string> toInq;
@@ -471,8 +486,7 @@ bool ExtractMesh::getParticleData(core::Call& call) {
 
     cm->AccessBoundingBoxes().SetObjectSpaceBBox(_bbox.ObjectSpaceBBox());
 
-    if (cd->getDataHash() != _old_datahash)
-        this->calculateAlphaShape();
+    if (cd->getDataHash() != _old_datahash) this->calculateAlphaShape();
 
     // this->filterResult();
     // this->filterByIndex();
@@ -482,7 +496,8 @@ bool ExtractMesh::getParticleData(core::Call& call) {
     cm->AccessParticles(0).SetCount(_resultCloud.points.size());
     cm->AccessParticles(0).SetVertexData(core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
         reinterpret_cast<uint8_t*>(&_resultNormalCloud->points[0].x), sizeof(pcl::PointNormal));
-    cm->AccessParticles(0).SetDirData(core::moldyn::MultiParticleDataCall::Particles::DIRDATA_FLOAT_XYZ, &_resultNormalCloud->points[0].normal_x, sizeof(pcl::PointNormal));
+    cm->AccessParticles(0).SetDirData(core::moldyn::MultiParticleDataCall::Particles::DIRDATA_FLOAT_XYZ,
+        &_resultNormalCloud->points[0].normal_x, sizeof(pcl::PointNormal));
 
     _old_datahash = cd->getDataHash();
     _recalc = false;
@@ -497,8 +512,7 @@ bool ExtractMesh::getParticleMetaData(core::Call& call) {
     auto cd = this->_getDataCall.CallAs<adios::CallADIOSData>();
     if (cd == nullptr) return false;
 
-    if (cd->getDataHash() == _old_datahash && cm->FrameID() == cd->getFrameIDtoLoad())
-        return true;
+    if (cd->getDataHash() == _old_datahash && cm->FrameID() == cd->getFrameIDtoLoad()) return true;
 
     // get metadata from adios
     if (!(*cd)(1)) return false;
@@ -555,12 +569,11 @@ bool ExtractMesh::getCenterlineData(core::Call& call) {
     meta_data.m_bboxs = _bbox;
     cm->setMetaData(meta_data);
 
-    if (cd->getDataHash() != _old_datahash)
-        this->calculateAlphaShape();
+    if (cd->getDataHash() != _old_datahash) this->calculateAlphaShape();
 
     _line_attribs.resize(1);
     _line_attribs[0].component_type = mesh::MeshDataAccessCollection::ValueType::FLOAT;
-    _line_attribs[0].byte_size = _centerline.size() * sizeof(std::array<float,4>);
+    _line_attribs[0].byte_size = _centerline.size() * sizeof(std::array<float, 4>);
     _line_attribs[0].component_cnt = 3;
     _line_attribs[0].stride = sizeof(std::array<float, 4>);
     _line_attribs[0].data = reinterpret_cast<uint8_t*>(_centerline.data());
@@ -576,6 +589,88 @@ bool ExtractMesh::getCenterlineData(core::Call& call) {
     mesh::MeshDataAccessCollection line;
     line.addMesh(_line_attribs, _line_indices);
     cm->setData(std::make_shared<mesh::MeshDataAccessCollection>(std::move(line)));
+    _old_datahash = cd->getDataHash();
+    _recalc = false;
+
+    return true;
+}
+
+bool ExtractMesh::getKDMetaData(core::Call& call) {
+
+       auto cm = dynamic_cast<CallKDTree*>(&call);
+    if (cm == nullptr) return false;
+
+    auto cd = this->_getDataCall.CallAs<adios::CallADIOSData>();
+    if (cd == nullptr) return false;
+
+    auto meta_data = cm->getMetaData();
+    if (cd->getDataHash() == _old_datahash && meta_data.m_frame_ID == cd->getFrameIDtoLoad() && !_recalc) return true;
+
+    // get metadata from adios
+
+    cd->setFrameIDtoLoad(meta_data.m_frame_ID);
+    if (!(*cd)(1)) return false;
+    auto vars = cd->getAvailableVars();
+    for (auto var : vars) {
+        this->_xSlot.Param<core::param::FlexEnumParam>()->AddValue(var);
+        this->_ySlot.Param<core::param::FlexEnumParam>()->AddValue(var);
+        this->_zSlot.Param<core::param::FlexEnumParam>()->AddValue(var);
+        this->_xyzSlot.Param<core::param::FlexEnumParam>()->AddValue(var);
+    }
+
+    // put metadata in mesh call
+    meta_data.m_frame_cnt = cd->getFrameCount();
+    meta_data.m_data_hash++;
+    cm->setMetaData(meta_data);
+
+    return true;
+
+}
+
+bool ExtractMesh::getKDData(core::Call& call) {
+
+    auto cm = dynamic_cast<CallKDTree*>(&call);
+    if (cm == nullptr) return false;
+
+    auto cd = this->_getDataCall.CallAs<adios::CallADIOSData>();
+    if (cd == nullptr) return false;
+
+    auto meta_data = cm->getMetaData();
+    // if (cd->getDataHash() == _old_datahash && meta_data.m_frame_ID == cd->getFrameIDtoLoad() &&
+    //    meta_data.m_data_hash == _recalc_hash)
+    //    return true;
+
+    std::vector<std::string> toInq;
+    toInq.clear();
+    if (this->_formatSlot.Param<core::param::EnumParam>()->Value() == 0) {
+        toInq.emplace_back(std::string(this->_xSlot.Param<core::param::FlexEnumParam>()->ValueString()));
+        toInq.emplace_back(std::string(this->_ySlot.Param<core::param::FlexEnumParam>()->ValueString()));
+        toInq.emplace_back(std::string(this->_zSlot.Param<core::param::FlexEnumParam>()->ValueString()));
+    } else {
+        toInq.emplace_back(std::string(this->_xyzSlot.Param<core::param::FlexEnumParam>()->ValueString()));
+    }
+
+    // get data from adios
+    for (auto var : toInq) {
+        if (!cd->inquire(var)) return false;
+    }
+
+    if (cd->getDataHash() != _old_datahash)
+        if (!(*cd)(0)) return false;
+
+
+    if (!this->createPointCloud(toInq)) return false;
+
+    meta_data.m_bboxs = _bbox;
+    cm->setMetaData(meta_data);
+
+    if (cd->getDataHash() != _old_datahash) this->calculateAlphaShape();
+
+    // put data in mesh
+    mesh::MeshDataAccessCollection mesh;
+
+    mesh.addMesh(_mesh_attribs, _mesh_indices);
+    cm->setData(this->_full_data_tree);
     _old_datahash = cd->getDataHash();
     _recalc = false;
 

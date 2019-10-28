@@ -1,6 +1,6 @@
 /*
  * ExtractMesh.h
- * Copyright (C) 2009-2017 by MegaMol Team
+ * Copyright (C) 2019 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
 #pragma once
@@ -55,6 +55,7 @@ protected:
     core::CalleeSlot _deployMeshCall;
     core::CalleeSlot _deploySpheresCall;
     core::CalleeSlot _deployLineCall;
+    core::CalleeSlot _deployFullDataTree;
     core::param::ParamSlot _algorithmSlot;
     core::param::ParamSlot _xSlot;
     core::param::ParamSlot _ySlot;
@@ -62,6 +63,7 @@ protected:
     core::param::ParamSlot _xyzSlot;
     core::param::ParamSlot _formatSlot;
     core::param::ParamSlot _alphaSlot;
+
 
 
 private:
@@ -73,13 +75,18 @@ private:
 
     bool createPointCloud(std::vector<std::string>& vars);
     void convertToMesh();
-    bool getData(core::Call& call);
 
     bool getMetaData(core::Call& call);
+    bool getData(core::Call& call);
+
     bool getParticleData(core::Call& call);
     bool getParticleMetaData(core::Call& call);
+
     bool getCenterlineData(core::Call& call);
-     
+
+    bool getKDMetaData(core::Call& call);
+    bool getKDData(core::Call& call);
+    
     
 
     bool toggleFormat(core::param::ParamSlot& p);
@@ -100,6 +107,7 @@ private:
     pcl::PointCloud<pcl::PointXYZ> _resultCloud;
     pcl::PointCloud<pcl::PointNormal> _resultSurface;
     std::shared_ptr<pcl::PointCloud<pcl::PointNormal>> _resultNormalCloud;
+    std::shared_ptr<pcl::KdTreeFLANN<pcl::PointXYZ>> _full_data_tree;
 
     // CallMesh stuff
     std::vector<mesh::MeshDataAccessCollection::VertexAttribute> _mesh_attribs;

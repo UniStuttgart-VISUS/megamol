@@ -16,6 +16,7 @@
 #include "SampleAlongProbes.h"
 #include "ProbeCalls.h"
 #include "ExtractProbeGeometry.h"
+#include "CallKDTree.h"
 
 
 /* anonymous namespace hides this type from any other object files */
@@ -52,6 +53,7 @@ namespace {
             // register calls here:
 
             this->call_descriptions.RegisterAutoDescription<megamol::probe::CallProbes>();
+            this->call_descriptions.RegisterAutoDescription<megamol::probe::CallKDTree>();
 
         }
         MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics
