@@ -8,18 +8,17 @@
 
 #include "mesh_data_call.h"
 
-#include "mmcore/CalleeSlot.h"
+#include "mesh/AbstractGPUMeshDataSource.h"
+
+#include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 
 #include "vislib/math/Cuboid.h"
 
 #include "glad/glad.h"
 
-#include <array>
 #include <memory>
-#include <string>
 #include <type_traits>
 #include <vector>
 
@@ -32,7 +31,7 @@ namespace megamol
         *
         * @author Alexander Straub
         */
-        class triangle_mesh_renderer_3d : public core::Module
+        class triangle_mesh_renderer_3d : public mesh::AbstractGPUMeshDataSource
         {
             static_assert(std::is_same<GLfloat, float>::value, "'GLfloat' and 'float' must be the same type!");
             static_assert(std::is_same<GLuint, unsigned int>::value, "'GLuint' and 'unsigned int' must be the same type!");
@@ -83,25 +82,25 @@ namespace megamol
             virtual void release() override;
 
         private:
-            /** Callbacks for setting up the render tasks */
-            bool get_task_callback(core::Call& caller);
-            bool get_task_extent_callback(core::Call& caller);
+            /** Get input data and extent from called modules */
+            bool get_input_data();
+            bool get_input_extent();
 
             /** Callbacks for uploading the mesh to the GPU */
-            bool get_mesh_callback(core::Call& caller);
-            bool get_mesh_extent_callback(core::Call& caller);
+            virtual bool getDataCallback(core::Call& call) override;
+            virtual bool getMetaDataCallback(core::Call& call) override;
 
             /** Input slot for the triangle mesh */
-            core::CallerSlot triangle_mesh_slot;
             SIZE_T triangle_mesh_hash;
+            bool triangle_mesh_changed;
+
+            core::CallerSlot triangle_mesh_slot;
 
             /** Input slot for data attached to the triangles or their nodes */
-            core::CallerSlot mesh_data_slot;
             SIZE_T mesh_data_hash;
+            bool mesh_data_changed;
 
-            /** Output slots for rendering */
-            core::CalleeSlot render_task;
-            core::CalleeSlot gpu_mesh;
+            core::CallerSlot mesh_data_slot;
 
             /** Parameter slot for choosing data sets to visualize */
             core::param::ParamSlot data_set;
@@ -114,7 +113,7 @@ namespace megamol
             core::param::ParamSlot wireframe;
 
             /** Bounding box */
-            vislib::math::Cuboid<float> bounds;
+            vislib::math::Cuboid<float> bounding_box;
 
             /** Struct for storing data needed for rendering */
             struct render_data_t
@@ -123,8 +122,6 @@ namespace megamol
                 std::shared_ptr<std::vector<GLuint>> indices;
 
                 std::shared_ptr<mesh_data_call::data_set> values;
-
-                std::shared_ptr<std::vector<GLfloat>> mask;
 
             } render_data;
         };

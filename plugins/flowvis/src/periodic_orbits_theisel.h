@@ -22,7 +22,9 @@
 #include "data/tpf_grid.h"
 
 #include <array>
+#include <functional>
 #include <memory>
+#include <iostream>
 #include <utility>
 #include <vector>
 
@@ -36,10 +38,6 @@ namespace megamol
         * @author Alexander Straub
         */
         class periodic_orbits_theisel : public core::Module {
-
-            static_assert(std::is_same<GLfloat, float>::value, "'GLfloat' and 'float' must be the same type!");
-            static_assert(std::is_same<GLuint, unsigned int>::value, "'GLuint' and 'unsigned int' must be the same type!");
-
         public:
             /**
              * Answer the name of this module.

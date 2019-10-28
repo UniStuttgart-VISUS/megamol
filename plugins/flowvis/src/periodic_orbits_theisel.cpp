@@ -11,17 +11,19 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/TransferFunctionParam.h"
+#include "mmcore/utility/DataHash.h"
 
 #include "vislib/sys/Log.h"
 
 #include "Eigen/Dense"
 
+#include "data/tpf_data_information.h"
 #include "data/tpf_grid.h"
 #include "data/tpf_grid_information.h"
 
 #include <algorithm>
-#include <array>
 #include <iostream>
+#include <iterator>
 #include <memory>
 #include <utility>
 #include <vector>
@@ -43,7 +45,9 @@ periodic_orbits_theisel::periodic_orbits_theisel()
     , max_integration_error("max_integration_error", "Maximum integration error for Runge-Kutta 4-5")
     , num_subdivisions("num_subdivisions", "Number of subdivisions")
     , vector_field_hash(-1)
+    , vector_field_changed(false)
     , critical_points_hash(-1)
+    , critical_points_changed(false)
     , stream_surface_hash(-1)
     , periodic_orbits_hash(-1)
     , seed_line_hash(-1) {
@@ -92,7 +96,7 @@ periodic_orbits_theisel::periodic_orbits_theisel()
     this->integration_method.Param<core::param::EnumParam>()->SetTypePair(1, "Runge-Kutta 4-5 (dynamic)");
     this->MakeSlotAvailable(&this->integration_method);
 
-    this->num_integration_steps << new core::param::IntParam(0);
+    this->num_integration_steps << new core::param::IntParam(100);
     this->MakeSlotAvailable(&this->num_integration_steps);
 
     this->integration_timestep << new core::param::FloatParam(0.01f);
@@ -175,8 +179,8 @@ bool periodic_orbits_theisel::get_input_extent() {
 
     const auto average_size = 0.5f * (this->bounding_rectangle.Width() + this->bounding_rectangle.Height());
 
-    this->bounding_box.Set(this->bounding_rectangle.GetLeft(), 0.0f, this->bounding_rectangle.GetTop(),
-        this->bounding_rectangle.GetRight(), average_size, this->bounding_rectangle.GetBottom());
+    this->bounding_box.Set(this->bounding_rectangle.GetLeft(), 0.0f, this->bounding_rectangle.GetBottom(),
+        this->bounding_rectangle.GetRight(), average_size, this->bounding_rectangle.GetTop());
 
     return true;
 }
@@ -184,9 +188,6 @@ bool periodic_orbits_theisel::get_input_extent() {
 bool periodic_orbits_theisel::compute_periodic_orbits() {
     if (this->vector_field_changed || this->critical_points_changed) {
         // Create grid containing the vector field
-        this->grid_positions;
-        this->vectors;
-
         tpf::data::extent_t extent;
         extent.push_back(std::make_pair(0ull, static_cast<std::size_t>(this->resolution[0] - 1)));
         extent.push_back(std::make_pair(0ull, static_cast<std::size_t>(this->resolution[1] - 1)));
@@ -215,7 +216,6 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
                 origin[dimension] + (this->resolution[dimension] - 0.5f) * cell_size[dimension];
         }
 
-
         tpf::data::grid<float, float, 2, 2> vector_field("vector_field", extent, *this->vectors,
             std::move(cell_coordinates), std::move(node_coordinates), std::move(cell_sizes));
 
@@ -231,46 +231,51 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
         // DEBUG
 
         // For each seed line, compute forward and backward stream surfaces
-        const auto num_subdivisions =
-            static_cast<size_t>(std::max(1, this->num_subdivisions.Param<core::param::IntParam>()->Value()));
+        const auto num_seed_points =
+            static_cast<size_t>(std::max(0, this->num_subdivisions.Param<core::param::IntParam>()->Value()) + 2);
+        const auto num_triangles = 2 * (num_seed_points - 1);
         const auto num_integration_steps =
             static_cast<size_t>(this->num_integration_steps.Param<core::param::IntParam>()->Value());
 
         this->triangles = std::make_shared<std::vector<unsigned int>>();
-        this->triangles->reserve(2 * seed_lines.size() * num_subdivisions * 2 * 3 * num_integration_steps);
+        this->triangles->reserve(2 * seed_lines.size() * 3 * num_triangles * num_integration_steps);
 
         this->mesh_vertices = std::make_shared<std::vector<float>>();
-        this->mesh_vertices->reserve(2 * seed_lines.size() * 3 * num_subdivisions * (num_integration_steps + 1));
+        this->mesh_vertices->reserve(2 * seed_lines.size() * 3 * num_seed_points * (num_integration_steps + 1));
 
         this->seed_lines.clear();
         this->seed_lines.reserve(seed_lines.size());
 
         this->periodic_orbits.clear();
 
-        for (const auto& seed_line : seed_lines) {
-            this->seed_lines.push_back(std::make_pair(0.0f, std::vector<Eigen::Vector2f>{ seed_line.first, seed_line.second }));
+        unsigned int index_offset = 0;
+
+        for (std::size_t seed_index = 0; seed_index < seed_lines.size(); ++seed_index) {
+            this->seed_lines.push_back(std::make_pair(
+                static_cast<float>(seed_index),
+                std::vector<Eigen::Vector2f>{seed_lines[seed_index].first, seed_lines[seed_index].second}));
 
             // Subdivide line and create a seed point per subdivision
             const auto height = this->bounding_box.Height();
 
-            const Eigen::Vector3f seed_line_start(seed_line.first.x(), 0.0f, seed_line.first.y());
-            const Eigen::Vector3f seed_line_end(seed_line.second.x(), height, seed_line.second.y());
+            const Eigen::Vector3f seed_line_start(seed_lines[seed_index].first.x(), 0.0f, seed_lines[seed_index].first.y());
+            const Eigen::Vector3f seed_line_end(seed_lines[seed_index].second.x(), height, seed_lines[seed_index].second.y());
 
             const auto direction = (seed_line_end - seed_line_start).normalized();
-            const auto step = (seed_line_end - seed_line_start).norm() / num_subdivisions;
+            const auto step = (seed_line_end - seed_line_start).norm() / (num_seed_points - 1);
 
             std::vector<Eigen::Vector3f> forward_points, backward_points;
-            forward_points.reserve(num_subdivisions * (num_integration_steps + 1));
-            backward_points.reserve(num_subdivisions * (num_integration_steps + 1));
+            forward_points.reserve(num_seed_points * (num_integration_steps + 1));
+            backward_points.reserve(num_seed_points * (num_integration_steps + 1));
 
             std::vector<float> forward_timesteps, backward_timesteps;
-            forward_timesteps.reserve(num_subdivisions);
-            backward_timesteps.reserve(num_subdivisions);
+            forward_timesteps.reserve(num_seed_points);
+            backward_timesteps.reserve(num_seed_points);
 
             const float timestep = this->integration_timestep.Param<core::param::FloatParam>()->Value();
 
-            for (int subdiv = 0; subdiv < num_subdivisions; ++subdiv) {
-                const Eigen::Vector3f seed_point = seed_line_start + (subdiv * step) * direction;
+            for (int point_index = 0; point_index < num_seed_points; ++point_index) {
+                const Eigen::Vector3f seed_point = seed_line_start + (point_index * step) * direction;
 
                 forward_timesteps.push_back(timestep);
                 backward_timesteps.push_back(timestep);
@@ -284,8 +289,8 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
             auto previous_backward_points = backward_points;
 
             std::vector<Eigen::Vector3f> advected_forward_points, advected_backward_points;
-            advected_forward_points.reserve(num_subdivisions);
-            advected_backward_points.reserve(num_subdivisions);
+            advected_forward_points.reserve(num_seed_points);
+            advected_backward_points.reserve(num_seed_points);
 
             for (std::size_t integration = 0; integration < num_integration_steps; ++integration) {
                 advected_forward_points.clear();
@@ -302,17 +307,17 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
                 }
 
                 // Create surface mesh for stream surface between previous and advected points
-                const auto offset = forward_points.size() - previous_forward_points.size();
+                for (std::size_t point_index = 0; point_index < num_seed_points - 1; ++point_index) {
+                    this->triangles->push_back(static_cast<unsigned int>(index_offset + point_index));
+                    this->triangles->push_back(static_cast<unsigned int>(index_offset + point_index + num_seed_points));
+                    this->triangles->push_back(static_cast<unsigned int>(index_offset + point_index + num_seed_points + 1));
 
-                for (std::size_t subdivisions = 0; subdivisions < num_subdivisions; ++subdivisions) {
-                    this->triangles->push_back(static_cast<unsigned int>(offset + subdivisions));
-                    this->triangles->push_back(static_cast<unsigned int>(offset + subdivisions + num_subdivisions + 1));
-                    this->triangles->push_back(static_cast<unsigned int>(offset + subdivisions + num_subdivisions + 2));
-
-                    this->triangles->push_back(static_cast<unsigned int>(offset + subdivisions));
-                    this->triangles->push_back(static_cast<unsigned int>(offset + subdivisions + num_subdivisions + 2));
-                    this->triangles->push_back(static_cast<unsigned int>(offset + subdivisions + 1));
+                    this->triangles->push_back(static_cast<unsigned int>(index_offset + point_index));
+                    this->triangles->push_back(static_cast<unsigned int>(index_offset + point_index + num_seed_points + 1));
+                    this->triangles->push_back(static_cast<unsigned int>(index_offset + point_index + 1));
                 }
+
+                index_offset += num_seed_points;
 
                 forward_points.insert(
                     forward_points.end(), advected_forward_points.begin(), advected_forward_points.end());
@@ -342,13 +347,13 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
                 this->mesh_vertices->push_back(backward_point.z());
             }
 
-            const auto offset = static_cast<unsigned int>(this->triangles->size());
-
-            std::transform(this->triangles->begin(), this->triangles->end(), std::back_inserter(*this->triangles),
-                [offset](unsigned int index) { return offset + index; });
+            //const auto offset = static_cast<unsigned int>(this->triangles->size());
+            //
+            //std::transform(this->triangles->begin(), this->triangles->end(), std::back_inserter(*this->triangles),
+            //    [offset](unsigned int index) { return offset + index; });
         }
 
-        ++this->stream_surface_hash;
+        this->stream_surface_hash = core::utility::DataHash(this->triangles->begin(), this->triangles->end());
 
         this->periodic_orbits_hash = -1;
         this->seed_line_hash = -1;
