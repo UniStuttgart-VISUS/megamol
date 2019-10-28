@@ -367,16 +367,13 @@ void ExtractMesh::convertToMesh() {
 
 bool ExtractMesh::getData(core::Call& call) {
 
+    bool something_changed = _recalc;
+
     auto cm = dynamic_cast<mesh::CallMesh*>(&call);
     if (cm == nullptr) return false;
 
     auto cd = this->_getDataCall.CallAs<adios::CallADIOSData>();
     if (cd == nullptr) return false;
-
-    auto meta_data = cm->getMetaData();
-    // if (cd->getDataHash() == _old_datahash && meta_data.m_frame_ID == cd->getFrameIDtoLoad() &&
-    //    meta_data.m_data_hash == _recalc_hash)
-    //    return true;
 
     std::vector<std::string> toInq;
     toInq.clear();
@@ -393,22 +390,29 @@ bool ExtractMesh::getData(core::Call& call) {
         if (!cd->inquire(var)) return false;
     }
 
-    if (cd->getDataHash() != _old_datahash)
+    if (cd->getDataHash() != _old_datahash) {
         if (!(*cd)(0)) return false;
+        something_changed = true;
+    }
 
+    if (something_changed) {
 
-    if (!this->createPointCloud(toInq)) return false;
+        if (!this->createPointCloud(toInq)) return false;
 
+        
 
+        if (cd->getDataHash() != _old_datahash)
+            this->calculateAlphaShape();
+
+        // this->filterResult();
+        // this->filterByIndex();
+
+        this->convertToMesh();
+    }
+
+    auto meta_data = cm->getMetaData();
     meta_data.m_bboxs = _bbox;
     cm->setMetaData(meta_data);
-
-    if (cd->getDataHash() != _old_datahash) this->calculateAlphaShape();
-
-    // this->filterResult();
-    // this->filterByIndex();
-
-    this->convertToMesh();
 
     // put data in mesh
     mesh::MeshDataAccessCollection mesh;
@@ -430,10 +434,8 @@ bool ExtractMesh::getMetaData(core::Call& call) {
     if (cd == nullptr) return false;
 
     auto meta_data = cm->getMetaData();
-    if (cd->getDataHash() == _old_datahash && meta_data.m_frame_ID == cd->getFrameIDtoLoad() && !_recalc) return true;
 
     // get metadata from adios
-
     cd->setFrameIDtoLoad(meta_data.m_frame_ID);
     if (!(*cd)(1)) return false;
     auto vars = cd->getAvailableVars();
@@ -443,6 +445,8 @@ bool ExtractMesh::getMetaData(core::Call& call) {
         this->_zSlot.Param<core::param::FlexEnumParam>()->AddValue(var);
         this->_xyzSlot.Param<core::param::FlexEnumParam>()->AddValue(var);
     }
+
+    if (cd->getDataHash() == _old_datahash && !_recalc) return true;
 
     // put metadata in mesh call
     meta_data.m_frame_cnt = cd->getFrameCount();
