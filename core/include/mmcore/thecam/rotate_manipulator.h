@@ -97,6 +97,17 @@ public:
      */
     inline world_type rotation_angle(void) const { return this->rotationAngle; }
 
+    void setActive() {
+        if (!this->manipulating() && this->enabled()) {
+            this->begin_manipulation();
+        }
+    }
+
+    /**
+     * Set manipulator to inactive (usually on mouse button release).
+     */
+    inline void setInactive(void) { this->end_manipulation(); }
+
 private:
     /** The angle that is used for rotation */
     world_type rotationAngle;

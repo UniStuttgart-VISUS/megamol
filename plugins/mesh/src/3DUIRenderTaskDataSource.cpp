@@ -45,11 +45,11 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
         rt_collection = lhs_rtc->getData();
     }
 
-    CallGPUMaterialData* mtlc = this->m_material_callerSlot.CallAs<CallGPUMaterialData>();
+    CallGPUMaterialData* mtlc = this->m_material_slot.CallAs<CallGPUMaterialData>();
     if (mtlc == NULL) return false;
     if (!(*mtlc)(0)) return false;
 
-    CallGPUMeshData* mc = this->m_mesh_callerSlot.CallAs<CallGPUMeshData>();
+    CallGPUMeshData* mc = this->m_mesh_slot.CallAs<CallGPUMeshData>();
     if (mc == NULL) return false;
     if (!(*mc)(0)) return false;
 
@@ -255,7 +255,7 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
 
     }
 
-    CallGPURenderTaskData* rhs_rtc = this->m_renderTask_callerSlot.CallAs<CallGPURenderTaskData>();
+    CallGPURenderTaskData* rhs_rtc = this->m_renderTask_rhs_slot.CallAs<CallGPURenderTaskData>();
     if (rhs_rtc != NULL) {
         rhs_rtc->setData(rt_collection);
 
