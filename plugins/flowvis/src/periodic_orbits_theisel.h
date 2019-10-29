@@ -6,6 +6,8 @@
  */
 #pragma once
 
+#include "mesh_data_call.h"
+
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
@@ -115,6 +117,9 @@ namespace megamol
             bool get_stream_surfaces_data(core::Call& call);
             bool get_stream_surfaces_extent(core::Call& call);
 
+            bool get_stream_surface_values_data(core::Call& call);
+            bool get_stream_surface_values_extent(core::Call& call);
+
             /** Callbacks for the computed seed lines */
             bool get_seed_lines_data(core::Call& call);
             bool get_seed_lines_extent(core::Call& call);
@@ -128,6 +133,7 @@ namespace megamol
 
             /** Output slot for computed stream surfaces */
             core::CalleeSlot stream_surface_slot;
+            core::CalleeSlot stream_surface_values_slot;
 
             /** Output slot for computed seed lines */
             core::CalleeSlot seed_line_slot;
@@ -150,6 +156,7 @@ namespace megamol
             core::param::ParamSlot integration_timestep;
             core::param::ParamSlot max_integration_error;
             core::param::ParamSlot num_subdivisions;
+            core::param::ParamSlot direction;
 
             /** Bounding rectangle and box */
             vislib::math::Rectangle<float> bounding_rectangle;
@@ -175,6 +182,9 @@ namespace megamol
 
             std::shared_ptr<std::vector<float>> mesh_vertices;
             std::shared_ptr<std::vector<unsigned int>> triangles;
+            std::shared_ptr<mesh_data_call::data_set> seed_line_ids;
+            std::shared_ptr<mesh_data_call::data_set> seed_point_ids;
+            std::shared_ptr<mesh_data_call::data_set> integration_ids;
 
             /** Output periodic orbit glyphs */
             SIZE_T periodic_orbits_hash;

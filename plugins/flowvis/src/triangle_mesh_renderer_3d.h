@@ -8,7 +8,9 @@
 
 #include "mesh_data_call.h"
 
-#include "mesh/AbstractGPUMeshDataSource.h"
+#include "mesh/AbstractGPURenderTaskDataSource.h"
+#include "mesh/GPUMaterialCollection.h"
+#include "mesh/GPUMeshCollection.h"
 
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
@@ -31,7 +33,7 @@ namespace megamol
         *
         * @author Alexander Straub
         */
-        class triangle_mesh_renderer_3d : public mesh::AbstractGPUMeshDataSource
+        class triangle_mesh_renderer_3d : public mesh::AbstractGPURenderTaskDataSource
         {
             static_assert(std::is_same<GLfloat, float>::value, "'GLfloat' and 'float' must be the same type!");
             static_assert(std::is_same<GLuint, unsigned int>::value, "'GLuint' and 'unsigned int' must be the same type!");
@@ -105,23 +107,22 @@ namespace megamol
             /** Parameter slot for choosing data sets to visualize */
             core::param::ParamSlot data_set;
 
-            /** Parameter slot for choosing validity masks */
-            core::param::ParamSlot mask;
-            core::param::ParamSlot mask_color;
-
-            /** Parameter slot for choosing between filled and wireframe mode */
-            core::param::ParamSlot wireframe;
-
             /** Bounding box */
             vislib::math::Cuboid<float> bounding_box;
 
             /** Struct for storing data needed for rendering */
             struct render_data_t
             {
+                std::shared_ptr<mesh::Shader> shader;
+
+                GLuint transfer_function = 0;
+
                 std::shared_ptr<std::vector<GLfloat>> vertices;
                 std::shared_ptr<std::vector<GLuint>> indices;
 
                 std::shared_ptr<mesh_data_call::data_set> values;
+
+                std::shared_ptr<mesh::GPUMeshCollection> mesh;
 
             } render_data;
         };

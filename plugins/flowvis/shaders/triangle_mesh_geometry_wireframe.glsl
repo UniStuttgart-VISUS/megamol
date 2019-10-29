@@ -1,5 +1,5 @@
 layout(triangles) in;
-layout(triangle_strip, max_vertices = 3) out;
+layout(line_strip, max_vertices = 4) out;
 
 uniform mat4 view_mx;
 uniform mat4 proj_mx;
@@ -24,6 +24,10 @@ void main() {
 
     gl_Position = proj_mx * view_mx * gl_in[2].gl_Position;
     color = illum_coeff * colors[2];
+    EmitVertex();
+
+    gl_Position = proj_mx * view_mx * gl_in[0].gl_Position;
+    color = illum_coeff * colors[0];
     EmitVertex();
 
     EndPrimitive();
