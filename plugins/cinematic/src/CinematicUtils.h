@@ -116,13 +116,13 @@ namespace cinematic {
 
         bool LoadTextureFromFile(std::wstring filename, GLuint& out_texture_id);
 
-        void PushPointPrimitive(const glm::vec3& pos_center, float size, const glm::vec3& cam_view, const glm::vec3& cam_pos, const glm::vec4& color);
+        void PushPointPrimitive(const glm::vec3& pos_center, float size, const glm::vec3& cam_view, const glm::vec3& cam_pos, const glm::vec4& color, bool sort = false);
 
-        void PushLinePrimitive(const glm::vec3& pos_start, const glm::vec3& pos_end, float line_width, const glm::vec3& cam_view, const glm::vec3& cam_pos, const glm::vec4& color);
+        void PushLinePrimitive(const glm::vec3& pos_start, const glm::vec3& pos_end, float line_width, const glm::vec3& cam_view, const glm::vec3& cam_pos, const glm::vec4& color, bool sort = false);
 
-        void PushQuadPrimitive(const glm::vec3& pos_center, float width, float height, const glm::vec3& cam_view, const glm::vec3& cam_up, const glm::vec4& color);
+        void PushQuadPrimitive(const glm::vec3& pos_center, float width, float height, const glm::vec3& cam_view, const glm::vec3& cam_up, const glm::vec4& color, bool sort = false);
 
-        void PushQuadPrimitive(const glm::vec3& pos_bottom_left, const glm::vec3& pos_upper_left, const glm::vec3& pos_upper_right, const glm::vec3& pos_bottom_right, const glm::vec4& color);
+        void PushQuadPrimitive(const glm::vec3& pos_bottom_left, const glm::vec3& pos_upper_left, const glm::vec3& pos_upper_right, const glm::vec3& pos_bottom_right, const glm::vec4& color, bool sort = false);
 
         /// Default color requires alpha = zero to recognise in shader whether global color for texture is set or not.
         void Push2DColorTexture(GLuint texture_id, const glm::vec3& pos_bottom_left, const glm::vec3& pos_upper_left, const glm::vec3& pos_upper_right, const glm::vec3& pos_bottom_right, 

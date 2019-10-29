@@ -163,7 +163,7 @@ bool RenderUtils::LoadTextureFromFile(std::wstring filename, GLuint& out_texture
 }
 
 
-void RenderUtils::PushPointPrimitive(const glm::vec3& pos_center, float size, const glm::vec3& cam_view, const glm::vec3& cam_pos, const glm::vec4& color) {
+void RenderUtils::PushPointPrimitive(const glm::vec3& pos_center, float size, const glm::vec3& cam_view, const glm::vec3& cam_pos, const glm::vec4& color, bool sort) {
 
     glm::vec3 distance = (pos_center - cam_pos);
     if (glm::dot(cam_view, distance) < 0.0f) return;
@@ -173,10 +173,14 @@ void RenderUtils::PushPointPrimitive(const glm::vec3& pos_center, float size, co
     glm::vec3 rad = pos_center + glm::normalize(this->arbitraryPerpendicular(distance)) * radius;
     glm::vec4 attributes = { rad.x, rad.y, rad.z, d };
     this->pushShaderData(Primitives::POINTS, 0, pos_center, color, glm::vec2(0.0f, 0.0f), attributes);
+
+    if (sort) {
+        this->sortPrimitiveQueue(Primitives::POINTS);
+    }
 }
 
 
-void RenderUtils::PushLinePrimitive(const glm::vec3& pos_start, const glm::vec3& pos_end, float line_width, const glm::vec3& cam_view, const glm::vec3& cam_pos, const glm::vec4& color) {
+void RenderUtils::PushLinePrimitive(const glm::vec3& pos_start, const glm::vec3& pos_end, float line_width, const glm::vec3& cam_view, const glm::vec3& cam_pos, const glm::vec4& color, bool sort) {
 
     glm::vec3 normal = cam_view * (-1.0f);
     glm::vec3 linedir = (pos_start - pos_end);
@@ -187,11 +191,15 @@ void RenderUtils::PushLinePrimitive(const glm::vec3& pos_start, const glm::vec3&
     glm::vec3 pos_upper_right = pos_end + p1;
     glm::vec3 pos_bottom_right = pos_end - p1;
     glm::vec4 attributes = { 0.0f, 0.0f, 0.0f, 0.0f };
-    this->pushQuad(RenderUtils::Primitives::QUADS, 0, pos_bottom_left, pos_upper_left, pos_upper_right, pos_bottom_right, color, attributes);
+    this->pushQuad(RenderUtils::Primitives::LINES, 0, pos_bottom_left, pos_upper_left, pos_upper_right, pos_bottom_right, color, attributes);
+
+    if (sort) {
+        this->sortPrimitiveQueue(Primitives::LINES);
+    }
 }
 
 
-void RenderUtils::PushQuadPrimitive(const glm::vec3& pos_center, float width, float height, const glm::vec3& cam_view, const glm::vec3& cam_up, const glm::vec4& color) {
+void RenderUtils::PushQuadPrimitive(const glm::vec3& pos_center, float width, float height, const glm::vec3& cam_view, const glm::vec3& cam_up, const glm::vec4& color, bool sort) {
 
     glm::vec3 normal = cam_view * (-1.0f);
     glm::vec3 p1 = glm::normalize(cam_up);
@@ -204,13 +212,21 @@ void RenderUtils::PushQuadPrimitive(const glm::vec3& pos_center, float width, fl
     glm::vec3 pos_bottom_right = pos_center - p1 + p2;
     glm::vec4 attributes = { 0.0f, 0.0f, 0.0f, 0.0f };
     this->pushQuad(RenderUtils::Primitives::QUADS, 0, pos_bottom_left, pos_upper_left, pos_upper_right, pos_bottom_right, color, attributes);
+
+    if (sort) {
+        this->sortPrimitiveQueue(Primitives::QUADS);
+    }
 }
 
 
-void RenderUtils::PushQuadPrimitive(const glm::vec3& pos_bottom_left, const glm::vec3& pos_upper_left, const glm::vec3& pos_upper_right, const glm::vec3& pos_bottom_right, const glm::vec4& color) {
+void RenderUtils::PushQuadPrimitive(const glm::vec3& pos_bottom_left, const glm::vec3& pos_upper_left, const glm::vec3& pos_upper_right, const glm::vec3& pos_bottom_right, const glm::vec4& color, bool sort) {
 
     glm::vec4 attributes = { 0.0f, 0.0f, 0.0f, 0.0f };
     this->pushQuad(RenderUtils::Primitives::QUADS, 0, pos_bottom_left, pos_upper_left, pos_upper_right, pos_bottom_right, color, attributes);
+
+    if (sort) {
+        this->sortPrimitiveQueue(Primitives::QUADS);
+    }
 }
 
 

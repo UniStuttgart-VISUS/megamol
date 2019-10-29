@@ -252,7 +252,7 @@ bool BoundingBoxRenderer::RenderBoundingBoxBack(const glm::mat4& mvp, const Boun
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS); // EQUAL);
+    glDepthFunc(GL_LEQUAL);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_FRONT);
     if (smoothLines) glEnable(GL_LINE_SMOOTH);
