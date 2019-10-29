@@ -17,6 +17,7 @@
 #include "GPUMaterialCollection.h"
 #include "GPUMeshCollection.h"
 #include "GPURenderTaskCollection.h"
+#include "ImageDataAccessCollection.h"
 #include "MeshDataAccessCollection.h"
 
 namespace megamol {
@@ -82,6 +83,16 @@ public:
     static const char* Description(void) { return "Call that gives access to CPU-side mesh data."; }
 };
 
+class MESH_API CallImage
+    : public core::CallGeneric<std::shared_ptr<ImageDataAccessCollection>, core::BasicMetaData> {
+public:
+    CallImage() : CallGeneric<std::shared_ptr<ImageDataAccessCollection>, core::BasicMetaData>() {}
+    ~CallImage(){};
+
+    static const char* ClassName(void) { return "CallImage"; }
+    static const char* Description(void) { return "Call that gives access to CPU-side image data."; }
+};
+
 /** Description class typedef */
 typedef megamol::core::factories::CallAutoDescription<CallGPURenderTaskData> GPURenderTasksDataCallDescription;
 typedef megamol::core::factories::CallAutoDescription<CallGPUMeshData> CallGPUMeshDataDescription;
@@ -89,6 +100,7 @@ typedef megamol::core::factories::CallAutoDescription<CallGPUMaterialData> CallG
 typedef megamol::core::factories::CallAutoDescription<Call3DInteraction> Call3DInteractionDescription;
 typedef megamol::core::factories::CallAutoDescription<CallGlTFData> CallGlTFDataDescription;
 typedef megamol::core::factories::CallAutoDescription<CallMesh> CallMeshDescription;
+typedef megamol::core::factories::CallAutoDescription<CallImage> CallImageDescription;
 
 } // namespace mesh
 } // namespace megamol
