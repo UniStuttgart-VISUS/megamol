@@ -537,8 +537,8 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
                         ImVec2(canvas_pos.x + (x * canvas_size.x), canvas_pos.y + canvas_size.y - (g * canvas_size.y));
                     drawList->PathLineTo(pos);
                 }
+                drawList->PathStroke(channelColors[c], false, line_width);
             }
-            drawList->PathStroke(channelColors[c], false, line_width);
 
             // Test for intersection of mouse position with node.
             ImVec2 d = ImVec2(point.x - mouse_cur_pos.x, point.y - mouse_cur_pos.y);
@@ -548,6 +548,7 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
                 selected_delta = d;
             }
         }
+        drawList->PathStroke(channelColors[c], false, line_width);
 
         // Draw node circles.
         for (size_t i = 0; i < this->nodes.size(); ++i) {
@@ -675,5 +676,7 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
     }
     ImGui::SameLine(0.0f, style.ItemInnerSpacing.x);
     ImGui::Text("Function Plot");
-    this->utils.HelpMarkerToolTip("[Left-Click] Select Node\n[Left-Drag] Move Node\n[Right-Click] Add/Delete Node");
+    this->utils.HelpMarkerToolTip(
+        "First and last node are always present\nwith fixed value 0 and 1.\n[Left-Click] Select "
+        "Node\n[Left-Drag] Move Node\n[Right-Click] Add/Delete Node");
 }
