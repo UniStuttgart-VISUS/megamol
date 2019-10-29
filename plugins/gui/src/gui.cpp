@@ -12,7 +12,6 @@
 #include "mmcore/versioninfo.h"
 #include "vislib/vislibversion.h"
 
-#include "ConfiguratorView.h"
 #include "GUIView.h"
 #include "WatermarkRenderer.h"
 
@@ -41,7 +40,6 @@ public:
     /** Registers modules and calls */
     virtual void registerClasses(void) {
         this->module_descriptions.RegisterAutoDescription<megamol::gui::GUIView>();
-        this->module_descriptions.RegisterAutoDescription<megamol::gui::ConfiguratorView>();
         this->module_descriptions.RegisterAutoDescription<megamol::gui::WatermarkRenderer>();
     }
 

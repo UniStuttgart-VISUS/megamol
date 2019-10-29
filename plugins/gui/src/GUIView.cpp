@@ -65,6 +65,7 @@ GUIView::GUIView()
     , context(nullptr)
     , window_manager()
     , tf_editor()
+    , configurator()
     , utils()
     , state()
     , setParameterSearchFocus(false)
@@ -137,6 +138,9 @@ bool GUIView::create() {
         WindowManager::DrawCallbacks::TF, [&, this](const std::string& wn, WindowManager::WindowConfiguration& wc) {
             this->drawTFWindowCallback(wn, wc);
         });
+    this->window_manager.RegisterDrawWindowCallback(WindowManager::DrawCallbacks::CONFIGURATOR,
+        [&, this](
+            const std::string& wn, WindowManager::WindowConfiguration& wc) { this->drawConfiguratorCallback(wn, wc); });
 
     // Create window configurations
     WindowManager::WindowConfiguration buf_win;
@@ -170,6 +174,14 @@ bool GUIView::create() {
     buf_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize;
     buf_win.win_callback = WindowManager::DrawCallbacks::TF;
     this->window_manager.AddWindowConfiguration("Transfer Function Editor", buf_win);
+
+    // CONFIGURATOR Window -----------------------------------------------
+    buf_win.win_show = false;
+    buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F8, core::view::Modifier::CTRL);
+    buf_win.win_flags = ImGuiWindowFlags_None;
+    buf_win.win_callback = WindowManager::DrawCallbacks::CONFIGURATOR;
+    buf_win.win_size = ImVec2(700, 600);
+    this->window_manager.AddWindowConfiguration("Configurator", buf_win);
 
     // Style settings ---------------------------------------------------------
     ImGui::SetColorEditOptions(ImGuiColorEditFlags_Uint8 | ImGuiColorEditFlags_RGB |
@@ -830,6 +842,11 @@ void GUIView::drawMainWindowCallback(const std::string& wn, WindowManager::Windo
 
 void GUIView::drawTFWindowCallback(const std::string& wn, WindowManager::WindowConfiguration& wc) {
     this->tf_editor.DrawTransferFunctionEditor();
+}
+
+
+void GUIView::drawConfiguratorCallback(const std::string& wn, WindowManager::WindowConfiguration& wc) {
+    this->configurator.Draw(wc, this->GetCoreInstance());
 }
 
 

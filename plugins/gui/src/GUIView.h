@@ -14,6 +14,7 @@
 
 #include "vislib/math/Rectangle.h"
 
+#include "Configurator.h"
 #include "GUIUtils.h"
 #include "TransferFunctionEditor.h"
 #include "WindowManager.h"
@@ -156,6 +157,9 @@ private:
     /** The transfer function editor. */
     TransferFunctionEditor tf_editor;
 
+    /** The configurator. */
+    Configurator configurator;
+
     /** Utils being used all over the place */
     GUIUtils utils;
 
@@ -231,6 +235,14 @@ private:
      * @param window_config  The configuration of the calling window.
      */
     void drawTFWindowCallback(const std::string& wn, WindowManager::WindowConfiguration& wc);
+
+    /**
+     * Callback for drawing the configurator.
+     *
+     * @param window_name    The label of the calling window.
+     * @param window_config  The configuration of the calling window.
+     */
+    void drawConfiguratorCallback(const std::string& wn, WindowManager::WindowConfiguration& wc);
 
     /**
      * Draws the menu bar.
