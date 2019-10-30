@@ -5,22 +5,27 @@ uniform mat4 view_mx;
 uniform mat4 proj_mx;
 
 in vec4 colors[];
+
 out vec4 color;
+out vec3 normal;
 
 void main() {
-    const float illum_coeff =
-        calculate_illumination(view_mx, gl_in[0].gl_Position, gl_in[1].gl_Position, gl_in[2].gl_Position);
+    const vec3 calculated_normal =
+        calculate_normal(view_mx, gl_in[0].gl_Position, gl_in[1].gl_Position, gl_in[2].gl_Position);
 
     gl_Position = proj_mx * view_mx * gl_in[0].gl_Position;
-    color = illum_coeff * colors[0];
+    color = colors[0];
+    normal = calculated_normal;
     EmitVertex();
 
     gl_Position = proj_mx * view_mx * gl_in[1].gl_Position;
-    color = illum_coeff * colors[1];
+    color = colors[1];
+    normal = calculated_normal;
     EmitVertex();
 
     gl_Position = proj_mx * view_mx * gl_in[2].gl_Position;
-    color = illum_coeff * colors[2];
+    color = colors[2];
+    normal = calculated_normal;
     EmitVertex();
 
     EndPrimitive();
