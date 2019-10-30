@@ -105,9 +105,9 @@ namespace megamol
              * @param delta Time step size, which can be adjusted by the integration method
              * @param forward True: forward integration, false: reverse integration
              */
-            void advect_point(const tpf::data::grid<float, float, 2, 2>& grid, Eigen::Vector3f& point, float& delta, bool forward) const;
-            void advect_point_rk4(const tpf::data::grid<float, float, 2, 2>& grid, Eigen::Vector3f& point, float& delta, bool forward) const;
-            void advect_point_rk45(const tpf::data::grid<float, float, 2, 2>& grid, Eigen::Vector3f& point, float& delta, bool forward) const;
+            Eigen::Vector3f advect_point(const tpf::data::grid<float, float, 2, 2>& grid, const Eigen::Vector3f& point, float& delta, bool forward) const;
+            void advect_point_rk4(const tpf::data::grid<float, float, 2, 2>& grid, Eigen::Vector2f& point, float& delta, bool forward) const;
+            void advect_point_rk45(const tpf::data::grid<float, float, 2, 2>& grid, Eigen::Vector2f& point, float& delta, bool forward) const;
 
             /** Callbacks for the computed periodic orbits */
             bool get_periodic_orbits_data(core::Call& call);

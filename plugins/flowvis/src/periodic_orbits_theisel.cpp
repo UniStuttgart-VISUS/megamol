@@ -253,7 +253,25 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
         // DEBUG
 
         seed_lines.push_back(
-            std::make_pair(Eigen::Vector2f(0.0701957, 0.00664742), Eigen::Vector2f(0.0825285, 0.0217574)));
+            std::make_pair(Eigen::Vector2f(0.0994355f, 0.0356891f), Eigen::Vector2f(0.0825285f, 0.0217574f)));
+        seed_lines.push_back(
+            std::make_pair(Eigen::Vector2f(0.0825285f, 0.0217574f) , Eigen::Vector2f(0.0701957f, 0.00664742f)));
+        seed_lines.push_back(
+            std::make_pair(Eigen::Vector2f(0.0701957f, 0.00664742f), Eigen::Vector2f(0.0318712f, 0.00745418f)));
+        seed_lines.push_back(
+            std::make_pair(Eigen::Vector2f(0.0318712f, 0.00745418f), Eigen::Vector2f(0.0441256f, 0.0246534f)));
+        seed_lines.push_back(
+            std::make_pair(Eigen::Vector2f(0.0441256f, 0.0246534f), Eigen::Vector2f(0.0760664f, 0.0650472f)));
+        seed_lines.push_back(
+            std::make_pair(Eigen::Vector2f(0.0760664f, 0.0650472f), Eigen::Vector2f(0.00214084f, 0.0429468f)));
+        seed_lines.push_back(
+            std::make_pair(Eigen::Vector2f(0.00214084f, 0.0429468f), Eigen::Vector2f(0.00313739f, 0.0583816f)));
+        seed_lines.push_back(
+            std::make_pair(Eigen::Vector2f(0.00313739f, 0.0583816f), Eigen::Vector2f(0.0293156f, 0.0776436f)));
+        seed_lines.push_back(
+            std::make_pair(Eigen::Vector2f(0.0293156f, 0.0776436f), Eigen::Vector2f(0.00848707f, 0.0989702f)));
+        seed_lines.push_back(
+            std::make_pair(Eigen::Vector2f(0.00848707f, 0.0989702f), Eigen::Vector2f(0.0f, 0.1f)));
 
         // DEBUG
 
@@ -335,21 +353,17 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
                 advected_backward_points.clear();
 
                 for (std::size_t point_index = 0; point_index < previous_forward_points.size(); ++point_index) {
-                    advect_point(
-                        vector_field, previous_forward_points[point_index], forward_timesteps[point_index], true);
-                    advected_forward_points.push_back(previous_forward_points[point_index]);
+                    advected_forward_points.push_back(advect_point(
+                        vector_field, previous_forward_points[point_index], forward_timesteps[point_index], true));
                 }
 
                 for (std::size_t point_index = 0; point_index < previous_backward_points.size(); ++point_index) {
-                    advect_point(
-                        vector_field, previous_backward_points[point_index], backward_timesteps[point_index], false);
-                    advected_backward_points.push_back(previous_backward_points[point_index]);
+                    advected_backward_points.push_back(advect_point(
+                        vector_field, previous_backward_points[point_index], backward_timesteps[point_index], false));
                 }
 
-                forward_points.insert(
-                    forward_points.end(), advected_forward_points.begin(), advected_forward_points.end());
-                backward_points.insert(
-                    backward_points.end(), advected_backward_points.begin(), advected_backward_points.end());
+                forward_points.insert(forward_points.end(), advected_forward_points.begin(), advected_forward_points.end());
+                backward_points.insert(backward_points.end(), advected_backward_points.begin(), advected_backward_points.end());
 
                 // Check for intersections
 
@@ -381,17 +395,23 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
             }
 
             if (integration_direction == 0 || integration_direction == 2) {
-                // for (const auto& backward_point : backward_points) {
-                //    this->mesh_vertices->push_back(backward_point.x());
-                //    this->mesh_vertices->push_back(backward_point.y());
-                //    this->mesh_vertices->push_back(backward_point.z());
-                //
-                //    this->values->data->push_back(static_cast<float>(seed_index) + 0.5f); // TODO
-                //}
+                std::size_t point_id = 0;
+
+                for (const auto& backward_point : backward_points) {
+                    this->mesh_vertices->push_back(backward_point.x());
+                    this->mesh_vertices->push_back(backward_point.y());
+                    this->mesh_vertices->push_back(backward_point.z());
+
+                    this->seed_line_ids->data->push_back(static_cast<float>(seed_index) + 0.5f);
+                    this->seed_point_ids->data->push_back(static_cast<float>(point_id % num_seed_points));
+                    this->integration_ids->data->push_back(static_cast<float>(point_id / num_seed_points));
+
+                    ++point_id;
+                }
             }
 
             // Create surface mesh
-            if (integration_direction == 0 || integration_direction == 1) {
+            if (integration_direction == 1 || integration_direction == 2) {
                 const auto seed_line_offset = seed_index * (num_integration_steps + 1) * num_seed_points;
 
                 for (std::size_t integration = 0; integration < num_integration_steps; ++integration) {
@@ -411,12 +431,42 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
                 }
             }
 
-            if (integration_direction == 0 || integration_direction == 2) {
-                // std::transform(this->triangles->begin(), this->triangles->end(),
-                // std::back_inserter(*this->triangles),
-                //    [&forward_points](unsigned int index) { return forward_points.size() + index; });
-                //
-                // index_offset += static_cast<unsigned int>(forward_points.size());
+            if (integration_direction == 0) {
+                const auto seed_line_offset_forward = 2 * seed_index * (num_integration_steps + 1) * num_seed_points;
+
+                for (std::size_t integration = 0; integration < num_integration_steps; ++integration) {
+                    const auto integration_offset = seed_line_offset_forward + integration * num_seed_points;
+
+                    for (std::size_t point_index = 0; point_index < num_seed_points - 1; ++point_index) {
+                        const auto point_offset = integration_offset + point_index;
+
+                        this->triangles->push_back(static_cast<unsigned int>(point_offset));
+                        this->triangles->push_back(static_cast<unsigned int>(point_offset + num_seed_points));
+                        this->triangles->push_back(static_cast<unsigned int>(point_offset + num_seed_points + 1));
+
+                        this->triangles->push_back(static_cast<unsigned int>(point_offset));
+                        this->triangles->push_back(static_cast<unsigned int>(point_offset + num_seed_points + 1));
+                        this->triangles->push_back(static_cast<unsigned int>(point_offset + 1));
+                    }
+                }
+
+                const auto seed_line_offset_backward = (2 * seed_index + 1) * (num_integration_steps + 1) * num_seed_points;
+
+                for (std::size_t integration = 0; integration < num_integration_steps; ++integration) {
+                    const auto integration_offset = seed_line_offset_backward + integration * num_seed_points;
+
+                    for (std::size_t point_index = 0; point_index < num_seed_points - 1; ++point_index) {
+                        const auto point_offset = integration_offset + point_index;
+
+                        this->triangles->push_back(static_cast<unsigned int>(point_offset));
+                        this->triangles->push_back(static_cast<unsigned int>(point_offset + num_seed_points));
+                        this->triangles->push_back(static_cast<unsigned int>(point_offset + num_seed_points + 1));
+
+                        this->triangles->push_back(static_cast<unsigned int>(point_offset));
+                        this->triangles->push_back(static_cast<unsigned int>(point_offset + num_seed_points + 1));
+                        this->triangles->push_back(static_cast<unsigned int>(point_offset + 1));
+                    }
+                }
             }
         }
 
@@ -438,31 +488,51 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
     return true;
 }
 
-void periodic_orbits_theisel::advect_point(
-    const tpf::data::grid<float, float, 2, 2>& grid, Eigen::Vector3f& point, float& delta, const bool forward) const {
+Eigen::Vector3f periodic_orbits_theisel::advect_point(const tpf::data::grid<float, float, 2, 2>& grid,
+    const Eigen::Vector3f& point, float& delta, const bool forward) const {
+
+    if (delta == 0.0f) return point;
+
+    // Sanity check
+    const auto min_x = 0;
+    const auto min_y = 0;
+    const auto max_x = this->resolution[0] - 1;
+    const auto max_y = this->resolution[1] - 1;
+
+    if (point[0] < grid.get_cell_coordinates(min_x, 0) || point[1] < grid.get_cell_coordinates(min_y, 1) ||
+        point[0] > grid.get_cell_coordinates(max_x, 0) || point[1] > grid.get_cell_coordinates(max_y, 1)) {
+
+        delta = 0.0f;
+        return point;
+    }
+
+    // Advect
+    Eigen::Vector2f advected_point = point.head<2>();
 
     try {
         switch (this->integration_method.Param<core::param::EnumParam>()->Value()) {
         case 0:
-            advect_point_rk4(grid, point, delta, forward);
+            advect_point_rk4(grid, advected_point, delta, forward);
             break;
         case 1:
-            advect_point_rk45(grid, point, delta, forward);
+            advect_point_rk45(grid, advected_point, delta, forward);
             break;
         default:
             vislib::sys::Log::DefaultLog.WriteError("Unknown advection method selected");
         }
-    } catch (const std::runtime_error&) { }
+    } catch (const std::runtime_error&) {
+        delta = 0.0f;
+    }
+
+    return Eigen::Vector3f(advected_point[0], advected_point[1], point[2]);
 }
 
-void periodic_orbits_theisel::advect_point_rk4(
-    const tpf::data::grid<float, float, 2, 2>& grid, Eigen::Vector3f& point, float& delta, const bool forward) const {
-
-    if (!grid.find_cell(point.head<2>())) return;
+void periodic_orbits_theisel::advect_point_rk4(const tpf::data::grid<float, float, 2, 2>& grid,
+    Eigen::Vector2f& point, float& delta, const bool forward) const {
 
     // Calculate step size
-    const auto max_velocity = grid.interpolate(point.head<2>()).norm();
-    const auto min_cellsize = grid.get_cell_sizes(*grid.find_cell(point.head<2>())).minCoeff();
+    const auto max_velocity = grid.interpolate(point).norm();
+    const auto min_cellsize = grid.get_cell_sizes(*grid.find_cell(point)).minCoeff();
 
     const auto steps_per_cell = max_velocity > 0.0f ? min_cellsize / max_velocity : 0.0f;
 
@@ -470,21 +540,23 @@ void periodic_orbits_theisel::advect_point_rk4(
     const auto sign = forward ? 1.0f : -1.0f;
 
     // Calculate Runge-Kutta coefficients
-    const auto k1 = steps_per_cell * delta * sign * grid.interpolate(point.head<2>());
-    const auto k2 = steps_per_cell * delta * sign * grid.interpolate(point.head<2>() + 0.5f * k1);
-    const auto k3 = steps_per_cell * delta * sign * grid.interpolate(point.head<2>() + 0.5f * k2);
-    const auto k4 = steps_per_cell * delta * sign * grid.interpolate(point.head<2>() + k3);
+    const auto k1 = steps_per_cell * delta * sign * grid.interpolate(point);
+    const auto k2 = steps_per_cell * delta * sign * grid.interpolate(point + 0.5f * k1);
+    const auto k3 = steps_per_cell * delta * sign * grid.interpolate(point + 0.5f * k2);
+    const auto k4 = steps_per_cell * delta * sign * grid.interpolate(point + k3);
 
     // Advect and store position
     Eigen::Vector2f advection = (1.0f / 6.0f) * (k1 + 2.0f * k2 + 2.0f * k3 + k4);
 
-    point += Eigen::Vector3f(advection[0], advection[1], 0.0f);
+    if (advection.norm() > max_velocity) {
+        advection = advection.normalized() * max_velocity;
+    }
+
+    point += advection;
 }
 
-void periodic_orbits_theisel::advect_point_rk45(
-    const tpf::data::grid<float, float, 2, 2>& grid, Eigen::Vector3f& point, float& delta, const bool forward) const {
-
-    if (!grid.find_cell(point.head<2>())) return;
+void periodic_orbits_theisel::advect_point_rk45(const tpf::data::grid<float, float, 2, 2>& grid,
+    Eigen::Vector2f& point, float& delta, const bool forward) const {
 
     // Cash-Karp parameters
     constexpr float b_21 = 0.2f;
@@ -532,22 +604,19 @@ void periodic_orbits_theisel::advect_point_rk45(
     bool decreased = false;
 
     do {
-        const auto k1 = delta * sign * grid.interpolate(point.head<2>());
-        const auto k2 = delta * sign * grid.interpolate(point.head<2>() + b_21 * k1);
-        const auto k3 = delta * sign * grid.interpolate(point.head<2>() + b_31 * k1 + b_32 * k2);
-        const auto k4 = delta * sign * grid.interpolate(point.head<2>() + b_41 * k1 + b_42 * k2 + b_43 * k3);
-        const auto k5 =
-            delta * sign * grid.interpolate(point.head<2>() + b_51 * k1 + b_52 * k2 + b_53 * k3 + b_54 * k4);
-        const auto k6 = delta * sign *
-                        grid.interpolate(point.head<2>() + b_61 * k1 + b_62 * k2 + b_63 * k3 + b_64 * k4 + b_65 * k5);
+        const auto k1 = delta * sign * grid.interpolate(point);
+        const auto k2 = delta * sign * grid.interpolate(point + b_21 * k1);
+        const auto k3 = delta * sign * grid.interpolate(point + b_31 * k1 + b_32 * k2);
+        const auto k4 = delta * sign * grid.interpolate(point + b_41 * k1 + b_42 * k2 + b_43 * k3);
+        const auto k5 = delta * sign * grid.interpolate(point + b_51 * k1 + b_52 * k2 + b_53 * k3 + b_54 * k4);
+        const auto k6 = delta * sign * grid.interpolate(point + b_61 * k1 + b_62 * k2 + b_63 * k3 + b_64 * k4 + b_65 * k5);
 
         // Calculate error estimate
-        const auto fifth_order = point.head<2>() + c_1 * k1 + c_2 * k2 + c_3 * k3 + c_4 * k4 + c_5 * k5 + c_6 * k6;
-        const auto fourth_order =
-            point.head<2>() + c_1s * k1 + c_2s * k2 + c_3s * k3 + c_4s * k4 + c_5s * k5 + c_6s * k6;
+        const auto fifth_order = point + c_1 * k1 + c_2 * k2 + c_3 * k3 + c_4 * k4 + c_5 * k5 + c_6 * k6;
+        const auto fourth_order = point + c_1s * k1 + c_2s * k2 + c_3s * k3 + c_4s * k4 + c_5s * k5 + c_6s * k6;
 
         const auto difference = (fifth_order - fourth_order).cwiseAbs();
-        const auto scale = grid.interpolate(point.head<2>()).cwiseAbs();
+        const auto scale = grid.interpolate(point).cwiseAbs();
 
         const auto error = std::max(0.0f, std::max(difference.x() / scale.x(), difference.y() / scale.y())) / max_error;
 
@@ -563,7 +632,7 @@ void periodic_orbits_theisel::advect_point_rk45(
         }
 
         // Set output
-        point << fifth_order, 0.0f;
+        point = fifth_order;
     } while (decreased);
 }
 
