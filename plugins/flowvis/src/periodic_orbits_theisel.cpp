@@ -346,8 +346,10 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
                     advected_backward_points.push_back(previous_backward_points[point_index]);
                 }
 
-                forward_points.insert(forward_points.end(), advected_forward_points.begin(), advected_forward_points.end());
-                backward_points.insert(backward_points.end(), advected_backward_points.begin(), advected_backward_points.end());
+                forward_points.insert(
+                    forward_points.end(), advected_forward_points.begin(), advected_forward_points.end());
+                backward_points.insert(
+                    backward_points.end(), advected_backward_points.begin(), advected_backward_points.end());
 
                 // Check for intersections
 
@@ -439,16 +441,18 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
 void periodic_orbits_theisel::advect_point(
     const tpf::data::grid<float, float, 2, 2>& grid, Eigen::Vector3f& point, float& delta, const bool forward) const {
 
-    switch (this->integration_method.Param<core::param::EnumParam>()->Value()) {
-    case 0:
-        advect_point_rk4(grid, point, delta, forward);
-        break;
-    case 1:
-        advect_point_rk45(grid, point, delta, forward);
-        break;
-    default:
-        vislib::sys::Log::DefaultLog.WriteError("Unknown advection method selected");
-    }
+    try {
+        switch (this->integration_method.Param<core::param::EnumParam>()->Value()) {
+        case 0:
+            advect_point_rk4(grid, point, delta, forward);
+            break;
+        case 1:
+            advect_point_rk45(grid, point, delta, forward);
+            break;
+        default:
+            vislib::sys::Log::DefaultLog.WriteError("Unknown advection method selected");
+        }
+    } catch (const std::runtime_error&) { }
 }
 
 void periodic_orbits_theisel::advect_point_rk4(
@@ -642,13 +646,15 @@ bool periodic_orbits_theisel::get_stream_surface_values_data(core::Call& call) {
         mdc.set_data("seed line", this->seed_line_ids);
 
         this->seed_point_ids->min_value = 0.0f;
-        this->seed_point_ids->max_value = static_cast<float>(std::max(0, this->num_subdivisions.Param<core::param::IntParam>()->Value()) + 2);
+        this->seed_point_ids->max_value =
+            static_cast<float>(std::max(0, this->num_subdivisions.Param<core::param::IntParam>()->Value()) + 2);
         this->seed_point_ids->transfer_function = tf_string;
         this->seed_point_ids->transfer_function_dirty = true;
         mdc.set_data("seed point", this->seed_point_ids);
 
         this->integration_ids->min_value = 0.0f;
-        this->integration_ids->max_value = static_cast<float>(this->num_integration_steps.Param<core::param::IntParam>()->Value());
+        this->integration_ids->max_value =
+            static_cast<float>(this->num_integration_steps.Param<core::param::IntParam>()->Value());
         this->integration_ids->transfer_function = tf_string;
         this->integration_ids->transfer_function_dirty = true;
         mdc.set_data("integration", this->integration_ids);
