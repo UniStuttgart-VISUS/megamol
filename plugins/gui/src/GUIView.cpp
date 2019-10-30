@@ -68,9 +68,6 @@ GUIView::GUIView()
     , configurator()
     , utils()
     , state()
-    , setParameterSearchFocus(false)
-    , parameterSearchString()
-    //, showParameterSearchWindow(false)
     , widgtmap_text()
     , widgtmap_float()
     , widgtmap_int()
@@ -92,6 +89,11 @@ GUIView::GUIView()
 
     this->state_param << new core::param::StringParam("");
     this->MakeSlotAvailable(&this->state_param);
+
+    this->hotkeys[HotkeyIndex::EXIT_PROGRAM] =
+        HotkeyData(megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F4, core::view::Modifier::ALT), false);
+    this->hotkeys[HotkeyIndex::PARAMETER_SEARCH] =
+        HotkeyData(megamol::core::view::KeyCode(megamol::core::view::Key::KEY_P, core::view::Modifier::CTRL), false);
 }
 
 GUIView::~GUIView() { this->Release(); }
@@ -382,6 +384,8 @@ bool GUIView::OnKey(core::view::Key key, core::view::KeyAction action, core::vie
 
     ImGuiIO& io = ImGui::GetIO();
 
+    bool hotkeyPressed = false;
+
     bool last_return_key = io.KeysDown[static_cast<size_t>(core::view::Key::KEY_ENTER)];
     bool last_num_enter_key = io.KeysDown[static_cast<size_t>(core::view::Key::KEY_KP_ENTER)];
 
@@ -407,6 +411,19 @@ bool GUIView::OnKey(core::view::Key key, core::view::KeyAction action, core::vie
     bool enter_pressed = (!last_num_enter_key && cur_num_enter_key);
     io.KeysDown[static_cast<size_t>(core::view::Key::KEY_ENTER)] = (return_pressed || enter_pressed);
 
+    // Check for GUIView specific hotkeys
+    for (auto& h : this->hotkeys) {
+        auto key = std::get<0>(h).GetKey();
+        auto mods = std::get<0>(h).GetModifiers();
+        if (ImGui::IsKeyDown(static_cast<int>(key)) && (mods.test(core::view::Modifier::CTRL) == io.KeyCtrl) &&
+            (mods.test(core::view::Modifier::ALT) == io.KeyAlt) &&
+            (mods.test(core::view::Modifier::SHIFT) == io.KeyShift)) {
+            std::get<1>(h) = true;
+            hotkeyPressed = true;
+        }
+    }
+    if (hotkeyPressed) return true;
+
     // Check for additional text modification hotkeys
     if (action == core::view::KeyAction::RELEASE) {
         io.KeysDown[static_cast<size_t>(GuiTextModHotkeys::CTRL_A)] = false;
@@ -416,7 +433,7 @@ bool GUIView::OnKey(core::view::Key key, core::view::KeyAction action, core::vie
         io.KeysDown[static_cast<size_t>(GuiTextModHotkeys::CTRL_Y)] = false;
         io.KeysDown[static_cast<size_t>(GuiTextModHotkeys::CTRL_Z)] = false;
     }
-    bool hotkeyPressed = true;
+    hotkeyPressed = true;
     if (io.KeyCtrl && ImGui::IsKeyDown(static_cast<int>(core::view::Key::KEY_A))) {
         keyIndex = static_cast<size_t>(GuiTextModHotkeys::CTRL_A);
     } else if (io.KeyCtrl && ImGui::IsKeyDown(static_cast<int>(core::view::Key::KEY_C))) {
@@ -434,38 +451,28 @@ bool GUIView::OnKey(core::view::Key key, core::view::KeyAction action, core::vie
     }
     if (hotkeyPressed && (action == core::view::KeyAction::PRESS)) {
         io.KeysDown[keyIndex] = true;
-    }
-
-    // ------------------------------------------------------------------------
-    // NB: Hotkey processing is stopped after first occurence. Order of hotkey processing is crucial.
-    // Hotkeys always trigger just one event.
-
-    // Exit megamol
-    hotkeyPressed = ((io.KeyAlt) && (ImGui::IsKeyDown(static_cast<int>(core::view::Key::KEY_F4)))); // Alt + F4
-    if (hotkeyPressed) {
-        this->shutdown();
         return true;
     }
 
     // Hotkeys for showing/hiding window(s)
+    hotkeyPressed = false;
     const auto func = [&, this](const std::string& wn, WindowManager::WindowConfiguration& wc) {
-        hotkeyPressed = (ImGui::IsKeyDown(static_cast<int>(wc.win_hotkey.key))) &&
-                        (wc.win_hotkey.mods.test(core::view::Modifier::CTRL) == io.KeyCtrl);
-        if (hotkeyPressed) {
+        bool windowHotkeyPressed = (io.KeyCtrl && (ImGui::IsKeyDown(static_cast<int>(wc.win_hotkey.key))));
+        if (windowHotkeyPressed) {
             if (io.KeyShift) {
                 wc.win_soft_reset = true;
             } else {
                 wc.win_show = !wc.win_show;
             }
+            hotkeyPressed = (hotkeyPressed || windowHotkeyPressed);
         }
     };
     this->window_manager.EnumWindows(func);
+    if (hotkeyPressed) return true;
 
-    // Hotkey for parameter search
-    hotkeyPressed = ((io.KeyCtrl) && (ImGui::IsKeyDown(static_cast<int>(core::view::Key::KEY_P)))); // Ctrl + p
-    if (hotkeyPressed) {
-        this->setParameterSearchFocus = true;
-        // this->showParameterSearchWindow = true;
+    // Check for configurator hotkeys
+    if (this->configurator.CheckHotkeys()) {
+        return true;
     }
 
     // Always consume keyboard input if requested by any imgui widget (e.g. text input).
@@ -474,7 +481,7 @@ bool GUIView::OnKey(core::view::Key key, core::view::KeyAction action, core::vie
         return true;
     }
 
-    // Check only considered modules for pressed parameter hotkeys
+    // Check for parameter hotkeys
     std::vector<std::string> modules_list;
     const auto modfunc = [&, this](const std::string& wn, WindowManager::WindowConfiguration& wc) {
         for (auto& m : wc.param_modules_list) {
@@ -694,14 +701,19 @@ void GUIView::validateGUI() {
 
 
 bool GUIView::drawGUI(vislib::math::Rectangle<int> viewport, double instanceTime) {
-    ImGui::SetCurrentContext(this->context);
+    if (std::get<1>(this->hotkeys[HotkeyIndex::EXIT_PROGRAM])) {
+        this->shutdown();
+        return true;
+    }
 
     this->validateGUI();
-    /// So far: Checked only once
+
     this->checkMultipleHotkeyAssignement();
 
     auto viewportWidth = viewport.Width();
     auto viewportHeight = viewport.Height();
+
+    ImGui::SetCurrentContext(this->context);
 
     // Set IO stuff
     ImGuiIO& io = ImGui::GetIO();
@@ -726,7 +738,7 @@ bool GUIView::drawGUI(vislib::math::Rectangle<int> viewport, double instanceTime
         config.OversampleV = 1;
         config.GlyphRanges = this->state.font_utf8_ranges.data();
 
-        this->utils.utf8Encode(this->state.font_file);
+        this->utils.Utf8Encode(this->state.font_file);
         io.Fonts->AddFontFromFileTTF(this->state.font_file.c_str(), this->state.font_size, &config);
         ImGui_ImplOpenGL3_CreateFontsTexture();
         /// Load last added font
@@ -760,7 +772,7 @@ bool GUIView::drawGUI(vislib::math::Rectangle<int> viewport, double instanceTime
                 for (int n = 0; n < io.Fonts->Fonts.Size; n++) {
 
                     std::string font_name = std::string(io.Fonts->Fonts[n]->GetDebugName());
-                    this->utils.utf8Decode(font_name);
+                    this->utils.Utf8Decode(font_name);
                     if (font_name == wc.font_name) {
                         this->state.font_index = n;
                     }
@@ -868,71 +880,19 @@ void GUIView::drawParametersCallback(const std::string& wn, WindowManager::Windo
     bool show_only_hotkeys = wc.param_show_hotkeys;
     ImGui::Checkbox("Show Hotkeys", &show_only_hotkeys);
     wc.param_show_hotkeys = show_only_hotkeys;
+    ImGui::Separator();
 
     // Paramter substring name filtering (only for main parameter view)
     if (wc.win_callback == WindowManager::DrawCallbacks::MAIN) {
-
-        if (ImGui::Button("Clear")) {
-            this->parameterSearchString = "";
+        if (std::get<1>(this->hotkeys[HotkeyIndex::PARAMETER_SEARCH])) {
+            this->utils.SetSearchFocus(true);
+            std::get<1>(this->hotkeys[HotkeyIndex::PARAMETER_SEARCH]) = false;
         }
-        ImGui::SameLine();
-
-        auto width = ImGui::CalcItemWidth() - ImGui::GetCursorPosX() + 2.0f * style.ItemInnerSpacing.x;
-        ImGui::PushItemWidth(width);
-        // Set keyboard focus when hotkey is pressed
-        if (this->setParameterSearchFocus) {
-            ImGui::SetKeyboardFocusHere();
-            this->setParameterSearchFocus = false;
-        }
-        /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
-        this->utils.utf8Encode(this->parameterSearchString);
-        ImGui::InputText("###Search Parameters", &this->parameterSearchString, ImGuiInputTextFlags_AutoSelectAll);
-        this->utils.utf8Decode(this->parameterSearchString);
-        ImGui::PopItemWidth();
-
-        ImGui::SameLine();
-        ImGui::Text("Search Parameters");
-        this->utils.HelpMarkerToolTip("[CTRL + 'p'] Set keyboard focus to search input field.\n"
-                                      "Searching for case insensitive substring in\n"
-                                      "parameter names globally in all parameter views.\n");
-
-        /// Alternative (TEMP):
-        // Show parameter search field in separate window
-        // if (this->showParameterSearchWindow) {
-
-        //    std::string popup_name = "Search Parameter";
-
-        //    ImGuiWindowFlags flags =
-        //        ImGuiWindowFlags_AlwaysAutoResize; // ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ;
-        //    ImVec2 popup_pos = ImVec2(io.DisplaySize.x / 2.0f - ImGui::GetWindowWidth() / 2.0f, 0.0f);
-        //    ImGui::SetWindowPos(popup_name.c_str(), popup_pos, ImGuiCond_Always);
-
-        //    ImGui::Begin(popup_name.c_str(), &this->showParameterSearchWindow, flags);
-
-        //    if (this->setParameterSearchFocus) {
-        //        ImGui::SetKeyboardFocusHere();
-        //        this->setParameterSearchFocus = false;
-        //    }
-
-        //    /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
-        //    this->utils.utf8Encode(this->parameterSearchString);
-        //    ImGui::InputText("###Search Parameter", &this->parameterSearchString, ImGuiInputTextFlags_AutoSelectAll);
-        //    this->utils.utf8Decode(this->parameterSearchString);
-
-        //    ImGui::SameLine();
-
-        //    if (ImGui::Button("Clear")) {
-        //        this->parameterSearchString = "";
-        //    }
-        //    ImGui::SameLine();
-
-        //    ImGui::Text("Search Parameter");
-        //    this->utils.HelpMarkerToolTip("Searching for case insensitive substring in parameter name.\n"
-        //                                  "[CTRL + 'p'] Set keyboard focus to search input field.");
-
-        //    ImGui::End();
-        //}
+        this->utils.StringSearch("Search Parameters", "[CTRL + 'p'] Set keyboard focus to search input field.\n"
+                                                      "Searching for case insensitive substring in\n"
+                                                      "parameter names globally in all parameter views.\n");
     }
+    ImGui::Separator();
 
     // Module filtering (only for main parameter view)
     if (wc.win_callback == WindowManager::DrawCallbacks::MAIN) {
@@ -1039,6 +999,8 @@ void GUIView::drawParametersCallback(const std::string& wn, WindowManager::Windo
     bool param_namespace_open = true;
 
     this->GetCoreInstance()->EnumParameters([&, this](const auto& mod, auto& slot) {
+        auto currentSearchString = this->utils.GetSearchString();
+
         // Check for new module
         if (current_mod != &mod) {
             current_mod = &mod;
@@ -1064,13 +1026,13 @@ void GUIView::drawParametersCallback(const std::string& wn, WindowManager::Windo
             if (headerState == -1) {
                 headerState = ImGui::GetStateStorage()->GetInt(headerId, 0); // 0=close 1=open
             }
-            if (!this->parameterSearchString.empty()) {
+            if (!currentSearchString.empty()) {
                 headerState = 1;
                 ImGui::PushStyleColor(ImGuiCol_Header, ImGui::GetStyleColorVec4(ImGuiCol_PopupBg));
             }
             ImGui::GetStateStorage()->SetInt(headerId, headerState);
             current_mod_open = ImGui::CollapsingHeader(label.c_str(), nullptr);
-            if (!this->parameterSearchString.empty()) {
+            if (!currentSearchString.empty()) {
                 ImGui::PopStyleColor();
             }
 
@@ -1122,8 +1084,8 @@ void GUIView::drawParametersCallback(const std::string& wn, WindowManager::Windo
             auto param = slot.Parameter();
             std::string param_name = slot.Name().PeekBuffer();
             bool showSearchedParameter = true;
-            if (!this->parameterSearchString.empty()) {
-                showSearchedParameter = this->findCaseInsensitiveSubstring(param_name, this->parameterSearchString);
+            if (!currentSearchString.empty()) {
+                showSearchedParameter = this->utils.FindCaseInsensitiveSubstring(param_name, currentSearchString);
             }
             if (!param.IsNull() && param->IsGUIVisible() && showSearchedParameter) {
                 // Check for changed parameter namespace
@@ -1143,7 +1105,7 @@ void GUIView::drawParametersCallback(const std::string& wn, WindowManager::Windo
                         ImGui::Indent();
                         std::string label = param_namespace + "###" + param_namespace + "__" + param_name;
                         // Open all namespace headers when parameter search is active
-                        if (!this->parameterSearchString.empty()) {
+                        if (!currentSearchString.empty()) {
                             auto headerId = ImGui::GetID(label.c_str());
                             ImGui::GetStateStorage()->SetInt(headerId, 1);
                         }
@@ -1187,7 +1149,6 @@ void GUIView::drawParametersCallback(const std::string& wn, WindowManager::Windo
         }
         ImGui::EndDragDropTarget();
     }
-
 
     ImGui::EndChild();
 
@@ -1345,7 +1306,7 @@ void GUIView::drawFontWindowCallback(const std::string& wn, WindowManager::Windo
 
     // Saving current font to window configuration.
     wc.font_name = std::string(font_current->GetDebugName());
-    this->utils.utf8Decode(wc.font_name);
+    this->utils.Utf8Decode(wc.font_name);
 
 #ifdef GUI_USE_FILEUTILS
     ImGui::Separator();
@@ -1362,9 +1323,9 @@ void GUIView::drawFontWindowCallback(const std::string& wn, WindowManager::Windo
 
     label = "Font File Name (.ttf)";
     /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
-    this->utils.utf8Encode(wc.buf_font_file);
+    this->utils.Utf8Encode(wc.buf_font_file);
     ImGui::InputText(label.c_str(), &wc.buf_font_file, ImGuiInputTextFlags_AutoSelectAll);
-    this->utils.utf8Decode(wc.buf_font_file);
+    this->utils.Utf8Decode(wc.buf_font_file);
     // Validate font file before offering load button
     if (HasExistingFileExtension(wc.buf_font_file, std::string(".ttf"))) {
         if (ImGui::Button("Add Font")) {
@@ -1508,9 +1469,9 @@ void GUIView::drawMenu(const std::string& wn, WindowManager::WindowConfiguration
 
         std::string label = "File Name";
         /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
-        this->utils.utf8Encode(wc.main_project_file);
+        this->utils.Utf8Encode(wc.main_project_file);
         ImGui::InputText(label.c_str(), &wc.main_project_file, ImGuiInputTextFlags_None);
-        this->utils.utf8Decode(wc.main_project_file);
+        this->utils.Utf8Decode(wc.main_project_file);
 
         bool valid = true;
         if (!HasFileExtension(wc.main_project_file, std::string(".lua"))) {
@@ -1695,7 +1656,7 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
             auto it = this->widgtmap_text.find(param_id);
             if (it == this->widgtmap_text.end()) {
                 std::string utf8Str = std::string(p->ValueString().PeekBuffer());
-                this->utils.utf8Encode(utf8Str);
+                this->utils.Utf8Encode(utf8Str);
                 this->widgtmap_text.emplace(param_id, utf8Str);
                 it = this->widgtmap_text.find(param_id);
             }
@@ -1708,11 +1669,11 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
                 param_label_hidden.c_str(), &it->second, ml_dim, ImGuiInputTextFlags_CtrlEnterForNewLine);
             if (ImGui::IsItemDeactivatedAfterEdit()) {
                 std::string utf8Str = it->second;
-                this->utils.utf8Decode(utf8Str);
+                this->utils.Utf8Decode(utf8Str);
                 p->SetValue(vislib::StringA(utf8Str.c_str()));
             } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
                 std::string utf8Str = std::string(p->ValueString().PeekBuffer());
-                this->utils.utf8Encode(utf8Str);
+                this->utils.Utf8Encode(utf8Str);
                 it->second = utf8Str;
             }
             ImGui::SameLine();
@@ -1723,17 +1684,17 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
             auto it = this->widgtmap_text.find(param_id);
             if (it == this->widgtmap_text.end()) {
                 std::string utf8Str = std::string(p->ValueString().PeekBuffer());
-                this->utils.utf8Encode(utf8Str);
+                this->utils.Utf8Encode(utf8Str);
                 this->widgtmap_text.emplace(param_id, utf8Str);
                 it = this->widgtmap_text.find(param_id);
             }
             ImGui::InputText(param_label.c_str(), &it->second, ImGuiInputTextFlags_None);
             if (ImGui::IsItemDeactivatedAfterEdit()) {
-                this->utils.utf8Decode(it->second);
+                this->utils.Utf8Decode(it->second);
                 p->SetValue(vislib::StringA(it->second.c_str()));
             } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
                 std::string utf8Str = std::string(p->ValueString().PeekBuffer());
-                this->utils.utf8Encode(utf8Str);
+                this->utils.Utf8Encode(utf8Str);
                 it->second = utf8Str;
             }
         } else {
@@ -1840,14 +1801,6 @@ void GUIView::drawParameterHotkey(const core::Module& mod, core::param::ParamSlo
             ImGui::Separator();
         }
     }
-}
-
-
-bool GUIView::findCaseInsensitiveSubstring(const std::string& source, const std::string& search) {
-
-    auto it = std::search(source.begin(), source.end(), search.begin(), search.end(),
-        [](char ch1, char ch2) { return std::toupper(ch1) == std::toupper(ch2); });
-    return (it != source.end());
 }
 
 

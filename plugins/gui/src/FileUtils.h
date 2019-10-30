@@ -36,8 +36,10 @@ namespace fsns = std::experimental::filesystem;
 namespace megamol {
 namespace gui {
 
+
 /** Type for filesystem paths. */
 typedef fsns::path PathType;
+
 
 /**
  * Check if given file or directory exists.
@@ -45,6 +47,7 @@ typedef fsns::path PathType;
  * @param path  The file or directory path.
  */
 inline bool PathExists(PathType path) { return fsns::exists(path); }
+
 
 /**
  * Check if file exists and has specified file extension.
@@ -59,6 +62,7 @@ inline bool HasExistingFileExtension(PathType path, std::string ext) {
     return (path.extension().generic_string() == ext);
 }
 
+
 /**
  * Check if file has specified file extension.
  *
@@ -66,6 +70,7 @@ inline bool HasExistingFileExtension(PathType path, std::string ext) {
  * @param ext   The extension the given file should have.
  */
 inline bool HasFileExtension(PathType path, std::string ext) { return (path.extension().generic_string() == ext); }
+
 
 /**
  * Search recursively for file or path beginning at given directory.
@@ -85,6 +90,7 @@ inline std::string SearchFileRecursive(std::string file, PathType searchPath) {
     }
     return foundPath;
 }
+
 
 /**
  * Save project to file.

@@ -17,11 +17,10 @@
 using namespace megamol::gui;
 
 
-GUIUtils::GUIUtils(void) : tooltipTime(0.0f), tooltipId(-1) {
-    // nothing to do here ...
-}
+GUIUtils::GUIUtils(void) : tooltipTime(0.0f), tooltipId(-1), searchFocus(false), searchString() {}
 
-void GUIUtils::HoverToolTip(std::string text, ImGuiID id, float time_start, float time_end) {
+
+void GUIUtils::HoverToolTip(const std::string& text, ImGuiID id, float time_start, float time_end) {
     assert(ImGui::GetCurrentContext() != nullptr);
     ImGuiIO& io = ImGui::GetIO();
 
@@ -55,7 +54,8 @@ void GUIUtils::HoverToolTip(std::string text, ImGuiID id, float time_start, floa
     }
 }
 
-void GUIUtils::HelpMarkerToolTip(std::string text, std::string label) {
+
+void GUIUtils::HelpMarkerToolTip(const std::string& text, std::string label) {
     assert(ImGui::GetCurrentContext() != nullptr);
 
     if (!text.empty()) {
@@ -66,7 +66,7 @@ void GUIUtils::HelpMarkerToolTip(std::string text, std::string label) {
 }
 
 
-float GUIUtils::TextWidgetWidth(std::string text) const {
+float GUIUtils::TextWidgetWidth(const std::string& text) const {
     assert(ImGui::GetCurrentContext() != nullptr);
     ImGuiIO& io = ImGui::GetIO();
     ImGuiStyle& style = ImGui::GetStyle();
@@ -81,7 +81,7 @@ float GUIUtils::TextWidgetWidth(std::string text) const {
 }
 
 
-bool GUIUtils::utf8Decode(std::string& str) const {
+bool GUIUtils::Utf8Decode(std::string& str) const {
     vislib::StringA dec_tmp;
     if (vislib::UTF8Encoder::Decode(dec_tmp, vislib::StringA(str.c_str()))) {
         str = std::string(dec_tmp.PeekBuffer());
@@ -91,11 +91,45 @@ bool GUIUtils::utf8Decode(std::string& str) const {
 }
 
 
-bool GUIUtils::utf8Encode(std::string& str) const {
+bool GUIUtils::Utf8Encode(std::string& str) const {
     vislib::StringA dec_tmp;
     if (vislib::UTF8Encoder::Encode(dec_tmp, vislib::StringA(str.c_str()))) {
         str = std::string(dec_tmp.PeekBuffer());
         return true;
     }
     return false;
+}
+
+void megamol::gui::GUIUtils::StringSearch(const std::string& label, const std::string& help) {
+    ImGuiStyle& style = ImGui::GetStyle();
+
+    std::string help_label = "(?)";
+
+    if (ImGui::Button("Clear")) {
+        this->searchString = "";
+    }
+    ImGui::SameLine();
+
+    // Set keyboard focus when hotkey is pressed
+    if (this->searchFocus) {
+        ImGui::SetKeyboardFocusHere();
+        this->searchFocus = false;
+    }
+
+    auto width = ImGui::GetContentRegionAvailWidth() - ImGui::GetCursorPosX() + 2.0f * style.ItemInnerSpacing.x -
+                 this->TextWidgetWidth(label + help_label);
+    const int min_width = 50.0f;
+    width = (width < min_width) ? (min_width) : width;
+    ImGui::PushItemWidth(width);
+
+    /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
+    this->Utf8Encode(this->searchString);
+    ImGui::InputText("###Search Parameters", &this->searchString, ImGuiInputTextFlags_AutoSelectAll);
+    this->Utf8Decode(this->searchString);
+
+    ImGui::PopItemWidth();
+
+    ImGui::SameLine();
+    ImGui::Text(label.c_str());
+    this->HelpMarkerToolTip(help_label.c_str());
 }

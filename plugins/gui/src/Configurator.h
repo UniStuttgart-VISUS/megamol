@@ -23,6 +23,7 @@
 #include "imgui_stdlib.h"
 
 #include <math.h> // fmodf
+#include <tuple>
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/view//Input.h"
@@ -51,44 +52,12 @@ public:
      */
     bool Draw(WindowManager::WindowConfiguration& wc, megamol::core::CoreInstance* core_instance);
 
-    // INPUT ------------------------------------------------------------------
-
     /**
-     * This event handler can be reimplemented to receive key code events.
+     * Checks if any hotkeys are pressed.
      *
-     * @return true to stop propagation.
+     * @return true when any hotkey is pressed.
      */
-    virtual bool OnKey(
-        megamol::core::view::Key key, megamol::core::view::KeyAction action, megamol::core::view::Modifiers mods);
-
-    /**
-     * This event handler can be reimplemented to receive unicode events.
-     *
-     * @return Returns true if the event was accepted (stopping propagation), otherwise false.
-     */
-    virtual bool OnChar(unsigned int codePoint);
-
-    /**
-     * This event handler can be reimplemented to receive mouse button events.
-     *
-     * @return Returns true if the event was accepted (stopping propagation), otherwise false.
-     */
-    virtual bool OnMouseButton(megamol::core::view::MouseButton button, megamol::core::view::MouseButtonAction action,
-        megamol::core::view::Modifiers mods);
-
-    /**
-     * This event handler can be reimplemented to receive mouse move events.
-     *
-     * @return Returns true if the event was accepted (stopping propagation), otherwise false.
-     */
-    virtual bool OnMouseMove(double x, double y);
-
-    /**
-     * This event handler can be reimplemented to receive mouse scroll events.
-     *
-     * @return Returns true if the event was accepted (stopping propagation), otherwise false.
-     */
-    virtual bool OnMouseScroll(double dx, double dy);
+    bool CheckHotkeys(void);
 
 private:
     class Node {
@@ -108,15 +77,23 @@ private:
         } imgui_data;
     };
 
+    std::list<Configurator::Node> nodes;
+
     // VARIABLES --------------------------------------------------------------
 
-    std::list<Configurator::Node> nodes;
+    typedef std::tuple<megamol::core::view::KeyCode, bool> HotkeyData;
+    enum HotkeyIndex : size_t { MODULE_SEARCH = 0, INDEX_COUNT = 1 };
+    std::array<HotkeyData, HotkeyIndex::INDEX_COUNT> hotkeys;
+
+    GUIUtils utils;
+
+    struct State {
+        int module_list_selected_id;
+    } state;
+
 
     // FUNCTIONS --------------------------------------------------------------
 
-    void showNodeLinkGraph(bool* opened);
-
-    void showModuleList(bool* opened);
 
     // ------------------------------------------------------------------------
 };

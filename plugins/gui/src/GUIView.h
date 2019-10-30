@@ -136,6 +136,11 @@ private:
 
     // VARIABLES --------------------------------------------------------------
 
+    /** Hotkeys */
+    typedef std::tuple<megamol::core::view::KeyCode, bool> HotkeyData;
+    enum HotkeyIndex : size_t { EXIT_PROGRAM = 0, PARAMETER_SEARCH = 1, INDEX_COUNT = 2 };
+    std::array<HotkeyData, HotkeyIndex::INDEX_COUNT> hotkeys;
+
     /** The override call */
     megamol::core::view::CallRenderView* overrideCall;
 
@@ -165,13 +170,6 @@ private:
 
     /** The current local state of the gui. */
     StateBuffer state;
-
-    /** Set focus to parmeter search text input. */
-    bool setParameterSearchFocus;
-    /** Current parameter search string. */
-    std::string parameterSearchString;
-    /** Show parameter search window. */
-    // bool showParameterSearchWindow;
 
     /** Input Widget Buffers. */
     std::map<std::string, std::string> widgtmap_text;
@@ -272,14 +270,6 @@ private:
      * @param slot  The current parameter slot.
      */
     void drawParameterHotkey(const core::Module& mod, core::param::ParamSlot& slot);
-
-    /**
-     * Returns true if search string is found in source as a case insensitive substring.
-     *
-     * @param source   The string to search in.
-     * @param search   The string to search for in the source.
-     */
-    bool findCaseInsensitiveSubstring(const std::string& source, const std::string& search);
 
     /**
      * Check if module's parameters should be visible.

@@ -234,7 +234,7 @@ bool WindowManager::StateFromJSON(const std::string& json_string) {
             // main_project_file (supports UTF-8)
             if (config_values.at("main_project_file").is_string()) {
                 config_values.at("main_project_file").get_to(tmp_config.main_project_file);
-                this->utils.utf8Decode(tmp_config.main_project_file);
+                this->utils.Utf8Decode(tmp_config.main_project_file);
             } else {
                 vislib::sys::Log::DefaultLog.WriteError(
                     "[WindowManager] JSON state: Failed to read 'main_project_file' as string.");
@@ -314,7 +314,7 @@ bool WindowManager::StateFromJSON(const std::string& json_string) {
             // font_name (supports UTF-8)
             if (config_values.at("font_name").is_string()) {
                 config_values.at("font_name").get_to(tmp_config.font_name);
-                this->utils.utf8Decode(tmp_config.font_name);
+                this->utils.Utf8Decode(tmp_config.font_name);
             } else {
                 vislib::sys::Log::DefaultLog.WriteError(
                     "[WindowManager] JSON state: Failed to read 'font_name' as string.");
@@ -395,7 +395,7 @@ bool WindowManager::StateToJSON(std::string& json_string) {
             json[window_name]["win_soft_reset"] = window_config.win_soft_reset;
             json[window_name]["win_reset_size"] = {window_config.win_reset_size.x, window_config.win_reset_size.y};
 
-            this->utils.utf8Encode(window_config.main_project_file);
+            this->utils.Utf8Encode(window_config.main_project_file);
             json[window_name]["main_project_file"] = window_config.main_project_file;
 
             json[window_name]["param_show_hotkeys"] = window_config.param_show_hotkeys;
@@ -407,7 +407,7 @@ bool WindowManager::StateToJSON(std::string& json_string) {
             json[window_name]["fpsms_refresh_rate"] = window_config.fpsms_refresh_rate;
             json[window_name]["fpsms_mode"] = static_cast<int>(window_config.fpsms_mode);
 
-            this->utils.utf8Encode(window_config.font_name);
+            this->utils.Utf8Encode(window_config.font_name);
             json[window_name]["font_name"] = window_config.font_name;
         }
 
