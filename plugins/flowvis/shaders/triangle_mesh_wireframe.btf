@@ -11,6 +11,7 @@
     <shader name="geometry">
         <snippet type="version">430</snippet>
         <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>
+        <snippet name="Common"           type="file">triangle_mesh_commons.glsl</snippet>
         <snippet name="Main"             type="file">triangle_mesh_geometry_wireframe.glsl</snippet>
     </shader>
 

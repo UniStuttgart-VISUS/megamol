@@ -418,7 +418,13 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
             }
         }
 
-        this->stream_surface_hash = core::utility::DataHash(this->triangles->begin(), this->triangles->end());
+        this->stream_surface_hash = core::utility::DataHash(this->vector_field_hash, this->critical_points_hash,
+            this->direction.Param<core::param::EnumParam>()->Value(),
+            this->integration_method.Param<core::param::EnumParam>()->Value(),
+            this->integration_timestep.Param<core::param::FloatParam>()->Value(),
+            this->max_integration_error.Param<core::param::FloatParam>()->Value(),
+            this->num_integration_steps.Param<core::param::IntParam>()->Value(),
+            this->num_subdivisions.Param<core::param::IntParam>()->Value());
 
         this->periodic_orbits_hash = -1;
         this->seed_line_hash = -1;
