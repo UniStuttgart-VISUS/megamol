@@ -1002,7 +1002,15 @@ bool AbstractOSPRayRenderer::fillWorld() {
                     // returnValue = false;
                     break;
                 }
+                {
+                std::vector<mesh::ImageDataAccessCollection::Image> tex_vec;
+                if (element.mesh_textures != nullptr) {
+                    assert(element.mesh->accessMesh().size() == element.mesh_textures->accessImages().size());
+                    tex_vec = element.mesh_textures->accessImages();
+                }
                 this->numCreateGeo = element.mesh->accessMesh().size();
+
+                uint32_t mesh_index = 0;
                 for (auto& mesh : element.mesh->accessMesh()) {
 
                     geo.push_back(ospNewGeometry("triangles"));
@@ -1065,6 +1073,36 @@ bool AbstractOSPRayRenderer::fillWorld() {
                         vislib::sys::Log::DefaultLog.WriteError("OSPRay cannot render meshes without index array");
                         returnValue = false;
                     }
+                    if (element.mesh_textures != nullptr) {
+                        OSPTextureFormat osp_tex_format = OSP_TEXTURE_FORMAT_INVALID;
+                        switch (tex_vec[mesh_index].format) {
+                        case mesh::ImageDataAccessCollection::TextureFormat::RGBA8: 
+                            osp_tex_format = OSP_TEXTURE_RGBA8;
+                            break;
+                        case mesh::ImageDataAccessCollection::TextureFormat::RGB32F:
+                            osp_tex_format = OSP_TEXTURE_RGB32F;
+                            break;
+                        case mesh::ImageDataAccessCollection::TextureFormat::RGB8:
+                            osp_tex_format = OSP_TEXTURE_RGB8;
+                            break;
+                        case mesh::ImageDataAccessCollection::TextureFormat::RGBA32F:
+                            osp_tex_format = OSP_TEXTURE_RGBA32F;
+                            break;
+                        default:
+                            osp_tex_format = OSP_TEXTURE_RGB8;
+                            break;
+                        }
+
+                        auto ospTexture = ospNewTexture2D({tex_vec[mesh_index].width, tex_vec[mesh_index].height}, osp_tex_format, tex_vec[mesh_index].data, OSP_DATA_SHARED_BUFFER);
+                        auto ospMat = ospNewMaterial2(this->rd_type_string.c_str(), "OBJMaterial");
+                        ospCommit(ospTexture);
+                        ospSetObject(ospMat, "map_Kd", ospTexture);
+                        ospCommit(ospMat);
+                        ospSetMaterial(geo.back(), ospMat);
+
+                    }
+                    mesh_index++;
+                }
                 }
                 break;
             case geometryTypeEnum::STREAMLINES:

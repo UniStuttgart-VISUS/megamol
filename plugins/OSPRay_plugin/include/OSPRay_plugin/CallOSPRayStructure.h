@@ -84,6 +84,7 @@ public:
     std::pair<std::vector<void*>,structureTypeEnum> ospStructures;
 
     std::shared_ptr<mesh::MeshDataAccessCollection> mesh;
+    std::shared_ptr<mesh::ImageDataAccessCollection> mesh_textures;
 
     unsigned int voxelCount;
     unsigned int maxDim;
