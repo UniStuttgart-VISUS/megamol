@@ -51,10 +51,10 @@ protected:
     virtual void release();
 
     core::CallerSlot m_mesh_slot;
-    size_t           m_mesh_cached_hash = 0;
+    size_t           m_mesh_cached_hash;
 
     core::CallerSlot m_centerline_slot;
-    size_t m_centerline_cached_hash = 0;
+    size_t m_centerline_cached_hash;
 
     core::CalleeSlot m_probe_slot;
 

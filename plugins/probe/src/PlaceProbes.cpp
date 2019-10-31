@@ -64,7 +64,7 @@ bool megamol::probe::PlaceProbes::getData(core::Call& call) {
 
     auto mesh_meta_data = cm->getMetaData();
     auto probe_meta_data = pc->getMetaData();
-    auto centerline_meta_data = pc->getMetaData();
+    auto centerline_meta_data = ccl->getMetaData();
 
 
     if (mesh_meta_data.m_data_hash != m_mesh_cached_hash) {
@@ -112,7 +112,7 @@ bool megamol::probe::PlaceProbes::getMetaData(core::Call& call) {
     // set frame id before callback
     auto mesh_meta_data = cm->getMetaData();
     auto probe_meta_data = pc->getMetaData();
-    auto centerline_meta_data = pc->getMetaData();
+    auto centerline_meta_data = ccl->getMetaData();
 
     mesh_meta_data.m_frame_ID = probe_meta_data.m_frame_ID;
     centerline_meta_data.m_frame_ID = probe_meta_data.m_frame_ID;
@@ -124,7 +124,7 @@ bool megamol::probe::PlaceProbes::getMetaData(core::Call& call) {
     if (!(*ccl)(1)) return false;
     
     mesh_meta_data = cm->getMetaData();
-    centerline_meta_data = pc->getMetaData();
+    centerline_meta_data = ccl->getMetaData();
 
     // Guard
     if (mesh_meta_data.m_data_hash == m_mesh_cached_hash &&
@@ -299,7 +299,7 @@ bool megamol::probe::PlaceProbes::placeByCenterline(uint32_t lei, std::vector<st
     auto centerline_step = centerline.stride / sizeof(centerline.component_type);
     
     for (uint32_t i = 0; i < probe_count; i++) {
-        BaseProbe probe;
+        FloatProbe probe;
 
         std::vector<float> distances(centerline_vert_count);
         for (uint32_t j = 0; j < centerline_vert_count; j++) {

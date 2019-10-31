@@ -45,6 +45,8 @@ public:
         float average_value;
     };
 
+    FloatProbe() : m_result(std::make_shared<SamplingResult>()) {}
+
     template <typename DatafieldType> void probe(DatafieldType const& datafield) { /* ToDo*/ }
 
     std::shared_ptr<SamplingResult> getSamplingResult() { return m_result; }

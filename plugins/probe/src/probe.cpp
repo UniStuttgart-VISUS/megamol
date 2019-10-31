@@ -1,6 +1,6 @@
 /*
  * probe.cpp
- * Copyright (C) 2009-2015 by MegaMol Team
+ * Copyright (C) 2019 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
 
@@ -17,6 +17,10 @@
 #include "ProbeCalls.h"
 #include "ExtractProbeGeometry.h"
 #include "CallKDTree.h"
+#include "GenerateGlyphs.h"
+#ifdef PROBE_HAS_OSPRAY
+#include "OSPRayGlyphGeometry.h"
+#endif
 
 
 /* anonymous namespace hides this type from any other object files */
@@ -49,6 +53,10 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::probe::PlaceProbes>();
             this->module_descriptions.RegisterAutoDescription<megamol::probe::SampleAlongPobes>();
             this->module_descriptions.RegisterAutoDescription<megamol::probe::ExtractProbeGeometry>();
+            this->module_descriptions.RegisterAutoDescription<megamol::probe::GenerateGlyphs>();
+#ifdef PROBE_HAS_OSPRAY
+            this->module_descriptions.RegisterAutoDescription<megamol::probe::OSPRayGlyphGeometry>();
+#endif
 
             // register calls here:
 

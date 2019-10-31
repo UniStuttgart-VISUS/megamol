@@ -46,7 +46,7 @@ bool OSPRayTriangleMesh::readData(megamol::core::Call& call) {
     if (cm != nullptr) {
         auto meta_data = cm->getMetaData();
         this->structureContainer.dataChanged = false;
-         if (os->getTime() > meta_data.m_frame_cnt) {
+        if (os->getTime() > meta_data.m_frame_cnt) {
             meta_data.m_frame_ID = meta_data.m_frame_cnt - 1;
         } else {
             meta_data.m_frame_ID = os->getTime();
@@ -59,6 +59,7 @@ bool OSPRayTriangleMesh::readData(megamol::core::Call& call) {
             return true;
         }
 
+        cm->setMetaData(meta_data);
         if (!(*cm)(1)) return false;
         if (!(*cm)(0)) return false;
 
