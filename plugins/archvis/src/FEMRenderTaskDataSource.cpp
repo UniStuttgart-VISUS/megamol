@@ -17,12 +17,12 @@ bool megamol::archvis::FEMRenderTaskDataSource::getDataCallback(core::Call& call
     mesh::CallGPURenderTaskData* rtc = dynamic_cast<mesh::CallGPURenderTaskData*>(&caller);
     if (rtc == NULL) return false;
 
-    mesh::CallGPUMaterialData* mtlc = this->m_material_callerSlot.CallAs<mesh::CallGPUMaterialData>();
+    mesh::CallGPUMaterialData* mtlc = this->m_material_slot.CallAs<mesh::CallGPUMaterialData>();
     if (mtlc == NULL) return false;
 
     if (!(*mtlc)(0)) return false;
 
-    mesh::CallGPUMeshData* mc = this->m_mesh_callerSlot.CallAs<mesh::CallGPUMeshData>();
+    mesh::CallGPUMeshData* mc = this->m_mesh_slot.CallAs<mesh::CallGPUMeshData>();
     if (mc == NULL) return false;
 
     if (!(*mc)(0)) return false;

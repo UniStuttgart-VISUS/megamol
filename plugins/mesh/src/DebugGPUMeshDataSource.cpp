@@ -8,8 +8,6 @@ megamol::mesh::DebugGPUMeshDataSource::~DebugGPUMeshDataSource() {}
 bool megamol::mesh::DebugGPUMeshDataSource::create() {
     m_gpu_meshes = std::make_shared<GPUMeshCollection>();
 
-    m_bbox = {-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f};
-
     return load();
 }
 
@@ -21,6 +19,8 @@ bool megamol::mesh::DebugGPUMeshDataSource::getDataCallback(core::Call& caller) 
 
     return true;
 }
+
+bool megamol::mesh::DebugGPUMeshDataSource::getMetaDataCallback(core::Call& caller) { return false; }
 
 bool megamol::mesh::DebugGPUMeshDataSource::load() {
     // Create std-container for holding vertex data

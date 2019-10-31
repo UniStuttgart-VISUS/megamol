@@ -58,6 +58,8 @@ namespace megamol
 
 			virtual bool getDataCallback(core::Call& caller);
 
+            virtual bool getMetaDataCallback(core::Call& caller);
+
 		private:
 
             /** Slot to retrieve the gltf model */
