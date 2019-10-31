@@ -10,7 +10,8 @@
  *
  * - Show/hide Windows: Ctrl  + F9-F12
  * - Reset windows:     Shift + Ctrl   + F9-F12
- * - Search Paramter:   Ctrl  + p
+ * - Search Paramter:   Shift + Ctrl  + p
+ * - Save Project:      Shift + Ctrl  + s
  * - Quit program:      Alt   + F4
  */
 
@@ -93,7 +94,12 @@ GUIView::GUIView()
     this->hotkeys[HotkeyIndex::EXIT_PROGRAM] =
         HotkeyData(megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F4, core::view::Modifier::ALT), false);
     this->hotkeys[HotkeyIndex::PARAMETER_SEARCH] =
-        HotkeyData(megamol::core::view::KeyCode(megamol::core::view::Key::KEY_P, core::view::Modifier::CTRL), false);
+        HotkeyData(megamol::core::view::KeyCode(
+                       megamol::core::view::Key::KEY_P, core::view::Modifier::CTRL | core::view::Modifier::SHIFT),
+            false);
+    this->hotkeys[HotkeyIndex::SAVE_PROJECT] = HotkeyData(megamol::core::view::KeyCode(megamol::core::view::Key::KEY_S,
+                                                              core::view::Modifier::CTRL | core::view::Modifier::SHIFT),
+        false);
 }
 
 GUIView::~GUIView() { this->Release(); }
@@ -888,9 +894,11 @@ void GUIView::drawParametersCallback(const std::string& wn, WindowManager::Windo
             this->utils.SetSearchFocus(true);
             std::get<1>(this->hotkeys[HotkeyIndex::PARAMETER_SEARCH]) = false;
         }
-        this->utils.StringSearch("Search Parameters", "[CTRL + 'p'] Set keyboard focus to search input field.\n"
-                                                      "Searching for case insensitive substring in\n"
-                                                      "parameter names globally in all parameter views.\n");
+        std::string help_test =
+            "[" + std::get<0>(this->hotkeys[HotkeyIndex::PARAMETER_SEARCH]).ToString() +
+            "] Set keyboard focus to search input field.\n"
+            "Searching for case insensitive substring in\nparameter names globally in all parameter views.\n";
+        this->utils.StringSearch("Search Parameters", help_test);
     }
     ImGui::Separator();
 
@@ -1346,7 +1354,7 @@ void GUIView::drawMenu(const std::string& wn, WindowManager::WindowConfiguration
     if (ImGui::BeginMenu("File")) {
 #ifdef GUI_USE_FILEUTILS
         // Load/save parameter values to LUA file
-        if (ImGui::MenuItem("Save Project")) {
+        if (ImGui::MenuItem("Save Project", std::get<0>(this->hotkeys[HotkeyIndex::SAVE_PROJECT]).ToString().c_str())) {
             open_popup_project = true;
         }
         /// Not supported so far
@@ -1462,12 +1470,18 @@ void GUIView::drawMenu(const std::string& wn, WindowManager::WindowConfiguration
 
     // SAVE PROJECT
 #ifdef GUI_USE_FILEUTILS
+    open_popup_project = (open_popup_project || std::get<1>(this->hotkeys[HotkeyIndex::SAVE_PROJECT]));
     if (open_popup_project) {
         ImGui::OpenPopup("Save Project");
+        std::get<1>(this->hotkeys[HotkeyIndex::SAVE_PROJECT]) = false;
     }
     if (ImGui::BeginPopupModal("Save Project", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
 
-        std::string label = "File Name";
+        std::string label = "File Name###Save Project";
+        if (open_popup_project) {
+            ImGuiID id = ImGui::GetID(label.c_str());
+            ImGui::ActivateItem(id);
+        }
         /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
         this->utils.Utf8Encode(wc.main_project_file);
         ImGui::InputText(label.c_str(), &wc.main_project_file, ImGuiInputTextFlags_None);
@@ -1835,6 +1849,10 @@ void GUIView::checkMultipleHotkeyAssignement(void) {
         hotkeylist.emplace_back(core::view::KeyCode(core::view::Key::KEY_DOWN));
         hotkeylist.emplace_back(core::view::KeyCode(core::view::Key::KEY_LEFT));
         hotkeylist.emplace_back(core::view::KeyCode(core::view::Key::KEY_RIGHT));
+
+        for (auto& h : this->hotkeys) {
+            hotkeylist.emplace_back(std::get<0>(h));
+        }
 
         this->GetCoreInstance()->EnumParameters([&, this](const auto& mod, auto& slot) {
             auto param = slot.Parameter();

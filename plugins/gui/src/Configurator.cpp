@@ -8,7 +8,7 @@
 /**
  * USED HOTKEYS:
  *
- * - Search module:   Ctrl  + m
+ * - Search module:   Shift + Ctrl  + m
  */
 
 #include "stdafx.h"
@@ -24,7 +24,9 @@ Configurator::Configurator() : hotkeys(), utils(), state() {
 
     // Init HotKeys
     this->hotkeys[HotkeyIndex::MODULE_SEARCH] =
-        HotkeyData(megamol::core::view::KeyCode(megamol::core::view::Key::KEY_M, core::view::Modifier::CTRL), false);
+        HotkeyData(megamol::core::view::KeyCode(
+                       megamol::core::view::Key::KEY_M, core::view::Modifier::CTRL | core::view::Modifier::SHIFT),
+            false);
 
     // Init state
     this->state.module_list_selected_id = -1;
@@ -80,8 +82,10 @@ bool megamol::gui::Configurator::Draw(
         this->utils.SetSearchFocus(true);
         std::get<1>(this->hotkeys[HotkeyIndex::MODULE_SEARCH]) = false;
     }
-    this->utils.StringSearch("Search Modules", "[CTRL + 'm'] Set keyboard focus to search input field.\n"
-                                               "Searching for case insensitive substring in module names.\n");
+    std::string help_text = "[" + std::get<0>(this->hotkeys[HotkeyIndex::MODULE_SEARCH]).ToString() +
+                            "] Set keyboard focus to search input field.\n"
+                            "Searching for case insensitive substring in module names.";
+    this->utils.StringSearch("Search Modules", help_text);
     auto search_string = this->utils.GetSearchString();
     ImGui::Separator();
 

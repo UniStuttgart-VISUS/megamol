@@ -116,7 +116,7 @@ void megamol::gui::GUIUtils::StringSearch(const std::string& label, const std::s
         this->searchFocus = false;
     }
 
-    auto width = ImGui::GetContentRegionAvailWidth() - ImGui::GetCursorPosX() + 2.0f * style.ItemInnerSpacing.x -
+    auto width = ImGui::GetContentRegionAvailWidth() - ImGui::GetCursorPosX() + 4.0f * style.ItemInnerSpacing.x -
                  this->TextWidgetWidth(label + help_label);
     const int min_width = 50.0f;
     width = (width < min_width) ? (min_width) : width;
@@ -131,5 +131,5 @@ void megamol::gui::GUIUtils::StringSearch(const std::string& label, const std::s
 
     ImGui::SameLine();
     ImGui::Text(label.c_str());
-    this->HelpMarkerToolTip(help_label.c_str());
+    this->HelpMarkerToolTip(help, help_label);
 }
