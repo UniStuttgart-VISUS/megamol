@@ -76,16 +76,38 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
   file(GLOB_RECURSE third RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "3rd/*")
+  file(GLOB_RECURSE ospray_sources RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "probe_ospray/src/*.cpp")
+  file(GLOB_RECURSE ospray_headers RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "probe_ospray/src/*.h")
+  file(GLOB_RECURSE ospray_public_headers RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "probe_ospray/include/*.h")
+
+  
 
   # Target definition
   #add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files})
-  add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${source_files} ${third})
+  if(BUILD_OSPRAY_PLUGIN_PLUGIN)
+    add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${source_files} ${third} ${ospray_sources} ${ospray_headers} ${ospray_public_headers})
+  else()
+    add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${source_files} ${third})
+  endif()
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
+  if(BUILD_OSPRAY_PLUGIN_PLUGIN)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_HAS_OSPRAY)
+  endif()
+
   target_include_directories(${PROJECT_NAME} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     "include" "src" "3rd")
+
+  if(BUILD_OSPRAY_PLUGIN_PLUGIN)
+    target_include_directories(${PROJECT_NAME} PUBLIC
+      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/probe_ospray/include> "probe_ospray/src")
+  endif()
+
   target_link_libraries(${PROJECT_NAME} PRIVATE core adios_plugin Eigen nanoflann mesh blend2d qhull)# Qhull::libqhull )
+  if(BUILD_OSPRAY_PLUGIN_PLUGIN)
+    target_link_libraries(${PROJECT_NAME} PUBLIC OSPRay_plugin)
+  endif()
 
   # Installation rules for generated files
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")

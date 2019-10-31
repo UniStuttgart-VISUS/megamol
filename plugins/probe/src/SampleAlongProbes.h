@@ -50,30 +50,31 @@ protected:
     virtual bool create();
     virtual void release();
 
-    core::CalleeSlot m_probe_lhs_slot;
+    core::CalleeSlot _probe_lhs_slot;
 
-    core::CallerSlot m_probe_rhs_slot;
-    size_t m_probe_cached_hash;
+    core::CallerSlot _probe_rhs_slot;
+    size_t _probe_cached_hash;
 
-    core::CallerSlot m_adios_rhs_slot;
-    size_t m_adios_cached_hash;
+    core::CallerSlot _adios_rhs_slot;
+    size_t _adios_cached_hash;
 
-    core::CallerSlot m_full_tree_rhs_slot;
-    size_t m_full_tree_cached_hash;
+    core::CallerSlot _full_tree_rhs_slot;
+    size_t _full_tree_cached_hash;
 
-    core::param::ParamSlot m_parameter_to_sample_slot;
-    bool m_recalc;
+    core::param::ParamSlot _parameter_to_sample_slot;
+    core::param::ParamSlot _num_samples_per_probe_slot;
 
 private:
 
-    void doSampling(const std::shared_ptr<ProbeCollection>& probes, const std::shared_ptr<pcl::KdTreeFLANN<pcl::PointXYZ>>& tree, std::vector<float>& data);
+    void doSampling(const std::shared_ptr<pcl::KdTreeFLANN<pcl::PointXYZ>>& tree, std::vector<float>& data);
     bool getData(core::Call& call);
 
     bool getMetaData(core::Call& call);
 
-    std::shared_ptr<ProbeCollection> m_probes;
+    std::shared_ptr<ProbeCollection> _probes;
 
     size_t _old_datahash;
+    bool _trigger_recalc;
     bool paramChanged(core::param::ParamSlot& p);
 };
 
