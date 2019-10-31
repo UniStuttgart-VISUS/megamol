@@ -9,6 +9,7 @@
 #define CALL_GENERIC_H_INCLUDED
 
 #include "mmcore/AbstractGetDataCall.h"
+#include "mmcore/BoundingBoxes_2.h"
 
 namespace megamol {
 namespace core {
@@ -29,12 +30,16 @@ struct Spatial3DMetaData {
     size_t m_data_hash = 0;
     unsigned int m_frame_cnt = 0;
     unsigned int m_frame_ID = 0;
-    megamol::core::BoundingBoxes m_bboxs;
+    megamol::core::BoundingBoxes_2 m_bboxs;
 };
 
 template <typename DataType, typename MetaDataType> class CallGeneric : public Call 
 {
 public:
+
+    using data_type = DataType;
+    using meta_data_type = MetaDataType;
+
     CallGeneric() = default;
     ~CallGeneric() = default;
 
