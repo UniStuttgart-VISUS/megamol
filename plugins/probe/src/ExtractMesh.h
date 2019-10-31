@@ -101,6 +101,7 @@ private:
     std::vector<float> _normal_data;
 
     // PCL stuff
+    pcl::PointCloud<pcl::PointXYZ>::ConstPtr _inputCloud; 
     pcl::PointCloud<pcl::PointXYZ> _cloud;
     std::vector<pcl::Vertices> _polygons;
     std::vector<pcl::PointIndices> _indices;

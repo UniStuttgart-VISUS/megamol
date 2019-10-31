@@ -202,16 +202,16 @@ void ExtractMesh::calculateAlphaShape() {
 
     // Calculate the alpha hull of the initial point cloud
     pcl::ConcaveHull<pcl::PointXYZ> hull;
-
     hull.setAlpha(this->_alphaSlot.Param<core::param::FloatParam>()->Value());
     hull.setDimension(3);
-    pcl::PointCloud<pcl::PointXYZ>::ConstPtr inputCloud = std::make_shared<pcl::PointCloud<pcl::PointXYZ>>(_cloud);
-    hull.setInputCloud(inputCloud);
+    _inputCloud = std::make_shared<pcl::PointCloud<pcl::PointXYZ>>(_cloud);
+    hull.setInputCloud(_inputCloud);
     // hull.setDoFiltering(true);
     hull.reconstruct(_resultCloud, _polygons);
 
     // Extract the kd tree for easy sampling of the data
-    this->_full_data_tree = hull.getKDTree();
+    this->_full_data_tree = std::make_shared<pcl::KdTreeFLANN<pcl::PointXYZ>>();
+    this->_full_data_tree->setInputCloud(_inputCloud, nullptr);
 
     if (usePoisson) {
 
@@ -410,6 +410,10 @@ bool ExtractMesh::getData(core::Call& call) {
         this->convertToMesh();
     }
 
+    if (_mesh_attribs.empty()) {
+        this->convertToMesh();
+    }
+
     auto meta_data = cm->getMetaData();
     meta_data.m_bboxs = _bbox;
     cm->setMetaData(meta_data);
@@ -601,7 +605,7 @@ bool ExtractMesh::getCenterlineData(core::Call& call) {
 
 bool ExtractMesh::getKDMetaData(core::Call& call) {
 
-       auto cm = dynamic_cast<CallKDTree*>(&call);
+    auto cm = dynamic_cast<CallKDTree*>(&call);
     if (cm == nullptr) return false;
 
     auto cd = this->_getDataCall.CallAs<adios::CallADIOSData>();

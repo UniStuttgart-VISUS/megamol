@@ -593,6 +593,7 @@ void pcl::KdTreeFLANN<PointT>::setInputCloud(const PointCloudConstPtr& cloud, co
 
     input_ = cloud;
     indices_ = indices;
+    total_nr_points_ = cloud->points.size();
 
     // Allocate enough data
     //if (!input_) {

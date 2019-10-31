@@ -88,6 +88,7 @@ public:
         this->call_descriptions.RegisterAutoDescription<megamol::mesh::CallGPUMaterialData>();
         this->call_descriptions.RegisterAutoDescription<megamol::mesh::CallGPURenderTaskData>();
         this->call_descriptions.RegisterAutoDescription<megamol::mesh::CallMesh>();
+        this->call_descriptions.RegisterAutoDescription<megamol::mesh::CallImage>();
 
         //
         // TODO: Register your plugin's calls here

@@ -102,9 +102,6 @@ public:
     /** \brief Returns the alpha parameter, see setAlpha(). */
     inline double getAlpha() { return (alpha_); }
 
-    /** \brief Returns the KDTree. */
-    std::shared_ptr<KdTreeFLANN<PointInT>> getKDTree();
-
     /** \brief If set, the voronoi cells center will be saved in _voronoi_centers_
      * \param voronoi_centers
      */
@@ -688,13 +685,6 @@ void pcl::ConcaveHull<PointInT>::performReconstruction(PointCloud& alpha_shape, 
     }
 }
 
-template <typename PointInT> std::shared_ptr<KdTreeFLANN<PointInT>> pcl::ConcaveHull<PointInT>::getKDTree() {
-    // build a tree with the original points
-    pcl::KdTreeFLANN<PointInT> tree(true);
-    tree.setInputCloud(this->input_, this->indices_);
-
-    return std::make_shared<pcl::KdTreeFLANN<PointInT>>(std::move(tree));
-}
 #ifdef __GNUC__
 #    pragma GCC diagnostic warning "-Wold-style-cast"
 #endif
