@@ -104,7 +104,18 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
     CallADIOSData* cad = dynamic_cast<CallADIOSData*>(&caller);
     if (cad == nullptr) return false;
 
-    if (dataHashChanged || loadedFrameID != cad->getFrameIDtoLoad()) {
+    if (!this->dataMap.empty()) {
+        auto inq = cad->getVarsToInquire();
+        for (auto var : inq) {
+            this->inquireChanged = this->inquireChanged || this->dataMap.find(var) == this->dataMap.end();
+        }
+    } else {
+        if (!cad->getVarsToInquire().empty()) {
+            this->inquireChanged = true;
+        }
+    }
+
+    if (dataHashChanged || inquireChanged || loadedFrameID != cad->getFrameIDtoLoad()) {
 
         try {
             const std::string fname = std::string(T2A(this->filenameSlot.Param<core::param::FilePathParam>()->Value()));
@@ -273,6 +284,7 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
         cad->setData(std::make_shared<adiosDataMap>(dataMap));
         cad->setDataHash(this->data_hash);
         this->dataHashChanged = false;
+        this->inquireChanged = false;
     }
     return true;
 }
@@ -295,6 +307,7 @@ bool adiosDataSource::getHeaderCallback(core::Call& caller) {
     if (cad == nullptr) return false;
 
     if (dataHashChanged || loadedFrameID != cad->getFrameIDtoLoad()) {
+        if (loadedFrameID != cad->getFrameIDtoLoad()) this->dataMap.clear();
 
         try {
             vislib::sys::Log::DefaultLog.WriteInfo("[adiosDataSource] Setting Engine");
@@ -320,10 +333,10 @@ bool adiosDataSource::getHeaderCallback(core::Call& caller) {
             this->variables = io->AvailableVariables();
             vislib::sys::Log::DefaultLog.WriteInfo("[adiosDataSource] Number of variables %d", variables.size());
 
-            std::vector<std::string> availVars;
+
             availVars.reserve(variables.size());
 
-            std::vector<std::size_t> timesteps;
+            timesteps.clear();
             for (auto var : variables) {
                 availVars.push_back(var.first);
                 vislib::sys::Log::DefaultLog.WriteInfo("[adiosDataSource] %s", var.first.c_str());
@@ -331,21 +344,13 @@ bool adiosDataSource::getHeaderCallback(core::Call& caller) {
                 timesteps.push_back(std::stoi(var.second["AvailableStepsCount"]));
             }
 
-            cad->setAvailableVars(availVars);
             // Check of all variables have same timestep count
             std::sort(timesteps.begin(), timesteps.end());
             auto last = std::unique(timesteps.begin(), timesteps.end());
             timesteps.erase(last, timesteps.end());
 
-            if (timesteps.size() != 1) {
-                vislib::sys::Log::DefaultLog.WriteWarn(
-                    "[adiosDataSource] Detected variables with different count of time steps - Using lowest");
-                cad->setFrameCount(*std::min_element(timesteps.begin(), timesteps.end()));
-            } else {
-                cad->setFrameCount(timesteps[0]);
-            }
             this->data_hash++;
-            cad->setDataHash(this->data_hash);
+
         } catch (std::invalid_argument& e) {
 #ifdef WITH_MPI
             vislib::sys::Log::DefaultLog.WriteError(
@@ -373,6 +378,20 @@ bool adiosDataSource::getHeaderCallback(core::Call& caller) {
             vislib::sys::Log::DefaultLog.WriteError(e.what());
         }
     }
+
+    cad->setAvailableVars(availVars);
+    if (timesteps.size() != 1) {
+        vislib::sys::Log::DefaultLog.WriteWarn(
+            "[adiosDataSource] Detected variables with different count of time steps - Using lowest");
+        cad->setFrameCount(*std::min_element(timesteps.begin(), timesteps.end()));
+    } else {
+        cad->setFrameCount(timesteps[0]);
+    }
+
+    cad->setDataHash(this->data_hash);
+    dataHashChanged = false;
+    loadedFrameID = cad->getFrameIDtoLoad();
+
     return true;
 }
 

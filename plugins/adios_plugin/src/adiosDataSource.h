@@ -91,6 +91,7 @@ private:
     /** Data file load id counter */
     size_t data_hash = 0;
 	bool dataHashChanged = false;
+    bool inquireChanged = false;
 
     /** The file name */
     core::param::ParamSlot filenameSlot;
@@ -104,6 +105,9 @@ private:
     std::shared_ptr<adios2::Engine> reader;
     std::map<std::string, adios2::Params> variables;
     adiosDataMap dataMap;
+
+    std::vector<std::size_t> timesteps;
+    std::vector<std::string> availVars;
 };
 } /* end namespace adios */
 } /* end namespace megamol */
