@@ -21,6 +21,8 @@
 
 #include "Eigen/Dense"
 
+#include <CGAL/Exact_predicates_exact_constructions_kernel.h>
+
 #include "data/tpf_grid.h"
 
 #include <array>
@@ -86,6 +88,8 @@ namespace megamol
             virtual void release() override;
 
         private:
+            using kernel_t = CGAL::Exact_predicates_exact_constructions_kernel;
+
             /** Get input data and extent from called modules */
             bool get_input_data();
             bool get_input_extent();
@@ -104,6 +108,8 @@ namespace megamol
              * @param point Point, which will be advected
              * @param delta Time step size, which can be adjusted by the integration method
              * @param forward True: forward integration, false: reverse integration
+             *
+             * @returns Advected point
              */
             Eigen::Vector3f advect_point(const tpf::data::grid<float, float, 2, 2>& grid, const Eigen::Vector3f& point, float& delta, bool forward) const;
             void advect_point_rk4(const tpf::data::grid<float, float, 2, 2>& grid, Eigen::Vector2f& point, float& delta, bool forward) const;
@@ -155,8 +161,13 @@ namespace megamol
             core::param::ParamSlot num_integration_steps;
             core::param::ParamSlot integration_timestep;
             core::param::ParamSlot max_integration_error;
+
             core::param::ParamSlot num_subdivisions;
+            core::param::ParamSlot critical_point_offset;
+
             core::param::ParamSlot direction;
+            core::param::ParamSlot compute_intersections;
+            core::param::ParamSlot filter_seed_lines;
 
             /** Bounding rectangle and box */
             vislib::math::Rectangle<float> bounding_rectangle;
@@ -186,17 +197,15 @@ namespace megamol
             std::shared_ptr<mesh_data_call::data_set> seed_point_ids;
             std::shared_ptr<mesh_data_call::data_set> integration_ids;
 
-            /** Output periodic orbit glyphs */
+            /** Output periodic orbits */
             SIZE_T periodic_orbits_hash;
 
             std::vector<std::pair<float, std::vector<Eigen::Vector2f>>> periodic_orbits;
 
-            /** Output seed line glyphs */
+            /** Output seed lines */
             SIZE_T seed_line_hash;
 
             std::vector<std::pair<float, std::vector<Eigen::Vector2f>>> seed_lines;
-
-            /**  */
         };
     }
 }

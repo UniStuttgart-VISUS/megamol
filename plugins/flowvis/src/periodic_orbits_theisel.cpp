@@ -8,6 +8,7 @@
 
 #include "mmcore/Call.h"
 #include "mmcore/DirectDataWriterCall.h"
+#include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
@@ -17,6 +18,11 @@
 #include "vislib/sys/Log.h"
 
 #include "Eigen/Dense"
+
+#include <CGAL/Polygon_mesh_processing/intersection.h>
+#include <CGAL/Surface_mesh.h>
+#include <CGAL/intersections.h>
+#include <CGAL/iterator.h>
 
 #include "data/tpf_data_information.h"
 #include "data/tpf_grid.h"
@@ -46,7 +52,11 @@ periodic_orbits_theisel::periodic_orbits_theisel()
     , integration_timestep("integration_timestep", "Initial time step for stream line integration")
     , max_integration_error("max_integration_error", "Maximum integration error for Runge-Kutta 4-5")
     , num_subdivisions("num_subdivisions", "Number of subdivisions")
+    , critical_point_offset("critical_point_offset", "Offset from critical points for increased numeric stability")
     , direction("direction", "Integration direction for stream surface computation")
+    , compute_intersections(
+          "compute_intersections", "Compute intersection of stream surfaces for periodic orbit detection")
+    , filter_seed_lines("filter_seed_lines", "Filter input seed lines used for computation")
     , vector_field_hash(-1)
     , vector_field_changed(false)
     , critical_points_hash(-1)
@@ -117,11 +127,20 @@ periodic_orbits_theisel::periodic_orbits_theisel()
     this->num_subdivisions << new core::param::IntParam(10);
     this->MakeSlotAvailable(&this->num_subdivisions);
 
+    this->critical_point_offset << new core::param::FloatParam(0.5f);
+    this->MakeSlotAvailable(&this->critical_point_offset);
+
     this->direction << new core::param::EnumParam(0);
     this->direction.Param<core::param::EnumParam>()->SetTypePair(0, "both");
     this->direction.Param<core::param::EnumParam>()->SetTypePair(1, "forward");
     this->direction.Param<core::param::EnumParam>()->SetTypePair(2, "backward");
     this->MakeSlotAvailable(&this->direction);
+
+    this->compute_intersections << new core::param::BoolParam(false);
+    this->MakeSlotAvailable(&this->compute_intersections);
+
+    this->filter_seed_lines << new core::param::IntParam(-1);
+    this->MakeSlotAvailable(&this->filter_seed_lines);
 }
 
 periodic_orbits_theisel::~periodic_orbits_theisel() { this->Release(); }
@@ -194,8 +213,8 @@ bool periodic_orbits_theisel::get_input_extent() {
 
     const auto average_size = 0.5f * (this->bounding_rectangle.Width() + this->bounding_rectangle.Height());
 
-    this->bounding_box.Set(this->bounding_rectangle.GetLeft(), 0.0f, this->bounding_rectangle.GetBottom(),
-        this->bounding_rectangle.GetRight(), average_size, this->bounding_rectangle.GetTop());
+    this->bounding_box.Set(this->bounding_rectangle.GetLeft(), this->bounding_rectangle.GetBottom() , 0.0f,
+        this->bounding_rectangle.GetRight(), this->bounding_rectangle.GetTop(), average_size);
 
     return true;
 }
@@ -204,7 +223,8 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
     if (this->vector_field_changed || this->critical_points_changed || this->direction.IsDirty() ||
         this->integration_method.IsDirty() || this->integration_timestep.IsDirty() ||
         this->max_integration_error.IsDirty() || this->num_integration_steps.IsDirty() ||
-        this->num_subdivisions.IsDirty()) {
+        this->num_subdivisions.IsDirty() || this->compute_intersections.IsDirty() ||
+        this->filter_seed_lines.IsDirty() || this->critical_point_offset.IsDirty()) {
 
         this->direction.ResetDirty();
         this->integration_method.ResetDirty();
@@ -212,6 +232,9 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
         this->max_integration_error.ResetDirty();
         this->num_integration_steps.ResetDirty();
         this->num_subdivisions.ResetDirty();
+        this->compute_intersections.ResetDirty();
+        this->filter_seed_lines.ResetDirty();
+        this->critical_point_offset.ResetDirty();
 
         // Create grid containing the vector field
         tpf::data::extent_t extent;
@@ -252,30 +275,41 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
         // TODO
         // DEBUG
 
+        /*seed_lines.push_back(
+            std::make_pair(Eigen::Vector2f(0.0701957f, 0.00664742f), Eigen::Vector2f(0.0825285f, 0.0217574f)));
         seed_lines.push_back(
-            std::make_pair(Eigen::Vector2f(0.0994355f, 0.0356891f), Eigen::Vector2f(0.0825285f, 0.0217574f)));
+            std::make_pair(Eigen::Vector2f(0.0825285f, 0.0217574f), Eigen::Vector2f(0.0994355f, 0.0356891f)));
         seed_lines.push_back(
-            std::make_pair(Eigen::Vector2f(0.0825285f, 0.0217574f) , Eigen::Vector2f(0.0701957f, 0.00664742f)));
+            std::make_pair(Eigen::Vector2f(0.0994355f, 0.0356891f), Eigen::Vector2f(0.0318712f, 0.00745418f)));
         seed_lines.push_back(
-            std::make_pair(Eigen::Vector2f(0.0701957f, 0.00664742f), Eigen::Vector2f(0.0318712f, 0.00745418f)));
+            std::make_pair(Eigen::Vector2f(0.0318712f, 0.00745418f), Eigen::Vector2f(0.00214084f, 0.0429468f)));
         seed_lines.push_back(
-            std::make_pair(Eigen::Vector2f(0.0318712f, 0.00745418f), Eigen::Vector2f(0.0441256f, 0.0246534f)));
+            std::make_pair(Eigen::Vector2f(0.00214084f, 0.0429468f), Eigen::Vector2f(0.0441256f, 0.0246534f)));
         seed_lines.push_back(
             std::make_pair(Eigen::Vector2f(0.0441256f, 0.0246534f), Eigen::Vector2f(0.0760664f, 0.0650472f)));
         seed_lines.push_back(
-            std::make_pair(Eigen::Vector2f(0.0760664f, 0.0650472f), Eigen::Vector2f(0.00214084f, 0.0429468f)));
-        seed_lines.push_back(
-            std::make_pair(Eigen::Vector2f(0.00214084f, 0.0429468f), Eigen::Vector2f(0.00313739f, 0.0583816f)));
+            std::make_pair(Eigen::Vector2f(0.0760664f, 0.0650472f), Eigen::Vector2f(0.00313739f, 0.0583816f)));
         seed_lines.push_back(
             std::make_pair(Eigen::Vector2f(0.00313739f, 0.0583816f), Eigen::Vector2f(0.0293156f, 0.0776436f)));
         seed_lines.push_back(
             std::make_pair(Eigen::Vector2f(0.0293156f, 0.0776436f), Eigen::Vector2f(0.00848707f, 0.0989702f)));
-        seed_lines.push_back(
-            std::make_pair(Eigen::Vector2f(0.00848707f, 0.0989702f), Eigen::Vector2f(0.0f, 0.1f)));
+        seed_lines.push_back(std::make_pair(Eigen::Vector2f(0.00848707f, 0.0989702f), Eigen::Vector2f(0.0f, 0.1f)));*/
+
+        seed_lines.push_back(std::make_pair(Eigen::Vector2f(-2.0f, 0.0f), Eigen::Vector2f(0.0f, 0.0f)));
 
         // DEBUG
 
-        // For each seed line, compute forward and backward stream surfaces
+        const auto cp_offset = this->critical_point_offset.Param<core::param::FloatParam>()->Value();
+
+        for (auto& seed_line : seed_lines) {
+            const auto direction = (seed_line.second - seed_line.first).normalized();
+            const auto offset = cp_offset * Eigen::Vector2f(cell_size[0] * direction[0], cell_size[1] * direction[1]);
+
+            seed_line.first += offset;
+            seed_line.second -= offset;
+        }
+
+        // Allocate output
         const auto num_seed_points =
             static_cast<size_t>(std::max(0, this->num_subdivisions.Param<core::param::IntParam>()->Value()) + 2);
         const auto num_triangles = 2 * (num_seed_points - 1);
@@ -305,7 +339,18 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
 
         this->periodic_orbits.clear();
 
-        for (std::size_t seed_index = 0; seed_index < seed_lines.size(); ++seed_index) {
+        // For each seed line, compute forward and backward stream surfaces
+        std::size_t seed_index = 0;
+        std::size_t seed_end = seed_lines.size();
+
+        const auto filter_index = this->filter_seed_lines.Param<core::param::IntParam>()->Value();
+
+        if (filter_index != -1) {
+            seed_index = filter_index;
+            seed_end = seed_index + 1;
+        }
+
+        for (; seed_index < seed_end; ++seed_index) {
             this->seed_lines.push_back(std::make_pair(static_cast<float>(seed_index),
                 std::vector<Eigen::Vector2f>{seed_lines[seed_index].first, seed_lines[seed_index].second}));
 
@@ -313,9 +358,9 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
             const auto height = this->bounding_box.Height();
 
             const Eigen::Vector3f seed_line_start(
-                seed_lines[seed_index].first.x(), 0.0f, seed_lines[seed_index].first.y());
+                seed_lines[seed_index].first.x(), seed_lines[seed_index].first.y(), 0.0f);
             const Eigen::Vector3f seed_line_end(
-                seed_lines[seed_index].second.x(), height, seed_lines[seed_index].second.y());
+                seed_lines[seed_index].second.x(), seed_lines[seed_index].second.y(), height);
 
             const auto direction = (seed_line_end - seed_line_start).normalized();
             const auto step = (seed_line_end - seed_line_start).norm() / (num_seed_points - 1);
@@ -362,13 +407,10 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
                         vector_field, previous_backward_points[point_index], backward_timesteps[point_index], false));
                 }
 
-                forward_points.insert(forward_points.end(), advected_forward_points.begin(), advected_forward_points.end());
-                backward_points.insert(backward_points.end(), advected_backward_points.begin(), advected_backward_points.end());
-
-                // Check for intersections
-
-
-                // TODO: this->periodic_orbits.push_back();
+                forward_points.insert(
+                    forward_points.end(), advected_forward_points.begin(), advected_forward_points.end());
+                backward_points.insert(
+                    backward_points.end(), advected_backward_points.begin(), advected_backward_points.end());
 
                 // Prepare for next execution
                 std::swap(previous_forward_points, advected_forward_points);
@@ -386,7 +428,8 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
                     this->mesh_vertices->push_back(forward_point.y());
                     this->mesh_vertices->push_back(forward_point.z());
 
-                    this->seed_line_ids->data->push_back(static_cast<float>(seed_index));
+                    this->seed_line_ids->data->push_back(
+                        (integration_direction == 0 ? 0.5f : 1.0f) * static_cast<float>(seed_index));
                     this->seed_point_ids->data->push_back(static_cast<float>(point_id % num_seed_points));
                     this->integration_ids->data->push_back(static_cast<float>(point_id / num_seed_points));
 
@@ -402,7 +445,9 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
                     this->mesh_vertices->push_back(backward_point.y());
                     this->mesh_vertices->push_back(backward_point.z());
 
-                    this->seed_line_ids->data->push_back(static_cast<float>(seed_index) + 0.5f);
+                    this->seed_line_ids->data->push_back(
+                        (integration_direction == 0 ? 0.5f * seed_lines.size() : 0.0f) +
+                        (integration_direction == 0 ? 0.5f : 1.0f) * static_cast<float>(seed_index));
                     this->seed_point_ids->data->push_back(static_cast<float>(point_id % num_seed_points));
                     this->integration_ids->data->push_back(static_cast<float>(point_id / num_seed_points));
 
@@ -411,8 +456,14 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
             }
 
             // Create surface mesh
+            auto seed_index_filtered = seed_index;
+
+            if (filter_index != -1) {
+                seed_index_filtered = 0;
+            }
+
             if (integration_direction == 1 || integration_direction == 2) {
-                const auto seed_line_offset = seed_index * (num_integration_steps + 1) * num_seed_points;
+                const auto seed_line_offset = seed_index_filtered * (num_integration_steps + 1) * num_seed_points;
 
                 for (std::size_t integration = 0; integration < num_integration_steps; ++integration) {
                     const auto integration_offset = seed_line_offset + integration * num_seed_points;
@@ -432,7 +483,8 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
             }
 
             if (integration_direction == 0) {
-                const auto seed_line_offset_forward = 2 * seed_index * (num_integration_steps + 1) * num_seed_points;
+                const auto seed_line_offset_forward =
+                    2 * seed_index_filtered * (num_integration_steps + 1) * num_seed_points;
 
                 for (std::size_t integration = 0; integration < num_integration_steps; ++integration) {
                     const auto integration_offset = seed_line_offset_forward + integration * num_seed_points;
@@ -450,7 +502,8 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
                     }
                 }
 
-                const auto seed_line_offset_backward = (2 * seed_index + 1) * (num_integration_steps + 1) * num_seed_points;
+                const auto seed_line_offset_backward =
+                    (2 * seed_index_filtered + 1) * (num_integration_steps + 1) * num_seed_points;
 
                 for (std::size_t integration = 0; integration < num_integration_steps; ++integration) {
                     const auto integration_offset = seed_line_offset_backward + integration * num_seed_points;
@@ -468,6 +521,67 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
                     }
                 }
             }
+
+            // Compute intersections
+            if (this->compute_intersections.Param<core::param::BoolParam>()->Value() && num_integration_steps > 1 &&
+                this->direction.Param<core::param::EnumParam>()->Value() == 0) {
+
+                CGAL::Surface_mesh<kernel_t::Point_3> mesh_forward, mesh_backward;
+
+                std::vector<CGAL::Surface_mesh<kernel_t::Point_3>::Vertex_index> indices_forward, indices_backward;
+                indices_forward.reserve(forward_points.size());
+                indices_backward.reserve(backward_points.size());
+
+                for (const auto& forward_point : forward_points) {
+                    indices_forward.push_back(mesh_forward.add_vertex(
+                        kernel_t::Point_3(forward_point[0], forward_point[1], forward_point[2])));
+                }
+
+                for (const auto& backward_point : backward_points) {
+                    indices_backward.push_back(mesh_backward.add_vertex(
+                        kernel_t::Point_3(backward_point[0], backward_point[1], backward_point[2])));
+                }
+
+                for (std::size_t integration = 1; integration < num_integration_steps; ++integration) {
+                    const auto integration_offset = integration * num_seed_points;
+
+                    for (std::size_t point_index = 0; point_index < num_seed_points - 1; ++point_index) {
+                        const auto point_offset = integration_offset + point_index;
+
+                        mesh_forward.add_face(indices_forward[point_offset],
+                            indices_forward[point_offset + num_seed_points],
+                            indices_forward[point_offset + num_seed_points + 1]);
+
+                        mesh_forward.add_face(indices_forward[point_offset],
+                            indices_forward[point_offset + num_seed_points + 1], indices_forward[point_offset + 1]);
+
+                        mesh_backward.add_face(indices_backward[point_offset],
+                            indices_backward[point_offset + num_seed_points],
+                            indices_backward[point_offset + num_seed_points + 1]);
+
+                        mesh_backward.add_face(indices_backward[point_offset],
+                            indices_backward[point_offset + num_seed_points + 1], indices_backward[point_offset + 1]);
+                    }
+                }
+
+                std::vector<std::vector<kernel_t::Point_3>> polylines;
+
+                CGAL::Polygon_mesh_processing::surface_intersection(
+                    mesh_forward, mesh_backward, std::back_inserter(polylines));
+
+                for (const auto& polyline : polylines) {
+                    if (polyline.size() > 1) {
+                        std::vector<Eigen::Vector2f> lines;
+                        lines.reserve(polyline.size());
+
+                        for (const auto& point : polyline) {
+                            lines.push_back(Eigen::Vector2f(CGAL::to_double(point.x()), CGAL::to_double(point.y())));
+                        }
+
+                        this->periodic_orbits.push_back(std::make_pair(static_cast<float>(seed_index), lines));
+                    }
+                }
+            }
         }
 
         this->stream_surface_hash = core::utility::DataHash(this->vector_field_hash, this->critical_points_hash,
@@ -476,10 +590,15 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
             this->integration_timestep.Param<core::param::FloatParam>()->Value(),
             this->max_integration_error.Param<core::param::FloatParam>()->Value(),
             this->num_integration_steps.Param<core::param::IntParam>()->Value(),
-            this->num_subdivisions.Param<core::param::IntParam>()->Value());
+            this->num_subdivisions.Param<core::param::IntParam>()->Value(),
+            this->filter_seed_lines.Param<core::param::IntParam>()->Value(),
+            this->critical_point_offset.Param<core::param::FloatParam>()->Value());
 
-        this->periodic_orbits_hash = -1;
-        this->seed_line_hash = -1;
+        this->periodic_orbits_hash = core::utility::DataHash(
+            this->stream_surface_hash, this->compute_intersections.Param<core::param::BoolParam>()->Value());
+
+        this->seed_line_hash = core::utility::DataHash(this->filter_seed_lines.Param<core::param::IntParam>()->Value(),
+            this->critical_point_offset.Param<core::param::FloatParam>()->Value());
     }
 
     this->vector_field_changed = false;
@@ -527,8 +646,8 @@ Eigen::Vector3f periodic_orbits_theisel::advect_point(const tpf::data::grid<floa
     return Eigen::Vector3f(advected_point[0], advected_point[1], point[2]);
 }
 
-void periodic_orbits_theisel::advect_point_rk4(const tpf::data::grid<float, float, 2, 2>& grid,
-    Eigen::Vector2f& point, float& delta, const bool forward) const {
+void periodic_orbits_theisel::advect_point_rk4(
+    const tpf::data::grid<float, float, 2, 2>& grid, Eigen::Vector2f& point, float& delta, const bool forward) const {
 
     // Calculate step size
     const auto max_velocity = grid.interpolate(point).norm();
@@ -555,8 +674,8 @@ void periodic_orbits_theisel::advect_point_rk4(const tpf::data::grid<float, floa
     point += advection;
 }
 
-void periodic_orbits_theisel::advect_point_rk45(const tpf::data::grid<float, float, 2, 2>& grid,
-    Eigen::Vector2f& point, float& delta, const bool forward) const {
+void periodic_orbits_theisel::advect_point_rk45(
+    const tpf::data::grid<float, float, 2, 2>& grid, Eigen::Vector2f& point, float& delta, const bool forward) const {
 
     // Cash-Karp parameters
     constexpr float b_21 = 0.2f;
@@ -609,7 +728,8 @@ void periodic_orbits_theisel::advect_point_rk45(const tpf::data::grid<float, flo
         const auto k3 = delta * sign * grid.interpolate(point + b_31 * k1 + b_32 * k2);
         const auto k4 = delta * sign * grid.interpolate(point + b_41 * k1 + b_42 * k2 + b_43 * k3);
         const auto k5 = delta * sign * grid.interpolate(point + b_51 * k1 + b_52 * k2 + b_53 * k3 + b_54 * k4);
-        const auto k6 = delta * sign * grid.interpolate(point + b_61 * k1 + b_62 * k2 + b_63 * k3 + b_64 * k4 + b_65 * k5);
+        const auto k6 =
+            delta * sign * grid.interpolate(point + b_61 * k1 + b_62 * k2 + b_63 * k3 + b_64 * k4 + b_65 * k5);
 
         // Calculate error estimate
         const auto fifth_order = point + c_1 * k1 + c_2 * k2 + c_3 * k3 + c_4 * k4 + c_5 * k5 + c_6 * k6;
@@ -650,7 +770,7 @@ bool periodic_orbits_theisel::get_periodic_orbits_data(core::Call& call) {
             gdc.add_line(line.second, line.first);
         }
 
-        this->periodic_orbits_hash = gdc.DataHash();
+        gdc.SetDataHash(this->periodic_orbits_hash);
     }
 
     return true;
@@ -764,7 +884,7 @@ bool periodic_orbits_theisel::get_seed_lines_data(core::Call& call) {
             gdc.add_line(line.second, line.first);
         }
 
-        this->seed_line_hash = gdc.DataHash();
+        gdc.SetDataHash(this->seed_line_hash);
     }
 
     return true;
