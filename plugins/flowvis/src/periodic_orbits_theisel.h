@@ -37,7 +37,7 @@ namespace megamol
     namespace flowvis
     {
         /**
-        * Module for computing and visualizing the the periodic orbits of a vector field.
+        * Module for computing and visualizing the periodic orbits of a vector field.
         *
         * @author Alexander Straub
         */
