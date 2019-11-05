@@ -28,6 +28,7 @@
 
 #include "AbstractRenderAPI.hpp"
 #include "mmcore/view/AbstractView.h"
+#include "mmcore/RootModuleNamespace.h"
 
 namespace megamol {
 namespace core {
@@ -234,6 +235,9 @@ private:
 
     /** List of modules that this graph owns */
     ModuleList_t module_list_;
+
+	// the dummy_namespace must be above the call_list_ because it needs to be destroyed AFTER all calls during ~MegaMolGraph()
+    std::shared_ptr<RootModuleNamespace> dummy_namespace; // serves as parent object for stupid fat modules
 
     /** List of call that this graph owns */
     CallList_t call_list_;

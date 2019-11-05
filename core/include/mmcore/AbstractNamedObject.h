@@ -276,6 +276,8 @@ namespace core {
          */
         static bool isNameValid(const vislib::StringA& name);
 
+	public: // for new MegaMolGraph, make this public:
+
         /**
          * Ctor.
          */

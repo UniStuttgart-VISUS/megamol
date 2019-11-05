@@ -7,8 +7,9 @@ megamol::core::MegaMolGraph::MegaMolGraph(
     factories::ModuleDescriptionManager const& moduleProvider, factories::CallDescriptionManager const& callProvider,
 		std::unique_ptr<render_api::AbstractRenderAPI> rapi,
 		std::string rapi_name)
-    : moduleProvider_ptr{&moduleProvider}, callProvider_ptr{&callProvider}, rapi_{std::move(rapi)}, rapi_root_name{rapi_name}
+    : moduleProvider_ptr{&moduleProvider}, callProvider_ptr{&callProvider}, rapi_{std::move(rapi)}, rapi_root_name{rapi_name}, dummy_namespace{std::make_shared<RootModuleNamespace>()}
 {
+	dummy_namespace->SetCoreInstance(core);
 }
 
 /**
@@ -178,6 +179,8 @@ static std::vector<std::string> splitPathName(std::string const& path) {
 
     this->module_list_.emplace_front(module_ptr, request);
 
+	module_ptr->setParent(this->dummy_namespace);
+
     // execute IsAvailable() and Create() in GL context
     this->rapi_commands.emplace_front(
         [module_description, module_ptr]() { return module_description->IsAvailable() && module_ptr->Create(); });
@@ -225,6 +228,10 @@ static std::vector<std::string> splitPathName(std::string const& path) {
             return false; // call already exists
         }
     }
+
+	// TODO: kill parents of modules/calls when new graph structure is in place
+	callee->setParent(this->dummy_namespace);
+	caller->setParent(this->dummy_namespace);
 
     Call::ptr_type call = Call::ptr_type(call_description->CreateCall());
     if (!callee->ConnectCall(call.get(), call_description)) return false;
