@@ -32,7 +32,7 @@
 namespace megamol {
 namespace core {
 
-class MegaMolGraph : public serializable, public deferrable_construction {
+class MEGAMOLCORE_API MegaMolGraph : public serializable, public deferrable_construction {
 
     // todo: where do the descriptionmanagers go?
     // todo: what about the view / job descriptions?
@@ -142,8 +142,8 @@ public:
 private :
 	const factories::ModuleDescriptionManager& ModuleProvider();
     const factories::CallDescriptionManager& CallProvider();
-    const factories::ModuleDescriptionManager* moduleProvider_ptr;
-    const factories::CallDescriptionManager* callProvider_ptr;
+    const factories::ModuleDescriptionManager const* moduleProvider_ptr;
+    const factories::CallDescriptionManager const* callProvider_ptr;
 
 public:
     //////////////////////////// serialization ////////////////////////////////

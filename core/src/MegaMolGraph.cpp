@@ -194,7 +194,7 @@ static std::vector<std::string> splitPathName(std::string const& path) {
         const auto path = splitPathName(name);
         if (path.empty()) return {false, nullptr};
 
-        auto module_name = "::" + path[0] + "::" + path[1];
+        auto module_name = path[0] + "::" + path[1];
         auto module_it = this->find_module(module_name);
         if (module_it == this->module_list_.end()) return {false, nullptr};
 
@@ -205,7 +205,7 @@ static std::vector<std::string> splitPathName(std::string const& path) {
 
         if (!slot_ptr->IsCallCompatible(call_description)) return {false, nullptr};
 
-        if (!slot_ptr->GetStatus() == AbstractSlot::STATUS_UNAVAILABLE) return {false, nullptr};
+        if (!slot_ptr->GetStatus() == AbstractSlot::STATUS_ENABLED) return {false, nullptr};
 
         return {true, slot_ptr};
     };
@@ -304,7 +304,8 @@ bool megamol::core::MegaMolGraph::delete_call(CallDeletionRequest_t const& reque
 
 
 void megamol::core::MegaMolGraph::ExecuteGraphUpdates() {
-    auto lock = this->AcquireQueueLocks();
+	// TODO: lock is broken?
+    //auto lock = this->AcquireQueueLocks();
 
     while (!call_deletion_queue_.Empty()) {
         auto call_deletion = call_deletion_queue_.Get();
@@ -334,8 +335,8 @@ void megamol::core::MegaMolGraph::RenderNextFrame() {
 
 	// OpenGL context for module Create() provided here
 	bool some_failed = false;
-	for (auto& cmd : this->rapi_commands)
-		some_failed |= cmd(); // module Create() or Release() called here
+	for (auto& command : this->rapi_commands)
+		some_failed |= command(); // module Create() or Release() called here
 
     this->rapi_commands.clear();
 
@@ -343,47 +344,19 @@ void megamol::core::MegaMolGraph::RenderNextFrame() {
 		// we need to remove the the module that failed IsAvailable() or Create()
     }
 
+	// process ui events
+
 	_mmcRenderViewContext dummyRenderViewContext; // doesn't do anything, really
 	//void* apiContextDataPtr = this->rapi->getContextDataPtr();
     for (auto& view: this->views_)
-		if (view)
+        if (view) {
 			view->Render(/* want: 'apiContextDataPtr' instead of: */ dummyRenderViewContext );
+        }
 
     if (this->rapi_)
 		this->rapi_->postViewRender();
 }
 
-
-// void megamol::core::MegaMolGraph::GraphRoot::executeGraphCommands() {
-//	// commands may create/destruct modules and calls into the modules_ and calls_ lists of the GraphRoot
-//	// construction/destruction of modules/calls, as well as creation/release need to happen inside the Render API
-// context
-//	// because for OpenGL the GL context needs to be 'active' when creating GL resources - this may happen during
-// module
-// creation or call constructors
-//
-//    for (auto& command: this->graphCommands_)
-//		command(*this);
-//
-//    this->graphCommands_.clear();
-//}
-//
-// void megamol::core::MegaMolGraph::GraphRoot::renderNextFrame() {
-//    if (!this->rapi)
-//		return;
-//
-//	this->rapi->preViewRender();
-//
-//	if (this->graphCommands_.size())
-//		this->executeGraphCommands();
-//
-//	_mmcRenderViewContext dummyRenderViewContext; // doesn't do anything, really
-//	//void* apiContextDataPtr = this->rapi->getContextDataPtr();
-//    if (this->view_)
-//		this->view_->Render(/* want: 'apiContextDataPtr' instead of: */ dummyRenderViewContext );
-//
-//	this->rapi->postViewRender();
-//}
 
 //[[nodiscard]] std::shared_ptr<megamol::core::param::AbstractParam> FindParameter(std::string const& name, bool
 // quiet = false) const;
