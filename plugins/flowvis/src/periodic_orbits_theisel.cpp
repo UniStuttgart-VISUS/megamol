@@ -19,10 +19,7 @@
 
 #include "Eigen/Dense"
 
-#include <CGAL/Polygon_mesh_processing/intersection.h>
-#include <CGAL/Surface_mesh.h>
 #include <CGAL/intersections.h>
-#include <CGAL/iterator.h>
 
 #include "data/tpf_data_information.h"
 #include "data/tpf_grid.h"
@@ -179,8 +176,7 @@ bool periodic_orbits_theisel::get_input_data() {
     }
 
     if (cpc.DataHash() != this->critical_points_hash) {
-        this->vertices = cpc.get_line_vertices();
-        this->lines = cpc.get_line_indices();
+        this->critical_points = cpc.get_point_vertices();
 
         this->critical_points_hash = cpc.DataHash();
         this->critical_points_changed = true;
@@ -213,7 +209,7 @@ bool periodic_orbits_theisel::get_input_extent() {
 
     const auto average_size = 0.5f * (this->bounding_rectangle.Width() + this->bounding_rectangle.Height());
 
-    this->bounding_box.Set(this->bounding_rectangle.GetLeft(), this->bounding_rectangle.GetBottom() , 0.0f,
+    this->bounding_box.Set(this->bounding_rectangle.GetLeft(), this->bounding_rectangle.GetBottom(), 0.0f,
         this->bounding_rectangle.GetRight(), this->bounding_rectangle.GetTop(), average_size);
 
     return true;
@@ -269,13 +265,27 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
         tpf::data::grid<float, float, 2, 2> vector_field("vector_field", extent, *this->vectors,
             std::move(cell_coordinates), std::move(node_coordinates), std::move(cell_sizes));
 
+        // Get cells in which there is a critical point
+        const auto& critical_points = *this->critical_points;
+
+        std::vector<tpf::data::grid<float, float, 2, 2>::coords_t> critical_point_cells;
+
+        for (std::size_t cp_index = 0; cp_index < critical_points.size(); cp_index += 2) {
+            const auto cell =
+                vector_field.find_cell(Eigen::Vector2f(critical_points[cp_index], critical_points[cp_index + 1]));
+
+            if (cell) {
+                critical_point_cells.push_back(*cell);
+            }
+        }
+
         // Create seed lines
         std::vector<std::pair<Eigen::Vector2f, Eigen::Vector2f>> seed_lines;
 
         // TODO
         // DEBUG
 
-        /*seed_lines.push_back(
+        seed_lines.push_back(
             std::make_pair(Eigen::Vector2f(0.0701957f, 0.00664742f), Eigen::Vector2f(0.0825285f, 0.0217574f)));
         seed_lines.push_back(
             std::make_pair(Eigen::Vector2f(0.0825285f, 0.0217574f), Eigen::Vector2f(0.0994355f, 0.0356891f)));
@@ -293,9 +303,9 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
             std::make_pair(Eigen::Vector2f(0.00313739f, 0.0583816f), Eigen::Vector2f(0.0293156f, 0.0776436f)));
         seed_lines.push_back(
             std::make_pair(Eigen::Vector2f(0.0293156f, 0.0776436f), Eigen::Vector2f(0.00848707f, 0.0989702f)));
-        seed_lines.push_back(std::make_pair(Eigen::Vector2f(0.00848707f, 0.0989702f), Eigen::Vector2f(0.0f, 0.1f)));*/
+        seed_lines.push_back(std::make_pair(Eigen::Vector2f(0.00848707f, 0.0989702f), Eigen::Vector2f(0.0f, 0.1f)));
 
-        seed_lines.push_back(std::make_pair(Eigen::Vector2f(-2.0f, 0.0f), Eigen::Vector2f(0.0f, 0.0f)));
+        //seed_lines.push_back(std::make_pair(Eigen::Vector2f(-2.0f, 0.0f), Eigen::Vector2f(0.0f, 0.0f)));
 
         // DEBUG
 
@@ -319,8 +329,8 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
         this->triangles = std::make_shared<std::vector<unsigned int>>();
         this->triangles->reserve(2 * seed_lines.size() * 3 * num_triangles * num_integration_steps);
 
-        this->mesh_vertices = std::make_shared<std::vector<float>>();
-        this->mesh_vertices->reserve(2 * seed_lines.size() * 3 * num_seed_points * (num_integration_steps + 1));
+        this->vertices = std::make_shared<std::vector<float>>();
+        this->vertices->reserve(2 * seed_lines.size() * 3 * num_seed_points * (num_integration_steps + 1));
 
         this->seed_line_ids = std::make_shared<mesh_data_call::data_set>();
         this->seed_line_ids->data = std::make_shared<std::vector<float>>();
@@ -412,6 +422,81 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
                 backward_points.insert(
                     backward_points.end(), advected_backward_points.begin(), advected_backward_points.end());
 
+                // Look for an intersection
+                if (this->compute_intersections.Param<core::param::BoolParam>()->Value() && num_integration_steps > 1 &&
+                    this->direction.Param<core::param::EnumParam>()->Value() == 0) {
+
+                    for (std::size_t fwd_point_index = 0; fwd_point_index < num_seed_points - 1; ++fwd_point_index) {
+                        const kernel_t::Point_3 fwd_point_1(previous_forward_points[fwd_point_index][0],
+                            previous_forward_points[fwd_point_index][1], previous_forward_points[fwd_point_index][2]);
+                        const kernel_t::Point_3 fwd_point_2(previous_forward_points[fwd_point_index + 1][0],
+                            previous_forward_points[fwd_point_index + 1][1],
+                            previous_forward_points[fwd_point_index + 1][2]);
+                        const kernel_t::Point_3 fwd_point_3(advected_forward_points[fwd_point_index][0],
+                            advected_forward_points[fwd_point_index][1], advected_forward_points[fwd_point_index][2]);
+                        const kernel_t::Point_3 fwd_point_4(advected_forward_points[fwd_point_index + 1][0],
+                            advected_forward_points[fwd_point_index + 1][1],
+                            advected_forward_points[fwd_point_index + 1][2]);
+
+                        const kernel_t::Triangle_3 fwd_triangle_1(fwd_point_1, fwd_point_3, fwd_point_4);
+                        const kernel_t::Triangle_3 fwd_triangle_2(fwd_point_1, fwd_point_4, fwd_point_2);
+
+                        for (std::size_t bwd_point_index = 0; bwd_point_index < num_seed_points - 1;
+                             ++bwd_point_index) {
+                            const kernel_t::Point_3 bwd_point_1(previous_backward_points[bwd_point_index][0],
+                                previous_backward_points[bwd_point_index][1],
+                                previous_backward_points[bwd_point_index][2]);
+                            const kernel_t::Point_3 bwd_point_2(previous_backward_points[bwd_point_index + 1][0],
+                                previous_backward_points[bwd_point_index + 1][1],
+                                previous_backward_points[bwd_point_index + 1][2]);
+                            const kernel_t::Point_3 bwd_point_3(advected_backward_points[bwd_point_index][0],
+                                advected_backward_points[bwd_point_index][1],
+                                advected_backward_points[bwd_point_index][2]);
+                            const kernel_t::Point_3 bwd_point_4(advected_backward_points[bwd_point_index + 1][0],
+                                advected_backward_points[bwd_point_index + 1][1],
+                                advected_backward_points[bwd_point_index + 1][2]);
+
+                            const kernel_t::Triangle_3 bwd_triangle_1(bwd_point_1, bwd_point_3, bwd_point_4);
+                            const kernel_t::Triangle_3 bwd_triangle_2(bwd_point_1, bwd_point_4, bwd_point_2);
+
+                            decltype(CGAL::intersection(fwd_triangle_1, bwd_triangle_1)) intersection;
+
+                            if (CGAL::do_intersect(fwd_triangle_1, bwd_triangle_1)) {
+                                intersection = CGAL::intersection(fwd_triangle_1, bwd_triangle_1);
+                            } else if (CGAL::do_intersect(fwd_triangle_1, bwd_triangle_2)) {
+                                intersection = CGAL::intersection(fwd_triangle_1, bwd_triangle_2);
+                            } else if (CGAL::do_intersect(fwd_triangle_2, bwd_triangle_1)) {
+                                intersection = CGAL::intersection(fwd_triangle_2, bwd_triangle_1);
+                            } else if (CGAL::do_intersect(fwd_triangle_2, bwd_triangle_2)) {
+                                intersection = CGAL::intersection(fwd_triangle_2, bwd_triangle_2);
+                            }
+
+                            if (intersection) {
+                                const auto intersection_point = boost::get<kernel_t::Point_3>(&*intersection);
+                                const auto intersection_line = boost::get<kernel_t::Segment_3>(&*intersection);
+                                const auto intersection_triangle = boost::get<kernel_t::Triangle_3>(&*intersection);
+                                const auto intersection_points =
+                                    boost::get<std::vector<kernel_t::Point_3>>(&*intersection);
+
+                                if (intersection_point != nullptr) {
+                                    // Not relevant
+                                } else if (intersection_line != nullptr) {
+                                    const auto point = intersection_line->vertex(0);
+
+                                    this->periodic_orbits.push_back(std::make_pair(
+                                        0.0f, Eigen::Vector2f(CGAL::to_double(point[0]), CGAL::to_double(point[1]))));
+                                } else if (intersection_triangle != nullptr) {
+                                    vislib::sys::Log::DefaultLog.WriteWarn(
+                                        "Triangle result from triangle intersection not supported");
+                                } else if (intersection_points != nullptr) {
+                                    vislib::sys::Log::DefaultLog.WriteWarn(
+                                        "Vector of points result from triangle intersection not supported");
+                                }
+                            }
+                        }
+                    }
+                }
+
                 // Prepare for next execution
                 std::swap(previous_forward_points, advected_forward_points);
                 std::swap(previous_backward_points, advected_backward_points);
@@ -424,9 +509,9 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
                 std::size_t point_id = 0;
 
                 for (const auto& forward_point : forward_points) {
-                    this->mesh_vertices->push_back(forward_point.x());
-                    this->mesh_vertices->push_back(forward_point.y());
-                    this->mesh_vertices->push_back(forward_point.z());
+                    this->vertices->push_back(forward_point.x());
+                    this->vertices->push_back(forward_point.y());
+                    this->vertices->push_back(forward_point.z());
 
                     this->seed_line_ids->data->push_back(
                         (integration_direction == 0 ? 0.5f : 1.0f) * static_cast<float>(seed_index));
@@ -441,9 +526,9 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
                 std::size_t point_id = 0;
 
                 for (const auto& backward_point : backward_points) {
-                    this->mesh_vertices->push_back(backward_point.x());
-                    this->mesh_vertices->push_back(backward_point.y());
-                    this->mesh_vertices->push_back(backward_point.z());
+                    this->vertices->push_back(backward_point.x());
+                    this->vertices->push_back(backward_point.y());
+                    this->vertices->push_back(backward_point.z());
 
                     this->seed_line_ids->data->push_back(
                         (integration_direction == 0 ? 0.5f * seed_lines.size() : 0.0f) +
@@ -518,67 +603,6 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
                         this->triangles->push_back(static_cast<unsigned int>(point_offset));
                         this->triangles->push_back(static_cast<unsigned int>(point_offset + num_seed_points + 1));
                         this->triangles->push_back(static_cast<unsigned int>(point_offset + 1));
-                    }
-                }
-            }
-
-            // Compute intersections
-            if (this->compute_intersections.Param<core::param::BoolParam>()->Value() && num_integration_steps > 1 &&
-                this->direction.Param<core::param::EnumParam>()->Value() == 0) {
-
-                CGAL::Surface_mesh<kernel_t::Point_3> mesh_forward, mesh_backward;
-
-                std::vector<CGAL::Surface_mesh<kernel_t::Point_3>::Vertex_index> indices_forward, indices_backward;
-                indices_forward.reserve(forward_points.size());
-                indices_backward.reserve(backward_points.size());
-
-                for (const auto& forward_point : forward_points) {
-                    indices_forward.push_back(mesh_forward.add_vertex(
-                        kernel_t::Point_3(forward_point[0], forward_point[1], forward_point[2])));
-                }
-
-                for (const auto& backward_point : backward_points) {
-                    indices_backward.push_back(mesh_backward.add_vertex(
-                        kernel_t::Point_3(backward_point[0], backward_point[1], backward_point[2])));
-                }
-
-                for (std::size_t integration = 1; integration < num_integration_steps; ++integration) {
-                    const auto integration_offset = integration * num_seed_points;
-
-                    for (std::size_t point_index = 0; point_index < num_seed_points - 1; ++point_index) {
-                        const auto point_offset = integration_offset + point_index;
-
-                        mesh_forward.add_face(indices_forward[point_offset],
-                            indices_forward[point_offset + num_seed_points],
-                            indices_forward[point_offset + num_seed_points + 1]);
-
-                        mesh_forward.add_face(indices_forward[point_offset],
-                            indices_forward[point_offset + num_seed_points + 1], indices_forward[point_offset + 1]);
-
-                        mesh_backward.add_face(indices_backward[point_offset],
-                            indices_backward[point_offset + num_seed_points],
-                            indices_backward[point_offset + num_seed_points + 1]);
-
-                        mesh_backward.add_face(indices_backward[point_offset],
-                            indices_backward[point_offset + num_seed_points + 1], indices_backward[point_offset + 1]);
-                    }
-                }
-
-                std::vector<std::vector<kernel_t::Point_3>> polylines;
-
-                CGAL::Polygon_mesh_processing::surface_intersection(
-                    mesh_forward, mesh_backward, std::back_inserter(polylines));
-
-                for (const auto& polyline : polylines) {
-                    if (polyline.size() > 1) {
-                        std::vector<Eigen::Vector2f> lines;
-                        lines.reserve(polyline.size());
-
-                        for (const auto& point : polyline) {
-                            lines.push_back(Eigen::Vector2f(CGAL::to_double(point.x()), CGAL::to_double(point.y())));
-                        }
-
-                        this->periodic_orbits.push_back(std::make_pair(static_cast<float>(seed_index), lines));
                     }
                 }
             }
@@ -766,8 +790,8 @@ bool periodic_orbits_theisel::get_periodic_orbits_data(core::Call& call) {
     if (gdc.DataHash() != this->periodic_orbits_hash) {
         gdc.clear();
 
-        for (const auto& line : this->periodic_orbits) {
-            gdc.add_line(line.second, line.first);
+        for (const auto& point : this->periodic_orbits) {
+            gdc.add_point(point.second, point.first);
         }
 
         gdc.SetDataHash(this->periodic_orbits_hash);
@@ -796,7 +820,7 @@ bool periodic_orbits_theisel::get_stream_surfaces_data(core::Call& call) {
     }
 
     if (tmc.DataHash() != this->stream_surface_hash) {
-        tmc.set_vertices(this->mesh_vertices);
+        tmc.set_vertices(this->vertices);
         tmc.set_indices(this->triangles);
 
         tmc.SetDataHash(this->stream_surface_hash);

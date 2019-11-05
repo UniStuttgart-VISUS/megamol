@@ -185,13 +185,12 @@ namespace megamol
             SIZE_T critical_points_hash;
             bool critical_points_changed;
 
-            std::shared_ptr<std::vector<float>> vertices;
-            std::shared_ptr<std::vector<unsigned int>> lines;
+            std::shared_ptr<std::vector<float>> critical_points;
 
             /** Output stream surfaces */
             SIZE_T stream_surface_hash;
 
-            std::shared_ptr<std::vector<float>> mesh_vertices;
+            std::shared_ptr<std::vector<float>> vertices;
             std::shared_ptr<std::vector<unsigned int>> triangles;
             std::shared_ptr<mesh_data_call::data_set> seed_line_ids;
             std::shared_ptr<mesh_data_call::data_set> seed_point_ids;
@@ -200,7 +199,7 @@ namespace megamol
             /** Output periodic orbits */
             SIZE_T periodic_orbits_hash;
 
-            std::vector<std::pair<float, std::vector<Eigen::Vector2f>>> periodic_orbits;
+            std::vector<std::pair<float, Eigen::Vector2f>> periodic_orbits;
 
             /** Output seed lines */
             SIZE_T seed_line_hash;
