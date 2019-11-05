@@ -3,8 +3,13 @@
 
 
 megamol::core::MegaMolGraph::MegaMolGraph(
-    factories::ModuleDescriptionManager const& moduleProvider, factories::CallDescriptionManager const& callProvider)
-    : moduleProvider_ptr{&moduleProvider}, callProvider_ptr{&callProvider} {}
+	megamol::core::CoreInstance& core, 
+    factories::ModuleDescriptionManager const& moduleProvider, factories::CallDescriptionManager const& callProvider,
+		std::unique_ptr<render_api::AbstractRenderAPI> rapi,
+		std::string rapi_name)
+    : moduleProvider_ptr{&moduleProvider}, callProvider_ptr{&callProvider}, rapi_{std::move(rapi)}, rapi_root_name{rapi_name}
+{
+}
 
 /**
  * A move of the graph should be OK, even without changing state of Modules in graph.

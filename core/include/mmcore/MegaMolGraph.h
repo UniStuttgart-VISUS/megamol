@@ -1,8 +1,4 @@
-#ifndef MEGAMOLCORE_MEGAMOLGRAPH_H_INCLUDED
-#define MEGAMOLCORE_MEGAMOLGRAPH_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
+#pragma once
 
 #include <functional>
 #include <list>
@@ -30,8 +26,7 @@
 
 #include "AbstractUpdateQueue.h" // TODO: why can't we use std::list? why is this class called abstract when, in fact, its implementation is very concrete?
 
-//#include "AbstractRenderAPI.hpp"
-#include "../../console/src/RenderAPI/AbstractRenderAPI.hpp" // temporary hack
+#include "AbstractRenderAPI.hpp"
 #include "mmcore/view/AbstractView.h"
 
 namespace megamol {
@@ -94,8 +89,10 @@ public:
     /**
      * Bare construction as stub for deserialization
      */
-    MegaMolGraph(factories::ModuleDescriptionManager const& moduleProvider,
-        factories::CallDescriptionManager const& callProvider);
+    MegaMolGraph(megamol::core::CoreInstance& core, factories::ModuleDescriptionManager const& moduleProvider,
+        factories::CallDescriptionManager const& callProvider,
+		std::unique_ptr<render_api::AbstractRenderAPI> rapi,
+		std::string rapi_name);
 
     /**
      * No copy-construction. This can only be a legal operation, if we allow deep-copy of Modules in graph.
@@ -244,7 +241,7 @@ private:
     /** Reader/Writer mutex for the graph */
     mutable std::shared_mutex graph_lock_;
 
-    std::unique_ptr<console::AbstractRenderAPI> rapi_;
+    std::unique_ptr<render_api::AbstractRenderAPI> rapi_;
     std::string rapi_root_name;
     std::list<std::function<bool()>> rapi_commands;
     std::list<view::AbstractView*> views_;
@@ -342,4 +339,3 @@ megamol::core::MegaMolGraph::FindModule(std::string const& module_name, std::fun
 } /* namespace core */
 } // namespace megamol
 
-#endif /* MEGAMOLCORE_MEGAMOLGRAPH_H_INCLUDED */
