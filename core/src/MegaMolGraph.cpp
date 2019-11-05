@@ -227,7 +227,7 @@ static std::vector<std::string> splitPathName(std::string const& path) {
     }
 
     Call::ptr_type call = Call::ptr_type(call_description->CreateCall());
-    if (!callee->ConnectCall(call.get())) return false;
+    if (!callee->ConnectCall(call.get(), call_description)) return false;
     if (!caller->ConnectCall(call.get())) {
         // FIXME: if connecting the callER fails, how to disconnect call from callEE?
         // callee->DisconnectCalls();

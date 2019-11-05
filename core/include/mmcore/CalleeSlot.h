@@ -54,7 +54,7 @@ namespace core {
          *
          * @return 'true' on success, 'false' on failure
          */
-        bool ConnectCall(megamol::core::Call *call);
+        bool ConnectCall(megamol::core::Call *call, factories::CallDescription::ptr call_description = nullptr);
 
         /**
          * Do not call this method directly!
