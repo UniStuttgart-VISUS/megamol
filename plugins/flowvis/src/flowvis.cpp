@@ -23,6 +23,7 @@
 #include "streamlines_2d.h"
 #include "vector_field_reader.h"
 
+#include "draw_to_texture.h"
 #include "glyph_renderer_2d.h"
 #include "triangle_mesh_renderer_2d.h"
 #include "triangle_mesh_renderer_3d.h"
@@ -70,6 +71,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::flowvis::vector_field_reader>();
 
             // register renderer here:
+            this->module_descriptions.RegisterAutoDescription<megamol::flowvis::draw_to_texture>();
             this->module_descriptions.RegisterAutoDescription<megamol::flowvis::glyph_renderer_2d>();
             this->module_descriptions.RegisterAutoDescription<megamol::flowvis::triangle_mesh_renderer_2d>();
             this->module_descriptions.RegisterAutoDescription<megamol::flowvis::triangle_mesh_renderer_3d>();
