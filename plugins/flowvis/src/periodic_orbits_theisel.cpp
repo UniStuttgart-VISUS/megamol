@@ -6,6 +6,8 @@
 #include "triangle_mesh_call.h"
 #include "vector_field_call.h"
 
+#include "flowvis/integrator.h"
+
 #include "mmcore/Call.h"
 #include "mmcore/DirectDataWriterCall.h"
 #include "mmcore/param/BoolParam.h"
@@ -44,9 +46,9 @@ periodic_orbits_theisel::periodic_orbits_theisel()
     , vector_field_slot("vector_field_slot", "Vector field input")
     , critical_points_slot("critical_points", "Critical points input")
     , transfer_function("transfer_function", "Transfer function for coloring the stream surfaces")
-    , integration_method("integration_method", "Method for stream line integration")
-    , num_integration_steps("num_integration_steps", "Number of stream line integration steps")
-    , integration_timestep("integration_timestep", "Initial time step for stream line integration")
+    , integration_method("integration_method", "Method for streamline integration")
+    , num_integration_steps("num_integration_steps", "Number of streamline integration steps")
+    , integration_timestep("integration_timestep", "Initial time step for streamline integration")
     , max_integration_error("max_integration_error", "Maximum integration error for Runge-Kutta 4-5")
     , num_subdivisions("num_subdivisions", "Number of subdivisions")
     , critical_point_offset("critical_point_offset", "Offset from critical points for increased numeric stability")
@@ -481,10 +483,15 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
                                 if (intersection_point != nullptr) {
                                     // Not relevant
                                 } else if (intersection_line != nullptr) {
-                                    const auto point = intersection_line->vertex(0);
+                                    const auto point = Eigen::Vector2f(
+                                        CGAL::to_double(intersection_line->vertex(0)[0]),
+                                        CGAL::to_double(intersection_line->vertex(0)[1]));
 
-                                    this->periodic_orbits.push_back(std::make_pair(
-                                        0.0f, Eigen::Vector2f(CGAL::to_double(point[0]), CGAL::to_double(point[1]))));
+                                    if (std::find(critical_point_cells.begin(), critical_point_cells.end(),
+                                            *vector_field.find_cell(point)) == critical_point_cells.end()) {
+
+                                        this->periodic_orbits.push_back(std::make_pair(0.0f, point));
+                                    }
                                 } else if (intersection_triangle != nullptr) {
                                     vislib::sys::Log::DefaultLog.WriteWarn(
                                         "Triangle result from triangle intersection not supported");
@@ -655,10 +662,11 @@ Eigen::Vector3f periodic_orbits_theisel::advect_point(const tpf::data::grid<floa
     try {
         switch (this->integration_method.Param<core::param::EnumParam>()->Value()) {
         case 0:
-            advect_point_rk4(grid, advected_point, delta, forward);
+            advect_point_rk4<2>(grid, advected_point, delta, forward);
             break;
         case 1:
-            advect_point_rk45(grid, advected_point, delta, forward);
+            advect_point_rk45<2>(grid, advected_point, delta,
+                this->max_integration_error.Param<core::param::FloatParam>()->Value(), forward);
             break;
         default:
             vislib::sys::Log::DefaultLog.WriteError("Unknown advection method selected");
@@ -668,116 +676,6 @@ Eigen::Vector3f periodic_orbits_theisel::advect_point(const tpf::data::grid<floa
     }
 
     return Eigen::Vector3f(advected_point[0], advected_point[1], point[2]);
-}
-
-void periodic_orbits_theisel::advect_point_rk4(
-    const tpf::data::grid<float, float, 2, 2>& grid, Eigen::Vector2f& point, float& delta, const bool forward) const {
-
-    // Calculate step size
-    const auto max_velocity = grid.interpolate(point).norm();
-    const auto min_cellsize = grid.get_cell_sizes(*grid.find_cell(point)).minCoeff();
-
-    const auto steps_per_cell = max_velocity > 0.0f ? min_cellsize / max_velocity : 0.0f;
-
-    // Integration parameters
-    const auto sign = forward ? 1.0f : -1.0f;
-
-    // Calculate Runge-Kutta coefficients
-    const auto k1 = steps_per_cell * delta * sign * grid.interpolate(point);
-    const auto k2 = steps_per_cell * delta * sign * grid.interpolate(point + 0.5f * k1);
-    const auto k3 = steps_per_cell * delta * sign * grid.interpolate(point + 0.5f * k2);
-    const auto k4 = steps_per_cell * delta * sign * grid.interpolate(point + k3);
-
-    // Advect and store position
-    Eigen::Vector2f advection = (1.0f / 6.0f) * (k1 + 2.0f * k2 + 2.0f * k3 + k4);
-
-    if (advection.norm() > max_velocity) {
-        advection = advection.normalized() * max_velocity;
-    }
-
-    point += advection;
-}
-
-void periodic_orbits_theisel::advect_point_rk45(
-    const tpf::data::grid<float, float, 2, 2>& grid, Eigen::Vector2f& point, float& delta, const bool forward) const {
-
-    // Cash-Karp parameters
-    constexpr float b_21 = 0.2f;
-    constexpr float b_31 = 0.075f;
-    constexpr float b_41 = 0.3f;
-    constexpr float b_51 = -11.0f / 54.0f;
-    constexpr float b_61 = 1631.0f / 55296.0f;
-    constexpr float b_32 = 0.225f;
-    constexpr float b_42 = -0.9f;
-    constexpr float b_52 = 2.5f;
-    constexpr float b_62 = 175.0f / 512.0f;
-    constexpr float b_43 = 1.2f;
-    constexpr float b_53 = -70.0f / 27.0f;
-    constexpr float b_63 = 575.0f / 13824.0f;
-    constexpr float b_54 = 35.0f / 27.0f;
-    constexpr float b_64 = 44275.0f / 110592.0f;
-    constexpr float b_65 = 253.0f / 4096.0f;
-
-    constexpr float c_1 = 37.0f / 378.0f;
-    constexpr float c_2 = 0.0f;
-    constexpr float c_3 = 250.0f / 621.0f;
-    constexpr float c_4 = 125.0f / 594.0f;
-    constexpr float c_5 = 0.0f;
-    constexpr float c_6 = 512.0f / 1771.0f;
-
-    constexpr float c_1s = 2825.0f / 27648.0f;
-    constexpr float c_2s = 0.0f;
-    constexpr float c_3s = 18575.0f / 48384.0f;
-    constexpr float c_4s = 13525.0f / 55296.0f;
-    constexpr float c_5s = 277.0f / 14336.0f;
-    constexpr float c_6s = 0.25f;
-
-    // Constants
-    constexpr float grow_exponent = -0.2f;
-    constexpr float shrink_exponent = -0.25f;
-    constexpr float max_growth = 5.0f;
-    constexpr float max_shrink = 0.1f;
-    constexpr float safety = 0.9f;
-
-    // Integration parameters
-    const auto sign = forward ? 1.0f : -1.0f;
-    const auto max_error = this->max_integration_error.Param<core::param::FloatParam>()->Value();
-
-    // Calculate Runge-Kutta coefficients
-    bool decreased = false;
-
-    do {
-        const auto k1 = delta * sign * grid.interpolate(point);
-        const auto k2 = delta * sign * grid.interpolate(point + b_21 * k1);
-        const auto k3 = delta * sign * grid.interpolate(point + b_31 * k1 + b_32 * k2);
-        const auto k4 = delta * sign * grid.interpolate(point + b_41 * k1 + b_42 * k2 + b_43 * k3);
-        const auto k5 = delta * sign * grid.interpolate(point + b_51 * k1 + b_52 * k2 + b_53 * k3 + b_54 * k4);
-        const auto k6 =
-            delta * sign * grid.interpolate(point + b_61 * k1 + b_62 * k2 + b_63 * k3 + b_64 * k4 + b_65 * k5);
-
-        // Calculate error estimate
-        const auto fifth_order = point + c_1 * k1 + c_2 * k2 + c_3 * k3 + c_4 * k4 + c_5 * k5 + c_6 * k6;
-        const auto fourth_order = point + c_1s * k1 + c_2s * k2 + c_3s * k3 + c_4s * k4 + c_5s * k5 + c_6s * k6;
-
-        const auto difference = (fifth_order - fourth_order).cwiseAbs();
-        const auto scale = grid.interpolate(point).cwiseAbs();
-
-        const auto error = std::max(0.0f, std::max(difference.x() / scale.x(), difference.y() / scale.y())) / max_error;
-
-        // Set new, adapted time step
-        if (error > 1.0f) {
-            // Error too large, reduce time step
-            delta *= std::max(max_shrink, safety * std::pow(error, shrink_exponent));
-            decreased = true;
-        } else {
-            // Error (too) small, increase time step
-            delta *= std::min(max_growth, safety * std::pow(error, grow_exponent));
-            decreased = false;
-        }
-
-        // Set output
-        point = fifth_order;
-    } while (decreased);
 }
 
 bool periodic_orbits_theisel::get_periodic_orbits_data(core::Call& call) {
