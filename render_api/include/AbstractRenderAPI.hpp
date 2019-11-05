@@ -9,7 +9,7 @@
 #include <string>
 
 namespace megamol {
-namespace console {
+namespace render_api {
 
 class AbstractRenderAPI {
 private:
@@ -58,5 +58,5 @@ public:
 };
 
 
-} // namespace console
+} // namespace render_api
 } // namespace megamol

@@ -11,7 +11,16 @@
 #include <chrono>
 #include <vector>
 
-#include "vislib/graphics/gl/IncludeAllGL.h" // GLuint
+#include "glad.h"
+#ifdef _WIN32
+#include <Windows.h>
+#undef min
+#undef max
+#include "glad_wgl.h"
+#else
+#include "glad_glx.h"
+#endif
+
 #include "GLFW/glfw3.h"
 #ifdef _WIN32
 #    ifndef USE_EGL
@@ -19,58 +28,49 @@
 #        include "GLFW/glfw3native.h"
 #    endif
 #endif
-#include "gl/glfwInst.h"
 
-
-#include "stdafx.h"
 #include "UILayersCollection.hpp"
 #include "vislib/graphics/FpsCounter.h"
-//#include "utility/KHR.h"
-#include "../../core/include/mmcore/utility/KHR.h" // temporary hack
-
-#include "utility/HotFixFileName.h"
-#include "utility/HotFixes.h"
 #include "vislib/sys/Log.h"
 
 #include <functional>
 
 namespace megamol {
-namespace console {
+namespace render_api {
 
 namespace {
 // the idea is that we only borrow, but _do not_ manipulate shared data somebody else gave us
 struct SharedData {
-	// shared GLFW instance across all OGL windows, automatically deleted after last OGL window destroyed?
-    // note this is only handles glfw library init/terminate, not OpenGL.
-    std::shared_ptr<gl::glfwInst> glfw{nullptr};
-
     GLFWwindow* borrowed_glfwContextWindowPtr{nullptr}; //
     // The SharedData idea is a bit broken here: on one hand, each window needs its own handle and GL context, on the
     // other hand a GL context can share its resources with others when its glfwWindow* handle gets passed to creation
     // of another Window/OpenGL context. So this handle is private, but can be used by other RAPI instances too.
 };
 
-struct AutoDeleter {
-    AutoDeleter() : destructor{} {}
-    AutoDeleter(AutoDeleter&& ad) : destructor{ad.destructor} {
-        ad.destructor = []() {};
-     }
-	AutoDeleter& operator=(AutoDeleter&& ad) {
-		this->destructor = ad.destructor;
-        ad.destructor = []() {};
-        return *this;
-	}
-    AutoDeleter(std::function<void()> const& d) : destructor{d} {}
-    ~AutoDeleter() { destructor(); }
-    std::function<void()> destructor;
-};
+void initSharedContext(SharedData& context) {
+    context.borrowed_glfwContextWindowPtr = nullptr; // stays null since nobody shared his GL context with us
+}
 
-struct pimplData {
+// indirection to not spam header file with GLFW inclucde
+#define that static_cast<OpenGL_GLFW_RAPI*>(::glfwGetWindowUserPointer(wnd))
+void outer_glfw_onKey_func(GLFWwindow* wnd, int k, int s, int a, int m) { that->glfw_onKey_func(k, s, a, m); }
+void outer_glfw_onChar_func(GLFWwindow* wnd, unsigned int charcode) { that->glfw_onChar_func(charcode); }
+void outer_glfw_onMouseMove_func(GLFWwindow* wnd, double x, double y) { that->glfw_onMouseMove_func(x, y); }
+void outer_glfw_onMouseButton_func(GLFWwindow* wnd, int b, int a, int m) { that->glfw_onMouseButton_func(b, a, m); }
+void outer_glfw_onMouseWheel_func(GLFWwindow* wnd, double x, double y) { that->glfw_onMouseWheel_func(x, y); }
+
+} // namespace
+
+// helpers to simplify data access
+#define m_data (*m_pimpl)
+#define m_sharedData ((m_data.sharedDataPtr) ? (*m_data.sharedDataPtr) : (m_data.sharedData))
+#define m_glfwWindowPtr (m_data.glfwContextWindowPtr)
+
+struct OpenGL_GLFW_RAPI::PimplData {
     SharedData sharedData;              // personal data we share with other RAPIs
     SharedData* sharedDataPtr{nullptr}; // if we get shared data from another OGL RAPI object, we access it using this
                                         // ptr and leave our own shared data un-initialized
 
-    AutoDeleter glfwContextAutoDestruction; // all members below this still have GL context available before it gets destroyed
     GLFWwindow* glfwContextWindowPtr{nullptr}; // _my own_ gl context!
     OpenGL_GLFW_RAPI::Config initialConfig;    // keep copy of user-provided config
 
@@ -96,38 +96,6 @@ struct pimplData {
     // m_data.fpsSyncTime = std::chrono::system_clock::now();
 };
 
-// helpers to simplify data access
-#define m_data (*static_cast<pimplData*>(m_pimpl))
-#define m_sharedData ((m_data.sharedDataPtr) ? (*m_data.sharedDataPtr) : (m_data.sharedData))
-#define m_glfwWindowPtr (m_data.glfwContextWindowPtr)
-
-void* makePimpl() { return static_cast<void*>(new pimplData); }
-
-void deletePimpl(void*& ptr) {
-    auto dataPtr = static_cast<pimplData*>(ptr);
-
-    if (dataPtr != nullptr) {
-        delete dataPtr;
-        dataPtr = nullptr;
-        ptr = nullptr;
-    }
-}
-
-void initSharedContext(SharedData& context) {
-    context.glfw = megamol::console::gl::glfwInst::Instance(); // opens GLFW lib. shared ptr closes it upon destruction.
-    context.borrowed_glfwContextWindowPtr = nullptr;           // stays null since nobody shared his GL context with us
-}
-
-// indirection to not spam header file with GLFW inclucde
-#define that static_cast<OpenGL_GLFW_RAPI*>(::glfwGetWindowUserPointer(wnd))
-void outer_glfw_onKey_func(GLFWwindow* wnd, int k, int s, int a, int m) { that->glfw_onKey_func(k, s, a, m); }
-void outer_glfw_onChar_func(GLFWwindow* wnd, unsigned int charcode) { that->glfw_onChar_func(charcode); }
-void outer_glfw_onMouseMove_func(GLFWwindow* wnd, double x, double y) { that->glfw_onMouseMove_func(x, y); }
-void outer_glfw_onMouseButton_func(GLFWwindow* wnd, int b, int a, int m) { that->glfw_onMouseButton_func(b, a, m); }
-void outer_glfw_onMouseWheel_func(GLFWwindow* wnd, double x, double y) { that->glfw_onMouseWheel_func(x, y); }
-
-} // namespace
-
 
 OpenGL_GLFW_RAPI::~OpenGL_GLFW_RAPI() {
     if (m_pimpl) this->closeAPI(); // cleans up pimpl
@@ -146,7 +114,7 @@ bool OpenGL_GLFW_RAPI::initAPI(const Config& config) {
     // if(!sane(config))
     //	return false
 
-    m_pimpl = makePimpl();
+    m_pimpl = std::unique_ptr<PimplData, std::function<void(PimplData*)>>(new PimplData, [](PimplData* ptr) { delete ptr; });
     m_data.initialConfig = config;
     // from here on, access pimpl data using "m_data.member", as in m_pimpl->member minus the  void-ptr casting
 
@@ -158,12 +126,16 @@ bool OpenGL_GLFW_RAPI::initAPI(const Config& config) {
     }
     // from here on, use m_sharedData to access reference to SharedData for RAPI objects; the owner will clean it up
     // correctly
-    if (!m_sharedData.glfw->OK()) return false; // glfw had error on init; abort
+    if (m_data.sharedDataPtr) {
+		// glfw already initialized by other render api
+    } else {
+        const bool success_glfw = glfwInit();
+        if (!success_glfw)
+			return false; // glfw had error on init; abort
+    }
 
     // init glfw window and OpenGL Context
-    if (utility::HotFixes::Instance().IsHotFixed("usealphabuffer")) {
-        ::glfwWindowHint(GLFW_ALPHA_BITS, 8);
-    }
+    ::glfwWindowHint(GLFW_ALPHA_BITS, 8);
     ::glfwWindowHint(GLFW_DECORATED,
         (config.windowPlacement.fullScreen) ? (GL_FALSE) : (config.windowPlacement.noDec ? GL_FALSE : GL_TRUE));
     ::glfwWindowHint(GLFW_VISIBLE, GL_FALSE); // initially invisible
@@ -229,20 +201,21 @@ bool OpenGL_GLFW_RAPI::initAPI(const Config& config) {
     }
 
     // TODO: OpenGL context hints? version? core profile?
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
 
     m_glfwWindowPtr = ::glfwCreateWindow(m_data.currentWidth, m_data.currentHeight,
         m_data.initialConfig.windowTitlePrefix.c_str(), nullptr, m_sharedData.borrowed_glfwContextWindowPtr);
+
     if (!m_glfwWindowPtr) {
         vislib::sys::Log::DefaultLog.WriteInfo("OpenGL_GLFW_RAPI: Failed to create GLFW window.");
         return false;
     }
     vislib::sys::Log::DefaultLog.WriteInfo(
         "OpenGL_GLFW_RAPI: Create window with size w: %d, h: %d\n", m_data.currentWidth, m_data.currentHeight);
+
     ::glfwMakeContextCurrent(m_glfwWindowPtr);
-    m_data.glfwContextAutoDestruction = AutoDeleter{std::function<void()>{[&]() {
-        ::glfwDestroyWindow(m_glfwWindowPtr);
-        m_glfwWindowPtr = nullptr;
-    }}};
 
     if (config.windowPlacement.pos ||
         config.windowPlacement
@@ -250,12 +223,20 @@ bool OpenGL_GLFW_RAPI::initAPI(const Config& config) {
         ::glfwSetWindowPos(
             m_glfwWindowPtr, m_data.initialConfig.windowPlacement.x, m_data.initialConfig.windowPlacement.y);
 
-    if (config.windowPlacement.fullScreen ||
-        config.windowPlacement.noDec && (!utility::HotFixes::Instance().IsHotFixed("DontHideCursor"))) {
-        ::glfwSetInputMode(m_glfwWindowPtr, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    }
+	// TODO: when do we need this?
+    // if (config.windowPlacement.fullScreen ||
+    //     config.windowPlacement.noDec) {
+    //     ::glfwSetInputMode(m_glfwWindowPtr, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    // }
 
-    vislib::graphics::gl::LoadAllGL();
+	gladLoadGL();
+#ifdef _WIN32
+	gladLoadWGL(wglGetCurrentDC());
+#else
+    Display *display = XOpenDisplay(NULL);
+	gladLoadGLX(display, DefaultScreen(display));
+    XCloseDisplay(display);
+#endif
 
     ::glfwSetWindowUserPointer(m_glfwWindowPtr, this); // this is ok, as long as no one derives from this RAPI
     ::glfwSetKeyCallback(m_glfwWindowPtr, &outer_glfw_onKey_func);
@@ -264,8 +245,9 @@ bool OpenGL_GLFW_RAPI::initAPI(const Config& config) {
     ::glfwSetScrollCallback(m_glfwWindowPtr, &outer_glfw_onMouseWheel_func);
     ::glfwSetCharCallback(m_glfwWindowPtr, &outer_glfw_onChar_func);
 
-    if (config.enableKHRDebug)
-		megamol::core::utility::KHR::startDebug();
+	// TODO: implement OpenGL Debug
+    //if (config.enableKHRDebug)
+	//    megamol::core::utility::KHR::startDebug();
 
 	if (config.enableVsync)
 		::glfwSwapInterval(0);
@@ -279,10 +261,23 @@ void OpenGL_GLFW_RAPI::closeAPI() {
     if (!m_pimpl) // this API object is not initialized
         return;
 
+	const bool close_glfw = (m_data.sharedDataPtr == nullptr);
+
 	::glfwMakeContextCurrent(m_glfwWindowPtr);
+
 	// GL context and destruction of all other things happens in destructors of pimpl data members
-    deletePimpl(m_pimpl);
+	if (m_data.glfwContextWindowPtr)
+		::glfwDestroyWindow(m_data.glfwContextWindowPtr);
+	m_data.sharedDataPtr = nullptr;
+    m_data.glfwContextWindowPtr = nullptr;
+    m_data.mouseCapture = nullptr;
+    this->m_pimpl.release();
+
 	::glfwMakeContextCurrent(nullptr);
+
+	if (close_glfw) {
+        glfwTerminate();
+	}
 }
 
 void OpenGL_GLFW_RAPI::preViewRender() {
@@ -351,85 +346,92 @@ void OpenGL_GLFW_RAPI::RemoveUILayer(std::shared_ptr<AbstractUILayer> uiLayer) {
 void OpenGL_GLFW_RAPI::glfw_onKey_func(int k, int s, int a, int m) {
     //::glfwMakeContextCurrent(m_glfwWindowPtr);
 
-    core::view::Key key = static_cast<core::view::Key>(k);
-    core::view::KeyAction action(core::view::KeyAction::RELEASE);
+    render_api::Key key = static_cast<render_api::Key>(k);
+    render_api::KeyAction action(render_api::KeyAction::RELEASE);
     switch (a) {
     case GLFW_PRESS:
-        action = core::view::KeyAction::PRESS;
+        action = render_api::KeyAction::PRESS;
         break;
     case GLFW_REPEAT:
-        action = core::view::KeyAction::REPEAT;
+        action = render_api::KeyAction::REPEAT;
         break;
     case GLFW_RELEASE:
-        action = core::view::KeyAction::RELEASE;
+        action = render_api::KeyAction::RELEASE;
         break;
     }
 
-    core::view::Modifiers mods;
-    if ((m & GLFW_MOD_SHIFT) == GLFW_MOD_SHIFT) mods |= core::view::Modifier::SHIFT;
-    if ((m & GLFW_MOD_CONTROL) == GLFW_MOD_CONTROL) mods |= core::view::Modifier::CTRL;
-    if ((m & GLFW_MOD_ALT) == GLFW_MOD_ALT) mods |= core::view::Modifier::ALT;
+    render_api::Modifiers mods;
+    if ((m & GLFW_MOD_SHIFT) == GLFW_MOD_SHIFT) mods |= render_api::Modifier::SHIFT;
+    if ((m & GLFW_MOD_CONTROL) == GLFW_MOD_CONTROL) mods |= render_api::Modifier::CTRL;
+    if ((m & GLFW_MOD_ALT) == GLFW_MOD_ALT) mods |= render_api::Modifier::ALT;
 
-    m_data.uiLayers.OnKey(key, action, mods);
+    //m_data.uiLayers.OnKey(key, action, mods);
+    this->ui_events.onKey_list.emplace_back(std::make_tuple(key, action, mods));
 }
 
 void OpenGL_GLFW_RAPI::glfw_onChar_func(unsigned int charcode) {
     //::glfwMakeContextCurrent(m_glfwWindowPtr);
-    m_data.uiLayers.OnChar(charcode);
+    //m_data.uiLayers.OnChar(charcode);
+    this->ui_events.onChar_list.emplace_back(charcode);
 }
 
 void OpenGL_GLFW_RAPI::glfw_onMouseMove_func(double x, double y) {
     //::glfwMakeContextCurrent(m_glfwWindowPtr);
-    if (m_data.mouseCapture) {
-        m_data.mouseCapture->OnMouseMove(x, y);
-    } else {
-        m_data.uiLayers.OnMouseMove(x, y);
-    }
+    //if (m_data.mouseCapture) {
+    //    m_data.mouseCapture->OnMouseMove(x, y);
+    //} else {
+    //    m_data.uiLayers.OnMouseMove(x, y);
+    //}
+    this->ui_events.onMouseMove_list.emplace_back(std::make_tuple(x, y));
 }
 
 void OpenGL_GLFW_RAPI::glfw_onMouseButton_func(int b, int a, int m) {
     //::glfwMakeContextCurrent(m_glfwWindowPtr);
-    core::view::MouseButton btn = static_cast<core::view::MouseButton>(b);
-    core::view::MouseButtonAction action =
-        (a == GLFW_PRESS) ? core::view::MouseButtonAction::PRESS : core::view::MouseButtonAction::RELEASE;
+    render_api::MouseButton btn = static_cast<render_api::MouseButton>(b);
+    render_api::MouseButtonAction action =
+        (a == GLFW_PRESS) ? render_api::MouseButtonAction::PRESS : render_api::MouseButtonAction::RELEASE;
 
-    core::view::Modifiers mods;
-    if ((m & GLFW_MOD_SHIFT) == GLFW_MOD_SHIFT) mods |= core::view::Modifier::SHIFT;
-    if ((m & GLFW_MOD_CONTROL) == GLFW_MOD_CONTROL) mods |= core::view::Modifier::CTRL;
-    if ((m & GLFW_MOD_ALT) == GLFW_MOD_ALT) mods |= core::view::Modifier::ALT;
+    render_api::Modifiers mods;
+    if ((m & GLFW_MOD_SHIFT) == GLFW_MOD_SHIFT) mods |= render_api::Modifier::SHIFT;
+    if ((m & GLFW_MOD_CONTROL) == GLFW_MOD_CONTROL) mods |= render_api::Modifier::CTRL;
+    if ((m & GLFW_MOD_ALT) == GLFW_MOD_ALT) mods |= render_api::Modifier::ALT;
 
-    if (m_data.mouseCapture) {
-        m_data.mouseCapture->OnMouseButton(btn, action, mods);
-    } else {
-        if (m_data.uiLayers.OnMouseButton(btn, action, mods))
-            if (action == core::view::MouseButtonAction::PRESS)
-                m_data.mouseCapture = m_data.uiLayers.lastEventCaptureUILayer();
-    }
+	this->ui_events.onMouseButton_list.emplace_back(std::make_tuple(btn, action, mods));
 
-    if (m_data.mouseCapture) {
-        bool anyPressed = false;
-        for (int mbi = GLFW_MOUSE_BUTTON_1; mbi <= GLFW_MOUSE_BUTTON_LAST; ++mbi) {
-            if (::glfwGetMouseButton(m_glfwWindowPtr, mbi) == GLFW_PRESS) {
-                anyPressed = true;
-                break;
-            }
-        }
-        if (!anyPressed) {
-            m_data.mouseCapture.reset();
-            double x, y;
-            ::glfwGetCursorPos(m_glfwWindowPtr, &x, &y);
-            glfw_onMouseMove_func(x, y); // to inform all of the new location
-        }
-    }
+    //if (m_data.mouseCapture) {
+    //    m_data.mouseCapture->OnMouseButton(btn, action, mods);
+    //} else {
+    //    if (m_data.uiLayers.OnMouseButton(btn, action, mods))
+    //        if (action == render_api::MouseButtonAction::PRESS)
+    //            m_data.mouseCapture = m_data.uiLayers.lastEventCaptureUILayer();
+    //}
+
+    //if (m_data.mouseCapture) {
+    //    bool anyPressed = false;
+    //    for (int mbi = GLFW_MOUSE_BUTTON_1; mbi <= GLFW_MOUSE_BUTTON_LAST; ++mbi) {
+    //        if (::glfwGetMouseButton(m_glfwWindowPtr, mbi) == GLFW_PRESS) {
+    //            anyPressed = true;
+    //            break;
+    //        }
+    //    }
+    //    if (!anyPressed) {
+    //        m_data.mouseCapture.reset();
+    //        double x, y;
+    //        ::glfwGetCursorPos(m_glfwWindowPtr, &x, &y);
+    //        glfw_onMouseMove_func(x, y); // to inform all of the new location
+    //    }
+    //}
 }
 
 void OpenGL_GLFW_RAPI::glfw_onMouseWheel_func(double x, double y) {
     //::glfwMakeContextCurrent(m_glfwWindowPtr);
-    if (m_data.mouseCapture) {
-        m_data.mouseCapture->OnMouseScroll(x, y);
-    } else {
-        m_data.uiLayers.OnMouseScroll(x, y);
-    }
+
+	this->ui_events.onMouseWheel_list.emplace_back(std::make_tuple(x, y));
+    //if (m_data.mouseCapture) {
+    //    m_data.mouseCapture->OnMouseScroll(x, y);
+    //} else {
+    //    m_data.uiLayers.OnMouseScroll(x, y);
+    //}
 }
 
 bool OpenGL_GLFW_RAPI::checkWindowResize() {
@@ -439,9 +441,11 @@ bool OpenGL_GLFW_RAPI::checkWindowResize() {
     if ((frame_width != m_data.currentWidth) || (frame_height != m_data.currentHeight)) {
         m_data.currentWidth = frame_width;
         m_data.currentHeight = frame_height;
-        return true;
+        this->ui_events.is_window_resized = true;
     }
-    return false;
+    this->ui_events.is_window_resized = false;
+
+	return this->ui_events.is_window_resized;
 }
 void OpenGL_GLFW_RAPI::on_resize(int w, int h) {
     //::glfwMakeContextCurrent(m_glfwWindowPtr);
@@ -451,12 +455,18 @@ void OpenGL_GLFW_RAPI::on_resize(int w, int h) {
         //::glViewport(0, 0, w, h);
         //::mmcResizeView(hView, w, h);
         vislib::sys::Log::DefaultLog.WriteInfo("OpenGL_GLFW_RAPI: Resize window (w: %d, h: %d)\n", w, h);
-        m_data.uiLayers.OnResize(w, h);
+
+        this->ui_events.resize_list.emplace_back(w, h);
+        //m_data.uiLayers.OnResize(w, h);
     }
+}
+
+OpenGL_GLFW_RAPI::UIEvents& OpenGL_GLFW_RAPI::getUIEvents() {
+	return this->ui_events;
 }
 
 // TODO: how to force/allow subclasses to interop with other APIs?
 // TODO: API-specific options in subclasses?
 
-} // namespace console
+} // namespace render_api
 } // namespace megamol
