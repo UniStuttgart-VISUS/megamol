@@ -29,7 +29,13 @@ megamol::core::MegaMolGraph& megamol::core::MegaMolGraph::operator=(MegaMolGraph
 //}
 
 /** dtor */
-megamol::core::MegaMolGraph::~MegaMolGraph() {}
+megamol::core::MegaMolGraph::~MegaMolGraph() {
+    if (this->rapi_)
+		rapi_->closeAPI();
+
+    moduleProvider_ptr = nullptr;
+    callProvider_ptr = nullptr;
+}
 
 const megamol::core::factories::ModuleDescriptionManager& megamol::core::MegaMolGraph::ModuleProvider() {
     return *moduleProvider_ptr;
@@ -185,6 +191,11 @@ static std::vector<std::string> splitPathName(std::string const& path) {
     this->rapi_commands.emplace_front(
         [module_description, module_ptr]() { return module_description->IsAvailable() && module_ptr->Create(); });
 
+	megamol::core::view::AbstractView* view_ptr = nullptr;
+    if (view_ptr = dynamic_cast<megamol::core::view::AbstractView*>(module_ptr.get())) {
+        this->views_.push_back(view_ptr);
+    }
+
     return true;
 }
 
@@ -280,6 +291,7 @@ bool megamol::core::MegaMolGraph::delete_module(ModuleDeletionRequest_t const& r
     this->rapi_commands.emplace_back([module_ptr]() -> bool {
         module_ptr->Release();
         return true;
+		// end of lambda scope deletes last shared_ptr to module
      });
 
     this->module_list_.erase(module_it);
