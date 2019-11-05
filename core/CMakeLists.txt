@@ -53,7 +53,7 @@ if(BUILD_CORE)
 
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h" "include/*.inl")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
-  file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h" ${CMAKE_CURRENT_SOURCE_DIR}/../console/src/RenderAPI/AbstractRenderAPI.hpp)
+  file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
   file(GLOB_RECURSE shader_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Shaders/*")
   file(GLOB_RECURSE resource_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Resources/*")
   set(version_files ${CMAKE_BINARY_DIR}/version/MMCoreVersionInfo.cpp)
@@ -98,7 +98,7 @@ if(BUILD_CORE)
     PUBLIC ${EXPAT_INCLUDE_DIRS})
   target_link_libraries(${PROJECT_NAME} 
     PUBLIC vislib glad glm glowl zlib libpng json lua ${EXPAT_LIBRARIES}
-    PRIVATE libzmq libcppzmq ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT})
+    PRIVATE libzmq libcppzmq ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} abstract_render_api)
   if(WIN32)
     if(USE_TRACKING)
       target_link_libraries(${PROJECT_NAME} PUBLIC tracking natnet)

@@ -64,6 +64,11 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/NuGet.Config
   ${CMAKE_CURRENT_BINARY_DIR}/NuGet.Config COPYONLY)
 
 ###############################
+# Render API modules
+###############################
+add_subdirectory(${MEGAMOL_DIR}/render_api)
+
+###############################
 # Vislib
 ###############################
 add_subdirectory(${MEGAMOL_VISLIB_DIR})
