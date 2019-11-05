@@ -22,7 +22,7 @@ if(BUILD_MAIN3000)
     PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
     OUTPUT_NAME ${PROJECT_NAME})
   target_include_directories(${PROJECT_NAME} PRIVATE "src" "include")
-  target_link_libraries(${PROJECT_NAME} PRIVATE core)
+  target_link_libraries(${PROJECT_NAME} PRIVATE core render_api)
 
   if(WIN32)
     set(VERSION_LIBRARY "Version.lib")

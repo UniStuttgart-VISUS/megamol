@@ -87,7 +87,7 @@ add_subdirectory(${MEGAMOL_CONSOLE_DIR})
 ###############################
 # Main3000
 ###############################
-add_subdirectory(main3000)
+add_subdirectory(${MEGAMOL_DIR}/main3000)
 
 # Add directory structure for visual studio
 if(WIN32)
