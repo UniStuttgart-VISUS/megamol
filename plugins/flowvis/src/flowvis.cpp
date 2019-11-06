@@ -23,6 +23,7 @@
 #include "streamlines_2d.h"
 #include "vector_field_reader.h"
 
+#include "draw_texture_3d.h"
 #include "draw_to_texture.h"
 #include "glyph_renderer_2d.h"
 #include "triangle_mesh_renderer_2d.h"
@@ -30,6 +31,7 @@
 
 #include "glyph_data_call.h"
 #include "implicit_topology_call.h"
+#include "matrix_call.h"
 #include "mesh_data_call.h"
 #include "mouse_click_call.h"
 #include "triangle_mesh_call.h"
@@ -71,6 +73,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::flowvis::vector_field_reader>();
 
             // register renderer here:
+            this->module_descriptions.RegisterAutoDescription<megamol::flowvis::draw_texture_3d>();
             this->module_descriptions.RegisterAutoDescription<megamol::flowvis::draw_to_texture>();
             this->module_descriptions.RegisterAutoDescription<megamol::flowvis::glyph_renderer_2d>();
             this->module_descriptions.RegisterAutoDescription<megamol::flowvis::triangle_mesh_renderer_2d>();
@@ -80,6 +83,7 @@ namespace {
             this->call_descriptions.RegisterAutoDescription<megamol::flowvis::glyph_data_call>();
             this->call_descriptions.RegisterAutoDescription<megamol::flowvis::implicit_topology_reader_call>();
             this->call_descriptions.RegisterAutoDescription<megamol::flowvis::implicit_topology_writer_call>();
+            this->call_descriptions.RegisterAutoDescription<megamol::flowvis::matrix_call>();
             this->call_descriptions.RegisterAutoDescription<megamol::flowvis::mesh_data_call>();
             this->call_descriptions.RegisterAutoDescription<megamol::flowvis::mouse_click_call>();
             this->call_descriptions.RegisterAutoDescription<megamol::flowvis::triangle_mesh_call>();

@@ -12,7 +12,7 @@
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 
-#include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib/math/Rectangle.h"
 
 #include "glowl/FramebufferObject.hpp"
 
@@ -73,12 +73,21 @@ protected:
     virtual void release() override;
 
 private:
-    /** Callbacks for the computed streamlines */
+    /** Functions for getting extents and data from input calls */
+    bool get_input_extent();
+
+    /** Callbacks for the texture */
     bool get_data(core::Call& call);
     bool get_extent(core::Call& call);
 
+    /** Callbacks for the model matrix */
+    bool get_matrix(core::Call& call);
+
     /** Output slot for the texture */
     core::CalleeSlot texture_slot;
+
+    /** Output slot for the matrix defining the position in world space */
+    core::CalleeSlot model_matrix_slot;
 
     /** Input slot for getting the rendering */
     core::CallerSlot rendering_slot;
@@ -87,6 +96,9 @@ private:
     core::param::ParamSlot width;
     core::param::ParamSlot height;
     core::param::ParamSlot keep_aspect_ratio;
+
+    /** Bounding rectangle */
+    vislib::math::Rectangle<float> bounding_rectangle;
 
     /** FBO */
     std::unique_ptr<glowl::FramebufferObject> fbo;
