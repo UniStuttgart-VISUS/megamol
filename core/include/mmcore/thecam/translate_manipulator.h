@@ -94,6 +94,15 @@ public:
     inline void move_horizontally(void) { this->move_horizontally(this->stepSize); }
 
     /**
+     * Move the camera along its up vector proportinaly to the mouse y coordinate delta
+     */
+    inline void move_horizontally(const screen_type x) {
+        screen_type dx = x - this->m_last_sx;
+        this->m_last_sx = x;
+        move_horizontally(this->stepSize * static_cast<world_type>(dx));
+    }
+
+    /**
      * Move the camera along its up vector.
      */
     void move_vertically(const world_type dist);
@@ -102,6 +111,15 @@ public:
      * Move the camera along its up vector.
      */
     inline void move_vertically(void) { this->move_horizontally(this->stepSize); }
+
+    /**
+     * Move the camera along its up vector proportinaly to the mouse y coordinate delta
+     */
+    inline void move_vertically(const screen_type y) { 
+        screen_type dy = y - this->m_last_sy;
+        this->m_last_sy = y;
+        move_vertically(this->stepSize * static_cast<world_type>(dy));
+    }
 
     /**
      * Sets a new step size in world units.
@@ -117,8 +135,30 @@ public:
      */
     inline world_type step_size(void) const { return this->stepSize; }
 
+    /**
+     * Set manipulator active, i.e. set manipulating flag true and store mouse coords at time of activation
+     */
+    inline void setActive(const screen_type x, const screen_type y) {
+        if (!this->manipulating() && this->enabled()) {
+            this->begin_manipulation();
+            this->m_last_sx = x;
+            this->m_last_sy = y;
+        }
+    }
+
+    /**
+     * Set manipulator inactive, i.e. set manipulating flag false
+     */
+    inline void setInactive() { this->end_manipulation(); }
+
 private:
     world_type stepSize;
+
+     /** The x-coordinate of the last clicked screen position */
+    screen_type m_last_sx;
+
+    /** The y-coordinate of the last clicked screen position */
+    screen_type m_last_sy;
 };
 
 } /* end namespace thecam */

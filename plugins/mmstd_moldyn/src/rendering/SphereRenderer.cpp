@@ -804,10 +804,10 @@ void SphereRenderer::getClipData(glm::vec4& out_clipDat, glm::vec4& out_clipCol)
         vislib::math::Vector<float, 3> grr(ccp->GetPlane().Point().PeekCoordinates());
         out_clipDat[3] = grr.Dot(ccp->GetPlane().Normal());
 
-        out_clipCol[0] = static_cast<float>(ccp->GetColour()[0]);
-        out_clipCol[1] = static_cast<float>(ccp->GetColour()[1]);
-        out_clipCol[2] = static_cast<float>(ccp->GetColour()[2]);
-        out_clipCol[3] = static_cast<float>(ccp->GetColour()[3]);
+        out_clipCol[0] = static_cast<float>(ccp->GetColour()[0]) / 255.0f;
+        out_clipCol[1] = static_cast<float>(ccp->GetColour()[1]) / 255.0f;
+        out_clipCol[2] = static_cast<float>(ccp->GetColour()[2]) / 255.0f;
+        out_clipCol[3] = static_cast<float>(ccp->GetColour()[3]) / 255.0f;
     }
     else {
         out_clipDat[0] = out_clipDat[1] = out_clipDat[2] = out_clipDat[3] = 0.0f;
@@ -1077,7 +1077,7 @@ bool SphereRenderer::Render(view::CallRender3D_2& call) {
             }
         }
     }
-    this->curlightDir = this->curMVtransp * this->curlightDir;
+    this->curlightDir = glm::normalize(this->curMVtransp * this->curlightDir);
 
     // Viewport
     if (!cam.image_tile().empty()) {
@@ -1099,6 +1099,7 @@ bool SphereRenderer::Render(view::CallRender3D_2& call) {
     glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS); /// Necessary for early depth test in fragment shader (default)
+    glEnable(GL_CLIP_DISTANCE0);
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
     bool retval = false;
@@ -1132,6 +1133,7 @@ bool SphereRenderer::Render(view::CallRender3D_2& call) {
     // Reset OpenGl state
     glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
     glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CLIP_DISTANCE0);
 
     // Save some current data
     this->lastVpHeight = this->curVpHeight;
