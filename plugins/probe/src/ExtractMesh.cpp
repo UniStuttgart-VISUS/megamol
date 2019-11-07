@@ -132,13 +132,58 @@ bool ExtractMesh::flipNormalsWithCenterLine(pcl::PointCloud<pcl::PointNormal>& p
     return true;
 }
 
+bool ExtractMesh::flipNormalsWithCenterLine_distanceBased(pcl::PointCloud<pcl::PointNormal>& point_cloud) {
+
+    for (uint32_t i = 0; i < point_cloud.points.size(); i++) {
+
+        std::vector<float> distances(_centerline.size());
+        for (uint32_t j = 0; j < _centerline.size(); j++) {
+            // std::array<float, 3> diffvec = {
+            //    vertex_accessor[vertex_step * i + 0] - centerline_accessor[centerline_step * j + 0],
+            //    vertex_accessor[vertex_step * i + 1] - centerline_accessor[centerline_step * j + 1],
+            //    vertex_accessor[vertex_step * i + 2] - centerline_accessor[centerline_step * j + 2]};
+            // distances[j] = std::sqrt(diffvec[0] * diffvec[0] + diffvec[1] * diffvec[1] + diffvec[2] * diffvec[2]);
+            std::array<float, 3> diff;
+            diff[0] = point_cloud.points[i].x - _centerline[j][0];
+            diff[1] = point_cloud.points[i].y - _centerline[j][1];
+            diff[2] = point_cloud.points[i].z - _centerline[j][2];
+            distances[j] = std::sqrt(diff[0] * diff[0] + diff[1] * diff[1] + diff[2] * diff[2]);
+        }
+
+        auto min_iter = std::min_element(distances.begin(), distances.end());
+        auto min_index = std::distance(distances.begin(), min_iter);
+
+        auto cl_x = _centerline[min_index][0];
+        auto cl_y = _centerline[min_index][1];
+        auto cl_z = _centerline[min_index][2];
+
+        cl_x -= point_cloud.points[i].x;
+        cl_y -= point_cloud.points[i].y;
+        cl_z -= point_cloud.points[i].z;
+
+        // Projection of the normal on the center line point
+        const float cos_theta =
+            (cl_x * point_cloud.points[i].normal_x + cl_y * point_cloud.points[i].normal_y +
+                cl_z * point_cloud.points[i].normal_z);
+
+        // Flip the plane normal away from center line point
+        if (cos_theta > 0) {
+            point_cloud.points[i].normal_x *= -1;
+            point_cloud.points[i].normal_y *= -1;
+            point_cloud.points[i].normal_z *= -1;
+        }
+    }
+
+    return true;
+}
+
 bool ExtractMesh::extractCenterLine(pcl::PointCloud<pcl::PointNormal>& point_cloud) {
 
     std::array<float, 3> whd = {this->_bbox.ObjectSpaceBBox().Width(), this->_bbox.ObjectSpaceBBox().Height(),
         this->_bbox.ObjectSpaceBBox().Depth()};
     const auto longest_edge_index = std::distance(whd.begin(), std::max_element(whd.begin(), whd.end()));
 
-    const uint32_t num_steps = 50;
+    const uint32_t num_steps = 20;
     const auto step_size = whd[longest_edge_index] / (num_steps + 2); // without begin and end
     const auto step_epsilon = step_size / 2;
     float offset = 0.0f;
@@ -198,6 +243,50 @@ bool ExtractMesh::extractCenterLine(pcl::PointCloud<pcl::PointNormal>& point_clo
     return true;
 }
 
+void ExtractMesh::applyMeshCorrections() {
+    
+    for (auto& point : _poissonCloud.points) {
+    
+        std::vector<uint32_t> k_indices;
+        std::vector<float> k_distances;
+
+        pcl::PointXYZ p;
+        p.x = point.x;
+        p.y = point.y;
+        p.z = point.z;
+
+        auto neighbors = this->_alpha_hull_tree->nearestKSearch(p, 1, k_indices, k_distances);
+
+        std::array<float,3> diffvec;
+        float distance = 0.0f;
+        if (neighbors > 0) {
+            diffvec[0] = _alphaHullCloud->points[k_indices[0]].x - point.x;
+            diffvec[1] = _alphaHullCloud->points[k_indices[0]].y - point.y;
+            diffvec[2] = _alphaHullCloud->points[k_indices[0]].z - point.z;
+            //distance = std::sqrt(diffvec[0] * diffvec[0] + diffvec[1] * diffvec[1] + diffvec[2] * diffvec[2]);
+
+            //point.x -= _resultNormalCloud->points[k_indices[0]].normal_x * distance;
+            //point.y -= _resultNormalCloud->points[k_indices[0]].normal_y * distance;
+            //point.z -= _resultNormalCloud->points[k_indices[0]].normal_z * distance;
+
+            //point.x += diffvec[0];
+            //point.y += diffvec[1];
+            //point.z += diffvec[2];
+
+            // move along normal
+            float d = std::sqrt(diffvec[0] * _resultNormalCloud->points[k_indices[0]].normal_x +
+                                diffvec[1] * _resultNormalCloud->points[k_indices[0]].normal_y +
+                                diffvec[2] * _resultNormalCloud->points[k_indices[0]].normal_z);
+
+            point.x -= d * _resultNormalCloud->points[k_indices[0]].normal_x;
+            point.y -= d * _resultNormalCloud->points[k_indices[0]].normal_y;
+            point.z -= d * _resultNormalCloud->points[k_indices[0]].normal_z;
+
+        }
+    }
+}
+
+
 void ExtractMesh::calculateAlphaShape() {
 
     // Calculate the alpha hull of the initial point cloud
@@ -207,56 +296,62 @@ void ExtractMesh::calculateAlphaShape() {
     _inputCloud = std::make_shared<pcl::PointCloud<pcl::PointXYZ>>(_cloud);
     hull.setInputCloud(_inputCloud);
     // hull.setDoFiltering(true);
-    hull.reconstruct(_resultCloud, _polygons);
+    pcl::PointCloud<pcl::PointXYZ> resultCloud;
+    hull.reconstruct(resultCloud, _polygons);
+    _alphaHullCloud = std::make_shared<pcl::PointCloud<pcl::PointXYZ>>(resultCloud);
 
     // Extract the kd tree for easy sampling of the data
     this->_full_data_tree = std::make_shared<pcl::KdTreeFLANN<pcl::PointXYZ>>();
     this->_full_data_tree->setInputCloud(_inputCloud, nullptr);
 
+    this->_alpha_hull_tree = std::make_shared<pcl::KdTreeFLANN<pcl::PointXYZ>>();
+    this->_alpha_hull_tree->setInputCloud(_alphaHullCloud, nullptr);
+
+
+    // Estimate normals of the alpha shape vertices.
+    // Correct normals are needed for the Poisson surface reconstruction
+    pcl::NormalEstimationOMP<pcl::PointXYZ, pcl::PointNormal> normal_est;
+    normal_est.setInputCloud(_alphaHullCloud);
+    pcl::PointCloud<pcl::PointNormal> normal_cloud;
+    normal_est.setRadiusSearch(_bbox.ObjectSpaceBBox().LongestEdge() * 1e-2);
+    //normal_est.setKSearch(40);
+    normal_est.compute(normal_cloud);
+
+    // The estimated normals are not oriented correctly
+    // Calculate center line and use it to flip normals
+    this->extractCenterLine(normal_cloud);
+    //this->flipNormalsWithCenterLine(normal_cloud);
+    this->flipNormalsWithCenterLine_distanceBased(normal_cloud);
+
+    _resultNormalCloud = std::make_shared<pcl::PointCloud<pcl::PointNormal>>(normal_cloud);
+
     if (usePoisson) {
 
         pcl::Poisson<pcl::PointNormal> surface;
 
-        pcl::NormalEstimationOMP<pcl::PointXYZ, pcl::PointNormal> normal_est;
-
-        std::shared_ptr<const pcl::PointCloud<pcl::PointXYZ>> result_shared =
-            std::make_shared<const pcl::PointCloud<pcl::PointXYZ>>(_resultCloud);
-
-        // Estimate normals of the alpha shape vertices.
-        // Correct normals are needed for the Poisson surface reconstruction
-        normal_est.setInputCloud(result_shared);
-        pcl::PointCloud<pcl::PointNormal> normal_cloud;
-        // normal_est.setRadiusSearch(0.5f);
-        normal_est.setKSearch(40);
-        normal_est.compute(normal_cloud);
-
-        // The estimated normals are not oriented correctly
-        // Calculate center line and use it to flip normals
-        this->extractCenterLine(normal_cloud);
-        this->flipNormalsWithCenterLine(normal_cloud);
-
-        _resultNormalCloud = std::make_shared<pcl::PointCloud<pcl::PointNormal>>(normal_cloud);
-
         // Perform a Poisson surface reconstruction
         _polygons.clear();
         surface.setInputCloud(_resultNormalCloud);
-        surface.setDepth(7);
+        surface.setDepth(9);
         surface.setSamplesPerNode(2.0f);
         // surface.setConfidence(true);
 
-        surface.reconstruct(_resultSurface, _polygons);
+        surface.reconstruct(_poissonCloud, _polygons);
 
         // Estimate normals of the reconstructed surface
         pcl::NormalEstimationOMP<pcl::PointNormal, pcl::PointNormal> new_normal_est;
         new_normal_est.setKSearch(40);
         std::shared_ptr<const pcl::PointCloud<pcl::PointNormal>> surface_shared =
-            std::make_shared<const pcl::PointCloud<pcl::PointNormal>>(_resultSurface);
+            std::make_shared<const pcl::PointCloud<pcl::PointNormal>>(_poissonCloud);
         new_normal_est.setInputCloud(surface_shared);
-        new_normal_est.compute(_resultSurface);
+        new_normal_est.compute(_poissonCloud);
 
-        // this->flipNormalsWithCenterLine(_resultSurface); // method is not general enough
+        this->flipNormalsWithCenterLine_distanceBased(_poissonCloud);
 
     }
+
+    // this->applyMeshCorrections();
+
 }
 
 bool ExtractMesh::createPointCloud(std::vector<std::string>& vars) {
@@ -266,7 +361,7 @@ bool ExtractMesh::createPointCloud(std::vector<std::string>& vars) {
 
     if (vars.empty()) return false;
 
-    auto count = cd->getData(vars[0])->size();
+    const auto count = cd->getData(vars[0])->size();
 
     _cloud.points.resize(count);
 
@@ -292,18 +387,23 @@ bool ExtractMesh::createPointCloud(std::vector<std::string>& vars) {
             }
 
         } else {
+            //auto xyz = cd->getData(std::string(this->_xyzSlot.Param<core::param::FlexEnumParam>()->ValueString()))
+            //               ->GetAsFloat();
+            int coarse_factor = 30;
             auto xyz = cd->getData(std::string(this->_xyzSlot.Param<core::param::FlexEnumParam>()->ValueString()))
-                           ->GetAsFloat();
+                           ->GetAsDouble();
             float xmin = std::numeric_limits<float>::max();
             float xmax = std::numeric_limits<float>::min();
             float ymin = std::numeric_limits<float>::max();
             float ymax = std::numeric_limits<float>::min();
             float zmin = std::numeric_limits<float>::max();
             float zmax = std::numeric_limits<float>::min();
-            for (unsigned long long i = 0; i < count; i++) {
-                _cloud.points[i].x = xyz[3 * i + 0];
-                _cloud.points[i].y = xyz[3 * i + 1];
-                _cloud.points[i].z = xyz[3 * i + 2];
+
+            _cloud.points.resize(count/coarse_factor);
+            for (unsigned long long i = 0; i < count/(3*coarse_factor); i++) {
+                _cloud.points[i].x = xyz[3 * (i*coarse_factor) + 0];
+                _cloud.points[i].y = xyz[3 * (i*coarse_factor) + 1];
+                _cloud.points[i].z = xyz[3 * (i*coarse_factor) + 2];
 
                 xmin = std::min(xmin, _cloud.points[i].x);
                 xmax = std::max(xmax, _cloud.points[i].x);
@@ -323,24 +423,24 @@ void ExtractMesh::convertToMesh() {
     if (!usePoisson) {
         _mesh_attribs.resize(1);
         _mesh_attribs[0].component_type = mesh::MeshDataAccessCollection::ValueType::FLOAT;
-        _mesh_attribs[0].byte_size = _resultCloud.points.size() * sizeof(pcl::PointXYZ);
+        _mesh_attribs[0].byte_size = _alphaHullCloud->points.size() * sizeof(pcl::PointXYZ);
         _mesh_attribs[0].component_cnt = 3;
         _mesh_attribs[0].stride = sizeof(pcl::PointXYZ);
-        _mesh_attribs[0].data = reinterpret_cast<uint8_t*>(_resultCloud.points.data());
+        _mesh_attribs[0].data = reinterpret_cast<uint8_t*>(const_cast<pcl::PointXYZ*>(_alphaHullCloud->points.data()));
     } else {
         _mesh_attribs.resize(2);
-        _vertex_data.resize(3 * _resultSurface.points.size());
-        _normal_data.resize(3 * _resultSurface.points.size());
+        _vertex_data.resize(3 * _poissonCloud.points.size());
+        _normal_data.resize(3 * _poissonCloud.points.size());
 #pragma omp parallel for
-        for (auto i = 0; i < _resultSurface.points.size(); i++) {
+        for (auto i = 0; i < _poissonCloud.points.size(); i++) {
             //
-            _vertex_data[3 * i + 0] = _resultSurface.points[i].x;
-            _vertex_data[3 * i + 1] = _resultSurface.points[i].y;
-            _vertex_data[3 * i + 2] = _resultSurface.points[i].z;
+            _vertex_data[3 * i + 0] = _poissonCloud.points[i].x;
+            _vertex_data[3 * i + 1] = _poissonCloud.points[i].y;
+            _vertex_data[3 * i + 2] = _poissonCloud.points[i].z;
             //
-            _normal_data[3 * i + 0] = _resultSurface.points[i].normal_x;
-            _normal_data[3 * i + 1] = _resultSurface.points[i].normal_y;
-            _normal_data[3 * i + 2] = _resultSurface.points[i].normal_z;
+            _normal_data[3 * i + 0] = _poissonCloud.points[i].normal_x;
+            _normal_data[3 * i + 1] = _poissonCloud.points[i].normal_y;
+            _normal_data[3 * i + 2] = _poissonCloud.points[i].normal_z;
         }
 
         //
@@ -395,13 +495,13 @@ bool ExtractMesh::getData(core::Call& call) {
         something_changed = true;
     }
 
-    if (something_changed) {
+    if (something_changed || _recalc) {
 
         if (!this->createPointCloud(toInq)) return false;
 
         
 
-        if (cd->getDataHash() != _old_datahash)
+        if (cd->getDataHash() != _old_datahash || _recalc)
             this->calculateAlphaShape();
 
         // this->filterResult();
@@ -494,14 +594,16 @@ bool ExtractMesh::getParticleData(core::Call& call) {
 
     cm->AccessBoundingBoxes().SetObjectSpaceBBox(_bbox.ObjectSpaceBBox());
 
-    if (cd->getDataHash() != _old_datahash) this->calculateAlphaShape();
+    if (cd->getDataHash() != _old_datahash || _recalc)
+        this->calculateAlphaShape();
 
     // this->filterResult();
     // this->filterByIndex();
 
     cm->SetParticleListCount(1);
-    cm->AccessParticles(0).SetGlobalRadius(0.02f);
-    cm->AccessParticles(0).SetCount(_resultCloud.points.size());
+    //cm->AccessParticles(0).SetGlobalRadius(0.02f);
+    cm->AccessParticles(0).SetGlobalRadius(_bbox.ObjectSpaceBBox().LongestEdge() * 1e-3);
+    cm->AccessParticles(0).SetCount(_alphaHullCloud->points.size());
     cm->AccessParticles(0).SetVertexData(core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
         reinterpret_cast<uint8_t*>(&_resultNormalCloud->points[0].x), sizeof(pcl::PointNormal));
     cm->AccessParticles(0).SetDirData(core::moldyn::MultiParticleDataCall::Particles::DIRDATA_FLOAT_XYZ,
@@ -672,7 +774,7 @@ bool ExtractMesh::getKDData(core::Call& call) {
     meta_data.m_bboxs = _bbox;
     cm->setMetaData(meta_data);
 
-    if (cd->getDataHash() != _old_datahash) this->calculateAlphaShape();
+    if (cd->getDataHash() != _old_datahash || _recalc) this->calculateAlphaShape();
 
     // put data in mesh
     mesh::MeshDataAccessCollection mesh;
@@ -717,9 +819,9 @@ bool ExtractMesh::filterResult() {
     new_polygon.reserve(_polygons.size());
 
     for (auto& polygon : _polygons) {
-        auto v1 = _resultCloud.points[polygon.vertices[0]];
-        auto v2 = _resultCloud.points[polygon.vertices[1]];
-        auto v3 = _resultCloud.points[polygon.vertices[2]];
+        auto v1 = _alphaHullCloud->points[polygon.vertices[0]];
+        auto v2 = _alphaHullCloud->points[polygon.vertices[1]];
+        auto v3 = _alphaHullCloud->points[polygon.vertices[2]];
 
         auto a = v1 - v2;
         auto length_a = std::sqrt(a.x * a.x + a.y * a.y + a.z * a.z);
