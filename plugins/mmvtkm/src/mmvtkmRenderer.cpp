@@ -24,7 +24,7 @@ mmvtkmDataRenderer::mmvtkmDataRenderer(void)
     , scene()
     , mapper()
     , canvas()
-    , camera()
+    , vtkmCamera()
     , colorArray(nullptr)
 	, dataHasChanged(true)
 {
@@ -113,6 +113,8 @@ bool mmvtkmDataRenderer::Render(core::view::CallRender3D_2& call) {
     glm::vec4 camUp = snapshot.up_vector;
     glm::vec4 camPos = snapshot.position;
 
+	// vislib::graphics::SceneSpaceCuboid bbox = call.AccessBoundingBoxes().BoundingBox();
+
 	// set camera setting for vtkm
 	canvasWidth = cam.resolution_gate().width();
     canvasHeight = cam.resolution_gate().height();
@@ -129,12 +131,12 @@ bool mmvtkmDataRenderer::Render(core::view::CallRender3D_2& call) {
     vtkm::Normalize(totalExtent);
 
     // setup a camera and point it to towards the center of the input data
-    camera.ResetToBounds(coordsBounds);
-    camera.SetLookAt(lookat /*totalExtent * (mag * .5f)*/);
-    camera.SetViewUp(up);
-    camera.SetClippingRange(nearPlane, farPlane);
-    camera.SetFieldOfView(fovY);
-    camera.SetPosition(position);
+    vtkmCamera.ResetToBounds(coordsBounds);
+    vtkmCamera.SetLookAt(lookat /*totalExtent * (mag * .5f)*/);
+    vtkmCamera.SetViewUp(up);
+    vtkmCamera.SetClippingRange(nearPlane, farPlane);
+    vtkmCamera.SetFieldOfView(fovY);
+    vtkmCamera.SetPosition(position);
 
 	//vislib::math::Cuboid<float> bbox(coordsBounds.X.Min, coordsBounds.Y.Min, coordsBounds.Z.Min, 
 		//coordsBounds.X.Max, coordsBounds.Y.Max, coordsBounds.Z.Max);
@@ -148,7 +150,7 @@ bool mmvtkmDataRenderer::Render(core::view::CallRender3D_2& call) {
 
     // update actor, acutally just the field, each frame
     // store dynamiccellset and coordinatesystem after reading them in GetExtents
-	vtkm::rendering::View3D view(scene, mapper, canvas, camera);
+    vtkm::rendering::View3D view(scene, mapper, canvas, vtkmCamera);
 	view.Initialize(); // required
 
 	view.Paint();

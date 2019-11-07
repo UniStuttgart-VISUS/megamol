@@ -133,7 +133,7 @@ namespace mmvtkm {
     vtkm::rendering::Scene scene;
     vtkm::rendering::MapperRayTracer mapper;
     vtkm::rendering::CanvasRayTracer canvas;
-    vtkm::rendering::Camera camera;
+    vtkm::rendering::Camera vtkmCamera;
     //vtkm::rendering::View3D view;
     void* colorArray;
     bool dataHasChanged;
