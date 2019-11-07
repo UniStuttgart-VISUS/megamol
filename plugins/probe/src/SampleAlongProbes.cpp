@@ -143,7 +143,8 @@ bool SampleAlongPobes::getData(core::Call& call) {
     if (probes_meta_data.m_data_hash != this->_probe_cached_hash)
         if (!(*cprobes)(0)) return false;
 
-
+    tree_meta_data = ct->getMetaData();
+    probes_meta_data = cprobes->getMetaData();
 
     // do sampling
     _probes = cprobes->getData();

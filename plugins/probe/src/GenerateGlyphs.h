@@ -63,7 +63,7 @@ private:
     bool getTexture(core::Call& call);
     bool getTextureMetaData(core::Call& call);
 
-    void doGlyphGeneration();
+    void doGlyphGeneration(float scale);
 
     uint32_t _data_hash;
     std::shared_ptr<ProbeCollection> _probe_data;

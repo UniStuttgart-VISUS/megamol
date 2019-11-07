@@ -41,21 +41,19 @@ GenerateGlyphs::~GenerateGlyphs() {
 }
 
 
-void GenerateGlyphs::doGlyphGeneration() {
+void GenerateGlyphs::doGlyphGeneration(float scale) {
 
     this->_mesh_data = std::make_shared<mesh::MeshDataAccessCollection>();
     this->_tex_data = std::make_shared<mesh::ImageDataAccessCollection>();
-
-    const float scale = 0.2f;
 
     _dtu.resize(this->_probe_data->getProbeCount());
     _generated_mesh.resize(this->_probe_data->getProbeCount() * 4);
 
     this->_generated_mesh_indices = {0, 1, 3, 0, 3, 2};
-    this->_generated_texture_coordinates[3] = {0.0f, 0.0f};
+    this->_generated_texture_coordinates[0] = {0.0f, 0.0f};
     this->_generated_texture_coordinates[1] = {0.0f, 1.0f};
     this->_generated_texture_coordinates[2] = {1.0f, 0.0f};
-    this->_generated_texture_coordinates[0] = {1.0f, 1.0f};
+    this->_generated_texture_coordinates[3] = {1.0f, 1.0f};
 
     for (int i = 0; i < this->_probe_data->getProbeCount(); i++) {
 
@@ -193,10 +191,13 @@ bool GenerateGlyphs::getMesh(core::Call& call) {
 
     mesh_meta_data.m_bboxs = probe_meta_data.m_bboxs;
 
+    cm->setMetaData(mesh_meta_data);
+
     this->_probe_data = cprobes->getData();
 
+    const float scale = probe_meta_data.m_bboxs.BoundingBox().LongestEdge() * 5e-3;
     if (probe_meta_data.m_data_hash != this->_data_hash)
-        doGlyphGeneration();
+        doGlyphGeneration(scale);
 
     cm->setData(this->_mesh_data);
 
@@ -250,8 +251,9 @@ bool GenerateGlyphs::getTexture(core::Call& call) {
 
     this->_probe_data = cprobes->getData();
 
+    const float scale = probe_meta_data.m_bboxs.BoundingBox().LongestEdge() * 5e-3;
     if (probe_meta_data.m_data_hash != this->_data_hash)
-        doGlyphGeneration();
+        doGlyphGeneration(scale);
 
     ctex->setData(this->_tex_data);
 

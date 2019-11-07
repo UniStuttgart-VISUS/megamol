@@ -286,7 +286,8 @@ void pcl::ConcaveHull<PointInT>::performReconstruction(PointCloud& alpha_shape, 
     // True if qhull should free points in qh_freeqhull() or reallocation
     boolT ismalloc = True;
     // option flags for qhull, see qh_opt.htm
-    char flags[] = "qhull d QJ";
+    //char flags[] = "qhull d QJ";
+    char flags[] = "qhull d Qt";
     // output from qh_produce_output(), use NULL to skip qh_produce_output()
     FILE* outfile = nullptr;
     // error messages from qhull code

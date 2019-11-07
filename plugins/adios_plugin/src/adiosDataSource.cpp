@@ -187,19 +187,19 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
                             reader->Get<double>(advar, tmp_vec);
                             dataMap[var.first] = std::move(fc);
 
-                        } else if (var.second["Type"] == "int") {
+                        } else if (var.second["Type"] == "int32_t") {
 
-                            auto fc = std::make_shared<IntContainer>(IntContainer());
+                            auto fc = std::make_shared<Int32Container>(Int32Container());
                             fc->singleValue = singleValue;
-                            std::vector<int>& tmp_vec = fc->getVec();
+                            std::vector<int32_t>& tmp_vec = fc->getVec();
 
-                            adios2::Variable<int> advar = io->InquireVariable<int>(var.first);
+                            adios2::Variable<int32_t> advar = io->InquireVariable<int32_t>(var.first);
                             auto info = reader->BlocksInfo(advar, cad->getFrameIDtoLoad());
                             fc->shape = info[0].Count;
                             std::for_each(fc->shape.begin(), fc->shape.end(), [&](decltype(num) n) { num *= n; });
                             tmp_vec.resize(num);
 
-                            reader->Get<int>(advar, tmp_vec);
+                            reader->Get<int32_t>(advar, tmp_vec);
                             dataMap[var.first] = std::move(fc);
                         } else if (var.second["Type"] == "uint64_t") {
                             auto fc = std::make_shared<UInt64Container>(UInt64Container());
@@ -228,7 +228,7 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
 
                             reader->Get<unsigned char>(advar, tmp_vec);
                             dataMap[var.first] = std::move(fc);
-                        } else if (var.second["Type"] == "unsigned int") {
+                        } else if (var.second["Type"] == "uint32_t") {
                             auto fc = std::make_shared<UInt32Container>(UInt32Container());
                             fc->singleValue = singleValue;
                             std::vector<unsigned int>& tmp_vec = fc->getVec();

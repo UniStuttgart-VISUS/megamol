@@ -69,7 +69,9 @@ protected:
 private:
     bool InterfaceIsDirty();
     bool flipNormalsWithCenterLine(pcl::PointCloud<pcl::PointNormal>& point_cloud);
+    bool flipNormalsWithCenterLine_distanceBased(pcl::PointCloud<pcl::PointNormal> &point_cloud);
     bool extractCenterLine(pcl::PointCloud<pcl::PointNormal>& point_cloud);
+    void applyMeshCorrections();
     // virtual void readParams();
     void calculateAlphaShape();
 
@@ -105,10 +107,11 @@ private:
     pcl::PointCloud<pcl::PointXYZ> _cloud;
     std::vector<pcl::Vertices> _polygons;
     std::vector<pcl::PointIndices> _indices;
-    pcl::PointCloud<pcl::PointXYZ> _resultCloud;
-    pcl::PointCloud<pcl::PointNormal> _resultSurface;
+    pcl::PointCloud<pcl::PointXYZ>::ConstPtr _alphaHullCloud; 
+    pcl::PointCloud<pcl::PointNormal> _poissonCloud;
     std::shared_ptr<pcl::PointCloud<pcl::PointNormal>> _resultNormalCloud;
     std::shared_ptr<pcl::KdTreeFLANN<pcl::PointXYZ>> _full_data_tree;
+    std::shared_ptr<pcl::KdTreeFLANN<pcl::PointXYZ>> _alpha_hull_tree;
 
     // CallMesh stuff
     std::vector<mesh::MeshDataAccessCollection::VertexAttribute> _mesh_attribs;

@@ -71,12 +71,12 @@ bool OSPRayGlyphGeometry::readData(core::Call& call) {
     if (!(*ctex)(1)) return false;
     if (!(*ctex)(0)) return false;
 
-    //meta_data = cm->getMetaData();
+    meta_data = cm->getMetaData();
 
-    //// revalidate the boundingbox
-    //this->extendContainer.boundingBox->SetBoundingBox(meta_data.m_bboxs.BoundingBox());
-    //this->extendContainer.timeFramesCount = meta_data.m_frame_cnt;
-    //this->extendContainer.isValid = true;
+    // revalidate the boundingbox
+    this->extendContainer.boundingBox->SetBoundingBox(meta_data.m_bboxs.BoundingBox());
+    this->extendContainer.timeFramesCount = meta_data.m_frame_cnt;
+    this->extendContainer.isValid = true;
 
     // Write stuff into the structureContainer
     this->structureContainer.type = ospray::structureTypeEnum::GEOMETRY;
