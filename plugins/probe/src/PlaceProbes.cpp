@@ -160,7 +160,7 @@ void megamol::probe::PlaceProbes::dartSampling(mesh::MeshDataAccessCollection::V
 
     uint32_t indx = 0;
     uint32_t error_index = 0;
-    while (indx != (num_probes - 1) && error_index < (num_triangles - indx)) {
+    while (indx != (num_probes - 1) && error_index < num_probes){//&& error_index < (num_triangles - indx)) {
 
         uint32_t triangle = dist(rnd);
         std::array<float, 3> vert0;
@@ -230,8 +230,8 @@ void megamol::probe::PlaceProbes::vertexSampling(
     auto vertex_accessor = reinterpret_cast<float*>(vertices.data);
     auto vertex_step = vertices.stride / sizeof(float);
 
-
-    for (uint32_t i = 0; i < probe_count; i++) {
+#pragma omp parallel for
+    for (int i = 0; i < probe_count; i++) {
         output[i][0] = vertex_accessor[vertex_step * i + 0];
         output[i][1] = vertex_accessor[vertex_step * i + 1];
         output[i][2] = vertex_accessor[vertex_step * i + 2];
