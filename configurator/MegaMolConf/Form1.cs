@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -36,7 +36,6 @@ namespace MegaMolConf {
         private Point lastMousePos;
         private Point mouseDownPos;
         private Point connectingTip;
-        private bool drawConnection;
         private Rectangle drawArea;
         private bool saveShortcut;
 
@@ -71,6 +70,9 @@ namespace MegaMolConf {
         internal static GraphicalModule copiedModule { get; private set; }
         internal static GraphicalModule eyedropperTarget { get; private set; }
         internal static GraphicalConnection selectedConnection { get; private set; }
+        internal static bool drawConnection { get; private set; }
+        internal static bool showSlotTips { get; private set; }
+
         internal TabPage SelectedTab {
             get {
                 if (!this.IsDisposed && InvokeRequired) {
@@ -943,11 +945,11 @@ namespace MegaMolConf {
                     e.Graphics.ResetTransform();
                     //e.Graphics.TranslateTransform(-drawArea.Left + tp.HorizontalScroll.Value, -drawArea.Top + tp.VerticalScroll.Value);
                     e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
-                    foreach (GraphicalModule gm in tabModules[tp]) {
-                        gm.Draw(e.Graphics);
-                    }
                     foreach (GraphicalConnection gc in tabConnections[tp]) {
                         gc.Draw(e.Graphics);
+                    }
+                    foreach (GraphicalModule gm in tabModules[tp]) {
+                        gm.Draw(e.Graphics);
                     }
                     if (drawConnection && (selectedCallee != null || selectedCaller != null)) {
                         Point p = tp.Controls[0].Controls[0].PointToClient(Cursor.Position);
@@ -1036,6 +1038,11 @@ namespace MegaMolConf {
                         }
                         if (gm.IsHit(e.Location)) {
                             SelectItem(gm);
+                            if(e.Button == MouseButtons.Middle)
+                            {
+                                btnDelete.PerformClick();
+                                break;
+                            }
                             movedModule = gm;
                             toolStripStatusLabel1.Text = gm.Module.Name + ": " + gm.Module.Description;
                             lastMousePos = e.Location;
@@ -1124,8 +1131,9 @@ namespace MegaMolConf {
                 x *= x;
                 int y = Math.Abs(tmp.Y);
                 y *= y;
-                if (Math.Sqrt(x + y) > 4 && e.Button == MouseButtons.Left) {
+                if (Math.Sqrt(x + y) > 4 && (e.Button == MouseButtons.Left || e.Button == MouseButtons.Right)) {
                     drawConnection = true;
+                    showSlotTips = (e.Button == MouseButtons.Right);
                     if (tabViews.SelectedTab != null) {
                         doTheScrollingShit(e.Location);
                     }
@@ -1206,6 +1214,7 @@ namespace MegaMolConf {
                                     tabConnections[tp].Add(gc);
                                     somethingSelected = true;
                                     drawConnection = false;
+                                    showSlotTips = false;
                                     break;
                                 }
                             }
@@ -1215,6 +1224,7 @@ namespace MegaMolConf {
                 }
                 if (!somethingSelected) {
                     drawConnection = false;
+                    showSlotTips = false;
                 }
                 resizePanel(true);
                 RefreshCurrent();
@@ -2554,7 +2564,8 @@ in PowerShell:
         private void ToolStripButton1_Click_1(object sender, EventArgs e) {
             if (selectedModule != null) {
                 if (SelectedTab != null) {
-                    string modFullName = "::" + safeName(SelectedTab.Text) + "::" + selectedModule.Name;
+                    string instName = "::inst";
+                    string modFullName = instName + "::" + selectedModule.Name;
                     string s = "";
                     if (tabMainViews[SelectedTab] != null && tabMainViews[SelectedTab].Name == selectedModule.Name) {
                         s = "mmCreateView(\"" + safeName(SelectedTab.Text) + "\", \"" + selectedModule.Module.Name + "\", \"" + modFullName + "\")\n";
@@ -2571,9 +2582,10 @@ in PowerShell:
                 }
             } else if (selectedConnection != null) {
                 if (SelectedTab != null) {
-                    string src = "::" + safeName(SelectedTab.Text) + "::" + selectedConnection.src.Name + "::" +
+                    string instName = "::inst";
+                    string src = instName + "::" + selectedConnection.src.Name + "::" +
                                  selectedConnection.srcSlot.Name;
-                    string dst = "::" + safeName(SelectedTab.Text) + "::" + selectedConnection.dest.Name + "::" +
+                    string dst = instName + "::" + selectedConnection.dest.Name + "::" +
                                  selectedConnection.destSlot.Name;
                     string s = "mmCreateCall(\"" + selectedConnection.Call.Name + "\", \"" +
                                    src + "\", \"" + dst +
