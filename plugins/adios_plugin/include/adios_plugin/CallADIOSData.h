@@ -24,7 +24,7 @@ public:
     virtual ~abstractContainer() = default;
     virtual std::vector<float> GetAsFloat() = 0;
     virtual std::vector<double> GetAsDouble() = 0;
-    virtual std::vector<int> GetAsInt() = 0;
+    virtual std::vector<int32_t> GetAsInt32() = 0;
     virtual std::vector<unsigned long long int> GetAsUInt64() = 0;
     virtual std::vector<unsigned int> GetAsUInt32() = 0;
     virtual std::vector<char> GetAsChar() = 0;
@@ -43,7 +43,7 @@ class DoubleContainer : public abstractContainer {
 public:
     std::vector<float> GetAsFloat() override { return this->getAs<float>(); }
     std::vector<double> GetAsDouble() override { return this->getAs<double>(); }
-    std::vector<int> GetAsInt() override { return this->getAs<int>(); }
+    std::vector<int32_t> GetAsInt32() override { return this->getAs<int32_t>(); }
     std::vector<unsigned long long int> GetAsUInt64() override { return this->getAs<unsigned long long int>(); }
     std::vector<unsigned int> GetAsUInt32() override { return this->getAs<unsigned int>(); }
     std::vector<char> GetAsChar() override { return this->getAs<char>(); }
@@ -69,7 +69,7 @@ class FloatContainer : public abstractContainer {
 public:
     std::vector<float> GetAsFloat() override { return this->getAs<float>(); }
     std::vector<double> GetAsDouble() override { return this->getAs<double>(); }
-    std::vector<int> GetAsInt() override { return this->getAs<int>(); }
+    std::vector<int32_t> GetAsInt32() override { return this->getAs<int32_t>(); }
     std::vector<unsigned long long int> GetAsUInt64() override { return this->getAs<unsigned long long int>(); }
     std::vector<unsigned int> GetAsUInt32() override { return this->getAs<unsigned int>(); }
     std::vector<char> GetAsChar() override { return this->getAs<char>(); }
@@ -95,20 +95,20 @@ private:
     std::vector<float> dataVec;
 };
 
-class IntContainer : public abstractContainer {
+class Int32Container : public abstractContainer {
 public:
     std::vector<float> GetAsFloat() override { return this->getAs<float>(); }
     std::vector<double> GetAsDouble() override { return this->getAs<double>(); }
-    std::vector<int> GetAsInt() override { return this->getAs<int>(); }
+    std::vector<int32_t> GetAsInt32() override { return this->getAs<int32_t>(); }
     std::vector<unsigned long long int> GetAsUInt64() override { return this->getAs<unsigned long long int>(); }
     std::vector<unsigned int> GetAsUInt32() override { return this->getAs<unsigned int>(); }
     std::vector<char> GetAsChar() override { return this->getAs<char>(); }
     std::vector<unsigned char> GetAsUChar() override { return this->getAs<unsigned char>(); }
 
-    std::vector<int>& getVec() { return dataVec; }
+    std::vector<int32_t>& getVec() { return dataVec; }
     size_t size() override { return dataVec.size(); }
-    const std::string getType() override { return "int"; }
-    const size_t getTypeSize() override { return sizeof(int); }
+    const std::string getType() override { return "int32_t"; }
+    const size_t getTypeSize() override { return sizeof(int32_t); }
 
 private:
     // TODO: maybe better in abstract container - no copy paste
@@ -127,7 +127,7 @@ public:
     std::vector<unsigned long long int> GetAsUInt64() override { return this->getAs<unsigned long long int>(); }
     std::vector<unsigned int> GetAsUInt32() override { return this->getAs<unsigned int>(); }
     std::vector<char> GetAsChar() override { return this->getAs<char>(); }
-    std::vector<int> GetAsInt() override { return this->getAs<int>(); }
+    std::vector<int32_t> GetAsInt32() override { return this->getAs<int32_t>(); }
     std::vector<float> GetAsFloat() override { return this->getAs<float>(); }
     std::vector<unsigned char> GetAsUChar() override { return this->getAs<unsigned char>(); }
 
@@ -155,7 +155,7 @@ public:
     std::vector<unsigned long long int> GetAsUInt64() override { return this->getAs<unsigned long long int>(); }
     std::vector<unsigned int> GetAsUInt32() override { return this->getAs<unsigned int>(); }
     std::vector<char> GetAsChar() override { return this->getAs<char>(); }
-    std::vector<int> GetAsInt() override { return this->getAs<int>(); }
+    std::vector<int32_t> GetAsInt32() override { return this->getAs<int32_t>(); }
     std::vector<float> GetAsFloat() override { return this->getAs<float>(); }
     std::vector<unsigned char> GetAsUChar() override { return this->getAs<unsigned char>(); }
 
@@ -181,7 +181,7 @@ class UCharContainer : public abstractContainer {
 public:
     std::vector<float> GetAsFloat() override { return this->getAs<float>(); }
     std::vector<double> GetAsDouble() override { return this->getAs<double>(); }
-    std::vector<int> GetAsInt() override { return this->getAs<int>(); }
+    std::vector<int32_t> GetAsInt32() override { return this->getAs<int32_t>(); }
     std::vector<unsigned long long int> GetAsUInt64() override { return this->getAs<unsigned long long int>(); }
     std::vector<unsigned int> GetAsUInt32() override { return this->getAs<unsigned int>(); }
     std::vector<char> GetAsChar() override { return this->getAs<char>(); }

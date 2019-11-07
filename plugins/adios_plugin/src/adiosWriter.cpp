@@ -266,15 +266,15 @@ bool adiosWriter::run() {
 
                     vislib::sys::Log::DefaultLog.WriteInfo("[adiosWriter] Putting Variables");
                     if (adiosVar) writer.Put<double>(adiosVar, values.data());
-                } else if (cad->getData(var)->getType() == "int") {
+                } else if (cad->getData(var)->getType() == "int32_t") {
 
-                    std::vector<int>& values = dynamic_cast<IntContainer*>(cad->getData(var).get())->getVec();
+                    std::vector<int32_t>& values = dynamic_cast<Int32Container*>(cad->getData(var).get())->getVec();
 
                     vislib::sys::Log::DefaultLog.WriteInfo("[adiosWriter] Defining Variables");
                     adios2::Variable<int> adiosVar = io->DefineVariable<int>(var, globalDim, offsets, localDim, false);
 
                     vislib::sys::Log::DefaultLog.WriteInfo("[adiosWriter] Putting Variables");
-                    if (adiosVar) writer.Put<int>(adiosVar, values.data());
+                    if (adiosVar) writer.Put<int32_t>(adiosVar, values.data());
                 } else if (cad->getData(var)->getType() == "uint64_t") {
 
                     std::vector<unsigned long long int>& values =
@@ -297,7 +297,7 @@ bool adiosWriter::run() {
 
                     vislib::sys::Log::DefaultLog.WriteInfo("[adiosWriter] Putting Variables");
                     if (adiosVar) writer.Put<unsigned char>(adiosVar, values.data());
-                } else if (cad->getData(var)->getType() == "unsigned int") {
+                } else if (cad->getData(var)->getType() == "uint32_t") {
 
                     std::vector<unsigned int>& values =
                         dynamic_cast<UInt32Container*>(cad->getData(var).get())->getVec();
