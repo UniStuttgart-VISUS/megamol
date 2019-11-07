@@ -40,6 +40,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
     "${BUILD_DIR}/Release/include"
     "${SOURCE_DIR}/vtkm/thirdparty/taotuple"
     "${SOURCE_DIR}/vtkm/thirdparty/diy"
+    "${SOURCE_DIR}/vtkm/thirdparty/lcl/vtkmlcl"
     )
   target_link_libraries(${PROJECT_NAME} PRIVATE core vtkm_cont vtkm_renderer vtkm_worklet)
 

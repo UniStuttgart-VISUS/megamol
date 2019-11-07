@@ -7,14 +7,14 @@ CMake:
 3.13.1 or above  
 Generator: Visual Studio 15 2017 x64
 
-VTKm Version: Release build 1.4.0  
+VTKm Version: Release build 1.5.0  
 MegaMol Version from 12.08.2019  
 Visual Studio Version: Visual Studio Enterprise 2017 Version 15.9.10 or above  
 
 ## Build
-TODO to run MegaMol with VTKm (incl. Cuda): 
+TODO to run MegaMol with VTKm: 
 * turn on the plugin in cmake
-* comment out the line "this->DataFile->Stream >> std::ws;" (should be around line 788) in ..\vtkm-src\vtkm\io\reader\VTKDataSetReaderBase.h
+* comment out the line "this->DataFile->Stream >> std::ws;" (should be around line 861) in ..\vtkm-src\vtkm\io\reader\VTKDataSetReaderBase.h
 
 ## TODO
 * replace glDrawPixels and fix BoundingBox issue
@@ -23,6 +23,9 @@ TODO to run MegaMol with VTKm (incl. Cuda):
 * duel CUDA
 
 ## Changelog
+#### 07.11.2019
+* updated plugin to use latest VTK-m version 1.5.0
+
 #### 01.10.2019
 * adapted plugin to new camera
 

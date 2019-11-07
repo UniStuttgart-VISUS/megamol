@@ -600,21 +600,23 @@ function(require_external NAME)
       return()
     endif()
 
+    set(VTKM_VER 1.5)
+
     if(WIN32)
-      set(VTKM_LIB_CONT "lib/vtkm_cont-1.4.lib")
-      set(VTKM_LIB_DEBUG_CONT "lib/vtkm_cont-1.4.lib")
-      set(VTKM_LIB_RENDERER "lib/vtkm_rendering-1.4.lib")
-      set(VTKM_LIB_DEBUG_RENDERER "lib/vtkm_rendering-1.4.lib")
-      set(VTKM_LIB_WORKLET "lib/vtkm_worklet-1.4.lib")
-      set(VTKM_LIB_DEBUG_WORKLET "lib/vtkm_worklet-1.4.lib")
+      set(VTKM_LIB_CONT "lib/vtkm_cont-${VTKM_VER}.lib")
+      set(VTKM_LIB_DEBUG_CONT "lib/vtkm_cont-${VTKM_VER}.lib")
+      set(VTKM_LIB_RENDERER "lib/vtkm_rendering-${VTKM_VER}.lib")
+      set(VTKM_LIB_DEBUG_RENDERER "lib/vtkm_rendering-${VTKM_VER}.lib")
+      set(VTKM_LIB_WORKLET "lib/vtkm_worklet-${VTKM_VER}.lib")
+      set(VTKM_LIB_DEBUG_WORKLET "lib/vtkm_worklet-${VTKM_VER}.lib")
     else()
       include(GNUInstallDirs)
-      set(VTKM_LIB_CONT "lib/vtkm_cont-1.4.a")
-      set(VTKM_LIB_DEBUG_CONT "lib/vtkm_cont-1.4.a")
-      set(VTKM_LIB_RENDERER "lib/vtkm_rendering-1.4.a")
-      set(VTKM_LIB_DEBUG_RENDERER "lib/vtkm_rendering-1.4.a")
-      set(VTKM_LIB_WORKLET "lib/vtkm_worklet-1.4.a")
-      set(VTKM_LIB_DEBUG_WORKLET "lib/vtkm_worklet-1.4.a")
+      set(VTKM_LIB_CONT "lib/vtkm_cont-${VTKM_VER}.a")
+      set(VTKM_LIB_DEBUG_CONT "lib/vtkm_cont-${VTKM_VER}.a")
+      set(VTKM_LIB_RENDERER "lib/vtkm_rendering-${VTKM_VER}.a")
+      set(VTKM_LIB_DEBUG_RENDERER "lib/vtkm_rendering-${VTKM_VER}.a")
+      set(VTKM_LIB_WORKLET "lib/vtkm_worklet-${VTKM_VER}.a")
+      set(VTKM_LIB_DEBUG_WORKLET "lib/vtkm_worklet-${VTKM_VER}.a")
     endif()
 
     #set(CXX_FLAGS "/__CUDACC__ /DWIN32 /D_WINDOWS /W3 /GR /EHsc")
@@ -625,7 +627,7 @@ function(require_external NAME)
     message(${vtkm_ENABLE_CUDA})
     add_external_project(vtkm
       GIT_REPOSITORY https://gitlab.kitware.com/vtk/vtk-m.git
-      GIT_TAG "v1.4.0"
+      GIT_TAG "v1.5.0"
       CMAKE_ARGS
         -DBUILD_SHARED_LIBS:BOOL=OFF
         -DVTKm_ENABLE_TESTING:BOOL=OFF
