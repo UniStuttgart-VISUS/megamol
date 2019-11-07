@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<btf type="MegaMolGLSLShader" version="1.0" namespace="hierarchieShader">
+<shader name="vertex">
+    <snippet type="version">400</snippet>
+    <snippet name="text" type="string">
+<!--
+layout (location = 0) in vec3 aPos;
+  
+out vec4 vertexColor;
+
+void main()
+{
+    gl_Position = vec4(aPos, 1.0); // see how we directly give a vec3 to vec4's constructor
+    vertexColor = vec4(0.5, 0.0, 0.0, 1.0); // set the output variable to a dark-red color
+}
+-->
+    </snippet>
+</shader>
+<shader name="fragment">
+    <snippet type="version">400</snippet>
+    <snippet name="text" type="string">
+<!--
+out vec4 FragColor;
+  
+in vec4 vertexColor;
+
+void main()
+{
+    FragColor = vertexColor;
+} 
+-->
+    </snippet>
+</shader>
+</btf>
