@@ -16,7 +16,10 @@ namespace megamol {
 namespace mesh {
 
 void GPUMaterialCollecton::addMaterial(
-    megamol::core::CoreInstance* mm_core_inst, std::string shader_btf_name, std::vector<GLuint> texture_names) {
+    megamol::core::CoreInstance* mm_core_inst,
+    std::string  const& shader_btf_name,
+    std::vector<std::shared_ptr<glowl::Texture>> const& textures) 
+{
     std::shared_ptr<Shader> shader = std::make_shared<Shader>();
 
     vislib::graphics::gl::ShaderSource vert_shader_src;
@@ -68,17 +71,21 @@ void GPUMaterialCollecton::addMaterial(
         // return false;
     }
 
-    addMaterial(shader, texture_names);
+    addMaterial(shader, textures);
 }
 
-void GPUMaterialCollecton::addMaterial(std::shared_ptr<Shader> const& shader, std::vector<GLuint> texture_names) {
+void GPUMaterialCollecton::addMaterial(
+    std::shared_ptr<Shader> const& shader, 
+    std::vector<std::shared_ptr<glowl::Texture>> const& textures) 
+{
     m_materials.push_back(Material());
     m_materials.back().shader_program = shader;
-    m_materials.back().textures_names = texture_names;
+    m_materials.back().textures = textures;
 }
 
-void GPUMaterialCollecton::updateMaterialTexture(size_t mtl_idx, size_t tex_idx, GLuint texture_name) {
-    m_materials[mtl_idx].textures_names[tex_idx] = texture_name;
+void GPUMaterialCollecton::updateMaterialTexture(
+    size_t mtl_idx, size_t tex_idx, std::shared_ptr<glowl::Texture> const& texture) {
+    m_materials[mtl_idx].textures[tex_idx] = texture;
 }
 
 void GPUMaterialCollecton::clearMaterials() { m_materials.clear(); }
