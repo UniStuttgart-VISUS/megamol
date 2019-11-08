@@ -126,9 +126,8 @@ void main(void) {
     camPos.w = 1.0;
 
     // calculate light position in glyph space
-    //lightPos = MVinv * gl_LightSource[0].position - inPos; // note: w is bullshit now!
-    //lightPos.xyz = rotMatT0 * lightPos.x + rotMatT1 * lightPos.y + rotMatT2 * lightPos.z;
-    //lightPos = MVtransp * gl_LightSource[0].position; // transpose of inverse inverse -> directional light
+    lightPos = gl_ModelViewMatrixInverse * gl_LightSource[0].position - inPos; // note: w is bullshit now!
+    lightPos.xyz = rotMatT0 * lightPos.x + rotMatT1 * lightPos.y + rotMatT2 * lightPos.z;
 
     objPos = inPos;
 
@@ -398,9 +397,13 @@ void main(void) {
 
     // phong lighting with directional light
 	//gl_FragColor = vec4(color.rgb, 1.0);
+<<<<<<< HEAD
     normal = rotMatIT * normal;
     ray = rotMatIT * ray;
     gl_FragColor = vec4(LocalLighting(ray, normal, lightDir.xyz, color), 1.0);
+=======
+    gl_FragColor = vec4(LocalLighting(ray, normal, lightPos.xyz, color), 1.0);
+>>>>>>> upstream/master
     gl_FragColor.rgb = (0.75 * gl_FragColor.rgb) + (0.25 * color);
 
 
