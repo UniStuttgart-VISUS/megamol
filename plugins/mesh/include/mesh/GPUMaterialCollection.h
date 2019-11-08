@@ -18,6 +18,7 @@
 
 #include "mesh.h"
 
+#include "glowl/GLSLProgram.hpp"
 #include "glowl/Texture.hpp"
 #include "glowl/Texture2D.hpp"
 #include "glowl/Texture2DArray.hpp"
@@ -27,7 +28,7 @@
 namespace megamol {
 namespace mesh {
 
-typedef vislib::graphics::gl::GLSLGeometryShader Shader;
+typedef glowl::GLSLProgram Shader;
 
 class MESH_API GPUMaterialCollecton {
 public:

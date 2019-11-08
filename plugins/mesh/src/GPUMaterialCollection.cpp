@@ -37,38 +37,34 @@ void GPUMaterialCollecton::addMaterial(
     auto geom_shdr_success =
         mm_core_inst->ShaderSourceFactory().MakeShaderSource(geoShaderName.PeekBuffer(), geom_shader_src);
 
-    try {
+    std::string vertex_src( vert_shader_src.WholeCode() , (vert_shader_src.WholeCode()).Length());
+    std::string tessellationControl_src;
+    std::string tessellationEvaluation_src;
+    std::string geometry_src(geom_shader_src.WholeCode(), (geom_shader_src.WholeCode()).Length());
+    std::string fragment_src(frag_shader_src.WholeCode(), (frag_shader_src.WholeCode()).Length());
+    std::string compute_src;
 
-        if (geom_shdr_success) {
-            if (!shader->Compile(vert_shader_src.Code(), vert_shader_src.Count(), geom_shader_src.Code(),
-                    geom_shader_src.Count(), frag_shader_src.Code(), frag_shader_src.Count())) {
-                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-                    "Unable to compile %s: Unknown error\n", shader_base_name.PeekBuffer());
-                // return false;
-            }
-            if (!shader->Link()) {
-                vislib::sys::Log::DefaultLog.WriteMsg(
-                    vislib::sys::Log::LEVEL_ERROR, "Unable to link %s: Unknown error\n", shader_base_name.PeekBuffer());
-                // return false;
-            }
-        } else {
-            shader->Create(
-                vert_shader_src.Code(), vert_shader_src.Count(), frag_shader_src.Code(), frag_shader_src.Count());
-        }
-    } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s (@%s):\n%s\n",
-            shader_base_name.PeekBuffer(),
-            vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
-            ce.GetMsgA());
-        // return false;
-    } catch (vislib::Exception e) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s:\n%s\n", shader_base_name.PeekBuffer(), e.GetMsgA());
-        // return false;
-    } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s: Unknown exception\n", shader_base_name.PeekBuffer());
-        // return false;
+    bool prgm_error = false;
+
+    if (!vertex_src.empty())
+        prgm_error |= !shader->compileShaderFromString(&vertex_src, Shader::VertexShader);
+    if (!fragment_src.empty())
+        prgm_error |= !shader->compileShaderFromString(&fragment_src, Shader::FragmentShader);
+    if (!geometry_src.empty())
+        prgm_error |= !shader->compileShaderFromString(&geometry_src, Shader::GeometryShader);
+    if (!tessellationControl_src.empty())
+        prgm_error |= !shader->compileShaderFromString(&tessellationControl_src, Shader::TessellationControl);
+    if (!tessellationEvaluation_src.empty())
+        prgm_error |= !shader->compileShaderFromString(&tessellationEvaluation_src, Shader::TessellationEvaluation);
+    if (!compute_src.empty())
+        prgm_error |= !shader->compileShaderFromString(&compute_src, Shader::ComputeShader);
+
+    prgm_error |= !shader->link();
+
+    if (prgm_error) {
+        std::cout << "Error during shader program creation of \"" << shader->getDebugLabel() << "\""
+                  << std::endl;
+        std::cout << shader->getLog();
     }
 
     addMaterial(shader, textures);
