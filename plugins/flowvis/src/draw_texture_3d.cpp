@@ -114,6 +114,8 @@ bool draw_texture_3d::Render(core::view::CallRender3D_2& call) {
 
             return false;
         }
+
+        this->render_data.initialized = true;
     }
 
     // Draw quad with given texture and model matrix
