@@ -154,15 +154,15 @@ bool imageviewer2::ImageRenderer::create(void) {
             "[SphereRenderer] Unable to compile sphere shader (@%s): %s\n",
             vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
-        return nullptr;
+        return false;
     } catch (vislib::Exception e) {
         vislib::sys::Log::DefaultLog.WriteMsg(
             vislib::sys::Log::LEVEL_ERROR, "[ImageRenderer] Unable to compile shader: %s\n", e.GetMsgA());
-        return nullptr;
+        return false;
     } catch (...) {
         vislib::sys::Log::DefaultLog.WriteMsg(
             vislib::sys::Log::LEVEL_ERROR, "[ImageRenderer] Unable to compile shader: Unknown exception\n");
-        return nullptr;
+        return false;
     }
 
     glGenBuffers(1, &theVertBuffer);

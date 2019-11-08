@@ -9,19 +9,9 @@ option(BUILD_REMOTECONSOLE "Build remote Lua console" ON)
 if(BUILD_REMOTECONSOLE)
   project(remoteconsole)
 
-  # Add libcxxopts.
-  set(CXXOPTS_TAG "v2.1.1")
-  add_external_project(libcxxopts_ext
-    GIT_REPOSITORY https://github.com/jarro2783/cxxopts.git
-    GIT_TAG ${CXXOPTS_TAG}
-    DEPENDS libzmq core
-    CONFIGURE_COMMAND ""
-    BUILD_COMMAND ""
-    INSTALL_COMMAND ""
-    TEST_COMMAND "")
-  add_external_library(libcxxopts INTERFACE
-    DEPENDS libcxxopts_ext
-    INCLUDE_DIR "src/libcxxopts_ext/include/")
+  require_external(libzmq)
+  require_external(libcppzmq)
+  require_external(libcxxopts)
 
   # Glob remote console files.
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")

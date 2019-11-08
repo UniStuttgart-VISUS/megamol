@@ -39,7 +39,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   file(GLOB_RECURSE cuda_helpers RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/helper_includes/*.h")
   file(GLOB cuda_cufft_binaries "${CUDA_COMPILER_DIRECTORY}/cufft*.dll")
 
-  # Set language to CUDA for respective files.
+  # Set language to CUDA for respective files
   set_source_files_properties(cuda_source_files PROPERTIES LANGUAGE CUDA)
 
   # Remove all items contained in the cuda_helpers from the normal headers
