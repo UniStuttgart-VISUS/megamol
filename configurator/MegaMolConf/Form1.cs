@@ -424,27 +424,6 @@ namespace MegaMolConf {
                         tabViews.Cursor = Cursors.Default;
                     }
                     break;
-                case (Keys.Control | Keys.E):   // shortcut to get into module search
-                    moduleFilterBox.Select();
-                    moduleFilterBox.SelectAll();
-                    break;
-                case (Keys.Control | Keys.N):
-                    btnNewProject.PerformClick();
-                    break;
-                case (Keys.Control | Keys.W):
-                    CloseProjectTab(tabViews.SelectedTab);
-                    break;
-                case (Keys.Control | Keys.Down):    // skip next 4 items downwards
-                    try {
-                        lbModules.SelectedIndex += 4;
-                    } catch {}
-                    break;
-                case (Keys.Control | Keys.Up):    // skip next 4 items upwards
-                    try {
-                        lbModules.SelectedIndex -= 4;
-                    }
-                    catch { }
-                    break;
             } 
             return base.ProcessCmdKey(ref msg, keyData);
         }
@@ -816,99 +795,6 @@ namespace MegaMolConf {
             }
             resizePanel();
             updateFiltered();
-            RefreshCurrent();
-        }
-
-        private void lbModules_EnterKeyPress(object sender, KeyPressEventArgs e)
-        {
-            bool enterIsPressed = e.KeyChar == ConsoleKey.Enter.GetHashCode();
-            if (lbModules.SelectedItem != null && enterIsPressed)
-            {
-                TabPage tp = tabViews.SelectedTab;
-                if (tp != null)
-                {
-                    var mod = AddModule(tp, (Data.Module)lbModules.SelectedItem);
-
-                    if (selectedCaller != null)
-                    {
-                        mod.Position = new Point(
-                            selectedModule.Position.X + selectedModule.Bounds.Width * 2,
-                            selectedModule.Position.Y
-                        );
-                        foreach (Data.CalleeSlot ce in mod.Module.CalleeSlots)
-                        {
-                            string[] compatibles = selectedCaller.CompatibleCalls.Intersect(ce.CompatibleCalls).ToArray();
-                            if (compatibles.Count() == 0) continue;
-                            string theName = compatibles[0];
-                            if (compatibles.Count() > 1)
-                            {
-                                using (StringSelector cs = new StringSelector("Select the Call you want to use", compatibles))
-                                {
-                                    cs.StartPosition = FormStartPosition.Manual;
-                                    Point p = PointToScreen(mod.Position);
-                                    cs.Location = p;
-                                    if (cs.ShowDialog(this) == DialogResult.Cancel)
-                                    {
-                                        SelectItem((GraphicalConnection)null);
-                                        RefreshCurrent();
-                                        return;
-                                    }
-                                    theName = cs.SelectedItem;
-                                }
-                            }
-                            GraphicalConnection gc = new GraphicalConnection(selectedModule, mod, selectedCaller, ce, FindCallByName(theName));
-                            // does the callerslot already have a connection? erase it
-                            foreach (GraphicalConnection gtemp in tabConnections[tp])
-                            {
-                                if (gtemp.src.Equals(selectedModule) && selectedCaller.Equals(gtemp.srcSlot))
-                                {
-                                    tabConnections[tp].Remove(gtemp);
-                                    break;
-                                }
-                            }
-                            tabConnections[tp].Add(gc);
-                            break;
-                        }
-                    }
-                    if (selectedCallee != null)
-                    {
-                        mod.Position = new Point(
-                            selectedModule.Position.X - selectedModule.Bounds.Width * 2,
-                            selectedModule.Position.Y
-                        );
-                        foreach (Data.CallerSlot cr in mod.Module.CallerSlots)
-                        {
-                            string[] compatibles = selectedCallee.CompatibleCalls.Intersect(cr.CompatibleCalls).ToArray();
-                            if (compatibles.Count() == 0) continue;
-                            string theName = compatibles[0];
-                            if (compatibles.Count() > 1)
-                            {
-                                using (StringSelector cs = new StringSelector("Select the Call you want to use", compatibles))
-                                {
-                                    cs.StartPosition = FormStartPosition.Manual;
-                                    Point p = PointToScreen(mod.Position);
-                                    cs.Location = p;
-                                    if (cs.ShowDialog(this) == DialogResult.Cancel)
-                                    {
-                                        SelectItem((GraphicalConnection)null);
-                                        RefreshCurrent();
-                                        return;
-                                    }
-                                    theName = cs.SelectedItem;
-                                }
-                            }
-                            GraphicalConnection gc = new GraphicalConnection(mod, selectedModule, cr, selectedCallee, FindCallByName(theName));
-                            tabConnections[tp].Add(gc);
-                            break;
-                        }
-                    }
-
-                    SelectItem(mod);
-                    propertyGrid1.SelectedObject = new GraphicalModuleDescriptor(selectedModule);
-                }
-            }
-            resizePanel();
-            //updateFiltered();
             RefreshCurrent();
         }
 
