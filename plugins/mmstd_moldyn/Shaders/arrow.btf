@@ -3,11 +3,10 @@
     <include file="common"/>
     <include file="bitflags"/>
 
-    <shader name="vertex">
-        <snippet type="version">120</snippet>
+  <shader name="vertex">
+        <snippet type="version">130</snippet>
         <snippet type="string">
-            #extension GL_EXT_gpu_shader4 : enable
-            #extension GL_ARB_gpu_shader5 : enable
+#extension GL_EXT_gpu_shader4 : enable
         </snippet>
         <snippet name="common::defines"/>
         <snippet name="attributes" type="string">
@@ -50,7 +49,6 @@ varying vec4 objPos;
 varying vec3 rotMatT0;
 varying vec3 rotMatT1;
 varying vec3 rotMatT2;
-varying mat3 rotMatIT;
 flat varying uint discardFrag;
 ]]>
         </snippet>
@@ -115,9 +113,6 @@ void main(void) {
     rotMatT1 = vec3(ttmp1.y, ttmp2.y, ttmp3.y);
     rotMatT2 = vec3(ttmp1.z, ttmp2.z, ttmp3.z);
 
-    rotMatIT = mat3(rotMatT0, rotMatT1, rotMatT2);
-    rotMatIT = transpose(rotMatIT);
-
 //    vec4 pos = inPos;
 //    pos.xyz += cor.x * rotMatT1 + cor.y * rotMatT2;
 //    pos = MVP * pos;
@@ -131,9 +126,8 @@ void main(void) {
     camPos.w = 1.0;
 
     // calculate light position in glyph space
-    //lightPos = MVinv * gl_LightSource[0].position - inPos; // note: w is bullshit now!
-    //lightPos.xyz = rotMatT0 * lightPos.x + rotMatT1 * lightPos.y + rotMatT2 * lightPos.z;
-    //lightPos = MVtransp * gl_LightSource[0].position; // transpose of inverse inverse -> directional light
+    lightPos = gl_ModelViewMatrixInverse * gl_LightSource[0].position - inPos; // note: w is bullshit now!
+    lightPos.xyz = rotMatT0 * lightPos.x + rotMatT1 * lightPos.y + rotMatT2 * lightPos.z;
 
     objPos = inPos;
 
@@ -282,17 +276,17 @@ void main(void) {
         </snippet>
     </shader>
 
-    <shader name="fragment">
-        <snippet type="version">120</snippet>
-        <snippet type="string">
-            #extension GL_EXT_gpu_shader4 : enable
-        </snippet>
-        <snippet name="common::defines"/>
-        <snippet name="vertex::attributes"/>
-        <snippet name="vertex::varyings"/>
-        <snippet name="common::lighting::simple"/>
-        <snippet type="string">
-            <![CDATA[
+  <shader name="fragment">
+    <snippet type="version">130</snippet>
+    <snippet type="string">
+#extension GL_EXT_gpu_shader4 : enable
+    </snippet>
+    <snippet name="common::defines"/>
+    <snippet name="vertex::attributes"/>
+    <snippet name="vertex::varyings"/>
+    <snippet name="common::lighting::simple"/>
+    <snippet type="string">
+      <![CDATA[
 void main(void) {
     vec4 coord;
     vec3 ray, tmp;
@@ -403,11 +397,8 @@ void main(void) {
 
     // phong lighting with directional light
 	//gl_FragColor = vec4(color.rgb, 1.0);
-    normal = rotMatIT * normal;
-    ray = rotMatIT * ray;
-    gl_FragColor = vec4(LocalLighting(ray, normal, lightDir.xyz, color), 1.0);
+    gl_FragColor = vec4(LocalLighting(ray, normal, lightPos.xyz, color), 1.0);
     gl_FragColor.rgb = (0.75 * gl_FragColor.rgb) + (0.25 * color);
-    //gl_FragColor.rgb = normal;
 
 
     // calculate depth
