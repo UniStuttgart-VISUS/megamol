@@ -36,10 +36,10 @@ public:
             retval = 0x8229;
             break;
         case RGB8:
-            retval = 0x1907;
+            retval = 0x8051;
             break;
         case RGBA8:
-            retval = 0x1908;
+            retval = 0x8058;
             break;
         default:
             break;
