@@ -1,7 +1,7 @@
 /*
- * EllipsoidRenderer.cpp
+ * GlyphRenderer.cpp
  *
- * Copyright (C) 2008-2015 by VISUS (Universitaet Stuttgart)
+ * Copyright (C) 2019 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 
@@ -83,6 +83,7 @@ bool GlyphRenderer::create(void) {
     // retVal = retVal && this->makeShader("glyph::ellipsoid_vertex", "glyph::ellipsoid_fragment",
     // this->ellipsoidShader);
     retVal = retVal && this->makeShader("glyph::box_vertex", "glyph::box_fragment", this->boxShader);
+    retVal = retVal && this->makeShader("glyph::ellipsoid_vertex", "glyph::ellipsoid_fragment", this->ellipsoidShader);
 
     glEnable(GL_TEXTURE_1D);
     glGenTextures(1, &this->greyTF);
@@ -312,7 +313,7 @@ bool GlyphRenderer::Render(core::view::CallRender3D_2& call) {
     bool rightEye = (Eye == core::thecam::Eye::right);
 
     // todo...
-    glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
+    //glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
@@ -330,27 +331,6 @@ bool GlyphRenderer::Render(core::view::CallRender3D_2& call) {
     glm::mat4 mvp_matrix = p_matrix * mv_matrix;
     glm::mat4 mvp_matrix_i = glm::inverse(mvp_matrix);
     glm::mat4 mv_matrix_i = glm::inverse(mv_matrix);
-
-    //this->GetLights();
-    //glm::vec4 light = {0.0f, 0.0f, 0.0f, 0.0f};
-    //if (this->lightMap.size() != 1) {
-    //    vislib::sys::Log::DefaultLog.WriteWarn(
-    //        "GlyphRenderer: Only one single directional light source is supported by this renderer");
-    //} else {
-    //    if (this->lightMap.begin()->second.lightType == view::light::DISTANTLIGHT) {
-    //        const auto dir_light = this->lightMap.begin()->second;
-    //        if (dir_light.dl_eye_direction) {
-    //            light = glm::normalize(CamPos);
-    //        } else if (dir_light.dl_direction.size() == 3) {
-    //            light[0] = dir_light.dl_direction[0];
-    //            light[1] = dir_light.dl_direction[1];
-    //            light[2] = dir_light.dl_direction[2];
-    //        }
-    //    } else {
-    //        vislib::sys::Log::DefaultLog.WriteWarn(
-    //            "GlyphRenderer: Only one single directional light source is supported by this renderer");
-    //    }
-    //}
 
     vislib::graphics::gl::GLSLShader* shader;
     switch (this->glyphParam.Param<core::param::EnumParam>()->Value()) {
@@ -380,6 +360,7 @@ bool GlyphRenderer::Render(core::view::CallRender3D_2& call) {
     //glUniform4fv(shader->ParameterLocation("light"), 1, glm::value_ptr(light));
     glUniform4fv(shader->ParameterLocation("cam"), 1, glm::value_ptr(CamPos));
     glUniform1f(shader->ParameterLocation("scaling"), this->scaleParam.Param<param::FloatParam>()->Value());
+    //glUniform2f(shader->ParameterLocation("far_near"), cam.far_clipping_plane(), cam.near_clipping_plane());
 
     glUniform1f(shader->ParameterLocation("colorInterpolation"),
         this->colorInterpolationParam.Param<param::FloatParam>()->Value());
@@ -392,6 +373,9 @@ bool GlyphRenderer::Render(core::view::CallRender3D_2& call) {
 
     std::shared_ptr<FlagStorage::FlagVectorType> flags;
     unsigned int fal = 0;
+    if (use_flags || use_clip) {
+        glEnable(GL_CLIP_DISTANCE0);
+    }
     if (use_flags) {
         (*flagsc)(core::FlagCall::CallMapFlags);
         flagsc->validateFlagsCount(num_total_glyphs);
@@ -418,6 +402,9 @@ bool GlyphRenderer::Render(core::view::CallRender3D_2& call) {
             clipc->GetPlane().Normal().Z(), -glm::dot(pt, nr)};
 
         glUniform4fv(shader->ParameterLocation("clip_data"), 1, clip_data.data());
+        auto c = clipc->GetColour();
+        glUniform4f(shader->ParameterLocation("clip_color"), static_cast<float>(c[0]) / 255.f,
+            static_cast<float>(c[1]) / 255.f, static_cast<float>(c[2]) / 255.f, static_cast<float>(c[3]) / 255.f);
     }
 
     for (unsigned int i = 0; i < epdc->GetParticleListCount(); i++) {
@@ -505,7 +492,6 @@ bool GlyphRenderer::Render(core::view::CallRender3D_2& call) {
         auto& the_quat = direction_buffers[i];
         auto& the_rad = radius_buffers[i];
         auto& the_col = color_buffers[i];
-        // TODO clip plane
 
         const auto numChunks = the_pos.GetNumChunks();
         for (GLuint x = 0; x < numChunks; ++x) {
@@ -529,14 +515,15 @@ bool GlyphRenderer::Render(core::view::CallRender3D_2& call) {
                 glUniform1ui(shader->ParameterLocation("flag_offset"), curr_glyph_offset);
             }
 
-
             switch (this->glyphParam.Param<core::param::EnumParam>()->Value()) {
             case Glyph::BOX:
                 // https://stackoverflow.com/questions/28375338/cube-using-single-gl-triangle-strip
-                glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 14, static_cast<GLsizei>(actualItems));
+                //glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 14, static_cast<GLsizei>(actualItems));
+                // but just drawing the front-facing triangles, that's better
+                glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, static_cast<GLsizei>(actualItems) * 3);
                 break;
             case Glyph::ELLIPSOID:
-                glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(actualItems));
+                glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, static_cast<GLsizei>(actualItems) * 3);
                 break;
             case Glyph::ARROW:
                 glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(actualItems));
@@ -558,6 +545,9 @@ bool GlyphRenderer::Render(core::view::CallRender3D_2& call) {
     }
 
     // todo clean up state
+    if (use_clip || use_flags) {
+        glDisable(GL_CLIP_DISTANCE0);
+    }
     glDisable(GL_DEPTH_TEST);
 
     return true;
