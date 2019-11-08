@@ -65,20 +65,32 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
         auto probe_cnt = probes->getProbeCount();
 
         std::vector<glowl::DrawElementsCommand> draw_commands;
-        std::vector<glm::vec4> glpyh_positions;
+
+        struct PerGlyphData {
+            glm::vec4 position;
+            GLuint64 texture_handle;
+            float padding0;
+            float padding1;
+        };
+
+        std::vector<PerGlyphData> glyph_data;
 
         draw_commands.reserve(probe_cnt);
-        glpyh_positions.reserve(probe_cnt);
+        glyph_data.resize(probe_cnt);
 
         for (int probe_idx = 0; probe_idx < probe_cnt; ++probe_idx) {
             try {
                 auto probe = probes->getProbe<probe::FloatProbe>(probe_idx);
 
-                glpyh_positions.push_back(glm::vec4(
+                glyph_data[probe_idx].position = glm::vec4(
                     probe.m_position[0] + probe.m_direction[0] * probe.m_begin, 
                     probe.m_position[1] + probe.m_direction[1] * probe.m_begin, 
                     probe.m_position[2] + probe.m_direction[2] * probe.m_begin,
-                    1.0f));
+                    1.0f);
+                glyph_data[probe_idx].texture_handle =
+                    gpu_mtl_storage->getMaterials().front().textures[probe_idx]->getTextureHandle();
+                
+                gpu_mtl_storage->getMaterials().front().textures[probe_idx]->makeResident();
 
                 glowl::DrawElementsCommand draw_command;
                 draw_command.base_instance = 0;
@@ -95,7 +107,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
         }
 
         auto const& shader = gpu_mtl_storage->getMaterials().front().shader_program;
-        rt_collection->addRenderTasks(shader, m_billboard_dummy_mesh, draw_commands, glpyh_positions);
+        rt_collection->addRenderTasks(shader, m_billboard_dummy_mesh, draw_commands, glyph_data);
     }
 
 

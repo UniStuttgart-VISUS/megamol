@@ -47,10 +47,10 @@ protected:
     bool getMetaDataCallback(core::Call& caller);
 
 private:
-    typedef vislib::graphics::gl::GLSLShader GLSLShader;
+    typedef glowl::GLSLProgram ShaderProgram;
 
     /** Shader program for deferred shading pass */
-    std::unique_ptr<GLSLShader> m_billboard_glyph_prgm;
+    std::shared_ptr<ShaderProgram> m_billboard_glyph_prgm;
 
     core::CallerSlot m_glyph_images_slot;
     size_t m_glyph_images_slot_cached_hash;
