@@ -13,14 +13,6 @@ megamol::archvis::MSMConvexHullDataSource::MSMConvexHullDataSource()
 
 megamol::archvis::MSMConvexHullDataSource::~MSMConvexHullDataSource() {}
 
-bool megamol::archvis::MSMConvexHullDataSource::create() { 
-    m_gpu_meshes = std::make_shared<mesh::GPUMeshCollection>();
-
-    m_bbox = {-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f};
-
-    return true;
-}
-
 bool megamol::archvis::MSMConvexHullDataSource::getDataCallback(core::Call& caller) { 
     mesh::CallGPUMeshData* mc = dynamic_cast<mesh::CallGPUMeshData*>(&caller);
     if (mc == NULL) return false;
@@ -62,3 +54,5 @@ bool megamol::archvis::MSMConvexHullDataSource::getDataCallback(core::Call& call
 
     return true;
 }
+
+bool megamol::archvis::MSMConvexHullDataSource::getMetaDataCallback(core::Call& caller) { return false; }
