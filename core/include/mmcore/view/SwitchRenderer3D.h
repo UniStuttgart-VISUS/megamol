@@ -12,9 +12,9 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/CallerSlot.h"
-#include "CallRender3D_2.h"
+#include "CallRender3D.h"
 #include "mmcore/param/ParamSlot.h"
-#include "Renderer3DModule_2.h"
+#include "Renderer3DModule.h"
 #include "vislib/forceinline.h"
 
 
@@ -26,7 +26,7 @@ namespace view {
     /**
      * A simple switch between two renderer 3d modules
      */
-    class SwitchRenderer3D : public Renderer3DModule_2 {
+    class SwitchRenderer3D : public Renderer3DModule {
     public:
 
         /**
@@ -94,7 +94,7 @@ namespace view {
          *
          * @return The return value of the function.
          */
-        virtual bool GetExtents(CallRender3D_2& call);
+        virtual bool GetExtents(Call& call);
 
         /**
          * The render callback.
@@ -103,7 +103,7 @@ namespace view {
          *
          * @return The return value of the function.
          */
-        virtual bool Render(CallRender3D_2& call);
+        virtual bool Render(Call& call);
 
     private:
 
@@ -131,7 +131,7 @@ namespace view {
          * @return The call to the selected renderer or NULL if no renderer is
          *         available
          */
-        VISLIB_FORCEINLINE CallRender3D_2 *callToRenderer(view::CallRender3D_2 *src);
+        VISLIB_FORCEINLINE CallRender3D *callToRenderer(view::CallRender3D *src);
 
         /** Call to the first renderer */
         CallerSlot renderer1Slot;

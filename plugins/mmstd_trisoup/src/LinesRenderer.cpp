@@ -10,6 +10,7 @@
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "LinesRenderer.h"
 #include "geometry_calls/LinesDataCall.h"
+#include "mmcore/view/CallRender3D.h"
 //#include <cmath>
 
 using namespace megamol;
@@ -18,7 +19,7 @@ using namespace megamol;
 /*
  * trisoup::LinesRenderer::LinesRenderer
  */
-trisoup::LinesRenderer::LinesRenderer(void) : core::view::Renderer3DModule_2(),
+trisoup::LinesRenderer::LinesRenderer(void) : core::view::Renderer3DModule(),
         getDataSlot("getdata", "Connects to the data source") {
 
     this->getDataSlot.SetCompatibleCall<megamol::geocalls::LinesDataCallDescription>();
@@ -47,17 +48,20 @@ bool trisoup::LinesRenderer::create(void) {
 /*
  * trisoup::LinesRenderer::GetExtents
  */
-bool trisoup::LinesRenderer::GetExtents(core::view::CallRender3D_2& call) {
+bool trisoup::LinesRenderer::GetExtents(core::Call& call) {
+    core::view::CallRender3D *cr = dynamic_cast<core::view::CallRender3D*>(&call);
+    if (cr == NULL) return false;
 
     megamol::geocalls::LinesDataCall *ldc = this->getDataSlot.CallAs<megamol::geocalls::LinesDataCall>();
-    if (ldc != nullptr) ldc->SetFrameID(static_cast<int>(call.Time()), true);
+    if (ldc != nullptr) ldc->SetFrameID(static_cast<int>(cr->Time()), true);
     if ((ldc != NULL) && ((*ldc)(1))) {
-        call.SetTimeFramesCount(ldc->FrameCount());
-        call.AccessBoundingBoxes() = ldc->AccessBoundingBoxes();
+        cr->SetTimeFramesCount(ldc->FrameCount());
+        cr->AccessBoundingBoxes() = ldc->AccessBoundingBoxes();
+        cr->AccessBoundingBoxes().MakeScaledWorld(1.0f); // lol-o-mat
 
     } else {
-        call.SetTimeFramesCount(1);
-        call.AccessBoundingBoxes().Clear();
+        cr->SetTimeFramesCount(1);
+        cr->AccessBoundingBoxes().Clear();
 
     }
 
@@ -76,32 +80,19 @@ void trisoup::LinesRenderer::release(void) {
 /*
  * trisoup::LinesRenderer::Render
  */
-bool trisoup::LinesRenderer::Render(core::view::CallRender3D_2& call) {
-
-	core::view::Camera_2 cam;
-    call.GetCamera(cam);
-    cam_type::snapshot_type snapshot;
-    cam_type::matrix_type viewTemp, projTemp;
-    cam.calc_matrices(snapshot, viewTemp, projTemp, core::thecam::snapshot_content::all);
-    glm::mat4 proj = projTemp;
-    glm::mat4 view = viewTemp;
-
-    ::glMatrixMode(GL_PROJECTION);
-    ::glPushMatrix();
-    ::glLoadMatrixf(glm::value_ptr(proj));
-
-    ::glMatrixMode(GL_MODELVIEW);
-    ::glPushMatrix();
-    ::glLoadMatrixf(glm::value_ptr(view));
+bool trisoup::LinesRenderer::Render(core::Call& call) {
+    core::view::CallRender3D *cr = dynamic_cast<core::view::CallRender3D*>(&call);
+    if (cr == NULL) return false;
 
     ::glDisable(GL_TEXTURE_2D);
     ::glDisable(GL_LINE_SMOOTH);
     ::glDisable(GL_BLEND);
+    ::glDisable(GL_LIGHTING);
     ::glEnable(GL_DEPTH_TEST);
     ::glLineWidth(1.0f);
 
     megamol::geocalls::LinesDataCall *ldc = this->getDataSlot.CallAs<megamol::geocalls::LinesDataCall>();
-    if (ldc != nullptr) ldc->SetFrameID(static_cast<int>(call.Time()), true);
+    if (ldc != nullptr) ldc->SetFrameID(static_cast<int>(cr->Time()), true);
     if ((ldc == NULL) || (!(*ldc)(0))) return false;
 
     bool useColourArray = false;
@@ -174,11 +165,6 @@ bool trisoup::LinesRenderer::Render(core::view::CallRender3D_2& call) {
 
     if (useColourArray) ::glDisableClientState(GL_COLOR_ARRAY);
     ::glDisableClientState(GL_VERTEX_ARRAY);
-
-	::glMatrixMode(GL_PROJECTION);
-    ::glPopMatrix();
-    ::glMatrixMode(GL_MODELVIEW);
-    ::glPopMatrix();
 
     return true;
 }
