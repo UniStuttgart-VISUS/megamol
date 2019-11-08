@@ -35,12 +35,13 @@
 #include "misc/ParticleWorker.h"
 
 #include "rendering/BrickStatsRenderer.h"
+#include "rendering/EllipsoidRenderer.h"
+#include "rendering/GlyphRenderer.h"
 #include "rendering/DataGridder.h"
 #include "rendering/GrimRenderer.h"
 #include "rendering/SphereRenderer.h"
 #include "rendering/ArrowRenderer.h"
 #include "rendering/ParticleGridDataCall.h"
-#include "rendering/EllipsoidRenderer.h"
 
 
 /*
@@ -135,13 +136,14 @@ namespace {
             this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::io::TclMolSelectionLoader>();
             this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::BrickStatsDataSource>();
             this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::rendering::BrickStatsRenderer>();
+            this->module_descriptions.RegisterAutoDescription<::megamol::stdplugin::moldyn::rendering::EllipsoidRenderer>();
+            this->module_descriptions.RegisterAutoDescription<::megamol::stdplugin::moldyn::rendering::GlyphRenderer>();
 			this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::rendering::DataGridder>();
 			this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::rendering::GrimRenderer>();
             this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::rendering::ArrowRenderer>();
             this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::rendering::SphereRenderer>();
 			this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::io::MMPGDDataSource>();
 			this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::io::MMPGDWriter>();
-            this->module_descriptions.RegisterAutoDescription<::megamol::stdplugin::moldyn::rendering::EllipsoidRenderer>();
             // register calls here:
             this->call_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::BrickStatsCall>();
 			this->call_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::rendering::ParticleGridDataCall>();

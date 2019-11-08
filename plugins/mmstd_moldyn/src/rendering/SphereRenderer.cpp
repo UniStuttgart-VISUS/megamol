@@ -1293,7 +1293,7 @@ bool SphereRenderer::renderSSBO(view::CallRender3D_2* cr3d, MultiParticleDataCal
                     glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBOvertexBindingPoint, bufA.GetHandle(x), 0,
                         bufA.GetMaxNumItemsPerChunk() * vertStride);
                     glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(actualItems));
-                    bufA.SignalCompletion();
+                    //bufA.SignalCompletion();
                 }
             } else {
                 const GLuint numChunks = this->streamer.SetDataWithSize(
@@ -1342,8 +1342,8 @@ bool SphereRenderer::renderSSBO(view::CallRender3D_2* cr3d, MultiParticleDataCal
                     glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBOcolorBindingPoint, colA.GetHandle(x),
                         0, colA.GetMaxNumItemsPerChunk() * colStride);
                     glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(actualItems));
-                    bufA.SignalCompletion();
-                    colA.SignalCompletion();
+                    //bufA.SignalCompletion();
+                    //colA.SignalCompletion();
                 }
             } else {
                 const GLuint numChunks = this->streamer.SetDataWithSize(
