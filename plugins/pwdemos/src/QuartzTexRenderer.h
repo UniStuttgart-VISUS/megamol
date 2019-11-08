@@ -103,11 +103,6 @@ namespace demos {
         /** Shows/Hides the axes (x and y) of the clipping plane */
         core::param::ParamSlot showClipAxesSlot;
 
-		// SSBO for multiple lights
-        GLuint ssboLights;
-
-        // vbo
-        GLuint vbo;
     };
 
 } /* end namespace demos */

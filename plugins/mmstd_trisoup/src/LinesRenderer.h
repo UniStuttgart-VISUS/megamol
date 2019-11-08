@@ -9,7 +9,7 @@
 #define MEGAMOL_TRISOUP_LINESRENDERER_H_INCLUDED
 #pragma once
 
-#include "mmcore/view/Renderer3DModule_2.h"
+#include "mmcore/view/Renderer3DModule.h"
 #include "mmcore/CallerSlot.h"
 
 
@@ -19,7 +19,7 @@ namespace trisoup {
     /**
      * Mesh-based renderer for bézier curve tubes
      */
-    class LinesRenderer : public core::view::Renderer3DModule_2 {
+    class LinesRenderer : public core::view::Renderer3DModule {
     public:
 
         /**
@@ -73,7 +73,7 @@ namespace trisoup {
          *
          * @return The return value of the function.
          */
-        virtual bool GetExtents(core::view::CallRender3D_2& call);
+        virtual bool GetExtents(core::Call& call);
 
         /**
          * Implementation of 'Release'.
@@ -87,7 +87,7 @@ namespace trisoup {
          *
          * @return The return value of the function.
          */
-        virtual bool Render(core::view::CallRender3D_2& call);
+        virtual bool Render(core::Call& call);
 
     private:
 
