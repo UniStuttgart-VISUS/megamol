@@ -38,7 +38,7 @@ if(BUILD_FLOWVIS_PLUGIN)
   # Set target naming conventions for different build types
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS _ENABLE_EXTENDED_ALIGNED_STORAGE ${tpf_compile_definitions})
-  target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src" PRIVATE ${CGAL_INCLUDE_DIRS} ${CGAL_3RD_PARTY_INCLUDE_DIRS})
+  target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src" "3rdparty" PRIVATE ${CGAL_INCLUDE_DIRS} ${CGAL_3RD_PARTY_INCLUDE_DIRS})
   target_link_libraries(${PROJECT_NAME} PRIVATE core mmstd_datatools mesh compositing_gl tpf flowvis_streamlines_cuda)
 
   # Installation rules for generated files

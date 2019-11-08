@@ -8,6 +8,8 @@
 
 #include "flowvis/integrator.h"
 
+#include "tsp/tsp.h"
+
 #include "mmcore/Call.h"
 #include "mmcore/DirectDataWriterCall.h"
 #include "mmcore/param/BoolParam.h"
@@ -267,14 +269,19 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
         tpf::data::grid<float, float, 2, 2> vector_field("vector_field", extent, *this->vectors,
             std::move(cell_coordinates), std::move(node_coordinates), std::move(cell_sizes));
 
-        // Get cells in which there is a critical point
-        const auto& critical_points = *this->critical_points;
+        // Get critical points
+        std::vector<Eigen::Vector2f> critical_points;
 
+        for (std::size_t cp_index = 0; cp_index < this->critical_points->size(); cp_index += 2) {
+            critical_points.push_back(
+                Eigen::Vector2f((*this->critical_points)[cp_index], (*this->critical_points)[cp_index + 1]));
+        }
+
+        // Get cells in which there is a critical point
         std::vector<tpf::data::grid<float, float, 2, 2>::coords_t> critical_point_cells;
 
-        for (std::size_t cp_index = 0; cp_index < critical_points.size(); cp_index += 2) {
-            const auto cell =
-                vector_field.find_cell(Eigen::Vector2f(critical_points[cp_index], critical_points[cp_index + 1]));
+        for (const auto& critical_point : critical_points) {
+            const auto cell = vector_field.find_cell(critical_point);
 
             if (cell) {
                 critical_point_cells.push_back(*cell);
@@ -284,32 +291,14 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
         // Create seed lines
         std::vector<std::pair<Eigen::Vector2f, Eigen::Vector2f>> seed_lines;
 
-        // TODO
-        // DEBUG
+        const auto polygon_order = thirdparty::tsp::Genetic(std::make_shared<thirdparty::tsp::Graph>(critical_points), 10, 1000, 5).run();
 
-        seed_lines.push_back(
-            std::make_pair(Eigen::Vector2f(0.0701957f, 0.00664742f), Eigen::Vector2f(0.0825285f, 0.0217574f)));
-        seed_lines.push_back(
-            std::make_pair(Eigen::Vector2f(0.0825285f, 0.0217574f), Eigen::Vector2f(0.0994355f, 0.0356891f)));
-        seed_lines.push_back(
-            std::make_pair(Eigen::Vector2f(0.0994355f, 0.0356891f), Eigen::Vector2f(0.0318712f, 0.00745418f)));
-        seed_lines.push_back(
-            std::make_pair(Eigen::Vector2f(0.0318712f, 0.00745418f), Eigen::Vector2f(0.00214084f, 0.0429468f)));
-        seed_lines.push_back(
-            std::make_pair(Eigen::Vector2f(0.00214084f, 0.0429468f), Eigen::Vector2f(0.0441256f, 0.0246534f)));
-        seed_lines.push_back(
-            std::make_pair(Eigen::Vector2f(0.0441256f, 0.0246534f), Eigen::Vector2f(0.0760664f, 0.0650472f)));
-        seed_lines.push_back(
-            std::make_pair(Eigen::Vector2f(0.0760664f, 0.0650472f), Eigen::Vector2f(0.00313739f, 0.0583816f)));
-        seed_lines.push_back(
-            std::make_pair(Eigen::Vector2f(0.00313739f, 0.0583816f), Eigen::Vector2f(0.0293156f, 0.0776436f)));
-        seed_lines.push_back(
-            std::make_pair(Eigen::Vector2f(0.0293156f, 0.0776436f), Eigen::Vector2f(0.00848707f, 0.0989702f)));
-        seed_lines.push_back(std::make_pair(Eigen::Vector2f(0.00848707f, 0.0989702f), Eigen::Vector2f(0.0f, 0.1f)));
+        for (std::size_t cp_index = 0; cp_index < polygon_order.size() - 1; ++cp_index) {
+            seed_lines.push_back(
+                std::make_pair(critical_points[polygon_order[cp_index]], critical_points[polygon_order[cp_index + 1]]));
+        }
 
-        //seed_lines.push_back(std::make_pair(Eigen::Vector2f(-2.0f, 0.0f), Eigen::Vector2f(0.0f, 0.0f)));
-
-        // DEBUG
+        // TODO: connect last or first critical point with the nearest boundary
 
         const auto cp_offset = this->critical_point_offset.Param<core::param::FloatParam>()->Value();
 

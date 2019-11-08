@@ -114,7 +114,7 @@ namespace megamol
             {
                 (*input_renderer) = call;
             }
-            
+
             // Initialize renderer by creating shaders and buffers
             if (!this->render_data.initialized)
             {
