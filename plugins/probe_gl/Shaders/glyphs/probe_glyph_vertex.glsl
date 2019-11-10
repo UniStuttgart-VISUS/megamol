@@ -4,9 +4,9 @@
 struct MeshShaderParams
 {
     vec4 glpyh_position;
-    sampler2D texture_handle;
+    uvec2 texture_handle;
+    float slice_idx;
     float padding0;
-    float padding1;
 };
 
 layout(std430, binding = 0) readonly buffer MeshShaderParamsBuffer { MeshShaderParams[] mesh_shader_params; };
@@ -14,8 +14,8 @@ layout(std430, binding = 0) readonly buffer MeshShaderParamsBuffer { MeshShaderP
 uniform mat4 view_mx;
 uniform mat4 proj_mx;
 
-flat out layout(location = 0) int draw_id;
-out layout(location = 1) vec2 uv_coords;
+layout(location = 0) flat out int draw_id;
+layout(location = 1) out vec2 uv_coords;
 
 void main()
 {

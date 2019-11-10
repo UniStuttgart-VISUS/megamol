@@ -75,36 +75,43 @@ bool megamol::probe_gl::ProbeBillboardGlyphMaterial::getDataCallback(core::Call&
         if (!(*ic)(0)) return false;
         auto img_data = ic->getData();
 
-        std::vector<std::shared_ptr<glowl::Texture>> textures;
+        // use first image to determine size -> assumes same size for all images
+        auto img_height = img_data->accessImages().front().height;
+        auto img_width = img_data->accessImages().front().width;
+        auto img_format = mesh::ImageDataAccessCollection::convertToGLInternalFormat(img_data->accessImages().front().format);
 
-        struct col_rgba {
-            unsigned char r, g, b, a = 0;
-        };
-        std::array<col_rgba, 40000> dummy_data;
-        for (auto& d : dummy_data) {
-            d.r = 255;
-            d.a = 255;
+        glowl::TextureLayout tex_layout;
+        tex_layout.width = img_width;
+        tex_layout.height = img_height;
+        tex_layout.depth = 2048;
+        tex_layout.levels = 1;
+        // TODO
+        tex_layout.format = GL_RGBA;
+        tex_layout.type = GL_UNSIGNED_BYTE;
+        // TODO
+        tex_layout.internal_format = img_format;
+
+        size_t img_cnt = img_data->accessImages().size();
+        size_t required_tx_arrays = static_cast<size_t>(std::ceil(static_cast<double>(img_cnt) / 2048.0));
+
+        std::vector<std::shared_ptr<glowl::Texture>> textures(required_tx_arrays,nullptr);
+        for (auto& tx_array : textures) {
+            auto new_tex_ptr = std::make_shared<glowl::Texture2DArray>("ProbeGlyph", tex_layout, nullptr);
+            tx_array = std::static_pointer_cast<glowl::Texture>(new_tex_ptr);
         }
 
         auto images = img_data->accessImages();
-        for (auto& img : images)
+        for (size_t i = 0; i < images.size(); ++i)
         {
-            glowl::TextureLayout tex_layout;
-            tex_layout.width = img.width;
-            tex_layout.height = img.height;
-            tex_layout.depth = 1;
-            tex_layout.levels = 1;
-            //TODO
-            tex_layout.format = GL_RGBA;
-            tex_layout.type = GL_UNSIGNED_BYTE;
-            //TODO
-            tex_layout.internal_format = mesh::ImageDataAccessCollection::convertToGLInternalFormat(img.format);
+            auto texture_idx = i / 2048;
+            auto slice_idx = i % 2048;
+            textures[texture_idx]->bindTexture();
 
-            auto new_tex_ptr = std::make_shared<glowl::Texture2D>("ProbeGlyph",tex_layout,img.data);
-            //auto new_tex_ptr = std::make_shared<glowl::Texture2D>("ProbeGlyph", tex_layout, dummy_data.data());
-
-            textures.push_back(std::static_pointer_cast<glowl::Texture>(new_tex_ptr));
+             glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, slice_idx, tex_layout.width, tex_layout.height, 1,
+                tex_layout.format,
+                tex_layout.type, images[i].data);
         }
+        glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
 
         //ToDo Clear only existing entry in collection?
         mtl_collection->clearMaterials();

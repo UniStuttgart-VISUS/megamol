@@ -69,7 +69,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
         struct PerGlyphData {
             glm::vec4 position;
             GLuint64 texture_handle;
-            float padding0;
+            float slice_idx;
             float padding1;
         };
 
@@ -88,9 +88,10 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                     probe.m_position[2] + probe.m_direction[2] * probe.m_begin,
                     1.0f);
                 glyph_data[probe_idx].texture_handle =
-                    gpu_mtl_storage->getMaterials().front().textures[probe_idx]->getTextureHandle();
+                    gpu_mtl_storage->getMaterials().front().textures[probe_idx/2048]->getTextureHandle();
+                glyph_data[probe_idx].slice_idx = probe_idx % 2048;
                 
-                gpu_mtl_storage->getMaterials().front().textures[probe_idx]->makeResident();
+                gpu_mtl_storage->getMaterials().front().textures[probe_idx/2048]->makeResident();
 
                 glowl::DrawElementsCommand draw_command;
                 draw_command.base_instance = 0;
