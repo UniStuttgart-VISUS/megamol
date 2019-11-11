@@ -8,8 +8,6 @@
 
 #include "flowvis/integrator.h"
 
-#include "tsp/tsp.h"
-
 #include "mmcore/Call.h"
 #include "mmcore/DirectDataWriterCall.h"
 #include "mmcore/param/BoolParam.h"
@@ -43,10 +41,9 @@ periodic_orbits_theisel::periodic_orbits_theisel()
     : periodic_orbits_slot("periodic_orbits", "Computed periodic orbits as line glyphs")
     , stream_surface_slot("stream_surface", "Computed stream surfaces")
     , stream_surface_values_slot("stream_surface_values", "Values for coloring the stream surfaces")
-    , seed_line_slot("seed_line", "Computed seed lines")
     , result_writer_slot("result_writer_slot", "Results writer for storing periodic orbits")
     , vector_field_slot("vector_field_slot", "Vector field input")
-    , critical_points_slot("critical_points", "Critical points input")
+    , seed_lines_slot("seed_lines", "Input seed lines for stream surfaces")
     , transfer_function("transfer_function", "Transfer function for coloring the stream surfaces")
     , integration_method("integration_method", "Method for streamline integration")
     , num_integration_steps("num_integration_steps", "Number of streamline integration steps")
@@ -60,11 +57,10 @@ periodic_orbits_theisel::periodic_orbits_theisel()
     , filter_seed_lines("filter_seed_lines", "Filter input seed lines used for computation")
     , vector_field_hash(-1)
     , vector_field_changed(false)
-    , critical_points_hash(-1)
-    , critical_points_changed(false)
+    , seed_lines_hash(-1)
+    , seed_lines_changed(false)
     , stream_surface_hash(-1)
-    , periodic_orbits_hash(-1)
-    , seed_line_hash(-1) {
+    , periodic_orbits_hash(-1) {
 
     // Connect output
     this->periodic_orbits_slot.SetCallback(glyph_data_call::ClassName(), glyph_data_call::FunctionName(0),
@@ -85,12 +81,6 @@ periodic_orbits_theisel::periodic_orbits_theisel()
         &periodic_orbits_theisel::get_stream_surface_values_extent);
     this->MakeSlotAvailable(&this->stream_surface_values_slot);
 
-    this->seed_line_slot.SetCallback(
-        glyph_data_call::ClassName(), glyph_data_call::FunctionName(0), &periodic_orbits_theisel::get_seed_lines_data);
-    this->seed_line_slot.SetCallback(glyph_data_call::ClassName(), glyph_data_call::FunctionName(1),
-        &periodic_orbits_theisel::get_seed_lines_extent);
-    this->MakeSlotAvailable(&this->seed_line_slot);
-
     this->result_writer_slot.SetCallback(core::DirectDataWriterCall::ClassName(),
         core::DirectDataWriterCall::FunctionName(0), &periodic_orbits_theisel::get_writer_callback);
     this->MakeSlotAvailable(&this->result_writer_slot);
@@ -103,8 +93,8 @@ periodic_orbits_theisel::periodic_orbits_theisel()
     this->vector_field_slot.SetCompatibleCall<vector_field_call::vector_field_description>();
     this->MakeSlotAvailable(&this->vector_field_slot);
 
-    this->critical_points_slot.SetCompatibleCall<glyph_data_call::glyph_data_description>();
-    this->MakeSlotAvailable(&this->critical_points_slot);
+    this->seed_lines_slot.SetCompatibleCall<glyph_data_call::glyph_data_description>();
+    this->MakeSlotAvailable(&this->seed_lines_slot);
 
     // Create transfer function parameters
     this->transfer_function << new core::param::TransferFunctionParam("");
@@ -152,9 +142,9 @@ void periodic_orbits_theisel::release() {}
 
 bool periodic_orbits_theisel::get_input_data() {
     auto vfc_ptr = this->vector_field_slot.CallAs<vector_field_call>();
-    auto cpc_ptr = this->critical_points_slot.CallAs<glyph_data_call>();
+    auto slc_ptr = this->seed_lines_slot.CallAs<glyph_data_call>();
 
-    if (vfc_ptr == nullptr || cpc_ptr == nullptr) {
+    if (vfc_ptr == nullptr || slc_ptr == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError(
             "The periodic_orbits_theisel module needs all input connections to be set properly");
 
@@ -162,9 +152,9 @@ bool periodic_orbits_theisel::get_input_data() {
     }
 
     auto& vfc = *vfc_ptr;
-    auto& cpc = *cpc_ptr;
+    auto& slc = *slc_ptr;
 
-    if (!(vfc(0) && cpc(0))) {
+    if (!(vfc(0) && slc(0))) {
         vislib::sys::Log::DefaultLog.WriteError("Error getting data from vector field or glyph data source");
 
         return false;
@@ -179,11 +169,12 @@ bool periodic_orbits_theisel::get_input_data() {
         this->vector_field_changed = true;
     }
 
-    if (cpc.DataHash() != this->critical_points_hash) {
-        this->critical_points = cpc.get_point_vertices();
+    if (slc.DataHash() != this->seed_lines_hash) {
+        this->seed_line_vertices = slc.get_line_vertices();
+        this->seed_line_indices = slc.get_line_indices();
 
-        this->critical_points_hash = cpc.DataHash();
-        this->critical_points_changed = true;
+        this->seed_lines_hash = slc.DataHash();
+        this->seed_lines_changed = true;
     }
 
     return true;
@@ -191,9 +182,9 @@ bool periodic_orbits_theisel::get_input_data() {
 
 bool periodic_orbits_theisel::get_input_extent() {
     auto vfc_ptr = this->vector_field_slot.CallAs<vector_field_call>();
-    auto cpc_ptr = this->critical_points_slot.CallAs<glyph_data_call>();
+    auto slc_ptr = this->seed_lines_slot.CallAs<glyph_data_call>();
 
-    if (vfc_ptr == nullptr || cpc_ptr == nullptr) {
+    if (vfc_ptr == nullptr || slc_ptr == nullptr) {
         vislib::sys::Log::DefaultLog.WriteError(
             "The periodic_orbits_theisel module needs all input connections to be set properly");
 
@@ -201,9 +192,9 @@ bool periodic_orbits_theisel::get_input_extent() {
     }
 
     auto& vfc = *vfc_ptr;
-    auto& cpc = *cpc_ptr;
+    auto& slc = *slc_ptr;
 
-    if (!(vfc(1) && cpc(1))) {
+    if (!(vfc(1) && slc(1))) {
         vislib::sys::Log::DefaultLog.WriteError("Error getting extents from vector field or glyph data source");
 
         return false;
@@ -220,7 +211,7 @@ bool periodic_orbits_theisel::get_input_extent() {
 }
 
 bool periodic_orbits_theisel::compute_periodic_orbits() {
-    if (this->vector_field_changed || this->critical_points_changed || this->direction.IsDirty() ||
+    if (this->vector_field_changed || this->seed_lines_changed || this->direction.IsDirty() ||
         this->integration_method.IsDirty() || this->integration_timestep.IsDirty() ||
         this->max_integration_error.IsDirty() || this->num_integration_steps.IsDirty() ||
         this->num_subdivisions.IsDirty() || this->compute_intersections.IsDirty() ||
@@ -239,27 +230,64 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
         // Create grid containing the vector field
         const auto vector_field = create_grid();
 
-        // Get critical points
-        std::vector<Eigen::Vector2f> critical_points;
+        // Get seed lines
+        std::vector<std::pair<Eigen::Vector2f, Eigen::Vector2f>> seed_lines;
+        seed_lines.reserve(this->seed_line_indices->size() / 2);
 
-        for (std::size_t cp_index = 0; cp_index < this->critical_points->size(); cp_index += 2) {
-            critical_points.push_back(
-                Eigen::Vector2f((*this->critical_points)[cp_index], (*this->critical_points)[cp_index + 1]));
+        for (std::size_t point_index = 0; point_index < this->seed_line_indices->size(); point_index += 2) {
+            const Eigen::Vector2f start_point(
+                (*this->seed_line_vertices)[2 * point_index], (*this->seed_line_vertices)[2 * point_index + 1]);
+            const Eigen::Vector2f end_point((*this->seed_line_vertices)[2 * (point_index + 1)],
+                (*this->seed_line_vertices)[2 * (point_index + 1) + 1]);
+
+            seed_lines.push_back(std::make_pair(start_point, end_point));
         }
 
-        // Get cells in which there is a critical point
-        std::vector<tpf::data::grid<float, float, 2, 2>::coords_t> critical_point_cells;
+        // Create seed line between last critical point and the nearest domain boundary
+        const auto grid_origin = vector_field.get_node_coordinates(tpf::data::coords2_t(0, 0));
+        const auto grid_diagonal = vector_field.get_node_coordinates(
+            tpf::data::coords2_t(vector_field.get_extent()[0].second, vector_field.get_extent()[1].second));
 
-        for (const auto& critical_point : critical_points) {
-            const auto cell = vector_field.find_cell(critical_point);
+        const Eigen::Vector2f last_critical_point(
+            (*this->seed_line_vertices)[2 * (this->seed_line_indices->size() - 1)],
+            (*this->seed_line_vertices)[2 * (this->seed_line_indices->size() - 1) + 1]);
 
-            if (cell) {
-                critical_point_cells.push_back(*cell);
+        const auto distance_left = last_critical_point.x() - grid_origin.x();
+        const auto distance_right = grid_diagonal.x() - last_critical_point.x();
+        const auto distance_bottom = last_critical_point.y() - grid_origin.y();
+        const auto distance_top = grid_diagonal.y() - last_critical_point.y();
+
+        const auto x_dir = std::min(distance_left, distance_right) < std::min(distance_bottom, distance_top);
+
+        if (x_dir) {
+            if (distance_left < distance_right) {
+                seed_lines.push_back(
+                    std::make_pair(last_critical_point, Eigen::Vector2f(grid_origin.x(), last_critical_point.y())));
+            } else {
+                seed_lines.push_back(
+                    std::make_pair(last_critical_point, Eigen::Vector2f(grid_diagonal.x(), last_critical_point.y())));
+            }
+        } else {
+            if (distance_bottom < distance_top) {
+                seed_lines.push_back(
+                    std::make_pair(last_critical_point, Eigen::Vector2f(last_critical_point.x(), grid_origin.y())));
+            } else {
+                seed_lines.push_back(
+                    std::make_pair(last_critical_point, Eigen::Vector2f(last_critical_point.x(), grid_diagonal.y())));
             }
         }
 
-        // Create seed lines
-        const auto seed_lines = create_seed_lines(vector_field, critical_points);
+        // Offset seed line endpoints from critical points for more numerical stability
+        const auto cp_offset = this->critical_point_offset.Param<core::param::FloatParam>()->Value();
+
+        for (auto& seed_line : seed_lines) {
+            const auto direction = (seed_line.second - seed_line.first).normalized();
+            const auto offset =
+                cp_offset * vector_field.get_cell_sizes(tpf::data::coords2_t(0, 0)).cwiseProduct(direction);
+
+            seed_line.first += offset;
+            seed_line.second -= offset;
+        }
 
         // Allocate output
         const auto num_seed_points =
@@ -286,9 +314,6 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
         this->integration_ids->data = std::make_shared<std::vector<float>>();
         this->integration_ids->data->reserve(2 * seed_lines.size() * num_seed_points * (num_integration_steps + 1));
 
-        this->seed_lines.clear();
-        this->seed_lines.reserve(seed_lines.size());
-
         this->periodic_orbits.clear();
 
         // For each seed line, compute forward and backward stream surfaces
@@ -303,9 +328,6 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
         }
 
         for (; seed_index < seed_end; ++seed_index) {
-            this->seed_lines.push_back(std::make_pair(static_cast<float>(seed_index),
-                std::vector<Eigen::Vector2f>{seed_lines[seed_index].first, seed_lines[seed_index].second}));
-
             // Subdivide line and create a seed point per subdivision
             const auto height = this->bounding_box.Height();
 
@@ -426,11 +448,7 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
                                     const auto point = Eigen::Vector2f(CGAL::to_double(intersection_line->vertex(0)[0]),
                                         CGAL::to_double(intersection_line->vertex(0)[1]));
 
-                                    if (std::find(critical_point_cells.begin(), critical_point_cells.end(),
-                                            *vector_field.find_cell(point)) == critical_point_cells.end()) {
-
-                                        this->periodic_orbits.push_back(std::make_pair(0.0f, point));
-                                    }
+                                    this->periodic_orbits.push_back(std::make_pair(0.0f, point));
                                 } else if (intersection_triangle != nullptr) {
                                     vislib::sys::Log::DefaultLog.WriteWarn(
                                         "Triangle result from triangle intersection not supported");
@@ -554,7 +572,7 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
             }
         }
 
-        this->stream_surface_hash = core::utility::DataHash(this->vector_field_hash, this->critical_points_hash,
+        this->stream_surface_hash = core::utility::DataHash(this->vector_field_hash, this->seed_lines_hash,
             this->direction.Param<core::param::EnumParam>()->Value(),
             this->integration_method.Param<core::param::EnumParam>()->Value(),
             this->integration_timestep.Param<core::param::FloatParam>()->Value(),
@@ -566,13 +584,10 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
 
         this->periodic_orbits_hash = core::utility::DataHash(
             this->stream_surface_hash, this->compute_intersections.Param<core::param::BoolParam>()->Value());
-
-        this->seed_line_hash = core::utility::DataHash(this->filter_seed_lines.Param<core::param::IntParam>()->Value(),
-            this->critical_point_offset.Param<core::param::FloatParam>()->Value());
     }
 
     this->vector_field_changed = false;
-    this->critical_points_changed = false;
+    this->seed_lines_changed = false;
 
     return true;
 }
@@ -612,68 +627,6 @@ tpf::data::grid<float, float, 2, 2> periodic_orbits_theisel::create_grid() const
     // Create grid
     return tpf::data::grid<float, float, 2, 2>("vector_field", extent, *this->vectors, std::move(cell_coordinates),
         std::move(node_coordinates), std::move(cell_sizes));
-}
-
-std::vector<std::pair<Eigen::Vector2f, Eigen::Vector2f>> periodic_orbits_theisel::create_seed_lines(
-    const tpf::data::grid<float, float, 2, 2>& grid,
-    const std::vector<Eigen::Vector2f>& critical_points) const {
-
-    std::vector<std::pair<Eigen::Vector2f, Eigen::Vector2f>> seed_lines;
-    seed_lines.reserve(critical_points.size());
-
-    // Create seed lines between critical points, approximating the travelling salesman problem
-    const auto polygon_order =
-        thirdparty::tsp::Genetic(std::make_shared<thirdparty::tsp::Graph>(critical_points), 10, 1000, 5).run();
-
-    for (std::size_t cp_index = 0; cp_index < polygon_order.size() - 1; ++cp_index) {
-        seed_lines.push_back(
-            std::make_pair(critical_points[polygon_order[cp_index]], critical_points[polygon_order[cp_index + 1]]));
-    }
-
-    // Create seed line between last critical point and the nearest domain boundary
-    const auto grid_origin = grid.get_node_coordinates(tpf::data::coords2_t(0, 0));
-    const auto grid_diagonal =
-        grid.get_node_coordinates(tpf::data::coords2_t(grid.get_extent()[0].second, grid.get_extent()[1].second));
-
-    const auto last_critical_point = critical_points[polygon_order.back()];
-
-    const auto distance_left = last_critical_point.x() - grid_origin.x();
-    const auto distance_right = grid_diagonal.x() - last_critical_point.x();
-    const auto distance_bottom = last_critical_point.y() - grid_origin.y();
-    const auto distance_top = grid_diagonal.y() - last_critical_point.y();
-
-    const auto x_dir = std::min(distance_left, distance_right) < std::min(distance_bottom, distance_top);
-
-    if (x_dir) {
-        if (distance_left < distance_right) {
-            seed_lines.push_back(std::make_pair(critical_points[polygon_order.back()],
-                Eigen::Vector2f(grid_origin.x(), critical_points[polygon_order.back()].y())));
-        } else {
-            seed_lines.push_back(std::make_pair(critical_points[polygon_order.back()],
-                Eigen::Vector2f(grid_diagonal.x(), critical_points[polygon_order.back()].y())));
-        }
-    } else {
-        if (distance_bottom < distance_top) {
-            seed_lines.push_back(std::make_pair(critical_points[polygon_order.back()],
-                Eigen::Vector2f(critical_points[polygon_order.back()].x(), grid_origin.y())));
-        } else {
-            seed_lines.push_back(std::make_pair(critical_points[polygon_order.back()],
-                Eigen::Vector2f(critical_points[polygon_order.back()].x(), grid_diagonal.y())));
-        }
-    }
-
-    // Offset seed line endpoints from critical points for more numerical stability
-    const auto cp_offset = this->critical_point_offset.Param<core::param::FloatParam>()->Value();
-
-    for (auto& seed_line : seed_lines) {
-        const auto direction = (seed_line.second - seed_line.first).normalized();
-        const auto offset = cp_offset * grid.get_cell_sizes(tpf::data::coords2_t(0, 0)).cwiseProduct(direction);
-
-        seed_line.first += offset;
-        seed_line.second -= offset;
-    }
-
-    return seed_lines;
 }
 
 Eigen::Vector3f periodic_orbits_theisel::advect_point(const tpf::data::grid<float, float, 2, 2>& grid,
@@ -789,7 +742,7 @@ bool periodic_orbits_theisel::get_stream_surface_values_data(core::Call& call) {
         const auto tf_string = this->transfer_function.Param<core::param::TransferFunctionParam>()->Value();
 
         this->seed_line_ids->min_value = 0.0f;
-        this->seed_line_ids->max_value = static_cast<float>(this->seed_lines.size());
+        this->seed_line_ids->max_value = static_cast<float>(this->seed_line_indices->size() / 2);
         this->seed_line_ids->transfer_function = tf_string;
         this->seed_line_ids->transfer_function_dirty = true;
         mdc.set_data("seed line", this->seed_line_ids);
@@ -826,38 +779,6 @@ bool periodic_orbits_theisel::get_stream_surface_values_extent(core::Call& call)
     mdc.set_data("seed line");
     mdc.set_data("seed point");
     mdc.set_data("integration");
-
-    return true;
-}
-
-bool periodic_orbits_theisel::get_seed_lines_data(core::Call& call) {
-    auto& gdc = static_cast<glyph_data_call&>(call);
-
-    if (!(get_input_data() && compute_periodic_orbits())) {
-        return false;
-    }
-
-    if (gdc.DataHash() != this->seed_line_hash) {
-        gdc.clear();
-
-        for (const auto& line : this->seed_lines) {
-            gdc.add_line(line.second, line.first);
-        }
-
-        gdc.SetDataHash(this->seed_line_hash);
-    }
-
-    return true;
-}
-
-bool periodic_orbits_theisel::get_seed_lines_extent(core::Call& call) {
-    auto& gdc = static_cast<glyph_data_call&>(call);
-
-    if (!get_input_extent()) {
-        return false;
-    }
-
-    gdc.set_bounding_rectangle(this->bounding_rectangle);
 
     return true;
 }

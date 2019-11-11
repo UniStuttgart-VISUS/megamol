@@ -107,13 +107,6 @@ namespace megamol
             tpf::data::grid<float, float, 2, 2> create_grid() const;
 
             /**
-             * Create seed lines between the critical points and the boundary
-             */
-            std::vector<std::pair<Eigen::Vector2f, Eigen::Vector2f>> create_seed_lines(
-                const tpf::data::grid<float, float, 2, 2>& grid,
-                const std::vector<Eigen::Vector2f>& critical_points) const;
-
-            /**
              * Advect given point with the selected integration method
              *
              * @param grid Vector field
@@ -136,10 +129,6 @@ namespace megamol
             bool get_stream_surface_values_data(core::Call& call);
             bool get_stream_surface_values_extent(core::Call& call);
 
-            /** Callbacks for the computed seed lines */
-            bool get_seed_lines_data(core::Call& call);
-            bool get_seed_lines_extent(core::Call& call);
-
             /** Callbacks for writing results to file */
             bool get_writer_callback(core::Call& call);
             std::function<std::ostream&()> get_writer;
@@ -151,17 +140,14 @@ namespace megamol
             core::CalleeSlot stream_surface_slot;
             core::CalleeSlot stream_surface_values_slot;
 
-            /** Output slot for computed seed lines */
-            core::CalleeSlot seed_line_slot;
-
             /** Output slot for writing results to file */
             core::CalleeSlot result_writer_slot;
 
             /** Input slot for getting the vector field */
             core::CallerSlot vector_field_slot;
 
-            /** Input slot for getting the critical points */
-            core::CallerSlot critical_points_slot;
+            /** Input slot for getting the seed lines */
+            core::CallerSlot seed_lines_slot;
 
             /** Transfer function for coloring stream surfaces */
             core::param::ParamSlot transfer_function;
@@ -191,11 +177,12 @@ namespace megamol
             std::shared_ptr<std::vector<float>> grid_positions;
             std::shared_ptr<std::vector<float>> vectors;
 
-            /** Input critical points */
-            SIZE_T critical_points_hash;
-            bool critical_points_changed;
+            /** Input seed lines */
+            SIZE_T seed_lines_hash;
+            bool seed_lines_changed;
 
-            std::shared_ptr<std::vector<float>> critical_points;
+            std::shared_ptr<std::vector<float>> seed_line_vertices;
+            std::shared_ptr<std::vector<unsigned int>> seed_line_indices;
 
             /** Output stream surfaces */
             SIZE_T stream_surface_hash;
@@ -210,11 +197,6 @@ namespace megamol
             SIZE_T periodic_orbits_hash;
 
             std::vector<std::pair<float, Eigen::Vector2f>> periodic_orbits;
-
-            /** Output seed lines */
-            SIZE_T seed_line_hash;
-
-            std::vector<std::pair<float, std::vector<Eigen::Vector2f>>> seed_lines;
         };
     }
 }
