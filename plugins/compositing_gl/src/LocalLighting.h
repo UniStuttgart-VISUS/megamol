@@ -24,6 +24,10 @@ namespace compositing {
 
 class COMPOSITING_GL_API LocalLighting : public core::Module {
 public:
+    struct LightParams {
+        float x, y, z, intensity;
+    };
+
     /**
      * Answer the name of this module.
      *
@@ -90,10 +94,17 @@ private:
     std::shared_ptr<glowl::Texture2D> m_output_texture;
 
     /** GPU buffer object for making active (point)lights available in during shading pass */
-    std::unique_ptr<glowl::BufferObject> m_lights_buffer;
+    std::unique_ptr<glowl::BufferObject> m_point_lights_buffer;
+
+    /** GPU buffer object for making active (distant)lights available in during shading pass */
+    std::unique_ptr<glowl::BufferObject> m_distant_lights_buffer;
 
     /** map to store the called lights */
-    core::view::light::LightMap lightMap;
+    core::view::light::LightMap m_light_map;
+
+    /** buffered light information */
+    std::vector<LightParams> m_point_lights, m_distant_lights;
+
 
     //TODO mode slot for LAMBERT, PHONG, etc.
 

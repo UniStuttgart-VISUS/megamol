@@ -202,11 +202,11 @@ bool RenderMDIMesh::Render(core::view::CallRender3D_2& call) {
 	// loop through "registered" render batches
 	for (auto const& render_task : gpu_render_tasks->getRenderTasks())
 	{
-		render_task.shader_program->Enable();
+        render_task.shader_program->use();
 		
 		// TODO introduce per frame "global" data buffer to store information like camera matrices?
-		glUniformMatrix4fv(render_task.shader_program->ParameterLocation("view_mx"), 1, GL_FALSE, glm::value_ptr(view_mx));
-		glUniformMatrix4fv(render_task.shader_program->ParameterLocation("proj_mx"), 1, GL_FALSE, glm::value_ptr(proj_mx));
+        render_task.shader_program->setUniform("view_mx", view_mx);
+        render_task.shader_program->setUniform("proj_mx", proj_mx);
 		
 		render_task.per_draw_data->bind(0);
 		
