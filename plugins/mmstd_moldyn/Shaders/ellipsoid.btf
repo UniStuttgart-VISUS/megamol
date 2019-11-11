@@ -282,15 +282,17 @@ void main() {
     #ifdef SMALL_SPRITE_LIGHTING
     normal = mix(-ray, normal, lightPos.w);
     #endif // SMALL_SPRITE_LIGHTING
+    vec3 color = gl_Color.rgb;
+    vec3 s = step(normal, vec3(0));
+    color = s;
 
     normal = rotMatIT * normal;
     ray = rotMatIT * ray;
     // chose color for lighting
     // Because of some reason color is either not set or not accessible
-    vec3 color = gl_Color.rgb;
     
     // Set the default global color from case 1 in the renderer manually 
-    color = vec3(0.698, 0.698, 0.698);
+    //color = vec3(0.698, 0.698, 0.698);
     
     // calculate depth
     // TODO: rewrite with rotation with untransposed
