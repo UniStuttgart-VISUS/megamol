@@ -8,7 +8,10 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
 
+#define GLM_SWIZZLE
+#include <glm/gtx/string_cast.hpp>
 #include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/quaternion.hpp"
 #include "glm/gtc/type_ptr.hpp"
 #include "vislib/Trace.h"
@@ -416,30 +419,16 @@ bool TableToParticles::assertData(table::TableDataCall* ft) {
             currOut[j] = ftData[cols * i + indicesToCollect[j]];
         }
         if (this->haveTensor) {
-            glm::mat3 tensor;
+            glm::mat3 rotate_world_into_tensor;
             glm::vec3 xvec, yvec, zvec;
             for (int offset = 0; offset < 9; ++offset) {
-                tensor[offset % 3][offset / 3] = ftData[cols * i + tensorIndices[offset]];
+                // tensorindices go v1_xyz v2_xyz v3_xyz, so the rotation matrix (column major)
+                // should read: col1 = [v1x, v2x, v3x], col2 = [v1y, v2y, v3y], col3 = [v1z, v2z, v3z];
+                rotate_world_into_tensor[offset % 3][offset / 3] = ftData[cols * i + tensorIndices[offset]];
             }
-            // if (!this->haveTensorMagnitudes) {
-            //    // TODO compute, save, pass pointer later.
-            //    for (int offset = 0; offset < 3; ++offset) {
-            //        xvec[offset] = ftData[cols * i + tensorIndices[offset]];
-            //    }
-            //    for (int offset = 3; offset < 6; ++offset) {
-            //        yvec[offset - 3] = ftData[cols * i + tensorIndices[offset]];
-            //    }
-            //    for (int offset = 6; offset < 9; ++offset) {
-            //        zvec[offset - 6] = ftData[cols * i + tensorIndices[offset]];
-            //    }
-            //    currOut[numIndices + 0] = glm::length(xvec);
-            //    currOut[numIndices + 1] = glm::length(yvec);
-            //    currOut[numIndices + 2] = glm::length(zvec);
-            //}
-            // make sure we are right-handed
-            auto tt = glm::transpose(tensor);
-            auto zz = glm::cross(tt[0], tt[1]);
-            tt[2] = zz;
+
+            // transpose matrix to have vectors in columns
+            auto tt = glm::transpose(rotate_world_into_tensor);
             if (!this->haveTensorMagnitudes) {
                 currOut[numIndices + 0] = glm::length(tt[0]);
                 currOut[numIndices + 1] = glm::length(tt[1]);
@@ -448,24 +437,73 @@ bool TableToParticles::assertData(table::TableDataCall* ft) {
                 tt[1] = glm::normalize(tt[1]);
                 tt[2] = glm::normalize(tt[2]);
             }
-            // turn around again to feed into quat
-            tt = glm::transpose(tt);
+            // make sure we are right-handed
+            auto zz = glm::cross(tt[0], tt[1]);
+            tt[2] = glm::normalize(zz);
 
-            auto quat = glm::normalize(glm::quat_cast(tt));
-            // memcpy(&currOut[numIndices + 3], glm::value_ptr(quat), sizeof(float) * 4);
-            currOut[tensorOffset + 0] = quat.x;
-            currOut[tensorOffset + 1] = quat.y;
-            currOut[tensorOffset + 2] = quat.z;
-            currOut[tensorOffset + 3] = quat.w;
-            // currOut[tensorOffset - 3] = 3.0f;
-            // currOut[tensorOffset - 2] = 2.0f;
-            // currOut[tensorOffset - 1] = 1.0f;
+            // transpose again so columns have components, not vectors, again
+            rotate_world_into_tensor = glm::transpose(tt);
 
-            // currOut[tensorOffset + 0] = 0.0f;
-            // currOut[tensorOffset + 1] = 0.0f;
-            // currOut[tensorOffset + 2] = 0.0f;
-            // currOut[tensorOffset + 3] = 1.0f;
-            // TODO make mat3, convert to quat, save, pass pointer later.
+            // this quat still represents the rotation from world into tensor coordinate system?
+            glm::dmat3 rwit(rotate_world_into_tensor);
+            //auto quat = glm::normalize(glm::quat_cast(rwit));
+            //auto dquat = glm::normalize(glm::quat_cast(rwit));
+            auto dquat = (glm::quat_cast(rwit));
+            glm::quat quat = dquat;
+#ifdef _DEBUG
+            // as in shader, kind of
+            const glm::vec4 quatConst = glm::vec4(1.0, -1.0, 0.5, 0.0);
+            glm::vec3 rotMatT0, rotMatT1, rotMatT2;
+            glm::mat3 rotMatRec;
+            auto quatC = quat;
+
+            // glm::vec4 tmp = quatC.xzyw * quatC.yxzw;
+            glm::vec4 tmp =
+                glm::vec4(quatC.x, quatC.z, quatC.y, quatC.w) * glm::vec4(quatC.y, quatC.x, quatC.z, quatC.w);
+            // glm::vec4 tmp1 = quatC * quatC.w;
+            glm::vec4 tmp1(quatC.x, quatC.y, quatC.z, quatC.w);
+            tmp1 *= quatC.w;
+            tmp1.w = -quatConst.z;
+            rotMatT0.xyz = tmp1.wzy * quatConst.xxy + tmp.wxy; // matrix0 <- (ww-0.5, xy+zw, xz-yw, %)
+            rotMatT0.x = quatC.x * quatC.x + rotMatT0.x;       // matrix0 <- (ww+x*x-0.5, xy+zw, xz-yw, %)
+            rotMatT0 = rotMatT0 + rotMatT0;                    // matrix0 <- (2(ww+x*x)-1, 2(xy+zw), 2(xz-yw), %)
+
+            rotMatT1.xyz = tmp1.zwx * quatConst.yxx + tmp.xwz; // matrix1 <- (xy-zw, ww-0.5, yz+xw, %)
+            rotMatT1.y = quatC.y * quatC.y + rotMatT1.y;       // matrix1 <- (xy-zw, ww+y*y-0.5, yz+xw, %)
+            rotMatT1 = rotMatT1 + rotMatT1;                    // matrix1 <- (2(xy-zw), 2(ww+y*y)-1, 2(yz+xw), %)
+
+            rotMatT2.xyz = tmp1.yxw * quatConst.xyx + tmp.yzw; // matrix2 <- (xz+yw, yz-xw, ww-0.5, %)
+            rotMatT2.z = quatC.z * quatC.z + rotMatT2.z;       // matrix2 <- (xz+yw, yz-xw, ww+zz-0.5, %)
+            rotMatT2 = rotMatT2 + rotMatT2;                    // matrix2 <- (2(xz+yw), 2(yz-xw), 2(ww+zz)-1, %)
+            // End: Holy code!
+
+            rotMatRec = glm::mat3(rotMatT0, rotMatT1, rotMatT2);
+
+            glm::mat3 diff = rotMatRec - rotate_world_into_tensor;
+            diff[0] = glm::abs(diff[0]);
+            diff[1] = glm::abs(diff[1]);
+            diff[2] = glm::abs(diff[2]);
+            auto* diffptr = glm::value_ptr(diff);
+            float(&diffarr)[9] = *reinterpret_cast<float(*)[9]>(diffptr);
+            if (std::any_of(std::begin(diffarr), std::end(diffarr), [](float f) { return f > 0.01f; })) {
+                vislib::sys::Log::DefaultLog.WriteWarn(
+                    "TableToParticles: difference too large when encoding matrix as quaternion:\n%s\n", glm::to_string(diff).c_str());
+                vislib::sys::Log::DefaultLog.WriteWarn(
+                    "TableToParticles: matrix =\n%s\n", glm::to_string(rotate_world_into_tensor).c_str());
+                vislib::sys::Log::DefaultLog.WriteWarn("TableToParticles: quat = %s\n", glm::to_string(quat).c_str());
+                vislib::sys::Log::DefaultLog.WriteWarn(
+                    "TableToParticles: reconstructed matrix =\n%s\n", glm::to_string(rotMatRec).c_str());
+                vislib::sys::Log::DefaultLog.WriteWarn(
+                    "TableToParticles: ---------------------------------------------------------------\n");
+            }
+            // end
+#endif
+
+            memcpy(&currOut[tensorOffset + 0], glm::value_ptr(quat), sizeof(float) * 4);
+            //currOut[tensorOffset + 0] = quat.x;
+            //currOut[tensorOffset + 1] = quat.y;
+            //currOut[tensorOffset + 2] = quat.z;
+            //currOut[tensorOffset + 3] = quat.w;
         }
     }
 
