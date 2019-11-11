@@ -102,6 +102,18 @@ namespace megamol
             bool compute_periodic_orbits();
 
             /**
+             * Create grid storing cell information and the vector values
+             */
+            tpf::data::grid<float, float, 2, 2> create_grid() const;
+
+            /**
+             * Create seed lines between the critical points and the boundary
+             */
+            std::vector<std::pair<Eigen::Vector2f, Eigen::Vector2f>> create_seed_lines(
+                const tpf::data::grid<float, float, 2, 2>& grid,
+                const std::vector<Eigen::Vector2f>& critical_points) const;
+
+            /**
              * Advect given point with the selected integration method
              *
              * @param grid Vector field

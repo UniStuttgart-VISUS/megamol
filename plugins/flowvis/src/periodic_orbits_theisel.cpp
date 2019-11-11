@@ -237,37 +237,7 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
         this->critical_point_offset.ResetDirty();
 
         // Create grid containing the vector field
-        tpf::data::extent_t extent;
-        extent.push_back(std::make_pair(0ull, static_cast<std::size_t>(this->resolution[0] - 1)));
-        extent.push_back(std::make_pair(0ull, static_cast<std::size_t>(this->resolution[1] - 1)));
-
-        const Eigen::Vector2f origin((*this->grid_positions)[0], (*this->grid_positions)[1]);
-        const Eigen::Vector2f right((*this->grid_positions)[2], (*this->grid_positions)[3]);
-        const Eigen::Vector2f up(
-            (*this->grid_positions)[2 * this->resolution[0]], (*this->grid_positions)[2 * this->resolution[0] + 1]);
-
-        const Eigen::Vector2f cell_size(right.x() - origin.x(), up.y() - origin.y());
-        const auto node_origin = origin - 0.5f * cell_size;
-
-        tpf::data::grid_information<float>::array_type cell_coordinates(2), node_coordinates(2), cell_sizes(2);
-
-        for (std::size_t dimension = 0; dimension < 2; ++dimension) {
-            cell_coordinates[dimension].resize(this->resolution[dimension]);
-            node_coordinates[dimension].resize(this->resolution[dimension] + 1);
-            cell_sizes[dimension].resize(this->resolution[dimension]);
-
-            for (std::size_t element = 0; element < this->resolution[dimension]; ++element) {
-                cell_sizes[dimension][element] = cell_size[dimension];
-                cell_coordinates[dimension][element] = origin[dimension] + element * cell_size[dimension];
-                node_coordinates[dimension][element] = origin[dimension] + (element - 0.5f) * cell_size[dimension];
-            }
-
-            node_coordinates[dimension][this->resolution[dimension]] =
-                origin[dimension] + (this->resolution[dimension] - 0.5f) * cell_size[dimension];
-        }
-
-        tpf::data::grid<float, float, 2, 2> vector_field("vector_field", extent, *this->vectors,
-            std::move(cell_coordinates), std::move(node_coordinates), std::move(cell_sizes));
+        const auto vector_field = create_grid();
 
         // Get critical points
         std::vector<Eigen::Vector2f> critical_points;
@@ -289,30 +259,11 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
         }
 
         // Create seed lines
-        std::vector<std::pair<Eigen::Vector2f, Eigen::Vector2f>> seed_lines;
-
-        const auto polygon_order = thirdparty::tsp::Genetic(std::make_shared<thirdparty::tsp::Graph>(critical_points), 10, 1000, 5).run();
-
-        for (std::size_t cp_index = 0; cp_index < polygon_order.size() - 1; ++cp_index) {
-            seed_lines.push_back(
-                std::make_pair(critical_points[polygon_order[cp_index]], critical_points[polygon_order[cp_index + 1]]));
-        }
-
-        // TODO: connect last or first critical point with the nearest boundary
-
-        const auto cp_offset = this->critical_point_offset.Param<core::param::FloatParam>()->Value();
-
-        for (auto& seed_line : seed_lines) {
-            const auto direction = (seed_line.second - seed_line.first).normalized();
-            const auto offset = cp_offset * Eigen::Vector2f(cell_size[0] * direction[0], cell_size[1] * direction[1]);
-
-            seed_line.first += offset;
-            seed_line.second -= offset;
-        }
+        const auto seed_lines = create_seed_lines(vector_field, critical_points);
 
         // Allocate output
         const auto num_seed_points =
-            static_cast<size_t>(std::max(0, this->num_subdivisions.Param<core::param::IntParam>()->Value()) + 2);
+            static_cast<size_t>(std::max(2, this->num_subdivisions.Param<core::param::IntParam>()->Value()));
         const auto num_triangles = 2 * (num_seed_points - 1);
         const auto num_integration_steps =
             static_cast<size_t>(this->num_integration_steps.Param<core::param::IntParam>()->Value());
@@ -472,8 +423,7 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
                                 if (intersection_point != nullptr) {
                                     // Not relevant
                                 } else if (intersection_line != nullptr) {
-                                    const auto point = Eigen::Vector2f(
-                                        CGAL::to_double(intersection_line->vertex(0)[0]),
+                                    const auto point = Eigen::Vector2f(CGAL::to_double(intersection_line->vertex(0)[0]),
                                         CGAL::to_double(intersection_line->vertex(0)[1]));
 
                                     if (std::find(critical_point_cells.begin(), critical_point_cells.end(),
@@ -627,6 +577,105 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
     return true;
 }
 
+tpf::data::grid<float, float, 2, 2> periodic_orbits_theisel::create_grid() const {
+
+    // Get extent
+    tpf::data::extent_t extent;
+    extent.push_back(std::make_pair(0ull, static_cast<std::size_t>(this->resolution[0] - 1)));
+    extent.push_back(std::make_pair(0ull, static_cast<std::size_t>(this->resolution[1] - 1)));
+
+    // Compute cell and node coordinates
+    const Eigen::Vector2f origin((*this->grid_positions)[0], (*this->grid_positions)[1]);
+    const Eigen::Vector2f cell_diagonal(
+        (*this->grid_positions)[2], (*this->grid_positions)[2 * static_cast<std::size_t>(this->resolution[0]) + 1]);
+
+    const auto cell_size = cell_diagonal - origin;
+    const auto node_origin = origin - 0.5f * cell_size;
+
+    tpf::data::grid_information<float>::array_type cell_coordinates(2), node_coordinates(2), cell_sizes(2);
+
+    for (std::size_t dimension = 0; dimension < 2; ++dimension) {
+        cell_coordinates[dimension].resize(this->resolution[dimension]);
+        node_coordinates[dimension].resize(static_cast<std::size_t>(this->resolution[dimension]) + 1);
+        cell_sizes[dimension].resize(this->resolution[dimension]);
+
+        for (std::size_t element = 0; element < this->resolution[dimension]; ++element) {
+            cell_sizes[dimension][element] = cell_size[dimension];
+            cell_coordinates[dimension][element] = origin[dimension] + element * cell_size[dimension];
+            node_coordinates[dimension][element] = origin[dimension] + (element - 0.5f) * cell_size[dimension];
+        }
+
+        node_coordinates[dimension][this->resolution[dimension]] =
+            origin[dimension] + (this->resolution[dimension] - 0.5f) * cell_size[dimension];
+    }
+
+    // Create grid
+    return tpf::data::grid<float, float, 2, 2>("vector_field", extent, *this->vectors, std::move(cell_coordinates),
+        std::move(node_coordinates), std::move(cell_sizes));
+}
+
+std::vector<std::pair<Eigen::Vector2f, Eigen::Vector2f>> periodic_orbits_theisel::create_seed_lines(
+    const tpf::data::grid<float, float, 2, 2>& grid,
+    const std::vector<Eigen::Vector2f>& critical_points) const {
+
+    std::vector<std::pair<Eigen::Vector2f, Eigen::Vector2f>> seed_lines;
+    seed_lines.reserve(critical_points.size());
+
+    // Create seed lines between critical points, approximating the travelling salesman problem
+    const auto polygon_order =
+        thirdparty::tsp::Genetic(std::make_shared<thirdparty::tsp::Graph>(critical_points), 10, 1000, 5).run();
+
+    for (std::size_t cp_index = 0; cp_index < polygon_order.size() - 1; ++cp_index) {
+        seed_lines.push_back(
+            std::make_pair(critical_points[polygon_order[cp_index]], critical_points[polygon_order[cp_index + 1]]));
+    }
+
+    // Create seed line between last critical point and the nearest domain boundary
+    const auto grid_origin = grid.get_node_coordinates(tpf::data::coords2_t(0, 0));
+    const auto grid_diagonal =
+        grid.get_node_coordinates(tpf::data::coords2_t(grid.get_extent()[0].second, grid.get_extent()[1].second));
+
+    const auto last_critical_point = critical_points[polygon_order.back()];
+
+    const auto distance_left = last_critical_point.x() - grid_origin.x();
+    const auto distance_right = grid_diagonal.x() - last_critical_point.x();
+    const auto distance_bottom = last_critical_point.y() - grid_origin.y();
+    const auto distance_top = grid_diagonal.y() - last_critical_point.y();
+
+    const auto x_dir = std::min(distance_left, distance_right) < std::min(distance_bottom, distance_top);
+
+    if (x_dir) {
+        if (distance_left < distance_right) {
+            seed_lines.push_back(std::make_pair(critical_points[polygon_order.back()],
+                Eigen::Vector2f(grid_origin.x(), critical_points[polygon_order.back()].y())));
+        } else {
+            seed_lines.push_back(std::make_pair(critical_points[polygon_order.back()],
+                Eigen::Vector2f(grid_diagonal.x(), critical_points[polygon_order.back()].y())));
+        }
+    } else {
+        if (distance_bottom < distance_top) {
+            seed_lines.push_back(std::make_pair(critical_points[polygon_order.back()],
+                Eigen::Vector2f(critical_points[polygon_order.back()].x(), grid_origin.y())));
+        } else {
+            seed_lines.push_back(std::make_pair(critical_points[polygon_order.back()],
+                Eigen::Vector2f(critical_points[polygon_order.back()].x(), grid_diagonal.y())));
+        }
+    }
+
+    // Offset seed line endpoints from critical points for more numerical stability
+    const auto cp_offset = this->critical_point_offset.Param<core::param::FloatParam>()->Value();
+
+    for (auto& seed_line : seed_lines) {
+        const auto direction = (seed_line.second - seed_line.first).normalized();
+        const auto offset = cp_offset * grid.get_cell_sizes(tpf::data::coords2_t(0, 0)).cwiseProduct(direction);
+
+        seed_line.first += offset;
+        seed_line.second -= offset;
+    }
+
+    return seed_lines;
+}
+
 Eigen::Vector3f periodic_orbits_theisel::advect_point(const tpf::data::grid<float, float, 2, 2>& grid,
     const Eigen::Vector3f& point, float& delta, const bool forward) const {
 
@@ -747,7 +796,7 @@ bool periodic_orbits_theisel::get_stream_surface_values_data(core::Call& call) {
 
         this->seed_point_ids->min_value = 0.0f;
         this->seed_point_ids->max_value =
-            static_cast<float>(std::max(0, this->num_subdivisions.Param<core::param::IntParam>()->Value()) + 2);
+            static_cast<float>(std::max(2, this->num_subdivisions.Param<core::param::IntParam>()->Value()));
         this->seed_point_ids->transfer_function = tf_string;
         this->seed_point_ids->transfer_function_dirty = true;
         mdc.set_data("seed point", this->seed_point_ids);
