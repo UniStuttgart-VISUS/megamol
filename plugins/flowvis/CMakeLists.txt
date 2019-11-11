@@ -22,6 +22,7 @@ if(BUILD_FLOWVIS_PLUGIN)
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
   file(GLOB_RECURSE shader_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "shaders/*")
+  file(GLOB_RECURSE thirdparty_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "3rdparty/*.cpp")
 
   if(UNIX)
     list(REMOVE_ITEM source_files "src/dllmain.cpp")
@@ -34,7 +35,7 @@ if(BUILD_FLOWVIS_PLUGIN)
   add_subdirectory(cuda)
 
   # Target definition
-  add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${source_files})
+  add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${source_files} ${thirdparty_files})
   # Set target naming conventions for different build types
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS _ENABLE_EXTENDED_ALIGNED_STORAGE ${tpf_compile_definitions})
