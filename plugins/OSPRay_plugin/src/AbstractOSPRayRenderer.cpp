@@ -1029,15 +1029,15 @@ bool AbstractOSPRayRenderer::fillWorld() {
                         }
 
                         // check normal pointer
-                        if (attrib.semantic == mesh::MeshDataAccessCollection::NORMAL) {
-                            auto count =
-                                attrib.byte_size / attrib.stride;
-                            auto ospType = OSP_FLOAT3;
-                            if (attrib.stride == 4 * sizeof(float)) ospType = OSP_FLOAT3A;
-                            normalData = ospNewData(count, ospType, attrib.data);
-                            ospCommit(normalData);
-                            ospSetData(geo.back(), "vertex.normal", normalData);
-                        }
+                        //if (attrib.semantic == mesh::MeshDataAccessCollection::NORMAL) {
+                        //    auto count =
+                        //        attrib.byte_size / attrib.stride;
+                        //    auto ospType = OSP_FLOAT3;
+                        //    if (attrib.stride == 4 * sizeof(float)) ospType = OSP_FLOAT3A;
+                        //    normalData = ospNewData(count, ospType, attrib.data);
+                        //    ospCommit(normalData);
+                        //    ospSetData(geo.back(), "vertex.normal", normalData);
+                        //}
 
                         // check colorpointer and convert to rgba
                         if (attrib.semantic == mesh::MeshDataAccessCollection::COLOR) {
@@ -1097,6 +1097,8 @@ bool AbstractOSPRayRenderer::fillWorld() {
                         auto ospMat = ospNewMaterial2(this->rd_type_string.c_str(), "OBJMaterial");
                         ospCommit(ospTexture);
                         ospSetObject(ospMat, "map_Kd", ospTexture);
+                        //ospSetObject(ospMat, "map_Ks", ospTexture);
+                        //ospSetObject(ospMat, "map_d", ospTexture);
                         ospCommit(ospMat);
                         ospSetMaterial(geo.back(), ospMat);
 

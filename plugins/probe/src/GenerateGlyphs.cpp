@@ -57,8 +57,17 @@ void GenerateGlyphs::doGlyphGeneration(float scale) {
 
     for (int i = 0; i < this->_probe_data->getProbeCount(); i++) {
 
-        // calc vertices
+        // get probe
         auto probe = this->_probe_data->getProbe<FloatProbe>(i);
+        // read samples of probe
+        auto samples = probe.getSamplingResult();
+
+        if (samples->samples.empty()) {
+            vislib::sys::Log::DefaultLog.WriteError("[GenerateGlyphs] Probes have not been sampled.");
+            return;
+        }
+
+        // calc vertices
         auto dir = probe.m_direction;
         auto smallest_normal_index = std::distance(dir.begin(), std::min_element(dir.begin(), dir.end()));
         dir[smallest_normal_index] = 1.0f;
@@ -158,11 +167,8 @@ void GenerateGlyphs::doGlyphGeneration(float scale) {
 
         this->_mesh_data->addMesh(vertex_attributes, index_data);
 
-        // read sampled probe
-        auto samples = probe.getSamplingResult();
-
         _dtu[i].setResolution(200, 200); // should be changeable
-        _dtu[i].setGraphType(DrawTextureUtility::PLOT); // should be changeable
+        _dtu[i].setGraphType(DrawTextureUtility::GLYPH); // should be changeable
 
         auto tex_ptr = _dtu[i].draw(samples->samples, samples->min_value, samples->max_value);
         this->_tex_data->addImage(mesh::ImageDataAccessCollection::RGBA8, _dtu[i].getPixelWidth(),
@@ -195,7 +201,7 @@ bool GenerateGlyphs::getMesh(core::Call& call) {
 
     this->_probe_data = cprobes->getData();
 
-    const float scale = probe_meta_data.m_bboxs.BoundingBox().LongestEdge() * 5e-3;
+    const float scale = probe_meta_data.m_bboxs.BoundingBox().LongestEdge() * 1e-2;
     if (probe_meta_data.m_data_hash != this->_data_hash)
         doGlyphGeneration(scale);
 

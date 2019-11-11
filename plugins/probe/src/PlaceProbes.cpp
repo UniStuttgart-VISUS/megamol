@@ -155,7 +155,7 @@ void megamol::probe::PlaceProbes::dartSampling(mesh::MeshDataAccessCollection::V
     std::uniform_real_distribution<float> fltdist(0, 1);
     std::uniform_int_distribution<uint32_t> dist(0, num_triangles - 1);
 
-    uint32_t num_probes = 10000;
+    uint32_t num_probes = 4000;
     output.reserve(num_probes);
 
     uint32_t indx = 0;

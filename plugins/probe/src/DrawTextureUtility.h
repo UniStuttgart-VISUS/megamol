@@ -6,11 +6,13 @@
 
 #pragma once
 
+#include <cmath>
 #include <cstdint>
-#include <tuple>
 #include <memory>
+#include <tuple>
 #include <vector>
 #include "blend2d.h"
+
 
 namespace megamol {
 namespace probe {
@@ -18,10 +20,7 @@ namespace probe {
 class DrawTextureUtility {
 
 public:
-    enum GraphType {
-        PLOT,
-        GLYPH
-    };
+    enum GraphType { PLOT, GLYPH };
 
     DrawTextureUtility() = default;
 
@@ -44,76 +43,46 @@ public:
 
     inline GraphType getGraphType() const { return this->_graph_type; }
 
-    template <typename T>
-    uint8_t* draw(std::vector<T>& data, T min, T max);
+    template <typename T> uint8_t* draw(std::vector<T>& data, T min, T max);
+
 
 private:
+    template <typename T> void drawPlot(std::vector<T>& data, T min, T max);
+    template <typename T> void drawStar(std::vector<T>& data, T min, T max);
 
     uint32_t _pixel_width = 0;
     uint32_t _pixel_height = 0;
     GraphType _graph_type = PLOT;
     BLImageData _img_data;
     BLImage _img;
+    BLContext _ctx;
 
     uint8_t* _pixel_data;
-
 };
 
 
-template <typename T>
-uint8_t* DrawTextureUtility::draw(std::vector<T>& data, T min, T max) {
+template <typename T> uint8_t* DrawTextureUtility::draw(std::vector<T>& data, T min, T max) {
     _img = BLImage(this->_pixel_width, this->_pixel_height, BL_FORMAT_PRGB32);
-    BLContext ctx(_img);
+    _ctx = BLContext(_img);
 
-    uint32_t width_halo = this->_pixel_width * 0.1f;
-    uint32_t height_halo = this->_pixel_height * 0.1f;
 
-    // fill with red 
-    ctx.setFillStyle(BLRgba32(0x88000000));
-    ctx.fillAll();
+    // fill with BG color
+    _ctx.setCompOp(BL_COMP_OP_SRC_COPY);
+    _ctx.setFillStyle(BLRgba32(0x00000000));
+    _ctx.fillAll();
 
     // Draw sampe data
-
-    // calc clamp on texture
-    auto num_data = data.size();
-
-    // first and last positions should be empty
-    float step_width = static_cast<T>(this->_pixel_width - 2*width_halo) / static_cast<T>(num_data);
-
     if (max - min > static_cast<T>(0.0000001)) {
-
-        BLPath path;
-        for (uint32_t i = 0; i < num_data - 1; i++) {
-            BLLine line(width_halo + step_width * (i + 1),
-                height_halo + ((data[i] - min) / (max - min)) * (this->_pixel_height - 2*height_halo),
-                width_halo + step_width * (i + 2),
-                height_halo + ((data[i + 1] - min) / (max - min)) * (this->_pixel_height - 2*height_halo));
-            path.addLine(line);
+        if (this->_graph_type == PLOT) {
+            this->drawPlot(data, min, max);
+        } else if (this->_graph_type == GLYPH) {
+            this->drawStar(data, min, max);
         }
-        // Draw axis
-        BLPath yaxis;
-        BLLine l1(width_halo, height_halo, width_halo, this->_pixel_height - 2 * height_halo);
-        BLLine l2(width_halo, this->_pixel_height - 2 * height_halo, 2 * width_halo, this->_pixel_height - 3 * height_halo);
-        yaxis.addLine(l1);
-        yaxis.addLine(l2);
 
-        ctx.setCompOp(BL_COMP_OP_SRC_OVER);
-        ctx.setStrokeStyle(BLRgba32(0xFF00FF00));
-        ctx.setStrokeWidth(5);
-        ctx.strokePath(yaxis);
-
-
-
-        // add path
-        ctx.setCompOp(BL_COMP_OP_SRC_OVER);
-        ctx.setStrokeStyle(BLRgba32(0xFF0000FF));
-        ctx.setStrokeWidth(5);
-        //ctx.setStrokeStartCap(BL_STROKE_CAP_ROUND);
-        //ctx.setStrokeEndCap(BL_STROKE_CAP_BUTT);
-        ctx.strokePath(path);
     }
-    ctx.end();
+    _ctx.end();
 
+    // extract image
     if (_img.getData(&this->_img_data) != BL_SUCCESS) {
         vislib::sys::Log::DefaultLog.WriteError("[DrawTextureUtility] Could not receive image data from blend2d.");
     }
@@ -121,6 +90,97 @@ uint8_t* DrawTextureUtility::draw(std::vector<T>& data, T min, T max) {
     this->_pixel_data = reinterpret_cast<uint8_t*>(this->_img_data.pixelData);
 
     return this->_pixel_data;
+}
+
+template <typename T> void DrawTextureUtility::drawPlot(std::vector<T>& data, T min, T max) {
+
+    uint32_t width_halo = this->_pixel_width * 0.1f;
+    uint32_t height_halo = this->_pixel_height * 0.1f;
+    // calc clamp on texture
+    auto num_data = data.size();
+    // first and last positions should be empty
+    float step_width = static_cast<T>(this->_pixel_width - 2 * width_halo) / static_cast<T>(num_data);
+
+    BLPath path;
+    for (uint32_t i = 0; i < num_data - 1; i++) {
+        BLLine line(width_halo + step_width * (i + 1),
+            height_halo + ((data[i] - min) / (max - min)) * (this->_pixel_height - 2 * height_halo),
+            width_halo + step_width * (i + 2),
+            height_halo + ((data[i + 1] - min) / (max - min)) * (this->_pixel_height - 2 * height_halo));
+        path.addLine(line);
+    }
+    // Draw axis
+    BLPath yaxis;
+    BLLine l1(width_halo, height_halo, width_halo, this->_pixel_height - 2 * height_halo);
+    BLLine l2(width_halo, this->_pixel_height - 2 * height_halo, 2 * width_halo, this->_pixel_height - 3 * height_halo);
+    yaxis.addLine(l1);
+    yaxis.addLine(l2);
+
+    _ctx.setCompOp(BL_COMP_OP_SRC_COPY);
+    _ctx.setStrokeStyle(BLRgba32(0xFF00FF00));
+    _ctx.setStrokeWidth(5);
+    _ctx.strokePath(yaxis);
+
+
+    // add path
+    _ctx.setCompOp(BL_COMP_OP_SRC_COPY);
+    _ctx.setStrokeStyle(BLRgba32(0xFF0000FF));
+    _ctx.setStrokeWidth(5);
+    // ctx.setStrokeStartCap(BL_STROKE_CAP_ROUND);
+    // ctx.setStrokeEndCap(BL_STROKE_CAP_BUTT);
+    _ctx.strokePath(path);
+}
+
+template <typename T> void DrawTextureUtility::drawStar(std::vector<T>& data, T min, T max) {
+
+    uint32_t width_halo = this->_pixel_width * 0.1f;
+    uint32_t height_halo = this->_pixel_height * 0.1f;
+    std::array<uint32_t, 2> center = {this->_pixel_width / 2, this->_pixel_height / 2};
+    // calc clamp on texture
+    auto num_data = data.size();
+
+    auto angle_step = 2 * 3.14159265359 / (num_data -1);
+
+    auto max_radius = std::min(this->_pixel_width, this->_pixel_height) / 2 - std::min(width_halo, height_halo);
+    auto axis_radius = std::min(this->_pixel_width, this->_pixel_height) / 2;
+
+
+    BLPath axis;
+    BLPath axis0;
+    BLPath path;
+    for (uint32_t i = 0; i < num_data-1; i++) {
+
+        BLLine path_line(center[0] + ((data[i] - min) / (max - min)) * max_radius * std::cos(i * angle_step),
+            center[1] + ((data[i] - min) / (max - min)) * max_radius * std::sin(i * angle_step),
+            center[0] + ((data[i + 1] - min) / (max - min)) * max_radius * std::cos((i + 1) * angle_step),
+            center[1] + ((data[i + 1] - min) / (max - min)) * max_radius * std::sin((i + 1) * angle_step));
+        path.addLine(path_line);
+
+        // Draw axes
+        BLLine axis_line(center[0], center[1], center[0] + axis_radius * std::cos(i * angle_step),
+            center[1] + axis_radius * std::sin(i * angle_step));
+        if (i == 0) {
+            axis0.addLine(axis_line);
+        } else {
+            axis.addLine(axis_line);
+        }
+    }
+
+    _ctx.setCompOp(BL_COMP_OP_SRC_COPY);
+    _ctx.setStrokeStyle(BLRgba32(0xFFFF6666));
+    _ctx.setStrokeWidth(2);
+    _ctx.strokePath(axis0);
+
+    _ctx.setCompOp(BL_COMP_OP_SRC_COPY);
+    _ctx.setStrokeStyle(BLRgba32(0xFF000000));
+    _ctx.setStrokeWidth(2);
+    _ctx.strokePath(axis);
+
+    _ctx.setCompOp(BL_COMP_OP_SRC_COPY);
+    _ctx.setStrokeStyle(BLRgba32(0xFF0000FF));
+    _ctx.setStrokeWidth(7);
+    _ctx.strokePath(path);
+
 }
 
 
