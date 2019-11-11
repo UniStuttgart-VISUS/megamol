@@ -85,8 +85,9 @@ bool megamol::mesh::AbstractGPURenderTaskDataSource::getMetaDataCallback(core::C
 
     if (material_call != NULL) {
         auto mtl_meta_data = material_call->getMetaData();
-
-        //TODO....
+        
+        if (!(*material_call)(1)) return false;
+        mtl_meta_data = material_call->getMetaData();
 
         if (mtl_meta_data.m_data_hash > m_material_cached_hash) {
             something_has_changed = true;

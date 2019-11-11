@@ -14,9 +14,6 @@
 
 //#include "mesh/CallmeshRenderBatches.h"
 //#include "meshDebugDataSource.h"
-#include "DebugGPUMaterialDataSource.h"
-#include "DebugGPUMeshDataSource.h"
-#include "DebugGPURenderTaskDataSource.h"
 #include "GPUMeshes.h"
 #include "Render3DUI.h"
 #include "RenderMDIMesh.h"
@@ -24,7 +21,6 @@
 #include "WavefrontObjLoader.h"
 #include "gltf/glTFFileLoader.h"
 #include "gltf/glTFMaterialDataSource.h"
-#include "gltf/glTFMeshesDataSource.h"
 #include "gltf/glTFRenderTasksDataSource.h"
 #include "mesh/3DUIRenderTaskDataSource.h"
 #include "mesh/MeshCalls.h"
@@ -58,11 +54,7 @@ public:
 
         // register modules here:
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::RenderMDIMesh>();
-        this->module_descriptions.RegisterAutoDescription<megamol::mesh::DebugGPUMeshDataSource>();
-        this->module_descriptions.RegisterAutoDescription<megamol::mesh::DebugGPUMaterialDataSource>();
-        this->module_descriptions.RegisterAutoDescription<megamol::mesh::DebugGPURenderTaskDataSource>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::GlTFFileLoader>();
-        this->module_descriptions.RegisterAutoDescription<megamol::mesh::GlTFMeshesDataSource>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::GlTFRenderTasksDataSource>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::GPUMeshes>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::SimpleGPUMtlDataSource>();
