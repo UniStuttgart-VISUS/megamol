@@ -612,6 +612,7 @@
             this.lbModules.TabIndex = 2;
             this.lbModules.SelectedIndexChanged += new System.EventHandler(this.lbModules_SelectedIndexChanged);
             this.lbModules.DoubleClick += new System.EventHandler(this.lbModules_DoubleClick);
+            this.lbModules.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.lbModules_EnterKeyPress);
             // 
             // moduleText
             // 
@@ -764,14 +765,14 @@
             // saveFileDialog1
             // 
             this.saveFileDialog1.DefaultExt = "mmprj";
-            this.saveFileDialog1.Filter = "MegaMol Project Files|*.mmprj|MegaMol LUA project files|*.lua|All Files|*.*";
+            this.saveFileDialog1.Filter = "MegaMol LUA project files|*.lua|MegaMol Project Files|*.mmprj|All Files|*.*";
             this.saveFileDialog1.Title = "Save MegaMol™ Project ...";
             // 
             // openFileDialog1
             // 
             this.openFileDialog1.DefaultExt = "mmprj";
             this.openFileDialog1.FileName = "openFileDialog1";
-            this.openFileDialog1.Filter = "MegaMol™ Project Files|*.mmprj|All Files|*.*";
+            this.openFileDialog1.Filter = "Lua Project Files|*.lua|MegaMol™ Project Files|*.mmprj|All Files|*.*";
             this.openFileDialog1.Title = "Load MegaMol™-Project ...";
             // 
             // printDialog1
