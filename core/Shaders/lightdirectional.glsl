@@ -3,7 +3,7 @@
 
 // ray:      the eye to fragment ray vector
 // normal:   the normal of this fragment
-// lightPos: the position of the light source
+// lightdir: the direction of the light 
 // color:    the base material color
 
 vec3 LocalLighting(const in vec3 ray, const in vec3 normal, const in vec3 lightdir, const in vec3 color) {
@@ -11,8 +11,8 @@ vec3 LocalLighting(const in vec3 ray, const in vec3 normal, const in vec3 lightd
     vec3 lightdirn = normalize(lightdir);
 
     vec4 lightparams = vec4(0.2, 0.8, 0.4, 10.0);
-#define LIGHT_AMBIENT lightparams.x
-#define LIGHT_DIFFUSE lightparams.y
+#define LIGHT_AMBIENT  lightparams.x
+#define LIGHT_DIFFUSE  lightparams.y
 #define LIGHT_SPECULAR lightparams.z
 #define LIGHT_EXPONENT lightparams.w
 
