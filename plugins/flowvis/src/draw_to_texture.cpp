@@ -108,7 +108,7 @@ bool draw_to_texture::get_data(core::Call& call) {
 
     if (this->fbo == nullptr || this->width.IsDirty() || this->height.IsDirty()) {
         this->fbo = std::make_unique<glowl::FramebufferObject>(width, height);
-        this->fbo->createColorAttachment(GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE);
+        this->fbo->createColorAttachment(GL_RGBA16F, GL_RGBA, GL_FLOAT);
 
         this->width.ResetDirty();
         this->height.ResetDirty();

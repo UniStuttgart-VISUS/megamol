@@ -5,6 +5,8 @@
 #include "flowvis/shader.h"
 
 #include "mmcore/CoreInstance.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/ColorParam.h"
 #include "mmcore/view/CallRender3D_2.h"
 #include "mmcore/view/Camera_2.h"
 
@@ -28,7 +30,9 @@ namespace flowvis {
 
 draw_texture_3d::draw_texture_3d()
     : texture_slot("texture", "Input texture")
-    , model_matrix_slot("model_matrix", "Model matrix for positioning of the rendered texture quad") {
+    , model_matrix_slot("model_matrix", "Model matrix for positioning of the rendered texture quad")
+    , enable_transparency("transparency", "Enable transparency by setting a color to be replaced")
+    , transparent_color("transparent_color", "Color to be replaced by transparency") {
 
     // Connect input
     this->texture_slot.SetCompatibleCall<compositing::CallTexture2DDescription>();
@@ -36,6 +40,13 @@ draw_texture_3d::draw_texture_3d()
 
     this->model_matrix_slot.SetCompatibleCall<matrix_call::matrix_call_description>();
     this->MakeSlotAvailable(&this->model_matrix_slot);
+
+    // Create parameters
+    this->enable_transparency << new core::param::BoolParam(false);
+    this->MakeSlotAvailable(&this->enable_transparency);
+
+    this->transparent_color << new core::param::ColorParam(0.0f, 0.0f, 32.0f / 255.0f, 1.0f);
+    this->MakeSlotAvailable(&this->transparent_color);
 }
 
 draw_texture_3d::~draw_texture_3d() { this->Release(); }
@@ -48,6 +59,9 @@ void draw_texture_3d::release() {
         glDetachShader(this->render_data.prog, this->render_data.vs);
         glDetachShader(this->render_data.prog, this->render_data.fs);
         glDeleteProgram(this->render_data.prog);
+
+        glDetachShader(this->render_data.cs_prog, this->render_data.cs);
+        glDeleteProgram(this->render_data.cs_prog);
     }
 }
 
@@ -101,12 +115,32 @@ bool draw_texture_3d::Render(core::view::CallRender3D_2& call) {
             "    fragColor = texture(tex2D, tex_coords); \n" \
             "}";
 
+        const std::string compute_shader =
+            "#version 420\n" \
+            "#extension GL_ARB_compute_shader: enable\n" \
+            "layout(rgba16f, binding = 0) uniform highp image2D tx2D;\n" \
+            "layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;\n" \
+            "uniform vec3 transparent_color;\n" \
+            "bool is_similar(vec3 colorA, vec3 colorB) {\n" \
+            "    bool r_similar = abs(colorA.r - colorB.r) < (0.5f / 255.0f);\n" \
+            "    bool g_similar = abs(colorA.g - colorB.g) < (0.5f / 255.0f);\n" \
+            "    bool b_similar = abs(colorA.b - colorB.b) < (0.5f / 255.0f);\n" \
+            "    return r_similar && g_similar && b_similar;\n" \
+            "}\n" \
+            "void main() {\n" \
+            "    vec4 color = imageLoad(tx2D, ivec2(gl_GlobalInvocationID.xy));\n" \
+            "    if (is_similar(color.rgb, transparent_color)) color.a = 0.0f;\n" \
+            "    imageStore(tx2D, ivec2(gl_GlobalInvocationID.xy), color);\n" \
+            "}\n";
+
         try
         {
             this->render_data.vs = utility::make_shader(vertex_shader, GL_VERTEX_SHADER);
             this->render_data.fs = utility::make_shader(fragment_shader, GL_FRAGMENT_SHADER);
+            this->render_data.cs = utility::make_shader(compute_shader, GL_COMPUTE_SHADER);
 
-            this->render_data.prog = utility::make_program({ this->render_data.vs, this->render_data.fs });
+            this->render_data.prog = utility::make_program({this->render_data.vs, this->render_data.fs});
+            this->render_data.cs_prog = utility::make_program({this->render_data.cs});
         }
         catch (const std::exception& e)
         {
@@ -118,7 +152,32 @@ bool draw_texture_3d::Render(core::view::CallRender3D_2& call) {
         this->render_data.initialized = true;
     }
 
+    // Replace transparent color
+    this->transparent_color.Parameter()->SetGUIVisible(false);
+
+    if (this->enable_transparency.Param<core::param::BoolParam>()->Value()) {
+        this->transparent_color.Parameter()->SetGUIVisible(true);
+
+        glUseProgram(this->render_data.cs_prog);
+
+        glUniform3fv(glGetUniformLocation(this->render_data.cs_prog, "transparent_color"), 1,
+            this->transparent_color.Param<core::param::ColorParam>()->Value().data());
+
+        this->render_data.texture->bindImage(0, GL_READ_WRITE);
+
+        int w, h;
+        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &w);
+        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &h);
+
+        glDispatchCompute(std::ceil(w / 8), std::ceil(h / 8), 1);
+
+        glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT);
+    }
+
     // Draw quad with given texture and model matrix
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     glUseProgram(this->render_data.prog);
 
     glActiveTexture(GL_TEXTURE0);
@@ -134,6 +193,9 @@ bool draw_texture_3d::Render(core::view::CallRender3D_2& call) {
     glBindTexture(GL_TEXTURE_2D, 0);
 
     glUseProgram(0);
+
+    // TODO: Reset to previous blending settings
+    glDisable(GL_BLEND);
 
     return true;
 }
