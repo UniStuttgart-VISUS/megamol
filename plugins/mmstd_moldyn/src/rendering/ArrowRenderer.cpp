@@ -204,27 +204,37 @@ bool ArrowRenderer::Render(view::CallRender3D_2& call) {
 
     // Lights
     this->GetLights();
-    glm::vec4 light_dir = { 0.0f, 0.0f, 1.0f, 1.0f };
+    glm::vec4 curlightDir = { 0.0f, 0.0f, 0.0f, 1.0f };
     if (this->lightMap.size() > 1) {
-        vislib::sys::Log::DefaultLog.WriteWarn("ArrowRenderer: Only one single distant (directional) light source is supported by this renderer");
+        vislib::sys::Log::DefaultLog.WriteWarn("ArrowRenderer: Only one single 'Distant Light' source is supported by this renderer");
     }
     for (auto light : this->lightMap) {
         if (light.second.lightType != core::view::light::DISTANTLIGHT) {
-            vislib::sys::Log::DefaultLog.WriteWarn("ArrowRenderer: Only single distant (directional) light source is supported by this renderer");
+            vislib::sys::Log::DefaultLog.WriteWarn("ArrowRenderer: Only single 'Distant Light' source is supported by this renderer");
         }
         else {
-            auto lightDir = this->lightMap.begin()->second.dl_direction;
-            if (lightDir.size() == 3) {
-                light_dir[0] = lightDir[0];
-                light_dir[1] = lightDir[1];
-                light_dir[2] = lightDir[2];
+            auto use_eyedir = light.second.dl_eye_direction;
+            if (use_eyedir) {
+                curlightDir = -cam_view;
             }
-            if (lightDir.size() == 4) {
-                light_dir[3] = lightDir[3];
+            else {
+                auto lightDir = light.second.dl_direction;
+                if (lightDir.size() == 3) {
+                    curlightDir[0] = lightDir[0];
+                    curlightDir[1] = lightDir[1];
+                    curlightDir[2] = lightDir[2];
+                }
+                if (lightDir.size() == 4) {
+                    curlightDir[3] = lightDir[3];
+                }
             }
+/// TODO Implement missing distant light parameter:
+            //light.second.dl_angularDiameter;
+            //light.second.lightColor;
+            //light.second.lightIntensity;
         }
     }
-    light_dir = MVtransp * light_dir;
+    curlightDir = MVtransp * curlightDir;
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -246,7 +256,7 @@ bool ArrowRenderer::Render(view::CallRender3D_2& call) {
     glUniform3fv(this->arrowShader.ParameterLocation("camIn"), 1, glm::value_ptr(cam_view));
     glUniform3fv(this->arrowShader.ParameterLocation("camRight"), 1, glm::value_ptr(cam_right));
     glUniform3fv(this->arrowShader.ParameterLocation("camUp"), 1, glm::value_ptr(cam_up));
-    glUniform4fv(this->arrowShader.ParameterLocation("lightDir"), 1, glm::value_ptr(light_dir));
+    glUniform4fv(this->arrowShader.ParameterLocation("lightDir"), 1, glm::value_ptr(curlightDir));
     this->arrowShader.SetParameter("lengthScale", lengthScale);
     this->arrowShader.SetParameter("lengthFilter", lengthFilter);
     glUniform4fv(this->arrowShader.ParameterLocation("clipDat"), 1, clipDat);

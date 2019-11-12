@@ -1057,21 +1057,21 @@ bool SphereRenderer::Render(view::CallRender3D_2& call) {
 
     // Lights
     this->GetLights();
-    this->curlightDir = { 0.0f, 0.0f, 1.0f, 1.0f };
+    this->curlightDir = { 0.0f, 0.0f, 0.0f, 1.0f };
     if (this->lightMap.size() > 1) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[SphereRenderer] Only one single distant (directional) light source is supported by this renderer");
+        vislib::sys::Log::DefaultLog.WriteWarn("[SphereRenderer] Only one single 'Distant Light' source is supported by this renderer");
     }
     for (auto light : this->lightMap) {
         if (light.second.lightType != core::view::light::DISTANTLIGHT) {
-            vislib::sys::Log::DefaultLog.WriteWarn("[SphereRenderer] Only single distant (directional) light source is supported by this renderer");
+            vislib::sys::Log::DefaultLog.WriteWarn("[SphereRenderer] Only single 'Distant Light' source is supported by this renderer");
         }
         else {
-            auto use_eyedir = this->lightMap.begin()->second.dl_eye_direction;
+            auto use_eyedir = light.second.dl_eye_direction;
             if (use_eyedir) {
-                this->curlightDir = this->curCamView;
+                this->curlightDir = -this->curCamView;
             }
             else {
-                auto lightDir = this->lightMap.begin()->second.dl_direction;
+                auto lightDir = light.second.dl_direction;
                 if (lightDir.size() == 3) {
                     this->curlightDir[0] = lightDir[0];
                     this->curlightDir[1] = lightDir[1];
@@ -1081,6 +1081,10 @@ bool SphereRenderer::Render(view::CallRender3D_2& call) {
                     this->curlightDir[3] = lightDir[3];
                 }
             }
+/// TODO Implement missing distant light parameter:
+            //light.second.dl_angularDiameter;
+            //light.second.lightColor;
+            //light.second.lightIntensity;
         }
     }
     this->curlightDir = this->curMVtransp * this->curlightDir;
