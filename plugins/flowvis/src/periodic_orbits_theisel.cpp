@@ -50,7 +50,8 @@ periodic_orbits_theisel::periodic_orbits_theisel()
     , integration_timestep("integration_timestep", "Initial time step for streamline integration")
     , max_integration_error("max_integration_error", "Maximum integration error for Runge-Kutta 4-5")
     , domain_height("domain_height", "Domain height coefficient for the stream surfaces")
-    , num_subdivisions("num_subdivisions", "Number of subdivisions")
+    , num_seed_points("num_seed_points", "Number of seed points along a seed line")
+    , num_subdivisions("num_subdivisions", "Number of subdivisions for seed line refinement")
     , critical_point_offset("critical_point_offset", "Offset from critical points for increased numeric stability")
     , direction("direction", "Integration direction for stream surface computation")
     , compute_intersections(
@@ -118,6 +119,9 @@ periodic_orbits_theisel::periodic_orbits_theisel()
 
     this->domain_height << new core::param::FloatParam(1.0f);
     this->MakeSlotAvailable(&domain_height);
+
+    this->num_seed_points << new core::param::IntParam(10);
+    this->MakeSlotAvailable(&this->num_seed_points);
 
     this->num_subdivisions << new core::param::IntParam(10);
     this->MakeSlotAvailable(&this->num_subdivisions);
@@ -218,9 +222,9 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
     if (this->vector_field_changed || this->seed_lines_changed || this->direction.IsDirty() ||
         this->integration_method.IsDirty() || this->integration_timestep.IsDirty() ||
         this->max_integration_error.IsDirty() || this->domain_height.IsDirty() ||
-        this->num_integration_steps.IsDirty() || this->num_subdivisions.IsDirty() ||
-        this->compute_intersections.IsDirty() || this->filter_seed_lines.IsDirty() ||
-        this->critical_point_offset.IsDirty()) {
+        this->num_integration_steps.IsDirty() || this->num_seed_points.IsDirty() ||
+        this->num_subdivisions.IsDirty() || this->compute_intersections.IsDirty() ||
+        this->filter_seed_lines.IsDirty() || this->critical_point_offset.IsDirty()) {
 
         this->direction.ResetDirty();
         this->integration_method.ResetDirty();
@@ -228,6 +232,7 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
         this->max_integration_error.ResetDirty();
         this->domain_height.ResetDirty();
         this->num_integration_steps.ResetDirty();
+        this->num_seed_points.ResetDirty();
         this->num_subdivisions.ResetDirty();
         this->compute_intersections.ResetDirty();
         this->filter_seed_lines.ResetDirty();
@@ -298,7 +303,7 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
 
         // Allocate output
         const auto num_seed_points =
-            static_cast<size_t>(std::max(2, this->num_subdivisions.Param<core::param::IntParam>()->Value()));
+            static_cast<size_t>(std::max(2, this->num_seed_points.Param<core::param::IntParam>()->Value()));
         const auto num_triangles = 2 * (num_seed_points - 1);
         const auto num_integration_steps =
             static_cast<size_t>(this->num_integration_steps.Param<core::param::IntParam>()->Value());
@@ -388,81 +393,104 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
                         vector_field, previous_backward_points[point_index], backward_timesteps[point_index], false));
                 }
 
-                forward_points.insert(
-                    forward_points.end(), advected_forward_points.begin(), advected_forward_points.end());
-                backward_points.insert(
-                    backward_points.end(), advected_backward_points.begin(), advected_backward_points.end());
+                forward_points.insert(forward_points.end(), advected_forward_points.begin(), advected_forward_points.end());
+                backward_points.insert(backward_points.end(), advected_backward_points.begin(), advected_backward_points.end());
 
                 // Look for an intersection
                 if (this->compute_intersections.Param<core::param::BoolParam>()->Value() && num_integration_steps > 1 &&
                     this->direction.Param<core::param::EnumParam>()->Value() == 0) {
 
-                    for (std::size_t fwd_point_index = 0; fwd_point_index < num_seed_points - 1; ++fwd_point_index) {
-                        const kernel_t::Point_3 fwd_point_1(previous_forward_points[fwd_point_index][0],
-                            previous_forward_points[fwd_point_index][1], previous_forward_points[fwd_point_index][2]);
-                        const kernel_t::Point_3 fwd_point_2(previous_forward_points[fwd_point_index + 1][0],
-                            previous_forward_points[fwd_point_index + 1][1],
-                            previous_forward_points[fwd_point_index + 1][2]);
-                        const kernel_t::Point_3 fwd_point_3(advected_forward_points[fwd_point_index][0],
-                            advected_forward_points[fwd_point_index][1], advected_forward_points[fwd_point_index][2]);
-                        const kernel_t::Point_3 fwd_point_4(advected_forward_points[fwd_point_index + 1][0],
-                            advected_forward_points[fwd_point_index + 1][1],
-                            advected_forward_points[fwd_point_index + 1][2]);
+                    const auto intersection_points = find_intersection(previous_forward_points, previous_backward_points,
+                        advected_forward_points, advected_backward_points);
 
-                        const kernel_t::Triangle_3 fwd_triangle_1(fwd_point_1, fwd_point_3, fwd_point_4);
-                        const kernel_t::Triangle_3 fwd_triangle_2(fwd_point_1, fwd_point_4, fwd_point_2);
+                    if (!intersection_points.empty()) {
+                        const auto num_subdivisions = this->num_subdivisions.Param<core::param::IntParam>()->Value();
 
-                        for (std::size_t bwd_point_index = 0; bwd_point_index < num_seed_points - 1;
-                             ++bwd_point_index) {
-                            const kernel_t::Point_3 bwd_point_1(previous_backward_points[bwd_point_index][0],
-                                previous_backward_points[bwd_point_index][1],
-                                previous_backward_points[bwd_point_index][2]);
-                            const kernel_t::Point_3 bwd_point_2(previous_backward_points[bwd_point_index + 1][0],
-                                previous_backward_points[bwd_point_index + 1][1],
-                                previous_backward_points[bwd_point_index + 1][2]);
-                            const kernel_t::Point_3 bwd_point_3(advected_backward_points[bwd_point_index][0],
-                                advected_backward_points[bwd_point_index][1],
-                                advected_backward_points[bwd_point_index][2]);
-                            const kernel_t::Point_3 bwd_point_4(advected_backward_points[bwd_point_index + 1][0],
-                                advected_backward_points[bwd_point_index + 1][1],
-                                advected_backward_points[bwd_point_index + 1][2]);
+                        if (num_subdivisions > 0) {
+                            for (const auto& intersection_point : intersection_points) {
+                                // Seed a new point for each subdivision and check intersection again
+                                float step_fwd_low = static_cast<float>(std::get<1>(intersection_point));
+                                float step_fwd_hi = static_cast<float>(std::get<1>(intersection_point) + 1);
+                                float step_bwd_low = static_cast<float>(std::get<2>(intersection_point));
+                                float step_bwd_hi = static_cast<float>(std::get<2>(intersection_point) + 1);
 
-                            const kernel_t::Triangle_3 bwd_triangle_1(bwd_point_1, bwd_point_3, bwd_point_4);
-                            const kernel_t::Triangle_3 bwd_triangle_2(bwd_point_1, bwd_point_4, bwd_point_2);
+                                Eigen::Vector3f fwd_prev_low = previous_forward_points[std::get<1>(intersection_point)];
+                                Eigen::Vector3f fwd_prev_hi = previous_forward_points[std::get<1>(intersection_point) + 1];
+                                Eigen::Vector3f fwd_adv_low = advected_forward_points[std::get<1>(intersection_point)];
+                                Eigen::Vector3f fwd_adv_hi = advected_forward_points[std::get<1>(intersection_point) + 1];
+                                Eigen::Vector3f bwd_prev_low = previous_backward_points[std::get<2>(intersection_point)];
+                                Eigen::Vector3f bwd_prev_hi = previous_backward_points[std::get<2>(intersection_point) + 1];
+                                Eigen::Vector3f bwd_adv_low = advected_backward_points[std::get<2>(intersection_point)];
+                                Eigen::Vector3f bwd_adv_hi = advected_backward_points[std::get<2>(intersection_point) + 1];
 
-                            decltype(CGAL::intersection(fwd_triangle_1, bwd_triangle_1)) intersection;
+                                for (std::size_t subdivision = 0; subdivision < num_subdivisions; ++subdivision) {
+                                    const float step_fwd_ref = 0.5f * (step_fwd_low + step_fwd_hi);
+                                    const float step_bwd_ref = 0.5f * (step_bwd_low + step_bwd_hi);
 
-                            if (CGAL::do_intersect(fwd_triangle_1, bwd_triangle_1)) {
-                                intersection = CGAL::intersection(fwd_triangle_1, bwd_triangle_1);
-                            } else if (CGAL::do_intersect(fwd_triangle_1, bwd_triangle_2)) {
-                                intersection = CGAL::intersection(fwd_triangle_1, bwd_triangle_2);
-                            } else if (CGAL::do_intersect(fwd_triangle_2, bwd_triangle_1)) {
-                                intersection = CGAL::intersection(fwd_triangle_2, bwd_triangle_1);
-                            } else if (CGAL::do_intersect(fwd_triangle_2, bwd_triangle_2)) {
-                                intersection = CGAL::intersection(fwd_triangle_2, bwd_triangle_2);
-                            }
+                                    Eigen::Vector3f seed_point_fwd = seed_line_start + (step_fwd_ref * step) * direction;
+                                    Eigen::Vector3f seed_point_bwd = seed_line_start + (step_bwd_ref * step) * direction;
 
-                            if (intersection) {
-                                const auto intersection_point = boost::get<kernel_t::Point_3>(&*intersection);
-                                const auto intersection_line = boost::get<kernel_t::Segment_3>(&*intersection);
-                                const auto intersection_triangle = boost::get<kernel_t::Triangle_3>(&*intersection);
-                                const auto intersection_points =
-                                    boost::get<std::vector<kernel_t::Point_3>>(&*intersection);
+                                    float delta_fwd = timestep;
+                                    float delta_bwd = timestep;
 
-                                if (intersection_point != nullptr) {
-                                    // Not relevant
-                                } else if (intersection_line != nullptr) {
-                                    const auto point = Eigen::Vector2f(CGAL::to_double(intersection_line->vertex(0)[0]),
-                                        CGAL::to_double(intersection_line->vertex(0)[1]));
+                                    // Advect new seed points
+                                    for (std::size_t ref_integration = 0; ref_integration < integration;
+                                         ++ref_integration) {
+                                        seed_point_fwd = advect_point(vector_field, seed_point_fwd, delta_fwd, true);
+                                        seed_point_bwd = advect_point(vector_field, seed_point_bwd, delta_bwd, false);
+                                    }
 
-                                    this->periodic_orbits.push_back(std::make_pair(0.0f, point));
-                                } else if (intersection_triangle != nullptr) {
-                                    vislib::sys::Log::DefaultLog.WriteWarn(
-                                        "Triangle result from triangle intersection not supported");
-                                } else if (intersection_points != nullptr) {
-                                    vislib::sys::Log::DefaultLog.WriteWarn(
-                                        "Vector of points result from triangle intersection not supported");
+                                    const Eigen::Vector3f adv_point_fwd =
+                                        advect_point(vector_field, seed_point_fwd, delta_fwd, true);
+                                    const Eigen::Vector3f adv_point_bwd =
+                                        advect_point(vector_field, seed_point_bwd, delta_bwd, true);
+
+                                    // Check intersection
+                                    const std::vector<Eigen::Vector3f> fwd_prev{fwd_prev_low, seed_point_fwd, fwd_prev_hi};
+                                    const std::vector<Eigen::Vector3f> bwd_prev{bwd_prev_low, seed_point_bwd, bwd_prev_hi};
+                                    const std::vector<Eigen::Vector3f> fwd_adv{fwd_adv_low, adv_point_fwd, fwd_adv_hi};
+                                    const std::vector<Eigen::Vector3f> bwd_adv{bwd_adv_low, adv_point_bwd, bwd_adv_hi};
+
+                                    const auto ref_intersection_points = find_intersection(fwd_prev, bwd_prev, fwd_adv, bwd_adv);
+
+                                    if (ref_intersection_points.empty()) {
+                                        break;
+                                    }
+
+                                    if (subdivision == (static_cast<long long>(num_subdivisions) - 1)) {
+                                        this->periodic_orbits.push_back(std::make_pair(0.0f, std::get<0>(ref_intersection_points[0])));
+                                        break;
+                                    }
+
+                                    // Prepare for next subdivision
+                                    if (std::get<1>(ref_intersection_points[0]) == 0) {
+                                        step_fwd_hi = step_fwd_ref;
+
+                                        fwd_prev_hi = seed_point_fwd;
+                                        fwd_adv_hi = adv_point_fwd;
+                                    } else {
+                                        step_fwd_low = step_fwd_ref;
+
+                                        fwd_prev_low = seed_point_fwd;
+                                        fwd_adv_low = adv_point_fwd;
+                                    }
+
+                                    if (std::get<2>(ref_intersection_points[0]) == 0) {
+                                        step_bwd_hi = step_bwd_ref;
+
+                                        bwd_prev_hi = seed_point_bwd;
+                                        bwd_adv_hi = adv_point_bwd;
+                                    } else {
+                                        step_bwd_low = step_bwd_ref;
+
+                                        bwd_prev_low = seed_point_bwd;
+                                        bwd_adv_low = adv_point_bwd;
+                                    }
                                 }
+                            }
+                        } else {
+                            for (const auto& intersection_point : intersection_points) {
+                                this->periodic_orbits.push_back(std::make_pair(0.0f, std::get<0>(intersection_point)));
                             }
                         }
                     }
@@ -591,6 +619,7 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
             this->integration_timestep.Param<core::param::FloatParam>()->Value(),
             this->max_integration_error.Param<core::param::FloatParam>()->Value(),
             this->num_integration_steps.Param<core::param::IntParam>()->Value(),
+            this->num_seed_points.Param<core::param::IntParam>()->Value(),
             this->num_subdivisions.Param<core::param::IntParam>()->Value(),
             this->filter_seed_lines.Param<core::param::IntParam>()->Value(),
             this->critical_point_offset.Param<core::param::FloatParam>()->Value());
@@ -683,6 +712,80 @@ Eigen::Vector3f periodic_orbits_theisel::advect_point(const tpf::data::grid<floa
     return Eigen::Vector3f(advected_point[0], advected_point[1], point[2]);
 }
 
+std::vector<std::tuple<Eigen::Vector2f, std::size_t, std::size_t>> periodic_orbits_theisel::find_intersection(
+    const std::vector<Eigen::Vector3f>& previous_forward_points,
+    const std::vector<Eigen::Vector3f>& previous_backward_points,
+    const std::vector<Eigen::Vector3f>& advected_forward_points,
+    const std::vector<Eigen::Vector3f>& advected_backward_points) const {
+
+    const auto num_seed_points = previous_forward_points.size();
+
+    std::vector<std::tuple<Eigen::Vector2f, std::size_t, std::size_t>> intersections;
+
+    for (std::size_t fwd_point_index = 0; fwd_point_index < num_seed_points - 1; ++fwd_point_index) {
+        const kernel_t::Point_3 fwd_point_1(previous_forward_points[fwd_point_index][0],
+            previous_forward_points[fwd_point_index][1], previous_forward_points[fwd_point_index][2]);
+        const kernel_t::Point_3 fwd_point_2(previous_forward_points[fwd_point_index + 1][0],
+            previous_forward_points[fwd_point_index + 1][1], previous_forward_points[fwd_point_index + 1][2]);
+        const kernel_t::Point_3 fwd_point_3(advected_forward_points[fwd_point_index][0],
+            advected_forward_points[fwd_point_index][1], advected_forward_points[fwd_point_index][2]);
+        const kernel_t::Point_3 fwd_point_4(advected_forward_points[fwd_point_index + 1][0],
+            advected_forward_points[fwd_point_index + 1][1], advected_forward_points[fwd_point_index + 1][2]);
+
+        const kernel_t::Triangle_3 fwd_triangle_1(fwd_point_1, fwd_point_3, fwd_point_4);
+        const kernel_t::Triangle_3 fwd_triangle_2(fwd_point_1, fwd_point_4, fwd_point_2);
+
+        for (std::size_t bwd_point_index = 0; bwd_point_index < num_seed_points - 1; ++bwd_point_index) {
+            const kernel_t::Point_3 bwd_point_1(previous_backward_points[bwd_point_index][0],
+                previous_backward_points[bwd_point_index][1], previous_backward_points[bwd_point_index][2]);
+            const kernel_t::Point_3 bwd_point_2(previous_backward_points[bwd_point_index + 1][0],
+                previous_backward_points[bwd_point_index + 1][1], previous_backward_points[bwd_point_index + 1][2]);
+            const kernel_t::Point_3 bwd_point_3(advected_backward_points[bwd_point_index][0],
+                advected_backward_points[bwd_point_index][1], advected_backward_points[bwd_point_index][2]);
+            const kernel_t::Point_3 bwd_point_4(advected_backward_points[bwd_point_index + 1][0],
+                advected_backward_points[bwd_point_index + 1][1], advected_backward_points[bwd_point_index + 1][2]);
+
+            const kernel_t::Triangle_3 bwd_triangle_1(bwd_point_1, bwd_point_3, bwd_point_4);
+            const kernel_t::Triangle_3 bwd_triangle_2(bwd_point_1, bwd_point_4, bwd_point_2);
+
+            decltype(CGAL::intersection(fwd_triangle_1, bwd_triangle_1)) intersection;
+
+            if (CGAL::do_intersect(fwd_triangle_1, bwd_triangle_1)) {
+                intersection = CGAL::intersection(fwd_triangle_1, bwd_triangle_1);
+            } else if (CGAL::do_intersect(fwd_triangle_1, bwd_triangle_2)) {
+                intersection = CGAL::intersection(fwd_triangle_1, bwd_triangle_2);
+            } else if (CGAL::do_intersect(fwd_triangle_2, bwd_triangle_1)) {
+                intersection = CGAL::intersection(fwd_triangle_2, bwd_triangle_1);
+            } else if (CGAL::do_intersect(fwd_triangle_2, bwd_triangle_2)) {
+                intersection = CGAL::intersection(fwd_triangle_2, bwd_triangle_2);
+            }
+
+            if (intersection) {
+                const auto intersection_point = boost::get<kernel_t::Point_3>(&*intersection);
+                const auto intersection_line = boost::get<kernel_t::Segment_3>(&*intersection);
+                const auto intersection_triangle = boost::get<kernel_t::Triangle_3>(&*intersection);
+                const auto intersection_points = boost::get<std::vector<kernel_t::Point_3>>(&*intersection);
+
+                if (intersection_point != nullptr) {
+                    // Not relevant
+                } else if (intersection_line != nullptr) {
+                    const auto point = Eigen::Vector2f(CGAL::to_double(intersection_line->vertex(0)[0]),
+                        CGAL::to_double(intersection_line->vertex(0)[1]));
+
+                    intersections.push_back(std::make_tuple(point, fwd_point_index, bwd_point_index));
+                } else if (intersection_triangle != nullptr) {
+                    vislib::sys::Log::DefaultLog.WriteWarn("Triangle result from triangle intersection not supported");
+                } else if (intersection_points != nullptr) {
+                    vislib::sys::Log::DefaultLog.WriteWarn(
+                        "Vector of points result from triangle intersection not supported");
+                }
+            }
+        }
+    }
+
+    return intersections;
+}
+
 bool periodic_orbits_theisel::get_periodic_orbits_data(core::Call& call) {
     auto& gdc = static_cast<glyph_data_call&>(call);
 
@@ -763,7 +866,7 @@ bool periodic_orbits_theisel::get_stream_surface_values_data(core::Call& call) {
 
         this->seed_point_ids->min_value = 0.0f;
         this->seed_point_ids->max_value =
-            static_cast<float>(std::max(2, this->num_subdivisions.Param<core::param::IntParam>()->Value()));
+            static_cast<float>(std::max(2, this->num_seed_points.Param<core::param::IntParam>()->Value()));
         this->seed_point_ids->transfer_function = tf_string;
         this->seed_point_ids->transfer_function_dirty = true;
         mdc.set_data("seed point", this->seed_point_ids);

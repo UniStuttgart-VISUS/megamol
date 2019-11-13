@@ -27,8 +27,8 @@
 
 #include <array>
 #include <functional>
-#include <memory>
 #include <iostream>
+#include <memory>
 #include <utility>
 #include <vector>
 
@@ -118,6 +118,13 @@ namespace megamol
              */
             Eigen::Vector3f advect_point(const tpf::data::grid<float, float, 2, 2>& grid, const Eigen::Vector3f& point, float& delta, bool forward) const;
 
+
+            std::vector<std::tuple<Eigen::Vector2f, std::size_t, std::size_t>> find_intersection(
+                const std::vector<Eigen::Vector3f>& previous_forward_points,
+                const std::vector<Eigen::Vector3f>& previous_backward_points,
+                const std::vector<Eigen::Vector3f>& advected_forward_points,
+                const std::vector<Eigen::Vector3f>& advected_backward_points) const;
+
             /** Callbacks for the computed periodic orbits */
             bool get_periodic_orbits_data(core::Call& call);
             bool get_periodic_orbits_extent(core::Call& call);
@@ -160,6 +167,7 @@ namespace megamol
 
             core::param::ParamSlot domain_height;
 
+            core::param::ParamSlot num_seed_points;
             core::param::ParamSlot num_subdivisions;
             core::param::ParamSlot critical_point_offset;
 
