@@ -441,8 +441,10 @@ namespace megamol
                 glBindVertexArray(this->render_data.line.vao);
                 glActiveTexture(GL_TEXTURE0);
                 glBindTexture(GL_TEXTURE_1D, this->render_data.tf);
+                glEnable(GL_PRIMITIVE_RESTART);
                 glPrimitiveRestartIndex(-1);
                 glDrawElements(GL_LINE_STRIP, static_cast<GLsizei>(this->render_data.line_indices->size()), GL_UNSIGNED_INT, nullptr);
+                glDisable(GL_PRIMITIVE_RESTART);
                 glBindTexture(GL_TEXTURE_1D, 0);
                 glBindVertexArray(0);
             }

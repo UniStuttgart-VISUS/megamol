@@ -187,7 +187,7 @@ bool streamlines_2d::compute_streamlines() {
                 origin[dimension] + (this->resolution[dimension] - 0.5f) * cell_size[dimension];
         }
 
-        tpf::data::grid<float, float, 2, 2> vector_field("vector_field", extent, *this->vectors,
+        const tpf::data::grid<float, float, 2, 2> vector_field("vector_field", extent, *this->vectors,
             std::move(cell_coordinates), std::move(node_coordinates), std::move(cell_sizes));
 
         // Get parameters
@@ -202,8 +202,10 @@ bool streamlines_2d::compute_streamlines() {
 
         for (std::size_t direction_run = 0; direction_run < (direction == 0 ? 2 : 1); ++direction_run) {
             #pragma omp parallel for
-            for (long long point_index = 0; point_index < static_cast<long long>(this->seed_points.size()); ++point_index) {
-                Eigen::Vector2f point = this->seed_points.at(point_index).first;
+            for (long long point_index = 0; point_index < static_cast<long long>(this->seed_points.size());
+                 ++point_index) {
+
+                Eigen::Vector2f point = this->seed_points[point_index].first;
 
                 auto integration_timestep = this->integration_timestep.Param<core::param::FloatParam>()->Value();
 
@@ -212,23 +214,29 @@ bool streamlines_2d::compute_streamlines() {
 
                 line_points.push_back(point);
 
-                for (std::size_t integration = 0; integration < num_integration_steps; ++integration) {
-                    switch (integration_method) {
-                    case 0:
-                        advect_point_rk4<2>(vector_field, point, integration_timestep,
-                            direction == 1 || (direction == 0 && direction_run == 0));
+                try {
+                    for (std::size_t integration = 0; integration < num_integration_steps; ++integration) {
+                        switch (integration_method) {
+                        case 0:
+                            advect_point_rk4<2>(vector_field, point, integration_timestep,
+                                direction == 1 || (direction == 0 && direction_run == 0));
+                            line_points.push_back(point);
+                            break;
+                        case 1:
+                            advect_point_rk45<2>(vector_field, point, integration_timestep, max_integration_error,
+                                direction == 1 || (direction == 0 && direction_run == 0));
+                            line_points.push_back(point);
+                            break;
+                        }
+                    }
+                } catch (std::exception&) {
+                    if (line_points.size() == 1) {
                         line_points.push_back(point);
-                        break;
-                    case 1:
-                        advect_point_rk45<2>(vector_field, point, integration_timestep, max_integration_error,
-                            direction == 1 || (direction == 0 && direction_run == 0));
-                        line_points.push_back(point);
-                        break;
                     }
                 }
 
                 this->streamlines[direction_run * this->seed_points.size() + point_index] =
-                    std::make_pair(static_cast<float>(point_index), line_points);
+                   std::make_pair(static_cast<float>(point_index), line_points);
             }
         }
 

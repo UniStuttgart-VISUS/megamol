@@ -579,6 +579,12 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
             }
         }
 
+        if (this->compute_intersections.Param<core::param::BoolParam>()->Value() && num_integration_steps > 1 &&
+            this->direction.Param<core::param::EnumParam>()->Value() == 0) {
+
+            vislib::sys::Log::DefaultLog.WriteInfo("Found %u periodic orbits.", this->periodic_orbits.size());
+        }
+
         this->stream_surface_hash = core::utility::DataHash(this->vector_field_hash, this->seed_lines_hash,
             this->direction.Param<core::param::EnumParam>()->Value(),
             this->integration_method.Param<core::param::EnumParam>()->Value(),
