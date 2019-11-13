@@ -63,6 +63,7 @@ protected:
      /** The call for data */
     core::CallerSlot getTrimeshDataSlot;
     core::CallerSlot getMeshDataSlot;
+    std::vector<float> _color;
 
 };
 

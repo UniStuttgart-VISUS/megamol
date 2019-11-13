@@ -38,6 +38,9 @@ bool OSPRayTriangleMesh::readData(megamol::core::Call& call) {
     // fill material container
     this->processMaterial();
 
+    // fill transformation container
+    this->processTransformation();
+
     // read Data, calculate  shape parameters, fill data vectors
     CallOSPRayStructure* os = dynamic_cast<CallOSPRayStructure*>(&call);
 
@@ -133,7 +136,7 @@ bool OSPRayTriangleMesh::readData(megamol::core::Call& call) {
                         const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(obj.GetNormalPointerFloat())),
                         3 * vertexCount *
                             mesh::MeshDataAccessCollection::getByteSize(mesh::MeshDataAccessCollection::FLOAT),
-                        3, mesh::MeshDataAccessCollection::FLOAT, 0, 0,
+                        3, mesh::MeshDataAccessCollection::FLOAT, sizeof(float) * 3, 0,
                         mesh::MeshDataAccessCollection::AttributeSemanticType::NORMAL});
                     break;
                 default:
@@ -145,28 +148,39 @@ bool OSPRayTriangleMesh::readData(megamol::core::Call& call) {
 
             // check colorpointer and convert to rgba
             if (obj.HasColourPointer()) {
+                _color.clear();
                 switch (obj.GetColourDataType()) {
                 case geocalls::CallTriMeshData::Mesh::DT_BYTE:
-                    attrib.emplace_back(mesh::MeshDataAccessCollection::VertexAttribute{
-                        const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(obj.GetColourPointerByte())),
-                        3 * vertexCount *
-                            mesh::MeshDataAccessCollection::getByteSize(mesh::MeshDataAccessCollection::BYTE),
-                        3, mesh::MeshDataAccessCollection::BYTE, 0, 0,
-                        mesh::MeshDataAccessCollection::AttributeSemanticType::COLOR});
+                    _color.reserve(vertexCount * 4);
+                    for (unsigned int i = 0; i < 3 * obj.GetVertexCount(); i++) {
+                        _color.push_back((float)obj.GetColourPointerByte()[i] / 255.0f);
+                        if ((i + 1) % 3 == 0) {
+                            _color.push_back(1.0f);
+                        }
+                    }
                     break;
                 case geocalls::CallTriMeshData::Mesh::DT_FLOAT:
-                    attrib.emplace_back(mesh::MeshDataAccessCollection::VertexAttribute{
-                        const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(obj.GetColourPointerFloat())),
-                        3 * vertexCount *
-                            mesh::MeshDataAccessCollection::getByteSize(mesh::MeshDataAccessCollection::FLOAT),
-                        3, mesh::MeshDataAccessCollection::FLOAT, 0, 0,
-                        mesh::MeshDataAccessCollection::AttributeSemanticType::COLOR});
+                    // TODO: not tested
+                    _color.reserve(vertexCount * 4);
+                    for (unsigned int i = 0; i < 3 * obj.GetVertexCount(); i++) {
+                        _color.push_back(obj.GetColourPointerFloat()[i]);
+                        if ((i + 1) % 3 == 0) {
+                            _color.push_back(1.0f);
+                        }
+                    }
                     break;
                 default:
                     vislib::sys::Log::DefaultLog.WriteError(
                         "[OSPRayTriangleMesh] Color: No other data types than BYTE or FLOAT are supported.");
                     return false;
                 }
+
+                attrib.emplace_back(mesh::MeshDataAccessCollection::VertexAttribute{
+                    const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(_color.data())),
+                    4 * vertexCount *
+                        mesh::MeshDataAccessCollection::getByteSize(mesh::MeshDataAccessCollection::FLOAT),
+                    4, mesh::MeshDataAccessCollection::FLOAT, 4 * sizeof(float), 0,
+                    mesh::MeshDataAccessCollection::AttributeSemanticType::COLOR});
             }
 
 
@@ -178,7 +192,7 @@ bool OSPRayTriangleMesh::readData(megamol::core::Call& call) {
                         const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(obj.GetTextureCoordinatePointerFloat())),
                         2 * vertexCount *
                             mesh::MeshDataAccessCollection::getByteSize(mesh::MeshDataAccessCollection::FLOAT),
-                        2, mesh::MeshDataAccessCollection::FLOAT, 0, 0,
+                        2, mesh::MeshDataAccessCollection::FLOAT, 2*sizeof(float), 0,
                         mesh::MeshDataAccessCollection::AttributeSemanticType::TEXCOORD});
                     break;
                 default:

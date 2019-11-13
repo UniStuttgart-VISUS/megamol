@@ -100,7 +100,7 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
     this->structureContainer.dataChanged = false;
     if (cd == nullptr) return false;
     if (cgtf == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError("OSPRayStructuredVolume: no transferfunction connected.");
+        vislib::sys::Log::DefaultLog.WriteError("[OSPRayStructuredVolume] No transferfunction connected.");
         return false;
     }
 
@@ -113,7 +113,12 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
     } else {
         cd->SetFrameID(os->getTime(), true); // isTimeForced flag set to true
     }
-    if (this->datahash != cd->DataHash() || this->time != os->getTime() || this->InterfaceIsDirty() || cgtf->IsDirty()) {
+    
+    // do the callback to set the dirty flag
+    if (!(*cgtf)(0)) return false;
+    
+    if (this->datahash != cd->DataHash() || this->time != os->getTime() || this->InterfaceIsDirty() ||
+        cgtf->IsDirty()) {
         this->datahash = cd->DataHash();
         this->time = os->getTime();
         this->structureContainer.dataChanged = true;

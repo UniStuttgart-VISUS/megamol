@@ -111,9 +111,29 @@ bool OSPRayRenderer::create() {
 ospray::OSPRayRenderer::release
 */
 void OSPRayRenderer::release() {
+    for (auto& model : this->instancedModels) {
+        ospRelease(model.second);
+    }
+    for (auto& inst : this->instances) {
+        ospRelease(inst.second);
+    }
+    for (auto& structs : this->baseStructures) {
+        if (this->structureMap[structs.first].type == structureTypeEnum::GEOMETRY) {
+            for (auto& geo : structs.second) {
+                ospRelease(std::get<OSPGeometry>(geo));
+            }
+        } else {
+            for (auto& vol : structs.second) {
+                ospRelease(std::get<OSPVolume>(vol));
+            }
+        }
+    }
+    for (auto& material : this->materials) {
+        ospRelease(material.second);
+    }
     if (camera != NULL) ospRelease(camera);
     if (world != NULL) ospRelease(world);
-    if (renderer != NULL) ospRelease(renderer);
+    //if (renderer != NULL) ospRelease(renderer);
     releaseTextureScreen();
 }
 
@@ -161,6 +181,7 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D_2& cr) {
     // check if data has changed
     data_has_changed = false;
     material_has_changed = false;
+    transformation_has_changed = false;
     for (auto element : this->structureMap) {
         auto structure = element.second;
         if (structure.dataChanged) {
@@ -169,6 +190,8 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D_2& cr) {
         if (structure.materialChanged) {
             material_has_changed = true;
         }
+        if (structure.transformationChanged)
+            transformation_has_changed = true;
     }
 
     // Light setup
@@ -180,7 +203,7 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D_2& cr) {
 	cam_type::matrix_type viewTemp, projTemp;
 
 	// Generate complete snapshot and calculate matrices
-	tmp_newcam.calc_matrices(snapshot, viewTemp, projTemp, core::thecam::snapshot_content::all);
+    tmp_newcam.calc_matrices(snapshot, viewTemp, projTemp, core::thecam::snapshot_content::all);
 
     // check data and camera hash
 	if (cam.eye_position().x() != tmp_newcam.eye_position().x() ||
@@ -204,7 +227,7 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D_2& cr) {
         imgSize.y != cam.resolution_gate().height() || accumulateSlot.IsDirty()) {
         // triggered = true;
         // Breakpoint for Screenshooter debugging
-        if (framebuffer != NULL) ospFreeFrameBuffer(framebuffer);
+        // if (framebuffer != NULL) ospFreeFrameBuffer(framebuffer);
         imgSize.x = cam.resolution_gate().width();
         imgSize.y = cam.resolution_gate().height();
         framebuffer = newFrameBuffer(imgSize, OSP_FB_RGBA8, OSP_FB_COLOR | OSP_FB_DEPTH | OSP_FB_ACCUM);
@@ -235,7 +258,7 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D_2& cr) {
     osprayShader.Enable();
     // if nothing changes, the image is rendered multiple times
     if (data_has_changed || material_has_changed || light_has_changed || cam_has_changed || renderer_has_changed ||
-        !(this->accumulateSlot.Param<core::param::BoolParam>()->Value()) ||
+        transformation_has_changed || !(this->accumulateSlot.Param<core::param::BoolParam>()->Value()) ||
         frameID != static_cast<size_t>(cr.Time()) || this->InterfaceIsDirty()) {
 
         if (data_has_changed || frameID != static_cast<size_t>(cr.Time()) || renderer_has_changed) {
@@ -247,11 +270,16 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D_2& cr) {
             ospCommit(world);
             auto t2 = std::chrono::high_resolution_clock::now();
             const auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
-            vislib::sys::Log::DefaultLog.WriteMsg(242, "OSPRayRenderer: Commiting World took: %d microseconds", duration);
+            vislib::sys::Log::DefaultLog.WriteMsg(
+                242, "OSPRayRenderer: Commiting World took: %d microseconds", duration);
         }
         if (material_has_changed && !data_has_changed) {
             this->changeMaterial();
         }
+        if (transformation_has_changed && !data_has_changed) {
+            this->changeTransformation();
+        }
+
         this->InterfaceResetDirty();
         time = cr.Time();
         frameID = static_cast<size_t>(cr.Time());
@@ -281,6 +309,7 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D_2& cr) {
 
         ospFrameBufferClear(framebuffer, OSP_FB_COLOR | OSP_FB_DEPTH | OSP_FB_ACCUM);
         ospRenderFrame(framebuffer, renderer, OSP_FB_COLOR | OSP_FB_DEPTH | OSP_FB_ACCUM);
+
         // get the texture from the framebuffer
         fb = (uint32_t*)ospMapFrameBuffer(framebuffer, OSP_FB_COLOR);
         auto t2 = std::chrono::high_resolution_clock::now();

@@ -7,17 +7,21 @@
 #include "stdafx.h"
 #include "OSPRay_plugin/AbstractOSPRayStructure.h"
 
-using namespace megamol::ospray;
+namespace megamol {
+namespace ospray {
 
 
-AbstractOSPRayStructure::AbstractOSPRayStructure(void) : 
-    megamol::core::Module(),
-    deployStructureSlot("deployStructureSlot", "Connects to the OSPRayRenderer or another OSPRayStructure"),
-    getStructureSlot("getStructureSlot", "Connects to the another OSPRayStructure"),
-    getMaterialSlot("getMaterialSlot", "Connects to an OSPRayMaterial") {
+AbstractOSPRayStructure::AbstractOSPRayStructure()
+    : Module()
+    , deployStructureSlot("deployStructureSlot", "Connects to the OSPRayRenderer or another OSPRayStructure")
+    , getStructureSlot("getStructureSlot", "Connects to the another OSPRayStructure")
+    , getMaterialSlot("getMaterialSlot", "Connects to an OSPRayMaterial") 
+    , getTransformationSlot("getTransformationSlot", "Connects to an OSPRayTransform") {
 
-    this->deployStructureSlot.SetCallback(CallOSPRayStructure::ClassName(), CallOSPRayStructure::FunctionName(0), &AbstractOSPRayStructure::getStructureCallback);
-    this->deployStructureSlot.SetCallback(CallOSPRayStructure::ClassName(), CallOSPRayStructure::FunctionName(1), &AbstractOSPRayStructure::getExtendsCallback);
+    this->deployStructureSlot.SetCallback(CallOSPRayStructure::ClassName(), CallOSPRayStructure::FunctionName(0),
+        &AbstractOSPRayStructure::getStructureCallback);
+    this->deployStructureSlot.SetCallback(CallOSPRayStructure::ClassName(), CallOSPRayStructure::FunctionName(1),
+        &AbstractOSPRayStructure::getExtendsCallback);
     this->MakeSlotAvailable(&this->deployStructureSlot);
 
     this->getStructureSlot.SetCompatibleCall<CallOSPRayStructureDescription>();
@@ -26,11 +30,14 @@ AbstractOSPRayStructure::AbstractOSPRayStructure(void) :
     this->getMaterialSlot.SetCompatibleCall<CallOSPRayMaterialDescription>();
     this->MakeSlotAvailable(&this->getMaterialSlot);
 
+    this->getTransformationSlot.SetCompatibleCall<CallOSPRayTransformationDescription>();
+    this->MakeSlotAvailable(&this->getTransformationSlot);
+
     this->structureContainer.isValid = true;
     this->time = -1.0f;
 }
 
-AbstractOSPRayStructure::~AbstractOSPRayStructure(void) {
+AbstractOSPRayStructure::~AbstractOSPRayStructure() {
     this->structureContainer.isValid = false;
     this->Release();
 }
@@ -88,6 +95,26 @@ void AbstractOSPRayStructure::processMaterial() {
         }
     } else {
         this->structureContainer.materialChanged = false;
-        this->structureContainer.materialContainer = NULL;
+        this->structureContainer.materialContainer = nullptr;
     }
 }
+
+void AbstractOSPRayStructure::processTransformation() {
+    CallOSPRayTransformation* ct = this->getTransformationSlot.CallAs<CallOSPRayTransformation>();
+    if (ct != NULL) {
+        this->structureContainer.transformationChanged = false;
+        if (ct->InterfaceIsDirty()) {
+            this->structureContainer.transformationChanged = true;
+        }
+        auto gmp = ct->getTransformationParameter();
+        if (gmp->isValid) {
+            this->structureContainer.transformationContainer = ct->getTransformationParameter();
+        }
+    } else {
+        this->structureContainer.transformationChanged = false;
+        this->structureContainer.transformationContainer = nullptr;
+    }
+}
+
+} // namespace ospray
+} // namespace megamol

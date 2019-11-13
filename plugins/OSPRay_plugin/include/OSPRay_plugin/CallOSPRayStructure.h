@@ -15,6 +15,7 @@
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mesh/MeshCalls.h"
+#include "CallOSPRayTransformation.h"
 
 namespace megamol {
 namespace ospray {
@@ -26,8 +27,7 @@ enum geometryTypeEnum {
     NHSPHERES,
     TRIANGLES,
     STREAMLINES,
-    CYLINDERS,
-    PBS
+    CYLINDERS
 };
 
 enum volumeTypeEnum { STRUCTUREDVOLUME, BLOCKBRICKEDVOLUME, GHOSTBLOCKBRICKEDVOLUME };
@@ -56,6 +56,9 @@ public:
     geometryTypeEnum geometryType;
     volumeTypeEnum volumeType;
     volumeRepresentationType volRepType;
+
+    std::shared_ptr<OSPRayTransformationContainer> transformationContainer = nullptr;
+    bool transformationChanged = false;
 
     std::shared_ptr<std::vector<float>> vertexData;
     std::shared_ptr<std::vector<float>> colorData;

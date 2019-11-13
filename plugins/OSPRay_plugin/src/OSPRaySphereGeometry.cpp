@@ -63,6 +63,9 @@ bool OSPRaySphereGeometry::readData(megamol::core::Call &call) {
     // fill material container
     this->processMaterial();
 
+    // fill transformation container
+    this->processTransformation();
+
     // read Data, calculate  shape parameters, fill data vectors
     CallOSPRayStructure *os = dynamic_cast<CallOSPRayStructure*>(&call);
     megamol::core::moldyn::MultiParticleDataCall *cd = this->getDataSlot.CallAs<megamol::core::moldyn::MultiParticleDataCall>();
