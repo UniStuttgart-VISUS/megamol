@@ -64,7 +64,7 @@ namespace megamol
                 // Check link status
                 GLint link_status;
                 glGetProgramiv(program_handle, GL_LINK_STATUS, &link_status);
-                
+
                 if (link_status == GL_FALSE)
                 {
                     int info_log_length = 0;
