@@ -335,37 +335,33 @@ namespace megamol
             if (glyph_call != nullptr && (*glyph_call)(1) && (*glyph_call)(0))
             {
                 // Get points
-                const auto& point_vertices = *glyph_call->get_point_vertices();
-                const auto& point_indices = *glyph_call->get_point_indices();
-                const auto& point_values = *glyph_call->get_point_values();
+                const auto& input_points = glyph_call->get_points();
 
-                points.reserve(2 * point_indices.size());
-                point_ids.reserve(point_indices.size());
+                points.reserve(2 * input_points.size());
+                point_ids.reserve(input_points.size());
 
-                for (const auto index : point_indices)
+                for (const auto& point : input_points)
                 {
-                    points.push_back(point_vertices[index * 2 + 0]);
-                    points.push_back(point_vertices[index * 2 + 1]);
+                    points.push_back(point.first[0]);
+                    points.push_back(point.first[1]);
 
-                    point_ids.push_back(static_cast<int>(point_values[index]));
+                    point_ids.push_back(static_cast<int>(point.second));
                 }
 
                 // Get lines
-                const auto& line_vertices = *glyph_call->get_line_vertices();
-                const auto& line_indices = *glyph_call->get_line_indices();
-                const auto& line_values = *glyph_call->get_line_values();
+                const auto& input_lines = glyph_call->get_line_segments();
 
-                lines.reserve(4 * line_indices.size());
-                line_ids.reserve(line_indices.size());
+                lines.reserve(4 * input_lines.size());
+                line_ids.reserve(input_lines.size());
 
-                for (const auto index : line_indices)
+                for (const auto& line : input_lines)
                 {
-                    lines.push_back(line_vertices[index * 4 + 0]);
-                    lines.push_back(line_vertices[index * 4 + 1]);
-                    lines.push_back(line_vertices[index * 4 + 2]);
-                    lines.push_back(line_vertices[index * 4 + 3]);
+                    lines.push_back(line.first.first[0]);
+                    lines.push_back(line.first.first[1]);
+                    lines.push_back(line.first.second[0]);
+                    lines.push_back(line.first.second[1]);
 
-                    line_ids.push_back(static_cast<int>(line_values[index]));
+                    line_ids.push_back(static_cast<int>(line.second));
                 }
             }
             else

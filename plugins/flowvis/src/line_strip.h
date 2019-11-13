@@ -18,7 +18,6 @@
 
 #include "Eigen/Dense"
 
-#include <memory>
 #include <utility>
 #include <vector>
 
@@ -106,12 +105,12 @@ namespace megamol
             SIZE_T points_hash;
             bool points_changed;
 
-            std::shared_ptr<std::vector<float>> points;
+            std::vector<std::pair<Eigen::Vector2f, float>> points;
 
             /** Output lines */
             SIZE_T line_strip_hash;
 
-            std::vector<std::pair<float, std::vector<Eigen::Vector2f>>> lines;
+            std::pair<float, std::vector<Eigen::Vector2f>> lines;
         };
     }
 }

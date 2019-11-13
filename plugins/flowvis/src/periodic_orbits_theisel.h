@@ -183,8 +183,7 @@ namespace megamol
             SIZE_T seed_lines_hash;
             bool seed_lines_changed;
 
-            std::shared_ptr<std::vector<float>> seed_line_vertices;
-            std::shared_ptr<std::vector<unsigned int>> seed_line_indices;
+            std::vector<std::pair<std::pair<Eigen::Vector2f, Eigen::Vector2f>, float>> seed_lines;
 
             /** Output stream surfaces */
             SIZE_T stream_surface_hash;

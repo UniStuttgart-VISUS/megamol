@@ -29,8 +29,9 @@ namespace megamol
             render_input_slot("render_input_slot", "Render input slot"),
             glyph_slot("get_glyphs", "Glyph input"), glyph_hash(-1),
             mouse_slot("mouse_slot", "Mouse events"),
-            point_size("point_size", "Point size"),
-            line_width("line_width", "Line width"),
+            num_triangles("num_triangles", "Number of triangles for point glyphs"),
+            radius("radius", "Point glyph radius"),
+            width("width", "Line glyph width"),
             transfer_function("transfer_function", "Transfer function"),
             range_fixed("range_fixed", "Fix value range for the transfer function"),
             range_min("range_min", "Minimum value for the transfer function"),
@@ -48,11 +49,14 @@ namespace megamol
             this->MakeSlotAvailable(&this->mouse_slot);
 
             // Connect parameter slots
-            this->point_size << new core::param::IntParam(1);
-            this->MakeSlotAvailable(&this->point_size);
+            this->num_triangles << new core::param::IntParam(16);
+            this->MakeSlotAvailable(&this->num_triangles);
 
-            this->line_width << new core::param::IntParam(1);
-            this->MakeSlotAvailable(&this->line_width);
+            this->radius << new core::param::FloatParam(0.1f);
+            this->MakeSlotAvailable(&this->radius);
+
+            this->width << new core::param::FloatParam(0.1f);
+            this->MakeSlotAvailable(&this->width);
 
             this->transfer_function << new core::param::TransferFunctionParam("");
             this->MakeSlotAvailable(&this->transfer_function);
@@ -410,8 +414,8 @@ namespace megamol
                 glUniform1f(glGetUniformLocation(this->render_data.prog_p, "min_value"), this->render_data.min_value);
                 glUniform1f(glGetUniformLocation(this->render_data.prog_p, "max_value"), this->render_data.max_value);
 
-                glUniform1i(glGetUniformLocation(this->render_data.prog_p, "num_triangles"), 16); // TODO
-                glUniform1f(glGetUniformLocation(this->render_data.prog_p, "radius"), 0.0002f); // TODO
+                glUniform1i(glGetUniformLocation(this->render_data.prog_p, "num_triangles"), this->num_triangles.Param<core::param::IntParam>()->Value());
+                glUniform1f(glGetUniformLocation(this->render_data.prog_p, "radius"), this->radius.Param<core::param::FloatParam>()->Value());
 
                 glBindVertexArray(this->render_data.point.vao);
                 glActiveTexture(GL_TEXTURE0);
@@ -432,12 +436,13 @@ namespace megamol
                 glUniform1f(glGetUniformLocation(this->render_data.prog_l, "min_value"), this->render_data.min_value);
                 glUniform1f(glGetUniformLocation(this->render_data.prog_l, "max_value"), this->render_data.max_value);
 
-                glUniform1f(glGetUniformLocation(this->render_data.prog_l, "width"), 0.0002f); // TODO
+                glUniform1f(glGetUniformLocation(this->render_data.prog_l, "width"), this->width.Param<core::param::FloatParam>()->Value());
 
                 glBindVertexArray(this->render_data.line.vao);
                 glActiveTexture(GL_TEXTURE0);
                 glBindTexture(GL_TEXTURE_1D, this->render_data.tf);
-                glDrawElements(GL_LINES, static_cast<GLsizei>(this->render_data.line_indices->size()), GL_UNSIGNED_INT, nullptr);
+                glPrimitiveRestartIndex(-1);
+                glDrawElements(GL_LINE_STRIP, static_cast<GLsizei>(this->render_data.line_indices->size()), GL_UNSIGNED_INT, nullptr);
                 glBindTexture(GL_TEXTURE_1D, 0);
                 glBindVertexArray(0);
             }

@@ -174,8 +174,7 @@ bool periodic_orbits_theisel::get_input_data() {
     }
 
     if (slc.DataHash() != this->seed_lines_hash) {
-        this->seed_line_vertices = slc.get_line_vertices();
-        this->seed_line_indices = slc.get_line_indices();
+        this->seed_lines = slc.get_line_segments();
 
         this->seed_lines_hash = slc.DataHash();
         this->seed_lines_changed = true;
@@ -241,24 +240,18 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
         std::vector<std::pair<Eigen::Vector2f, Eigen::Vector2f>> seed_lines;
         Eigen::Vector2f last_critical_point;
 
-        if (!this->seed_line_indices->empty()) {
-            seed_lines.reserve(this->seed_line_indices->size() / 2);
+        if (!this->seed_lines.empty()) {
+            seed_lines.reserve(this->seed_lines.size());
 
-            for (std::size_t point_index = 0; point_index < this->seed_line_indices->size(); point_index += 2) {
-                const Eigen::Vector2f start_point(
-                    (*this->seed_line_vertices)[2 * point_index], (*this->seed_line_vertices)[2 * point_index + 1]);
-                const Eigen::Vector2f end_point((*this->seed_line_vertices)[2 * (point_index + 1)],
-                    (*this->seed_line_vertices)[2 * (point_index + 1) + 1]);
-
-                seed_lines.push_back(std::make_pair(start_point, end_point));
+            for (const auto& seed_line : this->seed_lines) {
+                seed_lines.push_back(seed_line.first);
             }
 
-            last_critical_point << (*this->seed_line_vertices)[2 * (this->seed_line_indices->size() - 1)],
-                (*this->seed_line_vertices)[2 * (this->seed_line_indices->size() - 1) + 1];
+            last_critical_point = seed_lines.back().second;
         } else {
-            auto& slc = *this->seed_lines_slot.CallAs<glyph_data_call>()->get_point_vertices();
+            const auto& points = this->seed_lines_slot.CallAs<glyph_data_call>()->get_points();
 
-            last_critical_point << slc[0], slc[1];
+            last_critical_point = points.front().first;
         }
 
         // Create seed line between last critical point and the nearest domain boundary
@@ -757,7 +750,7 @@ bool periodic_orbits_theisel::get_stream_surface_values_data(core::Call& call) {
         const auto tf_string = this->transfer_function.Param<core::param::TransferFunctionParam>()->Value();
 
         this->seed_line_ids->min_value = 0.0f;
-        this->seed_line_ids->max_value = static_cast<float>(this->seed_line_indices->size() / 2 + 1);
+        this->seed_line_ids->max_value = static_cast<float>(this->seed_lines.size());
         this->seed_line_ids->transfer_function = tf_string;
         this->seed_line_ids->transfer_function_dirty = true;
         mdc.set_data("seed line", this->seed_line_ids);

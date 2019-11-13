@@ -110,7 +110,7 @@ bool streamlines_2d::get_input_data() {
     }
 
     if (spc.DataHash() != this->seed_points_hash) {
-        this->seed_points = spc.get_point_vertices();
+        this->seed_points = spc.get_points();
 
         this->seed_points_hash = spc.DataHash();
         this->seed_points_changed = true;
@@ -198,13 +198,12 @@ bool streamlines_2d::compute_streamlines() {
 
         // Advect all seed points
         this->streamlines.clear();
-        this->streamlines.resize(direction == 0 ? this->seed_points->size() : this->seed_points->size() / 2);
+        this->streamlines.resize(direction == 0 ? 2 * this->seed_points.size() : this->seed_points.size());
 
         for (std::size_t direction_run = 0; direction_run < (direction == 0 ? 2 : 1); ++direction_run) {
             #pragma omp parallel for
-            for (long long point_index = 0; point_index < static_cast<long long>(this->seed_points->size());
-                 point_index += 2) {
-                Eigen::Vector2f point(this->seed_points->at(point_index), this->seed_points->at(point_index + 1));
+            for (long long point_index = 0; point_index < static_cast<long long>(this->seed_points.size()); ++point_index) {
+                Eigen::Vector2f point = this->seed_points.at(point_index).first;
 
                 auto integration_timestep = this->integration_timestep.Param<core::param::FloatParam>()->Value();
 
@@ -228,7 +227,7 @@ bool streamlines_2d::compute_streamlines() {
                     }
                 }
 
-                this->streamlines[direction_run * (this->seed_points->size() / 2) + (point_index / 2)] =
+                this->streamlines[direction_run * this->seed_points.size() + point_index] =
                     std::make_pair(static_cast<float>(point_index), line_points);
             }
         }

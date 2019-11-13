@@ -209,9 +209,7 @@ namespace megamol
 
                     std::vector<double> vectors(get_vector_field->get_vectors()->begin(), get_vector_field->get_vectors()->end());
 
-                    const auto& critical_points_vertices = *get_critical_points->get_point_vertices();
-                    const auto& critical_points_indices = *get_critical_points->get_point_indices();
-                    const auto& critical_points_values = *get_critical_points->get_point_values();
+                    const auto& critical_points = get_critical_points->get_points();
 
                     // Create grid from input vector field
                     tpf::data::extent_t extent(2);
@@ -261,12 +259,13 @@ namespace megamol
                     this->orbit_cells.clear();
 
                     // Store critical points
-                    this->input_critical_points.reserve(critical_points_indices.size());
+                    this->input_critical_points.reserve(critical_points.size());
 
-                    for (auto index : critical_points_indices)
+                    for (const auto& critical_point : critical_points)
                     {
-                        this->input_critical_points.push_back(std::make_pair(static_cast<critical_points::type>(static_cast<int>(critical_points_values[index])),
-                            Eigen::Vector2d(critical_points_vertices[index * 2 + 0], critical_points_vertices[index * 2 + 1])));
+                        this->input_critical_points.push_back(
+                            std::make_pair(static_cast<critical_points::type>(static_cast<int>(critical_point.second)),
+                                Eigen::Vector2d(critical_point.first[0], critical_point.first[1])));
                     }
                 }
 

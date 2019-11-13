@@ -146,9 +146,10 @@ namespace megamol
             /** Input slot for the mouse event */
             core::CallerSlot mouse_slot;
 
-            /** Parameter slots for defining the size (strongness) of the glyphs */
-            core::param::ParamSlot point_size;
-            core::param::ParamSlot line_width;
+            /** Parameter slots for defining the size and resolution of the glyphs */
+            core::param::ParamSlot num_triangles;
+            core::param::ParamSlot radius;
+            core::param::ParamSlot width;
 
             /** Parameter slot for the transfer function */
             core::param::ParamSlot transfer_function;

@@ -18,6 +18,7 @@
 
 #include <array>
 #include <memory>
+#include <utility>
 #include <vector>
 
 namespace megamol {
@@ -121,7 +122,7 @@ private:
     SIZE_T seed_points_hash;
     bool seed_points_changed;
 
-    std::shared_ptr<std::vector<float>> seed_points;
+    std::vector<std::pair<Eigen::Vector2f, float>> seed_points;
 
     /** Output streamlines */
     SIZE_T streamlines_hash;

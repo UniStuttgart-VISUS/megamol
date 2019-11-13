@@ -127,6 +127,27 @@ namespace megamol
             void add_line(const std::vector<Eigen::Vector2f>& points, float value);
 
             /**
+            * Get all points
+            *
+            * @return List of all points
+            */
+            std::vector<std::pair<Eigen::Vector2f, float>> get_points() const;
+
+            /**
+             * Get all lines
+             *
+             * @return List of all lines, defined by their points
+             */
+            std::vector<std::pair<std::vector<Eigen::Vector2f>, float>> get_lines() const;
+
+            /**
+             * Get all lines
+             *
+             * @return List of all lines, defined by their points
+             */
+            std::vector<std::pair<std::pair<Eigen::Vector2f, Eigen::Vector2f>, float>> get_line_segments() const;
+
+            /**
             * Clear all, removing all points and lines
             */
             void clear();

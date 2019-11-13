@@ -13,6 +13,7 @@
 
 #include "Eigen/Dense"
 
+#include <algorithm>
 #include <memory>
 #include <utility>
 #include <vector>
@@ -70,7 +71,7 @@ bool line_strip::get_input_data() {
     }
 
     if (pc.DataHash() != this->points_hash) {
-        this->points = pc.get_point_vertices();
+        this->points = pc.get_points();
 
         this->points_hash = pc.DataHash();
         this->points_changed = true;
@@ -101,21 +102,18 @@ bool line_strip::get_input_extent() {
     return true;
 }
 
-void line_strip::create_lines_input_order(const std::vector<Eigen::Vector2f>& points) {
-    for (std::size_t point_index = 0; point_index < points.size() - 1; ++point_index) {
-        this->lines.push_back(std::make_pair(static_cast<float>(point_index),
-            std::vector<Eigen::Vector2f>{points[point_index], points[point_index + 1]}));
-    }
-}
+void line_strip::create_lines_input_order(const std::vector<Eigen::Vector2f>& points) { this->lines.second = points; }
 
 void line_strip::create_lines_tsp(const std::vector<Eigen::Vector2f>& points) {
-    // Create seed lines between points, approximating the travelling salesman problem
+    // Create lines between points, approximating the travelling salesman problem
     const auto polygon_order =
         thirdparty::tsp::Genetic(std::make_shared<thirdparty::tsp::Graph>(points), 10, 1000, 5).run();
 
-    for (std::size_t point_index = 0; point_index < polygon_order.size() - 1; ++point_index) {
-        this->lines.push_back(std::make_pair(static_cast<float>(point_index),
-            std::vector<Eigen::Vector2f>{points[polygon_order[point_index]], points[polygon_order[point_index + 1]]}));
+    this->lines.second.clear();
+    this->lines.second.reserve(points.size());
+
+    for (std::size_t point_index = 0; point_index < polygon_order.size(); ++point_index) {
+        this->lines.second.push_back(points[polygon_order[point_index]]);
     }
 }
 
@@ -129,26 +127,22 @@ bool line_strip::get_lines_data(core::Call& call) {
     if (this->points_changed || this->method.IsDirty()) {
         this->method.ResetDirty();
 
-        // Get points
-        std::vector<Eigen::Vector2f> points;
-
-        for (std::size_t cp_index = 0; cp_index < this->points->size(); cp_index += 2) {
-            points.push_back(Eigen::Vector2f((*this->points)[cp_index], (*this->points)[cp_index + 1]));
+        // Connect points
+        if (this->points.size() < 2) {
+            vislib::sys::Log::DefaultLog.WriteError("Not enough points given to construct a line");
+            return false;
         }
 
-        // Connect points
-        this->lines.clear();
+        std::vector<Eigen::Vector2f> points(this->points.size());
+        std::transform(this->points.begin(), this->points.end(), points.begin(),
+            [](const std::pair<Eigen::Vector2f, float>& point) { return point.first; });
 
-        if (points.size() > 1) {
-            this->lines.reserve(points.size() - 1);
-
-            switch (this->method.Param<core::param::EnumParam>()->Value()) {
-            case 0:
-                create_lines_input_order(points);
-                break;
-            case 1:
-                create_lines_tsp(points);
-            }
+        switch (this->method.Param<core::param::EnumParam>()->Value()) {
+        case 0:
+            create_lines_input_order(points);
+            break;
+        case 1:
+            create_lines_tsp(points);
         }
 
         // Set new hash
@@ -161,9 +155,7 @@ bool line_strip::get_lines_data(core::Call& call) {
     if (gdc.DataHash() != this->line_strip_hash) {
         gdc.clear();
 
-        for (const auto& line : this->lines) {
-            gdc.add_line(line.second, line.first);
-        }
+        gdc.add_line(this->lines.second, this->lines.first);
 
         gdc.SetDataHash(this->line_strip_hash);
     }

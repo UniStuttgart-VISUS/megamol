@@ -105,21 +105,21 @@ namespace megamol
         {
             unsigned int next_index = static_cast<unsigned int>(this->line_vertices->size() / 2);
 
+            // Push restart index
+            if (next_index != 0) {
+                this->line_indices->push_back(-1);
+            }
+
             float min_x, min_y, max_x, max_y;
             min_x = max_x = points[0][0];
             min_y = max_y = points[0][1];
 
-            this->line_vertices->push_back(points[0][0]);
-            this->line_vertices->push_back(points[0][1]);
-
-            this->line_values->push_back(value);
-
-            for (std::size_t i = 1; i < points.size(); ++i)
+            // Add indices for a line strip
+            for (std::size_t i = 0; i < points.size(); ++i)
             {
                 const auto& point = points[i];
 
                 this->line_indices->push_back(next_index++);
-                this->line_indices->push_back(next_index);
 
                 this->line_vertices->push_back(point[0]);
                 this->line_vertices->push_back(point[1]);
@@ -152,6 +152,61 @@ namespace megamol
             }
 
             this->bounding_rectangle_valid = true;
+        }
+
+        std::vector<std::pair<Eigen::Vector2f, float>> glyph_data_call::get_points() const {
+            std::vector<std::pair<Eigen::Vector2f, float>> points(this->point_indices->size());
+
+            for (std::size_t i = 0; i < points.size(); ++i) {
+                const auto index = static_cast<std::size_t>((*this->point_indices)[i]);
+
+                points[i].first << (*this->point_vertices)[index * 2], (*this->point_vertices)[index * 2 + 1];
+                points[i].second = (*this->point_values)[index];
+            }
+
+            return points;
+        }
+
+        std::vector<std::pair<std::vector<Eigen::Vector2f>, float>> glyph_data_call::get_lines() const {
+            std::vector<std::pair<std::vector<Eigen::Vector2f>, float>> lines;
+
+            if (!this->line_indices->empty()) {
+                lines.emplace_back();
+                lines.back().second = (*this->line_values)[(*this->line_indices)[0]];
+
+                for (std::size_t i = 0; i < this->line_indices->size(); ++i) {
+                    const auto index = (*this->line_indices)[i];
+
+                    if (index == -1) {
+                        // Restart index found: add new line
+                        lines.emplace_back();
+                        lines.back().second = (*this->line_values)[(*this->line_indices)[i + 1]];
+                    } else {
+                        lines.back().first.emplace_back(
+                            (*this->line_vertices)[static_cast<std::size_t>(index) * 2],
+                            (*this->line_vertices)[static_cast<std::size_t>(index) * 2 + 1]);
+                    }
+                }
+            }
+
+            return lines;
+        }
+
+        std::vector<std::pair<std::pair<Eigen::Vector2f, Eigen::Vector2f>, float>> glyph_data_call::get_line_segments() const {
+            std::vector<std::pair<std::pair<Eigen::Vector2f, Eigen::Vector2f>, float>> line_segments;
+
+            if (!this->line_indices->empty()) {
+                const auto lines = get_lines();
+
+                for (const auto& line : lines) {
+                    for (std::size_t segment = 0; segment < line.first.size() - 1; ++segment) {
+                        line_segments.push_back(
+                            std::make_pair(std::make_pair(line.first[segment], line.first[segment + 1]), line.second));
+                    }
+                }
+            }
+
+            return line_segments;
         }
 
         void glyph_data_call::clear()
