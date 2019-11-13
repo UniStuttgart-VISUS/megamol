@@ -118,14 +118,41 @@ namespace megamol
              */
             Eigen::Vector3f advect_point(const tpf::data::grid<float, float, 2, 2>& grid, const Eigen::Vector3f& point, float& delta, bool forward) const;
 
-
+            /**
+             * Find intersection between two triangle strips
+             *
+             * @param previous_forward_points One side of the first triangle strip
+             * @param previous_backward_points One side of the second triangle strip
+             * @param advected_forward_points Other side of the first triangle strip
+             * @param advected_backward_points Other side of the second triangle strip
+             *
+             * @return Tuple of intersection points with indices for both triangle strips for identification
+             *         of the intersecting triangles
+             */
             std::vector<std::tuple<Eigen::Vector2f, std::size_t, std::size_t>> find_intersection(
                 const std::vector<Eigen::Vector3f>& previous_forward_points,
                 const std::vector<Eigen::Vector3f>& previous_backward_points,
                 const std::vector<Eigen::Vector3f>& advected_forward_points,
                 const std::vector<Eigen::Vector3f>& advected_backward_points) const;
 
-
+            /**
+             * Refine the triangle strips at the intersection by seeding new points on the seed line
+             * in a binary search manner
+             *
+             * @param vector_field Underlying vector field
+             * @param seed_line_start Start point of the seed line
+             * @param seed_line_direction Direction of the seed line
+             * @param seed_line_step Step size for the original resolution
+             * @param timestep Original integration time step
+             * @param integration Number of integrations performed so far
+             * @param previous_forward_points One side of the first triangle strip
+             * @param previous_backward_points One side of the second triangle strip
+             * @param advected_forward_points Other side of the first triangle strip
+             * @param advected_backward_points Other side of the second triangle strip
+             * @param intersections Found intersections, for which the refinement is performed
+             *
+             * @returns The refined intersections, which after refinement still hold
+             */
             std::vector<Eigen::Vector2f> refine_intersections(
                 const tpf::data::grid<float, float, 2, 2>& vector_field,
                 const Eigen::Vector3f& seed_line_start, const Eigen::Vector3f& seed_line_direction,
