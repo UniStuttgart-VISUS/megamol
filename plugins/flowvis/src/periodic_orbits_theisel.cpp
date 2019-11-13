@@ -380,20 +380,53 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
             advected_backward_points.reserve(num_seed_points);
 
             for (std::size_t integration = 0; integration < num_integration_steps; ++integration) {
+                // Advect forward stream surface
                 advected_forward_points.clear();
-                advected_backward_points.clear();
 
                 for (std::size_t point_index = 0; point_index < previous_forward_points.size(); ++point_index) {
                     advected_forward_points.push_back(advect_point(
                         vector_field, previous_forward_points[point_index], forward_timesteps[point_index], true));
                 }
 
+                forward_points.insert(forward_points.end(), advected_forward_points.begin(), advected_forward_points.end());
+
+                // Look for an intersection
+                if (this->compute_intersections.Param<core::param::BoolParam>()->Value() && num_integration_steps > 1 &&
+                    this->direction.Param<core::param::EnumParam>()->Value() == 0) {
+
+                    const auto intersection_points = find_intersection(previous_forward_points,
+                        previous_backward_points, advected_forward_points, advected_backward_points);
+
+                    if (!intersection_points.empty()) {
+                        const auto num_subdivisions = this->num_subdivisions.Param<core::param::IntParam>()->Value();
+
+                        if (num_subdivisions > 0) {
+                            const auto refined_intersections =
+                                refine_intersections(vector_field, seed_line_start, direction, step, timestep,
+                                    integration, previous_forward_points, previous_backward_points,
+                                    advected_forward_points, advected_backward_points, intersection_points);
+
+                            for (const auto& refined_intersection : refined_intersections) {
+                                this->periodic_orbits.push_back(std::make_pair(0.0f, refined_intersection));
+                            }
+                        } else {
+                            for (const auto& intersection_point : intersection_points) {
+                                this->periodic_orbits.push_back(std::make_pair(0.0f, std::get<0>(intersection_point)));
+                            }
+                        }
+                    }
+                }
+
+                std::swap(previous_forward_points, advected_forward_points);
+
+                // Advect backward stream surface
+                advected_backward_points.clear();
+
                 for (std::size_t point_index = 0; point_index < previous_backward_points.size(); ++point_index) {
                     advected_backward_points.push_back(advect_point(
                         vector_field, previous_backward_points[point_index], backward_timesteps[point_index], false));
                 }
 
-                forward_points.insert(forward_points.end(), advected_forward_points.begin(), advected_forward_points.end());
                 backward_points.insert(backward_points.end(), advected_backward_points.begin(), advected_backward_points.end());
 
                 // Look for an intersection
@@ -423,8 +456,6 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
                     }
                 }
 
-                // Prepare for next execution
-                std::swap(previous_forward_points, advected_forward_points);
                 std::swap(previous_backward_points, advected_backward_points);
             }
 
