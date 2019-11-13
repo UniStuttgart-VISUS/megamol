@@ -49,7 +49,7 @@ megamol::compositing::SimpleRenderTarget::~SimpleRenderTarget() {
 bool megamol::compositing::SimpleRenderTarget::create() { 
 
     m_GBuffer = std::make_shared<glowl::FramebufferObject>(1, 1, true);
-    m_GBuffer->createColorAttachment(GL_RGB16F, GL_RGB, GL_HALF_FLOAT); // surface albedo
+    m_GBuffer->createColorAttachment(GL_RGBA16F, GL_RGBA, GL_HALF_FLOAT); // surface albedo
     m_GBuffer->createColorAttachment(GL_RGB16F, GL_RGB, GL_HALF_FLOAT); // normals
     m_GBuffer->createColorAttachment(GL_R32F, GL_RED, GL_FLOAT);        // clip space depth
 
@@ -63,7 +63,9 @@ bool megamol::compositing::SimpleRenderTarget::GetExtents(core::view::CallRender
     return true; 
 }
 
-bool megamol::compositing::SimpleRenderTarget::Render(core::view::CallRender3D_2& call) { 
+bool megamol::compositing::SimpleRenderTarget::Render(core::view::CallRender3D_2& call) {
+    glClearColor(this->clear_color[0], this->clear_color[1], this->clear_color[2], this->clear_color[3]);
+
     return false; 
 }
 
@@ -86,6 +88,9 @@ void megamol::compositing::SimpleRenderTarget::PreRender(core::view::CallRender3
     }
 
     m_GBuffer->bind();
+
+    glGetFloatv(GL_COLOR_CLEAR_VALUE, this->clear_color.data());
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }

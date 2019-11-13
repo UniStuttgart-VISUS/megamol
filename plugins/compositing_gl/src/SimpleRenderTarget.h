@@ -6,14 +6,16 @@
  */
 
 #ifndef SIMPLE_RENDER_TARGET_H_INCLUDED
-#    define SIMPLE_RENDER_TARGET_H_INCLUDED
+#define SIMPLE_RENDER_TARGET_H_INCLUDED
 
 
-#    include "mmcore/CalleeSlot.h"
-#    include "mmcore/view/CallRender3D_2.h"
-#    include "mmcore/view/Renderer3DModule_2.h"
+#include "mmcore/CalleeSlot.h"
+#include "mmcore/view/CallRender3D_2.h"
+#include "mmcore/view/Renderer3DModule_2.h"
 
-#    include "glowl/FramebufferObject.hpp"
+#include "glowl/FramebufferObject.hpp"
+
+#include <array>
 
 namespace megamol {
 namespace compositing {
@@ -139,6 +141,9 @@ private:
 
     /** Slot for publishing the framebuffer object used by this render target module */
     core::CallerSlot m_framebuffer_slot;
+
+    /** Temporarily store the clear color */
+    std::array<float, 4> clear_color;
 };
 
 } // namespace compositing

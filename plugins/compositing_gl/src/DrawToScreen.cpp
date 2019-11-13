@@ -93,6 +93,8 @@ bool megamol::compositing::DrawToScreen::Render(core::view::CallRender3D_2& call
     }
 
     if (m_drawToScreen_prgm != nullptr) {
+        glEnable(GL_BLEND);
+
         m_drawToScreen_prgm->Enable();
 
         glActiveTexture(GL_TEXTURE0);
@@ -102,6 +104,8 @@ bool megamol::compositing::DrawToScreen::Render(core::view::CallRender3D_2& call
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
         m_drawToScreen_prgm->Disable();
+
+        glDisable(GL_BLEND);
     }
 
     return true; 
