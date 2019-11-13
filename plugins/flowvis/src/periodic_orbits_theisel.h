@@ -158,6 +158,8 @@ namespace megamol
             core::param::ParamSlot integration_timestep;
             core::param::ParamSlot max_integration_error;
 
+            core::param::ParamSlot domain_height;
+
             core::param::ParamSlot num_subdivisions;
             core::param::ParamSlot critical_point_offset;
 

@@ -49,6 +49,7 @@ periodic_orbits_theisel::periodic_orbits_theisel()
     , num_integration_steps("num_integration_steps", "Number of streamline integration steps")
     , integration_timestep("integration_timestep", "Initial time step for streamline integration")
     , max_integration_error("max_integration_error", "Maximum integration error for Runge-Kutta 4-5")
+    , domain_height("domain_height", "Domain height coefficient for the stream surfaces")
     , num_subdivisions("num_subdivisions", "Number of subdivisions")
     , critical_point_offset("critical_point_offset", "Offset from critical points for increased numeric stability")
     , direction("direction", "Integration direction for stream surface computation")
@@ -114,6 +115,9 @@ periodic_orbits_theisel::periodic_orbits_theisel()
 
     this->max_integration_error << new core::param::FloatParam(0.000001f);
     this->MakeSlotAvailable(&this->max_integration_error);
+
+    this->domain_height << new core::param::FloatParam(1.0f);
+    this->MakeSlotAvailable(&domain_height);
 
     this->num_subdivisions << new core::param::IntParam(10);
     this->MakeSlotAvailable(&this->num_subdivisions);
@@ -202,7 +206,8 @@ bool periodic_orbits_theisel::get_input_extent() {
 
     this->bounding_rectangle = vfc.get_bounding_rectangle();
 
-    const auto average_size = 0.5f * (this->bounding_rectangle.Width() + this->bounding_rectangle.Height());
+    const auto average_size = this->domain_height.Param<core::param::FloatParam>()->Value() * 0.5f *
+                              (this->bounding_rectangle.Width() + this->bounding_rectangle.Height());
 
     this->bounding_box.Set(this->bounding_rectangle.GetLeft(), this->bounding_rectangle.GetBottom(), 0.0f,
         this->bounding_rectangle.GetRight(), this->bounding_rectangle.GetTop(), average_size);
@@ -213,14 +218,16 @@ bool periodic_orbits_theisel::get_input_extent() {
 bool periodic_orbits_theisel::compute_periodic_orbits() {
     if (this->vector_field_changed || this->seed_lines_changed || this->direction.IsDirty() ||
         this->integration_method.IsDirty() || this->integration_timestep.IsDirty() ||
-        this->max_integration_error.IsDirty() || this->num_integration_steps.IsDirty() ||
-        this->num_subdivisions.IsDirty() || this->compute_intersections.IsDirty() ||
-        this->filter_seed_lines.IsDirty() || this->critical_point_offset.IsDirty()) {
+        this->max_integration_error.IsDirty() || this->domain_height.IsDirty() ||
+        this->num_integration_steps.IsDirty() || this->num_subdivisions.IsDirty() ||
+        this->compute_intersections.IsDirty() || this->filter_seed_lines.IsDirty() ||
+        this->critical_point_offset.IsDirty()) {
 
         this->direction.ResetDirty();
         this->integration_method.ResetDirty();
         this->integration_timestep.ResetDirty();
         this->max_integration_error.ResetDirty();
+        this->domain_height.ResetDirty();
         this->num_integration_steps.ResetDirty();
         this->num_subdivisions.ResetDirty();
         this->compute_intersections.ResetDirty();
@@ -232,25 +239,32 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
 
         // Get seed lines
         std::vector<std::pair<Eigen::Vector2f, Eigen::Vector2f>> seed_lines;
-        seed_lines.reserve(this->seed_line_indices->size() / 2);
+        Eigen::Vector2f last_critical_point;
 
-        for (std::size_t point_index = 0; point_index < this->seed_line_indices->size(); point_index += 2) {
-            const Eigen::Vector2f start_point(
-                (*this->seed_line_vertices)[2 * point_index], (*this->seed_line_vertices)[2 * point_index + 1]);
-            const Eigen::Vector2f end_point((*this->seed_line_vertices)[2 * (point_index + 1)],
-                (*this->seed_line_vertices)[2 * (point_index + 1) + 1]);
+        if (!this->seed_line_indices->empty()) {
+            seed_lines.reserve(this->seed_line_indices->size() / 2);
 
-            seed_lines.push_back(std::make_pair(start_point, end_point));
+            for (std::size_t point_index = 0; point_index < this->seed_line_indices->size(); point_index += 2) {
+                const Eigen::Vector2f start_point(
+                    (*this->seed_line_vertices)[2 * point_index], (*this->seed_line_vertices)[2 * point_index + 1]);
+                const Eigen::Vector2f end_point((*this->seed_line_vertices)[2 * (point_index + 1)],
+                    (*this->seed_line_vertices)[2 * (point_index + 1) + 1]);
+
+                seed_lines.push_back(std::make_pair(start_point, end_point));
+            }
+
+            last_critical_point << (*this->seed_line_vertices)[2 * (this->seed_line_indices->size() - 1)],
+                (*this->seed_line_vertices)[2 * (this->seed_line_indices->size() - 1) + 1];
+        } else {
+            auto& slc = *this->seed_lines_slot.CallAs<glyph_data_call>()->get_point_vertices();
+
+            last_critical_point << slc[0], slc[1];
         }
 
         // Create seed line between last critical point and the nearest domain boundary
         const auto grid_origin = vector_field.get_node_coordinates(tpf::data::coords2_t(0, 0));
         const auto grid_diagonal = vector_field.get_node_coordinates(
             tpf::data::coords2_t(vector_field.get_extent()[0].second, vector_field.get_extent()[1].second));
-
-        const Eigen::Vector2f last_critical_point(
-            (*this->seed_line_vertices)[2 * (this->seed_line_indices->size() - 1)],
-            (*this->seed_line_vertices)[2 * (this->seed_line_indices->size() - 1) + 1]);
 
         const auto distance_left = last_critical_point.x() - grid_origin.x();
         const auto distance_right = grid_diagonal.x() - last_critical_point.x();
@@ -329,7 +343,7 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
 
         for (; seed_index < seed_end; ++seed_index) {
             // Subdivide line and create a seed point per subdivision
-            const auto height = this->bounding_box.Height();
+            const auto height = this->bounding_box.Depth();
 
             const Eigen::Vector3f seed_line_start(
                 seed_lines[seed_index].first.x(), seed_lines[seed_index].first.y(), 0.0f);
@@ -663,6 +677,7 @@ Eigen::Vector3f periodic_orbits_theisel::advect_point(const tpf::data::grid<floa
             vislib::sys::Log::DefaultLog.WriteError("Unknown advection method selected");
         }
     } catch (const std::runtime_error&) {
+        vislib::sys::Log::DefaultLog.WriteWarn("Interpolation yielded no movement or overshooting");
         delta = 0.0f;
     }
 
@@ -742,7 +757,7 @@ bool periodic_orbits_theisel::get_stream_surface_values_data(core::Call& call) {
         const auto tf_string = this->transfer_function.Param<core::param::TransferFunctionParam>()->Value();
 
         this->seed_line_ids->min_value = 0.0f;
-        this->seed_line_ids->max_value = static_cast<float>(this->seed_line_indices->size() / 2);
+        this->seed_line_ids->max_value = static_cast<float>(this->seed_line_indices->size() / 2 + 1);
         this->seed_line_ids->transfer_function = tf_string;
         this->seed_line_ids->transfer_function_dirty = true;
         mdc.set_data("seed line", this->seed_line_ids);

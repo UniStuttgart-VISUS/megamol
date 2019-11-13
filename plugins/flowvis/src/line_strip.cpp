@@ -138,14 +138,17 @@ bool line_strip::get_lines_data(core::Call& call) {
 
         // Connect points
         this->lines.clear();
-        this->lines.reserve(points.size() - 1);
 
-        switch (this->method.Param<core::param::EnumParam>()->Value()) {
-        case 0:
-            create_lines_input_order(points);
-            break;
-        case 1:
-            create_lines_tsp(points);
+        if (points.size() > 1) {
+            this->lines.reserve(points.size() - 1);
+
+            switch (this->method.Param<core::param::EnumParam>()->Value()) {
+            case 0:
+                create_lines_input_order(points);
+                break;
+            case 1:
+                create_lines_tsp(points);
+            }
         }
 
         // Set new hash
