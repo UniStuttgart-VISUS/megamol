@@ -125,6 +125,17 @@ namespace megamol
                 const std::vector<Eigen::Vector3f>& advected_forward_points,
                 const std::vector<Eigen::Vector3f>& advected_backward_points) const;
 
+
+            std::vector<Eigen::Vector2f> refine_intersections(
+                const tpf::data::grid<float, float, 2, 2>& vector_field,
+                const Eigen::Vector3f& seed_line_start, const Eigen::Vector3f& seed_line_direction,
+                float seed_line_step, float timestep, std::size_t integration,
+                const std::vector<Eigen::Vector3f>& previous_forward_points,
+                const std::vector<Eigen::Vector3f>& previous_backward_points,
+                const std::vector<Eigen::Vector3f>& advected_forward_points,
+                const std::vector<Eigen::Vector3f>& advected_backward_points,
+                const std::vector<std::tuple<Eigen::Vector2f, std::size_t, std::size_t>>& intersections) const;
+
             /** Callbacks for the computed periodic orbits */
             bool get_periodic_orbits_data(core::Call& call);
             bool get_periodic_orbits_extent(core::Call& call);

@@ -407,86 +407,13 @@ bool periodic_orbits_theisel::compute_periodic_orbits() {
                         const auto num_subdivisions = this->num_subdivisions.Param<core::param::IntParam>()->Value();
 
                         if (num_subdivisions > 0) {
-                            for (const auto& intersection_point : intersection_points) {
-                                // Seed a new point for each subdivision and check intersection again
-                                float step_fwd_low = static_cast<float>(std::get<1>(intersection_point));
-                                float step_fwd_hi = static_cast<float>(std::get<1>(intersection_point) + 1);
-                                float step_bwd_low = static_cast<float>(std::get<2>(intersection_point));
-                                float step_bwd_hi = static_cast<float>(std::get<2>(intersection_point) + 1);
+                            const auto refined_intersections =
+                                refine_intersections(vector_field, seed_line_start, direction, step, timestep,
+                                    integration, previous_forward_points, previous_backward_points,
+                                    advected_forward_points, advected_backward_points, intersection_points);
 
-                                Eigen::Vector3f fwd_prev_low = previous_forward_points[std::get<1>(intersection_point)];
-                                Eigen::Vector3f fwd_prev_hi = previous_forward_points[std::get<1>(intersection_point) + 1];
-                                Eigen::Vector3f fwd_adv_low = advected_forward_points[std::get<1>(intersection_point)];
-                                Eigen::Vector3f fwd_adv_hi = advected_forward_points[std::get<1>(intersection_point) + 1];
-                                Eigen::Vector3f bwd_prev_low = previous_backward_points[std::get<2>(intersection_point)];
-                                Eigen::Vector3f bwd_prev_hi = previous_backward_points[std::get<2>(intersection_point) + 1];
-                                Eigen::Vector3f bwd_adv_low = advected_backward_points[std::get<2>(intersection_point)];
-                                Eigen::Vector3f bwd_adv_hi = advected_backward_points[std::get<2>(intersection_point) + 1];
-
-                                for (std::size_t subdivision = 0; subdivision < num_subdivisions; ++subdivision) {
-                                    const float step_fwd_ref = 0.5f * (step_fwd_low + step_fwd_hi);
-                                    const float step_bwd_ref = 0.5f * (step_bwd_low + step_bwd_hi);
-
-                                    Eigen::Vector3f seed_point_fwd = seed_line_start + (step_fwd_ref * step) * direction;
-                                    Eigen::Vector3f seed_point_bwd = seed_line_start + (step_bwd_ref * step) * direction;
-
-                                    float delta_fwd = timestep;
-                                    float delta_bwd = timestep;
-
-                                    // Advect new seed points
-                                    for (std::size_t ref_integration = 0; ref_integration < integration;
-                                         ++ref_integration) {
-                                        seed_point_fwd = advect_point(vector_field, seed_point_fwd, delta_fwd, true);
-                                        seed_point_bwd = advect_point(vector_field, seed_point_bwd, delta_bwd, false);
-                                    }
-
-                                    const Eigen::Vector3f adv_point_fwd =
-                                        advect_point(vector_field, seed_point_fwd, delta_fwd, true);
-                                    const Eigen::Vector3f adv_point_bwd =
-                                        advect_point(vector_field, seed_point_bwd, delta_bwd, true);
-
-                                    // Check intersection
-                                    const std::vector<Eigen::Vector3f> fwd_prev{fwd_prev_low, seed_point_fwd, fwd_prev_hi};
-                                    const std::vector<Eigen::Vector3f> bwd_prev{bwd_prev_low, seed_point_bwd, bwd_prev_hi};
-                                    const std::vector<Eigen::Vector3f> fwd_adv{fwd_adv_low, adv_point_fwd, fwd_adv_hi};
-                                    const std::vector<Eigen::Vector3f> bwd_adv{bwd_adv_low, adv_point_bwd, bwd_adv_hi};
-
-                                    const auto ref_intersection_points = find_intersection(fwd_prev, bwd_prev, fwd_adv, bwd_adv);
-
-                                    if (ref_intersection_points.empty()) {
-                                        break;
-                                    }
-
-                                    if (subdivision == (static_cast<long long>(num_subdivisions) - 1)) {
-                                        this->periodic_orbits.push_back(std::make_pair(0.0f, std::get<0>(ref_intersection_points[0])));
-                                        break;
-                                    }
-
-                                    // Prepare for next subdivision
-                                    if (std::get<1>(ref_intersection_points[0]) == 0) {
-                                        step_fwd_hi = step_fwd_ref;
-
-                                        fwd_prev_hi = seed_point_fwd;
-                                        fwd_adv_hi = adv_point_fwd;
-                                    } else {
-                                        step_fwd_low = step_fwd_ref;
-
-                                        fwd_prev_low = seed_point_fwd;
-                                        fwd_adv_low = adv_point_fwd;
-                                    }
-
-                                    if (std::get<2>(ref_intersection_points[0]) == 0) {
-                                        step_bwd_hi = step_bwd_ref;
-
-                                        bwd_prev_hi = seed_point_bwd;
-                                        bwd_adv_hi = adv_point_bwd;
-                                    } else {
-                                        step_bwd_low = step_bwd_ref;
-
-                                        bwd_prev_low = seed_point_bwd;
-                                        bwd_adv_low = adv_point_bwd;
-                                    }
-                                }
+                            for (const auto& refined_intersection : refined_intersections) {
+                                this->periodic_orbits.push_back(std::make_pair(0.0f, refined_intersection));
                             }
                         } else {
                             for (const auto& intersection_point : intersection_points) {
@@ -784,6 +711,101 @@ std::vector<std::tuple<Eigen::Vector2f, std::size_t, std::size_t>> periodic_orbi
     }
 
     return intersections;
+}
+
+std::vector<Eigen::Vector2f> periodic_orbits_theisel::refine_intersections(
+    const tpf::data::grid<float, float, 2, 2>& vector_field, const Eigen::Vector3f& seed_line_start,
+    const Eigen::Vector3f& seed_line_direction, const float seed_line_step, const float timestep,
+    const std::size_t integration, const std::vector<Eigen::Vector3f>& previous_forward_points,
+    const std::vector<Eigen::Vector3f>& previous_backward_points,
+    const std::vector<Eigen::Vector3f>& advected_forward_points,
+    const std::vector<Eigen::Vector3f>& advected_backward_points,
+    const std::vector<std::tuple<Eigen::Vector2f, std::size_t, std::size_t>>& intersections) const {
+
+    const auto num_subdivisions = this->num_subdivisions.Param<core::param::IntParam>()->Value();
+
+    std::vector<Eigen::Vector2f> refined_intersections;
+
+    for (const auto& intersection_point : intersections) {
+        // Seed a new point for each subdivision and check intersection again
+        float step_fwd_low = static_cast<float>(std::get<1>(intersection_point));
+        float step_fwd_hi = static_cast<float>(std::get<1>(intersection_point) + 1);
+        float step_bwd_low = static_cast<float>(std::get<2>(intersection_point));
+        float step_bwd_hi = static_cast<float>(std::get<2>(intersection_point) + 1);
+
+        Eigen::Vector3f fwd_prev_low = previous_forward_points[std::get<1>(intersection_point)];
+        Eigen::Vector3f fwd_prev_hi = previous_forward_points[std::get<1>(intersection_point) + 1];
+        Eigen::Vector3f fwd_adv_low = advected_forward_points[std::get<1>(intersection_point)];
+        Eigen::Vector3f fwd_adv_hi = advected_forward_points[std::get<1>(intersection_point) + 1];
+        Eigen::Vector3f bwd_prev_low = previous_backward_points[std::get<2>(intersection_point)];
+        Eigen::Vector3f bwd_prev_hi = previous_backward_points[std::get<2>(intersection_point) + 1];
+        Eigen::Vector3f bwd_adv_low = advected_backward_points[std::get<2>(intersection_point)];
+        Eigen::Vector3f bwd_adv_hi = advected_backward_points[std::get<2>(intersection_point) + 1];
+
+        for (std::size_t subdivision = 0; subdivision < num_subdivisions; ++subdivision) {
+            const float step_fwd_ref = 0.5f * (step_fwd_low + step_fwd_hi);
+            const float step_bwd_ref = 0.5f * (step_bwd_low + step_bwd_hi);
+
+            Eigen::Vector3f seed_point_fwd = seed_line_start + (step_fwd_ref * seed_line_step) * seed_line_direction;
+            Eigen::Vector3f seed_point_bwd = seed_line_start + (step_bwd_ref * seed_line_step) * seed_line_direction;
+
+            float delta_fwd = timestep;
+            float delta_bwd = timestep;
+
+            // Advect new seed points
+            for (std::size_t ref_integration = 0; ref_integration < integration; ++ref_integration) {
+                seed_point_fwd = advect_point(vector_field, seed_point_fwd, delta_fwd, true);
+                seed_point_bwd = advect_point(vector_field, seed_point_bwd, delta_bwd, false);
+            }
+
+            const Eigen::Vector3f adv_point_fwd = advect_point(vector_field, seed_point_fwd, delta_fwd, true);
+            const Eigen::Vector3f adv_point_bwd = advect_point(vector_field, seed_point_bwd, delta_bwd, true);
+
+            // Check intersection
+            const std::vector<Eigen::Vector3f> fwd_prev{fwd_prev_low, seed_point_fwd, fwd_prev_hi};
+            const std::vector<Eigen::Vector3f> bwd_prev{bwd_prev_low, seed_point_bwd, bwd_prev_hi};
+            const std::vector<Eigen::Vector3f> fwd_adv{fwd_adv_low, adv_point_fwd, fwd_adv_hi};
+            const std::vector<Eigen::Vector3f> bwd_adv{bwd_adv_low, adv_point_bwd, bwd_adv_hi};
+
+            const auto ref_intersection_points = find_intersection(fwd_prev, bwd_prev, fwd_adv, bwd_adv);
+
+            if (ref_intersection_points.empty()) {
+                break;
+            }
+
+            if (subdivision == (static_cast<long long>(num_subdivisions) - 1)) {
+                refined_intersections.push_back(std::get<0>(ref_intersection_points[0]));
+                break;
+            }
+
+            // Prepare for next subdivision
+            if (std::get<1>(ref_intersection_points[0]) == 0) {
+                step_fwd_hi = step_fwd_ref;
+
+                fwd_prev_hi = seed_point_fwd;
+                fwd_adv_hi = adv_point_fwd;
+            } else {
+                step_fwd_low = step_fwd_ref;
+
+                fwd_prev_low = seed_point_fwd;
+                fwd_adv_low = adv_point_fwd;
+            }
+
+            if (std::get<2>(ref_intersection_points[0]) == 0) {
+                step_bwd_hi = step_bwd_ref;
+
+                bwd_prev_hi = seed_point_bwd;
+                bwd_adv_hi = adv_point_bwd;
+            } else {
+                step_bwd_low = step_bwd_ref;
+
+                bwd_prev_low = seed_point_bwd;
+                bwd_adv_low = adv_point_bwd;
+            }
+        }
+    }
+
+    return refined_intersections;
 }
 
 bool periodic_orbits_theisel::get_periodic_orbits_data(core::Call& call) {
