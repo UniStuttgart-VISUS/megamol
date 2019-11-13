@@ -22,6 +22,8 @@ namespace megamol
 
             this->point_values = std::make_shared<std::vector<float>>();
             this->line_values = std::make_shared<std::vector<float>>();
+
+            this->SetDataHash(-1);
         }
 
         const vislib::math::Rectangle<float>& glyph_data_call::get_bounding_rectangle() const

@@ -86,9 +86,15 @@ namespace megamol
             // Remove shaders, buffers and arrays
             if (this->render_data.initialized)
             {
-                glDetachShader(this->render_data.prog, this->render_data.vs);
-                glDetachShader(this->render_data.prog, this->render_data.fs);
-                glDeleteProgram(this->render_data.prog);
+                glDetachShader(this->render_data.prog_p, this->render_data.vs);
+                glDetachShader(this->render_data.prog_p, this->render_data.fs);
+                glDetachShader(this->render_data.prog_p, this->render_data.gs_p);
+                glDeleteProgram(this->render_data.prog_p);
+
+                glDetachShader(this->render_data.prog_l, this->render_data.vs);
+                glDetachShader(this->render_data.prog_l, this->render_data.fs);
+                glDetachShader(this->render_data.prog_l, this->render_data.gs_l);
+                glDeleteProgram(this->render_data.prog_l);
 
                 glDeleteVertexArrays(1, &this->render_data.point.vao);
                 glDeleteVertexArrays(1, &this->render_data.line.vao);
@@ -123,31 +129,111 @@ namespace megamol
                     "#version 330 \n" \
                     "layout(location = 0) in vec2 in_position; \n" \
                     "layout(location = 1) in float in_value; \n" \
-                    "uniform mat4 model_view_matrix; \n" \
-                    "uniform mat4 projection_matrix; \n" \
                     "uniform float min_value; \n" \
                     "uniform float max_value; \n" \
                     "uniform sampler1D transfer_function; \n" \
-                    "out vec4 vertex_color; \n" \
+                    "out vec4 vertex_colors; \n" \
                     "void main() { \n" \
-                    "    gl_Position = projection_matrix * model_view_matrix * vec4(in_position, 0.0f, 1.0f); \n" \
-                    "    vertex_color = texture(transfer_function, (min_value == max_value) ? 0.5f : ((in_value - min_value) / (max_value - min_value))); \n" \
+                    "    gl_Position = vec4(in_position, 0.0f, 1.0f); \n" \
+                    "    vertex_colors = texture(transfer_function, (min_value == max_value) ? 0.5f : ((in_value - min_value) / (max_value - min_value))); \n" \
+                    "}";
+
+                const std::string geometry_point_shader =
+                    "#version 330\n" \
+                    "#define PI 3.1415926535897932384626433832795\n" \
+                    "layout(points) in;\n" \
+                    "layout(triangle_strip, max_vertices = 64) out;\n" \
+                    "uniform mat4 model_view_matrix;\n" \
+                    "uniform mat4 projection_matrix;\n" \
+                    "uniform int num_triangles;\n" \
+                    "uniform float radius;\n" \
+                    "in vec4 vertex_colors[];\n" \
+                    "out vec4 vertex_color;\n" \
+                    "out vec3 normal;\n" \
+                    "void main() {\n" \
+                    "    vec4 point = gl_in[0].gl_Position;\n" \
+                    "    vertex_color = vertex_colors[0];\n" \
+                    "    for (int i = 0; i < num_triangles; ++i) {\n" \
+                    "        gl_Position = projection_matrix * model_view_matrix * point;\n" \
+                    "        normal = vec3(0.0f, 0.0f, 1.0f);\n" \
+                    "        EmitVertex();\n" \
+                    "        float t_1 = 2.0f * PI * (i / float(num_triangles));\n" \
+                    "        vec3 point_1 = vec3(radius * cos(t_1), radius * sin(t_1), 0.0f);\n" \
+                    "        gl_Position = projection_matrix * model_view_matrix * vec4(point.xyz + point_1, 1.0f);\n" \
+                    "        normal = normalize(point_1);\n" \
+                    "        EmitVertex();\n" \
+                    "        float t_2 = 2.0f * PI * ((i + 1) / float(num_triangles));\n" \
+                    "        vec3 point_2 = vec3(radius * cos(t_2), radius * sin(t_2), 0.0f);\n" \
+                    "        gl_Position = projection_matrix * model_view_matrix * vec4(point.xyz + point_2, 1.0f);\n" \
+                    "        normal = normalize(point_2);\n" \
+                    "        EmitVertex();\n" \
+                    "        EndPrimitive();\n" \
+                    "    }\n" \
+                    "}";
+
+                const std::string geometry_line_shader =
+                    "#version 330\n" \
+                    "layout(lines) in;\n" \
+                    "layout(triangle_strip, max_vertices = 6) out;\n" \
+                    "uniform mat4 model_view_matrix;\n" \
+                    "uniform mat4 projection_matrix;\n" \
+                    "uniform float width;\n" \
+                    "in vec4 vertex_colors[];\n" \
+                    "out vec4 vertex_color;\n" \
+                    "out vec3 normal;\n" \
+                    "void main() {\n" \
+                    "    vec4 line_start = gl_in[0].gl_Position;\n" \
+                    "    vec4 line_end = gl_in[1].gl_Position;\n" \
+                    "    vec4 line_direction = line_end - line_start;\n" \
+                    "    vec4 offset = normalize(vec4(line_direction.y, -line_direction.x, 0.0f, 0.0f));\n" \
+                    "    gl_Position = projection_matrix * model_view_matrix * (line_start + width * offset);\n" \
+                    "    vertex_color = vertex_colors[0];\n" \
+                    "    normal = offset.xyz;\n" \
+                    "    EmitVertex();\n" \
+                    "    gl_Position = projection_matrix * model_view_matrix * (line_end + width * offset);\n" \
+                    "    vertex_color = vertex_colors[1];\n" \
+                    "    normal = offset.xyz;\n" \
+                    "    EmitVertex();\n" \
+                    "    gl_Position = projection_matrix * model_view_matrix * line_start;\n" \
+                    "    vertex_color = vertex_colors[0];\n" \
+                    "    normal = vec3(0.0f, 0.0f, 1.0f);\n" \
+                    "    EmitVertex();\n" \
+                    "    gl_Position = projection_matrix * model_view_matrix * line_end;\n" \
+                    "    vertex_color = vertex_colors[1];\n" \
+                    "    normal = vec3(0.0f, 0.0f, 1.0f);\n" \
+                    "    EmitVertex();\n" \
+                    "    gl_Position = projection_matrix * model_view_matrix * (line_start - width * offset);\n" \
+                    "    vertex_color = vertex_colors[0];\n" \
+                    "    normal = -offset.xyz;\n" \
+                    "    EmitVertex();\n" \
+                    "    gl_Position = projection_matrix * model_view_matrix * (line_end - width * offset);\n" \
+                    "    vertex_color = vertex_colors[1];\n" \
+                    "    normal = -offset.xyz;\n" \
+                    "    EmitVertex();\n" \
+                    "    EndPrimitive();\n" \
                     "}";
 
                 const std::string fragment_shader =
                     "#version 330\n" \
                     "in vec4 vertex_color; \n" \
+                    "in vec3 normal; \n" \
                     "out vec4 fragColor; \n" \
                     "void main() { \n" \
-                    "    fragColor = vertex_color; \n" \
+                    "    const vec3 light_dir = vec3(0.0f, 0.0f, 1.0f); \n" \
+                    "    fragColor = vec4(vertex_color.rgb * vec3(clamp(dot(normal, light_dir) + 0.2f, 0.0f, 1.0f)), 1.0f); \n" \
                     "}";
 
                 try
                 {
                     this->render_data.vs = utility::make_shader(vertex_shader, GL_VERTEX_SHADER);
                     this->render_data.fs = utility::make_shader(fragment_shader, GL_FRAGMENT_SHADER);
+                    this->render_data.gs_p = utility::make_shader(geometry_point_shader, GL_GEOMETRY_SHADER);
+                    this->render_data.gs_l = utility::make_shader(geometry_line_shader, GL_GEOMETRY_SHADER);
 
-                    this->render_data.prog = utility::make_program({ this->render_data.vs, this->render_data.fs });
+                    this->render_data.prog_p =
+                        utility::make_program({this->render_data.vs, this->render_data.fs, this->render_data.gs_p});
+                    this->render_data.prog_l =
+                        utility::make_program({this->render_data.vs, this->render_data.fs, this->render_data.gs_l});
                 }
                 catch (const std::exception& e)
                 {
@@ -309,43 +395,57 @@ namespace megamol
             this->glyph_hash = get_glyphs->DataHash();
 
             // Render
-            glUseProgram(this->render_data.prog);
             glDisable(GL_DEPTH_TEST);
             glDepthMask(GL_FALSE);
 
-            glUniformMatrix4fv(glGetUniformLocation(this->render_data.prog, "model_view_matrix"), 1, GL_FALSE, this->camera.model_view.data());
-            glUniformMatrix4fv(glGetUniformLocation(this->render_data.prog, "projection_matrix"), 1, GL_FALSE, this->camera.projection.data());
-
-            glUniform1f(glGetUniformLocation(this->render_data.prog, "min_value"), this->render_data.min_value);
-            glUniform1f(glGetUniformLocation(this->render_data.prog, "max_value"), this->render_data.max_value);
-
             if (!this->render_data.point_indices->empty())
             {
+                glUseProgram(this->render_data.prog_p);
+
+                glUniformMatrix4fv(glGetUniformLocation(this->render_data.prog_p, "model_view_matrix"), 1, GL_FALSE,
+                    this->camera.model_view.data());
+                glUniformMatrix4fv(glGetUniformLocation(this->render_data.prog_p, "projection_matrix"), 1, GL_FALSE,
+                    this->camera.projection.data());
+
+                glUniform1f(glGetUniformLocation(this->render_data.prog_p, "min_value"), this->render_data.min_value);
+                glUniform1f(glGetUniformLocation(this->render_data.prog_p, "max_value"), this->render_data.max_value);
+
+                glUniform1i(glGetUniformLocation(this->render_data.prog_p, "num_triangles"), 16); // TODO
+                glUniform1f(glGetUniformLocation(this->render_data.prog_p, "radius"), 0.0002f); // TODO
+
                 glBindVertexArray(this->render_data.point.vao);
                 glActiveTexture(GL_TEXTURE0);
                 glBindTexture(GL_TEXTURE_1D, this->render_data.tf);
-                glPointSize(static_cast<float>(this->point_size.Param<core::param::IntParam>()->Value()));
                 glDrawElements(GL_POINTS, static_cast<GLsizei>(this->render_data.point_indices->size()), GL_UNSIGNED_INT, nullptr);
-                glPointSize(1.0f);
                 glBindTexture(GL_TEXTURE_1D, 0);
                 glBindVertexArray(0);
             }
 
-            if (!this->render_data.line_indices->empty())
-            {
+            if (!this->render_data.line_indices->empty()) {
+                glUseProgram(this->render_data.prog_l);
+
+                glUniformMatrix4fv(glGetUniformLocation(this->render_data.prog_l, "model_view_matrix"), 1, GL_FALSE,
+                    this->camera.model_view.data());
+                glUniformMatrix4fv(glGetUniformLocation(this->render_data.prog_l, "projection_matrix"), 1, GL_FALSE,
+                    this->camera.projection.data());
+
+                glUniform1f(glGetUniformLocation(this->render_data.prog_l, "min_value"), this->render_data.min_value);
+                glUniform1f(glGetUniformLocation(this->render_data.prog_l, "max_value"), this->render_data.max_value);
+
+                glUniform1f(glGetUniformLocation(this->render_data.prog_l, "width"), 0.0002f); // TODO
+
                 glBindVertexArray(this->render_data.line.vao);
                 glActiveTexture(GL_TEXTURE0);
                 glBindTexture(GL_TEXTURE_1D, this->render_data.tf);
-                glLineWidth(static_cast<float>(this->line_width.Param<core::param::IntParam>()->Value()));
                 glDrawElements(GL_LINES, static_cast<GLsizei>(this->render_data.line_indices->size()), GL_UNSIGNED_INT, nullptr);
-                glLineWidth(1.0f);
                 glBindTexture(GL_TEXTURE_1D, 0);
                 glBindVertexArray(0);
             }
 
+            glUseProgram(0);
+
             glDepthMask(GL_TRUE);
             glEnable(GL_DEPTH_TEST);
-            glUseProgram(0);
 
             return true;
         }

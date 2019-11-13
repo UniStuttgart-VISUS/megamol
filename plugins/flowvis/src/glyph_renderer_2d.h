@@ -176,7 +176,7 @@ namespace megamol
             {
                 bool initialized = false;
 
-                GLuint vs, fs, prog;
+                GLuint vs, fs, gs_p, gs_l, prog_p, prog_l;
                 struct glyph_data_t { GLuint vao, vbo, ibo, cbo; } point, line;
                 GLuint tf, tf_size;
 
