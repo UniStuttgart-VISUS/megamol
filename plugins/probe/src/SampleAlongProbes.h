@@ -15,6 +15,7 @@
 #include "ProbeCollection.h"
 #include "mmcore/param/ParamSlot.h"
 #include "kdtree.h"
+#include "mmcore/param/IntParam.h"
 #include "adios_plugin/CallADIOSData.h"
 
 namespace megamol {
@@ -65,8 +66,8 @@ protected:
     core::param::ParamSlot _num_samples_per_probe_slot;
 
 private:
-
-    void doSampling(const std::shared_ptr<pcl::KdTreeFLANN<pcl::PointXYZ>>& tree, std::vector<float>& data);
+    template <typename T>
+    void doSampling(const std::shared_ptr<pcl::KdTreeFLANN<pcl::PointXYZ>>& tree, std::vector<T>& data);
     bool getData(core::Call& call);
 
     bool getMetaData(core::Call& call);
@@ -77,6 +78,61 @@ private:
     bool _trigger_recalc;
     bool paramChanged(core::param::ParamSlot& p);
 };
+
+
+template <typename T>
+void SampleAlongPobes::doSampling(const std::shared_ptr<pcl::KdTreeFLANN<pcl::PointXYZ>>& tree, std::vector<T>& data) {
+
+    const int samples_per_probe = this->_num_samples_per_probe_slot.Param<core::param::IntParam>()->Value();
+
+    for (int i = 0; i < _probes->getProbeCount(); i++) {
+
+        auto probe = _probes->getProbe<FloatProbe>(i);
+        auto samples = probe.getSamplingResult();
+        // samples = std::make_shared<FloatProbe::SamplingResult>();
+
+        auto sample_step = probe.m_end / static_cast<float>(samples_per_probe);
+        auto radius = sample_step / 2.0f;
+
+        float min_value = std::numeric_limits<float>::max();
+        float max_value = std::numeric_limits<float>::min();
+        float avg_value = 0.0f;
+        samples->samples.resize(samples_per_probe);
+
+        for (int j = 0; j < samples_per_probe; j++) {
+
+            pcl::PointXYZ sample_point;
+            sample_point.x = probe.m_position[0] + j * sample_step * probe.m_direction[0];
+            sample_point.y = probe.m_position[1] + j * sample_step * probe.m_direction[1];
+            sample_point.z = probe.m_position[2] + j * sample_step * probe.m_direction[2];
+
+            std::vector<uint32_t> k_indices;
+            std::vector<float> k_distances;
+
+            auto num_neighbors = tree->radiusSearch(sample_point, radius, k_indices, k_distances);
+            if (num_neighbors == 0) {
+                num_neighbors = tree->nearestKSearch(sample_point, 1, k_indices, k_distances);
+            }
+
+
+            // accumulate values
+            float value = 0;
+            for (int n = 0; n < num_neighbors; n++) {
+                value += data[k_indices[n]];
+            } // end num_neighbors
+            value /= num_neighbors;
+            samples->samples[j] = value;
+            min_value = std::min(min_value, value);
+            max_value = std::max(max_value, value);
+            avg_value += value;
+        } // end num samples per probe
+        avg_value /= samples_per_probe;
+        samples->average_value = avg_value;
+        samples->max_value = max_value;
+        samples->min_value = min_value;
+    } // end for probes
+}
+
 
 } // namespace probe
 } // namespace megamol

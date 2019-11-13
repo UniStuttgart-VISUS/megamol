@@ -14,6 +14,7 @@
 #include "mmcore/Module.h"
 #include "mesh/ImageDataAccessCollection.h"
 #include "DrawTextureUtility.h"
+#include "mmcore/CallGeneric.h"
 
 namespace megamol {
 namespace probe {
@@ -63,7 +64,7 @@ private:
     bool getTexture(core::Call& call);
     bool getTextureMetaData(core::Call& call);
 
-    void doGlyphGeneration(float scale);
+    void doGlyphGeneration();
 
     uint32_t _data_hash;
     std::shared_ptr<ProbeCollection> _probe_data;
@@ -75,6 +76,8 @@ private:
     std::array<std::array<float,2>,4> _generated_texture_coordinates;
 
     std::vector<DrawTextureUtility> _dtu;
+
+    double scale = -1.0;
 };
 
 } // namespace probe

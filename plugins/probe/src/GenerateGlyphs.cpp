@@ -41,7 +41,7 @@ GenerateGlyphs::~GenerateGlyphs() {
 }
 
 
-void GenerateGlyphs::doGlyphGeneration(float scale) {
+void GenerateGlyphs::doGlyphGeneration() {
 
     this->_mesh_data = std::make_shared<mesh::MeshDataAccessCollection>();
     this->_tex_data = std::make_shared<mesh::ImageDataAccessCollection>();
@@ -167,7 +167,7 @@ void GenerateGlyphs::doGlyphGeneration(float scale) {
 
         this->_mesh_data->addMesh(vertex_attributes, index_data);
 
-        _dtu[i].setResolution(200, 200); // should be changeable
+        _dtu[i].setResolution(300, 300); // should be changeable
         _dtu[i].setGraphType(DrawTextureUtility::GLYPH); // should be changeable
 
         auto tex_ptr = _dtu[i].draw(samples->samples, samples->min_value, samples->max_value);
@@ -201,9 +201,9 @@ bool GenerateGlyphs::getMesh(core::Call& call) {
 
     this->_probe_data = cprobes->getData();
 
-    const float scale = probe_meta_data.m_bboxs.BoundingBox().LongestEdge() * 1e-2;
+    if (this->scale < 0.0) this->scale = probe_meta_data.m_bboxs.BoundingBox().LongestEdge() * 2e-2;
     if (probe_meta_data.m_data_hash != this->_data_hash)
-        doGlyphGeneration(scale);
+        doGlyphGeneration();
 
     cm->setData(this->_mesh_data);
 
@@ -257,9 +257,9 @@ bool GenerateGlyphs::getTexture(core::Call& call) {
 
     this->_probe_data = cprobes->getData();
 
-    const float scale = probe_meta_data.m_bboxs.BoundingBox().LongestEdge() * 5e-3;
+    if (this->scale < 0) this->scale = probe_meta_data.m_bboxs.BoundingBox().LongestEdge() * 2e-2;
     if (probe_meta_data.m_data_hash != this->_data_hash)
-        doGlyphGeneration(scale);
+        doGlyphGeneration();
 
     ctex->setData(this->_tex_data);
 

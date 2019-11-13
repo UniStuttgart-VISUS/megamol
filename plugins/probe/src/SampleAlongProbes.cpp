@@ -9,7 +9,6 @@
 #include "ProbeCalls.h"
 #include "adios_plugin/CallADIOSData.h"
 #include "mmcore/param/FlexEnumParam.h"
-#include "mmcore/param/IntParam.h"
 
 namespace megamol {
 namespace probe {
@@ -54,56 +53,6 @@ bool SampleAlongPobes::create() { return true; }
 
 void SampleAlongPobes::release() {}
 
-void SampleAlongPobes::doSampling(const std::shared_ptr<pcl::KdTreeFLANN<pcl::PointXYZ>>& tree, std::vector<float>& data) {
-
-    const int samples_per_probe  = this->_num_samples_per_probe_slot.Param<core::param::IntParam>()->Value();
-
-    for (int i = 0; i < _probes->getProbeCount(); i++) {
-
-        auto probe = _probes->getProbe<FloatProbe>(i);
-        auto samples = probe.getSamplingResult();
-        //samples = std::make_shared<FloatProbe::SamplingResult>();
-
-        auto sample_step = probe.m_end / static_cast<float>(samples_per_probe);
-        auto radius = sample_step / 2.0f;
-
-        float min_value =
-            std::numeric_limits<float>::max();
-        float max_value =
-            std::numeric_limits<float>::min();
-        float avg_value = 0.0f;
-        samples->samples.resize(samples_per_probe);
-
-        for (int j = 0; j < samples_per_probe; j++) {
-
-            pcl::PointXYZ sample_point;
-            sample_point.x = probe.m_position[0] + j * sample_step * probe.m_direction[0];
-            sample_point.y = probe.m_position[1] + j * sample_step * probe.m_direction[1];
-            sample_point.z = probe.m_position[2] + j * sample_step * probe.m_direction[2];
-
-            std::vector<uint32_t> k_indices;
-            std::vector<float> k_distances;
-
-            auto num_neighbors = tree->radiusSearch(sample_point, radius, k_indices, k_distances);
-
-            // accumulate values
-            float value = 0;
-            for (int n = 0; n < num_neighbors; n++) {
-                value += data[k_indices[n]];
-            } // end num_neighbors
-            value /= num_neighbors;
-            samples->samples[j] = value;
-            min_value = std::min(min_value, value);
-            max_value = std::max(max_value, value);
-            avg_value += value;
-        } // end num samples per probe
-        avg_value /= samples_per_probe;
-        samples->average_value = avg_value;
-        samples->max_value = max_value;
-        samples->min_value = min_value;
-    } // end for probes
-}
-
 bool SampleAlongPobes::getData(core::Call& call) {
     
     auto cp = dynamic_cast<CallProbes*>(&call);
@@ -125,6 +74,8 @@ bool SampleAlongPobes::getData(core::Call& call) {
 
 
     std::vector<std::string> toInq;
+    std::string var_str =
+        std::string(this->_parameter_to_sample_slot.Param<core::param::FlexEnumParam>()->ValueString());
     toInq.clear();
     toInq.emplace_back(
         std::string(this->_parameter_to_sample_slot.Param<core::param::FlexEnumParam>()->ValueString()));
@@ -149,8 +100,14 @@ bool SampleAlongPobes::getData(core::Call& call) {
     // do sampling
     _probes = cprobes->getData();
     auto tree = ct->getData();
-    auto data = cd->getData(this->_parameter_to_sample_slot.Param<core::param::FlexEnumParam>()->Value())->GetAsFloat();
-    doSampling(tree, data);
+    if (cd->getData(var_str)->getType() == "double") {
+        std::vector<double> data = cd->getData(var_str)->GetAsDouble();
+        doSampling(tree, data);
+    
+    } else if (cd->getData(var_str)->getType() == "float") {
+        std::vector<float> data = cd->getData(var_str)->GetAsFloat();
+        doSampling(tree, data);
+    }
 
 
     // put data into probes

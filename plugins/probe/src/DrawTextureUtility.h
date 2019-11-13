@@ -139,47 +139,69 @@ template <typename T> void DrawTextureUtility::drawStar(std::vector<T>& data, T 
     // calc clamp on texture
     auto num_data = data.size();
 
-    auto angle_step = 2 * 3.14159265359 / (num_data -1);
+    auto angle_step = 2 * 3.14159265359 / num_data;
 
     auto max_radius = std::min(this->_pixel_width, this->_pixel_height) / 2 - std::min(width_halo, height_halo);
     auto axis_radius = std::min(this->_pixel_width, this->_pixel_height) / 2;
 
 
     BLPath axis;
-    BLPath axis0;
-    BLPath path;
-    for (uint32_t i = 0; i < num_data-1; i++) {
+    BLPath max_polygon;
+    BLPath data_polygon;
+    for (uint32_t i = 0; i < num_data; i++) {
 
-        BLLine path_line(center[0] + ((data[i] - min) / (max - min)) * max_radius * std::cos(i * angle_step),
-            center[1] + ((data[i] - min) / (max - min)) * max_radius * std::sin(i * angle_step),
-            center[0] + ((data[i + 1] - min) / (max - min)) * max_radius * std::cos((i + 1) * angle_step),
-            center[1] + ((data[i + 1] - min) / (max - min)) * max_radius * std::sin((i + 1) * angle_step));
-        path.addLine(path_line);
+        if (i == 0) {
+            data_polygon.moveTo(center[0] + ((data[i] - min) / (max - min)) * max_radius * std::cos(i * angle_step),
+                center[1] + ((data[i] - min) / (max - min)) * max_radius * std::sin(i * angle_step));
+            max_polygon.moveTo(center[0] + max_radius * std::cos(i * angle_step),
+                center[1] + max_radius* std::sin(i * angle_step));
+        } else {
+            data_polygon.lineTo(center[0] + ((data[i] - min) / (max - min)) * max_radius * std::cos(i * angle_step),
+                center[1] + ((data[i] - min) / (max - min)) * max_radius * std::sin(i * angle_step));
+            max_polygon.lineTo(
+                center[0] + max_radius * std::cos(i * angle_step), center[1] + max_radius * std::sin(i * angle_step));
+            }
 
         // Draw axes
         BLLine axis_line(center[0], center[1], center[0] + axis_radius * std::cos(i * angle_step),
             center[1] + axis_radius * std::sin(i * angle_step));
-        if (i == 0) {
-            axis0.addLine(axis_line);
-        } else {
-            axis.addLine(axis_line);
-        }
+        axis.addLine(axis_line);
     }
+    //max_polygon.lineTo(center[0] + max_radius, center[1]); 
 
-    _ctx.setCompOp(BL_COMP_OP_SRC_COPY);
-    _ctx.setStrokeStyle(BLRgba32(0xFFFF6666));
-    _ctx.setStrokeWidth(2);
-    _ctx.strokePath(axis0);
+    BLPath cut;
+    cut.moveTo(center[0], center[1]);
+    cut.lineTo(center[0] + axis_radius, center[1]);
+    cut.lineTo(center[0] + axis_radius * std::cos((num_data - 1) * angle_step),
+        center[1] + axis_radius * std::sin((num_data - 1) * angle_step));
 
+    // Max Polygon Filling
     _ctx.setCompOp(BL_COMP_OP_SRC_COPY);
+    _ctx.setFillStyle(BLRgba32(0x66F3DF92));
+    _ctx.fillPath(max_polygon);
+
+    // Star Axis
     _ctx.setStrokeStyle(BLRgba32(0xFF000000));
     _ctx.setStrokeWidth(2);
     _ctx.strokePath(axis);
 
-    _ctx.setCompOp(BL_COMP_OP_SRC_COPY);
+    // Max Polygon Stroke
+    _ctx.setStrokeStyle(BLRgba32(0xFFF3DF92));
+    _ctx.setStrokeWidth(2);
+    _ctx.strokePath(max_polygon);
+
+    // Data Stroke
     _ctx.setStrokeStyle(BLRgba32(0xFF0000FF));
     _ctx.setStrokeWidth(7);
-    _ctx.strokePath(path);
+    _ctx.strokePath(data_polygon);
+
+    // Data Filling
+    _ctx.setFillStyle(BLRgba32(0x660000FF));
+    _ctx.fillPath(data_polygon);
+
+    // Solid Cut
+    _ctx.setFillStyle(BLRgba32(0xFFF3DF92));
+    _ctx.fillPath(cut);
 
 }
 
