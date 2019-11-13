@@ -9,7 +9,6 @@
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/CallRender3D_2.h"
 #include "mmcore/view/Renderer3DModule_2.h"
 
@@ -86,13 +85,9 @@ private:
     /** Input slot for getting the model matrix */
     core::CallerSlot model_matrix_slot;
 
-    /** Parameters for defining a transparent color */
-    core::param::ParamSlot enable_transparency;
-    core::param::ParamSlot transparent_color;
-
     /** Information for rendering */
     struct render_data_t {
-        GLuint vs, fs, cs, prog, cs_prog;
+        GLuint vs, fs, prog;
 
         std::shared_ptr<glowl::Texture2D> texture;
         glm::mat4 model_matrix;

@@ -93,7 +93,15 @@ bool megamol::compositing::DrawToScreen::Render(core::view::CallRender3D_2& call
     }
 
     if (m_drawToScreen_prgm != nullptr) {
-        glEnable(GL_BLEND);
+        const auto blend_enabled = glIsEnabled(GL_BLEND);
+        if (!blend_enabled) glEnable(GL_BLEND);
+
+        GLint blend_src_rgb, blend_src_alpha, blend_dst_rgb, blend_dst_alpha;
+        glGetIntegerv(GL_BLEND_SRC_RGB, &blend_src_rgb);
+        glGetIntegerv(GL_BLEND_SRC_ALPHA, &blend_src_alpha);
+        glGetIntegerv(GL_BLEND_DST_RGB, &blend_dst_rgb);
+        glGetIntegerv(GL_BLEND_DST_ALPHA, &blend_dst_alpha);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         m_drawToScreen_prgm->Enable();
 
@@ -105,7 +113,8 @@ bool megamol::compositing::DrawToScreen::Render(core::view::CallRender3D_2& call
 
         m_drawToScreen_prgm->Disable();
 
-        glDisable(GL_BLEND);
+        glBlendFuncSeparate(blend_src_rgb, blend_dst_rgb, blend_src_alpha, blend_dst_alpha);
+        if (!blend_enabled) glDisable(GL_BLEND);
     }
 
     return true; 

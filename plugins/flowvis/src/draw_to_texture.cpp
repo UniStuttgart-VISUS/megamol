@@ -16,6 +16,7 @@
 
 #include "glm/mat4x4.hpp"
 
+#include <array>
 #include <memory>
 
 namespace megamol {
@@ -134,6 +135,10 @@ bool draw_to_texture::get_data(core::Call& call) {
     // Render
     this->fbo->bind();
 
+    /*std::array<float, 4> clear_color;
+    glGetFloatv(GL_COLOR_CLEAR_VALUE, clear_color.data());
+
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);*/
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     if (!rc(core::view::AbstractCallRender::FnRender)) {
@@ -142,6 +147,8 @@ bool draw_to_texture::get_data(core::Call& call) {
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    //glClearColor(clear_color[0], clear_color[1], clear_color[2], clear_color[3]);
 
     glViewport(vp[0], vp[1], vp[2], vp[3]);
 
