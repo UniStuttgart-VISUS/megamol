@@ -1080,14 +1080,15 @@ bool SphereRenderer::Render(view::CallRender3D_2& call) {
                 if (lightDir.size() == 4) {
                     this->curlightDir[3] = lightDir[3];
                 }
+                /// View Space Lighting. Comment line to change to Object Space Lighting.
+                //this->curlightDir = this->curMVtransp * this->curlightDir;
             }
-/// TODO Implement missing distant light parameter:
+/// TODO Implement missing distant light parameters:
             //light.second.dl_angularDiameter;
             //light.second.lightColor;
             //light.second.lightIntensity;
         }
     }
-    this->curlightDir = this->curMVtransp * this->curlightDir;
 
     // Viewport
     if (!cam.image_tile().empty()) {

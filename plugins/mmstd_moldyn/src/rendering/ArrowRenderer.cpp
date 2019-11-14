@@ -227,17 +227,15 @@ bool ArrowRenderer::Render(view::CallRender3D_2& call) {
                 if (lightDir.size() == 4) {
                     curlightDir[3] = lightDir[3];
                 }
+                /// View Space Lighting. Comment line to change to Object Space Lighting.
+                //curlightDir = MVtransp * curlightDir;
             }
-/// TODO Implement missing distant light parameter:
+/// TODO Implement missing distant light parameters:
             //light.second.dl_angularDiameter;
             //light.second.lightColor;
             //light.second.lightIntensity;
         }
     }
-    curlightDir = MVtransp * curlightDir;
-
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     glDisable(GL_BLEND);
 
