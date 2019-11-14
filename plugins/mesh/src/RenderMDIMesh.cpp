@@ -182,7 +182,7 @@ bool RenderMDIMesh::Render(core::view::CallRender3D_2& call) {
 	//vislib::sys::Log::DefaultLog.WriteError("Hey listen!");
 	
 	// Set GL state (otherwise bounding box or view cube rendering state is used)
-	//glDisable(GL_BLEND);
+	glDisable(GL_BLEND);
 	glEnable(GL_DEPTH_TEST);
 	//glEnable(GL_CULL_FACE);
     glDisable(GL_CULL_FACE);

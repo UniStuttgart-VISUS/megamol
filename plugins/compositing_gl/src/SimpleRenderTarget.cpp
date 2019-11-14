@@ -49,7 +49,7 @@ megamol::compositing::SimpleRenderTarget::~SimpleRenderTarget() {
 bool megamol::compositing::SimpleRenderTarget::create() { 
 
     m_GBuffer = std::make_shared<glowl::FramebufferObject>(1, 1, true);
-    m_GBuffer->createColorAttachment(GL_RGB16F, GL_RGB, GL_HALF_FLOAT); // surface albedo
+    m_GBuffer->createColorAttachment(GL_RGBA16F, GL_RGBA, GL_HALF_FLOAT); // surface albedo
     m_GBuffer->createColorAttachment(GL_RGB16F, GL_RGB, GL_HALF_FLOAT); // normals
     m_GBuffer->createColorAttachment(GL_R32F, GL_RED, GL_FLOAT);        // clip space depth
 
@@ -64,16 +64,11 @@ bool megamol::compositing::SimpleRenderTarget::GetExtents(core::view::CallRender
 }
 
 bool megamol::compositing::SimpleRenderTarget::Render(core::view::CallRender3D_2& call) { 
-    return false; 
-}
 
-void megamol::compositing::SimpleRenderTarget::PreRender(core::view::CallRender3D_2& call)
-{
     m_last_used_camera = call.GetCamera();
 
     auto rhs_fc = m_framebuffer_slot.CallAs<CallFramebufferGL>();
-    if (rhs_fc != NULL)
-    {
+    if (rhs_fc != NULL) {
         rhs_fc->setData(m_GBuffer);
         (*rhs_fc)(0);
     }
@@ -87,7 +82,17 @@ void megamol::compositing::SimpleRenderTarget::PreRender(core::view::CallRender3
 
     m_GBuffer->bind();
 
+    // get clear color
+    glClearColor(0, 0, 0, 0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    // TODO: query old clear color, set 0 clear color, reset old clear color? -> wtf, profit!
+
+    return true; 
+}
+
+void megamol::compositing::SimpleRenderTarget::PreRender(core::view::CallRender3D_2& call)
+{
 }
 
 bool megamol::compositing::SimpleRenderTarget::getColorRenderTarget(core::Call& caller) {
