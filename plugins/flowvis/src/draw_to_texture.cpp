@@ -99,6 +99,18 @@ bool draw_to_texture::get_data(core::Call& call) {
 
     static_cast<compositing::CallTexture2D&>(call).setMetaData(meta_data);
 
+    // Save state
+    GLint oldFb, oldDb, oldRb;
+    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &oldFb);
+    glGetIntegerv(GL_DRAW_BUFFER, &oldDb);
+    glGetIntegerv(GL_READ_BUFFER, &oldRb);
+
+    GLint vp[4];
+    glGetIntegerv(GL_VIEWPORT, vp);
+
+    std::array<float, 4> clear_color;
+    glGetFloatv(GL_COLOR_CLEAR_VALUE, clear_color.data());
+
     // Create texture if necessary
     const auto aspect_ratio = this->bounding_rectangle.AspectRatio();
 
@@ -116,8 +128,6 @@ bool draw_to_texture::get_data(core::Call& call) {
     }
 
     // Set view
-    GLint vp[4];
-    glGetIntegerv(GL_VIEWPORT, vp);
     glViewport(0, 0, static_cast<GLsizei>(width), static_cast<GLsizei>(height));
 
     glMatrixMode(GL_PROJECTION);
@@ -135,10 +145,7 @@ bool draw_to_texture::get_data(core::Call& call) {
     // Render
     this->fbo->bind();
 
-    /*std::array<float, 4> clear_color;
-    glGetFloatv(GL_COLOR_CLEAR_VALUE, clear_color.data());
-
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);*/
+    //glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     if (!rc(core::view::AbstractCallRender::FnRender)) {
@@ -148,9 +155,14 @@ bool draw_to_texture::get_data(core::Call& call) {
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    //glClearColor(clear_color[0], clear_color[1], clear_color[2], clear_color[3]);
-
+    // Restore state
     glViewport(vp[0], vp[1], vp[2], vp[3]);
+
+    glClearColor(clear_color[0], clear_color[1], clear_color[2], clear_color[3]);
+
+    glBindFramebuffer(GL_FRAMEBUFFER_EXT, oldFb);
+    glDrawBuffer(oldDb);
+    glReadBuffer(oldRb);
 
     // Set output
     static_cast<compositing::CallTexture2D&>(call).setData(this->fbo->getColorAttachment(0));

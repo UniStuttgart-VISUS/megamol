@@ -27,6 +27,7 @@
 #include "draw_texture_3d.h"
 #include "draw_to_texture.h"
 #include "glyph_renderer_2d.h"
+#include "render_to_file.h"
 #include "triangle_mesh_renderer_2d.h"
 #include "triangle_mesh_renderer_3d.h"
 
@@ -78,6 +79,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::flowvis::draw_texture_3d>();
             this->module_descriptions.RegisterAutoDescription<megamol::flowvis::draw_to_texture>();
             this->module_descriptions.RegisterAutoDescription<megamol::flowvis::glyph_renderer_2d>();
+            this->module_descriptions.RegisterAutoDescription<megamol::flowvis::render_to_file>();
             this->module_descriptions.RegisterAutoDescription<megamol::flowvis::triangle_mesh_renderer_2d>();
             this->module_descriptions.RegisterAutoDescription<megamol::flowvis::triangle_mesh_renderer_3d>();
 

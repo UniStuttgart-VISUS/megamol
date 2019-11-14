@@ -142,8 +142,10 @@ private:
     /** Slot for publishing the framebuffer object used by this render target module */
     core::CallerSlot m_framebuffer_slot;
 
-    /** Temporarily store the clear color */
+    /** Temporarily save the state */
     std::array<float, 4> clear_color;
+
+    GLint old_fb, old_db, old_rb;
 };
 
 } // namespace compositing

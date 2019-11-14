@@ -86,12 +86,6 @@ bool megamol::compositing::DrawToScreen::Render(core::view::CallRender3D_2& call
     auto input_texture = ct->getData();
     if (input_texture == nullptr) return false;
 
-    if (call.FrameBufferObject() != nullptr) {
-        glBindFramebuffer(GL_FRAMEBUFFER, call.FrameBufferObject()->GetID());
-    } else {
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    }
-
     if (m_drawToScreen_prgm != nullptr) {
         const auto blend_enabled = glIsEnabled(GL_BLEND);
         if (!blend_enabled) glEnable(GL_BLEND);
