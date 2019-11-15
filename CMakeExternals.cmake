@@ -491,9 +491,9 @@ function(require_external NAME)
       LIBRARY_DEBUG ${TNY_LIB_DEBUG}
       LIBRARY_RELEASE ${TNY_LIB})
 
-  # mm-tracking
-  elseif(NAME STREQUAL "mm-tracking")
-    if(TARGET mm-tracking)
+  # mmtracking
+  elseif(NAME STREQUAL "mmtracking")
+    if(TARGET mmtracking)
       return()
     endif()
 
@@ -502,24 +502,27 @@ function(require_external NAME)
     set(TRACKING_NATNET_LIB "bin/NatNetLib.dll")
     set(TRACKING_NATNET_IMPORT_LIB "lib/NatNetLib.lib")
 
-    add_external_project(mm-tracking
+    add_external_project(mmtracking
       GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/mm-tracking
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${TRACKING_IMPORT_LIB}" "<INSTALL_DIR>/${TRACKING_NATNET_IMPORT_LIB}"
       CMAKE_ARGS
         -DCREATE_TRACKING_TEST_PROGRAM=OFF)
 
-    add_external_library(mm-tracking SHARED 
+    add_external_library(mmtracking SHARED 
       IMPORT_LIBRARY ${TRACKING_IMPORT_LIB}
       LIBRARY ${TRACKING_LIB})
 
     add_external_library(natnet SHARED 
-      PROJECT mm-tracking
+      PROJECT mmtracking
       IMPORT_LIBRARY ${TRACKING_NATNET_IMPORT_LIB}
       LIBRARY ${TRACKING_NATNET_LIB})
 
     add_external_library(tracking_interface INTERFACE
-      PROJECT mm-tracking
+      PROJECT mmtracking
       INCLUDE_DIR "include")
+
+    external_get_property(mmtracking SOURCE_DIR)
+    set(mmtracking_files "${SOURCE_DIR}/tracking/conf/tracking.conf" PARENT_SCOPE)
 
   # zfp
   elseif(NAME STREQUAL "zfp")
