@@ -7,11 +7,11 @@
 megamol::compositing::SimpleRenderTarget::SimpleRenderTarget() 
     : Renderer3DModule_2()
     , m_GBuffer(nullptr)
-    , m_color_render_target("Color", "Acces the color render target texture")
-    , m_normal_render_target("Normals", "Acces the normals render target texture")
+    , m_color_render_target("Color", "Access the color render target texture")
+    , m_normal_render_target("Normals", "Access the normals render target texture")
     , m_depth_render_target("Depth", "Access the depth render target texture")
     , m_camera("Camera", "Access the latest camera snapshot")
-    , m_framebuffer_slot("Framebuffer", "Publish the framebuffer used by this render target")
+    , m_framebuffer_slot("Framebuffer", "Access the framebuffer used by this render target")
 {
     this->m_color_render_target.SetCallback(
         CallTexture2D::ClassName(), "GetData", &SimpleRenderTarget::getColorRenderTarget);
@@ -37,7 +37,10 @@ megamol::compositing::SimpleRenderTarget::SimpleRenderTarget()
         CallCamera::ClassName(), "GetMetaData", &SimpleRenderTarget::getMetaDataCallback);
     this->MakeSlotAvailable(&this->m_camera);
 
-    this->m_framebuffer_slot.SetCompatibleCall<CallFramebufferGLDescription>();
+    this->m_framebuffer_slot.SetCallback(
+        CallFramebufferGL::ClassName(), "GetData", &SimpleRenderTarget::getFramebufferObject);
+    this->m_framebuffer_slot.SetCallback(
+        CallFramebufferGL::ClassName(), "GetMetaData", &SimpleRenderTarget::getMetaDataCallback);
     this->MakeSlotAvailable(&this->m_framebuffer_slot);
 }
 
@@ -66,12 +69,6 @@ bool megamol::compositing::SimpleRenderTarget::GetExtents(core::view::CallRender
 bool megamol::compositing::SimpleRenderTarget::Render(core::view::CallRender3D_2& call) { 
 
     m_last_used_camera = call.GetCamera();
-
-    auto rhs_fc = m_framebuffer_slot.CallAs<CallFramebufferGL>();
-    if (rhs_fc != NULL) {
-        rhs_fc->setData(m_GBuffer);
-        (*rhs_fc)(0);
-    }
 
     GLfloat viewport[4];
     glGetFloatv(GL_VIEWPORT, viewport);
@@ -126,13 +123,23 @@ bool megamol::compositing::SimpleRenderTarget::getDepthRenderTarget(core::Call& 
 }
 
 bool megamol::compositing::SimpleRenderTarget::getCameraSnapshot(core::Call& caller) { 
-    auto ct = dynamic_cast<CallCamera*>(&caller);
+    auto cc = dynamic_cast<CallCamera*>(&caller);
 
-    if (ct == NULL) return false;
+    if (cc == NULL) return false;
 
-    ct->setData(m_last_used_camera);
+    cc->setData(m_last_used_camera);
 
     return true; 
 }
 
-bool megamol::compositing::SimpleRenderTarget::getMetaDataCallback(core::Call& caller) { return false; }
+bool megamol::compositing::SimpleRenderTarget::getFramebufferObject(core::Call& caller) { 
+    auto cf = dynamic_cast<CallFramebufferGL*>(&caller);
+
+    if (cf == NULL) return false;
+
+    cf->setData(m_GBuffer);
+
+    return true;
+}
+
+bool megamol::compositing::SimpleRenderTarget::getMetaDataCallback(core::Call& caller) { return true; }
