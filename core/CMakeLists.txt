@@ -38,12 +38,6 @@ if(BUILD_CORE)
   require_external(glm)
   require_external(glowl)
   require_external(json)
-  if(WIN32)
-    option(USE_TRACKING "use tracking" OFF)
-    if(USE_TRACKING)
-      require_external(tracking)
-    endif()
-  endif()
 
   # Collect source files
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h" "include/*.inl")
@@ -95,9 +89,6 @@ if(BUILD_CORE)
   endif()
   
   if(WIN32)
-    if(USE_TRACKING)
-      target_link_libraries(${PROJECT_NAME} PUBLIC tracking natnet)
-    endif()
     set_target_properties(${PROJECT_NAME} PROPERTIES
       LINK_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /DYNAMICBASE:NO")
   endif()
