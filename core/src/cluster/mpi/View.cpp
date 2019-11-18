@@ -403,7 +403,7 @@ void megamol::core::cluster::mpi::View::Render(const mmcRenderViewContext& conte
                 vislib::sys::Log::DefaultLog.WriteInfo("MPIClusterView: Waiting for data in MPI world to be ready.\n");
             }
         } else {
-            ///vislib::sys::Log::DefaultLog.WriteInfo("MPIClusterView: No sync object connected.\n");
+            vislib::sys::Log::DefaultLog.WriteInfo("MPIClusterView: No sync object connected.\n");
         }
 #endif
 
@@ -445,7 +445,7 @@ void megamol::core::cluster::mpi::View::Render(const mmcRenderViewContext& conte
 
     } else {
         this->renderFallbackView();
-        ///vislib::sys::Log::DefaultLog.WriteInfo("Waiting for all nodes to create the module graph.\n");
+        vislib::sys::Log::DefaultLog.WriteInfo("Waiting for all nodes to create the module graph.\n");
     } /* end if (canRender) */
 
 #ifdef WITH_MPI
