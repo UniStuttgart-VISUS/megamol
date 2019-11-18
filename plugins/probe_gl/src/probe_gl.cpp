@@ -14,6 +14,7 @@
 
 #include "ProbeBillboardGlyphMaterial.h"
 #include "ProbeBillboardGlyphRenderTasks.h"
+#include "ProbeInteraction.h"
 #include "ProbeRenderTasks.h"
 
 /* anonymous namespace hides this type from any other object files */
@@ -52,6 +53,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::probe_gl::ProbeBillboardGlyphMaterial>();
         this->module_descriptions.RegisterAutoDescription<megamol::probe_gl::ProbeBillboardGlyphRenderTasks>();
         this->module_descriptions.RegisterAutoDescription<megamol::probe_gl::ProbeRenderTasks>();
+        this->module_descriptions.RegisterAutoDescription<megamol::probe_gl::ProbeInteraction>();
 
         // register calls here:
 
