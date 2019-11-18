@@ -91,6 +91,9 @@ bool megamol::probe_gl::ProbeBillboardGlyphMaterial::getDataCallback(core::Call&
         // TODO
         tex_layout.internal_format = img_format;
 
+        tex_layout.int_parameters = {
+            {GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR}, {GL_TEXTURE_MAG_FILTER, GL_LINEAR}};
+
         size_t img_cnt = img_data->accessImages().size();
         size_t required_tx_arrays = static_cast<size_t>(std::ceil(static_cast<double>(img_cnt) / 2048.0));
 
@@ -110,7 +113,10 @@ bool megamol::probe_gl::ProbeBillboardGlyphMaterial::getDataCallback(core::Call&
              glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, slice_idx, tex_layout.width, tex_layout.height, 1,
                 tex_layout.format,
                 tex_layout.type, images[i].data);
+
+             glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
         }
+
         glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
 
         //ToDo Clear only existing entry in collection?

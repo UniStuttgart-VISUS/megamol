@@ -13,15 +13,18 @@ layout(std430, binding = 0) readonly buffer MeshShaderParamsBuffer { MeshShaderP
 layout(location = 0) flat in int draw_id;
 layout(location = 1) in vec2 uv_coords;
 
-out layout(location = 0) vec3 albedo_out;
-out layout(location = 1) vec3 normal_out;
-out layout(location = 2) float depth_out;
+layout(location = 0) out vec4 albedo_out;
+layout(location = 1) out vec3 normal_out;
+layout(location = 2) out float depth_out;
 
 void main() {
     sampler2DArray tx_hndl = sampler2DArray(mesh_shader_params[draw_id].texture_handle);
     vec3 tx_crds = vec3(uv_coords,mesh_shader_params[draw_id].slice_idx);
 
-    vec3 tx_col = texture( tx_hndl,tx_crds).rgb;
+    vec4 tx_col = texture( tx_hndl,tx_crds);
+
+    if(tx_col.a < 0.00001) discard;
+
     albedo_out = tx_col;
     normal_out = vec3(0.0,0.0,1.0);
     depth_out = gl_FragCoord.z;

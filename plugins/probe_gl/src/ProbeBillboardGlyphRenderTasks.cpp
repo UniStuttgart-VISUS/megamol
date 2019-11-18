@@ -83,9 +83,9 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                 auto probe = probes->getProbe<probe::FloatProbe>(probe_idx);
 
                 glyph_data[probe_idx].position = glm::vec4(
-                    probe.m_position[0] + probe.m_direction[0] * probe.m_begin, 
-                    probe.m_position[1] + probe.m_direction[1] * probe.m_begin, 
-                    probe.m_position[2] + probe.m_direction[2] * probe.m_begin,
+                    probe.m_position[0] + probe.m_direction[0] * (probe.m_begin * 1.1f), 
+                    probe.m_position[1] + probe.m_direction[1] * (probe.m_begin * 1.1f), 
+                    probe.m_position[2] + probe.m_direction[2] * (probe.m_begin * 1.1f),
                     1.0f);
                 glyph_data[probe_idx].texture_handle =
                     gpu_mtl_storage->getMaterials().front().textures[probe_idx/2048]->getTextureHandle();
