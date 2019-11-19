@@ -3679,6 +3679,7 @@ bool MapGenerator::Render(Call& call) {
         auto pdb_name =  getNameOfPDB(*mdc);
         if (!pdb_name.empty()) {
             pdb_name = splitString(pdb_name, '\\').back();
+            pdb_name = splitString(pdb_name, '/').back();
         }
         vislib::TString prev_file_path;
         if (this->store_png_path.IsDirty()) {
