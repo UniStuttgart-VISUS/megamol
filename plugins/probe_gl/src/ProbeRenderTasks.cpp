@@ -2,16 +2,22 @@
 
 #include "ProbeCalls.h"
 #include "mesh/MeshCalls.h"
+#include "ProbeGlCalls.h"
 
 #include "glm/glm.hpp"
 #include "glm/gtx/transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
 
 megamol::probe_gl::ProbeRenderTasks::ProbeRenderTasks()
-    : m_probes_slot("GetProbes", "Slot for accessing a probe collection"), m_probes_cached_hash(0) {
-
+    : m_probes_slot("GetProbes", "Slot for accessing a probe collection")
+    , m_probes_cached_hash(0)
+    , m_probe_manipulation_slot("GetProbeManipulation", "") 
+{
     this->m_probes_slot.SetCompatibleCall<probe::CallProbesDescription>();
     this->MakeSlotAvailable(&this->m_probes_slot);
+
+    this->m_probe_manipulation_slot.SetCompatibleCall<probe_gl::CallProbeInteractionDescription>();
+    this->MakeSlotAvailable(&this->m_probe_manipulation_slot);
 }
 
 megamol::probe_gl::ProbeRenderTasks::~ProbeRenderTasks() {}

@@ -55,17 +55,28 @@ public:
         return NULL;
     }
 
-    void setData(DataType const& data) { m_data = data; }
+    void setData(DataType const& data) {
+        m_data = data;
+        ++m_set_version;
+    }
 
     void setMetaData(MetaDataType const& meta_data) { m_meta_data = meta_data; }
 
-    DataType const& getData() { return m_data; }
+    DataType const& getData() {
+        m_get_version = m_set_version;
+        return m_data;
+    }
 
     MetaDataType const& getMetaData() { return m_meta_data; }
+
+    bool hasUpdate() { return (m_set_version > m_get_version); }
 
 private:
     DataType     m_data;
     MetaDataType m_meta_data;
+
+    uint32_t     m_get_version = 0;
+    uint32_t     m_set_version = 0;
 };
 
 } // namespace mesh

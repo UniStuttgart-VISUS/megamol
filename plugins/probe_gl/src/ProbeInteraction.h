@@ -97,13 +97,18 @@ protected:
     bool Render(core::view::CallRender3D_2& call);
 
 private:
-
     double m_cursor_x, m_cursor_y;
+
+    std::shared_ptr<ProbeInteractionCollection> m_interactions;
 
     megamol::core::CallerSlot m_probe_fbo_slot;
     megamol::core::CallerSlot m_hull_fbo_slot;
 
     megamol::core::CalleeSlot m_interaction_collection_slot;
+
+    // local storage of projection and view matrix (for 3D space interaction computations)
+    glm::mat4 m_view_mx_cpy;
+    glm::mat4 m_proj_mx_cpy;
 };
 
 }

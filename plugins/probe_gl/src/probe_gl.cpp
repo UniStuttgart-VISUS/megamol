@@ -16,6 +16,7 @@
 #include "ProbeBillboardGlyphRenderTasks.h"
 #include "ProbeInteraction.h"
 #include "ProbeRenderTasks.h"
+#include "ProbeGlCalls.h"
 
 /* anonymous namespace hides this type from any other object files */
 namespace {
@@ -64,6 +65,7 @@ public:
         //   this->call_descriptions.RegisterAutoDescription<megamol::probe_gl::MyCall2>();
         //   ...
         //
+        this->call_descriptions.RegisterAutoDescription<megamol::probe_gl::CallProbeInteraction>();
     }
     MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics
 };
@@ -73,13 +75,13 @@ public:
 /*
  * mmplgPluginAPIVersion
  */
-probe_gl_API int mmplgPluginAPIVersion(void){MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_mmplgPluginAPIVersion}
+PROBE_GL_API int mmplgPluginAPIVersion(void){MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_mmplgPluginAPIVersion}
 
 
 /*
  * mmplgGetPluginCompatibilityInfo
  */
-probe_gl_API ::megamol::core::utility::plugins::PluginCompatibilityInfo* mmplgGetPluginCompatibilityInfo(
+PROBE_GL_API ::megamol::core::utility::plugins::PluginCompatibilityInfo* mmplgGetPluginCompatibilityInfo(
     ::megamol::core::utility::plugins::ErrorCallback onError) {
     // compatibility information with core and vislib
     using ::megamol::core::utility::plugins::LibraryVersionInfo;
@@ -121,7 +123,7 @@ probe_gl_API ::megamol::core::utility::plugins::PluginCompatibilityInfo* mmplgGe
 /*
  * mmplgReleasePluginCompatibilityInfo
  */
-probe_gl_API void mmplgReleasePluginCompatibilityInfo(::megamol::core::utility::plugins::PluginCompatibilityInfo* ci){
+PROBE_GL_API void mmplgReleasePluginCompatibilityInfo(::megamol::core::utility::plugins::PluginCompatibilityInfo* ci){
     // release compatiblity data on the correct heap
     MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_mmplgReleasePluginCompatibilityInfo(ci)}
 
@@ -129,7 +131,7 @@ probe_gl_API void mmplgReleasePluginCompatibilityInfo(::megamol::core::utility::
 /*
  * mmplgGetPluginInstance
  */
-probe_gl_API ::megamol::core::utility::plugins::AbstractPluginInstance* mmplgGetPluginInstance(
+PROBE_GL_API ::megamol::core::utility::plugins::AbstractPluginInstance* mmplgGetPluginInstance(
     ::megamol::core::utility::plugins::ErrorCallback onError){
     MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_mmplgGetPluginInstance(plugin_instance, onError)}
 
@@ -137,6 +139,6 @@ probe_gl_API ::megamol::core::utility::plugins::AbstractPluginInstance* mmplgGet
 /*
  * mmplgReleasePluginInstance
  */
-probe_gl_API void mmplgReleasePluginInstance(::megamol::core::utility::plugins::AbstractPluginInstance* pi) {
+PROBE_GL_API void mmplgReleasePluginInstance(::megamol::core::utility::plugins::AbstractPluginInstance* pi) {
     MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_mmplgReleasePluginInstance(pi)
 }

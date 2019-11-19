@@ -49,6 +49,8 @@ protected:
 private:
     core::CallerSlot m_probes_slot;
     size_t m_probes_cached_hash;
+
+    core::CallerSlot m_probe_manipulation_slot;
 };
 
 } // namespace mesh

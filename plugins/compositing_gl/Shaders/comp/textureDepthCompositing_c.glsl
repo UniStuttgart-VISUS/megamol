@@ -4,7 +4,8 @@ uniform sampler2D src1_tx2D; // secondary source texture, is read from using nor
 uniform sampler2D depth0_tx2D;
 uniform sampler2D depth1_tx2D;
 
-layout(RGBA16) writeonly uniform image2D tgt_tx2D;
+layout(RGBA16, binding = 0) writeonly uniform image2D tgt_tx2D;
+layout(R32F, binding = 1) writeonly uniform image2D tgt_depth_tx2D;
 
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
@@ -24,6 +25,12 @@ void main() {
 
     float depth0 = texelFetch(depth0_tx2D,pixel_coords,0).r;
     float depth1 = texelFetch(depth1_tx2D,pixel_coords,0).r;
+    float depth_out = depth0;
+
+    if (((depth0 > depth1) && depth1 > 0.0) || (!(depth0 > 0.0) && depth1 > 0.0))
+    {
+        depth_out = depth1;
+    }
 
     vec4 front,back,comp;
 
@@ -40,4 +47,5 @@ void main() {
     comp.a = front.a + back.a*(1.0-front.a);
 
     imageStore(tgt_tx2D, pixel_coords , comp );
+    imageStore(tgt_depth_tx2D, pixel_coords, vec4(depth_out));
 }
