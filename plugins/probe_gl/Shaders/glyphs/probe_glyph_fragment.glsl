@@ -25,8 +25,6 @@ void main() {
 
     if(tx_col.a < 0.00001) discard;
 
-    tx_col.a = 1.0;
-
     albedo_out = tx_col;
     normal_out = vec3(0.0,0.0,1.0);
     depth_out = gl_FragCoord.z;

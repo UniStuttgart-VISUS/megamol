@@ -25,26 +25,36 @@ void main() {
 
     float depth0 = texelFetch(depth0_tx2D,pixel_coords,0).r;
     float depth1 = texelFetch(depth1_tx2D,pixel_coords,0).r;
-    float depth_out = depth0;
-
-    if (((depth0 > depth1) && depth1 > 0.0) || (!(depth0 > 0.0) && depth1 > 0.0))
-    {
-        depth_out = depth1;
-    }
 
     vec4 front,back,comp;
+    float depth_out = 0.0f;
 
-    if(depth0 > depth1){
-        front = rgba1;
-        back = rgba0;
-    }
-    else{
-        front = rgba0;
-        back = rgba1;
-    }
+    if(depth0 > 0.0f && depth1 > 0.0f)
+    {
+        if(depth0 > depth1){
+           front = rgba1;
+           back = rgba0;
+        }
+        else{
+            front = rgba0;
+            back = rgba1;
+        }
+        
+        comp.rgb = ( (front.rgb * front.a) + (back.rgb*back.a*(1.0-front.a)) ) / ( front.a + back.a*(1.0-front.a) );
+        comp.a = front.a + back.a*(1.0-front.a);
 
-    comp.rgb = ( (front.rgb * front.a) + (back.rgb*back.a*(1.0-front.a)) ) / ( front.a + back.a*(1.0-front.a) );
-    comp.a = front.a + back.a*(1.0-front.a);
+        depth_out = min(depth0,depth1);
+    }
+    else if(depth0 > 0.0f)
+    {
+        comp = rgba0;
+        depth_out = depth0;
+    }
+    else if(depth1 > 0.0f)
+    {
+        comp = rgba1;
+        depth_out = depth1;
+    }   
 
     imageStore(tgt_tx2D, pixel_coords , comp );
     imageStore(tgt_depth_tx2D, pixel_coords, vec4(depth_out));
