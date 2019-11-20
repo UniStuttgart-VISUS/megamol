@@ -210,7 +210,8 @@ namespace cinematic {
 
         core::param::ParamSlot renderParam;
         core::param::ParamSlot delayFirstRenderFrameParam;
-        core::param::ParamSlot startRenderFrameParam;
+        core::param::ParamSlot firstRenderFrameParam;
+        core::param::ParamSlot lastRenderFrameParam;
         core::param::ParamSlot toggleAnimPlayParam;
         core::param::ParamSlot selectedSkyboxSideParam;
         core::param::ParamSlot skyboxCubeModeParam;

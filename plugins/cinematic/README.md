@@ -88,12 +88,13 @@ The module `CinematicView` exposes the following parameters:
 * `cinematic::cinematicWidth` (`1920`): The width resolution of the cinematic view to render.
 * `cinematic::cinematicHeight`(`1080`): The height resolution of the cinematic view to render.
 * `cinematic::fps` (`24`): The frames per second the animation should be rendered.
-* `cinematic::firstRenderFrame` (`0`): Set first frame number to start rendering with.
-* `cinematic::delayFirstRenderFrame` (`10.0`): Delay (in seconds) to wait until first frame is ready and rendering to file is started.
+* `cinematic::firstRender` (`0`): Set first frame number to start rendering with.
+* `cinematic::lastRender` (): Set last frame number to end rendering with.
+* `cinematic::delayFirstFrame` (`10.0`): Delay (in seconds) to wait until first frame is ready and rendering to file is started.
 * `cinematic::frameFolder` Specify folder where the frame files should be stored.
 * `cinematic::addSBSideToName` (`false`): If true, adds the value of `skyboxSide` to the filename of the written image.
-* `cinematic::stereo::eye` (`Left`) Eye position (for stereo view).
-* `cinematic::stereo::projection` (`Mono Perspective`) Camera projection.
+* `cinematic::stereo_eye` (`Left`) Eye position (for stereo view).
+* `cinematic::stereo_projection` (`Mono Perspective`) Camera projection.
 
 The module `TimeLineRenderer` exposes the following parameters:
 (The values in brackets indicate the default values.)

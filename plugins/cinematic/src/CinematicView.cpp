@@ -11,7 +11,6 @@
 #include "mmcore/thecam/utility/types.h"
 
 
-
 using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::core::view;
@@ -30,12 +29,13 @@ CinematicView::CinematicView(void) : View3D_2()
     , resWidthParam("cinematic::cinematicWidth", "The width resolution of the cineamtic view to render.")
     , resHeightParam("cinematic::cinematicHeight", "The height resolution of the cineamtic view to render.")
     , fpsParam("cinematic::fps", "Frames per second the animation should be rendered.")
-    , startRenderFrameParam("cinematic::firstRenderFrame", "Set first frame number to start rendering with (allows continuing aborted rendering without starting from the beginning).")
-    , delayFirstRenderFrameParam("cinematic::delayFirstRenderFrame", "Delay (in seconds) to wait until first frame for rendering is written (needed to get right first frame especially for high resolutions and for distributed rendering).")
+    , firstRenderFrameParam("cinematic::firstFrame", "Set first frame number to start rendering with.")
+    , lastRenderFrameParam("cinematic::lastFrame", "Set last frame number to end rendering with.")
+    , delayFirstRenderFrameParam("cinematic::delayFirstFrame", "Delay (in seconds) to wait until first frame for rendering is written (needed to get right first frame especially for high resolutions and for distributed rendering).")
     , frameFolderParam( "cinematic::frameFolder", "Specify folder where the frame files should be stored.")
     , addSBSideToNameParam( "cinematic::addSBSideToName", "Toggle whether skybox side should be added to output filename")
-    , eyeParam("cinematic::stereo::eye", "Select eye position (for stereo view).")
-    , projectionParam("cinematic::stereo::projection", "Select camera projection.")
+    , eyeParam("cinematic::stereo_eye", "Select eye position (for stereo view).")
+    , projectionParam("cinematic::stereo_projection", "Select camera projection.")
     , fbo()
     , png_data()
     , utils()
@@ -85,8 +85,11 @@ CinematicView::CinematicView(void) : View3D_2()
     this->fpsParam.SetParameter(new param::IntParam(static_cast<int>(this->fps), 1));
     this->MakeSlotAvailable(&this->fpsParam);
 
-    this->startRenderFrameParam.SetParameter(new param::IntParam(0, 0));
-    this->MakeSlotAvailable(&this->startRenderFrameParam);
+    this->firstRenderFrameParam.SetParameter(new param::IntParam(0, 0));
+    this->MakeSlotAvailable(&this->firstRenderFrameParam);
+
+    this->lastRenderFrameParam.SetParameter(new param::IntParam((std::numeric_limits<int>::max)(), 1));
+    this->MakeSlotAvailable(&this->lastRenderFrameParam);
 
     this->delayFirstRenderFrameParam.SetParameter(new param::FloatParam(1.0f));
     this->MakeSlotAvailable(&this->delayFirstRenderFrameParam);
@@ -148,7 +151,6 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     }
 
     // Update parameters ------------------------------------------------------
-    bool loadNewCamParams = false;
     if (this->toggleAnimPlayParam.IsDirty()) {
         this->toggleAnimPlayParam.ResetDirty();
         this->playAnim = !this->playAnim;
@@ -165,13 +167,11 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
         } else {
             this->sbSide = static_cast<CinematicView::SkyboxSides>(
                 this->selectedSkyboxSideParam.Param<param::EnumParam>()->Value());
-            loadNewCamParams = true;
         }
     }
     if (this->skyboxCubeModeParam.IsDirty()) {
         this->skyboxCubeModeParam.ResetDirty();
         this->skyboxCubeMode = this->skyboxCubeModeParam.Param<param::BoolParam>()->Value();
-        loadNewCamParams = true;
     }
     if (this->resHeightParam.IsDirty()) {
         this->resHeightParam.ResetDirty();
@@ -208,10 +208,8 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
         this->rendering = !this->rendering;
         if (this->rendering) {
             this->render_to_file_setup();
-            vislib::sys::Log::DefaultLog.WriteInfo("[CINEMATIC VIEW] STARTED rendering of complete animation.");
         } else {
             this->render_to_file_cleanup();
-            vislib::sys::Log::DefaultLog.WriteInfo("[CINEMATIC VIEW] STOPPED rendering.");
         }
     }
     // Set (mono/stereo) projection for camera
@@ -233,7 +231,6 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
         }
         ccc->SetSelectedKeyframeTime(this->png_data.animTime);
         if (!(*ccc)(CallKeyframeKeeper::CallForGetSelectedKeyframeAtTime)) return;
-        loadNewCamParams = true;
     } else {
         // If time is set by running ANIMATION
         if (this->playAnim) {
@@ -247,7 +244,6 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
             }
             ccc->SetSelectedKeyframeTime(animTime);
             if (!(*ccc)(CallKeyframeKeeper::CallForGetSelectedKeyframeAtTime)) return;
-            loadNewCamParams = true;
         }
     }
     Keyframe skf = ccc->GetSelectedKeyframe();
@@ -553,15 +549,24 @@ bool CinematicView::render_to_file_setup() {
     this->png_data.write_lock = 1;
     this->png_data.start_time = std::chrono::system_clock::now();
 
-    unsigned int startFrameCnt =
-        static_cast<unsigned int>(this->startRenderFrameParam.Param<param::IntParam>()->Value());
-    unsigned int maxFrameCnt = (unsigned int)(this->png_data.animTime * (float)this->fps);
-    if (startFrameCnt > maxFrameCnt) {
-        startFrameCnt = maxFrameCnt;
+    unsigned int firstFrame =
+        static_cast<unsigned int>(this->firstRenderFrameParam.Param<param::IntParam>()->Value());
+    unsigned int lastFrame =
+        static_cast<unsigned int>(this->lastRenderFrameParam.Param<param::IntParam>()->Value());
+
+    unsigned int maxFrame = (unsigned int)(ccc->GetTotalAnimTime() * (float)this->fps);
+    if (firstFrame > maxFrame) {
         vislib::sys::Log::DefaultLog.WriteWarn(
-            "[CINEMATIC VIEW] [render_to_file_setup] Max frame count %d exceeded: %d", maxFrameCnt, startFrameCnt);
+            "[CINEMATIC VIEW] [render_to_file_setup] Max frame count exceeded. Limiting first frame to maximum frame %d", maxFrame);
+        firstFrame = maxFrame;
     }
-    this->png_data.cnt = startFrameCnt;
+    if (firstFrame > lastFrame) {
+        vislib::sys::Log::DefaultLog.WriteWarn(
+            "[CINEMATIC VIEW] [render_to_file_setup] First frame exceeds last frame. Limiting first frame to last frame %d", lastFrame);
+        firstFrame = lastFrame;
+    }
+
+    this->png_data.cnt = firstFrame;
     this->png_data.animTime = (float)this->png_data.cnt / (float)this->fps;
 
     // Calculate pre-decimal point positions for frame counter in filename
@@ -571,6 +576,7 @@ bool CinematicView::render_to_file_setup() {
         frameCnt /= 10.0f;
         this->png_data.exp_frame_cnt++;
     }
+
     // Creating new folder
     vislib::StringA frameFolder;
     time_t t = std::time(0); // get time now
@@ -586,12 +592,10 @@ bool CinematicView::render_to_file_setup() {
         now->tm_hour, now->tm_min, now->tm_sec, this->fps);
     this->png_data.path = static_cast<vislib::StringA>(this->frameFolderParam.Param<param::FilePathParam>()->Value());
     if (this->png_data.path.IsEmpty()) {
-        this->png_data.path = vislib::sys::Path::GetCurrentDirectoryA();
-        this->png_data.path = vislib::sys::Path::Concatenate(this->png_data.path, frameFolder);
+        this->png_data.path = vislib::sys::Path::Concatenate(vislib::sys::Path::GetCurrentDirectoryA(), frameFolder);
     }
     vislib::sys::Path::MakeDirectory(this->png_data.path);
 
-    // Set current time stamp to file name
     this->png_data.filename = "frames";
 
     // Create new byte buffer
@@ -600,6 +604,8 @@ bool CinematicView::render_to_file_setup() {
         throw vislib::Exception(
             "[CINEMATIC VIEW] [render_to_file_setup] Cannot allocate image buffer.", __FILE__, __LINE__);
     }
+
+    vislib::sys::Log::DefaultLog.WriteInfo("[CINEMATIC VIEW] STARTED rendering of complete animation.");
 
     return true;
 }
@@ -634,7 +640,7 @@ bool CinematicView::render_to_file_write() {
         }
         tmpFilename.Prepend(this->png_data.filename);
 
-        // open final image file
+        // Open final image file
         if (!this->png_data.file.Open(vislib::sys::Path::Concatenate(this->png_data.path, tmpFilename),
                 vislib::sys::File::WRITE_ONLY, vislib::sys::File::SHARE_EXCLUSIVE,
                 vislib::sys::File::CREATE_OVERWRITE)) {
@@ -642,7 +648,7 @@ bool CinematicView::render_to_file_write() {
                 "[CINEMATIC VIEW] [render_to_file_write] Cannot open output file", __FILE__, __LINE__);
         }
 
-        // init png lib
+        // Init png lib
         this->png_data.structptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, &this->pngError, &this->pngWarn);
         if (this->png_data.structptr == nullptr) {
             throw vislib::Exception(
@@ -701,25 +707,29 @@ bool CinematicView::render_to_file_write() {
 
         // --------------------------------------------------------------------
 
-        // Next time step
+        // Next frame/time step
+        this->png_data.cnt++;
+        this->png_data.animTime = (float)this->png_data.cnt / (float)this->fps;
         float fpsFrac = (1.0f / static_cast<float>(this->fps));
-        this->png_data.animTime += fpsFrac;
-
         // Fit animTime to exact full seconds (removing rounding error)
         if (std::abs(this->png_data.animTime - std::round(this->png_data.animTime)) < (fpsFrac / 2.0)) {
             this->png_data.animTime = std::round(this->png_data.animTime);
         }
 
-        if (this->png_data.animTime == ccc->GetTotalAnimTime()) {
-            ///XXX Handling this case is actually only necessary when rendering is done via FBOCompositor 
-            ///XXX => Rendering crashes (WHY? - Rendering last frame with animation time = total animation time is otherwise no problem)
-            this->png_data.animTime -= 0.000005f;
-        } else if (this->png_data.animTime >= ccc->GetTotalAnimTime()) {
+        ///XXX Handling this case is actually only necessary when rendering is done via FBOCompositor 
+        ///XXX Rendering crashes - WHY? 
+        // XXX Rendering last frame with animation time = total animation time is otherwise no problem
+        //if (this->png_data.animTime == ccc->GetTotalAnimTime()) {
+        //    this->png_data.animTime -= 0.000005f;
+        //} else 
+
+        // Check condition for finishing rendering
+        auto lastFrame = static_cast<unsigned int>(this->lastRenderFrameParam.Param<param::IntParam>()->Value());
+        if ((this->png_data.animTime >= ccc->GetTotalAnimTime()) ||
+            (this->png_data.cnt > lastFrame)) {
             this->render_to_file_cleanup();
             return false;
         }
-
-        this->png_data.cnt++;
     }
 
     return true;
@@ -762,6 +772,8 @@ bool CinematicView::render_to_file_cleanup() {
     if (this->png_data.infoptr != nullptr) {
         vislib::sys::Log::DefaultLog.WriteError("[CINEMATIC VIEW] [render_to_file_cleanup] pngdata.infoptr is not nullptr.");
     }
+
+    vislib::sys::Log::DefaultLog.WriteInfo("[CINEMATIC VIEW] STOPPED rendering.");
 
     return true;
 }
