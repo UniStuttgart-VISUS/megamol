@@ -75,18 +75,27 @@ bool megamol::compositing::DrawToScreen::Render(core::view::CallRender3D_2& call
     (*ct)(0);
 
     // obtain camera information
-    core::view::Camera_2 cam(cr->GetCamera());
-    cam_type::snapshot_type snapshot;
-    cam_type::matrix_type view_tmp, proj_tmp;
-    cam.calc_matrices(snapshot, view_tmp, proj_tmp, core::thecam::snapshot_content::all);
-    glm::mat4 view_mx = view_tmp;
-    glm::mat4 proj_mx = proj_tmp;
+    //  core::view::Camera_2 cam(cr->GetCamera());
+    //  cam_type::snapshot_type snapshot;
+    //  cam_type::matrix_type view_tmp, proj_tmp;
+    //  cam.calc_matrices(snapshot, view_tmp, proj_tmp, core::thecam::snapshot_content::all);
+    //  glm::mat4 view_mx = view_tmp;
+    //  glm::mat4 proj_mx = proj_tmp;
+
+
 
     // get input texture from call
     auto input_texture = ct->getData();
     if (input_texture == nullptr) return false;
 
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    if (call.FrameBufferObject() != nullptr) {
+        glBindFramebuffer(GL_FRAMEBUFFER, call.FrameBufferObject()->GetID());
+    } else {
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
     if (m_drawToScreen_prgm != nullptr) {
         m_drawToScreen_prgm->Enable();

@@ -1579,8 +1579,9 @@ bool SDFFont::loadFontTexture(vislib::StringA filename) {
             ARY_SAFE_DELETE(buf);
             return false;
         }
-
         this->texture.Bind();
+        //glGenerateMipmap(GL_TEXTURE_2D);
+        //this->texture.SetFilter(GL_LINEAR, GL_LINEAR_MIPMAP_LINEAR);
         this->texture.SetFilter(GL_LINEAR, GL_LINEAR);
         this->texture.SetWrap(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
         glBindTexture(GL_TEXTURE_2D, 0);
