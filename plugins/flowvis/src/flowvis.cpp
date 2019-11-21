@@ -21,6 +21,7 @@
 #include "line_strip.h"
 #include "periodic_orbits.h"
 #include "periodic_orbits_theisel.h"
+#include "stl_data_source.h"
 #include "streamlines_2d.h"
 #include "vector_field_reader.h"
 
@@ -72,6 +73,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::flowvis::line_strip>();
             this->module_descriptions.RegisterAutoDescription<megamol::flowvis::periodic_orbits>();
             this->module_descriptions.RegisterAutoDescription<megamol::flowvis::periodic_orbits_theisel>();
+            this->module_descriptions.RegisterAutoDescription<megamol::flowvis::stl_data_source>();
             this->module_descriptions.RegisterAutoDescription<megamol::flowvis::streamlines_2d>();
             this->module_descriptions.RegisterAutoDescription<megamol::flowvis::vector_field_reader>();
 

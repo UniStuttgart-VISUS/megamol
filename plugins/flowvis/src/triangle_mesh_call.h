@@ -59,7 +59,12 @@ namespace megamol
             }
 
             /** Dimension */
-            enum class dimension_t { TWO, THREE };
+            enum class dimension_t { INVALID, TWO, THREE };
+
+            /**
+             * Constructor
+             */
+            triangle_mesh_call();
 
             /**
              * Getter for the dimension
@@ -102,6 +107,16 @@ namespace megamol
             void set_vertices(std::shared_ptr<std::vector<float>> vertices);
 
             /**
+             * Getter for the normals
+             */
+            std::shared_ptr<std::vector<float>> get_normals() const;
+
+            /**
+             * Setter for the normals
+             */
+            void set_normals(std::shared_ptr<std::vector<float>> normals);
+
+            /**
             * Getter for the indices defining the triangle mesh
             */
             std::shared_ptr<std::vector<unsigned int>> get_indices() const;
@@ -121,8 +136,9 @@ namespace megamol
             /** Bounding box */
             vislib::math::Cuboid<float> bounding_box;
 
-            /** Vertices and indices defining the triangle mesh */
+            /** Vertices, normals and indices defining the triangle mesh */
             std::shared_ptr<std::vector<float>> vertices;
+            std::shared_ptr<std::vector<float>> normals;
             std::shared_ptr<std::vector<unsigned int>> indices;
         };
     }

@@ -7,6 +7,7 @@
 #ifndef MEGAMOL_DATATOOLS_IO_STLDATASOURCE_H_INCLUDED
 #define MEGAMOL_DATATOOLS_IO_STLDATASOURCE_H_INCLUDED
 #pragma once
+#include "mmstd_datatools/mmstd_datatools.h"
 
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
@@ -25,7 +26,7 @@ namespace stdplugin {
 namespace datatools {
 namespace io {
 
-class STLDataSource : public core::Module {
+class MMSTD_DATATOOLS_API STLDataSource : public core::Module {
 public:
     /// <summary>
     /// Answer the name of this module
@@ -81,11 +82,16 @@ protected:
     /// </summary>
     virtual void release() override;
 
+    /// <summary>
+    /// Get the input and return its success
+    /// </summary>
+    bool get_input();
+
 private:
     /// <summary>
     /// States for the ascii parser
     /// </summary>
-    enum parser_states_t {
+    enum class parser_states_t {
         EXPECT_SOLID,
         EXPECT_NAME,
         EXPECT_FACET_OR_ENDSOLID,
@@ -131,28 +137,30 @@ private:
     /// <param name="filename">File name of the STL file</param>
     void read_ascii(const std::string& filename);
 
+    /// File name
+    core::param::ParamSlot filename_slot;
+
+    /// Mesh data
+    geocalls::CallTriMeshData::Mesh mesh;
+
+protected:
     /// <summary>
     /// Calculate the data hash
     /// </summary>
     /// <returns>Data hash</returns>
     uint32_t hash() const;
 
-    /// File name
-    core::param::ParamSlot filename_slot;
-
     /// Output
     core::CalleeSlot mesh_output_slot;
 
-    /// Mesh data
-    geocalls::CallTriMeshData::Mesh mesh;
-
-    /// Buffers to store vertices and normals, and indices
+    /// Buffers to store vertices, normals, and indices
     uint32_t num_triangles;
 
     float min_x, min_y, min_z, max_x, max_y, max_z;
 
-    std::vector<uint8_t> vertex_normal_buffer;
-    std::vector<unsigned int> index_buffer;
+    std::shared_ptr<std::vector<float>> vertex_buffer;
+    std::shared_ptr<std::vector<float>> normal_buffer;
+    std::shared_ptr<std::vector<unsigned int>> index_buffer;
 };
 
 } // namespace io

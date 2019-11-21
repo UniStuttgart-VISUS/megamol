@@ -39,6 +39,7 @@ triangle_mesh_renderer_3d::triangle_mesh_renderer_3d()
     , triangle_mesh_changed(false)
     , mesh_data_hash(-1)
     , mesh_data_changed(false) {
+
     // Connect input slots
     this->triangle_mesh_slot.SetCompatibleCall<triangle_mesh_call::triangle_mesh_description>();
     this->MakeSlotAvailable(&this->triangle_mesh_slot);
@@ -101,10 +102,17 @@ bool triangle_mesh_renderer_3d::get_input_data() {
 
     if (tmc.DataHash() != this->triangle_mesh_hash) {
         this->render_data.vertices = tmc.get_vertices();
+        this->render_data.normals = tmc.get_normals();
         this->render_data.indices = tmc.get_indices();
 
         this->triangle_mesh_hash = tmc.DataHash();
         this->triangle_mesh_changed = true;
+    }
+
+    if (gmd.getData()->getMaterials().size() == 0) {
+        vislib::sys::Log::DefaultLog.WriteError("No shader attached for mesh rendering");
+
+        return false;
     }
 
     this->render_data.shader = gmd.getData()->getMaterials().front().shader_program;
@@ -219,11 +227,19 @@ bool triangle_mesh_renderer_3d::getDataCallback(core::Call& call) {
         std::vector<glowl::VertexLayout::Attribute> attributes{glowl::VertexLayout::Attribute(3, GL_FLOAT, GL_FALSE, 0),
             glowl::VertexLayout::Attribute(1, GL_FLOAT, GL_FALSE, 0)};
 
+        if (this->render_data.normals != nullptr) {
+            attributes.emplace_back(3, GL_FLOAT, GL_TRUE, 0);
+        }
+
         glowl::VertexLayout vertex_descriptor(0, attributes);
 
         std::vector<std::pair<vbi_t, vbi_t>> vertex_buffer{
             {this->render_data.vertices->begin(), this->render_data.vertices->end()},
             {this->render_data.values->data->begin(), this->render_data.values->data->end()}};
+
+        if (this->render_data.normals != nullptr) {
+            vertex_buffer.push_back({this->render_data.normals->begin(), this->render_data.normals->end()});
+        }
 
         std::pair<ibi_t, ibi_t> index_buffer{this->render_data.indices->begin(), this->render_data.indices->end()};
 

@@ -11,6 +11,8 @@ namespace megamol
 {
     namespace flowvis
     {
+        triangle_mesh_call::triangle_mesh_call() : dimension(dimension_t::INVALID) {}
+
         triangle_mesh_call::dimension_t triangle_mesh_call::get_dimension() const
         {
             return this->dimension;
@@ -49,6 +51,16 @@ namespace megamol
         void triangle_mesh_call::set_vertices(std::shared_ptr<std::vector<float>> vertices)
         {
             this->vertices = vertices;
+        }
+
+        std::shared_ptr<std::vector<float>> triangle_mesh_call::get_normals() const
+        {
+            return this->normals;
+        }
+
+        void triangle_mesh_call::set_normals(std::shared_ptr<std::vector<float>> normals)
+        {
+            this->normals = normals;
         }
 
         std::shared_ptr<std::vector<unsigned int>> triangle_mesh_call::get_indices() const

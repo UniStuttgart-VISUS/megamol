@@ -118,6 +118,7 @@ namespace megamol
                 GLuint transfer_function = 0;
 
                 std::shared_ptr<std::vector<GLfloat>> vertices;
+                std::shared_ptr<std::vector<GLfloat>> normals;
                 std::shared_ptr<std::vector<GLuint>> indices;
 
                 std::shared_ptr<mesh_data_call::data_set> values;
