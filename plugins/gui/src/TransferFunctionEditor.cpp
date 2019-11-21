@@ -235,7 +235,7 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
     const float canvas_width = tfw_item_width;
     ImGui::PushItemWidth(tfw_item_width); // set general proportional item width
 
-    drawTextureBox(ImVec2(tfw_item_width, 30.0f));
+    this->drawTextureBox(ImVec2(tfw_item_width, 30.0f));
 
     ImGui::SameLine();
     if (ImGui::ArrowButton("Options", this->showOptions ? ImGuiDir_Down : ImGuiDir_Up)) {
@@ -309,7 +309,7 @@ bool TransferFunctionEditor::DrawTransferFunctionEditor(void) {
 
     // Plot ---------------------------------------------------------------
 
-    drawFunctionPlot(ImVec2(canvas_width, canvas_height));
+    this->drawFunctionPlot(ImVec2(canvas_width, canvas_height));
 
     // Color channels -----------------------------------------------------
     ImGui::Checkbox("Red", &this->activeChannels[0]);
@@ -526,34 +526,18 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
                 const float ga = this->nodes[i][c];
                 const float gb = this->nodes[i][4];
                 const float gc = this->nodes[i][5];
-                const int step = 3; // step width in x direction
-                float x0, x1;
-                float g0, g1;
-                float last_g1 = 0.0f;
+                const int step = 3; // pixel step width in x direction
+                float x, g;
+                ImVec2 pos;
 
-                for (int p = 0; p < (int)canvas_size.x; p += step) {
-                    x0 = (float)p / canvas_size.x;
-                    x1 = (float)(p + step) / canvas_size.x;
-
-                    g0 = last_g1;
-                    if (p == 0) {
-                        x0 = (float)(-step) / canvas_size.x;
-                        g0 = param::TransferFunctionParam::gauss(x0, ga, gb, gc);
-                    }
-                    ImVec2 pos0 = ImVec2(
-                        canvas_pos.x + (x0 * canvas_size.x), canvas_pos.y + canvas_size.y - (g0 * canvas_size.y));
-
-                    if (p == ((int)canvas_size.x - 1)) {
-                        x1 = (float)(canvas_size.x + step) / canvas_size.x;
-                    }
-                    g1 = param::TransferFunctionParam::gauss(x1, ga, gb, gc);
-                    ImVec2 pos1 = ImVec2(
-                        canvas_pos.x + (x1 * canvas_size.x), canvas_pos.y + canvas_size.y - (g1 * canvas_size.y));
-                    last_g1 = g1;
-
-                    drawList->PathLineToMergeDuplicate(pos0);
-                    drawList->PathLineTo(pos1);
+                for (int p = 0; p < (int)canvas_size.x + step; p += step) {
+                    x = (float)(p) / canvas_size.x;
+                    g = param::TransferFunctionParam::gauss(x, ga, gb, gc);
+                    pos =
+                        ImVec2(canvas_pos.x + (x * canvas_size.x), canvas_pos.y + canvas_size.y - (g * canvas_size.y));
+                    drawList->PathLineTo(pos);
                 }
+                drawList->PathStroke(channelColors[c], false, line_width);
             }
 
             // Test for intersection of mouse position with node.
@@ -692,5 +676,7 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
     }
     ImGui::SameLine(0.0f, style.ItemInnerSpacing.x);
     ImGui::Text("Function Plot");
-    this->utils.HelpMarkerToolTip("[Left-Click] Select Node\n[Left-Drag] Move Node\n[Right-Click] Add/Delete Node");
+    this->utils.HelpMarkerToolTip(
+        "First and last node are always present\nwith fixed value 0 and 1.\n[Left-Click] Select "
+        "Node\n[Left-Drag] Move Node\n[Right-Click] Add/Delete Node");
 }
