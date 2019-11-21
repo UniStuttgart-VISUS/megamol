@@ -14,6 +14,7 @@
 
 #include "DiagramSeries.h"
 #include "DiagramSeriesCall.h"
+#include "HistogramRenderer2D.h"
 #include "MDSProjection.h"
 #include "PCAProjection.h"
 #include "ParallelCoordinatesRenderer2D.h"
@@ -45,6 +46,7 @@ public:
         // register modules here:
         this->module_descriptions.RegisterAutoDescription<megamol::infovis::ParallelCoordinatesRenderer2D>();
         this->module_descriptions.RegisterAutoDescription<megamol::infovis::ScatterplotMatrixRenderer2D>();
+        this->module_descriptions.RegisterAutoDescription<megamol::infovis::HistogramRenderer2D>();
         this->module_descriptions.RegisterAutoDescription<megamol::infovis::PCAProjection>();
         this->module_descriptions.RegisterAutoDescription<megamol::infovis::TSNEProjection>();
         this->module_descriptions.RegisterAutoDescription<megamol::infovis::MDSProjection>();
