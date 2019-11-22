@@ -145,6 +145,9 @@ namespace megamol
             core::param::ParamSlot mask;
             core::param::ParamSlot mask_color;
 
+            /** Parameter slot for setting the default color if no dataset is specified */
+            core::param::ParamSlot default_color;
+
             /** Parameter slot for choosing between filled and wireframe mode */
             core::param::ParamSlot wireframe;
 

@@ -19,6 +19,7 @@
 
 #include <exception>
 #include <memory>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -34,6 +35,7 @@ namespace megamol
             data_set("data_set", "Data set used for coloring the triangles"),
             mask("mask", "Validity mask to selectively hide unwanted vertices or triangles"),
             mask_color("mask_color", "Color for invalid values"),
+            default_color("default_color", "Default color if no dataset is selected"),
             wireframe("wireframe", "Render as wireframe instead of filling the triangles")
         {
             // Connect input slots
@@ -55,6 +57,9 @@ namespace megamol
 
             this->mask_color << new core::param::ColorParam(1.0f, 1.0f, 1.0f, 1.0f);
             this->MakeSlotAvailable(&this->mask_color);
+
+            this->default_color << new core::param::ColorParam(0.7f, 0.7f, 0.7f, 1.0f);
+            this->MakeSlotAvailable(&this->default_color);
 
             this->wireframe << new core::param::BoolParam(false);
             this->MakeSlotAvailable(&this->wireframe);
@@ -231,7 +236,15 @@ namespace megamol
                 if (this->render_data.values == nullptr)
                 {
                     this->render_data.values = std::make_shared<mesh_data_call::data_set>();
-                    this->render_data.values->transfer_function = "{\"Interpolation\":\"LINEAR\",\"Nodes\":[[0.0,0.0,0.0,0.0,0.0],[1.0,1.0,1.0,1.0,1.0]],\"TextureSize\":2}";
+
+                    const auto color = this->default_color.Param<core::param::ColorParam>()->Value();
+
+                    std::stringstream ss;
+                    ss << "{\"Interpolation\":\"LINEAR\",\"Nodes\":["
+                       << "[" << color[0] << "," << color[1] << "," << color[2] << "," << color[3] << ",0.0,0.05000000074505806],"
+                       << "[" << color[0] << "," << color[1] << "," << color[2] << "," << color[3] << ",1.0,0.05000000074505806]]"
+                       << ",\"TextureSize\":2,\"ValueRange\":[0.0,1.0]}";
+
                     this->render_data.values->min_value = 0.0f;
                     this->render_data.values->max_value = 1.0f;
                     this->render_data.values->data = std::make_shared<std::vector<GLfloat>>(this->render_data.vertices->size() / 2, 1.0f);

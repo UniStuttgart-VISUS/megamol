@@ -11,8 +11,6 @@
 
 #include "mmcore/BoundingBoxes_2.h"
 #include "mmcore/Call.h"
-#include "mmcore/CallGeneric.h"
-#include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/TransferFunctionParam.h"
@@ -25,6 +23,7 @@
 #include "glowl/VertexLayout.hpp"
 
 #include <memory>
+#include <sstream>
 #include <utility>
 #include <vector>
 
@@ -35,6 +34,7 @@ triangle_mesh_renderer_3d::triangle_mesh_renderer_3d()
     : triangle_mesh_slot("get_triangle_mesh", "Triangle mesh input")
     , mesh_data_slot("get_mesh_data", "Mesh data input")
     , data_set("data_set", "Data set used for coloring the triangles")
+    , default_color("default_color", "Default color if no dataset is specified")
     , triangle_mesh_hash(-1)
     , triangle_mesh_changed(false)
     , mesh_data_hash(-1)
@@ -51,6 +51,9 @@ triangle_mesh_renderer_3d::triangle_mesh_renderer_3d()
     this->data_set << new core::param::FlexEnumParam("");
     this->MakeSlotAvailable(&this->data_set);
 
+    this->default_color << new core::param::ColorParam(0.7f, 0.7f, 0.7f, 1.0f);
+    this->MakeSlotAvailable(&this->default_color);
+
     // Disconnect inherited slots
     this->SetSlotUnavailable(&this->m_renderTask_rhs_slot);
     this->SetSlotUnavailable(&this->m_mesh_slot);
@@ -65,8 +68,7 @@ bool triangle_mesh_renderer_3d::create() {
     return true;
 }
 
-void triangle_mesh_renderer_3d::release() {
-}
+void triangle_mesh_renderer_3d::release() {}
 
 bool triangle_mesh_renderer_3d::get_input_data() {
     auto tmc_ptr = this->triangle_mesh_slot.CallAs<triangle_mesh_call>();
@@ -132,7 +134,8 @@ bool triangle_mesh_renderer_3d::get_input_data() {
     if (mdc_ptr != nullptr) {
         this->render_data.values = mdc_ptr->get_data(this->data_set.Param<core::param::FlexEnumParam>()->Value());
 
-        if (this->render_data.values != nullptr && (this->render_data.values->transfer_function_dirty || this->data_set.IsDirty())) {
+        if (this->render_data.values != nullptr &&
+            (this->render_data.values->transfer_function_dirty || this->data_set.IsDirty())) {
             this->data_set.ResetDirty();
             this->render_data.values->transfer_function_dirty = false;
             this->mesh_data_changed = true;
@@ -145,7 +148,15 @@ bool triangle_mesh_renderer_3d::get_input_data() {
         this->render_data.values->min_value = 0.0f;
         this->render_data.values->max_value = 1.0f;
 
-        this->render_data.values->transfer_function = "";
+        const auto color = this->default_color.Param<core::param::ColorParam>()->Value();
+
+        std::stringstream ss;
+        ss << "{\"Interpolation\":\"LINEAR\",\"Nodes\":["
+           << "[" << color[0] << "," << color[1] << "," << color[2] << "," << color[3] << ",0.0,0.05000000074505806],"
+           << "[" << color[0] << "," << color[1] << "," << color[2] << "," << color[3] << ",1.0,0.05000000074505806]]"
+           << ",\"TextureSize\":2,\"ValueRange\":[0.0,1.0]}";
+
+        this->render_data.values->transfer_function = ss.str();
         this->render_data.values->transfer_function_dirty = false;
 
         this->render_data.values->data =

@@ -11,7 +11,7 @@
     <shader name="geometry">
         <snippet type="version">430</snippet>
         <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>
-        <snippet name="Main"             type="file">triangle_mesh_geometry_passthrough_wireframe.glsl</snippet>
+        <snippet name="Main"             type="file">triangle_mesh_geometry_wireframe_passthrough.glsl</snippet>
     </shader>
 
     <shader name="fragment">

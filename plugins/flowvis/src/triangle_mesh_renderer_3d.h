@@ -107,6 +107,9 @@ namespace megamol
             /** Parameter slot for choosing data sets to visualize */
             core::param::ParamSlot data_set;
 
+            /** Parameter slot for setting the default color if no dataset is specified */
+            core::param::ParamSlot default_color;
+
             /** Bounding box */
             vislib::math::Cuboid<float> bounding_box;
 
