@@ -13,7 +13,9 @@
 
 #include "vislib/vislibversion.h"
 
+#include "clip_plane.h"
 #include "critical_points.h"
+#include "extract_model_matrix.h"
 #include "glyph_data_reader.h"
 #include "implicit_topology.h"
 #include "implicit_topology_reader.h"
@@ -65,7 +67,9 @@ namespace {
         virtual void registerClasses(void) {
 
             // register modules here:
+            this->module_descriptions.RegisterAutoDescription<megamol::flowvis::clip_plane>();
             this->module_descriptions.RegisterAutoDescription<megamol::flowvis::critical_points>();
+            this->module_descriptions.RegisterAutoDescription<megamol::flowvis::extract_model_matrix>();
             this->module_descriptions.RegisterAutoDescription<megamol::flowvis::glyph_data_reader>();
             this->module_descriptions.RegisterAutoDescription<megamol::flowvis::implicit_topology>();
             this->module_descriptions.RegisterAutoDescription<megamol::flowvis::implicit_topology_reader>();
