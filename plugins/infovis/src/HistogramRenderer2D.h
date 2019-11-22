@@ -1,6 +1,13 @@
 #ifndef MEGAMOL_INFOVIS_HISTOGRAMRENDERER2D_H_INCLUDED
 #define MEGAMOL_INFOVIS_HISTOGRAMRENDERER2D_H_INCLUDED
 
+#include "mmcore/CalleeSlot.h"
+#include "mmcore/CallerSlot.h"
+#include "mmcore/FlagCall.h"
+#include "mmcore/utility/SDFFont.h"
+#include "mmcore/view/CallGetTransferFunction.h"
+#include "mmstd_datatools/table/TableDataCall.h"
+
 #include "Renderer2D.h"
 
 namespace megamol::infovis {
@@ -75,6 +82,20 @@ protected:
     bool OnMouseMove(double x, double y) override;
 
 private:
+    core::CallerSlot tableDataCallerSlot;
+    core::CallerSlot transferFunctionCallerSlot;
+    core::CallerSlot flagStorageCallerSlot;
+
+    GLfloat modelViewMatrix_column[16];
+    GLfloat projMatrix_column[16];
+
+    vislib::graphics::gl::GLSLShader histogramProgram;
+
+    GLuint quadVertexArray;
+    GLuint quadVertexBuffer;
+    GLuint quadIndexBuffer;
+
+    megamol::core::utility::SDFFont font;
 };
 
 } // namespace megamol::infovis
