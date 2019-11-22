@@ -77,6 +77,8 @@ protected:
      */
     bool Render(core::view::CallRender2D &call) override;
 
+    bool handleCall(core::view::CallRender2D &call);
+
     bool OnMouseButton(core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) override;
 
     bool OnMouseMove(double x, double y) override;
@@ -85,6 +87,16 @@ private:
     core::CallerSlot tableDataCallerSlot;
     core::CallerSlot transferFunctionCallerSlot;
     core::CallerSlot flagStorageCallerSlot;
+
+    size_t currentTableDataHash;
+    unsigned int currentTableFrameId;
+    core::FlagStorage::FlagVersionType currentFlagStorageVersion;
+
+    size_t bins;
+    std::vector<float> colMinimums;
+    std::vector<float> colMaximums;
+    std::vector<std::string> colNames;
+    std::vector<float> histogram;
 
     GLfloat modelViewMatrix_column[16];
     GLfloat projMatrix_column[16];
