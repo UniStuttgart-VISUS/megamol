@@ -93,10 +93,13 @@ private:
     core::FlagStorage::FlagVersionType currentFlagStorageVersion;
 
     size_t bins;
+    size_t colCount;
     std::vector<float> colMinimums;
     std::vector<float> colMaximums;
     std::vector<std::string> colNames;
     std::vector<float> histogram;
+    std::vector<float> selectedHistogram;
+    size_t maxBinValue;
 
     GLfloat modelViewMatrix_column[16];
     GLfloat projMatrix_column[16];
