@@ -8,7 +8,7 @@
 #ifndef PROBE_INTERACTION_COLLECTION_H_INCLUDED
 #define PROBE_INTERACTION_COLLECTION_H_INCLUDED
 
-#include <queue>
+#include <list>
 
 namespace megamol {
 namespace probe_gl {
@@ -29,10 +29,10 @@ public:
     ProbeInteractionCollection() = default;
     ~ProbeInteractionCollection() = default;
 
-    std::queue<ProbeManipulation>& accessPendingManipulations() { return m_pending_manipulations; }
+    std::list<ProbeManipulation>& accessPendingManipulations() { return m_pending_manipulations; }
 
 private:
-    std::queue<ProbeManipulation> m_pending_manipulations;
+    std::list<ProbeManipulation> m_pending_manipulations;
 };
 
 }

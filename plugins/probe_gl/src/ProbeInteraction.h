@@ -96,6 +96,10 @@ protected:
      */
     bool Render(core::view::CallRender3D_2& call);
 
+    bool getInteractionCollection(core::Call& call);
+
+    bool getInteractionMetaData(core::Call& call);
+
 private:
     double m_cursor_x, m_cursor_y;
 

@@ -5,6 +5,9 @@
 
 megamol::probe_gl::ProbeInteraction::ProbeInteraction()
     : Renderer3DModule_2()
+    , m_cursor_x(0)
+    , m_cursor_y(0)
+    , m_interactions(new ProbeInteractionCollection())
     , m_probe_fbo_slot("getProbeFBO", "")
     , m_hull_fbo_slot("getHullFBO", "")
     , m_interaction_collection_slot("deployInteractions","")
@@ -15,7 +18,11 @@ megamol::probe_gl::ProbeInteraction::ProbeInteraction()
     this->m_hull_fbo_slot.SetCompatibleCall<compositing::CallFramebufferGLDescription>();
     this->MakeSlotAvailable(&this->m_hull_fbo_slot);
 
-
+    this->m_interaction_collection_slot.SetCallback(
+        CallProbeInteraction::ClassName(), "GetData", &ProbeInteraction::getInteractionCollection);
+    this->m_interaction_collection_slot.SetCallback(
+        CallProbeInteraction::ClassName(), "GetMetaData", &ProbeInteraction::getInteractionMetaData);
+    this->MakeSlotAvailable(&this->m_interaction_collection_slot);
 }
 
 megamol::probe_gl::ProbeInteraction::~ProbeInteraction() { this->Release(); }
@@ -44,7 +51,6 @@ bool megamol::probe_gl::ProbeInteraction::GetExtents(core::view::CallRender3D_2&
 
 bool megamol::probe_gl::ProbeInteraction::Render(core::view::CallRender3D_2& call) {
 
-    
     core::view::CallRender3D_2* cr = dynamic_cast<core::view::CallRender3D_2*>(&call);
     if (cr == NULL) return false;
 
@@ -62,11 +68,90 @@ bool megamol::probe_gl::ProbeInteraction::Render(core::view::CallRender3D_2& cal
     if (call_probe_fbo == NULL) return false;
     if (call_hull_fbo == NULL) return false;
 
+    if ((!(*call_probe_fbo)(0))) return false;
+    if ((!(*call_hull_fbo)(0))) return false;
+
     auto probe_fbo = call_probe_fbo->getData();
     auto hull_fbo = call_hull_fbo->getData();
 
-
     //TODO read obj ids from FBOs...
 
+    // bind fbo to read buffer for retrieving pixel data and bliting to default framebuffer
+    hull_fbo->bindToRead(2);
+    {
+        auto err = glGetError();
+        std::cerr << err << std::endl;
+    }
+    // get object id at cursor location from framebuffer's second color attachment
+    float hull_depth_pixel_data = 0.0;
+    // TODO check if cursor position is within framebuffer pixel range?
+    glReadPixels(static_cast<GLint>(this->m_cursor_x), probe_fbo->getHeight() - static_cast<GLint>(this->m_cursor_y), 1,
+        1, GL_RED, GL_FLOAT, &hull_depth_pixel_data);
+    {
+        auto err = glGetError();
+        std::cerr << err << std::endl;
+    }
+
+    // bind fbo to read buffer for retrieving pixel data and bliting to default framebuffer
+    probe_fbo->bindToRead(2);
+    {
+        auto err = glGetError();
+        std::cerr << err << std::endl;
+    }
+    // get object id at cursor location from framebuffer's second color attachment
+    float probe_depth_pixel_data = 0.0;
+    // TODO check if cursor position is within framebuffer pixel range?
+    glReadPixels(
+        static_cast<GLint>(this->m_cursor_x), 
+        probe_fbo->getHeight() - static_cast<GLint>(this->m_cursor_y),
+        1,
+        1, GL_RED, GL_FLOAT, &probe_depth_pixel_data);
+    {
+        auto err = glGetError();
+        std::cerr << err << std::endl;
+    }
+
+
+    // bind fbo to read buffer for retrieving pixel data and bliting to default framebuffer
+    probe_fbo->bindToRead(3);
+    {
+        auto err = glGetError();
+        std::cerr << err << std::endl;
+    }
+    // get object id at cursor location from framebuffer's second color attachment
+    GLint probe_objId_pixel_data = -1;
+    // TODO check if cursor position is within framebuffer pixel range?
+    glReadPixels(static_cast<GLint>(this->m_cursor_x), probe_fbo->getHeight() - static_cast<GLint>(this->m_cursor_y), 1,
+        1, GL_RED_INTEGER, GL_INT, &probe_objId_pixel_data);
+    {
+        auto err = glGetError();
+        std::cerr << err << std::endl;
+    }
+
+
+    //std::cout << "Object ID at " << m_cursor_x << "," << m_cursor_y << " : " << probe_objId_pixel_data << std::endl;
+
+    if (probe_objId_pixel_data > -1 && (probe_depth_pixel_data < hull_depth_pixel_data))
+    {
+        m_interactions->accessPendingManipulations().push_back(
+            ProbeManipulation{InteractionType::HIGHLIGHT, static_cast<uint32_t>(probe_objId_pixel_data), 0, 0, 0});
+    }
+
+    return true;
+}
+
+bool megamol::probe_gl::ProbeInteraction::getInteractionCollection(core::Call& call) {
+    auto cic = dynamic_cast<CallProbeInteraction*>(&call);
+    if (cic == NULL) return false;
+
+    if (!m_interactions->accessPendingManipulations().empty())
+    {
+        cic->setData(m_interactions);
+    }
+
+    return true; 
+}
+
+bool megamol::probe_gl::ProbeInteraction::getInteractionMetaData(core::Call& call) {
     return true;
 }
