@@ -75,12 +75,14 @@ bool megamol::compositing::DrawToScreen::Render(core::view::CallRender3D_2& call
     (*ct)(0);
 
     // obtain camera information
-    core::view::Camera_2 cam(cr->GetCamera());
-    cam_type::snapshot_type snapshot;
-    cam_type::matrix_type view_tmp, proj_tmp;
-    cam.calc_matrices(snapshot, view_tmp, proj_tmp, core::thecam::snapshot_content::all);
-    glm::mat4 view_mx = view_tmp;
-    glm::mat4 proj_mx = proj_tmp;
+    //  core::view::Camera_2 cam(cr->GetCamera());
+    //  cam_type::snapshot_type snapshot;
+    //  cam_type::matrix_type view_tmp, proj_tmp;
+    //  cam.calc_matrices(snapshot, view_tmp, proj_tmp, core::thecam::snapshot_content::all);
+    //  glm::mat4 view_mx = view_tmp;
+    //  glm::mat4 proj_mx = proj_tmp;
+
+
 
     // get input texture from call
     auto input_texture = ct->getData();
@@ -95,7 +97,7 @@ bool megamol::compositing::DrawToScreen::Render(core::view::CallRender3D_2& call
         glGetIntegerv(GL_BLEND_SRC_ALPHA, &blend_src_alpha);
         glGetIntegerv(GL_BLEND_DST_RGB, &blend_dst_rgb);
         glGetIntegerv(GL_BLEND_DST_ALPHA, &blend_dst_alpha);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
         m_drawToScreen_prgm->Enable();
 

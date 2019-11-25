@@ -118,6 +118,11 @@ protected:
     /**
      *
      */
+    bool getFramebufferObject(core::Call& caller);
+
+    /**
+     *
+     */
     bool getMetaDataCallback(core::Call& caller);
 
 private:
@@ -136,11 +141,11 @@ private:
     core::CalleeSlot m_normal_render_target;
     core::CalleeSlot m_depth_render_target;
 
-    /** Slot for requesting the camera that is propagated to the render chain from this module */
+    /** Slot for accessing the camera that is propagated to the render chain from this module */
     core::CalleeSlot m_camera;
 
-    /** Slot for publishing the framebuffer object used by this render target module */
-    core::CallerSlot m_framebuffer_slot;
+    /** Slot for accessing the framebuffer object used by this render target module */
+    core::CalleeSlot m_framebuffer_slot;
 
     /** Temporarily save the state */
     std::array<float, 4> clear_color;
