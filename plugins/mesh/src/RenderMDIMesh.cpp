@@ -181,13 +181,14 @@ bool RenderMDIMesh::Render(core::view::CallRender3D_2& call) {
 	
 	//vislib::sys::Log::DefaultLog.WriteError("Hey listen!");
 	
-	// Set GL state (otherwise bounding box or view cube rendering state is used)
-	//glDisable(GL_BLEND);
-	glEnable(GL_DEPTH_TEST);
-	//glEnable(GL_CULL_FACE);
-    glDisable(GL_CULL_FACE);
-	//glCullFace(GL_BACK);
+    // set state
+    const auto depth_test = glIsEnabled(GL_DEPTH_TEST);
+    if (!depth_test) glEnable(GL_DEPTH_TEST);
 
+    const auto culling = glIsEnabled(GL_CULL_FACE);
+    if (culling) glDisable(GL_CULL_FACE);
+
+    // get tasks
 	auto gpu_render_tasks = task_call->getData();
 
     // TODO yet another nullptr check for gpu render tasks
@@ -247,7 +248,11 @@ bool RenderMDIMesh::Render(core::view::CallRender3D_2& call) {
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-	glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
+    glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
+
+    // Restore state
+    if (!depth_test) glDisable(GL_DEPTH_TEST);
+    if (culling) glEnable(GL_CULL_FACE);
 	
 	return true;
 }
