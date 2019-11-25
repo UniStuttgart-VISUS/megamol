@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "HistogramRenderer2D.h"
 
+#include "mmcore/param/IntParam.h"
+
 using namespace megamol;
 using namespace megamol::infovis;
 using namespace megamol::stdplugin::datatools;
@@ -12,10 +14,11 @@ HistogramRenderer2D::HistogramRenderer2D()
     , tableDataCallerSlot("getData", "Float table input")
     , transferFunctionCallerSlot("getTransferFunction", "Transfer function input")
     , flagStorageCallerSlot("getFlagStorage", "Flag storage input")
+    , numberOfBinsSlot("numberOfBins", "Number of bins")
     , currentTableDataHash(std::numeric_limits<std::size_t>::max())
     , currentTableFrameId(std::numeric_limits<unsigned int>::max())
     , currentFlagStorageVersion(std::numeric_limits<core::FlagStorage::FlagVersionType>::max())
-    , bins(10) // TODO
+    , bins(10)
     , colCount(0)
     , maxBinValue(0)
     , font("Evolventa-SansSerif", core::utility::SDFFont::RenderType::RENDERTYPE_FILL)
@@ -28,6 +31,9 @@ HistogramRenderer2D::HistogramRenderer2D()
 
     this->flagStorageCallerSlot.SetCompatibleCall<core::FlagCallDescription>();
     this->MakeSlotAvailable(&this->flagStorageCallerSlot);
+
+    this->numberOfBinsSlot << new core::param::IntParam(this->bins, 1);
+    this->MakeSlotAvailable(&this->numberOfBinsSlot);
 }
 
 HistogramRenderer2D::~HistogramRenderer2D() {
@@ -156,8 +162,11 @@ bool HistogramRenderer2D::handleCall(core::view::CallRender2D &call) {
     (*flagsCall)(core::FlagCall::CallMapFlags);
     auto version = flagsCall->GetVersion();
 
-    if (this->currentTableDataHash != hash || this->currentTableFrameId != frameId || this->currentFlagStorageVersion != version) {
+    auto binsParam = static_cast<size_t>(this->numberOfBinsSlot.Param<core::param::IntParam>()->Value());
+    if (this->currentTableDataHash != hash || this->currentTableFrameId != frameId || this->currentFlagStorageVersion != version || this->bins != binsParam) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Calculate Histogram");
+
+        this->bins = binsParam;
 
         this->colCount = floatTableCall->GetColumnsCount();
         size_t rowCount = floatTableCall->GetRowsCount();
@@ -193,8 +202,8 @@ bool HistogramRenderer2D::handleCall(core::view::CallRender2D &call) {
             if ((f & filteredTestMask) == filteredPassMask) {
                 bool isSelected = (f & selectedTestMask) == selectedPassMask;
                 for (size_t c = 0; c < this->colCount; ++c) {
-                    float val = (data[r * this->colCount + c] - colMinimums[c]) / (colMaximums[c] - colMinimums[c]);
-                    int bin_idx = std::clamp(static_cast<int>(val * bins), 0, static_cast<int>(bins) - 1);
+                    float val = (data[r * this->colCount + c] - this->colMinimums[c]) / (this->colMaximums[c] - this->colMinimums[c]);
+                    int bin_idx = std::clamp(static_cast<int>(val * this->bins), 0, static_cast<int>(this->bins) - 1);
                     this->histogram[bin_idx * this->colCount + c] += 1.0;
                     if (isSelected) {
                         this->selectedHistogram[bin_idx * this->colCount + c] += 1.0;

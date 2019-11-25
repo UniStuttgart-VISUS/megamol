@@ -4,6 +4,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/FlagCall.h"
+#include "mmcore/param/ParamSlot.h"
 #include "mmcore/utility/SDFFont.h"
 #include "mmcore/view/CallGetTransferFunction.h"
 #include "mmstd_datatools/table/TableDataCall.h"
@@ -87,6 +88,8 @@ private:
     core::CallerSlot tableDataCallerSlot;
     core::CallerSlot transferFunctionCallerSlot;
     core::CallerSlot flagStorageCallerSlot;
+
+    core::param::ParamSlot numberOfBinsSlot;
 
     size_t currentTableDataHash;
     unsigned int currentTableFrameId;
