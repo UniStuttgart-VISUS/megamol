@@ -72,6 +72,11 @@ bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) {
 
         auto probe_cnt = probes->getProbeCount();
 
+        m_probe_draw_data.clear();
+        m_probe_draw_data.resize(probe_cnt);
+
+        std::vector<glowl::DrawElementsCommand> draw_commands(probe_cnt);
+
         for (int probe_idx = 0; probe_idx < probe_cnt; ++probe_idx) {
             try {
                 auto probe = probes->getProbe<probe::FloatProbe>(probe_idx);
@@ -82,18 +87,14 @@ bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) {
 
                 auto const& gpu_sub_mesh = gpu_mesh_storage->getSubMeshData().front();
                 auto const& gpu_batch_mesh = gpu_mesh_storage->getMeshes().front().mesh;
-                auto const& shader = gpu_mtl_storage->getMaterials().front().shader_program;
 
-                std::vector<glowl::DrawElementsCommand> draw_commands(1, gpu_sub_mesh.sub_mesh_draw_command);
-
-                // std::vector<std::array<float, 16>> object_transform(1);
-                std::array<PerObjData, 1> per_obj_data;
+                draw_commands[probe_idx] = gpu_sub_mesh.sub_mesh_draw_command;
 
                 const glm::vec3 from(0.0f, 1.0f, 0.0f);
                 const glm::vec3 to(probe.m_direction[0], probe.m_direction[1], probe.m_direction[2]);
                 glm::vec3 v = glm::cross(to, from);
                 float angle = -acos(glm::dot(to, from) / (glm::length(to) * glm::length(from)));
-                std::get<0>(per_obj_data).object_transform = glm::rotate(angle, v);
+                m_probe_draw_data[probe_idx].object_transform = glm::rotate(angle, v);
 
                 auto scaling = glm::scale(glm::vec3(0.5f, probe.m_end - probe.m_begin, 0.5f));
 
@@ -101,16 +102,18 @@ bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) {
                     probe.m_position[1] + probe.m_direction[1] * probe.m_begin,
                     probe.m_position[2] + probe.m_direction[2] * probe.m_begin);
                 auto translation = glm::translate(glm::mat4(), probe_start_point);
-                std::get<0>(per_obj_data).object_transform =
-                    translation * std::get<0>(per_obj_data).object_transform * scaling;
-
-
-                rt_collection->addRenderTasks(shader, gpu_batch_mesh, draw_commands, per_obj_data);
+                m_probe_draw_data[probe_idx].object_transform =
+                    translation * m_probe_draw_data[probe_idx].object_transform * scaling;
 
             } catch (std::bad_variant_access&) {
                 // TODO log error, dont add new render task
             }
         }
+
+        auto const& gpu_sub_mesh = gpu_mesh_storage->getSubMeshData().front();
+        auto const& gpu_batch_mesh = gpu_mesh_storage->getMeshes().front().mesh;
+        auto const& shader = gpu_mtl_storage->getMaterials().front().shader_program;
+        rt_collection->addRenderTasks(shader, gpu_batch_mesh, draw_commands, m_probe_draw_data);
     }
 
     // check for pending probe manipulations
@@ -130,33 +133,39 @@ bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) {
             auto probes = pc->getData();
 
             for (auto itr = pending_manips.begin(); itr != pending_manips.end();) {
-                if (itr->type == HIGHLIGHT) {
+                if (itr->type == HIGHLIGHT) 
+                {
                     // TODO remove from list and apply hightlight to render task
                     auto manipulation = *itr;
                     itr = pending_manips.erase(itr);
 
-                    auto probe = probes->getProbe<probe::FloatProbe>(manipulation.obj_id);
+                    std::array<PerProbeDrawData, 1> per_probe_data = {m_probe_draw_data[manipulation.obj_id]};
+                    per_probe_data[0].highlighted = 1;
 
-                    std::array<PerObjData, 1> per_obj_data;
-                    const glm::vec3 from(0.0f, 1.0f, 0.0f);
-                    const glm::vec3 to(probe.m_direction[0], probe.m_direction[1], probe.m_direction[2]);
-                    glm::vec3 v = glm::cross(to, from);
-                    float angle = -acos(glm::dot(to, from) / (glm::length(to) * glm::length(from)));
-                    std::get<0>(per_obj_data).object_transform = glm::rotate(angle, v);
-                    
-                    auto scaling = glm::scale(glm::vec3(0.5f, probe.m_end - probe.m_begin, 0.5f));
-                    
-                    auto probe_start_point = glm::vec3(probe.m_position[0] + probe.m_direction[0] * probe.m_begin,
-                        probe.m_position[1] + probe.m_direction[1] * probe.m_begin,
-                        probe.m_position[2] + probe.m_direction[2] * probe.m_begin);
-                    auto translation = glm::translate(glm::mat4(), probe_start_point);
-                    std::get<0>(per_obj_data).object_transform =
-                        translation * std::get<0>(per_obj_data).object_transform * scaling;
+                    rt_collection->updatePerDrawData(manipulation.obj_id, per_probe_data);
+                }
+                else if (itr->type == DEHIGHLIGHT)
+                {
+                    // TODO remove from list and apply hightlight to render task
+                    auto manipulation = *itr;
+                    itr = pending_manips.erase(itr);
 
-                    std::get<0>(per_obj_data).highlighted = 1;
+                    std::array<PerProbeDrawData,1> per_probe_data = { m_probe_draw_data[manipulation.obj_id] };
 
-                    rt_collection->updatePerDrawData(manipulation.obj_id, per_obj_data);
-                } else {
+                    rt_collection->updatePerDrawData(manipulation.obj_id, per_probe_data);
+                } 
+                else if (itr->type == SELECT) 
+                {
+                    // TODO remove from list and apply hightlight to render task
+                    auto manipulation = *itr;
+                    itr = pending_manips.erase(itr);
+
+                    m_probe_draw_data[manipulation.obj_id].highlighted = 2;
+                    std::array<PerProbeDrawData, 1> per_probe_data = {m_probe_draw_data[manipulation.obj_id]};
+
+                    rt_collection->updatePerDrawData(manipulation.obj_id, per_probe_data);
+                }
+                else {
                     ++itr;
                 }
             }

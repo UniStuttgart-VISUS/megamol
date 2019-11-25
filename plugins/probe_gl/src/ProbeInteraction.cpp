@@ -8,6 +8,7 @@ megamol::probe_gl::ProbeInteraction::ProbeInteraction()
     , m_cursor_x(0)
     , m_cursor_y(0)
     , m_interactions(new ProbeInteractionCollection())
+    , last_active_probe_id(-1)
     , m_probe_fbo_slot("getProbeFBO", "")
     , m_hull_fbo_slot("getHullFBO", "")
     , m_interaction_collection_slot("deployInteractions","")
@@ -29,6 +30,18 @@ megamol::probe_gl::ProbeInteraction::~ProbeInteraction() { this->Release(); }
 
 bool megamol::probe_gl::ProbeInteraction::OnMouseButton(
     core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) {
+
+    if (button == core::view::MouseButton::BUTTON_LEFT && action == core::view::MouseButtonAction::PRESS) {
+        
+        if (last_active_probe_id > 0)
+        {
+            m_interactions->accessPendingManipulations().push_back(
+                ProbeManipulation{InteractionType::SELECT, static_cast<uint32_t>(last_active_probe_id), 0, 0, 0});
+
+            return true;
+        }
+    }
+
     return false;
 }
 
@@ -79,8 +92,8 @@ bool megamol::probe_gl::ProbeInteraction::Render(core::view::CallRender3D_2& cal
     // bind fbo to read buffer for retrieving pixel data and bliting to default framebuffer
     hull_fbo->bindToRead(2);
     {
-        auto err = glGetError();
-        std::cerr << err << std::endl;
+        //auto err = glGetError();
+        //std::cerr << err << std::endl;
     }
     // get object id at cursor location from framebuffer's second color attachment
     float hull_depth_pixel_data = 0.0;
@@ -88,8 +101,8 @@ bool megamol::probe_gl::ProbeInteraction::Render(core::view::CallRender3D_2& cal
     glReadPixels(static_cast<GLint>(this->m_cursor_x), probe_fbo->getHeight() - static_cast<GLint>(this->m_cursor_y), 1,
         1, GL_RED, GL_FLOAT, &hull_depth_pixel_data);
     {
-        auto err = glGetError();
-        std::cerr << err << std::endl;
+        //auto err = glGetError();
+        //std::cerr << err << std::endl;
     }
 
     // bind fbo to read buffer for retrieving pixel data and bliting to default framebuffer
@@ -107,16 +120,16 @@ bool megamol::probe_gl::ProbeInteraction::Render(core::view::CallRender3D_2& cal
         1,
         1, GL_RED, GL_FLOAT, &probe_depth_pixel_data);
     {
-        auto err = glGetError();
-        std::cerr << err << std::endl;
+        //auto err = glGetError();
+        //std::cerr << err << std::endl;
     }
 
 
     // bind fbo to read buffer for retrieving pixel data and bliting to default framebuffer
     probe_fbo->bindToRead(3);
     {
-        auto err = glGetError();
-        std::cerr << err << std::endl;
+        //auto err = glGetError();
+        //std::cerr << err << std::endl;
     }
     // get object id at cursor location from framebuffer's second color attachment
     GLint probe_objId_pixel_data = -1;
@@ -124,18 +137,29 @@ bool megamol::probe_gl::ProbeInteraction::Render(core::view::CallRender3D_2& cal
     glReadPixels(static_cast<GLint>(this->m_cursor_x), probe_fbo->getHeight() - static_cast<GLint>(this->m_cursor_y), 1,
         1, GL_RED_INTEGER, GL_INT, &probe_objId_pixel_data);
     {
-        auto err = glGetError();
-        std::cerr << err << std::endl;
+        //auto err = glGetError();
+        //std::cerr << err << std::endl;
     }
-
 
     //std::cout << "Object ID at " << m_cursor_x << "," << m_cursor_y << " : " << probe_objId_pixel_data << std::endl;
 
-    if (probe_objId_pixel_data > -1 && (probe_depth_pixel_data < hull_depth_pixel_data))
+    if (probe_depth_pixel_data > hull_depth_pixel_data)
+    {
+        probe_objId_pixel_data = -1;
+    }
+
+    if (probe_objId_pixel_data > -1)
     {
         m_interactions->accessPendingManipulations().push_back(
             ProbeManipulation{InteractionType::HIGHLIGHT, static_cast<uint32_t>(probe_objId_pixel_data), 0, 0, 0});
     }
+    if (last_active_probe_id > 0 && last_active_probe_id != probe_objId_pixel_data)
+    {
+        m_interactions->accessPendingManipulations().push_back(
+            ProbeManipulation{InteractionType::DEHIGHLIGHT, static_cast<uint32_t>(last_active_probe_id), 0, 0, 0});
+    }
+
+    last_active_probe_id = probe_objId_pixel_data;
 
     return true;
 }

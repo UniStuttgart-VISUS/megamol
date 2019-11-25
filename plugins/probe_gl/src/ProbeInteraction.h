@@ -105,6 +105,8 @@ private:
 
     std::shared_ptr<ProbeInteractionCollection> m_interactions;
 
+    int64_t last_active_probe_id;
+
     megamol::core::CallerSlot m_probe_fbo_slot;
     megamol::core::CallerSlot m_hull_fbo_slot;
 
