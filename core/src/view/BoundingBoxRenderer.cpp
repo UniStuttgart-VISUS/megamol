@@ -10,8 +10,20 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/thecam/math/functions.h"
+
 #include "vislib/graphics/gl/ShaderSource.h"
 #include "vislib/sys/Log.h"
+
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+
+#include <algorithm>
+#include <cmath>
+#include <memory>
+#include <vector>
 
 using namespace megamol::core;
 using namespace megamol::core::view;
@@ -25,6 +37,8 @@ BoundingBoxRenderer::BoundingBoxRenderer(void)
     , boundingBoxColorSlot("boundingBoxColor", "Color of the bounding box")
     , smoothLineSlot("smoothLines", "Enables the smoothing of lines (may look strange on some setups)")
     , enableViewCubeSlot("enableViewCube", "Enables the rendering of the view cube")
+    , viewCubePosSlot("viewCubePosition", "Position of the view cube")
+    , viewCubeSizeSlot("viewCubeSize", "Size of the view cube")
     , vbo(0)
     , ibo(0)
     , va(0) {
@@ -41,6 +55,16 @@ BoundingBoxRenderer::BoundingBoxRenderer(void)
     this->enableViewCubeSlot.SetParameter(new param::BoolParam(false));
     this->MakeSlotAvailable(&this->enableViewCubeSlot);
 
+    this->viewCubePosSlot.SetParameter(new param::EnumParam(3));
+    this->viewCubePosSlot.Param<param::EnumParam>()->SetTypePair(0, "bottom left");
+    this->viewCubePosSlot.Param<param::EnumParam>()->SetTypePair(1, "bottom right");
+    this->viewCubePosSlot.Param<param::EnumParam>()->SetTypePair(2, "top left");
+    this->viewCubePosSlot.Param<param::EnumParam>()->SetTypePair(3, "top right");
+    this->MakeSlotAvailable(&this->viewCubePosSlot);
+
+    this->viewCubeSizeSlot.SetParameter(new param::IntParam(100));
+    this->MakeSlotAvailable(&this->viewCubeSizeSlot);
+
     this->MakeSlotAvailable(&this->chainRenderSlot);
     this->MakeSlotAvailable(&this->renderSlot);
 }
@@ -55,8 +79,7 @@ BoundingBoxRenderer::~BoundingBoxRenderer(void) { this->Release(); }
  */
 bool BoundingBoxRenderer::create(void) {
     // TODO the vislib shaders have to die a slow and painful death
-    vislib::graphics::gl::ShaderSource bbVertSrc;
-    vislib::graphics::gl::ShaderSource bbFragSrc;
+    vislib::graphics::gl::ShaderSource bbVertSrc, bbFragSrc;
     if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("boundingbox::vertex", bbVertSrc)) {
         vislib::sys::Log::DefaultLog.WriteError("Unable to load vertex shader source for bounding box line shader");
     }
@@ -69,6 +92,22 @@ bool BoundingBoxRenderer::create(void) {
         }
     } catch (vislib::Exception e) {
         vislib::sys::Log::DefaultLog.WriteError("Unable to create bounding box line shader: %s\n", e.GetMsgA());
+        return false;
+    }
+
+    vislib::graphics::gl::ShaderSource vcVertSrc, vcFragSrc;
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("viewcube::vertex", vcVertSrc)) {
+        vislib::sys::Log::DefaultLog.WriteError("Unable to load vertex shader source for view cube shader");
+    }
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("viewcube::fragment", vcFragSrc)) {
+        vislib::sys::Log::DefaultLog.WriteError("Unable to load fragment shader source for view cube shader");
+    }
+    try {
+        if (!this->cubeShader.Create(vcVertSrc.Code(), vcVertSrc.Count(), vcFragSrc.Code(), vcFragSrc.Count())) {
+            throw vislib::Exception("Shader creation failure", __FILE__, __LINE__);
+        }
+    } catch (vislib::Exception e) {
+        vislib::sys::Log::DefaultLog.WriteError("Unable to create view cube shader: %s\n", e.GetMsgA());
         return false;
     }
 
@@ -94,8 +133,8 @@ bool BoundingBoxRenderer::create(void) {
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
 
     glBindVertexArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
     return true;
 }
@@ -288,4 +327,96 @@ bool BoundingBoxRenderer::RenderBoundingBoxBack(const glm::mat4& mvp, const Boun
 /*
  * BoundingBoxRenderer::RenderViewCube
  */
-bool BoundingBoxRenderer::RenderViewCube(CallRender3D_2& call) { return true; }
+bool BoundingBoxRenderer::RenderViewCube(CallRender3D_2& call) {
+    // Get camera orientation
+    core::view::Camera_2 cam;
+    call.GetCamera(cam);
+
+    const auto orientation = cam.orientation();
+
+    // Calculate rotation matrix from quaternion,
+    // see https://en.wikipedia.org/wiki/Quaternions_and_spatial_rotation#Quaternion-derived_rotation_matrix
+    const auto qr = orientation.w();
+    const auto qi = orientation.x();
+    const auto qj = orientation.y();
+    const auto qk = orientation.z();
+
+    glm::mat4 rotation(1.0f);
+    rotation[0][0] = 1.0f - 2.0f * (qj * qj + qk * qk);
+    rotation[0][1] = 2.0f * (qi * qj + qk * qr);
+    rotation[0][2] = 2.0f * (qi * qk - qj * qr);
+    rotation[1][0] = 2.0f * (qi * qj - qk * qr);
+    rotation[1][1] = 1.0f - 2.0f * (qi * qi + qk * qk);
+    rotation[1][2] = 2.0f * (qj * qk + qi * qr);
+    rotation[2][0] = 2.0f * (qi * qk + qj * qr);
+    rotation[2][1] = 2.0f * (qj * qk - qi * qr);
+    rotation[2][2] = 1.0f - 2.0f * (qi * qi + qj * qj);
+
+    rotation = glm::inverse(rotation);
+
+    // Create view/model and projection matrices
+    const float dist = 2.0f / std::tan(thecam::math::angle_deg2rad(30.0f) / 2.0f);
+
+    glm::mat4 model(1.0f);
+    model[3][2] = -dist;
+
+    const auto proj = glm::perspective(thecam::math::angle_deg2rad(30.0f), 1.0f, 0.1f, 100.0f);
+
+    // Set state
+    const auto depth_test = glIsEnabled(GL_DEPTH_TEST);
+    if (depth_test) glDisable(GL_DEPTH_TEST);
+
+    const auto culling = glIsEnabled(GL_CULL_FACE);
+    if (!culling) glEnable(GL_CULL_FACE);
+
+    // Set viewport
+    std::array<GLint, 4> viewport;
+    glGetIntegerv(GL_VIEWPORT, viewport.data());
+
+    const auto position = this->viewCubePosSlot.Param<param::EnumParam>()->Value();
+    const auto size = this->viewCubeSizeSlot.Param<param::IntParam>()->Value();
+
+    int x, y;
+
+    switch (position) {
+    case 0:
+        x = viewport[0];
+        y = viewport[1];
+        break;
+    case 1:
+        x = viewport[2] - size;
+        y = viewport[1];
+        break;
+    case 2:
+        x = viewport[0];
+        y = viewport[3] - size;
+        break;
+    case 3:
+    default:
+        x = viewport[2] - size;
+        y = viewport[3] - size;
+        break;
+    }
+
+    glViewport(x, y, size, size);
+
+    // Render view cube
+    this->cubeShader.Enable();
+
+    glUniformMatrix4fv(this->cubeShader.ParameterLocation("rot_mx"), 1, false, glm::value_ptr(rotation));
+    glUniformMatrix4fv(this->cubeShader.ParameterLocation("model_mx"), 1, false, glm::value_ptr(model));
+    glUniformMatrix4fv(this->cubeShader.ParameterLocation("proj_mx"), 1, false, glm::value_ptr(proj));
+
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+
+    this->cubeShader.Disable();
+
+    // Restore viewport
+    glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+
+    // Restore state
+    if (depth_test) glEnable(GL_DEPTH_TEST);
+    if (!culling) glDisable(GL_CULL_FACE);
+
+    return true;
+}
