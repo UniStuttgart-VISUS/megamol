@@ -17,7 +17,7 @@ namespace megamol {
 namespace flowvis {
 
 /**
- * Module for drawing a two-dimensional texture on a quad in 3D space.
+ * Module for extracting a model matrix from the interaction with a view cube.
  *
  * @author Alexander Straub
  */
@@ -35,7 +35,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static inline const char* Description() { return "Extract the model matrix from a view"; }
+    static inline const char* Description() { return "Extract the model matrix from a view cube rendering"; }
 
     /**
      * Answers whether this module is available on the current system.

@@ -8,6 +8,7 @@
 
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
+#include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/CallRender3D_2.h"
 #include "mmcore/view/Renderer3DModule_2.h"
 
@@ -17,7 +18,7 @@ namespace megamol {
 namespace flowvis {
 
 /**
- * Module for drawing a two-dimensional texture on a quad in 3D space.
+ * Module for rendering and providing a clip plane.
  *
  * @author Alexander Straub
  */
@@ -80,6 +81,9 @@ private:
 
     /** Output slot for providing the clip plane */
     core::CalleeSlot clip_plane_slot;
+
+    /** Parameter for setting the plane color */
+    core::param::ParamSlot color;
 
     /** The clip plane */
     vislib::math::Plane<float> plane;

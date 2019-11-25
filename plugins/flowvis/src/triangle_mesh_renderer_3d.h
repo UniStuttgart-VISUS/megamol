@@ -20,6 +20,7 @@
 
 #include "glad/glad.h"
 
+#include <array>
 #include <memory>
 #include <type_traits>
 #include <vector>
@@ -104,6 +105,9 @@ namespace megamol
 
             core::CallerSlot mesh_data_slot;
 
+            /** Input slot for a clip plane */
+            core::CallerSlot clip_plane_slot;
+
             /** Parameter slot for choosing data sets to visualize */
             core::param::ParamSlot data_set;
 
@@ -112,6 +116,23 @@ namespace megamol
 
             /** Bounding box */
             vislib::math::Cuboid<float> bounding_box;
+
+            /** Per draw data offsets and size */
+            struct per_draw_data_t {
+                static constexpr std::size_t size_tf = sizeof(GLuint64);
+                static constexpr std::size_t size_min_value = sizeof(float);
+                static constexpr std::size_t size_max_value = sizeof(float);
+                static constexpr std::size_t size_plane = 4 * sizeof(float);
+                static constexpr std::size_t size_plane_bool = sizeof(int);
+
+                static constexpr std::size_t offset_tf = 0;
+                static constexpr std::size_t offset_min_value = offset_tf + size_tf;
+                static constexpr std::size_t offset_max_value = offset_min_value + size_min_value;
+                static constexpr std::size_t offset_plane = offset_max_value + size_max_value;
+                static constexpr std::size_t offset_plane_bool = offset_plane + size_plane;
+
+                static constexpr std::size_t size = offset_plane_bool + size_plane_bool;
+            };
 
             /** Struct for storing data needed for rendering */
             struct render_data_t
@@ -127,6 +148,8 @@ namespace megamol
                 std::shared_ptr<mesh_data_call::data_set> values;
 
                 std::shared_ptr<mesh::GPUMeshCollection> mesh;
+
+                std::array<uint8_t, per_draw_data_t::size> per_draw_data;
 
             } render_data;
         };

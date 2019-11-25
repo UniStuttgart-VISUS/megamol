@@ -6,6 +6,7 @@
 #include "flowvis/shader.h"
 
 #include "mmcore/CoreInstance.h"
+#include "mmcore/param/ColorParam.h"
 #include "mmcore/view/CallClipPlane.h"
 #include "mmcore/view/CallRender3D_2.h"
 #include "mmcore/view/Camera_2.h"
@@ -14,6 +15,8 @@
 
 #include "vislib/math/Cuboid.h"
 #include "vislib/math/Plane.h"
+#include "vislib/math/Point.h"
+#include "vislib/math/Vector.h"
 #include "vislib/sys/Log.h"
 
 #include <exception>
@@ -25,6 +28,7 @@ namespace flowvis {
 clip_plane::clip_plane()
     : model_matrix_slot("model_matrix", "Model matrix for positioning the clip plane")
     , clip_plane_slot("clip_plane", "Clip plane")
+    , color("color", "Color of the clip plane")
     , initialized(false) {
 
     // Set output
@@ -35,6 +39,10 @@ clip_plane::clip_plane()
     this->clip_plane_slot.SetCallback(
         core::view::CallClipPlane::ClassName(), "GetPlane", &clip_plane::get_clip_plane_callback);
     this->MakeSlotAvailable(&this->clip_plane_slot);
+
+    // Set parameters
+    this->color << new core::param::ColorParam(0.7f, 0.7f, 0.7f, 0.3f);
+    this->MakeSlotAvailable(&this->color);
 }
 
 clip_plane::~clip_plane() { this->Release(); }
@@ -66,6 +74,7 @@ bool clip_plane::Render(core::view::CallRender3D_2& call) {
                                           "uniform mat4 model_mx; \n"
                                           "uniform mat4 view_mx; \n"
                                           "uniform mat4 proj_mx; \n"
+                                          "uniform vec4 color; \n"
                                           "out vec4 vertex_color; \n"
                                           "void main() \n"
                                           "{ \n"
@@ -77,7 +86,7 @@ bool clip_plane::Render(core::view::CallRender3D_2& call) {
                                           "        vec4( 1.0,  1.0, 0.0, 1.0), \n"
                                           "        vec4(-1.0,  1.0, 0.0, 1.0) \n"
                                           "    ); \n"
-                                          "    vertex_color = vec4(0.7f, 0.7f, 0.7f, 0.3f);\n"
+                                          "    vertex_color = color;\n"
                                           "    gl_Position = proj_mx * view_mx * translate_mx * model_mx * scale_mx * vertices[gl_VertexID]; \n"
                                           "}";
 
@@ -138,18 +147,49 @@ bool clip_plane::Render(core::view::CallRender3D_2& call) {
     model[3][1] *= 0.5f * scale_factor;
     model[3][2] *= 0.5f * scale_factor;
 
+    // Set state
+    const auto depth_test = glIsEnabled(GL_DEPTH_TEST);
+    if (!depth_test) glEnable(GL_DEPTH_TEST);
+
+    const auto blending = glIsEnabled(GL_BLEND);
+    if (!blending) glEnable(GL_BLEND);
+
+    GLint src_color, dst_color, src_alpha, dst_alpha;
+    glGetIntegerv(GL_BLEND_SRC_RGB, &src_color);
+    glGetIntegerv(GL_BLEND_DST_RGB, &dst_color);
+    glGetIntegerv(GL_BLEND_SRC_ALPHA, &src_alpha);
+    glGetIntegerv(GL_BLEND_DST_ALPHA, &dst_alpha);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     // Render plane
     glUseProgram(this->render_data.prog);
-    
+
     glUniformMatrix4fv(glGetUniformLocation(this->render_data.prog, "translate_mx"), 1, false, glm::value_ptr(translate));
     glUniformMatrix4fv(glGetUniformLocation(this->render_data.prog, "scale_mx"), 1, false, glm::value_ptr(scale));
     glUniformMatrix4fv(glGetUniformLocation(this->render_data.prog, "model_mx"), 1, false, glm::value_ptr(model));
     glUniformMatrix4fv(glGetUniformLocation(this->render_data.prog, "view_mx"), 1, false, glm::value_ptr(static_cast<glm::mat4>(view)));
     glUniformMatrix4fv(glGetUniformLocation(this->render_data.prog, "proj_mx"), 1, false, glm::value_ptr(static_cast<glm::mat4>(proj)));
 
+    glUniform4fv(glGetUniformLocation(this->render_data.prog, "color"), 1, this->color.Param<core::param::ColorParam>()->Value().data());
+
     glDrawArrays(GL_TRIANGLES, 0, 6);
 
     glUseProgram(0);
+
+    // Restore state
+    if (!depth_test) glDisable(GL_DEPTH_TEST);
+    if (!blending) glDisable(GL_BLEND);
+
+    glBlendFuncSeparate(src_color, dst_color, src_alpha, dst_alpha);
+
+    // Store plane
+    const glm::mat4 model_complete = translate * model * scale;
+
+    const glm::vec4 plane_pos = model_complete * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+    const glm::vec4 plane_normal = glm::normalize(model * glm::vec4(0.0f, 0.0f, 1.0f, 0.0f));
+
+    this->plane.Set(vislib::math::Point<float, 3>(plane_pos[0], plane_pos[1], plane_pos[2]),
+        vislib::math::Vector<float, 3>(plane_normal[0], plane_normal[1], plane_normal[2]));
 
     return true;
 }
@@ -169,7 +209,7 @@ bool clip_plane::GetExtents(core::view::CallRender3D_2& call) {
 }
 
 bool clip_plane::get_clip_plane_callback(core::Call& call) {
-    // TODO
+    static_cast<core::view::CallClipPlane&>(call).SetPlane(this->plane);
 
     return true;
 }

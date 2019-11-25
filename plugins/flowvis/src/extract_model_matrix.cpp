@@ -143,6 +143,13 @@ bool extract_model_matrix::Render(core::view::CallRender3D_2& call) {
     // Calculate model matrix
     this->model_matrix = this->inverse_initial_model_matrix * static_cast<glm::mat4>(view);
 
+    // Set state
+    const auto depth_test = glIsEnabled(GL_DEPTH_TEST);
+    if (!depth_test) glEnable(GL_DEPTH_TEST);
+
+    const auto blending = glIsEnabled(GL_BLEND);
+    if (blending) glDisable(GL_BLEND);
+
     // Render view cube
     glUseProgram(this->render_data.prog);
 
@@ -154,6 +161,10 @@ bool extract_model_matrix::Render(core::view::CallRender3D_2& call) {
     glDrawArrays(GL_TRIANGLES, 0, 36);
 
     glUseProgram(0);
+
+    // Restore state
+    if (!depth_test) glDisable(GL_DEPTH_TEST);
+    if (blending) glEnable(GL_BLEND);
 
     return true;
 }

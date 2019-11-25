@@ -15,6 +15,7 @@
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/TransferFunctionParam.h"
 #include "mmcore/utility/DataHash.h"
+#include "mmcore/view/CallClipPlane.h"
 
 #include "vislib/sys/Log.h"
 
@@ -33,6 +34,7 @@ namespace flowvis {
 triangle_mesh_renderer_3d::triangle_mesh_renderer_3d()
     : triangle_mesh_slot("get_triangle_mesh", "Triangle mesh input")
     , mesh_data_slot("get_mesh_data", "Mesh data input")
+    , clip_plane_slot("clip_plane", "Clip plane for clipping the rendered triangle mesh")
     , data_set("data_set", "Data set used for coloring the triangles")
     , default_color("default_color", "Default color if no dataset is specified")
     , triangle_mesh_hash(-1)
@@ -46,6 +48,9 @@ triangle_mesh_renderer_3d::triangle_mesh_renderer_3d()
 
     this->mesh_data_slot.SetCompatibleCall<mesh_data_call::mesh_data_description>();
     this->MakeSlotAvailable(&this->mesh_data_slot);
+
+    this->clip_plane_slot.SetCompatibleCall<core::view::CallClipPlaneDescription>();
+    this->MakeSlotAvailable(&this->clip_plane_slot);
 
     // Connect parameter slots
     this->data_set << new core::param::FlexEnumParam("");
@@ -134,10 +139,8 @@ bool triangle_mesh_renderer_3d::get_input_data() {
     if (mdc_ptr != nullptr) {
         this->render_data.values = mdc_ptr->get_data(this->data_set.Param<core::param::FlexEnumParam>()->Value());
 
-        if (this->render_data.values != nullptr &&
-            (this->render_data.values->transfer_function_dirty || this->data_set.IsDirty())) {
+        if (this->render_data.values != nullptr && this->data_set.IsDirty()) {
             this->data_set.ResetDirty();
-            this->render_data.values->transfer_function_dirty = false;
             this->mesh_data_changed = true;
         }
     }
@@ -157,7 +160,7 @@ bool triangle_mesh_renderer_3d::get_input_data() {
            << ",\"TextureSize\":2,\"ValueRange\":[0.0,1.0]}";
 
         this->render_data.values->transfer_function = ss.str();
-        this->render_data.values->transfer_function_dirty = false;
+        this->render_data.values->transfer_function_dirty = true;
 
         this->render_data.values->data =
             std::make_shared<std::vector<GLfloat>>(this->render_data.vertices->size() / 3, 1.0f);
@@ -257,6 +260,22 @@ bool triangle_mesh_renderer_3d::getDataCallback(core::Call& call) {
         this->render_data.mesh->template addMesh<vbi_t, ibi_t>(
             vertex_descriptor, vertex_buffer, index_buffer, GL_UNSIGNED_INT, GL_STATIC_DRAW, GL_TRIANGLES);
 
+        // Create render task
+        auto mesh_data = this->render_data.mesh->getSubMeshData().front();
+        auto mesh = this->render_data.mesh->getMeshes()[mesh_data.batch_index].mesh;
+
+        std::vector<glowl::DrawElementsCommand> draw_commands(1, mesh_data.sub_mesh_draw_command);
+
+        std::memcpy(&this->render_data.per_draw_data[per_draw_data_t::offset_min_value],
+            &this->render_data.values->min_value, per_draw_data_t::size_min_value);
+        std::memcpy(&this->render_data.per_draw_data[per_draw_data_t::offset_max_value],
+            &this->render_data.values->max_value, per_draw_data_t::size_max_value);
+
+        rt_collection->clear();
+        rt_collection->addRenderTasks(this->render_data.shader, mesh, draw_commands, this->render_data.per_draw_data);
+    }
+
+    if (this->render_data.values->transfer_function_dirty || this->triangle_mesh_changed || this->mesh_data_changed) {
         // Create texture for transfer function
         std::vector<GLfloat> texture_data;
         std::array<float, 2> _unused__texture_range;
@@ -286,24 +305,43 @@ bool triangle_mesh_renderer_3d::getDataCallback(core::Call& call) {
         const auto transfer_function_handle = glGetTextureHandleARB(this->render_data.transfer_function);
         glMakeTextureHandleResidentARB(transfer_function_handle);
 
-        // Create render task
-        auto mesh_data = this->render_data.mesh->getSubMeshData().front();
-        auto mesh = this->render_data.mesh->getMeshes()[mesh_data.batch_index].mesh;
+        // Update per draw data
+        std::memcpy(&this->render_data.per_draw_data[per_draw_data_t::offset_tf], &transfer_function_handle,
+            per_draw_data_t::size_tf);
 
-        std::vector<glowl::DrawElementsCommand> draw_commands(1, mesh_data.sub_mesh_draw_command);
-
-        std::array<uint8_t, sizeof(GLuint64) + 2 * sizeof(float)> per_draw_data;
-        std::size_t offset = 0;
-        std::memcpy(&per_draw_data[offset], &transfer_function_handle, sizeof(GLuint64));
-        std::memcpy(&per_draw_data[offset += sizeof(GLuint64)], &this->render_data.values->min_value, sizeof(float));
-        std::memcpy(&per_draw_data[offset += sizeof(float)], &this->render_data.values->max_value, sizeof(float));
-
-        rt_collection->clear();
-        rt_collection->addRenderTasks(this->render_data.shader, mesh, draw_commands, per_draw_data);
-
-        this->triangle_mesh_changed = false;
-        this->mesh_data_changed = false;
+        rt_collection->updatePerDrawData(0, this->render_data.per_draw_data);
     }
+
+    {
+        auto cp = this->clip_plane_slot.CallAs<core::view::CallClipPlane>();
+
+        if (cp != nullptr && (*cp)(0)) {
+            // Set clip plane flag to enabled
+            const int use_plane = 1;
+
+            std::memcpy(&this->render_data.per_draw_data[per_draw_data_t::offset_plane_bool], &use_plane,
+                per_draw_data_t::size_plane_bool);
+
+            // Get clip plane
+            const auto plane = cp->GetPlane();
+            const std::array<float, 4> abcd_plane{plane.A(), plane.B(), plane.C(), plane.D()};
+
+            std::memcpy(&this->render_data.per_draw_data[per_draw_data_t::offset_plane], abcd_plane.data(),
+                per_draw_data_t::size_plane);
+        } else {
+            // Set clip plane flag to disabled
+            const int use_plane = 0;
+
+            std::memcpy(&this->render_data.per_draw_data[per_draw_data_t::offset_plane_bool], &use_plane,
+                per_draw_data_t::size_plane_bool);
+        }
+
+        rt_collection->updatePerDrawData(0, this->render_data.per_draw_data);
+    }
+
+    this->triangle_mesh_changed = false;
+    this->mesh_data_changed = false;
+    this->render_data.values->transfer_function_dirty = false;
 
     return true;
 }

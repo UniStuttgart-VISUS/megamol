@@ -12,3 +12,12 @@ vec3 calculate_normal(mat4 view_mx, vec4 vertex_1, vec4 vertex_2, vec4 vertex_3)
 
     return normal;
 }
+
+/**
+ * Perform halfspace test
+ *
+ * Return true if vertex is clipped; false otherwise
+ */
+bool clip_halfspace(vec3 vertex, vec4 plane) {
+    return dot(plane, vec4(vertex, 1.0f)) > 0.0f;
+}
