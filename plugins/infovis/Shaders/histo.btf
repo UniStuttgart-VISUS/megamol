@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <btf namespace="histo" type="MegaMolGLSLShader" version="1.0">
-  <include file="core_utils" />
-  <include file="bitflags" />
+  <include file="core_utils"/>
+  <include file="bitflags"/>
   <namespace name="draw">
     <shader name="vert">
       <snippet type="version">430</snippet>
@@ -9,6 +9,8 @@
     </shader>
     <shader name="frag">
       <snippet type="version">430</snippet>
+      <snippet name="::core_utils::tflookup"/>
+      <snippet name="::core_utils::tfconvenience"/>
       <snippet type="file">histo_frag.glsl</snippet>
     </shader>
   </namespace>

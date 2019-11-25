@@ -92,6 +92,9 @@ bool HistogramRenderer2D::Render(core::view::CallRender2D &call) {
         return false;
     }
 
+    auto tfCall = this->transferFunctionCallerSlot.CallAs<core::view::CallGetTransferFunction>();
+    if (tfCall == nullptr) { return false; }
+
     // this is the apex of suck and must die
     glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
     glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
@@ -102,6 +105,7 @@ bool HistogramRenderer2D::Render(core::view::CallRender2D &call) {
     glUniformMatrix4fv(histogramProgram.ParameterLocation("projection"), 1, GL_FALSE, projMatrix_column);
 
     glBindVertexArray(quadVertexArray);
+    tfCall->BindConvenience(histogramProgram, GL_TEXTURE0, 0);
 
     // TODO use something better like instanced rendering
     for (size_t c = 0; c < this->colCount; ++c) {
@@ -110,6 +114,7 @@ bool HistogramRenderer2D::Render(core::view::CallRender2D &call) {
             float height = 10.0f * this->histogram[b * this->colCount + c] / this->maxBinValue;
             float posX = 12.0f * c + 1.0f + b * width;
             float posY = 2.0f;
+            glUniform1f(histogramProgram.ParameterLocation("binColor"), static_cast<float>(b) / static_cast<float>((this->bins - 1)));
             glUniform1f(histogramProgram.ParameterLocation("posX"), posX);
             glUniform1f(histogramProgram.ParameterLocation("posY"), posY);
             glUniform1f(histogramProgram.ParameterLocation("width"), width);
@@ -124,6 +129,7 @@ bool HistogramRenderer2D::Render(core::view::CallRender2D &call) {
         }
     }
 
+    tfCall->UnbindConvenience();
     glBindVertexArray(0);
     glUseProgram(0);
 
