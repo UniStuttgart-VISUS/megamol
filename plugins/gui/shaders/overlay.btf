@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<btf type="MegaMolGLSLShader" version="1.0" namespace="overlay">
+    <include file="common"/>
+
+    <shader name="vertex">
+        <snippet type="version">130</snippet>
+        <snippet name="main" type="string">
+        <![CDATA[
+
+uniform vec4 ltbr;
+uniform mat4 ortho;
+out vec2 tex_coord;
+
+void main() {
+
+    float half_tex = ;
+
+    vec2 pos, tex;
+    pos.x = gl_VertexID / 2 == 0 ? ltbr.x : ltbr.w;
+    pos.y = gl_VertexID % 2 == 0 ? ltbr.y : ltbr.z;
+    tex.x = gl_VertexID / 2 == 0 ? half_tex : 1.0 - half_tex;
+    tex.y = gl_VertexID % 2 == 0 ? 1.0 - half_tex : half_tex;
+    
+    tex_ccord = tex;
+    gl_Position = ortho * vec4(pos.xy, -1.0, 1.0);
+}
+
+        ]]>
+        </snippet>
+    </shader>
+
+    <shader name="fragment">
+        <snippet type="version">130</snippet>
+        <snippet name="main" type="string">
+        <![CDATA[
+        
+#extension GL_ARB_explicit_attrib_location : require // glsl version 130       
+
+in vec2 tex_coord;
+uniform sampler2D tex;
+layout(location = 0) out vec4 outFragColor;
+
+void main(void) {
+
+    outFragColor  = texture(tex, tex_coord);
+}
+
+        ]]>
+        </snippet>
+    </shader>
+
+</btf>
