@@ -14,10 +14,12 @@
 
 #include "compositing/CompositingCalls.h"
 #include "DrawToScreen.h"
+#include "InteractionRenderTarget.h"
 #include "LocalLighting.h"
 #include "ScreenSpaceEffect.h"
 #include "SimpleRenderTarget.h"
 #include "TextureCombine.h"
+#include "TextureDepthCompositing.h"
 
 /* anonymous namespace hides this type from any other object files */
 namespace {
@@ -53,10 +55,12 @@ namespace {
             //   ...
             //
             this->module_descriptions.RegisterAutoDescription<megamol::compositing::DrawToScreen>();
+            this->module_descriptions.RegisterAutoDescription<megamol::compositing::InteractionRenderTarget>();
             this->module_descriptions.RegisterAutoDescription<megamol::compositing::LocalLighting>();
             this->module_descriptions.RegisterAutoDescription<megamol::compositing::ScreenSpaceEffect>();
             this->module_descriptions.RegisterAutoDescription<megamol::compositing::SimpleRenderTarget>();
             this->module_descriptions.RegisterAutoDescription<megamol::compositing::TextureCombine>();
+            this->module_descriptions.RegisterAutoDescription<megamol::compositing::TextureDepthCompositing>();
 
             // register calls here:
 

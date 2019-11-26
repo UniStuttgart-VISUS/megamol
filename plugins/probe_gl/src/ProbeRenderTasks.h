@@ -47,8 +47,20 @@ protected:
     virtual bool getMetaDataCallback(core::Call& caller);
 
 private:
+    struct PerProbeDrawData {
+        glm::mat4x4 object_transform;
+        int highlighted;
+        float pad0;
+        float pad1;
+        float pad2;
+    };
+
+    std::vector<PerProbeDrawData> m_probe_draw_data;
+
     core::CallerSlot m_probes_slot;
     size_t m_probes_cached_hash;
+
+    core::CallerSlot m_probe_manipulation_slot;
 };
 
 } // namespace mesh
