@@ -13,6 +13,7 @@
 #include "mmcore/misc/PngBitmapCodec.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
+#include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
@@ -127,39 +128,36 @@ private:
      * variables
      **********************************************************************/
 
-    TextureData texture;
-    vislib::graphics::gl::GLSLShader shader;
-    std::unique_ptr<megamol::core::utility::SDFFont> font;
-    std::array<TextureData, 5> media_buttons;
-
-    // Texture Mode
-
-    // Media Buttons Mode
-
-    // Parameter Mode
-    std::shared_ptr<megamol::core::param::FloatParam> parameter_ptr;
-
-    // Label Mode
-
+    TextureData m_texture;
+    vislib::graphics::gl::GLSLShader m_shader;
+    std::unique_ptr<megamol::core::utility::SDFFont> m_font;
+    std::array<TextureData, 5> m_media_buttons;
+    glm::ivec2 m_viewport;
+    Rectangle m_current_rectangle;
+    // Parameter Mode:
+    megamol::core::param::FloatParam* m_parameter_ptr;
 
     /**********************************************************************
      * functions
      **********************************************************************/
 
-    bool loadTexture(const std::string& fn, TextureData& io_tex);
-
-    bool loadShader(
-        vislib::graphics::gl::GLSLShader& io_shader, const std::string& vert_name, const std::string& frag_name);
-
-    size_t loadRawFile(std::string name, void** outData);
-
     void setParameterGUIVisibility(void);
 
-    void drawScreenSpaceBillboard(glm::vec2 rel_pos, float rel_width, Anchor anchor, const TextureData& tex);
+    void drawScreenSpaceBillboard(
+        glm::mat4 ortho, Rectangle rectangle, TextureData& texture, vislib::graphics::gl::GLSLShader& shader) const;
 
-    void drawScreenSpaceText(glm::vec2 rel_pos, float rel_width, Anchor anchor, const TextureData& tex);
+    void drawScreenSpaceText(glm::mat4 ortho, megamol::core::utility::SDFFont& font, const std::string& text,
+        glm::vec4 color, float size, Anchor anchor, Rectangle rectangle) const;
 
-    Rectangle getScreenSpaceRect(glm::vec2 rel_pos, float rel_width, Anchor anchor, const TextureData& tex);
+    Rectangle getScreenSpaceRect(
+        glm::vec2 rel_pos, float rel_width, Anchor anchor, const TextureData& texture, glm::ivec2 viewport) const;
+
+    bool loadTexture(const std::string& filename, TextureData& texture) const;
+
+    bool loadShader(
+        vislib::graphics::gl::GLSLShader& shader, const std::string& vert_name, const std::string& frag_name) const;
+
+    size_t loadRawFile(std::string name, void** outData) const;
 
     /* parameter callbacks --------------------------------------------- */
 
@@ -167,6 +165,7 @@ private:
     bool onTextureFileName(core::param::ParamSlot& slot);
     bool onFontName(core::param::ParamSlot& slot);
     bool onParameterName(core::param::ParamSlot& slot);
+    bool onTriggerRecalcRectangle(core::param::ParamSlot& slot);
 
     /**********************************************************************
      * parameters
@@ -174,28 +173,25 @@ private:
 
     core::param::ParamSlot paramMode;
     core::param::ParamSlot paramAnchor;
-    core::param::ParamSlot paramCustomPositionSwitch;
-
     // Custom position
     core::param::ParamSlot paramCustomPosition;
-
     // Texture Mode
     core::param::ParamSlot paramFileName;
     core::param::ParamSlot paramRelativeWidth;
-
     // Media Buttons Mode
-    // core::param::ParamSlot param...
-
+    /// ...
     // Parameter Mode
     core::param::ParamSlot paramPrefix;
     core::param::ParamSlot paramSufix;
     core::param::ParamSlot paramParameterName;
-    // offset, speed - factor
-
+    // core::param::ParamSlot paramOffset;
+    // core::param::ParamSlot paramSpeedFactor;
     // Label Mode
     core::param::ParamSlot paramText;
-    core::param::ParamSlot paramFont;
+    // Font Settings
+    core::param::ParamSlot paramFontName;
     core::param::ParamSlot paramFontSize;
+    core::param::ParamSlot paramFontColor;
 };
 
 } /* end namespace gui */

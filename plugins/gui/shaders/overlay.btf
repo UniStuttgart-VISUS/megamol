@@ -7,24 +7,24 @@
         <snippet name="main" type="string">
         <![CDATA[
 
+uniform mat4 ortho;
 uniform float left;
 uniform float right;
 uniform float top;
 uniform float bottom;
-uniform mat4 ortho;
 out vec2 tex_coord;
 
 void main() {
 
-    float half_tex = ;
-
     vec2 pos, tex;
-    pos.x = gl_VertexID / 2 == 0 ? left : right;
-    pos.y = gl_VertexID % 2 == 0 ? top : bottom;
-    tex.x = gl_VertexID / 2 == 0 ? half_tex : 1.0 - half_tex;
-    tex.y = gl_VertexID % 2 == 0 ? 1.0 - half_tex : half_tex;
+    float half_tex = 0.0;
     
-    tex_ccord = tex;
+    tex.x = (gl_VertexID / 2 == 0) ? half_tex : (1.0 - half_tex);
+    tex.y = (gl_VertexID % 2 == 0) ? half_tex : (1.0 - half_tex);
+    tex_coord = tex;
+    
+    pos.x = (gl_VertexID / 2 == 0) ? left : right; 
+    pos.y = (gl_VertexID % 2 == 0) ? top : bottom; 
     gl_Position = ortho * vec4(pos.xy, -1.0, 1.0);
 }
 
