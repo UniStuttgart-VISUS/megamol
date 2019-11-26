@@ -745,8 +745,14 @@ void AbstractOSPRayRenderer::changeTransformation() {
                 instancedModels.erase(entry.first);
             }
             instancedModels[entry.first] = ospNewModel();
-            for (int i = 0; i < entry.second.size(); i++) {
-                ospAddGeometry(instancedModels[entry.first], std::get<OSPGeometry>(entry.second[i]));
+            if (this->structureMap[entry.first].type == structureTypeEnum::GEOMETRY) {
+                for (int i = 0; i < entry.second.size(); i++) {
+                    ospAddGeometry(instancedModels[entry.first], std::get<OSPGeometry>(entry.second[i]));
+                }
+            } else {
+                for (int i = 0; i < entry.second.size(); i++) {
+                    ospAddVolume(instancedModels[entry.first], std::get<OSPVolume>(entry.second[i]));
+                }
             }
         }
         ospCommit(instancedModels[entry.first]);
