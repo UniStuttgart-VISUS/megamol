@@ -1,7 +1,7 @@
 /*
  * OverlayRenderer.h
  *
- * Copyright (C) 2018 by VISUS (Universitaet Stuttgart)
+ * Copyright (C) 2019 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 
@@ -21,8 +21,9 @@
 #include "mmcore/param/Vector2fParam.h"
 #include "mmcore/utility/ResourceWrapper.h"
 #include "mmcore/utility/SDFFont.h"
+#include "mmcore/view/AbstractView.h"
 #include "mmcore/view/CallRender3D_2.h"
-#include "mmcore/view/Renderer3DModule_2.h"
+#include "mmcore/view/RendererModule.h"
 
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
@@ -36,13 +37,10 @@
 namespace megamol {
 namespace gui {
 
-using namespace megamol::core;
-
-
 /**
  * Renders various kinds of overlays.
  */
-class OverlayRenderer : public view::Renderer3DModule_2 {
+class OverlayRenderer : public megamol::core::view::RendererModule<megamol::core::view::CallRender3D_2> {
 public:
     /**
      * Answer the name of this module.
@@ -109,13 +107,20 @@ private:
 
     enum Mode { TEXTURE, MEDIA_BUTTONS, PARAMETER, LABEL };
 
-    // Explicit numbering for array media_buttons
+    // Explicit numbering required as indices in media_buttons array.
     enum MediaButton { PLAY = 0, STOP = 1, PAUSE = 2, REWIND = 3, FAST_FORWARD = 4 };
 
     struct TextureData {
         vislib::graphics::gl::OpenGLTexture2D tex;
         unsigned int width;
         unsigned int height;
+    };
+
+    struct Rectangle {
+        float left;
+        float right;
+        float top;
+        float bottom;
     };
 
     /**********************************************************************
@@ -127,31 +132,41 @@ private:
     std::unique_ptr<megamol::core::utility::SDFFont> font;
     std::array<TextureData, 5> media_buttons;
 
+    // Texture Mode
+
+    // Media Buttons Mode
+
+    // Parameter Mode
+    std::shared_ptr<megamol::core::param::FloatParam> parameter_ptr;
+
+    // Label Mode
+
+
     /**********************************************************************
      * functions
      **********************************************************************/
 
-    /**
-     * Separate function for loading files from arbitrary paths needed.
-     * Not only from within the megamol resource folders ...
-     */
-    size_t loadFile(std::string name, void** outData);
-
-    /** PNG image file must be in RGBA foramt. */
     bool loadTexture(const std::string& fn, TextureData& io_tex);
 
-    /** Load shader. */
-    bool loadShader(vislib::graphics::gl::GLSLShader& io_shader);
+    bool loadShader(
+        vislib::graphics::gl::GLSLShader& io_shader, const std::string& vert_name, const std::string& frag_name);
+
+    size_t loadRawFile(std::string name, void** outData);
 
     void setParameterGUIVisibility(void);
 
-    glm::vec4 getScreenSpaceRect(glm::vec2 rel_pos, float rel_width, Anchor anchor, TextureData& io_tex);
+    void drawScreenSpaceBillboard(glm::vec2 rel_pos, float rel_width, Anchor anchor, const TextureData& tex);
+
+    void drawScreenSpaceText(glm::vec2 rel_pos, float rel_width, Anchor anchor, const TextureData& tex);
+
+    Rectangle getScreenSpaceRect(glm::vec2 rel_pos, float rel_width, Anchor anchor, const TextureData& tex);
 
     /* parameter callbacks --------------------------------------------- */
 
     bool onToggleMode(core::param::ParamSlot& slot);
     bool onTextureFileName(core::param::ParamSlot& slot);
     bool onFontName(core::param::ParamSlot& slot);
+    bool onParameterName(core::param::ParamSlot& slot);
 
     /**********************************************************************
      * parameters
@@ -159,12 +174,14 @@ private:
 
     core::param::ParamSlot paramMode;
     core::param::ParamSlot paramAnchor;
-
     core::param::ParamSlot paramCustomPositionSwitch;
+
+    // Custom position
     core::param::ParamSlot paramCustomPosition;
 
     // Texture Mode
-    core::param::ParamSlot paramFileName; // callback -> loadTexture
+    core::param::ParamSlot paramFileName;
+    core::param::ParamSlot paramRelativeWidth;
 
     // Media Buttons Mode
     // core::param::ParamSlot param...
@@ -173,10 +190,11 @@ private:
     core::param::ParamSlot paramPrefix;
     core::param::ParamSlot paramSufix;
     core::param::ParamSlot paramParameterName;
+    // offset, speed - factor
 
     // Label Mode
     core::param::ParamSlot paramText;
-    core::param::ParamSlot paramFont; // enum SDFFont::FontName | callback -> initFont
+    core::param::ParamSlot paramFont;
     core::param::ParamSlot paramFontSize;
 };
 

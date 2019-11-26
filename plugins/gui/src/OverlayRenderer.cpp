@@ -1,7 +1,7 @@
 /*
  * OverlayRenderer.cpp
  *
- * Copyright (C) 2018 by VISUS (Universitaet Stuttgart)
+ * Copyright (C) 2019 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 
@@ -9,55 +9,36 @@
 #include "OverlayRenderer.h"
 
 
+using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::gui;
 
 
-/*
-drawScreenSpaceBillboard(vec2 rel_pos, float rel_width, enum anchor, OpenGLTexture2D &tex) {
-    lrtb = getScreenSpaceRect(...);
-    // upload lrtb
-    // in shader, transform to [-1,1]
-    // upload NO pos, NO tex
-
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-}
-
-drawScreenSpaceText(vec2 rel_pos, float rel_width, enum anchor, OpenGLTexture2D &tex) {
-    lrtb = ...
-
-        drawText(...) ? ?
-}
-*/
-
-
 OverlayRenderer::OverlayRenderer(void)
-    : view::Renderer3DModule_2()
+    : view::RendererModule<view::CallRender3D_2>()
+    , paramMode("mode", "Overlay mode.")
+    , paramAnchor("anchor", "Anchor of overlay.")
+    , paramCustomPositionSwitch(
+          "enable_custom_position", "Enable custom relative position depending on selected anchor.")
+    , paramCustomPosition("relative_position", "Custom relative position.")
+    , paramFileName("texture::file_name", "The file name of the texture.")
+    , paramRelativeWidth("texture::relative_width", "Relative screen space width of texture.")
+    , paramPrefix("parameter::prefix", "The parmaeter value prefix.")
+    , paramSufix("parameter::sufix", "The parameter value sufix.")
+    , paramParameterName("parameter::name", "The full megamol parameter name.")
+    , paramText("label::text", "The displayed text.")
+    , paramFont("label::font", "Choose predefined font type.")
+    , paramFontSize("label::font_size", "The font size.")
     , texture()
     , shader()
     , font(nullptr)
     , media_buttons()
-    , paramMode("mode", "Overlay mode.")
-    , paramAnchor("anchor", "Anchor of overlay.")
-    // Custom position
-    , paramCustomPositionSwitch(
-          "enable_custom_position", "Enable custom relative position depending on selected anchor.")
-    , paramCustomPosition("relative_position", "Custom relative position.")
-    // Texture Mode
-    , paramFileName("texture::file_name", "The file name of the texture.")
-    // Media Buttons Mode
-    /// nothing so far ....
-    // Parameter Mode
-    , paramPrefix("parameter::prefix", "The parmaeter value prefix.")
-    , paramSufix("parameter::sufix", "The parameter value sufix.")
-    , paramParameterName("parameter::name", "The full megamol parameter name.")
-    // Label
-    , paramText("label::text", "The displayed text.")
-    , paramFont("label::font", "Choose predefined font type.")
-    , paramFontSize("label::font_size", "The font size.") {
+    , parameter_ptr(nullptr) {
 
-    core::param::EnumParam* mep = new core::param::EnumParam(Mode::TEXTURE);
+    this->MakeSlotAvailable(&this->chainRenderSlot);
+    this->MakeSlotAvailable(&this->renderSlot);
+
+    param::EnumParam* mep = new param::EnumParam(Mode::TEXTURE);
     mep->SetTypePair(Mode::TEXTURE, "Texture");
     mep->SetTypePair(Mode::MEDIA_BUTTONS, "Media Buttons");
     mep->SetTypePair(Mode::PARAMETER, "Parameter");
@@ -65,7 +46,7 @@ OverlayRenderer::OverlayRenderer(void)
     this->paramMode << mep;
     this->MakeSlotAvailable(&this->paramMode);
 
-    core::param::EnumParam* aep = new core::param::EnumParam(Anchor::ALIGN_LEFT_TOP);
+    param::EnumParam* aep = new param::EnumParam(Anchor::ALIGN_LEFT_TOP);
     aep->SetTypePair(Anchor::ALIGN_LEFT_TOP, "Left Top");
     aep->SetTypePair(Anchor::ALIGN_LEFT_MIDDLE, "Left Middle");
     aep->SetTypePair(Anchor::ALIGN_LEFT_BOTTOM, "Left Bottom");
@@ -79,50 +60,53 @@ OverlayRenderer::OverlayRenderer(void)
     this->MakeSlotAvailable(&this->paramAnchor);
 
     // Custom overlay position
-    this->paramCustomPositionSwitch << new core::param::BoolParam(false);
+    this->paramCustomPositionSwitch << new param::BoolParam(false);
     this->MakeSlotAvailable(&this->paramCustomPositionSwitch);
 
-    this->paramCustomPosition << new core::param::Vector2fParam(vislib::math::Vector<float, 2>(0.0f, 0.0f));
+    this->paramCustomPosition << new param::Vector2fParam(vislib::math::Vector<float, 2>(0.0f, 0.0f));
     this->MakeSlotAvailable(&this->paramCustomPosition);
 
     // Texture Mode
-    this->paramFileName << new core::param::FilePathParam("");
+    this->paramFileName << new param::FilePathParam("");
     this->paramFileName.SetUpdateCallback(this, &OverlayRenderer::onTextureFileName);
     this->MakeSlotAvailable(&this->paramFileName);
 
+    this->paramRelativeWidth << new param::FloatParam(25.0f, 0.0f, 100.0f);
+    this->MakeSlotAvailable(&this->paramRelativeWidth);
+
     // Parameter Mode
-    this->paramPrefix << new core::param::StringParam("");
+    this->paramPrefix << new param::StringParam("");
     this->MakeSlotAvailable(&this->paramFileName);
 
-    this->paramSufix << new core::param::StringParam("");
+    this->paramSufix << new param::StringParam("");
     this->MakeSlotAvailable(&this->paramFileName);
 
-    this->paramParameterName << new core::param::StringParam("");
+    this->paramParameterName << new param::StringParam("");
     this->MakeSlotAvailable(&this->paramFileName);
 
     // Label Mode
-    this->paramText << new core::param::StringParam("");
+    this->paramText << new param::StringParam("");
     this->MakeSlotAvailable(&this->paramFileName);
 
-    core::param::EnumParam* fep = new core::param::EnumParam(megamol::core::utility::SDFFont::FontName::ROBOTO_SANS);
-    fep->SetTypePair(megamol::core::utility::SDFFont::FontName::ROBOTO_SANS, "Roboto Sans");
-    fep->SetTypePair(megamol::core::utility::SDFFont::FontName::EVOLVENTA_SANS, "Evolventa");
-    fep->SetTypePair(megamol::core::utility::SDFFont::FontName::UBUNTU_MONO, "Ubuntu Mono");
-    fep->SetTypePair(megamol::core::utility::SDFFont::FontName::VOLLKORN_SERIF, "Vollkorn Serif");
+    param::EnumParam* fep = new param::EnumParam(utility::SDFFont::FontName::ROBOTO_SANS);
+    fep->SetTypePair(utility::SDFFont::FontName::ROBOTO_SANS, "Roboto Sans");
+    fep->SetTypePair(utility::SDFFont::FontName::EVOLVENTA_SANS, "Evolventa");
+    fep->SetTypePair(utility::SDFFont::FontName::UBUNTU_MONO, "Ubuntu Mono");
+    fep->SetTypePair(utility::SDFFont::FontName::VOLLKORN_SERIF, "Vollkorn Serif");
     this->paramFont << fep;
     this->paramFont.SetUpdateCallback(this, &OverlayRenderer::onFontName);
     this->MakeSlotAvailable(&this->paramFont);
 
-    this->paramFontSize << new core::param::FloatParam(20.0f, 0.0f);
+    this->paramFontSize << new param::FloatParam(20.0f, 0.0f);
     this->MakeSlotAvailable(&this->paramFileName);
 }
-
 
 OverlayRenderer::~OverlayRenderer(void) { this->Release(); }
 
 
 void OverlayRenderer::release(void) {
 
+    this->parameter_ptr = nullptr;
     this->font.reset();
     this->texture.tex.Release();
     this->shader.Release();
@@ -134,25 +118,23 @@ void OverlayRenderer::release(void) {
 
 bool OverlayRenderer::create(void) {
 
-    if (!this->loadShader(this->shader)) return false;
+    this->setParameterGUIVisibility();
+    if (!this->loadShader(this->shader, "overlay::vertex", "overlay::fragment")) return false;
 
     return true;
 }
 
 
-bool OverlayRenderer::onToggleMode(megamol::core::param::ParamSlot& slot) {
+bool OverlayRenderer::onToggleMode(param::ParamSlot& slot) {
 
     this->release();
 
-    auto mode = this->paramMode.Param<core::param::EnumParam>()->Value();
+    auto mode = this->paramMode.Param<param::EnumParam>()->Value();
     switch (mode) {
     case (Mode::TEXTURE): {
-
         this->onTextureFileName(slot);
-
     } break;
     case (Mode::MEDIA_BUTTONS): {
-
         // Load media button texutres from hard coded texture file names.
         std::string filename;
         for (size_t i = 0; i < this->media_buttons.size(); i++) {
@@ -175,73 +157,89 @@ bool OverlayRenderer::onToggleMode(megamol::core::param::ParamSlot& slot) {
             }
             if (!this->loadTexture(filename, this->media_buttons[i])) return false;
         }
-
     } break;
     case (Mode::PARAMETER): {
-
+        // ...
     } break;
     case (Mode::LABEL): {
-
         this->onFontName(slot);
-
     } break;
-    default:
-        break;
     }
 
+    this->setParameterGUIVisibility();
+
     return true;
 }
 
 
-bool OverlayRenderer::onTextureFileName(megamol::core::param::ParamSlot& slot) {
+bool OverlayRenderer::onTextureFileName(param::ParamSlot& slot) {
 
     this->texture.tex.Release();
-    std::string filename = std::string(this->paramFileName.Param<core::param::FilePathParam>()->Value().PeekBuffer());
+    std::string filename = std::string(this->paramFileName.Param<param::FilePathParam>()->Value().PeekBuffer());
     if (!this->loadTexture(filename, this->texture)) return false;
-
     return true;
 }
 
 
-bool OverlayRenderer::onFontName(megamol::core::param::ParamSlot& slot) {
+bool OverlayRenderer::onFontName(param::ParamSlot& slot) {
 
     this->font.reset();
-    auto font_name = static_cast<megamol::core::utility::SDFFont::FontName>(
-        this->paramFont.Param<core::param::EnumParam>()->Value());
-    this->font = std::make_unique<megamol::core::utility::SDFFont>(font_name);
+    auto font_name = static_cast<utility::SDFFont::FontName>(this->paramFont.Param<param::EnumParam>()->Value());
+    this->font = std::make_unique<utility::SDFFont>(font_name);
     if (!this->font->Initialise(this->GetCoreInstance())) return false;
-
     return true;
 }
 
 
-void megamol::gui::OverlayRenderer::setParameterGUIVisibility(void) {
+bool OverlayRenderer::onParameterName(param::ParamSlot& slot) {
 
-    Mode mode = static_cast<Mode>(this->paramMode.Param<core::param::EnumParam>()->Value());
+    this->parameter_ptr = nullptr;
+    auto parameter_name = this->paramParameterName.Param<param::StringParam>()->Value();
+    auto parameter = this->GetCoreInstance()->FindParameter(parameter_name, false, false);
+    if (parameter.IsNull()) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "Unable to find parameter by name. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+    auto* float_param = parameter.DynamicCast<param::FloatParam>();
+    if (float_param == nullptr) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "Parameter is no FloatParam. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+    this->parameter_ptr = std::make_shared<param::FloatParam>((*float_param));
+    return true;
+}
+
+
+void gui::OverlayRenderer::setParameterGUIVisibility(void) {
 
     // Custom position
-    bool custom_position = this->paramCustomPositionSwitch.Param<core::param::BoolParam>()->Value();
-    this->paramCustomPosition.Param<core::param::Vector2fParam>()->SetGUIVisible(custom_position);
+    bool custom_position = this->paramCustomPositionSwitch.Param<param::BoolParam>()->Value();
+    this->paramCustomPosition.Param<param::Vector2fParam>()->SetGUIVisible(custom_position);
+
+    Mode mode = static_cast<Mode>(this->paramMode.Param<param::EnumParam>()->Value());
 
     // Texture Mode
     bool texture_mode = (mode == Mode::TEXTURE);
-    this->paramFileName.Param<core::param::FilePathParam>()->SetGUIVisible(texture_mode);
+    this->paramFileName.Param<param::FilePathParam>()->SetGUIVisible(texture_mode);
+    this->paramRelativeWidth.Param<param::FloatParam>()->SetGUIVisible(texture_mode);
 
     // Parameter Mode
     bool parameter_mode = (mode == Mode::PARAMETER);
-    this->paramPrefix.Param<core::param::StringParam>()->SetGUIVisible(parameter_mode);
-    this->paramSufix.Param<core::param::StringParam>()->SetGUIVisible(parameter_mode);
-    this->paramParameterName.Param<core::param::StringParam>()->SetGUIVisible(parameter_mode);
+    this->paramPrefix.Param<param::StringParam>()->SetGUIVisible(parameter_mode);
+    this->paramSufix.Param<param::StringParam>()->SetGUIVisible(parameter_mode);
+    this->paramParameterName.Param<param::StringParam>()->SetGUIVisible(parameter_mode);
 
     // Label Mode
     bool label_mode = (mode == Mode::LABEL);
-    this->paramText.Param<core::param::StringParam>()->SetGUIVisible(label_mode);
-    this->paramFont.Param<core::param::EnumParam>()->SetGUIVisible(label_mode);
-    this->paramFontSize.Param<core::param::FloatParam>()->SetGUIVisible(label_mode);
+    this->paramText.Param<param::StringParam>()->SetGUIVisible(label_mode);
+    this->paramFont.Param<param::EnumParam>()->SetGUIVisible(label_mode);
+    this->paramFontSize.Param<param::FloatParam>()->SetGUIVisible(label_mode);
 }
 
 
-bool OverlayRenderer::GetExtents(megamol::core::view::CallRender3D_2& call) {
+bool OverlayRenderer::GetExtents(view::CallRender3D_2& call) {
 
     auto chainedCall = this->chainRenderSlot.CallAs<view::CallRender3D_2>();
     if (chainedCall != nullptr) {
@@ -250,20 +248,36 @@ bool OverlayRenderer::GetExtents(megamol::core::view::CallRender3D_2& call) {
         call = *chainedCall;
         return retVal;
     }
-
     return true;
 }
 
 
-bool OverlayRenderer::Render(megamol::core::view::CallRender3D_2& call) {
+bool OverlayRenderer::Render(view::CallRender3D_2& call) {
 
-    auto cr3d = &call;
-    if (cr3d == nullptr) return false;
+    auto leftSlotParent = call.PeekCallerSlot()->Parent();
+    std::shared_ptr<const view::AbstractView> viewptr =
+        std::dynamic_pointer_cast<const view::AbstractView>(leftSlotParent);
+    if (viewptr != nullptr) { // TODO move this behind the fbo magic?
+        auto vp = call.GetViewport();
+        glViewport(vp.Left(), vp.Bottom(), vp.Width(), vp.Height());
+        auto backCol = call.BackgroundColor();
+        glClearColor(backCol.x, backCol.y, backCol.z, 0.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    }
+
+    // First call chained renderer
+    auto* chainedCall = this->chainRenderSlot.CallAs<view::CallRender3D_2>();
+    if (chainedCall != nullptr) {
+        *chainedCall = call;
+        if (!(*chainedCall)(view::AbstractCallRender::FnRender)) {
+            return false;
+        }
+    }
 
     view::Camera_2 cam;
-    cr3d->GetCamera(cam);
+    call.GetCamera(cam);
     glm::vec4 viewport;
-    if (!cam.image_tile().empty()) { /// or better auto viewport = cr3d_in->GetViewport().GetSize()?
+    if (!cam.image_tile().empty()) { /// or better: auto viewport = cr3d_in->GetViewport().GetSize()?
         viewport = glm::vec4(
             cam.image_tile().left(), cam.image_tile().bottom(), cam.image_tile().width(), cam.image_tile().height());
     } else {
@@ -273,21 +287,22 @@ bool OverlayRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     glm::mat4 ortho = glm::ortho(0.0f, vp.x, 0.0f, vp.y, -1.0f, 1.0f);
 
 
-    // this->paramMode.Param<core::param::EnumParam>()->Value;
-    // this->paramAnchor.Param<core::param::EnumParam>()->Value;
-    // this->paramCustomPositionSwitch.Param<core::param::BoolParam>()->Value;
-    // this->paramCustomPosition.Param<core::param::Vector2fParam>()->Value;
-    // this->paramFileName.Param<core::param::FilePathParam>()->Value;
-    // this->paramPrefix.Param<core::param::StringParam>()->Value;
-    // this->paramSufix.Param<core::param::StringParam>()->Value;
-    // this->paramParameterName.Param<core::param::StringParam>()->Value;
-    // this->paramText.Param<core::param::StringParam>()->Value;
-    // this->paramFont.Param<core::param::EnumParam>()->Value;
-    // this->paramFontSize.Param<core::param::FloatParam>()->Value;
+    // this->paramMode.Param<param::EnumParam>()->Value();
+    // this->paramAnchor.Param<param::EnumParam>()->Value();
+    // this->paramCustomPositionSwitch.Param<param::BoolParam>()->Value();
+    // this->paramCustomPosition.Param<param::Vector2fParam>()->Value();
+    // this->paramFileName.Param<param::FilePathParam>()->Value();
+    // this->paramRelativeWidth.Param<param::FloatParam>()->Value();
+    // this->paramPrefix.Param<param::StringParam>()->Value();
+    // this->paramSufix.Param<param::StringParam>()->Value();
+    // this->paramParameterName.Param<param::StringParam>()->Value();
+    // this->paramText.Param<param::StringParam>()->Value();
+    // this->paramFont.Param<param::EnumParam>()->Value();
+    // this->paramFontSize.Param<param::FloatParam>()->Value();
 
 
     // Initialise new mode
-    auto mode = this->paramMode.Param<core::param::EnumParam>()->Value();
+    auto mode = this->paramMode.Param<param::EnumParam>()->Value();
     switch (mode) {
     case (Mode::TEXTURE): {
 
@@ -298,7 +313,8 @@ bool OverlayRenderer::Render(megamol::core::view::CallRender3D_2& call) {
 
     } break;
     case (Mode::PARAMETER): {
-
+        this->parameter_ptr->Value();
+        this->parameter_ptr->ValueString();
 
     } break;
     case (Mode::LABEL): {
@@ -310,7 +326,7 @@ bool OverlayRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     }
 
 
-    glm::vec4 lrtb;
+    Rectangle rectangle;
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -322,7 +338,10 @@ bool OverlayRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     this->shader.Enable();
 
     glUniformMatrix4fv(this->shader.ParameterLocation("ortho"), 1, GL_FALSE, glm::value_ptr(ortho));
-    glUniform4fv(this->shader.ParameterLocation("lrtb"), 1, glm::value_ptr(lrtb));
+    glUniform1f(this->shader.ParameterLocation("left"), rectangle.left);
+    glUniform1f(this->shader.ParameterLocation("right"), rectangle.right);
+    glUniform1f(this->shader.ParameterLocation("top"), rectangle.top);
+    glUniform1f(this->shader.ParameterLocation("bottom"), rectangle.bottom);
     glUniform1i(this->shader.ParameterLocation("tex"), 0);
 
     glDrawArrays(GL_POINTS, 0, 1); /// Vertex position is implicitly set via uniform 'lrtb'.
@@ -338,23 +357,93 @@ bool OverlayRenderer::Render(megamol::core::view::CallRender3D_2& call) {
 }
 
 
-glm::vec4 OverlayRenderer::getScreenSpaceRect(glm::vec2 rel_pos, float rel_width, Anchor anchor, TextureData& io_tex) {
+void OverlayRenderer::drawScreenSpaceBillboard(
+    glm::vec2 rel_pos, float rel_width, Anchor anchor, const TextureData& tex) {
 
-    glm::vec4 ltbr = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
 
-    // float tex_aspect = tex.
-    // rel_height = rel_width * aspect_from_tex;
-    // switch (anchor) {
-    // case TOP_LEFT:
-    //    left = rel_pos.x;
-    //    right = left + rel_width;
-    //    top = 1.0 - rel_pos.y;
-    //    bottom = 1.0 - rel_pos.y - rel_height;
-    //    break;
-    //    // usw
-    //}
+    // lrtb = getScreenSpaceRect(...);
+    // upload lrtb
+    // in shader, transform to [-1,1]
+    // upload NO pos, NO tex
 
-    return ltbr;
+    // glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+}
+
+void OverlayRenderer::drawScreenSpaceText(glm::vec2 rel_pos, float rel_width, Anchor anchor, const TextureData& tex) {
+
+    // lrtb = ...
+
+    //    drawText(...) ? ?
+}
+
+
+OverlayRenderer::Rectangle OverlayRenderer::getScreenSpaceRect(
+    glm::vec2 rel_pos, float rel_width, Anchor anchor, const TextureData& tex) {
+
+    Rectangle rectangle = {0.0f, 0.0f, 0.0f, 0.0f};
+
+    float tex_aspect = static_cast<float>(tex.width) / static_cast<float>(tex.height);
+    auto rel_height = rel_width * tex_aspect;
+
+    switch (anchor) {
+    case (Anchor::ALIGN_LEFT_TOP): {
+        rectangle.left = rel_pos.x;
+        rectangle.right = rectangle.left + rel_width;
+        rectangle.top = 1.0 - rel_pos.y;
+        rectangle.bottom = 1.0 - rel_pos.y - rel_height;
+    } break;
+
+    case (Anchor::ALIGN_LEFT_MIDDLE): {
+        // rectangle.left = rel_pos.x;
+        // rectangle.right = rectangle.left + rel_width;
+        // rectangle.top = 1.0 - rel_pos.y;
+        // rectangle.bottom = 1.0 - rel_pos.y - rel_height;
+    } break;
+    case (Anchor::ALIGN_LEFT_BOTTOM): {
+        // rectangle.left = rel_pos.x;
+        // rectangle.right = rectangle.left + rel_width;
+        // rectangle.top = 1.0 - rel_pos.y;
+        // rectangle.bottom = 1.0 - rel_pos.y - rel_height;
+    } break;
+    case (Anchor::ALIGN_CENTER_TOP): {
+        // rectangle.left = rel_pos.x;
+        // rectangle.right = rectangle.left + rel_width;
+        // rectangle.top = 1.0 - rel_pos.y;
+        // rectangle.bottom = 1.0 - rel_pos.y - rel_height;
+    } break;
+    case (Anchor::ALIGN_CENTER_MIDDLE): {
+        // rectangle.left = rel_pos.x;
+        // rectangle.right = rectangle.left + rel_width;
+        // rectangle.top = 1.0 - rel_pos.y;
+        // rectangle.bottom = 1.0 - rel_pos.y - rel_height;
+    } break;
+    case (Anchor::ALIGN_CENTER_BOTTOM): {
+        // rectangle.left = rel_pos.x;
+        // rectangle.right = rectangle.left + rel_width;
+        // rectangle.top = 1.0 - rel_pos.y;
+        // rectangle.bottom = 1.0 - rel_pos.y - rel_height;
+    } break;
+    case (Anchor::ALIGN_RIGHT_TOP): {
+        // rectangle.left = rel_pos.x;
+        // rectangle.right = rectangle.left + rel_width;
+        // rectangle.top = 1.0 - rel_pos.y;
+        // rectangle.bottom = 1.0 - rel_pos.y - rel_height;
+    } break;
+    case (Anchor::ALIGN_RIGHT_MIDDLE): {
+        // rectangle.left = rel_pos.x;
+        // rectangle.right = rectangle.left + rel_width;
+        // rectangle.top = 1.0 - rel_pos.y;
+        // rectangle.bottom = 1.0 - rel_pos.y - rel_height;
+    } break;
+    case (Anchor::ALIGN_RIGHT_BOTTOM): {
+        // rectangle.left = rel_pos.x;
+        // rectangle.right = rectangle.left + rel_width;
+        // rectangle.top = 1.0 - rel_pos.y;
+        // rectangle.bottom = 1.0 - rel_pos.y - rel_height;
+    } break;
+    }
+
+    return rectangle;
 }
 
 
@@ -369,7 +458,13 @@ bool OverlayRenderer::loadTexture(const std::string& fn, TextureData& io_tex) {
     void* buf = nullptr;
     size_t size = 0;
 
-    if ((size = this->loadFile(fn, &buf)) > 0) {
+    size = utility::ResourceWrapper::LoadResource(
+        this->GetCoreInstance()->Configuration(), vislib::StringA(fn.c_str()), (void**)(&buf));
+    if (size == 0) {
+        size = this->loadRawFile(fn, &buf);
+    }
+
+    if (size > 0) {
         if (pbc.Load(buf, size)) {
             img.Convert(vislib::graphics::BitmapImage::TemplateByteRGBA);
             if (io_tex.tex.Create(img.Width(), img.Height(), false, img.PeekDataAs<BYTE>(), GL_RGBA) != GL_NO_ERROR) {
@@ -402,15 +497,18 @@ bool OverlayRenderer::loadTexture(const std::string& fn, TextureData& io_tex) {
 }
 
 
-bool OverlayRenderer::loadShader(vislib::graphics::gl::GLSLShader& io_shader) {
+bool OverlayRenderer::loadShader(
+    vislib::graphics::gl::GLSLShader& io_shader, const std::string& vert_name, const std::string& frag_name) {
 
     io_shader.Release();
     vislib::graphics::gl::ShaderSource vert, frag;
     try {
-        if (!megamol::core::Module::instance()->ShaderSourceFactory().MakeShaderSource("overlay::vertex", vert)) {
+        if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
+                vislib::StringA(vert_name.c_str()), vert)) {
             return false;
         }
-        if (!megamol::core::Module::instance()->ShaderSourceFactory().MakeShaderSource("overlay::fragment", frag)) {
+        if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
+                vislib::StringA(frag_name.c_str()), frag)) {
             return false;
         }
         if (!io_shader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
@@ -438,7 +536,7 @@ bool OverlayRenderer::loadShader(vislib::graphics::gl::GLSLShader& io_shader) {
 }
 
 
-size_t OverlayRenderer::loadFile(std::string name, void** outData) {
+size_t OverlayRenderer::loadRawFile(std::string name, void** outData) {
 
     *outData = nullptr;
 
