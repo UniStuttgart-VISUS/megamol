@@ -197,6 +197,9 @@ bool BoundingBoxRenderer::Render(CallRender3D_2& call) {
             "The BoundingBoxRenderer does not work without a renderer attached to its right");
         return false;
     }
+    *chainedCall = call;
+    bool retVal = (*chainedCall)(view::AbstractCallRender::FnGetExtents);
+    call = *chainedCall;
 
     Camera_2 cam;
     call.GetCamera(cam);
