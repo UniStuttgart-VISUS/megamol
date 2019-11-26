@@ -20,7 +20,7 @@ namespace probe {
 class DrawTextureUtility {
 
 public:
-    enum GraphType { PLOT, GLYPH };
+    enum GraphType { PLOT, GLYPH, LINEAR };
 
     DrawTextureUtility() = default;
 
@@ -49,6 +49,7 @@ public:
 private:
     template <typename T> void drawPlot(std::vector<T>& data, T min, T max);
     template <typename T> void drawStar(std::vector<T>& data, T min, T max);
+    template <typename T> void drawLinear(std::vector<T>& data, T min, T max);
 
     uint32_t _pixel_width = 0;
     uint32_t _pixel_height = 0;
@@ -77,6 +78,8 @@ template <typename T> uint8_t* DrawTextureUtility::draw(std::vector<T>& data, T 
             this->drawPlot(data, min, max);
         } else if (this->_graph_type == GLYPH) {
             this->drawStar(data, min, max);
+        } else if (this->_graph_type == LINEAR) {
+            this->drawLinear(data,min,max);
         }
 
     }
@@ -204,6 +207,65 @@ template <typename T> void DrawTextureUtility::drawStar(std::vector<T>& data, T 
     _ctx.fillPath(cut);
 
 }
+
+template <typename T> void DrawTextureUtility::drawLinear(std::vector<T>& data, T min, T max) {
+    
+    uint32_t width_halo = this->_pixel_width * 0.2f;
+    uint32_t height_halo = this->_pixel_height * 0.1f;
+    std::array<uint32_t, 2> start = {this->_pixel_width / 2, height_halo};
+    // calc clamp on texture
+    auto num_data = data.size();
+
+    auto linear_step = (this->_pixel_height - 2*height_halo) / num_data;
+
+    auto max_linear = std::min(this->_pixel_width, this->_pixel_height) / 2 - std::min(width_halo, height_halo);
+
+    BLPath axis;
+    
+    BLPath data_polygon;
+    for (uint32_t i = 0; i < num_data; i++) {
+
+        if (i == 0) {
+            data_polygon.moveTo(start[0] + ((data[i] - min) / (max - min)) * max_linear,
+                start[1]);
+        } else {
+            data_polygon.lineTo(start[0] + ((data[i] - min) / (max - min)) * max_linear,
+                start[1] + i * linear_step );
+        }
+
+        // Draw axes
+        BLLine axis_line(start[0] - max_linear, start[1] + i * linear_step, start[0] + max_linear,
+            start[1] + i * linear_step);
+        axis.addLine(axis_line);
+    }
+    // max_polygon.lineTo(center[0] + max_radius, center[1]);
+
+    //BLPath max_polygon;
+
+    //// Max Polygon Filling
+    //_ctx.setCompOp(BL_COMP_OP_SRC_COPY);
+    //_ctx.setFillStyle(BLRgba32(0x66F3DF92));
+    //_ctx.fillPath(max_polygon);
+
+    BLLine y(start[0], start[1], start[0], start[1] + num_data * linear_step);
+    axis.addLine(y);
+
+    // Star Axis
+    _ctx.setStrokeStyle(BLRgba32(0xFF000000));
+    _ctx.setStrokeWidth(2);
+    _ctx.strokePath(axis);
+
+    // Data Stroke
+    _ctx.setStrokeStyle(BLRgba32(0xFF0000FF));
+    _ctx.setStrokeWidth(7);
+    _ctx.strokePath(data_polygon);
+
+    // Data Filling
+    _ctx.setFillStyle(BLRgba32(0x660000FF));
+    _ctx.fillPath(data_polygon);
+
+}
+
 
 
 } // namespace probe
