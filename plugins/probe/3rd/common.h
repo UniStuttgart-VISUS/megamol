@@ -50,7 +50,11 @@
 #ifdef _DEBUG
 #    define PCL_DEBUG vislib::sys::Log::DefaultLog.WriteWarn
 #else
-#    define PCL_DEBUG std::string
+// most hacky solution just to make michael more happy :,(
+namespace {
+inline auto do_nothing = [](auto... xs) {};
+}
+#    define PCL_DEBUG do_nothing
 #endif
 
 namespace pcl {
@@ -121,7 +125,7 @@ struct EIGEN_ALIGN16 PointXYZ : public _PointXYZ {
 
     typedef float value_t;
 
-   inline bool isfinite() const {
+    inline bool isfinite() const {
         return (std::isfinite(x) && std::isfinite(y) && std::isfinite(z));
     }
 

@@ -92,6 +92,9 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
     // fill material container
     this->processMaterial();
 
+    // get transformation parameter
+    //this->processTransformation();
+
     // read Data, calculate  shape parameters, fill data vectors
     auto os = dynamic_cast<CallOSPRayStructure*>(&call);
     auto cd = this->getDataSlot.CallAs<megamol::core::misc::VolumetricDataCall>();
