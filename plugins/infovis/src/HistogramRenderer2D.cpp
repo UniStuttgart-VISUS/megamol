@@ -44,6 +44,7 @@ bool HistogramRenderer2D::create() {
     if (!font.Initialise(this->GetCoreInstance())) return false;
 
     if (!makeProgram("::histo::draw", this->histogramProgram)) return false;
+    if (!makeProgram("::histo::axes", this->axesProgram)) return false;
 
     static const GLfloat quadVertices[] = {
             0.0f, 0.0f, 0.0f,
@@ -96,6 +97,8 @@ bool HistogramRenderer2D::Render(core::view::CallRender2D &call) {
     if (tfCall == nullptr) { return false; }
 
     // this is the apex of suck and must die
+    GLfloat modelViewMatrix_column[16];
+    GLfloat projMatrix_column[16];
     glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
     glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
     // end suck
@@ -133,11 +136,29 @@ bool HistogramRenderer2D::Render(core::view::CallRender2D &call) {
     glBindVertexArray(0);
     glUseProgram(0);
 
+    glUseProgram(this->axesProgram);
+    glUniformMatrix4fv(this->axesProgram.ParameterLocation("modelView"), 1, GL_FALSE, modelViewMatrix_column);
+    glUniformMatrix4fv(this->axesProgram.ParameterLocation("projection"), 1, GL_FALSE, projMatrix_column);
+    glUniform2f(this->axesProgram.ParameterLocation("colTotalSize"), 12.0f, 14.0f);
+    glUniform2f(this->axesProgram.ParameterLocation("colDrawSize"), 10.0f, 10.0f);
+    glUniform2f(this->axesProgram.ParameterLocation("colDrawOffset"), 1.0f, 2.0f);
+
+    glUniform1i(this->axesProgram.ParameterLocation("mode"), 0);
+    glDrawArraysInstanced(GL_LINES, 0, 2, this->colCount);
+
+    glUniform1i(this->axesProgram.ParameterLocation("mode"), 1);
+    glDrawArrays(GL_LINES, 0, 2);
+
+    glUseProgram(0);
+
     float white[4] = {1.0f, 1.0f, 1.0f, 1.0f};
     for (size_t c = 0; c < this->colCount; ++c) {
         float posX = 12.0f * c + 6.0f;
         this->font.DrawString(white, posX, 13.0f, 1.0f, false, this->colNames[c].c_str(), core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
+        this->font.DrawString(white, posX - 5.0f, 2.0f, 1.0f, false, std::to_string(this->colMinimums[c]).c_str(), core::utility::AbstractFont::ALIGN_LEFT_TOP);
+        this->font.DrawString(white, posX + 5.0f, 2.0f, 1.0f, false, std::to_string(this->colMaximums[c]).c_str(), core::utility::AbstractFont::ALIGN_RIGHT_TOP);
     }
+    this->font.DrawString(white, 1.0f, 12.0f, 1.0f, false, std::to_string(this->maxBinValue).c_str(), core::utility::AbstractFont::ALIGN_RIGHT_TOP);
 
     return true;
 }

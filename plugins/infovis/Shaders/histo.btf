@@ -5,13 +5,23 @@
   <namespace name="draw">
     <shader name="vert">
       <snippet type="version">430</snippet>
-      <snippet type="file">histo_vert.glsl</snippet>
+      <snippet type="file">histo_draw_vert.glsl</snippet>
     </shader>
     <shader name="frag">
       <snippet type="version">430</snippet>
       <snippet name="::core_utils::tflookup"/>
       <snippet name="::core_utils::tfconvenience"/>
-      <snippet type="file">histo_frag.glsl</snippet>
+      <snippet type="file">histo_draw_frag.glsl</snippet>
+    </shader>
+  </namespace>
+  <namespace name="axes">
+    <shader name="vert">
+      <snippet type="version">430</snippet>
+      <snippet type="file">histo_axes_vert.glsl</snippet>
+    </shader>
+    <shader name="frag">
+      <snippet type="version">430</snippet>
+      <snippet type="file">histo_axes_frag.glsl</snippet>
     </shader>
   </namespace>
 </btf>

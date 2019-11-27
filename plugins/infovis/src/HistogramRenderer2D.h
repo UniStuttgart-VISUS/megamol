@@ -104,10 +104,8 @@ private:
     std::vector<float> selectedHistogram;
     size_t maxBinValue;
 
-    GLfloat modelViewMatrix_column[16];
-    GLfloat projMatrix_column[16];
-
     vislib::graphics::gl::GLSLShader histogramProgram;
+    vislib::graphics::gl::GLSLShader axesProgram;
 
     GLuint quadVertexArray;
     GLuint quadVertexBuffer;
