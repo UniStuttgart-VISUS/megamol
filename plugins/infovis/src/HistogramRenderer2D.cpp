@@ -41,7 +41,8 @@ HistogramRenderer2D::~HistogramRenderer2D() {
 }
 
 bool HistogramRenderer2D::create() {
-    if (!font.Initialise(this->GetCoreInstance())) return false;
+    if (!this->font.Initialise(this->GetCoreInstance())) return false;
+    this->font.SetBatchDrawMode(true);
 
     if (!makeProgram("::histo::draw", this->histogramProgram)) return false;
     if (!makeProgram("::histo::axes", this->axesProgram)) return false;
@@ -151,6 +152,8 @@ bool HistogramRenderer2D::Render(core::view::CallRender2D &call) {
 
     glUseProgram(0);
 
+    this->font.ClearBatchDrawCache();
+
     float white[4] = {1.0f, 1.0f, 1.0f, 1.0f};
     for (size_t c = 0; c < this->colCount; ++c) {
         float posX = 12.0f * c + 6.0f;
@@ -159,6 +162,8 @@ bool HistogramRenderer2D::Render(core::view::CallRender2D &call) {
         this->font.DrawString(white, posX + 5.0f, 2.0f, 1.0f, false, std::to_string(this->colMaximums[c]).c_str(), core::utility::AbstractFont::ALIGN_RIGHT_TOP);
     }
     this->font.DrawString(white, 1.0f, 12.0f, 1.0f, false, std::to_string(this->maxBinValue).c_str(), core::utility::AbstractFont::ALIGN_RIGHT_TOP);
+
+    this->font.BatchDrawString();
 
     return true;
 }
@@ -223,16 +228,16 @@ bool HistogramRenderer2D::handleCall(core::view::CallRender2D &call) {
         static const core::FlagStorage::FlagItemType selectedTestMask = core::FlagStorage::ENABLED | core::FlagStorage::SELECTED | core::FlagStorage::FILTERED;
         static const core::FlagStorage::FlagItemType selectedPassMask = core::FlagStorage::ENABLED | core::FlagStorage::SELECTED;
 
-        // TODO parallelize
-        for (size_t r = 0; r < rowCount; ++r) {
-            auto f = flags->operator[](r);
-            if ((f & filteredTestMask) == filteredPassMask) {
-                bool isSelected = (f & selectedTestMask) == selectedPassMask;
-                for (size_t c = 0; c < this->colCount; ++c) {
+        // Use loop over columns for parallelization, then atomic memory access is not a problem.
+        #pragma omp parallel for
+        for (int c = 0; c < static_cast<int>(this->colCount); ++c) {
+            for (size_t r = 0; r < rowCount; ++r) {
+                auto f = flags->operator[](r);
+                if ((f & filteredTestMask) == filteredPassMask) {
                     float val = (data[r * this->colCount + c] - this->colMinimums[c]) / (this->colMaximums[c] - this->colMinimums[c]);
                     int bin_idx = std::clamp(static_cast<int>(val * this->bins), 0, static_cast<int>(this->bins) - 1);
                     this->histogram[bin_idx * this->colCount + c] += 1.0;
-                    if (isSelected) {
+                    if ((f & selectedTestMask) == selectedPassMask) {
                         this->selectedHistogram[bin_idx * this->colCount + c] += 1.0;
                     }
                 }
