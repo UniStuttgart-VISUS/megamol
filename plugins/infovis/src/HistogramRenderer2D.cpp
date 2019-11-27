@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "HistogramRenderer2D.h"
 
+#include "mmcore/param/BoolParam.h"
 #include "mmcore/param/IntParam.h"
 
 using namespace megamol;
@@ -14,7 +15,8 @@ HistogramRenderer2D::HistogramRenderer2D()
     , tableDataCallerSlot("getData", "Float table input")
     , transferFunctionCallerSlot("getTransferFunction", "Transfer function input")
     , flagStorageCallerSlot("getFlagStorage", "Flag storage input")
-    , numberOfBinsSlot("numberOfBins", "Number of bins")
+    , numberOfBinsParam("numberOfBins", "Number of bins")
+    , logPlotParam("logPlot", "Logarithmic scale")
     , currentTableDataHash(std::numeric_limits<std::size_t>::max())
     , currentTableFrameId(std::numeric_limits<unsigned int>::max())
     , currentFlagStorageVersion(std::numeric_limits<core::FlagStorage::FlagVersionType>::max())
@@ -32,8 +34,11 @@ HistogramRenderer2D::HistogramRenderer2D()
     this->flagStorageCallerSlot.SetCompatibleCall<core::FlagCallDescription>();
     this->MakeSlotAvailable(&this->flagStorageCallerSlot);
 
-    this->numberOfBinsSlot << new core::param::IntParam(this->bins, 1);
-    this->MakeSlotAvailable(&this->numberOfBinsSlot);
+    this->numberOfBinsParam << new core::param::IntParam(this->bins, 1);
+    this->MakeSlotAvailable(&this->numberOfBinsParam);
+
+    this->logPlotParam << new core::param::BoolParam(false);
+    this->MakeSlotAvailable(&this->logPlotParam);
 }
 
 HistogramRenderer2D::~HistogramRenderer2D() {
@@ -114,8 +119,17 @@ bool HistogramRenderer2D::Render(core::view::CallRender2D &call) {
     // TODO use something better like instanced rendering
     for (size_t c = 0; c < this->colCount; ++c) {
         for (size_t b = 0; b < this->bins; ++b) {
+            float histoVal = this->histogram[b * this->colCount + c];
+            float selectedHistoVal = this->selectedHistogram[b * this->colCount + c];
+            float maxHistoVal = this->maxBinValue;
+            if (this->logPlotParam.Param<core::param::BoolParam>()->Value()) {
+                histoVal = std::max(0.0f, std::log(histoVal));
+                selectedHistoVal = std::max(0.0f, std::log(selectedHistoVal));
+                maxHistoVal = std::max(1.0f, std::log(maxHistoVal));
+            }
+
             float width = 10.0f / this->bins;
-            float height = 10.0f * this->histogram[b * this->colCount + c] / this->maxBinValue;
+            float height = 10.0f * histoVal / maxHistoVal;
             float posX = 12.0f * c + 1.0f + b * width;
             float posY = 2.0f;
             glUniform1f(this->histogramProgram.ParameterLocation("binColor"), static_cast<float>(b) / static_cast<float>((this->bins - 1)));
@@ -126,7 +140,7 @@ bool HistogramRenderer2D::Render(core::view::CallRender2D &call) {
             glUniform1i(this->histogramProgram.ParameterLocation("selected"), 0);
             glDrawElements(GL_TRIANGLES, 2 * 3, GL_UNSIGNED_INT, nullptr);
 
-            height = 10.0f * this->selectedHistogram[b * this->colCount + c] / this->maxBinValue;
+            height = 10.0f * selectedHistoVal / maxHistoVal;
             glUniform1f(this->histogramProgram.ParameterLocation("height"), height);
             glUniform1i(this->histogramProgram.ParameterLocation("selected"), 1);
             glDrawElements(GL_TRIANGLES, 2 * 3, GL_UNSIGNED_INT, nullptr);
@@ -162,6 +176,7 @@ bool HistogramRenderer2D::Render(core::view::CallRender2D &call) {
         this->font.DrawString(white, posX + 5.0f, 2.0f, 1.0f, false, std::to_string(this->colMaximums[c]).c_str(), core::utility::AbstractFont::ALIGN_RIGHT_TOP);
     }
     this->font.DrawString(white, 1.0f, 12.0f, 1.0f, false, std::to_string(this->maxBinValue).c_str(), core::utility::AbstractFont::ALIGN_RIGHT_TOP);
+    this->font.DrawString(white, 1.0f, 2.0f, 1.0f, false, "0", core::utility::AbstractFont::ALIGN_RIGHT_BOTTOM);
 
     this->font.BatchDrawString();
 
@@ -194,7 +209,7 @@ bool HistogramRenderer2D::handleCall(core::view::CallRender2D &call) {
     (*flagsCall)(core::FlagCall::CallMapFlags);
     auto version = flagsCall->GetVersion();
 
-    auto binsParam = static_cast<size_t>(this->numberOfBinsSlot.Param<core::param::IntParam>()->Value());
+    auto binsParam = static_cast<size_t>(this->numberOfBinsParam.Param<core::param::IntParam>()->Value());
     if (this->currentTableDataHash != hash || this->currentTableFrameId != frameId || this->currentFlagStorageVersion != version || this->bins != binsParam) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Calculate Histogram");
 

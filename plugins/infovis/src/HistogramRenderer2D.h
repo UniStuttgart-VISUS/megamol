@@ -89,7 +89,8 @@ private:
     core::CallerSlot transferFunctionCallerSlot;
     core::CallerSlot flagStorageCallerSlot;
 
-    core::param::ParamSlot numberOfBinsSlot;
+    core::param::ParamSlot numberOfBinsParam;
+    core::param::ParamSlot logPlotParam;
 
     size_t currentTableDataHash;
     unsigned int currentTableFrameId;
