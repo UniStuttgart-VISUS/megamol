@@ -308,6 +308,7 @@ bool OverlayRenderer::Render(view::CallRender3D_2& call) {
         }
     }
 
+    // Get current viewport
     view::Camera_2 cam;
     call.GetCamera(cam);
     glm::ivec4 cam_viewport;
@@ -319,11 +320,14 @@ bool OverlayRenderer::Render(view::CallRender3D_2& call) {
     }
     if ((this->m_viewport.x != cam_viewport.z) || (this->m_viewport.y != cam_viewport.w)) {
         this->m_viewport = {cam_viewport.z, cam_viewport.w};
+        // Reload rectangle on viewport changes
         this->onTriggerRecalcRectangle(this->paramMode);
     }
+    // Create 2D orthographic mvp matrix
     glm::mat4 ortho = glm::ortho(
         0.0f, static_cast<float>(this->m_viewport.x), 0.0f, static_cast<float>(this->m_viewport.y), -1.0f, 1.0f);
 
+    // Draw mode dependent stuff
     auto mode = this->paramMode.Param<param::EnumParam>()->Value();
     switch (mode) {
     case (Mode::TEXTURE): {
@@ -388,7 +392,8 @@ void OverlayRenderer::drawScreenSpaceBillboard(
     glUniform1f(shader.ParameterLocation("bottom"), rectangle.bottom);
     glUniform1i(shader.ParameterLocation("tex"), 0);
 
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4); /// Vertex position is implicitly set via uniform 'lrtb'.
+    // Vertex position is implicitly set via uniforms.
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
     shader.Disable();
 
@@ -437,56 +442,56 @@ OverlayRenderer::Rectangle OverlayRenderer::getScreenSpaceRect(
         rectangle.left = rel_pos.x;
         rectangle.right = rectangle.left + rel_width;
         rectangle.top = 1.0f - rel_pos.y;
-        rectangle.bottom = 1.0f - rel_pos.y - rel_height;
+        rectangle.bottom = rectangle.top - rel_height;
     } break;
 
     case (Anchor::ALIGN_LEFT_MIDDLE): {
-        // rectangle.left = rel_pos.x;
-        // rectangle.right = rectangle.left + rel_width;
-        // rectangle.top = 1.0 - rel_pos.y;
-        // rectangle.bottom = 1.0 - rel_pos.y - rel_height;
+        rectangle.left = rel_pos.x;
+        rectangle.right = rectangle.left + rel_width;
+        rectangle.top = 0.5f - (rel_pos.y / 2.0f) + (rel_height / 2.0f);
+        rectangle.bottom = rectangle.top - rel_height;
     } break;
     case (Anchor::ALIGN_LEFT_BOTTOM): {
-        // rectangle.left = rel_pos.x;
-        // rectangle.right = rectangle.left + rel_width;
-        // rectangle.top = 1.0 - rel_pos.y;
-        // rectangle.bottom = 1.0 - rel_pos.y - rel_height;
+        rectangle.left = rel_pos.x;
+        rectangle.right = rectangle.left + rel_width;
+        rectangle.top = rel_pos.y + rel_height;
+        rectangle.bottom = rel_pos.y;
     } break;
     case (Anchor::ALIGN_CENTER_TOP): {
-        // rectangle.left = rel_pos.x;
-        // rectangle.right = rectangle.left + rel_width;
-        // rectangle.top = 1.0 - rel_pos.y;
-        // rectangle.bottom = 1.0 - rel_pos.y - rel_height;
+        rectangle.left = 0.5f + (rel_pos.x / 2.0f) - (rel_width / 2.0f);
+        rectangle.right = rectangle.left + rel_width;
+        rectangle.top = 1.0 - rel_pos.y;
+        rectangle.bottom = 1.0 - rel_pos.y - rel_height;
     } break;
     case (Anchor::ALIGN_CENTER_MIDDLE): {
-        // rectangle.left = rel_pos.x;
-        // rectangle.right = rectangle.left + rel_width;
-        // rectangle.top = 1.0 - rel_pos.y;
-        // rectangle.bottom = 1.0 - rel_pos.y - rel_height;
+        rectangle.left = 0.5f + (rel_pos.x / 2.0f) - (rel_width / 2.0f);
+        rectangle.right = rectangle.left + rel_width;
+        rectangle.top = 0.5f - (rel_pos.y / 2.0f) + (rel_height / 2.0f);
+        rectangle.bottom = rectangle.top - rel_height;
     } break;
     case (Anchor::ALIGN_CENTER_BOTTOM): {
-        // rectangle.left = rel_pos.x;
-        // rectangle.right = rectangle.left + rel_width;
-        // rectangle.top = 1.0 - rel_pos.y;
-        // rectangle.bottom = 1.0 - rel_pos.y - rel_height;
+        rectangle.left = 0.5f + (rel_pos.x / 2.0f) - (rel_width / 2.0f);
+        rectangle.right = rectangle.left + rel_width;
+        rectangle.top = rel_pos.y + rel_height;
+        rectangle.bottom = rel_pos.y;
     } break;
     case (Anchor::ALIGN_RIGHT_TOP): {
-        // rectangle.left = rel_pos.x;
-        // rectangle.right = rectangle.left + rel_width;
-        // rectangle.top = 1.0 - rel_pos.y;
-        // rectangle.bottom = 1.0 - rel_pos.y - rel_height;
+        rectangle.left = 1.0f - rel_pos.x - rel_width;
+        rectangle.right = 1.0f - rel_pos.x;
+        rectangle.top = 1.0 - rel_pos.y;
+        rectangle.bottom = 1.0 - rel_pos.y - rel_height;
     } break;
     case (Anchor::ALIGN_RIGHT_MIDDLE): {
-        // rectangle.left = rel_pos.x;
-        // rectangle.right = rectangle.left + rel_width;
-        // rectangle.top = 1.0 - rel_pos.y;
-        // rectangle.bottom = 1.0 - rel_pos.y - rel_height;
+        rectangle.left = 1.0f - rel_pos.x - rel_width;
+        rectangle.right = 1.0f - rel_pos.x;
+        rectangle.top = 0.5f - (rel_pos.y / 2.0f) + (rel_height / 2.0f);
+        rectangle.bottom = rectangle.top - rel_height;
     } break;
     case (Anchor::ALIGN_RIGHT_BOTTOM): {
-        // rectangle.left = rel_pos.x;
-        // rectangle.right = rectangle.left + rel_width;
-        // rectangle.top = 1.0 - rel_pos.y;
-        // rectangle.bottom = 1.0 - rel_pos.y - rel_height;
+        rectangle.left = 1.0f - rel_pos.x - rel_width;
+        rectangle.right = 1.0f - rel_pos.x;
+        rectangle.top = rel_pos.y + rel_height;
+        rectangle.bottom = rel_pos.y;
     } break;
     }
 
@@ -530,9 +535,9 @@ bool OverlayRenderer::loadTexture(const std::string& filename, TextureData& text
             texture.width = img.Width();
             texture.height = img.Height();
             texture.tex.Bind();
-            glGenerateMipmap(GL_TEXTURE_2D);
-            texture.tex.SetFilter(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
-            // texture.tex.SetFilter(GL_LINEAR, GL_LINEAR);
+            /// glGenerateMipmap(GL_TEXTURE_2D);
+            /// texture.tex.SetFilter(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
+            texture.tex.SetFilter(GL_LINEAR, GL_LINEAR); // Uncomment when MipMaps are used.
             texture.tex.SetWrap(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
             glBindTexture(GL_TEXTURE_2D, 0);
 
