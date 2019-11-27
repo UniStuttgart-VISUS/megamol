@@ -410,6 +410,38 @@ void OverlayRenderer::drawScreenSpaceText(glm::mat4 ortho, megamol::core::utilit
     float y = rectangle.top;
     float z = -1.0f;
 
+    switch (anchor) {
+    // case(Anchor::ALIGN_LEFT_TOP): {} break;
+    case (Anchor::ALIGN_LEFT_MIDDLE): {
+        y = rectangle.top + (rectangle.bottom - rectangle.top) / 2.0f;
+    } break;
+    case (Anchor::ALIGN_LEFT_BOTTOM): {
+        y = rectangle.bottom;
+    } break;
+    case (Anchor::ALIGN_CENTER_TOP): {
+        x = rectangle.left + (rectangle.right - rectangle.left) / 2.0f;
+    } break;
+    case (Anchor::ALIGN_CENTER_MIDDLE): {
+        x = rectangle.left + (rectangle.right - rectangle.left) / 2.0f;
+        y = rectangle.top + (rectangle.bottom - rectangle.top) / 2.0f;
+    } break;
+    case (Anchor::ALIGN_CENTER_BOTTOM): {
+        x = rectangle.left + (rectangle.right - rectangle.left) / 2.0f;
+        y = rectangle.bottom;
+    } break;
+    case (Anchor::ALIGN_RIGHT_TOP): {
+        x = rectangle.right;
+    } break;
+    case (Anchor::ALIGN_RIGHT_MIDDLE): {
+        x = rectangle.right;
+        y = rectangle.top + (rectangle.bottom - rectangle.top) / 2.0f;
+    } break;
+    case (Anchor::ALIGN_RIGHT_BOTTOM): {
+        x = rectangle.right;
+        y = rectangle.bottom;
+    } break;
+    }
+
     // Font rendering takes matrices from OpenGL stack
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
