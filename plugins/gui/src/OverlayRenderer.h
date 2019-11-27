@@ -104,13 +104,6 @@ protected:
     virtual bool Render(megamol::core::view::CallRender3D_2& call);
 
 private:
-    typedef megamol::core::utility::AbstractFont::Alignment Anchor;
-
-    enum Mode { TEXTURE, MEDIA_BUTTONS, PARAMETER, LABEL };
-
-    // Explicit numbering required as indices in media_buttons array.
-    enum MediaButton { PLAY = 0, STOP = 1, PAUSE = 2, REWIND = 3, FAST_FORWARD = 4 };
-
     struct TextureData {
         vislib::graphics::gl::OpenGLTexture2D tex;
         unsigned int width;
@@ -124,6 +117,13 @@ private:
         float bottom;
     };
 
+    typedef megamol::core::utility::AbstractFont::Alignment Anchor;
+
+    enum Mode { TEXTURE, MEDIA_BUTTONS, PARAMETER, LABEL };
+
+    // Explicit numbering required as indices in media_buttons array.
+    enum MediaButton { PLAY = 0, STOP = 1, PAUSE = 2, REWIND = 3, FAST_FORWARD = 4 };
+
     /**********************************************************************
      * variables
      **********************************************************************/
@@ -131,11 +131,12 @@ private:
     TextureData m_texture;
     vislib::graphics::gl::GLSLShader m_shader;
     std::unique_ptr<megamol::core::utility::SDFFont> m_font;
-    std::array<TextureData, 5> m_media_buttons;
     glm::ivec2 m_viewport;
     Rectangle m_current_rectangle;
-    // Parameter Mode:
+    // Parameter Mode
     megamol::core::param::FloatParam* m_parameter_ptr;
+    // Media Buttons
+    std::array<TextureData, 5> m_media_buttons;
 
     /**********************************************************************
      * functions
@@ -143,8 +144,8 @@ private:
 
     void setParameterGUIVisibility(void);
 
-    void drawScreenSpaceBillboard(
-        glm::mat4 ortho, Rectangle rectangle, TextureData& texture, vislib::graphics::gl::GLSLShader& shader) const;
+    void drawScreenSpaceBillboard(glm::mat4 ortho, Rectangle rectangle, TextureData& texture,
+        vislib::graphics::gl::GLSLShader& shader, glm::vec4 overwrite_color) const;
 
     void drawScreenSpaceText(glm::mat4 ortho, megamol::core::utility::SDFFont& font, const std::string& text,
         glm::vec4 color, float size, Anchor anchor, Rectangle rectangle) const;
@@ -179,7 +180,7 @@ private:
     core::param::ParamSlot paramFileName;
     core::param::ParamSlot paramRelativeWidth;
     // Media Buttons Mode
-    /// ...
+    core::param::ParamSlot paramButtonColor;
     // Parameter Mode
     core::param::ParamSlot paramPrefix;
     core::param::ParamSlot paramSufix;

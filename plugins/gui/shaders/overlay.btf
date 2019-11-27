@@ -41,11 +41,19 @@ void main() {
 
 in vec2 tex_coord;
 uniform sampler2D tex;
+uniform vec4 overwrite_color;
 layout(location = 0) out vec4 outFragColor;
 
 void main(void) {
 
-    outFragColor  = texture(tex, tex_coord);
+    vec4 color = texture(tex, tex_coord);
+    if (color.a <= 0.0) {
+        discard;
+    }
+    if (overwrite_color.a > 0.0) {
+        color = overwrite_color;
+    }
+    outFragColor = color;
 }
 
         ]]>

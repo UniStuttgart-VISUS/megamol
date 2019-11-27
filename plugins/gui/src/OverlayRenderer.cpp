@@ -21,6 +21,7 @@ OverlayRenderer::OverlayRenderer(void)
     , paramCustomPosition("position_offset", "Custom relative position offset in respect to selected anchor.")
     , paramFileName("texture::file_name", "The file name of the texture.")
     , paramRelativeWidth("texture::relative_width", "Relative screen space width of texture.")
+    , paramButtonColor("media_buttons::color", "Color of media buttons.")
     , paramPrefix("parameter::prefix", "The parameter value prefix.")
     , paramSufix("parameter::sufix", "The parameter value sufix.")
     , paramParameterName("parameter::name", "The full parameter name, e.g. '::Project_1::View3D_21::anim::time'")
@@ -75,6 +76,10 @@ OverlayRenderer::OverlayRenderer(void)
     this->paramRelativeWidth << new param::FloatParam(25.0f, 0.0f, 100.0f);
     this->paramRelativeWidth.SetUpdateCallback(this, &OverlayRenderer::onTriggerRecalcRectangle);
     this->MakeSlotAvailable(&this->paramRelativeWidth);
+
+    // Media Button Mode
+    this->paramButtonColor << new param::ColorParam(0.5f, 0.5f, 0.5f, 1.0f);
+    this->MakeSlotAvailable(&this->paramButtonColor);
 
     // Parameter Mode
     this->paramPrefix << new param::StringParam("");
@@ -152,7 +157,7 @@ bool OverlayRenderer::onToggleMode(param::ParamSlot& slot) {
         this->onTextureFileName(slot);
     } break;
     case (Mode::MEDIA_BUTTONS): {
-        /// TODO ...
+        if (!this->loadShader(this->m_shader, "overlay::vertex", "overlay::fragment")) return false;
         // Load media button texutres from hard coded texture file names.
         std::string filename;
         for (size_t i = 0; i < this->m_media_buttons.size(); i++) {
@@ -249,27 +254,30 @@ bool OverlayRenderer::onTriggerRecalcRectangle(core::param::ParamSlot& slot) {
 void OverlayRenderer::setParameterGUIVisibility(void) {
 
     Mode mode = static_cast<Mode>(this->paramMode.Param<param::EnumParam>()->Value());
+    bool texture_mode = (mode == Mode::TEXTURE);
+    bool media_mode = (mode == Mode::MEDIA_BUTTONS);
+    bool parameter_mode = (mode == Mode::PARAMETER);
+    bool label_mode = (mode == Mode::LABEL);
 
     // Texture Mode
-    bool texture_mode = (mode == Mode::TEXTURE);
     this->paramFileName.Param<param::FilePathParam>()->SetGUIVisible(texture_mode);
-    this->paramRelativeWidth.Param<param::FloatParam>()->SetGUIVisible(texture_mode);
+    this->paramRelativeWidth.Param<param::FloatParam>()->SetGUIVisible(texture_mode || media_mode);
+
+    // Media Buttons Mode
+    this->paramButtonColor.Param<param::ColorParam>()->SetGUIVisible(media_mode);
 
     // Parameter Mode
-    bool parameter_mode = (mode == Mode::PARAMETER);
     this->paramPrefix.Param<param::StringParam>()->SetGUIVisible(parameter_mode);
     this->paramSufix.Param<param::StringParam>()->SetGUIVisible(parameter_mode);
-    this->paramParameterName.Param<param::StringParam>()->SetGUIVisible(parameter_mode);
+    this->paramParameterName.Param<param::StringParam>()->SetGUIVisible(parameter_mode || media_mode);
 
     // Label Mode
-    bool label_mode = (mode == Mode::LABEL);
     this->paramText.Param<param::StringParam>()->SetGUIVisible(label_mode);
 
     // Font Settings
-    bool font_settings = (label_mode || parameter_mode);
-    this->paramFontName.Param<param::EnumParam>()->SetGUIVisible(font_settings);
-    this->paramFontSize.Param<param::FloatParam>()->SetGUIVisible(font_settings);
-    this->paramFontColor.Param<param::ColorParam>()->SetGUIVisible(font_settings);
+    this->paramFontName.Param<param::EnumParam>()->SetGUIVisible(label_mode || parameter_mode);
+    this->paramFontSize.Param<param::FloatParam>()->SetGUIVisible(label_mode || parameter_mode);
+    this->paramFontColor.Param<param::ColorParam>()->SetGUIVisible(label_mode || parameter_mode);
 }
 
 
@@ -331,10 +339,23 @@ bool OverlayRenderer::Render(view::CallRender3D_2& call) {
     auto mode = this->paramMode.Param<param::EnumParam>()->Value();
     switch (mode) {
     case (Mode::TEXTURE): {
-        this->drawScreenSpaceBillboard(ortho, this->m_current_rectangle, this->m_texture, this->m_shader);
+        auto overwrite_color = glm::vec4(0.0f); /// Ignored when alpha = 0
+        this->drawScreenSpaceBillboard(
+            ortho, this->m_current_rectangle, this->m_texture, this->m_shader, overwrite_color);
     } break;
     case (Mode::MEDIA_BUTTONS): {
-        /// TODO ...
+        auto param_color = this->paramButtonColor.Param<param::ColorParam>()->Value();
+        glm::vec4 overwrite_color = glm::vec4(param_color[0], param_color[1], param_color[2], param_color[3]);
+
+        if (this->m_parameter_ptr == nullptr) {
+
+            return false;
+        }
+        float value = this->m_parameter_ptr->Value();
+        MediaButton i = MediaButton::PLAY;
+
+        this->drawScreenSpaceBillboard(
+            ortho, this->m_current_rectangle, this->m_media_buttons[i], this->m_shader, overwrite_color);
     } break;
     case (Mode::PARAMETER): {
         auto param_color = this->paramFontColor.Param<param::ColorParam>()->Value();
@@ -348,7 +369,10 @@ bool OverlayRenderer::Render(view::CallRender3D_2& call) {
         auto param_sufix = this->paramSufix.Param<param::StringParam>()->Value();
         std::string sufix = std::string(param_sufix.PeekBuffer());
 
-        if (this->m_parameter_ptr == nullptr) return false;
+        if (this->m_parameter_ptr == nullptr) {
+
+            return false;
+        }
         auto value = this->m_parameter_ptr->Value();
         std::stringstream stream;
         stream << std::fixed << std::setprecision(8) << " " << value << " ";
@@ -365,6 +389,10 @@ bool OverlayRenderer::Render(view::CallRender3D_2& call) {
         auto param_text = this->paramText.Param<param::StringParam>()->Value();
         std::string text = std::string(param_text.PeekBuffer());
 
+        if (this->m_font == nullptr) {
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Unable to read texture: %s [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        }
         this->drawScreenSpaceText(ortho, (*this->m_font), text, color, font_size, anchor, this->m_current_rectangle);
     } break;
     }
@@ -373,8 +401,8 @@ bool OverlayRenderer::Render(view::CallRender3D_2& call) {
 }
 
 
-void OverlayRenderer::drawScreenSpaceBillboard(
-    glm::mat4 ortho, Rectangle rectangle, TextureData& texture, vislib::graphics::gl::GLSLShader& shader) const {
+void OverlayRenderer::drawScreenSpaceBillboard(glm::mat4 ortho, Rectangle rectangle, TextureData& texture,
+    vislib::graphics::gl::GLSLShader& shader, glm::vec4 overwrite_color) const {
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -390,9 +418,10 @@ void OverlayRenderer::drawScreenSpaceBillboard(
     glUniform1f(shader.ParameterLocation("right"), rectangle.right);
     glUniform1f(shader.ParameterLocation("top"), rectangle.top);
     glUniform1f(shader.ParameterLocation("bottom"), rectangle.bottom);
+    glUniform4fv(shader.ParameterLocation("overwrite_color"), 1, glm::value_ptr(overwrite_color));
     glUniform1i(shader.ParameterLocation("tex"), 0);
 
-    // Vertex position is implicitly set via uniforms.
+    // Vertex position is only given via uniforms.
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
     shader.Disable();
