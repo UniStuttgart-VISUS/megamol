@@ -336,26 +336,7 @@ bool BoundingBoxRenderer::RenderViewCube(CallRender3D_2& call) {
     call.GetCamera(cam);
 
     const auto orientation = cam.orientation();
-
-    // Calculate rotation matrix from quaternion,
-    // see https://en.wikipedia.org/wiki/Quaternions_and_spatial_rotation#Quaternion-derived_rotation_matrix
-    const auto qr = orientation.w();
-    const auto qi = orientation.x();
-    const auto qj = orientation.y();
-    const auto qk = orientation.z();
-
-    glm::mat4 rotation(1.0f);
-    rotation[0][0] = 1.0f - 2.0f * (qj * qj + qk * qk);
-    rotation[0][1] = 2.0f * (qi * qj + qk * qr);
-    rotation[0][2] = 2.0f * (qi * qk - qj * qr);
-    rotation[1][0] = 2.0f * (qi * qj - qk * qr);
-    rotation[1][1] = 1.0f - 2.0f * (qi * qi + qk * qk);
-    rotation[1][2] = 2.0f * (qj * qk + qi * qr);
-    rotation[2][0] = 2.0f * (qi * qk + qj * qr);
-    rotation[2][1] = 2.0f * (qj * qk - qi * qr);
-    rotation[2][2] = 1.0f - 2.0f * (qi * qi + qj * qj);
-
-    rotation = glm::inverse(rotation);
+    const auto rotation = glm::mat4_cast(static_cast<glm::quat>(orientation));
 
     // Create view/model and projection matrices
     const float dist = 2.0f / std::tan(thecam::math::angle_deg2rad(30.0f) / 2.0f);
