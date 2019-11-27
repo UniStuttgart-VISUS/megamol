@@ -59,16 +59,16 @@ bool HistogramRenderer2D::create() {
             1, 2, 3,
     };
 
-    glGenVertexArrays(1, &quadVertexArray);
-    glGenBuffers(1, &quadVertexBuffer);
-    glGenBuffers(1, &quadIndexBuffer);
+    glGenVertexArrays(1, &this->quadVertexArray);
+    glGenBuffers(1, &this->quadVertexBuffer);
+    glGenBuffers(1, &this->quadIndexBuffer);
 
-    glBindVertexArray(quadVertexArray);
-    glBindBuffer(GL_ARRAY_BUFFER, quadVertexBuffer);
+    glBindVertexArray(this->quadVertexArray);
+    glBindBuffer(GL_ARRAY_BUFFER, this->quadVertexBuffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 3 * 4, quadVertices, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, quadIndexBuffer);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->quadIndexBuffer);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, 2 * 3 * sizeof(GLuint), quadIndices, GL_STATIC_DRAW);
     glBindVertexArray(0);
 
@@ -104,12 +104,12 @@ bool HistogramRenderer2D::Render(core::view::CallRender2D &call) {
     glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
     // end suck
 
-    glUseProgram(histogramProgram);
-    glUniformMatrix4fv(histogramProgram.ParameterLocation("modelView"), 1, GL_FALSE, modelViewMatrix_column);
-    glUniformMatrix4fv(histogramProgram.ParameterLocation("projection"), 1, GL_FALSE, projMatrix_column);
+    glUseProgram(this->histogramProgram);
+    glUniformMatrix4fv(this->histogramProgram.ParameterLocation("modelView"), 1, GL_FALSE, modelViewMatrix_column);
+    glUniformMatrix4fv(this->histogramProgram.ParameterLocation("projection"), 1, GL_FALSE, projMatrix_column);
 
-    glBindVertexArray(quadVertexArray);
-    tfCall->BindConvenience(histogramProgram, GL_TEXTURE0, 0);
+    glBindVertexArray(this->quadVertexArray);
+    tfCall->BindConvenience(this->histogramProgram, GL_TEXTURE0, 0);
 
     // TODO use something better like instanced rendering
     for (size_t c = 0; c < this->colCount; ++c) {
@@ -118,17 +118,17 @@ bool HistogramRenderer2D::Render(core::view::CallRender2D &call) {
             float height = 10.0f * this->histogram[b * this->colCount + c] / this->maxBinValue;
             float posX = 12.0f * c + 1.0f + b * width;
             float posY = 2.0f;
-            glUniform1f(histogramProgram.ParameterLocation("binColor"), static_cast<float>(b) / static_cast<float>((this->bins - 1)));
-            glUniform1f(histogramProgram.ParameterLocation("posX"), posX);
-            glUniform1f(histogramProgram.ParameterLocation("posY"), posY);
-            glUniform1f(histogramProgram.ParameterLocation("width"), width);
-            glUniform1f(histogramProgram.ParameterLocation("height"), height);
-            glUniform1i(histogramProgram.ParameterLocation("selected"), 0);
+            glUniform1f(this->histogramProgram.ParameterLocation("binColor"), static_cast<float>(b) / static_cast<float>((this->bins - 1)));
+            glUniform1f(this->histogramProgram.ParameterLocation("posX"), posX);
+            glUniform1f(this->histogramProgram.ParameterLocation("posY"), posY);
+            glUniform1f(this->histogramProgram.ParameterLocation("width"), width);
+            glUniform1f(this->histogramProgram.ParameterLocation("height"), height);
+            glUniform1i(this->histogramProgram.ParameterLocation("selected"), 0);
             glDrawElements(GL_TRIANGLES, 2 * 3, GL_UNSIGNED_INT, nullptr);
 
             height = 10.0f * this->selectedHistogram[b * this->colCount + c] / this->maxBinValue;
-            glUniform1f(histogramProgram.ParameterLocation("height"), height);
-            glUniform1i(histogramProgram.ParameterLocation("selected"), 1);
+            glUniform1f(this->histogramProgram.ParameterLocation("height"), height);
+            glUniform1i(this->histogramProgram.ParameterLocation("selected"), 1);
             glDrawElements(GL_TRIANGLES, 2 * 3, GL_UNSIGNED_INT, nullptr);
         }
     }
@@ -211,9 +211,9 @@ bool HistogramRenderer2D::handleCall(core::view::CallRender2D &call) {
         this->colMinimums.resize(this->colCount);
         this->colMaximums.resize(this->colCount);
         this->colNames.resize(this->colCount);
-        this->histogram.resize(this->colCount * bins);
+        this->histogram.resize(this->colCount * this->bins);
         std::fill(this->histogram.begin(), this->histogram.end(), 0.0);
-        this->selectedHistogram.resize(this->colCount * bins);
+        this->selectedHistogram.resize(this->colCount * this->bins);
         std::fill(this->selectedHistogram.begin(), this->selectedHistogram.end(), 0.0);
 
         for (size_t i = 0; i < this->colCount; ++i) {
