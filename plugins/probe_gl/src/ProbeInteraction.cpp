@@ -108,8 +108,8 @@ bool megamol::probe_gl::ProbeInteraction::Render(core::view::CallRender3D_2& cal
     // bind fbo to read buffer for retrieving pixel data and bliting to default framebuffer
     probe_fbo->bindToRead(2);
     {
-        auto err = glGetError();
-        std::cerr << err << std::endl;
+        //auto err = glGetError();
+        //std::cerr << err << std::endl;
     }
     // get object id at cursor location from framebuffer's second color attachment
     float probe_depth_pixel_data = 0.0;

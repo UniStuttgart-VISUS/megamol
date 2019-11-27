@@ -140,6 +140,7 @@ template <typename T> void DrawTextureUtility::drawStar(std::vector<T>& data, T 
     auto num_data = data.size();
 
     auto angle_step = 2 * 3.14159265359 / num_data;
+    auto angle_offset = angle_step * 0.5 - 3.14159265359 * 0.5;
 
     auto max_radius = std::min(this->_pixel_width, this->_pixel_height) / 2 - std::min(width_halo, height_halo);
     auto axis_radius = std::min(this->_pixel_width, this->_pixel_height) / 2;
@@ -151,33 +152,37 @@ template <typename T> void DrawTextureUtility::drawStar(std::vector<T>& data, T 
     for (uint32_t i = 0; i < num_data; i++) {
 
         if (i == 0) {
-            data_polygon.moveTo(center[0] + ((data[i] - min) / (max - min)) * max_radius * std::cos(i * angle_step),
-                center[1] + ((data[i] - min) / (max - min)) * max_radius * std::sin(i * angle_step));
-            max_polygon.moveTo(center[0] + max_radius * std::cos(i * angle_step),
-                center[1] + max_radius* std::sin(i * angle_step));
+            data_polygon.moveTo(center[0] + ((data[i] - min) / (max - min)) * max_radius * std::cos(i * angle_step + angle_offset),
+                center[1] + ((data[i] - min) / (max - min)) * max_radius * std::sin(i * angle_step + angle_offset));
+            max_polygon.moveTo(center[0] + max_radius * std::cos(i * angle_step + angle_offset),
+                center[1] + max_radius* std::sin(i * angle_step + angle_offset));
         } else {
-            data_polygon.lineTo(center[0] + ((data[i] - min) / (max - min)) * max_radius * std::cos(i * angle_step),
-                center[1] + ((data[i] - min) / (max - min)) * max_radius * std::sin(i * angle_step));
+            data_polygon.lineTo(center[0] + ((data[i] - min) / (max - min)) * max_radius * std::cos(i * angle_step + angle_offset),
+                center[1] + ((data[i] - min) / (max - min)) * max_radius * std::sin(i * angle_step + angle_offset));
             max_polygon.lineTo(
-                center[0] + max_radius * std::cos(i * angle_step), center[1] + max_radius * std::sin(i * angle_step));
+                center[0] + max_radius * std::cos(i * angle_step + angle_offset), center[1] + max_radius * std::sin(i * angle_step + angle_offset));
             }
 
         // Draw axes
-        BLLine axis_line(center[0], center[1], center[0] + axis_radius * std::cos(i * angle_step),
-            center[1] + axis_radius * std::sin(i * angle_step));
+        BLLine axis_line(center[0], center[1], center[0] + axis_radius * std::cos(i * angle_step + angle_offset),
+            center[1] + axis_radius * std::sin(i * angle_step + angle_offset));
         axis.addLine(axis_line);
     }
     //max_polygon.lineTo(center[0] + max_radius, center[1]); 
 
     BLPath cut;
     cut.moveTo(center[0], center[1]);
-    cut.lineTo(center[0] + axis_radius, center[1]);
-    cut.lineTo(center[0] + axis_radius * std::cos((num_data - 1) * angle_step),
-        center[1] + axis_radius * std::sin((num_data - 1) * angle_step));
+    cut.lineTo(center[0] + axis_radius * std::cos(angle_offset),
+        center[1] + axis_radius * std::sin(angle_offset));
+
+    cut.lineTo(center[0] + axis_radius * std::cos((num_data - 1) * angle_step + angle_offset),
+        center[1] + axis_radius * std::sin((num_data - 1) * angle_step + angle_offset));
 
     // Max Polygon Filling
     _ctx.setCompOp(BL_COMP_OP_SRC_COPY);
-    _ctx.setFillStyle(BLRgba32(0x66F3DF92));
+    //_ctx.setFillStyle(BLRgba32(0x66F3DF92));
+    _ctx.setFillStyle(BLRgba32(0xCC2C0D0E));
+    //_ctx.setFillStyle(BLRgba32(0xBBDABABE));
     _ctx.fillPath(max_polygon);
 
     // Star Axis
@@ -188,19 +193,22 @@ template <typename T> void DrawTextureUtility::drawStar(std::vector<T>& data, T 
     // Max Polygon Stroke
     _ctx.setStrokeStyle(BLRgba32(0xFFF3DF92));
     _ctx.setStrokeWidth(2);
-    _ctx.strokePath(max_polygon);
+    //_ctx.strokePath(max_polygon);
 
     // Data Stroke
     _ctx.setStrokeStyle(BLRgba32(0xFF0000FF));
     _ctx.setStrokeWidth(7);
-    _ctx.strokePath(data_polygon);
+    //_ctx.strokePath(data_polygon);
 
     // Data Filling
-    _ctx.setFillStyle(BLRgba32(0x660000FF));
+    //_ctx.setFillStyle(BLRgba32(0x660000FF));
+    _ctx.setFillStyle(BLRgba32(0xDD00B9FF));
+    //_ctx.setFillStyle(BLRgba32(0xBBd3b180));
     _ctx.fillPath(data_polygon);
 
     // Solid Cut
-    _ctx.setFillStyle(BLRgba32(0xFFF3DF92));
+    //_ctx.setFillStyle(BLRgba32(0xFFF3DF92));
+    _ctx.setFillStyle(BLRgba32(0xFF2A5F3B));
     _ctx.fillPath(cut);
 
 }
