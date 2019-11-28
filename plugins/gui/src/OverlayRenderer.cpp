@@ -24,7 +24,8 @@ OverlayRenderer::OverlayRenderer(void)
     , paramButtonColor("media_buttons::color", "Color of media buttons.")
     , paramPrefix("parameter::prefix", "The parameter value prefix.")
     , paramSufix("parameter::sufix", "The parameter value sufix.")
-    , paramParameterName("parameter::name", "The full parameter name, e.g. '::Project_1::View3D_21::anim::time'")
+    , paramParameterName("parameter::name", "The full parameter name, e.g. '::Project_1::View3D_21::anim::time'. "
+                                            "Supprted parameter types: float, int, Vector2f/3f/4f")
     , paramText("label::text", "The displayed text.")
     , paramFontName("font::name", "The font name.")
     , paramFontSize("font::size", "The font size.")
@@ -223,20 +224,33 @@ bool OverlayRenderer::onParameterName(param::ParamSlot& slot) {
     slot.ResetDirty();
     this->m_parameter_ptr = nullptr;
     auto parameter_name = this->paramParameterName.Param<param::StringParam>()->Value();
-    auto parameter = this->GetCoreInstance()->FindParameter(parameter_name, false, false);
-    if (parameter.IsNull()) {
+    auto parameter_ptr = this->GetCoreInstance()->FindParameter(parameter_name, false, false);
+    if (parameter_ptr.IsNull()) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
             "Unable to find parameter by name. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
-    auto* float_param = parameter.DynamicCast<param::FloatParam>();
-    if (float_param == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-            "Parameter is no FloatParam. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
+    bool found_valid_param_type = false;
+    if (auto* float_param = parameter_ptr.DynamicCast<param::FloatParam>()) {
+        found_valid_param_type = true;
+    } else if (auto* int_param = parameter_ptr.DynamicCast<param::IntParam>()) {
+        found_valid_param_type = true;
+    } else if (auto* vec2_param = parameter_ptr.DynamicCast<param::Vector2fParam>()) {
+        found_valid_param_type = true;
+    } else if (auto* vec3_param = parameter_ptr.DynamicCast<param::Vector3fParam>()) {
+        found_valid_param_type = true;
+    } else if (auto* vec4_param = parameter_ptr.DynamicCast<param::Vector4fParam>()) {
+        found_valid_param_type = true;
     }
-    this->m_parameter_ptr = float_param;
-    return true;
+
+    if (found_valid_param_type) {
+        this->m_parameter_ptr = parameter_ptr;
+    } else {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "No valid parameter type. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    }
+
+    return found_valid_param_type;
 }
 
 bool OverlayRenderer::onTriggerRecalcRectangle(core::param::ParamSlot& slot) {
@@ -283,7 +297,7 @@ void OverlayRenderer::setParameterGUIVisibility(void) {
 
 bool OverlayRenderer::GetExtents(view::CallRender3D_2& call) {
 
-    auto chainedCall = this->chainRenderSlot.CallAs<view::CallRender3D_2>();
+    auto* chainedCall = this->chainRenderSlot.CallAs<view::CallRender3D_2>();
     if (chainedCall != nullptr) {
         *chainedCall = call;
         bool retVal = (*chainedCall)(view::AbstractCallRender::FnGetExtents);
@@ -347,15 +361,29 @@ bool OverlayRenderer::Render(view::CallRender3D_2& call) {
         auto param_color = this->paramButtonColor.Param<param::ColorParam>()->Value();
         glm::vec4 overwrite_color = glm::vec4(param_color[0], param_color[1], param_color[2], param_color[3]);
 
-        if (this->m_parameter_ptr == nullptr) {
+        MediaButton media_button = MediaButton::NONE;
 
+        float value = std::numeric_limits<float>::max();
+
+        if (auto* float_param = this->m_parameter_ptr.DynamicCast<param::FloatParam>()) {
+            auto value = float_param->Value();
+        } else if (auto* int_param = this->m_parameter_ptr.DynamicCast<param::IntParam>()) {
+            auto value = int_param->Value();
+        } else if (auto* vec2_param = this->m_parameter_ptr.DynamicCast<param::Vector2fParam>()) {
+            auto value = vec2_param->Value();
+        } else if (auto* vec3_param = this->m_parameter_ptr.DynamicCast<param::Vector3fParam>()) {
+            auto value = vec3_param->Value();
+        } else if (auto* vec4_param = this->m_parameter_ptr.DynamicCast<param::Vector4fParam>()) {
+            auto value = vec4_param->Value();
+        }
+        if (media_button == MediaButton::NONE) {
+            // vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            //    "Unable to use parmeter for media buttons [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
-        float value = this->m_parameter_ptr->Value();
-        MediaButton i = MediaButton::PLAY;
 
         this->drawScreenSpaceBillboard(
-            ortho, this->m_current_rectangle, this->m_media_buttons[i], this->m_shader, overwrite_color);
+            ortho, this->m_current_rectangle, this->m_media_buttons[media_button], this->m_shader, overwrite_color);
     } break;
     case (Mode::PARAMETER): {
         auto param_color = this->paramFontColor.Param<param::ColorParam>()->Value();
@@ -369,14 +397,40 @@ bool OverlayRenderer::Render(view::CallRender3D_2& call) {
         auto param_sufix = this->paramSufix.Param<param::StringParam>()->Value();
         std::string sufix = std::string(param_sufix.PeekBuffer());
 
-        if (this->m_parameter_ptr == nullptr) {
-
+        std::string text;
+        if (auto* float_param = this->m_parameter_ptr.DynamicCast<param::FloatParam>()) {
+            auto value = float_param->Value();
+            std::stringstream stream;
+            stream << std::fixed << std::setprecision(8) << " " << value << " ";
+            text = prefix + stream.str() + sufix;
+        } else if (auto* int_param = this->m_parameter_ptr.DynamicCast<param::IntParam>()) {
+            auto value = int_param->Value();
+            std::stringstream stream;
+            stream << " " << value << " ";
+            text = prefix + stream.str() + sufix;
+        } else if (auto* vec2_param = this->m_parameter_ptr.DynamicCast<param::Vector2fParam>()) {
+            auto value = vec2_param->Value();
+            std::stringstream stream;
+            stream << std::fixed << std::setprecision(8) << " (" << value.X() << ", " << value.Y() << ") ";
+            text = prefix + stream.str() + sufix;
+        } else if (auto* vec3_param = this->m_parameter_ptr.DynamicCast<param::Vector3fParam>()) {
+            auto value = vec3_param->Value();
+            std::stringstream stream;
+            stream << std::fixed << std::setprecision(8) << " (" << value.X() << ", " << value.Y() << ", " << value.Z()
+                   << ") ";
+            text = prefix + stream.str() + sufix;
+        } else if (auto* vec4_param = this->m_parameter_ptr.DynamicCast<param::Vector4fParam>()) {
+            auto value = vec4_param->Value();
+            std::stringstream stream;
+            stream << std::fixed << std::setprecision(8) << " (" << value.X() << ", " << value.Y() << ", " << value.Z()
+                   << ", " << value.W() << ") ";
+            text = prefix + stream.str() + sufix;
+        }
+        if (text.empty()) {
+            // vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            //    "Unable to read parmeter value [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
-        auto value = this->m_parameter_ptr->Value();
-        std::stringstream stream;
-        stream << std::fixed << std::setprecision(8) << " " << value << " ";
-        auto text = prefix + stream.str() + sufix;
 
         this->drawScreenSpaceText(ortho, (*this->m_font), text, color, font_size, anchor, this->m_current_rectangle);
     } break;
@@ -390,7 +444,8 @@ bool OverlayRenderer::Render(view::CallRender3D_2& call) {
         std::string text = std::string(param_text.PeekBuffer());
 
         if (this->m_font == nullptr) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Unable to read texture: %s [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                "Unable to read texture: %s [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
         this->drawScreenSpaceText(ortho, (*this->m_font), text, color, font_size, anchor, this->m_current_rectangle);

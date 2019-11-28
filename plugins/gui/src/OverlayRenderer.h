@@ -17,9 +17,12 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
+#include "mmcore/param/IntParam.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/Vector2fParam.h"
+#include "mmcore/param/Vector3fParam.h"
+#include "mmcore/param/Vector4fParam.h"
 #include "mmcore/utility/ResourceWrapper.h"
 #include "mmcore/utility/SDFFont.h"
 #include "mmcore/view/AbstractView.h"
@@ -122,7 +125,7 @@ private:
     enum Mode { TEXTURE, MEDIA_BUTTONS, PARAMETER, LABEL };
 
     // Explicit numbering required as indices in media_buttons array.
-    enum MediaButton { PLAY = 0, STOP = 1, PAUSE = 2, REWIND = 3, FAST_FORWARD = 4 };
+    enum MediaButton { PLAY = 0, STOP = 1, PAUSE = 2, REWIND = 3, FAST_FORWARD = 4, NONE = 5 };
 
     /**********************************************************************
      * variables
@@ -134,7 +137,7 @@ private:
     glm::ivec2 m_viewport;
     Rectangle m_current_rectangle;
     // Parameter Mode
-    megamol::core::param::FloatParam* m_parameter_ptr;
+    vislib::SmartPtr<megamol::core::param::AbstractParam> m_parameter_ptr;
     // Media Buttons
     std::array<TextureData, 5> m_media_buttons;
 

@@ -9,8 +9,8 @@
 #define MEGAMOL_GUI_FILEUTILS_INCLUDED
 
 
-#if defined(_HAS_CXX17) ||  ((defined(_MSC_VER) && (_MSC_VER > 1916))) // C++2017 or since VS2019
-#    include <filesystem> 
+#if defined(_HAS_CXX17) || ((defined(_MSC_VER) && (_MSC_VER > 1916))) // C++2017 or since VS2019
+#    include <filesystem>
 namespace fsns = std::filesystem;
 #else
 // WINDOWS
