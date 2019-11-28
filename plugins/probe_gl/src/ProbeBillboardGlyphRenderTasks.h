@@ -44,6 +44,8 @@ protected:
 
     bool getMetaDataCallback(core::Call& caller);
 
+    core::param::ParamSlot m_billboard_size_slot;
+
 private:
     core::CallerSlot m_probes_slot;
     size_t m_probes_cached_hash;

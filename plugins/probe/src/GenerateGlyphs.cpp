@@ -168,7 +168,7 @@ void GenerateGlyphs::doGlyphGeneration() {
         this->_mesh_data->addMesh(vertex_attributes, index_data);
 
         _dtu[i].setResolution(300, 300); // should be changeable
-        _dtu[i].setGraphType(DrawTextureUtility::LINEAR); // should be changeable
+        _dtu[i].setGraphType(DrawTextureUtility::GLYPH); // should be changeable
 
         auto tex_ptr = _dtu[i].draw(samples->samples, samples->min_value, samples->max_value);
         this->_tex_data->addImage(mesh::ImageDataAccessCollection::RGBA8, _dtu[i].getPixelWidth(),

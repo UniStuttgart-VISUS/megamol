@@ -5,7 +5,7 @@ struct MeshShaderParams
     vec4 glpyh_position;
     uvec2 texture_handle;
     float slice_idx;
-    float padding0;
+    float scale;
 };
 
 layout(std430, binding = 0) readonly buffer MeshShaderParamsBuffer { MeshShaderParams[] mesh_shader_params; };

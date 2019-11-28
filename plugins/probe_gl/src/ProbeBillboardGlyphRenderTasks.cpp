@@ -6,13 +6,19 @@
 #include "glm/glm.hpp"
 #include "glm/gtx/transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
+#include "mmcore/param/FloatParam.h"
 
-megamol::probe_gl::ProbeBillboardGlyphRenderTasks::ProbeBillboardGlyphRenderTasks() 
-    : m_probes_slot("GetProbes", "Slot for accessing a probe collection"), m_probes_cached_hash(0), m_billboard_dummy_mesh(nullptr) {
+megamol::probe_gl::ProbeBillboardGlyphRenderTasks::ProbeBillboardGlyphRenderTasks()
+    : m_probes_slot("GetProbes", "Slot for accessing a probe collection")
+    , m_probes_cached_hash(0)
+    , m_billboard_dummy_mesh(nullptr)
+    , m_billboard_size_slot("BillBoardSize", "Sets the scaling factor of the texture billboards") {
 
     this->m_probes_slot.SetCompatibleCall<probe::CallProbesDescription>();
     this->MakeSlotAvailable(&this->m_probes_slot);
 
+    this->m_billboard_size_slot << new core::param::FloatParam(1.0f);
+    this->MakeSlotAvailable(&this->m_billboard_size_slot);
 }
 
 megamol::probe_gl::ProbeBillboardGlyphRenderTasks::~ProbeBillboardGlyphRenderTasks() {}
@@ -56,8 +62,10 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
 
     auto probe_meta_data = pc->getMetaData();
 
-    if (probe_meta_data.m_data_hash > m_probes_cached_hash) {
+    if (probe_meta_data.m_data_hash > m_probes_cached_hash || this->m_billboard_size_slot.IsDirty()) {
         m_probes_cached_hash = probe_meta_data.m_data_hash;
+        this->m_billboard_size_slot.ResetDirty();
+        rt_collection->clear();
 
         if (!(*pc)(0)) return false;
         auto probes = pc->getData();
@@ -70,7 +78,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
             glm::vec4 position;
             GLuint64 texture_handle;
             float slice_idx;
-            float padding1;
+            float scale;
         };
 
         std::vector<PerGlyphData> glyph_data;
@@ -90,7 +98,8 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                 glyph_data[probe_idx].texture_handle =
                     gpu_mtl_storage->getMaterials().front().textures[probe_idx/2048]->getTextureHandle();
                 glyph_data[probe_idx].slice_idx = probe_idx % 2048;
-                
+                glyph_data[probe_idx].scale = this->m_billboard_size_slot.Param<core::param::FloatParam>()->Value();
+
                 gpu_mtl_storage->getMaterials().front().textures[probe_idx/2048]->makeResident();
 
                 glowl::DrawElementsCommand draw_command;

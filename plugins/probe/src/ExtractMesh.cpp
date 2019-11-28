@@ -688,7 +688,7 @@ bool ExtractMesh::getCenterlineData(core::Call& call) {
     _line_attribs[0].stride = sizeof(std::array<float, 4>);
     _line_attribs[0].data = reinterpret_cast<uint8_t*>(_centerline.data());
 
-    _cl_indices.resize(_centerline.size());
+    _cl_indices.resize(_centerline.size()-1);
     std::generate(_cl_indices.begin(), _cl_indices.end(), [n = 0]() mutable { return n++; });
 
     _line_indices.type = mesh::MeshDataAccessCollection::ValueType::UNSIGNED_INT;

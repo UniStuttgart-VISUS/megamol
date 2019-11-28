@@ -6,7 +6,7 @@ struct MeshShaderParams
     vec4 glpyh_position;
     uvec2 texture_handle;
     float slice_idx;
-    float padding0;
+    float scale;
 };
 
 layout(std430, binding = 0) readonly buffer MeshShaderParamsBuffer { MeshShaderParams[] mesh_shader_params; };
@@ -34,5 +34,6 @@ void main()
     float aspect = proj_mx[1][1] / proj_mx[0][0];
     vec2  bboard_vertex = vertices[gl_VertexID].xy;
     
-    gl_Position =  clip_pos + vec4(bboard_vertex.x * 0.2,bboard_vertex.y * 0.2 * aspect,0.0,0.0);
+    gl_Position = clip_pos + vec4(bboard_vertex.x * mesh_shader_params[gl_DrawIDARB].scale,
+                                 bboard_vertex.y * mesh_shader_params[gl_DrawIDARB].scale * aspect, 0.0, 0.0);
 }
