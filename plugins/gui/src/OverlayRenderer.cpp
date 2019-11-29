@@ -22,6 +22,10 @@ OverlayRenderer::OverlayRenderer(void)
     , paramFileName("texture::file_name", "The file name of the texture.")
     , paramRelativeWidth("texture::relative_width", "Relative screen space width of texture.")
     , paramButtonColor("media_buttons::color", "Color of media buttons.")
+    , paramDuration("media_buttons::duration", "Duration media buttons are shown after value changes. Value of zero "
+                                               "means showing media buttons permanently.")
+    , paramScaling(
+          "media_buttons::value_scaling", "Parameter value scaling adjusting threshold for media button appearance.")
     , paramPrefix("parameter::prefix", "The parameter value prefix.")
     , paramSufix("parameter::sufix", "The parameter value sufix.")
     , paramParameterName("parameter::name", "The full parameter name, e.g. '::Project_1::View3D_21::anim::time'. "
@@ -33,10 +37,11 @@ OverlayRenderer::OverlayRenderer(void)
     , m_texture()
     , m_shader()
     , m_font(nullptr)
-    , m_media_buttons()
-    , m_parameter_ptr(nullptr)
     , m_viewport()
-    , m_current_rectangle({0.0f, 0.0f, 0.0f, 0.0f}) {
+    , m_current_rectangle({0.0f, 0.0f, 0.0f, 0.0f})
+    , m_parameter_ptr(nullptr)
+    , m_media_buttons()
+    , m_last_state() {
 
     this->MakeSlotAvailable(&this->chainRenderSlot);
     this->MakeSlotAvailable(&this->renderSlot);
@@ -81,6 +86,12 @@ OverlayRenderer::OverlayRenderer(void)
     // Media Button Mode
     this->paramButtonColor << new param::ColorParam(0.5f, 0.5f, 0.5f, 1.0f);
     this->MakeSlotAvailable(&this->paramButtonColor);
+
+    this->paramDuration << new param::FloatParam(3.0f, 0.0f);
+    this->MakeSlotAvailable(&this->paramDuration);
+
+    this->paramScaling << new param::FloatParam(1.0f, 0.0f);
+    this->MakeSlotAvailable(&this->paramScaling);
 
     // Parameter Mode
     this->paramPrefix << new param::StringParam("");
@@ -154,12 +165,10 @@ bool OverlayRenderer::onToggleMode(param::ParamSlot& slot) {
     switch (mode) {
     case (Mode::TEXTURE): {
         if (!this->loadShader(this->m_shader, "overlay::vertex", "overlay::fragment")) return false;
-        // Load current texture from parameter
         this->onTextureFileName(slot);
     } break;
     case (Mode::MEDIA_BUTTONS): {
         if (!this->loadShader(this->m_shader, "overlay::vertex", "overlay::fragment")) return false;
-        // Load media button texutres from hard coded texture file names.
         std::string filename;
         for (size_t i = 0; i < this->m_media_buttons.size(); i++) {
             switch (static_cast<MediaButton>(i)) {
@@ -183,12 +192,10 @@ bool OverlayRenderer::onToggleMode(param::ParamSlot& slot) {
         }
     } break;
     case (Mode::PARAMETER): {
-        // Load current parameter by name
         this->onParameterName(slot);
         this->onFontName(slot);
     } break;
     case (Mode::LABEL): {
-        // Load current font name from parameter
         this->onFontName(slot);
     } break;
     }
@@ -279,6 +286,8 @@ void OverlayRenderer::setParameterGUIVisibility(void) {
 
     // Media Buttons Mode
     this->paramButtonColor.Param<param::ColorParam>()->SetGUIVisible(media_mode);
+    this->paramDuration.Param<param::FloatParam>()->SetGUIVisible(media_mode);
+    this->paramScaling.Param<param::FloatParam>()->SetGUIVisible(media_mode);
 
     // Parameter Mode
     this->paramPrefix.Param<param::StringParam>()->SetGUIVisible(parameter_mode);
@@ -360,30 +369,61 @@ bool OverlayRenderer::Render(view::CallRender3D_2& call) {
     case (Mode::MEDIA_BUTTONS): {
         auto param_color = this->paramButtonColor.Param<param::ColorParam>()->Value();
         glm::vec4 overwrite_color = glm::vec4(param_color[0], param_color[1], param_color[2], param_color[3]);
+        float time_scaling = this->paramScaling.Param<param::FloatParam>()->Value();
 
-        MediaButton media_button = MediaButton::NONE;
-
-        float value = std::numeric_limits<float>::max();
-
+        float current_value = 0.0f;
         if (auto* float_param = this->m_parameter_ptr.DynamicCast<param::FloatParam>()) {
-            auto value = float_param->Value();
+            current_value = float_param->Value();
         } else if (auto* int_param = this->m_parameter_ptr.DynamicCast<param::IntParam>()) {
-            auto value = int_param->Value();
+            current_value = static_cast<float>(int_param->Value());
         } else if (auto* vec2_param = this->m_parameter_ptr.DynamicCast<param::Vector2fParam>()) {
-            auto value = vec2_param->Value();
+            current_value = vec2_param->Value().X() + vec2_param->Value().Y();
         } else if (auto* vec3_param = this->m_parameter_ptr.DynamicCast<param::Vector3fParam>()) {
-            auto value = vec3_param->Value();
+            current_value = vec3_param->Value().X() + vec3_param->Value().Y() + vec3_param->Value().Z();
         } else if (auto* vec4_param = this->m_parameter_ptr.DynamicCast<param::Vector4fParam>()) {
-            auto value = vec4_param->Value();
+            current_value =
+                vec4_param->Value().X() + vec4_param->Value().Y() + vec4_param->Value().Z() + vec4_param->Value().W();
         }
-        if (media_button == MediaButton::NONE) {
-            // vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-            //    "Unable to use parmeter for media buttons [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            return false;
+        // if (media_button == MediaButton::NONE) {
+        //    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        //        "Unable to use parmeter for media buttons [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        //    return false;
+        //}
+
+        current_value *= time_scaling;
+        MediaButton current_button = MediaButton::NONE;
+        float current_delta = current_value - this->m_last_state.value;
+
+        if (current_delta > 1.0f) {
+            current_button = MediaButton::FAST_FORWARD;
+        } else if (current_delta < -0.01f) { // delta threshold sesitivity can be adjustd via scaling parameter
+            current_button = MediaButton::REWIND;
+        } else if (current_delta > 0.01f) { // delta threshold sesitivity can be adjustd via scaling parameter
+            current_button = MediaButton::PLAY;
+        } else if (current_delta == 0.0f) {
+            current_button = MediaButton::PAUSE;
+        }
+        // else if ((current_value == 0.0f) && (this->m_last_delta_time > 0.0f)) {
+        //    media_button = MediaButton::STOP;
+        //}
+
+        if (current_button != this->m_last_state.button) {
+            this->m_last_state.start_time = std::chrono::system_clock::now();
+        }
+        this->m_last_state.button = current_button;
+        this->m_last_state.value = current_value;
+
+        float duration = this->paramDuration.Param<param::FloatParam>()->Value();
+        std::chrono::duration<double> diff = (std::chrono::system_clock::now() - this->m_last_state.start_time);
+        if (diff.count() > static_cast<double>(duration)) {
+            current_button = MediaButton::NONE;
         }
 
-        this->drawScreenSpaceBillboard(
-            ortho, this->m_current_rectangle, this->m_media_buttons[media_button], this->m_shader, overwrite_color);
+        if (current_button != MediaButton::NONE) {
+            this->drawScreenSpaceBillboard(ortho, this->m_current_rectangle, this->m_media_buttons[current_button],
+                this->m_shader, overwrite_color);
+        }
+
     } break;
     case (Mode::PARAMETER): {
         auto param_color = this->paramFontColor.Param<param::ColorParam>()->Value();
@@ -427,8 +467,8 @@ bool OverlayRenderer::Render(view::CallRender3D_2& call) {
             text = prefix + stream.str() + sufix;
         }
         if (text.empty()) {
-            // vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-            //    "Unable to read parmeter value [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                "Unable to read parmeter value [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
 

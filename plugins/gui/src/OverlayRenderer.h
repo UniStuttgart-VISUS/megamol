@@ -35,6 +35,7 @@
 #include "vislib/sys/File.h"
 #include "vislib/sys/Log.h"
 
+#include <chrono>
 #include <glm/gtc/matrix_transform.hpp>
 
 
@@ -127,6 +128,12 @@ private:
     // Explicit numbering required as indices in media_buttons array.
     enum MediaButton { PLAY = 0, STOP = 1, PAUSE = 2, REWIND = 3, FAST_FORWARD = 4, NONE = 5 };
 
+    struct MediaButtonState {
+        MediaButton button;
+        float value;
+        std::chrono::system_clock::time_point start_time;
+    };
+
     /**********************************************************************
      * variables
      **********************************************************************/
@@ -140,6 +147,7 @@ private:
     vislib::SmartPtr<megamol::core::param::AbstractParam> m_parameter_ptr;
     // Media Buttons
     std::array<TextureData, 5> m_media_buttons;
+    MediaButtonState m_last_state;
 
     /**********************************************************************
      * functions
@@ -184,12 +192,13 @@ private:
     core::param::ParamSlot paramRelativeWidth;
     // Media Buttons Mode
     core::param::ParamSlot paramButtonColor;
+    core::param::ParamSlot paramDuration;
+    core::param::ParamSlot paramScaling;
     // Parameter Mode
     core::param::ParamSlot paramPrefix;
     core::param::ParamSlot paramSufix;
     core::param::ParamSlot paramParameterName;
     // core::param::ParamSlot paramOffset;
-    // core::param::ParamSlot paramSpeedFactor;
     // Label Mode
     core::param::ParamSlot paramText;
     // Font Settings
