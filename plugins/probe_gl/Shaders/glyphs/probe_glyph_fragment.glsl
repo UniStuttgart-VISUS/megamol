@@ -23,7 +23,7 @@ void main() {
 
     vec4 tx_col = texture( tx_hndl,tx_crds);
 
-    if(tx_col.a < 0.00001) discard;
+    if(tx_col.a < 0.5) discard;
 
     albedo_out = tx_col;
     normal_out = vec3(0.0,0.0,1.0);
