@@ -71,6 +71,8 @@ namespace MegaMolConf {
         internal static GraphicalModule eyedropperTarget { get; private set; }
         internal static GraphicalConnection selectedConnection { get; private set; }
         internal static bool drawConnection { get; private set; }
+        internal static bool drawCallNames { get; private set; } = true;
+        internal static bool callBoundsCalculated { get; set; }
         internal static bool showSlotTips { get; private set; }
 
         internal TabPage SelectedTab {
@@ -1050,6 +1052,7 @@ namespace MegaMolConf {
                             somethingSelected = true;
                             break;
                         }
+                        lastMousePos = e.Location;
                     }
 
                     if (!somethingSelected) {
@@ -1140,6 +1143,25 @@ namespace MegaMolConf {
                     RefreshCurrent();
                 }
             } else {
+                if (tabViews.SelectedTab != null)
+                {
+                    if (e.Button == MouseButtons.Left)
+                    {
+                        int delta_x = (lastMousePos.X - e.Location.X);
+                        int delta_y = (lastMousePos.Y - e.Location.Y);
+                        Panel p = tabViews.SelectedTab.Controls[0] as Panel;
+                        int check = p.HorizontalScroll.Maximum;
+                        int check2 = p.HorizontalScroll.Minimum;
+                        int check3 = p.VerticalScroll.Maximum;
+                        int check4 = p.VerticalScroll.Minimum;
+                        int shift_x = p.HorizontalScroll.Value + delta_x;
+                        int shift_y = p.HorizontalScroll.Value + delta_y;
+                        if (shift_x > p.HorizontalScroll.Maximum) p.HorizontalScroll.Value = p.HorizontalScroll.Maximum;
+                        if (shift_x < p.HorizontalScroll.Minimum) p.HorizontalScroll.Value = p.HorizontalScroll.Minimum;
+                        if (shift_y > p.VerticalScroll.Maximum) p.VerticalScroll.Value = p.VerticalScroll.Maximum;
+                        if (shift_y < p.VerticalScroll.Minimum) p.VerticalScroll.Value = p.VerticalScroll.Minimum;
+                    }
+                }
                 RefreshCurrent();
             }
             lastMousePos = e.Location;
@@ -2593,6 +2615,12 @@ in PowerShell:
                     Clipboard.SetText(s);
                 }
             }
+        }
+
+        private void btnHideCallNames_Click(object sender, EventArgs e)
+        {
+            drawCallNames = btnHideCallNames.Checked;
+            callBoundsCalculated = !btnHideCallNames.Checked;
         }
     }
 }
