@@ -131,6 +131,7 @@ private:
     struct MediaButtonState {
         MediaButton button;
         float value;
+        float delta_value;
         std::chrono::system_clock::time_point start_time;
     };
 

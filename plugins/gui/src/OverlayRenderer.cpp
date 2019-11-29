@@ -362,14 +362,14 @@ bool OverlayRenderer::Render(view::CallRender3D_2& call) {
     auto mode = this->paramMode.Param<param::EnumParam>()->Value();
     switch (mode) {
     case (Mode::TEXTURE): {
-        auto overwrite_color = glm::vec4(0.0f); /// Ignored when alpha = 0
+        auto overwrite_color = glm::vec4(0.0f); /// Ignored when alpha = 0. Using texture color.
         this->drawScreenSpaceBillboard(
             ortho, this->m_current_rectangle, this->m_texture, this->m_shader, overwrite_color);
     } break;
     case (Mode::MEDIA_BUTTONS): {
         auto param_color = this->paramButtonColor.Param<param::ColorParam>()->Value();
         glm::vec4 overwrite_color = glm::vec4(param_color[0], param_color[1], param_color[2], param_color[3]);
-        float time_scaling = this->paramScaling.Param<param::FloatParam>()->Value();
+        float value_scaling = this->paramScaling.Param<param::FloatParam>()->Value();
 
         float current_value = 0.0f;
         if (auto* float_param = this->m_parameter_ptr.DynamicCast<param::FloatParam>()) {
@@ -384,26 +384,28 @@ bool OverlayRenderer::Render(view::CallRender3D_2& call) {
             current_value =
                 vec4_param->Value().X() + vec4_param->Value().Y() + vec4_param->Value().Z() + vec4_param->Value().W();
         }
-        // if (media_button == MediaButton::NONE) {
-        //    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-        //        "Unable to use parmeter for media buttons [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        //    return false;
-        //}
 
-        current_value *= time_scaling;
+        // delta threshold sensitivity can be adjustd via scaling parameter
+        current_value *= value_scaling;
         MediaButton current_button = MediaButton::NONE;
         float current_delta = current_value - this->m_last_state.value;
 
-        if (current_delta > 1.0f) {
+        float eps = 0.0f;
+        // if ((this->m_last_state.button == MediaButton::REWIND) ||
+        //    (this->m_last_state.button == MediaButton::FAST_FORWARD)) {
+        //    eps = 0.01f;
+        //}
+
+        if (current_delta > (1.0f - eps)) {
             current_button = MediaButton::FAST_FORWARD;
-        } else if (current_delta < -0.01f) { // delta threshold sesitivity can be adjustd via scaling parameter
+        } else if (current_delta < (-1.0f + eps)) {
             current_button = MediaButton::REWIND;
-        } else if (current_delta > 0.01f) { // delta threshold sesitivity can be adjustd via scaling parameter
+        } else if (current_delta > 0.0f) {
             current_button = MediaButton::PLAY;
         } else if (current_delta == 0.0f) {
             current_button = MediaButton::PAUSE;
         }
-        // else if ((current_value == 0.0f) && (this->m_last_delta_time > 0.0f)) {
+        // else if (...) {
         //    media_button = MediaButton::STOP;
         //}
 
@@ -412,7 +414,6 @@ bool OverlayRenderer::Render(view::CallRender3D_2& call) {
         }
         this->m_last_state.button = current_button;
         this->m_last_state.value = current_value;
-
         float duration = this->paramDuration.Param<param::FloatParam>()->Value();
         std::chrono::duration<double> diff = (std::chrono::system_clock::now() - this->m_last_state.start_time);
         if (diff.count() > static_cast<double>(duration)) {
@@ -423,7 +424,6 @@ bool OverlayRenderer::Render(view::CallRender3D_2& call) {
             this->drawScreenSpaceBillboard(ortho, this->m_current_rectangle, this->m_media_buttons[current_button],
                 this->m_shader, overwrite_color);
         }
-
     } break;
     case (Mode::PARAMETER): {
         auto param_color = this->paramFontColor.Param<param::ColorParam>()->Value();
