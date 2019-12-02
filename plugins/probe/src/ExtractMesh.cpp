@@ -506,23 +506,23 @@ bool ExtractMesh::getData(core::Call& call) {
 
         // this->filterResult();
         // this->filterByIndex();
-
-        this->convertToMesh();
     }
 
-    if (_mesh_attribs.empty()) {
+    if (_mesh_attribs.empty() || something_changed || _recalc) {
         this->convertToMesh();
+
+        auto meta_data = cm->getMetaData();
+        meta_data.m_bboxs = _bbox;
+        cm->setMetaData(meta_data);
+
+        // put data in mesh
+        mesh::MeshDataAccessCollection mesh;
+
+        mesh.addMesh(_mesh_attribs, _mesh_indices);
+        cm->setData(std::make_shared<mesh::MeshDataAccessCollection>(std::move(mesh)));
     }
 
-    auto meta_data = cm->getMetaData();
-    meta_data.m_bboxs = _bbox;
-    cm->setMetaData(meta_data);
-
-    // put data in mesh
-    mesh::MeshDataAccessCollection mesh;
-
-    mesh.addMesh(_mesh_attribs, _mesh_indices);
-    cm->setData(std::make_shared<mesh::MeshDataAccessCollection>(std::move(mesh)));
+    
     _old_datahash = cd->getDataHash();
     _recalc = false;
 

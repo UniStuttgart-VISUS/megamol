@@ -72,7 +72,7 @@ protected:
 
     bool getMeshMetaDataCallback(core::Call& caller);
 
-    void checkAndLoadGltfModel();
+    bool checkAndLoadGltfModel();
 
 private:
     std::shared_ptr<tinygltf::Model> m_gltf_model;

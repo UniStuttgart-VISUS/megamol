@@ -81,7 +81,6 @@ bool megamol::mesh::GlTFFileLoader::getMeshDataCallback(core::Call& caller) {
     if (cm->getData() == nullptr) {
         // no incoming mesh -> use your own mesh storage
         mesh_collection = this->m_mesh_collection;
-        cm->setData(mesh_collection);
     } else {
         // incoming mesh -> use it (delete local?)
         mesh_collection = cm->getData();
@@ -96,88 +95,90 @@ bool megamol::mesh::GlTFFileLoader::getMeshDataCallback(core::Call& caller) {
     bbox[4] = std::numeric_limits<float>::min();
     bbox[5] = std::numeric_limits<float>::min();
 
-    checkAndLoadGltfModel();
-    auto model = m_gltf_model;
+    auto has_update = checkAndLoadGltfModel();
 
-    if (model == nullptr) return false;
+    if (has_update)
+    {
+        auto model = m_gltf_model;
 
-    for (size_t mesh_idx = 0; mesh_idx < model->meshes.size(); mesh_idx++) {
+        if (model == nullptr) return false;
 
-        auto primitive_cnt = model->meshes[mesh_idx].primitives.size();
+        for (size_t mesh_idx = 0; mesh_idx < model->meshes.size(); mesh_idx++) {
 
-        for (size_t primitive_idx = 0; primitive_idx < primitive_cnt; ++primitive_idx) {
+            auto primitive_cnt = model->meshes[mesh_idx].primitives.size();
 
-            std::vector<MeshDataAccessCollection::VertexAttribute> mesh_attributes;
-            MeshDataAccessCollection::IndexData mesh_indices;
+            for (size_t primitive_idx = 0; primitive_idx < primitive_cnt; ++primitive_idx) {
 
-            auto& indices_accessor = model->accessors[model->meshes[mesh_idx].primitives[primitive_idx].indices];
-            auto& indices_bufferView = model->bufferViews[indices_accessor.bufferView];
-            auto& indices_buffer = model->buffers[indices_bufferView.buffer];
+                std::vector<MeshDataAccessCollection::VertexAttribute> mesh_attributes;
+                MeshDataAccessCollection::IndexData mesh_indices;
 
-            mesh_indices.byte_size = (indices_accessor.count * indices_accessor.ByteStride(indices_bufferView));
-            mesh_indices.data = reinterpret_cast<uint8_t*>(
-                indices_buffer.data.data() + indices_bufferView.byteOffset + indices_accessor.byteOffset);
-            mesh_indices.type = MeshDataAccessCollection::covertToValueType(indices_accessor.componentType);
+                auto& indices_accessor = model->accessors[model->meshes[mesh_idx].primitives[primitive_idx].indices];
+                auto& indices_bufferView = model->bufferViews[indices_accessor.bufferView];
+                auto& indices_buffer = model->buffers[indices_bufferView.buffer];
 
-            auto& vertex_attributes = model->meshes[mesh_idx].primitives[primitive_idx].attributes;
-            for (auto attrib : vertex_attributes) {
-                auto& vertexAttrib_accessor = model->accessors[attrib.second];
-                auto& vertexAttrib_bufferView = model->bufferViews[vertexAttrib_accessor.bufferView];
-                auto& vertexAttrib_buffer = model->buffers[vertexAttrib_bufferView.buffer];
+                mesh_indices.byte_size = (indices_accessor.count * indices_accessor.ByteStride(indices_bufferView));
+                mesh_indices.data = reinterpret_cast<uint8_t*>(
+                    indices_buffer.data.data() + indices_bufferView.byteOffset + indices_accessor.byteOffset);
+                mesh_indices.type = MeshDataAccessCollection::covertToValueType(indices_accessor.componentType);
 
-                MeshDataAccessCollection::AttributeSemanticType attrib_semantic;
+                auto& vertex_attributes = model->meshes[mesh_idx].primitives[primitive_idx].attributes;
+                for (auto attrib : vertex_attributes) {
+                    auto& vertexAttrib_accessor = model->accessors[attrib.second];
+                    auto& vertexAttrib_bufferView = model->bufferViews[vertexAttrib_accessor.bufferView];
+                    auto& vertexAttrib_buffer = model->buffers[vertexAttrib_bufferView.buffer];
 
-                if (attrib.first == "POSITION"){
-                    attrib_semantic = MeshDataAccessCollection::AttributeSemanticType::POSITION;
-                } 
-                else if (attrib.first == "NORMAL"){
-                    attrib_semantic = MeshDataAccessCollection::AttributeSemanticType::NORMAL;
-                } 
-                else if (attrib.first == "TANGENT") {
-                    attrib_semantic = MeshDataAccessCollection::AttributeSemanticType::TANGENT;
-                } 
-                else if (attrib.first == "TEXCOORD") {
-                    attrib_semantic = MeshDataAccessCollection::AttributeSemanticType::TEXCOORD;
-                }
+                    MeshDataAccessCollection::AttributeSemanticType attrib_semantic;
 
-                mesh_attributes.emplace_back(
-                    MeshDataAccessCollection::VertexAttribute{
-                        reinterpret_cast<uint8_t*>(vertexAttrib_buffer.data.data() + vertexAttrib_bufferView.byteOffset + vertexAttrib_accessor.byteOffset),
+                    if (attrib.first == "POSITION") {
+                        attrib_semantic = MeshDataAccessCollection::AttributeSemanticType::POSITION;
+                    } else if (attrib.first == "NORMAL") {
+                        attrib_semantic = MeshDataAccessCollection::AttributeSemanticType::NORMAL;
+                    } else if (attrib.first == "TANGENT") {
+                        attrib_semantic = MeshDataAccessCollection::AttributeSemanticType::TANGENT;
+                    } else if (attrib.first == "TEXCOORD") {
+                        attrib_semantic = MeshDataAccessCollection::AttributeSemanticType::TEXCOORD;
+                    }
+
+                    mesh_attributes.emplace_back(MeshDataAccessCollection::VertexAttribute{
+                        reinterpret_cast<uint8_t*>(vertexAttrib_buffer.data.data() +
+                                                   vertexAttrib_bufferView.byteOffset +
+                                                   vertexAttrib_accessor.byteOffset),
                         (vertexAttrib_accessor.count * vertexAttrib_accessor.ByteStride(vertexAttrib_bufferView)),
                         static_cast<unsigned int>(vertexAttrib_accessor.type),
-                        MeshDataAccessCollection::covertToValueType(vertexAttrib_accessor.componentType),
-                        0,
-                        0,
-                        attrib_semantic
-                    }
-                );
+                        MeshDataAccessCollection::covertToValueType(vertexAttrib_accessor.componentType), 0, 0,
+                        attrib_semantic});
+                }
+
+                mesh_collection->addMesh(mesh_attributes, mesh_indices);
+
+
+                auto max_data =
+                    model
+                        ->accessors
+                            [model->meshes[mesh_idx].primitives[primitive_idx].attributes.find("POSITION")->second]
+                        .maxValues;
+                auto min_data =
+                    model
+                        ->accessors
+                            [model->meshes[mesh_idx].primitives[primitive_idx].attributes.find("POSITION")->second]
+                        .minValues;
+
+                bbox[0] = std::min(bbox[0], static_cast<float>(min_data[0]));
+                bbox[1] = std::min(bbox[1], static_cast<float>(min_data[1]));
+                bbox[2] = std::min(bbox[2], static_cast<float>(min_data[2]));
+                bbox[3] = std::max(bbox[3], static_cast<float>(max_data[0]));
+                bbox[4] = std::max(bbox[4], static_cast<float>(max_data[1]));
+                bbox[5] = std::max(bbox[5], static_cast<float>(max_data[2]));
             }
-
-            mesh_collection->addMesh(mesh_attributes, mesh_indices);
-
-
-            auto max_data =
-                model->accessors[model->meshes[mesh_idx].primitives[primitive_idx].attributes.find("POSITION")->second]
-                    .maxValues;
-            auto min_data =
-                model->accessors[model->meshes[mesh_idx].primitives[primitive_idx].attributes.find("POSITION")->second]
-                    .minValues;
-
-            bbox[0] = std::min(bbox[0], static_cast<float>(min_data[0]));
-            bbox[1] = std::min(bbox[1], static_cast<float>(min_data[1]));
-            bbox[2] = std::min(bbox[2], static_cast<float>(min_data[2]));
-            bbox[3] = std::max(bbox[3], static_cast<float>(max_data[0]));
-            bbox[4] = std::max(bbox[4], static_cast<float>(max_data[1]));
-            bbox[5] = std::max(bbox[5], static_cast<float>(max_data[2]));
         }
+
+        auto meta_data = cm->getMetaData();
+        meta_data.m_bboxs.SetBoundingBox(bbox[0], bbox[1], bbox[2], bbox[3], bbox[4], bbox[5]);
+        meta_data.m_bboxs.SetClipBox(bbox[0], bbox[1], bbox[2], bbox[3], bbox[4], bbox[5]);
+        cm->setMetaData(meta_data);
+        cm->setData(mesh_collection);
     }
-
-    auto meta_data = cm->getMetaData();
-    meta_data.m_bboxs.SetBoundingBox(bbox[0], bbox[1], bbox[2], bbox[3], bbox[4], bbox[5]);
-    meta_data.m_bboxs.SetClipBox(bbox[0], bbox[1], bbox[2], bbox[3], bbox[4], bbox[5]);
-    cm->setMetaData(meta_data);
-    cm->setData(m_mesh_collection);
-
+    
     return true;
 }
 
@@ -198,7 +199,7 @@ bool megamol::mesh::GlTFFileLoader::getMeshMetaDataCallback(core::Call& caller) 
     return true;
 }
 
-void megamol::mesh::GlTFFileLoader::checkAndLoadGltfModel() {
+bool megamol::mesh::GlTFFileLoader::checkAndLoadGltfModel() {
 
     if (this->m_glTFFilename_slot.IsDirty()) {
         m_glTFFilename_slot.ResetDirty();
@@ -219,7 +220,11 @@ void megamol::mesh::GlTFFileLoader::checkAndLoadGltfModel() {
         if (!ret) {
             vislib::sys::Log::DefaultLog.WriteError("Failed to parse glTF\n");
         }
+
+        return true;
     }
+
+    return false;
 }
 
 void megamol::mesh::GlTFFileLoader::release() {

@@ -4,7 +4,8 @@
 #include "mesh/MeshCalls.h"
 
 megamol::mesh::GPUMeshes::GPUMeshes()
-    : m_mesh_slot("CallMeshes", "Connects mesh data to be uploaded to the GPU"), m_mesh_cached_hash(0) {
+    : m_mesh_slot("CallMeshes", "Connects mesh data to be uploaded to the GPU")
+{
     this->m_mesh_slot.SetCompatibleCall<CallMeshDescription>();
     this->MakeSlotAvailable(&this->m_mesh_slot);
 }
@@ -21,20 +22,19 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
     if (lhs_mesh_call->getData() == nullptr) {
         // no incoming mesh -> use your own mesh storage
         mesh_collection = this->m_gpu_meshes;
-        lhs_mesh_call->setData(mesh_collection);
     } else {
         // incoming mesh -> use it (delete local?)
         mesh_collection = lhs_mesh_call->getData();
     }
 
+    bool something_has_changed = false; // something has changed in the neath...
+
     CallMesh* mc = this->m_mesh_slot.CallAs<CallMesh>();
     if (mc == NULL) return false;
+    if (!(*mc)(0)) return false;
 
-    if (mc->getMetaData().m_data_hash > m_mesh_cached_hash) {
-
-        if (!(*mc)(0)) return false;
-
-        m_mesh_cached_hash = mc->getMetaData().m_data_hash;
+    if (mc->hasUpdate()) {
+        something_has_changed = true;
 
         if (!m_mesh_collection_indices.empty()) {
             // TODO delete all exisiting render task from this module
@@ -69,6 +69,7 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
             mesh_collection->addMesh(vertex_descriptor, vb_iterators, ib_iterators,
                 MeshDataAccessCollection::convertToGLType(mesh.indices.type), GL_STATIC_DRAW, GL_TRIANGLES);
         }
+
     }
 
     // update meta data to lhs
@@ -83,12 +84,15 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
 
         if (!(*rhs_mesh_call)(0)) return false;
 
-        m_mesh_rhs_cached_hash = rhs_mesh_call->getMetaData().m_data_hash;
+        if (rhs_mesh_call->hasUpdate()){
+            something_has_changed = true;
+            rhs_mesh_call->getData();
+        }
+
     } else {
         rhs_meta_data.m_frame_cnt = src_meta_data.m_frame_cnt;
     }
 
-    
     lhs_meta_data.m_frame_cnt = std::min(src_meta_data.m_frame_cnt, rhs_meta_data.m_frame_cnt);
 
     auto bbox = src_meta_data.m_bboxs.BoundingBox();
@@ -101,6 +105,10 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
 
     lhs_mesh_call->setMetaData(lhs_meta_data);
 
+    if (something_has_changed)
+    {
+        lhs_mesh_call->setData(mesh_collection);
+    }
 
     return true;
 }
@@ -123,7 +131,6 @@ bool megamol::mesh::GPUMeshes::getMetaDataCallback(core::Call& caller)
     if (!(*src_mesh_call)(1)) return false;
     src_meta_data = src_mesh_call->getMetaData();
 
-
     if (rhs_mesh_call != NULL)
     {
         rhs_meta_data = rhs_mesh_call->getMetaData();
@@ -131,22 +138,12 @@ bool megamol::mesh::GPUMeshes::getMetaDataCallback(core::Call& caller)
         rhs_mesh_call->setMetaData(rhs_meta_data);
         if (!(*rhs_mesh_call)(1)) return false;
         rhs_meta_data = rhs_mesh_call->getMetaData();
-
-        if (rhs_meta_data.m_data_hash > m_mesh_rhs_cached_hash){
-            m_mesh_lhs_cached_hash++;
-        }
     }
     else
     {
         rhs_meta_data.m_frame_cnt = 1;
     }
 
-    if (src_meta_data.m_data_hash > m_mesh_cached_hash) {
-        m_mesh_lhs_cached_hash++;
-    }
-
-
-    lhs_meta_data.m_data_hash = m_mesh_lhs_cached_hash;
     lhs_meta_data.m_frame_cnt = std::min(src_meta_data.m_frame_cnt, rhs_meta_data.m_frame_cnt);
 
     auto bbox = src_meta_data.m_bboxs.BoundingBox();

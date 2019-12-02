@@ -51,7 +51,6 @@ protected:
 
 private:
     megamol::core::CallerSlot m_mesh_slot;
-    size_t m_mesh_cached_hash;
 };
 
 
