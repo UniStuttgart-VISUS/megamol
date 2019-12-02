@@ -90,13 +90,13 @@ bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) {
 
                 draw_commands[probe_idx] = gpu_sub_mesh.sub_mesh_draw_command;
 
-                const glm::vec3 from(0.0f, 1.0f, 0.0f);
+                const glm::vec3 from(0.0f, 0.0f, 1.0f);
                 const glm::vec3 to(probe.m_direction[0], probe.m_direction[1], probe.m_direction[2]);
                 glm::vec3 v = glm::cross(to, from);
                 float angle = -acos(glm::dot(to, from) / (glm::length(to) * glm::length(from)));
                 m_probe_draw_data[probe_idx].object_transform = glm::rotate(angle, v);
 
-                auto scaling = glm::scale(glm::vec3(0.5f, probe.m_end - probe.m_begin, 0.5f));
+                auto scaling = glm::scale(glm::vec3(0.5f, 0.5f, probe.m_end - probe.m_begin));
 
                 auto probe_start_point = glm::vec3(probe.m_position[0] + probe.m_direction[0] * probe.m_begin,
                     probe.m_position[1] + probe.m_direction[1] * probe.m_begin,

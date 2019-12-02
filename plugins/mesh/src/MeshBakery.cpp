@@ -167,8 +167,8 @@ void megamol::mesh::MeshBakery::createConeGeometry() {
     m_indices.clear();
 
     int segments = 8;
-    float radius = 1.0f;
-    float height = 5.0f;
+    float radius = 0.05f;
+    float height = 1.0f;
     float alpha = std::atan(radius / height);
 
     //TODO create cone base
@@ -178,8 +178,8 @@ void megamol::mesh::MeshBakery::createConeGeometry() {
     for (int i = 0; i < segments; ++i) {
         float x = 0.0f, y = 0.0f, z = 0.0f;
 
-        x = radius * std::sin(static_cast<float>(i) / static_cast<float>(segments) * 3.14159265359 / 180.0f);
-        y = radius * std::cos(static_cast<float>(i) / static_cast<float>(segments) * 3.14159265359 / 180.0f);
+        x = radius * std::sin(static_cast<float>(i) / static_cast<float>(segments) * 2.0f * 3.14159265359f);
+        y = radius * std::cos(static_cast<float>(i) / static_cast<float>(segments) * 2.0f * 3.14159265359f);
 
         float nx = x, ny = y;
         float nz = std::tan(alpha) * radius;
