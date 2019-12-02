@@ -14,12 +14,15 @@
 
 #include "DiagramSeries.h"
 #include "DiagramSeriesCall.h"
-#include "HistogramRenderer2D.h"
 #include "MDSProjection.h"
 #include "PCAProjection.h"
+#include "TSNEProjection.h"
+
+// Use extra block for renderer, so clang format does not change include order. Eigen3 (used in MDSProjection)
+// does not compile when X11 header (used in SDFFont, which is used in renderers) is included before.
+#include "HistogramRenderer2D.h"
 #include "ParallelCoordinatesRenderer2D.h"
 #include "ScatterplotMatrixRenderer2D.h"
-#include "TSNEProjection.h"
 
 /* anonymous namespace hides this type from any other object files */
 namespace {
