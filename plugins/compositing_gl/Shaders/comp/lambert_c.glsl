@@ -3,7 +3,8 @@ struct LightParams
     float x,y,z,intensity;
 };
 
-layout(std430, binding = 1) readonly buffer LightParamsBuffer { LightParams light_params[]; };
+layout(std430, binding = 1) readonly buffer PointLightParamsBuffer { LightParams point_light_params[]; };
+layout(std430, binding = 2) readonly buffer DistantLightParamsBuffer { LightParams distant_light_params[]; };
 
 uniform sampler2D albedo_tx2D;
 uniform sampler2D normal_tx2D;
@@ -11,7 +12,8 @@ uniform sampler2D depth_tx2D;
 
 layout(RGBA16) writeonly uniform image2D tgt_tx2D;
 
-uniform int light_cnt;
+uniform int point_light_cnt;
+uniform int distant_light_cnt;
 
 uniform mat4 inv_view_mx;
 uniform mat4 inv_proj_mx;
@@ -56,17 +58,23 @@ void main() {
 
     vec4 retval = albedo;
 
-    if(depth > 0.0f)
+    if (depth > 0.0f && depth < 1.0f)
     {
         vec3 world_pos = depthToWorldPos(depth,pixel_coords_norm);
 
         float reflected_light = 0.0;
-        for(int i=0; i<light_cnt; ++i)
+        for(int i=0; i<point_light_cnt; ++i)
         {
-            vec3 light_dir = vec3(light_params[i].x,light_params[i].y,light_params[i].z) - world_pos;
+            vec3 light_dir = vec3(point_light_params[i].x,point_light_params[i].y,point_light_params[i].z) - world_pos;
             float d = length(light_dir);
             light_dir = normalize(light_dir);
-            reflected_light += lambert(light_dir,normal) * light_params[i].intensity * (1.0/(d*d));
+            reflected_light += lambert(light_dir,normal) * point_light_params[i].intensity * (1.0/(d*d));
+        }
+
+        for(int i=0; i<distant_light_cnt; ++i)
+        {
+            vec3 light_dir = vec3(distant_light_params[i].x,distant_light_params[i].y,distant_light_params[i].z);
+            reflected_light += lambert(light_dir,normal) * distant_light_params[i].intensity;
         }
 
         retval.rgb = vec3(reflected_light) * albedo.rgb;

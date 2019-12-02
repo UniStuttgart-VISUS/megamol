@@ -80,50 +80,111 @@ class PeekFileDefinitionProvider implements vscode.DefinitionProvider {
 
     provideDefinition(document: vscode.TextDocument,
         position: vscode.Position,
-        token: vscode.CancellationToken): vscode.Definition {
-        // todo: make this method operate async
-        let working_dir = path.dirname(document.fileName);
-        let word = document.getText(document.getWordRangeAtPosition(position));
-        let line = document.lineAt(position);
+        token: vscode.CancellationToken): Thenable<vscode.Location> {
 
-        //console.log('====== peek-file definition lookup ===========');
-        //console.log('word: ' + word);
-        //console.log('line: ' + line.text);
-        // We are looking for strings with filenames
-        // - simple hack for now we look for the string with our current word in it on our line
-        //   and where our cursor position is inside the string
-        //let re_str = `\"(.*?${word}.*?)\"|\'(.*?${word}.*?)\'`;
-        let re_str = `>(.*?${word}.*?)<`;
-        let match = line.text.match(re_str);
+        return new Promise((resolve, reject) => {
+            var working_dir = path.dirname(document.fileName);
+            var word = document.getText(document.getWordRangeAtPosition(position));
+            var line = document.lineAt(position);
 
-        //console.log('re_str: ' + re_str);
-        //console.log("   Match: ", match);
-        if (null !== match) {
-            let potential_fname = match[1]; // || match[2];
-            let match_start = match.index;
-            let match_end = match.index + potential_fname.length;
+            //console.log('====== peek-file definition lookup ===========');
+            //console.log('word: ' + word);
+            //console.log('line: ' + line.text);
+            // We are looking for strings with filenames
+            // - simple hack for now we look for the string with our current word in it on our line
+            //   and where our cursor position is inside the string
+            //let re_str = `\"(.*?${word}.*?)\"|\'(.*?${word}.*?)\'`;
+            var re_str = `>(.*?${word}.*?)<`;
+            var match = line.text.match(re_str);
 
-            // Verify the match string is at same location as cursor
-            if ((position.character >= match_start) &&
-                (position.character <= match_end)) {
-                let full_path = path.resolve(working_dir, potential_fname);
-                //console.log(" Match: ", match);
-                //console.log(" Fname: " + potential_fname);
-                //console.log("  Full: " + full_path);
-                // Find all potential paths to check and return the first one found
-                let potential_fnames = this.getPotentialPaths(full_path);
-                //console.log(" potential fnames: ", potential_fnames);
-                let found_fname = potential_fnames.find((fname_full) => {
-                    //console.log(" checking: ", fname_full);
-                    return fs.existsSync(fname_full);
-                });
-                if (found_fname != null) {
-                    //console.log('found: ' + found_fname);
-                    return new vscode.Location(vscode.Uri.file(found_fname), new vscode.Position(0, 1));
+            console.log('re_str: ' + re_str);
+            console.log("   Match: ", match);
+            if (null !== match) {
+                var potential_fname = match[1]; // || match[2];
+                var match_start = match.index;
+                var match_end = match.index + potential_fname.length;
+
+                // Verify the match string is at same location as cursor
+                if ((position.character >= match_start) &&
+                    (position.character <= match_end)) {
+                    var full_path = path.resolve(working_dir, potential_fname);
+                    //console.log(" Match: ", match);
+                    //console.log(" Fname: " + potential_fname);
+                    //console.log("  Full: " + full_path);
+                    // Find all potential paths to check and return the first one found
+                    var potential_fnames = this.getPotentialPaths(full_path);
+                    //console.log(" potential fnames: ", potential_fnames);
+                    var found_fname = potential_fnames.find((fname_full) => {
+                        //console.log(" checking: ", fname_full);
+                        return fs.existsSync(fname_full);
+                    });
+                    if (found_fname !== null) {
+                        //console.log('found: ' + found_fname);
+                        resolve(new vscode.Location(vscode.Uri.file(found_fname), new vscode.Position(0, 1)));
+                        return;
+                    }
+                }
+            } else {
+                var re_snippet = `<snippet.*?name="([^"]+)"`;
+                match = line.text.match(re_snippet);
+
+                //console.log('re_snippet: ' + re_snippet);
+                //console.log("   Match: ", match);
+
+                if (null !== match) {
+                    var full_name = match[1];
+                    // leading "::" need to be removed
+                    full_name = full_name.replace(/^::/, '');
+                    var pieces = full_name.split("::");
+                    if (pieces.length > 1) {
+                        var filename = pieces[0];
+                        //var snippet = pieces[pieces.length - 1];
+                        //console.log(filename);
+
+                        vscode.workspace.findFiles("**/" + filename + ".btf", "**/share/**").then(
+                            btfs => {
+                                vscode.workspace.openTextDocument(btfs[0]).then(val => {
+                                    //console.log("opening " + btfs[0]);
+                                    var t = val.getText();
+                                    //var parseString = require('xml2js').parseString;
+                                    var DOMParser = require('xmldom').DOMParser;
+                                    var doc = new DOMParser().parseFromString(t);
+                                    console.log(doc);
+                                    var btfElem = doc.documentElement;
+                                    if (btfElem.tagName === "btf" && btfElem.getAttribute("namespace") === filename) {
+                                        // we should be in the right place
+                                        var temp = btfElem;
+                                        for (var i = 1; i < pieces.length; i++) {
+                                            for (var j = 0; 0 < temp.childNodes.length; j++) {
+                                                var c = temp.childNodes[j];
+                                                if (c.nodeType === 1) {
+                                                    // Element
+                                                    if (c.tagName === "snippet" && c.getAttribute("name") === pieces[i]) {
+                                                        resolve(new vscode.Location(btfs[0], new vscode.Position(c.lineNumber - 1, c.columnNumber - 1)));
+                                                        return;
+                                                    } else if (c.tagName === "namespace" && c.getAttribute("name") === pieces[i]) {
+                                                        // descend
+                                                        temp = c;
+                                                        break;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }, err => { });
+                                //resolve(new vscode.Location(val[0], new vscode.Position(0, 1)));
+                                //return;
+                            },
+                            err => {
+                                // I'm not sure I care
+                                //handleError(err);
+                            }
+                        );
+                        //let snipname = pieces[pieces.length - 1];
+                        //console.log(filename + snipname);
+                    }
                 }
             }
-        }
-
-        return null;
+        });
     }
 }

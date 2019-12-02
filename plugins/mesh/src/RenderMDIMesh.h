@@ -113,10 +113,6 @@ protected:
      */
     bool Render(core::view::CallRender3D_2& call);
 
-    bool setFramebufferDataCallback(core::Call& caller);
-
-    bool setFramebufferMetaDataCallback(core::Call& caller);
-
 private:
     /** GPU buffer object that stores per frame data, i.e. camera parameters */
     std::unique_ptr<glowl::BufferObject> m_per_frame_data;
@@ -126,7 +122,7 @@ private:
 
     megamol::core::CallerSlot m_render_task_callerSlot;
 
-    megamol::core::CalleeSlot m_framebuffer_slot;
+    megamol::core::CallerSlot m_framebuffer_slot;
 };
 
 } // namespace mesh

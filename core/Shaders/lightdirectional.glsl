@@ -1,8 +1,11 @@
 
+// TODO: Implementation is wrong! Does positional Lighting instead of directional lighting!
+
 // ray:      the eye to fragment ray vector
 // normal:   the normal of this fragment
 // lightPos: the position of the light source
 // color:    the base material color
+
 vec3 LocalLighting(const in vec3 ray, const in vec3 normal, const in vec3 lightdir, const in vec3 color) {
 
     vec4 lightparams = vec4(0.2, 0.8, 0.9, 10.0);
