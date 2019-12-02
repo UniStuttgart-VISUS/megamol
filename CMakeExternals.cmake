@@ -113,7 +113,7 @@ function(require_external NAME)
       set(ADIOS2_LIB "${CMAKE_INSTALL_LIBDIR}/libadios2.so")
     endif()
 
-    add_external_project(adios2
+    add_external_project(adios2 SHARED
       GIT_REPOSITORY https://github.com/ornladios/ADIOS2.git
       GIT_TAG "v2.3.1"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${ADIOS2_LIB}"
@@ -147,7 +147,7 @@ function(require_external NAME)
       set(BHTSNE_LIB "lib/libbhtsne.so")
     endif()
 
-    add_external_project(bhtsne
+    add_external_project(bhtsne SHARED
       GIT_REPOSITORY https://github.com/lvdmaaten/bhtsne.git
       GIT_TAG "36b169c88250d0afe51828448dfdeeaa508f13bc"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${BHTSNE_LIB}"
@@ -170,16 +170,16 @@ function(require_external NAME)
     if(WIN32)
       set(GLFW_IMPORT_LIB "lib/glfw3dll.lib")
       set(GLFW_LIB "lib/glfw3.dll")
-      set(GLFW_COPY COPY "\"<INSTALL_DIR>/lib/glfw3.dll\" \"<INSTALL_DIR>/bin/glfw3.dll\"")
     else()
       set(GLFW_LIB "lib/libglfw.so")
     endif()
 
-    add_external_project(glfw
+    add_external_project(glfw SHARED
       GIT_REPOSITORY https://github.com/glfw/glfw.git
       GIT_TAG "3.2.1"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${GLFW_LIB}"
-      ${GLFW_COPY}
+      COMMANDS COMMAND ${CMAKE_COMMAND} -E copy "\"${CMAKE_INSTALL_PREFIX}/${GLFW_LIB}\" \"${CMAKE_INSTALL_PREFIX}/bin/glfw3.dll\""
+               COMMAND ${CMAKE_COMMAND} -E remove -f \"${CMAKE_INSTALL_PREFIX}/${GLFW_LIB}\"
       CMAKE_ARGS
         -DBUILD_SHARED_LIBS=ON
         -DGLFW_BUILD_EXAMPLES=OFF
@@ -211,7 +211,7 @@ function(require_external NAME)
       set(ICET_MPI_LIB "lib/libIceTMPI.so")
     endif()
     
-    add_external_project(IceT
+    add_external_project(IceT SHARED
       GIT_REPOSITORY https://gitlab.kitware.com/icet/icet.git
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${ICET_CORE_LIB}" "<INSTALL_DIR>/${ICET_GL_LIB}" "<INSTALL_DIR>/${ICET_MPI_LIB}"
       CMAKE_ARGS
@@ -247,7 +247,7 @@ function(require_external NAME)
       set(IMGUI_LIB "lib/libimgui.so")
     endif()
 
-    add_external_project(imgui
+    add_external_project(imgui SHARED
       GIT_REPOSITORY https://github.com/ocornut/imgui.git
       GIT_TAG "v1.70"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${IMGUI_LIB}"
@@ -295,7 +295,7 @@ function(require_external NAME)
 
     external_get_property(zlib INSTALL_DIR)
 
-    add_external_project(libpng
+    add_external_project(libpng SHARED
       GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/libpng.git
       GIT_TAG "v1.6.34"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${LIBPNG_LIB}"
@@ -345,7 +345,7 @@ function(require_external NAME)
       set(ZMQ_LIB "${CMAKE_INSTALL_LIBDIR}/libzmq.so")
     endif()
 
-    add_external_project(libzmq
+    add_external_project(libzmq SHARED
       GIT_REPOSITORY https://github.com/zeromq/libzmq.git
       GIT_TAG 56ace6d03f521b9abb5a50176ec7763c1b77afa9
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${ZMQ_LIB}"
@@ -375,7 +375,7 @@ function(require_external NAME)
       set(QUICKHULL_LIB "lib/libquickhull.so")
     endif()
 
-    add_external_project(quickhull
+    add_external_project(quickhull SHARED
       GIT_REPOSITORY https://github.com/akuukka/quickhull.git
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${QUICKHULL_LIB}"
       PATCH_COMMAND ${CMAKE_COMMAND} -E copy
@@ -403,7 +403,7 @@ function(require_external NAME)
       set(SNAPPY_LIB "${CMAKE_INSTALL_LIBDIR}/libsnappy.so")
     endif()
 
-    add_external_project(snappy
+    add_external_project(snappy SHARED
       GIT_REPOSITORY https://github.com/google/snappy.git
       GIT_TAG "1.1.7"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${SNAPPY_LIB}"
@@ -430,7 +430,7 @@ function(require_external NAME)
       set(TINYOBJLOADER_LIB "${CMAKE_INSTALL_LIBDIR}/libtinyobjloader.so")
     endif()
 
-    add_external_project(tinyobjloader
+    add_external_project(tinyobjloader SHARED
       GIT_REPOSITORY https://github.com/syoyo/tinyobjloader.git
       GIT_TAG "v2.0.0-rc1"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${TINYOBJLOADER_LIB}"
@@ -458,7 +458,7 @@ function(require_external NAME)
       set(TNY_LIB "lib/libtinyply.so")
     endif()
 
-    add_external_project(tinyply
+    add_external_project(tinyply SHARED
       GIT_REPOSITORY https://github.com/ddiakopoulos/tinyply.git
       GIT_TAG "2.1"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${TNY_LIB}"
@@ -483,7 +483,7 @@ function(require_external NAME)
       set(ZFP_LIB "${CMAKE_INSTALL_LIBDIR}/libzfp.so")
     endif()
 
-    add_external_project(zfp
+    add_external_project(zfp SHARED
       GIT_REPOSITORY https://github.com/LLNL/zfp.git
       GIT_TAG "0.5.2"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${ZFP_LIB}"
@@ -513,7 +513,7 @@ function(require_external NAME)
       set(ZLIB_LIB "lib/libz.so")
     endif()
 
-    add_external_project(zlib
+    add_external_project(zlib SHARED
       GIT_REPOSITORY https://github.com/madler/zlib.git
       GIT_TAG "v1.2.11"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${ZLIB_LIB}"

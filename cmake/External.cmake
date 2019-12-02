@@ -8,8 +8,8 @@ include(External_properties)
 # Adds an external header-only project.
 #
 # add_external_headeronly_project(<target>
-#     DEPENDS <external_projects>
-#     GIT_REPOSITORY <git-url>
+#     DEPENDS <other targets>
+#     GIT_REPOSITORY <git url>
 #     GIT_TAG <tag or commit>
 #     INCLUDE_DIR <include directories relative to the source directory
 #                  - omit for the source directory itself>)
@@ -61,15 +61,26 @@ endfunction(add_external_headeronly_project)
 #
 # Adds an external project.
 #
-# See ExternalProject_Add(...) for usage.
+# add_external_project(<target> [SHARED]
+#     DEPENDS <other targets>
+#     GIT_REPOSITORY <git url>
+#     GIT_TAG <tag or commit>
+#     PATCH_COMMAND <command>
+#     DEBUG_SUFFIX <suffix>
+#     RELWITHDEBINFO_SUFFIX <suffix>
+#     BUILD_BYPRODUCTS <output library files>
+#     CMAKE_ARGS <additional arguments>)
 #
 function(add_external_project TARGET)
-  set(ARGS_ONE_VALUE GIT_REPOSITORY GIT_TAG DEBUG_SUFFIX BUILD_BYPRODUCTS COPY)
-  set(ARGS_MULT_VALUES CMAKE_ARGS PATCH_COMMAND DEPENDS)
-  cmake_parse_arguments(args "" "${ARGS_ONE_VALUE}" "${ARGS_MULT_VALUES}" ${ARGN})
+  set(ARGS_OPTIONS SHARED)
+  set(ARGS_ONE_VALUE GIT_REPOSITORY GIT_TAG DEBUG_SUFFIX RELWITHDEBINFO_SUFFIX BUILD_BYPRODUCTS)
+  set(ARGS_MULT_VALUES CMAKE_ARGS PATCH_COMMAND DEPENDS COMMANDS)
+  cmake_parse_arguments(args "${ARGS_OPTIONS}" "${ARGS_ONE_VALUE}" "${ARGS_MULT_VALUES}" ${ARGN})
 
   # Download
   external_download(${TARGET} GIT_REPOSITORY ${args_GIT_REPOSITORY} GIT_TAG ${args_GIT_TAG})
+
+  external_get_property(${TARGET} NEW_VERSION)
 
   # Get and set directories
   external_get_property(${TARGET} SOURCE_DIR)
@@ -79,64 +90,108 @@ function(add_external_project TARGET)
   external_set_property(${TARGET} INSTALL_DIR "${INSTALL_DIR}")
   external_set_property(${TARGET} CONFIG_DIR "${INSTALL_DIR}")
 
-  # Apply patch
-  if(args_PATCH_COMMAND)
-    string(REPLACE "<SOURCE_DIR>" "${SOURCE_DIR}" PATCH_COMMAND "${args_PATCH_COMMAND}")
+  # Get available configurations on multi-config systems,
+  # or the used configuration otherwise
+  get_property(MULTICONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
 
-    execute_process(COMMAND ${PATCH_COMMAND} RESULT_VARIABLE CONFIG_RESULT)
+  if(args_SHARED)
+    set(CONFIG Release)
+    set(CONFIGURATIONS Release)
+  elseif(MULTICONFIG)
+    set(CONFIG Release)
+    set(CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES})
+  else()
+    set(CONFIG ${CMAKE_BUILD_TYPE})
+    set(CONFIGURATIONS ${CMAKE_BUILD_TYPE})
+  endif()
+
+  # Configure
+  if(NEW_VERSION)
+    # Apply patch
+    if(args_PATCH_COMMAND)
+      string(REPLACE "<SOURCE_DIR>" "${SOURCE_DIR}" PATCH_COMMAND "${args_PATCH_COMMAND}")
+
+      execute_process(COMMAND ${PATCH_COMMAND} RESULT_VARIABLE PATCH_RESULT)
+
+      if(NOT "${PATCH_RESULT}" STREQUAL "0")
+        message(FATAL_ERROR "Fatal error while applying patch for target ${TARGET}")
+      endif()
+    endif()
+
+    # Compose arguments for configuration
+    set(GEN_ARGS)
+    set(CONF_ARGS)
+
+    if(CMAKE_GENERATOR_PLATFORM)
+      set(GEN_ARGS ${GEN_ARGS} "-A${CMAKE_GENERATOR_PLATFORM}")
+    endif()
+    if(CMAKE_TOOLCHAIN_FILE)
+      set(GEN_ARGS ${GEN_ARGS} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
+    endif()
+
+    if(args_CMAKE_ARGS)
+      set(CONF_ARGS "${args_CMAKE_ARGS}")
+    endif()
+
+    # Configure project
+    execute_process(
+      COMMAND ${CMAKE_COMMAND} "-G${CMAKE_GENERATOR}" ${GEN_ARGS} ${CONF_ARGS}
+        -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_DIR}
+        -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+        -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+        -DCMAKE_BUILD_TYPE=${CONFIG}
+        ${SOURCE_DIR}
+      WORKING_DIRECTORY "${BINARY_DIR}"
+      RESULT_VARIABLE CONFIG_RESULT
+      OUTPUT_QUIET)
 
     if(NOT "${CONFIG_RESULT}" STREQUAL "0")
-      message(FATAL_ERROR "Fatal error while applying patch for target ${TARGET}")
+      message(FATAL_ERROR "Fatal error while configuring ${TARGET}")
     endif()
+
+    # Remove files so that the build process is run again
+    execute_process(
+      COMMAND ${CMAKE_COMMAND} -E remove -f EXTERNAL_BUILT_*
+      WORKING_DIRECTORY "${BINARY_DIR}"
+      OUTPUT_QUIET)
+
+    external_set_typed_property(${TARGET} NEW_VERSION FALSE BOOL)
   endif()
 
-  # Compose arguments for configuration
-  set(GEN_ARGS)
-  set(CONF_ARGS)
-
-  if(CMAKE_GENERATOR_PLATFORM)
-    set(GEN_ARGS ${GEN_ARGS} "-A${CMAKE_GENERATOR_PLATFORM}")
-  endif()
-  if(CMAKE_TOOLCHAIN_FILE)
-    set(GEN_ARGS ${GEN_ARGS} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
-  endif()
-
-  if(args_CMAKE_ARGS)
-    set(CONF_ARGS "${args_CMAKE_ARGS}")
-  endif()
-
-  # Compose arguments for building
+  # Get and check byproducts
   if(NOT args_BUILD_BYPRODUCTS)
     message(FATAL_ERROR "No byproducts declared")
   endif()
 
-  string(REPLACE "<INSTALL_DIR>" "${INSTALL_DIR}" BYPRODUCT ${args_BUILD_BYPRODUCTS})
-  string(REPLACE "<INSTALL_DIR>" "${CMAKE_INSTALL_PREFIX}" INSTALLED_LIB ${args_BUILD_BYPRODUCTS})
+  string(REPLACE "<INSTALL_DIR>" "${INSTALL_DIR}" BYPRODUCTS ${args_BUILD_BYPRODUCTS})
 
-  set(COPY)
-  if(args_COPY)
-    string(REPLACE "<INSTALL_DIR>" "${CMAKE_INSTALL_PREFIX}" COPY_ARGS ${args_COPY})
-    set(COPY COMMAND ${CMAKE_COMMAND} -E copy ${COPY_ARGS})
+  # Add command for building
+  if(args_SHARED)
+    external_set_typed_property(${TARGET} SHARED TRUE BOOL)
+
+    string(REPLACE "<INSTALL_DIR>" "${CMAKE_INSTALL_PREFIX}" TARGET_BYPRODUCT ${args_BUILD_BYPRODUCTS})
+
+    add_custom_command(OUTPUT "${BINARY_DIR}/EXTERNAL_BUILT_${CONFIG}"
+      COMMAND ${CMAKE_COMMAND} --build . --parallel --config Release
+      COMMAND ${CMAKE_COMMAND} --build . --target install --config Release
+      COMMAND ${CMAKE_COMMAND} -E copy \"${BYPRODUCTS}\" \"${TARGET_BYPRODUCT}\"
+      ${args_COMMANDS}
+      COMMAND ${CMAKE_COMMAND} -E touch EXTERNAL_BUILT_${CONFIG}
+      WORKING_DIRECTORY "${BINARY_DIR}"
+      BYPRODUCTS ${BYPRODUCTS})
+  else()
+    external_set_typed_property(${TARGET} SHARED FALSE BOOL)
+
+    # TODO ############################################################################################################################################################
   endif()
 
-  # Add command for configuration and building
-  add_custom_command(OUTPUT "${BINARY_DIR}/EXTERNAL_BUILT"
-    COMMAND ${CMAKE_COMMAND} "-G${CMAKE_GENERATOR}" ${GEN_ARGS} ${CONF_ARGS}
-      -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_DIR}
-      -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-      -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-      -DCMAKE_BUILD_TYPE=Release
-      ${SOURCE_DIR}
-    COMMAND ${CMAKE_COMMAND} --build . --parallel --config Release
-    COMMAND ${CMAKE_COMMAND} --build . --target install --config Release
-    COMMAND ${CMAKE_COMMAND} -E copy \"${BYPRODUCT}\" \"${INSTALLED_LIB}\"
-    ${COPY}
-    COMMAND ${CMAKE_COMMAND} -E touch EXTERNAL_BUILT
-    WORKING_DIRECTORY "${BINARY_DIR}"
-    BYPRODUCTS ${BYPRODUCT})
-
   # Add external target
-  add_custom_target(${TARGET}_ext DEPENDS "${BINARY_DIR}/EXTERNAL_BUILT")
+  set(DEPENDENCIES)
+  foreach(CONFIG_FILE IN LISTS CONFIGURATIONS)
+    list(APPEND DEPENDENCIES "${BINARY_DIR}/EXTERNAL_BUILT_${CONFIG_FILE}")
+  endforeach()
+
+  add_custom_target(${TARGET}_ext DEPENDS ${DEPENDENCIES})
   set_target_properties(${TARGET}_ext PROPERTIES FOLDER external)
 
   if(args_DEPENDS)
@@ -150,18 +205,6 @@ function(add_external_project TARGET)
   endif()
 
   add_dependencies(ALL_EXTERNALS ${TARGET}_ext)
-
-  # Remove EXTERNAL_BUILT file if a new version is available and needs to be built
-  external_try_get_property(${TARGET} NEW_VERSION)
-
-  if(NEW_VERSION)
-    execute_process(
-      COMMAND ${CMAKE_COMMAND} -E remove -f EXTERNAL_BUILT
-      WORKING_DIRECTORY "${BINARY_DIR}"
-      OUTPUT_QUIET)
-
-    external_unset_property(${TARGET} NEW_VERSION)
-  endif()
 endfunction(add_external_project)
 
 
@@ -171,11 +214,11 @@ endfunction(add_external_project)
 #
 # Adds an external library, depending on an external project.
 #
-# add_external_library(<target> (STATIC|SHARED|INTERFACE)
+# add_external_library(<target> (STATIC|SHARED)
 #     PROJECT <external_project>
 #     LIBRARY "<library_name>.dll|so"
 #     IMPORT_LIBRARY "<library_name>.lib"
-#     INTERFACE_LIBRARIES <external_library>*")
+#     INTERFACE_LIBRARIES "<external_library>*")
 #
 function(add_external_library TARGET)
   set(ARGS_ONE_VALUE PROJECT COMPILE_DEFINITIONS INCLUDE_DIR CONFIG_INCLUDE_DIR LIBRARY IMPORT_LIBRARY INTERFACE_LIBRARIES)
@@ -185,6 +228,13 @@ function(add_external_library TARGET)
     set(args_PROJECT ${TARGET})
   endif()
   _argument_default(PROJECT "")
+
+  external_get_property(${PROJECT} SHARED)
+  if(SHARED)
+    set(TYPE SHARED)
+  else()
+    set(TYPE STATIC)
+  endif()
 
   # Guess library properties, unless set.
   external_get_property(${PROJECT} INSTALL_DIR)
@@ -199,7 +249,7 @@ function(add_external_library TARGET)
   file(MAKE_DIRECTORY "${INSTALL_DIR}/${INCLUDE_DIR}")
 
   # Add an imported library.
-  add_library(${TARGET} SHARED IMPORTED GLOBAL)
+  add_library(${TARGET} ${TYPE} IMPORTED GLOBAL)
   add_dependencies(${TARGET} ${PROJECT}_ext)
   set_target_properties(${TARGET} PROPERTIES
     INTERFACE_COMPILE_DEFINITIONS "${COMPILE_DEFINITIONS}"

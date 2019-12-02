@@ -46,7 +46,22 @@ endfunction()
 # external_set_property(<target> <property> <value>)
 #
 function(external_set_property TARGET PROPERTY VAR)
-  set(EXTERNAL_${TARGET}_${PROPERTY} ${VAR} CACHE STRING "" FORCE)
+  external_set_typed_property(${TARGET} ${PROPERTY} ${VAR} STRING)
+endfunction()
+
+
+
+
+
+#
+# Set the property of an external project.
+#
+# Set the property <property> for a given target to the desired value.
+#
+# external_set_property(<target> <property> <value> <type>)
+#
+function(external_set_typed_property TARGET PROPERTY VAR TYPE)
+  set(EXTERNAL_${TARGET}_${PROPERTY} ${VAR} CACHE ${TYPE} "" FORCE)
   mark_as_advanced(EXTERNAL_${TARGET}_${PROPERTY})
 endfunction()
 
