@@ -49,6 +49,9 @@ function(add_external_headeronly_project TARGET)
   if(args_DEPENDS)
     add_dependencies(${TARGET} ${args_DEPENDS})
   endif()
+
+  # Remove unused variable
+  external_unset_property(${TARGET} NEW_VERSION)
 endfunction(add_external_headeronly_project)
 
 
@@ -76,54 +79,33 @@ function(add_external_project TARGET)
   external_set_property(${TARGET} INSTALL_DIR "${INSTALL_DIR}")
   external_set_property(${TARGET} CONFIG_DIR "${INSTALL_DIR}")
 
-  if(NOT ${TARGET}_ext_CONFIGURED)
-    # Compose arguments for external project
-    set(GEN_ARGS)
-    set(CONF_ARGS)
+  # Apply patch
+  if(args_PATCH_COMMAND)
+    string(REPLACE "<SOURCE_DIR>" "${SOURCE_DIR}" PATCH_COMMAND "${args_PATCH_COMMAND}")
 
-    if(CMAKE_GENERATOR_PLATFORM)
-      set(GEN_ARGS ${GEN_ARGS} "-A${CMAKE_GENERATOR_PLATFORM}")
-    endif()
-    if(CMAKE_TOOLCHAIN_FILE)
-      set(GEN_ARGS ${GEN_ARGS} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
-    endif()
-
-    if(args_CMAKE_ARGS)
-      set(CONF_ARGS "${args_CMAKE_ARGS}")
-    endif()
-
-    # Apply patch
-    if(args_PATCH_COMMAND)
-      string(REPLACE "<SOURCE_DIR>" "${SOURCE_DIR}" PATCH_COMMAND "${args_PATCH_COMMAND}")
-
-      execute_process(COMMAND ${PATCH_COMMAND} RESULT_VARIABLE CONFIG_RESULT)
-
-      if(NOT "${CONFIG_RESULT}" STREQUAL "0")
-        message(FATAL_ERROR "Fatal error while applying patch for target ${TARGET}")
-      endif()
-    endif()
-
-    # Configure package
-    execute_process(
-      COMMAND ${CMAKE_COMMAND} "-G${CMAKE_GENERATOR}" ${GEN_ARGS} ${CONF_ARGS}
-        -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_DIR}
-        -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-        -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-        -DCMAKE_BUILD_TYPE=Release
-        ${SOURCE_DIR}
-      WORKING_DIRECTORY "${BINARY_DIR}"
-      OUTPUT_QUIET
-      RESULT_VARIABLE CONFIG_RESULT)
+    execute_process(COMMAND ${PATCH_COMMAND} RESULT_VARIABLE CONFIG_RESULT)
 
     if(NOT "${CONFIG_RESULT}" STREQUAL "0")
-      message(FATAL_ERROR "Fatal error while configuring ${TARGET}.")
+      message(FATAL_ERROR "Fatal error while applying patch for target ${TARGET}")
     endif()
-
-    set(${TARGET}_ext_CONFIGURED TRUE CACHE BOOL "" FORCE)
-    mark_as_advanced(${TARGET}_ext_CONFIGURED)
   endif()
 
-  # Add command for building
+  # Compose arguments for configuration
+  set(GEN_ARGS)
+  set(CONF_ARGS)
+
+  if(CMAKE_GENERATOR_PLATFORM)
+    set(GEN_ARGS ${GEN_ARGS} "-A${CMAKE_GENERATOR_PLATFORM}")
+  endif()
+  if(CMAKE_TOOLCHAIN_FILE)
+    set(GEN_ARGS ${GEN_ARGS} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
+  endif()
+
+  if(args_CMAKE_ARGS)
+    set(CONF_ARGS "${args_CMAKE_ARGS}")
+  endif()
+
+  # Compose arguments for building
   if(NOT args_BUILD_BYPRODUCTS)
     message(FATAL_ERROR "No byproducts declared")
   endif()
@@ -137,7 +119,14 @@ function(add_external_project TARGET)
     set(COPY COMMAND ${CMAKE_COMMAND} -E copy ${COPY_ARGS})
   endif()
 
+  # Add command for configuration and building
   add_custom_command(OUTPUT "${BINARY_DIR}/EXTERNAL_BUILT"
+    COMMAND ${CMAKE_COMMAND} "-G${CMAKE_GENERATOR}" ${GEN_ARGS} ${CONF_ARGS}
+      -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_DIR}
+      -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+      -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+      -DCMAKE_BUILD_TYPE=Release
+      ${SOURCE_DIR}
     COMMAND ${CMAKE_COMMAND} --build . --parallel --config Release
     COMMAND ${CMAKE_COMMAND} --build . --target install --config Release
     COMMAND ${CMAKE_COMMAND} -E copy \"${BYPRODUCT}\" \"${INSTALLED_LIB}\"
@@ -161,6 +150,18 @@ function(add_external_project TARGET)
   endif()
 
   add_dependencies(ALL_EXTERNALS ${TARGET}_ext)
+
+  # Remove EXTERNAL_BUILT file if a new version is available and needs to be built
+  external_try_get_property(${TARGET} NEW_VERSION)
+
+  if(NEW_VERSION)
+    execute_process(
+      COMMAND ${CMAKE_COMMAND} -E remove -f EXTERNAL_BUILT
+      WORKING_DIRECTORY "${BINARY_DIR}"
+      OUTPUT_QUIET)
+
+    external_unset_property(${TARGET} NEW_VERSION)
+  endif()
 endfunction(add_external_project)
 
 

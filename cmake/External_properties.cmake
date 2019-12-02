@@ -49,3 +49,19 @@ function(external_set_property TARGET PROPERTY VAR)
   set(EXTERNAL_${TARGET}_${PROPERTY} ${VAR} CACHE STRING "" FORCE)
   mark_as_advanced(EXTERNAL_${TARGET}_${PROPERTY})
 endfunction()
+
+
+
+
+
+#
+# Unset the property of an external project.
+#
+# Unsets the property <property> for the given target. If the property
+# does not exist, nothing happens.
+#
+# external_unset_property(<target> <property>)
+#
+function(external_unset_property TARGET PROPERTY)
+  unset(EXTERNAL_${TARGET}_${PROPERTY} CACHE)
+endfunction()

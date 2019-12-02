@@ -66,6 +66,8 @@ function(external_download TARGET)
       external_set_property(${TARGET} GIT_TAG ${args_GIT_TAG})
     endif()
 
+    external_set_property(${TARGET} NEW_VERSION TRUE)
+
     # Set source and binary directory
     external_set_property(${TARGET} SOURCE_DIR "${${lcName}_SOURCE_DIR}")
     external_set_property(${TARGET} BINARY_DIR "${${lcName}_BINARY_DIR}")
