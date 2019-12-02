@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.0)
 
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
 project(ImGui CXX)
 
 set(IMGUI_PUBLIC_HDRS
