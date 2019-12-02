@@ -1,26 +1,59 @@
 include(CMakeParseArguments)
-include(FetchContent)
 
-function(_argument_default VARIABLE)
-  if(args_${VARIABLE})
-    set(${VARIABLE} "${args_${VARIABLE}}" PARENT_SCOPE)
+include(External_arguments)
+include(External_download)
+include(External_properties)
+
+#
+# Adds an external header-only project.
+#
+# add_external_headeronly_project(<target>
+#     DEPENDS <external_projects>
+#     GIT_REPOSITORY <git-url>
+#     GIT_TAG <tag or commit>
+#     INCLUDE_DIR <include directories relative to the source directory
+#                  - omit for the source directory itself>)
+#
+function(add_external_headeronly_project TARGET)
+  # Parse arguments
+  set(ARGS_ONE_VALUE GIT_REPOSITORY GIT_TAG)
+  set(ARGS_MULT_VALUES INCLUDE_DIR DEPENDS)
+  cmake_parse_arguments(args "" "${ARGS_ONE_VALUE}" "${ARGS_MULT_VALUES}" ${ARGN})
+
+  # Download
+  external_download(${TARGET} GIT_REPOSITORY ${args_GIT_REPOSITORY} GIT_TAG ${args_GIT_TAG})
+
+  # Create interface library
+  add_library(${TARGET} INTERFACE)
+
+  # Add include directories
+  external_get_property(${TARGET} SOURCE_DIR)
+
+  if(args_INCLUDE_DIR)
+    set(INCLUDE_DIRS)
+    foreach(INCLUDE_DIR IN LISTS args_INCLUDE_DIR)
+      if(EXISTS "${SOURCE_DIR}/${INCLUDE_DIR}")
+        list(APPEND INCLUDE_DIRS "${SOURCE_DIR}/${INCLUDE_DIR}")
+      else()
+        message(WARNING "Include directory '${SOURCE_DIR}/${INCLUDE_DIR}' not found. Adding path '${INCLUDE_DIR}' instead.")
+        list(APPEND INCLUDE_DIRS "${INCLUDE_DIR}")
+      endif()
+    endforeach()
   else()
-    set(${VARIABLE} "${ARGN}" PARENT_SCOPE)
-  endif()
-endfunction(_argument_default)
-
-function(external_get_property TARGET PROPERTY)
-  if(NOT DEFINED ${TARGET}_ext_${PROPERTY})
-    message(FATAL_ERROR "Property ${PROPERTY} for target ${TARGET} is not defined")
+    set(INCLUDE_DIRS "${SOURCE_DIR}")
   endif()
 
-  set(${PROPERTY} ${${TARGET}_ext_${PROPERTY}} PARENT_SCOPE)
-endfunction()
+  target_include_directories(${TARGET} INTERFACE ${INCLUDE_DIRS})
 
-function(external_set_property TARGET PROPERTY VAR)
-  set(${TARGET}_ext_${PROPERTY} ${VAR} CACHE STRING "" FORCE)
-  mark_as_advanced(${TARGET}_ext_${PROPERTY})
-endfunction()
+  # Add dependencies
+  if(args_DEPENDS)
+    add_dependencies(${TARGET} ${args_DEPENDS})
+  endif()
+endfunction(add_external_headeronly_project)
+
+
+
+
 
 #
 # Adds an external project.
@@ -28,34 +61,20 @@ endfunction()
 # See ExternalProject_Add(...) for usage.
 #
 function(add_external_project TARGET)
-  set(ARGS_ONE_VALUE GIT_TAG GIT_REPOSITORY DEBUG_SUFFIX BUILD_BYPRODUCTS COPY)
+  set(ARGS_ONE_VALUE GIT_REPOSITORY GIT_TAG DEBUG_SUFFIX BUILD_BYPRODUCTS COPY)
   set(ARGS_MULT_VALUES CMAKE_ARGS PATCH_COMMAND DEPENDS)
   cmake_parse_arguments(args "" "${ARGS_ONE_VALUE}" "${ARGS_MULT_VALUES}" ${ARGN})
 
-  string(TOLOWER "${TARGET}" lcName)
-  string(TOUPPER "${TARGET}" ucName)
+  # Download
+  external_download(${TARGET} GIT_REPOSITORY ${args_GIT_REPOSITORY} GIT_TAG ${args_GIT_TAG})
 
-  # Download immediately
-  if(NOT args_GIT_REPOSITORY)
-    message(FATAL_ERROR "No Git repository declared as source")
-  endif()
-  set(MESSAGE "${TARGET}: url '${args_GIT_REPOSITORY}'")
-  set(DOWNLOAD_ARGS "GIT_REPOSITORY;${args_GIT_REPOSITORY}")
-  if(args_GIT_TAG)
-    set(MESSAGE "${MESSAGE}, tag '${args_GIT_TAG}'")
-    list(APPEND DOWNLOAD_ARGS "GIT_TAG;${args_GIT_TAG}")
-  endif()
-  list(APPEND DOWNLOAD_ARGS "GIT_SHALLOW")
-  message(STATUS "${MESSAGE}")
+  # Get and set directories
+  external_get_property(${TARGET} SOURCE_DIR)
+  external_get_property(${TARGET} BINARY_DIR)
 
-  FetchContent_Declare(${TARGET} ${DOWNLOAD_ARGS})
-  FetchContent_GetProperties(${TARGET})
-  FetchContent_Populate(${TARGET})
-
-  mark_as_advanced(FORCE FETCHCONTENT_SOURCE_DIR_${ucName})
-  mark_as_advanced(FORCE FETCHCONTENT_UPDATES_DISCONNECTED_${ucName})
-
-  string(REPLACE "-src" "-install" ${lcName}_INSTALL_DIR "${${lcName}_SOURCE_DIR}")
+  string(REPLACE "-src" "-install" INSTALL_DIR "${SOURCE_DIR}")
+  external_set_property(${TARGET} INSTALL_DIR "${INSTALL_DIR}")
+  external_set_property(${TARGET} CONFIG_DIR "${INSTALL_DIR}")
 
   if(NOT ${TARGET}_ext_CONFIGURED)
     # Compose arguments for external project
@@ -75,7 +94,7 @@ function(add_external_project TARGET)
 
     # Apply patch
     if(args_PATCH_COMMAND)
-      string(REPLACE "<SOURCE_DIR>" "${${lcName}_SOURCE_DIR}" PATCH_COMMAND "${args_PATCH_COMMAND}")
+      string(REPLACE "<SOURCE_DIR>" "${SOURCE_DIR}" PATCH_COMMAND "${args_PATCH_COMMAND}")
 
       execute_process(COMMAND ${PATCH_COMMAND} RESULT_VARIABLE CONFIG_RESULT)
 
@@ -87,12 +106,12 @@ function(add_external_project TARGET)
     # Configure package
     execute_process(
       COMMAND ${CMAKE_COMMAND} "-G${CMAKE_GENERATOR}" ${GEN_ARGS} ${CONF_ARGS}
-        -DCMAKE_INSTALL_PREFIX:PATH=${${lcName}_INSTALL_DIR}
+        -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_DIR}
         -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
         -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
         -DCMAKE_BUILD_TYPE=Release
-        ${${lcName}_SOURCE_DIR}
-      WORKING_DIRECTORY "${${lcName}_BINARY_DIR}"
+        ${SOURCE_DIR}
+      WORKING_DIRECTORY "${BINARY_DIR}"
       OUTPUT_QUIET
       RESULT_VARIABLE CONFIG_RESULT)
 
@@ -109,7 +128,7 @@ function(add_external_project TARGET)
     message(FATAL_ERROR "No byproducts declared")
   endif()
 
-  string(REPLACE "<INSTALL_DIR>" "${${lcName}_INSTALL_DIR}" BYPRODUCT ${args_BUILD_BYPRODUCTS})
+  string(REPLACE "<INSTALL_DIR>" "${INSTALL_DIR}" BYPRODUCT ${args_BUILD_BYPRODUCTS})
   string(REPLACE "<INSTALL_DIR>" "${CMAKE_INSTALL_PREFIX}" INSTALLED_LIB ${args_BUILD_BYPRODUCTS})
 
   set(COPY)
@@ -118,22 +137,18 @@ function(add_external_project TARGET)
     set(COPY COMMAND ${CMAKE_COMMAND} -E copy ${COPY_ARGS})
   endif()
 
-  add_custom_command(OUTPUT "${${lcName}_BINARY_DIR}/EXTERNAL_BUILT"
+  add_custom_command(OUTPUT "${BINARY_DIR}/EXTERNAL_BUILT"
     COMMAND ${CMAKE_COMMAND} --build . --parallel --config Release
     COMMAND ${CMAKE_COMMAND} --build . --target install --config Release
     COMMAND ${CMAKE_COMMAND} -E copy \"${BYPRODUCT}\" \"${INSTALLED_LIB}\"
     ${COPY}
     COMMAND ${CMAKE_COMMAND} -E touch EXTERNAL_BUILT
-    WORKING_DIRECTORY "${${lcName}_BINARY_DIR}"
+    WORKING_DIRECTORY "${BINARY_DIR}"
     BYPRODUCTS ${BYPRODUCT})
 
   # Add external target
-  add_custom_target(${TARGET}_ext DEPENDS "${${lcName}_BINARY_DIR}/EXTERNAL_BUILT")
+  add_custom_target(${TARGET}_ext DEPENDS "${BINARY_DIR}/EXTERNAL_BUILT")
   set_target_properties(${TARGET}_ext PROPERTIES FOLDER external)
-
-  external_set_property(${TARGET} SOURCE_DIR "${${lcName}_SOURCE_DIR}")
-  external_set_property(${TARGET} INSTALL_DIR "${${lcName}_INSTALL_DIR}")
-  external_set_property(${TARGET} CONFIG_DIR "${${lcName}_INSTALL_DIR}")
 
   if(args_DEPENDS)
     add_dependencies(${TARGET}_ext ${args_DEPENDS})
@@ -148,70 +163,9 @@ function(add_external_project TARGET)
   add_dependencies(ALL_EXTERNALS ${TARGET}_ext)
 endfunction(add_external_project)
 
-#
-# Adds an external header-only project.
-#
-# add_external_headeronly_project(<target>
-#     DEPENDS <external_projects>
-#     GIT_REPOSITORY <git-url>
-#     GIT_TAG <tag or commit>
-#     INCLUDE_DIR <include directories relative to the source directory
-#                  - omit for the source directory itself>)
-#
-function(add_external_headeronly_project TARGET)
-  # Parse arguments
-  set(ARGS_ONE_VALUE GIT_TAG GIT_REPOSITORY)
-  set(ARGS_MULT_VALUES INCLUDE_DIR DEPENDS)
-  cmake_parse_arguments(args "" "${ARGS_ONE_VALUE}" "${ARGS_MULT_VALUES}" ${ARGN})
 
-  string(TOLOWER "${TARGET}" lcName)
-  string(TOUPPER "${TARGET}" ucName)
 
-  # Download immediately
-  if(NOT args_GIT_REPOSITORY)
-    message(FATAL_ERROR "No Git repository declared as source")
-  endif()
-  set(MESSAGE "${TARGET}: url '${args_GIT_REPOSITORY}'")
-  set(DOWNLOAD_ARGS "GIT_REPOSITORY;${args_GIT_REPOSITORY}")
-  if(args_GIT_TAG)
-    set(MESSAGE "${MESSAGE}, tag '${args_GIT_TAG}'")
-    list(APPEND DOWNLOAD_ARGS "GIT_TAG;${args_GIT_TAG}")
-  endif()
-  list(APPEND DOWNLOAD_ARGS "GIT_SHALLOW")
-  message(STATUS "${MESSAGE}")
 
-  FetchContent_Declare(${TARGET} ${DOWNLOAD_ARGS})
-  FetchContent_GetProperties(${TARGET})
-  FetchContent_Populate(${TARGET})
-
-  mark_as_advanced(FORCE FETCHCONTENT_SOURCE_DIR_${ucName})
-  mark_as_advanced(FORCE FETCHCONTENT_UPDATES_DISCONNECTED_${ucName})
-
-  # Create interface library
-  add_library(${TARGET} INTERFACE)
-
-  # Add include directories
-  if(args_INCLUDE_DIR)
-    set(INCLUDE_DIRS)
-    foreach(INCLUDE_DIR IN LISTS args_INCLUDE_DIR)
-      if(EXISTS "${${lcName}_SOURCE_DIR}/${INCLUDE_DIR}")
-        list(APPEND INCLUDE_DIRS "${${lcName}_SOURCE_DIR}/${INCLUDE_DIR}")
-      else()
-        message(WARNING "Include directory '${${lcName}_SOURCE_DIR}/${INCLUDE_DIR}' not found. Adding path '${INCLUDE_DIR}' instead.")
-        list(APPEND INCLUDE_DIRS "${INCLUDE_DIR}")
-      endif()
-    endforeach()
-  else()
-    set(INCLUDE_DIRS "${${lcName}_SOURCE_DIR}")
-  endif()
-
-  target_include_directories(${TARGET} INTERFACE ${INCLUDE_DIRS})
-
-  # Add dependencies
-  if(args_DEPENDS)
-    add_dependencies(${TARGET} ${args_DEPENDS})
-  endif()
-endfunction(add_external_headeronly_project)
 
 #
 # Adds an external library, depending on an external project.

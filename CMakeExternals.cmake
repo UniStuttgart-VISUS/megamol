@@ -1,3 +1,5 @@
+include(External)
+
 #
 # Centralized function to require externals to add them once by invoking
 # require_external(<EXTERNAL_TARGET>).
@@ -7,7 +9,6 @@
 #
 function(require_external NAME)
   set(FETCHCONTENT_QUIET ON CACHE BOOL "")
-  set(FETCHCONTENT_UPDATES_DISCONNECTED ON CACHE BOOL "")
 
   # Header-only libraries #####################################################
 
