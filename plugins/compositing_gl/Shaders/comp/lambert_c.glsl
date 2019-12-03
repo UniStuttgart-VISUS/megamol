@@ -58,7 +58,7 @@ void main() {
 
     vec4 retval = albedo;
 
-    if(depth > 0.0f)
+    if (depth > 0.0f && depth < 1.0f)
     {
         vec3 world_pos = depthToWorldPos(depth,pixel_coords_norm);
 
