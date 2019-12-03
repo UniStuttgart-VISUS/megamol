@@ -170,7 +170,17 @@ namespace MegaMolConf.Io {
                         
                     Param p = new Param();
 
-                    string[] paramElements = line.Split('"');
+                    //string[] paramElements = line.Split('"');
+                    // can't just split at '"' because of occuring quotes in parameter values
+                    // so the string gets split only at quotes which encloses the parameter values
+                    // this can be done better with a proper regex pattern that splits only at quotes which has no preceeding backslash
+                    // and does not also split the character before the quotes (this is currently done)
+                    string[] paramElementsTemp = Regex.Split(line, @"([^\\])\""");
+                    string[] paramElements = new string[paramElementsTemp.Length / 2];
+                    for(int j = 0; j < paramElementsTemp.Length / 2; ++j)
+                    {
+                        paramElements[j] = Regex.Replace(paramElementsTemp[2 * j] + paramElementsTemp[2 * j + 1], @"\\+\""", "\"");
+                    }
                     string[] paramFullName = paramElements[1].Split(':');
 
                     // we need to put together the full parameter name that was previously split up

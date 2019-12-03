@@ -20,18 +20,18 @@ void main()
     float FXAA_SPAN_MAX = 8.0;
     float FXAA_REDUCE_MUL = 1.0/8.0;
     float FXAA_REDUCE_MIN = 1.0/128.0;
-    vec3 rgbNW = texelFetch(src_tx2D, pixel_coords + ivec2(-1,-1),0).xyz;
-    vec3 rgbNE = texelFetch(src_tx2D, pixel_coords + ivec2(1,-1) ,0).xyz;
-    vec3 rgbSW = texelFetch(src_tx2D, pixel_coords + ivec2(-1,1) ,0).xyz;
-    vec3 rgbSE = texelFetch(src_tx2D, pixel_coords + ivec2(1,1)  ,0).xyz;
-    vec3 rgbM  = texelFetch(src_tx2D, pixel_coords, 0).xyz;
+    vec4 rgbNW = texelFetch(src_tx2D, pixel_coords + ivec2(-1,-1),0);
+    vec4 rgbNE = texelFetch(src_tx2D, pixel_coords + ivec2(1,-1) ,0);
+    vec4 rgbSW = texelFetch(src_tx2D, pixel_coords + ivec2(-1,1) ,0);
+    vec4 rgbSE = texelFetch(src_tx2D, pixel_coords + ivec2(1,1)  ,0);
+    vec4 rgbM  = texelFetch(src_tx2D, pixel_coords, 0);
     
     vec3 luma=vec3(0.299, 0.587, 0.114);
-    float lumaNW = dot(rgbNW, luma);
-    float lumaNE = dot(rgbNE, luma);
-    float lumaSW = dot(rgbSW, luma);
-    float lumaSE = dot(rgbSE, luma);
-    float lumaM  = dot(rgbM,  luma);
+    float lumaNW = dot(rgbNW.rgb, luma);
+    float lumaNE = dot(rgbNE.rgb, luma);
+    float lumaSW = dot(rgbSW.rgb, luma);
+    float lumaSE = dot(rgbSE.rgb, luma);
+    float lumaM  = dot(rgbM.rgb,  luma);
     
     float lumaMin = min(lumaM, min(min(lumaNW, lumaNE), min(lumaSW, lumaSE)));
     float lumaMax = max(lumaM, max(max(lumaNW, lumaNE), max(lumaSW, lumaSE)));
@@ -50,18 +50,18 @@ void main()
               max(vec2(-FXAA_SPAN_MAX, -FXAA_SPAN_MAX),
               dir * rcpDirMin)) / vec2(tgt_resolution);
             
-    vec3 rgbA = (1.0/2.0) * (
-            texture(src_tx2D, pixel_coords_norm.xy + dir * (1.0/3.0 - 0.5)).xyz +
-            texture(src_tx2D, pixel_coords_norm.xy + dir * (2.0/3.0 - 0.5)).xyz);
-    vec3 rgbB = rgbA * (1.0/2.0) + (1.0/4.0) * (
-            texture(src_tx2D, pixel_coords_norm.xy + dir * (0.0/3.0 - 0.5)).xyz +
-            texture(src_tx2D, pixel_coords_norm.xy + dir * (3.0/3.0 - 0.5)).xyz);
-    float lumaB = dot(rgbB, luma);
+    vec4 rgbaA = (1.0/2.0) * (
+            texture(src_tx2D, pixel_coords_norm.xy + dir * (1.0/3.0 - 0.5)) +
+            texture(src_tx2D, pixel_coords_norm.xy + dir * (2.0/3.0 - 0.5)));
+    vec4 rgbaB = rgbaA * (1.0/2.0) + (1.0/4.0) * (
+            texture(src_tx2D, pixel_coords_norm.xy + dir * (0.0/3.0 - 0.5)) +
+            texture(src_tx2D, pixel_coords_norm.xy + dir * (3.0/3.0 - 0.5)));
+    float lumaB = dot(rgbaB.rgb, luma);
 
     if((lumaB < lumaMin) || (lumaB > lumaMax)){
-        imageStore(tgt_tx2D, pixel_coords , vec4(rgbA,1.0) );
+        imageStore(tgt_tx2D, pixel_coords , vec4(rgbaA) );
     }
     else{
-        imageStore(tgt_tx2D, pixel_coords , vec4(rgbB,1.0) );
+        imageStore(tgt_tx2D, pixel_coords , vec4(rgbaB) );
     }
 }

@@ -6,14 +6,14 @@
  */
 
 #ifndef SIMPLE_RENDER_TARGET_H_INCLUDED
-#    define SIMPLE_RENDER_TARGET_H_INCLUDED
+#define SIMPLE_RENDER_TARGET_H_INCLUDED
 
 
-#    include "mmcore/CalleeSlot.h"
-#    include "mmcore/view/CallRender3D_2.h"
-#    include "mmcore/view/Renderer3DModule_2.h"
+#include "mmcore/CalleeSlot.h"
+#include "mmcore/view/CallRender3D_2.h"
+#include "mmcore/view/Renderer3DModule_2.h"
 
-#    include "glowl/FramebufferObject.hpp"
+#include "glowl/FramebufferObject.hpp"
 
 namespace megamol {
 namespace compositing {
@@ -116,6 +116,11 @@ protected:
     /**
      *
      */
+    bool getFramebufferObject(core::Call& caller);
+
+    /**
+     *
+     */
     bool getMetaDataCallback(core::Call& caller);
 
 private:
@@ -134,11 +139,11 @@ private:
     core::CalleeSlot m_normal_render_target;
     core::CalleeSlot m_depth_render_target;
 
-    /** Slot for requesting the camera that is propagated to the render chain from this module */
+    /** Slot for accessing the camera that is propagated to the render chain from this module */
     core::CalleeSlot m_camera;
 
-    /** Slot for publishing the framebuffer object used by this render target module */
-    core::CallerSlot m_framebuffer_slot;
+    /** Slot for accessing the framebuffer object used by this render target module */
+    core::CalleeSlot m_framebuffer_slot;
 };
 
 } // namespace compositing

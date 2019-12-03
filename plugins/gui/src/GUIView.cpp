@@ -878,43 +878,6 @@ void GUIView::drawParametersCallback(const std::string& wn, WindowManager::Windo
         this->utils.HelpMarkerToolTip("[CTRL + 'p'] Set keyboard focus to search input field.\n"
                                       "Searching for case insensitive substring in\n"
                                       "parameter names globally in all parameter views.\n");
-
-        /// Alternative (TEMP):
-        // Show parameter search field in separate window
-        // if (this->showParameterSearchWindow) {
-
-        //    std::string popup_name = "Search Parameter";
-
-        //    ImGuiWindowFlags flags =
-        //        ImGuiWindowFlags_AlwaysAutoResize; // ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ;
-        //    ImVec2 popup_pos = ImVec2(io.DisplaySize.x / 2.0f - ImGui::GetWindowWidth() / 2.0f, 0.0f);
-        //    ImGui::SetWindowPos(popup_name.c_str(), popup_pos, ImGuiCond_Always);
-
-        //    ImGui::Begin(popup_name.c_str(), &this->showParameterSearchWindow, flags);
-
-        //    if (this->setParameterSearchFocus) {
-        //        ImGui::SetKeyboardFocusHere();
-        //        this->setParameterSearchFocus = false;
-        //    }
-
-        //    /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
-        //    this->utils.utf8Encode(this->parameterSearchString);
-        //    ImGui::InputText("###Search Parameter", &this->parameterSearchString, ImGuiInputTextFlags_AutoSelectAll);
-        //    this->utils.utf8Decode(this->parameterSearchString);
-
-        //    ImGui::SameLine();
-
-        //    if (ImGui::Button("Clear")) {
-        //        this->parameterSearchString = "";
-        //    }
-        //    ImGui::SameLine();
-
-        //    ImGui::Text("Search Parameter");
-        //    this->utils.HelpMarkerToolTip("Searching for case insensitive substring in parameter name.\n"
-        //                                  "[CTRL + 'p'] Set keyboard focus to search input field.");
-
-        //    ImGui::End();
-        //}
     }
 
     // Module filtering (only for main parameter view)
@@ -1170,7 +1133,6 @@ void GUIView::drawParametersCallback(const std::string& wn, WindowManager::Windo
         }
         ImGui::EndDragDropTarget();
     }
-
 
     ImGui::EndChild();
 

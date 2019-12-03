@@ -26,10 +26,7 @@ RenderMDIMesh::RenderMDIMesh()
 	this->m_render_task_callerSlot.SetCompatibleCall<GPURenderTasksDataCallDescription>();
 	this->MakeSlotAvailable(&this->m_render_task_callerSlot);
 
-    this->m_framebuffer_slot.SetCallback(
-        compositing::CallFramebufferGL::ClassName(), "GetData", &RenderMDIMesh::setFramebufferDataCallback);
-    this->m_framebuffer_slot.SetCallback(
-        compositing::CallFramebufferGL::ClassName(), "GetMetaData", &RenderMDIMesh::setFramebufferMetaDataCallback);
+    this->m_framebuffer_slot.SetCompatibleCall<compositing::CallFramebufferGLDescription>();
     this->MakeSlotAvailable(&this->m_framebuffer_slot);
 }
 
@@ -182,7 +179,7 @@ bool RenderMDIMesh::Render(core::view::CallRender3D_2& call) {
 	//vislib::sys::Log::DefaultLog.WriteError("Hey listen!");
 	
 	// Set GL state (otherwise bounding box or view cube rendering state is used)
-	//glDisable(GL_BLEND);
+	glDisable(GL_BLEND);
 	glEnable(GL_DEPTH_TEST);
 	//glEnable(GL_CULL_FACE);
     glDisable(GL_CULL_FACE);
@@ -251,15 +248,3 @@ bool RenderMDIMesh::Render(core::view::CallRender3D_2& call) {
 	
 	return true;
 }
-
-bool megamol::mesh::RenderMDIMesh::setFramebufferDataCallback(core::Call& caller) { 
-
-    auto fc = dynamic_cast<compositing::CallFramebufferGL*>(&caller);
-    if (fc == NULL) return false;
-
-    m_render_target = fc->getData();
-
-    return true; 
-}
-
-bool megamol::mesh::RenderMDIMesh::setFramebufferMetaDataCallback(core::Call& caller) { return true; }
