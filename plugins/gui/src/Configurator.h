@@ -22,6 +22,7 @@
 #include "imgui_impl_opengl3.h"
 #include "imgui_stdlib.h"
 
+#include <map>
 #include <math.h> // fmodf
 #include <tuple>
 
@@ -49,11 +50,13 @@ public:
 
     /**
      * Draw configurator ImGui window.
+     * (Call in GUIView::drawConfiguratorCallback())
      */
     bool Draw(WindowManager::WindowConfiguration& wc, megamol::core::CoreInstance* core_instance);
 
     /**
      * Checks if any hotkeys are pressed.
+     * (Call in GUIView::OnKey())
      *
      * @return true when any hotkey is pressed.
      */
@@ -88,12 +91,16 @@ private:
     GUIUtils utils;
 
     struct State {
-        int module_list_selected_id;
+        int module_selected_id;
     } state;
 
 
+    std::vector<std::string> modules_map;
+    std::map<UINT, std::string> calls_map;
+
     // FUNCTIONS --------------------------------------------------------------
 
+    void demo_dummy(void);
 
     // ------------------------------------------------------------------------
 };
