@@ -83,9 +83,6 @@ void TrackingShotRenderer::release(void) {
 
 bool TrackingShotRenderer::GetExtents(megamol::core::view::CallRender3D_2& call) {
 
-    auto cr3d_in = &call;
-    if (cr3d_in == nullptr) return false;
-
     // Propagate changes made in GetExtents() from outgoing CallRender3D_2 (cr3d_out) to incoming CallRender3D_2 (cr3d_in).
     auto cr3d_out = this->chainRenderSlot.CallAs<view::CallRender3D_2>();
 
@@ -112,12 +109,12 @@ bool TrackingShotRenderer::GetExtents(megamol::core::view::CallRender3D_2& call)
 
         // Propagate changes made in GetExtents() from outgoing CallRender3D_2 (cr3d_out) to incoming  CallRender3D_2 (cr3d_in) => Bboxes and times.
         unsigned int timeFramesCount = cr3d_out->TimeFramesCount();
-        cr3d_in->SetTimeFramesCount((timeFramesCount > 0) ? (timeFramesCount) : (1));
-        cr3d_in->SetTime(cr3d_out->Time());
-        cr3d_in->AccessBoundingBoxes() = cr3d_out->AccessBoundingBoxes();
+        call.SetTimeFramesCount((timeFramesCount > 0) ? (timeFramesCount) : (1));
+        call.SetTime(cr3d_out->Time());
+        call.AccessBoundingBoxes() = cr3d_out->AccessBoundingBoxes();
         // Apply modified boundingbox 
-        cr3d_in->AccessBoundingBoxes().SetBoundingBox(bbox);
-        cr3d_in->AccessBoundingBoxes().SetClipBox(cbox);
+        call.AccessBoundingBoxes().SetBoundingBox(bbox);
+        call.AccessBoundingBoxes().SetClipBox(cbox);
     }
 
 	return true;
@@ -126,20 +123,16 @@ bool TrackingShotRenderer::GetExtents(megamol::core::view::CallRender3D_2& call)
 
 void TrackingShotRenderer::PreRender(core::view::CallRender3D_2& call) {
 
-    auto cr3d_in = &call;
-    if (cr3d_in == nullptr) return;
-
     auto cr3d_out = this->chainRenderSlot.CallAs<CallRender3D_2>();
     if (cr3d_out == nullptr) return;
 
     // Get current camera
     view::Camera_2 cam;
-    cr3d_in->GetCamera(cam);
+    call.GetCamera(cam);
 
     // Get current viewport
-    ///? auto viewport = cr3d_in->GetViewport().GetSize();
     glm::vec4 viewport;
-    if (!cam.image_tile().empty()) {
+    if (!cam.image_tile().empty()) { /// or better: auto viewport = cr3d_in->GetViewport().GetSize()?
         viewport = glm::vec4(
             cam.image_tile().left(), cam.image_tile().bottom(), cam.image_tile().width(), cam.image_tile().height());
     }
@@ -183,16 +176,13 @@ void TrackingShotRenderer::PreRender(core::view::CallRender3D_2& call) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // Set data of outgoing cr3d to data of incoming cr3d
-    *cr3d_out = *cr3d_in;
+    *cr3d_out = call;
     // Set output buffer for override call (otherwise render call is overwritten in Base::Render(context))
     cr3d_out->SetOutputBuffer(&this->fbo);
 }
 
 
 bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D_2& call) {
-
-    auto cr3d_in = &call;
-    if (cr3d_in == nullptr) return false;
 
     auto cr3d_out = this->chainRenderSlot.CallAs<CallRender3D_2>();
     if (cr3d_out == nullptr) return false;
@@ -217,7 +207,7 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D_2& call) {
 
     // Set current simulation time based on selected keyframe ('disables'/ignores animation via view3d)
     float simTime = skf.GetSimTime();
-    cr3d_in->SetTime(simTime * totalSimTime);
+    call.SetTime(simTime * totalSimTime);
 
     // Get pointer to keyframes array
     auto keyframes = ccc->GetKeyframes();
@@ -246,7 +236,7 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D_2& call) {
 
     // Get current camera
     view::Camera_2 cam;
-    cr3d_in->GetCamera(cam);
+    call.GetCamera(cam);
     cam_type::snapshot_type snapshot;
     cam_type::matrix_type viewTemp, projTemp;
     cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
@@ -259,7 +249,7 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     glm::mat4 mvp = proj * view;
 
     // Get current viewport
-    ///? auto viewport = cr3d_in->GetViewport().GetSize();
+    ///? auto viewport = call.GetViewport().GetSize();
     glm::vec4 viewport;
     if (!cam.image_tile().empty()) {
         viewport = glm::vec4(

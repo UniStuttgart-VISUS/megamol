@@ -105,13 +105,10 @@ void TimeLineRenderer::release(void) {
 
 bool TimeLineRenderer::GetExtents(view::CallRender2D& call) {
 
-	auto cr = &call;
-	if (cr == nullptr) return false;
-
     glm::vec2 currentViewport;
-    currentViewport.x = static_cast<float>(cr->GetViewport().GetSize().GetWidth());
-    currentViewport.y = static_cast<float>(cr->GetViewport().GetSize().GetHeight());
-    cr->SetBoundingBox(cr->GetViewport());
+    currentViewport.x = static_cast<float>(call.GetViewport().GetSize().GetWidth());
+    currentViewport.y = static_cast<float>(call.GetViewport().GetSize().GetHeight());
+    call.SetBoundingBox(call.GetViewport());
 
     if (currentViewport != this->viewport) {
         this->viewport = currentViewport;
@@ -145,9 +142,6 @@ bool TimeLineRenderer::GetExtents(view::CallRender2D& call) {
 
 
 bool TimeLineRenderer::Render(view::CallRender2D& call) {
-
-    auto cr = &call;
-    if (cr == nullptr) return false;
 
     // Get update data from keyframe keeper
     auto ccc = this->keyframeKeeperSlot.CallAs<CallKeyframeKeeper>();
@@ -226,7 +220,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     glm::vec3 cam_pos = { 0.0f, 0.0f, 1.0f };
     glm::vec3 origin = { this->axes[Axis::X].startPos.x, this->axes[Axis::X].startPos.y, 0.0f };
     float yAxisValue = 0.0f;
-    auto cbc = cr->GetBackgroundColour();
+    auto cbc = call.GetBackgroundColour();
     glm::vec4 back_color = glm::vec4(static_cast<float>(cbc[0]) / 255.0f, static_cast<float>(cbc[1]) / 255.0f, static_cast<float>(cbc[2]) / 255.0f, 1.0f);
     this->utils.SetBackgroundColor(back_color);
     glm::mat4 ortho = glm::ortho(0.0f, this->viewport.x, 0.0f, this->viewport.y, -1.0f, 1.0f);

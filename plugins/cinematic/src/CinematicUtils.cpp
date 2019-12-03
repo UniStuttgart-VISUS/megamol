@@ -770,7 +770,6 @@ void CinematicUtils::PushHotkeyList(float viewport_width, float viewport_height)
 
 void CinematicUtils::PushText(const std::string& text, float x, float y, float z) {
 
-    float text_width = this->font.LineWidth(this->font_size, text.c_str());
     auto color = this->Color(CinematicUtils::Colors::FONT);
     this->font.DrawString(glm::value_ptr(color), x, y, z, this->font_size, false, text.c_str(), megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
 }

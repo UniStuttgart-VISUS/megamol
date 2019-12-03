@@ -81,9 +81,6 @@ bool ReplacementRenderer::create(void) {
 
 bool ReplacementRenderer::GetExtents(megamol::core::view::CallRender3D_2& call) {
 
-    auto cr3d_in = &call;
-    if (cr3d_in == nullptr) return false;
-
     auto cr3d_out = this->chainRenderSlot.CallAs<view::CallRender3D_2>();
 
     bool retVal = true;
@@ -94,10 +91,10 @@ bool ReplacementRenderer::GetExtents(megamol::core::view::CallRender3D_2& call) 
         this->bbox = call.AccessBoundingBoxes().BoundingBox();
     }
     else {
-        cr3d_in->SetTimeFramesCount(1);
-        cr3d_in->SetTime(0.0f);
+        call.SetTimeFramesCount(1);
+        call.SetTime(0.0f);
         this->bbox = vislib::math::Cuboid<float>(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
-        cr3d_in->AccessBoundingBoxes().SetBoundingBox(this->bbox);
+        call.AccessBoundingBoxes().SetBoundingBox(this->bbox);
     }
 
     return retVal;
@@ -106,13 +103,10 @@ bool ReplacementRenderer::GetExtents(megamol::core::view::CallRender3D_2& call) 
 
 bool ReplacementRenderer::Render(megamol::core::view::CallRender3D_2& call) {
 
-    auto cr3d_in = &call;
-    if (cr3d_in == nullptr)  return false;
-
     auto leftSlotParent = call.PeekCallerSlot()->Parent();
     std::shared_ptr<const view::AbstractView> viewptr =
         std::dynamic_pointer_cast<const view::AbstractView>(leftSlotParent);
-    if (viewptr != nullptr) {
+    if (viewptr != nullptr) { // TODO move this behind the fbo magic?
         auto vp = call.GetViewport();
         glViewport(vp.Left(), vp.Bottom(), vp.Width(), vp.Height());
         auto backCol = call.BackgroundColor();
@@ -163,7 +157,7 @@ bool ReplacementRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     if (this->toggle) {
 
         view::Camera_2 cam;
-        cr3d_in->GetCamera(cam);
+        call.GetCamera(cam);
         cam_type::snapshot_type snapshot;
         cam_type::matrix_type viewTemp, projTemp;
         cam.calc_matrices(snapshot, viewTemp, projTemp);
@@ -171,9 +165,8 @@ bool ReplacementRenderer::Render(megamol::core::view::CallRender3D_2& call) {
         glm::mat4 view = viewTemp;
         glm::mat4 mvp = proj * view;
 
-        ///auto viewport = cr3d_in->GetViewport().GetSize();
         glm::vec4 viewport;
-        if (!cam.image_tile().empty()) {
+        if (!cam.image_tile().empty()) { /// or better: auto viewport = cr3d_in->GetViewport().GetSize()?
             viewport = glm::vec4(
                 cam.image_tile().left(), cam.image_tile().bottom(), cam.image_tile().width(), cam.image_tile().height());
         }
@@ -215,6 +208,7 @@ bool ReplacementRenderer::Render(megamol::core::view::CallRender3D_2& call) {
 
         auto cr3d_out = this->chainRenderSlot.CallAs<view::CallRender3D_2>();
         if (cr3d_out != nullptr) {
+            *cr3d_out = call;
             return (*cr3d_out)(core::view::AbstractCallRender::FnRender);
         }
     }
