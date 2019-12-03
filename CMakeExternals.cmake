@@ -605,16 +605,24 @@ function(require_external NAME)
     if(WIN32)
       set(VTKM_LIB_CONT "lib/vtkm_cont-${VTKM_VER}.lib")
       set(VTKM_LIB_DEBUG_CONT "lib/vtkm_cont-${VTKM_VER}.lib")
+      #set(VTKM_LIB_FILTER "lib/vtkm_filter-${VTKM_VER}.lib")
+      #set(VTKM_LIB_DEBUG_FILTER "lib/vtkm_filter-${VTKM_VER}.lib")
       set(VTKM_LIB_RENDERER "lib/vtkm_rendering-${VTKM_VER}.lib")
       set(VTKM_LIB_DEBUG_RENDERER "lib/vtkm_rendering-${VTKM_VER}.lib")
+      #set(VTKM_LIB_SOURCE "lib/vtkm_source-${VTKM_VER}.lib")
+      #set(VTKM_LIB_DEBUG_SOURCE "lib/vtkm_source-${VTKM_VER}.lib")
       set(VTKM_LIB_WORKLET "lib/vtkm_worklet-${VTKM_VER}.lib")
       set(VTKM_LIB_DEBUG_WORKLET "lib/vtkm_worklet-${VTKM_VER}.lib")
     else()
       include(GNUInstallDirs)
       set(VTKM_LIB_CONT "lib/vtkm_cont-${VTKM_VER}.a")
       set(VTKM_LIB_DEBUG_CONT "lib/vtkm_cont-${VTKM_VER}.a")
+      #set(VTKM_LIB_FILTER "lib/vtkm_filter-${VTKM_VER}.a")
+      #set(VTKM_LIB_DEBUG_FILTER "lib/vtkm_filter-${VTKM_VER}.a")
       set(VTKM_LIB_RENDERER "lib/vtkm_rendering-${VTKM_VER}.a")
       set(VTKM_LIB_DEBUG_RENDERER "lib/vtkm_rendering-${VTKM_VER}.a")
+      #set(VTKM_LIB_SOURCE "lib/vtkm_source-${VTKM_VER}.a")
+      #set(VTKM_LIB_DEBUG_SOURCE "lib/vtkm_source-${VTKM_VER}.a")
       set(VTKM_LIB_WORKLET "lib/vtkm_worklet-${VTKM_VER}.a")
       set(VTKM_LIB_DEBUG_WORKLET "lib/vtkm_worklet-${VTKM_VER}.a")
     endif()
@@ -627,7 +635,7 @@ function(require_external NAME)
     message(${vtkm_ENABLE_CUDA})
     add_external_project(vtkm
       GIT_REPOSITORY https://gitlab.kitware.com/vtk/vtk-m.git
-      GIT_TAG "v1.5.0"
+      GIT_TAG "v1.4.0"
       CMAKE_ARGS
         -DBUILD_SHARED_LIBS:BOOL=OFF
         -DVTKm_ENABLE_TESTING:BOOL=OFF
@@ -645,10 +653,20 @@ function(require_external NAME)
       LIBRARY_RELEASE "${VTKM_LIB_CONT}"
       LIBRARY_DEBUG "${VTKM_LIB_DEBUG_CONT}")
 
+    #add_external_library(vtkm_filter STATIC
+    #  PROJECT vtkm
+    #  LIBRARY_RELEASE "${VTKM_LIB_FILTER}"
+    #  LIBRARY_DEBUG "${VTKM_LIB_DEBUG_FILTER}")
+
     add_external_library(vtkm_renderer STATIC
       PROJECT vtkm
       LIBRARY_RELEASE "${VTKM_LIB_RENDERER}"
       LIBRARY_DEBUG "${VTKM_LIB_DEBUG_RENDERER}")
+
+    #add_external_library(vtkm_source STATIC
+    #  PROJECT vtkm
+    #  LIBRARY_RELEASE "${VTKM_LIB_SOURCE}"
+    #  LIBRARY_DEBUG "${VTKM_LIB_DEBUG_SOURCE}")
 
     add_external_library(vtkm_worklet STATIC
       PROJECT vtkm
