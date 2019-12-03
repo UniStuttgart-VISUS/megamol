@@ -18,7 +18,7 @@ MegaMol succeeds ​MolCloud, which has been developed at the University of Stut
 5. Run `make install` to create your MegaMol installation
 6. Test Megamol with
 
-        ./megamol.sh -i testspheres inst
+        ./megamol.sh -p ..\examples\testspheres.lua
 
 ### Windows
 1. Clone the MegaMol repository
@@ -29,7 +29,7 @@ MegaMol succeeds ​MolCloud, which has been developed at the University of Stut
 5. Use the `INSTALL` target to create your MegaMol installation
 6. Test Megamol with
 
-        mmconsole.exe -i testspheres inst
+        mmconsole.exe -p ..\examples\testspheres.lua
 
 
 ## MegaMol Configurator

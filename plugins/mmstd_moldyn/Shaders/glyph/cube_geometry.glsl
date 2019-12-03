@@ -33,3 +33,34 @@ const vec3 cube_normals[14] = vec3[14](
     vec3(0.f, 0.f, -1.f),    // back1
     vec3(0.f, 0.f, -1.f)      // back2
 );
+
+// this instead is a half cube made from 3 vertex strips, each representing the "positive" face of one axis
+// [face][vertex]
+const vec3 cube_faces[3][4] = {
+    // right
+    {
+        vec3( 1.f,  1.f,  1.f),
+        vec3( 1.f, -1.f,  1.f),
+        vec3( 1.f,  1.f, -1.f),
+        vec3( 1.f, -1.f, -1.f)
+    },
+    // top
+    {
+        vec3(-1.f,  1.f,  1.f),
+        vec3( 1.f,  1.f,  1.f),
+        vec3(-1.f,  1.f, -1.f),
+        vec3( 1.f,  1.f, -1.f)
+    },
+    // front
+    {
+        vec3(-1.f, -1.f,  1.f),
+        vec3( 1.f, -1.f,  1.f),
+        vec3(-1.f,  1.f,  1.f),
+        vec3( 1.f,  1.f,  1.f)
+    }
+};
+
+// the normals can be trivially indexed by face (see above)
+const vec3 cube_face_normals[3] = {
+    vec3(1.f, 0.f, 0.f), vec3(0.f, 1.f, 0.f), vec3(0.f, 0.f, 1.f)
+};

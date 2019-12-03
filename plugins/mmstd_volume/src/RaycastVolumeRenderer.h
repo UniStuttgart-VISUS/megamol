@@ -104,9 +104,9 @@ protected:
      */
     virtual bool Render(core::view::CallRender3D_2& call) override;
 
-	/**
-	 * Get and update data by calling input modules
-	 */
+    /**
+     * Get and update data by calling input modules
+     */
     bool updateVolumeData();
 
 private:
@@ -120,7 +120,7 @@ private:
     std::size_t m_volume_datahash = std::numeric_limits<std::size_t>::max();
     int m_frame_id = -1;
 
-	glm::vec3 m_volume_origin;
+    glm::vec3 m_volume_origin;
     glm::vec3 m_volume_extents;
     glm::vec3 m_volume_resolution;
 
