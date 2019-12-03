@@ -393,10 +393,9 @@ bool OverlayRenderer::Render(view::CallRender3D_2& call) {
         float eps = 0.0f;
         // if ((this->m_last_state.button == MediaButton::REWIND) ||
         //    (this->m_last_state.button == MediaButton::FAST_FORWARD)) {
-        //    eps = 0.01f;
+        //    eps = 0.75f;
         //}
-
-        if (current_delta > (1.0f - eps)) {
+         if (current_delta > (1.0f - eps)) {
             current_button = MediaButton::FAST_FORWARD;
         } else if (current_delta < (-1.0f + eps)) {
             current_button = MediaButton::REWIND;
