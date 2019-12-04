@@ -151,7 +151,8 @@ function(add_external_project TARGET)
 
     # Remove files so that the build process is run again
     execute_process(
-      COMMAND ${CMAKE_COMMAND} -E remove -f EXTERNAL_BUILT_*
+      COMMAND ${CMAKE_COMMAND} -E remove -f EXTERNAL_BUILT
+        EXTERNAL_BUILT_Release EXTERNAL_BUILT_RelWithDebInfo EXTERNAL_BUILT_Debug
       WORKING_DIRECTORY "${BINARY_DIR}"
       OUTPUT_QUIET)
 
@@ -163,35 +164,58 @@ function(add_external_project TARGET)
     message(FATAL_ERROR "No byproducts declared")
   endif()
 
-  string(REPLACE "<INSTALL_DIR>" "${INSTALL_DIR}" BYPRODUCTS ${args_BUILD_BYPRODUCTS})
-
   # Add command for building
   if(args_SHARED)
     external_set_typed_property(${TARGET} SHARED TRUE BOOL)
 
-    string(REPLACE "<INSTALL_DIR>" "${CMAKE_INSTALL_PREFIX}" TARGET_BYPRODUCT ${args_BUILD_BYPRODUCTS})
+    set(BYPRODUCTS)
+    set(INSTALL_COMMANDS)
+    foreach(BYPRODUCT IN LISTS args_BUILD_BYPRODUCTS)
+      string(REPLACE "<INSTALL_DIR>" "${INSTALL_DIR}" SOURCE_BYPRODUCT ${BYPRODUCT})
+      string(REPLACE "<INSTALL_DIR>" "${CMAKE_INSTALL_PREFIX}" TARGET_BYPRODUCT ${BYPRODUCT})
 
-    add_custom_command(OUTPUT "${BINARY_DIR}/EXTERNAL_BUILT_${CONFIG}"
+      list(APPEND BYPRODUCTS ${SOURCE_BYPRODUCT})
+      list(APPEND INSTALL_COMMANDS COMMAND ${CMAKE_COMMAND} -E copy \"${SOURCE_BYPRODUCT}\" \"${TARGET_BYPRODUCT}\")
+    endforeach()
+
+    add_custom_command(OUTPUT "${BINARY_DIR}/EXTERNAL_BUILT"
       COMMAND ${CMAKE_COMMAND} --build . --parallel --config Release
       COMMAND ${CMAKE_COMMAND} --build . --target install --config Release
-      COMMAND ${CMAKE_COMMAND} -E copy \"${BYPRODUCTS}\" \"${TARGET_BYPRODUCT}\"
+      ${INSTALL_COMMANDS}
       ${args_COMMANDS}
-      COMMAND ${CMAKE_COMMAND} -E touch EXTERNAL_BUILT_${CONFIG}
+      COMMAND ${CMAKE_COMMAND} -E touch EXTERNAL_BUILT
       WORKING_DIRECTORY "${BINARY_DIR}"
       BYPRODUCTS ${BYPRODUCTS})
+
+    add_custom_target(${TARGET}_ext DEPENDS "${BINARY_DIR}/EXTERNAL_BUILT")
   else()
     external_set_typed_property(${TARGET} SHARED FALSE BOOL)
 
-    # TODO ############################################################################################################################################################
+    set(BYPRODUCTS)
+    set(INSTALL_COMMANDS)
+    foreach(BYPRODUCT IN LISTS args_BUILD_BYPRODUCTS)
+      string(REPLACE "<INSTALL_DIR>" "${INSTALL_DIR}" SOURCE_BYPRODUCT ${BYPRODUCT})
+      string(REPLACE "<INSTALL_DIR>" "${INSTALL_DIR}/$<CONFIG>" TARGET_BYPRODUCT ${BYPRODUCT})
+      string(REPLACE "<SUFFIX>" "$<$<CONFIG:Debug>:${DEBUG_SUFFIX}>" SOURCE_BYPRODUCT ${SOURCE_BYPRODUCT})
+      string(REPLACE "<SUFFIX>" "$<$<CONFIG:Debug>:${DEBUG_SUFFIX}>" TARGET_BYPRODUCT ${TARGET_BYPRODUCT})
+
+      list(APPEND BYPRODUCTS ${TARGET_BYPRODUCT})
+      list(APPEND INSTALL_COMMANDS COMMAND ${CMAKE_COMMAND} -E copy "${SOURCE_BYPRODUCT}" "${TARGET_BYPRODUCT}")
+    endforeach()
+
+    add_custom_target(${TARGET}_ext
+      COMMAND ${CMAKE_COMMAND}
+        -DCONFIG=$<CONFIG>
+        -DINSTALL_DIR="${INSTALL_DIR}/$<CONFIG>"
+        "-DINSTALL_COMMANDS=${INSTALL_COMMANDS}"
+        "-DCOMMANDS=${args_COMMANDS}"
+        -P ${CMAKE_SOURCE_DIR}/cmake/External_build.cmake
+      DEPENDS ${CMAKE_SOURCE_DIR}/cmake/External_build.cmake
+      WORKING_DIRECTORY "${BINARY_DIR}"
+      BYPRODUCTS ${BYPRODUCTS})
   endif()
 
-  # Add external target
-  set(DEPENDENCIES)
-  foreach(CONFIG_FILE IN LISTS CONFIGURATIONS)
-    list(APPEND DEPENDENCIES "${BINARY_DIR}/EXTERNAL_BUILT_${CONFIG_FILE}")
-  endforeach()
-
-  add_custom_target(${TARGET}_ext DEPENDS ${DEPENDENCIES})
+  # Set external target properties
   set_target_properties(${TARGET}_ext PROPERTIES FOLDER external)
 
   if(args_DEPENDS)
@@ -214,48 +238,55 @@ endfunction(add_external_project)
 #
 # Adds an external library, depending on an external project.
 #
-# add_external_library(<target> (STATIC|SHARED)
+# add_external_library(<target>
 #     PROJECT <external_project>
 #     LIBRARY "<library_name>.dll|so"
 #     IMPORT_LIBRARY "<library_name>.lib"
-#     INTERFACE_LIBRARIES "<external_library>*")
+#     INTERFACE_LIBRARIES "<external_library>*"
+#     DEBUG_SUFFIX <suffix>)
 #
 function(add_external_library TARGET)
-  set(ARGS_ONE_VALUE PROJECT COMPILE_DEFINITIONS INCLUDE_DIR CONFIG_INCLUDE_DIR LIBRARY IMPORT_LIBRARY INTERFACE_LIBRARIES)
+  set(ARGS_ONE_VALUE PROJECT LIBRARY IMPORT_LIBRARY INTERFACE_LIBRARIES DEBUG_SUFFIX)
   cmake_parse_arguments(args "" "${ARGS_ONE_VALUE}" "${ARGS_MULT_VALUES}" ${ARGN})
 
-  if(NOT args_PROJECT)
-    set(args_PROJECT ${TARGET})
-  endif()
-  _argument_default(PROJECT "")
-
-  external_get_property(${PROJECT} SHARED)
-  if(SHARED)
-    set(TYPE SHARED)
-  else()
-    set(TYPE STATIC)
-  endif()
-
-  # Guess library properties, unless set.
-  external_get_property(${PROJECT} INSTALL_DIR)
-  external_get_property(${PROJECT} CONFIG_DIR)
-  _argument_default(COMPILE_DEFINITIONS "")
-  _argument_default(INCLUDE_DIR include)
-  _argument_default(CONFIG_INCLUDE_DIR "")
+  # Get default arguments
+  _argument_default(PROJECT ${TARGET})
   _argument_default(LIBRARY "NOTFOUND")
   _argument_default(IMPORT_LIBRARY "NOTFOUND")
+  _argument_default(INTERFACE_LIBRARIES "")
+  _argument_default(DEBUG_SUFFIX "")
+
+  # Guess library properties, unless set.
+  external_get_property(${PROJECT} SHARED)
+  external_get_property(${PROJECT} INSTALL_DIR)
+  external_get_property(${PROJECT} CONFIG_DIR)
 
   # Create include directory as required by INTERFACE_INCLUDE_DIRECTORIES.
-  file(MAKE_DIRECTORY "${INSTALL_DIR}/${INCLUDE_DIR}")
+  file(MAKE_DIRECTORY "${INSTALL_DIR}/include")
 
   # Add an imported library.
-  add_library(${TARGET} ${TYPE} IMPORTED GLOBAL)
-  add_dependencies(${TARGET} ${PROJECT}_ext)
-  set_target_properties(${TARGET} PROPERTIES
-    INTERFACE_COMPILE_DEFINITIONS "${COMPILE_DEFINITIONS}"
-    INTERFACE_INCLUDE_DIRECTORIES "${INSTALL_DIR}/${INCLUDE_DIR};${CONFIG_DIR}/${CONFIG_INCLUDE_DIR}"
-    INTERFACE_LINK_LIBRARIES "${INTERFACE_LIBRARIES}"
-    IMPORTED_CONFIGURATIONS "Release"
-    IMPORTED_LOCATION "${INSTALL_DIR}/${LIBRARY}"
-    IMPORTED_IMPLIB "${INSTALL_DIR}/${IMPORT_LIBRARY}")
+  if(SHARED)
+    add_library(${TARGET} SHARED IMPORTED GLOBAL)
+    add_dependencies(${TARGET} ${PROJECT}_ext)
+    set_target_properties(${TARGET} PROPERTIES
+      INTERFACE_INCLUDE_DIRECTORIES "${INSTALL_DIR}/include;${CONFIG_DIR}"
+      INTERFACE_LINK_LIBRARIES "${INTERFACE_LIBRARIES}"
+      IMPORTED_CONFIGURATIONS "Release"
+      IMPORTED_LOCATION "${INSTALL_DIR}/${LIBRARY}"
+      IMPORTED_IMPLIB "${INSTALL_DIR}/${IMPORT_LIBRARY}")
+  else()
+    string(REPLACE "<SUFFIX>" "" LIBRARY_RELEASE ${LIBRARY})
+    string(REPLACE "<SUFFIX>" "" LIBRARY_RELWITHDEBINFO ${LIBRARY})
+    string(REPLACE "<SUFFIX>" "${DEBUG_SUFFIX}" LIBRARY_DEBUG ${LIBRARY})
+
+    add_library(${TARGET} STATIC IMPORTED GLOBAL)
+    add_dependencies(${TARGET} ${PROJECT}_ext)
+    set_target_properties(${TARGET} PROPERTIES
+      INTERFACE_INCLUDE_DIRECTORIES "${INSTALL_DIR}/include;${CONFIG_DIR}"
+      INTERFACE_LINK_LIBRARIES "${INTERFACE_LIBRARIES}"
+      IMPORTED_CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES}
+      IMPORTED_LOCATION "${INSTALL_DIR}/Release/${LIBRARY_RELEASE}"
+      IMPORTED_LOCATION_RELWITHDEBINFO "${INSTALL_DIR}/RelWithDebInfo/${LIBRARY_RELWITHDEBINFO}"
+      IMPORTED_LOCATION_DEBUG "${INSTALL_DIR}/Debug/${LIBRARY_DEBUG}")
+  endif()
 endfunction(add_external_library)

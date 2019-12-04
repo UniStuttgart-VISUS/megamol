@@ -141,24 +141,20 @@ function(require_external NAME)
     endif()
 
     if(WIN32)
-      set(BHTSNE_IMPORT_LIB "lib/bhtsne.lib")
-      set(BHTSNE_LIB "bin/bhtsne.dll")
+      set(BHTSNE_LIB "lib/bhtsne.lib")
     else()
-      set(BHTSNE_LIB "lib/libbhtsne.so")
+      set(BHTSNE_LIB "lib/libbhtsne.a")
     endif()
 
-    add_external_project(bhtsne SHARED
+    add_external_project(bhtsne STATIC
       GIT_REPOSITORY https://github.com/lvdmaaten/bhtsne.git
       GIT_TAG "36b169c88250d0afe51828448dfdeeaa508f13bc"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${BHTSNE_LIB}"
       PATCH_COMMAND ${CMAKE_COMMAND} -E copy
         "${CMAKE_SOURCE_DIR}/cmake/bhtsne/CMakeLists.txt"
-        "<SOURCE_DIR>/CMakeLists.txt"
-      CMAKE_ARGS
-        -DCMAKE_WINDOWS_EXPORT_ALL_SYMBOLS=TRUE)
+        "<SOURCE_DIR>/CMakeLists.txt")
 
     add_external_library(bhtsne
-      IMPORT_LIBRARY ${BHTSNE_IMPORT_LIB}
       LIBRARY ${BHTSNE_LIB})
 
   # glfw3
@@ -241,13 +237,12 @@ function(require_external NAME)
     endif()
 
     if(WIN32)
-      set(IMGUI_IMPORT_LIB "lib/imgui.lib")
-      set(IMGUI_LIB "bin/imgui.dll")
+      set(IMGUI_LIB "lib/imgui.lib")
     else()
-      set(IMGUI_LIB "lib/libimgui.so")
+      set(IMGUI_LIB "lib/libimgui.a")
     endif()
 
-    add_external_project(imgui SHARED
+    add_external_project(imgui STATIC
       GIT_REPOSITORY https://github.com/ocornut/imgui.git
       GIT_TAG "v1.70"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${IMGUI_LIB}"
@@ -258,7 +253,6 @@ function(require_external NAME)
     external_get_property(imgui SOURCE_DIR)
 
     add_external_library(imgui
-      IMPORT_LIBRARY ${IMGUI_IMPORT_LIB}
       LIBRARY ${IMGUI_LIB})
 
     target_include_directories(imgui INTERFACE "${SOURCE_DIR}/examples" "${SOURCE_DIR}/misc/cpp")

@@ -1,6 +1,5 @@
 cmake_minimum_required(VERSION 3.0)
 
-set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
 project(ImGui CXX)
 
 set(IMGUI_PUBLIC_HDRS
@@ -16,8 +15,7 @@ set(IMGUI_SRCS
   imgui_draw.cpp
   imgui_widgets.cpp)
 
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-add_library(imgui SHARED ${IMGUI_SRCS} ${IMGUI_PUBLIC_HDRS} ${IMGUI_PRIVATE_HDRS})
+add_library(imgui STATIC ${IMGUI_SRCS} ${IMGUI_PUBLIC_HDRS} ${IMGUI_PRIVATE_HDRS})
 
 install(TARGETS imgui)
 install(FILES ${IMGUI_PUBLIC_HDRS} ${IMGUI_PRIVATE_HDRS} DESTINATION "include")

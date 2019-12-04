@@ -11,7 +11,7 @@ set(BHTSNE_SRCS
   tsne.cpp
   sptree.cpp)
 
-add_library(bhtsne SHARED ${BHTSNE_SRCS} ${BHTSNE_PUBLIC_HDRS} ${BHTSNE_PRIVATE_HDRS})
+add_library(bhtsne STATIC ${BHTSNE_SRCS} ${BHTSNE_PUBLIC_HDRS} ${BHTSNE_PRIVATE_HDRS})
 
 install(TARGETS bhtsne)
 install(FILES ${BHTSNE_PUBLIC_HDRS} DESTINATION "include")
