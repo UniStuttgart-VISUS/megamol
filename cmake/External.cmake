@@ -77,6 +77,8 @@ function(add_external_project TARGET)
   set(ARGS_MULT_VALUES CMAKE_ARGS PATCH_COMMAND DEPENDS COMMANDS)
   cmake_parse_arguments(args "${ARGS_OPTIONS}" "${ARGS_ONE_VALUE}" "${ARGS_MULT_VALUES}" ${ARGN})
 
+  _argument_default(COMMANDS "")
+
   # Download
   external_download(${TARGET} GIT_REPOSITORY ${args_GIT_REPOSITORY} GIT_TAG ${args_GIT_TAG})
 
@@ -172,17 +174,20 @@ function(add_external_project TARGET)
     set(INSTALL_COMMANDS)
     foreach(BYPRODUCT IN LISTS args_BUILD_BYPRODUCTS)
       string(REPLACE "<INSTALL_DIR>" "${INSTALL_DIR}" SOURCE_BYPRODUCT ${BYPRODUCT})
-      string(REPLACE "<INSTALL_DIR>" "${CMAKE_INSTALL_PREFIX}" TARGET_BYPRODUCT ${BYPRODUCT})
+      string(REPLACE "<INSTALL_DIR>" "${INSTALL_DIR}/../../_deps_install" TARGET_BYPRODUCT ${BYPRODUCT})
 
       list(APPEND BYPRODUCTS ${SOURCE_BYPRODUCT})
       list(APPEND INSTALL_COMMANDS COMMAND ${CMAKE_COMMAND} -E copy \"${SOURCE_BYPRODUCT}\" \"${TARGET_BYPRODUCT}\")
     endforeach()
 
+    string(REPLACE "<INSTALL_DIR>" "${INSTALL_DIR}/../../_deps_install" COMMANDS "${COMMANDS}")
+
     add_custom_command(OUTPUT "${BINARY_DIR}/EXTERNAL_BUILT"
       COMMAND ${CMAKE_COMMAND} --build . --parallel --config Release
       COMMAND ${CMAKE_COMMAND} --build . --target install --config Release
+      COMMAND ${CMAKE_COMMAND} -E make_directory \"${INSTALL_DIR}/../../_deps_install\"
       ${INSTALL_COMMANDS}
-      ${args_COMMANDS}
+      ${COMMANDS}
       COMMAND ${CMAKE_COMMAND} -E touch EXTERNAL_BUILT
       WORKING_DIRECTORY "${BINARY_DIR}"
       BYPRODUCTS ${BYPRODUCTS})
@@ -196,8 +201,8 @@ function(add_external_project TARGET)
     foreach(BYPRODUCT IN LISTS args_BUILD_BYPRODUCTS)
       string(REPLACE "<INSTALL_DIR>" "${INSTALL_DIR}" SOURCE_BYPRODUCT ${BYPRODUCT})
       string(REPLACE "<INSTALL_DIR>" "${INSTALL_DIR}/$<CONFIG>" TARGET_BYPRODUCT ${BYPRODUCT})
-      string(REPLACE "<SUFFIX>" "$<$<CONFIG:Debug>:${DEBUG_SUFFIX}>" SOURCE_BYPRODUCT ${SOURCE_BYPRODUCT})
-      string(REPLACE "<SUFFIX>" "$<$<CONFIG:Debug>:${DEBUG_SUFFIX}>" TARGET_BYPRODUCT ${TARGET_BYPRODUCT})
+      string(REPLACE "<SUFFIX>" "$<$<CONFIG:Debug>:${args_DEBUG_SUFFIX}>" SOURCE_BYPRODUCT ${SOURCE_BYPRODUCT})
+      string(REPLACE "<SUFFIX>" "$<$<CONFIG:Debug>:${args_DEBUG_SUFFIX}>" TARGET_BYPRODUCT ${TARGET_BYPRODUCT})
 
       list(APPEND BYPRODUCTS ${TARGET_BYPRODUCT})
       list(APPEND INSTALL_COMMANDS COMMAND ${CMAKE_COMMAND} -E copy "${SOURCE_BYPRODUCT}" "${TARGET_BYPRODUCT}")
@@ -208,7 +213,7 @@ function(add_external_project TARGET)
         -DCONFIG=$<CONFIG>
         -DINSTALL_DIR="${INSTALL_DIR}/$<CONFIG>"
         "-DINSTALL_COMMANDS=${INSTALL_COMMANDS}"
-        "-DCOMMANDS=${args_COMMANDS}"
+        "-DCOMMANDS=${COMMANDS}"
         -P ${CMAKE_SOURCE_DIR}/cmake/External_build.cmake
       DEPENDS ${CMAKE_SOURCE_DIR}/cmake/External_build.cmake
       WORKING_DIRECTORY "${BINARY_DIR}"
@@ -219,16 +224,33 @@ function(add_external_project TARGET)
   set_target_properties(${TARGET}_ext PROPERTIES FOLDER external)
 
   if(args_DEPENDS)
-    add_dependencies(${TARGET}_ext ${args_DEPENDS})
+    foreach(DEP IN LISTS args_DEPENDS)
+      if(TARGET ${DEP})
+        add_dependencies(${TARGET}_ext ${DEP})
+      elseif(TARGET ${DEP}_ext)
+        add_dependencies(${TARGET}_ext ${DEP}_ext)
+      endif()
+    endforeach()
   endif()
 
   # Create ALL target for building all external libraries at once
-  if(NOT TARGET ALL_EXTERNALS)
-    add_custom_target(ALL_EXTERNALS)
-    set_target_properties(ALL_EXTERNALS PROPERTIES FOLDER external)
+  if(NOT TARGET _ALL_EXTERNALS)
+    add_custom_target(_ALL_EXTERNALS)
+    set_target_properties(_ALL_EXTERNALS PROPERTIES FOLDER external)
   endif()
 
-  add_dependencies(ALL_EXTERNALS ${TARGET}_ext)
+  add_dependencies(_ALL_EXTERNALS ${TARGET}_ext)
+
+  # Create install target for installing all shared external libraries
+  if(NOT TARGET _INSTALL_EXTERNALS)
+    add_custom_target(_INSTALL_EXTERNALS
+      DEPENDS _ALL_EXTERNALS
+      COMMAND ${CMAKE_COMMAND} -E copy_directory \"${INSTALL_DIR}/../../_deps_install\" \"${CMAKE_INSTALL_PREFIX}/\")
+
+    set_target_properties(_INSTALL_EXTERNALS PROPERTIES FOLDER external)
+  endif()
+
+  install(DIRECTORY "${INSTALL_DIR}/../../_deps_install/bin" DESTINATION "${CMAKE_INSTALL_PREFIX}")
 endfunction(add_external_project)
 
 

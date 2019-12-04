@@ -174,8 +174,8 @@ function(require_external NAME)
       GIT_REPOSITORY https://github.com/glfw/glfw.git
       GIT_TAG "3.2.1"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${GLFW_LIB}"
-      COMMANDS COMMAND ${CMAKE_COMMAND} -E copy "\"${CMAKE_INSTALL_PREFIX}/${GLFW_LIB}\" \"${CMAKE_INSTALL_PREFIX}/bin/glfw3.dll\""
-               COMMAND ${CMAKE_COMMAND} -E remove -f \"${CMAKE_INSTALL_PREFIX}/${GLFW_LIB}\"
+      COMMANDS COMMAND ${CMAKE_COMMAND} -E copy "\"<INSTALL_DIR>/${GLFW_LIB}\" \"<INSTALL_DIR>/bin/glfw3.dll\""
+               COMMAND ${CMAKE_COMMAND} -E remove -f \"<INSTALL_DIR>/${GLFW_LIB}\"
       CMAKE_ARGS
         -DBUILD_SHARED_LIBS=ON
         -DGLFW_BUILD_EXAMPLES=OFF
@@ -273,31 +273,30 @@ function(require_external NAME)
     require_external(zlib)
 
     if(MSVC)
-      set(LIBPNG_IMPORT_LIB "lib/libpng16.lib")
-      set(LIBPNG_LIB "bin/libpng16.dll")
+      set(LIBPNG_LIB "lib/libpng16_static<SUFFIX>.lib")
     else()
       include(GNUInstallDirs)
-      set(LIBPNG_LIB "${CMAKE_INSTALL_LIBDIR}/libpng16.so")
+      set(LIBPNG_LIB "${CMAKE_INSTALL_LIBDIR}/libpng16<SUFFIX>.a")
     endif()
 
     if(MSVC)
-      set(ZLIB_LIB "lib/zlib.lib")
+      set(ZLIB_LIB "lib/zlibstatic$<$<CONFIG:Debug>:d>.lib")
     else()
       include(GNUInstallDirs)
-      set(ZLIB_LIB "lib/libz.so")
+      set(ZLIB_LIB "lib/libz.a")
     endif()
 
     external_get_property(zlib INSTALL_DIR)
 
-    add_external_project(libpng SHARED
+    add_external_project(libpng STATIC
       GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/libpng.git
       GIT_TAG "v1.6.34"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${LIBPNG_LIB}"
-      DEPENDS zlib_ext
+      DEBUG_SUFFIX d
+      DEPENDS zlib
       CMAKE_ARGS
         -DPNG_BUILD_ZLIB=ON
-        -DPNG_SHARED=ON
-        -DPNG_STATIC=OFF
+        -DPNG_SHARED=OFF
         -DPNG_TESTS=OFF
         -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON
         -DZLIB_LIBRARY:PATH=${INSTALL_DIR}/${ZLIB_LIB}
@@ -312,9 +311,9 @@ function(require_external NAME)
         -DZLIB_PATCH_VERSION:STRING=${ZLIB_VERSION_PATCH})
 
     add_external_library(libpng
-      IMPORT_LIBRARY ${LIBPNG_IMPORT_LIB}
       LIBRARY ${LIBPNG_LIB}
-      INTERFACE_LIBRARIES zlib)
+      INTERFACE_LIBRARIES zlib
+      DEBUG_SUFFIX d)
 
   # libzmq / libcppzmq
   elseif(NAME STREQUAL "libzmq" OR NAME STREQUAL "libcppzmq")
@@ -417,14 +416,13 @@ function(require_external NAME)
     endif()
 
     if(WIN32)
-      set(TINYOBJLOADER_IMPORT_LIB "lib/tinyobjloader.lib")
-      set(TINYOBJLOADER_LIB "bin/tinyobjloader.dll")
+      set(TINYOBJLOADER_LIB "lib/tinyobjloader.lib")
     else()
       include(GNUInstallDirs)
-      set(TINYOBJLOADER_LIB "${CMAKE_INSTALL_LIBDIR}/libtinyobjloader.so")
+      set(TINYOBJLOADER_LIB "${CMAKE_INSTALL_LIBDIR}/libtinyobjloader.a")
     endif()
 
-    add_external_project(tinyobjloader SHARED
+    add_external_project(tinyobjloader STATIC
       GIT_REPOSITORY https://github.com/syoyo/tinyobjloader.git
       GIT_TAG "v2.0.0-rc1"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${TINYOBJLOADER_LIB}"
@@ -435,7 +433,6 @@ function(require_external NAME)
         -DCMAKE_CXX_FLAGS=-fPIC)
 
     add_external_library(tinyobjloader
-      IMPORT_LIBRARY ${TINYOBJLOADER_IMPORT_LIB}
       LIBRARY ${TINYOBJLOADER_LIB})
 
   # tinyply
@@ -470,14 +467,13 @@ function(require_external NAME)
     endif()
 
     if(WIN32)
-      set(ZFP_IMPORT_LIB "lib/zfp.lib")
-      set(ZFP_LIB "bin/zfp.dll")
+      set(ZFP_LIB "lib/zfp.lib")
     else()
       include(GNUInstallDirs)
-      set(ZFP_LIB "${CMAKE_INSTALL_LIBDIR}/libzfp.so")
+      set(ZFP_LIB "${CMAKE_INSTALL_LIBDIR}/libzfp.a")
     endif()
 
-    add_external_project(zfp SHARED
+    add_external_project(zfp STATIC
       GIT_REPOSITORY https://github.com/LLNL/zfp.git
       GIT_TAG "0.5.2"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${ZFP_LIB}"
@@ -490,7 +486,6 @@ function(require_external NAME)
         -DCMAKE_BUILD_TYPE=Release)
 
     add_external_library(zfp
-      IMPORT_LIBRARY ${ZFP_IMPORT_LIB}
       LIBRARY ${ZFP_LIB})
 
   # zlib
@@ -500,23 +495,23 @@ function(require_external NAME)
     endif()
 
     if(MSVC)
-      set(ZLIB_IMPORT_LIB "lib/zlib.lib")
-      set(ZLIB_LIB "bin/zlib.dll")
+      set(ZLIB_LIB "lib/zlibstatic<SUFFIX>.lib")
     else()
       include(GNUInstallDirs)
-      set(ZLIB_LIB "lib/libz.so")
+      set(ZLIB_LIB "lib/libz.a")
     endif()
 
-    add_external_project(zlib SHARED
+    add_external_project(zlib STATIC
       GIT_REPOSITORY https://github.com/madler/zlib.git
       GIT_TAG "v1.2.11"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${ZLIB_LIB}"
+      DEBUG_SUFFIX d
       CMAKE_ARGS
         -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON)
 
     add_external_library(zlib
-      IMPORT_LIBRARY ${ZLIB_IMPORT_LIB}
-      LIBRARY ${ZLIB_LIB})
+      LIBRARY ${ZLIB_LIB}
+      DEBUG_SUFFIX d)
 
     set(ZLIB_VERSION_STRING "1.2.11" CACHE STRING "" FORCE)
     set(ZLIB_VERSION_MAJOR 1 CACHE STRING "" FORCE)

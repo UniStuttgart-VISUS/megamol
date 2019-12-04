@@ -18,5 +18,10 @@ if(NOT EXISTS EXTERNAL_BUILT_${CONFIG})
     COMMAND ${CMAKE_COMMAND} -E make_directory ${INSTALL_DIR}
     ${INSTALL_COMMANDS}
     ${COMMANDS}
-    COMMAND ${CMAKE_COMMAND} -E touch EXTERNAL_BUILT_${CONFIG})
+    COMMAND ${CMAKE_COMMAND} -E touch EXTERNAL_BUILT_${CONFIG}
+    RESULT_VARIABLE INSTALL_RESULT)
+
+  if(NOT "${INSTALL_RESULT}" STREQUAL "0")
+    message(FATAL_ERROR "Fatal error while installing external project ${TARGET}")
+  endif()
 endif()
