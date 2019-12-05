@@ -21,14 +21,14 @@ OverlayRenderer::OverlayRenderer(void)
     , paramCustomPosition("position_offset", "Custom relative position offset in respect to selected anchor.")
     , paramFileName("texture::file_name", "The file name of the texture.")
     , paramRelativeWidth("texture::relative_width", "Relative screen space width of texture.")
-    , paramButtonColor("transport_ctrl::color", "Color of transpctrl buttons.")
+    , paramIconColor("transport_ctrl::color", "Color of transpctrl icons.")
     , paramDuration("transport_ctrl::duration",
-          "Duration transport ctrl buttons are shown after value changes. Value of zero "
-          "means showing transport ctrl buttons permanently.")
+          "Duration transport ctrl icons are shown after value changes. Value of zero "
+          "means showing transport ctrl icons permanently.")
     , paramFastSpeed(
-          "transport_ctrl::fast_speed", "Define factor of default speed for fast transport ctrl button threshold.")
+          "transport_ctrl::fast_speed", "Define factor of default speed for fast transport ctrl icon threshold.")
     , paramUltraFastSpeed("transport_ctrl::value_scaling",
-          "Define factor of default speed for ultra fast transport ctrl button threshold.")
+          "Define factor of default speed for ultra fast transport ctrl icon threshold.")
     , paramSpeedParameter("transport_ctrl::speed_parameter_name",
           "The full parameter name for the animation speed, e.g. '::Project_1::View3D_21::anim::speed'.")
     , paramTimeParameter("transport_ctrl::time_parameter_name",
@@ -47,7 +47,7 @@ OverlayRenderer::OverlayRenderer(void)
     , m_viewport()
     , m_current_rectangle({0.0f, 0.0f, 0.0f, 0.0f})
     , m_parameter_ptr(nullptr)
-    , m_transpctrl_buttons()
+    , m_transpctrl_icons()
     , m_state()
     , m_speed_parameter_ptr(nullptr)
     , m_time_parameter_ptr(nullptr) {
@@ -57,7 +57,7 @@ OverlayRenderer::OverlayRenderer(void)
 
     param::EnumParam* mep = new param::EnumParam(Mode::TEXTURE);
     mep->SetTypePair(Mode::TEXTURE, "Texture");
-    mep->SetTypePair(Mode::TRANSPORT_CTRL, "Transport Ctrl Buttons");
+    mep->SetTypePair(Mode::TRANSPORT_CTRL, "Transport Ctrl Icons");
     mep->SetTypePair(Mode::PARAMETER, "Parameter");
     mep->SetTypePair(Mode::LABEL, "Label");
     this->paramMode << mep;
@@ -92,9 +92,9 @@ OverlayRenderer::OverlayRenderer(void)
     this->paramRelativeWidth.SetUpdateCallback(this, &OverlayRenderer::onTriggerRecalcRectangle);
     this->MakeSlotAvailable(&this->paramRelativeWidth);
 
-    // TranspCtrl Button Mode
-    this->paramButtonColor << new param::ColorParam(0.5f, 0.75f, 0.75f, 1.0f);
-    this->MakeSlotAvailable(&this->paramButtonColor);
+    // TranspCtrl Icon Mode
+    this->paramIconColor << new param::ColorParam(0.5f, 0.75f, 0.75f, 1.0f);
+    this->MakeSlotAvailable(&this->paramIconColor);
 
     this->paramDuration << new param::FloatParam(3.0f, 0.0f);
     this->MakeSlotAvailable(&this->paramDuration);
@@ -155,8 +155,8 @@ void OverlayRenderer::release(void) {
     this->m_parameter_ptr = nullptr;
     this->m_shader.Release();
     this->m_texture.tex.Release();
-    for (size_t i = 0; i < this->m_transpctrl_buttons.size(); i++) {
-        this->m_transpctrl_buttons[i].tex.Release();
+    for (size_t i = 0; i < this->m_transpctrl_icons.size(); i++) {
+        this->m_transpctrl_icons[i].tex.Release();
     }
 }
 
@@ -175,8 +175,8 @@ bool OverlayRenderer::onToggleMode(param::ParamSlot& slot) {
     this->m_parameter_ptr = nullptr;
     this->m_shader.Release();
     this->m_texture.tex.Release();
-    for (size_t i = 0; i < this->m_transpctrl_buttons.size(); i++) {
-        this->m_transpctrl_buttons[i].tex.Release();
+    for (size_t i = 0; i < this->m_transpctrl_icons.size(); i++) {
+        this->m_transpctrl_icons[i].tex.Release();
     }
 
     this->setParameterGUIVisibility();
@@ -192,31 +192,31 @@ bool OverlayRenderer::onToggleMode(param::ParamSlot& slot) {
         this->onParameterName(this->paramTimeParameter);
         this->onParameterName(this->paramSpeedParameter);
         std::string filename;
-        for (size_t i = 0; i < this->m_transpctrl_buttons.size(); i++) {
-            switch (static_cast<TranspCtrlButton>(i)) {
-            case (TranspCtrlButton::PLAY):
+        for (size_t i = 0; i < this->m_transpctrl_icons.size(); i++) {
+            switch (static_cast<TranspCtrlIcon>(i)) {
+            case (TranspCtrlIcon::PLAY):
                 filename = "transport_ctrl_play.png";
                 break;
-            case (TranspCtrlButton::PAUSE):
+            case (TranspCtrlIcon::PAUSE):
                 filename = "transport_ctrl_pause.png";
                 break;
-            case (TranspCtrlButton::STOP):
+            case (TranspCtrlIcon::STOP):
                 filename = "transport_ctrl_stop.png";
                 break;
-            case (TranspCtrlButton::FAST_REWIND):
+            case (TranspCtrlIcon::FAST_REWIND):
                 filename = "transport_ctrl_fast-rewind.png";
                 break;
-            case (TranspCtrlButton::FAST_FORWARD):
+            case (TranspCtrlIcon::FAST_FORWARD):
                 filename = "transport_ctrl_fast-forward.png";
                 break;
-            case (TranspCtrlButton::ULTRA_FAST_FORWARD):
+            case (TranspCtrlIcon::ULTRA_FAST_FORWARD):
                 filename = "transport_ctrl_ultra-fast-forward.png";
                 break;
-            case (TranspCtrlButton::ULTRA_FAST_REWIND):
+            case (TranspCtrlIcon::ULTRA_FAST_REWIND):
                 filename = "transport_ctrl_ultra-fast-forward.png";
                 break;
             }
-            if (!this->loadTexture(filename, this->m_transpctrl_buttons[i])) return false;
+            if (!this->loadTexture(filename, this->m_transpctrl_icons[i])) return false;
         }
     } break;
     case (Mode::PARAMETER): {
@@ -329,9 +329,9 @@ bool OverlayRenderer::onTriggerRecalcRectangle(core::param::ParamSlot& slot) {
     auto rel_width = this->paramRelativeWidth.Param<param::FloatParam>()->Value() / 100.0f;
 
     if (transpctrl_mode) {
-        if (this->m_state.button != TranspCtrlButton::NONE_COUNT) {
+        if (this->m_state.icon != TranspCtrlIcon::NONE_COUNT) {
             this->m_current_rectangle = this->getScreenSpaceRect(
-                rel_pos, rel_width, anchor, this->m_transpctrl_buttons[this->m_state.button], this->m_viewport);
+                rel_pos, rel_width, anchor, this->m_transpctrl_icons[this->m_state.icon], this->m_viewport);
         }
     } else {
         this->m_current_rectangle =
@@ -354,8 +354,8 @@ void OverlayRenderer::setParameterGUIVisibility(void) {
     this->paramFileName.Param<param::FilePathParam>()->SetGUIVisible(texture_mode);
     this->paramRelativeWidth.Param<param::FloatParam>()->SetGUIVisible(texture_mode || transpctrl_mode);
 
-    // TranspCtrl Buttons Mode
-    this->paramButtonColor.Param<param::ColorParam>()->SetGUIVisible(transpctrl_mode);
+    // TranspCtrl Icons Mode
+    this->paramIconColor.Param<param::ColorParam>()->SetGUIVisible(transpctrl_mode);
     this->paramDuration.Param<param::FloatParam>()->SetGUIVisible(transpctrl_mode);
     this->paramFastSpeed.Param<param::FloatParam>()->SetGUIVisible(transpctrl_mode);
     this->paramUltraFastSpeed.Param<param::FloatParam>()->SetGUIVisible(transpctrl_mode);
@@ -440,7 +440,7 @@ bool OverlayRenderer::Render(view::CallRender3D_2& call) {
             ortho, this->m_current_rectangle, this->m_texture, this->m_shader, overwrite_color);
     } break;
     case (Mode::TRANSPORT_CTRL): {
-        auto param_color = this->paramButtonColor.Param<param::ColorParam>()->Value();
+        auto param_color = this->paramIconColor.Param<param::ColorParam>()->Value();
         glm::vec4 overwrite_color = glm::vec4(param_color[0], param_color[1], param_color[2], param_color[3]);
         float fast_speed = this->paramFastSpeed.Param<param::FloatParam>()->Value();
         float ultra_fast_speed = this->paramUltraFastSpeed.Param<param::FloatParam>()->Value();
@@ -456,24 +456,24 @@ bool OverlayRenderer::Render(view::CallRender3D_2& call) {
         float delta_time = current_anim_time - this->m_state.current_anim_time;
         this->m_state.current_anim_time = current_anim_time;
 
-        TranspCtrlButton current_button = TranspCtrlButton::NONE_COUNT;
+        TranspCtrlIcon current_icon = TranspCtrlIcon::NONE_COUNT;
         if (current_speed < (-ultra_fast_speed)) {
-            current_button = TranspCtrlButton::ULTRA_FAST_REWIND;
+            current_icon = TranspCtrlIcon::ULTRA_FAST_REWIND;
         } else if (current_speed > ultra_fast_speed) {
-            current_button = TranspCtrlButton::ULTRA_FAST_FORWARD;
+            current_icon = TranspCtrlIcon::ULTRA_FAST_FORWARD;
         } else if (current_speed < (-fast_speed)) {
-            current_button = TranspCtrlButton::FAST_REWIND;
+            current_icon = TranspCtrlIcon::FAST_REWIND;
         } else if (current_speed > fast_speed) {
-            current_button = TranspCtrlButton::FAST_FORWARD;
+            current_icon = TranspCtrlIcon::FAST_FORWARD;
         } else if (delta_time > 0.0f) {
-            current_button = TranspCtrlButton::PLAY;
+            current_icon = TranspCtrlIcon::PLAY;
         }
         if (delta_time == 0.0f) {
-            current_button = TranspCtrlButton::PAUSE;
+            current_icon = TranspCtrlIcon::PAUSE;
         }
 
-        if (current_button != this->m_state.button) {
-            this->m_state.button = current_button;
+        if (current_icon != this->m_state.icon) {
+            this->m_state.icon = current_icon;
             this->onTriggerRecalcRectangle(this->paramCustomPosition);
             // this->m_state.start_anim_time = current_time;
             this->m_state.start_real_time = std::chrono::system_clock::now();
@@ -482,11 +482,11 @@ bool OverlayRenderer::Render(view::CallRender3D_2& call) {
         // if ((duration > 0.0f) && (duration < (current_time - this->m_state.start_anim_time))) {
         std::chrono::duration<double> diff = (std::chrono::system_clock::now() - this->m_state.start_real_time);
         if ((duration > 0.0f) && (diff.count() > static_cast<double>(duration))) {
-            current_button = TranspCtrlButton::NONE_COUNT;
+            current_icon = TranspCtrlIcon::NONE_COUNT;
         }
 
-        if (current_button != TranspCtrlButton::NONE_COUNT) {
-            this->drawScreenSpaceBillboard(ortho, this->m_current_rectangle, this->m_transpctrl_buttons[current_button],
+        if (current_icon != TranspCtrlIcon::NONE_COUNT) {
+            this->drawScreenSpaceBillboard(ortho, this->m_current_rectangle, this->m_transpctrl_icons[current_icon],
                 this->m_shader, overwrite_color);
         }
     } break;

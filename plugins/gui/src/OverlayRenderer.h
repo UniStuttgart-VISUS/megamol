@@ -12,7 +12,6 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/misc/PngBitmapCodec.h"
 #include "mmcore/param/BoolParam.h"
-#include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
@@ -125,8 +124,8 @@ private:
 
     enum Mode { TEXTURE, TRANSPORT_CTRL, PARAMETER, LABEL };
 
-    // Explicit numbering required as indices in transpctrl_buttons array.
-    enum TranspCtrlButton : size_t {
+    // Explicit numbering required as indices in transpctrl_icons array.
+    enum TranspCtrlIcon : size_t {
         PLAY = 0,
         STOP = 1, /// unused
         PAUSE = 2,
@@ -137,8 +136,8 @@ private:
         NONE_COUNT = 7
     };
 
-    struct TranspCtrlButtonState {
-        TranspCtrlButton button;
+    struct TranspCtrlIconState {
+        TranspCtrlIcon icon;
         float current_anim_time;
         float start_anim_time;
         std::chrono::system_clock::time_point start_real_time;
@@ -155,9 +154,9 @@ private:
     Rectangle m_current_rectangle;
     // Parameter Mode
     vislib::SmartPtr<megamol::core::param::AbstractParam> m_parameter_ptr;
-    // TranspCtrl Buttons
-    std::array<TextureData, NONE_COUNT> m_transpctrl_buttons;
-    TranspCtrlButtonState m_state;
+    // TranspCtrl Icons
+    std::array<TextureData, NONE_COUNT> m_transpctrl_icons;
+    TranspCtrlIconState m_state;
     vislib::SmartPtr<megamol::core::param::AbstractParam> m_speed_parameter_ptr;
     vislib::SmartPtr<megamol::core::param::AbstractParam> m_time_parameter_ptr;
 
@@ -202,8 +201,8 @@ private:
     // Texture Mode
     core::param::ParamSlot paramFileName;
     core::param::ParamSlot paramRelativeWidth;
-    // TranspCtrl Buttons Mode
-    core::param::ParamSlot paramButtonColor;
+    // TranspCtrl Icons Mode
+    core::param::ParamSlot paramIconColor;
     core::param::ParamSlot paramDuration;
     core::param::ParamSlot paramFastSpeed;
     core::param::ParamSlot paramUltraFastSpeed;
