@@ -13,5 +13,5 @@ set(BHTSNE_SRCS
 
 add_library(bhtsne STATIC ${BHTSNE_SRCS} ${BHTSNE_PUBLIC_HDRS} ${BHTSNE_PRIVATE_HDRS})
 
-install(TARGETS bhtsne)
+install(TARGETS bhtsne DESTINATION "lib")
 install(FILES ${BHTSNE_PUBLIC_HDRS} DESTINATION "include")
