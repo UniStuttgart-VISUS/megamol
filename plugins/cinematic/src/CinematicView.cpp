@@ -652,19 +652,27 @@ bool CinematicView::render_to_file_write() {
         this->png_data.structptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, &this->pngError, &this->pngWarn);
         if (this->png_data.structptr == nullptr) {
             throw vislib::Exception(
-                "[CINEMATIC VIEW] [render_to_file_write] Cannot create png structure", __FILE__, __LINE__);
+                "[CINEMATIC VIEW] [render_to_file_write] Unable to create png structure. ", __FILE__, __LINE__);
         }
         this->png_data.infoptr = png_create_info_struct(this->png_data.structptr);
         if (this->png_data.infoptr == nullptr) {
-            throw vislib::Exception("[CINEMATIC VIEW] [render_to_file_write] Cannot create png info", __FILE__, __LINE__);
+            throw vislib::Exception("[CINEMATIC VIEW] [render_to_file_write] Unable to create png info. ", __FILE__, __LINE__);
         }
         png_set_write_fn(this->png_data.structptr, static_cast<void*>(&this->png_data.file), &this->pngWrite, &this->pngFlush);
         png_set_IHDR(this->png_data.structptr, this->png_data.infoptr, this->png_data.width, this->png_data.height, 8,
             PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
 
+        // Serialise current project into png header (see ScreenShooter.cpp, line 452)
+        std::string serInstances, serModules, serCalls, serParams;
+        this->GetCoreInstance()->SerializeGraph(serInstances, serModules, serCalls, serParams);
+        auto confstr = serInstances + "\n" + serModules + "\n" + serCalls + "\n" + serParams;
+        std::vector<png_byte> tempvec(confstr.begin(), confstr.end());
+        tempvec.push_back('\0');
+        png_set_eXIf_1(this->png_data.structptr, this->png_data.infoptr, tempvec.size(), tempvec.data());
+
         if (this->fbo.GetColourTexture(this->png_data.buffer, 0, GL_RGB, GL_UNSIGNED_BYTE) != GL_NO_ERROR) {
             throw vislib::Exception(
-                "[CINEMATIC VIEW] [render_to_file_write] Failed to create Screenshot: Cannot read image data", __FILE__,
+                "[CINEMATIC VIEW] [render_to_file_write] Unable to read color texture. ", __FILE__,
                 __LINE__);
         }
 
