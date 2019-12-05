@@ -116,7 +116,7 @@ function(require_external NAME)
     add_external_project(adios2 SHARED
       GIT_REPOSITORY https://github.com/ornladios/ADIOS2.git
       GIT_TAG "v2.3.1"
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${ADIOS2_LIB}"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${ADIOS2_LIB}" "<INSTALL_DIR>/${ADIOS2_IMPORT_LIB}"
       CMAKE_ARGS 
         -DBUILD_TESTING=OFF
         -DADIOS2_USE_BZip2=OFF 
@@ -166,8 +166,8 @@ function(require_external NAME)
     if(WIN32)
       set(GLFW_IMPORT_LIB "lib/glfw3dll.lib")
       set(GLFW_LIB "lib/glfw3.dll")
-      set(MOVE_CMD COMMANDS COMMAND ${CMAKE_COMMAND} -E copy "\"<INSTALL_DIR>/${GLFW_LIB}\" \"<INSTALL_DIR>/bin/glfw3.dll\""
-                   COMMAND ${CMAKE_COMMAND} -E remove -f \"<INSTALL_DIR>/${GLFW_LIB}\")
+      set(MOVE_CMD COMMANDS COMMAND ${CMAKE_COMMAND} -E copy "\"<INSTALL_DIR>/lib/glfw3.dll\" \"<INSTALL_DIR>/bin/glfw3.dll\""
+                            COMMAND ${CMAKE_COMMAND} -E remove -f \"<INSTALL_DIR>/lib/glfw3.dll\")
     else()
       set(GLFW_LIB "lib/libglfw.so")
       set(MOVE_CMD)
@@ -176,7 +176,7 @@ function(require_external NAME)
     add_external_project(glfw SHARED
       GIT_REPOSITORY https://github.com/glfw/glfw.git
       GIT_TAG "3.2.1"
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${GLFW_LIB}"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${GLFW_LIB}" "<INSTALL_DIR>/${GLFW_IMPORT_LIB}"
       ${MOVE_CMD}
       CMAKE_ARGS
         -DBUILD_SHARED_LIBS=ON
@@ -212,6 +212,7 @@ function(require_external NAME)
     add_external_project(IceT SHARED
       GIT_REPOSITORY https://gitlab.kitware.com/icet/icet.git
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${ICET_CORE_LIB}" "<INSTALL_DIR>/${ICET_GL_LIB}" "<INSTALL_DIR>/${ICET_MPI_LIB}"
+                       "<INSTALL_DIR>/${ICET_CORE_IMPORT_LIB}" "<INSTALL_DIR>/${ICET_GL_IMPORT_LIB}" "<INSTALL_DIR>/${ICET_MPI_IMPORT_LIB}"
       CMAKE_ARGS
         -DBUILD_SHARED_LIBS=ON
         -DICET_BUILD_TESTING=OFF
@@ -343,7 +344,7 @@ function(require_external NAME)
     add_external_project(libzmq SHARED
       GIT_REPOSITORY https://github.com/zeromq/libzmq.git
       GIT_TAG 56ace6d03f521b9abb5a50176ec7763c1b77afa9
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${ZMQ_LIB}"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${ZMQ_LIB}" "<INSTALL_DIR>/${ZMQ_IMPORT_LIB}"
       CMAKE_ARGS
         -DZMQ_BUILD_TESTS=OFF
         -DENABLE_PRECOMPILED=OFF)
@@ -372,7 +373,7 @@ function(require_external NAME)
 
     add_external_project(quickhull SHARED
       GIT_REPOSITORY https://github.com/akuukka/quickhull.git
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${QUICKHULL_LIB}"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${QUICKHULL_LIB}" "<INSTALL_DIR>/${QUICKHULL_IMPORT_LIB}"
       PATCH_COMMAND ${CMAKE_COMMAND} -E copy
         "${CMAKE_SOURCE_DIR}/cmake/quickhull/CMakeLists.txt"
         "<SOURCE_DIR>/CMakeLists.txt"
@@ -401,7 +402,7 @@ function(require_external NAME)
     add_external_project(snappy SHARED
       GIT_REPOSITORY https://github.com/google/snappy.git
       GIT_TAG "1.1.7"
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${SNAPPY_LIB}"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${SNAPPY_LIB}" "<INSTALL_DIR>/${SNAPPY_IMPORT_LIB}"
       CMAKE_ARGS
         -DBUILD_SHARED_LIBS=ON
         -DSNAPPY_BUILD_TESTS=OFF
@@ -452,7 +453,7 @@ function(require_external NAME)
     add_external_project(tinyply SHARED
       GIT_REPOSITORY https://github.com/ddiakopoulos/tinyply.git
       GIT_TAG "2.1"
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${TNY_LIB}"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${TNY_LIB}" "<INSTALL_DIR>/${TNY_IMPORT_LIB}"
       CMAKE_ARGS
         -DSHARED_LIB=ON)
 

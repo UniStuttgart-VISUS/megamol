@@ -73,8 +73,8 @@ endfunction(add_external_headeronly_project)
 #
 function(add_external_project TARGET)
   set(ARGS_OPTIONS SHARED)
-  set(ARGS_ONE_VALUE GIT_REPOSITORY GIT_TAG DEBUG_SUFFIX RELWITHDEBINFO_SUFFIX BUILD_BYPRODUCTS)
-  set(ARGS_MULT_VALUES CMAKE_ARGS PATCH_COMMAND DEPENDS COMMANDS)
+  set(ARGS_ONE_VALUE GIT_REPOSITORY GIT_TAG DEBUG_SUFFIX RELWITHDEBINFO_SUFFIX)
+  set(ARGS_MULT_VALUES CMAKE_ARGS PATCH_COMMAND DEPENDS COMMANDS BUILD_BYPRODUCTS)
   cmake_parse_arguments(args "${ARGS_OPTIONS}" "${ARGS_ONE_VALUE}" "${ARGS_MULT_VALUES}" ${ARGN})
 
   _argument_default(COMMANDS "")
@@ -98,13 +98,10 @@ function(add_external_project TARGET)
 
   if(args_SHARED)
     set(CONFIG Release)
-    set(CONFIGURATIONS Release)
   elseif(MULTICONFIG)
     set(CONFIG Release)
-    set(CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES})
   else()
     set(CONFIG ${CMAKE_BUILD_TYPE})
-    set(CONFIGURATIONS ${CMAKE_BUILD_TYPE})
   endif()
 
   # Configure
@@ -193,10 +190,9 @@ function(add_external_project TARGET)
       BYPRODUCTS ${BYPRODUCTS})
 
     add_custom_target(${TARGET}_ext DEPENDS "${BINARY_DIR}/EXTERNAL_BUILT")
-  else()
+  elseif(MULTICONFIG)
     external_set_typed_property(${TARGET} SHARED FALSE BOOL)
 
-    set(BYPRODUCTS)
     set(INSTALL_COMMANDS)
     foreach(BYPRODUCT IN LISTS args_BUILD_BYPRODUCTS)
       string(REPLACE "<INSTALL_DIR>" "${INSTALL_DIR}" SOURCE_BYPRODUCT ${BYPRODUCT})
@@ -204,7 +200,6 @@ function(add_external_project TARGET)
       string(REPLACE "<SUFFIX>" "$<$<CONFIG:Debug>:${args_DEBUG_SUFFIX}>" SOURCE_BYPRODUCT ${SOURCE_BYPRODUCT})
       string(REPLACE "<SUFFIX>" "$<$<CONFIG:Debug>:${args_DEBUG_SUFFIX}>" TARGET_BYPRODUCT ${TARGET_BYPRODUCT})
 
-      list(APPEND BYPRODUCTS ${TARGET_BYPRODUCT})
       list(APPEND INSTALL_COMMANDS COMMAND ${CMAKE_COMMAND} -E copy "${SOURCE_BYPRODUCT}" "${TARGET_BYPRODUCT}")
     endforeach()
 
@@ -212,6 +207,36 @@ function(add_external_project TARGET)
       COMMAND ${CMAKE_COMMAND}
         -DCONFIG=$<CONFIG>
         -DINSTALL_DIR="${INSTALL_DIR}/$<CONFIG>"
+        "-DINSTALL_COMMANDS=\"${INSTALL_COMMANDS}\""
+        "-DCOMMANDS=\"${COMMANDS}\""
+        -P ${CMAKE_SOURCE_DIR}/cmake/External_build.cmake
+      DEPENDS ${CMAKE_SOURCE_DIR}/cmake/External_build.cmake
+      WORKING_DIRECTORY "${BINARY_DIR}")
+  else()
+    external_set_typed_property(${TARGET} SHARED FALSE BOOL)
+
+    set(BYPRODUCTS)
+    set(INSTALL_COMMANDS)
+    foreach(BYPRODUCT IN LISTS args_BUILD_BYPRODUCTS)
+      string(REPLACE "<INSTALL_DIR>" "${INSTALL_DIR}" SOURCE_BYPRODUCT ${BYPRODUCT})
+      string(REPLACE "<INSTALL_DIR>" "${INSTALL_DIR}/${CONFIG}" TARGET_BYPRODUCT ${BYPRODUCT})
+
+      if(CONFIG STREQUAL Debug)
+        string(REPLACE "<SUFFIX>" "${args_DEBUG_SUFFIX}" SOURCE_BYPRODUCT ${SOURCE_BYPRODUCT})
+        string(REPLACE "<SUFFIX>" "${args_DEBUG_SUFFIX}" TARGET_BYPRODUCT ${TARGET_BYPRODUCT})
+      else()
+        string(REPLACE "<SUFFIX>" "" SOURCE_BYPRODUCT ${SOURCE_BYPRODUCT})
+        string(REPLACE "<SUFFIX>" "" TARGET_BYPRODUCT ${TARGET_BYPRODUCT})
+      endif()
+
+      list(APPEND BYPRODUCTS ${TARGET_BYPRODUCT})
+      list(APPEND INSTALL_COMMANDS COMMAND ${CMAKE_COMMAND} -E copy "${SOURCE_BYPRODUCT}" "${TARGET_BYPRODUCT}")
+    endforeach()
+
+    add_custom_target(${TARGET}_ext
+      COMMAND ${CMAKE_COMMAND}
+        -DCONFIG=${CONFIG}
+        -DINSTALL_DIR="${INSTALL_DIR}/${CONFIG}"
         "-DINSTALL_COMMANDS=\"${INSTALL_COMMANDS}\""
         "-DCOMMANDS=\"${COMMANDS}\""
         -P ${CMAKE_SOURCE_DIR}/cmake/External_build.cmake

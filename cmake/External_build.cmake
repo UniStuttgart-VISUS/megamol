@@ -6,7 +6,7 @@ if(NOT EXISTS EXTERNAL_BUILT_${CONFIG})
   message(STATUS "COMMANDS: ${COMMANDS}")
 
   execute_process(
-    COMMAND ${CMAKE_COMMAND} --verbose --build . --parallel --config ${CONFIG}
+    COMMAND ${CMAKE_COMMAND} --build . --verbose --parallel --config ${CONFIG}
     COMMAND ${CMAKE_COMMAND} --build . --target install --config ${CONFIG}
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     RESULT_VARIABLE BUILD_RESULT)
@@ -27,4 +27,3 @@ if(NOT EXISTS EXTERNAL_BUILT_${CONFIG})
     message(FATAL_ERROR "Fatal error while installing external project ${TARGET}")
   endif()
 endif()
-
