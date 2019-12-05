@@ -166,16 +166,18 @@ function(require_external NAME)
     if(WIN32)
       set(GLFW_IMPORT_LIB "lib/glfw3dll.lib")
       set(GLFW_LIB "lib/glfw3.dll")
+      set(MOVE_CMD COMMANDS COMMAND ${CMAKE_COMMAND} -E copy "\"<INSTALL_DIR>/${GLFW_LIB}\" \"<INSTALL_DIR>/bin/glfw3.dll\""
+                   COMMAND ${CMAKE_COMMAND} -E remove -f \"<INSTALL_DIR>/${GLFW_LIB}\")
     else()
       set(GLFW_LIB "lib/libglfw.so")
+      set(MOVE_CMD)
     endif()
 
     add_external_project(glfw SHARED
       GIT_REPOSITORY https://github.com/glfw/glfw.git
       GIT_TAG "3.2.1"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${GLFW_LIB}"
-      COMMANDS COMMAND ${CMAKE_COMMAND} -E copy "\"<INSTALL_DIR>/${GLFW_LIB}\" \"<INSTALL_DIR>/bin/glfw3.dll\""
-               COMMAND ${CMAKE_COMMAND} -E remove -f \"<INSTALL_DIR>/${GLFW_LIB}\"
+      ${MOVE_CMD}
       CMAKE_ARGS
         -DBUILD_SHARED_LIBS=ON
         -DGLFW_BUILD_EXAMPLES=OFF
@@ -427,8 +429,6 @@ function(require_external NAME)
       GIT_TAG "v2.0.0-rc1"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${TINYOBJLOADER_LIB}"
       CMAKE_ARGS
-        -DBUILD_SHARED_LIBS=ON
-        -DCMAKE_WINDOWS_EXPORT_ALL_SYMBOLS=TRUE
         -DCMAKE_C_FLAGS=-fPIC
         -DCMAKE_CXX_FLAGS=-fPIC)
 

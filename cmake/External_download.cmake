@@ -14,16 +14,19 @@ function(external_download TARGET)
   cmake_parse_arguments(args "" "${ARGS_ONE_VALUE}" "" ${ARGN})
 
   # Check for local version
+  external_try_get_property(${TARGET} BUILD_TYPE)
   external_try_get_property(${TARGET} GIT_REPOSITORY)
+  external_try_get_property(${TARGET} GIT_TAG)
 
+  set(AVAILABLE_VERSION)
+  if(DEFINED BUILD_TYPE)
+    list(APPEND AVAILABLE_VERSION ${BUILD_TYPE})
+  endif()
   if(DEFINED GIT_REPOSITORY)
-    set(AVAILABLE_VERSION ${GIT_REPOSITORY})
-
-    external_try_get_property(${TARGET} GIT_TAG)
-
-    if(DEFINED GIT_TAG)
-      list(APPEND AVAILABLE_VERSION ${GIT_TAG})
-    endif()
+    list(APPEND AVAILABLE_VERSION ${GIT_REPOSITORY})
+  endif()
+  if(DEFINED GIT_TAG)
+    list(APPEND AVAILABLE_VERSION ${GIT_TAG})
   endif()
 
   # Check for requested version
@@ -33,7 +36,10 @@ function(external_download TARGET)
 
   set(MESSAGE "${TARGET}: url '${args_GIT_REPOSITORY}'")
   set(DOWNLOAD_ARGS "GIT_REPOSITORY;${args_GIT_REPOSITORY}")
-  set(REQUESTED_VERSION ${args_GIT_REPOSITORY})
+
+  set(REQUESTED_VERSION)
+  list(APPEND REQUESTED_VERSION ${CMAKE_BUILD_TYPE})
+  list(APPEND REQUESTED_VERSION ${args_GIT_REPOSITORY})
 
   if(args_GIT_TAG)
     set(MESSAGE "${MESSAGE}, tag '${args_GIT_TAG}'")
@@ -60,6 +66,7 @@ function(external_download TARGET)
     mark_as_advanced(FORCE FETCHCONTENT_UPDATES_DISCONNECTED_${ucName})
 
     # Set cached version
+    external_set_property(${TARGET} BUILD_TYPE ${CMAKE_BUILD_TYPE})
     external_set_property(${TARGET} GIT_REPOSITORY ${args_GIT_REPOSITORY})
 
     if(args_GIT_TAG)

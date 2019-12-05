@@ -212,8 +212,8 @@ function(add_external_project TARGET)
       COMMAND ${CMAKE_COMMAND}
         -DCONFIG=$<CONFIG>
         -DINSTALL_DIR="${INSTALL_DIR}/$<CONFIG>"
-        "-DINSTALL_COMMANDS=${INSTALL_COMMANDS}"
-        "-DCOMMANDS=${COMMANDS}"
+        "-DINSTALL_COMMANDS=\"${INSTALL_COMMANDS}\""
+        "-DCOMMANDS=\"${COMMANDS}\""
         -P ${CMAKE_SOURCE_DIR}/cmake/External_build.cmake
       DEPENDS ${CMAKE_SOURCE_DIR}/cmake/External_build.cmake
       WORKING_DIRECTORY "${BINARY_DIR}"
@@ -250,7 +250,11 @@ function(add_external_project TARGET)
     set_target_properties(_INSTALL_EXTERNALS PROPERTIES FOLDER external)
   endif()
 
-  install(DIRECTORY "${INSTALL_DIR}/../../_deps_install/bin" DESTINATION "${CMAKE_INSTALL_PREFIX}")
+  if(WIN32)
+    install(DIRECTORY "${INSTALL_DIR}/../../_deps_install/bin" DESTINATION "${CMAKE_INSTALL_PREFIX}")
+  else()
+    install(DIRECTORY "${INSTALL_DIR}/../../_deps_install/lib" DESTINATION "${CMAKE_INSTALL_PREFIX}")
+  endif()
 endfunction(add_external_project)
 
 
