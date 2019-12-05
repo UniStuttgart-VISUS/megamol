@@ -123,16 +123,25 @@ private:
 
     typedef megamol::core::utility::AbstractFont::Alignment Anchor;
 
-    enum Mode { TEXTURE, MEDIA_BUTTONS, PARAMETER, LABEL };
+    enum Mode { TEXTURE, TRANSPORT_CTRL, PARAMETER, LABEL };
 
-    // Explicit numbering required as indices in media_buttons array.
-    enum MediaButton { PLAY = 0, STOP = 1, PAUSE = 2, REWIND = 3, FAST_FORWARD = 4, NONE = 5 };
+    // Explicit numbering required as indices in transpctrl_buttons array.
+    enum TranspCtrlButton : size_t {
+        PLAY = 0,
+        STOP = 1, /// unused
+        PAUSE = 2,
+        FAST_REWIND = 3,
+        FAST_FORWARD = 4,
+        ULTRA_FAST_FORWARD = 5,
+        ULTRA_FAST_REWIND = 6,
+        NONE_COUNT = 7
+    };
 
-    struct MediaButtonState {
-        MediaButton button;
-        float value;
-        float delta_value;
-        std::chrono::system_clock::time_point start_time;
+    struct TranspCtrlButtonState {
+        TranspCtrlButton button;
+        float current_anim_time;
+        float start_anim_time;
+        std::chrono::system_clock::time_point start_real_time;
     };
 
     /**********************************************************************
@@ -146,9 +155,11 @@ private:
     Rectangle m_current_rectangle;
     // Parameter Mode
     vislib::SmartPtr<megamol::core::param::AbstractParam> m_parameter_ptr;
-    // Media Buttons
-    std::array<TextureData, 5> m_media_buttons;
-    MediaButtonState m_last_state;
+    // TranspCtrl Buttons
+    std::array<TextureData, NONE_COUNT> m_transpctrl_buttons;
+    TranspCtrlButtonState m_state;
+    vislib::SmartPtr<megamol::core::param::AbstractParam> m_speed_parameter_ptr;
+    vislib::SmartPtr<megamol::core::param::AbstractParam> m_time_parameter_ptr;
 
     /**********************************************************************
      * functions
@@ -191,15 +202,17 @@ private:
     // Texture Mode
     core::param::ParamSlot paramFileName;
     core::param::ParamSlot paramRelativeWidth;
-    // Media Buttons Mode
+    // TranspCtrl Buttons Mode
     core::param::ParamSlot paramButtonColor;
     core::param::ParamSlot paramDuration;
-    core::param::ParamSlot paramScaling;
+    core::param::ParamSlot paramFastSpeed;
+    core::param::ParamSlot paramUltraFastSpeed;
+    core::param::ParamSlot paramSpeedParameter;
+    core::param::ParamSlot paramTimeParameter;
     // Parameter Mode
     core::param::ParamSlot paramPrefix;
     core::param::ParamSlot paramSufix;
     core::param::ParamSlot paramParameterName;
-    // core::param::ParamSlot paramOffset;
     // Label Mode
     core::param::ParamSlot paramText;
     // Font Settings

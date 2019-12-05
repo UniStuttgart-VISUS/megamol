@@ -21,14 +21,21 @@ OverlayRenderer::OverlayRenderer(void)
     , paramCustomPosition("position_offset", "Custom relative position offset in respect to selected anchor.")
     , paramFileName("texture::file_name", "The file name of the texture.")
     , paramRelativeWidth("texture::relative_width", "Relative screen space width of texture.")
-    , paramButtonColor("media_buttons::color", "Color of media buttons.")
-    , paramDuration("media_buttons::duration", "Duration media buttons are shown after value changes. Value of zero "
-                                               "means showing media buttons permanently.")
-    , paramScaling(
-          "media_buttons::value_scaling", "Parameter value scaling adjusting threshold for media button appearance.")
+    , paramButtonColor("transport_ctrl::color", "Color of transpctrl buttons.")
+    , paramDuration("transport_ctrl::duration",
+          "Duration transport ctrl buttons are shown after value changes. Value of zero "
+          "means showing transport ctrl buttons permanently.")
+    , paramFastSpeed(
+          "transport_ctrl::fast_speed", "Define factor of default speed for fast transport ctrl button threshold.")
+    , paramUltraFastSpeed("transport_ctrl::value_scaling",
+          "Define factor of default speed for ultra fast transport ctrl button threshold.")
+    , paramSpeedParameter("transport_ctrl::speed_parameter_name",
+          "The full parameter name for the animation speed, e.g. '::Project_1::View3D_21::anim::speed'.")
+    , paramTimeParameter("transport_ctrl::time_parameter_name",
+          "The full parameter name for the animation time, e.g. '::Project_1::View3D_21::anim::time'.")
     , paramPrefix("parameter::prefix", "The parameter value prefix.")
     , paramSufix("parameter::sufix", "The parameter value sufix.")
-    , paramParameterName("parameter::name", "The full parameter name, e.g. '::Project_1::View3D_21::anim::time'. "
+    , paramParameterName("parameter::name", "The full parameter name, e.g. '::Project_1::View3D_21::cam::position'. "
                                             "Supprted parameter types: float, int, Vector2f/3f/4f")
     , paramText("label::text", "The displayed text.")
     , paramFontName("font::name", "The font name.")
@@ -40,15 +47,17 @@ OverlayRenderer::OverlayRenderer(void)
     , m_viewport()
     , m_current_rectangle({0.0f, 0.0f, 0.0f, 0.0f})
     , m_parameter_ptr(nullptr)
-    , m_media_buttons()
-    , m_last_state() {
+    , m_transpctrl_buttons()
+    , m_state()
+    , m_speed_parameter_ptr(nullptr)
+    , m_time_parameter_ptr(nullptr) {
 
     this->MakeSlotAvailable(&this->chainRenderSlot);
     this->MakeSlotAvailable(&this->renderSlot);
 
     param::EnumParam* mep = new param::EnumParam(Mode::TEXTURE);
     mep->SetTypePair(Mode::TEXTURE, "Texture");
-    mep->SetTypePair(Mode::MEDIA_BUTTONS, "Media Buttons");
+    mep->SetTypePair(Mode::TRANSPORT_CTRL, "Transport Ctrl Buttons");
     mep->SetTypePair(Mode::PARAMETER, "Parameter");
     mep->SetTypePair(Mode::LABEL, "Label");
     this->paramMode << mep;
@@ -83,15 +92,26 @@ OverlayRenderer::OverlayRenderer(void)
     this->paramRelativeWidth.SetUpdateCallback(this, &OverlayRenderer::onTriggerRecalcRectangle);
     this->MakeSlotAvailable(&this->paramRelativeWidth);
 
-    // Media Button Mode
-    this->paramButtonColor << new param::ColorParam(0.5f, 0.5f, 0.5f, 1.0f);
+    // TranspCtrl Button Mode
+    this->paramButtonColor << new param::ColorParam(0.5f, 0.75f, 0.75f, 1.0f);
     this->MakeSlotAvailable(&this->paramButtonColor);
 
     this->paramDuration << new param::FloatParam(3.0f, 0.0f);
     this->MakeSlotAvailable(&this->paramDuration);
 
-    this->paramScaling << new param::FloatParam(1.0f, 0.0f);
-    this->MakeSlotAvailable(&this->paramScaling);
+    this->paramFastSpeed << new param::FloatParam(5.0f, 1.0f);
+    this->MakeSlotAvailable(&this->paramFastSpeed);
+
+    this->paramUltraFastSpeed << new param::FloatParam(10.0f, 1.0f);
+    this->MakeSlotAvailable(&this->paramUltraFastSpeed);
+
+    this->paramSpeedParameter << new param::StringParam("");
+    this->paramSpeedParameter.SetUpdateCallback(this, &OverlayRenderer::onParameterName);
+    this->MakeSlotAvailable(&this->paramSpeedParameter);
+
+    this->paramTimeParameter << new param::StringParam("");
+    this->paramTimeParameter.SetUpdateCallback(this, &OverlayRenderer::onParameterName);
+    this->MakeSlotAvailable(&this->paramTimeParameter);
 
     // Parameter Mode
     this->paramPrefix << new param::StringParam("");
@@ -135,8 +155,8 @@ void OverlayRenderer::release(void) {
     this->m_parameter_ptr = nullptr;
     this->m_shader.Release();
     this->m_texture.tex.Release();
-    for (size_t i = 0; i < this->m_media_buttons.size(); i++) {
-        this->m_media_buttons[i].tex.Release();
+    for (size_t i = 0; i < this->m_transpctrl_buttons.size(); i++) {
+        this->m_transpctrl_buttons[i].tex.Release();
     }
 }
 
@@ -155,8 +175,8 @@ bool OverlayRenderer::onToggleMode(param::ParamSlot& slot) {
     this->m_parameter_ptr = nullptr;
     this->m_shader.Release();
     this->m_texture.tex.Release();
-    for (size_t i = 0; i < this->m_media_buttons.size(); i++) {
-        this->m_media_buttons[i].tex.Release();
+    for (size_t i = 0; i < this->m_transpctrl_buttons.size(); i++) {
+        this->m_transpctrl_buttons[i].tex.Release();
     }
 
     this->setParameterGUIVisibility();
@@ -165,38 +185,46 @@ bool OverlayRenderer::onToggleMode(param::ParamSlot& slot) {
     switch (mode) {
     case (Mode::TEXTURE): {
         if (!this->loadShader(this->m_shader, "overlay::vertex", "overlay::fragment")) return false;
-        this->onTextureFileName(slot);
+        this->onTextureFileName(this->paramFileName);
     } break;
-    case (Mode::MEDIA_BUTTONS): {
+    case (Mode::TRANSPORT_CTRL): {
         if (!this->loadShader(this->m_shader, "overlay::vertex", "overlay::fragment")) return false;
+        this->onParameterName(this->paramTimeParameter);
+        this->onParameterName(this->paramSpeedParameter);
         std::string filename;
-        for (size_t i = 0; i < this->m_media_buttons.size(); i++) {
-            switch (static_cast<MediaButton>(i)) {
-            case (MediaButton::PLAY):
-                filename = "media_button_play.png";
+        for (size_t i = 0; i < this->m_transpctrl_buttons.size(); i++) {
+            switch (static_cast<TranspCtrlButton>(i)) {
+            case (TranspCtrlButton::PLAY):
+                filename = "transport_ctrl_play.png";
                 break;
-            case (MediaButton::PAUSE):
-                filename = "media_button_pause.png";
+            case (TranspCtrlButton::PAUSE):
+                filename = "transport_ctrl_pause.png";
                 break;
-            case (MediaButton::STOP):
-                filename = "media_button_stop.png";
+            case (TranspCtrlButton::STOP):
+                filename = "transport_ctrl_stop.png";
                 break;
-            case (MediaButton::REWIND):
-                filename = "media_button_rewind.png";
+            case (TranspCtrlButton::FAST_REWIND):
+                filename = "transport_ctrl_fast-rewind.png";
                 break;
-            case (MediaButton::FAST_FORWARD):
-                filename = "media_button_fast-forward.png";
+            case (TranspCtrlButton::FAST_FORWARD):
+                filename = "transport_ctrl_fast-forward.png";
+                break;
+            case (TranspCtrlButton::ULTRA_FAST_FORWARD):
+                filename = "transport_ctrl_ultra-fast-forward.png";
+                break;
+            case (TranspCtrlButton::ULTRA_FAST_REWIND):
+                filename = "transport_ctrl_ultra-fast-forward.png";
                 break;
             }
-            if (!this->loadTexture(filename, this->m_media_buttons[i])) return false;
+            if (!this->loadTexture(filename, this->m_transpctrl_buttons[i])) return false;
         }
     } break;
     case (Mode::PARAMETER): {
-        this->onParameterName(slot);
-        this->onFontName(slot);
+        this->onParameterName(this->paramParameterName);
+        this->onFontName(this->paramFontName);
     } break;
     case (Mode::LABEL): {
-        this->onFontName(slot);
+        this->onFontName(this->paramFontName);
     } break;
     }
 
@@ -229,8 +257,11 @@ bool OverlayRenderer::onFontName(param::ParamSlot& slot) {
 bool OverlayRenderer::onParameterName(param::ParamSlot& slot) {
 
     slot.ResetDirty();
-    this->m_parameter_ptr = nullptr;
-    auto parameter_name = this->paramParameterName.Param<param::StringParam>()->Value();
+
+    auto parameter_name = slot.Param<param::StringParam>()->Value();
+    if (parameter_name.IsEmpty()) {
+        return false;
+    }
     auto parameter_ptr = this->GetCoreInstance()->FindParameter(parameter_name, false, false);
     if (parameter_ptr.IsNull()) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
@@ -238,23 +269,48 @@ bool OverlayRenderer::onParameterName(param::ParamSlot& slot) {
         return false;
     }
     bool found_valid_param_type = false;
-    if (auto* float_param = parameter_ptr.DynamicCast<param::FloatParam>()) {
-        found_valid_param_type = true;
-    } else if (auto* int_param = parameter_ptr.DynamicCast<param::IntParam>()) {
-        found_valid_param_type = true;
-    } else if (auto* vec2_param = parameter_ptr.DynamicCast<param::Vector2fParam>()) {
-        found_valid_param_type = true;
-    } else if (auto* vec3_param = parameter_ptr.DynamicCast<param::Vector3fParam>()) {
-        found_valid_param_type = true;
-    } else if (auto* vec4_param = parameter_ptr.DynamicCast<param::Vector4fParam>()) {
-        found_valid_param_type = true;
-    }
 
-    if (found_valid_param_type) {
-        this->m_parameter_ptr = parameter_ptr;
-    } else {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-            "No valid parameter type. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    if (&slot == &this->paramTimeParameter) {
+        if (auto* float_param = parameter_ptr.DynamicCast<param::FloatParam>()) {
+            found_valid_param_type = true;
+        }
+        this->m_time_parameter_ptr = nullptr;
+        if (found_valid_param_type) {
+            this->m_time_parameter_ptr = parameter_ptr;
+        } else {
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                "No valid parameter type. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        }
+    } else if (&slot == &this->paramSpeedParameter) {
+        if (auto* float_param = parameter_ptr.DynamicCast<param::FloatParam>()) {
+            found_valid_param_type = true;
+        }
+        this->m_speed_parameter_ptr = nullptr;
+        if (found_valid_param_type) {
+            this->m_speed_parameter_ptr = parameter_ptr;
+        } else {
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                "No valid parameter type. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        }
+    } else if (&slot == &this->paramParameterName) {
+        if (auto* float_param = parameter_ptr.DynamicCast<param::FloatParam>()) {
+            found_valid_param_type = true;
+        } else if (auto* int_param = parameter_ptr.DynamicCast<param::IntParam>()) {
+            found_valid_param_type = true;
+        } else if (auto* vec2_param = parameter_ptr.DynamicCast<param::Vector2fParam>()) {
+            found_valid_param_type = true;
+        } else if (auto* vec3_param = parameter_ptr.DynamicCast<param::Vector3fParam>()) {
+            found_valid_param_type = true;
+        } else if (auto* vec4_param = parameter_ptr.DynamicCast<param::Vector4fParam>()) {
+            found_valid_param_type = true;
+        }
+        this->m_parameter_ptr = nullptr;
+        if (found_valid_param_type) {
+            this->m_parameter_ptr = parameter_ptr;
+        } else {
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                "No valid parameter type. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        }
     }
 
     return found_valid_param_type;
@@ -263,11 +319,25 @@ bool OverlayRenderer::onParameterName(param::ParamSlot& slot) {
 bool OverlayRenderer::onTriggerRecalcRectangle(core::param::ParamSlot& slot) {
 
     slot.ResetDirty();
+
+    Mode mode = static_cast<Mode>(this->paramMode.Param<param::EnumParam>()->Value());
+    bool transpctrl_mode = (mode == Mode::TRANSPORT_CTRL);
+
     auto anchor = static_cast<Anchor>(this->paramAnchor.Param<param::EnumParam>()->Value());
     auto param_position = this->paramCustomPosition.Param<param::Vector2fParam>()->Value();
     glm::vec2 rel_pos = glm::vec2(param_position.X() / 100.0f, param_position.Y() / 100.0f);
     auto rel_width = this->paramRelativeWidth.Param<param::FloatParam>()->Value() / 100.0f;
-    this->m_current_rectangle = this->getScreenSpaceRect(rel_pos, rel_width, anchor, this->m_texture, this->m_viewport);
+
+    if (transpctrl_mode) {
+        if (this->m_state.button != TranspCtrlButton::NONE_COUNT) {
+            this->m_current_rectangle = this->getScreenSpaceRect(
+                rel_pos, rel_width, anchor, this->m_transpctrl_buttons[this->m_state.button], this->m_viewport);
+        }
+    } else {
+        this->m_current_rectangle =
+            this->getScreenSpaceRect(rel_pos, rel_width, anchor, this->m_texture, this->m_viewport);
+    }
+
     return true;
 }
 
@@ -276,23 +346,26 @@ void OverlayRenderer::setParameterGUIVisibility(void) {
 
     Mode mode = static_cast<Mode>(this->paramMode.Param<param::EnumParam>()->Value());
     bool texture_mode = (mode == Mode::TEXTURE);
-    bool media_mode = (mode == Mode::MEDIA_BUTTONS);
+    bool transpctrl_mode = (mode == Mode::TRANSPORT_CTRL);
     bool parameter_mode = (mode == Mode::PARAMETER);
     bool label_mode = (mode == Mode::LABEL);
 
     // Texture Mode
     this->paramFileName.Param<param::FilePathParam>()->SetGUIVisible(texture_mode);
-    this->paramRelativeWidth.Param<param::FloatParam>()->SetGUIVisible(texture_mode || media_mode);
+    this->paramRelativeWidth.Param<param::FloatParam>()->SetGUIVisible(texture_mode || transpctrl_mode);
 
-    // Media Buttons Mode
-    this->paramButtonColor.Param<param::ColorParam>()->SetGUIVisible(media_mode);
-    this->paramDuration.Param<param::FloatParam>()->SetGUIVisible(media_mode);
-    this->paramScaling.Param<param::FloatParam>()->SetGUIVisible(media_mode);
+    // TranspCtrl Buttons Mode
+    this->paramButtonColor.Param<param::ColorParam>()->SetGUIVisible(transpctrl_mode);
+    this->paramDuration.Param<param::FloatParam>()->SetGUIVisible(transpctrl_mode);
+    this->paramFastSpeed.Param<param::FloatParam>()->SetGUIVisible(transpctrl_mode);
+    this->paramUltraFastSpeed.Param<param::FloatParam>()->SetGUIVisible(transpctrl_mode);
+    this->paramSpeedParameter.Param<param::StringParam>()->SetGUIVisible(transpctrl_mode);
+    this->paramTimeParameter.Param<param::StringParam>()->SetGUIVisible(transpctrl_mode);
 
     // Parameter Mode
     this->paramPrefix.Param<param::StringParam>()->SetGUIVisible(parameter_mode);
     this->paramSufix.Param<param::StringParam>()->SetGUIVisible(parameter_mode);
-    this->paramParameterName.Param<param::StringParam>()->SetGUIVisible(parameter_mode || media_mode);
+    this->paramParameterName.Param<param::StringParam>()->SetGUIVisible(parameter_mode);
 
     // Label Mode
     this->paramText.Param<param::StringParam>()->SetGUIVisible(label_mode);
@@ -366,61 +439,54 @@ bool OverlayRenderer::Render(view::CallRender3D_2& call) {
         this->drawScreenSpaceBillboard(
             ortho, this->m_current_rectangle, this->m_texture, this->m_shader, overwrite_color);
     } break;
-    case (Mode::MEDIA_BUTTONS): {
+    case (Mode::TRANSPORT_CTRL): {
         auto param_color = this->paramButtonColor.Param<param::ColorParam>()->Value();
         glm::vec4 overwrite_color = glm::vec4(param_color[0], param_color[1], param_color[2], param_color[3]);
-        float value_scaling = this->paramScaling.Param<param::FloatParam>()->Value();
+        float fast_speed = this->paramFastSpeed.Param<param::FloatParam>()->Value();
+        float ultra_fast_speed = this->paramUltraFastSpeed.Param<param::FloatParam>()->Value();
 
-        float current_value = 0.0f;
-        if (auto* float_param = this->m_parameter_ptr.DynamicCast<param::FloatParam>()) {
-            current_value = float_param->Value();
-        } else if (auto* int_param = this->m_parameter_ptr.DynamicCast<param::IntParam>()) {
-            current_value = static_cast<float>(int_param->Value());
-        } else if (auto* vec2_param = this->m_parameter_ptr.DynamicCast<param::Vector2fParam>()) {
-            current_value = vec2_param->Value().X() + vec2_param->Value().Y();
-        } else if (auto* vec3_param = this->m_parameter_ptr.DynamicCast<param::Vector3fParam>()) {
-            current_value = vec3_param->Value().X() + vec3_param->Value().Y() + vec3_param->Value().Z();
-        } else if (auto* vec4_param = this->m_parameter_ptr.DynamicCast<param::Vector4fParam>()) {
-            current_value =
-                vec4_param->Value().X() + vec4_param->Value().Y() + vec4_param->Value().Z() + vec4_param->Value().W();
+        float current_speed = 0.0f;
+        if (auto* float_param = this->m_speed_parameter_ptr.DynamicCast<param::FloatParam>()) {
+            current_speed = float_param->Value();
+        }
+        float current_anim_time = 0.0f;
+        if (auto* float_param = this->m_time_parameter_ptr.DynamicCast<param::FloatParam>()) {
+            current_anim_time = float_param->Value();
+        }
+        float delta_time = current_anim_time - this->m_state.current_anim_time;
+        this->m_state.current_anim_time = current_anim_time;
+
+        TranspCtrlButton current_button = TranspCtrlButton::NONE_COUNT;
+        if (current_speed < (-ultra_fast_speed)) {
+            current_button = TranspCtrlButton::ULTRA_FAST_REWIND;
+        } else if (current_speed > ultra_fast_speed) {
+            current_button = TranspCtrlButton::ULTRA_FAST_FORWARD;
+        } else if (current_speed < (-fast_speed)) {
+            current_button = TranspCtrlButton::FAST_REWIND;
+        } else if (current_speed > fast_speed) {
+            current_button = TranspCtrlButton::FAST_FORWARD;
+        } else if (delta_time > 0.0f) {
+            current_button = TranspCtrlButton::PLAY;
+        }
+        if (delta_time == 0.0f) {
+            current_button = TranspCtrlButton::PAUSE;
         }
 
-        // delta threshold sensitivity can be adjustd via scaling parameter
-        current_value *= value_scaling;
-        MediaButton current_button = MediaButton::NONE;
-        float current_delta = current_value - this->m_last_state.value;
-
-        float eps = 0.0f;
-        // if ((this->m_last_state.button == MediaButton::REWIND) ||
-        //    (this->m_last_state.button == MediaButton::FAST_FORWARD)) {
-        //    eps = 0.75f;
-        //}
-         if (current_delta > (1.0f - eps)) {
-            current_button = MediaButton::FAST_FORWARD;
-        } else if (current_delta < (-1.0f + eps)) {
-            current_button = MediaButton::REWIND;
-        } else if (current_delta > 0.0f) {
-            current_button = MediaButton::PLAY;
-        } else if (current_delta == 0.0f) {
-            current_button = MediaButton::PAUSE;
+        if (current_button != this->m_state.button) {
+            this->m_state.button = current_button;
+            this->onTriggerRecalcRectangle(this->paramCustomPosition);
+            // this->m_state.start_anim_time = current_time;
+            this->m_state.start_real_time = std::chrono::system_clock::now();
         }
-        // else if (...) {
-        //    media_button = MediaButton::STOP;
-        //}
-
-        if (current_button != this->m_last_state.button) {
-            this->m_last_state.start_time = std::chrono::system_clock::now();
-        }
-        this->m_last_state.button = current_button;
-        this->m_last_state.value = current_value;
         float duration = this->paramDuration.Param<param::FloatParam>()->Value();
-        std::chrono::duration<double> diff = (std::chrono::system_clock::now() - this->m_last_state.start_time);
-        if (diff.count() > static_cast<double>(duration)) {
-            current_button = MediaButton::NONE;
+        // if ((duration > 0.0f) && (duration < (current_time - this->m_state.start_anim_time))) {
+        std::chrono::duration<double> diff = (std::chrono::system_clock::now() - this->m_state.start_real_time);
+        if ((duration > 0.0f) && (diff.count() > static_cast<double>(duration))) {
+            current_button = TranspCtrlButton::NONE_COUNT;
         }
 
-        if (current_button != MediaButton::NONE) {
-            this->drawScreenSpaceBillboard(ortho, this->m_current_rectangle, this->m_media_buttons[current_button],
+        if (current_button != TranspCtrlButton::NONE_COUNT) {
+            this->drawScreenSpaceBillboard(ortho, this->m_current_rectangle, this->m_transpctrl_buttons[current_button],
                 this->m_shader, overwrite_color);
         }
     } break;
@@ -436,7 +502,7 @@ bool OverlayRenderer::Render(view::CallRender3D_2& call) {
         auto param_sufix = this->paramSufix.Param<param::StringParam>()->Value();
         std::string sufix = std::string(param_sufix.PeekBuffer());
 
-        std::string text;
+        std::string text = "";
         if (auto* float_param = this->m_parameter_ptr.DynamicCast<param::FloatParam>()) {
             auto value = float_param->Value();
             std::stringstream stream;
