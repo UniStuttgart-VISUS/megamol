@@ -7,7 +7,7 @@ if(NOT EXISTS EXTERNAL_BUILT_${CONFIG})
 
   # Build external project
   execute_process(
-    COMMAND ${CMAKE_COMMAND} --build . --verbose --parallel --config ${CONFIG}
+    COMMAND ${CMAKE_COMMAND} --build . --config ${CONFIG}
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     COMMAND_ECHO STDOUT
     RESULT_VARIABLE BUILD_RESULT)
