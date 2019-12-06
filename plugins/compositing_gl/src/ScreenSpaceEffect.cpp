@@ -22,6 +22,7 @@ megamol::compositing::ScreenSpaceEffect::ScreenSpaceEffect()
     , m_mode("Mode", "Sets screen space effect mode, e.g. ssao, fxaa...")
     , m_ssao_radius("SSAO Radius", "Sets radius for SSAO")
     , m_ssao_sample_cnt("SSAO Samples", "Sets the number of samples used SSAO")
+    , m_fog_density("Density", "Set the density for fog effect")
     , m_output_tex_slot("OutputTexture", "Gives access to resulting output texture")
     , m_input_tex_slot("InputTexture", "Connects an optional input texture")
     , m_normals_tex_slot("NormalTexture", "Connects the normals render target texture")
@@ -30,6 +31,7 @@ megamol::compositing::ScreenSpaceEffect::ScreenSpaceEffect()
     this->m_mode << new megamol::core::param::EnumParam(0);
     this->m_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(0, "SSAO");
     this->m_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(1, "FXAA");
+    this->m_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(2, "Distance Fog");
     this->MakeSlotAvailable(&this->m_mode);
 
     this->m_ssao_sample_cnt << new megamol::core::param::IntParam(16, 0, 64);
@@ -37,6 +39,9 @@ megamol::compositing::ScreenSpaceEffect::ScreenSpaceEffect()
 
     this->m_ssao_radius << new megamol::core::param::FloatParam(0.5f, 0.0f);
     this->MakeSlotAvailable(&this->m_ssao_radius);
+
+    this->m_fog_density << new megamol::core::param::FloatParam(1.0f, 0.0f, 100.0f);
+    this->MakeSlotAvailable(&this->m_fog_density);
 
     this->m_output_tex_slot.SetCallback(CallTexture2D::ClassName(), "GetData", &ScreenSpaceEffect::getDataCallback);
     this->m_output_tex_slot.SetCallback(
@@ -64,10 +69,12 @@ bool megamol::compositing::ScreenSpaceEffect::create() {
         m_ssao_prgm = std::make_unique<GLSLComputeShader>();
         m_ssao_blur_prgm = std::make_unique<GLSLComputeShader>();
         m_fxaa_prgm = std::make_unique<GLSLComputeShader>();
+        m_fog_prgm = std::make_unique<GLSLComputeShader>();
 
         vislib::graphics::gl::ShaderSource compute_ssao_src;
         vislib::graphics::gl::ShaderSource compute_ssao_blur_src;
         vislib::graphics::gl::ShaderSource compute_fxaa_src;
+        vislib::graphics::gl::ShaderSource compute_fog_src;
 
         if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::ssao", compute_ssao_src)) return false;
         if (!m_ssao_prgm->Compile(compute_ssao_src.Code(), compute_ssao_src.Count())) return false;
@@ -81,6 +88,10 @@ bool megamol::compositing::ScreenSpaceEffect::create() {
         if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::fxaa", compute_fxaa_src)) return false;
         if (!m_fxaa_prgm->Compile(compute_fxaa_src.Code(), compute_fxaa_src.Count())) return false;
         if (!m_fxaa_prgm->Link()) return false;
+
+        if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::distanceFog", compute_fog_src)) return false;
+        if (!m_fog_prgm->Compile(compute_fog_src.Code(), compute_fog_src.Count())) return false;
+        if (!m_fog_prgm->Link()) return false;
 
     } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Unable to compile shader (@%s): %s\n",
@@ -165,6 +176,7 @@ bool megamol::compositing::ScreenSpaceEffect::getDataCallback(core::Call& caller
     if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0) {
         m_ssao_radius.Param<core::param::FloatParam>()->SetGUIVisible(true);
         m_ssao_sample_cnt.Param<core::param::IntParam>()->SetGUIVisible(true);
+        m_fog_density.Param<core::param::FloatParam>()->SetGUIVisible(false);
 
         if (call_normal == NULL) return false;
         if (call_depth == NULL) return false;
@@ -236,8 +248,10 @@ bool megamol::compositing::ScreenSpaceEffect::getDataCallback(core::Call& caller
         m_ssao_blur_prgm->Disable();
 
     } else if (this->m_mode.Param<core::param::EnumParam>()->Value() == 1) {
+        // FXAA
         m_ssao_radius.Param<core::param::FloatParam>()->SetGUIVisible(false);
         m_ssao_sample_cnt.Param<core::param::IntParam>()->SetGUIVisible(false);
+        m_fog_density.Param<core::param::FloatParam>()->SetGUIVisible(false);
 
         if (call_input == NULL) return false;
         if (!(*call_input)(0)) return false;
@@ -258,6 +272,39 @@ bool megamol::compositing::ScreenSpaceEffect::getDataCallback(core::Call& caller
             static_cast<int>(std::ceil(m_output_texture->getHeight() / 8.0f)), 1);
 
         m_fxaa_prgm->Disable();
+    } else if (this->m_mode.Param<core::param::EnumParam>()->Value() == 2) {
+        // fog
+        m_ssao_radius.Param<core::param::FloatParam>()->SetGUIVisible(false);
+        m_ssao_sample_cnt.Param<core::param::IntParam>()->SetGUIVisible(false);
+        m_fog_density.Param<core::param::FloatParam>()->SetGUIVisible(true);
+
+        if (call_input == NULL) return false;
+        if (!(*call_input)(0)) return false;
+        if (call_depth == NULL) return false;
+        if (!(*call_depth)(0)) return false;
+        if (call_camera == NULL) return false;
+        if (!(*call_camera)(0)) return false;
+
+        core::view::Camera_2 cam = call_camera->getData();
+
+        auto depth_tx2D = call_depth->getData();
+        setupOutputTexture(depth_tx2D, m_output_texture);
+
+        m_fog_prgm->Enable();
+        glActiveTexture(GL_TEXTURE1);
+        depth_tx2D->bindTexture();
+        glUniform1i(m_fog_prgm->ParameterLocation("depth_tx2D"), 1);
+
+        glUniform1f(m_fog_prgm->ParameterLocation("density"), this->m_fog_density.Param<core::param::FloatParam>()->Value());
+        glUniform1f(m_fog_prgm->ParameterLocation("zNear"), cam.near_clipping_plane());
+        glUniform1f(m_fog_prgm->ParameterLocation("zFar"), cam.far_clipping_plane());
+
+        m_output_texture->bindImage(0, GL_WRITE_ONLY);
+
+        m_fog_prgm->Dispatch(static_cast<int>(std::ceil(m_output_texture->getWidth() / 8.0f)),
+            static_cast<int>(std::ceil(m_output_texture->getHeight() / 8.0f)), 1);
+
+        m_fog_prgm->Disable();
     }
 
     return true;

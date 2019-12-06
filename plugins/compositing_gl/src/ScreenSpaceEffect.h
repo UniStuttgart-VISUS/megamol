@@ -76,11 +76,14 @@ private:
     /** Shader program for texture ssao */
     std::unique_ptr<GLSLComputeShader> m_ssao_prgm;
 
-    /** Shader program for texture ssao */
+    /** Shader program for blur */
     std::unique_ptr<GLSLComputeShader> m_ssao_blur_prgm;
 
-    /** Shader program for texture ssao */
+    /** Shader program for FXAA */
     std::unique_ptr<GLSLComputeShader> m_fxaa_prgm;
+
+    /** Shader program for fog */
+    std::unique_ptr<GLSLComputeShader> m_fog_prgm;
 
     /** GPU buffer object for making active (point)lights available in during shading pass */
     std::unique_ptr<glowl::BufferObject> m_ssao_samples;
@@ -105,6 +108,9 @@ private:
 
     /** Parameter for selecting the ssao sample count */
     megamol::core::param::ParamSlot m_ssao_sample_cnt;
+
+    /** Parameter for setting fog density */
+    megamol::core::param::ParamSlot m_fog_density;
 
     /** Slot for requesting the output textures from this module, i.e. lhs connection */
     megamol::core::CalleeSlot m_output_tex_slot;

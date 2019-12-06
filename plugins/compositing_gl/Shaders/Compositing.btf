@@ -37,4 +37,9 @@
         <snippet name="Main"             type="file">comp/lambert_c.glsl</snippet>
     </shader>
 
+    <shader name="distanceFog">
+        <snippet type="version">430</snippet>
+        <snippet name="Main"             type="file">comp/distanceFog_c.glsl</snippet>
+    </shader>
+
 </btf>
