@@ -6,6 +6,7 @@
 
 megamol::mesh::WavefrontObjLoader::WavefrontObjLoader()
     : core::Module()
+    , m_version(0)
     , m_meta_data()
     , m_filename_slot("Wavefront OBJ filename", "The name of the obj file to load")
     , m_getData_slot("CallMesh", "The slot publishing the loaded data") {
@@ -31,6 +32,8 @@ bool megamol::mesh::WavefrontObjLoader::getDataCallback(core::Call& caller) {
 
     if (this->m_filename_slot.IsDirty()) {
         m_filename_slot.ResetDirty();
+
+        ++m_version;
 
         auto vislib_filename = m_filename_slot.Param<core::param::FilePathParam>()->Value();
         std::string filename(vislib_filename.PeekBuffer());
@@ -178,8 +181,12 @@ bool megamol::mesh::WavefrontObjLoader::getDataCallback(core::Call& caller) {
         ++(m_meta_data.m_data_hash);
     }
 
-    cm->setMetaData(m_meta_data);
-    cm->setData(m_mesh_data_access);
+    if (cm->version() < m_version)
+    {
+        cm->setMetaData(m_meta_data);
+        cm->setData(m_mesh_data_access,m_version);
+    }
+    
     return true;
 }
 

@@ -21,6 +21,7 @@ namespace probe {
 
 ExtractMesh::ExtractMesh()
     : Module()
+    , m_version(0)
     , _getDataCall("getData", "")
     , _deployMeshCall("deployMesh", "")
     , _deployLineCall("deployCenterline", "")
@@ -495,22 +496,23 @@ bool ExtractMesh::getData(core::Call& call) {
         something_changed = true;
     }
 
-    if (something_changed || _recalc) {
+    if (something_changed) {
 
         if (!this->createPointCloud(toInq)) return false;
 
-        
-
-        if (cd->getDataHash() != _old_datahash || _recalc)
-            this->calculateAlphaShape();
+        this->calculateAlphaShape();
 
         // this->filterResult();
         // this->filterByIndex();
     }
 
-    if (_mesh_attribs.empty() || something_changed || _recalc) {
+    if (_mesh_attribs.empty() || something_changed) {
         this->convertToMesh();
 
+        ++m_version;
+    }
+
+    if (cm->version() < m_version) {
         auto meta_data = cm->getMetaData();
         meta_data.m_bboxs = _bbox;
         cm->setMetaData(meta_data);
@@ -519,10 +521,9 @@ bool ExtractMesh::getData(core::Call& call) {
         mesh::MeshDataAccessCollection mesh;
 
         mesh.addMesh(_mesh_attribs, _mesh_indices);
-        cm->setData(std::make_shared<mesh::MeshDataAccessCollection>(std::move(mesh)));
+        cm->setData(std::make_shared<mesh::MeshDataAccessCollection>(std::move(mesh)),m_version);
     }
 
-    
     _old_datahash = cd->getDataHash();
     _recalc = false;
 
@@ -672,33 +673,42 @@ bool ExtractMesh::getCenterlineData(core::Call& call) {
     if (cd->getDataHash() != _old_datahash)
         if (!(*cd)(0)) return false;
 
-
     if (!this->createPointCloud(toInq)) return false;
-
 
     meta_data.m_bboxs = _bbox;
     cm->setMetaData(meta_data);
 
-    if (cd->getDataHash() != _old_datahash) this->calculateAlphaShape();
+    bool something_has_changed = (cd->getDataHash() != _old_datahash);
 
-    _line_attribs.resize(1);
-    _line_attribs[0].component_type = mesh::MeshDataAccessCollection::ValueType::FLOAT;
-    _line_attribs[0].byte_size = _centerline.size() * sizeof(std::array<float, 4>);
-    _line_attribs[0].component_cnt = 3;
-    _line_attribs[0].stride = sizeof(std::array<float, 4>);
-    _line_attribs[0].data = reinterpret_cast<uint8_t*>(_centerline.data());
+    if (something_has_changed)
+    {
+        ++m_version;
 
-    _cl_indices.resize(_centerline.size()-1);
-    std::generate(_cl_indices.begin(), _cl_indices.end(), [n = 0]() mutable { return n++; });
+        this->calculateAlphaShape();
 
-    _line_indices.type = mesh::MeshDataAccessCollection::ValueType::UNSIGNED_INT;
-    _line_indices.byte_size = _cl_indices.size() * sizeof(uint32_t);
-    _line_indices.data = reinterpret_cast<uint8_t*>(_cl_indices.data());
+        _line_attribs.resize(1);
+        _line_attribs[0].component_type = mesh::MeshDataAccessCollection::ValueType::FLOAT;
+        _line_attribs[0].byte_size = _centerline.size() * sizeof(std::array<float, 4>);
+        _line_attribs[0].component_cnt = 3;
+        _line_attribs[0].stride = sizeof(std::array<float, 4>);
+        _line_attribs[0].data = reinterpret_cast<uint8_t*>(_centerline.data());
 
-    // put data in line
-    mesh::MeshDataAccessCollection line;
-    line.addMesh(_line_attribs, _line_indices);
-    cm->setData(std::make_shared<mesh::MeshDataAccessCollection>(std::move(line)));
+        _cl_indices.resize(_centerline.size() - 1);
+        std::generate(_cl_indices.begin(), _cl_indices.end(), [n = 0]() mutable { return n++; });
+
+        _line_indices.type = mesh::MeshDataAccessCollection::ValueType::UNSIGNED_INT;
+        _line_indices.byte_size = _cl_indices.size() * sizeof(uint32_t);
+        _line_indices.data = reinterpret_cast<uint8_t*>(_cl_indices.data());
+
+    }
+    
+    if (cm->version() < m_version){
+        // put data in line
+        mesh::MeshDataAccessCollection line;
+        line.addMesh(_line_attribs, _line_indices);
+        cm->setData(std::make_shared<mesh::MeshDataAccessCollection>(std::move(line)),m_version);
+    }
+    
     _old_datahash = cd->getDataHash();
     _recalc = false;
 
@@ -776,11 +786,10 @@ bool ExtractMesh::getKDData(core::Call& call) {
 
     if (cd->getDataHash() != _old_datahash || _recalc) this->calculateAlphaShape();
 
-    // put data in mesh
-    mesh::MeshDataAccessCollection mesh;
+    if (cm->version() < m_version){
+        cm->setData(this->_full_data_tree,m_version);
+    }
 
-    mesh.addMesh(_mesh_attribs, _mesh_indices);
-    cm->setData(this->_full_data_tree);
     _old_datahash = cd->getDataHash();
     _recalc = false;
 

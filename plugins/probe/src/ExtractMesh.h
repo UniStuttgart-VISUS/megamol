@@ -128,6 +128,8 @@ private:
     size_t _old_datahash = 0;
     bool _recalc = true;
 
+    uint32_t m_version;
+
 };
 
 } // namespace probe

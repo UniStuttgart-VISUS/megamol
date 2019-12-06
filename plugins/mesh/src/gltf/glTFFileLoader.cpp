@@ -18,6 +18,7 @@
 
 megamol::mesh::GlTFFileLoader::GlTFFileLoader()
     : core::Module()
+    , m_version(0)
     , m_glTFFilename_slot("glTF filename", "The name of the gltf file to load")
     , m_gltf_slot("CallGlTFData", "The slot publishing the loaded data")
     //, m_gltf_cached_hash(0)
@@ -49,25 +50,19 @@ bool megamol::mesh::GlTFFileLoader::getGltfDataCallback(core::Call& caller) {
     CallGlTFData* gltf_call = dynamic_cast<CallGlTFData*>(&caller);
     if (gltf_call == NULL) return false;
 
-    checkAndLoadGltfModel();
+    auto has_update = checkAndLoadGltfModel();
+    if (has_update) {
+        ++m_version;
+    }
 
-    gltf_call->setData(m_gltf_model);
+    if (gltf_call->version() < m_version) {
+        gltf_call->setData(m_gltf_model,m_version);
+    }
 
     return true;
 }
 
 bool megamol::mesh::GlTFFileLoader::getGltfMetaDataCallback(core::Call& caller) { 
-    CallGlTFData* gltf_call = dynamic_cast<CallGlTFData*>(&caller);
-    if (gltf_call == NULL) return false;
-
-    auto meta_data = gltf_call->getMetaData();
-
-    if (this->m_glTFFilename_slot.IsDirty()) {
-        meta_data.m_data_hash++;
-    }
-
-    gltf_call->setMetaData(meta_data);
-
     return true; 
 }
 
@@ -86,19 +81,25 @@ bool megamol::mesh::GlTFFileLoader::getMeshDataCallback(core::Call& caller) {
         mesh_collection = cm->getData();
     }
 
-    std::array<float, 6> bbox;
-
-    bbox[0] = std::numeric_limits<float>::max();
-    bbox[1] = std::numeric_limits<float>::max();
-    bbox[2] = std::numeric_limits<float>::max();
-    bbox[3] = std::numeric_limits<float>::min();
-    bbox[4] = std::numeric_limits<float>::min();
-    bbox[5] = std::numeric_limits<float>::min();
-
     auto has_update = checkAndLoadGltfModel();
+    if (has_update) {
+        ++m_version;
+    }
 
-    if (has_update)
-    {
+    if (cm->version() < m_version) {
+        // set data and version to signal update
+        cm->setData(mesh_collection, m_version);
+    
+        // compute mesh call specific update
+        std::array<float, 6> bbox;
+
+        bbox[0] = std::numeric_limits<float>::max();
+        bbox[1] = std::numeric_limits<float>::max();
+        bbox[2] = std::numeric_limits<float>::max();
+        bbox[3] = std::numeric_limits<float>::min();
+        bbox[4] = std::numeric_limits<float>::min();
+        bbox[5] = std::numeric_limits<float>::min();
+
         auto model = m_gltf_model;
 
         if (model == nullptr) return false;
@@ -176,8 +177,8 @@ bool megamol::mesh::GlTFFileLoader::getMeshDataCallback(core::Call& caller) {
         meta_data.m_bboxs.SetBoundingBox(bbox[0], bbox[1], bbox[2], bbox[3], bbox[4], bbox[5]);
         meta_data.m_bboxs.SetClipBox(bbox[0], bbox[1], bbox[2], bbox[3], bbox[4], bbox[5]);
         cm->setMetaData(meta_data);
-        cm->setData(mesh_collection);
     }
+
     
     return true;
 }

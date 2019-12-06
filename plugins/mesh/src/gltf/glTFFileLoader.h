@@ -79,6 +79,8 @@ private:
 
     std::shared_ptr<MeshDataAccessCollection> m_mesh_collection;
 
+    uint32_t m_version;
+
     /** The gltf file name */
     core::param::ParamSlot m_glTFFilename_slot;
 

@@ -49,11 +49,12 @@ protected:
 private:
     typedef glowl::GLSLProgram ShaderProgram;
 
+    uint32_t m_version;
+
     /** Shader program for deferred shading pass */
     std::shared_ptr<ShaderProgram> m_billboard_glyph_prgm;
 
     core::CallerSlot m_glyph_images_slot;
-    size_t m_glyph_images_slot_cached_hash;
 };
 
 

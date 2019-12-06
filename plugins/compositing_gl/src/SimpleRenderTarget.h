@@ -131,6 +131,8 @@ protected:
      */
     std::shared_ptr<glowl::FramebufferObject> m_GBuffer;
 
+    uint32_t m_version;
+
 private:
 
     /** Local copy of last used camera*/

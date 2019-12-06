@@ -12,6 +12,7 @@
 
 megamol::compositing::TextureDepthCompositing::TextureDepthCompositing()
     : core::Module()
+    , m_version(0)
     , m_output_texture(nullptr)
     , m_output_depth_texture(nullptr)
     , m_output_tex_slot("OutputTexture", "Gives access to resulting output texture")
@@ -92,49 +93,38 @@ bool megamol::compositing::TextureDepthCompositing::getOutputImageCallback(core:
     auto lhs_tc = dynamic_cast<CallTexture2D*>(&caller);
     if (lhs_tc == NULL) return false;
 
-    auto rhs_tc0 = m_input_tex_0_slot.CallAs<CallTexture2D>();
-    auto rhs_tc1 = m_input_tex_1_slot.CallAs<CallTexture2D>();
-    auto rhs_dtc0 = m_depth_tex_0_slot.CallAs<CallTexture2D>();
-    auto rhs_dtc1 = m_depth_tex_1_slot.CallAs<CallTexture2D>();
-    
-    if (rhs_tc0 == NULL) return false;
-    if (rhs_tc1 == NULL) return false;
-    if (rhs_dtc0 == NULL) return false;
-    if (rhs_dtc1 == NULL) return false;
+    if (!computeDepthCompositing()) return false;
 
-    if (!(*rhs_tc0)(0)) return false;
-    if (!(*rhs_tc1)(0)) return false;
-    if (!(*rhs_dtc0)(0)) return false;
-    if (!(*rhs_dtc1)(0)) return false;
-    
-    if (rhs_tc0->hasUpdate() || rhs_tc1->hasUpdate())
-    {
-        auto src0_tx2D = rhs_tc0->getData();
-        auto src1_tx2D = rhs_tc1->getData();
-
-        auto depth0_tx2D = rhs_dtc0->getData();
-        auto depth1_tx2D = rhs_dtc1->getData();
-
-        computeDepthCompositing(src0_tx2D, src1_tx2D, depth0_tx2D, depth1_tx2D);
-
-        if (lhs_tc->getData() == nullptr) {
-            lhs_tc->setData(m_output_texture);
-        }
+    if (lhs_tc->version() < m_version) {
+        lhs_tc->setData(m_output_texture,m_version);
     }
 
     return true;
 }
 
 bool megamol::compositing::TextureDepthCompositing::getDepthImageCallback(core::Call& caller) {
-
     auto lhs_tc = dynamic_cast<CallTexture2D*>(&caller);
+    if (lhs_tc == NULL) return false;
+
+    if (!computeDepthCompositing()) return false;
+
+    if (lhs_tc->version() < m_version) {
+        lhs_tc->setData(m_output_depth_texture, m_version);
+    }
+
+    return true;
+}
+
+bool megamol::compositing::TextureDepthCompositing::getMetaDataCallback(core::Call& caller) {
+    return true; }
+
+bool megamol::compositing::TextureDepthCompositing::computeDepthCompositing() {
+
     auto rhs_tc0 = m_input_tex_0_slot.CallAs<CallTexture2D>();
     auto rhs_tc1 = m_input_tex_1_slot.CallAs<CallTexture2D>();
-
     auto rhs_dtc0 = m_depth_tex_0_slot.CallAs<CallTexture2D>();
     auto rhs_dtc1 = m_depth_tex_1_slot.CallAs<CallTexture2D>();
 
-    if (lhs_tc == NULL) return false;
     if (rhs_tc0 == NULL) return false;
     if (rhs_tc1 == NULL) return false;
     if (rhs_dtc0 == NULL) return false;
@@ -142,77 +132,64 @@ bool megamol::compositing::TextureDepthCompositing::getDepthImageCallback(core::
 
     if (!(*rhs_tc0)(0)) return false;
     if (!(*rhs_tc1)(0)) return false;
-
     if (!(*rhs_dtc0)(0)) return false;
     if (!(*rhs_dtc1)(0)) return false;
 
-    if (rhs_dtc0->hasUpdate() || rhs_dtc1->hasUpdate()) {
+    // something has changed in the neath...
+    bool something_has_changed =
+        rhs_tc0->hasUpdate() || rhs_tc1->hasUpdate() || rhs_dtc0->hasUpdate() || rhs_dtc1->hasUpdate();
+
+    if (something_has_changed) {
+        ++m_version;
+
         auto src0_tx2D = rhs_tc0->getData();
         auto src1_tx2D = rhs_tc1->getData();
 
         auto depth0_tx2D = rhs_dtc0->getData();
         auto depth1_tx2D = rhs_dtc1->getData();
 
-        computeDepthCompositing(src0_tx2D, src1_tx2D, depth0_tx2D, depth1_tx2D);
+        // set output texture size to primary input texture
+        
+        std::array<float, 2> texture_res = {
+            static_cast<float>(src0_tx2D->getWidth()), static_cast<float>(src0_tx2D->getHeight())};
 
-        if (lhs_tc->getData() == nullptr) {
-            lhs_tc->setData(m_output_depth_texture);
+        if (m_output_texture->getWidth() != std::get<0>(texture_res) ||
+            m_output_texture->getHeight() != std::get<1>(texture_res))
+        {
+            glowl::TextureLayout tx_layout(
+                GL_RGBA16F, std::get<0>(texture_res), std::get<1>(texture_res), 1, GL_RGBA, GL_HALF_FLOAT, 1);
+            m_output_texture->reload(tx_layout, nullptr);
+
+            glowl::TextureLayout depth_tx_layout(
+                GL_R32F, std::get<0>(texture_res), std::get<1>(texture_res), 1, GL_R, GL_FLOAT, 1);
+            m_output_depth_texture->reload(depth_tx_layout, nullptr);
+
         }
+
+        m_depthComp_prgm->Enable();
+
+        glActiveTexture(GL_TEXTURE0);
+        src0_tx2D->bindTexture();
+        glUniform1i(m_depthComp_prgm->ParameterLocation("src0_tx2D"), 0);
+        glActiveTexture(GL_TEXTURE1);
+        src1_tx2D->bindTexture();
+        glUniform1i(m_depthComp_prgm->ParameterLocation("src1_tx2D"), 1);
+        glActiveTexture(GL_TEXTURE2);
+        depth0_tx2D->bindTexture();
+        glUniform1i(m_depthComp_prgm->ParameterLocation("depth0_tx2D"), 2);
+        glActiveTexture(GL_TEXTURE3);
+        depth1_tx2D->bindTexture();
+        glUniform1i(m_depthComp_prgm->ParameterLocation("depth1_tx2D"), 3);
+
+        m_output_texture->bindImage(0, GL_WRITE_ONLY);
+        m_output_depth_texture->bindImage(1, GL_WRITE_ONLY);
+
+        m_depthComp_prgm->Dispatch(static_cast<int>(std::ceil(std::get<0>(texture_res) / 8.0f)),
+            static_cast<int>(std::ceil(std::get<1>(texture_res) / 8.0f)), 1);
+
+        m_depthComp_prgm->Disable();
+
+        glBindImageTexture(0, 0, 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA16F);
+        glBindImageTexture(1, 0, 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_R32F);
     }
-
-    return true; 
-}
-
-bool megamol::compositing::TextureDepthCompositing::getMetaDataCallback(core::Call& caller) {
-    return true; }
-
-void megamol::compositing::TextureDepthCompositing::computeDepthCompositing(
-    std::shared_ptr<glowl::Texture2D> src0_tx2D,
-    std::shared_ptr<glowl::Texture2D> src1_tx2D, 
-    std::shared_ptr<glowl::Texture2D> depth0_tx2D,
-    std::shared_ptr<glowl::Texture2D> depth1_tx2D) {
-
-    // set output texture size to primary input texture
-    
-    std::array<float, 2> texture_res = {
-        static_cast<float>(src0_tx2D->getWidth()), static_cast<float>(src0_tx2D->getHeight())};
-
-    if (m_output_texture->getWidth() != std::get<0>(texture_res) ||
-        m_output_texture->getHeight() != std::get<1>(texture_res))
-    {
-        glowl::TextureLayout tx_layout(
-            GL_RGBA16F, std::get<0>(texture_res), std::get<1>(texture_res), 1, GL_RGBA, GL_HALF_FLOAT, 1);
-        m_output_texture->reload(tx_layout, nullptr);
-
-        glowl::TextureLayout depth_tx_layout(
-            GL_R32F, std::get<0>(texture_res), std::get<1>(texture_res), 1, GL_R, GL_FLOAT, 1);
-        m_output_depth_texture->reload(depth_tx_layout, nullptr);
-
-    }
-
-    m_depthComp_prgm->Enable();
-
-    glActiveTexture(GL_TEXTURE0);
-    src0_tx2D->bindTexture();
-    glUniform1i(m_depthComp_prgm->ParameterLocation("src0_tx2D"), 0);
-    glActiveTexture(GL_TEXTURE1);
-    src1_tx2D->bindTexture();
-    glUniform1i(m_depthComp_prgm->ParameterLocation("src1_tx2D"), 1);
-    glActiveTexture(GL_TEXTURE2);
-    depth0_tx2D->bindTexture();
-    glUniform1i(m_depthComp_prgm->ParameterLocation("depth0_tx2D"), 2);
-    glActiveTexture(GL_TEXTURE3);
-    depth1_tx2D->bindTexture();
-    glUniform1i(m_depthComp_prgm->ParameterLocation("depth1_tx2D"), 3);
-
-    m_output_texture->bindImage(0, GL_WRITE_ONLY);
-    m_output_depth_texture->bindImage(1, GL_WRITE_ONLY);
-
-    m_depthComp_prgm->Dispatch(static_cast<int>(std::ceil(std::get<0>(texture_res) / 8.0f)),
-        static_cast<int>(std::ceil(std::get<1>(texture_res) / 8.0f)), 1);
-
-    m_depthComp_prgm->Disable();
-
-    glBindImageTexture(0, 0, 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA16F);
-    glBindImageTexture(1, 0, 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_R32F);
 }

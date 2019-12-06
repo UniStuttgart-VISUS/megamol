@@ -36,7 +36,7 @@ bool megamol::compositing::InteractionRenderTarget::getObjectIdRenderTarget(core
 
     if (ct == NULL) return false;
 
-    ct->setData(m_GBuffer->getColorAttachment(3));
+    ct->setData(m_GBuffer->getColorAttachment(3), this->m_version);
 
     return true;
 }
