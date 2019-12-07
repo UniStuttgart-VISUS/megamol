@@ -50,6 +50,8 @@ protected:
     virtual bool getMetaDataCallback(core::Call& caller);
 
 private:
+    uint32_t m_version;
+
     megamol::core::CallerSlot m_mesh_slot;
 };
 

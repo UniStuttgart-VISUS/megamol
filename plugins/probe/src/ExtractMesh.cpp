@@ -555,7 +555,6 @@ bool ExtractMesh::getMetaData(core::Call& call) {
 
     // put metadata in mesh call
     meta_data.m_frame_cnt = cd->getFrameCount();
-    meta_data.m_data_hash++;
     cm->setMetaData(meta_data);
 
     return true;
@@ -740,7 +739,6 @@ bool ExtractMesh::getKDMetaData(core::Call& call) {
 
     // put metadata in mesh call
     meta_data.m_frame_cnt = cd->getFrameCount();
-    meta_data.m_data_hash++;
     cm->setMetaData(meta_data);
 
     return true;

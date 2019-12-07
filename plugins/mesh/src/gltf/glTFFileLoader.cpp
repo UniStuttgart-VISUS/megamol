@@ -191,10 +191,6 @@ bool megamol::mesh::GlTFFileLoader::getMeshMetaDataCallback(core::Call& caller) 
     auto meta_data = cm->getMetaData();
     meta_data.m_frame_cnt = 1;
 
-    if (this->m_glTFFilename_slot.IsDirty()) {
-        meta_data.m_data_hash++;
-    }
-
     cm->setMetaData(meta_data);
 
     return true;

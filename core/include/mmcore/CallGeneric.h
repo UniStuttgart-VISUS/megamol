@@ -33,7 +33,6 @@ struct BasicMetaData {
  * A hash value provides the possibility to communicate when "something has changed".
  */
 struct Spatial3DMetaData {
-    size_t m_data_hash = 0;
     unsigned int m_frame_cnt = 0;
     unsigned int m_frame_ID = 0;
     megamol::core::BoundingBoxes_2 m_bboxs;

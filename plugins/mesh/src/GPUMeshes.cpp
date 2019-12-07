@@ -4,7 +4,8 @@
 #include "mesh/MeshCalls.h"
 
 megamol::mesh::GPUMeshes::GPUMeshes()
-    : m_mesh_slot("CallMeshes", "Connects mesh data to be uploaded to the GPU")
+    : m_version(0)
+    , m_mesh_slot("CallMeshes", "Connects mesh data to be uploaded to the GPU")
 {
     this->m_mesh_slot.SetCompatibleCall<CallMeshDescription>();
     this->MakeSlotAvailable(&this->m_mesh_slot);
@@ -27,14 +28,14 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
         mesh_collection = lhs_mesh_call->getData();
     }
 
-    bool something_has_changed = false; // something has changed in the neath...
-
     CallMesh* mc = this->m_mesh_slot.CallAs<CallMesh>();
     if (mc == NULL) return false;
     if (!(*mc)(0)) return false;
 
-    if (mc->hasUpdate()) {
-        something_has_changed = true;
+    bool something_has_changed = mc->hasUpdate(); // something has changed in the neath...
+
+    if (something_has_changed) {
+        ++m_version;
 
         if (!m_mesh_collection_indices.empty()) {
             // TODO delete all exisiting render task from this module
@@ -69,7 +70,6 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
             mesh_collection->addMesh(vertex_descriptor, vb_iterators, ib_iterators,
                 MeshDataAccessCollection::convertToGLType(mesh.indices.type), GL_STATIC_DRAW, GL_TRIANGLES);
         }
-
     }
 
     // update meta data to lhs
@@ -80,12 +80,12 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
     // if there is a mesh connection to the right, pass on the mesh collection
     CallGPUMeshData* rhs_mesh_call = this->m_mesh_rhs_slot.CallAs<CallGPUMeshData>();
     if (rhs_mesh_call != NULL) {
-        rhs_mesh_call->setData(mesh_collection);
+        rhs_mesh_call->setData(mesh_collection,0);
 
         if (!(*rhs_mesh_call)(0)) return false;
 
         if (rhs_mesh_call->hasUpdate()){
-            something_has_changed = true;
+            ++m_version;
             rhs_mesh_call->getData();
         }
 
@@ -105,9 +105,9 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
 
     lhs_mesh_call->setMetaData(lhs_meta_data);
 
-    if (something_has_changed)
+    if (lhs_mesh_call->version() < m_version)
     {
-        lhs_mesh_call->setData(mesh_collection);
+        lhs_mesh_call->setData(mesh_collection, m_version);
     }
 
     return true;

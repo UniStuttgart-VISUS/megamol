@@ -24,10 +24,10 @@ namespace megamol {
 namespace mesh {
 
 class MESH_API Call3DInteraction
-    : public core::CallGeneric<std::shared_ptr<ThreeDimensionalInteractionCollection>, core::BasicMetaData> {
+    : public core::CallGeneric<std::shared_ptr<ThreeDimensionalInteractionCollection>, core::EmptyMetaData> {
 public:
     inline Call3DInteraction()
-        : CallGeneric<std::shared_ptr<ThreeDimensionalInteractionCollection>, core::BasicMetaData>() {}
+        : CallGeneric<std::shared_ptr<ThreeDimensionalInteractionCollection>, core::EmptyMetaData>() {}
     ~Call3DInteraction() = default;
 
     static const char* ClassName(void) { return "Call3DInteraction"; }
@@ -44,9 +44,9 @@ public:
 };
 
 class MESH_API CallGPUMaterialData
-    : public core::CallGeneric<std::shared_ptr<GPUMaterialCollecton>, core::BasicMetaData> {
+    : public core::CallGeneric<std::shared_ptr<GPUMaterialCollecton>, core::EmptyMetaData> {
 public:
-    CallGPUMaterialData() : CallGeneric<std::shared_ptr<GPUMaterialCollecton>, core::BasicMetaData>() {}
+    CallGPUMaterialData() : CallGeneric<std::shared_ptr<GPUMaterialCollecton>, core::EmptyMetaData>() {}
     ~CallGPUMaterialData() = default;
 
     static const char* ClassName(void) { return "CallGPUMaterialData"; }
@@ -84,9 +84,9 @@ public:
 };
 
 class MESH_API CallImage
-    : public core::CallGeneric<std::shared_ptr<ImageDataAccessCollection>, core::BasicMetaData> {
+    : public core::CallGeneric<std::shared_ptr<ImageDataAccessCollection>, core::EmptyMetaData> {
 public:
-    CallImage() : CallGeneric<std::shared_ptr<ImageDataAccessCollection>, core::BasicMetaData>() {}
+    CallImage() : CallGeneric<std::shared_ptr<ImageDataAccessCollection>, core::EmptyMetaData>() {}
     ~CallImage(){};
 
     static const char* ClassName(void) { return "CallImage"; }
