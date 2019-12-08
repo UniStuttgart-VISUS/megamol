@@ -68,6 +68,7 @@ private:
 
     void createConeGeometry();
 
+    uint32_t m_version;
 
     std::shared_ptr<MeshDataAccessCollection> m_mesh_access_collection;
 

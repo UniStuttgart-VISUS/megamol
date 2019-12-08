@@ -51,6 +51,8 @@ protected:
     virtual bool create();
     virtual void release();
 
+    uint32_t _version;
+
     core::CalleeSlot _probe_lhs_slot;
 
     core::CallerSlot _probe_rhs_slot;

@@ -95,6 +95,7 @@ bool megamol::mesh::MeshViewerRenderTasks::getDataCallback(core::Call& caller) {
     auto mesh_meta_data = mc->getMetaData();
 
     //TODO set data if necessary
+    lhs_rtc->setData(rt_collection, m_version);
 
     return true;
 }

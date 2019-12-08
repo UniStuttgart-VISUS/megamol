@@ -48,7 +48,6 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
     
     // create an empty dummy mesh, actual billboard geometry will be build in vertex shader
     if (m_billboard_dummy_mesh == nullptr) {
-
         std::vector<void*> data_ptrs = {nullptr};
         std::vector<size_t> byte_sizes = {0};
         std::vector<uint32_t> indices = {0,1,2,3,4,5}; 

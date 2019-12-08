@@ -187,27 +187,23 @@ bool GenerateGlyphs::getMesh(core::Call& call) {
     if (cprobes == nullptr) return false;
     if (cm == nullptr) return false;
 
+    if (!(*cprobes)(0)) return false;
+
     auto probe_meta_data = cprobes->getMetaData();
-
-    if (probe_meta_data.m_data_hash != this->_data_hash)
-        if (!(*cprobes)(0)) return false;
-
-    probe_meta_data = cprobes->getMetaData();
     auto mesh_meta_data = cm->getMetaData();
 
     mesh_meta_data.m_bboxs = probe_meta_data.m_bboxs;
 
     cm->setMetaData(mesh_meta_data);
 
-    this->_probe_data = cprobes->getData();
-
-    if (this->scale < 0.0) this->scale = probe_meta_data.m_bboxs.BoundingBox().LongestEdge() * 2e-2;
-    if (probe_meta_data.m_data_hash != this->_data_hash)
+    if (cprobes->hasUpdate()){
+        ++_version;
+        this->_probe_data = cprobes->getData();
+        if (this->scale < 0.0) this->scale = probe_meta_data.m_bboxs.BoundingBox().LongestEdge() * 2e-2;
         doGlyphGeneration();
+    }
 
-    cm->setData(this->_mesh_data);
-
-    this->_data_hash = probe_meta_data.m_data_hash;
+    cm->setData(this->_mesh_data,_version);
 
     return true;
 }
@@ -230,12 +226,9 @@ bool GenerateGlyphs::getMetaData(core::Call& call) {
 
     probe_meta_data = cprobes->getMetaData();
 
-    if (this->_data_hash != probe_meta_data.m_data_hash) {
-        mesh_meta_data.m_data_hash++;
-        mesh_meta_data.m_frame_cnt = probe_meta_data.m_frame_cnt;
-        mesh_meta_data.m_bboxs = probe_meta_data.m_bboxs;
-        cm->setMetaData(mesh_meta_data);
-    }
+    mesh_meta_data.m_frame_cnt = probe_meta_data.m_frame_cnt;
+    mesh_meta_data.m_bboxs = probe_meta_data.m_bboxs;
+    cm->setMetaData(mesh_meta_data);
 
     return true;
 }
@@ -248,22 +241,19 @@ bool GenerateGlyphs::getTexture(core::Call& call) {
     if (cprobes == nullptr) return false;
     if (ctex == nullptr) return false;
 
+    if (!(*cprobes)(0)) return false;
+
     auto probe_meta_data = cprobes->getMetaData();
 
-    if (probe_meta_data.m_data_hash != this->_data_hash)
-        if (!(*cprobes)(0)) return false;
 
-    probe_meta_data = cprobes->getMetaData();
-
-    this->_probe_data = cprobes->getData();
-
-    if (this->scale < 0) this->scale = probe_meta_data.m_bboxs.BoundingBox().LongestEdge() * 2e-2;
-    if (probe_meta_data.m_data_hash != this->_data_hash)
+    if (cprobes->hasUpdate()) {
+        ++_version;
+        this->_probe_data = cprobes->getData();
+        if (this->scale < 0) this->scale = probe_meta_data.m_bboxs.BoundingBox().LongestEdge() * 2e-2;
         doGlyphGeneration();
+    }
 
-    ctex->setData(this->_tex_data);
-
-    this->_data_hash = probe_meta_data.m_data_hash;
+    ctex->setData(this->_tex_data,_version);
 
     return true;
 }
@@ -280,10 +270,7 @@ bool GenerateGlyphs::getTextureMetaData(core::Call& call) {
     auto probe_meta_data = cprobes->getMetaData();
     auto tex_meta_data = ctex->getMetaData();
 
-    if (this->_data_hash != probe_meta_data.m_data_hash) {
-        tex_meta_data.m_data_hash++;
-        ctex->setMetaData(tex_meta_data);
-    }
+    ctex->setMetaData(tex_meta_data);
 
     return true;
 }

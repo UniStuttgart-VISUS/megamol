@@ -66,7 +66,8 @@ private:
 
     void doGlyphGeneration();
 
-    uint32_t _data_hash;
+    uint32_t _version;
+
     std::shared_ptr<ProbeCollection> _probe_data;
     std::shared_ptr<mesh::MeshDataAccessCollection> _mesh_data;
     std::shared_ptr<mesh::ImageDataAccessCollection> _tex_data;

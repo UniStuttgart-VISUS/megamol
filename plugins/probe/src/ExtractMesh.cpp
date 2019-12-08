@@ -80,7 +80,8 @@ ExtractMesh::ExtractMesh()
         mesh::CallMesh::ClassName(), mesh::CallMesh::FunctionName(1), &ExtractMesh::getMetaData);
     this->MakeSlotAvailable(&this->_deployLineCall);
 
-    this->_deployFullDataTree.SetCallback(CallKDTree::ClassName(), CallKDTree::FunctionName(0), &ExtractMesh::getKDData);
+    this->_deployFullDataTree.SetCallback(
+        CallKDTree::ClassName(), CallKDTree::FunctionName(0), &ExtractMesh::getKDData);
     this->_deployFullDataTree.SetCallback(
         CallKDTree::ClassName(), CallKDTree::FunctionName(1), &ExtractMesh::getKDMetaData);
     this->MakeSlotAvailable(&this->_deployFullDataTree);
@@ -163,9 +164,8 @@ bool ExtractMesh::flipNormalsWithCenterLine_distanceBased(pcl::PointCloud<pcl::P
         cl_z -= point_cloud.points[i].z;
 
         // Projection of the normal on the center line point
-        const float cos_theta =
-            (cl_x * point_cloud.points[i].normal_x + cl_y * point_cloud.points[i].normal_y +
-                cl_z * point_cloud.points[i].normal_z);
+        const float cos_theta = (cl_x * point_cloud.points[i].normal_x + cl_y * point_cloud.points[i].normal_y +
+                                 cl_z * point_cloud.points[i].normal_z);
 
         // Flip the plane normal away from center line point
         if (cos_theta > 0) {
@@ -245,9 +245,9 @@ bool ExtractMesh::extractCenterLine(pcl::PointCloud<pcl::PointNormal>& point_clo
 }
 
 void ExtractMesh::applyMeshCorrections() {
-    
+
     for (auto& point : _poissonCloud.points) {
-    
+
         std::vector<uint32_t> k_indices;
         std::vector<float> k_distances;
 
@@ -258,21 +258,21 @@ void ExtractMesh::applyMeshCorrections() {
 
         auto neighbors = this->_alpha_hull_tree->nearestKSearch(p, 1, k_indices, k_distances);
 
-        std::array<float,3> diffvec;
+        std::array<float, 3> diffvec;
         float distance = 0.0f;
         if (neighbors > 0) {
             diffvec[0] = _alphaHullCloud->points[k_indices[0]].x - point.x;
             diffvec[1] = _alphaHullCloud->points[k_indices[0]].y - point.y;
             diffvec[2] = _alphaHullCloud->points[k_indices[0]].z - point.z;
-            //distance = std::sqrt(diffvec[0] * diffvec[0] + diffvec[1] * diffvec[1] + diffvec[2] * diffvec[2]);
+            // distance = std::sqrt(diffvec[0] * diffvec[0] + diffvec[1] * diffvec[1] + diffvec[2] * diffvec[2]);
 
-            //point.x -= _resultNormalCloud->points[k_indices[0]].normal_x * distance;
-            //point.y -= _resultNormalCloud->points[k_indices[0]].normal_y * distance;
-            //point.z -= _resultNormalCloud->points[k_indices[0]].normal_z * distance;
+            // point.x -= _resultNormalCloud->points[k_indices[0]].normal_x * distance;
+            // point.y -= _resultNormalCloud->points[k_indices[0]].normal_y * distance;
+            // point.z -= _resultNormalCloud->points[k_indices[0]].normal_z * distance;
 
-            //point.x += diffvec[0];
-            //point.y += diffvec[1];
-            //point.z += diffvec[2];
+            // point.x += diffvec[0];
+            // point.y += diffvec[1];
+            // point.z += diffvec[2];
 
             // move along normal
             float d = std::sqrt(diffvec[0] * _resultNormalCloud->points[k_indices[0]].normal_x +
@@ -282,7 +282,6 @@ void ExtractMesh::applyMeshCorrections() {
             point.x -= d * _resultNormalCloud->points[k_indices[0]].normal_x;
             point.y -= d * _resultNormalCloud->points[k_indices[0]].normal_y;
             point.z -= d * _resultNormalCloud->points[k_indices[0]].normal_z;
-
         }
     }
 }
@@ -315,13 +314,13 @@ void ExtractMesh::calculateAlphaShape() {
     normal_est.setInputCloud(_alphaHullCloud);
     pcl::PointCloud<pcl::PointNormal> normal_cloud;
     normal_est.setRadiusSearch(_bbox.ObjectSpaceBBox().LongestEdge() * 1e-2);
-    //normal_est.setKSearch(40);
+    // normal_est.setKSearch(40);
     normal_est.compute(normal_cloud);
 
     // The estimated normals are not oriented correctly
     // Calculate center line and use it to flip normals
     this->extractCenterLine(normal_cloud);
-    //this->flipNormalsWithCenterLine(normal_cloud);
+    // this->flipNormalsWithCenterLine(normal_cloud);
     this->flipNormalsWithCenterLine_distanceBased(normal_cloud);
 
     _resultNormalCloud = std::make_shared<pcl::PointCloud<pcl::PointNormal>>(normal_cloud);
@@ -348,11 +347,9 @@ void ExtractMesh::calculateAlphaShape() {
         new_normal_est.compute(_poissonCloud);
 
         this->flipNormalsWithCenterLine_distanceBased(_poissonCloud);
-
     }
 
     // this->applyMeshCorrections();
-
 }
 
 bool ExtractMesh::createPointCloud(std::vector<std::string>& vars) {
@@ -388,7 +385,7 @@ bool ExtractMesh::createPointCloud(std::vector<std::string>& vars) {
             }
 
         } else {
-            //auto xyz = cd->getData(std::string(this->_xyzSlot.Param<core::param::FlexEnumParam>()->ValueString()))
+            // auto xyz = cd->getData(std::string(this->_xyzSlot.Param<core::param::FlexEnumParam>()->ValueString()))
             //               ->GetAsFloat();
             int coarse_factor = 30;
             auto xyz = cd->getData(std::string(this->_xyzSlot.Param<core::param::FlexEnumParam>()->ValueString()))
@@ -400,11 +397,11 @@ bool ExtractMesh::createPointCloud(std::vector<std::string>& vars) {
             float zmin = std::numeric_limits<float>::max();
             float zmax = std::numeric_limits<float>::min();
 
-            _cloud.points.resize(count/coarse_factor);
-            for (unsigned long long i = 0; i < count/(3*coarse_factor); i++) {
-                _cloud.points[i].x = xyz[3 * (i*coarse_factor) + 0];
-                _cloud.points[i].y = xyz[3 * (i*coarse_factor) + 1];
-                _cloud.points[i].z = xyz[3 * (i*coarse_factor) + 2];
+            _cloud.points.resize(count / coarse_factor);
+            for (unsigned long long i = 0; i < count / (3 * coarse_factor); i++) {
+                _cloud.points[i].x = xyz[3 * (i * coarse_factor) + 0];
+                _cloud.points[i].y = xyz[3 * (i * coarse_factor) + 1];
+                _cloud.points[i].z = xyz[3 * (i * coarse_factor) + 2];
 
                 xmin = std::min(xmin, _cloud.points[i].x);
                 xmax = std::max(xmax, _cloud.points[i].x);
@@ -521,7 +518,7 @@ bool ExtractMesh::getData(core::Call& call) {
         mesh::MeshDataAccessCollection mesh;
 
         mesh.addMesh(_mesh_attribs, _mesh_indices);
-        cm->setData(std::make_shared<mesh::MeshDataAccessCollection>(std::move(mesh)),m_version);
+        cm->setData(std::make_shared<mesh::MeshDataAccessCollection>(std::move(mesh)), m_version);
     }
 
     _old_datahash = cd->getDataHash();
@@ -594,14 +591,13 @@ bool ExtractMesh::getParticleData(core::Call& call) {
 
     cm->AccessBoundingBoxes().SetObjectSpaceBBox(_bbox.ObjectSpaceBBox());
 
-    if (cd->getDataHash() != _old_datahash || _recalc)
-        this->calculateAlphaShape();
+    if (cd->getDataHash() != _old_datahash || _recalc) this->calculateAlphaShape();
 
     // this->filterResult();
     // this->filterByIndex();
 
     cm->SetParticleListCount(1);
-    //cm->AccessParticles(0).SetGlobalRadius(0.02f);
+    // cm->AccessParticles(0).SetGlobalRadius(0.02f);
     cm->AccessParticles(0).SetGlobalRadius(_bbox.ObjectSpaceBBox().LongestEdge() * 1e-3);
     cm->AccessParticles(0).SetCount(_alphaHullCloud->points.size());
     cm->AccessParticles(0).SetVertexData(core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
@@ -679,11 +675,13 @@ bool ExtractMesh::getCenterlineData(core::Call& call) {
 
     bool something_has_changed = (cd->getDataHash() != _old_datahash);
 
-    if (something_has_changed)
-    {
+    if (something_has_changed) {
         ++m_version;
 
         this->calculateAlphaShape();
+    }
+
+    if (cm->version() < m_version) {
 
         _line_attribs.resize(1);
         _line_attribs[0].component_type = mesh::MeshDataAccessCollection::ValueType::FLOAT;
@@ -699,15 +697,12 @@ bool ExtractMesh::getCenterlineData(core::Call& call) {
         _line_indices.byte_size = _cl_indices.size() * sizeof(uint32_t);
         _line_indices.data = reinterpret_cast<uint8_t*>(_cl_indices.data());
 
-    }
-    
-    if (cm->version() < m_version){
         // put data in line
         mesh::MeshDataAccessCollection line;
         line.addMesh(_line_attribs, _line_indices);
-        cm->setData(std::make_shared<mesh::MeshDataAccessCollection>(std::move(line)),m_version);
+        cm->setData(std::make_shared<mesh::MeshDataAccessCollection>(std::move(line)), m_version);
     }
-    
+
     _old_datahash = cd->getDataHash();
     _recalc = false;
 
@@ -742,7 +737,6 @@ bool ExtractMesh::getKDMetaData(core::Call& call) {
     cm->setMetaData(meta_data);
 
     return true;
-
 }
 
 bool ExtractMesh::getKDData(core::Call& call) {
@@ -782,10 +776,14 @@ bool ExtractMesh::getKDData(core::Call& call) {
     meta_data.m_bboxs = _bbox;
     cm->setMetaData(meta_data);
 
-    if (cd->getDataHash() != _old_datahash || _recalc) this->calculateAlphaShape();
+    if (cd->getDataHash() != _old_datahash || _recalc) {
+        ++m_version;
 
-    if (cm->version() < m_version){
-        cm->setData(this->_full_data_tree,m_version);
+        this->calculateAlphaShape();
+    }
+
+    if (cm->version() < m_version) {
+        cm->setData(this->_full_data_tree, m_version);
     }
 
     _old_datahash = cd->getDataHash();

@@ -21,9 +21,7 @@ megamol::mesh::GlTFFileLoader::GlTFFileLoader()
     , m_version(0)
     , m_glTFFilename_slot("glTF filename", "The name of the gltf file to load")
     , m_gltf_slot("CallGlTFData", "The slot publishing the loaded data")
-    //, m_gltf_cached_hash(0)
     , m_mesh_slot("CallMeshData", "The slot providing access to internal mesh data")
-    //, m_mesh_cached_hash(0) 
 {
     this->m_gltf_slot.SetCallback(CallGlTFData::ClassName(), "GetData", &GlTFFileLoader::getGltfDataCallback);
     this->m_gltf_slot.SetCallback(CallGlTFData::ClassName(), "GetMetaData", &GlTFFileLoader::getGltfMetaDataCallback);
@@ -151,7 +149,6 @@ bool megamol::mesh::GlTFFileLoader::getMeshDataCallback(core::Call& caller) {
                 }
 
                 mesh_collection->addMesh(mesh_attributes, mesh_indices);
-
 
                 auto max_data =
                     model

@@ -51,19 +51,19 @@ protected:
     virtual void release();
 
     core::CalleeSlot m_mesh_slot;
-    size_t           m_mesh_cached_hash;
-
     core::CallerSlot m_probe_slot;
-    size_t           m_probe_cached_hash;
     
 private:
-    bool convertToLine(core::Call& call);
+    std::shared_ptr<mesh::MeshDataAccessCollection> convertToLine(core::Call& call);
     bool getData(core::Call& call);
 
     bool getMetaData(core::Call& call);
 
-    std::shared_ptr<ProbeCollection> m_probes;
+    uint32_t _version;
 
+    std::shared_ptr<ProbeCollection> _probes;
+
+    std::shared_ptr<mesh::MeshDataAccessCollection> _line;
     std::vector<std::vector<mesh::MeshDataAccessCollection::VertexAttribute>> _line_attribs;
     mesh::MeshDataAccessCollection::IndexData _line_indices;
 

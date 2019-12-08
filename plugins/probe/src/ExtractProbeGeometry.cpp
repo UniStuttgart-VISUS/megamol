@@ -11,6 +11,8 @@
 
 megamol::probe::ExtractProbeGeometry::ExtractProbeGeometry() 
     : Module()
+    , _version(0)
+    , _line(nullptr)
     , m_mesh_slot("deployMesh", "")
     , m_probe_slot("getProbes", "") {
 
@@ -32,12 +34,12 @@ bool megamol::probe::ExtractProbeGeometry::create() { return true; }
 
 void megamol::probe::ExtractProbeGeometry::release() {}
 
-bool megamol::probe::ExtractProbeGeometry::convertToLine(core::Call& call) {
+std::shared_ptr<megamol::mesh::MeshDataAccessCollection> megamol::probe::ExtractProbeGeometry::convertToLine(core::Call& call) {
 
     auto* cm = dynamic_cast<mesh::CallMesh*>(&call);
     std::shared_ptr<mesh::MeshDataAccessCollection> line = std::make_shared<mesh::MeshDataAccessCollection>();
 
-    auto probe_count = this->m_probes->getProbeCount();
+    auto probe_count = this->_probes->getProbeCount();
 
     _index_data = {0};
     _line_indices.type = mesh::MeshDataAccessCollection::ValueType::UNSIGNED_INT;
@@ -52,7 +54,7 @@ bool megamol::probe::ExtractProbeGeometry::convertToLine(core::Call& call) {
 
 //#pragma omp parallel for
     for (auto i = 0; i < probe_count; i++) {
-        auto probe = this->m_probes->getProbe<FloatProbe>(i);
+        auto probe = this->_probes->getProbe<FloatProbe>(i);
 
         std::array<float,4> vert1, vert2;
 
@@ -80,9 +82,9 @@ bool megamol::probe::ExtractProbeGeometry::convertToLine(core::Call& call) {
         // put data in line
         line->addMesh(_line_attribs[i], _line_indices);
     }
-    cm->setData(line);
 
-    return true;
+    _line = line;
+    return line;
 }
 
 bool megamol::probe::ExtractProbeGeometry::getData(core::Call& call) {
@@ -90,33 +92,27 @@ bool megamol::probe::ExtractProbeGeometry::getData(core::Call& call) {
     auto* cm = dynamic_cast<mesh::CallMesh*>(&call);
     auto* cp = this->m_probe_slot.CallAs<CallProbes>();
 
-
     if (cp == nullptr) return false;
+    if (!(*cp)(0)) return false;
 
     auto mesh_meta_data = cm->getMetaData();
     auto probe_meta_data = cp->getMetaData();
 
+    if (cp->hasUpdate())
+    {
+        ++_version;
+        _probes = cp->getData();
 
-    if (mesh_meta_data.m_data_hash == m_mesh_cached_hash && probe_meta_data.m_data_hash == m_probe_cached_hash )
-        return true;
+        // here something really happens
+        this->convertToLine(call);
+    }
 
-    if (!(*cp)(0)) return false;
-
-
-    mesh_meta_data = cm->getMetaData();
-    probe_meta_data = cp->getMetaData();
-
-    mesh_meta_data.m_bboxs = probe_meta_data.m_bboxs;
-
-    m_probes = cp->getData();
-
-    // here something really happens
-    this->convertToLine(call);
-
-    m_probe_cached_hash = probe_meta_data.m_data_hash;
-    m_mesh_cached_hash++;
-    mesh_meta_data.m_data_hash = m_mesh_cached_hash;
-    cm->setMetaData(mesh_meta_data);
+    if (cm->version() < _version)
+    {
+        mesh_meta_data.m_bboxs = probe_meta_data.m_bboxs;
+        cm->setMetaData(mesh_meta_data);
+        cm->setData(_line,_version);
+    }
 
     return true; 
 }

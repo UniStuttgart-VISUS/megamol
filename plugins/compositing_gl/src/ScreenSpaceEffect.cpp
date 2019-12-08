@@ -141,10 +141,18 @@ bool megamol::compositing::ScreenSpaceEffect::getDataCallback(core::Call& caller
     auto call_camera = m_camera_slot.CallAs<CallCamera>();
 
     if (lhs_tc == NULL) return false;
+    
+    if(call_input != NULL) { if (!(*call_input)(0)) return false; }
+    if(call_normal != NULL) { if (!(*call_normal)(0)) return false; }
+    if(call_depth != NULL) { if (!(*call_depth)(0)) return false; }
+    if(call_camera != NULL) { if (!(*call_camera)(0)) return false; }
 
     // something has changed in the neath...
     bool something_has_changed =
-        call_input->hasUpdate() || call_normal->hasUpdate() || call_depth->hasUpdate() || call_camera->hasUpdate();
+        (call_input != NULL ? call_input->hasUpdate() : false) || 
+        (call_normal != NULL ? call_normal->hasUpdate() : false )|| 
+        (call_depth != NULL ? call_depth->hasUpdate() : false) || 
+        (call_camera != NULL ? call_camera->hasUpdate() : false);
 
     if (something_has_changed) {
         ++m_version;
@@ -169,10 +177,6 @@ bool megamol::compositing::ScreenSpaceEffect::getDataCallback(core::Call& caller
             if (call_normal == NULL) return false;
             if (call_depth == NULL) return false;
             if (call_camera == NULL) return false;
-
-            if (!(*call_normal)(0)) return false;
-            if (!(*call_depth)(0)) return false;
-            if (!(*call_camera)(0)) return false;
 
             auto normal_tx2D = call_normal->getData();
             auto depth_tx2D = call_depth->getData();
@@ -235,12 +239,12 @@ bool megamol::compositing::ScreenSpaceEffect::getDataCallback(core::Call& caller
 
             m_ssao_blur_prgm->Disable();
 
-        } else if (this->m_mode.Param<core::param::EnumParam>()->Value() == 1) {
+        } 
+        else if (this->m_mode.Param<core::param::EnumParam>()->Value() == 1) {
             m_ssao_radius.Param<core::param::FloatParam>()->SetGUIVisible(false);
             m_ssao_sample_cnt.Param<core::param::IntParam>()->SetGUIVisible(false);
 
             if (call_input == NULL) return false;
-            if (!(*call_input)(0)) return false;
 
             auto input_tx2D = call_input->getData();
 

@@ -4,6 +4,7 @@
 
 megamol::mesh::MeshBakery::MeshBakery() 
     : core::Module()
+    , m_version(0)
     , m_mesh_access_collection(nullptr)
     , m_geometry_type("GeometryType", "...")
     , m_mesh_lhs_slot("deployMeshAccess", "...")
@@ -50,14 +51,12 @@ bool megamol::mesh::MeshBakery::getDataCallback(core::Call& caller) {
         mesh_access_collection = lhs_mesh_call->getData();
     }
 
-    bool something_has_changed = false; // something has changed in the neath...
-
     //TODO check chain
 
     if (m_geometry_type.IsDirty()) {
         m_geometry_type.ResetDirty();
 
-        something_has_changed = true;
+        ++m_version;
 
         //TODO call geometry generating functions
         createConeGeometry();
@@ -111,10 +110,7 @@ bool megamol::mesh::MeshBakery::getDataCallback(core::Call& caller) {
         lhs_mesh_call->setMetaData(meta_data);
     }
 
-    if (something_has_changed)
-    {
-        lhs_mesh_call->setData(mesh_access_collection);
-    }
+    lhs_mesh_call->setData(mesh_access_collection, m_version);
 
     return true; 
 }
