@@ -645,7 +645,6 @@ bool ExtractMesh::getCenterlineData(core::Call& call) {
     auto cd = this->_getDataCall.CallAs<adios::CallADIOSData>();
     if (cd == nullptr) return false;
 
-    auto meta_data = cm->getMetaData();
     // if (cd->getDataHash() == _old_datahash && meta_data.m_frame_ID == cd->getFrameIDtoLoad() &&
     //    meta_data.m_data_hash == _recalc_hash)
     //    return true;
@@ -668,15 +667,12 @@ bool ExtractMesh::getCenterlineData(core::Call& call) {
     if (cd->getDataHash() != _old_datahash)
         if (!(*cd)(0)) return false;
 
-    if (!this->createPointCloud(toInq)) return false;
-
-    meta_data.m_bboxs = _bbox;
-    cm->setMetaData(meta_data);
-
     bool something_has_changed = (cd->getDataHash() != _old_datahash);
 
     if (something_has_changed) {
         ++m_version;
+
+        if (!this->createPointCloud(toInq)) return false;
 
         this->calculateAlphaShape();
     }
@@ -701,6 +697,10 @@ bool ExtractMesh::getCenterlineData(core::Call& call) {
         mesh::MeshDataAccessCollection line;
         line.addMesh(_line_attribs, _line_indices);
         cm->setData(std::make_shared<mesh::MeshDataAccessCollection>(std::move(line)), m_version);
+
+        auto meta_data = cm->getMetaData();
+        meta_data.m_bboxs = _bbox;
+        cm->setMetaData(meta_data);
     }
 
     _old_datahash = cd->getDataHash();
@@ -747,7 +747,7 @@ bool ExtractMesh::getKDData(core::Call& call) {
     auto cd = this->_getDataCall.CallAs<adios::CallADIOSData>();
     if (cd == nullptr) return false;
 
-    auto meta_data = cm->getMetaData();
+    
     // if (cd->getDataHash() == _old_datahash && meta_data.m_frame_ID == cd->getFrameIDtoLoad() &&
     //    meta_data.m_data_hash == _recalc_hash)
     //    return true;
@@ -770,20 +770,20 @@ bool ExtractMesh::getKDData(core::Call& call) {
     if (cd->getDataHash() != _old_datahash)
         if (!(*cd)(0)) return false;
 
-
-    if (!this->createPointCloud(toInq)) return false;
-
-    meta_data.m_bboxs = _bbox;
-    cm->setMetaData(meta_data);
-
     if (cd->getDataHash() != _old_datahash || _recalc) {
         ++m_version;
+
+        if (!this->createPointCloud(toInq)) return false;
 
         this->calculateAlphaShape();
     }
 
     if (cm->version() < m_version) {
         cm->setData(this->_full_data_tree, m_version);
+
+        auto meta_data = cm->getMetaData();
+        meta_data.m_bboxs = _bbox;
+        cm->setMetaData(meta_data);
     }
 
     _old_datahash = cd->getDataHash();
