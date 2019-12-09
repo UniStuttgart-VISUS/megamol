@@ -63,12 +63,25 @@ bool megamol::mesh::MeshViewerRenderTasks::getDataCallback(core::Call& caller) {
                 prev_mesh = gpu_batch_mesh;
             }
 
-            std::array<float, 16> obj_xform;
             float scale = 1.0f;
-            obj_xform[0] = scale;
-            obj_xform[5] = scale;
-            obj_xform[10] = scale;
-            obj_xform[15] = 1.0f;
+            std::array<float, 16> obj_xform = {
+                scale,
+                0.0f,
+                0.0f,
+                0.0f,
+                0.0f, 
+                scale,
+                0.0f,
+                0.0f,
+                0.0f,
+                0.0f, 
+                scale,
+                0.0f,
+                0.0f,
+                0.0f,
+                0.0f,
+                1.0f
+            };
 
             draw_commands.back().push_back(sub_mesh.sub_mesh_draw_command);
             object_transforms.back().push_back(obj_xform);
