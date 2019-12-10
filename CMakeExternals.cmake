@@ -115,7 +115,7 @@ function(require_external NAME)
 
     add_external_project(adios2 SHARED
       GIT_REPOSITORY https://github.com/ornladios/ADIOS2.git
-      GIT_TAG "v2.3.1"
+      GIT_TAG "v2.4.0"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${ADIOS2_LIB}" "<INSTALL_DIR>/${ADIOS2_IMPORT_LIB}"
       CMAKE_ARGS 
         -DBUILD_TESTING=OFF
@@ -460,6 +460,43 @@ function(require_external NAME)
     add_external_library(tinyply
       IMPORT_LIBRARY ${TNY_IMPORT_LIB}
       LIBRARY ${TNY_LIB})
+
+  # tracking
+  elseif(NAME STREQUAL "tracking")
+    if(TARGET tracking)
+      return()
+    endif()
+
+    if(NOT WIN32)
+      message(WARNING "External 'tracking' requested, but not available on non-Windows systems")
+    endif()
+
+    set(TRACKING_LIB "bin/tracking.dll")
+    set(TRACKING_IMPORT_LIB "lib/tracking.lib")
+    set(TRACKING_NATNET_LIB "bin/NatNetLib.dll")
+    set(TRACKING_NATNET_IMPORT_LIB "lib/NatNetLib.lib")
+
+    add_external_project(tracking SHARED
+      GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/mm-tracking
+      BUILD_BYPRODUCTS
+        "<INSTALL_DIR>/${TRACKING_LIB}"
+        "<INSTALL_DIR>/${TRACKING_IMPORT_LIB}"
+        "<INSTALL_DIR>/${TRACKING_NATNET_LIB}"
+        "<INSTALL_DIR>/${TRACKING_NATNET_IMPORT_LIB}"
+      CMAKE_ARGS
+        -DCREATE_TRACKING_TEST_PROGRAM=OFF)
+
+    add_external_library(tracking
+      IMPORT_LIBRARY ${TRACKING_IMPORT_LIB}
+      LIBRARY ${TRACKING_LIB})
+
+    add_external_library(natnet
+      PROJECT tracking
+      IMPORT_LIBRARY ${TRACKING_NATNET_IMPORT_LIB}
+      LIBRARY ${TRACKING_NATNET_LIB})
+
+    external_get_property(tracking SOURCE_DIR)
+    set(tracking_files "${SOURCE_DIR}/tracking/conf/tracking.conf" PARENT_SCOPE)
 
   # zfp
   elseif(NAME STREQUAL "zfp")
