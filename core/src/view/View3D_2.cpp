@@ -876,7 +876,7 @@ bool view::View3D_2::OnMouseScroll(double dx, double dy) {
 
         auto altitude = thecam::math::length(rot_cntr - cam_pos);
 
-        this->cam.position(cam_pos - (v * dy * (altitude / 100.0f)));
+        this->cam.position(cam_pos + (v * dy * (altitude / 50.0f)));
     }
 
     return true;
