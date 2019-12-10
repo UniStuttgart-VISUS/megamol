@@ -3,7 +3,7 @@
 
 #include <algorithm>
 #include "mmcore/CoreInstance.h"
-#include "mmcore/FlagCall.h"
+#include "mmcore/FlagCall_GL.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -31,7 +31,8 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
     : Renderer2D()
     , getDataSlot("getdata", "Float table input")
     , getTFSlot("getTF", "connects to the transfer function")
-    , getFlagsSlot("getFlags", "connects to the flag storage")
+    , readFlagsSlot("readFlags", "reads the flag storage")
+    , writeFlagsSlot("writeFlags", "writes the flag storage")
     , currentHash(0xFFFFFFFF)
     , currentFlagsVersion(0xFFFFFFFF)
     , densityFBO()
@@ -65,7 +66,6 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
     , columnCount(0)
     , itemCount(0)
     , dataBuffer(0)
-    , flagsBuffer(0)
     , minimumsBuffer(0)
     , maximumsBuffer(0)
     , axisIndirectionBuffer(0)
@@ -90,8 +90,10 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
     this->getTFSlot.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();
     this->MakeSlotAvailable(&this->getTFSlot);
 
-    this->getFlagsSlot.SetCompatibleCall<core::FlagCallDescription>();
-    this->MakeSlotAvailable(&this->getFlagsSlot);
+    this->readFlagsSlot.SetCompatibleCall<core::FlagCallRead_GLDescription>();
+    this->MakeSlotAvailable(&this->readFlagsSlot);
+    this->writeFlagsSlot.SetCompatibleCall<core::FlagCallWrite_GLDescription>();
+    this->MakeSlotAvailable(&this->writeFlagsSlot);
 
     auto drawModes = new core::param::EnumParam(DRAW_DISCRETE);
     drawModes->SetTypePair(DRAW_DISCRETE, "Discrete");
@@ -185,7 +187,8 @@ bool ParallelCoordinatesRenderer2D::enableProgramAndBind(vislib::graphics::gl::G
     program.Enable();
     // bindbuffer?
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, dataBuffer);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, flagsBuffer);
+    auto flags = this->readFlagsSlot.CallAs<core::FlagCallRead_GL>();
+    flags->getData()->flags->bind(1);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, minimumsBuffer);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, maximumsBuffer);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, axisIndirectionBuffer);
@@ -207,7 +210,6 @@ bool ParallelCoordinatesRenderer2D::enableProgramAndBind(vislib::graphics::gl::G
 
 bool ParallelCoordinatesRenderer2D::create(void) {
     glGenBuffers(1, &dataBuffer);
-    glGenBuffers(1, &flagsBuffer);
     glGenBuffers(1, &minimumsBuffer);
     glGenBuffers(1, &maximumsBuffer);
     glGenBuffers(1, &axisIndirectionBuffer);
@@ -256,7 +258,6 @@ bool ParallelCoordinatesRenderer2D::create(void) {
 
 void ParallelCoordinatesRenderer2D::release(void) {
     glDeleteBuffers(1, &dataBuffer);
-    glDeleteBuffers(1, &flagsBuffer);
     glDeleteBuffers(1, &minimumsBuffer);
     glDeleteBuffers(1, &maximumsBuffer);
     glDeleteBuffers(1, &axisIndirectionBuffer);
@@ -355,7 +356,7 @@ void ParallelCoordinatesRenderer2D::assertData(core::view::CallRender2D& call) {
             vislib::sys::Log::LEVEL_ERROR, "ParallelCoordinatesRenderer2D requires a transfer function!");
         return;
     }
-    auto flagsc = getFlagsSlot.CallAs<core::FlagCall>();
+    auto flagsc = readFlagsSlot.CallAs<core::FlagCallRead_GL>();
     if (flagsc == nullptr) {
         vislib::sys::Log::DefaultLog.WriteMsg(
             vislib::sys::Log::LEVEL_ERROR, "ParallelCoordinatesRenderer2D requires a flag storage!");
@@ -368,8 +369,11 @@ void ParallelCoordinatesRenderer2D::assertData(core::view::CallRender2D& call) {
     call.SetTimeFramesCount(floats->GetFrameCount());
     auto hash = floats->DataHash();
     (*tc)(0);
-    (*flagsc)(core::FlagCall::CallMapFlags);
-    auto version = flagsc->GetVersion();
+    (*flagsc)(core::FlagCallRead_GL::CallGetData);
+    if (flagsc->hasUpdate()) {
+        this->currentFlagsVersion = flagsc->version();
+        flagsc->getData();
+    }
 
     if (hash != this->currentHash || this->lastTimeStep != static_cast<unsigned int>(call.Time())) {
 
@@ -416,22 +420,7 @@ void ParallelCoordinatesRenderer2D::assertData(core::view::CallRender2D& call) {
         this->lastTimeStep = static_cast<unsigned int>(call.Time());
     }
 
-    if (version != this->currentFlagsVersion || version == 0) {
-        flagsc->validateFlagsCount(itemCount);
-        auto flagsvector = flagsc->GetFlags();
-
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, flagsBuffer);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, this->itemCount * sizeof(core::FlagStorage::FlagItemType),
-            flagsvector.get()->data(), GL_STATIC_DRAW);
-
-        // give the data back
-        flagsc->SetFlags(flagsvector);
-        this->currentFlagsVersion = flagsc->GetVersion();
-    }
-    (*flagsc)(core::FlagCall::CallUnmapFlags);
-
     makeDebugLabel(GL_BUFFER, DEBUG_NAME(dataBuffer));
-    makeDebugLabel(GL_BUFFER, DEBUG_NAME(flagsBuffer));
     makeDebugLabel(GL_BUFFER, DEBUG_NAME(minimumsBuffer));
     makeDebugLabel(GL_BUFFER, DEBUG_NAME(maximumsBuffer));
     makeDebugLabel(GL_BUFFER, DEBUG_NAME(axisIndirectionBuffer));
@@ -972,21 +961,23 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
 
     if (needFlagsUpdate) {
         needFlagsUpdate = false;
+        this->currentFlagsVersion++;
         // HAZARD: downloading everything over and over is slowish
-        auto flagsc = getFlagsSlot.CallAs<core::FlagCall>();
-        if (flagsc != nullptr) {
-            (*flagsc)(core::FlagCall::CallMapFlags);
-            auto version = flagsc->GetVersion();
-            auto flags = flagsc->GetFlags();
-            auto f = flags.get();
-            glBindBuffer(GL_SHADER_STORAGE_BUFFER, flagsBuffer);
-            glGetBufferSubData(
-                GL_SHADER_STORAGE_BUFFER, 0, f->size() * sizeof(core::FlagStorage::FlagItemType), f->data());
+        auto readFlags = readFlagsSlot.CallAs<core::FlagCallRead_GL>();
+        auto writeFlags = writeFlagsSlot.CallAs<core::FlagCallWrite_GL>();
+        if (readFlags != nullptr && writeFlags != nullptr) {
+            writeFlags->setData(readFlags->getData(), this->currentFlagsVersion);
+            (*writeFlags)(core::FlagCallWrite_GL::CallGetData);
 #if 0
+            auto flags = readFlags->getData()->flags;
+            std::vector<core::FlagStorage::FlagItemType> f(flags->getByteSize()/sizeof(core::FlagStorage::FlagItemType));
+            flags->bind();
+            glGetBufferSubData(
+                GL_SHADER_STORAGE_BUFFER, 0, flags->getByteSize(), f.data());
 
             core::FlagStorage::FlagVectorType::size_type numFiltered = 0, numEnabled = 0, numSelected = 0,
                                                          numSoftSelected = 0;
-            for (unsigned int& i : *f) {
+            for (unsigned int& i : f) {
                 if ((i & core::FlagStorage::FILTERED) > 0) numFiltered++;
                 if ((i & core::FlagStorage::ENABLED) > 0) numEnabled++;
                 if ((i & core::FlagStorage::SELECTED) > 0) numSelected++;
@@ -995,11 +986,8 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
             vislib::sys::Log::DefaultLog.WriteInfo(
                 "ParallelCoordinateRenderer2D: %lu items: %lu enabled, %lu filtered, %lu selected, %lu "
                 "soft-selected.",
-                f->size(), numEnabled, numFiltered, numSelected, numSoftSelected);
+                f.size(), numEnabled, numFiltered, numSelected, numSoftSelected);
 #endif
-            this->currentFlagsVersion = version + 1;
-            flagsc->SetFlags(flags, this->currentFlagsVersion);
-            (*flagsc)(core::FlagCall::CallUnmapFlags);
         }
     }
 

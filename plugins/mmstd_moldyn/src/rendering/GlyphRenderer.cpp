@@ -13,7 +13,7 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "inttypes.h"
 #include "mmcore/CoreInstance.h"
-#include "mmcore/FlagCall.h"
+#include "mmcore/FlagCall_GL.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/utility/ShaderSourceFactory.h"
@@ -38,7 +38,7 @@ GlyphRenderer::GlyphRenderer(void)
     , getDataSlot("getData", "The slot to fetch the data")
     , getTFSlot("getTF", "the slot for the transfer function")
     , getClipPlaneSlot("getClipPlane", "the slot for the clip plane")
-    , getFlagsSlot("getFlags", "the slots for the selection flags")
+    , readFlagsSlot("readFlags", "the slot for reading the selection flags")
     , glyphParam("glyph", "which glyph to render")
     , scaleParam("scaling", "scales the glyph radii")
     , colorInterpolationParam(
@@ -53,8 +53,8 @@ GlyphRenderer::GlyphRenderer(void)
     this->getClipPlaneSlot.SetCompatibleCall<view::CallClipPlaneDescription>();
     this->MakeSlotAvailable(&this->getClipPlaneSlot);
 
-    this->getFlagsSlot.SetCompatibleCall<FlagCallDescription>();
-    this->MakeSlotAvailable(&this->getFlagsSlot);
+    this->readFlagsSlot.SetCompatibleCall<FlagCallRead_GLDescription>();
+    this->MakeSlotAvailable(&this->readFlagsSlot);
 
     param::EnumParam* gp = new param::EnumParam(0);
     gp->SetTypePair(Glyph::BOX, "Box");
@@ -287,7 +287,7 @@ bool GlyphRenderer::Render(core::view::CallRender3D_2& call) {
     if (!this->validateData(epdc)) return false;
 
     auto* tfc = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
-    auto* flagsc = this->getFlagsSlot.CallAs<FlagCall>();
+    auto* flagsc = this->readFlagsSlot.CallAs<FlagCallRead_GL>();
     bool use_flags = (flagsc != nullptr);
 
     bool use_clip = false;
@@ -371,23 +371,24 @@ bool GlyphRenderer::Render(core::view::CallRender3D_2& call) {
         num_total_glyphs += epdc->AccessParticles(i).GetCount();
     }
 
-    std::shared_ptr<FlagStorage::FlagVectorType> flags;
     unsigned int fal = 0;
     if (use_flags || use_clip) {
         glEnable(GL_CLIP_DISTANCE0);
     }
     if (use_flags) {
-        (*flagsc)(core::FlagCall::CallMapFlags);
-        flagsc->validateFlagsCount(num_total_glyphs);
-        flags = flagsc->GetFlags();
+        (*flagsc)(core::FlagCallRead_GL::CallGetData);
+        auto flags = flagsc->getData();
+        //if (flags->flags->getByteSize() / sizeof(core::FlagStorage::FlagVectorType) < num_total_glyphs) {
+        //    vislib::sys::Log::DefaultLog.WriteError("Not enough flags in storage for proper selection!");
+        //    return false;
+        //}
+        flags->validateFlagCount(num_total_glyphs);
+
         // TODO HAZARD BUG this is not in sync with the buffer arrays for all other attributes and a design flaw of the
         // flag storage!!!!
-        this->flags_buffer.SetDataWithSize(flags->data(), sizeof(FlagStorage::FlagItemType),
-            sizeof(FlagStorage::FlagItemType), num_total_glyphs, max_ssbo_size);
-        ASSERT(this->flags_buffer.GetNumChunks() == 1);
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, this->flags_buffer.GetHandle(0));
-        glBindBufferRange(
-            GL_SHADER_STORAGE_BUFFER, 4, this->flags_buffer.GetHandle(0), 0, num_total_glyphs * sizeof(GLuint));
+        flags->flags->bind(4);
+        //glBindBufferRange(
+        //    GL_SHADER_STORAGE_BUFFER, 4, this->flags_buffer.GetHandle(0), 0, num_total_glyphs * sizeof(GLuint));
     }
     glUniform4f(shader->ParameterLocation("flag_selected_col"), 1.f, 0.f, 0.f, 1.f);
     glUniform4f(shader->ParameterLocation("flag_softselected_col"), 1.f, 1.f, 0.f, 1.f);
@@ -539,11 +540,8 @@ bool GlyphRenderer::Render(core::view::CallRender3D_2& call) {
     epdc->Unlock();
     shader->Disable();
 
-    if (use_flags) {
-        flagsc->SetFlags(flags);
-        (*flagsc)(core::FlagCall::CallUnmapFlags);
-    }
-
+    // todo if you implement selection, write flags back :)
+    //
     // todo clean up state
     if (use_clip || use_flags) {
         glDisable(GL_CLIP_DISTANCE0);

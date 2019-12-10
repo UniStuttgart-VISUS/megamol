@@ -153,7 +153,9 @@ private:
 
     core::CallerSlot getTFSlot;
 
-    core::CallerSlot getFlagsSlot;
+    core::CallerSlot readFlagsSlot;
+
+    core::CallerSlot writeFlagsSlot;
 
     size_t currentHash;
 
@@ -241,7 +243,7 @@ private:
     vislib::graphics::gl::GLSLComputeShader pickProgram;
     vislib::graphics::gl::GLSLComputeShader strokeProgram;
 
-    GLuint dataBuffer, flagsBuffer, minimumsBuffer, maximumsBuffer, axisIndirectionBuffer, filtersBuffer, minmaxBuffer;
+    GLuint dataBuffer, minimumsBuffer, maximumsBuffer, axisIndirectionBuffer, filtersBuffer, minmaxBuffer;
     GLuint counterBuffer;
 
     std::vector<GLuint> axisIndirection;
