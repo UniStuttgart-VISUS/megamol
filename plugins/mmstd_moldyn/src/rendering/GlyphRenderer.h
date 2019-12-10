@@ -109,6 +109,7 @@ private:
     /**The ellipsoid shader*/
     vislib::graphics::gl::GLSLShader ellipsoidShader;
     vislib::graphics::gl::GLSLShader boxShader;
+    vislib::graphics::gl::GLSLShader arrowShader;
 
     std::vector<core::utility::SSBOBufferArray> position_buffers;
     std::vector<core::utility::SSBOBufferArray> radius_buffers;

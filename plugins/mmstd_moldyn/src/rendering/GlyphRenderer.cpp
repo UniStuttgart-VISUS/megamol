@@ -84,6 +84,7 @@ bool GlyphRenderer::create(void) {
     // this->ellipsoidShader);
     retVal = retVal && this->makeShader("glyph::box_vertex", "glyph::box_fragment", this->boxShader);
     retVal = retVal && this->makeShader("glyph::ellipsoid_vertex", "glyph::ellipsoid_fragment", this->ellipsoidShader);
+    retVal = retVal && this->makeShader("glyph::arrow_vertex", "glyph::arrow_fragment", this->arrowShader);
 
     glEnable(GL_TEXTURE_1D);
     glGenTextures(1, &this->greyTF);
