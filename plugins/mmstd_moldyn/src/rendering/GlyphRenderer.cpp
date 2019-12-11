@@ -31,7 +31,7 @@ using namespace megamol::stdplugin;
 using namespace megamol::stdplugin::moldyn;
 using namespace megamol::stdplugin::moldyn::rendering;
 
-const uint32_t max_ssbo_size = 2 * 1024 * 1024 * 1024;
+//const uint32_t max_ssbo_size = 2 * 1024 * 1024 * 1024;
 
 GlyphRenderer::GlyphRenderer(void)
     : Renderer3DModule_2()
@@ -176,8 +176,8 @@ bool megamol::stdplugin::moldyn::rendering::GlyphRenderer::validateData(
             this->direction_buffers.emplace_back(utility::SSBOBufferArray("direction_buffer" + std::to_string(x)));
             this->color_buffers.emplace_back(utility::SSBOBufferArray("color_buffer" + std::to_string(x)));
 
-            this->direction_buffers[x].SetDataWithSize(l.GetQuatData(), l.GetQuatDataStride(), 4 * sizeof(float),
-                l.GetCount(), max_ssbo_size, [](void* dst, const void* src) { memcpy(dst, src, sizeof(float) * 4); });
+            this->direction_buffers[x].SetData(l.GetQuatData(), l.GetQuatDataStride(), 4 * sizeof(float),
+                l.GetCount(), [](void* dst, const void* src) { memcpy(dst, src, sizeof(float) * 4); });
             const auto num_items_per_chunk = this->direction_buffers[x].GetMaxNumItemsPerChunk();
 
             switch (l.GetVertexDataType()) {
