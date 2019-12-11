@@ -276,7 +276,7 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D_2& cr) {
         if (material_has_changed && !data_has_changed) {
             this->changeMaterial();
         }
-        if (transformation_has_changed && !data_has_changed) {
+        if (transformation_has_changed  || material_has_changed && !data_has_changed) {
             this->changeTransformation();
         }
 
