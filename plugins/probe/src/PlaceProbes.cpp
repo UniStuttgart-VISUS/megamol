@@ -77,6 +77,7 @@ bool megamol::probe::PlaceProbes::getData(core::Call& call) {
     }
 
     mesh_meta_data = cm->getMetaData();
+    centerline_meta_data = ccl->getMetaData();
     probe_meta_data = pc->getMetaData();
 
     probe_meta_data.m_bboxs = mesh_meta_data.m_bboxs;
@@ -84,8 +85,13 @@ bool megamol::probe::PlaceProbes::getData(core::Call& call) {
     m_mesh = cm->getData();
     m_centerline = ccl->getData();
 
-    m_whd = {mesh_meta_data.m_bboxs.BoundingBox().Width(), mesh_meta_data.m_bboxs.BoundingBox().Height(),
+    if (mesh_meta_data.m_bboxs.IsBoundingBoxValid()) {
+        m_whd = {mesh_meta_data.m_bboxs.BoundingBox().Width(), mesh_meta_data.m_bboxs.BoundingBox().Height(),
         mesh_meta_data.m_bboxs.BoundingBox().Depth()};
+    } else if (centerline_meta_data.m_bboxs.IsBoundingBoxValid()) {
+        m_whd = {centerline_meta_data.m_bboxs.BoundingBox().Width(), centerline_meta_data.m_bboxs.BoundingBox().Height(),
+            centerline_meta_data.m_bboxs.BoundingBox().Depth()};
+    }
     const auto longest_edge_index = std::distance(m_whd.begin(), std::max_element(m_whd.begin(), m_whd.end()));
 
 
