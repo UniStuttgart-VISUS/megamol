@@ -60,7 +60,8 @@ void main() {
         values[rowOffset + plot.indexY]));
     if (bitflag_test(flags[gl_VertexID], FLAG_ENABLED | FLAG_FILTERED, FLAG_ENABLED)) {
         gl_Position = modelViewProjection * vsPosition;
+		gl_ClipDistance[0] = 1.0;
     } else {
-        gl_Position = vec4(0.0); // clipping cheat
+        gl_ClipDistance[0] = -1.0; // clipping cheat
     }
 }

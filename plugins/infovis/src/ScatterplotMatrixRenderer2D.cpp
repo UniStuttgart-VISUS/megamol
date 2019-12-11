@@ -2,6 +2,7 @@
 #include "ScatterplotMatrixRenderer2D.h"
 
 #include "mmcore/CoreInstance.h"
+#include "mmcore/FlagCall_GL.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -81,7 +82,8 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     : Renderer2D()
     , floatTableInSlot("ftIn", "Float table input")
     , transferFunctionInSlot("tfIn", "Transfer function input")
-    , flagStorageInSlot("fsIn", "Flag storage input")
+    , readFlagStorageSlot("readFlags", "Flag storage input")
+    , writeFlagStorageSlot("writeFlags", "Flag storage output")
     , valueMappingParam("valueMappingMode", "Value mapping")
     , valueSelectorParam("valueSelector", "Sets a value column to as additional domain")
     , labelSelectorParam("labelSelector", "Sets a label column (text mode)")
@@ -122,8 +124,12 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     this->transferFunctionInSlot.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();
     this->MakeSlotAvailable(&this->transferFunctionInSlot);
 
-    this->flagStorageInSlot.SetCompatibleCall<core::FlagCallDescription>();
-    this->MakeSlotAvailable(&this->flagStorageInSlot);
+    this->readFlagStorageSlot.SetCompatibleCall<core::FlagCallRead_GLDescription>();
+    this->MakeSlotAvailable(&this->readFlagStorageSlot);
+
+    this->writeFlagStorageSlot.SetCompatibleCall<core::FlagCallWrite_GLDescription>();
+    this->MakeSlotAvailable(&this->writeFlagStorageSlot);
+
 
     auto* valueMappings = new core::param::EnumParam(0);
     valueMappings->SetTypePair(VALUE_MAPPING_KERNEL_BLEND, "Kernel Blending");
@@ -236,11 +242,6 @@ bool ScatterplotMatrixRenderer2D::create() {
     if (!makeProgram("::splom::triangle", this->triangleShader)) return false;
     if (!makeProgram("::splom::screen", this->screenShader)) return false;
 
-    glGenBuffers(1, &flagsBuffer);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, flagsBuffer);
-    makeDebugLabel(GL_BUFFER, DEBUG_NAME(flagsBuffer));
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-
     if (!this->axisFont.Initialise(this->GetCoreInstance())) return false;
     if (!this->textFont.Initialise(this->GetCoreInstance())) return false;
     this->axisFont.SetBatchDrawMode(true);
@@ -249,7 +250,7 @@ bool ScatterplotMatrixRenderer2D::create() {
     return true;
 }
 
-void ScatterplotMatrixRenderer2D::release() { glDeleteBuffers(1, &flagsBuffer); }
+void ScatterplotMatrixRenderer2D::release() {}
 
 bool ScatterplotMatrixRenderer2D::OnMouseButton(
     core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) {
@@ -303,10 +304,14 @@ bool ScatterplotMatrixRenderer2D::Render(core::view::CallRender2D& call) {
         auto geometryType = this->geometryTypeParam.Param<core::param::EnumParam>()->Value();
         switch (geometryType) {
         case GEOMETRY_TYPE_POINT:
+            glEnable(GL_CLIP_DISTANCE0);
             this->drawPoints();
+            glDisable(GL_CLIP_DISTANCE0);
             break;
         case GEOMETRY_TYPE_LINE:
+            glEnable(GL_CLIP_DISTANCE0);
             this->drawLines();
+            glDisable(GL_CLIP_DISTANCE0);
             break;
         case GEOMETRY_TYPE_TRIANGULATION:
             this->drawTriangulation();
@@ -315,7 +320,6 @@ bool ScatterplotMatrixRenderer2D::Render(core::view::CallRender2D& call) {
             this->drawText();
             break;
         }
-
         this->drawScreen();
 
     } catch (...) {
@@ -368,20 +372,16 @@ bool ScatterplotMatrixRenderer2D::validate(core::view::CallRender2D& call, bool 
     if (this->floatTable == nullptr || !(*(this->floatTable))(0)) return false;
     if (this->floatTable->GetColumnsCount() == 0) return false;
 
-    this->flagStorage = this->flagStorageInSlot.CallAs<core::FlagCall>();
-    if (this->flagStorage != nullptr) {
-        if (!(*(this->flagStorage))(core::FlagCall::CallMapFlags)) return false;
-
-        if (!(*(this->flagStorage))(core::FlagCall::CallUnmapFlags)) return false;
-    }
+    auto flagsc = this->readFlagStorageSlot.CallAs<core::FlagCallRead_GL>();
+    if (flagsc == nullptr) return false;
+    (*flagsc)(core::FlagCallRead_GL::CallGetData);
 
     this->transferFunction = this->transferFunctionInSlot.CallAs<megamol::core::view::CallGetTransferFunction>();
     if (this->transferFunction == nullptr || !(*(this->transferFunction))()) return false;
 
     auto mvp = getModelViewProjection();
     // mvp is unstable across GetExtents and Render, so we just do these checks when rendering
-    if (hasDirtyScreen() ||
-        (!ignoreMVP && (screenLastMVP != mvp || this->flagsBufferVersion != this->flagStorage->GetVersion())) ||
+    if (hasDirtyScreen() || (!ignoreMVP && (screenLastMVP != mvp || flagsc->hasUpdate())) ||
         this->transferFunction->IsDirty()) {
         this->screenValid = false;
         resetDirtyScreen();
@@ -651,23 +651,30 @@ void ScatterplotMatrixRenderer2D::bindMappingUniforms(vislib::graphics::gl::GLSL
 }
 
 void ScatterplotMatrixRenderer2D::bindFlagsAttribute() {
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->flagsBuffer);
-
-    if (this->flagsBufferVersion != this->flagStorage->GetVersion() || this->flagsBufferVersion == 0) {
-        (*this->flagStorage)(core::FlagCall::CallMapFlags);
-        this->flagStorage->validateFlagsCount(this->floatTable->GetRowsCount());
-        auto flags = this->flagStorage->GetFlags();
-
-        // Upload flags.
-        glBufferData(GL_SHADER_STORAGE_BUFFER, flags->size() * sizeof(core::FlagStorage::FlagItemType), flags->data(),
-            GL_STATIC_DRAW);
-        this->flagsBufferVersion = this->flagStorage->GetVersion();
-
-        this->flagStorage->SetFlags(flags);
-        (*this->flagStorage)(core::FlagCall::CallUnmapFlags);
+    auto flags = this->readFlagStorageSlot.CallAs<core::FlagCallRead_GL>();
+    if (flags->hasUpdate()) {
+        this->flagsBufferVersion = flags->version();
     }
+    auto count = this->floatTable->GetRowsCount();
+    flags->getData()->validateFlagCount(count);
+    flags->getData()->flags->bind(FlagsBindingPoint);
+    // glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->flagsBuffer);
 
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, FlagsBindingPoint, this->flagsBuffer);
+    // if (this->flagsBufferVersion != this->flagStorage->GetVersion() || this->flagsBufferVersion == 0) {
+    //    (*this->flagStorage)(core::FlagCall::CallMapFlags);
+    //    this->flagStorage->validateFlagsCount(this->floatTable->GetRowsCount());
+    //    auto flags = this->flagStorage->GetFlags();
+
+    //    // Upload flags.
+    //    glBufferData(GL_SHADER_STORAGE_BUFFER, flags->size() * sizeof(core::FlagStorage::FlagItemType), flags->data(),
+    //        GL_STATIC_DRAW);
+    //    this->flagsBufferVersion = this->flagStorage->GetVersion();
+
+    //    this->flagStorage->SetFlags(flags);
+    //    (*this->flagStorage)(core::FlagCall::CallUnmapFlags);
+    //}
+
+    // glBindBufferBase(GL_SHADER_STORAGE_BUFFER, FlagsBindingPoint, this->flagsBuffer);
 }
 
 void ScatterplotMatrixRenderer2D::drawPoints() {
@@ -1085,24 +1092,29 @@ void ScatterplotMatrixRenderer2D::updateSelection() {
     float dis[kk] = {0.0f};
     size_t k = this->index->knnSearch(queryPoint, kk, idx, dis);
 
-    (*this->flagStorage)(core::FlagCall::CallMapFlags);
-    auto flags = this->flagStorage->GetFlags();
-    auto version = this->flagStorage->GetVersion();
+    this->flagsBufferVersion++;
 
-    // Test if distance is within limits.
-    auto kernelRadiusSq = std::pow(0.5 * this->kernelWidthParam.Param<core::param::FloatParam>()->Value(), 2.0);
-    for (size_t i = 0; i < k; ++i) {
-        if (dis[i] <= kernelRadiusSq) {
-            size_t row = this->indexPoints->idx_to_row(idx[i]);
-            if (this->mouse.selector == BrushState::ADD) {
-                (*flags)[row] |= core::FlagStorage::SELECTED;
-            } else if (this->mouse.selector == BrushState::REMOVE) {
-                (*flags)[row] &= ~core::FlagStorage::SELECTED;
-            }
-        }
+    auto readFlags = readFlagStorageSlot.CallAs<core::FlagCallRead_GL>();
+    auto writeFlags = writeFlagStorageSlot.CallAs<core::FlagCallWrite_GL>();
+    if (readFlags != nullptr && writeFlags != nullptr) {
+
+        // TODO: selection on GPU!
+        //// Test if distance is within limits.
+        // auto kernelRadiusSq = std::pow(0.5 * this->kernelWidthParam.Param<core::param::FloatParam>()->Value(), 2.0);
+        // for (size_t i = 0; i < k; ++i) {
+        //    if (dis[i] <= kernelRadiusSq) {
+        //        size_t row = this->indexPoints->idx_to_row(idx[i]);
+        //        if (this->mouse.selector == BrushState::ADD) {
+        //            (*flags)[row] |= core::FlagStorage::SELECTED;
+        //        } else if (this->mouse.selector == BrushState::REMOVE) {
+        //            (*flags)[row] &= ~core::FlagStorage::SELECTED;
+        //        }
+        //    }
+        //}
+
+        writeFlags->setData(readFlags->getData(), this->flagsBufferVersion);
+        (*writeFlags)(core::FlagCallWrite_GL::CallGetData);
     }
-    this->flagStorage->SetFlags(flags, version + 1);
-    (*this->flagStorage)(core::FlagCall::CallUnmapFlags);
 
     this->screenValid = false;
 }

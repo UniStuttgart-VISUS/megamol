@@ -3,7 +3,6 @@
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/FlagCall.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/utility/SDFFont.h"
 #include "mmcore/utility/SSBOStreamer.h"
@@ -17,6 +16,7 @@
 #include <memory>
 #include <nanoflann.hpp>
 #include "Renderer2D.h"
+#include "mmcore/FlagStorage.h"
 
 namespace megamol::infovis {
 
@@ -215,7 +215,9 @@ private:
 
     core::CallerSlot transferFunctionInSlot;
 
-    core::CallerSlot flagStorageInSlot;
+    core::CallerSlot readFlagStorageSlot;
+
+    core::CallerSlot writeFlagStorageSlot;
 
     core::param::ParamSlot valueMappingParam;
 
@@ -264,8 +266,6 @@ private:
 
     core::view::CallGetTransferFunction* transferFunction;
 
-    core::FlagCall* flagStorage;
-
     ParamState map;
 
     MouseState mouse;
@@ -292,7 +292,6 @@ private:
 
     core::utility::SSBOStreamer valueSSBO;
 
-    GLuint flagsBuffer;
     core::FlagStorage::FlagVersionType flagsBufferVersion;
 
     GLuint triangleVBO;
