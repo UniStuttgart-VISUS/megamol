@@ -134,7 +134,6 @@ bool megamol::probe_gl::ProbeBillboardGlyphMaterial::getDataCallback(core::Call&
         lhs_mtl_call->setData(mtl_collection, m_version);
     }
 
-
     return true; 
 }
 

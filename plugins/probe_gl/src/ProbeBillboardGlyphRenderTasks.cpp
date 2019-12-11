@@ -61,7 +61,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
     if (pc == NULL) return false;
     if (!(*pc)(0)) return false;
 
-    bool something_has_changed = pc->hasUpdate() || this->m_billboard_size_slot.IsDirty();
+    bool something_has_changed = pc->hasUpdate() || mtlc->hasUpdate() || this->m_billboard_size_slot.IsDirty();
 
     if (something_has_changed) {
         ++m_version;
