@@ -372,7 +372,7 @@ void ParallelCoordinatesRenderer2D::assertData(core::view::CallRender2D& call) {
     (*flagsc)(core::FlagCallRead_GL::CallGetData);
     if (flagsc->hasUpdate()) {
         this->currentFlagsVersion = flagsc->version();
-        flagsc->getData();
+        flagsc->getData()->validateFlagCount(floats->GetRowsCount());
     }
 
     if (hash != this->currentHash || this->lastTimeStep != static_cast<unsigned int>(call.Time())) {
@@ -672,6 +672,7 @@ void ParallelCoordinatesRenderer2D::drawItemsDiscrete(
     glUniform1ui(prog.ParameterLocation("fragmentTestMask"), testMask);
     glUniform1ui(prog.ParameterLocation("fragmentPassMask"), passMask);
 
+    glEnable(GL_CLIP_DISTANCE0);
 #ifdef FUCK_THE_PIPELINE
     glDrawArrays(GL_TRIANGLES, 0, 6 * ((this->itemCount / 128) + 1));
 #else
@@ -687,6 +688,7 @@ void ParallelCoordinatesRenderer2D::drawItemsDiscrete(
 #    endif
 #endif
     prog.Disable();
+    glDisable(GL_CLIP_DISTANCE0);
     debugPop();
 }
 
@@ -718,19 +720,6 @@ void ParallelCoordinatesRenderer2D::drawStrokeIndicator(float x0, float y0, floa
     glDrawArrays(GL_LINES, 0, 2);
     glEnable(GL_DEPTH_TEST);
     prog.Disable();
-}
-
-void computeDispatchSizes(
-    uint64_t numItems, GLint const localSizes[3], GLint const maxCounts[3], GLuint dispatchCounts[3]) {
-    const auto localSize = localSizes[0] * localSizes[1] * localSizes[2];
-    const uint64_t needed_groups = (numItems + localSize - 1) / localSize; // round up int div
-    dispatchCounts[0] = std::clamp<GLint>(needed_groups, 1, maxCounts[0]);
-    dispatchCounts[1] = std::clamp<GLint>((needed_groups + dispatchCounts[0] - 1) / dispatchCounts[0], 1, maxCounts[1]);
-    const auto tmp = dispatchCounts[0] * dispatchCounts[1];
-    dispatchCounts[2] = std::clamp<GLint>((needed_groups + tmp - 1) / tmp, 1, maxCounts[2]);
-    const uint64_t totalCounts = dispatchCounts[0] * dispatchCounts[1] * dispatchCounts[2];
-    ASSERT(totalCounts * localSize >= numItems);
-    ASSERT(totalCounts * localSize - numItems < localSize);
 }
 
 void ParallelCoordinatesRenderer2D::doPicking(float x, float y, float pickRadius) {
@@ -820,8 +809,10 @@ void ParallelCoordinatesRenderer2D::drawItemsContinuous(void) {
     glUniform4fv(this->drawItemContinuousProgram.ParameterLocation("clearColor"), 1, backgroundColor);
     glUniform1i(this->drawItemContinuousProgram.ParameterLocation("sqrtDensity"),
         this->sqrtDensitySlot.Param<core::param::BoolParam>()->Value() ? 1 : 0);
+    glEnable(GL_CLIP_DISTANCE0);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     drawItemContinuousProgram.Disable();
+    glDisable(GL_CLIP_DISTANCE0);
     debugPop();
 }
 
@@ -832,8 +823,10 @@ void ParallelCoordinatesRenderer2D::drawItemsHistogram(void) {
     glActiveTexture(GL_TEXTURE1);
     densityFBO.BindColourTexture();
     glUniform4fv(this->drawItemContinuousProgram.ParameterLocation("clearColor"), 1, backgroundColor);
+    glEnable(GL_CLIP_DISTANCE0);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     drawItemContinuousProgram.Disable();
+    glDisable(GL_CLIP_DISTANCE0);
     debugPop();
 }
 
