@@ -119,15 +119,16 @@ function(require_external NAME)
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${ADIOS2_LIB}" "<INSTALL_DIR>/${ADIOS2_IMPORT_LIB}"
       CMAKE_ARGS 
         -DBUILD_TESTING=OFF
-        -DADIOS2_USE_BZip2=OFF 
+        -DADIOS2_USE_BZip2=OFF
         -DADIOS2_USE_Fortran=OFF
-        -DADIOS2_USE_HDF5=OFF 
+        -DADIOS2_USE_HDF5=OFF
         -DADIOS2_USE_Python=OFF
-        -DADIOS2_USE_SST=OFF 
+        -DADIOS2_USE_SST=OFF
         -DADIOS2_USE_SZ=OFF
-        -DADIOS2_USE_SysVShMem=OFF 
+        -DADIOS2_USE_SysVShMem=OFF
         -DADIOS2_USE_ZFP=OFF
-        -DADIOS2_USE_ZeroMQ=OFF 
+        -DADIOS2_USE_ZeroMQ=OFF
+        -DADIOS2_USE_Profiling=OFF
         -DMPI_GUESS_LIBRARY_NAME=${MPI_GUESS_LIBRARY_NAME})
 
     add_external_library(adios2
