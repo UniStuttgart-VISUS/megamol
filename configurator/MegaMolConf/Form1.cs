@@ -945,6 +945,8 @@ namespace MegaMolConf {
                 TabPage tp = np.Tag as TabPage;
                 if (tp != null) {
                     e.Graphics.ResetTransform();
+                    //e.Graphics.ScaleTransform(0.5f,0.5f);
+                    // TODO: scale clicks
                     //e.Graphics.TranslateTransform(-drawArea.Left + tp.HorizontalScroll.Value, -drawArea.Top + tp.VerticalScroll.Value);
                     e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
                     foreach (GraphicalConnection gc in tabConnections[tp]) {
@@ -1150,16 +1152,16 @@ namespace MegaMolConf {
                         int delta_x = (lastMousePos.X - e.Location.X);
                         int delta_y = (lastMousePos.Y - e.Location.Y);
                         Panel p = tabViews.SelectedTab.Controls[0] as Panel;
-                        int check = p.HorizontalScroll.Maximum;
-                        int check2 = p.HorizontalScroll.Minimum;
-                        int check3 = p.VerticalScroll.Maximum;
-                        int check4 = p.VerticalScroll.Minimum;
+
                         int shift_x = p.HorizontalScroll.Value + delta_x;
-                        int shift_y = p.HorizontalScroll.Value + delta_y;
-                        if (shift_x > p.HorizontalScroll.Maximum) p.HorizontalScroll.Value = p.HorizontalScroll.Maximum;
-                        if (shift_x < p.HorizontalScroll.Minimum) p.HorizontalScroll.Value = p.HorizontalScroll.Minimum;
-                        if (shift_y > p.VerticalScroll.Maximum) p.VerticalScroll.Value = p.VerticalScroll.Maximum;
-                        if (shift_y < p.VerticalScroll.Minimum) p.VerticalScroll.Value = p.VerticalScroll.Minimum;
+                        if (shift_x >= p.HorizontalScroll.Maximum) shift_x = p.HorizontalScroll.Maximum;
+                        else if (shift_x <= p.HorizontalScroll.Minimum) shift_x = p.HorizontalScroll.Minimum;
+
+                        int shift_y = p.VerticalScroll.Value + delta_y;
+                        if (shift_y >= p.VerticalScroll.Maximum) shift_y = p.VerticalScroll.Maximum;
+                        else if (shift_y <= p.VerticalScroll.Minimum) shift_y = p.VerticalScroll.Minimum;
+
+                        p.AutoScrollPosition = new Point(shift_x, shift_y);
                     }
                 }
                 RefreshCurrent();
