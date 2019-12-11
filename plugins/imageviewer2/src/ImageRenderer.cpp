@@ -80,7 +80,7 @@ imageviewer2::ImageRenderer::ImageRenderer(void)
     this->previousSlot.SetUpdateCallback(&ImageRenderer::onPreviousPressed);
     this->MakeSlotAvailable(&this->previousSlot);
 
-    this->currentSlot << new param::IntParam(0);
+    this->currentSlot << new param::IntParam(0, 0);
     this->currentSlot.SetUpdateCallback(&ImageRenderer::onCurrentSet);
     this->MakeSlotAvailable(&this->currentSlot);
 
