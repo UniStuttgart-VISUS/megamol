@@ -122,7 +122,7 @@ bool ADIOSFlexConvert::getDataCallback(core::Call& call) {
         stride += 1 * sizeof(float);
 
         // Set bounding box
-        const vislib::math::Cuboid<float> cubo(box[0], box[1], box[2], box[3], box[4], box[5]);
+        const vislib::math::Cuboid<float> cubo(box[0], box[1], std::min(box[5],box[2]), box[3], box[4], std::max(box[5],box[2]));
         mpdc->AccessBoundingBoxes().SetObjectSpaceBBox(cubo);
         mpdc->AccessBoundingBoxes().SetObjectSpaceClipBox(cubo);
 
