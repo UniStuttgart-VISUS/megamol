@@ -1056,6 +1056,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
                     }
                 }
                 break;
+            case geometryTypeEnum::QUADS:
             case geometryTypeEnum::TRIANGLES:
                 if (element.mesh == NULL) {
                     // returnValue = false;
@@ -1072,7 +1073,11 @@ bool AbstractOSPRayRenderer::fillWorld() {
                     uint32_t mesh_index = 0;
                     for (auto& mesh : element.mesh->accessMesh()) {
 
-                        this->baseStructures[entry.first].push_back(ospNewGeometry("triangles"));
+                        if (element.geometryType == TRIANGLES) {
+                            this->baseStructures[entry.first].push_back(ospNewGeometry("triangles"));
+                        } else if (element.geometryType == QUADS) {
+                            this->baseStructures[entry.first].push_back(ospNewGeometry("quads"));
+                        }
 
                         for (auto& attrib : mesh.attributes) {
 
@@ -1088,16 +1093,17 @@ bool AbstractOSPRayRenderer::fillWorld() {
                                     std::get<OSPGeometry>(baseStructures[entry.first].back()), "vertex", vertexData);
                             }
 
-                            // check normal pointer
-                            // if (attrib.semantic == mesh::MeshDataAccessCollection::NORMAL) {
-                            //    auto count =
-                            //        attrib.byte_size / attrib.stride;
-                            //    auto ospType = OSP_FLOAT3;
-                            //    if (attrib.stride == 4 * sizeof(float)) ospType = OSP_FLOAT3A;
-                            //    normalData = ospNewData(count, ospType, attrib.data);
-                            //    ospCommit(normalData);
-                            //    ospSetData(geo.back(), "vertex.normal", normalData);
-                            //}
+                             // check normal pointer
+                             if (attrib.semantic == mesh::MeshDataAccessCollection::NORMAL) {
+                                auto count =
+                                    attrib.byte_size / attrib.stride;
+                                auto ospType = OSP_FLOAT3;
+                                if (attrib.stride == 4 * sizeof(float)) ospType = OSP_FLOAT3A;
+                                normalData = ospNewData(count, ospType, attrib.data);
+                                ospCommit(normalData);
+                                ospSetData(std::get<OSPGeometry>(baseStructures[entry.first].back()), "vertex.normal",
+                                    normalData);
+                            }
 
                             // check colorpointer and convert to rgba
                             if (attrib.semantic == mesh::MeshDataAccessCollection::COLOR) {
@@ -1258,6 +1264,40 @@ bool AbstractOSPRayRenderer::fillWorld() {
                 }
                 break;
             case geometryTypeEnum::CYLINDERS:
+                if (element.raw == NULL) {
+                    // returnValue = false;
+                    break;
+                }
+
+                numCreateGeo = element.partCount * element.vertexStride / ispcLimit + 1;
+
+                for (unsigned int i = 0; i < numCreateGeo; i++) {
+                    baseStructures[entry.first].push_back(ospNewGeometry("cylinders"));
+
+
+                    long long int floatsToRead =
+                        element.partCount * element.vertexStride / (numCreateGeo * sizeof(float));
+                    floatsToRead -= floatsToRead % (element.vertexStride / sizeof(float));
+
+                    if (vertexData != NULL) ospRelease(vertexData);
+                    vertexData = ospNewData(floatsToRead, OSP_FLOAT,
+                        &static_cast<const float*>(element.raw)[i * floatsToRead], OSP_DATA_SHARED_BUFFER);
+                    ospCommit(vertexData);
+                    ospSet1i(std::get<OSPGeometry>(baseStructures[entry.first].back()), "bytes_per_cylinder",
+                        2*element.vertexStride);
+                    ospSet1i(std::get<OSPGeometry>(baseStructures[entry.first].back()), "offset_v1",
+                        element.vertexStride);
+                    ospSetData(std::get<OSPGeometry>(baseStructures[entry.first].back()), "cylinders", vertexData);
+                    ospSetData(std::get<OSPGeometry>(baseStructures[entry.first].back()), "color", NULL);
+
+                    if (element.vertexLength > 3) {
+                        ospSet1f(std::get<OSPGeometry>(baseStructures[entry.first].back()), "offset_radius",
+                            3 * sizeof(float));
+                    } else {
+                        ospSet1f(
+                            std::get<OSPGeometry>(baseStructures[entry.first].back()), "radius", element.globalRadius);
+                    }
+                }
                 break;
             }
 
