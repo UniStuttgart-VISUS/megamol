@@ -148,10 +148,17 @@ void view::SplitView::Render(const mmcRenderViewContext& context) {
         }
 
         // Bind and blit framebuffer.
+        GLint binding, readBuffer;
+        glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &binding);
+        glGetIntegerv(GL_READ_BUFFER, &readBuffer);
+
         glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo.GetID());
         glReadBuffer(GL_COLOR_ATTACHMENT0);
         glBlitFramebuffer(0, 0, fbo.GetWidth(), fbo.GetHeight(), ca.Left(), this->clientArea.Height() - ca.Top(),
             ca.Right(), this->clientArea.Height() - ca.Bottom(), GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, binding);
+        glReadBuffer(readBuffer);
     };
 
     // Draw the splitter through clearing without overplotting.

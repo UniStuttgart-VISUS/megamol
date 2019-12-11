@@ -97,7 +97,7 @@ private:
     /**
      * Render function for the bounding box back
      *
-     * @param call The incoming render call
+     * @param mvp Model, view and projection matrices combined
      * @param bb The bounding box to render
      * @param smoothLines Determines whether the lines of the box should get smoothed. default = true
      * @return True on success, false otherwise.
@@ -107,7 +107,7 @@ private:
     /**
      * Render function for the view cube
      *
-     * @param call The incoming render call
+     * @param call The call containing the camera and other parameters
      * @return True on success, false otherwise.
      */
     bool RenderViewCube(core::view::CallRender3D_2& call);
@@ -124,6 +124,12 @@ private:
     /** Parameter that enables or disables the view cube rendering */
     param::ParamSlot enableViewCubeSlot;
 
+    /** Parameter for setting the position of the view cube */
+    param::ParamSlot viewCubePosSlot;
+
+    /** Parameter for setting the view cube size */
+    param::ParamSlot viewCubeSizeSlot;
+
     /** Handle of the vertex buffer object */
     GLuint vbo;
 
@@ -135,6 +141,9 @@ private:
 
     /** Shader program for lines */
     vislib::graphics::gl::GLSLShader lineShader;
+
+    /** Shader program for a cube */
+    vislib::graphics::gl::GLSLShader cubeShader;
 };
 } // namespace view
 } // namespace core

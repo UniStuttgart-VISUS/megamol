@@ -13,7 +13,7 @@
 #include "vislib/vislibversion.h"
 
 #include "GUIView.h"
-#include "WatermarkRenderer.h"
+#include "OverlayRenderer.h"
 
 
 /* anonymous namespace hides this type from any other object files */
@@ -40,7 +40,7 @@ public:
     /** Registers modules and calls */
     virtual void registerClasses(void) {
         this->module_descriptions.RegisterAutoDescription<megamol::gui::GUIView>();
-        this->module_descriptions.RegisterAutoDescription<megamol::gui::WatermarkRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::gui::OverlayRenderer>();
     }
 
     MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics
