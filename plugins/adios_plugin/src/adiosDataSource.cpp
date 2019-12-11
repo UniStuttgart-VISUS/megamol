@@ -281,11 +281,12 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
             vislib::sys::Log::DefaultLog.WriteError(e.what());
         }
 
-        cad->setData(std::make_shared<adiosDataMap>(dataMap));
-        cad->setDataHash(this->data_hash);
+
         this->dataHashChanged = false;
         this->inquireChanged = false;
     }
+    cad->setData(std::make_shared<adiosDataMap>(dataMap));
+    cad->setDataHash(this->data_hash);
     return true;
 }
 
