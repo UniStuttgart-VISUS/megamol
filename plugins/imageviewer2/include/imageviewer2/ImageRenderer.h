@@ -187,6 +187,9 @@ private:
     /** if only one image per pair is defined: where it should go */
     param::ParamSlot defaultEye;
 
+    /** Index of the shown image if the one from the call is taken */
+    param::ParamSlot shownImage;
+
     /** slot for MPIprovider */
     CallerSlot callRequestMpi;
 

@@ -253,6 +253,8 @@ std::vector<double>* HierarchicalClustering::gray_scale_image(PNGPicLoader::PNGP
 
 double HierarchicalClustering::distance(std::vector<double>* X, std::vector<double>* Y, int r) {
 
+    if (X == nullptr || Y == nullptr) return 1.0;
+
     double distance = 0.0;
     switch (r) {
     case 1:
@@ -669,6 +671,8 @@ void HierarchicalClustering::setMoments(short int moments) { this->momentsmethod
 std::vector<HierarchicalClustering::CLUSTERNODE*>* HierarchicalClustering::getLeaves() { return this->leaves; }
 
 double HierarchicalClustering::similarity(std::vector<double>* X, std::vector<double>* Y, int method) {
+
+    if (X == nullptr || Y == nullptr) return 0.0f;
 
     double similar = 0.0;
     switch (method) {

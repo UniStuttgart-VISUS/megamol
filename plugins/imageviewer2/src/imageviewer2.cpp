@@ -13,6 +13,7 @@
 #include "vislib/vislibversion.h"
 
 #include "imageviewer2/ImageRenderer.h"
+#include "imageviewer2/ImageLoader.h"
 
 
 /* anonymous namespace hides this type from any other object files */
@@ -42,6 +43,7 @@ namespace {
             // register modules here:
 
             this->module_descriptions.RegisterAutoDescription<megamol::imageviewer2::ImageRenderer>();
+            this->module_descriptions.RegisterAutoDescription<megamol::imageviewer2::ImageLoader>();
             //
             // TODO: Register your plugin's modules here
             // like:

@@ -23,7 +23,7 @@ using namespace megamol::MolSurfMapCluster;
  */
 ClusteringLoader::ClusteringLoader(void)
     : core::Module()
-    , filenameSlot("filename", "The path to the file that contains the PNG-Filepaths to be loaded")
+    , filenameSlot("filename", "The path to the dot file")
     , getDataSlot("getdata", "The slot publishing the loaded data") {
 
     // For each CalleeSlot all callback functions have to be set

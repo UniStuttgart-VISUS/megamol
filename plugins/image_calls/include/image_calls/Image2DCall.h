@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <string>
 
 #include "mmcore/AbstractGetDataCall.h"
 #include "mmcore/CallAutoDescription.h"
@@ -58,6 +59,8 @@ public:
 
     void* GetData() const { return this->data_; }
 
+    std::string GetFilePath() const { return this->filepath_; }
+
     Encoding GetEncoding() const { return this->enc_; }
 
     Format GetFormat() const { return this->format_; }
@@ -68,8 +71,11 @@ public:
 
     size_t GetFilesize() const { return this->filesize_; }
 
-    void SetData(Encoding const enc, Format const format, size_t width, size_t height, size_t filesize,
-        void* data) {
+    void SetFilePath(std::string const filepath) { this->filepath_ = filepath; }
+
+    void SetData(std::string const filepath, Encoding const enc, Format const format, size_t width, size_t height,
+        size_t filesize, void* data) {
+        this->filepath_ = filepath;
         this->enc_ = enc;
         this->format_ = format;
         this->width_ = width;
@@ -84,6 +90,8 @@ private:
     Encoding enc_;
 
     Format format_;
+
+    std::string filepath_;
 
     void* data_;
 
