@@ -457,7 +457,7 @@ bool GlyphRenderer::Render(core::view::CallRender3D_2& call) {
                 vislib::sys::Log::DefaultLog.WriteError("GlyphRenderer: could not retrieve transfer function!");
                 return false;
             }
-            glUniform1ui(shader->ParameterLocation("tf_texture"), 0);
+            glUniform1i(shader->ParameterLocation("tf_texture"), 0);
             break;
         case core::moldyn::SimpleSphericalParticles::COLDATA_USHORT_RGBA:
             // we should never get this far
