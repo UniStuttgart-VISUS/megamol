@@ -29,7 +29,9 @@ FlagStorage_GL::~FlagStorage_GL(void) { this->Release(); };
 
 bool FlagStorage_GL::create(void) {
     this->theData = std::make_shared<FlagCollection_GL>();
-    this->theData->flags = std::make_shared<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, nullptr, 10, GL_DYNAMIC_DRAW);
+    const int num = 10;
+    std::vector<uint32_t> temp_data(num, FlagStorage::ENABLED);
+    this->theData->flags = std::make_shared<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, temp_data.data(), num, GL_DYNAMIC_DRAW);
     return true;
 }
 
