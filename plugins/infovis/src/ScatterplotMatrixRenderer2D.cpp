@@ -477,7 +477,6 @@ void ScatterplotMatrixRenderer2D::drawMinimalisticAxis() {
 
     // Render all plots at once.
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, PlotSSBOBindingPoint, this->plotSSBO.GetHandle(0));
-    // glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     const GLsizei numVerticesPerLine = 2;
     const GLsizei numBorderVertices = numVerticesPerLine * 4;
     const GLsizei numTickVertices = numVerticesPerLine * numTicks * 2;
@@ -578,7 +577,6 @@ void ScatterplotMatrixRenderer2D::drawScientificAxis() {
 
     // Render all plots at once.
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, PlotSSBOBindingPoint, this->plotSSBO.GetHandle(0));
-    // glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
     glDrawArraysInstanced(GL_QUADS, 0, 4, this->plots.size());
 
