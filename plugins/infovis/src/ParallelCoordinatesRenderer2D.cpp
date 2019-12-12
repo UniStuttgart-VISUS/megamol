@@ -219,6 +219,7 @@ bool ParallelCoordinatesRenderer2D::create(void) {
 
 #ifndef REMOVE_TEXT
     if (!font.Initialise(this->GetCoreInstance())) return false;
+    font.SetBatchDrawMode(true);
 #endif
 
     if (!makeProgram("::pc_axes_draw::axes", this->drawAxesProgram)) return false;
@@ -603,6 +604,7 @@ void ParallelCoordinatesRenderer2D::drawAxes(void) {
         float* color;
 #ifndef REMOVE_TEXT
         glActiveTexture(GL_TEXTURE0);
+        font.ClearBatchDrawCache();
         for (unsigned int c = 0; c < this->columnCount; c++) {
             unsigned int realCol = this->axisIndirection[c];
             if (this->pickedAxis == realCol) {
@@ -627,9 +629,11 @@ void ParallelCoordinatesRenderer2D::drawAxes(void) {
             this->font.DrawString(color, x, this->marginY * 1.5f + this->axisHeight, fontsize, false,
                 std::to_string(top).c_str(), core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
 #    endif
-            this->font.DrawString(color, x, this->marginY * 2.5f + this->axisHeight, fontsize * 2.0f, false,
+            this->font.DrawString(color, x,
+                this->marginY * (2.0f + static_cast<float>(c % 2) * 0.5f) + this->axisHeight, fontsize * 2.0f, false,
                 names[realCol].c_str(), core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
         }
+        this->font.BatchDrawString();
 #endif
     }
     debugPop();
