@@ -18,6 +18,8 @@
 #include "ExtractProbeGeometry.h"
 #include "CallKDTree.h"
 #include "GenerateGlyphs.h"
+#include "SurfaceNets.h"
+#include "ExtractCenterline.h"
 #ifdef PROBE_HAS_OSPRAY
 #include "OSPRayGlyphGeometry.h"
 #endif
@@ -54,6 +56,8 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::probe::SampleAlongPobes>();
             this->module_descriptions.RegisterAutoDescription<megamol::probe::ExtractProbeGeometry>();
             this->module_descriptions.RegisterAutoDescription<megamol::probe::GenerateGlyphs>();
+            this->module_descriptions.RegisterAutoDescription<megamol::probe::SurfaceNets>();
+            this->module_descriptions.RegisterAutoDescription<megamol::probe::ExtractCenterline>();
 #ifdef PROBE_HAS_OSPRAY
             this->module_descriptions.RegisterAutoDescription<megamol::probe::OSPRayGlyphGeometry>();
 #endif

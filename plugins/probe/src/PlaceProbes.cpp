@@ -78,9 +78,14 @@ bool megamol::probe::PlaceProbes::getData(core::Call& call) {
     // here something really happens
     if (something_changed) {
         ++m_version;
-
-        m_whd = {mesh_meta_data.m_bboxs.BoundingBox().Width(), mesh_meta_data.m_bboxs.BoundingBox().Height(),
+        
+        if (mesh_meta_data.m_bboxs.IsBoundingBoxValid()) {
+            m_whd = {mesh_meta_data.m_bboxs.BoundingBox().Width(), mesh_meta_data.m_bboxs.BoundingBox().Height(),
             mesh_meta_data.m_bboxs.BoundingBox().Depth()};
+        } else if (centerline_meta_data.m_bboxs.IsBoundingBoxValid()) {
+            m_whd = {centerline_meta_data.m_bboxs.BoundingBox().Width(), centerline_meta_data.m_bboxs.BoundingBox().Height(),
+                centerline_meta_data.m_bboxs.BoundingBox().Depth()};
+        }
         const auto longest_edge_index = std::distance(m_whd.begin(), std::max_element(m_whd.begin(), m_whd.end()));
 
         this->placeProbes(longest_edge_index);
