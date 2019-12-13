@@ -15,6 +15,7 @@
 #include "image_calls/Image2DCall.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FilePathParam.h"
+#include "mmcore/param/FloatParam.h"
 
 using namespace megamol;
 using namespace megamol::core;
@@ -29,6 +30,11 @@ ImageLoader::ImageLoader(void)
     , filenameSlot("filepath",
           "Path to the image file (*.png, *.bmp) that should be loaded. If the file to load has a *.txt extension the "
           "file will be treated as list of image paths. The module will then load all of the listed images.")
+    , loadEverythingSlot("loadEverything", "Forces this module to ignore the maxMemory value and all loading wishes by "
+                                           "callers by loading all given data by default.")
+    , maximumMemoryOccupationSlot("maxMemory",
+          "The maximum memory in Gigabyte that will be occupied by the loaded data. This value can be "
+          "ignored by selecting the loadEverything option.")
     , imageData(std::make_shared<image_calls::Image2DCall::ImageMap>())
     , datahash(0) {
 
@@ -42,9 +48,14 @@ ImageLoader::ImageLoader(void)
         &ImageLoader::SetWishlist);
     this->MakeSlotAvailable(&this->callRequestImage);
 
-
     this->filenameSlot.SetParameter(new param::FilePathParam(""));
     this->MakeSlotAvailable(&this->filenameSlot);
+
+    this->loadEverythingSlot.SetParameter(new param::BoolParam(false));
+    this->MakeSlotAvailable(&this->loadEverythingSlot);
+
+    this->maximumMemoryOccupationSlot.SetParameter(new param::FloatParam(4.0f, 0.1f));
+    this->MakeSlotAvailable(&this->maximumMemoryOccupationSlot);
 }
 
 /*

@@ -14,6 +14,9 @@
 #include "mmcore/param/ParamSlot.h"
 
 #include <fstream>
+#include <mutex>
+#include <queue>
+#include <set>
 
 namespace megamol {
 namespace imageviewer2 {
@@ -93,6 +96,12 @@ private:
 
     /** Image file path slot */
     core::param::ParamSlot filenameSlot;
+
+    /** Boolean slot indicating whether all listed images should be loaded directly */
+    core::param::ParamSlot loadEverythingSlot;
+
+    /** Slot determining the maximum memory occupation of the image data */
+    core::param::ParamSlot maximumMemoryOccupationSlot;
 
     /** Pointer to the vector containing the images */
     std::shared_ptr<image_calls::Image2DCall::ImageMap> imageData;
