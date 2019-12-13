@@ -265,7 +265,7 @@ bool imageviewer2::ImageRenderer::assertImage(bool rightEye) {
         } else {
             if (!(*imgc)(0)) return false;
             if (imgc->GetImageCount() > 0) {
-                filename = vislib::TString(imgc->GetImagePtr()->at(0).second.c_str());
+                filename = vislib::TString((*imgc->GetImagePtr()->begin()).first.c_str());
             }
         }
         static vislib::graphics::BitmapImage img;
@@ -293,9 +293,9 @@ bool imageviewer2::ImageRenderer::assertImage(bool rightEye) {
                     }
                 } else if (roleRank == roleImgcRank) {
                     // vislib::sys::Log::DefaultLog.WriteInfo("ImageRenderer: Retrieving image from call\n");
-                    this->width = imgc->GetImagePtr()->at(0).first.Width();
-                    this->height = imgc->GetImagePtr()->at(0).first.Height();
-                    allFile = reinterpret_cast<uint8_t*>(imgc->GetImagePtr()->at(0).first.PeekDataAs<uint8_t>());
+                    this->width = (*imgc->GetImagePtr()->begin()).second.Width();
+                    this->height = (*imgc->GetImagePtr()->begin()).second.Height();
+                    allFile = reinterpret_cast<uint8_t*>((*imgc->GetImagePtr()->begin()).second.PeekDataAs<uint8_t>());
                 }
                 uint8_t* image_ptr = nullptr;
                 if (!remoteness) {

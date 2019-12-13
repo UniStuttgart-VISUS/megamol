@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <string>
+#include <map>
 
 #include "mmcore/AbstractGetDataCall.h"
 #include "mmcore/CallAutoDescription.h"
@@ -14,7 +15,7 @@ namespace image_calls {
 
 class image_calls_API Image2DCall : public megamol::core::AbstractGetDataCall {
 public:
-    typedef std::vector<std::pair<vislib::graphics::BitmapImage, std::string>> ImageVector;
+    typedef std::map<std::string, vislib::graphics::BitmapImage> ImageMap;
 
     /**
      * Answer the name of this call.
@@ -64,14 +65,14 @@ public:
      *
      * @param ptr Pointer to the vector storing the images
      */
-    void SetImagePtr(const std::shared_ptr<ImageVector> ptr);
+    void SetImagePtr(const std::shared_ptr<ImageMap> ptr);
 
     /**
      * Returns the currently stored image vector
      *
      * @return Pointer to the vector storing the images
      */
-    const std::shared_ptr<ImageVector> GetImagePtr(void) const;
+    const std::shared_ptr<ImageMap> GetImagePtr(void) const;
 
     void SetAvailablePathsPtr(const std::shared_ptr<std::vector<std::string>> ptr);
 
@@ -89,7 +90,7 @@ public:
 
 private:
     /** Pointer to the stored data */
-    std::shared_ptr<ImageVector> imagePtr; // TODO change this to a map?
+    std::shared_ptr<ImageMap> imagePtr;
 
     /** Pointer to the list storing the paths to all available (but not necessarily loaded) images */
     std::shared_ptr<std::vector<std::string>> availablePathsPtr;

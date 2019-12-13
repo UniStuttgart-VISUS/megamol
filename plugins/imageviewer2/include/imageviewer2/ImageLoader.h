@@ -77,7 +77,7 @@ private:
     core::param::ParamSlot filenameSlot;
 
     /** Pointer to the vector containing the images */
-    std::shared_ptr<image_calls::Image2DCall::ImageVector> imageData;
+    std::shared_ptr<image_calls::Image2DCall::ImageMap> imageData;
 
     /** hash value for the data */
     SIZE_T datahash;

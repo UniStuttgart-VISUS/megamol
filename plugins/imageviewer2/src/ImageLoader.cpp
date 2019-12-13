@@ -29,7 +29,7 @@ ImageLoader::ImageLoader(void)
     , filenameSlot("filepath",
           "Path to the image file (*.png, *.bmp) that should be loaded. If the file to load has a *.txt extension the "
           "file will be treated as list of image paths. The module will then load all of the listed images.")
-    , imageData(std::make_shared<image_calls::Image2DCall::ImageVector>())
+    , imageData(std::make_shared<image_calls::Image2DCall::ImageMap>())
     , datahash(0) {
 
     this->callRequestImage.SetCallback(
@@ -117,7 +117,7 @@ bool ImageLoader::loadImage(const std::filesystem::path& path) {
     if (vislib::graphics::BitmapCodecCollection::DefaultCollection().LoadBitmapImage(
             image, loadedFile.data(), fileSize)) {
         image.Convert(vislib::graphics::BitmapImage::TemplateByteRGB);
-        this->imageData->push_back(std::make_pair(image, path.string()));
+        this->imageData->insert(std::pair(path.string(), image));
     } else {
         vislib::sys::Log::DefaultLog.WriteError("ImageLoader: failed decoding file \"%s\"", path.c_str());
         return false;

@@ -22,25 +22,33 @@ size_t Image2DCall::GetImageCount(void) const {
 /*
  * Image2DCall::SetImagePtr
  */
-void Image2DCall::SetImagePtr(const std::shared_ptr<Image2DCall::ImageVector> ptr) { this->imagePtr = ptr; }
+void Image2DCall::SetImagePtr(const std::shared_ptr<Image2DCall::ImageMap> ptr) { this->imagePtr = ptr; }
 
 /*
  * Image2DCall::GetImagePtr
  */
-const std::shared_ptr<Image2DCall::ImageVector> Image2DCall::GetImagePtr(void) const { return this->imagePtr; }
+const std::shared_ptr<Image2DCall::ImageMap> Image2DCall::GetImagePtr(void) const { return this->imagePtr; }
 
+/*
+ * Image2DCall::SetAvailablePathsPtr
+ */
 void Image2DCall::SetAvailablePathsPtr(const std::shared_ptr<std::vector<std::string>> ptr) {
     this->availablePathsPtr = ptr;
 }
 
+/*
+ * Image2DCall::GetAvailablePathsPtr
+ */
 const std::shared_ptr<std::vector<std::string>> Image2DCall::GetAvailablePathsPtr(void) const {
     return this->availablePathsPtr;
 }
 
-void Image2DCall::SetWishlistPtr(const std::shared_ptr<std::vector<uint64_t>> ptr) {
-    this->wishlistPtr = ptr;
-}
+/*
+ * Image2DCall::SetWishlistPtr
+ */
+void Image2DCall::SetWishlistPtr(const std::shared_ptr<std::vector<uint64_t>> ptr) { this->wishlistPtr = ptr; }
 
-const std::shared_ptr<std::vector<uint64_t>> Image2DCall::GetWishlistPtr(void) const {
-    return this->wishlistPtr;
-}
+/*
+ * Image2DCall::GetWishlistPtr
+ */
+const std::shared_ptr<std::vector<uint64_t>> Image2DCall::GetWishlistPtr(void) const { return this->wishlistPtr; }
