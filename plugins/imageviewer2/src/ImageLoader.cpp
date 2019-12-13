@@ -12,7 +12,7 @@
 #include "vislib/graphics/BitmapCodecCollection.h"
 
 #include <filesystem>
-#include "image_calls/Image2DCall_2.h"
+#include "image_calls/Image2DCall.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FilePathParam.h"
 
@@ -29,11 +29,11 @@ ImageLoader::ImageLoader(void)
     , filenameSlot("filepath",
           "Path to the image file (*.png, *.bmp) that should be loaded. If the file to load has a *.txt extension the "
           "file will be treated as list of image paths. The module will then load all of the listed images.")
-    , imageData(std::make_shared<image_calls::Image2DCall_2::ImageVector>())
+    , imageData(std::make_shared<image_calls::Image2DCall::ImageVector>())
     , datahash(0) {
 
     this->callRequestImage.SetCallback(
-        image_calls::Image2DCall_2::ClassName(), image_calls::Image2DCall_2::FunctionName(0), &ImageLoader::GetData);
+        image_calls::Image2DCall::ClassName(), image_calls::Image2DCall::FunctionName(0), &ImageLoader::GetData);
     this->MakeSlotAvailable(&this->callRequestImage);
 
     this->filenameSlot.SetParameter(new param::FilePathParam(""));
@@ -63,7 +63,7 @@ void ImageLoader::release(void) {}
  * ImageLoader::GetData
  */
 bool ImageLoader::GetData(core::Call& call) {
-    image_calls::Image2DCall_2* ic = dynamic_cast<image_calls::Image2DCall_2*>(&call);
+    image_calls::Image2DCall* ic = dynamic_cast<image_calls::Image2DCall*>(&call);
     if (ic == nullptr) return false;
 
     if (this->filenameSlot.IsDirty()) {

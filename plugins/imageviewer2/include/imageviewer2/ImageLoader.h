@@ -7,7 +7,7 @@
 #ifndef MEGAMOLCORE_IMAGELOADER_H_INCLUDED
 #define MEGAMOLCORE_IMAGELOADER_H_INCLUDED
 
-#include "image_calls/Image2DCall_2.h"
+#include "image_calls/Image2DCall.h"
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
@@ -77,7 +77,7 @@ private:
     core::param::ParamSlot filenameSlot;
 
     /** Pointer to the vector containing the images */
-    std::shared_ptr<image_calls::Image2DCall_2::ImageVector> imageData;
+    std::shared_ptr<image_calls::Image2DCall::ImageVector> imageData;
 
     /** hash value for the data */
     SIZE_T datahash;

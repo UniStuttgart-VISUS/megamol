@@ -13,7 +13,6 @@
 #include "vislib/vislibversion.h"
 
 #include "image_calls/Image2DCall.h"
-#include "image_calls/Image2DCall_2.h"
 
 
 /* anonymous namespace hides this type from any other object files */
@@ -60,7 +59,6 @@ namespace {
             //   ...
             //
             this->call_descriptions.RegisterAutoDescription<megamol::image_calls::Image2DCall>();
-            this->call_descriptions.RegisterAutoDescription<megamol::image_calls::Image2DCall_2>();
         }
         MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics
     };

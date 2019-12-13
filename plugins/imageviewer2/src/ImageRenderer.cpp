@@ -13,7 +13,7 @@
 #include "vislib/graphics/gl/IncludeAllGL.h"
 
 //#define _USE_MATH_DEFINES
-#include "image_calls/Image2DCall_2.h"
+#include "image_calls/Image2DCall.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/cluster/mpi/MpiCall.h"
 #include "mmcore/param/ButtonParam.h"
@@ -115,7 +115,7 @@ imageviewer2::ImageRenderer::ImageRenderer(void)
     this->callRequestMpi.SetCompatibleCall<cluster::mpi::MpiCallDescription>();
     this->MakeSlotAvailable(&this->callRequestMpi);
 
-    this->callRequestImage.SetCompatibleCall<image_calls::Image2DCall_2Description>();
+    this->callRequestImage.SetCompatibleCall<image_calls::Image2DCallDescription>();
     this->MakeSlotAvailable(&this->callRequestImage);
 }
 
@@ -253,7 +253,7 @@ bool imageviewer2::ImageRenderer::assertImage(bool rightEye) {
 
 
     bool imgcConnected = false;
-    auto imgc = this->callRequestImage.CallAs<image_calls::Image2DCall_2>();
+    auto imgc = this->callRequestImage.CallAs<image_calls::Image2DCall>();
     if (imgc != nullptr) imgcConnected = true;
 
     param::ParamSlot* filenameSlot = rightEye ? (&this->rightFilenameSlot) : (&this->leftFilenameSlot);
@@ -265,7 +265,7 @@ bool imageviewer2::ImageRenderer::assertImage(bool rightEye) {
         } else {
             if (!(*imgc)(0)) return false;
             if (imgc->GetImageCount() > 0) {
-                filename = vislib::TString(imgc->GetImageVector()->at(0).second.c_str());
+                filename = vislib::TString(imgc->GetImagePtr()->at(0).second.c_str());
             }
         }
         static vislib::graphics::BitmapImage img;
@@ -293,9 +293,9 @@ bool imageviewer2::ImageRenderer::assertImage(bool rightEye) {
                     }
                 } else if (roleRank == roleImgcRank) {
                     // vislib::sys::Log::DefaultLog.WriteInfo("ImageRenderer: Retrieving image from call\n");
-                    this->width = imgc->GetImageVector()->at(0).first.Width();
-                    this->height = imgc->GetImageVector()->at(0).first.Height();
-                    allFile = reinterpret_cast<uint8_t*>(imgc->GetImageVector()->at(0).first.PeekDataAs<uint8_t>());
+                    this->width = imgc->GetImagePtr()->at(0).first.Width();
+                    this->height = imgc->GetImagePtr()->at(0).first.Height();
+                    allFile = reinterpret_cast<uint8_t*>(imgc->GetImagePtr()->at(0).first.PeekDataAs<uint8_t>());
                 }
                 uint8_t* image_ptr = nullptr;
                 if (!remoteness) {

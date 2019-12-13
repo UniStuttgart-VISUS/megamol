@@ -5,6 +5,7 @@
 
 #include "mmcore/AbstractGetDataCall.h"
 #include "mmcore/CallAutoDescription.h"
+#include "vislib/graphics/BitmapCodecCollection.h"
 
 #include "image_calls/image_calls.h"
 
@@ -13,6 +14,8 @@ namespace image_calls {
 
 class image_calls_API Image2DCall : public megamol::core::AbstractGetDataCall {
 public:
+    typedef std::vector<std::pair<vislib::graphics::BitmapImage, std::string>> ImageVector;
+
     /**
      * Answer the name of this call.
      *
@@ -25,7 +28,7 @@ public:
      *
      * @return A human readable description of this call.
      */
-    static const char* Description(void) { return "Call to transport 2D image data"; }
+    static const char* Description(void) { return "New Call to transport 2D image data"; }
 
     /**
      * Answer the number of functions used for this call.
@@ -49,55 +52,53 @@ public:
         return nullptr;
     }
 
-    enum Encoding : uint8_t { PNG, BMP, JPEG, SNAPPY, RAW };
+    /**
+     * Answer the count of stored images
+     *
+     * @return The number of stored images
+     */
+    size_t GetImageCount(void) const;
 
-    enum Format : uint8_t { RGB, RGBA };
+    /**
+     * Sets the data pointer
+     *
+     * @param ptr Pointer to the vector storing the images
+     */
+    void SetImagePtr(const std::shared_ptr<ImageVector> ptr);
 
+    /**
+     * Returns the currently stored image vector
+     *
+     * @return Pointer to the vector storing the images
+     */
+    const std::shared_ptr<ImageVector> GetImagePtr(void) const;
+
+    void SetAvailablePathsPtr(const std::shared_ptr<std::vector<std::string>> ptr);
+
+    const std::shared_ptr<std::vector<std::string>> GetAvailablePathsPtr(void) const;
+
+    void SetWishlistPtr(const std::shared_ptr<std::vector<uint64_t>> ptr);
+
+    const std::shared_ptr<std::vector<uint64_t>> GetWishlistPtr(void) const;
+
+    /** Ctor. */
     Image2DCall();
 
+    /** Dtor. */
     virtual ~Image2DCall() = default;
 
-    void* GetData() const { return this->data_; }
-
-    std::string GetFilePath() const { return this->filepath_; }
-
-    Encoding GetEncoding() const { return this->enc_; }
-
-    Format GetFormat() const { return this->format_; }
-
-    size_t GetWidth() const { return this->width_; }
-
-    size_t GetHeight() const { return this->height_; }
-
-    size_t GetFilesize() const { return this->filesize_; }
-
-    void SetFilePath(std::string const filepath) { this->filepath_ = filepath; }
-
-    void SetData(std::string const filepath, Encoding const enc, Format const format, size_t width, size_t height,
-        size_t filesize, void* data) {
-        this->filepath_ = filepath;
-        this->enc_ = enc;
-        this->format_ = format;
-        this->width_ = width;
-        this->height_ = height;
-        this->filesize_ = filesize;
-        this->data_ = data;
-    }
-
 private:
-    size_t width_, height_, filesize_;
+    /** Pointer to the stored data */
+    std::shared_ptr<ImageVector> imagePtr; // TODO change this to a map?
 
-    Encoding enc_;
+    /** Pointer to the list storing the paths to all available (but not necessarily loaded) images */
+    std::shared_ptr<std::vector<std::string>> availablePathsPtr;
 
-    Format format_;
-
-    std::string filepath_;
-
-    void* data_;
-
-}; // end class Image2DCall
+    /** Pointer to the list storing the indices of all wished figures */
+    std::shared_ptr<std::vector<uint64_t>> wishlistPtr;
+};
 
 typedef megamol::core::CallAutoDescription<Image2DCall> Image2DCallDescription;
 
-} // end namespace image_calls
-} // end namespace megamol
+} // namespace image_calls
+} // namespace megamol
