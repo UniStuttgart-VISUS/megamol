@@ -57,59 +57,60 @@ The module `KeyframeKeeper` exposes the following parameters:
 * `snapSimFrames` (Assigned key: `CTRL+g`): Snap simulation time of all keyframes to integer simulation frames.
 * `linearizeSimTime` (Assigned key: `CTRL+t`): Linearize simulation time between two keyframes between currently selected keyframe and subsequently selected keyframe.
 * `interpolTangent` (`0.5`): Length of keyframe tangets affecting curvature of interpolation spline.
-* `editSelected - animTime` (`1.0`): Edit animation time of the selected keyframe.
-* `editSelected - simTime` (`1.0`): Edit simulation time of the selected keyframe.
-* `editSelected - positionVector`: Edit the position vector of the selected keyframe.
-* `editSelected - lookatVector`: Edit the look-at vector of the selected keyframe.
-* `editSelected - resetLookat` (Assigned key: `CTRL+l`): Reset the LookAt vector of the selected keyframe.
-* `editSelected - upVector`:  Edit the up vector of the selected keyframe.
-* `editSelected - apertureAngle`: Edit aperture angle of the selected keyframe.
-* `storage - filename`:  The name of the file to load or save keyframes. 
-* `storage - save` (Assigned key: `CTRL+s`): Save keyframes to file.
-* `storage - load` (Assigned key: `CTRL+l`): Load keyframes from file.
+* `editSelected::animTime` (`1.0`): Edit animation time of the selected keyframe.
+* `editSelected::simTime` (`1.0`): Edit simulation time of the selected keyframe.
+* `editSelected::positionVector`: Edit the position vector of the selected keyframe.
+* `editSelected::lookAtVector`: Edit the 'look at' vector of the selected keyframe.
+* `editSelected::resetLookAt` (Assigned key: `CTRL+l`): Reset the 'look at' vector of the selected keyframe to the center of the model boundng box.
+* `editSelected::upVector`:  Edit up vector direction relative to 'look at' vector of the selected keyframe.
+* `editSelected::apertureAngle`: Edit aperture angle of the selected keyframe.
+* `storage::filename`:  The name of the file to load or save keyframes. 
+* `storage::save` (Assigned key: `CTRL+s`): Save keyframes to file.
+* `storage::load` (Assigned key: `CTRL+l`): Load keyframes from file.
 
 The module `TrackingShotRenderer` exposes the following parameters:
 (The values in brackets indicate the default values.)
 
-* `splineSubdivision` (`20`): Amount of interpolation steps between keyframes.
-* `toggleManipulators` (Assigned key: `CTRL+q`): Toggle different manipulators for the selected keyframe.            
+* `splineSubdivision` (`20`): Amount of interpolation steps between keyframes.          
 * `helpText` (Assigned key: `CTRL+h`): Show/hide help text for key assignments.
-* `manipulatorsOutsideBBox` (Assigned key: `CTRL+w`): Keep manipulators always outside of model bounding box.
+* `manipulators::toggleVisibleGroup` (Assigned key: `CTRL+q`): Toggle visibility of different manipulator groups.  
+* `manipulators::visibleGroup`: Select visible manipulator group.  
+* `manipulators::showOutsideBBox` (Assigned key: `CTRL+w`): Show manipulators always outside of model bounding box.
 
 The module `CinematicView` exposes the following parameters:
 (The values in brackets indicate the default values.)
 
-* `renderAnim` (Assigned key: `CTRL+r`): Toggle rendering of complete animation to png files.   
+* `cinematic::renderAnim` (Assigned key: `CTRL+r`): Toggle rendering of complete animation to png files.   
    Whenever rendering is begun a new folder holding the frame image files (png) is generated.
-* `playPreview` (Assigned key: `CTRL+space`): Toggle playing animation as preview.
-* `skyboxSide` (`NONE`): Select the skybox side.
-* `cubeMode` (`false`): Activate mode that renders the bounding box side selected with `skyboxSide`.
-* `cinematicWidth` (`1920`): The width resolution of the cinematic view to render.
-* `cinematicHeight`(`1080`): The height resolution of the cinematic view to render.
-* `fps` (`24`): The frames per second the animation should be rendered.
-* `firstRenderFrame` (`0`): Set first frame number to start rendering with.
-* `delayFirstRenderFrame` (`10.0`): Delay (in seconds) to wait until first frame is ready and rendering to file is started.
-* `frameFolder` Specify folder where the frame files should be stored.
-* `addSBSideToName` (`false`): If true, adds the value of `skyboxSide` to the filename of the written image.
-* `stereo - eye` (`Left`) Eye position (for stereo view).
-* `stereo - projection` (`Mono Perspective`) Camera projection.
+* `cinematic::playPreview` (Assigned key: `CTRL+space`): Toggle playing animation as preview.
+* `cinematic::skyboxSide` (`NONE`): Select the skybox side.
+* `cinematic::cubeMode` (`false`): Activate mode that renders the bounding box side selected with `skyboxSide`.
+* `cinematic::cinematicWidth` (`1920`): The width resolution of the cinematic view to render.
+* `cinematic::cinematicHeight`(`1080`): The height resolution of the cinematic view to render.
+* `cinematic::fps` (`24`): The frames per second the animation should be rendered.
+* `cinematic::firstRender` (`0`): Set first frame number to start rendering with.
+* `cinematic::lastRender` (): Set last frame number to end rendering with.
+* `cinematic::delayFirstFrame` (`10.0`): Delay (in seconds) to wait until first frame is ready and rendering to file is started.
+* `cinematic::frameFolder` Specify folder where the frame files should be stored.
+* `cinematic::addSBSideToName` (`false`): If true, adds the value of `skyboxSide` to the filename of the written image.
+* `cinematic::stereo_eye` (`Left`) Eye position (for stereo view).
+* `cinematic::stereo_projection` (`Mono Perspective`) Camera projection.
 
 The module `TimeLineRenderer` exposes the following parameters:
 (The values in brackets indicate the default values.)
 
-* `fontSize` (`22.0`): The font size.
 * `gotoRightFrame` (Assigned key: `right arrow`): Move to right animation time frame.
 * `gotoLeftFrame` (Assigned key: `left arrow`): Move to left animation time frame.
-* `resetAxes` (Assigned key: `CTRL+p`): Reset all shifted and scaled time axes.
+* `resetAxes` (Assigned key: `CTRL+x`): Reset all shifted and scaled time axes.
 
 The module `ReplacementRenderer` exposes the following parameters:
 (The values in brackets indicate the default values.)
 
 * `alpha` (`0.75`): The alpha value of the replacement rendering.
-* `replacementRendering` (`false`): Show/hide replacement rendering for the model (coloured bounding box).
-* `replacmentKeyAssign` (` `): Assign a key for the replacement rendering button `toggleReplacement`.
-* `toggleReplacement` (Assigned key: ` `): Toggle replacement rendering. Key can be assigned via `replacmentKeyAssign` parameter. 
-    
+* `hotkeyAssignment` (` `): Choose hotkey for replacement rendering button `toggleReplacement`.
+* `toggleReplacement` (Assigned key: ` `): Toggle replacement rendering. Hotkey can be chosen from list offered by `hotkeyAssignment` parameter. 
+* `replacement` (`false`): Show/hide replacement rendering for chained renderer (coloured bounding box).
+
 ---
 
 ## How to use the modules

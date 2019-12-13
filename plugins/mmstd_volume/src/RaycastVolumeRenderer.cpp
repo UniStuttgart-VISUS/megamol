@@ -99,7 +99,7 @@ bool RaycastVolumeRenderer::create() {
     m_render_target = std::make_unique<glowl::Texture2D>("raycast_volume_render_target", render_tgt_layout, nullptr);
 
     // create empty volume texture
-	glowl::TextureLayout volume_layout(GL_R32F, 1, 1, 1, GL_RED, GL_FLOAT, 1,
+    glowl::TextureLayout volume_layout(GL_R32F, 1, 1, 1, GL_RED, GL_FLOAT, 1,
         {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
             {GL_TEXTURE_MIN_FILTER, GL_LINEAR}, {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
         {});
@@ -136,22 +136,23 @@ bool RaycastVolumeRenderer::GetExtents(megamol::core::view::CallRender3D_2& cr) 
 bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3D_2& cr) {
     if (!updateVolumeData()) return false;
 
-	auto ct = this->m_transferFunction_callerSlot.CallAs<core::view::CallGetTransferFunction>();
-	if (ct == nullptr || !(*ct)()) return false;
+    auto ct = this->m_transferFunction_callerSlot.CallAs<core::view::CallGetTransferFunction>();
+    if (ct == nullptr || !(*ct)()) return false;
 
-	// get camera
-	core::view::Camera_2 cam;
-	cr.GetCamera(cam);
+    // get camera
+    core::view::Camera_2 cam;
+    cr.GetCamera(cam);
 
-	cam_type::matrix_type view, proj;
-	cam.calc_matrices(view, proj);
-	
+    cam_type::matrix_type view, proj;
+    cam.calc_matrices(view, proj);
+
     // enable raycast volume rendering program
     m_raycast_volume_compute_shdr->Enable();
 
-    glUniformMatrix4fv(
-        m_raycast_volume_compute_shdr->ParameterLocation("view_mx"), 1, GL_FALSE, glm::value_ptr(static_cast<glm::mat4>(view)));
-    glUniformMatrix4fv(m_raycast_volume_compute_shdr->ParameterLocation("proj_mx"), 1, GL_FALSE, glm::value_ptr(static_cast<glm::mat4>(proj)));
+    glUniformMatrix4fv(m_raycast_volume_compute_shdr->ParameterLocation("view_mx"), 1, GL_FALSE,
+        glm::value_ptr(static_cast<glm::mat4>(view)));
+    glUniformMatrix4fv(m_raycast_volume_compute_shdr->ParameterLocation("proj_mx"), 1, GL_FALSE,
+        glm::value_ptr(static_cast<glm::mat4>(proj)));
 
     std::array<float, 2> rt_resolution;
     rt_resolution[0] = static_cast<float>(m_render_target->getWidth());
@@ -159,11 +160,11 @@ bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3D_2& cr) {
     glUniform2fv(m_raycast_volume_compute_shdr->ParameterLocation("rt_resolution"), 1, rt_resolution.data());
 
     // bbox sizes
-	glm::vec3 box_min;
+    glm::vec3 box_min;
     box_min[0] = m_volume_origin[0];
     box_min[1] = m_volume_origin[1];
     box_min[2] = m_volume_origin[2];
-	glm::vec3 box_max;
+    glm::vec3 box_max;
     box_max[0] = m_volume_origin[0] + m_volume_extents[0];
     box_max[1] = m_volume_origin[1] + m_volume_extents[1];
     box_max[2] = m_volume_origin[2] + m_volume_extents[2];
@@ -187,7 +188,7 @@ bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3D_2& cr) {
     m_volume_texture->bindTexture();
     glUniform1i(m_raycast_volume_compute_shdr->ParameterLocation("volume_tx3D"), 0);
     // bind the transfer function
-	ct->BindConvenience(*m_raycast_volume_compute_shdr, GL_TEXTURE1, 1);
+    ct->BindConvenience(*m_raycast_volume_compute_shdr, GL_TEXTURE1, 1);
 
     // bind image texture
     m_render_target->bindImage(0, GL_WRITE_ONLY);
@@ -196,53 +197,56 @@ bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3D_2& cr) {
     m_raycast_volume_compute_shdr->Dispatch(
         static_cast<int>(std::ceil(rt_resolution[0] / 8.0f)), static_cast<int>(std::ceil(rt_resolution[1] / 8.0f)), 1);
 
-	// unbind image texture
-	glBindImageTexture(0, 0, 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_R);
+    // unbind image texture
+    glBindImageTexture(0, 0, 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_R);
 
-	// unbind the transfer function
-	ct->UnbindConvenience();
-	// unbind volume texture
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_3D, 0);
+    // unbind the transfer function
+    ct->UnbindConvenience();
+    // unbind volume texture
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_3D, 0);
 
     m_raycast_volume_compute_shdr->Disable();
 
     glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT);
 
-	// store state
-	bool state_depth_test = glIsEnabled(GL_DEPTH_TEST);
-	bool state_blend = glIsEnabled(GL_BLEND);
+    // store state
+    bool state_depth_test = glIsEnabled(GL_DEPTH_TEST);
+    bool state_blend = glIsEnabled(GL_BLEND);
 
-	GLint state_blend_src_rgb, state_blend_src_alpha, state_blend_dst_rgb, state_blend_dst_alpha;
-	glGetIntegerv(GL_BLEND_SRC_RGB, &state_blend_src_rgb);
-	glGetIntegerv(GL_BLEND_SRC_ALPHA, &state_blend_src_alpha);
-	glGetIntegerv(GL_BLEND_DST_RGB, &state_blend_dst_rgb);
-	glGetIntegerv(GL_BLEND_DST_ALPHA, &state_blend_dst_alpha);
+    GLint state_blend_src_rgb, state_blend_src_alpha, state_blend_dst_rgb, state_blend_dst_alpha;
+    glGetIntegerv(GL_BLEND_SRC_RGB, &state_blend_src_rgb);
+    glGetIntegerv(GL_BLEND_SRC_ALPHA, &state_blend_src_alpha);
+    glGetIntegerv(GL_BLEND_DST_RGB, &state_blend_dst_rgb);
+    glGetIntegerv(GL_BLEND_DST_ALPHA, &state_blend_dst_alpha);
 
-	if (state_depth_test) glDisable(GL_DEPTH_TEST);
-	if (!state_blend) glEnable(GL_BLEND);
+    if (state_depth_test) glDisable(GL_DEPTH_TEST);
+    if (!state_blend) glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     m_render_to_framebuffer_shdr->Enable();
 
-	// bind texture
+    // bind texture
     glActiveTexture(GL_TEXTURE0);
     m_render_target->bindTexture();
     glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("src_tx2D"), 0);
 
-	// render
-	glDrawArrays(GL_TRIANGLES, 0, 6);
+    // render
+    glDrawArrays(GL_TRIANGLES, 0, 6);
 
-	// unbind texture
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, 0);
+    // unbind texture
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, 0);
 
     m_render_to_framebuffer_shdr->Disable();
 
-	// restore state
-	glBlendFuncSeparate(state_blend_src_rgb, state_blend_dst_rgb, state_blend_src_alpha, state_blend_dst_alpha);
-	if (!state_blend) glDisable(GL_BLEND);
-	if (state_depth_test) glEnable(GL_DEPTH_TEST); else glDisable(GL_DEPTH_TEST);
+    // restore state
+    glBlendFuncSeparate(state_blend_src_rgb, state_blend_dst_rgb, state_blend_src_alpha, state_blend_dst_alpha);
+    if (!state_blend) glDisable(GL_BLEND);
+    if (state_depth_test)
+        glEnable(GL_DEPTH_TEST);
+    else
+        glDisable(GL_DEPTH_TEST);
 
     return true;
 }
@@ -335,13 +339,13 @@ bool RaycastVolumeRenderer::updateVolumeData() {
 
     // debug using dummy-data
     std::array<uint8_t, 8> debug_volume_data = {255, 0, 255, 0, 255, 255, 0, 0};
-	glowl::TextureLayout debug_volume_layout(GL_R8, 2, 2, 2, GL_RED, GL_UNSIGNED_BYTE, 1,
+    glowl::TextureLayout debug_volume_layout(GL_R8, 2, 2, 2, GL_RED, GL_UNSIGNED_BYTE, 1,
         {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
             {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_NEAREST},
             {GL_TEXTURE_MAG_FILTER, GL_NEAREST}},
         {});
 
-	glowl::TextureLayout volume_layout(internal_format, metadata->Resolution[0], metadata->Resolution[1],
+    glowl::TextureLayout volume_layout(internal_format, metadata->Resolution[0], metadata->Resolution[1],
         metadata->Resolution[2], format, type, 1,
         {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
             {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
@@ -350,5 +354,5 @@ bool RaycastVolumeRenderer::updateVolumeData() {
 
     m_volume_texture->reload(volume_layout, volumedata);
 
-	return true;
+    return true;
 }

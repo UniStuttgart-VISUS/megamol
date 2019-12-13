@@ -1,0 +1,332 @@
+<?xml version="1.0" encoding="utf-8"?>
+<btf type="MegaMolGLSLShader" version="1.0" namespace="primitives">
+
+
+    <snippet name="smoothing" type="string">
+    <![CDATA[
+
+    // *******************************************************
+    // Smoothing function for edges.
+    //
+    // Return value can be interpreted as alpha value.
+    //
+    // Expects 'distances' in the range 0.0 to 1.0.
+    // The edge is expected to lie at distance 0.5.
+    // Distances greater than 0.5 are interpreted as lying 'inside'.
+    // Distances less than 0.5 are interpreted as lying 'outside'.
+    // Distances of 0.0 are discarded.
+    // *******************************************************
+    float smoothing(const in float distance) {
+        if (distance <= 0.0) {
+            discard;
+        }         
+        float dist = clamp(distance, 0.0, 1.0);       
+        float smootingEdge = 0.99 * length(vec2(dFdx(dist), dFdy(dist))); 
+        float smootingValue =  smoothstep((0.5 - smootingEdge), (0.5 + smootingEdge), dist);
+        smootingValue = clamp(smootingValue, 0.0, 1.0);
+        if (smootingValue == 0.0) {
+            discard;
+        }
+        return smootingValue;     
+    }
+
+    ]]>
+    </snippet>
+
+    
+    <snippet name="screenspace" type="string">
+    <![CDATA[  
+
+    // *******************************************************
+    // Transforms 2D ??? position to screen space coordinates.
+    //
+    // ******************************************************* 
+    vec2 toScreenSpace(in vec2 position, in vec2 viewport) {
+        return (((position + vec2(1.0, 1.0)) / vec2(2.0, 2.0)) * viewport);
+    }
+
+    ]]>
+    </snippet>
+
+    <snippet name="vertex_attributes" type="string">
+    <![CDATA[
+    
+    in vec3 inPosition;
+    in vec4 inColor;
+    in vec2 inTexture;
+    in vec4 inAttributes;
+
+    uniform vec2 viewport;
+    uniform mat4 mvp;
+
+    flat out vec4 color;
+    flat out vec2 center;
+    flat out float radius;
+    out vec2 texcoord;
+        
+    ]]>
+    </snippet>
+
+    <snippet name="fragment_attributes" type="string">
+    <![CDATA[
+
+    #extension GL_ARB_explicit_attrib_location : require // glsl version 130
+
+    flat in vec4 color;
+    flat in vec2 center;
+    flat in float radius;
+    in vec2 texcoord;
+                   
+    uniform vec2 viewport;                   
+    uniform sampler2D tex;
+    uniform int apply_smooth;
+
+    layout(location = 0) out vec4 outColor;
+
+    ]]>
+    </snippet>
+
+    <!-- POINTS ########################################################### -->
+    <namespace name="points">
+
+        <shader name="vertex">
+            <snippet type="version">130</snippet>
+            <snippet name="vertex_attributes"/>
+            <snippet name="screenspace"/>
+
+            <snippet name="main" type="string">
+            <![CDATA[            
+                
+            void main(void) {
+
+                vec4 inPos = mvp * vec4(inPosition, 1.0);
+                inPos /= inPos.w;
+                gl_Position = inPos; 
+                color = inColor;
+                texcoord = inTexture;
+                center = toScreenSpace(inPos.xy, viewport);
+                vec4 radPos = mvp * vec4(inAttributes.xyz, 1.0);
+                radPos /= radPos.w;
+                vec2 radPixel = toScreenSpace(radPos.xy, viewport);
+                radius = length(radPixel - center);
+                gl_PointSize = radius*2.0;
+            }
+
+            ]]>
+            </snippet>
+        </shader>
+
+        <shader name="fragment">
+            <snippet type="version">130</snippet>
+            <snippet name="fragment_attributes"/>
+            <snippet name="smoothing"/>
+            
+            <snippet name="main" type="string">
+            <![CDATA[
+
+            void main() {
+
+                float alpha = 1.0;
+                float distance = length(center - gl_FragCoord.xy);
+                if (bool(apply_smooth)) {
+                    distance = 1.0 - (distance/(radius*2.0));
+                    alpha = smoothing(distance);
+                }
+                else {
+                    if (distance > radius) {
+                        discard;
+                    }
+                }
+                outColor = vec4(color.rgb, color.a * alpha);
+            }
+
+            ]]>
+            </snippet>
+        </shader>
+
+    </namespace>
+
+    <!-- LINES ############################################################ -->
+
+    <namespace name="lines">
+
+        <shader name="vertex">
+            <snippet type="version">130</snippet>
+            <snippet name="vertex_attributes"/>
+            <snippet name="screenspace"/>
+
+            <snippet name="main" type="string">
+            <![CDATA[            
+                
+            void main(void) {
+
+                vec4 inPos = mvp * vec4(inPosition, 1.0);
+                inPos /= inPos.w;
+                gl_Position = inPos; 
+                color = inColor;
+            }
+
+            ]]>
+            </snippet>
+        </shader>
+
+        <shader name="fragment">
+            <snippet type="version">130</snippet>
+            <snippet name="fragment_attributes"/>
+            <snippet name="smoothing"/>
+
+            <snippet name="main" type="string">
+            <![CDATA[
+
+            void main() {
+
+                outColor = color;
+            }
+
+            ]]>
+            </snippet>
+        </shader>
+
+    </namespace>
+
+    <!-- QUADS ############################################################ -->
+
+    <namespace name="quads">
+
+        <shader name="vertex">
+            <snippet type="version">130</snippet>
+            <snippet name="vertex_attributes"/>
+            <snippet name="screenspace"/>
+
+            <snippet name="main" type="string">
+            <![CDATA[            
+                
+            void main(void) {
+
+                vec4 inPos = mvp * vec4(inPosition, 1.0);
+                inPos /= inPos.w;
+                gl_Position = inPos; 
+                color = inColor;
+            }
+
+            ]]>
+            </snippet>
+        </shader>
+
+        <shader name="fragment">
+            <snippet type="version">130</snippet>
+            <snippet name="fragment_attributes"/>
+            <snippet name="smoothing"/>
+            
+            <snippet name="main" type="string">
+            <![CDATA[
+
+            void main() {
+
+                outColor = color;
+            }
+
+            ]]>
+            </snippet>
+        </shader>
+
+    </namespace>     
+
+    <!-- COLOR TEXTURE #################################################### -->
+    <namespace name="color_texture">
+
+        <shader name="vertex">
+            <snippet type="version">130</snippet>
+            <snippet name="vertex_attributes"/>
+            <snippet name="screenspace"/>
+
+            <snippet name="main" type="string">
+            <![CDATA[            
+                
+            void main(void) {
+
+                vec4 inPos = mvp * vec4(inPosition, 1.0);
+                inPos /= inPos.w;
+                gl_Position = inPos; 
+                color = inColor;
+                texcoord = inTexture;
+            }
+
+            ]]>
+            </snippet>
+        </shader>
+
+        <shader name="fragment">
+            <snippet type="version">130</snippet>
+            <snippet name="fragment_attributes"/>
+            <snippet name="smoothing"/>
+            
+            <snippet name="main" type="string">
+            <![CDATA[
+
+            void main() {
+               
+                vec4 texcolor =  texture(tex, texcoord);
+                float alpha = texcolor.a;
+                if (alpha <= 0.0) {
+                    discard;
+                }                    
+                outColor = vec4(texcolor.rgb, alpha);
+                if (color.a > 0.0) {            
+                    outColor = vec4(color.rgb, alpha);
+                }
+            }
+
+            ]]>
+            </snippet>
+        </shader>
+
+    </namespace>
+
+    <!-- DEPTH TEXTURE #################################################### -->
+    <namespace name="depth_texture">
+
+        <shader name="vertex">
+            <snippet type="version">130</snippet>
+            <snippet name="vertex_attributes"/>
+            <snippet name="screenspace"/>
+
+            <snippet name="main" type="string">
+            <![CDATA[            
+                
+            void main(void) {
+
+                vec4 inPos = mvp * vec4(inPosition, 1.0);
+                inPos /= inPos.w;
+                gl_Position = inPos; 
+                color = inColor;
+                texcoord = inTexture;
+            }
+
+            ]]>
+            </snippet>
+        </shader>
+
+        <shader name="fragment">
+            <snippet type="version">130</snippet>
+            <snippet name="fragment_attributes"/>
+            <snippet name="smoothing"/>
+            
+            <snippet name="main" type="string">
+            <![CDATA[
+
+            void main() {
+                
+                vec2 uvcoord = vec2(gl_FragCoord.x / viewport.x, gl_FragCoord.y / viewport.y);
+                float depth = texture2D(tex, uvcoord).x;
+                gl_FragDepth = depth; 
+                outColor = vec4(0.0, 0.0, 0.0, 0.0);
+            }
+
+            ]]>
+            </snippet>
+        </shader>
+
+    </namespace>
+
+</btf>
