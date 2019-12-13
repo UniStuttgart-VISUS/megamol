@@ -7,28 +7,14 @@
 - [MegaMol Developer Guide](#megamol-developer-guide)
     - [Contents](#contents)
     - [Overview](#overview)
-        - [License](#license)
     - [Graph Manipulation Queues](#graph-manipulation-queues)
+- [License](#license)
 
 <!-- /TOC -->
 
 ## Overview
 
 This guide is intended to give MegaMol developers a useful insight into the internal structure of MegaMol.
-
-### License
-
-MegaMol is freely and publicly available as open source following the therms of the BSD License.
-Copyright (c) 2015, MegaMol Team TU Dresden, Germany Visualization Research Center, University of Stuttgart (VISUS), Germany
-Alle Rechte vorbehalten.
-All rights reserved.
-Redistribution and use in source and binary forms, with or without modification, are permitted
-provided that the following conditions are met:
-- Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
-- Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
-- Neither the name of the MegaMol Team, TU Dresden, University of Stuttgart, nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE MEGAMOL TEAM "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE MEGAMOL TEAM BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 # Bi-Directional Communication across Modules
 
@@ -38,14 +24,18 @@ You can have a look for an example in the ```FlagStorage_GL``` together with the
 We refer to the data passed around simply as ```DATA```, you can think of this as a struct containing everything changed by the corresponding Call.
 To properly track changes across several Modules, you need to follow the recipe.
 
-### Recipe
+## Recipe
+Split up the data flow for each direction, one call for reading only, one call for writing only.
+Keep in mind that the caller by definition is "left" in the module graph and the callee is "right". The callee is the end of a callback, but for this pattern this has nothing to do with the direction the data flows in, which results in the rules defined below.
 - set up a ```uint32_t version_DATA``` in each Module
 - create a ```CallerSlot``` for ```DATACallRead``` for modules reading the ```DATA```
 - (optional) create a ```CallerSlot``` for ```DATACallWrite``` for modules writing the ```DATA```
-- Create a ```DATACallRead``` either instancing the ```core::GenericVersionedCall``` template, or making sure that the call can distinguish between the ```DATA``` version that has been **set** into the Call and that which has get **gotten** out of the Call
+- Create a ```DATACallRead``` either instancing the ```core::GenericVersionedCall``` template, or making sure that the call can distinguish between the ```DATA``` version that was last **set** into the Call and that which was last **got** out of the Call
 - (optional) Create a ```DATACallWrite``` along the same lines
-- create a ```CalleeSlot``` for ```DATACallRead``` for modules supplying the ```DATA```
+- create a ```CalleeSlot``` for ```DATACallRead``` for modules consuming the ```DATA```
 - create a ```CallerSlot``` for ```DATACallWrite``` for modules supplying the ```DATA```
+
+A module with slots for both directions by convention should first execute the reading and then provide updates via writing.
 
 ### Usage: ```DATACallRead```
 - In the ```GetData``` callback, make sure you can *supply unchanged data very cheaply*.
@@ -54,13 +44,16 @@ To properly track changes across several Modules, you need to follow the recipe.
 - As a consumer
     - issue the Call: ```(*call)(DATACallRead::CallGetData)``` or your specialized version
     - check if something new is available: ```call::hasUpdate()```
+    - if necessary, fast-forward your own version to the available one ```version_DATA = GenericVersionedCall::version()```
 
 ### Usage: ```DataCallWrite```
 - In the ```GetData``` callback
   - First check if the incoming set data is newer than what you last got: ```GenericVersionedCall::hasUpdate()```
-  - Fetch the data and adjust your version to ```GenericVersionedCall::version()```
-- As a consumer
-  - f
+  - Fetch the data and if necessary, fast-forward your own version to the available one ```version_DATA = GenericVersionedCall::version()```
+- As a provider
+  - If parameters or incoming data have changed, modify your ```DATA``` accordingly, **increasing** your version.
+  - **ALWAYS** set the data in the call, supplying your version.
+  - issue the Call: ```(*call)(DATACallRead::CallGetData)``` or your specialized version
 
 # Synchronized Selection across Modules
 
@@ -74,7 +67,7 @@ The flags here are stored uniquely, resembling a unique pointer or Rust-like mem
 
 ## FlagStorage_GL
 
-This FlagStorage variant relies on a shader storage buffer and does not move any data around. It still keeps track of proper versions so you can detect and act on changes, for example when synchronizing a FlagStorage and a FlagStorage_GL.
+This FlagStorage variant relies on a shader storage buffer and does not move any data around. It is implicitly synchronized by single-threaded execution in OpenGL. You still need to synchronize with the host if you want to download the data though. It still keeps track of proper versions so you can detect and act on changes, for example when synchronizing a FlagStorage and a FlagStorage_GL.
 
 # Graph Manipulation
 
@@ -115,3 +108,18 @@ It causes the graph updater to stop at the indicated event and delay further gra
 |moduleDelRequestsFlushIndices|
 |paramSetRequestsFlushIndices|
 |groupParamSetRequestsFlushIndices|
+
+
+## License
+
+MegaMol is freely and publicly available as open source following the therms of the BSD License.
+Copyright (c) 2015, MegaMol Team TU Dresden, Germany Visualization Research Center, University of Stuttgart (VISUS), Germany
+Alle Rechte vorbehalten.
+All rights reserved.
+Redistribution and use in source and binary forms, with or without modification, are permitted
+provided that the following conditions are met:
+- Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+- Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+- Neither the name of the MegaMol Team, TU Dresden, University of Stuttgart, nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE MEGAMOL TEAM "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE MEGAMOL TEAM BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
