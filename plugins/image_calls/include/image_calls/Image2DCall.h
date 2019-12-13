@@ -29,14 +29,14 @@ public:
      *
      * @return A human readable description of this call.
      */
-    static const char* Description(void) { return "New Call to transport 2D image data"; }
+    static const char* Description(void) { return "Call to transport 2D image data"; }
 
     /**
      * Answer the number of functions used for this call.
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) { return 1; }
+    static unsigned int FunctionCount(void) { return 3; }
 
     /**
      * Answer the name of the function used for this call.
@@ -49,6 +49,10 @@ public:
         switch (idx) {
         case 0:
             return "GetData";
+        case 1:
+            return "GetMetaData";
+        case 2:
+            return "SetWishlist";
         }
         return nullptr;
     }
