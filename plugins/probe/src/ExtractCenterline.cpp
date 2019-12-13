@@ -147,13 +147,10 @@ bool ExtractCenterline::getMetaData(core::Call& call) {
     if (!(*cm)(1)) return false;
     mesh_meta_data = cm->getMetaData();
 
-    if (mesh_meta_data.m_data_hash == _old_datahash) return true;
-
     // put metadata in line call
     _bbox = mesh_meta_data.m_bboxs;
     line_meta_data.m_bboxs = mesh_meta_data.m_bboxs;
     line_meta_data.m_frame_cnt = mesh_meta_data.m_frame_cnt;
-    line_meta_data.m_data_hash++;
     cl->setMetaData(line_meta_data);
 
     return true;
@@ -165,58 +162,62 @@ bool ExtractCenterline::getData(core::Call& call) {
 
     auto cm = this->_getDataCall.CallAs<mesh::CallMesh>();
     if (cm == nullptr) return false;
+    if (!(*cm)(0)) return false;
 
     auto meta_data = cm->getMetaData();
+    
 
-    if (meta_data.m_data_hash != _old_datahash)
-        if (!(*cm)(0)) return false;
+    if (cm->hasUpdate())
+    {
+        ++_version;
 
-    meta_data = cm->getMetaData();
-    auto data = cm->getData();
-    if (data->accessMesh().size() > 1 || data->accessMesh().empty()) {
-        vislib::sys::Log::DefaultLog.WriteError("[ExtractCenterline] Cannot handle mesh");
-        return false;
-    }
+        auto data = cm->getData();
 
-    float* vertices = nullptr;
-    uint32_t num_vertices = 0;
-    uint32_t num_components = 0;
-    for (auto& attrib : data->accessMesh()[0].attributes) {
-        if (attrib.semantic == mesh::MeshDataAccessCollection::POSITION) {
-            if (attrib.component_type != mesh::MeshDataAccessCollection::FLOAT) {
-                vislib::sys::Log::DefaultLog.WriteError("[ExtractCenterline] Cannot handle data type");
-                return false;
-            }
-            vertices = reinterpret_cast<float*>(attrib.data);
-            num_vertices =
-                attrib.byte_size / (mesh::MeshDataAccessCollection::getByteSize(attrib.component_type) * attrib.component_cnt);
-            num_components = attrib.component_cnt;
+        if (data->accessMesh().size() > 1 || data->accessMesh().empty()) {
+            vislib::sys::Log::DefaultLog.WriteError("[ExtractCenterline] Cannot handle mesh");
+            return false;
         }
+
+        float* vertices = nullptr;
+        uint32_t num_vertices = 0;
+        uint32_t num_components = 0;
+        for (auto& attrib : data->accessMesh()[0].attributes) {
+            if (attrib.semantic == mesh::MeshDataAccessCollection::POSITION) {
+                if (attrib.component_type != mesh::MeshDataAccessCollection::FLOAT) {
+                    vislib::sys::Log::DefaultLog.WriteError("[ExtractCenterline] Cannot handle data type");
+                    return false;
+                }
+                vertices = reinterpret_cast<float*>(attrib.data);
+                num_vertices =
+                    attrib.byte_size / (mesh::MeshDataAccessCollection::getByteSize(attrib.component_type) * attrib.component_cnt);
+                num_components = attrib.component_cnt;
+            }
+        }
+
+        assert(vertices != nullptr || num_vertices != 0 || num_components != 0);
+            
+        this->extractCenterLine(vertices, num_vertices, num_components);
+
+        _line_attribs.resize(1);
+        _line_attribs[0].component_type = mesh::MeshDataAccessCollection::ValueType::FLOAT;
+        _line_attribs[0].byte_size = _centerline.size() * sizeof(std::array<float, 4>);
+        _line_attribs[0].component_cnt = 3;
+        _line_attribs[0].stride = sizeof(std::array<float, 4>);
+        _line_attribs[0].data = reinterpret_cast<uint8_t*>(_centerline.data());
+        _line_attribs[0].semantic = mesh::MeshDataAccessCollection::POSITION;
+
+        _cl_indices.resize(_centerline.size()-1);
+        std::generate(_cl_indices.begin(), _cl_indices.end(), [n = 0]() mutable { return n++; });
+
+        _line_indices.type = mesh::MeshDataAccessCollection::ValueType::UNSIGNED_INT;
+        _line_indices.byte_size = _cl_indices.size() * sizeof(uint32_t);
+        _line_indices.data = reinterpret_cast<uint8_t*>(_cl_indices.data());
     }
-
-    assert(vertices != nullptr || num_vertices != 0 || num_components != 0);
-    if (meta_data.m_data_hash != _old_datahash) this->extractCenterLine(vertices, num_vertices, num_components);
-
-    _line_attribs.resize(1);
-    _line_attribs[0].component_type = mesh::MeshDataAccessCollection::ValueType::FLOAT;
-    _line_attribs[0].byte_size = _centerline.size() * sizeof(std::array<float, 4>);
-    _line_attribs[0].component_cnt = 3;
-    _line_attribs[0].stride = sizeof(std::array<float, 4>);
-    _line_attribs[0].data = reinterpret_cast<uint8_t*>(_centerline.data());
-    _line_attribs[0].semantic = mesh::MeshDataAccessCollection::POSITION;
-
-    _cl_indices.resize(_centerline.size()-1);
-    std::generate(_cl_indices.begin(), _cl_indices.end(), [n = 0]() mutable { return n++; });
-
-    _line_indices.type = mesh::MeshDataAccessCollection::ValueType::UNSIGNED_INT;
-    _line_indices.byte_size = _cl_indices.size() * sizeof(uint32_t);
-    _line_indices.data = reinterpret_cast<uint8_t*>(_cl_indices.data());
 
     // put data in line
     mesh::MeshDataAccessCollection line;
     line.addMesh(_line_attribs, _line_indices);
-    cl->setData(std::make_shared<mesh::MeshDataAccessCollection>(std::move(line)));
-    _old_datahash = meta_data.m_data_hash;
+    cl->setData(std::make_shared<mesh::MeshDataAccessCollection>(std::move(line)),_version);
 
     auto line_meta_data = cl->getMetaData();
     line_meta_data.m_bboxs = this->_bbox;

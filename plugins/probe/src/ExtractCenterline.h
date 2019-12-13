@@ -70,6 +70,7 @@ private:
 
     // CallMesh stuff
     core::BoundingBoxes_2 _bbox;
+    uint32_t _version = 0;
 
     // CallCenterline stuff
     std::vector<mesh::MeshDataAccessCollection::VertexAttribute> _line_attribs;

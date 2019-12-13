@@ -469,7 +469,6 @@ bool SurfaceNets::getData(core::Call& call) {
         something_changed = true;
     }
 
-
     _dims[0] = cd->GetResolution(0);
     _dims[1] = cd->GetResolution(1);
     _dims[2] = cd->GetResolution(2);
@@ -505,13 +504,14 @@ bool SurfaceNets::getData(core::Call& call) {
             _mesh_indices.byte_size = _faces.size() * sizeof(std::array<uint32_t,4>);
             _mesh_indices.data = reinterpret_cast<uint8_t*>(_faces.data());
 
+            ++_version;
     }
 
     // put data in mesh
     mesh::MeshDataAccessCollection mesh;
 
     mesh.addMesh(_mesh_attribs, _mesh_indices, mesh::MeshDataAccessCollection::PrimitiveType::QUADS);
-    cm->setData(std::make_shared<mesh::MeshDataAccessCollection>(std::move(mesh)));
+    cm->setData(std::make_shared<mesh::MeshDataAccessCollection>(std::move(mesh)),_version);
     _old_datahash = cd->DataHash();
     _recalc = false;
 
@@ -537,7 +537,6 @@ bool SurfaceNets::getMetaData(core::Call& call) {
     // put metadata in mesh call
     meta_data.m_bboxs = cd->AccessBoundingBoxes();
     meta_data.m_frame_cnt = cd->GetAvailableFrames();
-    meta_data.m_data_hash++;
     cm->setMetaData(meta_data);
 
     return true;
