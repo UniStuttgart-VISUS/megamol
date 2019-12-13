@@ -61,13 +61,31 @@ protected:
     virtual void release(void);
 
     /**
-     * The render callback.
+     * The get data callback.
      *
      * @param call The calling call.
      *
      * @return The return value of the function.
      */
     virtual bool GetData(core::Call& call);
+
+    /**
+     * The get metadata callback.
+     *
+     * @param call The calling call.
+     *
+     * @return The return value of the function.
+     */
+    virtual bool GetMetaData(core::Call& call);
+
+    /**
+     * The set wishlist callback.
+     *
+     * @param call The calling call.
+     *
+     * @return The return value of the function.
+     */
+    virtual bool SetWishlist(core::Call& call);
 
 private:
     /** Callee slot requesting images from this module */

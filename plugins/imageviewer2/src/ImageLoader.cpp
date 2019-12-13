@@ -32,9 +32,16 @@ ImageLoader::ImageLoader(void)
     , imageData(std::make_shared<image_calls::Image2DCall::ImageMap>())
     , datahash(0) {
 
-    this->callRequestImage.SetCallback(
-        image_calls::Image2DCall::ClassName(), image_calls::Image2DCall::FunctionName(0), &ImageLoader::GetData);
+    this->callRequestImage.SetCallback(image_calls::Image2DCall::ClassName(),
+        image_calls::Image2DCall::FunctionName(image_calls::Image2DCall::CallForGetData), &ImageLoader::GetData);
+    this->callRequestImage.SetCallback(image_calls::Image2DCall::ClassName(),
+        image_calls::Image2DCall::FunctionName(image_calls::Image2DCall::CallForGetMetaData),
+        &ImageLoader::GetMetaData);
+    this->callRequestImage.SetCallback(image_calls::Image2DCall::ClassName(),
+        image_calls::Image2DCall::FunctionName(image_calls::Image2DCall::CallForSetWishlist),
+        &ImageLoader::SetWishlist);
     this->MakeSlotAvailable(&this->callRequestImage);
+
 
     this->filenameSlot.SetParameter(new param::FilePathParam(""));
     this->MakeSlotAvailable(&this->filenameSlot);
@@ -91,6 +98,22 @@ bool ImageLoader::GetData(core::Call& call) {
     ic->SetImagePtr(this->imageData);
     ic->SetDataHash(this->datahash);
 
+    return true;
+}
+
+/*
+ * ImageLoader::GetMetaData
+ */
+bool ImageLoader::GetMetaData(core::Call& call) {
+    // TODO implement
+    return true;
+}
+
+/*
+ * ImageLoader::SetWishlist
+ */
+bool ImageLoader::SetWishlist(core::Call& call) {
+    // TODO implement
     return true;
 }
 

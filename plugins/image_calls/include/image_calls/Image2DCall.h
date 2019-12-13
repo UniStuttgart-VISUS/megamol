@@ -17,6 +17,15 @@ class image_calls_API Image2DCall : public megamol::core::AbstractGetDataCall {
 public:
     typedef std::map<std::string, vislib::graphics::BitmapImage> ImageMap;
 
+    /** Index of the GetData function */
+    static const uint32_t CallForGetData;
+
+    /** Index of the GetMetaData function */
+    static const uint32_t CallForGetMetaData;
+
+    /** Index of the SetWishlist function */
+    static const uint32_t CallForSetWishlist;
+
     /**
      * Answer the name of this call.
      *

@@ -7,6 +7,21 @@ using namespace megamol::image_calls;
 /*
  * Image2DCall::Image2DCall
  */
+const uint32_t Image2DCall::CallForGetData = 0;
+
+/*
+ * Image2DCall::Image2DCall
+ */
+const uint32_t Image2DCall::CallForGetMetaData = 1;
+
+/*
+ * Image2DCall::Image2DCall
+ */
+const uint32_t Image2DCall::CallForSetWishlist = 2;
+
+/*
+ * Image2DCall::Image2DCall
+ */
 Image2DCall::Image2DCall(void) : core::AbstractGetDataCall(), imagePtr(nullptr) {}
 
 /*
