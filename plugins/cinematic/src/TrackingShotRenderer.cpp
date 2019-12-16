@@ -131,16 +131,9 @@ void TrackingShotRenderer::PreRender(core::view::CallRender3D_2& call) {
     call.GetCamera(cam);
 
     // Get current viewport
-    glm::vec4 viewport;
-    if (!cam.image_tile().empty()) { /// or better: auto viewport = cr3d_in->GetViewport().GetSize()?
-        viewport = glm::vec4(
-            cam.image_tile().left(), cam.image_tile().bottom(), cam.image_tile().width(), cam.image_tile().height());
-    }
-    else {
-        viewport = glm::vec4(0.0f, 0.0f, cam.resolution_gate().width(), cam.resolution_gate().height());
-    }
-    UINT vpW_int = static_cast<UINT>(viewport.z);
-    UINT vpH_int = static_cast<UINT>(viewport.w);
+    auto viewport = call.GetViewport();
+    UINT vpW_int = static_cast<UINT>(viewport.Width());
+    UINT vpH_int = static_cast<UINT>(viewport.Height());
 
     // Prepare rendering to FBO of chained output -----------------------------
 
@@ -249,17 +242,9 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     glm::mat4 mvp = proj * view;
 
     // Get current viewport
-    ///? auto viewport = call.GetViewport().GetSize();
-    glm::vec4 viewport;
-    if (!cam.image_tile().empty()) {
-        viewport = glm::vec4(
-            cam.image_tile().left(), cam.image_tile().bottom(), cam.image_tile().width(), cam.image_tile().height());
-    }
-    else {
-        viewport = glm::vec4(0.0f, 0.0f, cam.resolution_gate().width(), cam.resolution_gate().height());
-    }
-    const float vp_fw = viewport.z;
-    const float vp_fh = viewport.w;
+    auto viewport = call.GetViewport();
+    const float vp_fw = static_cast<float>(viewport.Width());
+    const float vp_fh = static_cast<float>(viewport.Height());
 
     // Get matrix for orthogonal projection of 2D rendering
     glm::mat4 ortho = glm::ortho(0.0f, vp_fw, 0.0f, vp_fh, -1.0f, 1.0f);

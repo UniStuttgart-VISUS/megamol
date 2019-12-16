@@ -106,17 +106,14 @@ bool ArrowRenderer::create(void) {
 
 bool ArrowRenderer::GetExtents(view::CallRender3D_2& call) {
 
-    auto cr = &call;
-    if (cr == nullptr) return false;
-
     MultiParticleDataCall* c2 = this->getDataSlot.CallAs<MultiParticleDataCall>();
     if ((c2 != nullptr) && ((*c2)(1))) {
-        cr->SetTimeFramesCount(c2->FrameCount());
-        cr->AccessBoundingBoxes() = c2->AccessBoundingBoxes();
+        call.SetTimeFramesCount(c2->FrameCount());
+        call.AccessBoundingBoxes() = c2->AccessBoundingBoxes();
 
     } else {
-        cr->SetTimeFramesCount(1);
-        cr->AccessBoundingBoxes().Clear();
+        call.SetTimeFramesCount(1);
+        call.AccessBoundingBoxes().Clear();
     }
 
     return true;
@@ -132,14 +129,11 @@ void ArrowRenderer::release(void) {
 
 bool ArrowRenderer::Render(view::CallRender3D_2& call) {
 
-    auto cr = &call;
-    if (cr == nullptr) return false;
-
     MultiParticleDataCall *c2 = this->getDataSlot.CallAs<MultiParticleDataCall>();
     if (c2 != nullptr) {
-        c2->SetFrameID(static_cast<unsigned int>(cr->Time()));
+        c2->SetFrameID(static_cast<unsigned int>(call.Time()));
         if (!(*c2)(1)) return false;
-        c2->SetFrameID(static_cast<unsigned int>(cr->Time()));
+        c2->SetFrameID(static_cast<unsigned int>(call.Time()));
         if (!(*c2)(0)) return false;
     } else {
         return false;
@@ -172,7 +166,7 @@ bool ArrowRenderer::Render(view::CallRender3D_2& call) {
 
     // Camera
     view::Camera_2 cam;
-    cr->GetCamera(cam);
+    call.GetCamera(cam);
     cam_type::snapshot_type snapshot;
     cam_type::matrix_type viewTemp, projTemp;
     cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
@@ -190,13 +184,12 @@ bool ArrowRenderer::Render(view::CallRender3D_2& call) {
     glm::mat4 MVPtransp = glm::transpose(MVP);
 
     // Viewport
+    auto viewport = call.GetViewport();
     glm::vec4 viewportStuff;
-    if (!cam.image_tile().empty()) {
-        viewportStuff = glm::vec4(cam.image_tile().left(), cam.image_tile().bottom(), cam.image_tile().width(), cam.image_tile().height());
-    }
-    else {
-        viewportStuff = glm::vec4(0.0f, 0.0f, cam.resolution_gate().width(), cam.resolution_gate().height());
-    }
+    viewportStuff[0] = 0.0f;
+    viewportStuff[1] = 0.0f;
+    viewportStuff[2] = static_cast<float>(viewport.Width());
+    viewportStuff[3] = static_cast<float>(viewport.Height());
     if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
     if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
     viewportStuff[2] = 2.0f / viewportStuff[2];
