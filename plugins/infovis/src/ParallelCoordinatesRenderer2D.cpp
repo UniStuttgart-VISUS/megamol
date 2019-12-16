@@ -287,7 +287,9 @@ void ParallelCoordinatesRenderer2D::pickIndicator(float x, float y, int& axis, i
     axis = mouseXtoAxis(x);
     index = -1;
     if (axis != -1) {
-        float val = (y - this->marginY) / this->axisHeight;
+        float val = (y - this->marginY) / this->axisHeight *
+                        (maximums[this->pickedIndicatorAxis] - minimums[this->pickedIndicatorAxis]) +
+                    minimums[this->pickedIndicatorAxis];
         float thresh = 0.1f;
 
         float middle = (this->filters[axis].upper + this->filters[axis].lower) * 0.5f;
@@ -341,8 +343,8 @@ bool ParallelCoordinatesRenderer2D::scalingChangedCallback(core::param::ParamSlo
 
 bool ParallelCoordinatesRenderer2D::resetFiltersSlotCallback(core::param::ParamSlot& caller) {
     for (GLuint i = 0; i < this->columnCount; i++) {
-        this->filters[i].lower = 0.0f;
-        this->filters[i].upper = 1.0f;
+        this->filters[i].lower = minimums[i];
+        this->filters[i].upper = maximums[i];
     }
     this->needFlagsUpdate = true;
     return true;
@@ -394,10 +396,8 @@ void ParallelCoordinatesRenderer2D::assertData(core::view::CallRender2D& call) {
             minimums[x] = floats->GetColumnsInfos()[x].MinimumValue();
             maximums[x] = floats->GetColumnsInfos()[x].MaximumValue();
             names[x] = floats->GetColumnsInfos()[x].Name();
-            // TODO this is shit the user needs his real values DAMMIT!
-            // hopefully fixed through proper axis labels.
-            filters[x].lower = 0.0f; // minimums[x];
-            filters[x].upper = 1.0f; // maximums[x];
+            filters[x].lower = minimums[x];
+            filters[x].upper = maximums[x];
         }
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, dataBuffer);
         glBufferData(GL_SHADER_STORAGE_BUFFER, this->columnCount * this->itemCount * sizeof(float), floats->GetData(),
@@ -542,12 +542,14 @@ bool ParallelCoordinatesRenderer2D::OnMouseMove(double x, double y) {
     }
 
     if (this->interactionState == InteractionState::INTERACTION_FILTER) {
-        float val = (this->mouseY - this->marginY) / this->axisHeight;
+        float val = ((this->mouseY - this->marginY) / this->axisHeight) *
+                        (maximums[this->pickedIndicatorAxis] - minimums[this->pickedIndicatorAxis]) +
+                    minimums[this->pickedIndicatorAxis];
         if (this->pickedIndicatorIndex == 0) {
-            val = std::clamp(val, 0.0f, this->filters[pickedIndicatorAxis].upper);
+            val = std::clamp(val, minimums[this->pickedIndicatorAxis], this->filters[pickedIndicatorAxis].upper);
             this->filters[this->pickedIndicatorAxis].lower = val;
         } else {
-            val = std::clamp(val, this->filters[pickedIndicatorAxis].lower, 1.0f);
+            val = std::clamp(val, this->filters[pickedIndicatorAxis].lower, maximums[this->pickedIndicatorAxis]);
             this->filters[this->pickedIndicatorAxis].upper = val;
         }
         this->needFlagsUpdate = true;
@@ -619,11 +621,11 @@ void ParallelCoordinatesRenderer2D::drawAxes(void) {
             this->font.DrawString(color, x, this->marginY * 1.5f + this->axisHeight, fontsize, false, std::to_string(maximums[realCol]).c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
 #    else
             float bottom = filters[realCol].lower;
-            bottom *= (maximums[realCol] - minimums[realCol]);
-            bottom += minimums[realCol];
+            // bottom *= (maximums[realCol] - minimums[realCol]);
+            // bottom += minimums[realCol];
             float top = filters[realCol].upper;
-            top *= (maximums[realCol] - minimums[realCol]);
-            top += minimums[realCol];
+            // top *= (maximums[realCol] - minimums[realCol]);
+            // top += minimums[realCol];
             this->font.DrawString(color, x, this->marginY * 0.5f, fontsize, false, std::to_string(bottom).c_str(),
                 core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
             this->font.DrawString(color, x, this->marginY * 1.5f + this->axisHeight, fontsize, false,
