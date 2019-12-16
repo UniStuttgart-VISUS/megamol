@@ -23,6 +23,7 @@
 #include "mmcore/cluster/simple/View.h"
 #include "mmcore/misc/SiffCSplineFitter.h"
 #include "mmcore/misc/WatermarkRenderer.h"
+#include "mmcore/misc/TestArrowsDataSource.h"
 #include "mmcore/misc/TestSpheresDataSource.h"
 #include "mmcore/moldyn/AddParticleColours.h"
 #include "mmcore/moldyn/ArrowRenderer.h"
@@ -107,6 +108,7 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<cluster::mpi::View>();
     instance.RegisterAutoDescription<misc::SiffCSplineFitter>();
     instance.RegisterAutoDescription<misc::WatermarkRenderer>();
+    instance.RegisterAutoDescription<misc::TestArrowsDataSource>();
     instance.RegisterAutoDescription<misc::TestSpheresDataSource>();
     instance.RegisterAutoDescription<moldyn::AddParticleColours>();
     instance.RegisterAutoDescription<moldyn::ArrowRenderer>();
