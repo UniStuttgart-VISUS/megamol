@@ -301,7 +301,9 @@ bool megamol::ospray::OSPRayArrowGeometry::onGetData(
         this->hashInput = gd->DataHash();
     } else {
         // Nothing to do here ...
-        return true;
+        // MegaMol sometimes thrashes the first frame without using it, thus
+        // ruining the whole caching. It's a disaster ...
+        //return true;
     }
 
     if (!(*gd)(0)) {
@@ -318,20 +320,25 @@ bool megamol::ospray::OSPRayArrowGeometry::onGetData(
 
         if (OSPRayArrowGeometry::checkParticles(particles)) {
             geo.push_back(::ospNewGeometry("arrows"));
+            ASSERT(!geo.empty());
+            ASSERT(geo.back() != nullptr);
 
             // The data pointer is the first of all relevant pointers, which
             // need to designate the same contiguous memory block if they have
             // passed the particle check above.
             auto vertices = static_cast<const std::int8_t *>(
                 particles.GetVertexData());
+            ASSERT(vertices != nullptr);
             auto directions = static_cast<const std::int8_t *>(
                 particles.GetDirData());
+            ASSERT(directions != nullptr);
             auto data = std::min(vertices, directions);
 
             // Pass the data to OSPRay.
             {
-                auto ospData = ::ospNewData(particles.GetCount(),
-                    OSPDataType::OSP_DATA,
+                auto ospData = ::ospNewData(
+                    particles.GetCount() * particles.GetVertexDataStride(),
+                    OSPDataType::OSP_CHAR,
                     data,
                     OSPDataCreationFlags::OSP_DATA_SHARED_BUFFER);
                 ::ospCommit(ospData);
