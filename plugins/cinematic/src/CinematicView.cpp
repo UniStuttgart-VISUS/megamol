@@ -72,6 +72,7 @@ CinematicView::CinematicView(void) : View3D_2()
     sbs->SetTypePair(CinematicView::SkyboxSides::SKYBOX_DOWN, "Down");
     this->selectedSkyboxSideParam << sbs;
     this->MakeSlotAvailable(&this->selectedSkyboxSideParam);
+    sbs = nullptr;
 
     this->skyboxCubeModeParam << new param::BoolParam(this->skyboxCubeMode);
     this->MakeSlotAvailable(&this->skyboxCubeModeParam);
@@ -107,6 +108,7 @@ CinematicView::CinematicView(void) : View3D_2()
     enp->SetTypePair(static_cast<int>(megamol::core::thecam::Eye::right), "Right");
     this->eyeParam << enp;
     this->MakeSlotAvailable(&this->eyeParam);
+    enp = nullptr;
 
     param::EnumParam* pep = new param::EnumParam(static_cast<int>(megamol::core::thecam::Projection_type::perspective));
     pep->SetTypePair(static_cast<int>(megamol::core::thecam::Projection_type::perspective), "Mono Perspective");
@@ -117,6 +119,7 @@ CinematicView::CinematicView(void) : View3D_2()
     pep->SetTypePair(static_cast<int>(megamol::core::thecam::Projection_type::converged), "Converged");
     this->projectionParam << pep;
     this->MakeSlotAvailable(&this->projectionParam);
+    pep = nullptr;
 }
 
 

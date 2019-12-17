@@ -53,6 +53,7 @@ ReplacementRenderer::ReplacementRenderer(void) : megamol::core::view::RendererMo
     tmpEnum->SetTypePair(KeyAssignment::KEY_ASSIGN_0, "Alt + 0");
     this->replacementKeyParam << tmpEnum;
     this->MakeSlotAvailable(&this->replacementKeyParam);
+    tmpEnum = nullptr;
 }
 
 

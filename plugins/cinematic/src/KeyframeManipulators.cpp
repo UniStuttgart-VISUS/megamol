@@ -40,6 +40,7 @@ KeyframeManipulators::KeyframeManipulators(void)
     vmg->SetTypePair(VisibleGroup::SELECTED_KEYFRAME_LOOKAT_AND_UP_VECTOR, "LookAt Vector and Up Vector");
     this->visibleGroupParam << vmg;
     this->paramSlots.emplace_back(&this->visibleGroupParam);
+    vmg = nullptr;
 
     Manipulator m;
     m.show = false;
