@@ -15,6 +15,7 @@
 #include "OSPRayRenderer.h"
 
 #include "OSPRayArrowGeometry.h"
+#include "OSPRayCylinderGeometry.h"
 #include "OSPRaySphereGeometry.h"
 #include "OSPRayNHSphereGeometry.h"
 #include "OSPRayTriangleMesh.h"
@@ -68,6 +69,7 @@ namespace {
                this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayRenderer>();
 
                this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayArrowGeometry>();
+               this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayCylinderGeometry>();
                this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRaySphereGeometry>();
                this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayNHSphereGeometry>();
                this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayTriangleMesh>();

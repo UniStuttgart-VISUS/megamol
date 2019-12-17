@@ -27,6 +27,7 @@
 #include "vislib/sys/Log.h"
 
 #include "OSPRayArrowGeometry.h"
+#include "osputils.h"
 
 
 
@@ -48,7 +49,7 @@ megamol::ospray::OSPRayArrowGeometry::OSPRayArrowGeometry(void)
     using namespace megamol::core::view;
 
     /* Configure parameters. */
-    this->paramBaseRadius << new FloatParam(0.01f, 0.001f);
+    this->paramBaseRadius << new FloatParam(0.01f, 0.000001f);
     this->MakeSlotAvailable(&this->paramBaseRadius);
 
     this->paramScale << new FloatParam(1.0f, 0.0f);
@@ -93,13 +94,11 @@ bool megamol::ospray::OSPRayArrowGeometry::checkParticles(
     using namespace megamol::core::moldyn;
     using vislib::sys::Log;
 
-    if (OSPRayArrowGeometry::toOspray(particles.GetVertexDataType())
-            == OSPDataType::OSP_UNKNOWN) {
+    if (ToOspray(particles.GetVertexDataType()) == OSPDataType::OSP_UNKNOWN) {
         return false;
     }
 
-    if (OSPRayArrowGeometry::toOspray(particles.GetDirDataType())
-            == OSPDataType::OSP_UNKNOWN) {
+    if (ToOspray(particles.GetDirDataType()) == OSPDataType::OSP_UNKNOWN) {
         return false;
     }
 
@@ -144,60 +143,15 @@ bool megamol::ospray::OSPRayArrowGeometry::checkState(
 
 
 /*
- * megamol::ospray::OSPRayArrowGeometry::toOspray
- */
-constexpr OSPDataType megamol::ospray::OSPRayArrowGeometry::toOspray(
-        const ParticleType::DirDataType type) {
-    using vislib::sys::Log;
-
-    switch (type) {
-        case ParticleType::DirDataType::DIRDATA_FLOAT_XYZ:
-            return OSPDataType::OSP_FLOAT3;
-
-        default:
-            Log::DefaultLog.WriteWarn(_T("Unsupported directional data type ")
-                _T("%d for OSPRay arrows."), type);
-            return OSPDataType::OSP_UNKNOWN;
-    }
-}
-
-
-/*
- * megamol::ospray::OSPRayArrowGeometry::toOspray
- */
-constexpr OSPDataType megamol::ospray::OSPRayArrowGeometry::toOspray(
-        const ParticleType::VertexDataType type) {
-    using vislib::sys::Log;
-
-    switch (type) {
-        case ParticleType::VertexDataType::VERTDATA_FLOAT_XYZ:
-            return OSPDataType::OSP_FLOAT3;
-
-        case ParticleType::VertexDataType::VERTDATA_FLOAT_XYZR:
-            return OSPDataType::OSP_FLOAT4;
-
-        default:
-            Log::DefaultLog.WriteWarn(_T("Unsupported data vertex type ")
-                _T("%d for OSPRay arrows."), type);
-            return OSPDataType::OSP_UNKNOWN;
-    }
-}
-
-
-/*
  * megamol::ospray::OSPRayArrowGeometry::checkState
  */
 bool megamol::ospray::OSPRayArrowGeometry::checkState(const bool reset) {
-    bool retval = true;
+    bool retval = false;
 
-    retval = OSPRayArrowGeometry::checkState(this->paramBaseRadius, reset)
-        && retval;  // "&& retval" must be last!
-    retval = OSPRayArrowGeometry::checkState(this->paramScale, reset)
-        && retval;  // "&& retval" must be last!
-    retval = OSPRayArrowGeometry::checkState(this->paramTipLength, reset)
-        && retval;  // "&& retval" must be last!
-    retval = OSPRayArrowGeometry::checkState(this->paramTipRadius, reset)
-        && retval;  // "&& retval" must be last!
+    retval |= OSPRayArrowGeometry::checkState(this->paramBaseRadius, reset);
+    retval |= OSPRayArrowGeometry::checkState(this->paramScale, reset);
+    retval |= OSPRayArrowGeometry::checkState(this->paramTipLength, reset);
+    retval |= OSPRayArrowGeometry::checkState(this->paramTipRadius, reset);
 
     return retval;
 }
@@ -290,7 +244,7 @@ bool megamol::ospray::OSPRayArrowGeometry::onGetData(
 
     // Determine whether the state of the module itself has changed.
     const auto isStateChanged = (this->frameID != frameTime)
-        && this->checkState(true);
+        || this->checkState(true);
     if (isStateChanged) {
         ++this->hashState;
     }

@@ -1,5 +1,5 @@
 /*
- * OSPRayArrowGeometry.h
+ * OSPRayCylinderGeometry.h
  *
  * Copyright (C) 2019 by MegaMol Team. Alle Rechte vorbehalten.
  */
@@ -17,33 +17,34 @@ namespace megamol {
 namespace ospray {
 
     /** The MegaMol equivalent of our own arrow geometry in OSPRay. */
-    class OSPRayArrowGeometry : public core::Module {
+    class OSPRayCylinderGeometry : public core::Module {
 
     public:
 
         static inline constexpr const char *ClassName(void) {
-           return "OSPRayArrowGeometry";
+           return "OSPRayCylinderGeometry";
         }
 
         static inline constexpr const char* Description(void) {
-            return "Creates OSPRay arrow geometry from patricle data.";
+            return "Creates OSPRay cylinder geometry from patricle data.";
         }
 
         static inline constexpr bool IsAvailable(void) {
             return true;
         }
 
-        OSPRayArrowGeometry(void);
+        OSPRayCylinderGeometry(void);
 
-        virtual ~OSPRayArrowGeometry(void);
+        virtual ~OSPRayCylinderGeometry(void);
 
     protected:
 
         typedef core::moldyn::SimpleSphericalParticles ParticleType;
 
-        static bool checkParticles(const ParticleType& particles);
-
         static bool checkState(core::param::ParamSlot& param, const bool reset);
+
+        static std::tuple<std::size_t, std::size_t> getSizes(
+            const ParticleType& particles);
 
         bool checkState(const bool reset);
 
@@ -68,13 +69,12 @@ namespace ospray {
 
     private:
 
+        std::vector<std::uint8_t> data;
         unsigned int frameID;
         std::size_t hashInput;
         std::size_t hashState;
-        core::param::ParamSlot paramBaseRadius;
+        core::param::ParamSlot paramRadius;
         core::param::ParamSlot paramScale;
-        core::param::ParamSlot paramTipLength;
-        core::param::ParamSlot paramTipRadius;
         core::CallerSlot slotGetData;
         core::CalleeSlot slotInstantiate;
 
