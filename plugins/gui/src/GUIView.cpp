@@ -88,6 +88,7 @@ GUIView::GUIView()
     this->style_param << styles;
     this->style_param.ForceSetDirty();
     this->MakeSlotAvailable(&this->style_param);
+    styles = nullptr;
 
     this->state_param << new core::param::StringParam("");
     this->MakeSlotAvailable(&this->state_param);

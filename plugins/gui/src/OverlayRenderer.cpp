@@ -63,6 +63,7 @@ OverlayRenderer::OverlayRenderer(void)
     this->paramMode << mep;
     this->paramMode.SetUpdateCallback(this, &OverlayRenderer::onToggleMode);
     this->MakeSlotAvailable(&this->paramMode);
+    mep = nullptr;
 
     param::EnumParam* aep = new param::EnumParam(Anchor::ALIGN_LEFT_TOP);
     aep->SetTypePair(Anchor::ALIGN_LEFT_TOP, "Left Top");
@@ -77,6 +78,7 @@ OverlayRenderer::OverlayRenderer(void)
     this->paramAnchor << aep;
     this->paramAnchor.SetUpdateCallback(this, &OverlayRenderer::onTriggerRecalcRectangle);
     this->MakeSlotAvailable(&this->paramAnchor);
+    aep = nullptr;
 
     this->paramCustomPosition << new param::Vector2fParam(vislib::math::Vector<float, 2>(0.0f, 0.0f),
         vislib::math::Vector<float, 2>(0.0f, 0.0f), vislib::math::Vector<float, 2>(100.0f, 100.0f));
@@ -137,6 +139,7 @@ OverlayRenderer::OverlayRenderer(void)
     this->paramFontName << fep;
     this->paramFontName.SetUpdateCallback(this, &OverlayRenderer::onFontName);
     this->MakeSlotAvailable(&this->paramFontName);
+    fep = nullptr;
 
     this->paramFontSize << new param::FloatParam(20.0f, 0.0f);
     this->MakeSlotAvailable(&this->paramFontSize);
