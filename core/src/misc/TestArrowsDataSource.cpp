@@ -141,13 +141,13 @@ bool megamol::core::misc::TestArrowsDataSource::create(void) {
         p.l = 1.0f;
     }
 
-    this->extents[0] = -1.0f;
-    this->extents[1] = -1.0f;
-    this->extents[2] = -1.0f;
+    this->extents[0] = -5.0f;
+    this->extents[1] = -5.0f;
+    this->extents[2] = -5.0f;
 
-    this->extents[3] = 1.0f;
-    this->extents[4] = 1.0f;
-    this->extents[5] = 1.0f;
+    this->extents[3] = 5.0f;
+    this->extents[4] = 5.0f;
+    this->extents[5] = 5.0f;
 
     return true;
 }
