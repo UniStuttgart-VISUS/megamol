@@ -30,10 +30,17 @@ void main()
     	uint dataID = pc_item_dataID(itemID, f);
 		  float value = pc_item_dataValue_unscaled(dataID);
 
-      if (value < filters[f].lower || value > filters[f].upper) {
-        bitflag_set(flags[itemID], FLAG_FILTERED, true);
-  		  break;
-		  }
+      if (filters[f].lower < filters[f].upper) {
+        if (value < filters[f].lower || value > filters[f].upper) {
+          bitflag_set(flags[itemID], FLAG_FILTERED, true);
+          break;
+        }
+      } else {
+        if (value < filters[f].lower && value > filters[f].upper) {
+          bitflag_set(flags[itemID], FLAG_FILTERED, true);
+          break;
+        }
+      }
 	  }
   }
 }

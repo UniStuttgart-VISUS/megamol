@@ -294,7 +294,7 @@ void ParallelCoordinatesRenderer2D::pickIndicator(float x, float y, int& axis, i
 
         float middle = (this->filters[axis].upper + this->filters[axis].lower) * 0.5f;
 
-        if (fabs(this->filters[axis].upper - val) < thresh && val > middle) {
+        if (fabs(this->filters[axis].upper - val) < thresh) {
             index = 1;
         } else if (fabs(this->filters[axis].lower - val) < thresh) {
             index = 0;
@@ -436,6 +436,7 @@ void ParallelCoordinatesRenderer2D::computeScaling(void) {
     this->marginX = 20.f;
     this->marginY = 20.f;
     this->axisDistance = 40.0f;
+    this->fontSize = this->axisDistance / 10.0f;
     this->bounds.SetLeft(0.0f);
     this->bounds.SetRight(2.0f * marginX + this->axisDistance * (fc->GetColumnsCount() - 1));
 
@@ -493,6 +494,19 @@ bool ParallelCoordinatesRenderer2D::OnMouseButton(
         }
 
         if (this->shiftDown) {
+
+            auto axis = mouseXtoAxis(mousePressedX);
+            if (axis != -1) {
+                float base = this->marginY * 0.5f - fontSize * 0.5f;
+                if ((mousePressedY > base && mousePressedY < base + fontSize) ||
+                    (mousePressedY > base + this->marginY + this->axisHeight &&
+                        mousePressedY < base + this->marginY + this->axisHeight + fontSize)) {
+                    std::swap(this->filters[axis].lower, this->filters[axis].upper);
+                    this->needFlagsUpdate = true;
+                    return true;
+                }
+            }
+
             pickIndicator(mousePressedX, mousePressedY, this->pickedIndicatorAxis, this->pickedIndicatorIndex);
             if (this->pickedIndicatorAxis != -1) {
                 this->interactionState = InteractionState::INTERACTION_FILTER;
@@ -546,10 +560,10 @@ bool ParallelCoordinatesRenderer2D::OnMouseMove(double x, double y) {
                         (maximums[this->pickedIndicatorAxis] - minimums[this->pickedIndicatorAxis]) +
                     minimums[this->pickedIndicatorAxis];
         if (this->pickedIndicatorIndex == 0) {
-            val = std::clamp(val, minimums[this->pickedIndicatorAxis], this->filters[pickedIndicatorAxis].upper);
+            val = std::clamp(val, minimums[this->pickedIndicatorAxis], maximums[this->pickedIndicatorAxis]);
             this->filters[this->pickedIndicatorAxis].lower = val;
         } else {
-            val = std::clamp(val, this->filters[pickedIndicatorAxis].lower, maximums[this->pickedIndicatorAxis]);
+            val = std::clamp(val, minimums[this->pickedIndicatorAxis], maximums[this->pickedIndicatorAxis]);
             this->filters[this->pickedIndicatorAxis].upper = val;
         }
         this->needFlagsUpdate = true;
@@ -615,10 +629,9 @@ void ParallelCoordinatesRenderer2D::drawAxes(void) {
                 color = this->axesColor;
             }
             float x = this->marginX + this->axisDistance * c;
-            float fontsize = this->axisDistance / 10.0f;
 #    if 0
-            this->font.DrawString(color, x, this->marginY * 0.5f                   , fontsize, false, std::to_string(minimums[realCol]).c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
-            this->font.DrawString(color, x, this->marginY * 1.5f + this->axisHeight, fontsize, false, std::to_string(maximums[realCol]).c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
+            this->font.DrawString(color, x, this->marginY * 0.5f                   , fontSize, false, std::to_string(minimums[realCol]).c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
+            this->font.DrawString(color, x, this->marginY * 1.5f + this->axisHeight, fontSize, false, std::to_string(maximums[realCol]).c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
 #    else
             float bottom = filters[realCol].lower;
             // bottom *= (maximums[realCol] - minimums[realCol]);
@@ -626,13 +639,13 @@ void ParallelCoordinatesRenderer2D::drawAxes(void) {
             float top = filters[realCol].upper;
             // top *= (maximums[realCol] - minimums[realCol]);
             // top += minimums[realCol];
-            this->font.DrawString(color, x, this->marginY * 0.5f, fontsize, false, std::to_string(bottom).c_str(),
+            this->font.DrawString(color, x, this->marginY * 0.5f, fontSize, false, std::to_string(bottom).c_str(),
                 core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
-            this->font.DrawString(color, x, this->marginY * 1.5f + this->axisHeight, fontsize, false,
+            this->font.DrawString(color, x, this->marginY * 1.5f + this->axisHeight, fontSize, false,
                 std::to_string(top).c_str(), core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
 #    endif
             this->font.DrawString(color, x,
-                this->marginY * (2.0f + static_cast<float>(c % 2) * 0.5f) + this->axisHeight, fontsize * 2.0f, false,
+                this->marginY * (2.0f + static_cast<float>(c % 2) * 0.5f) + this->axisHeight, fontSize * 2.0f, false,
                 names[realCol].c_str(), core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
         }
         this->font.BatchDrawString();
