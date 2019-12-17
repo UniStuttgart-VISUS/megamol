@@ -34,7 +34,7 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
     , readFlagsSlot("readFlags", "reads the flag storage")
     , writeFlagsSlot("writeFlags", "writes the flag storage")
     , currentHash(0xFFFFFFFF)
-    , currentFlagsVersion(0xFFFFFFFF)
+    , currentFlagsVersion(0)
     , densityFBO()
     , drawModeSlot("drawMode", "Draw mode")
     , drawSelectedItemsSlot("drawSelectedItems", "Draw selected items")
@@ -62,6 +62,7 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
     , sqrtDensitySlot("sqrtDensity", "map root of density to transfer function (instead of linear mapping)")
     //, resetFlagsSlot("resetFlags", "Reset item flags to initial state")
     , resetFiltersSlot("resetFilters", "Reset dimension filters to initial state")
+    , filterStateSlot("filterState", "stores filter state for serialization")
     , numTicks(5)
     , columnCount(0)
     , itemCount(0)
@@ -178,6 +179,11 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
     resetFiltersSlot.SetUpdateCallback(this, &ParallelCoordinatesRenderer2D::resetFiltersSlotCallback);
     this->MakeSlotAvailable(&resetFiltersSlot);
 
+    filterStateSlot << new ::core::param::StringParam("");
+    // filterStateSlot.Param<core::param::StringParam>()->SetGUIVisible(false);
+    this->MakeSlotAvailable(&filterStateSlot);
+
+
     fragmentMinMax.resize(2);
 }
 
@@ -253,6 +259,8 @@ bool ParallelCoordinatesRenderer2D::create(void) {
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &maxWorkgroupCount[0]);
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, &maxWorkgroupCount[1]);
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, &maxWorkgroupCount[2]);
+
+    // this->filterStateSlot.ForceSetDirty();
 
     return true;
 }
@@ -902,6 +910,36 @@ void ParallelCoordinatesRenderer2D::drawParcos(void) {
     }
 }
 
+void ParallelCoordinatesRenderer2D::store_filters() {
+    nlohmann::json jf, jf_array;
+    for (auto& f : this->filters) {
+        DimensionFilter::to_json(jf, f);
+        jf_array.push_back(jf);
+    }
+    auto js = jf_array.dump();
+    this->filterStateSlot.Param<core::param::StringParam>()->SetValue(js.c_str());
+}
+
+void ParallelCoordinatesRenderer2D::load_filters() {
+    try {
+        auto j = nlohmann::json::parse(this->filterStateSlot.Param<core::param::StringParam>()->Value().PeekBuffer());
+        int i = 0;
+        for (auto& f : j) {
+            if (i < this->filters.size()) {
+                DimensionFilter::from_json(f, this->filters[i]);
+            } else {
+                break;
+            }
+            i++;
+        }
+    } catch (nlohmann::json::exception e) {
+        vislib::sys::Log::DefaultLog.WriteError(
+            "ParallelCoordinatesRenderer2D: could not parse serialized filters (exception %i)!", e.id);
+        return;
+    }
+}
+
+
 bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
     windowAspect = static_cast<float>(call.GetViewport().AspectRatio());
 
@@ -930,6 +968,12 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
 
     glDisable(GL_DEPTH_TEST);
     glDepthMask(GL_FALSE);
+
+    if (this->filterStateSlot.IsDirty()) {
+        load_filters();
+        this->filterStateSlot.ResetDirty();
+        this->needFlagsUpdate = true;
+    }
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, axisIndirectionBuffer);
     glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, this->columnCount * sizeof(GLuint), axisIndirection.data());
@@ -973,6 +1017,8 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
 
     if (needFlagsUpdate) {
         needFlagsUpdate = false;
+        this->store_filters();
+
         this->currentFlagsVersion++;
         // HAZARD: downloading everything over and over is slowish
         auto readFlags = readFlagsSlot.CallAs<core::FlagCallRead_GL>();
