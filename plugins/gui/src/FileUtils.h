@@ -8,19 +8,22 @@
 #ifndef MEGAMOL_GUI_FILEUTILS_INCLUDED
 #define MEGAMOL_GUI_FILEUTILS_INCLUDED
 
-#if _HAS_CXX17
-#    include <filesystem> // directory_iterator
+
+#if defined(_HAS_CXX17) || ((defined(_MSC_VER) && (_MSC_VER > 1916))) // C++2017 or since VS2019
+#    include <filesystem>
 namespace fsns = std::filesystem;
 #else
 // WINDOWS
 #    ifdef _WIN32
 #        include <filesystem>
+namespace fsns = std::experimental::filesystem;
 #    else
 // LINUX
 #        include <experimental/filesystem>
-#    endif
 namespace fsns = std::experimental::filesystem;
+#    endif
 #endif
+
 
 #include <fstream>
 #include <iostream>
