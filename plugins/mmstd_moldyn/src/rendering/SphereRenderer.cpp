@@ -138,6 +138,7 @@ SphereRenderer::SphereRenderer(void) : view::Renderer3DModule_2()
     rmp->SetTypePair(RenderMode::OUTLINE, "Outline");
     this->renderModeParam << rmp;
     this->MakeSlotAvailable(&this->renderModeParam);
+    rmp = nullptr;
 
     this->radiusScalingParam << new param::FloatParam(1.0f);
     this->MakeSlotAvailable(&this->radiusScalingParam);
