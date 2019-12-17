@@ -73,7 +73,8 @@ bool megamol::gui::Configurator::Draw(
     }
 
     // DEMO DUMMY -------------------------------------------------------------
-    // this->demo_dummy(); return true;
+    this->demo_dummy();
+    return true;
 
 
     // One time initialisation ------------------------------------------------
