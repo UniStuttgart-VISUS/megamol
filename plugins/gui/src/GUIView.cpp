@@ -1496,7 +1496,8 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
     auto param = slot.Parameter();
     if (!param.IsNull()) {
         // Set different style if parameter is read-only
-        if (param->IsGUIReadOnly()) {
+        bool readOnly = param->IsGUIReadOnly();
+        if (readOnly) {
             ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
             ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
         }
