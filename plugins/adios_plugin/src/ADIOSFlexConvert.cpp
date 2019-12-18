@@ -102,7 +102,10 @@ bool ADIOSFlexConvert::getDataCallback(core::Call& call) {
         }
 
         cad->inquire("global_radius");
-        cad->inquire("p_count");
+        std::string count_str = "p_count";
+        if (!cad->isInVars(count_str)) count_str = "count";
+        cad->inquire(count_str);
+
 
         if (!(*cad)(0)) {
             vislib::sys::Log::DefaultLog.WriteError("[ADIOSFlexConvert] Error during GetData");
@@ -116,7 +119,7 @@ bool ADIOSFlexConvert::getDataCallback(core::Call& call) {
 
         auto radius = cad->getData("global_radius")->GetAsDouble();
         auto box = cad->getData(box_str)->GetAsDouble();
-        auto p_count = cad->getData("p_count")->GetAsUInt32();
+        auto p_count = cad->getData(count_str)->GetAsUInt32();
 
         auto col = cad->getData(col_str)->GetAsDouble();
         stride += 1 * sizeof(float);
