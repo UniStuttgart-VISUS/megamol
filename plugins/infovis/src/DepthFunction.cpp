@@ -420,7 +420,7 @@ bool megamol::infovis::DepthFunction::apply(megamol::stdplugin::datatools::table
         auto depths = groupDepths.col(group);
         std::string name = "Depth";
         for (int i = 0; i < columnGroups[group].size(); ++i) {
-            name += " " + inCall->GetColumnsInfos()[i].Name();
+            name += " " + inCall->GetColumnsInfos()[columnGroups[group][i]].Name();
         }
         this->columnInfos[group]
             .SetName(name)
