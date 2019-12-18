@@ -158,7 +158,6 @@ bool ConstructKDTree::getMetaData(core::Call& call) {
 
     // put metadata in mesh call
     meta_data.m_frame_cnt = cd->getFrameCount();
-    meta_data.m_data_hash++;
     ct->setMetaData(meta_data);
 
     return true;
@@ -189,25 +188,22 @@ bool ConstructKDTree::getData(core::Call& call) {
         if (!cd->inquire(var)) return false;
     }
 
-    if (cd->getDataHash() != _old_datahash)
+    if (cd->getDataHash() != _old_datahash) {
         if (!(*cd)(0)) return false;
 
+        if (!this->createPointCloud(toInq)) return false;
 
-    if (!this->createPointCloud(toInq)) return false;
+        meta_data.m_bboxs = _bbox;
+        ct->setMetaData(meta_data);
 
-    meta_data.m_bboxs = _bbox;
-    ct->setMetaData(meta_data);
-
-    if (cd->getDataHash() != _old_datahash) {
         // Extract the kd tree for easy sampling of the data
         _inputCloud = std::make_shared<pcl::PointCloud<pcl::PointXYZ>>(_cloud);
         this->_full_data_tree = std::make_shared<pcl::KdTreeFLANN<pcl::PointXYZ>>();
         this->_full_data_tree->setInputCloud(_inputCloud, nullptr);
+        this->_version++;
+        ct->setData(this->_full_data_tree, this->_version);
+        _old_datahash = cd->getDataHash();
     }
-
-    ct->setData(this->_full_data_tree);
-    _old_datahash = cd->getDataHash();
-
     return true;
 }
 

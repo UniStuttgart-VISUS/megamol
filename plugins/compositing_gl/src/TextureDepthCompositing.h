@@ -78,12 +78,9 @@ protected:
     bool getMetaDataCallback(core::Call& caller);
 
 private:
-    void computeDepthCompositing(
-        std::shared_ptr<glowl::Texture2D> src0_tx2D, 
-        std::shared_ptr<glowl::Texture2D> src1_tx2D,
-        std::shared_ptr<glowl::Texture2D> depth0_tx2D, 
-        std::shared_ptr<glowl::Texture2D> depth1_tx2D
-    );
+    bool computeDepthCompositing();
+
+    uint32_t m_version;
 
     typedef vislib::graphics::gl::GLSLComputeShader GLSLComputeShader;
 

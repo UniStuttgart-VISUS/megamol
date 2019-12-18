@@ -55,10 +55,11 @@ private:
         float pad2;
     };
 
+    uint32_t m_version;
+
     std::vector<PerProbeDrawData> m_probe_draw_data;
 
     core::CallerSlot m_probes_slot;
-    size_t m_probes_cached_hash;
 
     core::CallerSlot m_probe_manipulation_slot;
 };

@@ -24,19 +24,19 @@ namespace megamol {
 namespace mesh {
 
 class MESH_API Call3DInteraction
-    : public core::CallGeneric<std::shared_ptr<ThreeDimensionalInteractionCollection>, core::BasicMetaData> {
+    : public core::CallGeneric<std::shared_ptr<ThreeDimensionalInteractionCollection>, core::EmptyMetaData> {
 public:
     inline Call3DInteraction()
-        : CallGeneric<std::shared_ptr<ThreeDimensionalInteractionCollection>, core::BasicMetaData>() {}
+        : CallGeneric<std::shared_ptr<ThreeDimensionalInteractionCollection>, core::EmptyMetaData>() {}
     ~Call3DInteraction() = default;
 
     static const char* ClassName(void) { return "Call3DInteraction"; }
     static const char* Description(void) { return "Call that transports..."; }
 };
 
-class MESH_API CallGlTFData : public core::CallGeneric<std::shared_ptr<tinygltf::Model>, core::BasicMetaData> {
+class MESH_API CallGlTFData : public core::CallGeneric<std::shared_ptr<tinygltf::Model>, core::EmptyMetaData> {
 public:
-    inline CallGlTFData() : CallGeneric<std::shared_ptr<tinygltf::Model>, core::BasicMetaData>() {}
+    inline CallGlTFData() : CallGeneric<std::shared_ptr<tinygltf::Model>, core::EmptyMetaData>() {}
     ~CallGlTFData() = default;
 
     static const char* ClassName(void) { return "CallGlTFData"; }
@@ -44,9 +44,9 @@ public:
 };
 
 class MESH_API CallGPUMaterialData
-    : public core::CallGeneric<std::shared_ptr<GPUMaterialCollecton>, core::BasicMetaData> {
+    : public core::CallGeneric<std::shared_ptr<GPUMaterialCollecton>, core::EmptyMetaData> {
 public:
-    CallGPUMaterialData() : CallGeneric<std::shared_ptr<GPUMaterialCollecton>, core::BasicMetaData>() {}
+    CallGPUMaterialData() : CallGeneric<std::shared_ptr<GPUMaterialCollecton>, core::EmptyMetaData>() {}
     ~CallGPUMaterialData() = default;
 
     static const char* ClassName(void) { return "CallGPUMaterialData"; }
@@ -84,9 +84,9 @@ public:
 };
 
 class MESH_API CallImage
-    : public core::CallGeneric<std::shared_ptr<ImageDataAccessCollection>, core::BasicMetaData> {
+    : public core::CallGeneric<std::shared_ptr<ImageDataAccessCollection>, core::EmptyMetaData> {
 public:
-    CallImage() : CallGeneric<std::shared_ptr<ImageDataAccessCollection>, core::BasicMetaData>() {}
+    CallImage() : CallGeneric<std::shared_ptr<ImageDataAccessCollection>, core::EmptyMetaData>() {}
     ~CallImage(){};
 
     static const char* ClassName(void) { return "CallImage"; }

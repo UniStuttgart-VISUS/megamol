@@ -15,6 +15,8 @@ namespace probe {
 
 SampleAlongPobes::SampleAlongPobes()
     : Module()
+    , _version(0)
+    , _old_datahash(0)
     , _probe_lhs_slot("deployProbe", "")
     , _probe_rhs_slot("getProbe", "")
     , _adios_rhs_slot("getData", "")
@@ -58,57 +60,59 @@ bool SampleAlongPobes::getData(core::Call& call) {
     auto cp = dynamic_cast<CallProbes*>(&call);
     if (cp == nullptr) return false;
 
+    // query adios data
     auto cd = this->_adios_rhs_slot.CallAs<adios::CallADIOSData>();
     if (cd == nullptr) return false;
-
-    auto ct = this->_full_tree_rhs_slot.CallAs<CallKDTree>();
-    if (ct == nullptr) return false;
-
-    auto cprobes = this->_probe_rhs_slot.CallAs<CallProbes>();
-    if (cprobes == nullptr) return false;
-
-
-    auto meta_data = cp->getMetaData();
-    auto tree_meta_data = ct->getMetaData();
-    auto probes_meta_data = cprobes->getMetaData();
-
 
     std::vector<std::string> toInq;
     std::string var_str =
         std::string(this->_parameter_to_sample_slot.Param<core::param::FlexEnumParam>()->ValueString());
     toInq.clear();
-    toInq.emplace_back(
-        std::string(this->_parameter_to_sample_slot.Param<core::param::FlexEnumParam>()->ValueString()));
+    toInq.emplace_back(std::string(this->_parameter_to_sample_slot.Param<core::param::FlexEnumParam>()->ValueString()));
 
     // get data from adios
     for (auto var : toInq) {
         if (!cd->inquire(var)) return false;
     }
 
-    if (cd->getDataHash() != _old_datahash)
+    if (cd->getDataHash() != _old_datahash) {
         if (!(*cd)(0)) return false;
-    
-    if (tree_meta_data.m_data_hash != this->_full_tree_cached_hash)
-        if (!(*ct)(0)) return false;
+    }
 
-    if (probes_meta_data.m_data_hash != this->_probe_cached_hash)
-        if (!(*cprobes)(0)) return false;
+    // query kd tree data
+    auto ct = this->_full_tree_rhs_slot.CallAs<CallKDTree>();
+    if (ct == nullptr) return false;
+    if (!(*ct)(0)) return false;
+
+    // query probe data 
+    auto cprobes = this->_probe_rhs_slot.CallAs<CallProbes>();
+    if (cprobes == nullptr) return false;
+    if (!(*cprobes)(0)) return false;
+
+    bool something_has_changed = (cd->getDataHash() != _old_datahash) || ct->hasUpdate() || cprobes->hasUpdate();
+
+    auto meta_data = cp->getMetaData();
+    auto tree_meta_data = ct->getMetaData();
+    auto probes_meta_data = cprobes->getMetaData();
 
     tree_meta_data = ct->getMetaData();
     probes_meta_data = cprobes->getMetaData();
 
-    // do sampling
-    _probes = cprobes->getData();
-    auto tree = ct->getData();
-    if (cd->getData(var_str)->getType() == "double") {
-        std::vector<double> data = cd->getData(var_str)->GetAsDouble();
-        doSampling(tree, data);
-    
-    } else if (cd->getData(var_str)->getType() == "float") {
-        std::vector<float> data = cd->getData(var_str)->GetAsFloat();
-        doSampling(tree, data);
-    }
+    if (something_has_changed) {
+        ++_version;
 
+        // do sampling
+        _probes = cprobes->getData();
+        auto tree = ct->getData();
+        if (cd->getData(var_str)->getType() == "double") {
+            std::vector<double> data = cd->getData(var_str)->GetAsDouble();
+            doSampling(tree, data);
+
+        } else if (cd->getData(var_str)->getType() == "float") {
+            std::vector<float> data = cd->getData(var_str)->GetAsFloat();
+            doSampling(tree, data);
+        }
+    }
 
     // put data into probes
     if (probes_meta_data.m_bboxs.IsBoundingBoxValid()) {
@@ -118,11 +122,8 @@ bool SampleAlongPobes::getData(core::Call& call) {
     }
     cp->setMetaData(meta_data);
 
-
-    cp->setData(_probes);
+    cp->setData(_probes, _version);
     _old_datahash = cd->getDataHash();
-    this->_full_tree_cached_hash = tree_meta_data.m_data_hash;
-    this->_probe_cached_hash = probes_meta_data.m_data_hash;
     _trigger_recalc = false;
 
     return true;
@@ -158,7 +159,6 @@ bool SampleAlongPobes::getMetaData(core::Call& call) {
 
     // put metadata in mesh call
     meta_data.m_frame_cnt = cd->getFrameCount();
-    meta_data.m_data_hash++;
     cp->setMetaData(meta_data);
 
     return true;

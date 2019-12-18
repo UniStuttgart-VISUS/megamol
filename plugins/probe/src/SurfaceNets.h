@@ -76,6 +76,7 @@ private:
     // CallMesh stuff
     std::vector<mesh::MeshDataAccessCollection::VertexAttribute> _mesh_attribs;
     mesh::MeshDataAccessCollection::IndexData _mesh_indices;
+    uint32_t _version = 0;
 
     size_t _old_datahash = 0;
     bool _recalc = true;

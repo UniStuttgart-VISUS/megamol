@@ -101,6 +101,9 @@ protected:
     bool getInteractionMetaData(core::Call& call);
 
 private:
+
+    uint32_t m_version;
+
     double m_cursor_x, m_cursor_y;
 
     std::shared_ptr<ProbeInteractionCollection> m_interactions;

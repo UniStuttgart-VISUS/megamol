@@ -60,20 +60,17 @@ bool OSPRayLineGeometry::readData(core::Call& call) {
         } else {
             meta_data.m_frame_ID = os->getTime();
         }
-        if (this->datahash != meta_data.m_data_hash || this->time != os->getTime() || this->InterfaceIsDirty()) {
-            this->datahash = meta_data.m_data_hash;
-            this->time = os->getTime();
-            this->structureContainer.dataChanged = true;
-        } else {
-            return true;
-        }
-
+        cm->setMetaData(meta_data);
         if (!(*cm)(1)) return false;
         if (!(*cm)(0)) return false;
         meta_data = cm->getMetaData();
-        this->extendContainer.boundingBox = std::make_shared<core::BoundingBoxes_2>(meta_data.m_bboxs);
 
-        this->structureContainer.mesh = cm->getData();
+        if (cm->hasUpdate() || this->time != os->getTime() || this->InterfaceIsDirty()) {
+            this->time = os->getTime();
+            this->structureContainer.dataChanged = true;
+            this->extendContainer.boundingBox = std::make_shared<core::BoundingBoxes_2>(meta_data.m_bboxs);
+            this->structureContainer.mesh = cm->getData();
+        }
 
     } else {
 

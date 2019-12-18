@@ -9,8 +9,8 @@
 #include "glm/gtx/transform.hpp"
 
 megamol::probe_gl::ProbeRenderTasks::ProbeRenderTasks()
-    : m_probes_slot("GetProbes", "Slot for accessing a probe collection")
-    , m_probes_cached_hash(0)
+    : m_version(0)
+    , m_probes_slot("GetProbes", "Slot for accessing a probe collection")
     , m_probe_manipulation_slot("GetProbeManipulation", "") {
     this->m_probes_slot.SetCompatibleCall<probe::CallProbesDescription>();
     this->MakeSlotAvailable(&this->m_probes_slot);
@@ -28,33 +28,30 @@ bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) {
 
     mesh::CallGPUMaterialData* mtlc = this->m_material_slot.CallAs<mesh::CallGPUMaterialData>();
     if (mtlc == NULL) return false;
-
     if (!(*mtlc)(0)) return false;
 
     mesh::CallGPUMeshData* mc = this->m_mesh_slot.CallAs<mesh::CallGPUMeshData>();
     if (mc == NULL) return false;
-
     if (!(*mc)(0)) return false; // TODO only call callback when hash is outdated?
 
     probe::CallProbes* pc = this->m_probes_slot.CallAs<probe::CallProbes>();
     if (pc == NULL) return false;
+    if (!(*pc)(0)) return false;
+
+    // something has changed in the neath
+    bool something_has_changed = mtlc->hasUpdate() || mc->hasUpdate() || pc->hasUpdate();
 
     // no incoming render task collection -> use your own collection
-    if (lhs_rtc->getData() == nullptr) lhs_rtc->setData(this->m_gpu_render_tasks);
-    std::shared_ptr<mesh::GPURenderTaskCollection> rt_collection = lhs_rtc->getData();
+    std::shared_ptr<mesh::GPURenderTaskCollection> rt_collection;
+    if (lhs_rtc->getData() == nullptr) rt_collection = this->m_gpu_render_tasks;
+    else rt_collection = lhs_rtc->getData();
 
     // if there is a render task connection to the right, pass on the render task collection
     mesh::CallGPURenderTaskData* rhs_rtc = this->m_renderTask_rhs_slot.CallAs<mesh::CallGPURenderTaskData>();
     if (rhs_rtc != NULL) {
-        rhs_rtc->setData(rt_collection);
+        rhs_rtc->setData(rt_collection,0);
         if (!(*rhs_rtc)(0)) return false;
     }
-
-    auto gpu_mtl_storage = mtlc->getData();
-    auto gpu_mesh_storage = mc->getData();
-
-    auto probe_meta_data = pc->getMetaData();
-
 
     struct PerObjData {
         glm::mat4x4 object_transform;
@@ -64,10 +61,11 @@ bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) {
         float pad2;
     };
 
-    if (probe_meta_data.m_data_hash > m_probes_cached_hash) {
-        m_probes_cached_hash = probe_meta_data.m_data_hash;
+    if (something_has_changed) {
+        ++m_version;
 
-        if (!(*pc)(0)) return false;
+        auto gpu_mtl_storage = mtlc->getData();
+        auto gpu_mesh_storage = mc->getData();
         auto probes = pc->getData();
 
         auto probe_cnt = probes->getProbeCount();
@@ -90,13 +88,13 @@ bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) {
 
                 draw_commands[probe_idx] = gpu_sub_mesh.sub_mesh_draw_command;
 
-                const glm::vec3 from(0.0f, 1.0f, 0.0f);
+                const glm::vec3 from(0.0f, 0.0f, 1.0f);
                 const glm::vec3 to(probe.m_direction[0], probe.m_direction[1], probe.m_direction[2]);
                 glm::vec3 v = glm::cross(to, from);
                 float angle = -acos(glm::dot(to, from) / (glm::length(to) * glm::length(from)));
                 m_probe_draw_data[probe_idx].object_transform = glm::rotate(angle, v);
 
-                auto scaling = glm::scale(glm::vec3(0.5f, probe.m_end - probe.m_begin, 0.5f));
+                auto scaling = glm::scale(glm::vec3(0.5f, 0.5f, probe.m_end - probe.m_begin));
 
                 auto probe_start_point = glm::vec3(probe.m_position[0] + probe.m_direction[0] * probe.m_begin,
                     probe.m_position[1] + probe.m_direction[1] * probe.m_begin,
@@ -115,6 +113,8 @@ bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) {
         auto const& shader = gpu_mtl_storage->getMaterials().front().shader_program;
         rt_collection->addRenderTasks(shader, gpu_batch_mesh, draw_commands, m_probe_draw_data);
     }
+
+    lhs_rtc->setData(rt_collection, m_version);
 
     // check for pending probe manipulations
     CallProbeInteraction* pic = this->m_probe_manipulation_slot.CallAs<CallProbeInteraction>();
@@ -191,7 +191,6 @@ bool megamol::probe_gl::ProbeRenderTasks::getMetaDataCallback(core::Call& caller
     if (!(*probe_call)(1)) return false;
     probe_meta_data = probe_call->getMetaData();
 
-    if (probe_meta_data.m_data_hash > m_probes_cached_hash) lhs_meta_data.m_data_hash++;
     lhs_meta_data.m_frame_cnt = std::min(lhs_meta_data.m_frame_cnt, probe_meta_data.m_frame_cnt);
 
     auto bbox = lhs_meta_data.m_bboxs.BoundingBox();

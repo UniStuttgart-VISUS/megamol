@@ -50,11 +50,11 @@ protected:
     virtual bool create();
     virtual void release();
 
+    uint32_t m_version;
+
     core::CallerSlot m_mesh_slot;
-    size_t           m_mesh_cached_hash;
 
     core::CallerSlot m_centerline_slot;
-    size_t m_centerline_cached_hash;
 
     core::CalleeSlot m_probe_slot;
 

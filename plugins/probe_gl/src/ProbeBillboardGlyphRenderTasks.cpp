@@ -9,8 +9,8 @@
 #include "mmcore/param/FloatParam.h"
 
 megamol::probe_gl::ProbeBillboardGlyphRenderTasks::ProbeBillboardGlyphRenderTasks()
-    : m_probes_slot("GetProbes", "Slot for accessing a probe collection")
-    , m_probes_cached_hash(0)
+    : m_version(0)
+    , m_probes_slot("GetProbes", "Slot for accessing a probe collection")
     , m_billboard_dummy_mesh(nullptr)
     , m_billboard_size_slot("BillBoardSize", "Sets the scaling factor of the texture billboards") {
 
@@ -28,26 +28,26 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
     mesh::CallGPURenderTaskData* lhs_rtc = dynamic_cast<mesh::CallGPURenderTaskData*>(&caller);
     if (lhs_rtc == NULL) return false;
 
+    std::shared_ptr<mesh::GPURenderTaskCollection> rt_collection;
     // no incoming render task collection -> use your own collection
-    if (lhs_rtc->getData() == nullptr) lhs_rtc->setData(this->m_gpu_render_tasks);
-    std::shared_ptr<mesh::GPURenderTaskCollection> rt_collection = lhs_rtc->getData();
+    if (lhs_rtc->getData() == nullptr) 
+        rt_collection = this->m_gpu_render_tasks;
+    else
+        rt_collection = lhs_rtc->getData();
 
     // if there is a render task connection to the right, pass on the render task collection
     mesh::CallGPURenderTaskData* rhs_rtc = this->m_renderTask_rhs_slot.CallAs<mesh::CallGPURenderTaskData>();
     if (rhs_rtc != NULL) {
-        rhs_rtc->setData(rt_collection);
+        rhs_rtc->setData(rt_collection,0);
         if (!(*rhs_rtc)(0)) return false;
     }
 
     mesh::CallGPUMaterialData* mtlc = this->m_material_slot.CallAs<mesh::CallGPUMaterialData>();
     if (mtlc == NULL) return false;
     if (!(*mtlc)(0)) return false;
-    auto gpu_mtl_storage = mtlc->getData();
-
-
+    
     // create an empty dummy mesh, actual billboard geometry will be build in vertex shader
     if (m_billboard_dummy_mesh == nullptr) {
-
         std::vector<void*> data_ptrs = {nullptr};
         std::vector<size_t> byte_sizes = {0};
         std::vector<uint32_t> indices = {0,1,2,3,4,5}; 
@@ -59,16 +59,18 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
 
     probe::CallProbes* pc = this->m_probes_slot.CallAs<probe::CallProbes>();
     if (pc == NULL) return false;
+    if (!(*pc)(0)) return false;
 
-    auto probe_meta_data = pc->getMetaData();
+    bool something_has_changed = pc->hasUpdate() || mtlc->hasUpdate() || this->m_billboard_size_slot.IsDirty();
 
-    if (probe_meta_data.m_data_hash > m_probes_cached_hash || this->m_billboard_size_slot.IsDirty()) {
-        m_probes_cached_hash = probe_meta_data.m_data_hash;
+    if (something_has_changed) {
+        ++m_version;
+
         this->m_billboard_size_slot.ResetDirty();
-        rt_collection->clear();
-
-        if (!(*pc)(0)) return false;
+        auto gpu_mtl_storage = mtlc->getData();
         auto probes = pc->getData();
+        
+        rt_collection->clear();
 
         auto probe_cnt = probes->getProbeCount();
 
@@ -120,6 +122,9 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
         rt_collection->addRenderTasks(shader, m_billboard_dummy_mesh, draw_commands, glyph_data);
     }
 
+    if (lhs_rtc->version() < m_version) {
+        lhs_rtc->setData(rt_collection, m_version);
+    }
 
     return true; 
 }
@@ -140,7 +145,6 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getMetaDataCallback(core
     if (!(*probe_call)(1)) return false;
     probe_meta_data = probe_call->getMetaData();
 
-    if (probe_meta_data.m_data_hash > m_probes_cached_hash) lhs_meta_data.m_data_hash++;
     lhs_meta_data.m_frame_cnt = std::min(lhs_meta_data.m_frame_cnt, probe_meta_data.m_frame_cnt);
 
     auto bbox = lhs_meta_data.m_bboxs.BoundingBox();

@@ -5,6 +5,7 @@
 
 megamol::probe_gl::ProbeInteraction::ProbeInteraction()
     : Renderer3DModule_2()
+    , m_version(0)
     , m_cursor_x(0)
     , m_cursor_y(0)
     , m_interactions(new ProbeInteractionCollection())
@@ -170,8 +171,10 @@ bool megamol::probe_gl::ProbeInteraction::getInteractionCollection(core::Call& c
 
     if (!m_interactions->accessPendingManipulations().empty())
     {
-        cic->setData(m_interactions);
+        ++m_version;
     }
+
+    cic->setData(m_interactions,m_version);
 
     return true; 
 }

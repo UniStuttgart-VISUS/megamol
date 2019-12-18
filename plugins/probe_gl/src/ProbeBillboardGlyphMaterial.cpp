@@ -4,7 +4,8 @@
 #include "ProbeCalls.h"
 
 megamol::probe_gl::ProbeBillboardGlyphMaterial::ProbeBillboardGlyphMaterial() 
-    : m_glyph_images_slot("GetProbes", "Slot for accessing a probe collection"), m_glyph_images_slot_cached_hash(0) {
+    : m_version(0)
+    , m_glyph_images_slot("GetProbes", "Slot for accessing a probe collection") {
 
     this->m_glyph_images_slot.SetCompatibleCall<mesh::CallImageDescription>();
     this->MakeSlotAvailable(&this->m_glyph_images_slot);
@@ -54,25 +55,29 @@ bool megamol::probe_gl::ProbeBillboardGlyphMaterial::getDataCallback(core::Call&
     mesh::CallGPUMaterialData* lhs_mtl_call = dynamic_cast<mesh::CallGPUMaterialData*>(&caller);
     if (lhs_mtl_call == NULL) return false;
 
+    std::shared_ptr<mesh::GPUMaterialCollecton> mtl_collection;
     // no incoming material -> use your own material storage
-    if (lhs_mtl_call->getData() == nullptr) lhs_mtl_call->setData(this->m_gpu_materials);
-    std::shared_ptr<mesh::GPUMaterialCollecton> mtl_collection = lhs_mtl_call->getData();
+    if (lhs_mtl_call->getData() == nullptr) 
+        mtl_collection = this->m_gpu_materials;
+    else
+        mtl_collection = lhs_mtl_call->getData();
 
     // if there is a material connection to the right, pass on the material collection
     mesh::CallGPUMaterialData* rhs_mtl_call = this->m_mtl_callerSlot.CallAs<mesh::CallGPUMaterialData>();
-    if (rhs_mtl_call != NULL) rhs_mtl_call->setData(mtl_collection);
+    if (rhs_mtl_call != NULL) rhs_mtl_call->setData(mtl_collection,0);
 
-    
     mesh::CallImage* ic = this->m_glyph_images_slot.CallAs<mesh::CallImage>();
     if (ic == NULL) return false;
+    if (!(*ic)(0)) return false;
 
     auto image_meta_data = ic->getMetaData();
 
-    if (image_meta_data.m_data_hash > this->m_glyph_images_slot_cached_hash)
-    {
-        this->m_glyph_images_slot_cached_hash = image_meta_data.m_data_hash;
+    // something has changed in the neath...
+    bool something_has_changed = ic->hasUpdate();
 
-        if (!(*ic)(0)) return false;
+    if (something_has_changed) {
+        ++m_version;
+
         auto img_data = ic->getData();
 
         // use first image to determine size -> assumes same size for all images
@@ -125,6 +130,9 @@ bool megamol::probe_gl::ProbeBillboardGlyphMaterial::getDataCallback(core::Call&
         mtl_collection->addMaterial(this->m_billboard_glyph_prgm,textures);
     }
 
+    if (lhs_mtl_call->version() < m_version){
+        lhs_mtl_call->setData(mtl_collection, m_version);
+    }
 
     return true; 
 }

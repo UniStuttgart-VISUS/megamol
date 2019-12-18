@@ -11,6 +11,7 @@
 
 megamol::probe::PlaceProbes::PlaceProbes()
     : Module()
+    , m_version(0)
     , m_mesh_slot("getMesh", "")
     , m_probe_slot("deployProbes", "")
     , m_centerline_slot("getCenterLine", "")
@@ -54,55 +55,44 @@ void megamol::probe::PlaceProbes::release() {}
 
 bool megamol::probe::PlaceProbes::getData(core::Call& call) {
 
-    bool something_changed = false;
-
     auto* pc = dynamic_cast<CallProbes*>(&call);
     mesh::CallMesh* cm = this->m_mesh_slot.CallAs<mesh::CallMesh>();
     mesh::CallMesh* ccl = this->m_centerline_slot.CallAs<mesh::CallMesh>();
 
     if (cm == nullptr || ccl == nullptr) return false;
 
+    if (!(*cm)(0)) return false;
+    if (!(*ccl)(0)) return false;
+
+    bool something_changed = cm->hasUpdate() || ccl->hasUpdate();
+
     auto mesh_meta_data = cm->getMetaData();
     auto probe_meta_data = pc->getMetaData();
     auto centerline_meta_data = ccl->getMetaData();
-
-
-    if (mesh_meta_data.m_data_hash != m_mesh_cached_hash) {
-        if (!(*cm)(0)) return false;
-        something_changed = true;
-    }
-    if (centerline_meta_data.m_data_hash != m_centerline_cached_hash) {
-        if (!(*ccl)(0)) return false;
-        something_changed = true;
-    }
-
-    mesh_meta_data = cm->getMetaData();
-    centerline_meta_data = ccl->getMetaData();
-    probe_meta_data = pc->getMetaData();
 
     probe_meta_data.m_bboxs = mesh_meta_data.m_bboxs;
 
     m_mesh = cm->getData();
     m_centerline = ccl->getData();
 
-    if (mesh_meta_data.m_bboxs.IsBoundingBoxValid()) {
-        m_whd = {mesh_meta_data.m_bboxs.BoundingBox().Width(), mesh_meta_data.m_bboxs.BoundingBox().Height(),
-        mesh_meta_data.m_bboxs.BoundingBox().Depth()};
-    } else if (centerline_meta_data.m_bboxs.IsBoundingBoxValid()) {
-        m_whd = {centerline_meta_data.m_bboxs.BoundingBox().Width(), centerline_meta_data.m_bboxs.BoundingBox().Height(),
-            centerline_meta_data.m_bboxs.BoundingBox().Depth()};
-    }
-    const auto longest_edge_index = std::distance(m_whd.begin(), std::max_element(m_whd.begin(), m_whd.end()));
-
-
     // here something really happens
-    if (something_changed)
+    if (something_changed) {
+        ++m_version;
+        
+        if (mesh_meta_data.m_bboxs.IsBoundingBoxValid()) {
+            m_whd = {mesh_meta_data.m_bboxs.BoundingBox().Width(), mesh_meta_data.m_bboxs.BoundingBox().Height(),
+            mesh_meta_data.m_bboxs.BoundingBox().Depth()};
+        } else if (centerline_meta_data.m_bboxs.IsBoundingBoxValid()) {
+            m_whd = {centerline_meta_data.m_bboxs.BoundingBox().Width(), centerline_meta_data.m_bboxs.BoundingBox().Height(),
+                centerline_meta_data.m_bboxs.BoundingBox().Depth()};
+        }
+        const auto longest_edge_index = std::distance(m_whd.begin(), std::max_element(m_whd.begin(), m_whd.end()));
+
         this->placeProbes(longest_edge_index);
+    }
 
-    pc->setData(this->m_probes);
+    pc->setData(this->m_probes,m_version);
 
-    m_mesh_cached_hash = mesh_meta_data.m_data_hash;
-    m_centerline_cached_hash = centerline_meta_data.m_data_hash;
     pc->setMetaData(probe_meta_data);
     return true;
 }
@@ -132,14 +122,8 @@ bool megamol::probe::PlaceProbes::getMetaData(core::Call& call) {
     mesh_meta_data = cm->getMetaData();
     centerline_meta_data = ccl->getMetaData();
 
-    // Guard
-    if (mesh_meta_data.m_data_hash == m_mesh_cached_hash &&
-        centerline_meta_data.m_data_hash == m_centerline_cached_hash)
-        return true;
-
     probe_meta_data.m_frame_cnt = mesh_meta_data.m_frame_cnt;
     probe_meta_data.m_bboxs = mesh_meta_data.m_bboxs; // normally not available here
-    probe_meta_data.m_data_hash++;
     
     pc->setMetaData(probe_meta_data);
 

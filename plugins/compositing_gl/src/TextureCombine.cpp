@@ -12,8 +12,8 @@
 
 megamol::compositing::TextureCombine::TextureCombine()
     : core::Module()
+    , m_version(0)
     , m_output_texture(nullptr)
-    , m_output_texture_hash(0)
     , m_mode("Mode", "Sets texture combination mode, e.g. add, multiply...")
     , m_output_tex_slot("OutputTexture", "Gives access to resulting output texture")
     , m_input_tex_0_slot(
@@ -94,57 +94,62 @@ bool megamol::compositing::TextureCombine::getDataCallback(core::Call& caller) {
     if (!(*rhs_tc0)(0)) return false;
     if (!(*rhs_tc1)(0)) return false;
 
-    // TODO check/update data hash
+    // something has changed in the neath...
+    bool something_has_changed = rhs_tc0->hasUpdate() || rhs_tc1->hasUpdate();
 
-    if (lhs_tc->getData() == nullptr) {
-        lhs_tc->setData(m_output_texture);
+    if (something_has_changed) {
+        ++m_version;
+
+        // set output texture size to primary input texture
+        auto src0_tx2D = rhs_tc0->getData();
+        auto src1_tx2D = rhs_tc1->getData();
+        std::array<float, 2> texture_res = {
+            static_cast<float>(src0_tx2D->getWidth()), static_cast<float>(src0_tx2D->getHeight())};
+
+        if (m_output_texture->getWidth() != std::get<0>(texture_res) ||
+            m_output_texture->getHeight() != std::get<1>(texture_res)) {
+            glowl::TextureLayout tx_layout(
+                GL_RGBA16F, std::get<0>(texture_res), std::get<1>(texture_res), 1, GL_RGBA, GL_HALF_FLOAT, 1);
+            m_output_texture->reload(tx_layout, nullptr);
+        }
+
+        if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0) {
+            m_add_prgm->Enable();
+
+            glActiveTexture(GL_TEXTURE0);
+            src0_tx2D->bindTexture();
+            glUniform1i(m_add_prgm->ParameterLocation("src0_tx2D"), 0);
+            glActiveTexture(GL_TEXTURE1);
+            src1_tx2D->bindTexture();
+            glUniform1i(m_add_prgm->ParameterLocation("src1_tx2D"), 1);
+
+            m_output_texture->bindImage(0, GL_WRITE_ONLY);
+
+            m_add_prgm->Dispatch(static_cast<int>(std::ceil(std::get<0>(texture_res) / 8.0f)),
+                static_cast<int>(std::ceil(std::get<1>(texture_res) / 8.0f)), 1);
+
+            m_add_prgm->Disable();
+        } else if (this->m_mode.Param<core::param::EnumParam>()->Value() == 1) {
+            m_mult_prgm->Enable();
+
+            glActiveTexture(GL_TEXTURE0);
+            src0_tx2D->bindTexture();
+            glUniform1i(m_add_prgm->ParameterLocation("src0_tx2D"), 0);
+            glActiveTexture(GL_TEXTURE1);
+            src1_tx2D->bindTexture();
+            glUniform1i(m_add_prgm->ParameterLocation("src1_tx2D"), 1);
+
+            m_output_texture->bindImage(0, GL_WRITE_ONLY);
+
+            m_mult_prgm->Dispatch(static_cast<int>(std::ceil(std::get<0>(texture_res) / 8.0f)),
+                static_cast<int>(std::ceil(std::get<1>(texture_res) / 8.0f)), 1);
+
+            m_mult_prgm->Disable();
+        }
     }
 
-    // set output texture size to primary input texture
-    auto src0_tx2D = rhs_tc0->getData();
-    auto src1_tx2D = rhs_tc1->getData();
-    std::array<float, 2> texture_res = {
-        static_cast<float>(src0_tx2D->getWidth()), static_cast<float>(src0_tx2D->getHeight())};
-
-    if (m_output_texture->getWidth() != std::get<0>(texture_res) ||
-        m_output_texture->getHeight() != std::get<1>(texture_res)) {
-        glowl::TextureLayout tx_layout(
-            GL_RGBA16F, std::get<0>(texture_res), std::get<1>(texture_res), 1, GL_RGBA, GL_HALF_FLOAT, 1);
-        m_output_texture->reload(tx_layout, nullptr);
-    }
-
-    if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0) {
-        m_add_prgm->Enable();
-
-        glActiveTexture(GL_TEXTURE0);
-        src0_tx2D->bindTexture();
-        glUniform1i(m_add_prgm->ParameterLocation("src0_tx2D"), 0);
-        glActiveTexture(GL_TEXTURE1);
-        src1_tx2D->bindTexture();
-        glUniform1i(m_add_prgm->ParameterLocation("src1_tx2D"), 1);
-
-        m_output_texture->bindImage(0, GL_WRITE_ONLY);
-
-        m_add_prgm->Dispatch(static_cast<int>(std::ceil(std::get<0>(texture_res) / 8.0f)),
-            static_cast<int>(std::ceil(std::get<1>(texture_res) / 8.0f)), 1);
-
-        m_add_prgm->Disable();
-    } else if (this->m_mode.Param<core::param::EnumParam>()->Value() == 1) {
-        m_mult_prgm->Enable();
-
-        glActiveTexture(GL_TEXTURE0);
-        src0_tx2D->bindTexture();
-        glUniform1i(m_add_prgm->ParameterLocation("src0_tx2D"), 0);
-        glActiveTexture(GL_TEXTURE1);
-        src1_tx2D->bindTexture();
-        glUniform1i(m_add_prgm->ParameterLocation("src1_tx2D"), 1);
-
-        m_output_texture->bindImage(0, GL_WRITE_ONLY);
-
-        m_mult_prgm->Dispatch(static_cast<int>(std::ceil(std::get<0>(texture_res) / 8.0f)),
-            static_cast<int>(std::ceil(std::get<1>(texture_res) / 8.0f)), 1);
-
-        m_mult_prgm->Disable();
+    if (lhs_tc->version() < m_version) {
+        lhs_tc->setData(m_output_texture, m_version);
     }
 
     return true;
