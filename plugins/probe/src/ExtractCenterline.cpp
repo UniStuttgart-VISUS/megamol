@@ -214,7 +214,7 @@ bool ExtractCenterline::getData(core::Call& call) {
 
     // put data in line
     mesh::MeshDataAccessCollection line;
-    line.addMesh(_line_attribs, _line_indices);
+    line.addMesh(_line_attribs, _line_indices, mesh::MeshDataAccessCollection::LINES);
     cl->setData(std::make_shared<mesh::MeshDataAccessCollection>(std::move(line)));
     _old_datahash = meta_data.m_data_hash;
 

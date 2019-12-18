@@ -111,7 +111,11 @@ bool SampleAlongPobes::getData(core::Call& call) {
 
 
     // put data into probes
-    meta_data.m_bboxs = probes_meta_data.m_bboxs;
+    if (probes_meta_data.m_bboxs.IsBoundingBoxValid()) {
+        meta_data.m_bboxs = probes_meta_data.m_bboxs;
+    } else if (tree_meta_data.m_bboxs.IsBoundingBoxValid()) {
+        meta_data.m_bboxs = tree_meta_data.m_bboxs;
+    }
     cp->setMetaData(meta_data);
 
 

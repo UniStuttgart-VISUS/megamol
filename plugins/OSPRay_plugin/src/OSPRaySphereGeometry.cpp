@@ -104,6 +104,9 @@ bool OSPRaySphereGeometry::readData(megamol::core::Call &call) {
         vertexLength = 3;
     } else if (parts.GetVertexDataType() == core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR) {
         vertexLength = 4;
+    } else {
+        vislib::sys::Log::DefaultLog.WriteError("[OSPRaySphereGeometry] Vertex type not supported.");
+        return false;
     }
     // reserve space for vertex data object
     vd.reserve(parts.GetCount() * vertexLength);

@@ -85,7 +85,8 @@ void SampleAlongPobes::doSampling(const std::shared_ptr<pcl::KdTreeFLANN<pcl::Po
 
     const int samples_per_probe = this->_num_samples_per_probe_slot.Param<core::param::IntParam>()->Value();
 
-    for (int i = 0; i < _probes->getProbeCount(); i++) {
+//#pragma omp parallel for
+    for (int32_t i = 0; i < static_cast<int32_t>(_probes->getProbeCount()); i++) {
 
         auto probe = _probes->getProbe<FloatProbe>(i);
         auto samples = probe.getSamplingResult();
@@ -95,7 +96,7 @@ void SampleAlongPobes::doSampling(const std::shared_ptr<pcl::KdTreeFLANN<pcl::Po
         auto radius = sample_step / 2.0f;
 
         float min_value = std::numeric_limits<float>::max();
-        float max_value = std::numeric_limits<float>::min();
+        float max_value = -std::numeric_limits<float>::max();
         float avg_value = 0.0f;
         samples->samples.resize(samples_per_probe);
 

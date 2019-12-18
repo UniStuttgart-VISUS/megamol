@@ -55,6 +55,7 @@ void GenerateGlyphs::doGlyphGeneration() {
     this->_generated_texture_coordinates[2] = {1.0f, 0.0f};
     this->_generated_texture_coordinates[3] = {1.0f, 1.0f};
 
+//#pragma omp parallel for
     for (int i = 0; i < this->_probe_data->getProbeCount(); i++) {
 
         // get probe
@@ -71,21 +72,12 @@ void GenerateGlyphs::doGlyphGeneration() {
         auto dir = probe.m_direction;
         auto smallest_normal_index = std::distance(dir.begin(), std::min_element(dir.begin(), dir.end()));
         dir[smallest_normal_index] = 1.0f;
-        auto second_smallest_normal_index = std::distance(dir.begin(), std::min_element(dir.begin(), dir.end()));
-        auto largest_normal_index = std::distance(
-            probe.m_direction.begin(), std::max_element(probe.m_direction.begin(), probe.m_direction.end()));
-
-        //int flip_axis = 0;
-        //if (largest_normal_index == 0) {
-        //    if (std::abs(probe.m_direction[0]) - std::abs(probe.m_direction[1]) < 0.3 ) {
-        //        flip_axis = 
-        //                    
-        //    }
-
-        //    }
+        //auto second_smallest_normal_index = std::distance(dir.begin(), std::min_element(dir.begin(), dir.end()));
+        //auto largest_normal_index = std::distance(
+        //    probe.m_direction.begin(), std::max_element(probe.m_direction.begin(), probe.m_direction.end()));
 
         std::array<float,3> axis0 = {0.0f, 0.0f, 0.0f};
-        if (smallest_normal_index == 1) smallest_normal_index = second_smallest_normal_index;
+        //if (smallest_normal_index == 1) smallest_normal_index = second_smallest_normal_index;
         axis0[smallest_normal_index] = 1.0f;
         std::array<float,3> plane_vec_1;
         plane_vec_1[0] = probe.m_direction[1] * axis0[2] - probe.m_direction[2] * axis0[1];
@@ -201,7 +193,7 @@ bool GenerateGlyphs::getMesh(core::Call& call) {
 
     this->_probe_data = cprobes->getData();
 
-    if (this->scale < 0.0) this->scale = probe_meta_data.m_bboxs.BoundingBox().LongestEdge() * 2e-2;
+    if (this->scale <= 0.0) this->scale = probe_meta_data.m_bboxs.BoundingBox().LongestEdge() * 8e-3;
     if (probe_meta_data.m_data_hash != this->_data_hash)
         doGlyphGeneration();
 

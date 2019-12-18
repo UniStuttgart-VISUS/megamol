@@ -573,13 +573,11 @@ void AbstractOSPRayRenderer::setupOSPRayCamera(OSPCamera& ospcam, megamol::core:
 
 
     ospSet3f(ospcam, "pos", mmcam.eye_position().x(), mmcam.eye_position().y(), mmcam.eye_position().z());
-
-    // ospSet3fv(ospcam, "pos", cr->GetCameraParameters()->EyePosition().PeekCoordinates());
     ospSet3f(ospcam, "dir", mmcam.view_vector().x(), mmcam.view_vector().y(), mmcam.view_vector().z());
     ospSet3f(ospcam, "up", mmcam.up_vector().x(), mmcam.up_vector().y(), mmcam.up_vector().z());
     ospSet1f(ospcam, "fovy", mmcam.aperture_angle());
 
-    ospSet1i(ospcam, "architectural", 1);
+    // ospSet1i(ospcam, "architectural", 1);
     ospSet1f(ospcam, "nearClip", mmcam.near_clipping_plane());
     ospSet1f(ospcam, "farClip", mmcam.far_clipping_plane());
     // ospSet1f(ospcam, "apertureRadius", );

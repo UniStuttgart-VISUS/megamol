@@ -271,7 +271,7 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D_2& cr) {
             auto t2 = std::chrono::high_resolution_clock::now();
             const auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
             vislib::sys::Log::DefaultLog.WriteMsg(
-                242, "OSPRayRenderer: Commiting World took: %d microseconds", duration);
+                242, "[OSPRayRenderer] Commiting World took: %d microseconds", duration);
         }
         if (material_has_changed && !data_has_changed) {
             this->changeMaterial();
@@ -319,7 +319,7 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D_2& cr) {
         accum_time.count += 1;
         if (accum_time.amount >= static_cast<unsigned long long int>(1e6)) {
             const unsigned long long int mean_rendertime = accum_time.amount / accum_time.count;
-            vislib::sys::Log::DefaultLog.WriteMsg(242, "OSPRayRenderer: Rendering took: %d microseconds", mean_rendertime);
+            vislib::sys::Log::DefaultLog.WriteMsg(242, "[OSPRayRenderer] Rendering took: %d microseconds", mean_rendertime);
             accum_time.count = 0;
             accum_time.amount = 0;
         }
@@ -446,8 +446,6 @@ bool OSPRayRenderer::GetExtents(megamol::core::view::CallRender3D_2& cr) {
 
 void OSPRayRenderer::getOpenGLDepthFromOSPPerspective(float* db) {
 
-	//cr->GetCameraState().se
-
     const float fovy = cam.aperture_angle();
     const float aspect = cam.resolution_gate_aspect();
     const float zNear = cam.near_clipping_plane();
@@ -457,10 +455,10 @@ void OSPRayRenderer::getOpenGLDepthFromOSPPerspective(float* db) {
     const ospcommon::vec3f cameraDir(cam.view_vector().x(), cam.view_vector().y(), cam.view_vector().z());
 
     // map OSPRay depth buffer from provided frame buffer
-    const float* ospDepthBuffer = (const float*)ospMapFrameBuffer(this->framebuffer, OSP_FB_DEPTH);
+    const auto ospDepthBuffer = static_cast<const float*>(ospMapFrameBuffer(this->framebuffer, OSP_FB_DEPTH));
 
-    const size_t ospDepthBufferWidth = (size_t)this->imgSize.x;
-    const size_t ospDepthBufferHeight = (size_t)this->imgSize.y;
+    const auto ospDepthBufferWidth = static_cast<const size_t>(this->imgSize.x);
+    const auto ospDepthBufferHeight = static_cast<const size_t>(this->imgSize.y);
 
     // transform from ray distance t to orthogonal Z depth
     ospcommon::vec3f dir_du = normalize(cross(cameraDir, cameraUp));
@@ -479,17 +477,17 @@ void OSPRayRenderer::getOpenGLDepthFromOSPPerspective(float* db) {
 
     int j, i;
 #pragma omp parallel for private(i)
-    for (j = 0; j < ospDepthBufferHeight; j++)
+    for (j = 0; j < ospDepthBufferHeight; j++) {
         for (i = 0; i < ospDepthBufferWidth; i++) {
             const ospcommon::vec3f dir_ij = normalize(dir_00 + float(i) / float(ospDepthBufferWidth - 1) * dir_du +
                                                       float(j) / float(ospDepthBufferHeight - 1) * dir_dv);
 
-            float tmp = ospDepthBuffer[j * ospDepthBufferWidth + i] * dot(cameraDir, dir_ij);
+            const float tmp = ospDepthBuffer[j * ospDepthBufferWidth + i];// * dot(cameraDir, dir_ij);
             float res = 0.5 * (-A * tmp + B) / tmp + 0.5;
             if (!std::isfinite(res)) res = 1.0f;
             db[j * ospDepthBufferWidth + i] = res;
         }
-
+    }
     // unmap OSPRay depth buffer
     ospUnmapFrameBuffer(ospDepthBuffer, this->framebuffer);
 }
