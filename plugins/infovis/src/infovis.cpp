@@ -12,6 +12,7 @@
 #include "mmcore/versioninfo.h"
 #include "vislib/vislibversion.h"
 
+#include "DepthFunction.h"
 #include "DiagramSeries.h"
 #include "DiagramSeriesCall.h"
 #include "MDSProjection.h"
@@ -48,6 +49,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::infovis::PCAProjection>();
         this->module_descriptions.RegisterAutoDescription<megamol::infovis::TSNEProjection>();
         this->module_descriptions.RegisterAutoDescription<megamol::infovis::MDSProjection>();
+        this->module_descriptions.RegisterAutoDescription<megamol::infovis::DepthFunction>();
         this->module_descriptions.RegisterAutoDescription<megamol::infovis::DiagramSeries>();
 
         // register calls here:
