@@ -20,14 +20,14 @@ public:
      *
      * @return The name of this module.
      */
-    static const char *ClassName() { return "HistogramRenderer2D"; }
+    static const char* ClassName() { return "HistogramRenderer2D"; }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char *Description() { return "Histogram renderer for generic tables."; }
+    static const char* Description() { return "Histogram renderer for generic tables."; }
 
     /**
      * Answers whether this module is available on the current system.
@@ -68,7 +68,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool GetExtents(core::view::CallRender2D &call) override;
+    bool GetExtents(core::view::CallRender2D& call) override;
 
     /**
      * The OpenGL Render callback.
@@ -76,11 +76,12 @@ protected:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    bool Render(core::view::CallRender2D &call) override;
+    bool Render(core::view::CallRender2D& call) override;
 
-    bool handleCall(core::view::CallRender2D &call);
+    bool handleCall(core::view::CallRender2D& call);
 
-    bool OnMouseButton(core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) override;
+    bool OnMouseButton(
+        core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) override;
 
     bool OnMouseMove(double x, double y) override;
 

@@ -23,8 +23,7 @@ HistogramRenderer2D::HistogramRenderer2D()
     , bins(10)
     , colCount(0)
     , maxBinValue(0)
-    , font("Evolventa-SansSerif", core::utility::SDFFont::RenderType::RENDERTYPE_FILL)
-{
+    , font("Evolventa-SansSerif", core::utility::SDFFont::RenderType::RENDERTYPE_FILL) {
     this->tableDataCallerSlot.SetCompatibleCall<table::TableDataCallDescription>();
     this->MakeSlotAvailable(&this->tableDataCallerSlot);
 
@@ -41,9 +40,7 @@ HistogramRenderer2D::HistogramRenderer2D()
     this->MakeSlotAvailable(&this->logPlotParam);
 }
 
-HistogramRenderer2D::~HistogramRenderer2D() {
-    this->Release();
-}
+HistogramRenderer2D::~HistogramRenderer2D() { this->Release(); }
 
 bool HistogramRenderer2D::create() {
     if (!this->font.Initialise(this->GetCoreInstance())) return false;
@@ -52,17 +49,19 @@ bool HistogramRenderer2D::create() {
     if (!makeProgram("::histo::draw", this->histogramProgram)) return false;
     if (!makeProgram("::histo::axes", this->axesProgram)) return false;
 
+    // clang-format off
     static const GLfloat quadVertices[] = {
-            0.0f, 0.0f, 0.0f,
-            1.0f, 0.0f, 0.0f,
-            0.0f, 1.0f, 0.0f,
-            1.0f, 1.0f, 0.0f,
+        0.0f, 0.0f, 0.0f,
+        1.0f, 0.0f, 0.0f,
+        0.0f, 1.0f, 0.0f,
+        1.0f, 1.0f, 0.0f,
     };
 
     static const GLuint quadIndices[] = {
-            0, 1, 2,
-            1, 2, 3,
+        0, 1, 2,
+        1, 2, 3,
     };
+    // clang-format on
 
     glGenVertexArrays(1, &this->quadVertexArray);
     glGenBuffers(1, &this->quadVertexBuffer);
@@ -80,10 +79,9 @@ bool HistogramRenderer2D::create() {
     return true;
 }
 
-void HistogramRenderer2D::release() {
-}
+void HistogramRenderer2D::release() {}
 
-bool HistogramRenderer2D::GetExtents(core::view::CallRender2D &call) {
+bool HistogramRenderer2D::GetExtents(core::view::CallRender2D& call) {
     if (!handleCall(call)) {
         return false;
     }
@@ -94,13 +92,15 @@ bool HistogramRenderer2D::GetExtents(core::view::CallRender2D &call) {
     return true;
 }
 
-bool HistogramRenderer2D::Render(core::view::CallRender2D &call) {
+bool HistogramRenderer2D::Render(core::view::CallRender2D& call) {
     if (!handleCall(call)) {
         return false;
     }
 
     auto tfCall = this->transferFunctionCallerSlot.CallAs<core::view::CallGetTransferFunction>();
-    if (tfCall == nullptr) { return false; }
+    if (tfCall == nullptr) {
+        return false;
+    }
 
     // this is the apex of suck and must die
     GLfloat modelViewMatrix_column[16];
@@ -132,7 +132,8 @@ bool HistogramRenderer2D::Render(core::view::CallRender2D &call) {
             float height = 10.0f * histoVal / maxHistoVal;
             float posX = 12.0f * c + 1.0f + b * width;
             float posY = 2.0f;
-            glUniform1f(this->histogramProgram.ParameterLocation("binColor"), static_cast<float>(b) / static_cast<float>((this->bins - 1)));
+            glUniform1f(this->histogramProgram.ParameterLocation("binColor"),
+                static_cast<float>(b) / static_cast<float>((this->bins - 1)));
             glUniform1f(this->histogramProgram.ParameterLocation("posX"), posX);
             glUniform1f(this->histogramProgram.ParameterLocation("posY"), posY);
             glUniform1f(this->histogramProgram.ParameterLocation("width"), width);
@@ -171,11 +172,15 @@ bool HistogramRenderer2D::Render(core::view::CallRender2D &call) {
     float white[4] = {1.0f, 1.0f, 1.0f, 1.0f};
     for (size_t c = 0; c < this->colCount; ++c) {
         float posX = 12.0f * c + 6.0f;
-        this->font.DrawString(white, posX, 13.0f, 1.0f, false, this->colNames[c].c_str(), core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
-        this->font.DrawString(white, posX - 5.0f, 2.0f, 1.0f, false, std::to_string(this->colMinimums[c]).c_str(), core::utility::AbstractFont::ALIGN_LEFT_TOP);
-        this->font.DrawString(white, posX + 5.0f, 2.0f, 1.0f, false, std::to_string(this->colMaximums[c]).c_str(), core::utility::AbstractFont::ALIGN_RIGHT_TOP);
+        this->font.DrawString(white, posX, 13.0f, 1.0f, false, this->colNames[c].c_str(),
+            core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
+        this->font.DrawString(white, posX - 5.0f, 2.0f, 1.0f, false, std::to_string(this->colMinimums[c]).c_str(),
+            core::utility::AbstractFont::ALIGN_LEFT_TOP);
+        this->font.DrawString(white, posX + 5.0f, 2.0f, 1.0f, false, std::to_string(this->colMaximums[c]).c_str(),
+            core::utility::AbstractFont::ALIGN_RIGHT_TOP);
     }
-    this->font.DrawString(white, 1.0f, 12.0f, 1.0f, false, std::to_string(this->maxBinValue).c_str(), core::utility::AbstractFont::ALIGN_RIGHT_TOP);
+    this->font.DrawString(white, 1.0f, 12.0f, 1.0f, false, std::to_string(this->maxBinValue).c_str(),
+        core::utility::AbstractFont::ALIGN_RIGHT_TOP);
     this->font.DrawString(white, 1.0f, 2.0f, 1.0f, false, "0", core::utility::AbstractFont::ALIGN_RIGHT_BOTTOM);
 
     this->font.BatchDrawString();
@@ -183,19 +188,21 @@ bool HistogramRenderer2D::Render(core::view::CallRender2D &call) {
     return true;
 }
 
-bool HistogramRenderer2D::handleCall(core::view::CallRender2D &call) {
+bool HistogramRenderer2D::handleCall(core::view::CallRender2D& call) {
     auto floatTableCall = this->tableDataCallerSlot.CallAs<table::TableDataCall>();
     if (floatTableCall == nullptr) {
         return false;
     }
     auto tfCall = this->transferFunctionCallerSlot.CallAs<core::view::CallGetTransferFunction>();
     if (tfCall == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "HistogramRenderer2D requires a transfer function!");
+        vislib::sys::Log::DefaultLog.WriteMsg(
+            vislib::sys::Log::LEVEL_ERROR, "HistogramRenderer2D requires a transfer function!");
         return false;
     }
     auto flagsCall = this->flagStorageCallerSlot.CallAs<core::FlagCall>();
     if (flagsCall == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "HistogramRenderer2D requires a flag storage!");
+        vislib::sys::Log::DefaultLog.WriteMsg(
+            vislib::sys::Log::LEVEL_ERROR, "HistogramRenderer2D requires a flag storage!");
         return false;
     }
 
@@ -210,7 +217,8 @@ bool HistogramRenderer2D::handleCall(core::view::CallRender2D &call) {
     auto version = flagsCall->GetVersion();
 
     auto binsParam = static_cast<size_t>(this->numberOfBinsParam.Param<core::param::IntParam>()->Value());
-    if (this->currentTableDataHash != hash || this->currentTableFrameId != frameId || this->currentFlagStorageVersion != version || this->bins != binsParam) {
+    if (this->currentTableDataHash != hash || this->currentTableFrameId != frameId ||
+        this->currentFlagStorageVersion != version || this->bins != binsParam) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Calculate Histogram");
 
         this->bins = binsParam;
@@ -238,18 +246,22 @@ bool HistogramRenderer2D::handleCall(core::view::CallRender2D &call) {
             this->colNames[i] = colInfo.Name();
         }
 
-        static const core::FlagStorage::FlagItemType filteredTestMask = core::FlagStorage::ENABLED | core::FlagStorage::FILTERED;
+        static const core::FlagStorage::FlagItemType filteredTestMask =
+            core::FlagStorage::ENABLED | core::FlagStorage::FILTERED;
         static const core::FlagStorage::FlagItemType filteredPassMask = core::FlagStorage::ENABLED;
-        static const core::FlagStorage::FlagItemType selectedTestMask = core::FlagStorage::ENABLED | core::FlagStorage::SELECTED | core::FlagStorage::FILTERED;
-        static const core::FlagStorage::FlagItemType selectedPassMask = core::FlagStorage::ENABLED | core::FlagStorage::SELECTED;
+        static const core::FlagStorage::FlagItemType selectedTestMask =
+            core::FlagStorage::ENABLED | core::FlagStorage::SELECTED | core::FlagStorage::FILTERED;
+        static const core::FlagStorage::FlagItemType selectedPassMask =
+            core::FlagStorage::ENABLED | core::FlagStorage::SELECTED;
 
-        // Use loop over columns for parallelization, then atomic memory access is not a problem.
-        #pragma omp parallel for
+// Use loop over columns for parallelization, then atomic memory access is not a problem.
+#pragma omp parallel for
         for (int c = 0; c < static_cast<int>(this->colCount); ++c) {
             for (size_t r = 0; r < rowCount; ++r) {
                 auto f = flags->operator[](r);
                 if ((f & filteredTestMask) == filteredPassMask) {
-                    float val = (data[r * this->colCount + c] - this->colMinimums[c]) / (this->colMaximums[c] - this->colMinimums[c]);
+                    float val = (data[r * this->colCount + c] - this->colMinimums[c]) /
+                                (this->colMaximums[c] - this->colMinimums[c]);
                     int bin_idx = std::clamp(static_cast<int>(val * this->bins), 0, static_cast<int>(this->bins) - 1);
                     this->histogram[bin_idx * this->colCount + c] += 1.0;
                     if ((f & selectedTestMask) == selectedPassMask) {
@@ -274,10 +286,9 @@ bool HistogramRenderer2D::handleCall(core::view::CallRender2D &call) {
     return true;
 }
 
-bool HistogramRenderer2D::OnMouseButton(core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) {
+bool HistogramRenderer2D::OnMouseButton(
+    core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) {
     return false;
 }
 
-bool HistogramRenderer2D::OnMouseMove(double x, double y) {
-    return false;
-}
+bool HistogramRenderer2D::OnMouseMove(double x, double y) { return false; }
