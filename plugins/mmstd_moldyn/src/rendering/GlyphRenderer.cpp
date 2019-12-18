@@ -318,10 +318,12 @@ bool GlyphRenderer::Render(core::view::CallRender3D_2& call) {
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
 
-    // float viewportStuff[4] = {cameraInfo->TileRect().Left(), cameraInfo->TileRect().Bottom(),
-    //    cameraInfo->TileRect().Width(), cameraInfo->TileRect().Height()};
-    float viewportStuff[4] = {
-        cam.image_tile().left(), cam.image_tile().bottom(), cam.image_tile().width(), cam.image_tile().height()};
+    auto viewport = call.GetViewport();
+    glm::vec4 viewportStuff;
+    viewportStuff[0] = 0.0f;
+    viewportStuff[1] = 0.0f;
+    viewportStuff[2] = static_cast<float>(viewport.Width());
+    viewportStuff[3] = static_cast<float>(viewport.Height());
     if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
     if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
     viewportStuff[2] = 2.0f / viewportStuff[2];
@@ -351,7 +353,7 @@ bool GlyphRenderer::Render(core::view::CallRender3D_2& call) {
     }
     shader->Enable();
 
-    glUniform4fv(shader->ParameterLocation("viewAttr"), 1, viewportStuff);
+    glUniform4fv(shader->ParameterLocation("viewAttr"), 1, glm::value_ptr(viewportStuff));
     glUniformMatrix4fv(shader->ParameterLocation("MV_I"), 1, GL_FALSE, glm::value_ptr(mv_matrix_i));
     glUniformMatrix4fv(shader->ParameterLocation("MV_T"), 1, GL_TRUE, glm::value_ptr(mv_matrix));
     glUniformMatrix4fv(shader->ParameterLocation("MVP"), 1, GL_FALSE, glm::value_ptr(mvp_matrix));
