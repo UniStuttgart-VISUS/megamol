@@ -72,6 +72,7 @@ private:
     std::shared_ptr<pcl::KdTreeFLANN<pcl::PointXYZ>> _full_data_tree;
 
     size_t _old_datahash = 0;
+    uint32_t _version = 0;
     core::BoundingBoxes_2 _bbox;
 };
 

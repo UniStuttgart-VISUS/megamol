@@ -44,20 +44,18 @@ bool OSPRayQuadMesh::readData(megamol::core::Call& call) {
         } else {
             meta_data.m_frame_ID = os->getTime();
         }
-        if (this->datahash != meta_data.m_data_hash || this->time != os->getTime() || this->InterfaceIsDirty()) {
-            this->datahash = meta_data.m_data_hash;
-            this->time = os->getTime();
-            this->structureContainer.dataChanged = true;
-        } else {
-            return true;
-        }
-
         cm->setMetaData(meta_data);
         if (!(*cm)(1)) return false;
         if (!(*cm)(0)) return false;
-
-        this->structureContainer.mesh = cm->getData();
-
+        meta_data = cm->getMetaData();
+        if (cm->hasUpdate() || this->time != os->getTime() || this->InterfaceIsDirty()) {
+            this->time = os->getTime();
+            this->structureContainer.dataChanged = true;
+            this->extendContainer.boundingBox = std::make_shared<megamol::core::BoundingBoxes_2>(meta_data.m_bboxs);
+            this->extendContainer.timeFramesCount = meta_data.m_frame_cnt;
+            this->extendContainer.isValid = true;
+            this->structureContainer.mesh = cm->getData();
+        }
     }
 
     // Write stuff into the structureContainer

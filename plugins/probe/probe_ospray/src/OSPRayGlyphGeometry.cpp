@@ -54,15 +54,6 @@ bool OSPRayGlyphGeometry::readData(core::Call& call) {
         meta_data.m_frame_ID = os->getTime();
     }
 
-    if (this->datahash != meta_data.m_data_hash || this->_img_data_cached_hash != tex_meta_data.m_data_hash || this->time != os->getTime() || this->InterfaceIsDirty()) {
-        this->datahash = meta_data.m_data_hash;
-        this->_img_data_cached_hash = tex_meta_data.m_data_hash;
-        this->time = os->getTime();
-        this->structureContainer.dataChanged = true;
-    } else {
-        return true;
-    }
-
     cm->setMetaData(meta_data);
 
     if (!(*cm)(1)) return false;
@@ -73,19 +64,24 @@ bool OSPRayGlyphGeometry::readData(core::Call& call) {
 
     meta_data = cm->getMetaData();
 
-    // revalidate the boundingbox
-    this->extendContainer.boundingBox->SetBoundingBox(meta_data.m_bboxs.BoundingBox());
-    this->extendContainer.timeFramesCount = meta_data.m_frame_cnt;
-    this->extendContainer.isValid = true;
+    if (cm->hasUpdate() || ctex->hasUpdate() || this->time != os->getTime() || this->InterfaceIsDirty()) {
+        this->time = os->getTime();
+        this->structureContainer.dataChanged = true;
 
-    // Write stuff into the structureContainer
-    this->structureContainer.type = ospray::structureTypeEnum::GEOMETRY;
-    this->structureContainer.geometryType = ospray::geometryTypeEnum::TRIANGLES;
-    this->structureContainer.mesh = cm->getData();
-    this->structureContainer.mesh_textures = ctex->getData();
-    this->structureContainer.materialChanged = false;
+        // revalidate the boundingbox
+        this->extendContainer.boundingBox->SetBoundingBox(meta_data.m_bboxs.BoundingBox());
+        this->extendContainer.timeFramesCount = meta_data.m_frame_cnt;
+        this->extendContainer.isValid = true;
 
-    return true;
+        // Write stuff into the structureContainer
+        this->structureContainer.type = ospray::structureTypeEnum::GEOMETRY;
+        this->structureContainer.geometryType = ospray::geometryTypeEnum::TRIANGLES;
+        this->structureContainer.mesh = cm->getData();
+        this->structureContainer.mesh_textures = ctex->getData();
+        this->structureContainer.materialChanged = false;
+    }
+
+     return true;
 }
 
 bool OSPRayGlyphGeometry::getExtends(core::Call& call) {

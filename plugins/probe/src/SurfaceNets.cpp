@@ -467,6 +467,11 @@ bool SurfaceNets::getData(core::Call& call) {
     if (cd->DataHash() != _old_datahash) {
         if (!(*cd)(0)) return false;
         something_changed = true;
+
+        auto mesh_meta_data = cm->getMetaData();
+        mesh_meta_data.m_bboxs = cd->AccessBoundingBoxes();
+        mesh_meta_data.m_frame_cnt = cd->GetAvailableFrames();
+        cm->setMetaData(mesh_meta_data);
     }
 
     _dims[0] = cd->GetResolution(0);
