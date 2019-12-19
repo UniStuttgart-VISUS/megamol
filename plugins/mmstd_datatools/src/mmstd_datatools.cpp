@@ -76,6 +76,7 @@
 #include "mmstd_datatools/MultiIndexListDataCall.h"
 #include "mmstd_datatools/ParticleFilterMapDataCall.h"
 #include "mmstd_datatools/table/TableDataCall.h"
+#include "FSOctree.h"
 #include "table/CSVDataSource.h"
 #include "table/MMFTDataSource.h"
 #include "table/MMFTDataWriter.h"
@@ -237,6 +238,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::SyncedMMPLDProvider>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableManipulator>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::io::CPERAWDataSource>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::FSOctreeMMPLD>();
 
         // register calls here:
         this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableDataCall>();
