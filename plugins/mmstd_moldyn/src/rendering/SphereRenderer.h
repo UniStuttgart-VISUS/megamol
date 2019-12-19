@@ -445,13 +445,13 @@ namespace rendering {
          *
          * @return           True if success, false otherwise.
          */
-        bool renderSimple(view::CallRender3D_2* cr3d, MultiParticleDataCall* mpdc);
-        bool renderGeometryShader(view::CallRender3D_2* cr3d, MultiParticleDataCall* mpdc);
-        bool renderSSBO(view::CallRender3D_2* cr3d, MultiParticleDataCall* mpdc);
-        bool renderSplat(view::CallRender3D_2* cr3d, MultiParticleDataCall* mpdc);
-        bool renderBufferArray(view::CallRender3D_2* cr3d, MultiParticleDataCall* mpdc);
-        bool renderAmbientOcclusion(view::CallRender3D_2* cr3d, MultiParticleDataCall* mpdc);
-		bool renderOutline(view::CallRender3D_2* cr3d, MultiParticleDataCall* mpdc);
+        bool renderSimple(view::CallRender3D_2& cr3d, MultiParticleDataCall* mpdc);
+        bool renderGeometryShader(view::CallRender3D_2& cr3d, MultiParticleDataCall* mpdc);
+        bool renderSSBO(view::CallRender3D_2& cr3d, MultiParticleDataCall* mpdc);
+        bool renderSplat(view::CallRender3D_2& cr3d, MultiParticleDataCall* mpdc);
+        bool renderBufferArray(view::CallRender3D_2& cr3d, MultiParticleDataCall* mpdc);
+        bool renderAmbientOcclusion(view::CallRender3D_2& cr3d, MultiParticleDataCall* mpdc);
+		bool renderOutline(view::CallRender3D_2& cr3d, MultiParticleDataCall* mpdc);
 
         /**
          * Set pointers to vertex and color buffers and corresponding shader variables.
@@ -630,14 +630,14 @@ namespace rendering {
          * @param mpdc    ...
          * @param shader  ...
          */
-        void rebuildWorkingData(megamol::core::view::CallRender3D_2* cr3d, megamol::core::moldyn::MultiParticleDataCall* mpdc, const GLSLShader& shader);
+        void rebuildWorkingData(megamol::core::view::CallRender3D_2& cr3d, megamol::core::moldyn::MultiParticleDataCall* mpdc, const GLSLShader& shader);
 
         /**
          * Render deferred pass.
          *
          * @param cr3d  ...
          */
-        void renderDeferredPass(megamol::core::view::CallRender3D_2* cr3d);
+        void renderDeferredPass(megamol::core::view::CallRender3D_2& cr3d);
 
         /**
          * Generate direction shader array string.
