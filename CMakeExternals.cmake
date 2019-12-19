@@ -478,6 +478,7 @@ function(require_external NAME)
 
     add_external_project(tracking SHARED
       GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/mm-tracking
+      GIT_TAG "v2.0"
       BUILD_BYPRODUCTS
         "<INSTALL_DIR>/${TRACKING_LIB}"
         "<INSTALL_DIR>/${TRACKING_IMPORT_LIB}"
