@@ -106,18 +106,18 @@ function(require_external NAME)
     endif()
 
     if(WIN32)
-      set(ADIOS2_IMPORT_LIB "lib/adios2.lib")
-      set(ADIOS2_LIB "bin/adios2.dll")
+      set(ADIOS2_LIB "lib/adios2.lib")
     else()
       include(GNUInstallDirs)
-      set(ADIOS2_LIB "${CMAKE_INSTALL_LIBDIR}/libadios2.so")
+      set(ADIOS2_LIB "${CMAKE_INSTALL_LIBDIR}/libadios2.a")
     endif()
 
-    add_external_project(adios2 SHARED
+    add_external_project(adios2 STATIC
       GIT_REPOSITORY https://github.com/ornladios/ADIOS2.git
       GIT_TAG "v2.4.0"
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${ADIOS2_LIB}" "<INSTALL_DIR>/${ADIOS2_IMPORT_LIB}"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${ADIOS2_LIB}"
       CMAKE_ARGS 
+        -DBUILD_SHARED_LIBS=OFF
         -DBUILD_TESTING=OFF
         -DADIOS2_USE_BZip2=OFF
         -DADIOS2_USE_Fortran=OFF
@@ -132,7 +132,6 @@ function(require_external NAME)
         -DMPI_GUESS_LIBRARY_NAME=${MPI_GUESS_LIBRARY_NAME})
 
     add_external_library(adios2
-      IMPORT_LIBRARY ${ADIOS2_IMPORT_LIB}
       LIBRARY ${ADIOS2_LIB})
 
   # bhtsne
