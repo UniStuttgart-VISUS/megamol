@@ -59,7 +59,7 @@ namespace cinematic {
 
     static inline glm::quat quaternion_from_vectors(glm::vec3 view_vector, glm::vec3 up_vector) {
 
-        glm::vec3 view = view_vector * glm::vec3(-1.0f, -1.0f, -1.0f); /// why?
+        glm::vec3 view = view_vector * glm::vec3(-1.0f, -1.0f, -1.0f); /// (why?)
         glm::vec3 right = glm::cross(up_vector, view);
         glm::vec3 up = glm::cross(view, right);
 
@@ -74,7 +74,7 @@ namespace cinematic {
 
         glm::quat orientation_quat = glm::quat_cast(matrix_basis);
 
-        return orientation_quat; // glm::normalize(orientation_quat);
+        return glm::normalize(orientation_quat);
     }
 
 
