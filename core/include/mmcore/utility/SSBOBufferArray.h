@@ -44,7 +44,21 @@ class MEGAMOLCORE_API SSBOBufferArray {
         ~SSBOBufferArray();
          void upload(const std::function<void(void *, const void *)> &copyOp);
 
-         /// this is for defining the max number of items that fit in a desired chunk size,
+        /// this is for data that by definition will fit in a single block of GL_MAX_SHADER_STORAGE_BLOCK_SIZE.
+        /// if it does not, an assertion will happen!
+        /// @param data the pointer to the original data
+        /// @param srcStride the size of a single data item in the original data
+        /// @param dstStride the size of a single data item that will be uploaded
+        ///                   and must not be split across buffers
+        /// @param numItems the length of the original data in multiples of stride
+        /// @param maxBufferSize the size of a ring buffer in bytes
+        /// @param copyOp (optional) copyOp to transform src into dst (per item, gets correctly offset pointers (dst,
+        /// src))
+        /// @returns number of chunks
+        void SetData(const void* data, GLuint srcStride, GLuint dstStride, size_t numItems,
+            const std::function<void(void*, const void*)>& copyOp = nullptr);
+
+        /// this is for defining the max number of items that fit in a desired chunk size,
         /// i.e. for the largest data stream, the 'master'
         /// @param data the pointer to the original data
         /// @param srcStride the size of a single data item in the original data
@@ -71,14 +85,6 @@ class MEGAMOLCORE_API SSBOBufferArray {
         /// @returns the size of a ring buffer in bytes
         GLuint SetDataWithItems(const void* data, GLuint srcStride, GLuint dstStride, size_t numItems,
             GLuint numItemsPerChunk, const std::function<void(void*, const void*)>& copyOp = nullptr);
-
-        /// @param sync the abstract sync object to signal as done
-        //void SignalCompletion();
-
-        /// @param numItemsPerChunk the minimum number of items per chunk
-        /// @param up rounds up if true, otherwise rounds down.
-        /// @returns the alignment-friendly (rounded) number of items per chunk
-        GLuint GetNumItemsPerChunkAligned(GLuint numItemsPerChunk, bool up = false) const;
 
         /// @returns the GL object of the SSBO corresponding to chunk idx
         GLuint GetHandle(unsigned int idx) const {
@@ -109,11 +115,6 @@ class MEGAMOLCORE_API SSBOBufferArray {
         GLuint GetUsedBufferSize(void) const { return numItemsPerChunk * dstStride; }
 
     private:
-        /** */
-        //static void queueSignal(GLsync &syncObj);
-
-        ///** */
-        //static void waitSignal(GLsync &syncObj);
 
         std::vector<GLuint> theSSBOs;
         std::vector<GLuint> actualItemsPerChunk;
@@ -126,9 +127,8 @@ class MEGAMOLCORE_API SSBOBufferArray {
         size_t numItems;
         GLuint numChunks;
         GLuint numItemsPerChunk;
-        //GLsync fence;
         std::string debugLabel;
-        int offsetAlignment = 0;
+        GLint64 maxSSBOSize = 0;
     };
 
 } /* end namespace utility */

@@ -120,25 +120,30 @@ vertexNames = ["VERTDATA_NONE", "VERTDATA_FLOAT_XYZ", "VERTDATA_FLOAT_XYZR", "VE
 colorSizes = [0, 3, 4, 4, 12, 16, 8, 8]
 colorNames = ["COLDATA_NONE", "COLDATA_UINT8_RGB", "COLDATA_UINT8_RGBA", "COLDATA_FLOAT_I", "COLDATA_FLOAT_RGB", "COLDATA_FLOAT_RGBA", "COLDATA_USHORT_RGBA", "COLDATA_DOUBLE_I"]
 
-print("")
-print("MMPLDinfo (v.: 1.3.1) - MegaMol Particle List Data File Information Utility")
-print("Copyright 2014-2018 (C) by")
-print("S. Grottel, TU Dresden, Germany and G. Reina, University of Stuttgart")
-print("All rights reserved. Alle Rechte vorbehalten.")
-print("")
-
 parser = argparse.ArgumentParser(description='display information about .mmpld file(s)')
 parser.add_argument('inputfiles', metavar='file', nargs='+', help='file to get info about')
 parser.add_argument('-v', action='count', help='show verbose frame info (add another v for more verbosity)')
 parser.add_argument('--head', action='store', help='show that many particles at the start of each shown frame (or "all"))')
 parser.add_argument('--tail', action='store', help='show that many particles at the end of each shown frame (or "all"))')
 parser.add_argument('--bboxonly', action='count', help='only print the bbox of head/tail, not the particles)')
+parser.add_argument('--versiononly', action='count', help='show only file version and exit')
 parseResult = parser.parse_args()
 
-for filename in parseResult.inputfiles:
+specific_only = parseResult.bboxonly or parseResult.versiononly
+
+if (not specific_only):
     print("")
-    print("File: " + (filename))
-    print("-" * (6 + len(filename)))
+    print("MMPLDinfo (v.: 1.3.1) - MegaMol Particle List Data File Information Utility")
+    print("Copyright 2014-2018 (C) by")
+    print("S. Grottel, TU Dresden, Germany and G. Reina, University of Stuttgart")
+    print("All rights reserved. Alle Rechte vorbehalten.")
+    print("")
+
+for filename in parseResult.inputfiles:
+    if (not specific_only):
+        print("")
+        print("File: " + (filename))
+        print("-" * (6 + len(filename)))
 
     if not os.path.isfile(filename):
         print("error: cannot open file.")
@@ -151,24 +156,30 @@ for filename in parseResult.inputfiles:
             exit(1)
         version = getUShort(f)
         if (version == 100):
-            print("mmpld version 1.0")
+            parseResult.bboxonly or print("mmpld version 1.0")
         elif (version == 101):
-            print("mmpld version 1.1")
+            parseResult.bboxonly or print("mmpld version 1.1")
         elif (version == 102):
-            print("mmpld version 1.2")
+            parseResult.bboxonly or print("mmpld version 1.2")
         elif (version == 103):
-            print("mmpld version 1.3")
+            parseResult.bboxonly or print("mmpld version 1.3")
         else:
             print("unsupported mmpld version " + str(version / 100) + "." + str(version % 100))
             exit(1)
         
+        if (parseResult.versiononly):
+            exit(0)
+
         frameCount = getUInt(f)
-        print("Number of frames: " + str(frameCount))
+        specific_only or print("Number of frames: " + str(frameCount))
 
         box = [getFloat(f) for x in range(6)]
         print("Bounding box: (%f, %f, %f) - (%f, %f, %f)" % (tuple(box)))
         box = [getFloat(f) for x in range(6)]
         print("Clipping box: (%f, %f, %f) - (%f, %f, %f)" % (tuple(box)))
+
+        if (parseResult.bboxonly):
+            exit(0)
 
         if (frameCount <= 0):
             print("out of data")
@@ -202,7 +213,7 @@ for filename in parseResult.inputfiles:
         for fi in range(frameCount):
             f.seek(frameTable[fi], os.SEEK_SET)
             timeStampString = ""
-            if (version == 102):
+            if (version >= 102):
                 timestamp = getFloat(f)
                 timeStampString = "(%f)" % timestamp
             numLists = getUInt(f)
@@ -246,7 +257,7 @@ for filename in parseResult.inputfiles:
                 listFramedata(parseResult, fi) and print("        {0} particle{1}".format(*pluralTuple(listNumParts)))
                 frameNumParts += listNumParts
 
-                if (version == 103):
+                if (version >= 103):
                     box = [getFloat(f) for x in range(6)]
                     listFramedata(parseResult, fi) and print("        list bounding box: (%f, %f, %f) - (%f, %f, %f)" % (tuple(box)))
 
@@ -259,7 +270,7 @@ for filename in parseResult.inputfiles:
                     else:
                         numHead = 0
                     if (parseResult.tail):
-                        if (parseResult.head == "all"):
+                        if (parseResult.tail == "all"):
                             numTail = listNumParts
                         else:
                             numTail = min(int(parseResult.tail), listNumParts)

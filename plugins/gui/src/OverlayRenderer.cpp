@@ -413,17 +413,9 @@ bool OverlayRenderer::Render(view::CallRender3D_2& call) {
     }
 
     // Get current viewport
-    view::Camera_2 cam;
-    call.GetCamera(cam);
-    glm::ivec4 cam_viewport;
-    if (!cam.image_tile().empty()) { /// or better: auto viewport = cr3d_in->GetViewport().GetSize()?
-        cam_viewport = glm::ivec4(
-            cam.image_tile().left(), cam.image_tile().bottom(), cam.image_tile().width(), cam.image_tile().height());
-    } else {
-        cam_viewport = glm::ivec4(0, 0, cam.resolution_gate().width(), cam.resolution_gate().height());
-    }
-    if ((this->m_viewport.x != cam_viewport.z) || (this->m_viewport.y != cam_viewport.w)) {
-        this->m_viewport = {cam_viewport.z, cam_viewport.w};
+    auto viewport = call.GetViewport();
+    if ((this->m_viewport.x != viewport.Width()) || (this->m_viewport.y != viewport.Height())) {
+        this->m_viewport = {viewport.Width(), viewport.Height()};
         // Reload rectangle on viewport changes
         this->onTriggerRecalcRectangle(this->paramMode);
     }
