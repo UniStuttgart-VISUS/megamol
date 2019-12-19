@@ -878,43 +878,6 @@ void GUIView::drawParametersCallback(const std::string& wn, WindowManager::Windo
         this->utils.HelpMarkerToolTip("[CTRL + 'p'] Set keyboard focus to search input field.\n"
                                       "Searching for case insensitive substring in\n"
                                       "parameter names globally in all parameter views.\n");
-
-        /// Alternative (TEMP):
-        // Show parameter search field in separate window
-        // if (this->showParameterSearchWindow) {
-
-        //    std::string popup_name = "Search Parameter";
-
-        //    ImGuiWindowFlags flags =
-        //        ImGuiWindowFlags_AlwaysAutoResize; // ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ;
-        //    ImVec2 popup_pos = ImVec2(io.DisplaySize.x / 2.0f - ImGui::GetWindowWidth() / 2.0f, 0.0f);
-        //    ImGui::SetWindowPos(popup_name.c_str(), popup_pos, ImGuiCond_Always);
-
-        //    ImGui::Begin(popup_name.c_str(), &this->showParameterSearchWindow, flags);
-
-        //    if (this->setParameterSearchFocus) {
-        //        ImGui::SetKeyboardFocusHere();
-        //        this->setParameterSearchFocus = false;
-        //    }
-
-        //    /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
-        //    this->utils.utf8Encode(this->parameterSearchString);
-        //    ImGui::InputText("###Search Parameter", &this->parameterSearchString, ImGuiInputTextFlags_AutoSelectAll);
-        //    this->utils.utf8Decode(this->parameterSearchString);
-
-        //    ImGui::SameLine();
-
-        //    if (ImGui::Button("Clear")) {
-        //        this->parameterSearchString = "";
-        //    }
-        //    ImGui::SameLine();
-
-        //    ImGui::Text("Search Parameter");
-        //    this->utils.HelpMarkerToolTip("Searching for case insensitive substring in parameter name.\n"
-        //                                  "[CTRL + 'p'] Set keyboard focus to search input field.");
-
-        //    ImGui::End();
-        //}
     }
 
     // Module filtering (only for main parameter view)
@@ -1170,7 +1133,6 @@ void GUIView::drawParametersCallback(const std::string& wn, WindowManager::Windo
         }
         ImGui::EndDragDropTarget();
     }
-
 
     ImGui::EndChild();
 
@@ -1618,7 +1580,8 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
             ImGui::InputFloat(
                 param_label.c_str(), &it->second, 1.0f, 10.0f, float_format.c_str(), ImGuiInputTextFlags_None);
             if (ImGui::IsItemDeactivatedAfterEdit()) {
-                p->SetValue(std::max(p->MinValue(), std::min(it->second, p->MaxValue())));
+                it->second = std::max(p->MinValue(), std::min(it->second, p->MaxValue()));
+                p->SetValue(it->second);
             } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
                 it->second = p->Value();
             }
@@ -1630,7 +1593,8 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
             }
             ImGui::InputInt(param_label.c_str(), &it->second, 1, 10, ImGuiInputTextFlags_None);
             if (ImGui::IsItemDeactivatedAfterEdit()) {
-                p->SetValue(std::max(p->MinValue(), std::min(it->second, p->MaxValue())));
+                it->second = std::max(p->MinValue(), std::min(it->second, p->MaxValue()));
+                p->SetValue(it->second);
             } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
                 it->second = p->Value();
             }
@@ -1643,6 +1607,9 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
             ImGui::InputFloat2(
                 param_label.c_str(), it->second.PeekComponents(), float_format.c_str(), ImGuiInputTextFlags_None);
             if (ImGui::IsItemDeactivatedAfterEdit()) {
+                auto x = std::max(p->MinValue().X(), std::min(it->second.X(), p->MaxValue().X()));
+                auto y = std::max(p->MinValue().Y(), std::min(it->second.Y(), p->MaxValue().Y()));
+                it->second = vislib::math::Vector<float, 2>(x, y);
                 p->SetValue(it->second);
             } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
                 it->second = p->Value();
@@ -1656,6 +1623,10 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
             ImGui::InputFloat3(
                 param_label.c_str(), it->second.PeekComponents(), float_format.c_str(), ImGuiInputTextFlags_None);
             if (ImGui::IsItemDeactivatedAfterEdit()) {
+                auto x = std::max(p->MinValue().X(), std::min(it->second.X(), p->MaxValue().X()));
+                auto y = std::max(p->MinValue().Y(), std::min(it->second.Y(), p->MaxValue().Y()));
+                auto z = std::max(p->MinValue().Z(), std::min(it->second.Z(), p->MaxValue().Z()));
+                it->second = vislib::math::Vector<float, 3>(x, y, z);
                 p->SetValue(it->second);
             } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
                 it->second = p->Value();
@@ -1669,6 +1640,11 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
             ImGui::InputFloat4(
                 param_label.c_str(), it->second.PeekComponents(), float_format.c_str(), ImGuiInputTextFlags_None);
             if (ImGui::IsItemDeactivatedAfterEdit()) {
+                auto x = std::max(p->MinValue().X(), std::min(it->second.X(), p->MaxValue().X()));
+                auto y = std::max(p->MinValue().Y(), std::min(it->second.Y(), p->MaxValue().Y()));
+                auto z = std::max(p->MinValue().Z(), std::min(it->second.Z(), p->MaxValue().Z()));
+                auto w = std::max(p->MinValue().W(), std::min(it->second.W(), p->MaxValue().W()));
+                it->second = vislib::math::Vector<float, 4>(x, y, z, w);
                 p->SetValue(it->second);
             } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
                 it->second = p->Value();

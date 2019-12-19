@@ -38,7 +38,7 @@
  */
 megamol::stdplugin::volume::VolumetricDataSource::VolumetricDataSource(void)
     : Base()
-    , dataHash(0)
+    , dataHash(-234895)
     , fileInfo(nullptr)
     , loaderThread(VolumetricDataSource::loadAsync)
     , paramAsyncSleep("AsyncSleep", "The time in milliseconds that the loader sleeps between two frames.")
@@ -428,141 +428,143 @@ bool megamol::stdplugin::volume::VolumetricDataSource::onGetData(core::Call& cal
     int expected = 0;
     bool retval = false;
 
-    try {
-        /* Evaluate parameter changes. */
-        bool isAsync = this->paramLoadAsync.Param<BoolParam>()->Value();
-        size_t cntBuffers = this->paramBuffers.Param<IntParam>()->Value();
+    VolumetricDataCall& c = dynamic_cast<VolumetricDataCall&>(call);
 
-        if (cntBuffers != this->buffers.Count()) {
-            bool isResume = this->suspendAsyncLoad(true);
-            this->assertBuffersUnsafe(cntBuffers);
-            if (isResume) {
-                this->resumeAsyncLoad();
+    if (c.DataHash() != this->dataHash) {
+        try {
+            /* Evaluate parameter changes. */
+            bool isAsync = this->paramLoadAsync.Param<BoolParam>()->Value();
+            size_t cntBuffers = this->paramBuffers.Param<IntParam>()->Value();
+
+            if (cntBuffers != this->buffers.Count()) {
+                bool isResume = this->suspendAsyncLoad(true);
+                this->assertBuffersUnsafe(cntBuffers);
+                if (isResume) {
+                    this->resumeAsyncLoad();
+                }
             }
-        }
 
-        if (isAsync && this->loaderStatus != LOADER_STATUS_RUNNING) {
-            this->startAsyncLoad();
-        }
+            if (isAsync && this->loaderStatus != LOADER_STATUS_RUNNING) {
+                this->startAsyncLoad();
+            }
 
-        /* Do the actual work. */
-        VolumetricDataCall& c = dynamic_cast<VolumetricDataCall&>(call);
-        c.SetDataHash(this->dataHash);
+            /* Do the actual work. */
+            c.SetDataHash(this->dataHash);
 
-        /* Sanity check. */
-        if (this->fileInfo == nullptr) {
-            throw vislib::IllegalStateException(_T("A valid dat file must be ")
-                                                _T("loaded before the data can be read."),
-                __FILE__, __LINE__);
-        }
-
-        /*
-         * Search whether we have the requested frame buffered. The synchronous
-         * and the asynchronous case will handle this differently.
-         */
-        auto bufferIdx = this->bufferForFrameIDUnsafe(c.FrameID());
-
-        if (isAsync) {
-            /* Loader is running asynchronously, try to get data from buffer. */
-
-            if (c.GetData() != nullptr) {
-                throw vislib::IllegalStateException(_T("A user-defined ")
-                                                    _T("destination buffer cannot be used if asynchronous ")
-                                                    _T("loading has been enabled."),
+            /* Sanity check. */
+            if (this->fileInfo == nullptr) {
+                throw vislib::IllegalStateException(_T("A valid dat file must be ")
+                                                    _T("loaded before the data can be read."),
                     __FILE__, __LINE__);
             }
 
-            // The loader cannot change the number of buffers. Therefore, we do
-            // not lock the buffers here.
-            // Note: Only the UI thread shall reallocate buffers, so we to not
-            // lock here and allow the loader thread to continue.
-            ASSERT(this->buffers.Count() > 0);
-
-            /* Get the buffer we use for loading the requested frame. */
-            auto buffer = (bufferIdx >= 0) ? this->buffers[bufferIdx] : nullptr;
-
             /*
-             * Cancel all non-running requests and search buffers we can
-             * potentially reuse to load the requested frame and the ones after
-             * that (both, for the current frame as well as for the follow-up
-             * frames).
+             * Search whether we have the requested frame buffered. The synchronous
+             * and the asynchronous case will handle this differently.
              */
-            vislib::Array<BufferSlot*> oldBuffers(this->buffers.Count());
-            vislib::Array<BufferSlot*> unusedBuffers(this->buffers.Count());
-            for (size_t i = 0; i < this->buffers.Count(); ++i) {
-                auto b = this->buffers[i % this->buffers.Count()];
-                if (b != buffer) {
-                    if (b->status.load() == BUFFER_STATUS_UNUSED) {
-                        unusedBuffers.Add(b);
-                    }
-                    if (b->status.load() == BUFFER_STATUS_READY) {
-                        oldBuffers.Add(b);
-                    }
-                    expected = BUFFER_STATUS_PENDING;
-                    if (b->status.compare_exchange_strong(expected, BUFFER_STATUS_UNUSED)) {
-                        unusedBuffers.Add(b);
-                    }
-                } /* end if (b != buffer) */
-            }     /* end for (size_t i = 0; i < this->buffers.Count(); ++i) */
+            auto bufferIdx = this->bufferForFrameIDUnsafe(c.FrameID());
 
-            if (buffer == nullptr) {
-                /*
-                 * If we do not have the frame, request it using a free or
-                 * reusable buffer.
-                 */
-                if (!unusedBuffers.IsEmpty()) {
-                    buffer = unusedBuffers[0];
-                    unusedBuffers.RemoveFirst();
-                } else if (!oldBuffers.IsEmpty()) {
-                    buffer = oldBuffers[0];
-                    oldBuffers.RemoveFirst();
+            if (isAsync) {
+                /* Loader is running asynchronously, try to get data from buffer. */
+
+                if (c.GetData() != nullptr) {
+                    throw vislib::IllegalStateException(_T("A user-defined ")
+                                                        _T("destination buffer cannot be used if asynchronous ")
+                                                        _T("loading has been enabled."),
+                        __FILE__, __LINE__);
                 }
-            }
 
-            if (buffer != nullptr) {
+                // The loader cannot change the number of buffers. Therefore, we do
+                // not lock the buffers here.
+                // Note: Only the UI thread shall reallocate buffers, so we to not
+                // lock here and allow the loader thread to continue.
+                ASSERT(this->buffers.Count() > 0);
+
+                /* Get the buffer we use for loading the requested frame. */
+                auto buffer = (bufferIdx >= 0) ? this->buffers[bufferIdx] : nullptr;
+
                 /*
-                 * Request loading only if the buffer is not yet ready or
-                 * already being queued.
+                 * Cancel all non-running requests and search buffers we can
+                 * potentially reuse to load the requested frame and the ones after
+                 * that (both, for the current frame as well as for the follow-up
+                 * frames).
                  */
-                if (buffer->FrameID != c.FrameID()) {
-                    buffer->FrameID = c.FrameID();
-                    buffer->status.store(BUFFER_STATUS_UNUSED);
-                }
-                expected = BUFFER_STATUS_UNUSED;
-                buffer->status.compare_exchange_strong(expected, BUFFER_STATUS_PENDING);
-
-                /* Ensure that loading the requested frame starts now. */
-                this->evtStartLoading.Set();
-
-                /* Request follow-up frames. */
-                for (size_t i = 1; (i < this->metadata.NumberOfFrames) && (i < this->buffers.Count() - 1); ++i) {
-                    unsigned int frameID = (c.FrameID() + i) % (unsigned int)this->metadata.NumberOfFrames;
-                    if (this->bufferForFrameIDUnsafe(frameID) < 0) {
-                        BufferSlot* bs = nullptr;
-                        if (!unusedBuffers.IsEmpty()) {
-                            bs = unusedBuffers.First();
-                            unusedBuffers.RemoveFirst();
-                        } else if (!oldBuffers.IsEmpty()) {
-                            bs = oldBuffers.First();
-                            oldBuffers.RemoveFirst();
+                vislib::Array<BufferSlot*> oldBuffers(this->buffers.Count());
+                vislib::Array<BufferSlot*> unusedBuffers(this->buffers.Count());
+                for (size_t i = 0; i < this->buffers.Count(); ++i) {
+                    auto b = this->buffers[i % this->buffers.Count()];
+                    if (b != buffer) {
+                        if (b->status.load() == BUFFER_STATUS_UNUSED) {
+                            unusedBuffers.Add(b);
                         }
-                        if (bs != nullptr) {
-#if defined(DEBUG) || defined(_DEBUG)
-                            Log::DefaultLog.WriteInfo(_T("Queueing frame %u ")
-                                                      _T("to be loaded for future use."),
-                                frameID);
-#endif /* defined(DEBUG) || defined(_DEBUG) */
-                            bs->FrameID = frameID;
-                            bs->status.store(BUFFER_STATUS_PENDING);
-                            ASSERT(this->bufferForFrameIDUnsafe(frameID) != -1);
-                        } /* end if (bs != nullptr) */
-                    }     /* end if (this->bufferForFrameIDUnsafe(frameID) == -1) */
+                        if (b->status.load() == BUFFER_STATUS_READY) {
+                            oldBuffers.Add(b);
+                        }
+                        expected = BUFFER_STATUS_PENDING;
+                        if (b->status.compare_exchange_strong(expected, BUFFER_STATUS_UNUSED)) {
+                            unusedBuffers.Add(b);
+                        }
+                    } /* end if (b != buffer) */
+                }     /* end for (size_t i = 0; i < this->buffers.Count(); ++i) */
+
+                if (buffer == nullptr) {
+                    /*
+                     * If we do not have the frame, request it using a free or
+                     * reusable buffer.
+                     */
+                    if (!unusedBuffers.IsEmpty()) {
+                        buffer = unusedBuffers[0];
+                        unusedBuffers.RemoveFirst();
+                    } else if (!oldBuffers.IsEmpty()) {
+                        buffer = oldBuffers[0];
+                        oldBuffers.RemoveFirst();
+                    }
                 }
 
-                /* Ensure that the loader thread is awake. */
-                this->evtStartLoading.Set();
+                if (buffer != nullptr) {
+                    /*
+                     * Request loading only if the buffer is not yet ready or
+                     * already being queued.
+                     */
+                    if (buffer->FrameID != c.FrameID()) {
+                        buffer->FrameID = c.FrameID();
+                        buffer->status.store(BUFFER_STATUS_UNUSED);
+                    }
+                    expected = BUFFER_STATUS_UNUSED;
+                    buffer->status.compare_exchange_strong(expected, BUFFER_STATUS_PENDING);
 
-                /* Wait for the requested data if not yet loaded. */
+                    /* Ensure that loading the requested frame starts now. */
+                    this->evtStartLoading.Set();
+
+                    /* Request follow-up frames. */
+                    for (size_t i = 1; (i < this->metadata.NumberOfFrames) && (i < this->buffers.Count() - 1); ++i) {
+                        unsigned int frameID = (c.FrameID() + i) % (unsigned int)this->metadata.NumberOfFrames;
+                        if (this->bufferForFrameIDUnsafe(frameID) < 0) {
+                            BufferSlot* bs = nullptr;
+                            if (!unusedBuffers.IsEmpty()) {
+                                bs = unusedBuffers.First();
+                                unusedBuffers.RemoveFirst();
+                            } else if (!oldBuffers.IsEmpty()) {
+                                bs = oldBuffers.First();
+                                oldBuffers.RemoveFirst();
+                            }
+                            if (bs != nullptr) {
+#if defined(DEBUG) || defined(_DEBUG)
+                                Log::DefaultLog.WriteInfo(_T("Queueing frame %u ")
+                                                          _T("to be loaded for future use."),
+                                    frameID);
+#endif /* defined(DEBUG) || defined(_DEBUG) */
+                                bs->FrameID = frameID;
+                                bs->status.store(BUFFER_STATUS_PENDING);
+                                ASSERT(this->bufferForFrameIDUnsafe(frameID) != -1);
+                            } /* end if (bs != nullptr) */
+                        }     /* end if (this->bufferForFrameIDUnsafe(frameID) == -1) */
+                    }
+
+                    /* Ensure that the loader thread is awake. */
+                    this->evtStartLoading.Set();
+
+                    /* Wait for the requested data if not yet loaded. */
 #if 0
                 expected = BUFFER_STATUS_READY;
                 while (!buffer->status.compare_exchange_strong(expected,
@@ -572,145 +574,149 @@ bool megamol::stdplugin::volume::VolumetricDataSource::onGetData(core::Call& cal
                     this->evtStartLoading.Set();
                 }
 #else
-                int expecteds[] = {BUFFER_STATUS_READY, BUFFER_STATUS_USED};
-                this->spinExchange(buffer->status, BUFFER_STATUS_USED, expecteds, STATIC_ARRAY_COUNT(expecteds), false);
+                    int expecteds[] = {BUFFER_STATUS_READY, BUFFER_STATUS_USED};
+                    this->spinExchange(
+                        buffer->status, BUFFER_STATUS_USED, expecteds, STATIC_ARRAY_COUNT(expecteds), false);
 #endif
-                ASSERT(buffer->status == BUFFER_STATUS_USED);
+                    ASSERT(buffer->status == BUFFER_STATUS_USED);
 
-                /* Move the stuff to the call and set the unlocker. */
-                c.SetData(buffer->Buffer.At(0), 1);
-                VolumetricDataSource::setUnlocker(c, buffer);
+                    /* Move the stuff to the call and set the unlocker. */
+                    c.SetData(buffer->Buffer.At(0), 1);
+                    VolumetricDataSource::setUnlocker(c, buffer);
+
+                    retval = true;
+
+                } else {
+                    /* We do not have buffers left, which is a fatal error. */
+                    Log::DefaultLog.WriteError(1,
+                        _T("There are insufficient ")
+                        _T("buffers for loading the frame with ID %u."),
+                        c.FrameID());
+                    retval = false;
+                }
+
+            } else {
+                /* Loader is running synchronously, complete the request. */
+                size_t cnt = vislib::math::Max<size_t>(1, c.GetAvailableFrames());
+                size_t frameSize = this->calcFrameSize();
+                size_t loadStart = 0;
+                vislib::Array<void*> dst(cnt);
+
+                if (c.GetData() == nullptr) {
+                    /*
+                     * If the call does not request a direct copy to a target buffer
+                     * that the caller provides, allocate local memory and return
+                     * the data from there.
+                     *
+                     * In this case, we might already have preloaded the requested
+                     * frame into an existing buffer. If so, reuse the existing
+                     * buffer and preload the following frames if requested.
+                     *
+                     * Note that preloading to a data source-local buffer does not
+                     * enable the caller to immediately get the data.
+                     */
+                    dst.SetCount(vislib::math::Min(this->assertBuffersUnsafe(cnt, true), cnt));
+
+                    if ((bufferIdx >= 0) && (this->buffers[bufferIdx]->status == BUFFER_STATUS_READY)) {
+                        loadStart = 1;
+                        dst[0] = this->buffers[bufferIdx]->Buffer.At(0);
+                        retval = true;
+                    } else {
+                        loadStart = 0;
+                        bufferIdx = 0;
+                    }
+
+                    for (size_t i = loadStart; i < dst.Count(); ++i) {
+                        size_t idx = i % dst.Count();
+                        this->buffers[idx]->FrameID = c.FrameID() + (unsigned int)i;
+                        this->buffers[idx]->Buffer.AssertSize(frameSize);
+                        this->buffers[idx]->status.store(BUFFER_STATUS_READY);
+                        dst[i] = this->buffers[idx]->Buffer.At(0);
+                    }
+
+                    ASSERT(this->buffers[bufferIdx]->Buffer.At(0) == dst[0]);
+                    this->buffers[bufferIdx]->status.store(BUFFER_STATUS_USED);
+                    c.SetData(dst[0], 1);
+                    VolumetricDataSource::setUnlocker(c, this->buffers[bufferIdx]);
+
+                } else {
+                    /*
+                     * The caller requests us to copy directly to the memory that is
+                     * provided in the call. We assume this memory to be contiguous
+                     * and large enough to hold all requested frames.
+                     */
+                    dst.SetCount(cnt);
+                    for (size_t i = 0; i < dst.Count(); ++i) {
+                        dst[i] = static_cast<BYTE*>(c.GetData()) + i * frameSize;
+                    }
+                    loadStart = 0;
+
+                    // No local buffer is required here. The data pointer is already
+                    // set by the caller.
+                } /* end if (c.GetData() == nullptr) */
 
                 retval = true;
-
-            } else {
-                /* We do not have buffers left, which is a fatal error. */
-                Log::DefaultLog.WriteError(1,
-                    _T("There are insufficient ")
-                    _T("buffers for loading the frame with ID %u."),
-                    c.FrameID());
-                retval = false;
-            }
-
-        } else {
-            /* Loader is running synchronously, complete the request. */
-            size_t cnt = vislib::math::Max<size_t>(1, c.GetAvailableFrames());
-            size_t frameSize = this->calcFrameSize();
-            size_t loadStart = 0;
-            vislib::Array<void*> dst(cnt);
-
-            if (c.GetData() == nullptr) {
-                /*
-                 * If the call does not request a direct copy to a target buffer
-                 * that the caller provides, allocate local memory and return
-                 * the data from there.
-                 *
-                 * In this case, we might already have preloaded the requested
-                 * frame into an existing buffer. If so, reuse the existing
-                 * buffer and preload the following frames if requested.
-                 *
-                 * Note that preloading to a data source-local buffer does not
-                 * enable the caller to immediately get the data.
-                 */
-                dst.SetCount(vislib::math::Min(this->assertBuffersUnsafe(cnt, true), cnt));
-
-                if ((bufferIdx >= 0) && (this->buffers[bufferIdx]->status == BUFFER_STATUS_READY)) {
-                    loadStart = 1;
-                    dst[0] = this->buffers[bufferIdx]->Buffer.At(0);
-                    retval = true;
-                } else {
-                    loadStart = 0;
-                    bufferIdx = 0;
-                }
-
-                for (size_t i = loadStart; i < dst.Count(); ++i) {
-                    size_t idx = i % dst.Count();
-                    this->buffers[idx]->FrameID = c.FrameID() + (unsigned int)i;
-                    this->buffers[idx]->Buffer.AssertSize(frameSize);
-                    this->buffers[idx]->status.store(BUFFER_STATUS_READY);
-                    dst[i] = this->buffers[idx]->Buffer.At(0);
-                }
-
-                ASSERT(this->buffers[bufferIdx]->Buffer.At(0) == dst[0]);
-                this->buffers[bufferIdx]->status.store(BUFFER_STATUS_USED);
-                c.SetData(dst[0], 1);
-                VolumetricDataSource::setUnlocker(c, this->buffers[bufferIdx]);
-
-            } else {
-                /*
-                 * The caller requests us to copy directly to the memory that is
-                 * provided in the call. We assume this memory to be contiguous
-                 * and large enough to hold all requested frames.
-                 */
-                dst.SetCount(cnt);
-                for (size_t i = 0; i < dst.Count(); ++i) {
-                    dst[i] = static_cast<BYTE*>(c.GetData()) + i * frameSize;
-                }
-                loadStart = 0;
-
-                // No local buffer is required here. The data pointer is already
-                // set by the caller.
-            } /* end if (c.GetData() == nullptr) */
-
-            retval = true;
-            for (size_t i = loadStart; i < cnt; ++i) {
-                auto buffer = dst[i];
-                auto frameID = c.FrameID() + i;
-                auto format = this->getOutputDataFormat();
+                for (size_t i = loadStart; i < cnt; ++i) {
+                    auto buffer = dst[i];
+                    auto frameID = c.FrameID() + i;
+                    auto format = this->getOutputDataFormat();
 #if (defined(DEBUG) || defined(_DEBUG))
-                Log::DefaultLog.WriteInfo(_T("Loading frame %u in format ")
-                                          _T("%hs to 0x%p"),
-                    frameID, ::datRaw_getDataFormatName(format), dst.PeekElements());
+                    Log::DefaultLog.WriteInfo(_T("Loading frame %u in format ")
+                                              _T("%hs to 0x%p"),
+                        frameID, ::datRaw_getDataFormatName(format), dst.PeekElements());
 #endif /* (defined(DEBUG) || defined(_DEBUG)) */
-                retval = (::datRaw_loadStep(this->fileInfo, static_cast<int>(frameID), &buffer, format) != 0);
-                ::datRaw_close(this->fileInfo);
-                if (!retval) {
-                    Log::DefaultLog.WriteError(_T("Loading frame %u failed."), frameID);
-                    break;
-                }
-            } /* end for (size_t i = 0; i < dst.Count(); ++i) */
-        }     /* end if (this->paramLoadAsync.Param<BoolParam>()->Value()) */
+                    retval = (::datRaw_loadStep(this->fileInfo, static_cast<int>(frameID), &buffer, format) != 0);
+                    ::datRaw_close(this->fileInfo);
+                    if (!retval) {
+                        Log::DefaultLog.WriteError(_T("Loading frame %u failed."), frameID);
+                        break;
+                    }
+                } /* end for (size_t i = 0; i < dst.Count(); ++i) */
+            }     /* end if (this->paramLoadAsync.Param<BoolParam>()->Value()) */
 
-    } catch (vislib::Exception& e) {
-        Log::DefaultLog.WriteError(1, e.GetMsg());
-        retval = false;
-    } catch (...) {
-        Log::DefaultLog.WriteError(1, _T("Unexpected exception in callback ")
-                                      _T("onGetData (please check the call)."));
-        retval = false;
-    }
-
-    if (retval) {
-        const VolumetricDataCall& vdc = dynamic_cast<VolumetricDataCall&>(call);
-        switch (this->getOutputDataFormat()) {
-        case DR_FORMAT_UCHAR:
-            this->calcMinMax<uint8_t>(vdc.GetData(), this->mins, this->maxes, *fileInfo, metadata);
-            break;
-        case DR_FORMAT_FLOAT:
-            this->calcMinMax<float>(vdc.GetData(), this->mins, this->maxes, *fileInfo, metadata);
-            break;
-        case DR_FORMAT_DOUBLE:
-            this->calcMinMax<double>(vdc.GetData(), this->mins, this->maxes, *fileInfo, metadata);
-            break;
-        case DR_FORMAT_USHORT:
-            this->calcMinMax<uint16_t>(vdc.GetData(), this->mins, this->maxes, *fileInfo, metadata);
-            break;
-        case DR_FORMAT_SHORT:
-            this->calcMinMax<int16_t>(vdc.GetData(), this->mins, this->maxes, *fileInfo, metadata);
-            break;
-        case DR_FORMAT_RAW:
-            vislib::sys::Log::DefaultLog.WriteWarn("Cannot determine min/max of BITS volume. Setting to [0,1].");
-            this->mins.resize(this->metadata.Components, 0.0);
-            this->maxes.resize(this->metadata.Components, 1.0);
-            break;
-        default:
-            vislib::sys::Log::DefaultLog.WriteWarn("Cannot determine min/max of unknown volume. Setting to [0,1].");
-            this->mins.resize(this->metadata.Components, 0.0);
-            this->maxes.resize(this->metadata.Components, 1.0);
-            break;
+        } catch (vislib::Exception& e) {
+            Log::DefaultLog.WriteError(1, e.GetMsg());
+            retval = false;
+        } catch (...) {
+            Log::DefaultLog.WriteError(1, _T("Unexpected exception in callback ")
+                                          _T("onGetData (please check the call)."));
+            retval = false;
         }
-        this->metadata.MinValues = this->mins.data();
-        this->metadata.MaxValues = this->maxes.data();
+
+        if (retval) {
+            const VolumetricDataCall& vdc = dynamic_cast<VolumetricDataCall&>(call);
+            switch (this->getOutputDataFormat()) {
+            case DR_FORMAT_UCHAR:
+                this->calcMinMax<uint8_t>(vdc.GetData(), this->mins, this->maxes, *fileInfo, metadata);
+                break;
+            case DR_FORMAT_FLOAT:
+                this->calcMinMax<float>(vdc.GetData(), this->mins, this->maxes, *fileInfo, metadata);
+                break;
+            case DR_FORMAT_DOUBLE:
+                this->calcMinMax<double>(vdc.GetData(), this->mins, this->maxes, *fileInfo, metadata);
+                break;
+            case DR_FORMAT_USHORT:
+                this->calcMinMax<uint16_t>(vdc.GetData(), this->mins, this->maxes, *fileInfo, metadata);
+                break;
+            case DR_FORMAT_SHORT:
+                this->calcMinMax<int16_t>(vdc.GetData(), this->mins, this->maxes, *fileInfo, metadata);
+                break;
+            case DR_FORMAT_RAW:
+                vislib::sys::Log::DefaultLog.WriteWarn("Cannot determine min/max of BITS volume. Setting to [0,1].");
+                this->mins.resize(this->metadata.Components, 0.0);
+                this->maxes.resize(this->metadata.Components, 1.0);
+                break;
+            default:
+                vislib::sys::Log::DefaultLog.WriteWarn("Cannot determine min/max of unknown volume. Setting to [0,1].");
+                this->mins.resize(this->metadata.Components, 0.0);
+                this->maxes.resize(this->metadata.Components, 1.0);
+                break;
+            }
+            this->metadata.MinValues = this->mins.data();
+            this->metadata.MaxValues = this->maxes.data();
+        }
+    } else {
+        retval = true;
     }
 
     return retval;
@@ -726,7 +732,6 @@ bool megamol::stdplugin::volume::VolumetricDataSource::onGetExtents(core::Call& 
 
     try {
         VolumetricDataCall& c = dynamic_cast<VolumetricDataCall&>(call);
-        c.SetDataHash(this->dataHash);
 
         /* Sanity check. */
         if (this->fileInfo == nullptr) {
@@ -770,7 +775,6 @@ bool megamol::stdplugin::volume::VolumetricDataSource::onGetMetadata(core::Call&
 
     try {
         VolumetricDataCall& c = dynamic_cast<VolumetricDataCall&>(call);
-        c.SetDataHash(this->dataHash);
 
         /* Sanity check. */
         if (this->fileInfo == nullptr) {
