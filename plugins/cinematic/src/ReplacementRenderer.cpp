@@ -166,16 +166,9 @@ bool ReplacementRenderer::Render(megamol::core::view::CallRender3D_2& call) {
         glm::mat4 view = viewTemp;
         glm::mat4 mvp = proj * view;
 
-        glm::vec4 viewport;
-        if (!cam.image_tile().empty()) { /// or better: auto viewport = cr3d_in->GetViewport().GetSize()?
-            viewport = glm::vec4(
-                cam.image_tile().left(), cam.image_tile().bottom(), cam.image_tile().width(), cam.image_tile().height());
-        }
-        else {
-            viewport = glm::vec4(0.0f, 0.0f, cam.resolution_gate().width(), cam.resolution_gate().height());
-        }
-        float vp_fw = viewport.z;
-        float vp_fh = viewport.w;
+        auto viewport = call.GetViewport();
+        float vp_fw = static_cast<float>(viewport.Width());
+        float vp_fh = static_cast<float>(viewport.Height());
 
         float alpha = alphaParam.Param<param::FloatParam>()->Value();
 

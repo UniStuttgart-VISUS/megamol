@@ -69,7 +69,9 @@ void moldyn::MMPLDDataSource::Frame::SetData(MultiParticleDataCall& call, vislib
 
     SIZE_T p = 0;
     float timestamp = static_cast<float>(call.FrameID());
-    if (this->fileVersion == 102) {
+    // HAZARD for megamol up to fc4e784dae531953ad4cd3180f424605474dd18b this reads == 102
+    // which means that many MMPLDs out there with version 103 are written wrongly (no timestamp)!
+    if (this->fileVersion >= 102) {
         timestamp = *this->dat.AsAt<float>(p);
         p += sizeof(float);
     }
@@ -137,13 +139,14 @@ void moldyn::MMPLDDataSource::Frame::SetData(MultiParticleDataCall& call, vislib
 
         pts.SetCount(*this->dat.AsAt<UINT64>(p)); p += 8;
 
-        if (this->fileVersion == 103 && !overrideBBox) {
+        if (this->fileVersion >= 103) {
             auto const box = this->dat.AsAt<float>(p);
             vislib::math::Cuboid<float> bbox;
             bbox.Set(box[0], box[1], box[2], box[3], box[4], box[5]);
             pts.SetBBox(bbox);
             p += 24;
-        } else {
+        }
+        if (overrideBBox) {
             pts.SetBBox(bbox);
         }
 
