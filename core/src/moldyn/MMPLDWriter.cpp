@@ -238,7 +238,9 @@ bool moldyn::MMPLDWriter::writeFrame(vislib::sys::File& file, moldyn::MultiParti
     uint8_t const alpha = 255;
     int ver = this->versionSlot.Param<param::EnumParam>()->Value();
 
-    if (ver == 102) {
+    // HAZARD for megamol up to fc4e784dae531953ad4cd3180f424605474dd18b this reads == 102
+    // which means that many MMPLDs out there with version 103 are written wrongly (no timestamp)!
+    if (ver >= 102) {
         float ts = data.GetTimeStamp();
         ASSERT_WRITEOUT(&ts, 4);
     }
@@ -361,7 +363,7 @@ bool moldyn::MMPLDWriter::writeFrame(vislib::sys::File& file, moldyn::MultiParti
         if (vt == 0) cnt = 0;
         ASSERT_WRITEOUT(&cnt, 8);
 
-        if (ver == 103) {
+        if (ver >= 103) {
             ASSERT_WRITEOUT(points.GetBBox().PeekBounds(), 24);
         }
 

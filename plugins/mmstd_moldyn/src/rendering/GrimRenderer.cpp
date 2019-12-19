@@ -384,13 +384,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
     //glm::vec4 camUp = snapshot.up_vector;
     //float half_aperture_angle = cam.half_aperture_angle_radians();
     //// Viewport
-    //glm::vec4 viewport;
-    //if (!cam.image_tile().empty()) {
-    //    viewport = glm::vec4(cam.image_tile().left(), cam.image_tile().bottom(), cam.image_tile().width(), cam.image_tile().height());
-    //}
-    //else {
-    //    viewport = glm::vec4(0.0f, 0.0f, cam.resolution_gate().width(), cam.resolution_gate().height());
-    //}
+    //auto viewport = call.GetViewport();
 
     // update fbo size, if required
     GLint viewport[4];

@@ -106,17 +106,14 @@ bool ArrowRenderer::create(void) {
 
 bool ArrowRenderer::GetExtents(view::CallRender3D_2& call) {
 
-    auto cr = &call;
-    if (cr == nullptr) return false;
-
     MultiParticleDataCall* c2 = this->getDataSlot.CallAs<MultiParticleDataCall>();
     if ((c2 != nullptr) && ((*c2)(1))) {
-        cr->SetTimeFramesCount(c2->FrameCount());
-        cr->AccessBoundingBoxes() = c2->AccessBoundingBoxes();
+        call.SetTimeFramesCount(c2->FrameCount());
+        call.AccessBoundingBoxes() = c2->AccessBoundingBoxes();
 
     } else {
-        cr->SetTimeFramesCount(1);
-        cr->AccessBoundingBoxes().Clear();
+        call.SetTimeFramesCount(1);
+        call.AccessBoundingBoxes().Clear();
     }
 
     return true;
@@ -132,14 +129,11 @@ void ArrowRenderer::release(void) {
 
 bool ArrowRenderer::Render(view::CallRender3D_2& call) {
 
-    auto cr = &call;
-    if (cr == nullptr) return false;
-
     MultiParticleDataCall *c2 = this->getDataSlot.CallAs<MultiParticleDataCall>();
     if (c2 != nullptr) {
-        c2->SetFrameID(static_cast<unsigned int>(cr->Time()));
+        c2->SetFrameID(static_cast<unsigned int>(call.Time()));
         if (!(*c2)(1)) return false;
-        c2->SetFrameID(static_cast<unsigned int>(cr->Time()));
+        c2->SetFrameID(static_cast<unsigned int>(call.Time()));
         if (!(*c2)(0)) return false;
     } else {
         return false;
@@ -172,7 +166,7 @@ bool ArrowRenderer::Render(view::CallRender3D_2& call) {
 
     // Camera
     view::Camera_2 cam;
-    cr->GetCamera(cam);
+    call.GetCamera(cam);
     cam_type::snapshot_type snapshot;
     cam_type::matrix_type viewTemp, projTemp;
     cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
@@ -190,13 +184,12 @@ bool ArrowRenderer::Render(view::CallRender3D_2& call) {
     glm::mat4 MVPtransp = glm::transpose(MVP);
 
     // Viewport
+    auto viewport = call.GetViewport();
     glm::vec4 viewportStuff;
-    if (!cam.image_tile().empty()) {
-        viewportStuff = glm::vec4(cam.image_tile().left(), cam.image_tile().bottom(), cam.image_tile().width(), cam.image_tile().height());
-    }
-    else {
-        viewportStuff = glm::vec4(0.0f, 0.0f, cam.resolution_gate().width(), cam.resolution_gate().height());
-    }
+    viewportStuff[0] = 0.0f;
+    viewportStuff[1] = 0.0f;
+    viewportStuff[2] = static_cast<float>(viewport.Width());
+    viewportStuff[3] = static_cast<float>(viewport.Height());
     if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
     if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
     viewportStuff[2] = 2.0f / viewportStuff[2];
@@ -204,29 +197,41 @@ bool ArrowRenderer::Render(view::CallRender3D_2& call) {
 
     // Lights
     this->GetLights();
-    glm::vec4 light_dir = { 0.0f, 0.0f, 10.0f, 1.0f };
+    glm::vec4 curlightDir = { 0.0f, 0.0f, 0.0f, 1.0f };
     if (this->lightMap.size() > 1) {
-        vislib::sys::Log::DefaultLog.WriteWarn("ArrowRenderer: Only one single distant (directional) light source is supported by this renderer");
+        vislib::sys::Log::DefaultLog.WriteWarn("ArrowRenderer: Only one single 'Distant Light' source is supported by this renderer");
     }
     for (auto light : this->lightMap) {
         if (light.second.lightType != core::view::light::DISTANTLIGHT) {
-            vislib::sys::Log::DefaultLog.WriteWarn("ArrowRenderer: Only single distant (directional) light source is supported by this renderer");
+            vislib::sys::Log::DefaultLog.WriteWarn("ArrowRenderer: Only single 'Distant Light' source is supported by this renderer");
         }
         else {
-            auto lightDir = this->lightMap.begin()->second.dl_direction;
-            if (lightDir.size() == 3) {
-                light_dir[0] = lightDir[0];
-                light_dir[1] = lightDir[1];
-                light_dir[2] = lightDir[2];
+            auto use_eyedir = light.second.dl_eye_direction;
+            if (use_eyedir) {
+                curlightDir = -cam_view;
             }
-            if (lightDir.size() == 4) {
-                light_dir[3] = lightDir[3];
+            else {
+                auto lightDir = light.second.dl_direction;
+                if (lightDir.size() == 3) {
+                    curlightDir[0] = lightDir[0];
+                    curlightDir[1] = lightDir[1];
+                    curlightDir[2] = lightDir[2];
+                }
+                if (lightDir.size() == 4) {
+                    curlightDir[3] = lightDir[3];
+                }
+                /// View Space Lighting. Comment line to change to Object Space Lighting.
+                //curlightDir = MVtransp * curlightDir;
             }
+/// TODO Implement missing distant light parameters:
+            //light.second.dl_angularDiameter;
+            //light.second.lightColor;
+            //light.second.lightIntensity;
         }
     }
-    light_dir = MVtransp * light_dir;
 
     glDisable(GL_BLEND);
+
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
     glPointSize(vislib::math::Max(viewportStuff[2], viewportStuff[3]));
@@ -242,7 +247,7 @@ bool ArrowRenderer::Render(view::CallRender3D_2& call) {
     glUniform3fv(this->arrowShader.ParameterLocation("camIn"), 1, glm::value_ptr(cam_view));
     glUniform3fv(this->arrowShader.ParameterLocation("camRight"), 1, glm::value_ptr(cam_right));
     glUniform3fv(this->arrowShader.ParameterLocation("camUp"), 1, glm::value_ptr(cam_up));
-    glUniform4fv(this->arrowShader.ParameterLocation("lightDir"), 1, glm::value_ptr(light_dir));
+    glUniform4fv(this->arrowShader.ParameterLocation("lightDir"), 1, glm::value_ptr(curlightDir));
     this->arrowShader.SetParameter("lengthScale", lengthScale);
     this->arrowShader.SetParameter("lengthFilter", lengthFilter);
     glUniform4fv(this->arrowShader.ParameterLocation("clipDat"), 1, clipDat);
