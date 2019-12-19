@@ -128,8 +128,8 @@ void main()
   float iAmTop = (gl_InstanceID % 2);
   float topOffset = iAmTop * 2.0 - 1.0; // top -> 1, bottom -> -1
   float val = (topOffset > 0) ? filters[dimension].upper : filters[dimension].lower;
-  //val = val - dataMinimum[dimension];
-  //val /= dataMaximum[dimension] - dataMinimum[dimension];
+  val = val - dataMinimum[dimension];
+  val /= dataMaximum[dimension] - dataMinimum[dimension];
   vec4 vertex = vec4(
   bottom.x - axisHalfTick + gl_VertexID * axisHalfTick,
   mix(bottom.y, top.y, val) + axisHalfTick * (-topOffset * (-1 + gl_VertexID % 2)),
