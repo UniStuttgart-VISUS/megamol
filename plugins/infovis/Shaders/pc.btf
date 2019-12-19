@@ -134,6 +134,10 @@ float pc_item_dataValue(uint dataID, uint dimension)
   return (data[dataID] - dataMinimum[dimension]) / (dataMaximum[dimension] - dataMinimum[dimension]);
 }
 
+float pc_item_dataValue_unscaled(uint dataID) {
+  return data[dataID];
+}
+
 vec4 pc_item_vertex(uint itemID, uint dataID, uint dimension, uint worldSpaceAxis)
 {
   return vec4(

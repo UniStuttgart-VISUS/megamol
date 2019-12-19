@@ -14,7 +14,7 @@ file(GLOB header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "*.hpp")
 
 add_library(${PROJECT_NAME} SHARED ${struct_files} ${header_files} ${source_files})
 target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}> $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Structs>)
-                                                
+
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Structs/ DESTINATION "include/Structs")
 install(FILES ${header_files} DESTINATION "include")
 if(WIN32)
