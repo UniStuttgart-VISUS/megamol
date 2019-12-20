@@ -4,10 +4,9 @@
     <include file="bitflags"/>
 
     <shader name="vertex">
-        <snippet type="version">120</snippet>
+        <snippet type="version">130</snippet>
         <snippet type="string">
-            #extension GL_EXT_gpu_shader4 : enable
-            #extension GL_ARB_gpu_shader5 : enable
+#extension GL_EXT_gpu_shader4 : enable
         </snippet>
         <snippet name="common::defines"/>
         <snippet name="attributes" type="string">
@@ -46,11 +45,11 @@ uniform vec4 clipCol;
 varying vec3 rad; // r, r^2, len
 varying vec4 camPos;
 varying vec4 objPos;
+varying vec4 rotLightDir;
 
 varying vec3 rotMatT0;
 varying vec3 rotMatT1;
 varying vec3 rotMatT2;
-varying mat3 rotMatIT;
 flat varying uint discardFrag;
 ]]>
         </snippet>
@@ -115,9 +114,6 @@ void main(void) {
     rotMatT1 = vec3(ttmp1.y, ttmp2.y, ttmp3.y);
     rotMatT2 = vec3(ttmp1.z, ttmp2.z, ttmp3.z);
 
-    rotMatIT = mat3(rotMatT0, rotMatT1, rotMatT2);
-    rotMatIT = transpose(rotMatIT);
-
 //    vec4 pos = inPos;
 //    pos.xyz += cor.x * rotMatT1 + cor.y * rotMatT2;
 //    pos = MVP * pos;
@@ -134,6 +130,9 @@ void main(void) {
     //lightPos = MVinv * gl_LightSource[0].position - inPos; // note: w is bullshit now!
     //lightPos.xyz = rotMatT0 * lightPos.x + rotMatT1 * lightPos.y + rotMatT2 * lightPos.z;
     //lightPos = MVtransp * gl_LightSource[0].position; // transpose of inverse inverse -> directional light
+    
+    rotLightDir.xyz = rotMatT0 * lightDir.x + rotMatT1 * lightDir.y + rotMatT2 * lightDir.z;
+    rotLightDir.w = 1.0f;
 
     objPos = inPos;
 
@@ -283,9 +282,9 @@ void main(void) {
     </shader>
 
     <shader name="fragment">
-        <snippet type="version">120</snippet>
+        <snippet type="version">130</snippet>
         <snippet type="string">
-            #extension GL_EXT_gpu_shader4 : enable
+#extension GL_EXT_gpu_shader4 : enable
         </snippet>
         <snippet name="common::defines"/>
         <snippet name="vertex::attributes"/>
@@ -403,12 +402,8 @@ void main(void) {
 
     // phong lighting with directional light
 	//gl_FragColor = vec4(color.rgb, 1.0);
-    normal = rotMatIT * normal;
-    ray = rotMatIT * ray;
-    gl_FragColor = vec4(LocalLighting(ray, normal, lightDir.xyz, color), 1.0);
+    gl_FragColor = vec4(LocalLighting(ray, normal, rotLightDir.xyz, color), 1.0);
     gl_FragColor.rgb = (0.75 * gl_FragColor.rgb) + (0.25 * color);
-    //gl_FragColor.rgb = normal;
-
 
     // calculate depth
 #ifdef DEPTH

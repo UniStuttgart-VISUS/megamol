@@ -57,7 +57,7 @@ if(ENABLE_MPI)
   find_package(MPI REQUIRED)
   if(MPI_C_FOUND)
     target_compile_definitions(MPI::MPI_C INTERFACE "-DWITH_MPI")
-  endif()
+endif()
 endif()
 
 # Threading (XXX: this is a bit wonky due to Ubuntu/clang)

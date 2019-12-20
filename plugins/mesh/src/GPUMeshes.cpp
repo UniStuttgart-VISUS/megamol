@@ -30,7 +30,6 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
 
     CallMesh* mc = this->m_mesh_slot.CallAs<CallMesh>();
     if (mc == NULL) return false;
-    if (!(*mc)(0)) return false;
 
     bool something_has_changed = mc->hasUpdate(); // something has changed in the neath...
 

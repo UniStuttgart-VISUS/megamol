@@ -100,7 +100,6 @@ bool megamol::mesh::MeshViewerRenderTasks::getDataCallback(core::Call& caller) {
     CallGPURenderTaskData* rhs_rtc = this->m_renderTask_rhs_slot.CallAs<CallGPURenderTaskData>();
     if (rhs_rtc != NULL) {
         rhs_rtc->setData(rt_collection,0);
-
         (*rhs_rtc)(0);
     }
 

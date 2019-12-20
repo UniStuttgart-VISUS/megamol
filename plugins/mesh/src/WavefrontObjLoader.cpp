@@ -196,7 +196,6 @@ bool megamol::mesh::WavefrontObjLoader::getMetaDataCallback(core::Call& caller) 
     if (cm == nullptr) return false;
 
     cm->setMetaData(m_meta_data);
-
     return true;
 }
 

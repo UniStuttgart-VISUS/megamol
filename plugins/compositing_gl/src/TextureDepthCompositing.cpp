@@ -192,4 +192,6 @@ bool megamol::compositing::TextureDepthCompositing::computeDepthCompositing() {
         glBindImageTexture(0, 0, 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA16F);
         glBindImageTexture(1, 0, 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_R32F);
     }
+
+    return true;
 }

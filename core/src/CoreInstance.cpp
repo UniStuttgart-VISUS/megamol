@@ -331,8 +331,8 @@ void megamol::core::CoreInstance::Initialise(void) {
     }
     std::string result;
     const bool ok = lua->RunString("mmLog(LOGINFO, 'Lua loaded OK: Running on ', "
-                            "mmGetBitWidth(), ' bit ', mmGetOS(), ' in ', mmGetConfiguration(),"
-                            "' mode on ', mmGetMachineName(), '.')",
+                                   "mmGetBitWidth(), ' bit ', mmGetOS(), ' in ', mmGetConfiguration(),"
+                                   "' mode on ', mmGetMachineName(), '.')",
         result);
     if (ok) {
         // vislib::sys::Log::DefaultLog.WriteInfo("Lua execution is OK and returned '%s'", result.c_str());
@@ -652,9 +652,11 @@ mmcErrorCode megamol::core::CoreInstance::SetInitValue(mmcInitValue key, mmcValu
             this->preInit->SetConfigFileOverrides(utility::APIValueUtil::AsStringW(type, value));
             break;
         default:
+            vislib::sys::Log::DefaultLog.WriteError("CoreInstance::SetInitValue: unknown initval");
             return MMC_ERR_UNKNOWN;
         }
     } catch (...) {
+        vislib::sys::Log::DefaultLog.WriteError("CoreInstance::SetInitValue: exception during evaluation of initval");
         return MMC_ERR_UNKNOWN;
     }
     return MMC_ERR_NO_ERROR;
@@ -1367,8 +1369,14 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
                     psr.First().PeekBuffer(), psr.Second().PeekBuffer());
                 continue;
             } else {
-                vislib::sys::Log::DefaultLog.WriteInfo(
-                    "Setting parameter \"%s\" to \"%s\".", psr.First().PeekBuffer(), psr.Second().PeekBuffer());
+                if (psr.Second().Length() > 255) {
+                    vislib::sys::Log::DefaultLog.WriteInfo("Setting parameter \"%s\" to \"%s\"[... (shortened)]\"%s\".",
+                        psr.First().PeekBuffer(), psr.Second().Substring(0, 10).PeekBuffer(),
+                        psr.Second().Substring(psr.Second().Length() - 11, 10).PeekBuffer());
+                } else {
+                    vislib::sys::Log::DefaultLog.WriteInfo(
+                        "Setting parameter \"%s\" to \"%s\".", psr.First().PeekBuffer(), psr.Second().PeekBuffer());
+                }
             }
         } else {
             // the error is already shown
@@ -1946,7 +1954,8 @@ std::string megamol::core::CoreInstance::GetProjectFromPNG(std::string filename)
     } else {
         FILE* fp = fopen(filename.c_str(), "rb");
         if (fp == nullptr) {
-            vislib::sys::Log::DefaultLog.WriteError("getProjectFromPNG: Unable to open png file \"%s\"", filename.c_str());
+            vislib::sys::Log::DefaultLog.WriteError(
+                "getProjectFromPNG: Unable to open png file \"%s\"", filename.c_str());
         } else {
             png_infop info = png_create_info_struct(png);
             if (!info) {
@@ -1997,7 +2006,7 @@ void megamol::core::CoreInstance::LoadProject(const vislib::StringA& filename) {
     } else if (filename.EndsWith(".png")) {
         std::string result;
         std::string content = GetProjectFromPNG(filename.PeekBuffer());
-        //vislib::sys::Log::DefaultLog.WriteInfo("Loaded project from png:\n%s", content.c_str());
+        // vislib::sys::Log::DefaultLog.WriteInfo("Loaded project from png:\n%s", content.c_str());
         if (!this->lua->RunString(content.c_str(), result, filename.PeekBuffer())) {
             vislib::sys::Log::DefaultLog.WriteError(vislib::sys::Log::LEVEL_INFO,
                 "Failed loading project file \"%s\": %s", filename.PeekBuffer(), result.c_str());
@@ -2063,7 +2072,8 @@ void megamol::core::CoreInstance::LoadProject(const vislib::StringW& filename) {
 }
 
 
-void megamol::core::CoreInstance::SerializeGraph(std::string& serInstances, std::string& serModules, std::string& serCalls, std::string& serParams) {
+void megamol::core::CoreInstance::SerializeGraph(
+    std::string& serInstances, std::string& serModules, std::string& serCalls, std::string& serParams) {
 
     std::stringstream confInstances, confModules, confCalls, confParams;
 
@@ -2071,7 +2081,8 @@ void megamol::core::CoreInstance::SerializeGraph(std::string& serInstances, std:
     std::map<std::string, std::string> job_instances;
     {
         vislib::sys::AutoLock lock(this->namespaceRoot->ModuleGraphLock());
-        AbstractNamedObjectContainer::ptr_type anoc = AbstractNamedObjectContainer::dynamic_pointer_cast(this->namespaceRoot);
+        AbstractNamedObjectContainer::ptr_type anoc =
+            AbstractNamedObjectContainer::dynamic_pointer_cast(this->namespaceRoot);
         int job_counter = 0;
         for (auto ano = anoc->ChildList_Begin(); ano != anoc->ChildList_End(); ++ano) {
             auto vi = dynamic_cast<ViewInstance*>(ano->get());
@@ -2079,10 +2090,8 @@ void megamol::core::CoreInstance::SerializeGraph(std::string& serInstances, std:
             if (vi && vi->View()) {
                 std::string vin = vi->Name().PeekBuffer();
                 view_instances[vi->View()->FullName().PeekBuffer()] = vin;
-                vislib::sys::Log::DefaultLog.WriteInfo(
-                    "SerializeGraph: Found view instance \"%s\" with view \"%s\".",
-                    view_instances[vi->View()->FullName().PeekBuffer()].c_str(),
-                    vi->View()->FullName().PeekBuffer());
+                vislib::sys::Log::DefaultLog.WriteInfo("SerializeGraph: Found view instance \"%s\" with view \"%s\".",
+                    view_instances[vi->View()->FullName().PeekBuffer()].c_str(), vi->View()->FullName().PeekBuffer());
             }
             if (ji && ji->Job()) {
                 std::string jin = ji->Name().PeekBuffer();
@@ -2097,16 +2106,15 @@ void megamol::core::CoreInstance::SerializeGraph(std::string& serInstances, std:
         const auto fun = [&confInstances, &confModules, &confCalls, &confParams, &view_instances](Module* mod) {
             if (view_instances.find(mod->FullName().PeekBuffer()) != view_instances.end()) {
                 confInstances << "mmCreateView(\"" << view_instances[mod->FullName().PeekBuffer()] << "\",\""
-                    << mod->ClassName() << "\",\"" << mod->FullName().PeekBuffer() << "\")\n";
-            }
-            else {
+                              << mod->ClassName() << "\",\"" << mod->FullName().PeekBuffer() << "\")\n";
+            } else {
                 // todo: jobs??
                 confModules << "mmCreateModule(\"" << mod->ClassName() << "\",\"" << mod->FullName().PeekBuffer()
-                    << "\")\n";
+                            << "\")\n";
             }
             AbstractNamedObjectContainer::child_list_type::const_iterator se = mod->ChildList_End();
-            for (AbstractNamedObjectContainer::child_list_type::const_iterator si = mod->ChildList_Begin();
-                si != se; ++si) {
+            for (AbstractNamedObjectContainer::child_list_type::const_iterator si = mod->ChildList_Begin(); si != se;
+                 ++si) {
                 const auto slot = dynamic_cast<param::ParamSlot*>((*si).get());
                 if (slot) {
                     const auto bp = slot->Param<param::ButtonParam>();
@@ -2126,10 +2134,10 @@ void megamol::core::CoreInstance::SerializeGraph(std::string& serInstances, std:
                     const Call* c = const_cast<CallerSlot*>(cslot)->CallAs<Call>();
                     if (c != nullptr) {
                         confCalls << "mmCreateCall(\"" << c->ClassName() << "\",\""
-                            << c->PeekCallerSlot()->Parent()->FullName().PeekBuffer()
-                            << "::" << c->PeekCallerSlot()->Name().PeekBuffer() << "\",\""
-                            << c->PeekCalleeSlot()->Parent()->FullName().PeekBuffer()
-                            << "::" << c->PeekCalleeSlot()->Name().PeekBuffer() << "\")\n";
+                                  << c->PeekCallerSlot()->Parent()->FullName().PeekBuffer()
+                                  << "::" << c->PeekCallerSlot()->Name().PeekBuffer() << "\",\""
+                                  << c->PeekCalleeSlot()->Parent()->FullName().PeekBuffer()
+                                  << "::" << c->PeekCalleeSlot()->Name().PeekBuffer() << "\")\n";
                     }
                 }
             }

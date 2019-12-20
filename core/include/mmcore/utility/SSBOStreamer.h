@@ -18,6 +18,7 @@
 #include <cinttypes>
 #include "mmcore/api/MegaMolCore.std.h"
 #include <omp.h>
+#include <functional>
 
 namespace megamol {
 namespace core {
@@ -69,28 +70,10 @@ namespace utility {
         /// @param sync returns the internal ID of a sync object abstraction
         /// @param dstOffset the buffer offset required for binding the buffer range 
         /// @param dstLength the buffer length required for binding the buffer range
-        void UploadChunk(unsigned int idx, GLuint& numItems, unsigned int& sync,
-            GLsizeiptr& dstOffset, GLsizeiptr& dstLength);
-
-        /// use this uploader if you want to add a per-item transformation
-        /// that will be executed inside an omp parallel for
-        /// @param idx the chunk to upload [0..SetData()-1]
-        /// @param copyOp the lambda you want to execute. A really hacky subset-changing
-        ///            one could be:
-        ///            [vertStride](const char *src, char *dst) -> void {
-        ///                memcpy(dst, src, vertStride);
-        ///                *reinterpret_cast<float *>(dst + 4) =
-        ///                    *reinterpret_cast<const float *>(src + 4) - 100.0f;
-        ///            }
-        /// @param numItems returns the number of items in this chunk
-        ///                 (last one is probably shorter than bufferSize)
-        /// @param sync returns the internal ID of a sync object abstraction
-        /// @param dstOffset the buffer offset required for binding the buffer range 
-        /// @param dstLength the buffer length required for binding the buffer range
-        template<class fun>
-        void UploadChunk(unsigned int idx, fun copyOp,
-            GLuint& numItems, unsigned int& sync,
-            GLsizeiptr& dstOffset, GLsizeiptr& dstLength);
+        /// @param copyOp (optional) copyOp to transform src into dst (per item, gets correctly offset pointers (dst,
+        /// src))
+        void UploadChunk(unsigned int idx, GLuint& numItems, unsigned int& sync, GLsizeiptr& dstOffset,
+            GLsizeiptr& dstLength, const std::function<void(void*, const void*)>& copyOp = nullptr);
 
         /// @param sync the abstract sync object to signal as done
         void SignalCompletion(unsigned int sync);
@@ -135,42 +118,6 @@ namespace utility {
         std::string debugLabel;
         int offsetAlignment = 0;
     };
-
-    template<class fun>
-    void SSBOStreamer::UploadChunk(unsigned int idx, fun copyOp, GLuint& numItems,
-        unsigned int& sync, GLsizeiptr& dstOffset, GLsizeiptr& dstLength) {
-        if (theData == nullptr || idx > this->numChunks - 1) return;
-
-        // we did not succeed doing anything yet
-        numItems = sync = 0;
-
-        dstOffset = this->bufferSize * this->currIdx;
-        GLsizeiptr srcOffset = this->numItemsPerChunk * this->srcStride * idx;
-        char *dst = static_cast<char*>(this->mappedMem) + dstOffset;
-        const char *src = static_cast<const char*>(this->theData) + srcOffset;
-        const size_t itemsThisTime = std::min<unsigned int>(
-            this->numItems - idx * this->numItemsPerChunk, this->numItemsPerChunk);
-        dstLength = itemsThisTime * this->dstStride;
-        const void *srcEnd = src + itemsThisTime * srcStride;
-
-        //printf("going to upload %llu x %u bytes to offset %lld from %lld\n", itemsThisTime,
-        //    this->dstStride, dstOffset, srcOffset);
-
-        waitSignal(this->fences[currIdx]);
-
-#pragma omp parallel for
-        for (INT64 i = 0; i < itemsThisTime; ++i) {
-            copyOp(src + i * this->srcStride, dst + i * this->dstStride);
-        }
-
-        glFlushMappedNamedBufferRange(this->theSSBO,
-            this->bufferSize * this->currIdx, itemsThisTime * this->dstStride);
-        numItems = itemsThisTime;
-
-        sync = currIdx;
-        currIdx = (currIdx + 1) % this->numBuffers;
-    }
-
 
 } /* end namespace utility */
 } /* end namespace core */
