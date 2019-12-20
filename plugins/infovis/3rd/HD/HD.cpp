@@ -11,6 +11,7 @@
 #define _USE_MATH_DEFINES
 #include "HD.h"
 #include <algorithm>
+#include <cmath>
 #include <stdexcept>
 
 using namespace std;
