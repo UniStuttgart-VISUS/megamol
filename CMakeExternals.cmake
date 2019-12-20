@@ -119,6 +119,7 @@ function(require_external NAME)
       CMAKE_ARGS 
         -DBUILD_SHARED_LIBS=OFF
         -DBUILD_TESTING=OFF
+        -DCMAKE_POSITION_INDEPENDENT_CODE=ON
         -DADIOS2_USE_BZip2=OFF
         -DADIOS2_USE_Fortran=OFF
         -DADIOS2_USE_HDF5=OFF
