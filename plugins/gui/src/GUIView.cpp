@@ -62,6 +62,7 @@ GUIView::GUIView()
     , render_view_slot("renderview", "Connects to a preceding RenderView that will be decorated with a GUI")
     , style_param("style", "Color style, theme")
     , state_param("state", "Current state of all windows. Automatically updated.")
+    , overrideCall(nullptr)
     , context(nullptr)
     , window_manager()
     , tf_editor()
@@ -88,6 +89,7 @@ GUIView::GUIView()
     this->style_param << styles;
     this->style_param.ForceSetDirty();
     this->MakeSlotAvailable(&this->style_param);
+    styles = nullptr;
 
     this->state_param << new core::param::StringParam("");
     this->MakeSlotAvailable(&this->state_param);
@@ -1495,7 +1497,8 @@ void GUIView::drawParameter(const core::Module& mod, core::param::ParamSlot& slo
     auto param = slot.Parameter();
     if (!param.IsNull()) {
         // Set different style if parameter is read-only
-        if (param->IsGUIReadOnly()) {
+        bool readOnly = param->IsGUIReadOnly();
+        if (readOnly) {
             ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
             ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
         }
