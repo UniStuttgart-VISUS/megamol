@@ -83,8 +83,8 @@ namespace mmvtkm {
 
         /**
          * Loads one frame of the data set into the given 'frame' object. This
-         * method may be invoked from another thread. You must take 
-         * precausions in case you need synchronised access to shared 
+         * method may be invoked from another thread. You must take
+         * precausions in case you need synchronised access to shared
          * ressources.
          *
          * @param frame The frame to be loaded.
@@ -96,95 +96,6 @@ namespace mmvtkm {
          * Implementation of 'Release'.
          */
         virtual void release(void);
-
-        /** Nested class of frame data */
-        class Frame : public core::view::AnimDataModule::Frame {
-        public:
-
-            /**
-             * Ctor.
-             *
-             * @param owner The owning AnimDataModule
-             */
-            Frame(core::view::AnimDataModule& owner);
-
-            /** Dtor. */
-            virtual ~Frame(void);
-
-            /**
-             * Clears the loaded data
-             */
-            inline void Clear(void) {
-                this->dat.EnforceSize(0);
-            }
-
-            /**
-             * Loads a frame from 'file' into this object
-             *
-             * @param file The file stream to load from. The stream is assumed
-             *             to be at the correct location
-             * @param idx The zero-based index of the frame
-             * @param size The size of the frame data in bytes
-             * @param version File version (100 = standard, 101 with clusterInfos)
-             *
-             * @return True on success
-             */
-            bool LoadFrame(vislib::sys::File *file, unsigned int idx, UINT64 size, unsigned int version);
-
-            /**
-             * Sets the data into the call
-             *
-             * @param call The call to receive the data
-             */
-            void SetData(mmvtkmDataCall& call);
-
-        private:
-
-            /** position data per type */
-            vislib::RawStorage dat;
-
-            /** file version */
-            unsigned int fileVersion;
-
-        };
-
-        /**
-         * Helper class to unlock frame data when 'CallSimpleSphereData' is
-         * used.
-         */
-        class Unlocker : public mmvtkmDataCall::Unlocker {
-        public:
-
-            /**
-             * Ctor.
-             *
-             * @param frame The frame to unlock
-             */
-            Unlocker(Frame& frame) : mmvtkmDataCall::Unlocker(),
-                    frame(&frame) {
-                // intentionally empty
-            }
-
-            /** Dtor. */
-            virtual ~Unlocker(void) {
-                this->Unlock();
-                ASSERT(this->frame == NULL);
-            }
-
-            /** Unlocks the data */
-            virtual void Unlock(void) {
-                if (this->frame != NULL) {
-                    this->frame->Unlock();
-                    this->frame = NULL; // DO NOT DELETE!
-                }
-            }
-
-        private:
-
-            /** The frame to unlock */
-            Frame *frame;
-
-        };
 
         /**
          * Callback receiving the update of the file name parameter.
@@ -222,9 +133,6 @@ namespace mmvtkm {
         /** The opened data file */
         vislib::sys::File *file;
 
-        /** The frame index table */
-        UINT64 *frameIdx;
-
         /** The data set bounding box */
         vislib::math::Cuboid<float> bbox;
 
@@ -242,9 +150,6 @@ namespace mmvtkm {
 
 		/** The vtkm data file name */
         std::string vtkmDataFile;
-
-		/** current frameID */
-        size_t currentFrame;
 
 		bool dirtyFlag;
     };

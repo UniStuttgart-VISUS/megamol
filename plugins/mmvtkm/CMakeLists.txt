@@ -11,7 +11,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   
   # Check option dependencies: First list item is always the current build option,
   # afterwards list the dependencies.
-  set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE" CACHE INTERNAL "") #TODO add ENABLE_CUDA if intended to run vtkm with cuda and cuda needs to be enabled?
+  set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE" CACHE INTERNAL "")
   
   # Add externals.
   require_external(vtkm)
@@ -37,7 +37,6 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   target_include_directories(${PROJECT_NAME} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     "include" "src" "lib"
-    # TODO set include dirs with targets in cmakeexternals and not here
     "${SOURCE_DIR}"
     "${BUILD_DIR}/Release/include"
     "${SOURCE_DIR}/vtkm/thirdparty/taotuple"

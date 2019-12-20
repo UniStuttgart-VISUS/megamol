@@ -52,8 +52,6 @@ bool mmvtkmDataRenderer::GetExtents(core::view::CallRender3D_2& call) {
 
     if (!(*cd)(1)) {
         return false;
-    } else {
-		//cd->FrameID();
     }
 
     return true;

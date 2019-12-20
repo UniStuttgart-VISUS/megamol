@@ -600,39 +600,27 @@ function(require_external NAME)
       return()
     endif()
 
-    set(VTKM_VER 1.5)
+    set(VTKM_VER 1.4)
 
     if(WIN32)
       set(VTKM_LIB_CONT "lib/vtkm_cont-${VTKM_VER}.lib")
       set(VTKM_LIB_DEBUG_CONT "lib/vtkm_cont-${VTKM_VER}.lib")
-      #set(VTKM_LIB_FILTER "lib/vtkm_filter-${VTKM_VER}.lib")
-      #set(VTKM_LIB_DEBUG_FILTER "lib/vtkm_filter-${VTKM_VER}.lib")
       set(VTKM_LIB_RENDERER "lib/vtkm_rendering-${VTKM_VER}.lib")
       set(VTKM_LIB_DEBUG_RENDERER "lib/vtkm_rendering-${VTKM_VER}.lib")
-      #set(VTKM_LIB_SOURCE "lib/vtkm_source-${VTKM_VER}.lib")
-      #set(VTKM_LIB_DEBUG_SOURCE "lib/vtkm_source-${VTKM_VER}.lib")
       set(VTKM_LIB_WORKLET "lib/vtkm_worklet-${VTKM_VER}.lib")
       set(VTKM_LIB_DEBUG_WORKLET "lib/vtkm_worklet-${VTKM_VER}.lib")
     else()
       include(GNUInstallDirs)
       set(VTKM_LIB_CONT "lib/vtkm_cont-${VTKM_VER}.a")
       set(VTKM_LIB_DEBUG_CONT "lib/vtkm_cont-${VTKM_VER}.a")
-      #set(VTKM_LIB_FILTER "lib/vtkm_filter-${VTKM_VER}.a")
-      #set(VTKM_LIB_DEBUG_FILTER "lib/vtkm_filter-${VTKM_VER}.a")
       set(VTKM_LIB_RENDERER "lib/vtkm_rendering-${VTKM_VER}.a")
       set(VTKM_LIB_DEBUG_RENDERER "lib/vtkm_rendering-${VTKM_VER}.a")
-      #set(VTKM_LIB_SOURCE "lib/vtkm_source-${VTKM_VER}.a")
-      #set(VTKM_LIB_DEBUG_SOURCE "lib/vtkm_source-${VTKM_VER}.a")
       set(VTKM_LIB_WORKLET "lib/vtkm_worklet-${VTKM_VER}.a")
       set(VTKM_LIB_DEBUG_WORKLET "lib/vtkm_worklet-${VTKM_VER}.a")
     endif()
 
-    #set(CXX_FLAGS "/__CUDACC__ /DWIN32 /D_WINDOWS /W3 /GR /EHsc")
-    #set(CUDA_FLAGS "-D__CUDACC__ -D_WINDOWS -Xcompiler=\"/W3 /GR /EHsc\"")
-    #set(CUDA_FLAGS_RELEASE "-D__CUDACC__ -Xcompiler=\"-MD -O2 -Ob2\" -DNDEBUG")
-
     option(vtkm_ENABLE_CUDA "Option to build vtkm with cuda enabled" OFF)
-    message(${vtkm_ENABLE_CUDA})
+    
     add_external_project(vtkm
       GIT_REPOSITORY https://gitlab.kitware.com/vtk/vtk-m.git
       GIT_TAG "v1.4.0"
@@ -640,9 +628,6 @@ function(require_external NAME)
         -DBUILD_SHARED_LIBS:BOOL=OFF
         -DVTKm_ENABLE_TESTING:BOOL=OFF
         -DVTKm_ENABLE_CUDA:BOOL=${vtkm_ENABLE_CUDA}
-        #-DCMAKE_CXX_FLAGS:STRING=${CXX_FLAGS}
-        #-DCMAKE_CUDA_FLAGS:STRING=${CUDA_FLAGS}
-        #-DCMAKE_CUDA_FLAGS_RELEASE:STRING=${CUDA_FLAGS_RELEASE}
         -DBUILD_TESTING:BOOL=OFF
         -VTKm_ENABLE_DEVELOPER_FLAGS:BOOL=OFF
         -DCMAKE_BUILD_TYPE=Release
@@ -653,20 +638,10 @@ function(require_external NAME)
       LIBRARY_RELEASE "${VTKM_LIB_CONT}"
       LIBRARY_DEBUG "${VTKM_LIB_DEBUG_CONT}")
 
-    #add_external_library(vtkm_filter STATIC
-    #  PROJECT vtkm
-    #  LIBRARY_RELEASE "${VTKM_LIB_FILTER}"
-    #  LIBRARY_DEBUG "${VTKM_LIB_DEBUG_FILTER}")
-
     add_external_library(vtkm_renderer STATIC
       PROJECT vtkm
       LIBRARY_RELEASE "${VTKM_LIB_RENDERER}"
       LIBRARY_DEBUG "${VTKM_LIB_DEBUG_RENDERER}")
-
-    #add_external_library(vtkm_source STATIC
-    #  PROJECT vtkm
-    #  LIBRARY_RELEASE "${VTKM_LIB_SOURCE}"
-    #  LIBRARY_DEBUG "${VTKM_LIB_DEBUG_SOURCE}")
 
     add_external_library(vtkm_worklet STATIC
       PROJECT vtkm
