@@ -38,6 +38,7 @@ namespace MegaMolConf {
         private Point connectingTip;
         private Rectangle drawArea;
         private bool saveShortcut;
+        private float panelZoomFactor = 1.0f;
 
         private static int minPort = 30000;
         private static int maxPort = 31000;
@@ -945,7 +946,7 @@ namespace MegaMolConf {
                 TabPage tp = np.Tag as TabPage;
                 if (tp != null) {
                     e.Graphics.ResetTransform();
-                    //e.Graphics.ScaleTransform(0.5f,0.5f);
+                    e.Graphics.ScaleTransform(panelZoomFactor,panelZoomFactor);
                     // TODO: scale clicks
                     //e.Graphics.TranslateTransform(-drawArea.Left + tp.HorizontalScroll.Value, -drawArea.Top + tp.VerticalScroll.Value);
                     e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
@@ -1325,9 +1326,11 @@ namespace MegaMolConf {
             //    tabViews.GetTabRect(tabViews.SelectedIndex).Height);
             np.Paint += PaintTabpage;
             np.MouseDoubleClick += tabViews_MouseDoubleClick;
+            np.MouseClick += tabViews_MouseClick;
             np.MouseDown += tabViews_MouseDown;
             np.MouseMove += tabViews_MouseMove;
             np.MouseUp += tabViews_MouseUp;
+            np.MouseWheel += tabViews_MouseWheel;
             np.PreviewKeyDown += tabViews_PreviewKeyDown;
             np.BackColor = Color.Gainsboro;
             tabViews.SelectedTab = tp;
@@ -2124,6 +2127,31 @@ in PowerShell:
                         return;
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Scale modules when mouse wheel is triggered
+        /// </summary>
+        /// <param name="sender">not used</param>
+        /// <param name="e">The mouse event args identifying the clicking mouse button</param>
+        private void tabViews_MouseWheel(object sender, MouseEventArgs e)
+        {
+            panelZoomFactor += (float)e.Delta / 1000.0f;
+            if (panelZoomFactor <= 0.0f) panelZoomFactor = 0.1f;
+        }
+
+        /// <summary>
+        /// Close tab if clicked by middle mouse button
+        /// </summary>
+        /// <param name="sender">not used</param>
+        /// <param name="e">The mouse event args identifying the clicking mouse button</param>
+        private void tabViews_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            bool controlIsPressed = e.KeyChar == ConsoleKey.W.GetHashCode();
+            if (controlIsPressed)
+            {
+                
             }
         }
 
