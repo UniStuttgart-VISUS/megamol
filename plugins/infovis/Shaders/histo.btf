@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<btf namespace="histo" type="MegaMolGLSLShader" version="1.0">
+  <include file="core_utils"/>
+  <include file="bitflags"/>
+  <namespace name="draw">
+    <shader name="vert">
+      <snippet type="version">430</snippet>
+      <snippet type="file">histo_draw_vert.glsl</snippet>
+    </shader>
+    <shader name="frag">
+      <snippet type="version">430</snippet>
+      <snippet name="::core_utils::tflookup"/>
+      <snippet name="::core_utils::tfconvenience"/>
+      <snippet type="file">histo_draw_frag.glsl</snippet>
+    </shader>
+  </namespace>
+  <namespace name="axes">
+    <shader name="vert">
+      <snippet type="version">430</snippet>
+      <snippet type="file">histo_axes_vert.glsl</snippet>
+    </shader>
+    <shader name="frag">
+      <snippet type="version">430</snippet>
+      <snippet type="file">histo_axes_frag.glsl</snippet>
+    </shader>
+  </namespace>
+</btf>
