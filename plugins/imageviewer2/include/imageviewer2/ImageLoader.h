@@ -17,6 +17,8 @@
 #include <mutex>
 #include <queue>
 #include <set>
+#include <thread>
+#include <atomic>
 
 namespace megamol {
 namespace imageviewer2 {
@@ -106,6 +108,24 @@ private:
     /** Pointer to the vector containing the images */
     std::shared_ptr<image_calls::Image2DCall::ImageMap> imageData;
 
+    /** List of all available image files */
+    std::shared_ptr<std::vector<std::string>> availableFiles;
+
+    /** Set of all elements in the queue to avoid duplication */
+    std::set<std::string> queueElements;
+
+    /** Queue containing the paths of the images to load */
+    std::queue<std::string> imageLoadingQueue;
+
+    /**  */
+    std::thread loadingThread;
+
+    /** Mutex to protect the queue from race conditions */
+    std::mutex queueMutex;
+
+    /** Flag telling the seperate loader thread when to stop */
+    std::atomic_bool keepRunning = true;
+
     /** hash value for the data */
     SIZE_T datahash;
 
@@ -116,6 +136,11 @@ private:
      * @return True, if the image could be loaded, false otherwise.
      */
     bool loadImage(const std::filesystem::path& path);
+
+    /**
+     * Loop responsible for loading all images that are present in the imageLoadingQueue
+     */
+    void loadingLoop(void);
 };
 
 } // namespace imageviewer2

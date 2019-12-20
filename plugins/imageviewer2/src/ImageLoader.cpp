@@ -12,6 +12,7 @@
 #include "vislib/graphics/BitmapCodecCollection.h"
 
 #include <filesystem>
+#include <functional>
 #include "image_calls/Image2DCall.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FilePathParam.h"
@@ -69,13 +70,19 @@ ImageLoader::~ImageLoader(void) { this->Release(); }
 bool ImageLoader::create(void) {
     vislib::graphics::BitmapCodecCollection::DefaultCollection().AddCodec(new sg::graphics::PngBitmapCodec());
     vislib::graphics::BitmapCodecCollection::DefaultCollection().AddCodec(new sg::graphics::JpegBitmapCodec());
+    this->loadingThread = std::thread(std::bind(&ImageLoader::loadingLoop), std::ref(*this)); // start loading thread
     return true;
 }
 
 /*
  * ImageLoader::release
  */
-void ImageLoader::release(void) {}
+void ImageLoader::release(void) {
+    this->keepRunning = false;
+    if (this->loadingThread.joinable()) {
+        this->loadingThread.join();
+    }
+}
 
 /*
  * ImageLoader::GetData
@@ -116,7 +123,35 @@ bool ImageLoader::GetData(core::Call& call) {
  * ImageLoader::GetMetaData
  */
 bool ImageLoader::GetMetaData(core::Call& call) {
-    // TODO implement
+    image_calls::Image2DCall* ic = dynamic_cast<image_calls::Image2DCall*>(&call);
+    if (ic == nullptr) return false;
+
+    if (this->filenameSlot.IsDirty()) {
+        this->filenameSlot.ResetDirty();
+        this->imageData->clear();
+        auto tpath = this->filenameSlot.Param<param::FilePathParam>()->Value();
+        std::filesystem::path path(tpath.PeekBuffer());
+
+        this->availableFiles->clear();
+
+        // check path extension
+        if (path.has_extension() && path.extension().string().compare(".txt") != 0) { // normal file
+            this->availableFiles->push_back(path.string());
+        } else { // list of files
+            std::ifstream file(path);
+            if (file.is_open()) {
+                std::string line;
+                while (std::getline(file, line)) {
+                    this->availableFiles->push_back(line);
+                }
+            } else {
+                vislib::sys::Log::DefaultLog.WriteError("ImageLoader: The file \"%s\" could not be opened", path);
+                return false;
+            }
+        }
+        ++this->datahash;
+    }
+    ic->SetAvailablePathsPtr(this->availableFiles);
     return true;
 }
 
