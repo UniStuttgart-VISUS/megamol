@@ -63,6 +63,7 @@ OverlayRenderer::OverlayRenderer(void)
     this->paramMode << mep;
     this->paramMode.SetUpdateCallback(this, &OverlayRenderer::onToggleMode);
     this->MakeSlotAvailable(&this->paramMode);
+    mep = nullptr;
 
     param::EnumParam* aep = new param::EnumParam(Anchor::ALIGN_LEFT_TOP);
     aep->SetTypePair(Anchor::ALIGN_LEFT_TOP, "Left Top");
@@ -77,6 +78,7 @@ OverlayRenderer::OverlayRenderer(void)
     this->paramAnchor << aep;
     this->paramAnchor.SetUpdateCallback(this, &OverlayRenderer::onTriggerRecalcRectangle);
     this->MakeSlotAvailable(&this->paramAnchor);
+    aep = nullptr;
 
     this->paramCustomPosition << new param::Vector2fParam(vislib::math::Vector<float, 2>(0.0f, 0.0f),
         vislib::math::Vector<float, 2>(0.0f, 0.0f), vislib::math::Vector<float, 2>(100.0f, 100.0f));
@@ -137,6 +139,7 @@ OverlayRenderer::OverlayRenderer(void)
     this->paramFontName << fep;
     this->paramFontName.SetUpdateCallback(this, &OverlayRenderer::onFontName);
     this->MakeSlotAvailable(&this->paramFontName);
+    fep = nullptr;
 
     this->paramFontSize << new param::FloatParam(20.0f, 0.0f);
     this->MakeSlotAvailable(&this->paramFontSize);
@@ -413,17 +416,9 @@ bool OverlayRenderer::Render(view::CallRender3D_2& call) {
     }
 
     // Get current viewport
-    view::Camera_2 cam;
-    call.GetCamera(cam);
-    glm::ivec4 cam_viewport;
-    if (!cam.image_tile().empty()) { /// or better: auto viewport = cr3d_in->GetViewport().GetSize()?
-        cam_viewport = glm::ivec4(
-            cam.image_tile().left(), cam.image_tile().bottom(), cam.image_tile().width(), cam.image_tile().height());
-    } else {
-        cam_viewport = glm::ivec4(0, 0, cam.resolution_gate().width(), cam.resolution_gate().height());
-    }
-    if ((this->m_viewport.x != cam_viewport.z) || (this->m_viewport.y != cam_viewport.w)) {
-        this->m_viewport = {cam_viewport.z, cam_viewport.w};
+    auto viewport = call.GetViewport();
+    if ((this->m_viewport.x != viewport.Width()) || (this->m_viewport.y != viewport.Height())) {
+        this->m_viewport = {viewport.Width(), viewport.Height()};
         // Reload rectangle on viewport changes
         this->onTriggerRecalcRectangle(this->paramMode);
     }

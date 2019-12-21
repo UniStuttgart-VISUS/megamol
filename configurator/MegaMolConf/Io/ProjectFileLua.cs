@@ -107,8 +107,13 @@ namespace MegaMolConf.Io {
                     string[] elements = line.Split('"');
                     string vName = elements[1]; view.Name = vName;
                     string mModuleClass = elements[3]; m.Class = mModuleClass;
-                    string[] mModuleFullName = elements[5].Split(':');
-                    m.Name = mModuleFullName.Length == 3 ? mModuleFullName[2] : mModuleFullName[0];
+                    string fullname = elements[5];
+                    fullname = fullname.TrimStart(':');
+                    if (fullname.StartsWith(vName)) {
+                        fullname = fullname.Substring(vName.Length);
+                        fullname = fullname.TrimStart(':');
+                    }
+                    m.Name = fullname;
 
                     if (line.Contains("--confPos"))
                     {
@@ -170,18 +175,40 @@ namespace MegaMolConf.Io {
                         
                     Param p = new Param();
 
-                    //string[] paramElements = line.Split('"');
-                    // can't just split at '"' because of occuring quotes in parameter values
-                    // so the string gets split only at quotes which encloses the parameter values
-                    // this can be done better with a proper regex pattern that splits only at quotes which has no preceeding backslash
-                    // and does not also split the character before the quotes (this is currently done)
-                    string[] paramElementsTemp = Regex.Split(line, @"([^\\])\""");
-                    string[] paramElements = new string[paramElementsTemp.Length / 2];
-                    for(int j = 0; j < paramElementsTemp.Length / 2; ++j)
-                    {
-                        paramElements[j] = Regex.Replace(paramElementsTemp[2 * j] + paramElementsTemp[2 * j + 1], @"\\+\""", "\"");
+                    // check next lines if it contains mmSetParam, mmCreateCall, mmCreateModule or mmCreateView 
+                    // if so, go on as usual
+                    // if not, concatenate consecutive lines to get 1 big line
+                    // this allows paramValues to be split accross multiple line and still get interpreted as one
+                    if (i < (lines.Length - 1)) {
+                        while (i < (lines.Length - 1) && !Regex.IsMatch(lines[i + 1],
+                            @"mmSetParamValue|mmCreateCall|mmCreateModule|mmCreateView")) {
+                            line += lines[i + 1];
+                            ++i;
+                        }
                     }
+
+
+                    // in case of .lua files that encloses its value with [=[ and ]=]
+                    string pValue = "";
+                    Match vm = Regex.Match(line, @"\[\=\[(.*?)\]\=\]");
+                    if (vm.Success)
+                    {
+                        pValue = Regex.Replace(vm.Groups[1].Value, @"\\+\""", "\"");
+                    }
+
+
+                    // if .lua does not use [=[ ]=] syntax, split at '"' and put it back together
+                    string[] paramElements = line.Split('"');
                     string[] paramFullName = paramElements[1].Split(':');
+                    if(!vm.Success)
+                    {
+                        pValue += paramElements[3];
+                        for (int j = 4; j < paramElements.Length - 1; ++j)
+                        {
+                            pValue += "\"" + paramElements[j];
+                        }
+                    }
+
 
                     // we need to put together the full parameter name that was previously split up
                     // paramName will always start at the 7th position and each consecutive name element 
@@ -192,15 +219,16 @@ namespace MegaMolConf.Io {
                         pName += "::" + paramFullName[j];
                     }
                     p.Name = pName;
-                    string pValue = paramElements[3];
 
-                    // replace every sequence of "\\\\...\\\\" with "\\" so the correct filepathes get saved
-                    if (pName.Equals("filename"))
+
+                    // replace every sequence of "\...\" with "\\" so the correct filepathes get saved
+                    if (pName.Equals("filename", StringComparison.OrdinalIgnoreCase))
                     {
                         pValue = Regex.Replace(pValue, @"\\+", @"\");
                     }
-                    
+
                     p.Value = pValue;
+
 
                     // TODO?: instead of [4] do [x] to account for different paramFullNameLengths
                     foreach (Module mTemp in modules)

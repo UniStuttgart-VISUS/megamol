@@ -762,13 +762,13 @@ void vislib::graphics::gl::FramebufferObject::saveState(void) {
 
     GL_VERIFY_THROW(::glGetIntegerv(GL_VIEWPORT, this->oldVp));
 
-    VLTRACE(Trace::LEVEL_VL_INFO, "FBO saved state:\n"
-        "\tGL_FRAMEBUFFER_BINDING = %d\n"
-        "\tGL_DRAW_BUFFER = %d\n"
-        "\tGL_READ_BUFFER = %d\n"
-        "\tGL_VIEWPORT = %d %d %d %d\n",
-        this->oldFb, this->oldDrawBuffer, this->oldReadBuffer, 
-        this->oldVp[0], this->oldVp[1], this->oldVp[2], this->oldVp[3]);
+    //VLTRACE(Trace::LEVEL_VL_INFO, "FBO saved state:\n"
+    //    "\tGL_FRAMEBUFFER_BINDING = %d\n"
+    //    "\tGL_DRAW_BUFFER = %d\n"
+    //    "\tGL_READ_BUFFER = %d\n"
+    //    "\tGL_VIEWPORT = %d %d %d %d\n",
+    //    this->oldFb, this->oldDrawBuffer, this->oldReadBuffer, 
+    //    this->oldVp[0], this->oldVp[1], this->oldVp[2], this->oldVp[3]);
 }
 
 
